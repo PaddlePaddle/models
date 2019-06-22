@@ -28,9 +28,9 @@ from ppdet.data.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
     Permute)
-from ppdet.data.transform.arrange_sample import (
-    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeTestSSD, ArrangeYOLO,
-    ArrangeTestYOLO)
+from ppdet.data.transform.arrange_sample import (ArrangeRCNN, ArrangeTestRCNN,
+                                                 ArrangeSSD, ArrangeTestSSD,
+                                                 ArrangeYOLO, ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
@@ -73,6 +73,7 @@ def create_reader(feed, max_iter=0):
         mode: {
             'ANNO_FILE': feed.dataset.annotation,
             'IMAGE_DIR': feed.dataset.image_dir,
+            'USE_DEFAULT_LABEL': feed.dataset.use_default_label,
             'IS_SHUFFLE': feed.shuffle,
             'SAMPLES': feed.samples,
             'WITH_BACKGROUND': feed.with_background,
@@ -131,10 +132,12 @@ def create_reader(feed, max_iter=0):
     print(tty.green("============ generated data_config ================"))
     print(yaml.dump(data_config, default_flow_style=False, default_style=''))
     print(tty.green("========== generated transform_config =============="))
-    print(yaml.dump(
-        transform_config, default_flow_style=False, default_style=''))
-    print(tty.green(
-        "========== please verify they are correct!!!! =============="))
+    print(
+        yaml.dump(
+            transform_config, default_flow_style=False, default_style=''))
+    print(
+        tty.green(
+            "========== please verify they are correct!!!! =============="))
     print("")
 
     reader = Reader(data_config, {mode: transform_config}, max_iter)
@@ -197,11 +200,16 @@ class DataSet(object):
     """
     __source__ = 'RoiDbSource'
 
-    def __init__(self, annotation, image_dir, dataset_dir=None):
+    def __init__(self,
+                 annotation,
+                 image_dir,
+                 dataset_dir=None,
+                 use_default_label=None):
         super(DataSet, self).__init__()
         self.dataset_dir = dataset_dir
         self.annotation = annotation
         self.image_dir = image_dir
+        self.use_default_label = use_default_label
 
 
 COCO_DATASET_DIR = 'coco'
@@ -226,6 +234,7 @@ VOC_TRAIN_ANNOTATION = 'VOCdevkit/VOC_all/ImageSets/Main/train.txt'
 VOC_VAL_ANNOTATION = 'VOCdevkit/VOC_all/ImageSets/Main/val.txt'
 VOC_TEST_ANNOTATION = 'VOCdevkit/VOC_all/ImageSets/Main/test.txt'
 VOC_IMAGE_DIR = 'VOCdevkit/VOC_all/JPEGImages'
+VOC_USE_DEFAULT_LABEL = None
 
 
 @serializable
@@ -235,9 +244,13 @@ class VocDataSet(DataSet):
     def __init__(self,
                  dataset_dir=VOC_DATASET_DIR,
                  annotation=VOC_TRAIN_ANNOTATION,
-                 image_dir=VOC_IMAGE_DIR):
+                 image_dir=VOC_IMAGE_DIR,
+                 use_default_label=VOC_USE_DEFAULT_LABEL):
         super(VocDataSet, self).__init__(
-            dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
+            dataset_dir=dataset_dir,
+            annotation=annotation,
+            image_dir=image_dir,
+            use_default_label=use_default_label)
 
 
 @serializable
@@ -675,35 +688,42 @@ class MaskRCNNTestFeed(DataFeed):
 class SSDTrainFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
-    def __init__(
-            self,
-            dataset=VocDataSet().__dict__,
-            fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
-            image_shape=[3, 300, 300],
-            sample_transforms=[
-                DecodeImage(to_rgb=True), NormalizeBox(), RandomDistort(),
-                ExpandImage(
-                    max_ratio=3, prob=0.5), CropImage(
-                        [[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
-                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
-                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
-                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
-                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
-                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]), ResizeImage(
-                             target_size=300, use_cv2=False, interp=1),
-                RandomFlipImage(is_normalized=True), Permute(), NormalizeImage(
-                    mean=[127.5, 127.5, 127.5],
-                    std=[127.502231, 127.502231, 127.502231],
-                    is_scale=False)
-            ],
-            batch_transforms=[],
-            batch_size=32,
-            shuffle=True,
-            samples=-1,
-            drop_last=True,
-            num_workers=8,
-            use_process=True):
+    def __init__(self,
+                 dataset=VocDataSet().__dict__,
+                 fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
+                 image_shape=[3, 300, 300],
+                 sample_transforms=[
+                     DecodeImage(
+                         to_rgb=True,
+                         with_mixup=False), NormalizeBox(), RandomDistort(
+                             brightness_lower=0.875,
+                             brightness_upper=1.125,
+                             is_order=True), ExpandImage(
+                                 max_ratio=4, prob=0.5),
+                     CropImage(
+                         batch_sampler=[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
+                         satisfy_all=False), ResizeImage(
+                             target_size=300, use_cv2=False,
+                             interp=1), RandomFlipImage(is_normalized=True),
+                     Permute(), NormalizeImage(
+                         mean=[127.5, 127.5, 127.5],
+                         std=[127.502231, 127.502231, 127.502231],
+                         is_scale=False)
+                 ],
+                 batch_transforms=[],
+                 batch_size=32,
+                 shuffle=True,
+                 samples=-1,
+                 drop_last=True,
+                 num_workers=8,
+                 bufsize=10,
+                 use_process=True):
         sample_transforms.append(ArrangeSSD())
         if isinstance(dataset, dict):
             dataset = VocDataSet(**dataset)
@@ -726,26 +746,28 @@ class SSDTrainFeed(DataFeed):
 class SSDEvalFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
-    def __init__(self,
-                 dataset=VocDataSet(VOC_VAL_ANNOTATION).__dict__,
-                 fields=['image'],
-                 image_shape=[3, 300, 300],
-                 sample_transforms=[
-                     DecodeImage(to_rgb=True), NormalizeBox(), ResizeImage(
-                         target_size=300, use_cv2=False,
-                         interp=1), RandomFlipImage(is_normalized=True),
-                     Permute(), NormalizeImage(
-                         mean=[127.5, 127.5, 127.5],
-                         std=[127.502231, 127.502231, 127.502231],
-                         is_scale=False)
-                 ],
-                 batch_transforms=[],
-                 batch_size=64,
-                 shuffle=False,
-                 samples=-1,
-                 drop_last=True,
-                 num_workers=8,
-                 use_process=False):
+    def __init__(
+            self,
+            dataset=VocDataSet(VOC_VAL_ANNOTATION).__dict__,
+            fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
+            image_shape=[3, 300, 300],
+            sample_transforms=[
+                DecodeImage(
+                    to_rgb=True, with_mixup=False), NormalizeBox(), ResizeImage(
+                        target_size=300, use_cv2=False, interp=1),
+                RandomFlipImage(is_normalized=True), Permute(), NormalizeImage(
+                    mean=[127.5, 127.5, 127.5],
+                    std=[127.502231, 127.502231, 127.502231],
+                    is_scale=False)
+            ],
+            batch_transforms=[],
+            batch_size=64,
+            shuffle=False,
+            samples=-1,
+            drop_last=True,
+            num_workers=8,
+            bufsize=10,
+            use_process=False):
         sample_transforms.append(ArrangeSSD())
         if isinstance(dataset, dict):
             dataset = VocDataSet(**dataset)
@@ -773,9 +795,12 @@ class SSDTestFeed(DataFeed):
                  fields=['image'],
                  image_shape=[3, 300, 300],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True),
-                     ResizeImage(
-                         target_size=300, use_cv2=False, interp=1),
+                     DecodeImage(to_rgb=True), ResizeImage(
+                         target_size=300, use_cv2=False, interp=1), Permute(),
+                     NormalizeImage(
+                         mean=[127.5, 127.5, 127.5],
+                         std=[127.502231, 127.502231, 127.502231],
+                         is_scale=False)
                  ],
                  batch_transforms=[],
                  batch_size=1,
@@ -784,6 +809,7 @@ class SSDTestFeed(DataFeed):
                  drop_last=False,
                  test_file=None,
                  num_workers=8,
+                 bufsize=10,
                  use_process=False):
         sample_transforms.append(ArrangeTestSSD())
         if isinstance(dataset, dict):
