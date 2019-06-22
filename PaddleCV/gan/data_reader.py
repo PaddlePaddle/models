@@ -262,7 +262,7 @@ class celeba_reader_creator(reader_creator):
         attr_names = args.selected_attrs.split(',')
         for line in lines:
             arr = line.strip().split()
-            name = './img_align_celeba/' + arr[0]
+            name = os.path.join('img_align_celeba', arr[0])
             label = []
             for attr_name in attr_names:
                 idx = attr2idx[attr_name]
@@ -318,19 +318,11 @@ class celeba_reader_creator(reader_creator):
             batch_out_2 = []
             batch_out_3 = []
             for file, label in self.images:
-                if args.model_net == 'StarGAN':
-                    img = Image.open(os.path.join(self.image_dir, file))
-                    label = np.array(label).astype("float32")
-                    img = CentorCrop(img, args.crop_size, args.crop_size)
-                    img = img.resize((args.image_size, args.image_size),
-                                     Image.BILINEAR)
-                else:
-                    img = Image.open(os.path.join(self.image_dir,
-                                                  file)).convert('RGB')
-                    label = np.array(label).astype("float32")
-                    img = CentorCrop(img, 170, 170)
-                    img = img.resize((args.image_size, args.image_size),
-                                     Image.BILINEAR)
+                img = Image.open(os.path.join(self.image_dir, file))
+                label = np.array(label).astype("float32")
+                img = CentorCrop(img, args.crop_size, args.crop_size)
+                img = img.resize((args.image_size, args.image_size),
+                                 Image.BILINEAR)
                 img = (np.array(img).astype('float32') / 255.0 - 0.5) / 0.5
                 img = img.transpose([2, 0, 1])
                 if return_name:
