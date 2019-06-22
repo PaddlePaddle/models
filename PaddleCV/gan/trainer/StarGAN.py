@@ -80,8 +80,6 @@ class GTrainer():
                 beta2=0.999,
                 name="net_G")
             optimizer.minimize(self.g_loss, parameter_list=vars)
-            with open('program_gen.txt', 'w') as f:
-                print(self.program, file=f)
 
 
 class DTrainer():
@@ -164,8 +162,6 @@ class DTrainer():
                 name="net_D")
 
             optimizer.minimize(self.d_loss, parameter_list=vars)
-            with open('program_dis.txt', 'w') as f:
-                print(self.program, file=f)
 
     def gradient_penalty(self, f, real, fake, cfg=None, name=None):
         def _interpolate(a, b):
@@ -213,16 +209,6 @@ class StarGAN(object):
             type=int,
             default=5,
             help="the number of attributes we selected")
-        parser.add_argument(
-            '--g_conv_dim',
-            type=int,
-            default=64,
-            help="base conv dims in generator")
-        parser.add_argument(
-            '--d_conv_dim',
-            type=int,
-            default=64,
-            help="base conv dims in discriminator")
         parser.add_argument(
             '--g_repeat_num',
             type=int,
@@ -303,9 +289,6 @@ class StarGAN(object):
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
-
-        with open('program.txt', "w") as f:
-            print(gen_trainer.program, file=f)
 
         if self.cfg.init_model:
             utility.init_checkpoints(self.cfg, exe, gen_trainer, "net_G")
