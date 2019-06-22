@@ -107,6 +107,7 @@ class BBoxHead(object):
         self.num_classes = num_classes
         self.box_coder = box_coder
         self.nms = nms
+        self.head_feat = None
         if isinstance(box_coder, dict):
             self.box_coder = BoxCoder(**box_coder)
         if isinstance(nms, dict):
@@ -118,10 +119,11 @@ class BBoxHead(object):
         """
 
         if input is not None:
-            self.head_feat = self.head(input)
-            return self.head_feat
-        else:
-            return getattr(self, 'head_feat', None)
+            feat = self.head(input)
+            if isinstance(feat, OrderedDict):
+                feat = list(feat.values())[0]
+            self.head_feat = feat
+        return self.head_feat
 
     def _get_output(self, roi_feat):
         """
@@ -138,8 +140,6 @@ class BBoxHead(object):
         """
         head_feat = self.get_head_feat(roi_feat)
         # when ResNetC5 output a single feature map
-        if isinstance(head_feat, OrderedDict):
-            head_feat = list(head_feat.values())[0]
         if not isinstance(self.head, TwoFCHead):
             head_feat = fluid.layers.pool2d(
                 head_feat, pool_type='avg', global_pooling=True)
