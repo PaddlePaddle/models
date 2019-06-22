@@ -263,13 +263,25 @@ class ResNet(object):
 
     def c1_stage(self, input):
         out_chan = self._c1_out_chan_num
-        conv_def = self.na.fix_c1_stage_name(out_chan)
-        if self.variant in ['c', 'd'] and len(conv_def) != 3:
-            assert "variant 'c', 'd' len conv_def is 3!"
+
+        conv1_name = self.na.fix_c1_stage_name()
+
+        if self.variant in ['c', 'd']:
+            conv_def = [
+                [out_chan // 2, 3, 2, "conv1_1"],
+                [out_chan // 2, 3, 1, "conv1_2"],
+                [out_chan, 3, 1, "conv1_3"],
+            ]
+        else:
+            conv_def = [[out_chan, 7, 2, conv1_name]]
 
         for (c, k, s, _name) in conv_def:
+
+            # FIXME remove debug code before release
             print("[01;32m{} c: {}, k: {}, s: {}, g: 1, act: relu[0m".format(
                 _name, str(c).ljust(4), k, s))
+
+            print(input)
             input = self._conv_norm(
                 input=input,
                 num_filters=c,
