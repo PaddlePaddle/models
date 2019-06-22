@@ -344,7 +344,7 @@ def prepare_data_generator(args,
         # to make data on each device have similar token number
         data_reader = split(data_reader, count)
     if args.use_py_reader:
-        train_reader = py_reader_provider_wrapper(data_reader, )
+        train_reader = py_reader_provider_wrapper(data_reader, place)
         if num_trainers > 1:
             assert shuffle_seed is not None
             train_reader = fluid.contrib.reader.distributed_batch_reader(
