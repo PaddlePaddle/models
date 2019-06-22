@@ -66,7 +66,7 @@ class ParallelMappedDataset(ProxiedDataset):
 
         bufsize = self._worker_args['bufsize']
         if use_process:
-            from ppdet.utils.shared_queue import SharedQueue as Queue
+            from .shared_queue import SharedQueue as Queue
             from multiprocessing import Process as Worker
             from multiprocessing import Event
         else:
@@ -129,8 +129,8 @@ class ParallelMappedDataset(ProxiedDataset):
             if isinstance(sample, EndSignal):
                 sample.errmsg += "[consumer[{}] exits]".format(id)
                 outq.put(sample)
-                logger.debug("end signal received, "
-                             + "consumer[{}] exits".format(id))
+                logger.debug("end signal received, " +
+                             "consumer[{}] exits".format(id))
                 break
 
             try:
