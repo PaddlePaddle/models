@@ -45,7 +45,6 @@ FPNRPNHead:
     rpn_negative_overlap: 0.3
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
-    use_random: true
   train_proposal:
     min_size: 0.0
     nms_thresh: 0.7
