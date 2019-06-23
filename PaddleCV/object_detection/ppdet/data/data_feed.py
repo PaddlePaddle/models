@@ -41,7 +41,7 @@ __all__ = [
 ]
 
 
-def create_reader(feed, max_iter=0):
+def create_reader(feed, max_iter=0, image_or_dir=None, image_ext=None):
     """
     Return iterable data reader.
 
@@ -83,7 +83,22 @@ def create_reader(feed, max_iter=0):
     }
 
     if mode == 'TEST':
-        data_config[mode]['TEST_FILE'] = feed.test_file
+        image_or_dir = image_or_dir or feed.dataset.image_dir
+        image_or_dir = os.path.abspath(image_or_dir)
+        assert os.path.exists(image_or_dir), \
+                "image_or_dir {} not exists".format(image_or_dir)
+        image_ext = image_ext or feed.dataset.image_ext
+        images = []
+        if os.path.isdir(image_or_dir):
+            for f in os.listdir(image_or_dir):
+                if image_ext is None or f.endswith(image_ext):
+                    images.append(os.path.join(image_or_dir, f))
+        else:
+            if image_ext is None or image_or_dir.endswith(image_ext):
+                images.append(image_or_dir)
+        assert len(images) > 0, "no image found in {} with " \
+                    "extension {}".format(image_or_dir, image_ext)
+        data_config['TEST']['IMAGES'] = images
 
     transform_config = {
         'WORKER_CONF': {
@@ -246,9 +261,13 @@ class SimpleDataSet(DataSet):
     def __init__(self,
                  dataset_dir=VOC_DATASET_DIR,
                  annotation=VOC_TEST_ANNOTATION,
-                 image_dir=VOC_IMAGE_DIR):
+                 image_dir=VOC_IMAGE_DIR,
+                 image_or_dir=VOC_IMAGE_DIR,
+                 image_ext=None):
         super(SimpleDataSet, self).__init__(
             dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
+        self.image_or_dir = image_or_dir
+        self.image_ext = image_ext
 
 
 @serializable
@@ -280,7 +299,6 @@ class DataFeed(object):
                  samples=-1,
                  drop_last=False,
                  with_background=True,
-                 test_file=None,
                  num_workers=2,
                  bufsize=10,
                  use_process=False,
@@ -295,7 +313,6 @@ class DataFeed(object):
         self.samples = samples
         self.drop_last = drop_last
         self.with_background = with_background
-        self.test_file = test_file
         self.num_workers = num_workers
         self.bufsize = bufsize
         self.use_process = use_process
@@ -384,7 +401,6 @@ class TestFeed(DataFeed):
                  shuffle=False,
                  drop_last=False,
                  with_background=True,
-                 test_file=None,
                  num_workers=2):
         super(TestFeed, self).__init__(
             dataset,
@@ -396,7 +412,6 @@ class TestFeed(DataFeed):
             shuffle=shuffle,
             drop_last=drop_last,
             with_background=with_background,
-            test_file=test_file,
             num_workers=num_workers)
 
 
@@ -521,7 +536,6 @@ class FasterRCNNEvalFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_padded_im_info=True):
         sample_transforms.append(ArrangeTestRCNN())
@@ -535,7 +549,6 @@ class FasterRCNNEvalFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'VAL'
@@ -562,7 +575,6 @@ class FasterRCNNTestFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_padded_im_info=True):
         sample_transforms.append(ArrangeTestRCNN())
@@ -578,7 +590,6 @@ class FasterRCNNTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
@@ -610,7 +621,6 @@ class MaskRCNNEvalFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
@@ -625,7 +635,6 @@ class MaskRCNNEvalFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
@@ -654,7 +663,6 @@ class MaskRCNNTestFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
@@ -671,7 +679,6 @@ class MaskRCNNTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
@@ -801,7 +808,6 @@ class SSDTestFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=8,
                  bufsize=10,
                  use_process=False):
@@ -818,7 +824,6 @@ class SSDTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers)
         self.mode = 'TEST'
 
@@ -965,7 +970,6 @@ class YoloTestFeed(DataFeed):
                  samples=1,
                  drop_last=False,
                  with_background=False,
-                 test_file=None,
                  num_workers=8,
                  num_max_boxes=50,
                  use_process=False):
@@ -983,7 +987,6 @@ class YoloTestFeed(DataFeed):
             samples=samples,
             drop_last=drop_last,
             with_background=with_background,
-            test_file=test_file,
             num_workers=num_workers,
             use_process=use_process)
         self.num_max_boxes = num_max_boxes

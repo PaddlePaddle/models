@@ -84,4 +84,3 @@ SSDTestFeed:
     image_dir: VOCdevkit/VOC_all/JPEGImages
     use_default_label: false
   drop_last: false
-  test_file: data/voc/VOCdevkit/VOC_all/ImageSets/Main/test.txt

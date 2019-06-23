@@ -136,7 +136,6 @@ FasterRCNNTestFeed:
   dataset:
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  test_file: val2017.txt
   drop_last: false
   num_workers: 2
   shuffle: false
