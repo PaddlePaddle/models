@@ -263,7 +263,8 @@ class SimpleDataSet(DataSet):
                  annotation=VOC_TEST_ANNOTATION,
                  image_dir=VOC_IMAGE_DIR,
                  image_or_dir=VOC_IMAGE_DIR,
-                 image_ext=None):
+                 image_ext=None,
+                 use_default_label=VOC_USE_DEFAULT_LABEL):
         super(SimpleDataSet, self).__init__(
             dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
         self.image_or_dir = image_or_dir

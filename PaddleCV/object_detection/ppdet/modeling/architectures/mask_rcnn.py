@@ -187,3 +187,6 @@ class MaskRCNN(object):
                 fluid.layers.assign(input=mask_out, output=mask_pred)
 
         return {'bbox': bbox_pred, 'mask': mask_pred}
+
+    def eval(self, feed_vars):
+        self.test(feed_vars)

@@ -149,7 +149,8 @@ def save_test_image(epoch,
                 for j in range(len(label_org)):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
 
-                label_trg_ = map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp)
+                label_trg_ = list(
+                    map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
 
                 for j in range(len(label_org)):
                     label_trg_[j][i] = label_trg_[j][i] * 2.0
