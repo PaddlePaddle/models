@@ -43,6 +43,8 @@ class CascadeBBoxHead(object):
         self.head = head
         self.nms = nms
         self.num_classes = num_classes
+        if isinstance(nms, dict):
+            self.nms = MultiClassNMS(**nms)
 
     def get_output(self,
                    roi_feat,
@@ -236,7 +238,7 @@ class CascadeBBoxHead(object):
                                   learning_rate=2.0,
                                   regularizer=L2Decay(0.)))
         cls_score = fluid.layers.fc(input=fc7,
-                                    size=self.cfg.DATA.CLASS_NUM,
+                                    size=self.num_classes,
                                     act=None,
                                     name='cls_score' + name,
                                     param_attr=ParamAttr(
