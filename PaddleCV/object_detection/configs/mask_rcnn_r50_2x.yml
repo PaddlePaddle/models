@@ -129,4 +129,3 @@ MaskRCNNTestFeed:
     dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  samples: 5
