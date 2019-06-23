@@ -7,23 +7,23 @@ max_iters: 180000
 snapshot_iter: 10000
 log_smooth_window: 20
 save_dir: output
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.tar
 metric: COCO
 weights: output/mask_rcnn_r101_fpn_1x/model_final/ 
 
 MaskRCNN:
   backbone: ResNet
-  bbox_assigner: BBoxAssigner
-  bbox_head: BBoxHead
-  roi_extractor: FPNRoIAlign
+  fpn: FPN
   rpn_head: FPNRPNHead
-  neck: FPN
+  roi_extractor: FPNRoIAlign
+  bbox_head: BBoxHead
+  bbox_assigner: BBoxAssigner
 
 ResNet:
-  norm_type: affine_channel
   depth: 101
   feature_maps: [2, 3, 4, 5]
   freeze_at: 2
+  norm_type: affine_channel
 
 FPN:
   max_level: 6
@@ -46,16 +46,16 @@ FPNRPNHead:
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
     use_random: true
-  test_proposal:
-    min_size: 0.0
-    nms_thresh: 0.7
-    post_nms_top_n: 1000
-    pre_nms_top_n: 1000
   train_proposal:
     min_size: 0.0
     nms_thresh: 0.7
-    post_nms_top_n: 2000
     pre_nms_top_n: 2000
+    post_nms_top_n: 2000
+  test_proposal:
+    min_size: 0.0
+    nms_thresh: 0.7
+    pre_nms_top_n: 1000
+    post_nms_top_n: 1000
 
 FPNRoIAlign:
   canconical_level: 4
@@ -81,7 +81,6 @@ BBoxAssigner:
   fg_fraction: 0.25
   fg_thresh: 0.5
   num_classes: 81
-  shuffle_before_sample: true
 
 MaskAssigner:
   resolution: 28
@@ -91,7 +90,6 @@ BBoxHead:
   nms:
     keep_top_k: 100
     nms_threshold: 0.5
-    normalized: false
     score_threshold: 0.05
   num_classes: 81
 
@@ -126,6 +124,7 @@ MaskRCNNTrainFeed:
     dataset_dir: COCO17
     annotation: annotations/instances_train2017.json
     image_dir: train2017
+  num_workers: 2
   use_padded_im_info: False
 
 MaskRCNNEvalFeed:
@@ -137,6 +136,7 @@ MaskRCNNEvalFeed:
     dataset_dir: COCO17
     annotation: annotations/instances_val2017.json
     image_dir: val2017
+  num_workers: 2
   use_padded_im_info: True
 
 MaskRCNNTestFeed:
@@ -150,4 +150,5 @@ MaskRCNNTestFeed:
     image_dir: val2017
   test_file: val2017.txt
   samples: 5
+  num_workers: 2
   use_padded_im_info: True

@@ -61,13 +61,13 @@ class TwoFCHead(object):
         self.num_chan = num_chan
 
     def __call__(self, roi_feat):
-        fan_in = roi_feat.shape[1] * roi_feat.shape[2] * roi_feat.shape[3]
+        fan = roi_feat.shape[1] * roi_feat.shape[2] * roi_feat.shape[3]
         fc6 = fluid.layers.fc(input=roi_feat,
                               size=self.num_chan,
                               act='relu',
                               name='fc6',
                               param_attr=ParamAttr(
-                                  name='fc6_w', initializer=Xavier(fan_out=fan_in)),
+                                  name='fc6_w', initializer=Xavier(fan_out=fan)),
                               bias_attr=ParamAttr(
                                   name='fc6_b',
                                   learning_rate=2.,
