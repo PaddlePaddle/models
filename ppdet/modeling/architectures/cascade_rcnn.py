@@ -20,8 +20,6 @@ import paddle.fluid as fluid
 
 from ppdet.core.workspace import register
 
-from ppdet.modeling.necks.fpn import FPN
-
 __all__ = ['CascadeRCNN']
 
 
@@ -36,25 +34,26 @@ class CascadeRCNN(object):
         bbox_assigner (object): `BBoxAssigner` instance
         roi_extractor (object): ROI extractor instance
         bbox_head (object): `BBoxHead` instance
-        neck (object): feature enricher instance, e.g., FPN
+        fpn (object): feature pyramid network instance
     """
 
     __category__ = 'architecture'
     __inject__ = [
-        'backbone', 'neck', 'rpn_head', 'bbox_assigner', 'roi_extractor',
+        'backbone', 'fpn', 'rpn_head', 'bbox_assigner', 'roi_extractor',
         'bbox_head'
     ]
 
     def __init__(self,
                  backbone,
                  rpn_head,
-                 roi_extractor,
+                 roi_extractor='FPNRoIAlign',
                  bbox_head='CascadeBBoxHead',
                  bbox_assigner='CascadeBBoxAssigner',
-                 neck=None):
+                 fpn='FPN'):
         super(CascadeRCNN, self).__init__()
+        assert fpn is not None, "cascade RCNN requires FPN"
         self.backbone = backbone
-        self.neck = neck
+        self.fpn = fpn
         self.rpn_head = rpn_head
         self.bbox_assigner = bbox_assigner
         self.roi_extractor = roi_extractor
@@ -80,9 +79,9 @@ class CascadeRCNN(object):
         body_feats = self.backbone(im)
         # body_feat_names = list(body_feats.keys())
 
-        # neck
-        if self.neck is not None:
-            body_feats, spatial_scale = self.neck.get_output(body_feats)
+        # FPN
+        if self.fpn is not None:
+            body_feats, spatial_scale = self.fpn.get_output(body_feats)
 
         # rpn proposals
         rpn_rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
@@ -117,12 +116,8 @@ class CascadeRCNN(object):
             proposal_list.append(proposals)
 
             # extract roi features
-            if isinstance(self.neck, FPN):
-                roi_feat = self.roi_extractor(body_feats, proposals,
-                                              spatial_scale)
-                roi_feat_list.append(roi_feat)
-            else:
-                raise ValueError("only supports FPN as enricher for now")
+            roi_feat = self.roi_extractor(body_feats, proposals, spatial_scale)
+            roi_feat_list.append(roi_feat)
 
             # bbox head
             cls_score, bbox_pred = self.bbox_head.get_output(

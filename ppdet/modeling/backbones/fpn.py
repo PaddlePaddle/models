@@ -79,14 +79,14 @@ class FPN(object):
 
     def get_output(self, body_dict):
         """
-        Add FPN neck onto backbone.
+        Add FPN onto backbone.
 
         Args:
             body_dict(OrderedDict): Dictionary of variables and each element is the
                 output of backbone.
 
         Return:
-            fpn_dict(OrderedDict): A dictionary represents the output of FPN neck with
+            fpn_dict(OrderedDict): A dictionary represents the output of FPN with
                 their name.
             spatial_scale(list): A list of multiplicative spatial scale factor.
         """

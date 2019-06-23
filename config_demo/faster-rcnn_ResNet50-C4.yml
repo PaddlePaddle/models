@@ -10,7 +10,7 @@ FasterRCNN:
   bbox_head: BBoxHead
   roi_extractor: RoIAlign
   rpn_head: RPNHead
-  neck: null
+  fpn: null
 
 ResNet:
   norm_type: affine_channel

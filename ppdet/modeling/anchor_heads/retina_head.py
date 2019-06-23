@@ -96,7 +96,7 @@ class RetinaHead(object):
         Get class predictions of all level FPN level.
 
         Args:
-            fpn_dict(dict): A dictionary represents the output of FPN neck with
+            fpn_dict(dict): A dictionary represents the output of FPN with
                 their name.
             spatial_scale(list): A list of multiplicative spatial scale factor.
 
@@ -165,7 +165,7 @@ class RetinaHead(object):
         Get bounding box predictions of all level FPN level.
 
         Args:
-            fpn_dict(dict): A dictionary represents the output of FPN neck with
+            fpn_dict(dict): A dictionary represents the output of FPN with
                 their name.
             spatial_scale(list): A list of multiplicative spatial scale factor.
 
@@ -231,7 +231,7 @@ class RetinaHead(object):
         Get anchor boxes of all level FPN level.
 
         Args:
-            fpn_dict(dict): A dictionary represents the output of FPN neck with
+            fpn_dict(dict): A dictionary represents the output of FPN with
                 their name.
             spatial_scale(list): A list of multiplicative spatial scale factor.
 
@@ -266,7 +266,7 @@ class RetinaHead(object):
         Get class, bounding box predictions and anchor boxes of all level FPN level.
 
         Args:
-            fpn_dict(dict): A dictionary represents the output of FPN neck with
+            fpn_dict(dict): A dictionary represents the output of FPN with
                 their name.
             spatial_scale(list): A list of multiplicative spatial scale factor.
 
@@ -318,7 +318,7 @@ class RetinaHead(object):
         Get prediction bounding box in test stage.
 
         Args:
-            fpn_dict(dict): A dictionary represents the output of FPN neck with
+            fpn_dict(dict): A dictionary represents the output of FPN with
                 their name.
             spatial_scale(list): A list of multiplicative spatial scale factor.
             im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the
@@ -350,7 +350,7 @@ class RetinaHead(object):
         """
         Calculate the loss of retinanet.
         Args:
-            fpn_dict(dict): A dictionary represents the output of FPN neck with
+            fpn_dict(dict): A dictionary represents the output of FPN with
                 their name.
             spatial_scale(list): A list of multiplicative spatial scale factor.
             im_info(Variable): A 2-D LoDTensor with shape [B, 3]. B is the
