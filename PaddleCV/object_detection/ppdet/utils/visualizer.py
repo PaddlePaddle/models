@@ -38,7 +38,6 @@ def visualize_results(image_path,
                       bbox_results=None,
                       mask_results=None):
     """
-    TODO(dengkaipeng): add more comments
     Visualize bbox and mask results
     """
     if not os.path.exists(SAVE_HOME):
@@ -48,17 +47,15 @@ def visualize_results(image_path,
     save_name = get_save_image_name(image_path)
     if mask_results:
         image = draw_mask(image, mask_results, threshold)
-        logger.info("Detection mask results save in {}".format(save_name))
     if bbox_results:
         image = draw_bbox(image, catid2name, bbox_results, threshold)
-        logger.info("Detection bbox results save in {}".format(save_name))
 
+    logger.info("Detection results save in {}".format(save_name))
     image.save(save_name)
 
 
 def draw_mask(image, segms, threshold, alpha=0.7):
     """
-    TODO(dengkaipeng): add more comments
     Draw mask on image
     """
     im_width, im_height = image.size
@@ -84,7 +81,6 @@ def draw_mask(image, segms, threshold, alpha=0.7):
 
 def draw_bbox(image, catid2name, bboxes, threshold):
     """
-    TODO(dengkaipeng): add more comments
     Draw bbox on image
     """
     draw = ImageDraw.Draw(image)

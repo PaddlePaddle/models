@@ -18,6 +18,7 @@ from __future__ import division
 
 import os
 import inspect
+import logging
 
 from ppdet.core.workspace import register, serializable
 from ppdet.utils.download import get_dataset_path
@@ -40,8 +41,10 @@ __all__ = [
     'YoloEvalFeed', 'YoloTestFeed', 'create_reader'
 ]
 
+logger = logging.getLogger(__name__)
 
-def create_reader(feed, max_iter=0, image_or_dir=None, image_ext=None):
+
+def create_reader(feed, max_iter=0):
     """
     Return iterable data reader.
 
@@ -83,22 +86,7 @@ def create_reader(feed, max_iter=0, image_or_dir=None, image_ext=None):
     }
 
     if mode == 'TEST':
-        image_or_dir = image_or_dir or feed.dataset.image_dir
-        image_or_dir = os.path.abspath(image_or_dir)
-        assert os.path.exists(image_or_dir), \
-                "image_or_dir {} not exists".format(image_or_dir)
-        image_ext = image_ext or feed.dataset.image_ext
-        images = []
-        if os.path.isdir(image_or_dir):
-            for f in os.listdir(image_or_dir):
-                if image_ext is None or f.endswith(image_ext):
-                    images.append(os.path.join(image_or_dir, f))
-        else:
-            if image_ext is None or image_or_dir.endswith(image_ext):
-                images.append(image_or_dir)
-        assert len(images) > 0, "no image found in {} with " \
-                    "extension {}".format(image_or_dir, image_ext)
-        data_config['TEST']['IMAGES'] = images
+        data_config['TEST']['IMAGES'] = _get_test_images(feed)
 
     transform_config = {
         'WORKER_CONF': {
@@ -143,6 +131,37 @@ def create_reader(feed, max_iter=0, image_or_dir=None, image_ext=None):
 
     reader = Reader(data_config, {mode: transform_config}, max_iter)
     return reader._make_reader(mode)
+
+
+def _get_test_images(feed):
+    """
+    Get image path list in TEST mode
+    """
+    image_or_dir = feed.image_or_dir
+    if not image_or_dir:
+        logger.info("--image_or_dir not set, perform inference"
+                    " in {}".format(feed.dataset.image_dir))
+        image_or_dir = feed.dataset.image_dir
+
+    image_or_dir = os.path.abspath(image_or_dir)
+    assert os.path.exists(image_or_dir), \
+            "image_or_dir {} not exists".format(image_or_dir)
+
+    image_ext = feed.image_ext
+
+    images = []
+    if os.path.isdir(image_or_dir):
+        for f in os.listdir(image_or_dir):
+            if image_ext is None or f.endswith(image_ext):
+                images.append(os.path.join(image_or_dir, f))
+    else:
+        if image_ext is None or image_or_dir.endswith(image_ext):
+            images.append(image_or_dir)
+    assert len(images) > 0, "no image found in {} with " \
+                "extension {}".format(image_or_dir, image_ext)
+    logger.info("Found {} inference images in total.".format(len(images)))
+
+    return images
 
 
 # XXX batch transforms are only stubs for now, actually handled by `post_map`
@@ -259,16 +278,12 @@ class SimpleDataSet(DataSet):
     __source__ = 'SimpleSource'
 
     def __init__(self,
-                 dataset_dir=VOC_DATASET_DIR,
-                 annotation=VOC_TEST_ANNOTATION,
-                 image_dir=VOC_IMAGE_DIR,
-                 image_or_dir=VOC_IMAGE_DIR,
-                 image_ext=None,
-                 use_default_label=VOC_USE_DEFAULT_LABEL):
+                 dataset_dir=None,
+                 annotation=None,
+                 image_dir=None,
+                 use_default_label=None):
         super(SimpleDataSet, self).__init__(
             dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
-        self.image_or_dir = image_or_dir
-        self.image_ext = image_ext
 
 
 @serializable
@@ -399,6 +414,8 @@ class TestFeed(DataFeed):
                  sample_transforms=[],
                  batch_transforms=[],
                  batch_size=1,
+                 image_or_dir=None,
+                 image_ext=None,
                  shuffle=False,
                  drop_last=False,
                  with_background=True,
@@ -414,6 +431,8 @@ class TestFeed(DataFeed):
             drop_last=drop_last,
             with_background=with_background,
             num_workers=num_workers)
+        self.image_or_dir = image_or_dir
+        self.image_ext = image_ext
 
 
 @register
@@ -573,6 +592,8 @@ class FasterRCNNTestFeed(DataFeed):
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
+                 image_or_dir=None,
+                 image_ext=None,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
@@ -594,6 +615,8 @@ class FasterRCNNTestFeed(DataFeed):
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
+        self.image_or_dir = image_or_dir
+        self.image_ext = image_ext
 
 
 @register
@@ -661,6 +684,8 @@ class MaskRCNNTestFeed(DataFeed):
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
+                 image_or_dir=None,
+                 image_ext=None,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
@@ -684,6 +709,8 @@ class MaskRCNNTestFeed(DataFeed):
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
+        self.image_or_dir = image_or_dir
+        self.image_ext = image_ext
 
 
 @register
@@ -806,6 +833,8 @@ class SSDTestFeed(DataFeed):
                  ],
                  batch_transforms=[],
                  batch_size=1,
+                 image_or_dir=None,
+                 image_ext=None,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
@@ -827,6 +856,8 @@ class SSDTestFeed(DataFeed):
             drop_last=drop_last,
             num_workers=num_workers)
         self.mode = 'TEST'
+        self.image_or_dir = image_or_dir
+        self.image_ext = image_ext
 
 
 @register
@@ -967,8 +998,10 @@ class YoloTestFeed(DataFeed):
                  ],
                  batch_transforms=[],
                  batch_size=1,
+                 image_or_dir=None,
+                 image_ext=None,
                  shuffle=False,
-                 samples=1,
+                 samples=-1,
                  drop_last=False,
                  with_background=False,
                  num_workers=8,
@@ -993,3 +1026,5 @@ class YoloTestFeed(DataFeed):
         self.num_max_boxes = num_max_boxes
         self.mode = 'TEST'
         self.bufsize = 128
+        self.image_or_dir = image_or_dir
+        self.image_ext = image_ext

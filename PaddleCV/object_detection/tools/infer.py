@@ -53,6 +53,11 @@ def main():
     else:
         test_feed = create(cfg['test_feed'])
 
+    if args.image_or_dir:
+        test_feed.image_or_dir = args.image_or_dir
+    if args.image_ext:
+        test_feed.image_ext = args.image_ext
+
     place = fluid.CUDAPlace(0) if cfg['use_gpu'] else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
@@ -103,7 +108,7 @@ def main():
         logger.info('Infer iter {}'.format(iter_id))
 
         im_id = int(res['im_id'][0])
-        image_path = os.path.join(test_feed.dataset.image_dir, imid2path[im_id])
+        image_path = imid2path[im_id]
         if cfg['metric'] == 'COCO':
             bbox_results = None
             mask_results = None
