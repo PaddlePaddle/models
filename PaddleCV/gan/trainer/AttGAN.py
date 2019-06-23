@@ -161,14 +161,13 @@ class DTrainer():
             if fluid.io.is_parameter(var) and var.name.startswith(
                     "discriminator"):
                 vars.append(var.name)
-        grad = fluid.gradients(pred, x, no_grad_set=vars)
+        grad = fluid.gradients(pred, x, no_grad_set=vars)[0]
         grad_shape = grad.shape
         grad = fluid.layers.reshape(
             grad, [-1, grad_shape[1] * grad_shape[2] * grad_shape[3]])
-        epsilon = 1e-5
         norm = fluid.layers.sqrt(
             fluid.layers.reduce_sum(
-                fluid.layers.square(grad), dim=1) + epsilon)
+                fluid.layers.square(grad), dim=1))
         gp = fluid.layers.reduce_mean(fluid.layers.square(norm - 1.0))
         return gp
 
