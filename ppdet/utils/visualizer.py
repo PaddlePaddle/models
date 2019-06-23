@@ -41,13 +41,14 @@ def visualize_results(image_path,
     TODO(dengkaipeng): add more comments
     Visualize bbox and mask results
     """
-    if bbox_results:
-        draw_bbox(image_path, catid2name, bbox_results, threshold)
+    image = None
     if mask_results:
-        draw_mask(image_path, mask_results, threshold)
+        image = draw_mask(image_path, mask_results, threshold)
+    if bbox_results:
+        draw_bbox(image_path, catid2name, bbox_results, threshold, image)
 
 
-def draw_mask(image_path, segms, threshold, alpha=0.7):
+def draw_mask(image_path, segms, threshold, alpha=0.7, save_image=False):
     """
     TODO(dengkaipeng): add more comments
     Draw mask on image
@@ -74,17 +75,20 @@ def draw_mask(image_path, segms, threshold, alpha=0.7):
 
     if not os.path.exists(SAVE_HOME):
         os.makedirs(SAVE_HOME)
-    save_name = get_save_image_name(image_path, 'mask')
-    logger.info("Detection mask results save in {}".format(save_name))
-    image.save(save_name)
+    if save_image:
+        save_name = get_save_image_name(image_path)
+        logger.info("Detection mask results save in {}".format(save_name))
+        image.save(save_name)
+    return image
 
 
-def draw_bbox(image_path, catid2name, bboxes, threshold):
+def draw_bbox(image_path, catid2name, bboxes, threshold, image=None):
     """
     TODO(dengkaipeng): add more comments
     Draw bbox on image
     """
-    image = Image.open(image_path)
+    if image is None:
+        image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
     im_width, im_height = image.size
 
@@ -105,18 +109,15 @@ def draw_bbox(image_path, catid2name, bboxes, threshold):
 
     if not os.path.exists(SAVE_HOME):
         os.makedirs(SAVE_HOME)
-    save_name = get_save_image_name(image_path, 'bbox')
+    save_name = get_save_image_name(image_path)
     logger.info("Detection bbox results save in {}".format(save_name))
     image.save(save_name)
 
 
-def get_save_image_name(image_path, label_type='bbox'):
+def get_save_image_name(image_path):
     """
     Get save image name from source image path.
     """
-    assert label_type in ['bbox', 'mask'], \
-        "label_type can only be bbox or mask"
-
     image_name = image_path.split('/')[-1]
     name, ext = os.path.splitext(image_name)
-    return os.path.join(SAVE_HOME, "{}_{}".format(name, label_type)) + ext
+    return os.path.join(SAVE_HOME, "{}".format(name)) + ext
