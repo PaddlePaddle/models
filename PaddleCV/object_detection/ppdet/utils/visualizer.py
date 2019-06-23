@@ -44,12 +44,12 @@ def visualize_results(image_path,
         os.makedirs(SAVE_HOME)
 
     image = Image.open(image_path)
-    save_name = get_save_image_name(image_path)
     if mask_results:
         image = draw_mask(image, mask_results, threshold)
     if bbox_results:
         image = draw_bbox(image, catid2name, bbox_results, threshold)
 
+    save_name = get_save_image_name(image_path)
     logger.info("Detection results save in {}".format(save_name))
     image.save(save_name)
 
