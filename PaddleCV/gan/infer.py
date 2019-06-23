@@ -23,9 +23,10 @@ from PIL import Image
 import paddle.fluid as fluid
 import paddle
 import numpy as np
-from scipy.misc import imsave
+import imageio
 import glob
 from util.config import add_arguments, print_arguments
+import copy
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -153,7 +154,7 @@ def infer(args):
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
             images_concat = np.concatenate(images_concat, 1)
-            imsave(args.output + "/fake_img_" + name[0], (
+            imageio.imwrite(args.output + "/fake_img_" + name[0], (
                 (images_concat + 1) * 127.5).astype(np.uint8))
     elif args.model_net == 'StarGAN':
         test_reader = celeba_reader_creator(
@@ -184,8 +185,8 @@ def infer(args):
                 fake_temp = np.squeeze(out[0]).transpose([1, 2, 0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            imsave(out_path + "/fake_img" + str(epoch) + "_" + name[0], (
-                (images_concat + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(out_path + "/fake_img" + str(epoch) + "_" + name[0],
+                            ((images_concat + 1) * 127.5).astype(np.uint8))
 
     elif args.model_net == 'Pix2pix' or args.model_net == 'cyclegan':
         for file in glob.glob(args.input):
@@ -204,7 +205,7 @@ def infer(args):
             fake_temp = np.squeeze(fake_temp[0]).transpose([1, 2, 0])
             input_temp = np.squeeze(data).transpose([1, 2, 0])
 
-            imsave(args.output + "/fake_" + image_name, (
+            imageio.imwrite(args.output + "/fake_" + image_name, (
                 (fake_temp + 1) * 127.5).astype(np.uint8))
     else:
         raise NotImplementedError("model_net {} is not support".format(

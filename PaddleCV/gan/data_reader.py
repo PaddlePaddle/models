@@ -296,7 +296,7 @@ class celeba_reader_creator(reader_creator):
                         label = np.array(label).astype("float32")
                         label = (label + 1) // 2
                         img = CentorCrop(img, args.crop_size, args.crop_size)
-                        img = img.resize((args.load_size, args.load_size),
+                        img = img.resize((args.image_size, args.image_size),
                                          Image.BILINEAR)
                     img = (np.array(img).astype('float32') / 255.0 - 0.5) / 0.5
                     img = img.transpose([2, 0, 1])

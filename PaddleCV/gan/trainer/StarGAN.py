@@ -185,7 +185,7 @@ class DTrainer():
         for var in fluid.default_main_program().list_vars():
             if fluid.io.is_parameter(var) and var.name.startswith('d_'):
                 vars.append(var.name)
-        grad = fluid.gradients(pred, x, no_grad_set=vars)
+        grad = fluid.gradients(pred, x, no_grad_set=vars)[0]
         grad_shape = grad.shape
         grad = fluid.layers.reshape(
             grad, [-1, grad_shape[1] * grad_shape[2] * grad_shape[3]])
