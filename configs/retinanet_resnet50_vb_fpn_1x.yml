@@ -13,7 +13,7 @@ save_dir: output
 
 RetinaNet:
   backbone: ResNet
-  neck: FPN
+  fpn: FPN
   retina_head: RetinaHead
 
 ResNet:

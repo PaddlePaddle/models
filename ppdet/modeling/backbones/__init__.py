@@ -17,3 +17,4 @@ from . import resnext
 from . import darknet
 from . import mobilenet
 from . import senet
+from . import fpn

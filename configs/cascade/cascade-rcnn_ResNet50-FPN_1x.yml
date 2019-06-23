@@ -10,12 +10,12 @@ log_smooth_window: 20
 
 CascadeRCNN:
   backbone: ResNet
-  neck: FPN
+  fpn: FPN
   rpn_head: FPNRPNHead
   roi_extractor: FPNRoIAlign
   bbox_head: CascadeBBoxHead
   bbox_assigner: CascadeBBoxAssigner
-  
+
 ResNet:
   norm_type: affine_channel
   norm_decay: true
@@ -73,15 +73,14 @@ FPNRPNHead:
     nms_thresh: 0.7
     post_nms_top_n: 1000
     pre_nms_top_n: 1000
-  
+
 
 FPNRoIAlign:
   canconical_level: 4
   canonical_size: 224
   max_level: 5
   min_level: 2
-  pooled_height: 7
-  pooled_width: 7
+  box_resolution: 7
   sampling_ratio: 2
 
 CascadeBBoxAssigner:
@@ -90,15 +89,15 @@ CascadeBBoxAssigner:
   - 10
   - 20
   - 30
-  bg_thresh_hi: 
+  bg_thresh_hi:
   - 0.5
   - 0.6
   - 0.7
-  bg_thresh_lo: 
+  bg_thresh_lo:
   - 0.0
   - 0.0
   - 0.0
-  fg_thresh: 
+  fg_thresh:
   - 0.5
   - 0.6
   - 0.7

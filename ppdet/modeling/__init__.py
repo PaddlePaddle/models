@@ -13,11 +13,10 @@
 # limitations under the License.
 
 # XXX for triggering decorators
-from . import backbones
 from . import anchor_heads
-from . import detectors
+from . import architectures
+from . import backbones
 from . import roi_extractors
-from . import bbox_heads
-from . import necks
+from . import roi_heads
 from . import ops
 from . import target_assigners

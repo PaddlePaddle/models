@@ -13,7 +13,7 @@ metric: COCO
 
 FasterRCNN:
   backbone: SENet
-  neck: null
+  fpn: null
   rpn_head: RPNHead
   roi_extractor: RoIAlign
   bbox_head: BBoxHead
