@@ -80,8 +80,7 @@ FPNRoIAlign:
   canonical_size: 224
   max_level: 5
   min_level: 2
-  pooled_height: 7
-  pooled_width: 7
+  box_resolution: 7
   sampling_ratio: 2
 
 CascadeBBoxAssigner:
