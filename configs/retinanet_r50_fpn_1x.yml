@@ -5,7 +5,7 @@ test_feed: FasterRCNNTestFeed
 max_iters: 90000
 use_gpu: yes
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
-weights: output/RetinaNet/model_final
+weights: output/retinanet_r50_fpn_1x/model_final
 log_smooth_window: 20
 snapshot_iter: 10000
 metric: COCO
@@ -82,7 +82,7 @@ FasterRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 128
   dataset:
-    dataset_dir: coco
+    dataset_dir: data/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   drop_last: false
@@ -117,7 +117,7 @@ FasterRCNNEvalFeed:
   - !PadBatch
     pad_to_stride: 128
   dataset:
-    dataset_dir: coco
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   shuffle: false
@@ -148,7 +148,7 @@ FasterRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 128
   dataset:
-    dataset_dir: coco
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   test_file: val2017.txt

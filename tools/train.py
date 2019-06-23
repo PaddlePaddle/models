@@ -127,7 +127,7 @@ def main():
     freeze_bn = getattr(model.backbone, 'freeze_norm', False)
     if args.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, args.resume_checkpoint)
-    elif cfg['pretrain_weights'] and freeze_bn and args.fusebn:
+    elif cfg['pretrain_weights'] and freeze_bn:
         checkpoint.load_and_fusebn(exe, train_prog, cfg['pretrain_weights'])
     elif cfg['pretrain_weights']:
         checkpoint.load_pretrain(exe, train_prog, cfg['pretrain_weights'])
@@ -137,7 +137,8 @@ def main():
     start_time = time.time()
     end_time = time.time()
 
-    save_dir = os.path.join(cfg['save_dir'], cfg['architecture'])
+    cfg_name = os.path.basename(args.config).split('.')[0]
+    save_dir = os.path.join(cfg['save_dir'], cfg_name)
     for it in range(cfg['max_iters']):
         start_time = end_time
         end_time = time.time()

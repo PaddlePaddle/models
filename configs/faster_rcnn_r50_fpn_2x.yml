@@ -9,7 +9,7 @@ log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
 metric: COCO
-weights: output/fpn/faster-r50-fpn-1x/model_final
+weights: output/faster_rcnn_r50_fpn_2x/model_final
 
 FasterRCNN:
   backbone: ResNet
@@ -111,7 +111,7 @@ FasterRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   drop_last: false
@@ -124,7 +124,7 @@ FasterRCNNEvalFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
 

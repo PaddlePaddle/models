@@ -2,40 +2,30 @@ architecture: FasterRCNN
 train_feed: FasterRCNNTrainFeed
 eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
-max_iters: 180000
-snapshot_iter: 10000
 use_gpu: True
+max_iters: 360000
 log_smooth_window: 20
 save_dir: output
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar
-weights: output/faster_rcnn_se154_c4_1x/model_final
+snapshot_iter: 10000
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
 metric: COCO
+weights: output/faster_rcnn_r50_2x/model_final
 
 FasterRCNN:
-  backbone: SENet
-  fpn: null
+  backbone: ResNet
   rpn_head: RPNHead
   roi_extractor: RoIAlign
   bbox_head: BBoxHead
   bbox_assigner: BBoxAssigner
 
-SENet:
-  depth: 152
-  feature_maps: [2, 3, 4]
-  freeze_at: 2
-  group_width: 4
-  groups: 64
+ResNet:
   norm_type: affine_channel
-  variant: d
+  depth: 50
+  feature_maps: [2,3,4]
+  freeze_at: 2
 
-SENetC5:
-  depth: 152
-  feature_maps: 5
-  freeze_at: 2
-  group_width: 4
-  groups: 64
+ResNetC5:
   norm_type: affine_channel
-  variant: d
 
 RPNHead:
   anchor_generator:
@@ -49,19 +39,20 @@ RPNHead:
     rpn_negative_overlap: 0.3
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
+    use_random: true
   train_proposal:
     min_size: 0.0
     nms_thresh: 0.7
+    pre_nums_top_n: 12000
     post_nms_top_n: 2000
-    pre_nms_top_n: 12000
   test_proposal:
     min_size: 0.0
     nms_thresh: 0.7
-    post_nms_top_n: 1000
     pre_nms_top_n: 6000
+    post_nms_top_n: 1000
 
 RoIAlign:
-  resolution: 7
+  resolution: 14
   sampling_ratio: 0
   spatial_scale: 0.0625
 
@@ -75,7 +66,7 @@ BBoxAssigner:
   num_classes: 81
 
 BBoxHead:
-  head: SENetC5
+  head: ResNetC5
   nms:
     keep_top_k: 100
     nms_threshold: 0.5
@@ -87,11 +78,10 @@ LearningRate:
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones: [120000, 160000]
-    values: null
+    milestones: [24000, 32000]
   - !LinearWarmup
-    start_factor: 0.1
-    steps: 1000
+    start_factor: 0.3333333333333333
+    steps: 500
 
 OptimizerBuilder:
   optimizer:
@@ -105,16 +95,16 @@ FasterRCNNTrainFeed:
   # batch size per device
   batch_size: 1
   dataset:
-    dataset_dir: COCO17
-    annotation: COCO17/annotations/instances_val2017.json
-    image_dir: COCO17/val2017
+    dataset_dir: data/coco
+    annotation: annotations/instances_train2017.json
+    image_dir: train2017
+  drop_last: false
   num_workers: 2
-  shuffle: True
 
 FasterRCNNEvalFeed:
   batch_size: 1
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
@@ -122,9 +112,8 @@ FasterRCNNEvalFeed:
 FasterRCNNTestFeed:
   batch_size: 1
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   test_file: val2017.txt
-  num_workers: 2
-  shuffle: False
+  samples: 5

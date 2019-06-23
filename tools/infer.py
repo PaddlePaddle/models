@@ -77,7 +77,7 @@ def main():
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
-    keys, values = parse_fetches(test_fetches, infer_prog, extra_keys)
+    keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # 6. Parse dataset category
     if cfg['metric'] == 'COCO':
@@ -112,7 +112,8 @@ def main():
             if 'mask' in res:
                 mask_results = mask2out([res], clsid2catid,
                                         cfg['MaskHead']['resolution'])
-            visualize_results(image_path, catid2name, 0.5, bbox_results, mask_results)
+            visualize_results(image_path, catid2name, 0.5, bbox_results,
+                              mask_results)
 
         if cfg['metric'] == "VOC":
             # TODO(dengkaipeng): add VOC metric process

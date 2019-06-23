@@ -29,10 +29,14 @@ logger = logging.getLogger(__name__)
 
 __all__ = ['visualize_results']
 
-SAVE_HOME = './output'
+SAVE_HOME = 'output'
 
 
-def visualize_results(image_path, catid2name, threshold=0.5, bbox_results=None, mask_results=None):
+def visualize_results(image_path,
+                      catid2name,
+                      threshold=0.5,
+                      bbox_results=None,
+                      mask_results=None):
     """
     TODO(dengkaipeng): add more comments
     Visualize bbox and mask results
@@ -67,6 +71,9 @@ def draw_mask(image_path, segms, threshold, alpha=0.7):
         image[idx[0], idx[1], :] *= 1.0 - alpha
         image[idx[0], idx[1], :] += alpha * color_mask
     image = Image.fromarray(image.astype('uint8'))
+
+    if not os.path.exists(SAVE_HOME):
+        os.makedirs(SAVE_HOME)
     save_name = get_save_image_name(image_path, 'mask')
     logger.info("Detection mask results save in {}".format(save_name))
     image.save(save_name)
@@ -95,6 +102,9 @@ def draw_bbox(image_path, catid2name, bboxes, threshold):
             fill='red')
         if image.mode == 'RGB':
             draw.text((xmin, ymin), catid2name[catid], (255, 255, 0))
+
+    if not os.path.exists(SAVE_HOME):
+        os.makedirs(SAVE_HOME)
     save_name = get_save_image_name(image_path, 'bbox')
     logger.info("Detection bbox results save in {}".format(save_name))
     image.save(save_name)
