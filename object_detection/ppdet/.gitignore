@@ -1,0 +1,5 @@
+*.log
+checkpoints/
+output/
+*.json
+
