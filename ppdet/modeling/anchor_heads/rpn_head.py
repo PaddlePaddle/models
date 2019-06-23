@@ -314,8 +314,8 @@ class FPNRPNHead(RPNHead):
 
         self.anchors, self.anchor_var = self.anchor_generator(
             input=conv_rpn_fpn,
-            anchor_sizes=(
-                self.anchor_start_size * 2. ** (feat_lvl - self.min_level), ),
+            anchor_sizes=(self.anchor_start_size * 2.
+                          **(feat_lvl - self.min_level), ),
             stride=(2.**feat_lvl, 2.**feat_lvl))
 
         self.rpn_cls_score = fluid.layers.conv2d(
@@ -324,11 +324,14 @@ class FPNRPNHead(RPNHead):
             filter_size=1,
             act=None,
             name=cls_name,
-            param_attr=ParamAttr(name=cls_share_name + '_w',
-                                 initializer=Normal(loc=0., scale=0.01)),
-            bias_attr=ParamAttr(name=cls_share_name + '_b',
-                                learning_rate=2.,
-                                regularizer=L2Decay(0.)))
+            param_attr=ParamAttr(
+                name=cls_share_name + '_w',
+                initializer=Normal(
+                    loc=0., scale=0.01)),
+            bias_attr=ParamAttr(
+                name=cls_share_name + '_b',
+                learning_rate=2.,
+                regularizer=L2Decay(0.)))
         self.rpn_bbox_pred = fluid.layers.conv2d(
             input=conv_rpn_fpn,
             num_filters=num_anchors * 4,
@@ -428,8 +431,8 @@ class FPNRPNHead(RPNHead):
             anchors.append(single_input[2])
             anchor_vars.append(single_input[3])
 
-        rpn_cls_input = fluid.layers.concat(rpn_clses, axis=1)
-        rpn_bbox_input = fluid.layers.concat(rpn_bboxes, axis=1)
-        anchors_input = fluid.layers.concat(anchors)
-        anchor_var_input = fluid.layers.concat(anchor_vars)
-        return rpn_cls_input, rpn_bbox_input, anchors_input, anchor_var_input
+        rpn_cls = fluid.layers.concat(rpn_clses, axis=1)
+        rpn_bbox = fluid.layers.concat(rpn_bboxes, axis=1)
+        anchors = fluid.layers.concat(anchors)
+        anchor_var = fluid.layers.concat(anchor_vars)
+        return rpn_cls, rpn_bbox, anchors, anchor_var
