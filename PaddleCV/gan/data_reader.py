@@ -294,7 +294,6 @@ class celeba_reader_creator(reader_creator):
                         img = Image.open(os.path.join(self.image_dir,
                                                       file)).convert('RGB')
                         label = np.array(label).astype("float32")
-                        label = (label + 1) // 2
                         img = CentorCrop(img, args.crop_size, args.crop_size)
                         img = img.resize((args.image_size, args.image_size),
                                          Image.BILINEAR)
