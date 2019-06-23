@@ -1,0 +1,153 @@
+architecture: MaskRCNN
+train_feed: MaskRCNNTrainFeed
+eval_feed: MaskRCNNEvalFeed
+test_feed: MaskRCNNTestFeed
+use_gpu: True
+max_iters: 360000
+snapshot_iter: 10000
+log_smooth_window: 20
+save_dir: output
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
+metric: COCO
+weights: output/mask_rcnn_r101_fpn_1x/model_final/ 
+
+MaskRCNN:
+  backbone: ResNet
+  bbox_assigner: BBoxAssigner
+  bbox_head: BBoxHead
+  roi_extractor: FPNRoIAlign
+  rpn_head: FPNRPNHead
+  neck: FPN
+
+ResNet:
+  norm_type: affine_channel
+  depth: 101
+  feature_maps: [2, 3, 4, 5]
+  freeze_at: 2
+
+FPN:
+  max_level: 6
+  min_level: 2
+  num_chan: 256
+  spatial_scale: [0.003125, 0.0625, 0.125, 0.25]
+
+FPNRPNHead:
+  anchor_generator:
+    aspect_ratios: [0.5, 1.0, 2.0]
+    variance: [1.0, 1.0, 1.0, 1.0]
+  anchor_start_size: 32
+  max_level: 6
+  min_level: 2
+  num_chan: 256
+  rpn_target_assign:
+    rpn_batch_size_per_im: 256
+    rpn_fg_fraction: 0.5
+    rpn_negative_overlap: 0.3
+    rpn_positive_overlap: 0.7
+    rpn_straddle_thresh: 0.0
+    use_random: true
+  test_proposal:
+    min_size: 0.0
+    nms_thresh: 0.7
+    post_nms_top_n: 1000
+    pre_nms_top_n: 1000
+  train_proposal:
+    min_size: 0.0
+    nms_thresh: 0.7
+    post_nms_top_n: 2000
+    pre_nms_top_n: 2000
+
+FPNRoIAlign:
+  canconical_level: 4
+  canonical_size: 224
+  max_level: 5
+  min_level: 2
+  sampling_ratio: 2
+  box_resolution: 7
+  mask_resolution: 14
+
+MaskHead:
+  dilation: 1
+  num_chan_reduced: 256
+  num_classes: 81
+  num_convs: 4
+  resolution: 28
+
+BBoxAssigner:
+  batch_size_per_im: 512
+  bbox_reg_weights: [0.1, 0.1, 0.2, 0.2]
+  bg_thresh_hi: 0.5
+  bg_thresh_lo: 0.0
+  fg_fraction: 0.25
+  fg_thresh: 0.5
+  num_classes: 81
+  shuffle_before_sample: true
+
+MaskAssigner:
+  resolution: 28
+
+BBoxHead:
+  head: TwoFCHead
+  nms:
+    keep_top_k: 100
+    nms_threshold: 0.5
+    normalized: false
+    score_threshold: 0.05
+  num_classes: 81
+
+TwoFCHead:
+  num_chan: 1024
+
+LearningRate:
+  base_lr: 0.01
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones: [240000, 320000]
+    values: null
+  - !LinearWarmup
+    start_factor: 0.3333333333333333
+    steps: 500
+
+OptimizerBuilder:
+  optimizer:
+    momentum: 0.9
+    type: Momentum
+  regularizer:
+    factor: 0.0001
+    type: L2
+
+MaskRCNNTrainFeed:
+  batch_size: 1
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 32
+  dataset:
+    dataset_dir: COCO17
+    annotation: annotations/instances_train2017.json
+    image_dir: train2017
+  use_padded_im_info: False
+
+MaskRCNNEvalFeed:
+  batch_size: 1
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 32
+  dataset:
+    dataset_dir: COCO17
+    annotation: annotations/instances_val2017.json
+    image_dir: val2017
+  use_padded_im_info: True
+
+MaskRCNNTestFeed:
+  batch_size: 1
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 32
+  dataset:
+    dataset_dir: COCO17
+    annotation: annotations/instances_val2017.json
+    image_dir: val2017
+  test_file: val2017.txt
+  samples: 5
+  use_padded_im_info: True
