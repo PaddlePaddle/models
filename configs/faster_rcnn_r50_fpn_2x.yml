@@ -2,39 +2,35 @@ architecture: FasterRCNN
 train_feed: FasterRCNNTrainFeed
 eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
-use_gpu: true
-max_iters: 180000
-pretrain_weights: /paddle/premodel/ResNeXt101_pretrained
-weights: /paddle/Me/gitlab/weights/faster-x101-fpn-1x/model_final
-log_smooth_window: 20
-metric: COCO
-save_dir: output
+max_iters: 90000
+use_gpu: True
 snapshot_iter: 10000
+log_smooth_window: 20
+save_dir: output
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
+metric: COCO
+weights: output/fpn/faster-r50-fpn-1x/model_final
 
 FasterRCNN:
-  backbone: ResNeXt
-  bbox_assigner: BBoxAssigner
-  bbox_head: BBoxHead
+  backbone: ResNet
   neck: FPN
-  roi_extractor: FPNRoIAlign
   rpn_head: FPNRPNHead
+  roi_extractor: FPNRoIAlign
+  bbox_head: BBoxHead
+  bbox_assigner: BBoxAssigner
 
-ResNeXt:
-  depth: 101
+ResNet:
+  norm_type: affine_channel
+  norm_decay: true
+  depth: 50
   feature_maps: [2, 3, 4, 5]
   freeze_at: 2
-  freeze_norm: true
-  group_width: 4
-  groups: 64
-  norm_decay: true
-  norm_type: affine_channel
-  variant: b
 
 FPN:
-  max_level: 6
   min_level: 2
+  max_level: 6
   num_chan: 256
-  spatial_scale: [0.003125, 0.0625, 0.125, 0.25]
+  spatial_scale: [0.03125, 0.0625, 0.125, 0.25]
 
 FPNRPNHead:
   anchor_generator:
@@ -43,61 +39,48 @@ FPNRPNHead:
     stride: [16.0, 16.0]
     variance: [1.0, 1.0, 1.0, 1.0]
   anchor_start_size: 32
-  max_level: 6
   min_level: 2
+  max_level: 6
   num_chan: 256
   rpn_target_assign:
     rpn_batch_size_per_im: 256
     rpn_fg_fraction: 0.5
-    rpn_negative_overlap: 0.3
     rpn_positive_overlap: 0.7
+    rpn_negative_overlap: 0.3
     rpn_straddle_thresh: 0.0
-    use_random: true
-  test_proposal:
-    eta: 1.0
-    min_size: 0.0
-    nms_thresh: 0.7
-    post_nms_top_n: 1000
-    pre_nms_top_n: 1000
   train_proposal:
-    eta: 1.0
     min_size: 0.0
     nms_thresh: 0.7
-    post_nms_top_n: 2000
     pre_nms_top_n: 2000
+    post_nms_top_n: 2000
+  test_proposal:
+    min_size: 0.0
+    nms_thresh: 0.7
+    pre_nms_top_n: 1000
+    post_nms_top_n: 1000
 
 FPNRoIAlign:
   canconical_level: 4
   canonical_size: 224
-  max_level: 5
   min_level: 2
+  max_level: 5
   box_resolution: 7
   sampling_ratio: 2
 
 BBoxAssigner:
   batch_size_per_im: 512
   bbox_reg_weights: [0.1, 0.1, 0.2, 0.2]
-  bg_thresh_hi: 0.5
   bg_thresh_lo: 0.0
+  bg_thresh_hi: 0.5
   fg_fraction: 0.25
   fg_thresh: 0.5
   num_classes: 81
-  shuffle_before_sample: true
 
 BBoxHead:
   head: TwoFCHead
-  box_coder:
-    axis: 1
-    box_normalized: false
-    code_type: decode_center_size
-    prior_box_var: [0.1, 0.1, 0.2, 0.2]
   nms:
-    background_label: 0
     keep_top_k: 100
-    nms_eta: 1.0
     nms_threshold: 0.5
-    nms_top_k: -1
-    normalized: false
     score_threshold: 0.05
   num_classes: 81
 
@@ -105,12 +88,11 @@ TwoFCHead:
   num_chan: 1024
 
 LearningRate:
-  base_lr: 0.01
+  base_lr: 0.02
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
     milestones: [120000, 160000]
-    values: null
   - !LinearWarmup
     start_factor: 0.3333333333333333
     steps: 500
@@ -124,16 +106,17 @@ OptimizerBuilder:
     type: L2
 
 FasterRCNNTrainFeed:
-  # batch size per device
-  batch_size: 1
+  batch_size: 2
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
   dataset:
     dataset_dir: COCO17
-    image_dir: train2017
     annotation: annotations/instances_train2017.json
+    image_dir: train2017
+  drop_last: false
   num_workers: 2
+  shuffle: true
 
 FasterRCNNEvalFeed:
   batch_size: 1
@@ -144,7 +127,6 @@ FasterRCNNEvalFeed:
     dataset_dir: COCO17
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  num_workers: 2
 
 FasterRCNNTestFeed:
   batch_size: 1
@@ -152,8 +134,8 @@ FasterRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: COCO17
-    annotation: annotations/instances_val2017.json
-    image_dir: val2017
-  test_file: val2017.txt
-  samples: 5
+    annotation: coco/annotations/instances_val2017.json
+    image_dir: coco/val2017
+  drop_last: false
+  num_workers: 2
+  shuffle: false

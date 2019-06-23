@@ -16,6 +16,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from collections import OrderedDict
+
 from paddle import fluid
 from ppdet.core.workspace import register
 
@@ -139,7 +141,7 @@ class MaskRCNN(object):
         if self.neck is not None:
             body_feats, spatial_scale = self.neck.get_output(body_feats)
 
-        rois = self.rpn_head.get_proposals(body_feats, im_info)
+        rois = self.rpn_head.get_proposals(body_feats, im_info, mode='test')
 
         if self.neck is None:
             body_feat = body_feats[list(body_feats.keys())[-1]]
@@ -153,7 +155,6 @@ class MaskRCNN(object):
         bbox_pred = bbox_pred['bbox']
 
         # share weight
-        head_conv = self.bbox_head.head
         bbox_shape = fluid.layers.shape(bbox_pred)
         bbox_size = fluid.layers.reduce_prod(bbox_shape)
         bbox_size = fluid.layers.reshape(bbox_size, [1, 1])
@@ -176,7 +177,7 @@ class MaskRCNN(object):
                 mask_rois = bbox * im_scale
                 if self.neck is None:
                     mask_feat = self.roi_extractor(body_feat, mask_rois)
-                    mask_feat = head_conv(mask_feat)
+                    mask_feat = self.bbox_head.get_head_feat(mask_feat)
                 else:
                     mask_feat = self.roi_extractor(body_feats, mask_rois,
                                                    spatial_scale, True)
