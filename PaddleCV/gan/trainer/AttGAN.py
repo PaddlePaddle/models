@@ -291,10 +291,12 @@ class AttGAN(object):
                 label_trg = copy.deepcopy(label_org)
 
                 np.random.shuffle(label_trg)
-                label_org_ = map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
-                                 label_org)
-                label_trg_ = map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
-                                 label_trg)
+                label_org_ = list(
+                    map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
+                        label_org))
+                label_trg_ = list(
+                    map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
+                        label_trg))
 
                 tensor_img = fluid.LoDTensor()
                 tensor_label_org = fluid.LoDTensor()
