@@ -431,8 +431,8 @@ class FPNRPNHead(RPNHead):
             anchors.append(single_input[2])
             anchor_vars.append(single_input[3])
 
-        rpn_cls_input = fluid.layers.concat(rpn_clses, axis=1)
-        rpn_bbox_input = fluid.layers.concat(rpn_bboxes, axis=1)
-        anchors_input = fluid.layers.concat(anchors)
-        anchor_var_input = fluid.layers.concat(anchor_vars)
-        return rpn_cls_input, rpn_bbox_input, anchors_input, anchor_var_input
+        rpn_cls = fluid.layers.concat(rpn_clses, axis=1)
+        rpn_bbox = fluid.layers.concat(rpn_bboxes, axis=1)
+        anchors = fluid.layers.concat(anchors)
+        anchor_var = fluid.layers.concat(anchor_vars)
+        return rpn_cls, rpn_bbox, anchors, anchor_var

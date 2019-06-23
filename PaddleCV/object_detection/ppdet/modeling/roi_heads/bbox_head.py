@@ -61,12 +61,14 @@ class TwoFCHead(object):
         self.num_chan = num_chan
 
     def __call__(self, roi_feat):
+        fan = roi_feat.shape[1] * roi_feat.shape[2] * roi_feat.shape[3]
         fc6 = fluid.layers.fc(input=roi_feat,
                               size=self.num_chan,
                               act='relu',
                               name='fc6',
                               param_attr=ParamAttr(
-                                  name='fc6_w', initializer=Xavier()),
+                                  name='fc6_w',
+                                  initializer=Xavier(fan_out=fan)),
                               bias_attr=ParamAttr(
                                   name='fc6_b',
                                   learning_rate=2.,
@@ -226,8 +228,8 @@ class BBoxHead(object):
         cls_score, bbox_pred = self._get_output(roi_feat)
 
         im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
-        im_scale_lod = fluid.layers.sequence_expand(im_scale, rois)
-        boxes = rois / im_scale_lod
+        im_scale = fluid.layers.sequence_expand(im_scale, rois)
+        boxes = rois / im_scale
         cls_prob = fluid.layers.softmax(cls_score, use_cudnn=False)
         bbox_pred = fluid.layers.reshape(bbox_pred, (-1, self.num_classes, 4))
         decoded_box = self.box_coder(prior_box=boxes, target_box=bbox_pred)

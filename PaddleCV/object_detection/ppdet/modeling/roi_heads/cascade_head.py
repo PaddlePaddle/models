@@ -213,13 +213,14 @@ class CascadeBBoxHead(object):
 
     def _head_share(self, roi_feat, wb_scalar=2.0, name=''):
         # FC6 FC7
+        fan = roi_feat[1] * roi_feat[2] * roi_feat[3]
         fc6 = fluid.layers.fc(input=roi_feat,
                               size=self.head.num_chan,
                               act='relu',
                               name='fc6' + name,
                               param_attr=ParamAttr(
                                   name='fc6%s_w' % name,
-                                  initializer=Xavier(),
+                                  initializer=Xavier(fan_out=fan),
                                   learning_rate=wb_scalar, ),
                               bias_attr=ParamAttr(
                                   name='fc6%s_b' % name,
@@ -267,13 +268,14 @@ class FC6FC7Head(object):
         self.num_chan = num_chan
 
     def __call__(self, roi_feat, wb_scalar=1.0, name=''):
+        fan = roi_feat[1] * roi_feat[2] * roi_feat[3]
         fc6 = fluid.layers.fc(input=roi_feat,
                               size=self.num_chan,
                               act='relu',
                               name='fc6' + name,
                               param_attr=ParamAttr(
                                   name='fc6%s_w' % name,
-                                  initializer=Xavier(),
+                                  initializer=Xavier(fan_out=fan),
                                   learning_rate=wb_scalar),
                               bias_attr=ParamAttr(
                                   name='fc6%s_b' % name,

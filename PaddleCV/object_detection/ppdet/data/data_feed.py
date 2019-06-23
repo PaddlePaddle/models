@@ -92,7 +92,8 @@ def create_reader(feed, max_iter=0):
             'use_process': use_process
         },
         'BATCH_SIZE': feed.batch_size,
-        'DROP_LAST': feed.drop_last
+        'DROP_LAST': feed.drop_last,
+        'USE_PADDED_IM_INFO': feed.use_padded_im_info,
     }
 
     batch_transforms = feed.batch_transforms
@@ -282,7 +283,8 @@ class DataFeed(object):
                  test_file=None,
                  num_workers=2,
                  bufsize=10,
-                 use_process=False):
+                 use_process=False,
+                 use_padded_im_info=False):
         super(DataFeed, self).__init__()
         self.fields = fields
         self.image_shape = image_shape
@@ -298,6 +300,7 @@ class DataFeed(object):
         self.bufsize = bufsize
         self.use_process = use_process
         self.dataset = dataset
+        self.use_padded_im_info = use_padded_im_info
         if isinstance(dataset, dict):
             self.dataset = DataSet(**dataset)
 
@@ -519,7 +522,8 @@ class FasterRCNNEvalFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  test_file=None,
-                 num_workers=2):
+                 num_workers=2,
+                 use_padded_im_info=True):
         sample_transforms.append(ArrangeTestRCNN())
         super(FasterRCNNEvalFeed, self).__init__(
             dataset,
@@ -532,7 +536,8 @@ class FasterRCNNEvalFeed(DataFeed):
             samples=samples,
             drop_last=drop_last,
             test_file=test_file,
-            num_workers=num_workers)
+            num_workers=num_workers,
+            use_padded_im_info=use_padded_im_info)
         self.mode = 'VAL'
 
 
@@ -558,7 +563,8 @@ class FasterRCNNTestFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  test_file=None,
-                 num_workers=2):
+                 num_workers=2,
+                 use_padded_im_info=True):
         sample_transforms.append(ArrangeTestRCNN())
         if isinstance(dataset, dict):
             dataset = SimpleDataSet(**dataset)
@@ -573,7 +579,8 @@ class FasterRCNNTestFeed(DataFeed):
             samples=samples,
             drop_last=drop_last,
             test_file=test_file,
-            num_workers=num_workers)
+            num_workers=num_workers,
+            use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
 
 
@@ -620,7 +627,8 @@ class MaskRCNNEvalFeed(DataFeed):
             drop_last=drop_last,
             test_file=test_file,
             num_workers=num_workers,
-            use_process=use_process)
+            use_process=use_process,
+            use_padded_im_info=use_padded_im_info)
         self.mode = 'VAL'
 
 
@@ -665,7 +673,8 @@ class MaskRCNNTestFeed(DataFeed):
             drop_last=drop_last,
             test_file=test_file,
             num_workers=num_workers,
-            use_process=use_process)
+            use_process=use_process,
+            use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
 
 

@@ -72,7 +72,7 @@ class MaskHead(object):
                     name=layer_name + '_b',
                     learning_rate=2.,
                     regularizer=L2Decay(0.)))
-        fan = self.num_chan_reduced * 2 * 2
+        fan = roi_feat.shape[1] * 2 * 2
         feat = fluid.layers.conv2d_transpose(
             input=roi_feat,
             num_filters=self.num_chan_reduced,
