@@ -27,7 +27,8 @@ import six
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from scipy.misc import imsave
+import imageio
+import copy
 
 img_dim = 28
 
@@ -94,11 +95,11 @@ def save_test_image(epoch,
             input_A_temp = np.squeeze(data_A[0]).transpose([1, 2, 0])
             input_B_temp = np.squeeze(data_A[0]).transpose([1, 2, 0])
 
-            imsave(out_path + "/fakeB_" + str(epoch) + "_" + name, (
+            imageio.imwrite(out_path + "/fakeB_" + str(epoch) + "_" + name, (
                 (fake_B_temp + 1) * 127.5).astype(np.uint8))
-            imsave(out_path + "/inputA_" + str(epoch) + "_" + name, (
+            imageio.imwrite(out_path + "/inputA_" + str(epoch) + "_" + name, (
                 (input_A_temp + 1) * 127.5).astype(np.uint8))
-            imsave(out_path + "/inputB_" + str(epoch) + "_" + name, (
+            imageio.imwrite(out_path + "/inputB_" + str(epoch) + "_" + name, (
                 (input_B_temp + 1) * 127.5).astype(np.uint8))
     elif cfg.model_net == "StarGAN":
         for data in zip(A_test_reader()):
@@ -127,8 +128,8 @@ def save_test_image(epoch,
                 images.append(fake_temp)
                 images.append(rec_temp)
             images_concat = np.concatenate(images, 1)
-            imsave(out_path + "/fake_img" + str(epoch) + "_" + name[0], (
-                (images_concat + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(out_path + "/fake_img" + str(epoch) + "_" + name[0],
+                            ((images_concat + 1) * 127.5).astype(np.uint8))
     elif cfg.model_net == 'AttGAN' or cfg.model_net == 'STGAN':
         for data in zip(A_test_reader()):
             real_img, label_org, name = data[0]
@@ -168,8 +169,8 @@ def save_test_image(epoch,
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
             images_concat = np.concatenate(images_concat, 1)
-            imsave(out_path + "/fake_img" + str(epoch) + '_' + name[0], (
-                (images_concat + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(out_path + "/fake_img" + str(epoch) + '_' + name[0],
+                            ((images_concat + 1) * 127.5).astype(np.uint8))
 
     else:
         for data_A, data_B in zip(A_test_reader(), B_test_reader()):
@@ -194,17 +195,17 @@ def save_test_image(epoch,
             input_A_temp = np.squeeze(data_A[0][0]).transpose([1, 2, 0])
             input_B_temp = np.squeeze(data_B[0][0]).transpose([1, 2, 0])
 
-            imsave(out_path + "/fakeB_" + str(epoch) + "_" + A_name, (
+            imageio.imwrite(out_path + "/fakeB_" + str(epoch) + "_" + A_name, (
                 (fake_B_temp + 1) * 127.5).astype(np.uint8))
-            imsave(out_path + "/fakeA_" + str(epoch) + "_" + B_name, (
+            imageio.imwrite(out_path + "/fakeA_" + str(epoch) + "_" + B_name, (
                 (fake_A_temp + 1) * 127.5).astype(np.uint8))
-            imsave(out_path + "/cycA_" + str(epoch) + "_" + A_name, (
+            imageio.imwrite(out_path + "/cycA_" + str(epoch) + "_" + A_name, (
                 (cyc_A_temp + 1) * 127.5).astype(np.uint8))
-            imsave(out_path + "/cycB_" + str(epoch) + "_" + B_name, (
+            imageio.imwrite(out_path + "/cycB_" + str(epoch) + "_" + B_name, (
                 (cyc_B_temp + 1) * 127.5).astype(np.uint8))
-            imsave(out_path + "/inputA_" + str(epoch) + "_" + A_name, (
+            imageio.imwrite(out_path + "/inputA_" + str(epoch) + "_" + A_name, (
                 (input_A_temp + 1) * 127.5).astype(np.uint8))
-            imsave(out_path + "/inputB_" + str(epoch) + "_" + B_name, (
+            imageio.imwrite(out_path + "/inputB_" + str(epoch) + "_" + B_name, (
                 (input_B_temp + 1) * 127.5).astype(np.uint8))
 
 

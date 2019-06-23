@@ -175,6 +175,8 @@ class DTrainer():
 class AttGAN(object):
     def add_special_args(self, parser):
         parser.add_argument(
+            '--image_size', type=int, default=256, help="image size")
+        parser.add_argument(
             '--g_lr',
             type=float,
             default=0.0002,
@@ -240,7 +242,7 @@ class AttGAN(object):
         self.batch_num = batch_num
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.load_size, self.cfg.load_size]
+        data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
 
         image_real = fluid.layers.data(
             name='image_real', shape=data_shape, dtype='float32')
