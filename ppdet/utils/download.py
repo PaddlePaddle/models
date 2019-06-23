@@ -15,15 +15,19 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
+
+import six
 
 import os
+import sys
 import shutil
 import requests
 import tqdm
 import hashlib
 import tarfile
 import zipfile
+
+from .cli import ColorTTY
 
 import logging
 logger = logging.getLogger(__name__)
@@ -134,6 +138,17 @@ def _download(url, path, md5sum=None):
     fname = url.split('/')[-1]
     fullname = os.path.join(path, fname)
     retry_cnt = 0
+
+    print("will download file to {}, proceed? {}".format(fullname, ColorTTY().green("[Y/n]")))
+    yes = {'yes', 'y', ''}
+    if six.PY2:
+        choice = raw_input().lower()
+    else:
+        choice = input().lower()
+    if choice not in yes:
+        print('download aborted....')
+        sys.exit(0)
+
     while not (os.path.exists(fullname) and _md5check(fullname, md5sum)):
         if retry_cnt < DOWNLOAD_RETRY_LIMIT:
             retry_cnt += 1
@@ -152,8 +167,8 @@ def _download(url, path, md5sum=None):
         with open(fullname, 'wb') as f:
             if total_size:
                 for chunk in tqdm.tqdm(req.iter_content(chunk_size=1024),
-                                  total=(int(total_size) + 1023) // 1024,
-                                  unit='KB'):
+                                       total=(int(total_size) + 1023) // 1024,
+                                       unit='KB'):
                     f.write(chunk)
             else:
                 for chunk in req.iter_content(chunk_size=1024):
