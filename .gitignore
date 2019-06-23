@@ -56,3 +56,5 @@ coverage.xml
 /docs/_build/
 
 *.json
+*.log
+output

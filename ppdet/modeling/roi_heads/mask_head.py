@@ -65,7 +65,9 @@ class MaskHead(object):
                 dilation=self.dilation,
                 name=layer_name,
                 param_attr=ParamAttr(
-                    name=layer_name + '_w', initializer=MSRA(uniform=False, fan_in=fan)),
+                    name=layer_name + '_w',
+                    initializer=MSRA(
+                        uniform=False, fan_in=fan)),
                 bias_attr=ParamAttr(
                     name=layer_name + '_b',
                     learning_rate=2.,
@@ -78,7 +80,9 @@ class MaskHead(object):
             stride=2,
             act='relu',
             param_attr=ParamAttr(
-                name='conv5_mask_w', initializer=MSRA(uniform=False, fan_in=fan)),
+                name='conv5_mask_w',
+                initializer=MSRA(
+                    uniform=False, fan_in=fan)),
             bias_attr=ParamAttr(
                 name='conv5_mask_b', learning_rate=2., regularizer=L2Decay(0.)))
         return feat
@@ -94,7 +98,9 @@ class MaskHead(object):
             filter_size=1,
             act=None,
             param_attr=ParamAttr(
-                name='mask_fcn_logits_w', initializer=MSRA(uniform=False, fan_in=fan)),
+                name='mask_fcn_logits_w',
+                initializer=MSRA(
+                    uniform=False, fan_in=fan)),
             bias_attr=ParamAttr(
                 name="mask_fcn_logits_b",
                 learning_rate=2.,
