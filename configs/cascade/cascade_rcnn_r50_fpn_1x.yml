@@ -13,7 +13,7 @@ metric: COCO
 
 CascadeRCNN:
   backbone: ResNet
-  neck: FPN
+  fpn: FPN
   rpn_head: FPNRPNHead
   roi_extractor: FPNRoIAlign
   bbox_head: CascadeBBoxHead
