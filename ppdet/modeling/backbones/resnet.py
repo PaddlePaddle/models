@@ -191,8 +191,6 @@ class ResNet(object):
 
         residual = input
         for (c, k, s, act, g, _name) in conv_def:
-            print("[01;32m{} c: {}, k: {}, s: {}, g: {}, act: {}[0m".format(
-                _name, str(c).ljust(4), k, s, g, act))
             residual = self._conv_norm(
                 input=residual,
                 num_filters=c,
@@ -276,12 +274,6 @@ class ResNet(object):
             conv_def = [[out_chan, 7, 2, conv1_name]]
 
         for (c, k, s, _name) in conv_def:
-
-            # FIXME remove debug code before release
-            print("[01;32m{} c: {}, k: {}, s: {}, g: 1, act: relu[0m".format(
-                _name, str(c).ljust(4), k, s))
-
-            print(input)
             input = self._conv_norm(
                 input=input,
                 num_filters=c,
