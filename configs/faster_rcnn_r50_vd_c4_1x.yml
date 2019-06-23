@@ -5,15 +5,14 @@ test_feed: FasterRCNNTestFeed
 use_gpu: True
 max_iters: 180000
 log_smooth_window: 20
-save_dir: output
+save_dir: output/faster-r50-vd-c4-1x
 snapshot_iter: 10000
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_pretrained.tar
 metric: COCO
 weights: output/faster-r50-vd-c4-1x/model_final
 
 FasterRCNN:
   backbone: ResNet
-  neck: null
   rpn_head: RPNHead
   roi_extractor: RoIAlign
   bbox_head: BBoxHead
@@ -21,7 +20,6 @@ FasterRCNN:
 
 ResNet:
   norm_type: affine_channel
-  norm_decay: 0
   depth: 50
   feature_maps: [2,3,4]
   freeze_at: 2
@@ -47,13 +45,13 @@ RPNHead:
   train_proposal:
     min_size: 0.0
     nms_thresh: 0.7
-    post_nms_top_n: 2000
     pre_nms_top_n: 12000
+    post_nms_top_n: 2000
   test_proposal:
     min_size: 0.0
     nms_thresh: 0.7
-    post_nms_top_n: 1000
     pre_nms_top_n: 6000
+    post_nms_top_n: 1000
 
 RoIAlign:
   resolution: 14
@@ -68,7 +66,6 @@ BBoxAssigner:
   fg_fraction: 0.25
   fg_thresh: 0.5
   num_classes: 81
-  shuffle_before_sample: true
 
 BBoxHead:
   head: ResNetC5
