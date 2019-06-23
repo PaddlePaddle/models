@@ -61,12 +61,6 @@ def parse_args():
         action='store_true',
         default=False,
         help="Whether perform evaluation in train")
-    # TODO(dangqingqing) remove this flag
-    parser.add_argument(
-        "--fusebn",
-        action='store_false',
-        default=True,
-        help="Whether to fuse params of batch norm to scale and bias.")
     parser.add_argument(
         "-o", "--opt", nargs=REMAINDER, help="set configuration options")
     args = parser.parse_args()

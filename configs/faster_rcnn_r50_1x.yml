@@ -3,13 +3,13 @@ train_feed: FasterRCNNTrainFeed
 eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 use_gpu: True
-max_iters: 360000
+max_iters: 180000
 log_smooth_window: 20
 save_dir: output
 snapshot_iter: 10000
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
 metric: COCO
-weights: output/faster-r50-C4-2x/model_final
+weights: output/faster_rcnn_r50_1x/model_final
 
 FasterRCNN:
   backbone: ResNet
@@ -43,7 +43,7 @@ RPNHead:
   train_proposal:
     min_size: 0.0
     nms_thresh: 0.7
-    pre_nums_top_n: 12000
+    pre_nms_top_n: 12000
     post_nms_top_n: 2000
   test_proposal:
     min_size: 0.0
@@ -78,7 +78,7 @@ LearningRate:
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones: [24000, 32000]
+    milestones: [12000, 16000]
   - !LinearWarmup
     start_factor: 0.3333333333333333
     steps: 500
@@ -95,7 +95,7 @@ FasterRCNNTrainFeed:
   # batch size per device
   batch_size: 1
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   drop_last: false
@@ -104,7 +104,7 @@ FasterRCNNTrainFeed:
 FasterRCNNEvalFeed:
   batch_size: 1
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
@@ -112,7 +112,7 @@ FasterRCNNEvalFeed:
 FasterRCNNTestFeed:
   batch_size: 1
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   test_file: val2017.txt

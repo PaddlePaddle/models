@@ -7,9 +7,9 @@ max_iters: 180000
 log_smooth_window: 20
 save_dir: output
 snapshot_iter: 10000
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.tar
 metric: COCO
-weights: output/faster-r50-C4-1x/model_final
+weights: output/faster_rcnn_r101_1x/model_final
 
 FasterRCNN:
   backbone: ResNet
@@ -20,7 +20,7 @@ FasterRCNN:
 
 ResNet:
   norm_type: affine_channel
-  depth: 50
+  depth: 101
   feature_maps: [2,3,4]
   freeze_at: 2
 
@@ -95,7 +95,7 @@ FasterRCNNTrainFeed:
   # batch size per device
   batch_size: 1
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   drop_last: false
@@ -104,7 +104,7 @@ FasterRCNNTrainFeed:
 FasterRCNNEvalFeed:
   batch_size: 1
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
@@ -112,8 +112,9 @@ FasterRCNNEvalFeed:
 FasterRCNNTestFeed:
   batch_size: 1
   dataset:
-    dataset_dir: COCO17
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   test_file: val2017.txt
   samples: 5
+
