@@ -30,17 +30,17 @@ class RetinaNet(object):
 
     Args:
         backbone (object): backbone instance
-        neck (object): feature enricher instance, e.g., FPN
+        fpn (object): feature pyramid network instance
         retina_head (object): `RetinaHead` instance
     """
 
     __category__ = 'architecture'
-    __inject__ = ['backbone', 'neck', 'retina_head']
+    __inject__ = ['backbone', 'fpn', 'retina_head']
 
-    def __init__(self, backbone, neck, retina_head):
+    def __init__(self, backbone, fpn, retina_head):
         super(RetinaNet, self).__init__()
         self.backbone = backbone
-        self.neck = neck
+        self.fpn = fpn
         self.retina_head = retina_head
 
     def _forward(self, feed_vars, mode='train'):
@@ -53,8 +53,8 @@ class RetinaNet(object):
         # backbone
         body_feats = self.backbone(im)
 
-        # neck
-        body_feats, spatial_scale = self.neck.get_output(body_feats)
+        # FPN
+        body_feats, spatial_scale = self.fpn.get_output(body_feats)
 
         # retinanet head
         if mode == 'train':

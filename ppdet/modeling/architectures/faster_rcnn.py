@@ -33,13 +33,13 @@ class FasterRCNN(object):
         bbox_assigner (object): `BBoxAssigner` instance
         roi_extractor (object): ROI extractor instance
         bbox_head (object): `BBoxHead` instance
-        neck (object): feature enricher instance, e.g., FPN
+        fpn (object): feature pyramid network instance
     """
 
     __category__ = 'architecture'
     __inject__ = [
         'backbone', 'rpn_head', 'bbox_assigner', 'roi_extractor', 'bbox_head',
-        'neck'
+        'fpn'
     ]
 
     def __init__(self,
@@ -48,14 +48,14 @@ class FasterRCNN(object):
                  roi_extractor,
                  bbox_head='BBoxHead',
                  bbox_assigner='BBoxAssigner',
-                 neck=None):
+                 fpn=None):
         super(FasterRCNN, self).__init__()
         self.backbone = backbone
         self.rpn_head = rpn_head
         self.bbox_assigner = bbox_assigner
         self.roi_extractor = roi_extractor
         self.bbox_head = bbox_head
-        self.neck = neck
+        self.fpn = fpn
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
@@ -68,8 +68,8 @@ class FasterRCNN(object):
         body_feats = self.backbone(im)
         body_feat_names = list(body_feats.keys())
 
-        if self.neck is not None:
-            body_feats, spatial_scale = self.neck.get_output(body_feats)
+        if self.fpn is not None:
+            body_feats, spatial_scale = self.fpn.get_output(body_feats)
 
         rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
 
@@ -91,7 +91,7 @@ class FasterRCNN(object):
             bbox_inside_weights = outs[3]
             bbox_outside_weights = outs[4]
 
-        if self.neck is None:
+        if self.fpn is None:
             # in models without FPN, roi extractor only uses the last level of
             # feature maps. And body_feat_names[-1] represents the name of
             # last feature map.

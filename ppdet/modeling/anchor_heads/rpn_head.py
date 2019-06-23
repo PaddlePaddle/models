@@ -383,7 +383,7 @@ class FPNRPNHead(RPNHead):
 
         Args:
             fpn_feats(dict): A dictionary represents the output feature map
-                of FPN neck with their name.
+                of FPN with their name.
             im_info(Variable): The information of image with shape [N, 3] with
                 format (height, width, scale).
 

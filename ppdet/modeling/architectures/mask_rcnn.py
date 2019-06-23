@@ -36,13 +36,13 @@ class MaskRCNN(object):
         bbox_head (object): `BBoxHead` instance
         mask_assigner (object): `MaskAssigner` instance
         mask_head (object): `MaskHead` instance
-        neck (object): feature enricher instance, e.g., FPN
+        fpn (object): feature pyramid network instance
     """
 
     __category__ = 'architecture'
     __inject__ = [
         'backbone', 'rpn_head', 'bbox_assigner', 'roi_extractor', 'bbox_head',
-        'mask_assigner', 'mask_head', 'neck'
+        'mask_assigner', 'mask_head', 'fpn'
     ]
 
     def __init__(self,
@@ -53,7 +53,7 @@ class MaskRCNN(object):
                  roi_extractor='RoIAlign',
                  mask_assigner='MaskAssigner',
                  mask_head='MaskHead',
-                 neck=None):
+                 fpn=None):
         super(MaskRCNN, self).__init__()
         self.backbone = backbone
         self.rpn_head = rpn_head
@@ -62,7 +62,7 @@ class MaskRCNN(object):
         self.bbox_head = bbox_head
         self.mask_assigner = mask_assigner
         self.mask_head = mask_head
-        self.neck = neck
+        self.fpn = fpn
 
     def train(self, feed_vars):
         im = feed_vars['image']
@@ -72,9 +72,9 @@ class MaskRCNN(object):
 
         body_feats = self.backbone(im)
 
-        # neck
-        if self.neck is not None:
-            body_feats, spatial_scale = self.neck.get_output(body_feats)
+        # FPN
+        if self.fpn is not None:
+            body_feats, spatial_scale = self.fpn.get_output(body_feats)
 
         # rpn proposals
         rois = self.rpn_head.get_proposals(body_feats, im_info)
@@ -95,7 +95,7 @@ class MaskRCNN(object):
         bbox_inside_weights = outs[3]
         bbox_outside_weights = outs[4]
 
-        if self.neck is None:
+        if self.fpn is None:
             # in models without FPN, roi extractor only uses the last level of
             # feature maps. And list(body_feats.keys())[-1] represents the name of
             # last feature map.
@@ -118,7 +118,7 @@ class MaskRCNN(object):
             im_info=feed_vars['im_info'],
             labels_int32=labels_int32)
         mask_rois, roi_has_mask_int32, mask_int32 = outs
-        if self.neck is None:
+        if self.fpn is None:
             bbox_head_feat = self.bbox_head.get_head_feat()
             feat = fluid.layers.gather(bbox_head_feat, roi_has_mask_int32)
         else:
@@ -137,13 +137,13 @@ class MaskRCNN(object):
         im_shape = feed_vars['im_shape']
 
         body_feats = self.backbone(im)
-        # neck
-        if self.neck is not None:
-            body_feats, spatial_scale = self.neck.get_output(body_feats)
+        # FPN
+        if self.fpn is not None:
+            body_feats, spatial_scale = self.fpn.get_output(body_feats)
 
         rois = self.rpn_head.get_proposals(body_feats, im_info, mode='test')
 
-        if self.neck is None:
+        if self.fpn is None:
             body_feat = body_feats[list(body_feats.keys())[-1]]
             roi_feat = self.roi_extractor(body_feat, rois)
         else:
@@ -175,7 +175,7 @@ class MaskRCNN(object):
                 im_scale = fluid.layers.sequence_expand(im_scale, bbox)
 
                 mask_rois = bbox * im_scale
-                if self.neck is None:
+                if self.fpn is None:
                     mask_feat = self.roi_extractor(body_feat, mask_rois)
                     mask_feat = self.bbox_head.get_head_feat(mask_feat)
                 else:

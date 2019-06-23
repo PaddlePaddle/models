@@ -125,21 +125,6 @@ def create_reader(feed, max_iter=0):
         ops.append(op_dict)
     transform_config['OPS'] = ops
 
-    # FIXME debug code, remove before merge
-    import yaml
-    from ppdet.utils.cli import ColorTTY
-    tty = ColorTTY()
-    print(tty.green("============ generated data_config ================"))
-    print(yaml.dump(data_config, default_flow_style=False, default_style=''))
-    print(tty.green("========== generated transform_config =============="))
-    print(
-        yaml.dump(
-            transform_config, default_flow_style=False, default_style=''))
-    print(
-        tty.green(
-            "========== please verify they are correct!!!! =============="))
-    print("")
-
     reader = Reader(data_config, {mode: transform_config}, max_iter)
     return reader._make_reader(mode)
 
