@@ -20,9 +20,9 @@
 ## 目录
 
 - [量化原理介绍](#1-quantization-aware-training量化介绍)
-- [剪切原理介绍](#2-卷积核剪切原理)
+- [剪裁原理介绍](#2-卷积核剪裁原理)
 - [蒸馏原理介绍](#3-蒸馏)
-- [小模型结构搜索原理介绍](#4-小模型结构搜索)
+- [轻量级模型结构搜索原理介绍](#4-轻量级模型结构搜索)
 
 ## 1. Quantization Aware Training量化介绍
 
@@ -120,16 +120,16 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 
 
 
-## 2. 卷积核剪切原理
+## 2. 卷积核剪裁原理
 
 该策略参考paper: [Pruning Filters for Efficient ConvNets](https://arxiv.org/pdf/1608.08710.pdf)
 
 该策略通过减少卷积层中卷积核的数量，来减小模型大小和降低模型计算复杂度。
 
-### 2.1  剪切卷积核
+### 2.1  剪裁卷积核
 
-**剪切注意事项1**
-剪切一个conv layer的filter，需要修改后续conv layer的filter. 如**图4**所示，剪掉Xi的一个filter，会导致$X_{i+1}$少一个channel, $X_{i+1}$对应的filter在input_channel纬度上也要减1.
+**剪裁注意事项1**
+剪裁一个conv layer的filter，需要修改后续conv layer的filter. 如**图4**所示，剪掉Xi的一个filter，会导致$X_{i+1}$少一个channel, $X_{i+1}$对应的filter在input_channel纬度上也要减1.
 
 
 <p align="center">
@@ -138,9 +138,9 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 </p>
 
 
-**剪切注意事项2**
+**剪裁注意事项2**
 
-如**图5**所示，剪切完$X_i$之后，根据注意事项1我们从$X_{i+1}$的filter中删除了一行（图中蓝色行），在计算$X_{i+1}$的filters的l1_norm(图中绿色一列)的时候，有两种选择：
+如**图5**所示，剪裁完$X_i$之后，根据注意事项1我们从$X_{i+1}$的filter中删除了一行（图中蓝色行），在计算$X_{i+1}$的filters的l1_norm(图中绿色一列)的时候，有两种选择：
 算上被删除的一行：independent pruning
 减去被删除的一行：greedy pruning
 
@@ -149,9 +149,9 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 <strong>图5</strong>
 </p>
 
-**剪切注意事项3**
-在对ResNet等复杂网络剪切的时候，还要考虑到后当前卷积层的修改对上一层卷积层的影响。
-如**图6**所示，在对residual block剪切时，$X_{i+1}$层如何剪切取决于project shortcut的剪切结果，因为我们要保证project shortcut的output和$X_{i+1}$的output能被正确的concat.
+**剪裁注意事项3**
+在对ResNet等复杂网络剪裁的时候，还要考虑到后当前卷积层的修改对上一层卷积层的影响。
+如**图6**所示，在对residual block剪裁时，$X_{i+1}$层如何剪裁取决于project shortcut的剪裁结果，因为我们要保证project shortcut的output和$X_{i+1}$的output能被正确的concat.
 
 
 <p align="center">
@@ -159,25 +159,25 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 <strong>图6</strong>
 </p>
 
-### 2.2 Uniform剪切卷积网络
+### 2.2 Uniform剪裁卷积网络
 
-每层剪切一样比例的卷积核。
-在剪切一个卷积核之前，按l1_norm对filter从高到低排序，越靠后的filter越不重要，优先剪掉靠后的filter.
+每层剪裁一样比例的卷积核。
+在剪裁一个卷积核之前，按l1_norm对filter从高到低排序，越靠后的filter越不重要，优先剪掉靠后的filter.
 
 
-### 2.3 基于敏感度剪切卷积网络
+### 2.3 基于敏感度剪裁卷积网络
 
 根据每个卷积层敏感度的不同，剪掉不同比例的卷积核。
 
 #### 两个假设
 
 - 在一个conv layer的parameter内部，按l1_norm对filter从高到低排序，越靠后的filter越不重要。
-- 两个layer剪切相同的比例的filters，我们称对模型精度影响更大的layer的敏感度相对高。
+- 两个layer剪裁相同的比例的filters，我们称对模型精度影响更大的layer的敏感度相对高。
 
-#### 剪切filter的指导原则
+#### 剪裁filter的指导原则
 
-- layer的剪切比例与其敏感度成反比
-- 优先剪切layer内l1_norm相对低的filter
+- layer的剪裁比例与其敏感度成反比
+- 优先剪裁layer内l1_norm相对低的filter
 
 #### 敏感度的理解
 
@@ -186,21 +186,21 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 <strong>图7</strong>
 </p>
 
-如**图7**所示，横坐标是将filter剪切掉的比例，竖坐标是精度的损失，每条彩色虚线表示的是网络中的一个卷积层。
-以不同的剪切比例**单独**剪切一个卷积层，并观察其在验证数据集上的精度损失，并绘出**图7**中的虚线。虚线上升较慢的，对应的卷积层相对不敏感，我们优先剪不敏感的卷积层的filter.
+如**图7**所示，横坐标是将filter剪裁掉的比例，竖坐标是精度的损失，每条彩色虚线表示的是网络中的一个卷积层。
+以不同的剪裁比例**单独**剪裁一个卷积层，并观察其在验证数据集上的精度损失，并绘出**图7**中的虚线。虚线上升较慢的，对应的卷积层相对不敏感，我们优先剪不敏感的卷积层的filter.
 
-#### 选择最优的剪切率组合
+#### 选择最优的剪裁率组合
 
-我们将**图7**中的折线拟合为**图8**中的曲线，每在竖坐标轴上选取一个精度损失值，就在横坐标轴上对应着一组剪切率，如**图8**中黑色实线所示。
-用户给定一个模型整体的剪切率，我们通过移动**图5**中的黑色实线来找到一组满足条件的且合法的剪切率。
+我们将**图7**中的折线拟合为**图8**中的曲线，每在竖坐标轴上选取一个精度损失值，就在横坐标轴上对应着一组剪裁率，如**图8**中黑色实线所示。
+用户给定一个模型整体的剪裁率，我们通过移动**图5**中的黑色实线来找到一组满足条件的且合法的剪裁率。
 
 <p align="center">
 <img src="images/tutorial/pruning_4.png" height=200 width=400 hspace='10'/> <br />
 <strong>图8</strong>
 </p>
 
-#### 迭代剪切
-考虑到多个卷积层间的相关性，一个卷积层的修改可能会影响其它卷积层的敏感度，我们采取了多次剪切的策略，步骤如下：
+#### 迭代剪裁
+考虑到多个卷积层间的相关性，一个卷积层的修改可能会影响其它卷积层的敏感度，我们采取了多次剪裁的策略，步骤如下：
 
 - step1: 统计各卷积层的敏感度信息
 - step2: 根据当前统计的敏感度信息，对每个卷积层剪掉少量filter, 并统计FLOPS，如果FLOPS已满足要求，进入step4，否则进行step3。
@@ -223,9 +223,9 @@ Fast Optimization, Network Minimization and Transfer Learning](http://openaccess
 
    由于小模型和大模型之间通过L2 loss进行监督，必须保证两个FSP矩阵的维度必须相同，而FSP矩阵的维度为M*N，其中M、N分别为输入和输出特征的channel数，因此大模型和小模型的FSP矩阵需要一一对应。
 
-## 4. 小模型结构搜索
+## 4. 轻量级模型结构搜索
 
-深度学习模型在很多任务上都取得了不错的效果，网络结构的好坏对最终模型的效果有非常重要的影响。手工设计网络需要非常丰富的经验和众多尝试，并且众多的超参数和网络结构参数会产生爆炸性的组合，常规的random search几乎不可行，因此最近几年自动模型搜索技术（Neural Architecture Search）成为研究热点。区别与传统NAS，我们专注在搜索精度高并且速度快的模型结构，我们将该功能统称为Light-NAS.
+深度学习模型在很多任务上都取得了不错的效果，网络结构的好坏对最终模型的效果有非常重要的影响。手工设计网络需要非常丰富的经验和众多尝试，并且众多的超参数和网络结构参数会产生爆炸性的组合，常规的random search几乎不可行，因此最近几年自动模型搜索技术（Neural Architecture Search）成为研究热点。区别于传统NAS，我们专注在搜索精度高并且速度快的模型结构，我们将该功能统称为Light-NAS.
 
 ### 4.1 搜索策略
 
@@ -261,7 +261,7 @@ e^{\frac{(r_k-r)}{T_k}} & r_k < r\\
 
 搜索空间定义了优化问题的变量，变量规模决定了搜索算法的难度和搜索时间。因此为了加快搜索速度，定义一个合理的搜索空间至关重要。在Light-NAS中，为了加速搜索速度，我们将一个网络划分为多个block，先手动按链状层级结构堆叠c，再 使用搜索算法自动搜索每个block内部的结构。
 
-因为要搜索出在移动端运行速度快的模型，我们参考了mnas中使用的mobienetV2结构中的Linear Bottlenecks和Inverted residuals结构，搜索每一个Inverted residuals中的具体参数，包括kernelsize、channel扩张倍数、repeat number、channels number。如图10所示：
+因为要搜索出在移动端运行速度快的模型，我们参考了MobileNetV2中的Linear Bottlenecks和Inverted residuals结构，搜索每一个Inverted residuals中的具体参数，包括kernelsize、channel扩张倍数、重复次数、channels number。如图10所示：
 
 <p align="center">
 <img src="images/tutorial/light-nas-block.png" height=300 width=600 hspace='10'/> <br />

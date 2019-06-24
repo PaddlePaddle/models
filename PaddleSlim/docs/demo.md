@@ -340,17 +340,17 @@ python compress.py \
 
 本示例先用模拟退火策略搜索出一组tokens, 再用搜索出的tokens初始化构建模型进行训练。
 
-step1: 进入路径PaddlePaddle/models/PaddleSlim/light_nas/
+step1: 进入路径`PaddlePaddle/models/PaddleSlim/light_nas/`。
 
-step2: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`.
+step2: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`。
 
-step3: 修改compress.xml文件, 将起重的server_ip设置为当前机器的ip.
+step3: 修改`compress.xml`文件, 将参数server_ip设置为当前机器的ip。
 
-step4: 执行`sh run.sh`, 可根据实际情况修改run.sh中的`CUDA_VISIBLE_DEVICES`
+step4: 执行`sh run.sh`, 可根据实际情况修改`run.sh`中的`CUDA_VISIBLE_DEVICES`。
 
-step5: 修改`light_nas_space.py`文件中的LightNASSpace::init_tokens, 使其返回step4中搜到的最优tokens.
+step5: 修改`light_nas_space.py`文件中的`LightNASSpace::init_tokens`, 使其返回step4中搜到的最优tokens。
 
-step6: 修改compress.xml文件，将compressor下的`strategies`去掉
+step6: 修改compress.xml文件，将compressor下的`strategies`去掉。
 
 step7: 执行`sh run.sh`进行训练任务。
 
@@ -361,4 +361,10 @@ step7: 执行`sh run.sh`进行训练任务。
 | FLOPS|-3% | -17% | -0% |
 | top1 accuracy| 72.45%|  71.84%| 71.90% |
 |GPU cost|1.2K GPU hours(V100)|1.2K GPU hours(V100)|-|
-|tokens|[3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 2, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0]|[3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 2, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1]||
+|tokens|tokens1|tokens2||
+
+
+| token name | tokens|
+|---|---|
+|tokens1|[3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 2, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0]|
+|tokens2|[3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 2, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1]|
