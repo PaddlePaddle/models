@@ -98,6 +98,11 @@ def parse_args():
         type=int,
         default=10,
         help='mini-batch interval to log.')
+    parser.add_argument(
+        '--enable_ce',
+        type=bool,
+        default=False,
+        help='If set True, enable continuous evaluation job.')
     args = parser.parse_args()
     return args
 
@@ -114,6 +119,9 @@ def train(args):
     # build model
     startup = fluid.Program()
     train_prog = fluid.Program()
+    if args.enable_ce:
+        startup.random_seed = 1000
+        train_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup):
         with fluid.unique_name.guard():
             train_model.build_input(not args.no_use_pyreader)
@@ -131,9 +139,6 @@ def train(args):
             optimizer = train_model.optimizer()
             optimizer.minimize(train_loss)
             train_pyreader = train_model.pyreader()
-
-    if not args.no_memory_optimize:
-        fluid.memory_optimize(train_prog)
 
     valid_prog = fluid.Program()
     with fluid.program_guard(valid_prog, startup):
@@ -168,10 +173,15 @@ def train(args):
         if pretrain:
             train_model.load_pretrain_params(exe, pretrain, train_prog, place)
 
+    build_strategy = fluid.BuildStrategy()
+    build_strategy.enable_inplace = True
+    #build_strategy.memory_optimize = True
+
     train_exe = fluid.ParallelExecutor(
         use_cuda=args.use_gpu,
         loss_name=train_loss.name,
-        main_program=train_prog)
+        main_program=train_prog,
+        build_strategy=build_strategy)
     valid_exe = fluid.ParallelExecutor(
         use_cuda=args.use_gpu,
         share_vars_from=train_exe,
@@ -235,6 +245,7 @@ def train(args):
             valid_interval=args.valid_interval,
             save_dir=args.save_dir,
             save_model_name=args.model_name,
+            enable_ce=args.enable_ce,
             test_exe=valid_exe,
             test_pyreader=valid_pyreader,
             test_fetch_list=valid_fetch_list,

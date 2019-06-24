@@ -9,7 +9,7 @@ PaddlePaddle provides a rich set of computational units to enable users to adopt
 - [fluid models](fluid): use PaddlePaddle's Fluid APIs. We especially recommend users to use Fluid models.
 
 
-PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化的方法解决各种学习问题。在此repo中，我们展示了如何用 PaddlePaddle 来解决常见的机器学习任务，提供若干种不同的易学易用的神经网络模型。
+PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化的方法解决各种学习问题。在此repo中，我们展示了如何用 PaddlePaddle 来解决常见的机器学习任务，提供若干种不同的易学易用的神经网络模型。PaddlePaddle用户现可申请AI Studio平台的**免费Tesla V100算力资源**，高效在线训练模型，[点击申请](https://aistudio.baidu.com/aistudio/questionnaire?activityid=378)。
 
 - [fluid模型](fluid): 使用 PaddlePaddle Fluid版本的 APIs，我们特别推荐您使用Fluid模型。
 
@@ -25,7 +25,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 [DPN](./PaddleCV/image_classification/models)|图像分类模型|结合了DenseNet和ResNeXt的网络结构，对图像分类效果有所提升|[Dual Path Networks](https://arxiv.org/abs/1707.01629)
 [SE-ResNeXt](./PaddleCV/image_classification/models)|图像分类模型|ResNeXt中加入了SE block，提高了模型准确率|[Squeeze-and-excitation networks](https://arxiv.org/abs/1709.01507)
 [SSD](./PaddleCV/object_detection/README_cn.md)|单阶段目标检测器|在不同尺度的特征图上检测对应尺度的目标,可以方便地插入到任何一种标准卷积网络中|[SSD: Single Shot MultiBox Detector](https://arxiv.org/abs/1512.02325)
-[YOLOv3](./PaddleCV/yolov3/README_cn.md)|单阶段目标检测器|基于darknet53主干网络在多种尺度的特征图上进行端到端实时目标检测,检测速度快|[YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767)
+[YOLOv3](./PaddleCV/yolov3/README.md)|单阶段目标检测器|基于darknet53主干网络在多种尺度的特征图上进行端到端实时目标检测,检测速度快|[YOLOv3: An Incremental Improvement](https://arxiv.org/abs/1804.02767)
 [Face Detector: PyramidBox](./PaddleCV/face_detection/README_cn.md)|基于SSD的单阶段人脸检测器|利用上下文信息解决困难人脸的检测问题，网络表达能力高，鲁棒性强|[PyramidBox: A Context-assisted Single Shot Face Detector](https://arxiv.org/pdf/1803.07737.pdf)
 [Faster RCNN](./PaddleCV/rcnn/README_cn.md)|典型的两阶段目标检测器|创造性地采用卷积网络自行产生建议框，并且和目标检测网络共享卷积网络，建议框数目减少，质量提高|[Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks](https://arxiv.org/abs/1506.01497)
 [Mask RCNN](./PaddleCV/rcnn/README_cn.md)|基于Faster RCNN模型的经典实例分割模型|在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。|[Mask R-CNN](https://arxiv.org/abs/1703.06870)

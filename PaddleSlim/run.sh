@@ -2,8 +2,8 @@
 
 # download pretrain model
 root_url="http://paddle-imagenet-models-name.bj.bcebos.com"
-MobileNetV1="MobileNetV1_pretrained.zip"
-ResNet50="ResNet50_pretrained.zip"
+MobileNetV1="MobileNetV1_pretrained.tar"
+ResNet50="ResNet50_pretrained.tar"
 pretrain_dir='./pretrain'
 
 if [ ! -d ${pretrain_dir} ]; then
@@ -14,12 +14,12 @@ cd ${pretrain_dir}
 
 if [ ! -f ${MobileNetV1} ]; then
     wget ${root_url}/${MobileNetV1}
-    unzip ${MobileNetV1}
+    tar xf ${MobileNetV1}
 fi
 
 if [ ! -f ${ResNet50} ]; then
     wget ${root_url}/${ResNet50}
-    unzip ${ResNet50}
+    tar xf ${ResNet50}
 fi
 
 cd -
@@ -66,6 +66,14 @@ cd -
 #--model "MobileNet" \
 #--pretrained_model ./pretrain/MobileNetV1_pretrained \
 #--compress_config ./configs/filter_pruning_uniform.yaml
+
+# for auto filter pruning
+#---------------------------
+#export CUDA_VISIBLE_DEVICES=0
+#python compress.py \
+#--model "MobileNet" \
+#--pretrained_model ./pretrain/MobileNetV1_pretrained \
+#--compress_config ./configs/auto_prune.yaml
 
 # for quantization
 #-----------------

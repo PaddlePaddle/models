@@ -11,7 +11,7 @@ sos = 0
 eos = 1
 gradient_clip = 10
 LR = 1.0
-beam_size = 2
+beam_size = 1
 learning_rate_decay = None
 
 

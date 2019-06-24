@@ -266,7 +266,7 @@ class DataReader(object):
                 with open(fpath, "rb") as f:
                     for line in f:
                         if six.PY3:
-                            line = line.decode()
+                            line = line.decode("utf8", errors="ignore")
                         fields = line.strip("\n").split(self._field_delimiter)
                         if (not self._only_src and len(fields) == 2) or (
                                 self._only_src and len(fields) == 1):

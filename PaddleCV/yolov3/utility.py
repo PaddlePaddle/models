@@ -120,12 +120,13 @@ def parse_args():
     add_arg('nms_posk',         int,    100,    "The number of boxes of NMS output.")
     add_arg('debug',            bool,   False,  "Debug mode")
     # SINGLE EVAL AND DRAW
-    add_arg('image_path',       str,   'image', 
+    add_arg('image_path',       str,   'image',
             "The image path used to inference and visualize.")
-    add_arg('image_name',       str,    None,   
+    add_arg('image_name',       str,    None,
             "The single image used to inference and visualize. None to inference all images in image_path")
-    add_arg('draw_thresh',      float,  0.5,    
+    add_arg('draw_thresh',      float,  0.5,
             "Confidence score threshold to draw prediction box in image in debug mode")
+    add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
     # yapf: enable
     args = parser.parse_args()
     file_name = sys.argv[0]

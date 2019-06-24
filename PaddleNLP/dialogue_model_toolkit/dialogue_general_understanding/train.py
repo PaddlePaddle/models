@@ -141,6 +141,8 @@ def main(args):
         print("Num warmup steps: %d" % warmup_steps)
 
         train_program = fluid.Program()
+        if args.random_seed is not None:
+            train_program.random_seed = args.random_seed
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
                 results = create_model(
@@ -257,6 +259,7 @@ def main(args):
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
         time_begin = time.time()
+        ce_info = []
         while True:
             try: 
                 steps += 1
@@ -318,12 +321,14 @@ def main(args):
                                steps, np.sum(total_cost) / np.sum(total_num_seqs),
                                np.sum(total_acc) / np.sum(total_num_seqs),
                                args.skip_steps / used_time))
+                        ce_info.append([np.sum(total_cost) / np.sum(total_num_seqs), np.sum(total_acc) / np.sum(total_num_seqs), args.skip_steps / used_time])
                     else: 
                         print("%s epoch: %d, progress: %d/%d, step: %d, ave loss: %f, "
                             "speed: %f steps/s" %
                             (current_time, current_epoch, current_example, num_train_examples,
                             steps, np.sum(total_cost) / np.sum(total_num_seqs),
                             args.skip_steps / used_time))
+                        ce_info.append([np.sum(total_cost) / np.sum(total_num_seqs), args.skip_steps / used_time])
                     total_cost, total_acc, total_num_seqs = [], [], []
                     time_begin = time.time()
 
@@ -354,6 +359,25 @@ def main(args):
                 fluid.io.save_persistables(exe, save_path, train_program)
                 train_pyreader.reset()
                 break
+    if args.do_train and args.enable_ce:
+        card_num = get_cards()
+        print("zytest_card_num", card_num)
+        ce_loss = 0
+        ce_acc = 0
+        ce_time = 0
+        try:
+            ce_loss = ce_info[-2][0]
+            ce_acc = ce_info[-2][1]
+            ce_time = ce_info[-2][2]
+        except:
+            print("ce info error")
+        print("kpis\teach_step_duration_%s_card%s\t%s" %
+                (task_name, card_num, ce_time))
+        print("kpis\ttrain_loss_%s_card%s\t%f" %
+            (task_name, card_num, ce_loss))
+        print("kpis\ttrain_acc_%s_card%s\t%f" %
+            (task_name, card_num, ce_acc))
+
     #final eval on dev set
     if args.do_val: 
         test_pyreader.decorate_tensor_provider( 
@@ -373,6 +397,15 @@ def main(args):
                 shuffle=False)) 
         print("Final test result:") 
         evaluate(test_exe, test_prog, test_pyreader, fetch_test_list, "test")
+
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    print("zytest_cards", cards)
+    if cards != '':
+        num = len(cards.split(","))
+    return num
 
 
 if __name__ == '__main__': 
