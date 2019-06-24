@@ -1,4 +1,4 @@
-# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -292,9 +292,9 @@ def refresh_program(args,
 
 
 def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
-                   img_dim, min_scale, rect_val):
+                   img_dim, min_scale, rect_val, args):
     train_reader = reader.train(
-        traindir="/data/imagenet/%strain" % trn_dir,
+        traindir="%s/%strain" % (args.data_dir, trn_dir),
         sz=img_dim,
         min_scale=min_scale,
         shuffle_seed=epoch_id + 1)
@@ -303,7 +303,7 @@ def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
             train_reader, batch_size=train_bs))
 
     test_reader = reader.test(
-        valdir="/data/imagenet/%svalidation" % trn_dir,
+        valdir="%s/%svalidation" % (args.data_dir, trn_dir),
         bs=val_bs * DEVICE_NUM,
         sz=img_dim,
         rect_val=rect_val)
@@ -324,7 +324,7 @@ def train_parallel(args):
     ## dynamic batch size, image size...
     bs = 224
     val_bs = 64
-    trn_dir = "sz/160/"
+    trn_dir = "160/"
     img_dim = 128
     min_scale = 0.08
     rect_val = False
@@ -341,7 +341,7 @@ def train_parallel(args):
                 need_update_start_prog=True)
         elif epoch_id == 13:  #13
             bs = 96
-            trn_dir = "sz/352/"
+            trn_dir = "352/"
             img_dim = 224
             min_scale = 0.087
             train_args, test_args, test_prog, exe, test_exe = refresh_program(
@@ -384,7 +384,8 @@ def train_parallel(args):
             trn_dir,
             img_dim=img_dim,
             min_scale=min_scale,
-            rect_val=rect_val)
+            rect_val=rect_val,
+            args=args)
         train_py_reader.start()  # start pyreader
         batch_start_time = time.time()
         while True:
