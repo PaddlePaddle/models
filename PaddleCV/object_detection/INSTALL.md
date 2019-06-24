@@ -95,6 +95,8 @@ ln -sf <path/to/voc> $PaddleDetection/data/voc
 If you set up models while `data/coc` and `data/voc` is not found, PaddleDetection will automaticly from [MSCOCO-2017](http://images.cocodataset.org) and [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC), decompress and save download datasets under `~/.cache/paddle/dataset/`. Once datasets has been download to `~/.cache/paddle/dataset/`, PaddleDetection will be able to find datasets in your next model settting up.
 
 
+**NOTE:** For detail setting of datasets, please see [DATASET.md](./ppdet/data/README.md)
+
 ## Update
 
 - 6/2019: Add installing PaddleDetection
