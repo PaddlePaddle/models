@@ -20,6 +20,7 @@ import os
 import glob
 
 import numpy as np
+from PIL import Image
 
 from paddle import fluid
 
@@ -36,6 +37,17 @@ import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
+
+
+def get_save_image_name(save_dir, image_path):
+    """
+    Get save image name from source image path.
+    """
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    image_name = image_path.split('/')[-1]
+    name, ext = os.path.splitext(image_name)
+    return os.path.join(save_dir, "{}".format(name)) + ext
 
 
 def get_test_images(infer_dir, infer_img):
@@ -74,7 +86,12 @@ def main():
         "--infer_img",
         type=str,
         default=None,
-        help="Image path, has higher priority over --image-dir")
+        help="Image path, has higher priority over --infer_dir")
+    parser.add_argument(
+        "--save_dir",
+        type=str,
+        default="output",
+        help="Directory for saving visualization files.")
     args = parser.parse_args()
     cfg = load_config(args.config)
 
@@ -152,8 +169,12 @@ def main():
             if 'mask' in res:
                 mask_results = mask2out([res], clsid2catid,
                                         cfg.MaskHead.resolution)
-            visualize_results(image_path, catid2name, 0.5, bbox_results,
-                              mask_results)
+            image = Image.open(image_path)
+            image = visualize_results(image, catid2name, 0.5,
+                                      bbox_results, mask_results)
+            save_name = get_save_image_name(args.save_dir, image_path)
+            logger.info("Detection bbox results save in {}".format(save_name))
+            image.save(save_name)
 
         if cfg.metric == "VOC":
             # TODO(dengkaipeng): add VOC metric process
