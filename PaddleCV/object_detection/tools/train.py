@@ -96,10 +96,7 @@ def main():
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
                 eval_pyreader, feed_vars = create_feeds(eval_feed)
-                if cfg['metric'] == 'COCO':
-                    fetches = model.test(feed_vars)
-                else:
-                    fetches = model.eval(feed_vars)
+                fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
 
         eval_reader = create_reader(eval_feed)
