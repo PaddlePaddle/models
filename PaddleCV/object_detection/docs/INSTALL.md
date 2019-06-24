@@ -14,7 +14,7 @@
 
 This document covers how to install PaddleDetection, its dependencies (including PaddlePaddle), and COCO and PASCAL VOC dataset.
 
-For general information about PaddleDetection, please see [README.md](./README.md).
+For general information about PaddleDetection, please see [README.md](../README.md).
 
 
 ## PaddlePaddle
