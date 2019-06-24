@@ -78,7 +78,9 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 用户可以通过设置`--direction`参数生成list文件，从而确保图像风格转变的方向。
 
 ### 模型训练
-**下载预训练模型: **
+
+**下载预训练模型:** 
+
 本示例提供以下预训练模型:
 
 | Model| Pretrained model |
@@ -114,6 +116,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
       --net_G=$(generator_network)
 
 效果如图所示：
+
 
 执行以下命令得到StarGAN,AttGAN和STGAN的预测结果：
 
