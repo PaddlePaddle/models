@@ -82,7 +82,7 @@ def create_reader(feed, max_iter=0):
         }
     }
     
-    if getattr(feed.dataset, 'images', None) is not None:
+    if len(getattr(feed.dataset, 'images', [])) > 0:
         data_config[mode]['IMAGES'] = feed.dataset.images
 
     transform_config = {
