@@ -43,7 +43,7 @@ class RetinaNet(object):
         self.fpn = fpn
         self.retina_head = retina_head
 
-    def _forward(self, feed_vars, mode='train'):
+    def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
         im_info = feed_vars['im_info']
         if mode == 'train':
@@ -69,10 +69,10 @@ class RetinaNet(object):
             return pred
 
     def train(self, feed_vars):
-        return self._forward(feed_vars, 'train')
+        return self.build(feed_vars, 'train')
 
     def eval(self, feed_vars):
-        return self._forward(feed_vars, 'test')
+        return self.build(feed_vars, 'test')
 
     def test(self, feed_vars):
-        return self._forward(feed_vars, 'test')
+        return self.build(feed_vars, 'test')
