@@ -26,6 +26,7 @@ import numpy as np
 import imageio
 import glob
 from util.config import add_arguments, print_arguments
+from data_reader import celeba_reader_creator
 import copy
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -33,14 +34,12 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('model_net',         str,   'cgan',            "The model used")
 add_arg('net_G',             str,   "resnet_9block",   "Choose the CycleGAN and Pix2pix generator's network, choose in [resnet_9block|resnet_6block|unet_128|unet_256]")
-add_arg('input',             str,   None,              "The images to be infered.")
 add_arg('init_model',        str,   None,              "The init model file of directory.")
 add_arg('output',            str,   "./infer_result",  "The directory the infer result to be saved to.")
 add_arg('input_style',       str,   "A",               "The style of the input, A or B")
 add_arg('norm_type',         str,   "batch_norm",      "Which normalization to used")
 add_arg('use_gpu',           bool,  True,              "Whether to use GPU to train.")
 add_arg('dropout',           bool,  False,             "Whether to use dropout")
-add_arg('data_shape',        int,   256,               "The shape of load image")
 add_arg('g_base_dims',       int,   64,                "Base channels in CycleGAN generator")
 add_arg('c_dim',             int,   13,                "the size of attrs")
 add_arg('use_gru',           bool,  False,             "Whether to use GRU")
@@ -51,14 +50,14 @@ add_arg('selected_attrs',    str,
 "the attributes we selected to change")
 add_arg('batch_size',        int,   16,                "batch size when test")
 add_arg('test_list',       str,   "./data/celeba/test_list_attr_celeba.txt",                "the test list file")
-add_arg('dataset_dir',       str,   "./data/celeba/",                "the dataset directory")
+add_arg('dataset_dir',       str,   "./data/celeba/",                "the dataset directory to be infered")
 add_arg('n_layers',        int,     5,      "default layers in generotor")
 add_arg('gru_n_layers',    int,     4,       "default layers of GRU in generotor")
 # yapf: enable
 
 
 def infer(args):
-    data_shape = [-1, 3, args.data_shape, args.data_shape]
+    data_shape = [-1, 3, args.image_size, args.image_size]
     input = fluid.layers.data(name='input', shape=data_shape, dtype='float32')
     label_org_ = fluid.layers.data(
         name='label_org_', shape=[args.c_dim], dtype='float32')
@@ -66,7 +65,7 @@ def infer(args):
         name='label_trg_', shape=[args.c_dim], dtype='float32')
 
     model_name = 'net_G'
-    if args.model_net == 'cyclegan':
+    if args.model_net == 'CycleGAN':
         from network.CycleGAN_network import CycleGAN_model
         model = CycleGAN_model()
         if args.input_style == "A":
@@ -136,10 +135,11 @@ def infer(args):
             images = [real_img_temp]
             for i in range(args.c_dim):
                 label_trg_tmp = copy.deepcopy(label_trg)
-                for j in range(args.batch_size):
+                for j in range(len(label_org)):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
-                label_trg_ = map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp)
-                for j in range(args.batch_size):
+                label_trg_ = list(
+                    map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
+                for j in range(len(label_org)):
                     label_trg_[j][i] = label_trg_[j][i] * 2.0
                 tensor_label_org_.set(label_org, place)
                 tensor_label_trg.set(label_trg, place)
@@ -149,7 +149,7 @@ def infer(args):
                     "label_org_": tensor_label_org_,
                     "label_trg_": tensor_label_trg_
                 },
-                              fetch_list=fake.name)
+                              fetch_list=[fake.name])
                 fake_temp = np.squeeze(out[0]).transpose([0, 2, 3, 1])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
@@ -167,29 +167,33 @@ def infer(args):
             args, shuffle=False, return_name=True)
         for data in zip(reader_test()):
             real_img, label_org, name = data[0]
+            print("read {}".format(name))
             tensor_img = fluid.LoDTensor()
             tensor_label_org = fluid.LoDTensor()
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
-            real_img_temp = np.squeeze(real_img).transpose([1, 2, 0])
+            real_img_temp = np.squeeze(real_img).transpose([0, 2, 3, 1])
             images = [real_img_temp]
-            for i in range(cfg.c_dim):
-                label_trg = np.zeros([1, cfg.c_dim]).astype("float32")
-                label_trg[0][i] = 1
+            for i in range(args.c_dim):
+                label_trg = np.zeros(
+                    [len(label_org), args.c_dim]).astype("float32")
+                for j in range(len(label_org)):
+                    label_trg[j][i] = 1
                 tensor_label_trg = fluid.LoDTensor()
                 tensor_label_trg.set(label_trg, place)
                 out = exe.run(
                     feed={"input": tensor_img,
                           "label_trg_": tensor_label_trg},
-                    fetch_list=fake.name)
-                fake_temp = np.squeeze(out[0]).transpose([1, 2, 0])
+                    fetch_list=[fake.name])
+                fake_temp = np.squeeze(out[0]).transpose([0, 2, 3, 1])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            imageio.imwrite(out_path + "/fake_img" + str(epoch) + "_" + name[0],
-                            ((images_concat + 1) * 127.5).astype(np.uint8))
+            images_concat = np.concatenate(images_concat, 1)
+            imageio.imwrite(args.output + "/fake_img_" + name[0], (
+                (images_concat + 1) * 127.5).astype(np.uint8))
 
-    elif args.model_net == 'Pix2pix' or args.model_net == 'cyclegan':
-        for file in glob.glob(args.input):
+    elif args.model_net == 'Pix2pix' or args.model_net == 'CycleGAN':
+        for file in glob.glob(args.dataset_dir):
             print("read {}".format(file))
             image_name = os.path.basename(file)
             image = Image.open(file).convert('RGB')

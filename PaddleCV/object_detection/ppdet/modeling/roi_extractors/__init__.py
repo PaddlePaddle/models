@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from . import roi_extractor
+from .roi_extractor import *
