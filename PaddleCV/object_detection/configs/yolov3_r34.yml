@@ -17,6 +17,8 @@ YOLOv3:
 
 ResNet:
   norm_type: sync_bn
+  freeze_at: 0
+  freeze_norm: False
   norm_decay: 0.
   depth: 34
   feature_maps: [3, 4, 5]
