@@ -20,8 +20,6 @@ except:
     from ConfigParser import ConfigParser
 
 import paddle.fluid as fluid
-from datareader import get_reader
-from metrics import get_metrics
 from .utils import download, AttrDict
 
 WEIGHT_DIR = os.path.expanduser("~/.paddle/weights")
@@ -67,7 +65,6 @@ class ModelBase(object):
         self.mode = mode
         self.cfg = cfg
         self.py_reader = None
-
 
     def build_model(self):
         "build model struct"
