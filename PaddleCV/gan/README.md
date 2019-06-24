@@ -78,10 +78,15 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 ###模型训练
 **下载预训练模型: **
 本示例提供以下预训练模型:
+
 [Pix2Pix的预训练模型]()
+
 [CycleGAN的预训练模型]()
+
 [StarGAN的预训练模型]()
+
 [AttGAN的预训练模型]()
+
 [STGAN的预训练模型]()
 
 下载完预训练模型之后，通过设置infer.py中`--init_model`加载预训练模型，测试所需要的图片。
