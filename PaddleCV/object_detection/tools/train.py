@@ -53,7 +53,7 @@ def main():
     if cfg['use_gpu']:
         devices_num = fluid.core.get_cuda_device_count()
     else:
-        devices_num = os.environ.get('CPU_NUM', multiprocessing.cpu_count())
+        devices_num = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     if 'train_feed' not in cfg:
         train_feed = create(type(main_arch).__name__ + 'TrainFeed')
