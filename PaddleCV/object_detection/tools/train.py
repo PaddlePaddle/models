@@ -56,13 +56,13 @@ def main():
         devices_num = os.environ.get('CPU_NUM', multiprocessing.cpu_count())
 
     if 'train_feed' not in cfg:
-        train_feed = create(type(main_arch).__name__ + 'TrainFeed')
+        train_feed = create(main_arch + 'TrainFeed')
     else:
         train_feed = create(cfg['train_feed'])
 
     if args.eval:
         if 'eval_feed' not in cfg:
-            eval_feed = create(type(main_arch).__name__ + 'EvalFeed')
+            eval_feed = create(main_arch + 'EvalFeed')
         else:
             eval_feed = create(cfg['eval_feed'])
 

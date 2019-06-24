@@ -16,7 +16,7 @@ SSD:
   backbone: MobileNet
   multi_box_head: MultiBoxHead
   num_classes: 21
-  metric: 
+  metric:
     ap_version: 11point
     evaluate_difficult: false
     overlap_threshold: 0.5
@@ -57,7 +57,7 @@ OptimizerBuilder:
   regularizer:
     factor: 0.00005
     type: L2
-    
+
 SSDTrainFeed:
   batch_size: 32
   use_process: true
