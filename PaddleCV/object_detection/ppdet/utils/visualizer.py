@@ -43,6 +43,7 @@ def visualize_results(image_path,
     if not os.path.exists(SAVE_HOME):
         os.makedirs(SAVE_HOME)
 
+    logger.info("Image {} detect: ".format(image_path))
     image = Image.open(image_path)
     if mask_results:
         image = draw_mask(image, mask_results, threshold)
@@ -50,7 +51,7 @@ def visualize_results(image_path,
         image = draw_bbox(image, catid2name, bbox_results, threshold)
 
     save_name = get_save_image_name(image_path)
-    logger.info("Detection results save in {}".format(save_name))
+    logger.info("Detection results save in {}\n".format(save_name))
     image.save(save_name)
 
 
@@ -100,6 +101,10 @@ def draw_bbox(image, catid2name, bboxes, threshold):
             fill='red')
         if image.mode == 'RGB':
             draw.text((xmin, ymin), catid2name[catid], (255, 255, 0))
+        logger.info("\t {:15s} at {:25} score: {:.5f}".format(
+                    catid2name[catid], 
+                    str(list(map(int, [xmin, ymin, xmax, ymax]))),
+                    score))
 
     return image
 
