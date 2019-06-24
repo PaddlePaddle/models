@@ -47,13 +47,13 @@ def get_test_images(infer_dir, infer_img):
     images = []
 
     # infer_img has a higher priority
-    if infer_img and os.path.exists(infer_img):
+    if infer_img and os.path.isfile(infer_img):
         images.append(infer_img)
         return images
 
     infer_dir = os.path.abspath(infer_dir)
-    assert os.path.exists(infer_dir), \
-            "infer_dir {} not exists".format(infer_dir)
+    assert os.path.isdir(infer_dir), \
+            "infer_dir {} is not a directory".format(infer_dir)
     for fmt in ['jpg', 'jpeg', 'png', 'bmp']:
         images.extend(glob.glob('{}/*.{}'.format(infer_dir, fmt)))
 
