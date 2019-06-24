@@ -61,6 +61,7 @@ python train.py \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
        --with_mem_opt=False \
+       --with_inplace=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
@@ -74,6 +75,7 @@ python train.py \
 * **image_shape**: 图片大小，默认值: "3,224,224"
 * **model_save_dir**: 模型存储路径，默认值: "output/"
 * **with_mem_opt**: 是否开启显存优化，默认值: False
+* **with_inplace**: 是否开启inplace显存优化，默认值: True
 * **lr_strategy**: 学习率变化策略，默认值: "piecewise_decay"
 * **lr**: 初始学习率，默认值: 0.1
 * **pretrained_model**: 预训练模型路径，默认值: None

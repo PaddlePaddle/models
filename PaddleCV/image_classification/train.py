@@ -23,6 +23,7 @@ import sys
 import functools
 import math
 
+
 def set_paddle_flags(flags):
     for key, value in flags.items():
         if os.environ.get(key, None) is None:
@@ -62,7 +63,7 @@ add_arg('num_epochs',       int,   120,                  "number of epochs.")
 add_arg('class_dim',        int,   1000,                 "Class number.")
 add_arg('image_shape',      str,   "3,224,224",          "input image size")
 add_arg('model_save_dir',   str,   "output",             "model save directory")
-add_arg('with_mem_opt',     bool,  True,                 "Whether to use memory optimization or not.")
+add_arg('with_mem_opt',     bool,  False,                 "Whether to use memory optimization or not.")
 add_arg('with_inplace',     bool,  True,                 "Whether to use inplace memory optimization.")
 add_arg('pretrained_model', str,   None,                 "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
@@ -248,7 +249,7 @@ def net_config(image, model, args, is_train, label=0, y_a=0, y_b=0, lam=0.0):
                     return avg_cost
                 else:
                     cost = calc_loss(epsilon,label,class_dim,softmax_out,use_label_smoothing)
-                    
+
             else:
                 cost = fluid.layers.cross_entropy(input=softmax_out, label=label)
         else:
@@ -256,7 +257,7 @@ def net_config(image, model, args, is_train, label=0, y_a=0, y_b=0, lam=0.0):
             softmax_out1, softmax_out = fluid.layers.softmax(out1), fluid.layers.softmax(out2)
             smooth_out1 = fluid.layers.label_smooth(label=softmax_out1, epsilon=0.0, dtype="float32")
             cost = fluid.layers.cross_entropy(input=softmax_out, label=smooth_out1, soft_label=True)
-        
+
         avg_cost = fluid.layers.mean(cost)
         if args.scale_loss > 1:
             avg_cost = fluid.layers.mean(x=cost) * float(args.scale_loss)
@@ -328,6 +329,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 else:
                     optimizer.minimize(avg_cost)
                 global_lr = optimizer._global_learning_rate()
+                global_lr.persistable=True
                 build_program_out.append(global_lr)
 
     return build_program_out
@@ -427,9 +429,10 @@ def train(args):
     use_ngraph = os.getenv('FLAGS_use_ngraph')
     if not use_ngraph:
         build_strategy = fluid.BuildStrategy()
-        build_strategy.memory_optimize = args.with_mem_opt
+        # memopt may affect GC results
+        #build_strategy.memory_optimize = args.with_mem_opt
         build_strategy.enable_inplace = args.with_inplace
-        build_strategy.fuse_all_reduce_ops=1
+        #build_strategy.fuse_all_reduce_ops=1
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_iteration_per_drop_scope = 10

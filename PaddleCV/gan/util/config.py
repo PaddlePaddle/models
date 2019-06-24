@@ -98,6 +98,8 @@ def base_parse_args(parser):
     add_arg('lambda_L1', float, 100.0, "the initialize lambda parameter for L1 loss")
     add_arg('num_generator_time', int, 1,
             "the generator run times in training each epoch")
+    add_arg('num_discriminator_time', int, 1,
+            "the discriminator run times in training each epoch")
     add_arg('print_freq', int, 10, "the frequency of print loss")
     # yapf: enable
 
