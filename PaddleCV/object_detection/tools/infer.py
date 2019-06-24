@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import glob
 
 import numpy as np
 
@@ -37,6 +38,32 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
+def get_test_images(infer_dir, infer_img):
+    """
+    Get image path list in TEST mode
+    """
+    assert infer_img is not None or infer_dir is not None, \
+            "--infer-img or --infer-dir should be set"
+    images = []
+
+    # infer_img has a higher priority
+    if infer_img and os.path.exists(infer_img):
+        images.append(infer_img)
+        return images
+
+    infer_dir = os.path.abspath(infer_dir)
+    assert os.path.exists(infer_dir), \
+            "infer_dir {} not exists".format(infer_dir)
+    for fmt in ['jpg', 'jpeg', 'png', 'bmp']:
+        images.extend(glob.glob('{}/*.{}'.format(infer_dir, fmt)))
+
+    assert len(images) > 0, "no image found in {} with " \
+                "extension {}".format(infer_dir, image_ext)
+    logger.info("Found {} inference images in total.".format(len(images)))
+
+    return images
+
+
 def main():
     args = parse_args()
     cfg = load_config(args.config)
@@ -53,8 +80,8 @@ def main():
     else:
         test_feed = create(cfg['test_feed'])
 
-    test_feed.infer_dir = args.infer_dir
-    test_feed.infer_image = args.infer_image
+    test_images = get_test_images(args.infer_dir, args.infer_img)
+    test_feed.dataset.add_images(test_images)
 
     place = fluid.CUDAPlace(0) if cfg['use_gpu'] else fluid.CPUPlace()
     exe = fluid.Executor(place)

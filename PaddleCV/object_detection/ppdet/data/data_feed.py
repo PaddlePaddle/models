@@ -18,8 +18,6 @@ from __future__ import division
 
 import os
 import inspect
-import logging
-import glob
 
 from ppdet.core.workspace import register, serializable
 from ppdet.utils.download import get_dataset_path
@@ -41,8 +39,6 @@ __all__ = [
     'SSDTrainFeed', 'SSDEvalFeed', 'SSDTestFeed', 'YoloTrainFeed',
     'YoloEvalFeed', 'YoloTestFeed', 'create_reader'
 ]
-
-logger = logging.getLogger(__name__)
 
 
 def create_reader(feed, max_iter=0):
@@ -85,9 +81,9 @@ def create_reader(feed, max_iter=0):
             'TYPE': type(feed.dataset).__source__
         }
     }
-
-    if mode == 'TEST':
-        data_config['TEST']['IMAGES'] = _get_test_images(feed)
+    
+    if getattr(feed.dataset, 'images', None) is not None:
+        data_config[mode]['IMAGES'] = feed.dataset.images
 
     transform_config = {
         'WORKER_CONF': {
@@ -132,37 +128,6 @@ def create_reader(feed, max_iter=0):
 
     reader = Reader(data_config, {mode: transform_config}, max_iter)
     return reader._make_reader(mode)
-
-
-def _get_test_images(feed):
-    """
-    Get image path list in TEST mode
-    """
-    infer_dir = feed.infer_dir
-    infer_image = feed.infer_image
-    images = []
-
-    # infer_image has a higher priority
-    if infer_image and os.path.exists(infer_image):
-        images.append(infer_image)
-        return images
-
-    if not infer_dir:
-        logger.info("--infer_dir and --infer_image not set, perform "
-                "inference in {}".format(feed.dataset.image_dir))
-        infer_dir = feed.dataset.image_dir
-
-    infer_dir = os.path.abspath(infer_dir)
-    assert os.path.exists(infer_dir), \
-            "infer_dir {} not exists".format(infer_dir)
-    for fmt in ['jpg', 'jpeg', 'png', 'bmp']:
-        images.extend(glob.glob('{}/*.{}'.format(infer_dir, fmt)))
-
-    assert len(images) > 0, "no image found in {} with " \
-                "extension {}".format(infer_dir, image_ext)
-    logger.info("Found {} inference images in total.".format(len(images)))
-
-    return images
 
 
 # XXX batch transforms are only stubs for now, actually handled by `post_map`
@@ -285,6 +250,10 @@ class SimpleDataSet(DataSet):
                  use_default_label=None):
         super(SimpleDataSet, self).__init__(
             dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
+        self.images = []
+
+    def add_images(self, images):
+        self.images.extend(images)
 
 
 @serializable
@@ -415,8 +384,6 @@ class TestFeed(DataFeed):
                  sample_transforms=[],
                  batch_transforms=[],
                  batch_size=1,
-                 infer_dir=None,
-                 infer_image=None,
                  shuffle=False,
                  drop_last=False,
                  with_background=True,
@@ -432,8 +399,6 @@ class TestFeed(DataFeed):
             drop_last=drop_last,
             with_background=with_background,
             num_workers=num_workers)
-        self.infer_dir = infer_dir
-        self.infer_image = infer_image
 
 
 @register
@@ -593,8 +558,6 @@ class FasterRCNNTestFeed(DataFeed):
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
-                 infer_dir=None,
-                 infer_image=None,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
@@ -616,8 +579,6 @@ class FasterRCNNTestFeed(DataFeed):
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
-        self.infer_dir = infer_dir
-        self.infer_image = infer_image
 
 
 @register
@@ -685,8 +646,6 @@ class MaskRCNNTestFeed(DataFeed):
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
-                 infer_dir=None,
-                 infer_image=None,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
@@ -710,8 +669,6 @@ class MaskRCNNTestFeed(DataFeed):
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
-        self.infer_dir = infer_dir
-        self.infer_image = infer_image
 
 
 @register
@@ -834,8 +791,6 @@ class SSDTestFeed(DataFeed):
                  ],
                  batch_transforms=[],
                  batch_size=1,
-                 infer_dir=None,
-                 infer_image=None,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
@@ -857,8 +812,6 @@ class SSDTestFeed(DataFeed):
             drop_last=drop_last,
             num_workers=num_workers)
         self.mode = 'TEST'
-        self.infer_dir = infer_dir
-        self.infer_image = infer_image
 
 
 @register
@@ -999,8 +952,6 @@ class YoloTestFeed(DataFeed):
                  ],
                  batch_transforms=[],
                  batch_size=1,
-                 infer_dir=None,
-                 infer_image=None,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
@@ -1027,5 +978,3 @@ class YoloTestFeed(DataFeed):
         self.num_max_boxes = num_max_boxes
         self.mode = 'TEST'
         self.bufsize = 128
-        self.infer_dir = infer_dir
-        self.infer_image = infer_image
