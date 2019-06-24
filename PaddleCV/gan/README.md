@@ -7,7 +7,9 @@
 ## 内容
 
 -[简介](#简介)
+
 -[快速开始](#快速开始)
+
 -[参考文献](#参考文献)
 
 ## 简介
@@ -95,8 +97,11 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
   python infer.py \
     --model_net=cyclegan \
     --init_model=$(path_to_init_model) \
-    --input=$(path_to_data) \
-    --input_style=$(A_or_B)
+    --image_size=256 \
+    --dataset_dir=$(path_to_data) \
+    --input_style=$(A_or_B) \
+    --net_G=$(generator_network) \
+    --g_base_dims=$(base_dim_of_generator)
 
 效果如图所示：
 
@@ -106,7 +111,9 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
   python infer.py \
     --model_net=Pix2pix \
     --init_model=$(path_to_init_model) \
-    --input=$(path_to_data)
+    --image_size=256 \
+    --dataset_dir=$(path_to_data) \
+    --net_G=$(generator_network)
 
 效果如图所示：
 
