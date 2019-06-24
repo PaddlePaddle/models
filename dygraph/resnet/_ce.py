@@ -11,9 +11,9 @@ from kpi import CostKpi, DurationKpi, AccKpi
 
 train_acc1 = AccKpi('train_acc1', 0.01, 0, actived=True, desc="test acc")
 train_acc5 = AccKpi('train_acc5', 0.01, 0, actived=True, desc="test acc")
-train_loss = AccKpi('train_loss', 0.01, 0, actived=True, desc="test acc")
-test_acc1 = CostKpi('test_acc1', 0.01, 0, actived=True, desc='test cost')
-test_acc5 = CostKpi('test_acc5', 0.01, 0, actived=True, desc='test cost')
+train_loss = CostKpi('train_loss', 0.01, 0, actived=True, desc="test acc")
+test_acc1 = AccKpi('test_acc1', 0.01, 0, actived=True, desc='test cost')
+test_acc5 = AccKpi('test_acc5', 0.01, 0, actived=True, desc='test cost')
 test_loss = CostKpi('test_loss', 0.01, 0, actived=True, desc='test cost')
 #train_speed_kpi = DurationKpi(
 #    'train_speed',
