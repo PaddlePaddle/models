@@ -29,7 +29,7 @@ FPN:
   max_level: 6
   min_level: 2
   num_chan: 256
-  spatial_scale: [0.003125, 0.0625, 0.125, 0.25]
+  spatial_scale: [0.03125, 0.0625, 0.125, 0.25]
 
 FPNRPNHead:
   anchor_generator:
