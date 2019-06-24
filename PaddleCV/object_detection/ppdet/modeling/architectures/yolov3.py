@@ -65,5 +65,8 @@ class YOLOv3(object):
     def train(self, feed_vars):
         return self._forward(feed_vars, mode='train')
 
+    def eval(self, feed_vars):
+        return self._forward(feed_vars, mode='test')
+
     def test(self, feed_vars):
         return self._forward(feed_vars, mode='test')
