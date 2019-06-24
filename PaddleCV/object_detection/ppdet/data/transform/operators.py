@@ -499,14 +499,14 @@ class ExpandImage(BaseOperator):
 
 @register_op
 class CropImage(BaseOperator):
-    def __init__(self, batch_sampler, satisfy_all=False, box_more_one=True):
+    def __init__(self, batch_sampler, satisfy_all=False, avoid_no_bbox=True):
         """
         Args:
             batch_sampler (list): Multiple sets of different
                                   parameters for cropping.
             satisfy_all (bool): whether all boxes must satisfy.
-            box_more_one (bool): if the number of box isn't 
-                                 more than one, then it doesn't satisfy.
+            avoid_no_bbox (bool): whether to to avoid the 
+                                  situation where the box does not appear.
             e.g.[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
@@ -521,7 +521,7 @@ class CropImage(BaseOperator):
         super(CropImage, self).__init__()
         self.batch_sampler = batch_sampler
         self.satisfy_all = satisfy_all
-        self.box_more_one = box_more_one
+        self.avoid_no_bbox = avoid_no_bbox
 
     def __call__(self, sample, context):
         """
@@ -560,7 +560,7 @@ class CropImage(BaseOperator):
             sample_bbox = clip_bbox(sample_bbox)
             crop_bbox, crop_class, crop_score = \
                 filter_and_process(sample_bbox, gt_bbox, gt_class, gt_score)
-            if self.box_more_one:
+            if self.avoid_no_bbox:
                 if len(crop_bbox) < 1:
                     continue
             xmin = int(sample_bbox[0] * im_width)
