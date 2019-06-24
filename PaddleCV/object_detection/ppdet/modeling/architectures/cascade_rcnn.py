@@ -159,5 +159,8 @@ class CascadeRCNN(object):
     def train(self, feed_vars):
         return self.build(feed_vars, 'train')
 
+    def eval(self, feed_vars):
+        return self.build(feed_vars, 'test')
+
     def test(self, feed_vars):
         return self.build(feed_vars, 'test')
