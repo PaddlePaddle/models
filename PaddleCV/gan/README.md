@@ -81,91 +81,76 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 **下载预训练模型: **
 本示例提供以下预训练模型:
 
-[Pix2Pix的预训练模型]()
-
-[CycleGAN的预训练模型]()
-
-[StarGAN的预训练模型]()
-
-[AttGAN的预训练模型]()
-
-[STGAN的预训练模型]()
+| Model| Pretrained model |
+|:---  |:---|
+| Pix2Pix  | [Pix2Pix的预训练模型]()  |
+| CycleGAN | [CycleGAN的预训练模型]() |
+| StarGAN  | [StarGAN的预训练模型]()  |
+| AttGAN   | [AttGAN的预训练模型]()   |
+| STGAN    | [STGAN的预训练模型]()     |
 
 下载完预训练模型之后，通过设置infer.py中`--init_model`加载预训练模型，测试所需要的图片。
 执行以下命令得到CyleGAN的预测结果：
 
-  python infer.py \
-    --model_net=cyclegan \
-    --init_model=$(path_to_init_model) \
-    --image_size=256 \
-    --dataset_dir=$(path_to_data) \
-    --input_style=$(A_or_B) \
-    --net_G=$(generator_network) \
-    --g_base_dims=$(base_dim_of_generator)
+    python infer.py \
+      --model_net=cyclegan \
+      --init_model=$(path_to_init_model) \
+      --image_size=256 \
+      --dataset_dir=$(path_to_data) \
+      --input_style=$(A_or_B) \
+      --net_G=$(generator_network) \
+      --g_base_dims=$(base_dim_of_generator)
 
 效果如图所示：
 
 
 执行以下命令得到Pix2Pix的预测结果：
 
-  python infer.py \
-    --model_net=Pix2pix \
-    --init_model=$(path_to_init_model) \
-    --image_size=256 \
-    --dataset_dir=$(path_to_data) \
-    --net_G=$(generator_network)
+    python infer.py \
+      --model_net=Pix2pix \
+      --init_model=$(path_to_init_model) \
+      --image_size=256 \
+      --dataset_dir=$(path_to_data) \
+      --net_G=$(generator_network)
 
 效果如图所示：
 
-执行以下命令得到StarGAN的预测结果：
+执行以下命令得到StarGAN,AttGAN和STGAN的预测结果：
 
-  python infer.py \
-    --model_net=StarGAN \
-    --init_model=$(path_to_init_model)\
-    --dataset_dir=$(path_to_data)
-
-效果如图所示：
-
-执行以下命令得到AttGAN的预测结果：
-
-  python infer.py \
-    --model_net=AttGAN \
-    --init_model=$(path_to_init_model)\
-    --dataset_dir=$(path_to_data)
+    python infer.py \
+      --model_net=$(StarGAN_or_AttGAN_or_STGAN) \
+      --init_model=$(path_to_init_model)\
+      --dataset_dir=$(path_to_data)
 
 效果如图所示：
 
-执行以下命令得到STGAN的预测结果：
-
-  python infer.py \
-    --model_net=STGAN \
-    --init_model=$(path_to_init_model)\
-    --dataset_dir=$(path_to_data)
-
-效果如图所示：
 
 **开始训练：** 数据准备完毕后，可以通过一下方式启动训练：
 
-  python train.py \
-    --model_net=$(name_of_model) \
-    --dataset=$(name_of_dataset) \
-    --data_dir=$(path_to_data) \
-    --train_list=$(path_to_train_data_list) \
-    --test_list=$(path_to_test_data_list) \
-    --batch_size=$(batch_size)
+    python train.py \
+      --model_net=$(name_of_model) \
+      --dataset=$(name_of_dataset) \
+      --data_dir=$(path_to_data) \
+      --train_list=$(path_to_train_data_list) \
+      --test_list=$(path_to_test_data_list) \
+      --batch_size=$(batch_size)
 
 - 可选参数见：
-  python train.py --help
-- 每个GAN都给出了一份运行示例，放在scripts文件夹内。
+
+    python train.py --help
+    
+- 每个GAN都给出了一份运行示例，放在scripts文件夹内，用户可以直接运行训练脚本快速开始训练。
 - 用户可以通过设置model_net参数来选择想要训练的模型，通过设置dataset参数来选择训练所需要的数据集。
 
 ### 模型测试
 模型测试是利用训练完成的生成模型进行图像生成。infer.py是主要的执行程序，调用示例如下：
 
-  python infer.py \
-    --model_net=$(name_of_model) \
-    --init_model=$(path_to_model) \
-    --dataset_dir=$(path_to_data)
+    python infer.py \
+      --model_net=$(name_of_model) \
+      --init_model=$(path_to_model) \
+      --dataset_dir=$(path_to_data)
+      
+- 每个GAN都给出了一份测试示例，放在scripts文件夹内，用户可以直接运行测试脚本得到测试结果。
 
 
 ## 参考文献
