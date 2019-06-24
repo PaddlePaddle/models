@@ -1,11 +1,26 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 import os
 import math
 import random
 import functools
 import numpy as np
-import paddle
 import cv2
 import io
+
+import paddle
 
 random.seed(0)
 np.random.seed(0)
@@ -81,8 +96,8 @@ def crop_image(img, target_size, center):
     height, width = img.shape[:2]
     size = target_size
     if center == True:
-        w_start = (width - size) / 2
-        h_start = (height - size) / 2
+        w_start = (width - size) // 2
+        h_start = (height - size) // 2
     else:
         w_start = np.random.randint(0, width - size + 1)
         h_start = np.random.randint(0, height - size + 1)
@@ -256,7 +271,7 @@ def val(settings,data_dir=DATA_DIR):
             data_dir=data_dir)
 
 
-def test(data_dir=DATA_DIR):
+def test(settings,data_dir=DATA_DIR):
     file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(file_list, 'test', shuffle=False,
+    return _reader_creator(settings, file_list, 'test', shuffle=False,
             data_dir=data_dir)

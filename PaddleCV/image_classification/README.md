@@ -64,6 +64,7 @@ python train.py \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
        --with_mem_opt=False \
+       --with_inplace=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
@@ -76,7 +77,8 @@ python train.py \
 * **class_dim**: the class number of the classification task. Default: 1000.
 * **image_shape**: input size of the network. Default: "3,224,224".
 * **model_save_dir**: the directory to save trained model. Default: "output".
-* **with_mem_opt**: whether to use memory optimization or not. Default: True.
+* **with_mem_opt**: whether to use memory optimization or not. Default: False.
+* **with_inplace**: whether to use inplace memory optimization or not. Default: True.
 * **lr_strategy**: learning rate changing strategy. Default: "piecewise_decay".
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
@@ -86,6 +88,15 @@ python train.py \
 * **scale_loss**: scale loss for fp16. Default: 1.0.
 * **l2_decay**: L2_decay parameter. Default: 1e-4.
 * **momentum_rate**: momentum_rate. Default: 0.9.
+* **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
+* **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.2.
+* **lower_scale**: the lower scale in random crop data processing, upper is 1.0. Default:0.08.
+* **lower_ratio**: the lower ratio in ramdom crop. Default:3./4. .
+* **upper_ration**: the upper ratio in ramdom crop. Default:4./3. .
+* **resize_short_size**: the resize_short_size. Default: 256.
+* **use_mixup**: whether to use mixup data processing or not. Default:False.
+* **mixup_alpha**: the mixup_alpha parameter. Default: 0.2.
+* **is_distill**: whether to use distill or not. Default: False.
 
 Or can start the training step by running the ```run.sh```.
 
@@ -167,13 +178,12 @@ Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. 
 |[ResNet101_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_vd_pretrained.tar) | 79.44%/94.47% |
 |[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.tar) | 78.26%/93.96% |
 |[ResNet152_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_vd_pretrained.tar) | 80.59%/95.30% |
-|[ResNet200_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_vd_pretrained.tar) | 80.93%/95.33% |
+|[ResNet200_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet200_vd_pretrained.tar) | 80.93%/95.33% |
 |[ResNeXt101_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_64x4d_pretrained.tar) | 79.35%/94.52% |
 |[ResNeXt101_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_64x4d_pretrained.tar) | 80.78%/95.20% |
 |[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_32x4d_pretrained.tar) | 78.44%/93.96% |
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.tar) | 79.12%/94.20% |
-|[SE154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar) | 81.45%/95.49% |
+|[SE154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar) | 81.40%/95.48% |
 |[GoogleNet](https://paddle-imagenet-models-name.bj.bcebos.com/GoogleNet_pretrained.tar) | 70.70%/89.66% |
 |[ShuffleNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_pretrained.tar) | 70.03%/89.17% |
-|[InceptionV4](https://paddle-imagenet-models-name.bj.bcebos.com/InceptionV4_pretrained.tar) | 80.88%/95.28% |
-
+|[InceptionV4](https://paddle-imagenet-models-name.bj.bcebos.com/InceptionV4_pretrained.tar) | 80.77%/95.26% |

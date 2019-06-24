@@ -1,19 +1,49 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 import os
 import numpy as np
 import time
 import sys
 import functools
 import math
+
+
+def set_paddle_flags(flags):
+    for key, value in flags.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect. 
+set_paddle_flags({
+    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
+    'FLAGS_fraction_of_gpu_memory_to_use': 0.98
+})
+import argparse
+import functools
+import subprocess
 import paddle
 import paddle.fluid as fluid
 import paddle.dataset.flowers as flowers
 import reader_cv2 as reader
-import argparse
-import functools
-import subprocess
 import utils
 import models
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
@@ -33,7 +63,8 @@ add_arg('num_epochs',       int,   120,                  "number of epochs.")
 add_arg('class_dim',        int,   1000,                 "Class number.")
 add_arg('image_shape',      str,   "3,224,224",          "input image size")
 add_arg('model_save_dir',   str,   "output",             "model save directory")
-add_arg('with_mem_opt',     bool,  True,                 "Whether to use memory optimization or not.")
+add_arg('with_mem_opt',     bool,  False,                 "Whether to use memory optimization or not.")
+add_arg('with_inplace',     bool,  True,                 "Whether to use inplace memory optimization.")
 add_arg('pretrained_model', str,   None,                 "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
 add_arg('lr',               float, 0.1,                  "set learning rate.")
@@ -218,7 +249,7 @@ def net_config(image, model, args, is_train, label=0, y_a=0, y_b=0, lam=0.0):
                     return avg_cost
                 else:
                     cost = calc_loss(epsilon,label,class_dim,softmax_out,use_label_smoothing)
-                    
+
             else:
                 cost = fluid.layers.cross_entropy(input=softmax_out, label=label)
         else:
@@ -226,7 +257,7 @@ def net_config(image, model, args, is_train, label=0, y_a=0, y_b=0, lam=0.0):
             softmax_out1, softmax_out = fluid.layers.softmax(out1), fluid.layers.softmax(out2)
             smooth_out1 = fluid.layers.label_smooth(label=softmax_out1, epsilon=0.0, dtype="float32")
             cost = fluid.layers.cross_entropy(input=softmax_out, label=smooth_out1, soft_label=True)
-        
+
         avg_cost = fluid.layers.mean(cost)
         if args.scale_loss > 1:
             avg_cost = fluid.layers.mean(x=cost) * float(args.scale_loss)
@@ -298,6 +329,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 else:
                     optimizer.minimize(avg_cost)
                 global_lr = optimizer._global_learning_rate()
+                global_lr.persistable=True
                 build_program_out.append(global_lr)
 
     return build_program_out
@@ -396,10 +428,21 @@ def train(args):
     # use_ngraph is for CPU only, please refer to README_ngraph.md for details
     use_ngraph = os.getenv('FLAGS_use_ngraph')
     if not use_ngraph:
+        build_strategy = fluid.BuildStrategy()
+        # memopt may affect GC results
+        #build_strategy.memory_optimize = args.with_mem_opt
+        build_strategy.enable_inplace = args.with_inplace
+        #build_strategy.fuse_all_reduce_ops=1
+
+        exec_strategy = fluid.ExecutionStrategy()
+        exec_strategy.num_iteration_per_drop_scope = 10
+
         train_exe = fluid.ParallelExecutor(
             main_program=train_prog,
             use_cuda=bool(args.use_gpu),
-            loss_name=train_cost.name)
+            loss_name=train_cost.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     else:
         train_exe = exe
 
@@ -413,6 +456,7 @@ def train(args):
         test_info = [[], [], []]
         train_time = []
         batch_id = 0
+        time_record=[]
         try:
             while True:
                 t1 = time.time()
@@ -434,6 +478,7 @@ def train(args):
 
                 t2 = time.time()
                 period = t2 - t1
+                time_record.append(period)
 
                 loss = np.mean(np.array(loss))
                 train_info[0].append(loss)
@@ -441,6 +486,8 @@ def train(args):
                 train_time.append(period)
 
                 if batch_id % 10 == 0:
+                    period = np.mean(time_record)
+                    time_record=[]
                     if use_mixup:
                         print("Pass {0}, trainbatch {1}, loss {2}, lr {3}, time {4}"
                               .format(pass_id, batch_id, "%.5f"%loss, "%.5f" %lr, "%2.2f sec" % period))
