@@ -53,10 +53,8 @@ def main():
     else:
         test_feed = create(cfg['test_feed'])
 
-    if args.image_or_dir:
-        test_feed.image_or_dir = args.image_or_dir
-    if args.image_ext:
-        test_feed.image_ext = args.image_ext
+    test_feed.infer_dir = args.infer_dir
+    test_feed.infer_image = args.infer_image
 
     place = fluid.CUDAPlace(0) if cfg['use_gpu'] else fluid.CPUPlace()
     exe = fluid.Executor(place)

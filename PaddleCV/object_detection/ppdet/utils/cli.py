@@ -62,15 +62,15 @@ def parse_args():
         default=False,
         help="Whether perform evaluation in train")
     parser.add_argument(
-        "--image-or-dir",
+        "--infer-dir",
         type=str,
         default=None,
-        help="Image or directory to perform inference.")
+        help="Image directory to perform inference.")
     parser.add_argument(
-        "--image-ext",
+        "--infer-image",
         type=str,
         default=None,
-        help="Image file extension, None for no checking.")
+        help="Image to perform inference, --infer-image has a higher priority than --image-dir")
     parser.add_argument(
         "-o", "--opt", nargs=REMAINDER, help="set configuration options")
     args = parser.parse_args()
