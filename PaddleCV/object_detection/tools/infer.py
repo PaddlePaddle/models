@@ -76,7 +76,7 @@ def main():
     merge_config(args.cli_config)
 
     if 'test_feed' not in cfg:
-        test_feed = create(type(main_arch).__name__ + 'TestFeed')
+        test_feed = create(main_arch + 'TestFeed')
     else:
         test_feed = create(cfg['test_feed'])
 
