@@ -25,7 +25,7 @@ ResNet:
   norm_type: affine_channel
   norm_decay: true
   depth: 50
-  feature_maps: [2,3, 4]
+  feature_maps: 4
   freeze_at: 2
 
 ResNetC5:
