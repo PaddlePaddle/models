@@ -93,7 +93,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 执行以下命令得到CyleGAN的预测结果：
 
     python infer.py \
-      --model_net=cyclegan \
+      --model_net=CycleGAN \
       --init_model=$(path_to_init_model) \
       --image_size=256 \
       --dataset_dir=$(path_to_data) \
