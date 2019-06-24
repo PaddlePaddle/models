@@ -73,10 +73,67 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 注意: pix2pix模型数据集准备中的list文件需要通过scripts文件夹里的make_pair_data.py来生成，可以使用以下命令来生成：
   python scripts/make_pair_data.py \
     --direction=A2B
-用户可以通过指定direction参数生成list文件，从而确保图像风格转变的方向。
+用户可以通过设置`--direction`参数生成list文件，从而确保图像风格转变的方向。
 
-### 模型训练
+###模型训练
+**下载预训练模型: **
+本示例提供以下预训练模型:
+[Pix2Pix的预训练模型]()
+[CycleGAN的预训练模型]()
+[StarGAN的预训练模型]()
+[AttGAN的预训练模型]()
+[STGAN的预训练模型]()
+
+下载完预训练模型之后，通过设置infer.py中`--init_model`加载预训练模型，测试所需要的图片。
+执行以下命令得到CyleGAN的预测结果：
+
+  python infer.py \
+    --model_net=cyclegan \
+    --init_model=$(path_to_init_model) \
+    --input=$(path_to_data) \
+    --input_style=$(A_or_B)
+
+效果如图所示：
+
+
+执行以下命令得到Pix2Pix的预测结果：
+
+  python infer.py \
+    --model_net=Pix2pix \
+    --init_model=$(path_to_init_model) \
+    --input=$(path_to_data)
+
+效果如图所示：
+
+执行以下命令得到StarGAN的预测结果：
+
+  python infer.py \
+    --model_net=StarGAN \
+    --init_model=$(path_to_init_model)\
+    --dataset_dir=$(path_to_data)
+
+效果如图所示：
+
+执行以下命令得到AttGAN的预测结果：
+
+  python infer.py \
+    --model_net=AttGAN \
+    --init_model=$(path_to_init_model)\
+    --dataset_dir=$(path_to_data)
+
+效果如图所示：
+
+执行以下命令得到STGAN的预测结果：
+
+  python infer.py \
+    --model_net=STGAN \
+    --init_model=$(path_to_init_model)\
+    --dataset_dir=$(path_to_data)
+
+效果如图所示：
+
 **开始训练：** 数据准备完毕后，可以通过一下方式启动训练：
+
   python train.py \
     --model_net=$(name_of_model) \
     --dataset=$(name_of_dataset) \
@@ -85,10 +142,14 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
     --test_list=$(path_to_test_data_list) \
     --batch_size=$(batch_size)
 
-用户可以通过设置model_net参数来选择想要训练的模型，通过设置dataset参数来选择训练所需要的数据集。
+- 可选参数见：
+  python train.py --help
+- 每个GAN都给出了一份运行示例，放在scripts文件夹内。
+- 用户可以通过设置model_net参数来选择想要训练的模型，通过设置dataset参数来选择训练所需要的数据集。
 
 ### 模型测试
 模型测试是利用训练完成的生成模型进行图像生成。infer.py是主要的执行程序，调用示例如下：
+
   python infer.py \
     --model_net=$(name_of_model) \
     --init_model=$(path_to_model) \
