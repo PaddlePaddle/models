@@ -8,19 +8,18 @@
 - [Other Dependencies](#other-dependencies)
 - [PaddleDetection](#paddle-detection)
 - [Datasets](#datasets)
-- [Update](#update)
 
 
 ## Introduction
 
-This document covers how to install PaddleDetection, its dependencies (including PaddlePaddle), and the COCO and PascalVOC dataset.
+This document covers how to install PaddleDetection, its dependencies (including PaddlePaddle), and COCO and PASCAL VOC dataset.
 
 For general information about PaddleDetection, please see [README.md](./README.md).
 
 
 ## PaddlePaddle
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.5 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
+Running PaddleDetection requires PaddelPaddle Fluid v.1.5 and later. please follow the installation instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html).
 
 Please make sure your PaddlePaddle installation was sucessful and the version of your PaddlePaddle is not lower than the version required. You can check PaddlePaddle installation with following commands.
 
@@ -31,6 +30,13 @@ python -c "from paddle.fluid import fluid; fluid.install_check.run_check()"
 # To print PaddlePaddle version
 python -c "import paddle; print(paddle.__version__)"
 ```
+
+### Requirements:
+
+- Python2 or Python3
+- CUDA >= 8.0
+- cuDNN >= 7.0
+- nccl >= 2.1.2
 
 
 ## Other Dependencies
@@ -73,30 +79,54 @@ pip install -r requirements.txt
 **Check PaddleDetection architectures tests pass:**
 
 ```
+export PYTHONPATH=$PYTHONPATH:.
 python ppdet/modeling/tests/test_architectures.py
 ```
 
 
 ## Datasets
 
-PaddleDetection support train/eval/infer models with dataset [MSCOCO](http://cocodataset.org) and [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/), you can set up dataset in following methods.
+PaddleDetection support train/eval/infer models with dataset [MSCOCO](http://cocodataset.org) and [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/), you can set up dataset as follows.
 
 **Create symlinks for datasets:**
 
-Dataset default path in PaddleDetection config files is `data/coco` and `data/voc`, you can set symlinks for your COCO/COCO-like or VOC/VOC-like datasets by following commands:
+Dataset default path in PaddleDetection config files is `data/coco` and `data/voc`, you can set symlinks for your COCO/COCO-like or VOC/VOC-like datasets with following commands:
 
 ```
 ln -sf <path/to/coco> $PaddleDetection/data/coco
 ln -sf <path/to/voc> $PaddleDetection/data/voc
 ```
 
+If you do not have datasets locally, you can download dataset as follows:
+
+- MSCOCO-2017
+
+```
+# download
+wget http://images.cocodataset.org/zips/train2017.zip
+wget http://images.cocodataset.org/zips/val2017.zip
+wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+
+# decompress
+unzip train2017.zip
+unzip val2017.zip
+unzip annotations_trainval2017.zip
+```
+
+- VOC2012
+
+```
+# download
+wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
+
+# decompress
+tar -xf VOCtrainval_11-May-2012.tar
+```
+
 **Auto download datasets:**
 
-If you set up models while `data/coc` and `data/voc` is not found, PaddleDetection will automaticly from [MSCOCO-2017](http://images.cocodataset.org) and [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC), decompress and save download datasets under `~/.cache/paddle/dataset/`. Once datasets has been download to `~/.cache/paddle/dataset/`, PaddleDetection will be able to find datasets in your next model settting up.
+If you set up models while `data/coc` and `data/voc` is not found, PaddleDetection will automaticaly download them from [MSCOCO-2017](http://images.cocodataset.org) and [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC), the decompressed datasets will be places in `~/.cache/paddle/dataset/` and can be discovered automaticaly in the next setting up time.
 
 
-**NOTE:** For detail setting of datasets, please see [DATASET.md](./ppdet/data/README.md)
+**NOTE:** For further informations on the datasets, please see [DATASET.md](../ppdet/data/README.md)
 
-## Update
-
-- 6/2019: Add installing PaddleDetection
