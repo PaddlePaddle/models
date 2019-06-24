@@ -70,7 +70,7 @@ def parse_args():
         "--infer_img",
         type=str,
         default=None,
-        help="Image path to perform inference, --infer-img has a higher priority than --image-dir")
+        help="Image path to perform inference, --infer-img has a higher priority than --infer_dir")
     parser.add_argument(
         "-o", "--opt", nargs=REMAINDER, help="set configuration options")
     args = parser.parse_args()
