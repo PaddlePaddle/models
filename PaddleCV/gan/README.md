@@ -75,7 +75,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
     --direction=A2B
 用户可以通过设置`--direction`参数生成list文件，从而确保图像风格转变的方向。
 
-###模型训练
+### 模型训练
 **下载预训练模型: **
 本示例提供以下预训练模型:
 
