@@ -703,7 +703,8 @@ class SSDTrainFeed(DataFeed):
                                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
                                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
                                         [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
-                         satisfy_all=False), ResizeImage(
+                         satisfy_all=False,
+                         box_more_one=False), ResizeImage(
                              target_size=300, use_cv2=False,
                              interp=1), RandomFlipImage(is_normalized=True),
                      Permute(), NormalizeImage(

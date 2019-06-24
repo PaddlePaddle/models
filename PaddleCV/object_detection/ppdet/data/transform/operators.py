@@ -499,11 +499,14 @@ class ExpandImage(BaseOperator):
 
 @register_op
 class CropImage(BaseOperator):
-    def __init__(self, batch_sampler, satisfy_all=False):
+    def __init__(self, batch_sampler, satisfy_all=False, box_more_one=True):
         """
         Args:
             batch_sampler (list): Multiple sets of different
                                   parameters for cropping.
+            satisfy_all (bool): whether all boxes must satisfy.
+            box_more_one (bool): if the number of box isn't 
+                                 more than one, then it doesn't satisfy.
             e.g.[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
@@ -518,6 +521,7 @@ class CropImage(BaseOperator):
         super(CropImage, self).__init__()
         self.batch_sampler = batch_sampler
         self.satisfy_all = satisfy_all
+        self.box_more_one = box_more_one
 
     def __call__(self, sample, context):
         """
@@ -550,24 +554,42 @@ class CropImage(BaseOperator):
                     sampled_bbox.append(sample_bbox)
                     found = found + 1
         im = np.array(im)
-        while sampled_bbox:
-            idx = int(np.random.uniform(0, len(sampled_bbox)))
-            sample_bbox = sampled_bbox.pop(idx)
-            sample_bbox = clip_bbox(sample_bbox)
-            crop_bbox, crop_class, crop_score = \
-                filter_and_process(sample_bbox, gt_bbox, gt_class, gt_score)
-            if len(crop_bbox) <= 1:
-                continue
-            xmin = int(sample_bbox[0] * im_width)
-            xmax = int(sample_bbox[2] * im_width)
-            ymin = int(sample_bbox[1] * im_height)
-            ymax = int(sample_bbox[3] * im_height)
-            im = im[ymin:ymax, xmin:xmax]
-            sample['image'] = im
-            sample['gt_bbox'] = crop_bbox
-            sample['gt_class'] = crop_class
-            sample['gt_score'] = crop_score
-            return sample
+        if self.box_more_one:
+            while sampled_bbox:
+                idx = int(np.random.uniform(0, len(sampled_bbox)))
+                sample_bbox = sampled_bbox.pop(idx)
+                sample_bbox = clip_bbox(sample_bbox)
+                crop_bbox, crop_class, crop_score = \
+                    filter_and_process(sample_bbox, gt_bbox, gt_class, gt_score)
+                if len(crop_bbox) <= 1:
+                    continue
+                xmin = int(sample_bbox[0] * im_width)
+                xmax = int(sample_bbox[2] * im_width)
+                ymin = int(sample_bbox[1] * im_height)
+                ymax = int(sample_bbox[3] * im_height)
+                im = im[ymin:ymax, xmin:xmax]
+                sample['image'] = im
+                sample['gt_bbox'] = crop_bbox
+                sample['gt_class'] = crop_class
+                sample['gt_score'] = crop_score
+                return sample
+        else:
+            if len(sampled_bbox) > 0:
+                idx = int(np.random.uniform(0, len(sampled_bbox)))
+                sample_bbox = sampled_bbox[idx]
+                sample_bbox = clip_bbox(sample_bbox)
+                xmin = int(sample_bbox[0] * im_width)
+                xmax = int(sample_bbox[2] * im_width)
+                ymin = int(sample_bbox[1] * im_height)
+                ymax = int(sample_bbox[3] * im_height)
+                im = im[ymin:ymax, xmin:xmax]
+                gt_bbox, gt_class, gt_score = \
+                    filter_and_process(sample_bbox, gt_bbox, gt_class, gt_score)
+                sample['image'] = im
+                sample['gt_bbox'] = gt_bbox
+                sample['gt_class'] = gt_class
+                sample['gt_score'] = gt_score
+                return sample
         return sample
 
 
