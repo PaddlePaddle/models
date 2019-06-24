@@ -43,7 +43,7 @@ RPNHead:
   train_proposal:
     min_size: 0.0
     nms_thresh: 0.7
-    pre_nums_top_n: 12000
+    pre_nms_top_n: 12000
     post_nms_top_n: 2000
   test_proposal:
     min_size: 0.0
