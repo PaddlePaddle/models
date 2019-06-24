@@ -42,7 +42,7 @@ def CentorCrop(img, crop_w, crop_h):
 def RandomHorizonFlip(img):
     i = np.random.rand()
     if i > 0.5:
-        img = ImageOps.mirror(image)
+        img = ImageOps.mirror(img)
     return img
 
 
@@ -262,7 +262,7 @@ class celeba_reader_creator(reader_creator):
         attr_names = args.selected_attrs.split(',')
         for line in lines:
             arr = line.strip().split()
-            name = './images/' + arr[0]
+            name = os.path.join('img_align_celeba', arr[0])
             label = []
             for attr_name in attr_names:
                 idx = attr2idx[attr_name]
@@ -283,13 +283,20 @@ class celeba_reader_creator(reader_creator):
                 if shuffle:
                     np.random.shuffle(self.images)
                 for file, label in self.images:
-                    img = Image.open(os.path.join(self.image_dir,
-                                                  file)).convert('RGB')
-                    label = np.array(label).astype("float32")
-                    label = (label + 1) // 2
-                    img = CentorCrop(img, args.crop_size, args.crop_size)
-                    img = img.resize((args.load_size, args.load_size),
-                                     Image.BILINEAR)
+                    if args.model_net == "StarGAN":
+                        img = Image.open(os.path.join(self.image_dir, file))
+                        label = np.array(label).astype("float32")
+                        img = RandomHorizonFlip(img)
+                        img = CentorCrop(img, args.crop_size, args.crop_size)
+                        img = img.resize((args.image_size, args.image_size),
+                                         Image.BILINEAR)
+                    else:
+                        img = Image.open(os.path.join(self.image_dir,
+                                                      file)).convert('RGB')
+                        label = np.array(label).astype("float32")
+                        img = CentorCrop(img, args.crop_size, args.crop_size)
+                        img = img.resize((args.image_size, args.image_size),
+                                         Image.BILINEAR)
                     img = (np.array(img).astype('float32') / 255.0 - 0.5) / 0.5
                     img = img.transpose([2, 0, 1])
 
@@ -310,10 +317,9 @@ class celeba_reader_creator(reader_creator):
             batch_out_2 = []
             batch_out_3 = []
             for file, label in self.images:
-                img = Image.open(os.path.join(self.image_dir, file)).convert(
-                    'RGB')
+                img = Image.open(os.path.join(self.image_dir, file))
                 label = np.array(label).astype("float32")
-                img = CentorCrop(img, 170, 170)
+                img = CentorCrop(img, args.crop_size, args.crop_size)
                 img = img.resize((args.image_size, args.image_size),
                                  Image.BILINEAR)
                 img = (np.array(img).astype('float32') / 255.0 - 0.5) / 0.5
@@ -482,7 +488,7 @@ class data_reader(object):
                     self.cfg, shuffle=self.shuffle)
                 return reader, reader_test, batch_num
 
-            else:
+            elif self.cfg.model_net == 'Pix2pix':
                 dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
                 train_list = os.path.join(dataset_dir, 'train.txt')
                 if self.cfg.train_list is not None:
@@ -508,3 +514,22 @@ class data_reader(object):
                 reader = train_reader.get_train_reader(
                     self.cfg, shuffle=self.shuffle)
                 return reader, reader_test, batch_num
+            else:
+                dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
+                train_list = os.path.join(dataset_dir, 'train.txt')
+                if self.cfg.train_list is not None:
+                    train_list = self.cfg.train_list
+                train_reader = reader_creator(
+                    image_dir=dataset_dir, list_filename=train_list)
+                reader_test = None
+                if self.cfg.run_test:
+                    test_list = os.path.join(dataset_dir, "test.txt")
+                    test_reader = reader_creator(
+                        image_dir=dataset_dir,
+                        list_filename=test_list,
+                        batch_size=1,
+                        drop_last=self.cfg.drop_last)
+                    reader_test = test_reader.get_test_reader(
+                        self.cfg, shuffle=False, return_name=True)
+                batch_num = train_reader.len()
+                return train_reader, reader_test, batch_num

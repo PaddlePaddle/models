@@ -23,9 +23,10 @@ from PIL import Image
 import paddle.fluid as fluid
 import paddle
 import numpy as np
-from scipy.misc import imsave
+import imageio
 import glob
 from util.config import add_arguments, print_arguments
+import copy
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -78,7 +79,10 @@ def infer(args):
         from network.Pix2pix_network import Pix2pix_model
         model = Pix2pix_model()
         fake = model.network_G(input, "generator", cfg=args)
-
+    elif args.model_net == 'StarGAN':
+        from network.StarGAN_network import StarGAN_model
+        model = StarGAN_model()
+        fake = model.network_G(input, label_trg_, name="g_main", cfg=args)
     elif args.model_net == 'STGAN':
         from network.STGAN_network import STGAN_model
         model = STGAN_model()
@@ -150,8 +154,39 @@ def infer(args):
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
             images_concat = np.concatenate(images_concat, 1)
-            imsave(args.output + "/fake_img_" + name[0], (
+            imageio.imwrite(args.output + "/fake_img_" + name[0], (
                 (images_concat + 1) * 127.5).astype(np.uint8))
+    elif args.model_net == 'StarGAN':
+        test_reader = celeba_reader_creator(
+            image_dir=args.dataset_dir,
+            list_filename=args.test_list,
+            batch_size=args.batch_size,
+            drop_last=False,
+            args=args)
+        reader_test = test_reader.get_test_reader(
+            args, shuffle=False, return_name=True)
+        for data in zip(reader_test()):
+            real_img, label_org, name = data[0]
+            tensor_img = fluid.LoDTensor()
+            tensor_label_org = fluid.LoDTensor()
+            tensor_img.set(real_img, place)
+            tensor_label_org.set(label_org, place)
+            real_img_temp = np.squeeze(real_img).transpose([1, 2, 0])
+            images = [real_img_temp]
+            for i in range(cfg.c_dim):
+                label_trg = np.zeros([1, cfg.c_dim]).astype("float32")
+                label_trg[0][i] = 1
+                tensor_label_trg = fluid.LoDTensor()
+                tensor_label_trg.set(label_trg, place)
+                out = exe.run(
+                    feed={"input": tensor_img,
+                          "label_trg_": tensor_label_trg},
+                    fetch_list=fake.name)
+                fake_temp = np.squeeze(out[0]).transpose([1, 2, 0])
+                images.append(fake_temp)
+            images_concat = np.concatenate(images, 1)
+            imageio.imwrite(out_path + "/fake_img" + str(epoch) + "_" + name[0],
+                            ((images_concat + 1) * 127.5).astype(np.uint8))
 
     elif args.model_net == 'Pix2pix' or args.model_net == 'cyclegan':
         for file in glob.glob(args.input):
@@ -170,7 +205,7 @@ def infer(args):
             fake_temp = np.squeeze(fake_temp[0]).transpose([1, 2, 0])
             input_temp = np.squeeze(data).transpose([1, 2, 0])
 
-            imsave(args.output + "/fake_" + image_name, (
+            imageio.imwrite(args.output + "/fake_" + image_name, (
                 (fake_temp + 1) * 127.5).astype(np.uint8))
     else:
         raise NotImplementedError("model_net {} is not support".format(

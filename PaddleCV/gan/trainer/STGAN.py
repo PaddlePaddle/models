@@ -159,20 +159,21 @@ class DTrainer():
             if fluid.io.is_parameter(var) and var.name.startswith(
                     "discriminator"):
                 vars.append(var.name)
-        grad = fluid.gradients(pred, x, no_grad_set=vars)
+        grad = fluid.gradients(pred, x, no_grad_set=vars)[0]
         grad_shape = grad.shape
         grad = fluid.layers.reshape(
             grad, [-1, grad_shape[1] * grad_shape[2] * grad_shape[3]])
-        epsilon = 1e-5
         norm = fluid.layers.sqrt(
             fluid.layers.reduce_sum(
-                fluid.layers.square(grad), dim=1) + epsilon)
+                fluid.layers.square(grad), dim=1))
         gp = fluid.layers.reduce_mean(fluid.layers.square(norm - 1.0))
         return gp
 
 
 class STGAN(object):
     def add_special_args(self, parser):
+        parser.add_argument(
+            '--image_size', type=int, default=256, help="image size")
         parser.add_argument(
             '--g_lr',
             type=float,
@@ -246,7 +247,7 @@ class STGAN(object):
         self.batch_num = batch_num
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.load_size, self.cfg.load_size]
+        data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
 
         image_real = fluid.layers.data(
             name='image_real', shape=data_shape, dtype='float32')
@@ -295,10 +296,12 @@ class STGAN(object):
                 label_trg = copy.deepcopy(label_org)
 
                 np.random.shuffle(label_trg)
-                label_org_ = map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
-                                 label_org)
-                label_trg_ = map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
-                                 label_trg)
+                label_org_ = list(
+                    map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
+                        label_org))
+                label_trg_ = list(
+                    map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
+                        label_trg))
 
                 tensor_img = fluid.LoDTensor()
                 tensor_label_org = fluid.LoDTensor()
