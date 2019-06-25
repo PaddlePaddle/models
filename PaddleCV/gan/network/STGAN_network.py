@@ -89,7 +89,7 @@ class STGAN_model(object):
                 activation_fn='leaky_relu',
                 name=name + str(i),
                 use_bias=False,
-                relufactor=0.01,
+                relufactor=0.2,
                 initial='kaiming')
             zs.append(z)
 
@@ -164,7 +164,7 @@ class STGAN_model(object):
                     padding_type='SAME',
                     name=name + str(i),
                     activation_fn='tanh',
-                    use_bias=True,
+                    use_bias=False,
                     initial='kaiming')
         return x
 
@@ -190,7 +190,7 @@ class STGAN_model(object):
                 activation_fn='leaky_relu',
                 name=name + str(i),
                 use_bias=True,
-                relufactor=0.01,
+                relufactor=0.2,
                 initial='kaiming')
 
         logit_gan = linear(
@@ -228,7 +228,7 @@ class STGAN_model(object):
             2,
             padding_type='SAME',
             name=name + '_deconv2d',
-            use_bias=True,
+            use_bias=False,
             initial='kaiming'
         )  # upsample and make `channel` identical to `out_channel`
         reset_gate = conv2d(
@@ -239,7 +239,7 @@ class STGAN_model(object):
             norm=norm,
             activation_fn='sigmoid',
             padding_type='SAME',
-            use_bias=True,
+            use_bias=False,
             name=name + '_reset_gate',
             initial='kaiming')
         update_gate = conv2d(
@@ -250,7 +250,7 @@ class STGAN_model(object):
             norm=norm,
             activation_fn='sigmoid',
             padding_type='SAME',
-            use_bias=True,
+            use_bias=False,
             name=name + '_update_gate',
             initial='kaiming')
         left_state = reset_gate * state_
@@ -263,7 +263,7 @@ class STGAN_model(object):
             activation_fn='tanh',
             name=name + '_info',
             padding_type='SAME',
-            use_bias=True,
+            use_bias=False,
             initial='kaiming')
         output = (1 - update_gate) * state_ + update_gate * new_info
         if pass_state == 'output':
