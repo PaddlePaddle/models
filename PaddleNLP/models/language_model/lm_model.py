@@ -358,7 +358,7 @@ def lm_model(hidden_size,
             default_initializer=fluid.initializer.UniformInitializer(
                 low=-init_scale, high=init_scale))
         rnn_out = layers.transpose(rnn_out, perm=[1, 0, 2])
-    elif rnn_model == "basic_api":
+    elif rnn_model == "basic_lstm":
         print( "basic api")
         rnn_out, last_hidden, last_cell = basic_lstm( x_emb, init_hidden, init_cell, hidden_size, num_layers=num_layers, batch_first=True, dropout_prob=dropout, param_attr = ParamAttr( initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale) ), bias_attr = ParamAttr( initializer = fluid.initializer.Constant(0.0) ))
     else:
