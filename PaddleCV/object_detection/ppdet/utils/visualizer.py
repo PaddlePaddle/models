@@ -45,7 +45,7 @@ def visualize_results(image_path,
         os.makedirs(SAVE_HOME)
 
     logger.info("Image {} detect: ".format(image_path))
-    image = Image.open(image_path)
+    image = Image.open(image_path).convert('RGB')
     if mask_results:
         image = draw_mask(image, mask_results, threshold)
     if bbox_results:

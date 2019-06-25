@@ -119,7 +119,9 @@ def main():
 
     anno_file = getattr(test_feed.dataset, 'annotation', None)
     with_background = getattr(test_feed, 'with_background', True)
-    clsid2catid, catid2name = get_category_info(anno_file, with_background)
+    use_default_label = getattr(test_feed, 'use_default_label', False)
+    clsid2catid, catid2name = get_category_info(anno_file, with_background,
+                                                use_default_label)
 
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
@@ -147,7 +149,7 @@ def main():
                               mask_results)
 
         if cfg['metric'] == "VOC":
-            bbox_results = bbox2out([res], clsid2catid)
+            bbox_results = bbox2out([res], clsid2catid, True)
             visualize_results(image_path, catid2name, 0.5, bbox_results,
                               None, True)
 

@@ -21,6 +21,9 @@ import os
 import sys
 import numpy as np
 
+from ..data.source.voc_loader import pascalvoc_label
+from .coco_eval import bbox2out
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -29,52 +32,14 @@ __all__ = [
 ]
 
 
-def clip_bbox(bbox):
-    xmin = max(min(bbox[0], 1.), 0.)
-    ymin = max(min(bbox[1], 1.), 0.)
-    xmax = max(min(bbox[2], 1.), 0.)
-    ymax = max(min(bbox[3], 1.), 0.)
-    return xmin, ymin, xmax, ymax
-
-
-def bbox2out(results, clsid2catid):
-    xywh_res = []
-    for t in results:
-        bboxes = t['bbox'][0]
-        lengths = t['bbox'][1][0]
-        im_ids = np.array(t['im_id'][0])
-        if bboxes.shape == (1, 1) or bboxes is None:
-            continue
-
-        k = 0
-        for i in range(len(lengths)):
-            num = lengths[i]
-            im_id = int(im_ids[i][0])
-            for j in range(num):
-                dt = bboxes[k]
-                clsid, score, xmin, ymin, xmax, ymax = dt.tolist()
-                xmin, ymin, xmax, ymax = \
-                        clip_bbox([xmin, ymin, xmax, ymax])
-                catid = clsid2catid[clsid]
-                w = xmax - xmin
-                h = ymax - ymin
-                bbox = [xmin, ymin, w, h]
-                res = {
-                    'image_id': im_id,
-                    'category_id': catid,
-                    'bbox': bbox,
-                    'score': score
-                }
-                xywh_res.append(res)
-                k += 1
-    return xywh_res
-
-
-def get_category_info(anno_file=None, with_background=True):
-    if anno_file is None or not os.path.exists(anno_file):
+def get_category_info(anno_file=None,
+                      with_background=True,
+                      use_default_label=False):
+    if use_default_label or anno_file is None \
+            or not os.path.exists(anno_file):
         logger.info("Not found annotation file {}, load "
                     "voc2012 categories.".format(anno_file))
-        return voc2012_category_info(with_background)
+        return vocall_category_info(with_background)
     else:
         logger.info("Load categories from {}".format(anno_file))
         return get_category_info_from_anno(anno_file, with_background)
@@ -106,36 +71,18 @@ def get_category_info_from_anno(anno_file, with_background=True):
     return clsid2catid, catid2name
 
 
-def voc2012_category_info(with_background=True):
+def vocall_category_info(with_background=True):
     """
     Get class id to category id map and category id
-    to category name map of voc2017 dataset
+    to category name map of mixup voc dataset
 
     Args:
         with_background (bool, default True):
             whether load background as class 0.
     """
-
-    cats = ['sheep'
-            'horse'
-            'bicycle'
-            'aeroplane'
-            'cow'
-            'car'
-            'dog'
-            'bus'
-            'cat'
-            'person'
-            'train'
-            'diningtable'
-            'bottle'
-            'sofa'
-            'pottedplant'
-            'tvmonitor'
-            'chair'
-            'bird'
-            'boat'
-            'motorbike']
+    label_map = pascalvoc_label()
+    label_map = sorted(label_map, key=lambda x: x[1])
+    cats = label_map.keys()
 
     if with_background:
         cats.insert(0, 'background')
