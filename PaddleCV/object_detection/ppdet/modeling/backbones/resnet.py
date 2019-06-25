@@ -152,8 +152,7 @@ class ResNet(object):
         ch_in = input.shape[1]
         # the naming rule is same as pretrained weight
         name = self.na.fix_shortcut_name(name)
-
-        if ch_in != ch_out or stride != 1 or is_first:
+        if ch_in != ch_out or stride != 1 or (self.depth < 50 and is_first):
             if max_pooling_in_short_cut and not is_first:
                 input = fluid.layers.pool2d(
                     input=input,
