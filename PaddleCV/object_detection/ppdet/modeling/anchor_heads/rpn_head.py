@@ -436,3 +436,59 @@ class FPNRPNHead(RPNHead):
         anchors = fluid.layers.concat(anchors)
         anchor_var = fluid.layers.concat(anchor_vars)
         return rpn_cls, rpn_bbox, anchors, anchor_var
+
+@register
+class ESFPNRPNHead(RPNHead):
+    """
+    ESFPNRPNHead: Enhanced Single FPNRPN Head, see ...
+    use P4 are RPN head.
+
+    Args:
+        anchor_generator (object): `AnchorGenerator` instance
+        rpn_target_assign (object): `RPNTargetAssign` instance
+        train_proposal (object): `GenerateProposals` instance for training
+        test_proposal (object): `GenerateProposals` instance for testing
+    """
+    __inject__ = [
+        'anchor_generator', 'rpn_target_assign', 'train_proposal',
+        'test_proposal'
+    ]
+
+    def __init__(self,
+                 anchor_generator=AnchorGenerator().__dict__,
+                 rpn_target_assign=RPNTargetAssign().__dict__,
+                 train_proposal=GenerateProposals(12000, 2000).__dict__,
+                 test_proposal=GenerateProposals().__dict__):
+        super(ESFPNRPNHead, self).__init__(anchor_generator, rpn_target_assign,
+                                         train_proposal, test_proposal)
+
+    def get_proposals(self, body_feats, im_info, mode='train'):
+        """
+        Get proposals according to the output of backbone.
+
+        Args:
+            body_feats (dict): The dictionary of feature maps from backbone.
+            im_info(Variable): The information of image with shape [N, 3] with
+                shape (height, width, scale).
+            body_feat_names(list): A list of names of feature maps from
+                backbone.
+
+        Returns:
+            rpn_rois(Variable): Output proposals with shape of (rois_num, 4).
+        """
+        # In ESFPNRPN Heads, only the last feature map of backbone is used.
+        body_feat = list(body_feats.values())[0]
+        
+        rpn_cls_score, rpn_bbox_pred = self._get_output(body_feat)
+
+        rpn_cls_score_prob = fluid.layers.sigmoid(
+            rpn_cls_score, name='rpn_cls_score_prob')
+
+        prop_op = self.train_proposal if mode == 'train' else self.test_proposal
+        rpn_rois, rpn_roi_probs = prop_op(
+            scores=rpn_cls_score_prob,
+            bbox_deltas=rpn_bbox_pred,
+            im_info=im_info,
+            anchors=self.anchor,
+            variances=self.anchor_var)
+        return rpn_rois
