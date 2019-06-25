@@ -22,6 +22,8 @@ from paddle.fluid.layers.control_flow import StaticRNN as PaddingRNN
 import numpy as np
 from paddle.fluid import ParamAttr
 from paddle.fluid.contrib.layers import basic_lstm
+
+
 def lm_model(hidden_size,
              vocab_size,
              batch_size,
@@ -359,8 +361,9 @@ def lm_model(hidden_size,
                 low=-init_scale, high=init_scale))
         rnn_out = layers.transpose(rnn_out, perm=[1, 0, 2])
     elif rnn_model == "basic_lstm":
-        print( "basic api")
-        rnn_out, last_hidden, last_cell = basic_lstm( x_emb, init_hidden, init_cell, hidden_size, num_layers=num_layers, batch_first=True, dropout_prob=dropout, param_attr = ParamAttr( initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale) ), bias_attr = ParamAttr( initializer = fluid.initializer.Constant(0.0) ))
+        print("basic api")
+        rnn_out, last_hidden, last_cell = basic_lstm( x_emb, init_hidden, init_cell, hidden_size, num_layers=num_layers, \
+                batch_first=True, dropout_prob=dropout, param_attr = ParamAttr( initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale) ), bias_attr = ParamAttr( initializer = fluid.initializer.Constant(0.0) ))
     else:
         print("type not support")
         return
