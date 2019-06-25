@@ -156,7 +156,7 @@ def main():
                                    eval_keys, eval_values, eval_cls)
                 # Evaluation
                 eval_results(results, eval_feed, cfg.metric,
-                             cfg.MaskHead.resolution, FLAGS.save_file)
+                             cfg.MaskHead.resolution, FLAGS.output_file)
 
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
@@ -176,8 +176,8 @@ if __name__ == '__main__':
         default=False,
         help="Whether to perform evaluation in train")
     parser.add_argument(
-        "-s",
-        "--save_file",
+        "-f",
+        "--output_file",
         default=None,
         type=str,
         help="Evaluation file name, default to bbox.json and mask.json."

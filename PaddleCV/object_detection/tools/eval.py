@@ -100,14 +100,14 @@ def main():
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
     # Evaluation
     eval_results(results, eval_feed, cfg.metric,
-                 cfg.MaskHead.resolution, FLAGS.save_file)
+                 cfg.MaskHead.resolution, FLAGS.output_file)
 
 
 if __name__ == '__main__':
     parser = ArgsParser()
     parser.add_argument(
-        "-s",
-        "--save_file",
+        "-f",
+        "--output_file",
         default=None,
         type=str,
         help="Evaluation file name, default to bbox.json and mask.json."

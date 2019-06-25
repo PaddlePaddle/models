@@ -39,15 +39,15 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
-def get_save_image_name(save_dir, image_path):
+def get_save_image_name(output_dir, image_path):
     """
     Get save image name from source image path.
     """
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     image_name = image_path.split('/')[-1]
     name, ext = os.path.splitext(image_name)
-    return os.path.join(save_dir, "{}".format(name)) + ext
+    return os.path.join(output_dir, "{}".format(name)) + ext
 
 
 def get_test_images(infer_dir, infer_img):
@@ -155,7 +155,7 @@ def main():
             image = Image.open(image_path)
             image = visualize_results(image, catid2name, 0.5,
                                       bbox_results, mask_results)
-            save_name = get_save_image_name(FLAGS.save_dir, image_path)
+            save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name)
 
@@ -177,9 +177,9 @@ if __name__ == '__main__':
         default=None,
         help="Image path, has higher priority over --infer_dir")
     parser.add_argument(
-        "--save_dir",
+        "--output_dir",
         type=str,
         default="output",
-        help="Directory for saving visualization files.")
+        help="Directory for storing the output visualization files.")
     FLAGS = parser.parse_args()
     main()
