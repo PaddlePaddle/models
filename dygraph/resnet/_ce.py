@@ -9,12 +9,12 @@ from kpi import CostKpi, DurationKpi, AccKpi
 
 #### NOTE kpi.py should shared in models in some way!!!!
 
-train_acc1 = AccKpi('train_acc1', 0.01, 0, actived=True, desc="test acc")
-train_acc5 = AccKpi('train_acc5', 0.01, 0, actived=True, desc="test acc")
-train_loss = CostKpi('train_loss', 0.01, 0, actived=True, desc="test acc")
-test_acc1 = AccKpi('test_acc1', 0.01, 0, actived=True, desc='test cost')
-test_acc5 = AccKpi('test_acc5', 0.01, 0, actived=True, desc='test cost')
-test_loss = CostKpi('test_loss', 0.01, 0, actived=True, desc='test cost')
+train_acc1 = AccKpi('train_acc1', 0.01, 0, actived=True, desc="train acc1")
+train_acc5 = AccKpi('train_acc5', 0.01, 0, actived=True, desc="train acc5")
+train_loss = CostKpi('train_loss', 0.01, 0, actived=True, desc="train loss")
+test_acc1 = AccKpi('test_acc1', 0.01, 0, actived=True, desc='test acc1')
+test_acc5 = AccKpi('test_acc5', 0.01, 0, actived=True, desc='test acc5')
+test_loss = CostKpi('test_loss', 0.01, 0, actived=True, desc='test loss')
 #train_speed_kpi = DurationKpi(
 #    'train_speed',
 #    0.05,
