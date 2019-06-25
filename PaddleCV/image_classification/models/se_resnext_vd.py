@@ -1,10 +1,25 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import math
+
 import paddle
 import paddle.fluid as fluid
-import math
 from paddle.fluid.param_attr import ParamAttr
 
 __all__ = [
@@ -147,7 +162,7 @@ class SE_ResNeXt():
             act='relu',
             name='conv'+name+'_x2')
         if cardinality == 64:
-            num_filters = num_filters / 2
+            num_filters = num_filters // 2
         conv2 = self.conv_bn_layer(
             input=conv1, num_filters=num_filters * 2, filter_size=1, act=None, name='conv'+name+'_x3')
         scale = self.squeeze_excitation(
@@ -173,7 +188,7 @@ class SE_ResNeXt():
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
-            padding=(filter_size - 1) / 2,
+            padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
             bias_attr=False,
@@ -205,7 +220,7 @@ class SE_ResNeXt():
             num_filters=num_filters,
             filter_size=filter_size,
             stride=1,
-            padding=(filter_size - 1) / 2,
+            padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
             param_attr=ParamAttr(name=name + "_weights"),
@@ -224,7 +239,7 @@ class SE_ResNeXt():
             input=input, pool_size=0, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         squeeze = fluid.layers.fc(input=pool,
-                                  size=num_channels / reduction_ratio,
+                                  size=num_channels // reduction_ratio,
                                   act='relu',
                                   param_attr=fluid.param_attr.ParamAttr(
                                       initializer=fluid.initializer.Uniform(

@@ -38,7 +38,7 @@ def infer():
             os.makedirs(out_path)
         cycle_gan = Cycle_Gan("cycle_gan")
         save_dir = args.init_model 
-        restore = fluid.dygraph.load_persistables(save_dir)
+        restore, _ = fluid.dygraph.load_persistables(save_dir)
         cycle_gan.load_dict(restore)
         cycle_gan.eval()
         for file in glob.glob(args.input):
