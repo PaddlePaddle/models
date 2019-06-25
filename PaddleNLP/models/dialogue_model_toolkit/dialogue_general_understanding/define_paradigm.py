@@ -62,7 +62,7 @@ class Paradigm(object):
 
         ce_loss, probs = fluid.layers.softmax_with_cross_entropy(
             logits=logits, label=params['labels'], return_softmax=True)
-        loss = fluid.layers.mean(input=ce_loss)
+        loss = fluid.layers.mean(x=ce_loss)
         num_seqs = fluid.layers.create_tensor(dtype='int64')
         accuracy = fluid.layers.accuracy(
             input=probs, label=params['labels'], total=num_seqs)
@@ -102,7 +102,7 @@ class Paradigm(object):
         ce_loss = fluid.layers.reduce_sum(
             fluid.layers.sigmoid_cross_entropy_with_logits(
                 x=logits, label=labels_onehot))
-        loss = fluid.layers.mean(input=ce_loss)
+        loss = fluid.layers.mean(x=ce_loss)
         probs = fluid.layers.sigmoid(logits)
 
         if params['is_prediction']:
@@ -158,7 +158,7 @@ class Paradigm(object):
                 correct_prediction, dtype='float32'))
         ce_loss = fluid.layers.softmax_with_cross_entropy(logits=logits, \
                 label=fluid.layers.reshape(params['labels'], [-1, 1]))
-        loss = fluid.layers.mean(input=ce_loss)
+        loss = fluid.layers.mean(x=ce_loss)
 
         loss.persistable = True
         probs.persistable = True

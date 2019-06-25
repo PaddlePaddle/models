@@ -41,7 +41,7 @@ class YOLOv3(object):
         self.backbone = backbone
         self.yolo_head = yolo_head
 
-    def _forward(self, feed_vars, mode='train'):
+    def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
         body_feats = self.backbone(im)
 
@@ -63,10 +63,10 @@ class YOLOv3(object):
             return self.yolo_head.get_prediction(body_feats, im_shape)
 
     def train(self, feed_vars):
-        return self._forward(feed_vars, mode='train')
+        return self.build(feed_vars, mode='train')
 
     def eval(self, feed_vars):
-        return self._forward(feed_vars, mode='test')
+        return self.build(feed_vars, mode='test')
 
     def test(self, feed_vars):
-        return self._forward(feed_vars, mode='test')
+        return self.build(feed_vars, mode='test')

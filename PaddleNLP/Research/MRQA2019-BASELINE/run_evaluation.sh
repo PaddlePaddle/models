@@ -22,6 +22,9 @@ PATH_prediction=./output/ema_predictions.json
 
 # evaluation
 for dataset in `ls $PATH_dev/*.raw.json`;do
+    if [ "$dataset" = "./data/dev/mrqa-combined.raw.json" ]; then
+        continue
+    fi
     echo $dataset
     python evaluate-v1.1.py $dataset $PATH_prediction
 done
