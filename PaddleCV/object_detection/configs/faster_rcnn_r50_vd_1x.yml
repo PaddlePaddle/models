@@ -117,5 +117,3 @@ FasterRCNNTestFeed:
     dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  test_file: val2017.txt
-  samples: 5
