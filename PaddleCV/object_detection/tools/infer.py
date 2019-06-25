@@ -66,8 +66,10 @@ def get_test_images(infer_dir, infer_img):
     infer_dir = os.path.abspath(infer_dir)
     assert os.path.isdir(infer_dir), \
         "infer_dir {} is not a directory".format(infer_dir)
-    for fmt in ['jpg', 'jpeg', 'png', 'bmp']:
-        images.extend(glob.glob('{}/*.{}'.format(infer_dir, fmt)))
+    exts = ['jpg', 'jpeg', 'png', 'bmp']
+    exts += [ext.upper() for ext in exts]
+    for ext in exts:
+        images.extend(glob.glob('{}/*.{}'.format(infer_dir, ext)))
 
     assert len(images) > 0, "no image found in {}".format(infer_dir)
     logger.info("Found {} inference images in total.".format(len(images)))
