@@ -38,22 +38,27 @@ def visualize_results(image_path,
                       bbox_results=None,
                       mask_results=None):
     """
-    TODO(dengkaipeng): add more comments
     Visualize bbox and mask results
     """
-    image = None
+    if not os.path.exists(SAVE_HOME):
+        os.makedirs(SAVE_HOME)
+
+    logger.info("Image {} detect: ".format(image_path))
+    image = Image.open(image_path)
     if mask_results:
-        image = draw_mask(image_path, mask_results, threshold)
+        image = draw_mask(image, mask_results, threshold)
     if bbox_results:
-        draw_bbox(image_path, catid2name, bbox_results, threshold, image)
+        image = draw_bbox(image, catid2name, bbox_results, threshold)
+
+    save_name = get_save_image_name(image_path)
+    logger.info("Detection results save in {}\n".format(save_name))
+    image.save(save_name)
 
 
-def draw_mask(image_path, segms, threshold, alpha=0.7, save_image=False):
+def draw_mask(image, segms, threshold, alpha=0.7):
     """
-    TODO(dengkaipeng): add more comments
     Draw mask on image
     """
-    image = Image.open(image_path)
     im_width, im_height = image.size
     mask_color_id = 0
     w_ratio = .4
@@ -72,23 +77,13 @@ def draw_mask(image_path, segms, threshold, alpha=0.7, save_image=False):
         image[idx[0], idx[1], :] *= 1.0 - alpha
         image[idx[0], idx[1], :] += alpha * color_mask
     image = Image.fromarray(image.astype('uint8'))
-
-    if not os.path.exists(SAVE_HOME):
-        os.makedirs(SAVE_HOME)
-    if save_image:
-        save_name = get_save_image_name(image_path)
-        logger.info("Detection mask results save in {}".format(save_name))
-        image.save(save_name)
     return image
 
 
-def draw_bbox(image_path, catid2name, bboxes, threshold, image=None):
+def draw_bbox(image, catid2name, bboxes, threshold):
     """
-    TODO(dengkaipeng): add more comments
     Draw bbox on image
     """
-    if image is None:
-        image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
     im_width, im_height = image.size
 
@@ -106,13 +101,12 @@ def draw_bbox(image_path, catid2name, bboxes, threshold, image=None):
             fill='red')
         if image.mode == 'RGB':
             draw.text((xmin, ymin), catid2name[catid], (255, 255, 0))
+        logger.info("\t {:15s} at {:25} score: {:.5f}".format(
+                    catid2name[catid], 
+                    str(list(map(int, [xmin, ymin, xmax, ymax]))),
+                    score))
 
-    if not os.path.exists(SAVE_HOME):
-        os.makedirs(SAVE_HOME)
-    save_name = get_save_image_name(image_path)
-    logger.info("Detection bbox results save in {}".format(save_name))
-    image.save(save_name)
-
+    return image
 
 def get_save_image_name(image_path):
     """

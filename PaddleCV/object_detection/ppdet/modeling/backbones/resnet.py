@@ -56,6 +56,9 @@ class ResNet(object):
                  feature_maps=[2, 3, 4, 5]):
         super(ResNet, self).__init__()
 
+        if isinstance(feature_maps, Integral):
+            feature_maps = [feature_maps]
+
         assert depth in [18, 34, 50, 101, 152], \
             "depth {} not in [18, 34, 50, 101, 152]"
         assert variant in ['a', 'b', 'c', 'd'], "invalid ResNet variant"
@@ -70,8 +73,6 @@ class ResNet(object):
         self.freeze_norm = freeze_norm
         self.variant = variant
         self._model_type = 'ResNet'
-        if isinstance(feature_maps, Integral):
-            feature_maps = [feature_maps]
         self.feature_maps = feature_maps
         self.depth_cfg = {
             18: ([2, 2, 2, 2], self.basicblock),
@@ -151,8 +152,7 @@ class ResNet(object):
         ch_in = input.shape[1]
         # the naming rule is same as pretrained weight
         name = self.na.fix_shortcut_name(name)
-
-        if ch_in != ch_out or stride != 1:
+        if ch_in != ch_out or stride != 1 or (self.depth < 50 and is_first):
             if max_pooling_in_short_cut and not is_first:
                 input = fluid.layers.pool2d(
                     input=input,
@@ -251,6 +251,8 @@ class ResNet(object):
         conv = input
         for i in range(count):
             conv_name = self.na.fix_layer_warp_name(stage_num, count, i)
+            if self.depth < 50:
+                is_first = True if i == 0 and stage_num == 2 else False
             conv = block_func(
                 input=conv,
                 num_filters=ch_out,

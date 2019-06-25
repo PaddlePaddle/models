@@ -21,7 +21,7 @@ FasterRCNN:
 ResNet:
   norm_type: affine_channel
   depth: 50
-  feature_maps: [2,3,4]
+  feature_maps: 4
   freeze_at: 2
 
 ResNetC5:
@@ -43,7 +43,7 @@ RPNHead:
   train_proposal:
     min_size: 0.0
     nms_thresh: 0.7
-    pre_nums_top_n: 12000
+    pre_nms_top_n: 12000
     post_nms_top_n: 2000
   test_proposal:
     min_size: 0.0
@@ -115,5 +115,3 @@ FasterRCNNTestFeed:
     dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  test_file: val2017.txt
-  samples: 5

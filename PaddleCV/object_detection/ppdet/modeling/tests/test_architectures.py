@@ -26,11 +26,14 @@ from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.modeling.model_input import create_feeds
 
 
-class TestDetectorFasterRCNN(unittest.TestCase):
+class TestFasterRCNN(unittest.TestCase):
     def setUp(self):
-        cfg_file = 'config_demo/faster_rcnn_r50_1x.yml'
-        self.cfg = load_config(cfg_file)
+        self.set_config()
+        self.cfg = load_config(self.cfg_file)
         self.detector_type = self.cfg['architecture']
+
+    def set_config(self):
+        self.cfg_file = 'configs/faster_rcnn_r50_1x.yml'
 
     @prog_scope()
     def test_train(self):
@@ -41,10 +44,35 @@ class TestDetectorFasterRCNN(unittest.TestCase):
 
     @prog_scope()
     def test_test(self):
-        test_feed = create(self.cfg['test_feed'])
+        test_feed = create(self.cfg['eval_feed'])
         model = create(self.detector_type)
         _, feed_vars = create_feeds(test_feed)
-        test_fetches = model.test(feed_vars)
+        test_fetches = model.eval(feed_vars)
+
+
+class TestMaskRCNN(TestFasterRCNN):
+    def set_config(self):
+        self.cfg_file = 'configs/mask_rcnn_r50_1x.yml'
+
+
+class TestCascadeRCNN(TestFasterRCNN):
+    def set_config(self):
+        self.cfg_file = 'configs/cascade_rcnn_r50_fpn_1x.yml'
+
+
+class TestYolov3(TestFasterRCNN):
+    def set_config(self):
+        self.cfg_file = 'configs/yolov3_darknet.yml'
+
+
+class TestRetinaNet(TestFasterRCNN):
+    def set_config(self):
+        self.cfg_file = 'configs/retinanet_r50_fpn_1x.yml'
+
+
+class TestSSD(TestFasterRCNN):
+    def set_config(self):
+        self.cfg_file = 'configs/ssd_mobilenet_v1_voc.yml'
 
 
 if __name__ == '__main__':

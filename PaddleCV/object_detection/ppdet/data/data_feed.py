@@ -81,9 +81,9 @@ def create_reader(feed, max_iter=0):
             'TYPE': type(feed.dataset).__source__
         }
     }
-
-    if mode == 'TEST':
-        data_config[mode]['TEST_FILE'] = feed.test_file
+    
+    if len(getattr(feed.dataset, 'images', [])) > 0:
+        data_config[mode]['IMAGES'] = feed.dataset.images
 
     transform_config = {
         'WORKER_CONF': {
@@ -244,11 +244,16 @@ class SimpleDataSet(DataSet):
     __source__ = 'SimpleSource'
 
     def __init__(self,
-                 dataset_dir=VOC_DATASET_DIR,
-                 annotation=VOC_TEST_ANNOTATION,
-                 image_dir=VOC_IMAGE_DIR):
+                 dataset_dir=None,
+                 annotation=None,
+                 image_dir=None,
+                 use_default_label=None):
         super(SimpleDataSet, self).__init__(
             dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
+        self.images = []
+
+    def add_images(self, images):
+        self.images.extend(images)
 
 
 @serializable
@@ -280,7 +285,6 @@ class DataFeed(object):
                  samples=-1,
                  drop_last=False,
                  with_background=True,
-                 test_file=None,
                  num_workers=2,
                  bufsize=10,
                  use_process=False,
@@ -295,7 +299,6 @@ class DataFeed(object):
         self.samples = samples
         self.drop_last = drop_last
         self.with_background = with_background
-        self.test_file = test_file
         self.num_workers = num_workers
         self.bufsize = bufsize
         self.use_process = use_process
@@ -384,7 +387,6 @@ class TestFeed(DataFeed):
                  shuffle=False,
                  drop_last=False,
                  with_background=True,
-                 test_file=None,
                  num_workers=2):
         super(TestFeed, self).__init__(
             dataset,
@@ -396,7 +398,6 @@ class TestFeed(DataFeed):
             shuffle=shuffle,
             drop_last=drop_last,
             with_background=with_background,
-            test_file=test_file,
             num_workers=num_workers)
 
 
@@ -412,14 +413,14 @@ class FasterRCNNTrainFeed(DataFeed):
                  ],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True), RandomFlipImage(prob=0.5),
-                     NormalizeImage(
-                         mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225],
-                         is_scale=True,
-                         is_channel_first=False), ResizeImage(
-                             target_size=800, max_size=1333,
-                             interp=1), Permute(to_bgr=False)
+                     DecodeImage(to_rgb=True),
+                     RandomFlipImage(prob=0.5),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
+                     ResizeImage(target_size=800, max_size=1333, interp=1),
+                     Permute(to_bgr=False)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
@@ -462,17 +463,17 @@ class MaskRCNNTrainFeed(DataFeed):
                  ],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True), RandomFlipImage(
-                         prob=0.5, is_mask_flip=True), NormalizeImage(
-                             mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225],
-                             is_scale=True,
-                             is_channel_first=False), ResizeImage(
-                                 target_size=800,
+                     DecodeImage(to_rgb=True),
+                     RandomFlipImage(prob=0.5, is_mask_flip=True),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
+                     ResizeImage(target_size=800,
                                  max_size=1333,
                                  interp=1,
-                                 use_cv2=True), Permute(
-                                     to_bgr=False, channel_first=True)
+                                 use_cv2=True),
+                     Permute(to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
@@ -508,12 +509,12 @@ class FasterRCNNEvalFeed(DataFeed):
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True), NormalizeImage(
-                         mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225],
-                         is_scale=True,
-                         is_channel_first=False), ResizeImage(
-                             target_size=800, max_size=1333, interp=1),
+                     DecodeImage(to_rgb=True),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
+                     ResizeImage(target_size=800, max_size=1333, interp=1),
                      Permute(to_bgr=False)
                  ],
                  batch_transforms=[PadBatch()],
@@ -521,7 +522,6 @@ class FasterRCNNEvalFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_padded_im_info=True):
         sample_transforms.append(ArrangeTestRCNN())
@@ -535,7 +535,6 @@ class FasterRCNNEvalFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'VAL'
@@ -551,18 +550,18 @@ class FasterRCNNTestFeed(DataFeed):
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True), NormalizeImage(
-                         mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225],
-                         is_scale=True,
-                         is_channel_first=False), Permute(to_bgr=False)
+                     DecodeImage(to_rgb=True),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
+                     Permute(to_bgr=False)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_padded_im_info=True):
         sample_transforms.append(ArrangeTestRCNN())
@@ -578,7 +577,6 @@ class FasterRCNNTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
@@ -594,23 +592,22 @@ class MaskRCNNEvalFeed(DataFeed):
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True), NormalizeImage(
-                         mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225],
-                         is_scale=True,
-                         is_channel_first=False), ResizeImage(
-                             target_size=800,
-                             max_size=1333,
-                             interp=1,
-                             use_cv2=True), Permute(
-                                 to_bgr=False, channel_first=True)
+                     DecodeImage(to_rgb=True),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
+                     ResizeImage(target_size=800,
+                                 max_size=1333,
+                                 interp=1,
+                                 use_cv2=True),
+                     Permute(to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
@@ -625,7 +622,6 @@ class MaskRCNNEvalFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
@@ -642,19 +638,19 @@ class MaskRCNNTestFeed(DataFeed):
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 1333, 800],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True), NormalizeImage(
+                     DecodeImage(to_rgb=True),
+                     NormalizeImage(
                          mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225],
                          is_scale=True,
-                         is_channel_first=False), Permute(
-                             to_bgr=False, channel_first=True)
+                         is_channel_first=False),
+                     Permute(to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
@@ -671,7 +667,6 @@ class MaskRCNNTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
@@ -687,28 +682,26 @@ class SSDTrainFeed(DataFeed):
                  fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
                  image_shape=[3, 300, 300],
                  sample_transforms=[
-                     DecodeImage(
-                         to_rgb=True,
-                         with_mixup=False), NormalizeBox(), RandomDistort(
-                             brightness_lower=0.875,
-                             brightness_upper=1.125,
-                             is_order=True), ExpandImage(
-                                 max_ratio=4, prob=0.5),
-                     CropImage(
-                         batch_sampler=[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
-                         satisfy_all=False), ResizeImage(
-                             target_size=300, use_cv2=False,
-                             interp=1), RandomFlipImage(is_normalized=True),
-                     Permute(), NormalizeImage(
-                         mean=[127.5, 127.5, 127.5],
-                         std=[127.502231, 127.502231, 127.502231],
-                         is_scale=False)
+                     DecodeImage(to_rgb=True, with_mixup=False),
+                     NormalizeBox(),
+                     RandomDistort(brightness_lower=0.875,
+                                   brightness_upper=1.125,
+                                   is_order=True),
+                     ExpandImage(max_ratio=4, prob=0.5),
+                     CropImage([[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
+                               satisfy_all=False),
+                     ResizeImage(target_size=300, use_cv2=False, interp=1),
+                     RandomFlipImage(is_normalized=True),
+                     Permute(),
+                     NormalizeImage(mean=[127.5, 127.5, 127.5],
+                                    std=[127.502231, 127.502231, 127.502231],
+                                    is_scale=False)
                  ],
                  batch_transforms=[],
                  batch_size=32,
@@ -746,10 +739,12 @@ class SSDEvalFeed(DataFeed):
             fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
             image_shape=[3, 300, 300],
             sample_transforms=[
-                DecodeImage(
-                    to_rgb=True, with_mixup=False), NormalizeBox(), ResizeImage(
-                        target_size=300, use_cv2=False, interp=1),
-                RandomFlipImage(is_normalized=True), Permute(), NormalizeImage(
+                DecodeImage(to_rgb=True, with_mixup=False),
+                NormalizeBox(),
+                ResizeImage(target_size=300, use_cv2=False, interp=1),
+                RandomFlipImage(is_normalized=True),
+                Permute(),
+                NormalizeImage(
                     mean=[127.5, 127.5, 127.5],
                     std=[127.502231, 127.502231, 127.502231],
                     is_scale=False)
@@ -789,8 +784,9 @@ class SSDTestFeed(DataFeed):
                  fields=['image'],
                  image_shape=[3, 300, 300],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True), ResizeImage(
-                         target_size=300, use_cv2=False, interp=1), Permute(),
+                     DecodeImage(to_rgb=True),
+                     ResizeImage(target_size=300, use_cv2=False, interp=1),
+                     Permute(),
                      NormalizeImage(
                          mean=[127.5, 127.5, 127.5],
                          std=[127.502231, 127.502231, 127.502231],
@@ -801,7 +797,6 @@ class SSDTestFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=8,
                  bufsize=10,
                  use_process=False):
@@ -818,7 +813,6 @@ class SSDTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers)
         self.mode = 'TEST'
 
@@ -832,14 +826,12 @@ class YoloTrainFeed(DataFeed):
                  fields=['image', 'gt_box', 'gt_label', 'gt_score'],
                  image_shape=[3, 608, 608],
                  sample_transforms=[
-                     DecodeImage(
-                         to_rgb=True, with_mixup=True),
-                     MixupImage(
-                         alpha=1.5, beta=1.5),
+                     DecodeImage(to_rgb=True, with_mixup=True),
+                     MixupImage(alpha=1.5, beta=1.5),
                      NormalizeBox(),
                      RandomDistort(),
-                     ExpandImage(
-                         max_ratio=4., prob=.5, mean=[123.675, 116.28, 103.53]),
+                     ExpandImage(max_ratio=4., prob=.5,
+                                 mean=[123.675, 116.28, 103.53]),
                      CropImage([[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
                                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
                                 [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
@@ -902,8 +894,7 @@ class YoloEvalFeed(DataFeed):
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(
-                         target_size=608, interp=2),
+                     ResizeImage(target_size=608, interp=2),
                      NormalizeImage(
                          mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225],
@@ -950,22 +941,19 @@ class YoloTestFeed(DataFeed):
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(
-                         target_size=608, interp=2),
-                     NormalizeImage(
-                         mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225],
-                         is_scale=True,
-                         is_channel_first=False),
+                     ResizeImage(target_size=608, interp=2),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
                      Permute(to_bgr=False),
                  ],
                  batch_transforms=[],
                  batch_size=1,
                  shuffle=False,
-                 samples=1,
+                 samples=-1,
                  drop_last=False,
                  with_background=False,
-                 test_file=None,
                  num_workers=8,
                  num_max_boxes=50,
                  use_process=False):
@@ -983,7 +971,6 @@ class YoloTestFeed(DataFeed):
             samples=samples,
             drop_last=drop_last,
             with_background=with_background,
-            test_file=test_file,
             num_workers=num_workers,
             use_process=use_process)
         self.num_max_boxes = num_max_boxes

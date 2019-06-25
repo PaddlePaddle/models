@@ -21,7 +21,7 @@ FasterRCNN:
 
 SENet:
   depth: 152
-  feature_maps: [2, 3, 4]
+  feature_maps: 4
   freeze_at: 2
   group_width: 4
   groups: 64
@@ -30,7 +30,6 @@ SENet:
 
 SENetC5:
   depth: 152
-  feature_maps: 5
   freeze_at: 2
   group_width: 4
   groups: 64
@@ -122,9 +121,8 @@ FasterRCNNEvalFeed:
 FasterRCNNTestFeed:
   batch_size: 1
   dataset:
-    dataset_dir: data/coco 
+    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  test_file: val2017.txt
   num_workers: 2
   shuffle: False

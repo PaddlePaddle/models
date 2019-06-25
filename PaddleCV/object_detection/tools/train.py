@@ -53,16 +53,16 @@ def main():
     if cfg['use_gpu']:
         devices_num = fluid.core.get_cuda_device_count()
     else:
-        devices_num = os.environ.get('CPU_NUM', multiprocessing.cpu_count())
+        devices_num = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     if 'train_feed' not in cfg:
-        train_feed = create(type(main_arch).__name__ + 'TrainFeed')
+        train_feed = create(main_arch + 'TrainFeed')
     else:
         train_feed = create(cfg['train_feed'])
 
     if args.eval:
         if 'eval_feed' not in cfg:
-            eval_feed = create(type(main_arch).__name__ + 'EvalFeed')
+            eval_feed = create(main_arch + 'EvalFeed')
         else:
             eval_feed = create(cfg['eval_feed'])
 
@@ -96,10 +96,7 @@ def main():
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
                 eval_pyreader, feed_vars = create_feeds(eval_feed)
-                if cfg['metric'] == 'COCO':
-                    fetches = model.test(feed_vars)
-                else:
-                    fetches = model.eval(feed_vars)
+                fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
 
         eval_reader = create_reader(eval_feed)
