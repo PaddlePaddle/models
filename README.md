@@ -5,13 +5,7 @@
 
 PaddlePaddle provides a rich set of computational units to enable users to adopt a modular approach to solving various learning problems. In this repo, we demonstrate how to use PaddlePaddle to solve common machine learning tasks, providing several different neural network model that anyone can easily learn and use.
 
-
-- [fluid models](fluid): use PaddlePaddle's Fluid APIs. We especially recommend users to use Fluid models.
-
-
 PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化的方法解决各种学习问题。在此repo中，我们展示了如何用 PaddlePaddle 来解决常见的机器学习任务，提供若干种不同的易学易用的神经网络模型。PaddlePaddle用户现可申请AI Studio平台的**免费Tesla V100算力资源**，高效在线训练模型，[点击申请](https://aistudio.baidu.com/aistudio/questionnaire?activityid=378)。
-
-- [fluid模型](fluid): 使用 PaddlePaddle Fluid版本的 APIs，我们特别推荐您使用Fluid模型。
 
 ## PaddleCV
 模型|简介|模型优势|参考论文
@@ -35,7 +29,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 [CycleGAN](./PaddleCV/gan/cycle_gan)|图片转化模型|自动将某一类图片转换成另外一类图片，可用于风格迁移|[Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://arxiv.org/abs/1703.10593)
 [CRNN-CTC模型](./PaddleCV/ocr_recognition)|场景文字识别模型|使用CTC model识别图片中单行英文字符|[Connectionist Temporal Classification: Labelling Unsegmented Sequence Data with Recurrent Neural Networks](https://www.researchgate.net/publication/221346365_Connectionist_temporal_classification_Labelling_unsegmented_sequence_data_with_recurrent_neural_'networks)
 [Attention模型](./PaddleCV/ocr_recognition)|场景文字识别模型|使用attention 识别图片中单行英文字符|[Recurrent Models of Visual Attention](https://arxiv.org/abs/1406.6247)
-[Metric Learning](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning)|度量学习模型|能够用于分析对象时间的关联、比较关系，可应用于辅助分类、聚类问题，也广泛用于图像检索、人脸识别等领域|-
+[Metric Learning](./PaddleCV/metric_learning)|度量学习模型|能够用于分析对象时间的关联、比较关系，可应用于辅助分类、聚类问题，也广泛用于图像检索、人脸识别等领域|-
 [TSN](./PaddleCV/video_classification)|视频分类模型|基于长范围时间结构建模，结合了稀疏时间采样策略和视频级监督来保证使用整段视频时学习得有效和高效|[Temporal Segment Networks: Towards Good Practices for Deep Action Recognition](https://arxiv.org/abs/1608.00859)
 [视频模型库](./PaddleCV/video)|视频模型库|给开发者提供基于PaddlePaddle的便捷、高效的使用深度学习算法解决视频理解、视频编辑、视频生成等一系列模型||
 [caffe2fluid](./PaddleCV/caffe2fluid)|将Caffe模型转换为Paddle Fluid配置和模型文件工具|-|-
@@ -64,13 +58,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 [DeepCTR](./PaddleRec/ctr/README.cn.md)|点击率预估模型|只实现了DeepFM论文中介绍的模型的DNN部分，DeepFM会在其他例子中给出|[DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](https://arxiv.org/abs/1703.04247)
 [Multiview-Simnet](./PaddleRec/multiview_simnet)|个性化推荐模型|基于多元视图，将用户和项目的多个功能视图合并为一个统一模型|[A Multi-View Deep Learning Approach for Cross Domain User Modeling in Recommendation Systems](http://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/frp1159-songA.pdf)
 
-## Other Models
-模型|简介|模型优势|参考论文
---|:--:|:--:|:--:
-[DeepASR](./PaddleSpeech/DeepASR/README_cn.md)|语音识别系统|利用Fluid框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器|-
-[DQN](./PaddleRL/DeepQNetwork/README_cn.md)|深度Q网络|value based强化学习算法，第一个成功地将深度学习和强化学习结合起来的模型|[Human-level control through deep reinforcement learning](https://www.nature.com/articles/nature14236)
-[DoubleDQN](./PaddleRL/DeepQNetwork/README_cn.md)|DQN的变体|将Double Q的想法应用在DQN上，解决过优化问题|[Font Size: Deep Reinforcement Learning with Double Q-Learning](https://www.aaai.org/ocs/index.php/AAAI/AAAI16/paper/viewPaper/12389)
-[DuelingDQN](./PaddleRL/DeepQNetwork/README_cn.md)|DQN的变体|改进了DQN模型，提高了模型的性能|[Dueling Network Architectures for Deep Reinforcement Learning](http://proceedings.mlr.press/v48/wangf16.html)
 
 ## License
 This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).
