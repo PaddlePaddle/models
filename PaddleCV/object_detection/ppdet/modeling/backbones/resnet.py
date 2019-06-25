@@ -153,7 +153,7 @@ class ResNet(object):
         # the naming rule is same as pretrained weight
         name = self.na.fix_shortcut_name(name)
 
-        if ch_in != ch_out or stride != 1:
+        if ch_in != ch_out or stride != 1 or is_first:
             if max_pooling_in_short_cut and not is_first:
                 input = fluid.layers.pool2d(
                     input=input,
@@ -252,6 +252,8 @@ class ResNet(object):
         conv = input
         for i in range(count):
             conv_name = self.na.fix_layer_warp_name(stage_num, count, i)
+            if self.depth < 50:
+                is_first = True if i == 0 and stage_num == 2 else False
             conv = block_func(
                 input=conv,
                 num_filters=ch_out,
