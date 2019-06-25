@@ -65,7 +65,7 @@ class CascadeBBoxAssigner(object):
             bg_thresh_hi=self.bg_thresh_hi[curr_stage],
             bg_thresh_lo=self.bg_thresh_lo[curr_stage],
             bbox_reg_weights=curr_bbox_reg_w,
-            use_random=False,
+            use_random=self.use_random,
             class_nums=2,
             is_cls_agnostic=True,
             is_cascade_rcnn=True if curr_stage > 0 else False, )
