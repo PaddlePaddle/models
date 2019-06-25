@@ -26,16 +26,15 @@ __all__ = ['BBoxAssigner', 'MaskAssigner', 'CascadeBBoxAssigner']
 
 @register
 class CascadeBBoxAssigner(object):
-    def __init__(
-            self,
-            batch_size_per_im=512,
-            fg_fraction=.25,
-            fg_thresh=[0.5, 0.6, 0.7],
-            bg_thresh_hi=[0.5, 0.6, 0.7],
-            bg_thresh_lo=[0., 0., 0.],
-            bbox_reg_weights=[10, 20, 30],
-            num_classes=81,
-            shuffle_before_sample=True, ):
+    def __init__(self,
+                 batch_size_per_im=512,
+                 fg_fraction=.25,
+                 fg_thresh=[0.5, 0.6, 0.7],
+                 bg_thresh_hi=[0.5, 0.6, 0.7],
+                 bg_thresh_lo=[0., 0., 0.],
+                 bbox_reg_weights=[10, 20, 30],
+                 num_classes=81,
+                 shuffle_before_sample=True):
         super(CascadeBBoxAssigner, self).__init__()
         self.batch_size_per_im = batch_size_per_im
         self.fg_fraction = fg_fraction
@@ -68,5 +67,5 @@ class CascadeBBoxAssigner(object):
             use_random=self.use_random,
             class_nums=2,
             is_cls_agnostic=True,
-            is_cascade_rcnn=True if curr_stage > 0 else False, )
+            is_cascade_rcnn=True if curr_stage > 0 else False)
         return outs
