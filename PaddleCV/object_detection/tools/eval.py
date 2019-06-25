@@ -38,23 +38,13 @@ def main():
     """
     Main evaluate function
     """
-    parser = ArgsParser()
-    parser.add_argument(
-        "-s",
-        "--savefile",
-        default=None,
-        type=str,
-        help="Evaluation file name, default to bbox.json and mask.json."
-    )
-    args = parser.parse_args()
-    cfg = load_config(args.config)
-
+    cfg = load_config(FLAGS.config)
     if 'architecture' in cfg:
         main_arch = cfg.architecture
     else:
         raise ValueError("'architecture' not specified in config file.")
 
-    merge_config(args.opt)
+    merge_config(FLAGS.opt)
 
     if cfg.use_gpu:
         devices_num = fluid.core.get_cuda_device_count()
@@ -110,8 +100,17 @@ def main():
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
     # Evaluation
     eval_results(results, eval_feed, cfg.metric,
-                 cfg.MaskHead.resolution, args.savefile)
+                 cfg.MaskHead.resolution, FLAGS.save_file)
 
 
 if __name__ == '__main__':
+    parser = ArgsParser()
+    parser.add_argument(
+        "-s",
+        "--save_file",
+        default=None,
+        type=str,
+        help="Evaluation file name, default to bbox.json and mask.json."
+    )
+    FLAGS = parser.parse_args()
     main()

@@ -76,38 +76,21 @@ def get_test_images(infer_dir, infer_img):
 
 
 def main():
-    parser = ArgsParser()
-    parser.add_argument(
-        "--infer_dir",
-        type=str,
-        default=None,
-        help="Directory for images to perform inference on.")
-    parser.add_argument(
-        "--infer_img",
-        type=str,
-        default=None,
-        help="Image path, has higher priority over --infer_dir")
-    parser.add_argument(
-        "--save_dir",
-        type=str,
-        default="output",
-        help="Directory for saving visualization files.")
-    args = parser.parse_args()
-    cfg = load_config(args.config)
+    cfg = load_config(FLAGS.config)
 
     if 'architecture' in cfg:
         main_arch = cfg.architecture
     else:
         raise ValueError("'architecture' not specified in config file.")
 
-    merge_config(args.opt)
+    merge_config(FLAGS.opt)
 
     if 'test_feed' not in cfg:
         test_feed = create(main_arch + 'TestFeed')
     else:
         test_feed = create(cfg.test_feed)
 
-    test_images = get_test_images(args.infer_dir, args.infer_img)
+    test_images = get_test_images(FLAGS.infer_dir, FLAGS.infer_img)
     test_feed.dataset.add_images(test_images)
 
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
@@ -172,7 +155,7 @@ def main():
             image = Image.open(image_path)
             image = visualize_results(image, catid2name, 0.5,
                                       bbox_results, mask_results)
-            save_name = get_save_image_name(args.save_dir, image_path)
+            save_name = get_save_image_name(FLAGS.save_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name)
 
@@ -182,4 +165,21 @@ def main():
 
 
 if __name__ == '__main__':
+    parser = ArgsParser()
+    parser.add_argument(
+        "--infer_dir",
+        type=str,
+        default=None,
+        help="Directory for images to perform inference on.")
+    parser.add_argument(
+        "--infer_img",
+        type=str,
+        default=None,
+        help="Image path, has higher priority over --infer_dir")
+    parser.add_argument(
+        "--save_dir",
+        type=str,
+        default="output",
+        help="Directory for saving visualization files.")
+    FLAGS = parser.parse_args()
     main()
