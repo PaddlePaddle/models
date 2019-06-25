@@ -80,7 +80,7 @@ SSDTestFeed:
   batch_size: 1
   dataset:
     dataset_dir: data/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/test.txt
+    annotation: VOCdevkit/VOC_all/ImageSets/Main/label_list.txt
     image_dir: VOCdevkit/VOC_all/JPEGImages
     use_default_label: false
   drop_last: false
