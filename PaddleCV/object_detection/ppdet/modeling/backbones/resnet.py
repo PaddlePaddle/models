@@ -39,11 +39,11 @@ class ResNet(object):
     Args:
         depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
         freeze_at (int): freeze the backbone at which stage
-        norm_type (str): normalization type, 'bn', 'sync_bn' or 'affine_channel'
+        norm_type (str): normalization type, 'bn'/'sync_bn'/'affine_channel'
         freeze_norm (bool): freeze normalization layers
         norm_decay (float): weight decay for normalization layer weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
-        feature_maps (list): index of the stages whose feature maps are returned
+        feature_maps (list): index of stages whose feature maps are returned
     """
 
     def __init__(self,
@@ -329,6 +329,7 @@ class ResNetC5(ResNet):
                  norm_decay=0.,
                  variant='b',
                  feature_maps=[5]):
-        super(ResNetC5, self).__init__(depth, freeze_at, norm_type, freeze_norm,
-                                       norm_decay, variant, feature_maps)
+        super(ResNetC5, self).__init__(
+            depth, freeze_at, norm_type, freeze_norm, norm_decay,
+            variant, feature_maps)
         self.severed_head = True
