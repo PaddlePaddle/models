@@ -143,7 +143,7 @@ python infer.py \
 
 ## 已有模型及其性能
 表格中列出了在```models```目录下支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，
-可以通过点击相应模型的名称下载相应预训练模型。其中ResNet50_vd_v1是ResNet50_vd的普通版本，ResNet50_vd_v2是ResNet50_vd的蒸馏版本。
+可以通过点击相应模型的名称下载相应预训练模型。其中ResNet50_vd_v2是ResNet50_vd的蒸馏版本。
 
 - Released models: specify parameter names
 
