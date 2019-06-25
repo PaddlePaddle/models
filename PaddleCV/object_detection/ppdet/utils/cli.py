@@ -60,7 +60,7 @@ class ArgsParser(ArgumentParser):
     def _parse_opt(self, opts):
         config = {}
         if not opts:
-            return
+            return config
         for s in opts:
             s = s.strip()
             k, v = s.split('=')
