@@ -156,8 +156,7 @@ python infer.py \
 
 ## Supported models and performances
 
-Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. Pretrained models can be downloaded by clicking related model names.
-
+Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. Pretrained models can be downloaded by clicking related model names.Among them, ResNet50_vd_v1 is the common version of ResNet50_vd, and ResNet50_vd_v2 is the distilled version of ResNet50_vd.
 - Released models: specify parameter names
 
 |model | top-1/top-5 accuracy(CV2) |
