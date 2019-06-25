@@ -45,9 +45,10 @@ DATASETS = {
             'http://images.cocodataset.org/annotations/annotations_trainval2017.zip',
             'f4bbac642086de4f52a3fdda2de5fa2c', ),
     ],
-    'pascal': [(
-        'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
-        '6cd6e144f989b92b3379bac3b3de84fd', )],
+    'voc': [
+        ('http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
+         '6cd6e144f989b92b3379bac3b3de84fd', ),
+    ],
 }
 
 DOWNLOAD_RETRY_LIMIT = 3

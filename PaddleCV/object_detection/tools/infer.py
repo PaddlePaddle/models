@@ -107,14 +107,15 @@ def main():
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
+    if cfg['metric'] == 'VOC':
+        extra_keys = ['im_id']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # 6. Parse dataset category
     if cfg['metric'] == 'COCO':
         from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
     if cfg['metric'] == "VOC":
-        # TODO(dengkaipeng): add VOC metric process
-        pass
+        from ppdet.utils.voc_eval import bbox2out, get_category_info
 
     anno_file = getattr(test_feed.dataset, 'annotation', None)
     with_background = getattr(test_feed, 'with_background', True)
@@ -146,8 +147,9 @@ def main():
                               mask_results)
 
         if cfg['metric'] == "VOC":
-            # TODO(dengkaipeng): add VOC metric process
-            pass
+            bbox_results = bbox2out([res], clsid2catid)
+            visualize_results(image_path, catid2name, 0.5, bbox_results,
+                              None, True)
 
 
 if __name__ == '__main__':

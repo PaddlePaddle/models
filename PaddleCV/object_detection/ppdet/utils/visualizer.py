@@ -36,7 +36,8 @@ def visualize_results(image_path,
                       catid2name,
                       threshold=0.5,
                       bbox_results=None,
-                      mask_results=None):
+                      mask_results=None,
+                      is_bbox_normalized=False):
     """
     Visualize bbox and mask results
     """
@@ -48,7 +49,8 @@ def visualize_results(image_path,
     if mask_results:
         image = draw_mask(image, mask_results, threshold)
     if bbox_results:
-        image = draw_bbox(image, catid2name, bbox_results, threshold)
+        image = draw_bbox(image, catid2name, bbox_results, threshold,
+                          is_bbox_normalized)
 
     save_name = get_save_image_name(image_path)
     logger.info("Detection results save in {}\n".format(save_name))
@@ -80,18 +82,25 @@ def draw_mask(image, segms, threshold, alpha=0.7):
     return image
 
 
-def draw_bbox(image, catid2name, bboxes, threshold):
+def draw_bbox(image, catid2name, bboxes, threshold, is_bbox_normalized=False):
     """
     Draw bbox on image
     """
     draw = ImageDraw.Draw(image)
-    im_width, im_height = image.size
 
     for dt in np.array(bboxes):
         catid, bbox, score = dt['category_id'], dt['bbox'], dt['score']
         if score < threshold:
             continue
         xmin, ymin, w, h = bbox
+
+        if is_bbox_normalized:
+            im_width, im_height = image.size
+            xmin *= im_width
+            ymin *= im_height
+            w *= im_width
+            h *= im_height
+
         xmax = xmin + w
         ymax = ymin + h
         draw.line(
