@@ -183,28 +183,61 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 
 ### 模型概览
 
-Pix2Pix由一个生成网络和一个判别网络组成。生成网络中编码部分的网络结构都是采用`convolution - batch norm - ReLU`作为基础结构，解码部分的网络结构由`transpose convolution - batch norm - ReLU`组成，判别网络基本是由`convolution - norm - leaky_ReLU`作为基础结构，详细的网络结构可以查看`network/Pix2pix_network.py`文件。生成网络提供两种可选的网络结构：Unet网络结构和普通的encoder-decoder网络结构。网络利用损失函数学习从输入图像到输出图像的映射，生成网络损失函数由CGAN的损失函数和L1损失函数组成，判别网络损失函数由CGAN的损失函数组成。
+- Pix2Pix由一个生成网络和一个判别网络组成。生成网络中编码部分的网络结构都是采用`convolution-batch norm-ReLU`作为基础结构，解码部分的网络结构由`transpose convolution-batch norm-ReLU`组成，判别网络基本是由`convolution-norm-leaky_ReLU`作为基础结构，详细的网络结构可以查看`network/Pix2pix_network.py`文件。生成网络提供两种可选的网络结构：Unet网络结构和普通的encoder-decoder网络结构。网络利用损失函数学习从输入图像到输出图像的映射，生成网络损失函数由CGAN的损失函数和L1损失函数组成，判别网络损失函数由CGAN的损失函数组成。生成器的网络结构如下图所示：
 
-CycleGAN由两个生成网络和两个判别网络组成，生成网络A是输入A类风格的图片输出B类风格的图片，生成网络B是输入B类风格的图片输出A类风格的图片。生成网络中编码部分的网络结构都是采用`convolution - norm -ReLU`作为基础结构，解码部分的网络结构由`transpose convolution - norm - ReLU`组成，判别网络基本是由`convolution - norm - leaky_ReLU`作为基础结构，详细的网络结构可以查看`network/CycleGAN_network.py`文件。生成网络提供两种可选的网络结构：Unet网络结构和普通的encoder-decoder网络结构。生成网络损失函数由CGAN的损失函数，重构损失和自身损失组成，判别网络的损失函数由CGAN的损失函数组成。
+<p align="centor">
+    <img src = "https://github.com/PaddlePaddle/" width=550><br/>
+</p>
 
-StarGAN中生成网络的编码部分主要由`convolution - instance norm - ReLU`组成，解码部分主要由`transpose convolution - norm - ReLU`组成，判别网络主要由`convolution - leaky_ReLU`组成，详细网络结构可以查看`network/StarGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
 
-AttGAN中生成网络的编码部分主要由`convolution - instance norm - ReLU`组成，解码部分由`transpose convolution - norm - ReLU`组成，判别网络主要由`convolution - leaky_ReLU`组成，详细网络结构可以查看`network/AttGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
+- CycleGAN由两个生成网络和两个判别网络组成，生成网络A是输入A类风格的图片输出B类风格的图片，生成网络B是输入B类风格的图片输出A类风格的图片。生成网络中编码部分的网络结构都是采用`convolution-norm-ReLU`作为基础结构，解码部分的网络结构由`transpose convolution-norm-ReLU`组成，判别网络基本是由`convolution-norm-leaky_ReLU`作为基础结构，详细的网络结构可以查看`network/CycleGAN_network.py`文件。生成网络提供两种可选的网络结构：Unet网络结构和普通的encoder-decoder网络结构。生成网络损失函数由CGAN的损失函数，重构损失和自身损失组成，判别网络的损失函数由CGAN的损失函数组成。
 
-STGAN中生成网络再编码器和解码器之间加入Selective Transfer Units\(STU\)，有选择的转换编码网络，从而更好的适配解码网络。生成网络中的编码网络主要由`convolution - instance norm - ReLU`组成，解码网络主要由`transpose convolution - norm - leaky_ReLU`组成，判别网络主要由`convolution - leaky_ReLU`组成，详细网络结构可以查看`network/STGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
+<p align="centor">
+    <img src = "https://github.com/PaddlePaddle/" width=550><br/>
+</p>
+
+
+- StarGAN中生成网络的编码部分主要由`convolution-instance norm-ReLU`组成，解码部分主要由`transpose convolution-norm-ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/StarGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
+
+<p align="centor">
+    <img src = "https://github.com/PaddlePaddle/" width=550><br/>
+</p>
+
+<p align="centor">
+    <img src = "https://github.com/PaddlePaddle/" width=550><br/>
+</p>
+
+
+
+- AttGAN中生成网络的编码部分主要由`convolution-instance norm-ReLU`组成，解码部分由`transpose convolution-norm-ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/AttGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
+
+<p align="centor">
+    <img src = "https://github.com/PaddlePaddle/" width=550><br/>
+</p>
+
+
+- STGAN中生成网络再编码器和解码器之间加入Selective Transfer Units\(STU\)，有选择的转换编码网络，从而更好的适配解码网络。生成网络中的编码网络主要由`convolution-instance norm-ReLU`组成，解码网络主要由`transpose convolution-norm-leaky_ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/STGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
+
+<p align="centor">
+    <img src = "https://github.com/PaddlePaddle/" width=550><br/>
+</p>
+
 
 注意：网络结构中的norm指的是用户可以选用batch norm或者instance norm来搭建自己的网络。
 
 
 ## FAQ
-Q：StarGAN/AttGAN/STGAN中属性没有变化，为什么？
-A：查看是否所有的标签都转换对了。
+**Q：** StarGAN/AttGAN/STGAN中属性没有变化，为什么？
 
-Q：预测结果不正常，是怎么回事？
-A：某些GAN预测的时候batch_norm的设置需要和训练的时候行为一致，查看模型库中相应的GAN中预测时batch_norm的行为和自己模型中的预测时batch_norm的行为是否一致。
+**A：** 查看是否所有的标签都转换对了。
 
-Q：为什么STGAN和ATTGAN中变男性得到的预测结果是变女性呢？
-A：这是由于预测时标签的设置，目标标签是基于原本的标签进行改变，比如原本图片是男生，预测代码对标签进行转变的时候会自动变成相对立的标签，即女性，所以得到的结果是女生。
+**Q：** 预测结果不正常，是怎么回事？
+
+**A：** 某些GAN预测的时候batch_norm的设置需要和训练的时候行为一致，查看模型库中相应的GAN中预测时batch_norm的行为和自己模型中的预测时batch_norm的行为是否一致。
+
+**Q：** 为什么STGAN和ATTGAN中变男性得到的预测结果是变女性呢？
+
+**A：** 这是由于预测时标签的设置，目标标签是基于原本的标签进行改变，比如原本图片是男生，预测代码对标签进行转变的时候会自动变成相对立的标签，即女性，所以得到的结果是女生。如果想要原本是男生，转变之后还是男生，可以参考模型库中预测代码的StarGAN的标签设置。
 
 
 ## 参考论文
