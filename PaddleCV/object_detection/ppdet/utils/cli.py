@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-from argparse import ArgumentParser, RawDescriptionHelpFormatter, REMAINDER
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 import yaml
+
+__all__ = ['ColorTTY', 'ArgsParser']
 
 
 class ColorTTY(object):
@@ -40,60 +41,39 @@ class ColorTTY(object):
         return "[{}m{}[0m".format(code, message)
 
 
-def parse_args():
-    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument("-c", "--config", help="configuration file to use")
-    parser.add_argument(
-        "-s",
-        "--savefile",
-        default=None,
-        type=str,
-        help="Save json file name for evaluation, if not set, default files are bbox.json and mask.json."
-    )
-    parser.add_argument(
-        "-r",
-        "--resume_checkpoint",
-        default=None,
-        type=str,
-        help="The checkpoint path for resuming training.")
-    parser.add_argument(
-        "--eval",
-        action='store_true',
-        default=False,
-        help="Whether perform evaluation in train")
-    parser.add_argument(
-        "--infer_dir",
-        type=str,
-        default=None,
-        help="Image directory path to perform inference.")
-    parser.add_argument(
-        "--infer_img",
-        type=str,
-        default=None,
-        help="Image path to perform inference, --infer-img has a higher priority than --image-dir")
-    parser.add_argument(
-        "-o", "--opt", nargs=REMAINDER, help="set configuration options")
-    args = parser.parse_args()
+class ArgsParser(ArgumentParser):
 
-    if args.config is None:
-        raise ValueError("Please specify --config=configure_file_path.")
+    def __init__(self):
+        super(ArgsParser, self).__init__(
+            formatter_class=RawDescriptionHelpFormatter)
+        self.add_argument("-c", "--config", help="configuration file to use")
+        self.add_argument("-o", "--opt", nargs='*',
+                          help="set configuration options")
 
-    cli_config = {}
-    if 'opt' in vars(args) and args.opt is not None:
-        for s in args.opt:
+    def parse_args(self, argv=None):
+        args = super(ArgsParser, self).parse_args(argv)
+        assert args.config is not None, \
+            "Please specify --config=configure_file_path."
+        args.opt = self._parse_opt(args.opt)
+        return args
+
+    def _parse_opt(self, opts):
+        config = {}
+        if not opts:
+            return config
+        for s in opts:
             s = s.strip()
             k, v = s.split('=')
             if '.' not in k:
-                cli_config[k] = v
+                config[k] = v
             else:
                 keys = k.split('.')
-                cli_config[keys[0]] = {}
-                cur = cli_config[keys[0]]
+                config[keys[0]] = {}
+                cur = config[keys[0]]
                 for idx, key in enumerate(keys[1:]):
                     if idx == len(keys) - 2:
                         cur[key] = yaml.load(v, Loader=yaml.Loader)
                     else:
                         cur[key] = {}
                         cur = cur[key]
-    args.cli_config = cli_config
-    return args
+        return config

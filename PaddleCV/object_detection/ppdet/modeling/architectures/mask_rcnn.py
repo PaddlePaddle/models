@@ -64,13 +64,17 @@ class MaskRCNN(object):
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
-        assert mode in ['train', 'test'], "only support 'train' and 'test' mode"
+        assert mode in ['train', 'test'], \
+            "only 'train' and 'test' mode is supported"
         if mode == 'train':
-            required_fields = ['gt_label', 'gt_box', 'gt_mask', 'is_crowd', 'im_info']
+            required_fields = [
+                'gt_label', 'gt_box', 'gt_mask', 'is_crowd', 'im_info'
+            ]
         else:
             required_fields = ['im_shape', 'im_info']
         for var in required_fields:
-            assert var in feed_vars, "{} has no {} field".format(feed_vars, var)
+            assert var in feed_vars, \
+                "{} has no {} field".format(feed_vars, var)
         im_info = feed_vars['im_info']
 
         body_feats = self.backbone(im)
@@ -81,12 +85,6 @@ class MaskRCNN(object):
 
         # RPN proposals
         rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
-
-        if self.fpn is None:
-            last_feat = body_feats[list(body_feats.keys())[-1]]
-            roi_feat = self.roi_extractor(last_feat, rois)
-        else:
-            roi_feat = self.roi_extractor(body_feats, rois, spatial_scale)
 
         if mode == 'train':
             rpn_loss = self.rpn_head.get_loss(im_info, feed_vars['gt_box'],
@@ -100,6 +98,12 @@ class MaskRCNN(object):
                 im_info=feed_vars['im_info'])
             rois = outs[0]
             labels_int32 = outs[1]
+
+            if self.fpn is None:
+                last_feat = body_feats[list(body_feats.keys())[-1]]
+                roi_feat = self.roi_extractor(last_feat, rois)
+            else:
+                roi_feat = self.roi_extractor(body_feats, rois, spatial_scale)
 
             loss = self.bbox_head.get_loss(roi_feat, labels_int32, *outs[2:])
             loss.update(rpn_loss)
@@ -115,8 +119,8 @@ class MaskRCNN(object):
                 bbox_head_feat = self.bbox_head.get_head_feat()
                 feat = fluid.layers.gather(bbox_head_feat, roi_has_mask_int32)
             else:
-                feat = self.roi_extractor(body_feats, mask_rois, spatial_scale,
-                                          is_mask=True)
+                feat = self.roi_extractor(
+                    body_feats, mask_rois, spatial_scale, is_mask=True)
 
             mask_loss = self.mask_head.get_loss(feat, mask_int32)
             loss.update(mask_loss)
@@ -126,6 +130,13 @@ class MaskRCNN(object):
             return loss
 
         else:
+
+            if self.fpn is None:
+                last_feat = body_feats[list(body_feats.keys())[-1]]
+                roi_feat = self.roi_extractor(last_feat, rois)
+            else:
+                roi_feat = self.roi_extractor(body_feats, rois, spatial_scale)
+
             bbox_pred = self.bbox_head.get_prediction(roi_feat, rois, im_info,
                                                       feed_vars['im_shape'])
             bbox_pred = bbox_pred['bbox']
@@ -144,7 +155,8 @@ class MaskRCNN(object):
                 with switch.case(cond):
                     fluid.layers.assign(input=bbox_pred, output=mask_pred)
                 with switch.default():
-                    bbox = fluid.layers.slice(bbox_pred, [1], starts=[2], ends=[6])
+                    bbox = fluid.layers.slice(
+                        bbox_pred, [1], starts=[2], ends=[6])
 
                     im_scale = fluid.layers.slice(
                         im_info, [1], starts=[2], ends=[3])
@@ -155,8 +167,8 @@ class MaskRCNN(object):
                         mask_feat = self.roi_extractor(last_feat, mask_rois)
                         mask_feat = self.bbox_head.get_head_feat(mask_feat)
                     else:
-                        mask_feat = self.roi_extractor(body_feats, mask_rois,
-                                                       spatial_scale, is_mask=True)
+                        mask_feat = self.roi_extractor(
+                            body_feats, mask_rois, spatial_scale, is_mask=True)
 
                     mask_out = self.mask_head.get_prediction(mask_feat, bbox)
                     fluid.layers.assign(input=mask_out, output=mask_pred)
