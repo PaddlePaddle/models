@@ -155,11 +155,12 @@ python infer.py \
 ```
 
 ## Supported models and performances
-The image classification models currently supported in models are listed in the table，and the top-1/top-5 accuracy on the imagenet-2012 validation set of the models and the inference time of fluid so and fluid_trt(fluid TensorRT) (test GPU model: tesla P4) are given. Pretrained models can be downloaded by clicking related model names. The inference method based on so will be released soon. As the activation function swish used by ShuffleNetV2 and the activation function relu6 used by MobileNetV2 are not supported by fluid_trt, inference acceleration is not obvious. Fluid_trt will support both op soon.
+The image classification models currently supported in models are listed in the table，and the top-1/top-5 accuracy on the imagenet-2012 validation set of the models and the inference time of Paddle Fluid and Paddle TensorRT based on dynamic link library(test GPU model: Tesla P4) are given. Pretrained models can be downloaded by clicking related model names. The inference method based on dynamic link library refer to http://www.paddlepaddle.org/documentation/docs/en/1.4/advanced_usage/deploy/index_en.html. As the activation function swish used by ShuffleNetV2 and the activation function relu6 used by MobileNetV2 are not supported by Paddle TensorRT, inference acceleration is not obvious. Paddle TensorRT will support both op soon.
 Note: ResNet50_vd_v2 is the distilled version of ResNet50_vd. In addition to the input image resolution 299x299 adopted by InceptionV4, the resolution used by other models is 224x224.
+
 - Released models: specify parameter names
 
-|model | top-1/top-5 accuracy(CV2) | fluid inference time(ms) | fluid_trt inference time(ms) |
+|model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.tar) | 56.72%/79.17% | 3.083 | 2.728 |
 |[VGG11](https://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretrained.tar) | 69.28%/89.09% | 8.223 | 6.821 |
