@@ -146,7 +146,11 @@ python infer.py \
 
 - Released models: specify parameter names
 
+<<<<<<< HEAD
 |model | top-1/top-5 accuracy(CV2) | fluid inference time(ms) | fluid_trt inference time(ms) |
+=======
+|model | top-1/top-5 accuracy(CV2) | so of fluid inference time(ms) | so of fluid_trt inference time(ms) |
+>>>>>>> eb3dd9f1da099d0b704f1132f34757e83cabdbac
 |- |:-: |:-: |:-: |
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.tar) | 56.72%/79.17% | 3.083 | 2.728 |
 |[VGG11](https://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretrained.tar) | 69.28%/89.09% | 8.223 | 6.821 |
