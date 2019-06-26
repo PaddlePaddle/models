@@ -35,7 +35,7 @@ python -c "import paddle; print(paddle.__version__)"
 
 - Python2 or Python3
 - CUDA >= 8.0
-- cuDNN >= 7.0
+- cuDNN >= 5.0
 - nccl >= 2.1.2
 
 
@@ -70,7 +70,7 @@ cd models/PaddleCV/object_detection
 
 **Install Python module requirements:**
 
-Other python module requirements is set in [requirements.txt](./requirements.txt), you can install these requirements with folloing command:
+Other python module requirements is set in [requirements.txt](../requirements.txt), you can install these requirements with folloing command:
 
 ```
 pip install -r requirements.txt
@@ -79,7 +79,7 @@ pip install -r requirements.txt
 **Check PaddleDetection architectures tests pass:**
 
 ```
-export PYTHONPATH=$PYTHONPATH:.
+export PYTHONPATH=`pwd`:$PYTHONPATH
 python ppdet/modeling/tests/test_architectures.py
 ```
 
@@ -118,4 +118,4 @@ cd dataset/voc
 If you set up models while `data/coc` and `data/voc` is not found, PaddleDetection will automaticaly download them from [MSCOCO-2017](http://images.cocodataset.org) and [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC), the decompressed datasets will be places in `~/.cache/paddle/dataset/` and can be discovered automaticaly in the next setting up time.
 
 
-**NOTE:** For further informations on the datasets, please see [DATASET.md](../ppdet/data/README.md)
+**NOTE:** For further informations on the datasets, please see [DATASET.md](docs/DATASET.md)

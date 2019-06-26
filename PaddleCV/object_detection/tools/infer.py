@@ -121,7 +121,7 @@ def main():
         extra_keys = ['im_info', 'im_id', 'im_shape']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
-    # 6. Parse dataset category
+    # parse dataset category
     if cfg.metric == 'COCO':
         from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
     if cfg.metric == "VOC":

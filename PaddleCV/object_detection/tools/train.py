@@ -86,6 +86,7 @@ def main():
     lr_builder = create('LearningRate')
     optim_builder = create('OptimizerBuilder')
 
+    # build program
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
@@ -120,7 +121,7 @@ def main():
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
-    # 3. Compile program for multi-devices
+    # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
@@ -164,10 +165,9 @@ def main():
             checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
 
             if FLAGS.eval:
-                # Run evaluation
+                # do evaluation
                 results = eval_run(exe, eval_compile_program, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
-                # Evaluation
                 eval_results(results, eval_feed, cfg.metric,
                              cfg.MaskHead.resolution, FLAGS.output_file)
 
