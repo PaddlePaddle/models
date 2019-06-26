@@ -175,12 +175,13 @@ if __name__=='__main__':
     for idx in range(0, n):
         current_token = tokens[idx]
         startup_program, main_program, _ = model.create_net(current_token)
-        op_params = get_ops_from_program(main_program,'results/lightnas_'+str(idx)+'.txt')
+        op_params = get_ops_from_program(main_program)
         all_ops = all_ops + op_params
+        all_ops = list(set(all_ops))
         if (idx+1)%10000 == 0:
             print('current net number is: ', idx)
             print('current number of ops is:', len(all_ops))
-            write_lookup_table(list(all_ops), 'results/lightnas_ops_tmp.txt')
+            write_lookup_table(all_ops, 'results/lightnas_ops_tmp.txt')
 
     print('{} networks have {} ops in total'.format(n, len(all_ops)))
     write_lookup_table(all_ops, 'lightnas_ops.txt')
