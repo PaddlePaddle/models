@@ -82,6 +82,11 @@ def get_dataset_path(path):
             data_dir = os.path.join(DATASET_HOME, name)
             for url, md5sum in dataset:
                 get_path(url, data_dir, md5sum)
+
+            if name == 'pascal':
+                logger.info("Download voc dataset sucess, merge "
+                            "VOC2007 and VOC2012 to VOC_all...")
+                # TODO(dengkaipeng): merge voc
             return data_dir
 
     # not match any dataset in DATASETS
@@ -110,7 +115,7 @@ def get_path(url, root_dir, md5sum=None):
     # For same zip file, decompressed directory name different
     # from zip file name, rename by following map
     decompress_name_map = {
-        "VOCtrainval": "VOCdevkit",
+        "VOC": "VOCdevkit/VOC_all",
         "annotations_trainval": "annotations"
     }
     for k, v in decompress_name_map.items():
