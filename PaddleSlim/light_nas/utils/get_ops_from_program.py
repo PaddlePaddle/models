@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
 
+
 def conv_op_params(blocks, current_op):
     """Getting params of conv op
     Args:
@@ -60,6 +61,7 @@ def conv_op_params(blocks, current_op):
     tmp = tmp + res
     return tmp
 
+
 def batch_norm_op_params(blocks, current_op):
     """Getting params of batch_norm op
     Args:
@@ -84,7 +86,8 @@ def batch_norm_op_params(blocks, current_op):
     in_shapes = blocks.vars[current_op.input("X")[0]].shape
     tmp = tmp + [int(in_shapes[1]), int(in_shapes[2]), int(in_shapes[3])]
     return tmp
-    
+
+
 def eltwise_op_params(blocks, current_op):
     """Getting params of eltwise op
     Args:
@@ -108,9 +111,10 @@ def eltwise_op_params(blocks, current_op):
     tmp.append(1)
     # input channels, height, width 
     in_shapes = blocks.vars[current_op.input('X')[0]].shape
-    for i in range(1,len(in_shapes)):
+    for i in range(1, len(in_shapes)):
         tmp.append(int(in_shapes[i]))
     return tmp
+
 
 def activation_op_params(blocks, current_op):
     """Getting params of activation op
@@ -133,6 +137,7 @@ def activation_op_params(blocks, current_op):
     in_shapes = blocks.vars[current_op.input('X')[0]].shape
     tmp = tmp + [int(in_shapes[1]), int(in_shapes[2]), int(in_shapes[3])]
     return tmp
+
 
 def pooling_op_params(blocks, current_op):
     """Getting params of pooling op
@@ -171,30 +176,33 @@ def pooling_op_params(blocks, current_op):
     tmp.append(int(strides[0]))
     if strides[0] != strides[1]:
         res.append(int(strides[1]))
-    
+
     # ceil mode
     tmp.append(int(current_op.attr('ceil_mode')))
 
     # pool type
     pool_type = current_op.attr('pooling_type')
     exclusive = current_op.attr('exclusive')
-    if pool_type=='max' and (not exclusive):
+    if pool_type == 'max' and (not exclusive):
         tmp.append(1)
-    elif pool_type=='avg' and (not exclusive):
+    elif pool_type == 'avg' and (not exclusive):
         tmp.append(2)
     else:
         tmp.append(3)
-    
+
     tmp = tmp + res
     return tmp
+
 
 def softmax_op_params(blocks, current_op):
     #TODO: Getting params of softmax op
     return []
 
+
 def resize_op_params(blocks, current_op):
     #TODO: Getting params of resize op
     return []
+
 
 def fc_op_params(blocks, current_op, isbias):
     """Getting params of fc op
@@ -223,6 +231,7 @@ def fc_op_params(blocks, current_op, isbias):
     tmp = tmp + [1, 1, 0, 1, 1]
     return tmp
 
+
 def write_lookup_table(params, output_file):
     """Writing down all params to a txt file
     Args:
@@ -235,9 +244,10 @@ def write_lookup_table(params, output_file):
     for line in params:
         str_list = []
         for item in line:
-           str_list.append(str(item))
-        fw.write(' '.join(str_list)+'\n')
+            str_list.append(str(item))
+        fw.write(' '.join(str_list) + '\n')
     fw.close()
+
 
 def get_ops_from_program(program, output_file=None):
     """Getting ops params from a paddle program
@@ -245,7 +255,7 @@ def get_ops_from_program(program, output_file=None):
         program, fluid program desc
         output_file, string of output file path
     Returns:
-        list, params of ops
+        list, params
     """
     blocks = program.global_block()
     params = []
@@ -256,9 +266,14 @@ def get_ops_from_program(program, output_file=None):
             tmp = conv_op_params(blocks, current_op)
         elif current_op.type == 'batch_norm':
             tmp = batch_norm_op_params(blocks, current_op)
-        elif current_op.type in ['elementwise_add', 'elementwise_mul', 'elementwise_max']:
+        elif current_op.type in [
+                'elementwise_add', 'elementwise_mul', 'elementwise_max'
+        ]:
             tmp = eltwise_op_params(blocks, current_op)
-        elif current_op.type in ['relu','prelu','sigmoid','relu6','elu','brelu','leaky_relu']:
+        elif current_op.type in [
+                'relu', 'prelu', 'sigmoid', 'relu6', 'elu', 'brelu',
+                'leaky_relu'
+        ]:
             tmp = activation_op_params(blocks, current_op)
         elif current_op.type == 'pool2d':
             tmp = pooling_op_params(blocks, current_op)
@@ -268,7 +283,7 @@ def get_ops_from_program(program, output_file=None):
             tmp = resize_op_params(blocks, current_op)
         elif current_op.type == 'mul':
             try:
-                next_op = blocks.ops[i+1]
+                next_op = blocks.ops[i + 1]
                 if next_op.type == 'elementwise_add':
                     tmp = fc_op_params(blocks, current_op, True)
                     i = i + 1
@@ -284,7 +299,7 @@ def get_ops_from_program(program, output_file=None):
             params.append(tuple(tmp))
 
         i += 1
-        
+
     if output_file is not None:
         write_lookup_table(params, output_file)
 
