@@ -18,7 +18,6 @@ from __future__ import print_function
 
 import os
 import os.path as osp
-import logging
 import re
 import random
 import shutil
