@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import logging
 import numpy as np
 import pycocotools.mask as mask_util
 from PIL import Image, ImageDraw
@@ -25,23 +26,28 @@ from .colormap import colormap
 
 __all__ = ['visualize_results']
 
+logger = logging.getLogger(__name__)
+
 
 def visualize_results(image,
+                      im_id,
                       catid2name,
                       threshold=0.5,
                       bbox_results=None,
-                      mask_results=None):
+                      mask_results=None,
+                      is_bbox_normalized=False):
     """
     Visualize bbox and mask results
     """
     if mask_results:
-        image = draw_mask(image, mask_results, threshold)
+        image = draw_mask(image, im_id, mask_results, threshold)
     if bbox_results:
-        image = draw_bbox(image, catid2name, bbox_results, threshold)
+        image = draw_bbox(image, im_id, catid2name, bbox_results,
+                          threshold, is_bbox_normalized)
     return image
 
 
-def draw_mask(image, segms, threshold, alpha=0.7):
+def draw_mask(image, im_id, segms, threshold, alpha=0.7):
     """
     Draw mask on image
     """
@@ -50,6 +56,8 @@ def draw_mask(image, segms, threshold, alpha=0.7):
     w_ratio = .4
     img_array = np.array(image).astype('float32')
     for dt in np.array(segms):
+        if im_id != dt['image_id']:
+            continue
         segm, score = dt['segmentation'], dt['score']
         if score < threshold:
             continue
@@ -65,18 +73,28 @@ def draw_mask(image, segms, threshold, alpha=0.7):
     return Image.fromarray(img_array.astype('uint8'))
 
 
-def draw_bbox(image, catid2name, bboxes, threshold):
+def draw_bbox(image, im_id, catid2name, bboxes, threshold, 
+              is_bbox_normalized=False):
     """
     Draw bbox on image
     """
     draw = ImageDraw.Draw(image)
-    im_width, im_height = image.size
 
     for dt in np.array(bboxes):
+        if im_id != dt['image_id']:
+            continue
         catid, bbox, score = dt['category_id'], dt['bbox'], dt['score']
         if score < threshold:
             continue
         xmin, ymin, w, h = bbox
+
+        if is_bbox_normalized:
+            im_width, im_height = image.size
+            xmin *= im_width
+            ymin *= im_height
+            w *= im_width
+            h *= im_height
+
         xmax = xmin + w
         ymax = ymin + h
         draw.line(
@@ -86,5 +104,7 @@ def draw_bbox(image, catid2name, bboxes, threshold):
             fill='red')
         if image.mode == 'RGB':
             draw.text((xmin, ymin), catid2name[catid], (255, 255, 0))
+        logger.debug("\t {:15s} at {:25} score: {:.5f}".format(catid2name[catid],
+                    str(list(map(int, list([xmin, ymin, xmax, ymax])))), score))
 
     return image

@@ -119,18 +119,21 @@ def main():
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
+    if cfg['metric'] == 'VOC':
+        extra_keys = ['im_id']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # 6. Parse dataset category
     if cfg.metric == 'COCO':
         from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
     if cfg.metric == "VOC":
-        # TODO(dengkaipeng): add VOC metric process
-        pass
+        from ppdet.utils.voc_eval import bbox2out, get_category_info
 
     anno_file = getattr(test_feed.dataset, 'annotation', None)
     with_background = getattr(test_feed, 'with_background', True)
-    clsid2catid, catid2name = get_category_info(anno_file, with_background)
+    use_default_label = getattr(test_feed, 'use_default_label', False)
+    clsid2catid, catid2name = get_category_info(anno_file, with_background,
+                                                use_default_label)
 
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
@@ -144,26 +147,26 @@ def main():
         }
         logger.info('Infer iter {}'.format(iter_id))
 
-        im_id = int(res['im_id'][0])
-        image_path = imid2path[im_id]
-        if cfg.metric == 'COCO':
-            bbox_results = None
-            mask_results = None
-            if 'bbox' in res:
-                bbox_results = bbox2out([res], clsid2catid)
-            if 'mask' in res:
-                mask_results = mask2out([res], clsid2catid,
-                                        cfg.MaskHead.resolution)
-            image = Image.open(image_path)
-            image = visualize_results(image, catid2name, 0.5,
-                                      bbox_results, mask_results)
+        bbox_results = None
+        mask_results = None
+        is_bbox_normalized = True if cfg.metric == 'VOC' else False
+        if 'bbox' in res:
+            bbox_results = bbox2out([res], clsid2catid, 
+                                    is_bbox_normalized)
+        if 'mask' in res:
+            mask_results = mask2out([res], clsid2catid,
+                                    cfg.MaskHead['resolution'])
+
+        # visualize result
+        im_ids = res['im_id'][0]
+        for im_id in im_ids:
+            image_path = imid2path[int(im_id)]
+            image = Image.open(image_path).convert('RGB')
+            visualize_results(image, int(im_id), catid2name, 0.5, bbox_results,
+                              mask_results, is_bbox_normalized)
             save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name)
-
-        if cfg.metric == "VOC":
-            # TODO(dengkaipeng): add VOC metric process
-            pass
 
 
 if __name__ == '__main__':

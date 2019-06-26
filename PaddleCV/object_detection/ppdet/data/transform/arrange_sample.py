@@ -183,7 +183,8 @@ class ArrangeTestSSD(BaseOperator):
             sample: a tuple containing the following items: (image)
         """
         im = sample['image']
-        outs = (im)
+        im_id = sample['im_id']
+        outs = (im, im_id)
         return outs
 
 
