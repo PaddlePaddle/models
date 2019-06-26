@@ -29,7 +29,7 @@ This kind of source is used to load `COCO` data directly, eg: `COCO2017`. It's c
   |   ...
   ```
 
-- Pascal VOC data source    
+- Pascal VOC data source       
 This kind of source is used to load `VOC` data directly, eg: `VOC2007`. It's composed of xml files for labeling info and image files. And it's directory structure is as follows:
 
 
@@ -61,8 +61,24 @@ This kind of source is used to load `VOC` data directly, eg: `VOC2007`. It's com
 
 
 
-- Roidb data source
-This kind of source is a normalized data format which only contains a pickle file for labeling info and a directory for image files(maybe there is a mapping file for label name to label id). You can convert `COCO` or `VOC` data into this format.
+- Roidb data source       
+This kind of source is a normalized data format which only contains a pickle file. The pickle file only has a dictionary which only has a list named 'records' (maybe there is a mapping file for label name to label id named 'canme2id'). You can convert `COCO` or `VOC` data into this format.  The pickle file's content is as follows:
+```python
+(records, catname2clsid)
+'records' is list of dict whose structure is:
+{
+    'im_file': im_fname, # image file name
+    'im_id': im_id, # image id
+    'h': im_h, # height of image
+    'w': im_w, # width
+    'is_crowd': is_crowd,
+    'gt_class': gt_class,
+    'gt_bbox': gt_bbox,
+    'gt_poly': gt_poly,
+}
+'cname2id' is a dict to map category name to class id
+
+```
 
  2. Image preprocessing     
  Image preprocessing subsystem includes operations such as image decoding, expanding, cropping, etc. We use `dataset.transform.operator` to unify the implementation, which is convenient for extension. In addition, multiple operators can be combined to form a complex processing pipeline, and used by data transformers in `dataset.transformer`, such as multi-threading to acclerate a complex image data processing.
