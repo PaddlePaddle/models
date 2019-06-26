@@ -26,6 +26,8 @@ import hashlib
 import tarfile
 import zipfile
 
+from .voc_utils import merge_and_create_list
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -95,10 +97,26 @@ def get_dataset_path(path):
             for url, md5sum in dataset[0]:
                 get_path(url, data_dir, md5sum)
 
+            # voc should merge dir after download
             if name == 'voc':
                 logger.info("Download voc dataset successed, merge "
                             "VOC2007 and VOC2012 to VOC_all...")
-                # TODO(dengkaipeng): merge voc
+                output_dir = osp.join(data_dir, dataset[1][0])
+                devkit_dir = "/".join(output_dir.split('/')[:-1])
+                years = ['2007', '2012']
+                # merge dir in output_tmp_dir at first, move to 
+                # output_dir after merge sucessed.
+                output_tmp_dir = osp.join(data_dir, 'tmp')
+                if osp.isdir(output_tmp_dir):
+                    shutil.rmtree(output_tmp_dir)
+                    os.makedirs(output_tmp_dir)
+                merge_and_create_list(devkit_dir, years, 
+                                      output_tmp_dir)
+                # TODO(dengkaipeng) add generate label_list
+                shutil.move(output_tmp_dir, output_dir)
+                # remove source VOC2007 and VOC2012
+                shutil.rmtree(osp.join(devkit_dir, "VOC2007"))
+                shutil.rmtree(osp.join(devkit_dir, "VOC2012"))
             return data_dir
 
     # not match any dataset in DATASETS
@@ -252,7 +270,7 @@ def _decompress(fname):
         _move_and_merge_tree(src_dir, dst_dir)
 
     shutil.rmtree(fpath_tmp)
-    os.remove(fname)
+    # os.remove(fname)
 
 
 def _move_and_merge_tree(src, dst):
