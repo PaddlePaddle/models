@@ -156,11 +156,11 @@ python infer.py \
 
 ## Supported models and performances
 
-Available top-1/top-5 validation accuracy on ImageNet 2012 and inference speed on so of fluid and fluid_trt(fluid TensorRT) are listed in table. Pretrained models can be downloaded by clicking related model names. Among them, ResNet50_vd_v2 is the distilled version of ResNet50_vd. By the way, the activation function of ShuffleNetV2 is swish, and the activation function of MobileNetV2 is relu6. Fluid_trt does not support accelerated prediction of these two activation functions at present.
+Available top-1/top-5 validation accuracy on ImageNet 2012 and inference speed on fluid and fluid_trt(fluid TensorRT) are listed in table, all speed results are tested in the tesla p4, and the inference method will be released in the near future. Pretrained models can be downloaded by clicking related model names. By the way, the activation function of ShuffleNetV2 is swish, and the activation function of MobileNetV2 is relu6. Fluid_trt does not accelerate these two activation functions significantly at present. Among them, ResNet50_vd_v2 is the distilled version of ResNet50_vd.
 - Released models: specify parameter names
 
-|model | top-1/top-5 accuracy(CV2) | so of fluid inference time(ms) | so of fluid_trt inference time(ms) |
-|- |:-: |
+|model | top-1/top-5 accuracy(CV2) | fluid inference time(ms) | fluid_trt inference time(ms) |
+|- |:-: |:-: |:-: |
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.tar) | 56.72%/79.17% | 3.083 | 2.728 |
 |[VGG11](https://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretrained.tar) | 69.28%/89.09% | 8.223 | 6.821 |
 |[VGG13](https://paddle-imagenet-models-name.bj.bcebos.com/VGG13_pretrained.tar) | 70.02%/89.42% | 9.512 | 7.783 |

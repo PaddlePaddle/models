@@ -142,13 +142,12 @@ python infer.py \
 ```
 
 ## 已有模型及其性能
-表格中列出了在```models```目录下支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，以及给出了其在fluid so和fluid_trt(fluid TensorRT)的预测时间
-可以通过点击相应模型的名称下载相应预训练模型。其中ResNet50_vd_v2是ResNet50_vd的蒸馏版本。目前ShuffleNetV2用的激活函数是swish，MobileNetV2用的激活函数是relu6，目前fluid_trt不支持对这两种激活函数的预测加速。
+表格中列出了在```models```目录下支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，以及给出了其在fluid so和fluid_trt(fluid TensorRT)的预测时间,所有的速度测试均在tesla p4上完成，预测方式将在不久后发布。可以通过点击相应模型的名称下载相应预训练模型。目前ShuffleNetV2用的激活函数是swish，MobileNetV2用的激活函数是relu6，目前fluid_trt对这两种激活函数的预测加速不明显。其中ResNet50_vd_v2是ResNet50_vd的蒸馏版本。
 
 - Released models: specify parameter names
 
-|model | top-1/top-5 accuracy(CV2) | so of fluid inference time(ms) | so of fluid_trt inference time(ms) |
-|- |:-: |
+|model | top-1/top-5 accuracy(CV2) | fluid inference time(ms) | fluid_trt inference time(ms) |
+|- |:-: |:-: |:-: |
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.tar) | 56.72%/79.17% | 3.083 | 2.728 |
 |[VGG11](https://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretrained.tar) | 69.28%/89.09% | 8.223 | 6.821 |
 |[VGG13](https://paddle-imagenet-models-name.bj.bcebos.com/VGG13_pretrained.tar) | 70.02%/89.42% | 9.512 | 7.783 |
