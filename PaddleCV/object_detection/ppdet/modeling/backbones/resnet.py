@@ -39,11 +39,11 @@ class ResNet(object):
     Args:
         depth (int): ResNet depth, should be 18, 34, 50, 101, 152.
         freeze_at (int): freeze the backbone at which stage
-        norm_type (str): normalization type, 'bn', 'sync_bn' or 'affine_channel'
+        norm_type (str): normalization type, 'bn'/'sync_bn'/'affine_channel'
         freeze_norm (bool): freeze normalization layers
         norm_decay (float): weight decay for normalization layer weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
-        feature_maps (list): index of the stages whose feature maps are returned
+        feature_maps (list): index of stages whose feature maps are returned
     """
 
     def __init__(self,
@@ -152,8 +152,7 @@ class ResNet(object):
         ch_in = input.shape[1]
         # the naming rule is same as pretrained weight
         name = self.na.fix_shortcut_name(name)
-
-        if ch_in != ch_out or stride != 1:
+        if ch_in != ch_out or stride != 1 or (self.depth < 50 and is_first):
             if max_pooling_in_short_cut and not is_first:
                 input = fluid.layers.pool2d(
                     input=input,
@@ -252,6 +251,8 @@ class ResNet(object):
         conv = input
         for i in range(count):
             conv_name = self.na.fix_layer_warp_name(stage_num, count, i)
+            if self.depth < 50:
+                is_first = True if i == 0 and stage_num == 2 else False
             conv = block_func(
                 input=conv,
                 num_filters=ch_out,
@@ -329,6 +330,7 @@ class ResNetC5(ResNet):
                  norm_decay=0.,
                  variant='b',
                  feature_maps=[5]):
-        super(ResNetC5, self).__init__(depth, freeze_at, norm_type, freeze_norm,
-                                       norm_decay, variant, feature_maps)
+        super(ResNetC5, self).__init__(
+            depth, freeze_at, norm_type, freeze_norm, norm_decay,
+            variant, feature_maps)
         self.severed_head = True
