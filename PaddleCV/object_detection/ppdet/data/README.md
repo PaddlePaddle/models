@@ -132,7 +132,7 @@ MixupImage: Mixup two images in proportion.
 ```
 [Note] The mixup operation can refer to[paper](https://arxiv.org/pdf/1710.09412.pdf)。
 
-`transform/arrange_sample.py`: Sort the data which need to input the network.
+`transform/arrange_sample.py`: Sort the data which need to input the network.           
 3. Transformer
 `transform/post_map.py`: A pre-processing operation for completing batch data, which mainly includes:
 
@@ -142,7 +142,7 @@ Multi-scale adjustment of image size
 Padding operation
 ```
 `transform/transformer.py`: Used to filter useless data and return batch data.
-`transform/parallel_map.py`: Used to achieve acceleration.
+`transform/parallel_map.py`: Used to achieve acceleration.          
 4. Reader
 `reader.py`: Used to combine source and transformer operations, and return batch data according to `max_iter`.
 `data_feed.py`: Configure default parameters for `reader.py`.
