@@ -1,5 +1,5 @@
 ## Introduction
-This is a python module used to load and convert data into formats for detection model training, validation, and testing. The converted sample schema is a tuple of np.ndarrays. For example, the schema of Faster R-CNN training data is: `[(im, im_info, im_id, gt_bbox, gt_class, is_crowd), (...)]`.
+This is a Python module used to load and convert data into formats for detection model training, evaluation and inference. The converted sample schema is a tuple of np.ndarrays. For example, the schema of Faster R-CNN training data is: `[(im, im_info, im_id, gt_bbox, gt_class, is_crowd), (...)]`.
 
 ### Implementation
 This module is consists of four sub-systems: data parsing, image pre-processing, data conversion and data feeding apis.  
@@ -7,11 +7,11 @@ This module is consists of four sub-systems: data parsing, image pre-processing,
 We use `dataset.Dataset` to abstract a set of data samples. For example, `COCO` data contains 3 sets of data for training, validation, and testing respectively. Original data stored in files could be loaded into memory using `dataset.source`; Then make use of `dataset.transform` to process the data; Finally, the batch data could be fetched by the api of `dataset.Reader`.
 
 Sub-systems introduction:
-1. Data prasing
+1. Data prasing     
 By data parsing, we can get a `dataset.Dataset` instance, whose implementation is located in `dataset.source`. This sub-system is used to parse different data formats, which is easy to add new data format supports. Currently, only following data sources are included:
 
-- COCO data source
- This kind of source is used to load `COCO` data directly, eg: `COCO2017`. It's composed of json files for labeling info and image files. And it's directory structure is as follows:
+- COCO data source    
+This kind of source is used to load `COCO` data directly, eg: `COCO2017`. It's composed of json files for labeling info and image files. And it's directory structure is as follows:
 
   ```
   data/coco/
@@ -29,8 +29,8 @@ By data parsing, we can get a `dataset.Dataset` instance, whose implementation i
   |   ...
   ```
 
-- Pascal VOC data source
- This kind of source is used to load `VOC` data directly, eg: `VOC2007`. It's composed of xml files for labeling info and image files. And it's directory structure is as follows:
+- Pascal VOC data source    
+This kind of source is used to load `VOC` data directly, eg: `VOC2007`. It's composed of xml files for labeling info and image files. And it's directory structure is as follows:
 
 
   ```
@@ -38,7 +38,7 @@ By data parsing, we can get a `dataset.Dataset` instance, whose implementation i
   ├──Annotations
   │   ├── i000050.jpg
   │   ├── 003876.xml
-   |   ...
+  |   ...
   ├── ImageSets
   │   ├──Main
               └── train.txt
@@ -56,7 +56,7 @@ By data parsing, we can get a `dataset.Dataset` instance, whose implementation i
   ├── JPEGImages
   │   ├── 000050.jpg
   │   ├── 003876.jpg
-    |   ...
+  |   ...
   ```
 
 
@@ -64,28 +64,28 @@ By data parsing, we can get a `dataset.Dataset` instance, whose implementation i
 - Roidb data source
 This kind of source is a normalized data format which only contains a pickle file for labeling info and a directory for image files(maybe there is a mapping file for label name to label id). You can convert `COCO` or `VOC` data into this format.
 
- 2. Image preprocessing
+ 2. Image preprocessing     
  Image preprocessing subsystem includes operations such as image decoding, expanding, cropping, etc. We use `dataset.transform.operator` to unify the implementation, which is convenient for extension. In addition, multiple operators can be combined to form a complex processing pipeline, and used by data transformers in `dataset.transformer`, such as multi-threading to acclerate a complex image data processing.
 
- 3. Data transformer
+ 3. Data transformer     
  The function of the data transformer is used to convert a `dataset.Dataset` to a new `dataset.Dataset`, for example: convert a jpeg image dataset into a decoded and resized dataset. We use the decorator pattern to implement different transformers which are all subclass of `dataset.Dataset`. For example, the `dataset.transform.paralle_map` transformer is for multi-process preprocessing, more transformers can be found in `dataset.transform.transformer`.
 
- 4. Data feeding apis
+ 4. Data feeding apis     
+To facilitate data pipeline building and data feeding for training, we combine multiple `dataset.Dataset` to form a `dataset.Reader` which can provide data for training, validation and testing respectively. The user only needs to call `Reader.[train|eval|infer]` to get the corresponding data stream. `Reader` supports yaml file to configure data address, preprocessing oprators, acceleration mode, and so on.
 
-To facilitate data pipeline building and data feeding for training, we combine multiple `dataset.Dataset` to form a `dataset.Reader` which can provide data for training, validation and testing respectively. The user only needs to call `Reader.[train|val|test]` to get the corresponding data stream. `Reader` supports yaml file to configure data address, preprocessing oprators, acceleration mode, and so on.
 
 The main APIs are as follows:
 
 
 
-1. source
+1. Data parsing
 
  - `source/coco_loader.py`: Use to parse the COCO dataset. [detail code](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/coco_loader.py)
  - `source/voc_loader.py`: Use to parse the Pascal VOC dataset. [detail code](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)
  [Note] When using VOC datasets, if you do not use the default label list, you need to generate `label_list.txt` using `tools/generate_data_for_training.py` or provide `label_list.txt` in `data/pascalvoc/ImageSets/Main` firstly. Also set the parameter `use_default_label` to `true` in the configuration file.
  - `source/loader.py`: Use to parse the Roidb dataset. [detail code](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/loader.py)
 
-2. operator
+2. Operator
  `transform/operators.py`: Contains a variety of data enhancement methods, including:
 
 ```  python
@@ -104,7 +104,7 @@ MixupImage: Mixup two images in proportion.
 [Note] The mixup operation can refer to[paper](https://arxiv.org/pdf/1710.09412.pdf)。
 
 `transform/arrange_sample.py`: Sort the data which need to input the network.
-3. transformer
+3. Transformer
 `transform/post_map.py`: A pre-processing operation for completing batch data, which mainly includes:
 
 ```  python
@@ -114,7 +114,7 @@ Padding operation
 ```
 `transform/transformer.py`: Used to filter useless data and return batch data.
 `transform/parallel_map.py`: Used to achieve acceleration.
-4. reader
+4. Reader
 `reader.py`: Used to combine source and transformer operations, and return batch data according to `max_iter`.
 `data_feed.py`: Configure default parameters for `reader.py`.
 
@@ -124,7 +124,7 @@ Padding operation
 
 ### Usage
 
-***Ordinary usage:***
+#### Ordinary usage
 The function of this module is completed by combining the configuration information in the yaml file. The use of yaml files can be found in the configuration file section.
 
  - Read data for training
@@ -133,8 +133,7 @@ The function of this module is completed by combining the configuration informat
 ccfg = load_cfg('./config.yml')
 coco = Reader(ccfg.DATA, ccfg.TRANSFORM, maxiter=-1)
 ```
-***Customized dataset usage:***
-
+#### How to use customized dataset?
 - Option 1: Convert the dataset to the VOC format or COCO format.
 ```python
  # In ./tools/, the code named labelme2coco.py is provided to convert
@@ -169,6 +168,6 @@ if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource', 'XXSource']:
 
 4. In the configure file, define the `type` of `dataset` as `XXSource`。  
 
-***Add data preprocessing:***
+#### How to add data pre-processing？
 - If you want to add the enhanced preprocessing of a single image, you can refer to the code of each class in `transform/operators.py`, and create a new class to implement new data enhancement. Also add the name of this preprocessing to the configuration file.
 - If you want to add image preprocessing for a single batch, you can refer to the code for each function in `build_post_map` of `transform/post_map.py`, and create a new internal function to implement new batch data preprocessing. Also add the name of this preprocessing to the configuration file.
