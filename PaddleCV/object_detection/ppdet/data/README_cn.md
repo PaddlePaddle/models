@@ -8,7 +8,7 @@
 
 子功能介绍：
 
-1. 数据解析
+1. 数据解析         
      数据解析得到的是`dataset.Dataset`,实现逻辑位于`dataset.source`中。通过它可以实现解析不同格式的数据集，已支持的数据源包括：
 - COCO数据源
      该数据集目前分为COCO2012和COCO2017，主要由json文件和image文件组成，其组织结构如下所示：
@@ -112,7 +112,7 @@ python ./tools/generate_data_for_training.py
 
  - `source/coco_loader.py`：用于解析COCO数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/coco_loader.py)
  - `source/voc_loader.py`：用于解析Pascal VOC数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)    
- [注意]在使用VOC数据集时，若不使用默认的label列表，则需要先使用`tools/generate_data_for_training.py`生成`label_list.txt`（[使用方式](Mark)），或提供`label_list.txt`放置于`data/pascalvoc/ImageSets/Main`中；同时在配置文件中设置参数`use_default_label`为`true`。
+ [注意]在使用VOC数据集时，若不使用默认的label列表，则需要先使用`tools/generate_data_for_training.py`生成`label_list.txt`（使用方式与数据解析中的roidb数据集获取过程一致），或提供`label_list.txt`放置于`data/pascalvoc/ImageSets/Main`中；同时在配置文件中设置参数`use_default_label`为`true`。
  - `source/loader.py`：用于解析Roidb数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/loader.py)
 
 2. 算子          
