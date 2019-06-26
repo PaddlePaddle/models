@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sed -i '$a\dropout_seed = 1000' ../../models/neural_machine_translation/transformer/desc.py
+
 DATA_PATH=./dataset/wmt16
 
 train(){
