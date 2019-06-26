@@ -133,7 +133,7 @@ MixupImage：按比例叠加两张图像。
 ```
 [注意]：Mixup的操作可参考[论文](https://arxiv.org/pdf/1710.09412.pdf)。
 
-`transform/arrange_sample.py`：实现对输入网络数据的排序。
+`transform/arrange_sample.py`：实现对输入网络数据的排序。     
 3. 转换     
 `transform/post_map.py`：用于完成批数据的预处理操作，其主要包括：
 
@@ -143,7 +143,7 @@ MixupImage：按比例叠加两张图像。
 padding操作
 ```
 `transform/transformer.py`：用于过滤无用的数据，并返回批数据。
-`transform/parallel_map.py`：用于实现加速。
+`transform/parallel_map.py`：用于实现加速。        
 4. 读取     
 `reader.py`：用于组合source和transformer操作，根据`max_iter`返回batch数据。
 `data_feed.py`: 用于配置 `reader.py`中所需的默认参数.
