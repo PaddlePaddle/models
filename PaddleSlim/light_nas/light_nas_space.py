@@ -122,6 +122,71 @@ class LightNASSpace(SearchSpace):
             2, 4, 3, 3, 2, 2, 2
         ]
 
+    def get_all_ops(self, ifshortcut=False, ifse=False):
+        """Get all possible ops of current search space
+        Returns:
+            list, op_params
+        """
+        op_params = []
+        # strides for seven bottlenecks
+        strides = [1, 2, 2, 2, 1, 2, 1]
+        # conv1_1
+        op_params.append(
+            ('conv', 0, 1, 100, 0, 0, 1, 3, 224, 224, 32, 1, 3, 1, 2, 1))
+        op_params.append(('activation', 0, 1, 100, 'relu6', 1, 32, 112, 112))
+
+        # bottlenecks
+        in_c, in_shape = [32], 112
+        for i in range(7):
+            if i == 0:
+                expansion, kernels, num_filters, s = [1], [3], [16], strides[i]
+            elif i == 6:
+                expansion, kernels, num_filters, s = [6], [3], [320], strides[i]
+            else:
+                expansion, kernels, num_filters, s = NAS_FILTERS_MULTIPLIER, \
+                                                     NAS_KERNEL_SIZE, \
+                                                     NAS_FILTER_SIZE[i-1], \
+                                                     strides[i]
+            for c in in_c:
+                for t in expansion:
+                    # expansion 
+                    op_params.append(('conv', 0, 1, 100, 0, 0, 1, c, in_shape,
+                                      in_shape, c * t, 1, 1, 0, 1, 1))
+                    op_params.append(('activation', 0, 1, 100, 'relu6', 1,
+                                      c * t, in_shape, in_shape))
+                    # depthwise
+                    for k in kernels:
+                        op_params.append(
+                            ('conv', 0, 1, 100, 0, 0, 1, c * t, in_shape,
+                             in_shape, c * t, c * t, k, (int(k - 1) / 2), s, 1))
+                    op_params.append(('activation', 0, 1, 100, 'relu6', c * t,
+                                      in_shape / s, in_shape / s))
+
+                    # shrink
+                    for out_c in num_filters:
+                        op_params.append(
+                            ('conv', 0, 1, 100, 0, 0, 1, c * t, in_shape / s,
+                             in_shape / s, out_c, 1, 1, 0, 1, 1))
+
+                        # shortcut
+                        if ifshortcut:
+                            pass
+
+                        if ifse:
+                            pass
+            in_c, in_shape = num_filters, in_shape / s
+
+        # last conv
+        op_params.append(
+            ('conv', 0, 1, 100, 0, 0, 1, 320, 7, 7, 1280, 1, 1, 0, 1, 1))
+        op_params.append(('activation', 0, 1, 100, 'relu6', 1, 1280, 7, 7))
+        op_params.append(
+            ('pooling', 0, 1, 100, 1, 1, 1280, 7, 7, 7, 0, 1, 0, 3))
+        op_params.append(
+            ('conv', 0, 1, 100, 1, 0, 1, 1280, 1, 1, 1000, 1, 1, 0, 1, 1))
+
+        return list(set(op_params))
+
     def create_net(self, tokens=None):
         """Create a network for training by tokens.
         """
