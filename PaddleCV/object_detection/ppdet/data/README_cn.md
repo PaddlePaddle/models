@@ -114,7 +114,7 @@ python ./tools/generate_data_for_training.py
 
  - `source/coco_loader.py`：用于解析COCO数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/coco_loader.py)
  - `source/voc_loader.py`：用于解析Pascal VOC数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)    
- [注意]在使用VOC数据集时，若不使用默认的label列表，则需要先使用`tools/generate_data_for_training.py`生成`label_list.txt`（[使用方式](Mark)），或提供`label_list.txt`放置于`data/pascalvoc/ImageSets/Main`中；同时在配置文件中设置参数`use_default_label`为`true`。
+ [注意]在使用VOC数据集时，若不使用默认的label列表，则需要先使用`tools/generate_data_for_training.py`生成`label_list.txt`（[使用方式](# Mark)），或提供`label_list.txt`放置于`data/pascalvoc/ImageSets/Main`中；同时在配置文件中设置参数`use_default_label`为`true`。
  - `source/loader.py`：用于解析Roidb数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/loader.py)
 
 2. 算子          
@@ -163,7 +163,7 @@ padding操作
 ccfg = load_cfg('./config.yml')
 coco = Reader(ccfg.DATA, ccfg.TRANSFORM, maxiter=-1)
 ```
-#### 自定义数据集的使用
+#### 如何使用自定义数据集？
 
 - 选择1：将数据集转换为VOC格式或者COCO格式。
 ```python
@@ -198,6 +198,6 @@ if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource', 'XXSource']:
 
 4.在配置文件中修改`dataset`下的`type`为`XXSource`。  
 
-#### 增加数据预处理
+#### 如何增加数据预处理？
 - 若增加单张图像的增强预处理，可在`transform/operators.py`中参考每个类的代码，新建一个类来实现新的数据增强；同时在配置文件中增加该预处理。
 - 若增加单个batch的图像预处理，可在`transform/post_map.py`中参考`build_post_map`中每个函数的代码，新建一个内部函数来实现新的批数据预处理；同时在配置文件中增加该预处理。
