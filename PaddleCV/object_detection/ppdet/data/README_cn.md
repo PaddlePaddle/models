@@ -1,5 +1,5 @@
 ## 介绍
-本模块是一个python模块，用于加载数据并将其转换成适用于检测模型的训练、验证、测试所需要的格式——由多个np.ndarray组成的tuple数组，例如用于Faster R-CNN模型的训练数据格式为：`[(im, im_info, im_id, gt_bbox, gt_class, is_crowd), (...)]`。
+本模块是一个Python模块，用于加载数据并将其转换成适用于检测模型的训练、验证、测试所需要的格式——由多个np.ndarray组成的tuple数组，例如用于Faster R-CNN模型的训练数据格式为：`[(im, im_info, im_id, gt_bbox, gt_class, is_crowd), (...)]`。
 
 ### 实现
 该模块内部可分为4个子功能：数据解析、图片预处理、数据转换和数据获取接口。
@@ -41,7 +41,7 @@
   ├──Annotations
   │   ├── i000050.jpg
   │   ├── 003876.xml
-   |   ...
+  |   ...
   ├── ImageSets
   │   ├──Main
               └── train.txt
@@ -59,14 +59,43 @@
   ├── JPEGImages
   │   ├── 000050.jpg
   │   ├── 003876.jpg
-    |   ...
+  |   ...
   ```
 
 
 
 - Roidb数据源
-        该数据集主要由COCO数据集和Pascal VOC数据集转换而成的pickle文件，包含一个图像信息的list和一个label到id的映射dict。
+    该数据集主要由COCO数据集和Pascal VOC数据集转换而成的pickle文件，包含一个dict，而dict中只包含一个命名为‘records’的list（可能还有一个命名为‘cname2cid’的字典），其内容如下所示：
+```python
+(records, catname2clsid)
+'records'是一个list并且它的结构如下:
+{
+    'im_file': im_fname, # 图像文件名
+    'im_id': im_id, # 图像id
+    'h': im_h, # 图像高度
+    'w': im_w, # 图像宽度
+    'is_crowd': is_crowd, # 是否重叠
+    'gt_class': gt_class, # 真实框类别
+    'gt_bbox': gt_bbox, # 真实框坐标
+    'gt_poly': gt_poly, # 多边形坐标
+}
+'cname2id'是一个dict，保存了类别名到id的映射
 
+```
+<div id="Mark">
+我们在`./tools/`中提供了一个生成roidb数据集的代码，可以通过下面命令实现该功能。
+```python 
+# --type: 原始数据集的类别（只能是xml或者json）
+# --annotation: 一个包含所需标注文件名的文件的路径
+# --save-dir: 保存路径
+# --samples: sample的个数（默认是-1，代表使用所有sample）
+python ./tools/generate_data_for_training.py 
+            --type=json \
+            --annotation=./annotations/instances_val2017.json \
+            --save-dir=./roidb \
+            --samples=-1 
+```
+</div>
  2. 图片预处理
     图片预处理通过包括图片解码、缩放、裁剪等操作，我们采用`dataset.transform.operator`算子的方式来统一实现，这样能方便扩展。此外，多个算子还可以组合形成复杂的处理流程, 并被`dataset.transformer`中的转换器使用，比如多线程完成一个复杂的预处理流程。
 
@@ -81,14 +110,14 @@
 
 
 
-1. source
+1. 数据解析    
 
  - `source/coco_loader.py`：用于解析COCO数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/coco_loader.py)
- - `source/voc_loader.py`：用于解析Pascal VOC数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)
- [注意]在使用VOC数据集时，若不使用默认的label列表，则需要先使用`tools/generate_data_for_training.py`生成`label_list.txt`，或提供`label_list.txt`放置于`data/pascalvoc/ImageSets/Main`中；同时在配置文件中设置参数`use_default_label`为`true`。
+ - `source/voc_loader.py`：用于解析Pascal VOC数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)    
+ [注意]在使用VOC数据集时，若不使用默认的label列表，则需要先使用`tools/generate_data_for_training.py`生成`label_list.txt`（[使用方式](Mark)），或提供`label_list.txt`放置于`data/pascalvoc/ImageSets/Main`中；同时在配置文件中设置参数`use_default_label`为`true`。
  - `source/loader.py`：用于解析Roidb数据集。[详见代码](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/loader.py)
 
-2. operator
+2. 算子          
  `transform/operators.py`：包含多种数据增强方式，主要包括：  
 
 ```  python
@@ -107,7 +136,7 @@ MixupImage：按比例叠加两张图像。
 [注意]：Mixup的操作可参考[论文](https://arxiv.org/pdf/1710.09412.pdf)。
 
 `transform/arrange_sample.py`：实现对输入网络数据的排序。
-3. transformer
+3. 转换     
 `transform/post_map.py`：用于完成批数据的预处理操作，其主要包括：
 
 ```  python
@@ -117,7 +146,7 @@ padding操作
 ```
 `transform/transformer.py`：用于过滤无用的数据，并返回批数据。
 `transform/parallel_map.py`：用于实现加速。
-4. reader
+4. 读取     
 `reader.py`：用于组合source和transformer操作，根据`max_iter`返回batch数据。
 `data_feed.py`: 用于配置 `reader.py`中所需的默认参数.
 
@@ -125,7 +154,7 @@ padding操作
 
 
 ### 使用
-***常规使用：***
+#### 常规使用
 结合yaml文件中的配置信息，完成本模块的功能。yaml文件的使用可以参见配置文件部分。
 
  - 读取用于训练的数据
@@ -134,7 +163,7 @@ padding操作
 ccfg = load_cfg('./config.yml')
 coco = Reader(ccfg.DATA, ccfg.TRANSFORM, maxiter=-1)
 ```
-***自定义数据集的使用：***
+#### 自定义数据集的使用
 
 - 选择1：将数据集转换为VOC格式或者COCO格式。
 ```python
@@ -169,6 +198,6 @@ if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource', 'XXSource']:
 
 4.在配置文件中修改`dataset`下的`type`为`XXSource`。  
 
-***增加数据预处理：***
+#### 增加数据预处理
 - 若增加单张图像的增强预处理，可在`transform/operators.py`中参考每个类的代码，新建一个类来实现新的数据增强；同时在配置文件中增加该预处理。
 - 若增加单个batch的图像预处理，可在`transform/post_map.py`中参考`build_post_map`中每个函数的代码，新建一个内部函数来实现新的批数据预处理；同时在配置文件中增加该预处理。
