@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def visualize_results(image,
+                      im_id,
                       catid2name,
                       threshold=0.5,
                       bbox_results=None,
@@ -39,14 +40,14 @@ def visualize_results(image,
     Visualize bbox and mask results
     """
     if mask_results:
-        image = draw_mask(image, mask_results, threshold)
+        image = draw_mask(image, im_id, mask_results, threshold)
     if bbox_results:
-        image = draw_bbox(image, catid2name, bbox_results,
+        image = draw_bbox(image, im_id, catid2name, bbox_results,
                           threshold, is_bbox_normalized)
     return image
 
 
-def draw_mask(image, segms, threshold, alpha=0.7):
+def draw_mask(image, im_id, segms, threshold, alpha=0.7):
     """
     Draw mask on image
     """
@@ -55,6 +56,8 @@ def draw_mask(image, segms, threshold, alpha=0.7):
     w_ratio = .4
     img_array = np.array(image).astype('float32')
     for dt in np.array(segms):
+        if im_id != dt['image_id']:
+            continue
         segm, score = dt['segmentation'], dt['score']
         if score < threshold:
             continue
@@ -70,13 +73,16 @@ def draw_mask(image, segms, threshold, alpha=0.7):
     return Image.fromarray(img_array.astype('uint8'))
 
 
-def draw_bbox(image, catid2name, bboxes, threshold, is_bbox_normalized=False):
+def draw_bbox(image, im_id, catid2name, bboxes, threshold, 
+              is_bbox_normalized=False):
     """
     Draw bbox on image
     """
     draw = ImageDraw.Draw(image)
 
     for dt in np.array(bboxes):
+        if im_id != dt['image_id']:
+            continue
         catid, bbox, score = dt['category_id'], dt['bbox'], dt['score']
         if score < threshold:
             continue
