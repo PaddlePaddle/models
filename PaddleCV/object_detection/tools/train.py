@@ -19,8 +19,21 @@ from __future__ import print_function
 import os
 import time
 import multiprocessing
-
 import numpy as np
+
+
+def set_paddle_flags(flags):
+    for key, value in flags.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect. 
+set_paddle_flags({
+    'FLAGS_eager_delete_tensor_gb': 0,  # enable GC to save memory
+})
 
 from paddle import fluid
 
@@ -52,8 +65,8 @@ def main():
     if cfg.use_gpu:
         devices_num = fluid.core.get_cuda_device_count()
     else:
-        devices_num = int(os.environ.get('CPU_NUM',
-                                         multiprocessing.cpu_count()))
+        devices_num = int(
+            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     if 'train_feed' not in cfg:
         train_feed = create(main_arch + 'TrainFeed')
@@ -180,7 +193,6 @@ if __name__ == '__main__':
         "--output_file",
         default=None,
         type=str,
-        help="Evaluation file name, default to bbox.json and mask.json."
-    )
+        help="Evaluation file name, default to bbox.json and mask.json.")
     FLAGS = parser.parse_args()
     main()

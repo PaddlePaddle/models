@@ -55,7 +55,7 @@ def get_test_images(infer_dir, infer_img):
     Get image path list in TEST mode
     """
     assert infer_img is not None or infer_dir is not None, \
-        "--infer-img or --infer-dir should be set"
+        "--infer_img or --infer_dir should be set"
     images = []
 
     # infer_img has a higher priority
@@ -155,8 +155,8 @@ def main():
                 mask_results = mask2out([res], clsid2catid,
                                         cfg.MaskHead.resolution)
             image = Image.open(image_path)
-            image = visualize_results(image, catid2name, 0.5,
-                                      bbox_results, mask_results)
+            image = visualize_results(image, catid2name, 0.5, bbox_results,
+                                      mask_results)
             save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name)

@@ -113,7 +113,7 @@ FasterRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     image_dir: train2017
     annotation: annotations/instances_train2017.json
   num_workers: 2
@@ -125,7 +125,7 @@ FasterRCNNEvalFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
@@ -136,7 +136,7 @@ FasterRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
