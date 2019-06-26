@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import os
 import shutil
+import distutils
 import requests
 import tqdm
 import hashlib
@@ -35,19 +36,21 @@ DATASET_HOME = os.path.expanduser("~/.cache/paddle/dataset")
 
 DATASETS = {
     'coco': [
-        (
-            'http://images.cocodataset.org/zips/train2017.zip',
-            'cced6f7f71b7629ddf16f17bbcfab6b2', ),
-        (
-            'http://images.cocodataset.org/zips/val2017.zip',
-            '442b8da7639aecaf257c1dceb8ba8c80', ),
-        (
-            'http://images.cocodataset.org/annotations/annotations_trainval2017.zip',
-            'f4bbac642086de4f52a3fdda2de5fa2c', ),
+        ('http://images.cocodataset.org/zips/train2017.zip',
+         'cced6f7f71b7629ddf16f17bbcfab6b2', ),
+        ('http://images.cocodataset.org/zips/val2017.zip',
+         '442b8da7639aecaf257c1dceb8ba8c80', ),
+        ('http://images.cocodataset.org/annotations/annotations_trainval2017.zip',
+         'f4bbac642086de4f52a3fdda2de5fa2c', ),
     ],
-    'pascal': [(
-        'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
-        '6cd6e144f989b92b3379bac3b3de84fd', )],
+    'pascal': [
+        ('http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
+         '6cd6e144f989b92b3379bac3b3de84fd', ),
+        ('http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar',
+         'c52e279531787c972589f7e41ab4ae64', ),
+        ('http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar',
+         'b6e924de25625d8de591ea690078ad9f', ),
+    ],
 }
 
 DOWNLOAD_RETRY_LIMIT = 3
@@ -212,6 +215,30 @@ def _decompress(fname):
         raise TypeError("Unsupport compress file type {}".format(fname))
 
     for f in os.listdir(fpath_tmp):
-        shutil.move(os.path.join(fpath_tmp, f), os.path.join(fpath, f))
-    os.rmdir(fpath_tmp)
+        src_dir = os.path.join(fpath_tmp, f)
+        dst_dir = os.path.join(fpath, f)
+        _move_and_merge_tree(src_dir, dst_dir)
+
+    shutil.rmtree(fpath_tmp)
     os.remove(fname)
+
+
+def _move_and_merge_tree(src, dst):
+    """
+    Move src directory to dst, if dst is already exists, 
+    merge src to dst
+    """
+    if not os.path.exists(dst):
+        shutil.move(src, dst)
+    else:
+        for fp in os.listdir(src):
+            src_fp = os.path.join(src, fp)
+            dst_fp = os.path.join(dst, fp)
+            if os.path.isdir(src_fp):
+                if os.path.isdir(dst_fp):
+                    _move_and_merge_tree(src_fp, dst_fp)
+                else:
+                    shutil.move(src_fp, dst_fp)
+            elif os.path.isfile(src_fp) and \
+                    not os.path.isfile(dst_fp):
+                shutil.move(src_fp, dst_fp)
