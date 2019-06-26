@@ -143,7 +143,7 @@ python infer.py \
 
 ## 已有模型及其性能
 表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，基于fluid so和fluid_trt(fluid TensorRT)的预测时间（测试GPU型号为tesla p4）。可以通过点击相应模型的名称下载对应的预训练模型。基于so的预测方法，将在不久后发布。由于fluid_trt对ShuffleNetV2使用的激活函数swish，MobileNetV2使用的激活函数relu6不支持，因此预测加速不明显，fluid_trt对这两个op的支持将在不久后提供。
-注意：ResNet50_vd_v2是ResNet50_vd蒸馏版本。除了InceptionV4采用的输入图像的分辨率为299*299，其余模型测试时使用的分辨率均为224*224。
+注意：ResNet50_vd_v2是ResNet50_vd蒸馏版本。除了InceptionV4采用的输入图像的分辨率为299x299，其余模型测试时使用的分辨率均为224x224。
 - Released models: specify parameter names
 
 |model | top-1/top-5 accuracy(CV2) | fluid inference time(ms) | fluid_trt inference time(ms) |
