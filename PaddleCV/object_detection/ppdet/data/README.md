@@ -154,9 +154,9 @@ coco = Reader(ccfg.DATA, ccfg.TRANSFORM, maxiter=-1)
 ```
 - Option 2:
 
-1.Following the `./source/coco_loader.py` and `./source/voc_loader.py`, add `./source/XX_loader.py` and implement the `load` function.
-2.Add the entry for `./source/XX_loader.py` in the `load` function of `./source/loader.py`.
-3.Modify `./source/__init__.py`:
+1. Following the `./source/coco_loader.py` and `./source/voc_loader.py`, add `./source/XX_loader.py` and implement the `load` function.
+2. Add the entry for `./source/XX_loader.py` in the `load` function of `./source/loader.py`.
+3. Modify `./source/__init__.py`:
 
 
 ```python
@@ -167,7 +167,7 @@ if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource', 'XXSource']:
     source_type = 'RoiDbSource'
 ```
 
-4.In the configure file, define the `type` of `dataset` as `XXSource`。  
+4. In the configure file, define the `type` of `dataset` as `XXSource`。  
 
 ***Add data preprocessing:***
 - If you want to add the enhanced preprocessing of a single image, you can refer to the code of each class in `transform/operators.py`, and create a new class to implement new data enhancement. Also add the name of this preprocessing to the configuration file.
