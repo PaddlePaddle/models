@@ -243,7 +243,7 @@ def load(anno_path, sample_num=-1, use_default_label=True):
 
 def pascalvoc_label():
     labels_map = {
-	'car': 1,
+        'car': 1,
         'horse': 2,
         'person': 3,
         'bottle': 4,
