@@ -96,14 +96,14 @@ python ./tools/generate_data_for_training.py
             --samples=-1 
 ```
 </div>
- 2. 图片预处理
+ 2. 图片预处理    
     图片预处理通过包括图片解码、缩放、裁剪等操作，我们采用`dataset.transform.operator`算子的方式来统一实现，这样能方便扩展。此外，多个算子还可以组合形成复杂的处理流程, 并被`dataset.transformer`中的转换器使用，比如多线程完成一个复杂的预处理流程。
 
- 3. 数据转换器
+ 3. 数据转换器    
     数据转换器的功能是完成对某个`dataset.Dataset`进行转换处理，从而得到一个新的`dataset.Dataset`。我们采用装饰器模式实现各种不同的`dataset.transform.transformer`。比如用于多进程预处理的`dataset.transform.paralle_map`转换器。
 
- 4. 数据获取接口
-     为方便训练时的数据获取，我们将多个`dataset.Dataset`组合在一起构成一个`dataset.Reader`为用户提供数据，用户只需要调用`Reader.[train|val|test]`即可获得对应的数据流。`Reader`支持yaml文件配置数据地址、预处理过程、加速方式等。
+ 4. 数据获取接口    
+     为方便训练时的数据获取，我们将多个`dataset.Dataset`组合在一起构成一个`dataset.Reader`为用户提供数据，用户只需要调用`Reader.[train|eval|infer]`即可获得对应的数据流。`Reader`支持yaml文件配置数据地址、预处理过程、加速方式等。
 
 主要的APIs如下：
 
