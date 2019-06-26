@@ -20,7 +20,7 @@ from collections import OrderedDict
 
 from paddle import fluid
 
-__all__ = ['create_feeds']
+__all__ = ['create_feed']
 
 # yapf: disable
 feed_var_def = [
@@ -37,7 +37,7 @@ feed_var_def = [
 # yapf: enable
 
 
-def create_feeds(feed, use_pyreader=True):
+def create_feed(feed, use_pyreader=True):
     image_shape = feed.image_shape
     feed_var_map = {var['name']: var for var in feed_var_def}
     feed_var_map['image'] = {

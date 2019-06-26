@@ -31,7 +31,7 @@ from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
 import ppdet.utils.checkpoint as checkpoint
-from ppdet.modeling.model_input import create_feeds
+from ppdet.modeling.model_input import create_feed
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -77,7 +77,7 @@ def main():
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
-            train_pyreader, feed_vars = create_feeds(train_feed)
+            train_pyreader, feed_vars = create_feed(train_feed)
             train_fetches = model.train(feed_vars)
             loss = train_fetches['loss']
             lr = lr_builder()
@@ -95,7 +95,7 @@ def main():
         eval_prog = fluid.Program()
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
-                eval_pyreader, feed_vars = create_feeds(eval_feed)
+                eval_pyreader, feed_vars = create_feed(eval_feed)
                 fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
 
