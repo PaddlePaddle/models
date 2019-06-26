@@ -155,7 +155,7 @@ python infer.py \
 ```
 
 ## Supported models and performances
-The image classification models currently supported in models are listed in the table，and the top-1/top-5 accuracy on the imagenet-2012 validation set of the models and the inference time of fluid so and fluid_trt(fluid TensorRT) (test GPU model: tesla p4) are given. Pretrained models can be downloaded by clicking related model names. The inference method based on so will be released soon. As the activation function swish used by ShuffleNetV2 and the activation function relu6 used by MobileNetV2 are not supported by fluid_trt, inference acceleration is not obvious. Fluid_trt will support both op soon.
+The image classification models currently supported in models are listed in the table，and the top-1/top-5 accuracy on the imagenet-2012 validation set of the models and the inference time of fluid so and fluid_trt(fluid TensorRT) (test GPU model: tesla P4) are given. Pretrained models can be downloaded by clicking related model names. The inference method based on so will be released soon. As the activation function swish used by ShuffleNetV2 and the activation function relu6 used by MobileNetV2 are not supported by fluid_trt, inference acceleration is not obvious. Fluid_trt will support both op soon.
 Note: ResNet50_vd_v2 is the distilled version of ResNet50_vd. In addition to the input image resolution 299x299 adopted by InceptionV4, the resolution used by other models is 224x224.
 - Released models: specify parameter names
 
