@@ -64,6 +64,7 @@ python train.py \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
        --with_mem_opt=False \
+       --with_inplace=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
@@ -76,7 +77,8 @@ python train.py \
 * **class_dim**: the class number of the classification task. Default: 1000.
 * **image_shape**: input size of the network. Default: "3,224,224".
 * **model_save_dir**: the directory to save trained model. Default: "output".
-* **with_mem_opt**: whether to use memory optimization or not. Default: True.
+* **with_mem_opt**: whether to use memory optimization or not. Default: False.
+* **with_inplace**: whether to use inplace memory optimization or not. Default: True.
 * **lr_strategy**: learning rate changing strategy. Default: "piecewise_decay".
 * **lr**: initialized learning rate. Default: 0.1.
 * **pretrained_model**: model path for pretraining. Default: None.
@@ -154,8 +156,7 @@ python infer.py \
 
 ## Supported models and performances
 
-Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. Pretrained models can be downloaded by clicking related model names.
-
+Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. Pretrained models can be downloaded by clicking related model names.Among them, ResNet50_vd_v2 is the distilled version of ResNet50_vd.
 - Released models: specify parameter names
 
 |model | top-1/top-5 accuracy(CV2) |
@@ -172,6 +173,7 @@ Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. 
 |[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar) | 76.50%/93.00% |
 |[ResNet50_vc](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vc_pretrained.tar) |78.35%/94.03% |
 |[ResNet50_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_pretrained.tar) | 79.12%/94.44% |
+|[ResNet50_vd_v2](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_v2_pretrained.tar) | 79.84%/94.93% |
 |[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.tar) | 77.56%/93.64% |
 |[ResNet101_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_vd_pretrained.tar) | 79.44%/94.47% |
 |[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.tar) | 78.26%/93.96% |
@@ -185,4 +187,3 @@ Available top-1/top-5 validation accuracy on ImageNet 2012 are listed in table. 
 |[GoogleNet](https://paddle-imagenet-models-name.bj.bcebos.com/GoogleNet_pretrained.tar) | 70.70%/89.66% |
 |[ShuffleNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_pretrained.tar) | 70.03%/89.17% |
 |[InceptionV4](https://paddle-imagenet-models-name.bj.bcebos.com/InceptionV4_pretrained.tar) | 80.77%/95.26% |
-
