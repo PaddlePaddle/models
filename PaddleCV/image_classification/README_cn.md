@@ -147,7 +147,6 @@ python infer.py \
 - 注意1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
 - 注意2：除了InceptionV4采用的输入图像的分辨率为299x299，其余模型测试时使用的分辨率均为224x224。
 - 注意3：调用动态链接库预测时需要将训练模型转换为二进制模型，转换方法如下：a.将infer.py中参数save_inference设置为True; b.执行infer.py。
-- Released models: specify parameter names
 
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |

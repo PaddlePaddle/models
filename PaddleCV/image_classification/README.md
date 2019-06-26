@@ -159,7 +159,6 @@ The image classification models currently supported in models are listed in the 
 - Note1: ResNet50_vd_v2 is the distilled version of ResNet50_vd. 
 - Note2:In addition to the input image resolution 299x299 adopted by InceptionV4, the resolution used by other models is 224x224.
 - Note3: Calling dynamic link library to infer requires converting the train model to a binary model. The conversion method is as follows: a. Set the save_inference parameter in infer.py to True; b. Execute infer.py
-- Released models: specify parameter names
 
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
