@@ -181,9 +181,9 @@ coco = Reader(ccfg.DATA, ccfg.TRANSFORM, maxiter=-1)
 ```
 - 选择2：
 
-1.仿照`./source/coco_loader.py`和`./source/voc_loader.py`，添加`./source/XX_loader.py`并实现`load`函数。
-2.在`./source/loader.py`的`load`函数中添加使用`./source/XX_loader.py`的入口。
-3.修改`./source/__init__.py`：
+1. 仿照`./source/coco_loader.py`和`./source/voc_loader.py`，添加`./source/XX_loader.py`并实现`load`函数。       
+2. 在`./source/loader.py`的`load`函数中添加使用`./source/XX_loader.py`的入口。     
+3. 修改`./source/__init__.py`：   
 
 
 ```python
@@ -193,8 +193,8 @@ if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource']:
 if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource', 'XXSource']:
     source_type = 'RoiDbSource'
 ```
-
-4.在配置文件中修改`dataset`下的`type`为`XXSource`。  
+     
+4. 在配置文件中修改`dataset`下的`type`为`XXSource`。  
 
 #### 如何增加数据预处理？
 - 若增加单张图像的增强预处理，可在`transform/operators.py`中参考每个类的代码，新建一个类来实现新的数据增强；同时在配置文件中增加该预处理。
