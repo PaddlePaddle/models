@@ -22,7 +22,7 @@ python tools/train.py -c =configs/faster_rcnn_r50_1x.yml
 ```
 
 - Default dataset directory is `dataset/coco`, users also can specify it in the configure file.
-- Pretrained model will be downloaded automatically.
+- Pretrained model will be downloaded automatically and saved at `~/.cache/paddle/weights`.
 - Model will be saved at  `output/faster_rcnn_r50_1x` by default, users also can specify it in the configure file.
 - All hyper parameters can refer input config.
 - Change config file for other models.
@@ -30,12 +30,7 @@ python tools/train.py -c =configs/faster_rcnn_r50_1x.yml
 
 
 For `SSD` on Pascal-VOC dataset,  set `--eval=True` to do evaluation during training.
-For other models based on COCO dataset, the evaluating during training is not fully verified, better to do evaluation after traning.
-
-
-### Distributed Training
-
-Will add distributed training guide later.
+For other models based on COCO dataset, the evaluating during training is not fully verified, better to do evaluation after training.
 
 
 ## Evaluate with Pretrained models.
@@ -68,11 +63,12 @@ export CUDA_VISIBLE_DEVICES=0
 python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_dir=demo
 ```
 
-The predicted and visualized images are saved in `output` by default, uers also can change the saved directory by specifying `--savefile=`.  For more help please run `python tools/infer.py --helo`.
+The predicted and visualized images are saved in `output` by default, users can change saved directory by specifying `--savefile=`.  For more help please run `python tools/infer.py --help`.
 
 
 ## FAQ
 
 
 Q: Why the loss may be NaN when using single GPU to train?
+
 A: The default learning rate is adapt to multi-device training, when use single GPU and small batch size, you need to decrease `base_lr` by corresponding multiples.  
