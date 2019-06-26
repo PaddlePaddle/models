@@ -166,7 +166,7 @@ def main():
             visualize_results(image, catid2name, 0.5, bbox_results,
                               None, True)
         save_name = get_save_image_name(FLAGS.output_dir, image_path)
-        logger.info("Detection bbox results save in {}\n".format(save_name))
+        logger.info("Detection bbox results save in {}".format(save_name))
         image.save(save_name)
 
 

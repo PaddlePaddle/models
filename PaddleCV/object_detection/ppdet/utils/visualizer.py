@@ -98,7 +98,7 @@ def draw_bbox(image, catid2name, bboxes, threshold, is_bbox_normalized=False):
             fill='red')
         if image.mode == 'RGB':
             draw.text((xmin, ymin), catid2name[catid], (255, 255, 0))
-        logger.info("\t {:15s} at {:25} score: {:.5f}".format(catid2name[catid],
+        logger.debug("\t {:15s} at {:25} score: {:.5f}".format(catid2name[catid],
                     str(list(map(int, list([xmin, ymin, xmax, ymax])))), score))
 
     return image

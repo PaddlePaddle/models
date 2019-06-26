@@ -80,5 +80,5 @@ SSDTestFeed:
   batch_size: 1
   dataset:
     annotation: VOCdevkit/VOC_all/ImageSets/Main/label_list.txt
-    use_default_label: false
+    use_default_label: true
   drop_last: false
