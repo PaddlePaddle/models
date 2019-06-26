@@ -18,6 +18,7 @@ from __future__ import print_function
 
 
 import os
+import os.path as osp
 import shutil
 import requests
 import tqdm
@@ -30,26 +31,28 @@ logger = logging.getLogger(__name__)
 
 __all__ = ['get_weights_path', 'get_dataset_path']
 
-WEIGHTS_HOME = os.path.expanduser("~/.cache/paddle/weights")
-DATASET_HOME = os.path.expanduser("~/.cache/paddle/dataset")
+WEIGHTS_HOME = osp.expanduser("~/.cache/paddle/weights")
+DATASET_HOME = osp.expanduser("~/.cache/paddle/dataset")
 
+# dict of {dataset_name: (downalod_info, sub_dirs)}
+# download info: (url, md5sum)
 DATASETS = {
-    'coco': [
+    'coco': ([
         ('http://images.cocodataset.org/zips/train2017.zip',
          'cced6f7f71b7629ddf16f17bbcfab6b2', ),
         ('http://images.cocodataset.org/zips/val2017.zip',
          '442b8da7639aecaf257c1dceb8ba8c80', ),
         ('http://images.cocodataset.org/annotations/annotations_trainval2017.zip',
          'f4bbac642086de4f52a3fdda2de5fa2c', ),
-    ],
-    'pascal': [
+    ], ["annotations", "train2017", "val2017"]),
+    'voc': ([
         ('http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
          '6cd6e144f989b92b3379bac3b3de84fd', ),
         ('http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar',
          'c52e279531787c972589f7e41ab4ae64', ),
         ('http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar',
          'b6e924de25625d8de591ea690078ad9f', ),
-    ],
+    ], ["VOCdevkit/VOC_all"]),
 }
 
 DOWNLOAD_RETRY_LIMIT = 3
@@ -68,22 +71,31 @@ def get_dataset_path(path):
     Otherwise, get dataset path from DATASET_HOME, if not exists,
     download it.
     """
-    if os.path.exists(path):
-        logger.debug("Data path: {}".format(os.path.realpath(path)))
+    if _dataset_exists(path):
+        logger.debug("Dataset path: {}".format(osp.realpath(path)))
         return path
 
-    logger.info("DATASET_DIR {} not exitst, try searching {} or "
+    logger.info("Dataset {} not exitst, try searching {} or "
                 "downloading dataset...".format(
-                    os.path.realpath(path), DATASET_HOME))
+                    osp.realpath(path), DATASET_HOME))
+
     for name, dataset in DATASETS.items():
         if path.lower().find(name) >= 0:
-            logger.info("Parse DATASET_DIR {} as dataset "
+            logger.info("Parse dataset_dir {} as dataset "
                         "{}".format(path, name))
-            data_dir = os.path.join(DATASET_HOME, name)
-            for url, md5sum in dataset:
+            data_dir = osp.join(DATASET_HOME, name)
+
+            # For voc, only check merged dir
+            if name == 'voc':
+                check_dir = osp.join(data_dir, dataset[1][0])
+                if osp.exists(check_dir):
+                    logger.info("Found {}".format(check_dir))
+                    return data_dir
+
+            for url, md5sum in dataset[0]:
                 get_path(url, data_dir, md5sum)
 
-            if name == 'pascal':
+            if name == 'voc':
                 logger.info("Download voc dataset successed, merge "
                             "VOC2007 and VOC2012 to VOC_all...")
                 # TODO(dengkaipeng): merge voc
@@ -110,7 +122,7 @@ def get_path(url, root_dir, md5sum=None):
     fpath = fname
     for zip_format in zip_formats:
         fpath = fpath.replace(zip_format, '')
-    fullpath = os.path.join(root_dir, fpath)
+    fullpath = osp.join(root_dir, fpath)
 
     # For same zip file, decompressed directory name different
     # from zip file name, rename by following map
@@ -122,13 +134,29 @@ def get_path(url, root_dir, md5sum=None):
         if fullpath.find(k) >= 0:
             fullpath = '/'.join(fullpath.split('/')[:-1] + [v])
 
-    if os.path.exists(fullpath):
+    if osp.exists(fullpath):
         logger.info("Found {}".format(fullpath))
     else:
         fullname = _download(url, root_dir, md5sum)
         _decompress(fullname)
 
     return fullpath
+
+
+def _dataset_exists(path):
+    """
+    Check if user define dataset exists
+    """
+    if not osp.exists(path):
+        return False
+
+    for name, dataset in DATASETS.items():
+        if path.lower().find(name) >= 0:
+            for sub_dir in dataset[1]:
+                if not osp.exists(osp.join(path, sub_dir)):
+                    return False
+            return True
+    return True
 
 
 def _download(url, path, md5sum=None):
@@ -138,14 +166,14 @@ def _download(url, path, md5sum=None):
     url (str): download url
     path (str): download to given path
     """
-    if not os.path.exists(path):
+    if not osp.exists(path):
         os.makedirs(path)
 
     fname = url.split('/')[-1]
-    fullname = os.path.join(path, fname)
+    fullname = osp.join(path, fname)
     retry_cnt = 0
 
-    while not (os.path.exists(fullname) and _md5check(fullname, md5sum)):
+    while not (osp.exists(fullname) and _md5check(fullname, md5sum)):
         if retry_cnt < DOWNLOAD_RETRY_LIMIT:
             retry_cnt += 1
         else:
@@ -204,8 +232,8 @@ def _decompress(fname):
     # successed, move decompress files to fpath and delete
     # fpath_tmp and download file.
     fpath = '/'.join(fname.split('/')[:-1])
-    fpath_tmp = os.path.join(fpath, 'tmp')
-    if os.path.isdir(fpath_tmp):
+    fpath_tmp = osp.join(fpath, 'tmp')
+    if osp.isdir(fpath_tmp):
         shutil.rmtree(fpath_tmp)
         os.makedirs(fpath_tmp)
 
@@ -219,8 +247,8 @@ def _decompress(fname):
         raise TypeError("Unsupport compress file type {}".format(fname))
 
     for f in os.listdir(fpath_tmp):
-        src_dir = os.path.join(fpath_tmp, f)
-        dst_dir = os.path.join(fpath, f)
+        src_dir = osp.join(fpath_tmp, f)
+        dst_dir = osp.join(fpath, f)
         _move_and_merge_tree(src_dir, dst_dir)
 
     shutil.rmtree(fpath_tmp)
@@ -232,17 +260,17 @@ def _move_and_merge_tree(src, dst):
     Move src directory to dst, if dst is already exists, 
     merge src to dst
     """
-    if not os.path.exists(dst):
+    if not osp.exists(dst):
         shutil.move(src, dst)
     else:
         for fp in os.listdir(src):
-            src_fp = os.path.join(src, fp)
-            dst_fp = os.path.join(dst, fp)
-            if os.path.isdir(src_fp):
-                if os.path.isdir(dst_fp):
+            src_fp = osp.join(src, fp)
+            dst_fp = osp.join(dst, fp)
+            if osp.isdir(src_fp):
+                if osp.isdir(dst_fp):
                     _move_and_merge_tree(src_fp, dst_fp)
                 else:
                     shutil.move(src_fp, dst_fp)
-            elif os.path.isfile(src_fp) and \
-                    not os.path.isfile(dst_fp):
+            elif osp.isfile(src_fp) and \
+                    not osp.isfile(dst_fp):
                 shutil.move(src_fp, dst_fp)
