@@ -109,7 +109,6 @@ def get_dataset_path(path):
                 output_tmp_dir = osp.join(data_dir, 'tmp')
                 if osp.isdir(output_tmp_dir):
                     shutil.rmtree(output_tmp_dir)
-                    os.makedirs(output_tmp_dir)
                 merge_and_create_list(devkit_dir, years, 
                                       output_tmp_dir)
                 # TODO(dengkaipeng) add generate label_list
@@ -270,7 +269,7 @@ def _decompress(fname):
         _move_and_merge_tree(src_dir, dst_dir)
 
     shutil.rmtree(fpath_tmp)
-    # os.remove(fname)
+    os.remove(fname)
 
 
 def _move_and_merge_tree(src, dst):
