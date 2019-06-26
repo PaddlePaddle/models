@@ -2,12 +2,12 @@ from __future__ import print_function
 import numpy as np
 
 def conv_op_params(blocks, current_op):
-    """
+    """Getting params of conv op
     Args:
         blocks, current block
         current_op, current op
     Returns:
-        tmp, op name and hyperparamters
+        list, op name and hyperparamters
     """
     tmp, res = [], []
     # op_name
@@ -61,6 +61,13 @@ def conv_op_params(blocks, current_op):
     return tmp
 
 def batch_norm_op_params(blocks, current_op):
+    """Getting params of batch_norm op
+    Args:
+        blocks, current block
+        current_op, current op
+    Returns:
+        list, op name and hyperparamters
+    """
     tmp = []
     # op name
     tmp.append('batch_norm')
@@ -79,6 +86,13 @@ def batch_norm_op_params(blocks, current_op):
     return tmp
     
 def eltwise_op_params(blocks, current_op):
+    """Getting params of eltwise op
+    Args:
+        blocks, current block
+        current_op, current op
+    Returns:
+        list, op name and hyperparamters
+    """
     # op name, clusters, threads, test_iter
     tmp = ['eltwise', 0, 1, 100]
     # elementwise type, TODO: add more ops
@@ -99,6 +113,13 @@ def eltwise_op_params(blocks, current_op):
     return tmp
 
 def activation_op_params(blocks, current_op):
+    """Getting params of activation op
+    Args:
+        blocks, current block
+        current_op, current op
+    Returns:
+        list, op name and hyperparamters
+    """
     tmp = []
     # op name
     tmp.append('activation')
@@ -114,6 +135,13 @@ def activation_op_params(blocks, current_op):
     return tmp
 
 def pooling_op_params(blocks, current_op):
+    """Getting params of pooling op
+    Args:
+        blocks, current block
+        current_op, current op
+    Returns:
+        list, op name and hyperparamters
+    """
     tmp, res = [], []
     # op name
     tmp.append('pooling')
@@ -161,12 +189,23 @@ def pooling_op_params(blocks, current_op):
     return tmp
 
 def softmax_op_params(blocks, current_op):
+    #TODO: Getting params of softmax op
     return []
 
 def resize_op_params(blocks, current_op):
+    #TODO: Getting params of resize op
     return []
 
 def fc_op_params(blocks, current_op, isbias):
+    """Getting params of fc op
+    Note: 
+        fc op is converted to conv op with 1x1 kernels
+    Args:
+        blocks, current block
+        current_op, current op
+    Returns:
+        list, op name and hyperparamters
+    """
     # op name, clusters, threads, test_iters
     tmp = ['conv', 0, 1, 100]
     # flag bias
@@ -185,6 +224,13 @@ def fc_op_params(blocks, current_op, isbias):
     return tmp
 
 def write_lookup_table(params, output_file):
+    """Writing down all params to a txt file
+    Args:
+        params, list of op params
+        output_file, string of output file path
+    Returns:
+        None
+    """
     fw = open(output_file, 'w')
     for line in params:
         str_list = []
@@ -194,6 +240,13 @@ def write_lookup_table(params, output_file):
     fw.close()
 
 def get_ops_from_program(program, output_file=None):
+    """Getting ops params from a paddle program
+    Args:
+        program, fluid program desc
+        output_file, string of output file path
+    Returns:
+        list, params of ops
+    """
     blocks = program.global_block()
     params = []
     i = 0
@@ -234,4 +287,5 @@ def get_ops_from_program(program, output_file=None):
         
     if output_file is not None:
         write_lookup_table(params, output_file)
+
     return params
