@@ -17,8 +17,10 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import glob
 
 import numpy as np
+from PIL import Image
 
 from paddle import fluid
 
@@ -27,7 +29,7 @@ from ppdet.modeling.model_input import create_feeds
 from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
-from ppdet.utils.cli import parse_args
+from ppdet.utils.cli import ArgsParser
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
 
@@ -37,23 +39,63 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
+def get_save_image_name(output_dir, image_path):
+    """
+    Get save image name from source image path.
+    """
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    image_name = image_path.split('/')[-1]
+    name, ext = os.path.splitext(image_name)
+    return os.path.join(output_dir, "{}".format(name)) + ext
+
+
+def get_test_images(infer_dir, infer_img):
+    """
+    Get image path list in TEST mode
+    """
+    assert infer_img is not None or infer_dir is not None, \
+        "--infer-img or --infer-dir should be set"
+    images = []
+
+    # infer_img has a higher priority
+    if infer_img and os.path.isfile(infer_img):
+        images.append(infer_img)
+        return images
+
+    infer_dir = os.path.abspath(infer_dir)
+    assert os.path.isdir(infer_dir), \
+        "infer_dir {} is not a directory".format(infer_dir)
+    exts = ['jpg', 'jpeg', 'png', 'bmp']
+    exts += [ext.upper() for ext in exts]
+    for ext in exts:
+        images.extend(glob.glob('{}/*.{}'.format(infer_dir, ext)))
+
+    assert len(images) > 0, "no image found in {}".format(infer_dir)
+    logger.info("Found {} inference images in total.".format(len(images)))
+
+    return images
+
+
 def main():
-    args = parse_args()
-    cfg = load_config(args.config)
+    cfg = load_config(FLAGS.config)
 
     if 'architecture' in cfg:
-        main_arch = cfg['architecture']
+        main_arch = cfg.architecture
     else:
         raise ValueError("'architecture' not specified in config file.")
 
-    merge_config(args.cli_config)
+    merge_config(FLAGS.opt)
 
     if 'test_feed' not in cfg:
         test_feed = create(main_arch + 'TestFeed')
     else:
-        test_feed = create(cfg['test_feed'])
+        test_feed = create(cfg.test_feed)
 
-    place = fluid.CUDAPlace(0) if cfg['use_gpu'] else fluid.CPUPlace()
+    test_images = get_test_images(FLAGS.infer_dir, FLAGS.infer_img)
+    test_feed.dataset.add_images(test_images)
+
+    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
     model = create(main_arch)
@@ -70,8 +112,8 @@ def main():
     feeder = fluid.DataFeeder(place=place, feed_list=feed_vars.values())
 
     exe.run(startup_prog)
-    if cfg['weights']:
-        checkpoint.load_checkpoint(exe, infer_prog, cfg['weights'])
+    if cfg.weights:
+        checkpoint.load_checkpoint(exe, infer_prog, cfg.weights)
 
     # parse infer fetches
     extra_keys = []
@@ -80,9 +122,9 @@ def main():
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # 6. Parse dataset category
-    if cfg['metric'] == 'COCO':
+    if cfg.metric == 'COCO':
         from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
-    if cfg['metric'] == "VOC":
+    if cfg.metric == "VOC":
         # TODO(dengkaipeng): add VOC metric process
         pass
 
@@ -103,22 +145,43 @@ def main():
         logger.info('Infer iter {}'.format(iter_id))
 
         im_id = int(res['im_id'][0])
-        image_path = os.path.join(test_feed.dataset.image_dir, imid2path[im_id])
-        if cfg['metric'] == 'COCO':
+        image_path = imid2path[im_id]
+        if cfg.metric == 'COCO':
             bbox_results = None
             mask_results = None
             if 'bbox' in res:
                 bbox_results = bbox2out([res], clsid2catid)
             if 'mask' in res:
                 mask_results = mask2out([res], clsid2catid,
-                                        cfg['MaskHead']['resolution'])
-            visualize_results(image_path, catid2name, 0.5, bbox_results,
-                              mask_results)
+                                        cfg.MaskHead.resolution)
+            image = Image.open(image_path)
+            image = visualize_results(image, catid2name, 0.5,
+                                      bbox_results, mask_results)
+            save_name = get_save_image_name(FLAGS.output_dir, image_path)
+            logger.info("Detection bbox results save in {}".format(save_name))
+            image.save(save_name)
 
-        if cfg['metric'] == "VOC":
+        if cfg.metric == "VOC":
             # TODO(dengkaipeng): add VOC metric process
             pass
 
 
 if __name__ == '__main__':
+    parser = ArgsParser()
+    parser.add_argument(
+        "--infer_dir",
+        type=str,
+        default=None,
+        help="Directory for images to perform inference on.")
+    parser.add_argument(
+        "--infer_img",
+        type=str,
+        default=None,
+        help="Image path, has higher priority over --infer_dir")
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="output",
+        help="Directory for storing the output visualization files.")
+    FLAGS = parser.parse_args()
     main()

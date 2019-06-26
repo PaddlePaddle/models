@@ -81,9 +81,9 @@ def create_reader(feed, max_iter=0):
             'TYPE': type(feed.dataset).__source__
         }
     }
-
-    if mode == 'TEST':
-        data_config[mode]['TEST_FILE'] = feed.test_file
+    
+    if len(getattr(feed.dataset, 'images', [])) > 0:
+        data_config[mode]['IMAGES'] = feed.dataset.images
 
     transform_config = {
         'WORKER_CONF': {
@@ -244,12 +244,16 @@ class SimpleDataSet(DataSet):
     __source__ = 'SimpleSource'
 
     def __init__(self,
-                 dataset_dir=VOC_DATASET_DIR,
-                 annotation=VOC_TEST_ANNOTATION,
-                 image_dir=VOC_IMAGE_DIR,
-                 use_default_label=VOC_USE_DEFAULT_LABEL):
+                 dataset_dir=None,
+                 annotation=None,
+                 image_dir=None,
+                 use_default_label=None):
         super(SimpleDataSet, self).__init__(
             dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
+        self.images = []
+
+    def add_images(self, images):
+        self.images.extend(images)
 
 
 @serializable
@@ -281,7 +285,6 @@ class DataFeed(object):
                  samples=-1,
                  drop_last=False,
                  with_background=True,
-                 test_file=None,
                  num_workers=2,
                  bufsize=10,
                  use_process=False,
@@ -296,7 +299,6 @@ class DataFeed(object):
         self.samples = samples
         self.drop_last = drop_last
         self.with_background = with_background
-        self.test_file = test_file
         self.num_workers = num_workers
         self.bufsize = bufsize
         self.use_process = use_process
@@ -385,7 +387,6 @@ class TestFeed(DataFeed):
                  shuffle=False,
                  drop_last=False,
                  with_background=True,
-                 test_file=None,
                  num_workers=2):
         super(TestFeed, self).__init__(
             dataset,
@@ -397,7 +398,6 @@ class TestFeed(DataFeed):
             shuffle=shuffle,
             drop_last=drop_last,
             with_background=with_background,
-            test_file=test_file,
             num_workers=num_workers)
 
 
@@ -522,7 +522,6 @@ class FasterRCNNEvalFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_padded_im_info=True):
         sample_transforms.append(ArrangeTestRCNN())
@@ -536,7 +535,6 @@ class FasterRCNNEvalFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'VAL'
@@ -564,7 +562,6 @@ class FasterRCNNTestFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_padded_im_info=True):
         sample_transforms.append(ArrangeTestRCNN())
@@ -580,7 +577,6 @@ class FasterRCNNTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
@@ -612,7 +608,6 @@ class MaskRCNNEvalFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
@@ -627,7 +622,6 @@ class MaskRCNNEvalFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
@@ -657,7 +651,6 @@ class MaskRCNNTestFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
@@ -674,7 +667,6 @@ class MaskRCNNTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers,
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
@@ -805,7 +797,6 @@ class SSDTestFeed(DataFeed):
                  shuffle=False,
                  samples=-1,
                  drop_last=False,
-                 test_file=None,
                  num_workers=8,
                  bufsize=10,
                  use_process=False):
@@ -822,7 +813,6 @@ class SSDTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            test_file=test_file,
             num_workers=num_workers)
         self.mode = 'TEST'
 
@@ -961,10 +951,9 @@ class YoloTestFeed(DataFeed):
                  batch_transforms=[],
                  batch_size=1,
                  shuffle=False,
-                 samples=1,
+                 samples=-1,
                  drop_last=False,
                  with_background=False,
-                 test_file=None,
                  num_workers=8,
                  num_max_boxes=50,
                  use_process=False):
@@ -982,7 +971,6 @@ class YoloTestFeed(DataFeed):
             samples=samples,
             drop_last=drop_last,
             with_background=with_background,
-            test_file=test_file,
             num_workers=num_workers,
             use_process=use_process)
         self.num_max_boxes = num_max_boxes

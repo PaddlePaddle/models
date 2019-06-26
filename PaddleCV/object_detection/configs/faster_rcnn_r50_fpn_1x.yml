@@ -21,7 +21,7 @@ FasterRCNN:
 
 ResNet:
   norm_type: affine_channel
-  norm_decay: true
+  norm_decay: 0.
   depth: 50
   feature_maps: [2, 3, 4, 5]
   freeze_at: 2
@@ -136,7 +136,6 @@ FasterRCNNTestFeed:
   dataset:
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  test_file: val2017.txt
   drop_last: false
   num_workers: 2
   shuffle: false
