@@ -23,15 +23,8 @@ def infer():
     place = fluid.CPUPlace()
     inference_scope = fluid.Scope()
 
-    whole_filelist = [
-        'data/raw_data/part-%d' % x
-        for x in range(len(os.listdir('data/raw_data')))
-    ]
-    train_file_idx = pickle.load(
-        open('data/aid_data/train_file_idx.pkl2', 'rb'))
     test_files = [
-        whole_filelist[idx] for idx in range(len(whole_filelist))
-        if idx not in train_file_idx
+        args.test_data_dir + '/' + x for x in os.listdir(args.test_data_dir)
     ]
     criteo_dataset = CriteoDataset()
     criteo_dataset.setup()

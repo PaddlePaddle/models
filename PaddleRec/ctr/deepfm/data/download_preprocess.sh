@@ -6,3 +6,4 @@ rm -f dac.tar.gz
 
 python preprocess.py
 rm *.txt
+rm -r raw_data

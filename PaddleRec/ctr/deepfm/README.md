@@ -29,7 +29,7 @@ Download and preprocess data:
 cd data && sh download_preprocess.sh && cd ..
 ```
 
-After executing these commands, two folders "raw_data" and "aid_data" will be generated. The folder "raw_data" contains raw data that is divided into several parts. The folder "aid_data" contains a file "train_file_idx.pkl2" for data partitionin and a created feature dictionary "feat_dict.pkl2".
+After executing these commands, 3 folders "train_data", "test_data" and "aid_data" will be generated. The folder "train_data" contains 90% of the raw data, while the rest 10% is in "test_data". The folder "aid_data" contains a created feature dictionary "feat_dict.pkl2".
 
 ## Train
 
@@ -44,6 +44,7 @@ python infer.py --model_output_dir models --test_epoch 1
 Note: The last log info is the total Logloss and AUC for all test data.
 
 ## Result
+Reproducing this result requires training with default hyperparameters. The default hyperparameter is shown in args.py.
 <p align="center">
 <img src="./picture/deepfm_result.png" height=200 hspace='10'/> <br />
 </p>

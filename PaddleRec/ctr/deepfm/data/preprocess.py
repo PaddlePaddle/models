@@ -2,9 +2,13 @@ import os
 import pickle
 import numpy
 from collections import Counter
+import shutil
 
 
 def get_raw_data():
+    if not os.path.isdir('raw_data'):
+        os.mkdir('raw_data')
+
     fin = open('train.txt', 'r')
     fout = open('raw_data/part-0', 'w')
     for line_idx, line in enumerate(fin):
@@ -30,14 +34,19 @@ def split_data():
                 len(filelist_), int(len(filelist_) * split_rate_), False))
         with open(dir_train_file_idx_, 'wb') as fout:
             pickle.dump(train_file_idx, fout)
+    else:
+        train_file_idx = pickle.load(open(dir_train_file_idx_, 'rb'))
+
+    for idx in range(len(filelist_)):
+        if idx in train_file_idx:
+            shutil.move(filelist_[idx], 'train_data')
+        else:
+            shutil.move(filelist_[idx], 'test_data')
 
 
 def get_feat_dict():
     freq_ = 10
     dir_feat_dict_ = 'aid_data/feat_dict_' + str(freq_) + '.pkl2'
-    filelist_ = [
-        'raw_data/part-%d' % x for x in range(len(os.listdir('raw_data')))
-    ]
     continuous_range_ = range(1, 14)
     categorical_range_ = range(14, 40)
 
@@ -45,14 +54,14 @@ def get_feat_dict():
         # print('generate a feature dict')
         # Count the number of occurrences of discrete features
         feat_cnt = Counter()
-        for fname in filelist_:
-            with open(fname.strip(), 'r') as fin:
-                for line_idx, line in enumerate(fin):
-                    if line_idx == 0: print('generating feature dict')
-                    features = line.lstrip('\n').split('\t')
-                    for idx in categorical_range_:
-                        if features[idx] == '': continue
-                        feat_cnt.update([features[idx]])
+        with open('train.txt', 'r') as fin:
+            for line_idx, line in enumerate(fin):
+                if line_idx % 100000 == 0:
+                    print('generating feature dict', line_idx / 45000000)
+                features = line.lstrip('\n').split('\t')
+                for idx in categorical_range_:
+                    if features[idx] == '': continue
+                    feat_cnt.update([features[idx]])
 
         # Only retain discrete features with high frequency 
         dis_feat_set = set()
@@ -69,18 +78,16 @@ def get_feat_dict():
             tc += 1
         # Discrete features
         cnt_feat_set = set()
-        for fname in filelist_:
-            with open(fname.strip(), 'r') as fin:
-                for line_idx, line in enumerate(fin):
-                    features = line.rstrip('\n').split('\t')
-                    for idx in categorical_range_:
-                        if features[idx] == '' or features[
-                                idx] not in dis_feat_set:
-                            continue
-                        if features[idx] not in cnt_feat_set:
-                            cnt_feat_set.add(features[idx])
-                            feat_dict[features[idx]] = tc
-                            tc += 1
+        with open('train.txt', 'r') as fin:
+            for line_idx, line in enumerate(fin):
+                features = line.rstrip('\n').split('\t')
+                for idx in categorical_range_:
+                    if features[idx] == '' or features[idx] not in dis_feat_set:
+                        continue
+                    if features[idx] not in cnt_feat_set:
+                        cnt_feat_set.add(features[idx])
+                        feat_dict[features[idx]] = tc
+                        tc += 1
 
         # Save dictionary
         with open(dir_feat_dict_, 'wb') as fout:
@@ -89,8 +96,10 @@ def get_feat_dict():
 
 
 if __name__ == '__main__':
-    if not os.path.isdir('raw_data'):
-        os.mkdir('raw_data')
+    if not os.path.isdir('train_data'):
+        os.mkdir('train_data')
+    if not os.path.isdir('test_data'):
+        os.mkdir('test_data')
     if not os.path.isdir('aid_data'):
         os.mkdir('aid_data')
 

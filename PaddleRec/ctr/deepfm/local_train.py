@@ -23,20 +23,16 @@ def train():
 
     exe = fluid.Executor(fluid.CPUPlace())
     exe.run(fluid.default_startup_program())
+
     dataset = fluid.DatasetFactory().create_dataset()
     dataset.set_use_var(data_list)
     pipe_command = 'python criteo_reader.py'
     dataset.set_pipe_command(pipe_command)
     dataset.set_batch_size(args.batch_size)
     dataset.set_thread(args.num_thread)
-
-    whole_filelist = [
-        'data/raw_data/part-%d' % x
-        for x in range(len(os.listdir('data/raw_data')))
+    train_filelist = [
+        args.train_data_dir + '/' + x for x in os.listdir(args.train_data_dir)
     ]
-    train_file_idx = pickle.load(
-        open('data/aid_data/train_file_idx.pkl2', 'rb'))
-    train_filelist = [whole_filelist[idx] for idx in train_file_idx]
 
     for epoch_id in range(args.num_epoch):
         start = time.time()

@@ -4,6 +4,16 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser(description="PaddlePaddle CTR example")
     parser.add_argument(
+        '--train_data_dir',
+        type=str,
+        default='data/train_data',
+        help='The path of train data (default: data/train_data)')
+    parser.add_argument(
+        '--test_data_dir',
+        type=str,
+        default='data/test_data',
+        help='The path of test data (default: models)')
+    parser.add_argument(
         '--batch_size',
         type=int,
         default=100,
