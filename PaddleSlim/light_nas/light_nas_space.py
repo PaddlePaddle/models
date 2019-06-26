@@ -66,6 +66,36 @@ def get_bottleneck_params_list(var):
         params_list[i * 7 + 13] = NAS_SE[var[i * 6 + 5]]
     return params_list
 
+def get_tokens_set():
+    """Get all possible candidate tokens.
+    Returns:
+        list, tokens.
+    """
+    tokens = []
+    base = [0, 0, 1, 0, 0, 0] # fixed layer number, shortcut, and se
+
+    # all possible combinations for each bottleneck
+    tokens_for_bottlenecks = [[],[],[],[],[]]
+    for i in range(5):
+        tmp = copy.deepcopy(base)
+        for j in range(len(NAS_FILTERS_MULTIPLIER)):
+            tmp[0] = j
+            for k in range(len(NAS_KERNEL_SIZE)):
+                tmp[3] = k
+                for m in range(len(NAS_FILTER_SIZE[i])):
+                    tmp[1] = m
+                    tokens_for_bottlenecks[i].append(tmp)
+                    tmp = copy.deepcopy(tmp)
+
+    # all possible tokens
+    for tokens0 in tokens_for_bottlenecks[0]:
+        for tokens1 in tokens_for_bottlenecks[1]:
+            for tokens2 in tokens_for_bottlenecks[2]:
+                for tokens3 in tokens_for_bottlenecks[3]:
+                    for tokens4 in tokens_for_bottlenecks[4]:
+                        tokens.append(tokens0+tokens1+tokens2+tokens3+tokens4)
+
+    return tokens
 
 class LightNASSpace(SearchSpace):
     def __init__(self):
