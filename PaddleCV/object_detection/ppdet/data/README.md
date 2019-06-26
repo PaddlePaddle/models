@@ -79,6 +79,18 @@ This kind of source is a normalized data format which only contains a pickle fil
 'cname2id' is a dict to map category name to class id
 
 ```
+We also provide the tool to generate the roidb data source in `./tools/`. You can use the follow command to implement.
+```python 
+# --type: the type of original data (xml or json)
+# --annotation: the path of file, which contains the name of annotation files 
+# --save-dir: the save path
+# --samples: the number of samples (default is -1, which mean all datas in dataset)
+python ./tools/generate_data_for_training.py 
+            --type=json \
+            --annotation=./annotations/instances_val2017.json \
+            --save-dir=./roidb \
+            --samples=-1 
+```
 
  2. Image preprocessing     
  Image preprocessing subsystem includes operations such as image decoding, expanding, cropping, etc. We use `dataset.transform.operator` to unify the implementation, which is convenient for extension. In addition, multiple operators can be combined to form a complex processing pipeline, and used by data transformers in `dataset.transformer`, such as multi-threading to acclerate a complex image data processing.
@@ -90,6 +102,7 @@ This kind of source is a normalized data format which only contains a pickle fil
 To facilitate data pipeline building and data feeding for training, we combine multiple `dataset.Dataset` to form a `dataset.Reader` which can provide data for training, validation and testing respectively. The user only needs to call `Reader.[train|eval|infer]` to get the corresponding data stream. `Reader` supports yaml file to configure data address, preprocessing oprators, acceleration mode, and so on.
 
 
+
 The main APIs are as follows:
 
 
@@ -97,8 +110,8 @@ The main APIs are as follows:
 1. Data parsing
 
  - `source/coco_loader.py`: Use to parse the COCO dataset. [detail code](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/coco_loader.py)
- - `source/voc_loader.py`: Use to parse the Pascal VOC dataset. [detail code](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)
- [Note] When using VOC datasets, if you do not use the default label list, you need to generate `label_list.txt` using `tools/generate_data_for_training.py` or provide `label_list.txt` in `data/pascalvoc/ImageSets/Main` firstly. Also set the parameter `use_default_label` to `true` in the configuration file.
+ - `source/voc_loader.py`: Use to parse the Pascal VOC dataset. [detail code](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)     
+ [Note] When using VOC datasets, if you do not use the default label list, you need to generate `label_list.txt` using `tools/generate_data_for_training.py` or provide `label_list.txt` in `data/pascalvoc/ImageSets/Main` firstly. Also set the parameter `use_default_label` to `f` in the configuration file.
  - `source/loader.py`: Use to parse the Roidb dataset. [detail code](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/loader.py)
 
 2. Operator
