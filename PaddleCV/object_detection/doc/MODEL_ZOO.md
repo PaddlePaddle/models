@@ -14,13 +14,13 @@
 - Unless otherwise noted, all ResNet are adopted [ResNet-B](https://arxiv.org/pdf/1812.01187) as the backbone.
 - For RCNN and RetinaNet models, only horizontal flipping data augmentation was used in the training phase and no augmentations were used in the testing phase.
 
-##Training Schedules
+## Training Schedules
 
 - We adopt the exactly same training schedules as [Detectron](https://github.com/facebookresearch/Detectron/blob/master/MODEL_ZOO.md#training-schedules). 
 - 1x indicates the schedule starts at a LR of 0.02 and is decreased by a factor of * 0.1 after 60k and 80k iterations and finally terminates at 90k iterations for minibatch size 16. 
 - 2x indicates twice as long as the 1x schedule with the LR change points scaled proportionally.
 
-##ImageNet Pretrained Models
+## ImageNet Pretrained Models
 
 The backbone models pretrained on ImageNet are available. All models are trained on the standard ImageNet-1k dataset. All pretrained models can be download [here](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#supported-models-and-performances)
 
