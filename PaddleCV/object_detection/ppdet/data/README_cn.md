@@ -82,7 +82,6 @@
 'cname2id'是一个dict，保存了类别名到id的映射
 
 ```
-<div id="Mark">
 我们在`./tools/`中提供了一个生成roidb数据集的代码，可以通过下面命令实现该功能。
 ```python 
 # --type: 原始数据集的类别（只能是xml或者json）
@@ -95,7 +94,6 @@ python ./tools/generate_data_for_training.py
             --save-dir=./roidb \
             --samples=-1 
 ```
-</div>
  2. 图片预处理    
     图片预处理通过包括图片解码、缩放、裁剪等操作，我们采用`dataset.transform.operator`算子的方式来统一实现，这样能方便扩展。此外，多个算子还可以组合形成复杂的处理流程, 并被`dataset.transformer`中的转换器使用，比如多线程完成一个复杂的预处理流程。
 
