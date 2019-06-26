@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import os
 import shutil
-import distutils
 import requests
 import tqdm
 import hashlib
