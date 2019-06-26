@@ -44,7 +44,7 @@ python infer.py --model_output_dir models --test_epoch 1
 Note: The last log info is the total Logloss and AUC for all test data.
 
 ## Result
-Reproducing this result requires training with default hyperparameters. The default hyperparameter is shown in `args.py`. Using the default hyperparameters (10 threads, 100 batch size, etc.), it takes about 1.8 hours for 8 single-core CPUs to iterate the training data for one round.
+Reproducing this result requires training with default hyperparameters. The default hyperparameter is shown in `args.py`. Using the default hyperparameters (10 threads, 100 batch size, etc.), it takes about 1.8 hours for CPUs to iterate the training data for one round.
 
 When the training set is iterated to the 22nd round, the testing Logloss is `0.44797` and the testing AUC is `0.8046`.
 <p align="center">
