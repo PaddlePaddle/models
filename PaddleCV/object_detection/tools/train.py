@@ -156,7 +156,7 @@ def main():
                                    eval_keys, eval_values, eval_cls)
                 # Evaluation
                 eval_results(results, eval_feed, cfg.metric,
-                             cfg.MaskHead.resolution, FLAGS.output_file)
+                             model.mask_head.resolution, FLAGS.output_file)
 
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()

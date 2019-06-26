@@ -100,7 +100,7 @@ def main():
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
     # Evaluation
     eval_results(results, eval_feed, cfg.metric,
-                 cfg.MaskHead.resolution, FLAGS.output_file)
+                 model.mask_head.resolution, FLAGS.output_file)
 
 
 if __name__ == '__main__':

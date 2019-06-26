@@ -55,7 +55,7 @@ def get_test_images(infer_dir, infer_img):
     Get image path list in TEST mode
     """
     assert infer_img is not None or infer_dir is not None, \
-        "--infer-img or --infer-dir should be set"
+        "--infer_img or --infer_dir should be set"
     images = []
 
     # infer_img has a higher priority
@@ -151,11 +151,11 @@ def main():
         mask_results = None
         is_bbox_normalized = True if cfg.metric == 'VOC' else False
         if 'bbox' in res:
-            bbox_results = bbox2out([res], clsid2catid, 
+            bbox_results = bbox2out([res], clsid2catid,
                                     is_bbox_normalized)
         if 'mask' in res:
             mask_results = mask2out([res], clsid2catid,
-                                    cfg.MaskHead['resolution'])
+                                    model.mask_head.resolution)
 
         # visualize result
         im_ids = res['im_id'][0]
