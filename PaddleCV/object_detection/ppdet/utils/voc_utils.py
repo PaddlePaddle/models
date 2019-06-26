@@ -28,7 +28,7 @@ __all__ = ['merge_and_create_list']
 
 def merge_and_create_list(devkit_dir, years, output_dir):
     """
-    Merge VOC2007 and VOC2012 to VOC_all and create following list:
+    Merge VOC2007 and VOC2012 to output_dir and create following list:
         1. train.txt
         2. val.txt
         3. test.txt

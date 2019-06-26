@@ -87,7 +87,7 @@ def get_dataset_path(path):
                         "{}".format(path, name))
             data_dir = osp.join(DATASET_HOME, name)
 
-            # For voc, only check merged dir
+            # For voc, only check merged dir VOC_all
             if name == 'voc':
                 check_dir = osp.join(data_dir, dataset[1][0])
                 if osp.exists(check_dir):
@@ -110,9 +110,9 @@ def get_dataset_path(path):
                 if osp.isdir(output_tmp_dir):
                     shutil.rmtree(output_tmp_dir)
                 # NOTE(dengkaipeng): since using auto download VOC
-                # dataset here, VOC default label should be used, 
+                # dataset, VOC default label list should be used, 
                 # do not generate label_list.txt here. For default
-                # label, see ppdet/data/source/voc_loader.py
+                # label, see ../data/source/voc_loader.py
                 merge_and_create_list(devkit_dir, years, 
                                       output_tmp_dir)
                 shutil.move(output_tmp_dir, output_dir)
@@ -250,7 +250,7 @@ def _decompress(fname):
     # For protecting decompressing interupted,
     # decompress to fpath_tmp directory firstly, if decompress
     # successed, move decompress files to fpath and delete
-    # fpath_tmp and download file.
+    # fpath_tmp and remove download compress file.
     fpath = '/'.join(fname.split('/')[:-1])
     fpath_tmp = osp.join(fpath, 'tmp')
     if osp.isdir(fpath_tmp):
