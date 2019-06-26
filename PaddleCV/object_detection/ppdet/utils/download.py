@@ -111,7 +111,6 @@ def get_dataset_path(path):
                     shutil.rmtree(output_tmp_dir)
                 merge_and_create_list(devkit_dir, years, 
                                       output_tmp_dir)
-                # TODO(dengkaipeng) add generate label_list
                 shutil.move(output_tmp_dir, output_dir)
                 # remove source VOC2007 and VOC2012
                 shutil.rmtree(osp.join(devkit_dir, "VOC2007"))

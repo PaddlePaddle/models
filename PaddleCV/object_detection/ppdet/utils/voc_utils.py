@@ -32,7 +32,7 @@ def merge_and_create_list(devkit_dir, years, output_dir):
         1. train.txt
         2. val.txt
         3. test.txt
-        4. label_list.txt
+        4. label_list(TODO)
     """
     os.makedirs(osp.join(output_dir, 'Annotations/'))
     os.makedirs(osp.join(output_dir, 'ImageSets/Main/'))
@@ -59,6 +59,7 @@ def merge_and_create_list(devkit_dir, years, output_dir):
                 fval.write(item + '\n')
                 if ct <= 1000:
                     ftest.write(item + '\n')
+    # TODO(dengkaipeng) add generate label_list
 
 
 def _get_voc_dir(devkit_dir, year, type):
