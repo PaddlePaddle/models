@@ -97,7 +97,7 @@ def get_dataset_path(path):
             for url, md5sum in dataset[0]:
                 get_path(url, data_dir, md5sum)
 
-            # voc should merge dir after download
+            # voc should merge dir and create list after download
             if name == 'voc':
                 logger.info("Download voc dataset successed, merge "
                             "VOC2007 and VOC2012 to VOC_all...")
@@ -109,10 +109,14 @@ def get_dataset_path(path):
                 output_tmp_dir = osp.join(data_dir, 'tmp')
                 if osp.isdir(output_tmp_dir):
                     shutil.rmtree(output_tmp_dir)
+                # NOTE(dengkaipeng): since using auto download VOC
+                # dataset here, VOC default label should be used, 
+                # do not generate label_list.txt here. For default
+                # label, see ppdet/data/source/voc_loader.py
                 merge_and_create_list(devkit_dir, years, 
                                       output_tmp_dir)
                 shutil.move(output_tmp_dir, output_dir)
-                # remove source VOC2007 and VOC2012
+                # remove source directory VOC2007 and VOC2012
                 shutil.rmtree(osp.join(devkit_dir, "VOC2007"))
                 shutil.rmtree(osp.join(devkit_dir, "VOC2012"))
             return data_dir
