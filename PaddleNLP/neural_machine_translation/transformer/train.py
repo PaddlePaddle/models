@@ -647,7 +647,6 @@ def train(args):
     if args.enable_ce:
         train_prog.random_seed = 1000
         startup_prog.random_seed = 1000
-        dropout_seed = 1000
 
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
