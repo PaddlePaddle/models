@@ -84,7 +84,7 @@ def get_dataset_path(path):
                 get_path(url, data_dir, md5sum)
 
             if name == 'pascal':
-                logger.info("Download voc dataset sucess, merge "
+                logger.info("Download voc dataset successed, merge "
                             "VOC2007 and VOC2012 to VOC_all...")
                 # TODO(dengkaipeng): merge voc
             return data_dir
