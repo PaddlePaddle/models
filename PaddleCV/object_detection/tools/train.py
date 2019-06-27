@@ -165,7 +165,7 @@ def main():
             checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
 
             if FLAGS.eval:
-                # do evaluation
+                # evaluation
                 results = eval_run(exe, eval_compile_program, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
                 eval_results(results, eval_feed, cfg.metric,

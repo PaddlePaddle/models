@@ -96,7 +96,7 @@ def main():
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
-    # do evaluation
+    # evaluation
     eval_results(results, eval_feed, cfg.metric, model.mask_head.resolution,
                  FLAGS.output_file)
 
