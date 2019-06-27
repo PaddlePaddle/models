@@ -255,6 +255,3 @@ def main():
         json.dump(
             test_data_coco, open(test_json_path, 'w'), indent=4, cls=MyEncoder)
 
-
-if __name__ == '__main__':
-    main()
