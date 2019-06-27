@@ -539,7 +539,7 @@ def train(args):
         test_acc5 = np.array(test_info[2]).mean()
 
         if use_mixup:
-            print("End pass {0}, train_loss {1}, test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(
+            print("End pass {0}, train_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".format(
                       pass_id, "%.5f"%train_loss, "%.5f"%test_loss, "%.5f"%test_acc1, "%.5f"%test_acc5))
         else:
 
