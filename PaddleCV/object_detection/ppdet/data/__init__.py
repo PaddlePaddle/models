@@ -33,6 +33,8 @@
 #    * 'MappedDataset' accept a 'xxxSource' and a list of 'xxxOperator'
 #       to build a transformed 'Dataset'
 
+from __future__ import absolute_import
+
 from .dataset import Dataset
 from .reader import Reader
 from .data_feed import create_reader

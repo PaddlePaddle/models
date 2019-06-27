@@ -25,7 +25,7 @@ from PIL import Image
 from paddle import fluid
 
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.modeling.model_input import create_feeds
+from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
@@ -55,7 +55,7 @@ def get_test_images(infer_dir, infer_img):
     Get image path list in TEST mode
     """
     assert infer_img is not None or infer_dir is not None, \
-        "--infer-img or --infer-dir should be set"
+        "--infer_img or --infer_dir should be set"
     images = []
 
     # infer_img has a higher priority
@@ -104,7 +104,7 @@ def main():
     infer_prog = fluid.Program()
     with fluid.program_guard(infer_prog, startup_prog):
         with fluid.unique_name.guard():
-            _, feed_vars = create_feeds(test_feed, use_pyreader=False)
+            _, feed_vars = create_feed(test_feed, use_pyreader=False)
             test_fetches = model.test(feed_vars)
     infer_prog = infer_prog.clone(True)
 
@@ -151,11 +151,11 @@ def main():
         mask_results = None
         is_bbox_normalized = True if cfg.metric == 'VOC' else False
         if 'bbox' in res:
-            bbox_results = bbox2out([res], clsid2catid, 
+            bbox_results = bbox2out([res], clsid2catid,
                                     is_bbox_normalized)
         if 'mask' in res:
             mask_results = mask2out([res], clsid2catid,
-                                    cfg.MaskHead['resolution'])
+                                    model.mask_head.resolution)
 
         # visualize result
         im_ids = res['im_id'][0]

@@ -22,9 +22,10 @@ from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
 
 from ppdet.core.workspace import register
-from ppdet.modeling.ops import AnchorGenerator, RPNTargetAssign, GenerateProposals
+from ppdet.modeling.ops import (AnchorGenerator,
+                                RPNTargetAssign, GenerateProposals)
 
-__all__ = ['RPNTargetAssign', 'GenerateProposals', 'RPNHead']
+__all__ = ['RPNTargetAssign', 'GenerateProposals', 'RPNHead', 'FPNRPNHead']
 
 
 @register

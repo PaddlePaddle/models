@@ -17,7 +17,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import logging
 import numpy as np
 import pycocotools.mask as mask_util
 from PIL import Image, ImageDraw
@@ -25,8 +24,6 @@ from PIL import Image, ImageDraw
 from .colormap import colormap
 
 __all__ = ['visualize_results']
-
-logger = logging.getLogger(__name__)
 
 
 def visualize_results(image,
@@ -73,7 +70,7 @@ def draw_mask(image, im_id, segms, threshold, alpha=0.7):
     return Image.fromarray(img_array.astype('uint8'))
 
 
-def draw_bbox(image, im_id, catid2name, bboxes, threshold, 
+def draw_bbox(image, im_id, catid2name, bboxes, threshold,
               is_bbox_normalized=False):
     """
     Draw bbox on image
@@ -103,8 +100,11 @@ def draw_bbox(image, im_id, catid2name, bboxes, threshold,
             width=2,
             fill='red')
         if image.mode == 'RGB':
-            draw.text((xmin, ymin), catid2name[catid], (255, 255, 0))
-        logger.debug("\t {:15s} at {:25} score: {:.5f}".format(catid2name[catid],
-                    str(list(map(int, list([xmin, ymin, xmax, ymax])))), score))
+            text = catid2name[catid]
+            tw, th = draw.textsize(text)
+            draw.rectangle([(xmin + 1, ymin + 1),
+                            (xmin + tw + 1, ymin + th + 1)],
+                           fill='red')
+            draw.text((xmin + 1, ymin + 1), text, fill=(255, 255, 255))
 
     return image
