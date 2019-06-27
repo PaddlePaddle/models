@@ -17,22 +17,16 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
-import logging
 import numpy as np
 import pycocotools.mask as mask_util
 from PIL import Image, ImageDraw
 
 from .colormap import colormap
 
-logger = logging.getLogger(__name__)
-
 __all__ = ['visualize_results']
 
-SAVE_HOME = 'output'
 
-
-def visualize_results(image_path,
+def visualize_results(image,
                       catid2name,
                       threshold=0.5,
                       bbox_results=None,
@@ -40,19 +34,11 @@ def visualize_results(image_path,
     """
     Visualize bbox and mask results
     """
-    if not os.path.exists(SAVE_HOME):
-        os.makedirs(SAVE_HOME)
-
-    logger.info("Image {} detect: ".format(image_path))
-    image = Image.open(image_path)
     if mask_results:
         image = draw_mask(image, mask_results, threshold)
     if bbox_results:
         image = draw_bbox(image, catid2name, bbox_results, threshold)
-
-    save_name = get_save_image_name(image_path)
-    logger.info("Detection results save in {}\n".format(save_name))
-    image.save(save_name)
+    return image
 
 
 def draw_mask(image, segms, threshold, alpha=0.7):
@@ -62,7 +48,7 @@ def draw_mask(image, segms, threshold, alpha=0.7):
     im_width, im_height = image.size
     mask_color_id = 0
     w_ratio = .4
-    image = np.array(image).astype('float32')
+    img_array = np.array(image).astype('float32')
     for dt in np.array(segms):
         segm, score = dt['segmentation'], dt['score']
         if score < threshold:
@@ -74,10 +60,9 @@ def draw_mask(image, segms, threshold, alpha=0.7):
         for c in range(3):
             color_mask[c] = color_mask[c] * (1 - w_ratio) + w_ratio * 255
         idx = np.nonzero(mask)
-        image[idx[0], idx[1], :] *= 1.0 - alpha
-        image[idx[0], idx[1], :] += alpha * color_mask
-    image = Image.fromarray(image.astype('uint8'))
-    return image
+        img_array[idx[0], idx[1], :] *= 1.0 - alpha
+        img_array[idx[0], idx[1], :] += alpha * color_mask
+    return Image.fromarray(img_array.astype('uint8'))
 
 
 def draw_bbox(image, catid2name, bboxes, threshold):
@@ -101,17 +86,5 @@ def draw_bbox(image, catid2name, bboxes, threshold):
             fill='red')
         if image.mode == 'RGB':
             draw.text((xmin, ymin), catid2name[catid], (255, 255, 0))
-        logger.info("\t {:15s} at {:25} score: {:.5f}".format(
-                    catid2name[catid], 
-                    str(list(map(int, [xmin, ymin, xmax, ymax]))),
-                    score))
 
     return image
-
-def get_save_image_name(image_path):
-    """
-    Get save image name from source image path.
-    """
-    image_name = image_path.split('/')[-1]
-    name, ext = os.path.splitext(image_name)
-    return os.path.join(SAVE_HOME, "{}".format(name)) + ext

@@ -88,7 +88,7 @@ TwoFCHead:
   num_chan: 1024
 
 LearningRate:
-  base_lr: 0.01
+  base_lr: 0.02
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1

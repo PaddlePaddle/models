@@ -29,7 +29,7 @@ from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
-from ppdet.utils.cli import parse_args
+from ppdet.utils.cli import ArgsParser
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.modeling.model_input import create_feeds
 
@@ -40,33 +40,33 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    args = parse_args()
-    cfg = load_config(args.config)
+    cfg = load_config(FLAGS.config)
 
     if 'architecture' in cfg:
-        main_arch = cfg['architecture']
+        main_arch = cfg.architecture
     else:
         raise ValueError("'architecture' not specified in config file.")
 
-    merge_config(args.cli_config)
+    merge_config(FLAGS.opt)
 
-    if cfg['use_gpu']:
+    if cfg.use_gpu:
         devices_num = fluid.core.get_cuda_device_count()
     else:
-        devices_num = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+        devices_num = int(os.environ.get('CPU_NUM',
+                                         multiprocessing.cpu_count()))
 
     if 'train_feed' not in cfg:
         train_feed = create(main_arch + 'TrainFeed')
     else:
-        train_feed = create(cfg['train_feed'])
+        train_feed = create(cfg.train_feed)
 
-    if args.eval:
+    if FLAGS.eval:
         if 'eval_feed' not in cfg:
             eval_feed = create(main_arch + 'EvalFeed')
         else:
-            eval_feed = create(cfg['eval_feed'])
+            eval_feed = create(cfg.eval_feed)
 
-    place = fluid.CUDAPlace(0) if cfg['use_gpu'] else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
     model = create(main_arch)
@@ -84,14 +84,14 @@ def main():
             optimizer = optim_builder(lr)
             optimizer.minimize(loss)
 
-    train_reader = create_reader(train_feed, cfg['max_iters'] * devices_num)
+    train_reader = create_reader(train_feed, cfg.max_iters * devices_num)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     # parse train fetches
     train_keys, train_values, _ = parse_fetches(train_fetches)
     train_values.append(lr)
 
-    if args.eval:
+    if FLAGS.eval:
         eval_prog = fluid.Program()
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
@@ -103,7 +103,7 @@ def main():
         eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
         # parse train fetches
-        extra_keys = ['im_info', 'im_id'] if cfg['metric'] == 'COCO' else []
+        extra_keys = ['im_info', 'im_id'] if cfg.metric == 'COCO' else []
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
@@ -116,27 +116,27 @@ def main():
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
             loss_name=loss.name, build_strategy=build_strategy)
-    if args.eval:
+    if FLAGS.eval:
         eval_compile_program = fluid.compiler.CompiledProgram(eval_prog)
 
     exe.run(startup_prog)
 
     freeze_bn = getattr(model.backbone, 'freeze_norm', False)
-    if args.resume_checkpoint:
-        checkpoint.load_checkpoint(exe, train_prog, args.resume_checkpoint)
-    elif cfg['pretrain_weights'] and freeze_bn:
-        checkpoint.load_and_fusebn(exe, train_prog, cfg['pretrain_weights'])
-    elif cfg['pretrain_weights']:
-        checkpoint.load_pretrain(exe, train_prog, cfg['pretrain_weights'])
+    if FLAGS.resume_checkpoint:
+        checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
+    elif cfg.pretrain_weights and freeze_bn:
+        checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
+    elif cfg.pretrain_weights:
+        checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
 
-    train_stats = TrainingStats(cfg['log_smooth_window'], train_keys)
+    train_stats = TrainingStats(cfg.log_smooth_window, train_keys)
     train_pyreader.start()
     start_time = time.time()
     end_time = time.time()
 
-    cfg_name = os.path.basename(args.config).split('.')[0]
-    save_dir = os.path.join(cfg['save_dir'], cfg_name)
-    for it in range(cfg['max_iters']):
+    cfg_name = os.path.basename(FLAGS.config).split('.')[0]
+    save_dir = os.path.join(cfg.save_dir, cfg_name)
+    for it in range(cfg.max_iters):
         start_time = end_time
         end_time = time.time()
         outs = exe.run(train_compile_program, fetch_list=train_values)
@@ -147,19 +147,40 @@ def main():
             it, np.mean(outs[-1]), logs, end_time - start_time)
         logger.info(strs)
 
-        if it > 0 and it % cfg['snapshot_iter'] == 0:
+        if it > 0 and it % cfg.snapshot_iter == 0:
             checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
 
-            if args.eval:
+            if FLAGS.eval:
                 # Run evaluation
                 results = eval_run(exe, eval_compile_program, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
                 # Evaluation
-                eval_results(results, eval_feed, args, cfg)
+                eval_results(results, eval_feed, cfg.metric,
+                             cfg.MaskHead.resolution, FLAGS.output_file)
 
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
 
 
 if __name__ == '__main__':
+    parser = ArgsParser()
+    parser.add_argument(
+        "-r",
+        "--resume_checkpoint",
+        default=None,
+        type=str,
+        help="Checkpoint path for resuming training.")
+    parser.add_argument(
+        "--eval",
+        action='store_true',
+        default=False,
+        help="Whether to perform evaluation in train")
+    parser.add_argument(
+        "-f",
+        "--output_file",
+        default=None,
+        type=str,
+        help="Evaluation file name, default to bbox.json and mask.json."
+    )
+    FLAGS = parser.parse_args()
     main()
