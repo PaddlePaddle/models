@@ -27,6 +27,7 @@ import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator
+from util.utility import check_attribute_conflict
 import copy
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -86,12 +87,22 @@ def infer(args):
         from network.STGAN_network import STGAN_model
         model = STGAN_model()
         fake, _ = model.network_G(
-            input, label_org_, label_trg_, cfg=args, name='net_G')
+            input,
+            label_org_,
+            label_trg_,
+            cfg=args,
+            name='generator',
+            is_test=True)
     elif args.model_net == 'AttGAN':
         from network.AttGAN_network import AttGAN_model
         model = AttGAN_model()
         fake, _ = model.network_G(
-            input, label_org_, label_trg_, cfg=args, name='net_G')
+            input,
+            label_org_,
+            label_trg_,
+            cfg=args,
+            name='generator',
+            is_test=True)
     else:
         raise NotImplementedError("model_net {} is not support".format(
             args.model_net))
@@ -122,6 +133,7 @@ def infer(args):
             args, shuffle=False, return_name=True)
         for data in zip(reader_test()):
             real_img, label_org, name = data[0]
+            attr_names = args.selected_attrs.split(',')
             print("read {}".format(name))
             label_trg = copy.deepcopy(label_org)
             tensor_img = fluid.LoDTensor()
@@ -137,6 +149,8 @@ def infer(args):
                 label_trg_tmp = copy.deepcopy(label_trg)
                 for j in range(len(label_org)):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
+                    label_trg_tmp = check_attribute_conflict(
+                        label_trg_tmp, attr_names[i], attr_names)
                 label_trg_ = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
                 for j in range(len(label_org)):

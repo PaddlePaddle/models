@@ -133,6 +133,7 @@ def save_test_image(epoch,
     elif cfg.model_net == 'AttGAN' or cfg.model_net == 'STGAN':
         for data in zip(A_test_reader()):
             real_img, label_org, name = data[0]
+            attr_names = args.selected_attrs.split(',')
             label_trg = copy.deepcopy(label_org)
             tensor_img = fluid.LoDTensor()
             tensor_label_org = fluid.LoDTensor()
@@ -148,6 +149,8 @@ def save_test_image(epoch,
 
                 for j in range(len(label_org)):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
+                    label_trg_tmp = check_attribute_conflict(
+                        label_trg_tmp, attr_names[i], attr_names)
 
                 label_trg_ = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
@@ -230,3 +233,31 @@ class ImagePool(object):
                 return temp
             else:
                 return image
+
+
+def check_attribute_conflict(label_batch, attr, attrs):
+    def _set(label, value, attr):
+        if attr in attrs:
+            label[attrs.index(attr)] = value
+
+    attr_id = attrs.index(attr)
+    for label in label_batch:
+        if attr in ['Bald', 'Receding_Hairline'] and attrs[attr_id] != 0:
+            _set(label, 0, 'Bangs')
+        elif attr == 'Bangs' and attrs[attr_id] != 0:
+            _set(label, 0, 'Bald')
+            _set(label, 0, 'Receding_Hairline')
+        elif attr in ['Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Gray_Hair'
+                      ] and attrs[attr_id] != 0:
+            for a in ['Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Gray_Hair']:
+                if a != attr:
+                    _set(label, 0, a)
+        elif attr in ['Straight_Hair', 'Wavy_Hair'] and attrs[attr_id] != 0:
+            for a in ['Straight_Hair', 'Wavy_Hair']:
+                if a != attr:
+                    _set(label, 0, a)
+        elif attr in ['Mustache', 'No_Beard'] and attrs[attr_id] != 0:
+            for a in ['Mustache', 'No_Beard']:
+                if a != attr:
+                    _set(label, 0, a)
+    return label_batch

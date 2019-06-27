@@ -27,17 +27,26 @@ class AttGAN_model(object):
     def __init__(self):
         pass
 
-    def network_G(self, input, label_org, label_trg, cfg, name="generator"):
+    def network_G(self,
+                  input,
+                  label_org,
+                  label_trg,
+                  cfg,
+                  name="generator",
+                  is_test=False):
         _a = label_org
         _b = label_trg
         z = self.Genc(
             input,
             name=name + '_Genc',
             dim=cfg.g_base_dims,
-            n_layers=cfg.n_layers)
-        fake_image = self.Gdec(z, _b, name=name + '_Gdec', dim=cfg.g_base_dims)
+            n_layers=cfg.n_layers,
+            is_test=is_test)
+        fake_image = self.Gdec(
+            z, _b, name=name + '_Gdec', dim=cfg.g_base_dims, is_test=is_test)
 
-        rec_image = self.Gdec(z, _a, name=name + '_Gdec', dim=cfg.g_base_dims)
+        rec_image = self.Gdec(
+            z, _a, name=name + '_Gdec', dim=cfg.g_base_dims, is_test=is_test)
         return fake_image, rec_image
 
     def network_D(self, input, cfg, name="discriminator"):
@@ -54,7 +63,7 @@ class AttGAN_model(object):
             z, [-1, a.shape[1], z.shape[2], z.shape[3]], "float32", 1.0)
         return fluid.layers.concat([z, ones * a], axis=1)
 
-    def Genc(self, input, dim=64, n_layers=5, name='G_enc_'):
+    def Genc(self, input, dim=64, n_layers=5, name='G_enc_', is_test=False):
         z = input
         zs = []
         for i in range(n_layers):
@@ -71,7 +80,8 @@ class AttGAN_model(object):
                 name=name + str(i),
                 use_bias=False,
                 relufactor=0.01,
-                initial='kaiming')
+                initial='kaiming',
+                is_test=is_test)
             zs.append(z)
 
         return zs
@@ -83,7 +93,8 @@ class AttGAN_model(object):
              n_layers=5,
              shortcut_layers=1,
              inject_layers=1,
-             name='G_dec_'):
+             name='G_dec_',
+             is_test=False):
         shortcut_layers = min(shortcut_layers, n_layers - 1)
         inject_layers = min(inject_layers, n_layers - 1)
 
@@ -101,7 +112,8 @@ class AttGAN_model(object):
                     norm='batch_norm',
                     activation_fn='relu',
                     use_bias=False,
-                    initial='kaiming')
+                    initial='kaiming',
+                    is_test=is_test)
                 if shortcut_layers > i:
                     z = fluid.layers.concat([z, zs[n_layers - 2 - i]], axis=1)
                 if inject_layers > i:
@@ -116,7 +128,8 @@ class AttGAN_model(object):
                     name=name + str(i),
                     activation_fn='tanh',
                     use_bias=True,
-                    initial='kaiming')
+                    initial='kaiming',
+                    is_test=is_test)
         return x
 
     def D(self,
