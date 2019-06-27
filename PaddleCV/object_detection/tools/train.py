@@ -168,8 +168,11 @@ def main():
                 # evaluation
                 results = eval_run(exe, eval_compile_program, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
-                eval_results(results, eval_feed, cfg.metric,
-                             model.mask_head.resolution, FLAGS.output_file)
+                resolution = None
+                if 'mask' in results[0]:
+                    resolution = model.mask_head.resolution
+                eval_results(results, eval_feed, cfg.metric, resolution,
+                             FLAGS.output_file)
 
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
