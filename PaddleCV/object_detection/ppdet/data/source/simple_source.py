@@ -30,26 +30,23 @@ class SimpleSource(Dataset):
     Load image files for testing purpose
 
     Args:
-        test_file (str): list of image file names, relative to `image_dir`
-        image_dir (str): root dir for images
+        images (list): list of path of images
         samples (int): number of samples to load, -1 means all
         load_img (bool): should images be loaded
     """
 
     def __init__(self,
-                 test_file='',
-                 image_dir=None,
+                 images=[],
                  samples=-1,
                  load_img=True,
                  **kwargs):
         super(SimpleSource, self).__init__()
         self._epoch = -1
-        assert test_file != '' and os.path.isfile(test_file), \
-            "test file not found: " + test_file
-        self._fname = test_file
-        self._image_dir = image_dir
-        assert image_dir is not None and os.path.isdir(image_dir), \
-            "image directory not found: " + image_dir
+        for image in images:
+            assert image != '' and os.path.isfile(image), \
+                    "Image {} not found".format(image)
+        self._images = images
+        self._fname = None
         self._simple = None
         self._pos = -1
         self._drained = False
@@ -68,32 +65,25 @@ class SimpleSource(Dataset):
             sample = copy.deepcopy(self._simple[self._pos])
             if self._load_img:
                 sample['image'] = self._load_image(sample['im_file'])
-            else:
-                sample['im_file'] = os.path.join(self._image_dir,
-                                                 sample['im_file'])
+
             self._pos += 1
             return sample
 
     def _load(self):
-        assert os.path.isfile(self._fname) and self._fname.endswith('.txt'), \
-            "invalid test file path"
         ct = 0
         records = []
-        with open(self._fname, 'r') as fr:
-            while True:
-                line = fr.readline().strip()
-                if not line or (self._samples > 0 and ct >= self._samples):
-                    break
-                rec = {'im_id': np.array([ct]), 'im_file': line}
-                self._imid2path[ct] = line
-                ct += 1
-                records.append(rec)
-        assert len(records) > 0, "no image file found in " + self._fname
+        for image in self._images:
+            if self._samples > 0 and ct >= self._samples:
+                break
+            rec = {'im_id': np.array([ct]), 'im_file': image}
+            self._imid2path[ct] = image
+            ct += 1
+            records.append(rec)
+        assert len(records) > 0, "no image file found"
         return records
 
     def _load_image(self, where):
-        fn = os.path.join(self._image_dir, where)
-        with open(fn, 'rb') as f:
+        with open(where, 'rb') as f:
             return f.read()
 
     def reset(self):

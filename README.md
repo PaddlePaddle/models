@@ -6,18 +6,14 @@
 PaddlePaddle provides a rich set of computational units to enable users to adopt a modular approach to solving various learning problems. In this repo, we demonstrate how to use PaddlePaddle to solve common machine learning tasks, providing several different neural network model that anyone can easily learn and use.
 
 
-- [fluid models](fluid): use PaddlePaddle's Fluid APIs. We especially recommend users to use Fluid models.
-
-
 PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化的方法解决各种学习问题。在此repo中，我们展示了如何用 PaddlePaddle 来解决常见的机器学习任务，提供若干种不同的易学易用的神经网络模型。PaddlePaddle用户现可申请AI Studio平台的**免费Tesla V100算力资源**，高效在线训练模型，[点击申请](https://aistudio.baidu.com/aistudio/questionnaire?activityid=378)。
 
-- [fluid模型](fluid): 使用 PaddlePaddle Fluid版本的 APIs，我们特别推荐您使用Fluid模型。
 
 ## PaddleCV
 模型|简介|模型优势|参考论文
 --|:--:|:--:|:--:
 [AlexNet](./PaddleCV/image_classification/models)|图像分类经典模型|首次在CNN中成功的应用了ReLU、Dropout和LRN，并使用GPU进行运算加速|[ImageNet Classification with Deep Convolutional Neural Networks](https://www.researchgate.net/publication/267960550_ImageNet_Classification_with_Deep_Convolutional_Neural_Networks)
-[VGG](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)|图像分类经典模型|在AlexNet的基础上使用3*3小卷积核，增加网络深度，具有很好的泛化能力|[Very Deep ConvNets for Large-Scale Inage Recognition](https://arxiv.org/pdf/1409.1556.pdf)
+[VGG](./PaddleCV/image_classification/models)|图像分类经典模型|在AlexNet的基础上使用3*3小卷积核，增加网络深度，具有很好的泛化能力|[Very Deep ConvNets for Large-Scale Inage Recognition](https://arxiv.org/pdf/1409.1556.pdf)
 [GoogleNet](./PaddleCV/image_classification/models)|图像分类经典模型|在不增加计算负载的前提下增加了网络的深度和宽度，性能更加优越|[Going deeper with convolutions](https://ieeexplore.ieee.org/document/7298594)
 [ResNet](./PaddleCV/image_classification/models)|残差网络|引入了新的残差结构，解决了随着网络加深，准确率下降的问题|[Deep Residual Learning for Image Recognition](https://arxiv.org/abs/1512.03385)
 [Inception-v4](./PaddleCV/image_classification/models)|图像分类经典模型|更加deeper和wider的inception结构|[Inception-ResNet and the Impact of Residual Connections on Learning](http://arxiv.org/abs/1602.07261)
@@ -35,7 +31,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 [CycleGAN](./PaddleCV/gan/cycle_gan)|图片转化模型|自动将某一类图片转换成另外一类图片，可用于风格迁移|[Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://arxiv.org/abs/1703.10593)
 [CRNN-CTC模型](./PaddleCV/ocr_recognition)|场景文字识别模型|使用CTC model识别图片中单行英文字符|[Connectionist Temporal Classification: Labelling Unsegmented Sequence Data with Recurrent Neural Networks](https://www.researchgate.net/publication/221346365_Connectionist_temporal_classification_Labelling_unsegmented_sequence_data_with_recurrent_neural_'networks)
 [Attention模型](./PaddleCV/ocr_recognition)|场景文字识别模型|使用attention 识别图片中单行英文字符|[Recurrent Models of Visual Attention](https://arxiv.org/abs/1406.6247)
-[Metric Learning](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning)|度量学习模型|能够用于分析对象时间的关联、比较关系，可应用于辅助分类、聚类问题，也广泛用于图像检索、人脸识别等领域|-
+[Metric Learning](./PaddleCV/metric_learning)|度量学习模型|能够用于分析对象时间的关联、比较关系，可应用于辅助分类、聚类问题，也广泛用于图像检索、人脸识别等领域|-
 [TSN](./PaddleCV/video_classification)|视频分类模型|基于长范围时间结构建模，结合了稀疏时间采样策略和视频级监督来保证使用整段视频时学习得有效和高效|[Temporal Segment Networks: Towards Good Practices for Deep Action Recognition](https://arxiv.org/abs/1608.00859)
 [视频模型库](./PaddleCV/video)|视频模型库|给开发者提供基于PaddlePaddle的便捷、高效的使用深度学习算法解决视频理解、视频编辑、视频生成等一系列模型||
 [caffe2fluid](./PaddleCV/caffe2fluid)|将Caffe模型转换为Paddle Fluid配置和模型文件工具|-|-
