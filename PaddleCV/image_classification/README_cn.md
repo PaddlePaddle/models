@@ -190,15 +190,15 @@ python infer.py \
 |[InceptionV4](https://paddle-imagenet-models-name.bj.bcebos.com/InceptionV4_pretrained.tar) | 80.77%/95.26% | 32.413 | 18.154 |
 
 
-##FAQ
+## FAQ
 
 **Q:** 加载预训练模型报错，Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:1000 != labels_dims[1]:6.
 **A:** 维度对不上，删掉预训练参数中的FC
 
-##参考文献
+## 参考文献
 -[MobileNetV2: Inverted Residuals and Linear Bottlenecks](https://arxiv.org/pdf/1801.04381v4.pdf), Mark Sandler, Andrew Howard, Menglong Zhu, Andrey Zhmoginov, Liang-Chieh Chen
 
-##版本更新
+## 版本更新
 - 2018/12/03，**Stage1**: 更新AlexNet，ResNet50，ResNet101，MobileNetV1
 - 2018/12/23，**Stage2**: 更新VGG系列 SeResNeXt50_32x4d，SeResNeXt101_32x4d，ResNet152
 - 2019/01/31，更新MobileNetV2
@@ -206,10 +206,10 @@ python infer.py \
 - 2019/06/12，**Stage4**: 更新ResNet50_vc，ResNet50_vd，ResNet101_vd，ResNet152_vd，ResNet200_vd，SE154_vd InceptionV4，ResNeXt101_64x4d，ResNeXt101_vd_64x4d
 - 2019/06/22，更新ResNet50_vd_v2
 
-##如何贡献代码
+## 如何贡献代码
 
 如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
 
-##反馈
+## 反馈
 - [qingqing01](https://github.com/qingqing01)
 - [shippingwang](https://github.com/shippingwang)
