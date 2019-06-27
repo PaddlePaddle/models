@@ -88,7 +88,7 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
     return results
 
 
-def eval_results(results, feed, metric, resolution, output_file=None):
+def eval_results(results, feed, metric, resolution=None, output_file=None):
     """Evaluation for evaluation program results"""
     if metric == 'COCO':
         from ppdet.utils.coco_eval import bbox_eval, mask_eval
