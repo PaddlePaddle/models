@@ -148,9 +148,7 @@ FasterRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 128
   dataset:
-    dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
-    image_dir: val2017
   drop_last: false
   image_shape: [3, 1333, 800]
   num_workers: 2

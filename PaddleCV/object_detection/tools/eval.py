@@ -97,7 +97,7 @@ def main():
 
     # do evaluation
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
-    eval_results(results, eval_feed, cfg.metric, cfg.MaskHead.resolution,
+    eval_results(results, eval_feed, cfg.metric, cfg.MaskHead['resolution'],
                  FLAGS.output_file)
 
 

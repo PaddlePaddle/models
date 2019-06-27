@@ -65,6 +65,7 @@ SSDTrainFeed:
     dataset_dir: dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
     image_dir: VOCdevkit/VOC_all/JPEGImages
+    use_default_label: true
 
 SSDEvalFeed:
   batch_size: 64
@@ -73,14 +74,11 @@ SSDEvalFeed:
     dataset_dir: dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
     image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: false
+    use_default_label: true
   drop_last: false
 
 SSDTestFeed:
   batch_size: 1
   dataset:
-    dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/test.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: false
+    use_default_label: true
   drop_last: false
