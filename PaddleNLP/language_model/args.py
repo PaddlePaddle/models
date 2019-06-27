@@ -40,7 +40,7 @@ def parse_args():
         "--rnn_model",
         type=str,
         default="static",
-        help="model_type [static|padding|cudnn]")
+        help="model_type [static|padding|cudnn|basic_lstm]")
     parser.add_argument(
         "--data_path", type=str, help="all the data for train,valid,test")
     parser.add_argument('--para_init', action='store_true')
