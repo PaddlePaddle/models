@@ -196,12 +196,73 @@ class CTCNReader(DataReader):
             boxes, labels = Coder.encode(boxes, labels)
         return img, boxes, labels
 
+    def load_file(self, fname):
+        if python_ver < (3, 0):
+            rgb_pkl = pickle.load(
+                open(os.path.join(self.root, self.rgb, fname + '.pkl')))
+            flow_pkl = pickle.load(
+                open(os.path.join(self.root, self.flow, fname + '.pkl')))
+        else:
+            rgb_pkl = pickle.load(
+                open(os.path.join(self.root, self.rgb, fname + '.pkl')),
+                encoding='bytes')
+            flow_pkl = pickle.load(
+                open(os.path.join(self.root, self.flow, fname + '.pkl')),
+                encoding='bytes')
+        data_flow = np.array(flow_pkl['scores'])
+        data_rgb = np.array(rgb_pkl['scores'])
+        if data_flow.shape[0] < data_rgb.shape[0]:
+            data_rgb = data_rgb[0:data_flow.shape[0], :]
+        elif data_flow.shape[0] > data_rgb.shape[0]:
+            data_flow = data_flow[0:data_rgb.shape[0], :]
+
+        feats = np.concatenate((data_rgb, data_flow), axis=1)
+        if feats.shape[0] == 0 or feats.shape[1] == 0:
+            feats = np.zeros((512, 1024), np.float32)
+            logger.info('### file loading len = 0 {} ###'.format(fname))
+
+        return feats
+
     def create_reader(self):
         """reader creator for ctcn model"""
+        if self.mode == 'infer':
+            return self.make_infer_reader()
         if self.num_threads == 1:
             return self.make_reader()
         else:
             return self.make_multiprocess_reader()
+
+    def make_infer_reader(self):
+        """reader for inference"""
+
+        def reader():
+            with open(self.filelist) as f:
+                reader_list = f.readlines()
+            batch_out = []
+            for line in reader_list:
+                fname = line.strip().split()[0]
+                rgb_exist = os.path.exists(
+                    os.path.join(self.root, self.rgb, fname + '.pkl'))
+                flow_exist = os.path.exists(
+                    os.path.join(self.root, self.flow, fname + '.pkl'))
+                if not (rgb_exist and flow_exist):
+                    logger.info('file not exist', fname)
+                    continue
+                try:
+                    feats = self.load_file(fname)
+                    feats, boxes = self.resize(
+                        feats, boxes=None, size=self.img_size)
+                    h, w = feats.shape[:2]
+                    feats = feats.reshape(1, h, w)
+                except:
+                    logger.info('Error when loading {}'.format(fname))
+                    continue
+                batch_out.append((feats, fname))
+                if len(batch_out) == self.batch_size:
+                    yield batch_out
+                    batch_out = []
+
+        return reader
 
     def make_reader(self):
         """single process reader"""
@@ -223,17 +284,17 @@ class CTCNReader(DataReader):
                 flow_exist = os.path.exists(
                     os.path.join(self.root, self.flow, splited[0] + '.pkl'))
                 if not (rgb_exist and flow_exist):
-                    print('file not exist', splited[0])
+                    # logger.info('file not exist', splited[0])
                     continue
                 fnames.append(splited[0])
                 frames_num = int(splited[1]) // self.snippet_length
                 num_boxes = int(splited[2])
                 box = []
                 label = []
-                for i in range(num_boxes):
-                    c = splited[3 + 3 * i]
-                    xmin = splited[4 + 3 * i]
-                    xmax = splited[5 + 3 * i]
+                for ii in range(num_boxes):
+                    c = splited[3 + 3 * ii]
+                    xmin = splited[4 + 3 * ii]
+                    xmax = splited[5 + 3 * ii]
                     box.append([
                         float(xmin) / self.snippet_length,
                         float(xmax) / self.snippet_length
@@ -247,44 +308,9 @@ class CTCNReader(DataReader):
             for idx in range(num_videos):
                 fname = fnames[idx]
                 try:
-                    if python_ver < (3, 0):
-                        rgb_pkl = pickle.load(
-                            open(
-                                os.path.join(self.root, self.rgb, fname +
-                                             '.pkl')))
-                        flow_pkl = pickle.load(
-                            open(
-                                os.path.join(self.root, self.flow, fname +
-                                             '.pkl')))
-                    else:
-                        rgb_pkl = pickle.load(
-                            open(
-                                os.path.join(self.root, self.rgb, fname +
-                                             '.pkl')),
-                            encoding='bytes')
-                        flow_pkl = pickle.load(
-                            open(
-                                os.path.join(self.root, self.flow, fname +
-                                             '.pkl')),
-                            encoding='bytes')
-
-                    data_flow = np.array(flow_pkl['scores'])
-                    data_rgb = np.array(rgb_pkl['scores'])
-
-                    if data_flow.shape[0] < data_rgb.shape[0]:
-                        data_rgb = data_rgb[0:data_flow.shape[0], :]
-                    elif data_flow.shape[0] > data_rgb.shape[0]:
-                        data_flow = data_flow[0:data_rgb.shape[0], :]
-
-                    feats = np.concatenate((data_rgb, data_flow), axis=1)
-                    if feats.shape[0] == 0 or feats.shape[1] == 0:
-                        feats = np.zeros((512, 1024), np.float32)
-                        logger.info('### file loading len = 0 {} ###'.format(
-                            fname))
-
+                    feats = self.load_file(fname)
                     boxes = copy.deepcopy(total_boxes[idx])
                     labels = copy.deepcopy(total_labels[idx])
-
                     feats, boxes, labels = self.transform(feats, boxes, labels,
                                                           self.mode)
                     labels = labels.astype('int64')
@@ -328,17 +354,17 @@ class CTCNReader(DataReader):
                 flow_exist = os.path.exists(
                     os.path.join(self.root, self.flow, splited[0] + '.pkl'))
                 if not (rgb_exist and flow_exist):
-                    logger.info('file not exist {}'.format(splited[0]))
+                    # logger.info('file not exist {}'.format(splited[0]))
                     continue
                 fnames.append(splited[0])
                 frames_num = int(splited[1]) // self.snippet_length
                 num_boxes = int(splited[2])
                 box = []
                 label = []
-                for i in range(num_boxes):
-                    c = splited[3 + 3 * i]
-                    xmin = splited[4 + 3 * i]
-                    xmax = splited[5 + 3 * i]
+                for ii in range(num_boxes):
+                    c = splited[3 + 3 * ii]
+                    xmin = splited[4 + 3 * ii]
+                    xmax = splited[5 + 3 * ii]
                     box.append([
                         float(xmin) / self.snippet_length,
                         float(xmax) / self.snippet_length
@@ -352,41 +378,7 @@ class CTCNReader(DataReader):
             for idx in range(num_videos):
                 fname = fnames[idx]
                 try:
-                    if python_ver < (3, 0):
-                        rgb_pkl = pickle.load(
-                            open(
-                                os.path.join(self.root, self.rgb, fname +
-                                             '.pkl')))
-                        flow_pkl = pickle.load(
-                            open(
-                                os.path.join(self.root, self.flow, fname +
-                                             '.pkl')))
-                    else:
-                        rgb_pkl = pickle.load(
-                            open(
-                                os.path.join(self.root, self.rgb, fname +
-                                             '.pkl')),
-                            encoding='bytes')
-                        flow_pkl = pickle.load(
-                            open(
-                                os.path.join(self.root, self.flow, fname +
-                                             '.pkl')),
-                            encoding='bytes')
-
-                    data_flow = np.array(flow_pkl['scores'])
-                    data_rgb = np.array(rgb_pkl['scores'])
-
-                    if data_flow.shape[0] < data_rgb.shape[0]:
-                        data_rgb = data_rgb[0:data_flow.shape[0], :]
-                    elif data_flow.shape[0] > data_rgb.shape[0]:
-                        data_flow = data_flow[0:data_rgb.shape[0], :]
-
-                    feats = np.concatenate((data_rgb, data_flow), axis=1)
-                    if feats.shape[0] == 0 or feats.shape[1] == 0:
-                        feats = np.zeros((512, 1024), np.float32)
-                        logger.info('### file loading len = 0 {} ###'.format(
-                            fname))
-
+                    feats = self.load_file(fname)
                     boxes = copy.deepcopy(total_boxes[idx])
                     labels = copy.deepcopy(total_labels[idx])
 
