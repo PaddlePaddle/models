@@ -48,9 +48,9 @@ def draw_mask(image, im_id, segms, threshold, alpha=0.7):
     """
     Draw mask on image
     """
-    im_width, im_height = image.size
     mask_color_id = 0
     w_ratio = .4
+    color_list = colormap(rgb=True)
     img_array = np.array(image).astype('float32')
     for dt in np.array(segms):
         if im_id != dt['image_id']:
@@ -59,7 +59,6 @@ def draw_mask(image, im_id, segms, threshold, alpha=0.7):
         if score < threshold:
             continue
         mask = mask_util.decode(segm) * 255
-        color_list = colormap(rgb=True)
         color_mask = color_list[mask_color_id % len(color_list), 0:3]
         mask_color_id += 1
         for c in range(3):
@@ -77,6 +76,8 @@ def draw_bbox(image, im_id, catid2name, bboxes, threshold,
     """
     draw = ImageDraw.Draw(image)
 
+    catid2color = {}
+    color_list = colormap(rgb=True)[:20]
     for dt in np.array(bboxes):
         if im_id != dt['image_id']:
             continue
@@ -94,19 +95,24 @@ def draw_bbox(image, im_id, catid2name, bboxes, threshold,
         xmax = xmin + w
         ymax = ymin + h
 
+        if catid not in catid2color:
+            idx = np.random.randint(len(color_list))
+            catid2color[catid] = color_list[idx]
+        color = tuple(catid2color[catid])
+
         # draw bbox
         draw.line(
             [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin),
              (xmin, ymin)],
             width=2,
-            fill='green')
+            fill=color)
 
         # draw label
         text = "{} {:.2f}".format(catid2name[catid], score)
         tw, th = draw.textsize(text)
         draw.rectangle([(xmin + 1, ymin - th), 
                        (xmin + tw + 1, ymin)],
-                       fill='green')
+                       fill=color)
         draw.text((xmin + 1, ymin - th), text, fill=(255, 255, 255))
 
     return image
