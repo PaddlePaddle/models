@@ -83,28 +83,30 @@ def draw_bbox(image, im_id, catid2name, bboxes, threshold,
         catid, bbox, score = dt['category_id'], dt['bbox'], dt['score']
         if score < threshold:
             continue
-        xmin, ymin, w, h = bbox
 
+        xmin, ymin, w, h = bbox
         if is_bbox_normalized:
             im_width, im_height = image.size
             xmin *= im_width
             ymin *= im_height
             w *= im_width
             h *= im_height
-
         xmax = xmin + w
         ymax = ymin + h
+
+        # draw bbox
         draw.line(
             [(xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin),
              (xmin, ymin)],
             width=2,
-            fill='red')
-        if image.mode == 'RGB':
-            text = catid2name[catid]
-            tw, th = draw.textsize(text)
-            draw.rectangle([(xmin + 1, ymin + 1),
-                            (xmin + tw + 1, ymin + th + 1)],
-                           fill='red')
-            draw.text((xmin + 1, ymin + 1), text, fill=(255, 255, 255))
+            fill='green')
+
+        # draw label
+        text = "{} {:.2f}".format(catid2name[catid], score)
+        tw, th = draw.textsize(text)
+        draw.rectangle([(xmin + 1, ymin - th), 
+                       (xmin + tw + 1, ymin)],
+                       fill='green')
+        draw.text((xmin + 1, ymin - th), text, fill=(255, 255, 255))
 
     return image
