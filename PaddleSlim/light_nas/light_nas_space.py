@@ -204,8 +204,8 @@ class LightNASSpace(SearchSpace):
                           image_shape[1], image_shape[2], 32, 1, 3, 1, 2, 1))
         op_params.append(('activation', 0, 1, 100, 'relu6', 1, 32, 112, 112))
 
-        # bottlenecks
-        in_c, in_shape = [32], 112
+        # bottlenecks, TODO: different h and w for images
+        in_c, in_shape = [32], image_shape[1] / 2
         for i in range(7):
             if i == 0:
                 expansion, kernels, num_filters, s = [1], [3], [16], strides[i]
