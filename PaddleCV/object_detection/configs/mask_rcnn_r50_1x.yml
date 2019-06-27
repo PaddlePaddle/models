@@ -22,7 +22,7 @@ MaskRCNN:
 
 ResNet:
   norm_type: affine_channel
-  norm_decay: true
+  norm_decay: 0.
   depth: 50
   feature_maps: 4
   freeze_at: 2
