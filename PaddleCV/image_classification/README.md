@@ -169,7 +169,7 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 - Note2: In addition to the image resolution feeded in InceptionV4 net is ```299x299```, others are ```224x224```.
 - Note3: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
 
-```python infer.py --save_inference=True```
+    ```python infer.py --save_inference=True```
 
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
@@ -215,12 +215,12 @@ Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:100
 
 ## Update
 
-- 2018/12/03，**Stage1**: Update AlexNet，ResNet50，ResNet101，MobileNetV1
-- 2018/12/23，**Stage2**: Update VGG系列 SeResNeXt50_32x4d，SeResNeXt101_32x4d，ResNet152
-- 2019/01/31，Update MobileNetV2
-- 2019/04/01，**Stage3**: Update ResNet18，ResNet34，GoogLeNet，ShuffleNetV2
-- 2019/06/12，**Stage4**:Update ResNet50_vc，ResNet50_vd，ResNet101_vd，ResNet152_vd，ResNet200_vd，SE154_vd InceptionV4，ResNeXt101_64x4d，ResNeXt101_vd_64x4d
-- 2019/06/22，Update ResNet50_vd_v2
+- 2018/12/03, **Stage1**: Update AlexNet, ResNet50, ResNet101, MobileNetV1
+- 2018/12/23, **Stage2**: Update VGG Series, SeResNeXt50_32x4d, SeResNeXt101_32x4d, ResNet152
+- 2019/01/31, Update MobileNetV2
+- 2019/04/01, **Stage3**: Update ResNet18, ResNet34, GoogLeNet, ShuffleNetV2
+- 2019/06/12, **Stage4**:Update ResNet50_vc, ResNet50_vd, ResNet101_vd, ResNet152_vd, ResNet200_vd, SE154_vd InceptionV4, ResNeXt101_64x4d, ResNeXt101_vd_64x4d
+- 2019/06/22, Update ResNet50_vd_v2
 
 ## Contribute
 
