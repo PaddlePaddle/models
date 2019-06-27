@@ -24,7 +24,7 @@ import paddle.fluid as fluid
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.utils.cli import ArgsParser
-from ppdet.modeling.model_input import create_feeds
+from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
 
@@ -68,7 +68,7 @@ def main():
     eval_prog = fluid.Program()
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
-            pyreader, feed_vars = create_feeds(eval_feed)
+            pyreader, feed_vars = create_feed(eval_feed)
             fetches = model.eval(feed_vars)
     eval_prog = eval_prog.clone(True)
 
@@ -99,8 +99,10 @@ def main():
     # 6. Run
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
     # Evaluation
-    eval_results(results, eval_feed, cfg.metric,
-                 cfg.MaskHead.resolution, FLAGS.output_file)
+    resolution = None
+    if 'mask' in results[0]:
+        resolution = model.mask_head.resolution
+    eval_results(results, eval_feed, cfg.metric, resolution, FLAGS.output_file)
 
 
 if __name__ == '__main__':
