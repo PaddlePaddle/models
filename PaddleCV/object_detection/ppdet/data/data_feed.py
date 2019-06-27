@@ -688,29 +688,26 @@ class SSDTrainFeed(DataFeed):
                  fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
                  image_shape=[3, 300, 300],
                  sample_transforms=[
-                     DecodeImage(
-                         to_rgb=True,
-                         with_mixup=False), NormalizeBox(), RandomDistort(
-                             brightness_lower=0.875,
-                             brightness_upper=1.125,
-                             is_order=True), ExpandImage(
-                                 max_ratio=4, prob=0.5),
-                     CropImage(
-                         batch_sampler=[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
-                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
-                         satisfy_all=False,
-                         avoid_no_bbox=False), ResizeImage(
-                             target_size=300, use_cv2=False,
-                             interp=1), RandomFlipImage(is_normalized=True),
-                     Permute(), NormalizeImage(
-                         mean=[127.5, 127.5, 127.5],
-                         std=[127.502231, 127.502231, 127.502231],
-                         is_scale=False)
+                     DecodeImage(to_rgb=True, with_mixup=False),
+                     NormalizeBox(),
+                     RandomDistort(brightness_lower=0.875,
+                                   brightness_upper=1.125,
+                                   is_order=True),
+                     ExpandImage(max_ratio=4, prob=0.5),
+                     CropImage([[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
+                               satisfy_all=False),
+                     ResizeImage(target_size=300, use_cv2=False, interp=1),
+                     RandomFlipImage(is_normalized=True),
+                     Permute(),
+                     NormalizeImage(mean=[127.5, 127.5, 127.5],
+                                    std=[127.502231, 127.502231, 127.502231],
+                                    is_scale=False)
                  ],
                  batch_transforms=[],
                  batch_size=32,
