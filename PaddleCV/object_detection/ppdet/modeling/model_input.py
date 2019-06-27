@@ -31,7 +31,7 @@ feed_var_def = [
     {'name': 'is_crowd',      'shape': [1],  'dtype': 'int32',   'lod_level': 1},
     {'name': 'gt_mask',       'shape': [2],  'dtype': 'float32', 'lod_level': 3},
     {'name': 'is_difficult',  'shape': [1],  'dtype': 'int32',   'lod_level': 1},
-    {'name': 'gt_score',      'shape': None, 'dtype': 'float32', 'lod_level': 0},
+    {'name': 'gt_score',      'shape': [1],  'dtype': 'float32', 'lod_level': 0},
     {'name': 'im_shape',      'shape': [3],  'dtype': 'float32',   'lod_level': 0},
 ]
 # yapf: enable
