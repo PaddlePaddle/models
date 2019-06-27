@@ -106,8 +106,8 @@ class CTCN(ModelBase):
                 fileid = fluid.layers.data(
                     name='fileid', shape=fileid_shape, dtype='int64')
             elif self.mode == 'infer':
-                fileid = fluid.layers.data(
-                    name='fileid', shape=fileid_shape, dtype='int64')
+                # only image feature input when inference
+                pass
             else:
                 raise NotImplementedError('mode {} not implemented'.format(
                     self.mode))
@@ -168,7 +168,7 @@ class CTCN(ModelBase):
                 self.loc_targets, self.cls_targets, self.fileid
             ]
         elif self.mode == 'infer':
-            return self.feature_input + [self.fileid]
+            return self.feature_input
         else:
             raise NotImplemented
 

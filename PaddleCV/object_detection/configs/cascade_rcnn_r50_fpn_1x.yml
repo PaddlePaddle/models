@@ -135,7 +135,6 @@ FasterRCNNTestFeed:
     pad_to_stride: 32
   dataset:
     annotation: annotations/instances_val2017.json
-    image_dir: val2017
   drop_last: false
   num_workers: 2
   shuffle: false

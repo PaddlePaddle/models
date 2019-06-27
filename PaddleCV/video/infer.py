@@ -119,28 +119,38 @@ def infer(args):
         video_id = [items[-1] for items in data]
         infer_outs = exe.run(fetch_list=fetch_list,
                              feed=infer_feeder.feed(data_feed_in))
-        predictions = np.array(infer_outs[0])
-        for i in range(len(predictions)):
-            topk_inds = predictions[i].argsort()[0 - args.infer_topk:]
-            topk_inds = topk_inds[::-1]
-            preds = predictions[i][topk_inds]
-            results.append((video_id[i], preds.tolist(), topk_inds.tolist()))
         prev_time = cur_time
         cur_time = time.time()
         period = cur_time - prev_time
         periods.append(period)
+        if args.model_name in ['CTCN']:
+            # For detection model
+            loc_predictions = np.array(infer_outs[0])
+            cls_predictions = np.array(infer_outs[1])
+            for i in range(len(video_id)):
+                results.append((video_id[i], loc_predictions[i].tolist(),
+                                cls_predictions[i].tolist()))
+        else:
+            # For classification model
+            predictions = np.array(infer_outs[0])
+            for i in range(len(predictions)):
+                topk_inds = predictions[i].argsort()[0 - args.infer_topk:]
+                topk_inds = topk_inds[::-1]
+                preds = predictions[i][topk_inds]
+                results.append(
+                    (video_id[i], preds.tolist(), topk_inds.tolist()))
         if args.log_interval > 0 and infer_iter % args.log_interval == 0:
-            logger.info('Processed {} samples'.format((infer_iter) * len(
-                predictions)))
+            logger.info('Processed {} samples'.format((infer_iter + 1) * len(
+                video_id)))
 
     logger.info('[INFER] infer finished. average time: {}'.format(
         np.mean(periods)))
 
     if not os.path.isdir(args.save_dir):
         os.mkdir(args.save_dir)
-    result_file_name = os.path.join(args.save_dir,
-                                    "{}_infer_result".format(args.model_name))
-    pickle.dump(results, open(result_file_name, 'wb'))
+    result_file_name = os.path.join(
+        args.save_dir, "{}_infer_result.pkl".format(args.model_name))
+    pickle.dump(results, open(result_file_name, 'wb'), protocol=0)
 
 
 if __name__ == "__main__":
