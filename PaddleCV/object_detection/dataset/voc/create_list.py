@@ -49,10 +49,12 @@ def walk_dir(devkit_dir, year):
                 if name_prefix in added:
                     continue
                 added.add(name_prefix)
-                ann_path = osp.join(annotation_dir, name_prefix + '.xml') 
+                ann_path = osp.join(annotation_dir, name_prefix + '.xml')
                 img_path = osp.join(img_dir, name_prefix + '.jpg')
-                new_ann_path = osp.join('./VOCdevkit/VOC_all/Annotations/', name_prefix + '.xml') 
-                new_img_path = osp.join('./VOCdevkit/VOC_all/JPEGImages/', name_prefix + '.jpg')
+                new_ann_path = osp.join('./VOCdevkit/VOC_all/Annotations/',
+                                        name_prefix + '.xml')
+                new_img_path = osp.join('./VOCdevkit/VOC_all/JPEGImages/',
+                                        name_prefix + '.jpg')
                 shutil.copy(ann_path, new_ann_path)
                 shutil.copy(img_path, new_img_path)
                 img_ann_list.append(name_prefix)
@@ -74,7 +76,7 @@ def prepare_filelist(devkit_dir, years, output_dir):
     with open(osp.join(output_dir, 'train.txt'), 'w') as ftrainval:
         for item in trainval_list:
             ftrainval.write(item + '\n')
-            
+
     with open(osp.join(output_dir, 'val.txt'), 'w') as fval:
         with open(osp.join(output_dir, 'test.txt'), 'w') as ftest:
             ct = 0
@@ -83,4 +85,7 @@ def prepare_filelist(devkit_dir, years, output_dir):
                 fval.write(item + '\n')
                 if ct <= 1000:
                     ftest.write(item + '\n')
-                    
+
+
+if __name__ == '__main__':
+    prepare_filelist(devkit_dir, years, '.')
