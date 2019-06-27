@@ -23,7 +23,7 @@
 ## 简介
 图像分类是计算机视觉的重要领域，它的目标是将图像分类到预定义的标签。近期，许多研究者提出很多不同种类的神经网络，并且极大的提升了分类算法的性能。本页将介绍如何使用PaddlePaddle进行图像分类。
 
-##快速开始
+## 快速开始
 
 ### 安装说明
 在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [installation document](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
