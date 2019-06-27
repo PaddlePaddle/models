@@ -2,19 +2,20 @@ from __future__ import print_function
 import numpy as np
 
 
-def conv_op_params(blocks, current_op):
+def conv_op_params(blocks, current_op, test_iter=100):
     """Getting params of conv op
     Args:
-        blocks, current block
-        current_op, current op
+        blocks: BlockDesc, current block
+        current_op: OpDesc, current op
+        test_iter: test times
     Returns:
-        list, op name and hyperparamters
+        tmp: list, op name and hyperparamters
     """
     tmp, res = [], []
     # op_name
     tmp.append('conv')
     # cluster, threads, test_iter
-    tmp = tmp + [0, 1, 100]
+    tmp = tmp + [0, 1, test_iter]
     # flag_bias
     if not current_op.input('Bias'):
         tmp.append(0)
@@ -62,19 +63,20 @@ def conv_op_params(blocks, current_op):
     return tmp
 
 
-def batch_norm_op_params(blocks, current_op):
+def batch_norm_op_params(blocks, current_op, test_iter=100):
     """Getting params of batch_norm op
     Args:
-        blocks, current block
-        current_op, current op
+        blocks: BlockDesc, current block
+        current_op: OpDesc, current op
+        test_iter: test times
     Returns:
-        list, op name and hyperparamters
+        tmp: list, op name and hyperparamters
     """
     tmp = []
     # op name
     tmp.append('batch_norm')
     # cluster, threads, test_iters
-    tmp = tmp + [0, 1, 100]
+    tmp = tmp + [0, 1, test_iter]
     # activation type
     if not current_op.attr('fuse_with_relu'):
         tmp.append('None')
@@ -88,16 +90,17 @@ def batch_norm_op_params(blocks, current_op):
     return tmp
 
 
-def eltwise_op_params(blocks, current_op):
+def eltwise_op_params(blocks, current_op, test_iter=100):
     """Getting params of eltwise op
     Args:
-        blocks, current block
-        current_op, current op
+        blocks: BlockDesc, current block
+        current_op: OpDesc, current op
+        test_iter: test times
     Returns:
-        list, op name and hyperparamters
+        tmp: list, op name and hyperparamters
     """
     # op name, clusters, threads, test_iter
-    tmp = ['eltwise', 0, 1, 100]
+    tmp = ['eltwise', 0, 1, test_iter]
     # elementwise type, TODO: add more ops
     if current_op.type == 'elementwise_add':
         tmp.append(1)
@@ -116,19 +119,20 @@ def eltwise_op_params(blocks, current_op):
     return tmp
 
 
-def activation_op_params(blocks, current_op):
+def activation_op_params(blocks, current_op, test_iter=100):
     """Getting params of activation op
     Args:
-        blocks, current block
-        current_op, current op
+        blocks: BlockDesc, current block
+        current_op: OpDesc, current op
+        test_iter: test times
     Returns:
-        list, op name and hyperparamters
+        tmp: list, op name and hyperparamters
     """
     tmp = []
     # op name
     tmp.append('activation')
     # cluster, threads, test_iter
-    tmp = tmp + [0, 1, 100]
+    tmp = tmp + [0, 1, test_iter]
     # activation type
     tmp.append(current_op.type)
     # batch size
@@ -140,19 +144,20 @@ def activation_op_params(blocks, current_op):
     return tmp
 
 
-def pooling_op_params(blocks, current_op):
+def pooling_op_params(blocks, current_op, test_iter=100):
     """Getting params of pooling op
     Args:
-        blocks, current block
-        current_op, current op
+        blocks: BlockDesc, current block
+        current_op: OpDesc, current op
+        test_iter: test times
     Returns:
-        list, op name and hyperparamters
+        tmp: list, op name and hyperparamters    
     """
     tmp, res = [], []
     # op name
     tmp.append('pooling')
     # cluster, threads, test_iters
-    tmp = tmp + [0, 1, 100]
+    tmp = tmp + [0, 1, test_iter]
     # global pooling
     tmp.append(int(current_op.attr('global_pooling')))
     # batch size
@@ -195,28 +200,29 @@ def pooling_op_params(blocks, current_op):
     return tmp
 
 
-def softmax_op_params(blocks, current_op):
+def softmax_op_params(blocks, current_op, test_iter=100):
     #TODO: Getting params of softmax op
     return []
 
 
-def resize_op_params(blocks, current_op):
+def resize_op_params(blocks, current_op, test_iter=100):
     #TODO: Getting params of resize op
     return []
 
 
-def fc_op_params(blocks, current_op, isbias):
+def fc_op_params(blocks, current_op, isbias, test_iter=100):
     """Getting params of fc op
     Note: 
         fc op is converted to conv op with 1x1 kernels
     Args:
-        blocks, current block
-        current_op, current op
+        blocks: BlockDesc, current block
+        current_op: OpDesc, current op
+        test_iter: test times
     Returns:
-        list, op name and hyperparamters
+        tmp: list, op name and hyperparamters
     """
     # op name, clusters, threads, test_iters
-    tmp = ['conv', 0, 1, 100]
+    tmp = ['conv', 0, 1, test_iter]
     # flag bias
     tmp.append(int(isbias))
     # flag relu
@@ -250,7 +256,7 @@ def write_lookup_table(params, output_file):
     fw.close()
 
 
-def get_ops_from_program(program, output_file=None):
+def get_ops_from_program(program, output_file=None, test_iter=100):
     """Getting ops params from a paddle program
     Args:
         program, fluid program desc
@@ -264,32 +270,32 @@ def get_ops_from_program(program, output_file=None):
     while i < len(blocks.ops):
         current_op = blocks.ops[i]
         if current_op.type in ['conv2d', 'depthwise_conv2d']:
-            tmp = conv_op_params(blocks, current_op)
+            tmp = conv_op_params(blocks, current_op, test_iter)
         elif current_op.type in [
                 'elementwise_add', 'elementwise_mul', 'elementwise_max'
         ]:
-            tmp = eltwise_op_params(blocks, current_op)
+            tmp = eltwise_op_params(blocks, current_op, test_iter)
         elif current_op.type in [
                 'relu', 'prelu', 'sigmoid', 'relu6', 'elu', 'brelu',
                 'leaky_relu'
         ]:
-            tmp = activation_op_params(blocks, current_op)
+            tmp = activation_op_params(blocks, current_op, test_iter)
         elif current_op.type == 'pool2d':
-            tmp = pooling_op_params(blocks, current_op)
+            tmp = pooling_op_params(blocks, current_op, test_iter)
         elif current_op.type == 'softmax':
-            tmp = softmax_op_params(blocks, current_op)
+            tmp = softmax_op_params(blocks, current_op, test_iter)
         elif current_op.type == 'image_resize':
-            tmp = resize_op_params(blocks, current_op)
+            tmp = resize_op_params(blocks, current_op, test_iter)
         elif current_op.type == 'mul':
             try:
                 next_op = blocks.ops[i + 1]
                 if next_op.type == 'elementwise_add':
-                    tmp = fc_op_params(blocks, current_op, True)
+                    tmp = fc_op_params(blocks, current_op, True, test_iter)
                     i = i + 1
                 else:
-                    tmp = fc_op_params(blocks, current_op, False)
+                    tmp = fc_op_params(blocks, current_op, False, test_iter)
             except:
-                tmp = fc_op_params(blocks, current_op, False)
+                tmp = fc_op_params(blocks, current_op, False, test_iter)
         else:
             tmp = []
             #print('{} op is not support right now...'.format(current_op.type))

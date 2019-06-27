@@ -97,9 +97,9 @@ class LightNASSpace(SearchSpace):
                                        num_filters,
                                        s,
                                        ifshortcut=False,
-                                       ifse=False):
+                                       ifse=False,
+                                       test_iter=100):
         """Get ops of possible repeated inverted residual unit
-        
         Args:
             in_c: list, a list of numbers of input channels
             in_shape: int, size of input feature map
@@ -108,6 +108,7 @@ class LightNASSpace(SearchSpace):
             s: int, stride of depthwise conv
             ifshortcut: bool
             ifse: bool
+            test_iter: int, running times when estimating latency of op
         Returns:
             op_params: list, a list of op params
         """
@@ -115,51 +116,54 @@ class LightNASSpace(SearchSpace):
         for c in in_c:
             for t in expansion:
                 # expansion
-                op_params.append(('conv', 0, 1, 100, 0, 0, 1, c, in_shape,
+                op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, c, in_shape,
                                   in_shape, c * t, 1, 1, 0, 1, 1))
-                op_params.append(('activation', 0, 1, 100, 'relu6', 1, c * t,
-                                  in_shape, in_shape))
+                op_params.append(('activation', 0, 1, test_iter, 'relu6', 1,
+                                  c * t, in_shape, in_shape))
 
                 # depthwise
                 for k in kernels:
                     op_params.append(
-                        ('conv', 0, 1, 100, 0, 0, 1, c * t, in_shape, in_shape,
-                         c * t, c * t, k, (int(k - 1) / 2), s, 1))
-                op_params.append(('activation', 0, 1, 100, 'relu6', c * t,
+                        ('conv', 0, 1, test_iter, 0, 0, 1, c * t, in_shape,
+                         in_shape, c * t, c * t, k, (int(k - 1) / 2), s, 1))
+                op_params.append(('activation', 0, 1, test_iter, 'relu6', c * t,
                                   in_shape / s, in_shape / s))
 
                 # shrink
                 for out_c in num_filters:
                     op_params.append(
-                        ('conv', 0, 1, 100, 0, 0, 1, c * t, in_shape / s,
+                        ('conv', 0, 1, test_iter, 0, 0, 1, c * t, in_shape / s,
                          in_shape / s, out_c, 1, 1, 0, 1, 1))
 
                     # shortcut
                     if ifshortcut:
-                        op_params.append(('eltwise', 0, 1, 100, 1, 'None', 1,
-                                          out_c, in_shape / s, in_shape / s))
+                        op_params.append(('eltwise', 0, 1, test_iter, 1, 'None',
+                                          1, out_c, in_shape / s, in_shape / s))
                     if ifse:
                         op_params.append(
-                            ('pooling', 0, 1, 100, 1, 1, out_c, in_shape / s,
-                             in_shape / s, 0, 0, 1, 0, 3))
-                        op_params.append(('conv', 0, 1, 100, 1, 0, 1, out_c, 1,
-                                          1, out_c / 4, 1, 1, 0, 1, 1))
+                            ('pooling', 0, 1, test_iter, 1, 1, out_c,
+                             in_shape / s, in_shape / s, 0, 0, 1, 0, 3))
                         op_params.append(
-                            ('activation', 0, 1, 100, 'relu', 1, out_c / 4))
-                        op_params.append(('conv', 0, 1, 100, 1, 0, 1, out_c / 4,
-                                          1, 1, out_c, 1, 1, 0, 1, 1))
+                            ('conv', 0, 1, test_iter, 1, 0, 1, out_c, 1, 1,
+                             out_c / 4, 1, 1, 0, 1, 1))
+                        op_params.append(('activation', 0, 1, test_iter, 'relu',
+                                          1, out_c / 4))
                         op_params.append(
-                            ('activation', 0, 1, 100, 'sigmoid', 1, out_c))
-                        op_params.append(('eltwise', 0, 1, 100, 2, 'None', 1,
-                                          out_c, in_shape / s, in_shape / s))
+                            ('conv', 0, 1, test_iter, 1, 0, 1, out_c / 4, 1, 1,
+                             out_c, 1, 1, 0, 1, 1))
+                        op_params.append(('activation', 0, 1, test_iter,
+                                          'sigmoid', 1, out_c))
+                        op_params.append(('eltwise', 0, 1, test_iter, 2, 'None',
+                                          1, out_c, in_shape / s, in_shape / s))
 
         return op_params
 
-    def get_all_ops(self, ifshortcut=False, ifse=False):
+    def get_all_ops(self, ifshortcut=False, ifse=False, test_iter=100):
         """Get all possible ops of current search space
         Args:
             ifshortcut: bool, shortcut or not
             ifse: bool, se or not
+            test_iter: int, running times of op when estimating latency
         Returns:
             op_params: list, a list of all possible params
         """
@@ -167,12 +171,13 @@ class LightNASSpace(SearchSpace):
         # strides for seven bottlenecks
         strides = [1, 2, 2, 2, 1, 2, 1]
         # conv1_1
-        op_params.append(('conv', 0, 1, 100, 0, 0, 1, image_shape[0],
+        op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, image_shape[0],
                           image_shape[1], image_shape[2], 32, 1, 3, 1, 2, 1))
-        op_params.append(('activation', 0, 1, 100, 'relu6', 1, 32, 112, 112))
+        op_params.append(
+            ('activation', 0, 1, test_iter, 'relu6', 1, 32, 112, 112))
 
         # bottlenecks, TODO: different h and w for images
-        in_c, in_shape = [32], image_shape[1] / 2
+        in_c, in_shape = [32], image_shape[0] / 2
         for i in range(7):
             if i == 0:
                 expansion, kernels, num_filters, s = [1], [3], [16], strides[i]
@@ -186,7 +191,8 @@ class LightNASSpace(SearchSpace):
 
             # first block
             tmp_ops = self._ops_of_inverted_residual_unit(
-                in_c, in_shape, expansion, kernels, num_filters, s, False, ifse)
+                in_c, in_shape, expansion, kernels, num_filters, s, False, ifse,
+                test_iter)
             op_params = op_params + tmp_ops
 
             in_c, in_shape = num_filters, in_shape / s
@@ -194,17 +200,18 @@ class LightNASSpace(SearchSpace):
             # repeated block: possibly more ops, but it is ok
             tmp_ops = self._ops_of_inverted_residual_unit(
                 in_c, in_shape, expansion, kernels, num_filters, s, ifshortcut,
-                ifse)
+                ifse, test_iter)
             op_params = op_params + tmp_ops
 
         # last conv
+        op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, 320, in_shape,
+                          in_shape, 1280, 1, 1, 0, 1, 1))
         op_params.append(
-            ('conv', 0, 1, 100, 0, 0, 1, 320, 7, 7, 1280, 1, 1, 0, 1, 1))
-        op_params.append(('activation', 0, 1, 100, 'relu6', 1, 1280, 7, 7))
-        op_params.append(
-            ('pooling', 0, 1, 100, 1, 1, 1280, 7, 7, 7, 0, 1, 0, 3))
-        op_params.append(
-            ('conv', 0, 1, 100, 1, 0, 1, 1280, 1, 1, class_dim, 1, 1, 0, 1, 1))
+            ('activation', 0, 1, 100, 'relu6', 1, 1280, in_shape, in_shape))
+        op_params.append(('pooling', 0, 1, test_iter, 1, 1, 1280, in_shape,
+                          in_shape, in_shape, 0, 1, 0, 3))
+        op_params.append(('conv', 0, 1, test_iter, 1, 0, 1, 1280, 1, 1,
+                          class_dim, 1, 1, 0, 1, 1))
 
         return list(set(op_params))
 
