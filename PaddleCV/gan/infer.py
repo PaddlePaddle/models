@@ -27,6 +27,7 @@ import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator
+from util.utility import check_attribute_conflict
 import copy
 
 parser = argparse.ArgumentParser(description=__doc__)
