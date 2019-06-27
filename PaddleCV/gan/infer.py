@@ -86,12 +86,22 @@ def infer(args):
         from network.STGAN_network import STGAN_model
         model = STGAN_model()
         fake, _ = model.network_G(
-            input, label_org_, label_trg_, cfg=args, name='net_G')
+            input,
+            label_org_,
+            label_trg_,
+            cfg=args,
+            name='generator',
+            is_test=True)
     elif args.model_net == 'AttGAN':
         from network.AttGAN_network import AttGAN_model
         model = AttGAN_model()
         fake, _ = model.network_G(
-            input, label_org_, label_trg_, cfg=args, name='net_G')
+            input,
+            label_org_,
+            label_trg_,
+            cfg=args,
+            name='generator',
+            is_test=True)
     else:
         raise NotImplementedError("model_net {} is not support".format(
             args.model_net))
