@@ -27,31 +27,42 @@ def get_args():
     """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--ops_path', default='ops.txt', help='Input ops path.')
-    parser.add_argument('--ops_latency_path',
-                        default='ops_latency.txt',
-                        help='Output ops latency path.')
+    parser.add_argument(
+        '--platform', default='android', help='Platform: android/ios/custom.')
+    parser.add_argument(
+        '--ops_latency_path',
+        default='ops_latency.txt',
+        help='Output ops latency path.')
     args = parser.parse_args()
     return args
 
 
-def get_op_latency(op):
+def get_op_latency(op, platform):
     """Get model latency.
 
     Args:
         op: list, a list of str represents the op and its parameters.
+        platform: str, platform name.
 
     Returns:
         float, op latency.
     """
-    commands = 'adb shell data/local/tmp/get_{}_latency {}'.format(
-        op[0], ' '.join(op[1:]))
-    proc = subprocess.Popen(commands,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            shell=True)
-    out = proc.communicate()[1]
-    out = [_ for _ in out.split('\n') if 'time' in _][-1]
-    out = re.findall(r'\d+\.?\d*', out)[-2]
+    if platform == 'android':
+        commands = 'adb shell data/local/tmp/get_{}_latency {}'.format(
+            op[0], ' '.join(op[1:]))
+        proc = subprocess.Popen(
+            commands,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True)
+        out = proc.communicate()[1]
+        out = [_ for _ in out.split('\n') if 'time' in _][-1]
+        out = re.findall(r'\d+\.?\d*', out)[-2]
+    elif platform == 'ios':
+        out = 0
+    else:
+        print('Please define `get_op_latency` for {} platform'.format(platform))
+        out = 0
     return out
 
 
@@ -61,7 +72,7 @@ def main():
     ops = [line.split() for line in open(args.ops_path)]
     fid = open(args.ops_latency_path, 'w')
     for op in ops:
-        latency = get_op_latency(op)
+        latency = get_op_latency(op, args.platform)
         fid.write('{} {}\n'.format(' '.join(op), latency))
     fid.close()
 
