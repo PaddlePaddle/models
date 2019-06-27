@@ -40,7 +40,7 @@ Supported Architectures:
 | Mask R-CNN         | ✓      |                             ✓ | ✓       | ✓     | ✗         | ✗       |
 | Mask R-CNN + FPN   | ✓      |                             ✓ | ✓       | ✓     | ✗         | ✗       |
 | Cascade R-CNN      | ✓      |                             ✓ | ✓       | ✓     | ✗         | ✗       |
-| RetinaNet          | ✓      |                             ✓ | ✓       | ✓     | ✗         | ✗       |
+| RetinaNet          | ✓      |                             ✗ | ✗       | ✗     | ✗         | ✗       |
 | Yolov3             | ✓      |                             ✗ | ✗       | ✗     | ✓         | ✓       |
 | SSD                | ✗      |                             ✗ | ✗       | ✗     | ✓         | ✗       |
 
