@@ -132,6 +132,7 @@ def infer(args):
             args, shuffle=False, return_name=True)
         for data in zip(reader_test()):
             real_img, label_org, name = data[0]
+            attr_names = args.selected_attrs.split(',')
             print("read {}".format(name))
             label_trg = copy.deepcopy(label_org)
             tensor_img = fluid.LoDTensor()
@@ -147,6 +148,8 @@ def infer(args):
                 label_trg_tmp = copy.deepcopy(label_trg)
                 for j in range(len(label_org)):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
+                    label_trg_tmp = check_attribute_conflict(
+                        label_trg_tmp, attr_names[i], attr_names)
                 label_trg_ = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
                 for j in range(len(label_org)):

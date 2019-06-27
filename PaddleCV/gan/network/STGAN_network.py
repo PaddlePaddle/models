@@ -100,7 +100,7 @@ class STGAN_model(object):
                 activation_fn='leaky_relu',
                 name=name + str(i),
                 use_bias=False,
-                relufactor=0.2,
+                relufactor=0.01,
                 initial='kaiming',
                 is_test=is_test)
             zs.append(z)
@@ -180,7 +180,7 @@ class STGAN_model(object):
                     padding_type='SAME',
                     name=name + str(i),
                     activation_fn='tanh',
-                    use_bias=False,
+                    use_bias=True,
                     initial='kaiming',
                     is_test=is_test)
         return x
@@ -207,7 +207,7 @@ class STGAN_model(object):
                 activation_fn='leaky_relu',
                 name=name + str(i),
                 use_bias=True,
-                relufactor=0.2,
+                relufactor=0.01,
                 initial='kaiming')
 
         logit_gan = linear(
@@ -246,7 +246,7 @@ class STGAN_model(object):
             2,
             padding_type='SAME',
             name=name + '_deconv2d',
-            use_bias=False,
+            use_bias=True,
             initial='kaiming',
             is_test=is_test,
         )  # upsample and make `channel` identical to `out_channel`
@@ -258,7 +258,7 @@ class STGAN_model(object):
             norm=norm,
             activation_fn='sigmoid',
             padding_type='SAME',
-            use_bias=False,
+            use_bias=True,
             name=name + '_reset_gate',
             initial='kaiming',
             is_test=is_test)
@@ -270,7 +270,7 @@ class STGAN_model(object):
             norm=norm,
             activation_fn='sigmoid',
             padding_type='SAME',
-            use_bias=False,
+            use_bias=True,
             name=name + '_update_gate',
             initial='kaiming',
             is_test=is_test)
@@ -284,7 +284,7 @@ class STGAN_model(object):
             activation_fn='tanh',
             name=name + '_info',
             padding_type='SAME',
-            use_bias=False,
+            use_bias=True,
             initial='kaiming',
             is_test=is_test)
         output = (1 - update_gate) * state_ + update_gate * new_info
