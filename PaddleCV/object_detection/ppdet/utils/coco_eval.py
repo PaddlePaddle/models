@@ -185,9 +185,9 @@ def mask2out(results, clsid2catid, resolution, thresh_binarize=0.5):
                 im_mask = np.zeros((im_h, im_w), dtype=np.uint8)
 
                 x0 = min(max(xmin, 0), im_w)
-                x1 = min(xmax + 1, im_w)
+                x1 = min(max(xmax + 1, 0), im_w)
                 y0 = min(max(ymin, 0), im_h)
-                y1 = min(ymax + 1, im_h)
+                y1 = min(max(ymax + 1, 0), im_h)
 
                 im_mask[y0:y1, x0:x1] = resized_mask[(y0 - ymin):(y1 - ymin), (
                     x0 - xmin):(x1 - xmin)]
