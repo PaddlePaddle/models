@@ -1,5 +1,4 @@
 import os
-import pickle
 import numpy
 from collections import Counter
 import shutil
@@ -23,7 +22,7 @@ def get_raw_data():
 
 def split_data():
     split_rate_ = 0.9
-    dir_train_file_idx_ = 'aid_data/train_file_idx.pkl2'
+    dir_train_file_idx_ = 'aid_data/train_file_idx.txt'
     filelist_ = [
         'raw_data/part-%d' % x for x in range(len(os.listdir('raw_data')))
     ]
@@ -32,10 +31,11 @@ def split_data():
         train_file_idx = list(
             numpy.random.choice(
                 len(filelist_), int(len(filelist_) * split_rate_), False))
-        with open(dir_train_file_idx_, 'wb') as fout:
-            pickle.dump(train_file_idx, fout)
+        with open(dir_train_file_idx_, 'w') as fout:
+            fout.write(str(train_file_idx))
     else:
-        train_file_idx = pickle.load(open(dir_train_file_idx_, 'rb'))
+        with open(dir_train_file_idx_, 'r') as fin:
+            train_file_idx = eval(fin.read())
 
     for idx in range(len(filelist_)):
         if idx in train_file_idx:
@@ -46,7 +46,7 @@ def split_data():
 
 def get_feat_dict():
     freq_ = 10
-    dir_feat_dict_ = 'aid_data/feat_dict_' + str(freq_) + '.pkl2'
+    dir_feat_dict_ = 'aid_data/feat_dict_' + str(freq_) + '.txt'
     continuous_range_ = range(1, 14)
     categorical_range_ = range(14, 40)
 
@@ -90,8 +90,8 @@ def get_feat_dict():
                         tc += 1
 
         # Save dictionary
-        with open(dir_feat_dict_, 'wb') as fout:
-            pickle.dump(feat_dict, fout)
+        with open(dir_feat_dict_, 'w') as fout:
+            fout.write(str(feat_dict))
         print('args.num_feat ', len(feat_dict) + 1)
 
 

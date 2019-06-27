@@ -16,7 +16,6 @@ This model implementation reproduces the result of the paper "DeepFM: A Factoriz
 
 ## Environment
 - PaddlePaddle 1.5
-- Python 2.7
 
 ## Download and preprocess data
 
