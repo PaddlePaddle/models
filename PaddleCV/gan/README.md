@@ -131,7 +131,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 Pix2Pix和CycleGAN的效果如图所示：
 
 <p align="centor">
-    <img src = "https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/gan/images/pix2pix_cyclegan.png" width=550><br/>
+    <img src = "images/pix2pix_cyclegan.png" width=550><br/>
     Pix2Pix和CycleGAN的效果图
 </p>
 
@@ -139,7 +139,7 @@ Pix2Pix和CycleGAN的效果如图所示：
 StarGAN，AttGAN和STGAN的效果如图所示：
 
 <p align="centor">
-    <img src = "https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/gan/images/female_stargan_attgan_stgan.png" width=550><br/>
+    <img src = "images/female_stargan_attgan_stgan.png" width=550><br/>
     StarGAN,AttGAN和STGAN的效果图
 </p>
 
@@ -182,7 +182,7 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 - Pix2Pix由一个生成网络和一个判别网络组成。生成网络中编码部分的网络结构都是采用`convolution-batch norm-ReLU`作为基础结构，解码部分的网络结构由`transpose convolution-batch norm-ReLU`组成，判别网络基本是由`convolution-norm-leaky_ReLU`作为基础结构，详细的网络结构可以查看`network/Pix2pix_network.py`文件。生成网络提供两种可选的网络结构：Unet网络结构和普通的encoder-decoder网络结构。网络利用损失函数学习从输入图像到输出图像的映射，生成网络损失函数由CGAN的损失函数和L1损失函数组成，判别网络损失函数由CGAN的损失函数组成。生成器的网络结构如下图所示：
 
 <p align="centor">
-    <img src = "https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/gan/images/pix2pix_gen.png" width=550><br/>
+    <img src = "images/pix2pix_gen.png" width=550><br/>
     Pix2Pix生成网络结构图[5]
 </p>
 
@@ -190,7 +190,7 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 - CycleGAN由两个生成网络和两个判别网络组成，生成网络A是输入A类风格的图片输出B类风格的图片，生成网络B是输入B类风格的图片输出A类风格的图片。生成网络中编码部分的网络结构都是采用`convolution-norm-ReLU`作为基础结构，解码部分的网络结构由`transpose convolution-norm-ReLU`组成，判别网络基本是由`convolution-norm-leaky_ReLU`作为基础结构，详细的网络结构可以查看`network/CycleGAN_network.py`文件。生成网络提供两种可选的网络结构：Unet网络结构和普通的encoder-decoder网络结构。生成网络损失函数由CGAN的损失函数，重构损失和自身损失组成，判别网络的损失函数由CGAN的损失函数组成。
 
 <p align="centor">
-    <img src = "https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/gan/images/pix2pix_gen.png" width=550><br/>
+    <img src = "images/pix2pix_gen.png" width=550><br/>
     CycleGAN生成网络结构图[5]
 </p>
 
@@ -198,12 +198,12 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 - StarGAN中生成网络的编码部分主要由`convolution-instance norm-ReLU`组成，解码部分主要由`transpose convolution-norm-ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/StarGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
 
 <p align="centor">
-    <img src = "https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/gan/images/stargan_gen.png" width=300><br/>
+    <img src = "images/stargan_gen.png" width=300><br/>
     StarGAN生成网络结构[7]
 </p>
 
 <p align="centor">
-    <img src = "https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/gan/images/stargan_dis.png" width=300><br/>
+    <img src = "images/stargan_dis.png" width=300><br/>
     StarGAN判别网络结构[7]
 </p>
 
@@ -212,7 +212,7 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 - AttGAN中生成网络的编码部分主要由`convolution-instance norm-ReLU`组成，解码部分由`transpose convolution-norm-ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/AttGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
 
 <p align="centor">
-    <img src = "https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/gan/images/attgan_net.png" width=800><br/>
+    <img src = "images/attgan_net.png" width=800><br/>
     AttGAN的网络结构[8]
 </p>
 
@@ -220,7 +220,7 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 - STGAN中生成网络再编码器和解码器之间加入Selective Transfer Units\(STU\)，有选择的转换编码网络，从而更好的适配解码网络。生成网络中的编码网络主要由`convolution-instance norm-ReLU`组成，解码网络主要由`transpose convolution-norm-leaky_ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/STGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
 
 <p align="centor">
-    <img src = "https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/gan/images/stgan_net.png" width=550><br/>
+    <img src = "images/stgan_net.png" width=550><br/>
     STGAN的网络结构[9]
 </p>
 
