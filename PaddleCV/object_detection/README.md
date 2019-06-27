@@ -7,7 +7,7 @@ flexible, catering to research needs.
 
 
 <div align="center">
-  <img src="demo/output/000000523957.jpg" />
+  <img src="demo/output/000000570688.jpg" />
 </div>
 
 
@@ -72,8 +72,8 @@ be saved in `output/`.
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
 python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
-    -o weights=http://
-    -infer_img=demo/000000523957.jpg
+    -o weights=https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_r50_1x.tar
+    -infer_img=demo/000000570688.jpg
 ```
 
 For detailed training and evaluation workflow, please refer to [GETTING_STARTED.md](docs/GETTING_STARTED.md).

@@ -57,7 +57,7 @@ moment, but it is a planned feature
 export CUDA_VISIBLE_DEVICES=0
 # or run on CPU with:
 # export CPU_NUM=1
-python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/000000000139.jpg
+python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/000000570688.jpg
 ```
 
 - Batch inference:
