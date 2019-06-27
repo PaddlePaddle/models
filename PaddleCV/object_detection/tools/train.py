@@ -22,8 +22,8 @@ import multiprocessing
 import numpy as np
 
 
-def set_paddle_flags(flags):
-    for key, value in flags.items():
+def set_paddle_flags(**kwargs):
+    for key, value in kwargs.items():
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
 
@@ -31,9 +31,9 @@ def set_paddle_flags(flags):
 # NOTE(paddle-dev): All of these flags should be
 # set before `import paddle`. Otherwise, it would
 # not take any effect. 
-set_paddle_flags({
-    'FLAGS_eager_delete_tensor_gb': 0,  # enable GC to save memory
-})
+set_paddle_flags(
+    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
+)
 
 from paddle import fluid
 
@@ -124,7 +124,7 @@ def main():
     # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
-    build_strategy.enable_inplace = False
+    build_strategy.enable_inplace = True
     sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     build_strategy.sync_batch_norm = sync_bn
     train_compile_program = fluid.compiler.CompiledProgram(

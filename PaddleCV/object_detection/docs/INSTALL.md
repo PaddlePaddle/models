@@ -118,4 +118,4 @@ cd dataset/voc
 If you set up models while `data/coc` and `data/voc` is not found, PaddleDetection will automaticaly download them from [MSCOCO-2017](http://images.cocodataset.org) and [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC), the decompressed datasets will be places in `~/.cache/paddle/dataset/` and can be discovered automaticaly in the next setting up time.
 
 
-**NOTE:** For further informations on the datasets, please see [DATASET.md](docs/DATASET.md)
+**NOTE:** For further informations on the datasets, please see [DATASET.md](DATA.md)
