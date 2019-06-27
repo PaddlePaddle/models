@@ -16,6 +16,19 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
+
+def set_paddle_flags(flags):
+    for key, value in flags.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+set_paddle_flags({
+    'FLAGS_conv_workspace_size_limit': 500,
+    'FLAGS_eager_delete_tensor_gb': 0, # enable gc
+    'FLAGS_memory_fraction_of_eager_deletion': 1,
+    'FLAGS_fraction_of_gpu_memory_to_use': 0.98
+})
+    
 import sys
 import numpy as np
 import time
