@@ -80,7 +80,7 @@ def vocall_category_info(with_background=True):
         with_background (bool, default True):
             whether load background as class 0.
     """
-    label_map = pascalvoc_label()
+    label_map = pascalvoc_label(with_background)
     label_map = sorted(label_map.items(), key=lambda x: x[1])
     cats = [l[0] for l in label_map]
 
