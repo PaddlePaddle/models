@@ -20,7 +20,6 @@ MaskRCNN:
   mask_assigner: MaskAssigner
   mask_head: MaskHead
 
-
 ResNet:
   norm_type: affine_channel
   norm_decay: true

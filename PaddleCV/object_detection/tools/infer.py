@@ -25,7 +25,7 @@ from PIL import Image
 from paddle import fluid
 
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.modeling.model_input import create_feeds
+from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
@@ -104,7 +104,7 @@ def main():
     infer_prog = fluid.Program()
     with fluid.program_guard(infer_prog, startup_prog):
         with fluid.unique_name.guard():
-            _, feed_vars = create_feeds(test_feed, use_pyreader=False)
+            _, feed_vars = create_feed(test_feed, use_pyreader=False)
             test_fetches = model.test(feed_vars)
     infer_prog = infer_prog.clone(True)
 
@@ -154,7 +154,7 @@ def main():
             bbox_results = bbox2out([res], clsid2catid, is_bbox_normalized)
         if 'mask' in res:
             mask_results = mask2out([res], clsid2catid,
-                                    cfg.MaskHead['resolution'])
+                                    model.mask_head.resolution)
 
         # visualize result
         im_ids = res['im_id'][0]

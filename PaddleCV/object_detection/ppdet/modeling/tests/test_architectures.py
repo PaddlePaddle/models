@@ -23,7 +23,7 @@ import paddle.fluid as fluid
 
 from ppdet.modeling.tests.decorator_helper import prog_scope
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.modeling.model_input import create_feeds
+from ppdet.modeling.model_input import create_feed
 
 
 class TestFasterRCNN(unittest.TestCase):
@@ -39,14 +39,14 @@ class TestFasterRCNN(unittest.TestCase):
     def test_train(self):
         train_feed = create(self.cfg['train_feed'])
         model = create(self.detector_type)
-        _, feed_vars = create_feeds(train_feed)
+        _, feed_vars = create_feed(train_feed)
         train_fetches = model.train(feed_vars)
 
     @prog_scope()
     def test_test(self):
         test_feed = create(self.cfg['eval_feed'])
         model = create(self.detector_type)
-        _, feed_vars = create_feeds(test_feed)
+        _, feed_vars = create_feed(test_feed)
         test_fetches = model.eval(feed_vars)
 
 

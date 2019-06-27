@@ -4,11 +4,11 @@ eval_feed: MaskRCNNEvalFeed
 test_feed: MaskRCNNTestFeed
 max_iters: 260000
 snapshot_iter: 10000
-use_gpu: True
+use_gpu: true
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar
-weights: output/mask_rcnn_se154_vd_fpn_s1x/model_final/ 
+weights: output/mask_rcnn_se154_vd_fpn_s1x/model_final/
 metric: COCO
 
 MaskRCNN:
@@ -26,7 +26,7 @@ SENet:
   group_width: 4
   groups: 64
   norm_type: affine_channel
-  variant: d 
+  variant: d
 
 FPN:
   max_level: 6

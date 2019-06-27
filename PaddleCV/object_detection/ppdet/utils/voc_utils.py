@@ -12,24 +12,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import os.path as osp
 import re
 import random
 import shutil
 
-devkit_dir = './VOCdevkit'
-years = ['2007', '2012']
+__all__ = ['merge_and_create_list']
 
 
-def get_dir(devkit_dir, year, type):
+def merge_and_create_list(devkit_dir, years, output_dir):
+    """
+    Merge VOC2007 and VOC2012 to output_dir and create following list:
+        1. train.txt
+        2. val.txt
+        3. test.txt
+    """
+    os.makedirs(osp.join(output_dir, 'Annotations/'))
+    os.makedirs(osp.join(output_dir, 'ImageSets/Main/'))
+    os.makedirs(osp.join(output_dir, 'JPEGImages/'))
+
+    trainval_list = []
+    test_list = []
+    for year in years:
+        trainval, test = _walk_voc_dir(devkit_dir, year, output_dir)
+        trainval_list.extend(trainval)
+        test_list.extend(test)
+
+    main_dir = osp.join(output_dir, 'ImageSets/Main/')
+    random.shuffle(trainval_list)
+    with open(osp.join(main_dir, 'train.txt'), 'w') as ftrainval:
+        for item in trainval_list:
+            ftrainval.write(item + '\n')
+
+    with open(osp.join(main_dir, 'val.txt'), 'w') as fval:
+        with open(osp.join(main_dir, 'test.txt'), 'w') as ftest:
+            ct = 0
+            for item in test_list:
+                ct += 1
+                fval.write(item + '\n')
+                if ct <= 1000:
+                    ftest.write(item + '\n')
+
+
+def _get_voc_dir(devkit_dir, year, type):
     return osp.join(devkit_dir, 'VOC' + year, type)
 
 
-def walk_dir(devkit_dir, year):
-    filelist_dir = get_dir(devkit_dir, year, 'ImageSets/Main')
-    annotation_dir = get_dir(devkit_dir, year, 'Annotations')
-    img_dir = get_dir(devkit_dir, year, 'JPEGImages')
+def _walk_voc_dir(devkit_dir, year, output_dir):
+    filelist_dir = _get_voc_dir(devkit_dir, year, 'ImageSets/Main')
+    annotation_dir = _get_voc_dir(devkit_dir, year, 'Annotations')
+    img_dir = _get_voc_dir(devkit_dir, year, 'JPEGImages')
     trainval_list = []
     test_list = []
     added = set()
@@ -51,41 +88,12 @@ def walk_dir(devkit_dir, year):
                 added.add(name_prefix)
                 ann_path = osp.join(annotation_dir, name_prefix + '.xml')
                 img_path = osp.join(img_dir, name_prefix + '.jpg')
-                new_ann_path = osp.join('./VOCdevkit/VOC_all/Annotations/',
+                new_ann_path = osp.join(output_dir, 'Annotations/',
                                         name_prefix + '.xml')
-                new_img_path = osp.join('./VOCdevkit/VOC_all/JPEGImages/',
+                new_img_path = osp.join(output_dir, 'JPEGImages/',
                                         name_prefix + '.jpg')
                 shutil.copy(ann_path, new_ann_path)
                 shutil.copy(img_path, new_img_path)
                 img_ann_list.append(name_prefix)
 
     return trainval_list, test_list
-
-
-def prepare_filelist(devkit_dir, years, output_dir):
-    os.makedirs('./VOCdevkit/VOC_all/Annotations/')
-    os.makedirs('./VOCdevkit/VOC_all/ImageSets/Main/')
-    os.makedirs('./VOCdevkit/VOC_all/JPEGImages/')
-    trainval_list = []
-    test_list = []
-    for year in years:
-        trainval, test = walk_dir(devkit_dir, year)
-        trainval_list.extend(trainval)
-        test_list.extend(test)
-    random.shuffle(trainval_list)
-    with open(osp.join(output_dir, 'train.txt'), 'w') as ftrainval:
-        for item in trainval_list:
-            ftrainval.write(item + '\n')
-
-    with open(osp.join(output_dir, 'val.txt'), 'w') as fval:
-        with open(osp.join(output_dir, 'test.txt'), 'w') as ftest:
-            ct = 0
-            for item in test_list:
-                ct += 1
-                fval.write(item + '\n')
-                if ct <= 1000:
-                    ftest.write(item + '\n')
-
-
-if __name__ == '__main__':
-    prepare_filelist(devkit_dir, years, '.')
