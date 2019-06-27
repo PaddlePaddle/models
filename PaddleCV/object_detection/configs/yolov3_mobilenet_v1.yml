@@ -19,7 +19,7 @@ MobileNet:
   norm_type: sync_bn
   norm_decay: 0.
   conv_group_scale: 1
-  with_extra_blocks: false
+  with_extra_blocks: False
 
 YOLOv3Head:
   anchor_masks: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
@@ -28,13 +28,13 @@ YOLOv3Head:
             [116, 90], [156, 198], [373, 326]]
   norm_decay: 0.
   ignore_thresh: 0.7
-  label_smooth: true
+  label_smooth: True
   nms:
     background_label: -1
     keep_top_k: 100
     nms_threshold: 0.45
     nms_top_k: 1000
-    normalized: false
+    normalized: False
     score_threshold: 0.01
   num_classes: 80
 
@@ -66,7 +66,7 @@ YoloTrainFeed:
     image_dir: train2017
   num_workers: 8
   bufsize: 128
-  use_process: true
+  use_process: True
 
 YoloEvalFeed:
   batch_size: 8

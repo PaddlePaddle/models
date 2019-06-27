@@ -5,7 +5,7 @@ eval_feed: SSDEvalFeed
 test_feed: SSDTestFeed
 pretrain_weights: ./ssd3/
 
-use_gpu: true
+use_gpu: True
 snapshot_iter: 2000
 log_smooth_window: 1
 metric: VOC
@@ -18,7 +18,7 @@ SSD:
   num_classes: 21
   metric:
     ap_version: 11point
-    evaluate_difficult: false
+    evaluate_difficult: False
     overlap_threshold: 0.5
   output_decoder:
     background_label: 0
@@ -32,12 +32,12 @@ MobileNet:
   norm_decay: 0.
   conv_group_scale: 1
   extra_block_filters: [[256, 512], [128, 256], [128, 256], [64, 128]]
-  with_extra_blocks: true
+  with_extra_blocks: True
 
 MultiBoxHead:
   aspect_ratios: [[2.], [2., 3.], [2., 3.], [2., 3.], [2., 3.], [2., 3.]]
   base_size: 300
-  flip: true
+  flip: True
   max_ratio: 90
   max_sizes: [[], 150.0, 195.0, 240.0, 285.0, 300.0]
   min_ratio: 20
@@ -60,25 +60,25 @@ OptimizerBuilder:
 
 SSDTrainFeed:
   batch_size: 32
-  use_process: true
+  use_process: True
   dataset:
     dataset_dir: dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
     image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: true
+    use_default_label: True
 
 SSDEvalFeed:
   batch_size: 64
-  use_process: true
+  use_process: True
   dataset:
     dataset_dir: dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
     image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: true
-  drop_last: false
+    use_default_label: True
+  drop_last: False
 
 SSDTestFeed:
   batch_size: 1
   dataset:
-    use_default_label: true
-  drop_last: false
+    use_default_label: True
+  drop_last: False

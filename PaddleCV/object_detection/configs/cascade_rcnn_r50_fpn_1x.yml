@@ -4,7 +4,7 @@ eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 90000
 snapshot_iter: 10000
-use_gpu: true
+use_gpu: True
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
@@ -114,9 +114,9 @@ FasterRCNNTrainFeed:
     dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
-  drop_last: false
+  drop_last: False
   num_workers: 2
-  shuffle: true
+  shuffle: True
 
 FasterRCNNEvalFeed:
   batch_size: 1
@@ -135,6 +135,6 @@ FasterRCNNTestFeed:
     pad_to_stride: 32
   dataset:
     annotation: annotations/instances_val2017.json
-  drop_last: false
+  drop_last: False
   num_workers: 2
-  shuffle: false
+  shuffle: False

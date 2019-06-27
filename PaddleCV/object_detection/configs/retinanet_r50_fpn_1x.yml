@@ -28,7 +28,7 @@ FPN:
   min_level: 3
   num_chan: 256
   spatial_scale: [0.03125, 0.0625, 0.125]
-  has_extra_convs: true
+  has_extra_convs: True
 
 RetinaHead:
   num_convs_per_octave: 4
