@@ -122,10 +122,79 @@ class LightNASSpace(SearchSpace):
             2, 4, 3, 3, 2, 2, 2
         ]
 
+    def _ops_of_inverted_residual_unit(self,
+                                       in_c,
+                                       in_shape,
+                                       expansion,
+                                       kernels,
+                                       num_filters,
+                                       s,
+                                       ifshortcut=False,
+                                       ifse=False):
+        """Get ops of possible repeated inverted residual unit
+        
+        Args:
+            in_c: list, a list of numbers of input channels
+            in_shape: int, size of input feature map
+            expansion: int, expansion factor
+            kernels: list, a list of possible kernel size
+            s: int, stride of depthwise conv
+            ifshortcut: bool
+            ifse: bool
+        Returns:
+            op_params: list, a list of op params
+        """
+        op_params = []
+        for c in in_c:
+            for t in expansion:
+                # expansion
+                op_params.append(('conv', 0, 1, 100, 0, 0, 1, c, in_shape,
+                                  in_shape, c * t, 1, 1, 0, 1, 1))
+                op_params.append(('activation', 0, 1, 100, 'relu6', 1, c * t,
+                                  in_shape, in_shape))
+
+                # depthwise
+                for k in kernels:
+                    op_params.append(
+                        ('conv', 0, 1, 100, 0, 0, 1, c * t, in_shape, in_shape,
+                         c * t, c * t, k, (int(k - 1) / 2), s, 1))
+                op_params.append(('activation', 0, 1, 100, 'relu6', c * t,
+                                  in_shape / s, in_shape / s))
+
+                # shrink
+                for out_c in num_filters:
+                    op_params.append(
+                        ('conv', 0, 1, 100, 0, 0, 1, c * t, in_shape / s,
+                         in_shape / s, out_c, 1, 1, 0, 1, 1))
+
+                    # shortcut
+                    if ifshortcut:
+                        op_params.append(('eltwise', 0, 1, 100, 1, 'None', 1,
+                                          out_c, in_shape / s, in_shape / s))
+                    if ifse:
+                        op_params.append(
+                            ('pooling', 0, 1, 100, 1, 1, out_c, in_shape / s,
+                             in_shape / s, 0, 0, 1, 0, 3))
+                        op_params.append(('conv', 0, 1, 100, 1, 0, 1, out_c, 1,
+                                          1, out_c / 4, 1, 1, 0, 1, 1))
+                        op_params.append(
+                            ('activation', 0, 1, 100, 'relu', 1, out_c / 4))
+                        op_params.append(('conv', 0, 1, 100, 1, 0, 1, out_c / 4,
+                                          1, 1, out_c, 1, 1, 0, 1, 1))
+                        op_params.append(
+                            ('activation', 0, 1, 100, 'sigmoid', 1, out_c))
+                        op_params.append(('eltwise', 0, 1, 100, 2, 'None', 1,
+                                          out_c, in_shape / s, in_shape / s))
+
+        return op_params
+
     def get_all_ops(self, ifshortcut=False, ifse=False):
         """Get all possible ops of current search space
+        Args:
+            ifshortcut: bool, shortcut or not
+            ifse: bool, se or not
         Returns:
-            list, op_params
+            op_params: list, a list of all possible params
         """
         op_params = []
         # strides for seven bottlenecks
@@ -147,34 +216,20 @@ class LightNASSpace(SearchSpace):
                                                      NAS_KERNEL_SIZE, \
                                                      NAS_FILTER_SIZE[i-1], \
                                                      strides[i]
-            for c in in_c:
-                for t in expansion:
-                    # expansion 
-                    op_params.append(('conv', 0, 1, 100, 0, 0, 1, c, in_shape,
-                                      in_shape, c * t, 1, 1, 0, 1, 1))
-                    op_params.append(('activation', 0, 1, 100, 'relu6', 1,
-                                      c * t, in_shape, in_shape))
-                    # depthwise
-                    for k in kernels:
-                        op_params.append(
-                            ('conv', 0, 1, 100, 0, 0, 1, c * t, in_shape,
-                             in_shape, c * t, c * t, k, (int(k - 1) / 2), s, 1))
-                    op_params.append(('activation', 0, 1, 100, 'relu6', c * t,
-                                      in_shape / s, in_shape / s))
 
-                    # shrink
-                    for out_c in num_filters:
-                        op_params.append(
-                            ('conv', 0, 1, 100, 0, 0, 1, c * t, in_shape / s,
-                             in_shape / s, out_c, 1, 1, 0, 1, 1))
+            # first block
+            tmp_ops = _ops_of_inverted_residual_unit(in_c, in_shape, expansion,
+                                                     kernels, num_filters, s,
+                                                     ifshortcut, ifse)
+            op_params = op_params + tmp_ops
 
-                        # shortcut
-                        if ifshortcut:
-                            pass
-
-                        if ifse:
-                            pass
             in_c, in_shape = num_filters, in_shape / s
+
+            # repeated block: possibly more ops, but it is ok
+            tmp_ops = _ops_of_inverted_residual_unit(in_c, in_shape, expansion,
+                                                     kernels, num_filters, s,
+                                                     ifshortcut, ifse)
+            op_params = op_params + tmp_ops
 
         # last conv
         op_params.append(

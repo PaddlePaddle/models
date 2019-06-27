@@ -135,7 +135,8 @@ def activation_op_params(blocks, current_op):
     tmp.append(1)
     # input channels, height, width
     in_shapes = blocks.vars[current_op.input('X')[0]].shape
-    tmp = tmp + [int(in_shapes[1]), int(in_shapes[2]), int(in_shapes[3])]
+    for i in range(1, len(in_shapes)):
+        tmp.append(int(in_shapes[i]))
     return tmp
 
 
