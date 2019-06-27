@@ -4,8 +4,8 @@ eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 90000
 use_gpu: True
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
-weights: output/retinanet_r50_fpn_1x/model_final
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.tar
+weights: output/retinanet_r101_fpn_1x/model_final
 log_smooth_window: 20
 snapshot_iter: 10000
 metric: COCO
@@ -19,7 +19,7 @@ RetinaNet:
 ResNet:
   norm_type: affine_channel
   norm_decay: 0.
-  depth: 50
+  depth: 101
   feature_maps: [3, 4, 5]
   freeze_at: 2
 
