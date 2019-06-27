@@ -71,7 +71,7 @@ git clone https://github.com/PaddlePaddle/models
 cd models/PaddleCV/object_detection
 ```
 
-**Install python dependencies:**
+**Install Python dependencies:**
 
 Required python packages are specified in [requirements.txt](./requirements.txt), and can be installed with:
 

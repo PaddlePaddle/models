@@ -30,8 +30,8 @@ Most of the functionality is exposed in `ppdet.core.workspace` module.
     -   `__inject__`: A list of constructor arguments, which are intended to take module instances as input, module instances will be created at runtime an injected. The corresponding configuration value can be a class name string, a serialized object, a config key pointing to a serialized object, or a dict (in which case the constructor needs to handle it, see example below).
     -   `__op__`: Shortcut for wrapping PaddlePaddle operators into a callable objects, together with `__append_doc__` (extracting docstring from target PaddlePaddle operator automatically), this can be a real time saver.
 -   `serializable`: This decorator make a class directly serializable in yaml config file, by taking advantage of [pyyaml](https://pyyaml.org/wiki/PyYAMLDocumentation)'s serialization mechanism.
--   `create`: constructs a module instance according to global configuration.
--   `load_config` and `merge_config`: for loading yaml file and merge config settings from command line.
+-   `create`: Constructs a module instance according to global configuration.
+-   `load_config` and `merge_config`: Loading yaml file and merge config settings from command line.
 
 
 ## Example

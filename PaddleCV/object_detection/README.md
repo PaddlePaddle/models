@@ -25,7 +25,7 @@ preprocess pipelines, can be easily customized with simple configuration
 changes.
 
 - Performance Optimized:
-with the help of the underlying PaddlePaddle framework, faster training and
+With the help of the underlying PaddlePaddle framework, faster training and
 reduced GPU memory footprint is achieved. Notably, Yolo V3 training is
 much faster compared to other frameworks. Another example is Mask-RCNN
 (ResNet50), we managed to fit up to 5 images per GPU (V100 16GB) during
@@ -48,9 +48,9 @@ Supported Architectures:
 
 Advanced Features:
 
-- [x] **Synchronized batch norm**: currently used by Yolo V3.
+- [x] **Synchronized Batch Norm**: currently used by Yolo V3.
 - [x] **Group Norm**: pretrained models to be released.
-- [x] **Modulated deformable convolution**: pretrained models to be released.
+- [x] **Modulated Deformable Convolution**: pretrained models to be released.
 - [x] **Deformable PSRoI Pooling**: pretrained models to be released.
 
 
