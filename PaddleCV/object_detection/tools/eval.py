@@ -49,8 +49,8 @@ def main():
     if cfg.use_gpu:
         devices_num = fluid.core.get_cuda_device_count()
     else:
-        devices_num = int(os.environ.get('CPU_NUM',
-                                         multiprocessing.cpu_count()))
+        devices_num = int(
+            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     if 'eval_feed' not in cfg:
         eval_feed = create(main_arch + 'EvalFeed')
@@ -61,8 +61,7 @@ def main():
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    # 2. build program
-    # get detector and losses
+    # build program
     model = create(main_arch)
     startup_prog = fluid.Program()
     eval_prog = fluid.Program()
@@ -75,7 +74,7 @@ def main():
     reader = create_reader(eval_feed)
     pyreader.decorate_sample_list_generator(reader, place)
 
-    # 3. Compile program for multi-devices
+    # compile program for multi-devices
     if devices_num <= 1:
         compile_program = fluid.compiler.CompiledProgram(eval_prog)
     else:
@@ -85,7 +84,7 @@ def main():
         compile_program = fluid.compiler.CompiledProgram(
             eval_prog).with_data_parallel(build_strategy=build_strategy)
 
-    # 5. Load model
+    # load model
     exe.run(startup_prog)
     if 'weights' in cfg:
         checkpoint.load_pretrain(exe, eval_prog, cfg.weights)
@@ -96,9 +95,8 @@ def main():
 
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 
-    # 6. Run
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
-    # Evaluation
+    # evaluation
     resolution = None
     if 'mask' in results[0]:
         resolution = model.mask_head.resolution
@@ -112,7 +110,6 @@ if __name__ == '__main__':
         "--output_file",
         default=None,
         type=str,
-        help="Evaluation file name, default to bbox.json and mask.json."
-    )
+        help="Evaluation file name, default to bbox.json and mask.json.")
     FLAGS = parser.parse_args()
     main()

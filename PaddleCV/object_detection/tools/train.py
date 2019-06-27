@@ -19,8 +19,21 @@ from __future__ import print_function
 import os
 import time
 import multiprocessing
-
 import numpy as np
+
+
+def set_paddle_flags(**kwargs):
+    for key, value in kwargs.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect. 
+set_paddle_flags(
+    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
+)
 
 from paddle import fluid
 
@@ -52,8 +65,8 @@ def main():
     if cfg.use_gpu:
         devices_num = fluid.core.get_cuda_device_count()
     else:
-        devices_num = int(os.environ.get('CPU_NUM',
-                                         multiprocessing.cpu_count()))
+        devices_num = int(
+            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     if 'train_feed' not in cfg:
         train_feed = create(main_arch + 'TrainFeed')
@@ -73,6 +86,7 @@ def main():
     lr_builder = create('LearningRate')
     optim_builder = create('OptimizerBuilder')
 
+    # build program
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
@@ -107,10 +121,10 @@ def main():
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
-    # 3. Compile program for multi-devices
+    # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
-    build_strategy.enable_inplace = False
+    build_strategy.enable_inplace = True
     sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     build_strategy.sync_batch_norm = sync_bn
     train_compile_program = fluid.compiler.CompiledProgram(
@@ -151,15 +165,14 @@ def main():
             checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
 
             if FLAGS.eval:
-                # Run evaluation
+                # evaluation
                 results = eval_run(exe, eval_compile_program, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
-                # Evaluation
                 resolution = None
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
-                eval_results(results, eval_feed, cfg.metric,
-                             resolution, FLAGS.output_file)
+                eval_results(results, eval_feed, cfg.metric, resolution,
+                             FLAGS.output_file)
 
     checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
@@ -183,7 +196,6 @@ if __name__ == '__main__':
         "--output_file",
         default=None,
         type=str,
-        help="Evaluation file name, default to bbox.json and mask.json."
-    )
+        help="Evaluation file name, default to bbox.json and mask.json.")
     FLAGS = parser.parse_args()
     main()

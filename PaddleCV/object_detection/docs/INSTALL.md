@@ -35,7 +35,7 @@ python -c "import paddle; print(paddle.__version__)"
 
 - Python2 or Python3
 - CUDA >= 8.0
-- cuDNN >= 7.0
+- cuDNN >= 5.0
 - nccl >= 2.1.2
 
 
@@ -68,9 +68,9 @@ git clone https://github.com/PaddlePaddle/models
 cd models/PaddleCV/object_detection
 ```
 
-**Install python module requirements:**
+**Install Python module requirements:**
 
-Other python module requirements is set in [requirements.txt](./requirements.txt), you can install these requirements with folloing command:
+Other python module requirements is set in [requirements.txt](../requirements.txt), you can install these requirements with folloing command:
 
 ```
 pip install -r requirements.txt
@@ -79,7 +79,7 @@ pip install -r requirements.txt
 **Check PaddleDetection architectures tests pass:**
 
 ```
-export PYTHONPATH=$PYTHONPATH:.
+export PYTHONPATH=`pwd`:$PYTHONPATH
 python ppdet/modeling/tests/test_architectures.py
 ```
 
@@ -90,7 +90,7 @@ PaddleDetection support train/eval/infer models with dataset [MSCOCO](http://coc
 
 **Create symlinks for datasets:**
 
-Dataset default path in PaddleDetection config files is `data/coco` and `data/voc`, you can set symlinks for your COCO/COCO-like or VOC/VOC-like datasets with following commands:
+Dataset default path in PaddleDetection config files is `dataset/coco` and `dataset/voc`, you can set symlinks for your COCO/COCO-like or VOC/VOC-like datasets with following commands:
 
 ```
 ln -sf <path/to/coco> $PaddleDetection/data/coco
@@ -99,28 +99,18 @@ ln -sf <path/to/voc> $PaddleDetection/data/voc
 
 If you do not have datasets locally, you can download dataset as follows:
 
-- MSCOCO-2017
+- MS-COCO
 
 ```
-# download
-wget http://images.cocodataset.org/zips/train2017.zip
-wget http://images.cocodataset.org/zips/val2017.zip
-wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
-
-# decompress
-unzip train2017.zip
-unzip val2017.zip
-unzip annotations_trainval2017.zip
+cd dataset/coco
+./download.sh
 ```
 
-- VOC2012
+- PASCAL VOC
 
 ```
-# download
-wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
-
-# decompress
-tar -xf VOCtrainval_11-May-2012.tar
+cd dataset/voc
+./download.sh
 ```
 
 **Auto download datasets:**
@@ -128,5 +118,4 @@ tar -xf VOCtrainval_11-May-2012.tar
 If you set up models while `data/coc` and `data/voc` is not found, PaddleDetection will automaticaly download them from [MSCOCO-2017](http://images.cocodataset.org) and [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC), the decompressed datasets will be places in `~/.cache/paddle/dataset/` and can be discovered automaticaly in the next setting up time.
 
 
-**NOTE:** For further informations on the datasets, please see [DATASET.md](../ppdet/data/README.md)
-
+**NOTE:** For further informations on the datasets, please see [DATASET.md](DATA.md)

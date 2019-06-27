@@ -127,7 +127,7 @@ def main():
         extra_keys = ['im_id']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
-    # 6. Parse dataset category
+    # parse dataset category
     if cfg.metric == 'COCO':
         from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
     if cfg.metric == "VOC":
@@ -155,8 +155,7 @@ def main():
         mask_results = None
         is_bbox_normalized = True if cfg.metric == 'VOC' else False
         if 'bbox' in res:
-            bbox_results = bbox2out([res], clsid2catid,
-                                    is_bbox_normalized)
+            bbox_results = bbox2out([res], clsid2catid, is_bbox_normalized)
         if 'mask' in res:
             mask_results = mask2out([res], clsid2catid,
                                     model.mask_head.resolution)
@@ -166,8 +165,9 @@ def main():
         for im_id in im_ids:
             image_path = imid2path[int(im_id)]
             image = Image.open(image_path).convert('RGB')
-            image = visualize_results(image, int(im_id), catid2name, 0.5, 
-                        bbox_results, mask_results, is_bbox_normalized)
+            image = visualize_results(image,
+                                      int(im_id), catid2name, 0.5, bbox_results,
+                                      mask_results, is_bbox_normalized)
             save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name)
