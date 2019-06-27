@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+
 from . import rpn_head
 from . import yolo_head
 from . import retina_head

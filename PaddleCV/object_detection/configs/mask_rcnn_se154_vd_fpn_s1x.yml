@@ -4,11 +4,11 @@ eval_feed: MaskRCNNEvalFeed
 test_feed: MaskRCNNTestFeed
 max_iters: 260000
 snapshot_iter: 10000
-use_gpu: True
+use_gpu: true
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar
-weights: output/mask_rcnn_se154_fpn_s1x/model_final/ 
+weights: output/mask_rcnn_se154_vd_fpn_s1x/model_final/
 metric: COCO
 
 MaskRCNN:
@@ -26,7 +26,7 @@ SENet:
   group_width: 4
   groups: 64
   norm_type: affine_channel
-  variant: d 
+  variant: d
 
 FPN:
   max_level: 6
@@ -51,13 +51,13 @@ FPNRPNHead:
   train_proposal:
     min_size: 0.0
     nms_thresh: 0.7
-    post_nms_top_n: 2000
     pre_nms_top_n: 2000
+    post_nms_top_n: 2000
   test_proposal:
     min_size: 0.0
     nms_thresh: 0.7
-    post_nms_top_n: 1000
     pre_nms_top_n: 1000
+    post_nms_top_n: 1000
 
 FPNRoIAlign:
   canconical_level: 4
@@ -124,7 +124,7 @@ MaskRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco 
+    dataset_dir: data/coco
     image_dir: train2017
     annotation: annotations/instances_train2017.json
   num_workers: 2
@@ -149,8 +149,6 @@ MaskRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
-    image_dir: val2017
   num_workers: 2
   use_padded_im_info: True

@@ -2,13 +2,13 @@ architecture: FasterRCNN
 train_feed: FasterRCNNTrainFeed
 eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
-max_iters: 180000
+max_iters: 260000
 snapshot_iter: 10000
 use_gpu: True
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar
-weights: output/faster_rcnn_se154_fpn_1x/model_final
+weights: output/faster_rcnn_se154_fpn_s1x/model_final
 metric: COCO
 
 FasterRCNN:
@@ -94,7 +94,7 @@ LearningRate:
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones: [120000, 160000]
+    milestones: [200000, 240000]
     values: null
   - !LinearWarmup
     start_factor: 0.1
@@ -138,8 +138,6 @@ FasterRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
-    image_dir: val2017
   num_workers: 2
   shuffle: False
