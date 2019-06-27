@@ -79,7 +79,6 @@ def lm_model(hidden_size,
                 gate_input = layers.matmul(x=nn, y=weight_1)
 
                 gate_input = layers.elementwise_add(gate_input, bias)
-                #i, j, f, o = layers.split(gate_input, num_or_sections=4, dim=-1)
                 i = layers.slice(
                     gate_input, axes=[1], starts=[0], ends=[hidden_size])
                 j = layers.slice(
@@ -117,7 +116,6 @@ def lm_model(hidden_size,
                         dropout_implementation='upscale_in_train')
 
             rnn.step_output(input)
-        #real_res = layers.concat(res, 0)
         rnnout = rnn()
 
         last_hidden_array = []
@@ -134,32 +132,9 @@ def lm_model(hidden_size,
             last_c = layers.slice(
                 c, axes=[0], starts=[num_steps - 1], ends=[num_steps])
             last_cell_array.append(last_c)
-        '''
-        else:
-            real_res = rnnout[-1]
-            for i in range( num_layers ):
-
-            m1, c1, m2, c2 = rnnout
-            real_res = m2
-            m1.stop_gradient = True
-            c1.stop_gradient = True
-            c2.stop_gradient = True
-        '''
-
-        #layers.Print( first_hidden, message="22", summarize=10)
-        #layers.Print( rnnout[1], message="11", summarize=10)
-        #real_res = ( rnnout[1] + rnnout[2] + rnnout[3] + rnnout[4]) / 4.0
         real_res = layers.transpose(x=real_res, perm=[1, 0, 2])
         last_hidden = layers.concat(last_hidden_array, 0)
         last_cell = layers.concat(last_cell_array, 0)
-        '''
-        last_hidden = layers.concat( hidden_array, 1 )
-        last_hidden = layers.reshape( last_hidden, shape=[-1, num_layers, hidden_size])
-        last_hidden = layers.transpose( x = last_hidden, perm = [1, 0, 2])
-        last_cell = layers.concat( cell_array, 1)
-        last_cell = layers.reshape( last_cell, shape=[ -1, num_layers, hidden_size])
-        last_cell = layers.transpose( x = last_cell, perm = [1, 0, 2])
-        '''
 
         return real_res, last_hidden, last_cell
 
