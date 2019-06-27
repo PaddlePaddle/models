@@ -23,7 +23,7 @@
 
 Image classification, which is an important field of computer vision, is to classify an image into pre-defined labels. Recently, many researchers developed different kinds of neural networks and highly improve the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
 
-##Quick Start
+## Quick Start
 
 ### Installation
 
