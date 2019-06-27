@@ -131,8 +131,8 @@ class LightNASSpace(SearchSpace):
         # strides for seven bottlenecks
         strides = [1, 2, 2, 2, 1, 2, 1]
         # conv1_1
-        op_params.append(
-            ('conv', 0, 1, 100, 0, 0, 1, 3, 224, 224, 32, 1, 3, 1, 2, 1))
+        op_params.append(('conv', 0, 1, 100, 0, 0, 1, image_shape[0],
+                          image_shape[1], image_shape[2], 32, 1, 3, 1, 2, 1))
         op_params.append(('activation', 0, 1, 100, 'relu6', 1, 32, 112, 112))
 
         # bottlenecks
@@ -183,7 +183,7 @@ class LightNASSpace(SearchSpace):
         op_params.append(
             ('pooling', 0, 1, 100, 1, 1, 1280, 7, 7, 7, 0, 1, 0, 3))
         op_params.append(
-            ('conv', 0, 1, 100, 1, 0, 1, 1280, 1, 1, 1000, 1, 1, 0, 1, 1))
+            ('conv', 0, 1, 100, 1, 0, 1, 1280, 1, 1, class_dim, 1, 1, 0, 1, 1))
 
         return list(set(op_params))
 
