@@ -130,7 +130,7 @@ python eval.py \
 注意：根据具体模型和任务添加并调整其他参数
 
 ### 模型预测
-模型预测可以获取一个模型的预测分数或者图像的特征：
+模型预测可以获取一个模型的预测分数或者图像的特征，可以下载[已有模型及其性能](#已有模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令获得预测分数，：
 ```
 python infer.py \
        --pretrained_model=${path_to_pretrain_model}
@@ -193,6 +193,7 @@ python infer.py \
 ## FAQ
 
 **Q:** 加载预训练模型报错，Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:1000 != labels_dims[1]:6.
+
 **A:** 维度对不上，删掉预训练参数中的FC
 
 ## 参考文献
@@ -209,7 +210,3 @@ python infer.py \
 ## 如何贡献代码
 
 如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
-
-## 反馈
-- [qingqing01](https://github.com/qingqing01)
-- [shippingwang](https://github.com/shippingwang)

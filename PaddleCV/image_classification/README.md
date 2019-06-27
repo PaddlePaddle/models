@@ -1,24 +1,35 @@
 # Image Classification and Model Zoo
-Image classification, which is an important field of computer vision, is to classify an image into pre-defined labels. Recently, many researchers developed different kinds of neural networks and highly improve the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
 
 ---
 ## Table of Contents
-- [Installation](#installation)
-- [Data preparation](#data-preparation)
-- [Training a model with flexible parameters](#training-a-model-with-flexible-parameters)
-- [Using Mixed-Precision Training](#using-mixed-precision-training)
-- [Finetuning](#finetuning)
-- [Evaluation](#evaluation)
-- [Inference](#inference)
-- [Supported models and performances](#supported-models-and-performances)
 
-## Installation
+- [Introduction](#introduction)
+- [Quick Start](#quick-start)
+    - [Installation](#installation)
+    - [Data preparation](#data-preparation)
+    - [Training](#training)
+    - [Finetuning](#finetuning)
+    - [Evaluation](#evaluation)
+    - [Inference](#inference)
+- [Advanced Usage](#advanced-usage)
+    - [Using Mixed-Precision Training](#using-mixed-precision-training)
+    - [CE](#ce)
+- [Supported Models and Performances](#supported-models-and-performances)
+- [Reference](#reference)
+- [Update](#update)
+- [Contribute](#contribute)
 
-Running sample code in this directory requires PaddelPaddle Fluid v0.13.0 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v0.13.0, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html) and make an update.
+## Introduction
 
-Note: Please replace [fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor) to [fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor) when running the program in the windows & GPU environment.
+Image classification, which is an important field of computer vision, is to classify an image into pre-defined labels. Recently, many researchers developed different kinds of neural networks and highly improve the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
 
-## Data preparation
+##Quick Start
+
+### Installation
+
+Running sample code in this directory requires Python 2.7 and later, PaddelPaddle Fluid v1.5 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.5, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html) and make an update.
+
+### Data preparation
 
 An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
 ```
@@ -34,24 +45,18 @@ In the shell script ```download_imagenet2012.sh```,  there are three steps to pr
 
 **step-3:** Download training and validation label files. There are two label files which contain train and validation image labels respectively:
 
-* *train_list.txt*: label file of imagenet-2012 training set, with each line seperated by ```SPACE```, like:
+* train_list.txt: label file of imagenet-2012 training set, with each line seperated by ```SPACE```, like:
 ```
 train/n02483708/n02483708_2436.jpeg 369
-train/n03998194/n03998194_7015.jpeg 741
-train/n04523525/n04523525_38118.jpeg 884
-...
 ```
-* *val_list.txt*: label file of imagenet-2012 validation set, with each line seperated by ```SPACE```, like.
+* val_list.txt: label file of imagenet-2012 validation set, with each line seperated by ```SPACE```, like.
 ```
 val/ILSVRC2012_val_00000001.jpeg 65
-val/ILSVRC2012_val_00000002.jpeg 970
-val/ILSVRC2012_val_00000003.jpeg 230
-...
 ```
 
 You may need to modify the path in reader.py to load data correctly.
 
-## Training a model with flexible parameters
+### Training
 
 After data preparation, one can start the training step by:
 
@@ -69,6 +74,7 @@ python train.py \
        --lr=0.1
 ```
 **parameter introduction:**
+
 * **model**: name model to use. Default: "SE_ResNeXt50_32x4d".
 * **num_epochs**: the number of epochs. Default: 120.
 * **batch_size**: the size of each mini-batch. Default: 256.
@@ -100,65 +106,70 @@ python train.py \
 
 Or can start the training step by running the ```run.sh```.
 
-**data reader introduction:** Data reader is defined in ```reader.py```and```reader_cv2.py```, Using CV2 reader can improve the speed of reading. In [training stage](#training-a-model-with-flexible-parameters), random crop and flipping are used, while center crop is used in [Evaluation](#evaluation) and [Inference](#inference) stages. Supported data augmentation includes:
+**data reader introduction:** Data reader is defined in PIL: ```reader.py```and opencv: ```reader_cv2.py```, default reader is implemented by opencv. In [Training](#training), random crop and flipping are used, while center crop is used in [Evaluation](#evaluation) and [Inference](#inference) stages. Supported data augmentation includes:
+
 * rotation
-* color jitter
+* color jitter (haven't implemented in cv2_reader)
 * random crop
 * center crop
 * resize
 * flipping
 
-## Using Mixed-Precision Training
+### Finetuning
+
+Finetuning is to finetune model weights in a specific task by loading pretrained weights. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```, one can finetune a model by running following command:
+
+```
+python train.py
+       --pretrained_model=${path_to_pretrain_model}
+```
+
+Note: Add and adjust other parameters accroding to specific models and tasks.
+
+### Evaluation
+
+Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
+
+```
+python eval.py \
+       --pretrained_model=${path_to_pretrain_model}
+```
+
+Note: Add and adjust other parameters accroding to specific models and tasks.
+
+### Inference
+
+Inference is used to get prediction score or image features based on trained models. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Run following command then obtain prediction score.
+
+```
+python infer.py \
+       --pretrained_model=${path_to_pretrain_model}
+```
+
+Note: Add and adjust other parameters accroding to specific models and tasks.
+
+## Advanced Usage
+
+### Using Mixed-Precision Training
 
 You may add `--fp16=1` to start train using mixed precisioin training, which the training process will use float16 and the output model ("master" parameters) is saved as float32. You also may need to pass `--scale_loss` to overcome accuracy issues, usually `--scale_loss=8.0` will do.
 
 Note that currently `--fp16` can not use together with `--with_mem_opt`, so pass `--with_mem_opt=0` to disable memory optimization pass.
 
-## Finetuning
+### CE
 
-Finetuning is to finetune model weights in a specific task by loading pretrained weights. After initializing ```path_to_pretrain_model```, one can finetune a model as:
-```
-python train.py
-       --model=SE_ResNeXt50_32x4d \
-       --pretrained_model=${path_to_pretrain_model} \
-       --batch_size=32 \
-       --total_images=1281167 \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
-       --model_save_dir=output/ \
-       --with_mem_opt=True \
-       --lr_strategy=piecewise_decay \
-       --lr=0.1
-```
+CE is only for internal testing, don't have to set it.
 
-## Evaluation
-Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
-```
-python eval.py \
-       --model=SE_ResNeXt50_32x4d \
-       --batch_size=32 \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
-       --with_mem_opt=True \
-       --pretrained_model=${path_to_pretrain_model}
-```
+## Supported Models and Performances
 
-## Inference
-Inference is used to get prediction score or image features based on trained models.
-```
-python infer.py \
-       --model=SE_ResNeXt50_32x4d \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
-       --with_mem_opt=True \
-       --pretrained_model=${path_to_pretrain_model}
-```
+The image classification models currently supported by PaddlePaddle are listed in the table. It shows the top-1/top-5 accuracy on the ImageNet-2012 validation set of these models, the inference time of Paddle Fluid and Paddle TensorRT based on dynamic link library(test GPU model: Tesla P4). 
+As the activation function ```swish``` and ```relu6``` which separately used in ShuffleNetV2 and MobileNetV2 net are not supported by Paddle TensorRT, inference acceleration performance of them doesn't significient improve. Pretrained models can be downloaded by clicking related model names.
 
-## Supported models and performances
-The image classification models currently supported in models are listed in the table，and the top-1/top-5 accuracy on the imagenet-2012 validation set of the models and the inference time of Paddle Fluid and Paddle TensorRT based on dynamic link library(test GPU model: Tesla P4) are given. As the activation function swish used by ShuffleNetV2 and the activation function relu6 used by MobileNetV2 are not supported by Paddle TensorRT, inference acceleration is not obvious. Paddle TensorRT will support both op soon. The inference method based on dynamic link library will be also released soon,The inference speed indicator may be updated with the official released tool. Pretrained models can be downloaded by clicking related model names.
 - Note1: ResNet50_vd_v2 is the distilled version of ResNet50_vd. 
-- Note2:In addition to the input image resolution 299x299 adopted by InceptionV4, the resolution used by other models is 224x224.
-- Note3: Calling dynamic link library to infer requires converting the train model to a binary model. The conversion method is as follows: a. Set the save_inference parameter in infer.py to True; b. Execute infer.py
+- Note2: In addition to the image resolution feeded in InceptionV4 net is ```299x299```, others are ```224x224```.
+- Note3: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
+
+```python infer.py --save_inference=True```
 
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
@@ -185,6 +196,32 @@ The image classification models currently supported in models are listed in the 
 |[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_32x4d_pretrained.tar) | 78.44%/93.96% | 14.916 | 12.126 |
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.tar) | 79.12%/94.20% | 30.085 | 24.110 |
 |[SE154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar) | 81.40%/95.48% | 71.892 | 64.855 |
-|[GoogleNet](https://paddle-imagenet-models-name.bj.bcebos.com/GoogleNet_pretrained.tar) | 70.70%/89.66% | 6.528 | 3.076 |
+|[GoogLeNet](https://paddle-imagenet-models-name.bj.bcebos.com/GoogleNet_pretrained.tar) | 70.70%/89.66% | 6.528 | 3.076 |
 |[ShuffleNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_pretrained.tar) | 70.03%/89.17% | 6.078 | 6.282 |
 |[InceptionV4](https://paddle-imagenet-models-name.bj.bcebos.com/InceptionV4_pretrained.tar) | 80.77%/95.26% | 32.413 | 18.154 |
+
+## FAQ
+
+**Q:** How to solve this problem when I try to train a 6-classes dataset with indicating pretrained_model parameter ?
+``` 
+Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:1000 != labels_dims[1]:6.
+```
+
+**A:** It may be caused by dismatch dimensions. Please remove fc parameter in pretrained models, It usually named with a prefix ```fc_```
+
+## Reference
+
+- [MobileNetV2: Inverted Residuals and Linear Bottlenecks](https://arxiv.org/pdf/1801.04381v4.pdf), Mark Sandler, Andrew Howard, Menglong Zhu, Andrey Zhmoginov, Liang-Chieh Chen
+
+## Update
+
+- 2018/12/03，**Stage1**: Update AlexNet，ResNet50，ResNet101，MobileNetV1
+- 2018/12/23，**Stage2**: Update VGG系列 SeResNeXt50_32x4d，SeResNeXt101_32x4d，ResNet152
+- 2019/01/31，Update MobileNetV2
+- 2019/04/01，**Stage3**: Update ResNet18，ResNet34，GoogLeNet，ShuffleNetV2
+- 2019/06/12，**Stage4**:Update ResNet50_vc，ResNet50_vd，ResNet101_vd，ResNet152_vd，ResNet200_vd，SE154_vd InceptionV4，ResNeXt101_64x4d，ResNeXt101_vd_64x4d
+- 2019/06/22，Update ResNet50_vd_v2
+
+## Contribute
+
+If you can fix a issue or add a new feature, please open a PR to us. If your PR is accepted, you can get scores according to the quality and difficulty of your PR(0~5), while you got 10 scores, you can contact us for interview or recommendation letter.
