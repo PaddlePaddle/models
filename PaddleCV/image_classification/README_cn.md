@@ -46,12 +46,10 @@ sh download_imagenet2012.sh
 * train_list.txt: ImageNet-2012训练集合的标签文件，每一行采用"空格"分隔图像路径与标注，例如：
 ```
 train/n02483708/n02483708_2436.jpeg 369
-
 ```
 * val_list.txt: ImageNet-2012验证集合的标签文件，每一行采用"空格"分隔图像路径与标注，例如：
 ```
 val/ILSVRC2012_val_00000001.jpeg 65
-
 ```
 注意：可能需要根据本地环境调整reader.py相关路径来正确读取数据。
 
@@ -155,10 +153,12 @@ python infer.py \
 表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测
 试GPU型号为Tesla P4）。由于Paddle TensorRT对ShuffleNetV2使用的激活函数swish，MobileNetV2使用的激活函数relu6不支持，因此预测加速不明显。可以通过点击相应模型的名称下载对应的预训练模型。
 
-- 注意1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
-- 注意2：除了InceptionV4采用的输入图像的分辨率为299x299，其余模型测试时使用的分辨率均为224x224。
-- 注意3：调用动态链接库预测时需要将训练模型转换为二进制模型
-```python infer.py --save_inference=True```
+- 注意
+    1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
+    2：除了InceptionV4采用的输入图像的分辨率为299x299，其余模型测试时使用的分辨率均为224x224。
+    3：调用动态链接库预测时需要将训练模型转换为二进制模型
+
+    ```python infer.py --save_inference=True```
 
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
