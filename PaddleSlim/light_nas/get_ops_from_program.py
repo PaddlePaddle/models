@@ -265,8 +265,6 @@ def get_ops_from_program(program, output_file=None):
         current_op = blocks.ops[i]
         if current_op.type in ['conv2d', 'depthwise_conv2d']:
             tmp = conv_op_params(blocks, current_op)
-        elif current_op.type == 'batch_norm':
-            tmp = batch_norm_op_params(blocks, current_op)
         elif current_op.type in [
                 'elementwise_add', 'elementwise_mul', 'elementwise_max'
         ]:

@@ -14,25 +14,16 @@
 
 import paddle.fluid as fluid
 import paddle
-from light_nas_space import get_tokens_set, LightNASSpace
+from light_nas_space import LightNASSpace
 from get_ops_from_program import get_ops_from_program, write_lookup_table
 
+# get all ops in the search space
 space = LightNASSpace()
-tokens = get_tokens_set()
-
-n = len(tokens)
-all_ops = []
-for idx in range(0, n):
-    current_token = tokens[idx]
-    startup_program, main_program, _, _, _, _, _ = space.create_net(
-        current_token)
-    op_params = get_ops_from_program(main_program)
-    all_ops = all_ops + op_params
-    all_ops = list(set(all_ops))
-    if (idx + 1) % 10000 == 0:
-        write_lookup_table(all_ops, 'lightnas_ops_tmp.txt')
-        print('current file number is: {}'.format(idx))
-        print('current number of ops is:', len(all_ops))
-
+all_ops = space.get_all_ops(True, False)
 write_lookup_table(all_ops, 'lightnas_ops.txt')
-print('{} networks have {} ops in total'.format(n, len(all_ops)))
+
+# get all ops from mobilenetv2
+startup_program, main_program, _, _, _, _, _ = space.create_net()
+all_ops = get_ops_from_program(main_program)
+all_ops = list(set(all_ops))
+write_lookup_table(all_ops, 'mobilenetv2_ops.txt')
