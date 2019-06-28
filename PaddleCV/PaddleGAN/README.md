@@ -200,7 +200,7 @@ CycleGAN生成网络结构图[5]
 <p align="center">
 <img src="images/stargan_gen.png" width=350 />
 <img src="images/stargan_dis.png" width=400 /> <br />
-StarGAN的生成网络结构\[左\]和判别网络结构\[右\] [7]
+StarGAN的生成网络结构[左]和判别网络结构[右] [7]
 </p>
 
 
