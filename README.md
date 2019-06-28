@@ -19,9 +19,9 @@
 | [SE_ResNeXt](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在ResNeXt 基础、上加入了SE（Sequeeze-and-Excitation）   模块，提高了识别准确率，在ILSVRC 2017 的分类项目中取得了第一名 | ImageNet-2012验证集 | 81.40%/95.48%                                    |
 | [ShuffleNet   v2](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | ECCV2018，轻量级CNN网络，在速度和准确度之间做了很好地平衡。在同等复杂度下，比ShuffleNet和MobileNetv2更准确，更适合移动端以及无人车领域 | ImageNet-2012验证集 | 70.03%/89.17%                                    |
 
- 
-
-
+<br/>
+<br/>
+<br/>
 
 **目标检测**
 
@@ -35,10 +35,10 @@
 | [RetinaNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 经典的一阶段框架，由ResNet主干网络、FPN结构、和两个分别用于回归物体位置和预测物体类别的子网络组成。在训练过程中使用Focal Loss，解决了传统一阶段检测器存在前景背景类别不平衡的问题，进一步提高了一阶段检测器的精度。 | MS-COCO    | 基于ResNet mAP (500.50:0.95) = 36%                      |
 | [YOLOv3](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 速度和精度均衡的目标检测网络，相比于原作者darknet中的YOLO v3实现，PaddlePaddle实现参考了论文「https://arxiv.org/pdf/1812.01187.pdf」增加了mixup，label_smooth等处理，精度(mAP(0.5：0.95))相比于原作者提高了4.7个绝对百分点，在此基础上加入synchronize batch   normalization, 最终精度相比原作者提高5.9个绝对百分点。 | MS-COCO    | 基于DarkNet   mAP(0.50:0.95)=   38.9%                   |
 | [PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | **PyramidBox** **模型是百度自主研发的人脸检测模型**，利用上下文信息解决困难人脸的检测问题，网络表达能力高，鲁棒性强。于18年3月份在WIDER Face数据集上取得第一名 | WIDER FACE | mAP   （Easy/Medium/Hard   set）=   96.0%/ 94.8%/ 88.8% |
-
  
-
-
+<br/>
+<br/>
+<br/>
 
 **图像分割**
 
@@ -50,8 +50,9 @@
 | [DeepLab   V3+](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/deeplabv3%2B) | 通过encoder-decoder进行多尺度信息的融合，同时保留了原来的空洞卷积和ASSP层，   其骨干网络使用了Xception模型，提高了语义分割的健壮性和运行速率 | Cityscape | Mean IoU=78.81% |
 
  
-
-
+<br/>
+<br/>
+<br/>
 
 **关键点检测**
 
@@ -61,11 +62,9 @@
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------ | ------------ |
 | [Simple   Baselines](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/human_pose_estimation) | coco2018关键点检测项目亚军方案，网络结构非常简单，效果达到state of the art | COCO val2017 | AP =   72.7% |
 
- 
-
-
-
- 
+<br/>
+<br/>
+<br/>
 
 **图像生成**
 
@@ -81,10 +80,10 @@
 | [AttGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 利用分类损失和重构损失来保证改变特定的属性，可用于人脸特定属性转换 | Celeba     |
 | [STGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 人脸特定属性转换，只输入有变化的标签，引入GRU结构，更好的选择变化的属性 | Celeba     |
 
-
-
+<br/>
+<br/>
+<br/>
  
-
 **场景文字识别**
 
 场景文字识别是在图像背景复杂、分辨率低下、字体多样、分布随意等情况下，将图像信息转化为文字序列的过程，可认为是一种特别的翻译过程：将图像输入翻译为自然语言输出。
@@ -94,9 +93,9 @@
 | [CRNN-CTC](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用CTC model识别图片中单行英文字符，用于端到端的文本行图片识别方法 | 单行不定长的英文字符串图片 | 错误率= 22.3%  |
 | [OCR   Attention](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用attention 识别图片中单行英文字符，用于端到端的自然场景文本识别， | 单行不定长的英文字符串图片 | 错误率 = 15.8% |
 
-<<<<<<< HEAD
-
-
+<br/>
+<br/>
+<br/>
  
 
 **度量学习**
@@ -111,8 +110,9 @@
 | [ResNet50使用eml微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用eml loss微调的特征模型        | Stanford   Online Product(SOP) | 80.11%                                        |
 | [ResNet50使用npairs微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用npairs loss微调的特征模型     | Stanford   Online Product(SOP) | 79.81%                                        |
 
-
-
+<br/>
+<br/>
+<br/>
  
 
 **视频分类**
@@ -130,8 +130,9 @@
 | [NeXtVlad](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | Youtube-8M 2018最佳single model，弱化时序关系，适合建模短视频 | Youtube-8M                 | GAP   = 87% |
 | [C-TCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | 2018年ActivityNet夺冠方案，提供了处理视频动作定位问题的解决方案 | ActivityNet1.3提供的数据集 | Top1=31%    |
 
- 
-
+<br/>
+<br/>
+<br/>
  
 ## PaddleNLP
 
@@ -147,6 +148,9 @@
 | BERT finetuned   | 90.2%         | 90.4%      | 90.3%        |
 | ERNIE finetuned  | 92.0%         | 92.0%      | 92.0%        |
 
+<br/>
+<br/>
+<br/>
 
 
 **语言模型**
@@ -158,9 +162,9 @@
 | paddle           | 37.221    | 82.358    | 78.137   |
 | tensorflow       | 38.342    | 82.311    | 78.121   |
 
-
-
- 
+<br/>
+<br/>
+<br/>
 
 **文本理解（文本分类&阅读理解）**
 
@@ -179,8 +183,9 @@
 | ERNIE+BI-LSTM | 95.3%   | 95.2%    | ERNIE+BI-LSTM                | 95.7%   | 95.6%    |
 
 
-
- 
+<br/>
+<br/>
+<br/>
 
 **对话情绪识别**
 
@@ -196,9 +201,9 @@
 | BERT     | 93.6%    | 92.3%    | 78.6%    |
 | ERNIE    | 94.4%    | 94.0%    | 80.6%    |
 
-
-
- 
+<br/>
+<br/>
+<br/>
 
 **阅读理解**
 
@@ -209,9 +214,9 @@
 | BiDAF (原始[论文](https://arxiv.org/abs/1711.05073)基线) | 39.29           | 45.90            |
 | 本基线系统                                               | 47.68           | 54.66            |
 
-
-
- 
+<br/>
+<br/>
+<br/>
 
 **语义模型（语义表示&语义匹配）**
 
@@ -219,129 +224,85 @@
 
 [ERNIE （Embeddings from Language Models）](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)百度自研的语义表示模型，通过建模海量数据中的词、实体及实体关系，学习真实世界的语义知识。相较于 BERT 学习原始语言信号，ERNIE直接对先验语义知识单元进行建模，增强了模型语义表示能力。
 
+<br/>
+
 **BERT**
 
 [BERT（Bidirectional Encoder Representation from Transformers） ](https://github.com/PaddlePaddle/LARK/tree/develop/BERT)是一个迁移能力很强的通用语义表示模型， 以 Transformer 为网络基本组件，以双向 Masked Language Model和 Next Sentence Prediction 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。
 
+<br/>
 **ELMo**
 
 [ELMo(Embeddings from Language Models) ](https://github.com/PaddlePaddle/LARK/tree/develop/ELMo)是重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。
-<table>
-  <tbody>
-    <tr>
-      <th><strong>数据集</strong>
-        <br></th>
-      <th colspan="2"><strong>XNLI</strong></th>
-      <th colspan="2"><strong>LCQMC</strong></th>
-      <th colspan="2"><strong>MSRA-NER(SIGHAN 2006)</strong></th>
-      <th colspan="2"><strong>ChnSentiCorp</strong></th>
-      <th colspan="4"><strong>nlpcc-dbqa</strong></th></tr>
-    <tr>
-      <td rowspan="2">
-        <p>
-          <strong>评估</strong></p>
-        <p>
-          <strong>指标</strong>
-          <br></p>
-      </td>
-      <td colspan="2">
-        <strong>acc</strong>
-        <br></td>
-      <td colspan="2">
-        <strong>acc</strong>
-        <br></td>
-      <td colspan="2">
-        <strong>f1-score</strong>
-        <br></td>
-      <td colspan="2">
-        <strong>acc</strong>
-        <strong></strong>
-        <br></td>
-      <td colspan="2">
-        <strong>mrr</strong>
-        <br></td>
-      <td colspan="2">
-        <strong>f1-score</strong>
-        <br></td>
-    </tr>
-    <tr>
-      <th colspan="1" width="">
-        <strong>dev</strong>
-        <br></th>
-      <td colspan="1" width="">
-        <strong>test</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>dev</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>test</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>dev</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>test</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>dev</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>test</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>dev</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>test</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>dev</strong>
-        <br></td>
-      <td colspan="1" width="">
-        <strong>test</strong>
-        <br></td>
-    </tr>
-    <tr>
-      <td>
-        <strong>BERT
-          <br></strong></td>
-      <td>78.1</td>
-      <td>77.2</td>
-      <td>88.8</td>
-      <td>87.0</td>
-      <td>94.0
-        <br></td>
-      <td>
-        <span>92.6</span></td>
-      <td>94.6</td>
-      <td>94.3</td>
-      <td colspan="1">94.7</td>
-      <td colspan="1">94.6</td>
-      <td colspan="1">80.7</td>
-      <td colspan="1">80.8</td></tr>
-    <tr>
-      <td>
-        <strong>ERNIE
-          <br></strong></td>
-      <td>79.9 <span>(<strong>+1.8</strong>)</span></td>
-      <td>78.4 <span>(<strong>+1.2</strong>)</span></td>
-      <td>89.7 <span>(<strong>+0.9</strong>)</span></td>
-      <td>87.4 <span>(<strong>+0.4</strong>)</span></td>
-      <td>95.0 <span>(<strong>+1.0</strong>)</span></td>
-      <td>93.8 <span>(<strong>+1.2</strong>)</span></td>
-      <td>95.2 <span>(<strong>+0.6</strong>)</span></td>
-      <td>95.4 <span>(<strong>+1.1</strong>)</span></td>
-      <td colspan="1">95.0 <span>(<strong>+0.3</strong>)</span></td>
-      <td colspan="1">95.1 <span>(<strong>+0.5</strong>)</span></td>
-      <td colspan="1">82.3 <span>(<strong>+1.6</strong>)</span></td>
-      <td colspan="1">82.7 <span>(<strong>+1.9</strong>)</span></td></tr>
-  </tbody>
+
+<table border="1" cellspacing="0" cellpadding="0" width="0">
+  <tr>
+    <td width="66"><p align="center">数据集 </p></td>
+    <td width="180" colspan="2"><p align="center">XNLI</p></td>
+    <td width="196" colspan="2"><p align="center">LCQMC</p></td>
+    <td width="196" colspan="2"><p align="center">MSRA-NER<br />
+        (SIGHAN 2006)</p></td>
+    <td width="196" colspan="2"><p align="center">ChnSentiCorp</p></td>
+    <td width="392" colspan="4"><p align="center">nlpcc-dbqa</p></td>
+  </tr>
+  <tr>
+    <td width="66" rowspan="2"><p align="center">评估<br />指标</p></td>
+    <td width="180" colspan="2"><p align="center">acc</p></td>
+    <td width="196" colspan="2"><p align="center">acc</p></td>
+    <td width="196" colspan="2"><p align="center">f1-score</p></td>
+    <td width="196" colspan="2"><p align="center">acc</p></td>
+    <td width="196" colspan="2"><p align="center">mrr</p></td>
+    <td width="196" colspan="2"><p align="center">f1-score</p></td>
+  </tr>
+  <tr>
+    <td width="82"><p align="center">dev</p></td>
+    <td width="98"><p align="center">test</p></td>
+    <td width="98"><p align="center">dev</p></td>
+    <td width="98"><p align="center">test</p></td>
+    <td width="98"><p align="center">dev</p></td>
+    <td width="98"><p align="center">test</p></td>
+    <td width="98"><p align="center">dev</p></td>
+    <td width="98"><p align="center">test</p></td>
+    <td width="98"><p align="center">dev</p></td>
+    <td width="98"><p align="center">test</p></td>
+    <td width="98"><p align="center">dev</p></td>
+    <td width="98"><p align="center">test</p></td>
+  </tr>
+  <tr>
+    <td width="66"><p align="center">BERT</p></td>
+    <td width="82"><p align="center">78.1</p></td>
+    <td width="98"><p align="center">77.2</p></td>
+    <td width="98"><p align="center">88.8</p></td>
+    <td width="98"><p align="center">87</p></td>
+    <td width="98"><p align="center">94.0</p></td>
+    <td width="98"><p align="center">92.6</p></td>
+    <td width="98"><p align="center">94.6</p></td>
+    <td width="98"><p align="center">94.3</p></td>
+    <td width="98"><p align="center">94.7</p></td>
+    <td width="98"><p align="center">94.6</p></td>
+    <td width="98"><p align="center">80.7</p></td>
+    <td width="98"><p align="center">80.8</p></td>
+  </tr>
+  <tr>
+    <td width="66"><p align="center">ERNIE</p></td>
+    <td width="82"><p>79.9(+1.8)</p></td>
+    <td width="98"><p>78.4(+1.2)</p></td>
+    <td width="98"><p>89.7(+0.9)</p></td>
+    <td width="98"><p>87.4(+0.4)</p></td>
+    <td width="98"><p>95.0(+1.0)</p></td>
+    <td width="98"><p>93.8(+1.2)</p></td>
+    <td width="98"><p>95.2(+0.6)</p></td>
+    <td width="98"><p>95.4(+1.1)</p></td>
+    <td width="98"><p>95.0(+0.3)</p></td>
+    <td width="98"><p>95.1(+0.5)</p></td>
+    <td width="98"><p>82.3(+1.6)</p></td>
+    <td width="98"><p>82.7(+1.9)</p></td>
+  </tr>
 </table>
 
- 
 
 
+<br/>
 **DAM**
 
 **深度注意力机制模型(Deep Attention Matching Network)**，是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。、
@@ -352,7 +313,7 @@
 | DAM  | 93.8%         | 76.7%                      | 87.4% | 96.9% | 55.0% | 60.1% | 42.7% | 25.4% | 41.0% | 75.7% |
 
  
-
+<br/>
 **SimNet（SimilarityNet**）**百度自主研发的短文本语义匹配语义匹配框架**，一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。
 
 | **模型**     | **百度知道** | **ECOM** | **QQSIM** | **UNICOM** | **LCQMC** |
@@ -360,9 +321,10 @@
 |              | AUC          | AUC      | AUC       | 正逆序比   | Accuracy  |
 | BOW_Pairwise | 0.6767       | 0.7329   | 0.7650    | 1.5630     | 0.7532    |
 
-
-
  
+<br/>
+<br/>
+<br/>
 
 **文本生成（机器翻译&对话生成）**
 
@@ -375,9 +337,9 @@
 | Base       | 26.35            | 29.07            | 33.30            |
 | Big        | 27.07            | 30.09            | 34.38            |
 
-
-
- 
+<br/>
+<br/>
+<br/>
 
 **对话自动评估**
 
@@ -389,9 +351,9 @@
 | ----- | ----------------- | --------------- | ------------ | --------- |
 | cor   | 0.474             | 0.477           | 0.443        | 0.378     |
 
-
-
- 
+<br/>
+<br/>
+<br/>
 
 **对话通用理解**
 
@@ -406,11 +368,9 @@
 | SOTA         | 76.70%  | 87.40%  | 96.90%  | 96.89%        | 74.50%     | 98.32%          | 81.30%   | 91.70%   |
 | DGU          | 82.02%  | 90.43%  | 97.75%  | 97.10%        | 89.57%     | 97.65%          | 80.19%   | 91.43%   |
 
- 
-
-
-
- 
+<br/>
+<br/>
+<br/>
 
 **知识驱动对话**
 
@@ -421,7 +381,9 @@
 | retrieval-based     | 31.72/0.291/0.156  | 0.118/0.373             |
 | generation-based    | 32.65/0.300/0.168  | 0.062/0.128             |
 
- 
+<br/>
+<br/>
+<br/>
 
 ## PaddleRec
 
