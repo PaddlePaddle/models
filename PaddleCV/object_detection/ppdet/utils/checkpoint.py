@@ -168,9 +168,12 @@ def load_and_fusebn(exe, prog, path):
     if not bn_in_path:
         raise ValueError("The model in path {} has not params of batch norm.")
 
-    all_vars += [v for v in mean_variances]
+    # load running mean and running variance on cpu place into global scope.
+    place = fluid.CPUPlace()
+    exe_cpu = fluid.Executor(place)
+    fluid.io.load_vars(exe_cpu, path, vars=[v for v in mean_variances])
 
-    # load params including running mean and running variance into global scope.
+    # load params on real place into global scope.
     fluid.io.load_vars(exe, path, prog, vars=all_vars)
 
     eps = 1e-5

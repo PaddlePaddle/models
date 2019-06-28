@@ -182,6 +182,11 @@ def conv2d(input,
         use_cudnn=use_cudnn,
         param_attr=param_attr,
         bias_attr=bias_attr)
+    if need_crop:
+        conv = fluid.layers.crop(
+            conv,
+            shape=(-1, conv.shape[1], conv.shape[2] - 1, conv.shape[3] - 1),
+            offsets=(0, 0, 1, 1))
     if norm is not None:
         conv = norm_layer(
             input=conv, norm_type=norm, name=name + "_norm", is_test=is_test)

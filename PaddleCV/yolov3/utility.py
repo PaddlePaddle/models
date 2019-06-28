@@ -102,7 +102,7 @@ def parse_args():
     add_arg('class_num',        int,    80,          "Class number.")
     add_arg('data_dir',         str,    'dataset/coco',        "The data root path.")
     add_arg('start_iter',       int,    0,      "Start iteration.")
-    add_arg('use_multiprocess', bool,   True,   "add multiprocess.")
+    add_arg('use_multiprocess_reader', bool,   True,   "add multiprocess.")
     #SOLVER
     add_arg('batch_size',       int,    8,      "Mini-batch size per device.")
     add_arg('learning_rate',    float,  0.001,  "Learning rate.")
