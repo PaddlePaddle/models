@@ -125,7 +125,6 @@ MaskRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   num_workers: 2
-  use_padded_im_info: false
 
 MaskRCNNEvalFeed:
   batch_size: 1
@@ -137,7 +136,6 @@ MaskRCNNEvalFeed:
   - !PadBatch
     pad_to_stride: 32
   num_workers: 2
-  use_padded_im_info: true
 
 MaskRCNNTestFeed:
   batch_size: 1
@@ -147,4 +145,3 @@ MaskRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 32
   num_workers: 2
-  use_padded_im_info: true
