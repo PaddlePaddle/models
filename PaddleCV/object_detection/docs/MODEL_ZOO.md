@@ -9,7 +9,7 @@
 
 ## Common settings
 
-- All models below except SSD were trained on `coco_2017_train`, and tested on the `coco_2017_val`.
+- All models below except SSD were trained on `coco_2017_train`, and tested on `coco_2017_val`.
 - Batch Normalization layers in backbones are replaced by Affine Channel layers.
 - Unless otherwise noted, all ResNet backbones adopt the [ResNet-B](https://arxiv.org/pdf/1812.01187) variant..
 - For RCNN and RetinaNet models, only horizontal flipping data augmentation was used in the training phase and no augmentations were used in the testing phase.
@@ -23,6 +23,8 @@
 ## ImageNet Pretrained Models
 
 The backbone models pretrained on ImageNet are available. All backbone models are pretrained on standard ImageNet-1k dataset and can be downloaded [here](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#supported-models-and-performances).
+
+- Notes: The ResNet50
 
 ## Baselines
 
