@@ -34,7 +34,7 @@
 | [Mask-RCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 经典的两阶段框架，在Faster R-CNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕，可得到像素级别的检测结果。 | MS-COCO    | 基于ResNet 50   Mask   mAP（0.50:0.95） = 31.4%         |
 | [RetinaNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 经典的一阶段框架，由ResNet主干网络、FPN结构、和两个分别用于回归物体位置和预测物体类别的子网络组成。在训练过程中使用Focal Loss，解决了传统一阶段检测器存在前景背景类别不平衡的问题，进一步提高了一阶段检测器的精度。 | MS-COCO    | 基于ResNet mAP (500.50:0.95) = 36%                      |
 | [YOLOv3](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 速度和精度均衡的目标检测网络，相比于原作者darknet中的YOLO v3实现，PaddlePaddle实现参考了论文「https://arxiv.org/pdf/1812.01187.pdf」增加了mixup，label_smooth等处理，精度(mAP(0.5：0.95))相比于原作者提高了4.7个绝对百分点，在此基础上加入synchronize batch   normalization, 最终精度相比原作者提高5.9个绝对百分点。 | MS-COCO    | 基于DarkNet   mAP(0.50:0.95)=   38.9%                   |
-| [PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | **PyramidBox** **模型是百度自主研发的人脸检测模型**，利用上下文信息解决困难人脸的检测问题，网络表达能力高，鲁棒性强。于18年3月份在WIDER Face数据集上取得第一名 | WIDER FACE | mAP   （Easy/Medium/Hard   set）=   96.0%/ 94.8%/ 88.8% |
+| [PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/face_detection) | **PyramidBox** **模型是百度自主研发的人脸检测模型**，利用上下文信息解决困难人脸的检测问题，网络表达能力高，鲁棒性强。于18年3月份在WIDER Face数据集上取得第一名 | WIDER FACE | mAP   （Easy/Medium/Hard   set）=   96.0%/ 94.8%/ 88.8% |
  
 <br/>
 <br/>
@@ -115,7 +115,7 @@
 <br/>
  
 
-**视频分类**
+**视频分类和动作定位**
 
 视频分类是视频理解任务的基础，包含语音数据、包含运动信息等的视频对象，因此理解视频需要获得更多的上下文信息，不仅要理解每帧图像是什么、包含什么，还需要结合不同帧，知道上下文的关联信息。视频分类方法主要包含基于卷积神经网络、基于循环神经网络、或将这两者结合的方法。
 
@@ -184,8 +184,6 @@
 
 
 <br/>
-<br/>
-<br/>
 
 **对话情绪识别**
 
@@ -202,8 +200,6 @@
 | ERNIE    | 94.4%    | 94.0%    | 80.6%    |
 
 <br/>
-<br/>
-<br/>
 
 **阅读理解**
 
@@ -214,8 +210,6 @@
 | BiDAF (原始[论文](https://arxiv.org/abs/1711.05073)基线) | 39.29           | 45.90            |
 | 本基线系统                                               | 47.68           | 54.66            |
 
-<br/>
-<br/>
 <br/>
 
 **语义模型（语义表示&语义匹配）**
@@ -302,7 +296,6 @@
 </table>
 
 
-
 <br/>
 
 **DAM**
@@ -326,8 +319,6 @@
 
  
 <br/>
-<br/>
-<br/>
 
 **文本生成（机器翻译&对话生成）**
 
@@ -341,8 +332,6 @@
 | Big        | 27.07            | 30.09            | 34.38            |
 
 <br/>
-<br/>
-<br/>
 
 **对话自动评估**
 
@@ -354,8 +343,6 @@
 | ----- | ----------------- | --------------- | ------------ | --------- |
 | cor   | 0.474             | 0.477           | 0.443        | 0.378     |
 
-<br/>
-<br/>
 <br/>
 
 **对话通用理解**
@@ -371,8 +358,6 @@
 | SOTA         | 76.70%  | 87.40%  | 96.90%  | 96.89%        | 74.50%     | 98.32%          | 81.30%   | 91.70%   |
 | DGU          | 82.02%  | 90.43%  | 97.75%  | 97.10%        | 89.57%     | 97.65%          | 80.19%   | 91.43%   |
 
-<br/>
-<br/>
 <br/>
 
 **知识驱动对话**
@@ -403,9 +388,12 @@
 | [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | 基于会话的图神经网络模型的推荐系统，可以更好的挖掘item中丰富的转换特性以及生成准确的潜在的用户向量表示 |
 | [DeepInterestNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | DIN通过一个兴趣激活模块(Activation Unit)，用预估目标Candidate ADs的信息去激活用户的历史点击商品，以此提取用户与当前预估目标相关的兴趣。 |
 
+<br/>
+<br/>
+<br/>
  
 
-其他模型
+## 其他模型
 
 | 模型名称                                                     | 模型简介                                                     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
