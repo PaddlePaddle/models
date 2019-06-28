@@ -8,7 +8,7 @@ log_smooth_window: 20
 save_dir: output
 snapshot_iter: 2000
 metric: COCO
-pretrain_weights: https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
 weights: https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz
 
 YOLOv3:
