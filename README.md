@@ -228,7 +228,7 @@
 [ELMo(Embeddings from Language Models) ](https://github.com/PaddlePaddle/LARK/tree/develop/ELMo)是重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。
 
 <p align="center">
-<img src="images/elmo.png" width=800"/><br />
+<img src="elmo.png" width=800"/><br />
 </p>
  
 
