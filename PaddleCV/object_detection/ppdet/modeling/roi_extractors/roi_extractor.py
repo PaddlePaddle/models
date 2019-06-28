@@ -95,3 +95,50 @@ class FPNRoIAlign(object):
         roi_feat = fluid.layers.lod_reset(roi_feat_, rois)
 
         return roi_feat
+
+
+@register
+class ESFPNRoIAlign(object):
+    """
+    RoI align pooling for ESFPN feature maps
+    Args:
+        box_resolution (int): output height & width
+        sampling_ratio (int): number of sampling points
+    """
+
+    def __init__(self,
+                 sampling_ratio=0,
+                 spatial_scale=1. / 4,
+                 box_resolution=14,
+                 mask_resolution=14):
+        super(ESFPNRoIAlign, self).__init__()
+        self.sampling_ratio = sampling_ratio
+        self.spatial_scale = spatial_scale
+        self.box_resolution = box_resolution
+        self.mask_resolution = mask_resolution
+
+    def __call__(self, head_inputs, rois, spatial_scale, is_mask=False):
+        """
+        Adopt RoI align onto several feature map(P2) to get RoI features.
+        Distribute RoIs to different levels by area and get a list of RoI
+        features by distributed RoIs and their corresponding feature maps.
+
+        Returns:
+            roi_feat(Variable): RoI features with shape of [M, C, R, R],
+                where M is the number of RoIs and R is RoI resolution
+
+        """
+        name_list = list(head_inputs.keys())
+        faster_rcnn_head_name = name_list[-1]
+        spatial_scale = spatial_scale[-1]
+        head_input = head_inputs[faster_rcnn_head_name]
+        
+        resolution = is_mask and self.mask_resolution or self.box_resolution
+        roi_feat = fluid.layers.roi_align(
+            input=head_input,
+            rois=rois,
+            pooled_height=resolution,
+            pooled_width=resolution,
+            spatial_scale=spatial_scale,
+            sampling_ratio=self.sampling_ratio)
+        return roi_feat

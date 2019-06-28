@@ -138,7 +138,7 @@ def main():
     freeze_bn = getattr(model.backbone, 'freeze_norm', False)
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
-    elif cfg.pretrain_weights and freeze_bn:
+    elif cfg.pretrain_weights and freeze_bn and cfg["fusebn"]:
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:
         checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
