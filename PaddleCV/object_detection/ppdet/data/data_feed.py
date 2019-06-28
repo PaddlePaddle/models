@@ -81,7 +81,7 @@ def create_reader(feed, max_iter=0):
             'TYPE': type(feed.dataset).__source__
         }
     }
-    
+
     if len(getattr(feed.dataset, 'images', [])) > 0:
         data_config[mode]['IMAGES'] = feed.dataset.images
 
@@ -448,57 +448,6 @@ class FasterRCNNTrainFeed(DataFeed):
         self.mode = 'TRAIN'
 
 
-# XXX currently use two presets, in the future, these should be combined into a
-# single `RCNNTrainFeed`. Mask (and keypoint) should be processed
-# automatically if `gt_mask` (or `gt_keypoints`) is in the required fields
-@register
-class MaskRCNNTrainFeed(DataFeed):
-    __doc__ = DataFeed.__doc__
-
-    def __init__(self,
-                 dataset=CocoDataSet().__dict__,
-                 fields=[
-                     'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
-                     'is_crowd', 'gt_mask'
-                 ],
-                 image_shape=[3, 1333, 800],
-                 sample_transforms=[
-                     DecodeImage(to_rgb=True),
-                     RandomFlipImage(prob=0.5, is_mask_flip=True),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
-                     ResizeImage(target_size=800,
-                                 max_size=1333,
-                                 interp=1,
-                                 use_cv2=True),
-                     Permute(to_bgr=False, channel_first=True)
-                 ],
-                 batch_transforms=[PadBatch()],
-                 batch_size=1,
-                 shuffle=True,
-                 samples=-1,
-                 drop_last=False,
-                 num_workers=2,
-                 use_process=False,
-                 use_padded_im_info=False):
-        sample_transforms.append(ArrangeRCNN(is_mask=True))
-        super(MaskRCNNTrainFeed, self).__init__(
-            dataset,
-            fields,
-            image_shape,
-            sample_transforms,
-            batch_transforms,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            samples=samples,
-            drop_last=drop_last,
-            num_workers=num_workers,
-            use_process=use_process)
-        self.mode = 'TRAIN'
-
-
 @register
 class FasterRCNNEvalFeed(DataFeed):
     __doc__ = DataFeed.__doc__
@@ -580,6 +529,57 @@ class FasterRCNNTestFeed(DataFeed):
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'TEST'
+
+
+# XXX currently use two presets, in the future, these should be combined into a
+# single `RCNNTrainFeed`. Mask (and keypoint) should be processed
+# automatically if `gt_mask` (or `gt_keypoints`) is in the required fields
+@register
+class MaskRCNNTrainFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=CocoDataSet().__dict__,
+                 fields=[
+                     'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
+                     'is_crowd', 'gt_mask'
+                 ],
+                 image_shape=[3, 1333, 800],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True),
+                     RandomFlipImage(prob=0.5, is_mask_flip=True),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
+                     ResizeImage(target_size=800,
+                                 max_size=1333,
+                                 interp=1,
+                                 use_cv2=True),
+                     Permute(to_bgr=False, channel_first=True)
+                 ],
+                 batch_transforms=[PadBatch()],
+                 batch_size=1,
+                 shuffle=True,
+                 samples=-1,
+                 drop_last=False,
+                 num_workers=2,
+                 use_process=False,
+                 use_padded_im_info=False):
+        sample_transforms.append(ArrangeRCNN(is_mask=True))
+        super(MaskRCNNTrainFeed, self).__init__(
+            dataset,
+            fields,
+            image_shape,
+            sample_transforms,
+            batch_transforms,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            samples=samples,
+            drop_last=drop_last,
+            num_workers=num_workers,
+            use_process=use_process)
+        self.mode = 'TRAIN'
 
 
 @register
