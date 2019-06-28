@@ -14,7 +14,7 @@ To avoid the common pitfalls, with automation and static analysis in mind, we pr
 
 # Design
 
-The design utilizes some of Python's reflection mechanism to extract configuration schematics from python class definitions.
+The design utilizes some of Python's reflection mechanism to extract configuration schematics from Python class definitions.
 
 To be specific, it extracts information from class constructor arguments, including names, docstrings, default values, data types (if type hints are available).
 
@@ -158,7 +158,7 @@ LearningRate:
 
 # Requirements
 
-Two python packages are used, both are optional.
+Two Python packages are used, both are optional.
 
 -   [typeguard](https://github.com/agronholm/typeguard) is used for type checking in Python 3.
 -   [docstring\_parser](https://github.com/rr-/docstring_parser) is needed for docstring parsing.

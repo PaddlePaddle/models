@@ -1,7 +1,7 @@
-# PaddlePaddle Object Detection
+# PaddleDetection
 
 The goal of PaddleDetection is to provide easy access to a wide range of object
-detection models in both industry and research settings. we design
+detection models in both industry and research settings. We design
 PaddleDetection to be not only performant, production-ready but also highly
 flexible, catering to research needs.
 
