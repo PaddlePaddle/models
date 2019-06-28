@@ -94,3 +94,14 @@ python infer.sh
         --use_gpu True
 
 ````
+
+###效果
+单个模型 beam_size = 10
+
+no attention
+tst2012 BLEU: 11.58
+tst2013 BLEU: 12.20
+
+with attention
+tst2012 BLEU: 22.21
+tst2013 BLEU: 25.30
