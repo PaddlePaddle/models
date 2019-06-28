@@ -9,7 +9,7 @@ save_dir: output
 snapshot_iter: 2000
 metric: COCO
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
-weights: https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz
+weights: output/yolov3_darknet/model_final
 
 YOLOv3:
   backbone: DarkNet
