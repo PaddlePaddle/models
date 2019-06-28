@@ -104,7 +104,6 @@ LearningRate:
   - !PiecewiseDecay
     gamma: 0.1
     milestones: [200000, 240000]
-    values: null
   - !LinearWarmup
     start_factor: 0.3333333333333333
     steps: 500
@@ -120,35 +119,31 @@ OptimizerBuilder:
 MaskRCNNTrainFeed:
   # batch size per device
   batch_size: 1
-  batch_transforms:
-  - !PadBatch
-    pad_to_stride: 32
   dataset:
     dataset_dir: dataset/coco 
     image_dir: train2017
     annotation: annotations/instances_train2017.json
-  num_workers: 2
-  shuffle: True
-  use_padded_im_info: False
-
-MaskRCNNEvalFeed:
-  batch_size: 1
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
+  num_workers: 2
+
+MaskRCNNEvalFeed:
+  batch_size: 1
   dataset:
     dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  num_workers: 2
-  use_padded_im_info: True
-
-MaskRCNNTestFeed:
-  batch_size: 1
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
+  num_workers: 2
+
+MaskRCNNTestFeed:
+  batch_size: 1
   dataset:
     annotation: annotations/instances_val2017.json
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 32
   num_workers: 2
-  use_padded_im_info: True
