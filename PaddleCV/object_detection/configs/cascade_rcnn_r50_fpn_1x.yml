@@ -7,7 +7,7 @@ snapshot_iter: 10000
 use_gpu: true
 log_smooth_window: 20
 save_dir: output
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos_pretrained.tar
 weights: output/cascade_rcnn_r50_fpn_1x/model_final
 metric: COCO
 
