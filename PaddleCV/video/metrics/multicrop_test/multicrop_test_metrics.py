@@ -86,8 +86,8 @@ class MetricsCalculator():
             os.makedirs(self.checkpoint_dir)
         pkl_path = os.path.join(self.checkpoint_dir, "results_probs.pkl")
 
-        with open(pkl_path, 'w') as f:
-            pickle.dump(self.results, f)
+        with open(pkl_path, 'wb') as f:
+            pickle.dump(self.results, f, protocol=0)
         logger.info('Temporary file saved to: {}'.format(pkl_path))
 
 

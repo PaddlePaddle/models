@@ -2,6 +2,34 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
+
+
+def set_paddle_flags(flags):
+    for key, value in flags.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+use_cudnn_deterministic = os.environ.get('FLAGS_cudnn_deterministic', None)
+
+if use_cudnn_deterministic:
+    use_cudnn_exhaustive_search = 0
+else:
+    use_cudnn_exhaustive_search = 1
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect. 
+set_paddle_flags({
+    'FLAGS_cudnn_exhaustive_search': use_cudnn_exhaustive_search,
+    'FLAGS_conv_workspace_size_limit': 256,
+    'FLAGS_eager_delete_tensor_gb': 0, # enable gc 
+    # You can omit the following settings, because the default
+    # value of FLAGS_memory_fraction_of_eager_deletion is 1,
+    # and default value of FLAGS_fast_eager_deletion_mode is 1 
+    'FLAGS_memory_fraction_of_eager_deletion': 1,
+    'FLAGS_fast_eager_deletion_mode': 1
+})
+
 import random
 import sys
 import paddle
@@ -150,18 +178,30 @@ def train(args):
     build_strategy.enable_inplace = False
     build_strategy.memory_optimize = False
 
+    exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.num_threads = 1
+    exec_strategy.use_experimental_executor = True
+
     g_A_trainer_program = fluid.CompiledProgram(
         g_A_trainer.program).with_data_parallel(
-            loss_name=g_A_trainer.g_loss_A.name, build_strategy=build_strategy)
+            loss_name=g_A_trainer.g_loss_A.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     g_B_trainer_program = fluid.CompiledProgram(
         g_B_trainer.program).with_data_parallel(
-            loss_name=g_B_trainer.g_loss_B.name, build_strategy=build_strategy)
+            loss_name=g_B_trainer.g_loss_B.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     d_B_trainer_program = fluid.CompiledProgram(
         d_B_trainer.program).with_data_parallel(
-            loss_name=d_B_trainer.d_loss_B.name, build_strategy=build_strategy)
+            loss_name=d_B_trainer.d_loss_B.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     d_A_trainer_program = fluid.CompiledProgram(
         d_A_trainer.program).with_data_parallel(
-            loss_name=d_A_trainer.d_loss_A.name, build_strategy=build_strategy)
+            loss_name=d_A_trainer.d_loss_A.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     for epoch in range(args.epoch):
         batch_id = 0
         for i in range(max_images_num):

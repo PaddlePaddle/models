@@ -26,8 +26,6 @@ from paddle.fluid import framework
 import math
 import sys
 
-batch_size = 32
-epoch = 120
 IMAGENET1000 = 1281167
 base_lr = 0.1
 momentum_rate = 0.9
@@ -35,18 +33,21 @@ l2_decay = 1e-4
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("Training for Mnist.")
+    parser = argparse.ArgumentParser("Training for Resnet.")
     parser.add_argument(
         "--use_data_parallel",
         type=ast.literal_eval,
         default=False,
         help="The flag indicating whether to shuffle instances in each pass.")
+    parser.add_argument("-e", "--epoch", default=120, type=int, help="set epoch")
+    parser.add_argument("-b", "--batch_size", default=32, type=int, help="set epoch")
+    parser.add_argument("--ce", action="store_true", help="run ce")
     args = parser.parse_args()
     return args
 
 
 args = parse_args()
-
+batch_size = args.batch_size
 
 def optimizer_setting():
 
@@ -263,16 +264,28 @@ def eval(model, data):
             print("test | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
                   ( batch_id, total_loss / total_sample, \
                    total_acc1 / total_sample, total_acc5 / total_sample))
+    if args.ce:
+        print("kpis\ttest_acc1\t%0.3f" % (total_acc1 / total_sample))
+        print("kpis\ttest_acc5\t%0.3f" % (total_acc5 / total_sample))
+        print("kpis\ttest_loss\t%0.3f" % (total_loss / total_sample))
     print("final eval loss %0.3f acc1 %0.3f acc5 %0.3f" % \
           (total_loss / total_sample, \
            total_acc1 / total_sample, total_acc5 / total_sample))
 
 
 def train_resnet():
+    epoch = args.epoch
     trainer_count = fluid.dygraph.parallel.Env().nranks
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
         if args.use_data_parallel else fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
+        if args.ce:
+            print("ce mode")
+            seed = 33
+            np.random.seed(seed)
+            fluid.default_startup_program().random_seed = seed
+            fluid.default_main_program().random_seed = seed
+
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
 
@@ -282,14 +295,11 @@ def train_resnet():
         if args.use_data_parallel:
             resnet = fluid.dygraph.parallel.DataParallel(resnet, strategy)
 
+        train_reader = paddle.batch(
+            paddle.dataset.flowers.train(use_xmap=False), batch_size=batch_size)
         if args.use_data_parallel:
-            train_reader = fluid.contrib.reader.distributed_sampler(
-                paddle.dataset.flowers.train(use_xmap=False),
-                batch_size=batch_size * trainer_count)
-        else:
-            train_reader = paddle.batch(
-                paddle.dataset.flowers.train(use_xmap=False),
-                batch_size=batch_size)
+            train_reader = fluid.contrib.reader.distributed_batch_reader(
+                train_reader)
 
         test_reader = paddle.batch(
             paddle.dataset.flowers.test(use_xmap=False), batch_size=batch_size)
@@ -343,24 +353,27 @@ def train_resnet():
                 optimizer.minimize(avg_loss)
                 resnet.clear_gradients()
 
-                framework._dygraph_tracer_._clear_ops()
 
                 total_loss += dy_out
                 total_acc1 += acc_top1.numpy()
                 total_acc5 += acc_top5.numpy()
                 total_sample += 1
-
                 #print("epoch id: %d, batch step: %d, loss: %f" % (eop, batch_id, dy_out))
                 if batch_id % 10 == 0:
                     print( "epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
                            ( eop, batch_id, total_loss / total_sample, \
                              total_acc1 / total_sample, total_acc5 / total_sample))
 
+            if args.ce:
+                print("kpis\ttrain_acc1\t%0.3f" % (total_acc1 / total_sample))
+                print("kpis\ttrain_acc5\t%0.3f" % (total_acc5 / total_sample))
+                print("kpis\ttrain_loss\t%0.3f" % (total_loss / total_sample))
             print("epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
                   (eop, batch_id, total_loss / total_sample, \
                    total_acc1 / total_sample, total_acc5 / total_sample))
             resnet.eval()
             eval(resnet, test_reader)
+            fluid.dygraph.save_persistables(resnet.state_dict(), 'resnet_params')
 
 
 if __name__ == '__main__':
