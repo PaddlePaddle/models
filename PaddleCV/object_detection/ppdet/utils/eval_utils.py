@@ -48,7 +48,7 @@ def parse_fetches(fetches, prog=None, extra_keys=None):
                 v.persistable = True
                 keys.append(k)
                 values.append(v.name)
-            except:
+            except Exception:
                 pass
 
     return keys, values, cls
@@ -88,23 +88,21 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
     return results
 
 
-def eval_results(results, feed, args, cfg):
+def eval_results(results, feed, metric, resolution=None, output_file=None):
     """Evaluation for evaluation program results"""
-    metric = cfg['metric']
     if metric == 'COCO':
         from ppdet.utils.coco_eval import bbox_eval, mask_eval
         anno_file = getattr(feed.dataset, 'annotation', None)
         with_background = getattr(feed, 'with_background', True)
-        savefile = 'bbox.json'
-        if args.savefile:
-            savefile = '{}_bbox.json'.format(args.savefile)
-        bbox_eval(results, anno_file, savefile, with_background)
+        output = 'bbox.json'
+        if output_file:
+            output = '{}_bbox.json'.format(output_file)
+        bbox_eval(results, anno_file, output, with_background)
         if 'mask' in results[0]:
-            savefile = 'mask.json'
-            if args.savefile:
-                savefile = '{}_mask.json'.format(args.savefile)
-            mask_eval(results, anno_file, savefile,
-                      cfg['MaskHead']['resolution'])
+            output = 'mask.json'
+            if output_file:
+                output = '{}_mask.json'.format(output_file)
+            mask_eval(results, anno_file, output, resolution)
     else:
         res = np.mean(results[-1]['accum_map'][0])
         logger.info('Test mAP: {}'.format(res))

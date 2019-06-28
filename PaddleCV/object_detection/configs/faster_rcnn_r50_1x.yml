@@ -21,7 +21,7 @@ FasterRCNN:
 ResNet:
   norm_type: affine_channel
   depth: 50
-  feature_maps: [2,3,4]
+  feature_maps: 4
   freeze_at: 2
 
 ResNetC5:
@@ -95,7 +95,7 @@ FasterRCNNTrainFeed:
   # batch size per device
   batch_size: 1
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   drop_last: false
@@ -104,7 +104,7 @@ FasterRCNNTrainFeed:
 FasterRCNNEvalFeed:
   batch_size: 1
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
@@ -112,8 +112,4 @@ FasterRCNNEvalFeed:
 FasterRCNNTestFeed:
   batch_size: 1
   dataset:
-    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
-    image_dir: val2017
-  test_file: val2017.txt
-  samples: 5

@@ -20,12 +20,11 @@ MaskRCNN:
   mask_assigner: MaskAssigner
   mask_head: MaskHead
 
-
 ResNet:
   norm_type: affine_channel
-  norm_decay: true
+  norm_decay: 0.
   depth: 50
-  feature_maps: [2,3, 4]
+  feature_maps: 4
   freeze_at: 2
 
 ResNetC5:
@@ -108,7 +107,7 @@ OptimizerBuilder:
 MaskRCNNTrainFeed:
   batch_size: 1
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   num_workers: 2
@@ -117,7 +116,7 @@ MaskRCNNTrainFeed:
 MaskRCNNEvalFeed:
   batch_size: 1
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   shuffle: false
@@ -125,8 +124,4 @@ MaskRCNNEvalFeed:
 MaskRCNNTestFeed:
   batch_size: 1
   dataset:
-    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
-    image_dir: val2017
-  test_file: val2017.txt
-  samples: 5

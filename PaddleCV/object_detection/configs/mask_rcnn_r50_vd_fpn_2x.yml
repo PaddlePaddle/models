@@ -9,7 +9,7 @@ log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_pretrained.tar
 metric: COCO
-weights: output/mask_rcnn_r50_vd_fpn_2x/model_final/ 
+weights: output/mask_rcnn_r50_vd_fpn_2x/model_final/
 
 MaskRCNN:
   backbone: ResNet
@@ -24,7 +24,7 @@ ResNet:
   feature_maps: [2, 3, 4, 5]
   freeze_at: 2
   norm_type: affine_channel
-  variant: d 
+  variant: d
 
 FPN:
   max_level: 6
@@ -122,7 +122,7 @@ MaskRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     image_dir: train2017
     annotation: annotations/instances_train2017.json
   num_workers: 2
@@ -135,7 +135,7 @@ MaskRCNNEvalFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
@@ -147,9 +147,6 @@ MaskRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
-    image_dir: val2017
-  test_file: val2017.txt
   num_workers: 2
   use_padded_im_info: True

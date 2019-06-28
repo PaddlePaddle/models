@@ -17,48 +17,44 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
-import logging
 import numpy as np
 import pycocotools.mask as mask_util
 from PIL import Image, ImageDraw
 
 from .colormap import colormap
 
-logger = logging.getLogger(__name__)
-
 __all__ = ['visualize_results']
 
-SAVE_HOME = 'output'
 
-
-def visualize_results(image_path,
+def visualize_results(image,
+                      im_id,
                       catid2name,
                       threshold=0.5,
                       bbox_results=None,
-                      mask_results=None):
+                      mask_results=None,
+                      is_bbox_normalized=False):
     """
-    TODO(dengkaipeng): add more comments
     Visualize bbox and mask results
     """
-    image = None
     if mask_results:
-        image = draw_mask(image_path, mask_results, threshold)
+        image = draw_mask(image, im_id, mask_results, threshold)
     if bbox_results:
-        draw_bbox(image_path, catid2name, bbox_results, threshold, image)
+        image = draw_bbox(image, im_id, catid2name, bbox_results,
+                          threshold, is_bbox_normalized)
+    return image
 
 
-def draw_mask(image_path, segms, threshold, alpha=0.7, save_image=False):
+def draw_mask(image, im_id, segms, threshold, alpha=0.7):
     """
-    TODO(dengkaipeng): add more comments
     Draw mask on image
     """
-    image = Image.open(image_path)
     im_width, im_height = image.size
     mask_color_id = 0
     w_ratio = .4
-    image = np.array(image).astype('float32')
+    img_array = np.array(image).astype('float32')
     for dt in np.array(segms):
+        if im_id != dt['image_id']:
+            continue
         segm, score = dt['segmentation'], dt['score']
         if score < threshold:
             continue
@@ -69,34 +65,33 @@ def draw_mask(image_path, segms, threshold, alpha=0.7, save_image=False):
         for c in range(3):
             color_mask[c] = color_mask[c] * (1 - w_ratio) + w_ratio * 255
         idx = np.nonzero(mask)
-        image[idx[0], idx[1], :] *= 1.0 - alpha
-        image[idx[0], idx[1], :] += alpha * color_mask
-    image = Image.fromarray(image.astype('uint8'))
-
-    if not os.path.exists(SAVE_HOME):
-        os.makedirs(SAVE_HOME)
-    if save_image:
-        save_name = get_save_image_name(image_path)
-        logger.info("Detection mask results save in {}".format(save_name))
-        image.save(save_name)
-    return image
+        img_array[idx[0], idx[1], :] *= 1.0 - alpha
+        img_array[idx[0], idx[1], :] += alpha * color_mask
+    return Image.fromarray(img_array.astype('uint8'))
 
 
-def draw_bbox(image_path, catid2name, bboxes, threshold, image=None):
+def draw_bbox(image, im_id, catid2name, bboxes, threshold,
+              is_bbox_normalized=False):
     """
-    TODO(dengkaipeng): add more comments
     Draw bbox on image
     """
-    if image is None:
-        image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
-    im_width, im_height = image.size
 
     for dt in np.array(bboxes):
+        if im_id != dt['image_id']:
+            continue
         catid, bbox, score = dt['category_id'], dt['bbox'], dt['score']
         if score < threshold:
             continue
         xmin, ymin, w, h = bbox
+
+        if is_bbox_normalized:
+            im_width, im_height = image.size
+            xmin *= im_width
+            ymin *= im_height
+            w *= im_width
+            h *= im_height
+
         xmax = xmin + w
         ymax = ymin + h
         draw.line(
@@ -105,19 +100,11 @@ def draw_bbox(image_path, catid2name, bboxes, threshold, image=None):
             width=2,
             fill='red')
         if image.mode == 'RGB':
-            draw.text((xmin, ymin), catid2name[catid], (255, 255, 0))
+            text = catid2name[catid]
+            tw, th = draw.textsize(text)
+            draw.rectangle([(xmin + 1, ymin + 1),
+                            (xmin + tw + 1, ymin + th + 1)],
+                           fill='red')
+            draw.text((xmin + 1, ymin + 1), text, fill=(255, 255, 255))
 
-    if not os.path.exists(SAVE_HOME):
-        os.makedirs(SAVE_HOME)
-    save_name = get_save_image_name(image_path)
-    logger.info("Detection bbox results save in {}".format(save_name))
-    image.save(save_name)
-
-
-def get_save_image_name(image_path):
-    """
-    Get save image name from source image path.
-    """
-    image_name = image_path.split('/')[-1]
-    name, ext = os.path.splitext(image_name)
-    return os.path.join(SAVE_HOME, "{}".format(name)) + ext
+    return image

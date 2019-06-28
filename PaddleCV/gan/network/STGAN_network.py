@@ -27,37 +27,48 @@ class STGAN_model(object):
     def __init__(self):
         pass
 
-    def network_G(self, input, label_org, label_trg, cfg, name="generator"):
+    def network_G(self,
+                  input,
+                  label_org,
+                  label_trg,
+                  cfg,
+                  name="generator",
+                  is_test=False):
         _a = label_org
         _b = label_trg
         z = self.Genc(
             input,
             name=name + '_Genc',
             n_layers=cfg.n_layers,
-            dim=cfg.g_base_dims)
+            dim=cfg.g_base_dims,
+            is_test=is_test)
         zb = self.GRU(z,
                       fluid.layers.elementwise_sub(_b, _a),
                       name=name + '_GRU',
                       dim=cfg.g_base_dims,
-                      n_layers=cfg.gru_n_layers) if cfg.use_gru else z
+                      n_layers=cfg.gru_n_layers,
+                      is_test=is_test) if cfg.use_gru else z
         fake_image = self.Gdec(
             zb,
             fluid.layers.elementwise_sub(_b, _a),
             name=name + '_Gdec',
             dim=cfg.g_base_dims,
-            n_layers=cfg.n_layers)
+            n_layers=cfg.n_layers,
+            is_test=is_test)
 
         za = self.GRU(z,
                       fluid.layers.elementwise_sub(_a, _a),
                       name=name + '_GRU',
                       dim=cfg.g_base_dims,
-                      n_layers=cfg.gru_n_layers) if cfg.use_gru else z
+                      n_layers=cfg.gru_n_layers,
+                      is_test=is_test) if cfg.use_gru else z
         rec_image = self.Gdec(
             za,
             fluid.layers.elementwise_sub(_a, _a),
             name=name + '_Gdec',
             dim=cfg.g_base_dims,
-            n_layers=cfg.n_layers)
+            n_layers=cfg.n_layers,
+            is_test=is_test)
         return fake_image, rec_image
 
     def network_D(self, input, cfg, name="discriminator"):
@@ -74,7 +85,7 @@ class STGAN_model(object):
             z, [-1, a.shape[1], z.shape[2], z.shape[3]], "float32", 1.0)
         return fluid.layers.concat([z, ones * a], axis=1)
 
-    def Genc(self, input, dim=64, n_layers=5, name='G_enc_'):
+    def Genc(self, input, dim=64, n_layers=5, name='G_enc_', is_test=False):
         z = input
         zs = []
         for i in range(n_layers):
@@ -90,7 +101,8 @@ class STGAN_model(object):
                 name=name + str(i),
                 use_bias=False,
                 relufactor=0.01,
-                initial='kaiming')
+                initial='kaiming',
+                is_test=is_test)
             zs.append(z)
 
         return zs
@@ -104,7 +116,8 @@ class STGAN_model(object):
             kernel_size=3,
             norm=None,
             pass_state='lstate',
-            name='G_gru_'):
+            name='G_gru_',
+            is_test=False):
 
         zs_ = [zs[-1]]
         state = self.concat(zs[-1], a)
@@ -117,7 +130,8 @@ class STGAN_model(object):
                 kernel_size=kernel_size,
                 norm=norm,
                 pass_state=pass_state,
-                name=name + str(i))
+                name=name + str(i),
+                is_test=is_test)
             zs_.insert(0, output[0] + zs[n_layers - 1 - i])
             if inject_layers > i:
                 state = self.concat(output[1], a)
@@ -132,7 +146,8 @@ class STGAN_model(object):
              n_layers=5,
              shortcut_layers=4,
              inject_layers=4,
-             name='G_dec_'):
+             name='G_dec_',
+             is_test=False):
         shortcut_layers = min(shortcut_layers, n_layers - 1)
         inject_layers = min(inject_layers, n_layers - 1)
 
@@ -150,7 +165,8 @@ class STGAN_model(object):
                     norm='batch_norm',
                     activation_fn='relu',
                     use_bias=False,
-                    initial='kaiming')
+                    initial='kaiming',
+                    is_test=is_test)
                 if shortcut_layers > i:
                     z = fluid.layers.concat([z, zs[n_layers - 2 - i]], axis=1)
                 if inject_layers > i:
@@ -165,7 +181,8 @@ class STGAN_model(object):
                     name=name + str(i),
                     activation_fn='tanh',
                     use_bias=True,
-                    initial='kaiming')
+                    initial='kaiming',
+                    is_test=is_test)
         return x
 
     def D(self,
@@ -220,7 +237,8 @@ class STGAN_model(object):
                  kernel_size=3,
                  norm=None,
                  pass_state='lstate',
-                 name='gru'):
+                 name='gru',
+                 is_test=False):
         state_ = deconv2d(
             state,
             out_channel,
@@ -229,7 +247,8 @@ class STGAN_model(object):
             padding_type='SAME',
             name=name + '_deconv2d',
             use_bias=True,
-            initial='kaiming'
+            initial='kaiming',
+            is_test=is_test,
         )  # upsample and make `channel` identical to `out_channel`
         reset_gate = conv2d(
             fluid.layers.concat(
@@ -241,7 +260,8 @@ class STGAN_model(object):
             padding_type='SAME',
             use_bias=True,
             name=name + '_reset_gate',
-            initial='kaiming')
+            initial='kaiming',
+            is_test=is_test)
         update_gate = conv2d(
             fluid.layers.concat(
                 [in_data, state_], axis=1),
@@ -252,7 +272,8 @@ class STGAN_model(object):
             padding_type='SAME',
             use_bias=True,
             name=name + '_update_gate',
-            initial='kaiming')
+            initial='kaiming',
+            is_test=is_test)
         left_state = reset_gate * state_
         new_info = conv2d(
             fluid.layers.concat(
@@ -264,7 +285,8 @@ class STGAN_model(object):
             name=name + '_info',
             padding_type='SAME',
             use_bias=True,
-            initial='kaiming')
+            initial='kaiming',
+            is_test=is_test)
         output = (1 - update_gate) * state_ + update_gate * new_info
         if pass_state == 'output':
             return output, output

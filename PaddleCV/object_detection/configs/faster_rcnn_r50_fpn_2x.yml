@@ -21,7 +21,7 @@ FasterRCNN:
 
 ResNet:
   norm_type: affine_channel
-  norm_decay: true
+  norm_decay: 0.
   depth: 50
   feature_maps: [2, 3, 4, 5]
   freeze_at: 2
@@ -111,7 +111,7 @@ FasterRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   drop_last: false
@@ -124,7 +124,7 @@ FasterRCNNEvalFeed:
   - !PadBatch
     pad_to_stride: 32
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
 
@@ -135,7 +135,6 @@ FasterRCNNTestFeed:
     pad_to_stride: 32
   dataset:
     annotation: coco/annotations/instances_val2017.json
-    image_dir: coco/val2017
   drop_last: false
   num_workers: 2
   shuffle: false

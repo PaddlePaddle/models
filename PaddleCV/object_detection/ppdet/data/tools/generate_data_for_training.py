@@ -109,7 +109,7 @@ def dump_voc_as_pickle(args):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     save_dir = args.save_dir
-    anno_path = args.annotation
+    anno_path = os.path.expanduser(args.annotation)
     roidb, cat2id = loader.load(
         anno_path, samples, with_cat2id=True, use_default_label=None)
     samples = len(roidb)

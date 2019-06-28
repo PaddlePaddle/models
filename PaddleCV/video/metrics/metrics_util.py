@@ -23,6 +23,7 @@ import numpy as np
 from metrics.youtube8m import eval_util as youtube8m_metrics
 from metrics.kinetics import accuracy_metrics as kinetics_metrics
 from metrics.multicrop_test import multicrop_test_metrics as multicrop_test_metrics
+from metrics.detections import detection_metrics as detection_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +161,43 @@ class MulticropMetrics(Metrics):
         self.calculator.reset()
 
 
+class DetectionMetrics(Metrics):
+    def __init__(self, name, mode, cfg):
+        self.name = name
+        self.mode = mode
+        args = {}
+        args['score_thresh'] = cfg.TEST.score_thresh
+        args['nms_thresh'] = cfg.TEST.nms_thresh
+        args['sigma_thresh'] = cfg.TEST.sigma_thresh
+        args['soft_thresh'] = cfg.TEST.soft_thresh
+        args['class_label_file'] = cfg.TEST.class_label_file
+        args['video_duration_file'] = cfg.TEST.video_duration_file
+        args['gt_label_file'] = cfg.TEST.filelist
+        args['mode'] = mode
+        args['name'] = name
+        self.calculator = detection_metrics.MetricsCalculator(**args)
+
+    def calculate_and_log_out(self, loss, pred, label, info=''):
+        logger.info(info +
+                    '\tLoss = {}, \tloc_loss = {}, \tcls_loss = {}'.format(
+                        np.mean(loss[0]), np.mean(loss[1]), np.mean(loss[2])))
+
+    def accumulate(self, loss, pred, label):
+        self.calculator.accumulate(loss, pred, label)
+
+    def finalize_and_log_out(self, info=''):
+        self.calculator.finalize_metrics()
+        metrics_dict = self.calculator.get_computed_metrics()
+        loss = metrics_dict['avg_loss']
+        loc_loss = metrics_dict['avg_loc_loss']
+        cls_loss = metrics_dict['avg_cls_loss']
+        logger.info(info + '\tLoss: {},\tloc_loss: {}, \tcls_loss: {}'.format('%.6f' % loss, \
+                       '%.6f' % loc_loss, '%.6f' % cls_loss))
+
+    def reset(self):
+        self.calculator.reset()
+
+
 class MetricsZoo(object):
     def __init__(self):
         self.metrics_zoo = {}
@@ -196,3 +234,4 @@ regist_metrics("NONLOCAL", MulticropMetrics)
 regist_metrics("TSM", Kinetics400Metrics)
 regist_metrics("TSN", Kinetics400Metrics)
 regist_metrics("STNET", Kinetics400Metrics)
+regist_metrics("CTCN", DetectionMetrics)
