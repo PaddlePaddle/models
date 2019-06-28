@@ -1,105 +1,112 @@
 # PaddlePaddle Object Detection
 
-This object detection framework is based on PaddlePaddle. We want to provide classically and state of the art detection algorithms in generic object detection and specific target detection for users. And we aimed to make this framework easy to extend, train, and deploy. We aimed to make it easy to use in research and products.
+The goal of PaddleDetection is to provide easy access to a wide range of object
+detection models in both industry and research settings. we design
+PaddleDetection to be not only performant, production-ready but also highly
+flexible, catering to research needs.
 
 
 <div align="center">
-  <img src="demo/output/000000523957.jpg" />
+  <img src="demo/output/000000570688.jpg" />
 </div>
 
 
 ## Introduction
 
-Major features:
+Design Principles:
 
-- Easy to Deploy:
-  All the operations related to inference are implemented by C++ and CUDA, it makes the detection model easy to deploy in products on the server without Python based on the high efficient inference engine of PaddlePaddle.
-  We release detection models based on ResNet-D backbone, for example, the accuracy of Faster-RCNN model with FPN based on ResNet50 VD is close to model based on ResNet 101. But the former is smaller and faster.
+- Production Ready:
+Key operations are implemented in C++ and CUDA, together with PaddlePaddle's
+highly efficient inference engine, enables easy deployment in server environments.
 
-- Easy to Customize:
-   All components are modular encapsulated, including the data transforms. It's easy to plug in and pull out any module. For example, users can switch backbone easily or add mixup data augmentation for models.
+- Highly Flexible:
+Components are designed to be modular. Model architectures, as well as data
+preprocess pipelines, can be easily customized with simple configuration
+changes.
 
-- High Efficiency:
-  Based on the high efficient PaddlePaddle framework, less memory is required. For example, the batch size of Mask-RCNN based on ResNet50 can be 5 per Tesla V100 (16G) when multi-GPU training. The training speed of Yolo v3 is faster than other frameworks.  
+- Performance Optimized:
+With the help of the underlying PaddlePaddle framework, faster training and
+reduced GPU memory footprint is achieved. Notably, Yolo V3 training is
+much faster compared to other frameworks. Another example is Mask-RCNN
+(ResNet50), we managed to fit up to 5 images per GPU (V100 16GB) during
+training.
 
-The supported architectures are as follows:
+Supported Architectures:
 
-|                    | ResNet |ResNet vd| ResNeXt  | SENet    | MobileNet | DarkNet|
-|--------------------|:------:|--------:|:--------:|:--------:|:---------:|:------:|
-| Faster R-CNN       | ✓      | ✓      | ✓        |  ✓       | ✗        | ✗      |
-| Faster R-CNN + FPN | ✓      | ✓      | ✓        |  ✓       | ✗        | ✗      |
-| Mask R-CNN         | ✓      | ✓      | ✓        |  ✓       | ✗        | ✗      |
-| Mask R-CNN + FPN   | ✓      | ✓      | ✓        |  ✓       | ✗        | ✗      |
-| Cascade R-CNN      | ✓      | ✓      | ✓        |  ✓       | ✗        | ✗      |
-| RetinaNet          | ✓      | ✓      | ✓        |  ✓       | ✗        | ✗      |
-| Yolov3             | ✓      | ✗      | ✗         |  ✗       | ✓        | ✓     |
-| SSD                | ✗      | ✗      | ✗         |  ✗       | ✓        | ✗      |
+|                    | ResNet | ResNet-vd <sup>[1](#vd)</sup> | ResNeXt | SENet | MobileNet | DarkNet |
+|--------------------|:------:|------------------------------:|:-------:|:-----:|:---------:|:-------:|
+| Faster R-CNN       | ✓      |                             ✓ | ✓       | ✓     | ✗         | ✗       |
+| Faster R-CNN + FPN | ✓      |                             ✓ | ✓       | ✓     | ✗         | ✗       |
+| Mask R-CNN         | ✓      |                             ✓ | ✓       | ✓     | ✗         | ✗       |
+| Mask R-CNN + FPN   | ✓      |                             ✓ | ✓       | ✓     | ✗         | ✗       |
+| Cascade R-CNN      | ✓      |                             ✗ | ✗       | ✗     | ✗         | ✗       |
+| RetinaNet          | ✓      |                             ✗ | ✗       | ✗     | ✗         | ✗       |
+| Yolov3             | ✓      |                             ✗ | ✗       | ✗     | ✓         | ✓       |
+| SSD                | ✗      |                             ✗ | ✗       | ✗     | ✓         | ✗       |
 
-The extensive capabilities:
+<a name="vd">[1]</a> ResNet-vd models offer much improved accuracy with negligible performance cost.
 
-- [x] **Synchronized batch norm**:  used in Yolo v3.
-- [x] **Group Norm**: supported this operation, the related model will be added later.
-- [x] **Modulated deformable convolution**: supported this operation, the related model will be added later.
-- [x] **Deformable PSRoI Pooling**: supported this operation, the related model will be added later.
+Advanced Features:
 
+- [x] **Synchronized Batch Norm**: currently used by Yolo V3.
+- [x] **Group Norm**: pretrained models to be released.
+- [x] **Modulated Deformable Convolution**: pretrained models to be released.
+- [x] **Deformable PSRoI Pooling**: pretrained models to be released.
 
-#### Work in Progress and to Do
-
-- About Framework:
-   - Mixed precision training and distributed training.
-   - 8-bit deployment.
-   - Easy to customize the user-defined function.
-
-- About Algorithms:
-   - More SOTA models.
-   - More easy-to-deployed models.
-
-We are glad to receive your feedback.
 
 ## Model zoo
 
-The trained models can be available in PaddlePaddle [detection model zoo](docs/MODEL_ZOO.md).
+Pretrained models are available in the PaddlePaddle [detection model zoo](docs/MODEL_ZOO.md).
+
 
 ## Installation
 
-Please follow the [installation instructions](docs/INSTALL.md) to install  and prepare environment.
+Please follow the [installation guide](docs/INSTALL.md).
+
 
 ## Get Started
 
-For quickly start, infer an image:
+For inference, simply run the following command and the visualized result will
+be saved in `output/`.
 
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
 python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
-    -o weights=http://
-    -infer_img=demo/000000523957.jpg
+    -o weights=https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_r50_1x.tar
+    -infer_img=demo/000000570688.jpg
 ```
 
-The predicted  and visualized results are saved in `output/1.jpg`.
+For detailed training and evaluation workflow, please refer to [GETTING_STARTED.md](docs/GETTING_STARTED.md).
 
-For more detailed training and evaluating pipeline, please refer [GETTING_STARTED.md](docs/GETTING_STARTED.md).
+We also recommend users to take a look at the [IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
+
+Further information can be found in these documentations:
+
+- [Introduction to the configuration workflow.](docs/CONFIG.md)
+- [Guide to custom dataset and preprocess pipeline.](docs/DATA.md)
 
 
-More documentation:
+##  Todo List
 
-- [How to config an object detection pipeline.](docs/CONFIG.md)
-- [How to use customized dataset and add data preprocessing.](docs/DATA.md)
+Please note this is a work in progress, substantial changes may come in the
+near future.
+Some of the planned features include:
 
+- [ ] Mixed precision training.
+- [ ] Distributed training.
+- [ ] Inference in 8-bit mode.
+- [ ] User defined operations.
+- [ ] Larger model zoo.
 
-## Deploy
-
-The example of how to use PaddlePaddle to deploy detection model will be added later.
 
 ## Updates
 
-The major updates are as follows:
-
-#### 2019-07-03
-- Release the unified detection framework.
-- Supported algorithms: Faster R-CNN, Mask R-CNN, Faster R-CNN + FPN, Mask R-CNN + FPN, Cascade-Faster-RCNN + FPN, RetinaNet, Yolo v3, and SSD.
-- Release the first version of Model Zoo.
+#### Initial release (7/3/2019)
+- Initial release of PaddleDetection and detection model zoo
+- Models included: Faster R-CNN, Mask R-CNN, Faster R-CNN+FPN, Mask
+  R-CNN+FPN, Cascade-Faster-RCNN+FPN, RetinaNet, Yolo v3, and SSD.
 
 
 ## Contributing
 
-We appreciate everyone's contributions!
+Contributions are highly welcomed and we would really appreciate your feedback!!
