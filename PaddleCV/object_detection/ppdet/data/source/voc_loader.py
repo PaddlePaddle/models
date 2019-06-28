@@ -18,7 +18,10 @@ import numpy as np
 import xml.etree.ElementTree as ET
 
 
-def get_roidb(anno_path, sample_num=-1, cname2cid=None):
+def get_roidb(anno_path,
+              sample_num=-1,
+              cname2cid=None,
+              with_background=True):
     """
     Load VOC records with annotations in xml directory 'anno_path'
 
@@ -30,6 +33,9 @@ def get_roidb(anno_path, sample_num=-1, cname2cid=None):
         anno_path (str): root directory for voc annotation data
         sample_num (int): number of samples to load, -1 means all
         cname2cid (dict): the label name to id dictionary
+        with_background (bool): whether load background as a class.
+                                if True, total class number will
+                                be 81. default True
 
     Returns:
         (records, catname2clsid)
@@ -89,7 +95,7 @@ def get_roidb(anno_path, sample_num=-1, cname2cid=None):
                 cname = obj.find('name').text
                 if not existence and cname not in cname2cid:
                     # the background's id is 0, so need to add 1.
-                    cname2cid[cname] = len(cname2cid) + 1
+                    cname2cid[cname] = len(cname2cid) + int(with_background)
                 elif existence and cname not in cname2cid:
                     raise KeyError(
                         'Not found cname[%s] in cname2cid when map it to cid.' %
@@ -129,7 +135,10 @@ def get_roidb(anno_path, sample_num=-1, cname2cid=None):
     return [records, cname2cid]
 
 
-def load(anno_path, sample_num=-1, use_default_label=True):
+def load(anno_path,
+         sample_num=-1,
+         use_default_label=True,
+         with_background=True):
     """
     Load VOC records with annotations in
     xml directory 'anno_path'
@@ -142,6 +151,9 @@ def load(anno_path, sample_num=-1, use_default_label=True):
         @anno_path (str): root directory for voc annotation data
         @sample_num (int): number of samples to load, -1 means all
         @use_default_label (bool): whether use the default mapping of label to id
+        @with_background (bool): whether load background as a class.
+                                 if True, total class number will
+                                 be 81. default True
 
     Returns:
         (records, catname2clsid)
@@ -165,21 +177,24 @@ def load(anno_path, sample_num=-1, use_default_label=True):
     assert os.path.isfile(txt_file) and \
         os.path.isdir(xml_path), 'invalid xml path'
 
+    # mapping category name to class id
+    # if with_background is True:
+    #   background:0, first_class:1, second_class:2, ...
+    # if with_background is False:
+    #   first_class:0, second_class:1, ...
     records = []
     ct = 0
     cname2cid = {}
     if not use_default_label:
         label_path = os.path.join(part[0], 'ImageSets/Main/label_list.txt')
         with open(label_path, 'r') as fr:
-            label_id = 1
+            label_id = int(with_background)
             for line in fr.readlines():
                 cname2cid[line.strip()] = label_id
                 label_id += 1
     else:
-        cname2cid = pascalvoc_label()
+        cname2cid = pascalvoc_label(with_background)
 
-    # mapping category name to class id
-    # background:0, first_class:1, second_class:2, ...
     with open(txt_file, 'r') as fr:
         while True:
             line = fr.readline()
@@ -241,7 +256,7 @@ def load(anno_path, sample_num=-1, use_default_label=True):
     return [records, cname2cid]
 
 
-def pascalvoc_label():
+def pascalvoc_label(with_background=True):
     labels_map = {
 	'aeroplane': 1,
 	'bicycle': 2,
@@ -264,4 +279,6 @@ def pascalvoc_label():
 	'train': 19,
 	'tvmonitor': 20
     }
+    if not with_background:
+        labels_map = {k: v - 1 for k, v in labels_map.items()}
     return labels_map
