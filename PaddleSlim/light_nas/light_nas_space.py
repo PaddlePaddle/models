@@ -137,8 +137,8 @@ class LightNASSpace(SearchSpace):
 
                     # shortcut
                     if ifshortcut:
-                        op_params.append(('eltwise', 0, 1, test_iter, 1, 'None',
-                                          1, out_c, in_shape / s, in_shape / s))
+                        op_params.append(('eltwise', 0, 1, test_iter, 2, 1,
+                                          out_c, in_shape / s, in_shape / s))
                     if ifse:
                         op_params.append(
                             ('pooling', 0, 1, test_iter, 1, 1, out_c,
@@ -147,14 +147,14 @@ class LightNASSpace(SearchSpace):
                             ('conv', 0, 1, test_iter, 1, 0, 1, out_c, 1, 1,
                              out_c / 4, 1, 1, 0, 1, 1))
                         op_params.append(('activation', 0, 1, test_iter, 'relu',
-                                          1, out_c / 4))
+                                          1, out_c / 4, 1, 1))
                         op_params.append(
                             ('conv', 0, 1, test_iter, 1, 0, 1, out_c / 4, 1, 1,
                              out_c, 1, 1, 0, 1, 1))
                         op_params.append(('activation', 0, 1, test_iter,
-                                          'sigmoid', 1, out_c))
-                        op_params.append(('eltwise', 0, 1, test_iter, 2, 'None',
-                                          1, out_c, in_shape / s, in_shape / s))
+                                          'sigmoid', 1, out_c, 1, 1))
+                        op_params.append(('eltwise', 0, 1, test_iter, 1, 1,
+                                          out_c, in_shape / s, in_shape / s))
 
         return op_params
 
@@ -177,7 +177,7 @@ class LightNASSpace(SearchSpace):
             ('activation', 0, 1, test_iter, 'relu6', 1, 32, 112, 112))
 
         # bottlenecks, TODO: different h and w for images
-        in_c, in_shape = [32], image_shape[0] / 2
+        in_c, in_shape = [32], image_shape[1] / 2
         for i in range(7):
             if i == 0:
                 expansion, kernels, num_filters, s = [1], [3], [16], strides[i]
@@ -199,7 +199,7 @@ class LightNASSpace(SearchSpace):
 
             # repeated block: possibly more ops, but it is ok
             tmp_ops = self._ops_of_inverted_residual_unit(
-                in_c, in_shape, expansion, kernels, num_filters, s, ifshortcut,
+                in_c, in_shape, expansion, kernels, num_filters, 1, ifshortcut,
                 ifse, test_iter)
             op_params = op_params + tmp_ops
 

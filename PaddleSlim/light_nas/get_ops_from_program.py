@@ -102,18 +102,19 @@ def eltwise_op_params(blocks, current_op, test_iter=100):
     # op name, clusters, threads, test_iter
     tmp = ['eltwise', 0, 1, test_iter]
     # elementwise type, TODO: add more ops
-    if current_op.type == 'elementwise_add':
+    if current_op.type == 'elementwise_mul':
         tmp.append(1)
-    elif current_op.type == 'elementwise_mul':
+    elif current_op.type == 'elementwise_add':
         tmp.append(2)
     else:
         tmp.append(3)
-    # activation type, TODO: check attr name
-    tmp.append('None')
     # batch size
     tmp.append(1)
     # input channels, height, width 
     in_shapes = blocks.vars[current_op.input('X')[0]].shape
+    if len(in_shapes) < 4:
+        return []
+
     for i in range(1, len(in_shapes)):
         tmp.append(int(in_shapes[i]))
     return tmp
@@ -139,6 +140,9 @@ def activation_op_params(blocks, current_op, test_iter=100):
     tmp.append(1)
     # input channels, height, width
     in_shapes = blocks.vars[current_op.input('X')[0]].shape
+    while len(in_shapes) < 4:
+        in_shapes = in_shapes + (1, )
+
     for i in range(1, len(in_shapes)):
         tmp.append(int(in_shapes[i]))
     return tmp
@@ -242,8 +246,8 @@ def fc_op_params(blocks, current_op, isbias, test_iter=100):
 def write_lookup_table(params, output_file):
     """Writing down all params to a txt file
     Args:
-        params, list of op params
-        output_file, string of output file path
+        params: list, list of op params
+        output_file: string, string of output file path
     Returns:
         None
     """
@@ -259,8 +263,8 @@ def write_lookup_table(params, output_file):
 def get_ops_from_program(program, output_file=None, test_iter=100):
     """Getting ops params from a paddle program
     Args:
-        program, fluid program desc
-        output_file, string of output file path
+        program: ProgramDesc, fluid program desc
+        output_file: string, string of output file path
     Returns:
         list, params
     """

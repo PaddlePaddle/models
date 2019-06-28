@@ -19,7 +19,7 @@ from get_ops_from_program import get_ops_from_program, write_lookup_table
 
 # get all ops in the search space
 space = LightNASSpace()
-all_ops = space.get_all_ops(True, False)
+all_ops = space.get_all_ops(True, True)
 write_lookup_table(all_ops, 'lightnas_ops.txt')
 
 # get all ops from mobilenetv2
