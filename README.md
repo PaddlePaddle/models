@@ -94,6 +94,7 @@
 | [CRNN-CTC](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用CTC model识别图片中单行英文字符，用于端到端的文本行图片识别方法 | 单行不定长的英文字符串图片 | 错误率= 22.3%  |
 | [OCR   Attention](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用attention 识别图片中单行英文字符，用于端到端的自然场景文本识别， | 单行不定长的英文字符串图片 | 错误率 = 15.8% |
 
+<<<<<<< HEAD
 
 
  
@@ -132,7 +133,6 @@
  
 
  
-
 ## PaddleNLP
 
 **基础模型（词法分析&语言模型）**
@@ -226,10 +226,119 @@
 **ELMo**
 
 [ELMo(Embeddings from Language Models) ](https://github.com/PaddlePaddle/LARK/tree/develop/ELMo)是重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。
+<table>
+  <tbody>
+    <tr>
+      <th><strong>数据集</strong>
+        <br></th>
+      <th colspan="2"><strong>XNLI</strong></th>
+      <th colspan="2"><strong>LCQMC</strong></th>
+      <th colspan="2"><strong>MSRA-NER(SIGHAN 2006)</strong></th>
+      <th colspan="2"><strong>ChnSentiCorp</strong></th>
+      <th colspan="4"><strong>nlpcc-dbqa</strong></th></tr>
+    <tr>
+      <td rowspan="2">
+        <p>
+          <strong>评估</strong></p>
+        <p>
+          <strong>指标</strong>
+          <br></p>
+      </td>
+      <td colspan="2">
+        <strong>acc</strong>
+        <br></td>
+      <td colspan="2">
+        <strong>acc</strong>
+        <br></td>
+      <td colspan="2">
+        <strong>f1-score</strong>
+        <br></td>
+      <td colspan="2">
+        <strong>acc</strong>
+        <strong></strong>
+        <br></td>
+      <td colspan="2">
+        <strong>mrr</strong>
+        <br></td>
+      <td colspan="2">
+        <strong>f1-score</strong>
+        <br></td>
+    </tr>
+    <tr>
+      <th colspan="1" width="">
+        <strong>dev</strong>
+        <br></th>
+      <td colspan="1" width="">
+        <strong>test</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>dev</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>test</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>dev</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>test</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>dev</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>test</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>dev</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>test</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>dev</strong>
+        <br></td>
+      <td colspan="1" width="">
+        <strong>test</strong>
+        <br></td>
+    </tr>
+    <tr>
+      <td>
+        <strong>BERT
+          <br></strong></td>
+      <td>78.1</td>
+      <td>77.2</td>
+      <td>88.8</td>
+      <td>87.0</td>
+      <td>94.0
+        <br></td>
+      <td>
+        <span>92.6</span></td>
+      <td>94.6</td>
+      <td>94.3</td>
+      <td colspan="1">94.7</td>
+      <td colspan="1">94.6</td>
+      <td colspan="1">80.7</td>
+      <td colspan="1">80.8</td></tr>
+    <tr>
+      <td>
+        <strong>ERNIE
+          <br></strong></td>
+      <td>79.9 <span>(<strong>+1.8</strong>)</span></td>
+      <td>78.4 <span>(<strong>+1.2</strong>)</span></td>
+      <td>89.7 <span>(<strong>+0.9</strong>)</span></td>
+      <td>87.4 <span>(<strong>+0.4</strong>)</span></td>
+      <td>95.0 <span>(<strong>+1.0</strong>)</span></td>
+      <td>93.8 <span>(<strong>+1.2</strong>)</span></td>
+      <td>95.2 <span>(<strong>+0.6</strong>)</span></td>
+      <td>95.4 <span>(<strong>+1.1</strong>)</span></td>
+      <td colspan="1">95.0 <span>(<strong>+0.3</strong>)</span></td>
+      <td colspan="1">95.1 <span>(<strong>+0.5</strong>)</span></td>
+      <td colspan="1">82.3 <span>(<strong>+1.6</strong>)</span></td>
+      <td colspan="1">82.7 <span>(<strong>+1.9</strong>)</span></td></tr>
+  </tbody>
+</table>
 
-<p align="center">
-<img src="elmo.png" width=800"/><br />
-</p>
  
 
 
