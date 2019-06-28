@@ -153,11 +153,11 @@ StarGAN，AttGAN和STGAN的效果如图所示：
 
 | Model| Pretrained model |
 |:---|:---|
-| Pix2Pix  | [Pix2Pix的预训练模型]()  |
-| CycleGAN | [CycleGAN的预训练模型]() |
-| StarGAN  | [StarGAN的预训练模型]()  |
+| Pix2Pix  | [Pix2Pix的预训练模型](https://paddle-gan-models.bj.bcebos.com/pix2pix_G.tar.gz)  |
+| CycleGAN | [CycleGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/cyclegan_9blocks_G.tar.gz) |
+| StarGAN  | [StarGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stargan_G.tar.gz)  |
 | AttGAN   | [AttGAN的预训练模型]()   |
-| STGAN    | [STGAN的预训练模型]()    |
+| STGAN    | [STGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stgan_G.tar.gz)    |
 
 
 ## 进阶使用
@@ -220,7 +220,7 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 - STGAN中生成网络再编码器和解码器之间加入Selective Transfer Units\(STU\)，有选择的转换编码网络，从而更好的适配解码网络。生成网络中的编码网络主要由`convolution-instance norm-ReLU`组成，解码网络主要由`transpose convolution-norm-leaky_ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/STGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
 
 <p align="centor">
-    <img src = "images/stgan_net.png" width=550><br/>
+    <img src = "images/stgan_net.png" width=800><br/>
     STGAN的网络结构[9]
 </p>
 
