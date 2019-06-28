@@ -2,7 +2,7 @@
 
 This model won the first place in SemEval 2019 Task 9 SubTask A - Suggestion Mining from Online Reviews and Forums.
 
-See more information about SemEval 2019: [http://alt.qcri.org/semeval2019/](http://alt.qcri.org/semeval2019/)
+See more information about [SemEval 2019](http://alt.qcri.org/semeval2019/)
 
 ## 1. Introduction
 This paper describes our system participated in Task 9 of SemEval-2019: the task is focused on suggestion mining and it aims to classify given sentences into suggestion and non-suggestion classes in domain speciﬁc and cross domain training setting respectively. We propose a multi-perspective architecture for learning representations by using different classical models including Convolutional Neural Networks (CNN), Gated Recurrent Units (GRU), Feed Forward Attention (FFA), etc. To leverage the semantics distributed in large amount of unsupervised data, we also have adopted the pre-trained Bidirectional Encoder Representations from Transformers (BERT) model as an encoder to produce sentence and word representations. The proposed architecture is applied for both sub-tasks, and achieved f1-score of 0.7812 for subtask A, and 0.8579 for subtask B. We won the ﬁrst and second place for the two tasks respectively in the ﬁnal competition.
