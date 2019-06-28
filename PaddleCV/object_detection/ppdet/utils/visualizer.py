@@ -77,7 +77,7 @@ def draw_bbox(image, im_id, catid2name, bboxes, threshold,
     draw = ImageDraw.Draw(image)
 
     catid2color = {}
-    color_list = colormap(rgb=True)[:20]
+    color_list = colormap(rgb=True)[:40]
     for dt in np.array(bboxes):
         if im_id != dt['image_id']:
             continue
