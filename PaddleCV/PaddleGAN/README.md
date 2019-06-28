@@ -199,8 +199,8 @@ CycleGAN生成网络结构图[5]
 
 <p align="center">
 <img src="images/stargan_gen.png" width=350 />
-<img src="images/stargan_dis.png" width=350 /> <br />
-StarGAN网络结构[7]
+<img src="images/stargan_dis.png" width=400 /> <br />
+StarGAN的生成网络结构\[左\]和判别网络结构\[右\] [7]
 </p>
 
 
@@ -226,14 +226,14 @@ STGAN的网络结构[9]
 
 ## FAQ
 
-**Q:** 我使用单GPU训练，训练过程中`loss=nan`，这是为什么？  
-**A:** YOLOv3中`learning_rate=0.001`的设置是针对总batch size为64的情况，若用户的batch size小于该值，建议调小学习率。
+**Q:** StarGAN/AttGAN/STGAN中属性没有变化，为什么?   
+**A:** 查看是否所有的标签都转换对了。
 
-**Q:** 预测结果不正常，是怎么回事？
+**Q:** 预测结果不正常，是怎么回事？  
 **A:** 某些GAN预测的时候batch_norm的设置需要和训练的时候行为一致，查看模型库中相应的GAN中预测时batch_norm的行为和自己模型中的预测时batch_norm的
 行为是否一致。 
 
-**Q:** 为什么STGAN和ATTGAN中变男性得到的预测结果是变女性呢？
+**Q:** 为什么STGAN和ATTGAN中变男性得到的预测结果是变女性呢？  
 **A:** 这是由于预测时标签的设置，目标标签是基于原本的标签进行改变，比如原本图片是男生，预测代码对标签进行转变的时候会自动变成相对立的标签，即女
 性，所以得到的结果是女生。如果想要原本是男生，转变之后还是男生，可以参考模型库中预测代码的StarGAN的标签设置。
 
