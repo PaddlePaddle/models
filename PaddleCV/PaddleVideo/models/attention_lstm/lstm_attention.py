@@ -62,7 +62,9 @@ class LSTMAttentionModel(object):
             input=[lstm_forward, lstm_backward], axis=1)
 
         lstm_dropout = fluid.layers.dropout(
-            x=lstm_concat, dropout_prob=self.drop_rate, is_test=(not is_training))
+            x=lstm_concat,
+            dropout_prob=self.drop_rate,
+            is_test=(not is_training))
 
         lstm_weight = fluid.layers.fc(
             input=lstm_dropout,

@@ -11,22 +11,21 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
-
+import numpy as np
 import paddle.fluid as fluid
-from paddle.fluid import ParamAttr
 
 from ..model import ModelBase
-from .tsm_res_model import TSM_ResNet
+from .stnet_res_model import StNet_ResNet
 
 import logging
 logger = logging.getLogger(__name__)
 
-__all__ = ["TSM"]
+__all__ = ["STNET"]
 
 
-class TSM(ModelBase):
+class STNET(ModelBase):
     def __init__(self, name, cfg, mode='train'):
-        super(TSM, self).__init__(name, cfg, mode=mode)
+        super(STNET, self).__init__(name, cfg, mode=mode)
         self.get_config()
 
     def get_config(self):
@@ -43,11 +42,12 @@ class TSM(ModelBase):
                                                            'learning_rate')
         self.learning_rate_decay = self.get_config_from_sec(
             'train', 'learning_rate_decay')
-        self.decay_epochs = self.get_config_from_sec('train', 'decay_epochs')
         self.l2_weight_decay = self.get_config_from_sec('train',
                                                         'l2_weight_decay')
         self.momentum = self.get_config_from_sec('train', 'momentum')
 
+        self.seg_num = self.get_config_from_sec(self.mode, 'seg_num',
+                                                self.seg_num)
         self.target_size = self.get_config_from_sec(self.mode, 'target_size')
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
 
@@ -79,20 +79,27 @@ class TSM(ModelBase):
         self.feature_input = [image]
         self.label_input = label
 
+    def create_model_args(self):
+        cfg = {}
+        cfg['layers'] = self.num_layers
+        cfg['class_dim'] = self.num_classes
+        cfg['seg_num'] = self.seg_num
+        cfg['seglen'] = self.seglen
+        return cfg
+
     def build_model(self):
-        videomodel = TSM_ResNet(
-            layers=self.num_layers,
-            seg_num=self.seg_num,
-            is_training=self.is_training)
+        cfg = self.create_model_args()
+        videomodel = StNet_ResNet(layers = cfg['layers'], seg_num = cfg['seg_num'], \
+                                  seglen = cfg['seglen'], is_training = (self.mode == 'train'))
         out = videomodel.net(input=self.feature_input[0],
-                             class_dim=self.num_classes)
+                             class_dim=cfg['class_dim'])
         self.network_outputs = [out]
 
     def optimizer(self):
-        assert self.mode == 'train', "optimizer only can be get in train mode"
+        epoch_points = [self.num_epochs / 3, self.num_epochs * 2 / 3]
         total_videos = self.total_videos
         step = int(total_videos / self.batch_size + 1)
-        bd = [e * step for e in self.decay_epochs]
+        bd = [e * step for e in epoch_points]
         base_lr = self.base_learning_rate
         lr_decay = self.learning_rate_decay
         lr = [base_lr, base_lr * lr_decay, base_lr * lr_decay * lr_decay]
@@ -107,7 +114,6 @@ class TSM(ModelBase):
         return optimizer
 
     def loss(self):
-        assert self.mode != 'infer', "invalid loss calculationg in infer mode"
         cost = fluid.layers.cross_entropy(input=self.network_outputs[0], \
                            label=self.label_input, ignore_index=-1)
         self.loss_ = fluid.layers.mean(x=cost)
@@ -122,17 +128,32 @@ class TSM(ModelBase):
         ]
 
     def pretrain_info(self):
-        return ('ResNet50_pretrained', 'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz')
+        return (
+            'ResNet50_pretrained',
+            'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz'
+        )
 
     def weights_info(self):
-        return ('tsm_kinetics', 
-                'https://paddlemodels.bj.bcebos.com/video_classification/tsm_kinetics.tar.gz')
+        return (
+            'stnet_kinetics',
+            'https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz'
+        )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
         def is_parameter(var):
-            return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name))
+            if isinstance(var, fluid.framework.Parameter):
+                return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name)) \
+                    and (not ("batch_norm" in var.name)) and (not ("xception" in var.name)) and (not ("conv3d" in var.name))
 
-        logger.info("Load pretrain weights from {}, exclude fc layer.".format(pretrain))
+        logger.info(
+            "Load pretrain weights from {}, exclude fc, batch_norm, xception, conv3d layers.".
+            format(pretrain))
         vars = filter(is_parameter, prog.list_vars())
         fluid.io.load_vars(exe, pretrain, vars=vars, main_program=prog)
 
+        param_tensor = fluid.global_scope().find_var(
+            "conv1_weights").get_tensor()
+        param_numpy = np.array(param_tensor)
+        param_numpy = np.mean(param_numpy, axis=1, keepdims=True) / self.seglen
+        param_numpy = np.repeat(param_numpy, 3 * self.seglen, axis=1)
+        param_tensor.set(param_numpy.astype(np.float32), place)

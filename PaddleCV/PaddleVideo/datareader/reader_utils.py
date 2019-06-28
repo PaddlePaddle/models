@@ -52,7 +52,6 @@ class DataReader(object):
         return self.cfg[sec.upper()].get(item, default)
 
 
-
 class ReaderZoo(object):
     def __init__(self):
         self.reader_zoo = {}

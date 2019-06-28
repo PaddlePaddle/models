@@ -5,11 +5,26 @@ import sys
 sys.path.append(os.environ['ceroot'])
 from kpi import CostKpi, DurationKpi
 
-train_cost_card1_kpi = CostKpi('train_cost_card1', 0.08, 0, actived=True, desc='train cost')
-train_speed_card1_kpi = DurationKpi('train_speed_card1', 0.08, 0, actived=True, desc='train speed in one GPU card')
-train_cost_card4_kpi = CostKpi('train_cost_card4', 0.08, 0, actived=True, desc='train cost')
-train_speed_card4_kpi = DurationKpi('train_speed_card4', 0.3, 0, actived=True, desc='train speed in four GPU card')
-tracking_kpis = [train_cost_card1_kpi, train_speed_card1_kpi, train_cost_card4_kpi, train_speed_card4_kpi]
+train_cost_card1_kpi = CostKpi(
+    'train_cost_card1', 0.08, 0, actived=True, desc='train cost')
+train_speed_card1_kpi = DurationKpi(
+    'train_speed_card1',
+    0.08,
+    0,
+    actived=True,
+    desc='train speed in one GPU card')
+train_cost_card4_kpi = CostKpi(
+    'train_cost_card4', 0.08, 0, actived=True, desc='train cost')
+train_speed_card4_kpi = DurationKpi(
+    'train_speed_card4',
+    0.3,
+    0,
+    actived=True,
+    desc='train speed in four GPU card')
+tracking_kpis = [
+    train_cost_card1_kpi, train_speed_card1_kpi, train_cost_card4_kpi,
+    train_speed_card4_kpi
+]
 
 
 def parse_log(log):
