@@ -120,7 +120,7 @@ Or can start the training step by running the ```run.sh```.
 Finetuning is to finetune model weights in a specific task by loading pretrained weights. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```, one can finetune a model by running following command:
 
 ```
-python train.py
+python train.py \
        --pretrained_model=${path_to_pretrain_model}
 ```
 

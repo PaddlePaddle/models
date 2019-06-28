@@ -114,7 +114,7 @@ python train.py \
 
 参数微调是指在特定任务上微调已训练模型的参数。可以下载[已有模型及其性能](#已有模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
 ```
-python train.py
+python train.py \
        --pretrained_model=${path_to_pretrain_model}
 ```
 注意：根据具体模型和任务添加并调整其他参数
