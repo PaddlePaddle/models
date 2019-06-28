@@ -1,6 +1,6 @@
-模型库Readme
+# PaddlePaddle Models 
 
-PaddleCV
+## PaddleCV
 
 **图像分类**
 
@@ -21,6 +21,8 @@ PaddleCV
 
  
 
+
+
 **目标检测**
 
 目标检测任务的目标是给定一张图像或是一个视频帧，让计算机找出其中所有目标的位置，并给出每个目标的具体类别。对于计算机而言，能够“看到”的是图像被编码之后的数字，但很难解图像或是视频帧中出现了人或是物体这样的高层语义概念，也就更加难以定位目标出现在图像中哪个区域。
@@ -36,6 +38,8 @@ PaddleCV
 
  
 
+
+
 **图像分割**
 
 图像语义分割顾名思义是将图像像素按照表达的语义含义的不同进行分组/分割，图像语义是指对图像内容的理解，例如，能够描绘出什么物体在哪里做了什么事情等，分割是指对图片中的每个像素点进行标注，标注属于哪一类别。近年来用在无人车驾驶技术中分割街景来避让行人和车辆、医疗影像分析中辅助诊断等。
@@ -47,6 +51,8 @@ PaddleCV
 
  
 
+
+
 **关键点检测**
 
 人体骨骼关键点检测，Pose Estimation，主要检测人体的一些关键点，如关节，五官等，通过关键点描述人体骨骼信息。人体骨骼关键点检测对于描述人体姿态，预测人体行为至关重要。是诸多计算机视觉任务的基础，例如动作分类，异常行为检测，以及自动驾驶等等。
@@ -56,6 +62,8 @@ PaddleCV
 | [Simple   Baselines](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/human_pose_estimation) | coco2018关键点检测项目亚军方案，网络结构非常简单，效果达到state of the art | COCO val2017 | AP =   72.7% |
 
  
+
+
 
  
 
@@ -73,6 +81,8 @@ PaddleCV
 | [AttGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 利用分类损失和重构损失来保证改变特定的属性，可用于人脸特定属性转换 | Celeba     |
 | [STGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 人脸特定属性转换，只输入有变化的标签，引入GRU结构，更好的选择变化的属性 | Celeba     |
 
+
+
  
 
 **场景文字识别**
@@ -83,6 +93,8 @@ PaddleCV
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | -------------- |
 | [CRNN-CTC](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用CTC model识别图片中单行英文字符，用于端到端的文本行图片识别方法 | 单行不定长的英文字符串图片 | 错误率= 22.3%  |
 | [OCR   Attention](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用attention 识别图片中单行英文字符，用于端到端的自然场景文本识别， | 单行不定长的英文字符串图片 | 错误率 = 15.8% |
+
+
 
  
 
@@ -97,6 +109,8 @@ PaddleCV
 | [ResNet50使用quadruplet微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用quadruplet loss微调的特征模型 | Stanford   Online Product(SOP) | 79.59%                                        |
 | [ResNet50使用eml微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用eml loss微调的特征模型        | Stanford   Online Product(SOP) | 80.11%                                        |
 | [ResNet50使用npairs微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用npairs loss微调的特征模型     | Stanford   Online Product(SOP) | 79.81%                                        |
+
+
 
  
 
@@ -119,7 +133,7 @@ PaddleCV
 
  
 
-PaddleNLP
+## PaddleNLP
 
 **基础模型（词法分析&语言模型）**
 
@@ -133,6 +147,8 @@ PaddleNLP
 | BERT finetuned   | 90.2%         | 90.4%      | 90.3%        |
 | ERNIE finetuned  | 92.0%         | 92.0%      | 92.0%        |
 
+
+
 **语言模型**
 
 [基于LSTM的语言模型任务](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model)，给定一个输入词序列（中文分词、英文tokenize），计算其PPL（语言模型困惑度，用户表示句子的流利程度）。
@@ -141,6 +157,8 @@ PaddleNLP
 | ---------------- | --------- | --------- | -------- |
 | paddle           | 37.221    | 82.358    | 78.137   |
 | tensorflow       | 38.342    | 82.311    | 78.121   |
+
+
 
  
 
@@ -160,6 +178,8 @@ PaddleNLP
 | ERNIE         | 95.1%   | 95.4%    | ERNIE                        | 95.4%   | 95.5%    |
 | ERNIE+BI-LSTM | 95.3%   | 95.2%    | ERNIE+BI-LSTM                | 95.7%   | 95.6%    |
 
+
+
  
 
 **对话情绪识别**
@@ -176,6 +196,8 @@ PaddleNLP
 | BERT     | 93.6%    | 92.3%    | 78.6%    |
 | ERNIE    | 94.4%    | 94.0%    | 80.6%    |
 
+
+
  
 
 **阅读理解**
@@ -186,6 +208,8 @@ PaddleNLP
 | -------------------------------------------------------- | --------------- | ---------------- |
 | BiDAF (原始[论文](https://arxiv.org/abs/1711.05073)基线) | 39.29           | 45.90            |
 | 本基线系统                                               | 47.68           | 54.66            |
+
+
 
  
 
@@ -203,14 +227,11 @@ PaddleNLP
 
 [ELMo(Embeddings from Language Models) ](https://github.com/PaddlePaddle/LARK/tree/develop/ELMo)是重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。
 
-| **数据集**          | **XNLI**        | **LCQMC**       | **MSRA-NER(SIGHAN 2006)** | **ChnSentiCorp** | **nlpcc-dbqa**  |                 |                 |                 |                 |                 |                 |                 |
-| ------------------- | --------------- | --------------- | ------------------------- | ---------------- | --------------- | --------------- | --------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
-| **评估**   **指标** | **acc**         | **acc**         | **f1-score**              | **acc**          | **mrr**         | **f1-score**    |                 |                 |                 |                 |                 |                 |
-| **dev**             | **test**        | **dev**         | **test**                  | **dev**          | **test**        | **dev**         | **test**        | **dev**         | **test**        | **dev**         | **test**        |                 |
-| **BERT**            | 78.1            | 77.2            | 88.8                      | 87.0             | 94.0            | 92.6            | 94.6            | 94.3            | 94.7            | 94.6            | 80.7            | 80.8            |
-| **ERNIE**           | 79.9 (**+1.8**) | 78.4 (**+1.2**) | 89.7 (**+0.9**)           | 87.4 (**+0.4**)  | 95.0 (**+1.0**) | 93.8 (**+1.2**) | 95.2 (**+0.6**) | 95.4 (**+1.1**) | 95.0 (**+0.3**) | 95.1 (**+0.5**) | 82.3 (**+1.6**) | 82.7 (**+1.9**) |
-
+<p align="center">
+<img src="images/elmo.png" width=800"/><br />
+</p>
  
+
 
 **DAM**
 
@@ -230,6 +251,8 @@ PaddleNLP
 |              | AUC          | AUC      | AUC       | 正逆序比   | Accuracy  |
 | BOW_Pairwise | 0.6767       | 0.7329   | 0.7650    | 1.5630     | 0.7532    |
 
+
+
  
 
 **文本生成（机器翻译&对话生成）**
@@ -243,6 +266,8 @@ PaddleNLP
 | Base       | 26.35            | 29.07            | 33.30            |
 | Big        | 27.07            | 30.09            | 34.38            |
 
+
+
  
 
 **对话自动评估**
@@ -254,6 +279,8 @@ PaddleNLP
 | **/** | **seq2seq_naive** | **seq2seq_att** | **keywords** | **human** |
 | ----- | ----------------- | --------------- | ------------ | --------- |
 | cor   | 0.474             | 0.477           | 0.443        | 0.378     |
+
+
 
  
 
@@ -272,6 +299,8 @@ PaddleNLP
 
  
 
+
+
  
 
 **知识驱动对话**
@@ -285,7 +314,7 @@ PaddleNLP
 
  
 
-PaddleRec
+## PaddleRec
 
 个性化推荐，在当前的互联网服务中正在发挥越来越大的作用，目前大部分电子商务系统、社交网络，广告推荐，搜索引擎，都不同程度的使用了各种形式的个性化推荐技术，帮助用户快速找到他们想要的信息。
 
