@@ -5,7 +5,7 @@ PaddleDetection takes a rather principled approach to configuration management. 
 
 # Rationale
 
-Presently, configuration in mainstream frameworks are usually dictionary based: the global config is simply a giant, loosely defined python dictionary.
+Presently, configuration in mainstream frameworks are usually dictionary based: the global config is simply a giant, loosely defined Python dictionary.
 
 This approach is error prone, e.g., misspelled or displaced keys may lead to serious errors in training process, causing time loss and wasted resources.
 
