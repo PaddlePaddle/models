@@ -2,14 +2,14 @@ architecture: MaskRCNN
 train_feed: MaskRCNNTrainFeed
 eval_feed: MaskRCNNEvalFeed
 test_feed: MaskRCNNTestFeed
-use_gpu: True
+use_gpu: true
 max_iters: 360000
 snapshot_iter: 10000
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
 metric: COCO
-weights: output/mask_rcnn_r50_fpn_2x/model_final/ 
+weights: output/mask_rcnn_r50_fpn_2x/model_final/
 
 MaskRCNN:
   backbone: ResNet
@@ -101,7 +101,6 @@ LearningRate:
   - !PiecewiseDecay
     gamma: 0.1
     milestones: [240000, 320000]
-    values: null
   - !LinearWarmup
     start_factor: 0.3333333333333333
     steps: 500
@@ -116,34 +115,34 @@ OptimizerBuilder:
 
 MaskRCNNTrainFeed:
   batch_size: 1
-  batch_transforms:
-  - !PadBatch
-    pad_to_stride: 32
   dataset:
     dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
-  num_workers: 2
-  use_padded_im_info: False
-
-MaskRCNNEvalFeed:
-  batch_size: 1
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
+  num_workers: 2
+  use_padded_im_info: false
+
+MaskRCNNEvalFeed:
+  batch_size: 1
   dataset:
     dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  num_workers: 2
-  use_padded_im_info: True
-
-MaskRCNNTestFeed:
-  batch_size: 1
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
+  num_workers: 2
+  use_padded_im_info: true
+
+MaskRCNNTestFeed:
+  batch_size: 1
   dataset:
     annotation: annotations/instances_val2017.json
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 32
   num_workers: 2
-  use_padded_im_info: True
+  use_padded_im_info: true

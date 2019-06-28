@@ -2,7 +2,7 @@ architecture: MaskRCNN
 train_feed: MaskRCNNTrainFeed
 eval_feed: MaskRCNNEvalFeed
 test_feed: MaskRCNNTestFeed
-use_gpu: True
+use_gpu: true
 max_iters: 360000
 snapshot_iter: 10000
 log_smooth_window: 20
@@ -113,7 +113,6 @@ MaskRCNNTrainFeed:
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   num_workers: 2
-  shuffle: true
 
 MaskRCNNEvalFeed:
   batch_size: 1
@@ -121,7 +120,6 @@ MaskRCNNEvalFeed:
     dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
-  shuffle: false
 
 MaskRCNNTestFeed:
   batch_size: 1

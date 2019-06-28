@@ -3,7 +3,7 @@ train_feed: FasterRCNNTrainFeed
 eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 90000
-use_gpu: True
+use_gpu: true
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar
 weights: output/retinanet_r50_fpn_1x/model_final
 log_smooth_window: 20
@@ -61,7 +61,6 @@ LearningRate:
   - !PiecewiseDecay
     gamma: 0.1
     milestones: [60000, 80000]
-    values: null
   - !LinearWarmup
     start_factor: 0.3333333333333333
     steps: 500
@@ -76,33 +75,31 @@ OptimizerBuilder:
 
 FasterRCNNTrainFeed:
   batch_size: 2
-  batch_transforms:
-  - !PadBatch
-    pad_to_stride: 128
   dataset:
     dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
-  num_workers: 2
-  shuffle: True
-
-FasterRCNNEvalFeed:
-  batch_size: 2
   batch_transforms:
   - !PadBatch
     pad_to_stride: 128
+  num_workers: 2
+
+FasterRCNNEvalFeed:
+  batch_size: 2
   dataset:
     dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
+  batch_transforms:
+  - !PadBatch
+    pad_to_stride: 128
   num_workers: 2
 
 FasterRCNNTestFeed:
   batch_size: 1
+  dataset:
+    annotation: annotations/instances_val2017.json
   batch_transforms:
   - !PadBatch
     pad_to_stride: 128
-  dataset:
-    annotation: annotations/instances_val2017.json
   num_workers: 2
-  shuffle: False

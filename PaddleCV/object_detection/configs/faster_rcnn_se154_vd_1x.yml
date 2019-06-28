@@ -4,7 +4,7 @@ eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 180000
 snapshot_iter: 10000
-use_gpu: True
+use_gpu: true
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar
@@ -13,7 +13,6 @@ metric: COCO
 
 FasterRCNN:
   backbone: SENet
-  fpn: null
   rpn_head: RPNHead
   roi_extractor: RoIAlign
   bbox_head: BBoxHead
@@ -87,7 +86,6 @@ LearningRate:
   - !PiecewiseDecay
     gamma: 0.1
     milestones: [120000, 160000]
-    values: null
   - !LinearWarmup
     start_factor: 0.1
     steps: 1000
@@ -108,7 +106,6 @@ FasterRCNNTrainFeed:
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
-  shuffle: True
 
 FasterRCNNEvalFeed:
   batch_size: 1
@@ -123,4 +120,3 @@ FasterRCNNTestFeed:
   dataset:
     annotation: annotations/instances_val2017.json
   num_workers: 2
-  shuffle: False
