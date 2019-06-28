@@ -16,6 +16,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
+
+def set_paddle_flags(flags):
+    for key, value in flags.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+set_paddle_flags({
+    'FLAGS_eager_delete_tensor_gb': 0, # enable gc
+    'FLAGS_memory_fraction_of_eager_deletion': 1,
+    'FLAGS_fraction_of_gpu_memory_to_use': 0.98
+})
+
 import sys
 import numpy as np
 import random
@@ -83,8 +95,12 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = True
-    build_strategy.sync_batch_norm = cfg.syncbn
+    build_strategy.memory_optimize = False #gc and memory optimize may conflict
+    syncbn = cfg.syncbn
+    if syncbn and devices_num <= 1:
+        print("Disable syncbn in single device")
+        syncbn = False
+    build_strategy.sync_batch_norm = syncbn
     compile_program = fluid.compiler.CompiledProgram(fluid.default_main_program(
     )).with_data_parallel(
         loss_name=loss.name, build_strategy=build_strategy)

@@ -37,13 +37,26 @@ def test_without_pyreader(test_exe,
                           test_feeder,
                           test_fetch_list,
                           test_metrics,
-                          log_interval=0):
+                          log_interval=0,
+                          save_model_name=''):
     test_metrics.reset()
     for test_iter, data in enumerate(test_reader()):
         test_outs = test_exe.run(test_fetch_list, feed=test_feeder.feed(data))
-        loss = np.array(test_outs[0])
-        pred = np.array(test_outs[1])
-        label = np.array(test_outs[-1])
+        if save_model_name in ['CTCN']:
+            # for detection
+            total_loss = np.array(test_outs[0])
+            loc_loss = np.array(test_outs[1])
+            cls_loss = np.array(test_outs[2])
+            loc_preds = np.array(test_outs[3])
+            cls_preds = np.array(test_outs[4])
+            label = np.array(test_outs[-1])
+            loss = [total_loss, loc_loss, cls_loss]
+            pred = [loc_preds, cls_preds]
+        else:
+            # for classification
+            loss = np.array(test_outs[0])
+            pred = np.array(test_outs[1])
+            label = np.array(test_outs[-1])
         test_metrics.accumulate(loss, pred, label)
         if log_interval > 0 and test_iter % log_interval == 0:
             test_metrics.calculate_and_log_out(loss, pred, label, \
@@ -55,7 +68,8 @@ def test_with_pyreader(test_exe,
                        test_pyreader,
                        test_fetch_list,
                        test_metrics,
-                       log_interval=0):
+                       log_interval=0,
+                       save_model_name=''):
     if not test_pyreader:
         logger.error("[TEST] get pyreader failed.")
     test_pyreader.start()
@@ -64,9 +78,20 @@ def test_with_pyreader(test_exe,
     try:
         while True:
             test_outs = test_exe.run(fetch_list=test_fetch_list)
-            loss = np.array(test_outs[0])
-            pred = np.array(test_outs[1])
-            label = np.array(test_outs[-1])
+            if save_model_name in ['CTCN']:
+                # for detection
+                total_loss = np.array(test_outs[0])
+                loc_loss = np.array(test_outs[1])
+                cls_loss = np.array(test_outs[2])
+                loc_preds = np.array(test_outs[3])
+                cls_preds = np.array(test_outs[4])
+                label = np.array(test_outs[-1])
+                loss = [total_loss, loc_loss, cls_loss]
+                pred = [loc_preds, cls_preds]
+            else:
+                loss = np.array(test_outs[0])
+                pred = np.array(test_outs[1])
+                label = np.array(test_outs[-1])
             test_metrics.accumulate(loss, pred, label)
             if log_interval > 0 and test_iter % log_interval == 0:
                 test_metrics.calculate_and_log_out(loss, pred, label, \
@@ -92,9 +117,21 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
                                        feed=train_feeder.feed(data))
             period = time.time() - cur_time
             epoch_periods.append(period)
-            loss = np.array(train_outs[0])
-            pred = np.array(train_outs[1])
-            label = np.array(train_outs[-1])
+            if save_model_name in ['CTCN']:
+                # detection model
+                total_loss = np.array(train_outs[0])
+                loc_loss = np.array(train_outs[1])
+                cls_loss = np.array(train_outs[2])
+                loc_preds = np.array(train_outs[3])
+                cls_preds = np.array(train_outs[4])
+                label = np.array(train_outs[-1])
+                loss = [total_loss, loc_loss, cls_loss]
+                pred = [loc_preds, cls_preds]
+            else:
+                # classification model
+                loss = np.array(train_outs[0])
+                pred = np.array(train_outs[1])
+                label = np.array(train_outs[-1])
             if log_interval > 0 and (train_iter % log_interval == 0):
                 # eval here
                 train_metrics.calculate_and_log_out(loss, pred, label, \
@@ -107,8 +144,8 @@ def train_without_pyreader(exe, train_prog, train_exe, train_reader, train_feede
         if test_exe and valid_interval > 0 and (epoch + 1
                                                 ) % valid_interval == 0:
             test_without_pyreader(test_exe, test_reader, test_feeder,
-                                  test_fetch_list, test_metrics, log_interval)
-
+                                  test_fetch_list, test_metrics, log_interval,
+                                  save_model_name)
 
 
 def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
@@ -133,9 +170,21 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
                 train_outs = train_exe.run(fetch_list=train_fetch_list)
                 period = time.time() - cur_time
                 epoch_periods.append(period)
-                loss = np.array(train_outs[0])
-                pred = np.array(train_outs[1])
-                label = np.array(train_outs[-1])
+                if save_model_name in ['CTCN']:
+                    # for detection
+                    total_loss = np.array(train_outs[0])
+                    loc_loss = np.array(train_outs[1])
+                    cls_loss = np.array(train_outs[2])
+                    loc_preds = np.array(train_outs[3])
+                    cls_preds = np.array(train_outs[4])
+                    label = np.array(train_outs[-1])
+                    loss = [total_loss, loc_loss, cls_loss]
+                    pred = [loc_preds, cls_preds]
+                else:
+                    # for classification
+                    loss = np.array(train_outs[0])
+                    pred = np.array(train_outs[1])
+                    label = np.array(train_outs[-1])
                 if log_interval > 0 and (train_iter % log_interval == 0):
                     # eval here
                     train_loss = train_metrics.calculate_and_log_out(loss, pred, label, \
@@ -150,7 +199,7 @@ def train_with_pyreader(exe, train_prog, train_exe, train_pyreader, \
             if test_exe and valid_interval > 0 and (epoch + 1
                                                     ) % valid_interval == 0:
                 test_with_pyreader(test_exe, test_pyreader, test_fetch_list,
-                                   test_metrics, log_interval)
+                                   test_metrics, log_interval, save_model_name)
         finally:
             epoch_period = []
             train_pyreader.reset()

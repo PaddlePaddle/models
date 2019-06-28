@@ -309,7 +309,7 @@ def infer(settings, image_path):
     def batch_reader():
         img = Image.open(image_path)
         if img.mode == 'L':
-            img = im.convert('RGB')
+            img = img.convert('RGB')
         im_width, im_height = img.size
         if settings.resize_width and settings.resize_height:
             img = img.resize((settings.resize_width, settings.resize_height),
