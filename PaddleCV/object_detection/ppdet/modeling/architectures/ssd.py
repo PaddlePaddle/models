@@ -94,4 +94,4 @@ class SSD(object):
         return self._forward(feed_vars, 'eval')
 
     def test(self, feed_vars):
-        return self._forward('test')
+        return self._forward(feed_vars, 'test')

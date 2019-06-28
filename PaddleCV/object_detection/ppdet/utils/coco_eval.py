@@ -34,6 +34,14 @@ __all__ = [
 ]
 
 
+def clip_bbox(bbox):
+    xmin = max(min(bbox[0], 1.), 0.)
+    ymin = max(min(bbox[1], 1.), 0.)
+    xmax = max(min(bbox[2], 1.), 0.)
+    ymax = max(min(bbox[3], 1.), 0.)
+    return xmin, ymin, xmax, ymax
+
+
 def bbox_eval(results, anno_file, outfile, with_background=True):
     assert 'bbox' in results[0]
     assert outfile.endswith('.json')
@@ -80,7 +88,7 @@ def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
     coco_ev.summarize()
 
 
-def bbox2out(results, clsid2catid):
+def bbox2out(results, clsid2catid, is_bbox_normalized=False):
     xywh_res = []
     for t in results:
         bboxes = t['bbox'][0]
@@ -97,8 +105,16 @@ def bbox2out(results, clsid2catid):
                 dt = bboxes[k]
                 clsid, score, xmin, ymin, xmax, ymax = dt.tolist()
                 catid = clsid2catid[clsid]
-                w = xmax - xmin + 1
-                h = ymax - ymin + 1
+
+                if is_bbox_normalized:
+                    xmin, ymin, xmax, ymax = \
+                            clip_bbox([xmin, ymin, xmax, ymax])
+                    w = xmax - xmin
+                    h = ymax - ymin
+                else:
+                    w = xmax - xmin + 1
+                    h = ymax - ymin + 1
+
                 bbox = [xmin, ymin, w, h]
                 coco_res = {
                     'image_id': im_id,
@@ -168,10 +184,10 @@ def mask2out(results, clsid2catid, resolution, thresh_binarize=0.5):
                     resized_mask > thresh_binarize, dtype=np.uint8)
                 im_mask = np.zeros((im_h, im_w), dtype=np.uint8)
 
-                x0 = max(xmin, 0)
-                x1 = min(xmax + 1, im_w)
-                y0 = max(ymin, 0)
-                y1 = min(ymax + 1, im_h)
+                x0 = min(max(xmin, 0), im_w)
+                x1 = min(max(xmax + 1, 0), im_w)
+                y0 = min(max(ymin, 0), im_h)
+                y1 = min(max(ymax + 1, 0), im_h)
 
                 im_mask[y0:y1, x0:x1] = resized_mask[(y0 - ymin):(y1 - ymin), (
                     x0 - xmin):(x1 - xmin)]
@@ -211,8 +227,11 @@ def expand_boxes(boxes, scale):
     return boxes_exp
 
 
-def get_category_info(anno_file=None, with_background=True):
-    if anno_file is None or not os.path.exists(anno_file):
+def get_category_info(anno_file=None,
+                      with_background=True,
+                      use_default_label=False):
+    if use_default_label or anno_file is None \
+            or not os.path.exists(anno_file):
         logger.info("Not found annotation file {}, load "
                     "coco17 categories.".format(anno_file))
         return coco17_category_info(with_background)

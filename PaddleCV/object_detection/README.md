@@ -20,7 +20,7 @@ Major features:
    All components are modular encapsulated, including the data transforms. It's easy to plug in and pull out any module. For example, users can switch backbone easily or add mixup data augmentation for models.
 
 - High Efficiency:
-  Based on the high efficient PaddlePaddle framework, less memory is required. For example, the batch size of Mask-RCNN based on ResNet50 can be 5 per Tesla V100 (16G). The training speed of Yolo v3 is faster than other frameworks.  
+  Based on the high efficient PaddlePaddle framework, less memory is required. For example, the batch size of Mask-RCNN based on ResNet50 can be 5 per Tesla V100 (16G) when multi-GPU training. The training speed of Yolo v3 is faster than other frameworks.  
 
 The supported architectures are as follows:
 

@@ -88,10 +88,10 @@ class MetricsCalculator():
             }
             self.out_file = 'res_decode_' + str(self.score_thresh) + '_' + \
                       str(self.nms_thresh) + '_' + str(self.sigma_thresh) + \
-                      '_' + str(self.soft_thresh)
+                      '_' + str(self.soft_thresh) + '.json'
 
     def accumulate(self, loss, pred, label):
-        cur_batch_size = loss[0].shape[0]
+        cur_batch_size = 1  # iteration counter
         self.aggr_loss += np.mean(np.array(loss[0]))
         self.aggr_loc_loss += np.mean(np.array(loss[1]))
         self.aggr_cls_loss += np.mean(np.array(loss[2]))
@@ -99,13 +99,13 @@ class MetricsCalculator():
         if self.mode == 'test':
             box_preds, label_preds, score_preds = self.box_coder.decode(
                 pred[0].squeeze(), pred[1].squeeze(), **self.box_decode_params)
-            fid = label[-1]
+            fid = label.squeeze()
             fname = self.gt_labels[fid]
-            logger.info("file {}, num of box preds {}:".format(fname,
-                                                               len(box_preds)))
+            logger.info("id {}, file {}, num of box preds {}:".format(
+                fid, fname, len(box_preds)))
             self.results_detect[fname] = []
             for j in range(len(label_preds)):
-                results_detect[fname[0]].append({
+                self.results_detect[fname].append({
                     "score": score_preds[j],
                     "label": self.class_label[label_preds[j]].strip(),
                     "segment": [
@@ -123,7 +123,9 @@ class MetricsCalculator():
         if self.mode == 'test':
             self.res_detect['results'] = self.results_detect
             with open(self.out_file, 'w') as f:
-                json.dump(res_detect, f)
+                json.dump(self.res_detect, f)
+            logger.info('results has been saved into file: {}'.format(
+                self.out_file))
 
     def get_computed_metrics(self):
         json_stats = {}

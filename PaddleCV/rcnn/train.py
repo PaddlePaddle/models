@@ -91,8 +91,8 @@ def train():
     optimizer.minimize(loss)
     fetch_list = fetch_list + [lr]
 
-    fluid.memory_optimize(
-        fluid.default_main_program(), skip_opt_set=set(fetch_list))
+    for var in fetch_list:
+        var.persistable = True
 
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -106,8 +106,19 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrained_model, predicate=if_exist)
 
     if cfg.parallel:
-        train_exe = fluid.ParallelExecutor(
-            use_cuda=bool(cfg.use_gpu), loss_name=loss.name)
+        build_strategy = fluid.BuildStrategy()
+        build_strategy.memory_optimize = False
+        build_strategy.enable_inplace = True
+
+        exec_strategy = fluid.ExecutionStrategy()
+        exec_strategy.use_experimental_executor = True
+        exec_strategy.num_iteration_per_drop_scope = 10
+        train_exe = fluid.ParallelExecutor(use_cuda=bool(cfg.use_gpu), 
+                            loss_name=loss.name, 
+                            build_strategy=build_strategy, 
+                            exec_strategy=exec_strategy)
+    else:
+        train_exe = exe
 
     shuffle = True
     if cfg.enable_ce:

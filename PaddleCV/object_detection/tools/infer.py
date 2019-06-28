@@ -25,7 +25,7 @@ from PIL import Image
 from paddle import fluid
 
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.modeling.model_input import create_feeds
+from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
@@ -55,7 +55,11 @@ def get_test_images(infer_dir, infer_img):
     Get image path list in TEST mode
     """
     assert infer_img is not None or infer_dir is not None, \
-        "--infer-img or --infer-dir should be set"
+        "--infer_img or --infer_dir should be set"
+    assert infer_img is None or os.path.isfile(infer_img), \
+            "{} is not a file".format(infer_img)
+    assert infer_dir is None or os.path.isdir(infer_dir), \
+            "{} is not a directory".format(infer_dir)
     images = []
 
     # infer_img has a higher priority
@@ -104,7 +108,7 @@ def main():
     infer_prog = fluid.Program()
     with fluid.program_guard(infer_prog, startup_prog):
         with fluid.unique_name.guard():
-            _, feed_vars = create_feeds(test_feed, use_pyreader=False)
+            _, feed_vars = create_feed(test_feed, use_pyreader=False)
             test_fetches = model.test(feed_vars)
     infer_prog = infer_prog.clone(True)
 
@@ -119,18 +123,21 @@ def main():
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
+    if cfg['metric'] == 'VOC':
+        extra_keys = ['im_id']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
-    # 6. Parse dataset category
+    # parse dataset category
     if cfg.metric == 'COCO':
         from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
     if cfg.metric == "VOC":
-        # TODO(dengkaipeng): add VOC metric process
-        pass
+        from ppdet.utils.voc_eval import bbox2out, get_category_info
 
     anno_file = getattr(test_feed.dataset, 'annotation', None)
     with_background = getattr(test_feed, 'with_background', True)
-    clsid2catid, catid2name = get_category_info(anno_file, with_background)
+    use_default_label = getattr(test_feed, 'use_default_label', False)
+    clsid2catid, catid2name = get_category_info(anno_file, with_background,
+                                                use_default_label)
 
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
@@ -144,26 +151,26 @@ def main():
         }
         logger.info('Infer iter {}'.format(iter_id))
 
-        im_id = int(res['im_id'][0])
-        image_path = imid2path[im_id]
-        if cfg.metric == 'COCO':
-            bbox_results = None
-            mask_results = None
-            if 'bbox' in res:
-                bbox_results = bbox2out([res], clsid2catid)
-            if 'mask' in res:
-                mask_results = mask2out([res], clsid2catid,
-                                        cfg.MaskHead.resolution)
-            image = Image.open(image_path)
-            image = visualize_results(image, catid2name, 0.5,
-                                      bbox_results, mask_results)
+        bbox_results = None
+        mask_results = None
+        is_bbox_normalized = True if cfg.metric == 'VOC' else False
+        if 'bbox' in res:
+            bbox_results = bbox2out([res], clsid2catid, is_bbox_normalized)
+        if 'mask' in res:
+            mask_results = mask2out([res], clsid2catid,
+                                    model.mask_head.resolution)
+
+        # visualize result
+        im_ids = res['im_id'][0]
+        for im_id in im_ids:
+            image_path = imid2path[int(im_id)]
+            image = Image.open(image_path).convert('RGB')
+            image = visualize_results(image,
+                                      int(im_id), catid2name, 0.5, bbox_results,
+                                      mask_results, is_bbox_normalized)
             save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name)
-
-        if cfg.metric == "VOC":
-            # TODO(dengkaipeng): add VOC metric process
-            pass
 
 
 if __name__ == '__main__':

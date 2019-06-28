@@ -104,7 +104,7 @@ FasterRCNNTrainFeed:
   # batch size per device
   batch_size: 1
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
@@ -113,7 +113,7 @@ FasterRCNNTrainFeed:
 FasterRCNNEvalFeed:
   batch_size: 1
   dataset:
-    dataset_dir: data/coco
+    dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
     image_dir: val2017
   num_workers: 2
@@ -121,8 +121,6 @@ FasterRCNNEvalFeed:
 FasterRCNNTestFeed:
   batch_size: 1
   dataset:
-    dataset_dir: data/coco
     annotation: annotations/instances_val2017.json
-    image_dir: val2017
   num_workers: 2
   shuffle: False
