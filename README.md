@@ -121,14 +121,14 @@
 
 | 模型名称                                                     | 模型简介                                                     | 数据集                     | 评估指标    |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | ----------- |
-| [TSN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | ECCV'16，基于2D-CNN的经典网络结构，首次引入序列信息到视频分类，证明序列信息有效性 | Kinetics-400               | Top-1 = 67% |
-| [Non-Local](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | 视频非局部关联建模模型，引入类似self-attention机制，效果好，计算量大 | Kinetics-400               | Top-1 = 62% |
-| [stNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | ActivityNet2018 最佳single模型，AAAI19，融合局部与全局的时序模型 | Kinetics-400               | Top-1 = 69% |
-| [TSM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | TSN改进版，简单高效，计算简单，当前的SOTA                    | Kinetics-400               | Top-1 = 70% |
-| [Attention   LSTM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | ActivityNet17最佳single model，更稳定的时序模型              | Youtube-8M                 | GAP   = 86% |
-| [Attention   Cluster](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | CVPR18，引入不同模态的不同注意力聚合模型，更好捕获特征间的组合关系 | Youtube-8M                 | GAP   = 87% |
-| [NeXtVlad](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | Youtube-8M 2018最佳single model，弱化时序关系，适合建模短视频 | Youtube-8M                 | GAP   = 87% |
-| [C-TCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVedio) | 2018年ActivityNet夺冠方案，提供了处理视频动作定位问题的解决方案 | ActivityNet1.3提供的数据集 | Top1=31%    |
+| [TSN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | ECCV'16，基于2D-CNN的经典网络结构，首次引入序列信息到视频分类，证明序列信息有效性 | Kinetics-400               | Top-1 = 67% |
+| [Non-Local](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 视频非局部关联建模模型，引入类似self-attention机制，效果好，计算量大 | Kinetics-400               | Top-1 = 62% |
+| [stNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | ActivityNet2018 最佳single模型，AAAI19，融合局部与全局的时序模型 | Kinetics-400               | Top-1 = 69% |
+| [TSM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | TSN改进版，简单高效，计算简单，当前的SOTA                    | Kinetics-400               | Top-1 = 70% |
+| [Attention   LSTM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | ActivityNet17最佳single model，更稳定的时序模型              | Youtube-8M                 | GAP   = 86% |
+| [Attention   Cluster](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | CVPR18，引入不同模态的不同注意力聚合模型，更好捕获特征间的组合关系 | Youtube-8M                 | GAP   = 87% |
+| [NeXtVlad](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | Youtube-8M 2018最佳single model，弱化时序关系，适合建模短视频 | Youtube-8M                 | GAP   = 87% |
+| [C-TCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2018年ActivityNet夺冠方案，提供了处理视频动作定位问题的解决方案 | ActivityNet1.3提供的数据集 | Top1=31%    |
 
 <br/>
 <br/>
@@ -231,6 +231,7 @@
 [BERT（Bidirectional Encoder Representation from Transformers） ](https://github.com/PaddlePaddle/LARK/tree/develop/BERT)是一个迁移能力很强的通用语义表示模型， 以 Transformer 为网络基本组件，以双向 Masked Language Model和 Next Sentence Prediction 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。
 
 <br/>
+
 **ELMo**
 
 [ELMo(Embeddings from Language Models) ](https://github.com/PaddlePaddle/LARK/tree/develop/ELMo)是重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。
@@ -303,6 +304,7 @@
 
 
 <br/>
+
 **DAM**
 
 **深度注意力机制模型(Deep Attention Matching Network)**，是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。、
@@ -314,6 +316,7 @@
 
  
 <br/>
+
 **SimNet（SimilarityNet**）**百度自主研发的短文本语义匹配语义匹配框架**，一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。
 
 | **模型**     | **百度知道** | **ECOM** | **QQSIM** | **UNICOM** | **LCQMC** |
