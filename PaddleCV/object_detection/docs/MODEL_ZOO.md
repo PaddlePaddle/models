@@ -17,14 +17,14 @@
 ## Training Schedules
 
 - We adopt exactly the same training schedules as [Detectron](https://github.com/facebookresearch/Detectron/blob/master/MODEL_ZOO.md#training-schedules). 
-- 1x indicates the schedule starts at a LR of 0.02 and is decreased by a factor of 10 after 60k and 80k iterations and eventually terminates at 90k iterations for minibatch size 16 or starts at a LR of 0.01 and is decreased by a factor of 10 after 120k and 160k iterations and eventually terminates at 180k iterations for minibatch size 8.
+- 1x indicates the schedule starts at a LR of 0.02 and is decreased by a factor of 10 after 60k and 80k iterations and eventually terminates at 90k iterations for minibatch size 16. For batch size 8, LR is decreased to 0.01, total training iterations are doubled, and the decay milestones are scaled by 2.
 - 2x schedule is twice as long as 1x, with the LR milestones scaled accordingly.
 
 ## ImageNet Pretrained Models
 
 The backbone models pretrained on ImageNet are available. All backbone models are pretrained on standard ImageNet-1k dataset and can be downloaded [here](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#supported-models-and-performances).
 
-- Notes: The ResNet50
+- Notes:  The ResNet50 model was trained with cosine LR decay schedule and can be downloaded here [here](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos_pretrained.tar).
 
 ## Baselines
 
