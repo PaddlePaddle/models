@@ -62,7 +62,8 @@ def merge_configs(cfg, sec, args_dict):
 
 
 def print_configs(cfg, mode):
-    logger.info("---------------- {:>5} Arguments ----------------".format(mode))
+    logger.info("---------------- {:>5} Arguments ----------------".format(
+        mode))
     for sec, sec_items in cfg.items():
         logger.info("{}:".format(sec))
         for k, v in sec_items.items():

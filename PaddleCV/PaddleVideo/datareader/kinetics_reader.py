@@ -64,7 +64,8 @@ class KineticsReader(DataReader):
         self.seg_num = self.get_config_from_sec(mode, 'seg_num', self.seg_num)
         self.short_size = self.get_config_from_sec(mode, 'short_size')
         self.target_size = self.get_config_from_sec(mode, 'target_size')
-        self.num_reader_threads = self.get_config_from_sec(mode, 'num_reader_threads')
+        self.num_reader_threads = self.get_config_from_sec(mode,
+                                                           'num_reader_threads')
         self.buf_size = self.get_config_from_sec(mode, 'buf_size')
         self.enable_ce = self.get_config_from_sec(mode, 'enable_ce')
 
@@ -99,7 +100,6 @@ class KineticsReader(DataReader):
 
         return _batch_reader
 
-
     def _reader_creator(self,
                         pickle_list,
                         mode,
@@ -113,8 +113,8 @@ class KineticsReader(DataReader):
                         num_threads=1,
                         buf_size=1024,
                         format='pkl'):
-        def decode_mp4(sample, mode, seg_num, seglen, short_size, target_size, img_mean,
-                       img_std):
+        def decode_mp4(sample, mode, seg_num, seglen, short_size, target_size,
+                       img_mean, img_std):
             sample = sample[0].split(' ')
             mp4_path = sample[0]
             # when infer, we store vid as label
@@ -122,8 +122,8 @@ class KineticsReader(DataReader):
             try:
                 imgs = mp4_loader(mp4_path, seg_num, seglen, mode)
                 if len(imgs) < 1:
-                    logger.error('{} frame length {} less than 1.'.format(mp4_path,
-                                                                          len(imgs)))
+                    logger.error('{} frame length {} less than 1.'.format(
+                        mp4_path, len(imgs)))
                     return None, None
             except:
                 logger.error('Error when loading {}'.format(mp4_path))
@@ -132,20 +132,20 @@ class KineticsReader(DataReader):
             return imgs_transform(imgs, label, mode, seg_num, seglen, \
                          short_size, target_size, img_mean, img_std)
 
-
-        def decode_pickle(sample, mode, seg_num, seglen, short_size, target_size,
-                          img_mean, img_std):
+        def decode_pickle(sample, mode, seg_num, seglen, short_size,
+                          target_size, img_mean, img_std):
             pickle_path = sample[0]
             try:
                 if python_ver < (3, 0):
                     data_loaded = pickle.load(open(pickle_path, 'rb'))
                 else:
-                    data_loaded = pickle.load(open(pickle_path, 'rb'), encoding='bytes')
+                    data_loaded = pickle.load(
+                        open(pickle_path, 'rb'), encoding='bytes')
 
                 vid, label, frames = data_loaded
                 if len(frames) < 1:
-                    logger.error('{} frame length {} less than 1.'.format(pickle_path,
-                                                                          len(frames)))
+                    logger.error('{} frame length {} less than 1.'.format(
+                        pickle_path, len(frames)))
                     return None, None
             except:
                 logger.info('Error when loading {}'.format(pickle_path))
@@ -160,9 +160,8 @@ class KineticsReader(DataReader):
             return imgs_transform(imgs, ret_label, mode, seg_num, seglen, \
                          short_size, target_size, img_mean, img_std)
 
-
-        def imgs_transform(imgs, label, mode, seg_num, seglen, short_size, target_size,
-                           img_mean, img_std):
+        def imgs_transform(imgs, label, mode, seg_num, seglen, short_size,
+                           target_size, img_mean, img_std):
             imgs = group_scale(imgs, short_size)
 
             if mode == 'train':
@@ -182,10 +181,10 @@ class KineticsReader(DataReader):
             imgs = np_imgs
             imgs -= img_mean
             imgs /= img_std
-            imgs = np.reshape(imgs, (seg_num, seglen * 3, target_size, target_size))
+            imgs = np.reshape(imgs,
+                              (seg_num, seglen * 3, target_size, target_size))
 
             return imgs, label
-
 
         def reader():
             with open(pickle_list) as flist:
@@ -229,8 +228,14 @@ def group_multi_scale_crop(img_group, target_size, scales=None, \
 
         base_size = min(image_w, image_h)
         crop_sizes = [int(base_size * x) for x in scales]
-        crop_h = [input_size[1] if abs(x - input_size[1]) < 3 else x for x in crop_sizes]
-        crop_w = [input_size[0] if abs(x - input_size[0]) < 3 else x for x in crop_sizes]
+        crop_h = [
+            input_size[1] if abs(x - input_size[1]) < 3 else x
+            for x in crop_sizes
+        ]
+        crop_w = [
+            input_size[0] if abs(x - input_size[0]) < 3 else x
+            for x in crop_sizes
+        ]
 
         pairs = []
         for i, h in enumerate(crop_h):
@@ -273,8 +278,14 @@ def group_multi_scale_crop(img_group, target_size, scales=None, \
         return crop_pair[0], crop_pair[1], w_offset, h_offset
 
     crop_w, crop_h, offset_w, offset_h = _sample_crop_size(im_size)
-    crop_img_group = [img.crop((offset_w, offset_h, offset_w + crop_w, offset_h + crop_h)) for img in img_group]
-    ret_img_group = [img.resize((input_size[0], input_size[1]), Image.BILINEAR) for img in crop_img_group]
+    crop_img_group = [
+        img.crop((offset_w, offset_h, offset_w + crop_w, offset_h + crop_h))
+        for img in img_group
+    ]
+    ret_img_group = [
+        img.resize((input_size[0], input_size[1]), Image.BILINEAR)
+        for img in crop_img_group
+    ]
 
     return ret_img_group
 

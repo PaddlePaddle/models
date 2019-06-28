@@ -16,17 +16,17 @@ import paddle.fluid as fluid
 from paddle.fluid import ParamAttr
 
 from ..model import ModelBase
-from .tsn_res_model import TSN_ResNet
+from .tsm_res_model import TSM_ResNet
 
 import logging
 logger = logging.getLogger(__name__)
 
-__all__ = ["TSN"]
+__all__ = ["TSM"]
 
 
-class TSN(ModelBase):
+class TSM(ModelBase):
     def __init__(self, name, cfg, mode='train'):
-        super(TSN, self).__init__(name, cfg, mode=mode)
+        super(TSM, self).__init__(name, cfg, mode=mode)
         self.get_config()
 
     def get_config(self):
@@ -43,11 +43,11 @@ class TSN(ModelBase):
                                                            'learning_rate')
         self.learning_rate_decay = self.get_config_from_sec(
             'train', 'learning_rate_decay')
+        self.decay_epochs = self.get_config_from_sec('train', 'decay_epochs')
         self.l2_weight_decay = self.get_config_from_sec('train',
                                                         'l2_weight_decay')
         self.momentum = self.get_config_from_sec('train', 'momentum')
 
-        self.seg_num = self.get_config_from_sec(self.mode, 'seg_num', self.seg_num)
         self.target_size = self.get_config_from_sec(self.mode, 'target_size')
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
 
@@ -79,29 +79,20 @@ class TSN(ModelBase):
         self.feature_input = [image]
         self.label_input = label
 
-    def create_model_args(self):
-        cfg = {}
-        cfg['layers'] = self.num_layers
-        cfg['class_dim'] = self.num_classes
-        cfg['seg_num'] = self.seg_num
-        return cfg
-
     def build_model(self):
-        cfg = self.create_model_args()
-        videomodel = TSN_ResNet(
-            layers=cfg['layers'],
-            seg_num=cfg['seg_num'],
-            is_training=(self.mode == 'train'))
+        videomodel = TSM_ResNet(
+            layers=self.num_layers,
+            seg_num=self.seg_num,
+            is_training=self.is_training)
         out = videomodel.net(input=self.feature_input[0],
-                             class_dim=cfg['class_dim'])
+                             class_dim=self.num_classes)
         self.network_outputs = [out]
 
     def optimizer(self):
         assert self.mode == 'train', "optimizer only can be get in train mode"
-        epoch_points = [self.num_epochs / 3, self.num_epochs * 2 / 3]
         total_videos = self.total_videos
         step = int(total_videos / self.batch_size + 1)
-        bd = [e * step for e in epoch_points]
+        bd = [e * step for e in self.decay_epochs]
         base_lr = self.base_learning_rate
         lr_decay = self.learning_rate_decay
         lr = [base_lr, base_lr * lr_decay, base_lr * lr_decay * lr_decay]
@@ -131,17 +122,23 @@ class TSN(ModelBase):
         ]
 
     def pretrain_info(self):
-        return ('ResNet50_pretrained', 'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz')
+        return (
+            'ResNet50_pretrained',
+            'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz'
+        )
 
     def weights_info(self):
-        return ('tsn_kinetics', 
-                'https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz')
+        return (
+            'tsm_kinetics',
+            'https://paddlemodels.bj.bcebos.com/video_classification/tsm_kinetics.tar.gz'
+        )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
         def is_parameter(var):
-            return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name))
+            return isinstance(var, fluid.framework.Parameter) and (
+                not ("fc_0" in var.name))
 
-        logger.info("Load pretrain weights from {}, exclude fc layer.".format(pretrain))
+        logger.info("Load pretrain weights from {}, exclude fc layer.".format(
+            pretrain))
         vars = filter(is_parameter, prog.list_vars())
         fluid.io.load_vars(exe, pretrain, vars=vars, main_program=prog)
-

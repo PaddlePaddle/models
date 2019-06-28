@@ -18,10 +18,8 @@ import paddle.fluid as fluid
 
 class LogisticModel(object):
     """Logistic model."""
-    def build_model(self,
-                    model_input,
-                    vocab_size,
-                    **unused_params):
+
+    def build_model(self, model_input, vocab_size, **unused_params):
         """Creates a logistic model.
 
     Args:

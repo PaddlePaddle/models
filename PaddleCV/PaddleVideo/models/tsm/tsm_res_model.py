@@ -45,19 +45,21 @@ class TSM_ResNet():
             padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
-            param_attr=fluid.param_attr.ParamAttr(name=name+"_weights"),
+            param_attr=fluid.param_attr.ParamAttr(name=name + "_weights"),
             bias_attr=False)
         if name == "conv1":
             bn_name = "bn_" + name
         else:
             bn_name = "bn" + name[3:]
 
-        return fluid.layers.batch_norm(input=conv, act=act,
-                                       is_test=(not self.is_training),
-                                       param_attr=fluid.param_attr.ParamAttr(name=bn_name+"_scale"),
-                                       bias_attr=fluid.param_attr.ParamAttr(bn_name+'_offset'),
-                                       moving_mean_name=bn_name+"_mean",
-                                       moving_variance_name=bn_name+'_variance')
+        return fluid.layers.batch_norm(
+            input=conv,
+            act=act,
+            is_test=(not self.is_training),
+            param_attr=fluid.param_attr.ParamAttr(name=bn_name + "_scale"),
+            bias_attr=fluid.param_attr.ParamAttr(bn_name + '_offset'),
+            moving_mean_name=bn_name + "_mean",
+            moving_variance_name=bn_name + '_variance')
 
     def shortcut(self, input, ch_out, stride, name):
         ch_in = input.shape[1]
@@ -70,18 +72,27 @@ class TSM_ResNet():
         shifted = self.shift_module(input)
 
         conv0 = self.conv_bn_layer(
-            input=shifted, num_filters=num_filters, filter_size=1, act='relu',
-            name=name+"_branch2a")
+            input=shifted,
+            num_filters=num_filters,
+            filter_size=1,
+            act='relu',
+            name=name + "_branch2a")
         conv1 = self.conv_bn_layer(
             input=conv0,
             num_filters=num_filters,
             filter_size=3,
             stride=stride,
-            act='relu', name=name+"_branch2b")
+            act='relu',
+            name=name + "_branch2b")
         conv2 = self.conv_bn_layer(
-            input=conv1, num_filters=num_filters * 4, filter_size=1, act=None, name=name+"_branch2c")
+            input=conv1,
+            num_filters=num_filters * 4,
+            filter_size=1,
+            act=None,
+            name=name + "_branch2c")
 
-        short = self.shortcut(input, num_filters * 4, stride, name=name+"_branch1")
+        short = self.shortcut(
+            input, num_filters * 4, stride, name=name + "_branch1")
 
         return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
 
@@ -109,7 +120,12 @@ class TSM_ResNet():
         num_filters = [64, 128, 256, 512]
 
         conv = self.conv_bn_layer(
-            input=input, num_filters=64, filter_size=7, stride=2, act='relu', name='conv1')
+            input=input,
+            num_filters=64,
+            filter_size=7,
+            stride=2,
+            act='relu',
+            name='conv1')
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
@@ -121,11 +137,11 @@ class TSM_ResNet():
             for i in range(depth[block]):
                 if layers in [101, 152] and block == 2:
                     if i == 0:
-                        conv_name = "res" + str(block+2) + "a"
+                        conv_name = "res" + str(block + 2) + "a"
                     else:
-                        conv_name = "res" + str(block+2) + "b" + str(i)
+                        conv_name = "res" + str(block + 2) + "b" + str(i)
                 else:
-                    conv_name = "res" + str(block+2) + chr(97+i)
+                    conv_name = "res" + str(block + 2) + chr(97 + i)
 
                 conv = self.bottleneck_block(
                     input=conv,
@@ -136,7 +152,8 @@ class TSM_ResNet():
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
 
-        dropout = fluid.layers.dropout(x=pool, dropout_prob=0.5, is_test=(not self.is_training))
+        dropout = fluid.layers.dropout(
+            x=pool, dropout_prob=0.5, is_test=(not self.is_training))
 
         feature = fluid.layers.reshape(
             x=dropout, shape=[-1, seg_num, pool.shape[1]])
@@ -149,6 +166,7 @@ class TSM_ResNet():
                               param_attr=fluid.param_attr.ParamAttr(
                                   initializer=fluid.initializer.Uniform(-stdv,
                                                                         stdv)),
-                              bias_attr=fluid.param_attr.ParamAttr(learning_rate=2.0,
+                              bias_attr=fluid.param_attr.ParamAttr(
+                                  learning_rate=2.0,
                                   regularizer=fluid.regularizer.L2Decay(0.)))
         return out
