@@ -130,4 +130,4 @@ will be cached in `~/.cache/paddle/dataset/` and can be discovered automatically
 subsequently.
 
 
-**NOTE:** For further informations on the datasets, please see [DATASET.md](../ppdet/data/README.md)
+**NOTE:** For further informations on the datasets, please see [DATA.md](DATA.md)
