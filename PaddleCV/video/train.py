@@ -130,18 +130,24 @@ def train(args):
             train_feeds = train_model.feeds()
             train_feeds[-1].persistable = True
             # for the output of classification model, has the form [pred]
+            # for the output of detection model, has the form [loc_pred, cls_pred]
             train_outputs = train_model.outputs()
             for output in train_outputs:
                 output.persistable = True
-            train_loss = train_model.loss()
-            train_loss.persistable = True
+            train_losses = train_model.loss()
+            if isinstance(train_losses, list) or isinstance(train_losses,
+                                                            tuple):
+                # for detection model, train_losses has the form [total_loss, loc_loss, cls_loss]
+                train_loss = train_losses[0]
+                for item in train_losses:
+                    item.persistable = True
+            else:
+                train_loss = train_losses
+                train_loss.persistable = True
             # outputs, loss, label should be fetched, so set persistable to be true
             optimizer = train_model.optimizer()
             optimizer.minimize(train_loss)
             train_pyreader = train_model.pyreader()
-
-    if not args.no_memory_optimize:
-        fluid.memory_optimize(train_prog)
 
     valid_prog = fluid.Program()
     with fluid.program_guard(valid_prog, startup):
@@ -149,8 +155,10 @@ def train(args):
             valid_model.build_input(not args.no_use_pyreader)
             valid_model.build_model()
             valid_feeds = valid_model.feeds()
+            # for the output of classification model, has the form [pred]
+            # for the output of detection model, has the form [loc_pred, cls_pred]
             valid_outputs = valid_model.outputs()
-            valid_loss = valid_model.loss()
+            valid_losses = valid_model.loss()
             valid_pyreader = valid_model.pyreader()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
@@ -176,10 +184,17 @@ def train(args):
         if pretrain:
             train_model.load_pretrain_params(exe, pretrain, train_prog, place)
 
+    build_strategy = fluid.BuildStrategy()
+    build_strategy.enable_inplace = True
+    if args.model_name in ['CTCN']:
+        build_strategy.enable_sequential_execution = True
+    #build_strategy.memory_optimize = True
+
     train_exe = fluid.ParallelExecutor(
         use_cuda=args.use_gpu,
         loss_name=train_loss.name,
-        main_program=train_prog)
+        main_program=train_prog,
+        build_strategy=build_strategy)
     valid_exe = fluid.ParallelExecutor(
         use_cuda=args.use_gpu,
         share_vars_from=train_exe,
@@ -200,10 +215,20 @@ def train(args):
     train_metrics = get_metrics(args.model_name.upper(), 'train', train_config)
     valid_metrics = get_metrics(args.model_name.upper(), 'valid', valid_config)
 
-    train_fetch_list = [train_loss.name] + [x.name for x in train_outputs
-                                            ] + [train_feeds[-1].name]
-    valid_fetch_list = [valid_loss.name] + [x.name for x in valid_outputs
-                                            ] + [valid_feeds[-1].name]
+    if isinstance(train_losses, tuple) or isinstance(train_losses, list):
+        # for detection
+        train_fetch_list = [item.name for item in train_losses] + \
+                [x.name for x in train_outputs] + [train_feeds[-1].name]
+        valid_fetch_list = [item.name for item in valid_losses] + \
+                [x.name for x in valid_outputs] + [valid_feeds[-1].name]
+    else:
+        # for classification
+        train_fetch_list = [train_losses.name] + [
+            x.name for x in train_outputs
+        ] + [train_feeds[-1].name]
+        valid_fetch_list = [valid_losses.name] + [
+            x.name for x in valid_outputs
+        ] + [valid_feeds[-1].name]
 
     epochs = args.epoch or train_model.epoch_num()
 

@@ -94,11 +94,16 @@ def test(args):
     test_metrics = get_metrics(args.model_name.upper(), 'test', test_config)
 
     test_feeder = fluid.DataFeeder(place=place, feed_list=test_feeds)
-    if test_loss is None:
-        fetch_list = [x.name for x in test_outputs] + [test_feeds[-1].name]
+    if args.model_name.upper() in ['CTCN']:
+        fetch_list = [x.name for x in test_loss] + \
+                     [x.name for x in test_outputs] + \
+                     [test_feeds[-1].name]
     else:
-        fetch_list = [test_loss.name] + [x.name for x in test_outputs
-                                         ] + [test_feeds[-1].name]
+        if test_loss is None:
+            fetch_list = [x.name for x in test_outputs] + [test_feeds[-1].name]
+        else:
+            fetch_list = [test_loss.name] + [x.name for x in test_outputs
+                                             ] + [test_feeds[-1].name]
 
     epoch_period = []
     for test_iter, data in enumerate(test_reader()):
@@ -106,14 +111,25 @@ def test(args):
         test_outs = exe.run(fetch_list=fetch_list, feed=test_feeder.feed(data))
         period = time.time() - cur_time
         epoch_period.append(period)
-        if test_loss is None:
-            loss = np.zeros(1, ).astype('float32')
-            pred = np.array(test_outs[0])
-            label = np.array(test_outs[-1])
+        if args.model_name.upper() in ['CTCN']:
+            total_loss = test_outs[0]
+            loc_loss = test_outs[1]
+            cls_loss = test_outs[2]
+            loc_preds = test_outs[3]
+            cls_preds = test_outs[4]
+            fid = test_outs[-1]
+            loss = [total_loss, loc_loss, cls_loss]
+            pred = [loc_preds, cls_preds]
+            label = fid
         else:
-            loss = np.array(test_outs[0])
-            pred = np.array(test_outs[1])
-            label = np.array(test_outs[-1])
+            if test_loss is None:
+                loss = np.zeros(1, ).astype('float32')
+                pred = np.array(test_outs[0])
+                label = np.array(test_outs[-1])
+            else:
+                loss = np.array(test_outs[0])
+                pred = np.array(test_outs[1])
+                label = np.array(test_outs[-1])
         test_metrics.accumulate(loss, pred, label)
 
         # metric here

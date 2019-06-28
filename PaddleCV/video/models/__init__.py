@@ -6,6 +6,7 @@ from .nonlocal_model import NonLocal
 from .tsm import TSM
 from .tsn import TSN
 from .stnet import STNET
+from .ctcn import CTCN
 
 # regist models, sort by alphabet
 regist_model("AttentionCluster", AttentionCluster)
@@ -15,3 +16,4 @@ regist_model('NONLOCAL', NonLocal)
 regist_model("TSM", TSM)
 regist_model("TSN", TSN)
 regist_model("STNET", STNET)
+regist_model("CTCN", CTCN)

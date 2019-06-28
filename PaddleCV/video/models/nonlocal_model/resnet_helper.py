@@ -264,6 +264,13 @@ def res_stage_nonlocal(block_fn,
 
     for idx in range(num_blocks):
         block_prefix = '{}{}'.format(prefix, chr(idx + 97))
+        if cfg.MODEL.depth == 101:
+            if num_blocks == 23:
+                if idx == 0:
+                    block_prefix = '{}{}'.format(prefix, chr(97))
+                else:
+                    block_prefix = '{}{}{}'.format(prefix, 'b', idx)
+
         block_stride = 2 if ((idx == 0) and (stride == 2)) else 1
         blob_in = _generic_residual_block_3d(
             blob_in,

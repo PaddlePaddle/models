@@ -19,10 +19,9 @@
 
 ## 快速开始
 
-本项目依赖于 Python2.7、Paddlepaddle Fluid 1.4.0以及PaddleHub 0.5.0，请确保相关依赖都已安装正确
+本项目依赖于 Paddlepaddle 1.3.2 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
-[PaddlePaddle安装指南](http://www.paddlepaddle.org/#quick-start)
-[PaddleHub安装指南](https://github.com/PaddlePaddle/PaddleHub)
+python版本依赖python 2.7
 
 #### 安装代码
 
@@ -167,6 +166,38 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 ```shell
 # 在train()函数中，修改--init_checkpoint选项
 --init_checkpoint ./models/ernie_finetune/params
+```
+
+#### 如何基于PaddleHub加载ERNIE进行 Finetune
+
+我们也提供了使用PaddleHub加载ERNIE模型的选项，PaddleHub是PaddlePaddle的预训练模型管理工具，可以一行代码完成预训练模型的加载，简化预训练模型的使用和迁移学习。更多相关的介绍，可以查看[PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
+
+如果想使用该功能，需要修改run_ernie.sh中的配置如下：
+```shell
+# 在train()函数中，修改--use_paddle_hub选项
+--use_paddle_hub true
+```
+
+注意：使用该选项需要先安装PaddleHub，安装命令如下
+```shell
+pip install paddlehub
+```
+
+执行以下命令进行Finetune
+```shell
+sh run_ernie.sh train
+```
+
+Finetune结束后，进行eval或者infer时，需要修改run_ernie.sh中的配置如下：
+```shell
+# 在eval()和infer()函数中，修改--use_paddle_hub选项
+--use_paddle_hub true
+```
+
+执行以下命令进行eval和infer
+```shell
+sh run_ernie.sh eval
+sh run_ernie.sh infer
 ```
 
 ## 如何贡献代码
