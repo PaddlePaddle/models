@@ -158,18 +158,21 @@ class LightNASSpace(SearchSpace):
 
         return op_params
 
-    def get_all_ops(self, ifshortcut=False, ifse=False, test_iter=100):
+    def get_all_ops(self,
+                    ifshortcut=False,
+                    ifse=False,
+                    strides=[1, 2, 2, 2, 1, 2, 1],
+                    test_iter=100):
         """Get all possible ops of current search space
         Args:
             ifshortcut: bool, shortcut or not
             ifse: bool, se or not
+            strides: list, list of strides for bottlenecks
             test_iter: int, running times of op when estimating latency
         Returns:
             op_params: list, a list of all possible params
         """
         op_params = []
-        # strides for seven bottlenecks
-        strides = [1, 2, 2, 2, 1, 2, 1]
         # conv1_1
         op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, image_shape[0],
                           image_shape[1], image_shape[2], 32, 1, 3, 1, 2, 1))
@@ -178,10 +181,10 @@ class LightNASSpace(SearchSpace):
 
         # bottlenecks, TODO: different h and w for images
         in_c, in_shape = [32], image_shape[1] / 2
-        for i in range(7):
+        for i in range(len(NAS_FILTER_SIZE) + 2):
             if i == 0:
                 expansion, kernels, num_filters, s = [1], [3], [16], strides[i]
-            elif i == 6:
+            elif i == len(NAS_FILTER_SIZE) + 1:
                 expansion, kernels, num_filters, s = [6], [3], [320], strides[i]
             else:
                 expansion, kernels, num_filters, s = NAS_FILTERS_MULTIPLIER, \
