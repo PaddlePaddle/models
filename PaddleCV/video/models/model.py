@@ -136,10 +136,7 @@ class ModelBase(object):
         fluid.io.load_params(exe, pretrain, main_program=prog)
 
     def load_test_weights(self, exe, weights, prog, place):
-        def if_exist(var):
-            return os.path.exists(os.path.join(weights, var.name))
-
-        fluid.io.load_vars(exe, weights, predicate=if_exist)
+        fluid.io.load_params(exe, weights, main_program=prog)
 
     def get_config_from_sec(self, sec, item, default=None):
         if sec.upper() not in self.cfg:

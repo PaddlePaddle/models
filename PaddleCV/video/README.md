@@ -1,8 +1,8 @@
 
 ## 简介
-本教程期望给开发者提供基于PaddlePaddle的便捷、高效的使用深度学习算法解决视频理解、视频编辑、视频生成等一系列模型。目前包含视频分类模型，后续会不断的扩展到其他更多场景。
+本教程期望给开发者提供基于PaddlePaddle的便捷、高效的使用深度学习算法解决视频理解、视频编辑、视频生成等一系列模型。目前包含视频分类和动作定位模型，后续会不断的扩展到其他更多场景。
 
-目前视频分类模型包括:
+目前视频分类和动作定位模型包括:
 
 | 模型 | 类别  | 描述 |
 | :--------------- | :--------: | :------------: |
@@ -13,16 +13,17 @@
 | [TSM](./models/tsm/README.md) | 视频分类| 基于时序移位的简单高效视频时空建模方法 |
 | [TSN](./models/tsn/README.md) | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
 | [Non-local](./models/nonlocal_model/README.md) | 视频分类| 视频非局部关联建模模型 |
+| [C-TCN](./models/ctcn/README.md) | 视频动作定位| 2018年ActivityNet夺冠方案 |
 
 ### 主要特点
 
-- 包含视频分类方向的多个主流领先模型，其中Attention LSTM，Attention Cluster和NeXtVLAD是比较流行的特征序列模型，Non-local, TSN, TSM和StNet是End-to-End的视频分类模型。Attention LSTM模型速度快精度高，NeXtVLAD是2nd-Youtube-8M比赛中最好的单模型, TSN是基于2D-CNN的经典解决方案，TSM是基于时序移位的简单高效视频时空建模方法，Non-local模型提出了视频非局部关联建模方法。Attention Cluster和StNet是百度自研模型，分别发表于CVPR2018和AAAI2019，是Kinetics600比赛第一名中使用到的模型。
+- 包含视频分类和动作定位方向的多个主流领先模型，其中Attention LSTM，Attention Cluster和NeXtVLAD是比较流行的特征序列模型，Non-local, TSN, TSM和StNet是End-to-End的视频分类模型。Attention LSTM模型速度快精度高，NeXtVLAD是2nd-Youtube-8M比赛中最好的单模型, TSN是基于2D-CNN的经典解决方案，TSM是基于时序移位的简单高效视频时空建模方法，Non-local模型提出了视频非局部关联建模方法。Attention Cluster和StNet是百度自研模型，分别发表于CVPR2018和AAAI2019，是Kinetics600比赛第一名中使用到的模型。C-TCN也是百度自研模型，2018年ActivityNet比赛的夺冠方案。
 
-- 提供了适合视频分类任务的通用骨架代码，用户可一键式高效配置模型完成训练和评测。
+- 提供了适合视频分类和动作定位任务的通用骨架代码，用户可一键式高效配置模型完成训练和评测。
 
 ## 安装
 
-在当前模型库运行样例代码需要PadddlePaddle Fluid v.1.4.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前模型库运行样例代码需要PadddlePaddle Fluid v.1.5.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ## 数据准备
 
@@ -123,6 +124,14 @@ infer.py
 | TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz) |
 | TSM | 128 | 8卡P40 | 7.1 | 0.70 | [model](https://paddlemodels.bj.bcebos.com/video_classification/tsm_kinetics.tar.gz) |
 | Non-local | 64 | 8卡P40 | 7.1 | 0.74 | [model](https://paddlemodels.bj.bcebos.com/video_classification/nonlocal_kinetics.tar.gz) |
+
+- 基于ActivityNet的动作定位模型：
+
+| 模型 | Batch Size | 环境配置 | cuDNN版本 | MAP | 下载链接 |
+| :-------: | :---: | :---------: | :----: | :----: | :----------: |
+| C-TCN | 16 | 8卡P40 | 7.1 | 0.31| [model](https://paddlemodels.bj.bcebos.com/video_detection/ctcn.tar.gz) |
+
+
 ## 参考文献
 
 - [Attention Clusters: Purely Attention Based Local Feature Integration for Video Classification](https://arxiv.org/abs/1711.09550), Xiang Long, Chuang Gan, Gerard de Melo, Jiajun Wu, Xiao Liu, Shilei Wen
@@ -132,7 +141,9 @@ infer.py
 - [Temporal Segment Networks: Towards Good Practices for Deep Action Recognition](https://arxiv.org/abs/1608.00859), Limin Wang, Yuanjun Xiong, Zhe Wang, Yu Qiao, Dahua Lin, Xiaoou Tang, Luc Van Gool
 - [Temporal Shift Module for Efficient Video Understanding](https://arxiv.org/abs/1811.08383v1), Ji Lin, Chuang Gan, Song Han
 - [Non-local Neural Networks](https://arxiv.org/abs/1711.07971v1), Xiaolong Wang, Ross Girshick, Abhinav Gupta, Kaiming He
+
 ## 版本更新
 
 - 3/2019: 新增模型库，发布Attention Cluster，Attention LSTM，NeXtVLAD，StNet，TSN五个视频分类模型。
 - 4/2019: 发布Non-local, TSM两个视频分类模型。
+- 6/2019: 发布C-TCN视频动作定位模型；Non-local模型增加C2D ResNet101和I3D ResNet50骨干网络；NeXtVLAD、TSM模型速度和显存优化。

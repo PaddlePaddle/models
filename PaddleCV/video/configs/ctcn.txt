@@ -36,17 +36,17 @@ num_gpus = 8
 filelist = 'dataset/ctcn/Activity1.3_val_rgb.listformat'
 rgb = 'senet152-201cls-rgb-70.3-5seg-331data_331img_val'
 flow = 'senet152-201cls-flow-60.9-5seg-331data_val'
-class_label_file = 'dataset/ctcn/test_val_label.list'
+class_label_file = 'dataset/ctcn/labels.txt'
 video_duration_file = 'dataset/ctcn/val_duration_frame.list'
 batch_size = 1
 num_threads = 1
 score_thresh = 0.001
-nms_thresh = 0.08
-sigma_thresh = 0.006
-soft_thresh = 0.006
+nms_thresh = 0.8
+sigma_thresh = 0.9
+soft_thresh = 0.004
 
 [INFER]
-filelist = 'dataset/ctcn/Activity1.3_val_rgb.listformat'
+filelist = 'dataset/ctcn/infer.list'
 rgb = 'senet152-201cls-rgb-70.3-5seg-331data_331img_val'
 flow = 'senet152-201cls-flow-60.9-5seg-331data_val'
 batch_size = 1

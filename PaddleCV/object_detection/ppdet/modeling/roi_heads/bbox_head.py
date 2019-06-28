@@ -26,7 +26,7 @@ from paddle.fluid.regularizer import L2Decay
 from ppdet.modeling.ops import MultiClassNMS
 from ppdet.core.workspace import register, serializable
 
-__all__ = ['BBoxHead']
+__all__ = ['BBoxHead', 'TwoFCHead']
 
 
 @register
