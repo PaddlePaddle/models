@@ -7,23 +7,22 @@ PaddlePaddle provides a rich set of computational units to enable users to adopt
 PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化的方法解决各种学习问题。在此Repo中，我们展示了如何用 PaddlePaddle 来解决常见的机器学习任务，提供若干种不同的易学易用的神经网络模型。PaddlePaddle用户现可申请AI Studio平台的**免费Tesla V100算力资源**，高效在线训练模型，[点击申请](https://aistudio.baidu.com/aistudio/questionnaire?activityid=378)。
 
 ## 目录
-
-* [智能视觉(PaddleCV)](## PaddleCV)
-  * [图像分类](### 图像分类)
-  * [目标检测](### 目标检测)
-  * [图像分割](### 图像分割)
-  * [关键点检测](### 关键点检测)
-  * [图像生成](### 图像生成)
-  * [场景文字识别](### 场景文字识别)
-  * [度量学习](### 度量学习)
-  * [视频分类&动作定位](### 视频分类&动作定位)
-* [智能文本处理(PaddleNLP)](## PaddleNLP)
-  * [基础模型（词法分析&语言模型）](### 基础模型)
-  * [文本理解（文本分类&阅读理解）](### 文本理解)
-  * [语义模型（语义表示&语义匹配）](### 语义模型)
-  * [文本生成（机器翻译&对话生成）](### 文本生成)
-* [智能推荐(PaddleRec)](## PaddleRec)
-* [其他模型](## 其他模型)
+* [智能视觉(PaddleCV)](#PaddleCV)
+  * [图像分类](#图像分类)
+  * [目标检测](#目标检测)
+  * [图像分割](#图像分割)
+  * [关键点检测](#关键点检测)
+  * [图像生成](#图像生成)
+  * [场景文字识别](#场景文字识别)
+  * [度量学习](#度量学习)
+  * [视频分类和动作定位](#视频分类和动作定位)
+* [智能文本处理(PaddleNLP)](#PaddleNLP)
+  * [基础模型（词法分析&语言模型）](#基础模型)
+  * [文本理解（文本分类&阅读理解）](#文本理解)
+  * [语义模型（语义表示&语义匹配）](#语义模型)
+  * [文本生成（机器翻译&对话生成）](#文本生成)
+* [智能推荐(PaddleRec)](#PaddleRec)
+* [其他模型](#其他模型)
 
 ## PaddleCV
 
@@ -109,7 +108,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [ResNet50使用eml微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用eml loss微调的特征模型        | Stanford   Online Product(SOP) | 80.11%                                        |
 | [ResNet50使用npairs微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用npairs loss微调的特征模型     | Stanford   Online Product(SOP) | 79.81%                                        |
 
-### 视频分类&动作定位
+### 视频分类和动作定位
 
 视频分类是视频理解任务的基础，包含语音数据、包含运动信息等的视频对象，因此理解视频需要获得更多的上下文信息，不仅要理解每帧图像是什么、包含什么，还需要结合不同帧，知道上下文的关联信息。视频分类方法主要包含基于卷积神经网络、基于循环神经网络、或将这两者结合的方法。
 
