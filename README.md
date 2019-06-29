@@ -255,6 +255,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
     <td width="98"><p>82.7(+1.9)</p></td>
   </tr>
 </table>
+
 #### BERT
 
 [BERT(Bidirectional Encoder Representation from Transformers)](https://github.com/PaddlePaddle/LARK/tree/develop/BERT)是一个迁移能力很强的通用语义表示模型， 以 Transformer 为网络基本组件，以双向 Masked Language Model和 Next Sentence Prediction 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。
