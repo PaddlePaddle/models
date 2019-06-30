@@ -56,9 +56,9 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 | Backbone  | Size | Lr schd | Box AP | Download  |
 | :-------- | :--: | :-----: | :----: | :-------: |
-| DarkNet53 | 608  |  120e   |  25.7  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
-| MobileNet-V1 | 608  |  120e   |  25.7  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
-| ResNet34 | 608  |  120e   |  25.7  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| DarkNet53 | 608  |  1x   |  38.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
+| MobileNet-V1 | 608  |  1x   |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| ResNet34 | 608  |  1x   |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
 
 - Notes: Data Augmentation（TODO：Kaipeng）
 
@@ -75,4 +75,4 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 | Backbone     | Size | Lr schd | Box AP | Download  |
 | :----------- | :--: | :-----: | :----: | :-------: |
-| MobileNet v1 | 300  |  120e   |  25.7  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
+| MobileNet v1 | 300  |  1x   |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
