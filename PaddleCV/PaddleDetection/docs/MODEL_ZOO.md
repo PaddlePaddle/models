@@ -67,12 +67,12 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | ResNet34     | 320  |    8    |   270e  |  31.4  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
 
 **NOTE**: Yolo v3 trained in 8 GPU with total batch size as 64 and trained 270 epoches. Yolo v3 trained with following data augmentations: 
-- mixup image, 
-- random distort image
-- random crop image
-- random expand image
-- random interpolate
-- random flip image
+- Mixup images: mixup two images with beta distribution.
+- Random distort image: distort brightness, contrast, saturation, and hue.
+- Random crop image: crop image with respect to different scale, aspect ratio, and overlap.
+- Random expand image: pad image to a larger size, padding filled with mean image value.
+- Random interpolate: use a random interpolation method to resize the image.
+- Random flip image: horizontal flip image.
 
 ### RetinaNet
 
@@ -88,7 +88,7 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | MobileNet v1 | 300  |    32   |   120e  |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
 
 **NOTE**: SSD trained in 2 GPU with total batch size as 64 and trained 120 epoches. SSD trained with following data augmentations: 
-- random distort image
-- random crop image
-- random expand image
-- random flip image.
+- Random distort image: distort brightness, contrast, saturation, and hue.
+- Random crop image: crop image with respect to different scale, aspect ratio, and overlap.
+- Random expand image: pad image to a larger size, padding filled with mean image value.
+- Random flip image: horizontal flip image.
