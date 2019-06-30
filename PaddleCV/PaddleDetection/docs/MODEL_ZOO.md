@@ -54,11 +54,17 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 ### Yolo v3
 
-| Backbone     | Size | Box AP | Download  |
-| :----------- | :--: | :----: | :-------: |
-| DarkNet53    | 608  |  38.8  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
-| MobileNet-V1 | 608  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
-| ResNet34     | 608  |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| Backbone     | Size | Img/gpu | Lr schd | Box AP | Download  |
+| :----------- | :--: | :------ | :------ | :----: | :-------: |
+| DarkNet53    | 608  |    8    |   120e  |  38.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
+| DarkNet53    | 416  |    8    |   120e  |  37.5  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
+| DarkNet53    | 320  |    8    |   120e  |  34.8  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
+| MobileNet-V1 | 608  |    8    |   120e  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| MobileNet-V1 | 416  |    8    |   120e  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| MobileNet-V1 | 320  |    8    |   120e  |  27.1  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| ResNet34     | 608  |    8    |   120e  |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| ResNet34     | 416  |    8    |   120e  |  34.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| ResNet34     | 320  |    8    |   120e  |  31.4  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
 
 **NOTE**: Yolo v3 training data augmentations: mixup image, random distort image, random crop image, random expand image, random interpolate, random flip image.
 
@@ -71,8 +77,8 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 ### SSD on PascalVOC
 
-| Backbone     | Size | Box AP | Download  |
-| :----------- | :--: | :----: | :-------: |
-| MobileNet v1 | 300  |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
+| Backbone     | Size | Img/gpu | Lr schd | Box AP | Download  |
+| :----------- | :--: | :------ | :------ | :----: | :-------: |
+| MobileNet v1 | 300  |    32   |   120e  |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
 
-**NOTE**: SSD training data augmentations: random distort image, random crop image, random expand image, random flip image.
+**NOTE**: SSD trained in 2 GPU with totoal batch size as 64. SSD training data augmentations: random distort image, random crop image, random expand image, random flip image.
