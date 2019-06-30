@@ -56,7 +56,7 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 | Backbone     | Size | Box AP | Download  |
 | :----------- | :--: | :----: | :-------: |
-| DarkNet53    | 608  |  38.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
+| DarkNet53    | 608  |  38.8  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
 | MobileNet-V1 | 608  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
 | ResNet34     | 608  |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
 
