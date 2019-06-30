@@ -62,11 +62,12 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | MobileNet-V1 | 608  |    8    |   120e  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
 | MobileNet-V1 | 416  |    8    |   120e  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
 | MobileNet-V1 | 320  |    8    |   120e  |  27.1  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
-| ResNet34     | 608  |    8    |   120e  |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
-| ResNet34     | 416  |    8    |   120e  |  34.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
-| ResNet34     | 320  |    8    |   120e  |  31.4  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| ResNet34     | 608  |    8    |   120e  |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
+| ResNet34     | 416  |    8    |   120e  |  34.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
+| ResNet34     | 320  |    8    |   120e  |  31.4  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
 
-**NOTE**: Yolo v3 training data augmentations: mixup image, random distort image, random crop image, random expand image, random interpolate, random flip image.
+**NOTE**: Yolo v3 trained in 8 GPU with total batch size as 64. Yolo v3 training data augmentations: mixup image, random distort image, 
+random crop image, random expand image, random interpolate, random flip image.
 
 ### RetinaNet
 
