@@ -55,7 +55,7 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 ### Yolo v3
 
 | Backbone     | Size | Img/gpu | Lr schd | Box AP | Download  |
-| :----------- | :--: | :------ | :------ | :----: | :-------: |
+| :----------- | :--: | :-----: | :-----: | :----: | :-------: |
 | DarkNet53    | 608  |    8    |   120e  |  38.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
 | DarkNet53    | 416  |    8    |   120e  |  37.5  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
 | DarkNet53    | 320  |    8    |   120e  |  34.8  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
@@ -79,7 +79,7 @@ random distort image, random crop image, random expand image, random interpolate
 ### SSD on PascalVOC
 
 | Backbone     | Size | Img/gpu | Lr schd | Box AP | Download  |
-| :----------- | :--: | :------ | :------ | :----: | :-------: |
+| :----------- | :--: | :-----: | :-----: | :----: | :-------: |
 | MobileNet v1 | 300  |    32   |   120e  |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
 
 **NOTE**: SSD trained in 2 GPU with totoal batch size as 64. SSD training data augmentations: random distort image, 
