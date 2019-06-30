@@ -54,13 +54,13 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 ### Yolo v3
 
-| Backbone  | Size | Lr schd | Box AP | Download  |
-| :-------- | :--: | :-----: | :----: | :-------: |
-| DarkNet53 | 608  |  1x   |  38.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
-| MobileNet-V1 | 608  |  1x   |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
-| ResNet34 | 608  |  1x   |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| Backbone     | Size | Box AP | Download  |
+| :----------- | :--: | :----: | :-------: |
+| DarkNet53    | 608  |  38.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
+| MobileNet-V1 | 608  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| ResNet34     | 608  |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
 
-- Notes: Data Augmentation（TODO：Kaipeng）
+**NOTE**: Yolo v3 training data augmentations: mixup image, random distort image, random crop image, random expand image, random interpolate, random flip image.
 
 ### RetinaNet
 
@@ -69,10 +69,10 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | ResNet50-FPN | 300  |  120e   |  36.0  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r50_fpn_1x.tar) |
 | ResNet101-FPN | 300  |  120e   |  37.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r101_fpn_1x.tar) |
 
-- Notes: （TODO：Kaipeng）
-
 ### SSD on PascalVOC
 
-| Backbone     | Size | Lr schd | Box AP | Download  |
-| :----------- | :--: | :-----: | :----: | :-------: |
-| MobileNet v1 | 300  |  1x   |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
+| Backbone     | Size | Box AP | Download  |
+| :----------- | :--: | :----: | :-------: |
+| MobileNet v1 | 300  |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
+
+**NOTE**: SSD training data augmentations: random distort image, random crop image, random expand image, random flip image.
