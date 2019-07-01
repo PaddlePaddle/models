@@ -48,7 +48,7 @@ python -u src/run_mrqa.py --use_cuda true\
         --weight_decay  0.01 \
         --epoch 2 \
         --max_seq_len 512 \
-        --bert_config_path ${ERNIE_BASE_PATH}/bert_config.json \
+        --bert_config_path ${ERNIE_BASE_PATH}/ernie_config.json \
         --predict_file ${DATA_PATH_dev}/mrqa-combined.raw.json \
         --do_lower_case true \
         --doc_stride 128 \
