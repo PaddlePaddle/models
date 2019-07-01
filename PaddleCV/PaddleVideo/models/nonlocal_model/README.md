@@ -126,25 +126,17 @@ Non-local模型的训练数据采用由DeepMind公布的Kinetics-400动作识别
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/nonlocal_kinetics.tar.gz)进行评估
 
-
-当取如下参数时:
-
-| 参数 | 取值 |
-| :---------: | :----: |
-| back bone | Resnet-50 |
-| 卷积形式 | c2d |
-| 采样频率 | 8 |
-| 视频长度 | 8 |
-
-在Kinetics400的validation数据集下评估精度如下:
-
-| 精度指标 | 模型精度 |
-| :---------: | :----: |
-| TOP\_1 | 0.739 |
+实现了C2D-ResNet50, C2D-ResNet101, I3D-ResNet50三种网络结构，在Kinetics400的validation数据集下评估精度如下：
+| 网络结构 | 采样频率 | 视频长度 | TOP\_1 |
+| :-----------: | :------: |:-------: |:-------: |
+| C2D-ResNet50 | 8 | 8 | 73.9% |
+| C2D-ResNet101 | 8 | 8 | 74.5% |
+| I3D-ResNet50 | 8 | 8 | 74.3% |
 
 ### 备注
 
-由于Youtube上部分数据已删除，只下载到了kinetics400数据集中的234619条，而原始数据集包含246535条视频，可能会导致精度略微下降。
+- 由于Youtube上部分数据已删除，只下载到了kinetics400数据集中的234619条，而原始数据集包含246535条视频，可能会导致精度略微下降。
+- 使用不同的网络结构，需要在configs/nonlocal.txt中修改video\_arc\_choice，1为C2D-ResNet50，2为I3D-ResNet50，3则是C2D-ResNet101。
 
 ## 模型推断
 
