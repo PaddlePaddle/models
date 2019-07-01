@@ -150,8 +150,7 @@ def create_mixup_reader(settings, rd):
 
     def mixup_reader():
 
-        for context.tmp_mix, context.tmp_l1, context.tmp_l2, context.tmp_lam in mixup_data(
-        ):
+        for context.tmp_mix, context.tmp_l1, context.tmp_l2, context.tmp_lam in mixup_data():
             for i in range(len(context.tmp_mix)):
                 mixed_l = context.tmp_mix[i]
                 l1 = context.tmp_l1[i]
