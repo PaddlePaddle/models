@@ -55,17 +55,17 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 | Backbone     | Size | Image/gpu | Lr schd | Box AP | Download  |
 | :----------- | :--: | :-----: | :-----: | :----: | :-------: |
-| DarkNet53    | 608  |    8    |   120e  |  38.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
-| DarkNet53    | 416  |    8    |   120e  |  37.5  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
-| DarkNet53    | 320  |    8    |   120e  |  34.8  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
-| MobileNet-V1 | 608  |    8    |   120e  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
-| MobileNet-V1 | 416  |    8    |   120e  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
-| MobileNet-V1 | 320  |    8    |   120e  |  27.1  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
-| ResNet34     | 608  |    8    |   120e  |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
-| ResNet34     | 416  |    8    |   120e  |  34.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
-| ResNet34     | 320  |    8    |   120e  |  31.4  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
+| DarkNet53    | 608  |    8    |   270e  |  38.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
+| DarkNet53    | 416  |    8    |   270e  |  37.5  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
+| DarkNet53    | 320  |    8    |   270e  |  34.8  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet.tar) |
+| MobileNet-V1 | 608  |    8    |   270e  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| MobileNet-V1 | 416  |    8    |   270e  |  29.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| MobileNet-V1 | 320  |    8    |   270e  |  27.1  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1.tar) |
+| ResNet34     | 608  |    8    |   270e  |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
+| ResNet34     | 416  |    8    |   270e  |  34.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
+| ResNet34     | 320  |    8    |   270e  |  31.4  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
 
-**NOTE**: Yolo v3 trained in 8 GPU with total batch size as 64. Yolo v3 training data augmentations: mixup,
+**NOTE**: Yolo v3 trained in 8 GPU with total batch size as 64 and trained 270 epoches. Yolo v3 training data augmentations: mixup,
 randomly color distortion, randomly cropping, randomly expansion, randomly interpolation method, randomly flippling.
 
 ### RetinaNet
@@ -83,5 +83,5 @@ randomly color distortion, randomly cropping, randomly expansion, randomly inter
 | :----------- | :--: | :-----: | :-----: | :----: | :-------: |
 | MobileNet v1 | 300  |    32   |   120e  |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
 
-**NOTE**: SSD trained in 2 GPU with totoal batch size as 64. SSD training data augmentations: randomly color distortion,
+**NOTE**: SSD trained in 2 GPU with totoal batch size as 64 and trained 120 epoches. SSD training data augmentations: randomly color distortion,
 randomly cropping, randomly expansion, randomly flipping.
