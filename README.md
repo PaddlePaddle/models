@@ -189,7 +189,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### ERNIE
 
-[ERNIE(Embeddings from Language Models)](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)百度自研的语义表示模型，通过建模海量数据中的词、实体及实体关系，学习真实世界的语义知识。相较于 BERT 学习原始语言信号，ERNIE直接对先验语义知识单元进行建模，增强了模型语义表示能力。
+[ERNIE(Enhanced Representation from kNowledge IntEgration)](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)百度自研的语义表示模型，通过建模海量数据中的词、实体及实体关系，学习真实世界的语义知识。相较于 BERT 学习原始语言信号，ERNIE直接对先验语义知识单元进行建模，增强了模型语义表示能力。
 
 <table border="1" cellspacing="0" cellpadding="0" width="0">
   <tr>
