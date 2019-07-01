@@ -58,7 +58,6 @@ def optimizer_setting(params):
     bd = [step * e for e in ls["epochs"]]
     lr = params["lr"]
     num_epochs = params["num_epochs"]
-    print("lr:",lr)
     optimizer = fluid.optimizer.Momentum(
         learning_rate=fluid.layers.cosine_decay(
             learning_rate=lr,step_each_epoch=step,epochs=num_epochs),
@@ -367,11 +366,11 @@ def train():
         test_reader = paddle.batch(
             paddle.dataset.flowers.test(use_xmap=False), batch_size=32)       
 
-        total_loss = 0.0
-        total_acc1 = 0.0
-        total_acc5 = 0.0
-        total_sample = 0
         for epoch_id in range(epoch_num):
+            total_loss = 0.0
+            total_acc1 = 0.0
+            total_acc5 = 0.0
+            total_sample = 0
             for batch_id, data in enumerate(train_reader()):
                 
                 dy_x_data = np.array(
