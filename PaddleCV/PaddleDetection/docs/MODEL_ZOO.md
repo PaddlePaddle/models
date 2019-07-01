@@ -30,7 +30,7 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 ### Faster & Mask R-CNN
 
-| Backbone             | Type           | Img/gpu | Lr schd | Box AP | Mask AP |                           Download                           |
+| Backbone             | Type           | Image/gpu | Lr schd | Box AP | Mask AP |                           Download                           |
 | :------------------- | :------------- | :-----: | :-----: | :----: | :-----: | :----------------------------------------------------------: |
 | ResNet50             | Faster         |    1    |   1x    |  35.2  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r50_1x.tar) |
 | ResNet50             | Faster         |    1    |   2x    |  37.1  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r50_2x.tar) |
@@ -63,10 +63,10 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 ### RetinaNet
 
-| Backbone      | Img/gpu | Lr schd | Box AP | Download  |
+| Backbone      | Image/gpu | Lr schd | Box AP | Download  |
 | :-----------  | :-----: | :-----: | :----: | :-------: |
-| ResNet50-FPN  |    1    |   1x    |  36.0  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r50_fpn_1x.tar)  |
-| ResNet101-FPN |    1    |   1x    |  37.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r101_fpn_1x.tar) |
+| ResNet50-FPN  |    2    |   1x    |  36.0  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r50_fpn_1x.tar)  |
+| ResNet101-FPN |    2    |   1x    |  37.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r101_fpn_1x.tar) |
 
 **Notes:**
 
