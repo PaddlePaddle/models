@@ -434,7 +434,8 @@ def train(args):
             flowers.train(use_xmap=False),
             batch_size=train_batch_size,
             drop_last=True)
-        train_reader = fluid.contrib.reader.distributed_batch_reader(train_reader)
+        if num_trainers > 1:
+            train_reader = fluid.contrib.reader.distributed_batch_reader(train_reader)
         test_reader = paddle.batch(
             flowers.test(use_xmap=False), batch_size=test_batch_size)
 
