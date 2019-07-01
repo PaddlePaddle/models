@@ -21,10 +21,12 @@ from mmpms.modules.attention import Attention
 
 
 class BaseDecoder(object):
-    def step(self, input, state: dict):
+    def step(self, input, state):
+        """ step function """
         raise NotImplementedError
 
-    def forward(self, input, state: dict):
+    def forward(self, input, state):
+        """ forward function """
         drnn = layers.DynamicRNN()
 
         def memory(memory_state):

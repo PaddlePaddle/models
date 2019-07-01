@@ -16,6 +16,10 @@
 # limitations under the License.
 ################################################################################
 
+from __future__ import division
+
+import codecs
+
 from mmpms.inputters.constant import UNK, BOS, EOS
 
 
@@ -94,14 +98,15 @@ class Vocabulary(object):
     def build_word_embeddings(self, embed_file):
         cover = 0
         print("Building word embeddings from '{}' ...".format(embed_file))
-        with open(embed_file, "r") as f:
+        with codecs.open(embed_file, "r", encoding="utf-8") as f:
             num, dim = map(int, f.readline().strip().split())
             embeds = [[0] * dim] * len(self.stoi)
             for line in f:
-                w, vs = line.rstrip().split(maxsplit=1)
+                cols = line.rstrip().split()
+                w, vs = cols[0], cols[1:]
                 if w in self.stoi:
                     try:
-                        vs = [float(x) for x in vs.split(" ")]
+                        vs = [float(x) for x in vs]
                     except Exception:
                         vs = []
                     if len(vs) == dim:

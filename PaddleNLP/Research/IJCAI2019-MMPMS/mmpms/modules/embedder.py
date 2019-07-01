@@ -16,6 +16,8 @@
 # limitations under the License.
 ################################################################################
 
+from __future__ import division
+
 import numpy as np
 import paddle.fluid as fluid
 

@@ -16,6 +16,7 @@
 # limitations under the License.
 ################################################################################
 
+import codecs
 import os
 import json
 import time
@@ -57,7 +58,7 @@ def infer(model, data_iter, parse_dict, save_file=None):
         results += flatten_batch(batch_result)
 
     if save_file is not None:
-        with open(save_file, "w", encoding="utf-8") as fp:
+        with codecs.open(save_file, "w", encoding="utf-8") as fp:
             json.dump(results, fp, ensure_ascii=False, indent=2)
         print("Saved inference results to '{}'".format(save_file))
     return results

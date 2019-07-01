@@ -66,13 +66,15 @@ class Model(object):
                                        return_numpy=return_numpy)
         return dict(zip(fetch_keys, fetch_vals))
 
-    def save(self, model_dir: str) -> None:
+    def save(self, model_dir):
+        """ Save model parameters. """
         fluid.io.save_persistables(
             executor=self.executor,
             dirname=model_dir,
             main_program=self.train_program)
 
-    def load(self, model_dir: str) -> None:
+    def load(self, model_dir):
+        """ Load model parameters. """
         fluid.io.load_persistables(
             executor=self.executor,
             dirname=model_dir,

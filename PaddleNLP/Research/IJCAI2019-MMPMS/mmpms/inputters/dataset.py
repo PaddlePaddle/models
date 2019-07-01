@@ -16,6 +16,7 @@
 # limitations under the License.
 ################################################################################
 
+import codecs
 import re
 import time
 import json
@@ -58,7 +59,7 @@ class PostResponseDataset(object):
     def save_vocab(self, vocab_file):
         vocab_dict = self.vocab.dump()
         start = time.time()
-        with open(vocab_file, "w", encoding="utf-8") as fp:
+        with codecs.open(vocab_file, "w", encoding="utf-8") as fp:
             json.dump(vocab_dict, fp, ensure_ascii=False)
         elapsed = time.time() - start
         print("Saved vocabulary to '{}' (elapsed {:.2f}s)".format(vocab_file,
@@ -67,7 +68,7 @@ class PostResponseDataset(object):
     def load_vocab(self, vocab_file):
         print("Loading vocabulary from '{}' ...".format(vocab_file))
         start = time.time()
-        with open(vocab_file, "r", encoding="utf-8") as fp:
+        with codecs.open(vocab_file, "r", encoding="utf-8") as fp:
             vocab_dict = json.load(fp)
         elapsed = time.time() - start
         self.vocab.load(vocab_dict)
@@ -151,10 +152,11 @@ class PostResponseDataset(object):
         ignored = 0
 
         def filter_pred(utt):
+            """ Filter utterance. """
             return self.min_len <= len(utt) <= self.max_len
 
         print("Reading examples from '{}' ...".format(data_file))
-        with open(data_file, "r", encoding="utf-8") as f:
+        with codecs.open(data_file, "r", encoding="utf-8") as f:
             for line in f:
                 post, response = line.strip().split("\t")
                 post = self.tokenize_fn(post)

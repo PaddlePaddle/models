@@ -16,6 +16,9 @@
 # limitations under the License.
 ################################################################################
 
+from __future__ import division
+from __future__ import absolute_import
+
 import math
 import numpy as np
 import paddle.fluid as fluid
@@ -72,7 +75,7 @@ class MMPMS(Model):
 
         # Multi-Mapping
         self.mappings = layers.LayerList([
-            layers.FC(size=self.hidden_dim, name="map_".format(i))
+            layers.FC(size=self.hidden_dim, name="map_{}".format(i))
             for i in range(self.num_mappings)
         ])
 

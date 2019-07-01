@@ -16,6 +16,7 @@
 # limitations under the License.
 ################################################################################
 
+import codecs
 import sys
 import json
 
@@ -56,7 +57,7 @@ def evaluate_generation(results):
 
 def main():
     result_file = sys.argv[1]
-    with open(result_file, "r", encoding="utf-8") as fp:
+    with codecs.open(result_file, "r", encoding="utf-8") as fp:
         results = json.load(fp)
     evaluate_generation(results)
 

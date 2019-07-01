@@ -16,6 +16,7 @@
 # limitations under the License.
 ################################################################################
 
+import codecs
 import json
 import argparse
 
@@ -46,11 +47,11 @@ class HParams(dict):
         self[name] = value
 
     def save(self, filename):
-        with open(filename, "w", encoding="utf-8") as fp:
+        with codecs.open(filename, "w", encoding="utf-8") as fp:
             json.dump(self, fp, ensure_ascii=False, indent=4, sort_keys=False)
 
     def load(self, filename):
-        with open(filename, "r", encoding="utf-8") as fp:
+        with codecs.open(filename, "r", encoding="utf-8") as fp:
             params_dict = json.load(fp)
         for k, v in params_dict.items():
             # Only load grouping hyperparameters
