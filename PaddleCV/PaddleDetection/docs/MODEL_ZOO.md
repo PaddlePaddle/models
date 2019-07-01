@@ -64,12 +64,10 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 ### RetinaNet
 
-| Backbone     | Size | Lr schd | Box AP | Download  |
-| :----------- | :--: | :-----: | :----: | :-------: |
-| ResNet50-FPN | 300  |  120e   |  36.0  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r50_fpn_1x.tar) |
-| ResNet101-FPN | 300  |  120e   |  37.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r101_fpn_1x.tar) |
-
-- Notes: （TODO：Kaipeng）
+| Backbone     | Img/gpu | Lr schd | Box AP | Download  |
+| :----------- | :-----: | :-----: | :----: | :-------: |
+| ResNet50-FPN |    2    |   1x    |  36.0  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r50_fpn_1x.tar) |
+| ResNet101-FPN |    2    |   1x    |  37.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r101_fpn_1x.tar) |
 
 ### SSD on PascalVOC
 
