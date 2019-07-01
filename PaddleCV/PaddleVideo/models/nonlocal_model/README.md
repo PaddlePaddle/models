@@ -127,6 +127,7 @@ Non-local模型的训练数据采用由DeepMind公布的Kinetics-400动作识别
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/nonlocal_kinetics.tar.gz)进行评估
 
 实现了C2D-ResNet50, C2D-ResNet101, I3D-ResNet50三种网络结构，在Kinetics400的validation数据集下评估精度如下：
+
 | 网络结构 | 采样频率 | 视频长度 | TOP\_1 |
 | :-----------: | :------: |:-------: |:-------: |
 | C2D-ResNet50 | 8 | 8 | 73.9% |
