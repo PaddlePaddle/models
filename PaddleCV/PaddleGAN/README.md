@@ -156,7 +156,7 @@ StarGAN,AttGAN和STGAN的效果图
 | Pix2Pix  | [Pix2Pix的预训练模型](https://paddle-gan-models.bj.bcebos.com/pix2pix_G.tar.gz)  |
 | CycleGAN | [CycleGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/cyclegan_9blocks_G.tar.gz) |
 | StarGAN  | [StarGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stargan_G.tar.gz)  |
-| AttGAN   | [AttGAN的预训练模型]()   |
+| AttGAN   | [AttGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/attgan_G.tar.gz)   |
 | STGAN    | [STGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stgan_G.tar.gz)    |
 
 
