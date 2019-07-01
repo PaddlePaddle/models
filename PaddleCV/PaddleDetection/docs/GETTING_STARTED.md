@@ -75,13 +75,13 @@ path, simply add a `--save_file=` flag.
 
 ## FAQ
 
-**Q**: Why do I get `NaN` loss values during single GPU training?
-**A**: The default learning rate is tuned to multi-GPU training (8x GPUs), it must
+**Q:** Why do I get `NaN` loss values during single GPU training?
+**A:** The default learning rate is tuned to multi-GPU training (8x GPUs), it must
 be adapted for single GPU training accordingly (e.g., divide by 8).
 
 
-**Q**: How to further reduce GPU memory?
-**A**: Uers also can set a smaller number environment variable FLAGS_conv_workspace_size_limit
+**Q:** How to further reduce GPU memory?
+**A:** Uers also can set a smaller number environment variable FLAGS_conv_workspace_size_limit
 to reduce GPU memory. For example, the batch size per GPU of Mask-RCNN (R50)
 can be 4 by setting `export FLAGS_conv_workspace_size_limit=512` and there is no
 effect on the training speed.
