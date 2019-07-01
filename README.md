@@ -32,16 +32,16 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | **模型名称**                                                 | **模型简介**                                                 | **数据集**          | **评估指标**    **top-1/top-5    accuracy(CV2)** |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------- | ------------------------------------------------ |
-| [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 首次在CNN中成功的应用了ReLU、Dropout和LRN，并使用GPU进行运算加速 | ImageNet-2012验证集 | 56.72%/79.17%                                    |
-| [VGG](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在AlexNet的基础上使用3*3小卷积核，增加网络深度，具有很好的泛化能力 | ImageNet-2012验证集 | 72.56%/90.93%                                    |
-| [GoogleNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在不增加计算负载的前提下增加了网络的深度和宽度，性能更加优越 | ImageNet-2012验证集 | 70.70%/89.66%                                    |
-| [ResNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | Residual Network，引入了新的残差结构，解决了随着网络加深，准确率下降的问题 | ImageNet-2012验证集 | 80.93%/95.33%                                    |
-| [ResNet-D](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 融合最新多种对ResNet改进策略，ResNet50_vd的top1准确率达到79.84% | ImageNet-2012验证集 | 79.84%/94.93%                                    |
-| [Inception-v4](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 将Inception模块与Residual Connection进行结合，通过ResNet的结构极大地加速训练并获得性能的提升 | ImageNet-2012验证集 | 80.77%/95.26%                                    |
-| [MobileNet   v1](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 将传统的卷积结构改造成两层卷积结构的网络，在基本不影响准确率的前提下大大减少计算时间，更适合移动端和嵌入式视觉应用 | ImageNet-2012验证集 | 70.99%/89.68%                                    |
-| [MobileNet   v2](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | MobileNet结构的微调，直接在thinner的bottleneck层上进行skip learning连接以及对bottleneck layer不进行ReLu非线性处理可取得更好的结果 | ImageNet-2012验证集 | 72.15%/90.65%                                    |
-| [SE_ResNeXt](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在ResNeXt 基础、上加入了SE（Sequeeze-and-Excitation）   模块，提高了识别准确率，在ILSVRC 2017 的分类项目中取得了第一名 | ImageNet-2012验证集 | 81.40%/95.48%                                    |
-| [ShuffleNet   v2](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | ECCV2018，轻量级CNN网络，在速度和准确度之间做了很好地平衡。在同等复杂度下，比ShuffleNet和MobileNetv2更准确，更适合移动端以及无人车领域 | ImageNet-2012验证集 | 70.03%/89.17%                                    |
+| [AlexNet](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | 首次在CNN中成功的应用了ReLU、Dropout和LRN，并使用GPU进行运算加速 | ImageNet-2012验证集 | 56.72%/79.17%                                    |
+| [VGG](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | 在AlexNet的基础上使用3*3小卷积核，增加网络深度，具有很好的泛化能力 | ImageNet-2012验证集 | 72.56%/90.93%                                    |
+| [GoogleNet](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | 在不增加计算负载的前提下增加了网络的深度和宽度，性能更加优越 | ImageNet-2012验证集 | 70.70%/89.66%                                    |
+| [ResNet](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | Residual Network，引入了新的残差结构，解决了随着网络加深，准确率下降的问题 | ImageNet-2012验证集 | 80.93%/95.33%                                    |
+| [ResNet-D](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | 融合最新多种对ResNet改进策略，ResNet50_vd的top1准确率达到79.84% | ImageNet-2012验证集 | 79.84%/94.93%                                    |
+| [Inception-v4](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | 将Inception模块与Residual Connection进行结合，通过ResNet的结构极大地加速训练并获得性能的提升 | ImageNet-2012验证集 | 80.77%/95.26%                                    |
+| [MobileNet   v1](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | 将传统的卷积结构改造成两层卷积结构的网络，在基本不影响准确率的前提下大大减少计算时间，更适合移动端和嵌入式视觉应用 | ImageNet-2012验证集 | 70.99%/89.68%                                    |
+| [MobileNet   v2](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | MobileNet结构的微调，直接在thinner的bottleneck层上进行skip learning连接以及对bottleneck layer不进行ReLu非线性处理可取得更好的结果 | ImageNet-2012验证集 | 72.15%/90.65%                                    |
+| [SE_ResNeXt](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | 在ResNeXt 基础、上加入了SE（Sequeeze-and-Excitation）   模块，提高了识别准确率，在ILSVRC 2017 的分类项目中取得了第一名 | ImageNet-2012验证集 | 81.40%/95.48%                                    |
+| [ShuffleNet   v2](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/image_classification) | ECCV2018，轻量级CNN网络，在速度和准确度之间做了很好地平衡。在同等复杂度下，比ShuffleNet和MobileNetv2更准确，更适合移动端以及无人车领域 | ImageNet-2012验证集 | 70.03%/89.17%                                    |
 
 ### 目标检测
 
@@ -49,12 +49,12 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集     | 评估指标   mAP                                          |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------- | ------------------------------------------------------- |
-| [SSD](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 很好的继承了MobileNet预测速度快，易于部署的特点，能够很好的在多种设备上完成图像目标检测任务 | VOC07 test | mAP   = 73.32%                                          |
-| [Faster-RCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 创造性地采用卷积网络自行产生建议框，并且和目标检测网络共享卷积网络，建议框数目减少，质量提高 | MS-COCO    | 基于ResNet 50  mAP(0.50:0.95) = 36.7%                   |
-| [Mask-RCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 经典的两阶段框架，在Faster R-CNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕，可得到像素级别的检测结果。 | MS-COCO    | 基于ResNet 50   Mask   mAP（0.50:0.95） = 31.4%         |
-| [RetinaNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 经典的一阶段框架，由ResNet主干网络、FPN结构、和两个分别用于回归物体位置和预测物体类别的子网络组成。在训练过程中使用Focal Loss，解决了传统一阶段检测器存在前景背景类别不平衡的问题，进一步提高了一阶段检测器的精度。 | MS-COCO    | 基于ResNet mAP (500.50:0.95) = 36%                      |
-| [YOLOv3](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 速度和精度均衡的目标检测网络，相比于原作者darknet中的YOLO v3实现，PaddlePaddle实现参考了论文[Bag of Tricks for Image Classification with Convolutional Neural Networks](https://arxiv.org/pdf/1812.01187.pdf) 增加了mixup，label_smooth等处理，精度(mAP(0.5：0.95))相比于原作者提高了4.7个绝对百分点，在此基础上加入synchronize batch   normalization, 最终精度相比原作者提高5.9个绝对百分点。 | MS-COCO    | 基于DarkNet   mAP(0.50:0.95)=   38.9%                   |
-| [PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/face_detection) | **PyramidBox** **模型是百度自主研发的人脸检测模型**，利用上下文信息解决困难人脸的检测问题，网络表达能力高，鲁棒性强。于18年3月份在WIDER Face数据集上取得第一名 | WIDER FACE | mAP   （Easy/Medium/Hard   set）=   96.0%/ 94.8%/ 88.8% |
+| [SSD](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleDetection) | 很好的继承了MobileNet预测速度快，易于部署的特点，能够很好的在多种设备上完成图像目标检测任务 | VOC07 test | mAP   = 73.32%                                          |
+| [Faster-RCNN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleDetection) | 创造性地采用卷积网络自行产生建议框，并且和目标检测网络共享卷积网络，建议框数目减少，质量提高 | MS-COCO    | 基于ResNet 50  mAP(0.50:0.95) = 36.7%                   |
+| [Mask-RCNN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleDetection) | 经典的两阶段框架，在Faster R-CNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕，可得到像素级别的检测结果。 | MS-COCO    | 基于ResNet 50   Mask   mAP（0.50:0.95） = 31.4%         |
+| [RetinaNet](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleDetection) | 经典的一阶段框架，由ResNet主干网络、FPN结构、和两个分别用于回归物体位置和预测物体类别的子网络组成。在训练过程中使用Focal Loss，解决了传统一阶段检测器存在前景背景类别不平衡的问题，进一步提高了一阶段检测器的精度。 | MS-COCO    | 基于ResNet mAP (500.50:0.95) = 36%                      |
+| [YOLOv3](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleDetection) | 速度和精度均衡的目标检测网络，相比于原作者darknet中的YOLO v3实现，PaddlePaddle实现参考了论文[Bag of Tricks for Image Classification with Convolutional Neural Networks](https://arxiv.org/pdf/1812.01187.pdf) 增加了mixup，label_smooth等处理，精度(mAP(0.5：0.95))相比于原作者提高了4.7个绝对百分点，在此基础上加入synchronize batch   normalization, 最终精度相比原作者提高5.9个绝对百分点。 | MS-COCO    | 基于DarkNet   mAP(0.50:0.95)=   38.9%                   |
+| [PyramidBox](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/face_detection) | **PyramidBox** **模型是百度自主研发的人脸检测模型**，利用上下文信息解决困难人脸的检测问题，网络表达能力高，鲁棒性强。于18年3月份在WIDER Face数据集上取得第一名 | WIDER FACE | mAP   （Easy/Medium/Hard   set）=   96.0%/ 94.8%/ 88.8% |
 
 ### 图像分割
 
@@ -62,8 +62,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集    | 评估指标        |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | --------- | --------------- |
-| [ICNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/icnet) | 主要用于图像实时语义分割，能够兼顾速度和准确性，易于线上部署 | Cityscape | Mean IoU=67.0%  |
-| [DeepLab   V3+](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/deeplabv3%2B) | 通过encoder-decoder进行多尺度信息的融合，同时保留了原来的空洞卷积和ASSP层，   其骨干网络使用了Xception模型，提高了语义分割的健壮性和运行速率 | Cityscape | Mean IoU=78.81% |
+| [ICNet](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/icnet) | 主要用于图像实时语义分割，能够兼顾速度和准确性，易于线上部署 | Cityscape | Mean IoU=67.0%  |
+| [DeepLab   V3+](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/deeplabv3%2B) | 通过encoder-decoder进行多尺度信息的融合，同时保留了原来的空洞卷积和ASSP层，   其骨干网络使用了Xception模型，提高了语义分割的健壮性和运行速率 | Cityscape | Mean IoU=78.81% |
 
 ### 关键点检测
 
@@ -71,7 +71,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集       | 评估指标     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------ | ------------ |
-| [Simple   Baselines](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/human_pose_estimation) | coco2018关键点检测项目亚军方案，网络结构非常简单，效果达到state of the art | COCO val2017 | AP =   72.7% |
+| [Simple   Baselines](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/human_pose_estimation) | coco2018关键点检测项目亚军方案，网络结构非常简单，效果达到state of the art | COCO val2017 | AP =   72.7% |
 
 ### 图像生成
 
@@ -79,13 +79,13 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------- |
-| [CGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 条件生成对抗网络，一种带条件约束的GAN，使用额外信息对模型增加条件，可以指导数据生成过程 | Mnist      |
-| [DCGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 深度卷积生成对抗网络，将GAN和卷积网络结合起来，以解决GAN训练不稳定的问题 | Mnist      |
-| [Pix2Pix](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 图像翻译，通过成对图片将某一类图片转换成另外一类图片，可用于风格迁移 | Cityscapes |
-| [CycleGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 图像翻译，可以通过非成对的图片将某一类图片转换成另外一类图片，可用于风格迁移 | Cityscapes |
-| [StarGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 多领域属性迁移，引入辅助分类帮助单个判别器判断多个属性，可用于人脸属性转换 | Celeba     |
-| [AttGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 利用分类损失和重构损失来保证改变特定的属性，可用于人脸特定属性转换 | Celeba     |
-| [STGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 人脸特定属性转换，只输入有变化的标签，引入GRU结构，更好的选择变化的属性 | Celeba     |
+| [CGAN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleGAN) | 条件生成对抗网络，一种带条件约束的GAN，使用额外信息对模型增加条件，可以指导数据生成过程 | Mnist      |
+| [DCGAN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleGAN) | 深度卷积生成对抗网络，将GAN和卷积网络结合起来，以解决GAN训练不稳定的问题 | Mnist      |
+| [Pix2Pix](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleGAN) | 图像翻译，通过成对图片将某一类图片转换成另外一类图片，可用于风格迁移 | Cityscapes |
+| [CycleGAN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleGAN) | 图像翻译，可以通过非成对的图片将某一类图片转换成另外一类图片，可用于风格迁移 | Cityscapes |
+| [StarGAN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleGAN) | 多领域属性迁移，引入辅助分类帮助单个判别器判断多个属性，可用于人脸属性转换 | Celeba     |
+| [AttGAN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleGAN) | 利用分类损失和重构损失来保证改变特定的属性，可用于人脸特定属性转换 | Celeba     |
+| [STGAN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleGAN) | 人脸特定属性转换，只输入有变化的标签，引入GRU结构，更好的选择变化的属性 | Celeba     |
 
 ### 场景文字识别
 
@@ -93,8 +93,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集                     | 评估指标       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | -------------- |
-| [CRNN-CTC](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用CTC model识别图片中单行英文字符，用于端到端的文本行图片识别方法 | 单行不定长的英文字符串图片 | 错误率= 22.3%  |
-| [OCR   Attention](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用attention 识别图片中单行英文字符，用于端到端的自然场景文本识别， | 单行不定长的英文字符串图片 | 错误率 = 15.8% |
+| [CRNN-CTC](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/ocr_recognition) | 使用CTC model识别图片中单行英文字符，用于端到端的文本行图片识别方法 | 单行不定长的英文字符串图片 | 错误率= 22.3%  |
+| [OCR   Attention](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/ocr_recognition) | 使用attention 识别图片中单行英文字符，用于端到端的自然场景文本识别， | 单行不定长的英文字符串图片 | 错误率 = 15.8% |
 
 ### 度量学习
 
@@ -102,11 +102,11 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                  | 数据集                         | 评估指标   Recall@Rank-1（使用arcmargin训练） |
 | ------------------------------------------------------------ | --------------------------------------------------------- | ------------------------------ | --------------------------------------------- |
-| [ResNet50未微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 使用arcmargin loss训练的特征模型                          | Stanford   Online Product(SOP) | 78.11%                                        |
-| [ResNet50使用triplet微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用triplet loss微调的特征模型    | Stanford   Online Product(SOP) | 79.21%                                        |
-| [ResNet50使用quadruplet微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用quadruplet loss微调的特征模型 | Stanford   Online Product(SOP) | 79.59%                                        |
-| [ResNet50使用eml微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用eml loss微调的特征模型        | Stanford   Online Product(SOP) | 80.11%                                        |
-| [ResNet50使用npairs微调](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用npairs loss微调的特征模型     | Stanford   Online Product(SOP) | 79.81%                                        |
+| [ResNet50未微调](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/metric_learning) | 使用arcmargin loss训练的特征模型                          | Stanford   Online Product(SOP) | 78.11%                                        |
+| [ResNet50使用triplet微调](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用triplet loss微调的特征模型    | Stanford   Online Product(SOP) | 79.21%                                        |
+| [ResNet50使用quadruplet微调](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用quadruplet loss微调的特征模型 | Stanford   Online Product(SOP) | 79.59%                                        |
+| [ResNet50使用eml微调](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用eml loss微调的特征模型        | Stanford   Online Product(SOP) | 80.11%                                        |
+| [ResNet50使用npairs微调](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/metric_learning) | 在arcmargin loss基础上，使用npairs loss微调的特征模型     | Stanford   Online Product(SOP) | 79.81%                                        |
 
 ### 视频分类和动作定位
 
@@ -114,14 +114,14 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集                     | 评估指标    |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | ----------- |
-| [TSN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | ECCV'16提出的基于2D-CNN经典解决方案 | Kinetics-400               | Top-1 = 67% |
-| [Non-Local](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 视频非局部关联建模模型 | Kinetics-400               | Top-1 = 74% |
-| [stNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | AAAI'19提出的视频联合时空建模方法 | Kinetics-400               | Top-1 = 69% |
-| [TSM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 基于时序移位的简单高效视频时空建模方法 | Kinetics-400               | Top-1 = 70% |
-| [Attention   LSTM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 常用模型，速度快精度高 | Youtube-8M                 | GAP   = 86% |
-| [Attention   Cluster](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | CVPR'18提出的视频多模态特征注意力聚簇融合方法 | Youtube-8M                 | GAP   = 84% |
-| [NeXtVlad](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2nd-Youtube-8M最优单模型 | Youtube-8M                 | GAP   = 87% |
-| [C-TCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2018年ActivityNet夺冠方案 | ActivityNet1.3 | MAP=31%    |
+| [TSN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleVideo) | ECCV'16提出的基于2D-CNN经典解决方案 | Kinetics-400               | Top-1 = 67% |
+| [Non-Local](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleVideo) | 视频非局部关联建模模型 | Kinetics-400               | Top-1 = 74% |
+| [stNet](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleVideo) | AAAI'19提出的视频联合时空建模方法 | Kinetics-400               | Top-1 = 69% |
+| [TSM](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleVideo) | 基于时序移位的简单高效视频时空建模方法 | Kinetics-400               | Top-1 = 70% |
+| [Attention   LSTM](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleVideo) | 常用模型，速度快精度高 | Youtube-8M                 | GAP   = 86% |
+| [Attention   Cluster](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleVideo) | CVPR'18提出的视频多模态特征注意力聚簇融合方法 | Youtube-8M                 | GAP   = 84% |
+| [NeXtVlad](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleVideo) | 2nd-Youtube-8M最优单模型 | Youtube-8M                 | GAP   = 87% |
+| [C-TCN](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleCV/PaddleVideo) | 2018年ActivityNet夺冠方案 | ActivityNet1.3 | MAP=31%    |
 
 ## PaddleNLP
 
@@ -129,7 +129,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 词法分析
 
-[LAC(Lexical Analysis of Chinese)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis)百度自主研发中文特色模型词法分析任务，**输入是一个字符串，而输出是句子中的词边界和词性、实体类别。
+[LAC(Lexical Analysis of Chinese)](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/lexical_analysis)百度自主研发中文特色模型词法分析任务，**输入是一个字符串，而输出是句子中的词边界和词性、实体类别。
 
 | **模型**         | **Precision** | **Recall** | **F1-score** |
 | ---------------- | ------------- | ---------- | ------------ |
@@ -139,7 +139,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 语言模型
 
-[基于LSTM的语言模型任务](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model)，给定一个输入词序列（中文分词、英文tokenize），计算其PPL（语言模型困惑度，用户表示句子的流利程度）。
+[基于LSTM的语言模型任务](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/language_model)，给定一个输入词序列（中文分词、英文tokenize），计算其PPL（语言模型困惑度，用户表示句子的流利程度）。
 
 | **large config** | **train** | **valid** | **test** |
 | ---------------- | --------- | --------- | -------- |
@@ -150,7 +150,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 情感分析
 
-[Senta(Sentiment Classification)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/sentiment_classification)百度AI开放平台中情感倾向分析模型、百度自主研发的中文特色模型，是目前最好的中文情感分析模型。
+[Senta(Sentiment Classification)](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/sentiment_classification)百度AI开放平台中情感倾向分析模型、百度自主研发的中文特色模型，是目前最好的中文情感分析模型。
 
 | **模型**      | **dev** | **test** | **模型（****finetune****）** | **dev** | **test** |
 | ------------- | ------- | -------- | ---------------------------- | ------- | -------- |
@@ -164,7 +164,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 对话情绪识别
 
-[EmoTect(Emotion Detection)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/emotion_detection)专注于识别智能对话场景中用户的情绪识别，并开源基于百度海量数据训练好的预训练模型。
+[EmoTect(Emotion Detection)](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/emotion_detection)专注于识别智能对话场景中用户的情绪识别，并开源基于百度海量数据训练好的预训练模型。
 
 | **模型** | **闲聊** | **客服** | **微博** |
 | -------- | -------- | -------- | -------- |
@@ -178,7 +178,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 阅读理解
 
-[MRC(Machine Reading Comprehension)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/reading_comprehension)机器阅读理解(MRC)是自然语言处理(NLP)中的关键任务之一，开源的DuReader升级了经典的阅读理解BiDAF模型，去掉了char级别的embedding，在预测层中使用了[pointer network](https://arxiv.org/abs/1506.03134)，并且参考了[R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)中的一些网络结构，效果上有了大幅提升
+[MRC(Machine Reading Comprehension)](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/reading_comprehension)机器阅读理解(MRC)是自然语言处理(NLP)中的关键任务之一，开源的DuReader升级了经典的阅读理解BiDAF模型，去掉了char级别的embedding，在预测层中使用了[pointer network](https://arxiv.org/abs/1506.03134)，并且参考了[R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)中的一些网络结构，效果上有了大幅提升
 
 | **Model**                                                | **Dev ROUGE-L** | **Test ROUGE-L** |
 | -------------------------------------------------------- | --------------- | ---------------- |
@@ -266,7 +266,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### SimNet
 
-[SimNet(Similarity Net)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/similarity_net)一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。
+[SimNet(Similarity Net)](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/similarity_net)一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。
 
 | **模型**     | **百度知道** | **ECOM** | **QQSIM** | **UNICOM** | **LCQMC** |
 | ------------ | ------------ | -------- | --------- | ---------- | --------- |
@@ -277,7 +277,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 机器翻译
 
-[MT(machine translation)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/neural_machine_translation/transformer)机器翻译是利用计算机将一种自然语言(源语言)转换为另一种自然语言(目标语言)的过程，输入为源语言句子，输出为相应的目标语言的句子。
+[MT(machine translation)](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/neural_machine_translation/transformer)机器翻译是利用计算机将一种自然语言(源语言)转换为另一种自然语言(目标语言)的过程，输入为源语言句子，输出为相应的目标语言的句子。
 
 | **测试集** | **newstest2014** | **newstest2015** | **newstest2016** |
 | ---------- | ---------------- | ---------------- | ---------------- |
@@ -286,7 +286,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 对话自动评估
 
-[对话自动评估(Auto Dialogue Evaluation)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation)主要用于评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。
+[对话自动评估(Auto Dialogue Evaluation)](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation)主要用于评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。
 
 利用少量标注数据微调后，自动评估打分和人工打分spearman相关系数，如下表。
 
@@ -296,7 +296,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 对话通用理解
 
-[DGU(Dialogue General Understanding)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit/dialogue_general_understanding)对话通用理解针对数据集开发了相关的模型训练过程，支持分类，多标签分类，序列标注等任务，用户可针对自己的数据集，进行相关的模型定制
+[DGU(Dialogue General Understanding)](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/dialogue_model_toolkit/dialogue_general_understanding)对话通用理解针对数据集开发了相关的模型训练过程，支持分类，多标签分类，序列标注等任务，用户可针对自己的数据集，进行相关的模型定制
 
 | **ask_name** | **udc** | **udc** | **udc** | **atis_slot** | **dstc2**  | **atis_intent** | **swda** | **mrda** |
 | ------------ | ------- | ------- | ------- | ------------- | ---------- | --------------- | -------- | -------- |
@@ -309,7 +309,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### DAM
 
-[深度注意力机制模型(Deep Attention Maching)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit/deep_attention_matching)是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。
+[深度注意力机制模型(Deep Attention Maching)](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/dialogue_model_toolkit/deep_attention_matching)是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。
 
 |      | Ubuntu Corpus | Douban Conversation Corpus |       |       |       |       |       |       |       |       |
 | ---- | ------------- | -------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
@@ -331,24 +331,15 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [TagSpace](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | 应用于工业级的标签推荐，具体应用场景有feed新闻标签推荐等     |
-| [GRU4Rec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | 首次将RNN（GRU）运用于session-based推荐，相比传统的KNN和矩阵分解，效果有明显的提升 |
-| [SequenceSemanticRetrieval](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | 使用参考论文中的思想，使用多种时间粒度进行用户行为预测       |
-| [DeepCTR](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | 只实现了DeepFM论文中介绍的模型的DNN部分，DeepFM会在其他例子中给出 |
-| [Multiview-Simnet](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | 基于多元视图，将用户和项目的多个功能视图合并为一个统一模型   |
-| [Word2Vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | skip-gram模式的word2vector模型                               |
-| [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | 基于会话的图神经网络模型的推荐系统，可以更好的挖掘item中丰富的转换特性以及生成准确的潜在的用户向量表示 |
-| [DeepInterestNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec) | DIN通过一个兴趣激活模块(Activation Unit)，用预估目标Candidate ADs的信息去激活用户的历史点击商品，以此提取用户与当前预估目标相关的兴趣。 |
+| [TagSpace](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleRec) | 应用于工业级的标签推荐，具体应用场景有feed新闻标签推荐等     |
+| [GRU4Rec](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleRec) | 首次将RNN（GRU）运用于session-based推荐，相比传统的KNN和矩阵分解，效果有明显的提升 |
+| [SequenceSemanticRetrieval](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleRec) | 使用参考论文中的思想，使用多种时间粒度进行用户行为预测       |
+| [DeepCTR](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleRec) | 只实现了DeepFM论文中介绍的模型的DNN部分，DeepFM会在其他例子中给出 |
+| [Multiview-Simnet](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleRec) | 基于多元视图，将用户和项目的多个功能视图合并为一个统一模型   |
+| [Word2Vec](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleRec) | skip-gram模式的word2vector模型                               |
+| [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleRec) | 基于会话的图神经网络模型的推荐系统，可以更好的挖掘item中丰富的转换特性以及生成准确的潜在的用户向量表示 |
+| [DeepInterestNetwork](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleRec) | DIN通过一个兴趣激活模块(Activation Unit)，用预估目标Candidate ADs的信息去激活用户的历史点击商品，以此提取用户与当前预估目标相关的兴趣。 |
 
-
-## 其他模型
-
-| 模型名称                                                     | 模型简介                                                     |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [DeepASR](https://github.com/PaddlePaddle/models/blob/develop/PaddleSpeech/DeepASR/README_cn.md) | 利用Fluid框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器 |
-| [DQN](https://github.com/PaddlePaddle/models/blob/develop/PaddleRL/DeepQNetwork/README_cn.md) | value   based强化学习算法，第一个成功地将深度学习和强化学习结合起来的模型 |
-| [DoubleDQN](https://github.com/PaddlePaddle/models/blob/develop/PaddleRL/DeepQNetwork/README_cn.md) | 将Double Q的想法应用在DQN上，解决过优化问题                  |
-| [DuelingDQN](https://github.com/PaddlePaddle/models/blob/develop/PaddleRL/DeepQNetwork/README_cn.md) | 改进了DQN模型，提高了模型的性能                              |
 
 ## License
 This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).
