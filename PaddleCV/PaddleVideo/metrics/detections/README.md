@@ -6,7 +6,8 @@
 
 - 计算精度指标
 
-  cd ActivityNet/Evaluation
-  python get_detection_performance.py ./data/activity_net.v1-3.min.json $Test_Result
+    cd ActivityNet/Evaluation
+
+    python get_detection_performance.py ./data/activity_net.v1-3.min.json $Test_Result
 
   其中Test_Result是运行测试程序test.py输出的json格式的文件。
