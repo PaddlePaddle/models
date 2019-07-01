@@ -130,17 +130,17 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 
 Pix2Pix和CycleGAN的效果如图所示：
 
-<p align="centor">
-    <img src = "images/pix2pix_cyclegan.png" width=550><br/>
-    Pix2Pix和CycleGAN的效果图
+<p align="center">
+<img src="images/pix2pix_cyclegan.png" width="650"/><br />
+Pix2Pix和CycleGAN的效果图
 </p>
 
 
 StarGAN，AttGAN和STGAN的效果如图所示：
 
-<p align="centor">
-    <img src = "images/female_stargan_attgan_stgan.png" width=550><br/>
-    StarGAN,AttGAN和STGAN的效果图
+<p align="center">
+<img src="images/female_stargan_attgan_stgan.png" width="650"/><br />
+StarGAN,AttGAN和STGAN的效果图
 </p>
 
 
@@ -156,7 +156,7 @@ StarGAN，AttGAN和STGAN的效果如图所示：
 | Pix2Pix  | [Pix2Pix的预训练模型](https://paddle-gan-models.bj.bcebos.com/pix2pix_G.tar.gz)  |
 | CycleGAN | [CycleGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/cyclegan_9blocks_G.tar.gz) |
 | StarGAN  | [StarGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stargan_G.tar.gz)  |
-| AttGAN   | [AttGAN的预训练模型]()   |
+| AttGAN   | [AttGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/attgan_G.tar.gz)   |
 | STGAN    | [STGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stgan_G.tar.gz)    |
 
 
@@ -181,47 +181,43 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 
 - Pix2Pix由一个生成网络和一个判别网络组成。生成网络中编码部分的网络结构都是采用`convolution-batch norm-ReLU`作为基础结构，解码部分的网络结构由`transpose convolution-batch norm-ReLU`组成，判别网络基本是由`convolution-norm-leaky_ReLU`作为基础结构，详细的网络结构可以查看`network/Pix2pix_network.py`文件。生成网络提供两种可选的网络结构：Unet网络结构和普通的encoder-decoder网络结构。网络利用损失函数学习从输入图像到输出图像的映射，生成网络损失函数由CGAN的损失函数和L1损失函数组成，判别网络损失函数由CGAN的损失函数组成。生成器的网络结构如下图所示：
 
-<p align="centor">
-    <img src = "images/pix2pix_gen.png" width=550><br/>
-    Pix2Pix生成网络结构图[5]
+<p align="center">
+<img src="images/pix2pix_gen.png" width="550"/><br />
+Pix2Pix生成网络结构图[5]
 </p>
 
 
 - CycleGAN由两个生成网络和两个判别网络组成，生成网络A是输入A类风格的图片输出B类风格的图片，生成网络B是输入B类风格的图片输出A类风格的图片。生成网络中编码部分的网络结构都是采用`convolution-norm-ReLU`作为基础结构，解码部分的网络结构由`transpose convolution-norm-ReLU`组成，判别网络基本是由`convolution-norm-leaky_ReLU`作为基础结构，详细的网络结构可以查看`network/CycleGAN_network.py`文件。生成网络提供两种可选的网络结构：Unet网络结构和普通的encoder-decoder网络结构。生成网络损失函数由CGAN的损失函数，重构损失和自身损失组成，判别网络的损失函数由CGAN的损失函数组成。
 
-<p align="centor">
-    <img src = "images/pix2pix_gen.png" width=550><br/>
-    CycleGAN生成网络结构图[5]
+<p align="center">
+<img src="images/pix2pix_gen.png" width="550"/><br />
+CycleGAN生成网络结构图[5]
 </p>
 
 
 - StarGAN中生成网络的编码部分主要由`convolution-instance norm-ReLU`组成，解码部分主要由`transpose convolution-norm-ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/StarGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
 
-<p align="centor">
-    <img src = "images/stargan_gen.png" width=300><br/>
-    StarGAN生成网络结构[7]
-</p>
-
-<p align="centor">
-    <img src = "images/stargan_dis.png" width=300><br/>
-    StarGAN判别网络结构[7]
+<p align="center">
+<img src="images/stargan_gen.png" width=350 />
+<img src="images/stargan_dis.png" width=400 /> <br />
+StarGAN的生成网络结构[左]和判别网络结构[右] [7]
 </p>
 
 
 
 - AttGAN中生成网络的编码部分主要由`convolution-instance norm-ReLU`组成，解码部分由`transpose convolution-norm-ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/AttGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
 
-<p align="centor">
-    <img src = "images/attgan_net.png" width=800><br/>
-    AttGAN的网络结构[8]
+<p align="center">
+<img src="images/attgan_net.png" width=800 /> <br />
+AttGAN的网络结构[8]
 </p>
 
 
 - STGAN中生成网络再编码器和解码器之间加入Selective Transfer Units\(STU\)，有选择的转换编码网络，从而更好的适配解码网络。生成网络中的编码网络主要由`convolution-instance norm-ReLU`组成，解码网络主要由`transpose convolution-norm-leaky_ReLU`组成，判别网络主要由`convolution-leaky_ReLU`组成，详细网络结构可以查看`network/STGAN_network.py`文件。生成网络的损失函数是由CGAN的损失函数，重构损失和分类损失组成，判别网络的损失函数由预测损失，分类损失和梯度惩罚损失组成。
 
-<p align="centor">
-    <img src = "images/stgan_net.png" width=800><br/>
-    STGAN的网络结构[9]
+<p align="center">
+<img src="images/stgan_net.png" width=800 /> <br />
+STGAN的网络结构[9]
 </p>
 
 
@@ -230,17 +226,16 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 
 ## FAQ
 
-**Q：** StarGAN/AttGAN/STGAN中属性没有变化，为什么？
+**Q:** StarGAN/AttGAN/STGAN中属性没有变化，为什么?   
+**A:** 查看是否所有的标签都转换对了。
 
-**A：** 查看是否所有的标签都转换对了。
+**Q:** 预测结果不正常，是怎么回事？  
+**A:** 某些GAN预测的时候batch_norm的设置需要和训练的时候行为一致，查看模型库中相应的GAN中预测时batch_norm的行为和自己模型中的预测时batch_norm的
+行为是否一致。 
 
-**Q：** 预测结果不正常，是怎么回事？
-
-**A：** 某些GAN预测的时候batch_norm的设置需要和训练的时候行为一致，查看模型库中相应的GAN中预测时batch_norm的行为和自己模型中的预测时batch_norm的行为是否一致。
-
-**Q：** 为什么STGAN和ATTGAN中变男性得到的预测结果是变女性呢？
-
-**A：** 这是由于预测时标签的设置，目标标签是基于原本的标签进行改变，比如原本图片是男生，预测代码对标签进行转变的时候会自动变成相对立的标签，即女性，所以得到的结果是女生。如果想要原本是男生，转变之后还是男生，可以参考模型库中预测代码的StarGAN的标签设置。
+**Q:** 为什么STGAN和ATTGAN中变男性得到的预测结果是变女性呢？  
+**A:** 这是由于预测时标签的设置，目标标签是基于原本的标签进行改变，比如原本图片是男生，预测代码对标签进行转变的时候会自动变成相对立的标签，即女
+性，所以得到的结果是女生。如果想要原本是男生，转变之后还是男生，可以参考模型库中预测代码的StarGAN的标签设置。
 
 
 ## 参考论文
@@ -269,8 +264,7 @@ STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属
 
 ## 版本更新
 
-- 4/2019 新增CGAN, DCGAN, Pix2Pix, CycleGAN
-- 6/2019 新增StarGAN, AttGAN, STGAN
+- 6/2019 新增CGAN, DCGAN, Pix2Pix, CycleGAN,StarGAN, AttGAN, STGAN
 
 ## 作者
 - [ceci3](https://github.com/ceci3)

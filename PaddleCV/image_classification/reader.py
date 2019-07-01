@@ -27,7 +27,7 @@ np.random.seed(0)
 DATA_DIM = 224
 
 THREAD = 8
-BUF_SIZE = 1024
+BUF_SIZE = 2048
 
 DATA_DIR = 'data/ILSVRC2012'
 

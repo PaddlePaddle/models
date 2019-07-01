@@ -29,7 +29,7 @@ np.random.seed(0)
 DATA_DIM = 224
 
 THREAD = 8
-BUF_SIZE = 102400
+BUF_SIZE = 2048
 
 DATA_DIR = './data/ILSVRC2012'
 
@@ -282,7 +282,7 @@ def train(settings, batch_size, data_dir=DATA_DIR, shuffle_seed=0):
         color_jitter=False,
         rotate=False,
         data_dir=data_dir,
-        shuffle_seed=shuffle_seed, )
+        shuffle_seed=shuffle_seed)
     if settings.use_mixup == True:
         reader = create_mixup_reader(settings, reader)
     return reader
