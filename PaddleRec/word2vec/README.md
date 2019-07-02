@@ -72,13 +72,13 @@ nine 250430
 第一步根据英文语料生成词典，中文语料可以通过修改text_strip方法自定义处理方法。
 
 ```bash
-python preprocess.py --build_dict --build_dict_corpus_dir data/text/ --dict_path data/test_build_dict
+python preprocess.py --build_dict --build_dict_corpus_dir data/text/ --dict_path data/test_build_dict --min_count 5
 ```
 
 第二步根据词典将文本转成id, 同时进行downsample，按照概率过滤常见词, 同时生成word和id映射的文件，文件名为词典+"_word_to_id_"。
 
 ```bash
-python preprocess.py --filter_corpus --dict_path data/test_build_dict --input_corpus_dir data/text --output_corpus_dir data/convert_text8 --min_count 5 --downsample 0.001
+python preprocess.py --filter_corpus --dict_path data/test_build_dict --input_corpus_dir data/text --output_corpus_dir data/convert_text8 --downsample 0.001
 ```
 
 ## 训练
