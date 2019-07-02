@@ -20,7 +20,7 @@
 
 注意： 
 1. AttGAN和STGAN的网络结构中，判别器去掉了instance norm。  
-2. AttGAN和STGAN目前只支持使用GPU训练，感谢您的支持。
+2. StarGAN，AttGAN和STGAN只支持使用GPU训练，感谢您的支持。
 
 图像生成模型库库的目录结构如下：
 ```
