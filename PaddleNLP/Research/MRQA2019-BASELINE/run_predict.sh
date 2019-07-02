@@ -17,11 +17,14 @@
 
 set -xe
 
+export FLAGS_sync_nccl_allreduce=0
+export FLAGS_eager_delete_tensor_gb=1
+
 # set CUDA_VISIBLE_DEVICES
 export CUDA_VISIBLE_DEVICES=0
 
 # path of pre_train model
-BERT_BASE_PATH=ernie_model
+ERNIE_BASE_PATH=ernie_model
 # path to save checkpoint
 CHECKPOINT_PATH=output/
 mkdir -p $CHECKPOINT_PATH
@@ -34,10 +37,10 @@ DATA_PATH_dev=data/dev
 python -u src/run_mrqa.py --use_cuda true\
         --batch_size 8 \
         --in_tokens false \
-        --init_pretraining_params ${BERT_BASE_PATH}/params \
+        --init_pretraining_params ${ERNIE_BASE_PATH}/params \
         --init_checkpoint ${PATH_init_checkpoint} \
         --checkpoints ${CHECKPOINT_PATH} \
-        --vocab_path ${BERT_BASE_PATH}/vocab.txt \
+        --vocab_path ${ERNIE_BASE_PATH}/vocab.txt \
         --do_train false \
         --do_predict true \
         --save_steps 10000 \
@@ -45,7 +48,7 @@ python -u src/run_mrqa.py --use_cuda true\
         --weight_decay  0.01 \
         --epoch 2 \
         --max_seq_len 512 \
-        --bert_config_path ${BERT_BASE_PATH}/bert_config.json \
+        --bert_config_path ${ERNIE_BASE_PATH}/ernie_config.json \
         --predict_file ${DATA_PATH_dev}/mrqa-combined.raw.json \
         --do_lower_case true \
         --doc_stride 128 \

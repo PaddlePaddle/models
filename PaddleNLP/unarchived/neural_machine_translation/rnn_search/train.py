@@ -19,150 +19,175 @@ from __future__ import print_function
 import numpy as np
 import time
 import os
+import random
+
+import math
 
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.framework as framework
 from paddle.fluid.executor import Executor
-from paddle.fluid.contrib.decoder.beam_search_decoder import *
+
+import reader
+
+import sys
+if sys.version[0] == '2':
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
+import os
 
 from args import *
-import attention_model
-import no_attention_model
+from base_model import BaseModel
+from attention_model import AttentionModel
+import logging
+import pickle
+
+SEED = 123
 
 
 def train():
     args = parse_args()
 
-    if args.enable_ce:
-        framework.default_startup_program().random_seed = 111
-
+    num_layers = args.num_layers
+    src_vocab_size = args.src_vocab_size
+    tar_vocab_size = args.tar_vocab_size
+    batch_size = args.batch_size
+    dropout = args.dropout
+    init_scale = args.init_scale
+    max_grad_norm = args.max_grad_norm
+    hidden_size = args.hidden_size
     # Training process
-    if args.no_attention:
-        avg_cost, feed_order = no_attention_model.seq_to_seq_net(
-            args.embedding_dim,
-            args.encoder_size,
-            args.decoder_size,
-            args.dict_size,
-            args.dict_size,
-            False,
-            beam_size=args.beam_size,
-            max_length=args.max_length)
-    else:
-        avg_cost, feed_order = attention_model.seq_to_seq_net(
-            args.embedding_dim,
-            args.encoder_size,
-            args.decoder_size,
-            args.dict_size,
-            args.dict_size,
-            False,
-            beam_size=args.beam_size,
-            max_length=args.max_length)
 
+    if args.attention:
+        model = AttentionModel(
+            hidden_size,
+            src_vocab_size,
+            tar_vocab_size,
+            batch_size,
+            num_layers=num_layers,
+            init_scale=init_scale,
+            dropout=dropout)
+    else:
+        model = BaseModel(
+            hidden_size,
+            src_vocab_size,
+            tar_vocab_size,
+            batch_size,
+            num_layers=num_layers,
+            init_scale=init_scale,
+            dropout=dropout)
+
+    loss = model.build_graph()
     # clone from default main program and use it as the validation program
     main_program = fluid.default_main_program()
-    inference_program = fluid.default_main_program().clone()
+    inference_program = fluid.default_main_program().clone(for_test=True)
 
-    optimizer = fluid.optimizer.Adam(
-        learning_rate=args.learning_rate,
-        regularization=fluid.regularizer.L2DecayRegularizer(
-            regularization_coeff=1e-5))
+    fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(
+        clip_norm=max_grad_norm))
 
-    optimizer.minimize(avg_cost)
-
-    # Disable shuffle for Continuous Evaluation only
-    if not args.enable_ce:
-        train_batch_generator = paddle.batch(
-            paddle.reader.shuffle(
-                paddle.dataset.wmt14.train(args.dict_size), buf_size=1000),
-            batch_size=args.batch_size,
-            drop_last=False)
-
-        test_batch_generator = paddle.batch(
-            paddle.reader.shuffle(
-                paddle.dataset.wmt14.test(args.dict_size), buf_size=1000),
-            batch_size=args.batch_size,
-            drop_last=False)
+    lr = args.learning_rate
+    opt_type = args.optimizer
+    if opt_type == "sgd":
+        optimizer = fluid.optimizer.SGD(lr)
+    elif opt_type == "adam":
+        optimizer = fluid.optimizer.Adam(lr)
     else:
-        train_batch_generator = paddle.batch(
-            paddle.dataset.wmt14.train(args.dict_size),
-            batch_size=args.batch_size,
-            drop_last=False)
+        print("only support [sgd|adam]")
+        raise Exception("opt type not support")
 
-        test_batch_generator = paddle.batch(
-            paddle.dataset.wmt14.test(args.dict_size),
-            batch_size=args.batch_size,
-            drop_last=False)
+    optimizer.minimize(loss)
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = Executor(place)
     exe.run(framework.default_startup_program())
 
-    feed_list = [
-        main_program.global_block().var(var_name) for var_name in feed_order
-    ]
-    feeder = fluid.DataFeeder(feed_list, place)
+    train_data_prefix = args.train_data_prefix
+    eval_data_prefix = args.eval_data_prefix
+    test_data_prefix = args.test_data_prefix
+    vocab_prefix = args.vocab_prefix
+    src_lang = args.src_lang
+    tar_lang = args.tar_lang
+    print("begin to load data")
+    raw_data = reader.raw_data(src_lang, tar_lang, vocab_prefix,
+                               train_data_prefix, eval_data_prefix,
+                               test_data_prefix, args.max_len)
+    print("finished load data")
+    train_data, valid_data, test_data, _ = raw_data
 
-    def validation():
-        # Use test set as validation each pass
+    def prepare_input(batch, epoch_id=0, with_lr=True):
+        src_ids, src_mask, tar_ids, tar_mask = batch
+        res = {}
+        src_ids = src_ids.reshape((src_ids.shape[0], src_ids.shape[1], 1))
+        in_tar = tar_ids[:, :-1]
+        label_tar = tar_ids[:, 1:]
+
+        in_tar = in_tar.reshape((in_tar.shape[0], in_tar.shape[1], 1))
+        label_tar = label_tar.reshape(
+            (label_tar.shape[0], label_tar.shape[1], 1))
+
+        res['src'] = src_ids
+        res['tar'] = in_tar
+        res['label'] = label_tar
+        res['src_sequence_length'] = src_mask
+        res['tar_sequence_length'] = tar_mask
+
+        return res, np.sum(tar_mask)
+
+    # get train epoch size
+    def eval(data, epoch_id=0):
+        eval_data_iter = reader.get_data_iter(data, batch_size, mode='eval')
         total_loss = 0.0
-        count = 0
-        val_feed_list = [
-            inference_program.global_block().var(var_name)
-            for var_name in feed_order
-        ]
-        val_feeder = fluid.DataFeeder(val_feed_list, place)
+        word_count = 0.0
+        for batch_id, batch in enumerate(eval_data_iter):
+            input_data_feed, word_num = prepare_input(
+                batch, epoch_id, with_lr=False)
+            fetch_outs = exe.run(inference_program,
+                                 feed=input_data_feed,
+                                 fetch_list=[loss.name],
+                                 use_program_cache=False)
 
-        for batch_id, data in enumerate(test_batch_generator()):
-            val_fetch_outs = exe.run(inference_program,
-                                     feed=val_feeder.feed(data),
-                                     fetch_list=[avg_cost],
-                                     return_numpy=False)
+            cost_train = np.array(fetch_outs[0])
 
-            total_loss += np.array(val_fetch_outs[0])[0]
-            count += 1
+            total_loss += cost_train * batch_size
+            word_count += word_num
 
-        return total_loss / count
+        ppl = np.exp(total_loss / word_count)
 
-    for pass_id in range(1, args.pass_num + 1):
-        pass_start_time = time.time()
-        words_seen = 0
-        for batch_id, data in enumerate(train_batch_generator()):
-            words_seen += len(data) * 2
+        return ppl
 
-            fetch_outs = exe.run(framework.default_main_program(),
-                                 feed=feeder.feed(data),
-                                 fetch_list=[avg_cost])
+    max_epoch = args.max_epoch
+    for epoch_id in range(max_epoch):
+        start_time = time.time()
+        print("epoch id", epoch_id)
+        train_data_iter = reader.get_data_iter(train_data, batch_size)
 
-            avg_cost_train = np.array(fetch_outs[0])
-            print('pass_id=%d, batch_id=%d, train_loss: %f' %
-                  (pass_id, batch_id, avg_cost_train))
-            # This is for continuous evaluation only
-            if args.enable_ce and batch_id >= 100:
-                break
+        total_loss = 0
+        word_count = 0.0
+        for batch_id, batch in enumerate(train_data_iter):
 
-        pass_end_time = time.time()
-        test_loss = validation()
-        time_consumed = pass_end_time - pass_start_time
-        words_per_sec = words_seen / time_consumed
-        print("pass_id=%d, test_loss: %f, words/s: %f, sec/pass: %f" %
-              (pass_id, test_loss, words_per_sec, time_consumed))
+            input_data_feed, word_num = prepare_input(batch, epoch_id=epoch_id)
+            fetch_outs = exe.run(feed=input_data_feed,
+                                 fetch_list=[loss.name],
+                                 use_program_cache=True)
 
-        # This log is for continuous evaluation only
-        if args.enable_ce:
-            print("kpis\ttrain_cost\t%f" % avg_cost_train)
-            print("kpis\ttest_cost\t%f" % test_loss)
-            print("kpis\ttrain_duration\t%f" % time_consumed)
+            cost_train = np.array(fetch_outs[0])
 
-        if pass_id % args.save_interval == 0:
-            model_path = os.path.join(args.save_dir, str(pass_id))
-            if not os.path.isdir(model_path):
-                os.makedirs(model_path)
+            total_loss += cost_train * batch_size
+            word_count += word_num
 
-            fluid.io.save_persistables(
-                executor=exe,
-                dirname=model_path,
-                main_program=framework.default_main_program())
+            if batch_id > 0 and batch_id % 100 == 0:
+                print("ppl", batch_id, np.exp(total_loss / word_count))
+                total_loss = 0.0
+                word_count = 0.0
+
+        dir_name = args.model_path + "/epoch_" + str(epoch_id)
+        print("begin to save", dir_name)
+        fluid.io.save_params(exe, dir_name)
+        print("save finished")
+        dev_ppl = eval(valid_data)
+        print("dev ppl", dev_ppl)
+        test_ppl = eval(test_data)
+        print("test ppl", test_ppl)
 
 
 if __name__ == '__main__':
