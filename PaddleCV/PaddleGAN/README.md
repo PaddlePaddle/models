@@ -18,8 +18,9 @@
 
 本图像生成模型库包含CGAN\[[3](#参考文献)\], DCGAN\[[4](#参考文献)\], Pix2Pix\[[5](#参考文献)\], CycleGAN\[[6](#参考文献)\], StarGAN\[[7](#参考文献)\], AttGAN\[[8](#参考文献)\], STGAN\[[9](#参考文献)\]。
 
-注意：1. AttGAN和STGAN的网络结构中，判别器去掉了instance norm。
-      2. AttGAN和STGAN目前只支持使用GPU训练，感谢您的支持。
+注意： 
+1. AttGAN和STGAN的网络结构中，判别器去掉了instance norm。  
+2. AttGAN和STGAN目前只支持使用GPU训练，感谢您的支持。
 
 图像生成模型库库的目录结构如下：
 ```
