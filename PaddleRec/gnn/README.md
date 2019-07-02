@@ -76,9 +76,19 @@ gpu 单机单卡训练
 CUDA_VISIBLE_DEVICES=1 python -u train.py --use_cuda 1 > log.txt 2>&1 &
 ```
 
+gpu 单机多卡训练
+``` bash
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -u train.py --use_cuda 1 > log.txt 2>&1 &
+```
+
 cpu 单机训练
 ``` bash
 CPU_NUM=1 python -u train.py --use_cuda 0 > log.txt 2>&1 &
+```
+
+cpu 单机多CPU训练
+``` bash
+CPU_NUM=5 python -u train.py --use_cuda 0 > log.txt 2>&1 &
 ```
 
 值得注意的是上述单卡训练可以通过加--use_parallel 1参数使用Parallel Executor来进行加速。

@@ -15,5 +15,7 @@ PADDLE_TRAINING_ROLE="TRAINER" \
 PADDLE_CURRENT_ENDPOINT="127.0.0.1:716${i}" \
 PADDLE_TRAINER_ID="${i}" \
 FLAGS_selected_gpus="${i}" \
-python dist_train.py --model $MODEL --update_method nccl2 --batch_size 32 --fp16 1 --scale_loss 8 &> logs/tr$i.log &
+python -u dist_train.py --model $MODEL --update_method nccl2 \
+--batch_size 32 \
+--fp16 0 --scale_loss 1 &> logs/tr$i.log &
 done
