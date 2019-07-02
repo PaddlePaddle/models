@@ -126,8 +126,8 @@ class LightNASSpace(SearchSpace):
                     op_params.append(
                         ('conv', 0, 1, test_iter, 0, 0, 1, c * t, in_shape,
                          in_shape, c * t, c * t, k, (int(k - 1) / 2), s, 1))
-                op_params.append(('activation', 0, 1, test_iter, 'relu6', c * t,
-                                  in_shape / s, in_shape / s))
+                op_params.append(('activation', 0, 1, test_iter, 'relu6', 1,
+                                  c * t, in_shape / s, in_shape / s))
 
                 # shrink
                 for out_c in num_filters:
@@ -176,8 +176,8 @@ class LightNASSpace(SearchSpace):
         # conv1_1
         op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, image_shape[0],
                           image_shape[1], image_shape[2], 32, 1, 3, 1, 2, 1))
-        op_params.append(
-            ('activation', 0, 1, test_iter, 'relu6', 1, 32, 112, 112))
+        op_params.append(('activation', 0, 1, test_iter, 'relu6', 1, 32,
+                          image_shape[1] / 2, image_shape[2] / 2))
 
         # bottlenecks, TODO: different h and w for images
         in_c, in_shape = [32], image_shape[1] / 2
