@@ -133,7 +133,7 @@ def save_test_image(epoch,
     elif cfg.model_net == 'AttGAN' or cfg.model_net == 'STGAN':
         for data in zip(A_test_reader()):
             real_img, label_org, name = data[0]
-            attr_names = args.selected_attrs.split(',')
+            attr_names = cfg.selected_attrs.split(',')
             label_trg = copy.deepcopy(label_org)
             tensor_img = fluid.LoDTensor()
             tensor_label_org = fluid.LoDTensor()
