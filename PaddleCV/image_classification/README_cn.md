@@ -155,7 +155,7 @@ python infer.py \
 
 - 注意
     1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
-    2：除了InceptionV4采用的输入图像的分辨率为299x299，其余模型测试时使用的分辨率均为224x224。
+    2：除了InceptionV4和Xception采用的输入图像的分辨率为299x299，其余模型测试时使用的分辨率均为224x224。
     3：调用动态链接库预测时需要将训练模型转换为二进制模型
 
     ```python infer.py --save_inference=True```
@@ -248,7 +248,7 @@ python infer.py \
 ## 版本更新
 - 2018/12/03 **Stage1**: 更新AlexNet，ResNet50，ResNet101，MobileNetV1
 - 2018/12/23 **Stage2**: 更新VGG系列 SeResNeXt50_32x4d，SeResNeXt101_32x4d，ResNet152
-- 2019/01/31 更新MobileNetV2
+- 2019/01/31 更新MobileNetV2_x1_0
 - 2019/04/01 **Stage3**: 更新ResNet18，ResNet34，GoogLeNet，ShuffleNetV2
 - 2019/06/12 **Stage4**: 更新ResNet50_vc，ResNet50_vd，ResNet101_vd，ResNet152_vd，ResNet200_vd，SE154_vd InceptionV4，ResNeXt101_64x4d，ResNeXt101_vd_64x4d
 - 2019/06/22 更新ResNet50_vd_v2
