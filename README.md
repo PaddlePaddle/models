@@ -4,7 +4,7 @@
 
 PaddlePaddle provides a rich set of computational units to enable users to adopt a modular approach to solving various learning problems. In this Repo, we demonstrate how to use PaddlePaddle to solve common machine learning tasks, providing several different neural network model that anyone can easily learn and use.
 
-PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化的方法解决各种学习问题。在此Repo中，我们展示了如何用 PaddlePaddle 来解决常见的机器学习任务，提供若干种不同的易学易用的神经网络模型。PaddlePaddle用户现可申请AI Studio平台的**免费Tesla V100算力资源**，高效在线训练模型，[点击申请](https://aistudio.baidu.com/aistudio/questionnaire?activityid=378)。
+PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化的方法解决各种学习问题。在此Repo中，我们展示了如何用 PaddlePaddle来解决常见的机器学习任务，提供若干种不同的易学易用的神经网络模型。PaddlePaddle用户可领取**免费Tesla V100在线算力资源**，高效训练模型，**每日登陆即送12小时**，**连续五天运行再加送48小时**，[前往使用免费算力](http://ai.baidu.com/support/news?action=detail&id=981)。
 
 ## 目录
 * [智能视觉(PaddleCV)](#PaddleCV)
