@@ -88,17 +88,17 @@ def infer_epoch(args, vocab_size, test_reader, use_cuda, i2w):
 
                     label = [dat[3] for dat in data]
                     input_word = [dat[4] for dat in data]
-                    para = exe.run(
-                        copy_program,
-                        feed={
-                            "analogy_a": wa,
-                            "analogy_b": wb,
-                            "analogy_c": wc,
-                            "all_label":
-                            np.arange(vocab_size).reshape(vocab_size, 1),
-                        },
-                        fetch_list=[pred.name, values],
-                        return_numpy=False)
+                    para = exe.run(copy_program,
+                                   feed={
+                                       "analogy_a": wa,
+                                       "analogy_b": wb,
+                                       "analogy_c": wc,
+                                       "all_label":
+                                       np.arange(vocab_size).reshape(
+                                           vocab_size, 1).astype("int64"),
+                                   },
+                                   fetch_list=[pred.name, values],
+                                   return_numpy=False)
                     pre = np.array(para[0])
                     val = np.array(para[1])
                     for ii in range(len(label)):
