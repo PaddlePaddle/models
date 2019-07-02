@@ -205,8 +205,29 @@ def pooling_op_params(blocks, current_op, test_iter=100):
 
 
 def softmax_op_params(blocks, current_op, test_iter=100):
-    #TODO: Getting params of softmax op
-    return []
+    """Getting params of softmax op
+    Args:
+        blocks: BlockDesc, current block
+        current_op: OpDesc, current op
+        test_iter: test times
+    Returns:
+        tmp: list, op name and hyperparamters
+    """
+    # op name, cluster, threads, test_iter
+    tmp = ['softmax', 0, 1, test_iter]
+    # axis
+    tmp.append(current_op.attr('axis'))
+    # batch size
+    tmp.append(1)
+    # input channels, height, width
+    in_shapes = blocks.vars[current_op.input('X')[0]].shape
+    while len(in_shapes) < 4:
+        in_shapes = in_shapes + (1, )
+
+    for i in range(1, len(in_shapes)):
+        tmp.append(int(in_shapes[i]))
+
+    return tmp
 
 
 def resize_op_params(blocks, current_op, test_iter=100):
