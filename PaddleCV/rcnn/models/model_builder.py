@@ -76,7 +76,7 @@ class RCNN(object):
                          [-1, 3], [-1, 1]]
             lod_levels = [0, 1, 1, 1, 0, 0]
             dtypes = [
-                'float32', 'float32', 'int32', 'int32', 'float32', 'int32'
+                'float32', 'float32', 'int32', 'int32', 'float32', 'int64'
             ]
             if cfg.MASK_ON:
                 in_shapes.append([-1, 2])
@@ -109,7 +109,7 @@ class RCNN(object):
             self.im_info = fluid.layers.data(
                 name='im_info', shape=[3], dtype='float32')
             self.im_id = fluid.layers.data(
-                name='im_id', shape=[1], dtype='int32')
+                name='im_id', shape=[1], dtype='int64')
             if cfg.MASK_ON:
                 self.gt_masks = fluid.layers.data(
                     name='gt_masks', shape=[2], dtype='float32', lod_level=3)

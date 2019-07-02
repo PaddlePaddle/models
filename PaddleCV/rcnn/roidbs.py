@@ -153,14 +153,14 @@ class JsonDataset(object):
         num_valid_objs = len(valid_objs)
 
         gt_boxes = np.zeros((num_valid_objs, 4), dtype=entry['gt_boxes'].dtype)
-        gt_id = np.zeros((num_valid_objs), dtype=np.int32)
+        gt_id = np.zeros((num_valid_objs), dtype=np.int64)
         gt_classes = np.zeros((num_valid_objs), dtype=entry['gt_classes'].dtype)
         is_crowd = np.zeros((num_valid_objs), dtype=entry['is_crowd'].dtype)
         for ix, obj in enumerate(valid_objs):
             cls = self.json_category_id_to_contiguous_id[obj['category_id']]
             gt_boxes[ix, :] = obj['clean_bbox']
             gt_classes[ix] = cls
-            gt_id[ix] = np.int32(obj['id'])
+            gt_id[ix] = np.int64(obj['id'])
             is_crowd[ix] = obj['iscrowd']
 
         entry['gt_boxes'] = np.append(entry['gt_boxes'], gt_boxes, axis=0)

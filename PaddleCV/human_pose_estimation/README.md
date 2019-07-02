@@ -10,8 +10,11 @@ This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http
 ## Requirements
 
   - Python == 2.7 or 3.6
-  - PaddlePaddle >= 1.1.0 (<= 1.3.0)
+  - PaddlePaddle >= 1.1.0 
   - opencv-python >= 3.3
+
+### Notes:
+We found that there are some issues may result in misconvergence with PaddlePaddle 1.3.0 and cuDNN-7.0. So it is recommended to use the latest version of PaddlePaddle (>= 1.4).
 
 ## Environment
 
@@ -91,7 +94,7 @@ python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x
 ### Perform Training
 
 ```bash
-python train.py --dataset 'mpii' --data_root 'data/mpii'
+python train.py --dataset 'mpii'
 ```
 
 **Note**: Configurations for training are aggregated in the `lib/mpii_reader.py` and `lib/coco_reader.py`.
