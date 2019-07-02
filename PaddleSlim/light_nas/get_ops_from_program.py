@@ -230,11 +230,6 @@ def softmax_op_params(blocks, current_op, test_iter=100):
     return tmp
 
 
-def resize_op_params(blocks, current_op, test_iter=100):
-    #TODO: Getting params of resize op
-    return []
-
-
 def fc_op_params(blocks, current_op, isbias, test_iter=100):
     """Getting params of fc op
     Note: 
