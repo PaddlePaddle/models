@@ -21,42 +21,45 @@ import paddle.fluid.layers as layers
 
 def network(batch_size, items_num, hidden_size, step):
     stdv = 1.0 / math.sqrt(hidden_size)
+    need_append = True
+
+    batch_size = -1
 
     items = layers.data(
         name="items",
-        shape=[batch_size, items_num, 1],
+        shape=[1, 1],
         dtype="int64",
-        append_batch_size=False)  #[bs, uniq_max, 1]
+        append_batch_size=need_append)  #[bs, uniq_max, 1]
     seq_index = layers.data(
         name="seq_index",
-        shape=[batch_size, items_num],
+        shape=[1],
         dtype="int32",
-        append_batch_size=False)  #[-1(seq_max)*batch_size, 1]
+        append_batch_size=need_append)  #[-1(seq_max)*batch_size, 1]
     last_index = layers.data(
         name="last_index",
-        shape=[batch_size],
+        shape=[1],
         dtype="int32",
-        append_batch_size=False)  #[batch_size, 1]
+        append_batch_size=need_append)  #[batch_size, 1]
     adj_in = layers.data(
         name="adj_in",
-        shape=[batch_size, items_num, items_num],
+        shape=[1,1],
         dtype="float32",
-        append_batch_size=False)
+        append_batch_size=need_append)
     adj_out = layers.data(
         name="adj_out",
-        shape=[batch_size, items_num, items_num],
+        shape=[1,1],
         dtype="float32",
-        append_batch_size=False)
+        append_batch_size=need_append)
     mask = layers.data(
         name="mask",
-        shape=[batch_size, -1, 1],
+        shape=[1, 1],
         dtype="float32",
-        append_batch_size=False)
+        append_batch_size=need_append)
     label = layers.data(
         name="label",
-        shape=[batch_size, 1],
+        shape=[1],
         dtype="int64",
-        append_batch_size=False)
+        append_batch_size=need_append)
 
     datas = [items, seq_index, last_index, adj_in, adj_out, mask, label]
     py_reader = fluid.layers.create_py_reader_by_data(
@@ -71,11 +74,12 @@ def network(batch_size, items_num, hidden_size, step):
             initializer=fluid.initializer.Uniform(
                 low=-stdv, high=stdv)),
         size=[items_num, hidden_size])  #[batch_size, uniq_max, h]
+    items_emb_shape = layers.shape(items_emb)
 
     pre_state = items_emb
     for i in range(step):
         pre_state = layers.reshape(
-            x=pre_state, shape=[batch_size, -1, hidden_size])
+            x=pre_state, shape=[-1, 1, hidden_size], actual_shape=items_emb_shape)
         state_in = layers.fc(
             input=pre_state,
             name="state_in",
@@ -115,12 +119,17 @@ def network(batch_size, items_num, hidden_size, step):
             size=3 * hidden_size)
 
     final_state = pre_state
+
+    seq_origin_shape = layers.assign(np.array([0,0,hidden_size-1]).astype("int32"))
+    seq_origin_shape += layers.shape(layers.unsqueeze(seq_index,[2]))
+    seq_origin_shape.stop_gradient = True
+
     seq_index = layers.reshape(seq_index, shape=[-1])
     seq = layers.gather(final_state, seq_index)  #[batch_size*-1(seq_max), h]
     last = layers.gather(final_state, last_index)  #[batch_size, h]
 
     seq = layers.reshape(
-        seq, shape=[batch_size, -1, hidden_size])  #[batch_size, -1(seq_max), h]
+        seq, shape=[batch_size, 1, hidden_size], actual_shape=seq_origin_shape)  #[batch_size, -1(seq_max), h]
     last = layers.reshape(
         last, shape=[batch_size, hidden_size])  #[batch_size, h]
 
@@ -207,3 +216,4 @@ def network(batch_size, items_num, hidden_size, step):
     loss = layers.reduce_mean(softmax)  # [1]
     acc = layers.accuracy(input=logits, label=label, k=20)
     return loss, acc, py_reader, feed_datas
+
