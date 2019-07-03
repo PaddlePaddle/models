@@ -166,9 +166,11 @@ def train():
     for epoch_id in range(max_epoch):
         start_time = time.time()
         print("epoch id", epoch_id)
-        train_data_iter = reader.get_data_iter(train_data, batch_size)
         if args.enable_ce:
             train_data_iter = reader.get_data_iter(train_data, batch_size, enable_ce=True)
+        else:
+            train_data_iter = reader.get_data_iter(train_data, batch_size)
+            
 
         total_loss = 0
         word_count = 0.0
