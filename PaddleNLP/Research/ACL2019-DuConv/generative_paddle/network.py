@@ -149,7 +149,7 @@ def load():
 
     main_program = fluid.default_main_program()
 
-    if config.use_gpu:
+    if config.use_gpu and fluid.is_compiled_with_cuda() == True:
         place = fluid.CUDAPlace(0)
     else:
         place = fluid.CPUPlace()
@@ -399,7 +399,7 @@ def test(config):
 
     main_program = fluid.default_main_program()
 
-    if config.use_gpu:
+    if config.use_gpu and fluid.is_compiled_with_cuda() == True:
         place = fluid.CUDAPlace(0)
     else:
         place = fluid.CPUPlace()
@@ -485,7 +485,7 @@ def train(config):
     fluid.memory_optimize(main_program)
     opt_var_name_list = optimizer.get_opti_var_name_list()
 
-    if config.use_gpu:
+    if config.use_gpu and fluid.is_compiled_with_cuda() == True:
         place = fluid.CUDAPlace(0)
     else:
         place = fluid.CPUPlace()
