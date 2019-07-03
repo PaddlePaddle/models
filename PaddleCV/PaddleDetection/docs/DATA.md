@@ -26,7 +26,7 @@ following data sources are supported:
 Loads `COCO` type datasets with directory structures like this:
 
   ```
-  data/coco/
+  dataset/coco/
   ├── annotations
   │   ├── instances_train2017.json
   │   ├── instances_val2017.json
