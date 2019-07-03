@@ -24,6 +24,7 @@ def _term(sig_num, addition):
 
 
 signal.signal(signal.SIGTERM, _term)
+signal.signal(signal.SIGINT, _term)
 
 
 class AttrDict(dict):
