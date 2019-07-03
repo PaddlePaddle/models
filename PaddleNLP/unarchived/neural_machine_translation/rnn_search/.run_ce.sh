@@ -30,7 +30,7 @@ export CUDA_VISIBLE_DEVICES=$cudaid
 
 train | python _ce.py
 
-cudaid=${transformer_m:=0,1,2,3} # use 0,1,2,3 card as default
-export CUDA_VISIBLE_DEVICES=$cudaid
+#cudaid=${transformer_m:=0,1,2,3} # use 0,1,2,3 card as default
+#export CUDA_VISIBLE_DEVICES=$cudaid
 
-train | python _ce.py
+#train | python _ce.py
