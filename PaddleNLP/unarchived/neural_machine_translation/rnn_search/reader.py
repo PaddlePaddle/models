@@ -143,7 +143,7 @@ def raw_mono_data(vocab_file, file_path):
     return (test_src, test_tar)
 
 
-def get_data_iter(raw_data, batch_size, mode='train'):
+def get_data_iter(raw_data, batch_size, mode='train', enable_ce=False):
 
     src_data, tar_data = raw_data
 
