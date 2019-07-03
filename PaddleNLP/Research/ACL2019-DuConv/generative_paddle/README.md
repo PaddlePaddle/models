@@ -44,3 +44,4 @@ sh run_test.sh
 
 * The script run_train.sh/run_test.sh shows all the processes including data processing and model training/testing. Be sure to read it carefully and follow it.
 * The files in ./data and ./model is just empty file to show the structure of the document.
+* Make sure that the paddlepaddle-gpu is installed on your machine when you set use_cuda = True, otherwise the program will run on the CPU.
