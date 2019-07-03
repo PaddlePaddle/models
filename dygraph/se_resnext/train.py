@@ -25,7 +25,12 @@ from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, FC
 from paddle.fluid.dygraph.base import to_variable
 import sys
 import math
+import argparse
 
+parser = argparse.ArgumentParser("Training for Se-ResNeXt.")
+parser.add_argument("-e", "--epoch", default=200, type=int, help="set epoch")
+parser.add_argument("--ce", action="store_true", help="run ce") 
+args = parser.parse_args()
 batch_size = 64
 train_parameters = {
     "input_size": [3, 224, 224],
@@ -341,19 +346,28 @@ def eval(model, data):
                   ( batch_id, total_loss / total_sample, \
                    total_acc1 / total_sample, total_acc5 / total_sample))
 	    
+    if args.ce:
+        print("kpis\ttest_acc1\t%0.3f" % (total_acc1 / total_sample))
+        print("kpis\ttest_acc5\t%0.3f" % (total_acc5 / total_sample))
+        print("kpis\ttest_loss\t%0.3f" % (total_loss / total_sample))
     print("final eval loss %0.3f acc1 %0.3f acc5 %0.3f" % \
           (total_loss / total_sample, \
            total_acc1 / total_sample, total_acc5 / total_sample))
 
 def train():
-    seed = 90
+    
     epoch_num = train_parameters["num_epochs"]
-
+    if args.ce:
+        epoch_num = args.epoch
     batch_size = train_parameters["batch_size"]
 
     with fluid.dygraph.guard():
-        fluid.default_startup_program().random_seed = 90
-        fluid.default_main_program().random_seed = 90
+        if args.ce:
+            print("ce mode")
+            seed = 90
+            np.random.seed(seed)
+            fluid.default_startup_program().random_seed = seed
+            fluid.default_main_program().random_seed = seed
         
         se_resnext = SeResNeXt("se_resnext")
         optimizer = optimizer_setting(train_parameters)
@@ -408,6 +422,10 @@ def train():
                            ( epoch_id, batch_id, total_loss / total_sample, \
                              total_acc1 / total_sample, total_acc5 / total_sample, lr))
 
+            if args.ce:
+                print("kpis\ttrain_acc1\t%0.3f" % (total_acc1 / total_sample))
+                print("kpis\ttrain_acc5\t%0.3f" % (total_acc5 / total_sample))
+                print("kpis\ttrain_loss\t%0.3f" % (total_loss / total_sample))
             print("epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
                   (epoch_id, batch_id, total_loss / total_sample, \
                    total_acc1 / total_sample, total_acc5 / total_sample))
