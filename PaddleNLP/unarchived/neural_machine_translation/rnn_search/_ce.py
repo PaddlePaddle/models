@@ -9,10 +9,10 @@ from kpi import CostKpi, DurationKpi, AccKpi
 
 train_ppl_card1_kpi = CostKpi('train_ppl_card1', 0.02, 0, actived=True)
 train_duration_card1_kpi = DurationKpi(
-    'train_duration_card1', 0.08, 0, actived=True)
+    'train_duration_card1', 0.02, 0, actived=True)
 train_ppl_card4_kpi = CostKpi('train_ppl_card4', 0.02, 0, actived=True)
 train_duration_card4_kpi = DurationKpi(
-    'train_duration_card4', 0.06, 0, actived=True)
+    'train_duration_card4', 0.02, 0, actived=True)
 
 tracking_kpis = [
     train_ppl_card1_kpi,
