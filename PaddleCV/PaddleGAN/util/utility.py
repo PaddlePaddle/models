@@ -104,6 +104,7 @@ def save_test_image(epoch,
     elif cfg.model_net == "StarGAN":
         for data in zip(A_test_reader()):
             real_img, label_org, name = data[0]
+            attr_names = cfg.selected_attrs.split(',')
             tensor_img = fluid.LoDTensor()
             tensor_label_org = fluid.LoDTensor()
             tensor_img.set(real_img, place)
@@ -111,8 +112,10 @@ def save_test_image(epoch,
             real_img_temp = np.squeeze(real_img).transpose([1, 2, 0])
             images = [real_img_temp]
             for i in range(cfg.c_dim):
-                label_trg = np.zeros([1, cfg.c_dim]).astype("float32")
-                label_trg[0][i] = 1
+                label_trg_tmp = copy.deepcopy(label_org)
+                label_trg_tmp[0][i] = 1.0 - label_trg_tmp[j][i]
+                label_trg = check_attribute_conflict(
+                    label_trg_tmp, attr_names[i], attr_names)
                 tensor_label_trg = fluid.LoDTensor()
                 tensor_label_trg.set(label_trg, place)
                 fake_temp, rec_temp = exe.run(
