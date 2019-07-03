@@ -119,6 +119,23 @@ def main():
     if cfg.weights:
         checkpoint.load_checkpoint(exe, infer_prog, cfg.weights)
 
+    if FLAGS.save_inference_model:
+        cfg_name = os.path.basename(FLAGS.config).split('.')[0]
+        save_dir = os.path.join(FLAGS.output_dir, cfg_name)
+        feeded_var_names = [var.name for var in feed_vars.values()]
+        if 'im_id' in feeded_var_names:
+            feeded_var_names.remove('im_id')
+        target_vars = test_fetches.values()
+        logger.info("Save inference model to {}, input: {}, output: "
+                    "{}...".format(save_dir, feeded_var_names,
+                                [var.name for var in target_vars]))
+        fluid.io.save_inference_model(save_dir, 
+                                      feeded_var_names=feeded_var_names,
+                                      target_vars=target_vars,
+                                      executor=exe,
+                                      main_program=infer_prog,
+                                      params_filename="__parmas__")
+
     # parse infer fetches
     extra_keys = []
     if cfg['metric'] == 'COCO':
@@ -196,5 +213,10 @@ if __name__ == '__main__':
         type=float,
         default=0.5,
         help="Threshold to reserve the result for visualization.")
+    parser.add_argument(
+        "--save_inference_model",
+        action='store_true',
+        default=False,
+        help="Save inference model in output_dir if True.")
     FLAGS = parser.parse_args()
     main()
