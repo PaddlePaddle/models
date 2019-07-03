@@ -25,6 +25,7 @@ ResNet:
   freeze_at: 2
 
 ResNetC5:
+  depth: 50
   norm_type: affine_channel
 
 RPNHead:
@@ -78,7 +79,7 @@ LearningRate:
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones: [12000, 16000]
+    milestones: [120000, 160000]
   - !LinearWarmup
     start_factor: 0.3333333333333333
     steps: 500

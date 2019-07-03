@@ -83,6 +83,23 @@ def load_checkpoint(exe, prog, path):
     fluid.io.load_persistables(exe, path, prog)
 
 
+def global_step(scope=None):
+    """
+    Load global step in scope.
+    Args:
+        scope (fluid.Scope): load global step from which scope. If None,
+            from default global_scope().
+
+    Returns:
+        global step: int.
+    """
+    if scope is None:
+        scope = fluid.global_scope()
+    v = scope.find_var('@LR_DECAY_COUNTER@')
+    step = np.array(v.get_tensor())[0] if v else 0
+    return step
+
+
 def save(exe, prog, path):
     """
     Load model from the given path.
@@ -166,7 +183,8 @@ def load_and_fusebn(exe, prog, path):
                         [scale_name, bias_name, mean_name, variance_name])
 
     if not bn_in_path:
-        raise ValueError("The model in path {} has not params of batch norm.")
+        raise ValueError("There is no params of batch norm in model {}.".format(
+            path))
 
     # load running mean and running variance on cpu place into global scope.
     place = fluid.CPUPlace()
