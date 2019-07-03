@@ -85,8 +85,8 @@ def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(FLAGS.output_dir, cfg_name)
     feeded_var_names = [var.name for var in feed_vars.values()]
-    if 'im_id' in feeded_var_names:
-        feeded_var_names.remove('im_id')
+    # im_id is only used for visualize, not used in inference model
+    feeded_var_names.remove('im_id')
     target_vars = test_fetches.values()
     logger.info("Save inference model to {}, input: {}, output: "
                 "{}...".format(save_dir, feeded_var_names,
