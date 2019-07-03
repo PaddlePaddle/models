@@ -126,13 +126,13 @@ The main APIs are as follows:
 
 1. Data parsing
 
- - `source/coco_loader.py`: COCO dataset parser. [source](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/coco_loader.py)
- - `source/voc_loader.py`: Pascal VOC dataset parser. [source](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)
+ - `source/coco_loader.py`: COCO dataset parser. [source](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection/ppdet/data/source/coco_loader.py)
+ - `source/voc_loader.py`: Pascal VOC dataset parser. [source](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection/ppdet/data/source/voc_loader.py)
  [Note] To use a non-default label list for VOC datasets, a `label_list.txt`
  file is needed, one can use the provided label list
  (`data/pascalvoc/ImageSets/Main/label_list.txt`) or generate a custom one (with `tools/generate_data_for_training.py`). Also, `use_default_label` option should
  be set to `false` in the configuration file
- - `source/loader.py`: Roidb dataset parser. [source](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/loader.py)
+ - `source/loader.py`: Roidb dataset parser. [source](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection/ppdet/data/source/loader.py)
 
 2. Operator
  `transform/operators.py`: Contains a variety of data enhancement methods, including:
