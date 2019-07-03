@@ -129,7 +129,7 @@ def main(args):
         shuffle=False)
     num_dev_examples = processor.get_num_examples(phase='dev')
 
-    if args.use_cuda: 
+    if args.use_cuda and fluid.is_compiled_with_cuda() == True: 
         place = fluid.CUDAPlace(0)
         dev_count = fluid.core.get_cuda_device_count()
     else: 
