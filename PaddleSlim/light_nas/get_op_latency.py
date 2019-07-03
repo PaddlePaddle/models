@@ -28,7 +28,9 @@ def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--ops_path', default='ops.txt', help='Input ops path.')
     parser.add_argument(
-        '--platform', default='android', help='Platform: android/ios/custom.')
+        '--platform',
+        default='paddlemobile-android',
+        help='Platform: android/ios/custom.')
     parser.add_argument(
         '--ops_latency_path',
         default='ops_latency.txt',
@@ -47,7 +49,7 @@ def get_op_latency(op, platform):
     Returns:
         float, op latency.
     """
-    if platform == 'android':
+    if platform == 'anakin-android':
         commands = 'adb shell data/local/tmp/get_{}_latency {}'.format(
             op[0], ' '.join(op[1:]))
         proc = subprocess.Popen(
@@ -58,6 +60,16 @@ def get_op_latency(op, platform):
         out = proc.communicate()[1]
         out = [_ for _ in out.split('\n') if 'time' in _][-1]
         out = re.findall(r'\d+\.?\d*', out)[-2]
+    elif platform == 'paddlemobile-android':
+        commands = 'adb shell "cd /data/local/tmp/bin && export LD_LIBRARY_PATH=. && ./get_{}_latency \'{}\'"'.format(
+            op[0], ' '.join(op[1:]))
+        proc = subprocess.Popen(
+            commands,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True)
+        out = proc.communicate()[0]
+        out = float(out)
     elif platform == 'ios':
         out = 0
     else:
