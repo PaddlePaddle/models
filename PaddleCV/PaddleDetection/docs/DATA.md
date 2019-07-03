@@ -41,8 +41,8 @@ Loads `COCO` type datasets with directory structures like this:
   |   ...
   ```
 
-- Pascal VOC data source
-Loads `Pascal VOC` like datasets with directory structure like this:
+- PASCAL VOC data source
+Loads `PASCAL VOC` like datasets with directory structure like this:
 
   ```
   data/pascalvoc/
@@ -127,7 +127,7 @@ The main APIs are as follows:
 1. Data parsing
 
  - `source/coco_loader.py`: COCO dataset parser. [source](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/coco_loader.py)
- - `source/voc_loader.py`: Pascal VOC dataset parser. [source](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)
+ - `source/voc_loader.py`: PASCAL VOC dataset parser. [source](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/ppdet/data/source/voc_loader.py)
  [Note] To use a non-default label list for VOC datasets, a `label_list.txt`
  file is needed, one can use the provided label list
  (`data/pascalvoc/ImageSets/Main/label_list.txt`) or generate a custom one (with `tools/generate_data_for_training.py`). Also, `use_default_label` option should
@@ -167,7 +167,7 @@ The main APIs are as follows:
 
 #### Canned Datasets
 
-Preset for common datasets, e.g., `MS-COCO` and `Pascal Voc` are included. In
+Preset for common datasets, e.g., `COCO` and `PASCAL Voc` are included. In
 most cases, user can simply use these canned dataset as is. Moreover, the
 whole data pipeline is fully customizable through the yaml configuration files.
 

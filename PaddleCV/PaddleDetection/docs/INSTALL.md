@@ -89,7 +89,7 @@ python ppdet/modeling/tests/test_architectures.py
 
 ## Datasets
 
-PaddleDetection includes support for [MSCOCO](http://cocodataset.org) and [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) by default, please follow these instructions to set up the dataset.
+PaddleDetection includes support for [COCO](http://cocodataset.org) and [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) by default, please follow these instructions to set up the dataset.
 
 **Create symlinks for local datasets:**
 
@@ -106,7 +106,7 @@ ln -sf <path/to/voc> <path/to/paddle_detection>/dataset/voc
 
 On the other hand, to download the datasets, run the following commands:
 
-- MS-COCO
+- COCO
 
 ```
 cd dataset/coco
@@ -124,7 +124,7 @@ cd dataset/voc
 
 If a training session is started but the dataset is not setup properly (e.g,
 not found in `dataset/coco` or `dataset/voc`), PaddleDetection can automatically
-download them from [MSCOCO-2017](http://images.cocodataset.org) and
+download them from [COCO-2017](http://images.cocodataset.org) and
 [VOC2012](http://host.robots.ox.ac.uk/pascal/VOC), the decompressed datasets
 will be cached in `~/.cache/paddle/dataset/` and can be discovered automatically
 subsequently.
