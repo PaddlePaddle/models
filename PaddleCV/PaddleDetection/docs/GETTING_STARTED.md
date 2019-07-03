@@ -82,6 +82,8 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
                       --save_inference_model
 ```
 
+Save inference model by set `--save_inference_model`.
+
 
 ## FAQ
 
