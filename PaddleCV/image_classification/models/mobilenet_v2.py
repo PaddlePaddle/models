@@ -1,3 +1,17 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -5,7 +19,8 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ['MobileNetV2']
+__all__ = ['MobileNetV2', 'MobileNetV2_x0_25, ''MobileNetV2_x0_5', 'MobileNetV2_x1_0', 'MobileNetV2_x1_5', 'MobileNetV2_x2_0', 
+           'MobileNetV2_scale']
 
 train_parameters = {
     "input_size": [3, 224, 224],
@@ -21,11 +36,16 @@ train_parameters = {
 
 
 class MobileNetV2():
-    def __init__(self):
+    def __init__(self, scale=1.0, change_depth=False):
         self.params = train_parameters
+        self.scale = scale
+        self.change_depth=change_depth
+        
 
-    def net(self, input, class_dim=1000, scale=1.0):
-
+    def net(self, input, class_dim=1000):
+        scale = self.scale
+        change_depth = self.change_depth
+        #if change_depth is True, the new depth is 1.4 times as deep as before.
         bottleneck_params_list = [
             (1, 16, 1, 1),
             (6, 24, 2, 2),
@@ -34,6 +54,14 @@ class MobileNetV2():
             (6, 96, 3, 1),
             (6, 160, 3, 2),
             (6, 320, 1, 1),
+        ] if change_depth == False else [
+            (1, 16, 1, 1), 
+            (6, 24, 2, 2), 
+            (6, 32, 5, 2), 
+            (6, 64, 7, 2), 
+            (6, 96, 5, 1), 
+            (6, 160, 3, 2), 
+            (6, 320, 1, 1), 
         ]
 
         #conv1 
@@ -196,3 +224,29 @@ class MobileNetV2():
                 expansion_factor=t,
                 name=name + '_' + str(i + 1))
         return last_residual_block
+    
+    
+    
+def MobileNetV2_x0_25():
+    model = MobileNetV2(scale=0.25)
+    return model
+
+def MobileNetV2_x0_5():
+    model = MobileNetV2(scale=0.5)
+    return model
+
+def MobileNetV2_x1_0():
+    model = MobileNetV2(scale=1.0)
+    return model
+
+def MobileNetV2_x1_5():
+    model = MobileNetV2(scale=1.5)
+    return model
+
+def MobileNetV2_x2_0():
+    model = MobileNetV2(scale=2.0)
+    return model
+
+def MobileNetV2_scale():
+    model = MobileNetV2(scale=1.2, change_depth=True)
+    return model
