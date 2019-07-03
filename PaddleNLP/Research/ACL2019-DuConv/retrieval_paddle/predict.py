@@ -58,7 +58,7 @@ def main(args):
                 num_labels=num_labels,
                 is_prediction=True)
     
-    if args.use_cuda: 
+    if args.use_cuda and fluid.is_compiled_with_cuda() == True: 
         place = fluid.CUDAPlace(0)
         dev_count = fluid.core.get_cuda_device_count()
     else:
