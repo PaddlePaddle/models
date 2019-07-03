@@ -29,7 +29,7 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 - To check out hyper parameters used, please refer to the config file.
 
 Alternating between training epoch and evaluation run is possible, simply pass
-in `--eval=True` to do so (tested with `SSD` detector on PASCAL-VOC, not
+in `--eval=True` to do so (tested with `SSD` detector on Pascal-VOC, not
 recommended for two stage models or training sessions on COCO dataset)
 
 

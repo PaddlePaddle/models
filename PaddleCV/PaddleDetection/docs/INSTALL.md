@@ -13,7 +13,7 @@
 ## Introduction
 
 This document covers how to install PaddleDetection, its dependencies
-(including PaddlePaddle), together with COCO and PASCAL VOC dataset.
+(including PaddlePaddle), together with COCO and Pascal VOC dataset.
 
 For general information about PaddleDetection, please see [README.md](../README.md).
 
@@ -89,7 +89,7 @@ python ppdet/modeling/tests/test_architectures.py
 
 ## Datasets
 
-PaddleDetection includes support for [COCO](http://cocodataset.org) and [PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) by default, please follow these instructions to set up the dataset.
+PaddleDetection includes support for [COCO](http://cocodataset.org) and [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) by default, please follow these instructions to set up the dataset.
 
 **Create symlinks for local datasets:**
 
@@ -113,7 +113,7 @@ cd dataset/coco
 ./download.sh
 ```
 
-- PASCAL VOC
+- Pascal VOC
 
 ```
 cd dataset/voc

@@ -77,7 +77,7 @@ randomly color distortion, randomly cropping, randomly expansion, randomly inter
 
 **Notes:** In RetinaNet, the base LR is changed to 0.01 for minibatch size 16.
 
-### SSD on PASCAL VOC
+### SSD on Pascal VOC
 
 | Backbone     | Size | Image/gpu | Lr schd | Box AP | Download  |
 | :----------- | :--: | :-----: | :-----: | :----: | :-------: |
