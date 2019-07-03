@@ -150,7 +150,7 @@ def get_data_iter(raw_data, batch_size, mode='train', enable_ce=False):
     data_len = len(src_data)
 
     index = np.arange(data_len)
-    if mode == "train":
+    if mode == "train" and not enable_ce:
         np.random.shuffle(index)
 
     def to_pad_np(data, source=False):
