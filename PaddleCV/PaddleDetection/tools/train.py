@@ -153,6 +153,8 @@ def main():
 
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
+    snapshot_loss = 0.
+    snapshot_time = 0.
     for it in range(start_iter, cfg.max_iters):
         start_time = end_time
         end_time = time.time()
@@ -163,9 +165,19 @@ def main():
         strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
             it, np.mean(outs[-1]), logs, end_time - start_time)
         logger.info(strs)
+        snapshot_loss += stats['loss']
+        snapshot_time += end_time - start_time
 
         if it > 0 and it % cfg.snapshot_iter == 0:
             checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
+
+            # log out snapshot stat
+            snapshot_loss /= cfg.snapshot_iter
+            snapshot_time /= cfg.snapshot_iter
+            logger.info("Snapshot {}: average loss: {:.6f}, average time: "
+                        "{:.3f}".format(it, snapshot_loss, snapshot_time))
+            snapshot_loss = 0.
+            snapshot_time = 0.
 
             if FLAGS.eval:
                 # evaluation
