@@ -38,10 +38,10 @@ Supported Architectures:
 
 |                    | ResNet | ResNet-vd <sup>[1](#vd)</sup> | ResNeXt-vd | SENet | MobileNet | DarkNet |
 |--------------------|:------:|------------------------------:|:----------:|:-----:|:---------:|:-------:|
-| Faster R-CNN       | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       |
+| Faster R-CNN       | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
 | Faster R-CNN + FPN | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       |
-| Mask R-CNN         | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       |
-| Mask R-CNN + FPN   | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       |
+| Mask R-CNN         | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
+| Mask R-CNN + FPN   | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
 | Cascade R-CNN      | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       |
 | RetinaNet          | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       |
 | Yolov3             | ✓      |                             ✗ | ✗          | ✗     | ✓         | ✓       |
