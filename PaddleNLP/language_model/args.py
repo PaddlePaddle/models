@@ -55,6 +55,11 @@ def parse_args():
         default=True,
         help='Whether using gpu in parallel [True|False]')
     parser.add_argument(
+        '--profile',
+        type=str2bool,
+        default=False,
+        help='Whether profiling the trainning [True|False]')
+    parser.add_argument(
         '--use_py_reader',
         type=str2bool,
         default=False,
