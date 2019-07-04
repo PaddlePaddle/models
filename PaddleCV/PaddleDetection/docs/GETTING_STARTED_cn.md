@@ -24,12 +24,12 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 
 - 数据集默认存储在`dataset/coco`中（可配置）。
 - 若本地未找到数据集，将自动下载数据集并保存在`~/.cache/paddle/dataset`中。
-- 预训练模型自动下载并缓存在`〜/.cache/paddle/weights`中。
+- 预训练模型自动下载并保存在`〜/.cache/paddle/weights`中。
 - 模型checkpoints默认保存在`output`中（可配置）。
 - 更多参数配置，请参考配置文件。
 
 
-可通过设置`--eval`支持在训练epoch中交替执行评估（已在在Pascal-VOC数据集上
+可通过设置`--eval`在训练epoch中交替执行评估（已在在Pascal-VOC数据集上
 用`SSD`检测器验证，不推荐在COCO数据集上的两阶段模型上执行交替评估）
 
 
@@ -51,7 +51,6 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 
 
 - 单图片推断
-- Run inference on a single image:
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0
@@ -87,10 +86,10 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 ## FAQ
 
 **Q:**  为什么我使用单GPU训练loss会出`NaN`? </br>
-**A:**  默认学习率是适配多GPU培训(8x GPU)，若使用单GPU训练，须对应调整学习率（例如，除以8）。
+**A:**  默认学习率是适配多GPU训练(8x GPU)，若使用单GPU训练，须对应调整学习率（例如，除以8）。
 
 
 **Q:**  如何减少GPU显存使用率? </br>
-**A:**  可通过设置环境变量`FLAGS_conv_workspace_size_limit`为较小的值来减少显存消耗，
-并且不会影响训练速度。以Mask-RCNN（R50）为例，设置`export FLAGS_conv_workspace_size_limit = 512`，
+**A:**  可通过设置环境变量`FLAGS_conv_workspace_size_limit`为较小的值来减少显存消耗，并且不
+会影响训练速度。以Mask-RCNN（R50）为例，设置`export FLAGS_conv_workspace_size_limit = 512`，
 batch size可以达到每GPU 4 (Tesla V100 16GB)。

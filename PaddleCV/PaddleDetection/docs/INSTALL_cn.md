@@ -5,7 +5,7 @@
 
 - [简介](#introduction)
 - [PaddlePaddle](#paddlepaddle)
-- [其他依赖](#other-dependencies)
+- [其他依赖安装](#other-dependencies)
 - [PaddleDetection](#paddle-detection)
 - [数据集](#datasets)
 
@@ -14,7 +14,7 @@
 
 这份文档介绍了如何安装PaddleDetection及其依赖项(包括PaddlePaddle)，以及COCO和Pascal VOC数据集。
 
-PaddleDetection的相关信息，请参考[README.md](../README_cn.md).
+PaddleDetection的相关信息，请参考[README.md](../README.md).
 
 
 ## PaddlePaddle
@@ -22,7 +22,7 @@ PaddleDetection的相关信息，请参考[README.md](../README_cn.md).
 
 运行PaddleDetection需要PaddlePaddle Fluid v.1.5及更高版本。请按照[安装文档](http://www.paddlepaddle.org.cn/)中的说明进行操作。
 
-请确保您的PaddlePaddle安装成功并且您的PaddlePaddle版本不低于需求版本。使用以下命令进行验证。
+请确保您的PaddlePaddle安装成功并且版本不低于需求版本。使用以下命令进行验证。
 
 ```
 # 在您的Python解释器中确认PaddlePaddle安装成功
@@ -41,7 +41,7 @@ python -c "import paddle; print(paddle.__version__)"
 - nccl >= 2.1.2
 
 
-## 其他依赖
+## 其他依赖安装
 
 [COCO-API](https://github.com/cocodataset/cocoapi):
 
@@ -103,7 +103,6 @@ ln -sf <path/to/voc> <path/to/paddle_detection>/dataset/voc
 ```
 
 **手动下载数据集：**
-**Download datasets manually:**
 
 若您本地没有数据集，可通过如下命令下载：
 
@@ -122,7 +121,6 @@ cd dataset/voc
 ```
 
 **自动下载数据集：**
-
 
 若您在数据集未成功设置（例如，在`dataset/coco`或`dataset/voc`中找不到）的情况下开始运行，
 PaddleDetection将自动从[COCO-2017](http://images.cocodataset.org)或
