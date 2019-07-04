@@ -152,15 +152,21 @@ class LightNASSpace(SearchSpace):
                         op_params.append(
                             ('conv', 0, 1, test_iter, 1, 0, 1, out_c, 1, 1,
                              out_c / 4, 1, 1, 0, 1, 1))
+                        op_params.append(
+                            ('eltwise', 0, 1, test_iter, 2, 1, out_c / 4, 1, 1))
                         op_params.append(('activation', 0, 1, test_iter, 'relu',
                                           1, out_c / 4, 1, 1))
                         op_params.append(
                             ('conv', 0, 1, test_iter, 1, 0, 1, out_c / 4, 1, 1,
                              out_c, 1, 1, 0, 1, 1))
+                        op_params.append(
+                            ('eltwise', 0, 1, test_iter, 2, 1, out_c, 1, 1))
                         op_params.append(('activation', 0, 1, test_iter,
                                           'sigmoid', 1, out_c, 1, 1))
                         op_params.append(('eltwise', 0, 1, test_iter, 1, 1,
                                           out_c, in_shape / s, in_shape / s))
+                        op_params.append(('activation', 0, 1, test_iter, 'relu',
+                                          1, out_c, in_shape / s, in_shape / s))
 
         return op_params
 
