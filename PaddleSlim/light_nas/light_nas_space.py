@@ -118,6 +118,8 @@ class LightNASSpace(SearchSpace):
                 # expansion
                 op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, c, in_shape,
                                   in_shape, c * t, 1, 1, 0, 1, 1))
+                op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1,
+                                  c * t, in_shape, in_shape))
                 op_params.append(('activation', 0, 1, test_iter, 'relu6', 1,
                                   c * t, in_shape, in_shape))
 
@@ -126,6 +128,8 @@ class LightNASSpace(SearchSpace):
                     op_params.append(
                         ('conv', 0, 1, test_iter, 0, 0, 1, c * t, in_shape,
                          in_shape, c * t, c * t, k, (int(k - 1) / 2), s, 1))
+                op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1,
+                                  c * t, in_shape / s, in_shape / s))
                 op_params.append(('activation', 0, 1, test_iter, 'relu6', 1,
                                   c * t, in_shape / s, in_shape / s))
 
@@ -134,6 +138,8 @@ class LightNASSpace(SearchSpace):
                     op_params.append(
                         ('conv', 0, 1, test_iter, 0, 0, 1, c * t, in_shape / s,
                          in_shape / s, out_c, 1, 1, 0, 1, 1))
+                    op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1,
+                                      out_c, in_shape / s, in_shape / s))
 
                     # shortcut
                     if ifshortcut:
@@ -176,6 +182,8 @@ class LightNASSpace(SearchSpace):
         # conv1_1
         op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, image_shape[0],
                           image_shape[1], image_shape[2], 32, 1, 3, 1, 2, 1))
+        op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1, 32,
+                          image_shape[1] / 2, image_shape[2] / 2))
         op_params.append(('activation', 0, 1, test_iter, 'relu6', 1, 32,
                           image_shape[1] / 2, image_shape[2] / 2))
 
@@ -209,6 +217,8 @@ class LightNASSpace(SearchSpace):
         # last conv
         op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, 320, in_shape,
                           in_shape, 1280, 1, 1, 0, 1, 1))
+        op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1, 1280,
+                          in_shape, in_shape))
         op_params.append(
             ('activation', 0, 1, 100, 'relu6', 1, 1280, in_shape, in_shape))
         op_params.append(('pooling', 0, 1, test_iter, 1, 1, 1280, in_shape,
@@ -217,6 +227,15 @@ class LightNASSpace(SearchSpace):
                           class_dim, 1, 1, 0, 1, 1))
 
         return list(set(op_params))
+
+    def get_model_latency(self, tokens):
+        """Get model latency according to tokens.
+        Args:
+            tokens(list<int>): The tokens which represent a network.
+        Return:
+            (float): model latency.
+        """
+        pass
 
     def create_net(self, tokens=None):
         """Create a network for training by tokens.
