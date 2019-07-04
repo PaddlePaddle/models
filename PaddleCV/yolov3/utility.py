@@ -95,11 +95,10 @@ def check_gpu(use_gpu):
     err = "Config use_gpu cannot be set as True while you are " \
           "using paddlepaddle cpu version ! \nPlease try: \n" \
           "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
-          "\t2. Set use_gpu as False in config file to run " \
-          "model on CPU"
+          "\t2. Set --use_gpu=False to run model on CPU"
 
     try:
-        if use_gpu and not fluid.core.is_compiled_with_cuda():
+        if use_gpu and not fluid.is_compiled_with_cuda():
             print(err)
             sys.exit(1)
     except Exception as e:
