@@ -309,7 +309,6 @@ def get_ops_from_program(program, output_file=None, test_iter=100):
         elif current_op.type == 'image_resize':
             tmp = resize_op_params(blocks, current_op, test_iter)
         elif current_op.type == 'mul':
-            print("come to fc layer...")
             tmp = fc_op_params(blocks, current_op, test_iter)
         else:
             tmp = []
