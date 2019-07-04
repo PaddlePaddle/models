@@ -56,6 +56,11 @@ def train():
     init_scale = args.init_scale
     max_grad_norm = args.max_grad_norm
     hidden_size = args.hidden_size
+
+    if args.enable_ce:
+        fluid.default_main_program().random_seed = 102
+        framework.default_startup_program().random_seed = 102
+
     # Training process
 
     if args.attention:
@@ -155,11 +160,17 @@ def train():
 
         return ppl
 
+    ce_time = []
+    ce_ppl = []
     max_epoch = args.max_epoch
     for epoch_id in range(max_epoch):
         start_time = time.time()
         print("epoch id", epoch_id)
-        train_data_iter = reader.get_data_iter(train_data, batch_size)
+        if args.enable_ce:
+            train_data_iter = reader.get_data_iter(train_data, batch_size, enable_ce=True)
+        else:
+            train_data_iter = reader.get_data_iter(train_data, batch_size)
+            
 
         total_loss = 0
         word_count = 0.0
@@ -177,8 +188,12 @@ def train():
 
             if batch_id > 0 and batch_id % 100 == 0:
                 print("ppl", batch_id, np.exp(total_loss / word_count))
+                ce_ppl.append(np.exp(total_loss / word_count))
                 total_loss = 0.0
                 word_count = 0.0
+        end_time = time.time()
+        time_gap = end_time - start_time
+        ce_time.append(time_gap)
 
         dir_name = args.model_path + "/epoch_" + str(epoch_id)
         print("begin to save", dir_name)
@@ -188,6 +203,28 @@ def train():
         print("dev ppl", dev_ppl)
         test_ppl = eval(test_data)
         print("test ppl", test_ppl)
+
+    if args.enable_ce:
+        card_num = get_cards()
+        _ppl = 0
+        _time = 0
+        try:
+            _time = ce_time[-1]
+            _ppl = ce_ppl[-1]
+        except:
+            print("ce info error")
+        print("kpis\ttrain_duration_card%s\t%s" %
+                (card_num, _time))
+        print("kpis\ttrain_ppl_card%s\t%f" %
+            (card_num, _ppl))
+
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    if cards != '':
+        num = len(cards.split(","))
+    return num
 
 
 if __name__ == '__main__':
