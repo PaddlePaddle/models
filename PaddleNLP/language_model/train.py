@@ -40,6 +40,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 from args import *
 sys.path.append("../")
+from model_check import check_cuda
 from models.language_model import lm_model
 from config import RNNConfig
 import logging
@@ -77,6 +78,9 @@ def save_para_npz(train_prog, train_exe):
 
 def main():
     args = parse_args()
+
+    check_cuda(args.use_cuda)
+
     logger = logging.getLogger("lm")
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
@@ -331,7 +335,7 @@ def main():
                 cost_train = np.array(fetch_outs[0])
                 lr = np.array(fetch_outs[1])
                 init_hidden = np.array(fetch_list[2])
-                init_cell = np.array( fetch_list[3] )
+                init_cell = np.array(fetch_list[3])
 
                 total_loss += cost_train
                 iters += config.num_steps
