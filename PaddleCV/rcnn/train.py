@@ -250,8 +250,6 @@ def train():
                   (gpu_num, total_time / epoch_idx))
             print("kpis\ttrain_loss_card%s\t%s" % (gpu_num, loss))
 
-        return np.mean(every_pass_loss)
-
     if cfg.use_pyreader:
         train_loop_pyreader()
     else:
