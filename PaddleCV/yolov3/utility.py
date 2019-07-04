@@ -23,7 +23,7 @@ import distutils.util
 import numpy as np
 import six
 from collections import deque
-from paddle.fluid import core
+import paddle.fluid as fluid
 import argparse
 import functools
 from config import *
@@ -85,6 +85,25 @@ class SmoothedValue(object):
 
     def get_mean_value(self):
         return self.loss_sum / self.iter_cnt
+
+
+def check_gpu(use_gpu):
+    """
+    Log error and exit when set use_gpu=True in paddlepaddle
+    cpu version.
+    """
+    err = "Config use_gpu cannot be set as True while you are " \
+          "using paddlepaddle cpu version ! \nPlease try: \n" \
+          "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
+          "\t2. Set use_gpu as False in config file to run " \
+          "model on CPU"
+
+    try:
+        if use_gpu and not fluid.core.is_compiled_with_cuda():
+            print(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
 
 
 def parse_args():
