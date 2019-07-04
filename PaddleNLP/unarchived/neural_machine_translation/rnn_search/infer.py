@@ -17,120 +17,146 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import time
 import os
-import six
+import random
+
+import math
 
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.framework as framework
 from paddle.fluid.executor import Executor
-from paddle.fluid.contrib.decoder.beam_search_decoder import *
+
+import reader
+
+import sys
+if sys.version[0] == '2':
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
+import os
 
 from args import *
-import attention_model
-import no_attention_model
+#from . import lm_model
+import logging
+import pickle
+
+from attention_model import AttentionModel
+
+from base_model import BaseModel
+
+SEED = 123
 
 
-def infer():
+def train():
     args = parse_args()
 
-    # Inference
-    if args.no_attention:
-        translation_ids, translation_scores, feed_order = \
-            no_attention_model.seq_to_seq_net(
-            args.embedding_dim,
-            args.encoder_size,
-            args.decoder_size,
-            args.dict_size,
-            args.dict_size,
-            True,
-            beam_size=args.beam_size,
-            max_length=args.max_length)
-    else:
-        translation_ids, translation_scores, feed_order = \
-            attention_model.seq_to_seq_net(
-            args.embedding_dim,
-            args.encoder_size,
-            args.decoder_size,
-            args.dict_size,
-            args.dict_size,
-            True,
-            beam_size=args.beam_size,
-            max_length=args.max_length)
+    num_layers = args.num_layers
+    src_vocab_size = args.src_vocab_size
+    tar_vocab_size = args.tar_vocab_size
+    batch_size = args.batch_size
+    dropout = args.dropout
+    init_scale = args.init_scale
+    max_grad_norm = args.max_grad_norm
+    hidden_size = args.hidden_size
+    # inference process
 
-    test_batch_generator = paddle.batch(
-        paddle.reader.shuffle(
-            paddle.dataset.wmt14.test(args.dict_size), buf_size=1000),
-        batch_size=args.batch_size,
-        drop_last=False)
+    print("src", src_vocab_size)
+
+    # dropout type using upscale_in_train, dropout can be remove in inferecen
+    # So we can set dropout to 0
+    if args.attention:
+        model = AttentionModel(
+            hidden_size,
+            src_vocab_size,
+            tar_vocab_size,
+            batch_size,
+            num_layers=num_layers,
+            init_scale=init_scale,
+            dropout=0.0)
+    else:
+        model = BaseModel(
+            hidden_size,
+            src_vocab_size,
+            tar_vocab_size,
+            batch_size,
+            num_layers=num_layers,
+            init_scale=init_scale,
+            dropout=0.0)
+
+    beam_size = args.beam_size
+    trans_res = model.build_graph(mode='beam_search', beam_size=beam_size)
+    # clone from default main program and use it as the validation program
+    main_program = fluid.default_main_program()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = Executor(place)
     exe.run(framework.default_startup_program())
 
-    model_path = os.path.join(args.save_dir, str(args.pass_num))
-    fluid.io.load_persistables(
-        executor=exe,
-        dirname=model_path,
-        main_program=framework.default_main_program())
+    source_vocab_file = args.vocab_prefix + "." + args.src_lang
+    infer_file = args.infer_file
 
-    src_dict, trg_dict = paddle.dataset.wmt14.get_dict(args.dict_size)
+    infer_data = reader.raw_mono_data(source_vocab_file, infer_file)
 
-    feed_list = [
-        framework.default_main_program().global_block().var(var_name)
-        for var_name in feed_order[0:1]
-    ]
-    feeder = fluid.DataFeeder(feed_list, place)
+    def prepare_input(batch, epoch_id=0, with_lr=True):
+        src_ids, src_mask, tar_ids, tar_mask = batch
+        res = {}
+        src_ids = src_ids.reshape((src_ids.shape[0], src_ids.shape[1], 1))
+        in_tar = tar_ids[:, :-1]
+        label_tar = tar_ids[:, 1:]
 
-    for batch_id, data in enumerate(test_batch_generator()):
-        # The value of batch_size may vary in the last batch
-        batch_size = len(data)
+        in_tar = in_tar.reshape((in_tar.shape[0], in_tar.shape[1], 1))
+        in_tar = np.zeros_like(in_tar, dtype='int64')
+        label_tar = label_tar.reshape(
+            (label_tar.shape[0], label_tar.shape[1], 1))
+        label_tar = np.zeros_like(label_tar, dtype='int64')
 
-        # Setup initial ids and scores lod tensor
-        init_ids_data = np.array([0 for _ in range(batch_size)], dtype='int64')
-        init_scores_data = np.array(
-            [1. for _ in range(batch_size)], dtype='float32')
-        init_ids_data = init_ids_data.reshape((batch_size, 1))
-        init_scores_data = init_scores_data.reshape((batch_size, 1))
-        init_recursive_seq_lens = [1] * batch_size
-        init_recursive_seq_lens = [
-            init_recursive_seq_lens, init_recursive_seq_lens
-        ]
-        init_ids = fluid.create_lod_tensor(init_ids_data,
-                                           init_recursive_seq_lens, place)
-        init_scores = fluid.create_lod_tensor(init_scores_data,
-                                              init_recursive_seq_lens, place)
+        res['src'] = src_ids
+        res['tar'] = in_tar
+        res['label'] = label_tar
+        res['src_sequence_length'] = src_mask
+        res['tar_sequence_length'] = tar_mask
 
-        # Feed dict for inference
-        feed_dict = feeder.feed([[x[0]] for x in data])
-        feed_dict['init_ids'] = init_ids
-        feed_dict['init_scores'] = init_scores
+        return res, np.sum(tar_mask)
 
-        fetch_outs = exe.run(framework.default_main_program(),
-                             feed=feed_dict,
-                             fetch_list=[translation_ids, translation_scores],
-                             return_numpy=False)
+    dir_name = args.reload_model
+    print("dir name", dir_name)
+    fluid.io.load_params(exe, dir_name)
 
-        # Split the output words by lod levels
-        lod_level_1 = fetch_outs[0].lod()[1]
-        token_array = np.array(fetch_outs[0])
-        result = []
-        for i in six.moves.xrange(len(lod_level_1) - 1):
-            sentence_list = [
-                trg_dict[token]
-                for token in token_array[lod_level_1[i]:lod_level_1[i + 1]]
-            ]
-            sentence = " ".join(sentence_list[1:-1])
-            result.append(sentence)
-        lod_level_0 = fetch_outs[0].lod()[0]
-        paragraphs = [
-            result[lod_level_0[i]:lod_level_0[i + 1]]
-            for i in six.moves.xrange(len(lod_level_0) - 1)
-        ]
+    train_data_iter = reader.get_data_iter(infer_data, 1, mode='eval')
 
-        for paragraph in paragraphs:
-            print(paragraph)
+    tar_id2vocab = []
+    tar_vocab_file = args.vocab_prefix + "." + args.tar_lang
+    with open(tar_vocab_file, "r") as f:
+        for line in f.readlines():
+            tar_id2vocab.append(line.strip())
+
+    infer_output_file = args.infer_output_file
+
+    out_file = open(infer_output_file, 'w')
+
+    for batch_id, batch in enumerate(train_data_iter):
+        input_data_feed, word_num = prepare_input(batch, epoch_id=0)
+
+        fetch_outs = exe.run(feed=input_data_feed,
+                             fetch_list=[trans_res.name],
+                             use_program_cache=False)
+
+        res = [tar_id2vocab[e] for e in fetch_outs[0].reshape(-1)]
+
+        res = res[1:]
+
+        new_res = []
+        for ele in res:
+            if ele == "</s>":
+                break
+            new_res.append(ele)
+
+        out_file.write(' '.join(new_res))
+        out_file.write('\n')
+
+    out_file.close()
 
 
 if __name__ == '__main__':
-    infer()
+    train()
