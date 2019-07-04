@@ -66,8 +66,9 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | ResNet34     | 320  |    8    |   270e  |  31.4  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
 
 **NOTE**: Yolo v3 is trained in 8 GPU with total batch size as 64 and trained 270 epoches. Yolo v3 training data augmentations: mixup,
-randomly color distortion, randomly cropping, randomly expansion, randomly interpolation method, randomly flippling. Yolo v3 is trained
-with random shapes, inferences can be performed on different image sizes, results of image size 608/416/320 above used the same model weights.
+randomly color distortion, randomly cropping, randomly expansion, randomly interpolation method, randomly flippling. Yolo v3 used randomly
+reshaped minibatch in training, inferences can be performed on different image sizes with the same model weights, and we provided evaluation
+results of image size 608/416/320 above.
 
 ### RetinaNet
 
