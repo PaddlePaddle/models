@@ -81,6 +81,24 @@ def get_test_images(infer_dir, infer_img):
     return images
 
 
+def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
+    cfg_name = os.path.basename(FLAGS.config).split('.')[0]
+    save_dir = os.path.join(FLAGS.output_dir, cfg_name)
+    feeded_var_names = [var.name for var in feed_vars.values()]
+    # im_id is only used for visualize, not used in inference model
+    feeded_var_names.remove('im_id')
+    target_vars = test_fetches.values()
+    logger.info("Save inference model to {}, input: {}, output: "
+                "{}...".format(save_dir, feeded_var_names,
+                            [var.name for var in target_vars]))
+    fluid.io.save_inference_model(save_dir, 
+                                  feeded_var_names=feeded_var_names,
+                                  target_vars=target_vars,
+                                  executor=exe,
+                                  main_program=infer_prog,
+                                  params_filename="__parmas__")
+
+
 def main():
     cfg = load_config(FLAGS.config)
 
@@ -118,6 +136,9 @@ def main():
     exe.run(startup_prog)
     if cfg.weights:
         checkpoint.load_checkpoint(exe, infer_prog, cfg.weights)
+
+    if FLAGS.save_inference_model:
+        save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
 
     # parse infer fetches
     extra_keys = []
@@ -166,11 +187,12 @@ def main():
             image_path = imid2path[int(im_id)]
             image = Image.open(image_path).convert('RGB')
             image = visualize_results(image,
-                                      int(im_id), catid2name, 0.5, bbox_results,
+                                      int(im_id), catid2name,
+                                      FLAGS.draw_threshold, bbox_results,
                                       mask_results, is_bbox_normalized)
             save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
-            image.save(save_name)
+            image.save(save_name, quality=95)
 
 
 if __name__ == '__main__':
@@ -190,5 +212,15 @@ if __name__ == '__main__':
         type=str,
         default="output",
         help="Directory for storing the output visualization files.")
+    parser.add_argument(
+        "--draw_threshold",
+        type=float,
+        default=0.5,
+        help="Threshold to reserve the result for visualization.")
+    parser.add_argument(
+        "--save_inference_model",
+        action='store_true',
+        default=False,
+        help="Save inference model in output_dir if True.")
     FLAGS = parser.parse_args()
     main()

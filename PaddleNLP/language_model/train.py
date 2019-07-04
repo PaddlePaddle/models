@@ -20,12 +20,13 @@ import numpy as np
 import time
 import os
 import random
-
 import math
+import contextlib
 
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.framework as framework
+import paddle.fluid.profiler as profiler
 from paddle.fluid.executor import Executor
 
 import reader
@@ -46,6 +47,15 @@ import logging
 import pickle
 
 SEED = 123
+
+
+@contextlib.contextmanager
+def profile_context(profile=True):
+    if profile:
+        with profiler.profiler('All', 'total', '/tmp/paddingrnn.profile'):
+            yield
+    else:
+        yield
 
 
 def get_current_model_para(train_prog, train_exe):
@@ -273,8 +283,10 @@ def main():
             batch_start_time = time.time()
             fetch_outs = exe.run(train_program,
                                  feed=input_data_feed,
-                                 fetch_list=[loss.name, "learning_rate", \
-                                             last_hidden.name, last_cell.name ],
+                                 fetch_list=[
+                                     loss.name, "learning_rate",
+                                     last_hidden.name, last_cell.name
+                                 ],
                                  use_program_cache=True)
             batch_time = time.time() - batch_start_time
             batch_times.append(batch_time)
@@ -324,14 +336,16 @@ def main():
 
                 fetch_outs = exe.run(train_program,
                                      feed=data_feeds,
-                                     fetch_list=[loss.name, "learning_rate", \
-                                             last_hidden.name, last_cell.name ],
+                                     fetch_list=[
+                                         loss.name, "learning_rate",
+                                         last_hidden.name, last_cell.name
+                                     ],
                                      use_program_cache=True)
 
                 cost_train = np.array(fetch_outs[0])
                 lr = np.array(fetch_outs[1])
-                init_hidden = np.array(fetch_list[2])
-                init_cell = np.array( fetch_list[3] )
+                init_hidden = np.array(fetch_outs[2])
+                init_cell = np.array(fetch_outs[3])
 
                 total_loss += cost_train
                 iters += config.num_steps
@@ -424,7 +438,9 @@ def main():
                 executor=exe, dirname=save_model_dir, main_program=main_program)
             print("Saved model to: %s.\n" % save_model_dir)
 
-    train()
+    with profile_context(args.profile):
+        train()
+
     test_ppl = eval(test_data)
     print("Test ppl:", test_ppl[0])
 
