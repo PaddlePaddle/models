@@ -15,7 +15,8 @@
 # limitations under the License.
 # ==============================================================================
 
-# download pre_train model
-wget ftp://cp01-rdqa04-dev119-zhangxiyuan01.epc.baidu.com/home/users/zhangxiyuan01/models/ernie_model.tar.gz
-tar -xvf ernie_model.tar.gz
-rm ernie_model.tar.gz
+# download pretrained ERNIE model
+wget --no-check-certificate https://ernie.bj.bcebos.com/ERNIE_en_1.0.tgz
+tar -xvf ERNIE_en_1.0.tgz
+rm ERNIE_en_1.0.tgz
+ln -s ERNIE_en_1.0 ernie_model

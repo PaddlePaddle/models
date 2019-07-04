@@ -9,7 +9,7 @@ This paper describes our system participated in Task 9 of SemEval-2019: the task
 
 ## 2. Quick Start
 ### Installation
-This project depends on python2.7 and paddle.fluid = 1.3.2, please follow [quick start](http://www.paddlepaddle.org/#quick-start) to install.
+This project depends on python2.7 and paddlepaddle-gpu = 1.3.2, please follow [quick start](http://www.paddlepaddle.org/#quick-start) to install.
 ### Data Preparation
 - Download the competition's data
 

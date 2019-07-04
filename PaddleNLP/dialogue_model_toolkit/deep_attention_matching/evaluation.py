@@ -5,12 +5,13 @@ Evaluation
 import sys
 import six
 import numpy as np
-from sklearn.metrics import average_precision_score
+
 
 def evaluate_ubuntu(file_path):
     """
     Evaluate on ubuntu data
     """
+
     def get_p_at_n_in_m(data, n, m, ind):
         """
         Recall n at m
@@ -18,7 +19,7 @@ def evaluate_ubuntu(file_path):
         pos_score = data[ind][0]
         curr = data[ind:ind + m]
         curr = sorted(curr, key=lambda x: x[0], reverse=True)
-    
+
         if curr[n - 1][0] <= pos_score:
             return 1
         return 0
@@ -56,7 +57,8 @@ def evaluate_ubuntu(file_path):
         "1_in_2": p_at_1_in_2 / length,
         "1_in_10": p_at_1_in_10 / length,
         "2_in_10": p_at_2_in_10 / length,
-        "5_in_10": p_at_5_in_10 / length}
+        "5_in_10": p_at_5_in_10 / length
+    }
 
     return result_dict
 
@@ -65,6 +67,7 @@ def evaluate_douban(file_path):
     """
     Evaluate douban data
     """
+
     def mean_average_precision(sort_data):
         """
         Evaluate mean average precision
@@ -76,7 +79,7 @@ def evaluate_douban(file_path):
                 count_1 += 1
                 sum_precision += 1.0 * count_1 / (index + 1)
         return sum_precision / count_1
-    
+
     def mean_reciprocal_rank(sort_data):
         """
         Evaluate MRR
@@ -84,7 +87,7 @@ def evaluate_douban(file_path):
         sort_lable = [s_d[1] for s_d in sort_data]
         assert 1 in sort_lable
         return 1.0 / (1 + sort_lable.index(1))
-    
+
     def precision_at_position_1(sort_data):
         """
         Evaluate precision
@@ -93,7 +96,7 @@ def evaluate_douban(file_path):
             return 1
         else:
             return 0
-    
+
     def recall_at_position_k_in_10(sort_data, k):
         """"
         Evaluate recall
@@ -101,7 +104,7 @@ def evaluate_douban(file_path):
         sort_lable = [s_d[1] for s_d in sort_data]
         select_lable = sort_lable[:k]
         return 1.0 * select_lable.count(1) / sort_lable.count(1)
-    
+
     def evaluation_one_session(data):
         """
         Evaluate one session
@@ -147,7 +150,6 @@ def evaluate_douban(file_path):
         "P_1": 1.0 * sum_p_1 / total_num,
         "1_in_10": 1.0 * sum_r_1 / total_num,
         "2_in_10": 1.0 * sum_r_2 / total_num,
-        "5_in_10": 1.0 * sum_r_5 / total_num}
+        "5_in_10": 1.0 * sum_r_5 / total_num
+    }
     return result_dict
-
-

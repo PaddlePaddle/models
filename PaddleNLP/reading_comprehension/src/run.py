@@ -640,6 +640,12 @@ if __name__ == '__main__':
         logger.addHandler(console_handler)
     args = parse_args()
     logger.info('Running with args : {}'.format(args))
+    try:
+        if fluid.is_compiled_with_cuda() != True and args.use_cuda == True:
+            print("\nYou can not set use_cuda = True in the model because you are using paddlepaddle-cpu.\nPlease: 1. Install paddlepaddle-gpu to run your models on GPU or 2. Set use_cuda = False to run models on CPU.\n")
+            sys.exit(1)
+    except Exception as e:
+        pass
     if args.prepare:
         prepare(logger, args)
     if args.train:
