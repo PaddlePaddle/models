@@ -15,13 +15,7 @@ train_loss = CostKpi('train_loss', 0.01, 0, actived=True, desc="train loss")
 test_acc1 = AccKpi('test_acc1', 0.01, 0, actived=True, desc='test acc1')
 test_acc5 = AccKpi('test_acc5', 0.01, 0, actived=True, desc='test acc5')
 test_loss = CostKpi('test_loss', 0.01, 0, actived=True, desc='test loss')
-#train_speed_kpi = DurationKpi(
-#    'train_speed',
-#    0.05,
-#    0,
-#    actived=True,
-#    unit_repr='seconds/image',
-#    desc='train speed in one GPU card')
+
 tracking_kpis = [train_acc1, train_acc5, train_loss,
                  test_acc1, test_acc5, test_loss]
 

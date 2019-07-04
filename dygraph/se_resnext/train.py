@@ -329,12 +329,12 @@ def eval(model, data):
         label = to_variable(y_data)
         label._stop_gradient = True
         out = model(img)
-        cost,pred = fluid.layers.softmax_with_cross_entropy(out,label,return_softmax=True)
-        avg_loss = fluid.layers.mean(x=cost)
 
-        acc_top1 = fluid.layers.accuracy(input=pred, label=label, k=1)
-        acc_top5 = fluid.layers.accuracy(input=pred, label=label, k=5)
-
+        softmax_out = fluid.layers.softmax(out,use_cudnn=False)
+        loss = fluid.layers.cross_entropy(input=softmax_out, label=label)
+        avg_loss = fluid.layers.mean(x=loss)
+        acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
+        acc_top5 = fluid.layers.accuracy(input=softmax_out, label=label, k=5)
         dy_out = avg_loss.numpy()
 
         total_loss += dy_out
@@ -418,6 +418,7 @@ def train():
                 total_acc5 += acc_top5.numpy()
                 total_sample += 1
                 if batch_id % 10 == 0:
+                    print(fluid.dygraph.base._print_debug_msg())
                     print( "epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f lr %0.5f" % \
                            ( epoch_id, batch_id, total_loss / total_sample, \
                              total_acc1 / total_sample, total_acc5 / total_sample, lr))
