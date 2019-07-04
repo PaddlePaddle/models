@@ -14,7 +14,7 @@
 
 这份文档介绍了如何安装PaddleDetection及其依赖项(包括PaddlePaddle)，以及COCO和Pascal VOC数据集。
 
-PaddleDetection的相关信息，请参考[README.md](../README.md).
+PaddleDetection的相关信息，请参考[README.md](../README_cn.md).
 
 
 ## PaddlePaddle
@@ -130,4 +130,4 @@ PaddleDetection将自动从[COCO-2017](http://images.cocodataset.org)或
 `〜/.cache/paddle/dataset/`目录下，下次运行时，也可自动从该目录发现数据集。
 
 
-**说明：** 更多有关数据集的介绍，请参考[DATA.md](DATA.md)
+**说明：** 更多有关数据集的介绍，请参考[DATA.md](DATA_cn.md)
