@@ -40,7 +40,7 @@ def parse_args():
         "--rnn_model",
         type=str,
         default="static",
-        help="model_type [static|padding|cudnn]")
+        help="model_type [static|padding|cudnn|basic_lstm]")
     parser.add_argument(
         "--data_path", type=str, help="all the data for train,valid,test")
     parser.add_argument('--para_init', action='store_true')
@@ -54,6 +54,11 @@ def parse_args():
         type=str2bool,
         default=True,
         help='Whether using gpu in parallel [True|False]')
+    parser.add_argument(
+        '--profile',
+        type=str2bool,
+        default=False,
+        help='Whether profiling the trainning [True|False]')
     parser.add_argument(
         '--use_py_reader',
         type=str2bool,

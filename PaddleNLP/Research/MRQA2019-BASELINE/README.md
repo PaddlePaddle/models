@@ -5,7 +5,7 @@ Machine Reading for Question Answering (MRQA), which requires machines to compre
 Although recent systems achieve impressive results on the several benchmarks, these systems are primarily evaluated on in-domain accuracy. The [2019 MRQA Shared Task](https://mrqa.github.io/shared) focuses on testing the generalization  of the existing systems on out-of-domain datasets. 
 
 In this repository, we provide a baseline for the 2019 MRQA Shared Task that is built on top of [PaddlePaddle](https://github.com/paddlepaddle/paddle), and it features:
-* ***Pre-trained Language Model***: [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) (Enhanced Representation through kNowledge IntEgration) is a pre-trained language model that is designed to learn better language representations by incorporating linguistic knowledge masking. Our ERNIE-based baseline outperforms the MRQA official baseline that uses BERT by 6.1 point (marco-f1) on the out-of-domain dev set. 
+* ***Pre-trained Language Model***: [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) (Enhanced Representation through kNowledge IntEgration) is a pre-trained language model that is designed to learn better language representations by incorporating linguistic knowledge masking. Our ERNIE-based baseline outperforms the MRQA official baseline that uses BERT by <span style="color:red"> *6.1* </span> point (marco-f1) on the out-of-domain dev set. 
 * ***Multi-GPU Fine-tuning and Prediction***: Support for Multi-GPU fine-tuning and prediction to accelerate the experiments. 
 
 You can use this repo as starter codebase for 2019 MRQA Shared Task and bootstrap your next model. 
@@ -73,14 +73,14 @@ Where `parameters_to_restore` is the model parameters used in the evaluatation (
 
 |      Model     | HotpotQA | NaturalQ | NewsQA | SearchQA | SQuAD | TriviaQA | Macro-F1 |
 | :------------- | :---------: | :----------: | :---------: | :----------: | :---------: | :----------: |:----------: |
-| baseline + EMA | 81.4/65.5 | 81.6/70.0 | 73.1/57.9 | 85.1/79.1 | 93.3/87.1 | 79.0/73.4 | 82.4 |
+| baseline + EMA | 81.4/65.5 | 81.6/69.9 | 73.1/57.9 | 85.1/79.1 | 93.3/87.1 | 79.0/73.4 | 82.4 |
 | baseline woEMA | 82.4/66.9 | 81.7/69.9 | 73.0/57.8 | 85.1/79.2 | 93.4/87.2 | 79.0/73.4 | 82.4 |
 
 ##### out-of-domain dev  (F1/EM)
 
 |      Model     | BioASQ | DROP | DuoRC | RACE | RE | Textbook | Macro-F1 |
 | :------------- | :---------: | :----------: | :---------: | :----------: | :---------: | :----------: |:----------: |
-| baseline + EMA | 70.2/54.7 | 57.3/47.5 | 64.1/52.8 | 51.7/37.2 | 87.9/77.7 | 63.1/53.5 | 65.7 |
+| baseline + EMA | 70.2/54.7 | 57.3/47.5 | 64.1/52.8 | 51.7/37.2 | 87.9/77.7 | 63.1/53.6 | 65.7 |
 | baseline woEMA | 69.9/54.6 | 57.0/47.3 | 64.0/52.8 | 51.8/37.4 | 87.8/77.6 | 63.0/53.4 | 65.6 |
 
 Note that we turn on exponential moving average (EMA) during training by default (in most cases EMA can improve performance) and save EMA parameters into the final checkpoint files. The predicted answers using EMA parameters are saved into `ema_predictions.json`.   

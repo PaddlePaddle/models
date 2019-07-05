@@ -20,8 +20,11 @@ except ImportError as e:
     import pickle  #python 3
 
 sys.path.append('../../models/dialogue_model_toolkit/auto_dialogue_evaluation/')
+sys.path.append('../../models/')
 from net import Network
 import config
+
+from model_check import check_cuda
 
 
 def train(args):
@@ -73,8 +76,9 @@ def train(args):
 
     print("device count %d" % dev_count)
     print("theoretical memory usage: ")
-    print(fluid.contrib.memory_usage(
-        program=train_program, batch_size=args.batch_size))
+    print(
+        fluid.contrib.memory_usage(
+            program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
     exe.run(train_startup)
@@ -155,8 +159,8 @@ def train(args):
                 main_program=train_program)
 
             print("Save model at step %d ... " % step)
-            print(time.strftime('%Y-%m-%d %H:%M:%S',
-                                time.localtime(time.time())))
+            print(
+                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             best_recall = recall_dict['1_in_10']
         return best_recall
 
@@ -252,8 +256,9 @@ def finetune(args):
 
     print("device count %d" % dev_count)
     print("theoretical memory usage: ")
-    print(fluid.contrib.memory_usage(
-        program=train_program, batch_size=args.batch_size))
+    print(
+        fluid.contrib.memory_usage(
+            program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
     exe.run(train_startup)
@@ -321,8 +326,8 @@ def finetune(args):
                 exe,
                 main_program=train_program)
             print("Save model at step %d ... " % step)
-            print(time.strftime('%Y-%m-%d %H:%M:%S',
-                                time.localtime(time.time())))
+            print(
+                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             best_cor = cor
         return best_cor
 
@@ -465,6 +470,8 @@ def main():
     """
     args = config.parse_args()
     config.print_arguments(args)
+
+    check_cuda(args.use_cuda)
 
     if args.do_train == True:
         if args.loss_type == 'CLS':
