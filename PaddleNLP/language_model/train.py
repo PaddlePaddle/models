@@ -35,12 +35,12 @@ import sys
 if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding("utf-8")
-sys.path.append('..')
+sys.path.append('../')
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 from args import *
-sys.path.append("../")
+from models.model_check import check_cuda
 from models.language_model import lm_model
 from config import RNNConfig
 import logging
@@ -87,6 +87,9 @@ def save_para_npz(train_prog, train_exe):
 
 def main():
     args = parse_args()
+
+    check_cuda(args.use_gpu)
+
     logger = logging.getLogger("lm")
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
