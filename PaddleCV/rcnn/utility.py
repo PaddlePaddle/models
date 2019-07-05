@@ -29,6 +29,7 @@ from paddle.fluid import core
 import argparse
 import functools
 from config import *
+import paddle.fluid as fluid
 
 
 def print_arguments(args):
