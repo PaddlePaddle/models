@@ -234,15 +234,6 @@ class LightNASSpace(SearchSpace):
 
         return list(set(op_params))
 
-    def get_model_latency(self, tokens):
-        """Get model latency according to tokens.
-        Args:
-            tokens(list<int>): The tokens which represent a network.
-        Return:
-            (float): model latency.
-        """
-        pass
-
     def create_net(self, tokens=None):
         """Create a network for training by tokens.
         """
