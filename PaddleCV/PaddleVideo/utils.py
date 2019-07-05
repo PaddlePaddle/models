@@ -40,8 +40,8 @@ class AttrDict(dict):
             self[key] = value
 
 def check_cuda(use_cuda, err = \
-    "\nYou can not set use_cuda = True in the model because you are using paddlepaddle-cpu.\n \
-    Please: 1. Install paddlepaddle-gpu to run your models on GPU or 2. Set use_cuda = False to run models on CPU.\n"
+    "\nYou can not set use_gpu = True in the model because you are using paddlepaddle-cpu.\n \
+    Please: 1. Install paddlepaddle-gpu to run your models on GPU or 2. Set use_gpu = False to run models on CPU.\n"
                                                                                                                      ):
     try:
         if use_cuda == True and fluid.is_compiled_with_cuda() == False:
