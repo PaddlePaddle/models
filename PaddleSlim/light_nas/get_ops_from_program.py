@@ -287,8 +287,6 @@ def get_ops_from_program(program):
             tmp = batch_norm_op_params(blocks, current_op, test_iter)
         elif current_op.type == 'softmax':
             tmp = softmax_op_params(blocks, current_op)
-        elif current_op.type == 'image_resize':
-            tmp = resize_op_params(blocks, current_op)
         elif current_op.type == 'mul':
             tmp = fc_op_params(blocks, current_op, test_iter)
         else:
