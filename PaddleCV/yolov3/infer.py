@@ -19,7 +19,7 @@ import paddle
 import paddle.fluid as fluid
 import box_utils
 import reader
-from utility import print_arguments, parse_args
+from utility import print_arguments, parse_args, check_gpu
 from models.yolov3 import YOLOv3
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
@@ -27,6 +27,9 @@ from config import cfg
 
 
 def infer():
+
+    # check if set use_gpu=True in paddlepaddle cpu version
+    check_gpu(cfg.use_gpu)
 
     if not os.path.exists('output'):
         os.mkdir('output')
