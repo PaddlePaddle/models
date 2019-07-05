@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 import distutils.util
 import six
+import paddle.fluid as fluid
 
 
 def print_arguments(args):
