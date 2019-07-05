@@ -203,6 +203,7 @@ def train(args,
         fluid.io.save_persistables(exe, model_path, main_program=main_prog)
 
     best_map = 0.
+    test_map = None
     def test(epoc_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
