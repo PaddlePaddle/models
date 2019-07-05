@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Get op latency."""
+"""Get latency lookup table."""
 from __future__ import print_function
 
-import re
 import argparse
 import subprocess
+
+from light_nas_space import get_all_ops
 
 
 def get_args():
@@ -26,21 +27,25 @@ def get_args():
         Namespace, arguments.
     """
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--ops_path', default='ops.txt', help='Input ops path.')
     parser.add_argument(
-        '--platform',
-        default='paddlemobile-android',
-        help='Platform: android/ios/custom.')
+        '--latency_lookup_table_path',
+        default='latency_lookup_table.txt',
+        help='Output latency lookup table path.')
     parser.add_argument(
-        '--ops_latency_path',
-        default='ops_latency.txt',
-        help='Output ops latency path.')
+        '--platform', default='android', help='Platform: android/ios/custom.')
+    parser.add_argument('--cluster', type=int, default=0, help='Cluster.')
+    parser.add_argument('--threads', type=int, default=1, help='Threads.')
+    parser.add_argument(
+        '--test_iter',
+        type=int,
+        default=100,
+        help='Running times of op when estimating latency.')
     args = parser.parse_args()
     return args
 
 
 def get_op_latency(op, platform):
-    """Get model latency.
+    """Get op latency.
 
     Args:
         op: list, a list of str represents the op and its parameters.
@@ -49,19 +54,8 @@ def get_op_latency(op, platform):
     Returns:
         float, op latency.
     """
-    if platform == 'anakin-android':
-        commands = 'adb shell data/local/tmp/get_{}_latency {}'.format(
-            op[0], ' '.join(op[1:]))
-        proc = subprocess.Popen(
-            commands,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True)
-        out = proc.communicate()[1]
-        out = [_ for _ in out.split('\n') if 'time' in _][-1]
-        out = re.findall(r'\d+\.?\d*', out)[-2]
-    elif platform == 'paddlemobile-android':
-        commands = 'adb shell "cd /data/local/tmp/bin && export LD_LIBRARY_PATH=. && ./get_{}_latency \'{}\'"'.format(
+    if platform == 'android':
+        commands = 'adb shell "cd /data/local/tmp/bin && LD_LIBRARY_PATH=. ./get_{}_latency \'{}\'"'.format(
             op[0], ' '.join(op[1:]))
         proc = subprocess.Popen(
             commands,
@@ -81,10 +75,13 @@ def get_op_latency(op, platform):
 def main():
     """main."""
     args = get_args()
-    ops = [line.split() for line in open(args.ops_path)]
-    fid = open(args.ops_latency_path, 'w')
+    ops = get_all_ops()
+    fid = open(args.latency_lookup_table_path, 'w')
     for op in ops:
-        latency = get_op_latency(op, args.platform)
+        op = map(str, op)
+        latency = get_op_latency(op[:1] + map(
+            str, [args.cluster, args.threads, args.test_iter]) + op[1:],
+                                 args.platform)
         fid.write('{} {}\n'.format(' '.join(op), latency))
     fid.close()
 

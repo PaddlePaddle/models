@@ -211,7 +211,7 @@ def softmax_op_params(blocks, current_op):
     Returns:
         (list): op name and hyperparamters
     """
-    # op name, cluster, threads, test_iter
+    # op name
     tmp = ['softmax']
     # axis
     tmp.append(current_op.attr('axis'))
@@ -282,13 +282,13 @@ def get_ops_from_program(program):
         elif current_op.type == 'batch_norm':
             tmp = batch_norm_op_params(blocks, current_op)
         elif current_op.type == 'pool2d':
-            tmp = pooling_op_params(blocks, current_op, test_iter)
+            tmp = pooling_op_params(blocks, current_op)
         elif current_op.type == 'batch_norm':
-            tmp = batch_norm_op_params(blocks, current_op, test_iter)
+            tmp = batch_norm_op_params(blocks, current_op)
         elif current_op.type == 'softmax':
             tmp = softmax_op_params(blocks, current_op)
         elif current_op.type == 'mul':
-            tmp = fc_op_params(blocks, current_op, test_iter)
+            tmp = fc_op_params(blocks, current_op)
         else:
             tmp = None
         if tmp:
