@@ -375,5 +375,5 @@ def get_cards():
 
 if __name__ == "__main__":
     utils.print_arguments(args)
-    check_cuda(args.use_gpu)
+    check_cuda(args.use_cuda)
     main(args)
