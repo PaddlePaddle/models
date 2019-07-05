@@ -14,6 +14,8 @@
 
 import os
 import signal
+import paddle
+import paddle.fluid as fluid
 
 __all__ = ['AttrDict']
 
@@ -24,6 +26,7 @@ def _term(sig_num, addition):
 
 
 signal.signal(signal.SIGTERM, _term)
+signal.signal(signal.SIGINT, _term)
 
 
 class AttrDict(dict):
@@ -35,3 +38,14 @@ class AttrDict(dict):
             self.__dict__[key] = value
         else:
             self[key] = value
+
+def check_cuda(use_cuda, err = \
+    "\nYou can not set use_gpu = True in the model because you are using paddlepaddle-cpu.\n \
+    Please: 1. Install paddlepaddle-gpu to run your models on GPU or 2. Set use_gpu = False to run models on CPU.\n"
+                                                                                                                     ):
+    try:
+        if use_cuda == True and fluid.is_compiled_with_cuda() == False:
+            print(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
