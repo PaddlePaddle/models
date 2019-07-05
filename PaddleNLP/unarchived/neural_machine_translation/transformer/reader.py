@@ -278,7 +278,7 @@ class DataReader(object):
         with open(dict_path, "rb") as fdict:
             for idx, line in enumerate(fdict):
                 if six.PY3:
-                    line = line.decode()
+                    line = line.decode("utf8", errors="ignore")
                 if reverse:
                     word_dict[idx] = line.strip("\n")
                 else:
