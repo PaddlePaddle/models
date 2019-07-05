@@ -57,7 +57,6 @@ class CriteoDataset(dg.MultiSlotDataGenerator):
     def generate_sample(self, line):
         def data_iter():
             feat_idx, feat_value, label = self._process_line(line)
-            feature_name = ['feat_idx', 'feat_value', 'label']
             yield [('feat_idx', feat_idx), ('feat_value', feat_value), ('label',
                                                                         label)]
 
