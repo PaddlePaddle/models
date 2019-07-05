@@ -27,7 +27,7 @@ import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator
-from util.utility import check_attribute_conflict
+from util.utility import check_attribute_conflict, check_gpu
 import copy
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -235,4 +235,5 @@ def infer(args):
 if __name__ == "__main__":
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     infer(args)
