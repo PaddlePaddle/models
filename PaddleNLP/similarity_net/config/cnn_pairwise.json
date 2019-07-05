@@ -14,7 +14,7 @@
     },
     "optimizer": {
         "class_name": "AdamOptimizer",
-        "learning_rate": 0.001,
+        "learning_rate": 0.2,
         "beta1": 0.9,
         "beta2": 0.999,
         "epsilon": 1e-08
