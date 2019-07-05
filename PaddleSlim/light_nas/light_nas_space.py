@@ -75,8 +75,8 @@ def ops_of_inverted_residual_unit(in_c,
                                   kernels,
                                   num_filters,
                                   s,
-                                  ifshortcut=False,
-                                  ifse=False):
+                                  ifshortcut=True,
+                                  ifse=True):
     """Get ops of possible repeated inverted residual unit
     Args:
         in_c: list, a list of numbers of input channels
@@ -190,8 +190,9 @@ def get_all_ops(ifshortcut=True, ifse=True, strides=[1, 2, 2, 2, 1, 2, 1]):
     op_params.append(('activation', 'relu6', 1, 1280, in_shape, in_shape))
     op_params.append(('pooling', 1, 1, 1280, in_shape, in_shape, in_shape, 0, 1,
                       0, 3))
+    # fc, converted to 1x1 conv
     op_params.append(('conv', 0, 0, 1, 1280, 1, 1, class_dim, 1, 1, 0, 1, 1))
-
+    op_params.append(('eltwise', 2, 1, 1000, 1, 1))
     return list(set(op_params))
 
 
