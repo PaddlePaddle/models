@@ -117,8 +117,8 @@ def eltwise_op_params(blocks, current_op):
     tmp.append(1)
     # input channels, height, width 
     in_shapes = blocks.vars[current_op.input('X')[0]].shape
-    if len(in_shapes) < 4:
-        return []
+    while len(in_shapes) < 4:
+        in_shapes = in_shapes + (1, )
 
     for i in range(1, len(in_shapes)):
         tmp.append(int(in_shapes[i]))
@@ -204,16 +204,31 @@ def pooling_op_params(blocks, current_op):
 
 
 def softmax_op_params(blocks, current_op):
-    #TODO: Getting params of softmax op
-    return []
+    """Getting params of softmax op
+    Args:
+        blocks: BlockDesc, current block
+        current_op: OpDesc, current op
+    Returns:
+        (list): op name and hyperparamters
+    """
+    # op name, cluster, threads, test_iter
+    tmp = ['softmax']
+    # axis
+    tmp.append(current_op.attr('axis'))
+    # batch size
+    tmp.append(1)
+    # input channels, height, width
+    in_shapes = blocks.vars[current_op.input('X')[0]].shape
+    while len(in_shapes) < 4:
+        in_shapes = in_shapes + (1, )
+
+    for i in range(1, len(in_shapes)):
+        tmp.append(int(in_shapes[i]))
+
+    return tmp
 
 
-def resize_op_params(blocks, current_op):
-    #TODO: Getting params of resize op
-    return []
-
-
-def fc_op_params(blocks, current_op, isbias):
+def fc_op_params(blocks, current_op):
     """Getting params of fc op
     Note: 
         fc op is converted to conv op with 1x1 kernels
@@ -226,7 +241,7 @@ def fc_op_params(blocks, current_op, isbias):
     # op name
     tmp = ['conv']
     # flag bias
-    tmp.append(int(isbias))
+    tmp.append(0)
     # flag relu
     tmp.append(0)
     # batch size 
@@ -267,21 +282,13 @@ def get_ops_from_program(program):
         elif current_op.type == 'batch_norm':
             tmp = batch_norm_op_params(blocks, current_op)
         elif current_op.type == 'pool2d':
-            tmp = pooling_op_params(blocks, current_op)
+            tmp = pooling_op_params(blocks, current_op, test_iter)
+        elif current_op.type == 'batch_norm':
+            tmp = batch_norm_op_params(blocks, current_op, test_iter)
         elif current_op.type == 'softmax':
             tmp = softmax_op_params(blocks, current_op)
-        elif current_op.type == 'image_resize':
-            tmp = resize_op_params(blocks, current_op)
         elif current_op.type == 'mul':
-            try:
-                next_op = blocks.ops[i + 1]
-                if next_op.type == 'elementwise_add':
-                    tmp = fc_op_params(blocks, current_op, True)
-                    i += 1
-                else:
-                    tmp = fc_op_params(blocks, current_op, False)
-            except:
-                tmp = fc_op_params(blocks, current_op, False)
+            tmp = fc_op_params(blocks, current_op, test_iter)
         else:
             tmp = None
         if tmp:

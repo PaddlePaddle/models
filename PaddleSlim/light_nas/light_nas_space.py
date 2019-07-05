@@ -131,6 +131,8 @@ class LightNASSpace(SearchSpace):
                 # expansion
                 op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, c, in_shape,
                                   in_shape, c * t, 1, 1, 0, 1, 1))
+                op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1,
+                                  c * t, in_shape, in_shape))
                 op_params.append(('activation', 0, 1, test_iter, 'relu6', 1,
                                   c * t, in_shape, in_shape))
 
@@ -139,14 +141,18 @@ class LightNASSpace(SearchSpace):
                     op_params.append(
                         ('conv', 0, 1, test_iter, 0, 0, 1, c * t, in_shape,
                          in_shape, c * t, c * t, k, (int(k - 1) / 2), s, 1))
-                op_params.append(('activation', 0, 1, test_iter, 'relu6', c * t,
-                                  in_shape / s, in_shape / s))
+                op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1,
+                                  c * t, in_shape / s, in_shape / s))
+                op_params.append(('activation', 0, 1, test_iter, 'relu6', 1,
+                                  c * t, in_shape / s, in_shape / s))
 
                 # shrink
                 for out_c in num_filters:
                     op_params.append(
                         ('conv', 0, 1, test_iter, 0, 0, 1, c * t, in_shape / s,
                          in_shape / s, out_c, 1, 1, 0, 1, 1))
+                    op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1,
+                                      out_c, in_shape / s, in_shape / s))
 
                     # shortcut
                     if ifshortcut:
@@ -159,15 +165,21 @@ class LightNASSpace(SearchSpace):
                         op_params.append(
                             ('conv', 0, 1, test_iter, 1, 0, 1, out_c, 1, 1,
                              out_c / 4, 1, 1, 0, 1, 1))
+                        op_params.append(
+                            ('eltwise', 0, 1, test_iter, 2, 1, out_c / 4, 1, 1))
                         op_params.append(('activation', 0, 1, test_iter, 'relu',
                                           1, out_c / 4, 1, 1))
                         op_params.append(
                             ('conv', 0, 1, test_iter, 1, 0, 1, out_c / 4, 1, 1,
                              out_c, 1, 1, 0, 1, 1))
+                        op_params.append(
+                            ('eltwise', 0, 1, test_iter, 2, 1, out_c, 1, 1))
                         op_params.append(('activation', 0, 1, test_iter,
                                           'sigmoid', 1, out_c, 1, 1))
                         op_params.append(('eltwise', 0, 1, test_iter, 1, 1,
                                           out_c, in_shape / s, in_shape / s))
+                        op_params.append(('activation', 0, 1, test_iter, 'relu',
+                                          1, out_c, in_shape / s, in_shape / s))
 
         return op_params
 
@@ -189,8 +201,10 @@ class LightNASSpace(SearchSpace):
         # conv1_1
         op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, image_shape[0],
                           image_shape[1], image_shape[2], 32, 1, 3, 1, 2, 1))
-        op_params.append(
-            ('activation', 0, 1, test_iter, 'relu6', 1, 32, 112, 112))
+        op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1, 32,
+                          image_shape[1] / 2, image_shape[2] / 2))
+        op_params.append(('activation', 0, 1, test_iter, 'relu6', 1, 32,
+                          image_shape[1] / 2, image_shape[2] / 2))
 
         # bottlenecks, TODO: different h and w for images
         in_c, in_shape = [32], image_shape[1] / 2
@@ -222,8 +236,10 @@ class LightNASSpace(SearchSpace):
         # last conv
         op_params.append(('conv', 0, 1, test_iter, 0, 0, 1, 320, in_shape,
                           in_shape, 1280, 1, 1, 0, 1, 1))
-        op_params.append(
-            ('activation', 0, 1, 100, 'relu6', 1, 1280, in_shape, in_shape))
+        op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1, 1280,
+                          in_shape, in_shape))
+        op_params.append(('activation', 0, 1, test_iter, 'relu6', 1, 1280,
+                          in_shape, in_shape))
         op_params.append(('pooling', 0, 1, test_iter, 1, 1, 1280, in_shape,
                           in_shape, in_shape, 0, 1, 0, 3))
         op_params.append(('conv', 0, 1, test_iter, 1, 0, 1, 1280, 1, 1,
