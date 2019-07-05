@@ -238,8 +238,8 @@ class LightNASSpace(SearchSpace):
                           in_shape, 1280, 1, 1, 0, 1, 1))
         op_params.append(('batch_norm', 0, 1, test_iter, 'None', 1, 1280,
                           in_shape, in_shape))
-        op_params.append(
-            ('activation', 0, 1, 100, 'relu6', 1, 1280, in_shape, in_shape))
+        op_params.append(('activation', 0, 1, test_iter, 'relu6', 1, 1280,
+                          in_shape, in_shape))
         op_params.append(('pooling', 0, 1, test_iter, 1, 1, 1280, in_shape,
                           in_shape, in_shape, 0, 1, 0, 3))
         op_params.append(('conv', 0, 1, test_iter, 1, 0, 1, 1280, 1, 1,
