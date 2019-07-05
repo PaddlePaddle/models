@@ -76,6 +76,7 @@ def train(cfg):
 if __name__ == "__main__":
     cfg = config.parse_args()
     config.print_arguments(cfg)
+    utility.check_gpu(cfg.use_gpu)
     #assert cfg.load_size >= cfg.crop_size, "Load Size CANNOT less than Crop Size!"
     if cfg.profile:
         if cfg.use_gpu:
