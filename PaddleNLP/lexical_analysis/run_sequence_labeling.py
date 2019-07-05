@@ -25,7 +25,6 @@ import utils
 sys.path.append("../")
 from models.sequence_labeling import nets
 
-
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 
@@ -70,6 +69,10 @@ parser.add_argument('--enable_ce', action='store_true', help='If set, run the ta
 
 args = parser.parse_args()
 # yapf: enable.
+
+sys.path.append('../models/')
+from model_check import check_cuda
+check_cuda(args.use_cuda)
 
 print(args)
 
