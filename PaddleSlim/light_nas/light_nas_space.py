@@ -11,15 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""Light-NAS space."""
+import sys
 from paddle.fluid.contrib.slim.nas import SearchSpace
 import paddle.fluid as fluid
 import paddle
-import sys
 sys.path.append('..')
 from models import LightNASNet
 import reader
-import copy
+from get_ops_from_program import get_ops_from_program
 
 total_images = 1281167
 lr = 0.1
@@ -40,6 +40,7 @@ NAS_KERNEL_SIZE = [3, 5]
 NAS_FILTERS_MULTIPLIER = [3, 4, 5, 6]
 NAS_SHORTCUT = [0, 1]
 NAS_SE = [0, 1]
+LOOKUP_TABLE_PATH = 'ops_latency.txt'
 
 
 def get_bottleneck_params_list(var):
@@ -71,6 +72,18 @@ def get_bottleneck_params_list(var):
 class LightNASSpace(SearchSpace):
     def __init__(self):
         super(LightNASSpace, self).__init__()
+        if LOOKUP_TABLE_PATH:
+            self.init_lookup_table(LOOKUP_TABLE_PATH)
+
+    def init_lookup_table(self, lookup_table_path):
+        """Init lookup table.
+        Args:
+            lookup_table_path: str, lookup table path.
+        """
+        self._lookup_table = dict()
+        for line in open(lookup_table_path):
+            line = line.split()
+            self._lookup_table[tuple(line[:-1])] = float(line[-1])
 
     def init_tokens(self):
         """Get init tokens in search space.
@@ -217,6 +230,18 @@ class LightNASSpace(SearchSpace):
                           class_dim, 1, 1, 0, 1, 1))
 
         return list(set(op_params))
+
+    def get_model_latency(self, program):
+        """Get model latency according to program.
+        Args:
+            program(Program): The program to get latency.
+        Return:
+            (float): model latency.
+        """
+        ops = get_ops_from_program(program)
+        latency = sum(
+            [self._lookup_table[tuple(str(_) for _ in op)] for op in ops])
+        return latency
 
     def create_net(self, tokens=None):
         """Create a network for training by tokens.
