@@ -165,9 +165,10 @@ class DTrainer():
         grad_shape = grad.shape
         grad = fluid.layers.reshape(
             grad, [-1, grad_shape[1] * grad_shape[2] * grad_shape[3]])
+        epsilon = 1e-16
         norm = fluid.layers.sqrt(
             fluid.layers.reduce_sum(
-                fluid.layers.square(grad), dim=1))
+                fluid.layers.square(grad), dim=1) + epsilon)
         gp = fluid.layers.reduce_mean(fluid.layers.square(norm - 1.0))
         return gp
 
