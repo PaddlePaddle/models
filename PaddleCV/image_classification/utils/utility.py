@@ -72,7 +72,7 @@ def check_gpu(use_gpu):
           "\t2. Set use_gpu as false in config file to run " \
           "model on CPU"
 
-     try:
+    try:
         if use_gpu and not fluid.is_compiled_with_cuda():
             logger.error(err)
             sys.exit(1)
