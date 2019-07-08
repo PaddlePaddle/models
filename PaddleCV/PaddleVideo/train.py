@@ -16,6 +16,7 @@ import os
 import sys
 import time
 import argparse
+import ast
 import logging
 import numpy as np
 import paddle.fluid as fluid
@@ -25,6 +26,7 @@ import models
 from config import *
 from datareader import get_reader
 from metrics import get_metrics
+from utils import check_cuda
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -67,7 +69,10 @@ def parse_args():
         help='path to resume training based on previous checkpoints. '
         'None for not resuming any checkpoints.')
     parser.add_argument(
-        '--use_gpu', type=bool, default=True, help='default use gpu.')
+        '--use_gpu',
+        type=ast.literal_eval,
+        default=True,
+        help='default use gpu.')
     parser.add_argument(
         '--no_use_pyreader',
         action='store_true',
@@ -100,7 +105,7 @@ def parse_args():
         help='mini-batch interval to log.')
     parser.add_argument(
         '--enable_ce',
-        type=bool,
+        type=ast.literal_eval,
         default=False,
         help='If set True, enable continuous evaluation job.')
     args = parser.parse_args()
@@ -277,6 +282,8 @@ def train(args):
 
 if __name__ == "__main__":
     args = parse_args()
+    # check whether the installed paddle is compiled with GPU
+    check_cuda(args.use_gpu)
     logger.info(args)
 
     if not os.path.exists(args.save_dir):

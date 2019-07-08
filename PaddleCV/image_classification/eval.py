@@ -29,7 +29,7 @@ import paddle.fluid as fluid
 import reader_cv2 as reader 
 import models
 from utils.learning_rate import cosine_decay
-from utils.utility import add_arguments, print_arguments
+from utils.utility import add_arguments, print_arguments, check_gpu
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -134,6 +134,7 @@ def eval(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     eval(args)
 
 
