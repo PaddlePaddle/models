@@ -113,7 +113,7 @@ def save_test_image(epoch,
             images = [real_img_temp]
             for i in range(cfg.c_dim):
                 label_trg_tmp = copy.deepcopy(label_org)
-                label_trg_tmp[0][i] = 1.0 - label_trg_tmp[j][i]
+                label_trg_tmp[0][i] = 1.0 - label_trg_tmp[0][i]
                 label_trg = check_attribute_conflict(
                     label_trg_tmp, attr_names[i], attr_names)
                 tensor_label_trg = fluid.LoDTensor()
