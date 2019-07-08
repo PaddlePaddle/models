@@ -47,7 +47,7 @@ import reader_cv2 as reader
 import utils
 import models
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
-from utils.utility import add_arguments, print_arguments
+from utils.utility import add_arguments, print_arguments, check_gpu
 from utils.learning_rate import cosine_decay_with_warmup
 from dist_train import dist_utils
 
@@ -612,6 +612,7 @@ def train(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     train(args)
 
 
