@@ -35,7 +35,8 @@ import numpy as np
 import random
 import time
 import shutil
-from utility import parse_args, print_arguments, SmoothedValue
+from utility import (parse_args, print_arguments, 
+                     SmoothedValue, check_gpu)
 
 import paddle
 import paddle.fluid as fluid
@@ -60,6 +61,9 @@ def get_device_num():
 
 
 def train():
+
+    # check if set use_gpu=True in paddlepaddle cpu version
+    check_gpu(cfg.use_gpu)
 
     if cfg.debug or args.enable_ce:
         fluid.default_startup_program().random_seed = 1000

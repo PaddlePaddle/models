@@ -47,7 +47,7 @@ Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https
 
 `train.py` is the main caller of the training module. Examples of usage are shown below.
   ```bash
-  python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+  python -u train.py --batch_size=64 --dataset=pascalvoc --pretrained_model=pretrained/ssd_mobilenet_v1_coco/
   ```
    - Set ```export CUDA_VISIBLE_DEVICES=0,1``` to specifiy the number of GPU you want to use.
    - For more help on arguments:
@@ -70,13 +70,13 @@ You can evaluate your trained model in different metrics like 11point, integral 
 
 `eval.py` is the main caller of the evaluating module. Examples of usage are shown below.
 ```bash
-python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/best_model' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point' --nms_threshold=0.45
+python eval.py --dataset=pascalvoc --model_dir=model/best_model --data_dir=data/pascalvoc --test_list=test.txt
 ```
 
 ### Infer and Visualize
 `infer.py` is the main caller of the inferring module. Examples of usage are shown below.
 ```bash
-python infer.py --dataset='pascalvoc' --nms_threshold=0.45 --model_dir='train_pascal_model/best_model' --image_path='./data/pascalvoc/VOCdevkit/VOC2007/JPEGImages/009963.jpg'
+python infer.py --dataset=pascalvoc --nms_threshold=0.45 --model_dir=model/best_model --image_path=./data/pascalvoc/VOCdevkit/VOC2007/JPEGImages/009963.jpg
 ```
 Below are the examples of running the inference and visualizing the model result.
 <p align="center">

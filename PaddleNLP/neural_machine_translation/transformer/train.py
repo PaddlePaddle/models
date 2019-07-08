@@ -6,12 +6,14 @@ import multiprocessing
 import os
 import six
 import sys
+sys.path.append("../../")
 sys.path.append("../../models/neural_machine_translation/transformer/")
 import time
 
 import numpy as np
 import paddle.fluid as fluid
 
+from models.model_check import check_cuda
 import reader
 from config import *
 from desc import *
@@ -663,6 +665,7 @@ def train(args):
         place = fluid.CPUPlace()
         dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
     else:
+        check_cuda(TrainTaskConfig.use_gpu)
         gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
         place = fluid.CUDAPlace(gpu_id)
         dev_count = get_device_num()
