@@ -22,6 +22,8 @@
 
 python版本依赖python 2.7
 
+注意：该项目可同时支持GPU和CPU训练和预测，请用户根据实验环境，分别下载paddlepaddle-gpu或者paddlepaddle版本。
+
 #### 安装代码
 
 克隆数据集代码库到本地
