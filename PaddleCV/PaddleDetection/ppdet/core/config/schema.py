@@ -50,7 +50,7 @@ except Exception:
 
     check_type.__warning_sent__ = False
 
-__all__ = ['SchemaValue', 'SchemaDict', 'extract_schema']
+__all__ = ['SchemaValue', 'SchemaDict', 'SharedConfig', 'extract_schema']
 
 
 class SchemaValue(object):
@@ -161,6 +161,26 @@ class SchemaDict(dict):
                 self.name, ", ".join(mismatch_keys)))
 
 
+class SharedConfig(object):
+    r"""A specialized `inject` type for simple values
+    the logic is as following:
+    - if `key` is set for the module in config, its value will be used
+    - if `key` is not set for the module but is present in config, its value
+      will be used
+    - if `key` is not set for the module and not present in config,
+      `default_value` will be used
+
+    Args:
+        key: config[key] will be injected
+        default_value: fallback value
+    """
+
+    def __init__(self, key, default_value=None):
+        super(SharedConfig, self).__init__()
+        self.key = key
+        self.default_value = default_value
+
+
 def extract_schema(cls):
     """
     Extract schema from a given class
@@ -217,6 +237,7 @@ def extract_schema(cls):
     schema.strict = not has_kwargs
     schema.pymodule = importlib.import_module(cls.__module__)
     schema.inject = getattr(cls, '__inject__', [])
+    schema.shared = getattr(cls, '__shared__', [])
     for idx, name in enumerate(names):
         comment = name in comments and comments[name] or name
         if name in schema.inject:
@@ -224,8 +245,13 @@ def extract_schema(cls):
         else:
             type_ = name in annotations and annotations[name] or None
         value_schema = SchemaValue(name, comment, type_)
-        if idx >= num_required:
-            value_schema.set_default(defaults[idx - num_required])
+        if name in schema.shared:
+            assert idx >= num_required, "shared config must have default value"
+            default = defaults[idx - num_required]
+            value_schema.set_default(SharedConfig(name, default))
+        elif idx >= num_required:
+            default = defaults[idx - num_required]
+            value_schema.set_default(default)
         schema.set_schema(name, value_schema)
 
     return schema

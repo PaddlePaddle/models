@@ -22,7 +22,7 @@ import sys
 
 import yaml
 
-from .config.schema import SchemaDict, extract_schema
+from .config.schema import SchemaDict, SharedConfig, extract_schema
 from .config.yaml_helpers import serializable
 
 __all__ = [
@@ -145,9 +145,24 @@ def create(cls_or_name, **kwargs):
 
     kwargs = {}
     kwargs.update(global_config[name])
+
+    if getattr(config, 'shared', None):
+        for k in config.shared:
+            target_key = config[k]
+            shared_conf = config.schema[k].default
+            assert isinstance(shared_conf, SharedConfig)
+            if target_key is not None and not isinstance(
+                    target_key, SharedConfig):
+                continue   # value is given for the module
+            elif shared_conf.key in global_config:
+                # `key` is present in config
+                kwargs[k] = global_config[shared_conf.key]
+            else:
+                kwargs[k] = shared_conf.default_value
+
     if getattr(config, 'inject', None):
         for k in config.inject:
-            target_key = global_config[name][k]
+            target_key = config[k]
             # optional dependency
             if target_key is None:
                 continue
