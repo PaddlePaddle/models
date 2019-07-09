@@ -20,6 +20,9 @@ from nets import cnn_net
 from nets import bilstm_net
 from nets import gru_net
 
+sys.path.append("../")
+from models.model_check import check_cuda
+
 import paddle
 import paddle.fluid as fluid
 
@@ -370,4 +373,5 @@ def main(args):
 
 if __name__ == "__main__":
     print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)
