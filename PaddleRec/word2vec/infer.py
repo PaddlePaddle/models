@@ -60,7 +60,7 @@ def infer_epoch(args, vocab_size, test_reader, use_cuda, i2w):
     exe = fluid.Executor(place)
     emb_size = args.emb_size
     batch_size = args.batch_size
-    with fluid.scope_guard(fluid.core.Scope()):
+    with fluid.scope_guard(fluid.Scope()):
         main_program = fluid.Program()
         with fluid.program_guard(main_program):
             values, pred = net.infer_network(vocab_size, emb_size)
@@ -123,7 +123,7 @@ def infer_step(args, vocab_size, test_reader, use_cuda, i2w):
     exe = fluid.Executor(place)
     emb_size = args.emb_size
     batch_size = args.batch_size
-    with fluid.scope_guard(fluid.core.Scope()):
+    with fluid.scope_guard(fluid.Scope()):
         main_program = fluid.Program()
         with fluid.program_guard(main_program):
             values, pred = net.infer_network(vocab_size, emb_size)

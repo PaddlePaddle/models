@@ -18,8 +18,8 @@ from __future__ import division
 from __future__ import print_function
 import distutils.util
 import numpy as np
-from paddle.fluid import core
 import six
+import paddle.fluid as fluid
 
 
 def print_arguments(args):
@@ -72,7 +72,7 @@ def to_lodtensor(data, place):
         lod.append(cur_len)
     flattened_data = np.concatenate(data, axis=0).astype("int32")
     flattened_data = flattened_data.reshape([len(flattened_data), 1])
-    res = core.LoDTensor()
+    res = fluid.LoDTensor()
     res.set(flattened_data, place)
     res.set_lod([lod])
     return res
@@ -80,17 +80,17 @@ def to_lodtensor(data, place):
 
 def get_feeder_data(data, place, for_test=False):
     feed_dict = {}
-    image_t = core.LoDTensor()
+    image_t = fluid.LoDTensor()
     image_t.set(data[0], place)
     feed_dict["image"] = image_t
 
     if not for_test:
-        labels_sub1_t = core.LoDTensor()
-        labels_sub2_t = core.LoDTensor()
-        labels_sub4_t = core.LoDTensor()
-        mask_sub1_t = core.LoDTensor()
-        mask_sub2_t = core.LoDTensor()
-        mask_sub4_t = core.LoDTensor()
+        labels_sub1_t = fluid.LoDTensor()
+        labels_sub2_t = fluid.LoDTensor()
+        labels_sub4_t = fluid.LoDTensor()
+        mask_sub1_t = fluid.LoDTensor()
+        mask_sub2_t = fluid.LoDTensor()
+        mask_sub4_t = fluid.LoDTensor()
 
         labels_sub1_t.set(data[1], place)
         labels_sub2_t.set(data[3], place)
@@ -105,11 +105,30 @@ def get_feeder_data(data, place, for_test=False):
         feed_dict["label_sub4"] = labels_sub4_t
         feed_dict["mask_sub4"] = mask_sub4_t
     else:
-        label_t = core.LoDTensor()
-        mask_t = core.LoDTensor()
+        label_t = fluid.LoDTensor()
+        mask_t = fluid.LoDTensor()
         label_t.set(data[1], place)
         mask_t.set(data[2], place)
         feed_dict["label"] = label_t
         feed_dict["mask"] = mask_t
 
     return feed_dict
+
+
+def check_gpu(use_gpu):
+    """
+     Log error and exit when set use_gpu=true in paddlepaddle
+     cpu version.
+     """
+    err = "Config use_gpu cannot be set as true while you are " \
+          "using paddlepaddle cpu version ! \nPlease try: \n" \
+          "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
+          "\t2. Set use_gpu as false in config file to run " \
+          "model on CPU"
+
+    try:
+        if use_gpu and not fluid.is_compiled_with_cuda():
+            logger.error(err)
+            sys.exit(1)
+    except Exception as e:
+        pass

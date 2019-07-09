@@ -76,7 +76,7 @@ def infer(args, vocab_size, test_reader):
     hid_size = args.hid_size
     batch_size = args.batch_size
     model_path = args.model_dir
-    with fluid.scope_guard(fluid.core.Scope()):
+    with fluid.scope_guard(fluid.Scope()):
         main_program = fluid.Program()
         start_up_program = fluid.Program()
         with fluid.program_guard(main_program, start_up_program):

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -47,6 +46,7 @@ def coco_anno_box_to_center_relative(box, img_height, img_width):
 
     return np.array([x, y, w, h])
 
+
 def clip_relative_box_in_image(x, y, w, h):
     """Clip relative box coordinates x, y, w, h to [0, 1]"""
     x1 = max(x - w / 2, 0.)
@@ -58,6 +58,7 @@ def clip_relative_box_in_image(x, y, w, h):
     w = x2 - x1
     h = y2 - y1
 
+
 def box_xywh_to_xyxy(box):
     shape = box.shape
     assert shape[-1] == 4, "Box shape[-1] should be 4."
@@ -67,6 +68,7 @@ def box_xywh_to_xyxy(box):
     box[:, 1], box[:, 3] = box[:, 1] - box[:, 3] / 2, box[:, 1] + box[:, 3] / 2
     box = box.reshape(shape)
     return box
+
 
 def box_iou_xywh(box1, box2):
     assert box1.shape[-1] == 4, "Box1 shape[-1] should be 4."
@@ -92,6 +94,7 @@ def box_iou_xywh(box1, box2):
 
     return inter_area / (b1_area + b2_area - inter_area)
 
+
 def box_iou_xyxy(box1, box2):
     assert box1.shape[-1] == 4, "Box1 shape[-1] should be 4."
     assert box2.shape[-1] == 4, "Box2 shape[-1] should be 4."
@@ -114,17 +117,21 @@ def box_iou_xyxy(box1, box2):
 
     return inter_area / (b1_area + b2_area - inter_area)
 
+
 def box_crop(boxes, labels, scores, crop, img_shape):
     x, y, w, h = map(float, crop)
     im_w, im_h = map(float, img_shape)
 
     boxes = boxes.copy()
-    boxes[:, 0], boxes[:, 2] = (boxes[:, 0] - boxes[:, 2] / 2) * im_w, (boxes[:, 0] + boxes[:, 2] / 2) * im_w
-    boxes[:, 1], boxes[:, 3] = (boxes[:, 1] - boxes[:, 3] / 2) * im_h, (boxes[:, 1] + boxes[:, 3] / 2) * im_h
+    boxes[:, 0], boxes[:, 2] = (boxes[:, 0] - boxes[:, 2] / 2) * im_w, (
+        boxes[:, 0] + boxes[:, 2] / 2) * im_w
+    boxes[:, 1], boxes[:, 3] = (boxes[:, 1] - boxes[:, 3] / 2) * im_h, (
+        boxes[:, 1] + boxes[:, 3] / 2) * im_h
 
     crop_box = np.array([x, y, x + w, y + h])
     centers = (boxes[:, :2] + boxes[:, 2:]) / 2.0
-    mask = np.logical_and(crop_box[:2] <= centers, centers <= crop_box[2:]).all(axis=1)
+    mask = np.logical_and(crop_box[:2] <= centers, centers <= crop_box[2:]).all(
+        axis=1)
 
     boxes[:, :2] = np.maximum(boxes[:, :2], crop_box[:2])
     boxes[:, 2:] = np.minimum(boxes[:, 2:], crop_box[2:])
@@ -135,12 +142,20 @@ def box_crop(boxes, labels, scores, crop, img_shape):
     boxes = boxes * np.expand_dims(mask.astype('float32'), axis=1)
     labels = labels * mask.astype('float32')
     scores = scores * mask.astype('float32')
-    boxes[:, 0], boxes[:, 2] = (boxes[:, 0] + boxes[:, 2]) / 2 / w, (boxes[:, 2] - boxes[:, 0]) / w
-    boxes[:, 1], boxes[:, 3] = (boxes[:, 1] + boxes[:, 3]) / 2 / h, (boxes[:, 3] - boxes[:, 1]) / h
+    boxes[:, 0], boxes[:, 2] = (boxes[:, 0] + boxes[:, 2]) / 2 / w, (
+        boxes[:, 2] - boxes[:, 0]) / w
+    boxes[:, 1], boxes[:, 3] = (boxes[:, 1] + boxes[:, 3]) / 2 / h, (
+        boxes[:, 3] - boxes[:, 1]) / h
 
     return boxes, labels, scores, mask.sum()
 
-def draw_boxes_on_image(image_path, boxes, scores, labels, label_names, score_thresh=0.5):
+
+def draw_boxes_on_image(image_path,
+                        boxes,
+                        scores,
+                        labels,
+                        label_names,
+                        score_thresh=0.5):
     image = np.array(Image.open(image_path))
     plt.figure()
     _, ax = plt.subplots(1)
@@ -158,21 +173,33 @@ def draw_boxes_on_image(image_path, boxes, scores, labels, label_names, score_th
         if label not in colors:
             colors[label] = plt.get_cmap('hsv')(label / len(label_names))
         x1, y1, x2, y2 = box[0], box[1], box[2], box[3]
-        rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, 
-                            fill=False, linewidth=2.0, 
-                            edgecolor=colors[label])
+        rect = plt.Rectangle(
+            (x1, y1),
+            x2 - x1,
+            y2 - y1,
+            fill=False,
+            linewidth=2.0,
+            edgecolor=colors[label])
         ax.add_patch(rect)
-        ax.text(x1, y1, '{} {:.4f}'.format(label_names[label], score), 
-                verticalalignment='bottom', horizontalalignment='left',
-                bbox={'facecolor': colors[label], 'alpha': 0.5, 'pad': 0},
-                fontsize=8, color='white')
-        print("\t {:15s} at {:25} score: {:.5f}".format(label_names[int(label)], map(int, list(box)), score))
+        ax.text(
+            x1,
+            y1,
+            '{} {:.4f}'.format(label_names[label], score),
+            verticalalignment='bottom',
+            horizontalalignment='left',
+            bbox={'facecolor': colors[label],
+                  'alpha': 0.5,
+                  'pad': 0},
+            fontsize=8,
+            color='white')
+        print("\t {:15s} at {:25} score: {:.5f}".format(label_names[int(
+            label)], str(list(map(int, list(box)))), score))
     image_name = image_name.replace('jpg', 'png')
     plt.axis('off')
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
-    plt.savefig("./output/{}".format(image_name), bbox_inches='tight', pad_inches=0.0)
+    plt.savefig(
+        "./output/{}".format(image_name), bbox_inches='tight', pad_inches=0.0)
     print("Detect result save at ./output/{}\n".format(image_name))
     plt.cla()
     plt.close('all')
-

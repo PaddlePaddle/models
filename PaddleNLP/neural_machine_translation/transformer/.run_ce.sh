@@ -1,10 +1,8 @@
 #!/bin/bash
 
-DATA_PATH=$HOME/.cache/paddle/dataset/wmt16
-if [ ! -e $DATA_PATH/en_10000.dict ] ; then
-    python -c 'import paddle;paddle.dataset.wmt16.train(10000, 10000, "en")().next()'
-    tar -zxf $DATA_PATH/wmt16.tar.gz -C $DATA_PATH
-fi
+sed -i '$a\dropout_seed = 1000' ../../models/neural_machine_translation/transformer/desc.py
+
+DATA_PATH=./dataset/wmt16
 
 train(){
     python -u train.py \
@@ -18,9 +16,9 @@ train(){
         --sort_type pool \
         --pool_size 10000 \
         --enable_ce True \
+        --fetch_steps 1 \
         weight_sharing False \
-        pass_num 20 \
-        dropout_seed 10
+        pass_num 20
 }
 
 cudaid=${transformer:=0} # use 0-th card as default

@@ -104,6 +104,7 @@ After data preparation, one can start the training step by:
 
     - Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
     - Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
+    - Set ```parallel``` to False to replace [fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor) to [fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor) when running the program in the Windows & GPU environment.
     - For more help on arguments:
 
         python train.py --help

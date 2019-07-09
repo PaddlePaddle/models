@@ -1,3 +1,23 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import math
+
 import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
@@ -82,7 +102,6 @@ class ShuffleNetV2():
                   use_cudnn=True,
                   if_act=True,
                   name=None):
-#         print(num_groups)
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -95,8 +114,6 @@ class ShuffleNetV2():
             param_attr=ParamAttr(initializer=MSRA(),name=name+'_weights'),
             bias_attr=False)
         out = int((input.shape[2] - 1)/float(stride) + 1)
-       # print(input.shape[1],(out, out), num_filters, (filter_size, filter_size), stride, 
-       #       (filter_size - 1) / 2, num_groups, name)
         bn_name = name + '_bn'
         if if_act:
             return fluid.layers.batch_norm(input=conv, act='swish',
@@ -137,8 +154,6 @@ class ShuffleNetV2():
         if benchmodel == 1:
             x1, x2 = fluid.layers.split(
                 input, num_or_sections=[input.shape[1]//2, input.shape[1]//2], dim=1)            
-#             x1 = input[:, :(input.shape[1]//2), :, :]
-#             x2 = input[:, (input.shape[1]//2):, :, :]
             
             conv_pw = self.conv_bn_layer(
                 input=x2, 

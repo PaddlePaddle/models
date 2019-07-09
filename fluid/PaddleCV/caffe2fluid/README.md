@@ -1,6 +1,6 @@
 
-Hi! 
+Hi!
 
-This directory has been deprecated. 
+This directory has been deprecated.
 
-Please visit the project at [PaddleCV/caffe2fluid](../../../PaddleCV/caffe2fluid).
+Please visit the project at [X2Paddle](https://github.com/PaddlePaddle/X2Paddle).

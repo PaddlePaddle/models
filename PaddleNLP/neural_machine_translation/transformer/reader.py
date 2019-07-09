@@ -180,6 +180,7 @@ class DataReader(object):
                  min_length=0,
                  max_length=100,
                  shuffle=True,
+                 shuffle_seed=None,
                  shuffle_batch=False,
                  use_token_batch=False,
                  field_delimiter="\t",
@@ -199,6 +200,7 @@ class DataReader(object):
         self._sort_type = sort_type
         self._clip_last_batch = clip_last_batch
         self._shuffle = shuffle
+        self._shuffle_seed = shuffle_seed
         self._shuffle_batch = shuffle_batch
         self._min_length = min_length
         self._max_length = max_length
@@ -266,7 +268,7 @@ class DataReader(object):
                 with open(fpath, "rb") as f:
                     for line in f:
                         if six.PY3:
-                            line = line.decode()
+                            line = line.decode("utf8", errors="ignore")
                         fields = line.strip("\n").split(self._field_delimiter)
                         if (not self._only_src and len(fields) == 2) or (
                                 self._only_src and len(fields) == 1):
@@ -278,7 +280,7 @@ class DataReader(object):
         with open(dict_path, "rb") as fdict:
             for idx, line in enumerate(fdict):
                 if six.PY3:
-                    line = line.decode()
+                    line = line.decode("utf8", errors="ignore")
                 if reverse:
                     word_dict[idx] = line.strip("\n")
                 else:
@@ -292,6 +294,8 @@ class DataReader(object):
         else:
             if self._shuffle:
                 infos = self._sample_infos
+                if self._shuffle_seed is not None:
+                    self._random.seed(self._shuffle_seed)
                 self._random.shuffle(infos)
             else:
                 infos = self._sample_infos

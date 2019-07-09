@@ -28,9 +28,15 @@ logger.setLevel(logging.INFO)
 def parse_args():
     parser = argparse.ArgumentParser(description="PaddlePaddle DIN example")
     parser.add_argument(
-        '--model_path', type=str, required=True, help="path of model parameters")
+        '--model_path',
+        type=str,
+        required=True,
+        help="path of model parameters")
     parser.add_argument(
-        '--test_path', type=str, default='data/paddle_test.txt.bak', help='dir of test file')
+        '--test_path',
+        type=str,
+        default='data/paddle_test.txt.bak',
+        help='dir of test file')
     parser.add_argument(
         '--use_cuda', type=int, default=0, help='whether to use gpu')
 
@@ -64,7 +70,7 @@ def infer():
     data_reader, _ = reader.prepare_reader(args.test_path, 32 * 16)
 
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
-    inference_scope = fluid.core.Scope()
+    inference_scope = fluid.Scope()
 
     exe = fluid.Executor(place)
 
