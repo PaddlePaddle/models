@@ -52,6 +52,7 @@ class RetinaHead(object):
         sigma (float): The parameter in smooth l1 loss
     """
     __inject__ = ['anchor_generator', 'target_assign', 'output_decoder']
+    __shared__ = ['num_classes']
 
     def __init__(self,
                  anchor_generator=AnchorGenerator().__dict__,

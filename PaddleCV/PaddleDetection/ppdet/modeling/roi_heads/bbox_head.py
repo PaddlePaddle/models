@@ -98,6 +98,7 @@ class BBoxHead(object):
         num_classes: number of output classes
     """
     __inject__ = ['head', 'box_coder', 'nms']
+    __shared__ = ['num_classes']
 
     def __init__(self,
                  head,
