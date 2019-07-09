@@ -92,7 +92,7 @@ class BBoxHead(object):
     RCNN bbox head
 
     Args:
-        head (object): the head module instance, e.g., `ResNetC5` or `TwoFCHead`
+        head (object): the head module instance, e.g., `ResNetC5`, `TwoFCHead`
         box_coder (object): `BoxCoder` instance
         nms (object): `MultiClassNMS` instance
         num_classes: number of output classes

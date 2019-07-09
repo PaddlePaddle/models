@@ -43,7 +43,8 @@ except Exception:
         if not check_type.__warning_sent__:
             from ppdet.utils.cli import ColorTTY
             color_tty = ColorTTY()
-            message = "typeguard is not installed, type checking is not available"
+            message = "typeguard is not installed," \
+                + "type checking is not available"
             print(color_tty.yellow(message))
             check_type.__warning_sent__ = True
 

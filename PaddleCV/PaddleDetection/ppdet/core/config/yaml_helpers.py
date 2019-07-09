@@ -59,7 +59,8 @@ def _make_python_representer(cls):
 
 def serializable(cls):
     """
-    Add loader and dumper for given class, which must be "trivially serializable"
+    Add loader and dumper for given class, which must be
+    "trivially serializable"
 
     Args:
         cls: class to be serialized
