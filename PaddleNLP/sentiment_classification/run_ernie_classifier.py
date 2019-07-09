@@ -17,7 +17,7 @@ import paddle
 import paddle.fluid as fluid
 
 sys.path.append("../models/classification/")
-sys.path.append("..")
+sys.path.append("../")
 print(sys.path)
 
 from nets import bow_net
@@ -34,6 +34,7 @@ from models.representation.ernie import ernie_pyreader
 from utils import ArgumentGroup
 from utils import print_arguments
 from utils import init_checkpoint
+from models.model_check import check_cuda
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
@@ -425,4 +426,5 @@ def main(args):
 
 if __name__ == "__main__":
     print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)
