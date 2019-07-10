@@ -13,7 +13,7 @@ import paddle
 import paddle.fluid as fluid
 from pyramidbox import PyramidBox
 import reader
-from utility import add_arguments, print_arguments
+from utility import add_arguments, print_arguments, check_cuda
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -247,6 +247,7 @@ def get_cards(args):
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
+    check_cuda(args.use_gpu)
 
     data_dir = os.path.join(args.data_dir, 'WIDER_train/images/')
     train_file_list = os.path.join(args.data_dir,
