@@ -32,6 +32,7 @@ add_arg('mean_BGR',         str,   '104., 117., 123.', "Mean value for B,G,R cha
 add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 add_arg('data_dir',         str,   'data',          "The base dir of dataset")
+add_arg('use_multiprocess', bool,  True,            "Whether use multi-process for data preprocessing.")
 parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 parser.add_argument('--batch_num', type=int, help="batch num for ce")
 parser.add_argument('--num_devices', type=int, default=1, help='Number of GPU devices')
@@ -163,7 +164,8 @@ def train(args, config, train_params, train_file_list):
                                 train_file_list,
                                 batch_size_per_device,
                                 shuffle = is_shuffle,
-                                num_workers = num_workers)
+                                use_multiprocess=args.use_multiprocess,
+                                num_workers=num_workers)
     train_py_reader.decorate_paddle_reader(train_reader)
 
     if args.parallel:
