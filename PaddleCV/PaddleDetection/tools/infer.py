@@ -164,6 +164,13 @@ def main():
     clsid2catid, catid2name = get_category_info(anno_file, with_background,
                                                 use_default_label)
 
+    # only SSD bbox output is normalized values in range [0, 1]
+    is_bbox_normalized = False
+    if 'bbox' in keys:
+        bbox_var_name = values[keys.index('bbox')]
+        if bbox_var_name.find('detection_output') >= 0:
+            is_bbox_normalized = True
+
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
         outs = exe.run(infer_prog,
@@ -178,7 +185,6 @@ def main():
 
         bbox_results = None
         mask_results = None
-        is_bbox_normalized = True if cfg.metric == 'VOC' else False
         if 'bbox' in res:
             bbox_results = bbox2out([res], clsid2catid, is_bbox_normalized)
         if 'mask' in res:
