@@ -163,10 +163,6 @@ def train():
                     cnn_net.train()
                     avg_cost, prediction, acc = cnn_net(doc, label)
                     avg_cost.backward()
-                    #print("---->{}".format(avg_cost.numpy()))
-                    #print(type(cnn_net.parameters()))
-                    #if batch_id == 20:
-                    #    exit()
                     np_mask = (doc.numpy() != args.vocab_size).astype('int32')
                     word_num = np.sum(np_mask)
                     sgd_optimizer.minimize(avg_cost)

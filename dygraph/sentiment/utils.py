@@ -19,7 +19,6 @@ import io
 import sys
 import random
 
-random.seed(33)
 
 def str2bool(v):
     return v.lower() in ("true", "t", "1")

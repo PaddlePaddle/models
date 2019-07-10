@@ -75,7 +75,6 @@ class CNN(fluid.dygraph.Layer):
         emb = emb * mask_emb
         emb = fluid.layers.reshape(
             emb, shape=[-1, 1, self.seq_len, self.hid_dim])
-        #print(emb.numpy().mean())
         conv_3 = self._simple_conv_pool_1(emb)
         #print(conv_3.numpy().mean())
         fc_1 = self._fc1(conv_3)
