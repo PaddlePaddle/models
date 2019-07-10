@@ -57,7 +57,7 @@ class SSD(object):
         if isinstance(metric, dict):
             self.metric = SSDMetric(**metric)
         
-    def _forward(self, feed_vars, mode='train'):
+    def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
         if mode == 'train' or mode == 'eval':
             gt_box = feed_vars['gt_box']
@@ -88,13 +88,13 @@ class SSD(object):
                 return {'bbox': pred}
 
     def train(self, feed_vars):
-        return self._forward(feed_vars, 'train')
+        return self.build(feed_vars, 'train')
 
     def eval(self, feed_vars):
-        return self._forward(feed_vars, 'eval')
+        return self.build(feed_vars, 'eval')
 
     def test(self, feed_vars):
-        return self._forward(feed_vars, 'test')
+        return self.build(feed_vars, 'test')
 
     def is_bbox_normalized(self):
         # SSD use output_decoder in output layers, bbox is normalized
