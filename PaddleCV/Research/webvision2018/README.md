@@ -24,7 +24,7 @@ Cudnn >= 7, CUDA 8/9, PaddlePaddle version >= 1.3, python version 2.7 （More de
 ## 3.Download pretrained model
 | Model | Acc@1 | Acc@5
 | - | - | -
-| [ResNeXt101_32x4d]() | 53.2% | 77.0%
+| [ResNeXt101_32x4d](https://paddlemodels.bj.bcebos.com/webvision/ResNeXt101_32x4d_Released.tar.gz) | 53.4% | 77.1%
 
 ## 4.Run code 
 ```
@@ -43,4 +43,3 @@ python infer.py --model ResNeXt101_32x4d \
 ```
 
 You will get the predictions of images.
-
