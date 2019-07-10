@@ -56,7 +56,7 @@ class SSD(object):
             self.output_decoder = SSDOutputDecoder(**output_decoder)
         if isinstance(metric, dict):
             self.metric = SSDMetric(**metric)
-
+        
     def _forward(self, feed_vars, mode='train'):
         im = feed_vars['image']
         if mode == 'train' or mode == 'eval':
@@ -95,3 +95,9 @@ class SSD(object):
 
     def test(self, feed_vars):
         return self._forward(feed_vars, 'test')
+
+    def is_bbox_normalized(self):
+        # SSD use output_decoder in output layers, bbox is normalized
+        # to range [0, 1], is_bbox_normalized is used in infer.py
+        return True
+

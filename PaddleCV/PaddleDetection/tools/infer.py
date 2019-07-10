@@ -164,12 +164,10 @@ def main():
     clsid2catid, catid2name = get_category_info(anno_file, with_background,
                                                 use_default_label)
 
-    # only SSD bbox output is normalized values in range [0, 1]
+    # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
-    if 'bbox' in keys:
-        bbox_var_name = values[keys.index('bbox')]
-        if bbox_var_name.find('detection_output') >= 0:
-            is_bbox_normalized = True
+    if hasattr(model, 'is_bbox_normalized'):
+        is_bbox_normalized = model.is_bbox_normalized()
 
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
