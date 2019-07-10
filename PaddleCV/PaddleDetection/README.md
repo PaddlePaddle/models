@@ -36,16 +36,16 @@ multi-GPU training.
 
 Supported Architectures:
 
-|                    | ResNet | ResNet-vd <sup>[1](#vd)</sup> | SENet | MobileNet | DarkNet |
-|--------------------|:------:|------------------------------:|:-----:|:---------:|:-------:|
-| Faster R-CNN       | ✓      |                             ✓ | ✓     | ✗         | ✗       |
-| Faster R-CNN + FPN | ✓      |                             ✓ | ✓     | ✗         | ✗       |
-| Mask R-CNN         | ✓      |                             ✓ | ✓     | ✗         | ✗       |
-| Mask R-CNN + FPN   | ✓      |                             ✓ | ✓     | ✗         | ✗       |
-| Cascade R-CNN      | ✓      |                             ✗ | ✗     | ✗         | ✗       |
-| RetinaNet          | ✓      |                             ✗ | ✗     | ✗         | ✗       |
-| Yolov3             | ✓      |                             ✗ | ✗     | ✓         | ✓       |
-| SSD                | ✗      |                             ✗ | ✗     | ✓         | ✗       |
+|                    | ResNet | ResNet-vd <sup>[1](#vd)</sup> | ResNeXt-vd | SENet | MobileNet | DarkNet |
+|--------------------|:------:|------------------------------:|:----------:|:-----:|:---------:|:-------:|
+| Faster R-CNN       | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
+| Faster R-CNN + FPN | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       |
+| Mask R-CNN         | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
+| Mask R-CNN + FPN   | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
+| Cascade R-CNN      | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       |
+| RetinaNet          | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       |
+| Yolov3             | ✓      |                             ✗ | ✗          | ✗     | ✓         | ✓       |
+| SSD                | ✗      |                             ✗ | ✗          | ✗     | ✓         | ✗       |
 
 <a name="vd">[1]</a> [ResNet-vd](https://arxiv.org/pdf/1812.01187) models offer much improved accuracy with negligible performance cost.
 
@@ -55,6 +55,8 @@ Advanced Features:
 - [x] **Group Norm**: pretrained models to be released.
 - [x] **Modulated Deformable Convolution**: pretrained models to be released.
 - [x] **Deformable PSRoI Pooling**: pretrained models to be released.
+
+**NOTE:** Synchronized batch normalization can only be used on multiple GPU devices, can not be used on CPU devices or single GPU device.
 
 
 ## Model zoo

@@ -11,7 +11,7 @@ import paddle
 import paddle.fluid as fluid
 import reader
 from mobilenet_ssd import build_mobilenet_ssd
-from utility import add_arguments, print_arguments
+from utility import add_arguments, print_arguments, check_cuda
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -203,6 +203,7 @@ def train(args,
         fluid.io.save_persistables(exe, model_path, main_program=main_prog)
 
     best_map = 0.
+    test_map = None
     def test(epoc_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
@@ -286,6 +287,8 @@ def train(args,
 def main():
     args = parser.parse_args()
     print_arguments(args)
+
+    check_cuda(args.use_gpu)
 
     data_dir = args.data_dir
     dataset = args.dataset

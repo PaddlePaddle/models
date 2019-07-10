@@ -55,6 +55,7 @@ def load_model():
 CityscapeDataset = reader.CityscapeDataset
 
 args = parser.parse_args()
+utility.check_gpu(args.use_gpu)
 
 models.clean()
 models.is_train = False

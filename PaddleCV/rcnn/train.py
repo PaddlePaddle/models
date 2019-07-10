@@ -35,7 +35,7 @@ import sys
 import numpy as np
 import time
 import shutil
-from utility import parse_args, print_arguments, SmoothedValue, TrainingStats, now_time
+from utility import parse_args, print_arguments, SmoothedValue, TrainingStats, now_time, check_gpu
 import collections
 
 import paddle
@@ -250,8 +250,6 @@ def train():
                   (gpu_num, total_time / epoch_idx))
             print("kpis\ttrain_loss_card%s\t%s" % (gpu_num, loss))
 
-        return np.mean(every_pass_loss)
-
     if cfg.use_pyreader:
         train_loop_pyreader()
     else:
@@ -262,4 +260,5 @@ def train():
 if __name__ == '__main__':
     args = parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     train()
