@@ -182,8 +182,6 @@ def train(args,
         train_params=train_params,
         is_train=False)
 
-    print('===parallel====',parallel)
-
     test_prog = test_prog.clone(for_test=True)
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
