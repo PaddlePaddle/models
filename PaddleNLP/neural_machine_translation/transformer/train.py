@@ -4,6 +4,10 @@ import copy
 import logging
 import multiprocessing
 import os
+
+if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
+    os.environ['FLAGS_eager_delete_tensor_gb'] = '0'
+
 import six
 import sys
 sys.path.append("../../models/neural_machine_translation/transformer/")
@@ -716,9 +720,6 @@ def train(args):
             else:
                 optimizer = fluid.optimizer.SGD(0.003)
             optimizer.minimize(avg_cost)
-
-    if args.use_mem_opt:
-        fluid.memory_optimize(train_prog)
 
     if args.local:
         logging.info("local start_up:")
