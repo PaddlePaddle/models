@@ -59,6 +59,8 @@ C-TCN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准�
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/ctcn.tar.gz)进行评估
 
+- 运行上述程序会将测试结果保存在json文件中，使用ActivityNet官方提供的测试脚本，即可计算MAP。具体计算过程请参考[指标计算](../../metrics/detections/README.md)
+
 当取如下参数时，在ActivityNet1.3数据集下评估精度如下:
 
 | score\_thresh | nms\_thresh | soft\_sigma | soft\_thresh | MAP |

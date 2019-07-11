@@ -98,17 +98,20 @@ class Data():
                     cur_batch = cur_bg[i:i + batch_size]
                     yield self.make_data(cur_batch, batch_size)
 
-            #deal with the remaining, discard at most batch_size data
-            if group_remain < batch_size:
+            #deal with the last batch group
+            if group_remain == 0:
                 return
             remain_data = copy.deepcopy(self.input[-group_remain:])
             if train:
                 remain_data = sorted(
                     remain_data, key=lambda x: len(x[0]), reverse=True)
-            for i in range(0, batch_group_size, batch_size):
-                if i + batch_size <= len(remain_data):
+            for i in range(0, group_remain, batch_size):
+                if i + batch_size <= group_remain:
                     cur_batch = remain_data[i:i + batch_size]
                     yield self.make_data(cur_batch, batch_size)
+                else:
+                    cur_batch = remain_data[i:]
+                    yield self.make_data(cur_batch, group_remain % batch_size)
         return _reader
 
 

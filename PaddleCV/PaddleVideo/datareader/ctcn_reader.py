@@ -199,18 +199,18 @@ class CTCNReader(DataReader):
     def load_file(self, fname):
         if python_ver < (3, 0):
             rgb_pkl = pickle.load(
-                open(os.path.join(self.root, self.rgb, fname + '.pkl')))
+                open(os.path.join(self.root, self.rgb, fname + '.pkl'), 'rb'))
             flow_pkl = pickle.load(
-                open(os.path.join(self.root, self.flow, fname + '.pkl')))
+                open(os.path.join(self.root, self.flow, fname + '.pkl'), 'rb'))
         else:
             rgb_pkl = pickle.load(
-                open(os.path.join(self.root, self.rgb, fname + '.pkl')),
+                open(os.path.join(self.root, self.rgb, fname + '.pkl'), 'rb'),
                 encoding='bytes')
             flow_pkl = pickle.load(
-                open(os.path.join(self.root, self.flow, fname + '.pkl')),
+                open(os.path.join(self.root, self.flow, fname + '.pkl'), 'rb'),
                 encoding='bytes')
-        data_flow = np.array(flow_pkl['scores'])
-        data_rgb = np.array(rgb_pkl['scores'])
+        data_flow = np.array(flow_pkl[b'scores'])
+        data_rgb = np.array(rgb_pkl[b'scores'])
         if data_flow.shape[0] < data_rgb.shape[0]:
             data_rgb = data_rgb[0:data_flow.shape[0], :]
         elif data_flow.shape[0] > data_rgb.shape[0]:

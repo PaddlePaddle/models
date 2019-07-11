@@ -22,6 +22,8 @@
 
 python版本依赖python 2.7
 
+注意：该模型同时支持cpu和gpu训练和预测，用户可以根据自身需求，选择安装对应的paddlepaddle-gpu或paddlepaddle版本。
+
 #### 安装代码
 
 克隆数据集代码库到本地

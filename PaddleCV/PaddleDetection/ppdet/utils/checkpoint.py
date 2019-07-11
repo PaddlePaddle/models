@@ -52,7 +52,8 @@ def load_pretrain(exe, prog, path):
         path = get_weights_path(path)
 
     if not os.path.exists(path):
-        logger.info('Model path {} does not exists.'.format(path))
+        raise ValueError("Model pretrain path {} does not "
+                         "exists.".format(path))
 
     logger.info('Loading pretrained model from {}...'.format(path))
 
@@ -77,7 +78,8 @@ def load_checkpoint(exe, prog, path):
         path = get_weights_path(path)
 
     if not os.path.exists(path):
-        logger.info('Model path {} does not exists.'.format(path))
+        raise ValueError("Model checkpoint path {} does not "
+                         "exists.".format(path))
 
     logger.info('Loading checkpoint from {}...'.format(path))
     fluid.io.load_persistables(exe, path, prog)
@@ -126,6 +128,9 @@ def load_and_fusebn(exe, prog, path):
     logger.info('Load model and fuse batch norm from {}...'.format(path))
     if is_url(path):
         path = get_weights_path(path)
+
+    if not os.path.exists(path):
+        raise ValueError("Model path {} does not exists.".format(path))
 
     def _if_exist(var):
         b = os.path.exists(os.path.join(path, var.name))
@@ -183,7 +188,8 @@ def load_and_fusebn(exe, prog, path):
                         [scale_name, bias_name, mean_name, variance_name])
 
     if not bn_in_path:
-        raise ValueError("The model in path {} has not params of batch norm.")
+        raise ValueError("There is no params of batch norm in model {}.".format(
+            path))
 
     # load running mean and running variance on cpu place into global scope.
     place = fluid.CPUPlace()

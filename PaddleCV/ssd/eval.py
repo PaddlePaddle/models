@@ -9,7 +9,7 @@ import paddle
 import paddle.fluid as fluid
 import reader
 from mobilenet_ssd import build_mobilenet_ssd
-from utility import add_arguments, print_arguments
+from utility import add_arguments, print_arguments, check_cuda
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -104,6 +104,8 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
+
+    check_cuda(args.use_gpu)
 
     data_dir = 'data/pascalvoc'
     test_list = 'test.txt'

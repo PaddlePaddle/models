@@ -189,9 +189,10 @@ class DTrainer():
         grad_shape = grad.shape
         grad = fluid.layers.reshape(
             grad, [-1, grad_shape[1] * grad_shape[2] * grad_shape[3]])
+        epsilon = 1e-16
         norm = fluid.layers.sqrt(
             fluid.layers.reduce_sum(
-                fluid.layers.square(grad), dim=1))
+                fluid.layers.square(grad), dim=1) + epsilon)
         gp = fluid.layers.reduce_mean(fluid.layers.square(norm - 1.0))
         return gp
 
@@ -308,12 +309,8 @@ class StarGAN(object):
                 loss_name=dis_trainer.d_loss.name,
                 build_strategy=build_strategy)
 
-        #losses = [[], []]
         t_time = 0
 
-        test_program = gen_trainer.infer_program
-        utility.save_test_image(0, self.cfg, exe, place, test_program,
-                                gen_trainer, self.test_reader)
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for i in range(self.batch_num):
