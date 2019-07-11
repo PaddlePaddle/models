@@ -4,7 +4,7 @@ eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 180000
 snapshot_iter: 10000
-use_gpu: True
+use_gpu: true
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_64x4d_pretrained.tar
@@ -119,7 +119,7 @@ FasterRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   num_workers: 2
-  shuffle: True
+  shuffle: true
 
 FasterRCNNEvalFeed:
   batch_size: 1
@@ -140,4 +140,4 @@ FasterRCNNTestFeed:
   - !PadBatch
     pad_to_stride: 32
   num_workers: 2
-  shuffle: False
+  shuffle: false

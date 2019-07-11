@@ -2,7 +2,7 @@ architecture: YOLOv3
 train_feed: YoloTrainFeed
 eval_feed: YoloEvalFeed
 test_feed: YoloTestFeed
-use_gpu: True
+use_gpu: true
 max_iters: 500200
 log_smooth_window: 20
 save_dir: output
@@ -18,7 +18,7 @@ YOLOv3:
 ResNet:
   norm_type: sync_bn
   freeze_at: 0
-  freeze_norm: False
+  freeze_norm: false
   norm_decay: 0.
   depth: 34
   feature_maps: [3, 4, 5]
@@ -30,13 +30,13 @@ YOLOv3Head:
             [116, 90], [156, 198], [373, 326]]
   norm_decay: 0.
   ignore_thresh: 0.7
-  label_smooth: True
+  label_smooth: true
   nms:
     background_label: -1
     keep_top_k: 100
     nms_threshold: 0.45
     nms_top_k: 1000
-    normalized: False
+    normalized: false
     score_threshold: 0.01
   num_classes: 80
 
@@ -68,7 +68,7 @@ YoloTrainFeed:
     image_dir: train2017
   num_workers: 8
   bufsize: 128
-  use_process: True
+  use_process: true
 
 YoloEvalFeed:
   batch_size: 8

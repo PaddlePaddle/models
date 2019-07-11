@@ -5,7 +5,7 @@ eval_feed: SSDEvalFeed
 test_feed: SSDTestFeed
 pretrain_weights: https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_coco_pretrained.tar
 
-use_gpu: True
+use_gpu: true
 snapshot_iter: 2000
 log_smooth_window: 1
 metric: VOC
@@ -18,7 +18,7 @@ SSD:
   num_classes: 21
   metric:
     ap_version: 11point
-    evaluate_difficult: False
+    evaluate_difficult: false
     overlap_threshold: 0.5
   output_decoder:
     background_label: 0
@@ -65,20 +65,20 @@ SSDTrainFeed:
     dataset_dir: dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
     image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: True
+    use_default_label: true
 
 SSDEvalFeed:
   batch_size: 64
-  use_process: True
+  use_process: true
   dataset:
     dataset_dir: dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
     image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: True
-  drop_last: False
+    use_default_label: true
+  drop_last: false
 
 SSDTestFeed:
   batch_size: 1
   dataset:
-    use_default_label: True
-  drop_last: False
+    use_default_label: true
+  drop_last: false

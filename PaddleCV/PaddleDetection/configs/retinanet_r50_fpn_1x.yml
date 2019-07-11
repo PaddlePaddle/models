@@ -3,7 +3,7 @@ train_feed: FasterRCNNTrainFeed
 eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 90000
-use_gpu: True
+use_gpu: true
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos_pretrained.tar
 weights: output/retinanet_r50_fpn_1x/model_final
 log_smooth_window: 20
