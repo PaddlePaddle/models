@@ -31,7 +31,6 @@ DATA_DIM = 224
 THREAD = 8
 BUF_SIZE = 2048
 
-DATA_DIR = './data/ILSVRC2012'
 
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
@@ -227,7 +226,7 @@ def _reader_creator(settings,
                     shuffle=False,
                     color_jitter=False,
                     rotate=False,
-                    data_dir=DATA_DIR,
+                    data_dir=None,
                     shuffle_seed=0):
     def reader():
         def read_file_list():
@@ -271,8 +270,9 @@ def _reader_creator(settings,
         mapper, data_reader, THREAD, BUF_SIZE, order=False)
 
 
-def train(settings, batch_size, data_dir=DATA_DIR, shuffle_seed=0):
-    file_list = os.path.join(data_dir, 'train_list.txt')
+def train(settings, batch_size, data_dir=None, shuffle_seed=0):
+    file_list = settings.img_list
+    data_dir = settings.img_path
     reader = _reader_creator(
         settings,
         file_list,
@@ -287,19 +287,7 @@ def train(settings, batch_size, data_dir=DATA_DIR, shuffle_seed=0):
         reader = create_mixup_reader(settings, reader)
     return reader
 
-
-def val(settings, batch_size, data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'val_list.txt')
-    return _reader_creator(
-        settings,
-        file_list,
-        batch_size,
-        'val',
-        shuffle=False,
-        data_dir=data_dir)
-
-
-def test(settings, batch_size=1, data_dir=DATA_DIR):
+def test(settings, batch_size=1, data_dir=None):
     file_list = settings.img_list
     data_dir = settings.img_path
     return _reader_creator(
