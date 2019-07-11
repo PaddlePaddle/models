@@ -1,6 +1,6 @@
 # WebVision Image Classification 2018 Challenge 
 The goal of this challenge is to advance the area of learning knowledge and representation from web data. The web data not only contains huge numbers of visual images, but also rich meta information concerning these visual data, which could be exploited to learn good representations and models. 
-More detail [[link]] (https://www.vision.ee.ethz.ch/webvision/challenge.html).
+More detail [[link] (https://www.vision.ee.ethz.ch/webvision/challenge.html)].
 
 By observing the web data, we find that there are five key challenges, i.e., imbalanced class sizes, high intra-classes diversity and inter-class similarity, imprecise instances,
 insufficient representative instances, and ambiguous class labels. To alleviate these challenges, we assume that every training instance has
