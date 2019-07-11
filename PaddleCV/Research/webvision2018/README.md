@@ -26,7 +26,7 @@ Cudnn >= 7, CUDA 8/9, PaddlePaddle version >= 1.3, python version 2.7 （More de
 | - | - | -
 | [ResNeXt101_32x4d](https://paddlemodels.bj.bcebos.com/webvision/ResNeXt101_32x4d_Released.tar.gz) | 53.4% | 77.1%
 
-## 4.Run code 
+## 4.Test image 
 ```
 sh run.sh
 ```
@@ -43,3 +43,17 @@ python infer.py --model ResNeXt101_32x4d \
 ```
 
 You will get the predictions of images.
+## 5.Evaluation
+```
+export CUDA_VISIBLE_DEVICES=$GPU_ID
+export FLAGS_fraction_of_gpu_memory_to_use=1.0
+python eval.py  --model ResNeXt101_32x4d \
+                --pretrained_model $PRETRAINEDMODELPATH \
+                --class_dim 5000 \
+                --img_path $IMGPATH \
+                --img_list $IMGLIST \
+                --use_gpu True
+
+```
+You will get the Acc@1 and Acc@5.
+
