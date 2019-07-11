@@ -1,0 +1,6 @@
+*.tgz
+deeplabv3plus_gn_init*
+deeplabv3plus_xception65_initialize*
+*.log
+*.sh
+output*
