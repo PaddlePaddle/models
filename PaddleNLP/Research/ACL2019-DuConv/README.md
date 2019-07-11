@@ -16,7 +16,7 @@ Human-machine conversation is one of the most important topics in artificial int
 
 # Task Description
 Given a dialogue goal g and a set of topic-related background knowledge M = f<sub>1</sub> ,f<sub>2</sub> ,..., f<sub>n</sub> , the system is expected to output an utterance "u<sub>t</sub>" for the current conversation H = u<sub>1</sub>, u<sub>2</sub>, ..., u<sub>t-1</sub>, which keeps the conversation coherent and informative under the guidance of the given goal. During the dialogue, the system is required to proactively lead the conversation from one topic to another. The dialog goal g is given like this: "Start->Topic_A->TOPIC_B", which means the machine should lead the conversation from any start state to topic A and then to topic B. The given background knowledge includes knowledge related to topic A and topic B, and the relations between these two topics.<br>
-![image](https://github.com/PaddlePaddle/models/blob/wwqydy-patch-1/PaddleNLP/Research/ACL2019-DuConv/images/proactive_conversation_case.png)
+![image](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/Research/ACL2019-DuConv/images/proactive_conversation_case.png)
 *Figure1.Proactive Conversation Case. Each utterance of "BOT" could be predicted by system, e.g., utterances with black words represent history H,and utterance with green words represent the response u<sub>t</sub> predicted by system.*
 
 # DuConv

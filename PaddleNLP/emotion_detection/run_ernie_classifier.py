@@ -19,6 +19,7 @@ import numpy as np
 
 from preprocess.ernie import task_reader
 from models.representation import ernie
+from models.model_check import check_cuda
 import utils
 
 # yapf: disable
@@ -384,4 +385,5 @@ def main(args):
 
 if __name__ == "__main__":
     utils.print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)

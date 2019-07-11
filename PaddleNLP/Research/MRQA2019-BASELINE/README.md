@@ -5,7 +5,7 @@ Machine Reading for Question Answering (MRQA), which requires machines to compre
 Although recent systems achieve impressive results on the several benchmarks, these systems are primarily evaluated on in-domain accuracy. The [2019 MRQA Shared Task](https://mrqa.github.io/shared) focuses on testing the generalization  of the existing systems on out-of-domain datasets. 
 
 In this repository, we provide a baseline for the 2019 MRQA Shared Task that is built on top of [PaddlePaddle](https://github.com/paddlepaddle/paddle), and it features:
-* ***Pre-trained Language Model***: [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) (Enhanced Representation through kNowledge IntEgration) is a pre-trained language model that is designed to learn better language representations by incorporating linguistic knowledge masking. Our ERNIE-based baseline outperforms the MRQA official baseline that uses BERT by 6.1 point (marco-f1) on the out-of-domain dev set. 
+* ***Pre-trained Language Model***: [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) (Enhanced Representation through kNowledge IntEgration) is a pre-trained language model that is designed to learn better language representations by incorporating linguistic knowledge masking. Our ERNIE-based baseline outperforms the MRQA official baseline that uses BERT by **6.1** point (marco-f1) on the out-of-domain dev set. 
 * ***Multi-GPU Fine-tuning and Prediction***: Support for Multi-GPU fine-tuning and prediction to accelerate the experiments. 
 
 You can use this repo as starter codebase for 2019 MRQA Shared Task and bootstrap your next model. 

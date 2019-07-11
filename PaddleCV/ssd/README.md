@@ -23,7 +23,7 @@ SSD is readily pluggable into a wide variant standard convolutional network, suc
 
 Please download [PASCAL VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC/) at first, skip this step if you already have one.
 
-```bash
+```
 cd data/pascalvoc
 ./download.sh
 ```
@@ -36,7 +36,7 @@ The command `download.sh` also will create training and testing file lists.
 
 We provide two pre-trained models. The one is MobileNet-v1 SSD trained on COCO dataset, but removed the convolutional predictors for COCO dataset. This model can be used to initialize the models when training other datasets, like PASCAL VOC. The other pre-trained model is MobileNet-v1 trained on ImageNet 2012 dataset but removed the last weights and bias in the Fully-Connected layer. Download MobileNet-v1 SSD:
 
-    ```bash
+    ```
     ./pretrained/download_coco.sh
     ```
 
@@ -46,13 +46,14 @@ Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https
 #### Train on PASCAL VOC
 
 `train.py` is the main caller of the training module. Examples of usage are shown below.
-  ```bash
-  python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+  ```
+  python -u train.py --batch_size=64 --dataset=pascalvoc --pretrained_model=pretrained/ssd_mobilenet_v1_coco/
   ```
    - Set ```export CUDA_VISIBLE_DEVICES=0,1``` to specifiy the number of GPU you want to use.
+   - **Note**: set `--use_multiprocess=False` when training on **Windows**, since some problems need to be solved when using Python multiprocess to accelerate data processing.
    - For more help on arguments:
 
-  ```bash
+  ```
   python train.py --help
   ```
 
@@ -69,14 +70,14 @@ We used RMSProp optimizer with mini-batch size 64 to train the MobileNet-SSD. Th
 You can evaluate your trained model in different metrics like 11point, integral on both PASCAL VOC and COCO dataset. Note we set the default test list to the dataset's test/val list, you can use your own test list by setting ```--test_list``` args.
 
 `eval.py` is the main caller of the evaluating module. Examples of usage are shown below.
-```bash
-python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/best_model' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point' --nms_threshold=0.45
+```
+python eval.py --dataset=pascalvoc --model_dir=model/best_model --data_dir=data/pascalvoc --test_list=test.txt
 ```
 
 ### Infer and Visualize
 `infer.py` is the main caller of the inferring module. Examples of usage are shown below.
-```bash
-python infer.py --dataset='pascalvoc' --nms_threshold=0.45 --model_dir='train_pascal_model/best_model' --image_path='./data/pascalvoc/VOCdevkit/VOC2007/JPEGImages/009963.jpg'
+```
+python infer.py --dataset=pascalvoc --nms_threshold=0.45 --model_dir=model/best_model --image_path=./data/pascalvoc/VOCdevkit/VOC2007/JPEGImages/009963.jpg
 ```
 Below are the examples of running the inference and visualizing the model result.
 <p align="center">
