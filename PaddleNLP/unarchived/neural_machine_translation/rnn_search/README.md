@@ -1,4 +1,4 @@
-运行本目录下的范例模型需要安装PaddlePaddle Fluid 1.0版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/install/index_cn.html)中的说明更新 PaddlePaddle 安装版本。
+运行本目录下的范例模型需要安装PaddlePaddle Fluid 1.5版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
 
 # 机器翻译：RNN Search
 
