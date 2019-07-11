@@ -300,7 +300,6 @@ def val(settings, batch_size, data_dir=DATA_DIR):
 
 
 def test(settings, batch_size=1, data_dir=DATA_DIR):
-    #file_list = os.path.join(data_dir, 'val_list.txt')
     file_list = settings.img_list
     data_dir = settings.img_path
     return _reader_creator(
