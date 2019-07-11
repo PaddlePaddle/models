@@ -27,7 +27,7 @@ import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator
-from util.utility import check_attribute_conflict, check_gpu, save_batch_image, save_single_image
+from util.utility import check_attribute_conflict, check_gpu, save_batch_image
 import copy
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -145,10 +145,7 @@ def infer(args):
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
 
-            if(len(label_org) > 1):
-                real_img_temp = save_batch_image(real_img) 
-            else:
-                real_img_temp = save_single_image(real_img)
+            real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(args.c_dim):
                 label_trg_tmp = copy.deepcopy(label_trg)
@@ -169,13 +166,10 @@ def infer(args):
                     "label_trg_": tensor_label_trg_
                 },
                               fetch_list=[fake.name])
-                if(len(label_org) > 1):
-                    fake_temp = save_batch_image(out[0]) 
-                else:
-                    fake_temp = save_single_image(out[0])
+                fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            if (len(label_org) > 1):
+            if len(label_org) > 1:
                 images_concat = np.concatenate(images_concat, 1)
             imageio.imwrite(args.output + "/fake_img_" + name[0], (
                 (images_concat + 1) * 127.5).astype(np.uint8))
@@ -196,10 +190,7 @@ def infer(args):
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
 
-            if(len(label_org) > 1):
-                real_img_temp = save_batch_image(real_img) 
-            else:
-                real_img_temp = save_single_image(real_img)
+            real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(args.c_dim):
                 label_trg_tmp = copy.deepcopy(label_org)
@@ -213,13 +204,10 @@ def infer(args):
                     feed={"input": tensor_img,
                           "label_trg_": tensor_label_trg},
                     fetch_list=[fake.name])
-                if(len(label_org) > 1):
-                    fake_temp = save_batch_image(out[0]) 
-                else:
-                    fake_temp = save_single_image(out[0])
+                fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            if(len(label_org) > 1):
+            if len(label_org) > 1:
                 images_concat = np.concatenate(images_concat, 1)
             imageio.imwrite(args.output + "/fake_img_" + name[0], (
                 (images_concat + 1) * 127.5).astype(np.uint8))
