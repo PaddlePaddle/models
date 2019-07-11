@@ -4,7 +4,7 @@ eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 180000
 snapshot_iter: 10000
-use_gpu: true
+use_gpu: True
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_vd_pretrained.tar

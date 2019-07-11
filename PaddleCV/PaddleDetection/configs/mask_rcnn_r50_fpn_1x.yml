@@ -2,7 +2,7 @@ architecture: MaskRCNN
 train_feed: MaskRCNNTrainFeed
 eval_feed: MaskRCNNEvalFeed
 test_feed: MaskRCNNTestFeed
-use_gpu: true
+use_gpu: True
 max_iters: 180000
 snapshot_iter: 10000
 log_smooth_window: 20

@@ -3,7 +3,7 @@ train_feed: FasterRCNNTrainFeed
 eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 180000
-use_gpu: true
+use_gpu: True
 snapshot_iter: 10000
 log_smooth_window: 20
 save_dir: output
@@ -114,7 +114,7 @@ FasterRCNNTrainFeed:
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
-  drop_last: false
+  drop_last: False
   num_workers: 2
 
 FasterRCNNEvalFeed:
@@ -134,5 +134,5 @@ FasterRCNNTestFeed:
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
-  drop_last: false
+  drop_last: False
   num_workers: 2

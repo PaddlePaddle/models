@@ -126,7 +126,8 @@ class ResNet(object):
                 param_attr=pattr,
                 bias_attr=battr,
                 moving_mean_name=bn_name + '_mean',
-                moving_variance_name=bn_name + '_variance', )
+                moving_variance_name=bn_name + '_variance',
+                use_global_stats=True)
             scale = fluid.framework._get_var(pattr.name)
             bias = fluid.framework._get_var(battr.name)
         elif self.norm_type == 'affine_channel':
@@ -330,7 +331,6 @@ class ResNetC5(ResNet):
                  norm_decay=0.,
                  variant='b',
                  feature_maps=[5]):
-        super(ResNetC5, self).__init__(
-            depth, freeze_at, norm_type, freeze_norm, norm_decay,
-            variant, feature_maps)
+        super(ResNetC5, self).__init__(depth, freeze_at, norm_type, freeze_norm,
+                                       norm_decay, variant, feature_maps)
         self.severed_head = True
