@@ -27,7 +27,7 @@ import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator
-from util.utility import check_attribute_conflict, check_gpu
+from util.utility import check_attribute_conflict, check_gpu, save_batch_image
 import copy
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -144,7 +144,8 @@ def infer(args):
             tensor_label_trg_ = fluid.LoDTensor()
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
-            real_img_temp = np.squeeze(real_img).transpose([0, 2, 3, 1])
+
+            real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(args.c_dim):
                 label_trg_tmp = copy.deepcopy(label_trg)
@@ -166,10 +167,11 @@ def infer(args):
                     "label_trg_": tensor_label_trg_
                 },
                               fetch_list=[fake.name])
-                fake_temp = np.squeeze(out[0]).transpose([0, 2, 3, 1])
+                fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            images_concat = np.concatenate(images_concat, 1)
+            if len(label_org) > 1:
+                images_concat = np.concatenate(images_concat, 1)
             imageio.imwrite(args.output + "/fake_img_" + name[0], (
                 (images_concat + 1) * 127.5).astype(np.uint8))
     elif args.model_net == 'StarGAN':
@@ -188,7 +190,8 @@ def infer(args):
             tensor_label_org = fluid.LoDTensor()
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
-            real_img_temp = np.squeeze(real_img).transpose([0, 2, 3, 1])
+
+            real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(args.c_dim):
                 label_trg_tmp = copy.deepcopy(label_org)
@@ -202,10 +205,11 @@ def infer(args):
                     feed={"input": tensor_img,
                           "label_trg_": tensor_label_trg},
                     fetch_list=[fake.name])
-                fake_temp = np.squeeze(out[0]).transpose([0, 2, 3, 1])
+                fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            images_concat = np.concatenate(images_concat, 1)
+            if len(label_org) > 1:
+                images_concat = np.concatenate(images_concat, 1)
             imageio.imwrite(args.output + "/fake_img_" + name[0], (
                 (images_concat + 1) * 127.5).astype(np.uint8))
 

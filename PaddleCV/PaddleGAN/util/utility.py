@@ -267,6 +267,14 @@ def check_attribute_conflict(label_batch, attr, attrs):
     return label_batch
 
 
+def save_batch_image(img):
+    if len(img) == 1:
+        res_img = np.squeeze(img).transpose([1, 2, 0])
+    else:
+        res_img = np.squeeze(img).transpose([0, 2, 3, 1])
+    return res_img
+
+
 def check_gpu(use_gpu):
     """
      Log error and exit when set use_gpu=true in paddlepaddle
