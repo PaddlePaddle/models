@@ -47,7 +47,7 @@ class ResNeXt():
             filter_size=7,
             stride=2,
             act='relu',
-            name="res_conv1") #debug
+            name="res_conv1")
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,

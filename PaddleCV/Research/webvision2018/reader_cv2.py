@@ -22,56 +22,6 @@ img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
 
 
-def rotate_image(img):
-    """ rotate_image """
-    (h, w) = img.shape[:2]
-    center = (w / 2, h / 2)
-    angle = np.random.randint(-10, 11)
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
-    rotated = cv2.warpAffine(img, M, (w, h))
-    return rotated
-
-
-def random_crop(img, size, settings, scale=None, ratio=None):
-    """ random_crop """
-    lower_scale = settings.lower_scale
-    lower_ratio = settings.lower_ratio
-    upper_ratio = settings.upper_ratio
-    scale = [lower_scale, 1.0] if scale is None else scale
-    ratio = [lower_ratio, upper_ratio] if ratio is None else ratio
-
-    aspect_ratio = math.sqrt(np.random.uniform(*ratio))
-    w = 1. * aspect_ratio
-    h = 1. / aspect_ratio
-
-    bound = min((float(img.shape[0]) / img.shape[1]) / (h**2),
-                (float(img.shape[1]) / img.shape[0]) / (w**2))
-
-    scale_max = min(scale[1], bound)
-    scale_min = min(scale[0], bound)
-
-    target_area = img.shape[0] * img.shape[1] * np.random.uniform(scale_min,
-                                                                  scale_max)
-    target_size = math.sqrt(target_area)
-    w = int(target_size * w)
-    h = int(target_size * h)
-    i = np.random.randint(0, img.shape[0] - h + 1)
-    j = np.random.randint(0, img.shape[1] - w + 1)
-
-    img = img[i:i + h, j:j + w, :]
-
-    resized = cv2.resize(
-        img,
-        (size, size)
-        #, interpolation=cv2.INTER_LANCZOS4
-    )
-    return resized
-
-
-def distort_color(img):
-    return img
-
-
 def resize_short(img, target_size):
     """ resize_short """
     percent = float(target_size) / min(img.shape[0], img.shape[1])
@@ -80,7 +30,6 @@ def resize_short(img, target_size):
     resized = cv2.resize(
         img,
         (resized_width, resized_height),
-        #interpolation=cv2.INTER_LANCZOS4
     )
     return resized
 
@@ -100,54 +49,6 @@ def crop_image(img, target_size, center):
     img = img[h_start:h_end, w_start:w_end, :]
     return img
 
-
-def create_mixup_reader(settings, rd):
-    class context:
-        tmp_mix = []
-        tmp_l1 = []
-        tmp_l2 = []
-        tmp_lam = []
-
-    batch_size = settings.batch_size
-    alpha = settings.mixup_alpha
-
-    def fetch_data():
-
-        data_list = []
-        for i, item in enumerate(rd()):
-            data_list.append(item)
-            if i % batch_size == batch_size - 1:
-                yield data_list
-                data_list = []
-
-    def mixup_data():
-
-        for data_list in fetch_data():
-            if alpha > 0.:
-                lam = np.random.beta(alpha, alpha)
-            else:
-                lam = 1.
-            l1 = np.array(data_list)
-            l2 = np.random.permutation(l1)
-            mixed_l = [
-                l1[i][0] * lam + (1 - lam) * l2[i][0] for i in range(len(l1))
-            ]
-            yield mixed_l, l1, l2, lam
-
-    def mixup_reader():
-
-        for context.tmp_mix, context.tmp_l1, context.tmp_l2, context.tmp_lam in mixup_data(
-        ):
-            for i in range(len(context.tmp_mix)):
-                mixed_l = context.tmp_mix[i]
-                l1 = context.tmp_l1[i]
-                l2 = context.tmp_l2[i]
-                lam = context.tmp_lam
-                yield mixed_l, l1[1], l2[1], lam
-
-    return mixup_reader
-
-
 def process_image(sample,
                   settings,
                   mode,
@@ -164,21 +65,11 @@ def process_image(sample,
     img_path = sample
     img = cv2.imread(img_path)
 
-    if mode == 'train':
-        if rotate:
-            img = rotate_image(img)
-        if crop_size > 0:
-            img = random_crop(img, crop_size, settings)
-        if color_jitter:
-            img = distort_color(img)
-        if np.random.randint(0, 2) == 1:
-            img = img[:, ::-1, :]
-    else:
-        if crop_size > 0:
-            target_size = settings.resize_short_size
-            img = resize_short(img, target_size)
+    if crop_size > 0:
+        target_size = settings.resize_short_size
+        img = resize_short(img, target_size)
 
-            img = crop_image(img, target_size=crop_size, center=True)
+        img = crop_image(img, target_size=crop_size, center=True)
 
     img = img[:, :, ::-1].astype('float32').transpose((2, 0, 1)) / 255
     img_mean = np.array(mean).reshape((3, 1, 1))
@@ -186,10 +77,7 @@ def process_image(sample,
     img -= img_mean
     img /= img_std
 
-    if mode == 'train' or mode == 'val':
-        return (img, sample[1])
-    elif mode == 'test':
-        return (img, )
+    return (img, )
 
 
 def image_mapper(**kwargs):
@@ -228,22 +116,12 @@ def _reader_creator(settings,
                 img_path = os.path.join(data_dir, img_path)
                 batch_data.append([img_path, int(label)])
                 if len(batch_data) == batch_size:
-                    if mode == 'train' or mode == 'val':
-                        yield batch_data
-                    elif mode == 'test':
-                        yield [sample[0] for sample in batch_data]
+                    yield [sample[0] for sample in batch_data]
                     batch_data = []
 
         return read_file_list
 
     data_reader = reader()
-    num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-    if mode == 'train' and num_trainers > 1:
-        assert shuffle_seed is not None, \
-            "If num_trainers > 1, the shuffle_seed must be set, because " \
-            "the order of batch data generated by reader " \
-            "must be the same in the respective processes."
-        data_reader = fluid.contrib.reader.distributed_batch_reader(data_reader)
 
     mapper = functools.partial(
         process_batch_data,
@@ -254,24 +132,6 @@ def _reader_creator(settings,
 
     return paddle.reader.xmap_readers(
         mapper, data_reader, THREAD, BUF_SIZE, order=False)
-
-
-def train(settings, batch_size=8, data_dir=None, shuffle_seed=0):
-    file_list = settings.img_list
-    data_dir = settings.img_path
-    reader = _reader_creator(
-        settings,
-        file_list,
-        batch_size,
-        'train',
-        shuffle=True,
-        color_jitter=False,
-        rotate=False,
-        data_dir=data_dir,
-        shuffle_seed=shuffle_seed)
-    if settings.use_mixup == True:
-        reader = create_mixup_reader(settings, reader)
-    return reader
 
 def test(settings, batch_size=1, data_dir=None):
     file_list = settings.img_list

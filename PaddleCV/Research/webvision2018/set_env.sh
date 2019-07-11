@@ -1,2 +1,0 @@
-export CUDA_VISIBLE_DEVICES=0
-export FLAGS_fraction_of_gpu_memory_to_use=1.0

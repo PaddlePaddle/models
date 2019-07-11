@@ -32,8 +32,8 @@ sh run.sh
 ```
 or
 ```
-. set_env.sh
 export CUDA_VISIBLE_DEVICES=$GPU_ID
+export FLAGS_fraction_of_gpu_memory_to_use=1.0
 python infer.py --model ResNeXt101_32x4d \
                 --pretrained_model $PRETRAINEDMODELPATH \
                 --class_dim 5000 \
