@@ -336,7 +336,7 @@ python compress.py \
 | ---                            | ---             | ---        |
 | MobileNet v1（剪切FLOPS -50%） | -86.47%（2.3M） | 69.20%     |
 
-### 3.7 小模型结构搜索示例
+### 3.8 小模型结构搜索示例
 
 本示例先用模拟退火策略搜索出一组tokens, 再用搜索出的tokens初始化构建模型进行训练。
 
@@ -344,13 +344,13 @@ step1: 进入路径`PaddlePaddle/models/PaddleSlim/light_nas/`。
 
 step2: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`。
 
-step3: 修改`compress.xml`文件, 将参数server_ip设置为当前机器的ip。
+step3: 修改`compress.yaml`文件, 将参数server_ip设置为当前机器的ip。
 
 step4: 执行`sh run.sh`, 可根据实际情况修改`run.sh`中的`CUDA_VISIBLE_DEVICES`。
 
 step5: 修改`light_nas_space.py`文件中的`LightNASSpace::init_tokens`, 使其返回step4中搜到的最优tokens。
 
-step6: 修改compress.xml文件，将compressor下的`strategies`去掉。
+step6: 修改`compress.yaml`文件，将compressor下的`strategies`去掉。
 
 step7: 执行`sh run.sh`进行训练任务。
 

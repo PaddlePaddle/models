@@ -515,10 +515,11 @@ distillers:
 
 该功能基于模拟退火算法，实现了轻量级模型结构的快速搜索，简称为LightNAS(Light Network Architecture Search).
 
-使用改功能，需要用户做两个工作：
+使用该功能，需要用户做两个工作：
 
 - 定义搜索空间
 - 配置LightNASStrategy,并启动压缩任务
+- （可选）基于 Android/iOS 移动端、开发板等硬件平台，配置延时评估器
 
 #### 2.4.1 定义搜索空间
 
@@ -563,6 +564,7 @@ strategies:
         class: 'LightNASStrategy'
         controller: 'sa_controller'
         target_flops: 592948064
+        target_latency: 61.6 ms
         end_epoch: 500
         retrain_epoch: 5
         metric_name: 'acc_top1'
@@ -576,6 +578,7 @@ strategies:
 - **class:** 策略类的名称，轻量级模型结构搜索策略请设置为LightNASStrategy。
 - **controller:** 用于搜索的controller, 需要在当前配置文件提前注册，下文会详细介绍其注册方法。
 - **target_flops:** FLOPS限制，搜索出的网络结构的FLOPS不超过该数值。
+- **target_latency** 评估延时限制，搜索出的网络结构评估的延时不超过该数值。
 - **end_epoch:** 当前client结束搜索策略的epoch。
 - **retrain_epoch:** 在评估模型结构性能之前，需要训练的epoch数量。(end_epoch-0)/retrain_epoch为当前client搜索出的网络结构的数量。
 - **metric_name：** 评估模型性能的指标。
@@ -598,3 +601,47 @@ controllers:
 - **reduce_rate:** float类型；温度的衰减率。
 - **init_temperature:** float类型；初始化温度。
 - **max_iter_number:** int类型；在得到一个满足FLOPS限制的tokens之前，最多尝试的次数。
+
+
+#### 2.4.3 配置延时评估器
+
+1. 基于 Paddle 预测库编写获取 op 延时的单测 `get_{op}_latency`，并将其执行文件放置在硬件平台中。
+
+    对于不同 op 的单测程序，替换 `get_{op}_latency` 中的 `{op}` 为该 op 名称。所有单测均输出一个表示平均延时的浮点数，常用 op 输入参数如下：
+
+        - `get_activation_latency cluster threads test_iter active_type n_in c_in h_in w_in`
+        - `get_batch_norm_latency cluster threads test_iter active_type n_in c_in h_in w_in`
+        - `get_conv_latency cluster threads test_iter flag_bias flag_relu n_in c_in h_in w_in c_out group kernel padding stride dilation`
+        - `get_eltwise_latency cluster threads test_iter eltwise_type n_in c_in h_in w_in`
+        - `get_pooling_latency cluster threads test_iter flag_global_pooling n_in c_in h_in w_in kernel padding stride ceil_mode pool_type`
+        - `get_softmax_latency cluster threads test_iter axis n_in c_in h_in w_in`
+
+    参数含义如下：
+
+        - cluster (int) - 核数（0：大核，1：小核，默认：大核）。
+        - threads (int) - 线程数（最大为手机支持的线程数）。
+        - test_iter (int) - 执行单测次数。
+        - active_type (string) - 激活函数类型，包含：relu, prelu, sigmoid, relu6, elu, brelu, leaky_relu。
+        - eltwise_type (int) - 按元素操作算子类型，其中 1 表示 elementwise_mul，2 表示elementwise_add，3 表示 elementwise_max。
+        - pool_type (int) - 池化类型，其中 1 表示 pooling_max，2 表示 pooling_average_include_padding，3 表示 pooling_average_exclude_padding。
+        - flag_bias (int) - 是否有 bias（0：无，1：有）。
+        - flag_global_pooling (int) - 是否为全局池化（0：不是，1：是）。
+        - flag_relu (int) - 是否有 relu（0：无，1：有）。
+        - n_in (int) - 输入 Tensor 的批尺寸。
+        - c_in (int) - 输入 Tensor 的通道 (channel) 数。
+        - h_in (int) - 输入 Tensor 的特征高度。
+        - w_in (int) - 输入 Tensor 的特征宽度。
+        - c_out (int) - 输出 Tensor 的通道 (channel) 数。
+        - groups (int) - 卷积二维层（Conv2D Layer）的组数。
+        - kernel (int) - 卷积核大小。
+        - padding (int) - 填充 (padding) 大小。
+        - stride (int) - 步长 (stride) 大小。
+        - dilation (int) - 膨胀 (dilation) 大小。
+        - axis (int) - 执行 softmax 计算的维度索引，应该在 [−1，rank − 1] 范围内，其中 rank 是输入变量的秩。
+        - ceil_mode (int) - 是否用 ceil 函数计算输出高度和宽度。0 表示使用 floor 函数，1 表示使用 ceil 函数。
+
+    对于 Android 平台和 arm-linux 开发板，把单测程序放在 `/data/local/tmp/bin`。
+
+2. 运行 `python get_latency_lookup_table.py` 获取当前搜索空间的延时评估器所需数据。
+
+    运行一段时间将生成 `latency_lookup_table.txt`，`light_nas_space.py` 中已默认配置该文件用作模型延时评估。
