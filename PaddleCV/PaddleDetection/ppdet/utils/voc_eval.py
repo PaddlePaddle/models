@@ -32,6 +32,7 @@ __all__ = [
 ]
 
 
+# TODO(dengkaipeng): extract mAP code to map_util.py
 def bbox_eval(results, 
               class_num, 
               overlap_thesh=0.5, 
