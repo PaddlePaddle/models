@@ -30,7 +30,8 @@ from ppdet.data.transform.operators import (
     Permute)
 from ppdet.data.transform.arrange_sample import (ArrangeRCNN, ArrangeTestRCNN,
                                                  ArrangeSSD, ArrangeTestSSD,
-                                                 ArrangeYOLO, ArrangeTestYOLO)
+                                                 ArrangeYOLO, ArrangeEvalYOLO,
+                                                 ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
@@ -742,7 +743,6 @@ class SSDEvalFeed(DataFeed):
                 DecodeImage(to_rgb=True, with_mixup=False),
                 NormalizeBox(),
                 ResizeImage(target_size=300, use_cv2=False, interp=1),
-                RandomFlipImage(is_normalized=True),
                 Permute(),
                 NormalizeImage(
                     mean=[127.5, 127.5, 127.5],
@@ -890,11 +890,12 @@ class YoloEvalFeed(DataFeed):
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_shape', 'im_id'],
+                 fields=['image', 'im_size', 'im_id', 'gt_box', 
+                         'gt_label', 'is_difficult'],
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(target_size=608, interp=2),
+                     ResizeImage(target_size=320, interp=2),
                      NormalizeImage(
                          mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225],
@@ -911,7 +912,7 @@ class YoloEvalFeed(DataFeed):
                  num_workers=8,
                  num_max_boxes=50,
                  use_process=False):
-        sample_transforms.append(ArrangeTestYOLO())
+        sample_transforms.append(ArrangeEvalYOLO())
         super(YoloEvalFeed, self).__init__(
             dataset,
             fields,
@@ -925,7 +926,6 @@ class YoloEvalFeed(DataFeed):
             with_background=with_background,
             num_workers=num_workers,
             use_process=use_process)
-        self.num_max_boxes = num_max_boxes
         self.mode = 'VAL'
         self.bufsize = 128
 
@@ -937,7 +937,7 @@ class YoloTestFeed(DataFeed):
     def __init__(self,
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_shape', 'im_id'],
+                 fields=['image', 'im_size', 'im_id'],
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
@@ -973,6 +973,5 @@ class YoloTestFeed(DataFeed):
             with_background=with_background,
             num_workers=num_workers,
             use_process=use_process)
-        self.num_max_boxes = num_max_boxes
         self.mode = 'TEST'
         self.bufsize = 128

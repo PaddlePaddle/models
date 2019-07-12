@@ -104,5 +104,10 @@ def eval_results(results, feed, metric, resolution=None, output_file=None):
                 output = '{}_mask.json'.format(output_file)
             mask_eval(results, anno_file, output, resolution)
     else:
-        res = np.mean(results[-1]['accum_map'][0])
-        logger.info('Test mAP: {}'.format(res))
+        if 'accum_map' in results[-1]:
+            res = np.mean(results[-1]['accum_map'][0])
+            logger.info('Test mAP: {}'.format(res))
+        elif 'bbox' in results[0]:
+            from ppdet.utils.voc_eval import bbox_eval
+            # TODO(dengkaipeng): change to use cfg.num_classes after #2764 merged
+            bbox_eval(results, 21, is_bbox_normalized=True)

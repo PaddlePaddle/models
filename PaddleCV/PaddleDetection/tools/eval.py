@@ -94,8 +94,11 @@ def main():
         checkpoint.load_pretrain(exe, eval_prog, cfg.weights)
 
     extra_keys = []
-    if 'metric' in cfg and cfg.metric == 'COCO':
-        extra_keys = ['im_info', 'im_id', 'im_shape']
+    if 'metric' in cfg:
+        if cfg.metric == 'COCO':
+            extra_keys = ['im_info', 'im_id', 'im_shape']
+        if cfg.metric == 'VOC':
+            extra_keys = ['gt_box', 'gt_label', 'is_difficult']
 
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 
