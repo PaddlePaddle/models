@@ -30,6 +30,7 @@ from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
 from ppdet.utils.cli import ArgsParser
+from ppdet.utils.check import check_gpu
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
 
@@ -96,7 +97,7 @@ def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
                                   target_vars=target_vars,
                                   executor=exe,
                                   main_program=infer_prog,
-                                  params_filename="__parmas__")
+                                  params_filename="__params__")
 
 
 def main():
@@ -108,6 +109,9 @@ def main():
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
+
+    # check if set use_gpu=True in paddlepaddle cpu version
+    check_gpu(cfg.use_gpu)
 
     if 'test_feed' not in cfg:
         test_feed = create(main_arch + 'TestFeed')
@@ -160,6 +164,12 @@ def main():
     clsid2catid, catid2name = get_category_info(anno_file, with_background,
                                                 use_default_label)
 
+    # whether output bbox is normalized in model output layer
+    is_bbox_normalized = False
+    if hasattr(model, 'is_bbox_normalized') and \
+            callable(model.is_bbox_normalized):
+        is_bbox_normalized = model.is_bbox_normalized()
+
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
         outs = exe.run(infer_prog,
@@ -174,7 +184,6 @@ def main():
 
         bbox_results = None
         mask_results = None
-        is_bbox_normalized = True if cfg.metric == 'VOC' else False
         if 'bbox' in res:
             bbox_results = bbox2out([res], clsid2catid, is_bbox_normalized)
         if 'mask' in res:

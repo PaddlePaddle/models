@@ -11,7 +11,7 @@ import os
 import time
 import paddle.fluid as fluid
 import numpy as np
-from utils import add_arguments, print_arguments, get_feeder_data
+from utils import add_arguments, print_arguments, get_feeder_data, check_gpu
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
 from paddle.fluid.initializer import init_on_cpu
 
@@ -148,6 +148,7 @@ def train(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     train(args)
 
 

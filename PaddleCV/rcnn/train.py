@@ -35,7 +35,7 @@ import sys
 import numpy as np
 import time
 import shutil
-from utility import parse_args, print_arguments, SmoothedValue, TrainingStats, now_time
+from utility import parse_args, print_arguments, SmoothedValue, TrainingStats, now_time, check_gpu
 import collections
 
 import paddle
@@ -260,4 +260,5 @@ def train():
 if __name__ == '__main__':
     args = parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     train()

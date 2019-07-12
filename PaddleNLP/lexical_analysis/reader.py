@@ -93,7 +93,7 @@ class Dataset(object):
                 for line in fread:
                     words = line.strip("\n").split("\002")
                     word_ids = self.word_to_ids(words)
-                    yield word_ids[0:max_seq_len]
+                    yield word_ids[0:max_seq_len], [0 for _ in word_ids][0: max_seq_len]
             else:
                 assert len(headline) == 2 and headline[0] == "text_a" and headline[1] == "label"
                 for line in fread:

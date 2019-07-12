@@ -75,6 +75,10 @@ run_type_g.add_arg("do_infer", bool, True, "Whether to perform inference.")
 args = parser.parse_args()
 # yapf: enable.
 
+sys.path.append('../models/')
+from model_check import check_cuda
+check_cuda(args.use_cuda)
+
 def ernie_pyreader(args, pyreader_name):
     """define standard ernie pyreader"""
     pyreader = fluid.layers.py_reader(

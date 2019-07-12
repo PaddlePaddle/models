@@ -113,9 +113,9 @@ def save_test_image(epoch,
             images = [real_img_temp]
             for i in range(cfg.c_dim):
                 label_trg_tmp = copy.deepcopy(label_org)
-                label_trg_tmp[0][i] = 1.0 - label_trg_tmp[j][i]
-                label_trg = check_attribute_conflict(
-                    label_trg_tmp, attr_names[i], attr_names)
+                label_trg_tmp[0][i] = 1.0 - label_trg_tmp[0][i]
+                label_trg = check_attribute_conflict(label_trg_tmp,
+                                                     attr_names[i], attr_names)
                 tensor_label_trg = fluid.LoDTensor()
                 tensor_label_trg.set(label_trg, place)
                 fake_temp, rec_temp = exe.run(
@@ -264,3 +264,30 @@ def check_attribute_conflict(label_batch, attr, attrs):
                 if a != attr:
                     _set(label, 0, a)
     return label_batch
+
+
+def save_batch_image(img):
+    if len(img) == 1:
+        res_img = np.squeeze(img).transpose([1, 2, 0])
+    else:
+        res_img = np.squeeze(img).transpose([0, 2, 3, 1])
+    return res_img
+
+
+def check_gpu(use_gpu):
+    """
+     Log error and exit when set use_gpu=true in paddlepaddle
+     cpu version.
+     """
+    err = "Config use_gpu cannot be set as true while you are " \
+          "using paddlepaddle cpu version ! \nPlease try: \n" \
+          "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
+          "\t2. Set use_gpu as false in config file to run " \
+          "model on CPU"
+
+    try:
+        if use_gpu and not fluid.is_compiled_with_cuda():
+            logger.error(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
