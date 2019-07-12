@@ -88,7 +88,12 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
     return results
 
 
-def eval_results(results, feed, metric, resolution=None, output_file=None):
+def eval_results(results, 
+                 feed, 
+                 metric, 
+                 resolution=None, 
+                 is_bbox_normalized=False, 
+                 output_file=None):
     """Evaluation for evaluation program results"""
     if metric == 'COCO':
         from ppdet.utils.coco_eval import bbox_eval, mask_eval
@@ -110,4 +115,4 @@ def eval_results(results, feed, metric, resolution=None, output_file=None):
         elif 'bbox' in results[0]:
             from ppdet.utils.voc_eval import bbox_eval
             # TODO(dengkaipeng): change to use cfg.num_classes after #2764 merged
-            bbox_eval(results, 21, is_bbox_normalized=True)
+            bbox_eval(results, 21, is_bbox_normalized=is_bbox_normalized)

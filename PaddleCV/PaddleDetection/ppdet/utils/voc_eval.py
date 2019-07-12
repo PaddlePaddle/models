@@ -92,7 +92,7 @@ def bbox_eval(results,
             accum_fp_list.append(accum_fp)
         return accum_tp_list, accum_fp_list
 
-    logger.info("Accumulate evaluatation results...")
+    logger.info("Accumulating evaluatation results...")
     mAP = 0.
     valid_cnt = 0
     for score, cnt in zip(class_scores, class_gt_cnts):
