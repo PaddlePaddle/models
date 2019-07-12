@@ -895,7 +895,7 @@ class YoloEvalFeed(DataFeed):
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(target_size=320, interp=2),
+                     ResizeImage(target_size=608, interp=2),
                      NormalizeImage(
                          mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225],
