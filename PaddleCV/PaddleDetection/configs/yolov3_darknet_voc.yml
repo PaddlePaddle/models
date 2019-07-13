@@ -3,7 +3,7 @@ train_feed: YoloTrainFeed
 eval_feed: YoloEvalFeed
 test_feed: YoloTestFeed
 use_gpu: true
-max_iters: 52200
+max_iters: 70000
 log_smooth_window: 20
 save_dir: output
 snapshot_iter: 2000
@@ -43,8 +43,8 @@ LearningRate:
   - !PiecewiseDecay
     gamma: 0.1
     milestones:
-    - 40000
-    - 46000
+    - 55000
+    - 62000
   - !LinearWarmup
     start_factor: 0.
     steps: 1000
@@ -67,7 +67,7 @@ YoloTrainFeed:
   num_workers: 8
   bufsize: 128
   use_process: true
-  mixup_epoch: -1
+  mixup_epoch: 250
 
 YoloEvalFeed:
   batch_size: 8

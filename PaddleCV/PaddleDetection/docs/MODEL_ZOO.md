@@ -72,12 +72,12 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 
 | Backbone     | Size | Image/gpu | Lr schd | Box AP | Download  |
 | :----------- | :--: | :-----: | :-----: | :----: | :-------: |
-| DarkNet53    | 608  |    8    |   200e  |  81.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
-| DarkNet53    | 416  |    8    |   200e  |  81.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
-| DarkNet53    | 320  |    8    |   200e  |  80.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| DarkNet53    | 608  |    8    |   270e  |  83.5  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| DarkNet53    | 416  |    8    |   270e  |  83.6  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| DarkNet53    | 320  |    8    |   270e  |  82.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
 
-**NOTE**: Yolo v3 is trained in 8 GPU with total batch size as 64 and trained 270(COCO)/200(VOC) epoches. Yolo v3 training data augmentations: 
-mixup, randomly color distortion, randomly cropping, randomly expansion, randomly interpolation method, randomly flippling. Yolo v3 used randomly
+**NOTE**: Yolo v3 is trained in 8 GPU with total batch size as 64 and trained 270 epoches. Yolo v3 training data augmentations: mixup,
+randomly color distortion, randomly cropping, randomly expansion, randomly interpolation method, randomly flippling. Yolo v3 used randomly
 reshaped minibatch in training, inferences can be performed on different image sizes with the same model weights, and we provided evaluation
 results of image size 608/416/320 above.
 
