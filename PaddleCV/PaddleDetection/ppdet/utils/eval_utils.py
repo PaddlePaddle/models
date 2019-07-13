@@ -111,7 +111,7 @@ def eval_results(results,
     else:
         if 'accum_map' in results[-1]:
             res = np.mean(results[-1]['accum_map'][0])
-            logger.info('Test mAP: {}'.format(res))
+            logger.info('mAP: {:.2f}'.format(res * 100.))
         elif 'bbox' in results[0]:
             from ppdet.utils.voc_eval import bbox_eval
             # TODO(dengkaipeng): change to use cfg.num_classes after #2764 merged
