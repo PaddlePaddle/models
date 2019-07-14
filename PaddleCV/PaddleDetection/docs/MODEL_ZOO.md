@@ -75,6 +75,9 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | DarkNet53    | 608  |    8    |   270e  |  83.5  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
 | DarkNet53    | 416  |    8    |   270e  |  83.6  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
 | DarkNet53    | 320  |    8    |   270e  |  82.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| ResNet34     | 608  |    8    |   270e  |  82.6  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34_voc.tar) |
+| ResNet34     | 416  |    8    |   270e  |  81.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34_voc.tar) |
+| ResNet34     | 320  |    8    |   270e  |  80.1  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34_voc.tar) |
 
 **NOTE**: Yolo v3 is trained in 8 GPU with total batch size as 64 and trained 270 epoches. Yolo v3 training data augmentations: mixup,
 randomly color distortion, randomly cropping, randomly expansion, randomly interpolation method, randomly flippling. Yolo v3 used randomly
