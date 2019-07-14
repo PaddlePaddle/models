@@ -229,6 +229,12 @@ class AttGAN(object):
             type=int,
             default=5,
             help="default layers in the network")
+        parser.add_argument(
+            '--dis_norm',
+            type=str,
+            default=None,
+            help="the normalization in discriminator, choose in [None, instance_norm]"
+        )
 
         return parser
 
