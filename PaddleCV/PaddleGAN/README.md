@@ -22,6 +22,7 @@
 1. StarGAN，AttGAN和STGAN由于梯度惩罚所需的操作目前只支持GPU，需使用GPU训练。
 2. CGAN和DCGAN仅支持多batch size训练。
 3. CGAN和DCGAN两个模型训练使用的数据集为mnist数据集；StarGAN，AttGAN和STGAN的数据集为CelebA数据集，测试集列表(test_list)和下载到的list文件格式相同，即包含测试集数量，属性列表，想要进行测试的图片和标签。Pix2Pix和CycleGAN支持的数据集可以参考download.py中的cycle_pix_dataset。
+4. PaddlePaddle1.5.1及之前的版本不支持在AttGAN和STGAN模型里的判别器加上的instance norm。如果要在判别器中加上instance norm，请源码编译develop分支并安装。
 
 图像生成模型库库的目录结构如下：
 ```
@@ -59,7 +60,7 @@
 ### 安装说明
 **安装[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)：**
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ### 任务简介
 
