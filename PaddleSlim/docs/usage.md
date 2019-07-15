@@ -564,7 +564,7 @@ strategies:
         class: 'LightNASStrategy'
         controller: 'sa_controller'
         target_flops: 592948064
-        target_latency: 61.6 ms
+        target_latency: 0
         end_epoch: 500
         retrain_epoch: 5
         metric_name: 'acc_top1'
@@ -578,7 +578,7 @@ strategies:
 - **class:** 策略类的名称，轻量级模型结构搜索策略请设置为LightNASStrategy。
 - **controller:** 用于搜索的controller, 需要在当前配置文件提前注册，下文会详细介绍其注册方法。
 - **target_flops:** FLOPS限制，搜索出的网络结构的FLOPS不超过该数值。
-- **target_latency** 评估延时限制，搜索出的网络结构评估的延时不超过该数值。
+- **target_latency** 评估延时限制，搜索出的网络结构评估的延时不超过该数值，0 表示不限制。
 - **end_epoch:** 当前client结束搜索策略的epoch。
 - **retrain_epoch:** 在评估模型结构性能之前，需要训练的epoch数量。(end_epoch-0)/retrain_epoch为当前client搜索出的网络结构的数量。
 - **metric_name：** 评估模型性能的指标。
