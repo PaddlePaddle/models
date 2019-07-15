@@ -30,6 +30,7 @@ from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
 from ppdet.utils.cli import ArgsParser
+from ppdet.utils.check import check_gpu
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
 
@@ -81,6 +82,24 @@ def get_test_images(infer_dir, infer_img):
     return images
 
 
+def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
+    cfg_name = os.path.basename(FLAGS.config).split('.')[0]
+    save_dir = os.path.join(FLAGS.output_dir, cfg_name)
+    feeded_var_names = [var.name for var in feed_vars.values()]
+    # im_id is only used for visualize, not used in inference model
+    feeded_var_names.remove('im_id')
+    target_vars = test_fetches.values()
+    logger.info("Save inference model to {}, input: {}, output: "
+                "{}...".format(save_dir, feeded_var_names,
+                            [var.name for var in target_vars]))
+    fluid.io.save_inference_model(save_dir, 
+                                  feeded_var_names=feeded_var_names,
+                                  target_vars=target_vars,
+                                  executor=exe,
+                                  main_program=infer_prog,
+                                  params_filename="__params__")
+
+
 def main():
     cfg = load_config(FLAGS.config)
 
@@ -90,6 +109,9 @@ def main():
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
+
+    # check if set use_gpu=True in paddlepaddle cpu version
+    check_gpu(cfg.use_gpu)
 
     if 'test_feed' not in cfg:
         test_feed = create(main_arch + 'TestFeed')
@@ -119,6 +141,9 @@ def main():
     if cfg.weights:
         checkpoint.load_checkpoint(exe, infer_prog, cfg.weights)
 
+    if FLAGS.save_inference_model:
+        save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
+
     # parse infer fetches
     extra_keys = []
     if cfg['metric'] == 'COCO':
@@ -139,6 +164,12 @@ def main():
     clsid2catid, catid2name = get_category_info(anno_file, with_background,
                                                 use_default_label)
 
+    # whether output bbox is normalized in model output layer
+    is_bbox_normalized = False
+    if hasattr(model, 'is_bbox_normalized') and \
+            callable(model.is_bbox_normalized):
+        is_bbox_normalized = model.is_bbox_normalized()
+
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
         outs = exe.run(infer_prog,
@@ -153,7 +184,6 @@ def main():
 
         bbox_results = None
         mask_results = None
-        is_bbox_normalized = True if cfg.metric == 'VOC' else False
         if 'bbox' in res:
             bbox_results = bbox2out([res], clsid2catid, is_bbox_normalized)
         if 'mask' in res:
@@ -196,5 +226,10 @@ if __name__ == '__main__':
         type=float,
         default=0.5,
         help="Threshold to reserve the result for visualization.")
+    parser.add_argument(
+        "--save_inference_model",
+        action='store_true',
+        default=False,
+        help="Save inference model in output_dir if True.")
     FLAGS = parser.parse_args()
     main()

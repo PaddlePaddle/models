@@ -21,7 +21,7 @@ from losses import QuadrupletLoss
 from losses import EmlLoss
 from losses import NpairsLoss
 from utility import add_arguments, print_arguments
-from utility import fmt_time, recall_topk, get_gpu_num
+from utility import fmt_time, recall_topk, get_gpu_num, check_cuda
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -275,6 +275,7 @@ def initlogging():
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_cuda(args.use_gpu)
     train_async(args)
 
 

@@ -1,4 +1,4 @@
-运行本目录下的范例模型需要安装PaddlePaddle Fluid 1.0版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/install/index_cn.html)中的说明更新 PaddlePaddle 安装版本。
+运行本目录下的范例模型需要安装PaddlePaddle Fluid 1.5版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
 
 # 机器翻译：RNN Search
 
@@ -45,7 +45,7 @@ cd data && sh download_en-vi.sh
 
 `run.sh`包含训练程序的主函数，要使用默认参数开始训练，只需要简单地执行：
 ```sh
-python run.sh
+sh run.sh
 ```
 
 ```sh
@@ -73,7 +73,7 @@ python run.sh
 
 当模型训练完成之后， 可以利用infer.py的脚本进行预测，默认使用beam search的方法进行预测，加载第10个epoch的模型进行预测，对test的数据集进行解码
 ```sh
-python infer.sh
+sh infer.sh
 ```
 如果想预测别的数据文件，只需要将 --infer_file参数进行修改
 
