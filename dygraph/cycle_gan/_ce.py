@@ -14,13 +14,6 @@ g_A_loss = CostKpi('g_A_loss', 0.3, 0, actived=True, desc="g A loss")
 g_B_loss = CostKpi('g_B_loss', 0.3, 0, actived=True, desc="g B loss")
 d_A_loss = CostKpi('d_A_loss', 0.3, 0, actived=True, desc="d A loss")
 d_B_loss = CostKpi('d_B_loss', 0.3, 0, actived=True, desc="d B loss")
-#train_speed_kpi = DurationKpi(
-#    'train_speed',
-#    0.05,
-#    0,
-#    actived=True,
-#    unit_repr='seconds/image',
-#    desc='train speed in one GPU card')
 tracking_kpis = [g_loss, g_A_loss, g_B_loss,
                  d_A_loss, d_B_loss]
 

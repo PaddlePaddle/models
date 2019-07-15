@@ -50,7 +50,6 @@ def optimizer_setting():
 def train(args):
     with fluid.dygraph.guard():
         max_images_num = data_reader.max_images_num()
-        print(max_images_num)
         shuffle = True
         data_shape = [-1] + data_reader.image_shape()
         print(data_shape)
