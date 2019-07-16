@@ -28,12 +28,17 @@ import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator
 from util.utility import check_attribute_conflict, check_gpu, save_batch_image
+from util import utility
 import copy
+
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('model_net',         str,   'cgan',            "The model used")
+add_arg('model_net',         str,   'CGAN',            "The model used")
 add_arg('net_G',             str,   "resnet_9block",   "Choose the CycleGAN and Pix2pix generator's network, choose in [resnet_9block|resnet_6block|unet_128|unet_256]")
 add_arg('init_model',        str,   None,              "The init model file of directory.")
 add_arg('output',            str,   "./infer_result",  "The directory the infer result to be saved to.")
@@ -50,10 +55,11 @@ add_arg('selected_attrs',    str,
     "Bald,Bangs,Black_Hair,Blond_Hair,Brown_Hair,Bushy_Eyebrows,Eyeglasses,Male,Mouth_Slightly_Open,Mustache,No_Beard,Pale_Skin,Young",
 "the attributes we selected to change")
 add_arg('batch_size',        int,   16,                "batch size when test")
-add_arg('test_list',       str,   "./data/celeba/test_list_attr_celeba.txt",                "the test list file")
+add_arg('test_list',         str,   "./data/celeba/test_list_attr_celeba.txt",                "the test list file")
 add_arg('dataset_dir',       str,   "./data/celeba/",                "the dataset directory to be infered")
-add_arg('n_layers',        int,     5,      "default layers in generotor")
-add_arg('gru_n_layers',    int,     4,       "default layers of GRU in generotor")
+add_arg('n_layers',          int,   5,                 "default layers in generotor")
+add_arg('gru_n_layers',      int,   4,                 "default layers of GRU in generotor")
+add_arg('noise_size',        int,   100,               "the noise dimension")
 # yapf: enable
 
 
@@ -103,6 +109,22 @@ def infer(args):
             cfg=args,
             name='generator',
             is_test=True)
+    elif args.model_net == 'CGAN':
+        noise = fluid.layers.data(
+            name='noise', shape=[args.noise_size], dtype='float32')
+        conditions = fluid.layers.data(
+            name='conditions', shape=[1], dtype='float32')
+
+        from network.CGAN_network import CGAN_model
+        model = CGAN_model()
+        fake = model.network_G(noise, conditions, name="G")
+    elif args.model_net == 'DCGAN':
+        noise = fluid.layers.data(
+            name='noise', shape=[args.noise_size], dtype='float32')
+
+        from network.DCGAN_network import DCGAN_model
+        model = DCGAN_model()
+        fake = model.network_G(noise, name="G")
     else:
         raise NotImplementedError("model_net {} is not support".format(
             args.model_net))
@@ -264,7 +286,7 @@ def infer(args):
 
         fig = utility.plot(fake_image)
         plt.savefig(
-            os.path.join(args.output, '/fake_dcgan.png'), bbox_inches='tight')
+            os.path.join(args.output, 'fake_dcgan.png'), bbox_inches='tight')
         plt.close(fig)
     else:
         raise NotImplementedError("model_net {} is not support".format(
