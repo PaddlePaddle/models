@@ -154,9 +154,10 @@ def infer(args):
                         label_trg_tmp, attr_names[i], attr_names)
                 label_trg_ = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
-                for j in range(len(label_org)):
-                    label_trg_[j][i] = label_trg_[j][i] * 2.0
-                tensor_label_org_.set(label_org, place)
+                if args.model_net == 'AttGAN':
+                    for k in range(len(label_org)):
+                        label_trg_[k][i] = label_trg_[k][i] * 2.0
+                tensor_label_org_.set(label_org_, place)
                 tensor_label_trg.set(label_trg, place)
                 tensor_label_trg_.set(label_trg_, place)
                 out = exe.run(feed={
