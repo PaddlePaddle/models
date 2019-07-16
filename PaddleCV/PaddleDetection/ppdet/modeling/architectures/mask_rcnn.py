@@ -51,10 +51,12 @@ class MaskRCNN(object):
                  roi_extractor='RoIAlign',
                  mask_assigner='MaskAssigner',
                  mask_head='MaskHead',
-                 fpn=None):
+                 fpn=None,
+                 rpn_only=False):
         super(MaskRCNN, self).__init__()
         self.backbone = backbone
         self.rpn_head = rpn_head
+        self.rpn_only = rpn_only
         self.bbox_assigner = bbox_assigner
         self.roi_extractor = roi_extractor
         self.bbox_head = bbox_head
@@ -130,7 +132,11 @@ class MaskRCNN(object):
             return loss
 
         else:
-
+            if self.rpn_only:
+                im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
+                im_scale = fluid.layers.sequence_expand(im_scale, rois)
+                rois = rois / im_scale
+                return {'proposal': rois}
             if self.fpn is None:
                 last_feat = body_feats[list(body_feats.keys())[-1]]
                 roi_feat = self.roi_extractor(last_feat, rois)

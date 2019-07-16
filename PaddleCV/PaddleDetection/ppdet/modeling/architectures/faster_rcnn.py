@@ -62,6 +62,7 @@ class FasterRCNN(object):
         im_info = feed_vars['im_info']
         if mode == 'train':
             gt_box = feed_vars['gt_box']
+            gt_label = feed_vars['gt_label']
             is_crowd = feed_vars['is_crowd']
         else:
             im_shape = feed_vars['im_info']
@@ -74,7 +75,7 @@ class FasterRCNN(object):
         rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
 
         if mode == 'train':
-            rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
+            rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd, gt_label)
             # sampled rpn proposals
             for var in ['gt_label', 'is_crowd', 'gt_box', 'im_info']:
                 assert var in feed_vars, "{} has no {}".format(feed_vars, var)
@@ -90,7 +91,12 @@ class FasterRCNN(object):
             bbox_targets = outs[2]
             bbox_inside_weights = outs[3]
             bbox_outside_weights = outs[4]
-
+        else:
+            if self.rpn_only:
+                im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
+                im_scale = fluid.layers.sequence_expand(im_scale, rois)
+                rois = rois / im_scale
+                return {'proposal': rois}
         if self.fpn is None:
             # in models without FPN, roi extractor only uses the last level of
             # feature maps. And body_feat_names[-1] represents the name of
