@@ -407,9 +407,11 @@ class FPNRPNHead(RPNHead):
         else:
             rpn_cls_score_fpn = fluid.layers.transpose(rpn_cls_score_fpn, perm=[0, 2, 3, 1])
             rpn_cls_score_fpn = fluid.layers.reshape(rpn_cls_score_fpn, shape=(0, 0, 0, -1, self.num_classes))
-            rpn_cls_score_fpn_prob = fluid.layers.softmax(
+            rpn_cls_prob_fpn = fluid.layers.softmax(
                 rpn_cls_score_fpn, use_cudnn=False, name='rpn_cls_prob_fpn' + (feat_lvl))
-            rpn_cls_prob_fpn = fluid.layers.reduce_max(rpn_cls_prob_fpn, dim=-1)
+            rpn_cls_prob_fpn = fluid.layers.slice(rpn_cls_prob_fpn, axes=[4], starts=[1], ends=[self.num_classes])
+            rpn_cls_prob_fpn, _ = fluid.layers.topk(rpn_cls_prob_fpn, 1)
+            rpn_cls_prob_fpn = fluid.layers.reshape(rpn_cls_prob_fpn, shape=(0, 0, 0, -1))
             rpn_cls_prob_fpn = fluid.layers.transpose(rpn_cls_prob_fpn, perm=[0, 3, 1, 2])
         rpn_rois_fpn, rpn_roi_prob_fpn = prop_op(
             scores=rpn_cls_prob_fpn,
