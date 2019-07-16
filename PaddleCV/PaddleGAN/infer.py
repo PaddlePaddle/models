@@ -118,7 +118,6 @@ def infer(args):
     print(args.init_model + '/' + model_name)
     fluid.io.load_persistables(exe, args.init_model + "/" + model_name)
     print('load params done')
-
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
@@ -144,7 +143,6 @@ def infer(args):
             tensor_label_trg_ = fluid.LoDTensor()
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
-
             real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(args.c_dim):
@@ -153,6 +151,7 @@ def infer(args):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
                     label_trg_tmp = check_attribute_conflict(
                         label_trg_tmp, attr_names[i], attr_names)
+                label_org_ = list(map(lambda x: ((x * 2) - 1) * 0.5, label_org))
                 label_trg_ = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
                 if args.model_net == 'AttGAN':
@@ -190,7 +189,6 @@ def infer(args):
             tensor_label_org = fluid.LoDTensor()
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
-
             real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(args.c_dim):
