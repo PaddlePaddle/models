@@ -292,6 +292,13 @@ def train_ptb_lm():
         return
 
     with fluid.dygraph.guard(core.CUDAPlace(0)):
+        if args.ce:
+            print("ce mode")
+            seed = 33
+            np.random.seed(seed)
+            fluid.default_startup_program().random_seed = seed
+            fluid.default_main_program().random_seed = seed
+            max_epoch = 1
         ptb_model = PtbModel(
             "ptb_model",
             hidden_size=hidden_size,
@@ -315,7 +322,7 @@ def train_ptb_lm():
 
         batch_len = len(train_data) // batch_size
         total_batch_size = (batch_len - 1) // num_steps
-        log_interval = total_batch_size // 10
+        log_interval = total_batch_size // 20
 
         bd = []
         lr_arr = [1.0]
@@ -361,6 +368,8 @@ def train_ptb_lm():
             print("eval finished")
             ppl = np.exp(total_loss / iters)
             print("ppl ", batch_id, ppl[0])
+            if args.ce:
+                print("kpis\ttest_ppl\t%0.3f" % ppl[0])
 
         grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(max_grad_norm)
         for epoch_id in range(max_epoch):
@@ -407,6 +416,8 @@ def train_ptb_lm():
             print("time cost ", time.time() - start_time)
             ppl = np.exp(total_loss / iters)
             print("ppl ", epoch_id, ppl[0])
+            if args.ce:
+                print("kpis\ttrain_ppl\t%0.3f" % ppl[0])
 
         eval(ptb_model, test_data)
 
