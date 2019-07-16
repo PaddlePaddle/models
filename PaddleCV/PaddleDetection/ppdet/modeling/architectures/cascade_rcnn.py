@@ -49,6 +49,7 @@ class CascadeRCNN(object):
                  roi_extractor='FPNRoIAlign',
                  bbox_head='CascadeBBoxHead',
                  bbox_assigner='CascadeBBoxAssigner',
+                 rpn_only=False,
                  fpn='FPN'):
         super(CascadeRCNN, self).__init__()
         assert fpn is not None, "cascade RCNN requires FPN"
@@ -58,6 +59,7 @@ class CascadeRCNN(object):
         self.bbox_assigner = bbox_assigner
         self.roi_extractor = roi_extractor
         self.bbox_head = bbox_head
+        self.rpn_only = rpn_only
         # Cascade local cfg
         self.cls_agnostic_bbox_reg = 2
         (brw0, brw1, brw2) = self.bbox_assigner.bbox_reg_weights

@@ -48,6 +48,7 @@ class FasterRCNN(object):
                  roi_extractor,
                  bbox_head='BBoxHead',
                  bbox_assigner='BBoxAssigner',
+                 rpn_only=False,
                  fpn=None):
         super(FasterRCNN, self).__init__()
         self.backbone = backbone
@@ -56,6 +57,7 @@ class FasterRCNN(object):
         self.roi_extractor = roi_extractor
         self.bbox_head = bbox_head
         self.fpn = fpn
+        self.rpn_only = rpn_only
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']

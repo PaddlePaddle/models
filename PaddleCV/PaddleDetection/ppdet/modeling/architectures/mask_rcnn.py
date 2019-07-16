@@ -51,6 +51,7 @@ class MaskRCNN(object):
                  roi_extractor='RoIAlign',
                  mask_assigner='MaskAssigner',
                  mask_head='MaskHead',
+                 rpn_only=False,
                  fpn=None):
         super(MaskRCNN, self).__init__()
         self.backbone = backbone
@@ -60,6 +61,7 @@ class MaskRCNN(object):
         self.bbox_head = bbox_head
         self.mask_assigner = mask_assigner
         self.mask_head = mask_head
+        self.rpn_only = rpn_only
         self.fpn = fpn
 
     def build(self, feed_vars, mode='train'):
