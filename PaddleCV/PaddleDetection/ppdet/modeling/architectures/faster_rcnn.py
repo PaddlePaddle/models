@@ -90,7 +90,12 @@ class FasterRCNN(object):
             bbox_targets = outs[2]
             bbox_inside_weights = outs[3]
             bbox_outside_weights = outs[4]
-
+        else:
+            if self.rpn_only:
+                im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
+                im_scale = fluid.layers.sequence_expand(im_scale, rois)
+                rois = rois / im_scale
+                return {'proposal': rois}
         if self.fpn is None:
             # in models without FPN, roi extractor only uses the last level of
             # feature maps. And body_feat_names[-1] represents the name of
