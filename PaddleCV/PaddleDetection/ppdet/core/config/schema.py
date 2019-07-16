@@ -162,13 +162,14 @@ class SchemaDict(dict):
 
 
 class SharedConfig(object):
-    r"""A specialized `inject` type for simple values
-    the logic is as following:
-    - if `key` is set for the module in config, its value will be used
-    - if `key` is not set for the module but is present in config, its value
-      will be used
-    - if `key` is not set for the module and not present in config,
-      `default_value` will be used
+    """
+    Representation class for `__shared__` annotations, which work as follows:
+
+    - if `key` is set for the module in config file, its value will take
+      precedence
+    - if `key` is not set for the module but present in the config file, its
+      value will be used
+    - otherwise, use the provided `default_value` as fallback
 
     Args:
         key: config[key] will be injected

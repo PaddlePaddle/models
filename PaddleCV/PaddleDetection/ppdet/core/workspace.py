@@ -146,6 +146,7 @@ def create(cls_or_name, **kwargs):
     kwargs = {}
     kwargs.update(global_config[name])
 
+    # parse `shared` annoation of registered modules
     if getattr(config, 'shared', None):
         for k in config.shared:
             target_key = config[k]
@@ -160,6 +161,7 @@ def create(cls_or_name, **kwargs):
             else:
                 kwargs[k] = shared_conf.default_value
 
+    # parse `inject` annoation of registered modules
     if getattr(config, 'inject', None):
         for k in config.inject:
             target_key = config[k]
