@@ -3,6 +3,10 @@ import ast
 import multiprocessing
 import numpy as np
 import os
+import sys
+if sys.version[0] == '2':
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
 from functools import partial
 
 import paddle
@@ -303,13 +307,13 @@ def fast_infer(args):
                     for j in range(end - start):  # for each candidate
                         sub_start = seq_ids.lod()[1][start + j]
                         sub_end = seq_ids.lod()[1][start + j + 1]
-                        hyps[i].append(" ".join([
+                        hyps[i].append(b" ".join([
                             trg_idx2word[idx]
                             for idx in post_process_seq(
                                 np.array(seq_ids)[sub_start:sub_end])
                         ]))
                         scores[i].append(np.array(seq_scores)[sub_end - 1])
-                        print(hyps[i][-1])
+                        print(hyps[i][-1].decode("utf8"))
                         if len(hyps[i]) >= InferTaskConfig.n_best:
                             break
         except (StopIteration, fluid.core.EOFException):

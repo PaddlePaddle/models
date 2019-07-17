@@ -6,6 +6,9 @@ import multiprocessing
 import os
 import six
 import sys
+if sys.version[0] == '2':
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
 import time
 
 import numpy as np

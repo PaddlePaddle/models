@@ -11,6 +11,9 @@ if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
 
 import six
 import sys
+if sys.version[0] == '2':
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
 sys.path.append("../../")
 sys.path.append("../../models/neural_machine_translation/transformer/")
 import time
