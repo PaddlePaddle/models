@@ -9,6 +9,8 @@ from PIL import Image
 from os import path
 from paddle.dataset.image import load_image
 import paddle
+import shutil
+import random
 
 try:
     input = raw_input
@@ -53,28 +55,70 @@ class DataGenerator(object):
         :param cycle: If number of iterations is greater than dataset_size / batch_size
         it reiterates dataset over as many times as necessary.
         :type cycle: bool
-        
+
         '''
 
         img_label_lines = []
         to_file = "tmp.txt"
         if not shuffle:
-            cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' > " + to_file
+            #cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' > " + to_file
+            shutil.copyfile(img_label_list,to_file)
         elif batchsize == 1:
-            cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' | shuf > " + to_file
+            #cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' | shuf > " + to_file
+            input_file = open(img_label_list, 'r')
+            lines_to_shuf = input_file.readlines()
+            random.shuffle(lines_to_shuf)
+            out_file = open(to_file, 'w')
+            for line in lines_to_shuf:
+                out_file.write(line)
+            input_file.close()
+            out_file.close()
+
         else:
             #cmd1: partial shuffle
-            cmd = "cat " + img_label_list + " | awk '{printf(\"%04d%.4f %s\\n\", $1, rand(), $0)}' | sort | sed 1,$((1 + RANDOM % 100))d | "
+            # cmd = "cat " + img_label_list + " | awk '{printf(\"%04d%.4f %s\\n\", $1, rand(), $0)}' | sort | sed 1,$((1 + RANDOM % 100))d | "
+            input_file = open(img_label_list, 'r')
+            lines_to_shuf = input_file.readlines()
+            for i in range(len(lines_to_shuf)):
+                str_i = lines_to_shuf[i]
+                list_i = str_i.strip().split(' ')
+                str_i_ = "%04d%.4f " % (int(list_i[0]), random.random()) + str_i
+                lines_to_shuf[i] = str_i_
+            lines_to_shuf.sort()
+            delete_num = random.randint(1,100)
+            del lines_to_shuf[0:delete_num]
+
             #cmd2: batch merge and shuffle
-            cmd += "awk '{printf $2\" \"$3\" \"$4\" \"$5\" \"; if(NR % " + str(
-                batchsize) + " == 0) print \"\";}' | shuf | "
+            #cmd += "awk '{printf $2\" \"$3\" \"$4\" \"$5\" \"; if(NR % " + str(
+            #    batchsize) + " == 0) print \"\";}' | shuf | "
+
+            lines_concat = []
+            tmp_line = ""
+            for i in range(len(lines_to_shuf)):
+                if i % batchsize == 0:
+                    tmp_line = lines_to_shuf[i].strip()
+                else:
+                    tmp_line = tmp_line + " " +  lines_to_shuf[i].strip()
+                if ((i + 1) % batchsize == 0):
+                    lines_concat.append(tmp_line)
+                    tmp_line = ""
+            random.shuffle(lines_concat)
+
             #cmd3: batch split
-            cmd += "awk '{if(NF == " + str(
-                batchsize
-            ) + " * 4) {for(i = 0; i < " + str(
-                batchsize
-            ) + "; i++) print $(4*i+1)\" \"$(4*i+2)\" \"$(4*i+3)\" \"$(4*i+4);}}' > " + to_file
-        os.system(cmd)
+            #cmd += "awk '{if(NF == " + str(
+            #    batchsize
+            #) + " * 4) {for(i = 0; i < " + str(
+            #    batchsize
+            #) + "; i++) print $(4*i+1)\" \"$(4*i+2)\" \"$(4*i+3)\" \"$(4*i+4);}}' > " + to_file
+            out_file = open(to_file, 'w')
+            for i in range(len(lines_concat)):
+                tmp_list = lines_concat[i].split(' ')
+                for j in range(batchsize):
+                    out_file.write("{} {} {} {}\n".format(tmp_list[5*j+1],
+                        tmp_list[5*j+2], tmp_list[5*j+3], tmp_list[5*j+4]))
+            input_file.close()
+            out_file.close()
+        #os.system(cmd)
         print("finish batch shuffle")
         img_label_lines = open(to_file, 'r').readlines()
 
@@ -148,7 +192,7 @@ class DataGenerator(object):
         was None. If img_label_list was set to None, it will read image path
         from stdin.
         :type img_root_dir: str
-        
+
         :param cycle: If number of iterations is greater than dataset_size /
         batch_size it reiterates dataset over as many times as necessary.
         :type cycle: bool
