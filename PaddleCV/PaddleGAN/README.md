@@ -143,11 +143,19 @@ Pix2Pix和CycleGAN的效果图
 StarGAN，AttGAN和STGAN的效果如图所示：
 
 <p align="center">
-<img src="images/female_stargan_attgan_stgan.png" width="650"/><br />
-StarGAN,AttGAN和STGAN的效果图
+<img src="images/stargan.jpg" width="500"/><br />
+StarGAN的效果图(图片属性分别为：origial image, Black hair, Blond Hair, Brown Hair, Male, Young)  
 </p>
 
+<p align="center">
+<img src="images/attgan.jpg" width="1250"/><br />
+AttGAN的效果图(图片属性分别为：original image, Bald, Bangs, Black Hair, Blond Hair, Brown Hair, Bushy Eyebrows, Eyeglasses, Male, Mouth Slightly Open, Mustache, No Beard, Pale Skin, Young)
+</p>
 
+<p align="center">
+<img src="images/stgan.jpg" width="1250"/><br />
+STGAN的效果图(图片属性分别为：original image, Bald, Bangs, Black Hair, Blond Hair, Brown Hair, Bushy Eyebrows, Eyeglasses, Male, Mouth Slightly Open, Mustache, No Beard, Pale Skin, Young)
+</p>
 
 - 每个GAN都给出了一份测试示例，放在scripts文件夹内，用户可以直接运行测试脚本得到测试结果。
 
@@ -240,6 +248,9 @@ STGAN的网络结构[9]
 **Q:** 为什么STGAN和ATTGAN中变男性得到的预测结果是变女性呢？  
 **A:** 这是由于预测时标签的设置，目标标签是基于原本的标签进行改变，比如原本图片是男生，预测代码对标签进行转变的时候会自动变成相对立的标签，即女
 性，所以得到的结果是女生。如果想要原本是男生，转变之后还是男生，保持要转变的标签不变即可。
+
+**Q:** 如何使用自己的数据集进行训练？
+**A:** 对于Pix2Pix来说，只要准备好类似于Cityscapes数据集的不同风格的成对的数据即可。对于CycleGAN来说，只要准备类似于Cityscapes数据集的不同风格的数据即可。对于StarGAN，AttGAN和STGAN来说，除了需要准备类似于CelebA数据集中的图片和标签文件外，还需要把模型中的selected_attrs参数设置为想要改变的目标属性，c_dim参数这是为目标属性的个数。
 
 
 ## 参考论文
