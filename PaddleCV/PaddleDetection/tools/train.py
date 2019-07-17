@@ -132,7 +132,7 @@ def main():
     sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     # only enable sync_bn in multi GPU devices
     build_strategy.sync_batch_norm = sync_bn and devices_num > 1 \
-				     and cfg.use_gpu
+         and cfg.use_gpu
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
             loss_name=loss.name, build_strategy=build_strategy)
@@ -141,12 +141,12 @@ def main():
 
     exe.run(startup_prog)
 
-    freeze_bn = getattr(model.backbone, 'freeze_norm', False)
+    fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
-    elif cfg.pretrain_weights and freeze_bn:
+    elif cfg.pretrain_weights and fuse_bn:
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:
         checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
