@@ -99,6 +99,8 @@ def prune_feed_vars(feeded_var_names, target_vars, prog):
             v = global_block.var(name)
             exist_var_names.append(v.name)
         except Exception:
+            logger.info('save_inference_model pruned unused feed '
+                        'variables {}'.format(name))
             pass
     return exist_var_names
 
