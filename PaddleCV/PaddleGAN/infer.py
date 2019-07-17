@@ -27,13 +27,18 @@ import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator
-from util.utility import check_attribute_conflict
+from util.utility import check_attribute_conflict, check_gpu, save_batch_image
+from util import utility
 import copy
+
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('model_net',         str,   'cgan',            "The model used")
+add_arg('model_net',         str,   'CGAN',            "The model used")
 add_arg('net_G',             str,   "resnet_9block",   "Choose the CycleGAN and Pix2pix generator's network, choose in [resnet_9block|resnet_6block|unet_128|unet_256]")
 add_arg('init_model',        str,   None,              "The init model file of directory.")
 add_arg('output',            str,   "./infer_result",  "The directory the infer result to be saved to.")
@@ -50,10 +55,11 @@ add_arg('selected_attrs',    str,
     "Bald,Bangs,Black_Hair,Blond_Hair,Brown_Hair,Bushy_Eyebrows,Eyeglasses,Male,Mouth_Slightly_Open,Mustache,No_Beard,Pale_Skin,Young",
 "the attributes we selected to change")
 add_arg('batch_size',        int,   16,                "batch size when test")
-add_arg('test_list',       str,   "./data/celeba/test_list_attr_celeba.txt",                "the test list file")
+add_arg('test_list',         str,   "./data/celeba/test_list_attr_celeba.txt",                "the test list file")
 add_arg('dataset_dir',       str,   "./data/celeba/",                "the dataset directory to be infered")
-add_arg('n_layers',        int,     5,      "default layers in generotor")
-add_arg('gru_n_layers',    int,     4,       "default layers of GRU in generotor")
+add_arg('n_layers',          int,   5,                 "default layers in generotor")
+add_arg('gru_n_layers',      int,   4,                 "default layers of GRU in generotor")
+add_arg('noise_size',        int,   100,               "the noise dimension")
 # yapf: enable
 
 
@@ -103,6 +109,22 @@ def infer(args):
             cfg=args,
             name='generator',
             is_test=True)
+    elif args.model_net == 'CGAN':
+        noise = fluid.layers.data(
+            name='noise', shape=[args.noise_size], dtype='float32')
+        conditions = fluid.layers.data(
+            name='conditions', shape=[1], dtype='float32')
+
+        from network.CGAN_network import CGAN_model
+        model = CGAN_model()
+        fake = model.network_G(noise, conditions, name="G")
+    elif args.model_net == 'DCGAN':
+        noise = fluid.layers.data(
+            name='noise', shape=[args.noise_size], dtype='float32')
+
+        from network.DCGAN_network import DCGAN_model
+        model = DCGAN_model()
+        fake = model.network_G(noise, name="G")
     else:
         raise NotImplementedError("model_net {} is not support".format(
             args.model_net))
@@ -118,7 +140,6 @@ def infer(args):
     print(args.init_model + '/' + model_name)
     fluid.io.load_persistables(exe, args.init_model + "/" + model_name)
     print('load params done')
-
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
@@ -144,7 +165,7 @@ def infer(args):
             tensor_label_trg_ = fluid.LoDTensor()
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
-            real_img_temp = np.squeeze(real_img).transpose([0, 2, 3, 1])
+            real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(args.c_dim):
                 label_trg_tmp = copy.deepcopy(label_trg)
@@ -152,11 +173,13 @@ def infer(args):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
                     label_trg_tmp = check_attribute_conflict(
                         label_trg_tmp, attr_names[i], attr_names)
+                label_org_ = list(map(lambda x: ((x * 2) - 1) * 0.5, label_org))
                 label_trg_ = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
-                for j in range(len(label_org)):
-                    label_trg_[j][i] = label_trg_[j][i] * 2.0
-                tensor_label_org_.set(label_org, place)
+                if args.model_net == 'AttGAN':
+                    for k in range(len(label_org)):
+                        label_trg_[k][i] = label_trg_[k][i] * 2.0
+                tensor_label_org_.set(label_org_, place)
                 tensor_label_trg.set(label_trg, place)
                 tensor_label_trg_.set(label_trg_, place)
                 out = exe.run(feed={
@@ -165,10 +188,11 @@ def infer(args):
                     "label_trg_": tensor_label_trg_
                 },
                               fetch_list=[fake.name])
-                fake_temp = np.squeeze(out[0]).transpose([0, 2, 3, 1])
+                fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            images_concat = np.concatenate(images_concat, 1)
+            if len(label_org) > 1:
+                images_concat = np.concatenate(images_concat, 1)
             imageio.imwrite(args.output + "/fake_img_" + name[0], (
                 (images_concat + 1) * 127.5).astype(np.uint8))
     elif args.model_net == 'StarGAN':
@@ -187,7 +211,7 @@ def infer(args):
             tensor_label_org = fluid.LoDTensor()
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
-            real_img_temp = np.squeeze(real_img).transpose([0, 2, 3, 1])
+            real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(args.c_dim):
                 label_trg_tmp = copy.deepcopy(label_org)
@@ -201,10 +225,11 @@ def infer(args):
                     feed={"input": tensor_img,
                           "label_trg_": tensor_label_trg},
                     fetch_list=[fake.name])
-                fake_temp = np.squeeze(out[0]).transpose([0, 2, 3, 1])
+                fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            images_concat = np.concatenate(images_concat, 1)
+            if len(label_org) > 1:
+                images_concat = np.concatenate(images_concat, 1)
             imageio.imwrite(args.output + "/fake_img_" + name[0], (
                 (images_concat + 1) * 127.5).astype(np.uint8))
 
@@ -227,6 +252,40 @@ def infer(args):
 
             imageio.imwrite(args.output + "/fake_" + image_name, (
                 (fake_temp + 1) * 127.5).astype(np.uint8))
+
+    elif args.model_net == 'CGAN':
+        noise_data = np.random.uniform(
+            low=-1.0, high=1.0,
+            size=[args.batch_size, args.noise_size]).astype('float32')
+        label = np.random.randint(
+            0, 9, size=[args.batch_size, 1]).astype('float32')
+        noise_tensor = fluid.LoDTensor()
+        conditions_tensor = fluid.LoDTensor()
+        noise_tensor.set(noise_data, place)
+        conditions_tensor.set(label, place)
+        fake_temp = exe.run(
+            fetch_list=[fake.name],
+            feed={"noise": noise_tensor,
+                  "conditions": conditions_tensor})[0]
+        fake_image = np.reshape(fake_temp, (args.batch_size, -1))
+
+        fig = utility.plot(fake_image)
+        plt.savefig(args.output + '/fake_cgan.png', bbox_inches='tight')
+        plt.close(fig)
+
+    elif args.model_net == 'DCGAN':
+        noise_data = np.random.uniform(
+            low=-1.0, high=1.0,
+            size=[args.batch_size, args.noise_size]).astype('float32')
+        noise_tensor = fluid.LoDTensor()
+        noise_tensor.set(noise_data, place)
+        fake_temp = exe.run(fetch_list=[fake.name],
+                            feed={"noise": noise_tensor})[0]
+        fake_image = np.reshape(fake_temp, (args.batch_size, -1))
+
+        fig = utility.plot(fake_image)
+        plt.savefig(args.output + '/fake_dcgan.png', bbox_inches='tight')
+        plt.close(fig)
     else:
         raise NotImplementedError("model_net {} is not support".format(
             args.model_net))
@@ -235,4 +294,5 @@ def infer(args):
 if __name__ == "__main__":
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     infer(args)

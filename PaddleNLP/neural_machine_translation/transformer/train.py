@@ -4,14 +4,21 @@ import copy
 import logging
 import multiprocessing
 import os
+import subprocess
+
+if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
+    os.environ['FLAGS_eager_delete_tensor_gb'] = '0'
+
 import six
 import sys
+sys.path.append("../../")
 sys.path.append("../../models/neural_machine_translation/transformer/")
 import time
 
 import numpy as np
 import paddle.fluid as fluid
 
+from models.model_check import check_cuda
 import reader
 from config import *
 from desc import *
@@ -661,8 +668,10 @@ def train(args):
 
     if training_role == "PSERVER" or (not TrainTaskConfig.use_gpu):
         place = fluid.CPUPlace()
-        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+        # the default setting of CPU_NUM in paddle framework is 1
+        dev_count = int(os.environ.get('CPU_NUM', 1))
     else:
+        check_cuda(TrainTaskConfig.use_gpu)
         gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
         place = fluid.CUDAPlace(gpu_id)
         dev_count = get_device_num()
@@ -716,9 +725,6 @@ def train(args):
             else:
                 optimizer = fluid.optimizer.SGD(0.003)
             optimizer.minimize(avg_cost)
-
-    if args.use_mem_opt:
-        fluid.memory_optimize(train_prog)
 
     if args.local:
         logging.info("local start_up:")

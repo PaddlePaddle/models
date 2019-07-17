@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 import paddle.fluid as fluid
 from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_data
+from utility import check_gpu
 import paddle.fluid.profiler as profiler
 from crnn_ctc_model import ctc_train_net
 from attention_model import attention_train_net
@@ -67,7 +68,9 @@ def train(args):
         cycle=args.total_step > 0,
         model=args.model)
     test_reader = data_reader.test(
-        test_images_dir=args.test_images, test_list_file=args.test_list, model=args.model)
+        test_images_dir=args.test_images,
+        test_list_file=args.test_list,
+        model=args.model)
 
     # prepare environment
     place = fluid.CPUPlace()
@@ -115,8 +118,8 @@ def train(args):
         for data in test_reader():
             exe.run(inference_program, feed=get_feeder_data(data, place))
         _, test_seq_error = error_evaluator.eval(exe)
-        print("\nTime: %s; Iter[%d]; Test seq error: %s.\n" % (
-            time.time(), iter_num, str(test_seq_error[0])))
+        print("\nTime: %s; Iter[%d]; Test seq error: %s.\n" %
+              (time.time(), iter_num, str(test_seq_error[0])))
 
         #Note: The following logs are special for CE monitoring.
         #Other situations do not need to care about these logs.
@@ -155,10 +158,10 @@ def train(args):
             iter_num += 1
             # training log
             if iter_num % args.log_period == 0:
-                print("\nTime: %s; Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f" % (
-                    time.time(), iter_num,
-                    total_loss / (args.log_period * args.batch_size),
-                    total_seq_error / (args.log_period * args.batch_size)))
+                print("\nTime: %s; Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f"
+                      % (time.time(), iter_num,
+                         total_loss / (args.log_period * args.batch_size),
+                         total_seq_error / (args.log_period * args.batch_size)))
                 print("kpis	train_cost	%f" % (total_loss / (args.log_period *
                                                             args.batch_size)))
                 print("kpis	train_acc	%f" % (
@@ -203,6 +206,7 @@ def train(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     if args.profile:
         if args.use_gpu:
             with profiler.cuda_profiler("cuda_profiler.txt", 'csv') as nvprof:
