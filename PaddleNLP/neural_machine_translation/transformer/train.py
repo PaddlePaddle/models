@@ -86,14 +86,14 @@ def parse_args():
         help="The flag indicating whether to shuffle the data batches.")
     parser.add_argument(
         "--special_token",
-        type=str,
-        default=["<s>", "<e>", "<unk>"],
+        type=lambda x: x.encode(),
+        default=[b"<s>", b"<e>", b"<unk>"],
         nargs=3,
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
     parser.add_argument(
         "--token_delimiter",
-        type=lambda x: str(x.encode().decode("unicode-escape")),
-        default=" ",
+        type=lambda x: x.encode(),
+        default=b" ",
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. ")
     parser.add_argument(
