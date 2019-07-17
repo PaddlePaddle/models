@@ -303,6 +303,11 @@ def train(size=416,
 
     if not use_multiprocess_reader:
         return generator
+    else:
+        print("multiprocess is not fully compatible with Windows, "
+                "you can set --use_multiprocess=False if there are "
+                "errors incured by multiprocess")
+        print("multiprocess reader starting up, it takes a while...")
 
     def infinite_reader():
         while True:
