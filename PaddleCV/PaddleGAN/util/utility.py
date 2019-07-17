@@ -109,13 +109,13 @@ def save_test_image(epoch,
             tensor_label_org = fluid.LoDTensor()
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
-            real_img_temp = np.squeeze(real_img).transpose([1, 2, 0])
+            real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(cfg.c_dim):
                 label_trg_tmp = copy.deepcopy(label_org)
                 label_trg_tmp[0][i] = 1.0 - label_trg_tmp[0][i]
-                label_trg = check_attribute_conflict(
-                    label_trg_tmp, attr_names[i], attr_names)
+                label_trg = check_attribute_conflict(label_trg_tmp,
+                                                     attr_names[i], attr_names)
                 tensor_label_trg = fluid.LoDTensor()
                 tensor_label_trg.set(label_trg, place)
                 fake_temp, rec_temp = exe.run(
@@ -126,8 +126,8 @@ def save_test_image(epoch,
                         "label_trg": tensor_label_trg
                     },
                     fetch_list=[g_trainer.fake_img, g_trainer.rec_img])
-                fake_temp = np.squeeze(fake_temp[0]).transpose([1, 2, 0])
-                rec_temp = np.squeeze(rec_temp[0]).transpose([1, 2, 0])
+                fake_temp = save_batch_image(fake_temp[0])
+                rec_temp = save_batch_image(rec_temp[0])
                 images.append(fake_temp)
                 images.append(rec_temp)
             images_concat = np.concatenate(images, 1)
@@ -145,7 +145,7 @@ def save_test_image(epoch,
             tensor_label_trg_ = fluid.LoDTensor()
             tensor_img.set(real_img, place)
             tensor_label_org.set(label_org, place)
-            real_img_temp = np.squeeze(real_img).transpose([0, 2, 3, 1])
+            real_img_temp = save_batch_image(real_img)
             images = [real_img_temp]
             for i in range(cfg.c_dim):
                 label_trg_tmp = copy.deepcopy(label_trg)
@@ -155,12 +155,14 @@ def save_test_image(epoch,
                     label_trg_tmp = check_attribute_conflict(
                         label_trg_tmp, attr_names[i], attr_names)
 
+                label_org_ = list(map(lambda x: ((x * 2) - 1) * 0.5, label_org))
                 label_trg_ = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
 
-                for j in range(len(label_org)):
-                    label_trg_[j][i] = label_trg_[j][i] * 2.0
-                tensor_label_org_.set(label_org, place)
+                if cfg.model_net == 'AttGAN':
+                    for k in range(len(label_org)):
+                        label_trg_[k][i] = label_trg_[k][i] * 2.0
+                tensor_label_org_.set(label_org_, place)
                 tensor_label_trg.set(label_trg, place)
                 tensor_label_trg_.set(label_trg_, place)
                 out = exe.run(test_program,
@@ -172,10 +174,11 @@ def save_test_image(epoch,
                                   "label_trg_": tensor_label_trg_
                               },
                               fetch_list=[g_trainer.fake_img])
-                fake_temp = np.squeeze(out[0]).transpose([0, 2, 3, 1])
+                fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            images_concat = np.concatenate(images_concat, 1)
+            if len(label_org) > 1:
+                images_concat = np.concatenate(images_concat, 1)
             imageio.imwrite(out_path + "/fake_img" + str(epoch) + '_' + name[0],
                             ((images_concat + 1) * 127.5).astype(np.uint8))
 
@@ -266,20 +269,28 @@ def check_attribute_conflict(label_batch, attr, attrs):
     return label_batch
 
 
+def save_batch_image(img):
+    if len(img) == 1:
+        res_img = np.squeeze(img).transpose([1, 2, 0])
+    else:
+        res_img = np.squeeze(img).transpose([0, 2, 3, 1])
+    return res_img
+
+
 def check_gpu(use_gpu):
-     """
+    """
      Log error and exit when set use_gpu=true in paddlepaddle
      cpu version.
      """
-     err = "Config use_gpu cannot be set as true while you are " \
-           "using paddlepaddle cpu version ! \nPlease try: \n" \
-           "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
-           "\t2. Set use_gpu as false in config file to run " \
-           "model on CPU"
+    err = "Config use_gpu cannot be set as true while you are " \
+          "using paddlepaddle cpu version ! \nPlease try: \n" \
+          "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
+          "\t2. Set use_gpu as false in config file to run " \
+          "model on CPU"
 
-     try:
-         if use_gpu and not fluid.is_compiled_with_cuda():
-             logger.error(err)
-             sys.exit(1)
-     except Exception as e:
-         pass
+    try:
+        if use_gpu and not fluid.is_compiled_with_cuda():
+            logger.error(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
