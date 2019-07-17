@@ -82,13 +82,33 @@ def get_test_images(infer_dir, infer_img):
     return images
 
 
+def prune_feed_vars(feeded_var_names, target_vars, prog):
+    """
+    Filter out feed variables which are not in program
+    """
+    exist_var_names = []
+    prog = prog.clone()
+    prog = prog._prune(targets=target_vars)
+    global_block = prog.global_block()
+    for name in feeded_var_names:
+        try:
+            v = global_block.var(name)
+            exist_var_names.append(v.name)
+        except Exception:
+            pass
+    return exist_var_names
+
 def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(FLAGS.output_dir, cfg_name)
     feeded_var_names = [var.name for var in feed_vars.values()]
-    # im_id is only used for visualize, not used in inference model
-    feeded_var_names.remove('im_id')
+    # # im_id is only used for visualize, not used in inference model
+    # feeded_var_names.remove('im_id')
+    # for var in feed_vars:
+    #     print(var)
+    #     v = fluid.framework._get_var(var, infer_prog)
     target_vars = test_fetches.values()
+    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars, infer_prog)
     logger.info("Save inference model to {}, input: {}, output: "
                 "{}...".format(save_dir, feeded_var_names,
                             [var.name for var in target_vars]))
