@@ -84,7 +84,11 @@ def get_test_images(infer_dir, infer_img):
 
 def prune_feed_vars(feeded_var_names, target_vars, prog):
     """
-    Filter out feed variables which are not in program
+    Filter out feed variables which are not in program,
+    pruned feed variables are only used in post processing
+    on model output, which are not used in program, such
+    as im_id to identify image order, im_shape to clip bbox
+    in image.
     """
     exist_var_names = []
     prog = prog.clone()
