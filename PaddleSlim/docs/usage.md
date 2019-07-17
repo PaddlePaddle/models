@@ -205,6 +205,13 @@ compress_pass:
         - pruning_strategy_1
 ```
 
+compress_pass下可配置的参数有：
+
+- **epoch**: 整个压缩任务执行的epoch数量。
+- **init_model**: 初始化模型路径。在裁剪策略中，会根据`init_model`中`parameter`的`shape`对当前网络进行裁剪。
+- **checkpoint_path**: 保存`checkpoint`的路径, checkpoint中包含了模型训练信息和策略执行信息。在重启任务时，会自动从`checkpoint`路径下加载最新的`checkpoint`，所以用户需要根据自己的需求决定是否修改`checkpoint`。
+- **strategies**: 在当前压缩任务中依次生效的策略。
+
 
 ## 2. 模型压缩策略使用介绍
 
