@@ -124,7 +124,10 @@ python train.py \
        --pretrained_model=${path_to_pretrain_model}
 ```
 
-Note: Add and adjust other parameters accroding to specific models and tasks.
+Note: 
+- Add and adjust other parameters accroding to specific models and task.
+- If you are running with Paddle Fluid >= 1.5 and cuDNN >= 7.0.1, it is better to upgrade Nvidia Driver version to 410 or higher, otherwise a compatibility error may be introduced(e.g. loss=nan).
+
 
 ### Evaluation
 

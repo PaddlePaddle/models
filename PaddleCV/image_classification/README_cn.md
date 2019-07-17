@@ -117,7 +117,9 @@ python train.py \
 python train.py \
        --pretrained_model=${path_to_pretrain_model}
 ```
-注意：根据具体模型和任务添加并调整其他参数
+注意：
+- 根据具体模型和任务添加并调整其他参数
+- 若你使用Paddle Fluid >= 1.5版本和cuDNN >= 7.0.1版本，请升级Nvidia Driver至410版本或更高，否则可能引入兼容性问题(如loss=nan)。
 
 ### 模型评估
 模型评估是指对训练完毕的模型评估各类性能指标。可以下载[已有模型及其性能](#已有模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:

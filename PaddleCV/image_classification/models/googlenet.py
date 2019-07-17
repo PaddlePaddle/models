@@ -46,6 +46,7 @@ class GoogleNet():
                    stride=1,
                    groups=1,
                    act=None,
+                   use_cudnn=True,
                    name=None):
         channels = input.shape[1]
         stdv = (3.0 / (filter_size**2 * channels))**0.5
@@ -62,6 +63,7 @@ class GoogleNet():
             act=act,
             param_attr=param_attr,
             bias_attr=False,
+            use_cudnn=use_cudnn,
             name=name)
         return conv
 
@@ -117,6 +119,7 @@ class GoogleNet():
             filter_size=5,
             stride=1,
             act=None,
+            use_cudnn=False,
             name="inception_" + name + "_5x5")
         pool = fluid.layers.pool2d(
             input=input,
