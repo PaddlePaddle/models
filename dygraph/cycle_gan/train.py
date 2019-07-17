@@ -17,6 +17,7 @@ from trainer import *
 from paddle.fluid.dygraph.base import to_variable
 import six
 parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--ce", action="store_true", help="run ce")
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',        int,   1,          "Minibatch size.")
@@ -26,6 +27,7 @@ add_arg('init_model',        str,   None,       "The init model file of director
 add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints.")
 # yapf: enable
 
+    
 lambda_A = 10.0
 lambda_B = 10.0
 lambda_identity = 0.5
@@ -51,10 +53,17 @@ def train(args):
         shuffle = True
         data_shape = [-1] + data_reader.image_shape()
         print(data_shape)
+        if args.ce:
+            print("ce mode")
+            seed = 33
+            random.seed(seed)
+            np.random.seed(seed)
+            fluid.default_startup_program().random_seed = seed
+            fluid.default_main_program().random_seed = seed
+            shuffle = False
 
         A_pool = ImagePool()
         B_pool = ImagePool()
-
         A_reader = paddle.batch(
             data_reader.a_reader(shuffle=shuffle), args.batch_size)()
         B_reader = paddle.batch(
@@ -154,6 +163,14 @@ def train(args):
                 losses[1].append(d_loss_A[0])
                 sys.stdout.flush()
                 batch_id += 1
+                if args.ce and batch_id == 500:
+                    print("kpis\tg_loss\t%0.3f" % g_loss_out[0])
+                    print("kpis\tg_A_loss\t%0.3f" % g_A_loss.numpy()[0])
+                    print("kpis\tg_B_loss\t%0.3f" % g_B_loss.numpy()[0])
+                    print("kpis\td_A_loss\t%0.3f" % d_loss_A.numpy()[0])
+                    print("kpis\td_B_loss\t%0.3f" % d_loss_B.numpy()[0])
+                    break
+                    
 
             if args.save_checkpoints:
                 fluid.dygraph.save_persistables(cycle_gan.state_dict(),args.output+"/checkpoints/{}".format(epoch))
