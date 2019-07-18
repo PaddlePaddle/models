@@ -337,13 +337,37 @@ def build_program(is_train, main_prog, startup_prog, args):
     return build_program_out
 
 def get_device_num():
+    def _get_nvidia_smi_path():
+        if os.name == 'nt':
+            try:
+                if sys.version_info.major == 3:
+                    import winreg
+                elif sys.version_info.major == 2:
+                    import _winreg as winreg
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                               r"SOFTWARE\NVIDIA Corporation\Global\NVSMI",
+                                    0,
+                                    winreg.KEY_QUERY_VALUE) as key:
+                    smipath, _ = winreg.QueryValueEx(key,
+                                                 "NVSMIPATH")
+                smipath += r'\nvidia-smi.exe'
+                return smipath
+            except:
+                raise Exception("Please check whether Nvidia driver get installed correctly!")
+        else:
+            return 'nvidia-smi'
+
     # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1 : return 1
+    if num_trainers > 1:
+        return 1
     visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
     if visible_device:
         device_num = len(visible_device.split(','))
     else:
-        device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
+        device_num = subprocess.check_output([_get_nvidia_smi_path(), '-L']).decode().count('\n')
+    if device_num > 1 and os.name == 'nt':
+        # Windows has single GPU support only
+        raise Exception('Windows has single GPU supported ony, please specify the GPU card like "set CUDA_VISIBLE_DEVICES=0".')
     return device_num
 
 def train(args):
