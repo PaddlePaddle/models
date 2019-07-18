@@ -101,7 +101,7 @@ def map(ds, mapper, worker_args=None):
         return MappedDataset(ds, mapper)
 
 
-def batch(ds, batchsize, drop_last=False):
+def batch(ds, batchsize, drop_last=False, drop_empty=True):
     """
     Batch data samples to batches
     Args:
@@ -112,7 +112,10 @@ def batch(ds, batchsize, drop_last=False):
         a batched dataset
     """
 
-    return BatchedDataset(ds, batchsize, drop_last=drop_last)
+    return BatchedDataset(ds, 
+                          batchsize, 
+                          drop_last=drop_last, 
+                          drop_empty=drop_empty)
 
 
 def batch_map(ds, config):
