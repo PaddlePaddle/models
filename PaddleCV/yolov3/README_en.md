@@ -74,7 +74,7 @@ The data catalog structure is as follows:
 
 **User defined dataset:**
 
-You can defined datasets by yourself, we recommend using annotations in COCO format, and you can set dataset directory by `--data_dir` or in [reader.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/reader.py#L39). When using annotations in COCO format, you can reference the directory structure in COCO dataset above.
+You can defined datasets by yourself, we recommend using annotations in COCO format, and you can set dataset directory by `--data_dir` or in [reader.py](./reader.py#L39). When using annotations in COCO format, you can reference the directory structure in COCO dataset above.
 
 ### Training
 
@@ -111,6 +111,8 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
 *  Use momentum optimizer with momentum=0.9.
 *  In first 4000 iteration, the learning rate increases linearly from 0.0 to 0.001. Then lr is decayed at 400000, 450000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500200.
 *  Synchronized batch normalization can be set by `--syncbn=True`, which can produce a higher performance.
+
+**NOTE:** Synchronized batch normalization can only be used on multiple GPU devices, can not be used on CPU devices or single GPU device.
 
 Training losses is shown as below：
 <p align="center">
@@ -199,7 +201,7 @@ Inference speed on single GPU:
 
 ### Inference deployment
 
-For YOLOv3 inference deployment, you can save YOLOv3 inference model in [eval.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/eval.py#L58), inference model can be loaded and deployed by Paddle prediction library, see [Paddle Inference Lib](http://www.paddlepaddle.org/documentation/docs/en/1.4/advanced_usage/deploy/index_en.html).
+For YOLOv3 inference deployment, you can save YOLOv3 inference model in [eval.py](./eval.py#L54) or [infer.py](./infer.py#L47), inference model can be loaded and deployed by Paddle prediction library, see [Paddle Inference Lib](http://www.paddlepaddle.org/documentation/docs/en/1.4/advanced_usage/deploy/index_en.html).
 
 ## Advanced Usage
 
@@ -236,7 +238,7 @@ YOLOv3 networks are composed of base feature extraction network, multi-scale fea
 
 For YOLOv3 fine-tuning, you should set `--pretrain` as YOLOv3 [model](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz) you download, set `--class_num` as category number in your dataset.
 
-In fine-tuning, weights of `yolo_output` layers should not be loaded when your `--class_num` is not equal to 80 as in COCO dataset, you can load pre-trained weights in [train.py](https://github.com/heavengate/models/blob/3fa6035550ebd4a425a2e354489967a829174155/PaddleCV/yolov3/train.py#L76) without `yolo_output` layers as:
+In fine-tuning, weights of `yolo_output` layers should not be loaded when your `--class_num` is not equal to 80 as in COCO dataset, you can load pre-trained weights in [train.py](./train.py#L76) without `yolo_output` layers as:
 
 ```python
 if cfg.pretrain:
@@ -295,7 +297,10 @@ if cfg.pretrain:
 **A:** `learning_rate=0.001` configuration is for training in 8 GPUs while total batch size is 64, if you train with smaller batch size, please decrease the learning rate.
 
 **Q:** YOLOv3 training in my machine is very slow, how can I speed it up?  
-**A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284) for speeding up. If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
+**A:** Image augmentation is very complicated and time consuming in YOLOv3, you can set more workers for reader in [reader.py](./reader.py#L284) for speeding up. If you are fine-tuning, you can also set `--no_mixup_iter` greater than `--max_iter` to disable image mixup.
+
+**Q:** YOLOv3 training with 2 categories dataset got `loss=nan` or wrong prediction, why?  
+**A:** Settting `--label_smooth` will smooth target value of positive sample to `1-1/class_num` and target of negative sample to `1/class_num`, if `class_num` is very small, label smooth will incur excessive influence and may cause `loss=nan` or wrong prediction, it is recommend to set `--label_smooth=False` while category number is small. If you are using Paddle Fluid v1.5 and above, this situation is protected in C++ code, setting `--label_smooth=True` will no longer incur such error.
 
 ## Reference
 

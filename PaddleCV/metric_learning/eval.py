@@ -13,7 +13,7 @@ import paddle
 import paddle.fluid as fluid
 import models
 import reader
-from utility import add_arguments, print_arguments
+from utility import add_arguments, print_arguments, check_cuda
 from utility import fmt_time, recall_topk
 
 # yapf: disable
@@ -93,6 +93,7 @@ def eval(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_cuda(args.use_gpu)
     eval(args)
 
 

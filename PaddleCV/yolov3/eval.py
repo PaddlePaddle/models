@@ -23,13 +23,16 @@ import paddle
 import paddle.fluid as fluid
 import reader
 from models.yolov3 import YOLOv3
-from utility import print_arguments, parse_args
+from utility import print_arguments, parse_args, check_gpu
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
 from config import cfg
 
 
 def eval():
+    # check if set use_gpu=True in paddlepaddle cpu version
+    check_gpu(cfg.use_gpu)
+
     if '2014' in cfg.dataset:
         test_list = 'annotations/instances_val2014.json'
     elif '2017' in cfg.dataset:
@@ -50,6 +53,13 @@ def eval():
             return os.path.exists(os.path.join(cfg.weights, var.name))
         fluid.io.load_vars(exe, cfg.weights, predicate=if_exist)
     # yapf: enable
+
+    # you can save inference model by following code
+    # fluid.io.save_inference_model("./output/yolov3", 
+    #                               feeded_var_names=['image', 'im_shape'],
+    #                               target_vars=outputs,
+    #                               executor=exe)
+
     input_size = cfg.input_size
     test_reader = reader.test(input_size, 1)
     label_names, label_ids = reader.get_label_infos()

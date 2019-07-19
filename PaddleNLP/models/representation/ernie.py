@@ -57,8 +57,7 @@ def ernie_encoder_with_paddle_hub(ernie_inputs, max_seq_len):
         pre_program=main_program,
         next_program=program,
         input_dict=input_dict,
-        inplace=True,
-        need_log=False)
+        inplace=True)
 
     enc_out = outputs["sequence_output"]
     unpad_enc_out = fluid.layers.sequence_unpad(

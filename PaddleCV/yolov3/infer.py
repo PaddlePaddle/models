@@ -19,7 +19,7 @@ import paddle
 import paddle.fluid as fluid
 import box_utils
 import reader
-from utility import print_arguments, parse_args
+from utility import print_arguments, parse_args, check_gpu
 from models.yolov3 import YOLOv3
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params
@@ -27,6 +27,9 @@ from config import cfg
 
 
 def infer():
+
+    # check if set use_gpu=True in paddlepaddle cpu version
+    check_gpu(cfg.use_gpu)
 
     if not os.path.exists('output'):
         os.mkdir('output')
@@ -43,6 +46,13 @@ def infer():
             return os.path.exists(os.path.join(cfg.weights, var.name))
         fluid.io.load_vars(exe, cfg.weights, predicate=if_exist)
     # yapf: enable
+
+    # you can save inference model by following code
+    # fluid.io.save_inference_model("./output/yolov3", 
+    #                               feeded_var_names=['image', 'im_shape'],
+    #                               target_vars=outputs,
+    #                               executor=exe)
+
     feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
     fetch_list = [outputs]
     image_names = []

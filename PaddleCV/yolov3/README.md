@@ -74,7 +74,7 @@ dataset/coco/
 
 **自定义数据集：**
 
-用户可使用自定义的数据集，我们推荐自定义数据集使用COCO数据集格式的标注，并可通过设置`--data_dir`或修改[reader.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/reader.py#L39)指定数据集路径。使用COCO数据集格式标注时，目录结构可参考上述COCO数据集目录结构。
+用户可使用自定义的数据集，我们推荐自定义数据集使用COCO数据集格式的标注，并可通过设置`--data_dir`或修改[reader.py](./reader.py#L39)指定数据集路径。使用COCO数据集格式标注时，目录结构可参考上述COCO数据集目录结构。
 
 ### 模型训练
 
@@ -110,6 +110,8 @@ dataset/coco/
 *  采用momentum优化算法训练YOLOv3，momentum=0.9。
 *  学习率采用warmup算法，前4000轮学习率从0.0线性增加至0.001。在400000，450000轮时使用0.1,0.01乘子进行学习率衰减，最大训练500000轮。
 *  通过设置`--syncbn=True`可以开启Synchronized batch normalization，该模式下精度会提高
+
+**注意：** Synchronized batch normalization只能用于多GPU训练，不能用于CPU训练和单GPU训练。
 
 下图为模型训练结果：
 <p align="center">
@@ -198,7 +200,7 @@ YOLOv3 预测可视化
 
 ### 服务部署
 
-进行YOLOv3的服务部署，用户可以在[eval.py](https://github.com/PaddlePaddle/models/blob/623698ef30cc2f7879e47621678292254d6af51e/PaddleCV/yolov3/eval.py#L58)中保存可部署的推断模型，该模型可以用Paddle预测库加载和部署，参考[Paddle预测库](http://paddlepaddle.org/documentation/docs/zh/1.4/advanced_usage/deploy/index_cn.html)
+进行YOLOv3的服务部署，用户可以在[eval.py](./eval.py#L54)或[infer.py](./infer.py#L47)中保存可部署的推断模型，该模型可以用Paddle预测库加载和部署，参考[Paddle预测库](http://paddlepaddle.org/documentation/docs/zh/1.4/advanced_usage/deploy/index_cn.html)
 
 ## 进阶使用
 
@@ -236,7 +238,7 @@ YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层�
 
 对YOLOv3进行fine-tune，用户可用`--pretrain`指定下载好的Paddle发布的YOLOv3[模型](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz)，并把`--class_num`设置为用户数据集的类别数。
 
-在fine-tune时，若用户自定义数据集的类别数不等于COCO数据集的80类，则加载权重时不应加载`yolo_output`层的权重，可通过在[train.py](https://github.com/heavengate/models/blob/3fa6035550ebd4a425a2e354489967a829174155/PaddleCV/yolov3/train.py#L76)使用如下方式加载非`yolo_output`层的权重：
+在fine-tune时，若用户自定义数据集的类别数不等于COCO数据集的80类，则加载权重时不应加载`yolo_output`层的权重，可通过在[train.py](./train.py#L76)使用如下方式加载非`yolo_output`层的权重：
 
 ```python
 if cfg.pretrain:
@@ -295,7 +297,10 @@ if cfg.pretrain:
 **A:** YOLOv3中`learning_rate=0.001`的设置是针对总batch size为64的情况，若用户的batch size小于该值，建议调小学习率。
 
 **Q:** 我训练YOLOv3速度比较慢，要怎么提速？  
-**A:** YOLOv3的数据增强比较复杂，速度比较慢，可通过在[reader.py](https://github.com/PaddlePaddle/models/blob/66e135ccc4f35880d1cd625e9ec96c041835e37d/PaddleCV/yolov3/reader.py#L284)中增加数据读取的进程数来提速。若用户是进行fine-tune，也可将`--no_mixup_iter`设置大于`--max_iter`的值来禁用mixup提升速度。
+**A:** YOLOv3的数据增强比较复杂，速度比较慢，可通过在[reader.py](./reader.py#L284)中增加数据读取的进程数来提速。若用户是进行fine-tune，也可将`--no_mixup_iter`设置大于`--max_iter`的值来禁用mixup提升速度。
+
+**Q:** 我使用YOLOv3训练两个类别的数据集，训练`loss=nan`或推断结果不符合预期，这是为什么？  
+**A:** `--label_smooth`参数会把所有正例的目标值设置为`1-1/class_num`，负例的目标值设为`1/class_num`，当`class_num`较小时，这个操作影响过大，可能会出现`loss=nan`或者训练结果错误，类别数较小时建议设置`--label_smooth=False`。若使用Paddle Fluid v1.5及以上版本，我们在C++代码中对这种情况作了保护，设置`--label_smooth=True`也不会出现这些问题。
 
 ## 参考文献
 
