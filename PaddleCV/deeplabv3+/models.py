@@ -32,7 +32,7 @@ depthwise_regularizer = fluid.regularizer.L2DecayRegularizer(
 def scope(name):
     global name_scope
     bk = name_scope
-    name_scope = name_scope + name + '/'
+    name_scope = name_scope + name + os.sep
     yield
     name_scope = bk
 
@@ -62,11 +62,11 @@ def conv(*args, **kargs):
         init_std = 0.09
     elif "logit" in name_scope:
         init_std = 0.01
-    elif name_scope.endswith('depthwise/'):
+    elif name_scope.endswith('depthwise' + os.sep):
         init_std = 0.33
     else:
         init_std = 0.06
-    if name_scope.endswith('depthwise/'):
+    if name_scope.endswith('depthwise' + os.sep):
         regularizer = depthwise_regularizer
     else:
         regularizer = None
