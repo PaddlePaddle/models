@@ -72,14 +72,12 @@ You can evaluate your trained model in different metrics like 11point, integral 
 `eval.py` is the main caller of the evaluating module. Examples of usage are shown below.
 ```
 python eval.py --dataset=pascalvoc --model_dir=model/best_model --data_dir=data/pascalvoc --test_list=test.txt
->>>>>>> 25ff400... Support to set multiprocess in SSD model (#2776)
 ```
 
 ### Infer and Visualize
 `infer.py` is the main caller of the inferring module. Examples of usage are shown below.
 ```
 python infer.py --dataset=pascalvoc --nms_threshold=0.45 --model_dir=model/best_model --image_path=./data/pascalvoc/VOCdevkit/VOC2007/JPEGImages/009963.jpg
->>>>>>> 25ff400... Support to set multiprocess in SSD model (#2776)
 ```
 Below are the examples of running the inference and visualizing the model result.
 <p align="center">
