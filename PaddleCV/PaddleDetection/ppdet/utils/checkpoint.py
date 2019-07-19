@@ -28,7 +28,12 @@ from .download import get_weights_path
 import logging
 logger = logging.getLogger(__name__)
 
-__all__ = ['load_checkpoint', 'load_and_fusebn', 'save']
+__all__ = [
+    'init_from_pretrain_model',
+    'init_from_checkpoint',
+    'save_checkpoint',
+    'init_from_pretrain_model_and_fusebn',
+]
 
 
 def is_url(path):
@@ -40,7 +45,7 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
-def load_pretrain(exe, prog, path):
+def init_from_pretrain_model(exe, prog, path):
     """
     Load model from the given path.
     Args:
@@ -66,7 +71,7 @@ def load_pretrain(exe, prog, path):
     fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
 
 
-def load_checkpoint(exe, prog, path):
+def init_from_checkpoint(exe, prog, path):
     """
     Load model from the given path.
     Args:
@@ -102,7 +107,7 @@ def global_step(scope=None):
     return step
 
 
-def save(exe, prog, path):
+def save_checkpoint(exe, prog, path):
     """
     Load model from the given path.
     Args:
@@ -116,7 +121,7 @@ def save(exe, prog, path):
     fluid.io.save_persistables(exe, path, prog)
 
 
-def load_and_fusebn(exe, prog, path):
+def init_from_pretrain_model_and_fusebn(exe, prog, path):
     """
     Fuse params of batch norm to scale and bias.
 

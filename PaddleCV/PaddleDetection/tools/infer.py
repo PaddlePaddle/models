@@ -110,16 +110,18 @@ def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
     save_dir = os.path.join(FLAGS.output_dir, cfg_name)
     feeded_var_names = [var.name for var in feed_vars.values()]
     target_vars = test_fetches.values()
-    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars, infer_prog)
+    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars,
+                                       infer_prog)
     logger.info("Save inference model to {}, input: {}, output: "
                 "{}...".format(save_dir, feeded_var_names,
-                            [var.name for var in target_vars]))
-    fluid.io.save_inference_model(save_dir, 
-                                  feeded_var_names=feeded_var_names,
-                                  target_vars=target_vars,
-                                  executor=exe,
-                                  main_program=infer_prog,
-                                  params_filename="__params__")
+                               [var.name for var in target_vars]))
+    fluid.io.save_inference_model(
+        save_dir,
+        feeded_var_names=feeded_var_names,
+        target_vars=target_vars,
+        executor=exe,
+        main_program=infer_prog,
+        params_filename="__params__")
 
 
 def main():
@@ -161,7 +163,7 @@ def main():
 
     exe.run(startup_prog)
     if cfg.weights:
-        checkpoint.load_checkpoint(exe, infer_prog, cfg.weights)
+        checkpoint.init_from_checkpoint(exe, infer_prog, cfg.weights)
 
     if FLAGS.save_inference_model:
         save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)

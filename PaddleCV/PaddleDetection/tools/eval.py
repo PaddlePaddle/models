@@ -91,7 +91,7 @@ def main():
     # load model
     exe.run(startup_prog)
     if 'weights' in cfg:
-        checkpoint.load_pretrain(exe, eval_prog, cfg.weights)
+        checkpoint.init_from_pretrain_model(exe, eval_prog, cfg.weights)
 
     extra_keys = []
     if 'metric' in cfg and cfg.metric == 'COCO':

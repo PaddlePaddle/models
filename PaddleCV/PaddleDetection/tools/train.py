@@ -146,12 +146,15 @@ def main():
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
     if FLAGS.resume_checkpoint:
-        checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
+        checkpoint.init_from_checkpoint(exe, train_prog,
+                                        FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
     elif cfg.pretrain_weights and fuse_bn:
-        checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
+        checkpoint.init_from_pretrain_model_and_fusebn(exe, train_prog,
+                                                       cfg.pretrain_weights)
     elif cfg.pretrain_weights:
-        checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
+        checkpoint.init_from_pretrain_model(exe, train_prog,
+                                            cfg.pretrain_weights)
 
     train_stats = TrainingStats(cfg.log_smooth_window, train_keys)
     train_pyreader.start()
@@ -172,7 +175,8 @@ def main():
         logger.info(strs)
 
         if it > 0 and it % cfg.snapshot_iter == 0:
-            checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
+            checkpoint.save_checkpoint(exe, train_prog,
+                                       os.path.join(save_dir, str(it)))
 
             if FLAGS.eval:
                 # evaluation
@@ -184,7 +188,8 @@ def main():
                 eval_results(results, eval_feed, cfg.metric, resolution,
                              FLAGS.output_file)
 
-    checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
+    checkpoint.save_checkpoint(exe, train_prog,
+                               os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
 
 

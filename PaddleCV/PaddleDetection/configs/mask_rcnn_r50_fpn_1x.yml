@@ -114,9 +114,9 @@ OptimizerBuilder:
 MaskRCNNTrainFeed:
   batch_size: 1
   dataset:
-    dataset_dir: dataset/coco
-    annotation: annotations/instances_train2017.json
-    image_dir: train2017
+    dataset_dir: /paddle/models/fluid/faster_rcnn/data/COCO17 
+    annotation: annotations/instances_val2017.json
+    image_dir: val2017
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32

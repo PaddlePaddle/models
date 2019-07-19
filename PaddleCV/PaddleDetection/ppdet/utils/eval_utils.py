@@ -36,7 +36,6 @@ def parse_fetches(fetches, prog=None, extra_keys=None):
     for k, v in fetches.items():
         if hasattr(v, 'name'):
             keys.append(k)
-            v.persistable = True
             values.append(v.name)
         else:
             cls.append(v)
