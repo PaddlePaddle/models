@@ -214,7 +214,7 @@ def process_batch_data(input_data, settings, mode, color_jitter, rotate):
             batch_data.append(
                 process_image(sample, settings, mode, color_jitter, rotate))
         else:
-            print("File not exist : " % sample[0])
+            print("File not exist : %s" % sample[0])
     return batch_data
 
 
