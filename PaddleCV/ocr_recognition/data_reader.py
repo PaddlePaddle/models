@@ -9,7 +9,6 @@ from PIL import Image
 from os import path
 from paddle.dataset.image import load_image
 import paddle
-import shutil
 import random
 
 try:
@@ -60,54 +59,52 @@ class DataGenerator(object):
 
         img_label_lines = []
         to_file = "tmp.txt"
-        if not shuffle:
-            shutil.copyfile(img_label_list, to_file)
-        elif batchsize == 1:
-            input_file = open(img_label_list, 'r')
-            lines_to_shuf = input_file.readlines()
-            random.shuffle(lines_to_shuf)
-            out_file = open(to_file, 'w')
-            for line in lines_to_shuf:
-                out_file.write(line)
+
+        def _shuffle_data(input_file_path, output_file_path, shuffle,
+                          batchsize):
+            def _write_file(file_path, lines_to_write):
+                open(file_path, 'w').writelines(
+                    ["{}\n".format(item) for item in lines_to_write])
+
+            input_file = open(input_file_path, 'r')
+            lines_to_shuf = [line.strip() for line in input_file.readlines()]
+
+            if not shuffle:
+                _write_file(output_file_path, lines_to_shuf)
+            elif batchsize == 1:
+                random.shuffle(lines_to_shuf)
+                _write_file(output_file_path, lines_to_shuf)
+            else:
+                #partial shuffle
+                for i in range(len(lines_to_shuf)):
+                    str_i = lines_to_shuf[i]
+                    list_i = str_i.strip().split(' ')
+                    str_i_ = "%04d%.4f " % (int(list_i[0]), random.random()
+                                            ) + str_i
+                    lines_to_shuf[i] = str_i_
+                lines_to_shuf.sort()
+                delete_num = random.randint(1, 100)
+                del lines_to_shuf[0:delete_num]
+
+                #batch merge and shuffle
+                lines_concat = []
+                for i in range(0, len(lines_to_shuf), batchsize):
+                    lines_concat.append(' '.join(lines_to_shuf[i:i +
+                                                               batchsize]))
+                random.shuffle(lines_concat)
+
+                #batch split
+                out_file = open(output_file_path, 'w')
+                for i in range(len(lines_concat)):
+                    tmp_list = lines_concat[i].split(' ')
+                    for j in range(int(len(tmp_list) / 5)):
+                        out_file.write("{} {} {} {}\n".format(tmp_list[
+                            5 * j + 1], tmp_list[5 * j + 2], tmp_list[
+                                5 * j + 3], tmp_list[5 * j + 4]))
+                out_file.close()
             input_file.close()
-            out_file.close()
 
-        else:
-            #partial shuffle
-            input_file = open(img_label_list, 'r')
-            lines_to_shuf = input_file.readlines()
-            for i in range(len(lines_to_shuf)):
-                str_i = lines_to_shuf[i]
-                list_i = str_i.strip().split(' ')
-                str_i_ = "%04d%.4f " % (int(list_i[0]), random.random()) + str_i
-                lines_to_shuf[i] = str_i_
-            lines_to_shuf.sort()
-            delete_num = random.randint(1, 100)
-            del lines_to_shuf[0:delete_num]
-
-            #batch merge and shuffle
-            lines_concat = []
-            tmp_line = ""
-            for i in range(len(lines_to_shuf)):
-                if i % batchsize == 0:
-                    tmp_line = lines_to_shuf[i].strip()
-                else:
-                    tmp_line = tmp_line + " " + lines_to_shuf[i].strip()
-                if ((i + 1) % batchsize == 0):
-                    lines_concat.append(tmp_line)
-                    tmp_line = ""
-            random.shuffle(lines_concat)
-
-            #batch split
-            out_file = open(to_file, 'w')
-            for i in range(len(lines_concat)):
-                tmp_list = lines_concat[i].split(' ')
-                for j in range(batchsize):
-                    out_file.write("{} {} {} {}\n".format(tmp_list[
-                        5 * j + 1], tmp_list[5 * j + 2], tmp_list[5 * j + 3],
-                                                          tmp_list[5 * j + 4]))
-            input_file.close()
-            out_file.close()
+        _shuffle_data(img_label_list, to_file, shuffle, batchsize)
         print("finish batch shuffle")
         img_label_lines = open(to_file, 'r').readlines()
 
