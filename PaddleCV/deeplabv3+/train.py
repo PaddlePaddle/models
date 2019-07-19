@@ -116,6 +116,7 @@ def loss(logit, label):
 
 args = parser.parse_args()
 utility.print_arguments(args)
+utility.check_gpu(args.use_gpu)
 
 models.clean()
 models.bn_momentum = 0.9997

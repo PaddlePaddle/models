@@ -29,7 +29,7 @@ import paddle.fluid as fluid
 import reader_cv2 as reader
 import models
 import utils
-from utils.utility import add_arguments, print_arguments
+from utils.utility import add_arguments, print_arguments, check_gpu
 
 parser = argparse.ArgumentParser(description=__doc__)
 # yapf: disable
@@ -110,6 +110,7 @@ def infer(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     infer(args)
 
 

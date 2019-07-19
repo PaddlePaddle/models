@@ -76,6 +76,7 @@ class STGAN_model(object):
                       n_atts=cfg.c_dim,
                       dim=cfg.d_base_dims,
                       fc_dim=cfg.d_fc_dim,
+                      norm=cfg.dis_norm,
                       n_layers=cfg.n_layers,
                       name=name)
 
@@ -100,7 +101,7 @@ class STGAN_model(object):
                 activation_fn='leaky_relu',
                 name=name + str(i),
                 use_bias=False,
-                relufactor=0.01,
+                relufactor=0.2,
                 initial='kaiming',
                 is_test=is_test)
             zs.append(z)
@@ -132,7 +133,7 @@ class STGAN_model(object):
                 pass_state=pass_state,
                 name=name + str(i),
                 is_test=is_test)
-            zs_.insert(0, output[0] + zs[n_layers - 1 - i])
+            zs_.insert(0, output[0])
             if inject_layers > i:
                 state = self.concat(output[1], a)
             else:
@@ -202,18 +203,18 @@ class STGAN_model(object):
                 d,
                 4,
                 2,
-                norm=None,
-                padding=1,
+                norm=norm,
+                padding_type="SAME",
                 activation_fn='leaky_relu',
                 name=name + str(i),
-                use_bias=True,
-                relufactor=0.01,
+                use_bias=(norm == None),
+                relufactor=0.2,
                 initial='kaiming')
 
         logit_gan = linear(
             y,
             fc_dim,
-            activation_fn='relu',
+            activation_fn='leaky_relu',
             name=name + 'fc_adv_1',
             initial='kaiming')
         logit_gan = linear(
@@ -222,7 +223,7 @@ class STGAN_model(object):
         logit_att = linear(
             y,
             fc_dim,
-            activation_fn='relu',
+            activation_fn='leaky_relu',
             name=name + 'fc_cls_1',
             initial='kaiming')
         logit_att = linear(

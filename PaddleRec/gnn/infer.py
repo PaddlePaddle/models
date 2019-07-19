@@ -19,6 +19,7 @@ import os
 import paddle
 import paddle.fluid as fluid
 import reader
+import network
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
@@ -32,6 +33,8 @@ def parse_args():
     parser.add_argument(
         '--test_path', type=str, default='./data/diginetica/test.txt', help='dir of test file')
     parser.add_argument(
+        '--config_path', type=str, default='./data/diginetica/config.txt', help='dir of config')
+    parser.add_argument(
         '--use_cuda', type=int, default=1, help='whether to use gpu')
     parser.add_argument(
         '--batch_size', type=int, default=100, help='input batch size')
@@ -39,40 +42,51 @@ def parse_args():
         '--start_index', type=int, default='0', help='start index')
     parser.add_argument(
         '--last_index', type=int, default='10', help='end index')
+    parser.add_argument(
+        '--hidden_size', type=int, default=100, help='hidden state size')
+    parser.add_argument(
+        '--step', type=int, default=1, help='gnn propogation steps')
     return parser.parse_args()
 
 
-def infer(epoch_num):
-    args = parse_args()
+def infer(args):
     batch_size = args.batch_size
+    items_num = reader.read_config(args.config_path)
     test_data = reader.Data(args.test_path, False)
     place = fluid.CUDAPlace(0) if args.use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
+    loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size, args.step)
+    exe.run(fluid.default_startup_program())
+    infer_program = fluid.default_main_program().clone(for_test=True)
 
-    model_path = args.model_path + "epoch_" + str(epoch_num)
-    try:
-        [infer_program, feed_names, fetch_targets] = fluid.io.load_inference_model(
-            model_path, exe)
-        feeder = fluid.DataFeeder(
-            feed_list=feed_names, place=place, program=infer_program)
+    for epoch_num in range(args.start_index, args.last_index + 1):
+        model_path = args.model_path + "epoch_" + str(epoch_num)
+        try:
+            if not os.path.exists(model_path):
+                raise ValueError()
+            fluid.io.load_persistables(executor=exe, dirname=model_path,
+                    main_program=infer_program)
 
-        loss_sum = 0.0
-        acc_sum = 0.0
-        count = 0
-        for data in test_data.reader(batch_size, batch_size, False)():
-            res = exe.run(infer_program,
-                          feed=feeder.feed(data),
-                          fetch_list=fetch_targets)
-            loss_sum += res[0]
-            acc_sum += res[1]
-            count += 1
-        logger.info("TEST --> loss: %.4lf, Recall@20: %.4lf" %
-                    (loss_sum / count, acc_sum / count))
-    except ValueError as e:
-        logger.info("TEST --> error: there is no model in " + model_path)
+            loss_sum = 0.0
+            acc_sum = 0.0
+            count = 0
+            py_reader.decorate_paddle_reader(test_data.reader(batch_size, batch_size*20, False))
+            py_reader.start()
+            try:
+                while True:
+                    res = exe.run(infer_program,
+                                  fetch_list=[loss.name, acc.name], use_program_cache=True)
+                    loss_sum += res[0]
+                    acc_sum += res[1]
+                    count += 1
+            except fluid.core.EOFException:
+                py_reader.reset()
+            logger.info("TEST --> loss: %.4lf, Recall@20: %.4lf" %
+                        (loss_sum / count, acc_sum / count))
+        except ValueError as e:
+            logger.info("TEST --> error: there is no model in " + model_path)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    for index in range(args.start_index, args.last_index + 1):
-        infer(index)
+    infer(args)

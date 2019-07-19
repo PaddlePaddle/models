@@ -27,6 +27,22 @@ env CUDA_VISIBLE_DEVICES=0 python train.py
 
 这里`CUDA_VISIBLE_DEVICES=0`表示是执行在0号设备卡上，请根据自身情况修改这个参数。
 
+亦可以使用多卡进行训练：
+```
+python -m paddle.distributed.launch --selected_gpus=0,1,2,3 --log_dir ./mylog train.py   --use_data_parallel 1
+```
+这里`--selected_gpus=0,1,2,3`表示使用0，1，2，3号设备卡，共计4卡进行多卡训练，请根据自身情况修改这个参数。
+此时，程序会将每个进程的输出log导入到`./mylog`路径下：
+```
+.
+├── mylog
+│   ├── workerlog.0
+│   ├── workerlog.1
+│   ├── workerlog.2
+│   └── workerlog.3
+├── README.md
+└── train.py
+```
 
 
 ## 输出
