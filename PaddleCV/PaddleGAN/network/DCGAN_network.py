@@ -31,13 +31,17 @@ class DCGAN_model(object):
         self.dfc_dim = 1024
         self.gf_dim = 64
         self.df_dim = 64
+        if self.batch_size == 1:
+            self.norm = None
+        else:
+            self.norm = "batch_norm"
 
     def network_G(self, input, name="generator"):
-        o_l1 = linear(input, self.gfc_dim, norm='batch_norm', name=name + '_l1')
+        o_l1 = linear(input, self.gfc_dim, norm=self.norm, name=name + '_l1')
         o_l2 = linear(
             o_l1,
             self.gf_dim * 2 * self.img_dim // 4 * self.img_dim // 4,
-            norm='batch_norm',
+            norm=self.norm,
             name=name + '_l2')
         o_r1 = fluid.layers.reshape(
             o_l2, [-1, self.df_dim * 2, self.img_dim // 4, self.img_dim // 4])
@@ -85,7 +89,7 @@ class DCGAN_model(object):
         o_l1 = linear(
             o_c2,
             self.dfc_dim,
-            norm='batch_norm',
+            norm=self.norm,
             activation_fn='leaky_relu',
             name=name + '_l1')
         out = linear(o_l1, 1, activation_fn='sigmoid', name=name + '_l2')

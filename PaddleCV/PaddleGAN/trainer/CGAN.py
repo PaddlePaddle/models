@@ -111,7 +111,7 @@ class CGAN(object):
             utility.init_checkpoints(self.cfg, exe, g_trainer, "net_G")
             utility.init_checkpoints(self.cfg, exe, d_trainer, "net_D")
 
-### memory optim
+        ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = True
         build_strategy.memory_optimize = False

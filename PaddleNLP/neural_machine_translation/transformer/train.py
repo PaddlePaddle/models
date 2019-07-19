@@ -4,6 +4,7 @@ import copy
 import logging
 import multiprocessing
 import os
+import subprocess
 
 if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
     os.environ['FLAGS_eager_delete_tensor_gb'] = '0'
@@ -667,7 +668,8 @@ def train(args):
 
     if training_role == "PSERVER" or (not TrainTaskConfig.use_gpu):
         place = fluid.CPUPlace()
-        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+        # the default setting of CPU_NUM in paddle framework is 1
+        dev_count = int(os.environ.get('CPU_NUM', 1))
     else:
         check_cuda(TrainTaskConfig.use_gpu)
         gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
