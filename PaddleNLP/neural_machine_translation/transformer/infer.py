@@ -4,12 +4,14 @@ import multiprocessing
 import numpy as np
 import os
 import sys
+sys.path.append("../../")
 sys.path.append("../../models/neural_machine_translation/transformer/")
 from functools import partial
 
 import paddle
 import paddle.fluid as fluid
 
+from models.model_check import check_cuda
 import reader
 from config import *
 from desc import *
@@ -217,6 +219,7 @@ def fast_infer(args):
         fluid.memory_optimize(infer_program)
 
     if InferTaskConfig.use_gpu:
+        check_cuda(InferTaskConfig.use_gpu)
         place = fluid.CUDAPlace(0)
         dev_count = fluid.core.get_cuda_device_count()
     else:

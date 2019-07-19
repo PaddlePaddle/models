@@ -57,7 +57,7 @@ def parse_args():
     parser.add_argument(
         '--learning_rate', type=float, default=0.001, help='Learning rate')
     parser.add_argument(
-        '--sample_pro', type=float, default=0.1, help='Sample probability for training data')
+        '--sample_pro', type=float, default=1, help='Sample probability for training data')
     parser.add_argument(
         '--max_len', type=int, default=50, help='Max length for sentences')
 

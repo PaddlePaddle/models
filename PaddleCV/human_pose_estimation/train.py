@@ -175,5 +175,6 @@ def train(args):
 
 if __name__ == '__main__':
     args = parser.parse_args()
+    check_cuda(args.use_gpu)
     train(args)
 

@@ -5,7 +5,7 @@ from eval_helper import *
 import paddle
 import paddle.fluid as fluid
 import reader
-from utility import print_arguments, parse_args
+from utility import print_arguments, parse_args, check_gpu
 import models.model_builder as model_builder
 import models.resnet as resnet
 from config import cfg
@@ -92,4 +92,5 @@ def infer():
 if __name__ == '__main__':
     args = parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     infer()

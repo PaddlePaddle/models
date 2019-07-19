@@ -1,4 +1,4 @@
-# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,18 @@ from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, FC
 from paddle.fluid.dygraph.base import to_variable
 import sys
 import math
+import argparse
+import ast
 
+parser = argparse.ArgumentParser("Training for Se-ResNeXt.")
+parser.add_argument("-e", "--epoch", default=200, type=int, help="set epoch")
+parser.add_argument("--ce", action="store_true", help="run ce") 
+parser.add_argument(
+        "--use_data_parallel",
+        type=ast.literal_eval,
+        default=False,
+        help="The flag indicating whether to shuffle instances in each pass.")
+args = parser.parse_args()
 batch_size = 64
 train_parameters = {
     "input_size": [3, 224, 224],
@@ -58,7 +69,6 @@ def optimizer_setting(params):
     bd = [step * e for e in ls["epochs"]]
     lr = params["lr"]
     num_epochs = params["num_epochs"]
-    print("lr:",lr)
     optimizer = fluid.optimizer.Momentum(
         learning_rate=fluid.layers.cosine_decay(
             learning_rate=lr,step_each_epoch=step,epochs=num_epochs),
@@ -325,12 +335,12 @@ def eval(model, data):
         label = to_variable(y_data)
         label._stop_gradient = True
         out = model(img)
-        cost,pred = fluid.layers.softmax_with_cross_entropy(out,label,return_softmax=True)
-        avg_loss = fluid.layers.mean(x=cost)
 
-        acc_top1 = fluid.layers.accuracy(input=pred, label=label, k=1)
-        acc_top5 = fluid.layers.accuracy(input=pred, label=label, k=5)
-
+        softmax_out = fluid.layers.softmax(out,use_cudnn=False)
+        loss = fluid.layers.cross_entropy(input=softmax_out, label=label)
+        avg_loss = fluid.layers.mean(x=loss)
+        acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
+        acc_top5 = fluid.layers.accuracy(input=softmax_out, label=label, k=5)
         dy_out = avg_loss.numpy()
 
         total_loss += dy_out
@@ -342,36 +352,53 @@ def eval(model, data):
                   ( batch_id, total_loss / total_sample, \
                    total_acc1 / total_sample, total_acc5 / total_sample))
 	    
+    if args.ce:
+        print("kpis\ttest_acc1\t%0.3f" % (total_acc1 / total_sample))
+        print("kpis\ttest_acc5\t%0.3f" % (total_acc5 / total_sample))
+        print("kpis\ttest_loss\t%0.3f" % (total_loss / total_sample))
     print("final eval loss %0.3f acc1 %0.3f acc5 %0.3f" % \
           (total_loss / total_sample, \
            total_acc1 / total_sample, total_acc5 / total_sample))
 
 def train():
-    seed = 90
+    
     epoch_num = train_parameters["num_epochs"]
-
+    if args.ce:
+        epoch_num = args.epoch
     batch_size = train_parameters["batch_size"]
 
-    with fluid.dygraph.guard():
-        fluid.default_startup_program().random_seed = 90
-        fluid.default_main_program().random_seed = 90
-        
+    trainer_count = fluid.dygraph.parallel.Env().nranks
+    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
+        if args.use_data_parallel else fluid.CUDAPlace(0)
+    with fluid.dygraph.guard(place):
+        if args.ce:
+            print("ce mode")
+            seed = 90
+            np.random.seed(seed)
+            fluid.default_startup_program().random_seed = seed
+            fluid.default_main_program().random_seed = seed
+        if args.use_data_parallel:
+            strategy = fluid.dygraph.parallel.prepare_context() 
         se_resnext = SeResNeXt("se_resnext")
         optimizer = optimizer_setting(train_parameters)
+        if args.use_data_parallel:
+            se_resnext = fluid.dygraph.parallel.DataParallel(se_resnext, strategy)
         train_reader = paddle.batch(
             paddle.dataset.flowers.train(use_xmap=False),
             batch_size=batch_size,
             drop_last=True
             )
-        
+        if args.use_data_parallel:
+            train_reader = fluid.contrib.reader.distributed_batch_reader(
+                train_reader)
         test_reader = paddle.batch(
             paddle.dataset.flowers.test(use_xmap=False), batch_size=32)       
 
-        total_loss = 0.0
-        total_acc1 = 0.0
-        total_acc5 = 0.0
-        total_sample = 0
         for epoch_id in range(epoch_num):
+            total_loss = 0.0
+            total_acc1 = 0.0
+            total_acc5 = 0.0
+            total_sample = 0
             for batch_id, data in enumerate(train_reader()):
                 
                 dy_x_data = np.array(
@@ -394,7 +421,12 @@ def train():
                 acc_top5 = fluid.layers.accuracy(input=softmax_out, label=label, k=5)
 
                 dy_out = avg_loss.numpy()
-                avg_loss.backward()
+                if args.use_data_parallel:
+                    avg_loss = se_resnext.scale_loss(avg_loss)
+                    avg_loss.backward()
+                    se_resnext.apply_collective_grads()
+                else:
+                    avg_loss.backward()
 
                 optimizer.minimize(avg_loss)
                 se_resnext.clear_gradients()
@@ -409,6 +441,10 @@ def train():
                            ( epoch_id, batch_id, total_loss / total_sample, \
                              total_acc1 / total_sample, total_acc5 / total_sample, lr))
 
+            if args.ce:
+                print("kpis\ttrain_acc1\t%0.3f" % (total_acc1 / total_sample))
+                print("kpis\ttrain_acc5\t%0.3f" % (total_acc5 / total_sample))
+                print("kpis\ttrain_loss\t%0.3f" % (total_loss / total_sample))
             print("epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
                   (epoch_id, batch_id, total_loss / total_sample, \
                    total_acc1 / total_sample, total_acc5 / total_sample))

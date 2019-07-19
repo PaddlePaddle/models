@@ -71,7 +71,7 @@ def train():
 
     batch_size = args.batch_size
     items_num = reader.read_config(args.config_path)
-    loss, acc, py_reader, feed_datas = network.network(batch_size, items_num, args.hidden_size,
+    loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size,
                                 args.step)
 
     data_reader = reader.Data(args.train_path, True)

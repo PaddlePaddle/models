@@ -111,6 +111,8 @@ dataset/coco/
 *  学习率采用warmup算法，前4000轮学习率从0.0线性增加至0.001。在400000，450000轮时使用0.1,0.01乘子进行学习率衰减，最大训练500000轮。
 *  通过设置`--syncbn=True`可以开启Synchronized batch normalization，该模式下精度会提高
 
+**注意：** Synchronized batch normalization只能用于多GPU训练，不能用于CPU训练和单GPU训练。
+
 下图为模型训练结果：
 <p align="center">
 <img src="image/train_loss.png" height="400" width="550" hspace="10"/><br />
