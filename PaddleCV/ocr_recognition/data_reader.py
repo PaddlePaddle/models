@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 import os
 import cv2
+import random
 import tarfile
 import numpy as np
 from PIL import Image
@@ -56,25 +57,36 @@ class DataGenerator(object):
         
         '''
 
+        def _shuffle_file_by_batchsize(input_file,
+                                       output_file,
+                                       shuffle=False,
+                                       batchsize=1):
+            def _list_to_file(filename, tolist):
+                open(filename, 'w').writelines(
+                    ["%s\n" % item for item in tolist])
+
+            assert (batchsize >= 1)
+            input_lines = [line.rstrip('\n') for line in open(input_file)]
+            if not shuffle:
+                _list_to_file(output_file, input_lines)
+            elif batchsize == 1:
+                random.shuffle(input_lines)
+                _list_to_file(output_file, input_lines)
+            else:
+                output_lines = []
+                tmp_list = [
+                    input_lines[i:i + batchsize]
+                    for i in range(0, len(input_lines), batchsize)
+                ]
+                for tmp in tmp_list:
+                    random.shuffle(tmp)
+                    output_lines.extend(tmp)
+                _list_to_file(output_file, output_lines)
+
         img_label_lines = []
         to_file = "tmp.txt"
-        if not shuffle:
-            cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' > " + to_file
-        elif batchsize == 1:
-            cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' | shuf > " + to_file
-        else:
-            #cmd1: partial shuffle
-            cmd = "cat " + img_label_list + " | awk '{printf(\"%04d%.4f %s\\n\", $1, rand(), $0)}' | sort | sed 1,$((1 + RANDOM % 100))d | "
-            #cmd2: batch merge and shuffle
-            cmd += "awk '{printf $2\" \"$3\" \"$4\" \"$5\" \"; if(NR % " + str(
-                batchsize) + " == 0) print \"\";}' | shuf | "
-            #cmd3: batch split
-            cmd += "awk '{if(NF == " + str(
-                batchsize
-            ) + " * 4) {for(i = 0; i < " + str(
-                batchsize
-            ) + "; i++) print $(4*i+1)\" \"$(4*i+2)\" \"$(4*i+3)\" \"$(4*i+4);}}' > " + to_file
-        os.system(cmd)
+        _shuffle_file_by_batchsize(
+            img_label_list, to_file, shuffle=shuffle, batchsize=batchsize)
         print("finish batch shuffle")
         img_label_lines = open(to_file, 'r').readlines()
 
