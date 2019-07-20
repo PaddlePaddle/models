@@ -22,8 +22,8 @@ from paddle.fluid.initializer import Normal
 from paddle.fluid.regularizer import L2Decay
 
 from ppdet.core.workspace import register
-from ppdet.modeling.ops import (AnchorGenerator,
-                                RPNTargetAssign, GenerateProposals)
+from ppdet.modeling.ops import (AnchorGenerator, RPNTargetAssign,
+                                GenerateProposals)
 
 __all__ = ['RPNTargetAssign', 'GenerateProposals', 'RPNHead', 'FPNRPNHead']
 
@@ -153,14 +153,20 @@ class RPNHead(object):
             rpn_cls_prob = fluid.layers.sigmoid(
                 rpn_cls_score, name='rpn_cls_prob')
         else:
-            rpn_cls_score = fluid.layers.transpose(rpn_cls_score, perm=[0, 2, 3, 1])
-            rpn_cls_score = fluid.layers.reshape(rpn_cls_score, shape=(0, 0, 0, -1, self.num_classes))
+            rpn_cls_score = fluid.layers.transpose(
+                rpn_cls_score, perm=[0, 2, 3, 1])
+            rpn_cls_score = fluid.layers.reshape(
+                rpn_cls_score, shape=(0, 0, 0, -1, self.num_classes))
             rpn_cls_prob_tmp = fluid.layers.softmax(
                 rpn_cls_score, use_cudnn=False, name='rpn_cls_prob')
-            rpn_cls_prob_slice = fluid.layers.slice(rpn_cls_prob_tmp, axes=[4], starts=[1], ends=[self.num_classes])
+            rpn_cls_prob_slice = fluid.layers.slice(
+                rpn_cls_prob_tmp, axes=[4], starts=[1],
+                ends=[self.num_classes])
             rpn_cls_prob, _ = fluid.layers.topk(rpn_cls_prob_slice, 1)
-            rpn_cls_prob = fluid.layers.reshape(rpn_cls_prob, shape=(0, 0, 0, -1))
-            rpn_cls_prob = fluid.layers.transpose(rpn_cls_prob, perm=[0, 3, 1, 2])
+            rpn_cls_prob = fluid.layers.reshape(
+                rpn_cls_prob, shape=(0, 0, 0, -1))
+            rpn_cls_prob = fluid.layers.transpose(
+                rpn_cls_prob, perm=[0, 3, 1, 2])
         prop_op = self.train_proposal if mode == 'train' else self.test_proposal
         rpn_rois, rpn_roi_probs = prop_op(
             scores=rpn_cls_prob,
@@ -176,7 +182,8 @@ class RPNHead(object):
         rpn_bbox_pred = fluid.layers.transpose(rpn_bbox_pred, perm=[0, 2, 3, 1])
         anchor = fluid.layers.reshape(anchor, shape=(-1, 4))
         anchor_var = fluid.layers.reshape(anchor_var, shape=(-1, 4))
-        rpn_cls_score = fluid.layers.reshape(x=rpn_cls_score, shape=(0, -1, self.num_classes))
+        rpn_cls_score = fluid.layers.reshape(
+            x=rpn_cls_score, shape=(0, -1, self.num_classes))
         rpn_bbox_pred = fluid.layers.reshape(x=rpn_bbox_pred, shape=(0, -1, 4))
         return rpn_cls_score, rpn_bbox_pred, anchor, anchor_var
 
@@ -282,7 +289,6 @@ class FPNRPNHead(RPNHead):
     ]
 
     def __init__(self,
-                 num_classes=1,
                  anchor_generator=AnchorGenerator().__dict__,
                  rpn_target_assign=RPNTargetAssign().__dict__,
                  train_proposal=GenerateProposals(12000, 2000).__dict__,
@@ -290,7 +296,8 @@ class FPNRPNHead(RPNHead):
                  anchor_start_size=32,
                  num_chan=256,
                  min_level=2,
-                 max_level=6):
+                 max_level=6,
+                 num_classes=1):
         super(FPNRPNHead, self).__init__(anchor_generator, rpn_target_assign,
                                          train_proposal, test_proposal)
         self.anchor_start_size = anchor_start_size
@@ -398,21 +405,29 @@ class FPNRPNHead(RPNHead):
         """
 
         rpn_cls_score_fpn, rpn_bbox_pred_fpn = self._get_output(body_feat,
-                                                                 feat_lvl)
+                                                                feat_lvl)
 
         prop_op = self.train_proposal if mode == 'train' else self.test_proposal
         if self.num_classes == 1:
             rpn_cls_prob_fpn = fluid.layers.sigmoid(
                 rpn_cls_score_fpn, name='rpn_cls_prob_fpn' + str(feat_lvl))
         else:
-            rpn_cls_score_fpn = fluid.layers.transpose(rpn_cls_score_fpn, perm=[0, 2, 3, 1])
-            rpn_cls_score_fpn = fluid.layers.reshape(rpn_cls_score_fpn, shape=(0, 0, 0, -1, self.num_classes))
+            rpn_cls_score_fpn = fluid.layers.transpose(
+                rpn_cls_score_fpn, perm=[0, 2, 3, 1])
+            rpn_cls_score_fpn = fluid.layers.reshape(
+                rpn_cls_score_fpn, shape=(0, 0, 0, -1, self.num_classes))
             rpn_cls_prob_fpn = fluid.layers.softmax(
-                rpn_cls_score_fpn, use_cudnn=False, name='rpn_cls_prob_fpn' + str(feat_lvl))
-            rpn_cls_prob_fpn = fluid.layers.slice(rpn_cls_prob_fpn, axes=[4], starts=[1], ends=[self.num_classes])
+                rpn_cls_score_fpn,
+                use_cudnn=False,
+                name='rpn_cls_prob_fpn' + str(feat_lvl))
+            rpn_cls_prob_fpn = fluid.layers.slice(
+                rpn_cls_prob_fpn, axes=[4], starts=[1],
+                ends=[self.num_classes])
             rpn_cls_prob_fpn, _ = fluid.layers.topk(rpn_cls_prob_fpn, 1)
-            rpn_cls_prob_fpn = fluid.layers.reshape(rpn_cls_prob_fpn, shape=(0, 0, 0, -1))
-            rpn_cls_prob_fpn = fluid.layers.transpose(rpn_cls_prob_fpn, perm=[0, 3, 1, 2])
+            rpn_cls_prob_fpn = fluid.layers.reshape(
+                rpn_cls_prob_fpn, shape=(0, 0, 0, -1))
+            rpn_cls_prob_fpn = fluid.layers.transpose(
+                rpn_cls_prob_fpn, perm=[0, 3, 1, 2])
         rpn_rois_fpn, rpn_roi_prob_fpn = prop_op(
             scores=rpn_cls_prob_fpn,
             bbox_deltas=rpn_bbox_pred_fpn,
