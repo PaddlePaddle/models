@@ -12,6 +12,14 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
+from .CGAN import CGAN
+from .DCGAN import DCGAN
+from .CycleGAN import CycleGAN
+from .Pix2pix import Pix2pix
+from .STGAN import STGAN
+from .StarGAN import StarGAN
+from .AttGAN import AttGAN
+
 import importlib
 
 
