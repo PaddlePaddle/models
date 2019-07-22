@@ -75,8 +75,7 @@ def test(args):
     test_model.build_input(use_pyreader=False)
     test_model.build_model()
     test_feeds = test_model.feeds()
-    test_outputs = test_model.outputs()
-    test_loss = test_model.loss()
+    test_fetch_list = test_model.fetches()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -94,48 +93,20 @@ def test(args):
     test_metrics = get_metrics(args.model_name.upper(), 'test', test_config)
 
     test_feeder = fluid.DataFeeder(place=place, feed_list=test_feeds)
-    if args.model_name.upper() in ['CTCN']:
-        fetch_list = [x.name for x in test_loss] + \
-                     [x.name for x in test_outputs] + \
-                     [test_feeds[-1].name]
-    else:
-        if test_loss is None:
-            fetch_list = [x.name for x in test_outputs] + [test_feeds[-1].name]
-        else:
-            fetch_list = [test_loss.name] + [x.name for x in test_outputs
-                                             ] + [test_feeds[-1].name]
 
     epoch_period = []
     for test_iter, data in enumerate(test_reader()):
         cur_time = time.time()
-        test_outs = exe.run(fetch_list=fetch_list, feed=test_feeder.feed(data))
+        test_outs = exe.run(fetch_list=test_fetch_list,
+                            feed=test_feeder.feed(data))
         period = time.time() - cur_time
         epoch_period.append(period)
-        if args.model_name.upper() in ['CTCN']:
-            total_loss = test_outs[0]
-            loc_loss = test_outs[1]
-            cls_loss = test_outs[2]
-            loc_preds = test_outs[3]
-            cls_preds = test_outs[4]
-            fid = test_outs[-1]
-            loss = [total_loss, loc_loss, cls_loss]
-            pred = [loc_preds, cls_preds]
-            label = fid
-        else:
-            if test_loss is None:
-                loss = np.zeros(1, ).astype('float32')
-                pred = np.array(test_outs[0])
-                label = np.array(test_outs[-1])
-            else:
-                loss = np.array(test_outs[0])
-                pred = np.array(test_outs[1])
-                label = np.array(test_outs[-1])
-        test_metrics.accumulate(loss, pred, label)
+        test_metrics.accumulate(test_outs)
 
         # metric here
         if args.log_interval > 0 and test_iter % args.log_interval == 0:
             info_str = '[EVAL] Batch {}'.format(test_iter)
-            test_metrics.calculate_and_log_out(loss, pred, label, info_str)
+            test_metrics.calculate_and_log_out(test_outs, info_str)
     test_metrics.finalize_and_log_out("[EVAL] eval finished. ")
 
 

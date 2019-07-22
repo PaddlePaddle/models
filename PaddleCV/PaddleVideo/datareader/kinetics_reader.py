@@ -76,12 +76,29 @@ class KineticsReader(DataReader):
         # set batch size and file list
         self.batch_size = cfg[mode.upper()]['batch_size']
         self.filelist = cfg[mode.upper()]['filelist']
+        if self.mode == 'infer':
+            self.video_path = cfg[mode.upper()]['video_path']
+        else:
+            self.video_path = ''
         if self.enable_ce:
             random.seed(0)
             np.random.seed(0)
 
     def create_reader(self):
-        _reader = self._reader_creator(self.filelist, self.mode, seg_num=self.seg_num, seglen = self.seglen, \
+        # if set video_path for inference mode, just load this single video
+        if (self.mode == 'infer') and (self.video_path != ''):
+            # load video from file stored at video_path
+            _reader = self._inference_reader_creator(
+                self.video_path,
+                self.mode,
+                seg_num=self.seg_num,
+                seglen=self.seglen,
+                short_size=self.short_size,
+                target_size=self.target_size,
+                img_mean=self.img_mean,
+                img_std=self.img_std)
+        else:
+            _reader = self._reader_creator(self.filelist, self.mode, seg_num=self.seg_num, seglen = self.seglen, \
                              short_size = self.short_size, target_size = self.target_size, \
                              img_mean = self.img_mean, img_std = self.img_std, \
                              shuffle = (self.mode == 'train'), \
@@ -99,6 +116,27 @@ class KineticsReader(DataReader):
                     batch_out = []
 
         return _batch_reader
+
+    def _inference_reader_creator(self, video_path, mode, seg_num, seglen,
+                                  short_size, target_size, img_mean, img_std):
+        def reader():
+            try:
+                imgs = mp4_loader(video_path, seg_num, seglen, mode)
+                if len(imgs) < 1:
+                    logger.error('{} frame length {} less than 1.'.format(
+                        video_path, len(imgs)))
+                    yield None, None
+            except:
+                logger.error('Error when loading {}'.format(mp4_path))
+                yield None, None
+
+            imgs_ret = imgs_transform(imgs, mode, seg_num, seglen, short_size,
+                                      target_size, img_mean, img_std)
+            label_ret = video_path
+
+            yield imgs_ret, label_ret
+
+        return reader
 
     def _reader_creator(self,
                         pickle_list,
@@ -129,8 +167,8 @@ class KineticsReader(DataReader):
                 logger.error('Error when loading {}'.format(mp4_path))
                 return None, None
 
-            return imgs_transform(imgs, label, mode, seg_num, seglen, \
-                         short_size, target_size, img_mean, img_std)
+            return imgs_transform(imgs, mode, seg_num, seglen, \
+                         short_size, target_size, img_mean, img_std, name = self.name), label
 
         def decode_pickle(sample, mode, seg_num, seglen, short_size,
                           target_size, img_mean, img_std):
@@ -157,34 +195,8 @@ class KineticsReader(DataReader):
                 ret_label = vid
 
             imgs = video_loader(frames, seg_num, seglen, mode)
-            return imgs_transform(imgs, ret_label, mode, seg_num, seglen, \
-                         short_size, target_size, img_mean, img_std)
-
-        def imgs_transform(imgs, label, mode, seg_num, seglen, short_size,
-                           target_size, img_mean, img_std):
-            imgs = group_scale(imgs, short_size)
-
-            if mode == 'train':
-                if self.name == "TSM":
-                    imgs = group_multi_scale_crop(imgs, short_size)
-                imgs = group_random_crop(imgs, target_size)
-                imgs = group_random_flip(imgs)
-            else:
-                imgs = group_center_crop(imgs, target_size)
-
-            np_imgs = (np.array(imgs[0]).astype('float32').transpose(
-                (2, 0, 1))).reshape(1, 3, target_size, target_size) / 255
-            for i in range(len(imgs) - 1):
-                img = (np.array(imgs[i + 1]).astype('float32').transpose(
-                    (2, 0, 1))).reshape(1, 3, target_size, target_size) / 255
-                np_imgs = np.concatenate((np_imgs, img))
-            imgs = np_imgs
-            imgs -= img_mean
-            imgs /= img_std
-            imgs = np.reshape(imgs,
-                              (seg_num, seglen * 3, target_size, target_size))
-
-            return imgs, label
+            return imgs_transform(imgs, mode, seg_num, seglen, \
+                         short_size, target_size, img_mean, img_std, name = self.name), ret_label
 
         def reader():
             with open(pickle_list) as flist:
@@ -214,6 +226,38 @@ class KineticsReader(DataReader):
 
         return paddle.reader.xmap_readers(mapper, reader, num_threads, buf_size)
 
+
+def imgs_transform(imgs,
+                   mode,
+                   seg_num,
+                   seglen,
+                   short_size,
+                   target_size,
+                   img_mean,
+                   img_std,
+                   name=''):
+    imgs = group_scale(imgs, short_size)
+
+    if mode == 'train':
+        if name == "TSM":
+            imgs = group_multi_scale_crop(imgs, short_size)
+        imgs = group_random_crop(imgs, target_size)
+        imgs = group_random_flip(imgs)
+    else:
+        imgs = group_center_crop(imgs, target_size)
+
+    np_imgs = (np.array(imgs[0]).astype('float32').transpose(
+        (2, 0, 1))).reshape(1, 3, target_size, target_size) / 255
+    for i in range(len(imgs) - 1):
+        img = (np.array(imgs[i + 1]).astype('float32').transpose(
+            (2, 0, 1))).reshape(1, 3, target_size, target_size) / 255
+        np_imgs = np.concatenate((np_imgs, img))
+    imgs = np_imgs
+    imgs -= img_mean
+    imgs /= img_std
+    imgs = np.reshape(imgs, (seg_num, seglen * 3, target_size, target_size))
+
+    return imgs
 
 def group_multi_scale_crop(img_group, target_size, scales=None, \
         max_distort=1, fix_crop=True, more_fix_crop=True):

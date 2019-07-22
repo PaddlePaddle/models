@@ -81,13 +81,15 @@ dataset_size = 19761
 use_multi_crop = 1
 
 [INFER]
-num_reader_threads = 8
+num_reader_threads = 1
 batch_size = 1
 filelist = 'dataset/nonlocal/inferlist.txt'
+checkpoint_dir = './output'
 crop_size = 256
 sample_rate = 8
 video_length = 8
 jitter_scales = [256, 256]
 num_test_clips = 30
 use_multi_crop = 1
-
+video_path =  ""
+kinetics_labels = "./dataset/kinetics_labels.json"

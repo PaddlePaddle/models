@@ -71,6 +71,9 @@ class NonlocalReader(DataReader):
         filelist = cfg[mode.upper()]['filelist']
         batch_size = cfg[mode.upper()]['batch_size']
 
+        if (self.mode == 'infer') and (cfg['INFER']['video_path'] != ''):
+            filelist = create_tmp_inference_file(cfg['INFER']['video_path'])
+
         if self.mode == 'train':
             sample_times = 1
             return reader_func(filelist, batch_size, sample_times, True, True,
@@ -90,6 +93,16 @@ class NonlocalReader(DataReader):
         else:
             logger.info('Not implemented')
             raise NotImplementedError
+
+
+def create_tmp_inference_file(video_path,
+                              file_path='temp_nonlocal_inference_list'):
+    tmp_file = open(file_path, 'w')
+    for i in range(10):
+        for j in range(3):
+            tmp_file.write('{} {} {} {}\n'.format(video_path, 0, i, j))
+    tmp_file.close()
+    return file_path
 
 
 def video_fast_get_frame(video_path,

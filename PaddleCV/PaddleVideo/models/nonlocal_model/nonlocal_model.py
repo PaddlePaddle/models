@@ -119,6 +119,20 @@ class NonLocal(ModelBase):
         return self.feature_input if self.mode == 'infer' else \
                      self.feature_input + [self.label_input]
 
+    def fetches(self):
+        if self.mode == 'train' or self.mode == 'valid':
+            losses = self.loss()
+            fetch_list = [losses, self.network_outputs[0], self.label_input]
+        elif self.mode == 'test':
+            fetch_list = [self.network_outputs[0], self.label_input]
+        elif self.mode == 'infer':
+            fetch_list = self.network_outputs
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+        return fetch_list
+
     def pretrain_info(self):
         return (
             'Nonlocal_ResNet50_pretrained',

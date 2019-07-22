@@ -20,7 +20,7 @@ import logging
 import numpy as np
 import paddle.fluid as fluid
 
-from tools.train_utils import train_with_pyreader, train_without_pyreader
+from tools.train_utils import train_with_pyreader
 import models
 from config import *
 from datareader import get_reader
@@ -81,7 +81,7 @@ def parse_args():
     parser.add_argument(
         '--epoch',
         type=int,
-        default=0,
+        default=None,
         help='epoch number, 0 for read from config file')
     parser.add_argument(
         '--valid_interval',
@@ -128,23 +128,10 @@ def train(args):
             train_model.build_model()
             # for the input, has the form [data1, data2,..., label], so train_feeds[-1] is label
             train_feeds = train_model.feeds()
-            train_feeds[-1].persistable = True
-            # for the output of classification model, has the form [pred]
-            # for the output of detection model, has the form [loc_pred, cls_pred]
-            train_outputs = train_model.outputs()
-            for output in train_outputs:
-                output.persistable = True
-            train_losses = train_model.loss()
-            if isinstance(train_losses, list) or isinstance(train_losses,
-                                                            tuple):
-                # for detection model, train_losses has the form [total_loss, loc_loss, cls_loss]
-                train_loss = train_losses[0]
-                for item in train_losses:
-                    item.persistable = True
-            else:
-                train_loss = train_losses
-                train_loss.persistable = True
-            # outputs, loss, label should be fetched, so set persistable to be true
+            train_fetch_list = train_model.fetches()
+            train_loss = train_fetch_list[0]
+            for item in train_fetch_list:
+                item.persistable = True
             optimizer = train_model.optimizer()
             optimizer.minimize(train_loss)
             train_pyreader = train_model.pyreader()
@@ -155,10 +142,7 @@ def train(args):
             valid_model.build_input(not args.no_use_pyreader)
             valid_model.build_model()
             valid_feeds = valid_model.feeds()
-            # for the output of classification model, has the form [pred]
-            # for the output of detection model, has the form [loc_pred, cls_pred]
-            valid_outputs = valid_model.outputs()
-            valid_losses = valid_model.loss()
+            valid_fetch_list = valid_model.fetches()
             valid_pyreader = valid_model.pyreader()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
@@ -200,6 +184,15 @@ def train(args):
         share_vars_from=train_exe,
         main_program=valid_prog)
 
+    compiled_train_program = fluid.compiler.CompiledProgram(
+        train_prog).with_data_parallel(
+            loss_name=train_loss.name, build_strategy=build_strategy)
+    compiled_valid_program = fluid.compiler.CompiledProgram(
+        valid_prog).with_data_parallel(
+            #loss_name=valid_loss.name,
+            share_vars_from=compiled_train_program,
+            build_strategy=build_strategy)
+
     # get reader
     bs_denominator = 1
     if (not args.no_use_pyreader) and args.use_gpu:
@@ -215,64 +208,27 @@ def train(args):
     train_metrics = get_metrics(args.model_name.upper(), 'train', train_config)
     valid_metrics = get_metrics(args.model_name.upper(), 'valid', valid_config)
 
-    if isinstance(train_losses, tuple) or isinstance(train_losses, list):
-        # for detection
-        train_fetch_list = [item.name for item in train_losses] + \
-                [x.name for x in train_outputs] + [train_feeds[-1].name]
-        valid_fetch_list = [item.name for item in valid_losses] + \
-                [x.name for x in valid_outputs] + [valid_feeds[-1].name]
-    else:
-        # for classification
-        train_fetch_list = [train_losses.name] + [
-            x.name for x in train_outputs
-        ] + [train_feeds[-1].name]
-        valid_fetch_list = [valid_losses.name] + [
-            x.name for x in valid_outputs
-        ] + [valid_feeds[-1].name]
-
     epochs = args.epoch or train_model.epoch_num()
 
-    if args.no_use_pyreader:
-        train_feeder = fluid.DataFeeder(place=place, feed_list=train_feeds)
-        valid_feeder = fluid.DataFeeder(place=place, feed_list=valid_feeds)
-        train_without_pyreader(
-            exe,
-            train_prog,
-            train_exe,
-            train_reader,
-            train_feeder,
-            train_fetch_list,
-            train_metrics,
-            epochs=epochs,
-            log_interval=args.log_interval,
-            valid_interval=args.valid_interval,
-            save_dir=args.save_dir,
-            save_model_name=args.model_name,
-            test_exe=valid_exe,
-            test_reader=valid_reader,
-            test_feeder=valid_feeder,
-            test_fetch_list=valid_fetch_list,
-            test_metrics=valid_metrics)
-    else:
-        train_pyreader.decorate_paddle_reader(train_reader)
-        valid_pyreader.decorate_paddle_reader(valid_reader)
-        train_with_pyreader(
-            exe,
-            train_prog,
-            train_exe,
-            train_pyreader,
-            train_fetch_list,
-            train_metrics,
-            epochs=epochs,
-            log_interval=args.log_interval,
-            valid_interval=args.valid_interval,
-            save_dir=args.save_dir,
-            save_model_name=args.model_name,
-            enable_ce=args.enable_ce,
-            test_exe=valid_exe,
-            test_pyreader=valid_pyreader,
-            test_fetch_list=valid_fetch_list,
-            test_metrics=valid_metrics)
+    train_pyreader.decorate_paddle_reader(train_reader)
+    valid_pyreader.decorate_paddle_reader(valid_reader)
+    train_with_pyreader(
+        exe,
+        train_prog,
+        compiled_train_prog,  #train_exe,
+        train_pyreader,
+        train_fetch_list,
+        train_metrics,
+        epochs=epochs,
+        log_interval=args.log_interval,
+        valid_interval=args.valid_interval,
+        save_dir=args.save_dir,
+        save_model_name=args.model_name,
+        enable_ce=args.enable_ce,
+        compiled_test_prog=compiled_valid_prog,  #test_exe=valid_exe,
+        test_pyreader=valid_pyreader,
+        test_fetch_list=valid_fetch_list,
+        test_metrics=valid_metrics)
 
 
 if __name__ == "__main__":

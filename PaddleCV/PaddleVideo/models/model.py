@@ -90,6 +90,10 @@ class ModelBase(object):
         "get feed inputs list"
         raise NotImplementError(self, self.feeds)
 
+    def fetches(self):
+        "get fetch list of model"
+        raise NotImplementError(self, self.fetches)
+
     def weights_info(self):
         "get model weight default path and download url"
         raise NotImplementError(self, self.weights_info)

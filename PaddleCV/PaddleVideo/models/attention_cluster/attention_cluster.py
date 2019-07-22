@@ -132,6 +132,21 @@ class AttentionCluster(ModelBase):
             self.label_input
         ]
 
+    def fetches(self):
+        if self.mode == 'train' or self.mode == 'valid':
+            losses = self.loss()
+            fetch_list = [losses, self.output, self.label_input]
+        elif self.mode == 'test':
+            losses = self.loss()
+            fetch_list = [losses, self.output, self.label_input]
+        elif self.mode == 'infer':
+            fetch_list = [self.output]
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+        return fetch_list
+
     def weights_info(self):
         return (
             "attention_cluster_youtube8m",

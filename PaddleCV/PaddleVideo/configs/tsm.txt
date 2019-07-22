@@ -7,6 +7,7 @@ seglen = 1
 image_mean = [0.485, 0.456, 0.406]
 image_std = [0.229, 0.224, 0.225]
 num_layers = 50
+topk = 5
 
 [TRAIN]
 epoch = 65
@@ -49,4 +50,5 @@ num_reader_threads = 12
 buf_size = 1024
 batch_size = 1
 filelist = "./dataset/kinetics/infer.list"
-
+video_path = ""
+kinetics_labels = "./dataset/kinetics_labels.json"

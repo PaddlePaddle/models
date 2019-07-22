@@ -170,7 +170,26 @@ class CTCN(ModelBase):
         elif self.mode == 'infer':
             return self.feature_input
         else:
-            raise NotImplemented
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+    def fetches(self):
+        if (self.mode == 'train') or (self.mode == 'valid'):
+            losses = self.loss()
+            fetch_list = [item for item in losses]
+        elif self.mode == 'test':
+            losses = self.loss()
+            preds = self.outputs()
+            fetch_list = [item for item in losses] + \
+                         [item for item in preds] + \
+                         [self.fileid]
+        elif self.mode == 'infer':
+            preds = self.outputs()
+            fetch_list = [item for item in preds]
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+        return fetch_list
 
     def pretrain_info(self):
         return (None, None)

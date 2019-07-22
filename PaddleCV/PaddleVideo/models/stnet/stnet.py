@@ -127,6 +127,21 @@ class STNET(ModelBase):
             self.label_input
         ]
 
+    def fetches(self):
+        if self.mode == 'train' or self.mode == 'valid':
+            losses = self.loss()
+            fetch_list = [losses, self.network_outputs[0], self.label_input]
+        elif self.mode == 'test':
+            losses = self.loss()
+            fetch_list = [losses, self.network_outputs[0], self.label_input]
+        elif self.mode == 'infer':
+            fetch_list = self.network_outputs
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+        return fetch_list
+
     def pretrain_info(self):
         return (
             'ResNet50_pretrained',

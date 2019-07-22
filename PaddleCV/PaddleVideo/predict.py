@@ -27,6 +27,7 @@ import paddle.fluid as fluid
 from config import *
 import models
 from datareader import get_reader
+from metrics import get_metrics
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -75,6 +76,11 @@ def parse_args():
         help='topk predictions to restore.')
     parser.add_argument(
         '--save_dir', type=str, default='./', help='directory to store results')
+    parser.add_argument(
+        '--video_path',
+        type=str,
+        default=None,
+        help='directory to store results')
     args = parser.parse_args()
     return args
 
@@ -109,10 +115,12 @@ def infer(args):
                                   fluid.default_main_program(), place)
 
     infer_feeder = fluid.DataFeeder(place=place, feed_list=infer_feeds)
-    fetch_list = [x.name for x in infer_outputs]
+    fetch_list = infer_model.fetches()
+
+    infer_metrics = get_metrics(args.model_name.upper(), 'infer', infer_config)
+    infer_metrics.reset()
 
     periods = []
-    results = []
     cur_time = time.time()
     for infer_iter, data in enumerate(infer_reader()):
         data_feed_in = [items[:-1] for items in data]
@@ -123,22 +131,10 @@ def infer(args):
         cur_time = time.time()
         period = cur_time - prev_time
         periods.append(period)
-        if args.model_name in ['CTCN']:
-            # For detection model
-            loc_predictions = np.array(infer_outs[0])
-            cls_predictions = np.array(infer_outs[1])
-            for i in range(len(video_id)):
-                results.append((video_id[i], loc_predictions[i].tolist(),
-                                cls_predictions[i].tolist()))
-        else:
-            # For classification model
-            predictions = np.array(infer_outs[0])
-            for i in range(len(predictions)):
-                topk_inds = predictions[i].argsort()[0 - args.infer_topk:]
-                topk_inds = topk_inds[::-1]
-                preds = predictions[i][topk_inds]
-                results.append(
-                    (video_id[i], preds.tolist(), topk_inds.tolist()))
+
+        infer_result_list = [item for item in infer_outs] + [video_id]
+        infer_metrics.accumulate(infer_result_list)
+
         if args.log_interval > 0 and infer_iter % args.log_interval == 0:
             logger.info('Processed {} samples'.format((infer_iter + 1) * len(
                 video_id)))
@@ -146,11 +142,7 @@ def infer(args):
     logger.info('[INFER] infer finished. average time: {}'.format(
         np.mean(periods)))
 
-    if not os.path.isdir(args.save_dir):
-        os.mkdir(args.save_dir)
-    result_file_name = os.path.join(
-        args.save_dir, "{}_infer_result.pkl".format(args.model_name))
-    pickle.dump(results, open(result_file_name, 'wb'), protocol=0)
+    infer_metrics.finalize_and_log_out()
 
 
 if __name__ == "__main__":
