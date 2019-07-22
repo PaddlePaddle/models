@@ -242,9 +242,7 @@ class ImagePool(object):
 
 
 def check_attribute_conflict(label_batch, attr, attrs):
-    ''' 
-        Based on https://github.com/LynnHo/AttGAN-Tensorflow
-    '''
+    ''' Based on https://github.com/LynnHo/AttGAN-Tensorflow'''
 
     def _set(label, value, attr):
         if attr in attrs:
