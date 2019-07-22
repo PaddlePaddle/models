@@ -30,7 +30,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    'bbox_eval', 'mask_eval', 'bbox2out', 'mask2out', 'get_category_info', 'proposal_eval',
+    'bbox_eval',
+    'mask_eval',
+    'bbox2out',
+    'mask2out',
+    'get_category_info',
+    'proposal_eval',
 ]
 
 
@@ -41,11 +46,16 @@ def clip_bbox(bbox):
     ymax = max(min(bbox[3], 1.), 0.)
     return xmin, ymin, xmax, ymax
 
+
 def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
     assert 'proposal' in results[0]
     assert outfile.endswith('.json')
 
     xywh_results = proposal2out(results)
+    assert len(
+        segms_results) > 0, "The number of valid proposal detected is zero.\n \
+        Please use reasonable model and check input data."
+
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
@@ -63,6 +73,7 @@ def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
     coco_ev.summarize()
     # flush coco evaluation result
     sys.stdout.flush()
+
 
 def bbox_eval(results, anno_file, outfile, with_background=True):
     assert 'bbox' in results[0]
