@@ -95,7 +95,7 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
        --class_num=${category_num}
 
 - Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train. 
-- It is recommended to set `--use_multiprocess=False` when training on Windows.
+- It is recommended to set `--use_multiprocess_reader=False` when training on Windows.
 - For more help on arguments:
 
     python train.py --help
