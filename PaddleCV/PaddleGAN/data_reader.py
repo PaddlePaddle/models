@@ -439,6 +439,9 @@ class data_reader(object):
                     mode="TRAIN")
                 reader_test = None
                 if self.cfg.run_test:
+                    test_list = train_list
+                    if self.cfg.test_list is not None:
+                        test_list = self.cfg.test_list
                     test_reader = celeba_reader_creator(
                         image_dir=dataset_dir,
                         list_filename=train_list,
