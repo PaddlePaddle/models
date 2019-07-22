@@ -52,12 +52,13 @@ data_g.add_arg("batch_size", int, 16,
 data_g.add_arg("random_seed", int, 0, "Random seed.")
 
 run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
-run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
+run_type_g.add_arg("use_cuda", bool, True, "If set, use GPU for training.")
 run_type_g.add_arg("do_train", bool, True, "Whether to perform training.")
 run_type_g.add_arg("do_val", bool, True, "Whether to perform evaluation.")
 run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
 run_type_g.add_arg("profile_steps", int, 15000,
                    "The steps interval to record the performance.")
+parser.add_argument("--ce", action="store_true", help="run ce")
 
 args = parser.parse_args()
 
@@ -81,8 +82,21 @@ def profile_context(profile=True):
         yield
 
 
+if args.ce:
+    print("ce mode")
+    seed = 90
+    np.random.seed(seed)
+    fluid.default_startup_program().random_seed = seed
+    fluid.default_main_program().random_seed = seed 
+
 def train():
     with fluid.dygraph.guard(place):
+        if args.ce:
+            print("ce mode")
+            seed = 90
+            np.random.seed(seed)
+            fluid.default_startup_program().random_seed = seed
+            fluid.default_main_program().random_seed = seed 
         processor = reader.SentaProcessor(
             data_dir=args.data_dir,
             vocab_path=args.vocab_path,
@@ -92,19 +106,31 @@ def train():
         num_train_examples = processor.get_num_examples(phase="train")
 
         max_train_steps = args.epoch * num_train_examples // args.batch_size // dev_count
+        
+        if not args.ce:
+            train_data_generator = processor.data_generator(
+                batch_size=args.batch_size,
+                phase='train',
+                epoch=args.epoch,
+                shuffle=True)
 
-        train_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
-            phase='train',
-            epoch=args.epoch,
-            shuffle=True)
+            eval_data_generator = processor.data_generator(
+                batch_size=args.batch_size,
+                phase='dev',
+                epoch=args.epoch,
+                shuffle=False)
+        else:
+            train_data_generator = processor.data_generator(
+                batch_size=args.batch_size,
+                phase='train',
+                epoch=args.epoch,
+                shuffle=False)
 
-        eval_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
-            phase='dev',
-            epoch=args.epoch,
-            shuffle=False)
-
+            eval_data_generator = processor.data_generator(
+                batch_size=args.batch_size,
+                phase='dev',
+                epoch=args.epoch,
+                shuffle=False)
         cnn_net = nets.CNN("cnn_net", args.vocab_size, args.batch_size,
                            args.padding_size)
 
@@ -137,7 +163,6 @@ def train():
                     cnn_net.train()
                     avg_cost, prediction, acc = cnn_net(doc, label)
                     avg_cost.backward()
-
                     np_mask = (doc.numpy() != args.vocab_size).astype('int32')
                     word_num = np.sum(np_mask)
                     sgd_optimizer.minimize(avg_cost)
@@ -200,14 +225,16 @@ def train():
                              / np.sum(total_eval_num_seqs),
                              eval_steps / used_time))
                         time_begin = time.time()
+                        if args.ce:
+                            print("kpis\ttrain_loss\t%0.3f" % (np.sum(total_eval_cost) / np.sum(total_eval_num_seqs)))
+                            print("kpis\ttrain_acc\t%0.3f" % (np.sum(total_eval_acc) / np.sum(total_eval_num_seqs)))
 
                     if steps % args.save_steps == 0:
                         save_path = "save_dir_" + str(steps)
                         print('save model to: ' + save_path)
                         fluid.dygraph.save_persistables(cnn_net.state_dict(),
                                                         save_path)
-
-                    if enable_profile:
+                if enable_profile:
                         print('save profile result into /tmp/profile_file')
                         return
 

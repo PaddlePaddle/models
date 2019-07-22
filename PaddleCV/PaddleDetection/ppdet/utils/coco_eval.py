@@ -56,6 +56,10 @@ def bbox_eval(results, anno_file, outfile, with_background=True):
          for i, catid in enumerate(cat_ids)})
 
     xywh_results = bbox2out(results, clsid2catid)
+    assert len(
+        xywh_results) > 0, "The number of valid bbox detected is zero.\n \
+        Please use reasonable model and check input data."
+
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
@@ -77,6 +81,10 @@ def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
     clsid2catid = {i + 1: v for i, v in enumerate(coco_gt.getCatIds())}
 
     segm_results = mask2out(results, clsid2catid, resolution, thresh_binarize)
+    assert len(
+        segms_results) > 0, "The number of valid mask detected is zero.\n \
+        Please use reasonable model and check input data."
+
     with open(outfile, 'w') as f:
         json.dump(segm_results, f)
 
@@ -144,13 +152,13 @@ def mask2out(results, clsid2catid, resolution, thresh_binarize=0.5):
             continue
 
         masks = t['mask'][0]
-        im_shape = t['im_shape'][0][0]
 
         s = 0
         # for each sample
         for i in range(len(lengths)):
             num = lengths[i]
             im_id = int(im_ids[i][0])
+            im_shape = t['im_shape'][0][i]
 
             bbox = bboxes[s:s + num][:, 2:]
             clsid_scores = bboxes[s:s + num][:, 0:2]

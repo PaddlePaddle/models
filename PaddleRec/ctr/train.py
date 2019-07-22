@@ -147,14 +147,13 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
         fluid.BuildStrategy.ReduceStrategy.Reduce if cpu_num > 1 \
             else fluid.BuildStrategy.ReduceStrategy.AllReduce
 
+    exe.run(fluid.default_startup_program())
     pe = fluid.ParallelExecutor(
         use_cuda=False,
         loss_name=loss.name,
         main_program=train_program,
         build_strategy=build_strategy,
         exec_strategy=exec_strategy)
-
-    exe.run(fluid.default_startup_program())
 
     total_time = 0
     for pass_id in range(args.num_passes):

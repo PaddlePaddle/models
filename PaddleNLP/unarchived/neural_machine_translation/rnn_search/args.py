@@ -113,5 +113,11 @@ def parse_args():
         default=False,
         help='Whether using gpu [True|False]')
 
+    parser.add_argument(
+        "--enable_ce",
+        action='store_true',
+        help="The flag indicating whether to run the task "
+        "for continuous evaluation.")
+
     args = parser.parse_args()
     return args

@@ -111,13 +111,13 @@ The corresponding(generated) YAML snippet is as follows, note this is the config
 
 ```yaml
 RPNHead:
-  test_prop:
+  test_proposal:
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
     post_nms_top_n: 1000
     pre_nms_top_n: 6000
-  train_prop:
+  train_proposal:
     eta: 1.0
     min_size: 0.1
     nms_thresh: 0.5
@@ -188,3 +188,14 @@ A small utility (`tools/configure.py`) is included to simplify the configuration
     ```shell
     python tools/configure.py --minimal generate FasterRCNN BBoxHead
     ```
+
+
+# FAQ
+
+**Q:** There are some configuration options that are used by multiple modules (e.g., `num_classes`), how do I avoid duplication in config files?
+
+**A:** We provided a `__shared__` annotation for exactly this purpose, simply annotate like this `__shared__ = ['num_classes']`. It works as follows:
+
+1.  if `num_classes` is configured for a module in config file, it takes precedence.
+2.  if `num_classes` is not configured for a module but is present in the config file as a global key, its value will be used.
+3.  otherwise, the default value (`81`) will be used.

@@ -13,7 +13,7 @@ import paddle
 import paddle.fluid as fluid
 import models
 import reader
-from utility import add_arguments, print_arguments
+from utility import add_arguments, print_arguments, check_cuda
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -77,6 +77,7 @@ def infer(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_cuda(args.use_gpu)
     infer(args)
 
 
