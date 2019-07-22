@@ -94,7 +94,7 @@ dataset/coco/
        --class_num=${category_num}
 
 - 通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
-- 若在Windows环境下训练模型，建议设置`--use_multiprocess=False`。
+- 若在Windows环境下训练模型，建议设置`--use_multiprocess_reader=False`。
 - 可选参数见：
 
     python train.py --help
