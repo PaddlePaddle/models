@@ -4,8 +4,9 @@ from __future__ import division
 from __future__ import print_function
 import os
 import sys
-from kpi import CostKpi, DurationKpi, AccKpi
 sys.path.append(os.environ['ceroot'])
+from kpi import CostKpi, DurationKpi, AccKpi
+
 
 #### NOTE kpi.py should shared in models in some way!!!!
 
