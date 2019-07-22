@@ -151,7 +151,7 @@ python infer.py \
 
 ## 已发布模型及其性能
 表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测
-试GPU型号为Tesla P4）。由于Paddle TensorRT对ShuffleNetV2使用的激活函数swish，MobileNetV2使用的激活函数relu6不支持，因此预测加速不明显。可以通过点击相应模型的名称下载对应的预训练模型。
+试GPU型号为Tesla P4）。由于Paddle TensorRT对ShuffleNetV2_swish使用的激活函数swish，MobileNetV2使用的激活函数relu6不支持，因此预测加速不明显。可以通过点击相应模型的名称下载对应的预训练模型。
 
 - 注意
     1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
@@ -177,13 +177,22 @@ python infer.py \
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar) | 70.99%/89.68% | 2.609 |1.615 |
+|[MobileNetV2_x0_25](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x0_25_pretrained.tar) | 53.21%/76.52% | 4.267 | 3.777 |
 |[MobileNetV2_x0_5](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x0_5_pretrained.tar) | 65.03%/85.72% | 4.514 | 4.150 |
 |[MobileNetV2_x1_0](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_pretrained.tar) | 72.15%/90.65% | 4.546 | 5.278 |
+|[MobileNetV2_x1_5](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x1_5_pretrained.tar) | 74.12%/91.67% | 5.235 | 6.909 |
+|[MobileNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x2_0_pretrained.tar) | 75.23%/92.58% | 6.680 | 7.658 |
 
 ### ShuffleNet
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
-|[ShuffleNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_pretrained.tar) | 70.03%/89.17% | 6.078 | 6.282 |
+|[ShuffleNetV2_x0_25](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x0_25_pretrained.tar) | 49.90%/73.79% | 5.956 | 2.961 |
+|[ShuffleNetV2_x0_33](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x0_33_pretrained.tar) | 53.73%/77.05% | 5.896 | 2.941 |
+|[ShuffleNetV2_x0_5](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x0_5_pretrained.tar) | 60.32%/82.26% | 6.048 | 3.088 |
+|[ShuffleNetV2_x1_0](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x1_0_pretrained.tar) | 68.80%/88.45% | 6.101 | 3.616 |
+|[ShuffleNetV2_x1_5](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x1_5_pretrained.tar) | 71.63%/90.15% | 6.113 | 3.699 |
+|[ShuffleNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x2_0_pretrained.tar) | 73.15%/91.20% | 6.430 | 4.553 |
+|[ShuffleNetV2_x1_0_swish](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_pretrained.tar) | 70.03%/89.17% | 6.078 | 6.282 |
 
 ### ResNet
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -205,8 +214,11 @@ python infer.py \
 |- |:-: |:-: |:-: |
 |[ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_32x4d_pretrained.tar) | 77.75%/93.82% | 12.863 | 9.837 |
 |[ResNeXt50_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_64x4d_pretrained.tar) | 78.43%/94.13% | 28.162 | 18.271 |
+|[ResNeXt50_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_vd_64x4d_pretrained.tar) | 80.12%/94.86% | 20.888 | 17.687 |
+|[ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x4d_pretrained.tar) | 78.65%/94.19% | 24.154 | 21.387 |
 |[ResNeXt101_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_64x4d_pretrained.tar) | 78.43%/94.13% | 41.073 | 38.736 |
 |[ResNeXt101_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_64x4d_pretrained.tar) | 80.78%/95.20% | 42.277 | 40.929 |
+|[ResNeXt152_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_32x4d_pretrained.tar) | 78.98%/94.33% | 37.007 | 31.301 |
 
 ### SENet
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -252,8 +264,8 @@ python infer.py \
 - 2019/04/01 **Stage3**: 更新ResNet18，ResNet34，GoogLeNet，ShuffleNetV2
 - 2019/06/12 **Stage4**: 更新ResNet50_vc，ResNet50_vd，ResNet101_vd，ResNet152_vd，ResNet200_vd，SE154_vd InceptionV4，ResNeXt101_64x4d，ResNeXt101_vd_64x4d
 - 2019/06/22 更新ResNet50_vd_v2
-- 2019/07/02 更新MobileNetV2_x0_5，ResNeXt50_32x4d，ResNeXt50_64x4d，Xception_41，ResNet101_vd
-
+- 2019/07/02 **Stage5**: 更新MobileNetV2_x0_5, ResNeXt50_32x4d, ResNeXt50_64x4d, Xception_41, ResNet101_vd
+- 2019/07/19 **Stage6**: 更新ShuffleNetV2_x0_25, ShuffleNetV2_x0_33, ShuffleNetV2_x0_5, ShuffleNetV2_x1_0, ShuffleNetV2_x1_5, ShuffleNetV2_x2_0, MobileNetV2_x0_25, MobileNetV2_x1_5, MobileNetV2_x2_0, ResNeXt50_vd_64x4d, ResNeXt101_32x4d, ResNeXt152_32x4d
 
 ## 如何贡献代码
 
