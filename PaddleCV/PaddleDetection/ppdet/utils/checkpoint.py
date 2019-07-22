@@ -29,10 +29,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    'init_from_pretrain_model',
-    'init_from_checkpoint',
-    'save_checkpoint',
-    'init_from_pretrain_model_and_fusebn',
+    'load_checkpoint',
+    'load_and_fusebn',
+    'save',
 ]
 
 
@@ -45,7 +44,7 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
-def init_from_pretrain_model(exe, prog, path):
+def load_pretrain(exe, prog, path):
     """
     Load model from the given path.
     Args:
@@ -71,7 +70,7 @@ def init_from_pretrain_model(exe, prog, path):
     fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
 
 
-def init_from_checkpoint(exe, prog, path):
+def load_checkpoint(exe, prog, path):
     """
     Load model from the given path.
     Args:
@@ -107,7 +106,7 @@ def global_step(scope=None):
     return step
 
 
-def save_checkpoint(exe, prog, path):
+def save(exe, prog, path):
     """
     Load model from the given path.
     Args:
@@ -121,7 +120,7 @@ def save_checkpoint(exe, prog, path):
     fluid.io.save_persistables(exe, path, prog)
 
 
-def init_from_pretrain_model_and_fusebn(exe, prog, path):
+def load_and_fusebn(exe, prog, path):
     """
     Fuse params of batch norm to scale and bias.
 

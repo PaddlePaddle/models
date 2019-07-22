@@ -41,7 +41,7 @@ Supported Architectures:
 | Faster R-CNN       | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
 | Faster R-CNN + FPN | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       |
 | Mask R-CNN         | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
-| Mask R-CNN + FPN   | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
+| Mask R-CNN + FPN   | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       |
 | Cascade R-CNN      | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       |
 | RetinaNet          | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       |
 | Yolov3             | ✓      |                             ✗ | ✗          | ✗     | ✓         | ✓       |
@@ -61,7 +61,7 @@ Advanced Features:
 
 ## Model zoo
 
-Pretrained models are available in the PaddlePaddle [detection model zoo](docs/MODEL_ZOO_en.md).
+Pretrained models are available in the PaddlePaddle [PaddleDetection model zoo](docs/MODEL_ZOO_en.md).
 
 
 ## Installation
@@ -81,7 +81,7 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
     --infer_img=demo/000000570688.jpg
 ```
 
-For detailed training and evaluation workflow, please refer to [GETTING_STARTED.md](docs/GETTING_STARTED_en.md).
+For detailed training and evaluation workflow, please refer to [GETTING_STARTED_en.md](docs/GETTING_STARTED_en.md).
 
 We also recommend users to take a look at the [IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
 

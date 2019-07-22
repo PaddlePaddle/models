@@ -107,7 +107,7 @@ OptimizerBuilder:
 FasterRCNNTrainFeed:
   batch_size: 2
   dataset:
-    dataset_dir: /paddle/models/fluid/faster_rcnn/data/COCO17 
+    dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   batch_transforms:
