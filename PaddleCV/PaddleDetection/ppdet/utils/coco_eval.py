@@ -53,7 +53,7 @@ def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
 
     xywh_results = proposal2out(results)
     assert len(
-        segms_results) > 0, "The number of valid proposal detected is zero.\n \
+        xywh_results) > 0, "The number of valid proposal detected is zero.\n \
         Please use reasonable model and check input data."
 
     with open(outfile, 'w') as f:
