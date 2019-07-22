@@ -21,7 +21,7 @@ PaddleDetection的目的是为工业界和学术界提供大量易使用的目�
 
 - 性能优化：
 
-  在PaddlePaddle底层框架的帮助下，实现了更快的模型训练及更少的显存占用两。值得注意的是，Yolo v3的训练速度远快于其他框架。另外，Mask-RCNN(ResNet50)可以在Tesla V100 16GB环境下以每个GPU4张图片输入实现多卡训练。
+  在PaddlePaddle底层框架的帮助下，实现了更快的模型训练及更少的显存占用量。值得注意的是，Yolo v3的训练速度远快于其他框架。另外，Mask-RCNN(ResNet50)可以在Tesla V100 16GB环境下以每个GPU4张图片输入实现多卡训练。
 
 支持的模型结构：
 
@@ -59,7 +59,7 @@ PaddleDetection的目的是为工业界和学术界提供大量易使用的目�
 
 ## 开始
 
-在预测阶段，可以通过运行一下指令得到可视化结果并保存在`output`目录下。
+在预测阶段，可以通过运行以下指令得到可视化结果并保存在`output`目录下。
 
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
@@ -80,7 +80,7 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
 
 ## 未来规划
 
-目前PaddleDetection处在持续更新的状态，接下来将会推出一系列的改动，包括如下特性：
+目前PaddleDetection处在持续更新的状态，接下来将会推出一系列的更新，包括如下特性：
 
 - [ ] 混合精度训练
 - [ ] 分布式训练
