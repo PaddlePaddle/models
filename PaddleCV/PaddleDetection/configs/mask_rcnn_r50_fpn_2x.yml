@@ -1,18 +1,18 @@
-architecture: FasterRCNN
-train_feed: FasterRCNNTrainFeed
-eval_feed: FasterRCNNEvalFeed
-test_feed: FasterRCNNTestFeed
-max_iters: 90000
-use_gpu: true
+architecture: MaskRCNN
+train_feed: MaskRCNNTrainFeed
+eval_feed: MaskRCNNEvalFeed
+test_feed: MaskRCNNTestFeed
+max_iters: 360000
 snapshot_iter: 10000
+use_gpu: true
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos_pretrained.tar
+weights: output/mask_rcnn_r50_fpn_2x/model_final/
 metric: COCO
-weights: output/faster_rcnn_r50_fpn_1x/model_final
 num_classes: 81
 
-FasterRCNN:
+MaskRCNN:
   backbone: ResNet
   fpn: FPN
   rpn_head: FPNRPNHead
@@ -21,33 +21,30 @@ FasterRCNN:
   bbox_assigner: BBoxAssigner
 
 ResNet:
-  norm_type: affine_channel
-  norm_decay: 0.
   depth: 50
   feature_maps: [2, 3, 4, 5]
   freeze_at: 2
+  norm_type: affine_channel
 
 FPN:
-  min_level: 2
   max_level: 6
+  min_level: 2
   num_chan: 256
   spatial_scale: [0.03125, 0.0625, 0.125, 0.25]
 
 FPNRPNHead:
   anchor_generator:
-    anchor_sizes: [32, 64, 128, 256, 512]
     aspect_ratios: [0.5, 1.0, 2.0]
-    stride: [16.0, 16.0]
     variance: [1.0, 1.0, 1.0, 1.0]
   anchor_start_size: 32
-  min_level: 2
   max_level: 6
+  min_level: 2
   num_chan: 256
   rpn_target_assign:
     rpn_batch_size_per_im: 256
     rpn_fg_fraction: 0.5
-    rpn_positive_overlap: 0.7
     rpn_negative_overlap: 0.3
+    rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
   train_proposal:
     min_size: 0.0
@@ -63,18 +60,28 @@ FPNRPNHead:
 FPNRoIAlign:
   canconical_level: 4
   canonical_size: 224
-  min_level: 2
   max_level: 5
-  box_resolution: 7
+  min_level: 2
   sampling_ratio: 2
+  box_resolution: 7
+  mask_resolution: 14
+
+MaskHead:
+  dilation: 1
+  num_chan_reduced: 256
+  num_convs: 4
+  resolution: 28
 
 BBoxAssigner:
   batch_size_per_im: 512
   bbox_reg_weights: [0.1, 0.1, 0.2, 0.2]
-  bg_thresh_lo: 0.0
   bg_thresh_hi: 0.5
+  bg_thresh_lo: 0.0
   fg_fraction: 0.25
   fg_thresh: 0.5
+
+MaskAssigner:
+  resolution: 28
 
 BBoxHead:
   head: TwoFCHead
@@ -87,11 +94,11 @@ TwoFCHead:
   num_chan: 1024
 
 LearningRate:
-  base_lr: 0.02
+  base_lr: 0.01
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones: [60000, 80000]
+    milestones: [240000, 320000]
   - !LinearWarmup
     start_factor: 0.3333333333333333
     steps: 500
@@ -104,8 +111,8 @@ OptimizerBuilder:
     factor: 0.0001
     type: L2
 
-FasterRCNNTrainFeed:
-  batch_size: 2
+MaskRCNNTrainFeed:
+  batch_size: 1
   dataset:
     dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
@@ -113,10 +120,9 @@ FasterRCNNTrainFeed:
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
-  drop_last: false
   num_workers: 2
 
-FasterRCNNEvalFeed:
+MaskRCNNEvalFeed:
   batch_size: 1
   dataset:
     dataset_dir: dataset/coco
@@ -125,13 +131,13 @@ FasterRCNNEvalFeed:
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
+  num_workers: 2
 
-FasterRCNNTestFeed:
+MaskRCNNTestFeed:
   batch_size: 1
   dataset:
     annotation: annotations/instances_val2017.json
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
-  drop_last: false
   num_workers: 2

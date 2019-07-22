@@ -24,7 +24,7 @@ SSD 可以方便地插入到任何一种标准卷积网络中，比如 VGG、Res
 
 请先使用下面的命令下载 [PASCAL VOC 数据集](http://host.robots.ox.ac.uk/pascal/VOC/)：
 
-```bash
+```
 cd data/pascalvoc
 ./download.sh
 ```
@@ -38,7 +38,7 @@ cd data/pascalvoc
 
 我们提供了两个预训练模型。第一个模型是在 COCO 数据集上预训练的 MobileNet-v1 SSD，我们将它的预测头移除了以便在 COCO 以外的数据集上进行训练。第二个模型是在 ImageNet 2012 数据集上预训练的 MobileNet-v1，我们也将最后的全连接层移除以便进行目标检测训练。下载 MobileNet-v1 SSD:
 
-    ```bash
+    ```
     ./pretrained/download_coco.sh
     ```
 
@@ -48,13 +48,14 @@ cd data/pascalvoc
 #### 训练
 
 `train.py` 是训练模块的主要执行程序，调用示例如下：
-  ```bash
-  python -u train.py --batch_size=64 --dataset='pascalvoc' --pretrained_model='pretrained/ssd_mobilenet_v1_coco/'
+  ```
+  python -u train.py --batch_size=64 --dataset=pascalvoc --pretrained_model=pretrained/ssd_mobilenet_v1_coco/
   ```
    - 可以通过设置 ```export CUDA_VISIBLE_DEVICES=0,1``` 指定想要使用的GPU数量。
+   - **注意**: 在**Windows**机器上训练，需要设置 `--use_multiprocess=False`，因为在Windows上使用Python多进程加速训练时有错误。
    - 更多的可选参数见:
 
-  ```bash
+  ```
   python train.py --help
   ```
 
@@ -71,15 +72,16 @@ cd data/pascalvoc
 你可以使用11point、integral等指标在PASCAL VOC 数据集上评估训练好的模型。不失一般性，我们采用相应数据集的测试列表作为样例代码的默认列表，你也可以通过设置```--test_list```来指定自己的测试样本列表。
 
 `eval.py`是评估模块的主要执行程序，调用示例如下：
-```bash
-python eval.py --dataset='pascalvoc' --model_dir='train_pascal_model/best_model' --data_dir='data/pascalvoc' --test_list='test.txt' --ap_version='11point' --nms_threshold=0.45
+
+```
+python eval.py --dataset=pascalvoc --model_dir=model/best_model --data_dir=data/pascalvoc --test_list=test.txt
 ```
 
 ### 模型预测以及可视化
 
 `infer.py`是预测及可视化模块的主要执行程序，调用示例如下：
-```bash
-python infer.py --dataset='pascalvoc' --nms_threshold=0.45 --model_dir='train_pascal_model/best_model' --image_path='./data/pascalvoc/VOCdevkit/VOC2007/JPEGImages/009963.jpg'
+```
+python infer.py --dataset=pascalvoc --nms_threshold=0.45 --model_dir=model/best_model --image_path=./data/pascalvoc/VOCdevkit/VOC2007/JPEGImages/009963.jpg
 ```
 下图可视化了模型的预测结果：
 <p align="center">
