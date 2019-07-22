@@ -91,12 +91,17 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
 
 ## 版本更新
 
-#### 初版发布 (7/3/2019)
+#### 7/22/2019
+
+- 更新检测库中文文档
+- 修复R-CNN系列模型训练同时进行评估的问题
+- 新增ResNext101-vd + Mask R-CNN + FPN模型
+
+#### 7/3/2019
 
 - 首次发布PaddleDetection检测库和检测模型库
 - 模型包括：Faster R-CNN, Mask R-CNN, Faster R-CNN+FPN, Mask
   R-CNN+FPN, Cascade-Faster-RCNN+FPN, RetinaNet, Yolo v3, 和SSD.
-
 
 ## 如何贡献代码
 

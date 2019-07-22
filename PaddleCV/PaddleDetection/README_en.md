@@ -106,7 +106,13 @@ Some of the planned features include:
 
 ## Updates
 
-#### Initial release (7/3/2019)
+#### 7/22/2019
+
+- Update Chinese docs for PaddleDetection
+- Fix bug in R-CNN models when train and test at the same time
+- Add ResNext101-vd + Mask R-CNN + FPN models
+
+#### 7/3/2019
 
 - Initial release of PaddleDetection and detection model zoo
 - Models included: Faster R-CNN, Mask R-CNN, Faster R-CNN+FPN, Mask
