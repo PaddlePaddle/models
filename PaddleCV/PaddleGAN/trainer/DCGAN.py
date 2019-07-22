@@ -166,7 +166,7 @@ class DCGAN(object):
                 t_time += batch_time
 
                 if batch_id % self.cfg.print_freq == 0:
-                    image_path = self.cfg.output + '/images'
+                    image_path = os.path.join(self.cfg.output, 'images')
                     if not os.path.exists(image_path):
                         os.makedirs(image_path)
                     generate_const_image = exe.run(
@@ -185,10 +185,9 @@ class DCGAN(object):
                                batch_time))
                     plt.title('Epoch ID={}, Batch ID={}'.format(epoch_id,
                                                                 batch_id))
+                    img_name = '{:04d}_{:04d}.png'.format(epoch_id, batch_id)
                     plt.savefig(
-                        '{}/{:04d}_{:04d}.png'.format(image_path, epoch_id,
-                                                      batch_id),
-                        bbox_inches='tight')
+                        os.path.join(image_path, img_name), bbox_inches='tight')
                     plt.close(fig)
 
             if self.cfg.save_checkpoints:

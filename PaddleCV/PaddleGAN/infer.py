@@ -116,7 +116,7 @@ def infer(args):
     for var in fluid.default_main_program().global_block().all_parameters():
         print(var.name)
     print(args.init_model + '/' + model_name)
-    fluid.io.load_persistables(exe, args.init_model + "/" + model_name)
+    fluid.io.load_persistables(exe, os.path.join(args.init_model, model_name))
     print('load params done')
     if not os.path.exists(args.output):
         os.makedirs(args.output)
@@ -230,6 +230,42 @@ def infer(args):
 
             imageio.imwrite(args.output + "/fake_" + image_name, (
                 (fake_temp + 1) * 127.5).astype(np.uint8))
+
+    elif args.model_net == 'CGAN':
+        noise_data = np.random.uniform(
+            low=-1.0, high=1.0,
+            size=[args.batch_size, args.noise_size]).astype('float32')
+        label = np.random.randint(
+            0, 9, size=[args.batch_size, 1]).astype('float32')
+        noise_tensor = fluid.LoDTensor()
+        conditions_tensor = fluid.LoDTensor()
+        noise_tensor.set(noise_data, place)
+        conditions_tensor.set(label, place)
+        fake_temp = exe.run(
+            fetch_list=[fake.name],
+            feed={"noise": noise_tensor,
+                  "conditions": conditions_tensor})[0]
+        fake_image = np.reshape(fake_temp, (args.batch_size, -1))
+
+        fig = utility.plot(fake_image)
+        plt.savefig(
+            os.path.join(args.output, 'fake_cgan.png'), bbox_inches='tight')
+        plt.close(fig)
+
+    elif args.model_net == 'DCGAN':
+        noise_data = np.random.uniform(
+            low=-1.0, high=1.0,
+            size=[args.batch_size, args.noise_size]).astype('float32')
+        noise_tensor = fluid.LoDTensor()
+        noise_tensor.set(noise_data, place)
+        fake_temp = exe.run(fetch_list=[fake.name],
+                            feed={"noise": noise_tensor})[0]
+        fake_image = np.reshape(fake_temp, (args.batch_size, -1))
+
+        fig = utility.plot(fake_image)
+        plt.savefig(
+            os.path.join(args.output, '/fake_dcgan.png'), bbox_inches='tight')
+        plt.close(fig)
     else:
         raise NotImplementedError("model_net {} is not support".format(
             args.model_net))
