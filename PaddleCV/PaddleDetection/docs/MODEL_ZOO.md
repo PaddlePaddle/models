@@ -47,8 +47,12 @@ Paddle提供基于ImageNet的骨架网络预训练模型。所有预训练模型
 | ResNet101-FPN        | Faster         |    1    |   2x    |  39.1  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r101_fpn_2x.tar) |
 | ResNet101-FPN        | Mask           |    1    |   1x    |  39.5  |  35.2   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_r101_fpn_1x.tar) |
 | ResNet101-vd-FPN     | Faster         |    1    |   1x    |  40.5  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r101_vd_fpn_1x.tar) |
-| ResNet101-vd-FPN     | Faster         |    1    |   2x    |  40.6  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r101_fpn_2x.tar) |
+| ResNet101-vd-FPN     | Faster         |    1    |   2x    |  40.8  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r101_vd_fpn_2x.tar) |
+| ResNet101-vd-FPN     | Mask           |    1    |   1x    |  41.4  |  36.8   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_r101_vd_fpn_1x.tar) |
 | ResNeXt101-vd-FPN    | Faster         |    1    |   1x    |  42.2  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_x101_vd_64x4d_fpn_1x.tar) |
+| ResNeXt101-vd-FPN    | Faster         |    1    |   2x    |  41.7  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_x101_vd_64x4d_fpn_2x.tar) |
+| ResNeXt101-vd-FPN    | Mask           |    1    |   1x    |  42.9  |  37.9   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_x101_vd_64x4d_fpn_1x.tar) |
+| ResNeXt101-vd-FPN    | Mask           |    1    |   2x    |  42.6  |  37.6   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_x101_vd_64x4d_fpn_2x.tar) |
 | SENet154-vd-FPN      | Faster         |    1    |  1.44x  |  42.9  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_se154_vd_fpn_s1x.tar) |
 | SENet154-vd-FPN      | Mask           |    1    |  1.44x  |  44.0  |  38.7   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_se154_vd_fpn_s1x.tar) |
 
