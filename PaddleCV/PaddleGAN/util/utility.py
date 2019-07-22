@@ -49,7 +49,7 @@ def plot(gen_data):
 
 
 def checkpoints(epoch, cfg, exe, trainer, name):
-    output_path = cfg.output + '/checkpoints/' + str(epoch)
+    output_path = os.path.join(cfg.output, 'checkpoints', str(epoch))
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     fluid.io.save_persistables(
@@ -75,7 +75,7 @@ def save_test_image(epoch,
                     g_trainer,
                     A_test_reader,
                     B_test_reader=None):
-    out_path = cfg.output + '/test'
+    out_path = os.path.join(cfg.output, 'test')
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     if cfg.model_net == "Pix2pix":
