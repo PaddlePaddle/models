@@ -9,6 +9,7 @@ from PIL import Image
 from os import path
 from paddle.dataset.image import load_image
 import paddle
+import random
 
 try:
     input = raw_input
@@ -53,28 +54,57 @@ class DataGenerator(object):
         :param cycle: If number of iterations is greater than dataset_size / batch_size
         it reiterates dataset over as many times as necessary.
         :type cycle: bool
-        
+
         '''
 
         img_label_lines = []
         to_file = "tmp.txt"
-        if not shuffle:
-            cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' > " + to_file
-        elif batchsize == 1:
-            cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' | shuf > " + to_file
-        else:
-            #cmd1: partial shuffle
-            cmd = "cat " + img_label_list + " | awk '{printf(\"%04d%.4f %s\\n\", $1, rand(), $0)}' | sort | sed 1,$((1 + RANDOM % 100))d | "
-            #cmd2: batch merge and shuffle
-            cmd += "awk '{printf $2\" \"$3\" \"$4\" \"$5\" \"; if(NR % " + str(
-                batchsize) + " == 0) print \"\";}' | shuf | "
-            #cmd3: batch split
-            cmd += "awk '{if(NF == " + str(
-                batchsize
-            ) + " * 4) {for(i = 0; i < " + str(
-                batchsize
-            ) + "; i++) print $(4*i+1)\" \"$(4*i+2)\" \"$(4*i+3)\" \"$(4*i+4);}}' > " + to_file
-        os.system(cmd)
+
+        def _shuffle_data(input_file_path, output_file_path, shuffle,
+                          batchsize):
+            def _write_file(file_path, lines_to_write):
+                open(file_path, 'w').writelines(
+                    ["{}\n".format(item) for item in lines_to_write])
+
+            input_file = open(input_file_path, 'r')
+            lines_to_shuf = [line.strip() for line in input_file.readlines()]
+
+            if not shuffle:
+                _write_file(output_file_path, lines_to_shuf)
+            elif batchsize == 1:
+                random.shuffle(lines_to_shuf)
+                _write_file(output_file_path, lines_to_shuf)
+            else:
+                #partial shuffle
+                for i in range(len(lines_to_shuf)):
+                    str_i = lines_to_shuf[i]
+                    list_i = str_i.strip().split(' ')
+                    str_i_ = "%04d%.4f " % (int(list_i[0]), random.random()
+                                            ) + str_i
+                    lines_to_shuf[i] = str_i_
+                lines_to_shuf.sort()
+                delete_num = random.randint(1, 100)
+                del lines_to_shuf[0:delete_num]
+
+                #batch merge and shuffle
+                lines_concat = []
+                for i in range(0, len(lines_to_shuf), batchsize):
+                    lines_concat.append(' '.join(lines_to_shuf[i:i +
+                                                               batchsize]))
+                random.shuffle(lines_concat)
+
+                #batch split
+                out_file = open(output_file_path, 'w')
+                for i in range(len(lines_concat)):
+                    tmp_list = lines_concat[i].split(' ')
+                    for j in range(int(len(tmp_list) / 5)):
+                        out_file.write("{} {} {} {}\n".format(tmp_list[
+                            5 * j + 1], tmp_list[5 * j + 2], tmp_list[
+                                5 * j + 3], tmp_list[5 * j + 4]))
+                out_file.close()
+            input_file.close()
+
+        _shuffle_data(img_label_list, to_file, shuffle, batchsize)
         print("finish batch shuffle")
         img_label_lines = open(to_file, 'r').readlines()
 
@@ -148,7 +178,7 @@ class DataGenerator(object):
         was None. If img_label_list was set to None, it will read image path
         from stdin.
         :type img_root_dir: str
-        
+
         :param cycle: If number of iterations is greater than dataset_size /
         batch_size it reiterates dataset over as many times as necessary.
         :type cycle: bool
