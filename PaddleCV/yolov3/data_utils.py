@@ -20,8 +20,9 @@ def _reader_quit(signum, frame):
     print("Reader process exit.")
     sys.exit()
 
-def _term_group(sig_num, addition):
-    print('pid {} terminated, terminate group {}'.format(os.getpid(), os.getpgrp()))
+def _term_group(sig_num, frame):
+    print('pid {} terminated, terminate group '
+          '{}...'.format(os.getpid(), os.getpgrp()))
     os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
 
 signal.signal(signal.SIGTERM, _reader_quit)
