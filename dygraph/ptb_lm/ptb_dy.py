@@ -316,9 +316,9 @@ def train_ptb_lm():
 
         data_path = args.data_path
         print("begin to load data")
-        raw_data = reader.ptb_raw_data(data_path)
+        ptb_data = reader.get_ptb_data(data_path)
         print("finished load data")
-        train_data, valid_data, test_data, _ = raw_data
+        train_data, valid_data, test_data = ptb_data
 
         batch_len = len(train_data) // batch_size
         total_batch_size = (batch_len - 1) // num_steps

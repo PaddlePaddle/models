@@ -138,7 +138,7 @@ def infer(args):
     for var in fluid.default_main_program().global_block().all_parameters():
         print(var.name)
     print(args.init_model + '/' + model_name)
-    fluid.io.load_persistables(exe, args.init_model + "/" + model_name)
+    fluid.io.load_persistables(exe, os.path.join(args.init_model, model_name))
     print('load params done')
     if not os.path.exists(args.output):
         os.makedirs(args.output)
@@ -270,7 +270,8 @@ def infer(args):
         fake_image = np.reshape(fake_temp, (args.batch_size, -1))
 
         fig = utility.plot(fake_image)
-        plt.savefig(args.output + '/fake_cgan.png', bbox_inches='tight')
+        plt.savefig(
+            os.path.join(args.output, 'fake_cgan.png'), bbox_inches='tight')
         plt.close(fig)
 
     elif args.model_net == 'DCGAN':
@@ -284,7 +285,8 @@ def infer(args):
         fake_image = np.reshape(fake_temp, (args.batch_size, -1))
 
         fig = utility.plot(fake_image)
-        plt.savefig(args.output + '/fake_dcgan.png', bbox_inches='tight')
+        plt.savefig(
+            os.path.join(args.output, '/fake_dcgan.png'), bbox_inches='tight')
         plt.close(fig)
     else:
         raise NotImplementedError("model_net {} is not support".format(

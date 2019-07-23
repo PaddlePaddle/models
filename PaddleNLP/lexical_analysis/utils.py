@@ -49,7 +49,10 @@ def to_str(string, encoding="utf-8"):
             return string.decode(encoding)
     elif sys.version_info.major == 2:
         if isinstance(string, unicode):
-            return string.encode(encoding)
+            if os.name == 'nt':
+                return string
+            else:
+                return string.encode(encoding)
     return string
 
 
