@@ -55,6 +55,7 @@ class AttGAN_model(object):
                       name=name,
                       dim=cfg.d_base_dims,
                       fc_dim=cfg.d_fc_dim,
+                      norm=cfg.dis_norm,
                       n_layers=cfg.n_layers)
 
     def concat(self, z, a):
@@ -149,11 +150,11 @@ class AttGAN_model(object):
                 d,
                 4,
                 2,
-                norm=None,
+                norm=norm,
                 padding=1,
                 activation_fn='leaky_relu',
                 name=name + str(i),
-                use_bias=True,
+                use_bias=(norm == None),
                 relufactor=0.01,
                 initial='kaiming')
 

@@ -1,20 +1,21 @@
-# this file is only used for continuous evaluation test!
-
+####this file is only used for continuous evaluation test!
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import os
 import sys
 sys.path.append(os.environ['ceroot'])
-from kpi import CostKpi
-from kpi import DurationKpi
+from kpi import CostKpi, DurationKpi, AccKpi
 
-imikolov_20_avg_ppl_kpi = CostKpi('lstm_language_model_loss', 0.02, 0)
-imikolov_20_pass_duration_kpi = DurationKpi(
-    'lstm_language_model_duration', 0.02, 0, actived=True)
+#### NOTE kpi.py should shared in models in some way!!!!
 
-tracking_kpis = [
-    imikolov_20_avg_ppl_kpi,
-    imikolov_20_pass_duration_kpi,
-]
-
+g_loss = CostKpi('g_loss', 0.3, 0, actived=True, desc="g loss")
+g_A_loss = CostKpi('g_A_loss', 0.3, 0, actived=True, desc="g A loss")
+g_B_loss = CostKpi('g_B_loss', 0.3, 0, actived=True, desc="g B loss")
+d_A_loss = CostKpi('d_A_loss', 0.3, 0, actived=True, desc="d A loss")
+d_B_loss = CostKpi('d_B_loss', 0.3, 0, actived=True, desc="d B loss")
+tracking_kpis = [g_loss, g_A_loss, g_B_loss,
+                 d_A_loss, d_B_loss]
 
 def parse_log(log):
     '''
@@ -35,7 +36,8 @@ def parse_log(log):
     for line in log.split('\n'):
         fs = line.strip().split('\t')
         print(fs)
-        if len(fs) == 3 and fs[0] == 'ptblm':
+        if len(fs) == 3 and fs[0] == 'kpis':
+            print("-----%s" % fs)
             kpi_name = fs[1]
             kpi_value = float(fs[2])
             yield kpi_name, kpi_value
@@ -54,4 +56,7 @@ def log_to_ce(log):
 
 if __name__ == '__main__':
     log = sys.stdin.read()
+    print("*****")
+    print(log)
+    print("****")
     log_to_ce(log)

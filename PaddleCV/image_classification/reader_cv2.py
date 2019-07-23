@@ -243,10 +243,9 @@ def _reader_creator(settings,
                 img_path = os.path.join(data_dir, img_path)
                 batch_data.append([img_path, int(label)])
                 if len(batch_data) == batch_size:
-                    if mode == 'train' or mode == 'val':
+                    if mode == 'train' or mode == 'val' or mode == 'test':
                         yield batch_data
-                    elif mode == 'test':
-                        yield [sample[0] for sample in batch_data]
+
                     batch_data = []
 
         return read_file_list

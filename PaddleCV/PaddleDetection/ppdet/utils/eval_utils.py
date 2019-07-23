@@ -96,13 +96,19 @@ def eval_results(results,
                  output_file=None):
     """Evaluation for evaluation program results"""
     if metric == 'COCO':
-        from ppdet.utils.coco_eval import bbox_eval, mask_eval
+        from ppdet.utils.coco_eval import proposal_eval, bbox_eval, mask_eval
         anno_file = getattr(feed.dataset, 'annotation', None)
         with_background = getattr(feed, 'with_background', True)
-        output = 'bbox.json'
-        if output_file:
-            output = '{}_bbox.json'.format(output_file)
-        bbox_eval(results, anno_file, output, with_background)
+        if 'proposal' in results[0]:
+            output = 'proposal.json'
+            if output_file:
+                output = '{}_proposal.json'.format(output_file)
+            proposal_eval(results, anno_file, output)
+        if 'bbox' in results[0]:
+            output = 'bbox.json'
+            if output_file:
+                output = '{}_bbox.json'.format(output_file)
+            bbox_eval(results, anno_file, output, with_background)
         if 'mask' in results[0]:
             output = 'mask.json'
             if output_file:
