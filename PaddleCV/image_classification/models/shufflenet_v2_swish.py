@@ -22,7 +22,7 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ['ShuffleNetV2_x0_25', 'ShuffleNetV2_x0_33', 'ShuffleNetV2_x0_5', 'ShuffleNetV2_x1_0', 'ShuffleNetV2_x1_5', 'ShuffleNetV2_x2_0']
+__all__ = ['ShuffleNetV2_x0_5_swish', 'ShuffleNetV2_x1_0_swish', 'ShuffleNetV2_x1_5_swish', 'ShuffleNetV2_x2_0_swish']
 
 train_parameters = {
     "input_size": [3, 224, 224],
@@ -46,11 +46,7 @@ class ShuffleNetV2():
         scale = self.scale 
         stage_repeats = [4, 8, 4]
         
-	if scale == 0.25:
-            stage_out_channels = [-1, 24,  24,  48, 96, 512]
-        elif scale == 0.33:
-            stage_out_channels = [-1, 24,  32,  64, 128, 512]
-        elif scale == 0.5:
+        if scale == 0.5:
             stage_out_channels = [-1, 24,  48,  96, 192, 1024]
         elif scale == 1.0:
             stage_out_channels = [-1, 24, 116, 232, 464, 1024]
@@ -117,7 +113,7 @@ class ShuffleNetV2():
         out = int((input.shape[2] - 1)/float(stride) + 1)
         bn_name = name + '_bn'
         if if_act:
-            return fluid.layers.batch_norm(input=conv, act='relu',
+            return fluid.layers.batch_norm(input=conv, act='swish',
                                            param_attr = ParamAttr(name=bn_name+"_scale"),
                                            bias_attr=ParamAttr(name=bn_name+"_offset"),
                                            moving_mean_name=bn_name + '_mean',
@@ -247,27 +243,19 @@ class ShuffleNetV2():
             out = fluid.layers.concat([conv_linear_1, conv_linear_2], axis=1)
             
         return self.channel_shuffle(out, 2)
-
-def ShuffleNetV2_x0_25():
-    model = ShuffleNetV2(scale=0.25)
-    return model
-
-def ShuffleNetV2_x0_33():
-    model = ShuffleNetV2(scale=0.33)
-    return model
- 
-def ShuffleNetV2_x0_5():
+    
+def ShuffleNetV2_x0_5_swish():
     model = ShuffleNetV2(scale=0.5)
     return model
 
-def ShuffleNetV2_x1_0():
+def ShuffleNetV2_x1_0_swish():
     model = ShuffleNetV2(scale=1.0)
     return model
 
-def ShuffleNetV2_x1_5():
+def ShuffleNetV2_x1_5_swish():
     model = ShuffleNetV2(scale=1.5)
     return model
 
-def ShuffleNetV2_x2_0():
+def ShuffleNetV2_x2_0_swish():
     model = ShuffleNetV2(scale=2.0)
     return model
