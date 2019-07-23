@@ -13,13 +13,13 @@ PaddleDetection的目的是为工业界和学术界提供大量易使用的目�
 
 - 易部署:
 
-  C++和CUDA实现的主要算子，配合PaddlePaddle的高性能预测引擎，使得在服务器环境下易于部署。
+  PaddleDetection的模型中使用的主要算子均通过C++和CUDA实现，配合PaddlePaddle的高性能预测引擎，使得在服务器环境下易于部署。
 
 - 高灵活度：
 
-  PaddleDetection各个组件均为功能单元。例如，模型结构，数据预处理流程，能够通过修改配置文件轻松实现可定制化。
+  PaddleDetection各个组件均为功能单元。例如，模型结构，数据预处理流程，用户能够通过修改配置文件轻松实现可定制化。
 
-- 性能优化：
+- 高性能：
 
   在PaddlePaddle底层框架的帮助下，实现了更快的模型训练及更少的显存占用量。值得注意的是，Yolo v3的训练速度远快于其他框架。另外，Mask-RCNN(ResNet50)可以在Tesla V100 16GB环境下以每个GPU4张图片输入实现多卡训练。
 
@@ -38,7 +38,7 @@ PaddleDetection的目的是为工业界和学术界提供大量易使用的目�
 
 <a name="vd">[1]</a> [ResNet-vd](https://arxiv.org/pdf/1812.01187) 模型提供了较大的精度提高和较少的性能损失。
 
-高级特性：
+扩展特性：
 
 - [x] **Synchronized Batch Norm**: 目前在Yolo v3中使用。
 - [x] **Group Norm**: 预训练模型待发布。
@@ -49,7 +49,7 @@ PaddleDetection的目的是为工业界和学术界提供大量易使用的目�
 
 ## 模型库
 
-基于PaddlePaddle训练的目标检测模型可参考[PaddleDetection model zoo](docs/MODEL_ZOO.md).
+基于PaddlePaddle训练的目标检测模型可参考[PaddleDetection模型库](docs/MODEL_ZOO.md).
 
 
 ## 安装
@@ -93,7 +93,7 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
 
 #### 7/22/2019
 
-- 更新检测库中文文档
+- 增加检测库中文文档
 - 修复R-CNN系列模型训练同时进行评估的问题
 - 新增ResNext101-vd + Mask R-CNN + FPN模型
 
@@ -105,4 +105,4 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
 
 ## 如何贡献代码
 
-如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
+我们实现欢迎你可以为PaddleDetection提供代码，也十分感谢你的反馈。
