@@ -21,6 +21,8 @@ import numpy as np
 
 import paddle.fluid as fluid
 
+from ppdet.utils.voc_eval import bbox_eval as voc_bbox_eval
+
 __all__ = ['parse_fetches', 'eval_run', 'eval_results']
 
 logger = logging.getLogger(__name__)
@@ -91,6 +93,7 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
 def eval_results(results, 
                  feed, 
                  metric, 
+                 num_classes,
                  resolution=None, 
                  is_bbox_normalized=False, 
                  output_file=None):
@@ -119,6 +122,5 @@ def eval_results(results,
             res = np.mean(results[-1]['accum_map'][0])
             logger.info('mAP: {:.2f}'.format(res * 100.))
         elif 'bbox' in results[0]:
-            from ppdet.utils.voc_eval import bbox_eval
-            # TODO(dengkaipeng): change to use cfg.num_classes after #2764 merged
-            bbox_eval(results, 21, is_bbox_normalized=is_bbox_normalized)
+            voc_bbox_eval(results, num_classes,
+                          is_bbox_normalized=is_bbox_normalized)

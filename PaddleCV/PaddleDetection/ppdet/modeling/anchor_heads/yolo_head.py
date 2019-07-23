@@ -41,6 +41,7 @@ class YOLOv3Head(object):
         nms (object): an instance of `MultiClassNMS`
     """
     __inject__ = ['nms']
+    __shared__ = ['num_classes']
 
     def __init__(self,
                  norm_decay=0.,

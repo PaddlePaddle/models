@@ -39,6 +39,7 @@ class SSD(object):
 
     __category__ = 'architecture'
     __inject__ = ['backbone', 'multi_box_head', 'output_decoder', 'metric']
+    __shared__ = ['num_classes']
 
     def __init__(self,
                  backbone,
