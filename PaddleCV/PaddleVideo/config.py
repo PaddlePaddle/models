@@ -17,6 +17,8 @@ try:
 except:
     from ConfigParser import ConfigParser
 
+import yaml
+
 from utils import AttrDict
 
 import logging
@@ -31,20 +33,29 @@ CONFIG_SECS = [
 
 
 def parse_config(cfg_file):
-    parser = ConfigParser()
-    cfg = AttrDict()
-    parser.read(cfg_file)
-    for sec in parser.sections():
-        sec_dict = AttrDict()
-        for k, v in parser.items(sec):
-            try:
-                v = eval(v)
-            except:
-                pass
-            setattr(sec_dict, k, v)
-        setattr(cfg, sec.upper(), sec_dict)
+    """Load a config file and merge it into the default options."""
+    import yaml
+    with open(cfg_file, 'r') as fopen:
+        yaml_config = AttrDict(yaml.load(fopen, Loader=yaml.Loader))
+    create_attr_dict(yaml_config)
+    return yaml_config
 
-    return cfg
+
+def create_attr_dict(yaml_config):
+    from ast import literal_eval
+    for key, value in yaml_config.items():
+        if type(value) is dict:
+            yaml_config[key] = value = AttrDict(value)
+        if isinstance(value, str):
+            try:
+                value = literal_eval(value)
+            except BaseException:
+                pass
+        if isinstance(value, AttrDict):
+            create_attr_dict(yaml_config[key])
+        else:
+            yaml_config[key] = value
+    return
 
 
 def merge_configs(cfg, sec, args_dict):

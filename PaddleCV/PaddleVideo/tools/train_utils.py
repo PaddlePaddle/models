@@ -93,8 +93,8 @@ def train_with_pyreader(exe, train_prog, compiled_train_prog, train_pyreader, \
                         format(epoch, np.mean(epoch_periods[1:])))
             save_model(exe, train_prog, save_dir, save_model_name,
                        "_epoch{}".format(epoch))
-            if test_exe and valid_interval > 0 and (epoch + 1
-                                                    ) % valid_interval == 0:
+            if compiled_test_prog and valid_interval > 0 and (
+                    epoch + 1) % valid_interval == 0:
                 test_with_pyreader(exe, compiled_test_prog, test_pyreader,
                                    test_fetch_list, test_metrics, log_interval,
                                    save_model_name)

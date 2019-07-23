@@ -149,6 +149,8 @@ def train(args):
             valid_feeds = valid_model.feeds()
             valid_fetch_list = valid_model.fetches()
             valid_pyreader = valid_model.pyreader()
+            for item in valid_fetch_list:
+                item.persistable = True
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -179,23 +181,13 @@ def train(args):
         build_strategy.enable_sequential_execution = True
     #build_strategy.memory_optimize = True
 
-    train_exe = fluid.ParallelExecutor(
-        use_cuda=args.use_gpu,
-        loss_name=train_loss.name,
-        main_program=train_prog,
-        build_strategy=build_strategy)
-    valid_exe = fluid.ParallelExecutor(
-        use_cuda=args.use_gpu,
-        share_vars_from=train_exe,
-        main_program=valid_prog)
-
-    compiled_train_program = fluid.compiler.CompiledProgram(
+    compiled_train_prog = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
             loss_name=train_loss.name, build_strategy=build_strategy)
-    compiled_valid_program = fluid.compiler.CompiledProgram(
+    compiled_valid_prog = fluid.compiler.CompiledProgram(
         valid_prog).with_data_parallel(
             #loss_name=valid_loss.name,
-            share_vars_from=compiled_train_program,
+            share_vars_from=compiled_train_prog,
             build_strategy=build_strategy)
 
     # get reader
