@@ -4,7 +4,6 @@ train_feed: SSDTrainFeed
 eval_feed: SSDEvalFeed
 test_feed: SSDTestFeed
 pretrain_weights: https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_coco_pretrained.tar
-
 use_gpu: true
 snapshot_iter: 2000
 log_smooth_window: 1
