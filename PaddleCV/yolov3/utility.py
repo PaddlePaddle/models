@@ -23,7 +23,7 @@ import distutils.util
 import numpy as np
 import six
 from collections import deque
-from paddle.fluid import core
+import paddle.fluid as fluid
 import argparse
 import functools
 from config import *
@@ -87,6 +87,24 @@ class SmoothedValue(object):
         return self.loss_sum / self.iter_cnt
 
 
+def check_gpu(use_gpu):
+    """
+    Log error and exit when set use_gpu=True in paddlepaddle
+    cpu version.
+    """
+    err = "Config use_gpu cannot be set as True while you are " \
+          "using paddlepaddle cpu version ! \nPlease try: \n" \
+          "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
+          "\t2. Set --use_gpu=False to run model on CPU"
+
+    try:
+        if use_gpu and not fluid.is_compiled_with_cuda():
+            print(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
+
+
 def parse_args():
     """return all args
     """
@@ -102,7 +120,7 @@ def parse_args():
     add_arg('class_num',        int,    80,          "Class number.")
     add_arg('data_dir',         str,    'dataset/coco',        "The data root path.")
     add_arg('start_iter',       int,    0,      "Start iteration.")
-    add_arg('use_multiprocess', bool,   True,   "add multiprocess.")
+    add_arg('use_multiprocess_reader', bool,   True,   "add multiprocess.")
     #SOLVER
     add_arg('batch_size',       int,    8,      "Mini-batch size per device.")
     add_arg('learning_rate',    float,  0.001,  "Learning rate.")
@@ -120,12 +138,13 @@ def parse_args():
     add_arg('nms_posk',         int,    100,    "The number of boxes of NMS output.")
     add_arg('debug',            bool,   False,  "Debug mode")
     # SINGLE EVAL AND DRAW
-    add_arg('image_path',       str,   'image', 
+    add_arg('image_path',       str,   'image',
             "The image path used to inference and visualize.")
-    add_arg('image_name',       str,    None,   
+    add_arg('image_name',       str,    None,
             "The single image used to inference and visualize. None to inference all images in image_path")
-    add_arg('draw_thresh',      float,  0.5,    
+    add_arg('draw_thresh',      float,  0.5,
             "Confidence score threshold to draw prediction box in image in debug mode")
+    add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
     # yapf: enable
     args = parser.parse_args()
     file_name = sys.argv[0]

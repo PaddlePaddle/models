@@ -3,8 +3,8 @@
 情感倾向分析（Sentiment Classification，简称Senta）针对带有主观描述的中文文本，可自动判断该文本的情感极性类别并给出相应的置信度。情感类型分为积极、消极。情感倾向分析能够帮助企业理解用户消费习惯、分析热点话题和危机舆情监控，为企业提供有利的决策支持。可通过[AI开放平台-情感倾向分析](http://ai.baidu.com/tech/nlp_apply/sentiment_classify) 线上体验。
 
 情感是人类的一种高级智能行为，为了识别文本的情感倾向，需要深入的语义建模。另外，不同领域（如餐饮、体育）在情感的表达各不相同，因而需要有大规模覆盖各个领域的数据进行模型训练。为此，我们通过基于深度学习的语义模型和大规模数据挖掘解决上述两个问题。效果上，我们基于开源情感倾向分类数据集ChnSentiCorp进行评测；此外，我们还开源了百度基于海量数据训练好的模型，该模型在ChnSentiCorp数据集上fine-tune之后（基于开源模型进行Finetune的方法请见下面章节），可以得到更好的效果。具体数据如下所示：
- 
-| 模型 | dev | test | 模型（finetune） |dev | test | 
+
+| 模型 | dev | test | 模型（finetune） |dev | test |
 | :------| :------ | :------ | :------ |:------ | :------
 | BOW | 89.8% | 90.0% | BOW |91.3% | 90.6% |
 | CNN | 90.6% | 89.9% | CNN |92.4% | 91.8% |
@@ -22,12 +22,14 @@
 
 python版本依赖python 2.7
 
+注意：该模型同时支持cpu和gpu训练和预测，用户可以根据自身需求，选择安装对应的paddlepaddle-gpu或paddlepaddle版本。
+
 #### 安装代码
 
 克隆数据集代码库到本地
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
-cd models/PaddleNLP/sentiment_classification 
+cd models/PaddleNLP/sentiment_classification
 ```
 
 #### 数据准备
@@ -80,6 +82,18 @@ senta_config.json中需要修改如下：
 # 在eval()函数中，修改如下参数：
 --init_checkpoint senta_model/ernie_bilstm_model/
 --model_type "ernie_bilstm"
+```
+
+我们也提供了使用PaddleHub加载ERNIE模型的选项，PaddleHub是PaddlePaddle的预训练模型管理工具，可以一行代码完成预训练模型的加载，简化预训练模型的使用和迁移学习。更多相关的介绍，可以查看[PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
+
+如果想使用该功能，需要修改run_ernie.sh中的配置如下：
+```shell
+# 在eval()函数中，修改如下参数：
+--use_paddle_hub true
+```
+注意：使用该选项需要先安装PaddleHub，安装命令如下
+```shell
+$ pip install paddlehub
 ```
 
 #### 模型训练
@@ -154,7 +168,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 
 可以根据自己的需求，组建自定义的模型，具体方法如下所示：
 
-1. 定义自己的网络结构 
+1. 定义自己的网络结构
 用户可以在 ```models/classification/nets.py``` 中，定义自己的模型，只需要增加新的函数即可。假设用户自定义的函数名为```user_net```
 2. 更改模型配置
 在 ```senta_config.json``` 中需要将 ```model_type``` 改为用户自定义的 ```user_net```

@@ -1,10 +1,39 @@
-from __future__ import print_function
+# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
+from __future__ import print_function
+import argparse
+import ast
 import paddle.fluid as fluid
 from paddle.fluid.dygraph import Embedding, LayerNorm, FC, to_variable, Layer, guard
 import numpy as np
 import paddle
 import paddle.dataset.wmt16 as wmt16
+
+
+def parse_args():
+    parser = argparse.ArgumentParser("Training for Mnist.")
+    parser.add_argument(
+        "--use_data_parallel",
+        type=ast.literal_eval,
+        default=False,
+        help="The flag indicating whether to shuffle instances in each pass.")
+    args = parser.parse_args()
+    return args
+
+
+args = parse_args()
 
 
 # Copy from models
@@ -1080,7 +1109,13 @@ def train():
     :return:
     """
 
-    with guard():
+    trainer_count = fluid.dygraph.parallel.Env().nranks
+    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
+        if args.use_data_parallel else fluid.CUDAPlace(0)
+    with fluid.dygraph.guard(place):
+        if args.use_data_parallel:
+            strategy = fluid.dygraph.parallel.prepare_context()
+
         transformer = TransFormer(
             'transformer', ModelHyperParams.src_vocab_size,
             ModelHyperParams.trg_vocab_size, ModelHyperParams.max_length + 1,
@@ -1094,10 +1129,17 @@ def train():
 
         optimizer = fluid.optimizer.SGD(learning_rate=0.003)
 
+        if args.use_data_parallel:
+            transformer = fluid.dygraph.parallel.DataParallel(transformer,
+                                                              strategy)
+
         reader = paddle.batch(
             wmt16.train(ModelHyperParams.src_vocab_size,
                         ModelHyperParams.trg_vocab_size),
             batch_size=TrainTaskConfig.batch_size)
+        if args.use_data_parallel:
+            reader = fluid.contrib.reader.distributed_batch_reader(reader)
+
         for i in range(200):
             dy_step = 0
             for batch in reader():
@@ -1108,7 +1150,14 @@ def train():
                 enc_inputs, dec_inputs, label, weights = create_data(np_values)
                 dy_sum_cost, dy_avg_cost, dy_predict, dy_token_num = transformer(
                     enc_inputs, dec_inputs, label, weights)
-                dy_avg_cost.backward()
+
+                if args.use_data_parallel:
+                    dy_avg_cost = transformer.scale_loss(dy_avg_cost)
+                    dy_avg_cost.backward()
+                    transformer.apply_collective_grads()
+                else:
+                    dy_avg_cost.backward()
+
                 optimizer.minimize(dy_avg_cost)
                 transformer.clear_gradients()
                 dy_step = dy_step + 1

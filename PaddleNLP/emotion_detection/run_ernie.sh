@@ -12,6 +12,7 @@ train() {
         --verbose true \
         --do_train true \
         --do_val true \
+        --use_paddle_hub false \
         --batch_size 32 \
         --init_checkpoint ${MODEL_PATH}/params \
         --train_set ${TASK_DATA_PATH}/train.tsv \
@@ -35,6 +36,7 @@ evaluate() {
         --use_cuda true \
         --verbose true \
         --do_val true \
+        --use_paddle_hub false \
         --batch_size 32 \
         --init_checkpoint ${MODEL_PATH}/params \
         --test_set ${TASK_DATA_PATH}/test.tsv \
@@ -50,6 +52,7 @@ infer() {
         --use_cuda true \
         --verbose true \
         --do_infer true \
+        --use_paddle_hub false \
         --batch_size 32 \
         --init_checkpoint ${MODEL_PATH}/params \
         --infer_set ${TASK_DATA_PATH}/infer.tsv \

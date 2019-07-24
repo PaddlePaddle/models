@@ -2,30 +2,29 @@
 
 import os
 import sys
-sys.path.append(os.environ['ceroot'])
+sys.path.insert(0, os.environ['ceroot'])
 from kpi import CostKpi, DurationKpi, AccKpi
 
 #### NOTE kpi.py should shared in models in some way!!!!
 
-train_cost_kpi = CostKpi('train_cost', 0.02, 0, actived=False)
-test_cost_kpi = CostKpi('test_cost', 0.005, 0, actived=False)
-train_duration_kpi = DurationKpi('train_duration', 0.06, 0, actived=False)
+train_ppl_card1_kpi = CostKpi('train_ppl_card1', 0.02, 0, actived=True)
+train_duration_card1_kpi = DurationKpi(
+    'train_duration_card1', 0.02, 0, actived=True)
+#train_ppl_card4_kpi = CostKpi('train_ppl_card4', 0.02, 0, actived=True)
+#train_duration_card4_kpi = DurationKpi(
+#    'train_duration_card4', 0.02, 0, actived=True)
 
 tracking_kpis = [
-    train_cost_kpi,
-    test_cost_kpi,
-    train_duration_kpi,
+    train_ppl_card1_kpi,
+    train_duration_card1_kpi,
 ]
 
 
 def parse_log(log):
     '''
     This method should be implemented by model developers.
-
     The suggestion:
-
     each line in the log should be key, value, for example:
-
     "
     train_cost\t1.0
     test_cost\t1.0
