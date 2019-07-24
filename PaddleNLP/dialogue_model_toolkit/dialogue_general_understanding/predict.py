@@ -93,7 +93,7 @@ def main(args):
                 is_prediction=True)
             predict_pyreader = pred_results.get('pyreader', None)
             probs = pred_results.get('probs', None)
-            feed_target_names = pred_results.get('feed_target_names', None)
+            feed_target_names = pred_results.get('feed_targets_name', None)
 
     predict_prog = predict_prog.clone(for_test=True)
 
