@@ -82,7 +82,7 @@ def get_dataset_path(path):
                     osp.realpath(path), DATASET_HOME))
 
     for name, dataset in DATASETS.items():
-        if path.lower().find(name) >= 0:
+        if os.path.split(path.strip().lower())[-1] == name:
             logger.info("Parse dataset_dir {} as dataset "
                         "{}".format(path, name))
             data_dir = osp.join(DATASET_HOME, name)
