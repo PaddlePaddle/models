@@ -99,10 +99,10 @@ sh download_models.sh
 
 #### &ensp;&ensp;c、CPU、GPU训练设置
 
-&ensp;&ensp;&ensp;&ensp;CPU训练和预测: 
+&ensp;&ensp;&ensp;&ensp;CPU训练和预测:
 
 ```
-请将run_train.sh和run_predict.sh内如下两行参数设置为: 
+请将run_train.sh和run_predict.sh内如下两行参数设置为:
 1、export CUDA_VISIBLE_DEVICES=
 2、--use_cuda false
 ```
@@ -115,7 +115,7 @@ sh download_models.sh
 2、--use_cuda true
 ```
 
-#### &ensp;&ensp;d、训练 
+#### &ensp;&ensp;d、训练
 
 &ensp;&ensp;&ensp;&ensp;方式一(推荐)：
 
@@ -132,7 +132,7 @@ python -u train.py --task_name mrda \ # name model to use. [udc|swda|mrda|atis_i
 
        --use_cuda true \      # If set, use GPU for training.
        --do_train true \        # Whether to perform training.
-       --do_val true \         # Whether to perform evaluation on dev data set. 
+       --do_val true \         # Whether to perform evaluation on dev data set.
        --do_test true \       # Whether to perform evaluation on test data set.
        --epoch 10 \          #  Number of epoches for fine-tuning.
        --batch_size 4096 \          # Total examples' number in batch for training. see also --in_tokens.
@@ -147,7 +147,7 @@ python -u train.py --task_name mrda \ # name model to use. [udc|swda|mrda|atis_i
        --max_seq_len 128 \            # Number of words of the longest seqence.
        --skip_steps 100 \             # The steps interval to print loss.
        --validation_steps 500 \           # The steps interval to evaluate model performance.
-       --num_iteration_per_drop_scope 10 \         # The iteration intervals to clean up temporary variables. 
+       --num_iteration_per_drop_scope 10 \         # The iteration intervals to clean up temporary variables.
        --use_fp16 false         # If set, use fp16 for training.
 ```
 
@@ -209,49 +209,49 @@ task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
 
 ```
 .
-├── run_train.sh     				    # 训练执行脚本
-├── run_predict.sh					# 预测执行脚本
-├── run_eval_metrics.sh				# 评估执行脚本
-├── download_data.sh				    # 下载数据脚本
-├── download_models.sh				# 下载对话模型脚本
-├── download_pretrain_model.sh		# 下载bert pretrain模型脚本
-├── train.py						    # train流程
-├── predict.py					    # predict流程
-├── eval_metrics.py					# 指标评估
+├── run_train.sh                         # 训练执行脚本
+├── run_predict.sh                    # 预测执行脚本
+├── run_eval_metrics.sh                # 评估执行脚本
+├── download_data.sh                    # 下载数据脚本
+├── download_models.sh                # 下载对话模型脚本
+├── download_pretrain_model.sh        # 下载bert pretrain模型脚本
+├── train.py                            # train流程
+├── predict.py                        # predict流程
+├── eval_metrics.py                    # 指标评估
 ├── define_predict_pack.py            # 封装预测结果
 ├── finetune_args.py                  # 模型训练相关的配置参数
-├── batching.py						# 封装yield batch数据
-├── optimization.py 	                # 模型优化器
-├── tokenization.py				    # tokenizer工具
-├── reader/data_reader.py：			# 数据的处理和组装过程，每个数据集都定义一个类进行处理
-├── README.md							# 文档
-├── utils/*							# 定义了其他常用的功能函数
-└── scripts							# 数据处理脚本集合
-       ├── run_build_data.sh			# 数据处理运行脚本
-       ├── build_atis_dataset.py		# 构建atis_intent和atis_slot训练数据
-       ├── build_dstc2_dataset.py		# 构建dstc2训练数据
-       ├── build_mrda_dataset.py		# 构建mrda训练数据
-       ├── build_swda_dataset.py		# 构建swda训练数据
-       ├── commonlib.py				    # 数据处理通用方法
-       └── conf				            # 公开数据集中训练集、验证集、测试集划分
-       
+├── batching.py                        # 封装yield batch数据
+├── optimization.py                     # 模型优化器
+├── tokenization.py                    # tokenizer工具
+├── reader/data_reader.py：            # 数据的处理和组装过程，每个数据集都定义一个类进行处理
+├── README.md                            # 文档
+├── utils/*                            # 定义了其他常用的功能函数
+└── scripts                            # 数据处理脚本集合
+       ├── run_build_data.sh            # 数据处理运行脚本
+       ├── build_atis_dataset.py        # 构建atis_intent和atis_slot训练数据
+       ├── build_dstc2_dataset.py        # 构建dstc2训练数据
+       ├── build_mrda_dataset.py        # 构建mrda训练数据
+       ├── build_swda_dataset.py        # 构建swda训练数据
+       ├── commonlib.py                    # 数据处理通用方法
+       └── conf                            # 公开数据集中训练集、验证集、测试集划分
+
 ../../models/dialogue_model_toolkit/dialogue_general_understanding
-├── bert.py 					        # 底层bert模型
-├── define_paradigm.py				# 上层网络范式
-└── create_model.py					# 创建底层bert模型+上层网络范式网络结构
+├── bert.py                             # 底层bert模型
+├── define_paradigm.py                # 上层网络范式
+└── create_model.py                    # 创建底层bert模型+上层网络范式网络结构
 ```
 
 ### 5、如何组建自己的模型
 
 &ensp;&ensp;&ensp;&ensp;用户可以根据自己的需求，组建自定义的模型，具体方法如下所示：
 
-&ensp;&ensp;&ensp;&ensp;i、自定义数据 
+&ensp;&ensp;&ensp;&ensp;i、自定义数据
 
 &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;如用户目前有数据集为**task_name**, 则在**data**下定义**task_name**文件夹，将数据集存放进去；在**reader/data_reader.py**中，新增自定义的数据处理的类，如**udc**数据集对应**UDCProcessor**;  在**train.py**内设置**task_name**和**processor**的对应关系(如**processors = {'udc': reader.UDCProcessor}**)，以及当前的数据集训练时是否是否使用**in_tokens**的方式计算batch大小(如：**in_tokens = {'udc': True}**)
 
 &ensp;&ensp;&ensp;&ensp;ii、 自定义上层网络范式
 
-&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;如果用户自定义模型属于分类、多分类和序列标注这3种类型其中一个，则只需要在**paddle-nlp/models/dialogue_model_toolkit/dialogue_general_understanding/define_paradigm.py** 内指明**task_name**和相应上层范式函数的对应关系即可，如用户自定义模型属于其他模型，则需要自定义上层范式函数并指明其与**task_name**之间的关系；
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;如果用户自定义模型属于分类、多分类和序列标注这3种类型其中一个，则只需要在**models/PaddleNLP/models/dialogue_model_toolkit/dialogue_general_understanding/define_paradigm.py** 内指明**task_name**和相应上层范式函数的对应关系即可，如用户自定义模型属于其他模型，则需要自定义上层范式函数并指明其与**task_name**之间的关系；
 
 &ensp;&ensp;&ensp;&ensp;iii、自定义预测封装接口
 
