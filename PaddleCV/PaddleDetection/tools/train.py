@@ -55,13 +55,14 @@ logger = logging.getLogger(__name__)
 
 def main():
     cfg = load_config(FLAGS.config)
-
     if 'architecture' in cfg:
         main_arch = cfg.architecture
     else:
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
+    if 'log_iter' not in cfg:
+        cfg.log_iter = 1
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
@@ -169,7 +170,8 @@ def main():
         logs = train_stats.log()
         strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
             it, np.mean(outs[-1]), logs, end_time - start_time)
-        logger.info(strs)
+        if it % cfg.log_iter == 0:
+            logger.info(strs)
 
         if it > 0 and it % cfg.snapshot_iter == 0:
             checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
