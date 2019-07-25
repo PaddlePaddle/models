@@ -26,10 +26,10 @@ import functools
 
 import paddle
 import paddle.fluid as fluid
-import reader_cv2 as reader 
+import reader_cv2 as reader
 import models
 from utils.learning_rate import cosine_decay
-from utils.utility import add_arguments, print_arguments
+from utils.utility import add_arguments, print_arguments, check_gpu
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -43,6 +43,7 @@ add_arg('pretrained_model', str,  None,                "Whether to use pretraine
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('resize_short_size', int, 256,                "Set resize short size")
 # yapf: enable
+
 
 def eval(args):
     # parameters from arguments
@@ -93,10 +94,9 @@ def eval(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-
     fluid.io.load_persistables(exe, pretrained_model)
 
-    val_reader = paddle.batch(reader.val(settings=args), batch_size=args.batch_size)
+    val_reader = reader.val(settings=args, batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     test_info = [[], [], []]
@@ -127,13 +127,14 @@ def eval(args):
     test_acc5 = np.sum(test_info[2]) / cnt
 
     print("Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
-        "%.5f"%test_loss, "%.5f"%test_acc1, "%.5f"%test_acc5))
+        "%.5f" % test_loss, "%.5f" % test_acc1, "%.5f" % test_acc5))
     sys.stdout.flush()
 
 
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     eval(args)
 
 

@@ -29,7 +29,7 @@ import paddle.fluid as fluid
 import reader_cv2 as reader
 import models
 import utils
-from utils.utility import add_arguments,print_arguments
+from utils.utility import add_arguments, print_arguments, check_gpu
 
 parser = argparse.ArgumentParser(description=__doc__)
 # yapf: disable
@@ -43,6 +43,7 @@ add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.
 add_arg('save_inference',   bool, False,                 "Whether to save inference model or not")
 add_arg('resize_short_size', int, 256,                  "Set resize short size")
 # yapf: enable
+
 
 def infer(args):
     # parameters from arguments
@@ -80,17 +81,18 @@ def infer(args):
     fluid.io.load_persistables(exe, pretrained_model)
     if save_inference:
         fluid.io.save_inference_model(
-                dirname=model_name,
-                feeded_var_names=['image'],
-                main_program=test_program,
-                target_vars=out,
-                executor=exe,
-                model_filename='model',
-                params_filename='params')
-        print("model: ",model_name," is already saved")
+            dirname=model_name,
+            feeded_var_names=['image'],
+            main_program=test_program,
+            target_vars=out,
+            executor=exe,
+            model_filename='model',
+            params_filename='params')
+        print("model: ", model_name, " is already saved")
         exit(0)
     test_batch_size = 1
-    test_reader = paddle.batch(reader.test(settings=args), batch_size=test_batch_size)
+
+    test_reader = reader.test(settings=args, batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     TOPK = 1
@@ -108,6 +110,7 @@ def infer(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     infer(args)
 
 

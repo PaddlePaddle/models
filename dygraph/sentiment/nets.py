@@ -76,7 +76,6 @@ class CNN(fluid.dygraph.Layer):
         emb = fluid.layers.reshape(
             emb, shape=[-1, 1, self.seq_len, self.hid_dim])
         conv_3 = self._simple_conv_pool_1(emb)
-
         fc_1 = self._fc1(conv_3)
         prediction = self._fc_prediction(fc_1)
 
