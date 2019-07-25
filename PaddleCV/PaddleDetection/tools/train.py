@@ -20,6 +20,7 @@ import os
 import time
 import multiprocessing
 import numpy as np
+import datetime
 from collections import deque
 
 
@@ -63,7 +64,7 @@ def main():
 
     merge_config(FLAGS.opt)
     if 'log_iter' not in cfg:
-        cfg.log_iter = 1
+        cfg.log_iter = 20
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
@@ -162,17 +163,20 @@ def main():
 
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
-    time_stat = deque(maxlen=20)
+    time_stat = deque(maxlen=cfg.log_iter)
     for it in range(start_iter, cfg.max_iters):
         start_time = end_time
         end_time = time.time()
         time_stat.append(end_time - start_time)
+        time_cost = np.mean(time_stat)
+        eta_sec = (cfg.max_iters - start_iter) * time_cost
+        eta = str(datetime.timedelta(seconds=int(eta_sec)))
         outs = exe.run(train_compile_program, fetch_list=train_values)
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
         train_stats.update(stats)
         logs = train_stats.log()
-        strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
-            it, np.mean(outs[-1]), logs, np.mean(time_stat))
+        strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
+            it, np.mean(outs[-1]), logs, time_cost, eta)
         if it % cfg.log_iter == 0:
             logger.info(strs)
 
