@@ -175,9 +175,9 @@ def main():
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
         train_stats.update(stats)
         logs = train_stats.log()
-        strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
-            it, np.mean(outs[-1]), logs, time_cost, eta)
         if it % cfg.log_iter == 0:
+            strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
+                it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
 
         if it > 0 and it % cfg.snapshot_iter == 0:
