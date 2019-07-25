@@ -28,6 +28,8 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 - Pretrained model is downloaded automatically and cached in `~/.cache/paddle/weights`.
 - Model checkpoints is saved in `output` by default (configurable).
 - To check out hyper parameters used, please refer to the config file.
+- RCNN models training on CPU is not supported on PaddlePaddle<=1.5.1 and will be fixed on later version.
+
 
 Alternating between training epoch and evaluation run is possible, simply pass
 in `--eval` to do so
