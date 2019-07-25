@@ -56,8 +56,10 @@ def create_reader(feed, max_iter=0):
         image_dir = getattr(feed.dataset, 'image_dir', None)
         dataset_dir = get_dataset_path(feed.dataset.dataset_dir,
                                        annotation, image_dir)
-        feed.dataset.annotation = os.path.join(dataset_dir, annotation)
-        feed.dataset.image_dir = os.path.join(dataset_dir, image_dir)
+        if annotation:
+            feed.dataset.annotation = os.path.join(dataset_dir, annotation)
+        if image_dir:
+            feed.dataset.image_dir = os.path.join(dataset_dir, image_dir)
 
     mixup_epoch = -1
     if getattr(feed, 'mixup_epoch', None) is not None:
