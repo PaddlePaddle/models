@@ -20,6 +20,7 @@ import os
 import time
 import multiprocessing
 import numpy as np
+from collections import deque
 
 
 def set_paddle_flags(**kwargs):
@@ -161,15 +162,17 @@ def main():
 
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
+    time_stat = deque(maxlen=20)
     for it in range(start_iter, cfg.max_iters):
         start_time = end_time
         end_time = time.time()
+        time_stat.append(end_time - start_time)
         outs = exe.run(train_compile_program, fetch_list=train_values)
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
         train_stats.update(stats)
         logs = train_stats.log()
         strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
-            it, np.mean(outs[-1]), logs, end_time - start_time)
+            it, np.mean(outs[-1]), logs, np.mean(time_stat))
         if it % cfg.log_iter == 0:
             logger.info(strs)
 
