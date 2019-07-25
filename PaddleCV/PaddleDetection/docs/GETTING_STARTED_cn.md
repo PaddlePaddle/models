@@ -29,7 +29,9 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 - 更多参数配置，请参考配置文件。
 
 
-可通过设置`--eval`在训练epoch中交替执行评估
+可通过设置`--eval`在训练epoch中交替执行评估（已在在Pascal-VOC数据集上
+用`SSD`检测器验证，不推荐在COCO数据集上的两阶段模型上执行交替评估）
+
 
 ## 评估
 

@@ -109,7 +109,7 @@ def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(FLAGS.output_dir, cfg_name)
     feeded_var_names = [var.name for var in feed_vars.values()]
-    target_vars = test_fetches.values()
+    target_vars = list(test_fetches.values())
     feeded_var_names = prune_feed_vars(feeded_var_names, target_vars,
                                        infer_prog)
     logger.info("Save inference model to {}, input: {}, output: "

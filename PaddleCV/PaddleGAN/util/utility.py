@@ -49,7 +49,7 @@ def plot(gen_data):
 
 
 def checkpoints(epoch, cfg, exe, trainer, name):
-    output_path = cfg.output + '/checkpoints/' + str(epoch)
+    output_path = os.path.join(cfg.output, 'checkpoints', str(epoch))
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     fluid.io.save_persistables(
@@ -75,7 +75,7 @@ def save_test_image(epoch,
                     g_trainer,
                     A_test_reader,
                     B_test_reader=None):
-    out_path = cfg.output + '/test'
+    out_path = os.path.join(cfg.output, 'test')
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     if cfg.model_net == "Pix2pix":
@@ -113,9 +113,10 @@ def save_test_image(epoch,
             images = [real_img_temp]
             for i in range(cfg.c_dim):
                 label_trg_tmp = copy.deepcopy(label_org)
-                label_trg_tmp[0][i] = 1.0 - label_trg_tmp[0][i]
-                label_trg = check_attribute_conflict(label_trg_tmp,
-                                                     attr_names[i], attr_names)
+                for j in range(len(label_org)):
+                    label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
+                    label_trg = check_attribute_conflict(
+                        label_trg_tmp, attr_names[i], attr_names)
                 tensor_label_trg = fluid.LoDTensor()
                 tensor_label_trg.set(label_trg, place)
                 fake_temp, rec_temp = exe.run(
@@ -126,11 +127,13 @@ def save_test_image(epoch,
                         "label_trg": tensor_label_trg
                     },
                     fetch_list=[g_trainer.fake_img, g_trainer.rec_img])
-                fake_temp = save_batch_image(fake_temp[0])
-                rec_temp = save_batch_image(rec_temp[0])
+                fake_temp = save_batch_image(fake_temp)
+                rec_temp = save_batch_image(rec_temp)
                 images.append(fake_temp)
                 images.append(rec_temp)
             images_concat = np.concatenate(images, 1)
+            if len(label_org) > 1:
+                images_concat = np.concatenate(images_concat, 1)
             imageio.imwrite(out_path + "/fake_img" + str(epoch) + "_" + name[0],
                             ((images_concat + 1) * 127.5).astype(np.uint8))
     elif cfg.model_net == 'AttGAN' or cfg.model_net == 'STGAN':
@@ -184,12 +187,12 @@ def save_test_image(epoch,
 
     else:
         for data_A, data_B in zip(A_test_reader(), B_test_reader()):
-            A_name = data_A[0][1]
-            B_name = data_B[0][1]
+            A_data, A_name = data_A
+            B_data, B_name = data_B
             tensor_A = fluid.LoDTensor()
             tensor_B = fluid.LoDTensor()
-            tensor_A.set(data_A[0][0], place)
-            tensor_B.set(data_B[0][0], place)
+            tensor_A.set(A_data, place)
+            tensor_B.set(B_data, place)
             fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = exe.run(
                 test_program,
                 fetch_list=[
@@ -205,18 +208,20 @@ def save_test_image(epoch,
             input_A_temp = np.squeeze(data_A[0][0]).transpose([1, 2, 0])
             input_B_temp = np.squeeze(data_B[0][0]).transpose([1, 2, 0])
 
-            imageio.imwrite(out_path + "/fakeB_" + str(epoch) + "_" + A_name, (
-                (fake_B_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/fakeA_" + str(epoch) + "_" + B_name, (
-                (fake_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/cycA_" + str(epoch) + "_" + A_name, (
-                (cyc_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/cycB_" + str(epoch) + "_" + B_name, (
-                (cyc_B_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/inputA_" + str(epoch) + "_" + A_name, (
-                (input_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/inputB_" + str(epoch) + "_" + B_name, (
-                (input_B_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(out_path + "/fakeB_" + str(epoch) + "_" + A_name[0],
+                            ((fake_B_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(out_path + "/fakeA_" + str(epoch) + "_" + B_name[0],
+                            ((fake_A_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(out_path + "/cycA_" + str(epoch) + "_" + A_name[0],
+                            ((cyc_A_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(out_path + "/cycB_" + str(epoch) + "_" + B_name[0],
+                            ((cyc_B_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                out_path + "/inputA_" + str(epoch) + "_" + A_name[0], (
+                    (input_A_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                out_path + "/inputB_" + str(epoch) + "_" + B_name[0], (
+                    (input_B_temp + 1) * 127.5).astype(np.uint8))
 
 
 class ImagePool(object):
@@ -242,6 +247,8 @@ class ImagePool(object):
 
 
 def check_attribute_conflict(label_batch, attr, attrs):
+    ''' Based on https://github.com/LynnHo/AttGAN-Tensorflow'''
+
     def _set(label, value, attr):
         if attr in attrs:
             label[attrs.index(attr)] = value
@@ -260,10 +267,6 @@ def check_attribute_conflict(label_batch, attr, attrs):
                     _set(label, 0, a)
         elif attr in ['Straight_Hair', 'Wavy_Hair'] and attrs[attr_id] != 0:
             for a in ['Straight_Hair', 'Wavy_Hair']:
-                if a != attr:
-                    _set(label, 0, a)
-        elif attr in ['Mustache', 'No_Beard'] and attrs[attr_id] != 0:
-            for a in ['Mustache', 'No_Beard']:
                 if a != attr:
                     _set(label, 0, a)
     return label_batch
@@ -290,7 +293,7 @@ def check_gpu(use_gpu):
 
     try:
         if use_gpu and not fluid.is_compiled_with_cuda():
-            logger.error(err)
+            print(err)
             sys.exit(1)
     except Exception as e:
         pass
