@@ -337,6 +337,9 @@ def build_program(is_train, main_prog, startup_prog, args):
     return build_program_out
 
 def get_device_num():
+    # NOTE(zcd): for multi-processe training, each process use one GPU card.
+    if num_trainers > 1:
+        return 1
     return fluid.core.get_cuda_device_count()
 
 def train(args):
