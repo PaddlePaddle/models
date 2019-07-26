@@ -93,6 +93,8 @@ def main():
     if 'weights' in cfg:
         checkpoint.load_pretrain(exe, eval_prog, cfg.weights)
 
+    assert cfg.metric in ['COCO', 'VOC'], \
+            "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg.metric == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
