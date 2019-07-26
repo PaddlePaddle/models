@@ -68,7 +68,8 @@ class ArgsParser(ArgumentParser):
                 config[k] = v
             else:
                 keys = k.split('.')
-                config[keys[0]] = {}
+                if keys[0] not in config:
+                    config[keys[0]] = {}
                 cur = config[keys[0]]
                 for idx, key in enumerate(keys[1:]):
                     if idx == len(keys) - 2:
