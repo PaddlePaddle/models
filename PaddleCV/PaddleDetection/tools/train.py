@@ -169,7 +169,7 @@ def main():
         end_time = time.time()
         time_stat.append(end_time - start_time)
         time_cost = np.mean(time_stat)
-        eta_sec = (cfg.max_iters - start_iter) * time_cost
+        eta_sec = (cfg.max_iters - it) * time_cost
         eta = str(datetime.timedelta(seconds=int(eta_sec)))
         outs = exe.run(train_compile_program, fetch_list=train_values)
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
