@@ -11,7 +11,7 @@ class MobileNetSSD:
 
     def ssd_net(self, scale=1.0):
         # 300x300
-        tmp = self.conv_bn(self.img, 3, int(32 * scale), 2, 1, 3)
+        tmp = self.conv_bn(self.img, 3, int(32 * scale), 2, 1)
         # 150x150
         tmp = self.depthwise_separable(tmp, 32, 64, 32, 1, scale)
         tmp = self.depthwise_separable(tmp, 64, 128, 64, 2, scale)
@@ -30,13 +30,13 @@ class MobileNetSSD:
 
         # 10x10
         module13 = self.depthwise_separable(tmp, 1024, 1024, 1024, 1, scale)
-        module14 = self.extra_block(module13, 256, 512, 1, 2, scale)
+        module14 = self.extra_block(module13, 256, 512, 1, 2)
         # 5x5
-        module15 = self.extra_block(module14, 128, 256, 1, 2, scale)
+        module15 = self.extra_block(module14, 128, 256, 1, 2)
         # 3x3
-        module16 = self.extra_block(module15, 128, 256, 1, 2, scale)
+        module16 = self.extra_block(module15, 128, 256, 1, 2)
         # 2x2
-        module17 = self.extra_block(module16, 64, 128, 1, 2, scale)
+        module17 = self.extra_block(module16, 64, 128, 1, 2)
 
         mbox_locs, mbox_confs, box, box_var = fluid.layers.multi_box_head(
             inputs=[
@@ -62,7 +62,6 @@ class MobileNetSSD:
                 num_filters,
                 stride,
                 padding,
-                channels=None,
                 num_groups=1,
                 act='relu',
                 use_cudnn=True):
@@ -99,24 +98,23 @@ class MobileNetSSD:
             padding=0)
         return pointwise_conv
 
-    def extra_block(self, input, num_filters1, num_filters2, num_groups, stride,
-                    scale):
+    def extra_block(self, input, num_filters1, num_filters2, num_groups, stride):
         # 1x1 conv
         pointwise_conv = self.conv_bn(
             input=input,
             filter_size=1,
-            num_filters=int(num_filters1 * scale),
+            num_filters=int(num_filters1),
             stride=1,
-            num_groups=int(num_groups * scale),
+            num_groups=int(num_groups),
             padding=0)
 
         # 3x3 conv
         normal_conv = self.conv_bn(
             input=pointwise_conv,
             filter_size=3,
-            num_filters=int(num_filters2 * scale),
+            num_filters=int(num_filters2),
             stride=2,
-            num_groups=int(num_groups * scale),
+            num_groups=int(num_groups),
             padding=1)
         return normal_conv
 

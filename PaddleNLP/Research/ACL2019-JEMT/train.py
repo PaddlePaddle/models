@@ -4,28 +4,17 @@ import copy
 import logging
 import multiprocessing
 import os
-import subprocess
-
-if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
-    os.environ['FLAGS_eager_delete_tensor_gb'] = '0'
-
 import six
 import sys
-sys.path.append("../../")
-sys.path.append("../../models/neural_machine_translation/transformer/")
 import time
 
 import numpy as np
 import paddle.fluid as fluid
 
-from models.model_check import check_cuda
 import reader
 from config import *
 from desc import *
 from model import transformer, position_encoding_init
-import dist_utils
-
-num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
 
 def parse_args():
@@ -40,6 +29,16 @@ def parse_args():
         type=str,
         required=True,
         help="The path of vocabulary file of target language.")
+    parser.add_argument(
+        "--phoneme_vocab_fpath",
+        type=str,
+        required=True,
+        help="The path of vocabulary file of phonemes.")
+    parser.add_argument(
+        "--lexicon_fpath",
+        type=str,
+        required=True,
+        help="The path of lexicon of source language.")
     parser.add_argument(
         "--train_file_pattern",
         type=str,
@@ -145,28 +144,26 @@ def parse_args():
     # Append args related to dict
     src_dict = reader.DataReader.load_dict(args.src_vocab_fpath)
     trg_dict = reader.DataReader.load_dict(args.trg_vocab_fpath)
+    phone_dict = reader.DataReader.load_dict(args.phoneme_vocab_fpath)
     dict_args = [
-        "src_vocab_size", str(len(src_dict)), "trg_vocab_size",
-        str(len(trg_dict)), "bos_idx", str(src_dict[args.special_token[0]]),
-        "eos_idx", str(src_dict[args.special_token[1]]), "unk_idx",
+        "src_vocab_size",
+        str(len(src_dict)), "trg_vocab_size",
+        str(len(trg_dict)), "phone_vocab_size",
+        str(len(phone_dict)), "bos_idx",
+        str(src_dict[args.special_token[0]]), "eos_idx",
+        str(src_dict[args.special_token[1]]), "unk_idx",
         str(src_dict[args.special_token[2]])
     ]
     merge_cfg_from_list(args.opts + dict_args,
                         [TrainTaskConfig, ModelHyperParams])
+
     return args
-
-
-def get_device_num():
-    # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1:
-        return 1
-    return fluid.core.get_cuda_device_count()
 
 
 def append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
                          current_endpoint):
-    assert (trainer_id >= 0 and len(worker_endpoints) > 1 and
-            current_endpoint in worker_endpoints)
+    assert (trainer_id >= 0 and len(worker_endpoints) > 1
+            and current_endpoint in worker_endpoints)
     eps = copy.deepcopy(worker_endpoints)
     eps.remove(current_endpoint)
     nccl_id_var = startup_prog.global_block().create_var(
@@ -181,6 +178,35 @@ def append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
             "trainer_id": trainer_id
         })
     return nccl_id_var
+
+
+def pad_phoneme_data(phoneme_seqs, pad_idx, max_seq_len):
+    """
+    Pad the instances to the max sequence length in batch, and generate the
+    corresponding position data and attention bias.
+    """
+    ph_seq_lens = []
+    for ps in phoneme_seqs:
+        cur_seq_lens = [len(x) for x in ps]
+        ph_seq_lens.append(max(cur_seq_lens))
+    max_ph_seq_len = max(ph_seq_lens)
+
+    batch_size = len(phoneme_seqs)
+    phoneme_data = pad_idx * np.ones(
+        (batch_size, max_seq_len, max_ph_seq_len), dtype=np.int64)
+    phoneme_mask = np.zeros((batch_size, max_seq_len, max_ph_seq_len),
+                            dtype=np.int64)
+
+    for i in range(batch_size):
+        cur_ph_seq = phoneme_seqs[i]
+        for j, cur_word_phs in enumerate(cur_ph_seq):
+            word_phs_len = len(cur_word_phs)
+            phoneme_data[i, j, :word_phs_len] = cur_word_phs
+            phoneme_mask[i, j, :word_phs_len] = 1
+
+    phoneme_data = np.reshape(phoneme_data, [batch_size, max_seq_len, -1, 1])
+
+    return phoneme_data, phoneme_mask, max_ph_seq_len
 
 
 def pad_batch_data(insts,
@@ -203,8 +229,8 @@ def pad_batch_data(insts,
         [inst + [pad_idx] * (max_len - len(inst)) for inst in insts])
     return_list += [inst_data.astype("int64").reshape([-1, 1])]
     if is_label:  # label weight
-        inst_weight = np.array(
-            [[1.] * len(inst) + [0.] * (max_len - len(inst)) for inst in insts])
+        inst_weight = np.array([[1.] * len(inst) + [0.] * (max_len - len(inst))
+                                for inst in insts])
         return_list += [inst_weight.astype("float32").reshape([-1, 1])]
     else:  # position data
         inst_pos = np.array([
@@ -216,16 +242,17 @@ def pad_batch_data(insts,
         if is_target:
             # This is used to avoid attention on paddings and subsequent
             # words.
-            slf_attn_bias_data = np.ones((inst_data.shape[0], max_len, max_len))
+            slf_attn_bias_data = np.ones((inst_data.shape[0], max_len,
+                                          max_len))
             slf_attn_bias_data = np.triu(slf_attn_bias_data,
                                          1).reshape([-1, 1, max_len, max_len])
             slf_attn_bias_data = np.tile(slf_attn_bias_data,
                                          [1, n_head, 1, 1]) * [-1e9]
         else:
             # This is used to avoid attention on paddings.
-            slf_attn_bias_data = np.array([[0] * len(inst) + [-1e9] *
-                                           (max_len - len(inst))
-                                           for inst in insts])
+            slf_attn_bias_data = np.array(
+                [[0] * len(inst) + [-1e9] * (max_len - len(inst))
+                 for inst in insts])
             slf_attn_bias_data = np.tile(
                 slf_attn_bias_data.reshape([-1, 1, 1, max_len]),
                 [1, n_head, max_len, 1])
@@ -240,8 +267,8 @@ def pad_batch_data(insts,
     return return_list if len(return_list) > 1 else return_list[0]
 
 
-def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
-                        n_head, d_model):
+def prepare_batch_input(insts, data_input_names, src_pad_idx, phone_pad_idx,
+                        trg_pad_idx, n_head, d_model):
     """
     Put all padded data needed by training into a dict.
     """
@@ -249,8 +276,10 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
         [inst[0] for inst in insts], src_pad_idx, n_head, is_target=False)
     src_word = src_word.reshape(-1, src_max_len, 1)
     src_pos = src_pos.reshape(-1, src_max_len, 1)
+    src_phone, src_phone_mask, max_phone_len = pad_phoneme_data(
+        [inst[1] for inst in insts], phone_pad_idx, src_max_len)
     trg_word, trg_pos, trg_slf_attn_bias, trg_max_len = pad_batch_data(
-        [inst[1] for inst in insts], trg_pad_idx, n_head, is_target=True)
+        [inst[2] for inst in insts], trg_pad_idx, n_head, is_target=True)
     trg_word = trg_word.reshape(-1, trg_max_len, 1)
     trg_pos = trg_pos.reshape(-1, trg_max_len, 1)
 
@@ -258,7 +287,7 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
                                 [1, 1, trg_max_len, 1]).astype("float32")
 
     lbl_word, lbl_weight, num_token = pad_batch_data(
-        [inst[2] for inst in insts],
+        [inst[3] for inst in insts],
         trg_pad_idx,
         n_head,
         is_target=False,
@@ -269,8 +298,9 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, trg_pad_idx,
 
     data_input_dict = dict(
         zip(data_input_names, [
-            src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
-            trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
+            src_word, src_pos, src_slf_attn_bias, src_phone, src_phone_mask,
+            trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, lbl_word,
+            lbl_weight
         ]))
 
     return data_input_dict, np.asarray([num_token], dtype="float32")
@@ -286,11 +316,9 @@ def prepare_data_generator(args,
     Data generator wrapper for DataReader. If use py_reader, set the data
     provider for py_reader
     """
-    # NOTE: If num_trainers > 1, the shuffle_seed must be set, because
-    # the order of batch data generated by reader
-    # must be the same in the respective processes.
-    shuffle_seed = 1 if num_trainers > 1 else None
     data_reader = reader.DataReader(
+        phoneme_vocab_fpath=args.phoneme_vocab_fpath,
+        lexicon_fpath=args.lexicon_fpath,
         fpattern=args.val_file_pattern if is_test else args.train_file_pattern,
         src_vocab_fpath=args.src_vocab_fpath,
         trg_vocab_fpath=args.trg_vocab_fpath,
@@ -300,7 +328,6 @@ def prepare_data_generator(args,
         pool_size=args.pool_size,
         sort_type=args.sort_type,
         shuffle=args.shuffle,
-        shuffle_seed=shuffle_seed,
         shuffle_batch=args.shuffle_batch,
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
@@ -337,8 +364,8 @@ def prepare_data_generator(args,
             for item in data_reader():
                 inst_num_per_part = len(item) // count
                 for i in range(count):
-                    yield item[inst_num_per_part * i:inst_num_per_part * (i + 1
-                                                                          )]
+                    yield item[inst_num_per_part * i:inst_num_per_part *
+                               (i + 1)]
 
         return __impl__
 
@@ -346,12 +373,8 @@ def prepare_data_generator(args,
         # to make data on each device have similar token number
         data_reader = split(data_reader, count)
     if args.use_py_reader:
-        train_reader = py_reader_provider_wrapper(data_reader, place)
-        if num_trainers > 1:
-            assert shuffle_seed is not None
-            train_reader = fluid.contrib.reader.distributed_batch_reader(
-                train_reader)
-        pyreader.decorate_tensor_provider(train_reader)
+        pyreader.decorate_tensor_provider(
+            py_reader_provider_wrapper(data_reader, place))
         data_reader = None
     else:  # Data generator for multi-devices
         data_reader = stack(data_reader, count)
@@ -370,8 +393,8 @@ def prepare_feed_dict_list(data_generator, init_flag, count):
         for idx, data_buffer in enumerate(data):
             data_input_dict, num_token = prepare_batch_input(
                 data_buffer, data_input_names, ModelHyperParams.eos_idx,
-                ModelHyperParams.eos_idx, ModelHyperParams.n_head,
-                ModelHyperParams.d_model)
+                ModelHyperParams.phone_pad_idx, ModelHyperParams.eos_idx,
+                ModelHyperParams.n_head, ModelHyperParams.d_model)
             feed_dict_list.append(data_input_dict)
     if init_flag:
         for idx in range(count):
@@ -383,9 +406,8 @@ def prepare_feed_dict_list(data_generator, init_flag, count):
                 feed_dict_list.append(pos_enc_tables)
             else:
                 feed_dict_list[idx] = dict(
-                    list(pos_enc_tables.items()) + list(feed_dict_list[idx]
-                                                        .items()))
-
+                    list(pos_enc_tables.items()) +
+                    list(feed_dict_list[idx].items()))
     return feed_dict_list if len(feed_dict_list) == count else None
 
 
@@ -400,10 +422,9 @@ def py_reader_provider_wrapper(data_reader, place):
         for batch_id, data in enumerate(data_reader()):
             data_input_dict, num_token = prepare_batch_input(
                 data, data_input_names, ModelHyperParams.eos_idx,
-                ModelHyperParams.eos_idx, ModelHyperParams.n_head,
-                ModelHyperParams.d_model)
-            total_dict = dict(data_input_dict.items())
-            yield [total_dict[item] for item in data_input_names]
+                ModelHyperParams.phone_pad_idx, ModelHyperParams.eos_idx,
+                ModelHyperParams.n_head, ModelHyperParams.d_model)
+            yield [data_input_dict[item] for item in data_input_names]
 
     return py_reader_provider
 
@@ -435,6 +456,7 @@ def test_context(exe, train_exe, dev_count):
                 ModelHyperParams.weight_sharing,
                 TrainTaskConfig.label_smooth_eps,
                 use_py_reader=args.use_py_reader,
+                beta=ModelHyperParams.beta,
                 is_test=True)
     test_prog = test_prog.clone(for_test=True)
     test_data = prepare_data_generator(
@@ -449,11 +471,14 @@ def test_context(exe, train_exe, dev_count):
         fluid.io.load_persistables(
             exe, TrainTaskConfig.ckpt_path, main_program=test_prog)
 
+    exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.use_experimental_executor = True
     build_strategy = fluid.BuildStrategy()
     test_exe = fluid.ParallelExecutor(
         use_cuda=TrainTaskConfig.use_gpu,
         main_program=test_prog,
         build_strategy=build_strategy,
+        exec_strategy=exec_strategy,
         share_vars_from=train_exe)
 
     def test(exe=test_exe, pyreader=pyreader):
@@ -467,10 +492,11 @@ def test_context(exe, train_exe, dev_count):
             data_generator = test_data()
         while True:
             try:
-                feed_dict_list = prepare_feed_dict_list(data_generator, False,
-                                                        dev_count)
-                outs = test_exe.run(fetch_list=[sum_cost.name, token_num.name],
-                                    feed=feed_dict_list)
+                feed_dict_list = prepare_feed_dict_list(
+                    data_generator, False, dev_count)
+                outs = test_exe.run(
+                    fetch_list=[sum_cost.name, token_num.name],
+                    feed=feed_dict_list)
             except (StopIteration, fluid.core.EOFException):
                 # The current pass is over.
                 if args.use_py_reader:
@@ -518,22 +544,13 @@ def train_loop(exe,
 
     # For faster executor
     exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.use_experimental_executor = True
     exec_strategy.num_iteration_per_drop_scope = int(args.fetch_steps)
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = False
-    build_strategy.enable_inplace = True
-
-    sum_cost.persistable = True
-    token_num.persistable = True
     # Since the token number differs among devices, customize gradient scale to
     # use token average cost among multi-devices. and the gradient scale is
     # `1 / token_number` for average cost.
     # build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
-    build_strategy.fuse_all_optimizer_ops = True
-
-    if num_trainers > 1 and args.use_py_reader and TrainTaskConfig.use_gpu:
-        dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog)
-        exec_strategy.num_threads = 1
 
     logging.info("begin executor")
     train_exe = fluid.ParallelExecutor(
@@ -550,13 +567,14 @@ def train_loop(exe,
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -((1. - TrainTaskConfig.label_smooth_eps) * np.log(
-        (1. - TrainTaskConfig.label_smooth_eps
-         )) + TrainTaskConfig.label_smooth_eps *
-                        np.log(TrainTaskConfig.label_smooth_eps / (
-                            ModelHyperParams.trg_vocab_size - 1) + 1e-20))
+        (1. - TrainTaskConfig.label_smooth_eps)) +
+                        TrainTaskConfig.label_smooth_eps *
+                        np.log(TrainTaskConfig.label_smooth_eps /
+                               (ModelHyperParams.trg_vocab_size - 1) + 1e-20))
 
     step_idx = 0
     init_flag = True
+
     logging.info("begin train")
     for pass_id in six.moves.xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
@@ -570,8 +588,8 @@ def train_loop(exe,
         batch_id = 0
         while True:
             try:
-                feed_dict_list = prepare_feed_dict_list(data_generator,
-                                                        init_flag, dev_count)
+                feed_dict_list = prepare_feed_dict_list(
+                    data_generator, init_flag, dev_count)
                 outs = train_exe.run(
                     fetch_list=[sum_cost.name, token_num.name]
                     if step_idx % args.fetch_steps == 0 else [],
@@ -596,11 +614,12 @@ def train_loop(exe,
                     else:
                         logging.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                            "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
-                            (step_idx, pass_id, batch_id, total_avg_cost,
-                             total_avg_cost - loss_normalizer,
-                             np.exp([min(total_avg_cost, 100)]),
-                             args.fetch_steps / (time.time() - avg_batch_time)))
+                            "normalized loss: %f, ppl: %f, speed: %.2f step/s"
+                            % (step_idx, pass_id, batch_id, total_avg_cost,
+                               total_avg_cost - loss_normalizer,
+                               np.exp([min(total_avg_cost, 100)
+                                       ]), args.fetch_steps /
+                               (time.time() - avg_batch_time)))
                         avg_batch_time = time.time()
 
                 if step_idx % TrainTaskConfig.save_freq == 0 and step_idx > 0:
@@ -629,12 +648,10 @@ def train_loop(exe,
             val_avg_cost, val_ppl = test()
             logging.info(
                 "epoch: %d, val avg loss: %f, val normalized loss: %f, val ppl: %f,"
-                " consumed %fs" % (pass_id, val_avg_cost,
-                                   val_avg_cost - loss_normalizer, val_ppl,
-                                   time_consumed))
+                " consumed %fs" % (pass_id, val_avg_cost, val_avg_cost -
+                                   loss_normalizer, val_ppl, time_consumed))
         else:
             logging.info("epoch: %d, consumed %fs" % (pass_id, time_consumed))
-
         if not args.enable_ce:
             fluid.io.save_persistables(
                 exe,
@@ -663,13 +680,10 @@ def train(args):
 
     if training_role == "PSERVER" or (not TrainTaskConfig.use_gpu):
         place = fluid.CPUPlace()
-        # the default setting of CPU_NUM in paddle framework is 1
-        dev_count = int(os.environ.get('CPU_NUM', 1))
+        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
     else:
-        check_cuda(TrainTaskConfig.use_gpu)
-        gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
-        place = fluid.CUDAPlace(gpu_id)
-        dev_count = get_device_num()
+        place = fluid.CUDAPlace(0)
+        dev_count = fluid.core.get_cuda_device_count()
 
     exe = fluid.Executor(place)
 
@@ -685,6 +699,7 @@ def train(args):
             sum_cost, avg_cost, predict, token_num, pyreader = transformer(
                 ModelHyperParams.src_vocab_size,
                 ModelHyperParams.trg_vocab_size,
+                ModelHyperParams.phone_vocab_size,
                 ModelHyperParams.max_length + 1,
                 ModelHyperParams.n_layer,
                 ModelHyperParams.n_head,
@@ -699,6 +714,7 @@ def train(args):
                 ModelHyperParams.postprocess_cmd,
                 ModelHyperParams.weight_sharing,
                 TrainTaskConfig.label_smooth_eps,
+                ModelHyperParams.beta,
                 ModelHyperParams.bos_idx,
                 use_py_reader=args.use_py_reader,
                 is_test=False)
@@ -721,10 +737,13 @@ def train(args):
                 optimizer = fluid.optimizer.SGD(0.003)
             optimizer.minimize(avg_cost)
 
+    if args.use_mem_opt:
+        fluid.memory_optimize(train_prog)
+
     if args.local:
         logging.info("local start_up:")
-        train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
-                   token_num, predict, pyreader)
+        train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
+                   avg_cost, token_num, predict, pyreader)
     else:
         if args.update_method == "nccl2":
             trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
