@@ -18,6 +18,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
+import numpy as np
 import logging
 logger = logging.getLogger(__name__)
 
@@ -93,11 +94,14 @@ class DetectionMAP(object):
         self.evaluate_difficult = evaluate_difficult
         self.reset()
 
-    def update(self, bbox, gt_box, gt_label, difficult):
+    def update(self, bbox, gt_box, gt_label, difficult=None):
         """
         Update metric statics from given prediction and ground
         truth infomations.
         """
+        if difficult is None:
+            difficult = np.zeros_like(gt_label)
+
         # record class gt count
         for gtl, diff in zip(gt_label, difficult):
             if self.evaluate_difficult or int(diff) == 0:

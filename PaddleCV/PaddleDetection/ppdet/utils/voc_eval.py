@@ -58,8 +58,11 @@ def bbox_eval(results,
         gt_boxes = t['gt_box'][0]
         gt_box_lengths = t['gt_box'][1][0]
         gt_labels = t['gt_label'][0]
-        difficults = t['is_difficult'][0]
-        assert len(gt_boxes) == len(gt_labels) == len(difficults)
+        assert len(gt_boxes) == len(gt_labels)
+        difficults = t['is_difficult'][0] if not evaluate_difficult \
+                            else None
+        if not evaluate_difficult:
+            assert len(gt_labels) == len(difficults)
 
         bbox_idx = 0
         gt_box_idx = 0
@@ -69,7 +72,8 @@ def bbox_eval(results,
             bbox = bboxes[bbox_idx: bbox_idx + bbox_num]
             gt_box = gt_boxes[gt_box_idx: gt_box_idx + gt_box_num]
             gt_label = gt_labels[gt_box_idx: gt_box_idx + gt_box_num]
-            difficult = difficults[gt_box_idx: gt_box_idx + gt_box_num]
+            difficult = None if difficults is None else \
+                        difficults[gt_box_idx: gt_box_idx + gt_box_num]
             detection_map.update(bbox, gt_box, gt_label, difficult)
             bbox_idx += bbox_num
             gt_box_idx += gt_box_num
