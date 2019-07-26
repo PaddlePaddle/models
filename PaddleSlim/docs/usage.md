@@ -29,7 +29,7 @@
 - [量化使用说明](#21-量化训练)
 - [剪裁使用说明](#22-模型通道剪裁)
 - [蒸馏使用说明](#23-蒸馏)
-- [轻量级模型结构搜索使用说明](#24-轻量级模型结构搜索)
+- [轻量级模型结构搜索使用说明](#24-基于硬件的轻量级模型结构搜索)
 
 
 ## 1. PaddleSlim通用功能使用介绍
@@ -518,15 +518,15 @@ distillers:
 - **distillation_loss_weight:** 当前定义的loss对应的权重。默认为1.0
 
 
-### 2.4 轻量级模型结构搜索
+### 2.4 基于硬件的轻量级模型结构搜索
 
-该功能基于模拟退火算法，实现了轻量级模型结构的快速搜索，简称为LightNAS(Light Network Architecture Search).
+该功能基于模拟退火算法，实现了基于不同硬件的轻量级模型结构的快速搜索，简称为LightNAS (Light Network Architecture Search).
 
-使用该功能，需要用户做两个工作：
+使用该功能，需要用户做三个工作：
 
 - 定义搜索空间
+- （可选）基于不同的硬件，例如Android/iOS移动端、Android开发板等，配置延时评估器
 - 配置LightNASStrategy,并启动压缩任务
-- （可选）基于 Android/iOS 移动端、开发板等硬件平台，配置延时评估器
 
 #### 2.4.1 定义搜索空间
 
@@ -561,8 +561,17 @@ com_pass = Compressor(
     search_space=space)
 ```
 
+#### 2.4.2 (可选) 基于不同硬件，配置延时评估器
 
-#### 2.4.2 配置LightNASStrategy
+用户需要根据自己定义的搜索空间，类似[LightNASSpace类](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)中的get_all_ops函数，重写获取搜索空间所有可能ops的方法。
+
+用户需要根据其搜索空间所有可能的op，生成延时评估器表格。延时评估器表格一般存放在类似[LightNASSpace类](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)里面的LATENCY_LOOKUP_TABLE_PATH=latency_lookup_table.txt路径下。后面会详细介绍延时评估器表格的生成方式。
+
+用户需要通过继承[SearchSpace类](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/fluid/contrib/slim/nas/search_space.py#L19)并重写下面方法：
+
+- get_model_latency: program对应搜索到的某一个网络结构。使用该功能，用户能够根据不同硬件提前生成延时评估器表格，然后查询获取各个搜索到的网络的延时。
+
+#### 2.4.3 配置LightNASStrategy
 
 在配置文件中，配置搜索策略方式如下：
 ```
@@ -585,7 +594,7 @@ strategies:
 - **class:** 策略类的名称，轻量级模型结构搜索策略请设置为LightNASStrategy。
 - **controller:** 用于搜索的controller, 需要在当前配置文件提前注册，下文会详细介绍其注册方法。
 - **target_flops:** FLOPS限制，搜索出的网络结构的FLOPS不超过该数值。
-- **target_latency** 评估延时限制，搜索出的网络结构评估的延时不超过该数值，0 表示不限制。
+- **target_latency** 评估延时限制，搜索出的网络结构评估的延时不超过该数值。0 表示不限制，不会启动基于硬件的网络搜索。
 - **end_epoch:** 当前client结束搜索策略的epoch。
 - **retrain_epoch:** 在评估模型结构性能之前，需要训练的epoch数量。(end_epoch-0)/retrain_epoch为当前client搜索出的网络结构的数量。
 - **metric_name：** 评估模型性能的指标。
@@ -609,7 +618,7 @@ controllers:
 - **init_temperature:** float类型；初始化温度。
 - **max_iter_number:** int类型；在得到一个满足FLOPS限制的tokens之前，最多尝试的次数。
 
-#### 2.4.3 分布式搜索
+#### 2.4.4 分布式搜索
 
 单机多任务：
 
@@ -627,45 +636,68 @@ controllers:
 
 >注意： 在重启controller server时，lim_LightNASStrategy_controller_server.socke文件可能不会被及时清除，所以需要用户手动删除该文件。在后续版本中，会修复完善该问题。
 
-#### 2.4.4 配置延时评估器
+#### 2.4.5 延时评估器生成方式
 
-1. 基于 Paddle 预测库编写获取 op 延时的单测 `get_{op}_latency`，并将其执行文件放置在硬件平台中。
+1. 延时评估器表格的标准形式
 
-    对于不同 op 的单测程序，替换 `get_{op}_latency` 中的 `{op}` 为该 op 名称。所有单测均输出一个表示平均延时的浮点数，常用 op 输入参数如下：
+   延时评估器表格一般存放在一个txt文件中。对于不同的硬件平台，我们都会根据搜索空间中的所有可能ops生成延时评估器表格。延时评估器表格中的每一行都对应一个op，其内容形式如下：
 
-        - `get_activation_latency cluster threads test_iter active_type n_in c_in h_in w_in`
-        - `get_batch_norm_latency cluster threads test_iter active_type n_in c_in h_in w_in`
-        - `get_conv_latency cluster threads test_iter flag_bias flag_relu n_in c_in h_in w_in c_out group kernel padding stride dilation`
-        - `get_eltwise_latency cluster threads test_iter eltwise_type n_in c_in h_in w_in`
-        - `get_pooling_latency cluster threads test_iter flag_global_pooling n_in c_in h_in w_in kernel padding stride ceil_mode pool_type`
-        - `get_softmax_latency cluster threads test_iter axis n_in c_in h_in w_in`
+       - `conv flag_bias flag_relu n_in c_in h_in w_in c_out group kernel padding stride dilation latency`
+       - `activation active_type n_in c_in h_in w_in latency`
+       - `batch_norm active_type n_in c_in h_in w_in latency`
+       - `eltwise eltwise_type n_in c_in h_in w_in latency`
+       - `pooling flag_global_pooling n_in c_in h_in w_in kernel padding stride ceil_mode pool_type latency`
+       - `softmax axis n_in c_in h_in w_in latency`
 
-    参数含义如下：
+   其中conv、activation、batch_norm、eltwise、pooling、softmax分别代表卷积运算、激活函数、batch normalization、elementwise运算、池化以及softmax运算。目前主要支持了这些ops。参数含义如下：
 
-        - cluster (int) - 核数（0：大核，1：小核，默认：大核）。
-        - threads (int) - 线程数（最大为手机支持的线程数）。
-        - test_iter (int) - 执行单测次数。
-        - active_type (string) - 激活函数类型，包含：relu, prelu, sigmoid, relu6, elu, brelu, leaky_relu。
-        - eltwise_type (int) - 按元素操作算子类型，其中 1 表示 elementwise_mul，2 表示elementwise_add，3 表示 elementwise_max。
-        - pool_type (int) - 池化类型，其中 1 表示 pooling_max，2 表示 pooling_average_include_padding，3 表示 pooling_average_exclude_padding。
-        - flag_bias (int) - 是否有 bias（0：无，1：有）。
-        - flag_global_pooling (int) - 是否为全局池化（0：不是，1：是）。
-        - flag_relu (int) - 是否有 relu（0：无，1：有）。
-        - n_in (int) - 输入 Tensor 的批尺寸。
-        - c_in (int) - 输入 Tensor 的通道 (channel) 数。
-        - h_in (int) - 输入 Tensor 的特征高度。
-        - w_in (int) - 输入 Tensor 的特征宽度。
-        - c_out (int) - 输出 Tensor 的通道 (channel) 数。
-        - groups (int) - 卷积二维层（Conv2D Layer）的组数。
-        - kernel (int) - 卷积核大小。
-        - padding (int) - 填充 (padding) 大小。
-        - stride (int) - 步长 (stride) 大小。
-        - dilation (int) - 膨胀 (dilation) 大小。
-        - axis (int) - 执行 softmax 计算的维度索引，应该在 [−1，rank − 1] 范围内，其中 rank 是输入变量的秩。
-        - ceil_mode (int) - 是否用 ceil 函数计算输出高度和宽度。0 表示使用 floor 函数，1 表示使用 ceil 函数。
+       - active_type (string) - 激活函数类型，包含：relu, prelu, sigmoid, relu6, tanh。
+       - eltwise_type (int) - 按元素操作算子类型，其中 1 表示 elementwise_mul，2 表示elementwise_add，3 表示 elementwise_max。
+       - pool_type (int) - 池化类型，其中 1 表示 pooling_max，2 表示 pooling_average_include_padding，3 表示 pooling_average_exclude_padding。
+       - flag_bias (int) - 是否有 bias（0：无，1：有）。
+       - flag_global_pooling (int) - 是否为全局池化（0：不是，1：是）。
+       - flag_relu (int) - 是否有 relu（0：无，1：有）。
+       - n_in (int) - 输入 Tensor 的批尺寸 (batch size)。
+       - c_in (int) - 输入 Tensor 的通道 (channel) 数。
+       - h_in (int) - 输入 Tensor 的特征高度。
+       - w_in (int) - 输入 Tensor 的特征宽度。
+       - c_out (int) - 输出 Tensor 的通道 (channel) 数。
+       - groups (int) - 卷积二维层（Conv2D Layer）的组数。
+       - kernel (int) - 卷积核大小。
+       - padding (int) - 填充 (padding) 大小。
+       - stride (int) - 步长 (stride) 大小。
+       - dilation (int) - 膨胀 (dilation) 大小。
+       - axis (int) - 执行 softmax 计算的维度索引，应该在 [−1，rank − 1] 范围内，其中 rank 是输入变量的秩。
+       - ceil_mode (int) - 是否用 ceil 函数计算输出高度和宽度。0 表示使用 floor 函数，1 表示使用 ceil 函数。
+       - latency (float) - 当前op的延时时间
 
-    对于 Android 平台和 arm-linux 开发板，把单测程序放在 `/data/local/tmp/bin`。
+2. 不同硬件平台延时评估器的生成方法
 
-2. 运行 `python get_latency_lookup_table.py` 获取当前搜索空间的延时评估器所需数据。
+    Android系统:
+    
+    用户从这里下载Android系统的延时评估器生成工具，连接硬件平台，使用sh push2android.sh把必要的文件放置到硬件平台，然后运行 `python get_latency_lookup_table.py` 就可以获取当前搜索空间的延时评估器表格`latency_lookup_table.txt`。
 
-    运行一段时间将生成 `latency_lookup_table.txt`，`light_nas_space.py` 中已默认配置该文件用作模型延时评估。
+    为了方便用户开发，我们也介绍一下在`get_latency_lookup_table.py`里调用的延时评估器生成工具的细节。我们基于[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)预测库编写、编译并获取每个op延时单测的二进制文件。这些二进制文件都被命名为 get_{op}_latency，其中对于不同 op 的单测程序，替换 get_{op}_latency 中的 {op} 为该 op 名称。这些单测文件的调用方法如下：
+
+       - `get_activation_latency threads test_iter active_type n_in c_in h_in w_in`
+       - `get_batch_norm_latency threads test_iter active_type n_in c_in h_in w_in`
+       - `get_conv_latency threads test_iter flag_bias flag_relu n_in c_in h_in w_in c_out group kernel padding stride dilation`
+       - `get_eltwise_latency threads test_iter eltwise_type n_in c_in h_in w_in`
+       - `get_pooling_latency threads test_iter flag_global_pooling n_in c_in h_in w_in kernel padding stride ceil_mode pool_type`
+       - `get_softmax_latency threads test_iter axis n_in c_in h_in w_in`
+
+    可以看出，他们仅在各个op的参数前加入了两个参数：
+       - threads (int) - 线程数（最大为手机支持的线程数）。
+       - test_iter (int) - 执行单测次数。
+
+    所有单测均输出一个表示平均延时的浮点数。用户如果有其他op的开发需求，可以根据Paddle Mobile的[op单测](https://github.com/PaddlePaddle/paddle-mobile/tree/develop/test/operators)进行开发，基于android端的编译方法可以参见这里。
+
+    iOS系统：
+
+    用户从这里下载iOS系统的延时评估器生成工具。与Android系统不同的是，在使用延时评估器生成工具之前，用户需要把从get_all_ops里面得到的搜索空间所有ops的参数写入到一个txt文件中。该文件与延时评估器表格类似，每行内容对应一个op，仅仅缺少该op的延时数据。在Light NAS中，我们将它命名为`lightnas_ops.txt`。
+
+    用户需要安装Xcode，连接硬件平台，将上述准备好的`lightnas_ops.txt`文件拖入工程，运行OpLatency，生成手机app的同时，程序会生成一个当前搜索空间的延时评估器表格`latency_lookup_table.txt`。
+
+    为了方便用户开发，我们也介绍一下iOS系统延时评估器生成工具的细节。我们基于[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)预测库编写op的延时单测方法。这些方法同样以get_{op}_latency命名。参数与上述Android系统op延时单测的各个方法参数一致。
+
+    值得注意的是：与Android系统不一样的是，Paddle Mobile目前不支持op的单测，我们需要编写类似这里的op延时单测源文件和头文件，然后放置到Paddle Mobile的src目录下，进行编译打包生成libpaddle-mobile.a文件，然后再在OpLatency工程里使用。
