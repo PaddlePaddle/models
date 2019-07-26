@@ -39,6 +39,21 @@ def bbox_eval(results,
               map_type='11point',
               is_bbox_normalized=False,
               evaluate_difficult=False):
+    """
+    Bounding box evaluation for VOC dataset
+
+    Args:
+        results (list): prediction bounding box results.
+        class_num (int): evaluation class number.
+        overlap_thresh (float): the postive threshold of 
+                        bbox overlap
+        map_type (string): method for mAP calcualtion,
+                        can only be '11point' or 'integral'
+        is_bbox_normalized (bool): whether bbox is normalized
+                        to range [0, 1].
+        evaluate_difficult (bool): whether to evaluate 
+                        difficult gt bbox.
+    """
     assert 'bbox' in results[0]
     logger.info("Start evaluate...")
 
