@@ -30,19 +30,7 @@ class GTrainer():
             self.pred_fake, self.cls_fake = model.network_D(
                 self.fake_img, cfg, name="d_main")
             #wgan
-            if cfg.gan_mode == "wgan":
-                self.g_loss_fake = -1 * fluid.layers.mean(self.pred_fake)
-            #lsgan
-            elif cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_fake,
-                    shape=self.pred_fake.shape,
-                    value=1,
-                    dtype='float32')
-                self.g_loss_fake = fluid.layers.mean(
-                    fluid.layers.square(
-                        fluid.layers.elementwise_sub(
-                            x=self.pred_fake, y=ones)))
+            self.g_loss_fake = -1 * fluid.layers.mean(self.pred_fake)
 
             cls_shape = self.cls_fake.shape
             self.cls_fake = fluid.layers.reshape(
@@ -87,11 +75,9 @@ class DTrainer():
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
             model = StarGAN_model()
-            clone_image_real = []
-            for b in self.program.blocks:
-                if b.has_var('image_real'):
-                    clone_image_real = b.var('image_real')
-                    break
+
+            image_real = fluid.layers.data(
+                name='image_real', shape=image_real.shape, dtype='float32')
             self.fake_img = model.network_G(
                 image_real, label_trg, cfg, name="g_main")
             self.pred_real, self.cls_real = model.network_D(
@@ -106,30 +92,15 @@ class DTrainer():
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     self.cls_real, label_org)) / cfg.batch_size
             #wgan
-            if cfg.gan_mode == "wgan":
-                self.d_loss_fake = fluid.layers.mean(self.pred_fake)
-                self.d_loss_real = -1 * fluid.layers.mean(self.pred_real)
-                self.d_loss_gp = self.gradient_penalty(
-                    getattr(model, "network_D"),
-                    clone_image_real,
-                    self.fake_img,
-                    cfg=cfg,
-                    name="d_main")
-                self.d_loss = self.d_loss_real + self.d_loss_fake + self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
-            #lsgan
-            elif cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_real,
-                    shape=self.pred_real.shape,
-                    value=1,
-                    dtype='float32')
-                self.d_loss_real = fluid.layers.mean(
-                    fluid.layers.square(
-                        fluid.layers.elementwise_sub(
-                            x=self.pred_real, y=ones)))
-                self.d_loss_fake = fluid.layers.mean(
-                    fluid.layers.square(x=self.pred_fake))
-                self.d_loss = self.d_loss_real + self.d_loss_fake + cfg.lambda_cls * self.d_loss_cls
+            self.d_loss_fake = fluid.layers.mean(self.pred_fake)
+            self.d_loss_real = -1 * fluid.layers.mean(self.pred_real)
+            self.d_loss_gp = self.gradient_penalty(
+                getattr(model, "network_D"),
+                image_real,
+                self.fake_img,
+                cfg=cfg,
+                name="d_main")
+            self.d_loss = self.d_loss_real + self.d_loss_fake + self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
 
             self.d_loss_real.persistable = True
             self.d_loss_fake.persistable = True
@@ -168,13 +139,8 @@ class DTrainer():
             shape = [a.shape[0]]
             alpha = fluid.layers.uniform_random_batch_size_like(
                 input=a, shape=shape, min=0.0, max=1.0)
-            a.stop_gradient = True
-            b.stop_gradient = True
-            inner1 = fluid.layers.elementwise_mul(a, alpha, axis=0)
-            inner2 = fluid.layers.elementwise_mul(b, (1.0 - alpha), axis=0)
-            inner1.stop_gradient = True
-            inner2.stop_gradient = True
-            inner = inner1 + inner2
+
+            inner = b * (1.0 - alpha) + a * alpha
             return inner
 
         x = _interpolate(real, fake)

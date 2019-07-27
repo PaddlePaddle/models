@@ -67,6 +67,66 @@ def init_checkpoints(cfg, exe, trainer, name):
     sys.stdout.flush()
 
 
+### the initialize checkpoint is one file named checkpoint.pdparams
+def init_from_checkpoint(args, exe, trainer, name):
+    if not os.path.exists(args.init_model):
+        raise Warning("the checkpoint path does not exist.")
+        return False
+
+    fluid.io.load_persistables(
+        executor=exe,
+        dirname=os.path.join(args.init_model, name),
+        main_program=trainer.program,
+        filename="checkpoint.pdparams")
+
+    print("finish initing model from checkpoint from %s" % (args.init_model))
+
+    return True
+
+
+### save the parameters of generator to one file
+def save_param(args, exe, program, dirname, var_name="generator"):
+
+    param_dir = os.path.join(args.output, 'infer_vars')
+
+    if not os.path.exists(param_dir):
+        os.makedirs(param_dir)
+
+    def _name_has_generator(var):
+        res = (fluid.io.is_parameter(var) and var.name.startswith(var_name))
+        print(var.name, res)
+        return res
+
+    fluid.io.save_vars(
+        exe,
+        os.path.join(param_dir, dirname),
+        main_program=program,
+        predicate=_name_has_generator,
+        filename="params.pdparams")
+    print("save parameters at %s" % (os.path.join(param_dir, dirname)))
+
+    return True
+
+
+### save the checkpoint to one file
+def save_checkpoint(epoch, args, exe, program, dirname):
+
+    checkpoint_dir = os.path.join(args.output, 'checkpoints', str(epoch))
+
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+
+    fluid.io.save_persistables(
+        exe,
+        os.path.join(checkpoint_dir, dirname),
+        main_program=program,
+        filename="checkpoint.pdparams")
+
+    print("save checkpoint at %s" % (os.path.join(checkpoint_dir, dirname)))
+
+    return True
+
+
 def save_test_image(epoch,
                     cfg,
                     exe,

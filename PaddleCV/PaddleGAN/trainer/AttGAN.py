@@ -51,12 +51,9 @@ class GTrainer():
             self.g_loss_fake.persistable = True
             self.g_loss_rec.persistable = True
             self.g_loss_cls.persistable = True
-            if cfg.epoch <= 100:
-                lr = cfg.g_lr
-            else:
-                lr = fluid.layers.piecewise_decay(
-                    boundaries=[99 * step_per_epoch],
-                    values=[cfg.g_lr, cfg.g_lr * 0.1], )
+            lr = fluid.layers.piecewise_decay(
+                boundaries=[99 * step_per_epoch],
+                values=[cfg.g_lr, cfg.g_lr * 0.1])
             vars = []
             for var in self.program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith(
@@ -76,11 +73,6 @@ class DTrainer():
         lr = cfg.d_lr
         with fluid.program_guard(self.program):
             model = AttGAN_model()
-            clone_image_real = []
-            for b in self.program.blocks:
-                if b.has_var('image_real'):
-                    clone_image_real = b.var('image_real')
-                    break
             self.fake_img, _ = model.network_G(
                 image_real, label_org, label_trg_, cfg, name="generator")
             self.pred_real, self.cls_real = model.network_D(
@@ -96,7 +88,7 @@ class DTrainer():
                 self.d_loss_real = -1 * fluid.layers.reduce_mean(self.pred_real)
                 self.d_loss_gp = self.gradient_penalty(
                     model.network_D,
-                    clone_image_real,
+                    image_real,
                     self.fake_img,
                     cfg=cfg,
                     name="discriminator")
@@ -114,7 +106,13 @@ class DTrainer():
                             x=self.pred_real, y=ones)))
                 self.d_loss_fake = fluid.layers.mean(
                     fluid.layers.square(x=self.pred_fake))
-                self.d_loss = self.d_loss_real + self.d_loss_fake + self.d_loss_cls
+                self.d_loss_gp = self.gradient_penalty(
+                    model.network_D,
+                    image_real,
+                    None,
+                    cfg=cfg,
+                    name="discriminator")
+                self.d_loss = self.d_loss_real + self.d_loss_fake + 1.0 * self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
 
             self.d_loss_real.persistable = True
             self.d_loss_fake.persistable = True
@@ -128,12 +126,9 @@ class DTrainer():
                     vars.append(var.name)
             self.param = vars
 
-            if cfg.epoch <= 100:
-                lr = cfg.d_lr
-            else:
-                lr = fluid.layers.piecewise_decay(
-                    boundaries=[99 * step_per_epoch],
-                    values=[cfg.g_lr, cfg.g_lr * 0.1], )
+            lr = fluid.layers.piecewise_decay(
+                boundaries=[99 * step_per_epoch],
+                values=[cfg.g_lr, cfg.g_lr * 0.1])
             optimizer = fluid.optimizer.Adam(
                 learning_rate=lr, beta1=0.5, beta2=0.999, name="net_D")
 
@@ -141,14 +136,21 @@ class DTrainer():
 
     def gradient_penalty(self, f, real, fake=None, cfg=None, name=None):
         def _interpolate(a, b=None):
+            if b is None:
+                beta = fluid.layers.uniform_random_batch_size_like(
+                    input=a, shape=a.shape, min=0.0, max=1.0)
+                mean = fluid.layers.reduce_mean(
+                    a, range(len(a.shape)), keep_dim=True)
+                input_sub_mean = fluid.layers.elementwise_sub(a, mean, axis=0)
+                var = fluid.layers.reduce_mean(
+                    fluid.layers.square(input_sub_mean),
+                    range(len(a.shape)),
+                    keep_dim=True)
+                b = beta * fluid.layers.sqrt(var) * 0.5 + a
             shape = [a.shape[0]]
             alpha = fluid.layers.uniform_random_batch_size_like(
                 input=a, shape=shape, min=0.0, max=1.0)
-            tmp = fluid.layers.elementwise_mul(
-                fluid.layers.elementwise_sub(b, a), alpha, axis=0)
-            alpha.stop_gradient = True
-            tmp.stop_gradient = True
-            inner = fluid.layers.elementwise_add(a, tmp, axis=0)
+            inner = (b - a) * alpha + a
             return inner
 
         x = _interpolate(real, fake)
