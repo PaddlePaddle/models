@@ -680,7 +680,7 @@ controllers:
     - 进入工具目录 Android_demo，命令行输入 sh push2android.sh, 把必要的文件放置到硬件平台；
     - 在 models/PaddleSlim/light_nas 目录下运行 `python get_latency_lookup_table.py` 就可以获取当前搜索空间的延时评估器表格`latency_lookup_table.txt`。
 
-    - 备注：我们基于[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)预测库编写，编译并获取重要op单测延时、网络模型延时的二进制文件。重要op单测延时的二进制文件都被命名为 get_{op}_latency，其中对于不同 op 的单测程序，替换 get_{op}_latency 中的 {op} 为该 op 名称。所有单测均输出一个表示平均延时的浮点数。这些单测文件的调用方法如下：
+    - 备注：我们基于[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)预测库编写，编译并获取重要op单测延时、网络模型延时的二进制文件。重要op单测延时的二进制文件都被命名为 `get_{op}_latency`，其中对于不同 op 的单测程序，替换 `get_{op}_latency` 中的 {op} 为该 op 名称。所有单测均输出一个表示平均延时的浮点数。这些单测文件的调用方法如下：
 
        - `./get_activation_latency "threads test_iter active_type n_in c_in h_in w_in"`
        - `./get_batch_norm_latency "threads test_iter active_type n_in c_in h_in w_in"`
