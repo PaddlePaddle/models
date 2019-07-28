@@ -694,22 +694,24 @@ controllers:
        - threads (int) - 线程数（最大为手机支持的线程数）；
        - test_iter (int) - 执行单测次数。
 
-    我们同样提供了测试整个模型延时的二进制文件，命名为get_net_latency，调用方法如下：
+    我们同样提供了测试整个模型延时的二进制文件，命名为get_net_latency，它返回的是整个模型的延时。调用方法如下：
        
-       - `get_net_latency model_path threads test_iter`
+       - `./get_net_latency model_path threads test_iter`
    
-    其中 model_path 是保存 PaddlePaddle 模型的路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)将参数保存为单独的文件。
+    其中 model_path 是保存 PaddlePaddle 模型的路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)将参数保存为单独的文件。如何单独使用这些二进制文件可以参看[这里](https://github.com/PaddlePaddle/paddle-mobile/blob/develop/doc/development_android.md)或者`get_latency_lookup_table.py`里面的类似方法。
 
-    备注2：用户如果有其他 op 的开发需求，可以根据 Paddle Mobile 的[op单测](https://github.com/PaddlePaddle/paddle-mobile/tree/develop/test/operators)进行开发，基于android端的编译方法可以参见[这里](https://github.com/PaddlePaddle/paddle-mobile/blob/develop/doc/development_android.md)，欢迎大家贡献代码。
+    备注2：用户如果有其他 op 的开发需求，可以根据 Paddle Mobile 的[op单测](https://github.com/PaddlePaddle/paddle-mobile/tree/develop/test/operators)进行开发，基于android端的编译方法可以参见[这里](https://github.com/PaddlePaddle/paddle-mobile/blob/develop/doc/development_android.md)，欢迎大家贡献代码。我们的重要 op 的单测代码可以在[这里](http://172.24.166.70:8886:android_op_test.zip)下载,解压放置到paddle-mobile/tree/develop/test/operators目录，然后修改 test 路径下的 CMakeList.txt 进行编译即可生成所需的二进制文件。
 
     iOS系统：
 
-    - 用户从[这里](http://172.24.166.70:8886:OpLatency.zip)下载iOS系统的延时评估器生成工具;
+    - 用户从[这里](http://172.24.166.70:8886:OpLatency.zip)下载iOS系统的延时评估器生成工具 OpLatency;
     - 与Android系统不同的是，在使用延时评估器生成工具之前，用户需要把从 models/PaddleSlim/light_nas/light_nas_space.py 中的 get_all_ops 函数里面得到的搜索空间所有 ops 参数写入到一个 .txt 文件中。该文件与延时评估器表格类似，每行内容对应一个 op，仅仅缺少该 op 的延时数据。在 Light NAS 中，我们将它命名为`lightnas_ops.txt`;
     - 用户需要安装Xcode，连接 iOS 硬件平台，目前不支持虚拟设备。注意选中项目名称 OpLatency，在 General-->Signing 中修改 developer 信息。
     - 将上述准备好的 `lightnas_ops.txt` 文件拖入工程。注意根据提示勾选 `Add to targets`。
     - 在 ViewController 我们调用了 OCWrapper 类里面的 get_latency_lookup_table 方法，修改其输入输出参数为`lightnas_ops.txt`与`latency_lookup_table.txt`;
-    - 运行OpLatency，生成手机 APP 的同时，程序会在 APP 沙盒中生成一个当前搜索空间的延时评估器表格`latency_lookup_table.txt`;
+    - 运行 OpLatency，生成手机 APP 的同时，程序会在 APP 沙盒中生成一个当前搜索空间的延时评估器表格`latency_lookup_table.txt`;
     - 点击 Windows-->Devices and Simulators-->OpLatency->Download Container 将沙盒下载到 PC，右键点击显示包内容，在 AppData-->Documents 即能找到延时评估器表格。
 
     备注1：我们同样提供了测试整个模型延时的方法。可以在ViewController 我们调用了 OCWrapper 类里面的 get_net_latency 方法。其中 get_net_latency 的参数为 model 和 params 路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)>将所有参数打包存储。
+
+    备注2：用户如果有其他 op 的开发需求，可以根据我们[这里](http://172.24.166.70:8886:ios_op_test.zip)提供的代码示例进行开发。使用方法：解压并在命令行运行 sh run.sh 即可生成 OpLatency 里面所需的打包文件 libpaddle-mobile.a 和头文件 ios_op_test.h。
