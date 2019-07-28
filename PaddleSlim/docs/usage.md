@@ -690,6 +690,7 @@ controllers:
        - `./get_softmax_latency "threads test_iter axis n_in c_in h_in w_in"`
 
     可以看出，他们传入了一个字符串参数，这些字符串参数除开最初始的`threads`和`test_iter`以外，都与延时评估器表格中各个 op 的参数一样，
+      
        - threads (int) - 线程数（最大为手机支持的线程数）；
        - test_iter (int) - 执行单测次数。
 
@@ -697,9 +698,9 @@ controllers:
        
        - `get_net_latency model_path threads test_iter`
    
-    - 其中 model_path 是保存 PaddlePaddle 模型的路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)将参数保存为单独的文件。
+    其中 model_path 是保存 PaddlePaddle 模型的路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)将参数保存为单独的文件。
 
-    - 注意：用户如果有其他 op 的开发需求，可以根据 Paddle Mobile 的[op单测](https://github.com/PaddlePaddle/paddle-mobile/tree/develop/test/operators)进行开发，基于android端的编译方法可以参见[这里](https://github.com/PaddlePaddle/paddle-mobile/blob/develop/doc/development_android.md)，欢迎大家贡献代码。
+    - 备注：用户如果有其他 op 的开发需求，可以根据 Paddle Mobile 的[op单测](https://github.com/PaddlePaddle/paddle-mobile/tree/develop/test/operators)进行开发，基于android端的编译方法可以参见[这里](https://github.com/PaddlePaddle/paddle-mobile/blob/develop/doc/development_android.md)，欢迎大家贡献代码。
 
     iOS系统：
 
@@ -713,4 +714,4 @@ controllers:
 
     我们同样提供了测试整个模型延时的方法。可以在ViewController 我们调用了 OCWrapper 类里面的 get_net_latency 方法。
 
-    - 注意：get_net_latency 的参数为 model 和 params 路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)>将所有参数打包存储。
+    - 备注：get_net_latency 的参数为 model 和 params 路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)>将所有参数打包存储。
