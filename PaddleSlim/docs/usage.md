@@ -680,7 +680,7 @@ controllers:
     - 进入工具目录 Android_demo，命令行输入 sh push2android.sh, 把必要的文件放置到硬件平台；
     - 在 models/PaddleSlim/light_nas 目录下运行 `python get_latency_lookup_table.py` 就可以获取当前搜索空间的延时评估器表格`latency_lookup_table.txt`。
 
-    - 备注：我们基于[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)预测库编写，编译并获取重要op单测延时、网络模型延时的二进制文件。重要op单测延时的二进制文件都被命名为 `get_{op}_latency`，其中对于不同 op 的单测程序，替换 `get_{op}_latency` 中的 {op} 为该 op 名称。所有单测均输出一个表示平均延时的浮点数。这些单测文件的调用方法如下：
+    备注1：我们基于[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)预测库编写，编译并获取重要op单测延时、网络模型延时的二进制文件。重要op单测延时的二进制文件都被命名为 `get_{op}_latency`，其中对于不同 op 的单测程序，替换 `get_{op}_latency` 中的 {op} 为该 op 名称。所有单测均输出一个表示平均延时的浮点数。这些单测文件的调用方法如下：
 
        - `./get_activation_latency "threads test_iter active_type n_in c_in h_in w_in"`
        - `./get_batch_norm_latency "threads test_iter active_type n_in c_in h_in w_in"`
@@ -700,7 +700,7 @@ controllers:
    
     其中 model_path 是保存 PaddlePaddle 模型的路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)将参数保存为单独的文件。
 
-    - 备注：用户如果有其他 op 的开发需求，可以根据 Paddle Mobile 的[op单测](https://github.com/PaddlePaddle/paddle-mobile/tree/develop/test/operators)进行开发，基于android端的编译方法可以参见[这里](https://github.com/PaddlePaddle/paddle-mobile/blob/develop/doc/development_android.md)，欢迎大家贡献代码。
+    备注2：用户如果有其他 op 的开发需求，可以根据 Paddle Mobile 的[op单测](https://github.com/PaddlePaddle/paddle-mobile/tree/develop/test/operators)进行开发，基于android端的编译方法可以参见[这里](https://github.com/PaddlePaddle/paddle-mobile/blob/develop/doc/development_android.md)，欢迎大家贡献代码。
 
     iOS系统：
 
@@ -712,6 +712,4 @@ controllers:
     - 运行OpLatency，生成手机 APP 的同时，程序会在 APP 沙盒中生成一个当前搜索空间的延时评估器表格`latency_lookup_table.txt`;
     - 点击 Windows-->Devices and Simulators-->OpLatency->Download Container 将沙盒下载到 PC，右键点击显示包内容，在 AppData-->Documents 即能找到延时评估器表格。
 
-    我们同样提供了测试整个模型延时的方法。可以在ViewController 我们调用了 OCWrapper 类里面的 get_net_latency 方法。
-
-    - 备注：get_net_latency 的参数为 model 和 params 路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)>将所有参数打包存储。
+    备注1：我们同样提供了测试整个模型延时的方法。可以在ViewController 我们调用了 OCWrapper 类里面的 get_net_latency 方法。其中 get_net_latency 的参数为 model 和 params 路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)>将所有参数打包存储。
