@@ -21,6 +21,9 @@ import multiprocessing
 
 import paddle.fluid as fluid
 
+import sys
+sys.path.append('..')
+
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.utils.cli import ArgsParser

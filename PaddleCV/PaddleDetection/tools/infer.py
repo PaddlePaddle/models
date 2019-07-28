@@ -24,6 +24,9 @@ from PIL import Image
 
 from paddle import fluid
 
+import sys
+sys.path.append('..')
+
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader

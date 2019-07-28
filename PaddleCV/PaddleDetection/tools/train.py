@@ -35,7 +35,11 @@ set_paddle_flags(
     FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
 )
 
+
 from paddle import fluid
+
+import sys
+sys.path.append('..')
 
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader

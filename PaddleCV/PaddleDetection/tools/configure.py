@@ -20,6 +20,9 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 import yaml
 
+import sys
+sys.path.append('..')
+
 from ppdet.core.workspace import get_registered_modules, load_config
 from ppdet.utils.cli import ColorTTY
 
