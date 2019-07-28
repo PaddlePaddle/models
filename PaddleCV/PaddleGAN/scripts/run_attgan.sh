@@ -1,0 +1,1 @@
+python train.py --model_net AttGAN --dataset celeba --crop_size 170 --image_size 128 --train_list ./data/celeba/list_attr_celeba.txt  --gan_mode wgan  --batch_size 32 --print_freq 1 --num_discriminator_time 5 --epoch 120 >log_out 2>log_err

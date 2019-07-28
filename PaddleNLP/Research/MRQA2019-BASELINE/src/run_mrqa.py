@@ -241,7 +241,7 @@ def train(args):
     if args.random_seed is not None:
         startup_prog.random_seed = args.random_seed
 
-    if args.do_train: 
+    if args.do_train:
         build_strategy = fluid.BuildStrategy()
         print("estimating runtime number of examples...")
         num_train_examples = processor.estimate_runtime_examples(args.train_file, sample_rate=args.sample_rate)
@@ -277,7 +277,7 @@ def train(args):
                     pyreader_name='train_reader',
                     bert_config=bert_config,
                     is_training=True)
-                
+
                 train_pyreader.decorate_tensor_provider(train_data_generator)
 
                 scheduled_lr = optimization(
@@ -291,9 +291,9 @@ def train(args):
                     scheduler=args.lr_scheduler,
                     use_fp16=args.use_fp16,
                     loss_scaling=args.loss_scaling)
-                
-                loss.persistable = True 
-                num_seqs.persistable = True 
+
+                loss.persistable = True
+                num_seqs.persistable = True
 
                 ema = fluid.optimizer.ExponentialMovingAverage(args.ema_decay)
                 ema.update()
@@ -312,7 +312,7 @@ def train(args):
             print("Theoretical memory usage in training:  %.3f - %.3f %s" %
                   (lower_mem, upper_mem, unit))
 
-    if args.do_predict: 
+    if args.do_predict:
         build_strategy = fluid.BuildStrategy()
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
@@ -321,7 +321,7 @@ def train(args):
                     pyreader_name='test_reader',
                     bert_config=bert_config,
                     is_training=False)
-                
+
                 if 'ema' not in dir():
                     ema = fluid.optimizer.ExponentialMovingAverage(args.ema_decay)
 
@@ -441,11 +441,11 @@ def train(args):
 
         if args.use_ema:
             with ema.apply(exe):
-                predict(exe, test_prog, test_pyreader, [
+                predict(exe, test_compiled_program, test_pyreader, [
                     unique_ids.name, start_logits.name, end_logits.name, num_seqs.name
                 ], processor, prefix='ema_')
         else:
-            predict(exe, test_prog, test_pyreader, [
+            predict(exe, test_compiled_program, test_pyreader, [
                 unique_ids.name, start_logits.name, end_logits.name, num_seqs.name
             ], processor)
 

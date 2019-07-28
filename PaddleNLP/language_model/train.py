@@ -20,12 +20,13 @@ import numpy as np
 import time
 import os
 import random
-
 import math
+import contextlib
 
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.framework as framework
+import paddle.fluid.profiler as profiler
 from paddle.fluid.executor import Executor
 
 import reader
@@ -34,18 +35,27 @@ import sys
 if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding("utf-8")
-sys.path.append('..')
+sys.path.append('../')
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 from args import *
-sys.path.append("../")
+from models.model_check import check_cuda
 from models.language_model import lm_model
 from config import RNNConfig
 import logging
 import pickle
 
 SEED = 123
+
+
+@contextlib.contextmanager
+def profile_context(profile=True):
+    if profile:
+        with profiler.profiler('All', 'total', '/tmp/paddingrnn.profile'):
+            yield
+    else:
+        yield
 
 
 def get_current_model_para(train_prog, train_exe):
@@ -77,6 +87,9 @@ def save_para_npz(train_prog, train_exe):
 
 def main():
     args = parse_args()
+
+    check_cuda(args.use_gpu)
+
     logger = logging.getLogger("lm")
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
@@ -178,9 +191,9 @@ def main():
 
     data_path = args.data_path
     print("begin to load data")
-    raw_data = reader.ptb_raw_data(data_path)
+    ptb_data = reader.get_ptb_data(data_path)
     print("finished load data")
-    train_data, valid_data, test_data, _ = raw_data
+    train_data, valid_data, test_data = ptb_data
 
     def generate_init_data():
         init_hidden = np.zeros(
@@ -233,7 +246,7 @@ def main():
                 program=inference_program,
                 feed=input_data_feed,
                 fetch_list=[loss.name, last_hidden.name, last_cell.name],
-                use_program_cache=True)
+                use_program_cache=False)
 
             cost_eval = np.array(fetch_outs[0])
             init_hidden = np.array(fetch_outs[1])
@@ -259,12 +272,9 @@ def main():
 
         total_loss = 0
         iters = 0
+
+        init_hidden, init_cell = generate_init_data()
         for batch_id, batch in enumerate(train_data_iter):
-            if batch_id == 0:
-                init_hidden, init_cell = generate_init_data()
-            else:
-                init_hidden = None
-                init_cell = None
             input_data_feed = prepare_input(
                 batch,
                 init_hidden=init_hidden,
@@ -276,13 +286,18 @@ def main():
             batch_start_time = time.time()
             fetch_outs = exe.run(train_program,
                                  feed=input_data_feed,
-                                 fetch_list=[loss.name, "learning_rate"],
+                                 fetch_list=[
+                                     loss.name, "learning_rate",
+                                     last_hidden.name, last_cell.name
+                                 ],
                                  use_program_cache=True)
             batch_time = time.time() - batch_start_time
             batch_times.append(batch_time)
 
             cost_train = np.array(fetch_outs[0])
             lr = np.array(fetch_outs[1])
+            init_hidden = np.array(fetch_outs[2])
+            init_cell = np.array(fetch_outs[3])
 
             total_loss += cost_train
             iters += config.num_steps
@@ -312,8 +327,6 @@ def main():
                 if batch_id == 0:
                     batch_time = 0
                     batch_start_time = time.time()
-                    data_feeds["init_hidden"] = init_hidden
-                    data_feeds["init_cell"] = init_cell
                 else:
                     batch_time = time.time() - batch_start_time
                     batch_times.append(batch_time)
@@ -321,14 +334,21 @@ def main():
 
                 new_lr = generate_new_lr(epoch_id, device_count)
                 data_feeds['learning_rate'] = new_lr
+                data_feeds["init_hidden"] = init_hidden
+                data_feeds["init_cell"] = init_cell
 
                 fetch_outs = exe.run(train_program,
                                      feed=data_feeds,
-                                     fetch_list=[loss.name, "learning_rate"],
+                                     fetch_list=[
+                                         loss.name, "learning_rate",
+                                         last_hidden.name, last_cell.name
+                                     ],
                                      use_program_cache=True)
 
                 cost_train = np.array(fetch_outs[0])
                 lr = np.array(fetch_outs[1])
+                init_hidden = np.array(fetch_outs[2])
+                init_cell = np.array(fetch_outs[3])
 
                 total_loss += cost_train
                 iters += config.num_steps
@@ -421,7 +441,9 @@ def main():
                 executor=exe, dirname=save_model_dir, main_program=main_program)
             print("Saved model to: %s.\n" % save_model_dir)
 
-    train()
+    with profile_context(args.profile):
+        train()
+
     test_ppl = eval(test_data)
     print("Test ppl:", test_ppl[0])
 

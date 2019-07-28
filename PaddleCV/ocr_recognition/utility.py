@@ -140,3 +140,22 @@ def get_attention_feeder_for_infer(data, place):
         "init_ids": init_ids,
         "init_scores": init_scores
     }
+
+
+def check_gpu(use_gpu):
+    """
+    Log error and exit when set use_gpu=true in paddlepaddle
+    cpu version.
+    """
+    err = "Config use_gpu cannot be set as true while you are " \
+          "using paddlepaddle cpu version ! \nPlease try: \n" \
+          "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
+          "\t2. Set use_gpu as false in config file to run " \
+          "model on CPU"
+
+    try:
+        if use_gpu and not fluid.is_compiled_with_cuda():
+            print(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
