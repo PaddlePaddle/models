@@ -346,13 +346,15 @@ step2: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../
 
 step3: 修改`compress.yaml`文件, 将参数server_ip设置为当前机器的ip。
 
-step4: 执行`sh run.sh`, 可根据实际情况修改`run.sh`中的`CUDA_VISIBLE_DEVICES`。
+step4: （可选）修改`compress.yaml`文件，将参数 target_latency 设置为用户的目标延时。
 
-step5: 修改`light_nas_space.py`文件中的`LightNASSpace::init_tokens`, 使其返回step4中搜到的最优tokens。
+step5: 执行`sh run.sh`, 可根据实际情况修改`run.sh`中的`CUDA_VISIBLE_DEVICES`。
 
-step6: 修改`compress.yaml`文件，将compressor下的`strategies`去掉。
+step6: 修改`light_nas_space.py`文件中的`LightNASSpace::init_tokens`, 使其返回step5中搜到的最优tokens。
 
-step7: 执行`sh run.sh`进行训练任务。
+step7: 修改`compress.yaml`文件，将compressor下的`strategies`去掉。
+
+step8: 执行`sh run.sh`进行训练任务。
 
 该示例两组结果如下：
 

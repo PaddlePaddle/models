@@ -33,7 +33,6 @@ def get_args():
         help='Output latency lookup table path.')
     parser.add_argument(
         '--platform', default='android', help='Platform: android/ios/custom.')
-    parser.add_argument('--cluster', type=int, default=0, help='Cluster.')
     parser.add_argument('--threads', type=int, default=1, help='Threads.')
     parser.add_argument(
         '--test_iter',
@@ -80,7 +79,7 @@ def main():
     for op in ops:
         op = map(str, op)
         latency = get_op_latency(op[:1] + map(
-            str, [args.cluster, args.threads, args.test_iter]) + op[1:],
+            str, [args.threads, args.test_iter]) + op[1:],
                                  args.platform)
         fid.write('{} {}\n'.format(' '.join(op), latency))
     fid.close()
