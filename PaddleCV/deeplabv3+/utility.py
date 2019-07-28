@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 import distutils.util
 import six
+import paddle.fluid as fluid
 
 
 def print_arguments(args):
@@ -58,3 +59,22 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
         type=type,
         help=help + ' Default: %(default)s.',
         **kwargs)
+
+
+def check_gpu(use_gpu):
+    """
+     Log error and exit when set use_gpu=true in paddlepaddle
+     cpu version.
+     """
+    err = "Config use_gpu cannot be set as true while you are " \
+          "using paddlepaddle cpu version ! \nPlease try: \n" \
+          "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
+          "\t2. Set use_gpu as false in config file to run " \
+          "model on CPU"
+
+    try:
+        if use_gpu and not fluid.is_compiled_with_cuda():
+            logger.error(err)
+            sys.exit(1)
+    except Exception as e:
+        pass

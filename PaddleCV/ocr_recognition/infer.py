@@ -1,6 +1,7 @@
 from __future__ import print_function
 import paddle.fluid as fluid
 from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_for_infer, get_ctc_feeder_for_infer
+from utility import check_gpu
 import paddle.fluid.profiler as profiler
 from crnn_ctc_model import ctc_infer
 from attention_model import attention_infer
@@ -138,6 +139,7 @@ def prune(words, sos, eos):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     if args.profile:
         if args.use_gpu:
             with profiler.cuda_profiler("cuda_profiler.txt", 'csv') as nvprof:

@@ -40,6 +40,6 @@ def parse_args():
     parser.add_argument(
         '--log_path',
         help='path of the log file. If not set, logs are printed to console')
-    parser.add_argument('--enable_ce', action='store_true')
+    parser.add_argument('--ce', action='store_true', help="run ce")
     args = parser.parse_args()
     return args

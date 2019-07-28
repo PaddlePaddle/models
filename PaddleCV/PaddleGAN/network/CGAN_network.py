@@ -35,6 +35,10 @@ class CGAN_model(object):
         self.gf_dim = 128
         self.df_dim = 64
         self.leaky_relu_factor = 0.2
+        if self.batch_size == 1:
+            self.norm = None
+        else:
+            self.norm = "batch_norm"
 
     def network_G(self, input, label, name="generator"):
         # concat noise and label
@@ -43,14 +47,14 @@ class CGAN_model(object):
         o_l1 = linear(
             xy,
             self.gf_dim * 8,
-            norm='batch_norm',
+            norm=self.norm,
             activation_fn='relu',
             name=name + '_l1')
         o_c1 = fluid.layers.concat([o_l1, y], 1)
         o_l2 = linear(
             o_c1,
             self.gf_dim * (self.img_w // 4) * (self.img_h // 4),
-            norm='batch_norm',
+            norm=self.norm,
             activation_fn='relu',
             name=name + '_l2')
         o_r1 = fluid.layers.reshape(
@@ -107,7 +111,7 @@ class CGAN_model(object):
         o_l3 = linear(
             o_c2,
             self.df_dim * 16,
-            norm='batch_norm',
+            norm=self.norm,
             activation_fn='leaky_relu',
             name=name + '_l3')
         o_c3 = fluid.layers.concat([o_l3, y], 1)

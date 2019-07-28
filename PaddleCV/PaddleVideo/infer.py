@@ -17,6 +17,7 @@ import sys
 import time
 import logging
 import argparse
+import ast
 import numpy as np
 try:
     import cPickle as pickle
@@ -27,6 +28,7 @@ import paddle.fluid as fluid
 from config import *
 import models
 from datareader import get_reader
+from utils import check_cuda
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -47,7 +49,10 @@ def parse_args():
         default='configs/attention_cluster.txt',
         help='path to config file of model')
     parser.add_argument(
-        '--use_gpu', type=bool, default=True, help='default use gpu.')
+        '--use_gpu',
+        type=ast.literal_eval,
+        default=True,
+        help='default use gpu.')
     parser.add_argument(
         '--weights',
         type=str,
@@ -155,6 +160,8 @@ def infer(args):
 
 if __name__ == "__main__":
     args = parse_args()
+    # check whether the installed paddle is compiled with GPU
+    check_cuda(args.use_gpu)
     logger.info(args)
 
     infer(args)

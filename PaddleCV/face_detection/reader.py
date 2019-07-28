@@ -280,14 +280,25 @@ def train_generator(settings, file_list, batch_size, shuffle=True):
     return reader
 
 
-def train(settings, file_list, batch_size, shuffle=True, num_workers=8):
+def train(settings,
+          file_list,
+          batch_size,
+          shuffle=True,
+          use_multiprocess=True,
+          num_workers=8):
     file_lists = load_file_list(file_list)
-    n = int(math.ceil(len(file_lists) // num_workers))
-    split_lists = [file_lists[i:i + n] for i in range(0, len(file_lists), n)]
-    readers = []
-    for iterm in split_lists:
-        readers.append(train_generator(settings, iterm, batch_size, shuffle))
-    return paddle.reader.multiprocess_reader(readers, False)
+    if use_multiprocess:
+        n = int(math.ceil(len(file_lists) // num_workers))
+        split_lists = [
+            file_lists[i:i + n] for i in range(0, len(file_lists), n)
+        ]
+        readers = []
+        for iterm in split_lists:
+            readers.append(
+                train_generator(settings, iterm, batch_size, shuffle))
+        return paddle.reader.multiprocess_reader(readers, False)
+    else:
+        return train_generator(settings, file_lists, batch_size, shuffle)
 
 
 def test(settings, file_list):

@@ -13,12 +13,14 @@ import numpy as np
 import multiprocessing
 import sys
 sys.path.append("../models/classification/")
+sys.path.append("../")
 
 from nets import bow_net
 from nets import lstm_net
 from nets import cnn_net
 from nets import bilstm_net
 from nets import gru_net
+from models.model_check import check_cuda
 
 import paddle
 import paddle.fluid as fluid
@@ -370,4 +372,5 @@ def main(args):
 
 if __name__ == "__main__":
     print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)

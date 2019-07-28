@@ -7,11 +7,25 @@ import shutil
 import math
 import multiprocessing
 
+
+def set_paddle_flags(**kwargs):
+    for key, value in kwargs.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect. 
+set_paddle_flags(
+    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
+)
+
 import paddle
 import paddle.fluid as fluid
 import reader
 from mobilenet_ssd import build_mobilenet_ssd
-from utility import add_arguments, print_arguments
+from utility import add_arguments, print_arguments, check_cuda
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -28,6 +42,7 @@ add_arg('ap_version',       str,   '11point',           "mAP version can be inte
 add_arg('image_shape',      str,   '3,300,300',         "Input image shape.")
 add_arg('mean_BGR',         str,   '127.5,127.5,127.5', "Mean value for B,G,R channel which will be subtracted.")
 add_arg('data_dir',         str,   'data/pascalvoc', "Data directory.")
+add_arg('use_multiprocess', bool,  True,  "Whether use multi-process for data preprocessing.")
 add_arg('enable_ce',        bool,  False, "Whether use CE to evaluate the model.")
 #yapf: enable
 
@@ -185,14 +200,8 @@ def train(args,
         build_strategy.memory_optimize = True
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
             use_cuda=use_gpu, loss_name=loss.name, build_strategy=build_strategy)
-    train_reader = reader.train(data_args,
-                                train_file_list,
-                                batch_size_per_device,
-                                shuffle=is_shuffle,
-                                num_workers=num_workers,
-                                enable_ce=enable_ce)
+
     test_reader = reader.test(data_args, val_file_list, batch_size)
-    train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)
 
     def save_model(postfix, main_prog):
@@ -203,6 +212,7 @@ def train(args,
         fluid.io.save_persistables(exe, model_path, main_program=main_prog)
 
     best_map = 0.
+    test_map = None
     def test(epoc_id, best_map):
         _, accum_map = map_eval.get_map_var()
         map_eval.reset(exe)
@@ -232,6 +242,7 @@ def train(args,
                                 train_file_list,
                                 batch_size_per_device,
                                 shuffle=is_shuffle,
+                                use_multiprocess=args.use_multiprocess,
                                 num_workers=num_workers,
                                 enable_ce=enable_ce)
         train_py_reader.decorate_paddle_reader(train_reader)
@@ -286,6 +297,8 @@ def train(args,
 def main():
     args = parser.parse_args()
     print_arguments(args)
+
+    check_cuda(args.use_gpu)
 
     data_dir = args.data_dir
     dataset = args.dataset

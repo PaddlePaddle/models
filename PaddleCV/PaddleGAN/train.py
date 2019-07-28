@@ -24,51 +24,38 @@ import time
 import numpy as np
 import paddle
 import paddle.fluid as fluid
+import trainer
 
 
 def train(cfg):
+
+    MODELS = [
+        "CGAN", "DCGAN", "Pix2pix", "CycleGAN", "StarGAN", "AttGAN", "STGAN"
+    ]
+    if cfg.model_net not in MODELS:
+        raise NotImplementedError("{} is not support!".format(cfg.model_net))
+
     reader = data_reader(cfg)
-    if cfg.model_net == 'CycleGAN':
+
+    if cfg.model_net in ['CycleGAN']:
         a_reader, b_reader, a_reader_test, b_reader_test, batch_num = reader.make_data(
         )
-    elif cfg.model_net == 'Pix2pix':
-        train_reader, test_reader, batch_num = reader.make_data()
-    elif cfg.model_net == 'StarGAN':
-        train_reader, test_reader, batch_num = reader.make_data()
     else:
-        if cfg.dataset == 'mnist':
+        if cfg.dataset in ['mnist']:
             train_reader = reader.make_data()
         else:
             train_reader, test_reader, batch_num = reader.make_data()
 
-    if cfg.model_net == 'CGAN':
-        from trainer.CGAN import CGAN
+    if cfg.model_net in ['CGAN', 'DCGAN']:
         if cfg.dataset != 'mnist':
-            raise NotImplementedError('CGAN only support mnist now!')
-        model = CGAN(cfg, train_reader)
-    elif cfg.model_net == 'DCGAN':
-        from trainer.DCGAN import DCGAN
-        if cfg.dataset != 'mnist':
-            raise NotImplementedError('DCGAN only support mnist now!')
-        model = DCGAN(cfg, train_reader)
-    elif cfg.model_net == 'CycleGAN':
-        from trainer.CycleGAN import CycleGAN
-        model = CycleGAN(cfg, a_reader, b_reader, a_reader_test, b_reader_test,
-                         batch_num)
-    elif cfg.model_net == 'Pix2pix':
-        from trainer.Pix2pix import Pix2pix
-        model = Pix2pix(cfg, train_reader, test_reader, batch_num)
-    elif cfg.model_net == 'StarGAN':
-        from trainer.StarGAN import StarGAN
-        model = StarGAN(cfg, train_reader, test_reader, batch_num)
-    elif cfg.model_net == 'AttGAN':
-        from trainer.AttGAN import AttGAN
-        model = AttGAN(cfg, train_reader, test_reader, batch_num)
-    elif cfg.model_net == 'STGAN':
-        from trainer.STGAN import STGAN
-        model = STGAN(cfg, train_reader, test_reader, batch_num)
+            raise NotImplementedError("CGAN/DCGAN only support MNIST now!")
+        model = trainer.__dict__[cfg.model_net](cfg, train_reader)
+    elif cfg.model_net in ['CycleGAN']:
+        model = trainer.__dict__[cfg.model_net](
+            cfg, a_reader, b_reader, a_reader_test, b_reader_test, batch_num)
     else:
-        pass
+        model = trainer.__dict__[cfg.model_net](cfg, train_reader, test_reader,
+                                                batch_num)
 
     model.build_model()
 
@@ -76,13 +63,14 @@ def train(cfg):
 if __name__ == "__main__":
     cfg = config.parse_args()
     config.print_arguments(cfg)
-    #assert cfg.load_size >= cfg.crop_size, "Load Size CANNOT less than Crop Size!"
+    utility.check_gpu(cfg.use_gpu)
     if cfg.profile:
         if cfg.use_gpu:
-            with profiler.profiler('All', 'total', '/tmp/profile') as prof:
+            with fluid.profiler.profiler('All', 'total',
+                                         '/tmp/profile') as prof:
                 train(cfg)
         else:
-            with profiler.profiler("CPU", sorted_key='total') as cpuprof:
+            with fluid.profiler.profiler("CPU", sorted_key='total') as cpuprof:
                 train(cfg)
     else:
         train(cfg)

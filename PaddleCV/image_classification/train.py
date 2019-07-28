@@ -47,7 +47,7 @@ import reader_cv2 as reader
 import utils
 import models
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
-from utils.utility import add_arguments, print_arguments
+from utils.utility import add_arguments, print_arguments, check_gpu
 from utils.learning_rate import cosine_decay_with_warmup
 from dist_train import dist_utils
 
@@ -338,13 +338,9 @@ def build_program(is_train, main_prog, startup_prog, args):
 
 def get_device_num():
     # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1 : return 1
-    visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
-    return device_num
+    if num_trainers > 1:
+        return 1
+    return fluid.core.get_cuda_device_count()
 
 def train(args):
     # parameters from arguments
@@ -612,6 +608,7 @@ def train(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     train(args)
 
 

@@ -230,4 +230,5 @@ def valid(args):
 
 if __name__ == '__main__':
     args = parser.parse_args()
+    check_cuda(args.use_gpu)
     valid(args)
