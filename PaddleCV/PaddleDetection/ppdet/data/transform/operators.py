@@ -127,6 +127,13 @@ class ResizeImage(BaseOperator):
                  use_cv2=True,
                  target_shape=None):
         """
+        Rescale image to the specified target size, and capped at max_size
+        if max_size != 0.
+        If target_size is list, selected a scale randomly as the specified
+        target size.
+        If target_shape is set, it has higher priority to target_size. Rescale
+        image to specified target shape.
+
         Args:
             target_size (int|list): the target size of image's short side, 
                 multi-scale training is adopted when type is list.
@@ -169,7 +176,7 @@ class ResizeImage(BaseOperator):
                 im = cv2.resize(
                     im, tuple(self.target_shape), interpolation=self.interp)
             else:
-                im = Image.fromarray(np.uint8(im))
+                im = Image.fromarray(im)
                 im = im.resize(tuple(self.target_shape), self.interp)
                 im = np.array(im)
             sample['image'] = im
@@ -192,15 +199,19 @@ class ResizeImage(BaseOperator):
                 im_scale = float(self.max_size) / float(im_size_max)
             im_scale_x = im_scale
             im_scale_y = im_scale
+
+            resize_w = np.round(im_scale_x * float(im_shape[1]))
+            resize_h = np.round(im_scale_y * float(im_shape[0]))
+
             sample['im_info'] = np.array(
-                [
-                    np.round(im_shape[0] * im_scale),
-                    np.round(im_shape[1] * im_scale), im_scale
-                ],
-                dtype=np.float32)
+                [resize_h, resize_w, im_scale], dtype=np.float32)
         else:
             im_scale_x = float(selected_size) / float(im_shape[1])
             im_scale_y = float(selected_size) / float(im_shape[0])
+
+            resize_w = selected_size
+            resize_h = selected_size
+
         if self.use_cv2:
             im = cv2.resize(
                 im,
@@ -211,9 +222,7 @@ class ResizeImage(BaseOperator):
                 interpolation=self.interp)
         else:
             im = Image.fromarray(im)
-            resize_w = selected_size
-            resize_h = selected_size
-            im = im.resize((resize_w, resize_h), self.interp)
+            im = im.resize((int(resize_w), int(resize_h)), self.interp)
             im = np.array(im)
         sample['image'] = im
         return sample
