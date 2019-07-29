@@ -714,6 +714,6 @@ controllers:
     - 运行 OpLatency，生成手机 APP 的同时，程序会在 APP 沙盒中生成一个当前搜索空间的延时评估器表格`latency_lookup_table.txt`。
     - 点击 Windows-->Devices and Simulators-->OpLatency->Download Container 将沙盒下载到 PC，右键点击显示包内容，在 AppData-->Documents 即能找到延时评估器表格。
 
-    备注1：我们同样提供了测试整个模型延时的方法。可以在ViewController 我们调用了 OCWrapper 类里面的 get_net_latency 方法。其中 get_net_latency 的参数为 model 和 params 路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)>将所有参数打包存储。
+    备注1：我们同样提供了测试整个模型延时的方法。可以在ViewController 我们调用了 OCWrapper 类里面的 get_net_latency 方法。其中 get_net_latency 的参数为 model 和 params 路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.4/api_cn/io_cn.html#save-inference-model)将所有参数打包存储。
 
     备注2：用户如果有其他 op 的开发需求，可以根据我们[这里](https://paddle-slim-models.bj.bcebos.com/ios_op_test.zip)提供的代码示例进行开发。使用方法：解压并在命令行运行 sh run.sh 即可生成 OpLatency 里面所需的打包文件 libpaddle-mobile.a 和头文件 ios_op_test.h。
