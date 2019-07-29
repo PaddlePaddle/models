@@ -134,14 +134,15 @@ def proposal2out(results, is_bbox_normalized=False):
     for t in results:
         bboxes = t['proposal'][0]
         lengths = t['proposal'][1][0]
-        im_ids = np.array(t['im_id'][0])
+        im_ids = np.array(t['im_id'][0]).flatten()
+        assert len(lengths) == im_ids.size
         if bboxes.shape == (1, 1) or bboxes is None:
             continue
 
         k = 0
         for i in range(len(lengths)):
             num = lengths[i]
-            im_id = int(im_ids[i][0])
+            im_id = int(im_ids[i])
             for j in range(num):
                 dt = bboxes[k]
                 xmin, ymin, xmax, ymax = dt.tolist()
@@ -172,18 +173,20 @@ def bbox2out(results, clsid2catid, is_bbox_normalized=False):
     for t in results:
         bboxes = t['bbox'][0]
         lengths = t['bbox'][1][0]
-        im_ids = np.array(t['im_id'][0])
+        im_ids = np.array(t['im_id'][0]).flatten()
+        assert len(lengths) == im_ids.size
         if bboxes.shape == (1, 1) or bboxes is None:
             continue
 
         k = 0
         for i in range(len(lengths)):
             num = lengths[i]
-            im_id = int(im_ids[i][0])
+            im_id = int(im_ids[i])
             for j in range(num):
                 dt = bboxes[k]
                 clsid, score, xmin, ymin, xmax, ymax = dt.tolist()
-                catid = clsid2catid[clsid]
+                #print(dt.tolist())
+                catid = clsid2catid[int(clsid)]
 
                 if is_bbox_normalized:
                     xmin, ymin, xmax, ymax = \

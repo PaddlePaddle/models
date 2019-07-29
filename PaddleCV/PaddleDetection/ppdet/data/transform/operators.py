@@ -24,6 +24,7 @@ import uuid
 import logging
 import random
 import math
+import collections
 import numpy as np
 import cv2
 from PIL import Image, ImageEnhance
@@ -181,6 +182,7 @@ class ResizeImage(BaseOperator):
         else:
             im_scale_x = float(selected_size) / float(im_shape[1])
             im_scale_y = float(selected_size) / float(im_shape[0])
+
         if self.use_cv2:
             im = cv2.resize(
                 im,
@@ -191,11 +193,59 @@ class ResizeImage(BaseOperator):
                 interpolation=self.interp)
         else:
             im = Image.fromarray(im)
-            resize_w = selected_size * im_scale_x
-            resize_h = selected_size * im_scale_y
+            resize_w = int(im_scale_x * float(im_shape[1]))
+            resize_h = int(im_scale_y * float(im_shape[0]))
+
             im = im.resize((resize_w, resize_h), self.interp)
             im = np.array(im)
 
+        sample['image'] = im
+        return sample
+
+
+@register_op
+class Resize(BaseOperator):
+    def __init__(self, target_size=0, interp=cv2.INTER_LINEAR, use_cv2=True):
+        """
+        Args:
+            target_size (int|list): the target size of image's short side, 
+                multi-scale training is adopted when type is list.
+            interp (int): the interpolation method
+            use_cv2 (bool): use the cv2 interpolation method or use PIL 
+                interpolation method
+        """
+        super(Resize, self).__init__()
+        self.interp = int(interp)
+        self.use_cv2 = use_cv2
+        if not (isinstance(target_size, int) or isinstance(target_size, list)):
+            raise TypeError(
+                "Type of target_size is invalid. Must be Integer or List, now is {}".
+                format(type(target_size)))
+        self.target_size = target_size
+        if isinstance(target_size, collections.Sequence):
+            self.target_size = list(self.target_size)
+        else:
+            self.target_size = [self.target_size]
+
+    def __call__(self, sample, context=None):
+        """ Resise the image numpy.
+        """
+        im = sample['image']
+        if not isinstance(im, np.ndarray):
+            raise TypeError("{}: image type is not numpy.".format(self))
+        if len(im.shape) != 3:
+            raise ImageError('{}: image is not 3-dimensional.'.format(self))
+
+        resize_h = self.target_size[0]
+        resize_w = self.target_size[1] if len(
+            self.target_size) == 2 else resize_h
+
+        if self.use_cv2:
+            im = cv2.resize(im, resize_w, resize_h, interpolation=self.interp)
+        else:
+            im = Image.fromarray(im)
+            im = im.resize((resize_w, resize_h), self.interp)
+            im = np.array(im)
         sample['image'] = im
         return sample
 

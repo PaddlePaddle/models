@@ -42,13 +42,12 @@ class ColorTTY(object):
 
 
 class ArgsParser(ArgumentParser):
-
     def __init__(self):
         super(ArgsParser, self).__init__(
             formatter_class=RawDescriptionHelpFormatter)
         self.add_argument("-c", "--config", help="configuration file to use")
-        self.add_argument("-o", "--opt", nargs='*',
-                          help="set configuration options")
+        self.add_argument(
+            "-o", "--opt", nargs='*', help="set configuration options")
 
     def parse_args(self, argv=None):
         args = super(ArgsParser, self).parse_args(argv)
@@ -68,7 +67,8 @@ class ArgsParser(ArgumentParser):
                 config[k] = yaml.load(v, Loader=yaml.Loader)
             else:
                 keys = k.split('.')
-                config[keys[0]] = {}
+                if keys[0] not in config:
+                    config[keys[0]] = {}
                 cur = config[keys[0]]
                 for idx, key in enumerate(keys[1:]):
                     if idx == len(keys) - 2:

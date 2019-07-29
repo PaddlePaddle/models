@@ -56,7 +56,8 @@ def create_feed(feed, use_pyreader=True):
         feed_var_map['gt_score']['lod_level'] = 0
         feed_var_map['gt_box']['lod_level'] = 0
         feed_var_map['im_shape']['shape'] = [2]
-        feed_var_map['im_shape']['dtype'] = 'int32'
+        feed_var_map['im_shape']['dtype'] = 'int64'
+        #feed_var_map['im_shape']['dtype'] = 'int32'
 
     feed_vars = OrderedDict([(key, fluid.layers.data(
         name=feed_var_map[key]['name'],

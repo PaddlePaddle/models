@@ -136,9 +136,10 @@ class ArrangeSSD(BaseOperator):
         is_mask (bool): whether to use include mask data
     """
 
-    def __init__(self, is_mask=False):
+    def __init__(self, is_mask=False, fields=None):
         super(ArrangeSSD, self).__init__()
         self.is_mask = is_mask
+        self.fields = fields
         assert isinstance(self.is_mask, bool), "wrong type for is_mask"
 
     def __call__(self, sample, context=None):
@@ -151,11 +152,14 @@ class ArrangeSSD(BaseOperator):
             sample: a tuple containing the following items:
                     (image, gt_bbox, gt_class, difficult)
         """
+
         im = sample['image']
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
         difficult = sample['difficult']
         outs = (im, gt_bbox, gt_class, difficult)
+        if self.fields is not None and 'im_id' in self.fields:
+            outs += (sample['im_id'], )
         return outs
 
 

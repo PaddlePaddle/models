@@ -295,6 +295,7 @@ class YOLOv3Head(object):
         boxes = []
         scores = []
         downsample = 32
+        im_shape = fluid.layers.cast(im_shape, dtype='int32')
         for i, output in enumerate(outputs):
             box, score = fluid.layers.yolo_box(
                 x=output,
