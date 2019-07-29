@@ -109,7 +109,7 @@ def save_param(args, exe, program, dirname, var_name="generator"):
 
 
 ### save the checkpoint to one file
-def save_checkpoint(epoch, args, exe, program, dirname):
+def save_checkpoint(epoch, args, exe, trainer, dirname):
 
     checkpoint_dir = os.path.join(args.output, 'checkpoints', str(epoch))
 
@@ -119,7 +119,7 @@ def save_checkpoint(epoch, args, exe, program, dirname):
     fluid.io.save_persistables(
         exe,
         os.path.join(checkpoint_dir, dirname),
-        main_program=program,
+        main_program=trainer.program,
         filename="checkpoint.pdparams")
 
     print("save checkpoint at %s" % (os.path.join(checkpoint_dir, dirname)))
