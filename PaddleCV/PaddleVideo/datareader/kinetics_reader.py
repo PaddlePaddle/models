@@ -67,7 +67,7 @@ class KineticsReader(DataReader):
         self.num_reader_threads = self.get_config_from_sec(mode,
                                                            'num_reader_threads')
         self.buf_size = self.get_config_from_sec(mode, 'buf_size')
-        self.enable_ce = self.get_config_from_sec(mode, 'enable_ce')
+        self.fix_random_seed = self.get_config_from_sec(mode, 'fix_random_seed')
 
         self.img_mean = np.array(cfg.MODEL.image_mean).reshape(
             [3, 1, 1]).astype(np.float32)
@@ -80,9 +80,10 @@ class KineticsReader(DataReader):
             self.video_path = cfg[mode.upper()]['video_path']
         else:
             self.video_path = ''
-        if self.enable_ce:
+        if self.fix_random_seed:
             random.seed(0)
             np.random.seed(0)
+            self.num_reader_threads = 1
 
     def create_reader(self):
         # if set video_path for inference mode, just load this single video

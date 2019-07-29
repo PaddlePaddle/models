@@ -41,28 +41,25 @@ def test_with_pyreader(exe,
                        save_model_name=''):
     if not test_pyreader:
         logger.error("[TEST] get pyreader failed.")
-    test_pyreader.start()
     test_metrics.reset()
     test_iter = 0
-    try:
-        while True:
-            #test_outs = test_exe.run(fetch_list=test_fetch_list)
-            test_outs = exe.run(compiled_test_prog, fetch_list=test_fetch_list)
-            test_metrics.accumulate(test_outs)
-            if log_interval > 0 and test_iter % log_interval == 0:
-                test_metrics.calculate_and_log_out(test_outs, \
-                   info = '[TEST] test_iter {} '.format(test_iter))
-            test_iter += 1
-    except fluid.core.EOFException:
-        test_metrics.finalize_and_log_out("[TEST] Finish")
-    finally:
-        test_pyreader.reset()
+
+    for data in test_pyreader():
+        test_outs = exe.run(compiled_test_prog,
+                            fetch_list=test_fetch_list,
+                            feed=data)
+        test_metrics.accumulate(test_outs)
+        if log_interval > 0 and test_iter % log_interval == 0:
+            test_metrics.calculate_and_log_out(test_outs, \
+               info = '[TEST] test_iter {} '.format(test_iter))
+        test_iter += 1
+    test_metrics.finalize_and_log_out("[TEST] Finish")
 
 
 def train_with_pyreader(exe, train_prog, compiled_train_prog, train_pyreader, \
                         train_fetch_list, train_metrics, epochs = 10, \
                         log_interval = 0, valid_interval = 0, save_dir = './', \
-                        save_model_name = 'model', enable_ce = False, \
+                        save_model_name = 'model', fix_random_seed = False, \
                         compiled_test_prog = None, test_pyreader = None, \
                         test_fetch_list = None, test_metrics = None):
     if not train_pyreader:
@@ -71,38 +68,36 @@ def train_with_pyreader(exe, train_prog, compiled_train_prog, train_pyreader, \
     train_loss = 0
     for epoch in range(epochs):
         log_lr_and_step()
-        train_pyreader.start()
-        train_metrics.reset()
-        try:
-            train_iter = 0
-            epoch_periods = []
-            while True:
-                cur_time = time.time()
-                #train_outs = train_exe.run(fetch_list=train_fetch_list)
-                train_outs = exe.run(compiled_train_prog,
-                                     fetch_list=train_fetch_list)
-                period = time.time() - cur_time
-                epoch_periods.append(period)
-                if log_interval > 0 and (train_iter % log_interval == 0):
-                    train_metrics.calculate_and_log_out(train_outs, \
-                                info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
-                train_iter += 1
-        except fluid.core.EOFException:
-            # eval here
-            logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
-                        format(epoch, np.mean(epoch_periods[1:])))
-            save_model(exe, train_prog, save_dir, save_model_name,
-                       "_epoch{}".format(epoch))
-            if compiled_test_prog and valid_interval > 0 and (
-                    epoch + 1) % valid_interval == 0:
-                test_with_pyreader(exe, compiled_test_prog, test_pyreader,
-                                   test_fetch_list, test_metrics, log_interval,
-                                   save_model_name)
-        finally:
-            epoch_period = []
-            train_pyreader.reset()
-    #only for ce
-    if enable_ce:
+
+        train_iter = 0
+        epoch_periods = []
+
+        for data in train_pyreader():
+            cur_time = time.time()
+            train_outs = exe.run(compiled_train_prog,
+                                 fetch_list=train_fetch_list,
+                                 feed=data)
+            period = time.time() - cur_time
+            epoch_periods.append(period)
+            if log_interval > 0 and (train_iter % log_interval == 0):
+                train_metrics.calculate_and_log_out(train_outs, \
+                        info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
+            train_iter += 1
+
+        logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
+                    format(epoch, np.mean(epoch_periods[1:])))
+        save_model(exe, train_prog, save_dir, save_model_name,
+                   "_epoch{}".format(epoch))
+        if compiled_test_prog and valid_interval > 0 and (
+                epoch + 1) % valid_interval == 0:
+            test_with_pyreader(exe, compiled_test_prog, test_pyreader,
+                               test_fetch_list, test_metrics, log_interval,
+                               save_model_name)
+
+    save_model(exe, train_prog, save_dir, save_model_name, '_final',
+               '.pdparams')
+    #when fix_random seed for debug
+    if fix_random_seed:
         cards = os.environ.get('CUDA_VISIBLE_DEVICES')
         gpu_num = len(cards.split(","))
         print("kpis\ttrain_cost_card{}\t{}".format(gpu_num, train_loss))
@@ -110,8 +105,27 @@ def train_with_pyreader(exe, train_prog, compiled_train_prog, train_pyreader, \
                                                     np.mean(epoch_periods)))
 
 
-def save_model(exe, program, save_dir, model_name, postfix=None):
-    model_path = os.path.join(save_dir, model_name + postfix)
-    if os.path.isdir(model_path):
-        shutil.rmtree(model_path)
-    fluid.io.save_persistables(exe, model_path, main_program=program)
+def save_model(exe,
+               program,
+               save_dir,
+               model_name,
+               postfix=None,
+               save_type='.pdckpt'):
+    """
+    save_type: '.pdckpt' or '.pdparams', '.pdckpt' for all persistable variables, 
+               '.pdparams' for parameters only
+    """
+    #model_path = os.path.join(save_dir, model_name + postfix + save_type)
+    saved_model_name = model_name + postfix + save_type
+
+    if save_type == '.pdckpt':
+        fluid.io.save_persistables(
+            exe, save_dir, main_program=program, filename=saved_model_name)
+    elif save_type == '.pdparams':
+        fluid.io.save_params(
+            exe, save_dir, main_program=program, filename=saved_model_name)
+    else:
+        raise NotImplementedError(
+            'save_type {} not implemented, it should be either {} or {}'
+            .format(save_type, '.pdckpt', '.pdparams'))
+    return

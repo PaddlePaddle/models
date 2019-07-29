@@ -42,31 +42,25 @@ class NonLocal(ModelBase):
     def build_input(self, use_pyreader=True):
         input_shape = [3, self.video_length, self.crop_size, self.crop_size]
         label_shape = [1]
-        py_reader = None
+
+        data = fluid.layers.data(
+            name='train_data' if self.is_training else 'test_data',
+            shape=input_shape,
+            dtype='float32')
+        if self.mode != 'infer':
+            label = fluid.layers.data(
+                name='train_label' if self.is_training else 'test_label',
+                shape=label_shape,
+                dtype='int64')
+        else:
+            label = None
+
         if use_pyreader:
             assert self.mode != 'infer', \
                         'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            py_reader = fluid.layers.py_reader(
-                capacity=20,
-                shapes=[[-1] + input_shape, [-1] + label_shape],
-                dtypes=['float32', 'int64'],
-                name='train_py_reader'
-                if self.is_training else 'test_py_reader',
-                use_double_buffer=True)
-            data, label = fluid.layers.read_file(py_reader)
-            self.py_reader = py_reader
-        else:
-            data = fluid.layers.data(
-                name='train_data' if self.is_training else 'test_data',
-                shape=input_shape,
-                dtype='float32')
-            if self.mode != 'infer':
-                label = fluid.layers.data(
-                    name='train_label' if self.is_training else 'test_label',
-                    shape=label_shape,
-                    dtype='int64')
-            else:
-                label = None
+            self.py_reader = fluid.io.PyReader(
+                feed_list=[data, label], capacity=4, iterable=True)
+
         self.feature_input = [data]
         self.label_input = label
 

@@ -23,9 +23,18 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 ## 模型训练
 
 ### 随机初始化开始训练
-在video目录下运行如下脚本即可
+在video目录下可以通过如下两种方式启动训练：
 
-    bash ./scripts/train/train_nextvlad.sh
+    export CUDA_VISIBLE_DEVICES=0,1,2,3
+    python train.py --model_name=STNET
+            --config=./configs/nextvlad.yaml
+            --save_dir=checkpoints
+            --log_interval=10
+            --valid_interval=1
+
+    bash run.sh train NEXTVLAD ./configs/nextvlad.yaml
+
+- 在训练NeXtVLAD模型时使用的是4卡，请修改run.sh中的CUDA\_VISIBLE\_DEVICES=0,1,2,3
 
 ### 使用预训练模型做finetune
 
@@ -41,10 +50,9 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 
 ## 模型评估
 
-用户可以下载的预训练模型参数，或者使用自己训练好的模型参数，请在./scripts/test/test\_nextvald.sh
-文件中修改--weights参数为保存模型参数的目录。运行
+用户可以下载的预训练模型参数，或者使用自己训练好的模型参数，请在run.sh文件中修改--weights参数为保存模型参数的目录。运行
 
-    bash ./scripts/test/test_nextvlad.sh
+    bash run.sh eval NEXTVLAD ./configs/nextvlad.yaml
 
 由于youtube-8m提供的数据中test数据集是没有ground truth标签的，所以这里使用validation数据集来做测试。
 
@@ -69,10 +77,9 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 
 ## 模型推断
 
-用户可以下载的预训练模型参数，或者使用自己训练好的模型参数，请在./scripts/infer/infer\_nextvald.sh
-文件中修改--weights参数为保存模型参数的目录，运行如下脚本
+用户可以下载的预训练模型参数，或者使用自己训练好的模型参数，请在run.sh文件中修改--weights参数为保存模型参数的目录，运行如下脚本：
 
-    bash ./scripts/infer/infer_nextvald.sh
+    bash run.sh predict NEXTVLAD ./configs/nextvlad.yaml
 
 推断结果会保存在NEXTVLAD\_infer\_result文件中，通过pickle格式存储。
 

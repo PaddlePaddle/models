@@ -74,11 +74,6 @@ def parse_args():
         default=True,
         help='default use gpu.')
     parser.add_argument(
-        '--no_use_pyreader',
-        action='store_true',
-        default=False,
-        help='whether to use pyreader')
-    parser.add_argument(
         '--no_memory_optimize',
         action='store_true',
         default=False,
@@ -104,7 +99,7 @@ def parse_args():
         default=10,
         help='mini-batch interval to log.')
     parser.add_argument(
-        '--enable_ce',
+        '--fix_random_seed',
         type=ast.literal_eval,
         default=False,
         help='If set True, enable continuous evaluation job.')
@@ -124,12 +119,12 @@ def train(args):
     # build model
     startup = fluid.Program()
     train_prog = fluid.Program()
-    if args.enable_ce:
+    if args.fix_random_seed:
         startup.random_seed = 1000
         train_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup):
         with fluid.unique_name.guard():
-            train_model.build_input(not args.no_use_pyreader)
+            train_model.build_input(use_pyreader=True)
             train_model.build_model()
             # for the input, has the form [data1, data2,..., label], so train_feeds[-1] is label
             train_feeds = train_model.feeds()
@@ -144,7 +139,7 @@ def train(args):
     valid_prog = fluid.Program()
     with fluid.program_guard(valid_prog, startup):
         with fluid.unique_name.guard():
-            valid_model.build_input(not args.no_use_pyreader)
+            valid_model.build_input(use_pyreader=True)
             valid_model.build_model()
             valid_feeds = valid_model.feeds()
             valid_fetch_list = valid_model.fetches()
@@ -161,11 +156,8 @@ def train(args):
         assert os.path.exists(args.resume), \
                 "Given resume weight dir {} not exist.".format(args.resume)
 
-        def if_exist(var):
-            return os.path.exists(os.path.join(args.resume, var.name))
-
-        fluid.io.load_vars(
-            exe, args.resume, predicate=if_exist, main_program=train_prog)
+        fluid.io.load_persistables(
+            exe, '', main_program=train_prog, filename=args.resume)
     else:
         # if not in resume mode, load pretrain weights
         if args.pretrain:
@@ -186,14 +178,25 @@ def train(args):
             loss_name=train_loss.name, build_strategy=build_strategy)
     compiled_valid_prog = fluid.compiler.CompiledProgram(
         valid_prog).with_data_parallel(
-            #loss_name=valid_loss.name,
-            share_vars_from=compiled_train_prog,
-            build_strategy=build_strategy)
+            share_vars_from=compiled_train_prog, build_strategy=build_strategy)
 
     # get reader
     bs_denominator = 1
-    if (not args.no_use_pyreader) and args.use_gpu:
+    if args.use_gpu:
+        # check number of GPUs
+        gpus = os.getenv("CUDA_VISIBLE_DEVICES", "")
+        if gpus == "":
+            pass
+        else:
+            gpus = gpus.split(",")
+            num_gpus = len(gpus)
+            assert num_gpus == train_config.TRAIN.num_gpus, \
+                   "num_gpus({}) set by CUDA_VISIBLE_DEVICES" \
+                   "shoud be the same as that" \
+                   "set in {}({})".format(
+                   num_gpus, args.config, train_config.TRAIN.num_gpus)
         bs_denominator = train_config.TRAIN.num_gpus
+
     train_config.TRAIN.batch_size = int(train_config.TRAIN.batch_size /
                                         bs_denominator)
     valid_config.VALID.batch_size = int(valid_config.VALID.batch_size /
@@ -207,8 +210,12 @@ def train(args):
 
     epochs = args.epoch or train_model.epoch_num()
 
-    train_pyreader.decorate_paddle_reader(train_reader)
-    valid_pyreader.decorate_paddle_reader(valid_reader)
+    exe_places = fluid.cuda_places() if args.use_gpu else fluid.cpu_places()
+    train_pyreader.decorate_sample_list_generator(
+        train_reader, places=exe_places)
+    valid_pyreader.decorate_sample_list_generator(
+        valid_reader, places=exe_places)
+
     train_with_pyreader(
         exe,
         train_prog,
@@ -221,7 +228,7 @@ def train(args):
         valid_interval=args.valid_interval,
         save_dir=args.save_dir,
         save_model_name=args.model_name,
-        enable_ce=args.enable_ce,
+        fix_random_seed=args.fix_random_seed,
         compiled_test_prog=compiled_valid_prog,  #test_exe=valid_exe,
         test_pyreader=valid_pyreader,
         test_fetch_list=valid_fetch_list,

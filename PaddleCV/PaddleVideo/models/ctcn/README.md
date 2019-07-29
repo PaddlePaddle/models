@@ -13,7 +13,7 @@
 
 ## 模型简介
 
-C-TCN动作定位模型是百度自研，2018年ActivityNet夺冠方案，在Paddle上首次开源，为开发者提供了处理视频动作定位问题的解决方案。此模型引入了concept-wise时间卷积网络，对每个concept先用卷积神经网络分别提取时间维度的信息，然后再将每个concept的信息进行组合。主体结构是残差网络+FPN，采用类似SSD的单阶段目标检测算法对时间维度的anchor box进行预测和分类。
+C-TCN动作定位模型是百度自研，2018年ActivityNet夺冠方案，在PaddlePaddle上首次开源，为开发者提供了处理视频动作定位问题的解决方案。此模型引入了concept-wise时间卷积网络，对每个concept先用卷积神经网络分别提取时间维度的信息，然后再将每个concept的信息进行组合。主体结构是残差网络+FPN，采用类似SSD的单阶段目标检测算法对时间维度的anchor box进行预测和分类。
 
 
 ## 数据准备
@@ -25,13 +25,12 @@ C-TCN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准�
 数据准备完毕后，可以通过如下两种方式启动训练：
 
     python train.py --model_name=CTCN
-            --config=./configs/ctcn.txt
+            --config=./configs/ctcn.yaml
             --save_dir=checkpoints
             --log_interval=10
             --valid_interval=1
-            --pretrain=${path_to_pretrain_model}
 
-    bash scripts/train/train_ctcn.sh
+    bash run.sh train CTCN ./configs/ctcn.yaml
 
 - 从头开始训练，使用上述启动脚本程序即可启动训练，不需要用到预训练模型
 
@@ -48,14 +47,14 @@ C-TCN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准�
 
 可通过如下两种方式进行模型评估:
 
-    python test.py --model_name=CTCN
-            --config=configs/ctcn.txt
+    python eval.py --model_name=CTCN
+            --config=./configs/ctcn.yaml
             --log_interval=1
             --weights=$PATH_TO_WEIGHTS
 
-    bash scripts/test/test_ctcn.sh
+    bash run.sh eval CTCN ./configs/ctcn.yaml
 
-- 使用`scripts/test/test_ctcn.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
+- 使用`run.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/ctcn.tar.gz)进行评估
 
@@ -72,8 +71,8 @@ C-TCN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准�
 
 可通过如下命令进行模型推断：
 
-    python infer.py --model_name=CTCN
-            --config=configs/ctcn.txt
+    python predict.py --model_name=CTCN
+            --config=./configs/ctcn.yaml
             --log_interval=1
             --weights=$PATH_TO_WEIGHTS
             --filelist=$FILELIST

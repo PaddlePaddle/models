@@ -63,54 +63,42 @@ class CTCN(ModelBase):
         loc_targets = None
         cls_targets = None
         fileid = None
+
+        image = fluid.layers.data(
+            name='image', shape=image_shape, dtype='float32')
+
+        feed_list = []
+        feed_list.append(image)
+        if (self.mode == 'train') or (self.mode == 'valid'):
+            loc_targets = fluid.layers.data(
+                name='loc_targets', shape=loc_shape, dtype='float32')
+            cls_targets = fluid.layers.data(
+                name='cls_targets', shape=cls_shape, dtype='int64')
+            feed_list.append(loc_targets)
+            feed_list.append(cls_targets)
+        elif self.mode == 'test':
+            loc_targets = fluid.layers.data(
+                name='loc_targets', shape=loc_shape, dtype='float32')
+            cls_targets = fluid.layers.data(
+                name='cls_targets', shape=cls_shape, dtype='int64')
+            fileid = fluid.layers.data(
+                name='fileid', shape=fileid_shape, dtype='int64')
+            feed_list.append(loc_targets)
+            feed_list.append(cls_targets)
+            feed_list.append(fileid)
+        elif self.mode == 'infer':
+            # only image feature input when inference
+            pass
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
         if use_pyreader:
             assert self.mode != 'infer', \
                         'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            if (self.mode == 'train') or (self.mode == 'valid'):
-                py_reader = fluid.layers.py_reader(
-                    capacity=100,
-                    shapes=[[-1] + image_shape, [-1] + loc_shape,
-                            [-1] + cls_shape],
-                    dtypes=['float32', 'float32', 'int64'],
-                    name='train_py_reader'
-                    if self.is_training else 'test_py_reader',
-                    use_double_buffer=True)
-                image, loc_targets, cls_targets = fluid.layers.read_file(
-                    py_reader)
-            elif self.mode == 'test':
-                py_reader = fluid.layers.py_reader(
-                    capacity=100,
-                    shapes=[[-1] + image_shape, [-1] + loc_shape, [-1] +
-                            cls_shape] + [-1, 1],
-                    dtypes=['float32', 'float32', 'int64', 'int64'],
-                    use_double_buffer=True)
-                image, loc_targets, cls_targets, fileid = fluid.layers.read_file(
-                    pyreader)
-            else:
-                raise NotImplementedError('mode {} not implemented'.format(
-                    self.mode))
-            self.py_reader = py_reader
-        else:
-            image = fluid.layers.data(
-                name='image', shape=image_shape, dtype='float32')
-            if (self.mode == 'train') or (self.mode == 'valid'):
-                loc_targets = fluid.layers.data(
-                    name='loc_targets', shape=loc_shape, dtype='float32')
-                cls_targets = fluid.layers.data(
-                    name='cls_targets', shape=cls_shape, dtype='int64')
-            elif self.mode == 'test':
-                loc_targets = fluid.layers.data(
-                    name='loc_targets', shape=loc_shape, dtype='float32')
-                cls_targets = fluid.layers.data(
-                    name='cls_targets', shape=cls_shape, dtype='int64')
-                fileid = fluid.layers.data(
-                    name='fileid', shape=fileid_shape, dtype='int64')
-            elif self.mode == 'infer':
-                # only image feature input when inference
-                pass
-            else:
-                raise NotImplementedError('mode {} not implemented'.format(
-                    self.mode))
+            self.py_reader = fluid.io.PyReader(
+                feed_list=feed_list, capacity=4, iterable=True)
+
         self.feature_input = [image]
         self.cls_targets = cls_targets
         self.loc_targets = loc_targets

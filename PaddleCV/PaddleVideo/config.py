@@ -12,15 +12,8 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-try:
-    from configparser import ConfigParser
-except:
-    from ConfigParser import ConfigParser
-
 import yaml
-
 from utils import AttrDict
-
 import logging
 logger = logging.getLogger(__name__)
 
@@ -33,7 +26,7 @@ CONFIG_SECS = [
 
 
 def parse_config(cfg_file):
-    """Load a config file and merge it into the default options."""
+    """Load a config file into AttrDict"""
     import yaml
     with open(cfg_file, 'r') as fopen:
         yaml_config = AttrDict(yaml.load(fopen, Loader=yaml.Loader))

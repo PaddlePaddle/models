@@ -65,38 +65,30 @@ class NEXTVLAD(ModelBase):
         rgb_shape = [self.video_feature_size]
         audio_shape = [self.audio_feature_size]
         label_shape = [self.num_classes]
+
+        rgb = fluid.layers.data(
+            name='train_rgb' if self.is_training else 'test_rgb',
+            shape=rgb_shape,
+            dtype='uint8',
+            lod_level=1)
+        audio = fluid.layers.data(
+            name='train_audio' if self.is_training else 'test_audio',
+            shape=audio_shape,
+            dtype='uint8',
+            lod_level=1)
+        if self.mode == 'infer':
+            label = None
+        else:
+            label = fluid.layers.data(
+                name='train_label' if self.is_training else 'test_label',
+                shape=label_shape,
+                dtype='float32')
+
         if use_pyreader:
             assert self.mode != 'infer', \
-                      'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            py_reader = fluid.layers.py_reader(
-                capacity=100,
-                shapes=[[-1] + rgb_shape, [-1] + audio_shape,
-                        [-1] + label_shape],
-                lod_levels=[1, 1, 0],
-                dtypes=['uint8', 'uint8', 'float32'],
-                name='train_py_reader'
-                if self.is_training else 'test_py_reader',
-                use_double_buffer=True)
-            rgb, audio, label = fluid.layers.read_file(py_reader)
-            self.py_reader = py_reader
-        else:
-            rgb = fluid.layers.data(
-                name='train_rgb' if self.is_training else 'test_rgb',
-                shape=rgb_shape,
-                dtype='uint8',
-                lod_level=1)
-            audio = fluid.layers.data(
-                name='train_audio' if self.is_training else 'test_audio',
-                shape=audio_shape,
-                dtype='uint8',
-                lod_level=1)
-            if self.mode == 'infer':
-                label = None
-            else:
-                label = fluid.layers.data(
-                    name='train_label' if self.is_training else 'test_label',
-                    shape=label_shape,
-                    dtype='float32')
+                    'pyreader is not recommendated when infer, please set use_pyreader to be false.'
+            self.py_reader = fluid.io.PyReader(
+                feed_list=[rgb, audio, label], capacity=8, iterable=True)
         self.feature_input = [rgb, audio]
         self.label_input = label
 

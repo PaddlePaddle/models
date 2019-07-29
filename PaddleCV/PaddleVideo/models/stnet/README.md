@@ -31,13 +31,13 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 数据准备完毕后，可以通过如下两种方式启动训练：
 
     python train.py --model_name=STNET
-            --config=./configs/stnet.txt
+            --config=./configs/stnet.yaml
             --save_dir=checkpoints
             --log_interval=10
             --valid_interval=1
             --pretrain=${path_to_pretrain_model}
 
-    bash scripts/train/train_stnet.sh
+    bash run.sh train STNET ./configs/stnet.yaml
 
 - 从头开始训练，需要加载在ImageNet上训练的ResNet50权重作为初始化参数，请下载此[模型参数](https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz)并解压，将上面启动脚本中的path\_to\_pretrain\_model设置为解压之后的模型参数存放路径。如果没有手动下载并设置path\_to\_pretrain\_model，则程序会自动下载并将参数保存在~/.paddle/weights/ResNet50\_pretrained目录下面
 
@@ -51,28 +51,19 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 *  权重衰减系数为1e-4
 *  学习率在训练的总epoch数的1/3和2/3时分别做0.1的衰减
 
-**备注：**
-
-* 在训练StNet模型时使用PaddlePaddle Fluid 1.3 + cudnn5.1。使用cudnn7.0以上版本时batchnorm计算moving mean和moving average会出现异常，此问题还在修复中。建议用户安装PaddlePaddle时指定cudnn版本,
-
-     pip install paddlepaddle\_gpu==1.3.0.post85
-
-或者在PaddlePaddle的whl包[下载页面](http://paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/Tables.html/#permalink-4--whl-release)选择下载cuda8.0\_cudnn5\_avx\_mkl对应的whl包安装。
-关于安装PaddlePaddle的详细操作请参考[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.3/beginners_guide/install/index_cn.html)。
-
 
 ## 模型评估
 
 可通过如下两种方式进行模型评估:
 
-    python test.py --model_name=STNET
-            --config=configs/stnet.txt
+    python eval.py --model_name=STNET
+            --config=./configs/stnet.yaml
             --log_interval=1
             --weights=$PATH_TO_WEIGHTS
 
-    bash scripts/test/test__stnet.sh
+    bash run.sh eval STNET ./configs/stnet.yaml
 
-- 使用`scripts/test/test_stnet.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
+- 使用`run.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz)进行评估
 
@@ -95,7 +86,7 @@ StNet的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集�
 
 可通过如下命令进行模型推断：
 
-    python infer.py --model_name=stnet
+    python predict.py --model_name=stnet
             --config=configs/stnet.txt
             --log_interval=1
             --weights=$PATH_TO_WEIGHTS

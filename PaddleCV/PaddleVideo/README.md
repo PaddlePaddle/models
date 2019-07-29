@@ -17,7 +17,7 @@
 
 ### 主要特点
 
-- 包含视频分类和动作定位方向的多个主流领先模型，其中Attention LSTM，Attention Cluster和NeXtVLAD是比较流行的特征序列模型，Non-local, TSN, TSM和StNet是End-to-End的视频分类模型。Attention LSTM模型速度快精度高，NeXtVLAD是2nd-Youtube-8M比赛中最好的单模型, TSN是基于2D-CNN的经典解决方案，TSM是基于时序移位的简单高效视频时空建模方法，Non-local模型提出了视频非局部关联建模方法。Attention Cluster和StNet是百度自研模型，分别发表于CVPR2018和AAAI2019，是Kinetics600比赛第一名中使用到的模型。C-TCN也是百度自研模型，2018年ActivityNet比赛的夺冠方案。
+- 包含视频分类和动作定位方向的多个主流领先模型，其中Attention LSTM，Attention Cluster和NeXtVLAD是比较流行的特征序列模型，Non-local, TSN, TSM和StNet是End-to-End的视频分类模型。Attention LSTM模型速度快精度高，NeXtVLAD是2nd-Youtube-8M比赛中最好的单模型, TSN是基于2D-CNN的经典解决方案，TSM是基于时序移位的简单高效视频时空建模方法，Non-local模型提出了视频非局部关联建模方法。Attention Cluster和StNet是百度自研模型，分别发表于CVPR2018和AAAI2019，是Kinetics600比赛第一名中使用到的模型。C-TCN动作定位模型也是百度自研，2018年ActivityNet比赛的夺冠方案。
 
 - 提供了适合视频分类和动作定位任务的通用骨架代码，用户可一键式高效配置模型完成训练和评测。
 
@@ -31,7 +31,7 @@
 
 ## 快速使用
 
-视频模型库提供通用的train/test/infer框架，通过`train.py/test.py/infer.py`指定模型名、模型配置参数等可一键式进行训练和预测。
+视频模型库提供通用的train/evaluate/predict框架，通过`train.py/eval.py/predict.py`指定任务类型、模型名、模型配置参数等可一键式进行训练和预测。
 
 以StNet模型为例：
 
@@ -40,7 +40,7 @@
 ``` bash
 export CUDA_VISIBLE_DEVICES=0
 python train.py --model_name=STNET
-        --config=./configs/stnet.txt
+        --config=./configs/stnet.yaml
         --save_dir=checkpoints
 ```
 
@@ -49,21 +49,20 @@ python train.py --model_name=STNET
 ``` bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 python train.py --model_name=STNET
-        --config=./configs/stnet.txt
+        --config=./configs/stnet.yaml
         --save_dir=checkpoints
 ```
 
-视频模型库同时提供了快速训练脚本，脚本位于`scripts/train`目录下，可通过如下命令启动训练:
+视频模型库同时提供了快速训练脚本，run.sh，可通过如下命令启动训练:
 
 ``` bash
-bash scripts/train/train_stnet.sh
+bash run.sh train STNET ./configs/stnet.yaml
 ```
 
 - 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中的`num_gpus`和`batch_size`配置。
 
-### 注意
+- 上述启动脚本run.sh运行时需要指定任务类型、模型名、配置文件。训练、评估和预测对应的任务类型分别是train，eval和predict。模型名称则是[AttentionCluster, AttentionLSTM, NEXTVLAD, NONLOCAL, STNET, TSN, TSM, CTCN]中的任何一个。配置文件全部在PaddleVideo/configs目录下，根据模型名称选择对应的配置文件即可。具体使用请参见各模型的说明文档。
 
-使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
 
 ## 模型库结构
 
@@ -71,8 +70,8 @@ bash scripts/train/train_stnet.sh
 
 ```
 configs/
-  stnet.txt
-  tsn.txt
+  stnet.yaml
+  tsn.yaml
   ...
 dataset/
   youtube/
@@ -103,8 +102,8 @@ infer.py
 - `models`: 各模型网络结构构建脚本
 - `scripts`: 各模型快速训练评估脚本
 - `train.py`: 一键式训练脚本，可通过指定模型名，配置文件等一键式启动训练
-- `test.py`: 一键式评估脚本，可通过指定模型名，配置文件，模型权重等一键式启动评估
-- `infer.py`: 一键式推断脚本，可通过指定模型名，配置文件，模型权重，待推断文件列表等一键式启动推断
+- `eval.py`: 一键式评估脚本，可通过指定模型名，配置文件，模型权重等一键式启动评估
+- `predict.py`: 一键式推断脚本，可通过指定模型名，配置文件，模型权重，待推断文件列表等一键式启动推断
 
 ## Model Zoo
 

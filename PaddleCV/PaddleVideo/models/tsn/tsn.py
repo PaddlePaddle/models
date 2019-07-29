@@ -57,26 +57,21 @@ class TSN(ModelBase):
         image_shape[0] = image_shape[0] * self.seglen
         image_shape = [self.seg_num] + image_shape
         self.use_pyreader = use_pyreader
+
+        image = fluid.layers.data(
+            name='image', shape=image_shape, dtype='float32')
+        if self.mode != 'infer':
+            label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+        else:
+            label = None
+
         if use_pyreader:
             assert self.mode != 'infer', \
                         'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            py_reader = fluid.layers.py_reader(
-                capacity=100,
-                shapes=[[-1] + image_shape, [-1] + [1]],
-                dtypes=['float32', 'int64'],
-                name='train_py_reader'
-                if self.is_training else 'test_py_reader',
-                use_double_buffer=True)
-            image, label = fluid.layers.read_file(py_reader)
+            py_reader = fluid.io.PyReader(
+                feed_list=[image, label], capacity=4, iterable=True)
             self.py_reader = py_reader
-        else:
-            image = fluid.layers.data(
-                name='image', shape=image_shape, dtype='float32')
-            if self.mode != 'infer':
-                label = fluid.layers.data(
-                    name='label', shape=[1], dtype='int64')
-            else:
-                label = None
+
         self.feature_input = [image]
         self.label_input = label
 

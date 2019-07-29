@@ -25,7 +25,7 @@ TRAIN:
     l2_weight_decay: 1e-4
     momentum: 0.9
     total_videos: 239781
-    enable_ce: False 
+    fix_random_seed: False
 
 VALID:
     short_size: 256

@@ -53,35 +53,23 @@ class AttentionLSTM(ModelBase):
                                                         0.1)
 
     def build_input(self, use_pyreader):
+        self.feature_input = []
+        for name, dim in zip(self.feature_names, self.feature_dims):
+            self.feature_input.append(
+                fluid.layers.data(
+                    shape=[dim], lod_level=1, dtype='float32', name=name))
+        if self.mode != 'infer':
+            self.label_input = fluid.layers.data(
+                shape=[self.num_classes], dtype='float32', name='label')
+        else:
+            self.label_input = None
         if use_pyreader:
             assert self.mode != 'infer', \
-                'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            shapes = []
-            for dim in self.feature_dims:
-                shapes.append([-1, dim])
-            shapes.append([-1, self.num_classes])  # label
-            self.py_reader = fluid.layers.py_reader(
-                capacity=1024,
-                shapes=shapes,
-                lod_levels=[1] * self.feature_num + [0],
-                dtypes=['float32'] * (self.feature_num + 1),
-                name='train_py_reader'
-                if self.is_training else 'test_py_reader',
-                use_double_buffer=True)
-            inputs = fluid.layers.read_file(self.py_reader)
-            self.feature_input = inputs[:self.feature_num]
-            self.label_input = inputs[-1]
-        else:
-            self.feature_input = []
-            for name, dim in zip(self.feature_names, self.feature_dims):
-                self.feature_input.append(
-                    fluid.layers.data(
-                        shape=[dim], lod_level=1, dtype='float32', name=name))
-            if self.mode == 'infer':
-                self.label_input = None
-            else:
-                self.label_input = fluid.layers.data(
-                    shape=[self.num_classes], dtype='float32', name='label')
+                    'pyreader is not recommendated when infer, please set use_pyreader to be false.'
+            self.py_reader = fluid.io.PyReader(
+                feed_list=self.feature_input + [self.label_input],
+                capacity=8,
+                iterable=True)
 
     def build_model(self):
         att_outs = []
