@@ -18,6 +18,7 @@ import paddle.fluid as fluid
 import numpy as np
 
 from models.classification import nets
+from models.model_check import check_cuda
 import reader
 import config
 import utils
@@ -374,4 +375,5 @@ def get_cards():
 
 if __name__ == "__main__":
     utils.print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)

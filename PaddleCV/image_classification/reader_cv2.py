@@ -207,16 +207,14 @@ def process_image(sample,
         return (img, )
 
 
-def image_mapper(**kwargs):
-    """ image_mapper """
-    return functools.partial(process_image, **kwargs)
-
-
 def process_batch_data(input_data, settings, mode, color_jitter, rotate):
     batch_data = []
     for sample in input_data:
-        batch_data.append(
-            process_image(sample, settings, mode, color_jitter, rotate))
+        if os.path.isfile(sample[0]):
+            batch_data.append(
+                process_image(sample, settings, mode, color_jitter, rotate))
+        else:
+            print("File not exist : %s" % sample[0])
     return batch_data
 
 
@@ -243,10 +241,9 @@ def _reader_creator(settings,
                 img_path = os.path.join(data_dir, img_path)
                 batch_data.append([img_path, int(label)])
                 if len(batch_data) == batch_size:
-                    if mode == 'train' or mode == 'val':
+                    if mode == 'train' or mode == 'val' or mode == 'test':
                         yield batch_data
-                    elif mode == 'test':
-                        yield [sample[0] for sample in batch_data]
+
                     batch_data = []
 
         return read_file_list

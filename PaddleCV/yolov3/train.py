@@ -35,6 +35,7 @@ import numpy as np
 import random
 import time
 import shutil
+import subprocess
 from utility import (parse_args, print_arguments, 
                      SmoothedValue, check_gpu)
 
@@ -50,14 +51,9 @@ num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
 def get_device_num():
     # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1: return 1
-    visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(
-            ['nvidia-smi', '-L']).decode().count('\n')
-    return device_num
+    if num_trainers > 1:
+        return 1
+    return fluid.core.get_cuda_device_count()
 
 
 def train():

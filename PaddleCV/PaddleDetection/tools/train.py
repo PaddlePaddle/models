@@ -20,6 +20,8 @@ import os
 import time
 import multiprocessing
 import numpy as np
+import datetime
+from collections import deque
 
 
 def set_paddle_flags(**kwargs):
@@ -55,13 +57,14 @@ logger = logging.getLogger(__name__)
 
 def main():
     cfg = load_config(FLAGS.config)
-
     if 'architecture' in cfg:
         main_arch = cfg.architecture
     else:
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
+    if 'log_iter' not in cfg:
+        cfg.log_iter = 20
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
@@ -86,7 +89,6 @@ def main():
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    model = create(main_arch)
     lr_builder = create('LearningRate')
     optim_builder = create('OptimizerBuilder')
 
@@ -95,6 +97,7 @@ def main():
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
+            model = create(main_arch)
             train_pyreader, feed_vars = create_feed(train_feed)
             train_fetches = model.train(feed_vars)
             loss = train_fetches['loss']
@@ -113,6 +116,7 @@ def main():
         eval_prog = fluid.Program()
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
+                model = create(main_arch)
                 eval_pyreader, feed_vars = create_feed(eval_feed)
                 fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
@@ -120,8 +124,9 @@ def main():
         eval_reader = create_reader(eval_feed)
         eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
-        # parse train fetches
-        extra_keys = ['im_info', 'im_id'] if cfg.metric == 'COCO' else []
+        # parse eval fetches
+        extra_keys = ['im_info', 'im_id',
+                      'im_shape'] if cfg.metric == 'COCO' else []
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
@@ -132,7 +137,7 @@ def main():
     sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     # only enable sync_bn in multi GPU devices
     build_strategy.sync_batch_norm = sync_bn and devices_num > 1 \
-				     and cfg.use_gpu
+         and cfg.use_gpu
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
             loss_name=loss.name, build_strategy=build_strategy)
@@ -141,12 +146,12 @@ def main():
 
     exe.run(startup_prog)
 
-    freeze_bn = getattr(model.backbone, 'freeze_norm', False)
+    fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
-    elif cfg.pretrain_weights and freeze_bn:
+    elif cfg.pretrain_weights and fuse_bn:
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:
         checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
@@ -158,19 +163,26 @@ def main():
 
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
+    time_stat = deque(maxlen=cfg.log_iter)
     for it in range(start_iter, cfg.max_iters):
         start_time = end_time
         end_time = time.time()
+        time_stat.append(end_time - start_time)
+        time_cost = np.mean(time_stat)
+        eta_sec = (cfg.max_iters - it) * time_cost
+        eta = str(datetime.timedelta(seconds=int(eta_sec)))
         outs = exe.run(train_compile_program, fetch_list=train_values)
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
         train_stats.update(stats)
         logs = train_stats.log()
-        strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
-            it, np.mean(outs[-1]), logs, end_time - start_time)
-        logger.info(strs)
+        if it % cfg.log_iter == 0:
+            strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
+                it, np.mean(outs[-1]), logs, time_cost, eta)
+            logger.info(strs)
 
-        if it > 0 and it % cfg.snapshot_iter == 0:
-            checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
+        if it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1:
+            save_name = str(it) if it != cfg.max_iters - 1 else "model_final"
+            checkpoint.save(exe, train_prog, os.path.join(save_dir, save_name))
 
             if FLAGS.eval:
                 # evaluation
@@ -182,7 +194,6 @@ def main():
                 eval_results(results, eval_feed, cfg.metric, resolution,
                              FLAGS.output_file)
 
-    checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
 
 

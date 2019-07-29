@@ -79,7 +79,7 @@ class DTrainer():
                     clone_image_real = b.var('image_real')
                     break
             self.fake_img, _ = model.network_G(
-                image_real, label_org, label_trg_, cfg, name="generator")
+                image_real, label_org_, label_trg_, cfg, name="generator")
             self.pred_real, self.cls_real = model.network_D(
                 image_real, cfg, name="discriminator")
             self.pred_real.persistable = True
@@ -163,17 +163,16 @@ class DTrainer():
         grad_shape = grad.shape
         grad = fluid.layers.reshape(
             grad, [-1, grad_shape[1] * grad_shape[2] * grad_shape[3]])
+        epsilon = 1e-16
         norm = fluid.layers.sqrt(
             fluid.layers.reduce_sum(
-                fluid.layers.square(grad), dim=1))
+                fluid.layers.square(grad), dim=1) + epsilon)
         gp = fluid.layers.reduce_mean(fluid.layers.square(norm - 1.0))
         return gp
 
 
 class STGAN(object):
     def add_special_args(self, parser):
-        parser.add_argument(
-            '--image_size', type=int, default=256, help="image size")
         parser.add_argument(
             '--g_lr',
             type=float,
@@ -233,6 +232,12 @@ class STGAN(object):
             type=int,
             default=4,
             help="default layers of GRU in generotor")
+        parser.add_argument(
+            '--dis_norm',
+            type=str,
+            default=None,
+            help="the normalization in discriminator, choose in [None, instance_norm]"
+        )
 
         return parser
 

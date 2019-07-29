@@ -38,7 +38,7 @@ class ArgumentGroup(object):
             **kwargs)
 
 
-def data_reader(file_path, word_dict, num_examples, phrase, epoch):
+def data_reader(file_path, word_dict, num_examples, phrase, epoch, shuffle=False):
     unk_id = len(word_dict)
     all_data = []
     with io.open(file_path, "r", encoding='utf8') as fin:
@@ -56,8 +56,9 @@ def data_reader(file_path, word_dict, num_examples, phrase, epoch):
             ]
             all_data.append((wids, label))
 
-    if phrase == "train":
-        random.shuffle(all_data)
+    if shuffle:
+        if phrase == "train":
+            random.shuffle(all_data)
 
     num_examples[phrase] = len(all_data)
 

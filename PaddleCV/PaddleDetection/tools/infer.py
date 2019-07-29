@@ -82,22 +82,46 @@ def get_test_images(infer_dir, infer_img):
     return images
 
 
+def prune_feed_vars(feeded_var_names, target_vars, prog):
+    """
+    Filter out feed variables which are not in program,
+    pruned feed variables are only used in post processing
+    on model output, which are not used in program, such
+    as im_id to identify image order, im_shape to clip bbox
+    in image.
+    """
+    exist_var_names = []
+    prog = prog.clone()
+    prog = prog._prune(targets=target_vars)
+    global_block = prog.global_block()
+    for name in feeded_var_names:
+        try:
+            v = global_block.var(name)
+            exist_var_names.append(v.name)
+        except Exception:
+            logger.info('save_inference_model pruned unused feed '
+                        'variables {}'.format(name))
+            pass
+    return exist_var_names
+
+
 def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(FLAGS.output_dir, cfg_name)
     feeded_var_names = [var.name for var in feed_vars.values()]
-    # im_id is only used for visualize, not used in inference model
-    feeded_var_names.remove('im_id')
-    target_vars = test_fetches.values()
+    target_vars = list(test_fetches.values())
+    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars,
+                                       infer_prog)
     logger.info("Save inference model to {}, input: {}, output: "
                 "{}...".format(save_dir, feeded_var_names,
-                            [var.name for var in target_vars]))
-    fluid.io.save_inference_model(save_dir, 
-                                  feeded_var_names=feeded_var_names,
-                                  target_vars=target_vars,
-                                  executor=exe,
-                                  main_program=infer_prog,
-                                  params_filename="__parmas__")
+                               [var.name for var in target_vars]))
+    fluid.io.save_inference_model(
+        save_dir,
+        feeded_var_names=feeded_var_names,
+        target_vars=target_vars,
+        executor=exe,
+        main_program=infer_prog,
+        params_filename="__params__")
 
 
 def main():
@@ -164,6 +188,12 @@ def main():
     clsid2catid, catid2name = get_category_info(anno_file, with_background,
                                                 use_default_label)
 
+    # whether output bbox is normalized in model output layer
+    is_bbox_normalized = False
+    if hasattr(model, 'is_bbox_normalized') and \
+            callable(model.is_bbox_normalized):
+        is_bbox_normalized = model.is_bbox_normalized()
+
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
         outs = exe.run(infer_prog,
@@ -178,7 +208,6 @@ def main():
 
         bbox_results = None
         mask_results = None
-        is_bbox_normalized = True if cfg.metric == 'VOC' else False
         if 'bbox' in res:
             bbox_results = bbox2out([res], clsid2catid, is_bbox_normalized)
         if 'mask' in res:

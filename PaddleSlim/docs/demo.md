@@ -342,17 +342,21 @@ python compress.py \
 
 step1: 进入路径`PaddlePaddle/models/PaddleSlim/light_nas/`。
 
-step2: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`。
+step2: （可选）按照[使用手册](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md)中说明的方法生成好延时评估器表格`latency_lookup_table.txt`，放置到当前路径。
 
-step3: 修改`compress.yaml`文件, 将参数server_ip设置为当前机器的ip。
+step3: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`。
 
-step4: 执行`sh run.sh`, 可根据实际情况修改`run.sh`中的`CUDA_VISIBLE_DEVICES`。
+step4: 修改`compress.yaml`文件, 将参数server_ip设置为当前机器的ip。
 
-step5: 修改`light_nas_space.py`文件中的`LightNASSpace::init_tokens`, 使其返回step4中搜到的最优tokens。
+step5: （可选）修改`compress.yaml`文件，将参数 target_latency 设置为用户的目标延时。
 
-step6: 修改`compress.yaml`文件，将compressor下的`strategies`去掉。
+step6: 执行`sh run.sh`, 可根据实际情况修改`run.sh`中的`CUDA_VISIBLE_DEVICES`。
 
-step7: 执行`sh run.sh`进行训练任务。
+step7: 修改`light_nas_space.py`文件中的`LightNASSpace::init_tokens`, 使其返回step6中搜到的最优tokens。
+
+step8: 修改`compress.yaml`文件，将compressor下的`strategies`去掉。
+
+step9: 执行`sh run.sh`进行训练任务。
 
 该示例两组结果如下：
 

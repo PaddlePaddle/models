@@ -76,7 +76,7 @@ def norm_layer(input, norm_type='batch_norm', name=None, is_test=False):
         tmp = fluid.layers.elementwise_add(tmp, offset, axis=1)
         return tmp
     else:
-        raise NotImplementedError("norm tyoe: [%s] is not support" % norm_type)
+        raise NotImplementedError("norm type: [%s] is not support" % norm_type)
 
 
 def initial_type(name,

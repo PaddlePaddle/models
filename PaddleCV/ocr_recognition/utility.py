@@ -155,7 +155,7 @@ def check_gpu(use_gpu):
 
     try:
         if use_gpu and not fluid.is_compiled_with_cuda():
-            logger.error(err)
+            print(err)
             sys.exit(1)
     except Exception as e:
         pass
