@@ -91,21 +91,15 @@ def convert_python_to_tensor(weight, batch_size, sample_reader):
             if len(result[0]) == batch_size:
                 tensor_result = []
                 for tensor in result:
-                    t = fluid.Tensor()
                     dat = np.array(tensor, dtype='int64')
                     if len(dat.shape) > 2:
                         dat = dat.reshape((dat.shape[0], dat.shape[2]))
                     elif len(dat.shape) == 1:
                         dat = dat.reshape((-1, 1))
-                    t.set(dat, fluid.CPUPlace())
-                    tensor_result.append(t)
-                tt = fluid.Tensor()
+                    tensor_result.append(dat)
                 neg_array = cs.searchsorted(np.random.sample(args.nce_num))
-                neg_array = np.tile(neg_array, batch_size)
-                tt.set(
-                    neg_array.reshape((batch_size, args.nce_num)),
-                    fluid.CPUPlace())
-                tensor_result.append(tt)
+                neg_array = np.tile(neg_array, batch_size).reshape((batch_size, args.nce_num))
+                tensor_result.append(neg_array)
                 yield tensor_result
                 result = [[], []]
 
@@ -115,7 +109,7 @@ def convert_python_to_tensor(weight, batch_size, sample_reader):
 def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                weight):
 
-    py_reader.decorate_tensor_provider(
+    py_reader.decorate_batch_generator(
         convert_python_to_tensor(weight, args.batch_size, reader.train()))
 
     place = fluid.CPUPlace()
@@ -153,9 +147,9 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
 
                 if batch_id % args.print_batch == 0:
                     logger.info(
-                        "TRAIN --> pass: {} batch: {} loss: {} reader queue:{}".
+                        "TRAIN --> pass: {} batch: {} loss: {}".
                         format(pass_id, batch_id,
-                               loss_val.mean(), py_reader.queue.size()))
+                               loss_val.mean()))
                 if args.with_speed:
                     if batch_id % 500 == 0 and batch_id != 0:
                         elapsed = (time.time() - start)
