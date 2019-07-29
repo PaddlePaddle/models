@@ -124,7 +124,8 @@ class ResizeImage(BaseOperator):
                  target_size=0,
                  max_size=0,
                  interp=cv2.INTER_LINEAR,
-                 use_cv2=True):
+                 use_cv2=True,
+                 target_shape=None):
         """
         Args:
             target_size (int|list): the target size of image's short side, 
@@ -133,6 +134,9 @@ class ResizeImage(BaseOperator):
             interp (int): the interpolation method
             use_cv2 (bool): use the cv2 interpolation method or use PIL 
                 interpolation method
+            target_shape(None|list): resized shape after ResizeImage and it 
+                has higher priority than target_size and max_size. 
+                Format is [w, h].
         """
         super(ResizeImage, self).__init__()
         self.max_size = int(max_size)
@@ -146,6 +150,11 @@ class ResizeImage(BaseOperator):
         if not (isinstance(self.max_size, int) and isinstance(self.interp,
                                                               int)):
             raise TypeError("{}: input type is invalid.".format(self))
+        if target_shape and not isinstance(target_shape, list):
+            raise TypeError(
+                "Type of target_shape input type is invalid. Must be List, now is {}".
+                format(type(target_shape)))
+        self.target_shape = target_shape
 
     def __call__(self, sample, context=None):
         """ Resise the image numpy.
@@ -155,6 +164,17 @@ class ResizeImage(BaseOperator):
             raise TypeError("{}: image type is not numpy.".format(self))
         if len(im.shape) != 3:
             raise ImageError('{}: image is not 3-dimensional.'.format(self))
+        if self.target_shape:
+            if self.use_cv2:
+                im = cv2.resize(
+                    im, tuple(self.target_shape), interpolation=self.interp)
+            else:
+                im = Image.fromarray(np.uint8(im))
+                im = im.resize(tuple(self.target_shape), self.interp)
+                im = np.array(im)
+            sample['image'] = im
+            return sample
+
         im_shape = im.shape
         im_size_min = np.min(im_shape[0:2])
         im_size_max = np.max(im_shape[0:2])
@@ -191,11 +211,10 @@ class ResizeImage(BaseOperator):
                 interpolation=self.interp)
         else:
             im = Image.fromarray(im)
-            resize_w = selected_size * im_scale_x
-            resize_h = selected_size * im_scale_y
+            resize_w = selected_size
+            resize_h = selected_size
             im = im.resize((resize_w, resize_h), self.interp)
             im = np.array(im)
-
         sample['image'] = im
         return sample
 
