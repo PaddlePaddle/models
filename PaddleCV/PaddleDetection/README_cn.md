@@ -96,6 +96,7 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
 - 增加检测库中文文档
 - 修复R-CNN系列模型训练同时进行评估的问题
 - 新增ResNext101-vd + Mask R-CNN + FPN模型
+- 新增基于VOC数据集的Yolo v3模型
 
 #### 7/3/2019
 

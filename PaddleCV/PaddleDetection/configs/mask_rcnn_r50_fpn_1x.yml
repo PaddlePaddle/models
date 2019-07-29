@@ -114,7 +114,7 @@ OptimizerBuilder:
 MaskRCNNTrainFeed:
   batch_size: 1
   dataset:
-    dataset_dir: dataset/coco 
+    dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
     image_dir: train2017
   batch_transforms:

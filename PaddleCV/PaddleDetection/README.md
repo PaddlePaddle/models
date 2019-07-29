@@ -106,11 +106,12 @@ Some of the planned features include:
 
 ## Updates
 
-#### 7/22/2019
+#### 7/29/2019
 
 - Update Chinese docs for PaddleDetection
 - Fix bug in R-CNN models when train and test at the same time
 - Add ResNext101-vd + Mask R-CNN + FPN models
+- Add Yolo v3 on VOC models
 
 #### 7/3/2019
 
