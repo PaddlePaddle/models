@@ -1,7 +1,7 @@
 # 安装文档
 
 ---
-## 内容
+## 目录
 
 - [简介](#introduction)
 - [PaddlePaddle](#paddlepaddle)

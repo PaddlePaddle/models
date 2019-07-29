@@ -70,6 +70,20 @@ Paddle提供基于ImageNet的骨架网络预训练模型。所有预训练模型
 | ResNet34     | 416  |    8    |   270e  |  34.3  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
 | ResNet34     | 320  |    8    |   270e  |  31.4  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
 
+### Yolo v3 基于Pasacl VOC数据集
+
+| 骨架网络     | 输入尺寸 | 每张GPU图片个数 | 学习率策略 | Box AP | 下载 |
+| :----------- | :--: | :-----: | :-----: | :----: | :-------: |
+| DarkNet53    | 608  |    8    |   270e  |  83.5  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| DarkNet53    | 416  |    8    |   270e  |  83.6  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| DarkNet53    | 320  |    8    |   270e  |  82.2  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| MobileNet-V1 | 608  |    8    |   270e  |  76.2  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar) |
+| MobileNet-V1 | 416  |    8    |   270e  |  76.7  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar) |
+| MobileNet-V1 | 320  |    8    |   270e  |  75.3  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar) |
+| ResNet34     | 608  |    8    |   270e  |  82.6  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34_voc.tar) |
+| ResNet34     | 416  |    8    |   270e  |  81.9  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34_voc.tar) |
+| ResNet34     | 320  |    8    |   270e  |  80.1  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34_voc.tar) |
+
 **注意事项:** Yolo v3在8卡，总batch size为64下训练270轮。数据增强包括：mixup, 随机颜色失真，随机剪裁，随机扩张，随机插值法，随机翻转。Yolo v3在训练阶段对minibatch采用随机reshape，可以采用相同的模型测试不同尺寸图片，我们分别提供了尺寸为608/416/320大小的测试结果。
 
 ### RetinaNet
@@ -85,6 +99,6 @@ Paddle提供基于ImageNet的骨架网络预训练模型。所有预训练模型
 
 |  骨架网络     | 输入尺寸 | 每张GPU图片个数 | 学习率策略 | Box AP | 下载  |
 | :----------- | :--: | :-----: | :-----: | :----: | :-------: |
-| MobileNet v1 | 300  |    32   |   120e  |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
+| MobileNet v1 | 300  |    32   |   120e  |  73.13  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
 
 **注意事项:** SSD在2卡，总batch size为64下训练120轮。数据增强包括：随机颜色失真，随机剪裁，随机扩张，随机翻转。

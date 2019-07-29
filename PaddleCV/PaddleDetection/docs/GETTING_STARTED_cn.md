@@ -32,7 +32,8 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 - RCNN系列模型CPU训练在PaddlePaddle 1.5.1及以下版本暂不支持，将在下个版本修复。
 
 
-可通过设置`--eval`在训练epoch中交替执行评估
+可通过设置`--eval`在训练epoch中交替执行评估, 评估在每个snapshot_iter时开始。
+如果验证集很大，测试将会比较耗时，影响训练速度，建议减少评估次数，或训练完再进行评估。
 
 ## 评估
 

@@ -32,7 +32,8 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 
 
 Alternating between training epoch and evaluation run is possible, simply pass
-in `--eval` to do so
+in `--eval` to do so and evaluate at each snapshot_iter. If evaluation dataset is large and
+causes time-consuming in training, we suggest decreasing evaluation times or evaluating after training.
 
 ## Evaluation
 
