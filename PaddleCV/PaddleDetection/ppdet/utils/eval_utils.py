@@ -90,12 +90,12 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
     return results
 
 
-def eval_results(results, 
-                 feed, 
-                 metric, 
+def eval_results(results,
+                 feed,
+                 metric,
                  num_classes,
-                 resolution=None, 
-                 is_bbox_normalized=False, 
+                 resolution=None,
+                 is_bbox_normalized=False,
                  output_file=None):
     """Evaluation for evaluation program results"""
     if metric == 'COCO':
@@ -122,5 +122,21 @@ def eval_results(results,
             res = np.mean(results[-1]['accum_map'][0])
             logger.info('mAP: {:.2f}'.format(res * 100.))
         elif 'bbox' in results[0]:
-            voc_bbox_eval(results, num_classes,
-                          is_bbox_normalized=is_bbox_normalized)
+            voc_bbox_eval(
+                results, num_classes, is_bbox_normalized=is_bbox_normalized)
+
+def re_eval_results(feed,
+                    metric,
+                    bbox_file=None,
+                    mask_file=None,
+                    proposal_file=None):
+    assert metric == 'COCO'
+    assert bbox_file != None or mask_file != None or proposal_file != None
+    from ppdet.utils.coco_eval import coco_execute_eval, execute_proposal_eval
+    anno_file = getattr(feed.dataset, 'annotation', None)
+    if proposal_file != None:
+        execute_proposal_eval(anno_file, proposal_file)
+    if bbox_file != None:
+        coco_execute_eval(bbox_file, 'bbox', anno_file=anno_file)
+    if mask_file != None:
+        coco_execute_eval(mask_file, 'segm', anno_file=anno_file)

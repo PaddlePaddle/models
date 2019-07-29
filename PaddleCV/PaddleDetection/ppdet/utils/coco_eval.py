@@ -22,6 +22,8 @@ import sys
 import json
 import cv2
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import pycocotools.mask as mask_util
@@ -36,6 +38,8 @@ __all__ = [
     'mask2out',
     'get_category_info',
     'proposal_eval',
+    'coco_execute_eval',
+    'execute_proposal_eval'
 ]
 
 
@@ -59,21 +63,20 @@ def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
-    coco_gt = COCO(anno_file)
-
-    logger.info("Start evaluate...")
-    coco_dt = coco_gt.loadRes(outfile)
-    coco_ev = COCOeval(coco_gt, coco_dt, 'bbox')
-
-    coco_ev.params.useCats = 0
-    coco_ev.params.maxDets = list(max_dets)
-
-    coco_ev.evaluate()
-    coco_ev.accumulate()
-    coco_ev.summarize()
+    execute_proposal_eval(anno_file, outfile, max_dets=max_dets)
     # flush coco evaluation result
     sys.stdout.flush()
 
+def execute_proposal_eval(anno_file, jsonfile, max_dets=(100, 300, 1000)):
+    coco_gt = COCO(anno_file)
+    logger.info("Start evaluate...")
+    coco_dt = coco_gt.loadRes(jsonfile)
+    coco_ev = COCOeval(coco_gt, coco_dt, 'bbox')
+    coco_ev.params.useCats = 0
+    coco_ev.params.maxDets = list(max_dets)
+    coco_ev.evaluate()
+    coco_ev.accumulate()
+    coco_ev.summarize()
 
 def bbox_eval(results, anno_file, outfile, with_background=True):
     assert 'bbox' in results[0]
@@ -96,12 +99,7 @@ def bbox_eval(results, anno_file, outfile, with_background=True):
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
-    logger.info("Start evaluate...")
-    coco_dt = coco_gt.loadRes(outfile)
-    coco_ev = COCOeval(coco_gt, coco_dt, 'bbox')
-    coco_ev.evaluate()
-    coco_ev.accumulate()
-    coco_ev.summarize()
+    coco_execute_eval(outfile, 'bbox', coco_gt=coco_gt)
     # flush coco evaluation result
     sys.stdout.flush()
 
@@ -121,13 +119,18 @@ def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
     with open(outfile, 'w') as f:
         json.dump(segm_results, f)
 
+    coco_execute_eval(outfile, 'segm', coco_gt=coco_gt)
+
+def coco_execute_eval(jsonfile, style, coco_gt=None, anno_file=None):
+    assert coco_gt != None or anno_file != None
+    if coco_gt == None:
+        coco_gt = COCO(anno_file)
     logger.info("Start evaluate...")
-    coco_dt = coco_gt.loadRes(outfile)
-    coco_ev = COCOeval(coco_gt, coco_dt, 'segm')
+    coco_dt = coco_gt.loadRes(jsonfile)
+    coco_ev = COCOeval(coco_gt, coco_dt, style)
     coco_ev.evaluate()
     coco_ev.accumulate()
     coco_ev.summarize()
-
 
 def proposal2out(results, is_bbox_normalized=False):
     xywh_res = []
