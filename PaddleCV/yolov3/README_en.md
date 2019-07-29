@@ -96,6 +96,7 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
 
 - Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train. 
 - It is recommended to set `--use_multiprocess_reader=False` when training on Windows.
+- Set `--worker_num=` to specifiy multiprocess reader worker number, which is default 8, if the number of CPU cores in the training environment is small, it is recommended to set worker number to a small value.
 - For more help on arguments:
 
     python train.py --help
