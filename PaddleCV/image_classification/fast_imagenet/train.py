@@ -62,18 +62,7 @@ def parse_args():
     return args
 
 
-def get_device_num():
-    import subprocess
-    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(
-            ['nvidia-smi', '-L']).decode().count('\n')
-    return device_num
-
-
-DEVICE_NUM = get_device_num()
+DEVICE_NUM = fluid.core.get_cuda_device_count()
 
 
 def test_parallel(exe, test_args, args, test_reader, feeder, bs):

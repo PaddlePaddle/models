@@ -338,13 +338,9 @@ def build_program(is_train, main_prog, startup_prog, args):
 
 def get_device_num():
     # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1 : return 1
-    visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
-    return device_num
+    if num_trainers > 1:
+        return 1
+    return fluid.core.get_cuda_device_count()
 
 def train(args):
     # parameters from arguments
