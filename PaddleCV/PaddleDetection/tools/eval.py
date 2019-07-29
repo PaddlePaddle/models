@@ -139,10 +139,6 @@ def main():
         resolution = model.mask_head.resolution
     eval_results(results, eval_feed, cfg.metric, cfg.num_classes, resolution,
                  is_bbox_normalized, FLAGS.output_file)
-<<<<<<< HEAD
-=======
-
->>>>>>> d4fac0e63e6045659c77091f1d2fa223ba709f6f
 
 if __name__ == '__main__':
     parser = ArgsParser()
