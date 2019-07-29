@@ -24,7 +24,6 @@ import uuid
 import logging
 import random
 import math
-import collections
 import numpy as np
 import cv2
 from PIL import Image, ImageEnhance
