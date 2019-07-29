@@ -157,7 +157,8 @@ def train():
         total_iter=total_iter * devices_num,
         mixup_iter=mixup_iter * devices_num,
         random_sizes=random_sizes,
-        use_multiprocess_reader=cfg.use_multiprocess_reader)
+        use_multiprocess_reader=cfg.use_multiprocess_reader,
+        num_workers=cfg.worker_num)
     py_reader = model.py_reader
     py_reader.decorate_paddle_reader(train_reader)
 
