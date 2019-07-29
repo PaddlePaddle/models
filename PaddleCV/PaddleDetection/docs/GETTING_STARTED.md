@@ -1,12 +1,13 @@
-# 开始
+# Getting Started
 
-关于配置运行环境，请参考[安装指南](INSTALL_cn.md)
-
-
-## 训练
+For setting up the running environment, please refer to [installation
+instructions](INSTALL.md).
 
 
-#### 单GPU训练
+## Training
+
+
+#### Single-GPU Training
 
 
 ```bash
@@ -14,64 +15,65 @@ export CUDA_VISIBLE_DEVICES=0
 python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 ```
 
-#### 多GPU训练
+#### Multi-GPU Training
 
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-# or run on CPU with:
-# export CPU_NUM=8
 python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 ```
 
-- 数据集默认存储在`dataset/coco`中（可配置）。
-- 若本地未找到数据集，将自动下载数据集并保存在`~/.cache/paddle/dataset`中。
-- 预训练模型自动下载并保存在`〜/.cache/paddle/weights`中。
-- 模型checkpoints默认保存在`output`中（可配置）。
-- 更多参数配置，请参考配置文件。
-- RCNN系列模型CPU训练在PaddlePaddle 1.5.1及以下版本暂不支持，将在下个版本修复。
+- Datasets is stored in `dataset/coco` by default (configurable).
+- Datasets will be downloaded automatically and cached in `~/.cache/paddle/dataset` if not be found locally.
+- Pretrained model is downloaded automatically and cached in `~/.cache/paddle/weights`.
+- Model checkpoints is saved in `output` by default (configurable).
+- To check out hyper parameters used, please refer to the config file.
+- RCNN models training on CPU is not supported on PaddlePaddle<=1.5.1 and will be fixed on later version.
 
 
-可通过设置`--eval`在训练epoch中交替执行评估
+Alternating between training epoch and evaluation run is possible, simply pass
+in `--eval` to do so
 
-## 评估
+## Evaluation
 
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0
-# 若使用CPU，则执行
+# or run on CPU with:
 # export CPU_NUM=1
 python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 ```
 
-- 默认从`output`加载checkpoint（可配置）
-- R-CNN和SSD模型目前暂不支持多GPU评估，将在后续版本支持
+- Checkpoint is loaded from `output` by default (configurable)
+- Multi-GPU evaluation for R-CNN and SSD models is not supported at the
+moment, but it is a planned feature
 
 
-## 推断
+## Inference
 
 
-- 单图片推断
+- Run inference on a single image:
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0
-# 若使用CPU，则执行
+# or run on CPU with:
 # export CPU_NUM=1
 python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/000000570688.jpg
 ```
 
-- 多图片推断
+- Batch inference:
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0
-# 若使用CPU，则执行
+# or run on CPU with:
 # export CPU_NUM=1
 python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_dir=demo
 ```
 
-可视化文件默认保存在`output`中，可通过`--output_dir=`指定不同的输出路径。
+The visualization files are saved in `output` by default, to specify a different
+path, simply add a `--output_dir=` flag.
 
-- 保存推断模型
+- Save inference model
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0
@@ -81,16 +83,18 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
                       --save_inference_model
 ```
 
-通过设置`--save_inference_model`保存可供PaddlePaddle预测库加载的推断模型。
+Save inference model by set `--save_inference_model`, which can be loaded by PaddlePaddle predict library.
 
 
 ## FAQ
 
-**Q:**  为什么我使用单GPU训练loss会出`NaN`? </br>
-**A:**  默认学习率是适配多GPU训练(8x GPU)，若使用单GPU训练，须对应调整学习率（例如，除以8）。
+**Q:**  Why do I get `NaN` loss values during single GPU training? </br>
+**A:**  The default learning rate is tuned to multi-GPU training (8x GPUs), it must
+be adapted for single GPU training accordingly (e.g., divide by 8).
 
 
-**Q:**  如何减少GPU显存使用率? </br>
-**A:**  可通过设置环境变量`FLAGS_conv_workspace_size_limit`为较小的值来减少显存消耗，并且不
-会影响训练速度。以Mask-RCNN（R50）为例，设置`export FLAGS_conv_workspace_size_limit = 512`，
-batch size可以达到每GPU 4 (Tesla V100 16GB)。
+**Q:**  How to reduce GPU memory usage? </br>
+**A:**  Setting environment variable FLAGS_conv_workspace_size_limit to a smaller
+number can reduce GPU memory footprint without affecting training speed.
+Take Mask-RCNN (R50) as example, by setting `export FLAGS_conv_workspace_size_limit=512`,
+batch size could reach 4 per GPU (Tesla V100 16GB).

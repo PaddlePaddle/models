@@ -1,39 +1,40 @@
-# 安装文档
+# Installation
 
 ---
-## 内容
+## Table of Contents
 
-- [简介](#introduction)
+- [Introduction](#introduction)
 - [PaddlePaddle](#paddlepaddle)
-- [其他依赖安装](#other-dependencies)
+- [Other Dependencies](#other-dependencies)
 - [PaddleDetection](#paddle-detection)
-- [数据集](#datasets)
+- [Datasets](#datasets)
 
 
-## 简介
+## Introduction
 
-这份文档介绍了如何安装PaddleDetection及其依赖项(包括PaddlePaddle)，以及COCO和Pascal VOC数据集。
+This document covers how to install PaddleDetection, its dependencies
+(including PaddlePaddle), together with COCO and Pascal VOC dataset.
 
-PaddleDetection的相关信息，请参考[README.md](../README.md).
+For general information about PaddleDetection, please see [README.md](../README.md).
 
 
 ## PaddlePaddle
 
+Running PaddleDetection requires PaddlePaddle Fluid v.1.5 and later. please follow the instructions in [installation document](http://www.paddlepaddle.org.cn/).
 
-运行PaddleDetection需要PaddlePaddle Fluid v.1.5及更高版本。请按照[安装文档](http://www.paddlepaddle.org.cn/)中的说明进行操作。
-
-请确保您的PaddlePaddle安装成功并且版本不低于需求版本。使用以下命令进行验证。
+Please make sure your PaddlePaddle installation was successful and the version
+of your PaddlePaddle is not lower than required. Verify with the following commands.
 
 ```
-# 在您的Python解释器中确认PaddlePaddle安装成功
+# To check PaddlePaddle installation in your Python interpreter
 >>> import paddle.fluid as fluid
 >>> fluid.install_check.run_check()
 
-# 确认PaddlePaddle版本
+# To check PaddlePaddle version
 python -c "import paddle; print(paddle.__version__)"
 ```
 
-### 环境需求:
+### Requirements:
 
 - Python2 or Python3
 - CUDA >= 8.0
@@ -41,27 +42,29 @@ python -c "import paddle; print(paddle.__version__)"
 - nccl >= 2.1.2
 
 
-## 其他依赖安装
+## Other Dependencies
 
 [COCO-API](https://github.com/cocodataset/cocoapi):
 
-运行需要COCO-API，安装方式如下：
+COCO-API is needed for running. Installation is as follows:
 
     git clone https://github.com/cocodataset/cocoapi.git
     cd cocoapi/PythonAPI
-    # 若Cython未安装，请安装Cython
+    # if cython is not installed
     pip install Cython
-    # 安装至全局site-packages
+    # Install into global site-packages
     make install
-    # 若您没有权限或更倾向不安装至全局site-packages
+    # Alternatively, if you do not have permissions or prefer
+    # not to install the COCO API into global site-packages
     python setup.py install --user
 
 
 ## PaddleDetection
 
-**克隆Paddle models模型库：**
+**Clone Paddle models repository:**
 
-您可以通过以下命令克隆Paddle models模型库并切换工作目录至PaddleDetection：
+You can clone Paddle models and change working directory to PaddleDetection
+with the following commands:
 
 ```
 cd <path/to/clone/models>
@@ -69,15 +72,15 @@ git clone https://github.com/PaddlePaddle/models
 cd models/PaddleCV/PaddleDetection
 ```
 
-**安装Python依赖库：**
+**Install Python dependencies:**
 
-Python依赖库在[requirements.txt](../requirements.txt)中给出，可通过如下命令安装：
+Required python packages are specified in [requirements.txt](../requirements.txt), and can be installed with:
 
 ```
 pip install -r requirements.txt
 ```
 
-**确认测试通过：**
+**Make sure the tests pass:**
 
 ```
 export PYTHONPATH=`pwd`:$PYTHONPATH
@@ -85,26 +88,24 @@ python ppdet/modeling/tests/test_architectures.py
 ```
 
 
-## 数据集
+## Datasets
 
+PaddleDetection includes support for [COCO](http://cocodataset.org) and [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/) by default, please follow these instructions to set up the dataset.
 
-PaddleDetection默认支持[COCO](http://cocodataset.org)和[Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/)，
-请按照如下步骤设置数据集。
+**Create symlinks for local datasets:**
 
-**为本地数据集创建软链接：**
-
-
-配置文件中默认的数据集路径是`dataset/coco`和`dataset/voc`，如果您本地磁盘上已有数据集，
-只需创建软链接至数据集目录：
+Default dataset path in config files is `dataset/coco` and `dataset/voc`, if the
+datasets are already available on disk, you can simply create symlinks to
+their directories:
 
 ```
 ln -sf <path/to/coco> <path/to/paddle_detection>/dataset/coco
 ln -sf <path/to/voc> <path/to/paddle_detection>/dataset/voc
 ```
 
-**手动下载数据集：**
+**Download datasets manually:**
 
-若您本地没有数据集，可通过如下命令下载：
+On the other hand, to download the datasets, run the following commands:
 
 - COCO
 
@@ -120,12 +121,14 @@ cd dataset/voc
 ./download.sh
 ```
 
-**自动下载数据集：**
+**Download datasets automatically:**
 
-若您在数据集未成功设置（例如，在`dataset/coco`或`dataset/voc`中找不到）的情况下开始运行，
-PaddleDetection将自动从[COCO-2017](http://images.cocodataset.org)或
-[VOC2012](http://host.robots.ox.ac.uk/pascal/VOC)下载，解压后的数据集将被保存在
-`〜/.cache/paddle/dataset/`目录下，下次运行时，也可自动从该目录发现数据集。
+If a training session is started but the dataset is not setup properly (e.g,
+not found in `dataset/coco` or `dataset/voc`), PaddleDetection can automatically
+download them from [COCO-2017](http://images.cocodataset.org) and
+[VOC2012](http://host.robots.ox.ac.uk/pascal/VOC), the decompressed datasets
+will be cached in `~/.cache/paddle/dataset/` and can be discovered automatically
+subsequently.
 
 
-**说明：** 更多有关数据集的介绍，请参考[DATA.md](DATA_cn.md)
+**NOTE:** For further informations on the datasets, please see [DATA.md](DATA.md)

@@ -1,29 +1,40 @@
 # PaddleDetection
 
-PaddleDetection的目的是为工业界和学术界提供大量易使用的目标检测模型。PaddleDetection不仅性能完善，易于部署，同时能够灵活的满足算法研发需求。
+The goal of PaddleDetection is to provide easy access to a wide range of object
+detection models in both industry and research settings. We design
+PaddleDetection to be not only performant, production-ready but also highly
+flexible, catering to research needs.
+
 
 <div align="center">
   <img src="demo/output/000000570688.jpg" />
 </div>
 
 
-## 简介
+## Introduction
 
-特性：
+Features:
 
-- 易部署:
+- Production Ready:
 
-  PaddleDetection的模型中使用的主要算子均通过C++和CUDA实现，配合PaddlePaddle的高性能预测引擎，使得在服务器环境下易于部署。
+  Key operations are implemented in C++ and CUDA, together with PaddlePaddle's
+highly efficient inference engine, enables easy deployment in server environments.
 
-- 高灵活度：
+- Highly Flexible:
 
-  PaddleDetection各个组件均为功能单元。例如，模型结构，数据预处理流程，用户能够通过修改配置文件轻松实现可定制化。
+  Components are designed to be modular. Model architectures, as well as data
+preprocess pipelines, can be easily customized with simple configuration
+changes.
 
-- 高性能：
+- Performance Optimized:
 
-  在PaddlePaddle底层框架的帮助下，实现了更快的模型训练及更少的显存占用量。值得注意的是，Yolo v3的训练速度远快于其他框架。另外，Mask-RCNN(ResNet50)可以在Tesla V100 16GB环境下以每个GPU4张图片输入实现多卡训练。
+  With the help of the underlying PaddlePaddle framework, faster training and
+reduced GPU memory footprint is achieved. Notably, Yolo V3 training is
+much faster compared to other frameworks. Another example is Mask-RCNN
+(ResNet50), we managed to fit up to 4 images per GPU (Tesla V100 16GB) during
+multi-GPU training.
 
-支持的模型结构：
+Supported Architectures:
 
 |                    | ResNet | ResNet-vd <sup>[1](#vd)</sup> | ResNeXt-vd | SENet | MobileNet | DarkNet |
 |--------------------|:------:|------------------------------:|:----------:|:-----:|:---------:|:-------:|
@@ -36,30 +47,32 @@ PaddleDetection的目的是为工业界和学术界提供大量易使用的目�
 | Yolov3             | ✓      |                             ✗ | ✗          | ✗     | ✓         | ✓       |
 | SSD                | ✗      |                             ✗ | ✗          | ✗     | ✓         | ✗       |
 
-<a name="vd">[1]</a> [ResNet-vd](https://arxiv.org/pdf/1812.01187) 模型提供了较大的精度提高和较少的性能损失。
+<a name="vd">[1]</a> [ResNet-vd](https://arxiv.org/pdf/1812.01187) models offer much improved accuracy with negligible performance cost.
 
-扩展特性：
+Advanced Features:
 
-- [x] **Synchronized Batch Norm**: 目前在Yolo v3中使用。
-- [x] **Group Norm**: 预训练模型待发布。
-- [x] **Modulated Deformable Convolution**: 预训练模型待发布。
-- [x] **Deformable PSRoI Pooling**: 预训练模型待发布。
+- [x] **Synchronized Batch Norm**: currently used by Yolo V3.
+- [x] **Group Norm**: pretrained models to be released.
+- [x] **Modulated Deformable Convolution**: pretrained models to be released.
+- [x] **Deformable PSRoI Pooling**: pretrained models to be released.
 
-**注意:** Synchronized batch normalization 只能在多GPU环境下使用，不能在CPU环境或者单GPU环境下使用。
-
-## 模型库
-
-基于PaddlePaddle训练的目标检测模型可参考[PaddleDetection模型库](docs/MODEL_ZOO.md).
+**NOTE:** Synchronized batch normalization can only be used on multiple GPU devices, can not be used on CPU devices or single GPU device.
 
 
-## 安装
+## Model zoo
 
-请参考[安装说明文档](docs/INSTALL.md).
+Pretrained models are available in the PaddlePaddle [PaddleDetection model zoo](docs/MODEL_ZOO_en.md).
 
 
-## 开始
+## Installation
 
-在预测阶段，可以通过运行以下指令得到可视化结果并保存在`output`目录下。
+Please follow the [installation guide](docs/INSTALL_en.md).
+
+
+## Get Started
+
+For inference, simply run the following command and the visualized result will
+be saved in `output`.
 
 ```bash
 export PYTHONPATH=`pwd`:$PYTHONPATH
@@ -68,41 +81,44 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
     --infer_img=demo/000000570688.jpg
 ```
 
-更多训练及评估流程，请参考[GETTING_STARTED.md](docs/GETTING_STARTED.md).
+For detailed training and evaluation workflow, please refer to [GETTING_STARTED_en.md](docs/GETTING_STARTED_en.md).
 
-同时推荐用户参考[IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
+We also recommend users to take a look at the [IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
 
-其他更多信息可参考以下文档内容：
+Further information can be found in these documentations:
 
-- [配置流程介绍](docs/CONFIG.md)
-- [自定义数据集和预处理流程介绍](docs/DATA.md)
-
-
-## 未来规划
-
-目前PaddleDetection处在持续更新的状态，接下来将会推出一系列的更新，包括如下特性：
-
-- [ ] 混合精度训练
-- [ ] 分布式训练
-- [ ] Int8模式预测
-- [ ] 用户自定义算子
-- [ ] 进一步丰富模型库
+- [Introduction to the configuration workflow.](docs/CONFIG_en.md)
+- [Guide to custom dataset and preprocess pipeline.](docs/DATA_en.md)
 
 
-## 版本更新
+##  Todo List
+
+Please note this is a work in progress, substantial changes may come in the
+near future.
+Some of the planned features include:
+
+- [ ] Mixed precision training.
+- [ ] Distributed training.
+- [ ] Inference in 8-bit mode.
+- [ ] User defined operations.
+- [ ] Larger model zoo.
+
+
+## Updates
 
 #### 7/22/2019
 
-- 增加检测库中文文档
-- 修复R-CNN系列模型训练同时进行评估的问题
-- 新增ResNext101-vd + Mask R-CNN + FPN模型
+- Update Chinese docs for PaddleDetection
+- Fix bug in R-CNN models when train and test at the same time
+- Add ResNext101-vd + Mask R-CNN + FPN models
 
 #### 7/3/2019
 
-- 首次发布PaddleDetection检测库和检测模型库
-- 模型包括：Faster R-CNN, Mask R-CNN, Faster R-CNN+FPN, Mask
-  R-CNN+FPN, Cascade-Faster-RCNN+FPN, RetinaNet, Yolo v3, 和SSD.
+- Initial release of PaddleDetection and detection model zoo
+- Models included: Faster R-CNN, Mask R-CNN, Faster R-CNN+FPN, Mask
+  R-CNN+FPN, Cascade-Faster-RCNN+FPN, RetinaNet, Yolo v3, and SSD.
 
-## 如何贡献代码
 
-我们实现欢迎你可以为PaddleDetection提供代码，也十分感谢你的反馈。
+## Contributing
+
+Contributions are highly welcomed and we would really appreciate your feedback!!
