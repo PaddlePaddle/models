@@ -61,12 +61,12 @@ Advanced Features:
 
 ## Model zoo
 
-Pretrained models are available in the PaddlePaddle [PaddleDetection model zoo](docs/MODEL_ZOO_en.md).
+Pretrained models are available in the PaddlePaddle [PaddleDetection model zoo](docs/MODEL_ZOO.md).
 
 
 ## Installation
 
-Please follow the [installation guide](docs/INSTALL_en.md).
+Please follow the [installation guide](docs/INSTALL.md).
 
 
 ## Get Started
@@ -81,14 +81,14 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
     --infer_img=demo/000000570688.jpg
 ```
 
-For detailed training and evaluation workflow, please refer to [GETTING_STARTED_en.md](docs/GETTING_STARTED_en.md).
+For detailed training and evaluation workflow, please refer to [GETTING_STARTED.md](docs/GETTING_STARTED.md).
 
 We also recommend users to take a look at the [IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
 
 Further information can be found in these documentations:
 
-- [Introduction to the configuration workflow.](docs/CONFIG_en.md)
-- [Guide to custom dataset and preprocess pipeline.](docs/DATA_en.md)
+- [Introduction to the configuration workflow.](docs/CONFIG.md)
+- [Guide to custom dataset and preprocess pipeline.](docs/DATA.md)
 
 
 ##  Todo List

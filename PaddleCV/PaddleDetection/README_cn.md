@@ -49,12 +49,12 @@ PaddleDetection的目的是为工业界和学术界提供大量易使用的目�
 
 ## 模型库
 
-基于PaddlePaddle训练的目标检测模型可参考[PaddleDetection模型库](docs/MODEL_ZOO.md).
+基于PaddlePaddle训练的目标检测模型可参考[PaddleDetection模型库](docs/MODEL_ZOO_cn.md).
 
 
 ## 安装
 
-请参考[安装说明文档](docs/INSTALL.md).
+请参考[安装说明文档](docs/INSTALL_cn.md).
 
 
 ## 开始
@@ -68,14 +68,14 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
     --infer_img=demo/000000570688.jpg
 ```
 
-更多训练及评估流程，请参考[GETTING_STARTED.md](docs/GETTING_STARTED.md).
+更多训练及评估流程，请参考[GETTING_STARTED_cn.md](docs/GETTING_STARTED_cn.md).
 
 同时推荐用户参考[IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
 
 其他更多信息可参考以下文档内容：
 
-- [配置流程介绍](docs/CONFIG.md)
-- [自定义数据集和预处理流程介绍](docs/DATA.md)
+- [配置流程介绍](docs/CONFIG_cn.md)
+- [自定义数据集和预处理流程介绍](docs/DATA_cn.md)
 
 
 ## 未来规划
@@ -105,4 +105,4 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
 
 ## 如何贡献代码
 
-我们实现欢迎你可以为PaddleDetection提供代码，也十分感谢你的反馈。
+我们非常欢迎你可以为PaddleDetection提供代码，也十分感谢你的反馈。
