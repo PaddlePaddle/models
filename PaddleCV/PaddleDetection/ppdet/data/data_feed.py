@@ -28,9 +28,9 @@ from ppdet.data.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
     Permute, Resize)
-from ppdet.data.transform.arrange_sample import (ArrangeRCNN, ArrangeTestRCNN,
-                                                 ArrangeSSD, ArrangeTestSSD,
-                                                 ArrangeYOLO, ArrangeTestYOLO)
+from ppdet.data.transform.arrange_sample import (
+    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeTestSSD, ArrangeYOLO,
+    ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
@@ -41,7 +41,7 @@ __all__ = [
 ]
 
 
-def create_reader(feed, max_iter=0):
+def create_reader(feed, max_iter=0, args_path=None):
     """
     Return iterable data reader.
 
@@ -51,11 +51,11 @@ def create_reader(feed, max_iter=0):
 
     # if `DATASET_DIR` does not exists, search ~/.paddle/dataset for a directory
     # named `DATASET_DIR` (e.g., coco, pascal), if not present either, download
-    if feed.dataset.dataset_dir:
+    dataset_home = args_path if args_path else feed.dataset.dataset_dir
+    if dataset_home:
         annotation = getattr(feed.dataset, 'annotation', None)
         image_dir = getattr(feed.dataset, 'image_dir', None)
-        dataset_dir = get_dataset_path(feed.dataset.dataset_dir, annotation,
-                                       image_dir)
+        dataset_dir = get_dataset_path(dataset_home, annotation, image_dir)
         if annotation:
             feed.dataset.annotation = os.path.join(dataset_dir, annotation)
         if image_dir:
@@ -421,8 +421,8 @@ class FasterRCNNTrainFeed(DataFeed):
                          std=[0.229, 0.224, 0.225],
                          is_scale=True,
                          is_channel_first=False), ResizeImage(
-                             target_size=800, max_size=1333, interp=1),
-                     Permute(to_bgr=False)
+                             target_size=800, max_size=1333,
+                             interp=1), Permute(to_bgr=False)
                  ],
                  batch_transforms=[PadBatch()],
                  batch_size=1,
@@ -677,43 +677,43 @@ class MaskRCNNTestFeed(DataFeed):
 class SSDTrainFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
-    def __init__(
-            self,
-            dataset=VocDataSet().__dict__,
-            fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
-            image_shape=[3, 320, 320],
-            sample_transforms=[
-                DecodeImage(
-                    to_rgb=True, with_mixup=False), NormalizeBox(),
-                RandomDistort(
-                    brightness_lower=0.875,
-                    brightness_upper=1.125,
-                    is_order=True), ExpandImage(
-                        max_ratio=4, prob=0.5),
-                CropImage(
-                    batch_sampler=[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                                   [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
-                                   [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
-                                   [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
-                                   [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
-                                   [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
-                                   [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
-                    satisfy_all=False,
-                    avoid_no_bbox=False), Resize(
-                        target_size=300, use_cv2=False, interp=1),
-                RandomFlipImage(is_normalized=True), Permute(), NormalizeImage(
-                    mean=[127.5, 127.5, 127.5],
-                    std=[127.502231, 127.502231, 127.502231],
-                    is_scale=False)
-            ],
-            batch_transforms=[],
-            batch_size=32,
-            shuffle=True,
-            samples=-1,
-            drop_last=True,
-            num_workers=8,
-            bufsize=10,
-            use_process=True):
+    def __init__(self,
+                 dataset=VocDataSet().__dict__,
+                 fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
+                 image_shape=[3, 320, 320],
+                 sample_transforms=[
+                     DecodeImage(
+                         to_rgb=True,
+                         with_mixup=False), NormalizeBox(), RandomDistort(
+                             brightness_lower=0.875,
+                             brightness_upper=1.125,
+                             is_order=True), ExpandImage(
+                                 max_ratio=4, prob=0.5),
+                     CropImage(
+                         batch_sampler=[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                                        [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
+                         satisfy_all=False,
+                         avoid_no_bbox=False), ResizeImage(
+                             target_size=300, use_cv2=False,
+                             interp=1), RandomFlipImage(is_normalized=True),
+                     Permute(), NormalizeImage(
+                         mean=[127.5, 127.5, 127.5],
+                         std=[127.502231, 127.502231, 127.502231],
+                         is_scale=False)
+                 ],
+                 batch_transforms=[],
+                 batch_size=32,
+                 shuffle=True,
+                 samples=-1,
+                 drop_last=True,
+                 num_workers=8,
+                 bufsize=10,
+                 use_process=True):
         sample_transforms.append(ArrangeSSD(fields=fields))
         if isinstance(dataset, dict):
             dataset = VocDataSet(**dataset)
@@ -742,7 +742,8 @@ class SSDEvalFeed(DataFeed):
                  image_shape=[3, 320, 320],
                  sample_transforms=[
                      DecodeImage(
-                         to_rgb=True, with_mixup=False), NormalizeBox(), Resize(
+                         to_rgb=True,
+                         with_mixup=False), NormalizeBox(), ResizeImage(
                              target_size=320, use_cv2=False, interp=1),
                      Permute(), NormalizeImage(
                          mean=[127.5, 127.5, 127.5],
@@ -753,7 +754,7 @@ class SSDEvalFeed(DataFeed):
                  batch_size=64,
                  shuffle=False,
                  samples=-1,
-                 drop_last=False,
+                 drop_last=True,
                  num_workers=8,
                  bufsize=10,
                  use_process=False):
@@ -891,12 +892,15 @@ class YoloEvalFeed(DataFeed):
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_shape', 'im_id'],
-                 image_shape=[3, 300, 300],
+                 fields=[
+                     'image', 'im_size', 'im_id', 'gt_box', 'gt_label',
+                     'is_difficult'
+                 ],
+                 image_shape=[3, 320, 320],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      ResizeImage(
-                         target_size=300, interp=2),
+                         target_size=320, interp=2),
                      NormalizeImage(
                          mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225],
@@ -913,7 +917,7 @@ class YoloEvalFeed(DataFeed):
                  num_workers=8,
                  num_max_boxes=50,
                  use_process=False):
-        sample_transforms.append(ArrangeTestYOLO())
+        sample_transforms.append(ArrangeEvalYOLO())
         super(YoloEvalFeed, self).__init__(
             dataset,
             fields,
@@ -927,7 +931,6 @@ class YoloEvalFeed(DataFeed):
             with_background=with_background,
             num_workers=num_workers,
             use_process=use_process)
-        self.num_max_boxes = num_max_boxes
         self.mode = 'VAL'
         self.bufsize = 128
 
@@ -939,12 +942,12 @@ class YoloTestFeed(DataFeed):
     def __init__(self,
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_shape', 'im_id'],
-                 image_shape=[3, 300, 300],
+                 fields=['image', 'im_size', 'im_id'],
+                 image_shape=[3, 320, 320],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      ResizeImage(
-                         target_size=300, interp=2),
+                         target_size=320, interp=2),
                      NormalizeImage(
                          mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225],
@@ -977,6 +980,5 @@ class YoloTestFeed(DataFeed):
             with_background=with_background,
             num_workers=num_workers,
             use_process=use_process)
-        self.num_max_boxes = num_max_boxes
         self.mode = 'TEST'
         self.bufsize = 128

@@ -75,7 +75,7 @@ def main():
             fetches = model.eval(feed_vars)
     eval_prog = eval_prog.clone(True)
 
-    reader = create_reader(eval_feed)
+    reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
     pyreader.decorate_sample_list_generator(reader, place)
 
     # compile program for multi-devices
@@ -93,18 +93,29 @@ def main():
     if 'weights' in cfg:
         checkpoint.load_pretrain(exe, eval_prog, cfg.weights)
 
+    assert cfg.metric in ['COCO', 'VOC'], \
+            "unknown metric type {}".format(cfg.metric)
     extra_keys = []
-    if 'metric' in cfg and cfg.metric == 'COCO':
+    if cfg.metric == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
+    if cfg.metric == 'VOC':
+        extra_keys = ['gt_box', 'gt_label', 'is_difficult']
 
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
+
+    # whether output bbox is normalized in model output layer
+    is_bbox_normalized = False
+    if hasattr(model, 'is_bbox_normalized') and \
+            callable(model.is_bbox_normalized):
+        is_bbox_normalized = model.is_bbox_normalized()
 
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
     # evaluation
     resolution = None
     if 'mask' in results[0]:
         resolution = model.mask_head.resolution
-    eval_results(results, eval_feed, cfg.metric, resolution, FLAGS.output_file)
+    eval_results(results, eval_feed, cfg.metric, cfg.num_classes, resolution,
+                 is_bbox_normalized, FLAGS.output_file)
 
 
 if __name__ == '__main__':
@@ -115,5 +126,11 @@ if __name__ == '__main__':
         default=None,
         type=str,
         help="Evaluation file name, default to bbox.json and mask.json.")
+    parser.add_argument(
+        "-d",
+        "--dataset_dir",
+        default=None,
+        type=str,
+        help="Dataset path, same as DataFeed.dataset.dataset_dir")
     FLAGS = parser.parse_args()
     main()
