@@ -83,7 +83,7 @@ def check_gpu(use_gpu):
     except Exception as e:
         pass
 
-def parse_args():
+def parse_args(): 
     """Add arguments
 
     Returns: 
@@ -197,6 +197,16 @@ def get_device_num():
     print("...Running on ",device_num," GPU cards")
     return device_num
 
+def init_from()
+
+    if checkpoint is not None:
+        fluid.io.load_persistables(exe, checkpoint, main_program=train_prog)
+
+    if pretrained_model:
+        def if_exist(var):  
+            return os.path.exists(os.path.join(pretrained_model, var.name))
+        fluid.io.load_vars(exe, pretrained_model, main_program=train_prog, predicate=if_exist)
+
 
 def init_from_checkpoint(args, exe, program):
 
@@ -235,9 +245,7 @@ def save_checkpoint(args, exe, program, pass_id):
         filename="checkpoint.pdckpt")
 
     print("save checkpoint at %s" % (checkpoint_path)))
-
     return True
-
 
 def create_pyreader(is_train, args):
     """
@@ -265,3 +273,39 @@ def create_pyreader(is_train, args):
                 iterable = False)
 
     return py_reader
+
+##TODO: Robust print_resulr func.
+def print_result(batch_id, args)
+    pass
+
+
+def best_strategy(args, program, loss):
+    # use_ngraph is for CPU only, please refer to README_ngraph.md for details
+    use_ngraph = os.getenv('FLAGS_use_ngraph')
+    if not use_ngraph:
+        build_strategy = fluid.BuildStrategy()
+        # memopt may affect GC results
+        #build_strategy.memory_optimize = args.with_mem_opt
+        build_strategy.enable_inplace = args.with_inplace
+        #build_strategy.fuse_all_reduce_ops=1
+
+        exec_strategy = fluid.ExecutionStrategy()
+        exec_strategy.num_threads = device_num
+        exec_strategy.num_iteration_per_drop_scope = 10
+        if num_trainers > 1 and args.use_gpu:
+            dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog)
+            # NOTE: the process is fast when num_threads is 1
+            # for multi-process training.
+            exec_strategy.num_threads = 1
+
+        train_exe = fluid.ParallelExecutor(
+            main_program=train_prog,
+            use_cuda=bool(args.use_gpu),
+            loss_name=train_cost.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
+    else:
+        train_exe = exe
+
+    return train_exe
+    
