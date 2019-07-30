@@ -34,7 +34,7 @@ def get_config(model_path, mode=True):
             1 << 30,
             1,
             precision_mode=fluid.core.AnalysisConfig.Precision.Int8,
-            use_static=True,
+            use_static=False,
             use_calib_mode=True)
         logger.info('Run inference by TRT INT8.')
     elif mode == 'trt_fp32':
@@ -42,7 +42,7 @@ def get_config(model_path, mode=True):
             workspace_size=1 << 30,
             max_batch_size=1,
             precision_mode=fluid.core.AnalysisConfig.Precision.Float32,
-            use_static=True)
+            use_static=False)
         logger.info('Run inference by TRT FP32.')
     elif mode == 'fluid':
         logger.info('Run inference by Fluid FP32.')
@@ -107,6 +107,9 @@ def eval():
             in_t.data = fluid.core.PaddleBuf(buf)
             in_ts = [in_t]
 
+            if i == 0:
+                print(in_t.shape)
+
             if cfg.architecture == 'YOLOv3':
                 dt2 = data[0][1].astype('int64')
                 in_t2 = fluid.core.PaddleTensor()
@@ -116,8 +119,24 @@ def eval():
                 buf = dt2.flatten().tolist()
                 in_t2.data = fluid.core.PaddleBuf(buf)
                 in_ts += [in_t2]
-                if i == 0:
-                    print(in_t.shape, in_t2.shape)
+            elif cfg.architecture == 'SSD':
+                pass
+            else:
+                dt2 = data[0][1].astype('float32')
+                in_t2 = fluid.core.PaddleTensor()
+                in_t2.dtype = fluid.core.PaddleDType.FLOAT32
+                in_t2.shape = (len(data), ) + dt2.shape
+                buf = dt2.flatten().tolist()
+                in_t2.data = fluid.core.PaddleBuf(buf)
+                in_ts += [in_t2]
+
+                dt3 = data[0][3].astype('float32')
+                in_t3 = fluid.core.PaddleTensor()
+                in_t3.dtype = fluid.core.PaddleDType.FLOAT32
+                in_t3.shape = (len(data), ) + dt3.shape
+                buf = dt3.flatten().tolist()
+                in_t3.data = fluid.core.PaddleBuf(buf)
+                in_ts += [in_t3]
 
             #np.save('im.npy', data[0][0])
             #np.save('im_shape.npy', data[0][1])
