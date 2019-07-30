@@ -2,6 +2,7 @@ import os
 import numpy
 from collections import Counter
 import shutil
+import pickle
 
 
 def get_raw_data():
@@ -90,8 +91,8 @@ def get_feat_dict():
                         tc += 1
 
         # Save dictionary
-        with open(dir_feat_dict_, 'w') as fout:
-            fout.write(str(feat_dict))
+        with open(dir_feat_dict_, 'wb') as fout:
+            pickle.dump(feat_dict, fout)
         print('args.num_feat ', len(feat_dict) + 1)
 
 
