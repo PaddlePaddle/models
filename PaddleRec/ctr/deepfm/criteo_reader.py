@@ -1,6 +1,9 @@
 import sys
 import paddle.fluid.incubate.data_generator as dg
-import pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from collections import Counter
 import os
 
@@ -18,8 +21,8 @@ class CriteoDataset(dg.MultiSlotDataGenerator):
         ]
         self.continuous_range_ = range(1, 14)
         self.categorical_range_ = range(14, 40)
-        with open('data/aid_data/feat_dict_10.txt', 'r') as fin:
-            self.feat_dict_ = eval(fin.read())
+        self.feat_dict_ = pickle.load(
+            open('data/aid_data/feat_dict_10.pkl2', 'rb'))
 
     def _process_line(self, line):
         features = line.rstrip('\n').split('\t')
