@@ -63,7 +63,7 @@ def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
-    coco_proposal_eval(anno_file, outfile, max_dets=max_dets)
+    cocoapi_proposal_eval(anno_file, outfile, max_dets=max_dets)
     # flush coco evaluation result
     sys.stdout.flush()
 
@@ -88,7 +88,7 @@ def bbox_eval(results, anno_file, outfile, with_background=True):
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
-    coco_execute_eval(outfile, 'bbox', coco_gt=coco_gt)
+    cocoapi_eval(outfile, 'bbox', coco_gt=coco_gt)
     # flush coco evaluation result
     sys.stdout.flush()
 
@@ -108,9 +108,17 @@ def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
     with open(outfile, 'w') as f:
         json.dump(segm_results, f)
 
-    coco_execute_eval(outfile, 'segm', coco_gt=coco_gt)
+    cocoapi_eval(outfile, 'segm', coco_gt=coco_gt)
 
 def cocoapi_eval(jsonfile, style, coco_gt=None, anno_file=None):
+    """
+    Args:
+        jsonfile: Evaluation json file, eg: bbox.json, mask.json.
+        style: COCOeval style, can be `bbox` and `segm`
+        coco_gt: Whether to load COCOAPI through anno_file,
+                 eg: coco_gt = COCO(anno_file)
+        anno_file: COCO annotations file
+    """
     assert coco_gt != None or anno_file != None
     if coco_gt == None:
         coco_gt = COCO(anno_file)
@@ -122,6 +130,12 @@ def cocoapi_eval(jsonfile, style, coco_gt=None, anno_file=None):
     coco_eval.summarize()
 
 def cocoapi_proposal_eval(anno_file, jsonfile, max_dets=(100, 300, 1000)):
+    """
+    Args:
+        anno_file: COCO annotations file
+        jsonfile: Evaluation json file, eg: bbox.json
+        max_dets: COCO evaluation maxDets
+    """
     coco_gt = COCO(anno_file)
     logger.info("Start evaluate...")
     coco_dt = coco_gt.loadRes(jsonfile)
