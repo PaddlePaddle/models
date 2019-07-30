@@ -91,3 +91,131 @@ def lr_warmup(learning_rate, warmup_steps, start_lr, end_lr):
                 fluid.layers.tensor.assign(learning_rate, lr)
 
         return lr
+
+class Decay(object):
+    """A class used to represent several decay methods
+
+    Attributes:
+        batch_size: batch size on all devices.
+        lr: learning rate.
+        lr_strategy: learning rate decay strategy.
+        l2_decay: l2_decay parameter.
+        momentum_rate: momentum rate when using Momentum optimizer.
+        step_epochs: piecewise decay steps.
+        num_epochs: number of total epochs.
+
+        total_images: total images.
+        step: total steps in the an epoch.
+        
+    """
+
+    def __init__(self, args):
+
+        self.batch_size  = args.batch_size
+        self.lr = args.lr
+        self.lr_strategy = args.lr_strategy
+        self.l2_decay = args.l2_decay
+        self.momentum_rate = args.momentum_rate
+        self.step_epochs = args.step_epochs
+        self.num_epochs = args.num_epochs
+
+        self.total_images = args.total_images
+        self.step = int(math.ceil(float(self.total_images)/self.batch_size))
+
+     def piecewise_decay(self):
+        """piecewise decay with Momentum optimizer
+
+        Returns:
+            a piecewise_decay optimizer
+        """
+
+        bd = [self.step * e for e in self.step_epochs]
+        lr = [self.lr * (0.1**i) for i in range(len(bd) + 1)]
+        learning_rate = fluid.layers.piecewise_decay(boundaries = bd, values = lr)
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate = learning_rate, 
+            momentum_rate = self.momentum_rate, 
+            regularization = fluid.regularization.L2Decay(self.l2_decay))
+        return optimizer
+
+    def cosine_decay(self):
+        """cosine decay with Momentum optimizer
+
+        Returns:
+            a cosine_decay optimizer
+        """
+
+        learning_rate =fluid.layers.cosine_decay(learning_rate=self.lr, step_each_epoch=self.step, epochs=self.num_epochs)
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate = learning_rate, 
+            momentum_rate = self.momentum_rate, 
+            regularization = fluid.regularization.L2Decay(self.l2_decay))
+        return optimizer
+
+    def cosine_decay_warmup(self):
+        """cosine decay with warmup
+
+        Returns:
+            a cosine_decay_with_warmup optimizer
+        """
+
+        learning_rate =cosine_decay_with_warmup(learning_rate=self.lr, step_each_epoch=self.step, epochs=self.num_epochs)
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate = learning_rate, 
+            momentum_rate = self.momentum_rate, 
+            regularization = fluid.regularization.L2Decay(self.l2_decay))
+        return optimizer
+
+    def linear_decay(self):
+        """linear decay with Momentum optimizer
+
+        Returns:
+            a linear_decay optimizer
+        """
+
+        end_lr = 0
+        learning_rate = fluid.layers.polynomial_decay(self.lr, self.step, end_lr, power=1)
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=learning_rate,
+            momentum=self.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(self.l2_decay))
+
+        return optimizer
+
+    def adam_decay(self):
+        """Adam optimizer
+
+        Returns: 
+            an adam_decay optimizer
+        """
+
+        return fluid.optimizer.Adam(learning_rate = self.lr)
+
+    def cosine_decay_RMSProp(self):
+        """cosine decay with RMSProp optimizer
+
+        Returns: 
+            an cosine_decay_RMSProp optimizer
+        """
+
+        learning_rate = fluid.layers.cosine_decay(learning_rate=self.lr, step_each_epoch=self.step, epochs=self.num_epochs)
+        optimizer = fluid.optimizer.RMSProp(
+            learning_rate=learning_rate,
+            momentum=self.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(self.l2_decay),
+            # Apply epsilon=1 on ImageNet dataset.
+            epsilon=1)
+        return optimizer
+
+    def default_decay(self):
+        """default decay
+
+        Returns:
+            default decay optimizer
+        """
+
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=self.lr,
+            momentum=self.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(self.l2_decay))
+        return optimizer
