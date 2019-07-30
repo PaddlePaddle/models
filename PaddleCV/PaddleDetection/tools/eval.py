@@ -23,20 +23,16 @@ def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
-"""
-NOTE(paddle-dev): All of these flags should be set before `import paddle`.
-                  Otherwise, it would not take any effect.
-GC FLAGS: For more details, please refer to:
-https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/best_practice/memory_optimize.html
-"""
+
+#NOTE(paddle-dev): All of these flags should be set before
+#`import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
     FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
-    FLAGS_fast_eager_deletion_mode=1 # fast GC policy adjustment flag
 )
 
 import paddle.fluid as fluid
 
-from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results, re_eval_results
+from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results, json_eval_results
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
@@ -93,13 +89,9 @@ def main():
     reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
     pyreader.decorate_sample_list_generator(reader, place)
 
-    # eval already exists json
-    if FLAGS.proposal_json or FLAGS.bbox_json or FLAGS.mask_json:
-        re_eval_results(eval_feed,
-                        cfg.metric,
-                        bbox_file=FLAGS.bbox_json,
-                        mask_file=FLAGS.mask_json,
-                        proposal_file=FLAGS.proposal_json)
+    # eval already exists json file
+    if FLAGS.json_eval:
+        json_eval_results(eval_feed, cfg.metric, json_file=FLAGS.output_file)
         return
     # compile program for multi-devices
     if devices_num <= 1:
@@ -149,23 +141,10 @@ if __name__ == '__main__':
         type=str,
         help="Evaluation file name, default to bbox.json and mask.json.")
     parser.add_argument(
-        "-b",
-        "--bbox_json",
-        default=None,
-        type=str,
-        help="Already exists evaluation bbox_json file name, default None.")
-    parser.add_argument(
-        "-m",
-        "--mask_json",
-        default=None,
-        type=str,
-        help="Already exists evaluation mask_json file name, default None.")
-    parser.add_argument(
-        "-p",
-        "--proposal_json",
-        default=None,
-        type=str,
-        help="Already exists evaluation proposal_json file name, default None.")
+        "--json_eval",
+        action='store_true',
+        default=False,
+        help="Whether to re eval with already exists bbox.json or mask.json")
     parser.add_argument(
         "-d",
         "--dataset_dir",

@@ -28,15 +28,10 @@ def set_paddle_flags(**kwargs):
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
 
-"""
-NOTE(paddle-dev): All of these flags should be set before `import paddle`.
-                  Otherwise, it would not take any effect.
-GC FLAGS: For more details, please refer to:
-https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/best_practice/memory_optimize.html
-"""
+#NOTE(paddle-dev): All of these flags should be set before 
+#`import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
     FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
-    FLAGS_fast_eager_deletion_mode=1 # fast GC policy adjustment flag
 )
 
 from paddle import fluid

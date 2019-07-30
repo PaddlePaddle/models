@@ -18,12 +18,13 @@ from __future__ import print_function
 
 import logging
 import numpy as np
+import os
 
 import paddle.fluid as fluid
 
 from ppdet.utils.voc_eval import bbox_eval as voc_bbox_eval
 
-__all__ = ['parse_fetches', 'eval_run', 'eval_results']
+__all__ = ['parse_fetches', 'eval_run', 'eval_results', 'json_eval_results']
 
 logger = logging.getLogger(__name__)
 
@@ -125,18 +126,26 @@ def eval_results(results,
             voc_bbox_eval(
                 results, num_classes, is_bbox_normalized=is_bbox_normalized)
 
-def re_eval_results(feed,
-                    metric,
-                    bbox_file=None,
-                    mask_file=None,
-                    proposal_file=None):
+def json_eval_results(feed, metric, json_file=None):
+    """
+    cocoapi eval with already exists proposal.json, bbox.json or mask.json
+    """
     assert metric == 'COCO'
-    assert bbox_file != None or mask_file != None or proposal_file != None
-    from ppdet.utils.coco_eval import coco_execute_eval, execute_proposal_eval
+    from ppdet.utils.coco_eval import cocoapi_eval, cocoapi_proposal_eval
     anno_file = getattr(feed.dataset, 'annotation', None)
-    if proposal_file != None:
-        execute_proposal_eval(anno_file, proposal_file)
-    if bbox_file != None:
-        coco_execute_eval(bbox_file, 'bbox', anno_file=anno_file)
-    if mask_file != None:
-        coco_execute_eval(mask_file, 'segm', anno_file=anno_file)
+    json_file_list = ['proposal.json', 'bbox.json', 'mask.json']
+    if json_file:
+        for k, v in enumerate(json_file_list):
+            json_file_list[k] = '{}_{}'.format(str(json_file), v)
+    if os.path.exists(json_file_list[0]):
+        cocoapi_proposal_eval(anno_file, json_file_list[0])
+    else:
+        logger.info("{} not exists!".format(json_file_list[0]))
+    if os.path.exists(json_file_list[1]):
+        cocoapi_eval(json_file_list[1], 'bbox', anno_file=anno_file)
+    else:
+        logger.info("{} not exists!".format(json_file_list[1]))
+    if os.path.exists(json_file_list[2]):
+        cocoapi_eval(json_file_list[2], 'segm', anno_file=anno_file)
+    else:
+        logger.info("{} not exists!".format(json_file_list[2]))

@@ -38,8 +38,8 @@ __all__ = [
     'mask2out',
     'get_category_info',
     'proposal_eval',
-    'coco_execute_eval',
-    'execute_proposal_eval'
+    'cocoapi_eval',
+    'cocoapi_proposal_eval'
 ]
 
 
@@ -63,20 +63,9 @@ def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
-    execute_proposal_eval(anno_file, outfile, max_dets=max_dets)
+    coco_proposal_eval(anno_file, outfile, max_dets=max_dets)
     # flush coco evaluation result
     sys.stdout.flush()
-
-def execute_proposal_eval(anno_file, jsonfile, max_dets=(100, 300, 1000)):
-    coco_gt = COCO(anno_file)
-    logger.info("Start evaluate...")
-    coco_dt = coco_gt.loadRes(jsonfile)
-    coco_ev = COCOeval(coco_gt, coco_dt, 'bbox')
-    coco_ev.params.useCats = 0
-    coco_ev.params.maxDets = list(max_dets)
-    coco_ev.evaluate()
-    coco_ev.accumulate()
-    coco_ev.summarize()
 
 def bbox_eval(results, anno_file, outfile, with_background=True):
     assert 'bbox' in results[0]
@@ -121,16 +110,27 @@ def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
 
     coco_execute_eval(outfile, 'segm', coco_gt=coco_gt)
 
-def coco_execute_eval(jsonfile, style, coco_gt=None, anno_file=None):
+def cocoapi_eval(jsonfile, style, coco_gt=None, anno_file=None):
     assert coco_gt != None or anno_file != None
     if coco_gt == None:
         coco_gt = COCO(anno_file)
     logger.info("Start evaluate...")
     coco_dt = coco_gt.loadRes(jsonfile)
-    coco_ev = COCOeval(coco_gt, coco_dt, style)
-    coco_ev.evaluate()
-    coco_ev.accumulate()
-    coco_ev.summarize()
+    coco_eval = COCOeval(coco_gt, coco_dt, style)
+    coco_eval.evaluate()
+    coco_eval.accumulate()
+    coco_eval.summarize()
+
+def cocoapi_proposal_eval(anno_file, jsonfile, max_dets=(100, 300, 1000)):
+    coco_gt = COCO(anno_file)
+    logger.info("Start evaluate...")
+    coco_dt = coco_gt.loadRes(jsonfile)
+    coco_eval = COCOeval(coco_gt, coco_dt, 'bbox')
+    coco_eval.params.useCats = 0
+    coco_eval.params.maxDets = list(max_dets)
+    coco_eval.evaluate()
+    coco_eval.accumulate()
+    coco_eval.summarize()
 
 def proposal2out(results, is_bbox_normalized=False):
     xywh_res = []
