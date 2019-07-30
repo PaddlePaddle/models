@@ -11,7 +11,6 @@ import six
 import numpy as np
 import logging
 import logging.handlers
-
 """
 ******functions for file processing******
 """
@@ -165,9 +164,13 @@ def print_arguments(args):
     print('------------------------------------------------')
 
 
-def init_log(log_path, level=logging.INFO, when="D", backup=7,
-             format="%(levelname)s: %(asctime)s - %(filename)s:%(lineno)d * %(thread)d %(message)s",
-             datefmt=None):
+def init_log(
+        log_path,
+        level=logging.INFO,
+        when="D",
+        backup=7,
+        format="%(levelname)s: %(asctime)s - %(filename)s:%(lineno)d * %(thread)d %(message)s",
+        datefmt=None):
     """
     init_log - initialize log module
 
@@ -209,16 +212,14 @@ def init_log(log_path, level=logging.INFO, when="D", backup=7,
     if not os.path.isdir(dir):
         os.makedirs(dir)
 
-    handler = logging.handlers.TimedRotatingFileHandler(log_path + ".log",
-                                                        when=when,
-                                                        backupCount=backup)
+    handler = logging.handlers.TimedRotatingFileHandler(
+        log_path + ".log", when=when, backupCount=backup)
     handler.setLevel(level)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    handler = logging.handlers.TimedRotatingFileHandler(log_path + ".log.wf",
-                                                        when=when,
-                                                        backupCount=backup)
+    handler = logging.handlers.TimedRotatingFileHandler(
+        log_path + ".log.wf", when=when, backupCount=backup)
     handler.setLevel(logging.WARNING)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
@@ -241,7 +242,7 @@ def get_level():
     return logger.level
 
 
-def get_accuracy(preds, labels, mode, lamda=0.91):
+def get_accuracy(preds, labels, mode, lamda=0.958):
     """
     compute accuracy
     """

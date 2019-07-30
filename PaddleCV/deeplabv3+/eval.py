@@ -55,6 +55,7 @@ def load_model():
 CityscapeDataset = reader.CityscapeDataset
 
 args = parser.parse_args()
+utility.check_gpu(args.use_gpu)
 
 models.clean()
 models.is_train = False
@@ -112,7 +113,7 @@ else:
 
 batches = dataset.get_batch_generator(batch_size, total_step)
 if args.use_py_reader:
-    py_reader.decorate_tensor_provider(lambda :[ (yield b[1],b[2]) for b in batches])
+    py_reader.decorate_tensor_provider(lambda :[ (yield b[0],b[1]) for b in batches])
     py_reader.start()
 
 sum_iou = 0
@@ -137,3 +138,5 @@ for i in range(total_step):
     mp = (wrong + right) != 0
     miou2 = np.mean((right[mp] * 1.0 / (right[mp] + wrong[mp])))
     print('step: %s, mIoU: %s' % (i + 1, miou2))
+
+print('eval done!')

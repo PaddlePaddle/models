@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 import os
 import six
+import time
+from data_utils import GeneratorEnqueuer
 
 default_config = {
     "shuffle": True,
@@ -43,25 +45,22 @@ def slice_with_pad(a, s, value=0):
 
 class CityscapeDataset:
     def __init__(self, dataset_dir, subset='train', config=default_config):
-        label_dirname = os.path.join(dataset_dir, 'gtFine/' + subset)
-        if six.PY2:
-            import commands
-            label_files = commands.getoutput(
-                "find %s -type f | grep labelTrainIds | sort" %
-                label_dirname).splitlines()
-        else:
-            import subprocess
-            label_files = subprocess.getstatusoutput(
-                "find %s -type f | grep labelTrainIds | sort" %
-                label_dirname)[-1].splitlines()
-        self.label_files = label_files
-        self.label_dirname = label_dirname
+        with open(os.path.join(dataset_dir, subset + '.list'), 'r') as fr:
+            file_list = fr.readlines()
+        all_images = []
+        all_labels = []
+        for i in range(len(file_list)):
+            img_gt = file_list[i].strip().split(' ')
+            all_images.append(os.path.join(dataset_dir, img_gt[0]))
+            all_labels.append(os.path.join(dataset_dir, img_gt[1]))
+
+        self.label_files = all_labels
+        self.img_files = all_images
         self.index = 0
         self.subset = subset
         self.dataset_dir = dataset_dir
         self.config = config
         self.reset()
-        print("total number", len(label_files))
 
     def reset(self, shuffle=False):
         self.index = 0
@@ -77,10 +76,7 @@ class CityscapeDataset:
         shape = self.config["crop_size"]
         while True:
             ln = self.label_files[self.index]
-            img_name = os.path.join(
-                self.dataset_dir,
-                'leftImg8bit/' + self.subset + ln[len(self.label_dirname):])
-            img_name = img_name.replace('gtFine_labelTrainIds', 'leftImg8bit')
+            img_name = self.img_files[self.index]
             label = cv2.imread(ln)
             img = cv2.imread(img_name)
             if img is None:
@@ -138,21 +134,55 @@ class CityscapeDataset:
             self.next_img()
         return np.array(imgs), np.array(labels), names
 
-    def get_batch_generator(self, batch_size, total_step):
+    def get_batch_generator(self,
+                            batch_size,
+                            total_step,
+                            num_workers=8,
+                            max_queue=32,
+                            use_multiprocessing=True):
         def do_get_batch():
-            for i in range(total_step):
+            iter_id = 0
+            while True:
                 imgs, labels, names = self.get_batch(batch_size)
                 labels = labels.astype(np.int32)[:, :, :, 0]
                 imgs = imgs[:, :, :, ::-1].transpose(
                     0, 3, 1, 2).astype(np.float32) / (255.0 / 2) - 1
-                yield i, imgs, labels, names
+                yield imgs, labels, names
+                if not use_multiprocessing:
+                    iter_id += 1
+                    if iter_id >= total_step:
+                        break
 
         batches = do_get_batch()
-        try:
-            from prefetch_generator import BackgroundGenerator
-            batches = BackgroundGenerator(batches, 100)
-        except:
-            print(
-                "You can install 'prefetch_generator' for acceleration of data reading."
-            )
-        return batches
+        if not use_multiprocessing:
+            try:
+                from prefetch_generator import BackgroundGenerator
+                batches = BackgroundGenerator(batches, 100)
+            except:
+                print(
+                    "You can install 'prefetch_generator' for acceleration of data reading."
+                )
+            return batches
+
+        def reader():
+            try:
+                enqueuer = GeneratorEnqueuer(
+                    batches, use_multiprocessing=use_multiprocessing)
+                enqueuer.start(max_queue_size=max_queue, workers=num_workers)
+                generator_out = None
+                for i in range(total_step):
+                    while enqueuer.is_running():
+                        if not enqueuer.queue.empty():
+                            generator_out = enqueuer.queue.get()
+                            break
+                        else:
+                            time.sleep(0.02)
+                    yield generator_out
+                    generator_out = None
+                enqueuer.stop()
+            finally:
+                if enqueuer is not None:
+                    enqueuer.stop()
+
+        data_gen = reader()
+        return data_gen

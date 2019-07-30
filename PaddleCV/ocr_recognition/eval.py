@@ -1,5 +1,6 @@
 import paddle.fluid as fluid
 from utility import add_arguments, print_arguments, to_lodtensor, get_ctc_feeder_data, get_attention_feeder_data
+from utility import check_gpu
 from attention_model import attention_eval
 from crnn_ctc_model import ctc_eval
 import data_reader
@@ -70,6 +71,7 @@ def evaluate(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     evaluate(args)
 
 

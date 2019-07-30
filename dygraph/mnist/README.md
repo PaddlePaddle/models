@@ -15,7 +15,22 @@
 ## 训练
 教程中使用`paddle.dataset.mnist`数据集作为训练数据，可以通过如下的方式启动训练：
 ```
-env CUDA_VISIBLE_DEVICES=0 python mnist_dygraph.py
+env CUDA_VISIBLE_DEVICES=0 python train.py
+```
+Paddle动态图支持多进程多卡进行模型训练，启动训练的方式：
+```
+python -m paddle.distributed.launch --selected_gpus=0,1,2,3 --log_dir ./mylog train.py   --use_data_parallel 1
+```
+此时，程序会将每个进程的输出log导入到`./mylog`路径下：
+```
+.
+├── mylog
+│   ├── workerlog.0
+│   ├── workerlog.1
+│   ├── workerlog.2
+│   └── workerlog.3
+├── README.md
+└── train.py
 ```
 
 ## 输出
@@ -58,5 +73,3 @@ with fluid.dygraph.guard():
 ```text
 Inference result of image/infer_3.png is: 3
 ```
-
-
