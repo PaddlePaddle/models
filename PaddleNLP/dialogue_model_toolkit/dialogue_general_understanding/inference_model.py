@@ -11,33 +11,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""save inference model"""
 
 import os
 import sys
-import numpy as np
 import argparse
 import collections
+import numpy as np
+
 import paddle
 import paddle.fluid as fluid
-
-import dgu.reader as reader
-from dgu_net import create_net
-import dgu.define_paradigm as define_paradigm 
-import dgu.define_predict_pack as define_predict_pack
 
 from dgu.utils.configure import PDConfig
 from dgu.utils.input_field import InputField
 from dgu.utils.model_check import check_cuda
 import dgu.utils.save_load_io as save_load_io
 
+import dgu.reader as reader
+from dgu_net import create_net
+import dgu.define_paradigm as define_paradigm 
 
-def do_predict(args): 
-    """predict function"""
+
+def do_save_inference_model(args): 
+    """save inference model function"""
 
     task_name = args.task_name.lower()
     paradigm_inst = define_paradigm.Paradigm(task_name)
-    pred_inst = define_predict_pack.DefinePredict()
-    pred_func = getattr(pred_inst, pred_inst.task_map[task_name])
 
     processors = {
         'udc': reader.UDCProcessor,
@@ -58,7 +57,7 @@ def do_predict(args):
         with fluid.unique_name.guard():
 
             # define inputs of the network
-            num_labels = len(processors[task_name].get_labels())
+            num_labels = len(processors[task_name].get_labels()) 
 
             src_ids = fluid.layers.data(
                         name='src_ids', shape=[args.max_seq_len, 1], dtype='int64')
@@ -80,8 +79,6 @@ def do_predict(args):
             
             input_inst = [src_ids, pos_ids, sent_ids, input_mask, labels]
             input_field = InputField(input_inst)
-            data_reader = fluid.io.PyReader(feed_list=input_inst, 
-                        capacity=4, iterable=False)
             
             results = create_net(
                     is_training=False, 
@@ -89,17 +86,10 @@ def do_predict(args):
                     num_labels=num_labels,
                     paradigm_inst=paradigm_inst,
                     args=args)
-
             probs = results.get("probs", None)
 
-            probs.persistable = True
-
-            fetch_list = [probs.name]
-
-    test_prog = test_prog.clone(for_test=True)
-    # prepare predicting
     if args.use_cuda:
-        place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
+        place = fluid.CUDAPlace(0)
     else:
         place = fluid.CPUPlace()
 
@@ -107,56 +97,37 @@ def do_predict(args):
     exe.run(startup_prog)
 
     assert (args.init_from_params) or (args.init_from_pretrain_model)
-
+    
     if args.init_from_params:
         save_load_io.init_from_params(args, exe, test_prog)
-    if args.init_from_pretrain_model:
+    elif args.init_from_pretrain_model:
         save_load_io.init_from_pretrain_model(args, exe, test_prog)
 
-    compiled_test_prog = fluid.CompiledProgram(test_prog)
-    
-    processor = processors[task_name](data_dir=args.data_dir,
-                                      vocab_path=args.vocab_path,
-                                      max_seq_len=args.max_seq_len,
-                                      do_lower_case=args.do_lower_case,
-                                      in_tokens=args.in_tokens,
-                                      task_name=task_name,
-                                      random_seed=args.random_seed)
-    batch_generator = processor.data_generator(
-        batch_size=args.batch_size,
-        phase='test',
-        shuffle=False)
+    # saving inference model
+    fluid.io.save_inference_model(
+            args.inference_model_dir,
+            feeded_var_names=[
+                input_field.src_ids.name, 
+                input_field.pos_ids.name,
+                input_field.sent_ids.name, 
+                input_field.input_mask.name
+            ],
+            target_vars=[
+                probs
+            ],
+            executor=exe,
+            main_program=test_prog,
+            model_filename="model.pdmodel",
+            params_filename="params.pdparams")
 
-    data_reader.decorate_batch_generator(batch_generator) 
-    data_reader.start()
-    
-    all_results = []
-    while True: 
-        try: 
-            results = exe.run(compiled_test_prog, fetch_list=fetch_list)
-            all_results.extend(results[0])
-        except fluid.core.EOFException: 
-            data_reader.reset()
-            break
-
-    np.set_printoptions(precision=4, suppress=True)
-    with open(args.output_prediction_file, 'w') as fw: 
-        if task_name not in ['atis_slot']: 
-            for index, result in enumerate(all_results):
-                tags = pred_func(result)
-                fw.write("%s\t%s\n" % (index, tags))
-        else:
-            tags = pred_func(all_results, args.max_seq_len)
-            for index, tag in enumerate(tags):
-                fw.write("%s\t%s\n" % (index, tag))
+    print("save inference model at %s" % (args.inference_model_dir))
 
 
 if __name__ == "__main__":
 
     args = PDConfig(yaml_file="./data/config/dgu.yaml")
     args.build()
-    args.Print()
 
     check_cuda(args.use_cuda)
 
-    do_predict(args)
+    do_save_inference_model(args)
