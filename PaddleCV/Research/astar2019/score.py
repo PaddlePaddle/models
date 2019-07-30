@@ -47,7 +47,7 @@ def use_coco_api_compute_mAP(data_args, test_list, num_classes, test_reader, exe
         boxes = fluid.layers.data(
             name='boxes', shape=[-1, -1, 4], dtype='float32')
         scores = fluid.layers.data(
-            name='scores', shape=[-1, -1, num_classes], dtype='float32')
+            name='scores', shape=[-1, num_classes, -1], dtype='float32')
         pred_result = fluid.layers.multiclass_nms(
             bboxes=boxes,
             scores=scores,
@@ -60,7 +60,7 @@ def use_coco_api_compute_mAP(data_args, test_list, num_classes, test_reader, exe
     executor.run(fluid.default_startup_program())
 
     for batch_id, data in enumerate(test_reader()):
-        boxes_np, socres_np = exe.run(program=infer_program,
+        boxes_np, scores_np = exe.run(program=infer_program,
                                       feed={feeded_var_names[0]: feeder.feed(data)['image']},
                                       fetch_list=target_var)
 
@@ -68,7 +68,7 @@ def use_coco_api_compute_mAP(data_args, test_list, num_classes, test_reader, exe
             program=test_program,
             feed={
                 'boxes': boxes_np,
-                'scores': socres_np
+                'scores': scores_np
             },
             fetch_list=[pred_result], return_numpy=False)
         if batch_id % 20 == 0:

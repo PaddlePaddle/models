@@ -28,11 +28,12 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 - Pretrained model is downloaded automatically and cached in `~/.cache/paddle/weights`.
 - Model checkpoints is saved in `output` by default (configurable).
 - To check out hyper parameters used, please refer to the config file.
+- RCNN models training on CPU is not supported on PaddlePaddle<=1.5.1 and will be fixed on later version.
+
 
 Alternating between training epoch and evaluation run is possible, simply pass
-in `--eval` to do so (tested with `SSD` detector on Pascal-VOC, not
-recommended for two stage models or training sessions on COCO dataset)
-
+in `--eval` to do so and evaluate at each snapshot_iter. If evaluation dataset is large and
+causes time-consuming in training, we suggest decreasing evaluation times or evaluating after training.
 
 ## Evaluation
 
@@ -71,7 +72,7 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_dir=demo
 ```
 
 The visualization files are saved in `output` by default, to specify a different
-path, simply add a `--save_file=` flag.
+path, simply add a `--output_dir=` flag.
 
 - Save inference model
 
