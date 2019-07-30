@@ -14,7 +14,7 @@
 
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg', force=False)
 
 from pycocotools.coco import COCO
 
