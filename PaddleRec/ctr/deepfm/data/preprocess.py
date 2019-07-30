@@ -47,7 +47,7 @@ def split_data():
 
 def get_feat_dict():
     freq_ = 10
-    dir_feat_dict_ = 'aid_data/feat_dict_' + str(freq_) + '.txt'
+    dir_feat_dict_ = 'aid_data/feat_dict_' + str(freq_) + '.pkl2'
     continuous_range_ = range(1, 14)
     categorical_range_ = range(14, 40)
 
