@@ -253,7 +253,7 @@ STGAN的网络结构[9]
 性，所以得到的结果是女生。如果想要原本是男生，转变之后还是男生，保持要转变的标签不变即可。
 
 **Q:** 如何使用自己的数据集进行训练？
-**A:** 对于Pix2Pix来说，只要准备好类似于Cityscapes数据集的不同风格的成对的数据即可。对于CycleGAN来说，只要准备类似于Cityscapes数据集的不同风格的数据即可。对于StarGAN，AttGAN和STGAN来说，除了需要准备类似于CelebA数据集中的图片和标签文件外，还需要把模型中的selected_attrs参数设置为想要改变的目标属性，c_dim参数这是为目标属性的个数。
+**A:** 对于Pix2Pix来说，只要准备好类似于Cityscapes数据集的不同风格的成对的数据即可。对于CycleGAN来说，只要准备类似于Cityscapes数据集的不同风格的数据即可。对于StarGAN，AttGAN和STGAN来说，除了需要准备类似于CelebA数据集中图片、包含图片名称和标签信息的list文件外，还需要把模型中的selected_attrs参数设置为想要改变的目标属性，c_dim参数设置为目标属性的个数。
 
 
 ## 参考论文
