@@ -51,7 +51,6 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 
     locs, confs, box, box_var = build_mobilenet_ssd(image,
                 num_classes, image_shape)
-    locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
     nmsed_out = fluid.layers.detection_output(
         locs, confs, box, box_var, nms_threshold=args.nms_threshold)
     loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box, box_var)
@@ -132,7 +131,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
-
+    assert args.dataset in ['coco2014', 'coco2017']
     data_dir = './data/coco'
     if '2014' in args.dataset:
         test_list = 'annotations/instances_val2014.json'
