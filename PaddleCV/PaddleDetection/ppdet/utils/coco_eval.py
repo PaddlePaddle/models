@@ -39,7 +39,6 @@ __all__ = [
     'get_category_info',
     'proposal_eval',
     'cocoapi_eval',
-    'cocoapi_proposal_eval'
 ]
 
 
@@ -63,7 +62,7 @@ def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
-    cocoapi_proposal_eval(anno_file, outfile, max_dets=max_dets)
+    cocoapi_eval(outfile, 'proposal', anno_file=anno_file, max_dets=max_dets)
     # flush coco evaluation result
     sys.stdout.flush()
 
@@ -110,41 +109,35 @@ def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
 
     cocoapi_eval(outfile, 'segm', coco_gt=coco_gt)
 
-def cocoapi_eval(jsonfile, style, coco_gt=None, anno_file=None):
+def cocoapi_eval(jsonfile,
+                 style,
+                 coco_gt=None,
+                 anno_file=None,
+                 max_dets=(100, 300, 1000)):
     """
     Args:
         jsonfile: Evaluation json file, eg: bbox.json, mask.json.
-        style: COCOeval style, can be `bbox` and `segm`
+        style: COCOeval style, can be `bbox` , `segm` and `proposal`.
         coco_gt: Whether to load COCOAPI through anno_file,
                  eg: coco_gt = COCO(anno_file)
-        anno_file: COCO annotations file
+        anno_file: COCO annotations file.
+        max_dets: COCO evaluation maxDets.
     """
     assert coco_gt != None or anno_file != None
     if coco_gt == None:
         coco_gt = COCO(anno_file)
     logger.info("Start evaluate...")
     coco_dt = coco_gt.loadRes(jsonfile)
-    coco_eval = COCOeval(coco_gt, coco_dt, style)
+    if style == 'proposal':
+        coco_eval = COCOeval(coco_gt, coco_dt, 'bbox')
+        coco_eval.params.useCats = 0
+        coco_eval.params.maxDets = list(max_dets)
+    else:
+        coco_eval = COCOeval(coco_gt, coco_dt, style)
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()
 
-def cocoapi_proposal_eval(anno_file, jsonfile, max_dets=(100, 300, 1000)):
-    """
-    Args:
-        anno_file: COCO annotations file
-        jsonfile: Evaluation json file, eg: bbox.json
-        max_dets: COCO evaluation maxDets
-    """
-    coco_gt = COCO(anno_file)
-    logger.info("Start evaluate...")
-    coco_dt = coco_gt.loadRes(jsonfile)
-    coco_eval = COCOeval(coco_gt, coco_dt, 'bbox')
-    coco_eval.params.useCats = 0
-    coco_eval.params.maxDets = list(max_dets)
-    coco_eval.evaluate()
-    coco_eval.accumulate()
-    coco_eval.summarize()
 
 def proposal2out(results, is_bbox_normalized=False):
     xywh_res = []

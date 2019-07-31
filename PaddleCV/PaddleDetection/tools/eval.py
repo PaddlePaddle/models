@@ -91,7 +91,8 @@ def main():
 
     # eval already exists json file
     if FLAGS.json_eval:
-        json_eval_results(eval_feed, cfg.metric, json_file=FLAGS.output_file)
+        json_eval_results(eval_feed, cfg.metric,
+                json_directory=FLAGS.output_eval)
         return
     # compile program for multi-devices
     if devices_num <= 1:
@@ -130,16 +131,16 @@ def main():
     if 'mask' in results[0]:
         resolution = model.mask_head.resolution
     eval_results(results, eval_feed, cfg.metric, cfg.num_classes, resolution,
-                 is_bbox_normalized, FLAGS.output_file)
+                 is_bbox_normalized, FLAGS.output_eval)
 
 if __name__ == '__main__':
     parser = ArgsParser()
     parser.add_argument(
-        "-f",
-        "--output_file",
+        "-p",
+        "--output_eval",
         default=None,
         type=str,
-        help="Evaluation file name, default to bbox.json and mask.json.")
+        help="Evaluation file directory, default is current directory.")
     parser.add_argument(
         "--json_eval",
         action='store_true',

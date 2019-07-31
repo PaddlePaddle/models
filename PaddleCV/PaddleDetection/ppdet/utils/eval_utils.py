@@ -97,7 +97,7 @@ def eval_results(results,
                  num_classes,
                  resolution=None,
                  is_bbox_normalized=False,
-                 output_file=None):
+                 output_directory=None):
     """Evaluation for evaluation program results"""
     if metric == 'COCO':
         from ppdet.utils.coco_eval import proposal_eval, bbox_eval, mask_eval
@@ -105,18 +105,18 @@ def eval_results(results,
         with_background = getattr(feed, 'with_background', True)
         if 'proposal' in results[0]:
             output = 'proposal.json'
-            if output_file:
-                output = '{}_proposal.json'.format(output_file)
+            if output_directory:
+                output = os.path.join(output_directory, 'proposal.json')
             proposal_eval(results, anno_file, output)
         if 'bbox' in results[0]:
             output = 'bbox.json'
-            if output_file:
-                output = '{}_bbox.json'.format(output_file)
+            if output_directory:
+                output = os.path.join(output_directory, 'bbox.json')
             bbox_eval(results, anno_file, output, with_background)
         if 'mask' in results[0]:
             output = 'mask.json'
-            if output_file:
-                output = '{}_mask.json'.format(output_file)
+            if output_directory:
+                output = os.path.join(output_directory, 'mask.json')
             mask_eval(results, anno_file, output, resolution)
     else:
         if 'accum_map' in results[-1]:
@@ -126,19 +126,19 @@ def eval_results(results,
             voc_bbox_eval(
                 results, num_classes, is_bbox_normalized=is_bbox_normalized)
 
-def json_eval_results(feed, metric, json_file=None):
+def json_eval_results(feed, metric, json_directory=None):
     """
     cocoapi eval with already exists proposal.json, bbox.json or mask.json
     """
     assert metric == 'COCO'
-    from ppdet.utils.coco_eval import cocoapi_eval, cocoapi_proposal_eval
+    from ppdet.utils.coco_eval import cocoapi_eval
     anno_file = getattr(feed.dataset, 'annotation', None)
     json_file_list = ['proposal.json', 'bbox.json', 'mask.json']
-    if json_file:
+    if json_directory:
         for k, v in enumerate(json_file_list):
-            json_file_list[k] = '{}_{}'.format(str(json_file), v)
+            json_file_list[k] = os.path.join(str(json_directory), v)
     if os.path.exists(json_file_list[0]):
-        cocoapi_proposal_eval(anno_file, json_file_list[0])
+        cocoapi_eval(json_file_list[0], 'proposal', anno_file=anno_file)
     else:
         logger.info("{} not exists!".format(json_file_list[0]))
     if os.path.exists(json_file_list[1]):

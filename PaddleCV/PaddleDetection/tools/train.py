@@ -196,7 +196,7 @@ def main():
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
                 eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
-                             resolution, is_bbox_normalized, FLAGS.output_file)
+                             resolution, is_bbox_normalized, FLAGS.output_eval)
 
     train_pyreader.reset()
 
@@ -215,11 +215,11 @@ if __name__ == '__main__':
         default=False,
         help="Whether to perform evaluation in train")
     parser.add_argument(
-        "-f",
-        "--output_file",
+        "-p",
+        "--output_eval",
         default=None,
         type=str,
-        help="Evaluation file name, default to bbox.json and mask.json.")
+        help="Evaluation directory, default is current directory.")
     parser.add_argument(
         "-d",
         "--dataset_dir",
