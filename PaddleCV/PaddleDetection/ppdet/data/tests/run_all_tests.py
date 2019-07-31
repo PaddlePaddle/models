@@ -7,7 +7,6 @@ import unittest
 import test_loader
 import test_operator
 import test_roidb_source
-import test_iterator_source
 import test_transformer
 import test_reader
 
@@ -18,7 +17,6 @@ if __name__ == '__main__':
             test_loader.TestLoader,
             test_operator.TestBase,
             test_roidb_source.TestRoiDbSource,
-            test_iterator_source.TestIteratorSource,
             test_transformer.TestTransformer,
             test_reader.TestReader,
         ]
