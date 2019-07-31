@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument(
         '--val_path', type=str, default=None, help='Path of validation data')
     parser.add_argument(
-        '--test_path', type=str, default=None, help='Path of validation data')
+        '--test_path', type=str, default=None, help='Path of test data')
     parser.add_argument(
         '--save_path', type=str, default='tmp', help='Save path')
 
