@@ -66,7 +66,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 
 ##### NOTES
 
-- `CUDA_VISIBLE_DEVICES` Can specify different gpu numbers. Such as: `export CUDA_VISIBLE_DEVICES=0,1,2,3`. GPU calculation rules can refer [FAQ](#faq)
+- `CUDA_VISIBLE_DEVICES` can specify different gpu numbers. Such as: `export CUDA_VISIBLE_DEVICES=0,1,2,3`. GPU calculation rules can refer [FAQ](#faq)
 - Dataset is stored in `dataset/coco` by default (configurable).
 - Dataset will be downloaded automatically and cached in `~/.cache/paddle/dataset` if not be found locally.
 - Pretrained model is downloaded automatically and cached in `~/.cache/paddle/weights`.
@@ -92,7 +92,7 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 - `-d` or `--dataset_dir`: Dataset path, same as dataset_dir of configs. Such as: `-d dataset/coco`
 - `-p` or `--output_eval`: Evaluation directory, default is current directory.
 - `-o`: Set configuration options in config file. Such as: `-o weights=output/faster_rcnn_r50_1x/model_final`
-- `--json_eval`: Whether to eval with already existed bbox.json or mask.json. Default is `False`. Json file directory assigned by `-f` argument.
+- `--json_eval`: Whether to eval with already existed bbox.json or mask.json. Default is `False`. Json file directory is assigned by `-f` argument.
 
 #### Examples
 
