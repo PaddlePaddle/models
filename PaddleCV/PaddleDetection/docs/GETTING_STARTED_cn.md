@@ -28,6 +28,7 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 
 ```bash
 export CPU_NUM=8
+export PYTHONPATH=$PYTHONPATH:.
 python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 ```
 
