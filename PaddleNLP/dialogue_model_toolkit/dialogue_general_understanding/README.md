@@ -54,6 +54,8 @@ cd models/PaddleNLP/dialogue_model_toolkit/dialogue_general_understanding
 
 &ensp;&ensp;&ensp;&ensp;python版本依赖python 2.7
 
+&ensp;&ensp; 注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
+
 ### 2、开始第一次模型调用
 
 #### &ensp;&ensp;a、数据准备（数据、模型下载，预处理）
@@ -251,7 +253,7 @@ task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2
 
 &ensp;&ensp;&ensp;&ensp;ii、 自定义上层网络范式
 
-&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;如果用户自定义模型属于分类、多分类和序列标注这3种类型其中一个，则只需要在**paddle-nlp/models/dialogue_model_toolkit/dialogue_general_understanding/define_paradigm.py** 内指明**task_name**和相应上层范式函数的对应关系即可，如用户自定义模型属于其他模型，则需要自定义上层范式函数并指明其与**task_name**之间的关系；
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;如果用户自定义模型属于分类、多分类和序列标注这3种类型其中一个，则只需要在**models/PaddleNLP/models/dialogue_model_toolkit/dialogue_general_understanding/define_paradigm.py** 内指明**task_name**和相应上层范式函数的对应关系即可，如用户自定义模型属于其他模型，则需要自定义上层范式函数并指明其与**task_name**之间的关系；
 
 &ensp;&ensp;&ensp;&ensp;iii、自定义预测封装接口
 

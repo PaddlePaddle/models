@@ -10,6 +10,7 @@ import json
 
 import six
 import paddle.fluid as fluid
+import paddlehub as hub
 
 from models.transformer_encoder import encoder, pre_process_layer
 
@@ -26,7 +27,8 @@ def ernie_pyreader(args, pyreader_name):
         name=pyreader_name,
         use_double_buffer=True)
 
-    (src_ids, sent_ids, pos_ids, input_mask, labels, seq_lens) = fluid.layers.read_file(pyreader)
+    (src_ids, sent_ids, pos_ids, input_mask, labels,
+     seq_lens) = fluid.layers.read_file(pyreader)
 
     ernie_inputs = {
         "src_ids": src_ids,
@@ -36,6 +38,41 @@ def ernie_pyreader(args, pyreader_name):
         "seq_lens": seq_lens
     }
     return pyreader, ernie_inputs, labels
+
+
+def ernie_encoder_with_paddle_hub(ernie_inputs, max_seq_len):
+    ernie = hub.Module(name="ernie")
+    inputs, outputs, program = ernie.context(
+        trainable=True, max_seq_len=max_seq_len, learning_rate=1)
+
+    main_program = fluid.default_main_program()
+    input_dict = {
+        inputs["input_ids"].name: ernie_inputs["src_ids"],
+        inputs["segment_ids"].name: ernie_inputs["sent_ids"],
+        inputs["position_ids"].name: ernie_inputs["pos_ids"],
+        inputs["input_mask"].name: ernie_inputs["input_mask"]
+    }
+
+    hub.connect_program(
+        pre_program=main_program,
+        next_program=program,
+        input_dict=input_dict,
+        inplace=True)
+
+    enc_out = outputs["sequence_output"]
+    unpad_enc_out = fluid.layers.sequence_unpad(
+        enc_out, length=ernie_inputs["seq_lens"])
+    cls_feats = outputs["pooled_output"]
+
+    embeddings = {
+        "sentence_embeddings": cls_feats,
+        "token_embeddings": unpad_enc_out,
+    }
+
+    for k, v in embeddings.items():
+        v.persistable = True
+
+    return embeddings
 
 
 def ernie_encoder(ernie_inputs, ernie_config):
@@ -49,7 +86,8 @@ def ernie_encoder(ernie_inputs, ernie_config):
         config=ernie_config)
 
     enc_out = ernie.get_sequence_output()
-    unpad_enc_out = fluid.layers.sequence_unpad(enc_out, length=ernie_inputs["seq_lens"])
+    unpad_enc_out = fluid.layers.sequence_unpad(
+        enc_out, length=ernie_inputs["seq_lens"])
     cls_feats = ernie.get_pooled_output()
 
     embeddings = {
@@ -65,6 +103,7 @@ def ernie_encoder(ernie_inputs, ernie_config):
 
 class ErnieConfig(object):
     """ErnieConfig"""
+
     def __init__(self, config_path):
         self._config_dict = self._parse(config_path)
 
@@ -90,6 +129,7 @@ class ErnieConfig(object):
 
 class ErnieModel(object):
     """ErnieModel"""
+
     def __init__(self,
                  src_ids,
                  position_ids,

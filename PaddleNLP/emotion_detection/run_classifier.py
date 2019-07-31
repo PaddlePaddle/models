@@ -18,6 +18,7 @@ import paddle.fluid as fluid
 import numpy as np
 
 from models.classification import nets
+from models.model_check import check_cuda
 import reader
 import config
 import utils
@@ -50,6 +51,8 @@ run_type_g.add_arg("task_name", str, None, "The name of task to perform sentimen
 run_type_g.add_arg("do_train", bool, False, "Whether to perform training.")
 run_type_g.add_arg("do_val", bool, False, "Whether to perform evaluation.")
 run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
+
+parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
 args = parser.parse_args()
 
@@ -188,6 +191,8 @@ def main(args):
         print("Max train steps: %d" % max_train_steps)
 
         train_program = fluid.Program()
+        if args.random_seed is not None:
+            train_program.random_seed = args.random_seed
 
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
@@ -261,6 +266,7 @@ def main(args):
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
         time_begin = time.time()
+        ce_info = []
         while True:
             try:
                 steps += 1
@@ -292,6 +298,7 @@ def main(args):
                         (steps, np.sum(total_cost) / np.sum(total_num_seqs),
                         np.sum(total_acc) / np.sum(total_num_seqs),
                         args.skip_steps / used_time))
+                    ce_info.append([np.sum(total_cost) / np.sum(total_num_seqs), np.sum(total_acc) / np.sum(total_num_seqs), used_time])
                     total_cost, total_acc, total_num_seqs = [], [], []
                     time_begin = time.time()
 
@@ -317,6 +324,24 @@ def main(args):
                 train_pyreader.reset()
                 break
 
+    if args.do_train and args.enable_ce:
+        card_num = get_cards()
+        ce_loss = 0
+        ce_acc = 0
+        ce_time = 0
+        try:
+            ce_loss = ce_info[-2][0]
+            ce_acc = ce_info[-2][1]
+            ce_time = ce_info[-2][2]
+        except:
+            print("ce info error")
+        print("kpis\teach_step_duration_%s_card%s\t%s" %
+                (task_name, card_num, ce_time))
+        print("kpis\ttrain_loss_%s_card%s\t%f" %
+            (task_name, card_num, ce_loss))
+        print("kpis\ttrain_acc_%s_card%s\t%f" %
+            (task_name, card_num, ce_acc))
+
     # evaluate on test set
     if not args.do_train and args.do_val:
         test_pyreader.decorate_paddle_reader(
@@ -339,6 +364,16 @@ def main(args):
         infer(test_exe, test_prog, infer_pyreader,
              [probs.name], "infer")
 
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    if cards != '':
+        num = len(cards.split(","))
+    return num
+
+
 if __name__ == "__main__":
     utils.print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)
