@@ -111,6 +111,8 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml \
 		     -f evaluation/
 ```
 
+json文件必须命名为bbox.json或者mask.json，放在`evaluation/`目录下，或者不加`-f`参数，默认为当前目录。
+
 #### 提示
 
 - 默认从`output`加载checkpoint（可配置）

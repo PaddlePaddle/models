@@ -117,6 +117,8 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml \
 		     -f evaluation/
 ```
 
+The json file must be named bbox.json or mask.json, placed in the `evaluation/` directory. Or without the `-f` parameter, default is the current directory.
+
 #### NOTES
 
 - Checkpoint is loaded from `output` by default (configurable)
