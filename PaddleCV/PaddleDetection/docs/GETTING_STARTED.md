@@ -34,14 +34,14 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 
 - `-r`: Checkpoint path for resuming training. Such as: `-r output/faster_rcnn_r50_1x/10000`
 - `--eval`: Whether to perform evaluation in training, default is `False`
-- `-f`: If perform evaluation in train, this edits evaluation directory, default is current directory.
+- `-f`: If perform evaluation in training, this edits evaluation directory, default is current directory.
 - `-d`: Dataset path, same as `dataset_dir` of configs. Such as: `-d dataset/coco`
 - `-o`: Set configuration options in config file. Such as: `-o weights=output/faster_rcnn_r50_1x/model_final`
 
 
 ##### Examples
 
-- Perform evaluation in train
+- Perform evaluation in training
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export PYTHONPATH=$PYTHONPATH:.
@@ -91,7 +91,7 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 - `-d`: Dataset path, same as dataset_dir of configs. Such as: `-d dataset/coco`
 - `-f`: Evaluation directory, default is current directory.
 - `-o`: Set configuration options in config file. Such as: `-o weights=output/faster_rcnn_r50_1x/model_final`
-- `--json_eval`: Whether to eval with already exists bbox.json or mask.json. Default is `False`.
+- `--json_eval`: Whether to eval with already exists bbox.json or mask.json. Default is `False`. Json file directory assigned by `-f` argument.
 
 #### Examples
 
@@ -112,7 +112,9 @@ export CUDA_VISIBLE_DEVICES=0
 export PYTHONPATH=$PYTHONPATH:.
 # or run on CPU with:
 # export CPU_NUM=1
-python tools/eval.py -c configs/faster_rcnn_r50_1x.yml --json_eval
+python tools/eval.py -c configs/faster_rcnn_r50_1x.yml \
+		     --json_eval \
+		     -f evaluation/
 ```
 
 #### NOTES
@@ -148,7 +150,7 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_dir=demo
 #### Optional arguments
 
 - `--output_dir`: Directory for storing the output visualization files.
-- `--draw_threshold`: Threshold to reserve the result for visualization.
+- `--draw_threshold`: Threshold to reserve the result for visualization. Default is 0.5.
 - `--save_inference_model`: Save inference model in output_dir if True.
 
 #### Examples
@@ -166,7 +168,7 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml \
 ```
 The visualization files are saved in `output` by default, to specify a different
 path, simply add a `--output_dir=` flag.         
-`--draw_threshold` is optional arguments. Different thresholds will produce different results depending on the calculation of [NMS](https://ieeexplore.ieee.org/document/1699659)
+`--draw_threshold` is an optional argument. Default is 0.5. Different thresholds will produce different results depending on the calculation of [NMS](https://ieeexplore.ieee.org/document/1699659)
 
 - Save inference model
 
@@ -189,6 +191,8 @@ Save inference model by set `--save_inference_model`, which can be loaded by Pad
 **A:**  The default learning rate is tuned to multi-GPU training (8x GPUs), it must
 be adapted for single GPU training accordingly (e.g., divide by 8).       
 The calculation rules are as follows，they are equivalent: </br>     
+
+
 | GPU number  | Learning rate  | Max_iters | Milestones       |       
 | :---------: | :------------: | :-------: | :--------------: |     
 | 2           | 0.0025         | 720000    | [480000, 640000] |

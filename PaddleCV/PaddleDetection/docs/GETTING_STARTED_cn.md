@@ -85,7 +85,7 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 - `-d`: 数据集路径, 同配置文件里的`dataset_dir`。例如: `-d dataset/coco`
 - `-f`: 这个参数可以编辑评测保存json路径, 默认是当前目录。
 - `-o`: 设置配置文件里的参数内容。 例如: `-o weights=output/faster_rcnn_r50_1x/model_final`
-- `--json_eval`: 是否通过已存在的bbox.json或者mask.json进行评估。默认是`False`
+- `--json_eval`: 是否通过已存在的bbox.json或者mask.json进行评估。默认是`False`。json文件路径通过`-f`指令来设置。
 
 #### 例子
 
@@ -106,7 +106,9 @@ export CUDA_VISIBLE_DEVICES=0
 export PYTHONPATH=$PYTHONPATH:.
 # or run on CPU with:
 # export CPU_NUM=1
-python tools/eval.py -c configs/faster_rcnn_r50_1x.yml --json_eval
+python tools/eval.py -c configs/faster_rcnn_r50_1x.yml \
+		     --json_eval \
+		     -f evaluation/
 ```
 
 #### 提示
@@ -138,8 +140,8 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_dir=demo
 
 #### 可选参数
 
-- `--output_dir`: 输出推断后可视化文件.
-- `--draw_threshold`: 设置推断的阈值.
+- `--output_dir`: 输出推断后可视化文件。
+- `--draw_threshold`: 设置推断的阈值。默认是0.5.
 - `--save_inference_model`: Save inference model in output_dir if True.
 
 #### 例子
@@ -178,6 +180,8 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 **Q:**  为什么我使用单GPU训练loss会出`NaN`? </br>
 **A:**  默认学习率是适配多GPU训练(8x GPU)，若使用单GPU训练，须对应调整学习率（例如，除以8）。       
 计算规则表如下所示，它们是等价的: </br>          
+
+
 | GPU数  | 学习率  | 最大轮数 | 变化节点       |       
 | :---------: | :------------: | :-------: | :--------------: |     
 | 2           | 0.0025         | 720000    | [480000, 640000] |
