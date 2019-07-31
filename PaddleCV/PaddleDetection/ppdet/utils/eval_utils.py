@@ -137,15 +137,10 @@ def json_eval_results(feed, metric, json_directory=None):
     if json_directory:
         for k, v in enumerate(json_file_list):
             json_file_list[k] = os.path.join(str(json_directory), v)
-    if os.path.exists(json_file_list[0]):
-        cocoapi_eval(json_file_list[0], 'proposal', anno_file=anno_file)
-    else:
-        logger.info("{} not exists!".format(json_file_list[0]))
-    if os.path.exists(json_file_list[1]):
-        cocoapi_eval(json_file_list[1], 'bbox', anno_file=anno_file)
-    else:
-        logger.info("{} not exists!".format(json_file_list[1]))
-    if os.path.exists(json_file_list[2]):
-        cocoapi_eval(json_file_list[2], 'segm', anno_file=anno_file)
-    else:
-        logger.info("{} not exists!".format(json_file_list[2]))
+
+    coco_eval_style = ['proposal', 'bbox', 'segm']
+    for i, v_json in enumerate(json_file_list):
+        if os.path.exists(v_json):
+            cocoapi_eval(v_json, coco_eval_style[i], anno_file=anno_file)
+        else:
+            logger.info("{} not exists!".format(v_json))

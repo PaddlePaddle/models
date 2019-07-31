@@ -215,7 +215,6 @@ if __name__ == '__main__':
         default=False,
         help="Whether to perform evaluation in train")
     parser.add_argument(
-        "-p",
         "--output_eval",
         default=None,
         type=str,

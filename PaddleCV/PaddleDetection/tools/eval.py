@@ -136,12 +136,6 @@ def main():
 if __name__ == '__main__':
     parser = ArgsParser()
     parser.add_argument(
-        "-p",
-        "--output_eval",
-        default=None,
-        type=str,
-        help="Evaluation file directory, default is current directory.")
-    parser.add_argument(
         "--json_eval",
         action='store_true',
         default=False,
@@ -152,5 +146,10 @@ if __name__ == '__main__':
         default=None,
         type=str,
         help="Dataset path, same as DataFeed.dataset.dataset_dir")
+    parser.add_argument(
+        "--output_eval",
+        default=None,
+        type=str,
+        help="Evaluation file directory, default is current directory.")
     FLAGS = parser.parse_args()
     main()
