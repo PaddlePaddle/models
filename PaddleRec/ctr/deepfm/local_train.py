@@ -10,6 +10,7 @@ import pickle
 
 def train():
     args = parse_args()
+    print('Hyperparameters', args)
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
@@ -38,7 +39,12 @@ def train():
         start = time.time()
         dataset.set_filelist(train_filelist)
         exe.train_from_dataset(
-            program=fluid.default_main_program(), dataset=dataset, debug=False)
+            program=fluid.default_main_program(),
+            dataset=dataset,
+            fetch_list=[loss],
+            fetch_info=['epoch %d batch loss' % (epoch_id + 1)],
+            print_period=1,
+            debug=False)
         model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
         sys.stderr.write('epoch%d is finished and takes %f s\n' % (
             (epoch_id + 1), time.time() - start))
