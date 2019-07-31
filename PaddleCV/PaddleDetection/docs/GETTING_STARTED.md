@@ -32,10 +32,10 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml
 
 ##### Optional arguments
 
-- `-r`: Checkpoint path for resuming training. Such as: `-r output/faster_rcnn_r50_1x/10000`
+- `-r` or `--resume_checkpoint`: Checkpoint path for resuming training. Such as: `-r output/faster_rcnn_r50_1x/10000`
 - `--eval`: Whether to perform evaluation in training, default is `False`
-- `-f`: If perform evaluation in training, this edits evaluation directory, default is current directory.
-- `-d`: Dataset path, same as `dataset_dir` of configs. Such as: `-d dataset/coco`
+- `-p` or `--output_eval`: If perform evaluation in training, this edits evaluation directory, default is current directory.
+- `-d` or `--dataset_dir`: Dataset path, same as `dataset_dir` of configs. Such as: `-d dataset/coco`
 - `-o`: Set configuration options in config file. Such as: `-o weights=output/faster_rcnn_r50_1x/model_final`
 
 
@@ -88,8 +88,8 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 
 #### Optional arguments
 
-- `-d`: Dataset path, same as dataset_dir of configs. Such as: `-d dataset/coco`
-- `-f`: Evaluation directory, default is current directory.
+- `-d` or `--dataset_dir`: Dataset path, same as dataset_dir of configs. Such as: `-d dataset/coco`
+- `-p` or `--output_eval`: Evaluation directory, default is current directory.
 - `-o`: Set configuration options in config file. Such as: `-o weights=output/faster_rcnn_r50_1x/model_final`
 - `--json_eval`: Whether to eval with already exists bbox.json or mask.json. Default is `False`. Json file directory assigned by `-f` argument.
 
