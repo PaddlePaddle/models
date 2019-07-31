@@ -38,12 +38,7 @@ def train():
         start = time.time()
         dataset.set_filelist(train_filelist)
         exe.train_from_dataset(
-            program=fluid.default_main_program(),
-            dataset=dataset,
-            fetch_list=[loss, auc],
-            fetch_info=['loss', 'auc'],
-            debug=False,
-            print_period=1000)
+            program=fluid.default_main_program(), dataset=dataset, debug=False)
         model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
         sys.stderr.write('epoch%d is finished and takes %f s\n' % (
             (epoch_id + 1), time.time() - start))

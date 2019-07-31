@@ -33,12 +33,12 @@ After executing these commands, 3 folders "train_data", "test_data" and "aid_dat
 ## Train
 
 ```bash
-python local_train.py --model_output_dir models
+nohup python local_train.py --model_output_dir models >> train_log 2>&1 &
 ```
 
 ## Infer
 ```bash
-python infer.py --model_output_dir models --test_epoch 1
+nohup python infer.py --model_output_dir models --test_epoch 1 >> infer_log 2>&1 &
 ```
 Note: The last log info is the total Logloss and AUC for all test data.
 
