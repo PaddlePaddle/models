@@ -39,26 +39,26 @@ class DCGAN_model(object):
     def network_G(self, input, name="generator"):
         o_l1 = linear(input, self.gfc_dim, norm=self.norm, name=name + '_l1')
         o_l2 = linear(
-            o_l1,
-            self.gf_dim * 2 * self.img_dim // 4 * self.img_dim // 4,
+            input=o_l1,
+            output_size=self.gf_dim * 2 * self.img_dim // 4 * self.img_dim // 4,
             norm=self.norm,
             name=name + '_l2')
         o_r1 = fluid.layers.reshape(
             o_l2, [-1, self.df_dim * 2, self.img_dim // 4, self.img_dim // 4])
         o_dc1 = deconv2d(
-            o_r1,
-            self.gf_dim * 2,
-            4,
-            2,
+            input=o_r1,
+            num_filters=self.gf_dim * 2,
+            filter_size=4,
+            stride=2,
             padding=[1, 1],
             activation_fn='relu',
             output_size=[self.img_dim // 2, self.img_dim // 2],
             name=name + '_dc1')
         o_dc2 = deconv2d(
-            o_dc1,
-            1,
-            4,
-            2,
+            input=o_dc1,
+            num_filters=1,
+            filter_size=4,
+            stride=2,
             padding=[1, 1],
             activation_fn='tanh',
             output_size=[self.img_dim, self.img_dim],
@@ -70,25 +70,25 @@ class DCGAN_model(object):
         o_r1 = fluid.layers.reshape(
             input, shape=[-1, 1, self.img_dim, self.img_dim])
         o_c1 = conv2d(
-            o_r1,
-            self.df_dim,
-            4,
-            2,
+            input=o_r1,
+            num_filters=self.df_dim,
+            filter_size=4,
+            stride=2,
             padding=[1, 1],
             activation_fn='leaky_relu',
             name=name + '_c1')
         o_c2 = conv2d(
-            o_c1,
-            self.df_dim * 2,
-            4,
-            2,
+            input=o_c1,
+            num_filters=self.df_dim * 2,
+            filter_size=4,
+            stride=2,
             padding=[1, 1],
             norm='batch_norm',
             activation_fn='leaky_relu',
             name=name + '_c2')
         o_l1 = linear(
-            o_c2,
-            self.dfc_dim,
+            input=o_c2,
+            output_size=self.dfc_dim,
             norm=self.norm,
             activation_fn='leaky_relu',
             name=name + '_l1')

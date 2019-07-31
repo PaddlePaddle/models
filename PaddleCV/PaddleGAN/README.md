@@ -62,6 +62,9 @@
 
 在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
+其他依赖包：
+1. pip install imageio 安装imageio包（保存图片代码中所依赖的包）
+
 ### 任务简介
 
 Pix2Pix和CycleGAN采用cityscapes\[[10](#参考文献)\]数据集进行风格转换。
@@ -85,7 +88,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 
 ### 模型训练
 
-**开始训练：** 数据准备完毕后，可以通过一下方式启动训练：
+**开始训练：** 数据准备完毕后，可以通过以下方式启动训练：
 
     python train.py \
       --model_net=$(name_of_model) \

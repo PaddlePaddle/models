@@ -346,15 +346,6 @@ class STGAN(object):
                             "label_trg_": tensor_label_trg_
                         })
 
-                    batch_time = time.time() - s_time
-                    t_time += batch_time
-                    print("epoch{}: batch{}:  \n\
-                         d_loss: {}; d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
-                         Batch_time_cost: {:.2f}"
-                          .format(epoch_id, batch_id, d_loss[0], d_loss_real[
-                              0], d_loss_fake[0], d_loss_cls[0], d_loss_gp[0],
-                                  batch_time))
-                # optimize the generator network
                 else:
                     d_fetches = [
                         gen_trainer.g_loss_fake.name,
@@ -374,6 +365,16 @@ class STGAN(object):
                          g_loss_fake: {}; g_loss_rec: {}; g_loss_cls: {}"
                           .format(epoch_id, batch_id, g_loss_fake[0],
                                   g_loss_rec[0], g_loss_cls[0]))
+                batch_time = time.time() - s_time
+                t_time += batch_time
+                if batch_id % self.cfg.print_freq == 0:
+                    print("epoch{}: batch{}:  \n\
+                         d_loss: {}; d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
+                         Batch_time_cost: {:.2f}"
+                          .format(epoch_id, batch_id, d_loss[0], d_loss_real[
+                              0], d_loss_fake[0], d_loss_cls[0], d_loss_gp[0],
+                                  batch_time))
+                # optimize the generator network
                 sys.stdout.flush()
                 batch_id += 1
 
