@@ -65,7 +65,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 
 ##### NOTES
 
-- `CUDA_VISIBLE_DEVICES` Can specify different gpu numbers. Such as: `export CUDA_VISIBLE_DEVICES=0,1,2,3`. GPU calculation rules can refer [FAQ](##FAQ)
+- `CUDA_VISIBLE_DEVICES` Can specify different gpu numbers. Such as: `export CUDA_VISIBLE_DEVICES=0,1,2,3`. GPU calculation rules can refer [FAQ](#faq)
 - Datasets is stored in `dataset/coco` by default (configurable).
 - Datasets will be downloaded automatically and cached in `~/.cache/paddle/dataset` if not be found locally.
 - Pretrained model is downloaded automatically and cached in `~/.cache/paddle/weights`.
