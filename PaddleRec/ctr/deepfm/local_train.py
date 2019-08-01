@@ -11,8 +11,9 @@ import pickle
 def train():
     args = parse_args()
     print('---------- Configuration Arguments ----------')
-    for key, value in args.__dict__.iteritems():
+    for key, value in args.__dict__.items():
         print(key + ':' + str(value))
+
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
