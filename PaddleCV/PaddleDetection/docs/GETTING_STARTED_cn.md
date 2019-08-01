@@ -148,7 +148,7 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_dir=demo
 
 - `--output_dir`: 输出推断后可视化文件。
 - `--draw_threshold`: 设置推断的阈值。默认是0.5.
-- `--save_inference_model`: 设为`True`时，将保存预测模型保存到output_dir中.
+- `--save_inference_model`: 设为`True`时，将预测模型保存到output_dir中.
 
 #### 例子
 
