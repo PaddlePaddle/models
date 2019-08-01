@@ -71,10 +71,10 @@ class AttGAN_model(object):
             d = min(dim * 2**i, MAX_DIM)
             #SAME padding
             z = conv2d(
-                z,
-                d,
-                4,
-                2,
+                input=z,
+                num_filters=d,
+                filter_size=4,
+                stride=2,
                 padding_type='SAME',
                 norm='batch_norm',
                 activation_fn='leaky_relu',
@@ -104,10 +104,10 @@ class AttGAN_model(object):
             if i < n_layers - 1:
                 d = min(dim * 2**(n_layers - 1 - i), MAX_DIM)
                 z = deconv2d(
-                    z,
-                    d,
-                    4,
-                    2,
+                    input=z,
+                    num_filters=d,
+                    filter_size=4,
+                    stride=2,
                     padding_type='SAME',
                     name=name + str(i),
                     norm='batch_norm',
@@ -121,10 +121,10 @@ class AttGAN_model(object):
                     z = self.concat(z, a)
             else:
                 x = z = deconv2d(
-                    z,
-                    3,
-                    4,
-                    2,
+                    input=z,
+                    num_filters=3,
+                    filter_size=4,
+                    stride=2,
                     padding_type='SAME',
                     name=name + str(i),
                     activation_fn='tanh',
@@ -146,10 +146,10 @@ class AttGAN_model(object):
         for i in range(n_layers):
             d = min(dim * 2**i, MAX_DIM)
             y = conv2d(
-                y,
-                d,
-                4,
-                2,
+                input=y,
+                num_filters=d,
+                filter_size=4,
+                stride=2,
                 norm=norm,
                 padding=1,
                 activation_fn='leaky_relu',
@@ -159,8 +159,8 @@ class AttGAN_model(object):
                 initial='kaiming')
 
         logit_gan = linear(
-            y,
-            fc_dim,
+            input=y,
+            output_size=fc_dim,
             activation_fn='relu',
             name=name + 'fc_adv_1',
             initial='kaiming')
@@ -168,8 +168,8 @@ class AttGAN_model(object):
             logit_gan, 1, name=name + 'fc_adv_2', initial='kaiming')
 
         logit_att = linear(
-            y,
-            fc_dim,
+            input=y,
+            output_size=fc_dim,
             activation_fn='relu',
             name=name + 'fc_cls_1',
             initial='kaiming')

@@ -22,6 +22,17 @@ import glob
 import numpy as np
 from PIL import Image
 
+def set_paddle_flags(**kwargs):
+    for key, value in kwargs.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+# NOTE(paddle-dev): All of these flags should be set before
+# `import paddle`. Otherwise, it would not take any effect.
+set_paddle_flags(
+    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
+)
+
 from paddle import fluid
 
 from ppdet.core.workspace import load_config, merge_config, create
@@ -109,17 +120,19 @@ def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(FLAGS.output_dir, cfg_name)
     feeded_var_names = [var.name for var in feed_vars.values()]
-    target_vars = test_fetches.values()
-    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars, infer_prog)
+    target_vars = list(test_fetches.values())
+    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars,
+                                       infer_prog)
     logger.info("Save inference model to {}, input: {}, output: "
                 "{}...".format(save_dir, feeded_var_names,
-                            [var.name for var in target_vars]))
-    fluid.io.save_inference_model(save_dir, 
-                                  feeded_var_names=feeded_var_names,
-                                  target_vars=target_vars,
-                                  executor=exe,
-                                  main_program=infer_prog,
-                                  params_filename="__params__")
+                               [var.name for var in target_vars]))
+    fluid.io.save_inference_model(
+        save_dir,
+        feeded_var_names=feeded_var_names,
+        target_vars=target_vars,
+        executor=exe,
+        main_program=infer_prog,
+        params_filename="__params__")
 
 
 def main():
@@ -167,6 +180,8 @@ def main():
         save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
 
     # parse infer fetches
+    assert cfg.metric in ['COCO', 'VOC'], \
+            "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
