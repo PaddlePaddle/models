@@ -24,7 +24,7 @@ import argparse
 import functools
 import logging
 
-def print_arguments(arg s):
+def print_arguments(args):
     """Print argpars e's arguments.
 
     Usage:
@@ -64,25 +64,6 @@ def add_arguments(argname,  type, default, help, argparser, **kwargs):
         help=help + ' Default: %(default)s.',
         **kwargs)
 
-def check_gpu(use_gpu): 
-    """
-    Log error and exit when set use_gpu=true in paddlepaddle
-    cpu version.
-    """
-    logger = logging.getLogger(__name__)
-    err = "Config use_gpu cannot be set as true while you are " \
-          "using paddlepaddle cpu version ! \nPlease try: \n" \
-          "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
-          "\t2. Set use_gpu as false in config file to run " \
-          "model on CPU"
-
-    try:
-        if use_gpu and not fluid.is_compiled_with_cuda():
-            print(err)
-            sys.exit(1)
-    except Exception as e:
-        pass
-
 def parse_args(): 
     """Add arguments
 
@@ -114,9 +95,8 @@ def parse_args():
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
-    add_arg('momentum_rate',            float,  0.9,                    "The value of momentum_rate.")
-    
-    add_arg('step_epochs',              nargs-int-type,     [30, 60, 90]  "piecewise decay step")
+    add_arg('momentum_rate',            float,  0.9,                    "The value of momentum_rate.") 
+    #add_arg('step_epochs',              nargs-int-type,     [30, 60, 90]  "piecewise decay step")
     # READER AND PREPROCESS
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
@@ -143,7 +123,7 @@ def check_args(args):
     """check arguments before running
     """
 
-    import ..model
+    #import ..model
     model_list = [m for m in dir(models) if "__" not in m]
     assert model_name in model_list, "{} is not in lists: {}".format(args.model, model_list)
 
@@ -151,11 +131,11 @@ def check_args(args):
     assert args.lr_strategy in lr_strategy_list , "{} is not in lists: {}".format(args.lr_strategy, lr_strategy_list)
 
 
-    def check_gpu(args.gpu)
-    """
+    def check_gpu(args):
+        """
         Log error and exit when set use_gpu=true in paddlepaddle
         cpu version.
-    """
+        """
         logger = logging.getLogger(__name__)
         err = "Config use_gpu cannot be set as true while you are " \
                 "using paddlepaddle cpu version ! \nPlease try: \n" \
@@ -177,7 +157,7 @@ def check_args(args):
             assert os.path.isdir(args.check_output)
     def check_batch_size():
         # when use gpu, the number of visible gpu should divide batch size
-        assert args.batch_size % args.get_device_num() = 0
+        assert args.batch_size % args.get_device_num() == 0
 
 
 def get_device_num():
@@ -197,7 +177,7 @@ def get_device_num():
     print("...Running on ",device_num," GPU cards")
     return device_num
 
-def init_from()
+def init_from():
 
     if checkpoint is not None:
         fluid.io.load_persistables(exe, checkpoint, main_program=train_prog)
@@ -209,7 +189,7 @@ def init_from()
 
 
 def init_from_checkpoint(args, exe, program):
-
+    
     assert isinstance(args.init_from_checkpoint, str)
 
     if not os.path.exists(args.init_from_checkpoint):
@@ -244,11 +224,11 @@ def save_checkpoint(args, exe, program, pass_id):
         main_program=program,
         filename="checkpoint.pdckpt")
 
-    print("save checkpoint at %s" % (checkpoint_path)))
+    print("save checkpoint at %s" % (checkpoint_path))
     return True
 
-def create_pyreader(is_train, args):
-    """
+def create_pyreader(is_train, args ):
+    """ 
     use PyReader
     """
     image_shape = [int(m) for m in args.image_shape.split(",")]
@@ -267,16 +247,45 @@ def create_pyreader(is_train, args):
                 iterable = False)
     else:
         py_reader = fluid.io.PyReader(
-                feed_list = [feed_image, feed_label]
+                feed_list = [feed_image, feed_label],
                 capacity = 64,
                 use_double_buffer = True,
                 iterable = False)
 
     return py_reader
+ 
 
-##TODO: Robust print_resulr func.
-def print_result(batch_id, args)
-    pass
+def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
+    if info_mode == "batch":
+        if batch_id % print_step == 0:
+            if isinstance(metrics,list):
+
+                if len(metrics) == 2:
+                    loss, lr = metrics
+                    print("Pass {0}, train batch {1}, loss {2}, lr {3}, elapse {4}".format(pass_id, batch_id, "%.5f"%loss ,"%.5f"%lr, "%2.2f sec"% time_info))
+                # no mixup putput
+                elif len(metrics) == 4:
+                    loss, acc1, acc5, lr = metrics
+                    print("Pass {0}, train batch {1}, loss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%.5f" %lr, "%2.2f sec" % time_info))
+            # test output
+                elif len(metrics) == 3:
+                    loss, acc1, acc5 = metrics
+                    print("Pass {0}, test batch {1}, loss {2}, acc1 {3}, acc5 {4}, elapse {5}".format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%2.2f sec"%time_info))
+                else:
+                    print("?")
+
+    elif info_mode == "epoch" :
+        ## TODO add time elapse
+        if isinstance(metrics,list):
+            if len(metrics) == 5:
+                train_loss,_,test_loss,test_acc1,test_acc5 = metrics
+                print("End pass {0}, train_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".format(pass_id, "%.5f"%train_loss, "%.5f"%test_loss, "%.5f"%test_acc1, "%.5f"%test_acc5))
+            elif len(metrics) == 7:
+                train_loss,train_acc1,train_acc5,_,test_loss,test_acc1,test_acc5 = metrics
+                print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(pass_id, "%.5f"%train_loss, "%.5f"%train_acc1, "%.5f"%train_acc5, "%.5f    "%test_loss,"%.5f"%test_acc1, "%.5f"%test_acc5))
+        
+    if info_mode == "ce":
+        print("CE TESTING CODE IS HERE")
 
 
 def best_strategy(args, program, loss):

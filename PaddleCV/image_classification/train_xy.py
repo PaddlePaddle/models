@@ -46,8 +46,9 @@ import reader_cv2 as reader
 import utils
 import models
 from utils.fp16_utils import create_master_params_grads, master_param_to_train_param
-from utils.utility import add_arguments, print_arguments, check_gpu, get_device_num, create_pyreader
-from utils.learning_rate import cosine_decay_with_warmup, Decay
+from utils.utility import add_arguments, print_arguments, check_gpu, get_device_num, create_pyreader, best_strategy, print_info
+from utils.learning_rate import  Decay
+
 from dist_train import dist_utils
 from measurement import Measurement
 
@@ -56,8 +57,8 @@ num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 ##add preprocess on gpu in future 
 ##add visreader in future ##add multiprocess in future
 ## multi card test prog
-def build_program(is_train, main_prog, startup_prog, args):
-    """
+def build_program(is_train, main_prog, startup_pro g, args):
+    """ 
     return : 
     train: [Measurement, global_lr, py_reader]
     test: [Measurement, py_reader]
@@ -126,46 +127,76 @@ def train(args):
     test_py_reader.decorate_paddle_reader(test_reader)
 
     train_exe = best_strategy(args, train_prog, train_cost)
-
+    
+    
     for pass_id in range(args.num_epochs):
+        train_batch_id = 0
+        test_batch_id = 0
+        train_batch_time_record = []
+        test_batch_time_record = []
+        train_batch_metrics_record = []
+        test_batch_metrics_record = []
 
         train_py_reader.start()
-        train_info = [[], [], []]
-        test_info = [[], [], []]
-        train_time = []
-        batch_id = 0
-        time_record=[]
         try:
             while True:
-                train_batch_metrics = train_exe.run(train_prog, fetch_list=train_fetch_list)
-                print_result(args, train_batch_metrics)
+
+                t1 = time.time()
+                train_batch_metrics = train_exe.run(train_prog, fetch_list = train_fetch_list)
+                t2 = time.time()
+                train_batch_elapse = t2-t1
+                train_batch_time_record.append(batch_elapse)
+
+                train_batch_metrics_avg = np.mean(np.array(train_batch_metrics),axis=1)
+                train_batch_metrics_record.append(train_batch_metrics_avg)
+
+                print_info(pass_id, train_batch_id, args.print_step, train_batch_metrics_avg, train_batch_elapse, "batch")
+                sys.stdout.flush()
+                train_batch_id += 1
+
         except fluid.core.EOFException:
             train_py_reader.reset()
-        train_poch_metrics =  ###
-
+        
         test_py_reader.start()
-        test_batch_id = 0
         try:
             while True:
-                test_batch_metrics = exe.run(program=test_prog, fetch_list=test_fetch_list)
-                print_result(args, test_batch_metrics)
+                t1 = time.time()
+                test_batch_metrics = exe.run(program = test_prog, fetch_list = test_fetch_list)
+                t2 = time.time()
+                test_batch_elapse = t2-t1
+                test_batch_time_record.append(batch_elapse)
+
+                test_batch_metrics_avg = np.mean(np.array(test_batch_metrics),axis=1)
+                test_batch_metrics_record.append(test_batch_metrics_avg)
+
+                print_info(pass_id, test_batch_id, args.print_step, test_batch_metrics_avg, test_batch_elapse, "batch")
+                sys.stdout.flush()
+                test_batch_id += 1
+
         except fluid.core.EOFException:
             test_py_reader.reset()
-        test_epoch_metrics = ###
 
-        print_result(train_epoch_metrics,args)
-        print_result(test_epoch_metrics,args)
+
+
+        train_epoch_time_avg = np.mean(np.array(train_batch_time_record))
+        train_epoch_metrics_avg = np.mean(np.array(train_batch_metrics_record),axis=0)
+
+        test_epoch_time_avg = np.mean(np.array(test_batch_time_record))
+        test_epoch_metrics_avg = np.mean(np.array(test_batch_metrics_record),axis=0)
+
+        print_info(pass_id, 0, 0, train_epoch_metrics_avg+test_epoch_metrics_avg, 0, "epoch")
+
 
         model_path = os.path.join(model_save_dir + '/' + model_name, str(pass_id))
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
         fluid.io.save_persistables(exe, model_path, main_program=train_prog)
 
-def main() :
+def main() : 
     args = parser.parse_args()
     print_arguments(args)
-    check_args(args)
-    train(args)
+    #check_args(args)
+    #train(args)
 
-if __name__ == '__main__':
+if __name__ == '__main__': 
     main()

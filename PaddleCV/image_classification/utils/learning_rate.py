@@ -122,13 +122,12 @@ class Decay(object):
         self.total_images = args.total_images
         self.step = int(math.ceil(float(self.total_images)/self.batch_size))
 
-     def piecewise_decay(self):
+    def piecewise_decay(self):
         """piecewise decay with Momentum optimizer
 
-        Returns:
+            Returns:
             a piecewise_decay optimizer
         """
-
         bd = [self.step * e for e in self.step_epochs]
         lr = [self.lr * (0.1**i) for i in range(len(bd) + 1)]
         learning_rate = fluid.layers.piecewise_decay(boundaries = bd, values = lr)
