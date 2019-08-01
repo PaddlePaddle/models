@@ -30,7 +30,8 @@ from ppdet.data.transform.operators import (
     Permute)
 from ppdet.data.transform.arrange_sample import (ArrangeRCNN, ArrangeTestRCNN,
                                                  ArrangeSSD, ArrangeTestSSD,
-                                                 ArrangeYOLO, ArrangeTestYOLO)
+                                                 ArrangeYOLO, ArrangeEvalYOLO,
+                                                 ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
@@ -41,49 +42,60 @@ __all__ = [
 ]
 
 
-def create_reader(feed, max_iter=0):
+def _prepare_data_config(feed, args_path):
+    # if `DATASET_DIR` does not exists, search ~/.paddle/dataset for a directory
+    # named `DATASET_DIR` (e.g., coco, pascal), if not present either, download
+    dataset_home = args_path if args_path else feed.dataset.dataset_dir
+    if dataset_home:
+        annotation = getattr(feed.dataset, 'annotation', None)
+        image_dir = getattr(feed.dataset, 'image_dir', None)
+        dataset_dir = get_dataset_path(dataset_home, annotation, image_dir)
+        if annotation:
+            feed.dataset.annotation = os.path.join(dataset_dir, annotation)
+        if image_dir:
+            feed.dataset.image_dir = os.path.join(dataset_dir, image_dir)
+
+    mixup_epoch = -1
+    if getattr(feed, 'mixup_epoch', None) is not None:
+        mixup_epoch = feed.mixup_epoch
+
+    data_config = {
+        'ANNO_FILE': feed.dataset.annotation,
+        'IMAGE_DIR': feed.dataset.image_dir,
+        'USE_DEFAULT_LABEL': feed.dataset.use_default_label,
+        'IS_SHUFFLE': feed.shuffle,
+        'SAMPLES': feed.samples,
+        'WITH_BACKGROUND': feed.with_background,
+        'MIXUP_EPOCH': mixup_epoch,
+        'TYPE': type(feed.dataset).__source__
+    }
+
+    if len(getattr(feed.dataset, 'images', [])) > 0:
+        data_config['IMAGES'] = feed.dataset.images
+
+    return data_config
+
+
+def create_reader(feed, max_iter=0, args_path=None, my_source=None):
     """
     Return iterable data reader.
 
     Args:
         max_iter (int): number of iterations.
+        my_source (callable): callable function to create a source iterator
+            which is used to provide source data in 'ppdet.data.reader'
     """
 
     # if `DATASET_DIR` does not exists, search ~/.paddle/dataset for a directory
     # named `DATASET_DIR` (e.g., coco, pascal), if not present either, download
-    if feed.dataset.dataset_dir:
-        dataset_dir = get_dataset_path(feed.dataset.dataset_dir)
-        feed.dataset.annotation = os.path.join(dataset_dir,
-                                               feed.dataset.annotation)
-        feed.dataset.image_dir = os.path.join(dataset_dir,
-                                              feed.dataset.image_dir)
+    data_config = _prepare_data_config(feed, args_path)
 
-    mixup_epoch = -1
-    if getattr(feed, 'mixup_epoch', None) is not None:
-        mixup_epoch = feed.mixup_epoch
     bufsize = 10
     use_process = False
     if getattr(feed, 'bufsize', None) is not None:
         bufsize = feed.bufsize
     if getattr(feed, 'use_process', None) is not None:
         use_process = feed.use_process
-
-    mode = feed.mode
-    data_config = {
-        mode: {
-            'ANNO_FILE': feed.dataset.annotation,
-            'IMAGE_DIR': feed.dataset.image_dir,
-            'USE_DEFAULT_LABEL': feed.dataset.use_default_label,
-            'IS_SHUFFLE': feed.shuffle,
-            'SAMPLES': feed.samples,
-            'WITH_BACKGROUND': feed.with_background,
-            'MIXUP_EPOCH': mixup_epoch,
-            'TYPE': type(feed.dataset).__source__
-        }
-    }
-
-    if len(getattr(feed.dataset, 'images', [])) > 0:
-        data_config[mode]['IMAGES'] = feed.dataset.images
 
     transform_config = {
         'WORKER_CONF': {
@@ -126,8 +138,8 @@ def create_reader(feed, max_iter=0):
         ops.append(op_dict)
     transform_config['OPS'] = ops
 
-    reader = Reader(data_config, {mode: transform_config}, max_iter)
-    return reader._make_reader(mode)
+    return Reader.create(feed.mode, data_config,
+        transform_config, max_iter, my_source)
 
 
 # XXX batch transforms are only stubs for now, actually handled by `post_map`
@@ -181,7 +193,6 @@ class DataSet(object):
     Args:
         annotation (str): annotation file path
         image_dir (str): directory where image files are stored
-        num_classes (int): number of classes
         shuffle (bool): shuffle samples
     """
     __source__ = 'RoiDbSource'
@@ -742,7 +753,6 @@ class SSDEvalFeed(DataFeed):
                 DecodeImage(to_rgb=True, with_mixup=False),
                 NormalizeBox(),
                 ResizeImage(target_size=300, use_cv2=False, interp=1),
-                RandomFlipImage(is_normalized=True),
                 Permute(),
                 NormalizeImage(
                     mean=[127.5, 127.5, 127.5],
@@ -890,7 +900,8 @@ class YoloEvalFeed(DataFeed):
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_shape', 'im_id'],
+                 fields=['image', 'im_size', 'im_id', 'gt_box', 
+                         'gt_label', 'is_difficult'],
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
@@ -911,7 +922,7 @@ class YoloEvalFeed(DataFeed):
                  num_workers=8,
                  num_max_boxes=50,
                  use_process=False):
-        sample_transforms.append(ArrangeTestYOLO())
+        sample_transforms.append(ArrangeEvalYOLO())
         super(YoloEvalFeed, self).__init__(
             dataset,
             fields,
@@ -925,7 +936,6 @@ class YoloEvalFeed(DataFeed):
             with_background=with_background,
             num_workers=num_workers,
             use_process=use_process)
-        self.num_max_boxes = num_max_boxes
         self.mode = 'VAL'
         self.bufsize = 128
 
@@ -937,7 +947,7 @@ class YoloTestFeed(DataFeed):
     def __init__(self,
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_shape', 'im_id'],
+                 fields=['image', 'im_size', 'im_id'],
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
@@ -973,6 +983,5 @@ class YoloTestFeed(DataFeed):
             with_background=with_background,
             num_workers=num_workers,
             use_process=use_process)
-        self.num_max_boxes = num_max_boxes
         self.mode = 'TEST'
         self.bufsize = 128

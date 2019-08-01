@@ -4,6 +4,7 @@ import copy
 import logging
 import multiprocessing
 import os
+import subprocess
 
 if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
     os.environ['FLAGS_eager_delete_tensor_gb'] = '0'
@@ -157,14 +158,9 @@ def parse_args():
 
 def get_device_num():
     # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1: return 1
-    visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(
-            ['nvidia-smi', '-L']).decode().count('\n')
-    return device_num
+    if num_trainers > 1:
+        return 1
+    return fluid.core.get_cuda_device_count()
 
 
 def append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
@@ -667,7 +663,8 @@ def train(args):
 
     if training_role == "PSERVER" or (not TrainTaskConfig.use_gpu):
         place = fluid.CPUPlace()
-        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+        # the default setting of CPU_NUM in paddle framework is 1
+        dev_count = int(os.environ.get('CPU_NUM', 1))
     else:
         check_cuda(TrainTaskConfig.use_gpu)
         gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))

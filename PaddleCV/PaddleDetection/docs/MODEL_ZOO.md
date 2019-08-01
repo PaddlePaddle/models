@@ -49,8 +49,12 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | ResNet101-FPN        | Faster         |    1    |   2x    |  39.1  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r101_fpn_2x.tar) |
 | ResNet101-FPN        | Mask           |    1    |   1x    |  39.5  |  35.2   | [model](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_r101_fpn_1x.tar) |
 | ResNet101-vd-FPN     | Faster         |    1    |   1x    |  40.5  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r101_vd_fpn_1x.tar) |
-| ResNet101-vd-FPN     | Faster         |    1    |   2x    |  40.6  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r101_fpn_2x.tar) |
+| ResNet101-vd-FPN     | Faster         |    1    |   2x    |  40.8  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r101_vd_fpn_2x.tar) |
+| ResNet101-vd-FPN     | Mask           |    1    |   1x    |  41.4  |  36.8   | [model](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_r101_vd_fpn_1x.tar) |
 | ResNeXt101-vd-FPN    | Faster         |    1    |   1x    |  42.2  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_x101_vd_64x4d_fpn_1x.tar) |
+| ResNeXt101-vd-FPN    | Faster         |    1    |   2x    |  41.7  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_x101_vd_64x4d_fpn_2x.tar) |
+| ResNeXt101-vd-FPN    | Mask           |    1    |   1x    |  42.9  |  37.9   | [model](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_x101_vd_64x4d_fpn_1x.tar) |
+| ResNeXt101-vd-FPN    | Mask           |    1    |   2x    |  42.6  |  37.6   | [model](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_x101_vd_64x4d_fpn_2x.tar) |
 | SENet154-vd-FPN      | Faster         |    1    |  1.44x  |  42.9  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_se154_vd_fpn_s1x.tar) |
 | SENet154-vd-FPN      | Mask           |    1    |  1.44x  |  44.0  |  38.7   | [model](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_se154_vd_fpn_s1x.tar) |
 
@@ -67,6 +71,20 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | ResNet34     | 608  |    8    |   270e  |  36.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
 | ResNet34     | 416  |    8    |   270e  |  34.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
 | ResNet34     | 320  |    8    |   270e  |  31.4  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34.tar) |
+
+### Yolo v3 on Pascal VOC
+
+| Backbone     | Size | Image/gpu | Lr schd | Box AP | Download  |
+| :----------- | :--: | :-----: | :-----: | :----: | :-------: |
+| DarkNet53    | 608  |    8    |   270e  |  83.5  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| DarkNet53    | 416  |    8    |   270e  |  83.6  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| DarkNet53    | 320  |    8    |   270e  |  82.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_darknet_voc.tar) |
+| MobileNet-V1 | 608  |    8    |   270e  |  76.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar) |
+| MobileNet-V1 | 416  |    8    |   270e  |  76.7  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar) |
+| MobileNet-V1 | 320  |    8    |   270e  |  75.3  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar) |
+| ResNet34     | 608  |    8    |   270e  |  82.6  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34_voc.tar) |
+| ResNet34     | 416  |    8    |   270e  |  81.9  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34_voc.tar) |
+| ResNet34     | 320  |    8    |   270e  |  80.1  | [model](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_r34_voc.tar) |
 
 **NOTE**: Yolo v3 is trained in 8 GPU with total batch size as 64 and trained 270 epoches. Yolo v3 training data augmentations: mixup,
 randomly color distortion, randomly cropping, randomly expansion, randomly interpolation method, randomly flippling. Yolo v3 used randomly
@@ -86,7 +104,7 @@ results of image size 608/416/320 above.
 
 | Backbone     | Size | Image/gpu | Lr schd | Box AP | Download  |
 | :----------- | :--: | :-----: | :-----: | :----: | :-------: |
-| MobileNet v1 | 300  |    32   |   120e  |  73.2  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
+| MobileNet v1 | 300  |    32   |   120e  |  73.13  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
 
 **NOTE**: SSD is trained in 2 GPU with totoal batch size as 64 and trained 120 epoches. SSD training data augmentations: randomly color distortion,
 randomly cropping, randomly expansion, randomly flipping.

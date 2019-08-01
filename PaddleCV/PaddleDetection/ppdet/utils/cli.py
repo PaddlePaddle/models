@@ -63,12 +63,13 @@ class ArgsParser(ArgumentParser):
             return config
         for s in opts:
             s = s.strip()
-            k, v = s.split('=')
+            k, v = s.split('=', 1)
             if '.' not in k:
-                config[k] = v
+                config[k] = yaml.load(v, Loader=yaml.Loader)
             else:
                 keys = k.split('.')
-                config[keys[0]] = {}
+                if keys[0] not in config:
+                    config[keys[0]] = {}
                 cur = config[keys[0]]
                 for idx, key in enumerate(keys[1:]):
                     if idx == len(keys) - 2:

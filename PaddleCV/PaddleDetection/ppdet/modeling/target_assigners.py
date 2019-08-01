@@ -26,6 +26,8 @@ __all__ = ['BBoxAssigner', 'MaskAssigner', 'CascadeBBoxAssigner']
 
 @register
 class CascadeBBoxAssigner(object):
+    __shared__ = ['num_classes']
+
     def __init__(self,
                  batch_size_per_im=512,
                  fg_fraction=.25,
@@ -49,7 +51,7 @@ class CascadeBBoxAssigner(object):
 
         curr_bbox_reg_w = [
             1. / self.bbox_reg_weights[curr_stage],
-            2. / self.bbox_reg_weights[curr_stage],
+            1. / self.bbox_reg_weights[curr_stage],
             2. / self.bbox_reg_weights[curr_stage],
             2. / self.bbox_reg_weights[curr_stage],
         ]

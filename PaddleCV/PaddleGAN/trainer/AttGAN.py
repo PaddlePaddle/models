@@ -176,8 +176,6 @@ class DTrainer():
 class AttGAN(object):
     def add_special_args(self, parser):
         parser.add_argument(
-            '--image_size', type=int, default=256, help="image size")
-        parser.add_argument(
             '--g_lr',
             type=float,
             default=0.0002,
@@ -229,6 +227,12 @@ class AttGAN(object):
             type=int,
             default=5,
             help="default layers in the network")
+        parser.add_argument(
+            '--dis_norm',
+            type=str,
+            default=None,
+            help="the normalization in discriminator, choose in [None, instance_norm]"
+        )
 
         return parser
 

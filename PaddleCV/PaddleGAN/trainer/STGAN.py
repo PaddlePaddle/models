@@ -79,7 +79,7 @@ class DTrainer():
                     clone_image_real = b.var('image_real')
                     break
             self.fake_img, _ = model.network_G(
-                image_real, label_org, label_trg_, cfg, name="generator")
+                image_real, label_org_, label_trg_, cfg, name="generator")
             self.pred_real, self.cls_real = model.network_D(
                 image_real, cfg, name="discriminator")
             self.pred_real.persistable = True
@@ -174,8 +174,6 @@ class DTrainer():
 class STGAN(object):
     def add_special_args(self, parser):
         parser.add_argument(
-            '--image_size', type=int, default=256, help="image size")
-        parser.add_argument(
             '--g_lr',
             type=float,
             default=0.0002,
@@ -234,6 +232,12 @@ class STGAN(object):
             type=int,
             default=4,
             help="default layers of GRU in generotor")
+        parser.add_argument(
+            '--dis_norm',
+            type=str,
+            default=None,
+            help="the normalization in discriminator, choose in [None, instance_norm]"
+        )
 
         return parser
 

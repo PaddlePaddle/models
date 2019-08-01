@@ -1,21 +1,20 @@
 architecture: SSD
-max_iters: 28000
 train_feed: SSDTrainFeed
 eval_feed: SSDEvalFeed
 test_feed: SSDTestFeed
 pretrain_weights: https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_coco_pretrained.tar
-
 use_gpu: true
+max_iters: 28000
 snapshot_iter: 2000
 log_smooth_window: 1
 metric: VOC
 save_dir: output
 weights: output/ssd_mobilenet_v1_voc/model_final/
+num_classes: 21
 
 SSD:
   backbone: MobileNet
   multi_box_head: MultiBoxHead
-  num_classes: 21
   metric:
     ap_version: 11point
     evaluate_difficult: false
@@ -31,6 +30,7 @@ SSD:
 MobileNet:
   norm_decay: 0.
   conv_group_scale: 1
+  conv_learning_rate: 0.1
   extra_block_filters: [[256, 512], [128, 256], [128, 256], [64, 128]]
   with_extra_blocks: true
 
