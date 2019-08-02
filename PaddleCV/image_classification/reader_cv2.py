@@ -192,7 +192,7 @@ def process_image(sample,
         if crop_size > 0:
             target_size = settings.resize_short_size
             img = resize_short(img, target_size)
-
+            crop_size = int(settings.image_shape.split(',')[-1])
             img = crop_image(img, target_size=crop_size, center=True)
 
     img = img[:, :, ::-1].astype('float32').transpose((2, 0, 1)) / 255
