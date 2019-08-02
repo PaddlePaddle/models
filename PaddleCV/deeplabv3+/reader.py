@@ -38,7 +38,7 @@ def slice_with_pad(a, s, value=0):
             pads.append([pl, pr])
             slices.append([l, r])
     slices = list(map(lambda x: slice(x[0], x[1], 1), slices))
-    a = a[slices]
+    a = a[tuple(slices)]
     a = np.pad(a, pad_width=pads, mode='constant', constant_values=value)
     return a
 
