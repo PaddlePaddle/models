@@ -73,7 +73,7 @@ sh run.sh task_name task_type
 task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2，选择6个任务中任意一项；
 task_type: train，predict, evaluate, inference, all, 选择5个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model，all: 顺序执行训练、预测、评估、保存inference model的过程)；
 
-训练示例： sh run .sh atis_intent train
+训练示例： sh run.sh atis_intent train
 ```
 &ensp;&ensp;&ensp;&ensp; 方式一如果为CPU训练: 
 ```
@@ -83,7 +83,11 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 &ensp;&ensp;&ensp;&ensp; 方式一如果为GPU训练: 
 ```
 请将run.sh内参数设置为: 
-1、export CUDA_VISIBLE_DEVICES=0,1,2,3  #用户可自行指定空闲的卡
+1、如果为单卡训练（用户指定空闲的单卡）：
+export CUDA_VISIBLE_DEVICES=0 
+2、如果为多卡训练（用户指定空闲的多张卡）：
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+
 ```
 #### &ensp;&ensp;&ensp;&ensp; 方式二: 执行训练相关的代码:
 
@@ -91,14 +95,23 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
-export CUDA_VISIBLE_DEVICES=0  #指定训练所需GPU卡，如为CPU训练则该参数置为空
+export CUDA_VISIBLE_DEVICES=0  #GPU单卡训练
+#export CUDA_VISIBLE_DEVICES=0,1,2,3  #GPU多卡训练
+#export CUDA_VISIBLE_DEVICES=  #CPU训练
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
 
 TASK_NAME="atis_intent"  #指定训练的任务名称
 BERT_BASE_PATH="data/pretrain_model/uncased_L-12_H-768_A-12"
 
 python -u main.py \
        --task_name=${TASK_NAME} \
-       --use_cuda=true \
+       --use_cuda=${use_cuda} \
        --do_train=true \
        --in_tokens=true \
        --epoch=20 \
@@ -127,7 +140,7 @@ sh run.sh task_name task_type
 task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2，选择6个任务中任意一项；
 task_type: train，predict, evaluate, inference, all, 选择5个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model，all: 顺序执行训练、预测、评估、保存inference model的过程)；
 
-预测示例： sh run .sh atis_intent predict
+预测示例： sh run.sh atis_intent predict
 ```
 &ensp;&ensp;&ensp;&ensp; 方式一如果为CPU预测: 
 ```
@@ -137,7 +150,8 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 &ensp;&ensp;&ensp;&ensp; 方式一如果为GPU预测: 
 ```
 请将run.sh内参数设置为: 
-1、export CUDA_VISIBLE_DEVICES=0 #用户可自行指定空闲的卡
+支持单卡预测（用户指定空闲的单卡）：
+export CUDA_VISIBLE_DEVICES=0 
 ```
 注：预测时，如采用方式一，用户可通过修改run.sh中init_from_params参数来指定自己训练好的需要预测的模型，目前代码中默认为加载官方已经训练好的模型;
 
@@ -146,14 +160,22 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
-export CUDA_VISIBLE_DEVICES=0  #指定预测所需GPU卡，如为CPU预测则该参数置为空
+export CUDA_VISIBLE_DEVICES=0  #单卡预测
+#export CUDA_VISIBLE_DEVICES=  #CPU预测
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
 
 TASK_NAME="atis_intent"  #指定预测的任务名称
 BERT_BASE_PATH="./data/pretrain_model/uncased_L-12_H-768_A-12"
 
 python -u main.py \
        --task_name=${TASK_NAME} \
-       --use_cuda=true \
+       --use_cuda=${use_cuda} \
        --do_predict=true \
        --in_tokens=true \
        --batch_size=4096 \
@@ -197,7 +219,7 @@ sh run.sh task_name task_type
 task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2，选择6个任务中任意一项；
 task_type: train，predict, evaluate, inference, all, 选择5个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model，all: 顺序执行训练、预测、评估、保存inference model的过程)；
 
-评估示例： sh run .sh atis_intent evaluate
+评估示例： sh run.sh atis_intent evaluate
 ```
 注：评估计算ground_truth和predict_label之间的打分，默认CPU计算即可；
 
@@ -222,7 +244,7 @@ sh run.sh task_name task_type
 task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2，选择6个任务中任意一项；
 task_type: train，predict, evaluate, inference, all, 选择5个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model，all: 顺序执行训练、预测、评估、保存inference model的过程)；
 
-保存模型示例： sh run .sh atis_intent inference
+保存模型示例： sh run.sh atis_intent inference
 ```
 &ensp;&ensp;&ensp;&ensp; 方式一如果为CPU执行inference model过程: 
 ```
@@ -232,18 +254,27 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 &ensp;&ensp;&ensp;&ensp; 方式一如果为GPU执行inference model过程:
 ```
 请将run.sh内参数设置为: 
-1、export CUDA_VISIBLE_DEVICES=0 #用户可自行指定空闲的卡
+1、单卡模型推断（用户指定空闲的单卡）：
+export CUDA_VISIBLE_DEVICES=0
 ```
 
 #### &ensp;&ensp;&ensp;&ensp; 方式二: 执行inference model相关的代码: 
 ```
 TASK_NAME="atis_intent"  #指定预测的任务名称
 BERT_BASE_PATH="./data/pretrain_model/uncased_L-12_H-768_A-12"
-export CUDA_VISIBLE_DEVICES=0
 
+export CUDA_VISIBLE_DEVICES=0  #单卡推断inference model
+#export CUDA_VISIBLE_DEVICES=  #CPU预测
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
 python -u main.py \
     --task_name=${TASK_NAME} \
-    --use_cuda=true \
+    --use_cuda=${use_cuda} \
     --do_save_inference_model=true \
     --init_from_params="./data/saved_models/trained_models/${TASK_NAME}/params" \
     --bert_config_path="${BERT_BASE_PATH}/bert_config.json" \

@@ -3,7 +3,7 @@
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1.0
 
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=0
 
 if [ $# -ne 2 ]
 then

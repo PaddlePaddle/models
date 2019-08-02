@@ -65,7 +65,7 @@ def do_predict(args):
             logits.persistable = True
 
             fetch_list = [logits.name]
-   
+    #for_test is True if change the is_test attribute of operators to True
     test_prog = test_prog.clone(for_test=True)
     if args.use_cuda: 
         place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))

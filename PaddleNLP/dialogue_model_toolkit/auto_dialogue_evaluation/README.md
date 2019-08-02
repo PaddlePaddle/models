@@ -72,16 +72,29 @@ sh run .sh matching train
 1、export CUDA_VISIBLE_DEVICES=
 ```
 &ensp;&ensp;&ensp;&ensp; 方式一如果为GPU训练: 
+
 ```
 请将run.sh内参数设置为: 
-1、export CUDA_VISIBLE_DEVICES=0 #用户可自行指定空闲的卡
+1、如果为单卡训练（用户指定空闲的单卡）：
+export CUDA_VISIBLE_DEVICES=0 
+2、如果为多卡训练（用户指定空闲的多张卡）：
+export CUDA_VISIBLE_DEVICES=0,1,2,3
 ```
 #### &ensp;&ensp;&ensp;&ensp; 方式二: 执行训练相关的代码:
 ```
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
-export CUDA_VISIBLE_DEVICES=0  #指定训练所需GPU卡，如为CPU训练则该参数置为空
+export CUDA_VISIBLE_DEVICES=0  #GPU单卡训练
+#export CUDA_VISIBLE_DEVICES=0,1,2,3  #GPU多卡训练
+#export CUDA_VISIBLE_DEVICES=  #CPU训练
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
 
 pretrain_model_path="data/saved_models/matching_pretrained"
 if [ ! -d ${pretrain_model_path} ]
@@ -91,7 +104,7 @@ fi
 
 python -u main.py \
       --do_train=true \
-      --use_cuda=true \
+      --use_cuda=${use_cuda} \
       --loss_type="CLS" \
       --max_seq_len=50 \
       --save_model_path="data/saved_models/matching_pretrained" \
@@ -107,7 +120,7 @@ python -u main.py \
       --learning_rate=0.001 \
       --sample_pro 0.1 
 ```
-&ensp;&ensp;&ensp;&ensp; 指定CPU或者GPU训练方法同上；
+
 ####2、第二阶段finetuning模型的训练：
 #### &ensp;&ensp;&ensp;&ensp; 方式一: 推荐直接使用模块内脚本训练
 ```
@@ -118,12 +131,23 @@ task_type: train、predict、evaluate、inference, 选择4个参数选项中任�
 
 训练示例： sh run .sh human train
 ```
+&ensp;&ensp;&ensp;&ensp; CPU和GPU使用方式如单机训练1中所示；
+
 #### &ensp;&ensp;&ensp;&ensp; 方式二: 执行训练相关的代码:
 ```
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
-export CUDA_VISIBLE_DEVICES=0  #指定训练所需GPU卡，如为CPU训练则该参数置为空
+export CUDA_VISIBLE_DEVICES=0  #GPU单卡训练
+#export CUDA_VISIBLE_DEVICES=0,1,2,3  #GPU多卡训练
+#export CUDA_VISIBLE_DEVICES=  #CPU训练
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
 
 save_model_path="data/saved_models/human_finetuned"
 if [ ! -d ${save_model_path} ]
@@ -133,7 +157,7 @@ fi
 
 python -u main.py \
       --do_train=true \
-      --use_cuda=true \
+      --use_cuda=${use_cuda} \
       --loss_type="L2" \
       --max_seq_len=50 \
       --init_from_pretrain_model="data/saved_models/trained_models/matching_pretrained/params" \
@@ -166,7 +190,8 @@ sh run .sh matching predict
 &ensp;&ensp;&ensp;&ensp; 方式一如果为GPU预测: 
 ```
 请将run.sh内参数设置为: 
-1、export CUDA_VISIBLE_DEVICES=0 #用户可自行指定空闲的卡
+单卡预测：
+export CUDA_VISIBLE_DEVICES=0 #用户可自行指定空闲的卡
 ```
 注：预测时，如采用方式一，用户可通过修改run.sh中init_from_params参数来指定自己需要预测的模型，目前代码中默认预测本模块提供的训练好的模型；
 
@@ -175,10 +200,19 @@ sh run .sh matching predict
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
-export CUDA_VISIBLE_DEVICES=0  #指定训练所需GPU卡，如为CPU训练则该参数置为空
+export CUDA_VISIBLE_DEVICES=0  #单卡预测
+#export CUDA_VISIBLE_DEVICES=  #CPU预测
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
+
 python -u main.py \
       --do_predict=true \
-      --use_cuda=true \
+      --use_cuda=${use_cuda} \
       --predict_file="data/input/data/unlabel_data/test.ids" \
       --init_from_params="data/saved_models/trained_models/matching_pretrained/params" \
       --loss_type="CLS" \
@@ -200,18 +234,26 @@ task_type: train、predict、evaluate、inference, 选择4个参数选项中任�
 
 预测示例： sh run .sh human predict
 ```
-&ensp;&ensp;&ensp;&ensp; 指定CPU或者GPU训练方法同上；
+&ensp;&ensp;&ensp;&ensp; 指定CPU或者GPU方法同上模型预测1中所示；
 
 #### &ensp;&ensp;&ensp;&ensp; 方式二: 执行预测相关的代码:
 ```
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
-export CUDA_VISIBLE_DEVICES=0  #指定训练所需GPU卡，如为CPU训练则该参数置为空
+export CUDA_VISIBLE_DEVICES=0  #单卡预测
+#export CUDA_VISIBLE_DEVICES=  #CPU预测
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
 
 python -u main.py \
       --do_predict=true \
-      --use_cuda=true \
+      --use_cuda=${use_cuda} \
       --predict_file="data/input/data/label_data/human/test.ids" \
       --init_from_params="data/saved_models/trained_models/human_finetuned/params" \
       --loss_type="L2" \
@@ -302,18 +344,29 @@ sh run .sh matching inference
 &ensp;&ensp;&ensp;&ensp; 方式一如果为GPU执行inference model过程:
 ```
 请将run.sh内参数设置为: 
-1、export CUDA_VISIBLE_DEVICES=0 #用户可自行指定空闲的卡
+单卡推断（用户指定空闲的单卡）：
+export CUDA_VISIBLE_DEVICES=0
+
 ```
 #### &ensp;&ensp;&ensp;&ensp; 方式二: 执行inference model相关的代码: 
 ```
-export CUDA_VISIBLE_DEVICES=0  # 指定训练所需GPU卡，如为CPU训练则该参数置为空
+export CUDA_VISIBLE_DEVICES=0  # 指GPU单卡推断
+#export CUDA_VISIBLE_DEVICES=  #CPU推断
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
 
 python -u main.py \
       --do_save_inference_model=true \
-      --use_cuda=true \
+      --use_cuda=${use_cuda} \
       --init_from_params="data/saved_models/trained_models/matching_pretrained/params" \
       --inference_model_dir="data/inference_models/matching_inference_model"
 ```
+
 ####2、第二阶段finetuning模型的推断：
 #### &ensp;&ensp;&ensp;&ensp; 方式一: 推荐直接使用模块内脚本保存inference model
  
@@ -325,13 +378,23 @@ task_type: train、predict、evaluate、inference, 选择4个参数选项中任�
 
 评估示例： sh run.sh human inference
 ```
+&ensp;&ensp;&ensp;&ensp; CPU和GPU指定方式同模型推断1中所示；
+
 #### &ensp;&ensp;&ensp;&ensp; 方式二: 执行inference model相关的代码: 
 ```
-export CUDA_VISIBLE_DEVICES=0  # 指定训练所需GPU卡，如为CPU训练则该参数置为空
+export CUDA_VISIBLE_DEVICES=0  # 指GPU单卡推断
+#export CUDA_VISIBLE_DEVICES=  #CPU推断
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
 
 python -u main.py \
       --do_save_inference_model=true \
-      --use_cuda=true \
+      --use_cuda=${use_cuda} \
       --init_from_params="data/saved_models/trained_models/human_finetuned/params" \
       --inference_model_dir="data/inference_models/human_inference_model"
 ```
@@ -347,7 +410,11 @@ python -u main.py \
 &ensp;&ensp;&ensp;&ensp; 对话自动评估任务输入是文本对（上文，回复），输出是回复质量得分，匹配任务（预测上下文是否匹配）和自动评估任务有天然的联系，该项目利用匹配任务作为自动评估的预训练，利用少量标注数据，在匹配模型基础上微调。
 
 ### 模型概览
+&ensp;&ensp;&ensp;&ensp; 本模块内提供的模型为：
+&ensp;&ensp;&ensp;&ensp; 1）匹配模型：context和response作为输入，使用lstm学习两个句子的表示，在计算两个线性张量的积作为logits，然后sigmoid_cross_entropy_with_logits作为loss, 最终用来评估相似程度;
+&ensp;&ensp;&ensp;&ensp; 2）finetuing模型：在匹配模型的基础上，将sigmoid_cross_entropy_with_logits loss优化成平方损失loss，来进行训练；
 
+&ensp;&ensp;&ensp;&ensp; 模型中所需数据格式如下：
 &ensp;&ensp;&ensp;&ensp; 训练、预测、评估使用的数据示例如下，数据由三列组成，以制表符（'\t'）分隔，第一列是以空格分开的上文id，第二列是以空格分开的回复id，第三列是标签
 ```
 723 236 7823 12 8     887 13 77 4       2
@@ -355,8 +422,11 @@ python -u main.py \
 ```
 
 &ensp;&ensp;&ensp;&ensp; 注：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如下：
+
 ```
+
 python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
+
 ```
 ## 4、参考论文
 1、Anjuli Kannan and Oriol Vinyals. 2017. Adversarial evaluation of dialogue models. arXiv preprint arXiv:1701.08198.
