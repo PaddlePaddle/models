@@ -60,16 +60,18 @@ class FPN(object):
     def _add_topdown_lateral(self, body_name, body_input, upper_output):
         lateral_name = 'fpn_inner_' + body_name + '_lateral'
         topdown_name = 'fpn_topdown_' + body_name
+        fan = body_input.shape[1]
         if self.norm_type:
+            initializer = Xavier(fan_out=fan)
             lateral = ConvNorm(
                 body_input,
                 self.num_chan,
                 1,
+                initializer=initializer,
                 norm_type=self.norm_type,
                 name=lateral_name,
                 bn_name=lateral_name)
         else:
-            fan = body_input.shape[1]
             lateral = fluid.layers.conv2d(
                 body_input,
                 self.num_chan,
@@ -109,16 +111,18 @@ class FPN(object):
         self.fpn_inner_output = [[] for _ in range(num_backbone_stages)]
         fpn_inner_name = 'fpn_inner_' + body_name_list[0]
         body_input = body_dict[body_name_list[0]]
+        fan = body_input.shape[1]
         if self.norm_type:
+            initializer = Xavier(fan_out=fan)
             self.fpn_inner_output[0] = ConvNorm(
                 body_input,
                 self.num_chan,
                 1,
+                initializer=initializer,
                 norm_type=self.norm_type,
                 name=fpn_inner_name,
                 bn_name=fpn_inner_name)
         else:
-            fan = body_input.shape[1]
             self.fpn_inner_output[0] = fluid.layers.conv2d(
                 body_input,
                 self.num_chan,
@@ -142,16 +146,18 @@ class FPN(object):
         fpn_name_list = []
         for i in range(num_backbone_stages):
             fpn_name = 'fpn_' + body_name_list[i]
+            fan = self.fpn_inner_output[i].shape[1] * 3 * 3
             if self.norm_type:
+                initializer = Xavier(fan_out=fan)
                 fpn_output = ConvNorm(
                     self.fpn_inner_output[i],
                     self.num_chan,
                     3,
+                    initializer=initializer,
                     norm_type=self.norm_type,
                     name=fpn_name,
                     bn_name=fpn_name)
             else:
-                fan = self.fpn_inner_output[i].shape[1] * 3 * 3
                 fpn_output = fluid.layers.conv2d(
                     self.fpn_inner_output[i],
                     self.num_chan,
@@ -187,31 +193,20 @@ class FPN(object):
                 fpn_name = 'fpn_' + str(i)
                 if i > highest_backbone_level + 1:
                     fpn_blob_in = fluid.layers.relu(fpn_blob)
-                if self.norm_type:
-                    fpn_blob = ConvNorm(
-                        self.fpn_inner_output[i],
-                        self.num_chan,
-                        2,
-                        stride=2,
-                        norm_type=self.norm_type,
-                        name=fpn_name,
-                        bn_name=fpn_name)
-                else:
-                    fan = fpn_blob_in.shape[1] * 3 * 3
-                    fpn_blob = fluid.layers.conv2d(
-                        input=fpn_blob_in,
-                        num_filters=self.num_chan,
-                        filter_size=3,
-                        stride=2,
-                        padding=1,
-                        param_attr=ParamAttr(
-                            name=fpn_name + "_w",
-                            initializer=Xavier(fan_out=fan)),
-                        bias_attr=ParamAttr(
-                            name=fpn_name + "_b",
-                            learning_rate=2.,
-                            regularizer=L2Decay(0.)),
-                        name=fpn_name)
+                fan = fpn_blob_in.shape[1] * 3 * 3
+                fpn_blob = fluid.layers.conv2d(
+                    input=fpn_blob_in,
+                    num_filters=self.num_chan,
+                    filter_size=3,
+                    stride=2,
+                    padding=1,
+                    param_attr=ParamAttr(
+                        name=fpn_name + "_w", initializer=Xavier(fan_out=fan)),
+                    bias_attr=ParamAttr(
+                        name=fpn_name + "_b",
+                        learning_rate=2.,
+                        regularizer=L2Decay(0.)),
+                    name=fpn_name)
                 fpn_dict[fpn_name] = fpn_blob
                 fpn_name_list.insert(0, fpn_name)
                 self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
