@@ -38,6 +38,7 @@ def ConvNorm(input,
              freeze_norm=False,
              act=None,
              bn_name=None,
+             initializer=None,
              name=None):
     fan = num_filters
     conv = fluid.layers.conv2d(
@@ -49,8 +50,7 @@ def ConvNorm(input,
         groups=groups,
         act=None,
         param_attr=ParamAttr(
-            name=name + "_weights", initializer=MSRA(
-                uniform=False, fan_in=fan)),
+            name=name + "_weights", initializer=initializer),
         bias_attr=False,
         name=name + '.conv2d.output.1')
 
