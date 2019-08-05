@@ -58,7 +58,7 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | SENet154-vd-FPN      | Faster         |    1    |  1.44x  |  42.9  |    -    | [model](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_se154_vd_fpn_s1x.tar) |
 | SENet154-vd-FPN      | Mask           |    1    |  1.44x  |  44.0  |  38.7   | [model](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_se154_vd_fpn_s1x.tar) |
 
-### Deformable Convolutional Networks
+### Deformable ConvNets v2
 
 | Backbone             | Type           | Conv    | Image/gpu | Lr schd | Box AP | Mask AP |                           Download                           |
 | :------------------- | :------------- | :-----: |:--------: | :-----: | :----: | :-----: | :----------------------------------------------------------: |
@@ -72,7 +72,7 @@ The backbone models pretrained on ImageNet are available. All backbone models ar
 | ResNeXt101-vd-FPN    | Mask           | c3-c5   |    1      |   1x    |  46.2  |  40.4   | [model](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_dcn_x101_vd_64x4d_fpn_1x.tar) |
 
 #### Notes:
-- Deformable Convolutional Networks(dcn) reference from [Deformable ConvNets v2](https://arxiv.org/abs/1811.11168).
+- Deformable ConvNets v2(dcn_v2) reference from [Deformable ConvNets v2](https://arxiv.org/abs/1811.11168).
 - `c3-c5` means adding `dcn` in resnet stage 3 to 5.
 - Detailed configuration file in [configs/dcn](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection/configs/dcn)
 
