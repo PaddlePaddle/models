@@ -29,7 +29,7 @@ ResNeXt:
   groups: 64
   norm_type: bn
   variant: d
-  dcn_stages: [3, 4, 5]
+  dcn_v2_stages: [3, 4, 5]
 
 FPN:
   max_level: 6

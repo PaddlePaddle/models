@@ -37,7 +37,7 @@ class ResNeXt(ResNet):
         norm_decay (float): weight decay for normalization layer weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
         feature_maps (list): index of the stages whose feature maps are returned
-        dcn_stages (list): index of stages who select deformable conv
+        dcn_v2_stages (list): index of stages who select deformable conv v2
     """
 
     def __init__(self,
@@ -50,7 +50,7 @@ class ResNeXt(ResNet):
                  norm_decay=True,
                  variant='a',
                  feature_maps=[2, 3, 4, 5],
-                 dcn_stages=[]):
+                 dcn_v2_stages=[]):
         assert depth in [50, 101, 152], "depth {} should be 50, 101 or 152"
         super(ResNeXt, self).__init__(depth, freeze_at, norm_type, freeze_norm,
                                       norm_decay, variant, feature_maps)
@@ -63,7 +63,7 @@ class ResNeXt(ResNet):
         self.groups = groups
         self.group_width = group_width
         self._model_type = 'ResNeXt'
-        self.dcn_stages = dcn_stages
+        self.dcn_v2_stages = dcn_v2_stages
 
 
 @register

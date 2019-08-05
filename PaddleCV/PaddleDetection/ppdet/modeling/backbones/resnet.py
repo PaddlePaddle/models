@@ -45,7 +45,7 @@ class ResNet(object):
         norm_decay (float): weight decay for normalization layer weights
         variant (str): ResNet variant, supports 'a', 'b', 'c', 'd' currently
         feature_maps (list): index of stages whose feature maps are returned
-        dcn_stages (list): index of stages who select deformable conv
+        dcn_v2_stages (list): index of stages who select deformable conv v2
     """
 
     def __init__(self,
@@ -56,7 +56,7 @@ class ResNet(object):
                  norm_decay=0.,
                  variant='b',
                  feature_maps=[2, 3, 4, 5],
-                 dcn_stages=[]):
+                 dcn_v2_stages=[]):
         super(ResNet, self).__init__()
 
         if isinstance(feature_maps, Integral):
@@ -77,7 +77,7 @@ class ResNet(object):
         self.variant = variant
         self._model_type = 'ResNet'
         self.feature_maps = feature_maps
-        self.dcn_stages = dcn_stages
+        self.dcn_v2_stages = dcn_v2_stages
         self.depth_cfg = {
             18: ([2, 2, 2, 2], self.basicblock),
             34: ([3, 4, 6, 3], self.basicblock),
@@ -110,8 +110,8 @@ class ResNet(object):
                    groups=1,
                    act=None,
                    name=None,
-                   dcn=False):
-        if not dcn:
+                   dcn_v2=False):
+        if not dcn_v2:
             conv = fluid.layers.conv2d(
                 input=input,
                 num_filters=num_filters,
@@ -217,7 +217,7 @@ class ResNet(object):
         else:
             return input
 
-    def bottleneck(self, input, num_filters, stride, is_first, name, dcn=False):
+    def bottleneck(self, input, num_filters, stride, is_first, name, dcn_v2=False):
         if self.variant == 'a':
             stride1, stride2 = stride, 1
         else:
@@ -250,7 +250,7 @@ class ResNet(object):
                 act=act,
                 groups=g,
                 name=_name,
-                dcn=(i==1 and dcn))
+                dcn_v2=(i==1 and dcn_v2))
         short = self._shortcut(
             input,
             num_filters * expand,
@@ -264,8 +264,8 @@ class ResNet(object):
         return fluid.layers.elementwise_add(
             x=short, y=residual, act='relu', name=name + ".add.output.5")
 
-    def basicblock(self, input, num_filters, stride, is_first, name, dcn=False):
-        assert dcn is False, "Not implemented yet."
+    def basicblock(self, input, num_filters, stride, is_first, name, dcn_v2=False):
+        assert dcn_v2 is False, "Not implemented yet."
         conv0 = self._conv_norm(
             input=input,
             num_filters=num_filters,
@@ -299,7 +299,7 @@ class ResNet(object):
 
         ch_out = self.stage_filters[stage_num - 2]
         is_first = False if stage_num != 2 else True
-        dcn = True if stage_num in self.dcn_stages else False
+        dcn_v2 = True if stage_num in self.dcn_v2_stages else False
         # Make the layer name and parameter name consistent
         # with ImageNet pre-trained model
         conv = input
@@ -313,7 +313,7 @@ class ResNet(object):
                 stride=2 if i == 0 and stage_num != 2 else 1,
                 is_first=is_first,
                 name=conv_name,
-                dcn=dcn)
+                dcn_v2=dcn_v2)
         return conv
 
     def c1_stage(self, input):
