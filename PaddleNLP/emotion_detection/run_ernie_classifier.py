@@ -19,6 +19,7 @@ import numpy as np
 
 from preprocess.ernie import task_reader
 from models.representation import ernie
+from models.model_check import check_cuda
 import utils
 
 # yapf: disable
@@ -28,6 +29,7 @@ model_g.add_arg("ernie_config_path", str, None, "Path to the json file for ernie
 model_g.add_arg("senta_config_path", str, None, "Path to the json file for senta model config.")
 model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
 model_g.add_arg("output_dir", str, "checkpoints", "Path to save checkpoints")
+model_g.add_arg("use_paddle_hub", bool, False, "Whether to load ERNIE using PaddleHub")
 
 train_g = utils.ArgumentGroup(parser, "training", "training options.")
 train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
@@ -44,7 +46,7 @@ data_g.add_arg("data_dir", str, None, "Directory path to training data.")
 data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
 data_g.add_arg("batch_size", int, 256, "Total examples' number in batch for training.")
 data_g.add_arg("random_seed", int, 0, "Random seed.")
-data_g.add_arg("num_labels", int, 2, "label number")
+data_g.add_arg("num_labels", int, 3, "label number")
 data_g.add_arg("max_seq_len", int, 512, "Number of words of the longest seqence.")
 data_g.add_arg("train_set", str, None, "Path to training data.")
 data_g.add_arg("test_set", str, None, "Path to test data.")
@@ -201,7 +203,10 @@ def main(args):
                     pyreader_name='train_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                if args.use_paddle_hub:
+                    embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                else:
+                    embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
@@ -233,7 +238,10 @@ def main(args):
                     pyreader_name='eval_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                if args.use_paddle_hub:
+                    embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                else:
+                    embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
@@ -253,7 +261,10 @@ def main(args):
                     pyreader_name='infer_reader')
 
                 # get ernie_embeddings
-                embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                if args.use_paddle_hub:
+                    embeddings = ernie.ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                else:
+                    embeddings = ernie.ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
                 probs = create_model(args,
                                     embeddings,
@@ -268,7 +279,7 @@ def main(args):
             utils.init_checkpoint(
                 exe,
                 args.init_checkpoint,
-                main_program=startup_prog)
+                main_program=train_program)
     elif args.do_val or args.do_infer:
         if not args.init_checkpoint:
             raise ValueError("args 'init_checkpoint' should be set if"
@@ -374,4 +385,5 @@ def main(args):
 
 if __name__ == "__main__":
     utils.print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)

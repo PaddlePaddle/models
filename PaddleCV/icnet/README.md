@@ -66,7 +66,7 @@ Iter[0]; train loss: 2.338; sub4_loss: 3.367; sub24_loss: 4.120; sub124_loss: 0.
 ### 测试
 执行以下命令在`Cityscape`测试数据集上进行测试：
 ```
-python eval.py --model_path="./cnkpnt/100" --use_gpu=True
+python eval.py --model_path="./chkpnt/100" --use_gpu=True
 ```
 需要通过选项`--model_path`指定模型文件。
 测试脚本的输出的评估指标为[mean IoU]()。
@@ -75,7 +75,7 @@ python eval.py --model_path="./cnkpnt/100" --use_gpu=True
 执行以下命令对指定的数据进行预测：
 ```
 python infer.py \
---model_path="./cnkpnt/100" \
+--model_path="./chkpnt/100" \
 --images_path="./data/cityscape/" \
 --images_list="./data/cityscape/infer.list"
 ```

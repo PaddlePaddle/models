@@ -13,12 +13,14 @@ import numpy as np
 import multiprocessing
 import sys
 sys.path.append("../models/classification/")
+sys.path.append("../")
 
 from nets import bow_net
 from nets import lstm_net
 from nets import cnn_net
 from nets import bilstm_net
 from nets import gru_net
+from models.model_check import check_cuda
 
 import paddle
 import paddle.fluid as fluid
@@ -58,6 +60,7 @@ run_type_g.add_arg("task_name", str, None,
 run_type_g.add_arg("do_train", bool, True, "Whether to perform training.")
 run_type_g.add_arg("do_val", bool, True, "Whether to perform evaluation.")
 run_type_g.add_arg("do_infer", bool, True, "Whether to perform inference.")
+parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
 args = parser.parse_args()
 # yapf: enable.
@@ -199,6 +202,8 @@ def main(args):
         print("Max train steps: %d" % max_train_steps)
 
         train_program = fluid.Program()
+        if args.enable_ce and args.random_seed is not None:
+            train_program.random_seed = args.random_seed
 
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
@@ -364,6 +369,8 @@ def main(args):
         inference(exe, infer_prog, infer_pyreader,
             [prop.name], "infer")
 
+
 if __name__ == "__main__":
     print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)

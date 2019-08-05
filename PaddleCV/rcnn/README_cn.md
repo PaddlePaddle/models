@@ -105,6 +105,7 @@ data/coco/
 
     - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
     - 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
+    - 使用Windows GPU环境的用户，需要设置```parallel```为False，将[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
     - 可选参数见：
 
         python train.py --help

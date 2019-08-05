@@ -20,8 +20,11 @@ except ImportError as e:
     import pickle  #python 3
 
 sys.path.append('../../models/dialogue_model_toolkit/deep_attention_matching/')
+sys.path.append('../../models/')
 
+from model_check import check_cuda
 from net import Net
+
 
 def evaluate(score_path, result_file_path):
     """
@@ -70,6 +73,7 @@ def test_with_pyreader(exe, program, pyreader, fetch_list, score_path, batches,
     """
     Test with pyreader
     """
+
     def data_provider():
         """
         Data reader
@@ -145,10 +149,12 @@ def train(args):
                     staircase=True))
             optimizer.minimize(loss)
             print("begin memory optimization ...")
-            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+            print(
+                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
             fluid.memory_optimize(train_program)
             print("end memory optimization ...")
-            print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+            print(
+                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     test_program = fluid.Program()
     test_startup = fluid.Program()
@@ -270,6 +276,7 @@ def train(args):
         """
         Train on one epoch with pyreader
         """
+
         def data_provider():
             """
             Data reader
@@ -467,6 +474,9 @@ def get_cards():
 if __name__ == '__main__':
     args = config.parse_args()
     config.print_arguments(args)
+
+    check_cuda(args.use_cuda)
+
     if args.do_train:
         train(args)
 

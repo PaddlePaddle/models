@@ -22,7 +22,7 @@ Overview of Deep Attention Matching Network
 
     本项目依赖于Paddle Fluid 1.3.1 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
 
-2. 安装代码
+2. 下载代码
 
     克隆数据集代码库到本地
     ```

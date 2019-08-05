@@ -1,9 +1,28 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import math
+
 import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ['ShuffleNetV2', 'ShuffleNetV2_x0_5_swish', 'ShuffleNetV2_x1_0_swish', 'ShuffleNetV2_x1_5_swish', 
-           'ShuffleNetV2_x2_0_swish', 'ShuffleNetV2_x8_0_swish']
+__all__ = ['ShuffleNetV2_x0_25', 'ShuffleNetV2_x0_33', 'ShuffleNetV2_x0_5', 'ShuffleNetV2_x1_0', 'ShuffleNetV2_x1_5', 'ShuffleNetV2_x2_0']
 
 train_parameters = {
     "input_size": [3, 224, 224],
@@ -27,7 +46,11 @@ class ShuffleNetV2():
         scale = self.scale 
         stage_repeats = [4, 8, 4]
         
-        if scale == 0.5:
+	if scale == 0.25:
+            stage_out_channels = [-1, 24,  24,  48, 96, 512]
+        elif scale == 0.33:
+            stage_out_channels = [-1, 24,  32,  64, 128, 512]
+        elif scale == 0.5:
             stage_out_channels = [-1, 24,  48,  96, 192, 1024]
         elif scale == 1.0:
             stage_out_channels = [-1, 24, 116, 232, 464, 1024]
@@ -35,8 +58,6 @@ class ShuffleNetV2():
             stage_out_channels = [-1, 24, 176, 352, 704, 1024]
         elif scale == 2.0:
             stage_out_channels = [-1, 24, 224, 488, 976, 2048]
-        elif scale == 8.0:
-            stage_out_channels = [-1, 48, 896, 1952, 3904, 8192]
         else:
             raise ValueError(
                 """{} groups is not supported for
@@ -96,7 +117,7 @@ class ShuffleNetV2():
         out = int((input.shape[2] - 1)/float(stride) + 1)
         bn_name = name + '_bn'
         if if_act:
-            return fluid.layers.batch_norm(input=conv, act='swish',
+            return fluid.layers.batch_norm(input=conv, act='relu',
                                            param_attr = ParamAttr(name=bn_name+"_scale"),
                                            bias_attr=ParamAttr(name=bn_name+"_offset"),
                                            moving_mean_name=bn_name + '_mean',
@@ -226,25 +247,27 @@ class ShuffleNetV2():
             out = fluid.layers.concat([conv_linear_1, conv_linear_2], axis=1)
             
         return self.channel_shuffle(out, 2)
-    
-def ShuffleNetV2_x0_5_swish():
+
+def ShuffleNetV2_x0_25():
+    model = ShuffleNetV2(scale=0.25)
+    return model
+
+def ShuffleNetV2_x0_33():
+    model = ShuffleNetV2(scale=0.33)
+    return model
+ 
+def ShuffleNetV2_x0_5():
     model = ShuffleNetV2(scale=0.5)
     return model
 
-def ShuffleNetV2_x1_0_swish():
+def ShuffleNetV2_x1_0():
     model = ShuffleNetV2(scale=1.0)
     return model
 
-def ShuffleNetV2_x1_5_swish():
+def ShuffleNetV2_x1_5():
     model = ShuffleNetV2(scale=1.5)
     return model
 
-def ShuffleNetV2_x2_0_swish():
+def ShuffleNetV2_x2_0():
     model = ShuffleNetV2(scale=2.0)
     return model
-
-def ShuffleNetV2_x8_0_swish():
-    model = ShuffleNetV2(scale=8.0)
-    return model
-        
-

@@ -1,4 +1,4 @@
-# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import os
 import traceback
 
 import numpy as np
-import torchvision_reader
-import torch
+import math
+import reader
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.profiler as profiler
@@ -62,18 +62,7 @@ def parse_args():
     return args
 
 
-def get_device_num():
-    import subprocess
-    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(
-            ['nvidia-smi', '-L']).decode().count('\n')
-    return device_num
-
-
-DEVICE_NUM = get_device_num()
+DEVICE_NUM = fluid.core.get_cuda_device_count()
 
 
 def test_parallel(exe, test_args, args, test_reader, feeder, bs):
@@ -235,9 +224,19 @@ def refresh_program(args,
             if var.name.startswith('conv2d_')
         ]
         for var in conv2d_w_vars:
-            torch_w = torch.empty(var.shape)
-            kaiming_np = torch.nn.init.kaiming_normal_(
-                torch_w, mode='fan_out', nonlinearity='relu').numpy()
+            #torch_w = torch.empty(var.shape)
+            #kaiming_np = torch.nn.init.kaiming_normal_(torch_w, mode='fan_out', nonlinearity='relu').numpy()
+            shape = var.shape
+            if not shape or len(shape) == 0:
+                fan_out = 1
+            elif len(shape) == 1:
+                fan_out = shape[0]
+            elif len(shape) == 2:
+                fan_out = shape[1]
+            else:
+                fan_out = shape[0] * np.prod(shape[2:])
+            std = math.sqrt(2.0 / fan_out)
+            kaiming_np = np.random.normal(0, std, var.shape)
             tensor = fluid.global_scope().find_var(var.name).get_tensor()
             if args.fp16:
                 tensor.set(np.array(
@@ -282,9 +281,9 @@ def refresh_program(args,
 
 
 def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
-                   img_dim, min_scale, rect_val):
-    train_reader = torchvision_reader.train(
-        traindir="/data/imagenet/%strain" % trn_dir,
+                   img_dim, min_scale, rect_val, args):
+    train_reader = reader.train(
+        traindir="%s/%strain" % (args.data_dir, trn_dir),
         sz=img_dim,
         min_scale=min_scale,
         shuffle_seed=epoch_id + 1)
@@ -292,8 +291,8 @@ def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
         paddle.batch(
             train_reader, batch_size=train_bs))
 
-    test_reader = torchvision_reader.test(
-        valdir="/data/imagenet/%svalidation" % trn_dir,
+    test_reader = reader.test(
+        valdir="%s/%svalidation" % (args.data_dir, trn_dir),
         bs=val_bs * DEVICE_NUM,
         sz=img_dim,
         rect_val=rect_val)
@@ -314,7 +313,7 @@ def train_parallel(args):
     ## dynamic batch size, image size...
     bs = 224
     val_bs = 64
-    trn_dir = "sz/160/"
+    trn_dir = "160/"
     img_dim = 128
     min_scale = 0.08
     rect_val = False
@@ -331,7 +330,7 @@ def train_parallel(args):
                 need_update_start_prog=True)
         elif epoch_id == 13:  #13
             bs = 96
-            trn_dir = "sz/352/"
+            trn_dir = "352/"
             img_dim = 224
             min_scale = 0.087
             train_args, test_args, test_prog, exe, test_exe = refresh_program(
@@ -374,7 +373,8 @@ def train_parallel(args):
             trn_dir,
             img_dim=img_dim,
             min_scale=min_scale,
-            rect_val=rect_val)
+            rect_val=rect_val,
+            args=args)
         train_py_reader.start()  # start pyreader
         batch_start_time = time.time()
         while True:

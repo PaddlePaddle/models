@@ -49,7 +49,10 @@ def to_str(string, encoding="utf-8"):
             return string.decode(encoding)
     elif sys.version_info.major == 2:
         if isinstance(string, unicode):
-            return string.encode(encoding)
+            if os.name == 'nt':
+                return string
+            else:
+                return string.encode(encoding)
     return string
 
 
@@ -81,13 +84,27 @@ def parse_result(words, crf_decode, dataset):
     for sent_index in range(batch_size):
         sent_out_str = ""
         sent_len = offset_list[sent_index + 1] - offset_list[sent_index]
+        last_word = ""
+        last_tag = ""
         for tag_index in range(sent_len): # iterate every word in sent
             index = tag_index + offset_list[sent_index]
             cur_word_id = str(words[index][0])
             cur_tag_id = str(crf_decode[index][0])
             cur_word = dataset.id2word_dict[cur_word_id]
             cur_tag = dataset.id2label_dict[cur_tag_id]
-            sent_out_str += cur_word + u"/" + cur_tag + u" "
+            if last_word == "":
+                last_word = cur_word
+                last_tag = cur_tag[:-2]
+            elif cur_tag.endswith("-B") or cur_tag == "O":
+                sent_out_str += last_word + u"/" + last_tag + u" "
+                last_word = cur_word
+                last_tag = cur_tag[:-2]
+            elif cur_tag.endswith("-I"):
+                last_word += cur_word
+            else:
+                raise ValueError("invalid tag: %s" % (cur_tag))
+        if cur_word != "":
+            sent_out_str += last_word + u"/" + last_tag + u" "
         sent_out_str = to_str(sent_out_str.strip())
         batch_out_str.append(sent_out_str)
     return batch_out_str
