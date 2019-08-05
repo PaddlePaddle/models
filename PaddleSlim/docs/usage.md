@@ -622,19 +622,19 @@ controllers:
 
 单机多任务：
 
-单机多任务是指在一个机器上启动一个controller server和多个client, client从controller获取tokens, 根据tokens组建网络并训练评估，最后返回reward给controller server.
+单机多任务是指在一个机器上启动一个 controller server 和多个 client，client 从 controller 获取 tokens，根据 tokens 组建网络并训练评估，最后返回 reward 给 controller server。
 
 在Compressor::run()执行时，会首先判断配置文件中的`is_server`是否为`True`, 然后做如下操作：
 
-- True: 判断当前路径下是否存在`slim_LightNASStrategy_controller_server.socket`文件，如果存在，则仅启动一个client，如果不存在，则启动一个controller server和一个client.
+- True: 判断当前路径下是否存在 `slim_LightNASStrategy_controller_server.socket` 文件，如果存在，则仅启动一个 client，如果不存在，则启动一个 controller server 和一个 client。
 
-- False: 仅启动一个client
+- False: 仅启动一个 client。
 
 多机搜索：
 
 多机搜索是指在一个机器上启动一个controller server，在多台机器上启动若干client。在启动controller server的机器上的配置文件里的is_server要设置为True。其它机器上的配置文件中的`is_server`要手动设置为False, 同时`server_ip`和`server_port`要设置为controller server对应的`ip`和`port`.
 
->注意： 在重启controller server时，lim_LightNASStrategy_controller_server.socke文件可能不会被及时清除，所以需要用户手动删除该文件。在后续版本中，会修复完善该问题。
+>注意： 在重启controller server时，`slim_LightNASStrategy_controller_server.socket` 文件可能不会被及时清除，所以需要用户手动删除该文件。在后续版本中，会修复完善该问题。
 
 #### 2.4.5 延时评估器生成方式
 
