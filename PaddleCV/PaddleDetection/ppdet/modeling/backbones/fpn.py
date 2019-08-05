@@ -40,7 +40,7 @@ class FPN(object):
         max_level (int): highest level of the backbone feature map to use
         spatial_scale (list): feature map scaling factor
         has_extra_convs (bool): whether has extral convolutions in higher levels
-        norm_type (str): normalization type, 'bn'/'sync_bn'/'affine_channel'
+        norm_type (str|None): normalization type, 'bn'/'sync_bn'/'affine_channel'
     """
 
     def __init__(self,
@@ -49,7 +49,7 @@ class FPN(object):
                  max_level=6,
                  spatial_scale=[1. / 32., 1. / 16., 1. / 8., 1. / 4.],
                  has_extra_convs=False,
-                 norm_type=False):
+                 norm_type=None):
         self.num_chan = num_chan
         self.min_level = min_level
         self.max_level = max_level
