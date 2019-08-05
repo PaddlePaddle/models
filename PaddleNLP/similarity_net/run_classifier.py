@@ -138,7 +138,7 @@ def train(conf_dict, args):
             valid_feeder = fluid.DataFeeder(
                 place=place, feed_list=[left.name, pos_right.name])
             valid_reader = simnet_process.get_reader("valid")
-            pred = pos_score
+        pred = pos_score
         # Save Infer model
         infer_program = fluid.default_main_program().clone(for_test=True)
         _, neg_score = net.predict(left, neg_right)
