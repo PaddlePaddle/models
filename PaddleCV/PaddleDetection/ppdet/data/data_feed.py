@@ -29,9 +29,9 @@ from ppdet.data.transform.operators import (
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
     Permute)
 from ppdet.data.transform.arrange_sample import (ArrangeRCNN, ArrangeTestRCNN,
-                                                 ArrangeSSD, ArrangeTestSSD,
-                                                 ArrangeYOLO, ArrangeEvalYOLO,
-                                                 ArrangeTestYOLO)
+                                                 ArrangeSSD, ArrangeEvalSSD,
+                                                 ArrangeTestSSD, ArrangeYOLO,
+                                                 ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
@@ -690,7 +690,7 @@ class SSDTrainFeed(DataFeed):
 
     def __init__(self,
                  dataset=VocDataSet().__dict__,
-                 fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
+                 fields=['image', 'gt_box', 'gt_label'],
                  image_shape=[3, 300, 300],
                  sample_transforms=[
                      DecodeImage(to_rgb=True, with_mixup=False),
@@ -723,8 +723,6 @@ class SSDTrainFeed(DataFeed):
                  bufsize=10,
                  use_process=True):
         sample_transforms.append(ArrangeSSD())
-        if isinstance(dataset, dict):
-            dataset = VocDataSet(**dataset)
         super(SSDTrainFeed, self).__init__(
             dataset,
             fields,
@@ -736,6 +734,7 @@ class SSDTrainFeed(DataFeed):
             samples=samples,
             drop_last=drop_last,
             num_workers=num_workers,
+            bufsize=bufsize,
             use_process=use_process)
         self.mode = 'TRAIN'
 
@@ -747,7 +746,8 @@ class SSDEvalFeed(DataFeed):
     def __init__(
             self,
             dataset=VocDataSet(VOC_VAL_ANNOTATION).__dict__,
-            fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
+            fields=['image', 'im_shape', 'im_id', 'gt_box',
+                         'gt_label', 'is_difficult'],
             image_shape=[3, 300, 300],
             sample_transforms=[
                 DecodeImage(to_rgb=True, with_mixup=False),
@@ -767,9 +767,7 @@ class SSDEvalFeed(DataFeed):
             num_workers=8,
             bufsize=10,
             use_process=False):
-        sample_transforms.append(ArrangeSSD())
-        if isinstance(dataset, dict):
-            dataset = VocDataSet(**dataset)
+        sample_transforms.append(ArrangeEvalSSD())
         super(SSDEvalFeed, self).__init__(
             dataset,
             fields,
@@ -781,6 +779,7 @@ class SSDEvalFeed(DataFeed):
             samples=samples,
             drop_last=drop_last,
             num_workers=num_workers,
+            bufsize=bufsize,
             use_process=use_process)
         self.mode = 'VAL'
 
@@ -823,7 +822,9 @@ class SSDTestFeed(DataFeed):
             shuffle=shuffle,
             samples=samples,
             drop_last=drop_last,
-            num_workers=num_workers)
+            num_workers=num_workers,
+            bufsize=bufsize,
+            use_process=use_process)
         self.mode = 'TEST'
 
 

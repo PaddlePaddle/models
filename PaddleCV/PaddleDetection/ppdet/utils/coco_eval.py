@@ -66,7 +66,10 @@ def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
     # flush coco evaluation result
     sys.stdout.flush()
 
-def bbox_eval(results, anno_file, outfile, with_background=True):
+def bbox_eval(results,
+              anno_file, outfile,
+              with_background=True,
+              is_bbox_normalized=False):
     assert 'bbox' in results[0]
     assert outfile.endswith('.json')
 
@@ -78,8 +81,8 @@ def bbox_eval(results, anno_file, outfile, with_background=True):
     clsid2catid = dict(
         {i + int(with_background): catid
          for i, catid in enumerate(cat_ids)})
-
-    xywh_results = bbox2out(results, clsid2catid)
+    xywh_results = bbox2out(results, clsid2catid,
+            is_bbox_normalized=is_bbox_normalized, is_eval=True)
     assert len(
         xywh_results) > 0, "The number of valid bbox detected is zero.\n \
         Please use reasonable model and check input data."
@@ -177,7 +180,7 @@ def proposal2out(results, is_bbox_normalized=False):
     return xywh_res
 
 
-def bbox2out(results, clsid2catid, is_bbox_normalized=False):
+def bbox2out(results, clsid2catid, is_bbox_normalized=False, is_eval=False):
     xywh_res = []
     for t in results:
         bboxes = t['bbox'][0]
@@ -200,6 +203,12 @@ def bbox2out(results, clsid2catid, is_bbox_normalized=False):
                             clip_bbox([xmin, ymin, xmax, ymax])
                     w = xmax - xmin
                     h = ymax - ymin
+                    if is_eval:
+                        im_height, im_width = t['im_shape'][0][i].tolist()
+                        xmin *= im_width
+                        ymin *= im_height
+                        w *= im_width
+                        h *= im_height
                 else:
                     w = xmax - xmin + 1
                     h = ymax - ymin + 1
