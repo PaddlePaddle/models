@@ -36,8 +36,8 @@ set_paddle_flags(
 )
 
 from paddle import fluid
-from paddle.fluid.experimental import mixed_precision_context
 
+from ppdet.experimental import mixed_precision_context
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
 

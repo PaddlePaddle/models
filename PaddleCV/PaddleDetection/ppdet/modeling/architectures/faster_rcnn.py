@@ -19,8 +19,8 @@ from __future__ import print_function
 from collections import OrderedDict
 
 from paddle import fluid
-from paddle.fluid.experimental import mixed_precision_global_state
 
+from ppdet.experimental import mixed_precision_global_state
 from ppdet.core.workspace import register
 
 __all__ = ['FasterRCNN']
