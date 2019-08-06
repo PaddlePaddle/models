@@ -1,4 +1,4 @@
-# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.                                                                                                      
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved. 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@ from train import do_train
 from predict import do_predict
 from inference_model import do_save_inference_model
 
-from ade.utils.configure import PDConfig
+from dgu.utils.configure import PDConfig
 
 
 if __name__ == "__main__":
 
-    args = PDConfig(yaml_file="./data/config/ade.yaml")
+    args = PDConfig(yaml_file="./data/config/dgu.yaml")
     args.build()
     args.Print()
 
