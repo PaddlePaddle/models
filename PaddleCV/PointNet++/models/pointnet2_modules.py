@@ -19,13 +19,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
-import six
 import numpy as np
 
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
+
+__all__ = ["conv_bn", "pointnet_sa_module_msg", "pointnet_sa_module_ssg", "pointnet_fp_module"]
 
 
 def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
@@ -110,7 +110,7 @@ def pointnet_sa_module_msg(xyz,
                        radiuss=[],
                        nsamples=[],
                        mlps=[],
-                       features=None,
+                       feature=None,
                        bn=True,
                        use_xyz=True,
                        name=None):
@@ -122,7 +122,7 @@ def pointnet_sa_module_msg(xyz,
         radiuss ([float32]): list of radius of ball
         nsamples ([int32]): list of maximum number of gather features
         mlps ([[int32]]): list of out_channels_list
-        features (Variable): features with shape [B, C, N]
+        feature (Variable): features with shape [B, C, N]
         bn (bool): whether perform batch norm after conv2d
         use_xyz (bool): whether use xyz coordiantes features
 
@@ -137,10 +137,10 @@ def pointnet_sa_module_msg(xyz,
     new_xyz = fluid.layers.gather_point(xyz, farthest_idx)
 
     out = None
-    if features is not None:
+    if feature is not None:
         outs = []
         for i, (radius, nsample, mlp) in enumerate(zip(radiuss, nsamples, mlps)):
-            out = query_and_group(xyz, new_xyz, radius, nsample, features, use_xyz) if npoint is not None else group_all(xyz, features, use_xyz)
+            out = query_and_group(xyz, new_xyz, radius, nsample, feature, use_xyz) if npoint is not None else group_all(xyz, feature, use_xyz)
             out = fluid.layers.transpose(out, perm=[0, 3, 1, 2])
             out = MLP(out, mlp, bn=bn, name=name + '_mlp{}'.format(i)) # TODO(dengkaipeng): mlp[1:] ?
             out = fluid.layers.pool2d(out, pool_size=[1, out.shape[3]], pool_type='max')
@@ -157,7 +157,7 @@ def pointnet_sa_module_ssg(xyz,
                        radius=None,
                        nsample=None,
                        mlp=[],
-                       features=None,
+                       feature=None,
                        bn=True,
                        use_xyz=True,
                        name=None):
@@ -165,7 +165,7 @@ def pointnet_sa_module_ssg(xyz,
     PointNet SSG(Single-Scale Group) Set Abstraction Module
     see pointnet_sa_module_msg
     """
-    return pointnet_sa_module_msg(xyz, npoint, [radius], [nsample], [mlp], features, bn, use_xyz, name)
+    return pointnet_sa_module_msg(xyz, npoint, [radius], [nsample], [mlp], feature, bn, use_xyz, name)
 
 
 def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True, name=None):
@@ -176,7 +176,7 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         unknown (Variable): unknown xyz coordiantes features with shape [B, N, 3]
         known (Variable): known xyz coordiantes features with shape [B, M, 3]
         unknown_feats (Variable): unknown features with shape [B, N, C1] to be propagated to
-        known_feats (Variable): known features with shape [B, N, C2] to be propagated from
+        known_feats (Variable): known features with shape [B, M, C2] to be propagated from
         mlp ([int32]): out_channels_list
         bn (bool): whether perform batch norm after conv2d
 
@@ -184,13 +184,16 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         new_features (Variable): new features with shape [B, N, mlp[-1]]
     """
     if known is None:
+        # TODO
         interp_feats = fluid.layers.expand()
     else:
-        dist, idx = fluid.layers.three_nn(unknown, known, eps=1e-8)
+        dist, idx = fluid.layers.three_nn(unknown, known, eps=0)
         dist = fluid.layers.sqrt(dist)
-        dist_recip = (dist / dist) / dist; # 1.0 / dist
+        ones = fluid.layers.fill_constant_batch_size_like(dist, dist.shape, dist.dtype, 1)
+        dist_recip = ones / (dist + 1e-8); # 1.0 / dist
         norm = fluid.layers.reduce_sum(dist_recip, dim=-1, keep_dim=True)
-        interp_feats = fluid.layers.three_interp(known_feats, dist_recip / norm, idx)
+        weight = dist_recip / norm
+        interp_feats = fluid.layers.three_interp(known_feats, weight, idx)
 
     new_features = interp_feats if unknown_feats is None else \
                     fluid.layers.concat([interp_feats, unknown_feats], axis=-1)
