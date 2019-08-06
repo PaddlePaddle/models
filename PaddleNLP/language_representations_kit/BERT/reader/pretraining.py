@@ -159,7 +159,7 @@ class DataReader(object):
 
             src_ids = origin_src_ids[:origin_sep_index + 1] + pair_src_ids[
                 pair_sep_index + 1:]
-            if len(src_ids) >= self.max_seq_len:
+            if len(src_ids) > self.max_seq_len:
                 miss_num += 1
                 continue
             sent_ids = [0] * len(origin_src_ids[:origin_sep_index + 1]) + [
