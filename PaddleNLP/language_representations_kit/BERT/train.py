@@ -72,7 +72,7 @@ data_g.add_arg("in_tokens",           bool, True,
                "Otherwise, it will be the maximum number of examples in one batch.")
 
 run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
-run_type_g.add_arg("is_distributed",               bool,   False,  "If set, then start distributed training.")
+run_type_g.add_arg("is_distributed",               bool,   True,  "If set, then start distributed training.")
 run_type_g.add_arg("use_cuda",                     bool,   True,   "If set, use GPU for training.")
 run_type_g.add_arg("use_fast_executor",            bool,   False,  "If set, use fast parallel executor (in experiment).")
 run_type_g.add_arg("num_iteration_per_drop_scope", int,    1,      "Ihe iteration intervals to clean up temporary variables.")
@@ -229,11 +229,13 @@ def train(args):
                 use_fp16=args.use_fp16,
                 loss_scaling=args.loss_scaling)
 
+            """
             fluid.memory_optimize(
                 input_program=train_program,
                 skip_opt_set=[
                     next_sent_acc.name, mask_lm_loss.name, total_loss.name
                 ])
+            """
 
     test_prog = fluid.Program()
     with fluid.program_guard(test_prog, startup_prog):
@@ -243,8 +245,13 @@ def train(args):
 
     test_prog = test_prog.clone(for_test=True)
 
+    gpu_id=0
+    if args.is_distributed:
+        gpus = os.getenv("FLAGS_selected_gpus").split(",")
+        gpu_id = int(gpus[0])
+
     if args.use_cuda:
-        place = fluid.CUDAPlace(0)
+        place = fluid.CUDAPlace(gpu_id)
         dev_count = fluid.core.get_cuda_device_count()
     else:
         place = fluid.CPUPlace()
@@ -266,6 +273,7 @@ def train(args):
     nccl2_trainer_id = 0
     print("args.is_distributed:", args.is_distributed)
     if args.is_distributed:
+        """
         worker_endpoints_env = os.getenv("worker_endpoints")
         worker_endpoints = worker_endpoints_env.split(",")
         trainers_num = len(worker_endpoints)
@@ -274,6 +282,16 @@ def train(args):
         if trainer_id == 0:
             print("train_id == 0, sleep 60s")
             time.sleep(60)
+        print("worker_endpoints:{} trainers_num:{} current_endpoint:{} \
+              trainer_id:{}".format(worker_endpoints, trainers_num,
+                                    current_endpoint, trainer_id))
+        """
+        worker_endpoints_env = os.getenv("PADDLE_TRAINER_ENDPOINTS")
+        worker_endpoints = worker_endpoints_env.split(",")
+        trainers_num = len(worker_endpoints)
+        current_endpoint = os.getenv("PADDLE_CURRENT_ENDPOINT")
+        trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
+
         print("worker_endpoints:{} trainers_num:{} current_endpoint:{} \
               trainer_id:{}"
                             .format(worker_endpoints, trainers_num,

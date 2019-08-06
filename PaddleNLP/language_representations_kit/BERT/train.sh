@@ -2,6 +2,8 @@
 
 set -xe
 
+is_local = Tr
+
 while true ; do
   case "$1" in
     -local) is_local="$2" ; shift 2 ;;
