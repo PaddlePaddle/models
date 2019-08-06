@@ -126,6 +126,7 @@ class CGAN(object):
         t_time = 0
         losses = [[], []]
         for epoch_id in range(self.cfg.epoch):
+            batch_time_recorder = []
             for batch_id, data in enumerate(self.train_reader()):
                 if len(data) != self.cfg.batch_size:
                     continue
@@ -179,6 +180,7 @@ class CGAN(object):
 
                 batch_time = time.time() - s_time
                 t_time += batch_time
+                if batch_id > 3: batch_time_recorder.append(batch_time)
 
                 if batch_id % self.cfg.print_freq == 0:
                     image_path = os.path.join(self.cfg.output, 'images')
@@ -188,17 +190,23 @@ class CGAN(object):
                         g_trainer.infer_program,
                         feed={'noise': const_n,
                               'condition': condition_data},
-                        fetch_list={g_trainer.fake})[0]
+                        fetch_list=[g_trainer.fake])[0]
 
                     generate_image_reshape = np.reshape(generate_const_image, (
                         self.cfg.batch_size, -1))
                     total_images = np.concatenate(
                         [real_image, generate_image_reshape])
                     fig = utility.plot(total_images)
-                    print(
-                        'Epoch ID={} Batch ID={} D_loss={} G_loss={} Batch_time_cost={:.2f}'.
-                        format(epoch_id, batch_id, d_loss[0], g_loss[0],
-                               batch_time))
+                    if len(batch_time_recorder) > 5:
+                        print(
+                            'Epoch ID={} Batch ID={} D_loss={} G_loss={} Batch_time_cost={} avg_time_const={}'.
+                            format(epoch_id, batch_id, d_loss[0], g_loss[0],
+                                   batch_time, np.average(batch_time_recorder)))
+                    else:
+                        print(
+                            'Epoch ID={} Batch ID={} D_loss={} G_loss={} Batch_time_cost={}'.
+                            format(epoch_id, batch_id, d_loss[0], g_loss[0],
+                                   batch_time))
                     plt.title('Epoch ID={}, Batch ID={}'.format(epoch_id,
                                                                 batch_id))
                     img_name = '{:04d}_{:04d}.png'.format(epoch_id, batch_id)
