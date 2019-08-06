@@ -20,12 +20,13 @@ import numpy as np
 import time
 import os
 import random
-
 import math
+import contextlib
 
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.framework as framework
+import paddle.fluid.profiler as profiler
 from paddle.fluid.executor import Executor
 
 import reader
@@ -43,6 +44,15 @@ import logging
 import pickle
 
 SEED = 123
+
+
+@contextlib.contextmanager
+def profile_context(profile=True):
+    if profile:
+        with profiler.profiler('All', 'total', '/tmp/seq2seq.profile'):
+            yield
+    else:
+        yield
 
 
 def train():
@@ -165,17 +175,17 @@ def train():
     max_epoch = args.max_epoch
     for epoch_id in range(max_epoch):
         start_time = time.time()
-        print("epoch id", epoch_id)
         if args.enable_ce:
-            train_data_iter = reader.get_data_iter(train_data, batch_size, enable_ce=True)
+            train_data_iter = reader.get_data_iter(
+                train_data, batch_size, enable_ce=True)
         else:
             train_data_iter = reader.get_data_iter(train_data, batch_size)
-            
 
         total_loss = 0
         word_count = 0.0
+        batch_times = []
         for batch_id, batch in enumerate(train_data_iter):
-
+            batch_start_time = time.time()
             input_data_feed, word_num = prepare_input(batch, epoch_id=epoch_id)
             fetch_outs = exe.run(feed=input_data_feed,
                                  fetch_list=[loss.name],
@@ -185,15 +195,24 @@ def train():
 
             total_loss += cost_train * batch_size
             word_count += word_num
+            batch_end_time = time.time()
+            batch_time = batch_end_time - batch_start_time
+            batch_times.append(batch_time)
 
-            if batch_id > 0 and batch_id % 100 == 0:
-                print("ppl", batch_id, np.exp(total_loss / word_count))
+            #            if batch_id > 0 and batch_id % 100 == 0:
+            if True:
+                print("-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f" %
+                      (epoch_id, batch_id, batch_time, np.exp(total_loss /
+                                                              word_count)))
                 ce_ppl.append(np.exp(total_loss / word_count))
                 total_loss = 0.0
                 word_count = 0.0
+
         end_time = time.time()
-        time_gap = end_time - start_time
-        ce_time.append(time_gap)
+        epoch_time = end_time - start_time
+        ce_time.append(epoch_time)
+        print("\nTrain epoch:[%d]; Epoch Time: %.5f; avg_time: %.5f s/step\n" %
+              (epoch_id, epoch_time, sum(batch_times) / len(batch_times)))
 
         dir_name = args.model_path + "/epoch_" + str(epoch_id)
         print("begin to save", dir_name)
@@ -213,10 +232,8 @@ def train():
             _ppl = ce_ppl[-1]
         except:
             print("ce info error")
-        print("kpis\ttrain_duration_card%s\t%s" %
-                (card_num, _time))
-        print("kpis\ttrain_ppl_card%s\t%f" %
-            (card_num, _ppl))
+        print("kpis\ttrain_duration_card%s\t%s" % (card_num, _time))
+        print("kpis\ttrain_ppl_card%s\t%f" % (card_num, _ppl))
 
 
 def get_cards():
