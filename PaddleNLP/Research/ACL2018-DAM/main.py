@@ -19,9 +19,6 @@ try:
 except ImportError as e:
     import pickle  #python 3
 
-sys.path.append('../../models/dialogue_model_toolkit/deep_attention_matching/')
-sys.path.append('../../models/')
-
 from model_check import check_cuda
 from net import Net
 
