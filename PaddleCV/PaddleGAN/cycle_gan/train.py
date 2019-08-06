@@ -9,6 +9,7 @@ def set_paddle_flags(flags):
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
 
+
 use_cudnn_deterministic = os.environ.get('FLAGS_cudnn_deterministic', None)
 
 if use_cudnn_deterministic:
@@ -22,7 +23,7 @@ else:
 set_paddle_flags({
     'FLAGS_cudnn_exhaustive_search': use_cudnn_exhaustive_search,
     'FLAGS_conv_workspace_size_limit': 256,
-    'FLAGS_eager_delete_tensor_gb': 0, # enable gc 
+    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
     # You can omit the following settings, because the default
     # value of FLAGS_memory_fraction_of_eager_deletion is 1,
     # and default value of FLAGS_fast_eager_deletion_mode is 1 
@@ -247,7 +248,7 @@ def train(args):
             t_time += batch_time
             print(
                 "epoch{}; batch{}; g_A_loss: {}; d_B_loss: {}; g_B_loss: {}; d_A_loss: {}; "
-                "Batch_time_cost: {:.2f}".format(epoch, batch_id, g_A_loss[
+                "Batch_time_cost: {}".format(epoch, batch_id, g_A_loss[
                     0], d_B_loss[0], g_B_loss[0], d_A_loss[0], batch_time))
             losses[0].append(g_A_loss[0])
             losses[1].append(d_A_loss[0])
