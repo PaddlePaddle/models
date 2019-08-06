@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Auto Dialogue Evaluation.
 """
@@ -5,17 +18,27 @@ Auto Dialogue Evaluation.
 import argparse
 import six
 
+
 def parse_args():
     """
     Auto Dialogue Evaluation Config
     """
     parser = argparse.ArgumentParser('Automatic Dialogue Evaluation.')
     parser.add_argument(
-        '--do_train', type=bool, default=False, help='Whether to perform training.')
+        '--do_train',
+        type=bool,
+        default=False,
+        help='Whether to perform training.')
     parser.add_argument(
-        '--do_val', type=bool, default=False, help='Whether to perform evaluation.')
+        '--do_val',
+        type=bool,
+        default=False,
+        help='Whether to perform evaluation.')
     parser.add_argument(
-        '--do_infer', type=bool, default=False, help='Whether to perform inference.')
+        '--do_infer',
+        type=bool,
+        default=False,
+        help='Whether to perform inference.')
     parser.add_argument(
         '--loss_type', type=str, default='CLS', help='Loss type, CLS or L2.')
 
@@ -30,15 +53,16 @@ def parse_args():
         '--save_path', type=str, default='tmp', help='Save path')
 
     #step fit for data size
-    parser.add_argument(
-        '--print_step', type=int, default=50, help='Print step')
-    parser.add_argument(
-        '--save_step', type=int, default=400, help='Save step')
+    parser.add_argument('--print_step', type=int, default=50, help='Print step')
+    parser.add_argument('--save_step', type=int, default=400, help='Save step')
     parser.add_argument(
         '--num_scan_data', type=int, default=20, help='Save step')
 
     parser.add_argument(
-        '--word_emb_init', type=str, default=None, help='Path to the initial word embedding')
+        '--word_emb_init',
+        type=str,
+        default=None,
+        help='Path to the initial word embedding')
     parser.add_argument(
         '--init_model', type=str, default=None, help='Path to the init model')
 
@@ -57,7 +81,10 @@ def parse_args():
     parser.add_argument(
         '--learning_rate', type=float, default=0.001, help='Learning rate')
     parser.add_argument(
-        '--sample_pro', type=float, default=1, help='Sample probability for training data')
+        '--sample_pro',
+        type=float,
+        default=1,
+        help='Sample probability for training data')
     parser.add_argument(
         '--max_len', type=int, default=50, help='Max length for sentences')
 
@@ -73,5 +100,3 @@ def print_arguments(args):
     for arg, value in sorted(six.iteritems(vars(args))):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
-
-

@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Emotion Detection Task
 """
@@ -25,36 +38,47 @@ import utils
 
 parser = argparse.ArgumentParser(__doc__)
 model_g = utils.ArgumentGroup(parser, "model", "model configuration and paths.")
-model_g.add_arg("config_path", str, None, "Path to the json file for EmoTect model config.")
-model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
+model_g.add_arg("config_path", str, None,
+                "Path to the json file for EmoTect model config.")
+model_g.add_arg("init_checkpoint", str, None,
+                "Init checkpoint to resume training from.")
 model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
 
 train_g = utils.ArgumentGroup(parser, "training", "training options.")
 train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
-train_g.add_arg("save_steps", int, 10000, "The steps interval to save checkpoints.")
-train_g.add_arg("validation_steps", int, 1000, "The steps interval to evaluate model performance.")
+train_g.add_arg("save_steps", int, 10000,
+                "The steps interval to save checkpoints.")
+train_g.add_arg("validation_steps", int, 1000,
+                "The steps interval to evaluate model performance.")
 train_g.add_arg("lr", float, 0.002, "The Learning rate value for training.")
 
 log_g = utils.ArgumentGroup(parser, "logging", "logging related")
 log_g.add_arg("skip_steps", int, 10, "The steps interval to print loss.")
 log_g.add_arg("verbose", bool, False, "Whether to output verbose log")
 
-data_g = utils.ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
+data_g = utils.ArgumentGroup(
+    parser, "data", "Data paths, vocab paths and data processing options")
 data_g.add_arg("data_dir", str, None, "Directory path to training data.")
 data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
-data_g.add_arg("batch_size", int, 256, "Total examples' number in batch for training.")
+data_g.add_arg("batch_size", int, 256,
+               "Total examples' number in batch for training.")
 data_g.add_arg("random_seed", int, 0, "Random seed.")
 
 run_type_g = utils.ArgumentGroup(parser, "run_type", "running type options.")
 run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
-run_type_g.add_arg("task_name", str, None, "The name of task to perform sentiment classification.")
+run_type_g.add_arg("task_name", str, None,
+                   "The name of task to perform sentiment classification.")
 run_type_g.add_arg("do_train", bool, False, "Whether to perform training.")
 run_type_g.add_arg("do_val", bool, False, "Whether to perform evaluation.")
 run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
 
-parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+parser.add_argument(
+    '--enable_ce',
+    action='store_true',
+    help='If set, run the task with continuous evaluation logs.')
 
 args = parser.parse_args()
+
 
 def create_model(args,
                  pyreader_name,
@@ -98,11 +122,17 @@ def create_model(args,
 
     if is_infer:
         data = fluid.layers.read_file(pyreader)
-        probs = network(data, None, emotect_config["vocab_size"], class_dim=num_labels, is_infer=True)
+        probs = network(
+            data,
+            None,
+            emotect_config["vocab_size"],
+            class_dim=num_labels,
+            is_infer=True)
         return pyreader, probs
 
     data, label = fluid.layers.read_file(pyreader)
-    avg_loss, probs = network(data, label, emotect_config["vocab_size"], class_dim=num_labels)
+    avg_loss, probs = network(
+        data, label, emotect_config["vocab_size"], class_dim=num_labels)
     num_seqs = fluid.layers.create_tensor(dtype='int64')
     accuracy = fluid.layers.accuracy(input=probs, label=label, total=num_seqs)
     return pyreader, avg_loss, accuracy, num_seqs
@@ -118,8 +148,8 @@ def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
     while True:
         try:
             np_loss, np_acc, np_num_seqs = exe.run(program=test_program,
-                                                fetch_list=fetch_list,
-                                                return_numpy=False)
+                                                   fetch_list=fetch_list,
+                                                   return_numpy=False)
             np_loss = np.array(np_loss)
             np_acc = np.array(np_acc)
             np_num_seqs = np.array(np_num_seqs)
@@ -131,8 +161,8 @@ def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
             break
     time_end = time.time()
     print("[%s evaluation] avg loss: %f, avg acc: %f, elapsed time: %f s" %
-        (eval_phase, np.sum(total_cost) / np.sum(total_num_seqs),
-        np.sum(total_acc) / np.sum(total_num_seqs), time_end - time_begin))
+          (eval_phase, np.sum(total_cost) / np.sum(total_num_seqs),
+           np.sum(total_acc) / np.sum(total_num_seqs), time_end - time_begin))
 
 
 def infer(exe, infer_program, infer_pyreader, fetch_list, infer_phase):
@@ -141,10 +171,11 @@ def infer(exe, infer_program, infer_pyreader, fetch_list, infer_phase):
     while True:
         try:
             batch_probs = exe.run(program=infer_program,
-                            fetch_list=fetch_list,
-                            return_numpy=True)
+                                  fetch_list=fetch_list,
+                                  return_numpy=True)
             for probs in batch_probs[0]:
-                print("%d\t%f\t%f\t%f" % (np.argmax(probs), probs[0], probs[1], probs[2]))
+                print("%d\t%f\t%f\t%f" %
+                      (np.argmax(probs), probs[0], probs[1], probs[2]))
         except fluid.core.EOFException as e:
             infer_pyreader.reset()
             break
@@ -165,9 +196,10 @@ def main(args):
     exe = fluid.Executor(place)
 
     task_name = args.task_name.lower()
-    processor = reader.EmoTectProcessor(data_dir=args.data_dir,
-                                      vocab_path=args.vocab_path,
-                                      random_seed=args.random_seed)
+    processor = reader.EmoTectProcessor(
+        data_dir=args.data_dir,
+        vocab_path=args.vocab_path,
+        random_seed=args.random_seed)
     num_labels = len(processor.get_labels())
 
     if not (args.do_train or args.do_val or args.do_infer):
@@ -180,9 +212,7 @@ def main(args):
 
     if args.do_train:
         train_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
-            phase='train',
-            epoch=args.epoch)
+            batch_size=args.batch_size, phase='train', epoch=args.epoch)
 
         num_train_examples = processor.get_num_examples(phase="train")
         max_train_steps = args.epoch * num_train_examples // args.batch_size + 1
@@ -210,7 +240,7 @@ def main(args):
             lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
                 program=train_program, batch_size=args.batch_size)
             print("Theoretical memory usage in training: %.3f - %.3f %s" %
-                (lower_mem, upper_mem, unit))
+                  (lower_mem, upper_mem, unit))
 
     if args.do_val:
         test_prog = fluid.Program()
@@ -241,17 +271,12 @@ def main(args):
     if args.do_train:
         if args.init_checkpoint:
             utils.init_checkpoint(
-                exe,
-                args.init_checkpoint,
-                main_program=startup_prog)
+                exe, args.init_checkpoint, main_program=startup_prog)
     elif args.do_val or args.do_infer:
         if not args.init_checkpoint:
             raise ValueError("args 'init_checkpoint' should be set if"
                              "only doing validation or infer!")
-        utils.init_checkpoint(
-            exe,
-            args.init_checkpoint,
-            main_program=test_prog)
+        utils.init_checkpoint(exe, args.init_checkpoint, main_program=test_prog)
 
     if args.do_train:
         train_exe = exe
@@ -288,22 +313,27 @@ def main(args):
                     total_num_seqs.extend(np_num_seqs)
 
                     if args.verbose:
-                        verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size()
+                        verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size(
+                        )
                         print(verbose)
 
                     time_end = time.time()
                     used_time = time_end - time_begin
                     print("step: %d, avg loss: %f, "
-                        "avg acc: %f, speed: %f steps/s" %
-                        (steps, np.sum(total_cost) / np.sum(total_num_seqs),
-                        np.sum(total_acc) / np.sum(total_num_seqs),
-                        args.skip_steps / used_time))
-                    ce_info.append([np.sum(total_cost) / np.sum(total_num_seqs), np.sum(total_acc) / np.sum(total_num_seqs), used_time])
+                          "avg acc: %f, speed: %f steps/s" %
+                          (steps, np.sum(total_cost) / np.sum(total_num_seqs),
+                           np.sum(total_acc) / np.sum(total_num_seqs),
+                           args.skip_steps / used_time))
+                    ce_info.append([
+                        np.sum(total_cost) / np.sum(total_num_seqs),
+                        np.sum(total_acc) / np.sum(total_num_seqs), used_time
+                    ])
                     total_cost, total_acc, total_num_seqs = [], [], []
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
-                    save_path = os.path.join(args.output_dir, "step_" + str(steps))
+                    save_path = os.path.join(args.output_dir,
+                                             "step_" + str(steps))
                     fluid.io.save_persistables(exe, save_path, train_program)
 
                 if steps % args.validation_steps == 0:
@@ -315,8 +345,8 @@ def main(args):
                                 phase='dev',
                                 epoch=1))
                         evaluate(test_exe, test_prog, test_pyreader,
-                                [loss.name, accuracy.name, num_seqs.name],
-                                "dev")
+                                 [loss.name, accuracy.name, num_seqs.name],
+                                 "dev")
 
             except fluid.core.EOFException:
                 save_path = os.path.join(args.output_dir, "step_" + str(steps))
@@ -336,33 +366,25 @@ def main(args):
         except:
             print("ce info error")
         print("kpis\teach_step_duration_%s_card%s\t%s" %
-                (task_name, card_num, ce_time))
-        print("kpis\ttrain_loss_%s_card%s\t%f" %
-            (task_name, card_num, ce_loss))
-        print("kpis\ttrain_acc_%s_card%s\t%f" %
-            (task_name, card_num, ce_acc))
+              (task_name, card_num, ce_time))
+        print("kpis\ttrain_loss_%s_card%s\t%f" % (task_name, card_num, ce_loss))
+        print("kpis\ttrain_acc_%s_card%s\t%f" % (task_name, card_num, ce_acc))
 
     # evaluate on test set
     if not args.do_train and args.do_val:
         test_pyreader.decorate_paddle_reader(
             processor.data_generator(
-                batch_size=args.batch_size,
-                phase='test',
-                epoch=1))
+                batch_size=args.batch_size, phase='test', epoch=1))
         print("Final test result:")
         evaluate(test_exe, test_prog, test_pyreader,
-                [loss.name, accuracy.name, num_seqs.name],
-                "test")
+                 [loss.name, accuracy.name, num_seqs.name], "test")
 
     # infer
     if args.do_infer:
         infer_pyreader.decorate_paddle_reader(
             processor.data_generator(
-                batch_size=args.batch_size,
-                phase='infer',
-                epoch=1))
-        infer(test_exe, test_prog, infer_pyreader,
-             [probs.name], "infer")
+                batch_size=args.batch_size, phase='infer', epoch=1))
+        infer(test_exe, test_prog, infer_pyreader, [probs.name], "infer")
 
 
 def get_cards():

@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Auto dialogue evaluation task
 """
@@ -76,9 +89,8 @@ def train(args):
 
     print("device count %d" % dev_count)
     print("theoretical memory usage: ")
-    print(
-        fluid.contrib.memory_usage(
-            program=train_program, batch_size=args.batch_size))
+    print(fluid.contrib.memory_usage(
+        program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
     exe.run(train_startup)
@@ -159,8 +171,8 @@ def train(args):
                 main_program=train_program)
 
             print("Save model at step %d ... " % step)
-            print(
-                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+            print(time.strftime('%Y-%m-%d %H:%M:%S',
+                                time.localtime(time.time())))
             best_recall = recall_dict['1_in_10']
         return best_recall
 
@@ -256,9 +268,8 @@ def finetune(args):
 
     print("device count %d" % dev_count)
     print("theoretical memory usage: ")
-    print(
-        fluid.contrib.memory_usage(
-            program=train_program, batch_size=args.batch_size))
+    print(fluid.contrib.memory_usage(
+        program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
     exe.run(train_startup)
@@ -326,8 +337,8 @@ def finetune(args):
                 exe,
                 main_program=train_program)
             print("Save model at step %d ... " % step)
-            print(
-                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+            print(time.strftime('%Y-%m-%d %H:%M:%S',
+                                time.localtime(time.time())))
             best_cor = cor
         return best_cor
 
