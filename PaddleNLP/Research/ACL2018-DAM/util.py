@@ -1,4 +1,4 @@
-""""
+"""
 Utils
 """
 
@@ -20,8 +20,9 @@ def mkdir(path):
     """
     Mkdir
     """
-    if not os.path.isdir(path):
-        mkdir(os.path.split(path)[0])
+    if not os.path.isdir(path): 
+        if os.path.split(path)[0]:
+            mkdir(os.path.split(path)[0])
     else:
         return
     os.mkdir(path)
