@@ -136,4 +136,4 @@ def optimization(loss,
                         param.name] * weight_decay * scheduled_lr
                     fluid.layers.assign(output=param, input=updated_param)
 
-    return scheduled_lr
+    return scheduled_lr, optimizer
