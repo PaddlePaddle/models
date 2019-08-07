@@ -25,7 +25,7 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 
-__all__ = ["conv_bn", "pointnet_sa_module_msg", "pointnet_sa_module_ssg", "pointnet_fp_module"]
+__all__ = ["conv_bn", "pointnet_sa_module", "pointnet_fp_module"]
 
 
 def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
@@ -105,7 +105,7 @@ def MLP(features, out_channels_list, bn=True, act='relu', name=None):
     return out
         
 
-def pointnet_sa_module_msg(xyz,
+def pointnet_sa_module(xyz,
                        npoint=None,
                        radiuss=[],
                        nsamples=[],
@@ -115,7 +115,9 @@ def pointnet_sa_module_msg(xyz,
                        use_xyz=True,
                        name=None):
     """
-    PointNet MSG(Multi-Scale Group) Set Abstraction Module
+    PointNet MSG(Multi-Scale Group) Set Abstraction Module.
+    Call with radiuss, nsamples, mlps as single element list for 
+    SSG(Single-Scale Group).
 
     Args:
         xyz (Variable): xyz coordiantes features with shape [B, N, 3]
@@ -150,22 +152,6 @@ def pointnet_sa_module_msg(xyz,
         out = fluid.layers.transpose(out, perm=[0, 2, 1])
 
     return (new_xyz, out)
-
-
-def pointnet_sa_module_ssg(xyz,
-                       npoint=None,
-                       radius=None,
-                       nsample=None,
-                       mlp=[],
-                       feature=None,
-                       bn=True,
-                       use_xyz=True,
-                       name=None):
-    """
-    PointNet SSG(Single-Scale Group) Set Abstraction Module
-    see pointnet_sa_module_msg
-    """
-    return pointnet_sa_module_msg(xyz, npoint, [radius], [nsample], [mlp], feature, bn, use_xyz, name)
 
 
 def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True, name=None):

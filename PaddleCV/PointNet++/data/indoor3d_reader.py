@@ -91,11 +91,17 @@ class Indoor3DReader(object):
         def reader():
             batch_out = []
             for point, label in zip(points, labels):
+                # shuffle points
                 p = point.copy()
                 l = label.copy()
                 pt_idxs = np.arange(num_points)
                 np.random.shuffle(pt_idxs)
-                batch_out.append((p[pt_idxs], l[pt_idxs]))
+                p = p[pt_idxs]
+                l = l[pt_idxs]
+
+                xyz = p[:, :3]
+                feature = p[:, 3:]
+                batch_out.append((xyz, feature, l))
 
                 if len(batch_out) == batch_size:
                     yield batch_out
@@ -108,6 +114,8 @@ if __name__ == "__main__":
 
     train_reader = ir.get_reader(32, 4096)
     for i, data in enumerate(train_reader()):
+        if i == 0:
+            print(data[0][0].shape, data[0][1].shape, data[0][2].shape)
         print('train', i, len(data))
 
     test_reader = ir.get_reader(32, 4096, 'test')
