@@ -288,28 +288,28 @@ class Pix2pix(object):
                 sys.stdout.flush()
                 batch_id += 1
 
-                if self.cfg.run_test:
-                    image_name = fluid.layers.data(
-                        name='image_name',
-                        shape=[self.cfg.batch_size],
-                        dtype="int32")
-                    test_py_reader = fluid.io.PyReader(
-                        feed_list=[input_A, input_B, image_name],
-                        capacity=4,  ## batch_size * 4
-                        iterable=True,
-                        use_double_buffer=True)
-                    test_py_reader.decorate_batch_generator(
-                        self.test_reader, places=place)
-                    test_program = gen_trainer.infer_program
-                    utility.save_test_image(
-                        epoch_id,
-                        self.cfg,
-                        exe,
-                        place,
-                        test_program,
-                        gen_trainer,
-                        test_py_reader,
-                        A_id2name=self.id2name)
+            if self.cfg.run_test:
+                image_name = fluid.layers.data(
+                    name='image_name',
+                    shape=[self.cfg.batch_size],
+                    dtype="int32")
+                test_py_reader = fluid.io.PyReader(
+                    feed_list=[input_A, input_B, image_name],
+                    capacity=4,  ## batch_size * 4
+                    iterable=True,
+                    use_double_buffer=True)
+                test_py_reader.decorate_batch_generator(
+                    self.test_reader, places=place)
+                test_program = gen_trainer.infer_program
+                utility.save_test_image(
+                    epoch_id,
+                    self.cfg,
+                    exe,
+                    place,
+                    test_program,
+                    gen_trainer,
+                    test_py_reader,
+                    A_id2name=self.id2name)
 
             if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,
