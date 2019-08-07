@@ -7,7 +7,7 @@ save_steps: 10
 num_scan_data: ""
 word_emb_init: ""
 init_model: ""
-use_cuda: ""
+use_cuda: True
 batch_size: 256
 hidden_size: 256
 emb_size: 256
@@ -26,4 +26,4 @@ vocab_path: ""
 max_seq_len: 128
 random_seed: 110
 do_save_inference_model: False
-enable_ce: "store_true"
+enable_ce: ""
