@@ -94,6 +94,8 @@ dataset/coco/
        --class_num=${category_num}
 
 - 通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
+- 若在Windows环境下训练模型，建议设置`--use_multiprocess_reader=False`。
+- 通过`--worker_num=`设置多进程数据读取器进程数，默认进程数为8，若训练机器CPU核数较少，建议设小该值。
 - 可选参数见：
 
     python train.py --help
@@ -110,6 +112,8 @@ dataset/coco/
 *  采用momentum优化算法训练YOLOv3，momentum=0.9。
 *  学习率采用warmup算法，前4000轮学习率从0.0线性增加至0.001。在400000，450000轮时使用0.1,0.01乘子进行学习率衰减，最大训练500000轮。
 *  通过设置`--syncbn=True`可以开启Synchronized batch normalization，该模式下精度会提高
+
+**注意：** Synchronized batch normalization只能用于多GPU训练，不能用于CPU训练和单GPU训练。
 
 下图为模型训练结果：
 <p align="center">

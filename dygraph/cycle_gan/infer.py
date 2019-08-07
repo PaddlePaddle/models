@@ -1,3 +1,17 @@
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -25,20 +39,20 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 
 
 # yapf: disable
-add_arg('input',             str,   "123_A.jpg",      "input image")
+add_arg('input',             str,   "./image/testA/123_A.jpg",      "input image")
 add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
-add_arg('init_model',        str,   './G/150',       "The init model file of directory.")
+add_arg('init_model',        str,   './output_0/checkpoints/0',       "The init model file of directory.")
 add_arg('input_style',       str,   "A",        "A or B")
 def infer():
     with fluid.dygraph.guard():
         data_shape = [-1,3,256,256]
        
-        out_path = args.output + "/single" + "/" + str(args.input)
+        out_path = args.output + "/single"
         if not os.path.exists(out_path):
             os.makedirs(out_path)
         cycle_gan = Cycle_Gan("cycle_gan")
         save_dir = args.init_model 
-        restore = fluid.dygraph.load_persistables(save_dir)
+        restore, _ = fluid.dygraph.load_persistables(save_dir)
         cycle_gan.load_dict(restore)
         cycle_gan.eval()
         for file in glob.glob(args.input):

@@ -1,7 +1,7 @@
 # Simple Baselines for Human Pose Estimation in Fluid
 
 ## Introduction
-This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http://www.paddlepaddle.org/en) for the paper [Simple Baselines for Human Pose Estimation and Tracking](https://arxiv.org/abs/1804.06208) (ECCV'18) from MSRA. 
+This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http://www.paddlepaddle.org/en) for the paper [Simple Baselines for Human Pose Estimation and Tracking](https://arxiv.org/abs/1804.06208) (ECCV'18) from MSRA.
 
 ![demo](demo.gif)
 
@@ -10,7 +10,7 @@ This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http
 ## Requirements
 
   - Python == 2.7 or 3.6
-  - PaddlePaddle >= 1.1.0 
+  - PaddlePaddle >= 1.1.0
   - opencv-python >= 3.3
 
 ### Notes:
@@ -23,7 +23,7 @@ The code is developed and tested under 4 Tesla K40/P40 GPUS cards on CentOS with
 ## Results on MPII Val
 | Arch | Head | Shoulder | Elbow | Wrist | Hip | Knee | Ankle | Mean | Mean@0.1| Models |
 | ---- |:----:|:--------:|:-----:|:-----:|:---:|:----:|:-----:|:----:|:-------:|:------:|
-| 256x256\_pose\_resnet\_50 in PyTorch | 96.351	| 95.329 | 88.989 | 83.176 | 88.420	| 83.960 | 79.594 | 88.532 | 33.911 | - |
+| 256x256\_pose\_resnet\_50 in PyTorch | 96.351    | 95.329 | 88.989 | 83.176 | 88.420    | 83.960 | 79.594 | 88.532 | 33.911 | - |
 | 256x256\_pose\_resnet\_50 in Fluid   | 96.385 | 95.363 | 89.211 | 84.084 | 88.454 | 84.182 | 79.546 | 88.748 | 33.750 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-mpii-256x256.tar.gz) |
 | 384x384\_pose\_resnet\_50 in PyTorch | 96.658 | 95.754 | 89.790 | 84.614 | 88.523 | 84.666 | 79.287 | 89.066 | 38.046 | - |
 | 384x384\_pose\_resnet\_50 in Fluid   | 96.862 | 95.635 | 90.046 | 85.557 | 88.818 | 84.948 | 78.484 | 89.235 | 38.093 | [`link`](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-mpii-384x384.tar.gz) |
@@ -88,13 +88,13 @@ python2 setup.py install --user
 Downloading the checkpoints of Pose-ResNet-50 trained on MPII dataset from [here](https://paddlemodels.bj.bcebos.com/pose/pose-resnet50-mpii-384x384.tar.gz). Extract it into the folder `checkpoints` under the directory root of this repo. Then run
 
 ```bash
-python val.py --dataset 'mpii' --checkpoint 'checkpoints/pose-resnet50-mpii-384x384' --data_root 'data/mpii'
+python val.py --dataset mpii --checkpoint checkpoints/pose-resnet50-mpii-384x384 --data_root data/mpii
 ```
 
 ### Perform Training
 
 ```bash
-python train.py --dataset 'mpii'
+python train.py --dataset mpii
 ```
 
 **Note**: Configurations for training are aggregated in the `lib/mpii_reader.py` and `lib/coco_reader.py`.
@@ -106,7 +106,7 @@ We also support to apply pre-trained models on customized images.
 Put the images into the folder `test` under the directory root of this repo. Then run
 
 ```bash
-python test.py --checkpoint 'checkpoints/pose-resnet-50-384x384-mpii'
+python test.py --checkpoint checkpoints/pose-resnet-50-384x384-mpii
 ```
 
 If there are multiple persons in images, detectors such as [Faster R-CNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn), [SSD](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/object_detection) or others should be used first to crop them out. Because the simple baseline for human pose estimation is a top-down method.

@@ -73,7 +73,10 @@ run_type_g.add_arg(
     "When task_mode is pairwise, lamda is the threshold for calculating the accuracy."
 )
 
-parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+parser.add_argument(
+    '--enable_ce',
+    action='store_true',
+    help='If set, run the task with continuous evaluation logs.')
 
 args = parser.parse_args()
 
@@ -135,7 +138,7 @@ def train(conf_dict, args):
             valid_feeder = fluid.DataFeeder(
                 place=place, feed_list=[left.name, pos_right.name])
             valid_reader = simnet_process.get_reader("valid")
-            pred = pos_score
+        pred = pos_score
         # Save Infer model
         infer_program = fluid.default_main_program().clone(for_test=True)
         _, neg_score = net.predict(left, neg_right)
@@ -280,9 +283,9 @@ def train(conf_dict, args):
         except:
             logging.info("ce info err!")
         print("kpis\teach_step_duration_%s_card%s\t%s" %
-                (args.task_name, card_num, ce_time))
+              (args.task_name, card_num, ce_time))
         print("kpis\ttrain_loss_%s_card%s\t%f" %
-            (args.task_name, card_num, ce_loss))
+              (args.task_name, card_num, ce_loss))
 
     if args.do_test:
         if args.task_mode == "pairwise":
@@ -454,6 +457,15 @@ def main(conf_dict, args):
 
 if __name__ == "__main__":
     utils.print_arguments(args)
+    try:
+        if fluid.is_compiled_with_cuda() != True and args.use_cuda == True:
+            print(
+                "\nYou can not set use_cuda = True in the model because you are using paddlepaddle-cpu.\nPlease: 1. Install paddlepaddle-gpu to run your models on GPU or 2. Set use_cuda = False to run models on CPU.\n"
+            )
+
+            sys.exit(1)
+    except Exception as e:
+        pass
     utils.init_log("./log/TextSimilarityNet")
     conf_dict = config.SimNetConfig(args)
     main(conf_dict, args)

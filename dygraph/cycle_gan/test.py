@@ -1,3 +1,17 @@
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -25,7 +39,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size',        int,   1,          "Minibatch size.")
 add_arg('epoch',             int,   None,        "The number of weights to be testes.")
 add_arg('output',            str,   "./output_0", "The directory the model and the test result to be saved to.")
-add_arg('init_model',        str,   './G/',       "The init model file of directory.")
+add_arg('init_model',        str,   './output_0/checkpoints/',       "The init model file of directory.")
 
 def test():
     with fluid.dygraph.guard():

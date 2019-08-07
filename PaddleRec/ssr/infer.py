@@ -95,7 +95,7 @@ def infer(args, vocab_size, test_reader):
                     user_data, pos_label = utils.infer_data(data, place)
                     all_item_numpy = np.tile(
                         np.arange(vocab_size), len(pos_label)).reshape(
-                            len(pos_label), vocab_size, 1)
+                            len(pos_label), vocab_size, 1).astype("int64")
                     para = exe.run(copy_program,
                                    feed={
                                        "user": user_data,

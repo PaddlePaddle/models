@@ -4,12 +4,14 @@ import multiprocessing
 import numpy as np
 import os
 import sys
+sys.path.append("../../")
 sys.path.append("../../models/neural_machine_translation/transformer/")
 from functools import partial
 
 import paddle
 import paddle.fluid as fluid
 
+from models.model_check import check_cuda
 import reader
 from config import *
 from desc import *
@@ -217,6 +219,7 @@ def fast_infer(args):
         fluid.memory_optimize(infer_program)
 
     if InferTaskConfig.use_gpu:
+        check_cuda(InferTaskConfig.use_gpu)
         place = fluid.CUDAPlace(0)
         dev_count = fluid.core.get_cuda_device_count()
     else:
@@ -281,11 +284,11 @@ def fast_infer(args):
                     feed=feed_dict_list[0]
                     if feed_dict_list is not None else None,
                     return_numpy=False,
-                    use_program_cache=True)
+                    use_program_cache=False)
             seq_ids_list, seq_scores_list = [seq_ids], [
                 seq_scores
-            ] if isinstance(
-                seq_ids, paddle.fluid.LoDTensor) else (seq_ids, seq_scores)
+            ] if isinstance(seq_ids,
+                            paddle.fluid.LoDTensor) else (seq_ids, seq_scores)
             for seq_ids, seq_scores in zip(seq_ids_list, seq_scores_list):
                 # How to parse the results:
                 #   Suppose the lod of seq_ids is:

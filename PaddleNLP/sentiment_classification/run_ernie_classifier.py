@@ -31,6 +31,7 @@ from preprocess.ernie import task_reader
 from models.representation.ernie import ErnieConfig
 from models.representation.ernie import ernie_encoder, ernie_encoder_with_paddle_hub
 from models.representation.ernie import ernie_pyreader
+from models.model_check import check_cuda
 from utils import ArgumentGroup
 from utils import print_arguments
 from utils import init_checkpoint
@@ -425,4 +426,5 @@ def main(args):
 
 if __name__ == "__main__":
     print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)

@@ -19,6 +19,7 @@ import numpy as np
 
 from preprocess.ernie import task_reader
 from models.representation import ernie
+from models.model_check import check_cuda
 import utils
 
 # yapf: disable
@@ -45,7 +46,7 @@ data_g.add_arg("data_dir", str, None, "Directory path to training data.")
 data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
 data_g.add_arg("batch_size", int, 256, "Total examples' number in batch for training.")
 data_g.add_arg("random_seed", int, 0, "Random seed.")
-data_g.add_arg("num_labels", int, 2, "label number")
+data_g.add_arg("num_labels", int, 3, "label number")
 data_g.add_arg("max_seq_len", int, 512, "Number of words of the longest seqence.")
 data_g.add_arg("train_set", str, None, "Path to training data.")
 data_g.add_arg("test_set", str, None, "Path to test data.")
@@ -384,4 +385,5 @@ def main(args):
 
 if __name__ == "__main__":
     utils.print_arguments(args)
+    check_cuda(args.use_cuda)
     main(args)

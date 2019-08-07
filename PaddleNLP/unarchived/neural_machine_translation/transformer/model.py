@@ -875,7 +875,7 @@ def fast_decode(src_vocab_size,
             accu_scores = layers.elementwise_add(
                 x=layers.log(topk_scores), y=pre_scores, axis=0)
             # beam_search op uses lod to differentiate branches.
-            topk_indices = layers.lod_reset(accu_scores, pre_ids)
+            accu_scores = layers.lod_reset(accu_scores, pre_ids)
             # topK reduction across beams, also contain special handle of
             # end beams and end sentences(batch reduction)
             selected_ids, selected_scores, gather_idx = layers.beam_search(

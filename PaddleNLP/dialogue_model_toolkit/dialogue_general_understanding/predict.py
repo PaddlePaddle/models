@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved. 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,40 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Load checkpoint of running classifier to do prediction and save inference model."""
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
 import sys
-import time
 import numpy as np
-import multiprocessing
-
+import argparse
+import collections
 import paddle
 import paddle.fluid as fluid
 
-from finetune_args import parser
-from utils.args import print_arguments
-from utils.init import init_pretraining_params, init_checkpoint
+import dgu.reader as reader
+from dgu_net import create_net
+import dgu.define_paradigm as define_paradigm 
+import dgu.define_predict_pack as define_predict_pack
 
-import define_predict_pack
-import reader.data_reader as reader
-
-_WORK_DIR = os.path.split(os.path.realpath(__file__))[0]
-sys.path.append('../../models/dialogue_model_toolkit/dialogue_general_understanding')
-
-from bert import BertConfig, BertModel 
-from create_model import create_model
-import define_paradigm 
+from dgu.utils.configure import PDConfig
+from dgu.utils.input_field import InputField
+from dgu.utils.model_check import check_cuda
+import dgu.utils.save_load_io as save_load_io
 
 
-def main(args):
-    """main function"""
-    bert_config = BertConfig(args.bert_config_path)
-    bert_config.print_config()
+def do_predict(args): 
+    """predict function"""
 
     task_name = args.task_name.lower()
     paradigm_inst = define_paradigm.Paradigm(task_name)
@@ -55,110 +43,121 @@ def main(args):
         'udc': reader.UDCProcessor,
         'swda': reader.SWDAProcessor,
         'mrda': reader.MRDAProcessor,
-        'atis_slot': reader.ATISSlotProcessor, 
+        'atis_slot': reader.ATISSlotProcessor,
         'atis_intent': reader.ATISIntentProcessor,
-        'dstc2': reader.DSTC2Processor, 
-        'dstc2_asr': reader.DSTC2Processor,  
+        'dstc2': reader.DSTC2Processor,
     }
 
-    in_tokens = {
-        'udc': True,
-        'swda': True,
-        'mrda': True,
-        'atis_slot': False,
-        'atis_intent': True,
-        'dstc2': True,   
-        'dstc2_asr': True  
-    }
+    test_prog = fluid.default_main_program()
+    startup_prog = fluid.default_startup_program()
 
+    with fluid.program_guard(test_prog, startup_prog):
+        test_prog.random_seed = args.random_seed
+        startup_prog.random_seed = args.random_seed
+
+        with fluid.unique_name.guard():
+
+            # define inputs of the network
+            num_labels = len(processors[task_name].get_labels())
+
+            src_ids = fluid.layers.data(
+                        name='src_ids', shape=[args.max_seq_len, 1], dtype='int64')
+            pos_ids = fluid.layers.data(
+                        name='pos_ids', shape=[args.max_seq_len, 1], dtype='int64')
+            sent_ids = fluid.layers.data(
+                        name='sent_ids', shape=[args.max_seq_len, 1], dtype='int64')
+            input_mask = fluid.layers.data(
+                        name='input_mask', shape=[args.max_seq_len, 1], dtype='float32')
+            if args.task_name == 'atis_slot': 
+                labels = fluid.layers.data(
+                        name='labels', shape=[args.max_seq_len], dtype='int64')
+            elif args.task_name in ['dstc2', 'dstc2_asr', 'multi-woz']:
+                labels = fluid.layers.data(
+                        name='labels', shape=[num_labels], dtype='int64')
+            else: 
+                labels = fluid.layers.data(
+                        name='labels', shape=[1], dtype='int64')
+            
+            input_inst = [src_ids, pos_ids, sent_ids, input_mask, labels]
+            input_field = InputField(input_inst)
+            data_reader = fluid.io.PyReader(feed_list=input_inst, 
+                        capacity=4, iterable=False)
+            
+            results = create_net(
+                    is_training=False, 
+                    model_input=input_field, 
+                    num_labels=num_labels,
+                    paradigm_inst=paradigm_inst,
+                    args=args)
+
+            probs = results.get("probs", None)
+
+            probs.persistable = True
+
+            fetch_list = [probs.name]
+
+    #for_test is True if change the is_test attribute of operators to True
+    test_prog = test_prog.clone(for_test=True)
+
+    if args.use_cuda:
+        place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
+    else:
+        place = fluid.CPUPlace()
+
+    exe = fluid.Executor(place)
+    exe.run(startup_prog)
+
+    assert (args.init_from_params) or (args.init_from_pretrain_model)
+
+    if args.init_from_params:
+        save_load_io.init_from_params(args, exe, test_prog)
+    if args.init_from_pretrain_model:
+        save_load_io.init_from_pretrain_model(args, exe, test_prog)
+
+    compiled_test_prog = fluid.CompiledProgram(test_prog)
+    
     processor = processors[task_name](data_dir=args.data_dir,
                                       vocab_path=args.vocab_path,
                                       max_seq_len=args.max_seq_len,
-                                      do_lower_case=args.do_lower_case, 
-                                      in_tokens=in_tokens[task_name],
-                                      task_name=task_name, 
+                                      do_lower_case=args.do_lower_case,
+                                      in_tokens=args.in_tokens,
+                                      task_name=task_name,
                                       random_seed=args.random_seed)
-    num_labels = len(processor.get_labels())
-
-    predict_prog = fluid.Program()
-    predict_startup = fluid.Program()
-    with fluid.program_guard(predict_prog, predict_startup):
-        with fluid.unique_name.guard():
-            pred_results = create_model(
-                args,
-                pyreader_name='predict_reader',
-                bert_config=bert_config,
-                num_labels=num_labels,
-                paradigm_inst=paradigm_inst,
-                is_prediction=True)
-            predict_pyreader = pred_results.get('pyreader', None)
-            probs = pred_results.get('probs', None)
-            feed_target_names = pred_results.get('feed_target_names', None)
-
-    predict_prog = predict_prog.clone(for_test=True)
-
-    if args.use_cuda:
-        place = fluid.CUDAPlace(0)
-        dev_count = fluid.core.get_cuda_device_count()
-    else:
-        place = fluid.CPUPlace()
-        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
-
-    place = fluid.CUDAPlace(0) if args.use_cuda == True else fluid.CPUPlace()
-    exe = fluid.Executor(place)
-    exe.run(predict_startup)
-
-    if args.init_checkpoint:
-        init_pretraining_params(exe, args.init_checkpoint, predict_prog)
-    else:
-        raise ValueError("args 'init_checkpoint' should be set for prediction!")
-
-    predict_exe = fluid.ParallelExecutor(
-        use_cuda=args.use_cuda, main_program=predict_prog)
-
-    test_data_generator = processor.data_generator(
-        batch_size=args.batch_size, 
+    batch_generator = processor.data_generator(
+        batch_size=args.batch_size,
         phase='test',
-        epoch=1,
         shuffle=False)
-    predict_pyreader.decorate_tensor_provider(test_data_generator)
 
-    predict_pyreader.start()
+    data_reader.decorate_batch_generator(batch_generator) 
+    data_reader.start()
+    
     all_results = []
-    time_begin = time.time()
-    while True:
-        try:
-            results = predict_exe.run(fetch_list=[probs.name])
+    while True: 
+        try: 
+            results = exe.run(compiled_test_prog, fetch_list=fetch_list)
             all_results.extend(results[0])
-        except fluid.core.EOFException:
-            predict_pyreader.reset()
+        except fluid.core.EOFException: 
+            data_reader.reset()
             break
-    time_end = time.time()
 
     np.set_printoptions(precision=4, suppress=True)
-    print("-------------- prediction results --------------")
-    print("example_id\t" + '  '.join(processor.get_labels()))
-    if in_tokens[task_name]: 
-        for index, result in enumerate(all_results): 
-            tags = pred_func(result)
-            print("%s\t%s" % (index, tags))
-    else: 
-        tags = pred_func(all_results, args.max_seq_len)
-        for index, tag in enumerate(tags): 
-            print("%s\t%s" % (index, tag))
-    
-    if args.save_inference_model_path:
-        _, ckpt_dir = os.path.split(args.init_checkpoint)
-        dir_name = ckpt_dir + '_inference_model'
-        model_path = os.path.join(args.save_inference_model_path, dir_name)
-        fluid.io.save_inference_model(
-            model_path,
-            feed_target_names, [probs],
-            exe,
-            main_program=predict_prog)
+    with open(args.output_prediction_file, 'w') as fw: 
+        if task_name not in ['atis_slot']: 
+            for index, result in enumerate(all_results):
+                tags = pred_func(result)
+                fw.write("%s\t%s\n" % (index, tags))
+        else:
+            tags = pred_func(all_results, args.max_seq_len)
+            for index, tag in enumerate(tags):
+                fw.write("%s\t%s\n" % (index, tag))
 
 
-if __name__ == '__main__': 
-    args = parser.parse_args()
-    print_arguments(args)
-    main(args)
+if __name__ == "__main__":
+
+    args = PDConfig(yaml_file="./data/config/dgu.yaml")
+    args.build()
+    args.Print()
+
+    check_cuda(args.use_cuda)
+
+    do_predict(args)

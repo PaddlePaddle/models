@@ -16,12 +16,28 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
+
+
+def set_paddle_flags(flags):
+    for key, value in flags.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+set_paddle_flags({
+    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc
+    'FLAGS_memory_fraction_of_eager_deletion': 1,
+    'FLAGS_fraction_of_gpu_memory_to_use': 0.98
+})
+
 import sys
 import numpy as np
 import random
 import time
 import shutil
-from utility import parse_args, print_arguments, SmoothedValue
+import subprocess
+from utility import (parse_args, print_arguments, 
+                     SmoothedValue, check_gpu)
 
 import paddle
 import paddle.fluid as fluid
@@ -29,9 +45,21 @@ import reader
 from models.yolov3 import YOLOv3
 from learning_rate import exponential_with_warmup_decay
 from config import cfg
+import dist_utils
+
+num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+
+def get_device_num():
+    # NOTE(zcd): for multi-processe training, each process use one GPU card.
+    if num_trainers > 1:
+        return 1
+    return fluid.core.get_cuda_device_count()
 
 
 def train():
+
+    # check if set use_gpu=True in paddlepaddle cpu version
+    check_gpu(cfg.use_gpu)
 
     if cfg.debug or args.enable_ce:
         fluid.default_startup_program().random_seed = 1000
@@ -48,8 +76,7 @@ def train():
     loss = model.loss()
     loss.persistable = True
 
-    devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
-    devices_num = len(devices.split(","))
+    devices_num = get_device_num()
     print("Found {} CUDA devices.".format(devices_num))
 
     learning_rate = cfg.learning_rate
@@ -69,7 +96,8 @@ def train():
         momentum=cfg.momentum)
     optimizer.minimize(loss)
 
-    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
+    gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+    place = fluid.CUDAPlace(gpu_id) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
@@ -83,11 +111,24 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = True
-    build_strategy.sync_batch_norm = cfg.syncbn
+    build_strategy.memory_optimize = False  #gc and memory optimize may conflict
+    syncbn = cfg.syncbn
+    if (syncbn and devices_num <= 1) or num_trainers > 1:
+        print("Disable syncbn in single device")
+        syncbn = False
+    build_strategy.sync_batch_norm = syncbn
+
+    exec_strategy = fluid.ExecutionStrategy()
+    if cfg.use_gpu and num_trainers > 1:
+        dist_utils.prepare_for_multi_process(exe, build_strategy,
+                                             fluid.default_main_program())
+        exec_strategy.num_threads = 1
+
     compile_program = fluid.compiler.CompiledProgram(fluid.default_main_program(
     )).with_data_parallel(
-        loss_name=loss.name, build_strategy=build_strategy)
+        loss_name=loss.name,
+        build_strategy=build_strategy,
+        exec_strategy=exec_strategy)
 
     random_sizes = [cfg.input_size]
     if cfg.random_shape:
@@ -95,17 +136,24 @@ def train():
 
     total_iter = cfg.max_iter - cfg.start_iter
     mixup_iter = total_iter - cfg.no_mixup_iter
+
     shuffle = True
     if args.enable_ce:
         shuffle = False
+    shuffle_seed = None
+    # NOTE: yolov3 is a special model, if num_trainers > 1, each process
+    # trian the completed dataset.
+    # if num_trainers > 1: shuffle_seed  = 1
     train_reader = reader.train(
         input_size,
         batch_size=cfg.batch_size,
         shuffle=shuffle,
+        shuffle_seed=shuffle_seed,
         total_iter=total_iter * devices_num,
         mixup_iter=mixup_iter * devices_num,
         random_sizes=random_sizes,
-        use_multiprocessing=cfg.use_multiprocess)
+        use_multiprocess_reader=cfg.use_multiprocess_reader,
+        num_workers=cfg.worker_num)
     py_reader = model.py_reader
     py_reader.decorate_paddle_reader(train_reader)
 

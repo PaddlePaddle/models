@@ -95,6 +95,8 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
        --class_num=${category_num}
 
 - Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train. 
+- It is recommended to set `--use_multiprocess_reader=False` when training on Windows.
+- Set `--worker_num=` to specifiy multiprocess reader worker number, which is default 8, if the number of CPU cores in the training environment is small, it is recommended to set worker number to a small value.
 - For more help on arguments:
 
     python train.py --help
@@ -111,6 +113,8 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
 *  Use momentum optimizer with momentum=0.9.
 *  In first 4000 iteration, the learning rate increases linearly from 0.0 to 0.001. Then lr is decayed at 400000, 450000 iteration with multiplier 0.1, 0.01. The maximum iteration is 500200.
 *  Synchronized batch normalization can be set by `--syncbn=True`, which can produce a higher performance.
+
+**NOTE:** Synchronized batch normalization can only be used on multiple GPU devices, can not be used on CPU devices or single GPU device.
 
 Training losses is shown as below：
 <p align="center">
