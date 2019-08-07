@@ -92,31 +92,39 @@ run_type_g.add_arg("do_predict",                   bool,   True,  "Whether to pe
 args = parser.parse_args()
 # yapf: enable.
 
-def create_model(pyreader_name, bert_config, is_training=False):
+def create_model(bert_config, is_training=False):
     if is_training:
-        pyreader = fluid.layers.py_reader(
-            capacity=50,
-            shapes=[[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
+        input_fields = {
+            'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'start_positions', 'end_positions'],
+            'shapes': [[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
                     [-1, args.max_seq_len, 1],
                     [-1, args.max_seq_len, 1], [-1, 1], [-1, 1]],
-            dtypes=[
+            'dtypes': [
                 'int64', 'int64', 'int64', 'float32', 'int64', 'int64'],
-            lod_levels=[0, 0, 0, 0, 0, 0],
-            name=pyreader_name,
-            use_double_buffer=True)
-        (src_ids, pos_ids, sent_ids, input_mask, start_positions,
-         end_positions) = fluid.layers.read_file(pyreader)
+            'lod_levels': [0, 0, 0, 0, 0, 0],
+        }
     else:
-        pyreader = fluid.layers.py_reader(
-            capacity=50,
-            shapes=[[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
+        input_fields = {
+            'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'unique_id'],
+            'shapes': [[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
                     [-1, args.max_seq_len, 1],
                     [-1, args.max_seq_len, 1], [-1, 1]],
-            dtypes=['int64', 'int64', 'int64', 'float32', 'int64'],
-            lod_levels=[0, 0, 0, 0, 0],
-            name=pyreader_name,
-            use_double_buffer=True)
-        (src_ids, pos_ids, sent_ids, input_mask, unique_id) = fluid.layers.read_file(pyreader)
+            'dtypes': [
+                'int64', 'int64', 'int64', 'float32', 'int64'],
+            'lod_levels': [0, 0, 0, 0, 0],
+        }
+
+    inputs = [fluid.layers.data(name=input_fields['names'][i],
+                      shape=input_fields['shapes'][i],
+                      dtype=input_fields['dtypes'][i],
+                      lod_level=input_fields['lod_levels'][i]) for i in range(len(input_fields['names']))]
+
+    pyreader = fluid.io.PyReader(feed_list=inputs, capacity=50, iterable=False)
+
+    if is_training:
+        (src_ids, pos_ids, sent_ids, input_mask, start_positions, end_positions) = inputs
+    else:
+        (src_ids, pos_ids, sent_ids, input_mask, unique_id) = inputs
 
     bert = BertModel(
         src_ids=src_ids,
@@ -263,7 +271,6 @@ def train(args):
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
                 train_pyreader, loss, num_seqs = create_model(
-                    pyreader_name='train_reader',
                     bert_config=bert_config,
                     is_training=True)
 
@@ -296,7 +303,6 @@ def train(args):
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
                 test_pyreader, unique_ids, start_logits, end_logits, num_seqs = create_model(
-                    pyreader_name='test_reader',
                     bert_config=bert_config,
                     is_training=False)
 
@@ -341,7 +347,7 @@ def train(args):
         train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
                  loss_name=loss.name, exec_strategy=exec_strategy)
 
-        train_pyreader.decorate_tensor_provider(train_data_generator)
+        train_pyreader.decorate_batch_generator(train_data_generator, place)
 
         train_pyreader.start()
         steps = 0
@@ -402,14 +408,14 @@ def train(args):
                 break
 
     if args.do_predict:
-        test_pyreader.decorate_tensor_provider(
+        test_pyreader.decorate_batch_generator(
             processor.data_generator(
                 data_path=args.predict_file,
                 batch_size=args.batch_size,
                 phase='predict',
                 shuffle=False,
                 dev_count=1,
-                epoch=1))
+                epoch=1), place)
 
         predict(exe, test_prog, test_pyreader, [
             unique_ids.name, start_logits.name, end_logits.name, num_seqs.name

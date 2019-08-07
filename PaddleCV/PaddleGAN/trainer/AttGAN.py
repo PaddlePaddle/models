@@ -323,8 +323,8 @@ class AttGAN(object):
                 d_loss, d_loss_real, d_loss_fake, d_loss_cls, d_loss_gp = exe.run(
                     dis_trainer_program, fetch_list=fetches, feed=data)
 
-                # optimize the generator network
                 if (batch_id + 1) % self.cfg.num_discriminator_time == 0:
+                    # optimize the generator network
                     d_fetches = [
                         gen_trainer.g_loss_fake.name,
                         gen_trainer.g_loss_rec.name,

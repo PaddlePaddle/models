@@ -84,7 +84,6 @@ def main(args):
         with fluid.unique_name.guard():
             predict_pyreader, probs, feed_target_names = create_model(
                 args,
-                pyreader_name='predict_reader',
                 bert_config=bert_config,
                 num_labels=num_labels,
                 is_prediction=True)
@@ -103,7 +102,7 @@ def main(args):
     exe.run(predict_startup)
 
     if args.init_checkpoint:
-        init_pretraining_params(exe, args.init_checkpoint, predict_prog)
+        init_pretraining_params(exe, args.init_checkpoint, predict_prog, args.use_fp16)
     else:
         raise ValueError("args 'init_checkpoint' should be set for prediction!")
 
@@ -113,7 +112,7 @@ def main(args):
     predict_exe = fluid.ParallelExecutor(
         use_cuda=args.use_cuda, main_program=predict_prog)
 
-    predict_pyreader.decorate_tensor_provider(
+    predict_pyreader.decorate_batch_generator(
         processor.data_generator(
             batch_size=args.batch_size, phase='test', epoch=1, shuffle=False))
 

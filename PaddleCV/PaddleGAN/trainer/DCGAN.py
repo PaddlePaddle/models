@@ -179,8 +179,9 @@ class DCGAN(object):
                     total_images = np.concatenate(
                         [real_image, generate_image_reshape])
                     fig = utility.plot(total_images)
+
                     print(
-                        'Epoch ID={} Batch ID={} D_loss={} G_loss={} Batch_time_cost={:.2f}'.
+                        'Epoch ID: {} Batch ID: {} D_loss: {} G_loss: {} Batch_time_cost: {}'.
                         format(epoch_id, batch_id, d_loss[0], g_loss[0],
                                batch_time))
                     plt.title('Epoch ID={}, Batch ID={}'.format(epoch_id,

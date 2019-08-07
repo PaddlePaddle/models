@@ -22,22 +22,27 @@ import paddle.fluid as fluid
 from model.bert import BertModel
 
 
-def create_model(args,
-                 pyreader_name,
-                 bert_config,
-                 num_labels,
-                 is_prediction=False):
-    pyreader = fluid.layers.py_reader(
-        capacity=50,
-        shapes=[[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
-                [-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1], [-1, 1]],
-        dtypes=['int64', 'int64', 'int64', 'float32', 'int64'],
-        lod_levels=[0, 0, 0, 0, 0],
-        name=pyreader_name,
-        use_double_buffer=True)
+def create_model(args, bert_config, num_labels, is_prediction=False):
+    input_fields = {
+        'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'labels'],
+        'shapes':
+        [[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
+         [-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1], [-1, 1]],
+        'dtypes': ['int64', 'int64', 'int64', 'float32', 'int64'],
+        'lod_levels': [0, 0, 0, 0, 0],
+    }
 
-    (src_ids, pos_ids, sent_ids, input_mask,
-     labels) = fluid.layers.read_file(pyreader)
+    inputs = [
+        fluid.layers.data(
+            name=input_fields['names'][i],
+            shape=input_fields['shapes'][i],
+            dtype=input_fields['dtypes'][i],
+            lod_level=input_fields['lod_levels'][i])
+        for i in range(len(input_fields['names']))
+    ]
+    (src_ids, pos_ids, sent_ids, input_mask, labels) = inputs
+
+    pyreader = fluid.io.PyReader(feed_list=inputs, capacity=50, iterable=False)
 
     bert = BertModel(
         src_ids=src_ids,
