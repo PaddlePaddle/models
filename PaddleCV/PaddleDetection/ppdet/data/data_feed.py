@@ -28,10 +28,10 @@ from ppdet.data.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
     Permute)
-from ppdet.data.transform.arrange_sample import (ArrangeRCNN, ArrangeTestRCNN,
-                                                 ArrangeSSD, ArrangeEvalSSD,
-                                                 ArrangeTestSSD, ArrangeYOLO,
-                                                 ArrangeEvalYOLO, ArrangeTestYOLO)
+
+from ppdet.data.transform.arrange_sample import (
+    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD, 
+    ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
@@ -138,8 +138,8 @@ def create_reader(feed, max_iter=0, args_path=None, my_source=None):
         ops.append(op_dict)
     transform_config['OPS'] = ops
 
-    return Reader.create(feed.mode, data_config,
-        transform_config, max_iter, my_source)
+    return Reader.create(feed.mode, data_config, transform_config, max_iter,
+                         my_source)
 
 
 # XXX batch transforms are only stubs for now, actually handled by `post_map`
@@ -412,6 +412,7 @@ class TestFeed(DataFeed):
             num_workers=num_workers)
 
 
+# yapf: disable
 @register
 class FasterRCNNTrainFeed(DataFeed):
     __doc__ = DataFeed.__doc__
@@ -422,7 +423,7 @@ class FasterRCNNTrainFeed(DataFeed):
                      'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
                      'is_crowd'
                  ],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      RandomFlipImage(prob=0.5),
@@ -467,7 +468,7 @@ class FasterRCNNEvalFeed(DataFeed):
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -508,7 +509,7 @@ class FasterRCNNTestFeed(DataFeed):
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -555,7 +556,7 @@ class MaskRCNNTrainFeed(DataFeed):
                      'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
                      'is_crowd', 'gt_mask'
                  ],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      RandomFlipImage(prob=0.5, is_mask_flip=True),
@@ -601,7 +602,7 @@ class MaskRCNNEvalFeed(DataFeed):
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -647,7 +648,7 @@ class MaskRCNNTestFeed(DataFeed):
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(
@@ -901,7 +902,7 @@ class YoloEvalFeed(DataFeed):
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_size', 'im_id', 'gt_box', 
+                 fields=['image', 'im_size', 'im_id', 'gt_box',
                          'gt_label', 'is_difficult'],
                  image_shape=[3, 608, 608],
                  sample_transforms=[
@@ -986,3 +987,4 @@ class YoloTestFeed(DataFeed):
             use_process=use_process)
         self.mode = 'TEST'
         self.bufsize = 128
+# yapf: enable
