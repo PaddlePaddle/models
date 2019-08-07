@@ -46,7 +46,7 @@ class ShuffleNetV2():
         scale = self.scale 
         stage_repeats = [4, 8, 4]
         
-	if scale == 0.25:
+        if scale == 0.25:
             stage_out_channels = [-1, 24,  24,  48, 96, 512]
         elif scale == 0.33:
             stage_out_channels = [-1, 24,  32,  64, 128, 512]
