@@ -14,6 +14,7 @@
 """Get latency lookup table."""
 from __future__ import print_function
 
+import re
 import argparse
 import subprocess
 
@@ -62,8 +63,11 @@ def get_op_latency(op, platform):
             stderr=subprocess.PIPE,
             shell=True)
         out = proc.communicate()[0]
+        out = [_ for _ in out.split('\n') if 'Latency' in _][-1]
+        out = re.findall(r'\d+\.?\d*', out)[0]
         out = float(out)
     elif platform == 'ios':
+        print('Please refer the usage doc to get iOS latency lookup table')
         out = 0
     else:
         print('Please define `get_op_latency` for {} platform'.format(platform))
@@ -78,9 +82,9 @@ def main():
     fid = open(args.latency_lookup_table_path, 'w')
     for op in ops:
         op = map(str, op)
-        latency = get_op_latency(op[:1] + map(
-            str, [args.threads, args.test_iter]) + op[1:],
-                                 args.platform)
+        latency = get_op_latency(
+            op[:1] + map(str, [args.threads, args.test_iter]) + op[1:],
+            args.platform)
         fid.write('{} {}\n'.format(' '.join(op), latency))
     fid.close()
 

@@ -342,7 +342,7 @@ python compress.py \
 
 step1: 进入路径`PaddlePaddle/models/PaddleSlim/light_nas/`。
 
-step2: （可选）按照[使用手册](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md)中说明的方法生成好延时评估器表格 `latency_lookup_table.txt`，放置到当前路径。
+step2: （可选）按照[使用手册](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md#245-延时评估器生成方式)中说明的方法生成好延时评估器表格 `latency_lookup_table.txt`，放置到当前路径。
 
 step3: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`。
 
