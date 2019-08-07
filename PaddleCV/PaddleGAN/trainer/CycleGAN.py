@@ -319,7 +319,7 @@ class CycleGAN(object):
                     print("epoch{}: batch{}: \n\
                          d_A_loss: {}; g_A_loss: {}; g_A_cyc_loss: {}; g_A_idt_loss: {}; \n\
                          d_B_loss: {}; g_B_loss: {}; g_B_cyc_loss: {}; g_B_idt_loss: {}; \n\
-                         Batch_time_cost: {:.2f}".format(
+                         Batch_time_cost: {}".format(
                         epoch_id, batch_id, d_A_loss[0], g_A_loss[0],
                         g_A_cyc_loss[0], g_A_idt_loss[0], d_B_loss[0], g_B_loss[
                             0], g_B_cyc_loss[0], g_B_idt_loss[0], batch_time))
