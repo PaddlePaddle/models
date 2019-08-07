@@ -172,7 +172,7 @@ class DCGAN(object):
                     generate_const_image = exe.run(
                         g_trainer.infer_program,
                         feed={'noise': const_n},
-                        fetch_list={g_trainer.fake})[0]
+                        fetch_list=[g_trainer.fake])[0]
 
                     generate_image_reshape = np.reshape(generate_const_image, (
                         self.cfg.batch_size, -1))

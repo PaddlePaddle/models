@@ -27,10 +27,10 @@ def make_pair_data(fileA, file, d):
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    trainA_file = "./data/cityscapes/trainA.txt"
-    train_file = "./data/cityscapes/pix2pix_train_list"
+    trainA_file = os.path.join("data", "cityscapes", "trainA.txt")
+    train_file = os.path.join("data", "cityscapes", "pix2pix_train_list")
     make_pair_data(trainA_file, train_file, args.direction)
 
-    testA_file = "./data/cityscapes/testA.txt"
-    test_file = "./data/cityscapes/pix2pix_test_list"
+    testA_file = os.path.join("data", "cityscapes", "testA.txt")
+    test_file = os.path.join("data", "cityscapes", "pix2pix_test_list")
     make_pair_data(testA_file, test_file, args.direction)

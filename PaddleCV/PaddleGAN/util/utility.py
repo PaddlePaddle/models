@@ -134,57 +134,60 @@ def save_test_image(epoch,
                     test_program,
                     g_trainer,
                     A_test_reader,
-                    B_test_reader=None):
+                    B_test_reader=None,
+                    A_id2name=None,
+                    B_id2name=None):
     out_path = os.path.join(cfg.output, 'test')
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     if cfg.model_net == "Pix2pix":
-        for data in zip(A_test_reader()):
-            data_A, data_B, name = data[0]
-            name = name[0]
-            tensor_A = fluid.LoDTensor()
-            tensor_B = fluid.LoDTensor()
-            tensor_A.set(data_A, place)
-            tensor_B.set(data_B, place)
-            fake_B_temp = exe.run(
-                test_program,
-                fetch_list=[g_trainer.fake_B],
-                feed={"input_A": tensor_A,
-                      "input_B": tensor_B})
+        for data in A_test_reader():
+            A_data, B_data, image_name = data[0]['input_A'], data[0][
+                'input_B'], data[0]['image_name']
+            fake_B_temp = exe.run(test_program,
+                                  fetch_list=[g_trainer.fake_B],
+                                  feed={"input_A": A_data,
+                                        "input_B": B_data})
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
-            input_A_temp = np.squeeze(data_A[0]).transpose([1, 2, 0])
-            input_B_temp = np.squeeze(data_A[0]).transpose([1, 2, 0])
+            input_A_temp = np.squeeze(np.array(A_data)[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(np.array(A_data)[0]).transpose([1, 2, 0])
 
-            imageio.imwrite(out_path + "/fakeB_" + str(epoch) + "_" + name, (
-                (fake_B_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/inputA_" + str(epoch) + "_" + name, (
-                (input_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/inputB_" + str(epoch) + "_" + name, (
-                (input_B_temp + 1) * 127.5).astype(np.uint8))
+            fakeB_name = "fakeB_" + str(epoch) + "_" + A_id2name[np.array(
+                image_name).astype('int32')[0]]
+            inputA_name = "inputA_" + str(epoch) + "_" + A_id2name[np.array(
+                image_name).astype('int32')[0]]
+            inputB_name = "inputB_" + str(epoch) + "_" + A_id2name[np.array(
+                image_name).astype('int32')[0]]
+            imageio.imwrite(
+                os.path.join(out_path, fakeB_name), (
+                    (fake_B_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                os.path.join(out_path, inputA_name), (
+                    (input_A_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                os.path.join(out_path, inputB_name), (
+                    (input_B_temp + 1) * 127.5).astype(np.uint8))
     elif cfg.model_net == "StarGAN":
-        for data in zip(A_test_reader()):
-            real_img, label_org, name = data[0]
+        for data in A_test_reader():
+            real_img, label_org, label_trg, image_name = data[0][
+                'image_real'], data[0]['label_org'], data[0]['label_trg'], data[
+                    0]['image_name']
             attr_names = cfg.selected_attrs.split(',')
-            tensor_img = fluid.LoDTensor()
-            tensor_label_org = fluid.LoDTensor()
-            tensor_img.set(real_img, place)
-            tensor_label_org.set(label_org, place)
-            real_img_temp = save_batch_image(real_img)
+            real_img_temp = save_batch_image(np.array(real_img))
             images = [real_img_temp]
             for i in range(cfg.c_dim):
-                label_trg_tmp = copy.deepcopy(label_org)
-                for j in range(len(label_org)):
+                label_trg_tmp = copy.deepcopy(np.array(label_org))
+                for j in range(len(np.array(label_org))):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
-                    label_trg = check_attribute_conflict(
+                    np_label_trg = check_attribute_conflict(
                         label_trg_tmp, attr_names[i], attr_names)
-                tensor_label_trg = fluid.LoDTensor()
-                tensor_label_trg.set(label_trg, place)
+                label_trg.set(np_label_trg, place)
                 fake_temp, rec_temp = exe.run(
                     test_program,
                     feed={
-                        "image_real": tensor_img,
-                        "label_org": tensor_label_org,
-                        "label_trg": tensor_label_trg
+                        "image_real": real_img,
+                        "label_org": label_org,
+                        "label_trg": label_trg
                     },
                     fetch_list=[g_trainer.fake_img, g_trainer.rec_img])
                 fake_temp = save_batch_image(fake_temp)
@@ -192,95 +195,110 @@ def save_test_image(epoch,
                 images.append(fake_temp)
                 images.append(rec_temp)
             images_concat = np.concatenate(images, 1)
-            if len(label_org) > 1:
+            if len(np.array(label_org)) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(out_path + "/fake_img" + str(epoch) + "_" + name[0],
-                            ((images_concat + 1) * 127.5).astype(np.uint8))
+            image_name_save = "fake_img" + str(epoch) + "_" + str(
+                np.array(image_name)[0].astype('int32')) + '.jpg'
+            imageio.imwrite(
+                os.path.join(out_path, image_name_save), (
+                    (images_concat + 1) * 127.5).astype(np.uint8))
     elif cfg.model_net == 'AttGAN' or cfg.model_net == 'STGAN':
-        for data in zip(A_test_reader()):
-            real_img, label_org, name = data[0]
+        for data in A_test_reader():
+            real_img, label_org, label_trg, image_name = data[0][
+                'image_real'], data[0]['label_org'], data[0]['label_trg'], data[
+                    0]['image_name']
             attr_names = cfg.selected_attrs.split(',')
-            label_trg = copy.deepcopy(label_org)
-            tensor_img = fluid.LoDTensor()
-            tensor_label_org = fluid.LoDTensor()
-            tensor_label_trg = fluid.LoDTensor()
-            tensor_label_org_ = fluid.LoDTensor()
-            tensor_label_trg_ = fluid.LoDTensor()
-            tensor_img.set(real_img, place)
-            tensor_label_org.set(label_org, place)
-            real_img_temp = save_batch_image(real_img)
+            real_img_temp = save_batch_image(np.array(real_img))
             images = [real_img_temp]
             for i in range(cfg.c_dim):
-                label_trg_tmp = copy.deepcopy(label_trg)
+                label_trg_tmp = copy.deepcopy(np.array(label_trg))
 
-                for j in range(len(label_org)):
+                for j in range(len(label_trg_tmp)):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
                     label_trg_tmp = check_attribute_conflict(
                         label_trg_tmp, attr_names[i], attr_names)
 
-                label_org_ = list(map(lambda x: ((x * 2) - 1) * 0.5, label_org))
-                label_trg_ = list(
+                label_org_tmp = list(
+                    map(lambda x: ((x * 2) - 1) * 0.5, np.array(label_org)))
+                label_trg_tmp = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
 
                 if cfg.model_net == 'AttGAN':
-                    for k in range(len(label_org)):
-                        label_trg_[k][i] = label_trg_[k][i] * 2.0
-                tensor_label_org_.set(label_org_, place)
-                tensor_label_trg.set(label_trg, place)
-                tensor_label_trg_.set(label_trg_, place)
+                    for k in range(len(label_trg_tmp)):
+                        label_trg_tmp[k][i] = label_trg_tmp[k][i] * 2.0
+                tensor_label_org_ = fluid.LoDTensor()
+                tensor_label_org_.set(label_org_tmp, place)
+                tensor_label_trg_ = fluid.LoDTensor()
+                tensor_label_trg_.set(label_trg_tmp, place)
+
                 out = exe.run(test_program,
                               feed={
-                                  "image_real": tensor_img,
-                                  "label_org": tensor_label_org,
+                                  "image_real": real_img,
+                                  "label_org": label_org,
                                   "label_org_": tensor_label_org_,
-                                  "label_trg": tensor_label_trg,
+                                  "label_trg": label_trg,
                                   "label_trg_": tensor_label_trg_
                               },
                               fetch_list=[g_trainer.fake_img])
                 fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            if len(label_org) > 1:
+            if len(label_trg_tmp) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(out_path + "/fake_img" + str(epoch) + '_' + name[0],
-                            ((images_concat + 1) * 127.5).astype(np.uint8))
+            image_name_save = 'fake_img_' + str(epoch) + '_' + str(
+                np.array(image_name)[0].astype('int32')) + '.jpg'
+            image_path = os.path.join(out_path, image_name_save)
+            imageio.imwrite(image_path, (
+                (images_concat + 1) * 127.5).astype(np.uint8))
 
     else:
         for data_A, data_B in zip(A_test_reader(), B_test_reader()):
-            A_data, A_name = data_A
-            B_data, B_name = data_B
-            tensor_A = fluid.LoDTensor()
-            tensor_B = fluid.LoDTensor()
-            tensor_A.set(A_data, place)
-            tensor_B.set(B_data, place)
+            A_data, A_name = data_A[0]['input_A'], data_A[0]['A_image_name']
+            B_data, B_name = data_B[0]['input_B'], data_B[0]['B_image_name']
             fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = exe.run(
                 test_program,
                 fetch_list=[
                     g_trainer.fake_A, g_trainer.fake_B, g_trainer.cyc_A,
                     g_trainer.cyc_B
                 ],
-                feed={"input_A": tensor_A,
-                      "input_B": tensor_B})
+                feed={"input_A": A_data,
+                      "input_B": B_data})
             fake_A_temp = np.squeeze(fake_A_temp[0]).transpose([1, 2, 0])
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
             cyc_A_temp = np.squeeze(cyc_A_temp[0]).transpose([1, 2, 0])
             cyc_B_temp = np.squeeze(cyc_B_temp[0]).transpose([1, 2, 0])
-            input_A_temp = np.squeeze(data_A[0][0]).transpose([1, 2, 0])
-            input_B_temp = np.squeeze(data_B[0][0]).transpose([1, 2, 0])
+            input_A_temp = np.squeeze(np.array(A_data)).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(np.array(A_data)).transpose([1, 2, 0])
 
-            imageio.imwrite(out_path + "/fakeB_" + str(epoch) + "_" + A_name[0],
-                            ((fake_B_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/fakeA_" + str(epoch) + "_" + B_name[0],
-                            ((fake_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/cycA_" + str(epoch) + "_" + A_name[0],
-                            ((cyc_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/cycB_" + str(epoch) + "_" + B_name[0],
-                            ((cyc_B_temp + 1) * 127.5).astype(np.uint8))
+            fakeA_name = "fakeA_" + str(epoch) + "_" + A_id2name[np.array(
+                A_name).astype('int32')[0]]
+            fakeB_name = "fakeB_" + str(epoch) + "_" + B_id2name[np.array(
+                B_name).astype('int32')[0]]
+            inputA_name = "inputA_" + str(epoch) + "_" + A_id2name[np.array(
+                A_name).astype('int32')[0]]
+            inputB_name = "inputB_" + str(epoch) + "_" + B_id2name[np.array(
+                B_name).astype('int32')[0]]
+            cycA_name = "cycA_" + str(epoch) + "_" + A_id2name[np.array(
+                A_name).astype('int32')[0]]
+            cycB_name = "cycB_" + str(epoch) + "_" + B_id2name[np.array(
+                B_name).astype('int32')[0]]
             imageio.imwrite(
-                out_path + "/inputA_" + str(epoch) + "_" + A_name[0], (
+                os.path.join(out_path, fakeB_name), (
+                    (fake_B_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                os.path.join(out_path, fakeA_name), (
+                    (fake_A_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                os.path.join(out_path, cycA_name), (
+                    (cyc_A_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                os.path.join(out_path, cycB_name), (
+                    (cyc_B_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                os.path.join(out_path, inputA_name), (
                     (input_A_temp + 1) * 127.5).astype(np.uint8))
             imageio.imwrite(
-                out_path + "/inputB_" + str(epoch) + "_" + B_name[0], (
+                os.path.join(out_path, inputB_name), (
                     (input_B_temp + 1) * 127.5).astype(np.uint8))
 
 
@@ -333,6 +351,7 @@ def check_attribute_conflict(label_batch, attr, attrs):
 
 
 def save_batch_image(img):
+    #if img.shape[0] == 1:
     if len(img) == 1:
         res_img = np.squeeze(img).transpose([1, 2, 0])
     else:

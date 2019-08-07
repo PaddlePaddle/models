@@ -188,7 +188,7 @@ class CGAN(object):
                         g_trainer.infer_program,
                         feed={'noise': const_n,
                               'condition': condition_data},
-                        fetch_list={g_trainer.fake})[0]
+                        fetch_list=[g_trainer.fake])[0]
 
                     generate_image_reshape = np.reshape(generate_const_image, (
                         self.cfg.batch_size, -1))

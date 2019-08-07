@@ -162,6 +162,6 @@ if __name__ == '__main__':
         download_mnist('data')
     elif args.dataset in cycle_pix_dataset:
         print('Download dataset: {}'.format(args.dataset))
-        download_cycle_pix(os.path.join('data', args.dataset))
+        download_cycle_pix('data', args.dataset)
     else:
         print('Please download by yourself, thanks')
