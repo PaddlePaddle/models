@@ -13,7 +13,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-from __future__ import absolute_import 
+from __futu re__ import absolute_import 
 from __future__ import division
 from __future__ import print_function
 
@@ -23,9 +23,14 @@ import six
 import argparse
 import functools
 import logging
+import sys
+import os
+import warning
 
-def print_arguments(args):
-    """Print argpars e's arguments.
+import paddle
+import paddle.fluid as fluid
+def print_ar guments(args):
+    """Print argparse's arguments.
 
     Usage:
 
@@ -85,12 +90,12 @@ def parse_args():
     add_arg('save_step',                int,    100,                    "The steps interval to save checkpoints")
 
     # SOLVER AND HYPERPARAMETERS
-    add_arg('model',                    str,    "SE_ResNeXt50_32x4d",   "The name of network.")
+    add_arg('model',                    str,    "AlexNet",   "The name of network.")
     add_arg('total_images',             int,    1281167,                "The number of total training images.")
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
     add_arg('image_shape',              str,    "3,224,224",            "The size of Input image, order: [channels, height, weidth] ")
-    add_arg('batch_size',               int,    256,                    "Minibatch size on all devices.")
+    add_arg('batch_size',               int,    8,                    "Minibatch size on all devices.")
     add_arg('test_batch_size',          int,    16,                     "Test batch size.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
@@ -102,37 +107,51 @@ def parse_args():
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
     add_arg('upper_ratio',              float,  4./3.,                  "The value of upper_ratio in ramdom_crop")
     add_arg('resize_short_size',        int,    256,                    "The value of resize_short_size")
-    add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
+    add_arg('use_mixup',                bool,   False,                  "Whether to use mixup") 
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
 
     # SWITCH
-    add_arg('use_mem_opt',              bool,   False,                  "Whether to use memory optimization.")
+    #add_arg('use_mem_opt',              bool,   False,                  "Whether to use memory optimization.")
     add_arg('use_inplace',              bool,   True,                   "Whether to use inplace memory optimization.")
     add_arg('enable_ce',                bool,   False,                  "Whether to enable continuous evaluation job.")
     add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.2,                    "The value of label_smoothing_epsilon parameter")
-    add_arg('use_distill',              bool,   False,                  "Whether to use distill")
+    #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
     add_arg('random_seed',              int,    1000,                   "random seed")
     # yapf: enable
     args = parser.parse_args()
     return args
 
-def check_args(args):
-    """check arguments before running
+def check_args(args): 
+    """check arguments before running 
     """
 
-    #import ..model
+    # check models name
+    sys.path.append("..")
+    import models
     model_list = [m for m in dir(models) if "__" not in m]
-    assert model_name in model_list, "{} is not in lists: {}".format(args.model, model_list)
+    assert args.model in model_list, "{} is not in lists: {}, please check the model name".format(args.model, model_list)
+    
+    # check learning rate strategy
+    lr_strategy_list = ["piecewise_decay","cosine_decay","linear_decay","cosine_decay_warmup"]   
+    if args.lr_strategy not in lr_strategy_list:
+        warnings.warn("{} is not in lists: {}, Use default learning strategy now".format(args.lr_strategy, lr_strategy_list))
 
-    lr_strategy_list = ["piecewise_decay","cosine_deacy","linear_decay","cosine_decay_warmup"]
-    assert args.lr_strategy in lr_strategy_list , "{} is not in lists: {}".format(args.lr_strategy, lr_strategy_list)
+    if args.model == "GooLeNet":
+        assert arg.use_mixup == True, "Cannot use mixup processing in GoogLeNet, please set use_mixup = False"
 
+    if args.pretrained_model is not None:
+        assert os.path.isdir(args.pretrained_model)
 
-    def check_gpu(args):
-        """
+    if args.checkpoint is not None:
+        assert os.path.isdir(args.checkpoint)
+        # when use gpu, the number of visible gpu should divide batch size
+    assert args.batch_size % fluid.core.get_cuda_device_count() == 0
+
+    def check_gpu():
+        """ 
         Log error and exit when set use_gpu=true in paddlepaddle
         cpu version.
         """
@@ -144,24 +163,20 @@ def check_args(args):
                 "model on CPU"
 
         try:
-            if use_gpu and not fluid.is_compiled_with_cuda():
+            if args.use_gpu and not fluid.is_compiled_with_cuda():
                 print(err)
                 sys.exit(1)
         except Exception as e:
             pass
-    def check_pretrained_model():
-        if pretrained_model is not None:
-            assert os.path.isdir(args.pretrained_model)
-    def check_checkpoint():
-        if check_output is not None:
-            assert os.path.isdir(args.check_output)
-    def check_batch_size():
-        # when use gpu, the number of visible gpu should divide batch size
-        assert args.batch_size % args.get_device_num() == 0
+    check_gpu()
+    #temporary disable:
+    if enable_ce == True:
+        raise 
 
 
-def get_device_num():
-    """Obtain the number of available GPU cards
+
+def get_device_num(): 
+    """Obtain the num ber of available GPU cards
 
     Returns:
         the num of devices
@@ -177,15 +192,15 @@ def get_device_num():
     print("...Running on ",device_num," GPU cards")
     return device_num
 
-def init_from():
+def init_from(exe,args, program):
 
-    if checkpoint is not None:
-        fluid.io.load_persistables(exe, checkpoint, main_program=train_prog)
+    if args.checkpoint is not None:
+        fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
 
-    if pretrained_model:
+    if args.pretrained_model:
         def if_exist(var):  
             return os.path.exists(os.path.join(pretrained_model, var.name))
-        fluid.io.load_vars(exe, pretrained_model, main_program=train_prog, predicate=if_exist)
+        fluid.io.load_vars(exe, args.pretrained_model, main_program=program, predicate=if_exist)
 
 
 def init_from_checkpoint(args, exe, program):
@@ -227,19 +242,19 @@ def save_checkpoint(args, exe, program, pass_id):
     print("save checkpoint at %s" % (checkpoint_path))
     return True
 
-def create_pyreader(is_train, args ):
-    """ 
+def create_pyreader(is_t rain, args):
+    """  
     use PyReader
     """
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
-    feed_image = fluid.layers.data(name="feed_image", shape= image_shape, dtype=["float32"], lod_level=0)
-    feed_label = fluid.layers.data(name="feed_label", shape=[1], dtype=["int64"], lod_level=0)
-    feed_y_a = fluid.layers.data(name="feed_y_a", shape=[1], dtype=["int64"], lod_level=0)
-    feed_y_b = fluid.layers.data(name="feed_y_b", shape=[1], dtype=["int64"], lod_level=0)
-    feed_lam = fluid.layers.data(name="feed_lam", shape=[1], dtype=["float32"], lod_level=0)
+    feed_image = fluid.layers.data(name="feed_image", shape= image_shape, dtype="float32", lod_level=0)
+    feed_label = fluid.layers.data(name="feed_label", shape=[1], dtype="int64", lod_level=0)
+    feed_y_a = fluid.layers.data(name="feed_y_a", shape=[1], dtype="int64", lod_level=0)
+    feed_y_b = fluid.layers.data(name="feed_y_b", shape=[1], dtype="int64", lod_level=0)
+    feed_lam = fluid.layers.data(name="feed_lam", shape=[1], dtype="float32", lod_level=0)
 
-    if is_train and args.use_mixup:
+    if is_train and args.use_mixup: # and args.model != "GoogLeNet":
         py_reader = fluid.io.PyReader(
                 feed_list = [feed_image,feed_y_a,feed_y_b,feed_lam],
                 capacity = 64,
@@ -252,40 +267,44 @@ def create_pyreader(is_train, args ):
                 use_double_buffer = True,
                 iterable = False)
 
-    return py_reader
+    return py_reader, [feed_image, feed_label]
  
 
 def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
+    #print(batch_id, metrics)
+    #print(type(metrics))
     if info_mode == "batch":
         if batch_id % print_step == 0:
-            if isinstance(metrics,list):
+            #if isinstance(metrics,np.ndarray):
 
                 if len(metrics) == 2:
                     loss, lr = metrics
-                    print("Pass {0}, train batch {1}, loss {2}, lr {3}, elapse {4}".format(pass_id, batch_id, "%.5f"%loss ,"%.5f"%lr, "%2.2f sec"% time_info))
+                    print("[Pass {0}, train batch {1}], loss {2}, lr {3}, elapse {4}".format(pass_id, batch_id, "%.5f"%loss ,"%.5f"%lr, "%2.2f sec"% time_info))
                 # no mixup putput
                 elif len(metrics) == 4:
                     loss, acc1, acc5, lr = metrics
-                    print("Pass {0}, train batch {1}, loss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%.5f" %lr, "%2.2f sec" % time_info))
+                    print("[Pass {0}, train batch {1}], loss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%.5f" %lr, "%2.2f sec" % time_info))
             # test output
                 elif len(metrics) == 3:
                     loss, acc1, acc5 = metrics
-                    print("Pass {0}, test batch {1}, loss {2}, acc1 {3}, acc5 {4}, elapse {5}".format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%2.2f sec"%time_info))
+                    print("[Pass {0}, test batch {1}], loss {2}, acc1 {3}, acc5 {4}, elapse {5}".format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%2.2f sec"%time_info))
                 else:
-                    print("?")
-
+                    print("length of metrics is not implenmented, It maybe cause by wrong format of build_program_output!!")
+                sys.stdout.flush()
     elif info_mode == "epoch" :
         ## TODO add time elapse
-        if isinstance(metrics,list):
+        if isinstance(metrics,np.ndarray):
             if len(metrics) == 5:
                 train_loss,_,test_loss,test_acc1,test_acc5 = metrics
-                print("End pass {0}, train_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".format(pass_id, "%.5f"%train_loss, "%.5f"%test_loss, "%.5f"%test_acc1, "%.5f"%test_acc5))
+                print("[End pass {0}], train_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".format(pass_id, "%.5f"%train_loss, "%.5f"%test_loss, "%.5f"%test_acc1, "%.5f"%test_acc5))
             elif len(metrics) == 7:
                 train_loss,train_acc1,train_acc5,_,test_loss,test_acc1,test_acc5 = metrics
-                print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(pass_id, "%.5f"%train_loss, "%.5f"%train_acc1, "%.5f"%train_acc5, "%.5f    "%test_loss,"%.5f"%test_acc1, "%.5f"%test_acc5))
-        
-    if info_mode == "ce":
+                print("[End pass {0}], train_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(pass_id, "%.5f"%train_loss, "%.5f"%train_acc1, "%.5f"%train_acc5, "%.5f    "%test_loss,"%.5f"%test_acc1, "%.5f"%test_acc5))
+            sys.stdout.flush()
+    elif info_mode == "ce":
         print("CE TESTING CODE IS HERE")
+    else:
+        print("illegal info_mode!!!")
 
 
 def best_strategy(args, program, loss):
@@ -295,12 +314,15 @@ def best_strategy(args, program, loss):
         build_strategy = fluid.BuildStrategy()
         # memopt may affect GC results
         #build_strategy.memory_optimize = args.with_mem_opt
-        build_strategy.enable_inplace = args.with_inplace
+        build_strategy.enable_inplace = args.use_inplace
         #build_strategy.fuse_all_reduce_ops=1
 
         exec_strategy = fluid.ExecutionStrategy()
-        exec_strategy.num_threads = device_num
+        exec_strategy.num_threads = fluid.core.get_cuda_device_count()
         exec_strategy.num_iteration_per_drop_scope = 10
+
+        num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+
         if num_trainers > 1 and args.use_gpu:
             dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog)
             # NOTE: the process is fast when num_threads is 1
@@ -308,13 +330,13 @@ def best_strategy(args, program, loss):
             exec_strategy.num_threads = 1
 
         train_exe = fluid.ParallelExecutor(
-            main_program=train_prog,
+            main_program=program,
             use_cuda=bool(args.use_gpu),
-            loss_name=train_cost.name,
+            loss_name=loss.name,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
     else:
         train_exe = exe
-
+    print("[Program is running on ",fluid.core.get_cuda_device_count()," cards ]")
     return train_exe
     
