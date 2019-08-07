@@ -32,7 +32,7 @@ VGG:
   depth: 16
   with_extra_blocks: true
   normalizations: [20., -1, -1, -1, -1, -1, -1]
-  extra_block_filters: [[256, 512, "a"], [128, 256, "a"], [128, 256, "a"], [128, 256, "a"], [128, 256, "c"]]
+  extra_block_filters: [[256, 512, 1, 2, 3], [128, 256, 1, 2, 3], [128, 256, 1, 2, 3], [128, 256, 1, 2, 3], [128, 256, 1, 1, 4]]
 
 
 MultiBoxHead:
@@ -85,7 +85,7 @@ SSDTrainFeed:
     is_order: true
   - !ExpandImage
     max_ratio: 4
-    mean: [104, 117, 123]
+    mean: [123, 117, 104]
     prob: 0.5
   - !CropImage
     avoid_no_bbox: true
@@ -108,7 +108,7 @@ SSDTrainFeed:
     to_bgr: false
   - !NormalizeImage
     is_scale: false
-    mean: [104, 117, 123]
+    mean: [123, 117, 104]
     std: [1, 1, 1]
 
 SSDEvalFeed:
@@ -133,7 +133,7 @@ SSDEvalFeed:
     to_bgr: false
   - !NormalizeImage
     is_scale: false
-    mean: [104, 117, 123]
+    mean: [123, 117, 104]
     std: [1, 1, 1]
 
 SSDTestFeed:
@@ -155,5 +155,5 @@ SSDTestFeed:
     to_bgr: false
   - !NormalizeImage
     is_scale: false
-    mean: [104, 117, 123]
+    mean: [123, 117, 104]
     std: [1, 1, 1]

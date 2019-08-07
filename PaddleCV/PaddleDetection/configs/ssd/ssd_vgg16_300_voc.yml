@@ -32,8 +32,6 @@ VGG:
   depth: 16
   with_extra_blocks: true
   normalizations: [20., -1, -1, -1, -1, -1]
-  extra_block_filters: [[256, 512, "a"], [128, 256, "a"], [128, 256, "b"], [128, 256, "b"]]
-
 
 MultiBoxHead:
   base_size: 300

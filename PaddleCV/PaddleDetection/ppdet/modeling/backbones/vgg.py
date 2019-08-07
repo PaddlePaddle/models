@@ -42,8 +42,8 @@ class VGG(object):
                  depth=16,
                  with_extra_blocks=False,
                  normalizations=[20., -1, -1, -1, -1, -1],
-                 extra_block_filters=[[256, 512, "a"], [128, 256, "a"],
-                                      [128, 256, "b"], [128, 256, "b"]]):
+                 extra_block_filters=[[256, 512, 1, 2, 3], [128, 256, 1, 2, 3],
+                                      [128, 256, 0, 1, 3], [128, 256, 0, 1, 3]]):
         assert depth in [16, 19], \
             "depth {} not in [16, 19]"
 
@@ -94,8 +94,9 @@ class VGG(object):
         conv = input
         layers = []
         for k, v in enumerate(cfg):
+            assert len(v) == 5, "extra_block_filters size not fix"
             conv = self._extra_block(conv, v[0], v[1],
-                                     flag=v[2], name="conv{}_".format(6 + k))
+                                     v[2], v[3], v[4], name="conv{}_".format(6 + k))
             layers.append(conv)
 
         return layers
@@ -117,7 +118,9 @@ class VGG(object):
                      input,
                      num_filters1,
                      num_filters2,
-                     flag="a",
+                     padding_size,
+                     stride_size,
+                     filter_size,
                      name=None):
         # 1x1 conv
         conv_1 = self._conv_layer(
@@ -128,17 +131,6 @@ class VGG(object):
             act='relu',
             padding=0,
             name=name + "1")
-
-        padding_size = 1
-        stride_size = 2
-        filter_size = 3
-        if flag == "b":
-            padding_size = 0
-            stride_size = 1
-        elif flag == "c":
-            padding_size = 1
-            stride_size = 1
-            filter_size = 4
 
         # 3x3 conv
         conv_2 = self._conv_layer(
