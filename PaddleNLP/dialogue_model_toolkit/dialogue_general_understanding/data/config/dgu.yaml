@@ -27,4 +27,4 @@ use_cuda: True
 task_name: ""
 in_tokens: False
 do_save_inference_model: False
-enable_ce: "store_true"
+enable_ce: ""
