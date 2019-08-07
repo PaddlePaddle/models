@@ -3,7 +3,7 @@ set -xe
 
 # Paddle debug envs
 export GLOG_v=1
-export GLOG_vmodule=fused_all_reduce_op_handle=10,all_reduce_op_handle=10,alloc_continuous_space_op=10,fuse_all_reduce_op_pass=10,alloc_continuous_space_for_grad_pass=10
+#export GLOG_vmodule=fused_all_reduce_op_handle=10,all_reduce_op_handle=10,alloc_continuous_space_op=10,fuse_all_reduce_op_pass=10,alloc_continuous_space_for_grad_pass=10
 export GLOG_logtostderr=1
 export FLAGS_eager_delete_tensor_gb=0
 export FLAGS_fraction_of_gpu_memory_to_use=0.95
@@ -12,12 +12,11 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.95
 unset https_proxy http_proxy
 
 # NCCL debug envs
-export NCCL_P2P_DISABLE=1
 export NCCL_DEBUG=INFO
 
 # pretrain config
 SAVE_STEPS=10000
-BATCH_SIZE=4096
+BATCH_SIZE=1024
 LR_RATE=1e-4
 WEIGHT_DECAY=0.01
 MAX_LEN=512
