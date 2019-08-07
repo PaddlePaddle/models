@@ -52,6 +52,11 @@
 │   ├── run_....py 训练启动示例
 │   ├── infer_....py 测试启动示例
 │   ├── make_pair_data.py pix2pix GAN的数据list的生成脚本
+│
+├── data 下载的数据集存放的位置
+│   ├── celeba
+│       ├── ${image_dir} 存放实际图片
+│       ├── list 文件
 
 ```
 
