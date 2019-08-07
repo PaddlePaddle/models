@@ -270,7 +270,6 @@ class StarGAN(object):
         ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = False
-        build_strategy.memory_optimize = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
