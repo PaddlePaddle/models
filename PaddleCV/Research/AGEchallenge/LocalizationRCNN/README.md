@@ -16,13 +16,13 @@ More detail [AGE challenge](https://age.grand-challenge.org/Details/).
 
 2. Prepare data
 
-	* We assume that you have download data(two zip files), and store @ `../datasets/`.
+	* We assume that you have downloaded data(two zip files), and stored @ `../datasets/`.
 	* (Updated on August 5) Replace update files.
 	* We provide a demo about `zip file extract`, `data structure explore`, `format data to coco type` and `Train/Val split`.
 
 3. Train
 	
-	* We assume that you have download data, extract compressed files, and store @ `../datasets/`.
+	* We assume that you have downloaded data, extracted compressed files, and stored @ `../datasets/`.
 	* You should download or clone [PaddleModels](https://github.com/PaddlePaddle/models) manually.
 	* After you download whole repo, use soft link command:
 
@@ -39,8 +39,8 @@ More detail [AGE challenge](https://age.grand-challenge.org/Details/).
 
 4. Inference
 
-	* We assume that you have download data, extract compressed files, and store @ `../datasets/`.
-	* We assume that you store checkpoint files @ `PaddleDetection/output/cascade_rcnn_r50_fpn_1x/`
+	* We assume that you have downloaded data, extracted compressed files, and stored @ `../datasets/`.
+	* We assume that you stored checkpoint files @ `PaddleDetection/output/cascade_rcnn_r50_fpn_1x/`
 	* We provide a demo about `inference` and `visualization`.
 
 	<img src="assets/3.png">

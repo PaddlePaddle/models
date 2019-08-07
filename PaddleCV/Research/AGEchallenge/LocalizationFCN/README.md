@@ -15,7 +15,7 @@ More detail [AGE challenge](https://age.grand-challenge.org/Details/).
 
 2. Prepare data
 
-	* We assume that you have download data(two zip files), and store @ `../datasets/`.
+	* We assume that you have downloaded data(two zip files), and store @ `../datasets/`.
 	* (Updated on August 5) Replace update files.
 	* We provide a demo about `zip file extract`, `data structure explore`, and `Train/Val split`.
 
@@ -27,7 +27,7 @@ More detail [AGE challenge](https://age.grand-challenge.org/Details/).
 4. Inference
 
 	* We assume that you have download data, extract compressed files, and store @ `../datasets/`.
-	* We assume that you store checkpoint files @ `../weights/loc_fcn`
+	* We assume that you stored checkpoint files @ `../weights/loc_fcn`
 	* We provide a baseline about `inference` and `visualization`.
 
 	<img src="assets/3.png">
