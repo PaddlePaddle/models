@@ -111,7 +111,7 @@ def main():
             model = create(main_arch)
             train_pyreader, feed_vars = create_feed(train_feed)
 
-            with mixed_precision_context(8., FLAGS.fp16) as ctx:
+            with mixed_precision_context(FLAGS.loss_scale, FLAGS.fp16) as ctx:
                 train_fetches = model.train(feed_vars)
 
             loss = train_fetches['loss']
@@ -257,6 +257,11 @@ if __name__ == '__main__':
         action='store_true',
         default=False,
         help="Enable mixed precision training.")
+    parser.add_argument(
+        "--loss_scale",
+        default=8.,
+        type=float,
+        help="Mixed precision training loss scale.")
     parser.add_argument(
         "--eval",
         action='store_true',
