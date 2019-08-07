@@ -63,7 +63,7 @@ def download_mnist(dir_path):
     for url in URL_DIC:
         md5sum = URL_DIC[url]
 
-        data_dir = os.path.join(dir_path + 'mnist')
+        data_dir = os.path.join(dir_path, 'mnist')
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
 
@@ -157,11 +157,12 @@ if __name__ == '__main__':
         'facades', 'iphone2dslr_flower', 'ae_photos', 'mini'
     ]
 
+    pwd = os.path.join(os.path.dirname(__file__), 'data')
     if args.dataset == 'mnist':
         print('Download dataset: {}'.format(args.dataset))
-        download_mnist('data')
+        download_mnist(pwd)
     elif args.dataset in cycle_pix_dataset:
         print('Download dataset: {}'.format(args.dataset))
-        download_cycle_pix('data', args.dataset)
+        download_cycle_pix(pwd, args.dataset)
     else:
         print('Please download by yourself, thanks')
