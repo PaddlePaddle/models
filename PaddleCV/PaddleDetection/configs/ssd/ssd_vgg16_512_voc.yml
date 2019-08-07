@@ -85,7 +85,7 @@ SSDTrainFeed:
     is_order: true
   - !ExpandImage
     max_ratio: 4
-    mean: [104, 117, 123]  #[123, 117, 104]
+    mean: [104, 117, 123]
     prob: 0.5
   - !CropImage
     avoid_no_bbox: true
@@ -133,7 +133,7 @@ SSDEvalFeed:
     to_bgr: false
   - !NormalizeImage
     is_scale: false
-    mean: [123, 117, 104]
+    mean: [104, 117, 123]
     std: [1, 1, 1]
 
 SSDTestFeed:

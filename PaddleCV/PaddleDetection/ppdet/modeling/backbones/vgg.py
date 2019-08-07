@@ -34,8 +34,8 @@ class VGG(object):
         normalizations (list): params list of init scale in l2 norm, skip init
             scale if param is -1.
         with_extra_blocks (bool): whether or not extra blocks should be added
-        extra_block_filters (list): number of filter for each extra block.
-            In mode `a`,`b` and `c`, padding_size and stride_size are different,
+        extra_block_filters (list): in each extra block, params:
+            [in_channel, out_channel, padding_size, stride_size, filter_size]
     """
 
     def __init__(self,

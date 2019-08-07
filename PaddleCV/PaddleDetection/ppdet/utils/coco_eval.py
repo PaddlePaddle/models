@@ -82,7 +82,7 @@ def bbox_eval(results,
         {i + int(with_background): catid
          for i, catid in enumerate(cat_ids)})
     xywh_results = bbox2out(results, clsid2catid,
-            is_bbox_normalized=is_bbox_normalized, is_eval=True)
+            is_bbox_normalized=is_bbox_normalized, is_bbox_fix_im_shape=True)
     assert len(
         xywh_results) > 0, "The number of valid bbox detected is zero.\n \
         Please use reasonable model and check input data."
@@ -180,7 +180,14 @@ def proposal2out(results, is_bbox_normalized=False):
     return xywh_res
 
 
-def bbox2out(results, clsid2catid, is_bbox_normalized=False, is_eval=False):
+def bbox2out(results, clsid2catid, is_bbox_normalized=False, is_bbox_fix_im_shape=False):
+    """
+    Args:
+        results: results in exe.run output
+        clsid2catid: clsid2catid in COCO
+        is_bbox_normalized: whether or not bbox is normalized
+        is_bbox_fix_im_shape: whether or not bbox size fix im_shape
+    """
     xywh_res = []
     for t in results:
         bboxes = t['bbox'][0]
@@ -203,7 +210,7 @@ def bbox2out(results, clsid2catid, is_bbox_normalized=False, is_eval=False):
                             clip_bbox([xmin, ymin, xmax, ymax])
                     w = xmax - xmin
                     h = ymax - ymin
-                    if is_eval:
+                    if is_bbox_fix_im_shape:
                         im_height, im_width = t['im_shape'][0][i].tolist()
                         xmin *= im_width
                         ymin *= im_height
