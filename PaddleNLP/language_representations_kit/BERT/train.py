@@ -216,12 +216,29 @@ def train(args):
 
     train_program = fluid.Program()
     startup_prog = fluid.Program()
-    optimizer = None
+
+    exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.num_threads = args.num_threads
+    exec_strategy.num_iteration_per_drop_scope = args.num_iteration_per_drop_scope
+
+    dist_strategy = DistributedStrategy()
+    dist_strategy.exec_strategy = exec_strategy
+
+    role = role_maker.PaddleCloudRoleMaker(is_collective=True)
+    fleet.init(role)
+    print("fleet.node_num:", fleet.node_num())
+
+    if fleet.node_num() > 1:
+        dist_strategy.nccl_comm_num = 3
+        dist_strategy.fuse_memory_size = 64 #MB
+        dist_strategy.use_hierarchical_allreduce = True
+
+
     with fluid.program_guard(train_program, startup_prog):
         with fluid.unique_name.guard():
             train_pyreader, next_sent_acc, mask_lm_loss, total_loss = create_model(
                 pyreader_name='train_reader', bert_config=bert_config)
-            scheduled_lr, optimizer = optimization(
+            scheduled_lr = optimization(
                 loss=total_loss,
                 warmup_steps=args.warmup_steps,
                 num_train_steps=args.num_train_steps,
@@ -231,7 +248,8 @@ def train(args):
                 weight_decay=args.weight_decay,
                 scheduler=args.lr_scheduler,
                 use_fp16=args.use_fp16,
-                loss_scaling=args.loss_scaling)
+                loss_scaling=args.loss_scaling,
+                dist_strategy = dist_strategy)
 
     test_prog = fluid.Program()
     with fluid.program_guard(test_prog, startup_prog):
@@ -265,51 +283,6 @@ def train(args):
         print("Theoretical memory usage in training: %.3f - %.3f %s" %
               (lower_mem, upper_mem, unit))
 
-    """
-    nccl2_num_trainers = 1
-    nccl2_trainer_id = 0
-    print("args.is_distributed:", args.is_distributed)
-    if args.is_distributed:
-        worker_endpoints_env = os.getenv("PADDLE_TRAINER_ENDPOINTS")
-        worker_endpoints = worker_endpoints_env.split(",")
-        trainers_num = len(worker_endpoints)
-        current_endpoint = os.getenv("PADDLE_CURRENT_ENDPOINT")
-        trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
-
-        print("worker_endpoints:{} trainers_num:{} current_endpoint:{} \
-              trainer_id:{}"
-                            .format(worker_endpoints, trainers_num,
-                                    current_endpoint, trainer_id))
-
-        # prepare nccl2 env.
-        config = fluid.DistributeTranspilerConfig()
-        config.mode = "nccl2"
-        t = fluid.DistributeTranspiler(config=config)
-        t.transpile(
-            trainer_id,
-            trainers=worker_endpoints_env,
-            current_endpoint=current_endpoint,
-            program=train_program,
-            startup_program=startup_prog)
-        nccl2_num_trainers = trainers_num
-        nccl2_trainer_id = trainer_id
-    """
-
-    exec_strategy = fluid.ExecutionStrategy()
-    exec_strategy.num_threads = args.num_threads
-    exec_strategy.num_iteration_per_drop_scope = args.num_iteration_per_drop_scope
-
-    dist_strategy = DistributedStrategy()
-    dist_strategy.exec_strategy = exec_strategy
-    if fleet.node_num > 1:
-        dist_strategy.nccl_comm_num = 3
-        dist_strategy.fuse_memory_size = 64 #MB
-        dist_strategy.use_hierarchical_allreduce = True
-
-    role = role_maker.PaddleCloudRoleMaker(is_collective=True)
-    fleet.init(role)
-    dist_optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
-
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
@@ -330,6 +303,7 @@ def train(args):
     # use_ngraph is for CPU only, please refer to README_ngraph.md for details
     use_ngraph = os.getenv('FLAGS_use_ngraph')
     if not use_ngraph:
+        """
         train_exe = fluid.ParallelExecutor(
             use_cuda=args.use_cuda,
             loss_name=total_loss.name,
@@ -337,6 +311,8 @@ def train(args):
             main_program=train_program,
             num_trainers=fleet.worker_num,
             trainer_id=fleet.worker_index)
+        """
+        train_exe =  exe
     else:
         train_exe = exe
 
@@ -360,21 +336,21 @@ def train(args):
     time_begin = time.time()
     while steps < args.num_train_steps:
         try:
-            steps += nccl2_num_trainers
-            skip_steps = args.skip_steps * nccl2_num_trainers
+            steps += fleet.worker_num()
+            skip_steps = args.skip_steps * fleet.worker_num()
 
-            if nccl2_trainer_id != 0:
+            if fleet.worker_index() != 0:
                 if use_ngraph:
                     train_exe.run(fetch_list=[], program=train_program)
                 else:
-                    train_exe.run(fetch_list=[])
+                    train_exe.run(fetch_list=[], program=train_program)
                 continue
 
             if steps % skip_steps != 0:
                 if use_ngraph:
                     train_exe.run(fetch_list=[], program=train_program)
                 else:
-                    train_exe.run(fetch_list=[])
+                    train_exe.run(fetch_list=[], program=train_program)
 
             else:
                 if use_ngraph:
@@ -386,7 +362,7 @@ def train(args):
                     each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = train_exe.run(
                         fetch_list=[
                             next_sent_acc.name, mask_lm_loss.name, total_loss.name,
-                            scheduled_lr.name])
+                            scheduled_lr.name], program=train_program)
 
                 acc.extend(each_next_acc)
                 lm_cost.extend(each_mask_lm_cost)

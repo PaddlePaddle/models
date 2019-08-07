@@ -3,8 +3,10 @@ set -xe
 
 # Paddle debug envs
 export GLOG_v=1
+export GLOG_vmodule=fused_all_reduce_op_handle=10,all_reduce_op_handle=10,alloc_continuous_space_op=10,fuse_all_reduce_op_pass=10,alloc_continuous_space_for_grad_pass=10
 export GLOG_logtostderr=1
 export FLAGS_eager_delete_tensor_gb=0
+export FLAGS_fraction_of_gpu_memory_to_use=0.95
 
 # Unset proxy
 unset https_proxy http_proxy

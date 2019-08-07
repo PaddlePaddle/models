@@ -20,7 +20,7 @@ from __future__ import print_function
 import numpy as np
 import paddle.fluid as fluid
 from utils.fp16 import create_master_params_grads, master_param_to_train_param
-
+from paddle.fluid.incubate.fleet.collective import fleet, DistributedStrategy
 
 def linear_warmup_decay(learning_rate, warmup_steps, num_train_steps):
     """ Applies linear warmup of learning rate from 0 and decay to 0."""
@@ -57,6 +57,7 @@ def optimization(loss,
                  train_program,
                  startup_prog,
                  weight_decay,
+                 dist_strategy,
                  scheduler='linear_warmup_decay',
                  use_fp16=False,
                  loss_scaling=1.0):
@@ -124,7 +125,8 @@ def optimization(loss,
             param_list[param.name] = param * 1.0
             param_list[param.name].stop_gradient = True
 
-        _, param_grads = optimizer.minimize(loss)
+        dist_optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
+        _, param_grads = dist_optimizer.minimize(loss)
 
         if weight_decay > 0:
             for param, grad in param_grads:
@@ -136,4 +138,4 @@ def optimization(loss,
                         param.name] * weight_decay * scheduled_lr
                     fluid.layers.assign(output=param, input=updated_param)
 
-    return scheduled_lr, optimizer
+    return scheduled_lr
