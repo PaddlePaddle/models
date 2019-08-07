@@ -85,7 +85,7 @@ def load(anno_path, sample_num=-1, with_background=True):
                 bboxes.append(inst)
             else:
                 logger.warn(
-                    'Found invalid bbox in annotations: im_id: {}, area: {} x: {}, y: {}, h: {}, w: {}.'.
+                    'Found an invalid bbox in annotations: im_id: {}, area: {} x: {}, y: {}, h: {}, w: {}.'.
                     format(img_id, float(inst['area']), x, y, box_w, box_h))
         num_bbox = len(bboxes)
 
