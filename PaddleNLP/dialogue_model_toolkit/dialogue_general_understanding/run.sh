@@ -6,6 +6,7 @@ export FLAGS_eager_delete_tensor_gb=1
 export CUDA_VISIBLE_DEVICES=0
 if  [ ! "$CUDA_VISIBLE_DEVICES" ]
 then
+    export CPU_NUM=1
     use_cuda=false
 else
     use_cuda=true
@@ -13,9 +14,6 @@ fi
 
 TASK_NAME=$1
 TASK_TYPE=$2
-
-typeset -l TASK_NAME
-typeset -l TASK_TYPE
 
 BERT_BASE_PATH="./data/pretrain_model/uncased_L-12_H-768_A-12"
 INPUT_PATH="./data/input/data/${TASK_NAME}"
@@ -64,7 +62,7 @@ then
   print_steps=10
   batch_size=4096
   in_tokens=true
-  epoch=1
+  epoch=20
   learning_rate=2e-5
   INPUT_PATH="./data/input/data/atis/${TASK_NAME}"
 elif [ "${TASK_NAME}" = "atis_slot" ]
