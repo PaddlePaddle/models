@@ -139,6 +139,7 @@ python -u infer.py \
   --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
   --test_file_pattern gen_data/wmt16_ende_data_bpe/newstest2016.tok.bpe.32000.en-de \
+  --output_file predict.txt \
   --token_delimiter ' ' \
   --batch_size 32 \
   model_path trained_models/iter_100000.infer.model \
@@ -152,6 +153,7 @@ python -u infer.py \
   --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
   --test_file_pattern gen_data/wmt16_ende_data_bpe/newstest2016.tok.bpe.32000.en-de \
+  --output_file predict.txt \
   --token_delimiter ' ' \
   --batch_size 32 \
   model_path trained_models/iter_100000.infer.model \
@@ -164,7 +166,7 @@ python -u infer.py \
 ```
 此外相比于模型训练，预测时还有一些额外的参数，如需要设置 `model_path` 来给出模型所在目录，可以设置 `beam_size` 和 `max_out_len` 来指定 Beam Search 算法的搜索宽度和最大深度（翻译长度），这些参数也可以在 `config.py` 中的 `InferTaskConfig` 内查阅注释说明并进行更改设置。
 
-执行以上预测命令会打印翻译结果到标准输出，每行输出是对应行输入的得分最高的翻译。对于使用 BPE 的英德数据，预测出的翻译结果也将是 BPE 表示的数据，要还原成原始的数据（这里指 tokenize 后的数据）才能进行正确的评估，可以使用以下命令来恢复 `predict.txt` 内的翻译结果到 `predict.tok.txt` 中（无需再次 tokenize 处理）：
+执行以上预测命令会打印翻译结果到 `output_file` 指定的文件中，每行输出是对应行输入的得分最高的翻译。对于使用 BPE 的英德数据，预测出的翻译结果也将是 BPE 表示的数据，要还原成原始的数据（这里指 tokenize 后的数据）才能进行正确的评估，可以使用以下命令来恢复 `predict.txt` 内的翻译结果到 `predict.tok.txt` 中（无需再次 tokenize 处理）：
 ```sh
 sed -r 's/(@@ )|(@@ ?$)//g' predict.txt > predict.tok.txt
 ```

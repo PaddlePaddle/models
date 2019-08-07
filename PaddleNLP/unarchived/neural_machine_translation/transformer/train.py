@@ -6,9 +6,6 @@ import multiprocessing
 import os
 import six
 import sys
-if sys.version[0] == '2':
-    reload(sys)
-    sys.setdefaultencoding("utf-8")
 import time
 
 import numpy as np
@@ -77,14 +74,14 @@ def parse_args():
         help="The flag indicating whether to shuffle the data batches.")
     parser.add_argument(
         "--special_token",
-        type=lambda x: x.encode(),
-        default=[b"<s>", b"<e>", b"<unk>"],
+        type=lambda x: x.encode("utf8"),
+        default=["<s>", "<e>", "<unk>"],
         nargs=3,
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
     parser.add_argument(
         "--token_delimiter",
-        type=lambda x: x.encode(),
-        default=b" ",
+        type=lambda x: x.encode("utf8"),
+        default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. ")
     parser.add_argument(

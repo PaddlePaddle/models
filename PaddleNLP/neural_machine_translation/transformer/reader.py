@@ -183,12 +183,23 @@ class DataReader(object):
                  shuffle_seed=None,
                  shuffle_batch=False,
                  use_token_batch=False,
-                 field_delimiter=b"\t",
-                 token_delimiter=b" ",
-                 start_mark=b"<s>",
-                 end_mark=b"<e>",
-                 unk_mark=b"<unk>",
+                 field_delimiter="\t",
+                 token_delimiter=" ",
+                 start_mark="<s>",
+                 end_mark="<e>",
+                 unk_mark="<unk>",
                  seed=0):
+        # convert str to bytes, and use byte data
+        field_delimiter = field_delimiter if isinstance(
+            field_delimiter, bytes) else field_delimiter.encode("utf8")
+        token_delimiter = token_delimiter if isinstance(
+            token_delimiter, bytes) else token_delimiter.encode("utf8")
+        start_mark = start_mark if isinstance(
+            start_mark, bytes) else start_mark.encode("utf8")
+        end_mark = end_mark if isinstance(end_mark,
+                                          bytes) else end_mark.encode("utf8")
+        unk_mark = unk_mark if isinstance(unk_mark,
+                                          bytes) else unk_mark.encode("utf8")
         self._src_vocab = self.load_dict(src_vocab_fpath)
         self._only_src = True
         if trg_vocab_fpath is not None:

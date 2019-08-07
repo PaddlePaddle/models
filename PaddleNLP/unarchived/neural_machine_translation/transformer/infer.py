@@ -4,9 +4,6 @@ import multiprocessing
 import numpy as np
 import os
 import sys
-if sys.version[0] == '2':
-    reload(sys)
-    sys.setdefaultencoding("utf-8")
 from functools import partial
 
 import paddle
@@ -22,7 +19,7 @@ from train import pad_batch_data, prepare_data_generator
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("Training for Transformer.")
+    parser = argparse.ArgumentParser("Inference for Transformer.")
     parser.add_argument(
         "--src_vocab_fpath",
         type=str,
@@ -39,6 +36,11 @@ def parse_args():
         required=True,
         help="The pattern to match test data files.")
     parser.add_argument(
+        "--output_file",
+        type=str,
+        default="predict.txt",
+        help="The file to output the translation results of to.")
+    parser.add_argument(
         "--batch_size",
         type=int,
         default=50,
@@ -50,14 +52,14 @@ def parse_args():
         help="The buffer size to pool data.")
     parser.add_argument(
         "--special_token",
-        type=lambda x: x.encode(),
-        default=[b"<s>", b"<e>", b"<unk>"],
+        type=lambda x: x.encode("utf8"),
+        default=["<s>", "<e>", "<unk>"],
         nargs=3,
         help="The <bos>, <eos> and <unk> tokens in the dictionary.")
     parser.add_argument(
         "--token_delimiter",
-        type=lambda x: x.encode(),
-        default=b" ",
+        type=lambda x: x.encode("utf8"),
+        default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. ")
     parser.add_argument(
@@ -268,6 +270,7 @@ def fast_infer(args):
     trg_idx2word = reader.DataReader.load_dict(
         dict_path=args.trg_vocab_fpath, reverse=True)
 
+    f = open(args.output_file, "wb")
     while True:
         try:
             feed_dict_list = prepare_feed_dict_list(data_generator, dev_count,
@@ -313,7 +316,7 @@ def fast_infer(args):
                                 np.array(seq_ids)[sub_start:sub_end])
                         ]))
                         scores[i].append(np.array(seq_scores)[sub_end - 1])
-                        print(hyps[i][-1].decode("utf8"))
+                        f.write(hyps[i][-1] + b"\n")
                         if len(hyps[i]) >= InferTaskConfig.n_best:
                             break
         except (StopIteration, fluid.core.EOFException):
@@ -321,6 +324,7 @@ def fast_infer(args):
             if args.use_py_reader:
                 pyreader.reset()
             break
+    f.close()
 
 
 if __name__ == "__main__":

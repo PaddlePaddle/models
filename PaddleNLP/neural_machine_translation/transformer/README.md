@@ -55,7 +55,7 @@
 
 3. 模型预测
 
-	使用以上提供的数据和模型，可以按照以下代码进行预测，翻译结果将打印到标准输出:
+	使用以上提供的数据和模型，可以按照以下代码进行预测，翻译结果将打印到 `output_file` 指定的文件中:
 	```sh
     # base model
     python -u infer.py \
@@ -63,6 +63,7 @@
     --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
     --special_token '<s>' '<e>' '<unk>' \
     --test_file_pattern gen_data/wmt16_ende_data_bpe/newstest2014.tok.bpe.32000.en-de \
+    --output_file predict.txt \
     --token_delimiter ' ' \
     --batch_size 32 \
     model_path trained_models/iter_100000.infer.model \
@@ -76,6 +77,7 @@
     --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
     --special_token '<s>' '<e>' '<unk>' \
     --test_file_pattern gen_data/wmt16_ende_data_bpe/newstest2014.tok.bpe.32000.en-de \
+    --output_file predict.txt \
     --token_delimiter ' ' \
     --batch_size 32 \
     model_path trained_models/iter_100000.infer.model \
