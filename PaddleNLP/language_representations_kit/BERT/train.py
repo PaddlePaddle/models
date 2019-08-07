@@ -138,6 +138,8 @@ def predict_wrapper(args,
         max_seq_len=args.max_seq_len,
         is_test=True)
 
+    pyreader.decorate_batch_generator(data_reader.data_generator())
+
     if args.do_test:
         assert args.init_checkpoint is not None, "[FATAL] Please use --init_checkpoint '/path/to/checkpoints' \
                                                   to specify you pretrained model checkpoints"
@@ -145,8 +147,6 @@ def predict_wrapper(args,
         init_pretraining_params(exe, args.init_checkpoint, test_prog)
 
     def predict(exe=exe, pyreader=pyreader):
-
-        pyreader.decorate_batch_generator(data_reader.data_generator())
         pyreader.start()
 
         cost = 0
