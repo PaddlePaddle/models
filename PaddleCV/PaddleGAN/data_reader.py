@@ -238,19 +238,15 @@ class celeba_reader_creator(reader_creator):
             self.batch_size = args.n_samples
             self.shuffle = False
             if self.mode == "TEST":
-                #lines = lines[train_end:test_end]
-                lines = lines[train_end:-1]
+                lines = lines[train_end:test_end]
             else:
                 lines = lines[test_end:]
-
-        #self.name2id = {}
 
         self.images = []
         attr_names = args.selected_attrs.split(',')
         for i, line in enumerate(lines):
             arr = line.strip().split()
             name = os.path.join('img_align_celeba', arr[0])
-            #self.name2id[arr[0]] = i
             label = []
             for attr_name in attr_names:
                 idx = attr2idx[attr_name]
@@ -284,8 +280,6 @@ class celeba_reader_creator(reader_creator):
                 batch_out_1.append(img)
                 batch_out_2.append(label)
                 if return_name:
-                    #batch_out_name.append(self.name2id[os.path.basename(file)])
-                    #batch_out_name.append(os.path.basename(file))
                     batch_out_name.append(int(f_name.split('.')[0]))
                 if len(batch_out_1) == self.batch_size:
                     batch_out_3 = np.copy(batch_out_2)
