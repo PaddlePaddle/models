@@ -149,7 +149,6 @@ class ArrangeSSD(BaseOperator):
         im = sample['image']
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
-        # difficult = sample['difficult']
         outs = (im, gt_bbox, gt_class)
         return outs
 

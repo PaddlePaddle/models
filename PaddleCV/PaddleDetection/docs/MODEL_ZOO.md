@@ -121,7 +121,7 @@ results of image size 608/416/320 above.
 ### SSD
 
 | Backbone     | Size | Image/gpu | Lr schd | Box AP | Download  |
-| VGG16        | 300  |     8   |   40w  |  25.0  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_vgg16_300.tar) |
+| VGG16        | 300  |     8   |   40w  |  25.1  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_vgg16_300.tar) |
 | VGG16        | 512  |     8   |   40w  |  29.1  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_vgg16_512.tar) |
 
 **Notes:** VGG-SSD is trained in 4 GPU with total batch size as 32 and trained 400000 iters.

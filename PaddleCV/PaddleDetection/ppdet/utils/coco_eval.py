@@ -81,8 +81,10 @@ def bbox_eval(results,
     clsid2catid = dict(
         {i + int(with_background): catid
          for i, catid in enumerate(cat_ids)})
+    is_bbox_fix_im_shape = True if is_bbox_normalized else False
     xywh_results = bbox2out(results, clsid2catid,
-            is_bbox_normalized=is_bbox_normalized, is_bbox_fix_im_shape=True)
+            is_bbox_normalized=is_bbox_normalized,
+            is_bbox_fix_im_shape=is_bbox_fix_im_shape)
     assert len(
         xywh_results) > 0, "The number of valid bbox detected is zero.\n \
         Please use reasonable model and check input data."
@@ -186,7 +188,7 @@ def bbox2out(results, clsid2catid, is_bbox_normalized=False, is_bbox_fix_im_shap
         results: results in exe.run output
         clsid2catid: clsid2catid in COCO
         is_bbox_normalized: whether or not bbox is normalized
-        is_bbox_fix_im_shape: whether or not bbox size fix im_shape
+        is_bbox_fix_im_shape: whether or not bbox size fix to im_shape
     """
     xywh_res = []
     for t in results:
