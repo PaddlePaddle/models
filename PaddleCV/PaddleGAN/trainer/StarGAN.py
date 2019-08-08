@@ -284,21 +284,8 @@ class StarGAN(object):
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            #for i in range(self.batch_num):
             for data in py_reader():
                 s_time = time.time()
-                #tensor_img, tensor_label_org, tensor_label_trg = data[0]['image_real'], data[0]['label_org'], data[0]['label_trg'] 
-                #image, label_org = next(self.train_reader())
-                #label_trg = copy.deepcopy(label_org)
-                #np.random.shuffle(label_trg)
-
-                #tensor_img = fluid.LoDTensor()
-                #tensor_label_org = fluid.LoDTensor()
-                #tensor_label_trg = fluid.LoDTensor()
-                #tensor_img.set(image, place)
-                #tensor_label_org.set(label_org, place)
-                #tensor_label_trg.set(label_trg, place)
-                # optimize the discriminator network
                 d_loss_real, d_loss_fake, d_loss, d_loss_cls, d_loss_gp = exe.run(
                     dis_trainer_program,
                     fetch_list=[
@@ -307,11 +294,6 @@ class StarGAN(object):
                         dis_trainer.d_loss_gp
                     ],
                     feed=data)
-                #feed={
-                #    "image_real": tensor_img,
-                #    "label_org": tensor_label_org,
-                #    "label_trg": tensor_label_trg
-                #})
                 # optimize the generator network
                 if (batch_id + 1) % self.cfg.n_critic == 0:
                     g_loss_fake, g_loss_rec, g_loss_cls, fake_img, rec_img = exe.run(
@@ -322,11 +304,6 @@ class StarGAN(object):
                             gen_trainer.rec_img
                         ],
                         feed=data)
-                    #feed={
-                    #    "image_real": tensor_img,
-                    #    "label_org": tensor_label_org,
-                    #    "label_trg": tensor_label_trg
-                    #})
                     print("epoch{}: batch{}: \n\
                          g_loss_fake: {}; g_loss_rec: {}; g_loss_cls: {}"
                           .format(epoch_id, batch_id, g_loss_fake[0],
