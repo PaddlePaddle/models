@@ -210,7 +210,6 @@ class ResNet(object):
         ch_in = input.shape[1]
         # the naming rule is same as pretrained weight
         name = self.na.fix_shortcut_name(name)
-        kernel_size = 1
         std_senet = getattr(self, 'std_senet', False)
         if ch_in != ch_out or stride != 1 or (self.depth < 50 and is_first):
             if std_senet:
