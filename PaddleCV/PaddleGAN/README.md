@@ -20,7 +20,7 @@
 
 注意：
 1. StarGAN，AttGAN和STGAN由于梯度惩罚所需的操作目前只支持GPU，需使用GPU训练。
-2. CGAN和DCGAN仅支持多batch size训练。
+2. GAN模型目前仅仅验证了单机单卡训练和预测结果。
 3. CGAN和DCGAN两个模型训练使用的数据集为MNIST数据集；StarGAN，AttGAN和STGAN的数据集为CelebA数据集，测试集列表(test_list)和下载到的list文件格式相同，即包含测试集数量，属性列表，想要进行测试的图片和标签。Pix2Pix和CycleGAN支持的数据集可以参考download.py中的cycle_pix_dataset。
 4. PaddlePaddle1.5.1及之前的版本不支持在AttGAN和STGAN模型里的判别器加上的instance norm。如果要在判别器中加上instance norm，请源码编译develop分支并安装。
 
@@ -84,7 +84,7 @@ StarGAN，AttGAN和STGAN采用celeba\[[11](#参考文献)\]数据集进行属性
 StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)数据集可以自行下载。
 
 **自定义数据集：**
-用户可以使用自定义的数据集，只要设置成所对应的生成模型所需要的数据格式即可。
+如果您要使用自定义的数据集，只要设置成对应的生成模型所需要的数据格式，并放在data文件夹下，然后把`--dataset`参数设置成您自定义数据集的名称，data_reader.py文件就会自动去data文件夹中寻找数据。
 
 注意: pix2pix模型数据集准备中的list文件需要通过scripts文件夹里的make_pair_data.py来生成，可以使用以下命令来生成：
   python scripts/make_pair_data.py \

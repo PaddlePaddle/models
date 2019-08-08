@@ -268,7 +268,7 @@ def save_test_image(epoch,
             cyc_A_temp = np.squeeze(cyc_A_temp[0]).transpose([1, 2, 0])
             cyc_B_temp = np.squeeze(cyc_B_temp[0]).transpose([1, 2, 0])
             input_A_temp = np.squeeze(np.array(A_data)).transpose([1, 2, 0])
-            input_B_temp = np.squeeze(np.array(A_data)).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(np.array(B_data)).transpose([1, 2, 0])
 
             fakeA_name = "fakeA_" + str(epoch) + "_" + A_id2name[np.array(
                 A_name).astype('int32')[0]]
