@@ -245,7 +245,7 @@ class ArrangeEvalYOLO(BaseOperator):
             context: a dict which contains additional info.
         Returns:
             sample: a tuple containing the following items:
-                (image, im_shaoe, im_id, gt_bbox, gt_class,
+                (image, im_shape, im_id, gt_bbox, gt_class,
                  difficult)
         """
         im = sample['image']
