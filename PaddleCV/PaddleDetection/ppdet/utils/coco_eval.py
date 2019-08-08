@@ -80,10 +80,11 @@ def bbox_eval(results, anno_file, outfile, with_background=True):
          for i, catid in enumerate(cat_ids)})
 
     xywh_results = bbox2out(results, clsid2catid)
-    assert len(
-        xywh_results) > 0, "The number of valid bbox detected is zero.\n \
-        Please use reasonable model and check input data."
-
+    if len(xywh_results) == 0:
+        logger.warning("The number of valid bbox detected is zero.\n \
+            Please use reasonable model and check input data.\n \
+            stop eval!")
+        return [0.0]
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
