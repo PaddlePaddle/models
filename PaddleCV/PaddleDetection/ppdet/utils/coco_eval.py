@@ -87,9 +87,10 @@ def bbox_eval(results, anno_file, outfile, with_background=True):
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
-    cocoapi_eval(outfile, 'bbox', coco_gt=coco_gt)
+    map_stats = cocoapi_eval(outfile, 'bbox', coco_gt=coco_gt)
     # flush coco evaluation result
     sys.stdout.flush()
+    return map_stats
 
 
 def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
@@ -137,7 +138,7 @@ def cocoapi_eval(jsonfile,
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()
-
+    return coco_eval.stats
 
 def proposal2out(results, is_bbox_normalized=False):
     xywh_res = []

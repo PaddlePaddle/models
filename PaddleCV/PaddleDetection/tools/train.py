@@ -168,6 +168,7 @@ def main():
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
     time_stat = deque(maxlen=cfg.log_iter)
+    best_box_ap = 0.0
     for it in range(start_iter, cfg.max_iters):
         start_time = end_time
         end_time = time.time()
@@ -195,8 +196,12 @@ def main():
                 resolution = None
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
-                eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
+                box_ap_stats = eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
                              resolution, is_bbox_normalized, FLAGS.output_eval)
+                if box_ap_stats[0] > best_box_ap:
+                    best_box_ap = box_ap_stats[0]
+                    checkpoint.save(exe, train_prog, os.path.join(save_dir,"best_model"))
+                logger.info("Best test box ap: {}".format(best_box_ap))
 
     train_pyreader.reset()
 
