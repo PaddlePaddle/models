@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 SimNet config
 """
@@ -21,12 +34,14 @@ class SimNetConfig(object):
             with open(config_path) as json_file:
                 config_dict = json.load(json_file)
         except Exception:
-            raise IOError("Error in parsing simnet model config file '%s'" % config_path)
+            raise IOError("Error in parsing simnet model config file '%s'" %
+                          config_path)
 
         else:
             if config_dict["task_mode"] != self.task_mode:
                 raise ValueError(
-                    "the config '{}' does not match the task_mode '{}'".format(self.config_path, self.task_mode))
+                    "the config '{}' does not match the task_mode '{}'".format(
+                        self.config_path, self.task_mode))
             return config_dict
 
     def __getitem__(self, key):

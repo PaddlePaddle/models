@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 util tools
 """
@@ -19,6 +32,7 @@ class ArgumentGroup(object):
     """
     Put arguments to one group
     """
+
     def __init__(self, parser, title, des):
         """none"""
         self._group = parser.add_argument_group(title=title, description=des)
@@ -86,7 +100,7 @@ def parse_result(words, crf_decode, dataset):
         sent_len = offset_list[sent_index + 1] - offset_list[sent_index]
         last_word = ""
         last_tag = ""
-        for tag_index in range(sent_len): # iterate every word in sent
+        for tag_index in range(sent_len):  # iterate every word in sent
             index = tag_index + offset_list[sent_index]
             cur_word_id = str(words[index][0])
             cur_tag_id = str(crf_decode[index][0])

@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 EmoTect utilities.
 """
@@ -16,6 +29,7 @@ import paddle
 import paddle.fluid as fluid
 import numpy as np
 
+
 def str2bool(value):
     """
     String to Boolean
@@ -29,6 +43,7 @@ class ArgumentGroup(object):
     """
     Argument Class
     """
+
     def __init__(self, parser, title, des):
         self._group = parser.add_argument_group(title=title, description=des)
 
@@ -92,27 +107,33 @@ def data_reader(file_path, word_dict, num_examples, phrase, epoch=1):
                 cols = line.strip().split("\t")
                 if len(cols) != 1:
                     query = cols[-1]
-                wids = [word_dict[x] if x in word_dict else unk_id
-                        for x in query.strip().split(" ")]
-                all_data.append((wids,))
+                wids = [
+                    word_dict[x] if x in word_dict else unk_id
+                    for x in query.strip().split(" ")
+                ]
+                all_data.append((wids, ))
             else:
                 cols = line.strip().split("\t")
                 if len(cols) != 2:
                     sys.stderr.write("[NOTICE] Error Format Line!")
                     continue
                 label = int(cols[0])
-                wids = [word_dict[x] if x in word_dict else unk_id
-                        for x in cols[1].split(" ")]
+                wids = [
+                    word_dict[x] if x in word_dict else unk_id
+                    for x in cols[1].split(" ")
+                ]
                 all_data.append((wids, label))
     num_examples[phrase] = len(all_data)
 
     if phrase == "infer":
+
         def reader():
             """
             Infer reader function
             """
             for wids in all_data:
                 yield wids
+
         return reader
 
     def reader():
@@ -124,6 +145,7 @@ def data_reader(file_path, word_dict, num_examples, phrase, epoch=1):
                 random.shuffle(all_data)
             for wids, label in all_data:
                 yield wids, label
+
     return reader
 
 

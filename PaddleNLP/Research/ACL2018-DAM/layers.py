@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Layers
 """
@@ -77,7 +90,7 @@ def dot_product_attention(query,
     """
 
     logits = fluid.layers.matmul(
-        x=query, y=key, transpose_y=True, alpha=d_key ** (-0.5))
+        x=query, y=key, transpose_y=True, alpha=d_key**(-0.5))
 
     if (q_mask is not None) and (k_mask is not None):
         if mask_cache is not None and q_mask.name in mask_cache and k_mask.name in mask_cache[
@@ -87,7 +100,7 @@ def dot_product_attention(query,
             mask = fluid.layers.matmul(x=q_mask, y=k_mask, transpose_y=True)
             another_mask = fluid.layers.scale(
                 mask,
-                scale=float(2 ** 32 - 1),
+                scale=float(2**32 - 1),
                 bias=float(-1),
                 bias_after_scale=False)
             if mask_cache is not None:
