@@ -76,6 +76,8 @@
 ./train.sh
 ```
 
+注意：日志将生成在当前目录下的`log`下。
+
 如果采用 CPU 多核的方式进行预训练，则需要通过环境设置所用 CPU 的核数，例如 `export CPU_NUM=5`，否则会占据所有的CPU。
 
 这里需要特别说明的是，参数 `generate_neg_sample` 为 `True` 表示在预训练过程中，`Next Sentence Prediction` 任务的负样本是根据训练数据中的正样本动态生成的，我们给出的样例训练数据 [`demo_wiki_train.gz`](data/train/demo_wiki_train.gz) 只包含 `Next Sentence Prediction` 任务的正样本；如果已事先构造了 `Next Sentence Prediction` 任务的正负样本，则需要将 `generate_neg_sample` 置为 `False`。
@@ -97,7 +99,6 @@ epoch: 1, progress: 1/1, step: 100, loss: 10.132796, ppl: 12748.593750, next_sen
 
 ### 分布式训练
 分布式训练可以部署在单机（多进程）或者多机上，我们使用 NCCL 进行节点间的通信。同时需要设置参与训练的所有节点 endpoints 和当前节点 endpoint.
-这里我们提供了一个在本地可以模拟分布式训练的样例: `test_local_dist.sh`，这个脚本已经说明主要的分布式训练的启动逻辑。
 例如, 如果我们需要在两台机器（192.168.0.16, 192.168.0.17）上进行分布式训练，我们可以在节点 0（192.168.0.16）上运行：
 
 ```shell

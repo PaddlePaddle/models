@@ -260,10 +260,9 @@ def train(args):
 
     test_prog = test_prog.clone(for_test=True)
 
-    gpus = os.getenv("FLAGS_selected_gpus").split(",")
-    gpu_id = int(gpus[0])
-
     if args.use_cuda:
+        gpus = os.getenv("FLAGS_selected_gpus").split(",")
+        gpu_id = int(gpus[0])
         place = fluid.CUDAPlace(gpu_id)
         dev_count = fluid.core.get_cuda_device_count()
     else:
