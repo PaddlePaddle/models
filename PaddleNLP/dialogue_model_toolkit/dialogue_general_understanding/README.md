@@ -42,6 +42,8 @@ mrda: 使用公开数据集Meeting Recorder Dialogue Act，实现DA识别任务;
 swda：使用公开数据集Switchboard Dialogue Act Corpus，实现DA识别任务;
 ```
 
+注意: 目前dgu模块内提供的训练好的官方模型及效果, 均是在GPU单卡上面训练和预测得到的, 用户如需复线效果, 可使用单卡相同的配置.
+
 ### 数据准备
 &ensp;&ensp;&ensp;&ensp;数据集说明：
 
@@ -143,7 +145,9 @@ python -u main.py \
        --use_fp16 false 
 ```
 
-注：采用方式二时，模型训练过程可参考run.sh内相关任务的参数设置
+注：
+1) 采用方式二时，模型训练过程可参考run.sh内相关任务的参数设置
+2) 用户进行模型训练、预测、评估等, 可通过修改data/config/dgu.yaml配置文件或者从命令行传入来进行参数配置, 优先推荐命令行参数传入;
 
 ### 模型预测
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本预测
