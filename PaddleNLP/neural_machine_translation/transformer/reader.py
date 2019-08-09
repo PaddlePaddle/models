@@ -189,6 +189,17 @@ class DataReader(object):
                  end_mark="<e>",
                  unk_mark="<unk>",
                  seed=0):
+        # convert str to bytes, and use byte data
+        field_delimiter = field_delimiter if isinstance(
+            field_delimiter, bytes) else field_delimiter.encode("utf8")
+        token_delimiter = token_delimiter if isinstance(
+            token_delimiter, bytes) else token_delimiter.encode("utf8")
+        start_mark = start_mark if isinstance(
+            start_mark, bytes) else start_mark.encode("utf8")
+        end_mark = end_mark if isinstance(end_mark,
+                                          bytes) else end_mark.encode("utf8")
+        unk_mark = unk_mark if isinstance(unk_mark,
+                                          bytes) else unk_mark.encode("utf8")
         self._src_vocab = self.load_dict(src_vocab_fpath)
         self._only_src = True
         if trg_vocab_fpath is not None:
@@ -254,9 +265,9 @@ class DataReader(object):
             if tar_fname is None:
                 raise Exception("If tar file provided, please set tar_fname.")
 
-            f = tarfile.open(fpaths[0], "r")
+            f = tarfile.open(fpaths[0], "rb")
             for line in f.extractfile(tar_fname):
-                fields = line.strip("\n").split(self._field_delimiter)
+                fields = line.strip(b"\n").split(self._field_delimiter)
                 if (not self._only_src and len(fields) == 2) or (
                         self._only_src and len(fields) == 1):
                     yield fields
@@ -267,9 +278,7 @@ class DataReader(object):
 
                 with open(fpath, "rb") as f:
                     for line in f:
-                        if six.PY3:
-                            line = line.decode("utf8", errors="ignore")
-                        fields = line.strip("\n").split(self._field_delimiter)
+                        fields = line.strip(b"\n").split(self._field_delimiter)
                         if (not self._only_src and len(fields) == 2) or (
                                 self._only_src and len(fields) == 1):
                             yield fields
@@ -279,12 +288,10 @@ class DataReader(object):
         word_dict = {}
         with open(dict_path, "rb") as fdict:
             for idx, line in enumerate(fdict):
-                if six.PY3:
-                    line = line.decode("utf8", errors="ignore")
                 if reverse:
-                    word_dict[idx] = line.strip("\n")
+                    word_dict[idx] = line.strip(b"\n")
                 else:
-                    word_dict[line.strip("\n")] = idx
+                    word_dict[line.strip(b"\n")] = idx
         return word_dict
 
     def batch_generator(self):
