@@ -16,9 +16,6 @@ fi
 TRAIN_TYPE=$1
 TASK_TYPE=$2
 
-typeset -l TRAIN_TYPE
-typeset -l TASK_TYPE
-
 candi_train_type=("matching" "seq2seq_naive" "seq2seq_att" "keywords" "human")
 candi_task_type=("train" "predict" "evaluate" "inference")
 
@@ -43,6 +40,7 @@ PYTHON_PATH="python"
 #train pretrain model
 if  [ ! "$CUDA_VISIBLE_DEVICES" ]
 then
+  export CPU_NUM=1
   use_cuda=false
 else
   use_cuda=true
