@@ -1,12 +1,15 @@
 #!/bin/bash
-
 set -xe
 
-is_local = Tr
+cluster_node_ips="127.0.0.1"
+node_ip="127.0.0.1"
 
-while true ; do
-  case "$1" in
-    -local) is_local="$2" ; shift 2 ;;
+echo $#
+distributed_args=""
+if [[ $# -ge 1 ]]; then
+    case "$1" in
+    -cluster_node_ips) cluster_node_ips="$2" ; shift 2 ;;
+    -node_ip) node_ip="$2" ; shift 2 ;;
     *)
        if [[ ${#1} > 0 ]]; then
           echo "not supported arugments ${1}" ; exit 1 ;
@@ -15,13 +18,9 @@ while true ; do
        fi
        ;;
   esac
-done
+  distributed_args="--cluster_node_ips ${cluster_node_ips} --node_ip ${node_ip}"
+fi
 
-case "$is_local" in
-    n) is_distributed="--is_distributed true" ;;
-    y) is_distributed="--is_distributed false" ;;
-    *) echo "not support argument -local: ${is_local}" ; exit 1 ;;
-esac
 
 # pretrain config
 SAVE_STEPS=10000
@@ -35,7 +34,8 @@ CONFIG_PATH=data/demo_config/bert_config.json
 VOCAB_PATH=data/demo_config/vocab.txt
 
 # Change your train arguments:
-python -u ./train.py ${is_distributed}\
+nohup python -m paddle.distributed.launch ${distributed_args}  --log_dir log \
+        ./train.py \
         --use_cuda true\
         --weight_sharing true\
         --batch_size ${BATCH_SIZE} \
@@ -53,5 +53,5 @@ python -u ./train.py ${is_distributed}\
         --validation_steps 1000 \
         --num_iteration_per_drop_scope 10 \
         --use_fp16 false \
-        --loss_scaling 8.0
+        --loss_scaling 8.0 &
        

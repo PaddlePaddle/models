@@ -75,7 +75,6 @@ data_g.add_arg("in_tokens",           bool, True,
                "Otherwise, it will be the maximum number of examples in one batch.")
 
 run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
-run_type_g.add_arg("is_distributed",               bool,   True,  "If set, then start distributed training.")
 run_type_g.add_arg("use_cuda",                     bool,   True,   "If set, use GPU for training.")
 run_type_g.add_arg("num_iteration_per_drop_scope", int,    1,      "Ihe iteration intervals to clean up temporary variables.")
 run_type_g.add_arg("num_threads", int,    2,      "Ihe iteration intervals to clean up temporary variables.")
@@ -261,10 +260,8 @@ def train(args):
 
     test_prog = test_prog.clone(for_test=True)
 
-    gpu_id=0
-    if args.is_distributed:
-        gpus = os.getenv("FLAGS_selected_gpus").split(",")
-        gpu_id = int(gpus[0])
+    gpus = os.getenv("FLAGS_selected_gpus").split(",")
+    gpu_id = int(gpus[0])
 
     if args.use_cuda:
         place = fluid.CUDAPlace(gpu_id)
@@ -390,7 +387,7 @@ def train(args):
 
             if steps % args.save_steps == 0:
                 save_path = os.path.join(args.checkpoints, "step_" + str(steps))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                fluid.io.save_persistables(exe, save_path, fleet.origin_program)
 
             if args.validation_set_dir and steps % args.validation_steps == 0:
                 vali_cost, vali_lm_cost, vali_acc, vali_steps, vali_speed = predict(

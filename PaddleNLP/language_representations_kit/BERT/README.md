@@ -73,8 +73,7 @@
 利用提供的示例训练数据和测试数据，我们来说明如何进行单机训练。关于预训练的启动方式，可以查看脚本 `train.sh` ，该脚本已经默认以示例数据作为输入，以 GPU 模式进行训练。在开始预训练之前，需要把 CUDA、cuDNN、NCCL2 等动态库路径加入到环境变量 `LD_LIBRARY_PATH` 之中，然后按如下方式即可开始单机多卡预训练
 
 ```shell
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-./train.sh -local y
+./train.sh
 ```
 
 如果采用 CPU 多核的方式进行预训练，则需要通过环境设置所用 CPU 的核数，例如 `export CPU_NUM=5`，否则会占据所有的CPU。
