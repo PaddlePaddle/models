@@ -101,17 +101,13 @@ epoch: 1, progress: 1/1, step: 100, loss: 10.132796, ppl: 12748.593750, next_sen
 例如, 如果我们需要在两台机器（192.168.0.16, 192.168.0.17）上进行分布式训练，我们可以在节点 0（192.168.0.16）上运行：
 
 ```shell
-export worker_endpoints=192.168.0.16:9184,192.168.0.17:9185
-export current_endpoint=192.168.0.16:9184
-./train.sh -local n
+./train.sh -cluster_node_ips 192.168.0.16,192.168.0.17 -node_ip 192.168.0.16
 ```
 
 节点 1（192.168.0.17）上运行:
 
 ```shell
-export worker_endpoints=192.168.0.16:9184,192.168.0.17:9185
-export current_endpoint=192.168.0.17:9185
-./train.sh -local n
+./train.sh -cluster_node_ips 192.168.0.16,192.168.0.17 -node_ip 192.168.0.17
 ```
 
 ## NLP 任务的 Fine-tuning

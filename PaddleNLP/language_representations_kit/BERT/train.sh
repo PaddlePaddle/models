@@ -4,20 +4,21 @@ set -xe
 cluster_node_ips="127.0.0.1"
 node_ip="127.0.0.1"
 
-echo $#
 distributed_args=""
 if [[ $# -ge 1 ]]; then
-    case "$1" in
-    -cluster_node_ips) cluster_node_ips="$2" ; shift 2 ;;
-    -node_ip) node_ip="$2" ; shift 2 ;;
-    *)
-       if [[ ${#1} > 0 ]]; then
-          echo "not supported arugments ${1}" ; exit 1 ;
-       else
-           break
-       fi
-       ;;
-  esac
+    while true ; do
+        case "$1" in
+        -cluster_node_ips) cluster_node_ips="$2" ; shift 2 ;;
+        -node_ip) node_ip="$2" ; shift 2 ;;
+        *)
+           if [[ ${#1} > 0 ]]; then
+              echo "not supported arugments ${1}" ; exit 1 ;
+           else
+               break
+           fi
+           ;;
+        esac
+    done
   distributed_args="--cluster_node_ips ${cluster_node_ips} --node_ip ${node_ip}"
 fi
 
