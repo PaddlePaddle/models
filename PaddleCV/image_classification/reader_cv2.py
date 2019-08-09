@@ -192,7 +192,6 @@ def process_image(sample,
         if crop_size > 0:
             target_size = settings.resize_short_size
             img = resize_short(img, target_size)
-
             img = crop_image(img, target_size=crop_size, center=True)
 
     img = img[:, :, ::-1].astype('float32').transpose((2, 0, 1)) / 255
@@ -209,10 +208,11 @@ def process_image(sample,
 
 def process_batch_data(input_data, settings, mode, color_jitter, rotate):
     batch_data = []
+    crop_size = int(settings.image_shape.split(',')[-1])
     for sample in input_data:
         if os.path.isfile(sample[0]):
             batch_data.append(
-                process_image(sample, settings, mode, color_jitter, rotate))
+                process_image(sample, settings, mode, color_jitter, rotate, crop_size))
         else:
             print("File not exist : %s" % sample[0])
     return batch_data

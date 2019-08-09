@@ -17,3 +17,8 @@ from .shufflenet_v2_swish import ShuffleNetV2, ShuffleNetV2_x0_5_swish, ShuffleN
 from .shufflenet_v2 import ShuffleNetV2_x0_25, ShuffleNetV2_x0_33, ShuffleNetV2_x0_5, ShuffleNetV2_x1_0, ShuffleNetV2_x1_5, ShuffleNetV2_x2_0
 from .fast_imagenet import FastImageNet
 from .xception import Xception_41, Xception_65, Xception_71
+from .densenet import DenseNet121, DenseNet161, DenseNet169, DenseNet201, DenseNet264
+from .squeezenet import SqueezeNet1_0, SqueezeNet1_1
+from .darknet import DarkNet53
+from .resnext101_wsl import ResNeXt101_32x8d_wsl, ResNeXt101_32x16d_wsl, ResNeXt101_32x32d_wsl, ResNeXt101_32x48d_wsl, Fix_ResNeXt101_32x48d_wsl
+
