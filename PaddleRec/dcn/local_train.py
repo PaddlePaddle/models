@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+# coding: utf-8
+from __future__ import print_function, absolute_import, division
+import os
+import random
+
+import paddle.fluid as fluid
+
+from config import parse_args
+from network import DCN
+"""
+train DCN model
+"""
+
+
+def train(args):
+    """train and save DCN model
+
+    :param args: hyperparams of model
+    :return:
+    """
+    dcn_model = DCN(args.cross_num, args.dnn_hidden_units, args.l2_reg_cross,
+                    args.use_bn, args.clip_by_norm)
+    dcn_model.build_network()
+    dcn_model.backward(args.lr)
+
+    # config dataset
+    dataset = fluid.DatasetFactory().create_dataset()
+    dataset.set_use_var(dcn_model.data_list)
+    pipe_command = 'python reader.py'
+    dataset.set_pipe_command(pipe_command)
+    dataset.set_batch_size(args.batch_size)
+    dataset.set_thread(args.num_thread)
+    train_filelist = [
+        os.path.join(args.train_data_dir, fname)
+        for fname in next(os.walk(args.train_data_dir))[2]
+    ]
+    dataset.set_filelist(train_filelist)
+    num_epoch = args.num_epoch
+    if args.steps:
+        epoch = args.steps * args.batch_size / 41000000
+        full_epoch = int(epoch // 1)
+        last_epoch = epoch % 1
+        train_filelists = [train_filelist for _ in range(full_epoch)] + [
+            random.sample(train_filelist, int(
+                len(train_filelist) * last_epoch))
+        ]
+        num_epoch = full_epoch + 1
+    print("train epoch: {}".format(num_epoch))
+
+    # Executor
+    exe = fluid.Executor(fluid.CPUPlace())
+    exe.run(fluid.default_startup_program())
+
+    for epoch_id in range(num_epoch):
+        dataset.set_filelist(train_filelists[epoch_id])
+        exe.train_from_dataset(
+            program=fluid.default_main_program(),
+            dataset=dataset,
+            fetch_list=[
+                dcn_model.loss, dcn_model.avg_logloss, dcn_model.auc_var
+            ],
+            fetch_info=['total_loss', 'avg_logloss', 'auc'],
+            debug=False,
+            print_period=100)
+        model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
+        fluid.io.save_persistables(
+            executor=exe,
+            dirname=model_dir,
+            main_program=fluid.default_main_program())
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    print(args)
+    train(args)
