@@ -3,7 +3,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='the direction of data list')
 parser.add_argument(
-    '--direction', type=str, default='A2B', help='the direction of data list')
+    '--direction', type=str, default='B2A', help='the direction of data list')
 
 
 def make_pair_data(fileA, file, d):

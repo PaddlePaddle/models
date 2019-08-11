@@ -347,7 +347,7 @@ class STGAN(object):
                                   g_loss_rec[0], g_loss_cls[0]))
                 batch_time = time.time() - s_time
                 t_time += batch_time
-                if batch_id % self.cfg.print_freq == 0:
+                if (batch_id + 1) % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}:  \n\
                          d_loss: {}; d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
                          Batch_time_cost: {:.2f}"

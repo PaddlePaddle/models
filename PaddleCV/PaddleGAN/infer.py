@@ -26,7 +26,7 @@ import numpy as np
 import imageio
 import glob
 from util.config import add_arguments, print_arguments
-from data_reader import celeba_reader_creator
+from data_reader import celeba_reader_creator, reader_creator
 from util.utility import check_attribute_conflict, check_gpu, save_batch_image
 from util import utility
 import copy
@@ -150,14 +150,14 @@ def infer(args):
             name='conditions', shape=[1], dtype='float32')
 
         from network.CGAN_network import CGAN_model
-        model = CGAN_model()
+        model = CGAN_model(args.n_samples)
         fake = model.network_G(noise, conditions, name="G")
     elif args.model_net == 'DCGAN':
         noise = fluid.layers.data(
             name='noise', shape=[args.noise_size], dtype='float32')
 
         from network.DCGAN_network import DCGAN_model
-        model = DCGAN_model()
+        model = DCGAN_model(args.n_samples)
         fake = model.network_G(noise, name="G")
     else:
         raise NotImplementedError("model_net {} is not support".format(
@@ -194,7 +194,8 @@ def infer(args):
             mode="VAL")
         reader_test = test_reader.make_reader(return_name=True)
         py_reader.decorate_batch_generator(
-            reader_test, places=fluid.cuda_places())
+            reader_test,
+            places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
         for data in py_reader():
             real_img, label_org, label_trg, image_name = data[0]['input'], data[
                 0]['label_org_'], data[0]['label_trg_'], data[0]['image_name']
@@ -240,7 +241,8 @@ def infer(args):
             mode="VAL")
         reader_test = test_reader.make_reader(return_name=True)
         py_reader.decorate_batch_generator(
-            reader_test, places=fluid.cuda_places())
+            reader_test,
+            places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
         for data in py_reader():
             real_img, label_org, label_trg, image_name = data[0]['input'], data[
                 0]['label_org_'], data[0]['label_trg_'], data[0]['image_name']
@@ -272,20 +274,23 @@ def infer(args):
         test_reader = reader_creator(
             image_dir=args.dataset_dir,
             list_filename=args.test_list,
-            args=args,
+            shuffle=False,
+            batch_size=args.n_samples,
             mode="VAL")
-        reader_test = test_reader.make_reader(return_name=True)
+        reader_test = test_reader.make_reader(args, return_name=True)
         py_reader.decorate_batch_generator(
-            reader_test, places=fluid.cuda_places())
+            reader_test,
+            places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
         id2name = test_reader.id2name
         for data in py_reader():
             real_img, image_name = data[0]['input'], data[0]['image_name']
+            image_name = id2name[np.array(image_name).astype('int32')[0]]
+            print("read: ", image_name)
             fake_temp = exe.run(fetch_list=[fake.name],
                                 feed={"input": real_img})
             fake_temp = np.squeeze(fake_temp[0]).transpose([1, 2, 0])
-            input_temp = np.squeeze(data).transpose([1, 2, 0])
+            input_temp = np.squeeze(np.array(real_img)[0]).transpose([1, 2, 0])
 
-            image_name = id2name[np.array(image_name).astype('int32')[0]]
             imageio.imwrite(
                 os.path.join(args.output, "fake_" + image_name), (
                     (fake_temp + 1) * 127.5).astype(np.uint8))
@@ -323,7 +328,7 @@ def infer(args):
 
         fig = utility.plot(fake_image)
         plt.savefig(
-            os.path.join(args.output, '/fake_dcgan.png'), bbox_inches='tight')
+            os.path.join(args.output, 'fake_dcgan.png'), bbox_inches='tight')
         plt.close(fig)
     else:
         raise NotImplementedError("model_net {} is not support".format(
