@@ -230,7 +230,8 @@ class StarGAN(object):
                  cfg=None,
                  train_reader=None,
                  test_reader=None,
-                 batch_num=1):
+                 batch_num=1,
+                 id2name=None):
         self.cfg = cfg
         self.train_reader = train_reader
         self.test_reader = test_reader
