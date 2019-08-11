@@ -53,6 +53,8 @@ seq2seq_att：seq2seq attention model 对话系统；
 seq2seq_naive：naive seq2seq model对话系统；
 ```
 
+注意: 目前ade模块内提供的训练好的官方模型及效果, 均是在GPU单卡上面训练和预测得到的, 用户如需复线效果, 可使用单卡相同的配置.
+
 ### 数据准备
 &ensp;&ensp;&ensp;&ensp;数据集说明：本模块内只提供训练方法，真实涉及的匹配数据及4个对话系统的数据只开源测试集数据，仅提供样例，用户如有自动化评估对话系统的需求，可自行准备业务数据集按照文档提供流程进行训练；
     
@@ -142,6 +144,8 @@ python -u main.py \
       --learning_rate=0.001 \
       --sample_pro=0.1 
 ```
+
+注意: 用户进行模型训练、预测、评估等, 可通过修改data/config/ade.yaml配置文件或者从命令行传入来进行参数配置, 优先推荐命令行参数传入;
 
 #### 2、第二阶段finetuning模型的训练：
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
@@ -324,8 +328,9 @@ seq2seq_naive：使用spearman相关系数来衡量评估模型对系统的打�
 &ensp;&ensp;&ensp;&ensp;效果上，以四个不同的对话系统（seq2seq\_naive／seq2seq\_att／keywords／human）为例，使用对话自动评估工具进行自动评估。
 
 &ensp;&ensp;&ensp;&ensp;1. 无标注数据情况下，直接使用预训练好的评估工具进行评估；
-    在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
     
+    在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
+
     /|seq2seq\_naive|seq2seq\_att|keywords|human
     --|:--:|--:|:--:|--:
     cor|0.361|0.343|0.324|0.288
@@ -335,10 +340,10 @@ seq2seq_naive：使用spearman相关系数来衡量评估模型对系统的打�
     人工评估|k(0.591)<n(0.847)<a(1.116)<h(1.240)
     --|--:
     自动评估|k(0.625)<n(0.909)<a(1.399)<h(1.683)
-    
+
 &ensp;&ensp;&ensp;&ensp;2. 利用少量标注数据微调后，自动评估打分和人工打分spearman相关系数，如下：
 
-     /|seq2seq\_naive|seq2seq\_att|keywords|human
+    /|seq2seq\_naive|seq2seq\_att|keywords|human
     --|:--:|--:|:--:|--:
     cor|0.474|0.477|0.443|0.378
 
@@ -496,12 +501,6 @@ python -u main.py \
 ```
 723 236 7823 12 8     887 13 77 4       2
 8474 13 44 34         2 87 91 23       0
-```
-
-&ensp;&ensp;&ensp;&ensp;注：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如下：
-
-```
-python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
 ```
 
 ## 4、参考论文
