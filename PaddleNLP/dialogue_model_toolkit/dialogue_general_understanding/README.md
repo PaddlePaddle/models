@@ -21,7 +21,7 @@
 - PaddlePaddle >= 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 由于模块内模型基于bert做finetuning, 训练速度较慢, 建议用户安装GPU版本PaddlePaddle进行训练。
 
 &ensp;&ensp;注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
-#### &ensp;&ensp;b、安装代码
+#### &ensp;&ensp;b、下载代码
 
 &ensp;&ensp;&ensp;&ensp;克隆代码库到本地
 
@@ -41,6 +41,8 @@ atis_intent: 使用微软提供的公开数据集(Airline Travel Information Sys
 mrda: 使用公开数据集Meeting Recorder Dialogue Act，实现DA识别任务;
 swda：使用公开数据集Switchboard Dialogue Act Corpus，实现DA识别任务;
 ```
+
+注意: 目前dgu模块内提供的训练好的官方模型及效果, 均是在GPU单卡上面训练和预测得到的, 用户如需复线效果, 可使用单卡相同的配置.
 
 ### 数据准备
 &ensp;&ensp;&ensp;&ensp;数据集说明：
@@ -143,7 +145,9 @@ python -u main.py \
        --use_fp16 false 
 ```
 
-注：采用方式二时，模型训练过程可参考run.sh内相关任务的参数设置
+注：
+1) 采用方式二时，模型训练过程可参考run.sh内相关任务的参数设置
+2) 用户进行模型训练、预测、评估等, 可通过修改data/config/dgu.yaml配置文件或者从命令行传入来进行参数配置, 优先推荐命令行参数传入;
 
 ### 模型预测
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本预测
