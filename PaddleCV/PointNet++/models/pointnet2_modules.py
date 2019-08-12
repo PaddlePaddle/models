@@ -12,7 +12,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 """
-Contains model utility functions.
+Contains PointNet++ module functions.
 """
 
 from __future__ import absolute_import
@@ -44,6 +44,7 @@ def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
         out (Variable): features with shape [B, npoint, nsample, C + 3]
     """
     idx = fluid.layers.query_ball(xyz, new_xyz, radius, nsample)
+    idx.stop_gradient = True
     grouped_xyz = fluid.layers.group_points(xyz, idx)
     expand_new_xyz = fluid.layers.unsqueeze(new_xyz, axes=[2])
     expand_new_xyz = fluid.layers.expand(expand_new_xyz, [1, 1, grouped_xyz.shape[2], 1])
@@ -71,7 +72,7 @@ def group_all(xyz, features=None, use_xyz=True):
         return grouped_xyz
 
 
-def conv_bn(input, out_channels, bn=True, act='relu', name=None):
+def conv_bn(input, out_channels, bn=True, bn_momentum=0.9, act='relu', name=None):
     param_attr = ParamAttr(name='{}_conv_weight'.format(name),
                            initializer=fluid.initializer.Constant(1.376))
     bias_attr = ParamAttr(initializer=fluid.initializer.Constant(0.213),
@@ -90,6 +91,7 @@ def conv_bn(input, out_channels, bn=True, act='relu', name=None):
         bn_name = name + "_bn"
         out = fluid.layers.batch_norm(out,
                                       act=act,
+                                      momentum=bn_momentum,
                                       param_attr=ParamAttr(initializer=fluid.initializer.Constant(2.673), name=bn_name + "_scale"),
                                       bias_attr=ParamAttr(initializer=fluid.initializer.Constant(1.467), name=bn_name + "_offset"),
                                       moving_mean_name=bn_name + '_mean',
@@ -98,10 +100,20 @@ def conv_bn(input, out_channels, bn=True, act='relu', name=None):
     return out
 
 
-def MLP(features, out_channels_list, bn=True, act='relu', name=None):
+def MLP(features,
+        out_channels_list,
+        bn=True,
+        bn_momentum=0.9,
+        act='relu',
+        name=None):
     out = features
     for i, out_channels in enumerate(out_channels_list):
-        out = conv_bn(out, out_channels, bn=bn, act=act, name=name + "_{}".format(i))
+        out = conv_bn(out,
+                      out_channels,
+                      bn=bn,
+                      act=act,
+                      bn_momentum=bn_momentum,
+                      name=name + "_{}".format(i))
     return out
         
 
@@ -112,6 +124,7 @@ def pointnet_sa_module(xyz,
                        mlps=[],
                        feature=None,
                        bn=True,
+                       bn_momentum=0.9,
                        use_xyz=True,
                        name=None):
     """
@@ -126,6 +139,7 @@ def pointnet_sa_module(xyz,
         mlps ([[int32]]): list of out_channels_list
         feature (Variable): features with shape [B, C, N]
         bn (bool): whether perform batch norm after conv2d
+        bn_momentum (float): momentum of batch norm
         use_xyz (bool): whether use xyz coordiantes features
 
     Returns:
@@ -136,6 +150,7 @@ def pointnet_sa_module(xyz,
             "radiuss, nsamples, mlps length should be same"
 
     farthest_idx = fluid.layers.farthest_point_sampling(xyz, npoint)
+    farthest_idx.stop_gradient = True
     new_xyz = fluid.layers.gather_point(xyz, farthest_idx)
 
     out = None
@@ -144,7 +159,7 @@ def pointnet_sa_module(xyz,
         for i, (radius, nsample, mlp) in enumerate(zip(radiuss, nsamples, mlps)):
             out = query_and_group(xyz, new_xyz, radius, nsample, feature, use_xyz) if npoint is not None else group_all(xyz, feature, use_xyz)
             out = fluid.layers.transpose(out, perm=[0, 3, 1, 2])
-            out = MLP(out, mlp, bn=bn, name=name + '_mlp{}'.format(i)) # TODO(dengkaipeng): mlp[1:] ?
+            out = MLP(out, mlp, bn=bn, bn_momentum=bn_momentum, name=name + '_mlp{}'.format(i))
             out = fluid.layers.pool2d(out, pool_size=[1, out.shape[3]], pool_type='max')
             out = fluid.layers.squeeze(out, axes=[-1])
             outs.append(out)
@@ -154,7 +169,7 @@ def pointnet_sa_module(xyz,
     return (new_xyz, out)
 
 
-def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True, name=None):
+def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True, bn_momentum=0.9, name=None):
     """
     PointNet Feature Propagation Module
 
@@ -165,6 +180,7 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         known_feats (Variable): known features with shape [B, M, C2] to be propagated from
         mlp ([int32]): out_channels_list
         bn (bool): whether perform batch norm after conv2d
+        bn_momentum (float): momentum of batch norm
 
     Returns:
         new_features (Variable): new features with shape [B, N, mlp[-1]]
@@ -174,18 +190,21 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         interp_feats = fluid.layers.expand()
     else:
         dist, idx = fluid.layers.three_nn(unknown, known, eps=0)
+        dist.stop_gradient = True
+        idx.stop_gradient = True
         dist = fluid.layers.sqrt(dist)
         ones = fluid.layers.fill_constant_batch_size_like(dist, dist.shape, dist.dtype, 1)
         dist_recip = ones / (dist + 1e-8); # 1.0 / dist
         norm = fluid.layers.reduce_sum(dist_recip, dim=-1, keep_dim=True)
         weight = dist_recip / norm
+        weight.stop_gradient = True
         interp_feats = fluid.layers.three_interp(known_feats, weight, idx)
 
     new_features = interp_feats if unknown_feats is None else \
                     fluid.layers.concat([interp_feats, unknown_feats], axis=-1)
     new_features = fluid.layers.transpose(new_features, perm=[0, 2, 1])
     new_features = fluid.layers.unsqueeze(new_features, axes=[-1])
-    new_features = MLP(new_features, mlp, bn=bn, name=name + '_mlp')
+    new_features = MLP(new_features, mlp, bn=bn, bn_momentum=bn_momentum, name=name + '_mlp')
     new_features = fluid.layers.squeeze(new_features, axes=[-1])
     new_features = fluid.layers.transpose(new_features, perm=[0, 2, 1])
     
