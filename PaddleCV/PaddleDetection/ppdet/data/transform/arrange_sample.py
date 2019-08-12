@@ -134,8 +134,7 @@ class ArrangeSSD(BaseOperator):
     """
 
     def __init__(self):
-        super(ArrangeSSD, self).__init__(fields=None)
-        self.fields = fields
+        super(ArrangeSSD, self).__init__()
 
     def __call__(self, sample, context=None):
         """
@@ -147,7 +146,6 @@ class ArrangeSSD(BaseOperator):
             sample: a tuple containing the following items:
                     (image, gt_bbox, gt_class, difficult)
         """
-
         im = sample['image']
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
@@ -183,7 +181,6 @@ class ArrangeEvalSSD(BaseOperator):
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
         difficult = sample['difficult']
-
         outs = (im, im_shape, im_id, gt_bbox, gt_class, difficult)
         return outs
 

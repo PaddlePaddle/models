@@ -862,7 +862,7 @@ class YoloTrainFeed(DataFeed):
                  ],
                  batch_transforms=[
                      RandomShape(sizes=[
-                         320, 352, 384, 416, 448, 480, 512, 544, 576, 608
+                         608, 352, 384, 416, 448, 480, 512, 544, 576, 608
                      ])
                  ],
                  batch_size=8,
@@ -904,10 +904,10 @@ class YoloEvalFeed(DataFeed):
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_size', 'im_id', 'gt_box',
                          'gt_label', 'is_difficult'],
-                 image_shape=[3, 320, 320],
+                 image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(target_size=320, interp=2),
+                     ResizeImage(target_size=608, interp=2),
                      NormalizeImage(
                          mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225],
@@ -951,10 +951,10 @@ class YoloTestFeed(DataFeed):
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_size', 'im_id'],
-                 image_shape=[3, 320, 320],
+                 image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(target_size=320, interp=2),
+                     ResizeImage(target_size=608, interp=2),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225],
                                     is_scale=True,

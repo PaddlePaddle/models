@@ -60,7 +60,7 @@ OptimizerBuilder:
 
 SSDTrainFeed:
   batch_size: 32
-  use_process: false
+  use_process: true
   dataset:
     dataset_dir: dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
