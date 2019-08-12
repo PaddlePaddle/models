@@ -70,6 +70,9 @@ Paddle提供基于ImageNet的骨架网络预训练模型。所有预训练模型
 | ResNet50-vd-FPN      | Mask           | c3-c5   |    1      |   2x    |  42.9  |  38.0   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_dcn_r50_vd_fpn_2x.tar) |
 | ResNet101-vd-FPN     | Mask           | c3-c5   |    1      |   1x    |  44.6  |  39.2   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_dcn_r101_vd_fpn_1x.tar) |
 | ResNeXt101-vd-FPN    | Mask           | c3-c5   |    1      |   1x    |  46.2  |  40.4   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_dcn_x101_vd_64x4d_fpn_1x.tar) |
+| ResNet50-FPN         | Cascade Faster | c3-c5   |    2      |   1x    |  44.2  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/cascade_rcnn_dcn_r50_fpn_1x.tar) |
+| ResNet101-vd-FPN     | Cascade Faster | c3-c5   |    2      |   1x    |  46.4  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/cascade_rcnn_dcn_r101_vd_fpn_1x.tar) |
+| ResNeXt101-vd-FPN    | Cascade Faster | c3-c5   |    2      |   1x    |  47.3  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/cascade_rcnn_dcn_x101_vd_64x4d_fpn_1x.tar) |
 
 #### 注意事项:
 - Deformable卷积网络v2(dcn_v2)参考自论文[Deformable ConvNets v2](https://arxiv.org/abs/1811.11168).
@@ -108,10 +111,11 @@ Paddle提供基于ImageNet的骨架网络预训练模型。所有预训练模型
 
 ### RetinaNet
 
-|   骨架网络   | 每张GPU图片个数 | 学习率策略 | Box AP | 下载  |
-| :-----------  | :-----: | :-----: | :----: | :-------: |
-| ResNet50-FPN  |    2    |   1x    |  36.0  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r50_fpn_1x.tar)  |
-| ResNet101-FPN |    2    |   1x    |  37.3  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r101_fpn_1x.tar) |
+|   骨架网络        | 每张GPU图片个数 | 学习率策略 | Box AP | 下载  |
+| :---------------: | :-----: | :-----: | :----: | :-------: |
+| ResNet50-FPN      |    2    |   1x    |  36.0  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r50_fpn_1x.tar)  |
+| ResNet101-FPN     |    2    |   1x    |  37.3  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_r101_fpn_1x.tar) |
+| ResNeXt101-vd-FPN |    1    |   1x    |  40.5  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/retinanet_x101_vd_64x4d_fpn_1x.tar) |
 
 **注意事项:** RetinaNet系列模型中，在总batch size为16下情况下，初始学习率改为0.01。
 
