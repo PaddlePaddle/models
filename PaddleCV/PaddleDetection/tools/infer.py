@@ -22,6 +22,17 @@ import glob
 import numpy as np
 from PIL import Image
 
+def set_paddle_flags(**kwargs):
+    for key, value in kwargs.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+# NOTE(paddle-dev): All of these flags should be set before
+# `import paddle`. Otherwise, it would not take any effect.
+set_paddle_flags(
+    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
+)
+
 from paddle import fluid
 
 from ppdet.core.workspace import load_config, merge_config, create
@@ -175,7 +186,7 @@ def main():
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg['metric'] == 'VOC':
-        extra_keys = ['im_id']
+        extra_keys = ['im_id', 'im_shape']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # parse dataset category
@@ -224,7 +235,7 @@ def main():
             image = visualize_results(image,
                                       int(im_id), catid2name,
                                       FLAGS.draw_threshold, bbox_results,
-                                      mask_results, is_bbox_normalized)
+                                      mask_results)
             save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name, quality=95)

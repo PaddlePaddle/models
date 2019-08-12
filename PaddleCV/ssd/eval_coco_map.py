@@ -7,7 +7,7 @@ import functools
 import paddle
 import paddle.fluid as fluid
 import reader
-from mobilenet_ssd import mobile_net
+from mobilenet_ssd import build_mobilenet_ssd
 from utility import add_arguments, print_arguments
 
 # A special mAP metric for COCO dataset, which averages AP in different IoUs.
@@ -49,7 +49,8 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
     gt_image_info = fluid.layers.data(
         name='gt_image_id', shape=[3], dtype='int32')
 
-    locs, confs, box, box_var = mobile_net(num_classes, image, image_shape)
+    locs, confs, box, box_var = build_mobilenet_ssd(image,
+                num_classes, image_shape)
     nmsed_out = fluid.layers.detection_output(
         locs, confs, box, box_var, nms_threshold=args.nms_threshold)
     loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box, box_var)
@@ -130,7 +131,7 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
-
+    assert args.dataset in ['coco2014', 'coco2017']
     data_dir = './data/coco'
     if '2014' in args.dataset:
         test_list = 'annotations/instances_val2014.json'
