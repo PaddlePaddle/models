@@ -156,6 +156,7 @@ LearningRate:
     start_factor: 0.3333333333333333
     steps: 500
 ```
+[Example config files](config_example/) of multiple detection architectures are given and brief description of each parameter.
 
 
 ## Requirements
