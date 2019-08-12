@@ -13,7 +13,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-from __futu re__ import absolute_import 
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -25,11 +25,13 @@ import functools
 import logging
 import sys
 import os
-import warning
+import warnings
 
 import paddle
 import paddle.fluid as fluid
-def print_ar guments(args):
+
+
+def print_arguments(args):
     """Print argparse's arguments.
 
     Usage:
@@ -50,7 +52,7 @@ def print_ar guments(args):
     print("----------------------------------------------------")
 
 
-def add_arguments(argname,  type, default, help, argparser, **kwargs):
+def add_arguments(argname, type, default, help, argparser, **kwargs):
     """Add argparse's arg ument.
 
     Usage:
@@ -69,7 +71,8 @@ def add_arguments(argname,  type, default, help, argparser, **kwargs):
         help=help + ' Default: %(default)s.',
         **kwargs)
 
-def parse_args(): 
+
+def parse_args():
     """Add arguments
 
     Returns: 
@@ -100,14 +103,14 @@ def parse_args():
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
-    add_arg('momentum_rate',            float,  0.9,                    "The value of momentum_rate.") 
+    add_arg('momentum_rate',            float,  0.9,                    "The value of momentum_rate.")
     #add_arg('step_epochs',              nargs-int-type,     [30, 60, 90]  "piecewise decay step")
     # READER AND PREPROCESS
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
     add_arg('upper_ratio',              float,  4./3.,                  "The value of upper_ratio in ramdom_crop")
     add_arg('resize_short_size',        int,    256,                    "The value of resize_short_size")
-    add_arg('use_mixup',                bool,   False,                  "Whether to use mixup") 
+    add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
 
     # SWITCH
@@ -124,7 +127,8 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def check_args(args): 
+
+def check_args(args):
     """check arguments before running 
     """
 
@@ -132,12 +136,17 @@ def check_args(args):
     sys.path.append("..")
     import models
     model_list = [m for m in dir(models) if "__" not in m]
-    assert args.model in model_list, "{} is not in lists: {}, please check the model name".format(args.model, model_list)
-    
+    assert args.model in model_list, "{} is not in lists: {}, please check the model name".format(
+        args.model, model_list)
+
     # check learning rate strategy
-    lr_strategy_list = ["piecewise_decay","cosine_decay","linear_decay","cosine_decay_warmup"]   
+    lr_strategy_list = [
+        "piecewise_decay", "cosine_decay", "linear_decay", "cosine_decay_warmup"
+    ]
     if args.lr_strategy not in lr_strategy_list:
-        warnings.warn("{} is not in lists: {}, Use default learning strategy now".format(args.lr_strategy, lr_strategy_list))
+        warnings.warn(
+            "{} is not in lists: {}, Use default learning strategy now".format(
+                args.lr_strategy, lr_strategy_list))
 
     if args.model == "GooLeNet":
         assert arg.use_mixup == True, "Cannot use mixup processing in GoogLeNet, please set use_mixup = False"
@@ -168,14 +177,14 @@ def check_args(args):
                 sys.exit(1)
         except Exception as e:
             pass
+
     check_gpu()
     #temporary disable:
-    if enable_ce == True:
-        raise 
+    if args.enable_ce == True:
+        raise
 
 
-
-def get_device_num(): 
+def get_device_num():
     """Obtain the num ber of available GPU cards
 
     Returns:
@@ -183,28 +192,36 @@ def get_device_num():
     """
 
     # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1 : return 1
+    if num_trainers > 1: return 1
     visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
     if visible_device:
         device_num = len(visible_device.split(','))
     else:
-        device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
-    print("...Running on ",device_num," GPU cards")
+        device_num = subprocess.check_output(
+            ['nvidia-smi', '-L']).decode().count('\n')
+    print("...Running on ", device_num, " GPU cards")
     return device_num
 
-def init_from(exe,args, program):
+
+def init_from(exe, args, program):
 
     if args.checkpoint is not None:
         fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
 
     if args.pretrained_model:
-        def if_exist(var):  
+
+        def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
-        fluid.io.load_vars(exe, args.pretrained_model, main_program=program, predicate=if_exist)
+
+        fluid.io.load_vars(
+            exe,
+            args.pretrained_model,
+            main_program=program,
+            predicate=if_exist)
 
 
 def init_from_checkpoint(args, exe, program):
-    
+
     assert isinstance(args.init_from_checkpoint, str)
 
     if not os.path.exists(args.init_from_checkpoint):
@@ -226,12 +243,13 @@ def init_from_checkpoint(args, exe, program):
 
 def save_checkpoint(args, exe, program, pass_id):
 
-    assert isinstance(args.save_model_path, str)
+    assert isinstance(args.model_save_dir, str)
 
-    checkpoint_path = os.path.join(args.mode_save_dir,args.model_name,str(pass_id) )
+    checkpoint_path = os.path.join(args.model_save_dir, args.model,
+                                   str(pass_id))
 
-    if not os.path.exists(checkpoint_dir):
-        os.mkdir(checkpoint_dir)
+    if not os.path.exists(checkpoint_path):
+        os.mkdir(checkpoint_path)
 
     fluid.io.save_persistables(
         exe,
@@ -242,65 +260,90 @@ def save_checkpoint(args, exe, program, pass_id):
     print("save checkpoint at %s" % (checkpoint_path))
     return True
 
-def create_pyreader(is_t rain, args):
+
+def create_pyreader(is_train, args):
     """  
     use PyReader
     """
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
-    feed_image = fluid.layers.data(name="feed_image", shape= image_shape, dtype="float32", lod_level=0)
-    feed_label = fluid.layers.data(name="feed_label", shape=[1], dtype="int64", lod_level=0)
-    feed_y_a = fluid.layers.data(name="feed_y_a", shape=[1], dtype="int64", lod_level=0)
-    feed_y_b = fluid.layers.data(name="feed_y_b", shape=[1], dtype="int64", lod_level=0)
-    feed_lam = fluid.layers.data(name="feed_lam", shape=[1], dtype="float32", lod_level=0)
+    feed_image = fluid.layers.data(
+        name="feed_image", shape=image_shape, dtype="float32", lod_level=0)
 
-    if is_train and args.use_mixup: # and args.model != "GoogLeNet":
+    feed_label = fluid.layers.data(
+        name="feed_label", shape=[1], dtype="int64", lod_level=0)
+    feed_y_a = fluid.layers.data(
+        name="feed_y_a", shape=[1], dtype="int64", lod_level=0)
+    feed_y_b = fluid.layers.data(
+        name="feed_y_b", shape=[1], dtype="int64", lod_level=0)
+    feed_lam = fluid.layers.data(
+        name="feed_lam", shape=[1], dtype="float32", lod_level=0)
+
+    if is_train and args.use_mixup:  # and args.model != "GoogLeNet":
+        print("========Create pyreader========")
         py_reader = fluid.io.PyReader(
-                feed_list = [feed_image,feed_y_a,feed_y_b,feed_lam],
-                capacity = 64,
-                use_double_buffer = True,
-                iterable = False)
+            feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
+            capacity=64,
+            use_double_buffer=True,
+            iterable=False)
+        return py_reader, [feed_image, feed_y_a, feed_y_b, feed_lam]
     else:
         py_reader = fluid.io.PyReader(
-                feed_list = [feed_image, feed_label],
-                capacity = 64,
-                use_double_buffer = True,
-                iterable = False)
+            feed_list=[feed_image, feed_label],
+            capacity=64,
+            use_double_buffer=True,
+            iterable=False)
 
-    return py_reader, [feed_image, feed_label]
- 
+        return py_reader, [feed_image, feed_label]
+
 
 def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
-    #print(batch_id, metrics)
-    #print(type(metrics))
     if info_mode == "batch":
         if batch_id % print_step == 0:
             #if isinstance(metrics,np.ndarray):
-
-                if len(metrics) == 2:
-                    loss, lr = metrics
-                    print("[Pass {0}, train batch {1}], loss {2}, lr {3}, elapse {4}".format(pass_id, batch_id, "%.5f"%loss ,"%.5f"%lr, "%2.2f sec"% time_info))
-                # no mixup putput
-                elif len(metrics) == 4:
-                    loss, acc1, acc5, lr = metrics
-                    print("[Pass {0}, train batch {1}], loss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%.5f" %lr, "%2.2f sec" % time_info))
-            # test output
-                elif len(metrics) == 3:
-                    loss, acc1, acc5 = metrics
-                    print("[Pass {0}, test batch {1}], loss {2}, acc1 {3}, acc5 {4}, elapse {5}".format(pass_id, batch_id, "%.5f"%loss, "%.5f"%acc1, "%.5f"%acc5, "%2.2f sec"%time_info))
-                else:
-                    print("length of metrics is not implenmented, It maybe cause by wrong format of build_program_output!!")
-                sys.stdout.flush()
-    elif info_mode == "epoch" :
-        ## TODO add time elapse
-        if isinstance(metrics,np.ndarray):
-            if len(metrics) == 5:
-                train_loss,_,test_loss,test_acc1,test_acc5 = metrics
-                print("[End pass {0}], train_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".format(pass_id, "%.5f"%train_loss, "%.5f"%test_loss, "%.5f"%test_acc1, "%.5f"%test_acc5))
-            elif len(metrics) == 7:
-                train_loss,train_acc1,train_acc5,_,test_loss,test_acc1,test_acc5 = metrics
-                print("[End pass {0}], train_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(pass_id, "%.5f"%train_loss, "%.5f"%train_acc1, "%.5f"%train_acc5, "%.5f    "%test_loss,"%.5f"%test_acc1, "%.5f"%test_acc5))
+            if len(metrics) == 2:
+                loss, lr = metrics
+                print(
+                    "[Pass {0}, train batch {1}], loss {2}, lr {3}, elapse {4}".
+                    format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
+                           "%2.2f sec" % time_info))
+            # no mixup putput
+            elif len(metrics) == 4:
+                loss, acc1, acc5, lr = metrics
+                print(
+                    "[Pass {0}, train batch {1}], loss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".
+                    format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
+                           "%.5f" % acc5, "%.5f" % lr, "%2.2f sec" % time_info))
+        # test output
+            elif len(metrics) == 3:
+                loss, acc1, acc5 = metrics
+                print(
+                    "[Pass {0}, test batch {1}], loss {2}, acc1 {3}, acc5 {4}, elapse {5}".
+                    format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
+                           "%.5f" % acc5, "%2.2f sec" % time_info))
+            else:
+                print(
+                    "length of metrics is not implenmented, It maybe cause by wrong format of build_program_output!!"
+                )
             sys.stdout.flush()
+
+    elif info_mode == "epoch":
+        ## TODO add time elapse
+        #if isinstance(metrics,np.ndarray):
+        if len(metrics) == 5:
+            train_loss, _, test_loss, test_acc1, test_acc5 = metrics
+            print(
+                "[End pass {0}], train_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".
+                format(pass_id, "%.5f" % train_loss, "%.5f" % test_loss, "%.5f"
+                       % test_acc1, "%.5f" % test_acc5))
+        elif len(metrics) == 7:
+            train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
+            print(
+                "[End pass {0}], train_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".
+                format(pass_id, "%.5f" % train_loss, "%.5f" % train_acc1, "%.5f"
+                       % train_acc5, "%.5f    " % test_loss, "%.5f" % test_acc1,
+                       "%.5f" % test_acc5))
+        sys.stdout.flush()
     elif info_mode == "ce":
         print("CE TESTING CODE IS HERE")
     else:
@@ -324,7 +367,8 @@ def best_strategy(args, program, loss):
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
         if num_trainers > 1 and args.use_gpu:
-            dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog)
+            dist_utils.prepare_for_multi_process(exe, build_strategy,
+                                                 train_prog)
             # NOTE: the process is fast when num_threads is 1
             # for multi-process training.
             exec_strategy.num_threads = 1
@@ -337,6 +381,6 @@ def best_strategy(args, program, loss):
             exec_strategy=exec_strategy)
     else:
         train_exe = exe
-    print("[Program is running on ",fluid.core.get_cuda_device_count()," cards ]")
+    print("[Program is running on ", fluid.core.get_cuda_device_count(),
+          " cards ]")
     return train_exe
-    

@@ -1,6 +1,7 @@
 import paddle
 import paddle.fluid as fluid
 
+
 class Metrics(object):
     """A class used to generate metrics of specified model.
 
@@ -17,7 +18,8 @@ class Metrics(object):
     is_train:
     
     """
-    def  __init__(self, data, model, args, is_train):
+
+    def __init__(self, data, model, args, is_train):
 
         self.model_name = args.model
         self.use_mixup = args.use_mixup
@@ -28,7 +30,7 @@ class Metrics(object):
         self.image = data[0]
         self.label = data[1]
         self.is_train = is_train
-    
+
     def _clac_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
         """Calculate label smoothing loss
 
@@ -36,9 +38,11 @@ class Metrics(object):
             label smoothing loss
         
         """
-        label_one_hot = fluid.layers.one_hot(input=label, depth = class_dim)
-        smooth_label = fluid.layers.label_smoothing(label = label_one_hot, epsilon = epsilon, dtype="float32")
-        loss = fluid.layers.cross_entropy(input = softmax_out, label = smooth_label, soft_label = True)
+        label_one_hot = fluid.layers.one_hot(input=label, depth=class_dim)
+        smooth_label = fluid.layers.label_smoothing(
+            label=label_one_hot, epsilon=epsilon, dtype="float32")
+        loss = fluid.layers.cross_entropy(
+            input=softmax_out, label=smooth_label, soft_label=True)
 
         return loss
 
@@ -51,16 +55,20 @@ class Metrics(object):
         """
         net_out = self.model.net(input=self.image, class_dim=self.class_dim)
         softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
-        
+
         if self.is_train and self.use_label_smoothing:
-            cost = _calc_label_smoothing_loss(softmax_out, self.label, self.class_dim, self.epsilon) 
+            cost = _calc_label_smoothing_loss(softmax_out, self.label,
+                                              self.class_dim, self.epsilon)
 
-        else:            
-            cost = fluid.layers.cross_entropy(input=softmax_out, label=self.label)
+        else:
+            cost = fluid.layers.cross_entropy(
+                input=softmax_out, label=self.label)
 
-        avg_cost =  fluid.layers.mean(cost)
-        acc_top1 = fluid.layers.accuracy(input=softmax_out, label=self.label, k=1)
-        acc_top5 = fluid.layers.accuracy(input=softmax_out, label=self.label, k=5)
+        avg_cost = fluid.layers.mean(cost)
+        acc_top1 = fluid.layers.accuracy(
+            input=softmax_out, label=self.label, k=1)
+        acc_top5 = fluid.layers.accuracy(
+            input=softmax_out, label=self.label, k=5)
 
         return [avg_cost, acc_top1, acc_top5]
 
@@ -73,14 +81,15 @@ class GoogLeNet_Metrics(Metrics):
     """
 
     def __init__(self):
-        super(GoogLeNet_Metrics,self).__init__()
+        super(GoogLeNet_Metrics, self).__init__()
 
     def out(self):
         """GoogLeNet Metrics output, Include avg_cost, acc_top1 and acc_top5
 
 
         """
-        out0, out1, out2 = self.model.net(input=self.image, class_dim=self.class_dim)
+        out0, out1, out2 = self.model.net(input=self.image,
+                                          class_dim=self.class_dim)
         cost0 = fluid.layers.cross_entropy(input=out0, label=self.label)
         cost1 = fluid.layers.cross_entropy(input=out1, label=self.label)
         cost2 = fluid.layers.cross_entropy(input=out2, label=self.label)
@@ -110,38 +119,45 @@ class Distill_Metrics(Metrics):
         return avg_cost
 """
 
+
 class Mixup_Metrics(Metrics):
     """A subclass inherited from Metrics
 
         Note: Mixup preprocessing only apply on the training process.
     """
-    def __init__(self):
-        super(Mixup_Measuremeat, self).__init__()
+
+    def __init__(self, data, model, args, is_train):
+        super(Mixup_Metrics, self).__init__(data, model, args, is_train)
         #Instead of label, mixup use y_a y_b and lam to calculate metrics.
-        self.y_a ,self.y_b ,self.lam = data[1:]
+        self.y_a = data[1]
+        self.y_b = data[2]
+        self.lam = data[3]
 
     def out(self):
         """Metrics of Mixup processing network
 
         """
 
-        net_out = self.model.net(input = self.image, class_dim = self.class_dim)
-        softmax_out = fluid.layers.softmax(net_out, use_cudnn = False)
-        
-        if not self.use_label_smoothing: 
-            loss_a = fluid.layers.cross_entropy(input = softmax_out, label = self.y_a)
-            loss_b = fluid.layers.cross_entropy(input = softmax_out, label = self.y_b)
+        net_out = self.model.net(input=self.image, class_dim=self.class_dim)
+        softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
+
+        if not self.use_label_smoothing:
+            loss_a = fluid.layers.cross_entropy(
+                input=softmax_out, label=self.y_a)
+            loss_b = fluid.layers.cross_entropy(
+                input=softmax_out, label=self.y_b)
         else:
-            loss_a = Metrics._calc_label_smoothing(softmax_out, self.y_a, self.class_dim, self.epsilon)
-            loss_b = Metrics._calc_label_smoothing(softmax_out, self.y_b, self.class_dim, self.epsilon)
-        
-        loss_a_mean = fluid.layers.mean(x = loss_a)
-        loss_b_mean = fluid.layers.mean(x = loss_b)
+            loss_a = Metrics._calc_label_smoothing(softmax_out, self.y_a,
+                                                   self.class_dim, self.epsilon)
+            loss_b = Metrics._calc_label_smoothing(softmax_out, self.y_b,
+                                                   self.class_dim, self.epsilon)
+
+        loss_a_mean = fluid.layers.mean(x=loss_a)
+        loss_b_mean = fluid.layers.mean(x=loss_b)
 
         cost = self.lam * loss_a_mean + (1 - self.lam) * loss_b_mean
         avg_cost = fluid.layers.mean(x=cost)
-
-        return avg_cost
+        return [avg_cost]
 
 
 def create_metrics(data, model, args, is_train):
@@ -151,6 +167,5 @@ def create_metrics(data, model, args, is_train):
         if args.use_mixup and is_train:
             metrics = Mixup_Metrics(data, model, args, is_train)
         else:
-            metrics = Metrics(data, model, args, is_train )
+            metrics = Metrics(data, model, args, is_train)
     return metrics
-
