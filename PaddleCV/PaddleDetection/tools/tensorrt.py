@@ -6,13 +6,13 @@ from PIL import Image
 
 import paddle.fluid as fluid
 
-from ppdet.utils.cli import ArgsParser
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
-import ppdet.utils.voc_eval as voc_eval
-import ppdet.utils.coco_eval as coco_eval
 
 from ppdet.utils.visualizer import visualize_results
+from ppdet.utils.cli import ArgsParser
+import ppdet.utils.voc_eval as voc_eval
+import ppdet.utils.coco_eval as coco_eval
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -22,17 +22,16 @@ logger = logging.getLogger(__name__)
 eval_clses = {'COCO': coco_eval, 'VOC': voc_eval}
 
 
-def get_config(model_path, mode=True):
+def create_config(model_path, mode=True):
     model_file = os.path.join(model_path, '__model__')
     params_file = os.path.join(model_path, '__params__')
-
     config = fluid.core.AnalysisConfig(model_file, params_file)
     config.enable_use_gpu(100, 0)
-
     if mode == 'trt_int8':
         config.enable_tensorrt_engine(
             1 << 30,
             1,
+            min_subgraph_size=40,
             precision_mode=fluid.core.AnalysisConfig.Precision.Int8,
             use_static=False,
             use_calib_mode=True)
@@ -41,6 +40,7 @@ def get_config(model_path, mode=True):
         config.enable_tensorrt_engine(
             workspace_size=1 << 30,
             max_batch_size=1,
+            min_subgraph_size=40,
             precision_mode=fluid.core.AnalysisConfig.Precision.Float32,
             use_static=False)
         logger.info('Run inference by TRT FP32.')
@@ -48,8 +48,69 @@ def get_config(model_path, mode=True):
         logger.info('Run inference by Fluid FP32.')
     else:
         logger.fatal('Wrong mode, only support trt_int8, trt_fp32, fluid.')
-
     return config
+
+
+def create_tensor(np_data, dtype):
+    """
+    Args:
+        np_data (numpy.array): numpy.array data with dtype
+        dtype (string): float32, int64 or int32
+    """
+
+    dtype_map = {
+        'float32': fluid.core.PaddleDType.FLOAT32,
+        'int64': fluid.core.PaddleDType.INT64,
+        'int32': fluid.core.PaddleDType.INT32
+    }
+
+    t = fluid.core.PaddleTensor()
+    t.dtype = dtype_map[dtype]
+    t.shape = np_data.shape
+    buf = np_data.flatten().tolist()
+    t.data = fluid.core.PaddleBuf(buf)
+    return t
+
+
+def create_inputs(data, architecture, use_cpp_engine=True):
+    im = []
+    im_size = []
+    im_info = []
+    im_shape = []
+    for ins in data:
+        im.append(ins[0])
+        if architecture == 'YOLOv3':
+            im_size.append(ins[1])
+        elif architecture == 'SSD':
+            pass
+        else:
+            im_info.append(ins[1])
+            im_shape.append(ins[3])
+
+    im = np.array(im)
+    im_size = np.array(im_size)
+    im_info = np.array(im_info)
+    im_shape = np.array(im_shape)
+
+    if use_cpp_engine:
+        inputs = [create_tensor(im, 'float32')]
+        if architecture == 'YOLOv3':
+            inputs += [create_tensor(im_size, 'int64')]
+        elif architecture == 'SSD':
+            pass
+        else:
+            inputs += [create_tensor(im_info, 'float32')]
+            inputs += [create_tensor(im_shape, 'float32')]
+    else:
+        inputs = [im]
+        if architecture == 'YOLOv3':
+            inputs += [im_size]
+        elif architecture == 'SSD':
+            pass
+        else:
+            inputs += [im_info]
+            inputs += [im_shape]
+    return inputs
 
 
 def offset_to_lengths(lod):
@@ -58,109 +119,52 @@ def offset_to_lengths(lod):
     return [lengths]
 
 
-def eval():
+def evaluate():
     cfg = load_config(FLAGS.config)
     merge_config(FLAGS.opt)
 
     feed = create(cfg.eval_feed)
     reader = create_reader(feed)
-
     fields = feed.fields
 
-    model_path = FLAGS.model_path
-
-    results = []
     imid2path = reader.imid2path
-
-    eval_cls = eval_clses[cfg.metric]
-
     anno_file = getattr(feed.dataset, 'annotation', None)
     with_background = getattr(feed, 'with_background', True)
     use_default_label = getattr(feed, 'use_default_label', False)
+
+    eval_cls = eval_clses[cfg.metric]
     clsid2catid, catid2name = eval_cls.get_category_info(
         anno_file, with_background, use_default_label)
     is_bbox_normalized = True if cfg.architecture == 'SSD' else False
 
+    place = fluid.CPUPlace() if FLAGS.use_cpp_engine else fluid.CUDAPlace(0)
+
+    results = []
     if not FLAGS.use_cpp_engine:
-        place = fluid.CPUPlace()
         exe = fluid.Executor(place)
-        [program, feed_names, fetch_targets] = (fluid.io.load_inference_model(
-            dirname=model_path,
+        [program, feed_names, fetch_targets] = fluid.io.load_inference_model(
+            dirname=FLAGS.model_path,
             executor=exe,
             model_filename='__model__',
-            params_filename='__params__'))
-
-        print(program)
-        print(feed_names)
+            params_filename='__params__')
     else:
-        config = get_config(model_path, mode=FLAGS.mode)
+        config = create_config(FLAGS.model_path, mode=FLAGS.mode)
         predict = fluid.core.create_paddle_predictor(config)
 
-    print(fields)
     for i, data in enumerate(reader()):
         if FLAGS.use_cpp_engine:
-            dt = data[0][0]
-            in_t = fluid.core.PaddleTensor()
-            in_t.dtype = fluid.core.PaddleDType.FLOAT32
-            in_t.shape = (len(data), ) + dt.shape
-            buf = dt.flatten().tolist()
-            in_t.data = fluid.core.PaddleBuf(buf)
-            in_ts = [in_t]
-
-            if i == 0:
-                print(in_t.shape)
-
-            if cfg.architecture == 'YOLOv3':
-                dt2 = data[0][1].astype('int64')
-                in_t2 = fluid.core.PaddleTensor()
-                #in_t2.dtype = fluid.core.PaddleDType.INT32
-                in_t2.dtype = fluid.core.PaddleDType.INT64
-                in_t2.shape = (len(data), ) + dt2.shape
-                buf = dt2.flatten().tolist()
-                in_t2.data = fluid.core.PaddleBuf(buf)
-                in_ts += [in_t2]
-            elif cfg.architecture == 'SSD':
-                pass
-            else:
-                dt2 = data[0][1].astype('float32')
-                in_t2 = fluid.core.PaddleTensor()
-                in_t2.dtype = fluid.core.PaddleDType.FLOAT32
-                in_t2.shape = (len(data), ) + dt2.shape
-                buf = dt2.flatten().tolist()
-                in_t2.data = fluid.core.PaddleBuf(buf)
-                in_ts += [in_t2]
-
-                dt3 = data[0][3].astype('float32')
-                in_t3 = fluid.core.PaddleTensor()
-                in_t3.dtype = fluid.core.PaddleDType.FLOAT32
-                in_t3.shape = (len(data), ) + dt3.shape
-                buf = dt3.flatten().tolist()
-                in_t3.data = fluid.core.PaddleBuf(buf)
-                in_ts += [in_t3]
-
-            #np.save('im.npy', data[0][0])
-            #np.save('im_shape.npy', data[0][1])
-            #return
-
-            outs = predict.run(in_ts)[0]
-
+            inputs = create_inputs(data, cfg.architecture, True)
+            outs = predict.run(inputs)[0]
             res = {}
+            np_data = np.array(outs.data.float_data()).reshape(outs.shape)
             lengths = offset_to_lengths(outs.lod)
-            res['bbox'] = (np.array(outs.data.float_data()).reshape(outs.shape),
-                           lengths)
+            res['bbox'] = (np_data, lengths)
 
             for k, v in zip(fields[1:], data[0][1:]):
                 res[k] = (np.array(v), [[len(v)]])
             results.append(res)
         else:
-            dt = data[0][0]
-            in1 = dt.reshape((len(data), ) + dt.shape)
-            inputs = [in1]
-            if cfg.architecture == 'YOLOv3':
-                dt2 = data[0][1]
-                in2 = dt2.reshape((len(data), ) + dt2.shape).astype('int32')
-                inputs += [in2]
-
+            inputs = create_inputs(data, cfg.architecture, False)
             outs, = exe.run(program,
                             feed={k: v
                                   for k, v in zip(feed_names, inputs)},
@@ -195,7 +199,8 @@ def eval():
                 image_name = image_path.split('/')[-1]
                 name, ext = os.path.splitext(image_name)
                 save_file = os.path.join(output_dir, "{}".format(name)) + ext
-                #logger.info("Detection bbox results save in {}".format(save_file))
+                logger.info("Detection bbox results save in {}".format(
+                    save_file))
                 image.save(save_file, quality=95)
 
     if cfg.metric == 'VOC':
@@ -205,44 +210,38 @@ def eval():
         eval_cls.bbox_eval(results, anno_file, 'bbox.json', with_background)
 
 
-def bench():
+def benchmark():
     cfg = load_config(FLAGS.config)
     merge_config(FLAGS.opt)
 
-    feed = create(cfg.eval_feed)
+    if FLAGS.infer_img is not None:
+        feed = create(cfg.test_feed)
+        images = [FLAGS.infer_img]
+        feed.dataset.add_images(images)
+    else:
+        feed = create(cfg.eval_feed)
+
+    print(cfg)
+
     reader = create_reader(feed)
 
     model_path = FLAGS.model_path
-    config = get_config(model_path, mode=FLAGS.mode)
+    config = create_config(model_path, mode=FLAGS.mode)
     predict = fluid.core.create_paddle_predictor(config)
 
     data = reader().next()
-
-    dt = data[0][0]
-    in_t = fluid.core.PaddleTensor()
-    in_t.shape = (len(data), ) + dt.shape
-    buf = dt.flatten().tolist()
-    in_t.data = fluid.core.PaddleBuf(buf)
-
-    in_ts = [in_t]
-    if cfg.architecture == 'YOLOv3':
-        dt2 = data[0][1].astype('int64')
-        in_t2 = fluid.core.PaddleTensor()
-        in_t2.dtype = fluid.core.PaddleDType.INT64
-        in_t2.shape = (len(data), ) + dt2.shape
-        buf = dt2.flatten().tolist()
-        in_t2.data = fluid.core.PaddleBuf(buf)
-        in_ts += [in_t2]
+    inputs = create_inputs(data, cfg.architecture, True)
+    print('input image shape ', inputs[0].shape)
 
     logger.info('warmup...')
     for i in range(10):
-        outs = predict.run(in_ts)
+        outs = predict.run(inputs)
 
     cnt = 1000
     logger.info('run benchmark...')
     t1 = time.time()
     for i in range(cnt):
-        predict.run(in_ts)
+        predict.run(inputs)
     t2 = time.time()
 
     ms = (t2 - t1) * 1000.0 / float(cnt)
@@ -265,8 +264,8 @@ def bench():
         outs = outs[0]
         res = {}
         lengths = offset_to_lengths(outs.lod)
-        res['bbox'] = (np.array(outs.data.float_data()).reshape(outs.shape),
-                       lengths)
+        np_data = np.array(outs.data.float_data()).reshape(outs.shape)
+        res['bbox'] = (np_data, lengths)
         for k, v in zip(fields[1:], data[0][1:]):
             res[k] = (np.array(v), [[len(v)]])
 
@@ -325,8 +324,10 @@ if __name__ == '__main__':
         type=str,
         default="output",
         help="Directory for storing the output visualization files.")
+    parser.add_argument(
+        "--infer_img", type=str, default=None, help="Image path")
     FLAGS = parser.parse_args()
     if FLAGS.is_eval:
-        eval()
+        evaluate()
     else:
-        bench()
+        benchmark()

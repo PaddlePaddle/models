@@ -258,11 +258,6 @@ class ResizeImage(BaseOperator):
             resize_w = selected_size
             resize_h = selected_size
 
-            sample['im_info'] = np.array(
-                [resize_h, resize_w, 1.0], dtype=np.float32)
-            sample['h'] = resize_h
-            sample['w'] = resize_w
-
         if self.use_cv2:
             im = cv2.resize(
                 im,

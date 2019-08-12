@@ -466,8 +466,7 @@ class FasterRCNNEvalFeed(DataFeed):
                                     std=[0.229, 0.224, 0.225],
                                     is_scale=True,
                                     is_channel_first=False),
-                     #ResizeImage(target_size=800, max_size=1333, interp=1),
-                     Resize(target_size=[1333, 800], interp=1),
+                     ResizeImage(target_size=800, max_size=1333, interp=1),
                      Permute(to_bgr=False)
                  ],
                  batch_transforms=[PadBatch()],
@@ -741,11 +740,11 @@ class SSDEvalFeed(DataFeed):
             self,
             dataset=VocDataSet(VOC_VAL_ANNOTATION).__dict__,
             fields=['image', 'gt_box', 'gt_label', 'is_difficult'],
-            image_shape=[3, 320, 320],
+            image_shape=[3, 300, 300],
             sample_transforms=[
                 DecodeImage(to_rgb=True, with_mixup=False),
                 NormalizeBox(),
-                ResizeImage(target_size=320, use_cv2=False, interp=1),
+                ResizeImage(target_size=300, use_cv2=False, interp=1),
                 Permute(),
                 NormalizeImage(
                     mean=[127.5, 127.5, 127.5],
@@ -760,7 +759,7 @@ class SSDEvalFeed(DataFeed):
             num_workers=8,
             bufsize=10,
             use_process=False):
-        sample_transforms.append(ArrangeSSD())
+        sample_transforms.append(ArrangeSSD(fields=fields))
         if isinstance(dataset, dict):
             dataset = VocDataSet(**dataset)
         super(SSDEvalFeed, self).__init__(
