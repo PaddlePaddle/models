@@ -191,8 +191,8 @@ def proposal2out(results, is_bbox_normalized=False):
 def bbox2out(results, clsid2catid, is_bbox_normalized=False):
     """
     Args:
-        results: request a dict, include: `im_info`, `im_id`,
-                 `im_shape`, `bbox`, `mask`, etc.
+        results: request a dict, should include: `bbox`, `im_id`,
+                 if is_bbox_normalized=True, also need `im_shape`.
         clsid2catid: class id to category id map of COCO2017 dataset.
         is_bbox_normalized: whether or not bbox is normalized.
     """
