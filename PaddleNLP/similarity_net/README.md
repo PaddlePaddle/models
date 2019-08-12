@@ -64,8 +64,8 @@ sh run.sh infer
 用户可以基于示例数据构建训练集和开发集，可以运行下面的命令，进行模型训练和开发集验证。
 ```shell
 sh run.sh train 
-用户也可以指定./run.sh中train()函数里的INIT_CHECKPOINT的值，载入训练好的模型进行热启动训练。
 ```
+用户也可以指定./run.sh中train()函数里的INIT_CHECKPOINT的值，载入训练好的模型进行热启动训练。
 ## 进阶使用
 
 ### 任务定义与建模
