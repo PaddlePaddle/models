@@ -150,7 +150,9 @@ def train(args):
     train_py_reader.decorate_sample_list_generator(train_reader, place)
     test_py_reader.decorate_sample_list_generator(test_reader, place)
 
-    train_exe = best_strategy(args, train_prog, train_fetch_vars[0])
+    #train_exe = best_strategy(args, train_prog, train_fetch_vars[0])
+
+    train_prog = best_strategy_compiled(args, train_prog, train_fetch_vars[0])
 
     for pass_id in range(args.num_epochs):
         train_batch_id = 0
@@ -164,12 +166,8 @@ def train(args):
         try:
             while True:
                 t1 = time.time()
-                if not args.ngraph:
-                    train_batch_metrics = train_exe.run(
-                        fetch_list=train_fetch_list)
-                else:
-                    train_batch_metrics = train_exe.run(
-                        train_prog, fetch_list=train_fetch_list)
+                train_batch_metrics = exe.run(train_prog,
+                                              fetch_list=train_fetch_list)
                 t2 = time.time()
                 train_batch_elapse = t2 - t1
                 train_batch_time_record.append(train_batch_elapse)
