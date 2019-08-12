@@ -49,7 +49,8 @@ export PYTHONPATH=$PYTHONPATH:.
 python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml --eval
 ```
 可通过设置`--eval`在训练epoch中交替执行评估, 评估在每个snapshot_iter时开始。可在配置文件的`snapshot_iter`处修改。
-如果验证集很大，测试将会比较耗时，影响训练速度，建议减少评估次数，或训练完再进行评估。
+如果验证集很大，测试将会比较耗时，影响训练速度，建议减少评估次数，或训练完再进行评估。当边训练边测试时，在每次snapshot_iter会评测出最佳mAP模型保存到
+`best_model`文件夹下，`best_model`的路径和`model_final`的路径相同。
 
 - 设置配置文件参数 && 指定数据集路径
 ```bash
@@ -67,7 +68,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 - 若本地未找到数据集，将自动下载数据集并保存在`~/.cache/paddle/dataset`中。
 - 预训练模型自动下载并保存在`〜/.cache/paddle/weights`中。
 - 模型checkpoints默认保存在`output`中（可配置）。
-- 更多参数配置，请参考配置文件。
+- 更多参数配置，请参考[配置文件](../configs)。
 - RCNN系列模型CPU训练在PaddlePaddle 1.5.1及以下版本暂不支持，将在下个版本修复。
 
 
@@ -155,12 +156,13 @@ export PYTHONPATH=$PYTHONPATH:.
 python tools/infer.py -c configs/faster_rcnn_r50_1x.yml \
                       --infer_img=demo/000000570688.jpg \
                       --output_dir=infer_output/ \
-                      --draw_threshold=0.5
+                      --draw_threshold=0.5 \
+                      -o weights=output/faster_rcnn_r50_1x/model_final
 ```
 
 
 可视化文件默认保存在`output`中，可通过`--output_dir=`指定不同的输出路径。  
-`--draw_threshold` 是个可选参数. 根据 [NMS](https://ieeexplore.ieee.org/document/1699659) 的计算，不同阈值会产生不同的结果。
+`--draw_threshold` 是个可选参数. 根据 [NMS](https://ieeexplore.ieee.org/document/1699659) 的计算，不同阈值会产生不同的结果。如果用户需要对自定义路径的模型进行推断，可以设置`-o weights`指定模型路径。
 
 - 保存推断模型
 

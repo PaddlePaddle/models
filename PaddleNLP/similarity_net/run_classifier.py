@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(__doc__)
 model_g = utils.ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("config_path", str, None,
                 "Path to the json file for EmoTect model config.")
-model_g.add_arg("init_checkpoint", str, "examples/cnn_pointwise.json",
+model_g.add_arg("init_checkpoint", str, None,
                 "Init checkpoint to resume training from.")
 model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
 model_g.add_arg("task_mode", str, None, "task mode: pairwise or pointwise")
@@ -163,11 +163,16 @@ def train(conf_dict, args):
         infer_program = fluid.default_main_program().clone(for_test=True)
         avg_cost = loss.compute(pred, label)
         avg_cost.persistable = True
-
+    
     # operate Optimization
     optimizer.ops(avg_cost)
     executor = fluid.Executor(place)
     executor.run(fluid.default_startup_program())
+
+    if args.init_checkpoint is not None:
+        utils.init_checkpoint(executor, args.init_checkpoint, 
+                fluid.default_startup_program())
+    
     # Get and run executor
     parallel_executor = fluid.ParallelExecutor(
         use_cuda=args.use_cuda,
