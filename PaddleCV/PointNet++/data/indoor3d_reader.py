@@ -22,6 +22,11 @@ import os.path as osp
 import numpy as np
 import h5py
 import random
+import logging
+
+__all__ = ["Indoor3DReader"]
+
+logger = logging.getLogger(__name__)
 
 
 class Indoor3DReader(object):
@@ -43,6 +48,7 @@ class Indoor3DReader(object):
         return f['data'][:], f['label'][:]
 
     def load_data(self):
+        logger.info("Loading Indoor3D dataset from {} ...".format(self.data_dir))
         # read all_files.txt
         all_files_fname = osp.join(self.data_dir, 'all_files.txt')
         all_files = self._read_data_file(all_files_fname)
@@ -74,6 +80,7 @@ class Indoor3DReader(object):
         self.data['test'] = {}
         self.data['test']['points'] = points[test_idxs, ...]
         self.data['test']['labels'] = labels[test_idxs, ...]
+        logger.info("Load data finished")
 
     def get_reader(self, batch_size, num_points, mode='train', shuffle=True):
         assert mode in ['train', 'test'], \
@@ -82,7 +89,7 @@ class Indoor3DReader(object):
         points = data['points']
         labels = data['labels']
 
-        if shuffle:
+        if mode == 'train' and shuffle:
             idxs = np.arange(len(points))
             np.random.shuffle(idxs)
             points = points[idxs]
@@ -101,7 +108,8 @@ class Indoor3DReader(object):
 
                 xyz = p[:, :3]
                 feature = p[:, 3:]
-                batch_out.append((xyz, feature, l))
+                label = l[:, np.newaxis]
+                batch_out.append((xyz, feature, label))
 
                 if len(batch_out) == batch_size:
                     yield batch_out

@@ -12,13 +12,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-from __future__ import absolute_import
+from . import indoor3d_reader
+from indoor3d_reader import *
 
-from . import pointnet2_modules
-from . import pointnet2_seg
-
-from .pointnet2_modules import *
-from .pointnet2_seg import *
-
-__all__ = pointnet2_modules.__all__
-__all__ += pointnet2_seg.__all__
+__all__ = indoor3d_reader.__all__
