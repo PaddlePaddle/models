@@ -28,10 +28,9 @@ from ppdet.data.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
     Permute)
-from ppdet.data.transform.arrange_sample import (ArrangeRCNN, ArrangeTestRCNN,
-                                                 ArrangeSSD, ArrangeTestSSD,
-                                                 ArrangeYOLO, ArrangeEvalYOLO,
-                                                 ArrangeTestYOLO)
+from ppdet.data.transform.arrange_sample import (
+    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeTestSSD, ArrangeYOLO,
+    ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
@@ -58,12 +57,6 @@ def _prepare_data_config(feed, args_path):
     mixup_epoch = -1
     if getattr(feed, 'mixup_epoch', None) is not None:
         mixup_epoch = feed.mixup_epoch
-    bufsize = 10
-    use_process = False
-    if getattr(feed, 'bufsize', None) is not None:
-        bufsize = feed.bufsize
-    if getattr(feed, 'use_process', None) is not None:
-        use_process = feed.use_process
 
     data_config = {
         'ANNO_FILE': feed.dataset.annotation,
@@ -95,6 +88,13 @@ def create_reader(feed, max_iter=0, args_path=None, my_source=None):
     # if `DATASET_DIR` does not exists, search ~/.paddle/dataset for a directory
     # named `DATASET_DIR` (e.g., coco, pascal), if not present either, download
     data_config = _prepare_data_config(feed, args_path)
+
+    bufsize = 10
+    use_process = False
+    if getattr(feed, 'bufsize', None) is not None:
+        bufsize = feed.bufsize
+    if getattr(feed, 'use_process', None) is not None:
+        use_process = feed.use_process
 
     transform_config = {
         'WORKER_CONF': {
@@ -137,8 +137,8 @@ def create_reader(feed, max_iter=0, args_path=None, my_source=None):
         ops.append(op_dict)
     transform_config['OPS'] = ops
 
-    return Reader.create(feed.mode, data_config,
-        transform_config, max_iter, my_source)
+    return Reader.create(feed.mode, data_config, transform_config, max_iter,
+                         my_source)
 
 
 # XXX batch transforms are only stubs for now, actually handled by `post_map`
@@ -411,6 +411,7 @@ class TestFeed(DataFeed):
             num_workers=num_workers)
 
 
+# yapf: disable
 @register
 class FasterRCNNTrainFeed(DataFeed):
     __doc__ = DataFeed.__doc__
@@ -421,7 +422,7 @@ class FasterRCNNTrainFeed(DataFeed):
                      'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
                      'is_crowd'
                  ],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      RandomFlipImage(prob=0.5),
@@ -466,7 +467,7 @@ class FasterRCNNEvalFeed(DataFeed):
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -507,7 +508,7 @@ class FasterRCNNTestFeed(DataFeed):
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -554,7 +555,7 @@ class MaskRCNNTrainFeed(DataFeed):
                      'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
                      'is_crowd', 'gt_mask'
                  ],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      RandomFlipImage(prob=0.5, is_mask_flip=True),
@@ -600,7 +601,7 @@ class MaskRCNNEvalFeed(DataFeed):
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -646,7 +647,7 @@ class MaskRCNNTestFeed(DataFeed):
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[3, 1333, 800],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(
@@ -899,7 +900,7 @@ class YoloEvalFeed(DataFeed):
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_size', 'im_id', 'gt_box', 
+                 fields=['image', 'im_size', 'im_id', 'gt_box',
                          'gt_label', 'is_difficult'],
                  image_shape=[3, 608, 608],
                  sample_transforms=[
@@ -935,6 +936,7 @@ class YoloEvalFeed(DataFeed):
             with_background=with_background,
             num_workers=num_workers,
             use_process=use_process)
+        self.num_max_boxes = num_max_boxes
         self.mode = 'VAL'
         self.bufsize = 128
 
@@ -984,3 +986,4 @@ class YoloTestFeed(DataFeed):
             use_process=use_process)
         self.mode = 'TEST'
         self.bufsize = 128
+# yapf: enable

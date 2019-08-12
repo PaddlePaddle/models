@@ -23,16 +23,13 @@ import numpy as np
 import datetime
 from collections import deque
 
-
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
 
-
-# NOTE(paddle-dev): All of these flags should be
-# set before `import paddle`. Otherwise, it would
-# not take any effect. 
+# NOTE(paddle-dev): All of these flags should be set before 
+# `import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
     FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
 )
@@ -126,8 +123,11 @@ def main():
         eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
         # parse eval fetches
-        extra_keys = ['im_info', 'im_id',
-                      'im_shape'] if cfg.metric == 'COCO' else []
+        extra_keys = []
+        if cfg.metric == 'COCO':
+            extra_keys = ['im_info', 'im_id', 'im_shape']
+        if cfg.metric == 'VOC':
+            extra_keys = ['gt_box', 'gt_label', 'is_difficult']
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
@@ -199,7 +199,7 @@ def main():
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
                 eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
-                             resolution, is_bbox_normalized, FLAGS.output_file)
+                             resolution, is_bbox_normalized, FLAGS.output_eval)
 
     train_pyreader.reset()
 
@@ -218,11 +218,10 @@ if __name__ == '__main__':
         default=False,
         help="Whether to perform evaluation in train")
     parser.add_argument(
-        "-f",
-        "--output_file",
+        "--output_eval",
         default=None,
         type=str,
-        help="Evaluation file name, default to bbox.json and mask.json.")
+        help="Evaluation directory, default is current directory.")
     parser.add_argument(
         "-d",
         "--dataset_dir",
