@@ -198,7 +198,7 @@ def ResNeXt101_vd_64x4d():
     return model
 
 def ResNeXt101_vd_32x4d():
-    model = ResNeXt(layers=50, cardinality=32, is_3x3 = True)
+    model = ResNeXt(layers=101, cardinality=32, is_3x3 = True)
     return model
 
 def ResNeXt152_vd_64x4d():
@@ -206,6 +206,6 @@ def ResNeXt152_vd_64x4d():
     return model
 
 def ResNeXt152_vd_32x4d():
-    model = ResNeXt(layers=50, cardinality=32, is_3x3 = True)
+    model = ResNeXt(layers=152, cardinality=32, is_3x3 = True)
     return model
 

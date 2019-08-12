@@ -1,5 +1,7 @@
 # 模型库和基线
 
+## 测试环境
+
 - Python 2.7.1
 - PaddlePaddle 1.5
 - CUDA 9.0
@@ -56,6 +58,24 @@ Paddle提供基于ImageNet的骨架网络预训练模型。所有预训练模型
 | SENet154-vd-FPN      | Faster         |    1    |  1.44x  |  42.9  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_se154_vd_fpn_s1x.tar) |
 | SENet154-vd-FPN      | Mask           |    1    |  1.44x  |  44.0  |  38.7   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_se154_vd_fpn_s1x.tar) |
 
+### Deformable 卷积网络v2
+
+| 骨架网络             | 网络类型           | 卷积    | 每张GPU图片个数 | 学习率策略 | Box AP | Mask AP |                           下载                           |
+| :------------------- | :------------- | :-----: |:--------: | :-----: | :----: | :-----: | :----------------------------------------------------------: |
+| ResNet50-FPN         | Faster         | c3-c5   |    2      |   1x    |  41.0  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_dcn_r50_fpn_1x.tar) |
+| ResNet50-vd-FPN      | Faster         | c3-c5   |    2      |   2x    |  42.4  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_dcn_r50_vd_fpn_2x.tar) |
+| ResNet101-vd-FPN     | Faster         | c3-c5   |    2      |   1x    |  44.1  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_dcn_r101_vd_fpn_1x.tar) |
+| ResNeXt101-vd-FPN    | Faster         | c3-c5   |    1      |   1x    |  45.2  |    -    | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_dcn_x101_vd_64x4d_fpn_1x.tar) |
+| ResNet50-FPN         | Mask           | c3-c5   |    1      |   1x    |  41.9  |  37.3   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_dcn_r50_fpn_1x.tar) |
+| ResNet50-vd-FPN      | Mask           | c3-c5   |    1      |   2x    |  42.9  |  38.0   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_dcn_r50_vd_fpn_2x.tar) |
+| ResNet101-vd-FPN     | Mask           | c3-c5   |    1      |   1x    |  44.6  |  39.2   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_dcn_r101_vd_fpn_1x.tar) |
+| ResNeXt101-vd-FPN    | Mask           | c3-c5   |    1      |   1x    |  46.2  |  40.4   | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/mask_rcnn_dcn_x101_vd_64x4d_fpn_1x.tar) |
+
+#### 注意事项:
+- Deformable卷积网络v2(dcn_v2)参考自论文[Deformable ConvNets v2](https://arxiv.org/abs/1811.11168).
+- `c3-c5`意思是在resnet模块的3到5阶段增加`dcn`.
+- 详细的配置文件在[configs/dcn](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection/configs/dcn)
+
 ### Yolo v3
 
 | 骨架网络     | 输入尺寸 | 每张GPU图片个数 | 学习率策略 | Box AP | 下载 |
@@ -95,10 +115,10 @@ Paddle提供基于ImageNet的骨架网络预训练模型。所有预训练模型
 
 **注意事项:** RetinaNet系列模型中，在总batch size为16下情况下，初始学习率改为0.01。
 
-### SSD on Pascal VOC
+### SSD 基于Pascal VOC数据集
 
 |  骨架网络     | 输入尺寸 | 每张GPU图片个数 | 学习率策略 | Box AP | 下载  |
 | :----------- | :--: | :-----: | :-----: | :----: | :-------: |
-| MobileNet v1 | 300  |    32   |   120e  |  73.13  | [model](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
+| MobileNet v1 | 300  |    32   |   120e  |  73.13  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_voc.tar) |
 
 **注意事项:** SSD在2卡，总batch size为64下训练120轮。数据增强包括：随机颜色失真，随机剪裁，随机扩张，随机翻转。

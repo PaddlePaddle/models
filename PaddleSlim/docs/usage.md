@@ -59,7 +59,7 @@
 
 这一步的产出应该是两个[Program](http://paddlepaddle.org/documentation/docs/zh/1.3/api_cn/fluid_cn.html#program)实例：
 
-- **train_program:** 用于在压缩过程中迭代训练模型，该program必须包含loss。一般改program不要有backward op和weights update op，否则不能使用蒸馏策略。
+- **train_program:** 用于在压缩过程中迭代训练模型，该program必须包含loss。一般该program不要有backward op和weights update op，否则不能使用蒸馏策略。
 
 - **eval_program:** 用于在压缩过程中评估模型的精度，一般会包含accuracy、IoU等评估指标的计算layer。
 
@@ -78,7 +78,7 @@
 #### 1.1.2.3. optimizer
 [fluid.optimizer API](http://www.paddlepaddle.org/documentation/docs/zh/1.3/api_cn/optimizer_cn.html)
 
-在不同的使用场景下，用户需要提供0个、1个或2两个optimizer:
+在不同的使用场景下，用户需要提供0个、1个或2个optimizer:
 
 - **0个optimizer:** 在模型搭建阶段的train_program已经是一个包含了反向op和模型weight更新op的网络，则不用再提供optimizer
 - **1个optimizer:** train_program只有前向计算op, 则需要提供一个optimizer，用于优化训练train_program.
