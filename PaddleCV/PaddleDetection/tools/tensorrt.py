@@ -10,7 +10,9 @@ from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.visualizer import visualize_results
+from ppdet.utils.eval_utils import eval_results
 from ppdet.utils.cli import ArgsParser
+from ppdet.utils.eval_utils import eval_results
 import ppdet.utils.voc_eval as voc_eval
 import ppdet.utils.coco_eval as coco_eval
 
@@ -22,15 +24,15 @@ logger = logging.getLogger(__name__)
 eval_clses = {'COCO': coco_eval, 'VOC': voc_eval}
 
 
-def create_config(model_path, mode=True):
+def create_config(model_path, mode='fluid', batch_size=1):
     model_file = os.path.join(model_path, '__model__')
     params_file = os.path.join(model_path, '__params__')
     config = fluid.core.AnalysisConfig(model_file, params_file)
     config.enable_use_gpu(100, 0)
     if mode == 'trt_int8':
         config.enable_tensorrt_engine(
-            1 << 30,
-            1,
+            workspace_size=1 << 30,
+            max_batch_size=batch_size,
             min_subgraph_size=40,
             precision_mode=fluid.core.AnalysisConfig.Precision.Int8,
             use_static=False,
@@ -39,7 +41,7 @@ def create_config(model_path, mode=True):
     elif mode == 'trt_fp32':
         config.enable_tensorrt_engine(
             workspace_size=1 << 30,
-            max_batch_size=1,
+            max_batch_size=batch_size,
             min_subgraph_size=40,
             precision_mode=fluid.core.AnalysisConfig.Precision.Float32,
             use_static=False)
@@ -51,12 +53,14 @@ def create_config(model_path, mode=True):
     return config
 
 
-def create_tensor(np_data, dtype):
+def create_tensor(np_data, dtype, use_cpp_engine=True):
     """
     Args:
         np_data (numpy.array): numpy.array data with dtype
         dtype (string): float32, int64 or int32
     """
+    if not use_cpp_engine:
+        return np_data
 
     dtype_map = {
         'float32': fluid.core.PaddleDType.FLOAT32,
@@ -72,44 +76,39 @@ def create_tensor(np_data, dtype):
     return t
 
 
+def batch_row2col(data, fields):
+    outs = [[[], []] for i in range(len(data[0]))]
+    anno_bbox = ['gt_box', 'gt_label', 'is_crowd', 'is_difficult']
+    for batch in data:
+        for i, slot in enumerate(batch):
+            if fields[i] in anno_bbox:
+                outs[i][0].extend(list(slot))
+                outs[i][1].append(len(slot))
+            else:
+                outs[i][0].append(slot)
+
+    for i, slot in enumerate(outs):
+        #outs[i][0] = np.concatenate(slot[0], axis=0)
+        outs[i][0] = np.array(slot[0])
+        outs[i][1] = [slot[1]]
+    return outs
+
+
 def create_inputs(data, architecture, use_cpp_engine=True):
-    im = []
-    im_size = []
-    im_info = []
-    im_shape = []
-    for ins in data:
-        im.append(ins[0])
-        if architecture == 'YOLOv3':
-            im_size.append(ins[1])
-        elif architecture == 'SSD':
-            pass
-        else:
-            im_info.append(ins[1])
-            im_shape.append(ins[3])
+    im = data['image'][0]
+    inputs = [create_tensor(im, 'float32', use_cpp_engine)]
 
-    im = np.array(im)
-    im_size = np.array(im_size)
-    im_info = np.array(im_info)
-    im_shape = np.array(im_shape)
-
-    if use_cpp_engine:
-        inputs = [create_tensor(im, 'float32')]
-        if architecture == 'YOLOv3':
-            inputs += [create_tensor(im_size, 'int64')]
-        elif architecture == 'SSD':
-            pass
-        else:
-            inputs += [create_tensor(im_info, 'float32')]
-            inputs += [create_tensor(im_shape, 'float32')]
+    if architecture == 'YOLOv3':
+        im_size = data['im_size'][0]
+        inputs += [create_tensor(im_size, 'int64', use_cpp_engine)]
+    elif architecture == 'SSD':
+        pass
     else:
-        inputs = [im]
-        if architecture == 'YOLOv3':
-            inputs += [im_size]
-        elif architecture == 'SSD':
-            pass
-        else:
-            inputs += [im_info]
-            inputs += [im_shape]
+        im_info = data['im_info'][0]
+        im_shape = data['im_shape'][0]
+        inputs += [create_tensor(im_info, 'float32', use_cpp_engine)]
+        inputs += [create_tensor(im_shape, 'float32', use_cpp_engine)]
+
     return inputs
 
 
@@ -148,23 +147,29 @@ def evaluate():
             model_filename='__model__',
             params_filename='__params__')
     else:
-        config = create_config(FLAGS.model_path, mode=FLAGS.mode)
+        config = create_config(
+            FLAGS.model_path, mode=FLAGS.mode, batch_size=feed.batch_size)
         predict = fluid.core.create_paddle_predictor(config)
 
     for i, data in enumerate(reader()):
         if FLAGS.use_cpp_engine:
-            inputs = create_inputs(data, cfg.architecture, True)
+            data = batch_row2col(data, fields)
+            data_dict = {k: v for k, v in zip(fields, data)}
+            inputs = create_inputs(data_dict, cfg.architecture, True)
             outs = predict.run(inputs)[0]
+
             res = {}
             np_data = np.array(outs.data.float_data()).reshape(outs.shape)
             lengths = offset_to_lengths(outs.lod)
             res['bbox'] = (np_data, lengths)
+            res.update(data_dict)
 
-            for k, v in zip(fields[1:], data[0][1:]):
-                res[k] = (np.array(v), [[len(v)]])
             results.append(res)
         else:
-            inputs = create_inputs(data, cfg.architecture, False)
+            data = batch_row2col(data, fields)
+            data_dict = {k: v for k, v in zip(fields, data)}
+            inputs = create_inputs(data_dict, cfg.architecture, False)
+
             outs, = exe.run(program,
                             feed={k: v
                                   for k, v in zip(feed_names, inputs)},
@@ -174,9 +179,8 @@ def evaluate():
             res = {}
             lengths = outs.recursive_sequence_lengths()
             res['bbox'] = (np.array(outs), lengths)
+            res.update(data_dict)
 
-            for k, v in zip(fields[1:], data[0][1:]):
-                res[k] = (np.array(v), [[len(v)]])
             results.append(res)
 
         if i % 500 == 0:
@@ -192,7 +196,7 @@ def evaluate():
                 image = visualize_results(image,
                                           int(im_id), catid2name,
                                           FLAGS.draw_threshold, bbox_results,
-                                          None, is_bbox_normalized)
+                                          None)
                 output_dir = FLAGS.output_dir
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
@@ -203,11 +207,11 @@ def evaluate():
                     save_file))
                 image.save(save_file, quality=95)
 
-    if cfg.metric == 'VOC':
-        eval_cls.bbox_eval(
-            results, cfg.num_classes, is_bbox_normalized=is_bbox_normalized)
-    else:
-        eval_cls.bbox_eval(results, anno_file, 'bbox.json', with_background)
+    resolution = None
+    if 'mask' in results[0]:
+        resolution = model.mask_head.resolution
+    eval_results(results, feed, cfg.metric, cfg.num_classes, resolution,
+                 is_bbox_normalized)
 
 
 def benchmark():
@@ -226,18 +230,23 @@ def benchmark():
     reader = create_reader(feed)
 
     model_path = FLAGS.model_path
-    config = create_config(model_path, mode=FLAGS.mode)
+    config = create_config(
+        model_path, mode=FLAGS.mode, batch_size=feed.batch_size)
     predict = fluid.core.create_paddle_predictor(config)
 
     data = reader().next()
-    inputs = create_inputs(data, cfg.architecture, True)
+    fields = feed.fields
+    data = batch_row2col(data, fields)
+    data_dict = {k: v for k, v in zip(fields, data)}
+
+    inputs = create_inputs(data_dict, cfg.architecture, True)
     print('input image shape ', inputs[0].shape)
 
     logger.info('warmup...')
     for i in range(10):
         outs = predict.run(inputs)
 
-    cnt = 1000
+    cnt = 100
     logger.info('run benchmark...')
     t1 = time.time()
     for i in range(cnt):
@@ -249,7 +258,6 @@ def benchmark():
     print("Inference: {} ms per image".format(ms))
 
     if FLAGS.visualize:
-        fields = feed.fields
         imid2path = reader.imid2path
         eval_cls = eval_clses[cfg.metric]
 
@@ -266,8 +274,7 @@ def benchmark():
         lengths = offset_to_lengths(outs.lod)
         np_data = np.array(outs.data.float_data()).reshape(outs.shape)
         res['bbox'] = (np_data, lengths)
-        for k, v in zip(fields[1:], data[0][1:]):
-            res[k] = (np.array(v), [[len(v)]])
+        res.update(data_dict)
 
         bbox_results = eval_cls.bbox2out([res], clsid2catid, is_bbox_normalized)
         im_ids = res['im_id'][0]
@@ -276,8 +283,7 @@ def benchmark():
             image = Image.open(image_path).convert('RGB')
             image = visualize_results(image,
                                       int(im_id), catid2name,
-                                      FLAGS.draw_threshold, bbox_results, None,
-                                      is_bbox_normalized)
+                                      FLAGS.draw_threshold, bbox_results, None)
             output_dir = FLAGS.output_dir
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
