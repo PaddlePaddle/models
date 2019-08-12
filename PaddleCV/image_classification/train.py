@@ -76,7 +76,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 decay = Decay(args)
                 optimizer = getattr(decay, args.lr_strategy)()
                 avg_cost = out[0]
-                if not arg.fp16:
+                if not args.use_fp16:
                     optimizer.minimize(avg_cost)
                 else:
                     params_grads = optimizer.backward(avg_cost)
@@ -94,6 +94,9 @@ def build_program(is_train, main_prog, startup_prog, args):
 
 
 def train(args):
+    """Train a model
+    """
+
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()

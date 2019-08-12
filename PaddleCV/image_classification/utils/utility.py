@@ -402,3 +402,17 @@ def best_strategy(args, program, loss):
     print("[Program is running on ", fluid.core.get_cuda_device_count(),
           " cards ]")
     return train_exe
+
+
+def best_strategy_compiled(args, program, loss):
+    if os.getenv('FLAGS_use_ngraph'):
+        return program
+    else:
+        build_strategy = fluid.compiler.BuildStrategy()
+
+        build_strategy.enable_inplace = args.use_inplace
+
+        compiled_program = fluid.CompiledProgram(program).with_data_parallel(
+            loss_name=loss.name, build_strategy=build_strategy)
+
+        return compiled_program
