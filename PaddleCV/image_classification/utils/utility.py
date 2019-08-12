@@ -88,6 +88,7 @@ def parse_args():
     add_arg('data_dir',                 str,    "./data/ILSVRC2012/",   "The ImageNet dataset root directory.")
     add_arg('pretrained_model',         str,    None,                   "Whether to load pretrained model.")
     add_arg('checkpoint',               str,    None,                   "Whether to resume checkpoint.")
+    add_arg('save_params',              str,    None,                   "Whether to save params.")
 
     add_arg('print_step',               int,    10,                     "The steps interval to print logs")
     add_arg('save_step',                int,    100,                    "The steps interval to save checkpoints")
@@ -145,19 +146,31 @@ def check_args(args):
     ]
     if args.lr_strategy not in lr_strategy_list:
         warnings.warn(
-            "{} is not in lists: {}, Use default learning strategy now".format(
+            "{} is not in lists: {}, Use default learning strategy now.".format(
                 args.lr_strategy, lr_strategy_list))
 
     if args.model == "GooLeNet":
-        assert arg.use_mixup == True, "Cannot use mixup processing in GoogLeNet, please set use_mixup = False"
+        assert arg.use_mixup == True, "Cannot use mixup processing in GoogLeNet, please set use_mixup = False."
 
     if args.pretrained_model is not None:
-        assert os.path.isdir(args.pretrained_model)
+        assert isinstance(args.pretrained_model, str)
+        assert os.path.isdir(
+            args.
+            pretrained_model), "please support available pretrained_model path."
 
     if args.checkpoint is not None:
-        assert os.path.isdir(args.checkpoint)
-        # when use gpu, the number of visible gpu should divide batch size
-    assert args.batch_size % fluid.core.get_cuda_device_count() == 0
+        assert isinstance(args.checkpoint, str)
+        assert os.path.isdir(
+            args.checkpoint), "please support available checkpoint path."
+    if args.save_params:
+        assert isinstance(args.save_params, str)
+        assert os.path.isdir(
+            args.save_params), "please support availablr save_params path."
+
+    # when use gpu, the number of visible gpu should divide batch size
+    if args.use_gpu:
+        assert args.batch_size % fluid.core.get_cuda_device_count(
+        ) == 0, "please support correct batch_size, which can divide by available cards, you can change the number of cards by indicating: export CUDA_VISIBLE_DEVICES=0 "
 
     def check_gpu():
         """ 
@@ -180,8 +193,8 @@ def check_args(args):
 
     check_gpu()
     #temporary disable:
-    if args.enable_ce == True:
-        raise
+    if args.enable_ce == True or args.use_fp16:
+        raise Exception("Temporary disable enable_ce and fp_16")
 
 
 def get_device_num():
@@ -203,53 +216,46 @@ def get_device_num():
     return device_num
 
 
-def init_from(exe, args, program):
-
-    if args.checkpoint is not None:
-        fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
+def init_model(exe, args, program):
+    if args.checkpoint:
+        fluid.io.load_persistables(
+            exe,
+            args.checkpoint,
+            main_program=program,
+            filename="checkpoint.pdckpt")
+        print("finish initing model from checkpoint from %s" %
+              (args.checkpoint))
 
     if args.pretrained_model:
 
         def if_exist(var):
-            return os.path.exists(os.path.join(pretrained_model, var.name))
+            if not isinstance(var, fluid.framework.Parameter):
+                return False
+            return os.path.exists(os.path.join(args.pretrained_model, var.name))
 
         fluid.io.load_vars(
             exe,
             args.pretrained_model,
             main_program=program,
             predicate=if_exist)
+        print("finish initing model from pretrained params from %s" %
+              (args.pretrained_model))
 
 
-def init_from_checkpoint(args, exe, program):
+def save_model(args, exe, train_prog, info):
 
-    assert isinstance(args.init_from_checkpoint, str)
+    save_checkpoint(args, exe, train_prog, info)
 
-    if not os.path.exists(args.init_from_checkpoint):
-        raise Warning("the checkpoint path %s does not exist." %
-                      args.init_from_checkpoint)
-        return False
-
-    fluid.io.load_persistables(
-        executor=exe,
-        dirname=args.init_from_checkpoint,
-        main_program=program,
-        filename="checkpoint.pdckpt")
-
-    print("finish init model from checkpoint at %s" %
-          (args.init_from_checkpoint))
-
-    return True
+    if args.save_params:
+        save_param(args, exe, train_prog, info)
 
 
-def save_checkpoint(args, exe, program, pass_id):
+def save_checkpoint(args, exe, program, info):
 
-    assert isinstance(args.model_save_dir, str)
+    checkpoint_path = os.path.join(args.model_save_dir, args.model, str(info))
 
-    checkpoint_path = os.path.join(args.model_save_dir, args.model,
-                                   str(pass_id))
-
-    if not os.path.exists(checkpoint_path):
-        os.mkdir(checkpoint_path)
+    if not os.path.isdir(checkpoint_path):
+        os.makedirs(checkpoint_path)
 
     fluid.io.save_persistables(
         exe,
@@ -257,8 +263,20 @@ def save_checkpoint(args, exe, program, pass_id):
         main_program=program,
         filename="checkpoint.pdckpt")
 
-    print("save checkpoint at %s" % (checkpoint_path))
-    return True
+    print("Already save checkpoint in %s" % (checkpoint_path))
+
+
+def save_param(args, exe, program, dirname):
+
+    param_path = os.path.join(args.model_save_path, args.model, args.save_param,
+                              str(info))
+
+    if not os.path.isdir(param_path):
+        os.makedirs(param_path)
+
+    fluid.io.save_params(
+        exe, param_path, main_program=program, filename="params.pdparams")
+    print("Already save parameters in %s" % (os.path.join(param_dir, dirname)))
 
 
 def create_pyreader(is_train, args):
@@ -304,21 +322,21 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
             if len(metrics) == 2:
                 loss, lr = metrics
                 print(
-                    "[Pass {0}, train batch {1}], loss {2}, lr {3}, elapse {4}".
+                    "[Pass {0}, train batch {1}]\tloss {2}, lr {3}, elapse {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
                            "%2.2f sec" % time_info))
             # no mixup putput
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 print(
-                    "[Pass {0}, train batch {1}], loss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".
+                    "[Pass {0}, train batch {1}]\tloss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%.5f" % lr, "%2.2f sec" % time_info))
         # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 print(
-                    "[Pass {0}, test batch {1}], loss {2}, acc1 {3}, acc5 {4}, elapse {5}".
+                    "[Pass {0}, test batch {1}]\tloss {2}, acc1 {3}, acc5 {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%2.2f sec" % time_info))
             else:
@@ -333,13 +351,13 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
         if len(metrics) == 5:
             train_loss, _, test_loss, test_acc1, test_acc5 = metrics
             print(
-                "[End pass {0}], train_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".
+                "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % test_loss, "%.5f"
                        % test_acc1, "%.5f" % test_acc5))
         elif len(metrics) == 7:
             train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
             print(
-                "[End pass {0}], train_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".
+                "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % train_acc1, "%.5f"
                        % train_acc5, "%.5f    " % test_loss, "%.5f" % test_acc1,
                        "%.5f" % test_acc5))

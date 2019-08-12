@@ -27,7 +27,10 @@ class Metrics(object):
         self.use_label_smoothing = args.use_label_smoothing
         self.epsilon = args.label_smoothing_epsilon
         self.model = model
-        self.image = data[0]
+        if not args.fp16:
+            self.image = data[0]
+        else:
+            self.image = fluid.layers.cast(data[0], "float16")
         self.label = data[1]
         self.is_train = is_train
 

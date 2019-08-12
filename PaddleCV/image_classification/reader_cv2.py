@@ -238,7 +238,7 @@ def _reader_creator(settings,
                     np.random.seed(shuffle_seed)
                 np.random.shuffle(full_lines)
         batch_data = []
-        full_lines = full_lines[0:8]
+        #full_lines = full_lines[0:8]
         for line in full_lines:
             img_path, label = line.split()
             img_path = os.path.join(data_dir, img_path)
