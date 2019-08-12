@@ -66,8 +66,10 @@ def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
     # flush coco evaluation result
     sys.stdout.flush()
 
+
 def bbox_eval(results,
-              anno_file, outfile,
+              anno_file,
+              outfile,
               with_background=True,
               is_bbox_normalized=False):
     assert 'bbox' in results[0]
@@ -82,8 +84,8 @@ def bbox_eval(results,
         {i + int(with_background): catid
          for i, catid in enumerate(cat_ids)})
 
-    xywh_results = bbox2out(results, clsid2catid,
-            is_bbox_normalized=is_bbox_normalized)
+    xywh_results = bbox2out(
+        results, clsid2catid, is_bbox_normalized=is_bbox_normalized)
 
     if len(xywh_results) == 0:
         logger.warning("The number of valid bbox detected is zero.\n \
@@ -116,6 +118,7 @@ def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
 
     cocoapi_eval(outfile, 'segm', coco_gt=coco_gt)
 
+
 def cocoapi_eval(jsonfile,
                  style,
                  coco_gt=None,
@@ -145,6 +148,7 @@ def cocoapi_eval(jsonfile,
     coco_eval.accumulate()
     coco_eval.summarize()
     return coco_eval.stats
+
 
 def proposal2out(results, is_bbox_normalized=False):
     xywh_res = []
@@ -187,8 +191,8 @@ def proposal2out(results, is_bbox_normalized=False):
 def bbox2out(results, clsid2catid, is_bbox_normalized=False):
     """
     Args:
-        results: dict of exe.run output, include: im_info, im_id, im_shape,
-                 bbox, mask,etc.
+        results: request a dict, include: `im_info`, `im_id`,
+                 `im_shape`, `bbox`, `mask`, etc.
         clsid2catid: class id to category id map of COCO2017 dataset.
         is_bbox_normalized: whether or not bbox is normalized.
     """
