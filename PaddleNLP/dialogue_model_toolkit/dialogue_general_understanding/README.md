@@ -21,7 +21,7 @@
 - PaddlePaddle >= 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 由于模块内模型基于bert做finetuning, 训练速度较慢, 建议用户安装GPU版本PaddlePaddle进行训练。
 
 &ensp;&ensp;注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
-#### &ensp;&ensp;b、安装代码
+#### &ensp;&ensp;b、下载代码
 
 &ensp;&ensp;&ensp;&ensp;克隆代码库到本地
 
