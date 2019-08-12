@@ -20,8 +20,8 @@
 - cudnn >= 7.0
 - PaddlePaddle >= 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 由于模块内模型基于bert做finetuning, 训练速度较慢, 建议用户安装GPU版本PaddlePaddle进行训练。
 
-&ensp;&ensp; 注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
-#### &ensp;&ensp;b、安装代码
+&ensp;&ensp;注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
+#### &ensp;&ensp;b、下载代码
 
 &ensp;&ensp;&ensp;&ensp;克隆代码库到本地
 
@@ -31,7 +31,7 @@ cd models/PaddleNLP/dialogue_model_toolkit/dialogue_general_understanding
 ```
 
 ### 任务简介
-&ensp;&ensp;&ensp;&ensp; 本模块内共包含6个任务，内容如下：
+&ensp;&ensp;&ensp;&ensp;本模块内共包含6个任务，内容如下：
 
 ```
 udc: 使用Ubuntu Corpus V1公开数据集，实现对话匹配任务;
@@ -41,6 +41,9 @@ atis_intent: 使用微软提供的公开数据集(Airline Travel Information Sys
 mrda: 使用公开数据集Meeting Recorder Dialogue Act，实现DA识别任务;
 swda：使用公开数据集Switchboard Dialogue Act Corpus，实现DA识别任务;
 ```
+
+注意: 目前dgu模块内提供的训练好的官方模型及效果, 均是在GPU单卡上面训练和预测得到的, 用户如需复线效果, 可使用单卡相同的配置.
+
 ### 数据准备
 &ensp;&ensp;&ensp;&ensp;数据集说明：
 
@@ -52,44 +55,51 @@ MRDA: Meeting Recorder Dialogue Act;
 SWDA：Switchboard Dialogue Act Corpus;
 ```
 
-&ensp;&ensp;&ensp;&ensp; 数据集、相关模型下载：
+&ensp;&ensp;&ensp;&ensp;数据集、相关模型下载：
+
 ```
-cd dgu && sh prepare_data_and_model.sh
+cd dgu && bash prepare_data_and_model.sh
 ```
-&ensp;&ensp;&ensp;&ensp; 下载的数据集中已提供了训练集，测试集和验证集，用户如果需要重新生成某任务数据集的训练数据，可执行：
+
+&ensp;&ensp;&ensp;&ensp;下载的数据集中已提供了训练集，测试集和验证集，用户如果需要重新生成某任务数据集的训练数据，可执行：
+
 ```
-cd dgu/scripts && sh run_build_data.sh task_name
+cd dgu/scripts && bash run_build_data.sh task_name
 参数说明：
 task_name: udc, swda, mrda, atis, dstc2,  选择5个数据集选项中用户需要生成的数据名
 ```
 
 ### 单机训练
 
-#### &ensp;&ensp;&ensp;&ensp; 方式一: 推荐直接使用模块内脚本训练
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
 
 ```
-sh run.sh task_name task_type
+bash run.sh task_name task_type
 参数说明：
 task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2，选择6个任务中任意一项；
 task_type: train，predict, evaluate, inference, all, 选择5个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model，all: 顺序执行训练、预测、评估、保存inference model的过程)；
 
-训练示例： sh run.sh atis_intent train
+训练示例： bash run.sh atis_intent train
 ```
-&ensp;&ensp;&ensp;&ensp; 方式一如果为CPU训练: 
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为CPU训练: 
+
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
-&ensp;&ensp;&ensp;&ensp; 方式一如果为GPU训练: 
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为GPU训练: 
+
 ```
 请将run.sh内参数设置为: 
 1、如果为单卡训练（用户指定空闲的单卡）：
 export CUDA_VISIBLE_DEVICES=0 
 2、如果为多卡训练（用户指定空闲的多张卡）：
 export CUDA_VISIBLE_DEVICES=0,1,2,3
-
 ```
-#### &ensp;&ensp;&ensp;&ensp; 方式二: 执行训练相关的代码:
+
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行训练相关的代码:
 
 ```
 export FLAGS_sync_nccl_allreduce=0
@@ -108,6 +118,10 @@ fi
 
 TASK_NAME="atis_intent"  #指定训练的任务名称
 BERT_BASE_PATH="data/pretrain_model/uncased_L-12_H-768_A-12"
+
+if [ ! -d "./data/saved_models/${TASK_NAME}" ]; then
+    mkdir "./data/saved_models/${TASK_NAME}"
+fi
 
 python -u main.py \
        --task_name=${TASK_NAME} \
@@ -130,32 +144,42 @@ python -u main.py \
        --print_steps=10 \
        --use_fp16 false 
 ```
-注：采用方式二时，模型训练过程可参考run.sh内相关任务的参数设置
+
+注：
+1) 采用方式二时，模型训练过程可参考run.sh内相关任务的参数设置
+2) 用户进行模型训练、预测、评估等, 可通过修改data/config/dgu.yaml配置文件或者从命令行传入来进行参数配置, 优先推荐命令行参数传入;
 
 ### 模型预测
-#### &ensp;&ensp;&ensp;&ensp; 方式一: 推荐直接使用模块内脚本预测
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本预测
+
 ```
-sh run.sh task_name task_type
+bash run.sh task_name task_type
 参数说明：
 task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2，选择6个任务中任意一项；
 task_type: train，predict, evaluate, inference, all, 选择5个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model，all: 顺序执行训练、预测、评估、保存inference model的过程)；
 
-预测示例： sh run.sh atis_intent predict
+预测示例： bash run.sh atis_intent predict
 ```
-&ensp;&ensp;&ensp;&ensp; 方式一如果为CPU预测: 
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为CPU预测: 
+
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
-&ensp;&ensp;&ensp;&ensp; 方式一如果为GPU预测: 
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为GPU预测: 
+
 ```
 请将run.sh内参数设置为: 
 支持单卡预测（用户指定空闲的单卡）：
 export CUDA_VISIBLE_DEVICES=0 
 ```
+
 注：预测时，如采用方式一，用户可通过修改run.sh中init_from_params参数来指定自己训练好的需要预测的模型，目前代码中默认为加载官方已经训练好的模型;
 
-#### &ensp;&ensp;&ensp;&ensp; 方式二: 执行预测相关的代码:
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行预测相关的代码:
+
 ```
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
@@ -191,7 +215,8 @@ python -u main.py \
 注：采用方式二时，模型预测过程可参考run.sh内具体任务的参数设置
 
 ### 模型评估
-&ensp;&ensp;&ensp;&ensp; 模块中6个任务，各任务支持计算的评估指标内容如下：
+&ensp;&ensp;&ensp;&ensp;模块中6个任务，各任务支持计算的评估指标内容如下：
+
 ```
 udc: 使用R1@10、R2@10、R5@10三个指标评估匹配任务的效果;
 atis_slot: 使用F1指标来评估序列标注任务；
@@ -200,7 +225,8 @@ atis_intent: 使用acc指标来评估分类结果；
 mrda: 使用acc指标来评估DA任务分类结果;
 swda：使用acc指标来评估DA任务分类结果;
 ```
-&ensp;&ensp;&ensp;&ensp; 效果上，6个任务公开数据集评测效果如下表所示：
+
+&ensp;&ensp;&ensp;&ensp;效果上，6个任务公开数据集评测效果如下表所示：
 
 | task_name | udc | udc | udc | atis_slot | dstc2 | atis_intent | swda | mrda |
 | :------ | :------ | :------ | :------ | :------| :------ | :------ | :------ | :------ |
@@ -211,19 +237,20 @@ swda：使用acc指标来评估DA任务分类结果;
 | SOTA | 76.70% | 87.40% | 96.90% | 96.89% | 74.50% | 98.32% | 81.30% | 91.70% |
 | DGU | 82.03% | 90.59% | 97.73% | 97.14% | 91.23% | 97.76% | 80.37% | 91.53% |
 
-#### &ensp;&ensp;&ensp;&ensp; 方式一: 推荐直接使用模块内脚本评估
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本评估
 
 ```
-sh run.sh task_name task_type
+bash run.sh task_name task_type
 参数说明：
 task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2，选择6个任务中任意一项；
 task_type: train，predict, evaluate, inference, all, 选择5个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model，all: 顺序执行训练、预测、评估、保存inference model的过程)；
 
-评估示例： sh run.sh atis_intent evaluate
+评估示例： bash run.sh atis_intent evaluate
 ```
+
 注：评估计算ground_truth和predict_label之间的打分，默认CPU计算即可；
 
-#### &ensp;&ensp;&ensp;&ensp; 方式二: 执行评估相关的代码: 
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行评估相关的代码: 
 
 ```
 TASK_NAME="atis_intent"  #指定预测的任务名称
@@ -237,28 +264,34 @@ python -u main.py \
 ```
 
 ### 模型推断
-#### &ensp;&ensp;&ensp;&ensp; 方式一: 推荐直接使用模块内脚本保存inference model
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本保存inference model
+
 ```
-sh run.sh task_name task_type
+bash run.sh task_name task_type
 参数说明：
 task_name: udc, swda, mrda, atis_intent, atis_slot, dstc2，选择6个任务中任意一项；
 task_type: train，predict, evaluate, inference, all, 选择5个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model，all: 顺序执行训练、预测、评估、保存inference model的过程)；
 
-保存模型示例： sh run.sh atis_intent inference
+保存模型示例： bash run.sh atis_intent inference
 ```
-&ensp;&ensp;&ensp;&ensp; 方式一如果为CPU执行inference model过程: 
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为CPU执行inference model过程: 
+
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
-&ensp;&ensp;&ensp;&ensp; 方式一如果为GPU执行inference model过程:
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为GPU执行inference model过程:
+
 ```
 请将run.sh内参数设置为: 
 1、单卡模型推断（用户指定空闲的单卡）：
 export CUDA_VISIBLE_DEVICES=0
 ```
 
-#### &ensp;&ensp;&ensp;&ensp; 方式二: 执行inference model相关的代码: 
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行inference model相关的代码: 
+
 ```
 TASK_NAME="atis_intent"  #指定预测的任务名称
 BERT_BASE_PATH="./data/pretrain_model/uncased_L-12_H-768_A-12"
@@ -282,7 +315,7 @@ python -u main.py \
 ```
 
 ### 预训练模型
-&ensp;&ensp;&ensp;&ensp; 支持PaddlePaddle官方提供的BERT及ERNIE相关模型作为预训练模型
+&ensp;&ensp;&ensp;&ensp;支持PaddlePaddle官方提供的BERT及ERNIE相关模型作为预训练模型
 
 | Model | Layers | Hidden size | Heads |Parameters |
 | :------| :------: | :------: |:------: |:------: |
@@ -294,9 +327,9 @@ python -u main.py \
 
 
 ### 服务部署
-&ensp;&ensp;&ensp;&ensp; 模块内提供已训练好6个对话任务的inference_model模型，用户可根据自身业务情况进行下载使用。
+&ensp;&ensp;&ensp;&ensp;模块内提供已训练好6个对话任务的inference_model模型，用户可根据自身业务情况进行下载使用。
 #### 服务器部署
-&ensp;&ensp;&ensp;&ensp; 请参考PaddlePaddle官方提供的[服务器端部署](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/deploy/inference/index_cn.html)文档进行部署上线。
+&ensp;&ensp;&ensp;&ensp;请参考PaddlePaddle官方提供的[服务器端部署](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/deploy/inference/index_cn.html)文档进行部署上线。
 
 
 ## 3、进阶使用
@@ -361,6 +394,7 @@ python -u main.py \
 ## 作者
 
 zhangxiyuan01@baidu.com
+
 zhouxiangyang@baidu.com
 
 ## 如何贡献代码

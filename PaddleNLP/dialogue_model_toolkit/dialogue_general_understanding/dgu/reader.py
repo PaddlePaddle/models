@@ -250,6 +250,7 @@ class UDCProcessor(DataProcessor):
     def _create_examples(self, lines, set_type): 
         """Creates examples for the training and dev sets."""
         examples = []
+        print("UDC dataset is too big, loading data spent a long time, please wait patiently..................")
         for (i, line) in enumerate(lines):
             guid = "%s-%d" % (set_type, i)
             text_a = "\t".join(line[1: -1])
