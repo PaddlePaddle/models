@@ -82,10 +82,8 @@ def bbox_eval(results,
         {i + int(with_background): catid
          for i, catid in enumerate(cat_ids)})
 
-    bbox_denormalized = True if is_bbox_normalized else False
     xywh_results = bbox2out(results, clsid2catid,
-            is_bbox_normalized=is_bbox_normalized,
-            bbox_denormalized=bbox_denormalized)
+            is_bbox_normalized=is_bbox_normalized)
 
     if len(xywh_results) == 0:
         logger.warning("The number of valid bbox detected is zero.\n \
@@ -186,15 +184,13 @@ def proposal2out(results, is_bbox_normalized=False):
     return xywh_res
 
 
-def bbox2out(results, clsid2catid, is_bbox_normalized=False, bbox_denormalized=False):
+def bbox2out(results, clsid2catid, is_bbox_normalized=False):
     """
     Args:
         results: dict of exe.run output, include: im_info, im_id, im_shape,
                  bbox, mask,etc.
         clsid2catid: class id to category id map of COCO2017 dataset.
         is_bbox_normalized: whether or not bbox is normalized.
-        bbox_denormalized: in eval, whether or not need to restore the normalized
-                           bbox to fit with im_shape.
     """
     xywh_res = []
     for t in results:
@@ -218,12 +214,11 @@ def bbox2out(results, clsid2catid, is_bbox_normalized=False, bbox_denormalized=F
                             clip_bbox([xmin, ymin, xmax, ymax])
                     w = xmax - xmin
                     h = ymax - ymin
-                    if bbox_denormalized:
-                        im_height, im_width = t['im_shape'][0][i].tolist()
-                        xmin *= im_width
-                        ymin *= im_height
-                        w *= im_width
-                        h *= im_height
+                    im_height, im_width = t['im_shape'][0][i].tolist()
+                    xmin *= im_width
+                    ymin *= im_height
+                    w *= im_width
+                    h *= im_height
                 else:
                     w = xmax - xmin + 1
                     h = ymax - ymin + 1

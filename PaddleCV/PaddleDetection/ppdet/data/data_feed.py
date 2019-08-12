@@ -791,7 +791,7 @@ class SSDTestFeed(DataFeed):
 
     def __init__(self,
                  dataset=SimpleDataSet(VOC_TEST_ANNOTATION).__dict__,
-                 fields=['image', 'im_id'],
+                 fields=['image', 'im_id', 'im_shape'],
                  image_shape=[3, 300, 300],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
