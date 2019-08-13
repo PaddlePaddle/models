@@ -79,8 +79,9 @@ class PointNet2SemSegSSG(fluid.dygraph.Layer):
         out = fluid.layers.transpose(feature0, perm=[0, 2, 1])
         out = fluid.layers.unsqueeze(out, axes=[-1])
         out = self.conv_bn_0(out)
-        out = fluid.layers.dropout(out, 0.5)
+        # out = fluid.layers.dropout(out, 0.5)
         out = self.conv_bn_1(out)
+        tmp = out
         out = fluid.layers.squeeze(out, axes=[-1])
         out = fluid.layers.transpose(out, perm=[0, 2, 1])
         pred = fluid.layers.softmax(out)
@@ -90,12 +91,11 @@ class PointNet2SemSegSSG(fluid.dygraph.Layer):
         loss = fluid.layers.reduce_mean(loss)
 
         ##calc acc
-        pred = fluid.layers.reshape(pred, shape=[-1, self.num_classes])
+        pred_ = fluid.layers.reshape(pred, shape=[-1, self.num_classes])
         label = fluid.layers.reshape(label, shape=[-1, 1])
 	#print ("acc label:",pred.shape)
-        acc1 = fluid.layers.accuracy(pred, label, k=1)
-        acc5 = fluid.layers.accuracy(pred, label, k=5)
-        return out, loss, acc1, acc5
+        acc1 = fluid.layers.accuracy(pred_, label, k=1)
+        return tmp, loss, acc1
 
 
 class PointNet2SemSegMSG(PointNet2SemSegSSG):
@@ -128,7 +128,7 @@ class PointNet2SemSegMSG(PointNet2SemSegSSG):
         self.fp_module_0 = Pointnet_FP_module(self.full_name(),
                                               mlp=[128, 128])
         self.fp_module_1 = Pointnet_FP_module(self.full_name(),
-                                              mlp=[256, 128])
+                                              mlp=[256, 256])
         self.fp_module_2 = Pointnet_FP_module(self.full_name(),
                                               mlp=[512, 512])
         self.fp_module_3 = Pointnet_FP_module(self.full_name(),
@@ -140,10 +140,10 @@ if __name__ == "__main__":
     xyz = fluid.layers.data(name='xyz', shape=[32, 3], dtype='float32', lod_level=0)
     feature = fluid.layers.data(name='feature', shape=[32, 6], dtype='float32', lod_level=0)
     label = fluid.layers.data(name='label', shape=[32, 1], dtype='int64', lod_level=0)
-    pointnet_sem_ssg = PointNet2SemSegSSG("pointnet_sem_seg_ssg",num_classes=num_classes)
+    # pointnet_sem_ssg = PointNet2SemSegSSG("pointnet_sem_seg_ssg",num_classes=num_classes)
     pointnet_sem_msg = PointNet2SemSegMSG("pointnet_sem_seg_msg",num_classes=num_classes)
 
-    outs = pointnet_sem_ssg(xyz,feature,label)
+    outs = pointnet_sem_msg(xyz,feature,label)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -158,6 +158,6 @@ if __name__ == "__main__":
     #print("label", label_np)
     ret = exe.run(fetch_list=[out.name for out in outs], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
     #ret = exe.run(fetch_list=["transpose_17.tmp_0", outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    print(ret)
-    # print("ret0", ret[0].shape, ret[0])
+    print(ret[1:])
+    print("ret0", ret[0].shape, ret[0])
     # ret[0].tofile("out.data")

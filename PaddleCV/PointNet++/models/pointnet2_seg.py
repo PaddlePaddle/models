@@ -24,8 +24,8 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
-from .pointnet2_modules import *
-# from pointnet2_modules import *
+# from .pointnet2_modules import *
+from pointnet2_modules import *
 
 __all__ = ["PointNet2SemSegSSG", "PointNet2SemSegMSG"]
 
@@ -48,11 +48,11 @@ class PointNet2SemSeg(object):
         self.xyz = fluid.layers.data(name='xyz', shape=[self.num_points, 3], dtype='float32', lod_level=0)
         self.feature = fluid.layers.data(name='feature', shape=[self.num_points, 6], dtype='float32', lod_level=0)
         self.label = fluid.layers.data(name='label', shape=[self.num_points, 1], dtype='int64', lod_level=0)
-        self.pyreader = fluid.io.PyReader(
-                feed_list=[self.xyz, self.feature, self.label],
-                capacity=64,
-                use_double_buffer=True,
-                iterable=False)
+        # self.pyreader = fluid.io.PyReader(
+        #         feed_list=[self.xyz, self.feature, self.label],
+        #         capacity=64,
+        #         use_double_buffer=True,
+        #         iterable=False)
         self.feed_vars = [self.xyz, self.feature, self.label]
 
     def build_model(self, bn_momentum=0.9):
@@ -84,6 +84,7 @@ class PointNet2SemSeg(object):
         out = conv_bn(out, out_channels=128, bn=True, bn_momentum=bn_momentum, name="output_1")
         # out = fluid.layers.dropout(out, 0.5)
         out = conv_bn(out, out_channels=self.num_classes, bn=False, act=None, name="output_2")
+        print(out)
         out = fluid.layers.squeeze(out, axes=[-1])
         out = fluid.layers.transpose(out, perm=[0, 2, 1])
         pred = fluid.layers.softmax(out)
@@ -208,7 +209,7 @@ if __name__ == "__main__":
     # print("feaure", feature_np)
     # print("label", label_np)
     # ret = exe.run(fetch_list=[out.name for out in outs], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    ret = exe.run(fetch_list=["transpose_21.tmp_0", outs['loss'].name, outs['accuracy'].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    # print(ret)
+    ret = exe.run(fetch_list=["conv2d_33.tmp_1", outs['loss'].name, outs['accuracy'].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
     print("ret0", ret[0].shape, ret[0])
+    print("ret1-", ret[1:])
     # ret[0].tofile("out.data")
