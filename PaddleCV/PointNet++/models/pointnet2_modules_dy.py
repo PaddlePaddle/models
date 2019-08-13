@@ -26,7 +26,30 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from paddle.fluid.dygraph.nn import Conv2D, BatchNorm, FC
 
-__all__ = ["ConvBN", "Pointnet_SA_Module_MSG", "Pointnet_FP_module", "FCBN"]
+__all__ = ["squeeze", "unsqueeze", "ConvBN", "Pointnet_SA_Module_MSG", "Pointnet_FP_module", "FCBN"]
+
+
+def squeeze(var, axis=-1):
+    shape = var.shape
+    assert shape[axis] == 1
+    shape.pop(axis)
+    return fluid.layers.reshape(var, shape)
+
+def unsqueeze(var, axis=-1):
+    shape = var.shape
+    rank = len(shape)
+    orig_axis = axis
+    if axis == -1:
+        new_shape = shape + [1]
+    else:
+        axis = axis % rank
+        new_shape = []
+        for i in range(axis):
+            new_shape.append(shape[i])
+        new_shape.append(1)
+        for i in range(axis, rank):
+            new_shape.append(shape[i])
+    return fluid.layers.reshape(var, new_shape)
 
 
 def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
@@ -44,7 +67,8 @@ def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
     """
     idx = fluid.layers.query_ball(xyz, new_xyz, radius, nsample)
     grouped_xyz = fluid.layers.group_points(xyz, idx)
-    expand_new_xyz = fluid.layers.unsqueeze(new_xyz, axes=[2])
+    # expand_new_xyz = fluid.layers.unsqueeze(new_xyz, axes=[2])
+    expand_new_xyz = unsqueeze(new_xyz, axis=2)
     expand_new_xyz = fluid.layers.expand(expand_new_xyz, [1, 1, grouped_xyz.shape[2], 1])
     grouped_xyz -= expand_new_xyz
 
@@ -61,10 +85,12 @@ def group_all(xyz, features=None, use_xyz=True):
     Group all xyz and features when npoint is None
     See query_and_group
     """
-    grouped_xyz = fluid.layers.unsqueeze(xyz, axes=[2]) #[-1,128,1,3]
+    # grouped_xyz = fluid.layers.unsqueeze(xyz, axes=[2]) #[-1,128,1,3]
+    grouped_xyz = unsqueeze(xyz, axis=2) #[-1,128,1,3]
     #print("grouped_xyz:",grouped_xyz)
     if features is not None:
-        grouped_features = fluid.layers.unsqueeze(features, axes=[2]) # [-1,128,1,640]
+        # grouped_features = fluid.layers.unsqueeze(features, axes=[2]) # [-1,128,1,640]
+        grouped_features = unsqueeze(features, axis=2)# [-1,128,1,640]
 	#print("grouped_features:",grouped_features)
         return fluid.layers.concat([grouped_xyz, grouped_features], axis=-1) if use_xyz else grouped_features
     else:
@@ -247,7 +273,8 @@ class Pointnet_SA_Module_MSG(fluid.dygraph.Layer):
 		if self.npoint is None:
 		   out = fluid.layers.transpose(out,perm=[0,1,3,2])
                 out = fluid.layers.pool2d(out, pool_size=[1, out.shape[3]], pool_type='max')
-                out = fluid.layers.squeeze(out, axes=[-1])
+                # out = fluid.layers.squeeze(out, axes=[-1])
+                out = squeeze(out, axis=-1)
                 outs.append(out)
             out = fluid.layers.concat(outs,axis=1)
             out = fluid.layers.transpose(out,perm=[0,2,1])
@@ -295,9 +322,11 @@ class Pointnet_FP_module(fluid.dygraph.Layer):
         new_features = interp_feats if unknown_feats is None else \
             fluid.layers.concat([interp_feats, unknown_feats], axis=-1)
         new_features = fluid.layers.transpose(new_features, perm=[0,2,1])
-        new_features = fluid.layers.unsqueeze(new_features, axes=[-1])
+        # new_features = fluid.layers.unsqueeze(new_features, axes=[-1])
+        new_features = unsqueeze(new_features, axis=-1)
         new_features = self.MLP(new_features)
-        new_features = fluid.layers.squeeze(new_features, axes=[-1])
+        # new_features = fluid.layers.squeeze(new_features, axes=[-1])
+        new_features = squeeze(new_features, axis=-1)
         new_features = fluid.layers.transpose(new_features, perm=[0,2,1])
         return new_features
 
