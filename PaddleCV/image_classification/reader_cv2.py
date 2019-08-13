@@ -266,7 +266,7 @@ def _reader_creator(settings,
                     shuffle=False,
                     color_jitter=False,
                     rotate=False,
-                    data_dir=DATA_DIR,
+                    data_dir=None,
                     shuffle_seed=0):
     def reader():
         #def read_file_list():
@@ -277,7 +277,6 @@ def _reader_creator(settings,
                     np.random.seed(shuffle_seed)
                 np.random.shuffle(full_lines)
         batch_data = []
-        #full_lines = full_lines[0:8]
         for line in full_lines:
             img_path, label = line.split()
             img_path = os.path.join(data_dir, img_path)
@@ -331,9 +330,9 @@ def train(settings, shuffle_seed=0):
         train reader
     """
     file_list = os.path.join(settings.data_dir, 'train_list.txt')
-    #NOTE: not divide device_num yet
+    #NOTE: one card batch_size
     batch_size = settings.batch_size
-    batch_size = 8
+
     reader = _reader_creator(
         settings,
         file_list,
@@ -342,7 +341,7 @@ def train(settings, shuffle_seed=0):
         shuffle=True,
         color_jitter=False,
         rotate=False,
-        data_dir=os.path.join(data_dir, "train"),
+        data_dir=os.path.join(settings.data_dir, "train"),
         shuffle_seed=shuffle_seed)
     if settings.use_mixup == True:
         reader = create_mixup_reader(settings, reader)
@@ -366,7 +365,7 @@ def val(settings):
         batch_size,
         'val',
         shuffle=False,
-        data_dir=os.path.join(data_dir, 'val'))
+        data_dir=os.path.join(settings.data_dir, 'val'))
 
 
 def test(settings):
@@ -385,4 +384,4 @@ def test(settings):
         batch_size,
         'test',
         shuffle=False,
-        data_dir=data_dir)
+        data_dir=settings.data_dir)

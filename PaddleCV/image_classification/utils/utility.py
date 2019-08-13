@@ -98,8 +98,8 @@ def parse_args():
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
     add_arg('image_shape',              str,    "3,224,224",            "The size of Input image, order: [channels, height, weidth] ")
-    add_arg('batch_size',               int,    8,                    "Minibatch size on all devices.")
-    add_arg('test_batch_size',          int,    16,                     "Test batch size.")
+    add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
+    add_arg('test_batch_size',          int,    16,                     "Test batch size on a deveice.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
@@ -115,8 +115,8 @@ def parse_args():
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
     add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
     add_arg('interpolation',            str,    None,                   "The interpolation mode")
-    add_arg('image_mean',               array,  [0.485, 0.456, 0.406],  "The mean of input image data")
-    add_arg('image_std',                array,  [0.229, 0.224, 0.225],  "The std of input image data")
+    #    add_arg('image_mean',               array,  [0.485, 0.456, 0.406],  "The mean of input image data")
+    #    add_arg('image_std',                array,  [0.229, 0.224, 0.225],  "The std of input image data")
 
     # SWITCH
     #permenant disable use_mem_opt
@@ -155,8 +155,8 @@ def check_args(args):
             "{} is not in lists: {}, Use default learning strategy now.".format(
                 args.lr_strategy, lr_strategy_list))
 
-    if args.model == "GooLeNet":
-        assert arg.use_mixup == True, "Cannot use mixup processing in GoogLeNet, please set use_mixup = False."
+    if args.model == "GoogLeNet":
+        assert args.use_mixup == False, "Cannot use mixup processing in GoogLeNet, please set use_mixup = False."
 
     if args.pretrained_model is not None:
         assert isinstance(args.pretrained_model, str)
@@ -178,8 +178,12 @@ def check_args(args):
         assert args.batch_size % fluid.core.get_cuda_device_count(
         ) == 0, "please support correct batch_size, which can divide by available cards, you can change the number of cards by indicating: export CUDA_VISIBLE_DEVICES=0 "
 
+    assert os.path.isdir(
+        args.data_dir
+    ), "Data doesn't exist in {}, please load right path".format(args.data_dir)
+
     def check_gpu():
-        """ 
+        """  
         Log error and exit when set use_gpu=true in paddlepaddle
         cpu version.
         """
@@ -200,7 +204,7 @@ def check_args(args):
     check_gpu()
     #temporary disable:
     if args.enable_ce == True or args.use_fp16:
-        raise Exception("Temporary disable enable_ce and fp_16")
+        raise Exception("Temporary disable ce and fp_16")
 
 
 def get_device_num():
