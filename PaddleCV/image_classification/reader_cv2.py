@@ -26,19 +26,19 @@ import paddle.fluid as fluid
 random.seed(0)
 np.random.seed(0)
 
-DATA_DIM = 224
-
-THREAD = 8
-BUF_SIZE = 2048
-
-DATA_DIR = './data/ILSVRC2012'
-
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
 
 
 def rotate_image(img):
-    """ rotate_image """
+    """rotate image
+
+    Args:
+        img: image data
+
+    Returns:
+        rotated image data
+    """
     (h, w) = img.shape[:2]
     center = (w / 2, h / 2)
     angle = np.random.randint(-10, 11)
@@ -47,8 +47,20 @@ def rotate_image(img):
     return rotated
 
 
-def random_crop(img, size, settings, scale=None, ratio=None):
-    """ random_crop """
+def random_crop(img, size, settings, scale=None, ratio=None,
+                interpolation=None):
+    """random crop image
+        
+    Args:
+        img: image data
+        size: crop size
+        settings: arguments
+        scale: scale parameter
+        ratio: ratio parameter
+
+    Returns:
+        random cropped image data
+    """
     lower_scale = settings.lower_scale
     lower_ratio = settings.lower_ratio
     upper_ratio = settings.upper_ratio
@@ -77,31 +89,60 @@ def random_crop(img, size, settings, scale=None, ratio=None):
 
     resized = cv2.resize(
         img,
-        (size, size)
+        (size, size),
+        interpolation
         #, interpolation=cv2.INTER_LANCZOS4
     )
     return resized
 
 
+#NOTE:(2019/08/08) distort color func is not implemented
 def distort_color(img):
+    """distort image color
+
+    Args:
+        img: image data
+
+    Returns:
+        distorted color image data
+    """
     return img
 
 
-def resize_short(img, target_size):
-    """ resize_short """
+def resize_short(img, target_size, interpolation=None):
+    """resize image
+    
+    Args:
+        img: image data
+        target_size: resize short target size
+        interpolation: interpolation mode
+
+    Returns:
+        resized image data
+    """
     percent = float(target_size) / min(img.shape[0], img.shape[1])
     resized_width = int(round(img.shape[1] * percent))
     resized_height = int(round(img.shape[0] * percent))
     resized = cv2.resize(
         img,
         (resized_width, resized_height),
+        interpolation
         #interpolation=cv2.INTER_LANCZOS4
     )
     return resized
 
 
 def crop_image(img, target_size, center):
-    """ crop_image """
+    """crop image 
+    
+    Args:
+        img: images data
+        target_size: crop target size
+        center: crop mode
+    
+    Returns:
+        img: cropped image data
+    """
     height, width = img.shape[:2]
     size = target_size
     if center == True:
@@ -136,7 +177,6 @@ def create_mixup_reader(settings, rd):
                 data_list = []
 
     def mixup_data():
-
         for data_list in fetch_data():
             if alpha > 0.:
                 lam = np.random.beta(alpha, alpha)
@@ -150,7 +190,6 @@ def create_mixup_reader(settings, rd):
             yield (mixed_l, l1, l2, lam)
 
     def mixup_reader():
-
         for context.tmp_mix, context.tmp_l1, context.tmp_l2, context.tmp_lam in mixup_data(
         ):
             for i in range(len(context.tmp_mix)):
@@ -274,11 +313,24 @@ def _reader_creator(settings,
         rotate=rotate)
 
     return paddle.reader.xmap_readers(
-        mapper, reader, THREAD, BUF_SIZE, order=False)
+        mapper,
+        reader,
+        settings.reader_thread,
+        settings.reader_buf_size,
+        order=False)
 
 
-def train(settings, data_dir=DATA_DIR, shuffle_seed=0):
-    file_list = os.path.join(data_dir, 'train_list.txt')
+def train(settings, shuffle_seed=0):
+    """Create a reader for trainning
+
+    Args:
+        settings: arguments
+        shuffle_seed: seed for distributed trainning
+
+    Returns:
+        train reader
+    """
+    file_list = os.path.join(settings.data_dir, 'train_list.txt')
     #NOTE: not divide device_num yet
     batch_size = settings.batch_size
     batch_size = 8
@@ -297,8 +349,16 @@ def train(settings, data_dir=DATA_DIR, shuffle_seed=0):
     return reader
 
 
-def val(settings, data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'val_list.txt')
+def val(settings):
+    """Create a reader for eval
+
+    Args:
+        settings: arguments
+
+    Returns:
+        eval reader
+    """
+    file_list = os.path.join(settings.data_dir, 'val_list.txt')
     batch_size = settings.batch_size
     return _reader_creator(
         settings,
@@ -309,8 +369,16 @@ def val(settings, data_dir=DATA_DIR):
         data_dir=os.path.join(data_dir, 'val'))
 
 
-def test(settings, batch_size, data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'val_list.txt')
+def test(settings):
+    """Create a reader for testing
+
+    Args:
+        settings: arguments
+    
+    Returns:
+        test reader
+    """
+    file_list = os.path.join(settings.data_dir, 'val_list.txt')
     return _reader_creator(
         settings,
         file_list,

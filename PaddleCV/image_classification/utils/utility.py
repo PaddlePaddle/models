@@ -1,4 +1,3 @@
-"""Contains common utility functions."""
 #  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
@@ -113,8 +112,14 @@ def parse_args():
     add_arg('resize_short_size',        int,    256,                    "The value of resize_short_size")
     add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
+    add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
+    add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
+    add_arg('interpolation',            str,    None,                   "The interpolation mode")
+    add_arg('image_mean',               array,  [0.485, 0.456, 0.406],  "The mean of input image data")
+    add_arg('image_std',                array,  [0.229, 0.224, 0.225],  "The std of input image data")
 
     # SWITCH
+    #permenant disable use_mem_opt
     #add_arg('use_mem_opt',              bool,   False,                  "Whether to use memory optimization.")
     add_arg('use_inplace',              bool,   True,                   "Whether to use inplace memory optimization.")
     add_arg('enable_ce',                bool,   False,                  "Whether to enable continuous evaluation job.")
@@ -122,6 +127,7 @@ def parse_args():
     add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.2,                    "The value of label_smoothing_epsilon parameter")
+    #temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
     add_arg('random_seed',              int,    1000,                   "random seed")
     # yapf: enable

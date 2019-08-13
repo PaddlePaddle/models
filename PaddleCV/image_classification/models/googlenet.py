@@ -20,7 +20,7 @@ import paddle
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ['GoogleNet']
+__all__ = ['GoogLeNet']
 
 train_parameters = {
     "input_size": [3, 224, 224],
@@ -35,7 +35,7 @@ train_parameters = {
 }
 
 
-class GoogleNet():
+class GoogLeNet():
     def __init__(self):
         self.params = train_parameters
 

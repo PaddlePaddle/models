@@ -83,11 +83,11 @@ class GoogLeNet_Metrics(Metrics):
         Metrics of GoogLeNet
     """
 
-    def __init__(self):
-        super(GoogLeNet_Metrics, self).__init__()
+    def __init__(self, data, model, args, is_train):
+        super(GoogLeNet_Metrics, self).__init__(data, model, args, is_train)
 
     def out(self):
-        """GoogLeNet Metrics output, Include avg_cost, acc_top1 and acc_top5
+        """GoogLeNet Metrics outpu t, Include avg_cost, acc_top1 and acc_top5
 
 
         """
@@ -105,10 +105,11 @@ class GoogLeNet_Metrics(Metrics):
         acc_top1 = fluid.layers.accuracy(input=out0, label=self.label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out0, label=self.label, k=5)
 
-        return [avg_cost, avg_top1, avg_top5]
+        return [avg_cost, acc_top1, acc_top5]
 
 
 """
+#distill metrics is disable now.
 class Distill_Metrics(Metrics):
     def __init__(self):
         super(Distill_Metrics,self).__init__()
@@ -164,6 +165,9 @@ class Mixup_Metrics(Metrics):
 
 
 def create_metrics(data, model, args, is_train):
+    """Create metrics, include GoogLeNet(train, test); mixup(train); default(train, test) metrics
+
+    """
     if args.model == "GoogLeNet":
         metrics = GoogLeNet_Metrics(data, model, args, is_train)
     else:
