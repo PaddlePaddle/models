@@ -24,13 +24,18 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
-from pointnet2_modules import *
+from .pointnet2_modules import *
+# from pointnet2_modules import *
+
+__all__ = ["PointNet2SemSegSSG", "PointNet2SemSegMSG"]
 
 
 class PointNet2SemSeg(object):
-    def __init__(self, num_classes, use_xyz=True):
+    def __init__(self, num_classes, num_points, use_xyz=True):
         self.num_classes = num_classes
+        self.num_points = num_points
         self.use_xyz = use_xyz
+        self.feed_vars = []
         self.out_feature = None
         self.pyreader = None
         self.model_config()
@@ -40,16 +45,17 @@ class PointNet2SemSeg(object):
         self.FP_confs = []
 
     def build_input(self):
-        self.xyz = fluid.layers.data(name='xyz', shape=[32, 3], dtype='float32', lod_level=0)
-        self.feature = fluid.layers.data(name='feature', shape=[32, 6], dtype='float32', lod_level=0)
-        self.label = fluid.layers.data(name='label', shape=[32, 1], dtype='int64', lod_level=0)
-        # self.py_reader = fluid.io.PyReader(
-        #         feed_list=[self.xyz, self.feature, self.label],
-        #         capacity=64,
-        #         use_double_buffer=True,
-        #         iterable=False)
+        self.xyz = fluid.layers.data(name='xyz', shape=[self.num_points, 3], dtype='float32', lod_level=0)
+        self.feature = fluid.layers.data(name='feature', shape=[self.num_points, 6], dtype='float32', lod_level=0)
+        self.label = fluid.layers.data(name='label', shape=[self.num_points, 1], dtype='int64', lod_level=0)
+        self.pyreader = fluid.io.PyReader(
+                feed_list=[self.xyz, self.feature, self.label],
+                capacity=64,
+                use_double_buffer=True,
+                iterable=False)
+        self.feed_vars = [self.xyz, self.feature, self.label]
 
-    def build_model(self):
+    def build_model(self, bn_momentum=0.9):
         self.build_input()
 
         xyzs, features = [self.xyz], [self.feature]
@@ -57,6 +63,7 @@ class PointNet2SemSeg(object):
             xyzi, featurei = pointnet_sa_module(
                     xyz=xyzs[i],
                     feature=features[i],
+                    bn_momentum=bn_momentum,
                     use_xyz=self.use_xyz,
                     name="sa_{}".format(i),
                     **SA_conf)
@@ -68,12 +75,13 @@ class PointNet2SemSeg(object):
                     known=xyzs[i],
                     unknown_feats=features[i - 1],
                     known_feats=features[i],
+                    bn_momentum=bn_momentum,
                     name="fp_{}".format(i),
                     **self.FP_confs[i])
 
         out = fluid.layers.transpose(features[0], perm=[0, 2, 1])
         out = fluid.layers.unsqueeze(out, axes=[-1])
-        out = conv_bn(out, out_channels=128, bn=True, name="output_1")
+        out = conv_bn(out, out_channels=128, bn=True, bn_momentum=bn_momentum, name="output_1")
         # out = fluid.layers.dropout(out, 0.5)
         out = conv_bn(out, out_channels=self.num_classes, bn=False, act=None, name="output_2")
         out = fluid.layers.squeeze(out, axes=[-1])
@@ -88,13 +96,15 @@ class PointNet2SemSeg(object):
         pred = fluid.layers.reshape(pred, shape=[-1, self.num_classes])
         label = fluid.layers.reshape(self.label, shape=[-1, 1])
         self.acc1 = fluid.layers.accuracy(pred, label, k=1)
-        self.acc5 = fluid.layers.accuracy(pred, label, k=5)
 
     def get_feeds(self):
 	return self.feed_vars
 
     def get_outputs(self):
-        return (self.loss, self.acc1, self.acc5)
+        return {"loss": self.loss, "accuracy": self.acc1}
+
+    def get_pyreader(self):
+        return self.pyreader
 
 
 class PointNet2SemSegSSG(PointNet2SemSeg):
@@ -179,10 +189,12 @@ class PointNet2SemSegMSG(PointNet2SemSeg):
 
 if __name__ == "__main__":
     num_classes = 13
+    num_points = 32
     # model = PointNet2SemSegSSG(num_classes)
-    model = PointNet2SemSegMSG(num_classes)
+    model = PointNet2SemSegMSG(num_classes, num_points)
     model.build_model()
     outs = model.get_outputs()
+    print(outs)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -192,11 +204,11 @@ if __name__ == "__main__":
     xyz_np = np.random.uniform(-100, 100, (8, 32, 3)).astype('float32')
     feature_np = np.random.uniform(-100, 100, (8, 32, 6)).astype('float32')
     label_np = np.random.uniform(0, num_classes, (8, 32, 1)).astype('int64')
-    print("xyz", xyz_np)
-    print("feaure", feature_np)
-    print("label", label_np)
+    # print("xyz", xyz_np)
+    # print("feaure", feature_np)
+    # print("label", label_np)
     # ret = exe.run(fetch_list=[out.name for out in outs], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    ret = exe.run(fetch_list=["transpose_17.tmp_0", outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    print(ret)
-    # print("ret0", ret[0].shape, ret[0])
+    ret = exe.run(fetch_list=["transpose_21.tmp_0", outs['loss'].name, outs['accuracy'].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+    # print(ret)
+    print("ret0", ret[0].shape, ret[0])
     # ret[0].tofile("out.data")
