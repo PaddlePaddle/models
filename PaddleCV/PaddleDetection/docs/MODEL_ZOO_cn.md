@@ -122,6 +122,7 @@ Paddle提供基于ImageNet的骨架网络预训练模型。所有预训练模型
 ### SSD
 
 |  骨架网络     | 输入尺寸 | 每张GPU图片个数 | 学习率策略 | Box AP | 下载 |
+| :----------: | :--: | :-------: | :-----: | :----: | :-------: |
 | VGG16        | 300  |     8   |   40万  |  25.1  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/ssd_vgg16_300.tar) |
 | VGG16        | 512  |     8   |   40万  |  29.1  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/ssd_vgg16_512.tar) |
 
