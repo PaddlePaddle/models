@@ -212,56 +212,56 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
 
 
 if __name__ == "__main__":
-    xyz = fluid.layers.data(name='xyz', shape=[9, 3], dtype='float32')
-    xyz_feats = fluid.layers.data(name='xyz_feats', shape=[12, 18], dtype='float32')
-    new_xyz, out = pointnet_sa_module_msg(xyz, 4, [0.8, 1.6], [6, 3], [[3, 6], [6, 9]], xyz_feats, name="test")
-
-    place = fluid.CUDAPlace(0)
-    exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
-
-    np.random.seed(2333)
-    xyz_np = np.random.random((2, 9, 3)).astype('float32')
-    xyz_feats_np = np.random.random((2, 18, 12)).astype('float32')
-    xyz_feats_np = xyz_feats_np.transpose((0, 2, 1))
-    # print("xyz: ", xyz_np.shape, xyz_np)
-    # print("xyz_feats: ", xyz_feats_np.shape, xyz_feats_np)
-    ret = exe.run(fetch_list=[new_xyz.name, out.name], feed={'xyz': xyz_np, 'xyz_feats': xyz_feats_np})
-    print("new_xyz: ", ret[0].shape, ret[0])
-    print("out: ", ret[1].shape, ret[1].transpose((0, 2, 1)))
-    # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
-    # print("gourped_xyz0: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
-    # ret[3].tofile('grouped_xyz.data')
-    # print("grouped_feaures: ", ret[4].shape, ret[4].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
-    # ret[4].tofile('grouped_feaures.data')
-    # print("gourp0: ", ret[2].shape, ret[2]) # "transpose_0.tmp_0"
-    # print("gourp1: ", ret[3].shape, ret[3])
-    # ret[2].tofile('group0.data')
-    # print("mlp0: ", ret[2].shape, ret[2]) # "batch_norm_1.tmp_3"
-    # print("mlp1: ", ret[3].shape, ret[3])
-    # print("conv00: ", ret[2].shape, ret[2]) # "conv2d_0.tmp_1"
-    # print("conv10: ", ret[3].shape, ret[3])
-    # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
-    # print("ball_query1: ", ret[3].shape, ret[3])
-    # print("gourped_xyz0: ", ret[2].shape, ret[2].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
-    # print("gourped_xyz1: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2)))
-
-    # known = fluid.layers.data(name='known', shape=[9, 3], dtype='float32')
-    # unknown = fluid.layers.data(name='unknown', shape=[18, 3], dtype='float32')
-    # known_feats = fluid.layers.data(name='known_feats', shape=[9, 4], dtype='float32')
-    # unknown_feats = fluid.layers.data(name='unknown_feats', shape=[18, 8], dtype='float32')
-    # new_features = pointnet_fp_module(unknown, known, unknown_feats, known_feats, [6], name="test")
+    # xyz = fluid.layers.data(name='xyz', shape=[9, 3], dtype='float32')
+    # xyz_feats = fluid.layers.data(name='xyz_feats', shape=[12, 18], dtype='float32')
+    # new_xyz, out = pointnet_sa_module(xyz, 4, [0.8, 1.6], [6, 3], [[3, 6], [6, 9]], xyz_feats, name="test")
     #
     # place = fluid.CUDAPlace(0)
     # exe = fluid.Executor(place)
     # exe.run(fluid.default_startup_program())
     #
     # np.random.seed(2333)
-    # known_np = np.random.random((2, 9, 3)).astype('float32')
-    # unknown_np = np.random.random((2, 18, 3)).astype('float32')
-    # known_feats_np = np.random.random((2, 4, 9)).astype('float32')
-    # unknown_feats_np = np.random.random((2, 8, 18)).astype('float32')
-    # known_feats_np = known_feats_np.transpose((0, 2, 1))
-    # unknown_feats_np = unknown_feats_np.transpose((0, 2, 1))
-    # ret = exe.run(fetch_list=[new_features.name], feed={'known': known_np, 'unknown': unknown_np, 'known_feats': known_feats_np, 'unknown_feats': unknown_feats_np})
-    # print(ret[0].shape, ret[0].transpose((0, 2, 1)))
+    # xyz_np = np.random.random((2, 9, 3)).astype('float32')
+    # xyz_feats_np = np.random.random((2, 18, 12)).astype('float32')
+    # xyz_feats_np = xyz_feats_np.transpose((0, 2, 1))
+    # # print("xyz: ", xyz_np.shape, xyz_np)
+    # # print("xyz_feats: ", xyz_feats_np.shape, xyz_feats_np)
+    # ret = exe.run(fetch_list=[new_xyz.name, out.name], feed={'xyz': xyz_np, 'xyz_feats': xyz_feats_np})
+    # print("new_xyz: ", ret[0].shape, ret[0])
+    # print("out: ", ret[1].shape, ret[1].transpose((0, 2, 1)))
+    # # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
+    # # print("gourped_xyz0: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
+    # # ret[3].tofile('grouped_xyz.data')
+    # # print("grouped_feaures: ", ret[4].shape, ret[4].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
+    # # ret[4].tofile('grouped_feaures.data')
+    # # print("gourp0: ", ret[2].shape, ret[2]) # "transpose_0.tmp_0"
+    # # print("gourp1: ", ret[3].shape, ret[3])
+    # # ret[2].tofile('group0.data')
+    # # print("mlp0: ", ret[2].shape, ret[2]) # "batch_norm_1.tmp_3"
+    # # print("mlp1: ", ret[3].shape, ret[3])
+    # # print("conv00: ", ret[2].shape, ret[2]) # "conv2d_0.tmp_1"
+    # # print("conv10: ", ret[3].shape, ret[3])
+    # # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
+    # # print("ball_query1: ", ret[3].shape, ret[3])
+    # # print("gourped_xyz0: ", ret[2].shape, ret[2].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
+    # # print("gourped_xyz1: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2)))
+
+    known = fluid.layers.data(name='known', shape=[9, 3], dtype='float32')
+    unknown = fluid.layers.data(name='unknown', shape=[18, 3], dtype='float32')
+    known_feats = fluid.layers.data(name='known_feats', shape=[9, 4], dtype='float32')
+    unknown_feats = fluid.layers.data(name='unknown_feats', shape=[18, 8], dtype='float32')
+    new_features = pointnet_fp_module(unknown, known, unknown_feats, known_feats, [6], name="test")
+
+    place = fluid.CUDAPlace(0)
+    exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
+
+    np.random.seed(2333)
+    known_np = np.random.random((2, 9, 3)).astype('float32')
+    unknown_np = np.random.random((2, 18, 3)).astype('float32')
+    known_feats_np = np.random.random((2, 4, 9)).astype('float32')
+    unknown_feats_np = np.random.random((2, 8, 18)).astype('float32')
+    known_feats_np = known_feats_np.transpose((0, 2, 1))
+    unknown_feats_np = unknown_feats_np.transpose((0, 2, 1))
+    ret = exe.run(fetch_list=[new_features.name], feed={'known': known_np, 'unknown': unknown_np, 'known_feats': known_feats_np, 'unknown_feats': unknown_feats_np})
+    print(ret[0].shape, ret[0].transpose((0, 2, 1)))

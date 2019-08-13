@@ -86,8 +86,7 @@ class ConvBN(fluid.dygraph.Layer):
         param_attr = ParamAttr(name='conv_weight',
                                initializer=fluid.initializer.Constant(1.376))
         if bn:
-            bias_attr = ParamAttr(initializer=fluid.initializer.Constant(0.213),
-                                  name='conv_bias')
+            bias_attr = None
             self.BN = BatchNorm(self.full_name(),
                                 num_channels=num_filters,
                                 act=act,
@@ -98,7 +97,8 @@ class ConvBN(fluid.dygraph.Layer):
                                 moving_mean_name="mean",
                                 moving_variance_name="var")
         else:
-            bias_attr = None
+            bias_attr = ParamAttr(initializer=fluid.initializer.Constant(0.213),
+                                  name='conv_bias')
         self.conv = Conv2D(
             self.full_name(),
             num_filters=num_filters,
@@ -117,6 +117,10 @@ class ConvBN(fluid.dygraph.Layer):
         if self.bn:
             out = self.BN(out)
         return out
+
+    def set_bn_momentum(self, momentum):
+        if bn:
+            self.BN._momentum = momentum
 
 
 class FCBN(fluid.dygraph.Layer):
@@ -152,6 +156,10 @@ class FCBN(fluid.dygraph.Layer):
             out = self.BN(out)
         return out
 
+    def set_bn_momentum(self, momentum):
+        if bn:
+            self.BN._momentum = momentum
+
 
 class MLP(fluid.dygraph.Layer):
     def __init__(self,
@@ -174,6 +182,10 @@ class MLP(fluid.dygraph.Layer):
         for conv_block in self.build_conv_list:
             out = conv_block(out)
         return out
+
+    def set_bn_momentum(self, momentum):
+        for conv_block in self.build_conv_list:
+            conv_block.set_bn_momentum(momentum)
 
 
 class Pointnet_SA_Module_MSG(fluid.dygraph.Layer):
@@ -241,6 +253,11 @@ class Pointnet_SA_Module_MSG(fluid.dygraph.Layer):
             out = fluid.layers.transpose(out,perm=[0,2,1])
         return(new_xyz,out)
 
+    def set_bn_momentum(self, momentum):
+        for mlp in self.build_mlp_list:
+            mlp.set_bn_momentum(momentum)
+
+
 class Pointnet_FP_module(fluid.dygraph.Layer):
     """
     PointNet Feature Propagation Module
@@ -272,7 +289,7 @@ class Pointnet_FP_module(fluid.dygraph.Layer):
             dist = fluid.layers.sqrt(dist)
             ones = fluid.layers.fill_constant_batch_size_like(dist,dist.shape,dist.dtype,1)
             dist_recip = ones / (dist + 1e-8)
-            norm = fluid.layers.reduce_mean(dist_recip,dim=-1,keep_dim=True)
+            norm = fluid.layers.reduce_sum(dist_recip,dim=-1,keep_dim=True)
             weight = dist_recip / norm
             interp_feats = fluid.layers.three_interp(known_feats,weight,idx)
         new_features = interp_feats if unknown_feats is None else \
@@ -284,58 +301,63 @@ class Pointnet_FP_module(fluid.dygraph.Layer):
         new_features = fluid.layers.transpose(new_features, perm=[0,2,1])
         return new_features
 
+    def set_bn_momentum(self, momentum):
+        for mlp in self.build_mlp_list:
+            mlp.set_bn_momentum(momentum)
+
 if __name__ == "__main__":
-    xyz = fluid.layers.data(name='xyz', shape=[9, 3], dtype='float32')
-    xyz_feats = fluid.layers.data(name='xyz_feats', shape=[12, 18], dtype='float32')
-    pointnet_sa = Pointnet_SA_Module_MSG("sa_module_msg")
-    new_xyz, out = pointnet_sa(xyz, xyz_feats)
-
-    place = fluid.CUDAPlace(0)
-    exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
-
-    np.random.seed(2333)
-    xyz_np = np.random.random((2, 9, 3)).astype('float32')
-    xyz_feats_np = np.random.random((2, 18, 12)).astype('float32')
-    xyz_feats_np = xyz_feats_np.transpose((0, 2, 1))
-    # print("xyz: ", xyz_np.shape, xyz_np)
-    # print("xyz_feats: ", xyz_feats_np.shape, xyz_feats_np)
-    ret = exe.run(fetch_list=[new_xyz.name, out.name], feed={'xyz': xyz_np, 'xyz_feats': xyz_feats_np})
-    print("new_xyz: ", ret[0].shape, ret[0])
-    print("out: ", ret[1].shape, ret[1].transpose((0, 2, 1)))
-    # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
-    # print("gourped_xyz0: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
-    # ret[3].tofile('grouped_xyz.data')
-    # print("grouped_feaures: ", ret[4].shape, ret[4].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
-    # ret[4].tofile('grouped_feaures.data')
-    # print("gourp0: ", ret[2].shape, ret[2]) # "transpose_0.tmp_0"
-    # print("gourp1: ", ret[3].shape, ret[3])
-    # ret[2].tofile('group0.data')
-    # print("mlp0: ", ret[2].shape, ret[2]) # "batch_norm_1.tmp_3"
-    # print("mlp1: ", ret[3].shape, ret[3])
-    # print("conv00: ", ret[2].shape, ret[2]) # "conv2d_0.tmp_1"
-    # print("conv10: ", ret[3].shape, ret[3])
-    # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
-    # print("ball_query1: ", ret[3].shape, ret[3])
-    # print("gourped_xyz0: ", ret[2].shape, ret[2].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
-    # print("gourped_xyz1: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2)))
-
-    # known = fluid.layers.data(name='known', shape=[9, 3], dtype='float32')
-    # unknown = fluid.layers.data(name='unknown', shape=[18, 3], dtype='float32')
-    # known_feats = fluid.layers.data(name='known_feats', shape=[9, 4], dtype='float32')
-    # unknown_feats = fluid.layers.data(name='unknown_feats', shape=[18, 8], dtype='float32')
-    # new_features = pointnet_fp_module(unknown, known, unknown_feats, known_feats, [6], name="test")
+    # xyz = fluid.layers.data(name='xyz', shape=[9, 3], dtype='float32')
+    # xyz_feats = fluid.layers.data(name='xyz_feats', shape=[12, 18], dtype='float32')
+    # pointnet_sa = Pointnet_SA_Module_MSG("sa_module_msg", 4, [0.8, 1.6], [6, 3], [[3, 6], [6, 9]])
+    # new_xyz, out = pointnet_sa(xyz, xyz_feats)
     #
     # place = fluid.CUDAPlace(0)
     # exe = fluid.Executor(place)
     # exe.run(fluid.default_startup_program())
     #
     # np.random.seed(2333)
-    # known_np = np.random.random((2, 9, 3)).astype('float32')
-    # unknown_np = np.random.random((2, 18, 3)).astype('float32')
-    # known_feats_np = np.random.random((2, 4, 9)).astype('float32')
-    # unknown_feats_np = np.random.random((2, 8, 18)).astype('float32')
-    # known_feats_np = known_feats_np.transpose((0, 2, 1))
-    # unknown_feats_np = unknown_feats_np.transpose((0, 2, 1))
-    # ret = exe.run(fetch_list=[new_features.name], feed={'known': known_np, 'unknown': unknown_np, 'known_feats': known_feats_np, 'unknown_feats': unknown_feats_np})
-    # print(ret[0].shape, ret[0].transpose((0, 2, 1)))
+    # xyz_np = np.random.random((2, 9, 3)).astype('float32')
+    # xyz_feats_np = np.random.random((2, 18, 12)).astype('float32')
+    # xyz_feats_np = xyz_feats_np.transpose((0, 2, 1))
+    # # print("xyz: ", xyz_np.shape, xyz_np)
+    # # print("xyz_feats: ", xyz_feats_np.shape, xyz_feats_np)
+    # ret = exe.run(fetch_list=[new_xyz.name, out.name], feed={'xyz': xyz_np, 'xyz_feats': xyz_feats_np})
+    # print("new_xyz: ", ret[0].shape, ret[0])
+    # print("out: ", ret[1].shape, ret[1].transpose((0, 2, 1)))
+    # # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
+    # # print("gourped_xyz0: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
+    # # ret[3].tofile('grouped_xyz.data')
+    # # print("grouped_feaures: ", ret[4].shape, ret[4].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
+    # # ret[4].tofile('grouped_feaures.data')
+    # # print("gourp0: ", ret[2].shape, ret[2]) # "transpose_0.tmp_0"
+    # # print("gourp1: ", ret[3].shape, ret[3])
+    # # ret[2].tofile('group0.data')
+    # # print("mlp0: ", ret[2].shape, ret[2]) # "batch_norm_1.tmp_3"
+    # # print("mlp1: ", ret[3].shape, ret[3])
+    # # print("conv00: ", ret[2].shape, ret[2]) # "conv2d_0.tmp_1"
+    # # print("conv10: ", ret[3].shape, ret[3])
+    # # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
+    # # print("ball_query1: ", ret[3].shape, ret[3])
+    # # print("gourped_xyz0: ", ret[2].shape, ret[2].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
+    # # print("gourped_xyz1: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2)))
+
+    known = fluid.layers.data(name='known', shape=[9, 3], dtype='float32')
+    unknown = fluid.layers.data(name='unknown', shape=[18, 3], dtype='float32')
+    known_feats = fluid.layers.data(name='known_feats', shape=[9, 4], dtype='float32')
+    unknown_feats = fluid.layers.data(name='unknown_feats', shape=[18, 8], dtype='float32')
+    pointnet_fp = Pointnet_FP_module("fp_module_msg", [6])
+    new_features = pointnet_fp(unknown, known, unknown_feats, known_feats)
+
+    place = fluid.CUDAPlace(0)
+    exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
+
+    np.random.seed(2333)
+    known_np = np.random.random((2, 9, 3)).astype('float32')
+    unknown_np = np.random.random((2, 18, 3)).astype('float32')
+    known_feats_np = np.random.random((2, 4, 9)).astype('float32')
+    unknown_feats_np = np.random.random((2, 8, 18)).astype('float32')
+    known_feats_np = known_feats_np.transpose((0, 2, 1))
+    unknown_feats_np = unknown_feats_np.transpose((0, 2, 1))
+    ret = exe.run(fetch_list=[new_features.name], feed={'known': known_np, 'unknown': unknown_np, 'known_feats': known_feats_np, 'unknown_feats': unknown_feats_np})
+    print(ret[0].shape, ret[0].transpose((0, 2, 1)))
