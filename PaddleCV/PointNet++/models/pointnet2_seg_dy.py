@@ -80,13 +80,11 @@ class PointNet2SemSegSSG(fluid.dygraph.Layer):
         feature0 = self.fp_module_0(xyz, xyz1, feature, feature1)
 
         out = fluid.layers.transpose(feature0, perm=[0, 2, 1])
-        # out = fluid.layers.unsqueeze(out, axes=[-1])
         out = unsqueeze(out, axis=-1)
         out = self.conv_bn_0(out)
         # out = fluid.layers.dropout(out, 0.5)
         out = self.conv_bn_1(out)
         tmp = out
-        # out = fluid.layers.squeeze(out, axes=[-1])
         out = squeeze(out, axis=-1)
         out = fluid.layers.transpose(out, perm=[0, 2, 1])
         pred = fluid.layers.softmax(out)
@@ -98,9 +96,22 @@ class PointNet2SemSegSSG(fluid.dygraph.Layer):
         ##calc acc
         pred_ = fluid.layers.reshape(pred, shape=[-1, self.num_classes])
         label = fluid.layers.reshape(label, shape=[-1, 1])
-	#print ("acc label:",pred.shape)
         acc1 = fluid.layers.accuracy(pred_, label, k=1)
-        return pred, loss, acc1
+        return loss, acc1
+
+    def set_bn_momentum(self, bn_momentum):
+        self.sa_module_msg_0.set_bn_momentum(bn_momentum)
+        self.sa_module_msg_1.set_bn_momentum(bn_momentum)
+        self.sa_module_msg_2.set_bn_momentum(bn_momentum)
+        self.sa_module_msg_3.set_bn_momentum(bn_momentum)
+
+        self.fp_module_0.set_bn_momentum(bn_momentum)
+        self.fp_module_1.set_bn_momentum(bn_momentum)
+        self.fp_module_2.set_bn_momentum(bn_momentum)
+        self.fp_module_3.set_bn_momentum(bn_momentum)
+
+        self.conv_bn_0.set_bn_momentum(bn_momentum)
+        self.conv_bn_1.set_bn_momentum(bn_momentum)
 
 
 class PointNet2SemSegMSG(PointNet2SemSegSSG):

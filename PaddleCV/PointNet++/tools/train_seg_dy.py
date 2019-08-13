@@ -22,6 +22,7 @@ import logging
 import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.dygraph.base import to_variable
+import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 
 from models import *
 from data.indoor3d_reader import Indoor3DReader
@@ -83,8 +84,8 @@ def parse_args():
     parser.add_argument(
         '--decay_steps',
         type=int,
-        default=2e5,
-        help='learning rate and batch norm momentum decay steps, default 2e5')
+        default=625,
+        help='learning rate and batch norm momentum decay steps, default 625')
     parser.add_argument(
         '--weight_decay',
         type=float,
@@ -120,6 +121,24 @@ def parse_args():
     return args
 
 
+def exponential_with_clip(learning_rate, decay_steps, decay_rate,
+                                  min_lr):
+    global_step = lr_scheduler._decay_step_counter()
+
+    lr = fluid.layers.create_global_var(
+        shape=[1],
+        value=float(lr),
+        dtype='float32',
+        persistable=False,
+        name="learning_rate")
+
+    decayed_lr = learning_rate * (decay_rate ** int(global_step / decay_steps))
+    decayed_lr = max(decayed_lr, min_lr)
+    fluid.layers.assign(decayed_lr, lr)
+
+    return lr
+
+
 def test(model, reader, args):
     model.eval()
     
@@ -138,7 +157,7 @@ def test(model, reader, args):
         label = to_variable(label_data)
         label._stop_gradient = True
 
-        _, loss, acc1 = model(xyz, feature, label)
+        loss, acc1 = model(xyz, feature, label)
         period = time.time() - cur_time
         cur_time = time.time()
 
@@ -155,7 +174,7 @@ def test(model, reader, args):
 def train():
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
-    # check_gpu(args.use_gpu)
+    check_gpu(True)
 
     if not os.path.isdir(args.save_dir):
         os.makedirs(args.save_dir)
@@ -164,6 +183,7 @@ def train():
             if args.use_data_parallel else fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
         model = PointNet2SemSegMSG("pointnet2_semseg_msg", num_classes=args.num_classes)
+        # lr = exponential_with_clip(args.lr, args.decay_steps, args.lr_decay, 1e-5)
         lr = fluid.layers.exponential_decay(
                 learning_rate=args.lr,
                 decay_steps=args.decay_steps,
@@ -179,7 +199,7 @@ def train():
         #         feature = np.random.random((4096, 6)).astype('float32')
         #         label = np.random.uniform(0, 13, (4096, 1)).astype('int64')
         #         for i in range(10):
-        #             yield [(xyz, feature, label)]
+        #             yield [(xyz, feature, label), (xyz, feature, label)]
         #     return reader
         # train_reader = _train_reader()
         # test_reader = _train_reader()
@@ -195,6 +215,8 @@ def train():
             train_reader = fluid.contrib.distributed_batch_reader(train_reader)
             test_reader = fluid.contrib.distributed_batch_reader(test_reader)
 
+        global_step = 0
+        bn_momentum = args.bn_momentum
         for epoch_id in range(args.epoch):
             model.train()
             total_loss = 0.
@@ -203,6 +225,14 @@ def train():
             total_sample = 0
             cur_time = time.time()
             for batch_id, data in enumerate(train_reader()):
+                # perform bn decay
+                if global_step % args.decay_steps == 0:
+                    model.set_bn_momentum(bn_momentum)
+                    logger.info("Set batch norm momentum as {}".format(bn_momentum))
+                    bn_momentum *= args.bn_decay
+                    bn_momentum = max(bn_momentum, 1e-2)
+                global_step += 1
+
                 xyz_data = np.array([x[0].reshape(args.num_points, 3) for x in data]).astype('float32')
                 feature_data = np.array([x[1].reshape(args.num_points, 6) for x in data]).astype('float32')
                 label_data = np.array([x[2].reshape(args.num_points, 1) for x in data]).astype('int64')
@@ -212,7 +242,7 @@ def train():
                 label = to_variable(label_data)
                 label._stop_gradient = True
 
-                _, loss, acc1 = model(xyz, feature, label)
+                loss, acc1 = model(xyz, feature, label)
 
                 if args.use_data_parallel:
                     loss = model.scale_loss(loss)
@@ -231,7 +261,7 @@ def train():
                 total_time += period
                 total_sample += 1
                 if batch_id % args.log_interval == 0:
-                    logger.info("[TRAIN] Epoch {}, batch {}, loss: {:.3f}, acc(top-1): {:.3f}, time: {:.2f}".format(epoch_id, batch_id, loss.numpy()[0], acc1.numpy()[0], period))
+                    logger.info("[TRAIN] Epoch {}, batch {}, loss: {:.3f}, acc(top-1): {:.3f}, learning_rate: {:.5f} time: {:.2f}".format(epoch_id, batch_id, loss.numpy()[0], acc1.numpy()[0], optimizer._global_learning_rate().numpy()[0], period))
             fluid.dygraph.save_persistables(model.state_dict(), args.save_dir)
             test(model, test_reader, args)
 
