@@ -67,8 +67,8 @@ def load(anno_path, sample_num=-1, with_background=True):
     for img_id in img_ids:
         img_anno = coco.loadImgs(img_id)[0]
         im_fname = img_anno['file_name']
-        im_w = img_anno['width']
-        im_h = img_anno['height']
+        im_w = float(img_anno['width'])
+        im_h = float(img_anno['height'])
 
         ins_anno_ids = coco.getAnnIds(imgIds=img_id, iscrowd=False)
         instances = coco.loadAnns(ins_anno_ids)
@@ -101,7 +101,8 @@ def load(anno_path, sample_num=-1, with_background=True):
             gt_class[i][0] = catid2clsid[catid]
             gt_bbox[i, :] = box['clean_bbox']
             is_crowd[i][0] = box['iscrowd']
-            gt_poly[i] = box['segmentation']
+            if 'segmentation' in box:
+                gt_poly[i] = box['segmentation']
 
         coco_rec = {
             'im_file': im_fname,

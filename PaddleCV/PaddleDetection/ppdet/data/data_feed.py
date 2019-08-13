@@ -30,7 +30,7 @@ from ppdet.data.transform.operators import (
     Permute)
 
 from ppdet.data.transform.arrange_sample import (
-    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD, 
+    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD,
     ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
@@ -299,7 +299,8 @@ class DataFeed(object):
                  num_workers=2,
                  bufsize=10,
                  use_process=False,
-                 use_padded_im_info=False):
+                 use_padded_im_info=False,
+                 class_aware_sampling=False):
         super(DataFeed, self).__init__()
         self.fields = fields
         self.image_shape = image_shape
@@ -315,6 +316,7 @@ class DataFeed(object):
         self.use_process = use_process
         self.dataset = dataset
         self.use_padded_im_info = use_padded_im_info
+        self.class_aware_sampling = class_aware_sampling
         if isinstance(dataset, dict):
             self.dataset = DataSet(**dataset)
 
@@ -440,7 +442,8 @@ class FasterRCNNTrainFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  num_workers=2,
-                 use_process=False):
+                 use_process=False,
+                 class_aware_sampling=False):
         # XXX this should be handled by the data loader, since `fields` is
         # given, just collect them
         sample_transforms.append(ArrangeRCNN())
@@ -455,7 +458,8 @@ class FasterRCNNTrainFeed(DataFeed):
             samples=samples,
             drop_last=drop_last,
             num_workers=num_workers,
-            use_process=use_process)
+            use_process=use_process,
+            class_aware_sampling=class_aware_sampling)
         # XXX these modes should be unified
         self.mode = 'TRAIN'
 
@@ -874,7 +878,8 @@ class YoloTrainFeed(DataFeed):
                  bufsize=128,
                  use_process=True,
                  num_max_boxes=50,
-                 mixup_epoch=250):
+                 mixup_epoch=250,
+                 class_aware_sampling=False):
         sample_transforms.append(ArrangeYOLO())
         super(YoloTrainFeed, self).__init__(
             dataset,
@@ -889,7 +894,8 @@ class YoloTrainFeed(DataFeed):
             with_background=with_background,
             num_workers=num_workers,
             bufsize=bufsize,
-            use_process=use_process)
+            use_process=use_process,
+            class_aware_sampling=class_aware_sampling)
         self.num_max_boxes = num_max_boxes
         self.mixup_epoch = mixup_epoch
         self.mode = 'TRAIN'
