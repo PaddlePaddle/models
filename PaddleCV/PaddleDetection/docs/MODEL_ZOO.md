@@ -9,7 +9,7 @@
 
 ## Common settings
 
-- All models below except SSD were trained on `coco_2017_train`, and tested on `coco_2017_val`.
+- All models below were trained on `coco_2017_train`, and tested on `coco_2017_val`.
 - Batch Normalization layers in backbones are replaced by Affine Channel layers.
 - Unless otherwise noted, all ResNet backbones adopt the [ResNet-B](https://arxiv.org/pdf/1812.01187) variant..
 - For RCNN and RetinaNet models, only horizontal flipping data augmentation was used in the training phase and no augmentations were used in the testing phase.
