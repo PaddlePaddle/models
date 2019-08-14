@@ -123,20 +123,15 @@ def parse_args():
         default=100,
         help="The frequency to fetch and print output.")
     parser.add_argument(
-        "--nccl_comm_num",
+        "--num_threads",
         type=int,
-        default=1,
-        help="Number of NCCL communicators.")
+        default=2,
+        help="How many threads to run paddle.")
     parser.add_argument(
-        "--hierarchical_allreduce_inter_nranks",
-        type=int,
-        default=8,
-        help="Hierarchical allreduce inter ranks.")
-    parser.add_argument(
-        "--use_hierarchical_allreduce",
+        "--fuse",
         type=bool,
         default=False,
-        help="Use hierarchical allreduce or not.")
+        help="Use tensor fusion or not.")
 
     args = parser.parse_args()
     # Append args related to dict
@@ -592,12 +587,14 @@ def train(args):
     fleet.init(role)
 
     exec_strategy = fluid.ExecutionStrategy()
-    exec_strategy.num_threads = 2
+    exec_strategy.num_threads = args.num_threads
     exec_strategy.num_iteration_per_drop_scope = 30
 
     dist_strategy = DistributedStrategy()
     dist_strategy.exec_strategy = exec_strategy
     dist_strategy.fuse_memory_size = 64 #MB
+    if args.fuse:
+        dist_strategy.fuse_all_reduce_ops = 1
 
     with fluid.program_guard(train_program, startup_program):
         with fluid.unique_name.guard():
