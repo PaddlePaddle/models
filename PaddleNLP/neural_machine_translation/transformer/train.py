@@ -1,31 +1,40 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# This file is mainly from Paddle/models,
+# the repo: https://github.com/PaddlePaddle/models.git
+
 import argparse
 import ast
 import copy
 import logging
 import multiprocessing
 import os
-import subprocess
-
-if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
-    os.environ['FLAGS_eager_delete_tensor_gb'] = '0'
-
 import six
 import sys
-sys.path.append("../../")
-sys.path.append("../../models/neural_machine_translation/transformer/")
 import time
 
 import numpy as np
 import paddle.fluid as fluid
 
-from models.model_check import check_cuda
 import reader
 from config import *
 from desc import *
 from model import transformer, position_encoding_init
-import dist_utils
 
-num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+from paddle.fluid.incubate.fleet.collective import fleet, DistributedStrategy
+import paddle.fluid.incubate.fleet.base.role_maker as role_maker
 
 
 def parse_args():
@@ -58,7 +67,7 @@ def parse_args():
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=4096,
+        default=2048,
         help="The number of sequences contained in a mini-batch, or the maximum "
         "number of tokens (include paddings) contained in a mini-batch. Note "
         "that this represents the number on single device and the actual batch "
@@ -102,34 +111,7 @@ def parse_args():
         default=None,
         nargs=argparse.REMAINDER)
     parser.add_argument(
-        '--local',
-        type=ast.literal_eval,
-        default=True,
-        help='Whether to run as local mode.')
-    parser.add_argument(
-        '--device',
-        type=str,
-        default='GPU',
-        choices=['CPU', 'GPU'],
-        help="The device type.")
-    parser.add_argument(
-        '--update_method',
-        choices=("pserver", "nccl2"),
-        default="pserver",
-        help='Update method.')
-    parser.add_argument(
         '--sync', type=ast.literal_eval, default=True, help="sync mode.")
-    parser.add_argument(
-        "--enable_ce",
-        type=ast.literal_eval,
-        default=False,
-        help="The flag indicating whether to run the task "
-        "for continuous evaluation.")
-    parser.add_argument(
-        "--use_mem_opt",
-        type=ast.literal_eval,
-        default=True,
-        help="The flag indicating whether to use memory optimization.")
     parser.add_argument(
         "--use_py_reader",
         type=ast.literal_eval,
@@ -140,6 +122,31 @@ def parse_args():
         type=int,
         default=100,
         help="The frequency to fetch and print output.")
+    parser.add_argument(
+        "--nccl_comm_num",
+        type=int,
+        default=1,
+        help="Number of NCCL communicators.")
+    parser.add_argument(
+        "--hierarchical_allreduce_inter_nranks",
+        type=int,
+        default=8,
+        help="Hierarchical allreduce inter ranks.")
+    parser.add_argument(
+        "--use_hierarchical_allreduce",
+        type=bool,
+        default=False,
+        help="Use hierarchical allreduce or not.")
+    parser.add_argument(
+        "--enable_backward_op_deps",
+        type=bool,
+        default=False,
+        help="Whether to use enable_backward_op_deps.")
+    parser.add_argument(
+        "--fuse",
+        type=bool,
+        default=False,
+        help="Whether to use fusion.")
 
     args = parser.parse_args()
     # Append args related to dict
@@ -154,33 +161,6 @@ def parse_args():
     merge_cfg_from_list(args.opts + dict_args,
                         [TrainTaskConfig, ModelHyperParams])
     return args
-
-
-def get_device_num():
-    # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1:
-        return 1
-    return fluid.core.get_cuda_device_count()
-
-
-def append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
-                         current_endpoint):
-    assert (trainer_id >= 0 and len(worker_endpoints) > 1 and
-            current_endpoint in worker_endpoints)
-    eps = copy.deepcopy(worker_endpoints)
-    eps.remove(current_endpoint)
-    nccl_id_var = startup_prog.global_block().create_var(
-        name="NCCLID", persistable=True, type=fluid.core.VarDesc.VarType.RAW)
-    startup_prog.global_block().append_op(
-        type="gen_nccl_id",
-        inputs={},
-        outputs={"NCCLID": nccl_id_var},
-        attrs={
-            "endpoint": current_endpoint,
-            "endpoint_list": eps,
-            "trainer_id": trainer_id
-        })
-    return nccl_id_var
 
 
 def pad_batch_data(insts,
@@ -286,10 +266,6 @@ def prepare_data_generator(args,
     Data generator wrapper for DataReader. If use py_reader, set the data
     provider for py_reader
     """
-    # NOTE: If num_trainers > 1, the shuffle_seed must be set, because
-    # the order of batch data generated by reader
-    # must be the same in the respective processes.
-    shuffle_seed = 1 if num_trainers > 1 else None
     data_reader = reader.DataReader(
         fpattern=args.val_file_pattern if is_test else args.train_file_pattern,
         src_vocab_fpath=args.src_vocab_fpath,
@@ -300,7 +276,6 @@ def prepare_data_generator(args,
         pool_size=args.pool_size,
         sort_type=args.sort_type,
         shuffle=args.shuffle,
-        shuffle_seed=shuffle_seed,
         shuffle_batch=args.shuffle_batch,
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
@@ -346,12 +321,8 @@ def prepare_data_generator(args,
         # to make data on each device have similar token number
         data_reader = split(data_reader, count)
     if args.use_py_reader:
-        train_reader = py_reader_provider_wrapper(data_reader, place)
-        if num_trainers > 1:
-            assert shuffle_seed is not None
-            train_reader = fluid.contrib.reader.distributed_batch_reader(
-                train_reader)
-        pyreader.decorate_tensor_provider(train_reader)
+        pyreader.decorate_tensor_provider(
+            py_reader_provider_wrapper(data_reader, place))
         data_reader = None
     else:  # Data generator for multi-devices
         data_reader = stack(data_reader, count)
@@ -408,13 +379,11 @@ def py_reader_provider_wrapper(data_reader, place):
     return py_reader_provider
 
 
-def test_context(exe, train_exe, dev_count):
+def test_context(exe, dev_count):
     # Context to do validation.
     test_prog = fluid.Program()
     startup_prog = fluid.Program()
-    if args.enable_ce:
-        test_prog.random_seed = 1000
-        startup_prog.random_seed = 1000
+
     with fluid.program_guard(test_prog, startup_prog):
         with fluid.unique_name.guard():
             sum_cost, avg_cost, predict, token_num, pyreader = transformer(
@@ -449,14 +418,7 @@ def test_context(exe, train_exe, dev_count):
         fluid.io.load_persistables(
             exe, TrainTaskConfig.ckpt_path, main_program=test_prog)
 
-    build_strategy = fluid.BuildStrategy()
-    test_exe = fluid.ParallelExecutor(
-        use_cuda=TrainTaskConfig.use_gpu,
-        main_program=test_prog,
-        build_strategy=build_strategy,
-        share_vars_from=train_exe)
-
-    def test(exe=test_exe, pyreader=pyreader):
+    def test(exe=exe, pyreader=pyreader):
         test_total_cost = 0
         test_total_token = 0
 
@@ -469,8 +431,9 @@ def test_context(exe, train_exe, dev_count):
             try:
                 feed_dict_list = prepare_feed_dict_list(data_generator, False,
                                                         dev_count)
-                outs = test_exe.run(fetch_list=[sum_cost.name, token_num.name],
-                                    feed=feed_dict_list)
+                outs = exe.run(program=test_prog, 
+                               fetch_list=[sum_cost.name, token_num.name],
+                               feed=feed_dict_list)
             except (StopIteration, fluid.core.EOFException):
                 # The current pass is over.
                 if args.use_py_reader:
@@ -487,26 +450,24 @@ def test_context(exe, train_exe, dev_count):
 
 
 def train_loop(exe,
-               train_prog,
-               startup_prog,
+               train_program,
+               startup_program,
                dev_count,
                sum_cost,
                avg_cost,
                token_num,
                predict,
-               pyreader,
-               nccl2_num_trainers=1,
-               nccl2_trainer_id=0):
+               pyreader):
     # Initialize the parameters.
     if TrainTaskConfig.ckpt_path:
-        exe.run(startup_prog)  # to init pyreader for training
+        exe.run(startup_program)  # to init pyreader for training
         logging.info("load checkpoint from {}".format(
             TrainTaskConfig.ckpt_path))
         fluid.io.load_persistables(
-            exe, TrainTaskConfig.ckpt_path, main_program=train_prog)
+            exe, TrainTaskConfig.ckpt_path, main_program=train_program)
     else:
         logging.info("init fluid.framework.default_startup_program")
-        exe.run(startup_prog)
+        exe.run(startup_program)
 
     logging.info("begin reader")
     train_data = prepare_data_generator(
@@ -516,37 +477,11 @@ def train_loop(exe,
         pyreader=pyreader,
         py_reader_provider_wrapper=py_reader_provider_wrapper)
 
-    # For faster executor
-    exec_strategy = fluid.ExecutionStrategy()
-    exec_strategy.num_iteration_per_drop_scope = int(args.fetch_steps)
-    build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = False
-    build_strategy.enable_inplace = True
-
     sum_cost.persistable = True
     token_num.persistable = True
-    # Since the token number differs among devices, customize gradient scale to
-    # use token average cost among multi-devices. and the gradient scale is
-    # `1 / token_number` for average cost.
-    # build_strategy.gradient_scale_strategy = fluid.BuildStrategy.GradientScaleStrategy.Customized
-    build_strategy.fuse_all_optimizer_ops = True
-
-    if num_trainers > 1 and args.use_py_reader and TrainTaskConfig.use_gpu:
-        dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog)
-        exec_strategy.num_threads = 1
-
-    logging.info("begin executor")
-    train_exe = fluid.ParallelExecutor(
-        use_cuda=TrainTaskConfig.use_gpu,
-        loss_name=avg_cost.name,
-        main_program=train_prog,
-        build_strategy=build_strategy,
-        exec_strategy=exec_strategy,
-        num_trainers=nccl2_num_trainers,
-        trainer_id=nccl2_trainer_id)
 
     if args.val_file_pattern is not None:
-        test = test_context(exe, train_exe, dev_count)
+        test = test_context(exe, dev_count)
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -((1. - TrainTaskConfig.label_smooth_eps) * np.log(
@@ -557,6 +492,7 @@ def train_loop(exe,
 
     step_idx = 0
     init_flag = True
+
     logging.info("begin train")
     for pass_id in six.moves.xrange(TrainTaskConfig.pass_num):
         pass_start_time = time.time()
@@ -572,10 +508,10 @@ def train_loop(exe,
             try:
                 feed_dict_list = prepare_feed_dict_list(data_generator,
                                                         init_flag, dev_count)
-                outs = train_exe.run(
-                    fetch_list=[sum_cost.name, token_num.name]
-                    if step_idx % args.fetch_steps == 0 else [],
-                    feed=feed_dict_list)
+                outs = exe.run(program=train_program,
+                               fetch_list=[sum_cost.name, token_num.name]
+                               if step_idx % args.fetch_steps == 0 else [],
+                               feed=feed_dict_list)
 
                 if step_idx % args.fetch_steps == 0:
                     sum_cost_val, token_num_val = np.array(outs[0]), np.array(
@@ -607,12 +543,12 @@ def train_loop(exe,
                     fluid.io.save_persistables(
                         exe,
                         os.path.join(TrainTaskConfig.ckpt_dir,
-                                     "latest.checkpoint"), train_prog)
+                                     "latest.checkpoint"), train_program)
                     fluid.io.save_params(
                         exe,
                         os.path.join(TrainTaskConfig.model_dir,
                                      "iter_" + str(step_idx) + ".infer.model"),
-                        train_prog)
+                        train_program)
 
                 init_flag = False
                 batch_id += 1
@@ -635,52 +571,39 @@ def train_loop(exe,
         else:
             logging.info("epoch: %d, consumed %fs" % (pass_id, time_consumed))
 
-        if not args.enable_ce:
-            fluid.io.save_persistables(
-                exe,
-                os.path.join(TrainTaskConfig.ckpt_dir,
-                             "pass_" + str(pass_id) + ".checkpoint"),
-                train_prog)
-
-    if args.enable_ce:  # For CE
-        print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
-        if args.val_file_pattern is not None:
-            print("kpis\ttest_cost_card%d\t%f" % (dev_count, val_avg_cost))
-        print("kpis\ttrain_duration_card%d\t%f" % (dev_count, time_consumed))
+        fluid.io.save_persistables(
+            exe,
+            os.path.join(TrainTaskConfig.ckpt_dir,
+                         "pass_" + str(pass_id) + ".checkpoint"),
+            train_program)
 
 
 def train(args):
     # priority: ENV > args > config
-    is_local = os.getenv("PADDLE_IS_LOCAL", "1")
-    if is_local == '0':
-        args.local = False
     logging.info(args)
 
-    if args.device == 'CPU':
-        TrainTaskConfig.use_gpu = False
-
-    training_role = os.getenv("TRAINING_ROLE", "TRAINER")
-
-    if training_role == "PSERVER" or (not TrainTaskConfig.use_gpu):
-        place = fluid.CPUPlace()
-        # the default setting of CPU_NUM in paddle framework is 1
-        dev_count = int(os.environ.get('CPU_NUM', 1))
-    else:
-        check_cuda(TrainTaskConfig.use_gpu)
-        gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
-        place = fluid.CUDAPlace(gpu_id)
-        dev_count = get_device_num()
+    gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+    place = fluid.CUDAPlace(gpu_id)
+    dev_count = 1
 
     exe = fluid.Executor(place)
 
-    train_prog = fluid.Program()
-    startup_prog = fluid.Program()
+    train_program = fluid.Program()
+    startup_program = fluid.Program()
 
-    if args.enable_ce:
-        train_prog.random_seed = 1000
-        startup_prog.random_seed = 1000
+    # For Distributed Training.
+    role = role_maker.PaddleCloudRoleMaker(is_collective=True)
+    fleet.init(role)
 
-    with fluid.program_guard(train_prog, startup_prog):
+    exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.num_threads = 2
+    exec_strategy.num_iteration_per_drop_scope = 30
+
+    dist_strategy = DistributedStrategy()
+    dist_strategy.exec_strategy = exec_strategy
+    dist_strategy.fuse_memory_size = 64 #MB
+
+    with fluid.program_guard(train_program, startup_program):
         with fluid.unique_name.guard():
             sum_cost, avg_cost, predict, token_num, pyreader = transformer(
                 ModelHyperParams.src_vocab_size,
@@ -707,7 +630,6 @@ def train(args):
             if args.sync:
                 lr_decay = fluid.layers.learning_rate_scheduler.noam_decay(
                     ModelHyperParams.d_model, TrainTaskConfig.warmup_steps)
-                logging.info("before adam")
 
                 with fluid.default_main_program()._lr_schedule_guard():
                     learning_rate = lr_decay * TrainTaskConfig.learning_rate
@@ -719,82 +641,12 @@ def train(args):
                     epsilon=TrainTaskConfig.eps)
             else:
                 optimizer = fluid.optimizer.SGD(0.003)
-            optimizer.minimize(avg_cost)
+            optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy)
+            optimizer.minimize(avg_cost, startup_program)
 
-    if args.local:
-        logging.info("local start_up:")
-        train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
-                   token_num, predict, pyreader)
-    else:
-        if args.update_method == "nccl2":
-            trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
-            port = os.getenv("PADDLE_PORT")
-            worker_ips = os.getenv("PADDLE_TRAINERS")
-            worker_endpoints = []
-            for ip in worker_ips.split(","):
-                worker_endpoints.append(':'.join([ip, port]))
-            trainers_num = len(worker_endpoints)
-            current_endpoint = os.getenv("POD_IP") + ":" + port
-            if trainer_id == 0:
-                logging.info("train_id == 0, sleep 60s")
-                time.sleep(60)
-            logging.info("trainers_num:{}".format(trainers_num))
-            logging.info("worker_endpoints:{}".format(worker_endpoints))
-            logging.info("current_endpoint:{}".format(current_endpoint))
-            append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
-                                 current_endpoint)
-            train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
-                       avg_cost, token_num, predict, pyreader, trainers_num,
-                       trainer_id)
-            return
-
-        port = os.getenv("PADDLE_PORT", "6174")
-        pserver_ips = os.getenv("PADDLE_PSERVERS")  # ip,ip...
-        eplist = []
-        for ip in pserver_ips.split(","):
-            eplist.append(':'.join([ip, port]))
-        pserver_endpoints = ",".join(eplist)  # ip:port,ip:port...
-        trainers = int(os.getenv("PADDLE_TRAINERS_NUM", "0"))
-        current_endpoint = os.getenv("POD_IP") + ":" + port
-        trainer_id = int(os.getenv("PADDLE_TRAINER_ID"))
-
-        logging.info("pserver_endpoints:{}".format(pserver_endpoints))
-        logging.info("current_endpoint:{}".format(current_endpoint))
-        logging.info("trainer_id:{}".format(trainer_id))
-        logging.info("pserver_ips:{}".format(pserver_ips))
-        logging.info("port:{}".format(port))
-
-        t = fluid.DistributeTranspiler()
-        t.transpile(
-            trainer_id,
-            pservers=pserver_endpoints,
-            trainers=trainers,
-            program=train_prog,
-            startup_program=startup_prog)
-
-        if training_role == "PSERVER":
-            logging.info("distributed: pserver started")
-            current_endpoint = os.getenv("POD_IP") + ":" + os.getenv(
-                "PADDLE_PORT")
-            if not current_endpoint:
-                logging.critical("need env SERVER_ENDPOINT")
-                exit(1)
-            pserver_prog = t.get_pserver_program(current_endpoint)
-            pserver_startup = t.get_startup_program(current_endpoint,
-                                                    pserver_prog)
-
-            exe.run(pserver_startup)
-            exe.run(pserver_prog)
-        elif training_role == "TRAINER":
-            logging.info("distributed: trainer started")
-            trainer_prog = t.get_trainer_program()
-
-            train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
-                       avg_cost, token_num, predict, pyreader)
-        else:
-            logging.critical(
-                "environment var TRAINER_ROLE should be TRAINER os PSERVER")
-            exit(1)
+    train_program = fleet.main_program
+    train_loop(exe, train_program, startup_program, dev_count, sum_cost,
+               avg_cost, token_num, predict, pyreader)
 
 
 if __name__ == "__main__":

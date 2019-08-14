@@ -1,14 +1,28 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# This file is mainly from Paddle/models,
+# the repo: https://github.com/PaddlePaddle/models.git
+
 class TrainTaskConfig(object):
-    # support both CPU and GPU now.
+    # in collective mode, only support GPU now (always set to True)
     use_gpu = True
     # the epoch number to train.
     pass_num = 30
-    # the number of sequences contained in a mini-batch.
-    # deprecated, set batch_size in args.
-    batch_size = 32
     # the hyper parameters for Adam optimizer.
     # This static learning_rate will be multiplied to the LearningRateScheduler
-    # derived learning rate the to get the final learning rate.
+    # derived learning rate then to get the final learning rate.
     learning_rate = 2.0
     beta1 = 0.9
     beta2 = 0.997
@@ -35,6 +49,7 @@ class TrainTaskConfig(object):
 
 
 class InferTaskConfig(object):
+    # in collective mode, only support GPU now (always set to True)
     use_gpu = True
     # the number of examples in one run for sequence generation.
     batch_size = 10

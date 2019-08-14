@@ -1,5 +1,8 @@
 ## 简介
 
+### 脚本说明
+本脚本源自[PaddlePaddle/models仓库](https://github.com/PaddlePaddle/models.git)，通过Fleet API实现多卡/多机分布式训练。
+
 ### 任务说明
 
 机器翻译（machine translation, MT）是利用计算机将一种自然语言(源语言)转换为另一种自然语言(目标语言)的过程，输入为源语言句子，输出为相应的目标语言的句子。本示例是机器翻译主流模型 Transformer 的实现和相关介绍。

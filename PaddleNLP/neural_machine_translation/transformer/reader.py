@@ -1,3 +1,20 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
+# This file is mainly from Paddle/models,
+# the repo: https://github.com/PaddlePaddle/models.git
+
 import glob
 import six
 import os
@@ -180,7 +197,6 @@ class DataReader(object):
                  min_length=0,
                  max_length=100,
                  shuffle=True,
-                 shuffle_seed=None,
                  shuffle_batch=False,
                  use_token_batch=False,
                  field_delimiter="\t",
@@ -200,7 +216,6 @@ class DataReader(object):
         self._sort_type = sort_type
         self._clip_last_batch = clip_last_batch
         self._shuffle = shuffle
-        self._shuffle_seed = shuffle_seed
         self._shuffle_batch = shuffle_batch
         self._min_length = min_length
         self._max_length = max_length
@@ -294,8 +309,6 @@ class DataReader(object):
         else:
             if self._shuffle:
                 infos = self._sample_infos
-                if self._shuffle_seed is not None:
-                    self._random.seed(self._shuffle_seed)
                 self._random.shuffle(infos)
             else:
                 infos = self._sample_infos
