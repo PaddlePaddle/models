@@ -266,6 +266,7 @@ def prepare_data_generator(args,
         pool_size=args.pool_size,
         sort_type=args.sort_type,
         shuffle=args.shuffle,
+        shuffle_seed=args.shuffle_seed
         shuffle_batch=args.shuffle_batch,
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
@@ -311,8 +312,12 @@ def prepare_data_generator(args,
         # to make data on each device have similar token number
         data_reader = split(data_reader, count)
     if args.use_py_reader:
-        pyreader.decorate_tensor_provider(
-            py_reader_provider_wrapper(data_reader, place))
+        train_reader = py_reader_provider_wrapper(data_reader, place)
+        if args.num_trainers > 1:
+            assert shuffle_seed is not None
+            train_reader = fluid.contrib.reader.distributed_batch_reader(
+                train_reader)
+        pyreader.decorate_tensor_provider(train_reader)
         data_reader = None
     else:  # Data generator for multi-devices
         data_reader = stack(data_reader, count)
