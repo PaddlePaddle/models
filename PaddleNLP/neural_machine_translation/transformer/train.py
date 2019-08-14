@@ -67,7 +67,7 @@ def parse_args():
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=2048,
+        default=4096,
         help="The number of sequences contained in a mini-batch, or the maximum "
         "number of tokens (include paddings) contained in a mini-batch. Note "
         "that this represents the number on single device and the actual batch "
