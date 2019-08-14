@@ -256,6 +256,7 @@ def prepare_data_generator(args,
     Data generator wrapper for DataReader. If use py_reader, set the data
     provider for py_reader
     """
+    shuffle_seed=args.shuffle_seed
     data_reader = reader.DataReader(
         fpattern=args.val_file_pattern if is_test else args.train_file_pattern,
         src_vocab_fpath=args.src_vocab_fpath,
@@ -266,7 +267,7 @@ def prepare_data_generator(args,
         pool_size=args.pool_size,
         sort_type=args.sort_type,
         shuffle=args.shuffle,
-        shuffle_seed=args.shuffle_seed,
+        shuffle_seed=shuffle_seed,
         shuffle_batch=args.shuffle_batch,
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
