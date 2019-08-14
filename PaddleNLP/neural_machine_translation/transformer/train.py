@@ -442,6 +442,7 @@ def test_context(exe, dev_count):
 
 def train_loop(exe,
                train_program,
+               orig_train_program,
                startup_program,
                dev_count,
                sum_cost,
@@ -534,12 +535,12 @@ def train_loop(exe,
                     fluid.io.save_persistables(
                         exe,
                         os.path.join(TrainTaskConfig.ckpt_dir,
-                                     "latest.checkpoint"), train_program)
+                                     "latest.checkpoint"), orig_train_program)
                     fluid.io.save_params(
                         exe,
                         os.path.join(TrainTaskConfig.model_dir,
                                      "iter_" + str(step_idx) + ".infer.model"),
-                        train_program)
+                        orig_train_program)
 
                 init_flag = False
                 batch_id += 1
@@ -639,8 +640,9 @@ def train(args):
             optimizer.minimize(avg_cost, startup_program)
 
     train_program = fleet.main_program
-    train_loop(exe, train_program, startup_program, dev_count, sum_cost,
-               avg_cost, token_num, predict, pyreader)
+    orig_train_program = fleet._origin_program
+    train_loop(exe, train_program, orig_train_program, startup_program, 
+               dev_count, sum_cost, avg_cost, token_num, predict, pyreader)
 
 
 if __name__ == "__main__":
