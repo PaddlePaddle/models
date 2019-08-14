@@ -280,7 +280,7 @@ def _reader_creator(settings,
             if mode == "train" or mode == "val":
                 yield img_path, int(label)
             elif mode == "test":
-                yield img_path
+                yield [img_path]
             """
                 batch_data.append([img_path, int(label)])
                 if len(batch_data) == batch_size:
