@@ -3,8 +3,7 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 import math
 
-__all__ = ["ResNeXt", "ResNeXt50_vd_64x4d","ResNeXt101_vd_64x4d", "ResNeXt152_vd_64x4d"]
-
+__all__ = ["ResNeXt","ResNeXt50_vd_64x4d","ResNeXt101_vd_64x4d","ResNeXt152_vd_64x4d","ResNeXt50_vd_32x4d","ResNeXt101_vd_32x4d", "ResNeXt152_vd_32x4d"]
 train_parameters = {
     "input_size": [3, 224, 224],
     "input_mean": [0.485, 0.456, 0.406],
@@ -19,13 +18,15 @@ train_parameters = {
 
 
 class ResNeXt():
-    def __init__(self, layers=50, is_3x3 = False):
+    def __init__(self, layers=50, is_3x3 = False, cardinality=64):
         self.params = train_parameters
         self.layers = layers
         self.is_3x3 = is_3x3
+        self.cardinality = cardinality
     def net(self, input, class_dim=1000):
         is_3x3 = self.is_3x3
         layers = self.layers
+        cardinality = self.cardinality
         supported_layers = [50, 101, 152]
         assert layers in supported_layers, \
             "supported layers are {} but input layer is {}".format(supported_layers, layers)
@@ -36,8 +37,8 @@ class ResNeXt():
             depth = [3, 4, 23, 3]
         elif layers == 152:
             depth = [3, 8, 36, 3]
-        num_filters = [256, 512, 1024, 2048]
-        cardinality = 64
+        num_filters1 = [256, 512, 1024, 2048]
+        num_filters2 = [128, 256, 512, 1024]
         
         if is_3x3 == False:
             conv = self.conv_bn_layer(
@@ -68,7 +69,7 @@ class ResNeXt():
                     conv_name="res"+str(block+2)+chr(97+i)
                 conv = self.bottleneck_block(
                     input=conv,
-                    num_filters=num_filters[block],
+                    num_filters=num_filters1[block] if cardinality == 64 else num_filters2[block],
                     stride=2 if i == 0 and block != 0 else 1,
                     cardinality=cardinality,
                     if_first=block==0, 
@@ -177,25 +178,34 @@ class ResNeXt():
             groups=cardinality,
             name=name+"_branch2b")
         conv2 = self.conv_bn_layer(
-            input=conv1, num_filters=num_filters, filter_size=1, act=None, name=name+"_branch2c")
+            input=conv1, num_filters=num_filters if cardinality == 64 else num_filters*2, filter_size=1, act=None, name=name+"_branch2c")
 
-        short = self.shortcut(input, num_filters, stride, if_first=if_first, name=name + "_branch1")
+        short = self.shortcut(input, num_filters if cardinality == 64 else num_filters*2, stride, if_first=if_first, name=name + "_branch1")
 
         return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
     
 
-
-
 def ResNeXt50_vd_64x4d():
     model = ResNeXt(layers=50, is_3x3 = True)
+    return model
+
+def ResNeXt50_vd_32x4d():
+    model = ResNeXt(layers=50, cardinality=32, is_3x3 = True)
     return model
 
 def ResNeXt101_vd_64x4d():
     model = ResNeXt(layers=101, is_3x3 = True)
     return model
 
+def ResNeXt101_vd_32x4d():
+    model = ResNeXt(layers=101, cardinality=32, is_3x3 = True)
+    return model
+
 def ResNeXt152_vd_64x4d():
     model = ResNeXt(layers=152, is_3x3 = True)
     return model
 
+def ResNeXt152_vd_32x4d():
+    model = ResNeXt(layers=152, cardinality=32, is_3x3 = True)
+    return model
 

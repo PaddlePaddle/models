@@ -166,29 +166,29 @@ class DCGAN(object):
                 t_time += batch_time
 
                 if batch_id % self.cfg.print_freq == 0:
-                    image_path = self.cfg.output + '/images'
+                    image_path = os.path.join(self.cfg.output, 'images')
                     if not os.path.exists(image_path):
                         os.makedirs(image_path)
                     generate_const_image = exe.run(
                         g_trainer.infer_program,
                         feed={'noise': const_n},
-                        fetch_list={g_trainer.fake})[0]
+                        fetch_list=[g_trainer.fake])[0]
 
                     generate_image_reshape = np.reshape(generate_const_image, (
                         self.cfg.batch_size, -1))
                     total_images = np.concatenate(
                         [real_image, generate_image_reshape])
                     fig = utility.plot(total_images)
+
                     print(
-                        'Epoch ID={} Batch ID={} D_loss={} G_loss={} Batch_time_cost={:.2f}'.
+                        'Epoch ID: {} Batch ID: {} D_loss: {} G_loss: {} Batch_time_cost: {}'.
                         format(epoch_id, batch_id, d_loss[0], g_loss[0],
                                batch_time))
                     plt.title('Epoch ID={}, Batch ID={}'.format(epoch_id,
                                                                 batch_id))
+                    img_name = '{:04d}_{:04d}.png'.format(epoch_id, batch_id)
                     plt.savefig(
-                        '{}/{:04d}_{:04d}.png'.format(image_path, epoch_id,
-                                                      batch_id),
-                        bbox_inches='tight')
+                        os.path.join(image_path, img_name), bbox_inches='tight')
                     plt.close(fig)
 
             if self.cfg.save_checkpoints:

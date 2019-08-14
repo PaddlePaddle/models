@@ -59,7 +59,7 @@
 
 这一步的产出应该是两个[Program](http://paddlepaddle.org/documentation/docs/zh/1.3/api_cn/fluid_cn.html#program)实例：
 
-- **train_program:** 用于在压缩过程中迭代训练模型，该program必须包含loss。一般改program不要有backward op和weights update op，否则不能使用蒸馏策略。
+- **train_program:** 用于在压缩过程中迭代训练模型，该program必须包含loss。一般该program不要有backward op和weights update op，否则不能使用蒸馏策略。
 
 - **eval_program:** 用于在压缩过程中评估模型的精度，一般会包含accuracy、IoU等评估指标的计算layer。
 
@@ -78,7 +78,7 @@
 #### 1.1.2.3. optimizer
 [fluid.optimizer API](http://www.paddlepaddle.org/documentation/docs/zh/1.3/api_cn/optimizer_cn.html)
 
-在不同的使用场景下，用户需要提供0个、1个或2两个optimizer:
+在不同的使用场景下，用户需要提供0个、1个或2个optimizer:
 
 - **0个optimizer:** 在模型搭建阶段的train_program已经是一个包含了反向op和模型weight更新op的网络，则不用再提供optimizer
 - **1个optimizer:** train_program只有前向计算op, 则需要提供一个optimizer，用于优化训练train_program.
@@ -204,6 +204,13 @@ compress_pass:
         - pruning_strategy_0
         - pruning_strategy_1
 ```
+
+compress_pass下可配置的参数有：
+
+- **epoch**: 整个压缩任务执行的epoch数量。
+- **init_model**: 初始化模型路径。在裁剪策略中，会根据`init_model`中`parameter`的`shape`对当前网络进行裁剪。
+- **checkpoint_path**: 保存`checkpoint`的路径, checkpoint中包含了模型训练信息和策略执行信息。在重启任务时，会自动从`checkpoint`路径下加载最新的`checkpoint`，所以用户需要根据自己的需求决定是否修改`checkpoint`。
+- **strategies**: 在当前压缩任务中依次生效的策略。
 
 
 ## 2. 模型压缩策略使用介绍
@@ -598,3 +605,21 @@ controllers:
 - **reduce_rate:** float类型；温度的衰减率。
 - **init_temperature:** float类型；初始化温度。
 - **max_iter_number:** int类型；在得到一个满足FLOPS限制的tokens之前，最多尝试的次数。
+
+#### 2.4.3 分布式搜索
+
+单机多任务：
+
+单机多任务是指在一个机器上启动一个controller server和多个client, client从controller获取tokens, 根据tokens组建网络并训练评估，最后返回reward给controller server.
+
+在Compressor::run()执行时，会首先判断配置文件中的`is_server`是否为`True`, 然后做如下操作：
+
+- True: 判断当前路径下是否存在`slim_LightNASStrategy_controller_server.socket`文件，如果存在，则仅启动一个client，如果不存在，则启动一个controller server和一个client.
+
+- False: 仅启动一个client
+
+多机搜索：
+
+多机搜索是指在一个机器上启动一个controller server，在多台机器上启动若干client。在启动controller server的机器上的配置文件里的is_server要设置为True。其它机器上的配置文件中的`is_server`要手动设置为False, 同时`server_ip`和`server_port`要设置为controller server对应的`ip`和`port`.
+
+>注意： 在重启controller server时，lim_LightNASStrategy_controller_server.socke文件可能不会被及时清除，所以需要用户手动删除该文件。在后续版本中，会修复完善该问题。

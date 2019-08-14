@@ -156,7 +156,6 @@ class Xception(object):
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         out = fluid.layers.fc(input=pool,
                               size=class_dim,
-                              act='softmax',
                               param_attr=fluid.param_attr.ParamAttr(
                                   name='fc_weights',
                                   initializer=fluid.initializer.Uniform(-stdv, stdv)),
@@ -228,7 +227,7 @@ class Xception(object):
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
-            padding=(filter_size - 1) / 2,
+            padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
             param_attr=ParamAttr(name=name + "_weights"),

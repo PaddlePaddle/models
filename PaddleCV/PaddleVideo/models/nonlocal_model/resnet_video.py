@@ -321,7 +321,7 @@ def create_model(data, label, cfg, is_training=True, mode='train'):
         pool_padding=[0, 0, 0],
         name='pool5')
 
-    if (cfg.TRAIN.dropout_rate > 0) and (test_mode is False):
+    if (cfg.TRAIN.dropout_rate > 0):
         blob_out = fluid.layers.dropout(
             blob_out, cfg.TRAIN.dropout_rate, is_test=test_mode)
 

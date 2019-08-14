@@ -114,7 +114,7 @@ def eval():
     if cfg.MASK_ON:
         assert len(
             segms_res) > 0, "The number of valid mask detected is zero.\n \
-            Please use reasonable model and check input data.."
+            Please use reasonable model and check input data."
 
     with open("detection_bbox_result.json", 'w') as outfile:
         json.dump(dts_res, outfile)

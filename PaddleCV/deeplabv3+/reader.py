@@ -38,32 +38,29 @@ def slice_with_pad(a, s, value=0):
             pads.append([pl, pr])
             slices.append([l, r])
     slices = list(map(lambda x: slice(x[0], x[1], 1), slices))
-    a = a[slices]
+    a = a[tuple(slices)]
     a = np.pad(a, pad_width=pads, mode='constant', constant_values=value)
     return a
 
 
 class CityscapeDataset:
     def __init__(self, dataset_dir, subset='train', config=default_config):
-        label_dirname = os.path.join(dataset_dir, 'gtFine/' + subset)
-        if six.PY2:
-            import commands
-            label_files = commands.getoutput(
-                "find %s -type f | grep labelTrainIds | sort" %
-                label_dirname).splitlines()
-        else:
-            import subprocess
-            label_files = subprocess.getstatusoutput(
-                "find %s -type f | grep labelTrainIds | sort" %
-                label_dirname)[-1].splitlines()
-        self.label_files = label_files
-        self.label_dirname = label_dirname
+        with open(os.path.join(dataset_dir, subset + '.list'), 'r') as fr:
+            file_list = fr.readlines()
+        all_images = []
+        all_labels = []
+        for i in range(len(file_list)):
+            img_gt = file_list[i].strip().split(' ')
+            all_images.append(os.path.join(dataset_dir, img_gt[0]))
+            all_labels.append(os.path.join(dataset_dir, img_gt[1]))
+
+        self.label_files = all_labels
+        self.img_files = all_images
         self.index = 0
         self.subset = subset
         self.dataset_dir = dataset_dir
         self.config = config
         self.reset()
-        print("total number", len(label_files))
 
     def reset(self, shuffle=False):
         self.index = 0
@@ -79,10 +76,7 @@ class CityscapeDataset:
         shape = self.config["crop_size"]
         while True:
             ln = self.label_files[self.index]
-            img_name = os.path.join(
-                self.dataset_dir,
-                'leftImg8bit/' + self.subset + ln[len(self.label_dirname):])
-            img_name = img_name.replace('gtFine_labelTrainIds', 'leftImg8bit')
+            img_name = self.img_files[self.index]
             label = cv2.imread(ln)
             img = cv2.imread(img_name)
             if img is None:

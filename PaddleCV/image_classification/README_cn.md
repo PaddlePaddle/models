@@ -151,19 +151,27 @@ python infer.py \
 
 ## 已发布模型及其性能
 表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测
-试GPU型号为Tesla P4）。由于Paddle TensorRT对ShuffleNetV2使用的激活函数swish，MobileNetV2使用的激活函数relu6不支持，因此预测加速不明显。可以通过点击相应模型的名称下载对应的预训练模型。
+试GPU型号为Tesla P4）。由于Paddle TensorRT对ShuffleNetV2_swish使用的激活函数swish，MobileNetV2使用的激活函数relu6不支持，因此预测加速不明显。可以通过点击相应模型的名称下载对应的预训练模型。
 
 - 注意
-    1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
-    2：除了InceptionV4和Xception采用的输入图像的分辨率为299x299，其余模型测试时使用的分辨率均为224x224。
-    3：调用动态链接库预测时需要将训练模型转换为二进制模型
+   - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
+   - 2：InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同,InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
+   - 3：调用动态链接库预测时需要将训练模型转换为二进制模型
 
     ```python infer.py --save_inference=True```
+   - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情请移步[RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
+
 
 ### AlexNet
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.tar) | 56.72%/79.17% | 3.083 | 2.728 |
+
+### SqueezeNet
+|model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |
+|[SqueezeNet1_0](https://paddle-imagenet-models-name.bj.bcebos.com/SqueezeNet1_0_pretrained.tar) | 59.60%/81.66% | 2.740 | 1.688 |
+|[SqueezeNet1_1](https://paddle-imagenet-models-name.bj.bcebos.com/SqueezeNet1_1_pretrained.tar) | 60.08%/81.85% | 2.751 | 1.270 |
 
 ### VGG
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -177,13 +185,22 @@ python infer.py \
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar) | 70.99%/89.68% | 2.609 |1.615 |
+|[MobileNetV2_x0_25](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x0_25_pretrained.tar) | 53.21%/76.52% | 4.267 | 3.777 |
 |[MobileNetV2_x0_5](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x0_5_pretrained.tar) | 65.03%/85.72% | 4.514 | 4.150 |
 |[MobileNetV2_x1_0](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_pretrained.tar) | 72.15%/90.65% | 4.546 | 5.278 |
+|[MobileNetV2_x1_5](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x1_5_pretrained.tar) | 74.12%/91.67% | 5.235 | 6.909 |
+|[MobileNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x2_0_pretrained.tar) | 75.23%/92.58% | 6.680 | 7.658 |
 
 ### ShuffleNet
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
-|[ShuffleNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_pretrained.tar) | 70.03%/89.17% | 6.078 | 6.282 |
+|[ShuffleNetV2_x0_25](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x0_25_pretrained.tar) | 49.90%/73.79% | 5.956 | 2.961 |
+|[ShuffleNetV2_x0_33](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x0_33_pretrained.tar) | 53.73%/77.05% | 5.896 | 2.941 |
+|[ShuffleNetV2_x0_5](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x0_5_pretrained.tar) | 60.32%/82.26% | 6.048 | 3.088 |
+|[ShuffleNetV2_x1_0](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x1_0_pretrained.tar) | 68.80%/88.45% | 6.101 | 3.616 |
+|[ShuffleNetV2_x1_5](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x1_5_pretrained.tar) | 71.63%/90.15% | 6.113 | 3.699 |
+|[ShuffleNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x2_0_pretrained.tar) | 73.15%/91.20% | 6.430 | 4.553 |
+|[ShuffleNetV2_x1_0_swish](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_pretrained.tar) | 70.03%/89.17% | 6.078 | 6.282 |
 
 ### ResNet
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -204,9 +221,23 @@ python infer.py \
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_32x4d_pretrained.tar) | 77.75%/93.82% | 12.863 | 9.837 |
+|[ResNeXt50_vd_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_vd_32x4d_pretrained.tar) | 79.56%/94.62% | 13.673 | 9.991 |
 |[ResNeXt50_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_64x4d_pretrained.tar) | 78.43%/94.13% | 28.162 | 18.271 |
+|[ResNeXt50_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_vd_64x4d_pretrained.tar) | 80.12%/94.86% | 20.888 | 17.687 |
+|[ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x4d_pretrained.tar) | 78.65%/94.19% | 24.154 | 21.387 |
 |[ResNeXt101_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_64x4d_pretrained.tar) | 78.43%/94.13% | 41.073 | 38.736 |
 |[ResNeXt101_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_64x4d_pretrained.tar) | 80.78%/95.20% | 42.277 | 40.929 |
+|[ResNeXt152_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_32x4d_pretrained.tar) | 78.98%/94.33% | 37.007 | 31.301 |
+|[ResNeXt152_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_64x4d_pretrained.tar) | 79.51%/94.71% | 58.966 | 57.267 |
+
+### DenseNet
+|model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |
+|[DenseNet121](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet121_pretrained.tar) | 75.66%/92.58% | 12.437 | 5.813 |
+|[DenseNet161](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet161_pretrained.tar) | 78.57%/94.14% | 27.717 | 12.861 |
+|[DenseNet169](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet169_pretrained.tar) | 76.81%/93.31% | 18.941 | 8.146 |
+|[DenseNet201](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet201_pretrained.tar) | 77.63%/93.66% | 26.583 | 10.549 |
+|[DenseNet264](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet264_pretrained.tar) | 77.96%/93.85% | 41.495 | 15.574 |
 
 ### SENet
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -222,7 +253,19 @@ python infer.py \
 |[Xception_41](https://paddle-imagenet-models-name.bj.bcebos.com/Xception41_pretrained.tar) | 79.30%/94.53% | 13.757 | 10.831 |
 |[InceptionV4](https://paddle-imagenet-models-name.bj.bcebos.com/InceptionV4_pretrained.tar) | 80.77%/95.26% | 32.413 | 18.154 |
 
+### DarkNet
+|model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |
+|[DarkNet53](https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_ImageNet1k_pretrained.tar) | 78.04%/94.05% | 11.969 | 7.153 |
 
+### ResNeXt101_wsl
+|model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |
+|[ResNeXt101_32x8d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x8d_wsl_pretrained.tar) | 82.55%/96.74% | 33.310 | 27.648 |
+|[ResNeXt101_32x16d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x16d_wsl_pretrained.tar) | 84.24%/97.26% | 54.320 | 46.064 |
+|[ResNeXt101_32x32d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x32d_wsl_pretrained.tar) | 84.97%/97.59% | 97.734 | 87.961 |
+|[ResNeXt101_32x48d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x48d_wsl_pretrained.tar) | 85.37%/97.69% | 161.722 |  |
+|[Fix_ResNeXt101_32x48d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/Fix_ResNeXt101_32x48d_wsl_pretrained.tar) | 86.26%/97.97% | 236.091 |  |
 
 
 ## FAQ
@@ -244,6 +287,11 @@ python infer.py \
 - GoogLeNet: [Going Deeper with Convolutions](https://www.cs.unc.edu/~wliu/papers/GoogLeNet.pdf), Christian Szegedy1, Wei Liu2, Yangqing Jia
 - Xception: [Xception: Deep Learning with Depthwise Separable Convolutions](https://arxiv.org/abs/1610.02357), Franc ̧ois Chollet
 - InceptionV4: [Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning](https://arxiv.org/abs/1602.07261), Christian Szegedy, Sergey Ioffe, Vincent Vanhoucke, Alex Alemi
+- DarkNet: [YOLOv3: An Incremental Improvement](https://pjreddie.com/media/files/papers/YOLOv3.pdf), Joseph Redmon, Ali Farhadi
+- DenseNet: [Densely Connected Convolutional Networks](https://arxiv.org/abs/1608.06993), Gao Huang, Zhuang Liu, Laurens van der Maaten
+- SqueezeNet: [SQUEEZENET: ALEXNET-LEVEL ACCURACY WITH 50X FEWER PARAMETERS AND <0.5MB MODEL SIZE](https://arxiv.org/abs/1602.07360), Forrest N. Iandola, Song Han, Matthew W. Moskewicz, Khalid Ashraf, William J. Dally, Kurt Keutzer
+- ResNeXt101_wsl: [Exploring the Limits of Weakly Supervised Pretraining](https://arxiv.org/abs/1805.00932), Dhruv Mahajan, Ross Girshick, Vignesh Ramanathan, Kaiming He, Manohar Paluri, Yixuan Li, Ashwin Bharambe, Laurens van der Maaten
+- Fix_ResNeXt101_wsl: [Fixing the train-test resolution discrepancy](https://arxiv.org/abs/1906.06423), Hugo Touvron, Andrea Vedaldi, Matthijs Douze, Herve ́ Je ́gou
 
 ## 版本更新
 - 2018/12/03 **Stage1**: 更新AlexNet，ResNet50，ResNet101，MobileNetV1
@@ -252,8 +300,9 @@ python infer.py \
 - 2019/04/01 **Stage3**: 更新ResNet18，ResNet34，GoogLeNet，ShuffleNetV2
 - 2019/06/12 **Stage4**: 更新ResNet50_vc，ResNet50_vd，ResNet101_vd，ResNet152_vd，ResNet200_vd，SE154_vd InceptionV4，ResNeXt101_64x4d，ResNeXt101_vd_64x4d
 - 2019/06/22 更新ResNet50_vd_v2
-- 2019/07/02 更新MobileNetV2_x0_5，ResNeXt50_32x4d，ResNeXt50_64x4d，Xception_41，ResNet101_vd
-
+- 2019/07/02 **Stage5**: 更新MobileNetV2_x0_5, ResNeXt50_32x4d, ResNeXt50_64x4d, Xception_41, ResNet101_vd
+- 2019/07/19 **Stage6**: 更新ShuffleNetV2_x0_25, ShuffleNetV2_x0_33, ShuffleNetV2_x0_5, ShuffleNetV2_x1_0, ShuffleNetV2_x1_5, ShuffleNetV2_x2_0, MobileNetV2_x0_25, MobileNetV2_x1_5, MobileNetV2_x2_0, ResNeXt50_vd_64x4d, ResNeXt101_32x4d, ResNeXt152_32x4d
+- 2019/08/01 **Stage7**: 更新DarkNet53, DenseNet121. Densenet161, DenseNet169, DenseNet201, DenseNet264, SqueezeNet1_0, SqueezeNet1_1, ResNeXt50_vd_32x4d, ResNeXt152_64x4d, ResNeXt101_32x8d_wsl, ResNeXt101_32x16d_wsl, ResNeXt101_32x32d_wsl, ResNeXt101_32x48d_wsl, Fix_ResNeXt101_32x48d_wsl
 
 ## 如何贡献代码
 

@@ -200,8 +200,6 @@ class DTrainer():
 class StarGAN(object):
     def add_special_args(self, parser):
         parser.add_argument(
-            '--image_size', type=int, default=256, help="image size")
-        parser.add_argument(
             '--g_lr', type=float, default=0.0001, help="learning rate of g")
         parser.add_argument(
             '--d_lr', type=float, default=0.0001, help="learning rate of d")
@@ -362,7 +360,7 @@ class StarGAN(object):
                 if batch_id % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}: \n\
                          d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
-                         Batch_time_cost: {:.2f}".format(
+                         Batch_time_cost: {}".format(
                         epoch_id, batch_id, d_loss_real[0], d_loss_fake[
                             0], d_loss_cls[0], d_loss_gp[0], batch_time))
 
