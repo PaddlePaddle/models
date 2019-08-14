@@ -34,10 +34,10 @@ from utils.utility import add_arguments, print_arguments, check_gpu
 parser = argparse.ArgumentParser(description=__doc__)
 # yapf: disable
 add_arg = functools.partial(add_arguments, argparser=parser)
+add_arg('data_dir',         str,  "./data/ILSVRC2012/"  "The ImageNet data")
 add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                 "Class number.")
 add_arg('image_shape',      str,  "3,224,224",          "Input image size")
-add_arg('with_mem_opt',     bool, True,                 "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,  None,                 "Whether to use pretrained model.")
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('save_inference',   bool, False,                 "Whether to save inference model or not")
@@ -51,7 +51,6 @@ def infer(args):
     model_name = args.model
     save_inference = args.save_inference
     pretrained_model = args.pretrained_model
-    with_memory_optimization = args.with_mem_opt
     image_shape = [int(m) for m in args.image_shape.split(",")]
     model_list = [m for m in dir(models) if "__" not in m]
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
@@ -70,9 +69,6 @@ def infer(args):
     test_program = fluid.default_main_program().clone(for_test=True)
 
     fetch_list = [out.name]
-    if with_memory_optimization and not save_inference:
-        fluid.memory_optimize(
-            fluid.default_main_program(), skip_opt_set=set(fetch_list))
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

@@ -23,21 +23,6 @@ import sys
 import functools
 import math
 
-
-def set_paddle_flags(flags):
-    for key, value in flags.items():
-        if os.environ.get(key, None) is None:
-            os.environ[key] = str(value)
-
-
-# NOTE(paddle-dev): All of these flags should be
-# set before `import paddle`. Otherwise, it would
-# not take any effect. 
-set_paddle_flags({
-    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
-    'FLAGS_fraction_of_gpu_memory_to_use': 0.98
-})
-
 import argparse
 import functools
 import subprocess
@@ -53,12 +38,22 @@ from dist_train import dist_utils
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
 
-##add preprocess on gpu in future  ##add visreader in future ##add multiprocess in future ## multi card test prog
+#TODO: add preprocess on gpu
+#TODO: add visreader
+#TODO: multiprocess
+#TODO: multi card test prog
 def build_program(is_train, main_prog, startup_prog, args):
-    """   
-    return : 
-    train: [Measurement, global_lr, py_reader]
-    test: [Measurement, py_reader]
+    """build program accroding train or test
+
+    Args:
+        is_train: mode
+        main_prog: main program
+        startup_prog: strartup program
+        args: arguments
+
+    Returns : 
+        train: [Measurement, global_lr, py_reader]
+        test: [Measurement, py_reader]
     """
     model_name = args.model
     model = models.__dict__[model_name]()
@@ -66,12 +61,12 @@ def build_program(is_train, main_prog, startup_prog, args):
         #main_prog.random_seed = args.random_seed
         #startup_prog.random_seed = args.random_seed
         with fluid.unique_name.guard():
-            ### create pyreader
+            # create pyreader
             py_reader, data = create_pyreader(is_train, args)
             metrics = create_metrics(data, model, args, is_train)
-            ### return out: [avg_cost, ...]
+            # return out: [avg_cost, ...]
             out = metrics.out()
-            ### add backward op in program
+            # add backward op in program
             if is_train:
                 decay = Decay(args)
                 optimizer = getattr(decay, args.lr_strategy)()
@@ -94,9 +89,8 @@ def build_program(is_train, main_prog, startup_prog, args):
 
 
 def train(args):
-    """Train a model
+    """Train a model 
     """
-
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
@@ -106,7 +100,7 @@ def train(args):
         main_prog=train_prog,
         startup_prog=startup_prog,
         args=args)
-    ### TODO:need to extract cost 
+
     train_py_reader = b_train_out[-1]
     train_fetch_vars = b_train_out[:-1]
     #TODO: in fluid 1.6:
@@ -148,12 +142,10 @@ def train(args):
 
     test_reader = reader.val(settings=args)
     test_reader = paddle.batch(
-        test_reader, batch_size=args.batch_size, drop_last=True)
+        test_reader, batch_size=args.test_batch_size, drop_last=True)
 
     train_py_reader.decorate_sample_list_generator(train_reader, place)
     test_py_reader.decorate_sample_list_generator(test_reader, place)
-
-    #train_exe = best_strategy(args, train_prog, train_fetch_vars[0])
 
     train_prog = best_strategy_compiled(args, train_prog, train_fetch_vars[0])
 
