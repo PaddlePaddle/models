@@ -42,6 +42,7 @@ class FPN(object):
         has_extra_convs (bool): whether has extral convolutions in higher levels
         norm_type (str|None): normalization type, 'bn'/'sync_bn'/'affine_channel'
     """
+    __shared__ = ['norm_type']
 
     def __init__(self,
                  num_chan=256,

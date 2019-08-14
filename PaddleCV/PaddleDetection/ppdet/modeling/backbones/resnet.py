@@ -47,6 +47,7 @@ class ResNet(object):
         feature_maps (list): index of stages whose feature maps are returned
         dcn_v2_stages (list): index of stages who select deformable conv v2
     """
+    __shared__ = ['norm_type']
 
     def __init__(self,
                  depth=50,
