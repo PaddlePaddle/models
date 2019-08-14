@@ -251,7 +251,7 @@ def prepare_data_generator(args,
     Data generator wrapper for DataReader. If use py_reader, set the data
     provider for py_reader
     """
-    shuffle_seed=args.shuffle_seed
+    shuffle_seed = 1 if args.num_trainers > 1 else None
     data_reader = reader.DataReader(
         fpattern=args.val_file_pattern if is_test else args.train_file_pattern,
         src_vocab_fpath=args.src_vocab_fpath,
@@ -586,8 +586,6 @@ def train(args):
     role = role_maker.PaddleCloudRoleMaker(is_collective=True)
     fleet.init(role)
     args.num_trainers = fleet.worker_num()
-    if args.num_trainers > 1:
-        args.shuffle_seed = 1
 
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.num_threads = args.num_threads
