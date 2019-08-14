@@ -22,7 +22,7 @@
 
 1. paddle安装
 
-   本项目依赖于 PaddlePaddle Fluid 1.3.1 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle develop版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 2. 安装代码
 
