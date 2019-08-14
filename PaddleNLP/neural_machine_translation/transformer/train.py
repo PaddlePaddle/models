@@ -266,7 +266,7 @@ def prepare_data_generator(args,
         pool_size=args.pool_size,
         sort_type=args.sort_type,
         shuffle=args.shuffle,
-        shuffle_seed=args.shuffle_seed
+        shuffle_seed=args.shuffle_seed,
         shuffle_batch=args.shuffle_batch,
         start_mark=args.special_token[0],
         end_mark=args.special_token[1],
