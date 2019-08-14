@@ -13,7 +13,7 @@
 #limitations under the License.
 
 import yaml
-from utils import AttrDict
+from .utility import AttrDict
 import logging
 logger = logging.getLogger(__name__)
 

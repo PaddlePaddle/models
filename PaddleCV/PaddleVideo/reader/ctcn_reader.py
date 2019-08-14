@@ -284,7 +284,7 @@ class CTCNReader(DataReader):
                 flow_exist = os.path.exists(
                     os.path.join(self.root, self.flow, splited[0] + '.pkl'))
                 if not (rgb_exist and flow_exist):
-                    # logger.info('file not exist', splited[0])
+                    logger.info('file not exist {}'.format(splited[0]))
                     continue
                 fnames.append(splited[0])
                 frames_num = int(splited[1]) // self.snippet_length
@@ -354,7 +354,7 @@ class CTCNReader(DataReader):
                 flow_exist = os.path.exists(
                     os.path.join(self.root, self.flow, splited[0] + '.pkl'))
                 if not (rgb_exist and flow_exist):
-                    # logger.info('file not exist {}'.format(splited[0]))
+                    logger.info('file not exist {}'.format(splited[0]))
                     continue
                 fnames.append(splited[0])
                 frames_num = int(splited[1]) // self.snippet_length

@@ -15,6 +15,7 @@ import numpy as np
 import datetime
 import logging
 import json
+import os
 
 from models.ctcn.ctcn_utils import BoxCoder
 
@@ -86,7 +87,8 @@ class MetricsCalculator():
                 'sigma_thresh': self.sigma_thresh,
                 'soft_thresh': self.soft_thresh
             }
-            self.out_file = 'res_decode_' + str(self.score_thresh) + '_' + \
+            self.out_file = self.name + '_' + self.mode + \
+                      '_res_decode_' + str(self.score_thresh) + '_' + \
                       str(self.nms_thresh) + '_' + str(self.sigma_thresh) + \
                       '_' + str(self.soft_thresh) + '.json'
 
@@ -151,23 +153,23 @@ class MetricsCalculator():
                 score, label, segment_start, segment_end)
         logger.info(log_info)
 
-    def finalize_metrics(self):
+    def finalize_metrics(self, savedir):
         self.avg_loss = self.aggr_loss / self.aggr_batch_size
         self.avg_loc_loss = self.aggr_loc_loss / self.aggr_batch_size
         self.avg_cls_loss = self.aggr_cls_loss / self.aggr_batch_size
+        filepath = os.path.join(savedir, self.out_file)
         if self.mode == 'test':
             self.res_detect['results'] = self.results_detect
-            with open(self.out_file, 'w') as f:
+            with open(filepath, 'w') as f:
                 json.dump(self.res_detect, f)
-            logger.info('results has been saved into file: {}'.format(
-                self.out_file))
+            logger.info('results has been saved into file: {}'.format(filepath))
 
-    def finalize_infer_metrics(self):
+    def finalize_infer_metrics(self, savedir):
         self.res_detect['results'] = self.results_detect
-        with open(self.out_file, 'w') as f:
+        filepath = os.path.join(savedir, self.out_file)
+        with open(filepath, 'w') as f:
             json.dump(self.res_detect, f)
-        logger.info('results has been saved into file: {}'.format(
-            self.out_file))
+        logger.info('results has been saved into file: {}'.format(filepath))
 
     def get_computed_metrics(self):
         json_stats = {}

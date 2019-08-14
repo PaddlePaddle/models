@@ -130,7 +130,7 @@ def evaluate_results(results, filename_gt, test_dataset_size, num_classes,
 
     assert (len(gt_labels) == sample_num), \
              "the number of gt_labels({}) should be the same with sample_num({})".format(
-                         gt_labels, sample_num)
+                         len(gt_labels), sample_num)
     """
     clip_accuracy: the (e.g.) 10*19761 clips' average accuracy
     clip1_accuracy: the 1st clip's accuracy (starting from frame 0)

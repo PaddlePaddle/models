@@ -10,7 +10,7 @@ MODEL:
     expansion: 2
     drop_rate: 0.5
     gating_reduction: 8
-    eigen_file: "./dataset/youtube8m/yt8m_pca/eigenvals.npy"
+    eigen_file: "./data/dataset/youtube8m/yt8m_pca/eigenvals.npy"
 
 TRAIN:
     epoch: 6
@@ -23,17 +23,17 @@ TRAIN:
     use_gpu: True
     num_gpus: 4
     batch_size: 160
-    filelist: "./dataset/youtube8m/train.list"
+    filelist: "./data/dataset/youtube8m/train.list"
 
 VALID:
     batch_size: 160
-    filelist: "./dataset/youtube8m/val.list"
+    filelist: "./data/dataset/youtube8m/val.list"
 
 TEST:
     batch_size: 40
-    filelist: "./dataset/youtube8m/test.list"
+    filelist: "./data/dataset/youtube8m/test.list"
 
 INFER:
     batch_size: 1
-    filelist: "./dataset/youtube8m/infer.list"
+    filelist: "./data/dataset/youtube8m/infer.list"
 

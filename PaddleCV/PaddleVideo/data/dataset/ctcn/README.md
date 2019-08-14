@@ -11,4 +11,4 @@ data
   |----senet152-201cls-rgb-70.3-5seg-331data\_331img\_val
 ```
 
-同时需要下载如下几个数据文件Activity1.3\_train\_rgb.listformat, Activity1.3\_val\_rgb.listformat, labels.txt, test\_val\_label.list, val\_duration\_frame.list，并放到dataset/ctcn目录下。
+同时需要下载如下几个数据文件Activity1.3\_train\_rgb.listformat, Activity1.3\_val\_rgb.listformat, labels.txt, val\_duration\_frame.list，并放到dataset/ctcn目录下。

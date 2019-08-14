@@ -21,12 +21,12 @@ import logging
 import numpy as np
 import paddle.fluid as fluid
 
-from tools.train_utils import train_with_pyreader
+from utils.train_utils import train_with_pyreader
 import models
-from config import *
-from datareader import get_reader
+from utils.config_utils import *
+from reader import get_reader
 from metrics import get_metrics
-from utils import check_cuda
+from utils.utility import check_cuda
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -91,7 +91,7 @@ def parse_args():
     parser.add_argument(
         '--save_dir',
         type=str,
-        default='checkpoints',
+        default=os.path.join('data', 'checkpoints'),
         help='directory name to save train snapshoot')
     parser.add_argument(
         '--log_interval',

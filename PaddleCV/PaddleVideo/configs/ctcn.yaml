@@ -6,11 +6,11 @@ MODEL:
     num_anchors: 7
     total_num_anchors: 1785
     snippet_length: 1
-    root: '/ssd3/huangjun/Paddle/feats'
+    root: './data/dataset/ctcn/feats'
 
 TRAIN:
     epoch: 35
-    filelist: 'dataset/ctcn/Activity1.3_train_rgb.listformat'
+    filelist: './data/dataset/ctcn/Activity1.3_train_rgb.listformat'
     rgb: 'senet152-201cls-rgb-70.3-5seg-331data_331img_train'
     flow: 'senet152-201cls-flow-60.9-5seg-331data_train'
     batch_size: 16
@@ -24,7 +24,7 @@ TRAIN:
     momentum: 0.9
 
 VALID:
-    filelist: 'dataset/ctcn/Activity1.3_val_rgb.listformat'
+    filelist: './data/dataset/ctcn/Activity1.3_val_rgb.listformat'
     rgb: 'senet152-201cls-rgb-70.3-5seg-331data_331img_val'
     flow: 'senet152-201cls-flow-60.9-5seg-331data_val'
     batch_size: 16
@@ -33,11 +33,11 @@ VALID:
     num_gpus: 8
 
 TEST:
-    filelist: 'dataset/ctcn/Activity1.3_val_rgb.listformat'
+    filelist: './data/dataset/ctcn/Activity1.3_val_rgb.listformat'
     rgb: 'senet152-201cls-rgb-70.3-5seg-331data_331img_val'
     flow: 'senet152-201cls-flow-60.9-5seg-331data_val'
-    class_label_file: 'dataset/ctcn/labels.txt'
-    video_duration_file: 'dataset/ctcn/val_duration_frame.list'
+    class_label_file: './data/dataset/ctcn/labels.txt'
+    video_duration_file: './data/dataset/ctcn/val_duration_frame.list'
     batch_size: 1
     num_threads: 1
     score_thresh: 0.001
@@ -46,7 +46,7 @@ TEST:
     soft_thresh: 0.004
 
 INFER:
-    filelist: 'dataset/ctcn/infer.list'
+    filelist: './data/dataset/ctcn/infer.list'
     rgb: 'senet152-201cls-rgb-70.3-5seg-331data_331img_val'
     flow: 'senet152-201cls-flow-60.9-5seg-331data_val'
     batch_size: 1

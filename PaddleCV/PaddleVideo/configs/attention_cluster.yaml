@@ -21,16 +21,16 @@ TRAIN:
     batch_size: 2048
     use_gpu: True
     num_gpus: 8
-    filelist: "dataset/youtube8m/train.list"
+    filelist: "data/dataset/youtube8m/train.list"
 
 VALID:
     batch_size: 2048
-    filelist: "dataset/youtube8m/val.list"
+    filelist: "data/dataset/youtube8m/val.list"
 
 TEST:
     batch_size: 256
-    filelist: "dataset/youtube8m/test.list"
+    filelist: "data/dataset/youtube8m/test.list"
 
 INFER:
     batch_size: 1
-    filelist: "dataset/youtube8m/infer.list"
+    filelist: "data/dataset/youtube8m/infer.list"

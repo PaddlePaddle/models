@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import numpy as np
 import paddle
@@ -84,18 +85,47 @@ def train_with_pyreader(exe, train_prog, compiled_train_prog, train_pyreader, \
                         info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
             train_iter += 1
 
+        if len(epoch_periods) < 1:
+            logger.info(
+                'No iteration was executed, please check the data reader')
+            sys.exit(1)
+
         logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
                     format(epoch, np.mean(epoch_periods[1:])))
-        save_model(exe, train_prog, save_dir, save_model_name,
-                   "_epoch{}".format(epoch))
+        save_model(
+            exe,
+            train_prog,
+            save_dir,
+            save_model_name,
+            "_epoch{}".format(epoch),
+            save_type='.pdckpt')
+        save_model(
+            exe,
+            train_prog,
+            save_dir,
+            save_model_name,
+            "_epoch{}".format(epoch),
+            save_type='.pdparams')
         if compiled_test_prog and valid_interval > 0 and (
                 epoch + 1) % valid_interval == 0:
             test_with_pyreader(exe, compiled_test_prog, test_pyreader,
                                test_fetch_list, test_metrics, log_interval,
                                save_model_name)
 
-    save_model(exe, train_prog, save_dir, save_model_name, '_final',
-               '.pdparams')
+    save_model(
+        exe,
+        train_prog,
+        save_dir,
+        save_model_name,
+        '_final',
+        save_type='.pdckpt')
+    save_model(
+        exe,
+        train_prog,
+        save_dir,
+        save_model_name,
+        '_final',
+        save_type='.pdparams')
     #when fix_random seed for debug
     if fix_random_seed:
         cards = os.environ.get('CUDA_VISIBLE_DEVICES')

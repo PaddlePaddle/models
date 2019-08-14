@@ -42,7 +42,7 @@ class Metrics(object):
         """Not implemented"""
         pass
 
-    def finalize_and_log_out(self, info=''):
+    def finalize_and_log_out(self, info='', savedir='./'):
         """Not implemented"""
         pass
 
@@ -89,7 +89,7 @@ class Youtube8mMetrics(Metrics):
             label = np.array(fetch_list[2])
             self.calculator.accumulate(loss, pred, label)
 
-    def finalize_and_log_out(self, info=''):
+    def finalize_and_log_out(self, info='', savedir='./'):
         if self.mode == 'infer':
             for item in self.infer_results:
                 logger.info('video_id {} , topk({}) preds: \n'.format(item[
@@ -160,7 +160,7 @@ class Kinetics400Metrics(Metrics):
                 label = np.array(fetch_list[1])
             self.calculator.accumulate(loss, pred, label)
 
-    def finalize_and_log_out(self, info=''):
+    def finalize_and_log_out(self, info='', savedir='./'):
         if self.mode == 'infer':
             for item in self.infer_results:
                 logger.info('video_id {} , topk({}) preds: \n'.format(item[
@@ -236,7 +236,7 @@ class MulticropMetrics(Metrics):
             label = fetch_list[2]
             self.calculator.accumulate(loss, pred, label)
 
-    def finalize_and_log_out(self, info=''):
+    def finalize_and_log_out(self, info='', savedir='./'):
         if self.mode == 'test':
             self.calculator.finalize_metrics()
         elif self.mode == 'infer':
@@ -284,12 +284,12 @@ class DetectionMetrics(Metrics):
         else:
             self.calculator.accumulate(fetch_list)
 
-    def finalize_and_log_out(self, info=''):
+    def finalize_and_log_out(self, info='', savedir='./'):
         if self.mode == 'infer':
-            self.calculator.finalize_infer_metrics()
+            self.calculator.finalize_infer_metrics(savedir)
             #pass
         else:
-            self.calculator.finalize_metrics()
+            self.calculator.finalize_metrics(savedir)
             metrics_dict = self.calculator.get_computed_metrics()
             loss = metrics_dict['avg_loss']
             loc_loss = metrics_dict['avg_loc_loss']

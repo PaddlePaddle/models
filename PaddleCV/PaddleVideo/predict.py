@@ -25,11 +25,11 @@ except:
     import pickle
 import paddle.fluid as fluid
 
-from config import *
+from utils.config_utils import *
 import models
-from datareader import get_reader
+from reader import get_reader
 from metrics import get_metrics
-from utils import check_cuda
+from utils.utility import check_cuda
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -80,7 +80,10 @@ def parse_args():
         default=20,
         help='topk predictions to restore.')
     parser.add_argument(
-        '--save_dir', type=str, default='./', help='directory to store results')
+        '--save_dir',
+        type=str,
+        default=os.path.join('data', 'predict_results'),
+        help='directory to store results')
     parser.add_argument(
         '--video_path',
         type=str,
@@ -105,7 +108,11 @@ def infer(args):
     exe = fluid.Executor(place)
 
     filelist = args.filelist or infer_config.INFER.filelist
-    assert os.path.exists(filelist), "{} not exist.".format(args.filelist)
+    filepath = args.video_path or infer_config.INFER.get('filepath', '')
+    if filepath != '':
+        assert os.path.exists(filepath), "{} not exist.".format(filepath)
+    else:
+        assert os.path.exists(filelist), "{} not exist.".format(filelist)
 
     # get infer reader
     infer_reader = get_reader(args.model_name.upper(), 'infer', infer_config)
@@ -147,7 +154,9 @@ def infer(args):
     logger.info('[INFER] infer finished. average time: {}'.format(
         np.mean(periods)))
 
-    infer_metrics.finalize_and_log_out()
+    output_dir = args.save_dir
+
+    infer_metrics.finalize_and_log_out(savedir=output_dir)
 
 
 if __name__ == "__main__":

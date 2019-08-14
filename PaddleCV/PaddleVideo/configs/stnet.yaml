@@ -18,13 +18,13 @@ TRAIN:
     batch_size: 128
     num_gpus: 8
     use_gpu: True
-    filelist: "./dataset/kinetics/train.list"
+    filelist: "./data/dataset/kinetics/train.list"
     learning_rate: 0.01
     learning_rate_decay: 0.1
     l2_weight_decay: 1e-4
     momentum: 0.9
     total_videos: 224684
-    pretrain_base: "./dataset/pretrained/ResNet50_pretrained"
+    pretrain_base: "./data/dataset/pretrained/ResNet50_pretrained"
 
 VALID:
     short_size: 256
@@ -32,7 +32,7 @@ VALID:
     num_reader_threads: 12
     buf_size: 1024
     batch_size: 128
-    filelist: "./dataset/kinetics/val.list"
+    filelist: "./data/dataset/kinetics/val.list"
 
 TEST:
     seg_num: 25
@@ -41,7 +41,7 @@ TEST:
     num_reader_threads: 12
     buf_size: 1024
     batch_size: 4
-    filelist: "./dataset/kinetics/test.list"
+    filelist: "./data/dataset/kinetics/test.list"
 
 INFER:
     seg_num: 25
@@ -50,6 +50,6 @@ INFER:
     num_reader_threads: 12
     buf_size: 1024
     batch_size: 1
-    filelist: "./dataset/kinetics/infer.list"
+    filelist: "./data/dataset/kinetics/infer.list"
     video_path: ""
-    kinetics_labels: "./dataset/kinetics_labels.json"
+    kinetics_labels: "./data/dataset/kinetics_labels.json"

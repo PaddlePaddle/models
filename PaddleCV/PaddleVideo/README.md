@@ -23,11 +23,23 @@
 
 ## 安装
 
-在当前模型库运行样例代码需要PadddlePaddle Fluid v.1.5.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前模型库运行样例代码需要PaddlePaddle Fluid v.1.5.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+
+### 其他环境依赖
+
+- Python >= 2.7
+
+- CUDA >= 8.0
+
+- CUDNN >= 7.0
+
+- 使用Youtube-8M数据集时，需要将tfrecord数据转化成pickle格式，需要用到Tensorflow，详见[数据说明](./data/dataset/README.md)中Youtube-8M部分。与此相关的模型是Attention Cluster, Attention LSTM, NeXtVLAD，使用其他模型请忽略此项。
+
+- 使用Kinetics数据集时，如果需要将mp4文件提前解码并保存成pickle格式，需要用到ffmpeg，详见[数据说明](./data/dataset/README.md)中Kinetics部分。需要说明的是Nonlocal模型虽然也使用Kinetics数据集，但输入数据是视频源文件，不需要提前解码，不涉及此项。与此相关的模型是TSN, TSM, StNet，使用其他模型请忽略此项。
 
 ## 数据准备
 
-视频模型库使用Youtube-8M和Kinetics数据集, 具体使用方法请参考[数据说明](./dataset/README.md)
+视频模型库使用Youtube-8M和Kinetics数据集, 具体使用方法请参考[数据说明](./data/dataset/README.md)
 
 ## 快速使用
 
@@ -39,18 +51,38 @@
 
 ``` bash
 export CUDA_VISIBLE_DEVICES=0
-python train.py --model_name=STNET
-        --config=./configs/stnet.yaml
-        --save_dir=checkpoints
+python train.py --model_name=STNET \
+                --config=./configs/stnet.yaml \
+                --log_interval=10 \
+                --valid_interval=1 \
+                --use_gpu=True \
+                --save_dir=./data/checkpoints \
+                --fix_random_seed=False
 ```
 
 多卡训练：
 
 ``` bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python train.py --model_name=STNET
-        --config=./configs/stnet.yaml
-        --save_dir=checkpoints
+python train.py --model_name=STNET \
+                --config=./configs/stnet.yaml \
+                --log_interval=10 \
+                --valid_interval=1 \
+                --use_gpu=True \
+                --save_dir=./data/checkpoints \
+                --fix_random_seed=False
+```
+
+CPU训练：
+
+``` bash
+python train.py --model_name=STNET \
+                --config=./configs/stnet.yaml \
+                --log_interval=10 \
+                --valid_interval=1 \
+                --use_gpu=False \
+                --save_dir=./data/checkpoints \
+                --fix_random_seed=False
 ```
 
 视频模型库同时提供了快速训练脚本，run.sh，可通过如下命令启动训练:
@@ -60,6 +92,8 @@ bash run.sh train STNET ./configs/stnet.yaml
 ```
 
 - 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中的`num_gpus`和`batch_size`配置。
+
+- 使用CPU训练时请在run.sh中设置use\_gpu=False，使用GPU训练时则设置use\_gpu=True
 
 - 上述启动脚本run.sh运行时需要指定任务类型、模型名、配置文件。训练、评估和预测对应的任务类型分别是train，eval和predict。模型名称则是[AttentionCluster, AttentionLSTM, NEXTVLAD, NONLOCAL, STNET, TSN, TSM, CTCN]中的任何一个。配置文件全部在PaddleVideo/configs目录下，根据模型名称选择对应的配置文件即可。具体使用请参见各模型的说明文档。
 
@@ -73,10 +107,20 @@ configs/
   stnet.yaml
   tsn.yaml
   ...
-dataset/
-  youtube/
-  kinetics/
-datareader/
+data/
+  dataset/
+    youtube/
+    kinetics/
+    ...
+  checkpoints/
+    ...
+  evaluate_results/
+    ...
+  predict_results/
+    ...
+  inference_model/
+    ...
+reader/
   feature_readeer.py
   kinetics_reader.py
   ...
@@ -88,22 +132,22 @@ models/
   stnet/
   tsn/
   ...
-scripts/
-  train/
-  test/
+utils/
+  ...
 train.py
-test.py
-infer.py
+eval.py
+predict.py
+run.sh
 ```
 
 - `configs`: 各模型配置文件模板
-- `datareader`: 提供Youtube-8M，Kinetics数据集reader
-- `metrics`: Youtube-8，Kinetics数据集评估脚本
+- `reader`: 提供Youtube-8M，Kinetics数据集通用reader，以及模型自定义reader，如nonlocal、ctcn等
+- `metrics`: Youtube-8，Kinetics数据集评估脚本，以及模型自定义评估方法
 - `models`: 各模型网络结构构建脚本
-- `scripts`: 各模型快速训练评估脚本
 - `train.py`: 一键式训练脚本，可通过指定模型名，配置文件等一键式启动训练
 - `eval.py`: 一键式评估脚本，可通过指定模型名，配置文件，模型权重等一键式启动评估
 - `predict.py`: 一键式推断脚本，可通过指定模型名，配置文件，模型权重，待推断文件列表等一键式启动推断
+- `run.sh`: 各模型快速训练评估脚本
 
 ## Model Zoo
 
