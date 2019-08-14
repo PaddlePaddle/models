@@ -277,7 +277,10 @@ def _reader_creator(settings,
         for line in full_lines:
             img_path, label = line.split()
             img_path = os.path.join(data_dir, img_path)
-            yield img_path, int(label)
+            if mode == "train" or mode == "val":
+                yield img_path, int(label)
+            elif mode == "test":
+                yield img_path
             """
                 batch_data.append([img_path, int(label)])
                 if len(batch_data) == batch_size:
@@ -364,7 +367,7 @@ def val(settings):
         data_dir=os.path.join(settings.data_dir, 'val'))
 
 
-def test(settings):
+def test(settings, batch_size):
     """Create a reader for testing
 
     Args:
@@ -380,4 +383,4 @@ def test(settings):
         batch_size,
         'test',
         shuffle=False,
-        data_dir=settings.data_dir)
+        data_dir=os.path.join(settings.data_dir, 'val'))

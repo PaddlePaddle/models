@@ -28,13 +28,12 @@ import paddle
 import paddle.fluid as fluid
 import reader_cv2 as reader
 import models
-import utils
-from utils.utility import add_arguments, print_arguments, check_gpu
+from utils import *
 
 parser = argparse.ArgumentParser(description=__doc__)
 # yapf: disable
 add_arg = functools.partial(add_arguments, argparser=parser)
-add_arg('data_dir',         str,  "./data/ILSVRC2012/"  "The ImageNet data")
+add_arg('data_dir',         str,  "./data/ILSVRC2012/",  "The ImageNet data")
 add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                 "Class number.")
 add_arg('image_shape',      str,  "3,224,224",          "Input image size")
@@ -42,6 +41,9 @@ add_arg('pretrained_model', str,  None,                 "Whether to use pretrain
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('save_inference',   bool, False,                 "Whether to save inference model or not")
 add_arg('resize_short_size', int, 256,                  "Set resize short size")
+add_arg('reader_thread',            int,    1,                      "The number of multi thread reader")
+add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
+
 # yapf: enable
 
 
@@ -88,7 +90,10 @@ def infer(args):
         exit(0)
     test_batch_size = 1
 
-    test_reader = reader.test(settings=args, batch_size=test_batch_size)
+    test_reader = paddle.batch(
+        reader.test(
+            settings=args, batch_size=test_batch_size),
+        batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     TOPK = 1
@@ -106,7 +111,7 @@ def infer(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
-    check_gpu(args.use_gpu)
+    #check_gpu(args.use_gpu)
     infer(args)
 
 

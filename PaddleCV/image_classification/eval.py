@@ -41,6 +41,8 @@ add_arg('image_shape',      str,  "3,224,224",         "Input image size")
 add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('resize_short_size', int, 256,                "Set resize short size")
+add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
+add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
 # yapf: enable
 
 
@@ -91,7 +93,8 @@ def eval(args):
 
     fluid.io.load_persistables(exe, pretrained_model)
 
-    val_reader = reader.val(settings=args)
+    val_reader = paddle.batch(
+        reader.val(settings=args), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     test_info = [[], [], []]
