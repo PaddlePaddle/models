@@ -137,16 +137,6 @@ def parse_args():
         type=bool,
         default=False,
         help="Use hierarchical allreduce or not.")
-    parser.add_argument(
-        "--enable_backward_op_deps",
-        type=bool,
-        default=False,
-        help="Whether to use enable_backward_op_deps.")
-    parser.add_argument(
-        "--fuse",
-        type=bool,
-        default=False,
-        help="Whether to use fusion.")
 
     args = parser.parse_args()
     # Append args related to dict
