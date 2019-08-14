@@ -585,6 +585,9 @@ def train(args):
     # For Distributed Training.
     role = role_maker.PaddleCloudRoleMaker(is_collective=True)
     fleet.init(role)
+    args.num_trainers = fleet.worker_num()
+    if args.num_trainers > 1:
+        args.shuffle_seed = 1
 
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.num_threads = args.num_threads
