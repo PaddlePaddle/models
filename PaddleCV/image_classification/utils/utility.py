@@ -75,7 +75,7 @@ def parse_args():
     """Add arguments
 
     Returns: 
-        all args
+        all training args
     """
     parser = argparse.ArgumentParser(description=__doc__)
     add_arg = functools.partial(add_arguments, argparser=parser)

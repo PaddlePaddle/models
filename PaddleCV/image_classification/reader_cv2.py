@@ -90,7 +90,7 @@ def random_crop(img, size, settings, scale=None, ratio=None,
     resized = cv2.resize(
         img,
         (size, size),
-        interpolation
+        interpolation=interpolation
         #, interpolation=cv2.INTER_LANCZOS4
     )
     return resized
@@ -126,7 +126,7 @@ def resize_short(img, target_size, interpolation=None):
     resized = cv2.resize(
         img,
         (resized_width, resized_height),
-        interpolation
+        interpolation=interpolation
         #interpolation=cv2.INTER_LANCZOS4
     )
     return resized
