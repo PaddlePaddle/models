@@ -132,7 +132,6 @@ def eval(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
-    #check_gpu(args.use_gpu)
     eval(args)
 
 

@@ -91,9 +91,7 @@ def infer(args):
     test_batch_size = 1
 
     test_reader = paddle.batch(
-        reader.test(
-            settings=args, batch_size=test_batch_size),
-        batch_size=test_batch_size)
+        reader.test(settings=args), batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     TOPK = 1
