@@ -391,12 +391,6 @@ python -u main.py \
 第二版：PaddlePaddle 1.6.0版本
 更新功能：在第一版的基础上，根据PaddlePaddle的模型规范化标准，对模块内训练、预测、评估等代码进行了重构，提高易用性；
 
-## 作者
-
-zhangxiyuan01@baidu.com
-
-zhouxiangyang@baidu.com
-
 ## 如何贡献代码
 
 &ensp;&ensp;&ensp;&ensp;如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
