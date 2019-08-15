@@ -112,7 +112,7 @@ Speed-ups of Multiple-GPU Training of Resnet50 on Imagenet
 
 #### Environment
 
-  - GPU: NVIDIA® Tesla® V100 
+  - GPU: NVIDIA® Tesla® V100
   - Machine number * Card number: 4 * 4
   - System: Centos 6u3
   - Cuda/Cudnn: 9.0/7.1
@@ -127,5 +127,3 @@ Speed-ups of Multiple-GPU Training of Resnet50 on Imagenet
 <img src="../images/resnet_dgc.png" width=528> <br />
 Performance using DGC for resnet-fp32 under different bandwidth
 </p>
-
-

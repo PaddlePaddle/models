@@ -1,4 +1,4 @@
-#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -124,8 +124,8 @@ def parse_args():
     add_arg('use_inplace',              bool,   True,                   "Whether to use inplace memory optimization.")
     add_arg('enable_ce',                bool,   False,                  "Whether to enable continuous evaluation job.")
     # FP16 is moving to Paddle/Fleet 
-    add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
-    add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
+    #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
+    #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.2,                    "The value of label_smoothing_epsilon parameter")
     #temporary disable use_distill
@@ -204,30 +204,12 @@ def check_args(args):
 
     check_gpu()
     #temporary disable:
-    if args.enable_ce == True or args.use_fp16:
-        raise Exception("Temporary disable ce and fp_16")
-
-
-def get_device_num():
-    """Obtain the num ber of available GPU cards
-
-    Returns:
-        the num of devices
-    """
-
-    # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1: return 1
-    visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(
-            ['nvidia-smi', '-L']).decode().count('\n')
-    print("...Running on ", device_num, " GPU cards")
-    return device_num
+    if args.enable_ce == True:
+        raise Exception("Temporary disable ce")
 
 
 def init_model(exe, args, program):
+
     if args.checkpoint:
         fluid.io.load_persistables(
             exe,
@@ -236,7 +218,6 @@ def init_model(exe, args, program):
             filename="checkpoint.pdckpt")
         print("finish initing model from checkpoint from %s" %
               (args.checkpoint))
-
     if args.pretrained_model:
 
         def if_exist(var):
@@ -256,7 +237,6 @@ def init_model(exe, args, program):
 def save_model(args, exe, train_prog, info):
 
     save_checkpoint(args, exe, train_prog, info)
-
     if args.save_params:
         save_param(args, exe, train_prog, info)
 
@@ -264,16 +244,13 @@ def save_model(args, exe, train_prog, info):
 def save_checkpoint(args, exe, program, info):
 
     checkpoint_path = os.path.join(args.model_save_dir, args.model, str(info))
-
     if not os.path.isdir(checkpoint_path):
         os.makedirs(checkpoint_path)
-
     fluid.io.save_persistables(
         exe,
         checkpoint_path,
         main_program=program,
         filename="checkpoint.pdckpt")
-
     print("Already save checkpoint in %s" % (checkpoint_path))
 
 
@@ -281,10 +258,8 @@ def save_param(args, exe, program, dirname):
 
     param_path = os.path.join(args.model_save_path, args.model, args.save_param,
                               str(info))
-
     if not os.path.isdir(param_path):
         os.makedirs(param_path)
-
     fluid.io.save_params(
         exe, param_path, main_program=program, filename="params.pdparams")
     print("Already save parameters in %s" % (os.path.join(param_dir, dirname)))
@@ -308,8 +283,7 @@ def create_pyreader(is_train, args):
     feed_lam = fluid.layers.data(
         name="feed_lam", shape=[1], dtype="float32", lod_level=0)
 
-    if is_train and args.use_mixup:  # and args.model != "GoogLeNet":
-        print("========Create pyreader========")
+    if is_train and args.use_mixup:
         py_reader = fluid.io.PyReader(
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
             capacity=64,

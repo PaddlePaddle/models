@@ -71,16 +71,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 decay = Decay(args)
                 optimizer = getattr(decay, args.lr_strategy)()
                 avg_cost = out[0]
-                if not args.use_fp16:
-                    optimizer.minimize(avg_cost)
-                else:
-                    params_grads = optimizer.backward(avg_cost)
-                    master_params_grads = create_master_params_grads(
-                        params_grads, main_prog, startup_prog, args.scale_loss)
-                    optimizer.apply_gradients(master_params_grads)
-                    master_param_to_train_param(master_params_grads,
-                                                params_grads, main_prog)
-
+                optimizer.minimize(avg_cost)
                 global_lr = optimizer._global_learning_rate()
                 global_lr.persistable = True
                 out.append(global_lr)
