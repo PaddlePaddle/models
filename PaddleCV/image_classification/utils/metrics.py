@@ -1,3 +1,16 @@
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
 import paddle
 import paddle.fluid as fluid
 
@@ -6,16 +19,16 @@ class Metrics(object):
     """A class used to generate metrics of specified model.
 
     Attributes:
-    class_num:
-    model_name:
-    use_mixup:
-    class_dim:
-    use_label_smoothing:
-    epsilon:
-    model:
-    image:
-    label:
-    is_train:
+
+        model_name: the name of model
+        use_mixup: whether to use mixup
+        class_dim: the number of class
+        use_label_smoothing: whether to use label_smoothing
+        epsilon: the label_smoothing epsilon
+        model: class of the model architecture
+        image: iamge data
+        label: label data
+        is_train: mode
     
     """
 
@@ -34,7 +47,7 @@ class Metrics(object):
     def _clac_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
         """Calculate label smoothing loss
 
-            Returns:
+        Returns:
             label smoothing loss
         
         """
@@ -49,8 +62,8 @@ class Metrics(object):
     def out(self):
         """Default Metrics output, Include avg_cost, acc_top1 and acc_top5
 
-            Returns:
-            Metrics of default network
+        Returns:
+            Metrics of default net
         
         """
         net_out = self.model.net(input=self.image, class_dim=self.class_dim)
@@ -75,17 +88,16 @@ class Metrics(object):
 
 class GoogLeNet_Metrics(Metrics):
     """A subclass inherited from Metrics
-        
-        Returns:
-        Metrics of GoogLeNet
     """
 
     def __init__(self, data, model, args, is_train):
         super(GoogLeNet_Metrics, self).__init__(data, model, args, is_train)
 
     def out(self):
-        """GoogLeNet Metrics outpu t, Include avg_cost, acc_top1 and acc_top5
-
+        """GoogLeNet Metrics output, include avg_cost, acc_top1 and acc_top5
+        
+        Returns:
+            Metrics of GoogLeNet
 
         """
         out0, out1, out2 = self.model.net(input=self.image,
@@ -105,8 +117,8 @@ class GoogLeNet_Metrics(Metrics):
         return [avg_cost, acc_top1, acc_top5]
 
 
+#TODO: (2019/08/08) Distill is temporary disabled now.
 """
-#distill metrics is disable now.
 class Distill_Metrics(Metrics):
     def __init__(self):
         super(Distill_Metrics,self).__init__()
@@ -125,18 +137,21 @@ class Mixup_Metrics(Metrics):
     """A subclass inherited from Metrics
 
         Note: Mixup preprocessing only apply on the training process.
+        
+        Attributes:
+            y_a: label
+            y_b: label
+            lam: lamda
     """
 
     def __init__(self, data, model, args, is_train):
         super(Mixup_Metrics, self).__init__(data, model, args, is_train)
-        #Instead of label, mixup use y_a y_b and lam to calculate metrics.
         self.y_a = data[1]
         self.y_b = data[2]
         self.lam = data[3]
 
     def out(self):
-        """Metrics of Mixup processing network
-
+        """Metrics of Mixup processing network, include avg_cost
         """
 
         net_out = self.model.net(input=self.image, class_dim=self.class_dim)
@@ -163,7 +178,6 @@ class Mixup_Metrics(Metrics):
 
 def create_metrics(data, model, args, is_train):
     """Create metrics, include GoogLeNet(train, test); mixup(train); default(train, test) metrics
-
     """
     if args.model == "GoogLeNet":
         metrics = GoogLeNet_Metrics(data, model, args, is_train)

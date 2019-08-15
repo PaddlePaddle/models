@@ -7,7 +7,7 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 #GoogLeNet:
 python train.py \
-	--model=GoogleNet \
+	--model=GoogLeNet \
 	--batch_size=256 \
 	--total_images=1281167 \
 	--class_dim=1000 \
