@@ -126,7 +126,7 @@ class DataGenerator(object):
                             2])).convert('L')  #zhuanhuidu
                         if j == 0:
                             sz = img.size
-                        img = img.resize((sz[0], sz[1]))
+                        img = img.resize((DATA_SHAPE[1], sz[1]))
                         img = np.array(img) - 127.5
                         img = img[np.newaxis, ...]
                         if self.model == "crnn_ctc":
@@ -158,6 +158,8 @@ class DataGenerator(object):
                 label = [int(c) for c in items[-1].split(',')]
                 img = Image.open(os.path.join(img_root_dir, items[2])).convert(
                     'L')
+
+                img = img.resize((DATA_SHAPE[1], img.size[1])) # resize height
                 img = np.array(img) - 127.5
                 img = img[np.newaxis, ...]
                 if self.model == "crnn_ctc":
