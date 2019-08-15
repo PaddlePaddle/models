@@ -350,10 +350,9 @@ class STGAN(object):
                 if (batch_id + 1) % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}:  \n\
                          d_loss: {}; d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
-                         Batch_time_cost: {:.2f}"
-                          .format(epoch_id, batch_id, d_loss[0], d_loss_real[
-                              0], d_loss_fake[0], d_loss_cls[0], d_loss_gp[0],
-                                  batch_time))
+                         Batch_time_cost: {}".format(epoch_id, batch_id, d_loss[
+                        0], d_loss_real[0], d_loss_fake[0], d_loss_cls[0],
+                                                     d_loss_gp[0], batch_time))
                 sys.stdout.flush()
                 batch_id += 1
 
