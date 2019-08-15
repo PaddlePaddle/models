@@ -1,3 +1,5 @@
+# Data Pipline
+
 ## Introduction
 
 The data pipeline is responsible for loading and converting data. Each
@@ -28,7 +30,9 @@ Loads `COCO` type datasets with directory structures like this:
   ```
   dataset/coco/
   ├── annotations
+  │   ├── instances_train2014.json
   │   ├── instances_train2017.json
+  │   ├── instances_val2014.json
   │   ├── instances_val2017.json
   |   ...
   ├── train2017

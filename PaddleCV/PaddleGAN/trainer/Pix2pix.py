@@ -277,7 +277,7 @@ class Pix2pix(object):
                     print("epoch{}: batch{}: \n\
                          g_loss_gan: {}; g_loss_l1: {}; \n\
                          d_loss_real: {}; d_loss_fake: {}; \n\
-                         Batch_time_cost: {:.2f}"
+                         Batch_time_cost: {}"
                           .format(epoch_id, batch_id, g_loss_gan[0], g_loss_l1[
                               0], d_loss_real[0], d_loss_fake[0], batch_time))
 

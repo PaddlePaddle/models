@@ -22,6 +22,8 @@ import sys
 import json
 import cv2
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 import pycocotools.mask as mask_util
@@ -36,6 +38,7 @@ __all__ = [
     'mask2out',
     'get_category_info',
     'proposal_eval',
+    'cocoapi_eval',
 ]
 
 
@@ -59,23 +62,16 @@ def proposal_eval(results, anno_file, outfile, max_dets=(100, 300, 1000)):
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
-    coco_gt = COCO(anno_file)
-
-    logger.info("Start evaluate...")
-    coco_dt = coco_gt.loadRes(outfile)
-    coco_ev = COCOeval(coco_gt, coco_dt, 'bbox')
-
-    coco_ev.params.useCats = 0
-    coco_ev.params.maxDets = list(max_dets)
-
-    coco_ev.evaluate()
-    coco_ev.accumulate()
-    coco_ev.summarize()
+    cocoapi_eval(outfile, 'proposal', anno_file=anno_file, max_dets=max_dets)
     # flush coco evaluation result
     sys.stdout.flush()
 
 
-def bbox_eval(results, anno_file, outfile, with_background=True):
+def bbox_eval(results,
+              anno_file,
+              outfile,
+              with_background=True,
+              is_bbox_normalized=False):
     assert 'bbox' in results[0]
     assert outfile.endswith('.json')
 
@@ -88,22 +84,21 @@ def bbox_eval(results, anno_file, outfile, with_background=True):
         {i + int(with_background): catid
          for i, catid in enumerate(cat_ids)})
 
-    xywh_results = bbox2out(results, clsid2catid)
-    assert len(
-        xywh_results) > 0, "The number of valid bbox detected is zero.\n \
-        Please use reasonable model and check input data."
+    xywh_results = bbox2out(
+        results, clsid2catid, is_bbox_normalized=is_bbox_normalized)
 
+    if len(xywh_results) == 0:
+        logger.warning("The number of valid bbox detected is zero.\n \
+            Please use reasonable model and check input data.\n \
+            stop eval!")
+        return [0.0]
     with open(outfile, 'w') as f:
         json.dump(xywh_results, f)
 
-    logger.info("Start evaluate...")
-    coco_dt = coco_gt.loadRes(outfile)
-    coco_ev = COCOeval(coco_gt, coco_dt, 'bbox')
-    coco_ev.evaluate()
-    coco_ev.accumulate()
-    coco_ev.summarize()
+    map_stats = cocoapi_eval(outfile, 'bbox', coco_gt=coco_gt)
     # flush coco evaluation result
     sys.stdout.flush()
+    return map_stats
 
 
 def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
@@ -121,12 +116,38 @@ def mask_eval(results, anno_file, outfile, resolution, thresh_binarize=0.5):
     with open(outfile, 'w') as f:
         json.dump(segm_results, f)
 
+    cocoapi_eval(outfile, 'segm', coco_gt=coco_gt)
+
+
+def cocoapi_eval(jsonfile,
+                 style,
+                 coco_gt=None,
+                 anno_file=None,
+                 max_dets=(100, 300, 1000)):
+    """
+    Args:
+        jsonfile: Evaluation json file, eg: bbox.json, mask.json.
+        style: COCOeval style, can be `bbox` , `segm` and `proposal`.
+        coco_gt: Whether to load COCOAPI through anno_file,
+                 eg: coco_gt = COCO(anno_file)
+        anno_file: COCO annotations file.
+        max_dets: COCO evaluation maxDets.
+    """
+    assert coco_gt != None or anno_file != None
+    if coco_gt == None:
+        coco_gt = COCO(anno_file)
     logger.info("Start evaluate...")
-    coco_dt = coco_gt.loadRes(outfile)
-    coco_ev = COCOeval(coco_gt, coco_dt, 'segm')
-    coco_ev.evaluate()
-    coco_ev.accumulate()
-    coco_ev.summarize()
+    coco_dt = coco_gt.loadRes(jsonfile)
+    if style == 'proposal':
+        coco_eval = COCOeval(coco_gt, coco_dt, 'bbox')
+        coco_eval.params.useCats = 0
+        coco_eval.params.maxDets = list(max_dets)
+    else:
+        coco_eval = COCOeval(coco_gt, coco_dt, style)
+    coco_eval.evaluate()
+    coco_eval.accumulate()
+    coco_eval.summarize()
+    return coco_eval.stats
 
 
 def proposal2out(results, is_bbox_normalized=False):
@@ -168,6 +189,13 @@ def proposal2out(results, is_bbox_normalized=False):
 
 
 def bbox2out(results, clsid2catid, is_bbox_normalized=False):
+    """
+    Args:
+        results: request a dict, should include: `bbox`, `im_id`,
+                 if is_bbox_normalized=True, also need `im_shape`.
+        clsid2catid: class id to category id map of COCO2017 dataset.
+        is_bbox_normalized: whether or not bbox is normalized.
+    """
     xywh_res = []
     for t in results:
         bboxes = t['bbox'][0]
@@ -190,6 +218,11 @@ def bbox2out(results, clsid2catid, is_bbox_normalized=False):
                             clip_bbox([xmin, ymin, xmax, ymax])
                     w = xmax - xmin
                     h = ymax - ymin
+                    im_height, im_width = t['im_shape'][0][i].tolist()
+                    xmin *= im_width
+                    ymin *= im_height
+                    w *= im_width
+                    h *= im_height
                 else:
                     w = xmax - xmin + 1
                     h = ymax - ymin + 1
