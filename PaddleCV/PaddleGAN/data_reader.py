@@ -228,7 +228,6 @@ class celeba_reader_creator(reader_creator):
         attr2idx = {}
         for i, attr_name in enumerate(all_attr_names):
             attr2idx[attr_name] = i
-        lines = lines[2:]
 
         if self.mode == "TRAIN":
             self.batch_size = args.batch_size
@@ -292,6 +291,7 @@ class celeba_reader_creator(reader_creator):
                         yield batch_out_1, batch_out_2, batch_out_3
                     batch_out_1 = []
                     batch_out_2 = []
+                    batch_out_3 = []
 
         return reader
 
