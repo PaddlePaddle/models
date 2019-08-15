@@ -28,6 +28,34 @@ python train.py \
 #       --lr=0.01 \
 #       --l2_decay=1e-4
 
+#SqueezeNet1_0
+#python train.py \
+#        --model=SqueezeNet1_0 \
+#        --batch_size=256 \
+#        --total_images=1281167 \
+#        --image_shape=3,224,224 \
+#        --lr_strategy=cosine_decay \
+#        --class_dim=1000 \
+#        --model_save_dir=output/ \
+#        --lr=0.02 \
+#        --num_epochs=120 \
+#        --with_mem_opt=True \
+#        --l2_decay=1e-4
+
+#SqueezeNet1_1
+#python train.py \
+#        --model=SqueezeNet1_1 \
+#        --batch_size=256 \
+#        --total_images=1281167 \
+#        --image_shape=3,224,224 \
+#        --lr_strategy=cosine_decay \
+#        --class_dim=1000 \
+#        --model_save_dir=output/ \
+#        --lr=0.02 \
+#        --num_epochs=120 \
+#        --with_mem_opt=True \
+#        --l2_decay=1e-4
+
 #VGG11:
 #python train.py \
 #        --model=VGG11 \
@@ -448,6 +476,22 @@ python train.py \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
+#ResNeXt50_vd_32x4d
+#python train.py \
+#       --model=ResNeXt50_vd_32x4d \
+#       --batch_size=256 \
+#       --total_images=1281167 \
+#       --image_shape=3,224,224 \
+#       --class_dim=1000 \
+#       --lr_strategy=cosine_decay \
+#       --lr=0.1 \
+#       --num_epochs=200 \
+#       --with_mem_opt=True \
+#       --model_save_dir=output/ \
+#       --l2_decay=1e-4 \
+#       --use_mixup=True \
+#       --use_label_smoothing=True \
+#       --label_smoothing_epsilon=0.1 \
 
 #ResNeXt50_64x4d
 #python train.py \
@@ -528,6 +572,90 @@ python train.py \
 # ResNeXt152_32x4d
 # python train.py \
 #       --model=ResNeXt152_32x4d \
+#       --batch_size=256 \
+#       --total_images=1281167 \
+#       --image_shape=3,224,224 \
+#       --class_dim=1000 \
+#       --lr_strategy=piecewise_decay \
+#       --lr=0.1 \
+#       --num_epochs=120 \
+#       --with_mem_opt=True \
+#       --model_save_dir=output/ \
+#       --l2_decay=1e-4
+
+#ResNeXt152_64x4d
+#python train.py \
+#       --model=ResNeXt152_64x4d \
+#       --batch_size=256 \
+#       --total_images=1281167 \
+#       --image_shape=3,224,224 \
+#       --class_dim=1000 \
+#       --lr_strategy=piecewise_decay \
+#       --lr=0.1 \
+#       --num_epochs=120 \
+#       --with_mem_opt=True \
+#       --model_save_dir=output/ \
+#       --l2_decay=18e-5
+
+# DenseNet121
+# python train.py \
+#       --model=DenseNet121 \
+#       --batch_size=256 \
+#       --total_images=1281167 \
+#       --image_shape=3,224,224 \
+#       --class_dim=1000 \
+#       --lr_strategy=piecewise_decay \
+#       --lr=0.1 \
+#       --num_epochs=120 \
+#       --with_mem_opt=True \
+#       --model_save_dir=output/ \
+#       --l2_decay=1e-4
+
+# DenseNet161
+# python train.py \
+#       --model=DenseNet161 \
+#       --batch_size=256 \
+#       --total_images=1281167 \
+#       --image_shape=3,224,224 \
+#       --class_dim=1000 \
+#       --lr_strategy=piecewise_decay \
+#       --lr=0.1 \
+#       --num_epochs=120 \
+#       --with_mem_opt=True \
+#       --model_save_dir=output/ \
+#       --l2_decay=1e-4
+
+# DenseNet169
+# python train.py \
+#       --model=DenseNet169 \
+#       --batch_size=256 \
+#       --total_images=1281167 \
+#       --image_shape=3,224,224 \
+#       --class_dim=1000 \
+#       --lr_strategy=piecewise_decay \
+#       --lr=0.1 \
+#       --num_epochs=120 \
+#       --with_mem_opt=True \
+#       --model_save_dir=output/ \
+#       --l2_decay=1e-4
+
+# DenseNet201
+# python train.py \
+#       --model=DenseNet201 \
+#       --batch_size=256 \
+#       --total_images=1281167 \
+#       --image_shape=3,224,224 \
+#       --class_dim=1000 \
+#       --lr_strategy=piecewise_decay \
+#       --lr=0.1 \
+#       --num_epochs=120 \
+#       --with_mem_opt=True \
+#       --model_save_dir=output/ \
+#       --l2_decay=1e-4
+
+# DenseNet264
+# python train.py \
+#       --model=DenseNet264 \
 #       --batch_size=256 \
 #       --total_images=1281167 \
 #       --image_shape=3,224,224 \
@@ -628,6 +756,24 @@ python train.py \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
 #       --resize_short_size=320 \
+#       --use_label_smoothing=True \
+#       --label_smoothing_epsilon=0.1 \
+
+#DarkNet53
+ python train.py
+#       --model=DarkNet53 \
+#       --batch_size=256 \
+#       --total_images=1281167 \
+#       --image_shape=3,256,256 \
+#       --class_dim=1000 \
+#       --lr_strategy=cosine_decay \
+#       --lr=0.1 \
+#       --num_epochs=200 \
+#       --with_mem_opt=True \
+#       --model_save_dir=output/ \
+#       --l2_decay=1e-4 \
+#       --use_mixup=True \
+#       --resize_short_size=256 \
 #       --use_label_smoothing=True \
 #       --label_smoothing_epsilon=0.1 \
 
