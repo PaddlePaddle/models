@@ -678,7 +678,7 @@ controllers:
     - 用户从[这里](https://paddle-slim-models.bj.bcebos.com/Android_demo.zip)下载 Android 系统的延时评估器生成工具。
     - 连接硬件平台。利用 adb devices 查看当前连接的设备，判断是否正确连接。
     - 进入工具目录 Android_demo，命令行输入 `sh push2android.sh`, 把必要的文件放置到硬件平台。
-    - 在 `models/PaddleSlim/light_nas` 目录下运行 `python get_latency_lookup_table.py` 就可以获取当前搜索空间的延时评估器表格 `latency_lookup_table.txt`。
+    - 在 `models/PaddleSlim/light_nas/` 目录下运行 `python get_latency_lookup_table.py` 就可以获取当前搜索空间的延时评估器表格 `latency_lookup_table.txt`。另外一种方式是：用户还可以将`models/PaddleSlim/light_nas/light_nas_space.py` 中的 get_all_ops 函数获取的所有 ops 写入到文件中，比如 `lightnas_ops.txt`，然后调用延时评估器生成工具包 `Android_demo` 目录下的 `get_latency_lookup_table.py` 函数产生评估器表格。
 
     备注1：我们基于[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)预测库编写，编译并获取重要 op 单测延时、网络模型延时的二进制文件。重要 op 单测延时的二进制文件都被命名为 `get_{op}_latency`，其中对于不同 op 的单测程序，替换 `get_{op}_latency` 中的 `{op}` 为该 op 名称。所有单测均输出一个表示平均延时的浮点数。这些单测文件的调用方法如下：
 
@@ -695,7 +695,7 @@ controllers:
     - test_iter (int) - 执行单测次数。
 
     我们同样提供了测试整个模型延时的二进制文件，命名为 `get_net_latency`，它返回的是整个模型的延时。调用方法如下：
-       
+
     - `./get_net_latency model_path threads test_iter`
 
     其中 `model_path` 是保存 PaddlePaddle 模型的路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/io_cn.html#save-inference-model)将参数保存为单独的文件。如何单独使用这些二进制文件可以参看[这里](https://github.com/PaddlePaddle/paddle-mobile/blob/develop/doc/development_android.md)或者`get_latency_lookup_table.py`里面的类似方法。
