@@ -128,7 +128,7 @@ class ClassAwareSamplingRoiDbSource(Dataset):
             img_id_sampler = {}
             for i, roidb in enumerate(self._roidb):
                 img_id_pos_map[roidb['im_id'][0]] = i
-                for gt_cls in roidb['gt_class'][:, 0]:
+                for gt_cls in set(roidb['gt_class'][:, 0]):
                     img_id_sampler.setdefault(
                         gt_cls, ImgSampler(
                             random=self.random_img)).append(roidb['im_id'][0])
