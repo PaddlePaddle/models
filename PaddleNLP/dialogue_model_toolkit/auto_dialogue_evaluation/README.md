@@ -27,7 +27,7 @@
 
 &ensp;&ensp;注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
 
-#### &ensp;&ensp;b、安装代码
+#### &ensp;&ensp;b、下载代码
 
 &ensp;&ensp;&ensp;&ensp;克隆数据集代码库到本地
     
