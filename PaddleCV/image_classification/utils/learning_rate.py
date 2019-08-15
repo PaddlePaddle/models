@@ -24,6 +24,7 @@ import paddle.fluid.layers.ops as ops
 from paddle.fluid.initializer import init_on_cpu
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
 
+
 def cosine_decay(learning_rate, step_each_epoch, epochs=120):
     """Applies cosine decay to the learning rate.
     lr = 0.05 * (math.cos(epoch * (math.pi / 120)) + 1)
@@ -36,6 +37,7 @@ def cosine_decay(learning_rate, step_each_epoch, epochs=120):
                      (ops.cos(epoch * (math.pi / epochs)) + 1)/2
     return decayed_lr
 
+
 def cosine_decay_with_warmup(learning_rate, step_each_epoch, epochs=120):
     """Applies cosine decay to the learning rate.
     lr = 0.05 * (math.cos(epoch * (math.pi / 120)) + 1)
@@ -43,26 +45,28 @@ def cosine_decay_with_warmup(learning_rate, step_each_epoch, epochs=120):
     """
     global_step = _decay_step_counter()
     lr = fluid.layers.tensor.create_global_var(
-    shape=[1],
-    value=0.0,
-    dtype='float32',
-    persistable=True,
-    name="learning_rate")
+        shape=[1],
+        value=0.0,
+        dtype='float32',
+        persistable=True,
+        name="learning_rate")
 
     warmup_epoch = fluid.layers.fill_constant(
         shape=[1], dtype='float32', value=float(5), force_cpu=True)
 
     with init_on_cpu():
         epoch = ops.floor(global_step / step_each_epoch)
-        with control_flow.Switch() as switch:
+        with fluid.layers.control_flow.Switch() as switch:
             with switch.case(epoch < warmup_epoch):
-                decayed_lr = learning_rate * (global_step / (step_each_epoch * warmup_epoch))
+                decayed_lr = learning_rate * (global_step /
+                                              (step_each_epoch * warmup_epoch))
                 fluid.layers.tensor.assign(input=decayed_lr, output=lr)
             with switch.default():
                 decayed_lr = learning_rate * \
                     (ops.cos((global_step - warmup_epoch * step_each_epoch) * (math.pi / (epochs * step_each_epoch))) + 1)/2
                 fluid.layers.tensor.assign(input=decayed_lr, output=lr)
     return lr
+
 
 def lr_warmup(learning_rate, warmup_steps, start_lr, end_lr):
     """ Applies linear learning rate warmup for distributed training
@@ -92,6 +96,7 @@ def lr_warmup(learning_rate, warmup_steps, start_lr, end_lr):
 
         return lr
 
+
 class Decay(object):
     """A class used to represent several decay methods
 
@@ -111,7 +116,7 @@ class Decay(object):
 
     def __init__(self, args):
 
-        self.batch_size  = args.batch_size
+        self.batch_size = args.batch_size
         self.lr = args.lr
         self.lr_strategy = args.lr_strategy
         self.l2_decay = args.l2_decay
@@ -121,7 +126,7 @@ class Decay(object):
         self.num_epochs = args.num_epochs
 
         self.total_images = args.total_images
-        self.step = int(math.ceil(float(self.total_images)/self.batch_size))
+        self.step = int(math.ceil(float(self.total_images) / self.batch_size))
 
     def piecewise_decay(self):
         """piecewise decay with Momentum optimizer
@@ -131,11 +136,11 @@ class Decay(object):
         """
         bd = [self.step * e for e in self.step_epochs]
         lr = [self.lr * (0.1**i) for i in range(len(bd) + 1)]
-        learning_rate = fluid.layers.piecewise_decay(boundaries = bd, values = lr)
+        learning_rate = fluid.layers.piecewise_decay(boundaries=bd, values=lr)
         optimizer = fluid.optimizer.Momentum(
-            learning_rate = learning_rate, 
-            momentum = self.momentum_rate, 
-            regularization = fluid.regularizer.L2Decay(self.l2_decay))
+            learning_rate=learning_rate,
+            momentum=self.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(self.l2_decay))
         return optimizer
 
     def cosine_decay(self):
@@ -145,11 +150,14 @@ class Decay(object):
             a cosine_decay optimizer
         """
 
-        learning_rate =fluid.layers.cosine_decay(learning_rate=self.lr, step_each_epoch=self.step, epochs=self.num_epochs)
+        learning_rate = fluid.layers.cosine_decay(
+            learning_rate=self.lr,
+            step_each_epoch=self.step,
+            epochs=self.num_epochs)
         optimizer = fluid.optimizer.Momentum(
-            learning_rate = learning_rate, 
-            momentum = self.momentum_rate, 
-            regularization = fluid.regularizer.L2Decay(self.l2_decay))
+            learning_rate=learning_rate,
+            momentum=self.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(self.l2_decay))
         return optimizer
 
     def cosine_decay_warmup(self):
@@ -159,11 +167,14 @@ class Decay(object):
             a cosine_decay_with_warmup optimizer
         """
 
-        learning_rate =cosine_decay_with_warmup(learning_rate=self.lr, step_each_epoch=self.step, epochs=self.num_epochs)
+        learning_rate = cosine_decay_with_warmup(
+            learning_rate=self.lr,
+            step_each_epoch=self.step,
+            epochs=self.num_epochs)
         optimizer = fluid.optimizer.Momentum(
-            learning_rate = learning_rate, 
-            momentum = self.momentum_rate, 
-            regularization = fluid.regularizer.L2Decay(self.l2_decay))
+            learning_rate=learning_rate,
+            momentum=self.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(self.l2_decay))
         return optimizer
 
     def linear_decay(self):
@@ -174,11 +185,12 @@ class Decay(object):
         """
 
         end_lr = 0
-        learning_rate = fluid.layers.polynomial_decay(self.lr, self.step, end_lr, power=1)
+        learning_rate = fluid.layers.polynomial_decay(
+            self.lr, self.step, end_lr, power=1)
         optimizer = fluid.optimizer.Momentum(
-            learning_rate = learning_rate,
-            momentum = self.momentum_rate,
-            regularization = fluid.regularizer.L2Decay(self.l2_decay))
+            learning_rate=learning_rate,
+            momentum=self.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(self.l2_decay))
 
         return optimizer
 
@@ -189,7 +201,7 @@ class Decay(object):
             an adam_decay optimizer
         """
 
-        return fluid.optimizer.Adam(learning_rate = self.lr)
+        return fluid.optimizer.Adam(learning_rate=self.lr)
 
     def cosine_decay_RMSProp(self):
         """cosine decay with RMSProp optimizer
@@ -198,11 +210,14 @@ class Decay(object):
             an cosine_decay_RMSProp optimizer
         """
 
-        learning_rate = fluid.layers.cosine_decay(learning_rate=self.lr, step_each_epoch=self.step, epochs=self.num_epochs)
+        learning_rate = fluid.layers.cosine_decay(
+            learning_rate=self.lr,
+            step_each_epoch=self.step,
+            epochs=self.num_epochs)
         optimizer = fluid.optimizer.RMSProp(
-            learning_rate = learning_rate,
-            momentum = self.momentum_rate,
-            regularization = fluid.regularizer.L2Decay(self.l2_decay),
+            learning_rate=learning_rate,
+            momentum=self.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(self.l2_decay),
             # Apply epsilon=1 on ImageNet dataset.
             epsilon=1)
         return optimizer
@@ -215,7 +230,7 @@ class Decay(object):
         """
 
         optimizer = fluid.optimizer.Momentum(
-            learning_rate = self.lr,
-            momentum = self.momentum_rate,
-            regularization = fluid.regularizer.L2Decay(self.l2_decay))
+            learning_rate=self.lr,
+            momentum=self.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(self.l2_decay))
         return optimizer

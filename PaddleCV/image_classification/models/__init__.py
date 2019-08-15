@@ -1,6 +1,6 @@
 from .alexnet import AlexNet
 from .mobilenet import MobileNet
-from .mobilenet_v2 import MobileNetV2_x0_25, MobileNetV2_x0_5, MobileNetV2_x1_0, MobileNetV2_x1_5, MobileNetV2_x2_0, MobileNetV2_scale
+from .mobilenet_v2 import MobileNetV2, MobileNetV2_x0_25, MobileNetV2_x0_5, MobileNetV2_x1_0, MobileNetV2_x1_5, MobileNetV2_x2_0, MobileNetV2_scale
 from .googlenet import GoogLeNet
 from .vgg import VGG11, VGG13, VGG16, VGG19
 from .resnet import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152

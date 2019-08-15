@@ -123,6 +123,7 @@ def parse_args():
     #add_arg('use_mem_opt',              bool,   False,                  "Whether to use memory optimization.")
     add_arg('use_inplace',              bool,   True,                   "Whether to use inplace memory optimization.")
     add_arg('enable_ce',                bool,   False,                  "Whether to enable continuous evaluation job.")
+    # FP16 is moving to Paddle/Fleet 
     add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
