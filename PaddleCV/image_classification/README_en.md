@@ -62,8 +62,8 @@ After data preparation, one can start the training step by:
 
 ```
 python train.py \
-       --model=SE_ResNeXt50_32x4d \
-       --batch_size=32 \
+       --model=AlexNet \
+       --batch_size=256 \
        --total_images=1281167 \
        --class_dim=1000 \
        --image_shape=3,224,224 \
@@ -73,38 +73,54 @@ python train.py \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
+or running run.sh scripts
+```bash run.sh train model_name```
+
 **parameter introduction:**
 
+Environment settings:
+
+* **data_dir**: the data root directory Default: "./data/ILSVRC2012".
+* **model_save_dir**: the directory to save trained model. Default: "output".
+* **save_param**: the path to save params. Default: None.
+* **pretrained_model**: load model path for pretraining. Default: None.
+* **checkpoint**: load the checkpoint path to resume. Default: None.
+
+Solver and hyperparameters:
+
 * **model**: name model to use. Default: "SE_ResNeXt50_32x4d".
-* **num_epochs**: the number of epochs. Default: 120.
-* **batch_size**: the size of each mini-batch. Default: 256.
-* **use_gpu**: whether to use GPU or not. Default: True.
 * **total_images**: total number of images in the training set. Default: 1281167.
 * **class_dim**: the class number of the classification task. Default: 1000.
 * **image_shape**: input size of the network. Default: "3,224,224".
-* **model_save_dir**: the directory to save trained model. Default: "output".
-* **with_mem_opt**: whether to use memory optimization or not. Default: False.
-* **with_inplace**: whether to use inplace memory optimization or not. Default: True.
+* **num_epochs**: the number of epochs. Default: 120.
+* **batch_size**: the batch size of all devices. Default: 256.
+* **test_batch_size**: the test batch size, Default: 16
 * **lr_strategy**: learning rate changing strategy. Default: "piecewise_decay".
 * **lr**: initialized learning rate. Default: 0.1.
-* **pretrained_model**: model path for pretraining. Default: None.
-* **checkpoint**: the checkpoint path to resume. Default: None.
-* **data_dir**: the data path. Default: "./data/ILSVRC2012".
-* **fp16**: whether to enable half precision training with fp16. Default: False.
-* **scale_loss**: scale loss for fp16. Default: 1.0.
 * **l2_decay**: L2_decay parameter. Default: 1e-4.
 * **momentum_rate**: momentum_rate. Default: 0.9.
-* **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
-* **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.2.
+
+Reader and preprocess:
+
 * **lower_scale**: the lower scale in random crop data processing, upper is 1.0. Default:0.08.
 * **lower_ratio**: the lower ratio in ramdom crop. Default:3./4. .
 * **upper_ration**: the upper ratio in ramdom crop. Default:4./3. .
 * **resize_short_size**: the resize_short_size. Default: 256.
 * **use_mixup**: whether to use mixup data processing or not. Default:False.
 * **mixup_alpha**: the mixup_alpha parameter. Default: 0.2.
-* **is_distill**: whether to use distill or not. Default: False.
+* **reader_thread**: the number of threads in multi thread reader, Default: 8
+* **reader_buf_size**: the buff size of multi thread reader, Default: 2048
+* **interpolation**: interpolation method, Default: None
 
-Or can start the training step by running the ```run.sh```.
+
+Switch:
+
+* **use_gpu**: whether to use GPU or not. Default: True.
+* **use_inplace**: whether to use inplace memory optimization or not. Default: True.
+* **enable_ce**: whether to enable CE testing, Default: False.
+* **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
+* **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.2.
+* **random_seed**: random seed for debugging, Default: 1000
 
 **data reader introduction:** Data reader is defined in PIL: ```reader.py```and opencv: ```reader_cv2.py```, default reader is implemented by opencv. In [Training](#training), random crop and flipping are used, while center crop is used in [Evaluation](#evaluation) and [Inference](#inference) stages. Supported data augmentation includes:
 
@@ -121,6 +137,7 @@ Finetuning is to finetune model weights in a specific task by loading pretrained
 
 ```
 python train.py \
+       --model=model_name
        --pretrained_model=${path_to_pretrain_model}
 ```
 
@@ -132,6 +149,7 @@ Evaluation is to evaluate the performance of a trained model. One can download [
 
 ```
 python eval.py \
+       --model=model_name
        --pretrained_model=${path_to_pretrain_model}
 ```
 
@@ -143,6 +161,7 @@ Inference is used to get prediction score or image features based on trained mod
 
 ```
 python infer.py \
+       --model=model_name
        --pretrained_model=${path_to_pretrain_model}
 ```
 
@@ -152,9 +171,7 @@ Note: Add and adjust other parameters accroding to specific models and tasks.
 
 ### Using Mixed-Precision Training
 
-You may add `--fp16=1` to start train using mixed precisioin training, which the training process will use float16 and the output model ("master" parameters) is saved as float32. You also may need to pass `--scale_loss` to overcome accuracy issues, usually `--scale_loss=8.0` will do.
-
-Note that currently `--fp16` can not use together with `--with_mem_opt`, so pass `--with_mem_opt=0` to disable memory optimization pass.
+Mixed-precision part is moving to PaddlePaddle/Fleet now.
 
 ### CE
 
@@ -170,20 +187,20 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 - Note3: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
 
     ```python infer.py --save_inference=True```
-- Note4: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please go to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
+- Note4: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
-### AlexNet
+### AlexNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.tar) | 56.72%/79.17% | 3.083 | 2.728 |
 
-### SqueezeNet
+### SqueezeNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[SqueezeNet1_0](https://paddle-imagenet-models-name.bj.bcebos.com/SqueezeNet1_0_pretrained.tar) | 59.60%/81.66% | 2.740 | 1.688 |
 |[SqueezeNet1_1](https://paddle-imagenet-models-name.bj.bcebos.com/SqueezeNet1_1_pretrained.tar) | 60.08%/81.85% | 2.751 | 1.270 |
 
-### VGG
+### VGG Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[VGG11](https://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretrained.tar) | 69.28%/89.09% | 8.223 | 6.821 |
@@ -191,7 +208,7 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 |[VGG16](https://paddle-imagenet-models-name.bj.bcebos.com/VGG16_pretrained.tar) | 72.00%/90.69% | 11.315 | 9.067 |
 |[VGG19](https://paddle-imagenet-models-name.bj.bcebos.com/VGG19_pretrained.tar) | 72.56%/90.93% | 13.096 | 10.388 |
 
-### MobileNet
+### MobileNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar) | 70.99%/89.68% | 2.609 |1.615 |
@@ -201,7 +218,7 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 |[MobileNetV2_x1_5](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x1_5_pretrained.tar) | 74.12%/91.67% | 5.235 | 6.909 |
 |[MobileNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x2_0_pretrained.tar) | 75.23%/92.58% | 6.680 | 7.658 |
 
-### ShuffleNet
+### ShuffleNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[ShuffleNetV2_x0_25](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x0_25_pretrained.tar) | 49.90%/73.79% | 5.956 | 2.961 |
@@ -212,7 +229,7 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 |[ShuffleNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x2_0_pretrained.tar) | 73.15%/91.20% | 6.430 | 4.553 |
 |[ShuffleNetV2_x1_0_swish](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_pretrained.tar) | 70.03%/89.17% | 6.078 | 6.282 |
 
-### ResNet
+### ResNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[ResNet18](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet18_pretrained.tar) | 70.98%/89.92% | 3.456 | 2.484 |
@@ -227,7 +244,7 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 |[ResNet152_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_vd_pretrained.tar) | 80.59%/95.30% | 22.041 | 12.259 |
 |[ResNet200_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet200_vd_pretrained.tar) | 80.93%/95.33% | 28.015 | 15.278 |
 
-### ResNeXt
+### ResNeXt Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_32x4d_pretrained.tar) | 77.75%/93.82% | 12.863 | 9.837 |
@@ -240,7 +257,7 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 |[ResNeXt152_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_32x4d_pretrained.tar) | 78.98%/94.33% | 37.007 | 31.301 |
 |[ResNeXt152_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_64x4d_pretrained.tar) | 79.51%/94.71% | 58.966 | 57.267 |
 
-### DenseNet
+### DenseNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[DenseNet121](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet121_pretrained.tar) | 75.66%/92.58% | 12.437 | 5.813 |
@@ -249,14 +266,14 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 |[DenseNet201](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet201_pretrained.tar) | 77.63%/93.66% | 26.583 | 10.549 |
 |[DenseNet264](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet264_pretrained.tar) | 77.96%/93.85% | 41.495 | 15.574 |
 
-### SENet
+### SENet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_32x4d_pretrained.tar) | 78.44%/93.96% | 14.916 | 12.126 |
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.tar) | 79.12%/94.20% | 30.085 | 24.110 |
 |[SENet154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar) | 81.40%/95.48% | 71.892 | 64.855 |
 
-### Inception
+### Inception Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[GoogLeNet](https://paddle-imagenet-models-name.bj.bcebos.com/GoogleNet_pretrained.tar) | 70.70%/89.66% | 6.528 | 3.076 |
@@ -268,7 +285,7 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 |- |:-: |:-: |:-: |
 |[DarkNet53](https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_ImageNet1k_pretrained.tar) | 78.04%/94.05% | 11.969 | 7.153 |
 
-### ResNeXt101_wsl
+### ResNeXt101_:wwsl Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[ResNeXt101_32x8d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x8d_wsl_pretrained.tar) | 82.55%/96.74% | 33.310 | 27.648 |

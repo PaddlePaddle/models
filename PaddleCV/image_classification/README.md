@@ -73,30 +73,29 @@ python train.py \
 
 **参数说明：**
 
-- 环境配置部分：
+环境配置部分：
 
-* **use_gpu**: 是否在GPU上运行，默认值: True
-* **model_save_dir**: 模型存储路径，默认值: "output/"
 * **data_dir**: 数据存储路径，默认值: "./data/ILSVRC2012/"
+* **model_save_dir**: 模型存储路径，默认值: "output/"
+* **save_param**: params存储路径，默认值:"None"
 * **pretrained_model**: 加载预训练模型路径，默认值: None
 * **checkpoint**: 加载用于继续训练的检查点（指定具体模型存储路径，如"output/SE_ResNeXt50_32x4d/100/"），默认值: None
-* **save_param**: params存储路径，默认值:"None"
 
-- 解决方案和超参配置：
+解决方案和超参配置：
 
 * **model**: 模型名称， 默认值: "SE_ResNeXt50_32x4d"
-* **num_epochs**: 训练回合数，默认值: 120
-* **batch_size**: 批大小(所有设备)，默认值: 8
-* **test_batch_size**: 测试batch大小，默认值：16
 * **total_images**: 图片数，ImageNet2012默认值: 1281167.
 * **class_dim**: 类别数，默认值: 1000
 * **image_shape**: 图片大小，默认值: "3,224,224"
+* **num_epochs**: 训练回合数，默认值: 120
+* **batch_size**: 批大小(所有设备)，默认值: 8
+* **test_batch_size**: 测试batch大小，默认值：16
 * **lr_strategy**: 学习率变化策略，默认值: "piecewise_decay"
 * **lr**: 初始学习率，默认值: 0.1
 * **l2_decay**: l2_decay值，默认值: 1e-4
 * **momentum_rate**: momentum_rate值，默认值: 0.9
 
-- Reader 和预处理配置：
+数据读取器和预处理配置：
 
 * **lower_scale**: 数据随机裁剪处理时的lower scale值, upper scale值固定为1.0，默认值:0.08
 * **lower_ratio**: 数据随机裁剪处理时的lower ratio值，默认值:3./4.
@@ -108,8 +107,9 @@ python train.py \
 * **reader_buf_size**: 多线程reader的buf_size， 默认值:2048
 * **interpolation**: 插值方法: 默认值：None
 
-- 一些开关：
+一些开关：
 
+* **use_gpu**: 是否在GPU上运行，默认值: True
 * **use_inplace**: 是否开启inplace显存优化，默认值: True
 * **enable_ce**: 是否开启CE测试，默认值: False
 * **use_label_smoothing**: 是否对数据进行label smoothing处理，默认值: False
@@ -127,7 +127,7 @@ python train.py \
 
 ### 参数微调
 
-参数微调是指在特定任务上微调已训练模型的参数。可以下载[已有模型及其性能](#已有模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
+参数微调是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
 ```
 python train.py \
        --model=model_name
@@ -136,7 +136,7 @@ python train.py \
 注意：根据具体模型和任务添加并调整其他参数
 
 ### 模型评估
-模型评估是指对训练完毕的模型评估各类性能指标。可以下载[已有模型及其性能](#已有模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
+模型评估是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
 ```
 python eval.py \
        --model=model_name
@@ -145,7 +145,7 @@ python eval.py \
 注意：根据具体模型和任务添加并调整其他参数
 
 ### 模型预测
-模型预测可以获取一个模型的预测分数或者图像的特征，可以下载[已有模型及其性能](#已有模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令获得预测分数：
+模型预测可以获取一个模型的预测分数或者图像的特征，可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令获得预测分数：
 ```
 python infer.py \
        --model=model_name
@@ -260,7 +260,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 |- |:-: |:-: |:-: |
 |[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_32x4d_pretrained.tar) | 78.44%/93.96% | 14.916 | 12.126 |
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.tar) | 79.12%/94.20% | 30.085 | 24.110 |
-|[SENet154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar) | 81.40%/95.48% | 71.892 | 64.855 |
+|[SE154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar) | 81.40%/95.48% | 71.892 | 64.855 |
 
 ### Inception Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
