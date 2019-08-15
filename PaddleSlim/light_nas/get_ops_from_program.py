@@ -247,7 +247,10 @@ def fc_op_params(blocks, current_op):
     # batch size 
     tmp.append(1)
     # input channels, height, width
-    channels = blocks.vars[current_op.input('X')[0]].shape[1]
+    channels = 1
+    in_shape = blocks.vars[current_op.input('X')[0]].shape
+    for i in range(1, len(in_shape)):
+        channels *= in_shape[i]
     tmp = tmp + [int(channels), 1, 1]
     # output channels
     tmp.append(int(blocks.vars[current_op.output('Out')[0]].shape[1]))
