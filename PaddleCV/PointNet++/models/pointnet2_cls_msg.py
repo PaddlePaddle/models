@@ -65,18 +65,19 @@ class PointNet2MSGCls(object):
         out = fluid.layers.squeeze(out,axes=[-1])
 
 	out = fc_bn(out,out_channels=512,bn=True,name="fc_1")
-        out = fluid.layers.dropout(out, 0.5)
+        #out = fluid.layers.dropout(out, 0.5)
         out = fc_bn(out,out_channels=256,bn=True,name="fc_2")
-        out = fluid.layers.dropout(out, 0.5)
+        #out = fluid.layers.dropout(out, 0.5)
         out = fc_bn(out,out_channels=self.num_classes,act=None,name="fc_3")
-        pred = fluid.layers.softmax(out)
+	self.tmp = out
+        self.pred_ = fluid.layers.softmax(out)
 
         # calc loss
-        self.loss = fluid.layers.cross_entropy(pred, self.label)
+        self.loss = fluid.layers.cross_entropy(self.pred_, self.label)
         self.loss = fluid.layers.reduce_mean(self.loss)
 
         # calc acc
-        pred = fluid.layers.reshape(pred, shape=[-1, self.num_classes])
+        pred = fluid.layers.reshape(self.pred_, shape=[-1, self.num_classes])
         label = fluid.layers.reshape(self.label, shape=[-1, 1])
         self.acc1 = fluid.layers.accuracy(pred, label, k=1)
         self.acc5 = fluid.layers.accuracy(pred, label, k=5)
@@ -85,7 +86,7 @@ class PointNet2MSGCls(object):
         return self.feed_vars
 
     def get_outputs(self):
-        return (self.loss, self.acc1, self.acc5)
+        return (self.tmp, self.loss, self.acc1, self.acc5)
 
 
 class PointNet2CLSMSG(PointNet2MSGCls):
@@ -132,8 +133,8 @@ if __name__ == "__main__":
     label_np = np.random.uniform(0, num_classes, (8, 1)).astype('int64')
     #print("xyz", xyz_np)
     #print("feaure", feature_np)
-    #print("label", label_np)
-    ret = exe.run(fetch_list=[out.name for out in outs], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+    print("label", label_np)
+    ret = exe.run(fetch_list=[out.name+"@GRAD" for out in outs], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
     #ret = exe.run(fetch_list=["relu_0.tmp_0","relu_1.tmp_0","relu_2.tmp_0", outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
     print(ret)
     # print("ret0", ret[0].shape, ret[0])

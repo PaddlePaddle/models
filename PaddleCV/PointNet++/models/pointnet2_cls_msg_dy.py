@@ -43,14 +43,18 @@ class PointNet2MSGCls(fluid.dygraph.Layer):
                                                       nsamples=[32,64,128],
                                                       mlps=[[64,64,128],[128,128,256],[128,128,256]])
         self.sa_module = Pointnet_SA_Module_MSG(self.full_name(),radiuss=[None],nsamples=[None],mlps=[[256,512,1024]])
-        self.fc_0 = FCBN(self.full_name(),out_channel=512,bn=True)
-        self.fc_1 = FCBN(self.full_name(),out_channel=256,bn=True)
-        self.fc_2 = FCBN(self.full_name(),out_channel=self.num_classes,act=None)
+        self.fc_0 = FCBN(self.full_name(),out_channel=512,bn=False)
+        self.fc_1 = FCBN(self.full_name(),out_channel=256,bn=False)
+        self.fc_2 = FCBN(self.full_name(),out_channel=self.num_classes,bn=False,act=None)
     def forward(self, xyz,feature,label):
         xyz,feature = self.sa_module_msg_0(xyz,feature)
+	feature = fluid.layers.transpose(feature,perm=[0,2,1])
+	#print(feature)
         xyz,feature = self.sa_module_msg_1(xyz,feature)
-        xyz,feature = self.sa_module(xyz,feature)
 	print (feature)
+        feature = fluid.layers.transpose(feature,perm=[0,2,1])
+        xyz,feature = self.sa_module(xyz,feature)
+        feature = fluid.layers.transpose(feature,perm=[0,2,1])
         out = fluid.layers.transpose(feature, perm=[0, 2, 1])
         out = fluid.layers.squeeze(out, axes=[-1])
         # FC layer
@@ -59,18 +63,30 @@ class PointNet2MSGCls(fluid.dygraph.Layer):
         out = self.fc_1(out)
         #out = fluid.layers.dropout(out,0.5)
         out = self.fc_2(out)
-        pred = fluid.layers.softmax(out)
+	#out = fluid.layers.squeeze(out,axes=[-1])
+	#fluid.layers.Print(out,print_tensor_name=True,summarize=10)
+
+        #fluid.layers.Print(out,print_tensor_name=True,summarize=10) 
+	#pred = fluid.layers.softmax(out)
+	#fluid.layers.Print(pred,print_tensor_name=True,summarize=10)
+
 
         # calc loss
-        loss = fluid.layers.cross_entropy(pred,label)
-        loss = fluid.layers.reduce_mean(loss)
+	label_onehot = fluid.layers.one_hot(label,depth=self.num_classes)
+	label_float = fluid.layers.cast(label_onehot,dtype="float32")
+	loss = fluid.layers.sigmoid_cross_entropy_with_logits(out,label_float)
+	loss = fluid.layers.reduce_mean(loss)
+
+        #loss = fluid.layers.cross_entropy(pred,label)
+	#tmp = pred
+        #loss = fluid.layers.reduce_mean(loss)
 
         # calc acc
-        pred = fluid.layers.reshape(pred,shape=[-1,self.num_classes])
+        pred = fluid.layers.reshape(out,shape=[-1,self.num_classes])
         label = fluid.layers.reshape(label,shape=[-1,1])
         acc1 = fluid.layers.accuracy(pred,label,k=1)
-        acc2 = fluid.layers.accuracy(pred,label,k=5)
-        return loss,acc1,acc2
+        #acc2 = fluid.layers.accuracy(pred,label,k=5)
+        return out,loss,acc1
 
 
 
@@ -81,8 +97,9 @@ if __name__ == "__main__":
     feature = fluid.layers.data(name='feature', shape=[32, 6], dtype='float32', lod_level=0)
     label = fluid.layers.data(name='label', shape=[1], dtype='int64', lod_level=0)
 
-    loss,_,_= pointnet_cls(xyz,feature,label)
-    opt = fluid.optimizer.Adam(learning_rate=1e-2)
+    out,loss,_= pointnet_cls(xyz,feature,label)
+    opt = fluid.optimizer.AdamOptimizer(learning_rate=3e-2)
+    #opt = fluid.optimizer.AdamOptimizer(learning_rate=3e-2,regularization=fluid.regularizer.L2Decay(0))
     opt.minimize(loss)
 
 
@@ -96,11 +113,23 @@ if __name__ == "__main__":
     label_np = np.random.uniform(0, num_classes, (8, 1)).astype('int64')
     #print("xyz", xyz_np)
     #print("feaure", feature_np)
-    #print("label", label_np)
-    for i in range(5):
-        ret = exe.run(fetch_list=["transpose_10.tmp_0@GRAD",loss.name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-	print("loss:",ret)
-    #ret = exe.run(fetch_list=["relu_0.tmp_0","relu_1.tmp_0","relu_2.tmp_0", outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+    print("label", label_np)
+    i = 0
+    for param in pointnet_cls.parameters():
+        pass
+        print (i,param.name)
+        i += 1
+    for i in range(1):
+        #grad_list = [
+        #             #"pointnet2_cls/PointNet2MSGCls_0/FCBN_1/BatchNorm_0.w_2",
+        #             "pointnet2_cls/PointNet2MSGCls_0/FCBN_0/FC_0.fc_bias@GRAD"]
+        ret = exe.run(fetch_list=["concat_7.tmp_0@GRAD",out.name,loss.name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+	print("loss:",ret[-1])
+     	#print("softmax:",ret[-3])
+	#print("pred:",ret[-2])
+	print("grad",ret[0])
+
+    #ret = exe.run(fetch_list=[outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
     #print(ret)
     # print("ret0", ret[0].shape, ret[0])
     # ret[0].tofile("out.data")

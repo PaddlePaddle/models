@@ -209,6 +209,8 @@ if __name__ == "__main__":
     # print("feaure", feature_np)
     # print("label", label_np)
     # ret = exe.run(fetch_list=[out.name for out in outs], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+    for param in model.parameters():
+        print(param.name)
     ret = exe.run(fetch_list=["conv2d_33.tmp_1", outs['loss'].name, outs['accuracy'].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
     print("ret0", ret[0].shape, ret[0])
     print("ret1-", ret[1:])

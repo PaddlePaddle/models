@@ -24,7 +24,10 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
+# from pointnet2_modules_dy import *
 from pointnet2_modules_dy import *
+
+__all__ = ['PointNet2SemSegSSG', 'PointNet2SemSegMSG']
 
 
 class PointNet2SemSegSSG(fluid.dygraph.Layer):
@@ -77,12 +80,12 @@ class PointNet2SemSegSSG(fluid.dygraph.Layer):
         feature0 = self.fp_module_0(xyz, xyz1, feature, feature1)
 
         out = fluid.layers.transpose(feature0, perm=[0, 2, 1])
-        out = fluid.layers.unsqueeze(out, axes=[-1])
+        out = unsqueeze(out, axis=-1)
         out = self.conv_bn_0(out)
         # out = fluid.layers.dropout(out, 0.5)
         out = self.conv_bn_1(out)
         tmp = out
-        out = fluid.layers.squeeze(out, axes=[-1])
+        out = squeeze(out, axis=-1)
         out = fluid.layers.transpose(out, perm=[0, 2, 1])
         pred = fluid.layers.softmax(out)
 
@@ -93,9 +96,22 @@ class PointNet2SemSegSSG(fluid.dygraph.Layer):
         ##calc acc
         pred_ = fluid.layers.reshape(pred, shape=[-1, self.num_classes])
         label = fluid.layers.reshape(label, shape=[-1, 1])
-	#print ("acc label:",pred.shape)
         acc1 = fluid.layers.accuracy(pred_, label, k=1)
-        return tmp, loss, acc1
+        return loss, acc1
+
+    def set_bn_momentum(self, bn_momentum):
+        self.sa_module_msg_0.set_bn_momentum(bn_momentum)
+        self.sa_module_msg_1.set_bn_momentum(bn_momentum)
+        self.sa_module_msg_2.set_bn_momentum(bn_momentum)
+        self.sa_module_msg_3.set_bn_momentum(bn_momentum)
+
+        self.fp_module_0.set_bn_momentum(bn_momentum)
+        self.fp_module_1.set_bn_momentum(bn_momentum)
+        self.fp_module_2.set_bn_momentum(bn_momentum)
+        self.fp_module_3.set_bn_momentum(bn_momentum)
+
+        self.conv_bn_0.set_bn_momentum(bn_momentum)
+        self.conv_bn_1.set_bn_momentum(bn_momentum)
 
 
 class PointNet2SemSegMSG(PointNet2SemSegSSG):
@@ -143,7 +159,9 @@ if __name__ == "__main__":
     # pointnet_sem_ssg = PointNet2SemSegSSG("pointnet_sem_seg_ssg",num_classes=num_classes)
     pointnet_sem_msg = PointNet2SemSegMSG("pointnet_sem_seg_msg",num_classes=num_classes)
 
-    outs = pointnet_sem_msg(xyz,feature,label)
+    loss,acc1 = pointnet_sem_msg(xyz,feature,label)
+    opt = fluid.optimizer.AdamOptimizer(learning_rate=3e-2)
+    opt.minimize(loss)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -156,8 +174,10 @@ if __name__ == "__main__":
     #print("xyz", xyz_np)
     #print("feaure", feature_np)
     #print("label", label_np)
-    ret = exe.run(fetch_list=[out.name for out in outs], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+    for i in range(5):
+        ret = exe.run(fetch_list=[loss.name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+	print ("loss:",ret[0])
     #ret = exe.run(fetch_list=["transpose_17.tmp_0", outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    print(ret[1:])
-    print("ret0", ret[0].shape, ret[0])
+    #print(ret[1:])
+    #print("ret0", ret[0].shape, ret[0])
     # ret[0].tofile("out.data")
