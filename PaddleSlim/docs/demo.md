@@ -376,13 +376,10 @@ step9: 执行 `sh run.sh` 进行训练任务。
 |GPU cost|1.2K GPU hours(V100)|1.2K GPU hours(V100)|-|
 |tokens|tokens2|tokens3||
 
-| token name | tokens|
-|---|---|
-
 基于 Android 手机平台的结果如下：
 
 | - | Light-NAS-model4 | MobileNetV2 |
-|---|---|---|---|
+|---|---|---|
 | FLOPS| -13% | -0% |
 | top1 accuracy| 71.90% | 71.90% |
 |GPU cost|1.2K GPU hours(V100)|-|
@@ -391,7 +388,7 @@ step9: 执行 `sh run.sh` 进行训练任务。
 基于 iOS 手机平台的结果如下：
 
 | - | Light-NAS-model5 | MobileNetV2 |
-|---|---|---|---|
+|---|---|---|
 | FLOPS| -5% | -0% |
 | top1 accuracy| 71.78% | 71.90% |
 |GPU cost|1.2K GPU hours(V100)|-|
