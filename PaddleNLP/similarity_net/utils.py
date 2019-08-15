@@ -8,26 +8,28 @@ import sys
 import re
 import os
 import six
+import codecs
 import numpy as np
 import logging
 import logging.handlers
+import paddle.fluid as fluid
 """
 ******functions for file processing******
 """
-
 
 def load_vocab(file_path):
     """
     load the given vocabulary
     """
     vocab = {}
-    if not os.path.isfile(file_path):
-        raise ValueError("vocabulary dose not exist under %s" % file_path)
-    with open(file_path, 'r') as f:
-        for line in f:
-            items = line.strip('\n').split("\t")
-            if items[0] not in vocab:
-                vocab[items[0]] = int(items[1])
+    if six.PY3:
+        f = open(file_path, "r", encoding="utf-8")
+    else:
+        f = open(file_path, "r")
+    for line in f:
+        items = line.strip("\n").split("\t")
+        if items[0] not in vocab:
+            vocab[items[0]] = int(items[1])
     vocab["<unk>"] = 0
     return vocab
 
@@ -43,9 +45,9 @@ def get_result_file(args):
       result_file: merge sample and predict result
 
     """
-    with open(args.test_data_dir, "r") as test_file:
-        with open("predictions.txt", "r") as predictions_file:
-            with open(args.test_result_path, "w") as test_result_file:
+    with codecs.open(args.test_data_dir, "r", "utf-8") as test_file:
+        with codecs.open("predictions.txt", "r", "utf-8") as predictions_file:
+            with codecs.open(args.test_result_path, "w", "utf-8") as test_result_file:
                 test_datas = [line.strip("\n") for line in test_file]
                 predictions = [line.strip("\n") for line in predictions_file]
                 for test_data, prediction in zip(test_datas, predictions):
@@ -277,3 +279,24 @@ def deal_preds_of_mmdnn(conf_dict, preds):
         return get_sigmoid(preds)
     else:
         return get_softmax(preds)
+
+
+def init_checkpoint(exe, init_checkpoint_path, main_program):
+    """
+    init checkpoint
+    """
+    assert os.path.exists(
+        init_checkpoint_path), "[%s] cann't be found." % init_checkpoint_path
+    
+    def existed_persitables(var):
+        if not fluid.io.is_persistable(var):
+            return False
+        return os.path.exists(os.path.join(init_checkpoint_path, var.name))
+
+    fluid.io.load_vars(
+        exe,
+        init_checkpoint_path,
+        main_program=main_program,
+        predicate=existed_persitables)
+    print("Load model from {}".format(init_checkpoint_path))
+
