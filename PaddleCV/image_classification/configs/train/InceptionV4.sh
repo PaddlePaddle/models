@@ -1,5 +1,5 @@
 #Training details
-#Machine:P40 8cards 200epochs 367h
+#GPU: NVIDIA® Tesla® V100 8cards 200epochs 367h
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export FLAGS_fast_eager_deletion_mode=1
 export FLAGS_eager_delete_tensor_gb=0.0

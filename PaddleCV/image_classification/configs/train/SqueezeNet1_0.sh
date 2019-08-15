@@ -10,5 +10,3 @@ python train.py \
         --lr=0.02 \
         --num_epochs=120 \
         --l2_decay=1e-4
-
-

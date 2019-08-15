@@ -1,4 +1,4 @@
- python train.py \
+python train.py \
        --model=Xception_41 \
        --batch_size=256 \
        --total_images=1281167 \

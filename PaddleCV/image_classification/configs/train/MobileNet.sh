@@ -1,5 +1,5 @@
 #Training details
-#Machine:V100 4cards 120epochs 55h
+#GPU: NVIDIA® Tesla® V100 4cards 120epochs 55h
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 export FLAGS_fast_eager_deletion_mode=1
 export FLAGS_eager_delete_tensor_gb=0.0
