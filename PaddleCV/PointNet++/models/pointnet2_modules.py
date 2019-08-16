@@ -72,12 +72,12 @@ def group_all(xyz, features=None, use_xyz=True):
         return grouped_xyz
 
 
-def conv_bn(input, out_channels, bn=True, bn_momentum=0.9, act='relu', name=None):
+def conv_bn(input, out_channels, bn=True, bn_momentum=0.1, act='relu', name=None):
     param_attr = ParamAttr(name='{}_conv_weight'.format(name),
                            initializer=fluid.initializer.Constant(1.376))
     bias_attr = ParamAttr(initializer=fluid.initializer.Constant(0.213),
                           name='{}_conv_bias'.format(name)) \
-                                  if not bn else None
+                                  if not bn else False
     out = fluid.layers.conv2d(input,
                               num_filters=out_channels,
                               filter_size=1,
@@ -99,7 +99,7 @@ def conv_bn(input, out_channels, bn=True, bn_momentum=0.9, act='relu', name=None
 
     return out
 
-def fc_bn(input,out_channels,bn=False,bn_momentum=0.9,act='relu',name=None):
+def fc_bn(input,out_channels,bn=False,bn_momentum=0.1,act='relu',name=None):
     param_attr = ParamAttr(name='{}_fc_weight'.format(name),
                            initializer=fluid.initializer.Constant(2.4))
     if not bn:
@@ -110,17 +110,18 @@ def fc_bn(input,out_channels,bn=False,bn_momentum=0.9,act='relu',name=None):
     out = fluid.layers.fc(input,
                           size=out_channels,
 			  param_attr=param_attr,
-			  bias_attr=bias_attr,
-			  act=act)
+			  bias_attr=bias_attr)
     if bn:
         out = fluid.layers.batch_norm(out,
 	                              momentum=bn_momentum,
                                       param_attr=ParamAttr(initializer=fluid.initializer.Constant(2.673)),
                                       bias_attr=ParamAttr(initializer=fluid.initializer.Constant(1.467)))
-    out = fluid.layers.relu(out)
+    if act == "relu":
+        print("act is relu:",act)
+        out = fluid.layers.relu(out)
     return out
 
-def MLP(features, out_channels_list, bn=True, bn_momentum=0.9, act='relu', name=None):
+def MLP(features, out_channels_list, bn=True, bn_momentum=0.1, act='relu', name=None):
     out = features
     for i, out_channels in enumerate(out_channels_list):
         out = conv_bn(out, out_channels, bn=bn, act=act, bn_momentum=bn_momentum, name=name + "_{}".format(i))

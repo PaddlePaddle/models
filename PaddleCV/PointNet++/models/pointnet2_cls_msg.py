@@ -137,6 +137,10 @@ if __name__ == "__main__":
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
+    
+    # print param.name
+    #for i,var in enumerate(fluid.default_startup_program().list_vars()):
+    #    print(i,var.name)
 
     np.random.seed(1333)
     xyz_np = np.random.uniform(-100, 100, (8, 32, 3)).astype('float32')
@@ -146,8 +150,9 @@ if __name__ == "__main__":
     #print("feaure", feature_np)
     print("label", label_np)
     for i in range(5):
-        ret = exe.run(fetch_list=[loss.name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-	print(ret)
+        ret = exe.run(fetch_list=["fc_2_fc_weight@GRAD",loss.name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+	#print("grad:",ret[0])
+	print("loss:",ret[1])
     #ret = exe.run(fetch_list=["relu_0.tmp_0","relu_1.tmp_0","relu_2.tmp_0", outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
     #print(ret)
     # print("ret0", ret[0].shape, ret[0])
