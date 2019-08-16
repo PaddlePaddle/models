@@ -125,7 +125,6 @@ class MobileNet(object):
                      num_filters1,
                      num_filters2,
                      num_groups,
-                     stride,
                      name=None):
         pointwise_conv = self._conv_norm(
             input=input,
@@ -186,11 +185,11 @@ class MobileNet(object):
 
         num_filters = self.extra_block_filters
         module14 = self._extra_block(module13, num_filters[0][0],
-                                     num_filters[0][1], 1, 2, "conv7_1")
+                                     num_filters[0][1], 1, "conv7_1")
         module15 = self._extra_block(module14, num_filters[1][0],
-                                     num_filters[1][1], 1, 2, "conv7_2")
+                                     num_filters[1][1], 1, "conv7_2")
         module16 = self._extra_block(module15, num_filters[2][0],
-                                     num_filters[2][1], 1, 2, "conv7_3")
+                                     num_filters[2][1], 1, "conv7_3")
         module17 = self._extra_block(module16, num_filters[3][0],
-                                     num_filters[3][1], 1, 2, "conv7_4")
+                                     num_filters[3][1], 1, "conv7_4")
         return module11, module13, module14, module15, module16, module17
