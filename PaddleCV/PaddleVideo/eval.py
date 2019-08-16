@@ -95,6 +95,8 @@ def test(args):
             args.weights), "Given weight dir {} not exist.".format(args.weights)
     weights = args.weights or test_model.get_weights()
 
+    logger.info('load test weights from {}'.format(weights))
+
     test_model.load_test_weights(exe, weights,
                                  fluid.default_main_program(), place)
 
@@ -118,8 +120,9 @@ def test(args):
             info_str = '[EVAL] Batch {}'.format(test_iter)
             test_metrics.calculate_and_log_out(test_outs, info_str)
 
-    output_dir = args.save_dir
-    test_metrics.finalize_and_log_out("[EVAL] eval finished. ", output_dir)
+    if not os.path.isdir(args.save_dir):
+        os.makedirs(args.save_dir)
+    test_metrics.finalize_and_log_out("[EVAL] eval finished. ", args.save_dir)
 
 
 if __name__ == "__main__":

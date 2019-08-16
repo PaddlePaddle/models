@@ -41,7 +41,7 @@ C-TCN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准�
 
 - 从头开始训练，使用上述启动命令行或者脚本程序即可启动训练，不需要用到预训练模型
 
-- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/ctcn.tar.gz)通过`--resume`指定权重存放路径进行finetune等开发
+- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/CTCN_final.pdparams)通过`--resume`指定权重存放路径进行finetune等开发
 
 
 **训练策略：**
@@ -64,7 +64,7 @@ C-TCN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准�
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/ctcn.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/CTCN_final.pdparams)进行评估
 
 - 运行上述程序会将测试结果保存在json文件中，默认存储在data/evaluate\_results目录下，程序根据所使用的超参数自动生成文件名，例如：CTCN\_test\_res\_decode\_0.001\_0.8\_0.9\_0.004.json。使用ActivityNet官方提供的测试脚本，即可计算MAP。具体计算过程请参考[指标计算](../../metrics/detections/README.md)
 
@@ -96,7 +96,7 @@ C-TCN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准�
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要用到的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/ctcn.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/CTCN_final.pdparams)进行推断
 
 
 - 模型推断结果存储于json文件中，默认存储在`data/dataset/inference_results`目录下，程序根据所使用的超参数自动生成文件名，例如：CTCN\_infer\_res\_decode\_0.001\_0.8\_0.9\_0.004.json。同时也会以log的形式打印输出，显示每个视频的预测片段起止时间和类别

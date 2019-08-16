@@ -151,6 +151,6 @@ class AttentionLSTM(ModelBase):
 
     def weights_info(self):
         return (
-            'attention_lstm_youtube8m',
-            'https://paddlemodels.bj.bcebos.com/video_classification/attention_lstm_youtube8m.tar.gz'
+            'AttentionLSTM_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/AttentionLSTM_final.pdparams'
         )

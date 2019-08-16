@@ -102,7 +102,7 @@ Non-local模型的训练数据采用由DeepMind公布的Kinetics-400动作识别
 
 - 从头开始训练，需要加载在ImageNet上训练的ResNet50权重作为初始化参数（该模型参数转自Caffe2）。请下载此[模型参数](https://paddlemodels.bj.bcebos.com/video_classification/Nonlocal_ResNet50_pretrained.tar.gz)并解压，将上面启动命令行或者run.sh脚本中的`pretrain`参数设置为解压之后的模型参数存放路径。如果没有手动下载并设置`pretrain`参数，则程序会自动下载并将参数保存在~/.paddle/weights/Nonlocal\_ResNet50\_pretrained目录下面
 
-- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/nonlocal_kinetics.tar.gz)通过`--resume`指定权重存放路径进行finetune等开发
+- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/NONLOCAL_final.pdparams)通过`--resume`指定权重存放路径进行finetune等开发
 
 **数据读取器说明：** 模型读取Kinetics-400数据集中的`mp4`数据，根据视频长度和采样频率随机选取起始帧的位置，每个视频抽取`video_length`帧图像，对每帧图像做随机增强，短边缩放至[256, 320]之间的某个随机数，长边根据长宽比计算出来，然后再截取出224x224的区域作为训练数据输入网络。
 
@@ -129,7 +129,7 @@ Non-local模型的训练数据采用由DeepMind公布的Kinetics-400动作识别
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/nonlocal_kinetics.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/NONLOCAL_final.pdparams)进行评估
 
 - 评估结果以log的形式直接打印输出TOP1\_ACC、TOP5\_ACC等精度指标
 
@@ -167,7 +167,7 @@ Non-local模型的训练数据采用由DeepMind公布的Kinetics-400动作识别
 
 - 如果video\_path为'', 则忽略掉此参数。如果video\_path != ''，则程序会对video\_path指定的视频文件进行预测，而忽略掉filelist的值，预测结果为此视频的分类概率。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/nonlocal_kinetics.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/NONLOCAL_final.pdparams)进行推断
 
 - 模型推断结果以log的形式直接打印输出，可以看到测试样本的分类预测概率。
 

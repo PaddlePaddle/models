@@ -95,14 +95,6 @@ class MetricsCalculator():
         if self.filename_gt is not None:
             evaluate_results(self.results, self.filename_gt, self.dataset_size, \
                              self.num_classes, self.num_test_clips)
-        # save temporary file
-        if not os.path.isdir(self.checkpoint_dir):
-            os.makedirs(self.checkpoint_dir)
-        pkl_path = os.path.join(self.checkpoint_dir, "results_probs.pkl")
-
-        with open(pkl_path, 'wb') as f:
-            pickle.dump(self.results, f, protocol=0)
-        logger.info('Temporary file saved to: {}'.format(pkl_path))
 
     def finalize_infer_metrics(self):
         evaluate_infer_results(self.results, self.num_classes,

@@ -149,8 +149,8 @@ class TSN(ModelBase):
 
     def weights_info(self):
         return (
-            'tsn_kinetics',
-            'https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz'
+            'TSN_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams'
         )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):

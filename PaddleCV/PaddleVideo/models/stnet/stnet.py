@@ -145,8 +145,8 @@ class STNET(ModelBase):
 
     def weights_info(self):
         return (
-            'stnet_kinetics',
-            'https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz'
+            'STNET_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/STNET_final.pdparams'
         )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):

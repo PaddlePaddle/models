@@ -43,7 +43,7 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
     bash run.sh train AttentionCluster ./configs/attention_cluster.yaml
 
-- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)通过`--resume`指定权重存放路径进行finetune等开发，或者在run.sh脚本中修改resume为解压之后的权重文件存放路径。
+- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionCluster_final.pdparams)通过`--resume`指定权重存放路径进行finetune等开发，或者在run.sh脚本中修改resume为解压之后的权重文件存放路径。
 
 **数据读取器说明：** 模型读取Youtube-8M数据集中已抽取好的`rgb`和`audio`数据，对于每个视频的数据，均匀采样100帧，该值由配置文件中的`seg_num`参数指定。
 
@@ -69,7 +69,7 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionCluster_final.pdparams)进行评估
 
 - 评估结果以log的形式直接打印输出GAP、Hit@1等精度指标
 
@@ -82,7 +82,7 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 | cluster\_nums | 32 |
 | seg\_num | 100 |
 | batch\_size | 2048 |
-| nums\_gpu | 7 |
+| num\_gpus | 8 |
 
 在2nd-YouTube-8M数据集下评估精度如下:
 
@@ -110,11 +110,11 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
 - 使用`run.sh`进行评估时，请修改脚本中的`weights`参数指定需要用到的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionCluster_final.pdparams)进行推断
 
 - 模型推断结果以log的形式直接打印输出，可以看到每个测试样本的分类预测概率。
 
-- 使用CPU进行评估时，请将`use_gpu`设置为False
+- 使用CPU进行预测时，请将`use_gpu`设置为False
 
 ## 参考论文
 

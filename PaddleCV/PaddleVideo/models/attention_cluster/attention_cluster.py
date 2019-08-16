@@ -137,6 +137,6 @@ class AttentionCluster(ModelBase):
 
     def weights_info(self):
         return (
-            "attention_cluster_youtube8m",
-            "https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz"
+            "AttentionCluster_final.pdparams",
+            "https://paddlemodels.bj.bcebos.com/video_classification/AttentionCluster_final.pdparams"
         )

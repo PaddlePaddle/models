@@ -154,9 +154,10 @@ def infer(args):
     logger.info('[INFER] infer finished. average time: {}'.format(
         np.mean(periods)))
 
-    output_dir = args.save_dir
+    if not os.path.isdir(args.save_dir):
+        os.makedirs(args.save_dir)
 
-    infer_metrics.finalize_and_log_out(savedir=output_dir)
+    infer_metrics.finalize_and_log_out(savedir=args.save_dir)
 
 
 if __name__ == "__main__":

@@ -14,13 +14,13 @@ configs=$3
 pretrain="" # set pretrain model path if needed
 resume="" # set pretrain model path if needed
 save_dir="./data/checkpoints"
-save_inference_dir='./data/inference_model'
+save_inference_dir="./data/inference_model"
 use_gpu=True
 fix_random_seed=False
 log_interval=1
 valid_interval=1
 
-weights="data/checkpoints/CTCN_final.pdparams" #set the path of weights to enable eval and predicut, just ignore this when training
+weights="" #set the path of weights to enable eval and predicut, just ignore this when training
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 #export CUDA_VISIBLE_DEVICES=0,1,2,3
@@ -84,7 +84,7 @@ elif [ "$mode"x == "predict"x ]; then
         python predict.py --model_name=$name \
                           --config=$configs \
                           --log_interval=$log_interval \
-                          --use_gpu=$use_gpu
+                          --use_gpu=$use_gpu \
                           --video_path=''
     fi
 elif [ "$mode"x == "inference"x ]; then

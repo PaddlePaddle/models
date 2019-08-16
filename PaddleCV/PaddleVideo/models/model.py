@@ -13,6 +13,7 @@
 #limitations under the License.
 
 import os
+import wget
 import logging
 try:
     from configparser import ConfigParser
@@ -106,7 +107,7 @@ class ModelBase(object):
             return path
 
         logger.info("Download weights of {} from {}".format(self.name, url))
-        download(url, path)
+        wget.download(url, path)
         return path
 
     def pyreader(self):

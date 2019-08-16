@@ -183,8 +183,8 @@ class NEXTVLAD(ModelBase):
 
     def weights_info(self):
         return (
-            'nextvlad_youtube8m',
-            'https://paddlemodels.bj.bcebos.com/video_classification/nextvlad_youtube8m.tar.gz'
+            'NEXTVLAD_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/NEXTVLAD_final.pdparams'
         )
 
 

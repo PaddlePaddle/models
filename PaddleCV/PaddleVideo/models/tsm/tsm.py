@@ -139,8 +139,8 @@ class TSM(ModelBase):
 
     def weights_info(self):
         return (
-            'tsm_kinetics',
-            'https://paddlemodels.bj.bcebos.com/video_classification/tsm_kinetics.tar.gz'
+            'TSM_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/TSM_final.pdparams'
         )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):

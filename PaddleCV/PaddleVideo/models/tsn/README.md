@@ -19,7 +19,7 @@ Temporal Segment Network (TSN) 是视频分类领域经典的基于2D-CNN的解�
 
 ## 数据准备
 
-TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。数据下载及准备请参考[数据说明](../../dataset/README.md)
+TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。数据下载及准备请参考[数据说明](../../data/dataset/README.md)
 
 ## 模型训练
 
@@ -41,9 +41,9 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
     bash run.sh train TSN ./configs/tsn.yaml
 
 - 从头开始训练，需要加载在ImageNet上训练的ResNet50权重作为初始化参数，请下载此[模型参数](https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz)并解压，将上面启动命令行或者run.sh脚本中的`pretrain`参数设置为解压之后的模型参数
-存放路径。如果没有手动下载并设置`pretrain`参数，则程序会自动下载并将参数保存在~/.paddle/weights/Nonlocal\_ResNet50\_pretrained目录下面
+存放路径。如果没有手动下载并设置`pretrain`参数，则程序会自动下载并将参数保存在~/.paddle/weights/ResNet50\_pretrained目录下面
 
-- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz)通过`--resume`指定权重存
+- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams)通过`--resume`指定权重存
 放路径进行finetune等开发
 
 **数据读取器说明：** 模型读取Kinetics-400数据集中的`mp4`数据，每条数据抽取`seg_num`段，每段抽取1帧图像，对每帧图像做随机增强后，缩放至`target_size`。
@@ -68,7 +68,7 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams)进行评估
 
 - 评估结果以log的形式直接打印输出TOP1\_ACC、TOP5\_ACC等精度指标
 
@@ -100,7 +100,7 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
 - 如果video\_path为'', 则忽略掉此参数。如果video\_path != ''，则程序会对video\_path指定的视频文件进行预测，而忽略掉filelist的值，预测结果为此视频的分类概率。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/tsn_kinetics.tar.gz)进行推断
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams)进行推断
 
 - 模型推断结果以log的形式直接打印输出，可以看到测试样本的分类预测概率。
 

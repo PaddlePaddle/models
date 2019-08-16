@@ -145,7 +145,8 @@ def save_model(exe,
     save_type: '.pdckpt' or '.pdparams', '.pdckpt' for all persistable variables, 
                '.pdparams' for parameters only
     """
-    #model_path = os.path.join(save_dir, model_name + postfix + save_type)
+    if not os.path.isdir(save_dir):
+        os.makedirs(save_dir)
     saved_model_name = model_name + postfix + save_type
 
     if save_type == '.pdckpt':

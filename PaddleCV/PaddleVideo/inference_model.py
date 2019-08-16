@@ -97,6 +97,9 @@ def save_inference_model(args):
     infer_model.load_test_weights(exe, weights,
                                   fluid.default_main_program(), place)
 
+    if not os.path.isdir(args.save_dir):
+        os.makedirs(args.save_dir)
+
     # saving inference model
     fluid.io.save_inference_model(
         args.save_dir,
