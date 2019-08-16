@@ -121,10 +121,10 @@ python train.py \
 * **label_smoothing_epsilon**: label_smoothing的epsilon, 默认值:0.2
 * **random_seed**: 随机数种子, 默认值: 1000
 
-**数据读取器说明：** 数据读取器定义在PIL：```reader.py```和CV2:```reader_cv2.py```文件中，现在默认基于cv2的数据读取器, 在[训练阶段](#模型训练), 默认采用的增广方式是随机裁剪与水平翻转, 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
+**数据读取器说明：** 数据读取器定义在```reader.py```文件中，现在默认基于cv2的数据读取器, 在[训练阶段](#模型训练), 默认采用的增广方式是随机裁剪与水平翻转, 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 
 * 旋转
-* 颜色抖动（cv2暂未实现）
+* 颜色抖动（暂未实现）
 * 随机裁剪
 * 中心裁剪
 * 长宽调整
@@ -176,10 +176,11 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 
 - 注意
    - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
-   - 2：InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同,InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
+   - 2：InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同，InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
    - 3：调用动态链接库预测时需要将训练模型转换为二进制模型
 
-    ```python infer.py --save_inference=True```
+       ```python infer.py --save_inference=True```
+
    - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 
 
@@ -298,6 +299,14 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 **Q:** reader中报错AttributeError: 'NoneType' object has no attribute 'shape'
 
 **A:** 文件路径load错误
+
+**Q:** 出现cudaStreamSynchronize an illegal memory access was encountered errno:77 错误
+
+**A:** 可能是因为显存问题导致，添加一下环境变量：
+
+    export FLAGS_fast_eager_deletion_mode=1
+    export FLAGS_eager_delete_tensor_gb=0.0
+    export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 ## 参考文献
 - AlexNet: [imagenet-classification-with-deep-convolutional-neural-networks](https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf), Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton

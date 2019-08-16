@@ -41,8 +41,8 @@ add_arg('pretrained_model', str,  None,                 "Whether to use pretrain
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('save_inference',   bool, False,                 "Whether to save inference model or not")
 add_arg('resize_short_size', int, 256,                  "Set resize short size")
-add_arg('reader_thread',            int,    1,                      "The number of multi thread reader")
-add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
+add_arg('reader_thread',    int,    1,          "The number of multi thread reader")
+add_arg('reader_buf_size',  int,    2048,       "The buf size of multi thread reader")
 
 # yapf: enable
 
@@ -109,7 +109,6 @@ def infer(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
-    #check_gpu(args.use_gpu)
     infer(args)
 
 
