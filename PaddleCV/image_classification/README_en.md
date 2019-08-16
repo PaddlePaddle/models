@@ -99,6 +99,7 @@ Solver and hyperparameters:
 * **lr**: initialized learning rate. Default: 0.1.
 * **l2_decay**: L2_decay parameter. Default: 1e-4.
 * **momentum_rate**: momentum_rate. Default: 0.9.
+* **step_epochs**: piecewise dacay的decay step, Default: [30,60,90]
 
 Reader and preprocess:
 
@@ -106,11 +107,14 @@ Reader and preprocess:
 * **lower_ratio**: the lower ratio in ramdom crop. Default:3./4. .
 * **upper_ration**: the upper ratio in ramdom crop. Default:4./3. .
 * **resize_short_size**: the resize_short_size. Default: 256.
+* **crop_size**: the crop size, Default: 224.
 * **use_mixup**: whether to use mixup data processing or not. Default:False.
 * **mixup_alpha**: the mixup_alpha parameter. Default: 0.2.
 * **reader_thread**: the number of threads in multi thread reader, Default: 8
 * **reader_buf_size**: the buff size of multi thread reader, Default: 2048
 * **interpolation**: interpolation method, Default: None
+* **image_mean**: image mean, Default: [0.485, 0.456, 0.406]
+* **image_std**: image std, Default: [0.229, 0.224, 0.225]
 
 
 Switch:

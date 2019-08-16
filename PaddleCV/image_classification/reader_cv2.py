@@ -26,9 +26,6 @@ import paddle.fluid as fluid
 random.seed(0)
 np.random.seed(0)
 
-img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
-img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
-
 
 def rotate_image(img):
     """rotate image
@@ -87,11 +84,10 @@ def random_crop(img, size, settings, scale=None, ratio=None,
 
     img = img[i:i + h, j:j + w, :]
 
-    resized = cv2.resize(
-        img,
-        (size, size)
-        #, interpolation=cv2.INTER_LANCZOS4
-    )
+    if interpolation:
+        resized = cv2.resize(img, (size, size), interpolation=interpolation)
+    else:
+        resized = cv2.resize(img, (size, size))
     return resized
 
 
@@ -122,11 +118,11 @@ def resize_short(img, target_size, interpolation=None):
     percent = float(target_size) / min(img.shape[0], img.shape[1])
     resized_width = int(round(img.shape[1] * percent))
     resized_height = int(round(img.shape[0] * percent))
-    resized = cv2.resize(
-        img,
-        (resized_width, resized_height)
-        #interpolation=cv2.INTER_LANCZOS4
-    )
+    if interpolation:
+        resized = cv2.resize(
+            img, (resized_width, resized_height), interpolation=interpolation)
+    else:
+        resized = cv2.resize(img, (resized_width, resized_height))
     return resized
 
 
@@ -200,18 +196,12 @@ def create_mixup_reader(settings, rd):
     return mixup_reader
 
 
-def process_image(sample,
-                  settings,
-                  mode,
-                  color_jitter,
-                  rotate,
-                  crop_size=224,
-                  mean=None,
-                  std=None):
+def process_image(sample, settings, mode, color_jitter, rotate):
     """ process_image """
 
-    mean = [0.485, 0.456, 0.406] if mean is None else mean
-    std = [0.229, 0.224, 0.225] if std is None else std
+    mean = settings.image_mean
+    std = settings.image_std
+    crop_size = settings.crop_size
 
     img_path = sample[0]
     img = cv2.imread(img_path)
@@ -251,7 +241,6 @@ def _reader_creator(settings,
                     rotate=False,
                     data_dir=None):
     def reader():
-        #def read_file_list():
         with open(file_list) as flist:
             full_lines = [line.strip() for line in flist]
             if shuffle:

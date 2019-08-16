@@ -52,7 +52,7 @@ def print_arguments(args):
 
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
-    """Add argparse's argument.
+    """Add argparse's argument. 
 
     Usage:
 
@@ -98,25 +98,27 @@ def parse_args():
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
     add_arg('image_shape',              str,    "3,224,224",            "The size of Input image, order: [channels, height, weidth] ")
+    #parser.add_argument('--image_shape', nargs='+', type=int, default=[3,224,224], help='The size of Input image, order: [channels, height, weidth]')
     add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
     add_arg('test_batch_size',          int,    16,                     "Test batch size on a deveice.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
     add_arg('momentum_rate',            float,  0.9,                    "The value of momentum_rate.")
-    #add_arg('step_epochs',              nargs-int-type,     [30, 60, 90]  "piecewise decay step")
+    parser.add_argument('--step_epochs', nargs='+', type= int, default=[30, 60, 90], help="piecewise decay step")
     # READER AND PREPROCESS
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
     add_arg('upper_ratio',              float,  4./3.,                  "The value of upper_ratio in ramdom_crop")
     add_arg('resize_short_size',        int,    256,                    "The value of resize_short_size")
+    add_arg('crop_size',                int,    224,                    "The value of crop size")
     add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
     add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
-    add_arg('interpolation',            str,    None,                   "The interpolation mode")
-    #    add_arg('image_mean',               array,  [0.485, 0.456, 0.406],  "The mean of input image data")
-    #    add_arg('image_std',                array,  [0.229, 0.224, 0.225],  "The std of input image data")
+    add_arg('interpolation',            int,    None,                   "The interpolation mode")
+    parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
+    parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
     # SWITCH
     #NOTE: (2019/08/08) permenant disable use_mem_opt now
@@ -132,7 +134,9 @@ def parse_args():
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
     add_arg('random_seed',              int,    1000,                   "random seed")
     # yapf: enable
+
     args = parser.parse_args()
+
     return args
 
 
@@ -156,12 +160,17 @@ def check_args(args):
     ]
     if args.lr_strategy not in lr_strategy_list:
         warnings.warn(
-            "{} is not in lists: {}, Use default learning strategy now.".format(
-                args.lr_strategy, lr_strategy_list))
+            "\n{} is not in lists: {}, \nUse default learning strategy now.".
+            format(args.lr_strategy, lr_strategy_list))
         args.lr_strategy = "default_decay"
     # check confict of GoogLeNet and mixup
     if args.model == "GoogLeNet":
         assert args.use_mixup == False, "Cannot use mixup processing in GoogLeNet, please set use_mixup = False."
+
+    if args.interpolation:
+        assert args.interpolation in [
+            0, 1, 2, 3, 4
+        ], "Wrong interpolation, please set:\n0: cv2.INTER_NEAREST\n1: cv2.INTER_LINEAR\n2: cv2.INTER_CUBIC\n3: cv2.INTER_AREA\n4: cv2.INTER_LANCZOS4"
 
     # check pretrained_model path for loading
     if args.pretrained_model is not None:
@@ -196,7 +205,7 @@ def check_args(args):
     def check_gpu():
         """   
         Log error and exit when set use_gpu=true in paddlepaddle
-        cpu version.
+        cpu ver sion.
         """
         logger = logging.getLogger(__name__)
         err = "Config use_gpu cannot be set as true while you are " \

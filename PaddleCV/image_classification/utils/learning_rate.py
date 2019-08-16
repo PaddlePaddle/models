@@ -122,8 +122,8 @@ class Decay(object):
         self.l2_decay = args.l2_decay
         self.momentum_rate = args.momentum_rate
         #TODO add step_epochs args
-        #self.step_epochs = args.step_epochs
-        self.step_epochs = [30, 60, 90]
+        self.step_epochs = args.step_epochs
+        #self.step_epochs = [30, 60, 90]
         self.num_epochs = args.num_epochs
 
         self.total_images = args.total_images

@@ -94,6 +94,7 @@ python train.py \
 * **lr**: 初始学习率，默认值: 0.1
 * **l2_decay**: l2_decay值，默认值: 1e-4
 * **momentum_rate**: momentum_rate值，默认值: 0.9
+* **step_epochs**: piecewise dacay的decay step，默认值：[30,60,90]
 
 数据读取器和预处理配置：
 
@@ -101,11 +102,15 @@ python train.py \
 * **lower_ratio**: 数据随机裁剪处理时的lower ratio值，默认值:3./4.
 * **upper_ratio**: 数据随机裁剪处理时的upper ratio值，默认值:4./3.
 * **resize_short_size**: 指定数据处理时改变图像大小的短边值，默认值: 256
+* **crop_size**: 指定裁剪的大小，默认值:224
 * **use_mixup**: 是否对数据进行mixup处理，默认值:False
 * **mixup_alpha**: 指定mixup处理时的alpha值，默认值: 0.2
 * **reader_thread**: 多线程reader的线程数量，默认值: 8
 * **reader_buf_size**: 多线程reader的buf_size， 默认值:2048
-* **interpolation**: 插值方法: 默认值：None
+* **interpolation**: 插值方法， 默认值：None
+* **image_mean**: 图片均值，默认值：[0.485, 0.456, 0.406]
+* **image_std**: 图片std，默认值：[0.229, 0.224, 0.225]
+
 
 一些开关：
 
