@@ -1,4 +1,4 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -99,13 +99,13 @@ def parse_args():
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
     add_arg('image_shape',              str,    "3,224,224",            "The size of Input image, order: [channels, height, weidth] ")
     #parser.add_argument('--image_shape', nargs='+', type=int, default=[3,224,224], help='The size of Input image, order: [channels, height, weidth]')
-    add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
+    add_arg('batch_size',               int,    4,                      "Minibatch size on a device.")
     add_arg('test_batch_size',          int,    16,                     "Test batch size on a deveice.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
     add_arg('momentum_rate',            float,  0.9,                    "The value of momentum_rate.")
-    parser.add_argument('--step_epochs', nargs='+', type= int, default=[30, 60, 90], help="piecewise decay step")
+    parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
     # READER AND PREPROCESS
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
@@ -117,8 +117,8 @@ def parse_args():
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
     add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
     add_arg('interpolation',            int,    None,                   "The interpolation mode")
-    parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
-    parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
+    parser.add_argument('--image_mean', nargs='+', default=[0.485, 0.456, 0.406], help="The mean of input image data")
+    parser.add_argument('--image_std', nargs='+', default=[0.229, 0.224, 0.225], help="The std of input image data")
 
     # SWITCH
     #NOTE: (2019/08/08) permenant disable use_mem_opt now

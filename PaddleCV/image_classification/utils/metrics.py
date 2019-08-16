@@ -156,7 +156,6 @@ class Mixup_Metrics(Metrics):
 
         net_out = self.model.net(input=self.image, class_dim=self.class_dim)
         softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
-
         if not self.use_label_smoothing:
             loss_a = fluid.layers.cross_entropy(
                 input=softmax_out, label=self.y_a)

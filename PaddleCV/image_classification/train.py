@@ -29,28 +29,23 @@ import subprocess
 
 import paddle
 import paddle.fluid as fluid
-import paddle.dataset.flowers as flowers
-import reader_cv2 as reader
+import reader
 from utils import *
 import models
 
 
-#TODO: add preprocess on gpu
-#TODO: add visreader
-#TODO: multiprocess
-#TODO: multi card test prog
 def build_program(is_train, main_prog, startup_prog, args):
-    """build program accroding train or test
+    """build program, and add grad op in program accroding to different mode
 
     Args:
-        is_train: mode
+        is_train: mode: train or test
         main_prog: main program
         startup_prog: strartup program
         args: arguments
 
     Returns : 
-        train: [Measurement, global_lr, py_reader]
-        test: [Measurement, py_reader]
+        train mode: [Measurement, global_lr, py_reader]
+        test mode: [Measurement, py_reader]
     """
     model_name = args.model
     model = models.__dict__[model_name]()
@@ -69,6 +64,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 optimizer = getattr(decay, args.lr_strategy)()
                 avg_cost = out[0]
                 optimizer.minimize(avg_cost)
+                #XXX: fetch learning rate now. 
                 global_lr = optimizer._global_learning_rate()
                 global_lr.persistable = True
                 out.append(global_lr)
@@ -77,7 +73,10 @@ def build_program(is_train, main_prog, startup_prog, args):
 
 
 def train(args):
-    """Train a model 
+    """Train model
+    
+    Args:
+        args: all arguments.    
     """
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
@@ -117,6 +116,7 @@ def train(args):
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
+    #init model by checkpoint or pretrianed model.
     init_model(exe, args, train_prog)
 
     train_reader = reader.train(settings=args)
@@ -191,12 +191,11 @@ def train(args):
         test_epoch_time_avg = np.mean(np.array(test_batch_time_record))
         test_epoch_metrics_avg = np.mean(
             np.array(test_batch_metrics_record), axis=0)
-
         print_info(pass_id, 0, 0,
                    list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
                    0, "epoch")
         # for now, save model per epoch. 
-        save_model(args, exe, train_prog, pass_id)
+        #save_model(args, exe, train_prog, pass_id)
 
 
 def main():
