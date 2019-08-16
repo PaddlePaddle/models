@@ -69,15 +69,23 @@ class PointNet2MSGCls(object):
         out = fc_bn(out,out_channels=256,bn=True,name="fc_2")
         #out = fluid.layers.dropout(out, 0.5)
         out = fc_bn(out,out_channels=self.num_classes,act=None,name="fc_3")
-	self.tmp = out
-        self.pred_ = fluid.layers.softmax(out)
+
+	#softmax
+        #self.pred_ = fluid.layers.softmax(out)
 
         # calc loss
-        self.loss = fluid.layers.cross_entropy(self.pred_, self.label)
-        self.loss = fluid.layers.reduce_mean(self.loss)
+        #self.loss = fluid.layers.cross_entropy(self.pred_, self.label)
+        #self.loss = fluid.layers.reduce_mean(self.loss)
+
+	#sigmoid
+
+	label_onehot = fluid.layers.one_hot(self.label, depth=self.num_classes)
+	label_float = fluid.layers.cast(label_onehot, dtype='float32')
+	self.loss = fluid.layers.sigmoid_cross_entropy_with_logits(out,label_float)
+	self.loss = fluid.layers.reduce_mean(self.loss)
 
         # calc acc
-        pred = fluid.layers.reshape(self.pred_, shape=[-1, self.num_classes])
+        pred = fluid.layers.reshape(out, shape=[-1, self.num_classes])
         label = fluid.layers.reshape(self.label, shape=[-1, 1])
         self.acc1 = fluid.layers.accuracy(pred, label, k=1)
         self.acc5 = fluid.layers.accuracy(pred, label, k=5)
@@ -86,7 +94,7 @@ class PointNet2MSGCls(object):
         return self.feed_vars
 
     def get_outputs(self):
-        return (self.tmp, self.loss, self.acc1, self.acc5)
+        return self.loss, self.acc1, self.acc5
 
 
 class PointNet2CLSMSG(PointNet2MSGCls):
@@ -119,9 +127,12 @@ class PointNet2CLSMSG(PointNet2MSGCls):
 
 if __name__ == "__main__":
     num_classes = 13
+    
     model = PointNet2CLSMSG(num_classes)
     model.build_model()
-    outs = model.get_outputs()
+    loss,_,_ = model.get_outputs()
+    opt = fluid.optimizer.AdamOptimizer(learning_rate=3e-2)
+    opt.minimize(loss)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -134,8 +145,10 @@ if __name__ == "__main__":
     #print("xyz", xyz_np)
     #print("feaure", feature_np)
     print("label", label_np)
-    ret = exe.run(fetch_list=[out.name+"@GRAD" for out in outs], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+    for i in range(5):
+        ret = exe.run(fetch_list=[loss.name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+	print(ret)
     #ret = exe.run(fetch_list=["relu_0.tmp_0","relu_1.tmp_0","relu_2.tmp_0", outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    print(ret)
+    #print(ret)
     # print("ret0", ret[0].shape, ret[0])
     # ret[0].tofile("out.data")
