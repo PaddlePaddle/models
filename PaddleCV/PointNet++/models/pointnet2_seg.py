@@ -24,8 +24,8 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
-# from .pointnet2_modules import *
-from pointnet2_modules import *
+from .pointnet2_modules import *
+# from pointnet2_modules import *
 
 __all__ = ["PointNet2SemSegSSG", "PointNet2SemSegMSG"]
 
