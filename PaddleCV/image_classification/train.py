@@ -117,7 +117,7 @@ def train(args):
     exe.run(startup_prog)
 
     #init model by checkpoint or pretrianed model.
-    init_model(exe, args, train_prog)
+    init_model_old(exe, args, train_prog)
 
     train_reader = reader.train(settings=args)
     train_reader = paddle.batch(
@@ -132,7 +132,8 @@ def train(args):
     train_py_reader.decorate_sample_list_generator(train_reader, place)
     test_py_reader.decorate_sample_list_generator(test_reader, place)
 
-    train_prog = best_strategy_compiled(args, train_prog, train_fetch_vars[0])
+    compiled_train_prog = best_strategy_compiled(args, train_prog,
+                                                 train_fetch_vars[0])
 
     for pass_id in range(args.num_epochs):
         train_batch_id = 0
@@ -146,7 +147,7 @@ def train(args):
         try:
             while True:
                 t1 = time.time()
-                train_batch_metrics = exe.run(train_prog,
+                train_batch_metrics = exe.run(compiled_train_prog,
                                               fetch_list=train_fetch_list)
                 t2 = time.time()
                 train_batch_elapse = t2 - t1
@@ -195,7 +196,7 @@ def train(args):
                    list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
                    0, "epoch")
         # for now, save model per epoch. 
-        #save_model(args, exe, train_prog, pass_id)
+        save_model_old(args, exe, train_prog, pass_id)
 
 
 def main():

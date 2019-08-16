@@ -4,7 +4,7 @@ if [ "$mode"x == "train"x ]; then
 	echo $mode $model
 	sh ./configs/train/$model.sh
 elif [ "$mode"x == "eval"x ]; then
-	echo $mode $model
+	echo "eval is not implenmented now, refer to README.md"
 else
 	echo "Not implemented mode" $mode
 fi

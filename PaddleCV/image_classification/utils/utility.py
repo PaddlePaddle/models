@@ -83,11 +83,11 @@ def parse_args():
 
     # ENV
     add_arg('use_gpu',                  bool,   True,                   "Whether to use GPU.")
-    add_arg('model_save_dir',           str,    "./data/output",        "The directory path to save model.")
+    add_arg('model_save_dir',           str,    "./output",        "The directory path to save model.")
     add_arg('data_dir',                 str,    "./data/ILSVRC2012/",   "The ImageNet dataset root directory.")
     add_arg('pretrained_model',         str,    None,                   "Whether to load pretrained model.")
     add_arg('checkpoint',               str,    None,                   "Whether to resume checkpoint.")
-    add_arg('save_params',              str,    None,                   "Whether to save params.")
+    add_arg('save_params',              str,    "./output",                   "Whether to save params.")
 
     add_arg('print_step',               int,    10,                     "The steps interval to print logs")
     add_arg('save_step',                int,    100,                    "The steps interval to save checkpoints")
@@ -117,8 +117,8 @@ def parse_args():
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
     add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
     add_arg('interpolation',            int,    None,                   "The interpolation mode")
-    parser.add_argument('--image_mean', nargs='+', default=[0.485, 0.456, 0.406], help="The mean of input image data")
-    parser.add_argument('--image_std', nargs='+', default=[0.229, 0.224, 0.225], help="The std of input image data")
+    parser.add_argument('--image_mean', nargs='+', type=int, default=[0.485, 0.456, 0.406], help="The mean of input image data")
+    parser.add_argument('--image_std', nargs='+', type=int, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
     # SWITCH
     #NOTE: (2019/08/08) permenant disable use_mem_opt now
@@ -172,6 +172,8 @@ def check_args(args):
             0, 1, 2, 3, 4
         ], "Wrong interpolation, please set:\n0: cv2.INTER_NEAREST\n1: cv2.INTER_LINEAR\n2: cv2.INTER_CUBIC\n3: cv2.INTER_AREA\n4: cv2.INTER_LANCZOS4"
 
+    assert args.checkpoint is None or args.pretrained_model is None, "Do not init model by checkpoint and pretrained_model both."
+
     # check pretrained_model path for loading
     if args.pretrained_model is not None:
         assert isinstance(args.pretrained_model, str)
@@ -183,7 +185,8 @@ def check_args(args):
     if args.checkpoint is not None:
         assert isinstance(args.checkpoint, str)
         assert os.path.isdir(
-            args.checkpoint), "please support available checkpoint path."
+            args.checkpoint
+        ), "please support available checkpoint path for initing model."
 
     # check params for loading
     if args.save_params:
@@ -228,6 +231,25 @@ def check_args(args):
         raise Exception("Temporary disable ce")
 
 
+def init_model_old(exe, args, program):
+    if args.checkpoint:
+        fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
+        print(
+            "Finish initing model (interface: load_persistable with multifiles) from checkpoint from %s"
+            % (args.checkpoint))
+
+    if args.pretrained_model:
+
+        def if_exist(var):
+            return os.path.exists(os.path.join(args.pretrained_model, var.name))
+
+        fluid.io.load_vars(
+            exe,
+            args.pretrained_model,
+            main_program=program,
+            predicate=if_exist)
+
+
 def init_model(exe, args, program):
 
     if args.checkpoint:
@@ -236,8 +258,9 @@ def init_model(exe, args, program):
             args.checkpoint,
             main_program=program,
             filename="checkpoint.pdckpt")
-        print("finish initing model from checkpoint from %s" %
-              (args.checkpoint))
+        print(
+            "Finish initing model (interface: load_persistable with single file) from checkpoint from %s"
+            % (args.checkpoint))
     if args.pretrained_model:
 
         def if_exist(var):
@@ -250,8 +273,18 @@ def init_model(exe, args, program):
             args.pretrained_model,
             main_program=program,
             predicate=if_exist)
-        print("finish initing model from pretrained params from %s" %
-              (args.pretrained_model))
+        print(
+            "Finish initing model (interface: load_vars) from pretrained params from %s"
+            % (args.pretrained_model))
+
+
+def save_model_old(args, exe, train_prog, info):
+    model_path = os.path.join(args.model_save_dir, args.model, str(info))
+    if not os.path.isdir(model_path):
+        os.makedirs(model_path)
+    fluid.io.save_persistables(exe, model_path, main_program=train_prog)
+    print("Already save model (interface: save_persistable, multifiles) in %s" %
+          (model_path))
 
 
 def save_model(args, exe, train_prog, info):
@@ -271,18 +304,20 @@ def save_checkpoint(args, exe, program, info):
         checkpoint_path,
         main_program=program,
         filename="checkpoint.pdckpt")
-    print("Already save checkpoint in %s" % (checkpoint_path))
+    print(
+        "Already save (interface: save_persistable, single file )checkpoint in %s"
+        % (checkpoint_path))
 
 
-def save_param(args, exe, program, dirname):
+def save_param(args, exe, program, info):
 
-    param_path = os.path.join(args.model_save_path, args.model, args.save_param,
-                              str(info))
+    param_path = os.path.join(args.save_params, args.model, str(info))
     if not os.path.isdir(param_path):
         os.makedirs(param_path)
     fluid.io.save_params(
         exe, param_path, main_program=program, filename="params.pdparams")
-    print("Already save parameters in %s" % (os.path.join(param_dir, dirname)))
+    print("Already save (interface: save_params, multifiles ) parameters in %s"
+          % (param_path))
 
 
 def create_pyreader(is_train, args):

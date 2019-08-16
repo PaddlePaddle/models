@@ -68,7 +68,10 @@ python train.py \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
+
+Note: 当添加如step_epochs这种list的参数，需要去掉"="，如：--step_epochs 10 20 30
 或通过run.sh 启动训练
+
 ```bash run.sh train 模型名```
 
 **参数说明：**

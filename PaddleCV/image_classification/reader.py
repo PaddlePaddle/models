@@ -249,7 +249,6 @@ def _reader_creator(settings,
             full_lines = [line.strip() for line in flist]
             if shuffle:
                 np.random.shuffle(full_lines)
-        full_lines = full_lines[0:64]
         for line in full_lines:
             img_path, label = line.split()
             img_path = os.path.join(data_dir, img_path)
@@ -293,7 +292,7 @@ def train(settings, shuffle_seed=0):
         shuffle=True,
         color_jitter=False,
         rotate=False,
-        data_dir=os.path.join(settings.data_dir, "train"))
+        data_dir=settings.data_dir)
 
     if settings.use_mixup == True:
         reader = create_mixup_reader(settings, reader)
@@ -311,15 +310,11 @@ def val(settings):
     """
     file_list = os.path.join(settings.data_dir, 'val_list.txt')
     return _reader_creator(
-        settings,
-        file_list,
-        'val',
-        shuffle=False,
-        data_dir=os.path.join(settings.data_dir, 'val'))
+        settings, file_list, 'val', shuffle=False, data_dir=settings.data_dir)
 
 
 def test(settings):
-    """Create a reader for testing
+    """Create a reader for testing 
 
     Args:
         settings: arguments
@@ -329,8 +324,4 @@ def test(settings):
     """
     file_list = os.path.join(settings.data_dir, 'val_list.txt')
     return _reader_creator(
-        settings,
-        file_list,
-        'test',
-        shuffle=False,
-        data_dir=os.path.join(settings.data_dir, 'val'))
+        settings, file_list, 'test', shuffle=False, data_dir=settings.data_dir)
