@@ -64,7 +64,7 @@ class FasterRCNN(object):
 
     def build(self, feed_vars, mode='train'):
         assert self.metric in ['COCO', 'VOC'], \
-                "Training mask-rcnn must on COCO or VOC dataset"
+                "Training faster-rcnn must on COCO or VOC dataset"
         im = feed_vars['image']
         im_info = feed_vars['im_info']
 

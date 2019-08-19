@@ -103,8 +103,10 @@ class ArrangeTestRCNN(BaseOperator):
         super(ArrangeTestRCNN, self).__init__()
         self.is_mask = is_mask
         self.is_eval = is_eval
-        assert isinstance(self.is_mask, bool), "wrong type for is_mask"
-        assert isinstance(self.is_eval, bool), "wrong type for is_eval"
+        assert isinstance(self.is_mask, bool), \
+                "wrong type for is_mask is {}, should be bool".format(type(self.is_mask))
+        assert isinstance(self.is_eval, bool), \
+                "wrong type for is_eval{}, should be bool".format(type(self.is_eval))
 
     def __call__(self, sample, context=None):
         """
