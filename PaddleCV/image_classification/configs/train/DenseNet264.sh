@@ -1,4 +1,5 @@
-# DenseNet264
+#DenseNet264
+#Training details
 python train.py \
        --model=DenseNet264 \
        --batch_size=256 \

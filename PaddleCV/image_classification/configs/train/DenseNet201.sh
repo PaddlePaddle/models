@@ -1,4 +1,5 @@
-# DenseNet201
+#DenseNet201
+#Training details
 python train.py \
        --model=DenseNet201 \
        --batch_size=256 \

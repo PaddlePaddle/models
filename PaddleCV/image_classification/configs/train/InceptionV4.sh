@@ -5,7 +5,6 @@ export FLAGS_fast_eager_deletion_mode=1
 export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
-
 #InceptionV4
 python train.py
 	    --model=InceptionV4 \

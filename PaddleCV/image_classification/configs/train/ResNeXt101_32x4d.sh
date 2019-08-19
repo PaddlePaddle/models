@@ -1,4 +1,6 @@
 #ResNeXt101_32x4d
+#Training details
+
 python train.py \
        --model=ResNeXt101_32x4d \
        --batch_size=256 \

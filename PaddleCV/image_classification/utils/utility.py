@@ -192,12 +192,13 @@ def check_args(args):
     if args.save_params:
         assert isinstance(args.save_params, str)
         assert os.path.isdir(
-            args.save_params), "please support availablr save_params path."
+            args.save_params), "please support available save_params path."
 
     # check gpu: when using gpu, the number of visible cards should divide batch size
     if args.use_gpu:
         assert args.batch_size % fluid.core.get_cuda_device_count(
-        ) == 0, "please support correct batch_size, which can be divided by available cards, you can change the number of cards by indicating: export CUDA_VISIBLE_DEVICES=0,1,2,3 "
+        ) == 0, "please support correct batch_size({}), which can be divided by available cards({}), you can change the number of cards by indicating: export CUDA_VISIBLE_DEVICES=0,1,2,3 ".format(
+            args.batch_size, fluid.core.get_cuda_device_count())
 
     # check data directory
     assert os.path.isdir(
