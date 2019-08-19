@@ -42,6 +42,7 @@ class MaskRCNN(object):
         'backbone', 'rpn_head', 'bbox_assigner', 'roi_extractor', 'bbox_head',
         'mask_assigner', 'mask_head', 'fpn'
     ]
+    __shared__ = ['metric']
 
     def __init__(self,
                  backbone,
@@ -52,7 +53,8 @@ class MaskRCNN(object):
                  mask_assigner='MaskAssigner',
                  mask_head='MaskHead',
                  rpn_only=False,
-                 fpn=None):
+                 fpn=None,
+                 metric='COCO'):
         super(MaskRCNN, self).__init__()
         self.backbone = backbone
         self.rpn_head = rpn_head
@@ -63,8 +65,11 @@ class MaskRCNN(object):
         self.mask_head = mask_head
         self.rpn_only = rpn_only
         self.fpn = fpn
+        self.metric = metric
 
     def build(self, feed_vars, mode='train'):
+        assert self.metric in ['COCO'], \
+                "Training mask-rcnn must on COCO dataset"
         im = feed_vars['image']
         assert mode in ['train', 'test'], \
             "only 'train' and 'test' mode is supported"

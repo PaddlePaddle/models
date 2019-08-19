@@ -94,47 +94,17 @@ class ArrangeRCNN(BaseOperator):
 
 
 @register_op
-class ArrangeEvalRCNN(BaseOperator):
-    """
-    Transform dict to the tuple format needed for training.
-    """
-
-    def __init__(self):
-        super(ArrangeEvalRCNN, self).__init__()
-
-    def __call__(self, sample, context=None):
-        """
-        Args:
-            sample: a dict which contains image
-                    info and annotation info.
-            context: a dict which contains additional info.
-        Returns:
-            sample: a tuple containing the following items:
-                    (image, im_info, im_id, im_shape, difficult)
-        """
-        im = sample['image']
-        keys = list(sample.keys())
-        if 'im_info' in keys:
-            im_info = sample['im_info']
-        else:
-            raise KeyError("The dataset doesn't have 'im_info' key.")
-        im_id = sample['im_id']
-        h = sample['h']
-        w = sample['w']
-        im_shape = np.array((h, w, 1), dtype=np.float32)
-        difficult = sample['difficult']
-        outs = (im, im_info, im_id, im_shape, difficult)
-        return outs
-
-
-@register_op
 class ArrangeTestRCNN(BaseOperator):
     """
     Transform dict to the tuple format needed for training.
     """
 
-    def __init__(self):
+    def __init__(self, is_mask=False, is_eval=False):
         super(ArrangeTestRCNN, self).__init__()
+        self.is_mask = is_mask
+        self.is_eval = is_eval
+        assert isinstance(self.is_mask, bool), "wrong type for is_mask"
+        assert isinstance(self.is_eval, bool), "wrong type for is_eval"
 
     def __call__(self, sample, context=None):
         """
@@ -161,6 +131,9 @@ class ArrangeTestRCNN(BaseOperator):
         # so im_shape is appended by 1 to match dimension.
         im_shape = np.array((h, w, 1), dtype=np.float32)
         outs = (im, im_info, im_id, im_shape)
+        if not self.is_mask and self.is_eval:
+            difficult = sample['difficult']
+            outs = outs + (difficult, )
         return outs
 
 

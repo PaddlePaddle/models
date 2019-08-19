@@ -30,15 +30,15 @@ from ppdet.data.transform.operators import (
     Permute)
 
 from ppdet.data.transform.arrange_sample import (
-    ArrangeRCNN, ArrangeEvalRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD,
-    ArrangeTestSSD, ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
+    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD,
+    ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
     'DataFeed', 'TrainFeed', 'EvalFeed', 'FasterRCNNTrainFeed',
-    'ArrangeEvalRCNN', 'MaskRCNNTrainFeed', 'FasterRCNNTestFeed',
-    'MaskRCNNTestFeed', 'SSDTrainFeed', 'SSDEvalFeed', 'SSDTestFeed',
-    'YoloTrainFeed', 'YoloEvalFeed', 'YoloTestFeed', 'create_reader'
+    'MaskRCNNTrainFeed', 'FasterRCNNTestFeed', 'MaskRCNNTestFeed',
+    'SSDTrainFeed', 'SSDEvalFeed', 'SSDTestFeed', 'YoloTrainFeed',
+    'YoloEvalFeed', 'YoloTestFeed', 'create_reader'
 ]
 
 
@@ -485,7 +485,7 @@ class FasterRCNNEvalFeed(DataFeed):
                  drop_last=False,
                  num_workers=2,
                  use_padded_im_info=True):
-        sample_transforms.append(ArrangeEvalRCNN())
+        sample_transforms.append(ArrangeTestRCNN(is_eval=True))
         super(FasterRCNNEvalFeed, self).__init__(
             dataset,
             fields,
@@ -623,7 +623,7 @@ class MaskRCNNEvalFeed(DataFeed):
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
-        sample_transforms.append(ArrangeTestRCNN())
+        sample_transforms.append(ArrangeTestRCNN(is_mask=True))
         super(MaskRCNNEvalFeed, self).__init__(
             dataset,
             fields,
@@ -666,7 +666,7 @@ class MaskRCNNTestFeed(DataFeed):
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
-        sample_transforms.append(ArrangeTestRCNN())
+        sample_transforms.append(ArrangeTestRCNN(is_mask=True))
         if isinstance(dataset, dict):
             dataset = SimpleDataSet(**dataset)
         super(MaskRCNNTestFeed, self).__init__(
