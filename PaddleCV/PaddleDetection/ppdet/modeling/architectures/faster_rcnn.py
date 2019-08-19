@@ -41,6 +41,7 @@ class FasterRCNN(object):
         'backbone', 'rpn_head', 'bbox_assigner', 'roi_extractor', 'bbox_head',
         'fpn'
     ]
+    __shared__ = ['metric']
 
     def __init__(self,
                  backbone,
@@ -49,7 +50,8 @@ class FasterRCNN(object):
                  bbox_head='BBoxHead',
                  bbox_assigner='BBoxAssigner',
                  rpn_only=False,
-                 fpn=None):
+                 fpn=None,
+                 metric='COCO'):
         super(FasterRCNN, self).__init__()
         self.backbone = backbone
         self.rpn_head = rpn_head
@@ -58,15 +60,12 @@ class FasterRCNN(object):
         self.bbox_head = bbox_head
         self.fpn = fpn
         self.rpn_only = rpn_only
+        self.metric = metric
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
         im_info = feed_vars['im_info']
-        if mode == 'train':
-            gt_box = feed_vars['gt_box']
-            is_crowd = feed_vars['is_crowd']
-        else:
-            im_shape = feed_vars['im_shape']
+
         body_feats = self.backbone(im)
         body_feat_names = list(body_feats.keys())
 
@@ -76,16 +75,22 @@ class FasterRCNN(object):
         rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
 
         if mode == 'train':
+            for var in ['gt_label', 'is_crowd', 'gt_box', 'is_difficult']:
+                assert var in feed_vars, "{} has no {}".format(feed_vars, var)
+
+            gt_label = feed_vars['gt_label']
+            gt_box = feed_vars['gt_box']
+            is_crowd = feed_vars['is_crowd'] if self.metric == 'COCO' \
+                else feed_vars['is_difficult']
+
             rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
             # sampled rpn proposals
-            for var in ['gt_label', 'is_crowd', 'gt_box', 'im_info']:
-                assert var in feed_vars, "{} has no {}".format(feed_vars, var)
             outs = self.bbox_assigner(
                 rpn_rois=rois,
-                gt_classes=feed_vars['gt_label'],
-                is_crowd=feed_vars['is_crowd'],
-                gt_boxes=feed_vars['gt_box'],
-                im_info=feed_vars['im_info'])
+                gt_classes=gt_label,
+                is_crowd=is_crowd,
+                gt_boxes=gt_box,
+                im_info=im_info)
 
             rois = outs[0]
             labels_int32 = outs[1]
@@ -94,7 +99,8 @@ class FasterRCNN(object):
             bbox_outside_weights = outs[4]
         else:
             if self.rpn_only:
-                im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
+                im_scale = fluid.layers.slice(
+                    im_info, [1], starts=[2], ends=[3])
                 im_scale = fluid.layers.sequence_expand(im_scale, rois)
                 rois = rois / im_scale
                 return {'proposal': rois}
@@ -116,6 +122,7 @@ class FasterRCNN(object):
             loss.update({'loss': total_loss})
             return loss
         else:
+            im_shape = feed_vars['im_shape']
             pred = self.bbox_head.get_prediction(roi_feat, rois, im_info,
                                                  im_shape)
             return pred

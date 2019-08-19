@@ -87,6 +87,43 @@ class ArrangeRCNN(BaseOperator):
                     break
                 gt_masks.append(gt_segm)
             outs = outs + (gt_masks, )
+        else:
+            difficult = sample['difficult']
+            outs = outs + (difficult, )
+        return outs
+
+
+@register_op
+class ArrangeEvalRCNN(BaseOperator):
+    """
+    Transform dict to the tuple format needed for training.
+    """
+
+    def __init__(self):
+        super(ArrangeEvalRCNN, self).__init__()
+
+    def __call__(self, sample, context=None):
+        """
+        Args:
+            sample: a dict which contains image
+                    info and annotation info.
+            context: a dict which contains additional info.
+        Returns:
+            sample: a tuple containing the following items:
+                    (image, im_info, im_id, im_shape, difficult)
+        """
+        im = sample['image']
+        keys = list(sample.keys())
+        if 'im_info' in keys:
+            im_info = sample['im_info']
+        else:
+            raise KeyError("The dataset doesn't have 'im_info' key.")
+        im_id = sample['im_id']
+        h = sample['h']
+        w = sample['w']
+        im_shape = np.array((h, w, 1), dtype=np.float32)
+        difficult = sample['difficult']
+        outs = (im, im_info, im_id, im_shape, difficult)
         return outs
 
 
@@ -107,7 +144,7 @@ class ArrangeTestRCNN(BaseOperator):
             context: a dict which contains additional info.
         Returns:
             sample: a tuple containing the following items:
-                    (image, im_info, im_id)
+                    (image, im_info, im_id, im_shape)
         """
         im = sample['image']
         keys = list(sample.keys())
@@ -152,6 +189,7 @@ class ArrangeSSD(BaseOperator):
         outs = (im, gt_bbox, gt_class)
         return outs
 
+
 @register_op
 class ArrangeEvalSSD(BaseOperator):
     """
@@ -183,6 +221,7 @@ class ArrangeEvalSSD(BaseOperator):
         outs = (im, im_shape, im_id, gt_bbox, gt_class, difficult)
 
         return outs
+
 
 @register_op
 class ArrangeTestSSD(BaseOperator):
