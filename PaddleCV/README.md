@@ -32,7 +32,7 @@ Faster RCNN模型是典型的两阶段目标检测器，相较于传统提取区
 
 Mask RCNN模型是基于Faster RCNN模型的经典实例分割模型，在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
 
--  [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/object_detection/README_cn.md)
+-  [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/ssd/README_cn.md)
 -  [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/face_detection/README_cn.md)
 -  [Faster RCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/rcnn/README_cn.md)
 -  [Mask RCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/rcnn/README_cn.md)
