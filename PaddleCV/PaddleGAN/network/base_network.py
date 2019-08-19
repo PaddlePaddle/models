@@ -272,7 +272,7 @@ def deconv2d(input,
         param_attr=param_attr,
         bias_attr=bias_attr)
 
-    if outpadding != 0 and padding_type == None:
+    if np.mean(outpadding) != 0 and padding_type == None:
         conv = fluid.layers.pad2d(
             conv, paddings=outpadding, mode='constant', pad_value=0.0)
 
