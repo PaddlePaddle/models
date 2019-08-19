@@ -189,15 +189,17 @@ def check_args(args):
         ), "please support available checkpoint path for initing model."
 
     # check params for loading
+    """
     if args.save_params:
         assert isinstance(args.save_params, str)
         assert os.path.isdir(
             args.save_params), "please support available save_params path."
+    """
 
     # check gpu: when using gpu, the number of visible cards should divide batch size
     if args.use_gpu:
         assert args.batch_size % fluid.core.get_cuda_device_count(
-        ) == 0, "please support correct batch_size({}), which can be divided by available cards({}), you can change the number of cards by indicating: export CUDA_VISIBLE_DEVICES=0,1,2,3 ".format(
+        ) == 0, "please support correct batch_size({}), which can be divided by available cards({}), you can change the number of cards by indicating: export CUDA_VISIBLE_DEVICES= ".format(
             args.batch_size, fluid.core.get_cuda_device_count())
 
     # check data directory
@@ -332,7 +334,7 @@ def create_pyreader(is_train, args):
         args: arguments
 
     Returns:
-        py_reader and input data, 
+        py_reader and the input data of net, 
     """
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
