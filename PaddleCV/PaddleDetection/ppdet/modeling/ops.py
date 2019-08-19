@@ -34,9 +34,10 @@ def ConvNorm(input,
              groups=1,
              norm_decay=0.,
              norm_type='affine_channel',
+             norm_groups=32,
              freeze_norm=False,
              act=None,
-             bn_name=None,
+             norm_name=None,
              initializer=None,
              name=None):
     fan = num_filters
@@ -55,11 +56,11 @@ def ConvNorm(input,
 
     norm_lr = 0. if freeze_norm else 1.
     pattr = ParamAttr(
-        name=bn_name + '_scale',
+        name=norm_name + '_scale',
         learning_rate=norm_lr,
         regularizer=L2Decay(norm_decay))
     battr = ParamAttr(
-        name=bn_name + '_offset',
+        name=norm_name + '_offset',
         learning_rate=norm_lr,
         regularizer=L2Decay(norm_decay))
 
@@ -68,12 +69,22 @@ def ConvNorm(input,
         out = fluid.layers.batch_norm(
             input=conv,
             act=act,
-            name=bn_name + '.output.1',
+            name=norm_name + '.output.1',
             param_attr=pattr,
             bias_attr=battr,
-            moving_mean_name=bn_name + '_mean',
-            moving_variance_name=bn_name + '_variance',
+            moving_mean_name=norm_name + '_mean',
+            moving_variance_name=norm_name + '_variance',
             use_global_stats=global_stats)
+        scale = fluid.framework._get_var(pattr.name)
+        bias = fluid.framework._get_var(battr.name)
+    elif norm_type == 'gn':
+        out = fluid.layers.group_norm(
+            input=conv,
+            act=act,
+            name=norm_name + '.output.1',
+            groups=norm_groups,
+            param_attr=pattr,
+            bias_attr=battr)
         scale = fluid.framework._get_var(pattr.name)
         bias = fluid.framework._get_var(battr.name)
     elif norm_type == 'affine_channel':
