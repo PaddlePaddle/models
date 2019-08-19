@@ -188,11 +188,11 @@ def make_one_batch_input(data_batches, index):
         feeding dictionary
     """
 
-    turns = np.array(data_batches["turns"][index])
-    tt_turns_len = np.array(data_batches["tt_turns_len"][index])
-    every_turn_len = np.array(data_batches["every_turn_len"][index])
-    response = np.array(data_batches["response"][index])
-    response_len = np.array(data_batches["response_len"][index])
+    turns = np.array(data_batches["turns"][index]).astype('int64')
+    tt_turns_len = np.array(data_batches["tt_turns_len"][index]).astype('int64')
+    every_turn_len = np.array(data_batches["every_turn_len"][index]).astype('int64')
+    response = np.array(data_batches["response"][index]).astype('int64')
+    response_len = np.array(data_batches["response_len"][index]).astype('int64')
 
     batch_size = turns.shape[0]
     max_turn_num = turns.shape[1]

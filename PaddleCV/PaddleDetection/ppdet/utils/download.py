@@ -67,22 +67,21 @@ def get_weights_path(url):
     return get_path(url, WEIGHTS_HOME)
 
 
-def get_dataset_path(path):
+def get_dataset_path(path, annotation, image_dir):
     """
     If path exists, return path.
     Otherwise, get dataset path from DATASET_HOME, if not exists,
     download it.
     """
-    if _dataset_exists(path):
-        logger.debug("Dataset path: {}".format(osp.realpath(path)))
+    if _dataset_exists(path, annotation, image_dir):
         return path
 
-    logger.info("Dataset {} not exitst, try searching {} or "
+    logger.info("Dataset {} not exists, try searching {} or "
                 "downloading dataset...".format(
                     osp.realpath(path), DATASET_HOME))
 
     for name, dataset in DATASETS.items():
-        if path.lower().find(name) >= 0:
+        if os.path.split(path.strip().lower())[-1] == name:
             logger.info("Parse dataset_dir {} as dataset "
                         "{}".format(path, name))
             data_dir = osp.join(DATASET_HOME, name)
@@ -163,19 +162,26 @@ def get_path(url, root_dir, md5sum=None):
     return fullpath
 
 
-def _dataset_exists(path):
+def _dataset_exists(path, annotation, image_dir):
     """
     Check if user define dataset exists
     """
     if not osp.exists(path):
+        logger.info("Config dataset_dir {} not exits".format(path))
         return False
 
-    for name, dataset in DATASETS.items():
-        if path.lower().find(name) >= 0:
-            for sub_dir in dataset[1]:
-                if not osp.exists(osp.join(path, sub_dir)):
-                    return False
-            return True
+    if annotation:
+        annotation_path = osp.join(path, annotation)
+        if not osp.isfile(annotation_path):
+            logger.info("Config annotation {} is not a "
+                    "file".format(annotation_path))
+            return False
+    if image_dir:
+        image_path = osp.join(path, image_dir)
+        if not osp.isdir(image_path):
+            logger.info("Config image_dir {} is not a "
+                    "directory".format(image_path))
+            return False
     return True
 
 
@@ -207,8 +213,12 @@ def _download(url, path, md5sum=None):
             raise RuntimeError("Downloading from {} failed with code "
                                "{}!".format(url, req.status_code))
 
+        # For protecting download interupted, download to
+        # tmp_fullname firstly, move tmp_fullname to fullname
+        # after download finished
+        tmp_fullname = fullname + "_tmp"
         total_size = req.headers.get('content-length')
-        with open(fullname, 'wb') as f:
+        with open(tmp_fullname, 'wb') as f:
             if total_size:
                 for chunk in tqdm.tqdm(
                         req.iter_content(chunk_size=1024),
@@ -219,6 +229,7 @@ def _download(url, path, md5sum=None):
                 for chunk in req.iter_content(chunk_size=1024):
                     if chunk:
                         f.write(chunk)
+        shutil.move(tmp_fullname, fullname)
 
     return fullname
 

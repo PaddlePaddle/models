@@ -54,8 +54,8 @@ add_arg('image_size',        int,   128,               "image size")
 add_arg('selected_attrs',    str,
     "Bald,Bangs,Black_Hair,Blond_Hair,Brown_Hair,Bushy_Eyebrows,Eyeglasses,Male,Mouth_Slightly_Open,Mustache,No_Beard,Pale_Skin,Young",
 "the attributes we selected to change")
-add_arg('batch_size',        int,   16,                "batch size when test")
-add_arg('test_list',         str,   "./data/celeba/test_list_attr_celeba.txt",                "the test list file")
+add_arg('n_samples',        int,   16,                "batch size when test")
+add_arg('test_list',         str,   "./data/celeba/list_attr_celeba.txt",                "the test list file")
 add_arg('dataset_dir',       str,   "./data/celeba/",                "the dataset directory to be infered")
 add_arg('n_layers',          int,   5,                 "default layers in generotor")
 add_arg('gru_n_layers',      int,   4,                 "default layers of GRU in generotor")
@@ -298,9 +298,9 @@ def infer(args):
     elif args.model_net == 'CGAN':
         noise_data = np.random.uniform(
             low=-1.0, high=1.0,
-            size=[args.batch_size, args.noise_size]).astype('float32')
+            size=[args.n_samples, args.noise_size]).astype('float32')
         label = np.random.randint(
-            0, 9, size=[args.batch_size, 1]).astype('float32')
+            0, 9, size=[args.n_samples, 1]).astype('float32')
         noise_tensor = fluid.LoDTensor()
         conditions_tensor = fluid.LoDTensor()
         noise_tensor.set(noise_data, place)
@@ -309,7 +309,7 @@ def infer(args):
             fetch_list=[fake.name],
             feed={"noise": noise_tensor,
                   "conditions": conditions_tensor})[0]
-        fake_image = np.reshape(fake_temp, (args.batch_size, -1))
+        fake_image = np.reshape(fake_temp, (args.n_samples, -1))
 
         fig = utility.plot(fake_image)
         plt.savefig(
@@ -319,12 +319,12 @@ def infer(args):
     elif args.model_net == 'DCGAN':
         noise_data = np.random.uniform(
             low=-1.0, high=1.0,
-            size=[args.batch_size, args.noise_size]).astype('float32')
+            size=[args.n_samples, args.noise_size]).astype('float32')
         noise_tensor = fluid.LoDTensor()
         noise_tensor.set(noise_data, place)
         fake_temp = exe.run(fetch_list=[fake.name],
                             feed={"noise": noise_tensor})[0]
-        fake_image = np.reshape(fake_temp, (args.batch_size, -1))
+        fake_image = np.reshape(fake_temp, (args.n_samples, -1))
 
         fig = utility.plot(fake_image)
         plt.savefig(

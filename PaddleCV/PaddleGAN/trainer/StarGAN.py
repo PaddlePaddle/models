@@ -166,8 +166,6 @@ class DTrainer():
 class StarGAN(object):
     def add_special_args(self, parser):
         parser.add_argument(
-            '--image_size', type=int, default=256, help="image size")
-        parser.add_argument(
             '--g_lr', type=float, default=0.0001, help="learning rate of g")
         parser.add_argument(
             '--d_lr', type=float, default=0.0001, help="learning rate of d")

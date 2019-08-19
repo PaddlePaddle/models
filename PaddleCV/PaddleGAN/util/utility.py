@@ -190,8 +190,8 @@ def save_test_image(epoch,
                         "label_trg": label_trg
                     },
                     fetch_list=[g_trainer.fake_img, g_trainer.rec_img])
-                fake_temp = save_batch_image(fake_temp[0])
-                rec_temp = save_batch_image(rec_temp[0])
+                fake_temp = save_batch_image(fake_temp)
+                rec_temp = save_batch_image(rec_temp)
                 images.append(fake_temp)
                 images.append(rec_temp)
             images_concat = np.concatenate(images, 1)
