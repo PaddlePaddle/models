@@ -102,11 +102,6 @@ with fluid.program_guard(tp, sp):
     miou, out_wrong, out_correct = mean_iou(pred, label)
 
 tp = tp.clone(True)
-fluid.memory_optimize(
-    tp,
-    print_log=False,
-    skip_opt_set=set([pred.name, miou, out_wrong, out_correct]),
-    level=1)
 
 place = fluid.CPUPlace()
 if args.use_gpu:

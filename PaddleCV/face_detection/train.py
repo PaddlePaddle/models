@@ -56,7 +56,6 @@ add_arg('model_save_dir',   str,   'output',        "The path to save model.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image width.")
 add_arg('mean_BGR',         str,   '104., 117., 123.', "Mean value for B,G,R channel which will be subtracted.")
-add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 add_arg('data_dir',         str,   'data',          "The base dir of dataset")
 add_arg('use_multiprocess', bool,  True,            "Whether use multi-process for data preprocessing.")
@@ -138,7 +137,6 @@ def train(args, config, train_params, train_file_list):
     use_gpu = args.use_gpu
     model_save_dir = args.model_save_dir
     pretrained_model = args.pretrained_model
-    with_memory_optimization = args.with_mem_opt
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
@@ -165,9 +163,6 @@ def train(args, config, train_params, train_file_list):
         main_prog = train_prog,
         startup_prog = startup_prog,
         args=args)
-
-    if with_memory_optimization:
-        fluid.memory_optimize(train_prog)
 
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

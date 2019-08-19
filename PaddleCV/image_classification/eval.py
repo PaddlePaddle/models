@@ -38,7 +38,6 @@ add_arg('batch_size',       int,  256,                 "Minibatch size.")
 add_arg('use_gpu',          bool, True,                "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                "Class number.")
 add_arg('image_shape',      str,  "3,224,224",         "Input image size")
-add_arg('with_mem_opt',     bool, True,                "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
 add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
 add_arg('resize_short_size', int, 256,                "Set resize short size")
@@ -50,7 +49,6 @@ def eval(args):
     class_dim = args.class_dim
     model_name = args.model
     pretrained_model = args.pretrained_model
-    with_memory_optimization = args.with_mem_opt
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
     model_list = [m for m in dir(models) if "__" not in m]
@@ -86,9 +84,6 @@ def eval(args):
     test_program = fluid.default_main_program().clone(for_test=True)
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
-    if with_memory_optimization:
-        fluid.memory_optimize(
-            fluid.default_main_program(), skip_opt_set=set(fetch_list))
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
