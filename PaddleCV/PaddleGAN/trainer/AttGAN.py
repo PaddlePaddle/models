@@ -51,12 +51,9 @@ class GTrainer():
             self.g_loss_fake.persistable = True
             self.g_loss_rec.persistable = True
             self.g_loss_cls.persistable = True
-            if cfg.epoch <= 100:
-                lr = cfg.g_lr
-            else:
-                lr = fluid.layers.piecewise_decay(
-                    boundaries=[99 * step_per_epoch],
-                    values=[cfg.g_lr, cfg.g_lr * 0.1], )
+            lr = fluid.layers.piecewise_decay(
+                boundaries=[99 * step_per_epoch],
+                values=[cfg.g_lr, cfg.g_lr * 0.1])
             vars = []
             for var in self.program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith(
@@ -76,11 +73,6 @@ class DTrainer():
         lr = cfg.d_lr
         with fluid.program_guard(self.program):
             model = AttGAN_model()
-            clone_image_real = []
-            for b in self.program.blocks:
-                if b.has_var('image_real'):
-                    clone_image_real = b.var('image_real')
-                    break
             self.fake_img, _ = model.network_G(
                 image_real, label_org, label_trg_, cfg, name="generator")
             self.pred_real, self.cls_real = model.network_D(
@@ -96,7 +88,7 @@ class DTrainer():
                 self.d_loss_real = -1 * fluid.layers.reduce_mean(self.pred_real)
                 self.d_loss_gp = self.gradient_penalty(
                     model.network_D,
-                    clone_image_real,
+                    image_real,
                     self.fake_img,
                     cfg=cfg,
                     name="discriminator")
@@ -114,7 +106,13 @@ class DTrainer():
                             x=self.pred_real, y=ones)))
                 self.d_loss_fake = fluid.layers.mean(
                     fluid.layers.square(x=self.pred_fake))
-                self.d_loss = self.d_loss_real + self.d_loss_fake + self.d_loss_cls
+                self.d_loss_gp = self.gradient_penalty(
+                    model.network_D,
+                    image_real,
+                    None,
+                    cfg=cfg,
+                    name="discriminator")
+                self.d_loss = self.d_loss_real + self.d_loss_fake + 1.0 * self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
 
             self.d_loss_real.persistable = True
             self.d_loss_fake.persistable = True
@@ -128,12 +126,9 @@ class DTrainer():
                     vars.append(var.name)
             self.param = vars
 
-            if cfg.epoch <= 100:
-                lr = cfg.d_lr
-            else:
-                lr = fluid.layers.piecewise_decay(
-                    boundaries=[99 * step_per_epoch],
-                    values=[cfg.g_lr, cfg.g_lr * 0.1], )
+            lr = fluid.layers.piecewise_decay(
+                boundaries=[99 * step_per_epoch],
+                values=[cfg.g_lr, cfg.g_lr * 0.1])
             optimizer = fluid.optimizer.Adam(
                 learning_rate=lr, beta1=0.5, beta2=0.999, name="net_D")
 
@@ -141,14 +136,21 @@ class DTrainer():
 
     def gradient_penalty(self, f, real, fake=None, cfg=None, name=None):
         def _interpolate(a, b=None):
+            if b is None:
+                beta = fluid.layers.uniform_random_batch_size_like(
+                    input=a, shape=a.shape, min=0.0, max=1.0)
+                mean = fluid.layers.reduce_mean(
+                    a, range(len(a.shape)), keep_dim=True)
+                input_sub_mean = fluid.layers.elementwise_sub(a, mean, axis=0)
+                var = fluid.layers.reduce_mean(
+                    fluid.layers.square(input_sub_mean),
+                    range(len(a.shape)),
+                    keep_dim=True)
+                b = beta * fluid.layers.sqrt(var) * 0.5 + a
             shape = [a.shape[0]]
             alpha = fluid.layers.uniform_random_batch_size_like(
                 input=a, shape=shape, min=0.0, max=1.0)
-            tmp = fluid.layers.elementwise_mul(
-                fluid.layers.elementwise_sub(b, a), alpha, axis=0)
-            alpha.stop_gradient = True
-            tmp.stop_gradient = True
-            inner = fluid.layers.elementwise_add(a, tmp, axis=0)
+            inner = (b - a) * alpha + a
             return inner
 
         x = _interpolate(real, fake)
@@ -175,8 +177,6 @@ class DTrainer():
 
 class AttGAN(object):
     def add_special_args(self, parser):
-        parser.add_argument(
-            '--image_size', type=int, default=256, help="image size")
         parser.add_argument(
             '--g_lr',
             type=float,
@@ -242,11 +242,13 @@ class AttGAN(object):
                  cfg=None,
                  train_reader=None,
                  test_reader=None,
-                 batch_num=1):
+                 batch_num=1,
+                 id2name=None):
         self.cfg = cfg
         self.train_reader = train_reader
         self.test_reader = test_reader
         self.batch_num = batch_num
+        self.id2name = id2name
 
     def build_model(self):
         data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
@@ -261,6 +263,20 @@ class AttGAN(object):
             name='label_org_', shape=[self.cfg.c_dim], dtype='float32')
         label_trg_ = fluid.layers.data(
             name='label_trg_', shape=[self.cfg.c_dim], dtype='float32')
+
+        py_reader = fluid.io.PyReader(
+            feed_list=[image_real, label_org, label_trg],
+            capacity=64,
+            iterable=True,
+            use_double_buffer=True)
+
+        test_gen_trainer = GTrainer(image_real, label_org, label_org_,
+                                    label_trg, label_trg_, self.cfg,
+                                    self.batch_num)
+
+        label_org_ = (label_org * 2.0 - 1.0) * self.cfg.thres_int
+        label_trg_ = (label_trg * 2.0 - 1.0) * self.cfg.thres_int
+
         gen_trainer = GTrainer(image_real, label_org, label_org_, label_trg,
                                label_trg_, self.cfg, self.batch_num)
         dis_trainer = DTrainer(image_real, label_org, label_org_, label_trg,
@@ -268,6 +284,7 @@ class AttGAN(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
+        py_reader.decorate_batch_generator(self.train_reader, places=place)
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -278,7 +295,6 @@ class AttGAN(object):
         ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = False
-        build_strategy.memory_optimize = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
@@ -293,84 +309,61 @@ class AttGAN(object):
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            for i in range(self.batch_num):
-                image, label_org = next(self.train_reader())
-                label_trg = copy.deepcopy(label_org)
-
-                np.random.shuffle(label_trg)
-                label_org_ = list(
-                    map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
-                        label_org))
-                label_trg_ = list(
-                    map(lambda x: (x * 2.0 - 1.0) * self.cfg.thres_int,
-                        label_trg))
-
-                tensor_img = fluid.LoDTensor()
-                tensor_label_org = fluid.LoDTensor()
-                tensor_label_trg = fluid.LoDTensor()
-                tensor_label_org_ = fluid.LoDTensor()
-                tensor_label_trg_ = fluid.LoDTensor()
-                tensor_img.set(image, place)
-                tensor_label_org.set(label_org, place)
-                tensor_label_trg.set(label_trg, place)
-                tensor_label_org_.set(label_org_, place)
-                tensor_label_trg_.set(label_trg_, place)
-                label_shape = tensor_label_trg.shape
+            for data in py_reader():
                 s_time = time.time()
                 # optimize the discriminator network
-                if (batch_id + 1) % self.cfg.num_discriminator_time != 0:
-                    fetches = [
-                        dis_trainer.d_loss.name, dis_trainer.d_loss_real.name,
-                        dis_trainer.d_loss_fake.name,
-                        dis_trainer.d_loss_cls.name, dis_trainer.d_loss_gp.name
-                    ]
-                    d_loss, d_loss_real, d_loss_fake, d_loss_cls, d_loss_gp = exe.run(
-                        dis_trainer_program,
-                        fetch_list=fetches,
-                        feed={
-                            "image_real": tensor_img,
-                            "label_org": tensor_label_org,
-                            "label_org_": tensor_label_org_,
-                            "label_trg": tensor_label_trg,
-                            "label_trg_": tensor_label_trg_
-                        })
+                fetches = [
+                    dis_trainer.d_loss.name,
+                    dis_trainer.d_loss_real.name,
+                    dis_trainer.d_loss_fake.name,
+                    dis_trainer.d_loss_cls.name,
+                    dis_trainer.d_loss_gp.name,
+                ]
+                d_loss, d_loss_real, d_loss_fake, d_loss_cls, d_loss_gp = exe.run(
+                    dis_trainer_program, fetch_list=fetches, feed=data)
 
-                    batch_time = time.time() - s_time
-                    t_time += batch_time
-                    print("epoch{}: batch{}:  \n\
-                         d_loss: {}; d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
-                         Batch_time_cost: {}".format(epoch_id, batch_id, d_loss[
-                        0], d_loss_real[0], d_loss_fake[0], d_loss_cls[0],
-                                                     d_loss_gp[0], batch_time))
-                # optimize the generator network
-                else:
+                if (batch_id + 1) % self.cfg.num_discriminator_time == 0:
+                    # optimize the generator network
                     d_fetches = [
                         gen_trainer.g_loss_fake.name,
                         gen_trainer.g_loss_rec.name,
                         gen_trainer.g_loss_cls.name, gen_trainer.fake_img.name
                     ]
                     g_loss_fake, g_loss_rec, g_loss_cls, fake_img = exe.run(
-                        gen_trainer_program,
-                        fetch_list=d_fetches,
-                        feed={
-                            "image_real": tensor_img,
-                            "label_org": tensor_label_org,
-                            "label_org_": tensor_label_org_,
-                            "label_trg": tensor_label_trg,
-                            "label_trg_": tensor_label_trg_
-                        })
+                        gen_trainer_program, fetch_list=d_fetches, feed=data)
                     print("epoch{}: batch{}: \n\
                          g_loss_fake: {}; g_loss_rec: {}; g_loss_cls: {}"
                           .format(epoch_id, batch_id, g_loss_fake[0],
                                   g_loss_rec[0], g_loss_cls[0]))
+
+                batch_time = time.time() - s_time
+                t_time += batch_time
+                if (batch_id + 1) % self.cfg.print_freq == 0:
+                    print("epoch{}: batch{}:  \n\
+                         d_loss: {}; d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
+                         Batch_time_cost: {}".format(epoch_id, batch_id, d_loss[
+                        0], d_loss_real[0], d_loss_fake[0], d_loss_cls[0],
+                                                     d_loss_gp[0], batch_time))
                 sys.stdout.flush()
                 batch_id += 1
 
             if self.cfg.run_test:
-                test_program = gen_trainer.infer_program
+                image_name = fluid.layers.data(
+                    name='image_name',
+                    shape=[self.cfg.n_samples],
+                    dtype='int32')
+                test_py_reader = fluid.io.PyReader(
+                    feed_list=[image_real, label_org, label_trg, image_name],
+                    capacity=32,
+                    iterable=True,
+                    use_double_buffer=True)
+                test_py_reader.decorate_batch_generator(
+                    self.test_reader, places=place)
+
+                test_program = test_gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
-                                        test_program, gen_trainer,
-                                        self.test_reader)
+                                        test_program, test_gen_trainer,
+                                        test_py_reader)
 
             if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,
