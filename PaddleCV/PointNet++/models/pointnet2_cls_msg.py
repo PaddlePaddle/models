@@ -132,12 +132,12 @@ if __name__ == "__main__":
     model.build_model()
     loss,_,_ = model.get_outputs()
     opt = fluid.optimizer.AdamOptimizer(learning_rate=3e-2)
+    #opt = fluid.optimizer.SGD(learning_rate=3e-2)
     opt.minimize(loss)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
-    
+    exe.run(fluid.default_startup_program()) 
     # print param.name
     #for i,var in enumerate(fluid.default_startup_program().list_vars()):
     #    print(i,var.name)
@@ -149,10 +149,11 @@ if __name__ == "__main__":
     #print("xyz", xyz_np)
     #print("feaure", feature_np)
     print("label", label_np)
-    for i in range(5):
-        ret = exe.run(fetch_list=["fc_2_fc_weight@GRAD",loss.name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-	#print("grad:",ret[0])
-	print("loss:",ret[1])
+    for i in range(10):
+        ret = exe.run(fetch_list=["batch_norm_22.w_1","fc_3_fc_weight@GRAD",loss.name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
+	#print("batch_norm_22.w_0:",ret[0])
+	#print("fc weight:",ret[1])
+	print("loss:",ret[-1])
     #ret = exe.run(fetch_list=["relu_0.tmp_0","relu_1.tmp_0","relu_2.tmp_0", outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
     #print(ret)
     # print("ret0", ret[0].shape, ret[0])

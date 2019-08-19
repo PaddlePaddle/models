@@ -135,7 +135,7 @@ def pointnet_sa_module(xyz,
                        mlps=[],
                        feature=None,
                        bn=True,
-		       bn_momentum=0.9,
+		       bn_momentum=0.1,
                        use_xyz=True,
                        name=None):
     """
