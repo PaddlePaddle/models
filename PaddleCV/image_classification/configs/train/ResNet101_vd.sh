@@ -1,5 +1,5 @@
 #Training details
-#GPU: NVIDIA® Tesla® V100  4cards 1282epochs 55h
+#GPU: NVIDIA® Tesla® V100  4cards 200epochs 182h
 #NOTE: all _vd series is distilled version, and use_distill is temporary disabled now.
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 export FLAGS_fast_eager_deletion_mode=1
