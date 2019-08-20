@@ -6,7 +6,7 @@ export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 #ResNet50_vc
-python train.py
+python train.py \
   	    --model=ResNet50_vc \
 	    --batch_size=256 \
             --total_images=1281167 \

@@ -6,8 +6,8 @@ export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 #VGG13:
-python train.py
-        --model=VGG13 \          
+python train.py \
+        --model=VGG13 \
         --batch_size=256 \
         --total_images=1281167 \
         --class_dim=1000 \
