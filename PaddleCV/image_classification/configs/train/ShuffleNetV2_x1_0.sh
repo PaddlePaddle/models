@@ -6,7 +6,7 @@ python train.py \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
-       --lr_strategy=cosine_warmup_decay \
+       --lr_strategy=cosine_decay_warmup \
        --num_epochs=240 \
        --lr=0.5 \
        --l2_decay=4e-5 \
