@@ -6,7 +6,7 @@ export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 #InceptionV4
-python train.py
+python train.py \
 	    --model=InceptionV4 \
             --batch_size=256 \
             --total_images=1281167 \

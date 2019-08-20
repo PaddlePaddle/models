@@ -1,6 +1,6 @@
 #Training details
 #DarkNet53
-python train.py
+python train.py \
        --model=DarkNet53 \
        --batch_size=256 \
        --total_images=1281167 \

@@ -44,7 +44,8 @@ class Metrics(object):
         self.label = data[1]
         self.is_train = is_train
 
-    def _clac_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
+    def _calc_label_smoothing_loss(self, softmax_out, label, class_dim,
+                                   epsilon):
         """Calculate label smoothing loss
 
         Returns:
@@ -52,7 +53,7 @@ class Metrics(object):
         
         """
         label_one_hot = fluid.layers.one_hot(input=label, depth=class_dim)
-        smooth_label = fluid.layers.label_smoothing(
+        smooth_label = fluid.layers.label_smooth(
             label=label_one_hot, epsilon=epsilon, dtype="float32")
         loss = fluid.layers.cross_entropy(
             input=softmax_out, label=smooth_label, soft_label=True)
@@ -70,7 +71,7 @@ class Metrics(object):
         softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
 
         if self.is_train and self.use_label_smoothing:
-            cost = _calc_label_smoothing_loss(softmax_out, self.label,
+            cost = _calc_label_smoothing_loss(self, softmax_out, self.label,
                                               self.class_dim, self.epsilon)
 
         else:
@@ -162,10 +163,10 @@ class Mixup_Metrics(Metrics):
             loss_b = fluid.layers.cross_entropy(
                 input=softmax_out, label=self.y_b)
         else:
-            loss_a = Metrics._calc_label_smoothing(softmax_out, self.y_a,
-                                                   self.class_dim, self.epsilon)
-            loss_b = Metrics._calc_label_smoothing(softmax_out, self.y_b,
-                                                   self.class_dim, self.epsilon)
+            loss_a = Metrics._calc_label_smoothing_loss(
+                self, softmax_out, self.y_a, self.class_dim, self.epsilon)
+            loss_b = Metrics._calc_label_smoothing_loss(
+                self, softmax_out, self.y_b, self.class_dim, self.epsilon)
 
         loss_a_mean = fluid.layers.mean(x=loss_a)
         loss_b_mean = fluid.layers.mean(x=loss_b)
