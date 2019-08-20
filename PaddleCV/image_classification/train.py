@@ -47,8 +47,7 @@ def build_program(is_train, main_prog, startup_prog, args):
         train mode: [Measurement, global_lr, py_reader]
         test mode: [Measurement, py_reader]
     """
-    model_name = args.model
-    model = models.__dict__[model_name]()
+    model = models.__dict__[args.model]()
     with fluid.program_guard(main_prog, startup_prog):
         #main_prog.random_seed = args.random_seed
         #startup_prog.random_seed = args.random_seed
@@ -64,7 +63,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 optimizer = getattr(decay, args.lr_strategy)()
                 avg_cost = out[0]
                 optimizer.minimize(avg_cost)
-                #XXX: fetch learning rate now. 
+                #XXX: fetch learning rate now, better implement is required here. 
                 global_lr = optimizer._global_learning_rate()
                 global_lr.persistable = True
                 out.append(global_lr)
