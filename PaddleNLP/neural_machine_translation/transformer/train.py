@@ -240,6 +240,7 @@ def do_train(args):
 
     step_idx = 0
     for pass_id in range(args.epoch):
+        pass_start_time = time.time()
         input_field.reader.start()
 
         batch_id = 0
@@ -292,11 +293,17 @@ def do_train(args):
                 input_field.reader.reset()
                 break
 
+        time_consumed = time.time() - pass_start_time
+
     if args.save_checkpoint:
         save_checkpoint(args, exe, train_prog, "step_final")
 
     if args.save_param:
         save_param(args, exe, train_prog, "step_final")
+
+    if args.enable_ce:  # For CE
+        print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
+        print("kpis\ttrain_duration_card%d\t%f" % (dev_count, time_consumed))
 
 
 if __name__ == "__main__":

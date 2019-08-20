@@ -1,3 +1,6 @@
+# used for continuous evaluation
+enable_ce: False
+
 # The frequency to save trained models when training.
 save_step: 10000
 # The frequency to fetch and print output when training.
