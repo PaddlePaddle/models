@@ -1,4 +1,4 @@
-#python train.py \
+python train.py \
        --model=ResNeXt152_64x4d \
        --batch_size=256 \
        --total_images=1281167 \
