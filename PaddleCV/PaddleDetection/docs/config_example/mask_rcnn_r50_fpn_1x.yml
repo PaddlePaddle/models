@@ -89,8 +89,15 @@ FPN:
   - 0.25
 
 # RPN module, if use non-FPN architecture, use RPNHead instead
+# Extract proposals according to anchors and assign box targets and
+# score targets to selected proposals to compute RPN loss. For FPN
+# architecture, RPN is computed from each levels and collect proposals
+# together.
 FPNRPNHead:
   # fluid.layers.anchor_generator
+  # Generate anchors for RCNN models. Each position of input produces
+  # N anchors. N = anchor_sizes * aspect_ratios. In FPNRPNHead, aspect_ratios
+  # is provided and anchor_sizes depends on FPN levels and anchor_start_size.
   anchor_generator:
     aspect_ratios:
     - 0.5
@@ -102,6 +109,12 @@ FPNRPNHead:
     - 1.0
     - 1.0
   # fluid.layers.rpn_target_assign
+  # Assign classification and regression targets to each anchor according
+  # to Intersection-over-Union(IoU) overlap between anchors and ground
+  # truth boxes. The classification targets is binary class labels. the 
+  # positive labels are two kinds of anchors: the anchors with the highest 
+  # IoU overlap with a ground-truth box, or an anchor that has an IoU overlap 
+  # higher than rpn_positive_overlap with any ground-truth box.  
   rpn_target_assign:
     rpn_batch_size_per_im: 256
     rpn_fg_fraction: 0.5
@@ -109,6 +122,11 @@ FPNRPNHead:
     rpn_positive_overlap: 0.7
     rpn_straddle_thresh: 0.0
   # fluid.layers.generate_proposals in training
+  # Generate RoIs according to each box with probability to be a foreground 
+  # object. The operation performs following steps: Transposes and resizes 
+  # scores and bbox_deltas; Calculate box locations as proposal candidates;
+  # Clip boxes to image; Remove predicted boxes with small area; Apply NMS to 
+  # get final proposals as output.
   train_proposal:
     min_size: 0.0
     nms_thresh: 0.7
@@ -132,6 +150,8 @@ FPNRPNHead:
   num_classes: 1
 
 # RoI extractor module, if use non-FPN architecture, use RoIAlign instead
+# For FPN architecture, proposals are distributed to different levels and
+# apply roi align at each level. Then concat the outputs.
 FPNRoIAlign:
   # The canconical FPN feature map level, 4 by default
   canconical_level: 4
@@ -149,6 +169,7 @@ FPNRoIAlign:
   mask_resolution: 14
 
 # Mask head module  
+# Generate mask output and compute loss mask.
 MaskHead:
   # Number of convolutions, 4 for FPN, 0 otherwise. 0 by default
   num_convs: 4
@@ -161,8 +182,9 @@ MaskHead:
   # Number of output classes, 81 by default
   num_classes: 81
 
-# Assign box targets to selected RoIs
 # fluid.layers.generate_proposal_labels
+# Combine boxes and gt_boxes, and sample foreground proposals and background 
+# prosals.Then assign classification and regression targets to selected RoIs. 
 BBoxAssigner:
   batch_size_per_im: 512
   bbox_reg_weights:
@@ -177,18 +199,24 @@ BBoxAssigner:
   num_classes: 81
   shuffle_before_sample: true
 
-# Assign mask targets to selected RoIs
 # fluid.layers.generate_mask_labels
+# For given the RoIs and corresponding labels, sample foreground RoIs.
+# Assign mask targets to selected RoIs which are encoded to K binary masks 
+# of resolution M x M. 
 MaskAssigner:
   resolution: 28
   num_classes: 81
 
 # BBox head module
+# Faster bbox head following the RoI extractor, and apply post process, such as
+# NMS and box coder..
 BBoxHead:
   # Head after RoI extractor, ResNetC5/TwoFCHead
   head: TwoFCHead
   # fluid.layers.multiclass_nms
-  nms:
+  # Select a subset of detection bounding boxes that have high scores larger 
+  # than score_threshold. Then  prune away boxes that have high IoU overlap 
+  # with already selected boxes by nms_threshold.
     keep_top_k: 100
     nms_threshold: 0.5
     score_threshold: 0.05
@@ -402,7 +430,7 @@ MaskRCNNEvalFeed:
 
 # Data feed module for test
 MaskRCNNTestFeed:
-  #  Batch size per device, 1 by default  
+  # Batch size per device, 1 by default  
   batch_size: 1
   # Dataset module
   dataset:
