@@ -372,7 +372,7 @@ step9: 执行 `sh run.sh` 进行训练任务。
 | - | Light-NAS-model2 | Light-NAS-model3 | MobileNetV2 |
 |---|---|---|---|
 | Latency | -7% | -23% | -0% |
-| top1 accuracy| 71.91%|  71.62%| 71.90% |
+| top1 accuracy| 71.91%|  71.81%| 71.90% |
 |GPU cost|1.2K GPU hours(V100)|1.2K GPU hours(V100)|-|
 |tokens|tokens2|tokens3||
 
@@ -385,7 +385,7 @@ step9: 执行 `sh run.sh` 进行训练任务。
 |GPU cost|1.2K GPU hours(V100)|-|
 |tokens|tokens4||
 
-基于 iOS 手机平台的结果如下：
+基于 iPhone 手机平台的结果如下：
 
 | - | Light-NAS-model5 | MobileNetV2 |
 |---|---|---|
