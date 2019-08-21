@@ -55,8 +55,11 @@ def eval(args):
     model_list = [m for m in dir(models) if "__" not in m]
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
-    assert os.path.isdir(args.pretrained_model
-                         ), "please load right pretrained model path for infer"
+    assert os.path.isdir(
+        args.pretrained_model
+    ), "{} doesn't exist, please load right pretrained model path for eval".format(
+        args.pretrained_model)
+
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 

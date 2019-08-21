@@ -19,12 +19,29 @@ import functools
 import numpy as np
 import cv2
 import io
+import signal
 
 import paddle
 import paddle.fluid as fluid
 
 random.seed(0)
 np.random.seed(0)
+
+
+def _reader_quit(signum, frame):
+    print("Reader process exit.")
+    sys.exit()
+
+
+def _term_group(sig_num, frame):
+    print('pid {} terminated, terminate group '
+          '{}...'.format(os.getpid(), os.getpgrp()))
+    os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
+
+
+signal.signal(signal.SIGTERM, _reader_quit)
+signal.signal(signal.SIGINT, _term_group)
+print("CALL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
 
 def rotate_image(img):
@@ -249,6 +266,7 @@ def _reader_creator(settings,
             full_lines = [line.strip() for line in flist]
             if shuffle:
                 np.random.shuffle(full_lines)
+        full_lines = full_lines[0:64]
         for line in full_lines:
             img_path, label = line.split()
             img_path = os.path.join(data_dir, img_path)
@@ -272,7 +290,7 @@ def _reader_creator(settings,
         order=False)
 
 
-def train(settings, shuffle_seed=0):
+def train(settings):
     """Create a reader for trainning
 
     Args:
@@ -282,9 +300,9 @@ def train(settings, shuffle_seed=0):
         train reader
     """
     file_list = os.path.join(settings.data_dir, 'train_list.txt')
-    #NOTE: one card batch_size
-    batch_size = settings.batch_size
-
+    assert os.path.isfile(
+        file_list), "{} doesn't exist, please set right train list".format(
+            file_list)
     reader = _reader_creator(
         settings,
         file_list,
@@ -293,6 +311,7 @@ def train(settings, shuffle_seed=0):
         color_jitter=False,
         rotate=False,
         data_dir=settings.data_dir)
+    #data_dir=os.path.join(settings.data_dir, "train"))
 
     if settings.use_mixup == True:
         reader = create_mixup_reader(settings, reader)
@@ -300,7 +319,7 @@ def train(settings, shuffle_seed=0):
 
 
 def val(settings):
-    """Create a reader for eval
+    """Create a reader  for eval
 
     Args:
         settings: arguments
@@ -309,12 +328,17 @@ def val(settings):
         eval reader
     """
     file_list = os.path.join(settings.data_dir, 'val_list.txt')
+    assert os.path.isfile(
+        file_list), "{} doesn't exist, please set right eval list".format(
+            file_list)
+
     return _reader_creator(
         settings, file_list, 'val', shuffle=False, data_dir=settings.data_dir)
+    #data_dir=os.path.join(settings.data_dir, "val"))
 
 
 def test(settings):
-    """Create a reader for testing 
+    """Create a reader  for testing 
 
     Args:
         settings: arguments
@@ -323,5 +347,10 @@ def test(settings):
         test reader
     """
     file_list = os.path.join(settings.data_dir, 'val_list.txt')
+    assert os.path.isfile(
+        file_list), "{} doesn't exist, please set right infer list".format(
+            file_list)
     return _reader_creator(
         settings, file_list, 'test', shuffle=False, data_dir=settings.data_dir)
+
+    #data_dir=os.path.join(settings.data_dir, "val"))

@@ -25,9 +25,25 @@ import logging
 import sys
 import os
 import warnings
+import signal
 
 import paddle
 import paddle.fluid as fluid
+
+
+def _reader_quit(signum, frame):
+    print("Reader process exit.")
+    sys.exit()
+
+
+def _term_group(sig_num, frame):
+    print('pid {} terminated, terminate group '
+          '{}...'.format(os.getpid(), os.getpgrp()))
+    os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
+
+
+signal.signal(signal.SIGTERM, _reader_quit)
+signal.signal(signal.SIGINT, _term_group)
 
 
 def print_arguments(args):
@@ -399,12 +415,12 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 print(
-                    "[Pass {0}, test batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, elapse {5}".
+                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%2.2f sec" % time_info))
             else:
                 raise Exception(
-                    "length of metrics {} is not implenmented, It maybe caused by wrong format of build_program_output".
+                    "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".
                     format(len(metrics)))
             sys.stdout.flush()
 
@@ -422,7 +438,7 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
             print(
                 "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % train_acc1, "%.5f"
-                       % train_acc5, "%.5f    " % test_loss, "%.5f" % test_acc1,
+                       % train_acc5, "%.5f" % test_loss, "%.5f" % test_acc1,
                        "%.5f" % test_acc5))
         sys.stdout.flush()
     elif info_mode == "ce":
