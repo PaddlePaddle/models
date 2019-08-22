@@ -49,13 +49,13 @@ SEED = 123
 @contextlib.contextmanager
 def profile_context(profile=True):
     if profile:
-        with profiler.profiler('All', 'total', '/tmp/seq2seq.profile'):
+        with profiler.profiler('All', 'total', 'seq2seq.profile'):
             yield
     else:
         yield
 
 
-def train():
+def main():
     args = parse_args()
 
     num_layers = args.num_layers
@@ -116,6 +116,29 @@ def train():
     exe = Executor(place)
     exe.run(framework.default_startup_program())
 
+    device_count = len(fluid.cuda_places()) if args.use_gpu else len(
+        fluid.cpu_places())
+    if device_count > 1:
+        raise Exception("Training using multi-GPUs is not supported now.")
+
+    exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.num_threads = device_count
+    exec_strategy.num_iteration_per_drop_scope = 100
+
+    build_strategy = fluid.BuildStrategy()
+    build_strategy.enable_inplace = True
+    build_strategy.memory_optimize = False
+#    build_strategy.fuse_all_optimizer_ops = True
+
+    if args.parallel:
+        train_program = fluid.compiler.CompiledProgram(
+            framework.default_main_program()).with_data_parallel(
+                loss_name=loss.name,
+                build_strategy=build_strategy,
+                exec_strategy=exec_strategy)
+    else:
+        train_program = framework.default_main_program()
+
     train_data_prefix = args.train_data_prefix
     eval_data_prefix = args.eval_data_prefix
     test_data_prefix = args.test_data_prefix
@@ -170,70 +193,78 @@ def train():
 
         return ppl
 
-    ce_time = []
-    ce_ppl = []
-    max_epoch = args.max_epoch
-    for epoch_id in range(max_epoch):
-        start_time = time.time()
+    def train():
+        ce_time = []
+        ce_ppl = []
+        max_epoch = args.max_epoch
+        for epoch_id in range(max_epoch):
+            start_time = time.time()
+            if args.enable_ce:
+                train_data_iter = reader.get_data_iter(train_data, batch_size, enable_ce=True)
+            else:
+                train_data_iter = reader.get_data_iter(train_data, batch_size)
+                
+
+            total_loss = 0
+            word_count = 0.0
+            batch_times = []
+            for batch_id, batch in enumerate(train_data_iter):
+                batch_start_time = time.time()
+                input_data_feed, word_num = prepare_input(batch, epoch_id=epoch_id)
+                fetch_outs = exe.run(program=train_program,
+                                     feed=input_data_feed,
+                                     fetch_list=[loss.name],
+                                     use_program_cache=True)
+
+                cost_train = np.array(fetch_outs[0])
+
+                total_loss += cost_train * batch_size
+                word_count += word_num
+                batch_end_time = time.time()
+                batch_time = batch_end_time - batch_start_time
+                batch_times.append(batch_time)
+
+                if batch_id > 0 and batch_id % 100 == 0:
+                    print(
+                        "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f"
+                        % (epoch_id, batch_id, batch_time, np.exp(total_loss / word_count)))
+                    ce_ppl.append(np.exp(total_loss / word_count))
+                    total_loss = 0.0
+                    word_count = 0.0
+
+            end_time = time.time()
+            epoch_time = end_time - start_time
+            ce_time.append(epoch_time)
+            print(
+                "\nTrain epoch:[%d]; Epoch Time: %.5f; avg_time: %.5f s/step\n"
+                % (epoch_id, epoch_time, sum(batch_times) / len(batch_times)))
+
+            if not args.profile:
+                dir_name = args.model_path + "/epoch_" + str(epoch_id)
+                print("begin to save", dir_name)
+                fluid.io.save_params(exe, dir_name)
+                print("save finished")
+                dev_ppl = eval(valid_data)
+                print("dev ppl", dev_ppl)
+                test_ppl = eval(test_data)
+                print("test ppl", test_ppl)
+
         if args.enable_ce:
-            train_data_iter = reader.get_data_iter(
-                train_data, batch_size, enable_ce=True)
-        else:
-            train_data_iter = reader.get_data_iter(train_data, batch_size)
+            card_num = get_cards()
+            _ppl = 0
+            _time = 0
+            try:
+                _time = ce_time[-1]
+                _ppl = ce_ppl[-1]
+            except:
+                print("ce info error")
+            print("kpis\ttrain_duration_card%s\t%s" %
+                    (card_num, _time))
+            print("kpis\ttrain_ppl_card%s\t%f" %
+                (card_num, _ppl))
 
-        total_loss = 0
-        word_count = 0.0
-        batch_times = []
-        for batch_id, batch in enumerate(train_data_iter):
-            batch_start_time = time.time()
-            input_data_feed, word_num = prepare_input(batch, epoch_id=epoch_id)
-            fetch_outs = exe.run(feed=input_data_feed,
-                                 fetch_list=[loss.name],
-                                 use_program_cache=True)
-
-            cost_train = np.array(fetch_outs[0])
-
-            total_loss += cost_train * batch_size
-            word_count += word_num
-            batch_end_time = time.time()
-            batch_time = batch_end_time - batch_start_time
-            batch_times.append(batch_time)
-
-            #            if batch_id > 0 and batch_id % 100 == 0:
-            if True:
-                print("-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f" %
-                      (epoch_id, batch_id, batch_time, np.exp(total_loss /
-                                                              word_count)))
-                ce_ppl.append(np.exp(total_loss / word_count))
-                total_loss = 0.0
-                word_count = 0.0
-
-        end_time = time.time()
-        epoch_time = end_time - start_time
-        ce_time.append(epoch_time)
-        print("\nTrain epoch:[%d]; Epoch Time: %.5f; avg_time: %.5f s/step\n" %
-              (epoch_id, epoch_time, sum(batch_times) / len(batch_times)))
-
-        dir_name = args.model_path + "/epoch_" + str(epoch_id)
-        print("begin to save", dir_name)
-        fluid.io.save_params(exe, dir_name)
-        print("save finished")
-        dev_ppl = eval(valid_data)
-        print("dev ppl", dev_ppl)
-        test_ppl = eval(test_data)
-        print("test ppl", test_ppl)
-
-    if args.enable_ce:
-        card_num = get_cards()
-        _ppl = 0
-        _time = 0
-        try:
-            _time = ce_time[-1]
-            _ppl = ce_ppl[-1]
-        except:
-            print("ce info error")
-        print("kpis\ttrain_duration_card%s\t%s" % (card_num, _time))
-        print("kpis\ttrain_ppl_card%s\t%f" % (card_num, _ppl))
+    with profile_context(args.profile):
+        train()
 
 
 def get_cards():
@@ -245,4 +276,4 @@ def get_cards():
 
 
 if __name__ == '__main__':
-    train()
+    main()
