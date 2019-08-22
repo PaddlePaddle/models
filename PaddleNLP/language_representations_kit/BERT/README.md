@@ -18,6 +18,8 @@
 
 | Model | Layers | Hidden size | Heads |Parameters |
 | :------| :------: | :------: |:------: |:------: |
+| [BERT-Large, Uncased (Whole Word Masking)](https://bert-models.bj.bcebos.com/wwm_uncased_L-24_H-1024_A-16.tar.gz)| 24 | 1024 | 16 | 340M |
+| [BERT-Large, Cased (Whole Word Masking)](https://bert-models.bj.bcebos.com/wwm_cased_L-24_H-1024_A-16.tar.gz)| 24 | 1024 | 16 | 340M |
 | [BERT-Base, Uncased](https://bert-models.bj.bcebos.com/uncased_L-12_H-768_A-12.tar.gz) | 12 | 768 |12 |110M |
 | [BERT-Large, Uncased](https://bert-models.bj.bcebos.com/uncased_L-24_H-1024_A-16.tar.gz) | 24 | 1024 |16 |340M |
 |[BERT-Base, Cased](https://bert-models.bj.bcebos.com/cased_L-12_H-768_A-12.tar.gz)|12|768|12|110M|
@@ -46,7 +48,7 @@
   - [inference 接口调用示例](#inference-接口调用示例)
 
 ## 安装
-本项目依赖于 Paddle Fluid **1.3.1**，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。如果需要进行 TensorFlow 模型到 Paddle Fluid 参数的转换，则需要同时安装 TensorFlow 1.12。
+本项目依赖于 Paddle Fluid **1.5.1**，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。如果需要进行 TensorFlow 模型到 Paddle Fluid 参数的转换，则需要同时安装 TensorFlow 1.12。
 
 ## 预训练
 
@@ -138,22 +140,24 @@ python -u run_classifier.py --task_name ${TASK_NAME} \
                    --do_train true \
                    --do_val true \
                    --do_test true \
-                   --batch_size 8192 \
-                   --in_tokens true \
+                   --batch_size 32 \
+                   --in_tokens false \
                    --init_pretraining_params ${BERT_BASE_PATH}/params \
                    --data_dir ${DATA_PATH} \
                    --vocab_path ${BERT_BASE_PATH}/vocab.txt \
                    --checkpoints ${CKPT_PATH} \
                    --save_steps 1000 \
                    --weight_decay  0.01 \
-                   --warmup_proportion 0.0 \
-                   --validation_steps 25 \
+                   --warmup_proportion 0.1 \
+                   --validation_steps 100 \
                    --epoch 3 \
-                   --max_seq_len 512 \
+                   --max_seq_len 128 \
                    --bert_config_path ${BERT_BASE_PATH}/bert_config.json \
-                   --learning_rate 1e-4 \
+                   --learning_rate 5e-5 \
                    --skip_steps 10 \
-                   --random_seed 1
+                   --num_iteration_per_drop_scope 10 \
+                   --use_fp16 true \
+                   --verbose true
 ```
 
 这里的 `chinese_L-12_H-768_A-12` 即是转换后的中文预训练模型。需要注意的是，BERT on PaddlePaddle 支持按两种方式构建一个 batch 的数据，`in_tokens` 参数影响 `batch_size` 参数的意义，如果 `in_tokens` 为 `true` 则按照 token 个数构建 batch, 如不设定则按照 example 个数来构建 batch. 训练过程中会输出训练误差、训练速度等信息，训练结束后会输出如下所示的在验证集上的测试结果：

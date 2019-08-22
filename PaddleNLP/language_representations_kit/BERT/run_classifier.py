@@ -193,7 +193,6 @@ def main(args):
             with fluid.unique_name.guard():
                 train_pyreader, loss, probs, accuracy, num_seqs = create_model(
                     args,
-                    pyreader_name='train_reader',
                     bert_config=bert_config,
                     num_labels=num_labels)
                 scheduled_lr = optimization(
@@ -219,17 +218,41 @@ def main(args):
             print("Theoretical memory usage in training: %.3f - %.3f %s" %
                   (lower_mem, upper_mem, unit))
 
-    if args.do_val or args.do_test:
+    if args.do_val:
+        dev_prog = fluid.Program()
+        with fluid.program_guard(dev_prog, startup_prog):
+            with fluid.unique_name.guard():
+                dev_pyreader, loss, probs, accuracy, num_seqs = create_model(
+                    args,
+                    bert_config=bert_config,
+                    num_labels=num_labels)
+
+        dev_prog = dev_prog.clone(for_test=True)
+        dev_pyreader.decorate_batch_generator(
+                            processor.data_generator(
+                                batch_size=args.batch_size,
+                                phase='dev',
+                                epoch=1,
+                                dev_count=1,
+                                shuffle=False), place)
+
+    if args.do_test:
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
                 test_pyreader, loss, probs, accuracy, num_seqs = create_model(
                     args,
-                    pyreader_name='test_reader',
                     bert_config=bert_config,
                     num_labels=num_labels)
 
         test_prog = test_prog.clone(for_test=True)
+        test_pyreader.decorate_batch_generator(
+                            processor.data_generator(
+                                batch_size=args.batch_size,
+                                phase='test',
+                                epoch=1,
+                                dev_count=1,
+                                shuffle=False), place)
 
     exe.run(startup_prog)
 
@@ -276,7 +299,7 @@ def main(args):
         train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
                  loss_name=loss.name, build_strategy=build_strategy)
 
-        train_pyreader.decorate_tensor_provider(train_data_generator)
+        train_pyreader.decorate_batch_generator(train_data_generator, place)
 
 
     if args.do_train:
@@ -350,25 +373,11 @@ def main(args):
                     throughput = []
                     # evaluate dev set
                     if args.do_val:
-                        test_pyreader.decorate_tensor_provider(
-                            processor.data_generator(
-                                batch_size=args.batch_size,
-                                phase='dev',
-                                epoch=1,
-                                dev_count=1,
-                                shuffle=False))
-                        evaluate(exe, test_prog, test_pyreader,
+                        evaluate(exe, dev_prog, dev_pyreader,
                                  [loss.name, accuracy.name, num_seqs.name],
                                  "dev")
                     # evaluate test set
                     if args.do_test:
-                        test_pyreader.decorate_tensor_provider(
-                            processor.data_generator(
-                                batch_size=args.batch_size,
-                                phase='test',
-                                epoch=1,
-                                dev_count=1,
-                                shuffle=False))
                         evaluate(exe, test_prog, test_pyreader,
                                  [loss.name, accuracy.name, num_seqs.name],
                                  "test")
@@ -398,23 +407,12 @@ def main(args):
 
     # final eval on dev set
     if args.do_val:
-        test_pyreader.decorate_tensor_provider(
-            processor.data_generator(
-                batch_size=args.batch_size, phase='dev', epoch=1, dev_count=1,
-                shuffle=False))
         print("Final validation result:")
-        evaluate(exe, test_prog, test_pyreader,
+        evaluate(exe, dev_prog, dev_pyreader,
                  [loss.name, accuracy.name, num_seqs.name], "dev")
 
     # final eval on test set
     if args.do_test:
-        test_pyreader.decorate_tensor_provider(
-            processor.data_generator(
-                batch_size=args.batch_size,
-                phase='test',
-                epoch=1,
-                dev_count=1,
-                shuffle=False))
         print("Final test result:")
         evaluate(exe, test_prog, test_pyreader,
                  [loss.name, accuracy.name, num_seqs.name], "test")

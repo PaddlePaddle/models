@@ -82,21 +82,24 @@ args = parser.parse_args()
 # yapf: enable.
 
 
-def create_model(pyreader_name, bert_config):
-    pyreader = fluid.layers.py_reader(
-        capacity=70,
-        shapes=[[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
+def create_model(bert_config):
+    input_fields = {
+        'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'mask_label', 'mask_pos', 'labels'],
+        'shapes': [[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
                 [-1, args.max_seq_len, 1],
-                [-1, args.max_seq_len, 1], [-1, 1], [-1, 1],
-                [-1, 1]],
-        dtypes=[
-            'int64', 'int64', 'int64', 'float32', 'int64', 'int64', 'int64'
-        ],
-        lod_levels=[0, 0, 0, 0, 0, 0, 0],
-        name=pyreader_name,
-        use_double_buffer=True)
+                [-1, args.max_seq_len, 1], [-1, 1], [-1, 1], [-1, 1]],
+        'dtypes': ['int64', 'int64', 'int64', 'float32', 'int64', 'int64', 'int64'],
+        'lod_levels': [0, 0, 0, 0, 0, 0, 0],
+    }
 
-    (src_ids, pos_ids, sent_ids, input_mask, mask_label, mask_pos, labels) = fluid.layers.read_file(pyreader)
+    inputs = [fluid.layers.data(name=input_fields['names'][i],
+                      shape=input_fields['shapes'][i],
+                      dtype=input_fields['dtypes'][i],
+                      lod_level=input_fields['lod_levels'][i]) for i in range(len(input_fields['names']))]
+
+    (src_ids, pos_ids, sent_ids, input_mask, mask_label, mask_pos, labels) = inputs
+
+    pyreader = fluid.io.PyReader(feed_list=inputs, capacity=50, iterable=False)
 
     bert = BertModel(
         src_ids=src_ids,
@@ -135,6 +138,8 @@ def predict_wrapper(args,
         max_seq_len=args.max_seq_len,
         is_test=True)
 
+    pyreader.decorate_batch_generator(data_reader.data_generator())
+
     if args.do_test:
         assert args.init_checkpoint is not None, "[FATAL] Please use --init_checkpoint '/path/to/checkpoints' \
                                                   to specify you pretrained model checkpoints"
@@ -142,8 +147,6 @@ def predict_wrapper(args,
         init_pretraining_params(exe, args.init_checkpoint, test_prog)
 
     def predict(exe=exe, pyreader=pyreader):
-
-        pyreader.decorate_tensor_provider(data_reader.data_generator())
         pyreader.start()
 
         cost = 0
@@ -181,7 +184,7 @@ def test(args):
     with fluid.program_guard(test_prog, test_startup):
         with fluid.unique_name.guard():
             test_pyreader, next_sent_acc, mask_lm_loss, total_loss = create_model(
-                pyreader_name='test_reader', bert_config=bert_config)
+                bert_config=bert_config)
 
     test_prog = test_prog.clone(for_test=True)
 
@@ -216,7 +219,7 @@ def train(args):
     with fluid.program_guard(train_program, startup_prog):
         with fluid.unique_name.guard():
             train_pyreader, next_sent_acc, mask_lm_loss, total_loss = create_model(
-                pyreader_name='train_reader', bert_config=bert_config)
+                bert_config=bert_config)
             scheduled_lr = optimization(
                 loss=total_loss,
                 warmup_steps=args.warmup_steps,
@@ -229,17 +232,11 @@ def train(args):
                 use_fp16=args.use_fp16,
                 loss_scaling=args.loss_scaling)
 
-            fluid.memory_optimize(
-                input_program=train_program,
-                skip_opt_set=[
-                    next_sent_acc.name, mask_lm_loss.name, total_loss.name
-                ])
-
     test_prog = fluid.Program()
     with fluid.program_guard(test_prog, startup_prog):
         with fluid.unique_name.guard():
             test_pyreader, next_sent_acc, mask_lm_loss, total_loss = create_model(
-                pyreader_name='test_reader', bert_config=bert_config)
+                bert_config=bert_config)
 
     test_prog = test_prog.clone(for_test=True)
 
@@ -313,18 +310,16 @@ def train(args):
     exec_strategy.num_threads = dev_count
     exec_strategy.num_iteration_per_drop_scope = args.num_iteration_per_drop_scope
 
+    build_strategy = fluid.BuildStrategy()
+    build_strategy.num_trainers = nccl2_num_trainers
+    build_strategy.trainer_id = nccl2_trainer_id
     # use_ngraph is for CPU only, please refer to README_ngraph.md for details
     use_ngraph = os.getenv('FLAGS_use_ngraph')
     if not use_ngraph:
-        train_exe = fluid.ParallelExecutor(
-            use_cuda=args.use_cuda,
-            loss_name=total_loss.name,
-            exec_strategy=exec_strategy,
-            main_program=train_program,
-            num_trainers=nccl2_num_trainers,
-            trainer_id=nccl2_trainer_id)
-    else:
-        train_exe = exe
+        train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
+                 loss_name=total_loss.name,
+                 exec_strategy=exec_strategy,
+                 build_strategy=build_strategy)
 
     if args.validation_set_dir and args.validation_set_dir != "":
         predict = predict_wrapper(
@@ -337,7 +332,7 @@ def train(args):
                 next_sent_acc.name, mask_lm_loss.name, total_loss.name
             ])
 
-    train_pyreader.decorate_tensor_provider(data_reader.data_generator())
+    train_pyreader.decorate_batch_generator(data_reader.data_generator())
     train_pyreader.start()
     steps = 0
     cost = []
@@ -351,28 +346,28 @@ def train(args):
 
             if nccl2_trainer_id != 0:
                 if use_ngraph:
-                    train_exe.run(fetch_list=[], program=train_program)
+                    exe.run(fetch_list=[], program=train_program)
                 else:
-                    train_exe.run(fetch_list=[])
+                    exe.run(fetch_list=[], program=train_compiled_program)
                 continue
 
             if steps % skip_steps != 0:
                 if use_ngraph:
-                    train_exe.run(fetch_list=[], program=train_program)
+                    exe.run(fetch_list=[], program=train_program)
                 else:
-                    train_exe.run(fetch_list=[])
+                    exe.run(fetch_list=[], program=train_compiled_program)
 
             else:
                 if use_ngraph:
-                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = train_exe.run(
+                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = exe.run(
                         fetch_list=[
                             next_sent_acc.name, mask_lm_loss.name, total_loss.name,
                             scheduled_lr.name], program=train_program)
                 else:
-                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = train_exe.run(
+                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = exe.run(
                         fetch_list=[
                             next_sent_acc.name, mask_lm_loss.name, total_loss.name,
-                            scheduled_lr.name])
+                            scheduled_lr.name], program=train_compiled_program)
 
                 acc.extend(each_next_acc)
                 lm_cost.extend(each_mask_lm_cost)

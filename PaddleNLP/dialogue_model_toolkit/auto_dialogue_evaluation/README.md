@@ -1,13 +1,334 @@
-# Auto Dialogue Evaluation
-## 简介
-### 任务说明
-对话自动评估（Auto Dialogue Evaluation）评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。
-1. 在无标注数据的情况下，利用负采样训练匹配模型作为评估工具，实现对多个对话系统回复质量排序；
-2. 利用少量标注数据（特定对话系统或场景的人工打分），在匹配模型基础上进行微调，可以显著提高该对话系统或场景的评估效果。
+# 对话自动评估模块ADE
 
-### 效果说明
-我们以四个不同的对话系统（seq2seq\_naive／seq2seq\_att／keywords／human）为例，使用对话自动评估工具进行自动评估。
-1. 无标注数据情况下，直接使用预训练好的评估工具进行评估；
+ * [1、模型简介](#1、模型简介)
+ * [2、快速开始](#2、快速开始)
+ * [3、进阶使用](#3、进阶使用)
+ * [4、参考论文](#4、参考论文)
+ * [5、版本更新](#5、版本更新)
+
+## 1、模型简介
+
+&ensp;&ensp;&ensp;&ensp;对话自动评估（Auto Dialogue Evaluation）评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。
+
+&ensp;&ensp;&ensp;&ensp;1. 在无标注数据的情况下，利用负采样训练匹配模型作为评估工具，实现对多个对话系统回复质量排序；
+
+&ensp;&ensp;&ensp;&ensp;2. 利用少量标注数据（特定对话系统或场景的人工打分），在匹配模型基础上进行微调，可以显著提高该对话系统或场景的评估效果。
+
+## 2、快速开始
+
+### 安装说明
+
+#### &ensp;&ensp;a、环境依赖
+- Python >= 2.7
+- cuda >= 9.0
+- cudnn >= 7.0
+- pandas >= 0.20.1
+- PaddlePaddle >= 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 本模块使用bert作为pretrain model进行模型的finetuning训练，训练速度较慢，建议安装GPU版本的PaddlePaddle
+
+&ensp;&ensp;注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
+
+#### &ensp;&ensp;b、下载代码
+
+&ensp;&ensp;&ensp;&ensp;克隆数据集代码库到本地
+    
+```
+git clone https://github.com/PaddlePaddle/models.git
+cd models/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation
+```
+
+### 任务简介
+
+&ensp;&ensp;&ensp;&ensp;本模块内模型训练主要包括两个阶段：
+
+&ensp;&ensp;&ensp;&ensp;1）第一阶段：训练一个匹配模型作为评估工具，可用于待评估对话系统内的回复内容进行排序；（matching任务）
+
+&ensp;&ensp;&ensp;&ensp;2）第二阶段：利用少量的对话系统的标记数据，对第一阶段训练的匹配模型进行finetuning, 可以提高评估效果（包含human，keywords，seq2seq_att，seq2seq_naive，4个finetuning任务）;
+
+&ensp;&ensp;&ensp;&ensp;用于第二阶段fine-tuning的对话系统包括下面四部分：
+    
+```
+human: 人工模拟的对话系统；
+keywords：seq2seq keywords对话系统；
+seq2seq_att：seq2seq attention model 对话系统；
+seq2seq_naive：naive seq2seq model对话系统；
+```
+
+注意: 目前ade模块内提供的训练好的官方模型及效果, 均是在GPU单卡上面训练和预测得到的, 用户如需复线效果, 可使用单卡相同的配置.
+
+### 数据准备
+&ensp;&ensp;&ensp;&ensp;数据集说明：本模块内只提供训练方法，真实涉及的匹配数据及4个对话系统的数据只开源测试集数据，仅提供样例，用户如有自动化评估对话系统的需求，可自行准备业务数据集按照文档提供流程进行训练；
+    
+```
+unlabel_data（第一阶段训练匹配数据集）
+
+label_data（第二阶段finetuning数据集）
+1、human: 人工对话系统产出的标注数据；
+2、keywords：关键词对话系统产出的标注数据；
+3、seq2seq_att：seq2seq attention model产出的标注对话数据；
+4、seq2seq_naive：传统seq2seq model产出的标注对话数据；
+```
+
+&ensp;&ensp;&ensp;&ensp;数据集、相关模型下载：
+    
+```
+cd ade && bash prepare_data_and_model.sh
+```
+
+&ensp;&ensp;&ensp;&ensp;下载经过预处理的数据，运行该脚本之后，data目录下会存在unlabel_data(train.ids/val.ids/test.ids)，lable_data: human、keywords、seq2seq_att、seq2seq_naive(四个任务数据train.ids/val.ids/test.ids)，以及word2ids.
+
+### 单机训练
+#### 1、第一阶段matching模型的训练：
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
+
+```
+bash run.sh matching train
+```
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为CPU训练: 
+
+```
+请将run.sh内参数设置为: 
+1、export CUDA_VISIBLE_DEVICES=
+```
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为GPU训练: 
+
+```
+请将run.sh内参数设置为: 
+1、如果为单卡训练（用户指定空闲的单卡）：
+export CUDA_VISIBLE_DEVICES=0 
+2、如果为多卡训练（用户指定空闲的多张卡）：
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+```
+
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行训练相关的代码:
+
+```
+export FLAGS_sync_nccl_allreduce=0
+export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
+
+export CUDA_VISIBLE_DEVICES=0  #GPU单卡训练
+#export CUDA_VISIBLE_DEVICES=0,1,2,3  #GPU多卡训练
+
+#export CUDA_VISIBLE_DEVICES=  #CPU训练
+#export CPU_NUM=1 #CPU训练时指定CPU number
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
+
+pretrain_model_path="data/saved_models/matching_pretrained"
+if [ ! -d ${pretrain_model_path} ]
+then
+     mkdir ${pretrain_model_path}
+fi
+
+python -u main.py \
+      --do_train=true \
+      --use_cuda=${use_cuda} \
+      --loss_type="CLS" \
+      --max_seq_len=50 \
+      --save_model_path="data/saved_models/matching_pretrained" \
+      --save_param="params" \
+      --training_file="data/input/data/unlabel_data/train.ids" \
+      --epoch=20 \
+      --print_step=1 \
+      --save_step=400 \
+      --batch_size=256 \
+      --hidden_size=256 \
+      --emb_size=256 \
+      --vocab_size=484016 \
+      --learning_rate=0.001 \
+      --sample_pro=0.1 
+```
+
+注意: 用户进行模型训练、预测、评估等, 可通过修改data/config/ade.yaml配置文件或者从命令行传入来进行参数配置, 优先推荐命令行参数传入;
+
+#### 2、第二阶段finetuning模型的训练：
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
+
+```
+bash run.sh task_name task_type
+参数说明：
+task_name: seq2seq_naive、seq2seq_att、keywords、human，选择4个任务中任意一项；
+task_type: train、predict、evaluate、inference, 选择4个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model;
+
+训练示例： bash run.sh human train
+```
+
+&ensp;&ensp;&ensp;&ensp;CPU和GPU使用方式如单机训练1中所示；
+
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行训练相关的代码:
+
+```
+export FLAGS_sync_nccl_allreduce=0
+export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
+
+export CUDA_VISIBLE_DEVICES=0  #GPU单卡训练
+#export CUDA_VISIBLE_DEVICES=0,1,2,3  #GPU多卡训练
+
+#export CUDA_VISIBLE_DEVICES=  #CPU训练
+#export CPU_NUM=1 #CPU训练时指定CPU number
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
+
+save_model_path="data/saved_models/human_finetuned"
+if [ ! -d ${save_model_path} ]
+then
+    mkdir ${save_model_path}
+fi
+
+python -u main.py \
+      --do_train=true \
+      --use_cuda=${use_cuda} \
+      --loss_type="L2" \
+      --max_seq_len=50 \
+      --init_from_pretrain_model="data/saved_models/trained_models/matching_pretrained/params" \
+      --save_model_path="data/saved_models/human_finetuned" \
+      --save_param="params" \
+      --training_file="data/input/data/label_data/human/train.ids" \
+      --epoch=50 \
+      --print_step=1 \
+      --save_step=400 \
+      --batch_size=256 \
+      --hidden_size=256 \
+      --emb_size=256 \
+      --vocab_size=484016 \
+      --learning_rate=0.001 \
+      --sample_pro=0.1
+```
+
+### 模型预测
+#### 1、第一阶段matching模型的预测：
+
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本预测
+
+```
+bash run.sh matching predict
+```
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为CPU预测: 
+
+```
+请将run.sh内参数设置为: 
+export CUDA_VISIBLE_DEVICES=
+```
+
+&ensp;&ensp;&ensp;&ensp;方式一如果为GPU预测: 
+
+```
+请将run.sh内参数设置为: 
+单卡预测：
+export CUDA_VISIBLE_DEVICES=0 #用户可自行指定空闲的卡
+```
+注：预测时，如采用方式一，用户可通过修改run.sh中init_from_params参数来指定自己需要预测的模型，目前代码中默认预测本模块提供的训练好的模型；
+
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行预测相关的代码:
+
+```
+export FLAGS_sync_nccl_allreduce=0
+export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
+
+export CUDA_VISIBLE_DEVICES=0  #单卡预测
+#export CUDA_VISIBLE_DEVICES=  #CPU预测
+#export CPU_NUM=1 #CPU训练时指定CPU number
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
+
+python -u main.py \
+      --do_predict=true \
+      --use_cuda=${use_cuda} \
+      --predict_file="data/input/data/unlabel_data/test.ids" \
+      --init_from_params="data/saved_models/trained_models/matching_pretrained/params" \
+      --loss_type="CLS" \
+      --output_prediction_file="data/output/pretrain_matching_predict" \
+      --max_seq_len=50 \
+      --batch_size=256 \
+      --hidden_size=256 \
+      --emb_size=256 \
+      --vocab_size=484016
+```
+
+注：采用方式二时，模型预测过程可参考run.sh内具体任务的参数设置
+
+#### 2、第二阶段finetuning模型的预测：
+
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本预测
+
+```
+bash run.sh task_name task_type
+参数说明：
+task_name: seq2seq_naive、seq2seq_att、keywords、human，选择4个任务中任意一项；
+task_type: train、predict、evaluate、inference, 选择4个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model;
+
+预测示例： bash run.sh human predict
+```
+
+&ensp;&ensp;&ensp;&ensp;指定CPU或者GPU方法同上模型预测1中所示；
+
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行预测相关的代码:
+
+```
+export FLAGS_sync_nccl_allreduce=0
+export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
+
+export CUDA_VISIBLE_DEVICES=0  #单卡预测
+#export CUDA_VISIBLE_DEVICES=  #CPU预测
+#export CPU_NUM=1 #CPU训练时指定CPU number
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
+
+python -u main.py \
+      --do_predict=true \
+      --use_cuda=${use_cuda} \
+      --predict_file="data/input/data/label_data/human/test.ids" \
+      --init_from_params="data/saved_models/trained_models/human_finetuned/params" \
+      --loss_type="L2" \
+      --output_prediction_file="data/output/finetuning_human_predict" \
+      --max_seq_len=50 \
+      --batch_size=256 \
+      --hidden_size=256 \
+      --emb_size=256 \
+      --vocab_size=484016
+```
+
+### 模型评估
+
+&ensp;&ensp;&ensp;&ensp;模块中5个任务，各任务支持计算的评估指标内容如下：
+    
+```
+第一阶段：
+matching: 使用R1@2, R1@10, R2@10, R5@10四个指标进行评估排序模型的效果；
+
+第二阶段：
+human: 使用spearman相关系数来衡量评估模型对系统的打分与实际对话系统打分之间的关系；
+keywords：使用spearman相关系数来衡量评估模型对系统的打分与实际对话系统打分之间的关系；
+seq2seq_att：使用spearman相关系数来衡量评估模型对系统的打分与实际对话系统打分之间的关系；
+seq2seq_naive：使用spearman相关系数来衡量评估模型对系统的打分与实际对话系统打分之间的关系；
+```
+
+&ensp;&ensp;&ensp;&ensp;效果上，以四个不同的对话系统（seq2seq\_naive／seq2seq\_att／keywords／human）为例，使用对话自动评估工具进行自动评估。
+
+&ensp;&ensp;&ensp;&ensp;1. 无标注数据情况下，直接使用预训练好的评估工具进行评估；
+    
     在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
 
     /|seq2seq\_naive|seq2seq\_att|keywords|human
@@ -20,162 +341,196 @@
     --|--:
     自动评估|k(0.625)<n(0.909)<a(1.399)<h(1.683)
 
-2. 利用少量标注数据微调后，自动评估打分和人工打分spearman相关系数，如下：
+&ensp;&ensp;&ensp;&ensp;2. 利用少量标注数据微调后，自动评估打分和人工打分spearman相关系数，如下：
 
     /|seq2seq\_naive|seq2seq\_att|keywords|human
     --|:--:|--:|:--:|--:
     cor|0.474|0.477|0.443|0.378
 
-## 快速开始
-### 安装说明
-1. paddle安装
+#### 1、第一阶段matching模型的评估：
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本评估
 
-    本项目依赖于Paddle Fluid 1.3.1 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
-2. 安装代码
+```
+bash run.sh matching evaluate
+```
 
-    克隆数据集代码库到本地
-    ```
-    git clone https://github.com/PaddlePaddle/models.git
-    cd models/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation
-    ```
+注：评估计算ground_truth和predict_label之间的打分，默认CPU计算即可；
 
-3. 环境依赖
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行评估相关的代码: 
 
-    python版本依赖python 2.7
+```
+export CUDA_VISIBLE_DEVICES=  #指默认CPU评估
+export CPU_NUM=1 #CPU训练时指定CPU number
 
-### 开始第一次模型调用
-1. 数据准备
+python -u main.py \
+      --do_eval=true \
+      --use_cuda=false \
+      --evaluation_file="data/input/data/unlabel_data/test.ids" \
+      --output_prediction_file="data/output/pretrain_matching_predict" \
+      --loss_type="CLS"
+```
 
-    下载经过预处理的数据，运行该脚本之后，data目录下会存在unlabel_data(train.ids/val.ids/test.ids)，lable_data(四个任务数据train.ids/val.ids/test.ids)，以及word2ids.
+#### 2、第二阶段finetuning模型的评估：
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本评估
 
-    该项目只开源测试集数据，其他数据仅提供样例。
-    ```
-    sh download_data.sh
-    ```
-2. 模型下载
+```
+bash run.sh task_name task_type
+参数说明：
+task_name: seq2seq_naive、seq2seq_att、keywords、human，选择4个任务中任意一项；
+task_type: train、predict、evaluate、inference, 选择4个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model;
 
-    我们开源了基于海量未标注数据训练好的模型，以及基于少量标注数据微调的模型，可供用户直接使用
-    ```
-    cd model_files
-    sh download_model.sh
-    ```
+评估示例： bash run.sh human evaluate
+```
 
-    我们提供了两种下载方式,以下载auto_dialogue_evaluation_matching_pretrained_model为例
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行评估相关的代码: 
 
-    方式一：基于PaddleHub命令行工具（PaddleHub可参考[安装指南](https://github.com/PaddlePaddle/PaddleHub)进行安装)
-    ```
-    hub download auto_dialogue_evaluation_matching_pretrained_model --output_path ./
-    ```
+```
+export CUDA_VISIBLE_DEVICES=  #指默认CPU评估
+export CPU_NUM=1 #CPU训练时指定CPU number
 
-    方式二：直接下载
-    ```
-    wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/auto_dialogue_evaluation_matching_pretrained-1.0.0.tar.gz
-    ```
+python -u main.py \
+      --do_eval=true \
+      --use_cuda=false \
+      --evaluation_file="data/input/data/label_data/human/test.ids" \
+      --output_prediction_file="data/output/finetuning_human_predict" \
+      --loss_type="L2"
+```
 
-3. 模型预测
+### 模型推断
+#### 1、第一阶段matching模型的推断：
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本保存inference model
 
-    基于上面的模型和数据，可以运行下面的命令直接对对话数据进行打分(预测结果输出在test_path中).
-    ```
-    TASK=human
-    python -u main.py \
-      --do_infer True \
-      --use_cuda \
-      --test_path data/label_data/$TASK/test.ids \
-      --init_model model_files/${TASK}_finetuned
-    ```
-4. 模型评估
+```
+bash run.sh matching inference
+```
 
-    基于上面的模型和数据，可以运行下面的命令进行效果评估。
+&ensp;&ensp;&ensp;&ensp;方式一如果为CPU执行inference model过程: 
 
-    评估预训练模型作为自动评估效果：
-    ```
-    for task in seq2seq_naive seq2seq_att keywords human
-    do
-    echo $task
-    python -u main.py \
-      --do_val True \
-      --use_cuda \
-      --test_path data/label_data/$task/test.ids \
-      --init_model model_files/matching_pretrained \
-      --loss_type L2
-    done
-    ```
+```
+请将run.sh内参数设置为: 
+export CUDA_VISIBLE_DEVICES=
+```
 
-    评估微调模型效果：
-    ```
-    for task in seq2seq_naive seq2seq_att keywords human
-    do
-      echo $task
-      python -u main.py \
-        --do_val True \
-        --use_cuda \
-        --test_path data/label_data/$task/test.ids \
-        --init_model model_files/${task}_finetuned \
-        --loss_type L2
-    done
-    ```
+&ensp;&ensp;&ensp;&ensp;方式一如果为GPU执行inference model过程:
 
-5. 训练与验证
+```
+请将run.sh内参数设置为: 
+单卡推断（用户指定空闲的单卡）：
+export CUDA_VISIBLE_DEVICES=0
+```
 
-    基于示例的数据集，可以运行下面的命令，进行第一阶段训练
-    ```
-    python -u main.py \
-      --do_train True \
-      --use_cuda \
-      --save_path model_files_tmp/matching_pretrained \
-      --train_path data/unlabel_data/train.ids \
-      --val_path data/unlabel_data/val.ids
-    ```
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行inference model相关的代码: 
 
-    在第一阶段训练基础上，可利用少量标注数据进行第二阶段训练
-    ```
-    TASK=human
-    python -u main.py \
-      --do_train True \
-      --loss_type L2 \
-      --use_cuda \
-      --save_path model_files_tmp/${TASK}_finetuned \
-      --init_model model_files/matching_pretrained \
-      --train_path data/label_data/$TASK/train.ids \
-      --val_path data/label_data/$TASK/val.ids \
-      --print_step 1 \
-      --save_step 1 \
-      --num_scan_data 50
-    ```
+```
+export CUDA_VISIBLE_DEVICES=0  # 指GPU单卡推断
+#export CUDA_VISIBLE_DEVICES=  #CPU推断
+#export CPU_NUM=1 #CPU训练时指定CPU number
 
-## 进阶使用
-### 任务定义与建模
-对话自动评估任务输入是文本对（上文，回复），输出是回复质量得分。
-### 模型原理介绍
-匹配任务（预测上下文是否匹配）和自动评估任务有天然的联系，该项目利用匹配任务作为自动评估的预训练；
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
 
-利用少量标注数据，在匹配模型基础上微调。
-### 数据格式说明
-训练、预测、评估使用的数据示例如下，数据由三列组成，以制表符（'\t'）分隔，第一列是以空格分开的上文id，第二列是以空格分开的回复id，第三列是标签
+python -u main.py \
+      --do_save_inference_model=true \
+      --use_cuda=${use_cuda} \
+      --init_from_params="data/saved_models/trained_models/matching_pretrained/params" \
+      --inference_model_dir="data/inference_models/matching_inference_model"
+```
+
+#### 2、第二阶段finetuning模型的推断：
+#### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本保存inference model
+ 
+```
+bash run.sh task_name task_type
+参数说明：
+task_name: seq2seq_naive、seq2seq_att、keywords、human，选择4个任务中任意一项；
+task_type: train、predict、evaluate、inference, 选择4个参数选项中任意一项(train: 只执行训练，predict: 只执行预测，evaluate：只执行评估过程，依赖预测的结果，inference: 保存inference model;
+
+评估示例： bash run.sh human inference
+```
+
+&ensp;&ensp;&ensp;&ensp;CPU和GPU指定方式同模型推断1中所示；
+
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行inference model相关的代码: 
+
+```
+export CUDA_VISIBLE_DEVICES=0  # 指GPU单卡推断
+#export CUDA_VISIBLE_DEVICES=  #CPU推断
+#export CPU_NUM=1 #CPU训练时指定CPU number
+
+if  [ ! "$CUDA_VISIBLE_DEVICES" ]
+then
+    use_cuda=false
+else
+    use_cuda=true
+fi
+
+python -u main.py \
+      --do_save_inference_model=true \
+      --use_cuda=${use_cuda} \
+      --init_from_params="data/saved_models/trained_models/human_finetuned/params" \
+      --inference_model_dir="data/inference_models/human_inference_model"
+```
+
+### 服务部署
+&ensp;&ensp;&ensp;&ensp;模块内提供已训练好6个对话任务的inference_model模型，用户可根据自身业务情况进行下载使用。
+
+#### 服务器部署
+&ensp;&ensp;&ensp;&ensp;请参考PaddlePaddle官方提供的[服务器端部署](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/deploy/inference/index_cn.html)文档进行部署上线。
+
+## 3、进阶使用
+
+### 背景介绍
+&ensp;&ensp;&ensp;&ensp;对话自动评估任务输入是文本对（上文，回复），输出是回复质量得分，匹配任务（预测上下文是否匹配）和自动评估任务有天然的联系，该项目利用匹配任务作为自动评估的预训练，利用少量标注数据，在匹配模型基础上微调。
+
+### 模型概览
+
+&ensp;&ensp;&ensp;&ensp;本模块内提供的模型为：
+
+&ensp;&ensp;&ensp;&ensp;1）匹配模型：context和response作为输入，使用lstm学习两个句子的表示，在计算两个线性张量的积作为logits，然后sigmoid_cross_entropy_with_logits作为loss, 最终用来评估相似程度;
+
+&ensp;&ensp;&ensp;&ensp;2）finetuing模型：在匹配模型的基础上，将sigmoid_cross_entropy_with_logits loss优化成平方损失loss，来进行训练；
+
+&ensp;&ensp;&ensp;&ensp;模型中所需数据格式如下：
+
+&ensp;&ensp;&ensp;&ensp;训练、预测、评估使用的数据示例如下，数据由三列组成，以制表符（'\t'）分隔，第一列是以空格分开的上文id，第二列是以空格分开的回复id，第三列是标签
+
 ```
 723 236 7823 12 8     887 13 77 4       2
 8474 13 44 34         2 87 91 23       0
 ```
 
-注：本项目额外提供了分词预处理脚本（在preprocess目录下），可供用户使用，具体使用方法如下：
-```
-python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.utf8.seg
-```
+## 4、参考论文
+1、Anjuli Kannan and Oriol Vinyals. 2017. Adversarial evaluation of dialogue models. arXiv preprint arXiv:1701.08198.
+2、Ryan Lowe, Michael Noseworthy, Iulian V Serban, Nicolas Angelard-Gontier, Yoshua Bengio, and Joelle Pineau. 2017. Towards an automatic turing test: Learning to evaluate dialogue responses. arXiv preprint arXiv:1708.07149.
+3、Sebastian M¨oller, Roman Englert, Klaus Engelbrecht, Verena Hafner, Anthony Jameson, Antti Oulasvirta, Alexander Raake, and Norbert Reithinger. 2006. Memo: towards automatic usability evaluation of spoken dialogue services by user error simulations. In Ninth International Conference on Spoken Language Processing.
+4、Kishore Papineni, Salim Roukos, ToddWard, andWei-Jing Zhu. 2002. Bleu: a method for automatic evaluation
+of machine translation. In Proceedings of the 40th annual meeting on association for computational linguistics, pages 311–318. Association for Computational Linguistics.
+5、Chongyang Tao, Lili Mou, Dongyan Zhao, and Rui Yan. 2017. Ruber: An unsupervised method for automatic evaluation of open-domain dialog systems. arXiv preprint arXiv:1701.03079.
+6、Marilyn AWalker, Diane J Litman, Candace A Kamm, and Alicia Abella. 1997. Paradise: A framework for evaluating spoken dialogue agents. In Proceedings of the eighth conference on European chapter of the Association for Computational Linguistics, pages 271–280. Association for Computational Linguistics.
+7、Zhao Yan, Nan Duan, Junwei Bao, Peng Chen, Ming Zhou, Zhoujun Li, and Jianshe Zhou. 2016. Docchat: An information retrieval approach for chatbot engines using unstructured documents. In Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), volume 1, pages 516–525.
+8、Chia-Wei Liu, Ryan Lowe, Iulian V Serban, Michael Noseworthy, Laurent Charlin, and Joelle Pineau. 2016. How not to evaluate your dialogue system: An empirical study of unsupervised evaluation metrics for dialogue response generation. arXiv preprint arXiv:1603.08023.
+9、Chin-Yew Lin. 2004. Rouge: A package for automatic evaluation of summaries. Text Summarization Branches Out.
 
-### 代码结构说明
-main.py：该项目的主函数，封装包括训练、预测、评估的部分
+## 5、版本更新
 
-config.py：定义了该项目模型的相关配置，包括具体模型类别、以及模型的超参数
+第一版：PaddlePaddle 1.4.0版本
+主要功能：支持4个不同对话系统数据上训练、预测和系统性能评估
 
-reader.py：定义了读入数据，加载词典的功能
+第二版：PaddlePaddle 1.6.0版本
+更新功能：在第一版的基础上，根据PaddlePaddle的模型规范化标准，对模块内训练、预测、评估等代码进行了重构，提高易用性；
 
-evaluation.py：定义评估函数
+## 作者
 
-init.py:定义模型load函数
+zhangxiyuan01@baidu.com
 
-run.sh：训练、预测、评估运行脚本
+zhouxiangyang@baidu.com
 
-## 其他
-如何贡献代码
+lilu12@baidu.com
 
-如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
+## 如何贡献代码
+
+&ensp;&ensp;&ensp;&ensp;如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
