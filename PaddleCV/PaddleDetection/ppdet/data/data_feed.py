@@ -623,7 +623,7 @@ class MaskRCNNEvalFeed(DataFeed):
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
-        sample_transforms.append(ArrangeTestRCNN(is_mask=True))
+        sample_transforms.append(ArrangeTestRCNN())
         super(MaskRCNNEvalFeed, self).__init__(
             dataset,
             fields,
@@ -666,7 +666,7 @@ class MaskRCNNTestFeed(DataFeed):
                  num_workers=2,
                  use_process=False,
                  use_padded_im_info=True):
-        sample_transforms.append(ArrangeTestRCNN(is_mask=True))
+        sample_transforms.append(ArrangeTestRCNN())
         if isinstance(dataset, dict):
             dataset = SimpleDataSet(**dataset)
         super(MaskRCNNTestFeed, self).__init__(
