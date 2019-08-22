@@ -28,22 +28,6 @@ random.seed(0)
 np.random.seed(0)
 
 
-def _reader_quit(signum, frame):
-    print("Reader process exit.")
-    sys.exit()
-
-
-def _term_group(sig_num, frame):
-    print('pid {} terminated, terminate group '
-          '{}...'.format(os.getpid(), os.getpgrp()))
-    os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
-
-
-signal.signal(signal.SIGTERM, _reader_quit)
-signal.signal(signal.SIGINT, _term_group)
-print("CALL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-
 def rotate_image(img):
     """rotate image
 
@@ -264,6 +248,13 @@ def _reader_creator(settings,
     def reader():
         with open(file_list) as flist:
             full_lines = [line.strip() for line in flist]
+
+            if len(full_lines) < settings.batch_size:
+                print(
+                    "The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on now, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!"
+                ).format(len(full_lines), settings.batch_size)
+                os._exit(1)
+
             if shuffle:
                 np.random.shuffle(full_lines)
         for line in full_lines:
