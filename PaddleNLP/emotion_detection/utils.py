@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import io
 import os
-import six
 import sys
 import random
 import argparse
@@ -15,44 +14,6 @@ import argparse
 import paddle
 import paddle.fluid as fluid
 import numpy as np
-
-def str2bool(value):
-    """
-    String to Boolean
-    """
-    # because argparse does not support to parse "true, False" as python
-    # boolean directly
-    return value.lower() in ("true", "t", "1")
-
-
-class ArgumentGroup(object):
-    """
-    Argument Class
-    """
-    def __init__(self, parser, title, des):
-        self._group = parser.add_argument_group(title=title, description=des)
-
-    def add_arg(self, name, type, default, help, **kwargs):
-        """
-        Add argument
-        """
-        type = str2bool if type == bool else type
-        self._group.add_argument(
-            "--" + name,
-            default=default,
-            type=type,
-            help=help + ' Default: %(default)s.',
-            **kwargs)
-
-
-def print_arguments(args):
-    """
-    Print Arguments
-    """
-    print('-----------  Configuration Arguments -----------')
-    for arg, value in sorted(six.iteritems(vars(args))):
-        print('%s: %s' % (arg, value))
-    print('------------------------------------------------')
 
 
 def init_checkpoint(exe, init_checkpoint_path, main_program):

@@ -1,13 +1,13 @@
 #!/bin/bash
 export FLAGS_enable_parallel_graph=1
 export FLAGS_sync_nccl_allreduce=1
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=0
 export FLAGS_fraction_of_gpu_memory_to_use=0.95
 TASK_NAME='emotion_detection'
 DATA_PATH=./data/
 VOCAB_PATH=./data/vocab.txt
 CKPT_PATH=./save_models/textcnn
-MODEL_PATH=./models/textcnn
+MODEL_PATH=./save_models/textcnn/step_756
 
 # run_train on train.tsv and do_val on dev.tsv
 train() {
@@ -19,12 +19,11 @@ train() {
         --batch_size 64 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${VOCAB_PATH} \
-        --output_dir ${CKPT_PATH} \
+        --save_model_path ${CKPT_PATH} \
         --save_steps 200 \
         --validation_steps 200 \
         --epoch 5 \
         --lr 0.002 \
-        --config_path ./config.json \
         --skip_steps 200
 }
 # run_eval on test.tsv
@@ -37,7 +36,6 @@ evaluate() {
         --data_dir ${DATA_PATH} \
         --vocab_path ${VOCAB_PATH} \
         --init_checkpoint ${MODEL_PATH} \
-        --config_path ./config.json
 }
 # run_infer on infer.tsv
 infer() {
@@ -49,7 +47,6 @@ infer() {
         --data_dir ${DATA_PATH} \
         --vocab_path ${VOCAB_PATH} \
         --init_checkpoint ${MODEL_PATH} \
-        --config_path ./config.json
 }
 
 main() {

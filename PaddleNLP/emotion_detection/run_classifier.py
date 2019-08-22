@@ -8,7 +8,6 @@ from __future__ import print_function
 
 import os
 import time
-import argparse
 import multiprocessing
 import sys
 sys.path.append("../")
@@ -23,48 +22,15 @@ import reader
 import config
 import utils
 
-parser = argparse.ArgumentParser(__doc__)
-model_g = utils.ArgumentGroup(parser, "model", "model configuration and paths.")
-model_g.add_arg("config_path", str, None, "Path to the json file for EmoTect model config.")
-model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
-model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
-
-train_g = utils.ArgumentGroup(parser, "training", "training options.")
-train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
-train_g.add_arg("save_steps", int, 10000, "The steps interval to save checkpoints.")
-train_g.add_arg("validation_steps", int, 1000, "The steps interval to evaluate model performance.")
-train_g.add_arg("lr", float, 0.002, "The Learning rate value for training.")
-
-log_g = utils.ArgumentGroup(parser, "logging", "logging related")
-log_g.add_arg("skip_steps", int, 10, "The steps interval to print loss.")
-log_g.add_arg("verbose", bool, False, "Whether to output verbose log")
-
-data_g = utils.ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
-data_g.add_arg("data_dir", str, None, "Directory path to training data.")
-data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
-data_g.add_arg("batch_size", int, 256, "Total examples' number in batch for training.")
-data_g.add_arg("random_seed", int, 0, "Random seed.")
-
-run_type_g = utils.ArgumentGroup(parser, "run_type", "running type options.")
-run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
-run_type_g.add_arg("task_name", str, None, "The name of task to perform sentiment classification.")
-run_type_g.add_arg("do_train", bool, False, "Whether to perform training.")
-run_type_g.add_arg("do_val", bool, False, "Whether to perform evaluation.")
-run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
-
-parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
-
-args = parser.parse_args()
 
 def create_model(args,
                  pyreader_name,
-                 emotect_config,
                  num_labels,
-                 is_infer=False):
+                 is_prediction=False):
     """
     Create Model for sentiment classification
     """
-    if is_infer:
+    if is_prediction:
         pyreader = fluid.layers.py_reader(
             capacity=16,
             shapes=[[-1, 1]],
@@ -81,28 +47,28 @@ def create_model(args,
             name=pyreader_name,
             use_double_buffer=False)
 
-    if emotect_config['model_type'] == "cnn_net":
+    if args.model_type == "cnn_net":
         network = nets.cnn_net
-    elif emotect_config['model_type'] == "bow_net":
+    elif args.model_type == "bow_net":
         network = nets.bow_net
-    elif emotect_config['model_type'] == "lstm_net":
+    elif args.model_type == "lstm_net":
         network = nets.lstm_net
-    elif emotect_config['model_type'] == "bilstm_net":
+    elif args.model_type == "bilstm_net":
         network = nets.bilstm_net
-    elif emotect_config['model_type'] == "gru_net":
+    elif args.model_type == "gru_net":
         network = nets.gru_net
-    elif emotect_config['model_type'] == "textcnn_net":
+    elif args.model_type == "textcnn_net":
         network = nets.textcnn_net
     else:
         raise ValueError("Unknown network type!")
 
-    if is_infer:
+    if is_prediction:
         data = fluid.layers.read_file(pyreader)
-        probs = network(data, None, emotect_config["vocab_size"], class_dim=num_labels, is_infer=True)
+        probs = network(data, None, args.vocab_size, class_dim=num_labels, is_prediction=True)
         return pyreader, probs
 
     data, label = fluid.layers.read_file(pyreader)
-    avg_loss, probs = network(data, label, emotect_config["vocab_size"], class_dim=num_labels)
+    avg_loss, probs = network(data, label, args.vocab_size, class_dim=num_labels)
     num_seqs = fluid.layers.create_tensor(dtype='int64')
     accuracy = fluid.layers.accuracy(input=probs, label=label, total=num_seqs)
     return pyreader, avg_loss, accuracy, num_seqs
@@ -156,8 +122,6 @@ def main(args):
     """
     Main Function
     """
-    emotect_config = config.EmoTectConfig(args.config_path)
-
     if args.use_cuda:
         place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
     else:
@@ -199,9 +163,8 @@ def main(args):
                 train_pyreader, loss, accuracy, num_seqs = create_model(
                     args,
                     pyreader_name='train_reader',
-                    emotect_config=emotect_config,
                     num_labels=num_labels,
-                    is_infer=False)
+                    is_prediction=False)
 
                 sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.lr)
                 sgd_optimizer.minimize(loss)
@@ -219,9 +182,8 @@ def main(args):
                 test_pyreader, loss, accuracy, num_seqs = create_model(
                     args,
                     pyreader_name='test_reader',
-                    emotect_config=emotect_config,
                     num_labels=num_labels,
-                    is_infer=False)
+                    is_prediction=False)
         test_prog = test_prog.clone(for_test=True)
 
     if args.do_infer:
@@ -231,9 +193,8 @@ def main(args):
                 infer_pyreader, probs = create_model(
                     args,
                     pyreader_name='infer_reader',
-                    emotect_config=emotect_config,
                     num_labels=num_labels,
-                    is_infer=True)
+                    is_prediction=True)
         test_prog = test_prog.clone(for_test=True)
 
     exe.run(startup_prog)
@@ -374,6 +335,8 @@ def get_cards():
 
 
 if __name__ == "__main__":
-    utils.print_arguments(args)
-    check_cuda(args.use_cuda)
-    main(args)
+    pd_config = PDConfig('config.json')
+    pd_config.build()
+    pd_config.print_arguments()
+    check_cuda(pd_config.use_cuda)
+    main(pd_config)

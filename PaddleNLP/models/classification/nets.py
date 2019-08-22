@@ -11,7 +11,7 @@ def bow_net(data,
             hid_dim=128,
             hid_dim2=96,
             class_dim=2,
-            is_infer=False):
+            is_prediction=False):
     """
     Bow net
     """
@@ -25,7 +25,7 @@ def bow_net(data,
     fc_2 = fluid.layers.fc(input=fc_1, size=hid_dim2, act="tanh")
     # softmax layer
     prediction = fluid.layers.fc(input=[fc_2], size=class_dim, act="softmax")
-    if is_infer:
+    if is_prediction:
         return prediction
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
     avg_cost = fluid.layers.mean(x=cost)
@@ -42,7 +42,7 @@ def cnn_net(data,
             hid_dim2=96,
             class_dim=2,
             win_size=3,
-            is_infer=False):
+            is_prediction=False):
     """
     Conv net
     """
@@ -61,7 +61,7 @@ def cnn_net(data,
     fc_1 = fluid.layers.fc(input=[conv_3], size=hid_dim2)
     # softmax layer
     prediction = fluid.layers.fc(input=[fc_1], size=class_dim, act="softmax")
-    if is_infer:
+    if is_prediction:
         return prediction
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
     avg_cost = fluid.layers.mean(x=cost)
@@ -78,7 +78,7 @@ def lstm_net(data,
              hid_dim2=96,
              class_dim=2,
              emb_lr=30.0,
-             is_infer=False):
+             is_prediction=False):
     """
     Lstm net
     """
@@ -102,7 +102,7 @@ def lstm_net(data,
     fc1 = fluid.layers.fc(input=lstm_max_tanh, size=hid_dim2, act='tanh')
     # softmax layer
     prediction = fluid.layers.fc(input=fc1, size=class_dim, act='softmax')
-    if is_infer:
+    if is_prediction:
         return prediction
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
     avg_cost = fluid.layers.mean(x=cost)
@@ -119,7 +119,7 @@ def bilstm_net(data,
                hid_dim2=96,
                class_dim=2,
                emb_lr=30.0,
-               is_infer=False):
+               is_prediction=False):
     """
     Bi-Lstm net
     """
@@ -147,7 +147,7 @@ def bilstm_net(data,
     fc1 = fluid.layers.fc(input=lstm_concat, size=hid_dim2, act='tanh')
     # softmax layer
     prediction = fluid.layers.fc(input=fc1, size=class_dim, act='softmax')
-    if is_infer:
+    if is_prediction:
         return prediction
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
     avg_cost = fluid.layers.mean(x=cost)
@@ -163,7 +163,7 @@ def gru_net(data,
             hid_dim2=96,
             class_dim=2,
             emb_lr=30.0,
-            is_infer=False):
+            is_prediction=False):
     """
     gru net
     """
@@ -182,7 +182,7 @@ def gru_net(data,
     fc1 = fluid.layers.fc(input=gru_max_tanh, size=hid_dim2, act='tanh')
 
     prediction = fluid.layers.fc(input=fc1, size=class_dim, act='softmax')
-    if is_infer:
+    if is_prediction:
         return prediction
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
     avg_cost = fluid.layers.mean(x=cost)
@@ -199,7 +199,7 @@ def textcnn_net(data,
             hid_dim2=96,
             class_dim=2,
             win_sizes=None,
-            is_infer=False):
+            is_prediction=False):
     """
     Textcnn_net
     """
@@ -225,7 +225,7 @@ def textcnn_net(data,
     fc_1 = fluid.layers.fc(input=[convs_out], size=hid_dim2, act="tanh")
     # softmax layer
     prediction = fluid.layers.fc(input=[fc_1], size=class_dim, act="softmax")
-    if is_infer:
+    if is_prediction:
         return prediction
 
     cost = fluid.layers.cross_entropy(input=prediction, label=label)
