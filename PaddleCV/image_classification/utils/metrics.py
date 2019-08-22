@@ -71,8 +71,8 @@ class Metrics(object):
         softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
 
         if self.is_train and self.use_label_smoothing:
-            cost = _calc_label_smoothing_loss(self, softmax_out, self.label,
-                                              self.class_dim, self.epsilon)
+            cost = self._calc_label_smoothing_loss(softmax_out, self.label,
+                                                   self.class_dim, self.epsilon)
 
         else:
             cost = fluid.layers.cross_entropy(
@@ -152,7 +152,7 @@ class Mixup_Metrics(Metrics):
         self.lam = data[3]
 
     def out(self):
-        """Metrics of Mixup processing network, include avg_cost
+        """Metrics of Mixup processing netw ork, include avg_cost
         """
 
         net_out = self.model.net(input=self.image, class_dim=self.class_dim)
@@ -170,7 +170,6 @@ class Mixup_Metrics(Metrics):
 
         loss_a_mean = fluid.layers.mean(x=loss_a)
         loss_b_mean = fluid.layers.mean(x=loss_b)
-
         cost = self.lam * loss_a_mean + (1 - self.lam) * loss_b_mean
         avg_cost = fluid.layers.mean(x=cost)
         return [avg_cost]
