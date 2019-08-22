@@ -3,13 +3,13 @@ train_feed: YoloTrainFeed
 eval_feed: YoloEvalFeed
 test_feed: YoloTestFeed
 use_gpu: true
-max_iters: 24000
+max_iters: 14000
 log_smooth_window: 20
 save_dir: output
-snapshot_iter: 2000
+snapshot_iter: 1000
 metric: VOC
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
-weights: output/yolov3_darknet_mushi/model_final
+weights: output/yolov3_darknet_insect/model_final
 num_classes: 7
 
 YOLOv3:
@@ -38,16 +38,16 @@ YOLOv3Head:
     score_threshold: 0.01
 
 LearningRate:
-  base_lr: 0.0002
+  base_lr: 0.0001
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
     milestones:
-    - 16000
-    - 20000
+    - 11000
+    - 12500
   - !LinearWarmup
     start_factor: 0.
-    steps: 2000
+    steps: 1000
 
 OptimizerBuilder:
   optimizer:
@@ -60,19 +60,19 @@ OptimizerBuilder:
 YoloTrainFeed:
   batch_size: 8
   dataset:
-    dataset_dir: dataset/mushi
+    dataset_dir: dataset/insect
     annotation: ImageSets/train.txt
     image_dir: JPEGImages/train
     use_default_label: true
   num_workers: 8
   bufsize: 128
   use_process: true
-  mixup_epoch: 250
+  mixup_epoch: 50
 
 YoloEvalFeed:
   batch_size: 8
   dataset:
-    dataset_dir: dataset/mushi
+    dataset_dir: dataset/insect
     annotation: ImageSets/val.txt
     image_dir: JPEGImages/val
     use_default_label: true
