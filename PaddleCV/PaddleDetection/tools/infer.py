@@ -57,7 +57,7 @@ def get_save_image_name(output_dir, image_path):
     """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    image_name = image_path.split('/')[-1]
+    image_name = os.path.split(image_path)[-1]
     name, ext = os.path.splitext(image_name)
     return os.path.join(output_dir, "{}".format(name)) + ext
 
@@ -186,7 +186,7 @@ def main():
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg['metric'] == 'VOC':
-        extra_keys = ['im_id']
+        extra_keys = ['im_id', 'im_shape']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # parse dataset category
@@ -235,7 +235,7 @@ def main():
             image = visualize_results(image,
                                       int(im_id), catid2name,
                                       FLAGS.draw_threshold, bbox_results,
-                                      mask_results, is_bbox_normalized)
+                                      mask_results)
             save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name, quality=95)
