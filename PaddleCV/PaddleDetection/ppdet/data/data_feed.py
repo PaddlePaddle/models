@@ -421,7 +421,7 @@ class FasterRCNNTrainFeed(DataFeed):
                  dataset=CocoDataSet().__dict__,
                  fields=[
                      'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
-                     'is_crowd',
+                     'is_crowd'
                  ],
                  image_shape=[3, 800, 1333],
                  sample_transforms=[

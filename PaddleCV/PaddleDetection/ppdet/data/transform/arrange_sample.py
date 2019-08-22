@@ -96,7 +96,7 @@ class ArrangeTestRCNN(BaseOperator):
     Transform dict to the tuple format needed for training.
     """
 
-    def __init__(self): 
+    def __init__(self):
         super(ArrangeTestRCNN, self).__init__()
 
     def __call__(self, sample, context=None):
