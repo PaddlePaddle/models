@@ -87,9 +87,6 @@ class ArrangeRCNN(BaseOperator):
                     break
                 gt_masks.append(gt_segm)
             outs = outs + (gt_masks, )
-        else:
-            difficult = sample['difficult']
-            outs = outs + (difficult, )
         return outs
 
 
@@ -99,14 +96,8 @@ class ArrangeTestRCNN(BaseOperator):
     Transform dict to the tuple format needed for training.
     """
 
-    def __init__(self, is_mask=False, is_eval=False):
+    def __init__(self): 
         super(ArrangeTestRCNN, self).__init__()
-        self.is_mask = is_mask
-        self.is_eval = is_eval
-        assert isinstance(self.is_mask, bool), \
-                "wrong type for is_mask is {}, should be bool".format(type(self.is_mask))
-        assert isinstance(self.is_eval, bool), \
-                "wrong type for is_eval{}, should be bool".format(type(self.is_eval))
 
     def __call__(self, sample, context=None):
         """
@@ -133,9 +124,6 @@ class ArrangeTestRCNN(BaseOperator):
         # so im_shape is appended by 1 to match dimension.
         im_shape = np.array((h, w, 1), dtype=np.float32)
         outs = (im, im_info, im_id, im_shape)
-        if not self.is_mask and self.is_eval:
-            difficult = sample['difficult']
-            outs = outs + (difficult, )
         return outs
 
 

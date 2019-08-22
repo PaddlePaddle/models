@@ -421,7 +421,7 @@ class FasterRCNNTrainFeed(DataFeed):
                  dataset=CocoDataSet().__dict__,
                  fields=[
                      'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
-                     'is_crowd', 'is_difficult'
+                     'is_crowd',
                  ],
                  image_shape=[3, 800, 1333],
                  sample_transforms=[
@@ -467,7 +467,7 @@ class FasterRCNNEvalFeed(DataFeed):
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_info', 'im_id', 'im_shape', 'is_difficult'],
+                 fields=['image', 'im_info', 'im_id', 'im_shape'],
                  image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
@@ -485,7 +485,7 @@ class FasterRCNNEvalFeed(DataFeed):
                  drop_last=False,
                  num_workers=2,
                  use_padded_im_info=True):
-        sample_transforms.append(ArrangeTestRCNN(is_eval=True))
+        sample_transforms.append(ArrangeTestRCNN())
         super(FasterRCNNEvalFeed, self).__init__(
             dataset,
             fields,

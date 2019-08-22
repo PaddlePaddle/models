@@ -77,13 +77,12 @@ class FasterRCNN(object):
         rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
 
         if mode == 'train':
-            for var in ['gt_label', 'is_crowd', 'gt_box', 'is_difficult']:
+            for var in ['gt_label', 'is_crowd', 'gt_box']:
                 assert var in feed_vars, "{} has no {}".format(feed_vars, var)
 
             gt_label = feed_vars['gt_label']
             gt_box = feed_vars['gt_box']
-            is_crowd = feed_vars['is_crowd'] if self.metric == 'COCO' \
-                else feed_vars['is_difficult']
+            is_crowd = feed_vars['is_crowd']
 
             rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
             # sampled rpn proposals
