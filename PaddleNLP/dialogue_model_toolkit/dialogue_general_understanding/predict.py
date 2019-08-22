@@ -115,7 +115,7 @@ def do_predict(args):
         save_load_io.init_from_pretrain_model(args, exe, test_prog)
 
     compiled_test_prog = fluid.CompiledProgram(test_prog)
-    
+   
     processor = processors[task_name](data_dir=args.data_dir,
                                       vocab_path=args.vocab_path,
                                       max_seq_len=args.max_seq_len,
@@ -141,6 +141,7 @@ def do_predict(args):
             break
 
     np.set_printoptions(precision=4, suppress=True)
+    print("Write the predicted results into the output_prediction_file")
     with open(args.output_prediction_file, 'w') as fw: 
         if task_name not in ['atis_slot']: 
             for index, result in enumerate(all_results):

@@ -140,7 +140,7 @@ def do_train(args):
                 startup_prog=startup_prog,
                 weight_decay=args.weight_decay,
                 scheduler=args.lr_scheduler,
-                use_fp16=args.use_fp16,
+                use_fp16=False,
                 loss_scaling=args.loss_scaling)
 
     data_reader.decorate_batch_generator(batch_generator)
