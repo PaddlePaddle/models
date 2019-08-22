@@ -8,7 +8,7 @@ log_smooth_window: 20
 save_dir: output
 snapshot_iter: 1000
 metric: VOC
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
+pretrain_weights: http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar
 weights: output/yolov3_mobilenet_v1_insect/model_final
 num_classes: 7
 
