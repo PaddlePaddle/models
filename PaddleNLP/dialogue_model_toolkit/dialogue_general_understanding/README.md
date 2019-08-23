@@ -1,10 +1,14 @@
 # 对话通用理解模块DGU
 
- * [1、模型简介](#1、模型简介)
- * [2、快速开始](#2、快速开始)
- * [3、进阶使用](#3、进阶使用)
- * [4、参考论文](#4、参考论文)
- * [5、版本更新](#5、版本更新)
+- [**1、模型简介**](#1、模型简介)
+
+- [**2、快速开始**](#2、快速开始)
+
+- [**3、进阶使用**](#3、进阶使用)
+
+- [**4、参考论文**](#4、参考论文)
+
+- [**5、版本更新**](#5、版本更新)
 
 ## 1、模型简介
 
@@ -60,6 +64,10 @@ SWDA：Switchboard Dialogue Act Corpus;
 ```
 cd dgu && bash prepare_data_and_model.sh
 ```
+&ensp;&ensp;&ensp;&ensp;数据路径：data/input/data
+&ensp;&ensp;&ensp;&ensp;预训练模型路径：data/pretrain_model
+&ensp;&ensp;&ensp;&ensp;已训练模型路径：data/saved_models/trained_models
+
 
 &ensp;&ensp;&ensp;&ensp;下载的数据集中已提供了训练集，测试集和验证集，用户如果需要重新生成某任务数据集的训练数据，可执行：
 
@@ -67,6 +75,34 @@ cd dgu && bash prepare_data_and_model.sh
 cd dgu/scripts && bash run_build_data.sh task_name
 参数说明：
 task_name: udc, swda, mrda, atis, dstc2,  选择5个数据集选项中用户需要生成的数据名
+
+各任务数据生成脚本描述：
+dgu/scripts/build_atis_dataset.py：将ATIS开源数据集转换成训练所需的意图识别（atis_intent）和槽位解析（atis_slot）训练数据
+dgu/scripts/build_dstc2_dataset.py：将DSTC2开源数据集转换成训练所需数据格式；
+dgu/scripts/build_mrda_dataset.py：将MRDA开源数据集转换成训练所需数据格式；
+dgu/scripts/build_swda_dataset.py：将SWDA开源数据集转换成训练所需数据格式；
+```
+
+&ensp;&ensp;&ensp;&ensp;根据脚本构造的训练数据格式说明：
+
+```
+udc：数据组成，label和多轮对话(分为多轮上文和当前回复)，整体分割符为"\t"
+format: label \t conv1 \t conv2 \t conv3 \t ......\t response
+
+swda：数据组成，多轮对话id, 标签label, 发言人caller, 说话内容conversation_content，整体分割符为"\t"
+format： conversation_id \t label \t caller \t conversation_content
+
+mrda: 数据组成，多轮对话id, 标签label, 发言人caller, 说话内容conversation_content，整体分割符为"\t"
+format： conversation_id \t label \t caller \t conversation_content
+
+atis/atis_intent: 数据组成，标签label, 说话内容conversation_content，整体分割符为"\t"
+format： label \t conversation_content
+
+atis/atis_slot: 数据组成，说话内容conversation_content，标签序列 label_list（空格分割）, 其中标签和说话内容中token为一一对应关系，整体分割符为"\t"
+format： conversation_content \t label1 label2 label3
+
+dstc2/dstc2: 数据组成，多轮对话id, 当前轮QA对(使用\1拼接)，标签(识别到的对话状态，从对话初始状态到当前轮累计的标签集合, 空格分割)，整体分割符为"\t"
+format：conversation_content \t question \1 answer \t state1 state2 state3......
 ```
 
 ### 单机训练
@@ -119,6 +155,10 @@ fi
 TASK_NAME="atis_intent"  #指定训练的任务名称
 BERT_BASE_PATH="data/pretrain_model/uncased_L-12_H-768_A-12"
 
+if [ -f "./data/saved_models/${TASK_NAME}" ]; then
+    rm "./data/saved_models/${TASK_NAME}"
+fi
+
 if [ ! -d "./data/saved_models/${TASK_NAME}" ]; then
     mkdir "./data/saved_models/${TASK_NAME}"
 fi
@@ -141,8 +181,7 @@ python -u main.py \
        --learning_rate=2e-5 \
        --weight_decay=0.01 \
        --max_seq_len=128 \
-       --print_steps=10 \
-       --use_fp16 false 
+       --print_steps=10
 ```
 
 注：
@@ -350,7 +389,7 @@ python -u main.py \
 [CLS] token11 token12 token13  [INNER_SEP] token11 token12 token13 [SEP]  token21 token22 token23 [SEP]  token31 token32 token33 [SEP]
 ```
 
-&ensp;&ensp;&ensp;&ensp;输入数据以[CLS]开始，[SEP]分割内容为对话内容相关三部分，如上文，当前句，下文等，如[SEP]分割的每部分内部由多轮组成的话，使用[INNER_SEP]进行分割；第二部分和第三部分部分皆可缺省；
+&ensp;&ensp;&ensp;&ensp;输入数据以[CLS]开始，[SEP]分割对话内容（上文、当前句、下文等），如果[SEP]分割的每部分内部由多轮组成的话，使用[INNER_SEP]进行分割；第二部分和第三部分部分皆可缺省；
 
 &ensp;&ensp;&ensp;&ensp;目前dialogue_general_understanding模块内已将数据准备部分集成到代码内，用户可根据上面输入数据格式，组装自己的数据；
 
