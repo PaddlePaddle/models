@@ -1,10 +1,13 @@
 # -*- encoding: utf8 -*-
 import os
+import sys
+sys.path.append("../")
 
 import paddle
 import paddle.fluid as fluid
 import numpy as np
 
+from models.model_check import check_cuda
 from config import PDConfig
 from run_classifier import create_model
 import utils
@@ -26,7 +29,7 @@ def do_save_inference_model(args):
             infer_pyreader, probs = create_model(
                 args,
                 pyreader_name='infer_reader',
-                num_labels=num_labels,
+                num_labels=args.num_labels,
                 is_prediction=True)
 
     test_prog = test_prog.clone(for_test=True)

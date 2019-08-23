@@ -61,6 +61,9 @@ main() {
         infer)
             infer "$@";
             ;;
+        save_inference_model)
+            save_inference_model "$@";
+            ;;
         help)
             echo "Usage: ${BASH_SOURCE} {train|eval|infer}";
             return 0;

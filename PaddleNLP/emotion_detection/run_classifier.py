@@ -132,7 +132,7 @@ def main(args):
     processor = reader.EmoTectProcessor(data_dir=args.data_dir,
                                       vocab_path=args.vocab_path,
                                       random_seed=args.random_seed)
-    num_labels = len(processor.get_labels())
+    #num_labels = len(processor.get_labels())
 
     if not (args.do_train or args.do_val or args.do_infer):
         raise ValueError("For args `do_train`, `do_val` and `do_infer`, at "
@@ -264,7 +264,7 @@ def main(args):
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
-                    save_path = os.path.join(args.output_dir, "step_" + str(steps))
+                    save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
                     fluid.io.save_persistables(exe, save_path, train_program)
 
                 if steps % args.validation_steps == 0:
