@@ -110,6 +110,9 @@ def create_inputs(data, architecture, use_cpp_engine=True):
         inputs += [create_tensor(im_size, 'int64', use_cpp_engine)]
     elif architecture == 'SSD':
         pass
+    elif architecture == 'RetinaNet' or architecture == 'CascadeRCNN':
+        im_info = data['im_info'][0]
+        inputs += [create_tensor(im_info, 'float32', use_cpp_engine)]
     else:
         im_info = data['im_info'][0]
         im_shape = data['im_shape'][0]
@@ -263,7 +266,7 @@ def benchmark():
     logger.info('run benchmark...')
     t1 = time.time()
     for i in range(cnt):
-        predict.run(inputs)
+        outs = predict.run(inputs)
     t2 = time.time()
 
     ms = (t2 - t1) * 1000.0 / float(cnt)
@@ -282,7 +285,7 @@ def benchmark():
 
         is_bbox_normalized = True if cfg.architecture == 'SSD' else False
 
-        outs = outs[0]
+        outs = outs[-1]
         res = {}
         lengths = offset_to_lengths(outs.lod)
         np_data = np.array(outs.data.float_data()).reshape(outs.shape)
