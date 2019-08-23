@@ -46,7 +46,7 @@ def create_net(
         sentence_ids=sent_ids,
         input_mask=input_mask,
         config=bert_conf,
-        use_fp16=args.use_fp16)
+        use_fp16=False)
 
     params = {'num_labels': num_labels,
               'src_ids': src_ids,

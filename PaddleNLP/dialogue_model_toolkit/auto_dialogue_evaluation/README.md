@@ -1,10 +1,14 @@
 # 对话自动评估模块ADE
 
- * [1、模型简介](#1、模型简介)
- * [2、快速开始](#2、快速开始)
- * [3、进阶使用](#3、进阶使用)
- * [4、参考论文](#4、参考论文)
- * [5、版本更新](#5、版本更新)
+- [**1、模型简介**](#1、模型简介)
+
+- [**2、快速开始**](#2、快速开始)
+
+- [**3、进阶使用**](#3、进阶使用)
+
+- [**4、参考论文**](#4、参考论文)
+
+- [**5、版本更新**](#5、版本更新)
 
 ## 1、模型简介
 
@@ -40,9 +44,11 @@ cd models/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation
 
 &ensp;&ensp;&ensp;&ensp;本模块内模型训练主要包括两个阶段：
 
-&ensp;&ensp;&ensp;&ensp;1）第一阶段：训练一个匹配模型作为评估工具，可用于待评估对话系统内的回复内容进行排序；（matching任务）
+&ensp;&ensp;&ensp;&ensp;1）第一阶段：训练一个匹配模型作为评估工具，可用于待评估对话系统内的回复内容进行排序；（matching任务)
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;模型结构: 输入为context和response, 对两个输入学习embedding表示, 学习到的表示经过lstm学习高阶表示, context和response的高阶表示计算双线性张量积logits, logits和label计算sigmoid_cross_entropy_with_logits loss;
 
 &ensp;&ensp;&ensp;&ensp;2）第二阶段：利用少量的对话系统的标记数据，对第一阶段训练的匹配模型进行finetuning, 可以提高评估效果（包含human，keywords，seq2seq_att，seq2seq_naive，4个finetuning任务）;
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;模型结构: finetuning阶段学习表示到计算logits部分和第一阶段模型结构相同，区别在于finetuning阶段计算square_error_cost loss；
 
 &ensp;&ensp;&ensp;&ensp;用于第二阶段fine-tuning的对话系统包括下面四部分：
     
@@ -74,6 +80,8 @@ label_data（第二阶段finetuning数据集）
 cd ade && bash prepare_data_and_model.sh
 ```
 
+&ensp;&ensp;&ensp;&ensp;数据路径：data/input/data/   
+&ensp;&ensp;&ensp;&ensp;模型路径：data/saved_models/trained_models/
 &ensp;&ensp;&ensp;&ensp;下载经过预处理的数据，运行该脚本之后，data目录下会存在unlabel_data(train.ids/val.ids/test.ids)，lable_data: human、keywords、seq2seq_att、seq2seq_naive(四个任务数据train.ids/val.ids/test.ids)，以及word2ids.
 
 ### 单机训练
@@ -84,14 +92,14 @@ cd ade && bash prepare_data_and_model.sh
 bash run.sh matching train
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU训练: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU训练: 
 
 ```
 请将run.sh内参数设置为: 
@@ -121,6 +129,12 @@ else
 fi
 
 pretrain_model_path="data/saved_models/matching_pretrained"
+
+if [ -f ${pretrain_model_path} ]
+then
+    rm ${pretrain_model_path}
+fi
+
 if [ ! -d ${pretrain_model_path} ]
 then
      mkdir ${pretrain_model_path}
@@ -181,6 +195,12 @@ else
 fi
 
 save_model_path="data/saved_models/human_finetuned"
+
+if [ -f ${save_model_path} ]
+then
+    rm ${save_model_path}
+fi
+
 if [ ! -d ${save_model_path} ]
 then
     mkdir ${save_model_path}
@@ -215,14 +235,14 @@ python -u main.py \
 bash run.sh matching predict
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU预测: 
 
 ```
 请将run.sh内参数设置为: 
 export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU预测: 
 
 ```
 请将run.sh内参数设置为: 
@@ -329,23 +349,23 @@ seq2seq_naive：使用spearman相关系数来衡量评估模型对系统的打�
 
 &ensp;&ensp;&ensp;&ensp;1. 无标注数据情况下，直接使用预训练好的评估工具进行评估；
     
-    在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
 
-    /|seq2seq\_naive|seq2seq\_att|keywords|human
-    --|:--:|--:|:--:|--:
-    cor|0.361|0.343|0.324|0.288
+   ||seq2seq\_naive|seq2seq\_att|keywords|human|
+   |--|:--:|--:|:--:|--:|
+   |cor|0.361|0.343|0.324|0.288|
 
-    对四个系统平均得分排序：
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;对四个系统平均得分排序：
 
-    人工评估|k(0.591)<n(0.847)<a(1.116)<h(1.240)
-    --|--:
-    自动评估|k(0.625)<n(0.909)<a(1.399)<h(1.683)
+   |人工评估|k(0.591)<n(0.847)<a(1.116)<h(1.240)|
+   |--|--:|
+   |自动评估|k(0.625)<n(0.909)<a(1.399)<h(1.683)|
 
 &ensp;&ensp;&ensp;&ensp;2. 利用少量标注数据微调后，自动评估打分和人工打分spearman相关系数，如下：
 
-    /|seq2seq\_naive|seq2seq\_att|keywords|human
-    --|:--:|--:|:--:|--:
-    cor|0.474|0.477|0.443|0.378
+   ||seq2seq\_naive|seq2seq\_att|keywords|human|
+   |--|:--:|--:|:--:|--:|
+   |cor|0.474|0.477|0.443|0.378|
 
 #### 1、第一阶段matching模型的评估：
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本评估
@@ -404,14 +424,14 @@ python -u main.py \
 bash run.sh matching inference
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU执行inference model过程: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU执行inference model过程: 
 
 ```
 请将run.sh内参数设置为: 
 export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU执行inference model过程:
+&ensp;&ensp;&ensp;&ensp;如果为GPU执行inference model过程:
 
 ```
 请将run.sh内参数设置为: 
@@ -496,7 +516,7 @@ python -u main.py \
 
 &ensp;&ensp;&ensp;&ensp;模型中所需数据格式如下：
 
-&ensp;&ensp;&ensp;&ensp;训练、预测、评估使用的数据示例如下，数据由三列组成，以制表符（'\t'）分隔，第一列是以空格分开的上文id，第二列是以空格分开的回复id，第三列是标签
+&ensp;&ensp;&ensp;&ensp;训练、预测、评估使用的数据示例如下，数据由三列组成，以制表符（'\t'）分隔，第一列是以空格分开的上文id（即context），第二列是以空格分开的回复id（即response），第三列是标签（标签含义：2-完全匹配，1-部分匹配，0-不匹配）。
 
 ```
 723 236 7823 12 8     887 13 77 4       2
