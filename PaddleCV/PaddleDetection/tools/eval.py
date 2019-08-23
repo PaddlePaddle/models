@@ -41,6 +41,7 @@ from ppdet.utils.check import check_gpu
 from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
+import time
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -100,21 +101,18 @@ def main():
         json_eval_results(
             eval_feed, cfg.metric, json_directory=FLAGS.output_eval)
         return
-    # compile program for multi-devices
-    if devices_num <= 1:
-        compile_program = fluid.compiler.CompiledProgram(eval_prog)
-    else:
-        build_strategy = fluid.BuildStrategy()
-        build_strategy.memory_optimize = False
-        build_strategy.enable_inplace = False
-        compile_program = fluid.compiler.CompiledProgram(
-            eval_prog).with_data_parallel(build_strategy=build_strategy)
+
+    exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.num_threads = 1
+    compile_program = fluid.compiler.CompiledProgram(
+        eval_prog).with_data_parallel(exec_strategy=exec_strategy)
 
     # load model
     exe.run(startup_prog)
     if 'weights' in cfg:
         checkpoint.load_pretrain(exe, eval_prog, cfg.weights)
 
+    instance_num = 5000.0
     assert cfg.metric in ['COCO', 'VOC'], \
             "unknown metric type {}".format(cfg.metric)
     extra_keys = []
@@ -122,6 +120,7 @@ def main():
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg.metric == 'VOC':
         extra_keys = ['gt_box', 'gt_label', 'is_difficult']
+        instance_num = 4952.0
 
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 
@@ -131,7 +130,12 @@ def main():
             callable(model.is_bbox_normalized):
         is_bbox_normalized = model.is_bbox_normalized()
 
+    t1 = time.time()
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
+    t2 = time.time()
+    speed = instance_num / (t2 - t1)
+    print("Inference time: {} fps".format(speed))
+
     # evaluation
     resolution = None
     if 'mask' in results[0]:

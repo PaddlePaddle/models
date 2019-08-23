@@ -77,8 +77,16 @@ def create_tensor(np_data, dtype, use_cpp_engine=True):
 
 
 def batch_row2col(data, fields):
-    outs = [[[], []] for i in range(len(data[0]))]
     anno_bbox = ['gt_box', 'gt_label', 'is_crowd', 'is_difficult']
+    #outs = []
+    #if len(data) == 1:
+    #    data = data[0]
+    #    im = data[0]
+    #    im = im.reshape((1,) + im.shape)
+    #    outs.append(im)
+    #    for i in xrange(1, len(data)):
+    #        outs.append(data[i].reshape(1,-1))
+    outs = [[[], []] for i in range(len(data[0]))]
     for batch in data:
         for i, slot in enumerate(batch):
             if fields[i] in anno_bbox:
@@ -88,7 +96,6 @@ def batch_row2col(data, fields):
                 outs[i][0].append(slot)
 
     for i, slot in enumerate(outs):
-        #outs[i][0] = np.concatenate(slot[0], axis=0)
         outs[i][0] = np.array(slot[0])
         outs[i][1] = [slot[1]]
     return outs
@@ -151,6 +158,7 @@ def evaluate():
             FLAGS.model_path, mode=FLAGS.mode, batch_size=feed.batch_size)
         predict = fluid.core.create_paddle_predictor(config)
 
+    t1 = time.time()
     for i, data in enumerate(reader()):
         if FLAGS.use_cpp_engine:
             data = batch_row2col(data, fields)
@@ -206,6 +214,11 @@ def evaluate():
                 logger.info("Detection bbox results save in {}".format(
                     save_file))
                 image.save(save_file, quality=95)
+
+    t2 = time.time()
+    ins_num = 5000.0 if cfg.metric == 'COCO' else 4952.0
+    speed = 5000.0 / (t2 - t1)
+    print("Inference time: {} fps".format(speed))
 
     resolution = None
     if 'mask' in results[0]:

@@ -56,3 +56,10 @@ coverage.xml
 /docs/_build/
 
 *.json
+
+*.sh
+*.txt
+*.jpg
+*.jpeg
+*.png
+*.tar.gz
