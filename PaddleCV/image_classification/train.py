@@ -110,6 +110,7 @@ def train(args):
         var.persistable = True
         test_fetch_list.append(var.name)
 
+    test_prog = test_prog.clone(for_test=True)
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

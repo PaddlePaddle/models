@@ -93,8 +93,7 @@ class VGGNet():
                 act='relu',
                 param_attr=fluid.param_attr.ParamAttr(
                     name=name + str(i + 1) + "_weights"),
-                bias_attr=fluid.param_attr.ParamAttr(
-                    name=name + str(i + 1) + "_offset"))
+                bias_attr=False)
         return fluid.layers.pool2d(
             input=conv, pool_size=2, pool_type='max', pool_stride=2)
 
