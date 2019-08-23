@@ -66,8 +66,8 @@ class PDConfig(object):
         model_g.add_arg("model_type", str, "cnn_net", "Model type to run the task.", 
             choices=["bow_net","cnn_net", "lstm_net", "bilstm_net", "gru_net", "textcnn_net"])
         model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
-        model_g.add_arg("save_checkpoint_path", str, None, "Directory path to save checkpoints")
-        model_g.add_arg("save_model_path", str, None, "Directory path to save inference model")
+        model_g.add_arg("save_checkpoint_dir", str, None, "Directory path to save checkpoints")
+        model_g.add_arg("inference_model_dir", str, None, "Directory path to save inference model")
 
         data_g = ArgumentGroup(parser, "Data config options", "")
         data_g.add_arg("data_dir", str, None, "Directory path to training data.")
@@ -105,8 +105,11 @@ class PDConfig(object):
             raise Warning("the json file %s does not exist." % file_path)
             return
 
-        with open(file_path, "r") as fin:
-            self.json_config = json.load(fin)
+        try:
+            with open(file_path, "r") as fin:
+                self.json_config = json.load(fin)
+        except Exception as e:
+            raise IOError("Error in parsing json config file '%s'" % file_path)  
         
         for name in self.json_config:
             # use `six.string_types` but not `str` for compatible with python2 and python3

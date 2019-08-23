@@ -9,11 +9,49 @@ import io
 import os
 import sys
 import random
-import argparse
 
 import paddle
 import paddle.fluid as fluid
 import numpy as np
+
+
+def init_from_pretrain_model(exe, init_pretrain_model_path, program):
+    assert isinstance(init_pretrain_model_path, str)
+
+    if not os.path.exists(init_pretrain_model_path):
+        raise Warning("The pretrained params do not exist.")
+        return False
+
+    def existed_params(var):
+        if not isinstance(var, fluid.framework.Parameter):
+            return False
+        return os.path.exists(
+            os.path.join(init_pretrain_model_path, var.name))
+
+    fluid.io.load_vars(
+        exe,
+        init_pretrain_model_path,
+        main_program=program,
+        predicate=existed_params)
+
+    print("finish initing model from pretrained params from %s" %
+          (init_pretrain_model_path))
+
+
+def init_from_params(exe, init_params_path, program):
+    assert isinstance(init_params_path, str)
+
+    if not os.path.exists(init_params_path):
+        raise Warning("the params path does not exist.")
+        return False
+
+    fluid.io.load_params(
+        executor=exe,
+        dirname=init_params_path,
+        main_program=program,
+        filename="params.pdparams")
+
+    print("finish init model from params from %s" % (init_params_path))
 
 
 def init_checkpoint(exe, init_checkpoint_path, main_program):

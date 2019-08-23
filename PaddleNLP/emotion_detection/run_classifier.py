@@ -18,8 +18,8 @@ import numpy as np
 
 from models.classification import nets
 from models.model_check import check_cuda
+from config import PDConfig
 import reader
-import config
 import utils
 
 
@@ -335,8 +335,8 @@ def get_cards():
 
 
 if __name__ == "__main__":
-    pd_config = PDConfig('config.json')
-    pd_config.build()
-    pd_config.print_arguments()
-    check_cuda(pd_config.use_cuda)
-    main(pd_config)
+    args = PDConfig('config.json')
+    args.build()
+    args.print_arguments()
+    check_cuda(args.use_cuda)
+    main(args)
