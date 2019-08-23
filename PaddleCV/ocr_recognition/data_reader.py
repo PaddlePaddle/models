@@ -136,10 +136,10 @@ class DataGenerator(object):
 
                         label = [int(c) for c in items[-1].split(',')]
                         img = Image.open(os.path.join(img_root_dir, items[
-                            2])).convert('L')  #zhuanhuidu
+                            2])).convert('L')
                         if j == 0:
                             sz = img.size
-                        img = img.resize((sz[0], sz[1]))
+                        img = img.resize((sz[0], DATA_SHAPE[1]))
                         img = np.array(img) - 127.5
                         img = img[np.newaxis, ...]
                         if self.model == "crnn_ctc":
@@ -171,6 +171,8 @@ class DataGenerator(object):
                 label = [int(c) for c in items[-1].split(',')]
                 img = Image.open(os.path.join(img_root_dir, items[2])).convert(
                     'L')
+
+                img = img.resize((img.size[0], DATA_SHAPE[1])) # resize height
                 img = np.array(img) - 127.5
                 img = img[np.newaxis, ...]
                 if self.model == "crnn_ctc":
@@ -207,6 +209,7 @@ class DataGenerator(object):
                     else:
                         img_path = line.strip("\t\n\r")
                     img = Image.open(img_path).convert('L')
+                    img = img.resize((img.size[0], DATA_SHAPE[1])) # resize height
                     img = np.array(img) - 127.5
                     img = img[np.newaxis, ...]
                     label = [int(c) for c in line.split(' ')[3].split(',')]
@@ -225,6 +228,7 @@ class DataGenerator(object):
                 while True:
                     img_path = input("Please input the path of image: ")
                     img = Image.open(img_path).convert('L')
+                    img = img.resize((img.size[0], DATA_SHAPE[1])) # resize height
                     img = np.array(img) - 127.5
                     img = img[np.newaxis, ...]
                     yield img, [[0]]
