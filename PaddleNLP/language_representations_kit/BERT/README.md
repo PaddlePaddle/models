@@ -156,7 +156,6 @@ python -u run_classifier.py --task_name ${TASK_NAME} \
                    --learning_rate 5e-5 \
                    --skip_steps 10 \
                    --num_iteration_per_drop_scope 10 \
-                   --use_fp16 true \
                    --verbose true
 ```
 
