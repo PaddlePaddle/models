@@ -43,9 +43,9 @@ class Env():
 
     def draw(self, new_line=False):
         if new_line:
-            print ""
+            print("")
         else:
-            print "\r",
+            print("\r")
         for i in range(self.stage_len):
             if i == self.position:
                 sys.stdout.write("O")
