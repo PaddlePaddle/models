@@ -129,4 +129,31 @@ concept:coach -0.123886 0.0477016 0.517474 0.154645 0.32559 ...
 ```
 For other knowledge bases, please refer to the source code for training the BILINEAR model from [Yang's github repo](https://github.com/bishanyang/kblstm/tree/master/code/models).
 
-### 
+### Training KT-NET
+
+## Citation
+
+If you use any source code included in this project in your work, please cite the following paper:
+```
+@inproceedings{yang-etal-2019-enhancing-pre,
+    title = {Enhancing Pre-Trained Language Representations with Rich Knowledge for Machine Reading Comprehension},
+    author = {An Yang, Quan Wang, Jing Liu, Kai Liu, Yajuan Lyu, Hua Wu, Qiaoqiao She and Sujian Li},
+    booktitle = {Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics},
+    year = {2019},
+    publisher = {Association for Computational Linguistics},
+    pages = {2346--2357},
+}
+```
+
+## Copyright and License
+
+Copyright 2019 Baidu.com, Inc. All Rights Reserved
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
