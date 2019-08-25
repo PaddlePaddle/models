@@ -26,9 +26,8 @@ import utils
 parser = argparse.ArgumentParser(__doc__)
 model_g = utils.ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("ernie_config_path", str, None, "Path to the json file for ernie model config.")
-model_g.add_arg("senta_config_path", str, None, "Path to the json file for senta model config.")
 model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
-model_g.add_arg("output_dir", str, "checkpoints", "Path to save checkpoints")
+model_g.add_arg("save_checkpoint_dir", str, "checkpoints", "Path to save checkpoints")
 model_g.add_arg("use_paddle_hub", bool, False, "Whether to load ERNIE using PaddleHub")
 
 train_g = utils.ArgumentGroup(parser, "training", "training options.")
@@ -335,7 +334,7 @@ def main(args):
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
-                    save_path = os.path.join(args.output_dir, "step_" + str(steps))
+                    save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
                     fluid.io.save_persistables(exe, save_path, train_program)
 
                 if steps % args.validation_steps == 0:
@@ -354,7 +353,7 @@ def main(args):
                                 "dev")
 
             except fluid.core.EOFException:
-                save_path = os.path.join(args.output_dir, "step_" + str(steps))
+                save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
                 fluid.io.save_persistables(exe, save_path, train_program)
                 train_pyreader.reset()
                 break

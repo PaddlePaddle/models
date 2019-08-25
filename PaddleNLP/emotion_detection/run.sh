@@ -45,7 +45,7 @@ save_inference_model() {
     python inference_model.py \
         --use_cuda false \
         --do_save_inference_model true \
-        --init_from_pretrain_model ./save_models/textcnn/step_756 \
+        --init_checkpoint  ${MODEL_PATH} \
         --inference_model_dir ./inference_model
 }
 

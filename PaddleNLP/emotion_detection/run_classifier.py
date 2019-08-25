@@ -65,7 +65,7 @@ def create_model(args,
     if is_prediction:
         data = fluid.layers.read_file(pyreader)
         probs = network(data, None, args.vocab_size, class_dim=num_labels, is_prediction=True)
-        return pyreader, probs
+        return pyreader, probs, [data.name]
 
     data, label = fluid.layers.read_file(pyreader)
     avg_loss, probs = network(data, label, args.vocab_size, class_dim=num_labels)
@@ -133,6 +133,7 @@ def main(args):
                                       vocab_path=args.vocab_path,
                                       random_seed=args.random_seed)
     #num_labels = len(processor.get_labels())
+    num_labels = args.num_labels
 
     if not (args.do_train or args.do_val or args.do_infer):
         raise ValueError("For args `do_train`, `do_val` and `do_infer`, at "
@@ -190,7 +191,7 @@ def main(args):
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
-                infer_pyreader, probs = create_model(
+                infer_pyreader, probs, _ = create_model(
                     args,
                     pyreader_name='infer_reader',
                     num_labels=num_labels,

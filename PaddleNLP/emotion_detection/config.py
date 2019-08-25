@@ -68,9 +68,8 @@ class PDConfig(object):
         model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
         model_g.add_arg("save_checkpoint_dir", str, None, "Directory path to save checkpoints")
         model_g.add_arg("inference_model_dir", str, None, "Directory path to save inference model")
-        model_g.add_arg("init_from_params", str, None, "Directory path to save inference model")
-        model_g.add_arg("init_from_pretrain_model", str, None, "Directory path to save inference model")
 
+        
         data_g = ArgumentGroup(parser, "Data config options", "")
         data_g.add_arg("data_dir", str, None, "Directory path to training data.")
         data_g.add_arg("vocab_path", str, None, "Vocabulary path.")

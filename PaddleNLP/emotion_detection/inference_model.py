@@ -26,7 +26,7 @@ def do_save_inference_model(args):
 
     with fluid.program_guard(test_prog, startup_prog):
         with fluid.unique_name.guard():
-            infer_pyreader, probs = create_model(
+            infer_pyreader, probs, feed_target_names = create_model(
                 args,
                 pyreader_name='infer_reader',
                 num_labels=args.num_labels,
@@ -36,16 +36,14 @@ def do_save_inference_model(args):
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
-    assert (args.init_from_params) or (args.init_from_pretrain_model)
+    assert (args.init_checkpoint)
 
-    if args.init_from_params:
-        utils.init_from_params(exe, args.init_from_params, test_prog)
-    elif args.init_from_pretrain_model:
-        utils.init_from_pretrain_model(exe, args.init_from_pretrain_model, test_prog)
+    if args.init_checkpoint:
+        utils.init_checkpoint(exe, args.init_checkpoint, test_prog)
 
     fluid.io.save_inference_model(
         args.inference_model_dir,
-        feeded_var_names=["read_file_0.tmp_0"],
+        feeded_var_names=feed_target_names,
         target_vars=[probs],
         executor=exe,
         main_program=test_prog,
