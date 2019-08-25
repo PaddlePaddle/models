@@ -18,7 +18,7 @@ This repository contains the PaddlePaddle implementation of KT-NET. The trained 
 This project should work fine if the following requirements have been satisfied:
 + python >= 3.7
 + paddlepaddle-gpu (the latest develop version is recommended)
-+ NLTK >= 3.3
++ NLTK >= 3.3 (with WordNet 3.0)
 + tqdm
 + CoreNLP (3.8.0 version is recommended)
 + pycorenlp
@@ -69,14 +69,64 @@ The tagged dataset will be saved at `retrieve_concepts/ner_tagging_squad/output`
 #### 2. Tokenization
 
 Tokenization should be performed for retrieval. We use the same tokenizer with [BERT](https://github.com/google-research/bert). 
-For ReCoRD, run the following command (or directly download our output from [link](TODO)):
+For ReCoRD, run the following command to tokenize the raw dataset (or directly download our output from [link](TODO)):
 ```
 cd retrieve_concepts/tokenization_record
 python3 do_tokenization.py --do_lower_case
 ```
-For SQuAD, run the following command (or directly download our output from [link](TODO)):
+For SQuAD, run the following command to process the NER tagged dataset (or directly download our output from [link](TODO)):
 ```
 cd retrieve_concepts/tokenization_squad
 python3 do_tokenization.py --do_lower_case
 ```
 
+#### 3. Retrieve WordNet
+
+This step retrieves the WordNet (WN18) synsets for each non-stop word in the MRC samples. 
+For ReCoRD, run the command:
+```
+cd retrieve_concepts/retrieve_wordnet
+python3 retrieve.py --train_token ../tokenization_record/tokens/train.tokenization.uncased.data --eval_token ../tokenization_record/tokens/dev.tokenization.uncased.data --output_dir output_record/ --no_stopwords
+```
+For SQuAD, run the command:
+```
+cd retrieve_concepts/retrieve_wordnet
+python3 retrieve.py --train_token ../tokenization_squad/tokens/train.tokenization.uncased.data --eval_token ../tokenization_squad/tokens/dev.tokenization.uncased.data --output_dir output_squad/ --no_stopwords
+```
+The outputs are pickled into binary files. We have also provided our output files for convenience ([download link](TODO)).
+
+#### 4. Retrieve NELL
+
+Using string mapping, this step finds corresponding named entities for each entity mention in the given MRC example and returns their categories as relevant NELL concepts. The latest NELL beliefs should be downloaded first.
+```
+wget http://rtw.ml.cmu.edu/resources/results/08m/NELL.08m.1115.esv.csv.gz
+gzip -d NELL.08m.1115.esv.csv.gz
+mv NELL.08m.1115.esv.csv retrieve_concepts/retrieve_nell
+```
+For ReCoRD, run the command:
+```
+cd retrieve_concepts/retrieve_nell
+python3 retrieve.py --train_token ../tokenization_record/tokens/train.tokenization.uncased.data --eval_token ../tokenization_record/tokens/dev.tokenization.uncased.data --output_dir output_record/
+```
+For SQuAD, run the command:
+```
+cd retrieve_concepts/retrieve_nell
+python3 retrieve.py --train_token ../tokenization_squad/tokens/train.tokenization.uncased.data --eval_token ../tokenization_squad/tokens/dev.tokenization.uncased.data --output_dir output_squad/
+```
+The outputs are pickled into binary files. The output files can also be downloaded from [download link](TODO).
+
+#### 5. Prepare KB embedding
+
+Following the work of [Yang et al., 2015](https://arxiv.org/pdf/1412.6575.pdf), we leverage their KB embedding for WordNet synsets and NELL categories trained by the BILINEAR model. 
+```
+wget https://github.com/bishanyang/kblstm/raw/master/embeddings/wn_concept2vec.txt
+wget https://github.com/bishanyang/kblstm/raw/master/embeddings/nell_concept2vec.txt
+mv wn_concept2vec.txt nell_concept2vec.txt retrieve_concepts/KB_embeddings
+```
+The 100-dimension embeddings are stored in the following format:
+```
+concept:coach -0.123886 0.0477016 0.517474 0.154645 0.32559 ...
+```
+For other knowledge bases, please refer to the source code for training the BILINEAR model from [Yang's github repo](https://github.com/bishanyang/kblstm/tree/master/code/models).
+
+### 
