@@ -131,6 +131,50 @@ For other knowledge bases, please refer to the source code for training the BILI
 
 ### Training KT-NET
 
+#### Prepare BERT checkpoint
+
+The text encoder module of KT-NET is initialized with pretrained BERT large-cased parameters, run the command:
+```
+cd KTNET
+wget https://bert-models.bj.bcebos.com/cased_L-24_H-1024_A-16.tar.gz
+tar xzvf cased_L-24_H-1024_A-16.tar.gz
+```
+
+#### Directly fine-tuning
+
+We have provided scripts to execute training and inference for KT-NET. To train a model for ReCoRD dataset with both WordNet and NELL concepts employed, just run the command:
+```
+cd KTNET && sh ./run_record_twomemory.sh
+```
+To run with single KB, replace `run_record_twomemory.sh` with `run_record_wordnet.sh` or `run_record_nell.sh`. 
+
+Similarly, for SQuAD, use `run_squad_twomemory.sh`, `run_squad_wordnet.sh` or `run_squad_nell.sh`.
+
+#### Two-staged fine-tuning (Recommended)
+
+In our experiments, we found that employing a "two-staged" training strategy achieves better model performance, which freezes BERT params in the first stage and unfreezes them later. We recommend to adopt this strategy to train KT-NET. To run two-staged fine-tuning, just first execute the `XXX_pretrain.sh` script and then run `XXX_finetune.sh`. E.g., to train a KT-NET on ReCoRD with both KBs, firstly run
+```
+cd KTNET && sh ./run_record_twomemory_pretrain.sh
+```
+and then run the command after the first stage has been finished
+```
+sh ./run_record_twomemory_finetune.sh
+```
+
+#### Reproducing the paper results
+
+We have released the checkpoints for our trained KT-NET which can reproduce the performance in the paper ([Download link](TODO)). After downloaded them, run the command:
+```
+TODO
+```
+The following result is expected to be shown:
+```
+{
+    "exact_match": 71.61,
+    "f1": 73.62396522806482
+}
+```
+
 ## Citation
 
 If you use any source code included in this project in your work, please cite the following paper:
