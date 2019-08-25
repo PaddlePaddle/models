@@ -23,16 +23,13 @@ import numpy as np
 import datetime
 from collections import deque
 
-
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
 
-
-# NOTE(paddle-dev): All of these flags should be
-# set before `import paddle`. Otherwise, it would
-# not take any effect. 
+# NOTE(paddle-dev): All of these flags should be set before 
+# `import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
     FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
 )
@@ -105,7 +102,8 @@ def main():
             optimizer = optim_builder(lr)
             optimizer.minimize(loss)
 
-    train_reader = create_reader(train_feed, cfg.max_iters * devices_num)
+    train_reader = create_reader(train_feed, cfg.max_iters * devices_num,
+                                 FLAGS.dataset_dir)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     # parse train fetches
@@ -121,19 +119,22 @@ def main():
                 fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
 
-        eval_reader = create_reader(eval_feed)
+        eval_reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
         eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
         # parse eval fetches
-        extra_keys = ['im_info', 'im_id',
-                      'im_shape'] if cfg.metric == 'COCO' else []
+        extra_keys = []
+        if cfg.metric == 'COCO':
+            extra_keys = ['im_info', 'im_id', 'im_shape']
+        if cfg.metric == 'VOC':
+            extra_keys = ['gt_box', 'gt_label', 'is_difficult']
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
     # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
-    build_strategy.enable_inplace = True
+    build_strategy.enable_inplace = False
     sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     # only enable sync_bn in multi GPU devices
     build_strategy.sync_batch_norm = sync_bn and devices_num > 1 \
@@ -156,6 +157,12 @@ def main():
     elif cfg.pretrain_weights:
         checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
 
+    # whether output bbox is normalized in model output layer
+    is_bbox_normalized = False
+    if hasattr(model, 'is_bbox_normalized') and \
+            callable(model.is_bbox_normalized):
+        is_bbox_normalized = model.is_bbox_normalized()
+
     train_stats = TrainingStats(cfg.log_smooth_window, train_keys)
     train_pyreader.start()
     start_time = time.time()
@@ -164,6 +171,7 @@ def main():
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
     time_stat = deque(maxlen=cfg.log_iter)
+    best_box_ap_list = [0.0, 0]  #[map, iter]
     for it in range(start_iter, cfg.max_iters):
         start_time = end_time
         end_time = time.time()
@@ -191,8 +199,14 @@ def main():
                 resolution = None
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
-                eval_results(results, eval_feed, cfg.metric, resolution,
-                             FLAGS.output_file)
+                box_ap_stats = eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
+                             resolution, is_bbox_normalized, FLAGS.output_eval)
+                if box_ap_stats[0] > best_box_ap_list[0]:
+                    best_box_ap_list[0] = box_ap_stats[0]
+                    best_box_ap_list[1] = it
+                    checkpoint.save(exe, train_prog, os.path.join(save_dir,"best_model"))
+                logger.info("Best test box ap: {}, in iter: {}".format(
+                    best_box_ap_list[0],best_box_ap_list[1]))
 
     train_pyreader.reset()
 
@@ -211,10 +225,15 @@ if __name__ == '__main__':
         default=False,
         help="Whether to perform evaluation in train")
     parser.add_argument(
-        "-f",
-        "--output_file",
+        "--output_eval",
         default=None,
         type=str,
-        help="Evaluation file name, default to bbox.json and mask.json.")
+        help="Evaluation directory, default is current directory.")
+    parser.add_argument(
+        "-d",
+        "--dataset_dir",
+        default=None,
+        type=str,
+        help="Dataset path, same as DataFeed.dataset.dataset_dir")
     FLAGS = parser.parse_args()
     main()

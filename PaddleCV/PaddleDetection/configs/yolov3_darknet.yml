@@ -10,6 +10,7 @@ snapshot_iter: 2000
 metric: COCO
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
 weights: output/yolov3_darknet/model_final
+num_classes: 80
 
 YOLOv3:
   backbone: DarkNet
@@ -35,7 +36,6 @@ YOLOv3Head:
     nms_top_k: 1000
     normalized: false
     score_threshold: 0.01
-  num_classes: 80
 
 LearningRate:
   base_lr: 0.001
@@ -69,6 +69,7 @@ YoloTrainFeed:
 
 YoloEvalFeed:
   batch_size: 8
+  image_shape: [3, 608, 608]
   dataset:
     dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
@@ -76,5 +77,6 @@ YoloEvalFeed:
 
 YoloTestFeed:
   batch_size: 1
+  image_shape: [3, 608, 608]
   dataset:
     annotation: dataset/coco/annotations/instances_val2017.json

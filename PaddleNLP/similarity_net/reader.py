@@ -4,6 +4,7 @@ SimNet reader
 
 import logging
 import numpy as np
+import codecs
 
 
 class SimNetProcessor(object):
@@ -24,7 +25,7 @@ class SimNetProcessor(object):
                 Reader with Pairwise
             """
             if mode == "valid":
-                with open(self.args.valid_data_dir) as file:
+                with codecs.open(self.args.valid_data_dir, "r", "utf-8") as file:
                     for line in file:
                         query, title, label = line.strip().split("\t")
                         if len(query) == 0 or len(title) == 0 or len(label) == 0 or not label.isdigit() or int(
@@ -39,7 +40,7 @@ class SimNetProcessor(object):
                             title = [0]
                         yield [query, title]
             elif mode == "test":
-                with open(self.args.test_data_dir) as file:
+                with codecs.open(self.args.test_data_dir, "r", "utf-8") as file:
                     for line in file:
                         query, title, label = line.strip().split("\t")
                         if len(query) == 0 or len(title) == 0 or len(label) == 0 or not label.isdigit() or int(
@@ -54,7 +55,7 @@ class SimNetProcessor(object):
                             title = [0]
                         yield [query, title]
             else:
-                with open(self.args.train_data_dir) as file:
+                with codecs.open(self.args.train_data_dir, "r", "utf-8") as file:
                     for line in file:
                         query, pos_title, neg_title = line.strip().split("\t")
                         if len(query) == 0 or len(pos_title) == 0 or len(neg_title) == 0:
@@ -76,7 +77,7 @@ class SimNetProcessor(object):
             Reader with Pointwise
             """
             if mode == "valid":
-                with open(self.args.valid_data_dir) as file:
+                with codecs.open(self.args.valid_data_dir, "r", "utf-8") as file:
                     for line in file:
                         query, title, label = line.strip().split("\t")
                         if len(query) == 0 or len(title) == 0 or len(label) == 0 or not label.isdigit() or int(
@@ -91,7 +92,7 @@ class SimNetProcessor(object):
                             title = [0]
                         yield [query, title]
             elif mode == "test":
-                with open(self.args.test_data_dir) as file:
+                with codecs.open(self.args.test_data_dir, "r", "utf-8") as file:
                     for line in file:
                         query, title, label = line.strip().split("\t")
                         if len(query) == 0 or len(title) == 0 or len(label) == 0 or not label.isdigit() or int(
@@ -106,7 +107,7 @@ class SimNetProcessor(object):
                             title = [0]
                         yield [query, title]
             else:
-                with open(self.args.train_data_dir) as file:
+                with codecs.open(self.args.train_data_dir, "r", "utf-8") as file:
                     for line in file:
                         query, title, label = line.strip().split("\t")
                         if len(query) == 0 or len(title) == 0 or len(label) == 0 or not label.isdigit() or int(
@@ -131,7 +132,7 @@ class SimNetProcessor(object):
         """
         get infer reader
         """
-        with open(self.args.infer_data_dir, "r") as file:
+        with codecs.open(self.args.infer_data_dir, "r", "utf-8") as file:
             for line in file:
                 query, title = line.strip().split("\t")
                 if len(query) == 0 or len(title) == 0:
@@ -149,7 +150,7 @@ class SimNetProcessor(object):
         """
         get infer data
         """
-        with open(self.args.infer_data_dir, "r") as file:
+        with codecs.open(self.args.infer_data_dir, "r", "utf-8") as file:
             for line in file:
                 query, title = line.strip().split("\t")
                 if len(query) == 0 or len(title) == 0:
@@ -163,7 +164,7 @@ class SimNetProcessor(object):
         """
         if self.valid_label.size == 0:
             labels = []
-            with open(self.args.valid_data_dir, "r") as f:
+            with codecs.open(self.args.valid_data_dir, "r", "utf-8") as f:
                 for line in f:
                     labels.append([int(line.strip().split("\t")[-1])])
             self.valid_label = np.array(labels)
@@ -175,7 +176,7 @@ class SimNetProcessor(object):
         """
         if self.test_label.size == 0:
             labels = []
-            with open(self.args.test_data_dir, "r") as f:
+            with codecs.open(self.args.test_data_dir, "r", "utf-8") as f:
                 for line in f:
                     labels.append([int(line.strip().split("\t")[-1])])
             self.test_label = np.array(labels)

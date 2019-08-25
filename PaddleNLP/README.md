@@ -84,7 +84,7 @@ cd models/PaddleNLP/sentiment_classification
  - [机器翻译](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/neural_machine_translation/transformer)
 
 ### 语义表示与语言模型
- - [语言表示工具箱](https://github.com/PaddlePaddle/LARK/tree/develop)
+ - [语言表示工具箱](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_representations_kit)
  - [语言模型](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model)
 
 ### 复杂任务
