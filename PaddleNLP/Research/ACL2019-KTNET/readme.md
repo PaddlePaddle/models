@@ -146,9 +146,12 @@ We have provided scripts to execute training and inference for KT-NET. To train 
 ```
 cd KTNET && sh ./run_record_twomemory.sh
 ```
+The hyper-parameters, such as training epochs, learning rate and batch size, can be adjusted in the script. 
+
 To run with single KB, replace `run_record_twomemory.sh` with `run_record_wordnet.sh` or `run_record_nell.sh`. 
 
 Similarly, for SQuAD, use `run_squad_twomemory.sh`, `run_squad_wordnet.sh` or `run_squad_nell.sh`.
+
 
 #### Two-staged fine-tuning (Recommended)
 
