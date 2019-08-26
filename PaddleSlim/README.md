@@ -186,21 +186,19 @@ Paddle-Slim工具库有以下特点：
 
 数据：ImageNet 1000类
 
-| |Light-NAS-model0 |Light-NAS-model1 |MobileNetV2 |
-|---|---|---|---|
-|FLOPS|-3%|-17%|-0%|
-|top1/top5 accuracy|72.45%/90.70%|71.84%/90.45%|71.90%/90.55% |
-|GPU cost|1.2K GPU hours|1.2K GPU hours|-|
+| -                  | Light-NAS-model0 | Light-NAS-model1 | MobileNetV2      |
+|--------------------|------------------|------------------|------------------|
+| FLOPS              | -3%              | -17%             | -0%              |
+| Top1/Top5 accuracy | 72.45% / 90.70%  | 71.84% / 90.45%  | 71.90% / 90.55%  |
+| GPU cost           | 1.2K GPU hours(V100) | 1.2K GPU hours(V100) | -        |
 
 基于硬件耗时的模型结构搜索实验：
-
-基于 RK3288 Android 平台的两组结果如下：
 
 | -             | RK3288        | 安卓手机       | iPhone 手机   | MobileNetV2   |
 |---------------|---------------|---------------|---------------|---------------|
 | Latency       | -23%          | -13%          | -10%          | -0%           |
-| top1 accuracy | 71.97%        | 71.90%        | 71.78%        | 71.90%        |
-|GPU cost       |1.2K GPU hours(V100)|1.2K GPU hours(V100)|1.2K GPU hours(V100)|-|
+| Top1 accuracy | 71.97%        | 71.90%        | 71.78%        | 71.90%        |
+| GPU cost      |1.2K GPU hours(V100)|1.2K GPU hours(V100)|1.2K GPU hours(V100)|-|
 
 ## 模型导出格式
 
