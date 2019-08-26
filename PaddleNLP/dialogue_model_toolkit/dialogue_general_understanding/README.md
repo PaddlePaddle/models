@@ -1,5 +1,6 @@
 # 对话通用理解模块DGU
 
+## 目录
 - [**1、模型简介**](#1、模型简介)
 
 - [**2、快速开始**](#2、快速开始)
@@ -65,7 +66,9 @@ SWDA：Switchboard Dialogue Act Corpus;
 cd dgu && bash prepare_data_and_model.sh
 ```
 &ensp;&ensp;&ensp;&ensp;数据路径：data/input/data
+
 &ensp;&ensp;&ensp;&ensp;预训练模型路径：data/pretrain_model
+
 &ensp;&ensp;&ensp;&ensp;已训练模型路径：data/saved_models/trained_models
 
 
@@ -105,6 +108,41 @@ dstc2/dstc2: 数据组成，多轮对话id, 当前轮QA对(使用\1拼接)，标
 format：conversation_content \t question \1 answer \t state1 state2 state3......
 ```
 
+### 模型配置
+
+&ensp;&ensp;&ensp;&ensp;配置文件路径: data/config/dgu.yaml
+
+```
+task_name: 任务名称，可选udc、swda、mrda、atis_intent、atis_slot、dstc2
+data_dir: 数据路径，如./data/input/data/udc
+bert_config_path: 预训练模型bert的网络配置./data/pretrain_model/uncased_L-12_H-768_A-12/bert_config.json
+init_from_checkpoint: 加载断点模型
+init_from_params: 训练好的模型参数文件，一般用于预测
+init_from_pretrain_model: 预训练模型路径，如bert的模型参数
+inference_model_dir: inference model的保存路径
+save_model_path: 训练产出模型的输出路径
+save_checkpoint: 调用paddle的io接口save_persistables(把传入的层中所有参数以及优化器进行保存)来保存模型参数
+save_param: 调用paddle的io接口save_params(从main_program中取出所有参数然后保存到文件中)来保存模型参数
+lr_scheduler: learning rate scheduler
+weight_decay: learning rate 权重衰减因子
+warmup_proportion: warmup比率
+save_steps: 每隔save_steps个步数来保存一次模型
+use_fp16: 是否使用fp16来训练模型
+loss_scaling: loss权重因子
+print_steps: 每隔print_steps个步数打印一次日志
+evaluation_file: 参与评估的inference 标注文件
+output_prediction_file: 输出的预测文件
+vocab_path: 模型词表
+max_seq_len: 输入bert内的最大序列长度
+batch_size: 一个batch内输入的样本个数
+do_lower_case: 是否进行大小写转换
+random_seed: 随机种子设置
+use_cuda: 是否使用cuda, 如果是gpu训练时，设置成true
+in_tokens: 是否采用in_tokens模式来计算batch_siz数量, 如果in_tokens为false, 则batch_size等于真实设置的batch_size大小, 如果in_tokens为true, 则batch_size=batch_size*max_seq_len，即按照token计数
+do_save_inference_model: 是否保存inference model
+encable_ce: 是否开启ce
+```
+
 ### 单机训练
 
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
@@ -118,14 +156,14 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 训练示例： bash run.sh atis_intent train
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU训练: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU训练: 
 
 ```
 请将run.sh内参数设置为: 
@@ -200,14 +238,14 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 预测示例： bash run.sh atis_intent predict
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU预测: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU预测: 
 
 ```
 请将run.sh内参数设置为: 
@@ -314,14 +352,14 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 保存模型示例： bash run.sh atis_intent inference
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU执行inference model过程: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU执行inference model过程: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU执行inference model过程:
+&ensp;&ensp;&ensp;&ensp;如果为GPU执行inference model过程:
 
 ```
 请将run.sh内参数设置为: 
@@ -429,12 +467,6 @@ python -u main.py \
 
 第二版：PaddlePaddle 1.6.0版本
 更新功能：在第一版的基础上，根据PaddlePaddle的模型规范化标准，对模块内训练、预测、评估等代码进行了重构，提高易用性；
-
-## 作者
-
-zhangxiyuan01@baidu.com
-
-zhouxiangyang@baidu.com
 
 ## 如何贡献代码
 

@@ -1,5 +1,6 @@
 # 对话自动评估模块ADE
 
+## 目录
 - [**1、模型简介**](#1、模型简介)
 
 - [**2、快速开始**](#2、快速开始)
@@ -45,10 +46,12 @@ cd models/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation
 &ensp;&ensp;&ensp;&ensp;本模块内模型训练主要包括两个阶段：
 
 &ensp;&ensp;&ensp;&ensp;1）第一阶段：训练一个匹配模型作为评估工具，可用于待评估对话系统内的回复内容进行排序；（matching任务)
-&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;模型结构: 输入为context和response, 对两个输入学习embedding表示, 学习到的表示经过lstm学习高阶表示, context和response的高阶表示计算双线性张量积logits, logits和label计算sigmoid_cross_entropy_with_logits loss;
+
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;模型结构: 输入为context和response, 对两个输入学习embedding表示, 学习到的表示经过lstm学习高阶表示, context和response的高阶表示计算双线性张量积logits, logits和label计算sigmoid_cross_entropy_with_logits loss;
 
 &ensp;&ensp;&ensp;&ensp;2）第二阶段：利用少量的对话系统的标记数据，对第一阶段训练的匹配模型进行finetuning, 可以提高评估效果（包含human，keywords，seq2seq_att，seq2seq_naive，4个finetuning任务）;
-&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;模型结构: finetuning阶段学习表示到计算logits部分和第一阶段模型结构相同，区别在于finetuning阶段计算square_error_cost loss；
+
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;模型结构: finetuning阶段学习表示到计算logits部分和第一阶段模型结构相同，区别在于finetuning阶段计算square_error_cost loss；
 
 &ensp;&ensp;&ensp;&ensp;用于第二阶段fine-tuning的对话系统包括下面四部分：
     
@@ -81,11 +84,51 @@ cd ade && bash prepare_data_and_model.sh
 ```
 
 &ensp;&ensp;&ensp;&ensp;数据路径：data/input/data/   
+
 &ensp;&ensp;&ensp;&ensp;模型路径：data/saved_models/trained_models/
+
 &ensp;&ensp;&ensp;&ensp;下载经过预处理的数据，运行该脚本之后，data目录下会存在unlabel_data(train.ids/val.ids/test.ids)，lable_data: human、keywords、seq2seq_att、seq2seq_naive(四个任务数据train.ids/val.ids/test.ids)，以及word2ids.
 
+### 模型配置
+
+&ensp;&ensp;&ensp;&ensp;配置文件路径: data/config/ade.yaml
+
+```
+loss_type: loss类型, 可选CLS或者L2
+training_file: 训练数据路径
+val_file: 验证集路径
+predict_file: 预测文件路径
+print_steps: 每隔print_steps个步数打印一次日志 
+save_steps: 每隔save_steps个步数来保存一次模型
+num_scan_data: 
+word_emb_init: 用于初始化embedding的词表路径
+init_model: 初始化模型路径
+use_cuda: 是否使用cuda, 如果是gpu训练时，设置成true
+batch_size: 一个batch内输入的样本个数
+hidden_size: 隐层大小
+emb_size: embedding层大小
+vocab_size: 词表大小
+sample_pro: 采样比率
+output_prediction_file: 输出的预测文件
+init_from_checkpoint: 加载断点模型
+init_from_params: 训练好的模型参数文件，一般用于预测
+init_from_pretrain_model: 预训练模型路径，如bert的模型参数
+inference_model_dir: inference model的保存路径
+save_model_path: 训练产出模型的输出路径
+save_checkpoint: 调用paddle的io接口save_persistables(把传入的层中所有参数以及优化器进行保存)来保存模型参数
+save_param: 调用paddle的io接口save_params(从main_program中取出所有参数然后保存到文件中)来保存模型参数
+evaluation_file: 参与评估的inference 文件
+vocab_path: 词表路径
+max_seq_len: 输入最大序列长度
+random_seed: 随机种子设置
+do_save_inference_model: 是否保存inference model 
+encable_ce: 是否开启ce
+```
+
 ### 单机训练
+
 #### 1、第一阶段matching模型的训练：
+
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
 
 ```
@@ -349,13 +392,13 @@ seq2seq_naive：使用spearman相关系数来衡量评估模型对系统的打�
 
 &ensp;&ensp;&ensp;&ensp;1. 无标注数据情况下，直接使用预训练好的评估工具进行评估；
     
-&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
 
    ||seq2seq\_naive|seq2seq\_att|keywords|human|
    |--|:--:|--:|:--:|--:|
    |cor|0.361|0.343|0.324|0.288|
 
-&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;对四个系统平均得分排序：
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;对四个系统平均得分排序：
 
    |人工评估|k(0.591)<n(0.847)<a(1.116)<h(1.240)|
    |--|--:|
@@ -542,14 +585,6 @@ of machine translation. In Proceedings of the 40th annual meeting on association
 
 第二版：PaddlePaddle 1.6.0版本
 更新功能：在第一版的基础上，根据PaddlePaddle的模型规范化标准，对模块内训练、预测、评估等代码进行了重构，提高易用性；
-
-## 作者
-
-zhangxiyuan01@baidu.com
-
-zhouxiangyang@baidu.com
-
-lilu12@baidu.com
 
 ## 如何贡献代码
 
