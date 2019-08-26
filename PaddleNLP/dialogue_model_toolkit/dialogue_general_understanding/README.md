@@ -1,21 +1,21 @@
 # 对话通用理解模块DGU
 
 ## 目录
-- [**1、模型简介**](#1、模型简介)
+- [**模型简介**](#模型简介)
 
-- [**2、快速开始**](#2、快速开始)
+- [**快速开始**](#快速开始)
 
-- [**3、进阶使用**](#3、进阶使用)
+- [**进阶使用**](#进阶使用)
 
-- [**4、参考论文**](#4、参考论文)
+- [**参考论文**](#参考论文)
 
-- [**5、版本更新**](#5、版本更新)
+- [**版本更新**](#版本更新)
 
-## 1、模型简介
+## 模型简介
 
 &ensp;&ensp;&ensp;&ensp;对话相关的任务中，Dialogue System常常需要根据场景的变化去解决多种多样的任务。任务的多样性（意图识别、槽位解析、DA识别、DST等等），以及领域训练数据的稀少，给Dialogue System的研究和应用带来了巨大的困难和挑战，要使得dialogue system得到更好的发展，需要开发一个通用的对话理解模型。为此，我们给出了基于BERT的对话通用理解模块(DGU: DialogueGeneralUnderstanding)，通过实验表明，使用base-model(BERT)并结合常见的学习范式，就可以在几乎全部对话理解任务上取得比肩甚至超越各个领域业内最好的模型的效果，展现了学习一个通用对话理解模型的巨大潜力。
 
-## 2、快速开始
+## 快速开始
 
 ### 安装说明
 
@@ -409,7 +409,7 @@ python -u main.py \
 &ensp;&ensp;&ensp;&ensp;请参考PaddlePaddle官方提供的[服务器端部署](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/deploy/inference/index_cn.html)文档进行部署上线。
 
 
-## 3、进阶使用
+## 进阶使用
 
 ### 背景介绍
 
@@ -445,7 +445,7 @@ python -u main.py \
 
 &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;用户可在**dgu/define_predict_pack.py**内定义task_name和自定义封装预测接口的对应关系；
 
-## 4、参考论文
+## 参考论文
 1、Harshit Kumar, Arvind Agarwal, Riddhiman Dasgupta,Sachindra Joshi, and Arun Kumar. 2017.   Dia-logue act sequence labeling using hierarchical en-coder with crf.arXiv preprint arXiv:1709.04250.
 2、Changliang Li, Liang Li, and Ji Qi. 2018.  A self-attentive model with gate mechanism for spoken lan-guage understanding.  InProceedings of the 2018Conference on Empirical Methods in Natural Lan-guage Processing, pages 3824–3833.
 3、Ryan Lowe, Nissan Pow, Iulian Serban, and JoellePineau. 2015. The ubuntu dialogue corpus: A largedataset for research in unstructured multi-turn dia-logue systems.arXiv preprint arXiv:1506.08909.
@@ -460,7 +460,7 @@ python -u main.py \
 12、Su Zhu and Kai Yu. 2017.  Encoder-decoder withfocus-mechanism for sequence labelling based spo-ken language understanding. In2017 IEEE Interna-tional Conference on Acoustics, Speech and SignalProcessing (ICASSP), pages 5675–5679. IEEE.
 13、Jason Williams, Antoine Raux, Deepak Ramachan-dran, and Alan Black. 2013. The dialog state track-ing challenge. InProceedings of the SIGDIAL 2013Conference, pages 404–413.
 
-## 5、版本更新
+## 版本更新
 
 第一版：PaddlePaddle 1.4.0版本
 主要功能：支持对话6个数据集上任务的训练、预测和评估
