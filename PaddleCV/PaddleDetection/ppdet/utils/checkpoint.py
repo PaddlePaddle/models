@@ -62,7 +62,13 @@ def load_pretrain(exe, prog, path):
     logger.info('Loading pretrained model from {}...'.format(path))
 
     def _if_exist(var):
-        b = os.path.exists(os.path.join(path, var.name))
+        # Parameter related to class_num should be ignored in finetuning
+        ignore_name_list = [
+            'yolo_output', 'cls_score', 'bbox_pred', 'mask_fcn_logits',
+            'conv2d_', 'retnet_cls_pred_fpn'
+        ]
+        do_ignore = [name in var.name for name in ignore_name_list]
+        b = os.path.exists(os.path.join(path, var.name)) and not any(do_ignore)
         if b:
             logger.debug('load weight {}'.format(var.name))
         return b
@@ -137,7 +143,13 @@ def load_and_fusebn(exe, prog, path):
         raise ValueError("Model path {} does not exists.".format(path))
 
     def _if_exist(var):
-        b = os.path.exists(os.path.join(path, var.name))
+        # Parameter related to class_num should be ignored in finetuning
+        ignore_name_list = [
+            'yolo_output', 'cls_score', 'bbox_pred', 'mask_fcn_logits',
+            'conv2d_', 'retnet_cls_pred_fpn'
+        ]
+        do_ignore = [name in var.name for name in ignore_name_list]
+        b = os.path.exists(os.path.join(path, var.name)) and not any(do_ignore)
         if b:
             logger.debug('load weight {}'.format(var.name))
         return b
