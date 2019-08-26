@@ -360,46 +360,45 @@ step9: 执行 `sh run.sh` 进行训练任务。
 
 该示例基于 Flops 约束的两组结果如下：
 
-| - | Light-NAS-model0| Light-NAS-model1 | MobileNetV2 |
-|---|---|---|---|
-| FLOPS|-3% | -17% | -0% |
-| top1 accuracy| 72.45%|  71.84%| 71.90% |
-|GPU cost|1.2K GPU hours(V100)|1.2K GPU hours(V100)|-|
-|tokens|tokens0|tokens1||
+| -             | Light-NAS-model0 | Light-NAS-model1 | MobileNetV2 |
+|---------------|------------------|------------------|-------------|
+| FLOPS         | -3%              | -17%             | -0%         |
+| Top1 accuracy | 72.45%           | 71.84%           | 71.90%      |
+| GPU cost      | 1.2K GPU hours(V100) | 1.2K GPU hours(V100) | -   |
+| tokens        | tokens0          | tokens1          |             |
 
 基于 RK3288 Android 平台的两组结果如下：
 
-| - | Light-NAS-model2 | Light-NAS-model3 | MobileNetV2 |
-|---|---|---|---|
-| Latency | -7% | -23% | -0% |
-| top1 accuracy| 71.91%|  71.81%| 71.90% |
-|GPU cost|1.2K GPU hours(V100)|1.2K GPU hours(V100)|-|
-|tokens|tokens2|tokens3||
+| -             | Light-NAS-model2 | MobileNetV2 |
+|---------------|------------------|-------------|
+| Latency       | -23%             | -0%         |
+| Top1 accuracy | 71.97%           | 71.90%      |
+| GPU cost      | 1.2K GPU hours(V100) | -       |
+| tokens        | tokens2          |             |
 
 基于 Android 手机平台的结果如下：
 
-| - | Light-NAS-model4 | MobileNetV2 |
-|---|---|---|
-| FLOPS| -13% | -0% |
-| top1 accuracy| 71.90% | 71.90% |
-|GPU cost|1.2K GPU hours(V100)|-|
-|tokens|tokens4||
+| -             | Light-NAS-model3 | MobileNetV2 |
+|---------------|------------------|-------------|
+| Latency       | -13%             | -0%         |
+| Top1 accuracy | 71.90%           | 71.90%      |
+| GPU cost      | 1.2K GPU hours(V100) | -       |
+| tokens        | tokens3          |             |
 
 基于 iPhone 手机平台的结果如下：
 
-| - | Light-NAS-model5 | MobileNetV2 |
-|---|---|---|
-| FLOPS| -5% | -0% |
-| top1 accuracy| 71.78% | 71.90% |
-|GPU cost|1.2K GPU hours(V100)|-|
-|tokens|tokens5||
+| -             | Light-NAS-model4 | MobileNetV2 |
+|---------------|------------------|-------------|
+| Latency       | -10%             | -0%         |
+| Top1 accuracy | 71.78%           | 71.90%      |
+| GPU cost      | 1.2K GPU hours(V100) | -       |
+| tokens        | tokens4          |             |
 
 
 | token name | tokens|
 |---|---|
 |tokens0|[3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 2, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0]|
 |tokens1|[3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 2, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1]|
-|tokens2|[3, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 3, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0]|
-|tokens3|[0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 2, 2, 1, 0, 1, 1, 2, 1, 0, 0, 0, 0, 3, 2, 1, 0, 1, 0]|
-|tokens4|[1, 1, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 3, 1, 0, 0, 1, 0, 3, 1, 1, 0, 1, 0]|
-|tokens5|[3, 1, 1, 0, 0, 0, 3, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 3, 0, 1, 0, 1, 1, 2, 1, 1, 0, 1, 0]|
+|tokens2|[0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 2, 2, 1, 0, 1, 1, 2, 1, 0, 0, 0, 0, 3, 2, 1, 0, 1, 0]|
+|tokens3|[1, 1, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 3, 1, 0, 0, 1, 0, 3, 1, 1, 0, 1, 0]|
+|tokens4|[3, 1, 1, 0, 0, 0, 3, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 3, 0, 1, 0, 1, 1, 2, 1, 1, 0, 1, 0]|
