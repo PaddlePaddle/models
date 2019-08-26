@@ -308,8 +308,6 @@ def train():
                 logger.error('Unsupported optimizer: {}'.format(args.optim))
                 exit(-1)
             optimizer.minimize(train_model.loss * args.num_steps)
-            print('use gpu')
-            print(args.use_gpu)
             # initialize parameters
             place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
             exe = Executor(place)
