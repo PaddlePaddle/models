@@ -7,7 +7,8 @@ snapshot_iter: 10000
 use_gpu: true
 log_smooth_window: 20
 save_dir: output
-pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos_pretrained.tar
+pretrain_weights: ../r50_vb/
+#pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos_pretrained.tar
 weights: output/mask_rcnn_r50_fpn_2x/model_final/
 metric: COCO
 num_classes: 81
@@ -31,6 +32,7 @@ FPN:
   min_level: 2
   num_chan: 256
   spatial_scale: [0.03125, 0.0625, 0.125, 0.25]
+  norm_type: gn
 
 FPNRPNHead:
   anchor_generator:
@@ -68,9 +70,10 @@ FPNRoIAlign:
 
 MaskHead:
   dilation: 1
-  num_chan_reduced: 256
+  conv_dim: 256
   num_convs: 4
   resolution: 28
+  norm_type: gn
 
 BBoxAssigner:
   batch_size_per_im: 512
@@ -84,14 +87,14 @@ MaskAssigner:
   resolution: 28
 
 BBoxHead:
-  head: TwoFCHead
+  head: XConvNormHead
   nms:
     keep_top_k: 100
     nms_threshold: 0.5
     score_threshold: 0.05
 
-TwoFCHead:
-  num_chan: 1024
+XConvNormHead:
+  norm_type: gn
 
 LearningRate:
   base_lr: 0.01

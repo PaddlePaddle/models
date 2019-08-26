@@ -88,7 +88,7 @@ CascadeBBoxHead:
     score_threshold: 0.05
 
 FC6FC7Head:
-  num_chan: 1024
+  mlp_dim: 1024
 
 LearningRate:
   base_lr: 0.02
