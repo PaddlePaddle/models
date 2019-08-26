@@ -146,7 +146,12 @@ We have provided scripts to execute training and inference for KT-NET. To train 
 ```
 cd KTNET && sh ./run_record_twomemory.sh
 ```
-The hyper-parameters, such as training epochs, learning rate and batch size, can be adjusted in the script. 
+The hyper-parameters, such as training epochs, learning rate and batch size, can be adjusted in the script. After training and evaluation, the following files and directories will be created:
++ `output/eval_result.json`: the performance of the trained model on the benchmark
++ `output/predictions.json`: the predicted answers for the development set
++ `output/nbest_predictions.json`: n-best predicted answers for the development set
++ `output/step_XXXX`: the directory of model checkpoint
++ `log/train.log`: the logging file
 
 To run with single KB, replace `run_record_twomemory.sh` with `run_record_wordnet.sh` or `run_record_nell.sh`. 
 
