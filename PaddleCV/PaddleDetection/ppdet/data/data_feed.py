@@ -30,15 +30,17 @@ from ppdet.data.transform.operators import (
     Permute)
 
 from ppdet.data.transform.arrange_sample import (
-    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD, 
-    ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
+    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD,
+    ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO, ArrangeBlazeFace,
+    ArrangeEvalBlazeFace, ArrangeTestBlazeFace)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
     'DataFeed', 'TrainFeed', 'EvalFeed', 'FasterRCNNTrainFeed',
     'MaskRCNNTrainFeed', 'FasterRCNNTestFeed', 'MaskRCNNTestFeed',
     'SSDTrainFeed', 'SSDEvalFeed', 'SSDTestFeed', 'YoloTrainFeed',
-    'YoloEvalFeed', 'YoloTestFeed', 'create_reader'
+    'YoloEvalFeed', 'YoloTestFeed', 'BlazeFaceTrainFeed', 'BlazeFaceEvalFeed',
+    'BlazeFaceTestFeed', 'create_reader'
 ]
 
 
@@ -249,6 +251,26 @@ class VocDataSet(DataSet):
             image_dir=image_dir,
             use_default_label=use_default_label)
 
+
+WIdERFACE_DATASET_DIR = 'widerface'
+WIdERFACE_TRAIN_ANNOTATION = 'wider_face_split/wider_face_train_bbx_gt.txt'
+WIdERFACE_VAL_ANNOTATION = 'wider_face_split/wider_face_val_bbx_gt.txt'
+WIdERFACE_TRAIN_IMAGE_DIR = 'WIDER_train/images'
+WIdERFACE_VAL_IMAGE_DIR = 'WIDER_val/images'
+
+@serializable
+class WiderFaceDataSet(DataSet):
+    __source__ = 'WiderFaceSource'
+
+    def __init__(self,
+                 dataset_dir=WIdERFACE_DATASET_DIR,
+                 annotation=WIdERFACE_TRAIN_ANNOTATION,
+                 image_dir=WIdERFACE_TRAIN_IMAGE_DIR,
+                 use_default_label=None):
+        super(WiderFaceDataSet, self).__init__(
+            dataset_dir=dataset_dir,
+            annotation=annotation,
+            image_dir=image_dir)
 
 @serializable
 class SimpleDataSet(DataSet):
@@ -1002,4 +1024,148 @@ class YoloTestFeed(DataFeed):
                 sample_transforms[i] = ResizeImage(
                         target_size=self.image_shape[-1],
                         interp=trans.interp)
+
+@register
+class BlazeFaceTrainFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=WiderFaceDataSet().__dict__,
+                 fields=['image', 'gt_box', 'gt_label'],
+                 image_shape=[3, 128, 128],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True, with_mixup=False),
+                     NormalizeBox(),
+                     RandomDistort(brightness_lower=0.875,
+                                   brightness_upper=1.125,
+                                   is_order=True),
+                     ExpandImage(max_ratio=4, prob=0.5),
+                     CropImage(batch_sampler=[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
+                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
+                               satisfy_all=False, avoid_no_bbox=True),
+                     RandomInterpImage(target_size=128),
+                     RandomFlipImage(is_normalized=True),
+                     Permute(),
+                     NormalizeImage(mean=[104., 117., 123.],
+                                    std=[127.502231, 127.502231, 127.502231],
+                                    is_scale=False)
+                 ],
+                 batch_transforms=[],
+                 batch_size=32,
+                 shuffle=True,
+                 samples=-1,
+                 drop_last=True,
+                 num_workers=8,
+                 bufsize=128,
+                 use_process=True):
+        sample_transforms.append(ArrangeBlazeFace())
+        super(BlazeFaceTrainFeed, self).__init__(
+            dataset,
+            fields,
+            image_shape,
+            sample_transforms,
+            batch_transforms,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            samples=samples,
+            drop_last=drop_last,
+            num_workers=num_workers,
+            bufsize=bufsize,
+            use_process=use_process)
+        self.mode = 'TRAIN'
+
+
+@register
+class BlazeFaceEvalFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(
+            self,
+            dataset=VocDataSet(VOC_VAL_ANNOTATION).__dict__,
+            fields=['image', 'im_shape', 'im_id', 'gt_box',
+                         'gt_label'],
+            image_shape=[3, 128, 128],
+            sample_transforms=[
+                DecodeImage(to_rgb=True, with_mixup=False),
+                NormalizeBox(),
+                ResizeImage(target_size=128, use_cv2=False, interp=1),
+                Permute(),
+                NormalizeImage(
+                    mean=[104., 117., 123.],
+                    std=[127.502231, 127.502231, 127.502231],
+                    is_scale=False)
+                ],
+            batch_transforms=[],
+            batch_size=64,
+            shuffle=False,
+            samples=-1,
+            drop_last=True,
+            num_workers=8,
+            bufsize=10,
+            use_process=False):
+        sample_transforms.append(ArrangeEvalBlazeFace())
+        super(BlazeFaceEvalFeed, self).__init__(
+            dataset,
+            fields,
+            image_shape,
+            sample_transforms,
+            batch_transforms,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            samples=samples,
+            drop_last=drop_last,
+            num_workers=num_workers,
+            bufsize=bufsize,
+            use_process=use_process)
+        self.mode = 'VAL'
+
+
+@register
+class BlazeFaceTestFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=SimpleDataSet(VOC_TEST_ANNOTATION).__dict__,
+                 fields=['image', 'im_id', 'im_shape'],
+                 image_shape=[3, 128, 128],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True),
+                     ResizeImage(target_size=128, use_cv2=False, interp=1),
+                     Permute(),
+                     NormalizeImage(
+                         mean=[104., 117., 123],
+                         std=[127.502231, 127.502231, 127.502231],
+                         is_scale=False)
+                 ],
+                 batch_transforms=[],
+                 batch_size=1,
+                 shuffle=False,
+                 samples=-1,
+                 drop_last=False,
+                 num_workers=8,
+                 bufsize=10,
+                 use_process=False):
+        sample_transforms.append(ArrangeTestBlazeFace())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset)
+        super(BlazeFaceTestFeed, self).__init__(
+            dataset,
+            fields,
+            image_shape,
+            sample_transforms,
+            batch_transforms,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            samples=samples,
+            drop_last=drop_last,
+            num_workers=num_workers,
+            bufsize=bufsize,
+            use_process=use_process)
+        self.mode = 'TEST'
+
 # yapf: enable
