@@ -20,9 +20,10 @@
 
 注意：
 1. StarGAN，AttGAN和STGAN由于梯度惩罚所需的操作目前只支持GPU，需使用GPU训练。
-2. CGAN和DCGAN仅支持多batch size训练。
-3. CGAN和DCGAN两个模型训练使用的数据集为MNIST数据集；StarGAN，AttGAN和STGAN的数据集为CelebA数据集，测试集列表(test_list)和下载到的list文件格式相同，即包含测试集数量，属性列表，想要进行测试的图片和标签。Pix2Pix和CycleGAN支持的数据集可以参考download.py中的cycle_pix_dataset。
+2. GAN模型目前仅仅验证了单机单卡训练和预测结果。
+3. CGAN和DCGAN两个模型训练使用的数据集为MNIST数据集；StarGAN，AttGAN和STGAN的数据集为CelebA数据集。Pix2Pix和CycleGAN支持的数据集可以参考download.py中的cycle_pix_dataset。
 4. PaddlePaddle1.5.1及之前的版本不支持在AttGAN和STGAN模型里的判别器加上的instance norm。如果要在判别器中加上instance norm，请源码编译develop分支并安装。
+5. 中间效果图保存在${output_dir}/test文件夹中。对于Pix2Pix来说，inputA 和inputB 代表输入的两种风格的图片，fakeB表示生成图片；对于CycleGAN来说，inputA表示输入图片，fakeB表示inputA根据生成的图片，cycA表示fakeB经过生成器重构出来的对应于inputA的重构图片；对于StarGAN，AttGAN和STGAN来说，第一行表示原图，之后的每一行都代表一种属性变换。
 
 图像生成模型库库的目录结构如下：
 ```
@@ -52,6 +53,11 @@
 │   ├── run_....py 训练启动示例
 │   ├── infer_....py 测试启动示例
 │   ├── make_pair_data.py pix2pix GAN的数据list的生成脚本
+│
+├── data 下载的数据集存放的位置
+│   ├── celeba
+│       ├── ${image_dir} 存放实际图片
+│       ├── list 文件
 
 ```
 
@@ -61,6 +67,9 @@
 **安装[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)：**
 
 在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+
+其他依赖包：
+1. `pip install imageio` 或者 `pip install -r requirements.txt` 安装imageio包（保存图片代码中所依赖的包）
 
 ### 任务简介
 
@@ -76,7 +85,7 @@ StarGAN，AttGAN和STGAN采用celeba\[[11](#参考文献)\]数据集进行属性
 StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)数据集可以自行下载。
 
 **自定义数据集：**
-用户可以使用自定义的数据集，只要设置成所对应的生成模型所需要的数据格式即可。
+如果您要使用自定义的数据集，只要设置成对应的生成模型所需要的数据格式，并放在data文件夹下，然后把`--dataset`参数设置成您自定义数据集的名称，data_reader.py文件就会自动去data文件夹中寻找数据。
 
 注意: pix2pix模型数据集准备中的list文件需要通过scripts文件夹里的make_pair_data.py来生成，可以使用以下命令来生成：
   python scripts/make_pair_data.py \
@@ -85,7 +94,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 
 ### 模型训练
 
-**开始训练：** 数据准备完毕后，可以通过一下方式启动训练：
+**开始训练：** 数据准备完毕后，可以通过以下方式启动训练：
 
     python train.py \
       --model_net=$(name_of_model) \
@@ -242,15 +251,17 @@ STGAN的网络结构[9]
 **A:** 查看是否所有的标签都转换对了。
 
 **Q:** 预测结果不正常，是怎么回事？  
-**A:** 某些GAN预测的时候batch_norm的设置需要和训练的时候行为一致，查看模型库中相应的GAN中预测时batch_norm的行为和自己模型中的预测时batch_norm的
-行为是否一致。
+**A:** 某些GAN预测的时候batch_norm的设置需要和训练的时候行为一致，查看模型库中相应的GAN中预测时batch_norm的行为和自己模型中的预测时batch_norm的行为是否一致。
 
 **Q:** 为什么STGAN和ATTGAN中变男性得到的预测结果是变女性呢？  
 **A:** 这是由于预测时标签的设置，目标标签是基于原本的标签进行改变，比如原本图片是男生，预测代码对标签进行转变的时候会自动变成相对立的标签，即女
 性，所以得到的结果是女生。如果想要原本是男生，转变之后还是男生，保持要转变的标签不变即可。
 
-**Q:** 如何使用自己的数据集进行训练？
-**A:** 对于Pix2Pix来说，只要准备好类似于Cityscapes数据集的不同风格的成对的数据即可。对于CycleGAN来说，只要准备类似于Cityscapes数据集的不同风格的数据即可。对于StarGAN，AttGAN和STGAN来说，除了需要准备类似于CelebA数据集中的图片和标签文件外，还需要把模型中的selected_attrs参数设置为想要改变的目标属性，c_dim参数这是为目标属性的个数。
+**Q:** 如何使用自己的数据集进行训练？  
+**A:** 对于Pix2Pix来说，只要准备好类似于Cityscapes数据集的不同风格的成对的数据即可。对于CycleGAN来说，只要准备类似于Cityscapes数据集的不同风格的数据即可。对于StarGAN，AttGAN和STGAN来说，除了需要准备类似于CelebA数据集中图片，包含图片数量、名称和标签信息的list文件外，还需要把模型中的selected_attrs参数设置为想要改变的目标属性，c_dim参数设置为目标属性的个数。
+
+**Q:** 如何从模型库中拿出单独的一个模型？  
+**A:** 由于trainer文件夹中的__init__.py文件默认导入了所有网络结构，所以需要删掉__init__.py文件中导入的当前模型之外的包，然后把trainer和network中不需要的模型文件删掉即可。
 
 
 ## 参考论文
