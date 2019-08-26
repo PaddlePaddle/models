@@ -3,9 +3,8 @@ train_feed: FasterRCNNTrainFeed
 eval_feed: FasterRCNNEvalFeed
 test_feed: FasterRCNNTestFeed
 max_iters: 180000
-use_gpu: true
 snapshot_iter: 10000
-log_iter: 20
+use_gpu: true
 log_smooth_window: 20
 save_dir: output
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos_pretrained.tar
@@ -22,12 +21,10 @@ FasterRCNN:
   bbox_assigner: BBoxAssigner
 
 ResNet:
-  norm_type: affine_channel
-  freeze_norm: True
-  norm_decay: 0.
   depth: 50
   feature_maps: [2, 3, 4, 5]
   freeze_at: 2
+  norm_type: affine_channel
 
 FPN:
   min_level: 2

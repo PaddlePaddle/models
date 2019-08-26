@@ -31,6 +31,7 @@ FPN:
   min_level: 2
   num_chan: 256
   spatial_scale: [0.03125, 0.0625, 0.125, 0.25]
+  norm_type: gn
 
 FPNRPNHead:
   anchor_generator:
@@ -71,6 +72,7 @@ MaskHead:
   conv_dim: 256
   num_convs: 4
   resolution: 28
+  norm_type: gn
 
 BBoxAssigner:
   batch_size_per_im: 512
@@ -84,14 +86,14 @@ MaskAssigner:
   resolution: 28
 
 BBoxHead:
-  head: TwoFCHead
+  head: XConvNormHead
   nms:
     keep_top_k: 100
     nms_threshold: 0.5
     score_threshold: 0.05
 
-TwoFCHead:
-  mlp_dim: 1024
+XConvNormHead:
+  norm_type: gn
 
 LearningRate:
   base_lr: 0.01
