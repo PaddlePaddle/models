@@ -40,7 +40,7 @@ python3 src/run_squad_twomemory.py \
   --weight_decay 0.01 \
   --warmup_proportion 0.1 \
   --learning_rate 3e-5 \
-  --epoch 2 \
+  --epoch 3 \
   --max_seq_len 384 \
   --doc_stride 128 \
   --wn_concept_embedding_path $WN_CPT_EMBEDDING_PATH \

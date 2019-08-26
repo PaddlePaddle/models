@@ -170,6 +170,8 @@ sh ./run_record_twomemory_finetune.sh
 
 The finally created `output/` and `log/` directories have the same folder structure with directly fine-tuning.
 
+In the first stage, we trained 10 epochs for ReCoRD and 1 epoch for SQuAD. As for the second stage, we recommend to fine-tune 2~4 epochs for ReCoRD and 2~3 epochs for SQuAD.
+
 #### Reproduce the paper results
 
 We have released the checkpoints for our trained KT-NET which can reproduce the performance in the paper ([Download link](TODO)). After downloaded them, run the command:

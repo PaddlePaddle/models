@@ -39,7 +39,7 @@ python3 src/run_record.py \
   --weight_decay 0.01 \
   --warmup_proportion 0.1 \
   --learning_rate 3e-5 \
-  --epoch 2 \
+  --epoch 4 \
   --max_seq_len 384 \
   --doc_stride 128 \
   --concept_embedding_path $CPT_EMBEDDING_PATH \
