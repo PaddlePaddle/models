@@ -174,11 +174,25 @@ In the first stage, we trained 10 epochs for ReCoRD and 1 epoch for SQuAD. As fo
 
 #### Reproduce the paper results
 
-We have released the checkpoints for our trained KT-NET which can reproduce the performance in the paper ([Download link](TODO)). After downloading them, run the command:
+We have released the following checkpoints for our trained KT-NET which can reproduce the performance in the paper:
+
+|  ReCoRD Model  | F1 score | Exact Match | Evaluation Script |
+| :------------- | :---------: | :----------: | :--------- |
+| [KT-NET (WordNet)](TODO) | 72.76 | 70.56 | eval_record_wordnet.sh | 
+| [KT-NET (NELL)](TODO) | 72.52 | 70.54 | eval_record_nell.sh | 
+| [KT-NET (Both)](TODO) | 73.62 | 71.61 | eval_record_twomemory.sh | 
+
+|   SQuAD Model  | F1 score | Exact Match | Evaluation Script |
+| :------------- | :---------: | :----------: | :--------- |
+| [KT-NET (WordNet)](TODO) | 91.69 | 85.14 | eval_squad_wordnet.sh | 
+| [KT-NET (NELL)](TODO) | 91.71 | 85.03 | eval_squad_nell.sh | 
+| [KT-NET (Both)](TODO) | 91.64 | 84.96 | eval_squad_twomemory.sh | 
+
+After downloading and extracting the checkpoint file, please execute the corresponding evaluation script. E.g.:
 ```
-TODO
+cd KTNET && sh ./eval_record_twomemory.sh extracted_ckpt_dir_path
 ```
-The following result is expected to be shown:
+The following result is expected to be created in the `output/` directory:
 ```
 {
     "exact_match": 71.61,
