@@ -19,6 +19,7 @@ fi
 export FLAGS_cudnn_deterministic=true
 export FLAGS_cpu_deterministic=true
 
+PWD_DIR=`pwd`
 DATA=../data/
 BERT_DIR=cased_L-24_H-1024_A-16
 CPT_EMBEDDING_PATH=../retrieve_concepts/KB_embeddings/nell_concept2vec.txt
