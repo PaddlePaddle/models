@@ -22,11 +22,11 @@ import reader
 from get_ops_from_program import get_ops_from_program
 
 total_images = 1281167
-lr = 0.1
-num_epochs = 240
+lr = 0.016
+num_epochs = 350
 batch_size = 512
-lr_strategy = "cosine_decay"
-l2_decay = 4e-5
+lr_strategy = "exponential_decay_with_RMSProp"
+l2_decay = 1e-5
 momentum_rate = 0.9
 image_shape = [3, 224, 224]
 class_dim = 1000
@@ -402,6 +402,43 @@ def optimizer_setting(params):
                 learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
             momentum=momentum_rate,
             regularization=fluid.regularizer.L2Decay(l2_decay))
+    elif ls["name"] == "exponential_decay":
+        if "total_images" not in params:
+            total_images = IMAGENET1000
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        num_epochs = params["num_epochs"]
+        start_lr = params["lr"]
+        total_step = int((total_images / batch_size) * num_epochs)
+        decay_step = int((total_images / batch_size) * 2.4)
+        lr = start_lr
+        lr = fluid.layers.exponential_decay(
+            learning_rate=start_lr,
+            decay_steps=decay_step,
+            decay_rate=0.97,
+            staircase=True)
+        optimizer = fluid.optimizer.SGDOptimizer(learning_rate=lr)
+    elif ls["name"] == "exponential_decay_with_RMSProp":
+        if "total_images" not in params:
+            total_images = IMAGENET1000
+        else:
+            total_images = params["total_images"]
+        batch_size = ls["batch_size"]
+        step = int(math.ceil(float(total_images) / batch_size))
+        decay_step = int(2.4 * step)
+        lr = params["lr"]
+        num_epochs = params["num_epochs"]
+        optimizer = fluid.optimizer.RMSProp(
+            learning_rate=fluid.layers.exponential_decay(
+                learning_rate=lr,
+                decay_steps=decay_step,
+                decay_rate=0.97,
+                staircase=False),
+            regularization=fluid.regularizer.L2Decay(l2_decay),
+            momentum=0.9,
+            rho=0.9,
+            epsilon=0.001)
     elif ls["name"] == "linear_decay":
         if "total_images" not in params:
             total_images = IMAGENET1000
