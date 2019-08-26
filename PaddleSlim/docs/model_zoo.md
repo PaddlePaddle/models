@@ -157,7 +157,7 @@ optimizer = fluid.optimizer.Momentum(
 
 | FLOPS |model size|精度（top5/top1） |模型下载 |
 |---|---|---|---|
-| -50%|-47.0%(9.0M) | 89.13% / 69.83%|[点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.5_model.tar.gz)|
+| -50%|-47.0%(9.0M) | 88.92% / 69.66%|[点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.5_model.tar.gz)|
 | -60%|-55.9%(7.5M)|88.22% / 68.24%| [点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.6_model.tar.gz)|
 | -70%|-65.3%(5.9M)|86.99% / 66.57%| [点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.7_model.tar.gz)|
 
