@@ -36,6 +36,10 @@ SSD:
   multi_box_head: MultiBoxHead
 
   # fluid.layers.detection_output, Detection Output Layer for SSD.
+  # This operation is to get the detection results by performing following two steps:
+  #   1. Decode input bounding box predictions according to the prior boxes.
+  #   2. Get the final detection results by applying multi-class non maximum suppression (NMS).
+  # this operation doesn’t clip the final output bounding boxes to the image window.
   output_decoder:
     # The index of background label, the background label will be ignored.
     # If set to -1, then all categories will be considered.
@@ -70,6 +74,11 @@ VGG:
   normalizations: [20., -1, -1, -1, -1, -1]
 
 # fluid.layers.multi_box_head, Generate prior boxes for SSD algorithm.
+# Generate `prior_box`  according to the inputs list and other parameters
+# Each position of the input produce N prior boxes, N is determined by 
+# the count of min_sizes, max_sizes and aspect_ratios, The size of the box 
+# is in range(min_size, max_size) interval, which is generated in sequence 
+# according to the aspect_ratios.
 MultiBoxHead:
   # the base_size is used to get min_size and max_size according to min_ratio and max_ratio.
   base_size: 300
@@ -125,7 +134,7 @@ OptimizerBuilder:
     type: Momentum
   # fluid.regularizer
   regularizer:
-    # mplements the L2 Weight Decay Regularization
+    # implements the L2 Weight Decay Regularization
     # Small values of L2 can help prevent over fitting the training data.
     factor: 0.0005
     type: L2
