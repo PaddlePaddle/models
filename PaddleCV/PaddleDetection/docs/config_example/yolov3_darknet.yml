@@ -16,6 +16,9 @@ max_iters: 500200
 # Smooth the log output in specified iterations, 20 by default.
 log_smooth_window: 20
 
+# The number of iteration interval to display in training log.
+log_iter: 20
+
 # The directory to save models.
 save_dir: output
 
