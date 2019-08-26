@@ -168,7 +168,9 @@ and then run the command after the first stage has been finished
 sh ./run_record_twomemory_finetune.sh
 ```
 
-#### Reproducing the paper results
+The finally created `output/` and `log/` directories have the same folder structure with directly fine-tuning.
+
+#### Reproduce the paper results
 
 We have released the checkpoints for our trained KT-NET which can reproduce the performance in the paper ([Download link](TODO)). After downloaded them, run the command:
 ```

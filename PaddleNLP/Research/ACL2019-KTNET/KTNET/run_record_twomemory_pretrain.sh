@@ -1,52 +1,33 @@
 #!/bin/bash
-set -x
-set -e 
 
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LC_CTYPE=en_US.UTF-8
 
-# echo "running run.sh..."
-
-if [ ! -d log ]; then
-mkdir log
+if [ ! -d record_both_first_stage_log ]; then
+mkdir record_both_first_stage_log
 else
-rm -r log/*
+rm -r record_both_first_stage_log/*
 fi
 
-if [ ! -d output ]; then
-mkdir output
+if [ ! -d record_both_first_stage_output ]; then
+mkdir record_both_first_stage_output
 else
-rm -r output/*
+rm -r record_both_first_stage_output/*
 fi
 
-
-PWD_DIR=`pwd`
-
-export PATH=$PWD_DIR/python/bin/:./python/lib/:$PATH
-export PYTHONPATH=$PWD_DIR/python/lib/:$PWD_DIR/python/lib/python3.7/site-packages/:$PYTHONPATH
-export LD_LIBRARY_PATH=$PWD_DIR/nccl2.3.7_cuda9.0/lib:/home/work/cuda-9.0/lib64:/home/work/cudnn/cudnn_v7/cuda/lib64:/home/work/cuda-9.0/extras/CUPTI/lib64:$LD_LIBRARY_PATH
 export FLAGS_cudnn_deterministic=true
 export FLAGS_cpu_deterministic=true
 
-echo `which python` > $PWD_DIR/log/info.log
-
-python -c 'import sys; print(sys.path)' >> $PWD_DIR/log/info.log
-echo $WORK_DIR >> $PWD_DIR/log/info.log
-
-DATA=$PWD_DIR/data/
-#BERT_DIR=$PWD_DIR/uncased_L-12_H-768_A-12
-#BERT_DIR=$PWD_DIR/cased_L-12_H-768_A-12
-#BERT_DIR=$PWD_DIR/uncased_L-24_H-1024_A-16
-BERT_DIR=$PWD_DIR/cased_L-24_H-1024_A-16
-
-WN_CPT_EMBEDDING_PATH=$PWD_DIR/concept_resources/embeddings/wn_concept2vec.txt
-NELL_CPT_EMBEDDING_PATH=$PWD_DIR/concept_resources/embeddings/nell_concept2vec.txt
+PWD_DIR=`pwd`
+DATA=../data/
+BERT_DIR=cased_L-24_H-1024_A-16
+WN_CPT_EMBEDDING_PATH=../retrieve_concepts/KB_embeddings/wn_concept2vec.txt
+NELL_CPT_EMBEDDING_PATH=../retrieve_concepts/KB_embeddings/nell_concept2vec.txt
 
 python3 src/run_record_twomemory.py \
   --batch_size 6 \
   --do_train true \
-  --do_val true \
   --do_predict true \
   --use_ema false \
   --do_lower_case false \
@@ -57,7 +38,6 @@ python3 src/run_record_twomemory.py \
   --bert_config_path $BERT_DIR/bert_config.json \
   --freeze true \
   --save_steps 4000 \
-  --validation_steps 4000 \
   --weight_decay 0.01 \
   --warmup_proportion 0.0 \
   --learning_rate 3e-4 \
@@ -68,10 +48,5 @@ python3 src/run_record_twomemory.py \
   --nell_concept_embedding_path $NELL_CPT_EMBEDDING_PATH \
   --use_wordnet true \
   --use_nell true \
-  --random_seed 44 \
-  --checkpoints output/ 1>$PWD_DIR/log/train.log 2>&1
-
-cd output
-find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'tar czvf $(basename {}).tar.gz $(basename {})' \;
-find . -mindepth 1 -maxdepth 1 -type d -exec sh -c 'rm -rf {}' \;
-cd ..
+  --random_seed 45 \
+  --checkpoints record_both_first_stage_output/ 1>$PWD_DIR/record_both_first_stage_log/train.log 2>&1

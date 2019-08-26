@@ -36,7 +36,6 @@ python3 src/run_squad.py \
   --bert_config_path $BERT_DIR/bert_config.json \
   --freeze false \
   --save_steps 4000 \
-  --validation_steps 4000 \
   --weight_decay 0.01 \
   --warmup_proportion 0.1 \
   --learning_rate 3e-5 \
