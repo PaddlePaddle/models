@@ -152,7 +152,6 @@ To run with single KB, replace `run_record_twomemory.sh` with `run_record_wordne
 
 Similarly, for SQuAD, use `run_squad_twomemory.sh`, `run_squad_wordnet.sh` or `run_squad_nell.sh`.
 
-
 #### Two-staged fine-tuning (Recommended)
 
 In our experiments, we found that employing a "two-staged" training strategy achieves better model performance, which freezes BERT params in the first stage and unfreezes them later. We recommend to adopt this strategy to train KT-NET. To run two-staged fine-tuning, just first execute the `XXX_pretrain.sh` script and then run `XXX_finetune.sh`. E.g., to train a KT-NET on ReCoRD with both KBs, firstly run

@@ -107,10 +107,10 @@ mem_settings_g = ArgumentGroup(parser, "memory", "memory settings.")
 mem_settings_g.add_arg('wn_concept_embedding_path',  str,    None,   'path of wordnet pretrained concept file')
 mem_settings_g.add_arg('nell_concept_embedding_path',  str,    None,   'path of nell pretrained concept file')
 mem_settings_g.add_arg('use_wordnet',             bool,   False,  'whether to use wordnet memory')
-mem_settings_g.add_arg('retrieved_synset_path',   str,    'concept_resources/wordnet_concepts/retrived_synsets.data',   'path of retrieved synsets')
+mem_settings_g.add_arg('retrieved_synset_path',   str,    '../retrieve_concepts/retrieve_wordnet/output_record/retrived_synsets.data',   'path of retrieved synsets')
 mem_settings_g.add_arg('use_nell',                bool,   False,  'whether to use nell memory')
-mem_settings_g.add_arg('train_retrieved_nell_concept_path',   str,    'concept_resources/nell_concepts/train.retrieved_nell_concepts.data', 'path of retrieved concepts for trainset')
-mem_settings_g.add_arg('dev_retrieved_nell_concept_path',     str,    'concept_resources/nell_concepts/dev.retrieved_nell_concepts.data',   'path of retrieved concepts for devset')
+mem_settings_g.add_arg('train_retrieved_nell_concept_path',   str,    '../retrieve_concepts/retrieve_nell/output_record/train.retrieved_nell_concepts.data', 'path of retrieved concepts for trainset')
+mem_settings_g.add_arg('dev_retrieved_nell_concept_path',     str,    '../retrieve_concepts/retrieve_nell/output_record/dev.retrieved_nell_concepts.data',   'path of retrieved concepts for devset')
 
 args = parser.parse_args()
 # yapf: enable.
@@ -364,7 +364,7 @@ def train(args):
 
     if args.do_train:
         train_concept_settings = {
-            'tokenization_path': 'concept_resources/tokenize_result/train.tokenization.{}.data'.format('uncased' if args.do_lower_case else 'cased'),
+            'tokenization_path': '../retrieve_concepts/tokenization_record/tokens/train.tokenization.{}.data'.format('uncased' if args.do_lower_case else 'cased'),
             'wn_concept2id': wn_concept2id,
             'nell_concept2id': nell_concept2id,
             'use_wordnet': args.use_wordnet,
@@ -441,7 +441,7 @@ def train(args):
 
     if args.do_predict or args.do_val:
         eval_concept_settings = {
-            'tokenization_path': 'concept_resources/tokenize_result/dev.tokenization.{}.data'.format('uncased' if args.do_lower_case else 'cased'),
+            'tokenization_path': '../retrieve_concepts/tokenization_record/tokens/dev.tokenization.{}.data'.format('uncased' if args.do_lower_case else 'cased'),
             'wn_concept2id': wn_concept2id,
             'nell_concept2id': nell_concept2id,
             'use_wordnet': args.use_wordnet,

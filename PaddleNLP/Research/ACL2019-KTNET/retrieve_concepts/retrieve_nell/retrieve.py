@@ -37,10 +37,10 @@ def preprocess_record_ent_name(raw_token_seq):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--train_token', type=str, default='../tokenization/tokens/train.tokenization.data', help='token file of train set')
-    parser.add_argument('--eval_token', type=str, default='../tokenization/tokens/dev.tokenization.data', help='token file of dev set')
+    parser.add_argument('--train_token', type=str, default='../tokenization_record/tokens/train.tokenization.uncased.data', help='token file of train set')
+    parser.add_argument('--eval_token', type=str, default='../tokenization_record/tokens/dev.tokenization.uncased.data', help='token file of dev set')
     parser.add_argument('--score_threshold', type=float, default=0.9, help='only keep generalizations relations with score >= threshold')    
-    parser.add_argument('--output_dir', type=str, default='output/', help='output directory')
+    parser.add_argument('--output_dir', type=str, default='output_record/', help='output directory')
     args = parser.parse_args()
 
     # load set of concepts with pre-trained embedding
