@@ -446,19 +446,20 @@ python -u main.py \
 &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;用户可在**dgu/define_predict_pack.py**内定义task_name和自定义封装预测接口的对应关系；
 
 ## 参考论文
-1、Harshit Kumar, Arvind Agarwal, Riddhiman Dasgupta,Sachindra Joshi, and Arun Kumar. 2017.   Dia-logue act sequence labeling using hierarchical en-coder with crf.arXiv preprint arXiv:1709.04250.
-2、Changliang Li, Liang Li, and Ji Qi. 2018.  A self-attentive model with gate mechanism for spoken lan-guage understanding.  InProceedings of the 2018Conference on Empirical Methods in Natural Lan-guage Processing, pages 3824–3833.
-3、Ryan Lowe, Nissan Pow, Iulian Serban, and JoellePineau. 2015. The ubuntu dialogue corpus: A largedataset for research in unstructured multi-turn dia-logue systems.arXiv preprint arXiv:1506.08909.
-4、Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg S Cor-rado, and Jeff Dean. 2013. Distributed representa-tions of words and phrases and their compositional-ity. InAdvances in neural information processingsystems, pages 3111–3119.
-5、Hiroki Ouchi and Yuta Tsuboi. 2016. Addressee andresponse selection for multi-party conversation. InProceedings of the 2016 Conference on EmpiricalMethods in Natural Language Processing, pages2133–2143.
-6、Elizabeth Shriberg, Raj Dhillon, Sonali Bhagat, JeremyAng, and Hannah Carvey. 2004. The icsi meetingrecorder dialog act (mrda) corpus. Technical report,INTERNATIONAL COMPUTER SCIENCE INSTBERKELEY CA.
-7、Andreas Stolcke, Klaus Ries, Noah Coccaro, Eliza-beth Shriberg, Rebecca Bates, Daniel Jurafsky, PaulTaylor, Rachel Martin, Carol Van Ess-Dykema, andMarie Meteer. 2000. Dialogue act modeling for au-tomatic tagging and recognition of conversationalspeech.Computational linguistics, 26(3):339–373.
-8、Ye-Yi Wang, Li Deng, and Alex Acero. 2005.  Spo-ken language understanding.IEEE Signal Process-ing Magazine, 22(5):16–31.Jason Williams, Antoine Raux, Deepak Ramachan-dran, and Alan Black. 2013. The dialog state tracking challenge.  InProceedings of the SIGDIAL 2013Conference, pages 404–413.
-9、Yonghui Wu, Mike Schuster, Zhifeng Chen, Quoc VLe,  Mohammad Norouzi,  Wolfgang Macherey,Maxim  Krikun,  Yuan  Cao,  Qin  Gao,  KlausMacherey,  et al. 2016.   Google’s neural ma-chine translation system: Bridging the gap betweenhuman and machine translation.arXiv preprintarXiv:1609.08144.Kaisheng 
-10、Yao, Geoffrey Zweig, Mei-Yuh Hwang,Yangyang Shi, and Dong Yu. 2013. Recurrent neu-ral networks for language understanding. InInter-speech, pages 2524–2528.
-11、Xiangyang Zhou, Lu Li, Daxiang Dong, Yi Liu, YingChen, Wayne Xin Zhao, Dianhai Yu, and Hua Wu.2018.  Multi-turn response selection for chatbotswith deep attention matching network. InProceed-ings of the 56th Annual Meeting of the Associationfor Computational Linguistics (Volume 1: Long Pa-pers), volume 1, pages 1118–1127.
-12、Su Zhu and Kai Yu. 2017.  Encoder-decoder withfocus-mechanism for sequence labelling based spo-ken language understanding. In2017 IEEE Interna-tional Conference on Acoustics, Speech and SignalProcessing (ICASSP), pages 5675–5679. IEEE.
-13、Jason Williams, Antoine Raux, Deepak Ramachan-dran, and Alan Black. 2013. The dialog state track-ing challenge. InProceedings of the SIGDIAL 2013Conference, pages 404–413.
+
+- Harshit Kumar, Arvind Agarwal, Riddhiman Dasgupta,Sachindra Joshi, and Arun Kumar. 2017.   Dia-logue act sequence labeling using hierarchical en-coder with crf.arXiv preprint arXiv:1709.04250.
+- Changliang Li, Liang Li, and Ji Qi. 2018.  A self-attentive model with gate mechanism for spoken lan-guage understanding.  InProceedings of the 2018Conference on Empirical Methods in Natural Lan-guage Processing, pages 3824–3833.
+- Ryan Lowe, Nissan Pow, Iulian Serban, and JoellePineau. 2015. The ubuntu dialogue corpus: A largedataset for research in unstructured multi-turn dia-logue systems.arXiv preprint arXiv:1506.08909.
+- Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg S Cor-rado, and Jeff Dean. 2013. Distributed representa-tions of words and phrases and their compositional-ity. InAdvances in neural information processingsystems, pages 3111–3119.
+- Hiroki Ouchi and Yuta Tsuboi. 2016. Addressee andresponse selection for multi-party conversation. InProceedings of the 2016 Conference on EmpiricalMethods in Natural Language Processing, pages2133–2143.
+- Elizabeth Shriberg, Raj Dhillon, Sonali Bhagat, JeremyAng, and Hannah Carvey. 2004. The icsi meetingrecorder dialog act (mrda) corpus. Technical report,INTERNATIONAL COMPUTER SCIENCE INSTBERKELEY CA.
+- Andreas Stolcke, Klaus Ries, Noah Coccaro, Eliza-beth Shriberg, Rebecca Bates, Daniel Jurafsky, PaulTaylor, Rachel Martin, Carol Van Ess-Dykema, andMarie Meteer. 2000. Dialogue act modeling for au-tomatic tagging and recognition of conversationalspeech.Computational linguistics, 26(3):339–373.
+- Ye-Yi Wang, Li Deng, and Alex Acero. 2005.  Spo-ken language understanding.IEEE Signal Process-ing Magazine, 22(5):16–31.Jason Williams, Antoine Raux, Deepak Ramachan-dran, and Alan Black. 2013. The dialog state tracking challenge.  InProceedings of the SIGDIAL 2013Conference, pages 404–413.
+- Yonghui Wu, Mike Schuster, Zhifeng Chen, Quoc VLe,  Mohammad Norouzi,  Wolfgang Macherey,Maxim  Krikun,  Yuan  Cao,  Qin  Gao,  KlausMacherey,  et al. 2016.   Google’s neural ma-chine translation system: Bridging the gap betweenhuman and machine translation.arXiv preprintarXiv:1609.08144.Kaisheng 
+- Yao, Geoffrey Zweig, Mei-Yuh Hwang,Yangyang Shi, and Dong Yu. 2013. Recurrent neu-ral networks for language understanding. InInter-speech, pages 2524–2528.
+- Xiangyang Zhou, Lu Li, Daxiang Dong, Yi Liu, YingChen, Wayne Xin Zhao, Dianhai Yu, and Hua Wu.2018.  Multi-turn response selection for chatbotswith deep attention matching network. InProceed-ings of the 56th Annual Meeting of the Associationfor Computational Linguistics (Volume 1: Long Pa-pers), volume 1, pages 1118–1127.
+- Su Zhu and Kai Yu. 2017.  Encoder-decoder withfocus-mechanism for sequence labelling based spo-ken language understanding. In2017 IEEE Interna-tional Conference on Acoustics, Speech and SignalProcessing (ICASSP), pages 5675–5679. IEEE.
+- Jason Williams, Antoine Raux, Deepak Ramachan-dran, and Alan Black. 2013. The dialog state track-ing challenge. InProceedings of the SIGDIAL 2013Conference, pages 404–413.
 
 ## 版本更新
 
