@@ -1,17 +1,17 @@
 # 对话自动评估模块ADE
 
 ## 目录
-- [**1、模型简介**](#1、模型简介)
+- [**模型简介**](#模型简介)
 
-- [**2、快速开始**](#2、快速开始)
+- [**快速开始**](#快速开始)
 
-- [**3、进阶使用**](#3、进阶使用)
+- [**进阶使用**](#进阶使用)
 
-- [**4、参考论文**](#4、参考论文)
+- [**参考论文**](#参考论文)
 
-- [**5、版本更新**](#5、版本更新)
+- [**版本更新**](#版本更新)
 
-## 1、模型简介
+## 模型简介
 
 &ensp;&ensp;&ensp;&ensp;对话自动评估（Auto Dialogue Evaluation）评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。
 
@@ -19,7 +19,7 @@
 
 &ensp;&ensp;&ensp;&ensp;2. 利用少量标注数据（特定对话系统或场景的人工打分），在匹配模型基础上进行微调，可以显著提高该对话系统或场景的评估效果。
 
-## 2、快速开始
+## 快速开始
 
 ### 安装说明
 
@@ -544,7 +544,7 @@ python -u main.py \
 #### 服务器部署
 &ensp;&ensp;&ensp;&ensp;请参考PaddlePaddle官方提供的[服务器端部署](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/deploy/inference/index_cn.html)文档进行部署上线。
 
-## 3、进阶使用
+## 进阶使用
 
 ### 背景介绍
 &ensp;&ensp;&ensp;&ensp;对话自动评估任务输入是文本对（上文，回复），输出是回复质量得分，匹配任务（预测上下文是否匹配）和自动评估任务有天然的联系，该项目利用匹配任务作为自动评估的预训练，利用少量标注数据，在匹配模型基础上微调。
@@ -566,7 +566,7 @@ python -u main.py \
 8474 13 44 34         2 87 91 23       0
 ```
 
-## 4、参考论文
+## 参考论文
 1、Anjuli Kannan and Oriol Vinyals. 2017. Adversarial evaluation of dialogue models. arXiv preprint arXiv:1701.08198.
 2、Ryan Lowe, Michael Noseworthy, Iulian V Serban, Nicolas Angelard-Gontier, Yoshua Bengio, and Joelle Pineau. 2017. Towards an automatic turing test: Learning to evaluate dialogue responses. arXiv preprint arXiv:1708.07149.
 3、Sebastian M¨oller, Roman Englert, Klaus Engelbrecht, Verena Hafner, Anthony Jameson, Antti Oulasvirta, Alexander Raake, and Norbert Reithinger. 2006. Memo: towards automatic usability evaluation of spoken dialogue services by user error simulations. In Ninth International Conference on Spoken Language Processing.
@@ -578,7 +578,7 @@ of machine translation. In Proceedings of the 40th annual meeting on association
 8、Chia-Wei Liu, Ryan Lowe, Iulian V Serban, Michael Noseworthy, Laurent Charlin, and Joelle Pineau. 2016. How not to evaluate your dialogue system: An empirical study of unsupervised evaluation metrics for dialogue response generation. arXiv preprint arXiv:1603.08023.
 9、Chin-Yew Lin. 2004. Rouge: A package for automatic evaluation of summaries. Text Summarization Branches Out.
 
-## 5、版本更新
+## 版本更新
 
 第一版：PaddlePaddle 1.4.0版本
 主要功能：支持4个不同对话系统数据上训练、预测和系统性能评估
