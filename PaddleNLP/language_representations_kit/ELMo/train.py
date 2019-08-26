@@ -245,13 +245,6 @@ def eval(vocab, infer_progs, dev_count, logger, args):
 
 
 def train():
-    args = parse_args()
-    if args.random_seed == 0:
-        args.random_seed = None
-        print("random seed is None")
-    if args.enable_ce:
-        random.seed(args.random_seed)
-        np.random.seed(args.random_seed)
     logger = logging.getLogger("lm")
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
@@ -259,7 +252,7 @@ def train():
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(formatter)
-
+    args = parse_args()
     logger.info('Running with args : {}'.format(args))
     logger.info('Running paddle : {}'.format(paddle.version.commit))
 
@@ -275,10 +268,6 @@ def train():
     # build model
     train_prog = fluid.Program()
     train_startup_prog = fluid.Program()
-    if args.enable_ce:
-        train_prog.random_seed = args.random_seed
-        train_startup_prog.random_seed = args.random_seed
-
     # build infer model
     infer_prog = fluid.Program()
     infer_startup_prog = fluid.Program()
@@ -319,7 +308,8 @@ def train():
                 logger.error('Unsupported optimizer: {}'.format(args.optim))
                 exit(-1)
             optimizer.minimize(train_model.loss * args.num_steps)
-
+            print('use gpu')
+            print(args.use_gpu)
             # initialize parameters
             place = core.CUDAPlace(0) if args.use_gpu else core.CPUPlace()
             exe = Executor(place)
@@ -507,9 +497,11 @@ def train_loop(args,
     n_batches_total = args.max_epoch * n_batches_per_epoch
     begin_time = time.time()
     ce_info = []
+    final_batch_id = 0
     for batch_id, batch_list in enumerate(train_reader(), 1):
         if batch_id > n_batches_total:
             break
+        final_batch_id = batch_id
         feed_data = batch_reader(batch_list, args)
         feed = list(feeder.feed_parallel(feed_data, dev_count))
         for i in range(dev_count):
@@ -569,22 +561,9 @@ def train_loop(args,
                 os.makedirs(model_path)
             fluid.io.save_persistables(
                 executor=exe, dirname=model_path, main_program=train_prog)
-
-    if args.enable_ce:
-        card_num = get_cards()
-        ce_loss = 0
-        ce_time = 0
-        try:
-            ce_loss = ce_info[-2][0]
-            ce_time = ce_info[-2][1]
-        except:
-            print("ce info error")
-        print("kpis\ttrain_duration_card%s\t%s" % (card_num, ce_time))
-        print("kpis\ttrain_loss_card%s\t%f" % (card_num, ce_loss))
-
     end_time = time.time()
     total_time += end_time - start_time
-    epoch_id = int(batch_id / n_batches_per_epoch)
+    epoch_id = int(final_batch_id / n_batches_per_epoch)
     model_path = os.path.join(args.para_save_dir, str(epoch_id))
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
