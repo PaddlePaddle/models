@@ -9,7 +9,7 @@ KT-NET (Knowledge and Text fusion NET) is a machine reading comprehension (MRC) 
 Overall Architecture of KT-NET
 </p>
 
-This repository contains the PaddlePaddle implementation of KT-NET. The trained checkpoints are also provided for reproducing the result in the paper.
+This repository contains the PaddlePaddle implementation of KT-NET. The trained checkpoints are also provided for reproducing the results in the paper.
 
 ## How to Run
 
@@ -123,7 +123,7 @@ wget https://github.com/bishanyang/kblstm/raw/master/embeddings/wn_concept2vec.t
 wget https://github.com/bishanyang/kblstm/raw/master/embeddings/nell_concept2vec.txt
 mv wn_concept2vec.txt nell_concept2vec.txt retrieve_concepts/KB_embeddings
 ```
-The 100-dimension embeddings are stored in the following format:
+The 100-dimensional embeddings are stored in the following format:
 ```
 concept:coach -0.123886 0.0477016 0.517474 0.154645 0.32559 ...
 ```
