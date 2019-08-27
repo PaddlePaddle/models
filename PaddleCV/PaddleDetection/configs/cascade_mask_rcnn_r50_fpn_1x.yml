@@ -3,7 +3,7 @@ train_feed: MaskRCNNTrainFeed
 eval_feed: MaskRCNNEvalFeed
 test_feed: MaskRCNNTestFeed
 use_gpu: true
-max_iters: 90000
+max_iters: 180000
 snapshot_iter: 10000
 log_smooth_window: 20
 save_dir: output
@@ -96,11 +96,11 @@ FC6FC7Head:
   num_chan: 1024
 
 LearningRate:
-  base_lr: 0.02
+  base_lr: 0.01
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones: [60000, 80000]
+    milestones: [120000, 160000]
   - !LinearWarmup
     start_factor: 0.3333333333333333
     steps: 500
@@ -114,7 +114,7 @@ OptimizerBuilder:
     type: L2
 
 MaskRCNNTrainFeed:
-  batch_size: 2
+  batch_size: 1
   dataset:
     dataset_dir: dataset/coco
     annotation: annotations/instances_train2017.json
