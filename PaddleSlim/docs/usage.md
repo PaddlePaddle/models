@@ -642,7 +642,7 @@ controllers:
 
     延时评估器表格一般存放在一个 .txt 文件中。对于不同的硬件平台，我们都会根据搜索空间中的所有可能 op 生成延时评估器表格。延时评估器表格中的每一行都对应一个 op，其内容形式如下：
 
-    - `conv flag_bias flag_relu n_in c_in h_in w_in c_out group kernel padding stride dilation latency`
+    - `conv flag_bias flag_relu n_in c_in h_in w_in c_out groups kernel padding stride dilation latency`
     - `activation active_type n_in c_in h_in w_in latency`
     - `batch_norm active_type n_in c_in h_in w_in latency`
     - `eltwise eltwise_type n_in c_in h_in w_in latency`
