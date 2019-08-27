@@ -65,6 +65,8 @@ python ./train.py \
     --save_weights_path=$SAVE_WEIGHTS_PATH \
     --dataset_path=$DATASET_PATH
 ```
+注意：如果在windows系统上进行训练请不要将use_multiprocessing设置为True
+
 使用以下命令获得更多使用说明：
 ```
 python train.py --help
