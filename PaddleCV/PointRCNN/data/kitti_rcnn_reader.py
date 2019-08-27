@@ -27,7 +27,6 @@ import numpy as np
 import data.kitti_utils as kitti_utils
 from data.kitti_reader import KittiReader
 from utils.config import cfg
-# from utils.box_utils import pts_in_boxes3d
 
 __all__ = ["KittiRCNNReader"]
 
@@ -131,7 +130,7 @@ class KittiRCNNReader(KittiReader):
             sample_id = int(self.image_idx_list[idx])
             obj_list = self.filtrate_objects(self.get_label(sample_id))
             if len(obj_list) == 0:
-                # logger.info('No gt classes: %06d' % sample_id)
+                logger.info('No gt classes: %06d' % sample_id)
                 continue
             self.sample_id_list.append(sample_id)
 
@@ -439,9 +438,9 @@ class KittiRCNNReader(KittiReader):
             enlarged_box3d = new_gt_box3d.copy()
             enlarged_box3d[3] += 2  # remove the points above and below the object
 
-            boxes_pts_mask_list = roipool3d_utils.pts_in_boxes3d_cpu(
-                torch.from_numpy(pts_rect), torch.from_numpy(enlarged_box3d.reshape(1, 7)))
-            pt_mask_flag = (boxes_pts_mask_list[0].numpy() == 1)
+            boxes_pts_mask_list = kitti_utils.pts_in_boxes3d(pts_rect,
+                    enlarged_box3d.reshape(1, 7))
+            pt_mask_flag = (boxes_pts_mask_list[0] == 1)
             src_pts_flag[pt_mask_flag] = 0  # remove the original points which are inside the new box
 
             new_pts_list.append(new_gt_points)
@@ -581,8 +580,27 @@ class KittiRCNNReader(KittiReader):
         else:
             raise NotImplementedError
 
+    def get_reader(self, batch_size, drop_last=False):
+        def reader():
+            batch_out = []
+            for i in range(self.__len__()):
+                batch_out.append(self.__getitem__(i))
+                if len(batch_out) >= batch_size:
+                    yield batch_out
+                    batch_out = []
+            if not drop_last:
+                yield batch_out
+        return reader
+
 
 if __name__ == "__main__":
-    np.random.seed(233)
-    reader = KittiRCNNReader('./data')
-    print(reader[0])
+    np.random.seed(2333)
+    logging.basicConfig(level=logging.INFO)
+    cfg.RPN.ENABLED = True
+    cfg.RCNN.ENABLED = False
+    cfg.GT_AUG_ENABLED = True
+    kr = KittiRCNNReader('./data', gt_database_dir='./data/gt_database/train_gt_database_3level_Car.pkl')
+    print(kr[0])
+    # reader = kr.get_reader(8)
+    # for i, data in enumerate(reader()):
+    #     print(i, len(data))
