@@ -69,15 +69,15 @@ The tagged dataset will be saved at `retrieve_concepts/ner_tagging_squad/output`
 #### 2. Tokenization
 
 Tokenization should be performed for retrieval. We use the same tokenizer with [BERT](https://github.com/google-research/bert). 
-For ReCoRD, run the following command to tokenize the raw dataset (or directly download our output from [link](TODO)):
+For ReCoRD, run the following command to tokenize the raw dataset (or directly download our output from [link](https://baidu-nlp.bj.bcebos.com/KTNET_preprocess_tokenize_result_record.tar.gz)):
 ```
 cd retrieve_concepts/tokenization_record
-python3 do_tokenization.py --do_lower_case
+python3 do_tokenization.py
 ```
-For SQuAD, run the following command to process the NER tagged dataset (or directly download our output from [link](TODO)):
+For SQuAD, run the following command to process the NER tagged dataset (or directly download our output from [link](https://baidu-nlp.bj.bcebos.com/KTNET_preprocess_tokenize_result_squad.tar.gz)):
 ```
 cd retrieve_concepts/tokenization_squad
-python3 do_tokenization.py --do_lower_case
+python3 do_tokenization.py
 ```
 
 #### 3. Retrieve WordNet
@@ -93,7 +93,7 @@ For SQuAD, run the command:
 cd retrieve_concepts/retrieve_wordnet
 python3 retrieve.py --train_token ../tokenization_squad/tokens/train.tokenization.uncased.data --eval_token ../tokenization_squad/tokens/dev.tokenization.uncased.data --output_dir output_squad/ --no_stopwords
 ```
-The outputs are pickled into binary files. We have also provided our output files for convenience ([download link](TODO)).
+The outputs are pickled into binary files. We have also provided our output files for convenience ([download link](https://baidu-nlp.bj.bcebos.com/KTNET_preprocess_wordnet_concepts.tar.gz)).
 
 #### 4. Retrieve NELL
 
@@ -113,7 +113,7 @@ For SQuAD, run the command:
 cd retrieve_concepts/retrieve_nell
 python3 retrieve.py --train_token ../tokenization_squad/tokens/train.tokenization.uncased.data --eval_token ../tokenization_squad/tokens/dev.tokenization.uncased.data --output_dir output_squad/
 ```
-The outputs are pickled into binary files. The output files can also be downloaded from [download link](TODO).
+The outputs are pickled into binary files. The output files can also be downloaded from [download link](https://baidu-nlp.bj.bcebos.com/KTNET_preprocess_nell_concepts.tar.gz).
 
 #### 5. Prepare KB embedding
 

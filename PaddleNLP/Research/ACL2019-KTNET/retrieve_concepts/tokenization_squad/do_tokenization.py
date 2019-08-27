@@ -1,4 +1,19 @@
 # -*- coding: utf-8 -*-
+# ==============================================================================
+# Copyright 2019 Baidu.com, Inc. All Rights Reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
 
 # This script performs the same tokenization process as run_squad.py, dumping tokenization results
 # compared with v1: add query and passage entity span in output
@@ -262,9 +277,9 @@ def main():
     parser.add_argument("--train_file", default='../ner_tagging_squad/output/train-v1.1.tagged.json', type=str, help="SQuAD json for training. E.g., train-v1.1.json")
     parser.add_argument("--predict_file", default='../ner_tagging_squad/output/dev-v1.1.tagged.json', type=str,
                         help="SQuAD json for predictions. E.g., dev-v1.1.json or test-v1.1.json")
-    parser.add_argument("--do_lower_case", default=False, action='store_true',
-                        help="Whether to lower case the input text. Should be True for uncased "
-                             "models and False for cased models.")
+    # parser.add_argument("--do_lower_case", default=False, action='store_true',
+    #                     help="Whether to lower case the input text. Should be True for uncased "
+    #                          "models and False for cased models.")
     # parser.add_argument('--dump_token', action='store_true', help='whether dump the token-level tokenization result')
     # parser.add_argument('--dump_subtoken', action='store_true', help='whether dump the subtoken-level tokenization result, with its mapping with token-level result')
     args = parser.parse_args()
@@ -273,26 +288,28 @@ def main():
     if not os.path.exists(args.output_dir):
         os.mkdir(args.output_dir)
 
-    tokenizer = tokenization.FullTokenizer(
-        vocab_file='vocab.{}.txt'.format('uncased' if args.do_lower_case else 'cased'), do_lower_case=args.do_lower_case)
+    # We do both cased and uncased tokenization
+    for do_lower_case in (True, False):
+        tokenizer = tokenization.FullTokenizer(
+            vocab_file='vocab.{}.txt'.format('uncased' if do_lower_case else 'cased'), do_lower_case=do_lower_case)
 
-    train_examples = read_squad_examples(input_file=args.train_file, is_training=True)
-    train_tokenization_result = tokenization_on_examples(
-        examples=train_examples,
-        tokenizer=tokenizer)
-    with open(os.path.join(args.output_dir, 'train.tokenization.{}.data'.format('uncased' if args.do_lower_case else 'cased')), 'wb') as fout:
-        pickle.dump(train_tokenization_result, fout)
+        train_examples = read_squad_examples(input_file=args.train_file, is_training=True)
+        train_tokenization_result = tokenization_on_examples(
+            examples=train_examples,
+            tokenizer=tokenizer)
+        with open(os.path.join(args.output_dir, 'train.tokenization.{}.data'.format('uncased' if do_lower_case else 'cased')), 'wb') as fout:
+            pickle.dump(train_tokenization_result, fout)
 
-    logger.info('Finished tokenizing train set.')
+        logger.info('Finished {} tokenization for train set.'.format('uncased' if do_lower_case else 'cased'))
 
-    eval_examples = read_squad_examples(input_file=args.predict_file, is_training=False)
-    eval_tokenization_result = tokenization_on_examples(
-        examples=eval_examples,
-        tokenizer=tokenizer) 
-    with open(os.path.join(args.output_dir, 'dev.tokenization.{}.data'.format('uncased' if args.do_lower_case else 'cased')), 'wb') as fout:
-        pickle.dump(eval_tokenization_result, fout)
-    
-    logger.info('Finished tokenizing dev set.')
+        eval_examples = read_squad_examples(input_file=args.predict_file, is_training=False)
+        eval_tokenization_result = tokenization_on_examples(
+            examples=eval_examples,
+            tokenizer=tokenizer) 
+        with open(os.path.join(args.output_dir, 'dev.tokenization.{}.data'.format('uncased' if do_lower_case else 'cased')), 'wb') as fout:
+            pickle.dump(eval_tokenization_result, fout)
+        
+        logger.info('Finished {} tokenization for dev set.'.format('uncased' if do_lower_case else 'cased'))
 
 if __name__ == "__main__":
     main()
