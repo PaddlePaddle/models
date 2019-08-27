@@ -64,9 +64,11 @@ class DoubleDQNModel(object):
             greedy_action = fluid.layers.argmax(next_s_predcit_value, axis=1)
             greedy_action = fluid.layers.unsqueeze(greedy_action, axes=[1])
 
-            predict_onehot = fluid.layers.one_hot(greedy_action, self.action_dim)
+            predict_onehot = fluid.layers.one_hot(greedy_action,
+                                                  self.action_dim)
             best_v = fluid.layers.reduce_sum(
-                fluid.layers.elementwise_mul(predict_onehot, targetQ_predict_value),
+                fluid.layers.elementwise_mul(predict_onehot,
+                                             targetQ_predict_value),
                 dim=1)
             best_v.stop_gradient = True
 
@@ -79,17 +81,17 @@ class DoubleDQNModel(object):
             optimizer.minimize(cost)
 
         vars = list(self.train_program.list_vars())
-        target_vars = list(filter(
-            lambda x: 'GRAD' not in x.name and 'target' in x.name, vars))
+        target_vars = list(
+            filter(lambda x: 'GRAD' not in x.name and 'target' in x.name, vars))
 
         policy_vars_name = [
-                x.name.replace('target', 'policy') for x in target_vars]
-        policy_vars = list(filter(
-            lambda x: x.name in policy_vars_name, vars))
+            x.name.replace('target', 'policy') for x in target_vars
+        ]
+        policy_vars = list(filter(lambda x: x.name in policy_vars_name, vars))
 
         policy_vars.sort(key=lambda x: x.name)
         target_vars.sort(key=lambda x: x.name)
-        
+
         with fluid.program_guard(self._sync_program):
             sync_ops = []
             for i, var in enumerate(policy_vars):
@@ -160,7 +162,6 @@ class DoubleDQNModel(object):
             param_attr=ParamAttr(name='{}_fc1'.format(variable_field)),
             bias_attr=ParamAttr(name='{}_fc1_b'.format(variable_field)))
         return out
-
 
     def act(self, state, train_or_test):
         sample = np.random.random()
