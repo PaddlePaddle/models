@@ -13,6 +13,7 @@
 # limitations under the License.
 """Light-NAS space."""
 import sys
+import math
 from paddle.fluid.contrib.slim.nas import SearchSpace
 import paddle.fluid as fluid
 import paddle
