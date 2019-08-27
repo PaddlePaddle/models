@@ -1,12 +1,17 @@
 # 对话自动评估模块ADE
 
- * [1、模型简介](#1、模型简介)
- * [2、快速开始](#2、快速开始)
- * [3、进阶使用](#3、进阶使用)
- * [4、参考论文](#4、参考论文)
- * [5、版本更新](#5、版本更新)
+## 目录
+- [**模型简介**](#模型简介)
 
-## 1、模型简介
+- [**快速开始**](#快速开始)
+
+- [**进阶使用**](#进阶使用)
+
+- [**参考论文**](#参考论文)
+
+- [**版本更新**](#版本更新)
+
+## 模型简介
 
 &ensp;&ensp;&ensp;&ensp;对话自动评估（Auto Dialogue Evaluation）评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。
 
@@ -14,7 +19,7 @@
 
 &ensp;&ensp;&ensp;&ensp;2. 利用少量标注数据（特定对话系统或场景的人工打分），在匹配模型基础上进行微调，可以显著提高该对话系统或场景的评估效果。
 
-## 2、快速开始
+## 快速开始
 
 ### 安装说明
 
@@ -40,9 +45,13 @@ cd models/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation
 
 &ensp;&ensp;&ensp;&ensp;本模块内模型训练主要包括两个阶段：
 
-&ensp;&ensp;&ensp;&ensp;1）第一阶段：训练一个匹配模型作为评估工具，可用于待评估对话系统内的回复内容进行排序；（matching任务）
+&ensp;&ensp;&ensp;&ensp;1）第一阶段：训练一个匹配模型作为评估工具，可用于待评估对话系统内的回复内容进行排序；（matching任务)
+
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;模型结构: 输入为context和response, 对两个输入学习embedding表示, 学习到的表示经过lstm学习高阶表示, context和response的高阶表示计算双线性张量积logits, logits和label计算sigmoid_cross_entropy_with_logits loss;
 
 &ensp;&ensp;&ensp;&ensp;2）第二阶段：利用少量的对话系统的标记数据，对第一阶段训练的匹配模型进行finetuning, 可以提高评估效果（包含human，keywords，seq2seq_att，seq2seq_naive，4个finetuning任务）;
+
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;模型结构: finetuning阶段学习表示到计算logits部分和第一阶段模型结构相同，区别在于finetuning阶段计算square_error_cost loss；
 
 &ensp;&ensp;&ensp;&ensp;用于第二阶段fine-tuning的对话系统包括下面四部分：
     
@@ -74,24 +83,66 @@ label_data（第二阶段finetuning数据集）
 cd ade && bash prepare_data_and_model.sh
 ```
 
+&ensp;&ensp;&ensp;&ensp;数据路径：data/input/data/   
+
+&ensp;&ensp;&ensp;&ensp;模型路径：data/saved_models/trained_models/
+
 &ensp;&ensp;&ensp;&ensp;下载经过预处理的数据，运行该脚本之后，data目录下会存在unlabel_data(train.ids/val.ids/test.ids)，lable_data: human、keywords、seq2seq_att、seq2seq_naive(四个任务数据train.ids/val.ids/test.ids)，以及word2ids.
 
+### 模型配置
+
+&ensp;&ensp;&ensp;&ensp;配置文件路径: data/config/ade.yaml
+
+```
+loss_type: loss类型, 可选CLS或者L2
+training_file: 训练数据路径
+val_file: 验证集路径
+predict_file: 预测文件路径
+print_steps: 每隔print_steps个步数打印一次日志 
+save_steps: 每隔save_steps个步数来保存一次模型
+num_scan_data: 
+word_emb_init: 用于初始化embedding的词表路径
+init_model: 初始化模型路径
+use_cuda: 是否使用cuda, 如果是gpu训练时，设置成true
+batch_size: 一个batch内输入的样本个数
+hidden_size: 隐层大小
+emb_size: embedding层大小
+vocab_size: 词表大小
+sample_pro: 采样比率
+output_prediction_file: 输出的预测文件
+init_from_checkpoint: 加载断点模型
+init_from_params: 训练好的模型参数文件，一般用于预测
+init_from_pretrain_model: 预训练模型路径，如bert的模型参数
+inference_model_dir: inference model的保存路径
+save_model_path: 训练产出模型的输出路径
+save_checkpoint: 调用paddle的io接口save_persistables(把传入的层中所有参数以及优化器进行保存)来保存模型参数
+save_param: 调用paddle的io接口save_params(从main_program中取出所有参数然后保存到文件中)来保存模型参数
+evaluation_file: 参与评估的inference 文件
+vocab_path: 词表路径
+max_seq_len: 输入最大序列长度
+random_seed: 随机种子设置
+do_save_inference_model: 是否保存inference model 
+encable_ce: 是否开启ce
+```
+
 ### 单机训练
+
 #### 1、第一阶段matching模型的训练：
+
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
 
 ```
 bash run.sh matching train
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU训练: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU训练: 
 
 ```
 请将run.sh内参数设置为: 
@@ -121,6 +172,12 @@ else
 fi
 
 pretrain_model_path="data/saved_models/matching_pretrained"
+
+if [ -f ${pretrain_model_path} ]
+then
+    rm ${pretrain_model_path}
+fi
+
 if [ ! -d ${pretrain_model_path} ]
 then
      mkdir ${pretrain_model_path}
@@ -181,6 +238,12 @@ else
 fi
 
 save_model_path="data/saved_models/human_finetuned"
+
+if [ -f ${save_model_path} ]
+then
+    rm ${save_model_path}
+fi
+
 if [ ! -d ${save_model_path} ]
 then
     mkdir ${save_model_path}
@@ -215,14 +278,14 @@ python -u main.py \
 bash run.sh matching predict
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU预测: 
 
 ```
 请将run.sh内参数设置为: 
 export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU预测: 
 
 ```
 请将run.sh内参数设置为: 
@@ -329,23 +392,23 @@ seq2seq_naive：使用spearman相关系数来衡量评估模型对系统的打�
 
 &ensp;&ensp;&ensp;&ensp;1. 无标注数据情况下，直接使用预训练好的评估工具进行评估；
     
-    在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
 
-    /|seq2seq\_naive|seq2seq\_att|keywords|human
-    --|:--:|--:|:--:|--:
-    cor|0.361|0.343|0.324|0.288
+   ||seq2seq\_naive|seq2seq\_att|keywords|human|
+   |--|:--:|--:|:--:|--:|
+   |cor|0.361|0.343|0.324|0.288|
 
-    对四个系统平均得分排序：
+&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;对四个系统平均得分排序：
 
-    人工评估|k(0.591)<n(0.847)<a(1.116)<h(1.240)
-    --|--:
-    自动评估|k(0.625)<n(0.909)<a(1.399)<h(1.683)
+   |人工评估|k(0.591)<n(0.847)<a(1.116)<h(1.240)|
+   |--|--:|
+   |自动评估|k(0.625)<n(0.909)<a(1.399)<h(1.683)|
 
 &ensp;&ensp;&ensp;&ensp;2. 利用少量标注数据微调后，自动评估打分和人工打分spearman相关系数，如下：
 
-    /|seq2seq\_naive|seq2seq\_att|keywords|human
-    --|:--:|--:|:--:|--:
-    cor|0.474|0.477|0.443|0.378
+   ||seq2seq\_naive|seq2seq\_att|keywords|human|
+   |--|:--:|--:|:--:|--:|
+   |cor|0.474|0.477|0.443|0.378|
 
 #### 1、第一阶段matching模型的评估：
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本评估
@@ -404,14 +467,14 @@ python -u main.py \
 bash run.sh matching inference
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU执行inference model过程: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU执行inference model过程: 
 
 ```
 请将run.sh内参数设置为: 
 export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU执行inference model过程:
+&ensp;&ensp;&ensp;&ensp;如果为GPU执行inference model过程:
 
 ```
 请将run.sh内参数设置为: 
@@ -481,7 +544,7 @@ python -u main.py \
 #### 服务器部署
 &ensp;&ensp;&ensp;&ensp;请参考PaddlePaddle官方提供的[服务器端部署](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/deploy/inference/index_cn.html)文档进行部署上线。
 
-## 3、进阶使用
+## 进阶使用
 
 ### 背景介绍
 &ensp;&ensp;&ensp;&ensp;对话自动评估任务输入是文本对（上文，回复），输出是回复质量得分，匹配任务（预测上下文是否匹配）和自动评估任务有天然的联系，该项目利用匹配任务作为自动评估的预训练，利用少量标注数据，在匹配模型基础上微调。
@@ -496,40 +559,33 @@ python -u main.py \
 
 &ensp;&ensp;&ensp;&ensp;模型中所需数据格式如下：
 
-&ensp;&ensp;&ensp;&ensp;训练、预测、评估使用的数据示例如下，数据由三列组成，以制表符（'\t'）分隔，第一列是以空格分开的上文id，第二列是以空格分开的回复id，第三列是标签
+&ensp;&ensp;&ensp;&ensp;训练、预测、评估使用的数据示例如下，数据由三列组成，以制表符（'\t'）分隔，第一列是以空格分开的上文id（即context），第二列是以空格分开的回复id（即response），第三列是标签（标签含义：2-完全匹配，1-部分匹配，0-不匹配）。
 
 ```
 723 236 7823 12 8     887 13 77 4       2
 8474 13 44 34         2 87 91 23       0
 ```
 
-## 4、参考论文
-1、Anjuli Kannan and Oriol Vinyals. 2017. Adversarial evaluation of dialogue models. arXiv preprint arXiv:1701.08198.
-2、Ryan Lowe, Michael Noseworthy, Iulian V Serban, Nicolas Angelard-Gontier, Yoshua Bengio, and Joelle Pineau. 2017. Towards an automatic turing test: Learning to evaluate dialogue responses. arXiv preprint arXiv:1708.07149.
-3、Sebastian M¨oller, Roman Englert, Klaus Engelbrecht, Verena Hafner, Anthony Jameson, Antti Oulasvirta, Alexander Raake, and Norbert Reithinger. 2006. Memo: towards automatic usability evaluation of spoken dialogue services by user error simulations. In Ninth International Conference on Spoken Language Processing.
-4、Kishore Papineni, Salim Roukos, ToddWard, andWei-Jing Zhu. 2002. Bleu: a method for automatic evaluation
-of machine translation. In Proceedings of the 40th annual meeting on association for computational linguistics, pages 311–318. Association for Computational Linguistics.
-5、Chongyang Tao, Lili Mou, Dongyan Zhao, and Rui Yan. 2017. Ruber: An unsupervised method for automatic evaluation of open-domain dialog systems. arXiv preprint arXiv:1701.03079.
-6、Marilyn AWalker, Diane J Litman, Candace A Kamm, and Alicia Abella. 1997. Paradise: A framework for evaluating spoken dialogue agents. In Proceedings of the eighth conference on European chapter of the Association for Computational Linguistics, pages 271–280. Association for Computational Linguistics.
-7、Zhao Yan, Nan Duan, Junwei Bao, Peng Chen, Ming Zhou, Zhoujun Li, and Jianshe Zhou. 2016. Docchat: An information retrieval approach for chatbot engines using unstructured documents. In Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), volume 1, pages 516–525.
-8、Chia-Wei Liu, Ryan Lowe, Iulian V Serban, Michael Noseworthy, Laurent Charlin, and Joelle Pineau. 2016. How not to evaluate your dialogue system: An empirical study of unsupervised evaluation metrics for dialogue response generation. arXiv preprint arXiv:1603.08023.
-9、Chin-Yew Lin. 2004. Rouge: A package for automatic evaluation of summaries. Text Summarization Branches Out.
+## 参考论文
 
-## 5、版本更新
+- Anjuli Kannan and Oriol Vinyals. 2017. Adversarial evaluation of dialogue models. arXiv preprint arXiv:1701.08198.
+- Ryan Lowe, Michael Noseworthy, Iulian V Serban, Nicolas Angelard-Gontier, Yoshua Bengio, and Joelle Pineau. 2017. Towards an automatic turing test: Learning to evaluate dialogue responses. arXiv preprint arXiv:1708.07149.
+- Sebastian M¨oller, Roman Englert, Klaus Engelbrecht, Verena Hafner, Anthony Jameson, Antti Oulasvirta, Alexander Raake, and Norbert Reithinger. 2006. Memo: towards automatic usability evaluation of spoken dialogue services by user error simulations. In Ninth International Conference on Spoken Language Processing.
+- Kishore Papineni, Salim Roukos, ToddWard, andWei-Jing Zhu. 2002. Bleu: a method for automatic evaluation
+of machine translation. In Proceedings of the 40th annual meeting on association for computational linguistics, pages 311–318. Association for Computational Linguistics.
+- Chongyang Tao, Lili Mou, Dongyan Zhao, and Rui Yan. 2017. Ruber: An unsupervised method for automatic evaluation of open-domain dialog systems. arXiv preprint arXiv:1701.03079.
+- Marilyn AWalker, Diane J Litman, Candace A Kamm, and Alicia Abella. 1997. Paradise: A framework for evaluating spoken dialogue agents. In Proceedings of the eighth conference on European chapter of the Association for Computational Linguistics, pages 271–280. Association for Computational Linguistics.
+- Zhao Yan, Nan Duan, Junwei Bao, Peng Chen, Ming Zhou, Zhoujun Li, and Jianshe Zhou. 2016. Docchat: An information retrieval approach for chatbot engines using unstructured documents. In Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), volume 1, pages 516–525.
+- Chia-Wei Liu, Ryan Lowe, Iulian V Serban, Michael Noseworthy, Laurent Charlin, and Joelle Pineau. 2016. How not to evaluate your dialogue system: An empirical study of unsupervised evaluation metrics for dialogue response generation. arXiv preprint arXiv:1603.08023.
+- Chin-Yew Lin. 2004. Rouge: A package for automatic evaluation of summaries. Text Summarization Branches Out.
+
+## 版本更新
 
 第一版：PaddlePaddle 1.4.0版本
 主要功能：支持4个不同对话系统数据上训练、预测和系统性能评估
 
 第二版：PaddlePaddle 1.6.0版本
 更新功能：在第一版的基础上，根据PaddlePaddle的模型规范化标准，对模块内训练、预测、评估等代码进行了重构，提高易用性；
-
-## 作者
-
-zhangxiyuan01@baidu.com
-
-zhouxiangyang@baidu.com
-
-lilu12@baidu.com
 
 ## 如何贡献代码
 
