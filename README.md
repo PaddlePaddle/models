@@ -36,7 +36,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [VGG](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在AlexNet的基础上使用3*3小卷积核，增加网络深度，具有很好的泛化能力 | ImageNet-2012验证集 | 72.56%/90.93%                                    |
 | [GoogleNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在不增加计算负载的前提下增加了网络的深度和宽度，性能更加优越 | ImageNet-2012验证集 | 70.70%/89.66%                                    |
 | [ResNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | Residual Network，引入了新的残差结构，解决了随着网络加深，准确率下降的问题 | ImageNet-2012验证集 | 80.93%/95.33%                                    |
-| [ResNet-D](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 融合最新多种对ResNet改进策略，ResNet50_vd的top1准确率达到79.84% | ImageNet-2012验证集 | 79.84%/94.93%                                    |
+| [ResNet-D](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 融合多种对ResNet改进策略，ResNet50_vd的top1准确率达到79.84% | ImageNet-2012验证集 | 79.84%/94.93%                                    |
 | [Inception-v4](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 将Inception模块与Residual Connection进行结合，通过ResNet的结构极大地加速训练并获得性能的提升 | ImageNet-2012验证集 | 80.77%/95.26%                                    |
 | [MobileNet   v1](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 将传统的卷积结构改造成两层卷积结构的网络，在基本不影响准确率的前提下大大减少计算时间，更适合移动端和嵌入式视觉应用 | ImageNet-2012验证集 | 70.99%/89.68%                                    |
 | [MobileNet   v2](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | MobileNet结构的微调，直接在thinner的bottleneck层上进行skip learning连接以及对bottleneck layer不进行ReLu非线性处理可取得更好的结果 | ImageNet-2012验证集 | 72.15%/90.65%                                    |
@@ -120,7 +120,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [TSM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 基于时序移位的简单高效视频时空建模方法 | Kinetics-400               | Top-1 = 70% |
 | [Attention   LSTM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 常用模型，速度快精度高 | Youtube-8M                 | GAP   = 86% |
 | [Attention   Cluster](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | CVPR'18提出的视频多模态特征注意力聚簇融合方法 | Youtube-8M                 | GAP   = 84% |
-| [NeXtVlad](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2nd-Youtube-8M最优单模型 | Youtube-8M                 | GAP   = 87% |
+| [NeXtVlad](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2nd-Youtube-8M比赛第3名的模型 | Youtube-8M                 | GAP   = 87% |
 | [C-TCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2018年ActivityNet夺冠方案 | ActivityNet1.3 | MAP=31%    |
 
 ## PaddleNLP
@@ -150,7 +150,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 情感分析
 
-[Senta(Sentiment Classification)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/sentiment_classification)百度AI开放平台中情感倾向分析模型、百度自主研发的中文特色模型，是目前最好的中文情感分析模型。
+[Senta(Sentiment Classification)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/sentiment_classification)百度AI开放平台中情感倾向分析模型、百度自主研发的中文情感分析特色模型。
 
 | **模型**      | **dev** | **test** | **模型（****finetune****）** | **dev** | **test** |
 | ------------- | ------- | -------- | ---------------------------- | ------- | -------- |

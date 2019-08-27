@@ -1,20 +1,21 @@
 # 对话通用理解模块DGU
 
-- [**1、模型简介**](#1、模型简介)
+## 目录
+- [**模型简介**](#模型简介)
 
-- [**2、快速开始**](#2、快速开始)
+- [**快速开始**](#快速开始)
 
-- [**3、进阶使用**](#3、进阶使用)
+- [**进阶使用**](#进阶使用)
 
-- [**4、参考论文**](#4、参考论文)
+- [**参考论文**](#参考论文)
 
-- [**5、版本更新**](#5、版本更新)
+- [**版本更新**](#版本更新)
 
-## 1、模型简介
+## 模型简介
 
 &ensp;&ensp;&ensp;&ensp;对话相关的任务中，Dialogue System常常需要根据场景的变化去解决多种多样的任务。任务的多样性（意图识别、槽位解析、DA识别、DST等等），以及领域训练数据的稀少，给Dialogue System的研究和应用带来了巨大的困难和挑战，要使得dialogue system得到更好的发展，需要开发一个通用的对话理解模型。为此，我们给出了基于BERT的对话通用理解模块(DGU: DialogueGeneralUnderstanding)，通过实验表明，使用base-model(BERT)并结合常见的学习范式，就可以在几乎全部对话理解任务上取得比肩甚至超越各个领域业内最好的模型的效果，展现了学习一个通用对话理解模型的巨大潜力。
 
-## 2、快速开始
+## 快速开始
 
 ### 安装说明
 
@@ -65,7 +66,9 @@ SWDA：Switchboard Dialogue Act Corpus;
 cd dgu && bash prepare_data_and_model.sh
 ```
 &ensp;&ensp;&ensp;&ensp;数据路径：data/input/data
+
 &ensp;&ensp;&ensp;&ensp;预训练模型路径：data/pretrain_model
+
 &ensp;&ensp;&ensp;&ensp;已训练模型路径：data/saved_models/trained_models
 
 
@@ -105,6 +108,41 @@ dstc2/dstc2: 数据组成，多轮对话id, 当前轮QA对(使用\1拼接)，标
 format：conversation_content \t question \1 answer \t state1 state2 state3......
 ```
 
+### 模型配置
+
+&ensp;&ensp;&ensp;&ensp;配置文件路径: data/config/dgu.yaml
+
+```
+task_name: 任务名称，可选udc、swda、mrda、atis_intent、atis_slot、dstc2
+data_dir: 数据路径，如./data/input/data/udc
+bert_config_path: 预训练模型bert的网络配置./data/pretrain_model/uncased_L-12_H-768_A-12/bert_config.json
+init_from_checkpoint: 加载断点模型
+init_from_params: 训练好的模型参数文件，一般用于预测
+init_from_pretrain_model: 预训练模型路径，如bert的模型参数
+inference_model_dir: inference model的保存路径
+save_model_path: 训练产出模型的输出路径
+save_checkpoint: 调用paddle的io接口save_persistables(把传入的层中所有参数以及优化器进行保存)来保存模型参数
+save_param: 调用paddle的io接口save_params(从main_program中取出所有参数然后保存到文件中)来保存模型参数
+lr_scheduler: learning rate scheduler
+weight_decay: learning rate 权重衰减因子
+warmup_proportion: warmup比率
+save_steps: 每隔save_steps个步数来保存一次模型
+use_fp16: 是否使用fp16来训练模型
+loss_scaling: loss权重因子
+print_steps: 每隔print_steps个步数打印一次日志
+evaluation_file: 参与评估的inference 标注文件
+output_prediction_file: 输出的预测文件
+vocab_path: 模型词表
+max_seq_len: 输入bert内的最大序列长度
+batch_size: 一个batch内输入的样本个数
+do_lower_case: 是否进行大小写转换
+random_seed: 随机种子设置
+use_cuda: 是否使用cuda, 如果是gpu训练时，设置成true
+in_tokens: 是否采用in_tokens模式来计算batch_siz数量, 如果in_tokens为false, 则batch_size等于真实设置的batch_size大小, 如果in_tokens为true, 则batch_size=batch_size*max_seq_len，即按照token计数
+do_save_inference_model: 是否保存inference model
+encable_ce: 是否开启ce
+```
+
 ### 单机训练
 
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
@@ -118,14 +156,14 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 训练示例： bash run.sh atis_intent train
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU训练: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU训练: 
 
 ```
 请将run.sh内参数设置为: 
@@ -200,14 +238,14 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 预测示例： bash run.sh atis_intent predict
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU预测: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU预测: 
 
 ```
 请将run.sh内参数设置为: 
@@ -314,14 +352,14 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 保存模型示例： bash run.sh atis_intent inference
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU执行inference model过程: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU执行inference model过程: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU执行inference model过程:
+&ensp;&ensp;&ensp;&ensp;如果为GPU执行inference model过程:
 
 ```
 请将run.sh内参数设置为: 
@@ -371,7 +409,7 @@ python -u main.py \
 &ensp;&ensp;&ensp;&ensp;请参考PaddlePaddle官方提供的[服务器端部署](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/deploy/inference/index_cn.html)文档进行部署上线。
 
 
-## 3、进阶使用
+## 进阶使用
 
 ### 背景介绍
 
@@ -407,34 +445,29 @@ python -u main.py \
 
 &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;用户可在**dgu/define_predict_pack.py**内定义task_name和自定义封装预测接口的对应关系；
 
-## 4、参考论文
-1、Harshit Kumar, Arvind Agarwal, Riddhiman Dasgupta,Sachindra Joshi, and Arun Kumar. 2017.   Dia-logue act sequence labeling using hierarchical en-coder with crf.arXiv preprint arXiv:1709.04250.
-2、Changliang Li, Liang Li, and Ji Qi. 2018.  A self-attentive model with gate mechanism for spoken lan-guage understanding.  InProceedings of the 2018Conference on Empirical Methods in Natural Lan-guage Processing, pages 3824–3833.
-3、Ryan Lowe, Nissan Pow, Iulian Serban, and JoellePineau. 2015. The ubuntu dialogue corpus: A largedataset for research in unstructured multi-turn dia-logue systems.arXiv preprint arXiv:1506.08909.
-4、Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg S Cor-rado, and Jeff Dean. 2013. Distributed representa-tions of words and phrases and their compositional-ity. InAdvances in neural information processingsystems, pages 3111–3119.
-5、Hiroki Ouchi and Yuta Tsuboi. 2016. Addressee andresponse selection for multi-party conversation. InProceedings of the 2016 Conference on EmpiricalMethods in Natural Language Processing, pages2133–2143.
-6、Elizabeth Shriberg, Raj Dhillon, Sonali Bhagat, JeremyAng, and Hannah Carvey. 2004. The icsi meetingrecorder dialog act (mrda) corpus. Technical report,INTERNATIONAL COMPUTER SCIENCE INSTBERKELEY CA.
-7、Andreas Stolcke, Klaus Ries, Noah Coccaro, Eliza-beth Shriberg, Rebecca Bates, Daniel Jurafsky, PaulTaylor, Rachel Martin, Carol Van Ess-Dykema, andMarie Meteer. 2000. Dialogue act modeling for au-tomatic tagging and recognition of conversationalspeech.Computational linguistics, 26(3):339–373.
-8、Ye-Yi Wang, Li Deng, and Alex Acero. 2005.  Spo-ken language understanding.IEEE Signal Process-ing Magazine, 22(5):16–31.Jason Williams, Antoine Raux, Deepak Ramachan-dran, and Alan Black. 2013. The dialog state tracking challenge.  InProceedings of the SIGDIAL 2013Conference, pages 404–413.
-9、Yonghui Wu, Mike Schuster, Zhifeng Chen, Quoc VLe,  Mohammad Norouzi,  Wolfgang Macherey,Maxim  Krikun,  Yuan  Cao,  Qin  Gao,  KlausMacherey,  et al. 2016.   Google’s neural ma-chine translation system: Bridging the gap betweenhuman and machine translation.arXiv preprintarXiv:1609.08144.Kaisheng 
-10、Yao, Geoffrey Zweig, Mei-Yuh Hwang,Yangyang Shi, and Dong Yu. 2013. Recurrent neu-ral networks for language understanding. InInter-speech, pages 2524–2528.
-11、Xiangyang Zhou, Lu Li, Daxiang Dong, Yi Liu, YingChen, Wayne Xin Zhao, Dianhai Yu, and Hua Wu.2018.  Multi-turn response selection for chatbotswith deep attention matching network. InProceed-ings of the 56th Annual Meeting of the Associationfor Computational Linguistics (Volume 1: Long Pa-pers), volume 1, pages 1118–1127.
-12、Su Zhu and Kai Yu. 2017.  Encoder-decoder withfocus-mechanism for sequence labelling based spo-ken language understanding. In2017 IEEE Interna-tional Conference on Acoustics, Speech and SignalProcessing (ICASSP), pages 5675–5679. IEEE.
-13、Jason Williams, Antoine Raux, Deepak Ramachan-dran, and Alan Black. 2013. The dialog state track-ing challenge. InProceedings of the SIGDIAL 2013Conference, pages 404–413.
+## 参考论文
 
-## 5、版本更新
+- Harshit Kumar, Arvind Agarwal, Riddhiman Dasgupta,Sachindra Joshi, and Arun Kumar. 2017.   Dia-logue act sequence labeling using hierarchical en-coder with crf.arXiv preprint arXiv:1709.04250.
+- Changliang Li, Liang Li, and Ji Qi. 2018.  A self-attentive model with gate mechanism for spoken lan-guage understanding.  InProceedings of the 2018Conference on Empirical Methods in Natural Lan-guage Processing, pages 3824–3833.
+- Ryan Lowe, Nissan Pow, Iulian Serban, and JoellePineau. 2015. The ubuntu dialogue corpus: A largedataset for research in unstructured multi-turn dia-logue systems.arXiv preprint arXiv:1506.08909.
+- Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg S Cor-rado, and Jeff Dean. 2013. Distributed representa-tions of words and phrases and their compositional-ity. InAdvances in neural information processingsystems, pages 3111–3119.
+- Hiroki Ouchi and Yuta Tsuboi. 2016. Addressee andresponse selection for multi-party conversation. InProceedings of the 2016 Conference on EmpiricalMethods in Natural Language Processing, pages2133–2143.
+- Elizabeth Shriberg, Raj Dhillon, Sonali Bhagat, JeremyAng, and Hannah Carvey. 2004. The icsi meetingrecorder dialog act (mrda) corpus. Technical report,INTERNATIONAL COMPUTER SCIENCE INSTBERKELEY CA.
+- Andreas Stolcke, Klaus Ries, Noah Coccaro, Eliza-beth Shriberg, Rebecca Bates, Daniel Jurafsky, PaulTaylor, Rachel Martin, Carol Van Ess-Dykema, andMarie Meteer. 2000. Dialogue act modeling for au-tomatic tagging and recognition of conversationalspeech.Computational linguistics, 26(3):339–373.
+- Ye-Yi Wang, Li Deng, and Alex Acero. 2005.  Spo-ken language understanding.IEEE Signal Process-ing Magazine, 22(5):16–31.Jason Williams, Antoine Raux, Deepak Ramachan-dran, and Alan Black. 2013. The dialog state tracking challenge.  InProceedings of the SIGDIAL 2013Conference, pages 404–413.
+- Yonghui Wu, Mike Schuster, Zhifeng Chen, Quoc VLe,  Mohammad Norouzi,  Wolfgang Macherey,Maxim  Krikun,  Yuan  Cao,  Qin  Gao,  KlausMacherey,  et al. 2016.   Google’s neural ma-chine translation system: Bridging the gap betweenhuman and machine translation.arXiv preprintarXiv:1609.08144.Kaisheng 
+- Yao, Geoffrey Zweig, Mei-Yuh Hwang,Yangyang Shi, and Dong Yu. 2013. Recurrent neu-ral networks for language understanding. InInter-speech, pages 2524–2528.
+- Xiangyang Zhou, Lu Li, Daxiang Dong, Yi Liu, YingChen, Wayne Xin Zhao, Dianhai Yu, and Hua Wu.2018.  Multi-turn response selection for chatbotswith deep attention matching network. InProceed-ings of the 56th Annual Meeting of the Associationfor Computational Linguistics (Volume 1: Long Pa-pers), volume 1, pages 1118–1127.
+- Su Zhu and Kai Yu. 2017.  Encoder-decoder withfocus-mechanism for sequence labelling based spo-ken language understanding. In2017 IEEE Interna-tional Conference on Acoustics, Speech and SignalProcessing (ICASSP), pages 5675–5679. IEEE.
+- Jason Williams, Antoine Raux, Deepak Ramachan-dran, and Alan Black. 2013. The dialog state track-ing challenge. InProceedings of the SIGDIAL 2013Conference, pages 404–413.
+
+## 版本更新
 
 第一版：PaddlePaddle 1.4.0版本
 主要功能：支持对话6个数据集上任务的训练、预测和评估
 
 第二版：PaddlePaddle 1.6.0版本
 更新功能：在第一版的基础上，根据PaddlePaddle的模型规范化标准，对模块内训练、预测、评估等代码进行了重构，提高易用性；
-
-## 作者
-
-zhangxiyuan01@baidu.com
-
-zhouxiangyang@baidu.com
 
 ## 如何贡献代码
 
