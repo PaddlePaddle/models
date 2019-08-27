@@ -16,7 +16,6 @@
 # ==============================================================================
 
 # This script retrieve related NELL entities and their concepts for each named-entity in ReCoRD
-# Strategy in v2:
 # 1. transform ReCoRD entity from word sequences into strings (use _ to replace whitespace and eliminate punc)
 # 2. preprocess NELL entity name (remove front 'n' for NELL entities when digit is in the beginning and additional _)
 # 3. for ReCoRD entities with more than one token, use exact match

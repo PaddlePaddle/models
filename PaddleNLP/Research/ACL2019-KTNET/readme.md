@@ -64,7 +64,7 @@ Then run the command:
 cd retrieve_concepts/ner_tagging_squad
 python3 tagging.py
 ```
-The tagged dataset will be saved at `retrieve_concepts/ner_tagging_squad/output` directory. We have provided our output files for convenience ([download link](TODO)).
+The tagged dataset will be saved at `retrieve_concepts/ner_tagging_squad/output` directory. We have provided our output files for convenience ([download link](https://baidu-nlp.bj.bcebos.com/KTNET_preprocess_squad_tagging_output.tar.gz)).
 
 #### 2. Tokenization
 
@@ -178,15 +178,15 @@ We have released the following checkpoints for our trained KT-NET which can repr
 
 |  ReCoRD Model  | F1 score | Exact Match | Inference Script |
 | :------------- | :---------: | :----------: | :--------- |
-| [KT-NET (WordNet)](TODO) | 72.76 | 70.56 | eval_record_wordnet.sh | 
-| [KT-NET (NELL)](TODO) | 72.52 | 70.54 | eval_record_nell.sh | 
-| [KT-NET (Both)](TODO) | 73.62 | 71.61 | eval_record_twomemory.sh | 
+| [KT-NET (WordNet)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_record_wordnet.tar.gz) | 72.76 | 70.56 | eval_record_wordnet.sh | 
+| [KT-NET (NELL)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_record_nell.tar.gz) | 72.52 | 70.54 | eval_record_nell.sh | 
+| [KT-NET (Both)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_record_both.tar.gz) | 73.62 | 71.61 | eval_record_twomemory.sh | 
 
 |   SQuAD Model  | F1 score | Exact Match | Inference Script |
 | :------------- | :---------: | :----------: | :--------- |
-| [KT-NET (WordNet)](TODO) | 91.69 | 85.14 | eval_squad_wordnet.sh | 
-| [KT-NET (NELL)](TODO) | 91.71 | 85.03 | eval_squad_nell.sh | 
-| [KT-NET (Both)](TODO) | 91.64 | 84.96 | eval_squad_twomemory.sh | 
+| [KT-NET (WordNet)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_squad_wordnet.tar.gz) | 91.69 | 85.14 | eval_squad_wordnet.sh | 
+| [KT-NET (NELL)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_squad_nell.tar.gz) | 91.71 | 85.03 | eval_squad_nell.sh | 
+| [KT-NET (Both)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_squad_both.tar.gz) | 91.64 | 84.96 | eval_squad_twomemory.sh | 
 
 After downloading and extracting the checkpoint file, please execute the corresponding inference script. E.g.:
 ```
