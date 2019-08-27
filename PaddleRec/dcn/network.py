@@ -2,6 +2,7 @@
 # coding: utf-8
 from __future__ import print_function, absolute_import, division
 import paddle.fluid as fluid
+from collections import OrderedDict
 """
 DCN network
 """
@@ -20,7 +21,7 @@ class DCN(object):
         self.dnn_use_bn = dnn_use_bn
         self.clip_by_norm = clip_by_norm
 
-        self.cat_feat_dims_dict = {}
+        self.cat_feat_dims_dict = OrderedDict()
 
         self.dense_feat_names = ['I' + str(i) for i in range(1, 14)]
         self.sparse_feat_names = ['C' + str(i) for i in range(1, 27)]
@@ -32,7 +33,7 @@ class DCN(object):
             self.cat_feat_dims_dict[spls[0]] = int(spls[1])
 
         # {feat_name: dims}
-        self.feat_dims_dict = dict(
+        self.feat_dims_dict = OrderedDict(
             [(feat_name, 1) for feat_name in self.dense_feat_names])
         self.feat_dims_dict.update(self.cat_feat_dims_dict)
 
@@ -44,7 +45,7 @@ class DCN(object):
         self.target_input = fluid.layers.data(
             name='label', shape=[1], dtype='float32')
 
-        data_dict = {}
+        data_dict = OrderedDict()
         for feat_name in self.feat_dims_dict:
             data_dict[feat_name] = fluid.layers.data(
                 name=feat_name, shape=[1], dtype='float32')
@@ -121,16 +122,16 @@ class DCN(object):
 
     def _create_embedding_input(self, data_dict):
         # sparse embedding
-        sparse_emb_dict = {
-            name: fluid.layers.embedding(
+        sparse_emb_dict = OrderedDict((
+            name, fluid.layers.embedding(
                 input=fluid.layers.cast(
                     data_dict[name], dtype='int64'),
                 size=[
                     self.feat_dims_dict[name] + 1,
                     6 * int(pow(self.feat_dims_dict[name], 0.25))
-                ])
+                ]))
             for name in self.sparse_feat_names
-        }
+        )
 
         # combine dense and sparse_emb
         dense_input_list = [

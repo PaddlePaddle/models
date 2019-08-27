@@ -19,8 +19,6 @@
 ## 介绍
 DCN模型介绍可以参阅论文[Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)
 
-**由于DCN论文代码没有开源，代码实现没有基准对齐，所以本实现在Criteo数据集上没有达到论文中的logloss。本实现及实验结果对复现DCN提供参考。**
-
 ## 环境
 - PaddlePaddle 1.5.1
 
