@@ -22,8 +22,7 @@ from __future__ import print_function
 import numpy as np
 import paddle.fluid as fluid
 
-# from .config import cfg
-from config import cfg
+from utils.config import cfg
 
 __all__ = ["boxes3d_to_bev", "box_overlap_rotate", "boxes3d_to_bev", "box_iou", "box_nms"]
 
