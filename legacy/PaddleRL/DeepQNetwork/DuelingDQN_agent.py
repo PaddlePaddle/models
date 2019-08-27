@@ -7,7 +7,7 @@ from paddle.fluid.param_attr import ParamAttr
 from tqdm import tqdm
 
 
-class DQNModel(object):
+class DuelingDQNModel(object):
     def __init__(self, state_dim, action_dim, gamma, hist_len, use_cuda=False):
         self.img_height = state_dim[0]
         self.img_width = state_dim[1]
@@ -71,17 +71,17 @@ class DQNModel(object):
             optimizer.minimize(cost)
 
         vars = list(self.train_program.list_vars())
-        target_vars = list(filter(
-            lambda x: 'GRAD' not in x.name and 'target' in x.name, vars))
+        target_vars = list(
+            filter(lambda x: 'GRAD' not in x.name and 'target' in x.name, vars))
 
         policy_vars_name = [
-                x.name.replace('target', 'policy') for x in target_vars]
-        policy_vars = list(filter(
-            lambda x: x.name in policy_vars_name, vars))
+            x.name.replace('target', 'policy') for x in target_vars
+        ]
+        policy_vars = list(filter(lambda x: x.name in policy_vars_name, vars))
 
         policy_vars.sort(key=lambda x: x.name)
         target_vars.sort(key=lambda x: x.name)
-        
+
         with fluid.program_guard(self._sync_program):
             sync_ops = []
             for i, var in enumerate(policy_vars):
@@ -146,13 +146,22 @@ class DQNModel(object):
 
         flatten = fluid.layers.flatten(conv4, axis=1)
 
-        out = fluid.layers.fc(
+        value = fluid.layers.fc(
+            input=flatten,
+            size=1,
+            param_attr=ParamAttr(name='{}_value_fc'.format(variable_field)),
+            bias_attr=ParamAttr(name='{}_value_fc_b'.format(variable_field)))
+
+        advantage = fluid.layers.fc(
             input=flatten,
             size=self.action_dim,
-            param_attr=ParamAttr(name='{}_fc1'.format(variable_field)),
-            bias_attr=ParamAttr(name='{}_fc1_b'.format(variable_field)))
-        return out
+            param_attr=ParamAttr(name='{}_advantage_fc'.format(variable_field)),
+            bias_attr=ParamAttr(
+                name='{}_advantage_fc_b'.format(variable_field)))
 
+        Q = advantage + (value - fluid.layers.reduce_mean(
+            advantage, dim=1, keep_dim=True))
+        return Q
 
     def act(self, state, train_or_test):
         sample = np.random.random()
