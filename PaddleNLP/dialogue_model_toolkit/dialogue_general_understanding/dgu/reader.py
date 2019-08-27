@@ -18,9 +18,8 @@ import sys
 import types
 import numpy as np
 
-sys.path.append("./dgu")
-import tokenization
-from batching import prepare_batch_data
+from dgu import tokenization
+from dgu.batching import prepare_batch_data
 
 
 class DataProcessor(object):
