@@ -106,56 +106,7 @@ def ernie_pyreader(args, pyreader_name):
     return pyreader, ernie_inputs, words, labels
 
 
-def create_model(args,
-                 embeddings,
-                 labels,
-                 is_prediction=False):
 
-    """
-    Create Model for LAC based on ERNIE encoder
-    """
-    # sentence_embeddings = embeddings["sentence_embeddings"]
-    token_embeddings = embeddings["token_embeddings"]
-
-    emission = fluid.layers.fc(
-        size=args.num_labels,
-        input=token_embeddings,
-        param_attr=fluid.ParamAttr(
-            initializer=fluid.initializer.Uniform(
-                low=-args.init_bound, high=args.init_bound),
-            regularizer=fluid.regularizer.L2DecayRegularizer(
-                regularization_coeff=1e-4)))
-
-    crf_cost = fluid.layers.linear_chain_crf(
-        input=emission,
-        label=labels,
-        param_attr=fluid.ParamAttr(
-            name='crfw',
-            learning_rate=args.crf_learning_rate))
-    loss = fluid.layers.mean(x=crf_cost)
-
-    crf_decode = fluid.layers.crf_decoding(
-        input=emission, param_attr=fluid.ParamAttr(name='crfw'))
-
-    (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
-     num_correct_chunks) = fluid.layers.chunk_eval(
-         input=crf_decode,
-         label=labels,
-         chunk_scheme="IOB",
-         num_chunk_types=int(math.ceil((args.num_labels - 1) / 2.0)))
-    chunk_evaluator = fluid.metrics.ChunkEvaluator()
-    chunk_evaluator.reset()
-
-    ret = {
-        "loss":loss,
-        "crf_decode":crf_decode,
-        "chunk_evaluator":chunk_evaluator,
-        "num_infer_chunks":num_infer_chunks,
-        "num_label_chunks":num_label_chunks,
-        "num_correct_chunks":num_correct_chunks
-    }
-
-    return ret
 
 
 def evaluate(exe, test_program, test_pyreader, test_ret):

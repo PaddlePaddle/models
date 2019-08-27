@@ -22,8 +22,7 @@ import paddle.fluid as fluid
 import reader
 import utils
 
-sys.path.append("../")
-from models.sequence_labeling import nets
+import nets
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
@@ -119,9 +118,6 @@ def evaluate(exe, test_program, test_ret):
     test_ret["pyreader"].start()
     test_ret["chunk_evaluator"].reset()
     loss = []
-    precision = []
-    recall = []
-    f1 = []
     start_time = time.time()
     while True:
         try:
@@ -137,18 +133,14 @@ def evaluate(exe, test_program, test_ret):
             loss.append(avg_loss)
 
             test_ret["chunk_evaluator"].update(nums_infer, nums_label, nums_correct)
-            p, r, f = test_ret["chunk_evaluator"].eval()
-
-            precision.append(p)
-            recall.append(r)
-            f1.append(f)
         except fluid.core.EOFException:
             test_ret["pyreader"].reset()
             break
+    precision, recall, f1 = test_ret["chunk_evaluator"].eval()
     end_time = time.time()
     print("[test] avg loss: %.5f, P: %.5f, R: %.5f, F1: %.5f, elapsed time: %.3f s"
-            % (np.mean(loss), np.mean(precision),
-                np.mean(recall), np.mean(f1), end_time - start_time))
+            % (np.mean(loss), precision,
+                recall, f1, end_time - start_time))
 
 
 def main(args):
