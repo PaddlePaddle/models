@@ -35,7 +35,7 @@ In this work, we empirically evaluate our model on two benchmarks:
 [ReCoRD](https://sheng-z.github.io/ReCoRD-explorer/) (Reading Comprehension with Commonsense Reasoning Dataset) is a large-scale MRC dataset requiring commonsense reasoning. The official dataset in JSON format can be downloaded using Google drive (training set: [link](https://drive.google.com/file/d/1PoHmphyH79pETNws8kU2OwuerU7SWLHj/view), valid set: [link](https://drive.google.com/file/d/1WNaxBpXEGgPbymTzyN249P4ub-uU5dkO/view)). Please place the downloaded files `train.json` and `dev.json` into the `data/ReCoRD/` directory of this repository. We will also use the official evaluation script of ReCoRD, so please run the following command:
 ```
 wget https://sheng-z.github.io/ReCoRD-explorer/evaluation.py -O record_official_evaluate.py
-mv record_official_evaluate.py KTNET/src/eval/
+mv record_official_evaluate.py reading_comprehension/src/eval/
 ```
 
 #### 2. SQuAD v1.1
@@ -46,7 +46,7 @@ wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
 wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
 mv train-v1.1.json dev-v1.1.json data/SQuAD/
 wget https://worksheets.codalab.org/rest/bundles/0xbcd57bee090b421c982906709c8c27e1/contents/blob/ -O squad_v1_official_evaluate.py
-mv squad_v1_official_evaluate.py KTNET/src/eval/
+mv squad_v1_official_evaluate.py reading_comprehension/src/eval/
 ```
 
 ### Retrieve KB entries
@@ -135,7 +135,7 @@ For other knowledge bases, please refer to the source code for training the BILI
 
 The text encoder module of KT-NET is initialized with pretrained BERT large-cased parameters, run the command:
 ```
-cd KTNET
+cd reading_comprehension
 wget https://bert-models.bj.bcebos.com/cased_L-24_H-1024_A-16.tar.gz
 tar xzvf cased_L-24_H-1024_A-16.tar.gz
 ```
@@ -144,7 +144,7 @@ tar xzvf cased_L-24_H-1024_A-16.tar.gz
 
 We have provided scripts to execute training and inference for KT-NET. To train a model for ReCoRD dataset with both WordNet and NELL concepts employed, just run the command:
 ```
-cd KTNET && sh ./run_record_twomemory.sh
+cd reading_comprehension && sh ./run_record_twomemory.sh
 ```
 The hyper-parameters, such as training epochs, learning rate and batch size, can be adjusted in the script. After training and evaluation, the following files and directories will be created:
 + `output/eval_result.json`: the performance of the trained model on the benchmark
@@ -161,7 +161,7 @@ Similarly, for SQuAD, use `run_squad_twomemory.sh`, `run_squad_wordnet.sh` or `r
 
 In our experiments, we found that employing a "two-staged" training strategy achieves better model performance, which freezes BERT params in the first stage and unfreezes them later. We recommend to adopt this strategy to train KT-NET. To run two-staged fine-tuning, just first execute the `XXX_pretrain.sh` script and then run `XXX_finetune.sh`. E.g., to train a KT-NET on ReCoRD with both KBs, firstly run
 ```
-cd KTNET && sh ./run_record_twomemory_pretrain.sh
+cd reading_comprehension && sh ./run_record_twomemory_pretrain.sh
 ```
 and then run the command after the first stage has been finished
 ```
@@ -176,21 +176,21 @@ In the first stage, we trained 10 epochs for ReCoRD and 1 epoch for SQuAD. As fo
 
 We have released the following checkpoints for our trained KT-NET which can reproduce the performance in the paper:
 
-|  ReCoRD Model  | F1 score | Exact Match | Evaluation Script |
+|  ReCoRD Model  | F1 score | Exact Match | Inference Script |
 | :------------- | :---------: | :----------: | :--------- |
 | [KT-NET (WordNet)](TODO) | 72.76 | 70.56 | eval_record_wordnet.sh | 
 | [KT-NET (NELL)](TODO) | 72.52 | 70.54 | eval_record_nell.sh | 
 | [KT-NET (Both)](TODO) | 73.62 | 71.61 | eval_record_twomemory.sh | 
 
-|   SQuAD Model  | F1 score | Exact Match | Evaluation Script |
+|   SQuAD Model  | F1 score | Exact Match | Inference Script |
 | :------------- | :---------: | :----------: | :--------- |
 | [KT-NET (WordNet)](TODO) | 91.69 | 85.14 | eval_squad_wordnet.sh | 
 | [KT-NET (NELL)](TODO) | 91.71 | 85.03 | eval_squad_nell.sh | 
 | [KT-NET (Both)](TODO) | 91.64 | 84.96 | eval_squad_twomemory.sh | 
 
-After downloading and extracting the checkpoint file, please execute the corresponding evaluation script. E.g.:
+After downloading and extracting the checkpoint file, please execute the corresponding inference script. E.g.:
 ```
-cd KTNET && sh ./eval_record_twomemory.sh extracted_ckpt_dir_path
+cd reading_comprehension && sh ./eval_record_twomemory.sh extracted_ckpt_dir_path
 ```
 The following result is expected to be created in the `output/` directory:
 ```
