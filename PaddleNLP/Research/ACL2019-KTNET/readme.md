@@ -32,7 +32,7 @@ In this work, we empirically evaluate our model on two benchmarks:
 
 #### 1. ReCoRD
 
-[ReCoRD](https://sheng-z.github.io/ReCoRD-explorer/) (Reading Comprehension with Commonsense Reasoning Dataset) is a large-scale MRC dataset requiring commonsense reasoning. The official dataset in JSON format can be downloaded using Google drive (training set: [link](https://drive.google.com/file/d/1PoHmphyH79pETNws8kU2OwuerU7SWLHj/view), valid set: [link](https://drive.google.com/file/d/1WNaxBpXEGgPbymTzyN249P4ub-uU5dkO/view)). Please place the downloaded files `train.json` and `dev.json` into the `data/ReCoRD/` directory of this repository. We will also use the official evaluation script of ReCoRD, so please run the following command:
+[ReCoRD](https://sheng-z.github.io/ReCoRD-explorer/) (Reading Comprehension with Commonsense Reasoning Dataset) is a large-scale MRC dataset requiring commonsense reasoning. The official dataset in JSON format can be downloaded using Google drive (training set: [link](https://drive.google.com/file/d/1PoHmphyH79pETNws8kU2OwuerU7SWLHj/view), valid set: [link](https://drive.google.com/file/d/1WNaxBpXEGgPbymTzyN249P4ub-uU5dkO/view)). *(For convenience, we have provided the MD5 for each downloadable file of this readme in `downloaded_files.md5`. It's recommended to use it to check the completeness of the downloaded file.)* Please place the downloaded files `train.json` and `dev.json` into the `data/ReCoRD/` directory of this repository. We will also use the official evaluation script of ReCoRD, so please run the following command:
 ```
 wget https://sheng-z.github.io/ReCoRD-explorer/evaluation.py -O record_official_evaluate.py
 mv record_official_evaluate.py reading_comprehension/src/eval/
@@ -136,7 +136,7 @@ For other knowledge bases, please refer to the source code for training the BILI
 The text encoder module of KT-NET is initialized with pretrained BERT large-cased parameters, run the command:
 ```
 cd reading_comprehension
-wget https://bert-models.bj.bcebos.com/cased_L-24_H-1024_A-16.tar.gz
+wget https://bert-models.bj.bcebos.com/cased_L-24_H-1024_A-16.tar.gz --no-check-certificate
 tar xzvf cased_L-24_H-1024_A-16.tar.gz
 ```
 
