@@ -128,7 +128,7 @@ def do_train(args):
     elif args.init_pretraining_params:
         utils.init_pretraining_params(exe, args.init_pretraining_params, startup_prog)
 
-    if dev_count>1 and not args.use_cuda:
+    if dev_count>1:
         device = "GPU" if args.use_cuda else "CPU"
         print("%d %s are used to train model"%(dev_count, device))
         # multi cpu/gpu config
