@@ -118,6 +118,11 @@ class DCGAN(object):
             d_trainer.program).with_data_parallel(
                 loss_name=d_trainer.d_loss.name, build_strategy=build_strategy)
 
+        if self.cfg.run_test:
+            image_path = os.path.join(self.cfg.output, 'images')
+            if not os.path.exists(image_path):
+                os.makedirs(image_path)
+
         t_time = 0
         for epoch_id in range(self.cfg.epoch):
             for batch_id, data in enumerate(self.train_reader()):
@@ -164,12 +169,16 @@ class DCGAN(object):
                                      fetch_list=[g_trainer.g_loss])[0]
 
                 batch_time = time.time() - s_time
-                t_time += batch_time
 
                 if batch_id % self.cfg.print_freq == 0:
-                    image_path = os.path.join(self.cfg.output, 'images')
-                    if not os.path.exists(image_path):
-                        os.makedirs(image_path)
+                    print(
+                        'Epoch ID: {} Batch ID: {} D_loss: {} G_loss: {} Batch_time_cost: {}'.
+                        format(epoch_id, batch_id, d_loss[0], g_loss[0],
+                               batch_time))
+
+                t_time += batch_time
+
+                if self.cfg.run_test:
                     generate_const_image = exe.run(
                         g_trainer.infer_program,
                         feed={'noise': const_n},
@@ -181,10 +190,6 @@ class DCGAN(object):
                         [real_image, generate_image_reshape])
                     fig = utility.plot(total_images)
 
-                    print(
-                        'Epoch ID: {} Batch ID: {} D_loss: {} G_loss: {} Batch_time_cost: {}'.
-                        format(epoch_id, batch_id, d_loss[0], g_loss[0],
-                               batch_time))
                     plt.title('Epoch ID={}, Batch ID={}'.format(epoch_id,
                                                                 batch_id))
                     img_name = '{:04d}_{:04d}.png'.format(epoch_id, batch_id)
