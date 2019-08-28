@@ -26,22 +26,9 @@ __all__ = [
     "SE_ResNeXt", "SE_ResNeXt50_32x4d_vd", "SE_ResNeXt101_32x4d_vd", "SE154_vd"
 ]
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [10, 16, 20],
-        "steps": [0.01, 0.001, 0.0001, 0.00001]
-    }
-}
-
 
 class SE_ResNeXt():
     def __init__(self, layers=50):
-        self.params = train_parameters
         self.layers = layers
 
     def net(self, input, class_dim=1000):

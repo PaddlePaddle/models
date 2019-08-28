@@ -142,6 +142,7 @@ class ResNeXt():
             padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
+            use_cudnn=False,
             param_attr=ParamAttr(name=name + "_weights"),
             bias_attr=False)
         if name == "conv1":
@@ -179,6 +180,7 @@ class ResNeXt():
             padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
+            use_cudnn=False,
             param_attr=ParamAttr(name=name + "_weights"),
             bias_attr=False)
         if name == "conv1":

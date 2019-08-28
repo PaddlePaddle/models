@@ -25,22 +25,9 @@ __all__ = [
     'MobileNetV2_x2_0', 'MobileNetV2_scale'
 ]
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
-
 
 class MobileNetV2():
     def __init__(self, scale=1.0, change_depth=False):
-        self.params = train_parameters
         self.scale = scale
         self.change_depth = change_depth
 
