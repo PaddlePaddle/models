@@ -83,7 +83,7 @@ def main():
     for op in ops:
         op = map(str, op)
         latency = get_op_latency(
-            op[:1] + map(str, [args.threads, args.test_iter]) + op[1:],
+            op[:1] + [str(args.threads), str(args.test_iter)] + op[1:],
             args.platform)
         fid.write('{} {}\n'.format(' '.join(op), latency))
     fid.close()
