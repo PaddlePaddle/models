@@ -138,7 +138,7 @@ def create_model(args,  vocab_size, num_labels, mode = 'train'):
     # for inference process
     if mode=='infer':
         crf_decode = lex_net(words, args, vocab_size, num_labels, for_infer=True, target=None)
-        return { "words":words, "crf_decode":crf_decode,}
+        return { "feed_list":[words],"words":words, "crf_decode":crf_decode,}
 
     # for test or train process
     avg_cost, crf_decode = lex_net(words, args, vocab_size, num_labels, for_infer=False, target=targets)
@@ -153,6 +153,7 @@ def create_model(args,  vocab_size, num_labels, mode = 'train'):
     chunk_evaluator.reset()
 
     ret = {
+        "feed_list":[words, targets],
         "words": words,
         "targets": targets,
         "avg_cost":avg_cost,
@@ -171,8 +172,9 @@ import paddle
 sys.path.append("..")
 from models.representation.ernie import ernie_encoder
 from preprocess.ernie import task_reader
+from reader import Dataset
 
-def create_pyreader(args, file_name, feed_list, place, mode='lac', dataset=None, iterable=True):
+def create_pyreader(args, file_name, feed_list, place, mode='lac', reader=None, iterable=True, return_reader=False):
     # init reader
     pyreader = fluid.io.PyReader(
         feed_list=feed_list,
@@ -181,11 +183,13 @@ def create_pyreader(args, file_name, feed_list, place, mode='lac', dataset=None,
         iterable=iterable
     )
     if mode == 'lac':
+        if reader==None:
+            reader = Dataset(args)
         # create lac pyreader
         pyreader.decorate_sample_list_generator(
             paddle.batch(
                 paddle.reader.shuffle(
-                    dataset.file_reader(file_name),
+                    reader.file_reader(file_name),
                     buf_size=args.traindata_shuffle_buffer
                 ),
                 batch_size=args.batch_size
@@ -195,13 +199,14 @@ def create_pyreader(args, file_name, feed_list, place, mode='lac', dataset=None,
 
     elif mode == 'ernie':
         # create ernie pyreader
-        reader = task_reader.SequenceLabelReader(
-            vocab_path=args.vocab_path,
-            label_map_config=args.label_map_config,
-            max_seq_len=args.max_seq_len,
-            do_lower_case=args.do_lower_case,
-            in_tokens=False,
-            random_seed=args.random_seed)
+        if reader==None:
+            reader = task_reader.SequenceLabelReader(
+                vocab_path=args.vocab_path,
+                label_map_config=args.label_map_config,
+                max_seq_len=args.max_seq_len,
+                do_lower_case=args.do_lower_case,
+                in_tokens=False,
+                random_seed=args.random_seed)
 
 
         pyreader.decorate_batch_generator(
@@ -210,10 +215,11 @@ def create_pyreader(args, file_name, feed_list, place, mode='lac', dataset=None,
             ),
             places=place
         )
-    return pyreader
 
-
-
+    if return_reader:
+        return pyreader, reader
+    else:
+        return pyreader
 
 def create_ernie_model(args,
                  # embeddings,
@@ -277,7 +283,7 @@ def create_ernie_model(args,
             param_attr=fluid.ParamAttr(
                 name='crfw',
                 learning_rate=args.crf_learning_rate))
-        loss = fluid.layers.mean(x=crf_cost)
+        avg_cost = fluid.layers.mean(x=crf_cost)
         crf_decode = fluid.layers.crf_decoding(
             input=emission, param_attr=fluid.ParamAttr(name='crfw'))
 
@@ -295,7 +301,7 @@ def create_ernie_model(args,
             "feed_list": [src_ids, sent_ids, pos_ids, input_mask, padded_labels, seq_lens],
             "words":words,
             "labels":labels,
-            "loss":loss,
+            "avg_cost":avg_cost,
             "crf_decode":crf_decode,
             "precision" : precision,
             "recall": recall,
