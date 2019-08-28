@@ -47,6 +47,7 @@ class ResNet(object):
         feature_maps (list): index of stages whose feature maps are returned
         dcn_v2_stages (list): index of stages who select deformable conv v2
     """
+    __shared__ = ['norm_type', 'freeze_norm']
 
     def __init__(self,
                  depth=50,
@@ -103,8 +104,10 @@ class ResNet(object):
             filter_size=filter_size,
             stride=stride,
             padding=padding,
-            param_attr=ParamAttr(initializer=Constant(0.0)),
-            bias_attr=ParamAttr(initializer=Constant(0.0)),
+            param_attr=ParamAttr(
+                initializer=Constant(0.0), name=name + ".w_0"),
+            bias_attr=ParamAttr(
+                initializer=Constant(0.0), name=name + ".b_0"),
             act=act,
             name=name)
         return out

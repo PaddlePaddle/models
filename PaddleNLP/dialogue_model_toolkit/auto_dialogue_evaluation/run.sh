@@ -51,6 +51,11 @@ function pretrain_train()
 {
 
     pretrain_model_path="${SAVED_MODELS}/matching_pretrained"
+    if [ -f ${pretrain_model_path} ]
+    then
+        rm ${pretrain_model_path}
+    fi
+
     if [ ! -d ${pretrain_model_path} ]
     then
         mkdir ${pretrain_model_path}
@@ -78,10 +83,17 @@ function pretrain_train()
 function finetuning_train()
 {
     save_model_path="${SAVED_MODELS}/${2}_finetuned"
+
+    if [ -f ${save_model_path} ]
+    then
+        rm ${save_model_path}
+    fi
+
     if [ ! -d ${save_model_path} ]
     then
         mkdir ${save_model_path}
     fi
+
     ${PYTHON_PATH} -u main.py \
       --do_train=true \
       --use_cuda=${1} \

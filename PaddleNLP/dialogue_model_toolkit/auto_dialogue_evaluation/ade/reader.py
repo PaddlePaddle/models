@@ -33,8 +33,12 @@ class DataProcessor(object):
     def get_examples(self): 
         """load examples"""
         examples = []
+        index = 0
         with open(self.data_file, 'r') as fr: 
             for line in fr: 
+                if index !=0 and index % 100 == 0: 
+                    print("processing data: %d" % index)
+                index += 1
                 examples.append(line.strip())
         return examples
 
@@ -72,7 +76,12 @@ class DataProcessor(object):
                     if random.random() > sample_pro:
                         continue
                 tokens = example.strip().split('\t')
-                assert len(tokens) == 3 
+                
+                if len(tokens) != 3: 
+                    print("data format error: %s" % example.strip())
+                    print("please input data: context \t response \t label")
+                    continue
+
                 context = [int(x) for x in tokens[0].split()[: self.max_seq_len]]
                 response = [int(x) for x in tokens[1].split()[: self.max_seq_len]]
                 label = [int(tokens[2])]
