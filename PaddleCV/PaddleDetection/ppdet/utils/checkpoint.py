@@ -44,7 +44,7 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
-def load_pretrain(exe, prog, path):
+def load_pretrain(exe, prog, path, finetune=False):
     """
     Load model from the given path.
     Args:
@@ -62,12 +62,14 @@ def load_pretrain(exe, prog, path):
     logger.info('Loading pretrained model from {}...'.format(path))
 
     def _if_exist(var):
-        # Parameter related to class_num should be ignored in finetuning
-        ignore_name_list = [
-            'yolo_output', 'cls_score', 'bbox_pred', 'mask_fcn_logits',
-            'conv2d_', 'retnet_cls_pred_fpn'
-        ]
-        do_ignore = [name in var.name for name in ignore_name_list]
+        do_ignore = []
+        if finetune:
+            # Parameter related to class_num should be ignored in finetuning
+            ignore_name_list = [
+                'yolo_output', 'cls_score', 'bbox_pred', 'mask_fcn_logits',
+                'conv2d_', 'retnet_cls_pred_fpn'
+            ]
+            do_ignore = [name in var.name for name in ignore_name_list]
         b = os.path.exists(os.path.join(path, var.name)) and not any(do_ignore)
         if b:
             logger.debug('load weight {}'.format(var.name))

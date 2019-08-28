@@ -23,10 +23,12 @@ import numpy as np
 import datetime
 from collections import deque
 
+
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
+
 
 # NOTE(paddle-dev): All of these flags should be set before 
 # `import paddle`. Otherwise, it would not take any effect.
@@ -155,7 +157,8 @@ def main():
     elif cfg.pretrain_weights and fuse_bn:
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:
-        checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
+        checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights,
+                                 cfg.finetune)
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
@@ -199,14 +202,16 @@ def main():
                 resolution = None
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
-                box_ap_stats = eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
-                             resolution, is_bbox_normalized, FLAGS.output_eval)
+                box_ap_stats = eval_results(
+                    results, eval_feed, cfg.metric, cfg.num_classes, resolution,
+                    is_bbox_normalized, FLAGS.output_eval)
                 if box_ap_stats[0] > best_box_ap_list[0]:
                     best_box_ap_list[0] = box_ap_stats[0]
                     best_box_ap_list[1] = it
-                    checkpoint.save(exe, train_prog, os.path.join(save_dir,"best_model"))
+                    checkpoint.save(exe, train_prog,
+                                    os.path.join(save_dir, "best_model"))
                 logger.info("Best test box ap: {}, in iter: {}".format(
-                    best_box_ap_list[0],best_box_ap_list[1]))
+                    best_box_ap_list[0], best_box_ap_list[1]))
 
     train_pyreader.reset()
 
