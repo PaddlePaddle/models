@@ -24,11 +24,11 @@ from paddle.fluid.param_attr import ParamAttr
 
 __all__ = [
     'ShuffleNetV2_x0_5_swish', 'ShuffleNetV2_x1_0_swish',
-    'ShuffleNetV2_x1_5_swish', 'ShuffleNetV2_x2_0_swish'
+    'ShuffleNetV2_x1_5_swish', 'ShuffleNetV2_x2_0_swish', 'ShuffleNetV2_swish'
 ]
 
 
-class ShuffleNetV2():
+class ShuffleNetV2_swish():
     def __init__(self, scale=1.0):
         self.scale = scale
 
@@ -274,20 +274,20 @@ class ShuffleNetV2():
 
 
 def ShuffleNetV2_x0_5_swish():
-    model = ShuffleNetV2(scale=0.5)
+    model = ShuffleNetV2_swish(scale=0.5)
     return model
 
 
 def ShuffleNetV2_x1_0_swish():
-    model = ShuffleNetV2(scale=1.0)
+    model = ShuffleNetV2_swish(scale=1.0)
     return model
 
 
 def ShuffleNetV2_x1_5_swish():
-    model = ShuffleNetV2(scale=1.5)
+    model = ShuffleNetV2_swish(scale=1.5)
     return model
 
 
 def ShuffleNetV2_x2_0_swish():
-    model = ShuffleNetV2(scale=2.0)
+    model = ShuffleNetV2_swish(scale=2.0)
     return model

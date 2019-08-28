@@ -24,7 +24,8 @@ from paddle.fluid.param_attr import ParamAttr
 
 __all__ = [
     'ShuffleNetV2_x0_25', 'ShuffleNetV2_x0_33', 'ShuffleNetV2_x0_5',
-    'ShuffleNetV2_x1_0', 'ShuffleNetV2_x1_5', 'ShuffleNetV2_x2_0'
+    'ShuffleNetV2_x1_0', 'ShuffleNetV2_x1_5', 'ShuffleNetV2_x2_0',
+    'ShuffleNetV2'
 ]
 
 
