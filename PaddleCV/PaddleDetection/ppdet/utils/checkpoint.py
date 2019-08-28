@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     'load_checkpoint',
     'load_and_fusebn',
+    'load_finetune',
     'save',
 ]
 
@@ -44,7 +45,33 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
-def load_pretrain(exe, prog, path, finetune=False):
+def load_pretrain(exe, prog, path):
+    """
+    Load model from the given path.
+    Args:
+        exe (fluid.Executor): The fluid.Executor object.
+        prog (fluid.Program): load weight to which Program object.
+        path (string): URL string or loca model path.
+    """
+    if is_url(path):
+        path = get_weights_path(path)
+
+    if not os.path.exists(path):
+        raise ValueError("Model pretrain path {} does not "
+                         "exists.".format(path))
+
+    logger.info('Loading pretrained model from {}...'.format(path))
+
+    def _if_exist(var):
+        b = os.path.exists(os.path.join(path, var.name))
+        if b:
+            logger.debug('load weight {}'.format(var.name))
+        return b
+
+    fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
+
+
+def load_finetune(exe, prog, path):
     """
     Load model from the given path.
     Args:

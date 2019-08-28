@@ -154,11 +154,12 @@ def main():
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
+    elif FLAGS.fintune:
+        checkpoint.load_finetune(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights and fuse_bn:
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:
-        checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights,
-                                 cfg.finetune)
+        checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
@@ -240,5 +241,11 @@ if __name__ == '__main__':
         default=None,
         type=str,
         help="Dataset path, same as DataFeed.dataset.dataset_dir")
+    parser.add_argument(
+        "--finetune",
+        action='store_true',
+        default=False,
+        help="Whether to perform fintuning")
+
     FLAGS = parser.parse_args()
     main()

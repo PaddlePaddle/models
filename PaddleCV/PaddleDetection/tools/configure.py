@@ -38,7 +38,6 @@ MISC_CONFIG = {
     "log_smooth_window": 20,
     "snapshot_iter": 10000,
     "log_iter": 20,
-    "finetune": False,
     "use_gpu": True,
 }
 
