@@ -225,7 +225,10 @@ class Pix2pix(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
-        py_reader.decorate_batch_generator(self.train_reader, places=place)
+        py_reader.decorate_batch_generator(
+            self.train_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -299,7 +302,9 @@ class Pix2pix(object):
                     iterable=True,
                     use_double_buffer=True)
                 test_py_reader.decorate_batch_generator(
-                    self.test_reader, places=place)
+                    self.test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
                 utility.save_test_image(
                     epoch_id,
