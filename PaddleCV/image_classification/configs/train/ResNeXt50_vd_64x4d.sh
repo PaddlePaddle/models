@@ -1,6 +1,6 @@
-#ResNeXt50_vd_32x4d
+#ResNeXt50_vd_64x4d
 python train.py \
-       --model=ResNeXt50_vd_32x4d \
+       --model=ResNeXt50_vd_64x4d \
        --batch_size=256 \
        --total_images=1281167 \
        --image_shape=3,224,224 \
