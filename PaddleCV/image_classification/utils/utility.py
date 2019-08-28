@@ -480,7 +480,14 @@ def best_strategy_compiled(args, program, loss):
     else:
         build_strategy = fluid.compiler.BuildStrategy()
         build_strategy.enable_inplace = args.use_inplace
+
+        exec_strategy = fluid.ExecutionStrategy()
+        exec_strategy.num_threads = fluid.core.get_cuda_device_count()
+        exec_strategy.num_iteration_per_drop_scope = 10
+
         compiled_program = fluid.CompiledProgram(program).with_data_parallel(
-            loss_name=loss.name, build_strategy=build_strategy)
+            loss_name=loss.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
 
         return compiled_program

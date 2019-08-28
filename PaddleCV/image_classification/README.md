@@ -101,7 +101,7 @@ Note: 当添加如step_epochs这种list的参数，需要去掉"="，如：--ste
 
 数据读取器和预处理配置：
 
-* **lower_scale**: 数据随机裁剪处理时的lower scale值, upper scale值固定为1.0，默认值:0.08
+* **lower_scale**: 数据随机裁剪处理时的lower scale值， upper scale值固定为1.0，默认值:0.08
 * **lower_ratio**: 数据随机裁剪处理时的lower ratio值，默认值:3./4.
 * **upper_ratio**: 数据随机裁剪处理时的upper ratio值，默认值:4./3.
 * **resize_short_size**: 指定数据处理时改变图像大小的短边值，默认值: 256
@@ -121,10 +121,10 @@ Note: 当添加如step_epochs这种list的参数，需要去掉"="，如：--ste
 * **use_inplace**: 是否开启inplace显存优化，默认值: True
 * **enable_ce**: 是否开启CE测试，默认值: False
 * **use_label_smoothing**: 是否对数据进行label smoothing处理，默认值: False
-* **label_smoothing_epsilon**: label_smoothing的epsilon, 默认值:0.2
-* **random_seed**: 随机数种子, 默认值: 1000
+* **label_smoothing_epsilon**: label_smoothing的epsilon， 默认值:0.2
+* **random_seed**: 随机数种子， 默认值: 1000
 
-**数据读取器说明：** 数据读取器定义在```reader.py```文件中，现在默认基于cv2的数据读取器, 在[训练阶段](#模型训练), 默认采用的增广方式是随机裁剪与水平翻转, 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
+**数据读取器说明：** 数据读取器定义在```reader.py```文件中，现在默认基于cv2的数据读取器， 在[训练阶段](#模型训练)，默认采用的增广方式是随机裁剪与水平翻转， 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 
 * 旋转
 * 颜色抖动（暂未实现）
@@ -332,14 +332,14 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 
 ## 版本更新
 - 2018/12/03 **Stage1**: 更新AlexNet，ResNet50，ResNet101，MobileNetV1
-- 2018/12/23 **Stage2**: 更新VGG系列 SeResNeXt50_32x4d，SeResNeXt101_32x4d，ResNet152
+- 2018/12/23 **Stage2**: 更新VGG系列，SeResNeXt50_32x4d，SeResNeXt101_32x4d，ResNet152
 - 2019/01/31 更新MobileNetV2_x1_0
 - 2019/04/01 **Stage3**: 更新ResNet18，ResNet34，GoogLeNet，ShuffleNetV2
 - 2019/06/12 **Stage4**: 更新ResNet50_vc，ResNet50_vd，ResNet101_vd，ResNet152_vd，ResNet200_vd，SE154_vd InceptionV4，ResNeXt101_64x4d，ResNeXt101_vd_64x4d
 - 2019/06/22 更新ResNet50_vd_v2
-- 2019/07/02 **Stage5**: 更新MobileNetV2_x0_5, ResNeXt50_32x4d, ResNeXt50_64x4d, Xception_41, ResNet101_vd
-- 2019/07/19 **Stage6**: 更新ShuffleNetV2_x0_25, ShuffleNetV2_x0_33, ShuffleNetV2_x0_5, ShuffleNetV2_x1_0, ShuffleNetV2_x1_5, ShuffleNetV2_x2_0, MobileNetV2_x0_25, MobileNetV2_x1_5, MobileNetV2_x2_0, ResNeXt50_vd_64x4d, ResNeXt101_32x4d, ResNeXt152_32x4d
-- 2019/08/01 **Stage7**: 更新DarkNet53, DenseNet121. Densenet161, DenseNet169, DenseNet201, DenseNet264, SqueezeNet1_0, SqueezeNet1_1, ResNeXt50_vd_32x4d, ResNeXt152_64x4d, ResNeXt101_32x8d_wsl, ResNeXt101_32x16d_wsl, ResNeXt101_32x32d_wsl, ResNeXt101_32x48d_wsl, Fix_ResNeXt101_32x48d_wsl
+- 2019/07/02 **Stage5**: 更新MobileNetV2_x0_5，ResNeXt50_32x4d，ResNeXt50_64x4d，Xception_41，ResNet101_vd
+- 2019/07/19 **Stage6**: 更新ShuffleNetV2_x0_25，ShuffleNetV2_x0_33，ShuffleNetV2_x0_5，ShuffleNetV2_x1_0，ShuffleNetV2_x1_5，ShuffleNetV2_x2_0，MobileNetV2_x0_25，MobileNetV2_x1_5，MobileNetV2_x2_0，ResNeXt50_vd_64x4d，ResNeXt101_32x4d，ResNeXt152_32x4d
+- 2019/08/01 **Stage7**: 更新DarkNet53，DenseNet121，Densenet161，DenseNet169，DenseNet201，DenseNet264，SqueezeNet1_0，SqueezeNet1_1，ResNeXt50_vd_32x4d，ResNeXt152_64x4d，ResNeXt101_32x8d_wsl，ResNeXt101_32x16d_wsl，ResNeXt101_32x32d_wsl，ResNeXt101_32x48d_wsl，Fix_ResNeXt101_32x48d_wsl
 
 ## 如何贡献代码
 
