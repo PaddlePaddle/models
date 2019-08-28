@@ -56,6 +56,7 @@ def build_source(config):
         if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource']:
             if 'class_aware_sampling' in args and args['class_aware_sampling']:
                 source_type = 'ClassAwareSamplingRoiDbSource'
+                del args['class_aware_sampling']
             else:
                 source_type = 'RoiDbSource'
         else:

@@ -70,6 +70,10 @@ def _prepare_data_config(feed, args_path):
         'TYPE': type(feed.dataset).__source__
     }
 
+    if feed.mode == 'TRAIN':
+        data_config['CLASS_AWARE_SAMPLING'] = getattr(
+            feed, 'class_aware_sampling', False)
+
     if len(getattr(feed.dataset, 'images', [])) > 0:
         data_config['IMAGES'] = feed.dataset.images
 
