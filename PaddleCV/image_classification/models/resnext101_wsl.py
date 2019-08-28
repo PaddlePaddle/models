@@ -24,22 +24,9 @@ __all__ = [
     "ResNeXt101_32x48d_wsl", "Fix_ResNeXt101_32x48d_wsl"
 ]
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
-
 
 class ResNeXt101_wsl():
     def __init__(self, layers=101, cardinality=32, width=48):
-        self.params = train_parameters
         self.layers = layers
         self.cardinality = cardinality
         self.width = width
