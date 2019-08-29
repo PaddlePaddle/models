@@ -125,8 +125,7 @@ class SE_ResNeXt():
             pool_type='avg',
             global_pooling=True,
             use_cudnn=False)
-        drop = fluid.layers.dropout(
-            x=pool, dropout_prob=0.5, seed=self.params['dropout_seed'])
+        drop = fluid.layers.dropout(x=pool, dropout_prob=0.5)
         stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
         out = fluid.layers.fc(
             input=drop,
