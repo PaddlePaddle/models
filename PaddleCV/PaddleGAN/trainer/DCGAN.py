@@ -95,7 +95,7 @@ class DCGAN(object):
         d_trainer = DTrainer(img, label, self.cfg)
 
         # prepare enviorment
-        place = fluid.CUDAPlace(0)
+        place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -153,7 +153,7 @@ class DCGAN(object):
                     fetch_list=[d_trainer.d_loss])[0]
                 d_fake_loss = exe.run(
                     d_trainer_program,
-                    feed={'img': generate_image,
+                    feed={'img': generate_image[0],
                           'label': fake_label},
                     fetch_list=[d_trainer.d_loss])[0]
                 d_loss = d_real_loss + d_fake_loss

@@ -56,6 +56,9 @@ class GTrainer():
                 self.g_loss_gan = fluid.layers.mean(
                     fluid.layers.sigmoid_cross_entropy_with_logits(
                         x=self.pred, label=ones))
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
 
             self.g_loss_L1 = fluid.layers.reduce_mean(
                 fluid.layers.abs(
@@ -140,6 +143,10 @@ class DTrainer():
                 self.d_loss_fake = fluid.layers.mean(
                     fluid.layers.sigmoid_cross_entropy_with_logits(
                         x=self.pred_fake, label=zeros))
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
+
             self.d_loss = 0.5 * (self.d_loss_real + self.d_loss_fake)
             vars = []
             for var in self.program.list_vars():

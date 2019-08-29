@@ -55,6 +55,9 @@ class GTrainer():
                     fluid.layers.square(
                         fluid.layers.elementwise_sub(
                             x=self.pred_fake, y=ones)))
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
 
             self.g_loss_cls = fluid.layers.mean(
                 fluid.layers.sigmoid_cross_entropy_with_logits(self.cls_fake,
@@ -126,6 +129,9 @@ class DTrainer():
                     cfg=cfg,
                     name="discriminator")
                 self.d_loss = self.d_loss_real + self.d_loss_fake + 1.0 * self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
 
             self.d_loss_real.persistable = True
             self.d_loss_fake.persistable = True
@@ -153,11 +159,11 @@ class DTrainer():
                 beta = fluid.layers.uniform_random_batch_size_like(
                     input=a, shape=a.shape, min=0.0, max=1.0)
                 mean = fluid.layers.reduce_mean(
-                    a, range(len(a.shape)), keep_dim=True)
+                    a, dim=list(range(len(a.shape))), keep_dim=True)
                 input_sub_mean = fluid.layers.elementwise_sub(a, mean, axis=0)
                 var = fluid.layers.reduce_mean(
                     fluid.layers.square(input_sub_mean),
-                    range(len(a.shape)),
+                    dim=list(range(len(a.shape))),
                     keep_dim=True)
                 b = beta * fluid.layers.sqrt(var) * 0.5 + a
             shape = [a.shape[0]]

@@ -162,7 +162,7 @@ class CGAN(object):
                                       fetch_list=[d_trainer.d_loss])[0]
                 d_fake_loss = exe.run(d_trainer_program,
                                       feed={
-                                          'img': generate_image,
+                                          'img': generate_image[0],
                                           'condition': condition_data,
                                           'label': fake_label
                                       },
