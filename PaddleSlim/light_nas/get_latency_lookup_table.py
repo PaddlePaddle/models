@@ -63,7 +63,7 @@ def get_op_latency(op, platform):
             stderr=subprocess.PIPE,
             shell=True)
         out = proc.communicate()[0]
-        out = [_ for _ in out.split('\n') if 'Latency' in _][-1]
+        out = [_ for _ in out.decode().split('\n') if 'Latency' in _][-1]
         out = re.findall(r'\d+\.?\d*', out)[0]
         out = float(out)
     elif platform == 'ios':
