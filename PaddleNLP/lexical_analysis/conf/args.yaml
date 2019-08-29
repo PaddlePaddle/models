@@ -8,6 +8,50 @@ model:
   bigru_num:
     val: 2
     meaning: "The number of bi_gru layers in the network."
+  init_checkpoint:
+    val: ""
+    meaning: "Path to init model"
+
+train:
+  random_seed:
+    val: 0
+    meaning: "Random seed for training"
+  print_steps:
+    val: 200
+    meaning: "Print the result per xxx batch of training"
+  save_steps:
+    val: 10000
+    meaning: "Save the model once per xxxx batch of training"
+  validation_steps:
+    val: 1000
+    meaning: "Do the validation once per xxxx batch of training"
+  batch_size:
+    val: 300
+    meaning: "The number of sequences contained in a mini-batch"
+  epoch:
+    val: 10
+    meaning: "Corpus iteration num"
+  use_cuda:
+    val: False
+    meaning: "If set, use GPU for training."
+  traindata_shuffle_buffer:
+    val: 2000
+    meaning: "The buffer size used in shuffle the training data."
+  base_learning_rate:
+    val: 0.001
+    meaning: "The basic learning rate that affects the entire network."
+  emb_learning_rate:
+    val: 2
+    meaning: "The real learning rate of the embedding layer will be (emb_learning_rate * base_learning_rate)."
+  crf_learning_rate:
+    val: 0.2
+    meaning: "The real learning rate of the embedding layer will be (crf_learning_rate * base_learning_rate)."
+  enable_ce:
+    val: true
+    meaning: 'If set, run the task with continuous evaluation logs.'
+  cpu_num:
+    val: 10
+    meaning: "The number of cpu used to train model, this argument wouldn't be valid if use_cuda=true"
 
 data:
   word_dict_path:
@@ -31,47 +75,4 @@ data:
   model_save_dir:
     val: "./models"
     meaning: "The model will be saved in this path."
-  init_checkpoint:
-    val: ""
-    meaning: "Path to init model"
 
-train:
-  random_seed:
-    val: 0
-    meaning: "Random seed for training"
-  print_step:
-    val: 200
-    meaning: "Print the result per xxx batch of training"
-  save_model_per_batches:
-    val: 10000
-    meaning: "Save the model once per xxxx batch of training"
-  valid_model_per_batches:
-    val: 1000
-    meaning: "Do the validation once per xxxx batch of training"
-  batch_size:
-    val: 300
-    meaning: "The number of sequences contained in a mini-batch"
-  epoch:
-    val: 10
-    meaning: "Corpus iteration num"
-  enable_ce:
-    val: True
-    meaning: "If set, use GPU for training."
-  traindata_shuffle_buffer:
-    val: 2000
-    meaning: "The buffer size used in shuffle the training data."
-  base_learning_rate:
-    val: 0.001
-    meaning: "The basic learning rate that affects the entire network."
-  emb_learning_rate:
-    val: 2
-    meaning: "The real learning rate of the embedding layer will be (emb_learning_rate * base_learning_rate)."
-  crf_learning_rate:
-    val: 0.2
-    meaning: "The real learning rate of the embedding layer will be (crf_learning_rate * base_learning_rate)."
-  use_cuda:
-    val: true
-    meaning: 'If set, run the task with continuous evaluation logs.'
-  cpu_num:
-    val: 10
-    meaning: "The number of cpu used to train model, it works when use_cuda=False"

@@ -58,7 +58,7 @@ data:
     val: 57
     meaning: "label number"
   max_seq_len:
-    val: 512
+    val: 128
     meaning: "Number of words of the longest seqence."
   do_lower_case:
     val: True

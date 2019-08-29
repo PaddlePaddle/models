@@ -38,8 +38,31 @@ function run_train() {
         --test_data "${DATA_PATH}/test2.tsv" \
         --label_map_config "./conf/label_map.json" \
         --do_lower_case true \
-        --use_cuda true \
-        --cpu_num 4
+        --use_cuda false \
+        --cpu_num 1
+}
+
+function run_train_single_gpu() {
+    echo "single gpu training"              # which GPU to use
+    export CUDA_VISIBLE_DEVICES=0
+    fluid train.py \
+        --mode train \
+        --ernie_config_path "${ERNIE_PRETRAINED_MODEL_PATH}/ernie_config.json" \
+        --init_pretraining_params "${ERNIE_PRETRAINED_MODEL_PATH}/params/" \
+        --vocab_path "${ERNIE_PRETRAINED_MODEL_PATH}/vocab.txt" \
+        --use_cuda true
+}
+
+
+function run_train_multi_cpu() {
+    echo "multi cpu training"
+    fluid train.py \
+        --mode train \
+        --ernie_config_path "${ERNIE_PRETRAINED_MODEL_PATH}/ernie_config.json" \
+        --init_pretraining_params "${ERNIE_PRETRAINED_MODEL_PATH}/params/" \
+        --vocab_path "${ERNIE_PRETRAINED_MODEL_PATH}/vocab.txt" \
+        --use_cuda false \
+        --cpu_num 10         #cpu_num works only when use_cuda=false
 }
 
 
