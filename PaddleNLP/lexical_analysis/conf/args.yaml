@@ -11,6 +11,9 @@ model:
   init_checkpoint:
     val: ""
     meaning: "Path to init model"
+  inference_save_dir:
+    val: ""
+    meaning: "Path to save inference model"
 
 train:
   random_seed:
