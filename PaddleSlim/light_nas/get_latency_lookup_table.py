@@ -79,7 +79,6 @@ def main():
     """main."""
     args = get_args()
     ops = get_all_ops()
-    print(ops)
     fid = open(args.latency_lookup_table_path, 'w')
     for op in ops:
         op = [str(item) for item in op]
