@@ -20,13 +20,13 @@ train:
     val: 0
     meaning: "Random seed for training"
   print_steps:
-    val: 200
+    val: 1
     meaning: "Print the result per xxx batch of training"
   save_steps:
-    val: 10000
+    val: 10
     meaning: "Save the model once per xxxx batch of training"
   validation_steps:
-    val: 1000
+    val: 10
     meaning: "Do the validation once per xxxx batch of training"
   batch_size:
     val: 300

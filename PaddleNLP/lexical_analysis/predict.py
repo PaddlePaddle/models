@@ -1,19 +1,20 @@
 #coding:utf8
-import utils
 import argparse
-import nets
-import reader
+import os
+import time
+import sys
+
 import paddle.fluid as fluid
 import paddle
-import os
 from tqdm import tqdm
 
-import sys
+import utils
+import reader
+import creator
 sys.path.append('../models/')
 from model_check import check_cuda
 
 parser = argparse.ArgumentParser(__doc__)
-
 # 1. model parameters
 model_g = utils.ArgumentGroup(parser, "model", "model configuration")
 model_g.add_arg("word_emb_dim", int, 128, "The dimension in which a word is embedded.")
@@ -39,7 +40,7 @@ def do_infer(args):
     with fluid.program_guard(infer_program, fluid.default_startup_program()):
         with fluid.unique_name.guard():
 
-            infer_ret = nets.create_model(
+            infer_ret = creator.create_model(
                 args, dataset.vocab_size, dataset.num_labels, mode='infer')
     infer_program = infer_program.clone(for_test=True)
 

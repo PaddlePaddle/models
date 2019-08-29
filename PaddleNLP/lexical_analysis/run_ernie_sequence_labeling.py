@@ -16,13 +16,12 @@ import numpy as np
 import multiprocessing
 import sys
 from collections import namedtuple
+
 from tqdm import tqdm
-
 import paddle.fluid as fluid
-import nets
+
+import creator
 import utils
-
-
 sys.path.append("..")
 from models.representation.ernie import ErnieConfig
 from models.model_check import check_cuda
@@ -87,17 +86,17 @@ def do_train(args):
     with fluid.program_guard(train_program, startup_prog):
         with fluid.unique_name.guard():
             # user defined model based on ernie embeddings
-            train_ret = nets.create_ernie_model(args, ernie_config, is_prediction=False)
+            train_ret = creator.create_ernie_model(args, ernie_config, is_prediction=False)
 
             # ernie pyreader
-            train_pyreader = nets.create_pyreader(args, file_name=args.train_data,
+            train_pyreader = creator.create_pyreader(args, file_name=args.train_data,
                                                   feed_list=train_ret['feed_list'],
                                                   mode="ernie",
                                                   place=place,
                                                   iterable=True)
 
             test_program = train_program.clone(for_test=True)
-            test_pyreader = nets.create_pyreader(args, file_name=args.test_data,
+            test_pyreader = creator.create_pyreader(args, file_name=args.test_data,
                                                   feed_list=train_ret['feed_list'],
                                                   mode="ernie",
                                                   place=place,
@@ -112,14 +111,9 @@ def do_train(args):
         program=train_program, batch_size=args.batch_size)
     print("Theoretical memory usage in training: %.3f - %.3f %s" %
         (lower_mem, upper_mem, unit))
-    # num_train_examples = reader.get_num_examples(args.train_set)
-    # max_train_steps = args.epoch * num_train_examples // args.batch_size // dev_count
     print("Device count: %d" % dev_count)
-    # print("Num train examples: %d" % num_train_examples)
-    # print("Max train steps: %d" % max_train_steps)
 
     exe.run(startup_prog)
-
     # load checkpoints
     if args.init_checkpoint and args.init_pretraining_params:
         print("WARNING: args 'init_checkpoint' and 'init_pretraining_params' "
@@ -192,10 +186,10 @@ def do_eval(args):
     test_program = fluid.Program()
     with fluid.program_guard(test_program, fluid.default_startup_program()):
         with fluid.unique_name.guard():
-            test_ret = nets.create_ernie_model(args, ernie_config, is_prediction=False)
+            test_ret = creator.create_ernie_model(args, ernie_config, is_prediction=False)
     test_program = test_program.clone(for_test=True)
 
-    pyreader = nets.create_pyreader(args, file_name=args.test_data,
+    pyreader = creator.create_pyreader(args, file_name=args.test_data,
                                           feed_list=test_ret['feed_list'],
                                           mode="ernie",
                                           place=place,
@@ -228,10 +222,10 @@ def do_infer(args):
     infer_program = fluid.Program()
     with fluid.program_guard(infer_program, fluid.default_startup_program()):
         with fluid.unique_name.guard():
-            infer_ret = nets.create_ernie_model(args, ernie_config, is_prediction=False)
+            infer_ret = creator.create_ernie_model(args, ernie_config, is_prediction=False)
     infer_program = infer_program.clone(for_test=True)
     print(args.test_data)
-    pyreader, reader = nets.create_pyreader(args, file_name=args.test_data,
+    pyreader, reader = creator.create_pyreader(args, file_name=args.test_data,
                                           feed_list=infer_ret['feed_list'],
                                           mode="ernie",
                                           place=place,

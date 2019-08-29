@@ -1,14 +1,14 @@
 #coding:utf8
-import utils
 import argparse
-import nets
-import reader
+import sys
+
 import paddle.fluid as fluid
 import os
+
+import creator
+import reader
+import utils
 from reader import load_kv_dict
-
-
-import sys
 sys.path.append('../models/')
 from model_check import check_cuda
 
@@ -42,7 +42,7 @@ def save_inference_model(args):
     with fluid.program_guard(infer_program, fluid.default_startup_program()):
         with fluid.unique_name.guard():
 
-            infer_ret = nets.create_model(
+            infer_ret = creator.create_model(
                 args, dataset.vocab_size, dataset.num_labels, mode='infer')
             infer_program = infer_program.clone(for_test=True)
 

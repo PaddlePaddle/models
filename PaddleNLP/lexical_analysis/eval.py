@@ -1,24 +1,25 @@
 #coding:utf8
-import utils
 import argparse
-import nets
-import reader
-import paddle.fluid as fluid
-import paddle
 import os
 import time
-parser = argparse.ArgumentParser(__doc__)
 import sys
+
+import paddle.fluid as fluid
+import paddle
+
+import utils
+import reader
+import creator
 sys.path.append('../models/')
 from model_check import check_cuda
 
+parser = argparse.ArgumentParser(__doc__)
 # 1. model parameters
 model_g = utils.ArgumentGroup(parser, "model", "model configuration")
 model_g.add_arg("word_emb_dim", int, 128, "The dimension in which a word is embedded.")
 model_g.add_arg("grnn_hidden_dim", int, 128, "The number of hidden nodes in the GRNN layer.")
 model_g.add_arg("bigru_num", int, 2, "The number of bi_gru layers in the network.")
 model_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
-
 
 # 2. data parameters
 data_g = utils.ArgumentGroup(parser, "data", "data paths")
@@ -36,7 +37,7 @@ def do_eval(args):
     test_program = fluid.Program()
     with fluid.program_guard(test_program, fluid.default_startup_program()):
         with fluid.unique_name.guard():
-            test_ret = nets.create_model(
+            test_ret = creator.create_model(
                 args, dataset.vocab_size, dataset.num_labels, mode='test')
     test_program = test_program.clone(for_test=True)
 
@@ -46,19 +47,13 @@ def do_eval(args):
     else:
         place = fluid.CPUPlace()
 
-    pyreader = fluid.io.PyReader(
-        feed_list=[test_ret['words'], test_ret['targets']],
-        capacity=10,
-        iterable=True,
-        return_list=False
-    )
-    pyreader.decorate_sample_list_generator(
-        paddle.batch(
-            dataset.file_reader(args.test_data, mode='test'),
-            batch_size=args.batch_size
-        ),
-        places=place
-    )
+    pyreader = creator.create_pyreader(args, file_name=args.test_data,
+                                       feed_list=test_ret['feed_list'],
+                                       place=place,
+                                       mode='lac',
+                                       reader=dataset,
+                                       iterable=True,
+                                       for_test=True)
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())

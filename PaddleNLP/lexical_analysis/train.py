@@ -2,7 +2,6 @@
 """
 util tools
 """
-
 import os
 import sys
 import math
@@ -17,14 +16,10 @@ import paddle.fluid as fluid
 
 import reader
 import utils
+import creator
 from  eval import test_process
-
-import nets
-import sys
-import warnings
 sys.path.append('../models/')
 from model_check import check_cuda
-
 
 # the function to train model
 def do_train(args):
@@ -37,7 +32,7 @@ def do_train(args):
         startup_program.random_seed = args.random_seed
 
         with fluid.unique_name.guard():
-            train_ret = nets.create_model(
+            train_ret = creator.create_model(
                 args, dataset.vocab_size, dataset.num_labels, mode='train')
             test_program = train_program.clone(for_test=True)
 
@@ -57,42 +52,20 @@ def do_train(args):
         os.environ['CPU_NUM'] = str(dev_count)
         place = fluid.CPUPlace()
 
-
-    # init reader
-    train_reader = fluid.io.PyReader(
-        feed_list=[train_ret['words'], train_ret['targets']],
-        capacity=300,
-        use_double_buffer=True,
-        iterable=True
-    )
-    train_reader.decorate_sample_list_generator(
-        paddle.batch(
-            paddle.reader.shuffle(
-                dataset.file_reader(args.train_data),
-                buf_size=args.traindata_shuffle_buffer
-            ),
-            batch_size=args.batch_size
-        ),
-        places=place
-    )
-
-
-    test_reader = fluid.io.PyReader(
-        feed_list=[train_ret['words'], train_ret['targets']],
-        capacity=300,
-        use_double_buffer=True,
-        iterable=True
-    )
-    test_reader.decorate_sample_list_generator(
-        paddle.batch(
-            paddle.reader.shuffle(
-                dataset.file_reader(args.test_data),
-                buf_size=args.traindata_shuffle_buffer
-            ),
-            batch_size=args.batch_size
-        ),
-        places=place
-    )
+    train_reader = creator.create_pyreader(args, file_name=args.test_data,
+                                       feed_list=train_ret['feed_list'],
+                                       place=place,
+                                       mode='lac',
+                                       reader=dataset,
+                                       iterable=True)
+     
+    test_reader = creator.create_pyreader(args, file_name=args.test_data,
+                                       feed_list=train_ret['feed_list'],
+                                       place=place,
+                                       mode='lac',
+                                       reader=dataset,
+                                       iterable=True,
+                                       for_test=True)
 
     exe = fluid.Executor(place)
     exe.run(startup_program)
@@ -125,54 +98,45 @@ def do_train(args):
     ce_info = []
     step = 0
     for epoch_id in range(args.epoch):
-        # pyreader.start()
         ce_time = 0
-        try:
-            # while True:
-            # ipdb.set_trace()
-            for data in train_reader():
-                # this is for minimizing the fetching op, saving the training speed.
-                if step % args.print_steps == 0:
-                    fetch_list = [
-                        train_ret["avg_cost"],
-                        train_ret["precision"],
-                        train_ret["recall"],
-                        train_ret["f1_score"]
-                    ]
-                else:
-                    fetch_list = []
+        for data in train_reader():
+            # this is for minimizing the fetching op, saving the training speed.
+            if step % args.print_steps == 0:
+                fetch_list = [
+                    train_ret["avg_cost"],
+                    train_ret["precision"],
+                    train_ret["recall"],
+                    train_ret["f1_score"]
+                ]
+            else:
+                fetch_list = []
 
-                start_time = time.time()
+            start_time = time.time()
+            outputs = exe.run(
+                compiled_prog,
+                fetch_list=fetch_list,
+                feed=data[0],
+            )
 
-                outputs = exe.run(
-                    compiled_prog,
-                    # train_program,
-                    fetch_list=fetch_list,
-                    feed=data[0],
-                )
+            end_time = time.time()
+            if step % args.print_steps == 0:
+                avg_cost, precision, recall, f1_score = [np.mean(x) for x in outputs]
 
-                end_time = time.time()
-                if step % args.print_steps == 0:
-                    avg_cost, precision, recall, f1_score = [np.mean(x) for x in outputs]
+                print("[train] step = %d, loss = %.5f, P: %.5f, R: %.5f, F1: %.5f, elapsed time %.5f" % (
+                    step, avg_cost, precision, recall, f1_score, end_time - start_time))
 
-                    print("[train] step = %d, loss = %.5f, P: %.5f, R: %.5f, F1: %.5f, elapsed time %.5f"%(
-                        step, avg_cost, precision, recall, f1_score, end_time-start_time))
+            if step % args.validation_steps == 0:
+                test_process(exe, test_program, test_reader, train_ret)
 
-                if step % args.validation_steps==0:
-                    test_process(exe, test_program, test_reader, train_ret)
+                ce_time += end_time - start_time
+                ce_info.append([ce_time, avg_cost, precision, recall, f1_score])
 
-                    ce_time += end_time - start_time
-                    ce_info.append([ce_time, avg_cost, precision, recall, f1_score])
-
-
-                # save checkpoints
-                if step % args.save_steps == 0 and step != 0:
-                    save_path = os.path.join(args.model_save_dir, "step_" + str(step)+'.pdckpt')
-                    fluid.io.save_persistables(exe, save_path, train_program)
-                step += 1
-        except fluid.core.EOFException:
-            save_path = os.path.join(args.model_save_dir, "step_" + str(step))
-            fluid.io.save_persistables(exe, save_path, train_program)
+            # save checkpoints
+            if step % args.save_steps == 0 and step != 0:
+                save_path = os.path.join(args.model_save_dir, "step_" + str(step) + '.pdckpt')
+                fluid.io.save_persistables(exe, save_path, train_program)
+            step += 1
+        
 
 
     if args.enable_ce:
