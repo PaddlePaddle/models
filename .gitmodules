@@ -1,6 +1,6 @@
-[submodule "PaddleNLP/knowledge_driven_dialogue"]
-	path = PaddleNLP/knowledge_driven_dialogue
-	url = https://github.com/baidu/knowledge-driven-dialogue/
 [submodule "PaddleNLP/language_representations_kit/ERNIE"]
 	path = PaddleNLP/language_representations_kit/ERNIE
 	url = https://github.com/PaddlePaddle/ERNIE
+[submodule "PaddleRL"]
+	path = PaddleRL
+	url = https://github.com/PaddlePaddle/PARL

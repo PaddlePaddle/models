@@ -87,9 +87,11 @@ def recall_topk(fea, lab, k = 1):
     sorted_index = np.argsort(d, 1)
     res = 0
     for i in range(len(fea)):
-        pred = lab[sorted_index[i][0]]
-        if lab[i] == pred:
-            res += 1.0
+        for j in range(k):
+            pred = lab[sorted_index[i][j]]
+            if lab[i] == pred:
+                res += 1.0
+                break
     res = res / len(fea)
     return res
 
