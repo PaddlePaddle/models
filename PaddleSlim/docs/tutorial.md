@@ -74,11 +74,11 @@ $q = scale * r + b$
 对于通用矩阵乘法(`GEMM`)，输入$X$和权重$W$的量化操作可被表述为如下过程：
 $$ X_q = \left \lfloor \frac{X}{X_m} * (n - 1) \right \rceil $$ $$ W_q = \left \lfloor \frac{W}{W_m} * (n - 1) \right \rceil $$
 执行通用矩阵乘法：
-$$ Y = X_q * W_q $$
-反量化$Y$:
+$$ Y_q = X_q * W_q $$
+对量化乘积结果$Yq$进行反量化:
 $$
 \begin{align}
-Y_{dq} = \frac{Y}{(n - 1) * (n - 1)} * X_m * W_m \
+Y_{dq} = \frac{Y_q}{(n - 1) * (n - 1)} * X_m * W_m \
 =\frac{X_q * W_q}{(n - 1) * (n - 1)} * X_m * W_m \
 =(\frac{X_q}{n - 1} * X_m) * (\frac{W_q}{n - 1} * W_m) \
 \end{align}

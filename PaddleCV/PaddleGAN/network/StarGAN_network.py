@@ -28,9 +28,9 @@ class StarGAN_model(object):
     def ResidualBlock(self, input, dim, name):
         conv0 = conv2d(
             input,
-            dim,
-            3,
-            1,
+            num_filters=dim,
+            filter_size=3,
+            stride=1,
             padding=1,
             use_bias=False,
             norm="instance_norm",
@@ -38,10 +38,10 @@ class StarGAN_model(object):
             name=name + ".main0",
             initial='kaiming')
         conv1 = conv2d(
-            conv0,
-            dim,
-            3,
-            1,
+            input=conv0,
+            num_filters=dim,
+            filter_size=3,
+            stride=1,
             padding=1,
             use_bias=False,
             norm="instance_norm",
@@ -59,10 +59,10 @@ class StarGAN_model(object):
             x=label_trg_e, expand_times=[1, 1, shape[2], shape[3]])
         input1 = fluid.layers.concat([input, label_trg_e], 1)
         conv0 = conv2d(
-            input1,
-            cfg.g_base_dims,
-            7,
-            1,
+            input=input1,
+            num_filters=cfg.g_base_dims,
+            filter_size=7,
+            stride=1,
             padding=3,
             use_bias=False,
             norm="instance_norm",
@@ -73,10 +73,10 @@ class StarGAN_model(object):
         for i in range(2):
             rate = 2**(i + 1)
             conv_down = conv2d(
-                conv_down,
-                cfg.g_base_dims * rate,
-                4,
-                2,
+                input=conv_down,
+                num_filters=cfg.g_base_dims * rate,
+                filter_size=4,
+                stride=2,
                 padding=1,
                 use_bias=False,
                 norm="instance_norm",
@@ -93,10 +93,10 @@ class StarGAN_model(object):
         for i in range(2):
             rate = 2**(1 - i)
             deconv = deconv2d(
-                deconv,
-                cfg.g_base_dims * rate,
-                4,
-                2,
+                input=deconv,
+                num_filters=cfg.g_base_dims * rate,
+                filter_size=4,
+                stride=2,
                 padding=1,
                 use_bias=False,
                 norm="instance_norm",
@@ -104,10 +104,10 @@ class StarGAN_model(object):
                 name=name + str(15 + i * 3),
                 initial='kaiming')
         out = conv2d(
-            deconv,
-            3,
-            7,
-            1,
+            input=deconv,
+            num_filters=3,
+            filter_size=7,
+            stride=1,
             padding=3,
             use_bias=False,
             norm=None,
@@ -118,10 +118,10 @@ class StarGAN_model(object):
 
     def network_D(self, input, cfg, name="discriminator"):
         conv0 = conv2d(
-            input,
-            cfg.d_base_dims,
-            4,
-            2,
+            input=input,
+            num_filters=cfg.d_base_dims,
+            filter_size=4,
+            stride=2,
             padding=1,
             activation_fn='leaky_relu',
             name=name + '0',
@@ -132,28 +132,28 @@ class StarGAN_model(object):
         for i in range(1, repeat_num):
             curr_dim *= 2
             conv = conv2d(
-                conv,
-                curr_dim,
-                4,
-                2,
+                input=conv,
+                num_filters=curr_dim,
+                filter_size=4,
+                stride=2,
                 padding=1,
                 activation_fn='leaky_relu',
                 name=name + str(i * 2),
                 initial='kaiming')
         kernel_size = int(cfg.image_size / np.power(2, repeat_num))
         out1 = conv2d(
-            conv,
-            1,
-            3,
-            1,
+            input=conv,
+            num_filters=1,
+            filter_size=3,
+            stride=1,
             padding=1,
             use_bias=False,
             name="d_conv1",
             initial='kaiming')
         out2 = conv2d(
-            conv,
-            cfg.c_dim,
-            kernel_size,
+            input=conv,
+            num_filters=cfg.c_dim,
+            filter_size=kernel_size,
             use_bias=False,
             name="d_conv2",
             initial='kaiming')

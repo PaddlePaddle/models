@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # download pretrain model
-root_url="http://paddle-imagenet-models-name.bj.bcebos.com"
+root_url="https://paddle-inference-dist.bj.bcebos.com/int8/pretrain"
 MobileNetV1="MobileNetV1_pretrained.zip"
 ResNet50="ResNet50_pretrained.zip"
 GoogleNet="GoogleNet_pretrained.tar"
