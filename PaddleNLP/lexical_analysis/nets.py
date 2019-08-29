@@ -174,7 +174,7 @@ from models.representation.ernie import ernie_encoder
 from preprocess.ernie import task_reader
 from reader import Dataset
 
-def create_pyreader(args, file_name, feed_list, place, mode='lac', reader=None, iterable=True, return_reader=False):
+def create_pyreader(args, file_name, feed_list, place, mode='lac', reader=None, iterable=True, return_reader=False, for_test=False):
     # init reader
     pyreader = fluid.io.PyReader(
         feed_list=feed_list,
@@ -186,16 +186,25 @@ def create_pyreader(args, file_name, feed_list, place, mode='lac', reader=None, 
         if reader==None:
             reader = Dataset(args)
         # create lac pyreader
-        pyreader.decorate_sample_list_generator(
-            paddle.batch(
-                paddle.reader.shuffle(
+        if for_test:
+            pyreader.decorate_sample_list_generator(
+                paddle.batch(
                     reader.file_reader(file_name),
-                    buf_size=args.traindata_shuffle_buffer
+                    batch_size=args.batch_size
                 ),
-                batch_size=args.batch_size
-            ),
-            places=place
-        )
+                places=place
+            )
+        else:
+            pyreader.decorate_sample_list_generator(
+                paddle.batch(
+                    paddle.reader.shuffle(
+                        reader.file_reader(file_name),
+                        buf_size=args.traindata_shuffle_buffer
+                    ),
+                    batch_size=args.batch_size
+                ),
+                places=place
+            )
 
     elif mode == 'ernie':
         # create ernie pyreader
@@ -208,13 +217,20 @@ def create_pyreader(args, file_name, feed_list, place, mode='lac', reader=None, 
                 in_tokens=False,
                 random_seed=args.random_seed)
 
-
-        pyreader.decorate_batch_generator(
-            reader.data_generator(
-                file_name, args.batch_size, args.epoch, shuffle=True, phase="train"
-            ),
-            places=place
-        )
+        if for_test:
+            pyreader.decorate_batch_generator(
+                reader.data_generator(
+                    file_name, args.batch_size, epoch=1, shuffle=False, phase='test'
+                ),
+                places=place
+            )
+        else:
+            pyreader.decorate_batch_generator(
+                reader.data_generator(
+                    file_name, args.batch_size, args.epoch, shuffle=True, phase="train"
+                ),
+                places=place
+            )
 
     if return_reader:
         return pyreader, reader

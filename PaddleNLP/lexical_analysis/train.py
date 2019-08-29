@@ -24,51 +24,7 @@ import sys
 import warnings
 sys.path.append('../models/')
 from model_check import check_cuda
-import ipdb
 
-# yapf: disable
-# parser = argparse.ArgumentParser(__doc__)
-
-# 1. model parameters
-# model_g = utils.ArgumentGroup(parser, "model", "model configuration")
-# model_g.add_arg("word_emb_dim", int, 128, "The dimension in which a word is embedded.")
-# model_g.add_arg("grnn_hidden_dim", int, 256, "The number of hidden nodes in the GRNN layer.")
-# model_g.add_arg("bigru_num", int, 2, "The number of bi_gru layers in the network.")
-#
-# # 2. data parameters
-# data_g = utils.ArgumentGroup(parser, "data", "data paths")
-# data_g.add_arg("word_dict_path", str, "./conf/word.dic", "The path of the word dictionary.")
-# data_g.add_arg("label_dict_path", str, "./conf/tag.dic", "The path of the label dictionary.")
-# data_g.add_arg("word_rep_dict_path", str, "./conf/q2b.dic", "The path of the word replacement Dictionary.")
-# data_g.add_arg("train_data", str, "./data/train.tsv", "The folder where the train data is located.")
-# data_g.add_arg("test_data", str, "./data/test.tsv", "The folder where the test data is located.")
-# data_g.add_arg("infer_data", str, "./data/test.tsv", "The folder where the infer data is located.")
-# data_g.add_arg("model_save_dir", str, "./models", "The model will be saved in this path.")
-# data_g.add_arg("init_checkpoint", str, "", "Path to init model")
-#
-# # 3. train parameters
-# train_g = utils.ArgumentGroup(parser, "training", "training options")
-# train_g.add_arg("random_seed", int, 0, "random seed for training")
-# train_g.add_arg("print_step", int, 200, "print the result per xxx batch of training")
-# train_g.add_arg("save_model_per_batches", int, 10000, "Save the model once per xxxx batch of training")
-# train_g.add_arg("valid_model_per_batches", int, 1000, "Do the validation once per xxxx batch of training")
-# train_g.add_arg("batch_size", int, 80, "The number of sequences contained in a mini-batch, "
-#         "or the maximum number of tokens (include paddings) contained in a mini-batch.")
-# train_g.add_arg("epoch", int, 10, "corpus iteration num")
-# train_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
-#train_g.add_arg("cpu_num", int, 2, "The number of cpu used to train model",
-#         "it works when use_cuda=False)
-# train_g.add_arg("traindata_shuffle_buffer", int, 2000, "The buffer size used in shuffle the training data.")
-# train_g.add_arg("base_learning_rate", float, 1e-3, "The basic learning rate that affects the entire network.")
-# train_g.add_arg("emb_learning_rate", float, 5,
-#     "The real learning rate of the embedding layer will be (emb_learning_rate * base_learning_rate).")
-# train_g.add_arg("crf_learning_rate", float, 0.2,
-#     "The real learning rate of the embedding layer will be (crf_learning_rate * base_learning_rate).")
-#
-# parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
-
-
-# yapf: enable.
 
 # the function to train model
 def do_train(args):
@@ -95,9 +51,9 @@ def do_train(args):
         dev_count = fluid.core.get_cuda_device_count()
     else:
         dev_count = min(multiprocessing.cpu_count(), args.cpu_num)
-        if(dev_count<args.cpu_num):
-            warnings.warn('The total CPU NUM in this machine is %d, which is less than cpu_num parameter you set'%dev_count)
-            warnings.warn('Change the cpu_num from %d to %d'%(args.cpu_num, dev_count))
+        if (dev_count < args.cpu_num):
+            print("WARNING: The total CPU NUM in this machine is %d, which is less than cpu_num parameter you set. "
+                  "Change the cpu_num from %d to %d" % (dev_count, args.cpu_num, dev_count))
         os.environ['CPU_NUM'] = str(dev_count)
         place = fluid.CPUPlace()
 
@@ -176,7 +132,7 @@ def do_train(args):
             # ipdb.set_trace()
             for data in train_reader():
                 # this is for minimizing the fetching op, saving the training speed.
-                if step % args.print_step == 0:
+                if step % args.print_steps == 0:
                     fetch_list = [
                         train_ret["avg_cost"],
                         train_ret["precision"],
@@ -188,7 +144,7 @@ def do_train(args):
 
                 start_time = time.time()
 
-                output = exe.run(
+                outputs = exe.run(
                     compiled_prog,
                     # train_program,
                     fetch_list=fetch_list,
@@ -196,11 +152,13 @@ def do_train(args):
                 )
 
                 end_time = time.time()
-                if step % args.print_step == 0:
-                    avg_cost, precision, recall, f1_score = [np.mean(x) for x in output]
+                if step % args.print_steps == 0:
+                    avg_cost, precision, recall, f1_score = [np.mean(x) for x in outputs]
 
                     print("[train] step = %d, loss = %.5f, P: %.5f, R: %.5f, F1: %.5f, elapsed time %.5f"%(
                         step, avg_cost, precision, recall, f1_score, end_time-start_time))
+
+                if step % args.validation_steps==0:
                     test_process(exe, test_program, test_reader, train_ret)
 
                     ce_time += end_time - start_time
@@ -208,7 +166,7 @@ def do_train(args):
 
 
                 # save checkpoints
-                if step % args.save_model_per_batches == 0 and step != 0:
+                if step % args.save_steps == 0 and step != 0:
                     save_path = os.path.join(args.model_save_dir, "step_" + str(step)+'.pdckpt')
                     fluid.io.save_persistables(exe, save_path, train_program)
                 step += 1

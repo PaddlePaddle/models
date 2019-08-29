@@ -59,6 +59,7 @@ class Dataset(object):
     def word_to_ids(self, words):
         """convert word to word index"""
         word_ids = []
+        # word_ids.append(self.word2id_dict["[CLS]"])
         for word in words:
             if word in self.word_replace_dict:
                 word = self.word_replace_dict[word]
@@ -66,16 +67,20 @@ class Dataset(object):
                 word = "OOV"
             word_id = self.word2id_dict[word]
             word_ids.append(word_id)
+        # word_ids.append(self.word2id_dict["[SEP]"])
+
         return word_ids
 
     def label_to_ids(self, labels):
         """convert label to label index"""
         label_ids = []
+        # label_ids.append(self.label2id_dict['O'])
         for label in labels:
             if label not in self.label2id_dict:
                 label = "O"
             label_id = self.label2id_dict[label]
             label_ids.append(label_id)
+        # label_ids.append(self.label2id_dict['O'])
         return label_ids
 
 
@@ -92,6 +97,7 @@ class Dataset(object):
                     word_ids = self.word_to_ids(words)
                     yield (word_ids[0:max_seq_len],)
             else:
+                headline = next(fread)
                 for line in fread:
                     words, labels = line.strip("\n").split("\t")
                     word_ids = self.word_to_ids(words.split("\002"))

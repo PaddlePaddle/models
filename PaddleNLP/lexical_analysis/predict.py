@@ -42,21 +42,18 @@ def do_infer(args):
             infer_ret = nets.create_model(
                 args, dataset.vocab_size, dataset.num_labels, mode='infer')
     infer_program = infer_program.clone(for_test=True)
-    print('program created')
 
     if args.use_cuda:
         place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
     else:
         place = fluid.CPUPlace()
 
-    print('place created')
     pyreader = fluid.io.PyReader(
         feed_list=[infer_ret['words']],
         capacity=10,
         iterable=True,
         return_list=False
     )
-    print('pyreader created')
     pyreader.decorate_sample_list_generator(
         paddle.batch(
             dataset.file_reader(args.infer_data, mode='infer'),
@@ -65,7 +62,6 @@ def do_infer(args):
         places=place
     )
 
-    print('program startup')
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
@@ -73,7 +69,6 @@ def do_infer(args):
     # load model
     utils.init_checkpoint(exe, args.init_checkpoint+'.pdckpt', infer_program)
 
-    print('start predict')
     result = infer_process(
         exe=exe,
         program=infer_program,
@@ -82,7 +77,7 @@ def do_infer(args):
         dataset=dataset
     )
     for sent, tags in result:
-        result_list = ['(%s, %s)' % (ch.encode('utf8'), tag.encode('utf8')) for ch, tag in zip(sent, tags)]
+        result_list = ['(%s, %s)' % (ch, tag) for ch, tag in zip(sent, tags)]
         print(''.join(result_list))
 
 

@@ -16,6 +16,7 @@ import numpy as np
 import multiprocessing
 import sys
 from collections import namedtuple
+from tqdm import tqdm
 
 import paddle.fluid as fluid
 import nets
@@ -198,7 +199,8 @@ def do_eval(args):
                                           feed_list=test_ret['feed_list'],
                                           mode="ernie",
                                           place=place,
-                                          iterable=True)
+                                          iterable=True,
+                                          for_test=True,)
 
     print('program startup')
 
@@ -228,13 +230,14 @@ def do_infer(args):
         with fluid.unique_name.guard():
             infer_ret = nets.create_ernie_model(args, ernie_config, is_prediction=False)
     infer_program = infer_program.clone(for_test=True)
-
+    print(args.test_data)
     pyreader, reader = nets.create_pyreader(args, file_name=args.test_data,
                                           feed_list=infer_ret['feed_list'],
                                           mode="ernie",
                                           place=place,
                                           iterable=True,
-                                          return_reader=True,)
+                                          return_reader=True,
+                                          for_test=True)
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
@@ -251,7 +254,7 @@ def do_infer(args):
     dataset = Dataset(id2word_dict, id2label_dict)
 
     # make prediction
-    for data in pyreader():
+    for data in tqdm(pyreader()):
         (words, crf_decode) = exe.run(infer_program,
                                       fetch_list=[infer_ret["words"], infer_ret["crf_decode"]],
                                       feed=data[0],
@@ -259,14 +262,14 @@ def do_infer(args):
         # User should notice that words had been clipped if long than args.max_seq_len
         results = utils.parse_result(words, crf_decode, dataset)
         for sent, tags in results:
-            result_list = ['(%s, %s)' % (ch.encode('utf8'), tag.encode('utf8')) for ch, tag in zip(sent, tags)]
+            result_list = ['(%s, %s)' % (ch, tag) for ch, tag in zip(sent, tags)]
             print(''.join(result_list))
 
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(__doc__)
-    utils.load_yaml(parser, 'ernie_args.yaml')
+    utils.load_yaml(parser, './conf/ernie_args.yaml')
     args = parser.parse_args()
     check_cuda(args.use_cuda)
     utils.print_arguments(args)

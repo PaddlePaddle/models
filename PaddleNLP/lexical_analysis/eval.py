@@ -7,7 +7,6 @@ import paddle.fluid as fluid
 import paddle
 import os
 import time
-from tqdm import tqdm
 parser = argparse.ArgumentParser(__doc__)
 import sys
 sys.path.append('../models/')
@@ -33,7 +32,6 @@ data_g.add_arg("batch_size", int, 200, "The number of sequences contained in a m
 
 def do_eval(args):
     dataset = reader.Dataset(args)
-    print('dataset loaded')
 
     test_program = fluid.Program()
     with fluid.program_guard(test_program, fluid.default_startup_program()):
@@ -41,7 +39,6 @@ def do_eval(args):
             test_ret = nets.create_model(
                 args, dataset.vocab_size, dataset.num_labels, mode='test')
     test_program = test_program.clone(for_test=True)
-    print('program created')
 
     # init executor
     if args.use_cuda:
@@ -49,14 +46,12 @@ def do_eval(args):
     else:
         place = fluid.CPUPlace()
 
-    print('place created')
     pyreader = fluid.io.PyReader(
         feed_list=[test_ret['words'], test_ret['targets']],
         capacity=10,
         iterable=True,
         return_list=False
     )
-    print('pyreader created')
     pyreader.decorate_sample_list_generator(
         paddle.batch(
             dataset.file_reader(args.test_data, mode='test'),
@@ -65,14 +60,10 @@ def do_eval(args):
         places=place
     )
 
-    print('program startup')
-
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    print('program loading')
     # load model
-
     utils.init_checkpoint(exe, args.init_checkpoint+'.pdckpt', test_program)
     test_process(exe=exe,
                  program=test_program,
@@ -91,7 +82,7 @@ def test_process(exe, program, reader, test_ret):
     test_ret["chunk_evaluator"].reset()
 
     start_time = time.time()
-    for data in tqdm(reader()):
+    for data in reader():
 
         nums_infer, nums_label, nums_correct = exe.run(program,
                                 fetch_list=[

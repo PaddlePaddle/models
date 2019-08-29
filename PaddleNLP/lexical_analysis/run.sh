@@ -2,22 +2,20 @@
 export FLAGS_fraction_of_gpu_memory_to_use=0.02
 export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fast_eager_deletion_mode=1
-export CUDA_VISIBLE_DEVICES=0     #   which GPU to use
+export CUDA_VISIBLE_DEVICES=0,1,2,3     #   which GPU to use
 
-#alias python='./anaconda2/bin/python'
-source ~/huangdingbang/.bash_fluid
 function run_train() {
     echo "training"
-    fluid train.py \
+    python train.py \
         --train_data ./data/train.tsv \
         --test_data ./data/test.tsv \
         --model_save_dir ./models \
-        --valid_model_per_batches 1000 \
-        --save_model_per_batches 20000 \
-        --print_step 100 \
+        --validation_steps 2000 \
+        --save_steps 10000 \
+        --print_steps 500 \
         --batch_size 300 \
         --epoch 10 \
-        --traindata_shuffle_buffer 200000 \
+        --traindata_shuffle_buffer 150000 \
         --word_emb_dim 128 \
         --grnn_hidden_dim 128 \
         --bigru_num 2 \
@@ -35,20 +33,20 @@ function run_train() {
 function run_train_single_gpu() {
     echo "single gpu training"              # which GPU to use
     export CUDA_VISIBLE_DEVICES=0
-    fluid train.py \
+    python train.py \
         --use_cuda true
 }
 
 function run_train_multi_gpu() {
     echo "multi gpu training"
     export CUDA_VISIBLE_DEVICES=0,1,2,3     # which GPU to use
-    fluid train.py \
+    python train.py \
         --use_cuda true
 }
 
 function run_train_multi_cpu() {
     echo "multi cpu training"
-    fluid train.py \
+    python train.py \
         --use_cuda false \
         --cpu_num 10         #cpu_num works only when use_cuda=false
 }
@@ -56,7 +54,7 @@ function run_train_multi_cpu() {
 function run_eval() {
     echo "evaluating"
     echo "this may cost about 5 minutes if run on you CPU machine"
-    fluid eval.py \
+    python eval.py \
         --batch_size 200 \
         --word_emb_dim 128 \
         --grnn_hidden_dim 128 \
@@ -72,7 +70,7 @@ function run_eval() {
 
 function run_infer() {
     echo "infering"
-    fluid predict.py \
+    python predict.py \
         --batch_size 200 \
         --word_emb_dim 128 \
         --grnn_hidden_dim 128 \
@@ -88,7 +86,7 @@ function run_infer() {
 
 function run_inference() {
     echo "inference model"
-    fluid inference_model.py \
+    python inference_model.py \
         --word_emb_dim 128 \
         --grnn_hidden_dim 128 \
         --bigru_num 2 \

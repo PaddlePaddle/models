@@ -11,13 +11,12 @@ export NCCL_IB_GID_INDEX=3
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 ERNIE_PRETRAINED_MODEL_PATH=./pretrained/
-ERNIE_FINETUNED_MODEL_PATH=./ernie_models/step_10
+ERNIE_FINETUNED_MODEL_PATH=./model_finetuned
 DATA_PATH=./data/
-source /home/work/huangdingbang/.bash_fluid
 # train
 function run_train() {
     echo "training"
-    fluid run_ernie_sequence_labeling.py \
+    python run_ernie_sequence_labeling.py \
         --mode train \
         --ernie_config_path "${ERNIE_PRETRAINED_MODEL_PATH}/ernie_config.json" \
         --model_save_dir "./ernie_models" \
@@ -34,8 +33,8 @@ function run_train() {
         --random_seed 0 \
         --num_labels 57 \
         --max_seq_len 128 \
-        --train_data "${DATA_PATH}/train2.tsv" \
-        --test_data "${DATA_PATH}/test2.tsv" \
+        --train_data "${DATA_PATH}/train.tsv" \
+        --test_data "${DATA_PATH}/test.tsv" \
         --label_map_config "./conf/label_map.json" \
         --do_lower_case true \
         --use_cuda false \
@@ -45,7 +44,7 @@ function run_train() {
 function run_train_single_gpu() {
     echo "single gpu training"              # which GPU to use
     export CUDA_VISIBLE_DEVICES=0
-    fluid train.py \
+    python run_ernie_sequence_labeling.py \
         --mode train \
         --ernie_config_path "${ERNIE_PRETRAINED_MODEL_PATH}/ernie_config.json" \
         --init_pretraining_params "${ERNIE_PRETRAINED_MODEL_PATH}/params/" \
@@ -56,7 +55,7 @@ function run_train_single_gpu() {
 
 function run_train_multi_cpu() {
     echo "multi cpu training"
-    fluid train.py \
+    python run_ernie_sequence_labeling.py \
         --mode train \
         --ernie_config_path "${ERNIE_PRETRAINED_MODEL_PATH}/ernie_config.json" \
         --init_pretraining_params "${ERNIE_PRETRAINED_MODEL_PATH}/params/" \
@@ -68,7 +67,7 @@ function run_train_multi_cpu() {
 
 function run_eval() {
     echo "evaluating"
-    fluid run_ernie_sequence_labeling.py \
+    python run_ernie_sequence_labeling.py \
         --mode eval \
         --ernie_config_path "${ERNIE_PRETRAINED_MODEL_PATH}/ernie_config.json" \
         --init_checkpoint "${ERNIE_FINETUNED_MODEL_PATH}" \
@@ -78,16 +77,16 @@ function run_eval() {
         --random_seed 0 \
         --num_labels 57 \
         --max_seq_len 128 \
-        --test_data "${DATA_PATH}/test2.tsv" \
+        --test_data "${DATA_PATH}/test.tsv" \
         --label_map_config "./conf/label_map.json" \
         --do_lower_case true \
-        --use_cuda true
+        --use_cuda false
 
 }
 
 function run_infer() {
     echo "infering"
-    fluid run_ernie_sequence_labeling.py \
+    python run_ernie_sequence_labeling.py \
         --mode infer \
         --ernie_config_path "${ERNIE_PRETRAINED_MODEL_PATH}/ernie_config.json" \
         --init_checkpoint "${ERNIE_FINETUNED_MODEL_PATH}" \
@@ -97,10 +96,10 @@ function run_infer() {
         --random_seed 0 \
         --num_labels 57 \
         --max_seq_len 128 \
-        --test_data "${DATA_PATH}/test2.tsv" \
+        --test_data "${DATA_PATH}/test.tsv" \
         --label_map_config "./conf/label_map.json" \
         --do_lower_case true \
-        --use_cuda true
+        --use_cuda false
 
 }
 
