@@ -23,6 +23,21 @@ import sys
 import functools
 import math
 
+
+def set_paddle_flags(flags):
+    for key, value in flags.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect. 
+set_paddle_flags({
+    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
+    'FLAGS_fraction_of_gpu_memory_to_use': 0.98
+})
+
 import argparse
 import functools
 import subprocess
@@ -89,8 +104,10 @@ def train(args):
 
     train_py_reader = b_train_out[-1]
     train_fetch_vars = b_train_out[:-1]
+
     #TODO: in fluid 1.6:
     #train_fetch_list = [var.name for var in train_fetch_vars]
+
     train_fetch_list = []
     for var in train_fetch_vars:
         var.persistable = True
@@ -136,6 +153,7 @@ def train(args):
                                                  train_fetch_vars[0])
 
     for pass_id in range(args.num_epochs):
+
         train_batch_id = 0
         test_batch_id = 0
         train_batch_time_record = []
@@ -144,6 +162,7 @@ def train(args):
         test_batch_metrics_record = []
 
         train_py_reader.start()
+
         try:
             while True:
                 t1 = time.time()
@@ -192,6 +211,7 @@ def train(args):
         test_epoch_time_avg = np.mean(np.array(test_batch_time_record))
         test_epoch_metrics_avg = np.mean(
             np.array(test_batch_metrics_record), axis=0)
+
         print_info(pass_id, 0, 0,
                    list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
                    0, "epoch")

@@ -26,7 +26,7 @@
 ## 快速开始
 
 ### 安装说明
-在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
 
 ### 数据准备
 
@@ -51,7 +51,7 @@ train/n02483708/n02483708_2436.jpeg 369
 ```
 val/ILSVRC2012_val_00000001.jpeg 65
 ```
-注意：可能需要根据本地环境调整reader.py相关路径来正确读取数据。
+注意：可能需要根据本地环境调整reader.py中相关路径来正确读取数据。
 
 ### 模型训练
 
@@ -69,7 +69,8 @@ python train.py \
        --lr=0.1
 ```
 
-Note: 当添加如step_epochs这种list的参数，需要去掉"="，如：--step_epochs 10 20 30
+注意: 当添加如step_epochs这种列表型参数，需要去掉"="，如：--step_epochs 10 20 30
+
 或通过run.sh 启动训练
 
 ```bash run.sh train 模型名```
@@ -80,18 +81,18 @@ Note: 当添加如step_epochs这种list的参数，需要去掉"="，如：--ste
 
 * **data_dir**: 数据存储路径，默认值: "./data/ILSVRC2012/"
 * **model_save_dir**: 模型存储路径，默认值: "output/"
-* **save_param**: params存储路径，默认值:"None"
+* **save_param**: params存储路径，默认值: None
 * **pretrained_model**: 加载预训练模型路径，默认值: None
-* **checkpoint**: 加载用于继续训练的检查点（指定具体模型存储路径，如"output/SE_ResNeXt50_32x4d/100/"），默认值: None
+* **checkpoint**: 加载用于继续训练的检查点（指定具体模型存储路径，如"output/AlexNet/100/"），默认值: None
 
 解决方案和超参配置：
 
-* **model**: 模型名称， 默认值: "SE_ResNeXt50_32x4d"
-* **total_images**: 图片数，ImageNet2012默认值: 1281167.
+* **model**: 模型名称， 默认值: "AlexNet"
+* **total_images**: 图片数，ImageNet2012，默认值: 1281167
 * **class_dim**: 类别数，默认值: 1000
 * **image_shape**: 图片大小，默认值: "3,224,224"
 * **num_epochs**: 训练回合数，默认值: 120
-* **batch_size**: 批大小(所有设备)，默认值: 8
+* **batch_size**: batch size大小(所有设备)，默认值: 8
 * **test_batch_size**: 测试batch大小，默认值：16
 * **lr_strategy**: 学习率变化策略，默认值: "piecewise_decay"
 * **lr**: 初始学习率，默认值: 0.1
@@ -106,10 +107,10 @@ Note: 当添加如step_epochs这种list的参数，需要去掉"="，如：--ste
 * **upper_ratio**: 数据随机裁剪处理时的upper ratio值，默认值:4./3.
 * **resize_short_size**: 指定数据处理时改变图像大小的短边值，默认值: 256
 * **crop_size**: 指定裁剪的大小，默认值:224
-* **use_mixup**: 是否对数据进行mixup处理，默认值:False
+* **use_mixup**: 是否对数据进行mixup处理，默认值: False
 * **mixup_alpha**: 指定mixup处理时的alpha值，默认值: 0.2
 * **reader_thread**: 多线程reader的线程数量，默认值: 8
-* **reader_buf_size**: 多线程reader的buf_size， 默认值:2048
+* **reader_buf_size**: 多线程reader的buf_size， 默认值: 2048
 * **interpolation**: 插值方法， 默认值：None
 * **image_mean**: 图片均值，默认值：[0.485, 0.456, 0.406]
 * **image_std**: 图片std，默认值：[0.229, 0.224, 0.225]
@@ -184,7 +185,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 
        ```python infer.py --save_inference=True```
 
-   - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
+   - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 
 
 ### AlexNet
