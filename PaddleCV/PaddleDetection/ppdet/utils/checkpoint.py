@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     'load_checkpoint',
     'load_and_fusebn',
-    'load_finetune',
+    'load_params',
     'save',
 ]
 
@@ -45,14 +45,19 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
-def load_pretrain(exe, prog, path):
+def load_params(exe, prog, path, mode='train', ignore_map={}):
     """
     Load model from the given path.
     Args:
         exe (fluid.Executor): The fluid.Executor object.
         prog (fluid.Program): load weight to which Program object.
         path (string): URL string or loca model path.
+        mode (string): train, eval and infer mode for different load methods.
+        ignore_map (bool): ignore variable to load when finetuning.
     """
+    assert mode in ['train', 'eval', 'infer'], \
+        "only train, eval and infer mode is supported"
+
     if is_url(path):
         path = get_weights_path(path)
 
@@ -60,44 +65,28 @@ def load_pretrain(exe, prog, path):
         raise ValueError("Model pretrain path {} does not "
                          "exists.".format(path))
 
-    logger.info('Loading pretrained model from {}...'.format(path))
+    is_finetune = len(ignore_map.items()) > 0
+    if mode == 'train':
+        logger.info('Loading pretrained model for training from {}...'.format(
+            path))
+        if is_finetune:
+            logger.info(
+                'Finetune mode and weights related to class_num are ignored')
+    else:
+        logger.info('Loading parameters for {} from {}...'.format(mode, path))
 
     def _if_exist(var):
-        b = os.path.exists(os.path.join(path, var.name))
-        if b:
-            logger.debug('load weight {}'.format(var.name))
-        return b
-
-    fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
-
-
-def load_finetune(exe, prog, path):
-    """
-    Load model from the given path.
-    Args:
-        exe (fluid.Executor): The fluid.Executor object.
-        prog (fluid.Program): load weight to which Program object.
-        path (string): URL string or loca model path.
-    """
-    if is_url(path):
-        path = get_weights_path(path)
-
-    if not os.path.exists(path):
-        raise ValueError("Model pretrain path {} does not "
-                         "exists.".format(path))
-
-    logger.info('Loading pretrained model from {}...'.format(path))
-
-    def _if_exist(var):
-        do_ignore = []
-        if finetune:
+        do_ignore = False
+        if mode == 'train' and is_finetune:
             # Parameter related to class_num should be ignored in finetuning
-            ignore_name_list = [
-                'yolo_output', 'cls_score', 'bbox_pred', 'mask_fcn_logits',
-                'conv2d_', 'retnet_cls_pred_fpn'
+            do_ignore_list = [
+                name in var.name for name in ignore_map.values()[0]
             ]
-            do_ignore = [name in var.name for name in ignore_name_list]
-        b = os.path.exists(os.path.join(path, var.name)) and not any(do_ignore)
+            do_ignore = any(do_ignore_list)
+            if do_ignore:
+                logger.info('When finetuning for {} architecture, ignore {}'.
+                            format(ignore_map.keys()[0], var.name))
+        b = os.path.exists(os.path.join(path, var.name)) and not do_ignore
         if b:
             logger.debug('load weight {}'.format(var.name))
         return b
@@ -155,7 +144,7 @@ def save(exe, prog, path):
     fluid.io.save_persistables(exe, path, prog)
 
 
-def load_and_fusebn(exe, prog, path):
+def load_and_fusebn(exe, prog, path, ignore_map={}):
     """
     Fuse params of batch norm to scale and bias.
 
@@ -164,7 +153,12 @@ def load_and_fusebn(exe, prog, path):
         prog (fluid.Program): save weight from which Program object.
         path (string): the path to save model.
     """
+    is_finetune = len(ignore_map.items()) > 0
     logger.info('Load model and fuse batch norm from {}...'.format(path))
+    if is_finetune:
+        logger.info(
+            'Finetune mode and weights related to class_num are ignored')
+
     if is_url(path):
         path = get_weights_path(path)
 
@@ -172,13 +166,18 @@ def load_and_fusebn(exe, prog, path):
         raise ValueError("Model path {} does not exists.".format(path))
 
     def _if_exist(var):
-        # Parameter related to class_num should be ignored in finetuning
-        ignore_name_list = [
-            'yolo_output', 'cls_score', 'bbox_pred', 'mask_fcn_logits',
-            'conv2d_', 'retnet_cls_pred_fpn'
-        ]
-        do_ignore = [name in var.name for name in ignore_name_list]
-        b = os.path.exists(os.path.join(path, var.name)) and not any(do_ignore)
+        do_ignore = False
+        if is_finetune:
+            # Parameter related to class_num should be ignored in finetuning
+            do_ignore_list = [
+                name in var.name for name in ignore_map.values()[0]
+            ]
+            do_ignore = any(do_ignore_list)
+            if do_ignore:
+                logger.info('When finetuning for {} architecture, ignore {}'.
+                            format(ignore_map.keys()[0], var.name))
+        b = os.path.exists(os.path.join(path, var.name)) and not do_ignore
+
         if b:
             logger.debug('load weight {}'.format(var.name))
         return b

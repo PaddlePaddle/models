@@ -22,10 +22,12 @@ import glob
 import numpy as np
 from PIL import Image
 
+
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
+
 
 # NOTE(paddle-dev): All of these flags should be set before
 # `import paddle`. Otherwise, it would not take any effect.
@@ -174,7 +176,7 @@ def main():
 
     exe.run(startup_prog)
     if cfg.weights:
-        checkpoint.load_checkpoint(exe, infer_prog, cfg.weights)
+        checkpoint.load_params(exe, infer_prog, cfg.weights, mode='infer')
 
     if FLAGS.save_inference_model:
         save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)

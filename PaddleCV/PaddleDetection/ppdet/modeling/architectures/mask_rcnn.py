@@ -133,7 +133,8 @@ class MaskRCNN(object):
 
         else:
             if self.rpn_only:
-                im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
+                im_scale = fluid.layers.slice(
+                    im_info, [1], starts=[2], ends=[3])
                 im_scale = fluid.layers.sequence_expand(im_scale, rois)
                 rois = rois / im_scale
                 return {'proposal': rois}
@@ -192,3 +193,6 @@ class MaskRCNN(object):
 
     def test(self, feed_vars):
         return self.build(feed_vars, 'test')
+
+    def ignore_map(self):
+        return {'MaskRCNN': ['cls_score', 'bbox_pred', 'mask_fcn_logits']}

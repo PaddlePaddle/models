@@ -151,15 +151,20 @@ def main():
 
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
+
+    ignore_map = {}
+    if FLAGS.finetune:
+        ignore_map = model.ignore_map()
+
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
-    elif FLAGS.fintune:
-        checkpoint.load_finetune(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights and fuse_bn:
-        checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
+        checkpoint.load_and_fusebn(
+            exe, train_prog, cfg.pretrain_weights, ignore_map=ignore_map)
     elif cfg.pretrain_weights:
-        checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
+        checkpoint.load_params(
+            exe, train_prog, cfg.pretrain_weights, ignore_map=ignore_map)
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False

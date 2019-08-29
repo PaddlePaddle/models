@@ -91,7 +91,6 @@ class CascadeRCNN(object):
 
         # backbone
         body_feats = self.backbone(im)
-        # body_feat_names = list(body_feats.keys())
 
         # FPN
         if self.fpn is not None:
@@ -186,3 +185,6 @@ class CascadeRCNN(object):
 
     def test(self, feed_vars):
         return self.build(feed_vars, 'test')
+
+    def ignore_map(self):
+        return {'CascadeRCNN': ['cls_score', 'bbox_pred']}

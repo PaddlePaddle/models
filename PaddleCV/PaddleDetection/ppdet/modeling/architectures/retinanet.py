@@ -76,3 +76,6 @@ class RetinaNet(object):
 
     def test(self, feed_vars):
         return self.build(feed_vars, 'test')
+
+    def ignore_map(self):
+        return {'RetinaNet': ['retnet_cls_pred_fpn']}
