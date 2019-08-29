@@ -104,38 +104,39 @@ def ops_of_inverted_residual_unit(in_c,
             # depthwise
             for k in kernels:
                 op_params.append(('conv', 0, 0, 1, c * t, in_shape, in_shape,
-                                  c * t, c * t, k, (int(k - 1) / 2), s, 1))
-            op_params.append(('batch_norm', 'None', 1, c * t, in_shape / s,
-                              in_shape / s))
-            op_params.append(('activation', 'relu6', 1, c * t, in_shape / s,
-                              in_shape / s))
+                                  c * t, c * t, k, int(int(k - 1) / 2), s, 1))
+            op_params.append(('batch_norm', 'None', 1, c * t, int(in_shape / s),
+                              int(in_shape / s)))
+            op_params.append(('activation', 'relu6', 1, c * t,
+                              int(in_shape / s), int(in_shape / s)))
 
             # shrink
             for out_c in num_filters:
-                op_params.append(('conv', 0, 0, 1, c * t, in_shape / s,
-                                  in_shape / s, out_c, 1, 1, 0, 1, 1))
-                op_params.append(('batch_norm', 'None', 1, out_c, in_shape / s,
-                                  in_shape / s))
+                op_params.append(('conv', 0, 0, 1, c * t, int(in_shape / s),
+                                  int(in_shape / s), out_c, 1, 1, 0, 1, 1))
+                op_params.append(('batch_norm', 'None', 1, out_c,
+                                  int(in_shape / s), int(in_shape / s)))
 
                 # shortcut
                 if ifshortcut:
-                    op_params.append(('eltwise', 2, 1, out_c, in_shape / s,
-                                      in_shape / s))
+                    op_params.append(('eltwise', 2, 1, out_c, int(in_shape / s),
+                                      int(in_shape / s)))
                 if ifse:
-                    op_params.append(('pooling', 1, 1, out_c, in_shape / s,
-                                      in_shape / s, 0, 0, 1, 0, 3))
-                    op_params.append(('conv', 1, 0, 1, out_c, 1, 1, out_c / 4,
-                                      1, 1, 0, 1, 1))
-                    op_params.append(('eltwise', 2, 1, out_c / 4, 1, 1))
-                    op_params.append(('activation', 'relu', 1, out_c / 4, 1, 1))
-                    op_params.append(('conv', 1, 0, 1, out_c / 4, 1, 1, out_c,
-                                      1, 1, 0, 1, 1))
+                    op_params.append(('pooling', 1, 1, out_c, int(in_shape / s),
+                                      int(in_shape / s), 0, 0, 1, 0, 3))
+                    op_params.append(('conv', 1, 0, 1, out_c, 1, 1,
+                                      int(out_c / 4), 1, 1, 0, 1, 1))
+                    op_params.append(('eltwise', 2, 1, int(out_c / 4), 1, 1))
+                    op_params.append(
+                        ('activation', 'relu', 1, int(out_c / 4), 1, 1))
+                    op_params.append(('conv', 1, 0, 1, int(out_c / 4), 1, 1,
+                                      out_c, 1, 1, 0, 1, 1))
                     op_params.append(('eltwise', 2, 1, out_c, 1, 1))
                     op_params.append(('activation', 'sigmoid', 1, out_c, 1, 1))
-                    op_params.append(('eltwise', 1, 1, out_c, in_shape / s,
-                                      in_shape / s))
+                    op_params.append(('eltwise', 1, 1, out_c, int(in_shape / s),
+                                      int(in_shape / s)))
                     op_params.append(('activation', 'relu', 1, out_c,
-                                      in_shape / s, in_shape / s))
+                                      int(in_shape / s), int(in_shape / s)))
 
     return op_params
 
@@ -153,13 +154,13 @@ def get_all_ops(ifshortcut=True, ifse=True, strides=[1, 2, 2, 2, 1, 2, 1]):
     # conv1_1
     op_params.append(('conv', 0, 0, 1, image_shape[0], image_shape[1],
                       image_shape[2], 32, 1, 3, 1, 2, 1))
-    op_params.append(('batch_norm', 'None', 1, 32, image_shape[1] / 2,
-                      image_shape[2] / 2))
-    op_params.append(('activation', 'relu6', 1, 32, image_shape[1] / 2,
-                      image_shape[2] / 2))
+    op_params.append(('batch_norm', 'None', 1, 32, int(image_shape[1] / 2),
+                      int(image_shape[2] / 2)))
+    op_params.append(('activation', 'relu6', 1, 32, int(image_shape[1] / 2),
+                      int(image_shape[2] / 2)))
 
     # bottlenecks, TODO: different h and w for images
-    in_c, in_shape = [32], image_shape[1] / 2
+    in_c, in_shape = [32], int(image_shape[1] / 2)
     for i in range(len(NAS_FILTER_SIZE) + 2):
         if i == 0:
             expansion, kernels, num_filters, s = [1], [3], [16], strides[i]
@@ -176,7 +177,7 @@ def get_all_ops(ifshortcut=True, ifse=True, strides=[1, 2, 2, 2, 1, 2, 1]):
             in_c, in_shape, expansion, kernels, num_filters, s, False, ifse)
         op_params = op_params + tmp_ops
 
-        in_c, in_shape = num_filters, in_shape / s
+        in_c, in_shape = num_filters, int(in_shape / s)
 
         # repeated block: possibly more ops, but it is ok
         tmp_ops = ops_of_inverted_residual_unit(in_c, in_shape, expansion,
