@@ -6,9 +6,9 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 
 |模型|Precision|Recall|F1-score|
 |:-:|:-:|:-:|:-:|
-|Lexical Analysis|88.0%|88.7%|88.4%|
+|Lexical Analysis|87.7%|88.5%|88.1%|
 |BERT finetuned|90.2%|90.4%|90.3%|
-|ERNIE finetuned|92.0%|92.0%|92.0%|
+|ERNIE finetuned|91.7%|91.7%|91.7%|
 
 ## 2. 快速开始
 
@@ -16,7 +16,7 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 
 #### 1.PaddlePaddle 安装
 
-本项目依赖 PaddlePaddle 1.3.2 及以上版本，安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)。
+本项目依赖 PaddlePaddle 1.4.0 及以上版本和PaddleHub 1.0.0及以上版本 ，PaddlePaddle安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)，PaddleHub安装参考 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)。
 
 > Warning: GPU 和 CPU 版本的 PaddlePaddle 分别是 paddlepaddle-gpu 和 paddlepaddle，请安装时注意区别。
 
@@ -27,13 +27,25 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
  cd models/PaddleNLP/lexical_analysis
 ```
 ### 数据准备
+
+#### 1. 快速下载
+
+本项目涉及的**数据集**和**预训练模型**的数据可通过执行以下脚本进行快速下载，若仅需使用部分数据，可根据需要参照下列介绍进行部分下载
+
+```bash
+sh download.sh
+```
+
+#### 2. 训练数据集
+
 下载数据集文件，解压后会生成 `./data/` 文件夹
 ```bash
 wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-dataset-1.0.0.tar.gz
 tar xvf lexical_analysis-dataset-1.0.0.tar.gz
 ```
 
-### 模型下载
+#### 3. 预训练模型
+
 我们开源了在自建数据集上训练的词法分析模型，可供用户直接使用，这里提供两种下载方式：
 
 方式一：基于 PaddleHub 命令行工具，PaddleHub 的安装参考 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
@@ -58,7 +70,7 @@ wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis_fin
 tar xvf lexical_analysis_finetuned-1.0.0.tar.gz
 ```
 
-注：下载 ERNIE 开放的模型请参考 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)，下载后可放在 `./pretrained/` 目录下。
+注：另需自行进行ERNIE Finetune训练的，需自行下载 ERNIE 开放的模型，请参考 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)，下载后可放在 `./pretrained/` 目录下。
 
 ### 模型评估
 我们基于自建的数据集训练了一个词法分析的模型，可以直接用这个模型对测试集 `./data/test.tsv` 进行验证，
@@ -71,16 +83,31 @@ sh run_ernie.sh eval
 ```
 
 ### 模型训练
-基于示例的数据集，可以运行下面的命令，在训练集 `./data/train.tsv` 上进行训练
+基于示例的数据集，可通过下面的命令，在训练集 `./data/train.tsv` 上进行训练，示例包含程序在单机单卡/多卡，以及CPU多线程的运行设置
 ```bash
-# baseline model
-sh run.sh train
+# baseline model, using single GPU
+sh run.sh train_single_gpu
+
+# baseline model, using multi GPU
+sh run.sh train_multi_gpu
+
+# baseline model, using multi CPU
+sh run.sh train_multi_cpu
 
 # ERNIE finetuned model
 sh run_ernie.sh train
+
+# baseline model, using single GPU
+sh run_ernie.sh train_single_gpu
+
+# baseline model, using multi CPU
+sh run_ernie.sh train_multi_cpu
 ```
 
+注：基于ERNIE 的序列标注模型暂不支持多GPU
+
 ### 模型预测
+
 加载已有的模型，对未知的数据进行预测
 ```bash
 # baseline model
@@ -89,6 +116,19 @@ sh run.sh infer
 # ERNIE finetuned model
 sh run_ernie.sh infer
 ```
+
+### 模型保存
+
+将预训练好的模型转换为部署和预测用的模型
+
+```bash
+# baseline model
+python inference_model.py \
+		--init_checkpoint ./model_baseline \
+		--inference_save_dir ./inference_model
+```
+
+
 
 ## 3. 进阶使用
 
@@ -141,14 +181,19 @@ sh run_ernie.sh infer
 ```text
 .
 ├── README.md                           # 本文档
-├── conf/                               # 词典目录
+├── conf/                               # 词典及程序默认配置的目录
+├── compare.py                          # 执行LAC与其他开源分词的对比脚本
+├── creator.py                          # 执行创建网络和数据读取器的脚本
 ├── data/                               # 存放数据集的目录
 ├── downloads.sh                        # 用于下载数据和模型的脚本
+├── eval.py                             # 词法分析评估的脚本
+├── inference_model.py                  # 执行保存inference_model的脚本，用于准备上线部署环境
 ├── gru-crf-model.png                   # README 用到的模型图片
+├── predict.py                          # 执行预测功能的脚本
 ├── reader.py                           # 文件读取相关函数
 ├── run_ernie_sequence_labeling.py      # 用于 finetune ERNIE 的代码
 ├── run_ernie.sh                        # 启用上面代码的脚本
-├── run_sequence_labeling.py            # 词法分析任务代码
+├── train.py                            # 词法分析训练脚本
 ├── run.sh                              # 启用上面代码的脚本
 └── utils.py                            # 常用工具函数
 ```
