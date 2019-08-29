@@ -81,7 +81,7 @@ def main():
     ops = get_all_ops()
     fid = open(args.latency_lookup_table_path, 'w')
     for op in ops:
-        op = map(str, op)
+        op = [str(item) for item in op]
         latency = get_op_latency(
             op[:1] + [str(args.threads), str(args.test_iter)] + op[1:],
             args.platform)
