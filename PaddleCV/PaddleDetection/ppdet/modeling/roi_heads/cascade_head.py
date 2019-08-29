@@ -152,6 +152,9 @@ class CascadeBBoxHead(object):
             im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the
                 number of input images, each element consists
                 of im_height, im_width, im_scale.
+            im_shape (Variable): Actual shape of original image with shape
+                [B, 3]. B is the number of images, each element consists of
+                original_height, original_width, 1
             rois_feat_list (List): RoI feature from RoIExtractor.
             rcnn_pred_list (Variable): Cascade rcnn's head's output
                 including bbox_pred and cls_score
