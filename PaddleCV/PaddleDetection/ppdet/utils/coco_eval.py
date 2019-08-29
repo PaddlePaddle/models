@@ -25,7 +25,7 @@ matplotlib.use('Agg')
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
-from .eval_helper import bbox2out, mask2out, proposal2out
+from .eval2out_utils import bbox2out, mask2out, proposal2out
 
 import logging
 logger = logging.getLogger(__name__)

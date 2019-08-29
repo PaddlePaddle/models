@@ -23,7 +23,7 @@ import numpy as np
 
 from ..data.source.voc_loader import pascalvoc_label
 from .map_utils import DetectionMAP
-from .eval_helper import bbox2out
+from .eval2out_utils import bbox2out
 
 import logging
 logger = logging.getLogger(__name__)
