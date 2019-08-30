@@ -26,12 +26,13 @@ from collections import deque
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
         if os.environ.get(key, None) is None:
-            os.environ[key] = str(value)
+            os.environ["FLAGS_" + key] = str(value)
 
 # NOTE(paddle-dev): All of these flags should be set before
 # `import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
-    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
+    eager_delete_tensor_gb=0,  # enable GC to save memory
+    fraction_of_gpu_memory_to_use=.98   # the magic number!
 )
 
 from paddle import fluid
