@@ -68,6 +68,7 @@ add_arg('memory_optimize',      bool,   True,   "Using memory optimizer.")
 add_arg('norm_type',            str,    'bn',   "Normalization type, should be 'bn' or 'gn'.")
 add_arg('profile',              bool,    False, "Enable profiler.")
 add_arg('use_py_reader',        bool,    True,  "Use py reader.")
+add_arg('use_multiprocessing',  bool,    False, "Use multiprocessing.")
 add_arg("num_workers",          int,     8,     "The number of python processes used to read and preprocess data.")
 parser.add_argument(
     '--enable_ce',
@@ -227,7 +228,7 @@ if args.use_py_reader:
         batches = dataset.get_batch_generator(
             batch_size // fluid.core.get_cuda_device_count(),
             total_step * fluid.core.get_cuda_device_count(),
-            use_multiprocessing=True, num_workers=args.num_workers)
+            use_multiprocessing=args.use_multiprocessing, num_workers=args.num_workers)
         for b in batches:
             yield b[0], b[1]
     py_reader.decorate_tensor_provider(data_gen)

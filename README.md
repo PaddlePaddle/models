@@ -346,9 +346,9 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | 模型名称                                                     | 模型简介                                                     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [DeepASR](https://github.com/PaddlePaddle/models/blob/develop/PaddleSpeech/DeepASR/README_cn.md) | 利用Fluid框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器 |
-| [DQN](https://github.com/PaddlePaddle/models/blob/develop/PaddleRL/DeepQNetwork/README_cn.md) | value   based强化学习算法，第一个成功地将深度学习和强化学习结合起来的模型 |
-| [DoubleDQN](https://github.com/PaddlePaddle/models/blob/develop/PaddleRL/DeepQNetwork/README_cn.md) | 将Double Q的想法应用在DQN上，解决过优化问题                  |
-| [DuelingDQN](https://github.com/PaddlePaddle/models/blob/develop/PaddleRL/DeepQNetwork/README_cn.md) | 改进了DQN模型，提高了模型的性能                              |
+| [DQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | value   based强化学习算法，第一个成功地将深度学习和强化学习结合起来的模型 |
+| [DoubleDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 将Double Q的想法应用在DQN上，解决过优化问题                  |
+| [DuelingDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 改进了DQN模型，提高了模型的性能                              |
 
 ## License
 This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).
