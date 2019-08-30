@@ -28,8 +28,7 @@ def set_paddle_flags(**kwargs):
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
 
-
-# NOTE(paddle-dev): All of these flags should be set before 
+# NOTE(paddle-dev): All of these flags should be set before
 # `import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
     FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
@@ -54,6 +53,14 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    env = os.environ
+    FLAGS.dist = 'PADDLE_TRAINER_ID' in env and 'PADDLE_TRAINERS_NUM' in env
+    if FLAGS.dist:
+        import random
+        local_seed = (99 + int(env['PADDLE_TRAINER_ID']))
+        random.seed(local_seed)
+        np.random.seed(local_seed)
+
     cfg = load_config(FLAGS.config)
     if 'architecture' in cfg:
         main_arch = cfg.architecture
@@ -83,7 +90,11 @@ def main():
         else:
             eval_feed = create(cfg.eval_feed)
 
-    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
+    if 'FLAGS_selected_gpus' in env:
+        device_id = int(env['FLAGS_selected_gpus'])
+    else:
+        device_id = 0
+    place = fluid.CUDAPlace(device_id)
     exe = fluid.Executor(place)
 
     lr_builder = create('LearningRate')
@@ -136,14 +147,41 @@ def main():
     build_strategy.enable_inplace = False
     sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     # only enable sync_bn in multi GPU devices
-    build_strategy.sync_batch_norm = sync_bn and devices_num > 1 and cfg.use_gpu
-    train_compile_program = fluid.compiler.CompiledProgram(
-        train_prog).with_data_parallel(
-            loss_name=loss.name, build_strategy=build_strategy)
+    build_strategy.sync_batch_norm = sync_bn and devices_num > 1 \
+        and cfg.use_gpu
+
+    if FLAGS.dist:
+        trainer_id = int(env['PADDLE_TRAINER_ID'])
+        trainers = env['PADDLE_TRAINER_ENDPOINTS']
+        current_endpoint = env['PADDLE_CURRENT_ENDPOINT']
+        num_trainers = int(env['PADDLE_TRAINERS_NUM'])
+
+        config = fluid.DistributeTranspilerConfig()
+        config.mode = "nccl2"
+        t = fluid.DistributeTranspiler(config=config)
+        t.transpile(trainer_id, trainers=trainers,
+                    startup_program=startup_prog,
+                    current_endpoint=current_endpoint)
+
+        exe.run(startup_prog)
+
+        pe = fluid.ParallelExecutor(
+            use_cuda=True,
+            main_program=train_prog,
+            loss_name=loss.name,
+            num_trainers=num_trainers,
+            trainer_id=trainer_id)
+
+    else:
+        exe.run(startup_prog)
+        pe = fluid.ParallelExecutor(
+            main_program=train_prog,
+            use_cuda=True,
+            loss_name=loss.name,
+            build_strategy=build_strategy)
+
     if FLAGS.eval:
         eval_compile_program = fluid.compiler.CompiledProgram(eval_prog)
-
-    exe.run(startup_prog)
 
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
