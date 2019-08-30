@@ -58,6 +58,8 @@ def build_source(config):
                 source_type = 'ClassAwareSamplingRoiDbSource'
             else:
                 source_type = 'RoiDbSource'
+            if 'class_aware_sampling' in args:
+                del args['class_aware_sampling']
         else:
             source_type = data_cf['type']
         del args['type']
