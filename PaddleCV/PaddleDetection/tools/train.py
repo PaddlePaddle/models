@@ -127,12 +127,9 @@ def main():
         if cfg.metric == 'COCO':
             extra_keys = ['im_info', 'im_id', 'im_shape']
         if cfg.metric == 'VOC':
-            extra_keys = ['is_difficult']
+            extra_keys = ['gt_box', 'gt_label', 'is_difficult']
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
-        if cfg.metric == 'VOC':
-            eval_keys += ['gt_box', 'gt_label']
-            eval_values += ['gt_box', 'gt_label']
 
     # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
