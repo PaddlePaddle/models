@@ -39,6 +39,7 @@ add_arg('dataset_path',         str,    None,   "Cityscape dataset path.")
 add_arg('use_gpu',              bool,   True,   "Whether use GPU or CPU.")
 add_arg('num_classes',          int,    19,     "Number of classes.")
 add_arg('use_py_reader',        bool,   True,   "Use py_reader.")
+add_arg('use_multiprocessing',  bool,   False, "Use multiprocessing.")
 add_arg('norm_type',            str,    'bn',   "Normalization type, should be 'bn' or 'gn'.")
 #yapf: enable
 
@@ -124,7 +125,7 @@ if args.total_step == -1:
 else:
     total_step = args.total_step
 
-batches = dataset.get_batch_generator(batch_size, total_step)
+batches = dataset.get_batch_generator(batch_size, total_step, use_multiprocessing=args.use_multiprocessing)
 if args.use_py_reader:
     py_reader.decorate_tensor_provider(lambda :[ (yield b[0],b[1]) for b in batches])
     py_reader.start()
