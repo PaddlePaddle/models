@@ -12,7 +12,7 @@ DeepLab运行本目录下的程序示例需要使用PaddlePaddle Fluid v1.3.0版
 ## 简介
 
 DeepLabv3+ 是DeepLab语义分割系列网络的最新作，其前作有 DeepLabv1，DeepLabv2, DeepLabv3,
-在最新作中，DeepLab的作者通过encoder-decoder进行多尺度信息的融合，同时保留了原来的空洞卷积和ASSP层，
+在最新作中，DeepLab的作者通过encoder-decoder进行多尺度信息的融合，同时保留了原来的空洞卷积和ASPP(Atrous Spatial Pyramid Pooling)层，
 其骨干网络使用了Xception模型，提高了语义分割的健壮性和运行速率，在 PASCAL VOC 2012 dataset取得新的state-of-art performance，89.0mIOU。
 
 ![](./imgs/model.png)
