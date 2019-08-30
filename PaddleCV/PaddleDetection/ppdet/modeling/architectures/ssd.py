@@ -56,11 +56,14 @@ class SSD(object):
         if isinstance(output_decoder, dict):
             self.output_decoder = SSDOutputDecoder(**output_decoder)
 
-    def build(self, feed_vars, mode='train'):
-        im = feed_vars['image']
+    def build(self, mode='train'):
+        im = fluid.layers.data(
+            name='image', shape=[3, 300, 300], dtype='float32')
         if mode == 'train' or mode == 'eval':
-            gt_box = feed_vars['gt_box']
-            gt_label = feed_vars['gt_label']
+            gt_box = fluid.layers.data(
+                name='gt_box', shape=[4], dtype='float32', lod_level=1)
+            gt_label = fluid.layers.data(
+                name='gt_label', shape=[1], dtype='int32', lod_level=1)
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
         # cast inputs to FP16
@@ -90,14 +93,14 @@ class SSD(object):
             pred = self.output_decoder(locs, confs, box, box_var)
             return {'bbox': pred}
 
-    def train(self, feed_vars):
-        return self.build(feed_vars, 'train')
+    def train(self):
+        return self.build('train')
 
-    def eval(self, feed_vars):
-        return self.build(feed_vars, 'eval')
+    def eval(self):
+        return self.build('eval')
 
-    def test(self, feed_vars):
-        return self.build(feed_vars, 'test')
+    def test(self):
+        return self.build('test')
 
     def is_bbox_normalized(self):
         # SSD use output_decoder in output layers, bbox is normalized

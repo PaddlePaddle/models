@@ -46,13 +46,17 @@ class RetinaNet(object):
         self.fpn = fpn
         self.retina_head = retina_head
 
-    def build(self, feed_vars, mode='train'):
-        im = feed_vars['image']
-        im_info = feed_vars['im_info']
+    def build(self, mode='train'):
+        im = fluid.layers.data(
+            name='image', shape=[3, 800, 1333], dtype='float32')
+        im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
         if mode == 'train':
-            gt_box = feed_vars['gt_box']
-            gt_label = feed_vars['gt_label']
-            is_crowd = feed_vars['is_crowd']
+            gt_box = fluid.layers.data(
+                name='gt_box', shape=[4], dtype='float32', lod_level=1)
+            gt_label = fluid.layers.data(
+                name='gt_label', shape=[1], dtype='int32', lod_level=1)
+            is_crowd = fluid.layers.data(
+                name='is_crowd', shape=[1], dtype='int32', lod_level=1)
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
         # cast inputs to FP16
@@ -82,11 +86,11 @@ class RetinaNet(object):
                                                    im_info)
             return pred
 
-    def train(self, feed_vars):
-        return self.build(feed_vars, 'train')
+    def train(self):
+        return self.build('train')
 
-    def eval(self, feed_vars):
-        return self.build(feed_vars, 'test')
+    def eval(self):
+        return self.build('test')
 
-    def test(self, feed_vars):
-        return self.build(feed_vars, 'test')
+    def test(self):
+        return self.build('test')

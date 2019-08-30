@@ -62,14 +62,20 @@ class FasterRCNN(object):
         self.fpn = fpn
         self.rpn_only = rpn_only
 
-    def build(self, feed_vars, mode='train'):
-        im = feed_vars['image']
-        im_info = feed_vars['im_info']
+    def build(self, mode='train'):
+        im = fluid.layers.data(
+            name='image', shape=[3, 800, 1333], dtype='float32')
+        im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
         if mode == 'train':
-            gt_box = feed_vars['gt_box']
-            is_crowd = feed_vars['is_crowd']
+            gt_box = fluid.layers.data(
+                name='gt_box', shape=[4], dtype='float32', lod_level=1)
+            gt_label = fluid.layers.data(
+                name='gt_label', shape=[1], dtype='int32', lod_level=1)
+            is_crowd = fluid.layers.data(
+                name='is_crowd', shape=[1], dtype='int32', lod_level=1)
         else:
-            im_shape = feed_vars['im_shape']
+            im_shape = fluid.layers.data(
+                name='im_shape', shape=[3], dtype='float32')
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
 
@@ -93,14 +99,12 @@ class FasterRCNN(object):
         if mode == 'train':
             rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
             # sampled rpn proposals
-            for var in ['gt_label', 'is_crowd', 'gt_box', 'im_info']:
-                assert var in feed_vars, "{} has no {}".format(feed_vars, var)
             outs = self.bbox_assigner(
                 rpn_rois=rois,
-                gt_classes=feed_vars['gt_label'],
-                is_crowd=feed_vars['is_crowd'],
-                gt_boxes=feed_vars['gt_box'],
-                im_info=feed_vars['im_info'])
+                gt_classes=gt_label,
+                is_crowd=is_crowd,
+                gt_boxes=gt_box,
+                im_info=im_info)
 
             rois = outs[0]
             labels_int32 = outs[1]
@@ -136,11 +140,11 @@ class FasterRCNN(object):
                                                  im_shape)
             return pred
 
-    def train(self, feed_vars):
-        return self.build(feed_vars, 'train')
+    def train(self):
+        return self.build('train')
 
-    def eval(self, feed_vars):
-        return self.build(feed_vars, 'test')
+    def eval(self):
+        return self.build('test')
 
-    def test(self, feed_vars):
-        return self.build(feed_vars, 'test')
+    def test(self):
+        return self.build('test')

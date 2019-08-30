@@ -44,8 +44,9 @@ class YOLOv3(object):
         self.backbone = backbone
         self.yolo_head = yolo_head
 
-    def build(self, feed_vars, mode='train'):
-        im = feed_vars['image']
+    def build(self, mode='train'):
+        im = fluid.layers.data(
+            name='image', shape=[3, 608, 608], dtype='float32')
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
 
@@ -64,23 +65,27 @@ class YOLOv3(object):
             body_feats = [fluid.layers.cast(v, 'float32') for v in body_feats]
 
         if mode == 'train':
-            gt_box = feed_vars['gt_box']
-            gt_label = feed_vars['gt_label']
-            gt_score = feed_vars['gt_score']
+            gt_box = fluid.layers.data(
+                name='gt_box', shape=[50, 4], dtype='float32')
+            gt_label = fluid.layers.data(
+                name='gt_label', shape=[50], dtype='int32')
+            gt_score = fluid.layers.data(
+                name='gt_score', shape=[50], dtype='float32')
 
             return {
                 'loss': self.yolo_head.get_loss(body_feats, gt_box, gt_label,
                                                 gt_score)
             }
         else:
-            im_size = feed_vars['im_size']
+            im_size = fluid.layers.data(
+                name='im_size', shape=[2], dtype='int32')
             return self.yolo_head.get_prediction(body_feats, im_size)
 
-    def train(self, feed_vars):
-        return self.build(feed_vars, mode='train')
+    def train(self):
+        return self.build(mode='train')
 
-    def eval(self, feed_vars):
-        return self.build(feed_vars, mode='test')
+    def eval(self):
+        return self.build(mode='test')
 
-    def test(self, feed_vars):
-        return self.build(feed_vars, mode='test')
+    def test(self):
+        return self.build(mode='test')

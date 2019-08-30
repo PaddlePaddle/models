@@ -68,20 +68,22 @@ class MaskRCNN(object):
         self.rpn_only = rpn_only
         self.fpn = fpn
 
-    def build(self, feed_vars, mode='train'):
-        im = feed_vars['image']
-        assert mode in ['train', 'test'], \
-            "only 'train' and 'test' mode is supported"
+    def build(self, mode='train'):
+        im = fluid.layers.data(
+            name='image', shape=[3, 800, 1333], dtype='float32')
+        im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
         if mode == 'train':
-            required_fields = [
-                'gt_label', 'gt_box', 'gt_mask', 'is_crowd', 'im_info'
-            ]
+            gt_box = fluid.layers.data(
+                name='gt_box', shape=[4], dtype='float32', lod_level=1)
+            gt_label = fluid.layers.data(
+                name='gt_label', shape=[1], dtype='int32', lod_level=1)
+            gt_poly = fluid.layers.data(
+                name='gt_poly', shape=[2], dtype='float32', lod_level=3)
+            is_crowd = fluid.layers.data(
+                name='is_crowd', shape=[1], dtype='int32', lod_level=1)
         else:
-            required_fields = ['im_shape', 'im_info']
-        for var in required_fields:
-            assert var in feed_vars, \
-                "{} has no {} field".format(feed_vars, var)
-        im_info = feed_vars['im_info']
+            im_shape = fluid.layers.data(
+                name='im_shape', shape=[3], dtype='float32')
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
         # cast inputs to FP16
@@ -104,15 +106,15 @@ class MaskRCNN(object):
         rois = self.rpn_head.get_proposals(body_feats, im_info, mode=mode)
 
         if mode == 'train':
-            rpn_loss = self.rpn_head.get_loss(im_info, feed_vars['gt_box'],
-                                              feed_vars['is_crowd'])
+            rpn_loss = self.rpn_head.get_loss(im_info, gt_box,
+                                              is_crowd)
 
             outs = self.bbox_assigner(
                 rpn_rois=rois,
-                gt_classes=feed_vars['gt_label'],
-                is_crowd=feed_vars['is_crowd'],
-                gt_boxes=feed_vars['gt_box'],
-                im_info=feed_vars['im_info'])
+                gt_classes=gt_label,
+                is_crowd=is_crowd,
+                gt_boxes=gt_box,
+                im_info=im_info)
             rois = outs[0]
             labels_int32 = outs[1]
 
@@ -127,10 +129,10 @@ class MaskRCNN(object):
 
             mask_rois, roi_has_mask_int32, mask_int32 = self.mask_assigner(
                 rois=rois,
-                gt_classes=feed_vars['gt_label'],
-                is_crowd=feed_vars['is_crowd'],
-                gt_segms=feed_vars['gt_mask'],
-                im_info=feed_vars['im_info'],
+                gt_classes=gt_label,
+                is_crowd=is_crowd,
+                gt_segms=gt_poly,
+                im_info=im_info,
                 labels_int32=labels_int32)
             if self.fpn is None:
                 bbox_head_feat = self.bbox_head.get_head_feat()
@@ -160,7 +162,7 @@ class MaskRCNN(object):
                 roi_feat = self.roi_extractor(body_feats, rois, spatial_scale)
 
             bbox_pred = self.bbox_head.get_prediction(roi_feat, rois, im_info,
-                                                      feed_vars['im_shape'])
+                                                      im_shape)
             bbox_pred = bbox_pred['bbox']
 
             # share weight
@@ -200,11 +202,11 @@ class MaskRCNN(object):
                     fluid.layers.assign(input=mask_out, output=mask_pred)
             return {'bbox': bbox_pred, 'mask': mask_pred}
 
-    def train(self, feed_vars):
-        return self.build(feed_vars, 'train')
+    def train(self):
+        return self.build('train')
 
-    def eval(self, feed_vars):
-        return self.build(feed_vars, 'test')
+    def eval(self):
+        return self.build('test')
 
-    def test(self, feed_vars):
-        return self.build(feed_vars, 'test')
+    def test(self):
+        return self.build('test')

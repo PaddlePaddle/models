@@ -73,22 +73,20 @@ class CascadeRCNN(object):
         ]
         self.cascade_rcnn_loss_weight = [1.0, 0.5, 0.25]
 
-    def build(self, feed_vars, mode='train'):
-        im = feed_vars['image']
-        assert mode in ['train', 'test'], \
-            "only 'train' and 'test' mode is supported"
+    def build(self, mode='train'):
+        im = fluid.layers.data(
+            name='image', shape=[3, 800, 1333], dtype='float32')
+        im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
         if mode == 'train':
-            required_fields = ['gt_label', 'gt_box', 'is_crowd', 'im_info']
+            gt_box = fluid.layers.data(
+                name='gt_box', shape=[4], dtype='float32', lod_level=1)
+            gt_label = fluid.layers.data(
+                name='gt_label', shape=[1], dtype='int32', lod_level=1)
+            is_crowd = fluid.layers.data(
+                name='is_crowd', shape=[1], dtype='int32', lod_level=1)
         else:
-            required_fields = ['im_shape', 'im_info']
-        for var in required_fields:
-            assert var in feed_vars, \
-                "{} has no {} field".format(feed_vars, var)
-        im_info = feed_vars['im_info']
-
-        if mode == 'train':
-            gt_box = feed_vars['gt_box']
-            is_crowd = feed_vars['is_crowd']
+            im_shape = fluid.layers.data(
+                name='im_shape', shape=[3], dtype='float32')
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
         # cast inputs to FP16
@@ -138,7 +136,7 @@ class CascadeRCNN(object):
 
             if mode == 'train':
                 outs = self.bbox_assigner(
-                    input_rois=refined_bbox, feed_vars=feed_vars, curr_stage=i)
+                    refined_bbox, i, gt_box, gt_label, is_crowd, im_info)
 
                 proposals = outs[0]
                 rcnn_target_list.append(outs)
@@ -166,7 +164,7 @@ class CascadeRCNN(object):
             return loss
         else:
             pred = self.bbox_head.get_prediction(
-                im_info, feed_vars['im_shape'], roi_feat_list, rcnn_pred_list,
+                im_info, im_shape, roi_feat_list, rcnn_pred_list,
                 proposal_list, self.cascade_bbox_reg_weights,
                 self.cls_agnostic_bbox_reg)
             return pred
@@ -188,11 +186,11 @@ class CascadeRCNN(object):
 
         return refined_bbox
 
-    def train(self, feed_vars):
-        return self.build(feed_vars, 'train')
+    def train(self):
+        return self.build('train')
 
-    def eval(self, feed_vars):
-        return self.build(feed_vars, 'test')
+    def eval(self):
+        return self.build('test')
 
-    def test(self, feed_vars):
-        return self.build(feed_vars, 'test')
+    def test(self):
+        return self.build('test')

@@ -47,7 +47,8 @@ class CascadeBBoxAssigner(object):
         self.class_nums = num_classes
         self.use_random = shuffle_before_sample
 
-    def __call__(self, input_rois, feed_vars, curr_stage):
+    def __call__(self, input_rois, curr_stage, gt_box, gt_label, is_crowd,
+                 im_info):
 
         curr_bbox_reg_w = [
             1. / self.bbox_reg_weights[curr_stage],
@@ -57,10 +58,10 @@ class CascadeBBoxAssigner(object):
         ]
         outs = fluid.layers.generate_proposal_labels(
             rpn_rois=input_rois,
-            gt_classes=feed_vars['gt_label'],
-            is_crowd=feed_vars['is_crowd'],
-            gt_boxes=feed_vars['gt_box'],
-            im_info=feed_vars['im_info'],
+            gt_classes=gt_label,
+            is_crowd=is_crowd,
+            gt_boxes=gt_box,
+            im_info=im_info,
             batch_size_per_im=self.batch_size_per_im,
             fg_thresh=self.fg_thresh[curr_stage],
             bg_thresh_hi=self.bg_thresh_hi[curr_stage],
