@@ -28,8 +28,7 @@ def set_paddle_flags(**kwargs):
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
 
-
-# NOTE(paddle-dev): All of these flags should be set before 
+# NOTE(paddle-dev): All of these flags should be set before
 # `import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
     FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
@@ -83,7 +82,13 @@ def main():
         else:
             eval_feed = create(cfg.eval_feed)
 
-    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
+    env = os.environ
+    if 'FLAGS_selected_gpus' in env:
+        device_id = int(env['FLAGS_selected_gpus'])
+    else:
+        device_id = 0
+
+    place = fluid.CUDAPlace(device_id)
     exe = fluid.Executor(place)
 
     lr_builder = create('LearningRate')
@@ -142,8 +147,6 @@ def main():
             loss_name=loss.name, build_strategy=build_strategy)
     if FLAGS.eval:
         eval_compile_program = fluid.compiler.CompiledProgram(eval_prog)
-
-    exe.run(startup_prog)
 
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
@@ -222,6 +225,11 @@ if __name__ == '__main__':
         default=None,
         type=str,
         help="Checkpoint path for resuming training.")
+    parser.add_argument(
+        "--dist",
+        action='store_true',
+        default=False,
+        help="Enable distributed (multi-process) training.")
     parser.add_argument(
         "--eval",
         action='store_true',
