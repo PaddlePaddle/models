@@ -179,8 +179,7 @@ class CascadeBBoxHead(object):
         for i in range(repreat_num):
             # cls score
             if i < 2:
-                #cls_score = self._head_share(
-                cls_score, _ = get_output(
+                cls_score, _ = self.get_output(
                     roi_feat_list[-1],  # roi_feat_3
                     name='_' + str(i + 1) if i > 0 else '')
             else:
@@ -218,51 +217,6 @@ class CascadeBBoxHead(object):
 
         pred_result = self.nms(bboxes=box_out, scores=boxes_cls_prob_mean)
         return {"bbox": pred_result}
-
-
-"""
-    def _head_share(self, roi_feat, wb_scalar=2.0, name=''):
-        # FC6 FC7
-        fan = roi_feat.shape[1] * roi_feat.shape[2] * roi_feat.shape[3]
-        fc6 = fluid.layers.fc(input=roi_feat,
-                              size=self.head.mlp_dim,
-                              act='relu',
-                              name='fc6' + name,
-                              param_attr=ParamAttr(
-                                  name='fc6%s_w' % name,
-                                  initializer=Xavier(fan_out=fan),
-                                  learning_rate=wb_scalar),
-                              bias_attr=ParamAttr(
-                                  name='fc6%s_b' % name,
-                                  learning_rate=2.0,
-                                  regularizer=L2Decay(0.)))
-        fc7 = fluid.layers.fc(input=fc6,
-                              size=self.head.mlp_dim,
-                              act='relu',
-                              name='fc7' + name,
-                              param_attr=ParamAttr(
-                                  name='fc7%s_w' % name,
-                                  initializer=Xavier(),
-                                  learning_rate=wb_scalar, ),
-                              bias_attr=ParamAttr(
-                                  name='fc7%s_b' % name,
-                                  learning_rate=2.0,
-                                  regularizer=L2Decay(0.)))
-        cls_score = fluid.layers.fc(input=fc7,
-                                    size=self.num_classes,
-                                    act=None,
-                                    name='cls_score' + name,
-                                    param_attr=ParamAttr(
-                                        name='cls_score%s_w' % name,
-                                        initializer=Normal(
-                                            loc=0.0, scale=0.01),
-                                        learning_rate=wb_scalar, ),
-                                    bias_attr=ParamAttr(
-                                        name='cls_score%s_b' % name,
-                                        learning_rate=2.0,
-                                        regularizer=L2Decay(0.)))
-        return cls_score
-"""
 
 
 @register
