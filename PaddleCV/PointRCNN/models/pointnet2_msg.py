@@ -46,17 +46,14 @@ class PointNet2MSG(object):
                 "nsamples": self.cfg.RPN.SA_CONFIG.NSAMPLE[i],
                 "mlps": self.cfg.RPN.SA_CONFIG.MLPS[i],
                 })
-        print(self.SA_confs)
 
         self.FP_confs = []
         for i in range(self.cfg.RPN.FP_MLPS.__len__()):
             self.FP_confs.append({"mlp": self.cfg.RPN.FP_MLPS[i]})
-        print(self.FP_confs)
 
     def build(self, bn_momentum=0.9):
         xyzs, features = [self.xyz], [self.feature]
         for i, SA_conf in enumerate(self.SA_confs):
-            print(i, SA_conf)
             xyzi, featurei = pointnet_sa_module(
                     xyz=xyzs[i],
                     feature=features[i],
@@ -66,7 +63,6 @@ class PointNet2MSG(object):
                     **SA_conf)
             xyzs.append(xyzi)
             features.append(featurei)
-        print(features[-1])
         for i in range(-1, -(len(self.FP_confs) + 1), -1):
             features[i - 1] = pointnet_fp_module(
                     unknown=xyzs[i - 1],
