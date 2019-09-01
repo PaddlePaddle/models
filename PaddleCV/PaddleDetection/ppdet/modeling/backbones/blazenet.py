@@ -32,58 +32,104 @@ class BlazeNet(object):
     Args:
         blaze_filters (list): number of filter for each blaze block
         double_blaze_filters (list): number of filter for each double_blaze block
+        with_extra_blocks (bool): whether or not extra blocks should be added
+        is_lite (bool): whether or not is blazeface-lite
     """
 
-    def __init__(self,
-                 blaze_filters=[[24, 24],[24, 24],[24, 48, 2],[48, 48],[48, 48]],
-                 double_blaze_filters=[[48, 24, 96, 2],[96, 24, 96],[96, 24, 96],
-                                       [96, 24, 96, 2],[96, 24, 96],[96, 24, 96]],
-                 with_extra_blocks=True):
+    def __init__(
+            self,
+            blaze_filters=[[24, 24], [24, 24], [24, 48, 2], [48, 48], [48, 48]],
+            double_blaze_filters=[[48, 24, 96, 2], [96, 24, 96], [96, 24, 96],
+                                  [96, 24, 96, 2], [96, 24, 96], [96, 24, 96]],
+            with_extra_blocks=True,
+            is_lite=False):
         super(BlazeNet, self).__init__()
 
         self.blaze_filters = blaze_filters
         self.double_blaze_filters = double_blaze_filters
         self.with_extra_blocks = with_extra_blocks
+        self.is_lite = is_lite
 
     def __call__(self, input):
-        conv = input
-        # first conv
-        conv = self._conv_norm(
-            input=conv,
-            num_filters=24,
-            filter_size=3,
-            stride=2,
-            padding=1,
-            act='relu',
-            name="conv1")
+        if not self.is_lite:
+            conv = self._conv_norm(
+                input=input,
+                num_filters=24,
+                filter_size=3,
+                stride=2,
+                padding=1,
+                act='relu',
+                name="conv1")
 
-        for k, v in enumerate(self.blaze_filters):
-            assert len(v) in [2, 3], \
-                "blaze_filters {} not in [2, 3]".format(len(v))
-            if len(v) == 2:
-                conv = self.BlazeBlock(conv, v[0], v[1], name='blaze_{}'.format(k))
-            elif len(v) == 3:
-                conv = self.BlazeBlock(conv, v[0], v[1], stride=v[2], name='blaze_{}'.format(k))
+            for k, v in enumerate(self.blaze_filters):
+                assert len(v) in [2, 3], \
+                    "blaze_filters {} not in [2, 3]"
+                if len(v) == 2:
+                    conv = self.BlazeBlock(
+                        conv, v[0], v[1], name='blaze_{}'.format(k))
+                elif len(v) == 3:
+                    conv = self.BlazeBlock(
+                        conv,
+                        v[0],
+                        v[1],
+                        stride=v[2],
+                        name='blaze_{}'.format(k))
 
-        layers = []
-        for k, v in enumerate(self.double_blaze_filters):
-            assert len(v) in [3, 4], \
-                "blaze_filters {} not in [3, 4]".format(len(v))
-            if len(v) == 3:
-                conv = self.BlazeBlock(conv, v[0], v[1],
-                                       double_channels=v[2], name='double_blaze_{}'.format(k))
-            elif len(v) == 4:
-                layers.append(conv)
-                conv = self.BlazeBlock(conv, v[0], v[1], double_channels=v[2],
-                                       stride=v[3], name='double_blaze_{}'.format(k))
-        layers.append(conv)
+            layers = []
+            for k, v in enumerate(self.double_blaze_filters):
+                assert len(v) in [3, 4], \
+                    "blaze_filters {} not in [3, 4]"
+                if len(v) == 3:
+                    conv = self.BlazeBlock(
+                        conv,
+                        v[0],
+                        v[1],
+                        double_channels=v[2],
+                        name='double_blaze_{}'.format(k))
+                elif len(v) == 4:
+                    layers.append(conv)
+                    conv = self.BlazeBlock(
+                        conv,
+                        v[0],
+                        v[1],
+                        double_channels=v[2],
+                        stride=v[3],
+                        name='double_blaze_{}'.format(k))
+            layers.append(conv)
 
-        if not self.with_extra_blocks:
-            return layers[-1]
-        print("layers' length is {}".format(len(layers)))
-        print("{}:{}".format("output1", layers[-2].shape))
-        print("{}:{}".format("output2", layers[-1].shape))
-        return layers[-2], layers[-1]
+            if not self.with_extra_blocks:
+                return layers[-1]
+            print("layers' length is {}".format(len(layers)))
+            print("{}:{}".format("output1", layers[-2].shape))
+            print("{}:{}".format("output2", layers[-1].shape))
+            return layers[-2], layers[-1]
+        else:
+            conv1 = self._conv_norm(
+                input=input,
+                num_filters=24,
+                filter_size=5,
+                stride=2,
+                padding=2,
+                act='relu',
+                name="conv1")
+            conv2 = self.Blaze_lite(conv1, 24, 24, 1, 'conv2')
+            conv3 = self.Blaze_lite(conv2, 24, 28, 1, 'conv3')
+            conv4 = self.Blaze_lite(conv3, 28, 32, 2, 'conv4')
+            conv5 = self.Blaze_lite(conv4, 32, 36, 1, 'conv5')
+            conv6 = self.Blaze_lite(conv5, 36, 42, 1, 'conv6')
+            conv7 = self.Blaze_lite(conv6, 42, 48, 2, 'conv7')
+            in_ch = 48
+            for i in range(5):
+                conv7 = self.Blaze_lite(conv7, in_ch, in_ch + 8, 1,
+                                        'conv{}'.format(8 + i))
+                in_ch += 8
+            assert in_ch == 88
+            conv13 = self.Blaze_lite(conv2, 88, 96, 2, 'conv13')
+            for i in range(4):
+                conv13 = self.Blaze_lite(conv13, 96, 96, 1,
+                                         'conv{}'.format(14 + i))
+
+            return conv7, conv13
 
     def BlazeBlock(self,
                    input,
@@ -144,20 +190,57 @@ class BlazeNet(object):
                 stride=1,
                 padding=0,
                 name="shortcut" + name)
-            return fluid.layers.elementwise_add(x=channel_pad, y=conv_pw, act='relu')
+            return fluid.layers.elementwise_add(
+                x=channel_pad, y=conv_pw, act='relu')
         return fluid.layers.elementwise_add(x=input, y=conv_pw, act='relu')
 
+    def Blaze_lite(self, input, in_channels, out_channels, stride=1, name=None):
+        assert stride in [1, 2]
+        use_pool = not stride == 1
+        ues_pad = not in_channels == out_channels
+        conv_dw = self._conv_norm(
+            input=input,
+            filter_size=3,
+            num_filters=in_channels,
+            stride=stride,
+            padding=1,
+            num_groups=in_channels,
+            name=name + "_dw")
 
-    def _conv_norm(self,
-                   input,
-                   filter_size,
-                   num_filters,
-                   stride,
-                   padding,
-                   num_groups=1,
-                   act='relu',   # None
-                   use_cudnn=True,
-                   name=None):
+        conv_pw = self._conv_norm(
+            input=conv_dw,
+            filter_size=1,
+            num_filters=out_channels,
+            stride=1,
+            padding=0,
+            name=name + "_sep")
+
+        if use_pool:
+            shortcut_pool = self._pooling_block(input, stride, stride)
+        if ues_pad:
+            conv_pad = shortcut_pool if use_pool else input
+            channel_pad = self._conv_norm(
+                input=conv_pad,
+                filter_size=1,
+                num_filters=out_channels,
+                stride=1,
+                padding=0,
+                name="shortcut" + name)
+            return fluid.layers.elementwise_add(
+                x=channel_pad, y=conv_pw, act='relu')
+        return fluid.layers.elementwise_add(x=input, y=conv_pw, act='relu')
+
+    def _conv_norm(
+            self,
+            input,
+            filter_size,
+            num_filters,
+            stride,
+            padding,
+            num_groups=1,
+            act='relu',  # None
+            use_cudnn=True,
+            name=None):
         parameter_attr = ParamAttr(
             learning_rate=0.1,
             initializer=fluid.initializer.MSRA(),
@@ -175,7 +258,6 @@ class BlazeNet(object):
             bias_attr=False)
         print("{}:{}".format(name, conv.shape))
         return fluid.layers.batch_norm(input=conv, act=act)
-
 
     def _pooling_block(self,
                        conv,

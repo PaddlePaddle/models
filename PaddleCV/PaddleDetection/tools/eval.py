@@ -38,6 +38,7 @@ from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results, json_e
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
+from ppdet.utils.widerface_eval import WiderfaceEval
 from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
@@ -84,12 +85,15 @@ def main():
     eval_prog = fluid.Program()
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
-            pyreader, feed_vars = create_feed(eval_feed)
+            use_pyreader = False if cfg.metric == 'WIDERFACE' else True
+            pyreader, feed_vars = create_feed(
+                eval_feed, use_pyreader=use_pyreader)
             fetches = model.eval(feed_vars)
     eval_prog = eval_prog.clone(True)
 
     reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
-    pyreader.decorate_sample_list_generator(reader, place)
+    if not cfg.metric == 'WIDERFACE':
+        pyreader.decorate_sample_list_generator(reader, place)
 
     # eval already exists json file
     if FLAGS.json_eval:
@@ -97,6 +101,7 @@ def main():
             "In json_eval mode, PaddleDetection will evaluate json files in "
             "output_eval directly. And proposal.json, bbox.json and mask.json "
             "will be detected by default.")
+
         json_eval_results(
             eval_feed, cfg.metric, json_directory=FLAGS.output_eval)
         return
@@ -115,8 +120,16 @@ def main():
     if 'weights' in cfg:
         checkpoint.load_pretrain(exe, eval_prog, cfg.weights)
 
-    assert cfg.metric in ['COCO', 'VOC'], \
+    assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE'], \
             "unknown metric type {}".format(cfg.metric)
+    if cfg.metric == 'WIDERFACE':
+        eval_mode = 'matlab'
+        if 'eval_mode' in cfg:
+            eval_mode = cfg.eval_mode
+        anno_file = getattr(eval_feed.dataset, 'annotation', None)
+        WiderfaceEval(
+            exe, eval_prog, fetches, reader, anno_file, eval_mode=eval_mode)
+        return
     extra_keys = []
     if cfg.metric == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
