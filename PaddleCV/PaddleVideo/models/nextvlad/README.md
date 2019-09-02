@@ -55,10 +55,10 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 
 可通过如下两种方式进行模型评估:
 
-    python eval.py --model_name=NEXTVLAD
-                   --config=./configs/nextvlad.yaml
-                   --log_interval=1
-                   --weights=$PATH_TO_WEIGHTS
+    python eval.py --model_name=NEXTVLAD \
+                   --config=./configs/nextvlad.yaml \
+                   --log_interval=1 \
+                   --weights=$PATH_TO_WEIGHTS \
                    --use_gpu=True
 
     bash run.sh eval NEXTVLAD ./configs/nextvlad.yaml
@@ -96,11 +96,11 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 
 可通过如下两种方式启动模型推断：
 
-    python predict.py --model_name=NEXTVLAD
-                      --config=configs/nextvlad.yaml
-                      --log_interval=1
-                      --weights=$PATH_TO_WEIGHTS
-                      --filelist=$FILELIST
+    python predict.py --model_name=NEXTVLAD \
+                      --config=configs/nextvlad.yaml \
+                      --log_interval=1 \
+                      --weights=$PATH_TO_WEIGHTS \
+                      --filelist=$FILELIST \
                       --use_gpu=True
 
     bash run.sh predict NEXTVLAD ./configs/nextvlad.yaml

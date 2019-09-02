@@ -103,6 +103,10 @@ class ModelBase(object):
         "get model weight file path, download weight from Paddle if not exist"
         path, url = self.weights_info()
         path = os.path.join(WEIGHT_DIR, path)
+        if not os.path.isdir(WEIGHT_DIR):
+            logger.info('{} not exists, will be created automatically.'.format(
+                WEIGHT_DIR))
+            os.makedirs(WEIGHT_DIR)
         if os.path.exists(path):
             return path
 
@@ -128,6 +132,10 @@ class ModelBase(object):
             return None
 
         path = os.path.join(WEIGHT_DIR, path)
+        if not os.path.isdir(WEIGHT_DIR):
+            logger.info('{} not exists, will be created automatically.'.format(
+                WEIGHT_DIR))
+            os.makedirs(WEIGHT_DIR)
         if os.path.exists(path):
             return path
 

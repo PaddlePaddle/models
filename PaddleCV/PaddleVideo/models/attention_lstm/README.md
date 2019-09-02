@@ -45,10 +45,10 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 ## 模型评估
 可通过如下两种方式进行模型评估:
 
-    python eval.py --model_name=AttentionLSTM
-                   --config=./configs/attention_lstm.yaml
-                   --log_interval=1
-                   --weights=$PATH_TO_WEIGHTS
+    python eval.py --model_name=AttentionLSTM \
+                   --config=./configs/attention_lstm.yaml \
+                   --log_interval=1 \
+                   --weights=$PATH_TO_WEIGHTS \
                    --use_gpu=True
 
     bash run.sh eval AttentionLSTM ./configs/attention_lstm.yaml
@@ -85,14 +85,14 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 
 可通过如下两种方式启动模型推断：
 
-    python predict.py --model_name=AttentionLSTM
-                      --config=configs/attention_cluster.yaml
-                      --log_interval=1
-                      --weights=$PATH_TO_WEIGHTS
-                      --filelist=$FILELIST
+    python predict.py --model_name=AttentionLSTM \
+                      --config=configs/attention_lstm.yaml \
+                      --log_interval=1 \
+                      --weights=$PATH_TO_WEIGHTS \
+                      --filelist=$FILELIST \
                       --use_gpu=True
 
-    bash run.sh predict AttentionCluster ./configs/attention_cluster.yaml
+    bash run.sh predict AttentionLSTM ./configs/attention_lstm.yaml
 
 - 使用python命令行启动程序时，`--filelist`参数指定待推断的文件列表，如果不设置，默认为data/dataset/youtube8m/infer.list。`--weights`参数为训练好的权重参数，如果不设置，程序会自动下载已训练好的权重。这两个参数如果不设置，请不要写在命令行，将会自动使用默
 认值。

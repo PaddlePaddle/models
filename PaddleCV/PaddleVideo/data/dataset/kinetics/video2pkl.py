@@ -15,7 +15,10 @@
 import os
 import sys
 import glob
-import cPickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 from multiprocessing import Pool
 
 # example command line: python generate_k400_pkl.py kinetics-400_train.csv 8
@@ -71,8 +74,8 @@ def generate_pkl(entry):
 
     output_pkl = vid + ".pkl"
     output_pkl = os.path.join(target_dir, output_pkl)
-    f = open(output_pkl, 'w')
-    cPickle.dump((vid, label, ims), f, -1)
+    f = open(output_pkl, 'wb')
+    pickle.dump((vid, label, ims), f, protocol=2)
     f.close()
 
     os.system('rm -rf %s' % vid)

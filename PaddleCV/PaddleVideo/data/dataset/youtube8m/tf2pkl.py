@@ -16,7 +16,10 @@ import os, sys
 import numpy as np
 import tensorflow as tf
 from tensorflow import logging
-import cPickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 from tensorflow.python.platform import gfile
 
@@ -266,7 +269,7 @@ def main(files_pattern):
     outputdir = target_dir
     fn = '%s.pkl' % record_name
     outp = open(os.path.join(outputdir, fn), 'wb')
-    cPickle.dump(all_data, outp, protocol=cPickle.HIGHEST_PROTOCOL)
+    pickle.dump(all_data, outp, protocol=2)
     outp.close()
 
 
