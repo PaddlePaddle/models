@@ -36,6 +36,8 @@ set_paddle_flags(
 )
 
 from paddle import fluid
+from paddle.fluid.experimental import mixed_precision_context
+
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
 
@@ -111,11 +113,18 @@ def main():
         with fluid.unique_name.guard():
             model = create(main_arch)
             train_pyreader, feed_vars = create_feed(train_feed)
-            train_fetches = model.train(feed_vars)
+
+            with mixed_precision_context(8., FLAGS.fp16) as ctx:
+                train_fetches = model.train(feed_vars)
+
             loss = train_fetches['loss']
+            if FLAGS.fp16:
+                loss *= ctx.get_loss_scale_var()
             lr = lr_builder()
             optimizer = optim_builder(lr)
             optimizer.minimize(loss)
+            if FLAGS.fp16:
+                loss /= ctx.get_loss_scale_var()
 
     # parse train fetches
     train_keys, train_values, _ = parse_fetches(train_fetches)
@@ -273,6 +282,11 @@ if __name__ == '__main__':
         default=None,
         type=str,
         help="Checkpoint path for resuming training.")
+    parser.add_argument(
+        "--fp16",
+        action='store_true',
+        default=False,
+        help="Enable mixed precision training.")
     parser.add_argument(
         "--eval",
         action='store_true',
