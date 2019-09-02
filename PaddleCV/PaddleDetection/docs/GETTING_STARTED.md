@@ -217,8 +217,8 @@ batch size could reach 4 per GPU (Tesla V100 16GB).
 
 | Model Architecture |  Fine-tune ignored parameter fields   |
 | :----------------: | :-----------------------------------: |
-|     Faster RCNN    |          cls_score, cls_score         |
-|     Cascade RCNN   |          cls_score, cls_score         |
+|     Faster RCNN    |          cls_score, bbox_pred         |
+|     Cascade RCNN   |          cls_score, bbox_pred         |
 |       Mask RCNN    | cls_score, bbox_pred, mask_fcn_logits |
 |  Cascade-Mask RCNN | cls_score, bbox_pred, mask_fcn_logits |
 |      RetinaNet     |           retnet_cls_pred_fpn         |

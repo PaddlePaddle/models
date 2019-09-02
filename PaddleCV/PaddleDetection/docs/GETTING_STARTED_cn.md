@@ -211,8 +211,8 @@ batch size可以达到每GPU 4 (Tesla V100 16GB)。
 
 |      模型类型      |         fine-tune忽略参数字段         |
 | :----------------: | :-----------------------------------: |
-|     Faster RCNN    |          cls_score, cls_score         |
-|     Cascade RCNN   |          cls_score, cls_score         |
+|     Faster RCNN    |          cls_score, bbox_pred         |
+|     Cascade RCNN   |          cls_score, bbox_pred         |
 |       Mask RCNN    | cls_score, bbox_pred, mask_fcn_logits |
 |  Cascade-Mask RCNN | cls_score, bbox_pred, mask_fcn_logits |
 |      RetinaNet     |           retnet_cls_pred_fpn         |
