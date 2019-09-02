@@ -10,6 +10,7 @@ log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
 save_dir: output300x300_denseanchor_190902
+eval_mode: python
 weights: output/balzeface/model_final/
 num_classes: 2
 
@@ -48,7 +49,7 @@ BlazeFaceTrainFeed:
     image_dir: WIDER_train/images
 
 BlazeFaceEvalFeed:
-  batch_size: 32
+  batch_size: 1
   use_process: false
   dataset:
     dataset_dir: dataset/widerface
