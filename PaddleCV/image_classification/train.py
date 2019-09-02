@@ -65,7 +65,6 @@ add_arg('num_epochs',       int,   120,                  "number of epochs.")
 add_arg('class_dim',        int,   1000,                 "Class number.")
 add_arg('image_shape',      str,   "3,224,224",          "input image size")
 add_arg('model_save_dir',   str,   "output",             "model save directory")
-add_arg('with_mem_opt',     bool,  False,                 "Whether to use memory optimization or not.")
 add_arg('with_inplace',     bool,  True,                 "Whether to use inplace memory optimization.")
 add_arg('pretrained_model', str,   None,                 "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
@@ -338,20 +337,15 @@ def build_program(is_train, main_prog, startup_prog, args):
 
 def get_device_num():
     # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1 : return 1
-    visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(['nvidia-smi','-L']).decode().count('\n')
-    return device_num
+    if num_trainers > 1:
+        return 1
+    return fluid.core.get_cuda_device_count()
 
 def train(args):
     # parameters from arguments
     model_name = args.model
     checkpoint = args.checkpoint
     pretrained_model = args.pretrained_model
-    with_memory_optimization = args.with_mem_opt
     model_save_dir = args.model_save_dir
     use_mixup = args.use_mixup
 
@@ -390,10 +384,6 @@ def train(args):
                      args=args)
     test_py_reader, test_cost, test_acc1, test_acc5 = b_out_test[0],b_out_test[1],b_out_test[2],b_out_test[3]
     test_prog = test_prog.clone(for_test=True)
-
-    if with_memory_optimization:
-        fluid.memory_optimize(train_prog)
-        fluid.memory_optimize(test_prog)
 
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
@@ -453,8 +443,6 @@ def train(args):
     use_ngraph = os.getenv('FLAGS_use_ngraph')
     if not use_ngraph:
         build_strategy = fluid.BuildStrategy()
-        # memopt may affect GC results
-        #build_strategy.memory_optimize = args.with_mem_opt
         build_strategy.enable_inplace = args.with_inplace
         #build_strategy.fuse_all_reduce_ops=1
 

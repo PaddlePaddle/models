@@ -33,10 +33,10 @@ class GTrainer():
     def __init__(self, input, conditions, cfg):
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
-            model = CGAN_model()
+            model = CGAN_model(cfg.batch_size)
             self.fake = model.network_G(input, conditions, name="G")
             self.fake.persistable = True
-            self.infer_program = self.program.clone()
+            self.infer_program = self.program.clone(for_test=True)
             d_fake = model.network_D(self.fake, conditions, name="D")
             fake_labels = fluid.layers.fill_constant_batch_size_like(
                 input=input, dtype='float32', shape=[-1, 1], value=1.0)
@@ -59,7 +59,7 @@ class DTrainer():
     def __init__(self, input, conditions, labels, cfg):
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
-            model = CGAN_model()
+            model = CGAN_model(cfg.batch_size)
             d_logit = model.network_D(input, conditions, name="D")
             self.d_loss = fluid.layers.reduce_mean(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
@@ -114,7 +114,6 @@ class CGAN(object):
         ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = True
-        build_strategy.memory_optimize = False
 
         g_trainer_program = fluid.CompiledProgram(
             g_trainer.program).with_data_parallel(
@@ -181,14 +180,14 @@ class CGAN(object):
                 t_time += batch_time
 
                 if batch_id % self.cfg.print_freq == 0:
-                    image_path = self.cfg.output + '/images'
+                    image_path = os.path.join(self.cfg.output, 'images')
                     if not os.path.exists(image_path):
                         os.makedirs(image_path)
                     generate_const_image = exe.run(
                         g_trainer.infer_program,
                         feed={'noise': const_n,
                               'condition': condition_data},
-                        fetch_list={g_trainer.fake})[0]
+                        fetch_list=[g_trainer.fake])[0]
 
                     generate_image_reshape = np.reshape(generate_const_image, (
                         self.cfg.batch_size, -1))
@@ -196,15 +195,14 @@ class CGAN(object):
                         [real_image, generate_image_reshape])
                     fig = utility.plot(total_images)
                     print(
-                        'Epoch ID={} Batch ID={} D_loss={} G_loss={} Batch_time_cost={:.2f}'.
+                        'Epoch ID: {} Batch ID: {} D_loss: {} G_loss: {} Batch_time_cost: {}'.
                         format(epoch_id, batch_id, d_loss[0], g_loss[0],
                                batch_time))
                     plt.title('Epoch ID={}, Batch ID={}'.format(epoch_id,
                                                                 batch_id))
+                    img_name = '{:04d}_{:04d}.png'.format(epoch_id, batch_id)
                     plt.savefig(
-                        '{}/{:04d}_{:04d}.png'.format(image_path, epoch_id,
-                                                      batch_id),
-                        bbox_inches='tight')
+                        os.path.join(image_path, img_name), bbox_inches='tight')
                     plt.close(fig)
 
             if self.cfg.save_checkpoints:

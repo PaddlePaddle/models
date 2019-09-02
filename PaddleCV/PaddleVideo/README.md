@@ -8,7 +8,7 @@
 | :--------------- | :--------: | :------------: |
 | [Attention Cluster](./models/attention_cluster/README.md) | 视频分类| CVPR'18提出的视频多模态特征注意力聚簇融合方法 |
 | [Attention LSTM](./models/attention_lstm/README.md)  | 视频分类| 常用模型，速度快精度高 |
-| [NeXtVLAD](./models/nextvlad/README.md)  | 视频分类| 2nd-Youtube-8M最优单模型 |
+| [NeXtVLAD](./models/nextvlad/README.md)  | 视频分类| 2nd-Youtube-8M比赛第3名模型 |
 | [StNet](./models/stnet/README.md)  | 视频分类| AAAI'19提出的视频联合时空建模方法 |
 | [TSM](./models/tsm/README.md) | 视频分类| 基于时序移位的简单高效视频时空建模方法 |
 | [TSN](./models/tsn/README.md) | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |

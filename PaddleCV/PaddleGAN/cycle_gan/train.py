@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -8,6 +21,7 @@ def set_paddle_flags(flags):
     for key, value in flags.items():
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
+
 
 use_cudnn_deterministic = os.environ.get('FLAGS_cudnn_deterministic', None)
 
@@ -22,7 +36,7 @@ else:
 set_paddle_flags({
     'FLAGS_cudnn_exhaustive_search': use_cudnn_exhaustive_search,
     'FLAGS_conv_workspace_size_limit': 256,
-    'FLAGS_eager_delete_tensor_gb': 0, # enable gc 
+    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
     # You can omit the following settings, because the default
     # value of FLAGS_memory_fraction_of_eager_deletion is 1,
     # and default value of FLAGS_fast_eager_deletion_mode is 1 
@@ -247,7 +261,7 @@ def train(args):
             t_time += batch_time
             print(
                 "epoch{}; batch{}; g_A_loss: {}; d_B_loss: {}; g_B_loss: {}; d_A_loss: {}; "
-                "Batch_time_cost: {:.2f}".format(epoch, batch_id, g_A_loss[
+                "Batch_time_cost: {}".format(epoch, batch_id, g_A_loss[
                     0], d_B_loss[0], g_B_loss[0], d_A_loss[0], batch_time))
             losses[0].append(g_A_loss[0])
             losses[1].append(d_A_loss[0])

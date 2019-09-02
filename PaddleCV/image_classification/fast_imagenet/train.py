@@ -55,25 +55,13 @@ def parse_args():
     add_arg('num_threads',      int,    8,                  "Use num_threads to run the fluid program.")
     add_arg('reduce_strategy',  str,    "allreduce",        "Choose from reduce or allreduce.")
     add_arg('log_period',       int,    30,                 "Print period, defualt is 5.")
-    add_arg('memory_optimize',  bool,   True,               "Whether to enable memory optimize.")
     add_arg('best_acc5',        float,  0.93,               "The best acc5, default is 93%.")
     # yapf: enable
     args = parser.parse_args()
     return args
 
 
-def get_device_num():
-    import subprocess
-    visible_device = os.getenv('CUDA_VISIBLE_DEVICES')
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(
-            ['nvidia-smi', '-L']).decode().count('\n')
-    return device_num
-
-
-DEVICE_NUM = get_device_num()
+DEVICE_NUM = fluid.core.get_cuda_device_count()
 
 
 def test_parallel(exe, test_args, args, test_reader, feeder, bs):
@@ -185,9 +173,6 @@ def build_program(args,
                                                       params_grads, main_prog)
                 else:
                     optimizer.minimize(avg_cost)
-
-                if args.memory_optimize:
-                    fluid.memory_optimize(main_prog, skip_grads=True)
 
     return avg_cost, optimizer, [batch_acc1, batch_acc5], pyreader
 

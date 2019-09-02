@@ -49,6 +49,7 @@ class CascadeRCNN(object):
                  roi_extractor='FPNRoIAlign',
                  bbox_head='CascadeBBoxHead',
                  bbox_assigner='CascadeBBoxAssigner',
+                 rpn_only=False,
                  fpn='FPN'):
         super(CascadeRCNN, self).__init__()
         assert fpn is not None, "cascade RCNN requires FPN"
@@ -58,6 +59,7 @@ class CascadeRCNN(object):
         self.bbox_assigner = bbox_assigner
         self.roi_extractor = roi_extractor
         self.bbox_head = bbox_head
+        self.rpn_only = rpn_only
         # Cascade local cfg
         self.cls_agnostic_bbox_reg = 2
         (brw0, brw1, brw2) = self.bbox_assigner.bbox_reg_weights
@@ -70,7 +72,19 @@ class CascadeRCNN(object):
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
+        assert mode in ['train', 'test'], \
+            "only 'train' and 'test' mode is supported"
+        if mode == 'train':
+            required_fields = [
+                'gt_label', 'gt_box', 'gt_mask', 'is_crowd', 'im_info'
+            ]
+        else:
+            required_fields = ['im_shape', 'im_info']
+        for var in required_fields:
+            assert var in feed_vars, \
+                "{} has no {} field".format(feed_vars, var)
         im_info = feed_vars['im_info']
+
         if mode == 'train':
             gt_box = feed_vars['gt_box']
             is_crowd = feed_vars['is_crowd']
@@ -88,6 +102,13 @@ class CascadeRCNN(object):
 
         if mode == 'train':
             rpn_loss = self.rpn_head.get_loss(im_info, gt_box, is_crowd)
+        else:
+            if self.rpn_only:
+                im_scale = fluid.layers.slice(
+                    im_info, [1], starts=[2], ends=[3])
+                im_scale = fluid.layers.sequence_expand(im_scale, rpn_rois)
+                rois = rpn_rois / im_scale
+                return {'proposal': rois}
 
         proposal_list = []
         roi_feat_list = []
@@ -135,8 +156,9 @@ class CascadeRCNN(object):
             return loss
         else:
             pred = self.bbox_head.get_prediction(
-                im_info, roi_feat_list, rcnn_pred_list, proposal_list,
-                self.cascade_bbox_reg_weights, self.cls_agnostic_bbox_reg)
+                im_info, feed_vars['im_shape'], roi_feat_list, rcnn_pred_list,
+                proposal_list, self.cascade_bbox_reg_weights,
+                self.cls_agnostic_bbox_reg)
             return pred
 
     def _decode_box(self, proposals, bbox_pred, curr_stage):
