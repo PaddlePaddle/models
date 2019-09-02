@@ -28,24 +28,30 @@ __all__ = ['Sampler']
 
 class Sampler(object):
     def __init__(self,
+                 dataset,
+                 batch_size,
                  shuffle=True,
                  aspect_ratio_thresholds=None,
-                 init_seed=1,
-                 sync_seed_schedule=True):
+                 sync_seed_schedule=True,
+                 rank=0,
+                 world_size=1,
+                 init_seed=1):
         super(Sampler, self).__init__()
         assert not aspect_ratio_thresholds or \
             isinstance(aspect_ratio_thresholds, Sequence), \
             "if given, aspect_ratio_thresholds must be a sequence"
+        self.dataset = dataset
+        self.batch_size = batch_size
         self.shuffle = shuffle
         self.aspect_ratio_thresholds = aspect_ratio_thresholds
-        self.init_seed = init_seed
         self.sync_seed_schedule = sync_seed_schedule
+        self.rank = rank
+        self.world_size = world_size
+        self.init_seed = init_seed
         self.epoch = 0
         self._step = 0
 
     def setup(self):
-        for name in ['dataset', 'batch_size', 'rank', 'world_size']:
-            assert hasattr(self, name), name + " must be set"
         whole_batch_size = self.world_size * self.batch_size
         if self.world_size > 1 and not self.sync_seed_schedule:
             print("`sync_seed_schedule` is recommended for distributed "

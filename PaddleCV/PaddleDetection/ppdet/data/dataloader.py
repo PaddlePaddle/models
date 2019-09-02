@@ -208,42 +208,28 @@ class DataLoader(object):
     def __init__(self,
                  dataset,
                  sampler=None,
-                 batch_size=1,
                  sample_transforms=[],
                  batch_transforms=None,
                  num_workers=0,
                  multiprocessing=False,
                  queue_depth=2,
-                 init_seed=0,
-                 rank=0,
-                 world_size=1):
+                 rank=0):
         super(DataLoader, self).__init__()
 
-        self.sampler = sampler
         self.dataset = dataset
-        self.batch_size = batch_size
+        self.sampler = sampler
         self.sample_transforms = sample_transforms
         self.batch_transforms = batch_transforms
         self.num_workers = num_workers
         self.multiprocessing = multiprocessing
         self.queue_depth = queue_depth
-        self.init_seed = init_seed
         self.rank = rank
-        self.world_size = world_size
 
         assert sampler is not None or dataset.mode != 'indexable', \
             "Sampler is required for indexable dataset"
 
         self.transform = _Compose(sample_transforms)
         self.batchify = _Batchify(batch_transforms)
-
-    def __setattr__(self, name, value):
-        # propagate attributes to sampler
-        super(DataLoader, self).__setattr__(name, value)
-        if name in ['dataset', 'batch_size', 'init_seed',
-                    'rank', 'world_size']:
-           if self.sampler is not None:
-               setattr(self.sampler, name, value)
 
     def __len__(self):
         if self.dataset.mode == 'indexable':
