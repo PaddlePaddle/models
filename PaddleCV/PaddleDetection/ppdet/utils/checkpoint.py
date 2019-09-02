@@ -71,7 +71,7 @@ def load_params(exe, prog, path, mode='train', ignore_map={}):
             path))
         if is_finetune:
             logger.info(
-                'Finetune mode and weights related to class_num are ignored')
+                'Finetune mode and weights related to num_classes are ignored')
     else:
         logger.info('Loading parameters for {} from {}...'.format(mode, path))
 
@@ -79,7 +79,7 @@ def load_params(exe, prog, path, mode='train', ignore_map={}):
         do_ignore = False
         param_exist = os.path.exists(os.path.join(path, var.name))
         if mode == 'train' and is_finetune:
-            # Parameter related to class_num should be ignored in finetuning
+            # Parameter related to num_classes will be ignored in finetuning
             do_ignore_list = [
                 name in var.name for name in ignore_map.values()[0]
             ]

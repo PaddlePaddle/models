@@ -249,7 +249,7 @@ if __name__ == '__main__':
         "--finetune",
         action='store_true',
         default=False,
-        help="Whether to perform fintuning")
+        help="Whether to perform finetuning")
 
     FLAGS = parser.parse_args()
     main()

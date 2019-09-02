@@ -69,7 +69,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export PYTHONPATH=$PYTHONPATH:.
 python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
-                         -o pretrain_weights=output/mask_rcnn_r50_fpn_2x/model_final/ \
+                         -o pretrain_weights=output/faster_rcnn_r50_1x/model_final/ \
                          --finetune
 ```
 
