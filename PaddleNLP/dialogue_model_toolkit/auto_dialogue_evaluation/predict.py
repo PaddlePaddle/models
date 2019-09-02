@@ -108,9 +108,11 @@ def do_predict(args):
             break
 
     scores = scores[: num_test_examples]
+    print("Write the predicted results into the output_prediction_file")
     with open(args.output_prediction_file, 'w') as fw: 
         for index, score in enumerate(scores): 
             fw.write("%s\t%s\n" % (index, score))
+    print("finish........................................")
 
 
 if __name__ == "__main__": 
