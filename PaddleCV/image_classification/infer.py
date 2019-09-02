@@ -46,6 +46,7 @@ add_arg('reader_buf_size',  int,    2048,       "The buf size of multi thread re
 parser.add_argument('--image_mean', nargs='+', type=int, default=[0.485, 0.456, 0.406], help="The mean of input image data")
 parser.add_argument('--image_std', nargs='+', type=int, default=[0.229, 0.224, 0.225], help="The std of input image data")
 add_arg('crop_size',                int,    224,                    "The value of crop size")
+add_arg('topk',             int,    1,          "topk")
 # yapf: enable
 
 
@@ -75,14 +76,14 @@ def infer(args):
     fluid.io.load_persistables(exe, args.pretrained_model)
     if args.save_inference:
         fluid.io.save_inference_model(
-            dirname=model_name,
+            dirname=args.model,
             feeded_var_names=['image'],
             main_program=test_program,
             target_vars=out,
             executor=exe,
             model_filename='model',
             params_filename='params')
-        print("model: ", model_name, " is already saved")
+        print("model: ", args.model, " is already saved")
         exit(0)
     test_batch_size = 1
 
@@ -90,7 +91,7 @@ def infer(args):
         reader.test(settings=args), batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
-    TOPK = 1
+    TOPK = args.topk
     for batch_id, data in enumerate(test_reader()):
         result = exe.run(test_program,
                          fetch_list=fetch_list,
