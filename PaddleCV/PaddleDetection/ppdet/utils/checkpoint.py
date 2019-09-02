@@ -77,16 +77,17 @@ def load_params(exe, prog, path, mode='train', ignore_map={}):
 
     def _if_exist(var):
         do_ignore = False
+        param_exist = os.path.exists(os.path.join(path, var.name))
         if mode == 'train' and is_finetune:
             # Parameter related to class_num should be ignored in finetuning
             do_ignore_list = [
                 name in var.name for name in ignore_map.values()[0]
             ]
             do_ignore = any(do_ignore_list)
-            if do_ignore:
+            if do_ignore and param_exist:
                 logger.info('When finetuning for {} architecture, ignore {}'.
                             format(ignore_map.keys()[0], var.name))
-        b = os.path.exists(os.path.join(path, var.name)) and not do_ignore
+        b = param_exist and not do_ignore
         if b:
             logger.debug('load weight {}'.format(var.name))
         return b
@@ -144,7 +145,7 @@ def save(exe, prog, path):
     fluid.io.save_persistables(exe, path, prog)
 
 
-def load_and_fusebn(exe, prog, path, ignore_map={}):
+def load_and_fusebn(exe, prog, path):
     """
     Fuse params of batch norm to scale and bias.
 
@@ -153,11 +154,7 @@ def load_and_fusebn(exe, prog, path, ignore_map={}):
         prog (fluid.Program): save weight from which Program object.
         path (string): the path to save model.
     """
-    is_finetune = len(ignore_map.items()) > 0
     logger.info('Load model and fuse batch norm from {}...'.format(path))
-    if is_finetune:
-        logger.info(
-            'Finetune mode and weights related to class_num are ignored')
 
     if is_url(path):
         path = get_weights_path(path)
@@ -166,17 +163,7 @@ def load_and_fusebn(exe, prog, path, ignore_map={}):
         raise ValueError("Model path {} does not exists.".format(path))
 
     def _if_exist(var):
-        do_ignore = False
-        if is_finetune:
-            # Parameter related to class_num should be ignored in finetuning
-            do_ignore_list = [
-                name in var.name for name in ignore_map.values()[0]
-            ]
-            do_ignore = any(do_ignore_list)
-            if do_ignore:
-                logger.info('When finetuning for {} architecture, ignore {}'.
-                            format(ignore_map.keys()[0], var.name))
-        b = os.path.exists(os.path.join(path, var.name)) and not do_ignore
+        b = os.path.exists(os.path.join(path, var.name))
 
         if b:
             logger.debug('load weight {}'.format(var.name))

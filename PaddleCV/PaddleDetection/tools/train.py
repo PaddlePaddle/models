@@ -159,9 +159,8 @@ def main():
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
-    elif cfg.pretrain_weights and fuse_bn:
-        checkpoint.load_and_fusebn(
-            exe, train_prog, cfg.pretrain_weights, ignore_map=ignore_map)
+    elif cfg.pretrain_weights and fuse_bn and not FLAGS.finetune:
+        checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:
         checkpoint.load_params(
             exe, train_prog, cfg.pretrain_weights, ignore_map=ignore_map)
