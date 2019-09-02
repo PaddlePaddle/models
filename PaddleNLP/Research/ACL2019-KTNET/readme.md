@@ -34,7 +34,7 @@ In this work, we empirically evaluate our model on two benchmarks:
 
 [ReCoRD](https://sheng-z.github.io/ReCoRD-explorer/) (Reading Comprehension with Commonsense Reasoning Dataset) is a large-scale MRC dataset requiring commonsense reasoning. The official dataset in JSON format can be downloaded using Google drive (training set: [link](https://drive.google.com/file/d/1PoHmphyH79pETNws8kU2OwuerU7SWLHj/view), valid set: [link](https://drive.google.com/file/d/1WNaxBpXEGgPbymTzyN249P4ub-uU5dkO/view)). *(For convenience, we have provided the MD5 for each downloadable file of this readme in `downloaded_files.md5`. It's recommended to use it to check the completeness of the downloaded file.)* Please place the downloaded files `train.json` and `dev.json` into the `data/ReCoRD/` directory of this repository. We will also use the official evaluation script of ReCoRD, so please run the following command:
 ```
-wget https://sheng-z.github.io/ReCoRD-explorer/evaluation.py -O record_official_evaluate.py
+curl -o record_official_evaluate.py https://sheng-z.github.io/ReCoRD-explorer/evaluation.py
 mv record_official_evaluate.py reading_comprehension/src/eval/
 ```
 
@@ -42,10 +42,10 @@ mv record_official_evaluate.py reading_comprehension/src/eval/
 
 [SQuAD v1.1](https://rajpurkar.github.io/SQuAD-explorer/) is a well-known extractive MRC dataset that consists of questions created by crowdworkers for Wikipedia articles. Please run the following command to download the official dataset and evaluation script.
 ```
-wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
-wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
+curl -O https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
+curl -O https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
 mv train-v1.1.json dev-v1.1.json data/SQuAD/
-wget https://worksheets.codalab.org/rest/bundles/0xbcd57bee090b421c982906709c8c27e1/contents/blob/ -O squad_v1_official_evaluate.py
+curl -o squad_v1_official_evaluate.py https://worksheets.codalab.org/rest/bundles/0xbcd57bee090b421c982906709c8c27e1/contents/blob/
 mv squad_v1_official_evaluate.py reading_comprehension/src/eval/
 ```
 
@@ -57,7 +57,7 @@ Relevant knowledge should be retrieved and encoded before training the model. In
 
 To retrieve NELL concepts about entities, the named entity mentions in MRC samples should be annotated. For ReCoRD, the entity mentions have been provided in the dataset. For SQuAD, named entity recognition (NER) needs to be performed before the retrieval. We use [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/index.html) in this step. After CoreNLP is [downloaded](http://nlp.stanford.edu/software/stanford-corenlp-full-2017-06-09.zip) and unzipped, run the following command at the CoreNLP directory to start the CoreNLP server:
 ```
-java -mx10g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000 -timeout 15000
+java -mx10g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9753 -timeout 20000
 ```
 Then run the command:
 ```
@@ -119,8 +119,8 @@ The outputs are pickled into binary files. The output files can also be download
 
 Following the work of [Yang et al., 2015](https://arxiv.org/pdf/1412.6575.pdf), we leverage their KB embedding for WordNet synsets and NELL categories trained by the BILINEAR model. 
 ```
-wget https://github.com/bishanyang/kblstm/raw/master/embeddings/wn_concept2vec.txt
-wget https://github.com/bishanyang/kblstm/raw/master/embeddings/nell_concept2vec.txt
+curl -O https://raw.githubusercontent.com/bishanyang/kblstm/master/embeddings/wn_concept2vec.txt
+curl -O https://raw.githubusercontent.com/bishanyang/kblstm/master/embeddings/nell_concept2vec.txt
 mv wn_concept2vec.txt nell_concept2vec.txt retrieve_concepts/KB_embeddings
 ```
 The 100-dimensional embeddings are stored in the following format:
@@ -137,7 +137,7 @@ The text encoder module of KT-NET is initialized with pretrained BERT large-case
 ```
 cd reading_comprehension
 wget https://bert-models.bj.bcebos.com/cased_L-24_H-1024_A-16.tar.gz --no-check-certificate
-tar xzvf cased_L-24_H-1024_A-16.tar.gz
+tar xvf cased_L-24_H-1024_A-16.tar.gz
 ```
 
 #### Directly fine-tuning
@@ -180,13 +180,13 @@ We have released the following checkpoints for our trained KT-NET which can repr
 | :------------- | :---------: | :----------: | :--------- |
 | [KT-NET (WordNet)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_record_wordnet.tar.gz) | 72.76 | 70.56 | eval_record_wordnet.sh | 
 | [KT-NET (NELL)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_record_nell.tar.gz) | 72.52 | 70.54 | eval_record_nell.sh | 
-| [KT-NET (Both)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_record_both.tar.gz) | 73.62 | 71.61 | eval_record_twomemory.sh | 
+| [KT-NET (Both)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_record_both.tar.gz) | 73.62 | 71.60 | eval_record_twomemory.sh | 
 
 |   SQuAD Model  | F1 score | Exact Match | Inference Script |
 | :------------- | :---------: | :----------: | :--------- |
-| [KT-NET (WordNet)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_squad_wordnet.tar.gz) | 91.69 | 85.14 | eval_squad_wordnet.sh | 
-| [KT-NET (NELL)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_squad_nell.tar.gz) | 91.71 | 85.03 | eval_squad_nell.sh | 
-| [KT-NET (Both)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_squad_both.tar.gz) | 91.64 | 84.96 | eval_squad_twomemory.sh | 
+| [KT-NET (WordNet)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_squad_wordnet.tar.gz) | 91.70 | 85.16 | eval_squad_wordnet.sh | 
+| [KT-NET (NELL)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_squad_nell.tar.gz) | 91.70 | 85.02 | eval_squad_nell.sh | 
+| [KT-NET (Both)](https://baidu-nlp.bj.bcebos.com/KTNET_fine-tuned-model_squad_both.tar.gz) | 91.65 | 84.97 | eval_squad_twomemory.sh | 
 
 After downloading and extracting the checkpoint file, please execute the corresponding inference script. E.g.:
 ```

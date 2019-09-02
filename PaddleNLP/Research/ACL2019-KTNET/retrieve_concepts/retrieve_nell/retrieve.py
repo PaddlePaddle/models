@@ -58,6 +58,10 @@ def main():
     parser.add_argument('--output_dir', type=str, default='output_record/', help='output directory')
     args = parser.parse_args()
 
+    # make output directory if not exist
+    if not os.path.exists(args.output_dir):
+        os.mkdir(args.output_dir)
+
     # load set of concepts with pre-trained embedding
     concept_set = set()
     with open('nell_concept_list.txt') as fin:
@@ -67,7 +71,7 @@ def main():
 
     # read nell csv file and build NELL entity to category dict
     logger.info('Begin to read NELL csv...')
-    fin = open('NELL/NELL.08m.1115.esv.csv')
+    fin = open('NELL.08m.1115.esv.csv')
     nell_ent_to_cpt = {}
     nell_ent_to_fullname = {}
 

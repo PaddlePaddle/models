@@ -105,7 +105,7 @@ if __name__ == '__main__':
         os.mkdir(args.output_dir)
     
     # register corenlp server
-    nlp = StanfordCoreNLP('http://localhost:9000')
+    nlp = StanfordCoreNLP('http://localhost:9753')
 
     # load train and dev datasets
     ftrain = open(args.train_file, 'r', encoding='utf-8')

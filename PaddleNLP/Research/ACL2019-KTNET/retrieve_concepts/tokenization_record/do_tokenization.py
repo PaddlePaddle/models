@@ -79,7 +79,7 @@ def read_record_examples(input_file, is_training):
 
     examples = []
     for entry in input_data:
-        paragraph_text = entry["passage"]["text"]
+        paragraph_text = entry["passage"]["text"].replace('\xa0', ' ')
         doc_tokens = []
         char_to_word_offset = []
         prev_is_whitespace = True
@@ -108,7 +108,7 @@ def read_record_examples(input_file, is_training):
 
         for qa in entry["qas"]:
             qas_id = qa["id"]
-            question_text = qa["query"]
+            question_text = qa["query"].replace('\xa0', ' ')
             start_position = None
             end_position = None
             orig_answer_text = None
