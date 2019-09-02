@@ -200,12 +200,12 @@ class DataLoaderBuilder(dataloader.DataLoader):
             prefetch_device = int(env['FLAGS_selected_gpus'])
         else:
             prefetch_device = 0
-        self.to_feed = ToFeedDict(feed_vars, extra_vars, pin_memory,
-                                  prefetch_to_gpu, prefetch_device)
+        to_feed = ToFeedDict(feed_vars, extra_vars, pin_memory,
+                             prefetch_to_gpu, prefetch_device)
 
         super(DataLoaderBuilder, self).__init__(
             dataset, sampler, sample_transforms, batch_transforms,
-            num_workers, multiprocessing, queue_depth, rank)
+            to_feed, num_workers, multiprocessing, queue_depth, rank)
 
     def __iter__(self):
         _iter = super(DataLoaderBuilder, self).__iter__()
@@ -213,7 +213,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
         def forever():
             while True:
                 try:
-                    yield self.to_feed(next(_iter))
+                    yield next(_iter)
                 except StopIteration:
                     self.reset()
         return forever()
