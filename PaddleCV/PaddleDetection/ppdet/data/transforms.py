@@ -15,9 +15,9 @@
 from __future__ import division
 
 try:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Sequence
 except Exception:
-    from collections import Mapping, Sequence
+    from collections import Sequence
 
 import numpy as np
 import cv2
@@ -25,7 +25,7 @@ import cv2
 
 __all__ = ['RandomFlip', 'RandomExpand', 'RandomCrop', 'ColorDistort',
            'MixUp', 'Resize', 'NormalizePermute', 'NormalizeLabels',
-           'PadToStride', 'ToFeedDict']
+           'PadToStride']
 
 
 class Resize(object):
@@ -470,103 +470,3 @@ class PadToStride(object):
         batch['padded_height'] = np.array([pad_h] * batch_size)
         batch['padded_width'] = np.array([pad_w] * batch_size)
         return batch
-
-
-class ToFeedDict(object):
-    def __init__(self,
-                 feed_vars=[],
-                 extra_vars=[],
-                 pin_memory=False):
-
-        super(ToFeedDict, self).__init__()
-        self.feed_vars = feed_vars
-        self.extra_vars = extra_vars
-        self.pin_memory = pin_memory
-
-        self._normalized_vars = []
-        for var in self.feed_vars:
-            if isinstance(var, str):
-                name = var
-                fields = [var]
-                lod_level = 0
-            else:
-                assert isinstance(var, Mapping), \
-                    "feed_var should be either string or dict like object"
-                name = var['name']
-                if 'fields' in var:
-                    fields = var['fields']
-                else:
-                    fields = [name]
-                lod_level = 'lod_level' in var and var['lod_level'] or 0
-            self._normalized_vars.append({
-                'name': name,
-                'fields': fields,
-                'lod_level': lod_level})
-
-    def __call__(self, sample):
-        extra_dict = {key: sample[key] for key in self.extra_vars}
-        feed_dict = {}
-
-        for var in self._normalized_vars:
-            name = var['name']
-            lod_level = var['lod_level']
-            fields = var['fields']
-
-            array_list = []
-            seq_length = []
-
-            for idx, f in enumerate(fields):
-                arr = sample[f]
-                # assume all fields have the same LoD and seq_length
-                if lod_level != 0 and idx == 0:
-                    seq_length = self._recursive_length(arr, lod_level + 1)
-                if isinstance(arr, np.ndarray):
-                    # 'image' may already be stacked by `PadToStride`
-                    array_list.append(arr)
-                else:
-                    if all([isinstance(a, np.ndarray) for a in arr]):
-                        if lod_level == 0:
-                            array_list.append(np.stack(arr))
-                        else:
-                            array_list.append(np.concatenate(arr))
-                    else:
-                        array_list.append(np.asarray(arr))
-
-            if len(fields) == 1:
-                ndarray = array_list[0]
-            else:
-                # combine fields
-                ndarray = np.stack(array_list).T
-            feed_dict[name] = self._to_tensor(ndarray, seq_length)
-
-        return feed_dict, extra_dict
-
-    def _to_tensor(self, ndarray, seq_length):
-        from paddle import fluid
-        place = self.pin_memory and fluid.CUDAPinnedPlace() or fluid.CPUPlace()
-        t = fluid.core.LoDTensor()
-        t.set_recursive_sequence_lengths(seq_length)
-        t.set(ndarray, place)
-        return t
-
-    def _recursive_length(self, ndarray, lod_level):
-        if isinstance(ndarray, np.ndarray) and ndarray.ndim >= lod_level:
-            # handle dense numpy array
-            shape = ndarray.shape
-            last = 1
-            seq_length = []
-            for i in range(lod_level):
-                cur = shape[i]
-                seq_length.append([cur] * last)
-                last *= cur
-        else:
-            seq_length = [[] for _ in range(lod_level)]
-
-            def _recurse(data, result, level):
-                if level > 0:
-                    result[0].append(len(data))
-                    for item in data:
-                        _recurse(item, result[1:], level - 1)
-            _recurse(ndarray, seq_length, lod_level)
-
-        return seq_length
