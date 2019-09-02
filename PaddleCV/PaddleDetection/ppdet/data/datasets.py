@@ -18,7 +18,7 @@ import copy
 import os
 
 import numpy as np
-from PIL import Image
+import cv2
 from pycocotools.coco import COCO
 
 
@@ -41,6 +41,13 @@ class DataSet(object):
         else:
             raise "dataset should be either indexable or iterable"
         return self._mode
+
+    def _read_image(self, path):
+        with open(path, 'rb') as f:
+            data = np.frombuffer(f.read(), dtype='uint8')
+            img = cv2.imdecode(data, 1)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return img
 
 
 class COCODataSet(DataSet):
@@ -78,7 +85,7 @@ class COCODataSet(DataSet):
         if not hasattr(self, 'samples'):
             self._load()
         sample = copy.deepcopy(self.samples[idx])
-        sample['image'] = Image.open(sample['file']).convert('RGB')
+        sample['image'] = self._read_image(sample['file'])
         return sample
 
     def _load(self):
@@ -199,7 +206,7 @@ class PascalVocDataSet(DataSet):
         if not hasattr(self, 'samples'):
             self._load()
         sample = copy.deepcopy(self.samples[idx])
-        sample['image'] = Image.open(sample['file']).convert('RGB')
+        sample['image'] = self._read_image(sample['file'])
         return sample
 
     def _load(self):
@@ -262,7 +269,7 @@ class ListDataSet(DataSet):
     def __getitem__(self, idx):
         sample = copy.deepcopy(self.samples[idx])
         if 'image' not in sample and 'file' in sample:
-            sample['image'] = Image.open(sample['file']).convert('RGB')
+            sample['image'] = self._read_image(sample['file'])
         return sample
 
 

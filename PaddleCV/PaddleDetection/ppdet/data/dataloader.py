@@ -21,7 +21,6 @@ from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
 
 import numpy as np
-from PIL import Image
 
 __all__ = ['DataLoader']
 
@@ -97,7 +96,7 @@ def _apply_transform(idx, dataset, transform, batch_seed=None):
         if hasattr(dataset, 'samples'):
             # XXX sample2 is read-only, avoid deepcopy if possible
             sample2 = dataset.samples[idx2]
-            sample2['image'] = Image.open(sample2['file']).convert('RGB')
+            sample2['image'] = dataset._read_image(sample['file'])
         else:
             sample2 = dataset[idx2]
         sample = (sample, sample2)

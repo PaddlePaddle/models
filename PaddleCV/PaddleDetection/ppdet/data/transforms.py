@@ -20,7 +20,7 @@ except Exception:
     from collections import Mapping, Sequence
 
 import numpy as np
-from PIL import Image, ImageEnhance
+import cv2
 
 
 __all__ = ['RandomFlip', 'RandomExpand', 'RandomCrop', 'ColorDistort',
@@ -33,7 +33,7 @@ class Resize(object):
                  target_dim=None,
                  max_dim=None,
                  random_shape=[],
-                 interp=Image.BILINEAR):
+                 interp=cv2.INTER_LINEAR):
         super(Resize, self).__init__()
         self.target_dim = target_dim
         self.max_dim = max_dim
@@ -45,17 +45,12 @@ class Resize(object):
         return bool(self.random_shape)
 
     def __call__(self, sample):
-        img = sample['image']
         w = sample['width']
         h = sample['height']
-        if isinstance(img, np.ndarray):
-            img = Image.fromarray(img.astype(np.uint8))
 
         interp = self.interp
         if interp == 'random':
-            # `BOX` and `HAMMING` was added in pillow 3.4
-            avail_interp = 'HAMMING' in Image.__dict__ and 4 or 6
-            interp = np.random.choice(range(avail_interp - 1))
+            interp = np.random.choice(range(5))
 
         if self.random_shape:
             assert 'batch_seed' in sample, "random_shape requires batch_seed"
@@ -85,7 +80,8 @@ class Resize(object):
             # in some other caveats, e.g., all transformations that modifies
             # bboxes (currently `RandomFlip`) must be applied BEFORE `Resize`.
 
-        sample['image'] = img.resize((resize_w, resize_h), interp)
+        sample['image'] = cv2.resize(
+            sample['image'], (resize_w, resize_h), interpolation=interp)
         sample['width'] = resize_w
         sample['height'] = resize_h
         return sample
@@ -103,12 +99,8 @@ class RandomFlip(object):
         img = sample['image']
         gt_box = sample['gt_box']
 
-        if isinstance(img, Image.Image):
-            sample['image'] = img.transpose(Image.FLIP_LEFT_RIGHT)
-            w = img.size[0]
-        else:
-            sample['image'] = img[:, ::-1, :]
-            w = img.shape[1]
+        sample['image'] = img[:, ::-1, :]
+        w = img.shape[1]
 
         gt_box[:, 0] = w - gt_box[:, 0]
         gt_box[:, 2] = w - gt_box[:, 2]
@@ -138,8 +130,6 @@ class ColorDistort(object):
         if np.random.uniform(0., 1.) < prob:
             return img
 
-        if isinstance(img, Image.Image):
-            img = np.asarray(img)
         img = img.astype(np.float32)
 
         # XXX works, but result differ from HSV version
@@ -165,8 +155,6 @@ class ColorDistort(object):
             return img
         delta = np.random.uniform(low, high)
 
-        if isinstance(img, Image.Image):
-            return ImageEnhance.Contrast(img).enhance(delta)
         img = img.astype(np.float32)
         gray = img * np.array([[[0.299, 0.587, 0.114]]], dtype=np.float32)
         gray = gray.sum(axis=2, keepdims=True)
@@ -181,8 +169,6 @@ class ColorDistort(object):
             return img
         delta = np.random.uniform(low, high)
 
-        if isinstance(img, Image.Image):
-            return ImageEnhance.Color(img).enhance(delta)
         img = img.astype(np.float32)
         img *= delta
         return img
@@ -193,8 +179,6 @@ class ColorDistort(object):
             return img
         delta = np.random.uniform(low, high)
 
-        if isinstance(img, Image.Image):
-            return ImageEnhance.Brightness(img).enhance(delta)
         img = img.astype(np.float32)
         img += delta
         return img
@@ -223,8 +207,6 @@ class NormalizePermute(object):
 
     def __call__(self, sample):
         img = sample['image']
-        if isinstance(img, Image.Image):
-            img = np.asarray(img)
         img = img.astype(np.float32)
 
         img = img.transpose((2, 0, 1))
@@ -265,14 +247,9 @@ class RandomExpand(object):
         w = int(width * expand_ratio)
         y = np.random.randint(0, h - height)
         x = np.random.randint(0, w - width)
-        if isinstance(img, Image.Image):
-            fill_value = (int(f) for f in self.fill_value)
-            canvas = Image.new('RGB', (w, h), fill_value)
-            canvas.paste(img, (x, y))
-        else:
-            canvas = np.ones((h, w, 3), dtype=np.float32)
-            canvas *= np.array(self.fill_value, dtype=np.float32)
-            canvas[y:y + height, x:x + width, :] = img.astype(np.float32)
+        canvas = np.ones((h, w, 3), dtype=np.float32)
+        canvas *= np.array(self.fill_value, dtype=np.float32)
+        canvas[y:y + height, x:x + width, :] = img.astype(np.float32)
 
         sample['height'] = h
         sample['width'] = w
@@ -379,11 +356,8 @@ class RandomCrop(object):
         return cropped_box, np.where(valid)[0]
 
     def _crop_image(self, img, crop):
-        if isinstance(img, Image.Image):
-            return img.crop(crop)
-        else:
-            x1, y1, x2, y2 = crop
-            return img[y1:y2, x1:x2, :]
+        x1, y1, x2, y2 = crop
+        return img[y1:y2, x1:x2, :]
 
 
 class MixUp(object):
@@ -410,15 +384,11 @@ class MixUp(object):
         gt_score = np.concatenate((gt_score1, gt_score2), axis=0)
 
         img1, img2 = sample1['image'], sample2['image']
-        w1, h1 = img1.size
-        w2, h2 = img2.size
+        h1, w1, _ = img1.shape
+        h2, w2, _ = img2.shape
         w = max(w1, w2)
         h = max(h1, h2)
 
-        if isinstance(img1, Image.Image):
-            img1 = np.asarray(img1, dtype=np.float32)
-        if isinstance(img2, Image.Image):
-            img2 = np.asarray(img2, dtype=np.float32)
         img1 = img1.astype(np.float32)
         img2 = img2.astype(np.float32)
 
