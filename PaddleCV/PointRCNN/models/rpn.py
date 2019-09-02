@@ -23,6 +23,7 @@ from paddle.fluid.initializer import Constant
 
 from models.pointnet2_msg import PointNet2MSG
 from models.pointnet2_modules import conv_bn
+from models.loss_utils import get_reg_loss
 
 
 __all__ = ["PointNet2SemSegSSG", "PointNet2SemSegMSG"]
@@ -79,9 +80,6 @@ class RPN(object):
             "rpn_reg": self.reg_out,
         }
 
-    def get_reg_loss(self):
-        pass
-
     def get_loss(self):
         assert self.inputs is not None, \
                 "please call build() first"
@@ -95,5 +93,21 @@ class RPN(object):
         fg_num = fluid.layers.reduce_sum(fg_num, dim=[1, 2])
         rpn_loss_cls = fluid.layers.sigmoid_focal_loss(self.cls_out, rpn_cls_label, fg_num, 
                     alpha=cfg.RPN.FOCAL_ALPHA[0], gamma=cfg.RPN.FOCAL_GAMMA)
+        return rpn_loss_cls
 
         # # RPN regression loss
+        # loc_loss, angle_loss, size_loss, loss_dict = get_reg_loss(
+        #                                 self.reg_out, rpn_reg_label,
+        #                                 rpn_reg_label.view(point_num, 7)[fg_mask],
+        #                                 loc_scope=self.cfg.RPN.LOC_SCOPE,
+        #                                 loc_bin_size=self.cfg.RPN.LOC_BIN_SIZE,
+        #                                 num_head_bin=self.cfg.RPN.NUM_HEAD_BIN,
+        #                                 anchor_size=self.cfg.CLS_MEAN_SIZE[0],
+        #                                 get_xz_fine=self.cfg.RPN.LOC_XZ_FINE,
+        #                                 get_y_by_bin=False,
+        #                                 get_ry_fine=False)
+        # rpn_loss_reg = loc_loss + angle_loss + size_loss * 3
+        #
+        # rpn_loss = rpn_loss_cls * self.cfg.RPN.LOSS_WEIGHT[0] + rpn_loss_reg * self.cfg.RPN.LOSS_WEIGHT[1]
+        # return rpn_loss
+        

@@ -59,6 +59,7 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
     z_bin_l, z_bin_r = per_loc_bin_num, per_loc_bin_num * 2
     start_offset = z_bin_r
 
+    print(x_bin_label)
     loss_x_bin = fluid.layers.softmax_with_cross_entropy(pred_reg[:, x_bin_l: x_bin_r], x_bin_label)
     loss_x_bin = fluid.layers.reduce_mean(loss_x_bin)
     loss_z_bin = fluid.layers.softmax_with_cross_entropy(pred_reg[:, z_bin_l: z_bin_r], z_bin_label)
@@ -136,6 +137,7 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
         # ry_label[opposite_flag] = (ry_label[opposite_flag] + np.pi) % (2 * np.pi)  # (0 ~ pi/2, 3pi/2 ~ 2pi)
         # ry_label = ry_label + opposite_flag * np.pi
         shift_angle = (ry_label + opposite_flag * np.pi + np.pi * 0.5) % (2 * np.pi)  # (0 ~ pi)
+        shift_angle.stop_gradient = True
 
         shift_angle = fluid.layers.clip(shift_angle - np.pi * 0.25, min=1e-3, max=np.pi * 0.5 - 1e-3)  # (0, pi/2)
 
@@ -150,6 +152,7 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
         heading_angle = ry_label % (2 * np.pi)  # 0 ~ 2pi
 
         shift_angle = (heading_angle + angle_per_class / 2) % (2 * np.pi)
+        shift_angle.stop_gradient = True
         ry_bin_label = fluid.layers.cast(shift_angle / angle_per_class, dtype='int64')
         ry_res_label = shift_angle - (fluid.layers.cast(ry_bin_label, dtype=shift_angle.dtype) * angle_per_class + angle_per_class / 2)
         ry_res_norm_label = ry_res_label / (angle_per_class / 2)
@@ -189,7 +192,7 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
 
 if __name__ == "__main__":
     np.random.seed(2333)
-    pred_np = np.random.uniform(-100, 100, (256, 34)).astype('float32')
+    pred_np = np.random.uniform(-100, 100, (256, 46)).astype('float32')
     label_np = np.random.uniform(-100, 100, (256, 7)).astype('float32')
 
     from utils.config import cfg
@@ -197,28 +200,34 @@ if __name__ == "__main__":
     # cfg.TEST.RPN_DISTANCE_BASED_PROPOSE = False
     # cfg.RPN.NMS_TYPE = 'rotate'
 
-    pred = fluid.layers.data(name="pred", shape=[34], dtype='float32')
+    pred = fluid.layers.data(name="pred", shape=[46], dtype='float32', stop_gradient=False)
     label = fluid.layers.data(name="label", shape=[7], dtype='float32')
     loc_loss, angle_loss, size_loss, reg_loss_dict = get_reg_loss(pred, label,
                             loc_scope=cfg.RCNN.LOC_SCOPE,
                             loc_bin_size=cfg.RCNN.LOC_BIN_SIZE,
                             num_head_bin=cfg.RCNN.NUM_HEAD_BIN,
                             anchor_size=cfg.CLS_MEAN_SIZE[0],
-                            get_xz_fine=False, get_y_by_bin=cfg.RCNN.LOC_Y_BY_BIN,
+                            get_xz_fine=True, get_y_by_bin=cfg.RCNN.LOC_Y_BY_BIN,
                             loc_y_scope=cfg.RCNN.LOC_Y_SCOPE, loc_y_bin_size=cfg.RCNN.LOC_Y_BIN_SIZE,
-                            get_ry_fine=False)
+                            get_ry_fine=True)
+    loss = loc_loss + angle_loss + size_loss
+    optimizer = fluid.optimizer.Adam(learning_rate=1e-2)
+    optimizer.minimize(loss)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
     ret = exe.run(fetch_list=[
+        "cast_0.tmp_0",
+        'pred@GRAD',
         # loc_loss.name, angle_loss.name, size_loss, 
         # "tmp_8",
         # "reduce_mean_2.tmp_0",
-        "cast_0.tmp_0",
-        "reduce_sum_0.tmp_0", 
-        "tmp_14", 
+        # "cast_0.tmp_0",
+        # "reduce_sum_0.tmp_0", 
+        # "tmp_14", 
         # "smooth_l1_loss_0.tmp_1",
         ], feed={'pred': pred_np, 'label': label_np})
-    # print(ret)
+    print(ret)
+    ret[0].tofile("x_bin_label.data")
 
