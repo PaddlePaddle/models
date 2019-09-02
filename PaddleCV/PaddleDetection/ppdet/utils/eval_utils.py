@@ -22,7 +22,7 @@ import os
 
 import paddle.fluid as fluid
 
-from ppdet.utils.voc_eval import bbox_eval as voc_bbox_eval
+#from ppdet.utils.voc_eval import bbox_eval as voc_bbox_eval
 
 __all__ = ['parse_fetches', 'eval_run', 'eval_results', 'json_eval_results']
 

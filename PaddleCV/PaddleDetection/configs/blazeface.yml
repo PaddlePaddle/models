@@ -9,7 +9,7 @@ snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
-save_dir: output
+save_dir: output300x300_denseanchor_190902
 weights: output/balzeface/model_final/
 num_classes: 2
 

@@ -56,3 +56,10 @@ coverage.xml
 /docs/_build/
 
 *.json
+
+# Personal ignore
+log.txt
+/log/
+/*output*/
+set_env.sh
+run_train.sh

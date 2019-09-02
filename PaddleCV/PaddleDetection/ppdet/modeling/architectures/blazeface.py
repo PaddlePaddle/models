@@ -48,8 +48,8 @@ class BlazeFace(object):
     def __init__(self,
                  backbone="BlazeNet",
                  output_decoder=SSDOutputDecoder().__dict__,
-                 min_sizes=[9., [15., 45., 75.]],
-                 max_sizes=[15., [45., 75., 105.]],
+                 min_sizes=[16., [32., 64., 96.]],
+                 max_sizes=[32., [64., 96., 128.]],
                  steps=[4., 16.],
                  num_classes=2):
         super(BlazeFace, self).__init__()
@@ -110,16 +110,26 @@ class BlazeFace(object):
                 min_size = [min_size]
             if not _is_list_or_tuple_(max_size):
                 max_size = [max_size]
-            box, var = fluid.layers.prior_box(
-                input,
-                image,
-                min_sizes=min_size,
-                max_sizes=max_size,
-                steps=[self.steps[i]] * 2,
-                aspect_ratios=[1.],
-                clip=False,
-                flip=False,
-                offset=0.5)
+
+            if i == 0:
+                box, var = fluid.layers.density_prior_box(
+                    input,
+                    image,
+                    densities=[2, 1, 1],
+                    fixed_sizes=[16, 32, 64],
+                    fixed_ratios=[1.],
+                    clip=False,
+                    offset=0.5)
+            if i == 1:
+                box, var = fluid.layers.density_prior_box(
+                    input,
+                    image,
+                    densities=[1, 1],
+                    fixed_sizes=[96, 128],
+                    fixed_ratios=[1.],
+                    clip=False,
+                    offset=0.5)
+ 
             print("[ygh-debug] num_boxes:{}".format(box.shape))
             num_boxes = box.shape[2]
 
