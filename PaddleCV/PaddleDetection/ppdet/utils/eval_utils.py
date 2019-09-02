@@ -57,11 +57,10 @@ def parse_fetches(fetches, prog=None, extra_keys=None):
     return keys, values, cls
 
 
-def eval_run(exe, compile_program, pyreader, keys, values, cls):
+def eval_run(exe, compile_program, dataloader, keys, values, cls):
     """
     Run evaluation program, return program outputs.
     """
-    iter_id = 0
     results = []
     if len(cls) != 0:
         values = []
@@ -74,24 +73,19 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
     start_time = time.time()
     has_bbox = 'bbox' in keys
 
-    try:
-        pyreader.start()
-        while True:
-            outs = exe.run(compile_program,
-                           fetch_list=values,
-                           return_numpy=False)
-            res = {
-                k: (np.array(v), v.recursive_sequence_lengths())
-                for k, v in zip(keys, outs)
-            }
-            results.append(res)
-            if iter_id % 100 == 0:
-                logger.info('Test iter {}'.format(iter_id))
-            iter_id += 1
-            images_num += len(res['bbox'][1][0]) if has_bbox else 1
-    except (StopIteration, fluid.core.EOFException):
-        pyreader.reset()
-    logger.info('Test finish iter {}'.format(iter_id))
+    for it, (feed_data, extra) in enumerate(dataloader):
+        outs = exe.run(compile_program,
+                       feed=feed_data,
+                       fetch_list=values,
+                       return_numpy=False)
+        res = {
+            k: (np.array(v), v.recursive_sequence_lengths())
+            for k, v in zip(keys, outs)
+        }
+        results.append(res)
+        if it % 100 == 0:
+            logger.info('Test iter {}'.format(it))
+        images_num += len(res['bbox'][1][0]) if has_bbox else 1
 
     end_time = time.time()
     fps = images_num / (end_time - start_time)
@@ -106,7 +100,8 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
 
 
 def eval_results(results,
-                 feed,
+                 anno_file,
+                 use_background,
                  metric,
                  num_classes,
                  resolution=None,
@@ -117,8 +112,6 @@ def eval_results(results,
     box_ap_stats = []
     if metric == 'COCO':
         from ppdet.utils.coco_eval import proposal_eval, bbox_eval, mask_eval
-        anno_file = getattr(feed.dataset, 'annotation', None)
-        with_background = getattr(feed, 'with_background', True)
         if 'proposal' in results[0]:
             output = 'proposal.json'
             if output_directory:
@@ -129,12 +122,9 @@ def eval_results(results,
             if output_directory:
                 output = os.path.join(output_directory, 'bbox.json')
 
-            box_ap_stats = bbox_eval(
-                results,
-                anno_file,
-                output,
-                with_background,
-                is_bbox_normalized=is_bbox_normalized)
+            box_ap_stats = bbox_eval(results, anno_file, output,
+                                     use_background,
+                                     is_bbox_normalized=is_bbox_normalized)
 
         if 'mask' in results[0]:
             output = 'mask.json'

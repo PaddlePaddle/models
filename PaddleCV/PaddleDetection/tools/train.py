@@ -28,7 +28,6 @@ def set_paddle_flags(**kwargs):
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
 
-
 # NOTE(paddle-dev): All of these flags should be set before
 # `import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
@@ -39,7 +38,6 @@ from paddle import fluid
 
 from ppdet.experimental import mixed_precision_context
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.cli import print_total_cfg
 from ppdet.utils import dist_utils
@@ -48,7 +46,6 @@ from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
 import ppdet.utils.checkpoint as checkpoint
-from ppdet.modeling.model_input import create_feed
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -89,16 +86,20 @@ def main():
     else:
         devices_num = int(os.environ.get('CPU_NUM', 1))
 
-    if 'train_feed' not in cfg:
-        train_feed = create(main_arch + 'TrainFeed')
+    if 'train_loader' not in cfg:
+        train_loader = create('TrainDataLoader')
     else:
-        train_feed = create(cfg.train_feed)
+        train_loader = create(cfg.train_loader)
+    if FLAGS.dataset_dir is not None:
+        train_loader.dataset.root_dir = FLAGS.dataset_dir
 
     if FLAGS.eval:
-        if 'eval_feed' not in cfg:
-            eval_feed = create(main_arch + 'EvalFeed')
+        if 'eval_loader' not in cfg:
+            eval_loader = create('EvalDataLoader')
         else:
-            eval_feed = create(cfg.eval_feed)
+            eval_loader = create(cfg.eval_loader)
+        if FLAGS.dataset_dir is not None:
+            eval_loader.dataset.root_dir = FLAGS.dataset_dir
 
     if 'FLAGS_selected_gpus' in env:
         device_id = int(env['FLAGS_selected_gpus'])
@@ -116,10 +117,8 @@ def main():
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
-            train_pyreader, feed_vars = create_feed(train_feed)
-
             with mixed_precision_context(FLAGS.loss_scale, FLAGS.fp16) as ctx:
-                train_fetches = model.train(feed_vars)
+                train_fetches = model.train()
 
                 loss = train_fetches['loss']
                 if FLAGS.fp16:
@@ -139,17 +138,13 @@ def main():
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
                 model = create(main_arch)
-                eval_pyreader, feed_vars = create_feed(eval_feed)
-                fetches = model.eval(feed_vars)
+                fetches = model.eval()
         eval_prog = eval_prog.clone(True)
-
-        eval_reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
-        eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
         # parse eval fetches
         extra_keys = []
         if cfg.metric == 'COCO':
-            extra_keys = ['im_info', 'im_id', 'im_shape']
+            extra_keys = ['im_info', 'im_shape']
         if cfg.metric == 'VOC':
             extra_keys = ['gt_box', 'gt_label', 'is_difficult']
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
@@ -194,10 +189,6 @@ def main():
         checkpoint.load_params(
             exe, train_prog, cfg.pretrain_weights, ignore_params=ignore_params)
 
-    train_reader = create_reader(train_feed, (cfg.max_iters - start_iter) *
-                                 devices_num, FLAGS.dataset_dir)
-    train_pyreader.decorate_sample_list_generator(train_reader, place)
-
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
     if hasattr(model, 'is_bbox_normalized'):
@@ -207,7 +198,6 @@ def main():
     map_type = cfg.map_type if 'map_type' in cfg else '11point'
 
     train_stats = TrainingStats(cfg.log_smooth_window, train_keys)
-    train_pyreader.start()
     start_time = time.time()
     end_time = time.time()
 
@@ -230,7 +220,8 @@ def main():
         time_cost = np.mean(time_stat)
         eta_sec = (cfg.max_iters - it) * time_cost
         eta = str(datetime.timedelta(seconds=int(eta_sec)))
-        outs = exe.run(compiled_train_prog, fetch_list=train_values)
+        feed_data, _ = next(train_loader)
+        outs = exe.run(compiled_train_prog, feed=feed_data, fetch_list=train_values)
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
 
         # use tb-paddle to log loss
@@ -260,7 +251,10 @@ def main():
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
                 box_ap_stats = eval_results(
-                    results, eval_feed, cfg.metric, cfg.num_classes, resolution,
+                    results,
+                    eval_loader.dataset.annotation_file,
+                    getattr(eval_loader.dataset, 'use_background', None),
+                    cfg.metric, cfg.num_classes, resolution,
                     is_bbox_normalized, FLAGS.output_eval, map_type)
 
                 # use tb_paddle to log mAP
@@ -275,8 +269,6 @@ def main():
                                     os.path.join(save_dir, "best_model"))
                 logger.info("Best test box ap: {}, in iter: {}".format(
                     best_box_ap_list[0], best_box_ap_list[1]))
-
-    train_pyreader.reset()
 
 
 if __name__ == '__main__':
@@ -312,7 +304,7 @@ if __name__ == '__main__':
         "--dataset_dir",
         default=None,
         type=str,
-        help="Dataset path, same as DataFeed.dataset.dataset_dir")
+        help="Dataset path, same as DataLoader.dataset.root_dir")
     parser.add_argument(
         "--use_tb",
         type=bool,

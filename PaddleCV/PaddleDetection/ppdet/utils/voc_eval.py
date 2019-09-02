@@ -21,7 +21,6 @@ import os
 import sys
 import numpy as np
 
-from ..data.source.voc_loader import pascalvoc_label
 from .map_utils import DetectionMAP
 from .coco_eval import bbox2out
 
@@ -164,20 +163,43 @@ def get_category_info_from_anno(anno_file, with_background=True):
     return clsid2catid, catid2name
 
 
-def vocall_category_info(with_background=True):
+def vocall_category_info(use_background=True):
     """
     Get class id to category id map and category id
     to category name map of mixup voc dataset
 
     Args:
-        with_background (bool, default True):
+        use_background (bool, default True):
             whether load background as class 0.
     """
-    label_map = pascalvoc_label(with_background)
-    label_map = sorted(label_map.items(), key=lambda x: x[1])
+    label_map = {
+        'aeroplane': 1,
+        'bicycle': 2,
+        'bird': 3,
+        'boat': 4,
+        'bottle': 5,
+        'bus': 6,
+        'car': 7,
+        'cat': 8,
+        'chair': 9,
+        'cow': 10,
+        'diningtable': 11,
+        'dog': 12,
+        'horse': 13,
+        'motorbike': 14,
+        'person': 15,
+        'pottedplant': 16,
+        'sheep': 17,
+        'sofa': 18,
+        'train': 19,
+        'tvmonitor': 20
+    }
+    if use_background:
+        label_map = {k: v - 1 for k, v in label_map.items()}
+
     cats = [l[0] for l in label_map]
 
-    if with_background:
+    if use_background:
         cats.insert(0, 'background')
 
     clsid2catid = {i: i for i in range(len(cats))}

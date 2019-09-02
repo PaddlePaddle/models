@@ -1,0 +1,268 @@
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+try:
+    from collections.abc import Sequence
+except Exception:
+    from collections import Sequence
+
+from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
+
+import numpy as np
+from PIL import Image
+
+__all__ = ['DataLoader']
+
+
+class _Compose(object):
+    def __init__(self, transforms):
+        super(_Compose, self).__init__()
+        assert transforms and isinstance(transforms, Sequence), \
+            "sample_transforms must a sequence of callables"
+        self.transforms = transforms
+        self.use_mixup = bool(list(filter(
+            lambda x: hasattr(x, 'is_mixup'), transforms)))
+
+    @property
+    def need_seeding(self):
+        if not hasattr(self, 'batch_seed'):
+            self.batch_seed = bool(list(filter(
+                lambda x: hasattr(x, 'batch_seed'), self.transforms)))
+        return self.batch_seed
+
+    def __call__(self, sample):
+        if self.use_mixup:
+            sample, sample2 = sample
+
+        for transform in self.transforms:
+            if hasattr(transform, 'is_mixup'):
+                sample = transform(sample, sample2)
+            else:
+                sample = transform(sample)
+
+        return sample
+
+
+class _Batchify(object):
+    def __init__(self, transforms=None):
+        super(_Batchify, self).__init__()
+        assert transforms is None or isinstance(transforms, Sequence), \
+            "sample_transforms must a sequence of callables"
+        self.transforms = transforms
+
+    def __call__(self, batch):
+        # array of structures to structure of arrays
+        batch_dict = {}
+        for sample in batch:
+            for k, v in sample.items():
+                if k not in batch_dict:
+                    batch_dict[k] = []
+                batch_dict[k].append(v)
+
+        if not self.transforms:
+            return batch_dict
+
+        for transform in self.transforms:
+            batch_dict = transform(batch_dict)
+        return batch_dict
+
+
+def _apply_transform(idx, dataset, transform, batch_seed=None):
+    assert not transform.use_mixup or dataset.mode == 'indexable', \
+        'mixup only works with indexable datasets'
+
+    if dataset.mode == 'iterable':
+        return transform(next(dataset))
+
+    sample = dataset[idx]
+    # for random shape, ensure same size is chosen for the same batch
+    # batch_seed = batch_idx * rank
+    if batch_seed is not None:
+        sample['batch_seed'] = batch_seed
+    if transform.use_mixup:
+        idx2 = np.random.choice(np.delete(np.arange(
+            len(dataset)), idx))
+        if hasattr(dataset, 'samples'):
+            # XXX sample2 is read-only, avoid deepcopy if possible
+            sample2 = dataset.samples[idx2]
+            sample2['image'] = Image.open(sample2['file']).convert('RGB')
+        else:
+            sample2 = dataset[idx2]
+        sample = (sample, sample2)
+    return transform(sample)
+
+
+def _process_worker_init(dataset, transforms):
+    global _worker_context
+    _worker_context = (dataset, transforms)
+
+
+def _process_worker_fn(ids, context=None, batch_seed=None):
+    global _worker_context
+    dataset, transform = _worker_context
+    samples = [_apply_transform(idx, dataset, transform, batch_seed)
+               for idx in ids]
+    return samples
+
+
+def _thread_worker_fn(ids, context, batch_seed=None):
+    dataset, transform = context
+    samples = [_apply_transform(idx, dataset, transform, batch_seed)
+               for idx in ids]
+    return samples
+
+
+class _SingleWorkerLoaderIter(object):
+    def __init__(self, loader):
+        super(_SingleWorkerLoaderIter, self).__init__()
+        self.dataset = loader.dataset
+        self.transform = loader.transform
+        self.batchify = loader.batchify
+        self.rank = loader.rank
+        self._iter = iter(loader.sampler)
+        self._batch_idx = 0
+
+    def _batch_seed(self):
+        if self.transform.need_seeding:
+            return (self._batch_idx + 1) * (self.rank + 1)
+        else:
+            return None
+
+    def __next__(self):
+        ids = next(self._iter)
+        samples = [_apply_transform(
+            i, self.dataset, self.transform, self._batch_seed()) for i in ids]
+        batch = self.batchify(samples)
+        self._batch_idx += 1
+        return batch
+
+    next = __next__
+
+
+class _MultiWorkerLoaderIter(object):
+    def __init__(self, loader):
+        super(_MultiWorkerLoaderIter, self).__init__()
+        self.dataset = loader.dataset
+        self.transform = loader.transform
+        self.batchify = loader.batchify
+        self.rank = loader.rank
+        self.read_ahead = loader.read_ahead
+        self._iter = iter(loader.sampler)
+        self._out_queue = {}
+        self._recv_idx = 0
+        self._sent_idx = 0
+
+        worker_context = (loader.dataset, loader.transform)
+        if loader.multiprocessing:
+            self._worker_pool = Pool(
+                loader.num_workers, initializer=_process_worker_init,
+                initargs=worker_context)
+            self._worker_fn = _process_worker_fn
+            self._worker_context = None
+        else:
+            self._worker_pool = ThreadPool(loader.num_workers)
+            self._worker_fn = _thread_worker_fn
+            self._worker_context = worker_context
+
+        for _ in range(loader.read_ahead):
+            self._queue_next()
+
+    def _batch_seed(self):
+        if self.transform.need_seeding:
+            return (self._sent_idx + 1) * (self.rank + 1)
+        else:
+            return None
+
+    def _queue_next(self):
+        if self._sent_idx - self._recv_idx >= self.read_ahead:
+            return
+        ids = next(self._iter, None)
+        if ids is None:
+            return
+        future = self._worker_pool.apply_async(
+            self._worker_fn, (ids, self._worker_context, self._batch_seed()))
+        self._out_queue[self._sent_idx] = future
+        self._sent_idx += 1
+
+    def __next__(self):
+        self._queue_next()
+        if self._recv_idx == self._sent_idx:
+            assert not self._out_queue, "result queue should be empty by now"
+            raise StopIteration
+        assert self._recv_idx < self._sent_idx
+        assert self._recv_idx in self._out_queue
+        future = self._out_queue.pop(self._recv_idx)
+        batch = future.get()
+        self._recv_idx += 1
+        return self.batchify(batch)
+
+    next = __next__
+
+
+class DataLoader(object):
+    def __init__(self,
+                 dataset,
+                 sampler=None,
+                 batch_size=1,
+                 sample_transforms=[],
+                 batch_transforms=None,
+                 num_workers=0,
+                 multiprocessing=False,
+                 read_ahead=2,
+                 init_seed=0,
+                 rank=0,
+                 world_size=1):
+        super(DataLoader, self).__init__()
+
+        self.sampler = sampler
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.sample_transforms = sample_transforms
+        self.batch_transforms = batch_transforms
+        self.num_workers = num_workers
+        self.multiprocessing = multiprocessing
+        self.read_ahead = read_ahead
+        self.init_seed = init_seed
+        self.rank = rank
+        self.world_size = world_size
+
+        assert sampler is not None or dataset.mode != 'indexable', \
+            "Sampler is required for indexable dataset"
+
+        self.transform = _Compose(sample_transforms)
+        self.batchify = _Batchify(batch_transforms)
+
+    def __setattr__(self, name, value):
+        # propagate attributes to sampler
+        super(DataLoader, self).__setattr__(name, value)
+        if name in ['dataset', 'batch_size', 'init_seed',
+                    'rank', 'world_size']:
+           if self.sampler is not None:
+               setattr(self.sampler, name, value)
+
+    def __len__(self):
+        if self.dataset.mode == 'indexable':
+            return len(self.sampler)
+        raise TypeError('Iterable DataSet does not have fixed length')
+
+    def __iter__(self):
+        if self.num_workers > 0:
+            return _MultiWorkerLoaderIter(self)
+        else:
+            return _SingleWorkerLoaderIter(self)
+
+    def reset(self):
+        if self.sampler is not None:
+            self.sampler.reset()
