@@ -38,7 +38,8 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml -o use_gpu=false
 - `--eval`: 是否边训练边测试，默认是 `False`
 - `--output_eval`: 如果边训练边测试, 这个参数可以编辑评测保存json路径, 默认是当前目录。
 - `-d` or `--dataset_dir`: 数据集路径, 同配置文件里的`dataset_dir`. 例如: `-d dataset/coco`
-- `-o`: 设置配置文件里的参数内容。 例如: `-o max_iters=180000`
+- `-c`: 选择配置文件，所有配置文件在`configs/`中
+- `-o`: 设置配置文件里的参数内容。例如: `-o max_iters=180000`。使用`-o`配置相较于`-c`选择的配置文件具有更高的优先级。
 
 ##### 例子
 
@@ -60,6 +61,15 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
                          -d dataset/coco
 ```
 
+- 模型fine-tune
+```bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export PYTHONPATH=$PYTHONPATH:.
+python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
+                         -o pretrain_weights=output/mask_rcnn_r50_fpn_2x/model_final/ \
+                         --finetune
+```
+
 ##### 提示
 
 - `CUDA_VISIBLE_DEVICES` 参数可以指定不同的GPU。例如: `export CUDA_VISIBLE_DEVICES=0,1,2,3`. GPU计算规则可以参考 [FAQ](#faq)
@@ -67,6 +77,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 - 若本地未找到数据集，将自动下载数据集并保存在`~/.cache/paddle/dataset`中。
 - 预训练模型自动下载并保存在`〜/.cache/paddle/weights`中。
 - 模型checkpoints默认保存在`output`中（可配置）。
+- 进行模型fine-tune时，用户可将`pretrain_weights`配置为PaddlePaddle发布的模型，加载模型时默认不加载和`num_classes`相关的参数。参数名可以参考[FAQ](#faq)
 - 更多参数配置，请参考[配置文件](../configs)。
 - RCNN系列模型CPU训练在PaddlePaddle 1.5.1及以下版本暂不支持，将在下个版本修复。
 
@@ -194,3 +205,16 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 **A:**  可通过设置环境变量`FLAGS_conv_workspace_size_limit`为较小的值来减少显存消耗，并且不
 会影响训练速度。以Mask-RCNN（R50）为例，设置`export FLAGS_conv_workspace_size_limit = 512`，
 batch size可以达到每GPU 4 (Tesla V100 16GB)。
+
+**Q:** 模型fine-tune时，加载模型会忽略什么参数？ </br>
+**A:** Fine-tune加载模型时，忽略的参数与模型类型相关，参数字段如下表所示，如果模型参数命中包含如下字段即不加载该参数: </br>
+
+|      模型类型      |         fine-tune忽略参数字段         |
+| :----------------: | :-----------------------------------: |
+|     Faster RCNN    |          cls_score, cls_score         |
+|     Cascade RCNN   |          cls_score, cls_score         |
+|       Mask RCNN    | cls_score, bbox_pred, mask_fcn_logits |
+|  Cascade-Mask RCNN | cls_score, bbox_pred, mask_fcn_logits |
+|      RetinaNet     |           retnet_cls_pred_fpn         |
+|        SSD         |                conv2d_                |
+|       YOLOv3       |              yolo_output              |

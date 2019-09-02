@@ -37,7 +37,8 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml -o use_gpu=false
 - `--eval`: Whether to perform evaluation in training, default is `False`
 - `--output_eval`: If perform evaluation in training, this edits evaluation directory, default is current directory.
 - `-d` or `--dataset_dir`: Dataset path, same as `dataset_dir` of configs. Such as: `-d dataset/coco`
-- `-o`: Set configuration options in config file. Such as: `-o max_iters=180000`
+- `-c`: Select config file and all files are saved in `configs/`
+- `-o`: Set configuration options in config file. Such as: `-o max_iters=180000`. `-o` has higher priority to file configured by `-c`
 
 
 ##### Examples
@@ -63,6 +64,14 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
                          -d dataset/coco
 ```
 
+- Model fine-tune
+```bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export PYTHONPATH=$PYTHONPATH:.
+python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
+                         -o pretrain_weights=output/mask_rcnn_r50_fpn_2x/model_final/ \
+                         --finetune
+```
 
 ##### NOTES
 
@@ -71,6 +80,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 - Dataset will be downloaded automatically and cached in `~/.cache/paddle/dataset` if not be found locally.
 - Pretrained model is downloaded automatically and cached in `~/.cache/paddle/weights`.
 - Model checkpoints are saved in `output` by default (configurable).
+- When finetuning, users could set `pretrain_weights` to the models published by PaddlePaddle. Model is loaded without parameters related to `num_classes` by default. For detailed parameter names, please refer to [FAQ](#faq).
 - To check out hyper parameters used, please refer to the [configs](../configs).
 - RCNN models training on CPU is not supported on PaddlePaddle<=1.5.1 and will be fixed on later version.
 
@@ -201,3 +211,16 @@ The calculation rules are as follows，they are equivalent: </br>
 number can reduce GPU memory footprint without affecting training speed.
 Take Mask-RCNN (R50) as example, by setting `export FLAGS_conv_workspace_size_limit=512`,
 batch size could reach 4 per GPU (Tesla V100 16GB).
+
+**Q:** Which parameters are ignored when finetuning? </br>
+**A:** In fine-tuning, ignored parameters are related to architectures. Parameter fields are as follows and if the parameter name contains fields below, the parameter will not be loaded. </br>
+
+| Model Architecture |  Fine-tune ignored parameter fields   |
+| :----------------: | :-----------------------------------: |
+|     Faster RCNN    |          cls_score, cls_score         |
+|     Cascade RCNN   |          cls_score, cls_score         |
+|       Mask RCNN    | cls_score, bbox_pred, mask_fcn_logits |
+|  Cascade-Mask RCNN | cls_score, bbox_pred, mask_fcn_logits |
+|      RetinaNet     |           retnet_cls_pred_fpn         |
+|        SSD         |                conv2d_                |
+|       YOLOv3       |              yolo_output              |
