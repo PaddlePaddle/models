@@ -137,20 +137,42 @@ class BlazeNet(object):
                    out_channels,
                    double_channels=None,
                    stride=1,
+                   use_5x5kernel=False,
                    name=None):
         assert stride in [1, 2]
         use_pool = not stride == 1
         use_double_block = double_channels is not None
         act = 'relu' if use_double_block else None
-        conv_dw = self._conv_norm(
-            input=input,
-            filter_size=5,
-            num_filters=in_channels,
-            stride=stride,
-            padding=2,
-            num_groups=in_channels,
-            use_cudnn=False,
-            name=name + "1_dw")
+
+        if use_5x5kernel:
+            conv_dw = self._conv_norm(
+                input=input,
+                filter_size=5,
+                num_filters=in_channels,
+                stride=stride,
+                padding=2,
+                num_groups=in_channels,
+                use_cudnn=False,
+                name=name + "1_dw")
+        else:
+            conv_dw_1 = self._conv_norm(
+                input=input,
+                filter_size=3,
+                num_filters=in_channels,
+                stride=1,
+                padding=1,
+                num_groups=in_channels,
+                use_cudnn=False,
+                name=name + "1_dw_1")
+            conv_dw = self._conv_norm(
+                input=conv_dw_1,
+                filter_size=3,
+                num_filters=in_channels,
+                stride=stride,
+                padding=1,
+                num_groups=in_channels,
+                use_cudnn=False,
+                name=name + "1_dw_2")
 
         conv_pw = self._conv_norm(
             input=conv_dw,
@@ -162,14 +184,34 @@ class BlazeNet(object):
             name=name + "1_sep")
 
         if use_double_block:
-            conv_dw = self._conv_norm(
-                input=conv_pw,
-                filter_size=5,
-                num_filters=out_channels,
-                stride=1,
-                padding=2,
-                use_cudnn=False,
-                name=name + "2_dw")
+            if use_5x5kernel:
+                conv_dw = self._conv_norm(
+                    input=conv_pw,
+                    filter_size=5,
+                    num_filters=out_channels,
+                    stride=1,
+                    padding=2,
+                    use_cudnn=False,
+                    name=name + "2_dw")
+            else:
+                conv_dw_1 = self._conv_norm(
+                    input=conv_pw,
+                    filter_size=3,
+                    num_filters=out_channels,
+                    stride=1,
+                    padding=1,
+                    num_groups=out_channels,
+                    use_cudnn=False,
+                    name=name + "2_dw_1")
+                conv_dw = self._conv_norm(
+                    input=conv_dw_1,
+                    filter_size=3,
+                    num_filters=out_channels,
+                    stride=1,
+                    padding=1,
+                    num_groups=out_channels,
+                    use_cudnn=False,
+                    name=name + "2_dw_2")
 
             conv_pw = self._conv_norm(
                 input=conv_dw,

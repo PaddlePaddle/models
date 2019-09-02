@@ -63,3 +63,4 @@ log.txt
 /*output*/
 set_env.sh
 run_train.sh
+run_eval.sh
