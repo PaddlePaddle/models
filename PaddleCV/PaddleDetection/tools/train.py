@@ -200,9 +200,8 @@ def main():
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
-    if hasattr(model, 'is_bbox_normalized') and \
-            callable(model.is_bbox_normalized):
-        is_bbox_normalized = model.is_bbox_normalized()
+    if hasattr(model, 'is_bbox_normalized'):
+        is_bbox_normalized = model.is_bbox_normalized
 
     # if map_type not set, use default 11point, only use in VOC eval
     map_type = cfg.map_type if 'map_type' in cfg else '11point'

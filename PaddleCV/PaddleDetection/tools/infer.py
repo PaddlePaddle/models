@@ -207,9 +207,8 @@ def main():
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
-    if hasattr(model, 'is_bbox_normalized') and \
-            callable(model.is_bbox_normalized):
-        is_bbox_normalized = model.is_bbox_normalized()
+    if hasattr(model, 'is_bbox_normalized'):
+        is_bbox_normalized = model.is_bbox_normalized
 
     # use tb-paddle to log image
     if FLAGS.use_tb:
