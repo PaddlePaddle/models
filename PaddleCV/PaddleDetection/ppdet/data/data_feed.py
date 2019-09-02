@@ -279,6 +279,10 @@ class DataFeed(object):
         shuffle (bool): if samples should be shuffled
         drop_last (bool): drop last batch if size is uneven
         num_workers (int): number of workers processes (or threads)
+        bufsize (int): size of queue used to buffer results from workers
+        use_process (bool): use process or thread as workers
+        memsize (str): size of shared memory used in result queue
+                        when 'use_process' is True, default to '3G'
     """
     __category__ = 'data'
 
