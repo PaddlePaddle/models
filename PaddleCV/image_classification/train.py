@@ -443,8 +443,6 @@ def train(args):
     use_ngraph = os.getenv('FLAGS_use_ngraph')
     if not use_ngraph:
         build_strategy = fluid.BuildStrategy()
-        # memopt may affect GC results
-        #build_strategy.memory_optimize = args.with_mem_opt
         build_strategy.enable_inplace = args.with_inplace
         #build_strategy.fuse_all_reduce_ops=1
 
