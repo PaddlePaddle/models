@@ -212,8 +212,8 @@ number can reduce GPU memory footprint without affecting training speed.
 Take Mask-RCNN (R50) as example, by setting `export FLAGS_conv_workspace_size_limit=512`,
 batch size could reach 4 per GPU (Tesla V100 16GB).
 
-**Q:** Which parameters are ignored when finetuning? </br>
-**A:** In fine-tuning, ignored parameters are related to architectures. Parameter fields are as follows and if the parameter name contains fields below, the parameter will not be loaded. </br>
+**Q:** Why parameters are ignored when finetuning and which parameters are ignored?</br>
+**A:** In fine-tuning, users usually use own dataset which sets different `num_classes` compared to published models. That will cause dimensional inconsistency of parameters related to `num_classes`. Parameter fields are as follows and if the parameter name contains fields below, the parameter will not be loaded. </br>
 
 | Model Architecture |  Fine-tune ignored parameter fields   |
 | :----------------: | :-----------------------------------: |

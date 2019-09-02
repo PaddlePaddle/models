@@ -206,8 +206,8 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 会影响训练速度。以Mask-RCNN（R50）为例，设置`export FLAGS_conv_workspace_size_limit = 512`，
 batch size可以达到每GPU 4 (Tesla V100 16GB)。
 
-**Q:** 模型fine-tune时，加载模型会忽略什么参数？ </br>
-**A:** Fine-tune加载模型时，忽略的参数与模型类型相关，参数字段如下表所示，如果模型参数命中包含如下字段即不加载该参数: </br>
+**Q:** 模型fine-tune时，加载模型为什么需要忽略参数？会忽略哪些参数？ </br>
+**A:** Fine-tune加载模型时，用户通常会使用自己的数据集，`num_classes`与发布的模型不同，导致加载与`num_classes`相关的参数时维度不匹配。忽略的参数与模型类型相关，参数字段如下表所示，如果模型参数命中包含如下字段即不加载该参数: </br>
 
 |      模型类型      |         fine-tune忽略参数字段         |
 | :----------------: | :-----------------------------------: |
