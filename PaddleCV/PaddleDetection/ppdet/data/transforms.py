@@ -457,6 +457,11 @@ class PadToStride(object):
         pad_w = ((pad_w + self.stride - 1) // self.stride) * self.stride
         chan = dims[0][0]
 
+        if all([h == pad_h for h in hs]) and all([w == pad_w for w in ws]):
+            batch['padded_height'] = np.array(hs)
+            batch['padded_width'] = np.array(ws)
+            return batch
+
         padded = np.zeros((batch_size, chan, pad_h, pad_w), dtype=np.float32)
         for idx, img in enumerate(images):
             padded[idx, :, :hs[idx], :ws[idx]] = img
