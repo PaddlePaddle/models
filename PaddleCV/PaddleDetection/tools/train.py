@@ -117,14 +117,14 @@ def main():
             with mixed_precision_context(FLAGS.loss_scale, FLAGS.fp16) as ctx:
                 train_fetches = model.train(feed_vars)
 
-            loss = train_fetches['loss']
-            if FLAGS.fp16:
-                loss *= ctx.get_loss_scale_var()
-            lr = lr_builder()
-            optimizer = optim_builder(lr)
-            optimizer.minimize(loss)
-            if FLAGS.fp16:
-                loss /= ctx.get_loss_scale_var()
+                loss = train_fetches['loss']
+                if FLAGS.fp16:
+                    loss *= ctx.get_loss_scale_var()
+                lr = lr_builder()
+                optimizer = optim_builder(lr)
+                optimizer.minimize(loss)
+                if FLAGS.fp16:
+                    loss /= ctx.get_loss_scale_var()
 
     # parse train fetches
     train_keys, train_values, _ = parse_fetches(train_fetches)
