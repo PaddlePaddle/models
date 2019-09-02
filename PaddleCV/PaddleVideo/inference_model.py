@@ -58,7 +58,8 @@ def parse_args():
         '--weights',
         type=str,
         default=None,
-        help='weight path, None to use weights from Paddle.')
+        help='weight path, None to automatically download weights provided by Paddle.'
+    )
     parser.add_argument(
         '--batch_size',
         type=int,
