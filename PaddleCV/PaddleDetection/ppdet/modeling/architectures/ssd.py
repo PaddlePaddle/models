@@ -85,6 +85,3 @@ class SSD(object):
         # SSD use output_decoder in output layers, bbox is normalized
         # to range [0, 1], is_bbox_normalized is used in eval.py and infer.py
         return True
-
-    def ignore_map(self):
-        return {'SSD': ['conv2d_']}

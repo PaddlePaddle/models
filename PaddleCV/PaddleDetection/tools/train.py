@@ -46,6 +46,7 @@ from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
 import ppdet.utils.checkpoint as checkpoint
+from ppdet.utils.finetune_utils import get_ignore_params
 from ppdet.modeling.model_input import create_feed
 
 import logging
@@ -152,9 +153,9 @@ def main():
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
 
-    ignore_map = {}
+    ignore_params = []
     if FLAGS.finetune:
-        ignore_map = model.ignore_map()
+        ignore_params = get_ignore_params(main_arch)
 
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
@@ -163,7 +164,7 @@ def main():
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:
         checkpoint.load_params(
-            exe, train_prog, cfg.pretrain_weights, ignore_map=ignore_map)
+            exe, train_prog, cfg.pretrain_weights, ignore_params=ignore_params)
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False

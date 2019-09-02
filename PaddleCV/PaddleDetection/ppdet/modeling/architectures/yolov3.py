@@ -70,6 +70,3 @@ class YOLOv3(object):
 
     def test(self, feed_vars):
         return self.build(feed_vars, mode='test')
-
-    def ignore_map(self):
-        return {'YOLOv3': ['yolo_output']}

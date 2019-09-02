@@ -45,7 +45,7 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
-def load_params(exe, prog, path, mode='train', ignore_map={}):
+def load_params(exe, prog, path, mode='train', ignore_params=[]):
     """
     Load model from the given path.
     Args:
@@ -65,7 +65,7 @@ def load_params(exe, prog, path, mode='train', ignore_map={}):
         raise ValueError("Model pretrain path {} does not "
                          "exists.".format(path))
 
-    is_finetune = len(ignore_map.items()) > 0
+    is_finetune = len(ignore_params) > 0
     if mode == 'train':
         logger.info('Loading pretrained model for training from {}...'.format(
             path))
@@ -80,13 +80,12 @@ def load_params(exe, prog, path, mode='train', ignore_map={}):
         param_exist = os.path.exists(os.path.join(path, var.name))
         if mode == 'train' and is_finetune:
             # Parameter related to num_classes will be ignored in finetuning
-            do_ignore_list = [
-                name in var.name for name in ignore_map.values()[0]
-            ]
+            do_ignore_list = [name in var.name for name in ignore_params]
             do_ignore = any(do_ignore_list)
             if do_ignore and param_exist:
-                logger.info('When finetuning for {} architecture, ignore {}'.
-                            format(ignore_map.keys()[0], var.name))
+                logger.info(
+                    'When finetuning for {} architecture, ignore {}'.format(
+                        ignore_params[do_ignore_list.index(True)], var.name))
         b = param_exist and not do_ignore
         if b:
             logger.debug('load weight {}'.format(var.name))

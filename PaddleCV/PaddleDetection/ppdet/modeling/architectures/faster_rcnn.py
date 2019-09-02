@@ -129,6 +129,3 @@ class FasterRCNN(object):
 
     def test(self, feed_vars):
         return self.build(feed_vars, 'test')
-
-    def ignore_map(self):
-        return {'FasterRCNN': ['cls_score', 'bbox_pred']}

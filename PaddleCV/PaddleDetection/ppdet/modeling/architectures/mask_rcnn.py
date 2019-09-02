@@ -193,6 +193,3 @@ class MaskRCNN(object):
 
     def test(self, feed_vars):
         return self.build(feed_vars, 'test')
-
-    def ignore_map(self):
-        return {'MaskRCNN': ['cls_score', 'bbox_pred', 'mask_fcn_logits']}
