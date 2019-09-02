@@ -113,7 +113,7 @@ def main():
     # load model
     exe.run(startup_prog)
     if 'weights' in cfg:
-        checkpoint.load_params(exe, eval_prog, cfg.weights, mode='eval')
+        checkpoint.load_params(exe, eval_prog, cfg.weights)
 
     assert cfg.metric in ['COCO', 'VOC'], \
             "unknown metric type {}".format(cfg.metric)

@@ -45,19 +45,15 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
-def load_params(exe, prog, path, mode='train', ignore_params=[]):
+def load_params(exe, prog, path, ignore_params=[]):
     """
     Load model from the given path.
     Args:
         exe (fluid.Executor): The fluid.Executor object.
         prog (fluid.Program): load weight to which Program object.
         path (string): URL string or loca model path.
-        mode (string): train, eval and infer mode for different load methods.
         ignore_map (bool): ignore variable to load when finetuning.
     """
-    assert mode in ['train', 'eval', 'infer'], \
-        "only train, eval and infer mode is supported"
-
     if is_url(path):
         path = get_weights_path(path)
 
@@ -66,19 +62,15 @@ def load_params(exe, prog, path, mode='train', ignore_params=[]):
                          "exists.".format(path))
 
     is_finetune = len(ignore_params) > 0
-    if mode == 'train':
-        logger.info('Loading pretrained model for training from {}...'.format(
-            path))
-        if is_finetune:
-            logger.info(
-                'Finetune mode and weights related to num_classes are ignored')
-    else:
-        logger.info('Loading parameters for {} from {}...'.format(mode, path))
+    logger.info('Loading parameters from {}...'.format(path))
+    if is_finetune:
+        logger.info(
+            'Finetune mode and weights related to num_classes are ignored')
 
     def _if_exist(var):
         do_ignore = False
         param_exist = os.path.exists(os.path.join(path, var.name))
-        if mode == 'train' and is_finetune:
+        if is_finetune:
             # Parameter related to num_classes will be ignored in finetuning
             do_ignore_list = [name in var.name for name in ignore_params]
             do_ignore = any(do_ignore_list)
@@ -86,10 +78,10 @@ def load_params(exe, prog, path, mode='train', ignore_params=[]):
                 logger.info(
                     'When finetuning for {} architecture, ignore {}'.format(
                         ignore_params[do_ignore_list.index(True)], var.name))
-        b = param_exist and not do_ignore
-        if b:
+        do_load = param_exist and not do_ignore
+        if do_load:
             logger.debug('load weight {}'.format(var.name))
-        return b
+        return do_load
 
     fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
 
