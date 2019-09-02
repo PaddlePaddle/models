@@ -60,6 +60,15 @@ class COCODataSet(DataSet):
         self.use_crowd = use_crowd
         self.use_empty = use_empty
 
+    @property
+    def aspect_ratios(self):
+        if not hasattr(self, '_aspect_ratios'):
+            if not hasattr(self, 'samples'):
+                self._load()
+            self._aspect_ratios = [s['width'] / s['height']
+                                   for s in self.samples]
+        return self._aspect_ratios
+
     def __len__(self):
         if not hasattr(self, 'samples'):
             self._load()
@@ -73,7 +82,7 @@ class COCODataSet(DataSet):
         return sample
 
     def _load(self):
-        coco = COCO(self.annotation_file)
+        coco = COCO(os.path.join(self.root_dir, self.annotation_file))
         img_ids = coco.getImgIds()
         imgs = coco.loadImgs(img_ids)
         class_map = {v: i + 1 for i, v in enumerate(coco.getCatIds())}
@@ -81,7 +90,8 @@ class COCODataSet(DataSet):
 
         for img in imgs:
             sample = {}
-            img_path = os.path.join(self.image_dir, img['file_name'])
+            img_path = os.path.join(
+                self.root_dir, self.image_dir, img['file_name'])
             sample['file'] = img_path
             sample['id'] = img['id']
             width = img['width']
@@ -135,7 +145,6 @@ class COCODataSet(DataSet):
             samples.append(sample)
 
         self.samples = samples
-        self.aspect_ratios = [s['width'] / s['height'] for s in self.samples]
 
 
 class PascalVocDataSet(DataSet):
@@ -171,6 +180,15 @@ class PascalVocDataSet(DataSet):
         if use_background:
             label_map = {k: v - 1 for k, v in label_map.items()}
         self.label_map = label_map
+
+    @property
+    def aspect_ratios(self):
+        if not hasattr(self, '_aspect_ratios'):
+            if not hasattr(self, 'samples'):
+                self._load()
+            self._aspect_ratios = [s['width'] / s['height']
+                                   for s in self.samples]
+        return self._aspect_ratios
 
     def __len__(self):
         if not hasattr(self, 'samples'):
@@ -231,7 +249,6 @@ class PascalVocDataSet(DataSet):
             return sample
 
         self.samples = [parse_xml(idx) for idx in indices]
-        self.aspect_ratios = [s['width'] / s['height'] for s in self.samples]
 
 
 class ListDataSet(DataSet):

@@ -158,7 +158,7 @@ class _MultiWorkerLoaderIter(object):
         self.transform = loader.transform
         self.batchify = loader.batchify
         self.rank = loader.rank
-        self.read_ahead = loader.read_ahead
+        self.queue_depth = loader.queue_depth
         self._iter = iter(loader.sampler)
         self._out_queue = {}
         self._recv_idx = 0
@@ -176,7 +176,7 @@ class _MultiWorkerLoaderIter(object):
             self._worker_fn = _thread_worker_fn
             self._worker_context = worker_context
 
-        for _ in range(loader.read_ahead):
+        for _ in range(loader.queue_depth):
             self._queue_next()
 
     def _batch_seed(self):
@@ -186,7 +186,7 @@ class _MultiWorkerLoaderIter(object):
             return None
 
     def _queue_next(self):
-        if self._sent_idx - self._recv_idx >= self.read_ahead:
+        if self._sent_idx - self._recv_idx >= self.queue_depth:
             return
         ids = next(self._iter, None)
         if ids is None:
@@ -220,7 +220,7 @@ class DataLoader(object):
                  batch_transforms=None,
                  num_workers=0,
                  multiprocessing=False,
-                 read_ahead=2,
+                 queue_depth=2,
                  init_seed=0,
                  rank=0,
                  world_size=1):
@@ -233,7 +233,7 @@ class DataLoader(object):
         self.batch_transforms = batch_transforms
         self.num_workers = num_workers
         self.multiprocessing = multiprocessing
-        self.read_ahead = read_ahead
+        self.queue_depth = queue_depth
         self.init_seed = init_seed
         self.rank = rank
         self.world_size = world_size

@@ -239,13 +239,17 @@ class NormalizePermute(object):
 
 
 class RandomExpand(object):
-    def __init__(self, ratio=4., prob=0.5, fill_value=(127,) * 3):
+    def __init__(self, ratio=4., prob=0.5, fill_value=(127.5,) * 3):
         super(RandomExpand, self).__init__()
         assert ratio > 1.01, "expand ratio must be larger than 1.01"
         self.ratio = ratio
         self.prob = prob
-        if not isinstance(fill_value, tuple):
+        assert isinstance(fill_value, (float, Sequence)), \
+            "fill value must be either float or sequence"
+        if isinstance(fill_value, float):
             fill_value = (fill_value,) * 3
+        if not isinstance(fill_value, tuple):
+            fill_value = tuple(fill_value)
         self.fill_value = fill_value
 
     def __call__(self, sample):
@@ -262,7 +266,8 @@ class RandomExpand(object):
         y = np.random.randint(0, h - height)
         x = np.random.randint(0, w - width)
         if isinstance(img, Image.Image):
-            canvas = Image.new('RGB', (w, h), self.fill_value)
+            fill_value = (int(f) for f in self.fill_value)
+            canvas = Image.new('RGB', (w, h), fill_value)
             canvas.paste(img, (x, y))
         else:
             canvas = np.ones((h, w, 3), dtype=np.float32)
@@ -545,7 +550,10 @@ class ToFeedDict(object):
                     array_list.append(arr)
                 else:
                     if all([isinstance(a, np.ndarray) for a in arr]):
-                        array_list.append(np.concatenate(arr))
+                        if lod_level == 0:
+                            array_list.append(np.stack(arr))
+                        else:
+                            array_list.append(np.concatenate(arr))
                     else:
                         array_list.append(np.asarray(arr))
 
@@ -560,7 +568,7 @@ class ToFeedDict(object):
 
     def _to_tensor(self, ndarray, seq_length):
         from paddle import fluid
-        place = self.pin_memory and fluid.CUDAPinnedPlace or fluid.CPUPlace()
+        place = self.pin_memory and fluid.CUDAPinnedPlace() or fluid.CPUPlace()
         t = fluid.core.LoDTensor()
         t.set_recursive_sequence_lengths(seq_length)
         t.set(ndarray, place)

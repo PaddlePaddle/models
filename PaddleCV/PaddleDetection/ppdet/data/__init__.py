@@ -61,7 +61,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
                  batch_transforms=[],
                  num_workers=0,
                  multiprocessing=False,
-                 read_ahead=2):
+                 queue_depth=2):
         if isinstance(sampler, dict):
             if 'type' not in sampler:
                 sampler = samplers.Sampler(**sampler)
@@ -82,7 +82,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
 
         super(DataLoaderBuilder, self).__init__(
             dataset, sampler, batch_size, sample_transforms, batch_transforms,
-            num_workers, multiprocessing, read_ahead,
+            num_workers, multiprocessing, queue_depth,
             init_seed, rank, world_size)
 
     def __iter__(self):
@@ -94,7 +94,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
                     yield next(_iter)
                 except StopIteration:
                     self.reset()
-        return forever
+        return forever()
 
 
 @register
