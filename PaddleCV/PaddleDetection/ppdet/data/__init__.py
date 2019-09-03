@@ -14,6 +14,7 @@
 
 from __future__ import absolute_import
 
+import numbers
 import os
 import random
 
@@ -94,7 +95,12 @@ class ToFeedDict(object):
             seq_length = None
 
             for idx, f in enumerate(fields):
-                arr = batch[f]
+                # XXX basically just for `im_shape`
+                if isinstance(f, numbers.Number):
+                    arr = f
+                else:
+                    arr = batch[f]
+
                 if lod_level == 0:
                     # 'image' may already be stacked by `PadToStride`
                     arr = isinstance(arr, np.ndarray) and arr or np.stack(arr)
@@ -108,7 +114,7 @@ class ToFeedDict(object):
             if len(fields) == 1:
                 ndarray = arr_list[0]
             else:
-                ndarray = np.stack(arr_list).T
+                ndarray = np.column_stack(np.broadcast_arrays(*arr_list))
             feed_dict[name] = self._to_tensor(ndarray, seq_length)
 
         extra_dict = {key: batch[key] for key in self.extra_vars}
