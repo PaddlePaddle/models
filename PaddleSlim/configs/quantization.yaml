@@ -3,7 +3,7 @@ strategies:
     quantization_strategy:
         class: 'QuantizationStrategy'
         start_epoch: 0
-        end_epoch: 20
+        end_epoch: 19
         float_model_save_path: './output/float'
         mobile_model_save_path: './output/mobile'
         int8_model_save_path: './output/int8'
@@ -14,7 +14,7 @@ strategies:
         save_in_nodes: ['image']
         save_out_nodes: ['fc_0.tmp_2']
 compressor:
-    epoch: 21
+    epoch: 20
     checkpoint_path: './checkpoints_quan/'
     strategies:
         - quantization_strategy
