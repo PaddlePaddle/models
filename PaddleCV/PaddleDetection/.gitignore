@@ -57,9 +57,5 @@ coverage.xml
 
 *.json
 
-*.sh
 *.txt
-*.jpg
-*.jpeg
-*.png
 *.tar.gz

@@ -24,16 +24,18 @@ logger = logging.getLogger(__name__)
 eval_clses = {'COCO': coco_eval, 'VOC': voc_eval}
 
 
-def create_config(model_path, mode='fluid', batch_size=1):
+def create_config(model_path, mode='fluid', batch_size=1, min_subgraph_size=3):
     model_file = os.path.join(model_path, '__model__')
     params_file = os.path.join(model_path, '__params__')
     config = fluid.core.AnalysisConfig(model_file, params_file)
     config.enable_use_gpu(100, 0)
+    #config.enable_profile()
+    logger.info('min_subgraph_size = %d.' % (min_subgraph_size))
     if mode == 'trt_int8':
         config.enable_tensorrt_engine(
             workspace_size=1 << 30,
             max_batch_size=batch_size,
-            min_subgraph_size=40,
+            min_subgraph_size=min_subgraph_size,
             precision_mode=fluid.core.AnalysisConfig.Precision.Int8,
             use_static=False,
             use_calib_mode=True)
@@ -42,10 +44,18 @@ def create_config(model_path, mode='fluid', batch_size=1):
         config.enable_tensorrt_engine(
             workspace_size=1 << 30,
             max_batch_size=batch_size,
-            min_subgraph_size=40,
+            min_subgraph_size=min_subgraph_size,
             precision_mode=fluid.core.AnalysisConfig.Precision.Float32,
             use_static=False)
         logger.info('Run inference by TRT FP32.')
+    elif mode == 'trt_fp16':
+        config.enable_tensorrt_engine(
+            workspace_size=1 << 30,
+            max_batch_size=batch_size,
+            min_subgraph_size=min_subgraph_size,
+            precision_mode=fluid.core.AnalysisConfig.Precision.Half,
+            use_static=False)
+        logger.info('Run inference by TRT FP16.')
     elif mode == 'fluid':
         logger.info('Run inference by Fluid FP32.')
     else:
@@ -71,8 +81,8 @@ def create_tensor(np_data, dtype, use_cpp_engine=True):
     t = fluid.core.PaddleTensor()
     t.dtype = dtype_map[dtype]
     t.shape = np_data.shape
-    buf = np_data.flatten().tolist()
-    t.data = fluid.core.PaddleBuf(buf)
+    #buf = np_data.flatten().tolist()
+    t.data = fluid.core.PaddleBuf(np_data)
     return t
 
 
@@ -158,7 +168,10 @@ def evaluate():
             params_filename='__params__')
     else:
         config = create_config(
-            FLAGS.model_path, mode=FLAGS.mode, batch_size=feed.batch_size)
+            FLAGS.model_path,
+            mode=FLAGS.mode,
+            batch_size=feed.batch_size,
+            min_subgraph_size=FLAGS.min_subgraph_size)
         predict = fluid.core.create_paddle_predictor(config)
 
     t1 = time.time()
@@ -247,7 +260,10 @@ def benchmark():
 
     model_path = FLAGS.model_path
     config = create_config(
-        model_path, mode=FLAGS.mode, batch_size=feed.batch_size)
+        model_path,
+        mode=FLAGS.mode,
+        batch_size=feed.batch_size,
+        min_subgraph_size=FLAGS.min_subgraph_size)
     predict = fluid.core.create_paddle_predictor(config)
 
     data = reader().next()
@@ -264,10 +280,12 @@ def benchmark():
 
     cnt = 100
     logger.info('run benchmark...')
+    #fluid.profiler.start_profiler('GPU')
     t1 = time.time()
     for i in range(cnt):
         outs = predict.run(inputs)
     t2 = time.time()
+    #fluid.profiler.stop_profiler('total', 'logs')
 
     ms = (t2 - t1) * 1000.0 / float(cnt)
 
@@ -315,8 +333,6 @@ if __name__ == '__main__':
     parser.add_argument(
         "--model_path", type=str, default=None, help="model path.")
     parser.add_argument(
-        "--calib_num", type=int, default=-1, help="The calibaration number.")
-    parser.add_argument(
         "--visualize",
         action='store_true',
         default=False,
@@ -341,6 +357,11 @@ if __name__ == '__main__':
         type=float,
         default=0.5,
         help="Threshold to reserve the result for visualization.")
+    parser.add_argument(
+        "--min_subgraph_size",
+        type=int,
+        default=3,
+        help="min_subgraph_size for TensorRT.")
     parser.add_argument(
         "--output_dir",
         type=str,
