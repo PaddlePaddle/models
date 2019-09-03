@@ -82,11 +82,6 @@ def parse_args():
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter.")
     parser.add_argument(
-        "--use_mem_opt",
-        type=ast.literal_eval,
-        default=True,
-        help="The flag indicating whether to use memory optimization.")
-    parser.add_argument(
         "--use_py_reader",
         type=ast.literal_eval,
         default=True,
@@ -161,9 +156,6 @@ def main(args):
                 beta2=TrainTaskConfig.beta2,
                 epsilon=TrainTaskConfig.eps)
             optimizer.minimize(avg_cost)
-
-    if args.use_mem_opt:
-        fluid.memory_optimize(train_prog)
 
     if TrainTaskConfig.use_gpu:
         place = fluid.CUDAPlace(0)
