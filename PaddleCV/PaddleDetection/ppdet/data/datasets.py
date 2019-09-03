@@ -111,7 +111,7 @@ class COCODataSet(DataSet):
 
             gt_box = []
             gt_label = []
-            iscrowd = []
+            is_crowd = []
             if self.use_mask:
                 gt_poly = []
 
@@ -134,7 +134,7 @@ class COCODataSet(DataSet):
 
                 gt_label.append(ann['category_id'])
                 gt_box.append([x1, y1, x2, y2])
-                iscrowd.append(int(ann['iscrowd']))
+                is_crowd.append(int(ann['iscrowd']))
 
             gt_box = np.array(gt_box, dtype=np.float32)
             gt_label = np.array([class_map[cls] for cls in gt_label],
@@ -143,7 +143,7 @@ class COCODataSet(DataSet):
             sample['gt_box'] = gt_box
             sample['gt_label'] = gt_label
             sample['gt_score'] = np.ones_like(gt_label, dtype=np.float32)
-            sample['iscrowd'] = np.array(iscrowd, np.int32)
+            sample['is_crowd'] = np.array(is_crowd, np.int32)
             if self.use_mask:
                 sample['gt_poly'] = gt_poly
 
