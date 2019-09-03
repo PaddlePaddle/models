@@ -448,6 +448,10 @@ class PadToStride(object):
         assert isinstance(images[0], np.ndarray), "images must be ndarrays"
 
         batch_size = len(images)
+        if batch_size == 1 and self.stride == 1:
+            batch['padded_height'] = images.shape[0]
+            batch['padded_width'] = images.shape[1]
+            return batch
         dims = [i.shape for i in images]
         hs = [dim[1] for dim in dims]
         ws = [dim[2] for dim in dims]
