@@ -7,7 +7,6 @@ python train.py \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
-       --with_mem_opt=True \
        --lr_strategy=cosine_decay \
        --lr=0.1 \
        --num_epochs=200 \
@@ -22,7 +21,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=piecewise_decay \
 #       --num_epochs=120 \
 #       --lr=0.01 \
@@ -39,7 +37,6 @@ python train.py \
 #        --model_save_dir=output/ \
 #        --lr=0.02 \
 #        --num_epochs=120 \
-#        --with_mem_opt=True \
 #        --l2_decay=1e-4
 
 #SqueezeNet1_1
@@ -53,7 +50,6 @@ python train.py \
 #        --model_save_dir=output/ \
 #        --lr=0.02 \
 #        --num_epochs=120 \
-#        --with_mem_opt=True \
 #        --l2_decay=1e-4
 
 #VGG11:
@@ -67,7 +63,6 @@ python train.py \
 #        --model_save_dir=output/ \
 #        --lr=0.1 \
 #        --num_epochs=90 \
-#        --with_mem_opt=True \
 #        --l2_decay=2e-4
 
 #VGG13:
@@ -81,7 +76,6 @@ python train.py \
 #        --lr=0.01 \
 #        --num_epochs=90 \
 #        --model_save_dir=output/ \
-#        --with_mem_opt=True \
 #        --l2_decay=3e-4
 
 #VGG16:
@@ -95,7 +89,6 @@ python train.py \
 #        --model_save_dir=output/ \
 #        --lr=0.01 \
 #        --num_epochs=90 \
-#        --with_mem_opt=True \
 #        --l2_decay=3e-4
 
 #VGG19:
@@ -108,7 +101,6 @@ python train.py \
 #        --lr_strategy=cosine_decay \
 #        --lr=0.01 \
 #        --num_epochs=90 \
-#        --with_mem_opt=True \
 #        --model_save_dir=output/ \
 #        --l2_decay=3e-4
 
@@ -120,7 +112,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=piecewise_decay \
 #       --num_epochs=120 \
 #       --lr=0.1 \
@@ -134,7 +125,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_decay \
 #       --num_epochs=240 \
 #       --lr=0.1 \
@@ -150,7 +140,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_decay \
 #       --num_epochs=240 \
 #       --lr=0.1 \
@@ -166,7 +155,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_decay \
 #       --num_epochs=240 \
 #       --lr=0.1 \
@@ -180,7 +168,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_decay \
 #       --num_epochs=240 \
 #       --lr=0.1 \
@@ -194,7 +181,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_decay \
 #       --num_epochs=240 \
 #       --lr=0.1 \
@@ -208,7 +194,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_warmup_decay \
 #       --num_epochs=240 \
 #       --lr=0.5 \
@@ -225,7 +210,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_warmup_decay \
 #       --num_epochs=240 \
 #       --lr=0.5 \
@@ -242,7 +226,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_warmup_decay \
 #       --num_epochs=240 \
 #       --lr=0.5 \
@@ -259,7 +242,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_warmup_decay \
 #       --num_epochs=240 \
 #       --lr=0.5 \
@@ -274,7 +256,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_warmup_decay \
 #       --num_epochs=240 \
 #       --lr=0.25 \
@@ -290,7 +271,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_warmup_decay \
 #       --num_epochs=240 \
 #       --lr=0.25 \
@@ -304,7 +284,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_warmup_decay \
 #       --lr=0.5 \
 #       --num_epochs=240 \
@@ -318,7 +297,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
@@ -332,7 +310,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
@@ -346,7 +323,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=piecewise_decay \
 #       --num_epochs=120 \
 #       --lr=0.1 \
@@ -362,7 +338,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 
@@ -376,7 +351,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=7e-5 \
 #       --use_mixup=True \
@@ -391,7 +365,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=piecewise_decay \
 #       --num_epochs=120 \
 #       --lr=0.1 \
@@ -407,7 +380,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
@@ -423,7 +395,6 @@ python train.py \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
 #       --lr_strategy=piecewise_decay \
-#       --with_mem_opt=True \
 #       --lr=0.1 \
 #       --num_epochs=120 \
 #       --l2_decay=1e-4
@@ -438,7 +409,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
@@ -455,7 +425,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
@@ -472,7 +441,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
@@ -486,7 +454,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
@@ -503,7 +470,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
@@ -517,7 +483,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
@@ -534,7 +499,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
@@ -548,7 +512,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=15e-5
 
@@ -562,7 +525,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
@@ -579,7 +541,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
@@ -593,7 +554,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=18e-5
 
@@ -607,7 +567,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
@@ -621,7 +580,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
@@ -635,7 +593,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
@@ -649,7 +606,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
@@ -663,7 +619,6 @@ python train.py \
 #       --lr_strategy=piecewise_decay \
 #       --lr=0.1 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4
 
@@ -678,7 +633,6 @@ python train.py \
 #       --model_save_dir=output/ \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --l2_decay=1.2e-4
 
 #SE_ResNeXt101_32x4d:
@@ -692,7 +646,6 @@ python train.py \
 #       --model_save_dir=output/ \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --l2_decay=1.5e-5
 
 # SE_154
@@ -705,7 +658,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
@@ -720,7 +672,6 @@ python train.py \
 #       --class_dim=1000 \
 #       --image_shape=3,224,224 \
 #       --model_save_dir=output/ \
-#       --with_mem_opt=True \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.01 \
 #       --num_epochs=200 \
@@ -736,7 +687,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.045 \
 #       --num_epochs=120 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --resize_short_size=320
@@ -751,7 +701,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.045 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
@@ -769,7 +718,6 @@ python train.py \
 #       --lr_strategy=cosine_decay \
 #       --lr=0.1 \
 #       --num_epochs=200 \
-#       --with_mem_opt=True \
 #       --model_save_dir=output/ \
 #       --l2_decay=1e-4 \
 #       --use_mixup=True \
@@ -787,7 +735,6 @@ python train.py \
 #       --image_shape=3,224,224 \
 #       --lr=0.001 \
 #       --num_epochs=120 \
-#       --with_mem_opt=False \
 #       --model_save_dir=output/ \
 #       --lr_strategy=adam \
 #       --use_gpu=False

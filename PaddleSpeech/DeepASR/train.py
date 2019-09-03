@@ -174,7 +174,6 @@ def train(args):
                     decay_rate=1 / 1.2,
                     staircase=True))
             optimizer.minimize(avg_cost)
-            fluid.memory_optimize(train_program)
 
     test_program = fluid.Program()
     test_startup = fluid.Program()

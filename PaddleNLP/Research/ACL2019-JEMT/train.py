@@ -125,11 +125,6 @@ def parse_args():
         help="The flag indicating whether to run the task "
         "for continuous evaluation.")
     parser.add_argument(
-        "--use_mem_opt",
-        type=ast.literal_eval,
-        default=True,
-        help="The flag indicating whether to use memory optimization.")
-    parser.add_argument(
         "--use_py_reader",
         type=ast.literal_eval,
         default=True,
@@ -736,9 +731,6 @@ def train(args):
             else:
                 optimizer = fluid.optimizer.SGD(0.003)
             optimizer.minimize(avg_cost)
-
-    if args.use_mem_opt:
-        fluid.memory_optimize(train_prog)
 
     if args.local:
         logging.info("local start_up:")
