@@ -1,6 +1,7 @@
+English | [中文](README.md)
+
 # Image Classification and Model Zoo
 
----
 ## Table of Contents
 
 - [Introduction](#introduction)
@@ -12,27 +13,32 @@
     - [Evaluation](#evaluation)
     - [Inference](#inference)
 - [Advanced Usage](#advanced-usage)
+    - [Mixup Training](#mixup-training)
     - [Using Mixed-Precision Training](#using-mixed-precision-training)
     - [CE](#ce)
+    - [Custom Dataset](#custom-dataset)
 - [Supported Models and Performances](#supported-models-and-performances)
 - [Reference](#reference)
 - [Update](#update)
 - [Contribute](#contribute)
 
+---
+
 ## Introduction
 
-Image classification, which is an important field of computer vision, is to classify an image into pre-defined labels. Recently, many researchers developed different kinds of neural networks and highly improve the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
+Image classification, which is an important field of computer vision, is to classify images into pre-defined labels. Recently, many researchers have developed different kinds of neural networks and highly improved the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
 
 ## Quick Start
 
 ### Installation
 
-Running sample code in this directory requires Python 2.7 and later, PaddelPaddle Fluid v1.5 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.5, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html) and make an update.
+Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.5 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.5, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) and make an update.
 
 ### Data preparation
 
 An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
-```
+
+```bash
 cd data/ILSVRC2012/
 sh download_imagenet2012.sh
 ```
@@ -54,7 +60,7 @@ train/n02483708/n02483708_2436.jpeg 369
 val/ILSVRC2012_val_00000001.jpeg 65
 ```
 
-You may need to modify the path in reader.py to load data correctly.
+Note: You may need to modify the data path in reader.py to load data correctly.
 
 ### Training
 
@@ -68,13 +74,14 @@ python train.py \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
-       --with_mem_opt=False \
-       --with_inplace=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
 or running run.sh scripts
-```bash run.sh train model_name```
+
+```bash
+bash run.sh train model_name
+```
 
 **parameter introduction:**
 
@@ -126,7 +133,7 @@ Switch:
 * **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.2.
 * **random_seed**: random seed for debugging, Default: 1000
 
-**data reader introduction:** Data reader is defined in PIL: ```reader.py```and opencv: ```reader_cv2.py```, default reader is implemented by opencv. In [Training](#training), random crop and flipping are used, while center crop is used in [Evaluation](#evaluation) and [Inference](#inference) stages. Supported data augmentation includes:
+**data reader introduction:** Data reader is defined in ```reader.py```, default reader is implemented by opencv. In the [Training](#training) Stage, random crop and flipping are applied, while center crop is applied in the [Evaluation](#evaluation) and [Inference](#inference) stages. Supported data augmentation includes:
 
 * rotation
 * color jitter (haven't implemented in cv2_reader)
@@ -141,7 +148,7 @@ Finetuning is to finetune model weights in a specific task by loading pretrained
 
 ```
 python train.py \
-       --model=model_name
+       --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
 ```
 
@@ -153,7 +160,7 @@ Evaluation is to evaluate the performance of a trained model. One can download [
 
 ```
 python eval.py \
-       --model=model_name
+       --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
 ```
 
@@ -161,17 +168,28 @@ Note: Add and adjust other parameters accroding to specific models and tasks.
 
 ### Inference
 
+**some Inference stage unique parameters**
+
+* **save_inference**: whether to save binary model, Default: False
+* **topk**: the number of sorted predicated labels to show, Default: 1
+* **label_path**: readable label filepath, Default: "/utils/tools/readable_label.txt"
+
 Inference is used to get prediction score or image features based on trained models. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Run following command then obtain prediction score.
 
-```
+```bash
 python infer.py \
-       --model=model_name
+       --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
 ```
 
 Note: Add and adjust other parameters accroding to specific models and tasks.
 
 ## Advanced Usage
+
+### Mixup Training
+Set --use_mixup=True to start Mixup training, all of the models with a suffix "_vd" is training by mixup.
+
+Refer to [mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.09412)
 
 ### Using Mixed-Precision Training
 
@@ -181,17 +199,26 @@ Mixed-precision part is moving to PaddlePaddle/Fleet now.
 
 CE is only for internal testing, don't have to set it.
 
+### Custom Dataset
+
+
+
 ## Supported Models and Performances
 
 The image classification models currently supported by PaddlePaddle are listed in the table. It shows the top-1/top-5 accuracy on the ImageNet-2012 validation set of these models, the inference time of Paddle Fluid and Paddle TensorRT based on dynamic link library(test GPU model: Tesla P4).
-As the activation function ```swish``` and ```relu6``` which separately used in ShuffleNetV2_swish and MobileNetV2 net are not supported by Paddle TensorRT, inference acceleration performance of them doesn't significient improve. Pretrained models can be downloaded by clicking related model names.
+Pretrained models can be downloaded by clicking related model names.
 
-- Note1: ResNet50_vd_v2 is the distilled version of ResNet50_vd.
-- Note2: The image resolution feeded in InceptionV4 and Xception net is ```299x299```, Fix_ResNeXt101_32x48d_wsl is ```320x320```, DarkNet is ```256x256```, others are ```224x224```.In test time, the resize_short_size of the DarkNet53 and Fix_ResNeXt101_32x48d_wsl series networks is the same as the width or height of the input image resolution, the InceptionV4 and Xception network resize_short_size is 320, and the other networks resize_short_size are 256.
-- Note3: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
-
-    ```python infer.py --save_inference=True```
-- Note4: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
+- Note
+    - 1: ResNet50_vd_v2 is the distilled version of ResNet50_vd.
+    - 2: The image resolution feeded in InceptionV4 and Xception net is ```299x299```, Fix_ResNeXt101_32x48d_wsl is ```320x320```, DarkNet is ```256x256```, others are ```224x224```.In test time, the resize_short_size of the DarkNet53 and Fix_ResNeXt101_32x48d_wsl series networks is the same as the width or height of the input image resolution, the InceptionV4 and Xception network resize_short_size is 320, and the other networks resize_short_size are 256.
+    - 3: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
+        ```bash
+        python infer.py\
+            --model=model_name \
+            --pretrained_model=${path_to_pretrained_model} \
+            --save_inference=True
+        ```
+    - 4: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
 ### AlexNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |

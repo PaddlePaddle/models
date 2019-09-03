@@ -12,14 +12,15 @@
     - [模型评估](#模型评估)
     - [模型预测](#模型预测)
 - [进阶使用](#进阶使用)
+    - [Mixup训练](#mixup训练)
     - [混合精度训练](#混合精度训练)
     - [CE测试](#ce测试)
+    - [自定义数据集](#自定义数据集)
 - [已发布模型及其性能](#已发布模型及其性能)
 - [FAQ](#faq)
 - [参考文献](#参考文献)
 - [版本更新](#版本更新)
 - [如何贡献代码](#如何贡献代码)
-- [反馈](#反馈)
 
 ---
 
@@ -32,7 +33,7 @@
 
 在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
 
-### 环境依赖
+#### 环境依赖
 
 python >= 2.7，CUDA >= 8.0，CUDNN >= 7.0
 运行训练代码需要安装numpy，cv2
@@ -151,7 +152,7 @@ bash run.sh train 模型名
 
 ### 参数微调
 
-参数微调（Finetune）是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
+参数微调(Finetune)是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
 
 ```bash
 python train.py \
@@ -196,6 +197,7 @@ python infer.py \
 ### Mixup训练
 
 训练中指定 --use_mixup=True 开启Mixup训练，本模型库中所有后缀为_vd的模型即代表开启Mixup训练
+
 Mixup相关介绍参考[mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.09412)
 
 ### 混合精度训练
