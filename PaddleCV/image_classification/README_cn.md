@@ -64,6 +64,7 @@ python train.py \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
+       --with_mem_opt=False \
        --with_inplace=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
@@ -78,6 +79,7 @@ python train.py \
 * **class_dim**: 类别数，默认值: 1000
 * **image_shape**: 图片大小，默认值: "3,224,224"
 * **model_save_dir**: 模型存储路径，默认值: "output/"
+* **with_mem_opt**: 是否开启显存优化，默认值: False
 * **with_inplace**: 是否开启inplace显存优化，默认值: True
 * **lr_strategy**: 学习率变化策略，默认值: "piecewise_decay"
 * **lr**: 初始学习率，默认值: 0.1
@@ -139,6 +141,8 @@ python infer.py \
 ### 混合精度训练
 
 可以通过开启`--fp16=True`启动混合精度训练，这样训练过程会使用float16数据，并输出float32的模型参数（"master"参数）。您可能需要同时传入`--scale_loss`来解决fp16训练的精度问题，通常传入`--scale_loss=8.0`即可。
+
+注意，目前混合精度训练不能和内存优化功能同时使用，所以需要传`--with_mem_opt=False`这个参数来禁用内存优化功能。
 
 ### CE测试
 
