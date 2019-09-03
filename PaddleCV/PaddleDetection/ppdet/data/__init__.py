@@ -103,7 +103,8 @@ class ToFeedDict(object):
 
                 if lod_level == 0:
                     # 'image' may already be stacked by `PadToStride`
-                    arr = isinstance(arr, np.ndarray) and arr or np.stack(arr)
+                    if not isinstance(arr, np.ndarray):
+                        arr = np.stack(arr)
                     arr_list.append(arr)
                     continue
 
