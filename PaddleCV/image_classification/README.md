@@ -39,7 +39,7 @@ python >= 2.7，CUDA >= 8.0，CUDNN >= 7.0
 运行训练代码需要安装numpy，cv2
 
 ```bash
-pip install opencv-pytho
+pip install opencv-python
 pip install numpy
 ```
 
@@ -217,8 +217,8 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 
 
 ## 已发布模型及其性能
-表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1和top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测
-试GPU型号为NVIDIA® Tesla® P4）。可以通过点击相应模型的名称下载对应的预训练模型。
+表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1和top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测试GPU型号为NVIDIA® Tesla® P4）。
+可以通过点击相应模型的名称下载对应的预训练模型。
 
 - 注意
    - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
@@ -326,7 +326,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |[Xception_41](https://paddle-imagenet-models-name.bj.bcebos.com/Xception_41_pretrained.tar) | 79.30% | 94.53% | 13.757 | 10.831 |
 |[InceptionV4](https://paddle-imagenet-models-name.bj.bcebos.com/InceptionV4_pretrained.tar) | 80.77% | 95.26% | 32.413 | 18.154 |
 
-### DarkNet Series
+### DarkNet
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
 |[DarkNet53](https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_ImageNet1k_pretrained.tar) | 78.04% | 94.05% | 11.969 | 7.153 |
