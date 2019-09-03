@@ -25,10 +25,12 @@
 
 ## 快速开始
 
-###安装说明
+### 安装说明
+
 在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
 
-###环境依赖
+### 环境依赖
+
 python >= 2.7
 
 CUDA >= 8.0
