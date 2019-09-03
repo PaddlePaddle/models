@@ -25,12 +25,14 @@
 
 ## 快速开始
 
-### 安装说明
+###安装说明
 在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
 
 ###环境依赖
 python >= 2.7
+
 CUDA >= 8.0
+
 CUDNN >= 7.0
 
 运行训练代码需要安装numpy, cv2
@@ -169,7 +171,7 @@ python eval.py \
 
 模型预测可以获取一个模型的预测分数或者图像的特征，可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令获得预测分数：
 
-** 参数说明：**
+**参数说明：**
 
 * **save_inference**: 是否保存模型，默认值：False
 * **topk**: 按照置信由高到低排序结果，返回的标签数量，默认值：1
@@ -181,7 +183,8 @@ python infer.py \
        --pretrained_model=${path_to_pretrain_model}
 ```
 注意：根据具体模型和任务添加并调整其他参数
-模型预测默认ImageNet1000类类别，标签文件在/utils/tools/readable_label.txt中，如果使用自定义数据，请指定--label_path
+
+模型预测默认ImageNet1000类类别，标签文件在/utils/tools/readable_label.txt中，如果使用自定义数据，请指定--label_path参数
 
 
 ## 进阶使用
@@ -197,14 +200,19 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 
 ## 已发布模型及其性能
 表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测
-试GPU型号为Tesla P4）。由于Paddle TensorRT对ShuffleNetV2_swish使用的激活函数swish，MobileNetV2使用的激活函数relu6不支持，因此预测加速不明显。可以通过点击相应模型的名称下载对应的预训练模型。
+试GPU型号为Tesla P4）。可以通过点击相应模型的名称下载对应的预训练模型。
 
 - 注意
    - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
    - 2：InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同，InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
    - 3：调用动态链接库预测时需要将训练模型转换为二进制模型
 
-       ```python infer.py --save_inference=True```
+    ```
+    python infer.py \
+        --model=model_name
+               --pretrained_model=${path_to_pretrain_model}
+        --save_inference=True
+    ```
 
    - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 
@@ -327,7 +335,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 
 **Q:** 出现cudaStreamSynchronize an illegal memory access was encountered errno:77 错误
 
-**A:** 可能是因为显存问题导致，添加一下环境变量：
+**A:** 可能是因为显存问题导致，添加如下环境变量：
 
     export FLAGS_fast_eager_deletion_mode=1
     export FLAGS_eager_delete_tensor_gb=0.0
