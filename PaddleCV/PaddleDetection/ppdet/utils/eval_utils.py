@@ -23,6 +23,7 @@ import os
 import paddle.fluid as fluid
 
 from ppdet.utils.voc_eval import bbox_eval as voc_bbox_eval
+from ppdet.utils.widerface_eval import widerface_bbox_eval
 
 __all__ = ['parse_fetches', 'eval_run', 'eval_results', 'json_eval_results']
 
@@ -93,6 +94,7 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
 
 def eval_results(results,
                  feed,
+                 reader,
                  metric,
                  num_classes,
                  resolution=None,
@@ -114,16 +116,19 @@ def eval_results(results,
             if output_directory:
                 output = os.path.join(output_directory, 'bbox.json')
 
-            box_ap_stats = bbox_eval(results, anno_file, output,
-                                     with_background,
-                                     is_bbox_normalized=is_bbox_normalized)
+            box_ap_stats = bbox_eval(
+                results,
+                anno_file,
+                output,
+                with_background,
+                is_bbox_normalized=is_bbox_normalized)
 
         if 'mask' in results[0]:
             output = 'mask.json'
             if output_directory:
                 output = os.path.join(output_directory, 'mask.json')
             mask_eval(results, anno_file, output, resolution)
-    else:
+    elif metric == 'VOC':
         if 'accum_map' in results[-1]:
             res = np.mean(results[-1]['accum_map'][0])
             logger.info('mAP: {:.2f}'.format(res * 100.))
@@ -132,6 +137,11 @@ def eval_results(results,
             box_ap = voc_bbox_eval(
                 results, num_classes, is_bbox_normalized=is_bbox_normalized)
             box_ap_stats.append(box_ap)
+    elif metric == 'WIDERFACE':
+        anno_file = getattr(feed.dataset, 'annotation', None)
+        box_ap = widerface_bbox_eval(
+            results, reader, anno_file, is_bbox_normalized=is_bbox_normalized)
+        box_ap_stats.append(box_ap)
     return box_ap_stats
 
 

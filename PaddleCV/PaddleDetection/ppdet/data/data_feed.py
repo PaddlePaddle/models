@@ -32,7 +32,7 @@ from ppdet.data.transform.operators import (
 from ppdet.data.transform.arrange_sample import (
     ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD,
     ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO, ArrangeBlazeFace,
-    ArrangeEvalBlazeFace, ArrangeTestBlazeFace)
+    ArrangeTestBlazeFace)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
@@ -258,6 +258,7 @@ WIdERFACE_VAL_ANNOTATION = 'wider_face_split/wider_face_val_bbx_gt.txt'
 WIdERFACE_TRAIN_IMAGE_DIR = 'WIDER_train/images'
 WIdERFACE_VAL_IMAGE_DIR = 'WIDER_val/images'
 
+
 @serializable
 class WiderFaceDataSet(DataSet):
     __source__ = 'WiderFaceSource'
@@ -268,9 +269,8 @@ class WiderFaceDataSet(DataSet):
                  image_dir=WIdERFACE_TRAIN_IMAGE_DIR,
                  use_default_label=None):
         super(WiderFaceDataSet, self).__init__(
-            dataset_dir=dataset_dir,
-            annotation=annotation,
-            image_dir=image_dir)
+            dataset_dir=dataset_dir, annotation=annotation, image_dir=image_dir)
+
 
 @serializable
 class SimpleDataSet(DataSet):
@@ -1086,29 +1086,28 @@ class BlazeFaceEvalFeed(DataFeed):
 
     def __init__(
             self,
-            dataset=VocDataSet(VOC_VAL_ANNOTATION).__dict__,
-            fields=['image', 'im_shape', 'im_id', 'gt_box',
-                         'gt_label'],
+            dataset=WiderFaceDataSet(WIdERFACE_VAL_ANNOTATION,
+                                     WIdERFACE_VAL_IMAGE_DIR).__dict__,
+            fields=['image', 'im_id', 'im_shape'],
             image_shape=[3, 128, 128],
             sample_transforms=[
                 DecodeImage(to_rgb=True, with_mixup=False),
-                NormalizeBox(),
                 ResizeImage(target_size=128, use_cv2=False, interp=1),
                 Permute(),
                 NormalizeImage(
-                    mean=[104., 117., 123.],
+                    mean=[104., 117., 123],
                     std=[127.502231, 127.502231, 127.502231],
                     is_scale=False)
                 ],
             batch_transforms=[],
-            batch_size=64,
+            batch_size=16,
             shuffle=False,
             samples=-1,
             drop_last=True,
             num_workers=8,
             bufsize=10,
             use_process=False):
-        sample_transforms.append(ArrangeEvalBlazeFace())
+        sample_transforms.append(ArrangeTestBlazeFace())
         super(BlazeFaceEvalFeed, self).__init__(
             dataset,
             fields,
@@ -1130,11 +1129,11 @@ class BlazeFaceTestFeed(DataFeed):
     __doc__ = DataFeed.__doc__
 
     def __init__(self,
-                 dataset=SimpleDataSet(VOC_TEST_ANNOTATION).__dict__,
+                 dataset=SimpleDataSet(WIdERFACE_VAL_ANNOTATION).__dict__,
                  fields=['image', 'im_id', 'im_shape'],
                  image_shape=[3, 128, 128],
                  sample_transforms=[
-                     DecodeImage(to_rgb=True),
+                     DecodeImage(to_rgb=True, with_mixup=False),
                      ResizeImage(target_size=128, use_cv2=False, interp=1),
                      Permute(),
                      NormalizeImage(

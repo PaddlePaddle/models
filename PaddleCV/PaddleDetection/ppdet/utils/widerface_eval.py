@@ -471,7 +471,7 @@ def get_category_info(anno_file=None,
             or not os.path.exists(anno_file):
         logger.info("Not found annotation file {}, load "
                     "wider-face categories.".format(anno_file))
-        return vocall_category_info(with_background)
+        return widerfaceall_category_info(with_background)
     else:
         logger.info("Load categories from {}".format(anno_file))
         return get_category_info_from_anno(anno_file, with_background)
@@ -502,7 +502,7 @@ def get_category_info_from_anno(anno_file, with_background=True):
     return clsid2catid, catid2name
 
 
-def vocall_category_info(with_background=True):
+def widerfaceall_category_info(with_background=True):
     """
     Get class id to category id map and category id
     to category name map of mixup voc dataset
@@ -522,3 +522,37 @@ def vocall_category_info(with_background=True):
     catid2name = {i: name for i, name in enumerate(cats)}
 
     return clsid2catid, catid2name
+
+
+def widerface_bbox_eval(results, reader, anno_file, is_bbox_normalized=False):
+    imid2path = reader.imid2path
+    clsid2catid, catid2name = get_category_info(use_default_label=True)
+    xywh_res = bbox2out(
+        results, clsid2catid, is_bbox_normalized=is_bbox_normalized)
+    dets_list = []
+    im_id = 0
+    dets = []
+    for res in xywh_res:
+        if im_id != res['image_id']:
+            if len(dets) > 0:
+                dets = np.array(dets)
+                keep_index = np.where(dets[:, 4] >= 0.3)[0]
+                dets = dets[keep_index, :]
+                dets_list.append(dets)
+            dets = []
+            im_id = res['image_id']
+        bbox = res['bbox']
+        score = res['score']
+        det = [bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3], score]
+        dets.append(det)
+    if len(dets) > 0:
+        dets = np.array(dets)
+        keep_index = np.where(dets[:, 4] >= 0.3)[0]
+        dets = dets[keep_index, :]
+        dets_list.append(dets)
+
+    pred_dir = 'pred'
+    pred_res_file = save_widerface_bboxes_py(imid2path, dets_list, pred_dir)
+
+    calculate_ap_py(pred_res_file, anno_file, pred_dir)
+    logger.info("Finish evaluation.")

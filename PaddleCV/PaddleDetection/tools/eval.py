@@ -79,20 +79,23 @@ def main():
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
+    if 'multi_scale' not in cfg:
+        cfg.multi_scale = False
+
     # build program
     model = create(main_arch)
     startup_prog = fluid.Program()
     eval_prog = fluid.Program()
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
-            use_pyreader = False if cfg.metric == 'WIDERFACE' else True
+            use_pyreader = False if cfg.multi_scale else True
             pyreader, feed_vars = create_feed(
                 eval_feed, use_pyreader=use_pyreader)
             fetches = model.eval(feed_vars)
     eval_prog = eval_prog.clone(True)
 
     reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
-    if not cfg.metric == 'WIDERFACE':
+    if not cfg.multi_scale:
         pyreader.decorate_sample_list_generator(reader, place)
 
     # eval already exists json file
@@ -122,7 +125,7 @@ def main():
 
     assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE'], \
             "unknown metric type {}".format(cfg.metric)
-    if cfg.metric == 'WIDERFACE':
+    if cfg.metric == 'WIDERFACE' and cfg.multi_scale:
         eval_mode = 'matlab'
         if 'eval_mode' in cfg:
             eval_mode = cfg.eval_mode
@@ -135,6 +138,8 @@ def main():
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg.metric == 'VOC':
         extra_keys = ['gt_box', 'gt_label', 'is_difficult']
+    if cfg.metric == 'WIDERFACE':
+        extra_keys = ['im_id', 'im_shape']
 
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 
@@ -149,8 +154,8 @@ def main():
     resolution = None
     if 'mask' in results[0]:
         resolution = model.mask_head.resolution
-    eval_results(results, eval_feed, cfg.metric, cfg.num_classes, resolution,
-                 is_bbox_normalized, FLAGS.output_eval)
+    eval_results(results, eval_feed, reader, cfg.metric, cfg.num_classes,
+                 resolution, is_bbox_normalized, FLAGS.output_eval)
 
 
 if __name__ == '__main__':

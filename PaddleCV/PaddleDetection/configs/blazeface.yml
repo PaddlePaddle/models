@@ -10,6 +10,7 @@ log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
 eval_mode: python
+multi_scale: false
 save_dir: output
 weights: output/balzeface/model_final/
 num_classes: 2
@@ -52,7 +53,7 @@ BlazeFaceEvalFeed:
   batch_size: 1
   use_process: false
   dataset:
-    dataset_dir: dataset/widerface
+    dataset_dir: dataset/wider_face
     annotation: wider_face_split/wider_face_val_bbx_gt.txt
     image_dir: WIDER_val/images
   drop_last: false
