@@ -97,14 +97,12 @@ class RandomFlip(object):
             return sample
 
         img = sample['image']
-        gt_box = sample['gt_box']
-
         sample['image'] = img[:, ::-1, :]
-        w = img.shape[1]
+        w = sample['width']
 
-        gt_box[:, 0] = w - gt_box[:, 0]
-        gt_box[:, 2] = w - gt_box[:, 2]
-        sample['gt_box'] = gt_box
+        swap = sample['gt_box'].copy()
+        sample['gt_box'][:, 0] = w - swap[:, 2] - 1
+        sample['gt_box'][:, 2] = w - swap[:, 0] - 1
 
         if 'gt_poly' in sample:
             for poly in sample['gt_poly']:
