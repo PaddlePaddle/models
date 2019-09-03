@@ -180,9 +180,10 @@ class _MultiWorkerLoaderIter(object):
         worker_context = (loader.dataset, loader.transform,
                           loader.batchify, self._worker_queue)
         if loader.multiprocessing:
+            # `maxtasksperchild` is needed to avoid OOM
             self._worker_pool = Pool(
                 loader.num_workers, initializer=_process_worker_init,
-                initargs=worker_context)
+                initargs=worker_context, maxtasksperchild=4 * self.queue_depth)
             self._worker_fn = _process_worker_fn
             self._worker_context = None
         else:
