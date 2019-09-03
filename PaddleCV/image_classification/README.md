@@ -68,7 +68,6 @@ python train.py \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
-       --with_mem_opt=False \
        --with_inplace=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
@@ -83,7 +82,6 @@ python train.py \
 * **class_dim**: the class number of the classification task. Default: 1000.
 * **image_shape**: input size of the network. Default: "3,224,224".
 * **model_save_dir**: the directory to save trained model. Default: "output".
-* **with_mem_opt**: whether to use memory optimization or not. Default: False.
 * **with_inplace**: whether to use inplace memory optimization or not. Default: True.
 * **lr_strategy**: learning rate changing strategy. Default: "piecewise_decay".
 * **lr**: initialized learning rate. Default: 0.1.
@@ -153,8 +151,6 @@ Note: Add and adjust other parameters accroding to specific models and tasks.
 ### Using Mixed-Precision Training
 
 You may add `--fp16=1` to start train using mixed precisioin training, which the training process will use float16 and the output model ("master" parameters) is saved as float32. You also may need to pass `--scale_loss` to overcome accuracy issues, usually `--scale_loss=8.0` will do.
-
-Note that currently `--fp16` can not use together with `--with_mem_opt`, so pass `--with_mem_opt=0` to disable memory optimization pass.
 
 ### CE
 
@@ -254,7 +250,7 @@ As the activation function ```swish``` and ```relu6``` which separately used in 
 |- |:-: |:-: |:-: |
 |[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_32x4d_pretrained.tar) | 78.44%/93.96% | 14.916 | 12.126 |
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.tar) | 79.12%/94.20% | 30.085 | 24.110 |
-|[SENet154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar) | 81.40%/95.48% | 71.892 | 64.855 |
+|[SENet154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SENet154_vd_pretrained.tar) | 81.40%/95.48% | 71.892 | 64.855 |
 
 ### Inception
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |

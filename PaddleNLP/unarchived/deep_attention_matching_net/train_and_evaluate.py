@@ -216,9 +216,6 @@ def train(args):
                     decay_rate=0.9,
                     staircase=True))
             optimizer.minimize(loss)
-            print("begin memory optimization ...")
-            fluid.memory_optimize(train_program)
-            print("end memory optimization ...")
 
     test_program = fluid.Program()
     test_startup = fluid.Program()

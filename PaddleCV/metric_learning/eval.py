@@ -37,7 +37,6 @@ add_arg('embedding_size', int, 0, "Embedding size.")
 add_arg('batch_size', int, 10, "Minibatch size.")
 add_arg('image_shape', str, "3,224,224", "Input image size.")
 add_arg('use_gpu', bool, True, "Whether to use GPU or not.")
-add_arg('with_mem_opt', bool, False, "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str, None, "Whether to use pretrained model.")
 # yapf: enable
 
@@ -48,7 +47,6 @@ def eval(args):
     # parameters from arguments
     model_name = args.model
     pretrained_model = args.pretrained_model
-    with_memory_optimization = args.with_mem_opt
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
@@ -62,9 +60,6 @@ def eval(args):
     out = model.net(input=image, embedding_size=args.embedding_size)
 
     test_program = fluid.default_main_program().clone(for_test=True)
-
-    if with_memory_optimization:
-        fluid.memory_optimize(fluid.default_main_program())
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

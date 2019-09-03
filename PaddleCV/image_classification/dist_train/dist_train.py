@@ -46,7 +46,6 @@ def parse_args():
     add_arg('class_dim',        int,   1000,                 "Class number.")
     add_arg('image_shape',      str,   "3,224,224",          "input image size")
     add_arg('model_save_dir',   str,   "output",             "model save directory")
-    add_arg('with_mem_opt',     bool,  False,                "Whether to use memory optimization or not.")
     add_arg('pretrained_model', str,   None,                 "Whether to use pretrained model.")
     add_arg('checkpoint',       str,   None,                 "Whether to resume checkpoint.")
     add_arg('lr',               float, 0.1,                  "set learning rate.")
