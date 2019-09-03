@@ -133,8 +133,8 @@ def train(args):
     exe.run(startup_prog)
 
     #init model by checkpoint or pretrianed model.
-    #init_model_multi interface save multifiles and init_model(WIP) save single file.
-    init_model_multi(exe, args, train_prog)
+    #init_model interface will save multifiles.
+    init_model(exe, args, train_prog)
 
     train_reader = reader.train(settings=args)
     train_reader = paddle.batch(
@@ -216,7 +216,7 @@ def train(args):
                    list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
                    0, "epoch")
         #For now, save model per epoch. 
-        save_model_multi(args, exe, train_prog, pass_id)
+        save_model(args, exe, train_prog, pass_id)
 
 
 def main():

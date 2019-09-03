@@ -87,12 +87,12 @@ class Metrics(object):
         return [avg_cost, acc_top1, acc_top5]
 
 
-class GoogLeNet_Metrics(Metrics):
+class GoogLeNetMetrics(Metrics):
     """A subclass inherited from Metrics
     """
 
     def __init__(self, data, model, args, is_train):
-        super(GoogLeNet_Metrics, self).__init__(data, model, args, is_train)
+        super(GoogLeNetMetrics, self).__init__(data, model, args, is_train)
 
     def out(self):
         """GoogLeNet Metrics output, include avg_cost, acc_top1 and acc_top5
@@ -120,9 +120,9 @@ class GoogLeNet_Metrics(Metrics):
 
 #TODO: (2019/08/08) Distill is temporary disabled now.
 """
-class Distill_Metrics(Metrics):
+class DistillMetrics(Metrics):
     def __init__(self):
-        super(Distill_Metrics,self).__init__()
+        super(DistillMetrics,self).__init__()
     def out(self):
         out1, out2 = self.model.net(input=self.image, class_dim=self.class_dim)
         softmax_out1, softmax_out = fluid.layers.softmax(out1), fluid.layers.softmax(out2)
@@ -134,7 +134,7 @@ class Distill_Metrics(Metrics):
 """
 
 
-class Mixup_Metrics(Metrics):
+class MixupMetrics(Metrics):
     """A subclass inherited from Metrics
 
         Note: Mixup preprocessing only apply on the training process.
@@ -146,7 +146,7 @@ class Mixup_Metrics(Metrics):
     """
 
     def __init__(self, data, model, args, is_train):
-        super(Mixup_Metrics, self).__init__(data, model, args, is_train)
+        super(MixupMetrics, self).__init__(data, model, args, is_train)
         self.y_a = data[1]
         self.y_b = data[2]
         self.lam = data[3]
@@ -179,10 +179,10 @@ def create_metrics(data, model, args, is_train):
     """Create metrics, include GoogLeNet(train, test); mixup(train); default(train, test) metrics
     """
     if args.model == "GoogLeNet":
-        metrics = GoogLeNet_Metrics(data, model, args, is_train)
+        metrics = GoogLeNetMetrics(data, model, args, is_train)
     else:
         if args.use_mixup and is_train:
-            metrics = Mixup_Metrics(data, model, args, is_train)
+            metrics = MixupMetrics(data, model, args, is_train)
         else:
             metrics = Metrics(data, model, args, is_train)
     return metrics
