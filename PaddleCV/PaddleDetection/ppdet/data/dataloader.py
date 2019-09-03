@@ -55,10 +55,8 @@ class _Compose(object):
 
 
 class _Batchify(object):
-    def __init__(self, transforms=None):
+    def __init__(self, transforms=[]):
         super(_Batchify, self).__init__()
-        assert transforms is None or isinstance(transforms, Sequence), \
-            "sample_transforms must a sequence of callables"
         self.transforms = transforms
 
     def __call__(self, batch):
@@ -69,9 +67,6 @@ class _Batchify(object):
                 if k not in batch_dict:
                     batch_dict[k] = []
                 batch_dict[k].append(v)
-
-        if not self.transforms:
-            return batch_dict
 
         for transform in self.transforms:
             batch_dict = transform(batch_dict)
@@ -103,24 +98,24 @@ def _apply_transform(idx, dataset, transform, batch_seed=None):
     return transform(sample)
 
 
-def _process_worker_init(dataset, transforms):
+def _process_worker_init(dataset, transforms, batchify):
     global _worker_context
-    _worker_context = (dataset, transforms)
+    _worker_context = (dataset, transforms, batchify)
 
 
 def _process_worker_fn(ids, context=None, batch_seed=None):
     global _worker_context
-    dataset, transform = _worker_context
+    dataset, transform, batchify = _worker_context
     samples = [_apply_transform(idx, dataset, transform, batch_seed)
                for idx in ids]
-    return samples
+    return batchify(samples)
 
 
 def _thread_worker_fn(ids, context, batch_seed=None):
-    dataset, transform = context
+    dataset, transform, batchify = context
     samples = [_apply_transform(idx, dataset, transform, batch_seed)
                for idx in ids]
-    return samples
+    return batchify(samples)
 
 
 class _SingleWorkerLoaderIter(object):
@@ -155,7 +150,6 @@ class _MultiWorkerLoaderIter(object):
         super(_MultiWorkerLoaderIter, self).__init__()
         self.dataset = loader.dataset
         self.transform = loader.transform
-        self.batchify = loader.batchify
         self.rank = loader.rank
         self.queue_depth = loader.queue_depth
         self._iter = iter(loader.sampler)
@@ -163,7 +157,7 @@ class _MultiWorkerLoaderIter(object):
         self._recv_idx = 0
         self._sent_idx = 0
 
-        worker_context = (loader.dataset, loader.transform)
+        worker_context = (loader.dataset, loader.transform, loader.batchify)
         if loader.multiprocessing:
             self._worker_pool = Pool(
                 loader.num_workers, initializer=_process_worker_init,
@@ -205,7 +199,7 @@ class _MultiWorkerLoaderIter(object):
         future = self._out_queue.pop(self._recv_idx)
         batch = future.get()
         self._recv_idx += 1
-        return self.batchify(batch)
+        return batch
 
     next = __next__
 
