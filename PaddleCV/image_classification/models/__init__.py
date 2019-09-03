@@ -11,7 +11,7 @@ from .resnext_vd import ResNeXt50_vd_64x4d, ResNeXt101_vd_64x4d, ResNeXt152_vd_6
 from .resnet_dist import DistResNet
 from .inception_v4 import InceptionV4
 from .se_resnext import SE_ResNeXt50_32x4d, SE_ResNeXt101_32x4d, SE_ResNeXt152_32x4d
-from .se_resnext_vd import SE_ResNeXt50_32x4d_vd, SE_ResNeXt101_32x4d_vd, SE154_vd
+from .se_resnext_vd import SE_ResNeXt50_32x4d_vd, SE_ResNeXt101_32x4d_vd, SENet154_vd
 from .dpn import DPN68, DPN92, DPN98, DPN107, DPN131
 from .shufflenet_v2_swish import ShuffleNetV2, ShuffleNetV2_x0_5_swish, ShuffleNetV2_x1_0_swish, ShuffleNetV2_x1_5_swish, ShuffleNetV2_x2_0_swish
 from .shufflenet_v2 import ShuffleNetV2_x0_25, ShuffleNetV2_x0_33, ShuffleNetV2_x0_5, ShuffleNetV2_x1_0, ShuffleNetV2_x1_5, ShuffleNetV2_x2_0
