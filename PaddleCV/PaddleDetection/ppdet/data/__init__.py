@@ -111,6 +111,9 @@ class ToFeedDict(object):
                 flat, seq_length = self._flatten(arr, lod_level + 1)
                 arr_list.append(flat)
 
+            if seq_length is not None:
+                seq_length = seq_length[1:]
+
             # combine fields
             if len(fields) == 1:
                 ndarray = arr_list[0]
@@ -122,6 +125,11 @@ class ToFeedDict(object):
         return feed_dict, extra_dict
 
     def _to_tensor(self, ndarray, seq_length=None):
+        if not isinstance(ndarray, np.ndarray):
+            ndarray = np.asarray(ndarray)
+        if ndarray.dtype == np.float64:
+            ndarray = ndarray.astype(np.float32)
+
         t = fluid.core.LoDTensor()
         if seq_length is not None:
             t.set_recursive_sequence_lengths(seq_length)
