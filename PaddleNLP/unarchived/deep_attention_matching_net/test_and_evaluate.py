@@ -145,8 +145,6 @@ def test(args):
             staircase=True))
     optimizer.minimize(loss)
 
-    fluid.memory_optimize(fluid.default_main_program())
-
     if args.use_cuda:
         place = fluid.CUDAPlace(0)
         dev_count = fluid.core.get_cuda_device_count()

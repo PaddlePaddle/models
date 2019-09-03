@@ -145,13 +145,6 @@ def train(args):
                     decay_rate=0.9,
                     staircase=True))
             optimizer.minimize(loss)
-            print("begin memory optimization ...")
-            print(
-                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-            fluid.memory_optimize(train_program)
-            print("end memory optimization ...")
-            print(
-                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     test_program = fluid.Program()
     test_startup = fluid.Program()
@@ -382,12 +375,6 @@ def test(args):
             decay_rate=0.9,
             staircase=True))
     optimizer.minimize(loss)
-
-    print("begin memory optimization ...")
-    print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-    fluid.memory_optimize(fluid.default_main_program())
-    print("end memory optimization ...")
-    print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     if args.use_cuda:
         place = fluid.CUDAPlace(0)

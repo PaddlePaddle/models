@@ -38,7 +38,6 @@ add_arg('use_gpu',          bool,  True,                "Whether to use GPU or n
 add_arg('num_epochs',       int,   140,                 "Number of epochs.")
 add_arg('total_images',     int,   144406,              "Training image number.")
 add_arg('kp_dim',           int,   16,                  "Class number.")
-add_arg('with_mem_opt',     bool,  True,                "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   None,                "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                "Whether to resume checkpoint.")
 add_arg('lr',               float, 0.001,               "Set learning rate.")
@@ -97,10 +96,6 @@ def valid(args):
     params["learning_strategy"] = {}
     params["learning_strategy"]["batch_size"] = args.batch_size
     params["learning_strategy"]["name"] = args.lr_strategy
-
-    if args.with_mem_opt:
-        fluid.memory_optimize(fluid.default_main_program(),
-                              skip_opt_set=[loss.name, output.name, target.name])
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

@@ -53,7 +53,6 @@ add_arg('display_iter_step', int, 10, "display_iter_step.")
 add_arg('test_iter_step', int, 5000, "test_iter_step.")
 add_arg('save_iter_step', int, 5000, "save_iter_step.")
 add_arg('use_gpu', bool, True, "Whether to use GPU or not.")
-add_arg('with_mem_opt', bool, True, "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str, None, "Whether to use pretrained model.")
 add_arg('checkpoint', str, None, "Whether to resume checkpoint.")
 add_arg('model_save_dir', str, "output", "model save directory")
@@ -179,9 +178,6 @@ def train_async(args):
 
     train_fetch_list = [global_lr.name, train_cost.name, train_feas.name, train_label.name]
     test_fetch_list = [test_feas.name]
-
-    if args.with_mem_opt:
-        fluid.memory_optimize(train_prog, skip_opt_set=set(train_fetch_list))
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
