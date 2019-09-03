@@ -127,7 +127,11 @@ class COCODataSet(DataSet):
                 if ann['area'] <= 0 or x2 < x1 or y2 < y1:
                     continue
                 if self.use_mask:
-                    poly = [p for p in ann['segmentation'] if len(p) > 6]
+                    if ann['iscrowd']:
+                        poly = [np.zeros((1, 2), dtype=np.float32)]
+                    else:
+                        poly = [np.array(p, dtype=np.float32).reshape(-1, 2)
+                                for p in ann['segmentation'] if len(p) > 6]
                     if not poly:
                         continue
                     gt_poly.append(poly)

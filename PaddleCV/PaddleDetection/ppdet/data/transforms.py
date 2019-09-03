@@ -107,9 +107,9 @@ class RandomFlip(object):
         sample['gt_box'] = gt_box
 
         if 'gt_poly' in sample:
-            poly = np.array(sample['gt_poly'])
-            poly[0::2] = w - np.array(poly[0::2]) - 1
-            sample['gt_poly'] = poly
+            for poly in sample['gt_poly']:
+                for p in poly:
+                    p[:, 0] = w - p[:, 0] - 1
         return sample
 
 
