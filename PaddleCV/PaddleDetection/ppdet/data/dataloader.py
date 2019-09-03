@@ -216,7 +216,8 @@ class _MultiWorkerLoaderIter(object):
         self._sent_idx += 1
 
     def __next__(self):
-        self._queue_next()
+        for _ in range(self.queue_depth + 1 + self._recv_idx - self._sent_idx):
+            self._queue_next()
         if self._recv_idx == self._sent_idx:
             assert not self._buffer, "result queue should be empty by now"
             raise StopIteration
