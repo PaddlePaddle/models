@@ -1,7 +1,7 @@
-中文 | English(README_en.md)
+中文 | [English](README_en.md)
 
 # 图像分类以及模型库
----
+
 ## 内容
 - [简介](#简介)
 - [快速开始](#快速开始)
@@ -21,6 +21,8 @@
 - [如何贡献代码](#如何贡献代码)
 - [反馈](#反馈)
 
+---
+
 ## 简介
 图像分类是计算机视觉的重要领域，它的目标是将图像分类到预定义的标签。近期，许多研究者提出很多不同种类的神经网络，并且极大的提升了分类算法的性能。本页将介绍如何使用PaddlePaddle进行图像分类。
 
@@ -32,13 +34,8 @@
 
 ### 环境依赖
 
-python >= 2.7
-
-CUDA >= 8.0
-
-CUDNN >= 7.0
-
-运行训练代码需要安装numpy, cv2
+python >= 2.7，CUDA >= 8.0，CUDNN >= 7.0
+运行训练代码需要安装numpy，cv2
 
 ```bash
 pip install opencv-pytho
@@ -56,7 +53,7 @@ sh download_imagenet2012.sh
 
 **步骤一：** 首先在```image-net.org```网站上完成注册，用于获得一对```Username```和```AccessKey```。
 
-**步骤二：** 从ImageNet官网下载ImageNet-2012的图像数据。训练以及验证数据集会分别被下载到"train" 和 "val" 目录中。请注意，ImageNet数据的大小超过140GB，下载非常耗时；已经自行下载ImageNet的用户可以直接将数据组织放置到```data/ILSVRC2012```。
+**步骤二：** 从ImageNet官网下载ImageNet-2012的图像数据。训练以及验证数据集会分别被下载到"train" 和 "val" 目录中。注意，ImageNet数据的大小超过140GB，下载非常耗时；已经自行下载ImageNet的用户可以直接将数据组织放置到```data/ILSVRC2012```。
 
 **步骤三：** 下载训练与验证集合对应的标签文件。下面两个文件分别包含了训练集合与验证集合中图像的标签：
 
@@ -81,7 +78,6 @@ python train.py \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
-       --use_inplace=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
@@ -155,7 +151,7 @@ bash run.sh train 模型名
 
 ### 参数微调
 
-参数微调是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
+参数微调（Finetune）是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
 
 ```bash
 python train.py \
@@ -166,7 +162,7 @@ python train.py \
 
 ### 模型评估
 
-模型评估是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
+模型评估(Eval)是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
 
 ```bash
 python eval.py \
@@ -177,12 +173,12 @@ python eval.py \
 
 ### 模型预测
 
-模型预测可以获取一个模型的预测分数或者图像的特征，可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令获得预测分数：
+模型预测(Infer)可以获取一个模型的预测分数或者图像的特征，可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令获得预测结果：
 
 **参数说明：**
 
 * **save_inference**: 是否保存模型，默认值：False
-* **topk**: 按照置信由高到低排序结果，返回的标签数量，默认值：1
+* **topk**: 按照置信由高到低排序标签结果，返回的结果数量，默认值：1
 * **label_path**: 可读标签文件路径，默认值："./utils/tools/readable_label.txt"
 
 ```bash
@@ -192,7 +188,7 @@ python infer.py \
 ```
 注意：根据具体模型和任务添加并调整其他参数
 
-模型预测默认ImageNet1000类类别，标签文件在/utils/tools/readable_label.txt中，如果使用自定义数据，请指定--label_path参数
+模型预测默认ImageNet1000类类别，标签文件存储在/utils/tools/readable_label.txt中，如果使用自定义数据，请指定--label_path参数
 
 
 ## 进阶使用
@@ -214,12 +210,13 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 
 PaddlePaddle/Models ImageClassification 支持自定义数据
 
-1. 组织自定义数据
+1. 组织自定义数据，调整数据读取器以正确的传入数据
+2. 注意更改训练脚本中 --data_dim --total_image 等参数
 
 
 ## 已发布模型及其性能
-表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测
-试GPU型号为Tesla P4）。可以通过点击相应模型的名称下载对应的预训练模型。
+表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1和top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测
+试GPU型号为NVIDIA® Tesla® P4）。可以通过点击相应模型的名称下载对应的预训练模型。
 
 - 注意
    - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
