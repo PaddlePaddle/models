@@ -154,7 +154,7 @@ python train.py \
 参数微调是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
 ```
 python train.py \
-       --model=model_name
+       --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
 ```
 注意：根据具体模型和任务添加并调整其他参数
@@ -164,7 +164,7 @@ python train.py \
 模型评估是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
 ```
 python eval.py \
-       --model=model_name
+       --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
 ```
 注意：根据具体模型和任务添加并调整其他参数
@@ -181,7 +181,7 @@ python eval.py \
 
 ```
 python infer.py \
-       --model=model_name
+       --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
 ```
 注意：根据具体模型和任务添加并调整其他参数
@@ -209,12 +209,12 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
    - 2：InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同，InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
    - 3：调用动态链接库预测时需要将训练模型转换为二进制模型
 
-    ```
-    python infer.py \
-        --model=model_name
-               --pretrained_model=${path_to_pretrain_model}
-        --save_inference=True
-    ```
+        ```
+        python infer.py \
+               --model=model_name \
+               --pretrained_model=${path_to_pretrain_model} \
+               --save_inference=True
+        ```
 
    - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 
