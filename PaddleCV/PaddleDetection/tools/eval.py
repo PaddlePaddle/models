@@ -128,7 +128,13 @@ def main():
             eval_mode = cfg.eval_mode
         anno_file = getattr(eval_feed.dataset, 'annotation', None)
         WiderfaceEval(
-            exe, eval_prog, fetches, reader, anno_file, eval_mode=eval_mode)
+            exe,
+            eval_prog,
+            fetches,
+            reader,
+            anno_file,
+            pred_dir=FLAGS.output_eval,
+            eval_mode=eval_mode)
         return
     extra_keys = []
     if cfg.metric == 'COCO':

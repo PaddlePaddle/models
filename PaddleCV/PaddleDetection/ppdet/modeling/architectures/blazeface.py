@@ -74,9 +74,14 @@ class BlazeFace(object):
 
         if mode == 'train':
             loss = fluid.layers.ssd_loss(
-                locs, confs, gt_box, gt_label, box, box_var,
-                overlap_threshold=0.35, neg_overlap=0.35
-            )
+                locs,
+                confs,
+                gt_box,
+                gt_label,
+                box,
+                box_var,
+                overlap_threshold=0.35,
+                neg_overlap=0.35)
             loss = fluid.layers.reduce_sum(loss)
             loss.persistable = True
             return {'loss': loss}
@@ -84,8 +89,11 @@ class BlazeFace(object):
             pred = self.output_decoder(locs, confs, box, box_var)
             return {'bbox': pred}
 
-    def _multi_box_head(self, inputs, image, num_classes=2):
-
+    def _multi_box_head(self,
+                        inputs,
+                        image,
+                        num_classes=2,
+                        use_density_prior_box=True):
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
             compile_shape = [
@@ -95,13 +103,13 @@ class BlazeFace(object):
                 np.array([0, -1, last_dim]).astype("int32"))
             return fluid.layers.reshape(
                 trans, shape=compile_shape, actual_shape=run_shape)
+
         def _is_list_or_tuple_(data):
             return (isinstance(data, list) or isinstance(data, tuple))
 
         locs, confs = [], []
         boxes, vars = [], []
         b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
-
 
         for i, input in enumerate(inputs):
             min_size = self.min_sizes[i]
@@ -111,25 +119,37 @@ class BlazeFace(object):
             if not _is_list_or_tuple_(max_size):
                 max_size = [max_size]
 
-            if i == 0:
-                box, var = fluid.layers.density_prior_box(
+            if use_density_prior_box:
+                if i == 0:
+                    box, var = fluid.layers.density_prior_box(
+                        input,
+                        image,
+                        densities=[2, 1, 1],
+                        fixed_sizes=[16, 32, 64],
+                        fixed_ratios=[1.],
+                        clip=False,
+                        offset=0.5)
+                if i == 1:
+                    box, var = fluid.layers.density_prior_box(
+                        input,
+                        image,
+                        densities=[1, 1],
+                        fixed_sizes=[96, 128],
+                        fixed_ratios=[1.],
+                        clip=False,
+                        offset=0.5)
+            else:
+                box, var = fluid.layers.prior_box(
                     input,
                     image,
-                    densities=[2, 1, 1],
-                    fixed_sizes=[16, 32, 64],
-                    fixed_ratios=[1.],
+                    min_sizes=min_size,
+                    max_sizes=max_size,
+                    steps=[self.steps[i]] * 2,
+                    aspect_ratios=[1.],
                     clip=False,
+                    flip=False,
                     offset=0.5)
-            if i == 1:
-                box, var = fluid.layers.density_prior_box(
-                    input,
-                    image,
-                    densities=[1, 1],
-                    fixed_sizes=[96, 128],
-                    fixed_ratios=[1.],
-                    clip=False,
-                    offset=0.5)
- 
+
             print("[ygh-debug] num_boxes:{}".format(box.shape))
             num_boxes = box.shape[2]
 
@@ -139,10 +159,12 @@ class BlazeFace(object):
             num_loc_output = num_boxes * 4
             num_conf_output = num_boxes * num_classes
             # get loc
-            mbox_loc = fluid.layers.conv2d(input, num_loc_output, 3, 1, 1, bias_attr=b_attr)
+            mbox_loc = fluid.layers.conv2d(
+                input, num_loc_output, 3, 1, 1, bias_attr=b_attr)
             loc = permute_and_reshape(mbox_loc, 4)
             # get conf
-            mbox_conf = fluid.layers.conv2d(input, num_conf_output, 3, 1, 1, bias_attr=b_attr)
+            mbox_conf = fluid.layers.conv2d(
+                input, num_conf_output, 3, 1, 1, bias_attr=b_attr)
             conf = permute_and_reshape(mbox_conf, 2)
 
             locs.append(loc)
@@ -156,7 +178,6 @@ class BlazeFace(object):
         box_vars = fluid.layers.concat(vars)
         return face_mbox_loc, face_mbox_conf, prior_boxes, box_vars
 
-
     def train(self, feed_vars):
         return self.build(feed_vars, 'train')
 
@@ -165,5 +186,6 @@ class BlazeFace(object):
 
     def test(self, feed_vars):
         return self.build(feed_vars, 'test')
+
     def is_bbox_normalized(self):
         return True

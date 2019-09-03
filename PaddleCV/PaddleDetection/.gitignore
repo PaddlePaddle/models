@@ -60,6 +60,7 @@ coverage.xml
 # Personal ignore
 log.txt
 /log/
+/pred/
 /*output*/
 set_env.sh
 run_train.sh
