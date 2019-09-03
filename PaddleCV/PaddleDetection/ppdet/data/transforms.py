@@ -68,8 +68,8 @@ class Resize(object):
             if isinstance(self.target_dim, Sequence):
                 target_dim = np.random.choice(target_dim)
 
-            dim_min, dim_max = w > h and (w, h) or (h, w)
-            scale = min(dim_max / self.max_dim, dim_min / target_dim)
+            dim_max, dim_min = w > h and (w, h) or (h, w)
+            scale = min(self.max_dim / dim_max, target_dim / dim_min)
             resize_w = round(w * scale)
             resize_h = round(h * scale)
             sample['scale'] = scale
