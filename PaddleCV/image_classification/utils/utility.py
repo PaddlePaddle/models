@@ -141,6 +141,26 @@ def parse_args():
     return args
 
 
+def check_gpu():
+    """   
+    Log error and exit when set use_gpu=true in paddlepaddle
+    cpu ver sion.
+    """
+    logger = logging.getLogger(__name__)
+    err = "Config use_gpu cannot be set as true while you are " \
+                "using paddlepaddle cpu version ! \nPlease try: \n" \
+                "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
+                "\t2. Set use_gpu as false in config file to run " \
+                "model on CPU"
+
+    try:
+        if args.use_gpu and not fluid.is_compiled_with_cuda():
+            print(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
+
+
 def check_args(args):
     """check arguments before running
 
@@ -209,24 +229,6 @@ def check_args(args):
     ), "Data doesn't exist in {}, please load right path".format(args.data_dir)
 
     #check gpu
-    def check_gpu():
-        """   
-        Log error and exit when set use_gpu=true in paddlepaddle
-        cpu ver sion.
-        """
-        logger = logging.getLogger(__name__)
-        err = "Config use_gpu cannot be set as true while you are " \
-                "using paddlepaddle cpu version ! \nPlease try: \n" \
-                "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
-                "\t2. Set use_gpu as false in config file to run " \
-                "model on CPU"
-
-        try:
-            if args.use_gpu and not fluid.is_compiled_with_cuda():
-                print(err)
-                sys.exit(1)
-        except Exception as e:
-            pass
 
     check_gpu()
 
@@ -235,7 +237,7 @@ def check_args(args):
         raise Exception("Temporary disable ce")
 
 
-def init_model_old(exe, args, program):
+def init_model_multi(exe, args, program):
     if args.checkpoint:
         fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
         print(
@@ -282,7 +284,7 @@ def init_model(exe, args, program):
             % (args.pretrained_model))
 
 
-def save_model_old(args, exe, train_prog, info):
+def save_model_multi(args, exe, train_prog, info):
     model_path = os.path.join(args.model_save_dir, args.model, str(info))
     if not os.path.isdir(model_path):
         os.makedirs(model_path)

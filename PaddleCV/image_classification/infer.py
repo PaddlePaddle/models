@@ -33,20 +33,21 @@ from utils import *
 parser = argparse.ArgumentParser(description=__doc__)
 # yapf: disable
 add_arg = functools.partial(add_arguments, argparser=parser)
-add_arg('data_dir',         str,  "./data/ILSVRC2012/",  "The ImageNet data")
+add_arg('data_dir',         str,  "./data/ILSVRC2012/", "The ImageNet data")
 add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                 "Class number.")
 add_arg('image_shape',      str,  "3,224,224",          "Input image size")
 parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
-add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
-add_arg('save_inference',   bool, False,                 "Whether to save inference model or not")
-add_arg('resize_short_size', int, 256,                  "Set resize short size")
-add_arg('reader_thread',    int,    1,          "The number of multi thread reader")
-add_arg('reader_buf_size',  int,    2048,       "The buf size of multi thread reader")
+add_arg('model',            str,  "AlexNet",            "Set the network to use.")
+add_arg('save_inference',   bool, False,                "Whether to save inference model or not")
+add_arg('resize_short_size',int,  256,                  "Set resize short size")
+add_arg('reader_thread',    int,  1,                    "The number of multi thread reader")
+add_arg('reader_buf_size',  int,  2048,                 "The buf size of multi thread reader")
 parser.add_argument('--image_mean', nargs='+', type=int, default=[0.485, 0.456, 0.406], help="The mean of input image data")
 parser.add_argument('--image_std', nargs='+', type=int, default=[0.229, 0.224, 0.225], help="The std of input image data")
-add_arg('crop_size',                int,    224,                    "The value of crop size")
-add_arg('topk',             int,    1,          "topk")
+add_arg('crop_size',        int,  224,                  "The value of crop size")
+add_arg('topk',             int,  1,                    "topk")
+add_arg('label_path',            str,  "./utils/tools/readable_label.txt", "readable label filepath")
 # yapf: enable
 
 
@@ -85,8 +86,8 @@ def infer(args):
             params_filename='params')
         print("model: ", args.model, " is already saved")
         exit(0)
-    test_batch_size = 1
 
+    test_batch_size = 1
     test_reader = paddle.batch(
         reader.test(settings=args), batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
@@ -98,9 +99,24 @@ def infer(args):
                          feed=feeder.feed(data))
         result = result[0][0]
         pred_label = np.argsort(result)[::-1][:TOPK]
-        print("Test-{0}-score: {1}, class {2}"
-              .format(batch_id, result[pred_label], pred_label))
+        readable_pred_label = readable_label(pred_label, args.label_path)
+        print("Test-{0}-score: {1}, class {2}".format(batch_id, "%.4f" % result[
+            pred_label], readable_pred_label))
         sys.stdout.flush()
+
+
+def readable_label(idx, filepath):
+    assert os.path.exists(filepath), "Index file doesn't exist!"
+    f = open(filepath)
+    real_label = []
+    i = 0
+    for item in f.readlines():
+        for label in idx:
+            if label == i:
+                real_label.append(item.replace("\n", ""))
+        i = i + 1
+
+    return real_label
 
 
 def main():

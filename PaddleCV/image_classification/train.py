@@ -101,13 +101,10 @@ def train(args):
         main_prog=train_prog,
         startup_prog=startup_prog,
         args=args)
-
     train_py_reader = b_train_out[-1]
     train_fetch_vars = b_train_out[:-1]
-
     #TODO: in fluid 1.6:
     #train_fetch_list = [var.name for var in train_fetch_vars]
-
     train_fetch_list = []
     for var in train_fetch_vars:
         var.persistable = True
@@ -127,14 +124,17 @@ def train(args):
         var.persistable = True
         test_fetch_list.append(var.name)
 
+    #Create test_prog and set layers' is_test params to True
     test_prog = test_prog.clone(for_test=True)
+
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
     #init model by checkpoint or pretrianed model.
-    init_model_old(exe, args, train_prog)
+    #init_model_multi interface save multifiles and init_model(WIP) save single file.
+    init_model_multi(exe, args, train_prog)
 
     train_reader = reader.train(settings=args)
     train_reader = paddle.batch(
@@ -215,8 +215,8 @@ def train(args):
         print_info(pass_id, 0, 0,
                    list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
                    0, "epoch")
-        # for now, save model per epoch. 
-        save_model_old(args, exe, train_prog, pass_id)
+        #For now, save model per epoch. 
+        save_model_multi(args, exe, train_prog, pass_id)
 
 
 def main():

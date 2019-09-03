@@ -33,19 +33,19 @@ from utils import *
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('data_dir',         str,  "./data/ILSVRC2012/","The ImageNet datset")
-add_arg('batch_size',       int,  256,                 "Minibatch size.")
-add_arg('use_gpu',          bool, True,                "Whether to use GPU or not.")
-add_arg('class_dim',        int,  1000,                "Class number.")
-add_arg('image_shape',      str,  "3,224,224",         "Input image size")
+add_arg('data_dir',         str,  "./data/ILSVRC2012/", "The ImageNet datset")
+add_arg('batch_size',       int,  256,                  "Minibatch size.")
+add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
+add_arg('class_dim',        int,  1000,                 "Class number.")
+add_arg('image_shape',      str,  "3,224,224",          "Input image size")
 parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
-add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
-add_arg('resize_short_size', int, 256,                "Set resize short size")
-add_arg('reader_thread',    int,    8,                  "The number of multi thread reader")
-add_arg('reader_buf_size',  int,    2048,               "The buf size of multi thread reader")
+add_arg('model',            str,  "AlexNet", "Set the network to use.")
+add_arg('resize_short_size', int, 256,                  "Set resize short size")
+add_arg('reader_thread',    int,  8,                    "The number of multi thread reader")
+add_arg('reader_buf_size',  int,  2048,                 "The buf size of multi thread reader")
 parser.add_argument('--image_mean', nargs='+', type=int, default=[0.485, 0.456, 0.406], help="The mean of input image data")
 parser.add_argument('--image_std', nargs='+', type=int, default=[0.229, 0.224, 0.225], help="The std of input image data")
-add_arg('crop_size',                int,    224,                    "The value of crop size")
+add_arg('crop_size',        int,  224,                  "The value of crop size")
 # yapf: enable
 
 
@@ -80,6 +80,7 @@ def eval(args):
         acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
     else:
         out = model.net(input=image, class_dim=args.class_dim)
+
         cost, pred = fluid.layers.softmax_with_cross_entropy(
             out, label, return_softmax=True)
         avg_cost = fluid.layers.mean(x=cost)

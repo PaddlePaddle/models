@@ -28,6 +28,17 @@
 ### 安装说明
 在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
 
+###环境依赖
+python >= 2.7
+CUDA >= 8.0
+CUDNN >= 7.0
+
+运行训练代码需要安装numpy, cv2
+
+```pip install opencv-python```
+
+```pip install numpy```
+
 ### 数据准备
 
 下面给出了ImageNet分类任务的样例，首先，通过如下的方式进行数据的准备：
@@ -145,6 +156,7 @@ python train.py \
 注意：根据具体模型和任务添加并调整其他参数
 
 ### 模型评估
+
 模型评估是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
 ```
 python eval.py \
@@ -154,13 +166,22 @@ python eval.py \
 注意：根据具体模型和任务添加并调整其他参数
 
 ### 模型预测
+
 模型预测可以获取一个模型的预测分数或者图像的特征，可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令获得预测分数：
+
+** 参数说明：**
+
+* **save_inference**: 是否保存模型，默认值：False
+* **topk**: 按照置信由高到低排序结果，返回的标签数量，默认值：1
+* **label_path**: 可读标签文件路径，默认值："./utils/tools/readable_label.txt"
+
 ```
 python infer.py \
        --model=model_name
        --pretrained_model=${path_to_pretrain_model}
 ```
 注意：根据具体模型和任务添加并调整其他参数
+模型预测默认ImageNet1000类类别，标签文件在/utils/tools/readable_label.txt中，如果使用自定义数据，请指定--label_path
 
 
 ## 进阶使用
@@ -193,7 +214,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 |- |:-: |:-: |:-: |:-: |
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.tar) | 56.72% | 79.17% | 3.083 | 2.728 |
 
-### SqueezeNet Series
+### SqueezeNet
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
 |[SqueezeNet1_0](https://paddle-imagenet-models-name.bj.bcebos.com/SqueezeNet1_0_pretrained.tar) | 59.60% | 81.66% | 2.740 | 1.688 |
@@ -270,7 +291,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 |- |:-: |:-: |:-: |:-: |
 |[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_32x4d_pretrained.tar) | 78.44% | 93.96% | 14.916 | 12.126 |
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.tar) | 79.12% | 94.20% | 30.085 | 24.110 |
-|[SE_154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE_154_vd_pretrained.tar) | 81.40% | 95.48% | 71.892 | 64.855 |
+|[SENet_154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SENet_154_vd_pretrained.tar) | 81.40% | 95.48% | 71.892 | 64.855 |
 
 ### Inception Series
 | Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -298,7 +319,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 
 **Q:** 加载预训练模型报错，Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:1000 != labels_dims[1]:6.
 
-**A:** 维度对不上，删掉预训练参数中的FC
+**A:** 类别数匹配不上，删掉最后一层分类层FC
 
 **Q:** reader中报错AttributeError: 'NoneType' object has no attribute 'shape'
 
