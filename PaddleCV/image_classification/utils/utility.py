@@ -237,12 +237,10 @@ def check_args(args):
         raise Exception("Temporary disable ce")
 
 
-def init_model_multi(exe, args, program):
+def init_model(exe, args, program):
     if args.checkpoint:
         fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
-        print(
-            "Finish initing model (interface: load_persistable with multifiles) from checkpoint from %s"
-            % (args.checkpoint))
+        print("Finish initing model from %s" % (args.checkpoint))
 
     if args.pretrained_model:
 
@@ -256,74 +254,12 @@ def init_model_multi(exe, args, program):
             predicate=if_exist)
 
 
-def init_model(exe, args, program):
-
-    if args.checkpoint:
-        fluid.io.load_persistables(
-            exe,
-            args.checkpoint,
-            main_program=program,
-            filename="checkpoint.pdckpt")
-        print(
-            "Finish initing model (interface: load_persistable with single file) from checkpoint from %s"
-            % (args.checkpoint))
-    if args.pretrained_model:
-
-        def if_exist(var):
-            if not isinstance(var, fluid.framework.Parameter):
-                return False
-            return os.path.exists(os.path.join(args.pretrained_model, var.name))
-
-        fluid.io.load_vars(
-            exe,
-            args.pretrained_model,
-            main_program=program,
-            predicate=if_exist)
-        print(
-            "Finish initing model (interface: load_vars) from pretrained params from %s"
-            % (args.pretrained_model))
-
-
-def save_model_multi(args, exe, train_prog, info):
+def save_model(args, exe, train_prog, info):
     model_path = os.path.join(args.model_save_dir, args.model, str(info))
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
     fluid.io.save_persistables(exe, model_path, main_program=train_prog)
-    print("Already save model (interface: save_persistable, multifiles) in %s" %
-          (model_path))
-
-
-def save_model(args, exe, train_prog, info):
-
-    save_checkpoint(args, exe, train_prog, info)
-    if args.save_params:
-        save_param(args, exe, train_prog, info)
-
-
-def save_checkpoint(args, exe, program, info):
-
-    checkpoint_path = os.path.join(args.model_save_dir, args.model, str(info))
-    if not os.path.isdir(checkpoint_path):
-        os.makedirs(checkpoint_path)
-    fluid.io.save_persistables(
-        exe,
-        checkpoint_path,
-        main_program=program,
-        filename="checkpoint.pdckpt")
-    print(
-        "Already save (interface: save_persistable, single file )checkpoint in %s"
-        % (checkpoint_path))
-
-
-def save_param(args, exe, program, info):
-
-    param_path = os.path.join(args.save_params, args.model, str(info))
-    if not os.path.isdir(param_path):
-        os.makedirs(param_path)
-    fluid.io.save_params(
-        exe, param_path, main_program=program, filename="params.pdparams")
-    print("Already save (interface: save_params, multifiles ) parameters in %s"
-          % (param_path))
+    print("Already save model in %s" % (model_path))
 
 
 def create_pyreader(is_train, args):
