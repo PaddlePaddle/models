@@ -24,7 +24,19 @@ from paddle.fluid.initializer import Constant
 __all__ = ["get_reg_loss"]
 
 
-def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anchor_size,
+def sigmoid_focal_loss(logits, labels, weights, gamma=2.0, alpha=0.25):
+    sce_loss = fluid.layers.sigmoid_cross_entropy_with_logits(logits, labels)
+    prob = fluid.layers.sigmoid(logits)
+    # p_t = labels * prob + (labels * -1.0 + 1.0) * (prob * -1.0 + 1.0)
+    # modulating_factor = fluid.layers.pow(p_t * -1.0 + 1.0, gamma)
+    # alpha_weight_factor = labels * alpha + (labels * -1.0 + 1.0) * (1.0 - alpha)
+    p_t = labels * prob + (1.0 - labels) * (1.0 - prob)
+    modulating_factor = fluid.layers.pow(1.0 - p_t, gamma)
+    alpha_weight_factor = labels * alpha + (1.0 - labels) * (1.0 - alpha)
+    return modulating_factor * alpha_weight_factor * sce_loss * weights
+
+
+def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope, loc_bin_size, num_head_bin, anchor_size,
                  get_xz_fine=True, get_y_by_bin=False, loc_y_scope=0.5, loc_y_bin_size=0.25, get_ry_fine=False):
 
     """
@@ -43,6 +55,9 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
     :param get_ry_fine:
     :return:
     """
+    fg_num = fluid.layers.cast(fluid.layers.reduce_sum(fg_mask), dtype=pred_reg.dtype)
+    fg_scale = float(point_num) / fg_num
+
     per_loc_bin_num = int(loc_scope / loc_bin_size) * 2
     loc_y_bin_num = int(loc_y_scope / loc_y_bin_size) * 2
 
@@ -59,11 +74,10 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
     z_bin_l, z_bin_r = per_loc_bin_num, per_loc_bin_num * 2
     start_offset = z_bin_r
 
-    print(x_bin_label)
     loss_x_bin = fluid.layers.softmax_with_cross_entropy(pred_reg[:, x_bin_l: x_bin_r], x_bin_label)
-    loss_x_bin = fluid.layers.reduce_mean(loss_x_bin)
+    loss_x_bin = fluid.layers.reduce_mean(loss_x_bin * fg_mask) * fg_scale
     loss_z_bin = fluid.layers.softmax_with_cross_entropy(pred_reg[:, z_bin_l: z_bin_r], z_bin_label)
-    loss_z_bin = fluid.layers.reduce_mean(loss_z_bin)
+    loss_z_bin = fluid.layers.reduce_mean(loss_z_bin * fg_mask) * fg_scale
     reg_loss_dict['loss_x_bin'] = loss_x_bin
     reg_loss_dict['loss_z_bin'] = loss_z_bin
     loc_loss = loss_x_bin + loss_z_bin
@@ -82,9 +96,9 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
         z_bin_onehot = fluid.layers.one_hot(z_bin_label, depth=per_loc_bin_num)
 
         loss_x_res = fluid.layers.smooth_l1(fluid.layers.reduce_sum(pred_reg[:, x_res_l: x_res_r] * x_bin_onehot, dim=1, keep_dim=True), x_res_norm_label)
-        loss_x_res = fluid.layers.reduce_mean(loss_x_res)
+        loss_x_res = fluid.layers.reduce_mean(loss_x_res * fg_mask) * fg_scale
         loss_z_res = fluid.layers.smooth_l1(fluid.layers.reduce_sum(pred_reg[:, z_res_l: z_res_r] * z_bin_onehot, dim=1, keep_dim=True), z_res_norm_label)
-        loss_z_res = fluid.layers.reduce_mean(loss_z_res)
+        loss_z_res = fluid.layers.reduce_mean(loss_z_res * fg_mask) * fg_scale
         reg_loss_dict['loss_x_res'] = loss_x_res
         reg_loss_dict['loss_z_res'] = loss_z_res
         loc_loss += loss_x_res + loss_z_res
@@ -103,9 +117,9 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
         y_bin_onehot = fluid.layers.one_hot(y_bin_label, depth=per_loc_bin_num)
 
         loss_y_bin = fluid.layers.cross_entropy(pred_reg[:, y_bin_l: y_bin_r], y_bin_label)
-        loss_y_bin = fluid.layers.reduce_mean(loss_y_bin)
+        loss_y_bin = fluid.layers.reduce_mean(loss_y_bin * fg_mask) * fg_scale
         loss_y_res = fluid.layers.smooth_l1(fluid.layers.reduce_sum(pred_reg[:, y_res_l: y_res_r] * y_bin_onehot, dim=1, keep_dim=True), y_res_norm_label)
-        loss_y_res = fluid.layers.reduce_mean(loss_y_res)
+        loss_y_res = fluid.layers.reduce_mean(loss_y_res * fg_mask) * fg_scale
 
         reg_loss_dict['loss_y_bin'] = loss_y_bin
         reg_loss_dict['loss_y_res'] = loss_y_res
@@ -116,10 +130,10 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
         start_offset = y_offset_r
 
         loss_y_offset = fluid.layers.smooth_l1(fluid.layers.reduce_sum(pred_reg[:, y_offset_l: y_offset_r], dim=1, keep_dim=True), y_offset_label)
-        loss_y_offset = fluid.layers.reduce_mean(loss_y_offset)
+        loss_y_offset = fluid.layers.reduce_mean(loss_y_offset * fg_mask) * fg_scale
         reg_loss_dict['loss_y_offset'] = loss_y_offset
         loc_loss += loss_y_offset
-    fluid.layers.Print(loc_loss)
+    fluid.layers.Print(loc_loss, message="loc_loss")
 
     # angle loss
     ry_bin_l, ry_bin_r = start_offset, start_offset + num_head_bin
@@ -159,28 +173,28 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
 
     ry_bin_onehot = fluid.layers.one_hot(ry_bin_label, depth=num_head_bin)
     loss_ry_bin = fluid.layers.softmax_with_cross_entropy(pred_reg[:, ry_bin_l:ry_bin_r], ry_bin_label)
-    loss_ry_bin = fluid.layers.reduce_mean(loss_ry_bin)
+    loss_ry_bin = fluid.layers.reduce_mean(loss_ry_bin * fg_mask) * fg_scale
     loss_ry_res = fluid.layers.smooth_l1(fluid.layers.reduce_sum(pred_reg[:, ry_res_l: ry_res_r] * ry_bin_onehot, dim=1, keep_dim=True), ry_res_norm_label)
-    loss_ry_res = fluid.layers.reduce_mean(loss_ry_res)
+    loss_ry_res = fluid.layers.reduce_mean(loss_ry_res * fg_mask) * fg_scale
 
     reg_loss_dict['loss_ry_bin'] = loss_ry_bin
     reg_loss_dict['loss_ry_res'] = loss_ry_res
     angle_loss = loss_ry_bin + loss_ry_res
-    fluid.layers.Print(angle_loss)
+    fluid.layers.Print(angle_loss, message="angle_loss")
 
     # size loss
     size_res_l, size_res_r = ry_res_r, ry_res_r + 3
     assert pred_reg.shape[1] == size_res_r, '%d vs %d' % (pred_reg.shape[1], size_res_r)
 
     anchor_size_var = fluid.layers.zeros(shape=[3], dtype=reg_label.dtype)
-    fluid.layers.assign(anchor_size, anchor_size_var)
+    fluid.layers.assign(np.array(anchor_size).astype('float32'), anchor_size_var)
     size_res_norm_label = (reg_label[:, 3:6] - anchor_size_var) / anchor_size_var
     size_res_norm_label = fluid.layers.reshape(size_res_norm_label, shape=[-1, 1], inplace=True)
     size_res_norm = pred_reg[:, size_res_l:size_res_r]
     size_res_norm = fluid.layers.reshape(size_res_norm, shape=[-1, 1], inplace=True)
     size_loss = fluid.layers.smooth_l1(size_res_norm, size_res_norm_label)
-    size_loss = fluid.layers.reduce_mean(size_loss)
-    fluid.layers.Print(size_loss)
+    size_loss = fluid.layers.reduce_mean(fluid.layers.reshape(size_loss, [-1, 3]) * fg_mask) * fg_scale
+    fluid.layers.Print(size_loss, message="size_loss")
 
     # Total regression loss
     reg_loss_dict['loss_loc'] = loc_loss
