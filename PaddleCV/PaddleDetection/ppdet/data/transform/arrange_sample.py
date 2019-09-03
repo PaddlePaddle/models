@@ -152,6 +152,7 @@ class ArrangeSSD(BaseOperator):
         outs = (im, gt_bbox, gt_class)
         return outs
 
+
 @register_op
 class ArrangeEvalSSD(BaseOperator):
     """
@@ -183,6 +184,7 @@ class ArrangeEvalSSD(BaseOperator):
         outs = (im, im_shape, im_id, gt_bbox, gt_class, difficult)
 
         return outs
+
 
 @register_op
 class ArrangeTestSSD(BaseOperator):
@@ -345,38 +347,6 @@ class ArrangeBlazeFace(BaseOperator):
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
         outs = (im, gt_bbox, gt_class)
-        return outs
-
-
-@register_op
-class ArrangeEvalBlazeFace(BaseOperator):
-    """
-    Transform dict to tuple format needed for training.
-    """
-
-    def __init__(self):
-        super(ArrangeEvalBlazeFace, self).__init__()
-
-    def __call__(self, sample, context=None):
-        """
-        Args:
-            sample: a dict which contains image
-                    info and annotation info.
-            context: a dict which contains additional info.
-        Returns:
-            sample: a tuple containing the following items: (image)
-        """
-        im = sample['image']
-        if len(sample['gt_bbox']) != len(sample['gt_class']):
-            raise ValueError("gt num mismatch: bbox and class.")
-        im_id = sample['im_id']
-        h = sample['h']
-        w = sample['w']
-        im_shape = np.array((h, w))
-        gt_bbox = sample['gt_bbox']
-        gt_class = sample['gt_class']
-        outs = (im, im_shape, im_id, gt_bbox, gt_class)
-
         return outs
 
 

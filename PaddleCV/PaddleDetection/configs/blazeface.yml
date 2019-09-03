@@ -9,8 +9,9 @@ snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
-save_dir: output_300x300_3x3k_denseanchor_190902
+save_dir: output
 eval_mode: python
+multi_scale: false
 weights: output/balzeface/model_final/
 num_classes: 2
 
@@ -52,7 +53,7 @@ BlazeFaceEvalFeed:
   batch_size: 1
   use_process: false
   dataset:
-    dataset_dir: dataset/widerface
+    dataset_dir: dataset/wider_face
     annotation: wider_face_split/wider_face_val_bbx_gt.txt
     image_dir: WIDER_val/images
   drop_last: false
