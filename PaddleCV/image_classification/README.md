@@ -1,5 +1,6 @@
-# 图像分类以及模型库
+中文 | English(README_en.md)
 
+# 图像分类以及模型库
 ---
 ## 内容
 - [简介](#简介)
@@ -39,9 +40,10 @@ CUDNN >= 7.0
 
 运行训练代码需要安装numpy, cv2
 
-```pip install opencv-python```
-
-```pip install numpy```
+```bash
+pip install opencv-pytho
+pip install numpy
+```
 
 ### 数据准备
 
@@ -88,7 +90,9 @@ python train.py \
 
 或通过run.sh 启动训练
 
-```bash run.sh train 模型名```
+```bash
+bash run.sh train 模型名
+```
 
 **参数说明：**
 
@@ -152,7 +156,8 @@ python train.py \
 ### 参数微调
 
 参数微调是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
-```
+
+```bash
 python train.py \
        --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
@@ -162,7 +167,8 @@ python train.py \
 ### 模型评估
 
 模型评估是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
-```
+
+```bash
 python eval.py \
        --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
@@ -179,7 +185,7 @@ python eval.py \
 * **topk**: 按照置信由高到低排序结果，返回的标签数量，默认值：1
 * **label_path**: 可读标签文件路径，默认值："./utils/tools/readable_label.txt"
 
-```
+```bash
 python infer.py \
        --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
@@ -191,6 +197,11 @@ python infer.py \
 
 ## 进阶使用
 
+### Mixup训练
+
+训练中指定 --use_mixup=True 开启Mixup训练，本模型库中所有后缀为_vd的模型即代表开启Mixup训练
+Mixup相关介绍参考[mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.09412)
+
 ### 混合精度训练
 
 FP16相关内容已经迁移至PaddlePaddle/Fleet 中
@@ -198,6 +209,12 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 ### CE测试
 
 注意：CE相关代码仅用于内部测试，enable_ce默认设置False。
+
+### 自定义数据集
+
+PaddlePaddle/Models ImageClassification 支持自定义数据
+
+1. 组织自定义数据
 
 
 ## 已发布模型及其性能
@@ -209,7 +226,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
    - 2：InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同，InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
    - 3：调用动态链接库预测时需要将训练模型转换为二进制模型
 
-        ```
+        ```bash
         python infer.py \
                --model=model_name \
                --pretrained_model=${path_to_pretrain_model} \
