@@ -63,7 +63,6 @@ def build_source(config):
         else:
             source_type = data_cf['type']
         del args['type']
-    del args['class_aware_sampling']
     if source_type == 'RoiDbSource':
         return RoiDbSource(**args)
     elif source_type == 'SimpleSource':
