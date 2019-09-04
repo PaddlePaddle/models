@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
   <h3>
     <a href="usage.md">
       使用文档
@@ -13,7 +13,6 @@
     </a>
   </h3>
 </div>
-
 
 ---
 # Paddle模型压缩工具库使用示例
@@ -336,9 +335,11 @@ python compress.py \
 | ---                            | ---             | ---        |
 | MobileNet v1（剪切FLOPS -50%） | -86.47%（2.3M） | 69.20%     |
 
-### 3.7 小模型结构搜索示例
+### 3.8 小模型结构搜索示例
 
 本示例先用模拟退火策略搜索出一组tokens, 再用搜索出的tokens初始化构建模型进行训练。
+
+> tokens：light_nas将搜索空间中的CNN模型映射为一组token, token可以唯一地表示一个CNN模型。搜索过程就是在不断优化token, 使其构建得到的模型性能更强。
 
 step1: 进入路径`PaddlePaddle/models/PaddleSlim/light_nas/`。
 
