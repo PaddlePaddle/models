@@ -117,7 +117,8 @@ def create_inputs(data, architecture, use_cpp_engine=True):
 
     if architecture == 'YOLOv3':
         im_size = data['im_size'][0]
-        inputs += [create_tensor(im_size, 'int64', use_cpp_engine)]
+        #inputs += [create_tensor(im_size, 'int64', use_cpp_engine)]
+        inputs += [create_tensor(im_size, 'int32', use_cpp_engine)]
     elif architecture == 'SSD':
         pass
     elif architecture == 'RetinaNet' or architecture == 'CascadeRCNN':
@@ -252,7 +253,8 @@ def benchmark():
         images = [FLAGS.infer_img]
         feed.dataset.add_images(images)
     else:
-        feed = create(cfg.eval_feed)
+        #feed = create(cfg.eval_feed)
+        feed = create(cfg.test_feed)
 
     print(cfg)
 

@@ -17,18 +17,18 @@ CONFIG=ssd_mobilenet_v1_voc
 
 
 # Yolo on COCO
-#CONFIG=yolov3_mobilenet_v1 # yolov3_darknet or yolov3_mobilenet_v1 or yolov3_r34
-#MODEL=https://paddlemodels.bj.bcebos.com/object_detection/${CONFIG}.tar
+CONFIG=yolov3_mobilenet_v1 # yolov3_darknet or yolov3_mobilenet_v1 or yolov3_r34
+MODEL=https://paddlemodels.bj.bcebos.com/object_detection/${CONFIG}.tar
 #TRANSFORM="[!DecodeImage {to_rgb: true},!ResizeImage {target_size: 320,interp: 2},!NormalizeImage {mean: [0.485,0.456,0.406],std:[0.229,0.224,0.225],is_scale: true, is_channel_first: false},!Permute {to_bgr: false}]"
 # Save model by 320 x 320
 #python tools/infer.py -c configs/${CONFIG}.yml --infer_img demo/000000014439.jpg --save_inference_model \
 #    -o weights=${MODEL} YoloTestFeed.image_shape=[3,320,320] YoloTestFeed.sample_transforms="${TRANSFORM}"
 # Fluid FP32
 #python tools/tensorrt.py -c configs/${CONFIG}.yml --model_path=output/${CONFIG} --mode=fluid \
-#    -o YoloTestFeed.batch_size=8 YoloTestFeed.image_shape=[3,320,320] YoloTestFeed.sample_transforms="$TRANSFORM" --is_eval #--visualize #SSDTestFeed.samples=1
-# TensoRT FP32
+#    -o YoloTestFeed.batch_size=1 YoloTestFeed.image_shape=[3,320,320] --visualize --infer_img demo/000000014439.jpg
+## TensoRT FP32
 #python tools/tensorrt.py -c configs/${CONFIG}.yml --model_path=output/${CONFIG} --mode=trt_fp32 --visualize \
-#    -o YoloTestFeed.batch_size=4 YoloTestFeed.image_shape=[3,320,320] YoloTestFeed.sample_transforms="${TRANSFORM}" #SSDTestFeed.samples=1
+#    -o YoloTestFeed.batch_size=1 YoloTestFeed.image_shape=[3,320,320] --infer_img demo/000000014439.jpg
 
 # FasterRCNN
 #CONFIG=faster_rcnn_r50_1x
@@ -38,9 +38,9 @@ rm -rf output/000000014439_640x640.jpg
 # Save model
 #python tools/infer.py -c configs/${CONFIG}.yml --infer_img demo/000000014439.jpg -o weights=${MODLE} FasterRCNNTestFeed.image_shape=[3,640,640] --save_inference_model
 # TensorRT FP32
-python tools/tensorrt.py -c configs/${CONFIG}.yml --model_path=output/$CONFIG --mode=trt_fp32 --min_subgraph_size=40 --visualize \
-    --infer_img=demo/000000014439_640x640.jpg \
-    -o FasterRCNNTestFeed.batch_size=1
+#python tools/tensorrt.py -c configs/${CONFIG}.yml --model_path=output/$CONFIG --mode=trt_fp32 --min_subgraph_size=40 --visualize \
+#    --infer_img=demo/000000014439_640x640.jpg \
+#    -o FasterRCNNTestFeed.batch_size=1
 ## TensorRT FP16
 #python tools/tensorrt.py -c configs/${CONFIG}.yml --model_path=output/$CONFIG --mode=trt_fp16 --min_subgraph_size=40 --visualize \
 #    --infer_img=demo/000000014439_640x640.jpg \

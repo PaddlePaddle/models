@@ -877,7 +877,7 @@ class YoloTrainFeed(DataFeed):
                  ],
                  batch_transforms=[
                      RandomShape(sizes=[
-                         608, 352, 384, 416, 448, 480, 512, 544, 576, 608
+                         320, 352, 384, 416, 448, 480, 512, 544, 576, 608
                      ])
                  ],
                  batch_size=8,
