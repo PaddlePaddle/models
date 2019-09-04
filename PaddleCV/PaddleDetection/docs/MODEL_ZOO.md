@@ -2,9 +2,9 @@
 ## Environment
 
 - Python 2.7.1
-- PaddlePaddle 1.5
+- PaddlePaddle >=1.5
 - CUDA 9.0
-- CUDNN 7.4
+- cuDNN >=7.4
 - NCCL 2.1.2
 
 ## Common settings
@@ -13,7 +13,7 @@
 - Batch Normalization layers in backbones are replaced by Affine Channel layers.
 - Unless otherwise noted, all ResNet backbones adopt the [ResNet-B](https://arxiv.org/pdf/1812.01187) variant..
 - For RCNN and RetinaNet models, only horizontal flipping data augmentation was used in the training phase and no augmentations were used in the testing phase.
-- **Inf time (fps)**: the inference time is measured with fps (image/s) on a single GPU (Tesla V100) by running 'tools/eval.py' on all validation set, which including data loadding, network forwardning and post processing. The batch size is 1.
+- **Inf time (fps)**: the inference time is measured with fps (image/s) on a single GPU (Tesla V100) with cuDNN 7.5 by running 'tools/eval.py' on all validation set, which including data loadding, network forward and post processing. The batch size is 1.
 
 
 ## Training Schedules
