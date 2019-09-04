@@ -96,13 +96,13 @@ def train(args):
     train_prog = fluid.Program()
     test_prog = fluid.Program()
 
-    b_train_out = build_program(
+    train_out = build_program(
         is_train=True,
         main_prog=train_prog,
         startup_prog=startup_prog,
         args=args)
-    train_py_reader = b_train_out[-1]
-    train_fetch_vars = b_train_out[:-1]
+    train_py_reader = train_out[-1]
+    train_fetch_vars = train_out[:-1]
     #TODO: in fluid 1.6:
     #train_fetch_list = [var.name for var in train_fetch_vars]
     train_fetch_list = []
@@ -110,13 +110,13 @@ def train(args):
         var.persistable = True
         train_fetch_list.append(var.name)
 
-    b_test_out = build_program(
+    test_out = build_program(
         is_train=False,
         main_prog=test_prog,
         startup_prog=startup_prog,
         args=args)
-    test_py_reader = b_test_out[-1]
-    test_fetch_vars = b_test_out[:-1]
+    test_py_reader = test_out[-1]
+    test_fetch_vars = test_out[:-1]
     #TODO: in fluid 1.6
     #test_fetch_list = [var.name for var in test_fetch_vars]
     test_fetch_list = []
