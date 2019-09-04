@@ -42,6 +42,10 @@ class GTrainer():
                         x=image_real, y=self.rec_img)))
             self.pred_fake, self.cls_fake = model.network_D(
                 self.fake_img, cfg, name="d_main")
+            if cfg.gan_mode != 'wgan':
+                raise NotImplementedError(
+                    "gan_mode {} is not support! only support wgan".format(
+                        cfg.gan_mode))
             #wgan
             self.g_loss_fake = -1 * fluid.layers.mean(self.pred_fake)
 
@@ -104,6 +108,10 @@ class DTrainer():
             self.d_loss_cls = fluid.layers.reduce_sum(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     self.cls_real, label_org)) / cfg.batch_size
+            if cfg.gan_mode != 'wgan':
+                raise NotImplementedError(
+                    "gan_mode {} is not support! only support wgan".format(
+                        cfg.gan_mode))
             #wgan
             self.d_loss_fake = fluid.layers.mean(self.pred_fake)
             self.d_loss_real = -1 * fluid.layers.mean(self.pred_real)
@@ -273,7 +281,10 @@ class StarGAN(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
-        py_reader.decorate_batch_generator(self.train_reader, places=place)
+        py_reader.decorate_batch_generator(
+            self.train_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -346,7 +357,9 @@ class StarGAN(object):
                     iterable=True,
                     use_double_buffer=True)
                 test_py_reader.decorate_batch_generator(
-                    self.test_reader, places=place)
+                    self.test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
                                         test_program, gen_trainer,

@@ -95,7 +95,7 @@ class DCGAN(object):
         d_trainer = DTrainer(img, label, self.cfg)
 
         # prepare enviorment
-        place = fluid.CUDAPlace(0)
+        place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -117,6 +117,11 @@ class DCGAN(object):
         d_trainer_program = fluid.CompiledProgram(
             d_trainer.program).with_data_parallel(
                 loss_name=d_trainer.d_loss.name, build_strategy=build_strategy)
+
+        if self.cfg.run_test:
+            image_path = os.path.join(self.cfg.output, 'images')
+            if not os.path.exists(image_path):
+                os.makedirs(image_path)
 
         t_time = 0
         for epoch_id in range(self.cfg.epoch):
@@ -148,7 +153,7 @@ class DCGAN(object):
                     fetch_list=[d_trainer.d_loss])[0]
                 d_fake_loss = exe.run(
                     d_trainer_program,
-                    feed={'img': generate_image,
+                    feed={'img': generate_image[0],
                           'label': fake_label},
                     fetch_list=[d_trainer.d_loss])[0]
                 d_loss = d_real_loss + d_fake_loss
@@ -164,12 +169,16 @@ class DCGAN(object):
                                      fetch_list=[g_trainer.g_loss])[0]
 
                 batch_time = time.time() - s_time
-                t_time += batch_time
 
                 if batch_id % self.cfg.print_freq == 0:
-                    image_path = os.path.join(self.cfg.output, 'images')
-                    if not os.path.exists(image_path):
-                        os.makedirs(image_path)
+                    print(
+                        'Epoch ID: {} Batch ID: {} D_loss: {} G_loss: {} Batch_time_cost: {}'.
+                        format(epoch_id, batch_id, d_loss[0], g_loss[0],
+                               batch_time))
+
+                t_time += batch_time
+
+                if self.cfg.run_test:
                     generate_const_image = exe.run(
                         g_trainer.infer_program,
                         feed={'noise': const_n},
@@ -181,10 +190,6 @@ class DCGAN(object):
                         [real_image, generate_image_reshape])
                     fig = utility.plot(total_images)
 
-                    print(
-                        'Epoch ID: {} Batch ID: {} D_loss: {} G_loss: {} Batch_time_cost: {}'.
-                        format(epoch_id, batch_id, d_loss[0], g_loss[0],
-                               batch_time))
                     plt.title('Epoch ID={}, Batch ID={}'.format(epoch_id,
                                                                 batch_id))
                     img_name = '{:04d}_{:04d}.png'.format(epoch_id, batch_id)
