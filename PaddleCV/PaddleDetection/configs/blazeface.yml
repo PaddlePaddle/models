@@ -9,9 +9,9 @@ snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
-save_dir: output
+save_dir: output_blazelite_128x128_priorbox_5x5_190903
 eval_mode: python
-multi_scale: false
+multi_scale: true
 weights: output/balzeface/model_final/
 num_classes: 2
 
@@ -45,7 +45,7 @@ BlazeFaceTrainFeed:
   batch_size: 8
   use_process: True
   dataset:
-    dataset_dir: dataset/widerface
+    dataset_dir: dataset/wider_face
     annotation: wider_face_split/wider_face_train_bbx_gt.txt
     image_dir: WIDER_train/images
 

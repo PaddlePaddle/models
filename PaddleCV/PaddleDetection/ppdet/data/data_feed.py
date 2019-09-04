@@ -1032,8 +1032,8 @@ class BlazeFaceTrainFeed(DataFeed):
     def __init__(self,
                  dataset=WiderFaceDataSet().__dict__,
                  fields=['image', 'gt_box', 'gt_label'],
-                 #image_shape=[3, 128, 128],
-                 image_shape=[3, 300, 300],
+                 image_shape=[3, 128, 128],
+                 #image_shape=[3, 300, 300],
                  sample_transforms=[
                      DecodeImage(to_rgb=True, with_mixup=False),
                      NormalizeBox(),
@@ -1090,7 +1090,8 @@ class BlazeFaceEvalFeed(DataFeed):
             dataset=WiderFaceDataSet(WIdERFACE_VAL_ANNOTATION,
                                      WIdERFACE_VAL_IMAGE_DIR).__dict__,
             fields=['image', 'im_id', 'im_shape'],
-            image_shape=[3, 128, 128],
+            #image_shape=[3, 128, 128],
+            image_shape=[3, 300, 300],
             sample_transforms=[
                 DecodeImage(to_rgb=True, with_mixup=False),
                 ResizeImage(target_size=128, use_cv2=False, interp=1),

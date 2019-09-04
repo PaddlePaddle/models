@@ -124,7 +124,7 @@ class BlazeNet(object):
                                         'conv{}'.format(8 + i))
                 in_ch += 8
             assert in_ch == 88
-            conv13 = self.Blaze_lite(conv2, 88, 96, 2, 'conv13')
+            conv13 = self.Blaze_lite(conv7, 88, 96, 2, 'conv13')
             for i in range(4):
                 conv13 = self.Blaze_lite(conv13, 96, 96, 1,
                                          'conv{}'.format(14 + i))
