@@ -17,8 +17,7 @@ try:
 except Exception:
     from collections import Sequence
 
-import threading
-from multiprocessing import Pool, Queue
+from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
 
 import numpy as np
@@ -99,37 +98,24 @@ def _apply_transform(idx, dataset, transform, batch_seed=None):
     return transform(sample)
 
 
-def _process_worker_init(dataset, transforms, batchify, queue):
+def _process_worker_init(dataset, transforms, batchify):
     global _worker_context
-    _worker_context = (dataset, transforms, batchify, queue)
+    _worker_context = (dataset, transforms, batchify)
 
 
 def _process_worker_fn(idx, ids, context=None, batch_seed=None):
     global _worker_context
-    dataset, transform, batchify, queue = _worker_context
+    dataset, transform, batchify = _worker_context
     samples = [_apply_transform(i, dataset, transform, batch_seed)
                for i in ids]
-    result = batchify(samples)
-    queue.put((idx, result))
-    return idx
+    return batchify(samples)
 
 
 def _thread_worker_fn(idx, ids, context, batch_seed=None):
-    dataset, transform, batchify, queue = context
+    dataset, transform, batchify = context
     samples = [_apply_transform(i, dataset, transform, batch_seed)
                for i in ids]
-    result = batchify(samples)
-    queue.put((idx, result))
-    return idx
-
-
-def _fetcher_loop_fn(worker_queue, out_buffer, buffer_lock, callback=None):
-    while True:
-        idx, result = worker_queue.get()
-        if callable(callback):
-            result = callback(result)
-        with buffer_lock:
-            out_buffer[idx] = result
+    return batchify(samples)
 
 
 class _SingleWorkerLoaderIter(object):
@@ -138,7 +124,6 @@ class _SingleWorkerLoaderIter(object):
         self.dataset = loader.dataset
         self.transform = loader.transform
         self.batchify = loader.batchify
-        self.callback_fn = loader.callback_fn
         self.rank = loader.rank
         self._iter = iter(loader.sampler)
         self._batch_idx = 0
@@ -155,8 +140,6 @@ class _SingleWorkerLoaderIter(object):
             i, self.dataset, self.transform, self._batch_seed()) for i in ids]
         batch = self.batchify(samples)
         self._batch_idx += 1
-        if callable(self.callback_fn):
-            return self.callback_fn(batch)
         return batch
 
     next = __next__
@@ -168,22 +151,18 @@ class _MultiWorkerLoaderIter(object):
         self.dataset = loader.dataset
         self.transform = loader.transform
         self.rank = loader.rank
-        self.queue_depth = loader.queue_depth
+        self.buffer_size = loader.buffer_size
         self._iter = iter(loader.sampler)
-        self._buffer = {}
-        self._buffer_lock = threading.Lock()
+        self._out_buffer = {}
         self._recv_idx = 0
         self._sent_idx = 0
 
-        self._worker_queue = Queue(self.queue_depth)
-
-        worker_context = (loader.dataset, loader.transform,
-                          loader.batchify, self._worker_queue)
+        worker_context = (loader.dataset, loader.transform, loader.batchify)
         if loader.multiprocessing:
             # `maxtasksperchild` is needed to avoid OOM
             self._worker_pool = Pool(
                 loader.num_workers, initializer=_process_worker_init,
-                initargs=worker_context, maxtasksperchild=4 * self.queue_depth)
+                initargs=worker_context, maxtasksperchild=4 * self.buffer_size)
             self._worker_fn = _process_worker_fn
             self._worker_context = None
         else:
@@ -191,14 +170,7 @@ class _MultiWorkerLoaderIter(object):
             self._worker_fn = _thread_worker_fn
             self._worker_context = worker_context
 
-        self._fetcher = threading.Thread(
-            target=_fetcher_loop_fn,
-            args=(self._worker_queue, self._buffer, self._buffer_lock,
-                  loader.callback_fn))
-        self._fetcher.daemon = True
-        self._fetcher.start()
-
-        for _ in range(loader.queue_depth):
+        for _ in range(loader.buffer_size):
             self._queue_next()
 
     def _batch_seed(self):
@@ -208,27 +180,29 @@ class _MultiWorkerLoaderIter(object):
             return None
 
     def _queue_next(self):
-        ids = next(self._iter, None)
-        if ids is None:
-            return
-        self._worker_pool.apply_async(
-            self._worker_fn,
-            (self._sent_idx, ids, self._worker_context, self._batch_seed()))
-        self._sent_idx += 1
+       if self._sent_idx - self._recv_idx >= self.buffer_size:
+           return
+       ids = next(self._iter, None)
+       if ids is None:
+           return
+       future = self._worker_pool.apply_async(
+           self._worker_fn,
+           (self._sent_idx, ids, self._worker_context, self._batch_seed()))
+       self._out_buffer[self._sent_idx] = future
+       self._sent_idx += 1
 
     def __next__(self):
-        for _ in range(self.queue_depth + 1 + self._recv_idx - self._sent_idx):
+        for _ in range(self.buffer_size + 1 + self._recv_idx - self._sent_idx):
             self._queue_next()
         if self._recv_idx == self._sent_idx:
-            assert not self._buffer, "result queue should be empty by now"
+            assert not self._out_buffer, "result queue should be empty by now"
             raise StopIteration
         assert self._recv_idx < self._sent_idx
-        while True:
-            if self._recv_idx in self._buffer:
-                with self._buffer_lock:
-                    batch = self._buffer.pop(self._recv_idx)
-                self._recv_idx += 1
-                return batch
+        assert self._recv_idx in self._out_buffer
+        future = self._out_buffer.pop(self._recv_idx)
+        batch = future.get()
+        self._recv_idx += 1
+        return batch
 
     next = __next__
 
@@ -239,10 +213,9 @@ class DataLoader(object):
                  sampler=None,
                  sample_transforms=[],
                  batch_transforms=None,
-                 callback_fn=None,
                  num_workers=0,
                  multiprocessing=False,
-                 queue_depth=2,
+                 buffer_size=2,
                  rank=0):
         super(DataLoader, self).__init__()
 
@@ -250,10 +223,9 @@ class DataLoader(object):
         self.sampler = sampler
         self.sample_transforms = sample_transforms
         self.batch_transforms = batch_transforms
-        self.callback_fn = callback_fn
         self.num_workers = num_workers
         self.multiprocessing = multiprocessing
-        self.queue_depth = queue_depth
+        self.buffer_size = buffer_size
         self.rank = rank
 
         assert sampler is not None or dataset.mode != 'indexable', \
