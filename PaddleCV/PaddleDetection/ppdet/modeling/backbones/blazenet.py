@@ -137,7 +137,7 @@ class BlazeNet(object):
                    out_channels,
                    double_channels=None,
                    stride=1,
-                   use_5x5kernel=False,
+                   use_5x5kernel=True,
                    name=None):
         assert stride in [1, 2]
         use_pool = not stride == 1
