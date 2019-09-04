@@ -29,6 +29,7 @@ def set_paddle_flags(**kwargs):
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
 
+
 # NOTE(paddle-dev): All of these flags should be set before 
 # `import psaddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
@@ -40,7 +41,7 @@ from paddle import fluid
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
 
-from ppdet.utils.eval_utils import parse_fetches#, eval_run, eval_results
+from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
@@ -132,7 +133,7 @@ def main():
         #eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
         #                                                 extra_keys)
 
-    # compile program for multi-devices
+        # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
@@ -238,4 +239,3 @@ if __name__ == '__main__':
         help="Dataset path, same as DataFeed.dataset.dataset_dir")
     FLAGS = parser.parse_args()
     main()
-

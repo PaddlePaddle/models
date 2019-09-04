@@ -175,7 +175,8 @@ class FaceBoxNet(object):
         print("{}:{}".format(name, conv.shape))
 
         conv_a = fluid.layers.batch_norm(input=conv, act=act)
-        conv_b = 0.0 - conv_a
+        conv_b = fluid.layers.scale(conv_a, -1)
+
         concat = fluid.layers.concat([conv_a, conv_b], axis=1)
 
         return concat

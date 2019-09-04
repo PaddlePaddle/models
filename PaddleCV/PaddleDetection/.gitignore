@@ -58,7 +58,11 @@ coverage.xml
 *.json
 
 # Personal ignore
+ppdet/tools/train.py
+ppdet/data/data_feed.py
+
 log.txt
+/configs/
 /log/
 /pred/
 /*output*/
