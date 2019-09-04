@@ -19,6 +19,15 @@ from __future__ import print_function
 import argparse
 
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 'True'):
+        return True
+    elif v.lower() in ('no', 'false', 'False'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -65,9 +74,10 @@ def parse_args():
     parser.add_argument(
         "--data_path", type=str, help="all the data for train,valid,test")
     parser.add_argument("--vocab_path", type=str, help="vocab file path")
+    # parser.add_argument(
+    #    '--use_gpu', action='store_true',help='whether using gpu')
     parser.add_argument(
-        '--use_gpu', type=bool, default=False, help='whether using gpu')
-    parser.add_argument('--enable_ce', action='store_true')
+        "--use_gpu", type=str2bool, default='True', help="Activate nice mode.")
     parser.add_argument('--test_nccl', action='store_true')
     parser.add_argument('--optim', default='adagrad', help='optimizer type')
     parser.add_argument('--sample_softmax', action='store_true')
@@ -99,15 +109,16 @@ def parse_args():
     parser.add_argument('--proj_clip', type=float, default=3.0)
     parser.add_argument('--cell_clip', type=float, default=3.0)
     parser.add_argument('--max_epoch', type=float, default=10)
-    parser.add_argument('--local', type=bool, default=False)
-    parser.add_argument('--shuffle', type=bool, default=False)
-    parser.add_argument('--use_custom_samples', type=bool, default=False)
+    parser.add_argument('--local', type=str2bool, default='False')
+    parser.add_argument('--shuffle', type=str2bool, default='False')
+    parser.add_argument('--use_custom_samples', type=str2bool, default='False')
     parser.add_argument('--para_save_dir', type=str, default='checkpoints')
     parser.add_argument('--train_path', type=str, default='')
     parser.add_argument('--test_path', type=str, default='')
     parser.add_argument('--update_method', type=str, default='nccl2')
     parser.add_argument('--random_seed', type=int, default=0)
     parser.add_argument('--n_negative_samples_batch', type=int, default=8000)
+    parser.add_argument('--enable_ce', action='store_true', help='whether print log for ce')
     args = parser.parse_args()
 
     return args
