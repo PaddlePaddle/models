@@ -100,7 +100,7 @@ def infer(args):
         result = result[0][0]
         pred_label = np.argsort(result)[::-1][:TOPK]
         readable_pred_label = readable_label(pred_label, args.label_path)
-        print("Test-{0}-score: {1}, class {2}".format(batch_id, "%.4f" % result[
+        print("Test-{0}-score: {1}, class {2}".format(batch_id, result[
             pred_label], readable_pred_label))
         sys.stdout.flush()
 

@@ -259,6 +259,8 @@ def _reader_creator(settings,
         for line in full_lines:
             img_path, label = line.split()
             img_path = os.path.join(data_dir, img_path)
+            if not os.path.exists(img_path):
+                print("Warning: {} doesn't exist!".format(img_path))
             if mode == "train" or mode == "val":
                 yield img_path, int(label)
             elif mode == "test":
@@ -299,8 +301,8 @@ def train(settings):
         shuffle=True,
         color_jitter=False,
         rotate=False,
-        data_dir=settings.data_dir)
-    #data_dir=os.path.join(settings.data_dir, "train"))
+        #data_dir=settings.data_dir)
+        data_dir=os.path.join(settings.data_dir, "train"))
 
     if settings.use_mixup == True:
         reader = create_mixup_reader(settings, reader)
@@ -322,12 +324,15 @@ def val(settings):
             file_list)
 
     return _reader_creator(
-        settings, file_list, 'val', shuffle=False, data_dir=settings.data_dir)
-    #data_dir=os.path.join(settings.data_dir, "val"))
+        settings,
+        file_list,
+        'val',
+        shuffle=False,  #data_dir=settings.data_dir)
+        data_dir=os.path.join(settings.data_dir, "val"))
 
 
 def test(settings):
-    """Create a reader  for testing 
+    """Create a reader for testing 
 
     Args:
         settings: arguments
@@ -340,6 +345,8 @@ def test(settings):
         file_list), "{} doesn't exist, please check data list path".format(
             file_list)
     return _reader_creator(
-        settings, file_list, 'test', shuffle=False, data_dir=settings.data_dir)
-
-    #data_dir=os.path.join(settings.data_dir, "val"))
+        settings,
+        file_list,
+        'test',
+        shuffle=False,  #data_dir=settings.data_dir)
+        data_dir=os.path.join(settings.data_dir, "val"))
