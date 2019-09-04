@@ -64,7 +64,7 @@ class BlazeFace(object):
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
-        if mode == 'train' or mode == 'eval':
+        if mode == 'train':
             gt_box = feed_vars['gt_box']
             gt_label = feed_vars['gt_label']
 
