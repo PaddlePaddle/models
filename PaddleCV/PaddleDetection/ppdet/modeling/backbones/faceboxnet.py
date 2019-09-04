@@ -205,49 +205,61 @@ class FaceBoxNet(object):
             pool_type='avg',
             name='inceptionA_' + idx + '_pool1')
         conv1 = self._conv_norm(
-            pool1, 1, 32, 1, 0, act='relu', name='inceptionA_' + idx + '_conv1')
+            input=pool1,
+            filter_size=1,
+            num_filters=32,
+            stride=1,
+            padding=0,
+            act='relu',
+            name='inceptionA_' + idx + '_conv1')
 
         conv2 = self._conv_norm(
-            data, 1, 32, 1, 0, act='relu', name='inceptionA_' + idx + '_conv2')
+            input=data,
+            filter_size=1,
+            num_filters=32,
+            stride=1,
+            padding=0,
+            act='relu',
+            name='inceptionA_' + idx + '_conv2')
 
         conv3 = self._conv_norm(
-            data,
-            1,
-            24,
-            1,
-            0,
+            input=data,
+            filter_size=1,
+            num_filters=24,
+            stride=1,
+            padding=0,
             act='relu',
             name='inceptionA_' + idx + '_conv3_1')
         conv3 = self._conv_norm(
-            conv3,
-            3,
-            32,
-            1,
+            input=conv3,
+            filter_size=3,
+            num_filters=32,
+            stride=1,
             padding=1,
             act='relu',
             name='inceptionA_' + idx + '_conv3_2')
 
         conv4 = self._conv_norm(
-            data,
-            1,
-            24,
-            1,
-            0,
+            input=data,
+            filter_size=1,
+            num_filters=24,
+            stride=1,
+            padding=0,
             act='relu',
             name='inceptionA_' + idx + '_conv4_1')
         conv4 = self._conv_norm(
-            conv4,
-            3,
-            32,
-            1,
+            input=conv4,
+            filter_size=3,
+            num_filters=32,
+            stride=1,
             padding=1,
             act='relu',
             name='inceptionA_' + idx + '_conv4_2')
         conv4 = self._conv_norm(
-            conv4,
-            3,
-            32,
-            1,
+            input=conv4,
+            filter_size=3,
+            num_filters=32,
+            stride=1,
             padding=1,
             act='relu',
             name='inceptionA_' + idx + '_conv4_3')
