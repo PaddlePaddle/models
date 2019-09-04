@@ -11,6 +11,6 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
-from .learning_rate import cosine_decay, lr_warmup, cosine_decay_with_warmup, Decay
-from .utility import add_arguments, print_arguments, parse_args, check_args, init_model, save_model, create_pyreader, print_info, best_strategy_compiled, init_model, save_model
-from .metrics import Metrics, GoogLeNetMetrics, MixupMetrics, create_metrics
+from .learning_rate import cosine_decay, lr_warmup, cosine_decay_with_warmup, Optimizer, create_optimizer
+from .utility import add_arguments, print_arguments, parse_args, check_gpu, check_args, init_model, save_model, create_pyreader, print_info, best_strategy_compiled, init_model, save_model
+from .loss import Loss, GoogLeNetLoss, MixupLoss, create_model

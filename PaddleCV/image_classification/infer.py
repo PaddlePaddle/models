@@ -122,6 +122,7 @@ def readable_label(idx, filepath):
 def main():
     args = parser.parse_args()
     print_arguments(args)
+    check_gpu()
     infer(args)
 
 

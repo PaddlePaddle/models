@@ -302,7 +302,6 @@ def train(settings):
         color_jitter=False,
         rotate=False,
         data_dir=settings.data_dir)
-    #data_dir=os.path.join(settings.data_dir, "train"))
 
     if settings.use_mixup == True:
         reader = create_mixup_reader(settings, reader)
@@ -325,7 +324,6 @@ def val(settings):
 
     return _reader_creator(
         settings, file_list, 'val', shuffle=False, data_dir=settings.data_dir)
-    #data_dir=os.path.join(settings.data_dir, "val"))
 
 
 def test(settings):
@@ -343,4 +341,3 @@ def test(settings):
             file_list)
     return _reader_creator(
         settings, file_list, 'test', shuffle=False, data_dir=settings.data_dir)
-    #data_dir=os.path.join(settings.data_dir, "val"))

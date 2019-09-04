@@ -13,10 +13,11 @@
 #limitations under the License.
 import paddle
 import paddle.fluid as fluid
+import utility
 
 
-class Metrics(object):
-    """A class used to generate metrics of specified model.
+class Loss(object):
+    """A class used to generate loss of specified model.
 
     Attributes:
 
@@ -61,10 +62,10 @@ class Metrics(object):
         return loss
 
     def out(self):
-        """Default Metrics output, Include avg_cost, acc_top1 and acc_top5
+        """Default Loss output, Include avg_cost, acc_top1 and acc_top5
 
         Returns:
-            Metrics of default net
+            Loss
         
         """
         net_out = self.model.net(input=self.image, class_dim=self.class_dim)
@@ -87,18 +88,18 @@ class Metrics(object):
         return [avg_cost, acc_top1, acc_top5]
 
 
-class GoogLeNetMetrics(Metrics):
-    """A subclass inherited from Metrics
+class GoogLeNetLoss(Loss):
+    """A subclass inherited from Loss
     """
 
     def __init__(self, data, model, args, is_train):
-        super(GoogLeNetMetrics, self).__init__(data, model, args, is_train)
+        super(GoogLeNetLoss, self).__init__(data, model, args, is_train)
 
     def out(self):
-        """GoogLeNet Metrics output, include avg_cost, acc_top1 and acc_top5
+        """GoogLeNet Loss output, include avg_cost, acc_top1 and acc_top5
         
         Returns:
-            Metrics of GoogLeNet
+            Loss of GoogLeNet
 
         """
         out0, out1, out2 = self.model.net(input=self.image,
@@ -120,9 +121,9 @@ class GoogLeNetMetrics(Metrics):
 
 #TODO: (2019/08/08) Distill is temporary disabled now.
 """
-class DistillMetrics(Metrics):
+class DistillLoss(Loss):
     def __init__(self):
-        super(DistillMetrics,self).__init__()
+        super(DistillLosss,self).__init__()
     def out(self):
         out1, out2 = self.model.net(input=self.image, class_dim=self.class_dim)
         softmax_out1, softmax_out = fluid.layers.softmax(out1), fluid.layers.softmax(out2)
@@ -134,8 +135,8 @@ class DistillMetrics(Metrics):
 """
 
 
-class MixupMetrics(Metrics):
-    """A subclass inherited from Metrics
+class MixupLoss(Loss):
+    """A subclass inherited from Loss
 
         Note: Mixup preprocessing only apply on the training process.
         
@@ -146,13 +147,13 @@ class MixupMetrics(Metrics):
     """
 
     def __init__(self, data, model, args, is_train):
-        super(MixupMetrics, self).__init__(data, model, args, is_train)
+        super(MixupLoss, self).__init__(data, model, args, is_train)
         self.y_a = data[1]
         self.y_b = data[2]
         self.lam = data[3]
 
     def out(self):
-        """Metrics of Mixup processing netw ork, include avg_cost
+        """Loss of Mixup processing network, include avg_cost
         """
 
         net_out = self.model.net(input=self.image, class_dim=self.class_dim)
@@ -163,9 +164,9 @@ class MixupMetrics(Metrics):
             loss_b = fluid.layers.cross_entropy(
                 input=softmax_out, label=self.y_b)
         else:
-            loss_a = Metrics._calc_label_smoothing_loss(
+            loss_a = Loss._calc_label_smoothing_loss(
                 self, softmax_out, self.y_a, self.class_dim, self.epsilon)
-            loss_b = Metrics._calc_label_smoothing_loss(
+            loss_b = Loss._calc_label_smoothing_loss(
                 self, softmax_out, self.y_b, self.class_dim, self.epsilon)
 
         loss_a_mean = fluid.layers.mean(x=loss_a)
@@ -175,14 +176,19 @@ class MixupMetrics(Metrics):
         return [avg_cost]
 
 
-def create_metrics(data, model, args, is_train):
-    """Create metrics, include GoogLeNet(train, test); mixup(train); default(train, test) metrics
+def create_model(model, args, is_train):
+    """Create loss, include GoogLeNet(train, test); mixup(train); default(train, test) loss
     """
+    py_reader, data = utility.create_pyreader(is_train, args)
+
     if args.model == "GoogLeNet":
-        metrics = GoogLeNetMetrics(data, model, args, is_train)
+        loss = GoogLeNetLoss(data, model, args, is_train)
     else:
         if args.use_mixup and is_train:
-            metrics = MixupMetrics(data, model, args, is_train)
+            loss = MixupLoss(data, model, args, is_train)
         else:
-            metrics = Metrics(data, model, args, is_train)
-    return metrics
+            loss = Loss(data, model, args, is_train)
+
+    loss_out = loss.out()
+
+    return py_reader, loss_out

@@ -97,8 +97,8 @@ def lr_warmup(learning_rate, warmup_steps, start_lr, end_lr):
         return lr
 
 
-class Decay(object):
-    """A class used to represent several decay methods
+class Optimizer(object):
+    """A class used to represent several optimizer methods
 
     Attributes:
         batch_size: batch size on all devices.
@@ -233,3 +233,10 @@ class Decay(object):
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay))
         return optimizer
+
+
+def create_optimizer(args):
+    Opt = Optimizer(args)
+    optimizer = getattr(Opt, args.lr_strategy)()
+
+    return optimizer

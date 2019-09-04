@@ -133,7 +133,7 @@ def parse_args():
     add_arg('label_smoothing_epsilon',  float,  0.2,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
-    add_arg('random_seed',              int,    1000,                   "random seed")
+    add_arg('random_seed',              int,    None,                   "random seed")
     # yapf: enable
 
     args = parser.parse_args()

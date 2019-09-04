@@ -59,31 +59,27 @@ def build_program(is_train, main_prog, startup_prog, args):
         args: arguments
 
     Returns : 
-        train mode: [Measurement, global_lr, py_reader]
-        test mode: [Measurement, py_reader]
+        train mode: [Loss, global_lr, py_reader]
+        test mode: [Loss, py_reader]
     """
     model = models.__dict__[args.model]()
     with fluid.program_guard(main_prog, startup_prog):
-        #main_prog.random_seed = args.random_seed
-        #startup_prog.random_seed = args.random_seed
+        if args.random_seed:
+            main_prog.random_seed = args.random_seed
+            startup_prog.random_seed = args.random_seed
         with fluid.unique_name.guard():
-            # create pyreader
-            py_reader, data = create_pyreader(is_train, args)
-            metrics = create_metrics(data, model, args, is_train)
-            # return out: [avg_cost, ...]
-            out = metrics.out()
+            py_reader, loss_out = create_model(model, args, is_train)
             # add backward op in program
             if is_train:
-                decay = Decay(args)
-                optimizer = getattr(decay, args.lr_strategy)()
-                avg_cost = out[0]
+                optimizer = create_optimizer(args)
+                avg_cost = loss_out[0]
                 optimizer.minimize(avg_cost)
                 #XXX: fetch learning rate now, better implement is required here. 
                 global_lr = optimizer._global_learning_rate()
                 global_lr.persistable = True
-                out.append(global_lr)
-            out.append(py_reader)
-    return out
+                loss_out.append(global_lr)
+            loss_out.append(py_reader)
+    return loss_out
 
 
 def train(args):
@@ -133,7 +129,6 @@ def train(args):
     exe.run(startup_prog)
 
     #init model by checkpoint or pretrianed model.
-    #init_model interface will save multifiles.
     init_model(exe, args, train_prog)
 
     train_reader = reader.train(settings=args)
