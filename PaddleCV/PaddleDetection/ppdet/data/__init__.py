@@ -44,25 +44,14 @@ type_map = {
 }
 
 
-class ToFeedDict(object):
+class ExtractFields(object):
     def __init__(self,
                  feed_vars=[],
-                 extra_vars=[],
-                 pin_memory=False,
-                 prefetch_to_gpu=False,
-                 prefetch_device=0):
+                 extra_vars=[]):
 
-        super(ToFeedDict, self).__init__()
+        super(ExtractFields, self).__init__()
         self.feed_vars = feed_vars
         self.extra_vars = extra_vars
-
-        if prefetch_to_gpu:
-            place = fluid.CUDAPlace(prefetch_device)
-        elif pin_memory:
-            place = fluid.CUDAPinnedPlace()
-        else:
-            place = fluid.CPUPlace()
-        self.place = place
 
         self._normalized_vars = []
         for var in self.feed_vars:
@@ -119,22 +108,16 @@ class ToFeedDict(object):
                 ndarray = arr_list[0]
             else:
                 ndarray = np.column_stack(np.broadcast_arrays(*arr_list))
-            feed_dict[name] = self._to_tensor(ndarray, seq_length)
+
+            if not isinstance(ndarray, np.ndarray):
+                ndarray = np.asarray(ndarray)
+            if ndarray.dtype == np.float64:
+                ndarray = ndarray.astype(np.float32)
+
+            feed_dict[name] = (ndarray, seq_length)
 
         extra_dict = {key: batch[key] for key in self.extra_vars}
         return feed_dict, extra_dict
-
-    def _to_tensor(self, ndarray, seq_length=None):
-        if not isinstance(ndarray, np.ndarray):
-            ndarray = np.asarray(ndarray)
-        if ndarray.dtype == np.float64:
-            ndarray = ndarray.astype(np.float32)
-
-        t = fluid.core.LoDTensor()
-        if seq_length is not None:
-            t.set_recursive_sequence_lengths(seq_length)
-        t.set(ndarray, self.place)
-        return t
 
     def _flatten(self, arr, lod_level):
         flat = []
@@ -169,7 +152,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
             e.g., for computing evaluation metrics
         num_workers (int): number of dataloader workers.
         multiprocessing (bool): use threading or multiprocessing.
-        queue_depth (int): number of batches to buffer.
+        buffer_size (int): number of batches to buffer.
         pin_memory (bool): prefetch data to CUDA pinned memory.
         prefetch_to_gpu (bool): prefetch data to CUDA device.
     """
@@ -185,7 +168,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
                  extra_vars=[],
                  num_workers=0,
                  multiprocessing=False,
-                 queue_depth=2,
+                 buffer_size=2,
                  pin_memory=False,
                  prefetch_to_gpu=False):
         if isinstance(dataset, dict):
@@ -193,14 +176,32 @@ class DataLoaderBuilder(dataloader.DataLoader):
             cls = kwargs.pop('type')
             dataset = type_map[cls](**kwargs)
 
+        env = os.environ
+        if 'FLAGS_selected_gpus' in env:
+            prefetch_device = int(env['FLAGS_selected_gpus'])
+        else:
+            prefetch_device = 0
+
+        if prefetch_to_gpu:
+            place = fluid.CUDAPlace(prefetch_device)
+        elif pin_memory:
+            place = fluid.CUDAPinnedPlace()
+        else:
+            place = fluid.CPUPlace()
+        self.place = place
+
         rank = 0
         world_size = 1
         init_seed = random.randint(0, 1e5)
-        env = os.environ
         if 'PADDLE_TRAINER_ID' in env and 'PADDLE_TRAINERS_NUM' in env:
             rank = int(env['PADDLE_TRAINER_ID'])
             world_size = int(env['PADDLE_TRAINERS_NUM'])
             init_seed = 42 * world_size
+            self.coalesce_size = 1
+        else:
+            # XXX parallel executor in single process mode will split batch
+            # into each device
+            self.coalesce_size = fluid.core.get_cuda_device_count()
 
         if isinstance(sampler, dict):
             kwargs = sampler
@@ -211,16 +212,36 @@ class DataLoaderBuilder(dataloader.DataLoader):
             if 'type' not in kwargs:
                 sampler = samplers.Sampler(dataset, batch_size, **kwargs)
 
-        if 'FLAGS_selected_gpus' in env:
-            prefetch_device = int(env['FLAGS_selected_gpus'])
-        else:
-            prefetch_device = 0
-        to_feed = ToFeedDict(feed_vars, extra_vars, pin_memory,
-                             prefetch_to_gpu, prefetch_device)
+        extract = ExtractFields(feed_vars, extra_vars)
 
         super(DataLoaderBuilder, self).__init__(
-            dataset, sampler, sample_transforms, batch_transforms,
-            to_feed, num_workers, multiprocessing, queue_depth, rank)
+            dataset, sampler, sample_transforms, batch_transforms + [extract],
+            num_workers, multiprocessing, buffer_size, rank)
+
+    def _to_tensor(self, feed_dict):
+        for k, v in feed_dict.items():
+            t = fluid.core.LoDTensor()
+            if self.coalesce_size == 1:
+                ndarray, seq_length = v
+            if self.coalesce_size > 1:
+                seq_length = [i[1] for i in v]
+                if all([seq is None for seq in seq_length]):
+                    seq_length = None
+                    ndarray = np.concatenate([i[0] for i in v])
+                else:
+                    assert not any([seq is None for seq in seq_length])
+                    ndarray = np.asarray([i[0] for i in v])
+                if seq_length is not None:
+                    combined = seq_length[0]
+                    for i in range(len(combined)):
+                        for seq in seq_length[1:]:
+                            combined[i] += seq[i]
+                    seq_length = [list(range(self.coalesce_size))] + combined
+            if seq_length is not None:
+                t.set_recursive_sequence_lengths(seq_length)
+            t.set(ndarray, self.place)
+            feed_dict[k] = t
+        return feed_dict
 
     def __iter__(self):
         _iter = super(DataLoaderBuilder, self).__iter__()
@@ -228,7 +249,25 @@ class DataLoaderBuilder(dataloader.DataLoader):
         def forever():
             while True:
                 try:
-                    yield next(_iter)
+                    if self.coalesce_size == 1:
+                        feed_dict, extra_dict = next(_iter)
+                    else:
+                        extra_dict = {}
+                        feed_dict = {}
+                        for _ in range(self.coalesce_size):
+                            feed, extra = next(_iter)
+                            for k, v in extra.items():
+                                if k not in extra_dict:
+                                    extra_dict = v
+                                else:
+                                    extra_dict[k] += v
+                            for k, v in feed.items():
+                                if k not in feed_dict:
+                                    feed_dict[k] = [v]
+                                else:
+                                    feed_dict[k] += [v]
+
+                    yield self._to_tensor(feed_dict), extra_dict
                 except StopIteration:
                     self.reset()
         return forever()
