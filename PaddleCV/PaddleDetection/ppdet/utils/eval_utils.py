@@ -72,6 +72,7 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
 
     images_num = 0
     start_time = time.time()
+    has_bbox = 'bbox' in keys
 
     try:
         pyreader.start()
@@ -87,15 +88,19 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
             if iter_id % 100 == 0:
                 logger.info('Test iter {}'.format(iter_id))
             iter_id += 1
-            images_num += len(res['bbox'][1][0]) if 'bbox' in res else 1
+            images_num += len(res['bbox'][1][0]) if has_bbox else 1
     except (StopIteration, fluid.core.EOFException):
         pyreader.reset()
     logger.info('Test finish iter {}'.format(iter_id))
 
     end_time = time.time()
     fps = images_num / (end_time - start_time)
-    logger.info('Total number of images: {}, inference time: {} fps.'.format(
-        images_num, fps))
+    if has_bbox:
+        logger.info('Total number of images: {}, inference time: {} fps.'.
+                    format(images_num, fps))
+    else:
+        logger.info('Total iteration: {}, inference time: {} batch/s.'.format(
+            images_num, fps))
 
     return results
 
