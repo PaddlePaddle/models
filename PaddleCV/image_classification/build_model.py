@@ -105,7 +105,7 @@ def _mixup_model(data, model, args, is_train):
 
 
 def create_model(model, args, is_train):
-    """Create loss, include  GoogLeNet(train, test); mixup(train); default(train, test) loss
+    """Create model, include basic model, googlenet model and mixup model
     """
     py_reader, data = utility.create_pyreader(is_train, args)
 
