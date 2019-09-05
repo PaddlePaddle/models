@@ -67,7 +67,7 @@ After data preparation, one can start the training step by:
 
 ```
 python train.py \
-       --model=AlexNet \
+       --model=ResNet50 \
        --batch_size=256 \
        --total_images=1281167 \
        --class_dim=1000 \
@@ -94,12 +94,12 @@ Environment settings:
 
 Solver and hyperparameters:
 
-* **model**: name model to use. Default: "SE_ResNeXt50_32x4d".
+* **model**: name model to use. Default: "ResNet50".
 * **total_images**: total number of images in the training set. Default: 1281167.
 * **class_dim**: the class number of the classification task. Default: 1000.
 * **image_shape**: input size of the network. Default: "3,224,224".
 * **num_epochs**: the number of epochs. Default: 120.
-* **batch_size**: the batch size of all devices. Default: 256.
+* **batch_size**: the batch size of all devices. Default: 8.
 * **test_batch_size**: the test batch size, Default: 16
 * **lr_strategy**: learning rate changing strategy. Default: "piecewise_decay".
 * **lr**: initialized learning rate. Default: 0.1.

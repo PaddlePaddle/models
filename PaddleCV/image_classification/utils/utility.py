@@ -94,7 +94,7 @@ def parse_args():
     add_arg('save_step',                int,    100,                    "The steps interval to save checkpoints")
 
     # SOLVER AND HYPERPARAMETERS
-    add_arg('model',                    str,    "AlexNet",   "The name of network.")
+    add_arg('model',                    str,    "ResNet50",   "The name of network.")
     add_arg('total_images',             int,    1281167,                "The number of total training images.")
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")

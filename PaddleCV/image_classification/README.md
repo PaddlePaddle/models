@@ -72,7 +72,7 @@ val/ILSVRC2012_val_00000001.jpeg 65
 数据准备完毕后，可以通过如下的方式启动训练：
 ```
 python train.py \
-       --model=AlexNet \
+       --model=ResNet50 \
        --batch_size=256 \
        --total_images=1281167 \
        --class_dim=1000 \
@@ -98,11 +98,11 @@ bash run.sh train 模型名
 * **model_save_dir**: 模型存储路径，默认值: "output/"
 * **save_param**: params存储路径，默认值: None
 * **pretrained_model**: 加载预训练模型路径，默认值: None
-* **checkpoint**: 加载用于继续训练的检查点（指定具体模型存储路径，如"output/AlexNet/100/"），默认值: None
+* **checkpoint**: 加载用于继续训练的检查点（指定具体模型存储路径，如"output/ResNet50/100/"），默认值: None
 
 模型类型和超参配置：
 
-* **model**: 模型名称， 默认值: "AlexNet"
+* **model**: 模型名称， 默认值: "ResNet50"
 * **total_images**: 图片数，ImageNet2012，默认值: 1281167
 * **class_dim**: 类别数，默认值: 1000
 * **image_shape**: 图片大小，默认值: "3,224,224"

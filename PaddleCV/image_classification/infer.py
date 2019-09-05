@@ -38,7 +38,7 @@ add_arg('use_gpu',          bool, True,                 "Whether to use GPU or n
 add_arg('class_dim',        int,  1000,                 "Class number.")
 add_arg('image_shape',      str,  "3,224,224",          "Input image size")
 parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
-add_arg('model',            str,  "AlexNet",            "Set the network to use.")
+add_arg('model',            str,  "ResNet50",            "Set the network to use.")
 add_arg('save_inference',   bool, False,                "Whether to save inference model or not")
 add_arg('resize_short_size',int,  256,                  "Set resize short size")
 add_arg('reader_thread',    int,  1,                    "The number of multi thread reader")
