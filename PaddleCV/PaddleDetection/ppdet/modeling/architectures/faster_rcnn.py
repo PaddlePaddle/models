@@ -49,7 +49,8 @@ class FasterRCNN(object):
                  bbox_head='BBoxHead',
                  bbox_assigner='BBoxAssigner',
                  rpn_only=False,
-                 fpn=None):
+                 fpn=None,
+                 ohem=False):
         super(FasterRCNN, self).__init__()
         self.backbone = backbone
         self.rpn_head = rpn_head
@@ -92,9 +93,11 @@ class FasterRCNN(object):
             bbox_targets = outs[2]
             bbox_inside_weights = outs[3]
             bbox_outside_weights = outs[4]
+
         else:
             if self.rpn_only:
-                im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
+                im_scale = fluid.layers.slice(
+                    im_info, [1], starts=[2], ends=[3])
                 im_scale = fluid.layers.sequence_expand(im_scale, rois)
                 rois = rois / im_scale
                 return {'proposal': rois}
@@ -111,6 +114,7 @@ class FasterRCNN(object):
             loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
                                            bbox_inside_weights,
                                            bbox_outside_weights)
+
             loss.update(rpn_loss)
             total_loss = fluid.layers.sum(list(loss.values()))
             loss.update({'loss': total_loss})

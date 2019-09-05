@@ -162,12 +162,16 @@ class BBoxHead(object):
                  head,
                  box_coder=BoxCoder().__dict__,
                  nms=MultiClassNMS().__dict__,
-                 num_classes=81):
+                 num_classes=81,
+                 ohem=False,
+                 ohem_batch_size_per_im=512):
         super(BBoxHead, self).__init__()
         self.head = head
         self.num_classes = num_classes
         self.box_coder = box_coder
         self.nms = nms
+        self.ohem = ohem
+        self.ohem_batch_size_per_im = ohem_batch_size_per_im
         if isinstance(box_coder, dict):
             self.box_coder = BoxCoder(**box_coder)
         if isinstance(nms, dict):
@@ -257,16 +261,41 @@ class BBoxHead(object):
 
         labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
         labels_int64.stop_gradient = True
-        loss_cls = fluid.layers.softmax_with_cross_entropy(
+        loss_cls_per_roi = fluid.layers.softmax_with_cross_entropy(
             logits=cls_score, label=labels_int64, numeric_stable_mode=True)
-        loss_cls = fluid.layers.reduce_mean(loss_cls)
-        loss_bbox = fluid.layers.smooth_l1(
+        loss_bbox_per_roi = fluid.layers.smooth_l1(
             x=bbox_pred,
             y=bbox_targets,
             inside_weight=bbox_inside_weights,
             outside_weight=bbox_outside_weights,
             sigma=1.0)
-        loss_bbox = fluid.layers.reduce_mean(loss_bbox)
+
+        if self.ohem:
+            loss_per_roi = loss_cls_per_roi + loss_bbox_per_roi
+            loss_per_roi = fluid.layers.reshape(loss_per_roi, shape=[-1])
+            _, topk_index = fluid.layers.topk(loss_per_roi,
+                                              self.ohem_batch_size_per_im)
+
+            cls_score = fluid.layers.gather(cls_score, topk_index)
+            labels_int64 = fluid.layers.gather(labels_int64, topk_index)
+            bbox_pred = fluid.layers.gather(bbox_pred, topk_index)
+            bbox_targets = fluid.layers.gather(bbox_targets, topk_index)
+            bbox_inside_weights = fluid.layers.gather(bbox_inside_weights,
+                                                      topk_index)
+            bbox_outside_weights = fluid.layers.gather(bbox_outside_weights,
+                                                       topk_index)
+
+            loss_cls_per_roi = fluid.layers.softmax_with_cross_entropy(
+                logits=cls_score, label=labels_int64, numeric_stable_mode=True)
+            loss_bbox_per_roi = fluid.layers.smooth_l1(
+                x=bbox_pred,
+                y=bbox_targets,
+                inside_weight=bbox_inside_weights,
+                outside_weight=bbox_outside_weights,
+                sigma=1.0)
+
+        loss_cls = fluid.layers.reduce_mean(loss_cls_per_roi)
+        loss_bbox = fluid.layers.reduce_mean(loss_bbox_per_roi)
         return {'loss_cls': loss_cls, 'loss_bbox': loss_bbox}
 
     def get_prediction(self, roi_feat, rois, im_info, im_shape):
