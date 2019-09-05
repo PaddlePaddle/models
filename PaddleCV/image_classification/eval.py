@@ -43,8 +43,8 @@ add_arg('model',            str,  "AlexNet", "Set the network to use.")
 add_arg('resize_short_size', int, 256,                  "Set resize short size")
 add_arg('reader_thread',    int,  8,                    "The number of multi thread reader")
 add_arg('reader_buf_size',  int,  2048,                 "The buf size of multi thread reader")
-parser.add_argument('--image_mean', nargs='+', type=int, default=[0.485, 0.456, 0.406], help="The mean of input image data")
-parser.add_argument('--image_std', nargs='+', type=int, default=[0.229, 0.224, 0.225], help="The std of input image data")
+parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
+parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 add_arg('crop_size',        int,  224,                  "The value of crop size")
 # yapf: enable
 
