@@ -15,7 +15,6 @@ English | [中文](README.md)
 - [Advanced Usage](#advanced-usage)
     - [Mixup Training](#mixup-training)
     - [Using Mixed-Precision Training](#using-mixed-precision-training)
-    - [CE](#ce)
     - [Custom Dataset](#custom-dataset)
 - [Supported Models and Performances](#supported-models-and-performances)
 - [Reference](#reference)
@@ -128,7 +127,6 @@ Switch:
 
 * **use_gpu**: whether to use GPU or not. Default: True.
 * **use_inplace**: whether to use inplace memory optimization or not. Default: True.
-* **enable_ce**: whether to enable CE testing, Default: False.
 * **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
 * **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.2.
 * **random_seed**: random seed for debugging, Default: 1000
@@ -195,9 +193,6 @@ Refer to [mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.
 
 Mixed-precision part is moving to PaddlePaddle/Fleet now.
 
-### CE
-
-CE is only for internal testing, don't have to set it.
 
 ### Custom Dataset
 

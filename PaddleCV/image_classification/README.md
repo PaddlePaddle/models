@@ -14,7 +14,6 @@
 - [进阶使用](#进阶使用)
     - [Mixup训练](#mixup训练)
     - [混合精度训练](#混合精度训练)
-    - [CE测试](#ce测试)
     - [自定义数据集](#自定义数据集)
 - [已发布模型及其性能](#已发布模型及其性能)
 - [FAQ](#faq)
@@ -101,7 +100,7 @@ bash run.sh train 模型名
 * **pretrained_model**: 加载预训练模型路径，默认值: None
 * **checkpoint**: 加载用于继续训练的检查点（指定具体模型存储路径，如"output/AlexNet/100/"），默认值: None
 
-解决方案和超参配置：
+模型类型和超参配置：
 
 * **model**: 模型名称， 默认值: "AlexNet"
 * **total_images**: 图片数，ImageNet2012，默认值: 1281167
@@ -136,7 +135,6 @@ bash run.sh train 模型名
 
 * **use_gpu**: 是否在GPU上运行，默认值: True
 * **use_inplace**: 是否开启inplace显存优化，默认值: True
-* **enable_ce**: 是否开启CE测试，默认值: False
 * **use_label_smoothing**: 是否对数据进行label smoothing处理，默认值: False
 * **label_smoothing_epsilon**: label_smoothing的epsilon， 默认值:0.2
 * **random_seed**: 随机数种子， 默认值: 1000
@@ -203,10 +201,6 @@ Mixup相关介绍参考[mixup: Beyond Empirical Risk Minimization](https://arxiv
 ### 混合精度训练
 
 FP16相关内容已经迁移至PaddlePaddle/Fleet 中
-
-### CE测试
-
-注意：CE相关代码仅用于内部测试，enable_ce默认设置False。
 
 ### 自定义数据集
 

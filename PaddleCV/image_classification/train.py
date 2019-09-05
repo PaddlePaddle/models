@@ -47,6 +47,7 @@ import paddle.fluid as fluid
 import reader
 from utils import *
 import models
+from build_model import create_model
 
 
 def build_program(is_train, main_prog, startup_prog, args):

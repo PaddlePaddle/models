@@ -99,8 +99,7 @@ def parse_args():
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
     add_arg('image_shape',              str,    "3,224,224",            "The size of Input image, order: [channels, height, weidth] ")
-    #parser.add_argument('--image_shape', nargs='+', type=int, default=[3,224,224], help='The size of Input image, order: [channels, height, weidth]')
-    add_arg('batch_size',               int,    4,                      "Minibatch size on a device.")
+    add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
     add_arg('test_batch_size',          int,    16,                     "Test batch size on a deveice.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
@@ -122,10 +121,7 @@ def parse_args():
     parser.add_argument('--image_std', nargs='+', type=int, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
     # SWITCH
-    #NOTE: (2019/08/08) permenant disable use_mem_opt now
-    #add_arg('use_mem_opt',              bool,   False,                  "Whether to use memory optimization.")
     add_arg('use_inplace',              bool,   True,                   "Whether to use inplace memory optimization.")
-    add_arg('enable_ce',                bool,   False,                  "Whether to enable continuous evaluation job.")
     #NOTE: (2019/08/08) FP16 is moving to PaddlePaddle/Fleet now
     #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
@@ -232,10 +228,6 @@ def check_args(args):
 
     check_gpu()
 
-    #FIXME: temporary disable CE:
-    if args.enable_ce == True:
-        raise Exception("Temporary disable ce")
-
 
 def init_model(exe, args, program):
     if args.checkpoint:
@@ -284,12 +276,13 @@ def create_pyreader(is_train, args):
         name="feed_label", shape=[1], dtype="int64", lod_level=0)
     feed_y_a = fluid.layers.data(
         name="feed_y_a", shape=[1], dtype="int64", lod_level=0)
-    feed_y_b = fluid.layers.data(
-        name="feed_y_b", shape=[1], dtype="int64", lod_level=0)
-    feed_lam = fluid.layers.data(
-        name="feed_lam", shape=[1], dtype="float32", lod_level=0)
 
     if is_train and args.use_mixup:
+        feed_y_b = fluid.layers.data(
+            name="feed_y_b", shape=[1], dtype="int64", lod_level=0)
+        feed_lam = fluid.layers.data(
+            name="feed_lam", shape=[1], dtype="float32", lod_level=0)
+
         py_reader = fluid.io.PyReader(
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
             capacity=64,
@@ -368,45 +361,6 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
         raise Warning("CE code is not ready")
     else:
         raise Exception("Illegal info_mode")
-
-
-#XXX: PE is deprecated now, use best_strategy_compiled now.
-def best_strategy(args, program, loss):
-    """make a Parallel Executor
-    """
-    # use_ngraph is for CPU only, please refer to README_ngraph.md for details
-    use_ngraph = os.getenv('FLAGS_use_ngraph')
-    if not use_ngraph:
-        build_strategy = fluid.BuildStrategy()
-        # memopt may affect GC results
-        #build_strategy.memory_optimize = args.with_mem_opt
-        build_strategy.enable_inplace = args.use_inplace
-        #build_strategy.fuse_all_reduce_ops=1
-
-        exec_strategy = fluid.ExecutionStrategy()
-        exec_strategy.num_threads = fluid.core.get_cuda_device_count()
-        exec_strategy.num_iteration_per_drop_scope = 10
-
-        num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-
-        if num_trainers > 1 and args.use_gpu:
-            dist_utils.prepare_for_multi_process(exe, build_strategy,
-                                                 train_prog)
-            # NOTE: the process is fast when num_threads is 1
-            # for multi-process training.
-            exec_strategy.num_threads = 1
-
-        train_exe = fluid.ParallelExecutor(
-            main_program=program,
-            use_cuda=bool(args.use_gpu),
-            loss_name=loss.name,
-            build_strategy=build_strategy,
-            exec_strategy=exec_strategy)
-    else:
-        train_exe = exe
-    print("[Program is running on ", fluid.core.get_cuda_device_count(),
-          " cards ]")
-    return train_exe
 
 
 def best_strategy_compiled(args, program, loss):
