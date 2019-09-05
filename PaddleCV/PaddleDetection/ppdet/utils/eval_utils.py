@@ -111,7 +111,8 @@ def eval_results(results,
                  num_classes,
                  resolution=None,
                  is_bbox_normalized=False,
-                 output_directory=None):
+                 output_directory=None,
+                 map_type='11point'):
     """Evaluation for evaluation program results"""
     box_ap_stats = []
     if metric == 'COCO':
@@ -147,7 +148,10 @@ def eval_results(results,
             box_ap_stats.append(res * 100.)
         elif 'bbox' in results[0]:
             box_ap = voc_bbox_eval(
-                results, num_classes, is_bbox_normalized=is_bbox_normalized)
+                results,
+                num_classes,
+                is_bbox_normalized=is_bbox_normalized,
+                map_type=map_type)
             box_ap_stats.append(box_ap)
     return box_ap_stats
 
