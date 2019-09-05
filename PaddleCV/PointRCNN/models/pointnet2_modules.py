@@ -75,7 +75,7 @@ def group_all(xyz, features=None, use_xyz=True):
 def conv_bn(input, out_channels, bn=True, bn_momentum=0.1, act='relu', name=None):
     param_attr = ParamAttr(name='{}_conv_weight'.format(name),
                            initializer=fluid.initializer.Constant(1.376))
-    bias_attr = ParamAttr(initializer=fluid.initializer.Constant(0.213),
+    bias_attr = ParamAttr(initializer=fluid.initializer.Constant(6.213),
                           name='{}_conv_bias'.format(name)) \
                                   if not bn else False
     out = fluid.layers.conv2d(input,

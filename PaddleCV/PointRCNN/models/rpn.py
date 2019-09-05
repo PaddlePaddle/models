@@ -30,8 +30,10 @@ __all__ = ["PointNet2SemSegSSG", "PointNet2SemSegMSG"]
 
 
 class RPN(object):
-    def __init__(self, cfg, use_xyz=True, mode='TRAIN'):
+    def __init__(self, cfg, batch_size, num_points, use_xyz=True, mode='TRAIN'):
         self.cfg = cfg
+        self.batch_size = batch_size
+        self.num_points = num_points
         self.use_xyz = use_xyz
         self.mode = mode
         self.is_train = mode == 'TRAIN'
@@ -94,24 +96,22 @@ class RPN(object):
                 "unsupported RPN cls loss type {}".format(self.cfg.RPN.LOSS_CLS)
         cls_flat = fluid.layers.reshape(self.cls_out, shape=[-1])
         cls_label_flat = fluid.layers.reshape(rpn_cls_label, shape=[-1])
-        pos = fluid.layers.cast(cls_label_flat > 0, dtype=cls_flat.dtype)
-        pos_normalizer = fluid.layers.reduce_sum(pos)
+        cls_label_pos = fluid.layers.cast(cls_label_flat > 0, dtype=cls_flat.dtype)
+        pos_normalizer = fluid.layers.reduce_sum(cls_label_pos)
         cls_weights = fluid.layers.cast(cls_label_flat >= 0, dtype=cls_flat.dtype)
         cls_weights = cls_weights / fluid.layers.clip(pos_normalizer, min=1.0, max=1e10)
+        cls_weights.stop_gradient = True
         cls_label_flat = fluid.layers.cast(cls_label_flat, dtype=cls_flat.dtype)
-        rpn_loss_cls = sigmoid_focal_loss(cls_flat, cls_label_flat, cls_weights)
+        rpn_loss_cls = sigmoid_focal_loss(cls_flat, cls_label_pos, cls_weights)
         rpn_loss_cls = fluid.layers.reduce_sum(rpn_loss_cls)
-        # fg_num = fluid.layers.cast(rpn_cls_label > 0., dtype='int32')
-        # fg_num = fluid.layers.reduce_sum(fg_num, dim=[1])
-        # rpn_loss_cls = fluid.layers.sigmoid_focal_loss(self.cls_out, rpn_cls_label, fg_num, 
-        #             alpha=cfg.RPN.FOCAL_ALPHA[0], gamma=cfg.RPN.FOCAL_GAMMA)
 
         # RPN regression loss
         reg_out = fluid.layers.reshape(self.reg_out, [-1, self.reg_out.shape[-1]])
         reg_label = fluid.layers.reshape(rpn_reg_label, [-1, rpn_reg_label.shape[-1]])
         fg_mask = fluid.layers.cast(cls_label_flat > 0, dtype=reg_out.dtype)
         loc_loss, angle_loss, size_loss, loss_dict = get_reg_loss(
-                                        reg_out, reg_label, fg_mask, 16384.,
+                                        reg_out, reg_label, fg_mask,
+                                        float(self.batch_size * self.num_points),
                                         loc_scope=self.cfg.RPN.LOC_SCOPE,
                                         loc_bin_size=self.cfg.RPN.LOC_BIN_SIZE,
                                         num_head_bin=self.cfg.RPN.NUM_HEAD_BIN,
@@ -122,42 +122,57 @@ class RPN(object):
         rpn_loss_reg = loc_loss + angle_loss + size_loss * 3
 
         rpn_loss = rpn_loss_cls * self.cfg.RPN.LOSS_WEIGHT[0] + rpn_loss_reg * self.cfg.RPN.LOSS_WEIGHT[1]
-        return rpn_loss_cls, rpn_loss_reg
+        # rpn_loss = rpn_loss_reg * self.cfg.RPN.LOSS_WEIGHT[1]
+        return rpn_loss, rpn_loss_cls, rpn_loss_reg
         
 if __name__ == "__main__":
     from utils.config import load_config, cfg
+    batch_size = 4
+    num_points = 16384
     load_config('./cfgs/default.yml')
     cfg.RPN.ENABLED = True
     cfg.RCNN.ENABLED = False
-    keys = ['pts_input', 'rpn_cls_label', 'rpn_reg_label', 'pts_rect', 'pts_features', 'gt_boxes3d']
+    # keys = ['pts_input', 'rpn_cls_label', 'rpn_reg_label', 'pts_rect', 'pts_features', 'gt_boxes3d']
+    keys = ['pts_input', 'rpn_cls_label', 'rpn_reg_label']
     np_inputs = {}
     for key in keys:
-        np_inputs[key] = np.expand_dims(np.load('/paddle/rpn_data/{}.npy'.format(key)), axis=0)
+        # np_inputs[key] = np.expand_dims(np.load('/paddle/rpn_data/{}.npy'.format(key)), axis=0)
+        np_inputs[key] = np.load('/paddle/rpn_data/{}.npy'.format(key))[:batch_size]
         print(key, np_inputs[key].shape)
 
-    pts_input = fluid.layers.data(name='pts_input', shape=[16384, 3], dtype='float32')
-    rpn_cls_label = fluid.layers.data(name='rpn_cls_label', shape=[16384], dtype='int32')
-    rpn_reg_label = fluid.layers.data(name='rpn_reg_label', shape=[16384, 7], dtype='float32')
+    pts_input = fluid.layers.data(name='pts_input', shape=[num_points, 3], dtype='float32', stop_gradient=False)
+    rpn_cls_label = fluid.layers.data(name='rpn_cls_label', shape=[num_points], dtype='int32')
+    rpn_reg_label = fluid.layers.data(name='rpn_reg_label', shape=[num_points, 7], dtype='float32')
     inputs = {
             "pts_input": pts_input,
             "rpn_cls_label": rpn_cls_label,
             "rpn_reg_label": rpn_reg_label,
             }
-    rpn = RPN(cfg)
+    rpn = RPN(cfg, batch_size, num_points)
     rpn.build(inputs)
-    loss_cls, loss_reg = rpn.get_loss()
+    rpn_loss, loss_cls, loss_reg = rpn.get_loss()
+    optm = fluid.optimizer.Adam(learning_rate=0.01)
+    optm.minimize(rpn_loss)
 
     place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
     ret = exe.run(fetch_list=[
-        loss_cls.name,
-        loss_reg.name,
+        rpn_loss.name,
+        # loss_cls.name,
+        # loss_reg.name,
         # rpn.backbone_xyz.name,
         # rpn.backbone_feature.name,
-        # rpn.cls_out.name,
-        # rpn.reg_out.name,
-        "reshape2_2.tmp_0",
-        "reshape2_3.tmp_0",
+        rpn.cls_out.name + '@GRAD',
+        rpn.reg_out.name + '@GRAD',
+        'pts_input@GRAD',
+        rpn.backbone_feature.name + '@GRAD',
+        # 'sigmoid_cross_entropy_with_logits_0.tmp_0',
+        'tmp_47',
         ], feed={'pts_input': np_inputs['pts_input'], 'rpn_cls_label': np_inputs['rpn_cls_label'], 'rpn_reg_label': np_inputs['rpn_reg_label']})
     print(ret)
+    np.save('rpn_cls.npy', ret[1])
+    np.save('rpn_reg.npy', ret[2])
+    np.save('pts_input.npy', ret[3])
+    np.save('backbone_features.npy', ret[4])
+    np.save('sfloss.npy', ret[5])

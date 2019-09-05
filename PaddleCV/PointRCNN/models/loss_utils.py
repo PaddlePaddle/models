@@ -27,9 +27,6 @@ __all__ = ["get_reg_loss"]
 def sigmoid_focal_loss(logits, labels, weights, gamma=2.0, alpha=0.25):
     sce_loss = fluid.layers.sigmoid_cross_entropy_with_logits(logits, labels)
     prob = fluid.layers.sigmoid(logits)
-    # p_t = labels * prob + (labels * -1.0 + 1.0) * (prob * -1.0 + 1.0)
-    # modulating_factor = fluid.layers.pow(p_t * -1.0 + 1.0, gamma)
-    # alpha_weight_factor = labels * alpha + (labels * -1.0 + 1.0) * (1.0 - alpha)
     p_t = labels * prob + (1.0 - labels) * (1.0 - prob)
     modulating_factor = fluid.layers.pow(1.0 - p_t, gamma)
     alpha_weight_factor = labels * alpha + (1.0 - labels) * (1.0 - alpha)
