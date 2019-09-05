@@ -190,6 +190,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
             place = fluid.CPUPlace()
         self.place = place
 
+        self.coalesce_size = 1
         rank = 0
         world_size = 1
         init_seed = random.randint(0, 1e5)
@@ -197,10 +198,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
             rank = int(env['PADDLE_TRAINER_ID'])
             world_size = int(env['PADDLE_TRAINERS_NUM'])
             init_seed = 42 * world_size
-            self.coalesce_size = 1
         else:
-            # XXX parallel executor in single process mode will split batch
-            # into each device
+            # XXX assume training with GPU
             self.coalesce_size = fluid.core.get_cuda_device_count()
 
         if world_size > 1 and multiprocessing:
@@ -226,24 +225,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
             num_workers, multiprocessing, buffer_size, rank)
 
     def _to_tensor(self, feed_dict):
-        for k, v in feed_dict.items():
+        for k, (ndarray, seq_length) in feed_dict.items():
             t = fluid.core.LoDTensor()
-            if self.coalesce_size == 1:
-                ndarray, seq_length = v
-            if self.coalesce_size > 1:
-                seq_length = [i[1] for i in v]
-                if all([seq is None for seq in seq_length]):
-                    seq_length = None
-                    ndarray = np.concatenate([i[0] for i in v])
-                else:
-                    assert not any([seq is None for seq in seq_length])
-                    ndarray = np.asarray([i[0] for i in v])
-                if seq_length is not None:
-                    combined = seq_length[0]
-                    for i in range(len(combined)):
-                        for seq in seq_length[1:]:
-                            combined[i] += seq[i]
-                    seq_length = [list(range(self.coalesce_size))] + combined
             if seq_length is not None:
                 t.set_recursive_sequence_lengths(seq_length)
             t.set(ndarray, self.place)
@@ -258,23 +241,19 @@ class DataLoaderBuilder(dataloader.DataLoader):
                 try:
                     if self.coalesce_size == 1:
                         feed_dict, extra_dict = next(_iter)
+                        yield self._to_tensor(feed_dict), extra_dict
                     else:
-                        extra_dict = {}
-                        feed_dict = {}
+                        feed_list = []
+                        coalesced_extra_dict = {}
                         for _ in range(self.coalesce_size):
-                            feed, extra = next(_iter)
-                            for k, v in extra.items():
-                                if k not in extra_dict:
-                                    extra_dict = v
+                            feed_dict, extra_dict = next(_iter)
+                            feed_list.append(self._to_tensor(feed_dict))
+                            for k, v in extra_dict.items():
+                                if k not in coalesced_extra_dict:
+                                    coalesced_extra_dict[k] = v
                                 else:
-                                    extra_dict[k] += v
-                            for k, v in feed.items():
-                                if k not in feed_dict:
-                                    feed_dict[k] = [v]
-                                else:
-                                    feed_dict[k] += [v]
-
-                    yield self._to_tensor(feed_dict), extra_dict
+                                    coalesced_extra_dict[k] += v
+                        yield feed_list, coalesced_extra_dict
                 except StopIteration:
                     self.reset()
         return forever()
