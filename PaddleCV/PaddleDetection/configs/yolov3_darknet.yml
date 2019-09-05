@@ -1,12 +1,9 @@
 architecture: YOLOv3
-train_feed: YoloTrainFeed
-eval_feed: YoloEvalFeed
-test_feed: YoloTestFeed
 use_gpu: true
 max_iters: 500200
 log_smooth_window: 20
 save_dir: output
-snapshot_iter: 2000
+snapshot_iter: 10000
 metric: COCO
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
 weights: output/yolov3_darknet/model_final
@@ -57,26 +54,136 @@ OptimizerBuilder:
     factor: 0.0005
     type: L2
 
-YoloTrainFeed:
+TrainDataLoader:
   batch_size: 8
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  yolo_class_fix: true
+  num_workers: 4
+  buffer_size: 8
   dataset:
-    dataset_dir: dataset/coco
-    annotation: annotations/instances_train2017.json
+    type: coco
+    root_dir: /root/data
+    annotation_file: annotations/instances_train2017.json
     image_dir: train2017
-  num_workers: 8
-  bufsize: 128
-  use_process: true
+    use_crowd: false
+    use_empty: false
+    use_mask: false
+  sampler:
+    shuffle: true
+    sync_seed_schedule: true
+  feed_vars:
+  - image
+  - gt_box
+  - gt_label
+  - gt_score
+  extra_vars:
+  - id
+  sample_transforms:
+  - !MixUp
+    alpha: 1.5
+    beta: 1.5
+  - !RandomExpand
+    ratio: 4.0
+    prob: 0.5
+    fill_value: [127, 127, 127]
+  - !RandomCrop
+    thresholds: [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
+    aspect_ratio: [0.5, 2.0]
+    scaling: [0.3, 1.0]
+    num_attempts: 50
+    allow_no_crop: true
+  - !RandomFlip
+    prob: 0.5
+  - !Resize
+    random_shape: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
+    interp: random
+  - !ColorDistort
+    brightness: [0.5, 1.5, 0.5]
+    contrast: [0.5, 1.5, 0.5]
+    saturation: [0.5, 1.5, 0.5]
+    hue: [-18, 18, 0.5]
+  - !NormalizePermute
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  - !NormalizeLabels
+    num_instances: 50
+    normalize_box: true
+    to_center: true
+  batch_transforms:
+  - !PadToStride
+    stride: 1
 
-YoloEvalFeed:
+EvalDataLoader:
   batch_size: 8
-  image_shape: [3, 608, 608]
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  yolo_class_fix: true
+  num_workers: 4
+  buffer_size: 8
   dataset:
-    dataset_dir: dataset/coco
-    annotation: annotations/instances_val2017.json
+    type: coco
+    root_dir: /root/data
+    annotation_file: annotations/instances_val2017.json
     image_dir: val2017
+    use_crowd: false
+    use_empty: true
+    use_mask: false
+  sampler:
+    shuffle: false
+    pad_batch: false
+  feed_vars:
+  - image
+  - name: im_size
+    fields:
+    - orig_height
+    - orig_width
+  extra_vars:
+  - id
+  sample_transforms:
+  - !Resize
+    random_shape: [608]
+    interp: 2
+  - !NormalizePermute
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  batch_transforms:
+  - !PadToStride
+    stride: 1
 
-YoloTestFeed:
+TestDataLoader:
   batch_size: 1
-  image_shape: [3, 608, 608]
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  yolo_class_fix: true
+  num_workers: 4
+  buffer_size: 8
   dataset:
-    annotation: dataset/coco/annotations/instances_val2017.json
+    type: folder
+    root_dir: /root/data
+  sampler:
+    shuffle: false
+    pad_batch: false
+  feed_vars:
+  - image
+  - name: im_size
+    fields:
+    - orig_height
+    - orig_width
+  extra_vars:
+  - file
+  sample_transforms:
+  - !Resize
+    random_shape: [608]
+    interp: 2
+  - !NormalizePermute
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  batch_transforms:
+  - !PadToStride
+    stride: 1

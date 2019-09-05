@@ -1,7 +1,4 @@
 architecture: MaskRCNN
-train_feed: MaskRCNNTrainFeed
-eval_feed: MaskRCNNEvalFeed
-test_feed: MaskRCNNTestFeed
 use_gpu: true
 max_iters: 180000
 snapshot_iter: 10000
@@ -24,7 +21,7 @@ ResNet:
   depth: 50
   feature_maps: [2, 3, 4, 5]
   freeze_at: 2
-  norm_type: affine_channel
+  norm_type: bn
 
 FPN:
   max_level: 6
@@ -111,33 +108,137 @@ OptimizerBuilder:
     factor: 0.0001
     type: L2
 
-MaskRCNNTrainFeed:
+TrainDataLoader:
   batch_size: 1
+  multiprocessing: true
+  pin_memory: false
+  prefetch_to_gpu: false
+  num_workers: 2
+  buffer_size: 4
   dataset:
-    dataset_dir: dataset/coco
-    annotation: annotations/instances_train2017.json
+    type: coco
+    root_dir: /root/data
+    annotation_file: annotations/instances_train2017.json
     image_dir: train2017
+    use_crowd: false
+    use_empty: false
+    use_mask: true
+  sampler:
+    aspect_ratio_thresholds: [1.0]
+    shuffle: true
+    sync_seed_schedule: true
+  feed_vars:
+  - image
+  - name: gt_box
+    lod_level: 1
+  - name: gt_label
+    lod_level: 1
+  - name: gt_poly
+    lod_level: 3
+  - name: is_crowd
+    lod_level: 1
+  - name: im_info
+    fields:
+    - height
+    - width
+    - scale
+  extra_vars:
+  - id
+  sample_transforms:
+  - !RandomFlip
+    prob: 0.5
+  - !Resize
+    target_dim: 800
+    max_dim: 1333
+    interp: 1
+  - !NormalizePermute
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
   batch_transforms:
-  - !PadBatch
-    pad_to_stride: 32
-  num_workers: 2
+  - !PadToStride
+    stride: 32
 
-MaskRCNNEvalFeed:
+EvalDataLoader:
   batch_size: 1
+  auto_reset: false
+  multiprocessing: true
+  pin_memory: false
+  prefetch_to_gpu: false
+  num_workers: 2
+  buffer_size: 4
   dataset:
-    dataset_dir: dataset/coco
-    annotation: annotations/instances_val2017.json
+    type: coco
+    root_dir: /root/data
+    annotation_file: annotations/instances_val2017.json
     image_dir: val2017
+    use_crowd: false
+    use_empty: true
+    use_mask: true
+  sampler:
+    shuffle: false
+    pad_batch: false
+  feed_vars:
+  - image
+  - name: im_info
+    fields:
+    - padded_height
+    - padded_width
+    - scale
+  - name: im_shape
+    fields:
+    - orig_height
+    - orig_width
+    - 1.
+  extra_vars:
+  - id
+  sample_transforms:
+  - !Resize
+    target_dim: 800
+    max_dim: 1333
+    interp: 1
+  - !NormalizePermute
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
   batch_transforms:
-  - !PadBatch
-    pad_to_stride: 32
-  num_workers: 2
+  - !PadToStride
+    stride: 32
 
-MaskRCNNTestFeed:
+TestDataLoader:
   batch_size: 1
-  dataset:
-    annotation: dataset/coco/annotations/instances_val2017.json
-  batch_transforms:
-  - !PadBatch
-    pad_to_stride: 32
+  auto_reset: false
+  multiprocessing: true
+  pin_memory: false
+  prefetch_to_gpu: false
   num_workers: 2
+  buffer_size: 4
+  dataset:
+    type: folder
+    root_dir: /root/data
+  sampler:
+    shuffle: false
+    pad_batch: false
+  feed_vars:
+  - image
+  - name: im_info
+    fields:
+    - padded_height
+    - padded_width
+    - scale
+  - name: im_shape
+    fields:
+    - orig_height
+    - orig_width
+    - 1.
+  extra_vars:
+  - file
+  sample_transforms:
+  - !Resize
+    target_dim: 800
+    max_dim: 1333
+    interp: 1
+  - !NormalizePermute
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  batch_transforms:
+  - !PadToStride
+    stride: 32
