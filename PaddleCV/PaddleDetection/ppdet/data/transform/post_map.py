@@ -27,7 +27,9 @@ def build_post_map(coarsest_stride=1,
                    is_padding=False,
                    random_shapes=[],
                    multi_scales=[],
-                   use_padded_im_info=False):
+                   use_padded_im_info=False,
+                   enable_multiscale_test=False,
+                   num_scale=1):
     """
     Build a mapper for post-processing batches
 
@@ -65,6 +67,37 @@ def build_post_map(coarsest_stride=1,
                 data[1][:2] = max_shape[1:3]
             padding_batch.append((padding_im, ) + data[1:])
         return padding_batch
+
+    def padding_multiscale_test(batch_data):
+        if len(batch_data) != 1:
+            raise NotImplementedError(
+                "Batch size must be 1 when using multiscale test, but now batch size is {}".
+                format(len(batch_data)))
+        if coarsest_stride > 1:
+            padding_batch = []
+            padding_images = []
+            data = batch_data[0]
+            if len(data) - 3 != num_scale:
+                raise ValueError(
+                    "num_scale: {} is not equal to the number of actual multiscale resized images: {}".
+                    format(num_scale, len(data) - 3))
+            for i, input in enumerate(data):
+                if i < len(data) - 3:
+                    im_c, im_h, im_w = input.shape
+                    max_h = int(
+                        np.ceil(im_h / coarsest_stride) * coarsest_stride)
+                    max_w = int(
+                        np.ceil(im_w / coarsest_stride) * coarsest_stride)
+                    padding_im = np.zeros(
+                        (im_c, max_h, max_w), dtype=np.float32)
+                    padding_im[:, :im_h, :im_w] = input
+                    data[-3][3 * i:3 * i + 2] = [max_h, max_w]
+                    padding_batch.append(padding_im)
+                else:
+                    padding_batch.append(input)
+            return [tuple(padding_batch)]
+        # no need to padding
+        return batch_data
 
     def random_shape(batch_data):
         # For YOLO: gt_bbox is normalized, is scale invariant.
@@ -108,6 +141,8 @@ def build_post_map(coarsest_stride=1,
                 batch_data = random_shape(batch_data)
             if len(multi_scales) > 0:
                 batch_data = multi_scale_resize(batch_data)
+            if enable_multiscale_test:
+                batch_data = padding_multiscale_test(batch_data)
         except Exception as e:
             errmsg = "post-process failed with error: " + str(e)
             logger.warn(errmsg)

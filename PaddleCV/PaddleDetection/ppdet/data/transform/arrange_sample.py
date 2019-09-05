@@ -107,10 +107,13 @@ class ArrangeTestRCNN(BaseOperator):
             context: a dict which contains additional info.
         Returns:
             sample: a tuple containing the following items:
-                    (image, im_info, im_id)
+                    (image, im_info, im_id, im_shape)
         """
-        im = sample['image']
-        keys = list(sample.keys())
+        ims = []
+        keys = sorted(list(sample.keys()))
+        for k in keys:
+            if 'image' in k:
+                ims.append(sample[k])
         if 'im_info' in keys:
             im_info = sample['im_info']
         else:
@@ -123,7 +126,9 @@ class ArrangeTestRCNN(BaseOperator):
         # bbox prediction needs im_info as input in format of [N, 3],
         # so im_shape is appended by 1 to match dimension.
         im_shape = np.array((h, w, 1), dtype=np.float32)
-        outs = (im, im_info, im_id, im_shape)
+        remain_list = [im_info, im_id, im_shape]
+        ims.extend(remain_list)
+        outs = tuple(ims)
         return outs
 
 
@@ -151,6 +156,7 @@ class ArrangeSSD(BaseOperator):
         gt_class = sample['gt_class']
         outs = (im, gt_bbox, gt_class)
         return outs
+
 
 @register_op
 class ArrangeEvalSSD(BaseOperator):
@@ -183,6 +189,7 @@ class ArrangeEvalSSD(BaseOperator):
         outs = (im, im_shape, im_id, gt_bbox, gt_class, difficult)
 
         return outs
+
 
 @register_op
 class ArrangeTestSSD(BaseOperator):

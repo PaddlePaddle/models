@@ -27,18 +27,18 @@ from ppdet.data.reader import Reader
 from ppdet.data.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
-    Permute)
-
+    Permute, Flip_Augment, Multiscale_Test_Resize)
 from ppdet.data.transform.arrange_sample import (
-    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD, 
-    ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
+    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeTestSSD, ArrangeYOLO,
+    ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
-    'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
-    'DataFeed', 'TrainFeed', 'EvalFeed', 'FasterRCNNTrainFeed',
-    'MaskRCNNTrainFeed', 'FasterRCNNTestFeed', 'MaskRCNNTestFeed',
-    'SSDTrainFeed', 'SSDEvalFeed', 'SSDTestFeed', 'YoloTrainFeed',
-    'YoloEvalFeed', 'YoloTestFeed', 'create_reader'
+    'PadBatch', 'MultiScale', 'RandomShape', 'PadMSTest', 'DataSet',
+    'CocoDataSet', 'DataFeed', 'TrainFeed', 'EvalFeed', 'FasterRCNNTrainFeed',
+    'MaskRCNNTrainFeed', 'FasterRCNNEvalFeed', 'MaskRCNNEvalFeed',
+    'FasterRCNNTestFeed', 'MaskRCNNTestFeed', 'SSDTrainFeed', 'SSDEvalFeed',
+    'SSDTestFeed', 'YoloTrainFeed', 'YoloEvalFeed', 'YoloTestFeed',
+    'create_reader'
 ]
 
 
@@ -109,6 +109,7 @@ def create_reader(feed, max_iter=0, args_path=None, my_source=None):
     pad = [t for t in batch_transforms if isinstance(t, PadBatch)]
     rand_shape = [t for t in batch_transforms if isinstance(t, RandomShape)]
     multi_scale = [t for t in batch_transforms if isinstance(t, MultiScale)]
+    pad_ms_test = [t for t in batch_transforms if isinstance(t, PadMSTest)]
 
     if any(pad):
         transform_config['IS_PADDING'] = True
@@ -118,6 +119,10 @@ def create_reader(feed, max_iter=0, args_path=None, my_source=None):
         transform_config['RANDOM_SHAPES'] = rand_shape[0].sizes
     if any(multi_scale):
         transform_config['MULTI_SCALES'] = multi_scale[0].scales
+    if any(pad_ms_test):
+        transform_config['ENABLE_MULTISCALE_TEST'] = True
+        transform_config['NUM_SCALE'] = feed.num_scale
+        transform_config['COARSEST_STRIDE'] = pad_ms_test[0].pad_to_stride
 
     if hasattr(inspect, 'getfullargspec'):
         argspec = inspect.getfullargspec
@@ -180,6 +185,20 @@ class RandomShape(object):
     def __init__(self, sizes=[]):
         super(RandomShape, self).__init__()
         self.sizes = sizes
+
+
+@serializable
+class PadMSTest(object):
+    """
+    Padding for multi-scale test
+ 
+    Args:
+        pad_to_stride (int): pad to multiple of strides, e.g., 32
+    """
+
+    def __init__(self, pad_to_stride=0):
+        super(PadMSTest, self).__init__()
+        self.pad_to_stride = pad_to_stride
 
 
 @serializable
@@ -493,7 +512,10 @@ class FasterRCNNEvalFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  num_workers=2,
-                 use_padded_im_info=True):
+                 use_padded_im_info=True,
+                 enable_multiscale=False,
+                 num_scale=1,
+                 enable_aug_flip=False):
         sample_transforms.append(ArrangeTestRCNN())
         super(FasterRCNNEvalFeed, self).__init__(
             dataset,
@@ -508,6 +530,9 @@ class FasterRCNNEvalFeed(DataFeed):
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'VAL'
+        self.enable_multiscale = enable_multiscale
+        self.num_scale = num_scale
+        self.enable_aug_flip = enable_aug_flip
 
 
 @register
@@ -631,7 +656,10 @@ class MaskRCNNEvalFeed(DataFeed):
                  drop_last=False,
                  num_workers=2,
                  use_process=False,
-                 use_padded_im_info=True):
+                 use_padded_im_info=True,
+                 enable_multiscale=False,
+                 num_scale=1,
+                 enable_aug_flip=False):
         sample_transforms.append(ArrangeTestRCNN())
         super(MaskRCNNEvalFeed, self).__init__(
             dataset,
@@ -647,6 +675,9 @@ class MaskRCNNEvalFeed(DataFeed):
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'VAL'
+        self.enable_multiscale = enable_multiscale
+        self.num_scale = num_scale
+        self.enable_aug_flip = enable_aug_flip
 
 
 @register
@@ -660,11 +691,10 @@ class MaskRCNNTestFeed(DataFeed):
                  image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     NormalizeImage(
-                         mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225],
-                         is_scale=True,
-                         is_channel_first=False),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
                      Permute(to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
@@ -925,11 +955,10 @@ class YoloEvalFeed(DataFeed):
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      ResizeImage(target_size=608, interp=2),
-                     NormalizeImage(
-                         mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225],
-                         is_scale=True,
-                         is_channel_first=False),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
                      Permute(to_bgr=False),
                  ],
                  batch_transforms=[],
@@ -980,11 +1009,13 @@ class YoloTestFeed(DataFeed):
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(target_size=608, interp=2),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
+                     ResizeImage(
+                         target_size=608, interp=2),
+                     NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False),
                      Permute(to_bgr=False),
                  ],
                  batch_transforms=[],

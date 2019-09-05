@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import multiprocessing
 
 
 def set_paddle_flags(**kwargs):
@@ -58,9 +59,14 @@ def main():
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
-
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
+
+    if cfg.use_gpu:
+        devices_num = fluid.core.get_cuda_device_count()
+    else:
+        devices_num = int(
+            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     if 'eval_feed' not in cfg:
         eval_feed = create(main_arch + 'EvalFeed')
@@ -80,7 +86,6 @@ def main():
             pyreader, feed_vars = create_feed(eval_feed)
             fetches = model.eval(feed_vars)
     eval_prog = eval_prog.clone(True)
-
     reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
     pyreader.decorate_sample_list_generator(reader, place)
 
@@ -93,9 +98,15 @@ def main():
         json_eval_results(
             eval_feed, cfg.metric, json_directory=FLAGS.output_eval)
         return
-
-    compile_program = fluid.compiler.CompiledProgram(
-        eval_prog).with_data_parallel()
+    # compile program for multi-devices
+    if devices_num <= 1:
+        compile_program = fluid.compiler.CompiledProgram(eval_prog)
+    else:
+        build_strategy = fluid.BuildStrategy()
+        build_strategy.memory_optimize = False
+        build_strategy.enable_inplace = False
+        compile_program = fluid.compiler.CompiledProgram(
+            eval_prog).with_data_parallel(build_strategy=build_strategy)
 
     # load model
     exe.run(startup_prog)
@@ -118,12 +129,41 @@ def main():
             callable(model.is_bbox_normalized):
         is_bbox_normalized = model.is_bbox_normalized()
 
-    results = eval_run(exe, compile_program, pyreader, keys, values, cls)
+    sub_eval_prog = None
+    sub_keys = None
+    sub_values = None
+    # build sub-program
+    if 'sub_architecture' in cfg:
+        sub_arch = cfg.sub_architecture
+        sub_model = create(sub_arch)
+        sub_eval_prog = fluid.Program()
+        with fluid.program_guard(sub_eval_prog, startup_prog):
+            with fluid.unique_name.guard():
+                _, feed_vars = create_feed(
+                    eval_feed, use_pyreader=False, sub_prog_feed=True)
+                sub_fetches = sub_model.eval(feed_vars)
+                extra_keys = []
+                if cfg.metric == 'COCO':
+                    extra_keys = ['im_id', 'im_shape']
+                if cfg.metric == 'VOC':
+                    extra_keys = ['gt_box', 'gt_label', 'is_difficult']
+        sub_keys, sub_values, _ = parse_fetches(sub_fetches, sub_eval_prog,
+                                                extra_keys)
+        sub_eval_prog = sub_eval_prog.clone(True)
+
+        if 'weights' in cfg:
+            checkpoint.load_pretrain(exe, sub_eval_prog, cfg.weights)
+
+    results = eval_run(exe, compile_program, pyreader, keys, values, cls, cfg,
+                       sub_eval_prog, sub_keys, sub_values)
 
     # evaluation
     resolution = None
     if 'mask' in results[0]:
-        resolution = model.mask_head.resolution
+        if 'sub_architecture' in cfg:
+            resolution = sub_model.mask_head.resolution
+        else:
+            resolution = model.mask_head.resolution
     # if map_type not set, use default 11point, only use in VOC eval
     map_type = cfg.map_type if 'map_type' in cfg else '11point'
     eval_results(results, eval_feed, cfg.metric, cfg.num_classes, resolution,
