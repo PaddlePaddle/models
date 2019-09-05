@@ -93,30 +93,26 @@ def infer(args):
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     TOPK = args.topk
+    assert os.path.exists(args.label_path), "Index file doesn't exist!"
+    f = open(args.label_path)
+    label_dict = {}
+    for item in f.readlines():
+        key = item.split(" ")[0]
+        value = [l.replace("\n", "") for l in item.split(" ")[1:]]
+        label_dict[key] = value
+
     for batch_id, data in enumerate(test_reader()):
         result = exe.run(test_program,
                          fetch_list=fetch_list,
                          feed=feeder.feed(data))
         result = result[0][0]
         pred_label = np.argsort(result)[::-1][:TOPK]
-        readable_pred_label = readable_label(pred_label, args.label_path)
-        print("Test-{0}-score: {1}, class {2}".format(batch_id, result[
-            pred_label], readable_pred_label))
+        readable_pred_label = []
+        for label in pred_label:
+            readable_pred_label.append(label_dict[str(label)])
+        print("Test-{0}-score: {1}, class{2} {3}".format(batch_id, result[
+            pred_label], pred_label, readable_pred_label))
         sys.stdout.flush()
-
-
-def readable_label(idx, filepath):
-    assert os.path.exists(filepath), "Index file doesn't exist!"
-    f = open(filepath)
-    real_label = []
-    i = 0
-    for item in f.readlines():
-        for label in idx:
-            if label == i:
-                real_label.append(item.replace("\n", ""))
-        i = i + 1
-
-    return real_label
 
 
 def main():
