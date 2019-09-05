@@ -117,8 +117,8 @@ def parse_args():
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
     add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
     add_arg('interpolation',            int,    None,                   "The interpolation mode")
-    parser.add_argument('--image_mean', nargs='+', type=int, default=[0.485, 0.456, 0.406], help="The mean of input image data")
-    parser.add_argument('--image_std', nargs='+', type=int, default=[0.229, 0.224, 0.225], help="The std of input image data")
+    parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
+    parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
     # SWITCH
     add_arg('use_inplace',              bool,   True,                   "Whether to use inplace memory optimization.")

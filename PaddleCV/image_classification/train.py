@@ -100,8 +100,6 @@ def train(args):
         args=args)
     train_py_reader = train_out[-1]
     train_fetch_vars = train_out[:-1]
-    #TODO: in fluid 1.6:
-    #train_fetch_list = [var.name for var in train_fetch_vars]
     train_fetch_list = []
     for var in train_fetch_vars:
         var.persistable = True
@@ -114,8 +112,6 @@ def train(args):
         args=args)
     test_py_reader = test_out[-1]
     test_fetch_vars = test_out[:-1]
-    #TODO: in fluid 1.6
-    #test_fetch_list = [var.name for var in test_fetch_vars]
     test_fetch_list = []
     for var in test_fetch_vars:
         var.persistable = True
