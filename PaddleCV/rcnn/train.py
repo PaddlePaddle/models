@@ -131,6 +131,9 @@ def train():
             # for multi-process training.
             exec_strategy.num_threads = 1
 
+        if os.name == 'nt':    
+            exec_strategy.num_threads = 1
+
         train_exe = fluid.ParallelExecutor(
             use_cuda=bool(cfg.use_gpu),
             loss_name=loss.name,

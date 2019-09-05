@@ -113,7 +113,10 @@ def train(train_reader,
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    train_exe = fluid.ParallelExecutor(use_cuda=True, loss_name=avg_cost.name)
+    exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.num_threads = 1 if os.name == 'nt' else 0
+    train_exe = fluid.ParallelExecutor(
+        use_cuda=True, loss_name=avg_cost.name, exec_strategy=exec_strategy)
 
     total_time = 0.0
     fetch_list = [avg_cost.name]
