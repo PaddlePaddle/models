@@ -23,7 +23,7 @@ def dist_env():
     trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
     num_trainers = 1
     training_role = os.getenv("PADDLE_TRAINING_ROLE", "TRAINER")
-    assert(training_role == "PSERVER" or training_role == "TRAINER")
+    assert (training_role == "PSERVER" or training_role == "TRAINER")
 
     # - PADDLE_TRAINER_ENDPOINTS means nccl2 mode.
     # - PADDLE_PSERVER_ENDPOINTS means pserver mode.
@@ -36,7 +36,7 @@ def dist_env():
         num_trainers = len(trainer_endpoints)
     elif pserver_endpoints:
         num_trainers = int(os.getenv("PADDLE_TRAINERS_NUM"))
-    
+
     return {
         "trainer_id": trainer_id,
         "num_trainers": num_trainers,
