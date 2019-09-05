@@ -203,6 +203,13 @@ class DataLoaderBuilder(dataloader.DataLoader):
             # into each device
             self.coalesce_size = fluid.core.get_cuda_device_count()
 
+        if world_size > 1 and multiprocessing:
+            from ppdet.utils.cli import ColorTTY
+            color_tty = ColorTTY()
+            print(color_tty.bold(color_tty.red(
+                "it is recommended to set `dataloader.multiprocessing` "
+                "to `false` when training in distributed mode")))
+
         if isinstance(sampler, dict):
             kwargs = sampler
             kwargs['rank'] = rank
