@@ -75,9 +75,7 @@ class CascadeRCNN(object):
         assert mode in ['train', 'test'], \
             "only 'train' and 'test' mode is supported"
         if mode == 'train':
-            required_fields = [
-                'gt_label', 'gt_box', 'gt_mask', 'is_crowd', 'im_info'
-            ]
+            required_fields = ['gt_label', 'gt_box', 'is_crowd', 'im_info']
         else:
             required_fields = ['im_shape', 'im_info']
         for var in required_fields:
@@ -105,8 +103,8 @@ class CascadeRCNN(object):
             if self.rpn_only:
                 im_scale = fluid.layers.slice(
                     im_info, [1], starts=[2], ends=[3])
-                im_scale = fluid.layers.sequence_expand(im_scale, rois)
-                rois = rois / im_scale
+                im_scale = fluid.layers.sequence_expand(im_scale, rpn_rois)
+                rois = rpn_rois / im_scale
                 return {'proposal': rois}
 
         proposal_list = []

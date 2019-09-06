@@ -118,6 +118,7 @@ def parse_args():
     parser.add_argument('--update_method', type=str, default='nccl2')
     parser.add_argument('--random_seed', type=int, default=0)
     parser.add_argument('--n_negative_samples_batch', type=int, default=8000)
+    parser.add_argument('--enable_ce', action='store_true', help='whether print log for ce')
     args = parser.parse_args()
 
     return args
