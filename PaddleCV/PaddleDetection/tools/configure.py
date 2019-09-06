@@ -39,6 +39,7 @@ MISC_CONFIG = {
     "snapshot_iter": 10000,
     "log_iter": 20,
     "use_gpu": True,
+    "finetune_exclude_pretrained_params": "<value>",
 }
 
 

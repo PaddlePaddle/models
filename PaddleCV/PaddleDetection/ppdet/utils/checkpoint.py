@@ -20,7 +20,7 @@ from __future__ import unicode_literals
 import os
 import shutil
 import numpy as np
-
+import re
 import paddle.fluid as fluid
 
 from .download import get_weights_path
@@ -61,23 +61,19 @@ def load_params(exe, prog, path, ignore_params=[]):
         raise ValueError("Model pretrain path {} does not "
                          "exists.".format(path))
 
-    is_finetune = len(ignore_params) > 0
     logger.info('Loading parameters from {}...'.format(path))
-    if is_finetune:
-        logger.info(
-            'Finetune mode and weights related to num_classes are ignored')
 
     def _if_exist(var):
         do_ignore = False
         param_exist = os.path.exists(os.path.join(path, var.name))
-        if is_finetune:
+        if len(ignore_params) > 0:
             # Parameter related to num_classes will be ignored in finetuning
-            do_ignore_list = [name in var.name for name in ignore_params]
+            do_ignore_list = [
+                bool(re.match(name, var.name)) for name in ignore_params
+            ]
             do_ignore = any(do_ignore_list)
             if do_ignore and param_exist:
-                logger.info(
-                    'When finetuning for {} architecture, ignore {}'.format(
-                        ignore_params[do_ignore_list.index(True)], var.name))
+                logger.info('In load_params, ignore {}'.format(var.name))
         do_load = param_exist and not do_ignore
         if do_load:
             logger.debug('load weight {}'.format(var.name))
