@@ -360,21 +360,21 @@ step9: 执行 `sh run.sh` 进行训练任务。
 
 该示例基于 Flops 约束的两组结果如下：
 
-| -                  | Light-NAS-model0 | Light-NAS-model1 | MobileNetV2      |
-|--------------------|------------------|------------------|------------------|
-| FLOPS              | -3%              | -17%             | -0%              |
-| Top1/Top5 accuracy | 72.45% / 90.70%  | 71.84% / 90.45%  | 71.90% / 90.55%  |
-| GPU cost           | 1.2K GPU hours(V100) | 1.2K GPU hours(V100) | -        |
-| tokens             | tokens0          | tokens1          |                  |
+| -                | FLOPS | Top1/Top5 accuracy | GPU cost             | token  |
+|------------------|-------|--------------------|----------------------|--------|
+| MobileNetV2      | 0%    | 71.90% / 90.55%    | -                    | -      |
+| Light-NAS-model0 | -3%   | 72.45% / 90.70%    | 1.2K GPU hours(V100) | token0 |
+| Light-NAS-model1 | -17%  | 71.84% / 90.45%    | 1.2K GPU hours(V100) | token1 |
+
 
 基于硬件耗时的模型结构搜索实验：
 
-| -                  | RK3288          | 安卓手机        | iPhone 手机     | MobileNetV2   |
-|--------------------|-----------------|-----------------|-----------------|---------------|
-| Latency            | -23%            | -20%            | -5%             | -0%           |
-| Top1/Top5 accuracy | 71.97% / 90.35% | 71.91% / 90.21% | 71.78% / 90.59% | 71.90%        |
-| GPU cost           | 1.2K GPU hours(V100) | 1.2K GPU hours(V100) | 1.2K GPU hours(V100) | - |
-| tokens             | tokens2         | tokens3         | tokens4         |               |
+| -             | Latency | Top1/Top5 accuracy | GPU cost            | token  |
+|---------------|---------|--------------------|---------------------|--------|
+| MobileNetV2   | 0%      | 71.90% / 90.55%    | -                   | -      |
+| RK3288 开发板  | -23%    | 71.97% / 90.35%    | 1.2K GPU hours(V100) | token2 |
+| Android 手机  | -20%    | 72.06% / 90.36%    | 1.2K GPU hours(V100) | token3 |
+| iPhone 手机   | -17%    | 72.22% / 90.47%    | 1.2K GPU hours(V100) | token4 |
 
 
 | token name | tokens |
