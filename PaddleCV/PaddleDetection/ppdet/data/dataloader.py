@@ -175,9 +175,7 @@ class _MultiWorkerLoaderIter(object):
 
     def _batch_seed(self):
         if self.transform.need_seeding:
-            return (self._sent_idx + 1) * (self.rank + 1)
-        else:
-            return None
+            return np.random.randint(0, 2**31)
 
     def _queue_next(self):
        if self._sent_idx - self._recv_idx > self.buffer_size:
