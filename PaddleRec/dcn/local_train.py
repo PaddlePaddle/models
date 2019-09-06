@@ -3,6 +3,8 @@
 from __future__ import print_function, absolute_import, division
 import os
 import random
+import sys
+import time
 
 import paddle.fluid as fluid
 
@@ -53,6 +55,8 @@ def train(args):
     exe.run(fluid.default_startup_program())
 
     for epoch_id in range(num_epoch):
+        start = time.time()
+        sys.stderr.write('\nepoch%d start ...\n' % (epoch_id + 1))
         dataset.set_filelist(train_filelists[epoch_id])
         exe.train_from_dataset(
             program=fluid.default_main_program(),
@@ -62,8 +66,10 @@ def train(args):
             ],
             fetch_info=['total_loss', 'avg_logloss', 'auc'],
             debug=False,
-            print_period=100)
+            print_period=args.print_steps)
         model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
+        sys.stderr.write('epoch%d is finished and takes %f s\n' % (
+            (epoch_id + 1), time.time() - start))
         fluid.io.save_persistables(
             executor=exe,
             dirname=model_dir,

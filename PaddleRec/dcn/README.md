@@ -49,6 +49,7 @@ python preprocess.py
 ```bash
 nohup python -u local_train.py > train.log &
 ```
+训练过程中每隔固定的steps（默认为100）输出当前total loss(logloss + 正则), log loss和auc，可以在args.py中调整print_steps。
 
 ## 本地预测
 ```bash

@@ -58,5 +58,6 @@ def parse_args():
         help='Whether use batch norm in dnn part')
     parser.add_argument(
         '--clip_by_norm', type=float, default=100.0, help="gradient clip norm")
+    parser.add_argument('--print_steps', type=int, default=100)
 
     return parser.parse_args()
