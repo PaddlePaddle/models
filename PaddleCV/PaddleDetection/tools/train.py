@@ -39,6 +39,7 @@ from paddle import fluid
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
 
+from ppdet.utils import dist_utils
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
@@ -56,8 +57,9 @@ def main():
     env = os.environ
     FLAGS.dist = 'PADDLE_TRAINER_ID' in env and 'PADDLE_TRAINERS_NUM' in env
     if FLAGS.dist:
+        trainer_id = int(env['PADDLE_TRAINER_ID'])
         import random
-        local_seed = (99 + int(env['PADDLE_TRAINER_ID']))
+        local_seed = (99 + trainer_id)
         random.seed(local_seed)
         np.random.seed(local_seed)
 
@@ -150,38 +152,19 @@ def main():
     build_strategy.sync_batch_norm = sync_bn and devices_num > 1 \
         and cfg.use_gpu
 
+    exec_strategy = fluid.ExecutionStrategy()
     if FLAGS.dist:
-        trainer_id = int(env['PADDLE_TRAINER_ID'])
-        trainers = env['PADDLE_TRAINER_ENDPOINTS']
-        current_endpoint = env['PADDLE_CURRENT_ENDPOINT']
-        num_trainers = int(env['PADDLE_TRAINERS_NUM'])
+        dist_utils.prepare_for_multi_process(
+            exe, build_strategy, startup_prog, train_prog)
+        exec_strategy.num_threads = 1
 
-        config = fluid.DistributeTranspilerConfig()
-        config.mode = "nccl2"
-        t = fluid.DistributeTranspiler(config=config)
-        t.transpile(trainer_id, trainers=trainers,
-                    startup_program=startup_prog,
-                    current_endpoint=current_endpoint)
-
-        exe.run(startup_prog)
-
-        pe = fluid.ParallelExecutor(
-            use_cuda=True,
-            main_program=train_prog,
-            loss_name=loss.name,
-            num_trainers=num_trainers,
-            trainer_id=trainer_id)
-
-    else:
-        exe.run(startup_prog)
-        pe = fluid.ParallelExecutor(
-            main_program=train_prog,
-            use_cuda=True,
-            loss_name=loss.name,
-            build_strategy=build_strategy)
+    compiled_train_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
+        loss_name=loss.name,
+        build_strategy=build_strategy,
+        exec_strategy=exec_strategy)
 
     if FLAGS.eval:
-        eval_compile_program = fluid.compiler.CompiledProgram(eval_prog)
+        compiled_eval_program = fluid.compiler.CompiledProgram(eval_prog)
 
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
@@ -218,7 +201,7 @@ def main():
         time_cost = np.mean(time_stat)
         eta_sec = (cfg.max_iters - it) * time_cost
         eta = str(datetime.timedelta(seconds=int(eta_sec)))
-        outs = pe.run(fetch_list=train_values)
+        outs = exe.run(compiled_train_prog, fetch_list=train_values)
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
         train_stats.update(stats)
         logs = train_stats.log()
@@ -234,7 +217,7 @@ def main():
 
             if FLAGS.eval:
                 # evaluation
-                results = eval_run(exe, eval_compile_program, eval_pyreader,
+                results = eval_run(exe, compiled_eval_program, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
                 resolution = None
                 if 'mask' in results[0]:
