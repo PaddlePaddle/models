@@ -156,7 +156,7 @@ def conv2d(input,
     if padding_type == "SAME":
         top_padding, bottom_padding = cal_padding(input.shape[2], stride,
                                                   filter_size)
-        left_padding, right_padding = cal_padding(input.shape[2], stride,
+        left_padding, right_padding = cal_padding(input.shape[3], stride,
                                                   filter_size)
         height_padding = bottom_padding
         width_padding = right_padding
@@ -244,7 +244,7 @@ def deconv2d(input,
     if padding_type == "SAME":
         top_padding, bottom_padding = cal_padding(input.shape[2], stride,
                                                   filter_size)
-        left_padding, right_padding = cal_padding(input.shape[2], stride,
+        left_padding, right_padding = cal_padding(input.shape[3], stride,
                                                   filter_size)
         height_padding = bottom_padding
         width_padding = right_padding

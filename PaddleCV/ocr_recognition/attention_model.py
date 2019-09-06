@@ -22,11 +22,7 @@ word_vector_dim = 128
 max_length = 100
 sos = 0
 eos = 1
-gradient_clip = 10
-LR = 1.0
 beam_size = 1
-learning_rate_decay = None
-
 
 def conv_bn_pool(input,
                  group,
@@ -192,7 +188,7 @@ def attention_train_net(args, data_shape, num_classes):
     prediction = gru_decoder_with_attention(trg_embedding, encoded_vector,
                                             encoded_proj, decoder_boot,
                                             decoder_size, num_classes)
-    fluid.clip.set_gradient_clip(fluid.clip.GradientClipByValue(gradient_clip))
+    fluid.clip.set_gradient_clip(fluid.clip.GradientClipByValue(args.gradient_clip))
     label_out = fluid.layers.cast(x=label_out, dtype='int64')
 
     _, maxid = fluid.layers.topk(input=prediction, k=1)
@@ -203,8 +199,8 @@ def attention_train_net(args, data_shape, num_classes):
 
     cost = fluid.layers.cross_entropy(input=prediction, label=label_out)
     sum_cost = fluid.layers.reduce_sum(cost)
-
-    if learning_rate_decay == "piecewise_decay":
+    LR = args.lr
+    if args.lr_decay_strategy == "piecewise_decay":
         learning_rate = fluid.layers.piecewise_decay([50000], [LR, LR * 0.01])
     else:
         learning_rate = LR

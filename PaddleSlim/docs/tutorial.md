@@ -1,4 +1,6 @@
-﻿<div align="center">
+﻿>本文包含大量行内公式，将公式转为图片会导致各种排版问题，建议您使用浏览器插件[MathJax Plugin for Github](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima)渲染该页公式。后续我们会将该文档迁移至[PaddlePaddle官网](https://www.paddlepaddle.org)。
+
+<div align="center">
   <h3>
     <a href="usage.md">
       使用文档

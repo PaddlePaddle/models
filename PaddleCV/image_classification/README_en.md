@@ -1,175 +1,232 @@
-# 图像分类以及模型库
+English | [中文](README.md)
+
+# Image Classification and Model Zoo
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Quick Start](#quick-start)
+    - [Installation](#installation)
+    - [Data preparation](#data-preparation)
+    - [Training](#training)
+    - [Finetuning](#finetuning)
+    - [Evaluation](#evaluation)
+    - [Inference](#inference)
+- [Advanced Usage](#advanced-usage)
+    - [Mixup Training](#mixup-training)
+    - [Using Mixed-Precision Training](#using-mixed-precision-training)
+    - [Custom Dataset](#custom-dataset)
+- [Supported Models and Performances](#supported-models-and-performances)
+- [Reference](#reference)
+- [Update](#update)
+- [Contribute](#contribute)
 
 ---
-## 内容
-- [简介](#简介)
-- [快速开始](#快速开始)
-    - [安装说明](#安装说明)
-    - [数据准备](#数据准备)
-    - [模型训练](#模型训练)
-    - [参数微调](#参数微调)
-    - [模型评估](#模型评估)
-    - [模型预测](#模型预测)
-- [进阶使用](#进阶使用)
-    - [混合精度训练](#混合精度训练)
-    - [CE测试](#ce测试)
-- [已发布模型及其性能](#已发布模型及其性能)
-- [FAQ](#faq)
-- [参考文献](#参考文献)
-- [版本更新](#版本更新)
-- [如何贡献代码](#如何贡献代码)
-- [反馈](#反馈)
 
-## 简介
-图像分类是计算机视觉的重要领域，它的目标是将图像分类到预定义的标签。近期，许多研究者提出很多不同种类的神经网络，并且极大的提升了分类算法的性能。本页将介绍如何使用PaddlePaddle进行图像分类。
+## Introduction
 
-## 快速开始
+Image classification, which is an important field of computer vision, is to classify images into pre-defined labels. Recently, many researchers have developed different kinds of neural networks and highly improved the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
 
-### 安装说明
-在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [installation document](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
+## Quick Start
 
-### 数据准备
+### Installation
 
-下面给出了ImageNet分类任务的样例，首先，通过如下的方式进行数据的准备：
-```
+Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.5 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.5, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) and make an update.
+
+### Data preparation
+
+An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
+
+```bash
 cd data/ILSVRC2012/
 sh download_imagenet2012.sh
 ```
-在```download_imagenet2012.sh```脚本中，通过下面三步来准备数据：
 
-**步骤一：** 首先在```image-net.org```网站上完成注册，用于获得一对```Username```和```AccessKey```。
+In the shell script ```download_imagenet2012.sh```,  there are three steps to prepare data:
 
-**步骤二：** 从ImageNet官网下载ImageNet-2012的图像数据。训练以及验证数据集会分别被下载到"train" 和 "val" 目录中。请注意，ImaegNet数据的大小超过40GB，下载非常耗时；已经自行下载ImageNet的用户可以直接将数据组织放置到```data/ILSVRC2012```。
+**step-1:** Register at ```image-net.org``` first in order to get a pair of ```Username``` and ```AccessKey```, which are used to download ImageNet data.
 
-**步骤三：** 下载训练与验证集合对应的标签文件。下面两个文件分别包含了训练集合与验证集合中图像的标签：
+**step-2:** Download ImageNet-2012 dataset from website. The training and validation data will be downloaded into folder "train" and "val" respectively. Please note that the size of data is more than 40 GB, it will take much time to download. Users who have downloaded the ImageNet data can organize it into ```data/ILSVRC2012``` directly.
 
-* train_list.txt: ImageNet-2012训练集合的标签文件，每一行采用"空格"分隔图像路径与标注，例如：
+**step-3:** Download training and validation label files. There are two label files which contain train and validation image labels respectively:
+
+* train_list.txt: label file of imagenet-2012 training set, with each line seperated by ```SPACE```, like:
 ```
 train/n02483708/n02483708_2436.jpeg 369
 ```
-* val_list.txt: ImageNet-2012验证集合的标签文件，每一行采用"空格"分隔图像路径与标注，例如：
+* val_list.txt: label file of imagenet-2012 validation set, with each line seperated by ```SPACE```, like.
 ```
 val/ILSVRC2012_val_00000001.jpeg 65
 ```
-注意：可能需要根据本地环境调整reader.py相关路径来正确读取数据。
 
-### 模型训练
+Note: You may need to modify the data path in reader.py to load data correctly.
 
-数据准备完毕后，可以通过如下的方式启动训练：
+### Training
+
+After data preparation, one can start the training step by:
+
 ```
 python train.py \
-       --model=SE_ResNeXt50_32x4d \
-       --batch_size=32 \
+       --model=ResNet50 \
+       --batch_size=256 \
        --total_images=1281167 \
        --class_dim=1000 \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
-       --with_inplace=True \
        --lr_strategy=piecewise_decay \
        --lr=0.1
 ```
-**参数说明：**
+or running run.sh scripts
 
-* **model**: 模型名称， 默认值: "SE_ResNeXt50_32x4d"
-* **num_epochs**: 训练回合数，默认值: 120
-* **batch_size**: 批大小，默认值: 256
-* **use_gpu**: 是否在GPU上运行，默认值: True
-* **total_images**: 图片数，ImageNet2012默认值: 1281167.
-* **class_dim**: 类别数，默认值: 1000
-* **image_shape**: 图片大小，默认值: "3,224,224"
-* **model_save_dir**: 模型存储路径，默认值: "output/"
-* **with_inplace**: 是否开启inplace显存优化，默认值: True
-* **lr_strategy**: 学习率变化策略，默认值: "piecewise_decay"
-* **lr**: 初始学习率，默认值: 0.1
-* **pretrained_model**: 预训练模型路径，默认值: None
-* **checkpoint**: 用于继续训练的检查点（指定具体模型存储路径，如"output/SE_ResNeXt50_32x4d/100/"），默认值: None
-* **fp16**: 是否开启混合精度训练，默认值: False
-* **scale_loss**: 调整混合训练的loss scale值，默认值: 1.0
-* **l2_decay**: l2_decay值，默认值: 1e-4
-* **momentum_rate**: momentum_rate值，默认值: 0.9
-* **use_label_smoothing**: 是否对数据进行label smoothing处理，默认值:False
-* **label_smoothing_epsilon**: label_smoothing的epsilon值，默认值:0.2
-* **lower_scale**: 数据随机裁剪处理时的lower scale值, upper scale值固定为1.0，默认值:0.08
-* **lower_ratio**: 数据随机裁剪处理时的lower ratio值，默认值:3./4.
-* **upper_ration**: 数据随机裁剪处理时的upper ratio值，默认值:4./3.
-* **resize_short_size**: 指定数据处理时改变图像大小的短边值，默认值: 256
-* **use_mixup**: 是否对数据进行mixup处理，默认值:False
-* **mixup_alpha**: 指定mixup处理时的alpha值，默认值: 0.2
-* **is_distill**: 是否进行蒸馏训练，默认值: False
+```bash
+bash run.sh train model_name
+```
 
-**在```run.sh```中有用于训练的脚本.**
+**parameter introduction:**
 
-**数据读取器说明：** 数据读取器定义在PIL：```reader.py```和CV2:```reader_cv2.py```文件中，现在默认基于cv2的数据读取器, 在[训练阶段](#模型训练), 默认采用的增广方式是随机裁剪与水平翻转, 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
+Environment settings:
 
-* 旋转
-* 颜色抖动（cv2暂未实现）
-* 随机裁剪
-* 中心裁剪
-* 长宽调整
-* 水平翻转
+* **data_dir**: the data root directory Default: "./data/ILSVRC2012".
+* **model_save_dir**: the directory to save trained model. Default: "output".
+* **save_param**: the path to save params. Default: None.
+* **pretrained_model**: load model path for pretraining. Default: None.
+* **checkpoint**: load the checkpoint path to resume. Default: None.
 
-### 参数微调
+Solver and hyperparameters:
 
-参数微调是指在特定任务上微调已训练模型的参数。可以下载[已有模型及其性能](#已有模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
+* **model**: name model to use. Default: "ResNet50".
+* **total_images**: total number of images in the training set. Default: 1281167.
+* **class_dim**: the class number of the classification task. Default: 1000.
+* **image_shape**: input size of the network. Default: "3,224,224".
+* **num_epochs**: the number of epochs. Default: 120.
+* **batch_size**: the batch size of all devices. Default: 8.
+* **test_batch_size**: the test batch size, Default: 16
+* **lr_strategy**: learning rate changing strategy. Default: "piecewise_decay".
+* **lr**: initialized learning rate. Default: 0.1.
+* **l2_decay**: L2_decay parameter. Default: 1e-4.
+* **momentum_rate**: momentum_rate. Default: 0.9.
+* **step_epochs**: piecewise dacay的decay step, Default: [30,60,90]
+
+Reader and preprocess:
+
+* **lower_scale**: the lower scale in random crop data processing, upper is 1.0. Default:0.08.
+* **lower_ratio**: the lower ratio in ramdom crop. Default:3./4. .
+* **upper_ration**: the upper ratio in ramdom crop. Default:4./3. .
+* **resize_short_size**: the resize_short_size. Default: 256.
+* **crop_size**: the crop size, Default: 224.
+* **use_mixup**: whether to use mixup data processing or not. Default:False.
+* **mixup_alpha**: the mixup_alpha parameter. Default: 0.2.
+* **reader_thread**: the number of threads in multi thread reader, Default: 8
+* **reader_buf_size**: the buff size of multi thread reader, Default: 2048
+* **interpolation**: interpolation method, Default: None
+* **image_mean**: image mean, Default: [0.485, 0.456, 0.406]
+* **image_std**: image std, Default: [0.229, 0.224, 0.225]
+
+
+Switch:
+
+* **use_gpu**: whether to use GPU or not. Default: True.
+* **use_inplace**: whether to use inplace memory optimization or not. Default: True.
+* **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
+* **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.2.
+* **random_seed**: random seed for debugging, Default: 1000
+
+**data reader introduction:** Data reader is defined in ```reader.py```, default reader is implemented by opencv. In the [Training](#training) Stage, random crop and flipping are applied, while center crop is applied in the [Evaluation](#evaluation) and [Inference](#inference) stages. Supported data augmentation includes:
+
+* rotation
+* color jitter (haven't implemented in cv2_reader)
+* random crop
+* center crop
+* resize
+* flipping
+
+### Finetuning
+
+Finetuning is to finetune model weights in a specific task by loading pretrained weights. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```, one can finetune a model by running following command:
+
 ```
 python train.py \
+       --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
 ```
-注意：根据具体模型和任务添加并调整其他参数
 
-### 模型评估
-模型评估是指对训练完毕的模型评估各类性能指标。可以下载[已有模型及其性能](#已有模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
+Note: Add and adjust other parameters accroding to specific models and tasks.
+
+### Evaluation
+
+Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
+
 ```
 python eval.py \
+       --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
 ```
-注意：根据具体模型和任务添加并调整其他参数
 
-### 模型预测
-模型预测可以获取一个模型的预测分数或者图像的特征，可以下载[已有模型及其性能](#已有模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令获得预测分数，：
-```
+Note: Add and adjust other parameters accroding to specific models and tasks.
+
+### Inference
+
+**some Inference stage unique parameters**
+
+* **save_inference**: whether to save binary model, Default: False
+* **topk**: the number of sorted predicated labels to show, Default: 1
+* **label_path**: readable label filepath, Default: "/utils/tools/readable_label.txt"
+
+Inference is used to get prediction score or image features based on trained models. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Run following command then obtain prediction score.
+
+```bash
 python infer.py \
+       --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
 ```
-注意：根据具体模型和任务添加并调整其他参数
+
+Note: Add and adjust other parameters accroding to specific models and tasks.
+
+## Advanced Usage
+
+### Mixup Training
+Set --use_mixup=True to start Mixup training, all of the models with a suffix "_vd" is training by mixup.
+
+Refer to [mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.09412)
+
+### Using Mixed-Precision Training
+
+Mixed-precision part is moving to PaddlePaddle/Fleet now.
 
 
-##进阶使用
-
-### 混合精度训练
-
-可以通过开启`--fp16=True`启动混合精度训练，这样训练过程会使用float16数据，并输出float32的模型参数（"master"参数）。您可能需要同时传入`--scale_loss`来解决fp16训练的精度问题，通常传入`--scale_loss=8.0`即可。
-
-### CE测试
-
-注意：CE相关代码仅用于内部测试，enable_ce默认设置False。
+### Custom Dataset
 
 
-## 已发布模型及其性能
-表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1/top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测
-试GPU型号为Tesla P4）。由于Paddle TensorRT对ShuffleNetV2_swish使用的激活函数swish，MobileNetV2使用的激活函数relu6不支持，因此预测加速不明显。可以通过点击相应模型的名称下载对应的预训练模型。
 
-- 注意
-   - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
-   - 2：InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同,InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
-   - 3：调用动态链接库预测时需要将训练模型转换为二进制模型
+## Supported Models and Performances
 
-    ```python infer.py --save_inference=True```
-   - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情请移步[RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
+The image classification models currently supported by PaddlePaddle are listed in the table. It shows the top-1/top-5 accuracy on the ImageNet-2012 validation set of these models, the inference time of Paddle Fluid and Paddle TensorRT based on dynamic link library(test GPU model: Tesla P4).
+Pretrained models can be downloaded by clicking related model names.
 
+- Note
+    - 1: ResNet50_vd_v2 is the distilled version of ResNet50_vd.
+    - 2: The image resolution feeded in InceptionV4 and Xception net is ```299x299```, Fix_ResNeXt101_32x48d_wsl is ```320x320```, DarkNet is ```256x256```, others are ```224x224```.In test time, the resize_short_size of the DarkNet53 and Fix_ResNeXt101_32x48d_wsl series networks is the same as the width or height of the input image resolution, the InceptionV4 and Xception network resize_short_size is 320, and the other networks resize_short_size are 256.
+    - 3: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
+        ```bash
+        python infer.py\
+            --model=model_name \
+            --pretrained_model=${path_to_pretrained_model} \
+            --save_inference=True
+        ```
+    - 4: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
-### AlexNet
+### AlexNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[AlexNet](http://paddle-imagenet-models-name.bj.bcebos.com/AlexNet_pretrained.tar) | 56.72%/79.17% | 3.083 | 2.728 |
 
-### SqueezeNet
+### SqueezeNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[SqueezeNet1_0](https://paddle-imagenet-models-name.bj.bcebos.com/SqueezeNet1_0_pretrained.tar) | 59.60%/81.66% | 2.740 | 1.688 |
 |[SqueezeNet1_1](https://paddle-imagenet-models-name.bj.bcebos.com/SqueezeNet1_1_pretrained.tar) | 60.08%/81.85% | 2.751 | 1.270 |
 
-### VGG
+### VGG Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[VGG11](https://paddle-imagenet-models-name.bj.bcebos.com/VGG11_pretrained.tar) | 69.28%/89.09% | 8.223 | 6.821 |
@@ -177,7 +234,7 @@ python infer.py \
 |[VGG16](https://paddle-imagenet-models-name.bj.bcebos.com/VGG16_pretrained.tar) | 72.00%/90.69% | 11.315 | 9.067 |
 |[VGG19](https://paddle-imagenet-models-name.bj.bcebos.com/VGG19_pretrained.tar) | 72.56%/90.93% | 13.096 | 10.388 |
 
-### MobileNet
+### MobileNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar) | 70.99%/89.68% | 2.609 |1.615 |
@@ -187,7 +244,7 @@ python infer.py \
 |[MobileNetV2_x1_5](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x1_5_pretrained.tar) | 74.12%/91.67% | 5.235 | 6.909 |
 |[MobileNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x2_0_pretrained.tar) | 75.23%/92.58% | 6.680 | 7.658 |
 
-### ShuffleNet
+### ShuffleNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[ShuffleNetV2_x0_25](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x0_25_pretrained.tar) | 49.90%/73.79% | 5.956 | 2.961 |
@@ -198,7 +255,7 @@ python infer.py \
 |[ShuffleNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x2_0_pretrained.tar) | 73.15%/91.20% | 6.430 | 4.553 |
 |[ShuffleNetV2_x1_0_swish](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_pretrained.tar) | 70.03%/89.17% | 6.078 | 6.282 |
 
-### ResNet
+### ResNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[ResNet18](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet18_pretrained.tar) | 70.98%/89.92% | 3.456 | 2.484 |
@@ -213,7 +270,7 @@ python infer.py \
 |[ResNet152_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_vd_pretrained.tar) | 80.59%/95.30% | 22.041 | 12.259 |
 |[ResNet200_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet200_vd_pretrained.tar) | 80.93%/95.33% | 28.015 | 15.278 |
 
-### ResNeXt
+### ResNeXt Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_32x4d_pretrained.tar) | 77.75%/93.82% | 12.863 | 9.837 |
@@ -226,7 +283,7 @@ python infer.py \
 |[ResNeXt152_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_32x4d_pretrained.tar) | 78.98%/94.33% | 37.007 | 31.301 |
 |[ResNeXt152_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_64x4d_pretrained.tar) | 79.51%/94.71% | 58.966 | 57.267 |
 
-### DenseNet
+### DenseNet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[DenseNet121](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet121_pretrained.tar) | 75.66%/92.58% | 12.437 | 5.813 |
@@ -235,18 +292,18 @@ python infer.py \
 |[DenseNet201](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet201_pretrained.tar) | 77.63%/93.66% | 26.583 | 10.549 |
 |[DenseNet264](https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet264_pretrained.tar) | 77.96%/93.85% | 41.495 | 15.574 |
 
-### SENet
+### SENet Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_32x4d_pretrained.tar) | 78.44%/93.96% | 14.916 | 12.126 |
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.tar) | 79.12%/94.20% | 30.085 | 24.110 |
-|[SENet154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE154_vd_pretrained.tar) | 81.40%/95.48% | 71.892 | 64.855 |
+|[SE_154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE_154_vd_pretrained.tar) | 81.40%/95.48% | 71.892 | 64.855 |
 
-### Inception
+### Inception Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
-|[GoogLeNet](https://paddle-imagenet-models-name.bj.bcebos.com/GoogleNet_pretrained.tar) | 70.70%/89.66% | 6.528 | 3.076 |
-|[Xception_41](https://paddle-imagenet-models-name.bj.bcebos.com/Xception41_pretrained.tar) | 79.30%/94.53% | 13.757 | 10.831 |
+|[GoogLeNet](https://paddle-imagenet-models-name.bj.bcebos.com/GoogLeNet_pretrained.tar) | 70.70%/89.66% | 6.528 | 3.076 |
+|[Xception_41](https://paddle-imagenet-models-name.bj.bcebos.com/Xception_41_pretrained.tar) | 79.30%/94.53% | 13.757 | 10.831 |
 |[InceptionV4](https://paddle-imagenet-models-name.bj.bcebos.com/InceptionV4_pretrained.tar) | 80.77%/95.26% | 32.413 | 18.154 |
 
 ### DarkNet
@@ -254,7 +311,7 @@ python infer.py \
 |- |:-: |:-: |:-: |
 |[DarkNet53](https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_ImageNet1k_pretrained.tar) | 78.04%/94.05% | 11.969 | 7.153 |
 
-### ResNeXt101_wsl
+### ResNeXt101_:wwsl Series
 |model | top-1/top-5 accuracy(CV2) | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |
 |[ResNeXt101_32x8d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x8d_wsl_pretrained.tar) | 82.55%/96.74% | 33.310 | 27.648 |
@@ -263,14 +320,18 @@ python infer.py \
 |[ResNeXt101_32x48d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x48d_wsl_pretrained.tar) | 85.37%/97.69% | 161.722 |  |
 |[Fix_ResNeXt101_32x48d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/Fix_ResNeXt101_32x48d_wsl_pretrained.tar) | 86.26%/97.97% | 236.091 |  |
 
-
 ## FAQ
 
-**Q:** 加载预训练模型报错，Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:1000 != labels_dims[1]:6.
+**Q:** How to solve this problem when I try to train a 6-classes dataset with indicating pretrained_model parameter ?
+```
+Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:1000 != labels_dims[1]:6.
+```
 
-**A:** 维度对不上，删掉预训练参数中的FC
+**A:** It may be caused by dismatch dimensions. Please remove fc parameter in pretrained models, It usually named with a prefix ```fc_```
 
-## 参考文献
+## Reference
+
+
 - AlexNet: [imagenet-classification-with-deep-convolutional-neural-networks](https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf), Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton
 - ResNet: [Deep Residual Learning for Image Recognitio](https://arxiv.org/abs/1512.03385), Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
 - ResNeXt: [Aggregated Residual Transformations for Deep Neural Networks](https://arxiv.org/abs/1611.05431), Saining Xie, Ross Girshick, Piotr Dollár, Zhuowen Tu, Kaiming He
@@ -289,17 +350,18 @@ python infer.py \
 - ResNeXt101_wsl: [Exploring the Limits of Weakly Supervised Pretraining](https://arxiv.org/abs/1805.00932), Dhruv Mahajan, Ross Girshick, Vignesh Ramanathan, Kaiming He, Manohar Paluri, Yixuan Li, Ashwin Bharambe, Laurens van der Maaten
 - Fix_ResNeXt101_wsl: [Fixing the train-test resolution discrepancy](https://arxiv.org/abs/1906.06423), Hugo Touvron, Andrea Vedaldi, Matthijs Douze, Herve ́ Je ́gou
 
-## 版本更新
-- 2018/12/03 **Stage1**: 更新AlexNet，ResNet50，ResNet101，MobileNetV1
-- 2018/12/23 **Stage2**: 更新VGG系列 SeResNeXt50_32x4d，SeResNeXt101_32x4d，ResNet152
-- 2019/01/31 更新MobileNetV2_x1_0
-- 2019/04/01 **Stage3**: 更新ResNet18，ResNet34，GoogLeNet，ShuffleNetV2
-- 2019/06/12 **Stage4**: 更新ResNet50_vc，ResNet50_vd，ResNet101_vd，ResNet152_vd，ResNet200_vd，SE154_vd InceptionV4，ResNeXt101_64x4d，ResNeXt101_vd_64x4d
-- 2019/06/22 更新ResNet50_vd_v2
-- 2019/07/02 **Stage5**: 更新MobileNetV2_x0_5, ResNeXt50_32x4d, ResNeXt50_64x4d, Xception_41, ResNet101_vd
-- 2019/07/19 **Stage6**: 更新ShuffleNetV2_x0_25, ShuffleNetV2_x0_33, ShuffleNetV2_x0_5, ShuffleNetV2_x1_0, ShuffleNetV2_x1_5, ShuffleNetV2_x2_0, MobileNetV2_x0_25, MobileNetV2_x1_5, MobileNetV2_x2_0, ResNeXt50_vd_64x4d, ResNeXt101_32x4d, ResNeXt152_32x4d
-- 2019/08/01 **Stage7**: 更新DarkNet53, DenseNet121. Densenet161, DenseNet169, DenseNet201, DenseNet264, SqueezeNet1_0, SqueezeNet1_1, ResNeXt50_vd_32x4d, ResNeXt152_64x4d, ResNeXt101_32x8d_wsl, ResNeXt101_32x16d_wsl, ResNeXt101_32x32d_wsl, ResNeXt101_32x48d_wsl, Fix_ResNeXt101_32x48d_wsl
+## Update
 
-## 如何贡献代码
+- 2018/12/03 **Stage1**: Update AlexNet, ResNet50, ResNet101, MobileNetV1
+- 2018/12/23 **Stage2**: Update VGG Series, SeResNeXt50_32x4d, SeResNeXt101_32x4d, ResNet152
+- 2019/01/31 Update MobileNetV2_x1_0
+- 2019/04/01 **Stage3**: Update ResNet18, ResNet34, GoogLeNet, ShuffleNetV2
+- 2019/06/12 **Stage4**:Update ResNet50_vc, ResNet50_vd, ResNet101_vd, ResNet152_vd, ResNet200_vd, SE154_vd InceptionV4, ResNeXt101_64x4d, ResNeXt101_vd_64x4d
+- 2019/06/22 Update ResNet50_vd_v2
+- 2019/07/02 **Stage5**: Update MobileNetV2_x0_5, ResNeXt50_32x4d, ResNeXt50_64x4d, Xception_41, ResNet101_vd
+- 2019/07/19 **Stage6**: Update ShuffleNetV2_x0_25, ShuffleNetV2_x0_33, ShuffleNetV2_x0_5, ShuffleNetV2_x1_0, ShuffleNetV2_x1_5, ShuffleNetV2_x2_0, MobileNetV2_x0_25, MobileNetV2_x1_5, MobileNetV2_x2_0, ResNeXt50_vd_64x4d, ResNeXt101_32x4d, ResNeXt152_32x4d
+- 2019/08/01 **Stage7**: Update DarkNet53, DenseNet121. Densenet161, DenseNet169, DenseNet201, DenseNet264, SqueezeNet1_0, SqueezeNet1_1, ResNeXt50_vd_32x4d, ResNeXt152_64x4d, ResNeXt101_32x8d_wsl, ResNeXt101_32x16d_wsl, ResNeXt101_32x32d_wsl, ResNeXt101_32x48d_wsl, Fix_ResNeXt101_32x48d_wsl
 
-如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。
+## Contribute
+
+If you can fix an issue or add a new feature, please open a PR to us. If your PR is accepted, you can get scores according to the quality and difficulty of your PR(0~5), while you got 10 scores, you can contact us for interview or recommendation letter.
