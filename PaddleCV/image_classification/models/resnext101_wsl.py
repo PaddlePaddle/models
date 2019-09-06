@@ -1,16 +1,16 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#    http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -19,24 +19,14 @@ import paddle.fluid as fluid
 import math
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ["ResNeXt101_32x8d_wsl", "ResNeXt101_32x16d_wsl", "ResNeXt101_32x32d_wsl", "ResNeXt101_32x48d_wsl", "Fix_ResNeXt101_32x48d_wsl"]
-
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
+__all__ = [
+    "ResNeXt101_32x8d_wsl", "ResNeXt101_32x16d_wsl", "ResNeXt101_32x32d_wsl",
+    "ResNeXt101_32x48d_wsl", "Fix_ResNeXt101_32x48d_wsl"
+]
 
 
 class ResNeXt101_wsl():
     def __init__(self, layers=101, cardinality=32, width=48):
-        self.params = train_parameters
         self.layers = layers
         self.cardinality = cardinality
         self.width = width
@@ -49,7 +39,6 @@ class ResNeXt101_wsl():
         depth = [3, 4, 23, 3]
         base_width = cardinality * width
         num_filters = [base_width * i for i in [1, 2, 4, 8]]
-        
 
         conv = self.conv_bn_layer(
             input=input,
@@ -57,7 +46,7 @@ class ResNeXt101_wsl():
             filter_size=7,
             stride=2,
             act='relu',
-            name="conv1") #debug
+            name="conv1")  #debug
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
@@ -67,7 +56,7 @@ class ResNeXt101_wsl():
 
         for block in range(len(depth)):
             for i in range(depth[block]):
-                conv_name = 'layer' + str(block+1) + "." + str(i)
+                conv_name = 'layer' + str(block + 1) + "." + str(i)
                 conv = self.bottleneck_block(
                     input=conv,
                     num_filters=num_filters[block],
@@ -78,11 +67,13 @@ class ResNeXt101_wsl():
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
-        out = fluid.layers.fc(input=pool,
-                              size=class_dim,
-                              param_attr=fluid.param_attr.ParamAttr(
-                                  initializer=fluid.initializer.Uniform(-stdv, stdv),name='fc.weight'),
-                              bias_attr=fluid.param_attr.ParamAttr(name='fc.bias'))
+        out = fluid.layers.fc(
+            input=pool,
+            size=class_dim,
+            param_attr=fluid.param_attr.ParamAttr(
+                initializer=fluid.initializer.Uniform(-stdv, stdv),
+                name='fc.weight'),
+            bias_attr=fluid.param_attr.ParamAttr(name='fc.bias'))
         return out
 
     def conv_bn_layer(self,
@@ -113,7 +104,8 @@ class ResNeXt101_wsl():
             if "conv1" == name:
                 bn_name = 'bn' + name[-1]
             else:
-                bn_name = (name[:10] if name[7:9].isdigit() else name[:9]) + 'bn' + name[-1]
+                bn_name = (name[:10] if name[7:9].isdigit() else name[:9]
+                           ) + 'bn' + name[-1]
         return fluid.layers.batch_norm(
             input=conv,
             act=act,
@@ -148,32 +140,35 @@ class ResNeXt101_wsl():
             name=name + ".conv2")
         conv2 = self.conv_bn_layer(
             input=conv1,
-            num_filters=num_filters//(width//8),
+            num_filters=num_filters // (width // 8),
             filter_size=1,
             act=None,
             name=name + ".conv3")
 
         short = self.shortcut(
-            input, num_filters//(width//8), stride, name=name + ".downsample")
+            input,
+            num_filters // (width // 8),
+            stride,
+            name=name + ".downsample")
 
-        return fluid.layers.elementwise_add(
-            x=short, y=conv2, act='relu')
+        return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
 
 
-
-    
 def ResNeXt101_32x8d_wsl():
     model = ResNeXt101_wsl(cardinality=32, width=8)
     return model
-    
+
+
 def ResNeXt101_32x16d_wsl():
     model = ResNeXt101_wsl(cardinality=32, width=16)
     return model
 
+
 def ResNeXt101_32x32d_wsl():
     model = ResNeXt101_wsl(cardinality=32, width=32)
     return model
-    
+
+
 def ResNeXt101_32x48d_wsl():
     model = ResNeXt101_wsl(cardinality=32, width=48)
     return model
