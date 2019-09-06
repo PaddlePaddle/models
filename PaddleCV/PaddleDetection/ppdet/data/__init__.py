@@ -188,7 +188,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
             place = fluid.CUDAPinnedPlace()
         else:
             place = fluid.CPUPlace()
-        self.place = place
+        self.prefetch_place = place
 
         self.coalesce_size = 1
         rank = 0
@@ -229,7 +229,10 @@ class DataLoaderBuilder(dataloader.DataLoader):
             t = fluid.core.LoDTensor()
             if seq_length is not None:
                 t.set_recursive_sequence_lengths(seq_length)
-            t.set(ndarray, self.place)
+            if k == 'image':
+                t.set(ndarray, self.prefetch_place)
+            else:
+                t.set(ndarray, fluid.CPUPlace())
             feed_dict[k] = t
         return feed_dict
 
