@@ -82,9 +82,9 @@ class STGAN_model(object):
 
     def concat(self, z, a):
         """Concatenate attribute vector on feature map axis."""
-        ones = fluid.layers.fill_constant_batch_size_like(
-            z, [-1, a.shape[1], z.shape[2], z.shape[3]], "float32", 1.0)
-        return fluid.layers.concat([z, ones * a], axis=1)
+        reshaped_a = fluid.layers.reshape(a, shape=[-1, a.shape[1], 1, 1])
+        expanded_a = fluid.layers.expand(reshaped_a, expand_times=[1, 1, z.shape[2], z.shape[3]])
+        return fluid.layers.concat([z, expanded_a], axis=1)
 
     def Genc(self, input, dim=64, n_layers=5, name='G_enc_', is_test=False):
         z = input
@@ -254,9 +254,10 @@ class STGAN_model(object):
             initial='kaiming',
             is_test=is_test,
         )  # upsample and make `channel` identical to `out_channel`
+        in_data_concat_state_ = fluid.layers.concat(
+            [in_data, state_], axis=1)
         reset_gate = conv2d(
-            input=fluid.layers.concat(
-                [in_data, state_], axis=1),
+            input=in_data_concat_state_,
             num_filters=out_channel,
             filter_size=kernel_size,
             norm=norm,
@@ -267,8 +268,7 @@ class STGAN_model(object):
             initial='kaiming',
             is_test=is_test)
         update_gate = conv2d(
-            input=fluid.layers.concat(
-                [in_data, state_], axis=1),
+            input=in_data_concat_state_,
             num_filters=out_channel,
             filter_size=kernel_size,
             norm=norm,
@@ -291,7 +291,8 @@ class STGAN_model(object):
             use_bias=True,
             initial='kaiming',
             is_test=is_test)
-        output = (1 - update_gate) * state_ + update_gate * new_info
+        rest_update_gate = fluid.layers.scale(update_gate, scale=-1, bias=1)
+        output = rest_update_gate * state_ + update_gate * new_info
         if pass_state == 'output':
             return output, output
         elif pass_state == 'state':
