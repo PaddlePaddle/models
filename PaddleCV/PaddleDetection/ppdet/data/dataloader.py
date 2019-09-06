@@ -180,7 +180,7 @@ class _MultiWorkerLoaderIter(object):
             return None
 
     def _queue_next(self):
-       if self._sent_idx - self._recv_idx >= self.buffer_size:
+       if self._sent_idx - self._recv_idx > self.buffer_size:
            return
        ids = next(self._iter, None)
        if ids is None:
@@ -192,7 +192,8 @@ class _MultiWorkerLoaderIter(object):
        self._sent_idx += 1
 
     def __next__(self):
-        for _ in range(self.buffer_size + 1 + self._recv_idx - self._sent_idx):
+        steps_ahead = len(self._out_buffer)
+        for _ in range(self.buffer_size + 1 - steps_ahead):
             self._queue_next()
         if self._recv_idx == self._sent_idx:
             assert not self._out_buffer, "result queue should be empty by now"
