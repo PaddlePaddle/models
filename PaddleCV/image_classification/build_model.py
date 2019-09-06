@@ -41,7 +41,7 @@ def _basic_model(data, model, args, is_train):
 
     if is_train and args.use_label_smoothing:
         cost = _calc_label_smoothing_loss(softmax_out, label, args.class_dim,
-                                          args.epsilon)
+                                          args.label_smoothing_epsilon)
 
     else:
         cost = fluid.layers.cross_entropy(input=softmax_out, label=label)
@@ -93,9 +93,9 @@ def _mixup_model(data, model, args, is_train):
         loss_b = fluid.layers.cross_entropy(input=softmax_out, label=y_b)
     else:
         loss_a = _calc_label_smoothing_loss(softmax_out, y_a, args.class_dim,
-                                            args.epsilon)
+                                            args.label_smoothing_epsilon)
         loss_b = _calc_label_smoothing_loss(softmax_out, y_b, args.class_dim,
-                                            args.epsilon)
+                                            args.label_smoothing_epsilon)
 
     loss_a_mean = fluid.layers.mean(x=loss_a)
     loss_b_mean = fluid.layers.mean(x=loss_b)
