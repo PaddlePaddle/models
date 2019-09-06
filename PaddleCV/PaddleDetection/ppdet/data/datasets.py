@@ -121,9 +121,10 @@ class COCODataSet(DataSet):
                 y2 = y1 + h - 1
 
                 x1 = np.clip(x1, 0, width - 1)
-                y1 = np.clip(y1, 0, width - 1)
-                x2 = np.clip(x2, 0, height - 1)
+                x2 = np.clip(x2, 0, width - 1)
+                y1 = np.clip(y1, 0, height - 1)
                 y2 = np.clip(y2, 0, height - 1)
+
                 if ann['area'] <= 0 or x2 < x1 or y2 < y1:
                     continue
                 if self.use_mask:

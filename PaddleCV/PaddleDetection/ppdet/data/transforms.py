@@ -60,9 +60,9 @@ class Resize(object):
             scale_x = dim / w
             scale_y = dim / h
             # XXX this is for YOLOv3 and SSD, bboxes are scaled
-            scale_array = np.array([scale_x, scale_y, scale_x, scale_y],
-                                   dtype=np.float32)
-            sample['gt_box'] *= scale_array
+            scale_array = np.array([scale_x, scale_y] * 2, dtype=np.float32)
+            sample['gt_box'] = np.clip(
+                sample['gt_box'] * scale_array, 0, dim - 1)
         else:
             target_dim = self.target_dim
             if isinstance(self.target_dim, Sequence):
@@ -252,7 +252,7 @@ class RandomExpand(object):
         sample['height'] = h
         sample['width'] = w
         sample['image'] = canvas
-        sample['gt_box'] += np.array([x, y, x, y], dtype=np.float32)
+        sample['gt_box'] += np.array([x, y] * 2, dtype=np.float32)
         return sample
 
 
