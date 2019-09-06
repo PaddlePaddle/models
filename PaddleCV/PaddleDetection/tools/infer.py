@@ -299,7 +299,7 @@ if __name__ == '__main__':
         default=False,
         help="Save inference model in output_dir if True.")
     parser.add_argument(
-        "use_tb",
+        "--use_tb",
         type=bool,
         default=False,
         help="whether to record the data to Tensorboard.")

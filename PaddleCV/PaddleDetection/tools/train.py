@@ -261,7 +261,7 @@ if __name__ == '__main__':
         type=str,
         help="Dataset path, same as DataFeed.dataset.dataset_dir")
     parser.add_argument(
-        "use_tb",
+        "--use_tb",
         type=bool,
         default=False,
         help="whether to record the data to Tensorboard.")
