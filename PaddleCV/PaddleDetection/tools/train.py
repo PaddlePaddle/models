@@ -244,11 +244,6 @@ if __name__ == '__main__':
         default=None,
         type=str,
         help="Dataset path, same as DataFeed.dataset.dataset_dir")
-    parser.add_argument(
-        "--finetune",
-        action='store_true',
-        default=False,
-        help="Whether to perform finetuning")
 
     FLAGS = parser.parse_args()
     main()
