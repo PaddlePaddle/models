@@ -335,7 +335,7 @@ class RandomCrop(object):
         area_a = np.prod(a[:, 2:] - a[:, :2], axis=1)
         area_b = np.prod(b[:, 2:] - b[:, :2], axis=1)
         area_o = (area_a[:, np.newaxis] + area_b - area_i)
-        return area_i / area_o
+        return area_i / (area_o + 1e-10)
 
     def _crop_box_with_center_constraint(self, box, crop):
         cropped_box = box.copy()
