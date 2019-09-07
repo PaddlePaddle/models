@@ -213,7 +213,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
             kwargs = sampler
             kwargs['rank'] = rank
             kwargs['world_size'] = world_size
-            kwargs['init_seed'] = init_seed
+            if 'init_seed' not in kwargs:
+                kwargs['init_seed'] = init_seed
             # XXX currently we only have one default sampler
             if 'type' not in kwargs:
                 sampler = samplers.Sampler(dataset, batch_size, **kwargs)
