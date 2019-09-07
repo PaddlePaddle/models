@@ -241,7 +241,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
                 try:
                     if self.coalesce_size == 1:
                         feed_dict, extra_dict = next(_iter)
-                        yield self._to_tensor(feed_dict), extra_dict
+                        yield [self._to_tensor(feed_dict)], extra_dict
                     else:
                         feed_list = []
                         coalesced_extra_dict = {}
