@@ -8,7 +8,7 @@
 
 demo数据集，在data目录下执行命令，下载数据
 ```bash
-sh download.py
+sh download.sh
 ```
 
 ## 环境
