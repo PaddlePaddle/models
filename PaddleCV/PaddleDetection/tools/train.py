@@ -241,12 +241,13 @@ def main():
 
         train_stats.update(stats)
         logs = train_stats.log()
-        if it % cfg.log_iter == 0:
+        if it % cfg.log_iter == 0 and (not FLAGS.dist or trainer_id == 0):
             strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
                 it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
 
-        if it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1:
+        if (it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1) \
+           and (not FLAGS.dist or trainer_id == 0):
             save_name = str(it) if it != cfg.max_iters - 1 else "model_final"
             checkpoint.save(exe, train_prog, os.path.join(save_dir, save_name))
 
