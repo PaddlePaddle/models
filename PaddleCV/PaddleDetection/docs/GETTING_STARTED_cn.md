@@ -77,7 +77,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 - 若本地未找到数据集，将自动下载数据集并保存在`~/.cache/paddle/dataset`中。
 - 预训练模型自动下载并保存在`〜/.cache/paddle/weights`中。
 - 模型checkpoints默认保存在`output`中（可配置）。
-- 进行模型fine-tune时，用户可将`pretrain_weights`配置为PaddlePaddle发布的模型，加载模型时finetune_exclude_pretrained_params中的字段匹配的参数不被加载，可以为通配符匹配方式。参数名可以参考[FAQ](#faq)
+- 进行模型fine-tune时，用户可将`pretrain_weights`配置为PaddlePaddle发布的模型，加载模型时finetune_exclude_pretrained_params中的字段匹配的参数不被加载，可以为通配符匹配方式。详细说明请参考[Transfer Learning](TRANSFER_LEARNING.md)
 - 更多参数配置，请参考[配置文件](../configs)。
 - RCNN系列模型CPU训练在PaddlePaddle 1.5.1及以下版本暂不支持，将在下个版本修复。
 
@@ -205,16 +205,3 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 **A:**  可通过设置环境变量`FLAGS_conv_workspace_size_limit`为较小的值来减少显存消耗，并且不
 会影响训练速度。以Mask-RCNN（R50）为例，设置`export FLAGS_conv_workspace_size_limit = 512`，
 batch size可以达到每GPU 4 (Tesla V100 16GB)。
-
-**Q:** 模型fine-tune时，加载模型为什么需要忽略参数？会忽略哪些参数？ </br>
-**A:** Fine-tune加载模型时，用户通常会使用自己的数据集，`num_classes`与发布的模型不同，导致加载与`num_classes`相关的参数时维度不匹配。忽略的参数与模型类型相关，参数字段如下表所示，可以为通配符匹配方式，如果模型参数命中包含如下字段即不加载该参数: </br>
-
-|      模型类型      |         fine-tune忽略参数字段         |
-| :----------------: | :-----------------------------------: |
-|     Faster RCNN    |          cls_score, bbox_pred         |
-|     Cascade RCNN   |          cls_score, bbox_pred         |
-|       Mask RCNN    | cls_score, bbox_pred, mask_fcn_logits |
-|  Cascade-Mask RCNN | cls_score, bbox_pred, mask_fcn_logits |
-|      RetinaNet     |           retnet_cls_pred_fpn         |
-|        SSD         |                ^conv2d_               |
-|       YOLOv3       |              yolo_output              |

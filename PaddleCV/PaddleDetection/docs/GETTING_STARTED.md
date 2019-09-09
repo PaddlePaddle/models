@@ -80,7 +80,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 - Dataset will be downloaded automatically and cached in `~/.cache/paddle/dataset` if not be found locally.
 - Pretrained model is downloaded automatically and cached in `~/.cache/paddle/weights`.
 - Model checkpoints are saved in `output` by default (configurable).
-- When finetuning, users could set `pretrain_weights` to the models published by PaddlePaddle. Parameters matched by fields in finetune_exclude_pretrained_params will be ignored in loading and fields can be wildcard matching. For detailed parameter names, please refer to [FAQ](#faq).
+- When finetuning, users could set `pretrain_weights` to the models published by PaddlePaddle. Parameters matched by fields in finetune_exclude_pretrained_params will be ignored in loading and fields can be wildcard matching. For detailed information, please refer to [Transfer Learning](TRANSFER_LEARNING.md).
 - To check out hyper parameters used, please refer to the [configs](../configs).
 - RCNN models training on CPU is not supported on PaddlePaddle<=1.5.1 and will be fixed on later version.
 
@@ -211,16 +211,3 @@ The calculation rules are as follows，they are equivalent: </br>
 number can reduce GPU memory footprint without affecting training speed.
 Take Mask-RCNN (R50) as example, by setting `export FLAGS_conv_workspace_size_limit=512`,
 batch size could reach 4 per GPU (Tesla V100 16GB).
-
-**Q:** Why parameters are ignored when finetuning and which parameters are ignored?</br>
-**A:** In fine-tuning, users usually use own dataset which sets different `num_classes` compared to published models. That will cause dimensional inconsistency of parameters related to `num_classes`. Parameter fields are as follows and can be wildcard matching. If the parameter name contains fields below, the parameter will not be loaded. </br>
-
-| Model Architecture |  Fine-tune ignored parameter fields   |
-| :----------------: | :-----------------------------------: |
-|     Faster RCNN    |          cls_score, bbox_pred         |
-|     Cascade RCNN   |          cls_score, bbox_pred         |
-|       Mask RCNN    | cls_score, bbox_pred, mask_fcn_logits |
-|  Cascade-Mask RCNN | cls_score, bbox_pred, mask_fcn_logits |
-|      RetinaNet     |           retnet_cls_pred_fpn         |
-|        SSD         |                ^conv2d_               |
-|       YOLOv3       |              yolo_output              |
