@@ -121,12 +121,12 @@ class DecodeImage(BaseOperator):
 
 @register_op
 class Flip_Augment(BaseOperator):
-    def __init__(self, enable=True):
+    def __init__(self):
         """
         Add flipped image to sample.
         """
         super(Flip_Augment, self).__init__()
-        self.enable = enable
+        #self.enable = enable
 
     def __call__(self, sample, context=None):
         im = sample['image']
@@ -134,8 +134,8 @@ class Flip_Augment(BaseOperator):
             raise TypeError("{}: image type is not numpy.".format(self))
         if len(im.shape) != 3:
             raise ImageError('{}: image is not 3-dimensional.'.format(self))
-        if self.enable:
-            sample['flip_image'] = im[:, ::-1, :]
+        #if self.enable:
+        sample['flip_image'] = im[:, ::-1, :]
         return sample
 
 
@@ -144,7 +144,7 @@ class Multiscale_Test_Resize(BaseOperator):
     def __init__(self,
                  origin_target_size=800,
                  origin_max_size=1333,
-                 target_size=[1200],
+                 target_size=[],
                  max_size=2000,
                  interp=cv2.INTER_LINEAR):
         """

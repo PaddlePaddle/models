@@ -17,6 +17,7 @@ from __future__ import print_function
 from __future__ import division
 
 from collections import OrderedDict
+from ppdet.data.transform.operators import *
 import copy
 
 from paddle import fluid
@@ -63,8 +64,13 @@ def create_feed(feed, use_pyreader=True, sub_prog_feed=False):
 
     base_name_list = ['image']
     num_scale = getattr(feed, 'num_scale', 1)
+    sample_transform = feed.sample_transforms
+    aug_flip = [t for t in sample_transform if isinstance(t, Flip_Augment)]
+    multiscale_test = [
+        t for t in sample_transform if isinstance(t, Multiscale_Test_Resize)
+    ]
 
-    if getattr(feed, 'enable_aug_flip', False):
+    if any(aug_flip):
         num_scale //= 2
         base_name_list.insert(0, 'flip_image')
         feed_var_map['flip_image'] = {
@@ -74,7 +80,7 @@ def create_feed(feed, use_pyreader=True, sub_prog_feed=False):
             'lod_level': 0
         }
     image_name_list = []
-    if getattr(feed, 'enable_multiscale', False):
+    if any(multiscale_test):
         for base_name in base_name_list:
             for i in range(0, num_scale):
                 name = base_name if i == 0 else base_name + '_scale_' + str(i -
