@@ -1,0 +1,36 @@
+MODEL:
+    name: "AttentionCluster"
+    dataset: "YouTube-8M"
+    bone_network: None
+    drop_rate: 0.5
+    feature_num: 2
+    feature_names: ['rgb', 'audio']
+    feature_dims: [1024, 128]
+    seg_num: 100
+    cluster_nums: [32, 32]
+    num_classes: 3862
+    topk: 20
+    UNIQUE:
+        good: 20
+        bad: 30
+
+TRAIN:
+    epoch: 5
+    learning_rate: 0.001
+    pretrain_base: None
+    batch_size: 2048
+    use_gpu: True
+    num_gpus: 8
+    filelist: "data/dataset/youtube8m/train.list"
+
+VALID:
+    batch_size: 2048
+    filelist: "data/dataset/youtube8m/val.list"
+
+TEST:
+    batch_size: 256
+    filelist: "data/dataset/youtube8m/test.list"
+
+INFER:
+    batch_size: 1
+    filelist: "data/dataset/youtube8m/infer.list"

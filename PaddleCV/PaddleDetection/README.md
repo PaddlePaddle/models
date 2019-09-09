@@ -1,3 +1,5 @@
+English | [简体中文](README_cn.md)
+
 # PaddleDetection
 
 The goal of PaddleDetection is to provide easy access to a wide range of object
@@ -36,16 +38,16 @@ multi-GPU training.
 
 Supported Architectures:
 
-|                    | ResNet | ResNet-vd <sup>[1](#vd)</sup> | ResNeXt-vd | SENet | MobileNet | DarkNet |
-|--------------------|:------:|------------------------------:|:----------:|:-----:|:---------:|:-------:|
-| Faster R-CNN       | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
-| Faster R-CNN + FPN | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       |
-| Mask R-CNN         | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       |
-| Mask R-CNN + FPN   | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       |
-| Cascade R-CNN      | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       |
-| RetinaNet          | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       |
-| Yolov3             | ✓      |                             ✗ | ✗          | ✗     | ✓         | ✓       |
-| SSD                | ✗      |                             ✗ | ✗          | ✗     | ✓         | ✗       |
+|                    | ResNet | ResNet-vd <sup>[1](#vd)</sup> | ResNeXt-vd | SENet | MobileNet | DarkNet | VGG |
+|--------------------|:------:|------------------------------:|:----------:|:-----:|:---------:|:-------:|:---:|
+| Faster R-CNN       | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       | ✗   |
+| Faster R-CNN + FPN | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       | ✗   |
+| Mask R-CNN         | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       | ✗   |
+| Mask R-CNN + FPN   | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       | ✗   |
+| Cascade R-CNN      | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       | ✗   |
+| RetinaNet          | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       | ✗   |
+| Yolov3             | ✓      |                             ✗ | ✗          | ✗     | ✓         | ✓       | ✗   |
+| SSD                | ✗      |                             ✗ | ✗          | ✗     | ✓         | ✗       | ✓   |
 
 <a name="vd">[1]</a> [ResNet-vd](https://arxiv.org/pdf/1812.01187) models offer much improved accuracy with negligible performance cost.
 
@@ -82,6 +84,8 @@ python tools/infer.py -c configs/mask_rcnn_r50_1x.yml \
 ```
 
 For detailed training and evaluation workflow, please refer to [GETTING_STARTED.md](docs/GETTING_STARTED.md).
+
+For detailed configuration and parameter description, please refer to [Complete config files](docs/config_example/)
 
 We also recommend users to take a look at the [IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
 

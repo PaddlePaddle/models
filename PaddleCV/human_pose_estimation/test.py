@@ -34,7 +34,6 @@ add_arg('batch_size',       int,   32,                  "Minibatch size.")
 add_arg('dataset',          str,   'mpii',              "Dataset")
 add_arg('use_gpu',          bool,  True,                "Whether to use GPU or not.")
 add_arg('kp_dim',           int,   16,                  "Class number.")
-add_arg('with_mem_opt',     bool,  True,               "Whether to use memory optimization or not.")
 add_arg('checkpoint',       str,   None,                "Whether to resume checkpoint.")
 add_arg('flip_test',        bool,  True,                "Flip test")
 add_arg('shift_heatmap',    bool,  True,                "Shift heatmap")
@@ -70,10 +69,6 @@ def test(args):
 
     # Output
     output = model.net(input=image, target=None, target_weight=None)
-
-    if args.with_mem_opt:
-        fluid.memory_optimize(fluid.default_main_program(),
-                              skip_opt_set=[output.name])
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -29,20 +42,12 @@ class GTrainer():
                         x=image_real, y=self.rec_img)))
             self.pred_fake, self.cls_fake = model.network_D(
                 self.fake_img, cfg, name="d_main")
+            if cfg.gan_mode != 'wgan':
+                raise NotImplementedError(
+                    "gan_mode {} is not support! only support wgan".format(
+                        cfg.gan_mode))
             #wgan
-            if cfg.gan_mode == "wgan":
-                self.g_loss_fake = -1 * fluid.layers.mean(self.pred_fake)
-            #lsgan
-            elif cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_fake,
-                    shape=self.pred_fake.shape,
-                    value=1,
-                    dtype='float32')
-                self.g_loss_fake = fluid.layers.mean(
-                    fluid.layers.square(
-                        fluid.layers.elementwise_sub(
-                            x=self.pred_fake, y=ones)))
+            self.g_loss_fake = -1 * fluid.layers.mean(self.pred_fake)
 
             cls_shape = self.cls_fake.shape
             self.cls_fake = fluid.layers.reshape(
@@ -87,11 +92,9 @@ class DTrainer():
         self.program = fluid.default_main_program().clone()
         with fluid.program_guard(self.program):
             model = StarGAN_model()
-            clone_image_real = []
-            for b in self.program.blocks:
-                if b.has_var('image_real'):
-                    clone_image_real = b.var('image_real')
-                    break
+
+            image_real = fluid.layers.data(
+                name='image_real', shape=image_real.shape, dtype='float32')
             self.fake_img = model.network_G(
                 image_real, label_trg, cfg, name="g_main")
             self.pred_real, self.cls_real = model.network_D(
@@ -105,31 +108,20 @@ class DTrainer():
             self.d_loss_cls = fluid.layers.reduce_sum(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     self.cls_real, label_org)) / cfg.batch_size
+            if cfg.gan_mode != 'wgan':
+                raise NotImplementedError(
+                    "gan_mode {} is not support! only support wgan".format(
+                        cfg.gan_mode))
             #wgan
-            if cfg.gan_mode == "wgan":
-                self.d_loss_fake = fluid.layers.mean(self.pred_fake)
-                self.d_loss_real = -1 * fluid.layers.mean(self.pred_real)
-                self.d_loss_gp = self.gradient_penalty(
-                    getattr(model, "network_D"),
-                    clone_image_real,
-                    self.fake_img,
-                    cfg=cfg,
-                    name="d_main")
-                self.d_loss = self.d_loss_real + self.d_loss_fake + self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
-            #lsgan
-            elif cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_real,
-                    shape=self.pred_real.shape,
-                    value=1,
-                    dtype='float32')
-                self.d_loss_real = fluid.layers.mean(
-                    fluid.layers.square(
-                        fluid.layers.elementwise_sub(
-                            x=self.pred_real, y=ones)))
-                self.d_loss_fake = fluid.layers.mean(
-                    fluid.layers.square(x=self.pred_fake))
-                self.d_loss = self.d_loss_real + self.d_loss_fake + cfg.lambda_cls * self.d_loss_cls
+            self.d_loss_fake = fluid.layers.mean(self.pred_fake)
+            self.d_loss_real = -1 * fluid.layers.mean(self.pred_real)
+            self.d_loss_gp = self.gradient_penalty(
+                getattr(model, "network_D"),
+                image_real,
+                self.fake_img,
+                cfg=cfg,
+                name="d_main")
+            self.d_loss = self.d_loss_real + self.d_loss_fake + self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
 
             self.d_loss_real.persistable = True
             self.d_loss_fake.persistable = True
@@ -168,13 +160,8 @@ class DTrainer():
             shape = [a.shape[0]]
             alpha = fluid.layers.uniform_random_batch_size_like(
                 input=a, shape=shape, min=0.0, max=1.0)
-            a.stop_gradient = True
-            b.stop_gradient = True
-            inner1 = fluid.layers.elementwise_mul(a, alpha, axis=0)
-            inner2 = fluid.layers.elementwise_mul(b, (1.0 - alpha), axis=0)
-            inner1.stop_gradient = True
-            inner2.stop_gradient = True
-            inner = inner1 + inner2
+
+            inner = b * (1.0 - alpha) + a * alpha
             return inner
 
         x = _interpolate(real, fake)
@@ -264,7 +251,8 @@ class StarGAN(object):
                  cfg=None,
                  train_reader=None,
                  test_reader=None,
-                 batch_num=1):
+                 batch_num=1,
+                 id2name=None):
         self.cfg = cfg
         self.train_reader = train_reader
         self.test_reader = test_reader
@@ -279,6 +267,13 @@ class StarGAN(object):
             name='label_org', shape=[self.cfg.c_dim], dtype='float32')
         label_trg = fluid.layers.data(
             name='label_trg', shape=[self.cfg.c_dim], dtype='float32')
+
+        py_reader = fluid.io.PyReader(
+            feed_list=[image_real, label_org, label_trg],
+            capacity=128,
+            iterable=True,
+            use_double_buffer=True)
+
         gen_trainer = GTrainer(image_real, label_org, label_trg, self.cfg,
                                self.batch_num)
         dis_trainer = DTrainer(image_real, label_org, label_trg, self.cfg,
@@ -286,6 +281,10 @@ class StarGAN(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
+        py_reader.decorate_batch_generator(
+            self.train_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -296,7 +295,6 @@ class StarGAN(object):
         ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = False
-        build_strategy.memory_optimize = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
@@ -311,19 +309,8 @@ class StarGAN(object):
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            for i in range(self.batch_num):
-                image, label_org = next(self.train_reader())
-                label_trg = copy.deepcopy(label_org)
-                np.random.shuffle(label_trg)
-
-                tensor_img = fluid.LoDTensor()
-                tensor_label_org = fluid.LoDTensor()
-                tensor_label_trg = fluid.LoDTensor()
-                tensor_img.set(image, place)
-                tensor_label_org.set(label_org, place)
-                tensor_label_trg.set(label_trg, place)
+            for data in py_reader():
                 s_time = time.time()
-                # optimize the discriminator network
                 d_loss_real, d_loss_fake, d_loss, d_loss_cls, d_loss_gp = exe.run(
                     dis_trainer_program,
                     fetch_list=[
@@ -331,11 +318,7 @@ class StarGAN(object):
                         dis_trainer.d_loss, dis_trainer.d_loss_cls,
                         dis_trainer.d_loss_gp
                     ],
-                    feed={
-                        "image_real": tensor_img,
-                        "label_org": tensor_label_org,
-                        "label_trg": tensor_label_trg
-                    })
+                    feed=data)
                 # optimize the generator network
                 if (batch_id + 1) % self.cfg.n_critic == 0:
                     g_loss_fake, g_loss_rec, g_loss_cls, fake_img, rec_img = exe.run(
@@ -345,11 +328,7 @@ class StarGAN(object):
                             gen_trainer.g_loss_cls, gen_trainer.fake_img,
                             gen_trainer.rec_img
                         ],
-                        feed={
-                            "image_real": tensor_img,
-                            "label_org": tensor_label_org,
-                            "label_trg": tensor_label_trg
-                        })
+                        feed=data)
                     print("epoch{}: batch{}: \n\
                          g_loss_fake: {}; g_loss_rec: {}; g_loss_cls: {}"
                           .format(epoch_id, batch_id, g_loss_fake[0],
@@ -357,10 +336,10 @@ class StarGAN(object):
 
                 batch_time = time.time() - s_time
                 t_time += batch_time
-                if batch_id % self.cfg.print_freq == 0:
+                if (batch_id + 1) % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}: \n\
                          d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
-                         Batch_time_cost: {:.2f}".format(
+                         Batch_time_cost: {}".format(
                         epoch_id, batch_id, d_loss_real[0], d_loss_fake[
                             0], d_loss_cls[0], d_loss_gp[0], batch_time))
 
@@ -368,10 +347,23 @@ class StarGAN(object):
                 batch_id += 1
 
             if self.cfg.run_test:
+                image_name = fluid.layers.data(
+                    name='image_name',
+                    shape=[self.cfg.n_samples],
+                    dtype='int32')
+                test_py_reader = fluid.io.PyReader(
+                    feed_list=[image_real, label_org, label_trg, image_name],
+                    capacity=32,
+                    iterable=True,
+                    use_double_buffer=True)
+                test_py_reader.decorate_batch_generator(
+                    self.test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
                                         test_program, gen_trainer,
-                                        self.test_reader)
+                                        test_py_reader)
 
             if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,

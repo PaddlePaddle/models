@@ -176,7 +176,6 @@ def train(model, args, im_shape, steps_one_epoch):
     test_py_reader.decorate_paddle_reader(test_reader)
 
     fluid.clip.set_gradient_clip(fluid.clip.GradientClipByNorm(args.grad_clip))
-    fluid.memory_optimize(fluid.default_main_program())
 
     def save_model(postfix, main_prog):
         model_path = os.path.join(args.model_path, postfix)
