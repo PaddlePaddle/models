@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import multiprocessing
 
 
 def set_paddle_flags(**kwargs):
@@ -36,8 +37,6 @@ import paddle.fluid as fluid
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results, json_eval_results
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.utils.check import check_gpu
-from ppdet.modeling.model_input import create_feed
-from ppdet.data.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.utils.cli import print_total_cfg
 from ppdet.utils.cli import ArgsParser
@@ -64,10 +63,19 @@ def main():
     check_gpu(cfg.use_gpu)
     print_total_cfg(cfg)
 
-    if 'eval_feed' not in cfg:
-        eval_feed = create(main_arch + 'EvalFeed')
+    if cfg.use_gpu:
+        devices_num = fluid.core.get_cuda_device_count()
     else:
-        eval_feed = create(cfg.eval_feed)
+        devices_num = int(
+            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+
+    if 'eval_loader' not in cfg:
+        eval_loader = create('EvalDataLoader')
+    else:
+        eval_loader = create(cfg.eval_loader)
+    if FLAGS.dataset_dir is not None:
+        eval_loader.dataset.root_dir = FLAGS.dataset_dir
+    anno_file = getattr(eval_loader.dataset, 'annotation_file', None)
 
     # define executor
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
@@ -79,12 +87,8 @@ def main():
     eval_prog = fluid.Program()
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
-            pyreader, feed_vars = create_feed(eval_feed)
-            fetches = model.eval(feed_vars)
+            fetches = model.eval()
     eval_prog = eval_prog.clone(True)
-
-    reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
-    pyreader.decorate_sample_list_generator(reader, place)
 
     # eval already exists json file
     if FLAGS.json_eval:
@@ -93,7 +97,7 @@ def main():
             "output_eval directly. And proposal.json, bbox.json and mask.json "
             "will be detected by default.")
         json_eval_results(
-            eval_feed, cfg.metric, json_directory=FLAGS.output_eval)
+            anno_file, cfg.metric, json_directory=FLAGS.output_eval)
         return
 
     compile_program = fluid.compiler.CompiledProgram(
@@ -105,10 +109,10 @@ def main():
         checkpoint.load_params(exe, eval_prog, cfg.weights)
 
     assert cfg.metric in ['COCO', 'VOC'], \
-            "unknown metric type {}".format(cfg.metric)
+        "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg.metric == 'COCO':
-        extra_keys = ['im_info', 'im_id', 'im_shape']
+        extra_keys = ['im_info', 'im_shape']
     if cfg.metric == 'VOC':
         extra_keys = ['gt_box', 'gt_label', 'is_difficult']
 
@@ -119,16 +123,18 @@ def main():
     if hasattr(model, 'is_bbox_normalized'):
         is_bbox_normalized = model.is_bbox_normalized
 
-    results = eval_run(exe, compile_program, pyreader, keys, values, cls)
-
+    results = eval_run(exe, compile_program, eval_loader, keys, values, cls)
     # evaluation
     resolution = None
     if 'mask' in results[0]:
         resolution = model.mask_head.resolution
     # if map_type not set, use default 11point, only use in VOC eval
     map_type = cfg.map_type if 'map_type' in cfg else '11point'
-    eval_results(results, eval_feed, cfg.metric, cfg.num_classes, resolution,
-                 is_bbox_normalized, FLAGS.output_eval, map_type)
+    eval_results(
+        results, anno_file,
+        getattr(eval_loader.dataset, 'use_background', True),
+        cfg.metric, cfg.num_classes, resolution, is_bbox_normalized,
+        FLAGS.output_eval, map_type)
 
 
 if __name__ == '__main__':
@@ -143,7 +149,7 @@ if __name__ == '__main__':
         "--dataset_dir",
         default=None,
         type=str,
-        help="Dataset path, same as DataFeed.dataset.dataset_dir")
+        help="Dataset path, same as DataLoader.dataset.root_dir")
     parser.add_argument(
         "-f",
         "--output_eval",

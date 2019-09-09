@@ -126,7 +126,7 @@ def prune_zero_padding(gt_box, gt_label, difficult=None):
 
 def get_category_info(anno_file=None,
                       with_background=True,
-                      use_default_label=False):
+                      use_default_label=True):
     if use_default_label or anno_file is None \
             or not os.path.exists(anno_file):
         logger.info("Not found annotation file {}, load "

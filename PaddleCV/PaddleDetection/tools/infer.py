@@ -39,8 +39,6 @@ from paddle import fluid
 
 from ppdet.utils.cli import print_total_cfg
 from ppdet.core.workspace import load_config, merge_config, create
-from ppdet.modeling.model_input import create_feed
-from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
 from ppdet.utils.cli import ArgsParser
@@ -63,37 +61,6 @@ def get_save_image_name(output_dir, image_path):
     image_name = os.path.split(image_path)[-1]
     name, ext = os.path.splitext(image_name)
     return os.path.join(output_dir, "{}".format(name)) + ext
-
-
-def get_test_images(infer_dir, infer_img):
-    """
-    Get image path list in TEST mode
-    """
-    assert infer_img is not None or infer_dir is not None, \
-        "--infer_img or --infer_dir should be set"
-    assert infer_img is None or os.path.isfile(infer_img), \
-            "{} is not a file".format(infer_img)
-    assert infer_dir is None or os.path.isdir(infer_dir), \
-            "{} is not a directory".format(infer_dir)
-    images = []
-
-    # infer_img has a higher priority
-    if infer_img and os.path.isfile(infer_img):
-        images.append(infer_img)
-        return images
-
-    infer_dir = os.path.abspath(infer_dir)
-    assert os.path.isdir(infer_dir), \
-        "infer_dir {} is not a directory".format(infer_dir)
-    exts = ['jpg', 'jpeg', 'png', 'bmp']
-    exts += [ext.upper() for ext in exts]
-    for ext in exts:
-        images.extend(glob.glob('{}/*.{}'.format(infer_dir, ext)))
-
-    assert len(images) > 0, "no image found in {}".format(infer_dir)
-    logger.info("Found {} inference images in total.".format(len(images)))
-
-    return images
 
 
 def prune_feed_vars(feeded_var_names, target_vars, prog):
@@ -119,10 +86,9 @@ def prune_feed_vars(feeded_var_names, target_vars, prog):
     return exist_var_names
 
 
-def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
+def save_infer_model(FLAGS, exe, feeded_var_names, test_fetches, infer_prog):
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(FLAGS.output_dir, cfg_name)
-    feeded_var_names = [var.name for var in feed_vars.values()]
     target_vars = list(test_fetches.values())
     feeded_var_names = prune_feed_vars(feeded_var_names, target_vars,
                                        infer_prog)
@@ -131,7 +97,7 @@ def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
                                [str(var.name) for var in target_vars]))
     fluid.io.save_inference_model(
         save_dir,
-        feeded_var_names=feeded_var_names,
+        feeded_var_names=feeded_var_names,   # WTF is `feeded`??
         target_vars=target_vars,
         executor=exe,
         main_program=infer_prog,
@@ -152,13 +118,15 @@ def main():
     check_gpu(cfg.use_gpu)
     print_total_cfg(cfg)
 
-    if 'test_feed' not in cfg:
-        test_feed = create(main_arch + 'TestFeed')
+    if 'test_loader' not in cfg:
+        test_loader = create('TestDataLoader')
     else:
-        test_feed = create(cfg.test_feed)
+        test_loader = create(cfg.test_loader)
+    if FLAGS.dataset_dir is not None:
+        test_loader.dataset.root_dir = FLAGS.dataset_dir
 
-    test_images = get_test_images(FLAGS.infer_dir, FLAGS.infer_img)
-    test_feed.dataset.add_images(test_images)
+    feed_var_names = [isinstance(v, str) and v or v['name']
+                      for v in test_loader.feed_vars]
 
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -169,19 +137,15 @@ def main():
     infer_prog = fluid.Program()
     with fluid.program_guard(infer_prog, startup_prog):
         with fluid.unique_name.guard():
-            _, feed_vars = create_feed(test_feed, use_pyreader=False)
-            test_fetches = model.test(feed_vars)
+            test_fetches = model.test()
     infer_prog = infer_prog.clone(True)
-
-    reader = create_reader(test_feed)
-    feeder = fluid.DataFeeder(place=place, feed_list=feed_vars.values())
 
     exe.run(startup_prog)
     if cfg.weights:
         checkpoint.load_params(exe, infer_prog, cfg.weights)
 
     if FLAGS.save_inference_model:
-        save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
+        save_infer_model(FLAGS, exe, feed_var_names, test_fetches, infer_prog)
 
     # parse infer fetches
     assert cfg.metric in ['COCO', 'VOC'], \
@@ -199,11 +163,9 @@ def main():
     if cfg.metric == "VOC":
         from ppdet.utils.voc_eval import bbox2out, get_category_info
 
-    anno_file = getattr(test_feed.dataset, 'annotation', None)
-    with_background = getattr(test_feed, 'with_background', True)
-    use_default_label = getattr(test_feed, 'use_default_label', False)
-    clsid2catid, catid2name = get_category_info(anno_file, with_background,
-                                                use_default_label)
+    anno_file = getattr(test_loader.dataset, 'annotation_file', None)
+    with_background = getattr(test_loader.dataset, 'use_background', True)
+    clsid2catid, catid2name = get_category_info(anno_file, with_background)
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
@@ -215,19 +177,21 @@ def main():
         from tb_paddle import SummaryWriter
         tb_writer = SummaryWriter(FLAGS.tb_log_dir)
         tb_image_step = 0
-        tb_image_frame = 0  # each frame can display ten pictures at most. 
+        tb_image_frame = 0 # each frame can display ten pictures at most.
 
-    imid2path = reader.imid2path
-    for iter_id, data in enumerate(reader()):
+    counter = 0
+    for it, (feed_data, extra) in enumerate(test_loader):
         outs = exe.run(infer_prog,
-                       feed=feeder.feed(data),
+                       feed=feed_data,
                        fetch_list=values,
                        return_numpy=False)
         res = {
             k: (np.array(v), v.recursive_sequence_lengths())
             for k, v in zip(keys, outs)
         }
-        logger.info('Infer iter {}'.format(iter_id))
+        num_samples = len(extra['file'])
+        res['id'] = list(range(counter, counter + num_samples))
+        logger.info('Infer iter {}'.format(it))
 
         bbox_results = None
         mask_results = None
@@ -238,12 +202,11 @@ def main():
                                     model.mask_head.resolution)
 
         # visualize result
-        im_ids = res['im_id'][0]
-        for im_id in im_ids:
-            image_path = imid2path[int(im_id)]
+        files = extra['file']
+        for idx, image_path in enumerate(files):
             image = Image.open(image_path).convert('RGB')
 
-            # use tb-paddle to log original image           
+            # use tb-paddle to log original image
             if FLAGS.use_tb:
                 original_image_np = np.array(image)
                 tb_writer.add_image(
@@ -253,7 +216,7 @@ def main():
                     dataformats='HWC')
 
             image = visualize_results(image,
-                                      int(im_id), catid2name,
+                                      counter + idx, catid2name,
                                       FLAGS.draw_threshold, bbox_results,
                                       mask_results)
 
@@ -274,19 +237,17 @@ def main():
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name, quality=95)
 
+        counter += num_samples
+
 
 if __name__ == '__main__':
     parser = ArgsParser()
     parser.add_argument(
-        "--infer_dir",
-        type=str,
+        "-d",
+        "--dataset_dir",
         default=None,
-        help="Directory for images to perform inference on.")
-    parser.add_argument(
-        "--infer_img",
         type=str,
-        default=None,
-        help="Image path, has higher priority over --infer_dir")
+        help="Dataset path, same as DataLoader.dataset.root_dir")
     parser.add_argument(
         "--output_dir",
         type=str,

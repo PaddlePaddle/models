@@ -202,14 +202,14 @@ def bbox2out(results, clsid2catid, is_bbox_normalized=False):
     for t in results:
         bboxes = t['bbox'][0]
         lengths = t['bbox'][1][0]
-        im_ids = np.array(t['im_id'][0])
+        im_ids = np.array(t['id'])
         if bboxes.shape == (1, 1) or bboxes is None:
             continue
 
         k = 0
         for i in range(len(lengths)):
             num = lengths[i]
-            im_id = int(im_ids[i][0])
+            im_id = int(im_ids[i])
             for j in range(num):
                 dt = bboxes[k]
                 clsid, score, xmin, ymin, xmax, ymax = dt.tolist()
@@ -252,7 +252,7 @@ def mask2out(results, clsid2catid, resolution, thresh_binarize=0.5):
         bboxes = t['bbox'][0]
 
         lengths = t['bbox'][1][0]
-        im_ids = np.array(t['im_id'][0])
+        im_ids = np.array(t['id'])
         if bboxes.shape == (1, 1) or bboxes is None:
             continue
         if len(bboxes.tolist()) == 0:
@@ -264,7 +264,7 @@ def mask2out(results, clsid2catid, resolution, thresh_binarize=0.5):
         # for each sample
         for i in range(len(lengths)):
             num = lengths[i]
-            im_id = int(im_ids[i][0])
+            im_id = int(im_ids[i])
             im_shape = t['im_shape'][0][i]
 
             bbox = bboxes[s:s + num][:, 2:]
@@ -343,9 +343,8 @@ def expand_boxes(boxes, scale):
 
 
 def get_category_info(anno_file=None,
-                      with_background=True,
-                      use_default_label=False):
-    if use_default_label or anno_file is None \
+                      with_background=True):
+    if anno_file is None \
             or not os.path.exists(anno_file):
         logger.info("Not found annotation file {}, load "
                     "coco17 categories.".format(anno_file))

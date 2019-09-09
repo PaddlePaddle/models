@@ -176,6 +176,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
             cls = kwargs.pop('type')
             dataset = type_map[cls](**kwargs)
 
+        self.feed_vars = feed_vars
+
         env = os.environ
         if 'FLAGS_selected_gpus' in env:
             prefetch_device = int(env['FLAGS_selected_gpus'])

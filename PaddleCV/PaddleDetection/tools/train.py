@@ -245,6 +245,7 @@ def main():
             checkpoint.save(exe, train_prog, os.path.join(save_dir, save_name))
 
             if FLAGS.eval:
+                anno_file = getattr(eval_loader.dataset, 'annotation_file', None)
                 # evaluation
                 results = eval_run(exe, compiled_eval_prog, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
@@ -252,9 +253,8 @@ def main():
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
                 box_ap_stats = eval_results(
-                    results,
-                    eval_loader.dataset.annotation_file,
-                    getattr(eval_loader.dataset, 'use_background', None),
+                    results, anno_file,
+                    getattr(eval_loader.dataset, 'use_background', True),
                     cfg.metric, cfg.num_classes, resolution,
                     is_bbox_normalized, FLAGS.output_eval, map_type)
 

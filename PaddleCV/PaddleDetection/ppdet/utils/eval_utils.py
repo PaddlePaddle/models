@@ -82,6 +82,7 @@ def eval_run(exe, compile_program, dataloader, keys, values, cls):
             k: (np.array(v), v.recursive_sequence_lengths())
             for k, v in zip(keys, outs)
         }
+        res.update(extra)
         results.append(res)
         if it % 100 == 0:
             logger.info('Test iter {}'.format(it))
@@ -146,13 +147,12 @@ def eval_results(results,
     return box_ap_stats
 
 
-def json_eval_results(feed, metric, json_directory=None):
+def json_eval_results(anno_file, metric, json_directory=None):
     """
     cocoapi eval with already exists proposal.json, bbox.json or mask.json
     """
     assert metric == 'COCO'
     from ppdet.utils.coco_eval import cocoapi_eval
-    anno_file = getattr(feed.dataset, 'annotation', None)
     json_file_list = ['proposal.json', 'bbox.json', 'mask.json']
     if json_directory:
         assert os.path.exists(
