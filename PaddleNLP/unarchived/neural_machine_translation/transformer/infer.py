@@ -57,11 +57,6 @@ def parse_args():
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. ")
     parser.add_argument(
-        "--use_mem_opt",
-        type=ast.literal_eval,
-        default=True,
-        help="The flag indicating whether to use memory optimization.")
-    parser.add_argument(
         "--use_py_reader",
         type=ast.literal_eval,
         default=True,
@@ -211,9 +206,6 @@ def fast_infer(args):
 
     # This is used here to set dropout to the test mode.
     infer_program = fluid.default_main_program().clone(for_test=True)
-
-    if args.use_mem_opt:
-        fluid.memory_optimize(infer_program)
 
     if InferTaskConfig.use_gpu:
         place = fluid.CUDAPlace(0)

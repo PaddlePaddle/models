@@ -105,7 +105,6 @@ def train():
     for var in fetch_list:
         var.persistable = True
 
-    #fluid.memory_optimize(fluid.default_main_program(), skip_opt_set=set(fetch_list))
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(gpu_id) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

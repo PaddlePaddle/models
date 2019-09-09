@@ -119,5 +119,15 @@ def parse_args():
         help="The flag indicating whether to run the task "
         "for continuous evaluation.")
 
+    parser.add_argument(
+        "--parallel",
+        action='store_true',
+        help="Whether execute with the data_parallel mode.")
+
+    parser.add_argument(
+        "--profile",
+        action='store_true',
+        help="Whether enable the profile.")
+
     args = parser.parse_args()
     return args

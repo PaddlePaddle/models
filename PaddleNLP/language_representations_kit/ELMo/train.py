@@ -264,10 +264,17 @@ def train():
     vocab_size = vocab.size
     logger.info("finished load vocab")
 
+    if args.enable_ce:
+        random.seed(args.random_seed)
+        np.random.seed(args.random_seed)
+
     logger.info('build the model...')
     # build model
     train_prog = fluid.Program()
     train_startup_prog = fluid.Program()
+    if args.enable_ce:
+        train_prog.random_seed = args.random_seed
+        train_startup_prog.random_seed = args.random_seed
     # build infer model
     infer_prog = fluid.Program()
     infer_startup_prog = fluid.Program()
@@ -559,6 +566,19 @@ def train_loop(args,
                 os.makedirs(model_path)
             fluid.io.save_persistables(
                 executor=exe, dirname=model_path, main_program=train_prog)
+
+    if args.enable_ce:
+        card_num = get_cards()
+        ce_loss = 0
+        ce_time = 0
+        try:
+            ce_loss = ce_info[-2][0]
+            ce_time = ce_info[-2][1]
+        except:
+            print("ce info error")
+        print("kpis\ttrain_duration_card%s\t%s" % (card_num, ce_time))
+        print("kpis\ttrain_loss_card%s\t%f" % (card_num, ce_loss))
+
     end_time = time.time()
     total_time += end_time - start_time
     epoch_id = int(final_batch_id / n_batches_per_epoch)

@@ -88,7 +88,7 @@ class ConvBNLayer(fluid.dygraph.Layer):
             padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
-            bias_attr=None)
+            bias_attr=False)
 
         self._batch_norm = BatchNorm(self.full_name(), num_filters, act=act)
 

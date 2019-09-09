@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
   <h3>
     <a href="usage.md">
       使用文档
@@ -13,7 +13,6 @@
     </a>
   </h3>
 </div>
-
 
 ---
 # Paddle模型压缩工具库使用示例
@@ -33,14 +32,14 @@
 ## 0. 概述
 该示例参考[PaddlePaddle/models/fluid/PaddleCV/image_classification](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification)下代码，分别实现了以下策略：
 
-1. <a href="#31-蒸馏">蒸馏</a>：用ResNet50对MobileNetV1的在ImageNet 1000数据上的蒸馏训练。
-2. <a href="#32-uniform剪切">剪切</a>：对预训练好的MobileNetV1进行剪切
-3. <a href="#35-int8量化训练">量化</a>：对预训练好的MobileNetV1进行int8量化训练
-4. <a href="#36-蒸馏后int8量化">蒸馏量化组合</a>：先用ResNet50对MobileNetV1进行蒸馏，再对蒸馏后得到的模型进行int8量化训练。
-5. <a href="#37-剪切后int8量化">剪切量化组合</a>：先用Uniform剪切策略对MobileNetV1进行剪切，再对剪切后的模型进行int8量化训练
-5. <a href="#38-小模型结构搜索示例">小模型结构搜索示例</a>: 先用模拟退火策略搜索出一组tokens, 再用该tokens构建网络进行训练。
+1. <a href="#31-蒸馏">蒸馏</a>：用ResNet50对MobileNetV1的在ImageNet 1000数据上的蒸馏训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L42)。
+2. <a href="#32-uniform剪切">剪切</a>：对预训练好的MobileNetV1进行剪切, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L65)。
+3. <a href="#35-int8量化训练">量化</a>：对预训练好的MobileNetV1进行int8量化训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L81)
+4. <a href="#36-蒸馏后int8量化">蒸馏量化组合</a>：先用ResNet50对MobileNetV1进行蒸馏，再对蒸馏后得到的模型进行int8量化训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L99)。
+5. <a href="#37-剪切后int8量化">剪切量化组合</a>：先用Uniform剪切策略对MobileNetV1进行剪切，再对剪切后的模型进行int8量化训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L114)。
+6. <a href="#38-小模型结构搜索示例">小模型结构搜索示例</a>: 先用模拟退火策略搜索出一组tokens, 再用该tokens构建网络进行训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/run.sh)。
 
-本示例完整代码链接：https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim
+本示例完整代码链接：https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh
 
 使用方式：
 克隆[PaddlePaddle/models](https://github.com/PaddlePaddle/models)到本地，并进入models/fluid/PaddleSlim路径。
@@ -336,9 +335,11 @@ python compress.py \
 | ---                            | ---             | ---        |
 | MobileNet v1（剪切FLOPS -50%） | -86.47%（2.3M） | 69.20%     |
 
-### 3.7 小模型结构搜索示例
+### 3.8 小模型结构搜索示例
 
 本示例先用模拟退火策略搜索出一组tokens, 再用搜索出的tokens初始化构建模型进行训练。
+
+> tokens：light_nas将搜索空间中的CNN模型映射为一组token, token可以唯一地表示一个CNN模型。搜索过程就是在不断优化token, 使其构建得到的模型性能更强。
 
 step1: 进入路径`PaddlePaddle/models/PaddleSlim/light_nas/`。
 

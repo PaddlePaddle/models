@@ -8,18 +8,16 @@ snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: VOC
+map_type: 11point
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/VGG16_caffe_pretrained.tar
 save_dir: output
 weights: output/ssd_vgg16_300_voc/model_final/
+# 20(label_class) + 1(background)
 num_classes: 21
 
 SSD:
   backbone: VGG
   multi_box_head: MultiBoxHead
-  metric:
-    ap_version: 11point
-    evaluate_difficult: false
-    overlap_threshold: 0.5
   output_decoder:
     background_label: 0
     keep_top_k: 200

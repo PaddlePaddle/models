@@ -1,0 +1,37 @@
+MODEL:
+    name: "AttentionLSTM"
+    dataset: "YouTube-8M"
+    bone_nework: None
+    drop_rate: 0.5
+    feature_num: 2
+    feature_names: ['rgb', 'audio']
+    feature_dims: [1024, 128]
+    embedding_size: 512
+    lstm_size: 1024
+    num_classes: 3862
+    topk: 20
+
+TRAIN:
+    epoch: 10
+    learning_rate: 0.001
+    decay_epochs: [5]
+    decay_gamma: 0.1
+    weight_decay: 0.0008
+    num_samples: 5000000
+    pretrain_base: None
+    batch_size: 1024
+    use_gpu: True
+    num_gpus: 8
+    filelist: "data/dataset/youtube8m/train.list"
+
+VALID:
+    batch_size: 1024
+    filelist: "data/dataset/youtube8m/val.list"
+
+TEST:
+    batch_size: 128
+    filelist: "data/dataset/youtube8m/test.list"
+
+INFER:
+    batch_size: 1
+    filelist: "data/dataset/youtube8m/infer.list"
