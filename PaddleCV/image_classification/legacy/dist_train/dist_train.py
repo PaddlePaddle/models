@@ -284,7 +284,6 @@ def train_parallel(args):
     strategy.num_iteration_per_drop_scope = 30
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.enable_inplace = False
     build_strategy.memory_optimize = False
     build_strategy.enable_sequential_execution = bool(
         args.enable_sequential_execution)
