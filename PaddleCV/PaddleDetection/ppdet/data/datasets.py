@@ -60,12 +60,16 @@ class COCODataSet(DataSet):
                  use_empty=False):
         super(COCODataSet, self).__init__()
         assert annotation_file is not None and image_dir is not None
-        self.annotation_file = annotation_file
+        self._annotation_file = annotation_file
         self.root_dir = root_dir
         self.image_dir = image_dir
         self.use_mask = use_mask
         self.use_crowd = use_crowd
         self.use_empty = use_empty
+
+    @property
+    def annotation_file(self):
+        return os.path.join(self.root_dir, self._annotation_file)
 
     @property
     def aspect_ratios(self):
@@ -89,7 +93,7 @@ class COCODataSet(DataSet):
         return sample
 
     def _load(self):
-        coco = COCO(os.path.join(self.root_dir, self.annotation_file))
+        coco = COCO(self.annotation_file)
         img_ids = coco.getImgIds()
         imgs = coco.loadImgs(img_ids)
         class_map = {v: i + 1 for i, v in enumerate(coco.getCatIds())}
@@ -194,6 +198,11 @@ class PascalVocDataSet(DataSet):
         self.label_map = label_map
 
     @property
+    def annotation_file(self):
+        return os.path.join(
+            self.root_dir, 'ImageSets/Main/{}.txt'.format(self.subset))
+
+    @property
     def aspect_ratios(self):
         if not hasattr(self, '_aspect_ratios'):
             if not hasattr(self, 'samples'):
@@ -217,11 +226,9 @@ class PascalVocDataSet(DataSet):
     def _load(self):
         import xml.etree.ElementTree as ET
 
-        list_file = os.path.join(
-            self.root_dir, 'ImageSets/Main/{}.txt'.format(self.subset))
         image_dir = os.path.join(self.root_dir, 'JPEGImages')
         anno_dir = os.path.join(self.root_dir, 'Annotations')
-        indices = open(list_file).readlines()
+        indices = open(self.annotation_file).readlines()
 
         def _get(root, path):
             nodes = path.split('.')
