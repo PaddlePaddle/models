@@ -239,7 +239,7 @@ def bbox_vote(det):
             dets = det_accu_sum
     dets = dets[0:750, :]
     # Only keep 0.3 or more
-    keep_index = np.where(dets[:, 4] >= 0.3)[0]
+    keep_index = np.where(dets[:, 4] >= 0.01)[0]
     dets = dets[keep_index, :]
     return dets
 

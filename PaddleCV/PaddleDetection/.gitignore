@@ -64,7 +64,8 @@ ppdet/data/data_feed.py
 log.txt
 /configs/
 /log/
-/pred/
+/self_tools/
+/*pred*/
 /*output*/
 set_env.sh
 run_train.sh

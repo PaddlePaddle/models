@@ -10,8 +10,8 @@ log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
 save_dir: output_facebox
-eval_mode: python
-multi_scale: false
+eval_mode: matlab
+multi_scale: true
 weights: output/facebox/model_final/
 num_classes: 2
 

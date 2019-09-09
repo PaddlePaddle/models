@@ -9,9 +9,9 @@ snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
-save_dir: output_blazelite_128x128_priorbox_5x5_190903
-eval_mode: python
-multi_scale: false
+save_dir: output_blazelite_512x512_priorbox_190909
+eval_mode: matlab
+multi_scale: true
 weights: output/balzeface/model_final/
 num_classes: 2
 
@@ -27,22 +27,22 @@ BlazeNet:
   with_extra_blocks: true
 
 LearningRate:
-  base_lr: 0.001
+  base_lr: 0.002
   schedulers:
   - !PiecewiseDecay
     gamma: 0.1
-    milestones: [120000, 160000]
+    milestones: [80000, 140000]
 
 OptimizerBuilder:
   optimizer:
-    momentum: 0.9
-    type: Momentum
+    momentum: 0.0
+    type: RMSPropOptimizer
   regularizer:
     factor: 0.0005
     type: L2
 
 BlazeFaceTrainFeed:
-  batch_size: 8
+  batch_size: 16
   use_process: True
   dataset:
     dataset_dir: dataset/wider_face

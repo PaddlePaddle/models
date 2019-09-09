@@ -93,7 +93,7 @@ class BlazeFace(object):
                         inputs,
                         image,
                         num_classes=2,
-                        use_density_prior_box=True):
+                        use_density_prior_box=False):
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
             compile_shape = [
