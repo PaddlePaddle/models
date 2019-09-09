@@ -209,6 +209,7 @@ def main():
 
     # use tb-paddle to log image
     if FLAGS.use_tb:
+        from tb_paddle import SummaryWriter
         tb_writer = SummaryWriter(FLAGS.tb_log_dir)
         tb_image_step = 0
         tb_image_frame = 0 # each frame can display ten pictures at most. 
@@ -243,7 +244,7 @@ def main():
             if FLAGS.use_tb:
                 original_image_np = np.array(image)
                 tb_writer.add_image(
-                    "original_image/frame_{}".format(tb_image_frame),
+                    "original/frame_{}".format(tb_image_frame),
                     original_image_np,
                     tb_image_step,
                     dataformats='HWC')
@@ -257,7 +258,7 @@ def main():
             if FLAGS.use_tb:
                 infer_image_np = np.array(image)
                 tb_writer.add_image(
-                    "original_image/frame_{}".format(tb_image_frame),
+                    "bbox/frame_{}".format(tb_image_frame),
                     infer_image_np,
                     tb_image_step,
                     dataformats='HWC')
