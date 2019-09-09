@@ -262,9 +262,9 @@ def main():
                     tb_image_step,
                     dataformats='HWC')
                 tb_image_step += 1
-                if tb_image_step % 10 ==0:
+                if tb_image_step % 10 == 0:
                     tb_image_step = 0
-                    tb_image_frame += 1 
+                    tb_image_frame += 1
 
             save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
