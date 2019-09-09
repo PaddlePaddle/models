@@ -103,13 +103,13 @@ def _load_file_list(input_txt):
     num_class = 0
     for i in range(len(lines_input_txt)):
         line_txt = lines_input_txt[i].strip('\n\t\r')
-        if '--' in line_txt:
+        if '.jpg' in line_txt:
             if i != 0:
                 num_class += 1
             file_dict[num_class] = []
             file_dict[num_class].append(line_txt)
-        if '--' not in line_txt:
-            if len(line_txt) > 6:
+        if '.jpg' not in line_txt:
+            if len(line_txt) >= 4:
                 split_str = line_txt.split(' ')
                 x1_min = float(split_str[0])
                 y1_min = float(split_str[1])

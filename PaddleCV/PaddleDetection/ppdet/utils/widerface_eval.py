@@ -22,14 +22,14 @@ from .coco_eval import bbox2out
 import logging
 logger = logging.getLogger(__name__)
 
-__all__ = ['WiderfaceEval', 'bbox2out', 'get_category_info']
-
+__all__ = [
+    'WiderfaceEval', 'bbox2out', 'get_category_info'
+]
 
 class WiderfaceEval(object):
     """
     TODO(yuguanghua): add comments.
     """
-
     def __init__(self,
                  exe,
                  compile_program,
@@ -51,7 +51,7 @@ class WiderfaceEval(object):
 
     def bbox_eval(self):
         imid2path = self.reader.imid2path
-        dets_list = []
+        dets_dist = {}
         for iter_id, image_path in imid2path.iteritems():
             image = Image.open(image_path).convert('RGB')
             shrink, max_shrink = get_shrink(image.size[1], image.size[0])
@@ -65,11 +65,10 @@ class WiderfaceEval(object):
             if self.eval_mode == 'matlab':
                 save_widerface_bboxes_matlab(image_path, dets, self.pred_dir)
             else:
-                dets_list.append(dets)
+                dets_dist[image_path] = dets
             logger.info('Test iter {}'.format(iter_id))
         if self.eval_mode == 'python':
-            pred_res_file = save_widerface_bboxes_py(imid2path, dets_list,
-                                                     self.pred_dir)
+            pred_res_file = save_widerface_bboxes_py(dets_dist, self.pred_dir)
             calculate_ap_py(pred_res_file, self.anno_file, self.pred_dir)
         logger.info("Finish evaluation.")
 
@@ -104,8 +103,7 @@ class WiderfaceEval(object):
         det_xmax = image_shape[2] * detection[:, 4] / shrink
         det_ymax = image_shape[1] * detection[:, 5] / shrink
 
-        det = np.column_stack(
-            (det_xmin, det_ymin, det_xmax, det_ymax, det_conf))
+        det = np.column_stack((det_xmin, det_ymin, det_xmax, det_ymax, det_conf))
         return det
 
     def flip_test(self, image, shrink):
@@ -125,8 +123,8 @@ class WiderfaceEval(object):
         st = 0.5 if max_shrink >= 0.75 else 0.5 * max_shrink
         det_s = self.detect_face(image, st)
         index = np.where(
-            np.maximum(det_s[:, 2] - det_s[:, 0] + 1,
-                       det_s[:, 3] - det_s[:, 1] + 1) > 30)[0]
+            np.maximum(det_s[:, 2] - det_s[:, 0] + 1, det_s[:, 3] - det_s[:, 1] + 1)
+            > 30)[0]
         det_s = det_s[index, :]
         # Enlarge one times
         bt = min(2, max_shrink) if max_shrink > 1 else (st + max_shrink) / 2
@@ -158,8 +156,8 @@ class WiderfaceEval(object):
         # Use image pyramids to detect faces
         det_b = self.detect_face(image, 0.25)
         index = np.where(
-            np.maximum(det_b[:, 2] - det_b[:, 0] + 1,
-                       det_b[:, 3] - det_b[:, 1] + 1) > 30)[0]
+            np.maximum(det_b[:, 2] - det_b[:, 0] + 1, det_b[:, 3] - det_b[:, 1] + 1)
+            > 30)[0]
         det_b = det_b[index, :]
 
         st = [0.75, 1.25, 1.5, 1.75]
@@ -170,8 +168,7 @@ class WiderfaceEval(object):
                 if st[i] > 1:
                     index = np.where(
                         np.minimum(det_temp[:, 2] - det_temp[:, 0] + 1,
-                                   det_temp[:, 3] - det_temp[:, 1] + 1) <
-                        100)[0]
+                                   det_temp[:, 3] - det_temp[:, 1] + 1) < 100)[0]
                     det_temp = det_temp[index, :]
                 # Shrinked images are only used to detect big faces.
                 else:
@@ -304,17 +301,16 @@ def save_widerface_bboxes_matlab(image_path, bboxes_scores, output_dir):
     for box_score in bboxes_scores:
         xmin, ymin, xmax, ymax, score = box_score
         f.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'.format(xmin, ymin, (
-            xmax - xmin + 1), (ymax - ymin + 1), score))
+                xmax - xmin + 1), (ymax - ymin + 1), score))
     f.close()
     logger.info("The predicted result is saved as {}".format(ofname))
 
 
-def save_widerface_bboxes_py(imid2path, bboxes_scores, output_dir):
+def save_widerface_bboxes_py(bboxes_scores, output_dir):
     """
     Save predicted results, including bbox and score into text file.
     Args:
-        imid2path (string): file name dict.
-        bboxes_scores (np.array|list): the predicted bboxed and scores, layout
+        bboxes_scores (np.array|dist): the predicted bboxed and scores, layout
             is (xmin, ymin, xmax, ymax, score)
         output_dir (string): output directory.
     """
@@ -322,7 +318,7 @@ def save_widerface_bboxes_py(imid2path, bboxes_scores, output_dir):
         os.makedirs(output_dir)
     predict_file = os.path.join(output_dir, 'pred_res.txt')
     f = open(predict_file, 'w')
-    for dets, image_path in zip(bboxes_scores, imid2path.values()):
+    for image_path, dets in bboxes_scores.iteritems():
         image_name = image_path.split('/')[-1]
         image_class = image_path.split('/')[-2]
         f.write('{:s}\n'.format(image_class + '/' + image_name))
@@ -343,7 +339,6 @@ def calculate_ap_py(pred_res_file, gt_file, pred_dir):
     gt_file: annotation file path
     pred_dir: predict result output file directory
     """
-
     def calIOU(rect1, rect2):
         lt_x = max(rect1[0], rect2[0])
         lt_y = max(rect1[1], rect2[1])
@@ -527,8 +522,8 @@ def widerfaceall_category_info(with_background=True):
 def widerface_bbox_eval(results, reader, anno_file, is_bbox_normalized=False):
     imid2path = reader.imid2path
     clsid2catid, catid2name = get_category_info(use_default_label=True)
-    xywh_res = bbox2out(
-        results, clsid2catid, is_bbox_normalized=is_bbox_normalized)
+    xywh_res = bbox2out(results, clsid2catid,
+                        is_bbox_normalized=is_bbox_normalized)
     dets_list = []
     im_id = 0
     dets = []
@@ -552,7 +547,8 @@ def widerface_bbox_eval(results, reader, anno_file, is_bbox_normalized=False):
         dets_list.append(dets)
 
     pred_dir = 'pred'
-    pred_res_file = save_widerface_bboxes_py(imid2path, dets_list, pred_dir)
+    pred_res_file = save_widerface_bboxes_py(
+        imid2path, dets_list, pred_dir)
 
     calculate_ap_py(pred_res_file, anno_file, pred_dir)
     logger.info("Finish evaluation.")
