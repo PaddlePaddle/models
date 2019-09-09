@@ -89,11 +89,7 @@ class MobileNetV2():
             name='conv9')
 
         input = fluid.layers.pool2d(
-            input=input,
-            pool_size=7,
-            pool_stride=1,
-            pool_type='avg',
-            global_pooling=True)
+            input=input, pool_type='avg', global_pooling=True)
 
         output = fluid.layers.fc(input=input,
                                  size=class_dim,
