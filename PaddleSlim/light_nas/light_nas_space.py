@@ -124,12 +124,12 @@ def ops_of_inverted_residual_unit(in_c,
                 if ifse:
                     op_params.append(('pooling', 1, 1, out_c, int(in_shape / s),
                                       int(in_shape / s), 0, 0, 1, 0, 3))
-                    op_params.append(('conv', 1, 0, 1, out_c, 1, 1,
+                    op_params.append(('conv', 0, 0, 1, out_c, 1, 1,
                                       int(out_c / 4), 1, 1, 0, 1, 1))
                     op_params.append(('eltwise', 2, 1, int(out_c / 4), 1, 1))
                     op_params.append(
                         ('activation', 'relu', 1, int(out_c / 4), 1, 1))
-                    op_params.append(('conv', 1, 0, 1, int(out_c / 4), 1, 1,
+                    op_params.append(('conv', 0, 0, 1, int(out_c / 4), 1, 1,
                                       out_c, 1, 1, 0, 1, 1))
                     op_params.append(('eltwise', 2, 1, out_c, 1, 1))
                     op_params.append(('activation', 'sigmoid', 1, out_c, 1, 1))
