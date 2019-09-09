@@ -20,9 +20,12 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import pickle
 import logging
 import numpy as np
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 import data.kitti_utils as kitti_utils
 from data.kitti_reader import KittiReader
@@ -580,12 +583,16 @@ class KittiRCNNReader(KittiReader):
         else:
             raise NotImplementedError
 
-    def get_reader(self, batch_size, drop_last=False):
+    def get_reader(self, batch_size, fields, drop_last=False):
         def reader():
+            print("enter", self.__len__())
             batch_out = []
             for i in range(self.__len__()):
-                batch_out.append(self.__getitem__(i))
+                sample = [self.__getitem__(i)[f] for f in fields]
+                batch_out.append(sample)
+                print(i, len(batch_out))
                 if len(batch_out) >= batch_size:
+                    print("yield ", len(batch_out))
                     yield batch_out
                     batch_out = []
             if not drop_last:
@@ -601,6 +608,6 @@ if __name__ == "__main__":
     cfg.GT_AUG_ENABLED = True
     kr = KittiRCNNReader('./data', gt_database_dir='./data/gt_database/train_gt_database_3level_Car.pkl')
     print(kr[0])
-    # reader = kr.get_reader(8)
-    # for i, data in enumerate(reader()):
-    #     print(i, len(data))
+    reader = kr.get_reader(8, ['pts_input', 'rpn_cls_label', 'rpn_reg_label'])
+    for i, data in enumerate(reader()):
+        print(i, len(data))

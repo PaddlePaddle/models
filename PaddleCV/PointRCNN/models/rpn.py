@@ -26,14 +26,13 @@ from models.pointnet2_modules import conv_bn
 from models.loss_utils import sigmoid_focal_loss, get_reg_loss
 
 
-__all__ = ["PointNet2SemSegSSG", "PointNet2SemSegMSG"]
+__all__ = ["RPN"]
 
 
 class RPN(object):
-    def __init__(self, cfg, batch_size, num_points, use_xyz=True, mode='TRAIN'):
+    def __init__(self, cfg, batch_size, use_xyz=True, mode='TRAIN'):
         self.cfg = cfg
         self.batch_size = batch_size
-        self.num_points = num_points
         self.use_xyz = use_xyz
         self.mode = mode
         self.is_train = mode == 'TRAIN'
@@ -111,7 +110,7 @@ class RPN(object):
         fg_mask = fluid.layers.cast(cls_label_flat > 0, dtype=reg_out.dtype)
         loc_loss, angle_loss, size_loss, loss_dict = get_reg_loss(
                                         reg_out, reg_label, fg_mask,
-                                        float(self.batch_size * self.num_points),
+                                        float(self.batch_size * self.cfg.RPN.NUM_POINTS),
                                         loc_scope=self.cfg.RPN.LOC_SCOPE,
                                         loc_bin_size=self.cfg.RPN.LOC_BIN_SIZE,
                                         num_head_bin=self.cfg.RPN.NUM_HEAD_BIN,
@@ -121,9 +120,8 @@ class RPN(object):
                                         get_ry_fine=False)
         rpn_loss_reg = loc_loss + angle_loss + size_loss * 3
 
-        rpn_loss = rpn_loss_cls * self.cfg.RPN.LOSS_WEIGHT[0] + rpn_loss_reg * self.cfg.RPN.LOSS_WEIGHT[1]
-        # rpn_loss = rpn_loss_reg * self.cfg.RPN.LOSS_WEIGHT[1]
-        return rpn_loss, rpn_loss_cls, rpn_loss_reg
+        self.rpn_loss = rpn_loss_cls * self.cfg.RPN.LOSS_WEIGHT[0] + rpn_loss_reg * self.cfg.RPN.LOSS_WEIGHT[1]
+        return self.rpn_loss, rpn_loss_cls, rpn_loss_reg
         
 if __name__ == "__main__":
     from utils.config import load_config, cfg
