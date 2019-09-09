@@ -79,15 +79,14 @@ class DistResNet():
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
-        out = fluid.layers.fc(input=pool,
-                              size=class_dim,
-                              param_attr=fluid.param_attr.ParamAttr(
-                                  initializer=fluid.initializer.Uniform(-stdv,
-                                                                        stdv),
-                                  regularizer=fluid.regularizer.L2Decay(self.weight_decay)),
-                              bias_attr=fluid.ParamAttr(
-                                  regularizer=fluid.regularizer.L2Decay(self.weight_decay))
-                              )
+        out = fluid.layers.fc(
+            input=pool,
+            size=class_dim,
+            param_attr=fluid.param_attr.ParamAttr(
+                initializer=fluid.initializer.Uniform(-stdv, stdv),
+                regularizer=fluid.regularizer.L2Decay(self.weight_decay)),
+            bias_attr=fluid.ParamAttr(
+                regularizer=fluid.regularizer.L2Decay(self.weight_decay)))
         return out
 
     def conv_bn_layer(self,
@@ -107,12 +106,15 @@ class DistResNet():
             groups=groups,
             act=None,
             bias_attr=False,
-            param_attr=fluid.ParamAttr(regularizer=fluid.regularizer.L2Decay(self.weight_decay)))
+            param_attr=fluid.ParamAttr(
+                regularizer=fluid.regularizer.L2Decay(self.weight_decay)))
         return fluid.layers.batch_norm(
-                input=conv, act=act, is_test=not self.is_train,
-                param_attr=fluid.ParamAttr(
-                    initializer=fluid.initializer.Constant(bn_init_value),
-                    regularizer=None))
+            input=conv,
+            act=act,
+            is_test=not self.is_train,
+            param_attr=fluid.ParamAttr(
+                initializer=fluid.initializer.Constant(bn_init_value),
+                regularizer=None))
 
     def shortcut(self, input, ch_out, stride):
         ch_in = input.shape[1]
@@ -132,9 +134,12 @@ class DistResNet():
             act='relu')
         # NOTE: default bias is 0.0 already
         conv2 = self.conv_bn_layer(
-            input=conv1, num_filters=num_filters * 4, filter_size=1, act=None, bn_init_value=0.0)
+            input=conv1,
+            num_filters=num_filters * 4,
+            filter_size=1,
+            act=None,
+            bn_init_value=0.0)
 
         short = self.shortcut(input, num_filters * 4, stride)
 
         return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
-

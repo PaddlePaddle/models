@@ -88,9 +88,10 @@ Environment settings:
 
 * **data_dir**: the data root directory Default: "./data/ILSVRC2012".
 * **model_save_dir**: the directory to save trained model. Default: "output".
-* **save_param**: the path to save params. Default: None.
 * **pretrained_model**: load model path for pretraining. Default: None.
 * **checkpoint**: load the checkpoint path to resume. Default: None.
+* **print_step**: the batch steps interval to print log. Default: 10.
+* **save_step**: the epoch steps interval to save checkpoints. Default:1.
 
 Solver and hyperparameters:
 
@@ -105,7 +106,7 @@ Solver and hyperparameters:
 * **lr**: initialized learning rate. Default: 0.1.
 * **l2_decay**: L2_decay parameter. Default: 1e-4.
 * **momentum_rate**: momentum_rate. Default: 0.9.
-* **step_epochs**: piecewise dacay的decay step, Default: [30,60,90]
+* **step_epochs**: decay step of piecewise step, Default: [30,60,90]
 
 Reader and preprocess:
 
@@ -126,7 +127,6 @@ Reader and preprocess:
 Switch:
 
 * **use_gpu**: whether to use GPU or not. Default: True.
-* **use_inplace**: whether to use inplace memory optimization or not. Default: True.
 * **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
 * **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.2.
 * **random_seed**: random seed for debugging, Default: 1000
