@@ -20,6 +20,7 @@ from . import architectures
 from . import backbones
 from . import roi_extractors
 from . import roi_heads
+from . import roi_sampler
 from . import ops
 from . import target_assigners
 
@@ -28,5 +29,6 @@ from .architectures import *
 from .backbones import *
 from .roi_extractors import *
 from .roi_heads import *
+from .roi_sampler import *
 from .ops import *
 from .target_assigners import *
