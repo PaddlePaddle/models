@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import os
 import time
 import unittest
@@ -8,6 +21,8 @@ import yaml
 
 import set_env
 from ppdet.data.reader import Reader
+from ppdet.data.source import build_source
+from ppdet.data.source import IteratorSource
 
 
 class TestReader(unittest.TestCase):
@@ -113,6 +128,31 @@ class TestReader(unittest.TestCase):
         self.assertEqual(out[0][4].shape[1], 1)
         self.assertEqual(out[0][5].shape[1], 1)
         self.assertGreaterEqual(ct, rcnn._maxiter)
+
+    def test_create(self):
+        """ Test create a reader using my source
+        """
+        def _my_data_reader():
+            mydata = build_source(self.rcnn_conf['DATA']['TRAIN'])
+            for i, sample in enumerate(mydata):
+                yield sample
+
+        my_source = IteratorSource(_my_data_reader)
+        mode = 'TRAIN'
+        train_rd = Reader.create(mode,
+            self.rcnn_conf['DATA'][mode],
+            self.rcnn_conf['TRANSFORM'][mode],
+            max_iter=10, my_source=my_source)
+
+        out = None
+        for sample in train_rd():
+            out = sample
+            self.assertTrue(sample is not None)
+        self.assertEqual(out[0][0].shape[0], 3)
+        self.assertEqual(out[0][1].shape[0], 3)
+        self.assertEqual(out[0][3].shape[1], 4)
+        self.assertEqual(out[0][4].shape[1], 1)
+        self.assertEqual(out[0][5].shape[1], 1)
 
 
 if __name__ == '__main__':

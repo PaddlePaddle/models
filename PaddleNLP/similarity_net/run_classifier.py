@@ -17,6 +17,7 @@ sys.path.append("..")
 import paddle
 import paddle.fluid as fluid
 import numpy as np
+import codecs
 import config
 import utils
 import reader
@@ -28,7 +29,7 @@ parser = argparse.ArgumentParser(__doc__)
 model_g = utils.ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("config_path", str, None,
                 "Path to the json file for EmoTect model config.")
-model_g.add_arg("init_checkpoint", str, "examples/cnn_pointwise.json",
+model_g.add_arg("init_checkpoint", str, None,
                 "Init checkpoint to resume training from.")
 model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
 model_g.add_arg("task_mode", str, None, "task mode: pairwise or pointwise")
@@ -138,7 +139,7 @@ def train(conf_dict, args):
             valid_feeder = fluid.DataFeeder(
                 place=place, feed_list=[left.name, pos_right.name])
             valid_reader = simnet_process.get_reader("valid")
-            pred = pos_score
+        pred = pos_score
         # Save Infer model
         infer_program = fluid.default_main_program().clone(for_test=True)
         _, neg_score = net.predict(left, neg_right)
@@ -163,11 +164,16 @@ def train(conf_dict, args):
         infer_program = fluid.default_main_program().clone(for_test=True)
         avg_cost = loss.compute(pred, label)
         avg_cost.persistable = True
-
+    
     # operate Optimization
     optimizer.ops(avg_cost)
     executor = fluid.Executor(place)
     executor.run(fluid.default_startup_program())
+
+    if args.init_checkpoint is not None:
+        utils.init_checkpoint(executor, args.init_checkpoint, 
+                fluid.default_startup_program())
+    
     # Get and run executor
     parallel_executor = fluid.ParallelExecutor(
         use_cuda=args.use_cuda,
@@ -321,7 +327,7 @@ def test(conf_dict, args):
     simnet_process = reader.SimNetProcessor(args, vocab)
     # load auc method
     metric = fluid.metrics.Auc(name="auc")
-    with open("predictions.txt", "w") as predictions_file:
+    with codecs.open("predictions.txt", "w", "utf-8") as predictions_file:
         # Get model path
         model_path = args.init_checkpoint
         # Get device
@@ -425,7 +431,7 @@ def infer(args):
                 map(lambda item: str((item[0] + 1) / 2), output[1]))
         else:
             preds_list += map(lambda item: str(np.argmax(item)), output[1])
-    with open(args.infer_result_path, "w") as infer_file:
+    with codecs.open(args.infer_result_path, "w", "utf-8") as infer_file:
         for _data, _pred in zip(simnet_process.get_infer_data(), preds_list):
             infer_file.write(_data + "\t" + _pred + "\n")
     logging.info("infer result saved in %s" %

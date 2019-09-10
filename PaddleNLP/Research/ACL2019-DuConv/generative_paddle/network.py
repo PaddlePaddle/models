@@ -482,7 +482,6 @@ def train(config):
         print("stage 1")
         optimizer.minimize(final_loss)
 
-    fluid.memory_optimize(main_program)
     opt_var_name_list = optimizer.get_opti_var_name_list()
 
     if config.use_gpu:

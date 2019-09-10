@@ -271,12 +271,6 @@ def kfold_program(args, processor, train_examples, dev_examples, test_examples, 
                     use_fp16=args.use_fp16,
                     loss_scaling=args.loss_scaling)
 
-                fluid.memory_optimize(
-                    input_program=train_program,
-                    skip_opt_set=[
-                        loss.name, probs.name, accuracy.name, num_seqs.name
-                    ])
-
         if args.verbose:
             if args.in_tokens:
                 lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
@@ -548,12 +542,6 @@ def train_single(args):
                     scheduler=args.lr_scheduler,
                     use_fp16=args.use_fp16,
                     loss_scaling=args.loss_scaling)
-
-                fluid.memory_optimize(
-                    input_program=train_program,
-                    skip_opt_set=[
-                        loss.name, probs.name, accuracy.name, num_seqs.name
-                    ])
 
         if args.verbose:
             if args.in_tokens:

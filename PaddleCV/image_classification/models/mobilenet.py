@@ -20,24 +20,12 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ['MobileNet']
-
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
+__all__ = ['MobileNet', 'MobileNetV1']
 
 
 class MobileNet():
     def __init__(self):
-        self.params = train_parameters
+        pass
 
     def net(self, input, class_dim=1000, scale=1.0):
         # conv1: 112x112
@@ -137,11 +125,7 @@ class MobileNet():
             name="conv6")
 
         input = fluid.layers.pool2d(
-            input=input,
-            pool_size=0,
-            pool_stride=1,
-            pool_type='avg',
-            global_pooling=True)
+            input=input, pool_type='avg', global_pooling=True)
 
         output = fluid.layers.fc(input=input,
                                  size=class_dim,
@@ -208,3 +192,8 @@ class MobileNet():
             padding=0,
             name=name + "_sep")
         return pointwise_conv
+
+
+def MobileNetV1():
+    model = MobileNet()
+    return model

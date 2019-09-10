@@ -96,6 +96,7 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
 
 - Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train. 
 - It is recommended to set `--use_multiprocess_reader=False` when training on Windows.
+- Set `--worker_num=` to specifiy multiprocess reader worker number, which is default 8, if the number of CPU cores in the training environment is small, it is recommended to set worker number to a small value.
 - For more help on arguments:
 
     python train.py --help
@@ -220,7 +221,7 @@ YOLOv3 detection principle
 
 ### Model structure
 
-YOLOv3 divides the input image in to S\*S grids and predict B bounding boxes in each grid, predictions of boxes include Location(x, y, w, h), Confidence Score and probabilities of C classes, therefore YOLOv3 output layer has S\*S\*B\*(5 + C) channels. YOLOv3 loss consists of three parts: location loss, confidence loss and classification loss.
+YOLOv3 divides the input image in to S\*S grids and predict B bounding boxes in each grid, predictions of boxes include Location(x, y, w, h), Confidence Score and probabilities of C classes, therefore YOLOv3 output layer has B\*(5 + C) channels. YOLOv3 loss consists of three parts: location loss, confidence loss and classification loss.
 The bone network of YOLOv3 is darknet53, the structure of YOLOv3 is as follow:
 <p align="center">
 <img src="image/YOLOv3_structure.jpg" height=400 width=400 hspace='10'/> <br />

@@ -22,8 +22,22 @@ import glob
 import numpy as np
 from PIL import Image
 
+
+def set_paddle_flags(**kwargs):
+    for key, value in kwargs.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+# NOTE(paddle-dev): All of these flags should be set before
+# `import paddle`. Otherwise, it would not take any effect.
+set_paddle_flags(
+    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
+)
+
 from paddle import fluid
 
+from tools.configure import print_total_cfg
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
@@ -46,7 +60,7 @@ def get_save_image_name(output_dir, image_path):
     """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    image_name = image_path.split('/')[-1]
+    image_name = os.path.split(image_path)[-1]
     name, ext = os.path.splitext(image_name)
     return os.path.join(output_dir, "{}".format(name)) + ext
 
@@ -136,6 +150,7 @@ def main():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
+    print_total_cfg(cfg)
 
     if 'test_feed' not in cfg:
         test_feed = create(main_arch + 'TestFeed')
@@ -169,11 +184,13 @@ def main():
         save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
 
     # parse infer fetches
+    assert cfg.metric in ['COCO', 'VOC'], \
+            "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg['metric'] == 'VOC':
-        extra_keys = ['im_id']
+        extra_keys = ['im_id', 'im_shape']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # parse dataset category
@@ -193,6 +210,13 @@ def main():
     if hasattr(model, 'is_bbox_normalized') and \
             callable(model.is_bbox_normalized):
         is_bbox_normalized = model.is_bbox_normalized()
+
+    # use tb-paddle to log image
+    if FLAGS.use_tb:
+        from tb_paddle import SummaryWriter
+        tb_writer = SummaryWriter(FLAGS.tb_log_dir)
+        tb_image_step = 0
+        tb_image_frame = 0 # each frame can display ten pictures at most. 
 
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
@@ -219,10 +243,34 @@ def main():
         for im_id in im_ids:
             image_path = imid2path[int(im_id)]
             image = Image.open(image_path).convert('RGB')
+
+            # use tb-paddle to log original image           
+            if FLAGS.use_tb:
+                original_image_np = np.array(image)
+                tb_writer.add_image(
+                    "original/frame_{}".format(tb_image_frame),
+                    original_image_np,
+                    tb_image_step,
+                    dataformats='HWC')
+
             image = visualize_results(image,
                                       int(im_id), catid2name,
                                       FLAGS.draw_threshold, bbox_results,
-                                      mask_results, is_bbox_normalized)
+                                      mask_results)
+            
+            # use tb-paddle to log image with bbox
+            if FLAGS.use_tb:
+                infer_image_np = np.array(image)
+                tb_writer.add_image(
+                    "bbox/frame_{}".format(tb_image_frame),
+                    infer_image_np,
+                    tb_image_step,
+                    dataformats='HWC')
+                tb_image_step += 1
+                if tb_image_step % 10 == 0:
+                    tb_image_step = 0
+                    tb_image_frame += 1
+
             save_name = get_save_image_name(FLAGS.output_dir, image_path)
             logger.info("Detection bbox results save in {}".format(save_name))
             image.save(save_name, quality=95)
@@ -255,5 +303,15 @@ if __name__ == '__main__':
         action='store_true',
         default=False,
         help="Save inference model in output_dir if True.")
+    parser.add_argument(
+        "--use_tb",
+        type=bool,
+        default=False,
+        help="whether to record the data to Tensorboard.")
+    parser.add_argument(
+        '--tb_log_dir',
+        type=str,
+        default="tb_log_dir/image",
+        help='Tensorboard logging directory for image.')
     FLAGS = parser.parse_args()
     main()
