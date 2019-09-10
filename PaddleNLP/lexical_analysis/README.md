@@ -70,9 +70,10 @@ wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis_fin
 tar xvf lexical_analysis_finetuned-1.0.0.tar.gz
 ```
 
-注：另需自行进行ERNIE Finetune训练的，需自行下载 ERNIE 开放的模型，请参考 [ERNIE](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE)，下载后可放在 `./pretrained/` 目录下。
+注：若需进行ERNIE Finetune训练，需自行下载  [ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，下载链接为： [https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz)，下载后解压至 `./pretrained/` 目录下。
 
 ### 模型评估
+
 我们基于自建的数据集训练了一个词法分析的模型，可以直接用这个模型对测试集 `./data/test.tsv` 进行验证，
 ```bash
 # baseline model
@@ -84,6 +85,8 @@ sh run_ernie.sh eval
 
 ### 模型训练
 基于示例的数据集，可通过下面的命令，在训练集 `./data/train.tsv` 上进行训练，示例包含程序在单机单卡/多卡，以及CPU多线程的运行设置
+> Warning: 若需进行ERNIE Finetune训练，需自行下载  [ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，下载链接为： [https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz)，下载后解压至 `./pretrained/` 目录下。
+
 ```bash
 # baseline model, using single GPU
 sh run.sh train_single_gpu
@@ -97,10 +100,10 @@ sh run.sh train_multi_cpu
 # ERNIE finetuned model
 sh run_ernie.sh train
 
-# baseline model, using single GPU
+# ERNIE finetuned model, using single GPU
 sh run_ernie.sh train_single_gpu
 
-# baseline model, using multi CPU
+# ERNIE finetuned model, using multi CPU
 sh run_ernie.sh train_multi_cpu
 ```
 
@@ -123,6 +126,7 @@ sh run_ernie.sh infer
 
 ```bash
 # baseline model
+export PYTHONIOENCODING=UTF-8   # 模型输出为Unicode编码，Python2若无此设置容易报错
 python inference_model.py \
 		--init_checkpoint ./model_baseline \
 		--inference_save_dir ./inference_model

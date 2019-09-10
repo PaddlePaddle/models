@@ -50,13 +50,15 @@ def save_inference_model(args):
     # load pretrain check point
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    utils.init_checkpoint(exe, args.init_checkpoint+".pdckpt", infer_program)
+    utils.init_checkpoint(exe, args.init_checkpoint+'.pdckpt', infer_program)
 
-    fluid.io.save_inference_model(args.inference_save_dir+'.pdmodel',
+    fluid.io.save_inference_model(args.inference_save_dir,
                                   ['words'],
                                   infer_ret['crf_decode'],
                                   exe,
-                                  main_program=infer_program)
+                                  main_program=infer_program,
+                                  model_filename='model.pdmodel',
+                                  params_filename='params.pdparams')
 
 
 def test_inference_model(model_dir, text_list, dataset):
@@ -85,9 +87,11 @@ def test_inference_model(model_dir, text_list, dataset):
     inference_scope = fluid.core.Scope()
     with fluid.scope_guard(inference_scope):
         [inferencer, feed_target_names,
-         fetch_targets] = fluid.io.load_inference_model(model_dir+'.pdmodel', exe)
+         fetch_targets] = fluid.io.load_inference_model(model_dir, exe,
+                 model_filename='model.pdmodel',
+                 params_filename='params.pdparams')
         assert feed_target_names[0] == "words"
-        print("Load inference model from %s.pdmodel"%(model_dir))
+        print("Load inference model from %s"%(model_dir))
 
         # get lac result
         crf_decode = exe.run(inferencer,
