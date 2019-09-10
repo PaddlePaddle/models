@@ -146,7 +146,7 @@ class SE_ResNeXt():
                     name=str(n) + '_' + str(i + 1))
 
         pool = fluid.layers.pool2d(
-            input=conv, pool_size=7, pool_type='avg', global_pooling=True)
+            input=conv, pool_type='avg', global_pooling=True)
         if layers == 152:
             pool = fluid.layers.dropout(x=pool, dropout_prob=0.2)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
@@ -289,7 +289,7 @@ class SE_ResNeXt():
                            reduction_ratio,
                            name=None):
         pool = fluid.layers.pool2d(
-            input=input, pool_size=0, pool_type='avg', global_pooling=True)
+            input=input, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         squeeze = fluid.layers.fc(
             input=pool,
