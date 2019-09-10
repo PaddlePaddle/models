@@ -115,6 +115,7 @@ class CascadeRCNN(object):
         roi_feat_list = []
         rcnn_pred_list = []
         rcnn_target_list = []
+        sampled_idx_list = []
 
         proposals = None
         bbox_pred = None
@@ -150,11 +151,15 @@ class CascadeRCNN(object):
             rcnn_pred_list.append((cls_score, bbox_pred))
 
         if mode == 'train':
-            if i == 0 and self.roi_sampler is not None:
-                sampled_idx = self.roi_sampler(cls_score, bbox_pred, outs)
+            if self.roi_sampler is not None:
+                for i in range(len(rcnn_pred_list)):
+                    (cls_score, bbox_pred) = rcnn_pred_list[i]
+                    sampled_idx_list.append(
+                        self.roi_sampler(cls_score, bbox_pred, rcnn_target_list[
+                            i]))
                 loss = self.bbox_head.get_loss(rcnn_pred_list, rcnn_target_list,
                                                self.cascade_rcnn_loss_weight,
-                                               sampled_idx)
+                                               sampled_idx_list)
             else:
                 loss = self.bbox_head.get_loss(rcnn_pred_list, rcnn_target_list,
                                                self.cascade_rcnn_loss_weight)

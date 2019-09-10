@@ -253,6 +253,7 @@ class BBoxHead(object):
                 contribute to loss. Same shape as bbox_targets.
             bbox_outside_weights(Variable): Indicates whether a box should
                 contribute to loss. Same shape as bbox_targets.
+            sampled_idx(Variable): The sampled index of the RoI.
 
         Return:
             Type: Dict

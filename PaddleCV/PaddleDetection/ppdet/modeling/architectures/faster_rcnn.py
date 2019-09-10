@@ -117,12 +117,12 @@ class FasterRCNN(object):
             if self.roi_sampler is not None:
                 sampled_idx = self.roi_sampler(cls_score, bbox_pred, outs)
                 loss = self.bbox_head.get_loss(
-                    roi_feat, labels_int32, bbox_targets, bbox_inside_weights,
-                    bbox_outside_weights, sampled_idx)
+                    cls_score, bbox_pred, labels_int32, bbox_targets,
+                    bbox_inside_weights, bbox_outside_weights, sampled_idx)
             else:
                 loss = self.bbox_head.get_loss(
-                    roi_feat, labels_int32, bbox_targets, bbox_inside_weights,
-                    bbox_outside_weights)
+                    cls_score, bbox_pred, labels_int32, bbox_targets,
+                    bbox_inside_weights, bbox_outside_weights)
 
             loss.update(rpn_loss)
             total_loss = fluid.layers.sum(list(loss.values()))
