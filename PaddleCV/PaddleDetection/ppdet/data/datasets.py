@@ -166,8 +166,7 @@ class COCODataSet(DataSet):
 class PascalVocDataSet(DataSet):
     def __init__(self,
                  root_dir='VOCdevkit/VOC2012',
-                 subset='train',
-                 use_background=True):
+                 subset='train'):
         super(PascalVocDataSet, self).__init__()
         self.root_dir = root_dir
         self.subset = subset
@@ -193,8 +192,6 @@ class PascalVocDataSet(DataSet):
             'train': 19,
             'tvmonitor': 20
         }
-        if use_background:
-            label_map = {k: v - 1 for k, v in label_map.items()}
         self.label_map = label_map
 
     @property

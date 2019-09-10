@@ -173,7 +173,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
                  multiprocessing=False,
                  buffer_size=2,
                  pin_memory=False,
-                 prefetch_to_gpu=False):
+                 prefetch_to_gpu=False,
+                 yolo_class_fix=False):
         if isinstance(dataset, dict):
             kwargs = dataset
             cls = kwargs.pop('type')
@@ -181,6 +182,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
 
         self.feed_vars = feed_vars
         self.auto_reset = auto_reset
+        self.yolo_class_fix = yolo_class_fix
 
         env = os.environ
         if 'FLAGS_selected_gpus' in env:
@@ -233,6 +235,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
 
     def _to_tensor(self, feed_dict):
         for k, (ndarray, seq_length) in feed_dict.items():
+            if self.yolo_class_fix and k == 'gt_label':
+                ndarray -= 1
             t = fluid.core.LoDTensor()
             if seq_length is not None:
                 t.set_recursive_sequence_lengths(seq_length)

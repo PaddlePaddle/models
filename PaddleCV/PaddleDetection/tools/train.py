@@ -254,7 +254,7 @@ def main():
                     resolution = model.mask_head.resolution
                 box_ap_stats = eval_results(
                     results, anno_file,
-                    getattr(eval_loader.dataset, 'use_background', True),
+                    not getattr(eval_loader, 'yolo_class_fix', False),
                     cfg.metric, cfg.num_classes, resolution,
                     is_bbox_normalized, FLAGS.output_eval, map_type)
 
