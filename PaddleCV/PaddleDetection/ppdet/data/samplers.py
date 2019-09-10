@@ -58,8 +58,8 @@ class Sampler(object):
     def setup(self):
         whole_batch_size = self.world_size * self.batch_size
         if self.world_size > 1 and not self.sync_seed_schedule:
-            print("`sync_seed_schedule` is recommended for distributed "
-                  + "training, you may want to reconsider")
+            print("Disabling `sync_seed_schedule` is not recommended for"
+                  + "distributed training, you may want to reconsider")
         if self.aspect_ratio_thresholds is None:
             self.num_batches = math.ceil(len(self.dataset) / whole_batch_size)
             return self
