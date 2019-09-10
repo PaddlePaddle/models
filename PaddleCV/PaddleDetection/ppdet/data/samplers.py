@@ -32,6 +32,7 @@ class Sampler(object):
                  batch_size,
                  shuffle=True,
                  aspect_ratio_thresholds=None,
+                 pad_batch=True,
                  sync_seed_schedule=True,
                  rank=0,
                  world_size=1,
@@ -40,10 +41,13 @@ class Sampler(object):
         assert not aspect_ratio_thresholds or \
             isinstance(aspect_ratio_thresholds, Sequence), \
             "if given, aspect_ratio_thresholds must be a sequence"
+        assert pad_batch or not aspect_ratio_thresholds, \
+            "`pad_batch` must be enabled when grouping by aspect ratio"
         self.dataset = dataset
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.aspect_ratio_thresholds = aspect_ratio_thresholds
+        self.pad_batch = pad_batch
         self.sync_seed_schedule = sync_seed_schedule
         self.rank = rank
         self.world_size = world_size
@@ -99,9 +103,12 @@ class Sampler(object):
                 shuffled += shuffled[:pad]
                 shuffled_indices += shuffled
         else:
-            pad = len(self) * whole_batch_size - len(self.dataset)
             shuffled_indices = list(rand_perm(np.arange(len(self.dataset))))
-            shuffled_indices += shuffled_indices[:pad]
+            pad = len(self) * whole_batch_size - len(self.dataset)
+            if self.pad_batch:
+                shuffled_indices += shuffled_indices[:pad]
+            else:
+                shuffled_indices += [-1] * pad
 
         # shuffle by small batch, i.e., draw each small batch from same bucket
         shape = [-1, self.batch_size]
@@ -123,7 +130,10 @@ class Sampler(object):
     def __next__(self):
         if self._step >= self.num_batches:
             raise StopIteration
-        ids = self._shard[self._step]
+        if self.pad_batch:
+            ids = self._shard[self._step]
+        else:
+            ids = [idx for idx in self._shard[self._step] if idx != -1]
         self._step += 1
         return ids
 
