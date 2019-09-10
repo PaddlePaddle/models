@@ -1060,7 +1060,7 @@ class BlazeFaceTrainFeed(DataFeed):
                  shuffle=True,
                  samples=-1,
                  drop_last=True,
-                 num_workers=16,
+                 num_workers=8,
                  bufsize=128,
                  use_process=True):
         sample_transforms.append(ArrangeBlazeFace())
