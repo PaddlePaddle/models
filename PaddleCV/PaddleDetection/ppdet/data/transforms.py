@@ -61,8 +61,9 @@ class Resize(object):
             scale_y = dim / h
             # XXX this is for YOLOv3 and SSD, bboxes are scaled
             scale_array = np.array([scale_x, scale_y] * 2, dtype=np.float32)
-            sample['gt_box'] = np.clip(
-                sample['gt_box'] * scale_array, 0, dim - 1)
+            if 'gt_box' in sample and len(sample['gt_box']) > 0:
+                sample['gt_box'] = np.clip(
+                    sample['gt_box'] * scale_array, 0, dim - 1)
         else:
             target_dim = self.target_dim
             if isinstance(self.target_dim, Sequence):
@@ -100,9 +101,10 @@ class RandomFlip(object):
         sample['image'] = img[:, ::-1, :]
         w = sample['width']
 
-        swap = sample['gt_box'].copy()
-        sample['gt_box'][:, 0] = w - swap[:, 2] - 1
-        sample['gt_box'][:, 2] = w - swap[:, 0] - 1
+        if 'gt_box' in sample and len(sample['gt_box']) > 0:
+            swap = sample['gt_box'].copy()
+            sample['gt_box'][:, 0] = w - swap[:, 2] - 1
+            sample['gt_box'][:, 2] = w - swap[:, 0] - 1
 
         if 'gt_poly' in sample:
             for poly in sample['gt_poly']:
@@ -252,7 +254,8 @@ class RandomExpand(object):
         sample['height'] = h
         sample['width'] = w
         sample['image'] = canvas
-        sample['gt_box'] += np.array([x, y] * 2, dtype=np.float32)
+        if 'gt_box' in sample and len(sample['gt_box']) > 0:
+            sample['gt_box'] += np.array([x, y] * 2, dtype=np.float32)
         return sample
 
 
@@ -271,6 +274,9 @@ class RandomCrop(object):
         self.allow_no_crop = allow_no_crop
 
     def __call__(self, sample):
+        if 'gt_box' in sample and len(sample['gt_box']) == 0:
+            return sample
+
         h = sample['height']
         w = sample['width']
         gt_box = sample['gt_box']
@@ -411,6 +417,16 @@ class NormalizeLabels(object):
         self.normalize_box = normalize_box
 
     def __call__(self, sample):
+        if 'gt_box' in sample and len(sample['gt_box']) == 0:
+            sample['gt_box'] = np.zeros(
+                [self.num_instances, 4], dtype=np.float32)
+            sample['gt_label'] = np.zeros(
+                [self.num_instances], dtype=np.int32)
+            if 'gt_score' in sample:
+                sample['gt_score'] = np.zeros(
+                    [self.num_instances], dtype=np.float32)
+            return sample
+
         if self.normalize_box:
             w = sample['width']
             h = sample['height']
