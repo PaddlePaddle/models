@@ -463,8 +463,8 @@ class PadToStride(object):
 
         batch_size = len(images)
         if batch_size == 1 and self.stride == 1:
-            batch['padded_height'] = images.shape[0]
-            batch['padded_width'] = images.shape[1]
+            batch['padded_height'] = images[0].shape[0]
+            batch['padded_width'] = images[0].shape[1]
             return batch
         dims = [i.shape for i in images]
         hs = [dim[1] for dim in dims]
