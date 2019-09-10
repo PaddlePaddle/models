@@ -126,7 +126,8 @@ def parse_args():
     add_arg('label_smoothing_epsilon',  float,  0.2,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
-    add_arg('random_seed',              int,    None,                   "random seed")
+    add_arg('enable_ce',                bool,   False,                  "Whether to enable CE")
+    add_arg('random_seed',              int,    1000,                   "random seed")
     # yapf: enable
 
     args = parser.parse_args()
@@ -271,12 +272,15 @@ def create_pyreader(is_train, args):
 
     feed_label = fluid.layers.data(
         name="feed_label", shape=[1], dtype="int64", lod_level=0)
-    feed_y_a = fluid.layers.data(
-        name="feed_y_a", shape=[1], dtype="int64", lod_level=0)
 
     if is_train and args.use_mixup:
+
+        feed_y_a = fluid.layers.data(
+            name="feed_y_a", shape=[1], dtype="int64", lod_level=0)
+
         feed_y_b = fluid.layers.data(
             name="feed_y_b", shape=[1], dtype="int64", lod_level=0)
+
         feed_lam = fluid.layers.data(
             name="feed_lam", shape=[1], dtype="float32", lod_level=0)
 
@@ -294,6 +298,19 @@ def create_pyreader(is_train, args):
             iterable=False)
 
         return py_reader, [feed_image, feed_label]
+
+
+def create_ce_reader(train_batch_size, test_batch_size):
+    import random
+    random.seed(0)
+    np.random.seed(0)
+    train_reader = paddle.batch(
+        flowers.train(use_xmap=False),
+        batch_size=train_batch_size,
+        drop_last=True)
+    test_reader = paddle.batch(
+        flowers.test(use_xmap=False), batch_size=test_batch_size)
+    return train_reader, test_reader
 
 
 def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
@@ -354,10 +371,31 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
                        % train_acc5, "%.5f" % test_loss, "%.5f" % test_acc1,
                        "%.5f" % test_acc5))
         sys.stdout.flush()
-    elif info_mode == "ce":
-        raise Warning("CE code is not ready")
     else:
         raise Exception("Illegal info_mode")
+
+
+def print_ce(device_num, train_metrics, test_metrics, train_speed):
+    if device_num == 1:
+        # Use the mean cost/acc for training
+        print("kpis	train_cost	%s" % train_loss)
+        print("kpis	train_acc_top1	%s" % train_acc1)
+        print("kpis	train_acc_top5	%s" % train_acc5)
+        # Use the mean cost/acc for testing
+        print("kpis	test_cost	%s" % test_loss)
+        print("kpis	test_acc_top1	%s" % test_acc1)
+        print("kpis	test_acc_top5	%s" % test_acc5)
+        print("kpis	train_speed	%s" % train_speed)
+    else:
+        # Use the mean cost/acc for training
+        print("kpis	train_cost_card%s	%s" % (device_num, train_loss))
+        print("kpis	train_acc_top1_card%s	%s" % (device_num, train_acc1))
+        print("kpis	train_acc_top5_card%s	%s" % (device_num, train_acc5))
+        # Use the mean cost/acc for testing
+        print("kpis	test_cost_card%s	%s" % (device_num, test_loss))
+        print("kpis	test_acc_top1_card%s	%s" % (device_num, test_acc1))
+        print("kpis	test_acc_top5_card%s	%s" % (device_num, test_acc5))
+        print("kpis	train_speed_card%s	%s" % (device_num, train_speed))
 
 
 def best_strategy_compiled(args, program, loss):

@@ -65,9 +65,11 @@ def build_program(is_train, main_prog, startup_prog, args):
     """
     model = models.__dict__[args.model]()
     with fluid.program_guard(main_prog, startup_prog):
-        if args.random_seed:
+        if args.enable_ce:
             main_prog.random_seed = args.random_seed
             startup_prog.random_seed = args.random_seed
+            args.class_dim = 102
+            model = models.__dict__["CE"]()
         with fluid.unique_name.guard():
             py_reader, loss_out = create_model(model, args, is_train)
             # add backward op in program
@@ -124,15 +126,20 @@ def train(args):
     #init model by checkpoint or pretrianed model.
     init_model(exe, args, train_prog)
 
+    device_num = fluid.core.get_cuda_device_count() if args.use_gpu else 1
+    train_batch_size = int(args.batch_size / device_num)
+
     train_reader = reader.train(settings=args)
     train_reader = paddle.batch(
-        train_reader,
-        batch_size=int(args.batch_size / fluid.core.get_cuda_device_count()),
-        drop_last=True)
+        train_reader, batch_size=train_batch_size, drop_last=True)
 
     test_reader = reader.val(settings=args)
     test_reader = paddle.batch(
         test_reader, batch_size=args.test_batch_size, drop_last=True)
+
+    if ergs.enable_ce:
+        train_reader, test_reader = create_ce_reader(train_batch_size,
+                                                     test_batch_size)
 
     train_py_reader.decorate_sample_list_generator(train_reader, place)
     test_py_reader.decorate_sample_list_generator(test_reader, place)
@@ -206,6 +213,10 @@ def train(args):
         #For now, save model per epoch.
         if pass_id % args.save_step == 0:
             save_model(args, exe, train_prog, pass_id)
+
+        if args.enable_ce and pass_id == args.num_epochs - 1:
+            print_ce(device_num, train_epoch_metrics_avg,
+                     test_epoch_metrics_avg, train_speed)
 
 
 def main():

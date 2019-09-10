@@ -37,6 +37,8 @@ def _basic_model(data, model, args, is_train):
     label = data[1]
 
     net_out = model.net(input=image, class_dim=args.class_dim)
+    print("===================")
+    print(args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
 
     if is_train and args.use_label_smoothing:
