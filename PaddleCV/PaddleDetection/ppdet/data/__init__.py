@@ -113,6 +113,8 @@ class ExtractFields(object):
                 ndarray = np.asarray(ndarray)
             if ndarray.dtype == np.float64:
                 ndarray = ndarray.astype(np.float32)
+            if ndarray.dtype == np.int64:
+                ndarray = ndarray.astype(np.int32)
 
             feed_dict[name] = (ndarray, seq_length)
 
