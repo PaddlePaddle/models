@@ -109,6 +109,8 @@ class COCODataSet(DataSet):
             height = img['height']
             sample['width'] = width
             sample['height'] = height
+            sample['orig_width'] = width
+            sample['orig_height'] = height
             sample['scale'] = 1.
             ann_ids = coco.getAnnIds(imgIds=img['id'], iscrowd=self.use_crowd)
             anns = coco.loadAnns(ann_ids)
@@ -245,6 +247,8 @@ class PascalVocDataSet(DataSet):
             sample['file'] = os.path.join(image_dir, _get(tree, 'filename'))
             sample['width'] = w
             sample['height'] = h
+            sample['orig_width'] = w
+            sample['orig_height'] = h
             gt_box = []
             gt_label = []
             difficult = []
@@ -278,7 +282,15 @@ class ListDataSet(DataSet):
     def __getitem__(self, idx):
         sample = copy.deepcopy(self.samples[idx])
         if 'image' not in sample and 'file' in sample:
-            sample['image'] = self._read_image(sample['file'])
+            img = self._read_image(sample['file'])
+            h, w, _ = img.shape
+            sample['image'] = img
+            if 'width' not in sample:
+                sample['width'] = w
+            if 'height' not in sample:
+                sample['height'] = h
+            sample['orig_width'] = sample['width']
+            sample['orig_height'] = sample['height']
         return sample
 
 
