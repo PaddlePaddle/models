@@ -21,4 +21,4 @@
 	url = https://github.com/baidu/knowledge-driven-dialogue/
 [submodule "PaddleCV/PointRCNN/pybind11"]
 	path = PaddleCV/PointRCNN/pybind11
-	url = https://github.com/pybind/pybind11
+	url = https://github.com/pybind/pybind11/tree/stable

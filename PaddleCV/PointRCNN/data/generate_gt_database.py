@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 
 from kitti_reader import KittiReader
-import kitti_utils
+import pts_utils 
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -67,7 +67,7 @@ class GTDatabaseGenerator(KittiReader):
                 print('No gt object')
                 continue
 
-            boxes_pts_mask_list = kitti_utils.pts_in_boxes3d(pts_rect, gt_boxes3d)
+            boxes_pts_mask_list = pts_utils.pts_in_boxes3d(pts_rect, gt_boxes3d)
 
             for k in range(boxes_pts_mask_list.__len__()):
                 pt_mask_flag = (boxes_pts_mask_list[k] == 1)

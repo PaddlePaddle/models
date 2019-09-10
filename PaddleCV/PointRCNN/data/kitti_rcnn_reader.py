@@ -28,6 +28,7 @@ except:
     import pickle
 
 import data.kitti_utils as kitti_utils
+import pts_utils
 from data.kitti_reader import KittiReader
 from utils.config import cfg
 
@@ -133,7 +134,7 @@ class KittiRCNNReader(KittiReader):
             sample_id = int(self.image_idx_list[idx])
             obj_list = self.filtrate_objects(self.get_label(sample_id))
             if len(obj_list) == 0:
-                logger.info('No gt classes: %06d' % sample_id)
+                # logger.info('No gt classes: %06d' % sample_id)
                 continue
             self.sample_id_list.append(sample_id)
 
@@ -441,7 +442,7 @@ class KittiRCNNReader(KittiReader):
             enlarged_box3d = new_gt_box3d.copy()
             enlarged_box3d[3] += 2  # remove the points above and below the object
 
-            boxes_pts_mask_list = kitti_utils.pts_in_boxes3d(pts_rect,
+            boxes_pts_mask_list = pts_utils.pts_in_boxes3d(pts_rect,
                     enlarged_box3d.reshape(1, 7))
             pt_mask_flag = (boxes_pts_mask_list[0] == 1)
             src_pts_flag[pt_mask_flag] = 0  # remove the original points which are inside the new box
@@ -585,14 +586,14 @@ class KittiRCNNReader(KittiReader):
 
     def get_reader(self, batch_size, fields, drop_last=False):
         def reader():
-            print("enter", self.__len__())
             batch_out = []
-            for i in range(self.__len__()):
-                sample = [self.__getitem__(i)[f] for f in fields]
+            idxs = np.arange(self.__len__())
+            np.random.shuffle(idxs)
+            for idx in idxs:
+                sample_all = self.__getitem__(idx)
+                sample = [sample_all[f] for f in fields]
                 batch_out.append(sample)
-                print(i, len(batch_out))
                 if len(batch_out) >= batch_size:
-                    print("yield ", len(batch_out))
                     yield batch_out
                     batch_out = []
             if not drop_last:
@@ -602,12 +603,13 @@ class KittiRCNNReader(KittiReader):
 
 if __name__ == "__main__":
     np.random.seed(2333)
-    logging.basicConfig(level=logging.INFO)
+    FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
+    logging.basicConfig(level=logging.INFO, format=FORMAT)
     cfg.RPN.ENABLED = True
     cfg.RCNN.ENABLED = False
     cfg.GT_AUG_ENABLED = True
     kr = KittiRCNNReader('./data', gt_database_dir='./data/gt_database/train_gt_database_3level_Car.pkl')
-    print(kr[0])
-    reader = kr.get_reader(8, ['pts_input', 'rpn_cls_label', 'rpn_reg_label'])
+    reader = kr.get_reader(2, ['pts_input', 'rpn_cls_label', 'rpn_reg_label'])
     for i, data in enumerate(reader()):
         print(i, len(data))
+        print(data)

@@ -74,8 +74,10 @@ def group_all(xyz, features=None, use_xyz=True):
 
 def conv_bn(input, out_channels, bn=True, bn_momentum=0.1, act='relu', name=None):
     param_attr = ParamAttr(name='{}_conv_weight'.format(name),
-                           initializer=fluid.initializer.Constant(1.376))
-    bias_attr = ParamAttr(initializer=fluid.initializer.Constant(6.213),
+                           # initializer=fluid.initializer.Constant(1.376)
+                           )
+    bias_attr = ParamAttr(
+            # initializer=fluid.initializer.Constant(6.213),
                           name='{}_conv_bias'.format(name)) \
                                   if not bn else False
     out = fluid.layers.conv2d(input,
@@ -92,8 +94,12 @@ def conv_bn(input, out_channels, bn=True, bn_momentum=0.1, act='relu', name=None
         out = fluid.layers.batch_norm(out,
                                       act=act,
 				      momentum=bn_momentum,
-                                      param_attr=ParamAttr(initializer=fluid.initializer.Constant(2.673), name=bn_name + "_scale"),
-                                      bias_attr=ParamAttr(initializer=fluid.initializer.Constant(1.467), name=bn_name + "_offset"),
+                                      param_attr=ParamAttr(
+                                          # initializer=fluid.initializer.Constant(2.673),
+                                          name=bn_name + "_scale"),
+                                      bias_attr=ParamAttr(
+                                          # initializer=fluid.initializer.Constant(1.467),
+                                          name=bn_name + "_offset"),
                                       moving_mean_name=bn_name + '_mean',
                                       moving_variance_name=bn_name + '_var')
 

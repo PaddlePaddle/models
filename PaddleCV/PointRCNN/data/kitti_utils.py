@@ -178,20 +178,51 @@ def pts_in_boxes3d(pts_rect, boxes3d):
     :return: boxes_pts_mask_list: (M), list with [(N), (N), ..]
     """
     MAX_DIS = 10.
-    boxes_pts_mask_list = np.zeros((boxes3d.shape[0], pts_rect.shape[0]), dtype='int8')
+    boxes_pts_mask_list = np.zeros((boxes3d.shape[0], pts_rect.shape[0]), dtype='int32')
     for i in range(boxes3d.shape[0]):
+        cx, by, cz, h, w, l, angle = boxes3d[i, :]
+        cy = by - h / 2.
+        cosa = np.cos(angle)
+        sina = np.sin(angle)
         for j in range(pts_rect.shape[0]):
             x, y, z = pts_rect[j, :]
-            cx, by, cz, h, w, l, angle = boxes3d[i, :]
-            cy = by - h / 2.
 
             if np.abs(x - cx) > MAX_DIS or np.abs(y - cy) > h / 2. or np.abs(z - cz) > MAX_DIS:
                 continue
 
-            cosa = np.cos(angle)
-            sina = np.sin(angle)
             x_rot = (x - cx) * cosa + (z - cz) * (-sina)
             z_rot = (x - cx) * sina + (z - cz) * cosa
             boxes_pts_mask_list[i, j] = int(x_rot >= -l / 2. and x_rot <= l / 2. and
                                             z_rot >= -w / 2. and z_rot <= w / 2.)
+    return boxes_pts_mask_list
+
+# def pts_in_boxes3d(pts_rect, boxes3d):
+#     """
+#     :param pts: (N, 3) in rect-camera coords
+#     :param boxes3d: (M, 7)
+#     :return: boxes_pts_mask_list: (M), list with [(N), (N), ..]
+#     """
+#     MAX_DIS = 10.
+#     boxes_pts_mask_list = np.zeros((boxes3d.shape[0], pts_rect.shape[0]), dtype='int32')
+#     cx = boxes3d[:, 0]
+#     cy = boxes3d[:, 1] - boxes3d[:, 3] / 2.
+#     cz = boxes3d[:, 2]
+#     h = boxes3d[:, 3]
+#     w = boxes3d[:, 4]
+#     l = boxes3d[:, 5]
+#     angle = boxes3d[:, 6]
+#     cosa = np.cos(angle)
+#     sina = np.sin(angle)
+#     for i in range(pts_rect.shape[0]):
+#         x, y, z = pts_rect[i, :]
+#
+#         mask = np.logical_and(np.abs(x - cx) <= MAX_DIS, np.abs(y - cy) <= h / 2.)
+#         mask = np.logical_and(mask, np.abs(z - cz) <= MAX_DIS)
+#
+#         x_rot = (x - cx) * cosa + (z - cz) * (-sina)
+#         z_rot = (x - cx) * sina + (z - cz) * cosa
+#         mask = np.logical_and(mask, x_rot >= -l / 2.)
+#         mask = np.logical_and(mask, x_rot <= l / 2.)
+#         mask = np.logical_and(mask, z_rot >= -w / 2.)
+#         mask = np.logical_and(mask, z_rot <= -w / 2.)
     return boxes_pts_mask_list

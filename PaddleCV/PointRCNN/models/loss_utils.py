@@ -130,7 +130,6 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope, loc_bin_siz
         loss_y_offset = fluid.layers.reduce_mean(loss_y_offset * fg_mask) * fg_scale
         reg_loss_dict['loss_y_offset'] = loss_y_offset
         loc_loss += loss_y_offset
-    fluid.layers.Print(loc_loss, message="loc_loss")
 
     # angle loss
     ry_bin_l, ry_bin_r = start_offset, start_offset + num_head_bin
@@ -177,7 +176,6 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope, loc_bin_siz
     reg_loss_dict['loss_ry_bin'] = loss_ry_bin
     reg_loss_dict['loss_ry_res'] = loss_ry_res
     angle_loss = loss_ry_bin + loss_ry_res
-    fluid.layers.Print(angle_loss, message="angle_loss")
 
     # size loss
     size_res_l, size_res_r = ry_res_r, ry_res_r + 3
@@ -191,7 +189,6 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope, loc_bin_siz
     size_res_norm = fluid.layers.reshape(size_res_norm, shape=[-1, 1], inplace=True)
     size_loss = fluid.layers.smooth_l1(size_res_norm, size_res_norm_label)
     size_loss = fluid.layers.reduce_mean(fluid.layers.reshape(size_loss, [-1, 3]) * fg_mask) * fg_scale
-    fluid.layers.Print(size_loss, message="size_loss")
 
     # Total regression loss
     reg_loss_dict['loss_loc'] = loc_loss

@@ -20,6 +20,7 @@ import argparse
 import ast
 import logging
 import numpy as np
+import paddle
 import paddle.fluid as fluid
 import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 
@@ -54,7 +55,7 @@ def parse_args():
     parser.add_argument(
         '--batch_size',
         type=int,
-        default=4,
+        default=16,
         help='training batch size, default 16')
     parser.add_argument(
         '--epoch',
@@ -159,6 +160,20 @@ def train():
     else:
         raise NotImplementedError
 
+    kitti_rcnn_reader = KittiRCNNReader(data_dir='./data',
+                                    npoints=cfg.RPN.NUM_POINTS,
+                                    split=cfg.TRAIN.SPLIT,
+                                    mode='TRAIN',
+                                    classes=cfg.CLASSES,
+                                    rcnn_training_roi_dir=args.rcnn_training_roi_dir,
+                                    rcnn_training_feature_dir=args.rcnn_training_feature_dir,
+                                    gt_database_dir=args.gt_database)
+    num_samples = len(kitti_rcnn_reader)
+    steps_per_epoch = int(num_samples / args.batch_size)
+    logger.info("Total {} samples, {} batch per epoch.".format(num_samples, steps_per_epoch))
+    boundaries = [i * steps_per_epoch for i in cfg.TRAIN.DECAY_STEP_LIST]
+    values = [cfg.TRAIN.LR * (cfg.TRAIN.LR_DECAY ** i) for i in range(len(boundaries) + 1)]
+
     # build model
     startup = fluid.Program()
     train_prog = fluid.Program()
@@ -171,17 +186,24 @@ def train():
             train_outputs = train_model.get_outputs()
             train_loss = train_outputs['loss']
             optimizer = fluid.optimizer.Adam(
-                    learning_rate=fluid.layers.linear_lr_warmup(
-                        learning_rate=exponential_with_clip(
-                            cfg.TRAIN.LR,
-                            [0] + cfg.TRAIN.DECAY_STEP_LIST,
-                            cfg.TRAIN.LR_DECAY,
-                            cfg.TRAIN.LR_CLIP),
-                        warmup_steps=cfg.TRAIN.WARMUP_EPOCH,
-                        start_lr=cfg.TRAIN.WARMUP_MIN,
-                        end_lr=cfg.TRAIN.LR),
+                learning_rate=fluid.layers.linear_lr_warmup(
+                    learning_rate=fluid.layers.piecewise_decay(
+                        boundaries=boundaries, values=values),
+                    warmup_steps=cfg.TRAIN.WARMUP_EPOCH * steps_per_epoch,
+                    start_lr=cfg.TRAIN.WARMUP_MIN,
+                    end_lr=cfg.TRAIN.LR),
+                # learning_rate=fluid.layers.linear_lr_warmup(
+                #     learning_rate=exponential_with_clip(
+                #         cfg.TRAIN.LR,
+                #         [0] + cfg.TRAIN.DECAY_STEP_LIST,
+                #         cfg.TRAIN.LR_DECAY,
+                #         cfg.TRAIN.LR_CLIP),
+                #     warmup_steps=cfg.TRAIN.WARMUP_EPOCH,
+                #     start_lr=cfg.TRAIN.WARMUP_MIN,
+                #     end_lr=cfg.TRAIN.LR),
                 regularization=fluid.regularizer.L2Decay(cfg.TRAIN.WEIGHT_DECAY))
             optimizer.minimize(train_loss)
+            lr = optimizer._global_learning_rate()
     train_keys, train_values = parse_outputs(train_outputs)
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
@@ -210,15 +232,11 @@ def train():
         fluid.io.save_persistables(exe, path, prog)
 
     # get reader
-    indoor_reader = KittiRCNNReader(data_dir='./data',
-                                    npoints=cfg.RPN.NUM_POINTS,
-                                    split=cfg.TRAIN.SPLIT,
-                                    mode='TRAIN',
-                                    classes=cfg.CLASSES,
-                                    rcnn_training_roi_dir=args.rcnn_training_roi_dir,
-                                    rcnn_training_feature_dir=args.rcnn_training_feature_dir,
-                                    gt_database_dir=args.gt_database)
-    train_reader = indoor_reader.get_reader(args.batch_size, train_feeds)
+    # readers = []
+    # for i in range(8):
+    #     readers.append(kitti_rcnn_reader.get_reader(args.batch_size, train_feeds))
+    # train_reader = paddle.reader.multiprocess_reader(readers)
+    train_reader = kitti_rcnn_reader.get_reader(args.batch_size, train_feeds)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     train_stat = Stat()
@@ -229,8 +247,7 @@ def train():
             train_periods = []
             while True:
                 cur_time = time.time()
-                train_outs = exe.run(train_compile_prog, fetch_list=train_values + ['learning_rate'])
-                print(train_outs)
+                train_outs = exe.run(train_compile_prog, fetch_list=train_values + [lr.name])
                 period = time.time() - cur_time
                 train_periods.append(period)
                 train_stat.update(train_keys, train_outs[:-1])
