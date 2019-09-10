@@ -56,17 +56,3 @@ coverage.xml
 /docs/_build/
 
 *.json
-
-# Personal ignore
-ppdet/tools/train.py
-ppdet/data/data_feed.py
-
-log.txt
-/configs/
-/log/
-/self_tools/
-/*pred*/
-/*output*/
-set_env.sh
-run_train.sh
-run_eval.sh

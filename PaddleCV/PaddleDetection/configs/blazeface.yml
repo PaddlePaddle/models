@@ -9,7 +9,7 @@ snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
-save_dir: output_blazelite_512x512_priorbox_190909
+save_dir: output
 eval_mode: matlab
 multi_scale: true
 weights: output/balzeface/model_final/
@@ -35,8 +35,8 @@ LearningRate:
 
 OptimizerBuilder:
   optimizer:
-    momentum: 0.0
-    type: RMSPropOptimizer
+    momentum: 0.9
+    type: Momentum
   regularizer:
     factor: 0.0005
     type: L2

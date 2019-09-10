@@ -42,7 +42,7 @@ class BlazeNet(object):
             double_blaze_filters=[[48, 24, 96, 2], [96, 24, 96], [96, 24, 96],
                                   [96, 24, 96, 2], [96, 24, 96], [96, 24, 96]],
             with_extra_blocks=True,
-            is_lite=True):
+            is_lite=False):
         super(BlazeNet, self).__init__()
 
         self.blaze_filters = blaze_filters

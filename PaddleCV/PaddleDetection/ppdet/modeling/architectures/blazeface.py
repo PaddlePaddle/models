@@ -48,8 +48,8 @@ class BlazeFace(object):
     def __init__(self,
                  backbone="BlazeNet",
                  output_decoder=SSDOutputDecoder().__dict__,
-                 min_sizes=[16., [32., 64., 96.]],
-                 max_sizes=[32., [64., 96., 128.]],
+                 min_sizes=[9., [15., 45., 75.]],
+                 max_sizes=[15., [45., 75., 105.]],
                  steps=[4., 16.],
                  num_classes=2):
         super(BlazeFace, self).__init__()
