@@ -6,17 +6,22 @@ PaddleCV
 
 图像分类是根据图像的语义信息对不同类别图像进行区分，是计算机视觉中重要的基础问题，是物体检测、图像分割、物体跟踪、行为分析、人脸识别等其他高层视觉任务的基础，在许多领域都有着广泛的应用。如：安防领域的人脸识别和智能视频分析等，交通领域的交通场景识别，互联网领域基于内容的图像检索和相册自动归类，医学领域的图像识别等。
 
-在深度学习时代，图像分类的准确率大幅度提升，在图像分类任务中，我们向大家介绍了如何在经典的数据集ImageNet上，训练常用的模型，包括AlexNet、VGG、GoogLeNet、ResNet、Inception-v4、MobileNet、DPN(Dual Path Network)、SE-ResNeXt模型，也开源了[训练的模型](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/README_cn.md#已有模型及其性能) 方便用户下载使用。同时提供了能够将Caffe模型转换为PaddlePaddle
+在深度学习时代，图像分类的准确率大幅度提升，在图像分类任务中，我们向大家介绍了如何在经典的数据集ImageNet上，训练常用的模型，包括AlexNet、VGG系列、ResNet系列、ResNeXt系列、Inception系列、MobileNet系列、SENet系列、DarkNet、SqueezeNet、ShuffleNet系列等模型，也开源了[训练的模型](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/README.md#已有模型及其性能) 方便用户下载使用。同时提供了能够将Caffe模型转换为PaddlePaddle
 Fluid模型配置和参数文件的工具。
 
 -  [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [VGG](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [SqueezeNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [VGG Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
 -  [GoogleNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [Residual Network](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [Inception-v4](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [MobileNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [Dual Path Network](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [SE-ResNeXt](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [ResNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [ResNeXt Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [ShuffleNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [DenseNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [Inception Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [MobileNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [SENet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [DarkNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [ResNeXt101_wsl Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
 -  [Caffe模型转换为Paddle Fluid配置和模型文件工具](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/caffe2fluid)
 
 目标检测
