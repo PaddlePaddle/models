@@ -7,6 +7,6 @@ python  train.py \
 --test_path='data/dev/sentence_file_*'  \
 --vocab_path data/vocabulary_min5k.txt \
 --learning_rate 0.2 \
---use_gpu False \
+--use_gpu True \
 --all_train_tokens 35479 \
 --local True $@
