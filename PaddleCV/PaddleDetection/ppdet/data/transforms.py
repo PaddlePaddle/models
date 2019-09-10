@@ -438,14 +438,14 @@ class NormalizeLabels(object):
         gt_box = sample['gt_box'][:self.num_instances, :]
         gt_label = sample['gt_label'][:self.num_instances]
         pad = self.num_instances - gt_label.size
-        gt_box_padded = np.pad(gt_box, ((0, pad), (0, 0)))
-        gt_label_padded = np.pad(gt_label, [(0, pad)])
+        gt_box_padded = np.pad(gt_box, ((0, pad), (0, 0)), mode='constant')
+        gt_label_padded = np.pad(gt_label, [(0, pad)], mode='constant')
         sample['gt_box'] = gt_box_padded
         sample['gt_label'] = gt_label_padded
 
         if 'gt_score' in sample:
             gt_score = sample['gt_score'][:self.num_instances]
-            gt_score_padded = np.pad(gt_score, [(0, pad)])
+            gt_score_padded = np.pad(gt_score, [(0, pad)], mode='constant')
             sample['gt_score'] = gt_score_padded
 
         return sample
