@@ -1,14 +1,13 @@
 #set -eux
-#export FLAGS_fraction_of_gpu_memory_to_use=0.02
-export FLAGS_eager_delete_tensor_gb=1.0
-#export FLAGS_fast_eager_deletion_mode=1
-export FLAGS_sync_nccl_allreduce=1
-#export NCCL_DEBUG=INFO
-export NCCL_IB_GID_INDEX=3
-#export GLOG_v=1
-#export GLOG_logtostderr=1
-#export FLAGS_selected_gpus=0        # which GPU to use
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export FLAGS_fraction_of_gpu_memory_to_use=0.02
+export FLAGS_eager_delete_tensor_gb=0.0
+export FLAGS_fast_eager_deletion_mode=1
+# export FLAGS_sync_nccl_allreduce=1
+# export NCCL_DEBUG=INFO
+# export NCCL_IB_GID_INDEX=3
+# export GLOG_v=1
+# export GLOG_logtostderr=1
+export CUDA_VISIBLE_DEVICES=0        # which GPU to use
 
 ERNIE_PRETRAINED_MODEL_PATH=./pretrained/
 ERNIE_FINETUNED_MODEL_PATH=./model_finetuned
@@ -61,7 +60,8 @@ function run_train_multi_cpu() {
         --init_pretraining_params "${ERNIE_PRETRAINED_MODEL_PATH}/params/" \
         --vocab_path "${ERNIE_PRETRAINED_MODEL_PATH}/vocab.txt" \
         --use_cuda false \
-        --cpu_num 10         #cpu_num works only when use_cuda=false
+        --batch_size 64 \
+        --cpu_num 8         #cpu_num works only when use_cuda=false
 }
 
 
@@ -104,12 +104,17 @@ function run_infer() {
 }
 
 
-
 function main() {
     local cmd=${1:-help}
     case "${cmd}" in
         train)
             run_train "$@";
+            ;;
+        train_single_gpu)
+            run_train_single_gpu "$@";
+            ;;
+        train_multi_cpu)
+            run_train_multi_cpu "$@";
             ;;
         eval)
             run_eval "$@";
@@ -118,12 +123,12 @@ function main() {
             run_infer "$@";
             ;;
         help)
-            echo "Usage: ${BASH_SOURCE} {train|test|infer}";
+            echo "Usage: ${BASH_SOURCE} {train|train_single_gpu|train_multi_cpu|eval|infer}";
             return 0;
             ;;
         *)
             echo "unsupport command [${cmd}]";
-            echo "Usage: ${BASH_SOURCE} {train|eval|infer}";
+            echo "Usage: ${BASH_SOURCE} {train|train_single_gpu|train_multi_cpu|eval|infer}";
             return 1;
             ;;
     esac

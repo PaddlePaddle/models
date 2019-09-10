@@ -125,12 +125,12 @@ function main() {
             run_inference "$@";
             ;;
         help)
-            echo "Usage: ${BASH_SOURCE} {train|train_single_gpu|train_multi_gpu|train_multi_cpu|test|infer|}";
+            echo "Usage: ${BASH_SOURCE} {train|train_single_gpu|train_multi_gpu|train_multi_cpu|eval|infer}";
             return 0;
             ;;
         *)
             echo "unsupport command [${cmd}]";
-            echo "Usage: ${BASH_SOURCE} {train|train_single_gpu|train_multi_gpu|train_multi_cpu|test|infer|}";
+            echo "Usage: ${BASH_SOURCE} {train|train_single_gpu|train_multi_gpu|train_multi_cpu|eval|infer}";
             return 1;
             ;;
     esac

@@ -131,7 +131,7 @@ def do_train(args):
         exec_strategy = fluid.ExecutionStrategy()
         build_strategy = fluid.BuildStrategy()
         compiled_prog = fluid.compiler.CompiledProgram(train_program).with_data_parallel(
-            loss_name=train_ret['loss'].name,
+            loss_name=train_ret['avg_cost'].name,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
     else:
@@ -169,7 +169,7 @@ def do_train(args):
             if steps % args.validation_steps == 0:
                 evaluate(exe, test_program, test_pyreader, train_ret)
 
-    save_path = os.path.join(args.checkpoints, "step_" + str(steps))
+    save_path = os.path.join(args.model_save_dir, "step_" + str(steps))
     fluid.io.save_persistables(exe, save_path, train_program)
 
 
