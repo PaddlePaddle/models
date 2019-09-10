@@ -43,6 +43,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [SE_ResNeXt](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在ResNeXt 基础、上加入了SE（Sequeeze-and-Excitation）模块，提高了识别准确率，在ILSVRC 2017 的分类项目中取得了第一名 | ImageNet-2012验证集 | 81.40%/95.48% |
 | [ShuffleNetV2](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | ECCV2018，轻量级CNN网络，在速度和准确度之间做了很好地平衡。在同等复杂度下，比ShuffleNet和MobileNetv2更准确，更适合移动端以及无人车领域 | ImageNet-2012验证集 | 70.03%/89.17% |
 
+更多图像分类模型请参考[Image Classification](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification)
+
 ### 目标检测
 
 目标检测任务的目标是给定一张图像或是一个视频帧，让计算机找出其中所有目标的位置，并给出每个目标的具体类别。对于计算机而言，能够“看到”的是图像被编码之后的数字，但很难解图像或是视频帧中出现了人或是物体这样的高层语义概念，也就更加难以定位目标出现在图像中哪个区域。
