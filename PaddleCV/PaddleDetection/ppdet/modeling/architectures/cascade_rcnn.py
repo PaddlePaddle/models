@@ -35,12 +35,13 @@ class CascadeRCNN(object):
         roi_extractor (object): ROI extractor instance
         bbox_head (object): `BBoxHead` instance
         fpn (object): feature pyramid network instance
+        roi_sampler (object): 'RoISampler' instance
     """
 
     __category__ = 'architecture'
     __inject__ = [
         'backbone', 'fpn', 'rpn_head', 'bbox_assigner', 'roi_extractor',
-        'bbox_head'
+        'bbox_head', 'roi_sampler'
     ]
 
     def __init__(self,
@@ -49,6 +50,7 @@ class CascadeRCNN(object):
                  roi_extractor='FPNRoIAlign',
                  bbox_head='CascadeBBoxHead',
                  bbox_assigner='CascadeBBoxAssigner',
+                 roi_sampler=None,
                  rpn_only=False,
                  fpn='FPN'):
         super(CascadeRCNN, self).__init__()
@@ -60,6 +62,7 @@ class CascadeRCNN(object):
         self.roi_extractor = roi_extractor
         self.bbox_head = bbox_head
         self.rpn_only = rpn_only
+        self.roi_sampler = roi_sampler
         # Cascade local cfg
         self.cls_agnostic_bbox_reg = 2
         (brw0, brw1, brw2) = self.bbox_assigner.bbox_reg_weights
@@ -132,10 +135,11 @@ class CascadeRCNN(object):
                 rcnn_target_list.append(outs)
             else:
                 proposals = refined_bbox
-            proposal_list.append(proposals)
 
             # extract roi features
             roi_feat = self.roi_extractor(body_feats, proposals, spatial_scale)
+
+            proposal_list.append(proposals)
             roi_feat_list.append(roi_feat)
 
             # bbox head
@@ -146,8 +150,14 @@ class CascadeRCNN(object):
             rcnn_pred_list.append((cls_score, bbox_pred))
 
         if mode == 'train':
-            loss = self.bbox_head.get_loss(rcnn_pred_list, rcnn_target_list,
-                                           self.cascade_rcnn_loss_weight)
+            if i == 0 and self.roi_sampler is not None:
+                sampled_idx = self.roi_sampler(cls_score, bbox_pred, outs)
+                loss = self.bbox_head.get_loss(rcnn_pred_list, rcnn_target_list,
+                                               self.cascade_rcnn_loss_weight,
+                                               sampled_idx)
+            else:
+                loss = self.bbox_head.get_loss(rcnn_pred_list, rcnn_target_list,
+                                               self.cascade_rcnn_loss_weight)
             loss.update(rpn_loss)
             total_loss = fluid.layers.sum(list(loss.values()))
             loss.update({'loss': total_loss})

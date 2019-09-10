@@ -96,7 +96,11 @@ class CascadeBBoxHead(object):
                                         regularizer=L2Decay(0.)))
         return cls_score, bbox_pred
 
-    def get_loss(self, rcnn_pred_list, rcnn_target_list, rcnn_loss_weight_list):
+    def get_loss(self,
+                 rcnn_pred_list,
+                 rcnn_target_list,
+                 rcnn_loss_weight_list,
+                 sampled_idx=None):
         """
         Get bbox_head loss.
 
@@ -105,6 +109,7 @@ class CascadeBBoxHead(object):
                 bbox_pred and cls_score
             rcnn_target_list(List): Cascade rcnn's bbox and label target
             rcnn_loss_weight_list(List): The weight of location and class loss
+            sampled_idx(Variable): The sampled index of the RoI
 
         Return:
             loss_cls(Variable): bbox_head loss.
@@ -120,9 +125,6 @@ class CascadeBBoxHead(object):
                 logits=rcnn_pred[0],
                 label=labels_int64,
                 numeric_stable_mode=True, )
-            loss_cls = fluid.layers.reduce_mean(
-                loss_cls, name='loss_cls_' + str(i)) * rcnn_loss_weight_list[i]
-
             loss_bbox = fluid.layers.smooth_l1(
                 x=rcnn_pred[1],
                 y=rcnn_target[2],
@@ -130,6 +132,12 @@ class CascadeBBoxHead(object):
                 outside_weight=rcnn_target[4],
                 sigma=1.0,  # detectron use delta = 1./sigma**2
             )
+            if sampled_idx is not None:
+                loss_cls = fluid.layers.gather(loss_cls, sampled_idx)
+                loss_bbox = fluid.layers.gather(loss_bbox, sampled_idx)
+
+            loss_cls = fluid.layers.reduce_mean(
+                loss_cls, name='loss_cls_' + str(i)) * rcnn_loss_weight_list[i]
             loss_bbox = fluid.layers.reduce_mean(
                 loss_bbox,
                 name='loss_bbox_' + str(i)) * rcnn_loss_weight_list[i]

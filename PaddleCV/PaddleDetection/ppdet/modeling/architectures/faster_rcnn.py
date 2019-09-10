@@ -34,12 +34,13 @@ class FasterRCNN(object):
         roi_extractor (object): ROI extractor instance
         bbox_head (object): `BBoxHead` instance
         fpn (object): feature pyramid network instance
+        roi_sampler (object): 'RoISampler' instance
     """
 
     __category__ = 'architecture'
     __inject__ = [
         'backbone', 'rpn_head', 'bbox_assigner', 'roi_extractor', 'bbox_head',
-        'fpn'
+        'fpn', 'roi_sampler'
     ]
 
     def __init__(self,
@@ -48,9 +49,9 @@ class FasterRCNN(object):
                  roi_extractor,
                  bbox_head='BBoxHead',
                  bbox_assigner='BBoxAssigner',
+                 roi_sampler=None,
                  rpn_only=False,
-                 fpn=None,
-                 ohem=False):
+                 fpn=None):
         super(FasterRCNN, self).__init__()
         self.backbone = backbone
         self.rpn_head = rpn_head
@@ -59,6 +60,7 @@ class FasterRCNN(object):
         self.bbox_head = bbox_head
         self.fpn = fpn
         self.rpn_only = rpn_only
+        self.roi_sampler = roi_sampler
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
@@ -111,9 +113,16 @@ class FasterRCNN(object):
             roi_feat = self.roi_extractor(body_feats, rois, spatial_scale)
 
         if mode == 'train':
-            loss = self.bbox_head.get_loss(roi_feat, labels_int32, bbox_targets,
-                                           bbox_inside_weights,
-                                           bbox_outside_weights)
+            cls_score, bbox_pred = self.bbox_head.get_output(roi_feat)
+            if self.roi_sampler is not None:
+                sampled_idx = self.roi_sampler(cls_score, bbox_pred, outs)
+                loss = self.bbox_head.get_loss(
+                    roi_feat, labels_int32, bbox_targets, bbox_inside_weights,
+                    bbox_outside_weights, sampled_idx)
+            else:
+                loss = self.bbox_head.get_loss(
+                    roi_feat, labels_int32, bbox_targets, bbox_inside_weights,
+                    bbox_outside_weights)
 
             loss.update(rpn_loss)
             total_loss = fluid.layers.sum(list(loss.values()))

@@ -162,16 +162,12 @@ class BBoxHead(object):
                  head,
                  box_coder=BoxCoder().__dict__,
                  nms=MultiClassNMS().__dict__,
-                 num_classes=81,
-                 ohem=False,
-                 ohem_batch_size_per_im=512):
+                 num_classes=81):
         super(BBoxHead, self).__init__()
         self.head = head
         self.num_classes = num_classes
         self.box_coder = box_coder
         self.nms = nms
-        self.ohem = ohem
-        self.ohem_batch_size_per_im = ohem_batch_size_per_im
         if isinstance(box_coder, dict):
             self.box_coder = BoxCoder(**box_coder)
         if isinstance(nms, dict):
@@ -190,7 +186,7 @@ class BBoxHead(object):
             self.head_feat = feat
         return self.head_feat
 
-    def _get_output(self, roi_feat):
+    def get_output(self, roi_feat):
         """
         Get bbox head output.
 
@@ -235,13 +231,20 @@ class BBoxHead(object):
                                         regularizer=L2Decay(0.)))
         return cls_score, bbox_pred
 
-    def get_loss(self, roi_feat, labels_int32, bbox_targets,
-                 bbox_inside_weights, bbox_outside_weights):
+    def get_loss(self,
+                 cls_score,
+                 bbox_pred,
+                 labels_int32,
+                 bbox_targets,
+                 bbox_inside_weights,
+                 bbox_outside_weights,
+                 sampled_idx=None):
         """
         Get bbox_head loss.
 
         Args:
-            roi_feat (Variable): RoI feature from RoIExtractor.
+            cls_score(Variable):
+            bbox_pred(Variable):
             labels_int32(Variable): Class label of a RoI with shape [P, 1].
                 P is the number of RoI.
             bbox_targets(Variable): Box label of a RoI with shape
@@ -257,45 +260,23 @@ class BBoxHead(object):
                 loss_bbox(Variable): bbox_head loss.
         """
 
-        cls_score, bbox_pred = self._get_output(roi_feat)
-
         labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
         labels_int64.stop_gradient = True
-        loss_cls_per_roi = fluid.layers.softmax_with_cross_entropy(
+        loss_cls = fluid.layers.softmax_with_cross_entropy(
             logits=cls_score, label=labels_int64, numeric_stable_mode=True)
-        loss_bbox_per_roi = fluid.layers.smooth_l1(
+        loss_bbox = fluid.layers.smooth_l1(
             x=bbox_pred,
             y=bbox_targets,
             inside_weight=bbox_inside_weights,
             outside_weight=bbox_outside_weights,
             sigma=1.0)
 
-        if self.ohem:
-            loss_per_roi = loss_cls_per_roi + loss_bbox_per_roi
-            loss_per_roi = fluid.layers.reshape(loss_per_roi, shape=[-1])
-            _, topk_index = fluid.layers.topk(loss_per_roi,
-                                              self.ohem_batch_size_per_im)
+        if sampled_idx is not None:
+            loss_cls = fluid.layers.gather(loss_cls, sampled_idx)
+            loss_bbox = fluid.layers.gather(loss_bbox, sampled_idx)
 
-            cls_score = fluid.layers.gather(cls_score, topk_index)
-            labels_int64 = fluid.layers.gather(labels_int64, topk_index)
-            bbox_pred = fluid.layers.gather(bbox_pred, topk_index)
-            bbox_targets = fluid.layers.gather(bbox_targets, topk_index)
-            bbox_inside_weights = fluid.layers.gather(bbox_inside_weights,
-                                                      topk_index)
-            bbox_outside_weights = fluid.layers.gather(bbox_outside_weights,
-                                                       topk_index)
-
-            loss_cls_per_roi = fluid.layers.softmax_with_cross_entropy(
-                logits=cls_score, label=labels_int64, numeric_stable_mode=True)
-            loss_bbox_per_roi = fluid.layers.smooth_l1(
-                x=bbox_pred,
-                y=bbox_targets,
-                inside_weight=bbox_inside_weights,
-                outside_weight=bbox_outside_weights,
-                sigma=1.0)
-
-        loss_cls = fluid.layers.reduce_mean(loss_cls_per_roi)
-        loss_bbox = fluid.layers.reduce_mean(loss_bbox_per_roi)
+        loss_cls = fluid.layers.reduce_mean(loss_cls)
+        loss_bbox = fluid.layers.reduce_mean(loss_bbox)
         return {'loss_cls': loss_cls, 'loss_bbox': loss_bbox}
 
     def get_prediction(self, roi_feat, rois, im_info, im_shape):
@@ -317,7 +298,7 @@ class BBoxHead(object):
                 row has 6 values: [label, confidence, xmin, ymin, xmax, ymax].
                 N is the total number of prediction.
         """
-        cls_score, bbox_pred = self._get_output(roi_feat)
+        cls_score, bbox_pred = self.get_output(roi_feat)
 
         im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
         im_scale = fluid.layers.sequence_expand(im_scale, rois)
