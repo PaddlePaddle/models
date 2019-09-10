@@ -92,7 +92,7 @@ class ExtractFields(object):
 
                 if lod_level == 0:
                     # 'image' may already be stacked by `PadToStride`
-                    if not isinstance(arr, np.ndarray):
+                    if not isinstance(arr, (np.ndarray, numbers.Number)):
                         arr = np.stack(arr)
                     arr_list.append(arr)
                     continue
