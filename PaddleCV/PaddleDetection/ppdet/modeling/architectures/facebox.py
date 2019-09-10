@@ -25,14 +25,14 @@ from paddle.fluid.regularizer import L2Decay
 from ppdet.core.workspace import register
 from ppdet.modeling.ops import SSDOutputDecoder
 
-__all__ = ['BlazeFace']
+__all__ = ['FaceBox']
 
 
 @register
-class BlazeFace(object):
+class FaceBox(object):
     """
-    BlazeFace: Sub-millisecond Neural Face Detection on Mobile GPUs,
-               see https://arxiv.org/abs/1907.05047
+    FaceBox: Sub-millisecond Neural Face Detection on Mobile GPUs,
+               see https://https://arxiv.org/abs/1708.05234
 
     Args:
         backbone (object): backbone instance
@@ -46,13 +46,13 @@ class BlazeFace(object):
     __shared__ = ['num_classes']
 
     def __init__(self,
-                 backbone="BlazeNet",
+                 backbone="FaceBoxNet",
                  output_decoder=SSDOutputDecoder().__dict__,
-                 min_sizes=[9., [15., 45., 75.]],
-                 max_sizes=[15., [45., 75., 105.]],
+                 min_sizes=[16., [32., 64., 96.]],
+                 max_sizes=[32., [64., 96., 128.]],
                  steps=[4., 16.],
                  num_classes=2):
-        super(BlazeFace, self).__init__()
+        super(FaceBox, self).__init__()
         self.backbone = backbone
         self.num_classes = num_classes
         self.output_decoder = output_decoder
@@ -93,7 +93,7 @@ class BlazeFace(object):
                         inputs,
                         image,
                         num_classes=2,
-                        use_density_prior_box=False):
+                        use_density_prior_box=True):
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
             compile_shape = [
