@@ -167,6 +167,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
                  feed_vars=[],
                  extra_vars=[],
                  num_workers=0,
+                 auto_reset=True,
                  multiprocessing=False,
                  buffer_size=2,
                  pin_memory=False,
@@ -177,6 +178,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
             dataset = type_map[cls](**kwargs)
 
         self.feed_vars = feed_vars
+        self.auto_reset = auto_reset
 
         env = os.environ
         if 'FLAGS_selected_gpus' in env:
@@ -236,27 +238,32 @@ class DataLoaderBuilder(dataloader.DataLoader):
             feed_dict[k] = t
         return feed_dict
 
+    def __next__(self):
+        if self.coalesce_size == 1:
+            feed_dict, extra_dict = next(self._iter)
+            return [self._to_tensor(feed_dict)], extra_dict
+        else:
+            feed_list = []
+            coalesced_extra_dict = {}
+            for _ in range(self.coalesce_size):
+                feed_dict, extra_dict = next(self._iter)
+                feed_list.append(self._to_tensor(feed_dict))
+                for k, v in extra_dict.items():
+                    if k not in coalesced_extra_dict:
+                        coalesced_extra_dict[k] = v
+                    else:
+                        coalesced_extra_dict[k] += v
+            return feed_list, coalesced_extra_dict
+
     def __iter__(self):
-        _iter = super(DataLoaderBuilder, self).__iter__()
+        self._iter = super(DataLoaderBuilder, self).__iter__()
+        if not self.auto_reset:
+            return self
 
         def forever():
             while True:
                 try:
-                    if self.coalesce_size == 1:
-                        feed_dict, extra_dict = next(_iter)
-                        yield [self._to_tensor(feed_dict)], extra_dict
-                    else:
-                        feed_list = []
-                        coalesced_extra_dict = {}
-                        for _ in range(self.coalesce_size):
-                            feed_dict, extra_dict = next(_iter)
-                            feed_list.append(self._to_tensor(feed_dict))
-                            for k, v in extra_dict.items():
-                                if k not in coalesced_extra_dict:
-                                    coalesced_extra_dict[k] = v
-                                else:
-                                    coalesced_extra_dict[k] += v
-                        yield feed_list, coalesced_extra_dict
+                    yield self.__next__()
                 except StopIteration:
                     self.reset()
         return forever()
