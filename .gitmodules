@@ -19,3 +19,6 @@
 [submodule "PaddleNLP/knowledge_driven_dialogue"]
 	path = PaddleNLP/knowledge_driven_dialogue
 	url = https://github.com/baidu/knowledge-driven-dialogue/
+[submodule "PaddleCV/PointRCNN/pybind11"]
+	path = PaddleCV/PointRCNN/pybind11
+	url = https://github.com/pybind/pybind11
