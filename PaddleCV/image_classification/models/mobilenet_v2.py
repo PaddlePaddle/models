@@ -232,3 +232,4 @@ def MobileNetV2_x2_0():
 
 def MobileNetV2():
     model = MobileNetV2(scale=1.0)
+    return model
