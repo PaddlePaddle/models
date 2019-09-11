@@ -20,14 +20,15 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ['MobileNet', 'MobileNetV1']
+__all__ = ['MobileNetV1', 'MobileNetV1_x0_25', 'MobileNetV1_x0_5', 'MobileNetV1_x0_75']
 
 
-class MobileNet():
-    def __init__(self):
-        pass
+class MobileNetV1():
+    def __init__(self, scale=1.0):
+        self.scale = scale
 
-    def net(self, input, class_dim=1000, scale=1.0):
+    def net(self, input, class_dim=1000):
+        scale = self.scale
         # conv1: 112x112
         input = self.conv_bn_layer(
             input,
@@ -194,6 +195,21 @@ class MobileNet():
         return pointwise_conv
 
 
+def MobileNetV1_x0_25():
+    model = MobileNetV1(scale=0.25)
+    return model
+
+
+def MobileNetV1_x0_5():
+    model = MobileNetV1(scale=0.5)
+    return model
+
+
+def MobileNetV1_x0_75():
+    model = MobileNetV1(scale=0.75)
+    return model
+
+
 def MobileNetV1():
-    model = MobileNet()
+    model = MobileNetV1(scale=1.0)
     return model

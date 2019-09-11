@@ -1,8 +1,9 @@
+#Xception41_deeplab
 python train.py \
-       --model=Xception_41 \
+       --model=Xception41_deeplab \
        --batch_size=256 \
        --total_images=1281167 \
-       --image_shape=3,224,224 \
+       --image_shape=3,299,299 \
        --class_dim=1000 \
        --lr_strategy=cosine_decay \
        --lr=0.045 \
