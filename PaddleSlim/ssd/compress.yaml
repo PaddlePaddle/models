@@ -13,7 +13,6 @@ strategies:
         start_epoch: 0
         target_ratio: 0.2
         pruned_params: 'conv2d_[1-9].w_0|conv2d_1[0-2].w_0'
-        metric_name: 'acc_top1'
 compressor:
     epoch: 200
     #init_model: './checkpoints/0' # Please enable this option for loading checkpoint.
