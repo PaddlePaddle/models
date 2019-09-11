@@ -9,8 +9,6 @@
 ```
 for param in fluid.default_main_program().global_block().all_parameters():
     print("{}: {}".format(param.name, param.shape))
-
-return # for debug
 ```
 
 上述代码会按网络定义顺序，依次打印相应的参数名称，如下所示：
