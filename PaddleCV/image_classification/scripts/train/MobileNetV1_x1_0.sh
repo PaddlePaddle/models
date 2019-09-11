@@ -7,7 +7,7 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 
 python train.py \
-       --model=MobileNetV1 \
+       --model=MobileNetV1_x1_0 \
        --batch_size=256 \
        --total_images=1281167 \
        --class_dim=1000 \

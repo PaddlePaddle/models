@@ -22,7 +22,7 @@ import math
 import sys
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ['Xception', 'Xception_41', 'Xception_65', 'Xception_71']
+__all__ = ['Xception', 'Xception41', 'Xception65', 'Xception71']
 
 
 class Xception(object):
@@ -252,34 +252,29 @@ class Xception(object):
             act=None,
             param_attr=ParamAttr(name=name + "_weights"),
             bias_attr=False,
-            use_cudnn=use_cudnn,
-            name=name + '.conv2d.output.1')
+            use_cudnn=use_cudnn)
 
         bn_name = "bn_" + name
 
         return fluid.layers.batch_norm(
             input=conv,
             act=act,
-            name=bn_name + '.output.1',
             param_attr=ParamAttr(name=bn_name + '_scale'),
             bias_attr=ParamAttr(bn_name + '_offset'),
             moving_mean_name=bn_name + '_mean',
             moving_variance_name=bn_name + '_variance')
 
 
-def Xception_41():
-    """Xception_41"""
+def Xception41():
     model = Xception(entry_flow_block_num=3, middle_flow_block_num=8)
     return model
 
 
-def Xception_65():
-    """Xception_65"""
+def Xception65():
     model = Xception(entry_flow_block_num=3, middle_flow_block_num=16)
     return model
 
 
-def Xception_71():
-    """Xception_71"""
+def Xception71():
     model = Xception(entry_flow_block_num=5, middle_flow_block_num=16)
     return model
