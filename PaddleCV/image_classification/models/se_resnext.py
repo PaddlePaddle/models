@@ -29,8 +29,9 @@ __all__ = [
 
 
 class SE_ResNeXt():
-    def __init__(self, layers=50):
+    def __init__(self, layers=50, dropout_seed=None):
         self.layers = layers
+        self.dropout_seed = dropout_seed
 
     def net(self, input, class_dim=1000):
         layers = self.layers
@@ -121,7 +122,8 @@ class SE_ResNeXt():
 
         pool = fluid.layers.pool2d(
             input=conv, pool_type='avg', global_pooling=True, use_cudnn=False)
-        drop = fluid.layers.dropout(x=pool, dropout_prob=0.5)
+        drop = fluid.layers.dropout(
+            x=pool, dropout_prob=0.5, seed=self.dropout_seed)
         stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
         out = fluid.layers.fc(
             input=drop,
@@ -246,4 +248,10 @@ def SE_ResNeXt101_32x4d():
 
 def SE_ResNeXt152_32x4d():
     model = SE_ResNeXt(layers=152)
+    return model
+
+
+#NOTE: This is only for continuous evaluation only!
+def CE():
+    model = SE_ResNeXt(layers=50, dropout_seed=100)
     return model
