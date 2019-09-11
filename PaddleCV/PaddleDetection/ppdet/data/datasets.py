@@ -52,8 +52,8 @@ class DataSet(object):
 
 class COCODataSet(DataSet):
     def __init__(self,
-                 annotation_file,
                  root_dir,
+                 annotation_file,
                  image_dir,
                  use_mask=False,
                  use_crowd=False,
