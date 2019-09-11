@@ -100,10 +100,8 @@ def train(args):
         args=args)
     train_py_reader = train_out[-1]
     train_fetch_vars = train_out[:-1]
-    train_fetch_list = []
-    for var in train_fetch_vars:
-        var.persistable = True
-        train_fetch_list.append(var.name)
+
+    train_fetch_list = [var.name for var in train_fetch_vars]
 
     test_out = build_program(
         is_train=False,
@@ -112,10 +110,8 @@ def train(args):
         args=args)
     test_py_reader = test_out[-1]
     test_fetch_vars = test_out[:-1]
-    test_fetch_list = []
-    for var in test_fetch_vars:
-        var.persistable = True
-        test_fetch_list.append(var.name)
+
+    test_fetch_list = [var.name for var in test_fetch_vars]
 
     #Create test_prog and set layers' is_test params to True
     test_prog = test_prog.clone(for_test=True)
@@ -207,8 +203,9 @@ def train(args):
         print_info(pass_id, 0, 0,
                    list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
                    0, "epoch")
-        #For now, save model per epoch. 
-        save_model(args, exe, train_prog, pass_id)
+        #For now, save model per epoch.
+        if pass_id % args.save_step == 0:
+            save_model(args, exe, train_prog, pass_id)
 
 
 def main():

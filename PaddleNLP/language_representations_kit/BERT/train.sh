@@ -51,5 +51,5 @@ python -u ./train.py ${is_distributed}\
         --validation_steps 1000 \
         --num_iteration_per_drop_scope 10 \
         --use_fp16 false \
-        --loss_scaling 8.0
+        --verbose true
        

@@ -96,9 +96,10 @@ bash run.sh train 模型名
 
 * **data_dir**: 数据存储路径，默认值: "./data/ILSVRC2012/"
 * **model_save_dir**: 模型存储路径，默认值: "output/"
-* **save_param**: params存储路径，默认值: None
 * **pretrained_model**: 加载预训练模型路径，默认值: None
 * **checkpoint**: 加载用于继续训练的检查点（指定具体模型存储路径，如"output/ResNet50/100/"），默认值: None
+* **print_step**: 打印训练信息的batch步数，默认值：10
+* **save_step**: 保存模型的epoch步数，默认值：1
 
 模型类型和超参配置：
 
@@ -134,7 +135,6 @@ bash run.sh train 模型名
 一些开关：
 
 * **use_gpu**: 是否在GPU上运行，默认值: True
-* **use_inplace**: 是否开启inplace显存优化，默认值: True
 * **use_label_smoothing**: 是否对数据进行label smoothing处理，默认值: False
 * **label_smoothing_epsilon**: label_smoothing的epsilon， 默认值:0.2
 * **random_seed**: 随机数种子， 默认值: 1000
@@ -207,7 +207,11 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 PaddlePaddle/Models ImageClassification 支持自定义数据
 
 1. 组织自定义数据，调整数据读取器以正确的传入数据
-2. 注意更改训练脚本中 --data_dim --total_image 等参数
+2. 注意更改训练脚本中
+--data_dim 类别数为自定义数据类别数
+--total_image 图片数量
+3. 当进行finetune时，
+指定--pretrained_model 加载预训练模型，注意：本模型库提供的是基于ImageNet 1000类数据的预训练模型，当使用不同类别数的数据时，请删除预训练模型中fc_weight 和fc_offset参数
 
 
 ## 已发布模型及其性能
