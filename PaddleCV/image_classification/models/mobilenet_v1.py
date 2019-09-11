@@ -20,7 +20,7 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ['MobileNetV1', 'MobileNetV1_x0_25', ' MobileNetV1_x0_5', ' MobileNetV1_x0_75']
+__all__ = ['MobileNetV1', 'MobileNetV1_x0_25', 'MobileNetV1_x0_5', 'MobileNetV1_x0_75']
 
 
 class MobileNetV1():
