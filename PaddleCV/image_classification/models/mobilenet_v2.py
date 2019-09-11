@@ -21,7 +21,7 @@ from paddle.fluid.param_attr import ParamAttr
 
 __all__ = [
     'MobileNetV2', 'MobileNetV2_x0_25', 'MobileNetV2_x0_5'
-    'MobileNetV2_x0_75', 'MobileNetV2_x1_0', 'MobileNetV2_x1_5',
+    'MobileNetV2_x0_75', 'MobileNetV2', 'MobileNetV2_x1_5',
     'MobileNetV2_x2_0', 
 ]
 
@@ -215,7 +215,7 @@ def MobileNetV2_x0_75():
     return model
 
 
-def MobileNetV2_x1_0():
+def MobileNetV2():
     model = MobileNetV2(scale=1.0)
     return model
 

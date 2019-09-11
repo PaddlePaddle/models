@@ -20,7 +20,7 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ['MobileNetV1', 'MobileNetV1_x0_25', ' MobileNetV1_x0_5', ' MobileNetV1_x0_75', ' MobileNetV1_x1_0']
+__all__ = ['MobileNetV1', 'MobileNetV1_x0_25', ' MobileNetV1_x0_5', ' MobileNetV1_x0_75', ' MobileNetV1']
 
 
 class MobileNetV1():
@@ -210,6 +210,6 @@ def MobileNetV1_x0_75():
     return model
 
 
-def MobileNetV1_x1_0():
+def MobileNetV1():
     model = MobileNetV1(scale=1.0)
     return model
