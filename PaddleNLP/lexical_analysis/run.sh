@@ -10,12 +10,12 @@ function run_train() {
         --train_data ./data/train.tsv \
         --test_data ./data/test.tsv \
         --model_save_dir ./models \
-        --validation_steps 2000 \
-        --save_steps 10000 \
-        --print_steps 500 \
+        --validation_steps 2 \
+        --save_steps 10 \
+        --print_steps 1 \
         --batch_size 300 \
         --epoch 10 \
-        --traindata_shuffle_buffer 150000 \
+        --traindata_shuffle_buffer 20000 \
         --word_emb_dim 128 \
         --grnn_hidden_dim 128 \
         --bigru_num 2 \

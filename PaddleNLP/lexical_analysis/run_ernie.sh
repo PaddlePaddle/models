@@ -28,7 +28,7 @@ function run_train() {
         --init_bound 0.1 \
         --print_steps 1 \
         --vocab_path "${ERNIE_PRETRAINED_MODEL_PATH}/vocab.txt" \
-        --batch_size 64 \
+        --batch_size 3 \
         --random_seed 0 \
         --num_labels 57 \
         --max_seq_len 128 \

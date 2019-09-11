@@ -17,7 +17,7 @@ train:
     val: 0
     meaning: "Random seed for training"
   batch_size:
-    val: 3
+    val: 10
     meaning: "The number of sequences contained in a mini-batch"
   epoch:
     val: 10
@@ -26,7 +26,7 @@ train:
     val: True
     meaning: "If set, use GPU for training."
   base_learning_rate:
-    val: 0.001
+    val: 0.0002
     meaning: "The basic learning rate that affects the entire network."
   init_bound:
     val: 0.1
@@ -41,10 +41,10 @@ train:
     val: 1
     meaning: "Print the result per xxx batch of training"
   save_steps:
-    val: 10000
+    val: 10
     meaning: "Save the model once per xxxx batch of training"
   validation_steps:
-    val: 1000
+    val: 5
     meaning: "Do the validation once per xxxx batch of training"
 
 data:

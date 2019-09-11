@@ -3,7 +3,7 @@ model:
     val: 128
     meaning: "The dimension in which a word is embedded."
   grnn_hidden_dim:
-    val: 256
+    val: 128
     meaning: "The number of hidden nodes in the GRNN layer."
   bigru_num:
     val: 2
@@ -38,7 +38,7 @@ train:
     val: False
     meaning: "If set, use GPU for training."
   traindata_shuffle_buffer:
-    val: 2000
+    val: 20000
     meaning: "The buffer size used in shuffle the training data."
   base_learning_rate:
     val: 0.001
@@ -50,7 +50,7 @@ train:
     val: 0.2
     meaning: "The real learning rate of the embedding layer will be (crf_learning_rate * base_learning_rate)."
   enable_ce:
-    val: true
+    val: false
     meaning: 'If set, run the task with continuous evaluation logs.'
   cpu_num:
     val: 10
@@ -73,7 +73,7 @@ data:
     val: "./data/test.tsv"
     meaning: "The folder where the test data is located."
   infer_data:
-    val: "./data/test.tsv"
+    val: "./data/infer.tsv"
     meaning: "The folder where the infer data is located."
   model_save_dir:
     val: "./models"
