@@ -13,8 +13,8 @@
 #limitations under the License.
 
 from .alexnet import AlexNet
-from .mobilenet_v1 import MobileNetV1_x0_25, MobileNetV1_x0_5, MobileNetV1_x0_75, MobileNetV1
-from .mobilenet_v2 import MobileNetV2_x0_25, MobileNetV2_x0_5, MobileNetV2_x0_75, MobileNetV2, MobileNetV2_x1_5, MobileNetV2_x2_0
+from .mobilenet_v1 import MobileNetV1_x0_25, MobileNetV1_x0_5, MobileNetV1_x1_0, MobileNetV1_x0_75, MobileNetV1
+from .mobilenet_v2 import MobileNetV2_x0_25, MobileNetV2_x0_5, MobileNetV2_x0_75, MobileNetV2_x1_0, MobileNetV2_x1_5, MobileNetV2_x2_0, MobileNetV2
 from .mobilenet_v3 import MobileNetV3_small_x0_25, MobileNetV3_small_x0_5, MobileNetV3_small_x0_75, MobileNetV3_small_x1_0, MobileNetV3_small_x1_25, MobileNetV3_large_x0_25, MobileNetV3_large_x0_5, MobileNetV3_large_x0_75, MobileNetV3_large_x1_0, MobileNetV3_large_x1_25
 from .googlenet import GoogLeNet
 from .vgg import VGG11, VGG13, VGG16, VGG19
@@ -32,7 +32,7 @@ from .shufflenet_v2_swish import ShuffleNetV2_swish, ShuffleNetV2_x0_5_swish, Sh
 from .shufflenet_v2 import ShuffleNetV2_x0_25, ShuffleNetV2_x0_33, ShuffleNetV2_x0_5, ShuffleNetV2_x1_0, ShuffleNetV2_x1_5, ShuffleNetV2_x2_0, ShuffleNetV2
 from .fast_imagenet import FastImageNet
 from .xception import Xception41, Xception65, Xception71
-from .xception_deeplab import Xception41_deeplab , Xception65_deeplab , Xception71_deeplab 
+from .xception_deeplab import Xception41_deeplab, Xception65_deeplab, Xception71_deeplab
 from .densenet import DenseNet121, DenseNet161, DenseNet169, DenseNet201, DenseNet264
 from .squeezenet import SqueezeNet1_0, SqueezeNet1_1
 from .darknet import DarkNet53
