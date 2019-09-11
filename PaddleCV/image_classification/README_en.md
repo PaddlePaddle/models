@@ -240,11 +240,11 @@ Pretrained models can be downloaded by clicking related model names.
 |[MobileNetV1_x0_25](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_x0_25_pretrained.tar) | 51.43% | 75.46% | 2.283 | 0.866 |
 |[MobileNetV1_x0_5](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_x0_5_pretrained.tar) | 63.52% | 84.73% | 2.378 | 1.058 |
 |[MobileNetV1_x0_75](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_x0_75_pretrained.tar) | 68.81% | 88.23% | 2.540 | 1.386 |
-|[MobileNetV1_x1_0](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_x1_0_pretrained.tar) | 70.99% | 89.68% | 2.609 |1.615 |
+|[MobileNetV1](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar) | 70.99% | 89.68% | 2.609 |1.615 |
 |[MobileNetV2_x0_25](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x0_25_pretrained.tar) | 53.21% | 76.52% | 4.267 | 3.777 |
 |[MobileNetV2_x0_5](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x0_5_pretrained.tar) | 65.03% | 85.72% | 4.514 | 4.150 |
 |[MobileNetV2_x0_75](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x0_75_pretrained.tar) | 69.83% | 89.01% | 4.313 | 3.720 |
-|[MobileNetV2_x1_0](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x1_0_pretrained.tar) | 72.15% | 90.65% | 4.546 | 5.278 |
+|[MobileNetV2](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_pretrained.tar) | 72.15% | 90.65% | 4.546 | 5.278 |
 |[MobileNetV2_x1_5](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x1_5_pretrained.tar) | 74.12% | 91.67% | 5.235 | 6.909 |
 |[MobileNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV2_x2_0_pretrained.tar) | 75.23% | 92.58% | 6.680 | 7.658 |
 |[MobileNet3_small_x1_0](https://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV3_small_x1_0_pretrained.tar) | 67.46% | 87.12% | 6.809 |  |
