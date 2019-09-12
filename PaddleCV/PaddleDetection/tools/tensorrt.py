@@ -258,7 +258,7 @@ def benchmark():
 
     print(cfg)
 
-    reader = create_reader(feed)
+    reader = create_reader(feed, max_iter=10)
 
     model_path = FLAGS.model_path
     config = create_config(
@@ -270,7 +270,13 @@ def benchmark():
 
     data = reader().next()
     fields = feed.fields
-    data = batch_row2col(data, fields)
+
+    batch_data = data
+    if len(data) < feed.batch_size:
+        for i in range(len(data), feed.batch_size):
+            batch_data.append(data[0])
+
+    data = batch_row2col(batch_data, fields)
     data_dict = {k: v for k, v in zip(fields, data)}
 
     inputs = create_inputs(data_dict, cfg.architecture, True)
@@ -291,7 +297,7 @@ def benchmark():
 
     ms = (t2 - t1) * 1000.0 / float(cnt)
 
-    print("Inference: {} ms per image".format(ms))
+    print("Inference: {} ms per batch image".format(ms))
 
     if FLAGS.visualize:
         imid2path = reader.imid2path
