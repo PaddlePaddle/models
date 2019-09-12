@@ -263,7 +263,7 @@ def main(files_pattern):
             coord.request_stop()
             coord.join(threads)
 
-    print vid_num
+    print(vid_num)
 
     record_name = files_pattern.split('/')[-1].split('.')[0]
     outputdir = target_dir

@@ -2,5 +2,8 @@
 	path = PaddleNLP/language_representations_kit/ERNIE
 	url = https://github.com/PaddlePaddle/ERNIE
 [submodule "PaddleRL"]
-        path = PaddleRL
-        url = https://github.com/PaddlePaddle/PARL
+	path = PaddleRL
+	url = https://github.com/PaddlePaddle/PARL
+[submodule "PaddleCV/PaddleSeg"]
+	path = PaddleCV/PaddleSeg
+	url = https://github.com/PaddlePaddle/PaddleSeg

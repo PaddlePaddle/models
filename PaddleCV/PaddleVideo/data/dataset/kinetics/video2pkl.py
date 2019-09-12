@@ -68,7 +68,7 @@ def generate_pkl(entry):
     images = sorted(glob.glob(vid + '/*.jpg'))
     ims = []
     for img in images:
-        f = open(img)
+        f = open(img, 'rb')
         ims.append(f.read())
         f.close()
 

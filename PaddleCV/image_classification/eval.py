@@ -26,43 +26,48 @@ import functools
 
 import paddle
 import paddle.fluid as fluid
-import reader_cv2 as reader
+import reader
 import models
-from utils.learning_rate import cosine_decay
-from utils.utility import add_arguments, print_arguments, check_gpu
+from utils import *
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('batch_size',       int,  256,                 "Minibatch size.")
-add_arg('use_gpu',          bool, True,                "Whether to use GPU or not.")
-add_arg('class_dim',        int,  1000,                "Class number.")
-add_arg('image_shape',      str,  "3,224,224",         "Input image size")
-add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
-add_arg('model',            str,  "SE_ResNeXt50_32x4d", "Set the network to use.")
-add_arg('resize_short_size', int, 256,                "Set resize short size")
+add_arg('data_dir',         str,  "./data/ILSVRC2012/", "The ImageNet datset")
+add_arg('batch_size',       int,  256,                  "Minibatch size.")
+add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
+add_arg('class_dim',        int,  1000,                 "Class number.")
+add_arg('image_shape',      str,  "3,224,224",          "Input image size")
+parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
+add_arg('model',            str,  "ResNet50", "Set the network to use.")
+add_arg('resize_short_size', int, 256,                  "Set resize short size")
+add_arg('reader_thread',    int,  8,                    "The number of multi thread reader")
+add_arg('reader_buf_size',  int,  2048,                 "The buf size of multi thread reader")
+parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
+parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
+add_arg('crop_size',        int,  224,                  "The value of crop size")
 # yapf: enable
 
 
 def eval(args):
-    # parameters from arguments
-    class_dim = args.class_dim
-    model_name = args.model
-    pretrained_model = args.pretrained_model
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
     model_list = [m for m in dir(models) if "__" not in m]
-    assert model_name in model_list, "{} is not in lists: {}".format(args.model,
+    assert args.model in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
+    assert os.path.isdir(
+        args.pretrained_model
+    ), "{} doesn't exist, please load right pretrained model path for eval".format(
+        args.pretrained_model)
 
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 
     # model definition
-    model = models.__dict__[model_name]()
+    model = models.__dict__[args.model]()
 
-    if model_name == "GoogleNet":
-        out0, out1, out2 = model.net(input=image, class_dim=class_dim)
+    if args.model == "GoogLeNet":
+        out0, out1, out2 = model.net(input=image, class_dim=args.class_dim)
         cost0 = fluid.layers.cross_entropy(input=out0, label=label)
         cost1 = fluid.layers.cross_entropy(input=out1, label=label)
         cost2 = fluid.layers.cross_entropy(input=out2, label=label)
@@ -74,7 +79,8 @@ def eval(args):
         acc_top1 = fluid.layers.accuracy(input=out0, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
     else:
-        out = model.net(input=image, class_dim=class_dim)
+        out = model.net(input=image, class_dim=args.class_dim)
+
         cost, pred = fluid.layers.softmax_with_cross_entropy(
             out, label, return_softmax=True)
         avg_cost = fluid.layers.mean(x=cost)
@@ -89,9 +95,10 @@ def eval(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    fluid.io.load_persistables(exe, pretrained_model)
+    fluid.io.load_persistables(exe, args.pretrained_model)
 
-    val_reader = reader.val(settings=args, batch_size=args.batch_size)
+    val_reader = paddle.batch(
+        reader.val(settings=args), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     test_info = [[], [], []]
@@ -129,7 +136,7 @@ def eval(args):
 def main():
     args = parser.parse_args()
     print_arguments(args)
-    check_gpu(args.use_gpu)
+    check_gpu()
     eval(args)
 
 
