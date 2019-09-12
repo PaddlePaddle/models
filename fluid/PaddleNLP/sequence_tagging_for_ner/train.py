@@ -61,9 +61,6 @@ def main(train_data_file,
     avg_cost, feature_out, word, mark, target = ner_net(
         word_dict_len, label_dict_len, parallel)
 
-    sgd_optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
-    sgd_optimizer.minimize(avg_cost)
-
     crf_decode = fluid.layers.crf_decoding(
         input=feature_out, param_attr=fluid.ParamAttr(name='crfw'))
 
@@ -77,6 +74,8 @@ def main(train_data_file,
 
     inference_program = fluid.default_main_program().clone(for_test=True)
     test_fetch_list = [num_infer_chunks, num_label_chunks, num_correct_chunks]
+    sgd_optimizer = fluid.optimizer.SGD(learning_rate=1e-3)
+    sgd_optimizer.minimize(avg_cost)
 
     if "CE_MODE_X" not in os.environ:
         train_reader = paddle.batch(
