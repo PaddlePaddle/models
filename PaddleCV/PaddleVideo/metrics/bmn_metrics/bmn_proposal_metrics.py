@@ -30,21 +30,31 @@ class MetricsCalculator():
         self.dscale = cfg["MODEL"]["tscale"]
         self.subset = cfg[self.mode.upper()]["subset"]
         self.anno_file = cfg["MODEL"]["anno_file"]
+        self.file_list = cfg["INFER"]["filelist"]
         self.get_dataset_dict()
         self.cols = ["xmin", "xmax", "score"]
         self.snippet_xmins = [1.0 / self.tscale * i for i in range(self.tscale)]
         self.snippet_xmaxs = [
             1.0 / self.tscale * i for i in range(1, self.tscale + 1)
         ]
+        if self.mode == "test" or self.mode == "infer":
+            self.output_path = cfg[self.mode.upper()]["output_path"]
+            self.result_path = cfg[self.mode.upper()]["result_path"]
         self.reset()
 
     def get_dataset_dict(self):
-        annos = json.load(open(self.anno_file))
-        self.video_dict = {}
-        for video_name in annos.keys():
-            video_subset = annos[video_name]["subset"]
-            if self.subset in video_subset:
+        if self.mode == "infer":
+            annos = json.load(open(self.file_list))
+            self.video_dict = {}
+            for video_name in annos.keys():
                 self.video_dict[video_name] = annos[video_name]
+        else:
+            annos = json.load(open(self.anno_file))
+            self.video_dict = {}
+            for video_name in annos.keys():
+                video_subset = annos[video_name]["subset"]
+                if self.subset in video_subset:
+                    self.video_dict[video_name] = annos[video_name]
         self.video_list = list(self.video_dict.keys())
         self.video_list.sort()
 
@@ -56,9 +66,8 @@ class MetricsCalculator():
         self.aggr_pem_cls_loss = 0.0
         self.aggr_batch_size = 0
         if self.mode == 'test' or self.mode == "infer":
-            result_path = "data/output/BMN_results"
-            if not os.path.exists(result_path):
-                os.makedirs(result_path)
+            if not os.path.exists(self.output_path):
+                os.makedirs(self.output_path)
 
     def gen_props(self, pred_bm, pred_start, pred_end, fid):
         video_name = self.video_list[fid]
@@ -74,19 +83,18 @@ class MetricsCalculator():
                 end_index = start_index + idx
                 if end_index < self.tscale and start_mask[
                         start_index] == 1 and end_mask[end_index] == 1:
-
                     xmin = self.snippet_xmins[start_index]
                     xmax = self.snippet_xmaxs[end_index]
                     xmin_score = pred_start[start_index]
                     xmax_score = pred_end[end_index]
                     bm_score = pred_bm[idx, jdx]
-                    conf_score = xmin_score * xmax_score * bm_score  #reg_score*cls_score
+                    conf_score = xmin_score * xmax_score * bm_score
                     score_vector_list.append([xmin, xmax, conf_score])
 
         score_vector_list = np.stack(score_vector_list)
         video_df = pd.DataFrame(score_vector_list, columns=self.cols)
         video_df.to_csv(
-            "data/output/BMN_results/%s.csv" % video_name, index=False)
+            os.path.join(self.output_path, "%s.csv" % video_name), index=False)
 
     def accumulate(self, fetch_list):
         cur_batch_size = 1  # iteration counter
@@ -112,7 +120,7 @@ class MetricsCalculator():
         pred_bm = np.array(fetch_list[0])
         pred_start = np.array(fetch_list[1][0])
         pred_end = np.array(fetch_list[2][0])
-        fid = fetch_list[3][0][0]
+        fid = fetch_list[3][0]
         self.gen_props(pred_bm, pred_start, pred_end, fid)
 
     def finalize_metrics(self):
@@ -121,10 +129,12 @@ class MetricsCalculator():
         self.avg_pem_reg_loss = self.aggr_pem_reg_loss / self.aggr_batch_size
         self.avg_pem_cls_loss = self.aggr_pem_cls_loss / self.aggr_batch_size
         if self.mode == 'test':
-            bmn_post_processing(self.video_dict, self.subset)
+            bmn_post_processing(self.video_dict, self.subset, self.output_path,
+                                self.result_path)
 
     def finalize_infer_metrics(self):
-        bmn_post_processing(self.video_dict, self.subset)
+        bmn_post_processing(self.video_dict, self.subset, self.output_path,
+                            self.result_path)
 
     def get_computed_metrics(self):
         json_stats = {}

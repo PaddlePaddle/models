@@ -26,20 +26,29 @@ class MetricsCalculator():
     def __init__(self, cfg, name='BsnPem', mode='train'):
         self.name = name
         self.mode = mode  # 'train', 'valid', 'test', 'infer'
-        #self.tscale = cfg["MODEL"]["tscale"]
         self.subset = cfg[self.mode.upper()][
             "subset"]  # 'train', 'validation', 'test'
         self.anno_file = cfg["MODEL"]["anno_file"]
+        self.file_list = cfg["INFER"]["filelist"]
         self.get_dataset_dict()
+        if self.mode == "test" or self.mode == "infer":
+            self.output_path_pem = cfg[self.mode.upper()]["output_path_pem"]
+            self.result_path_pem = cfg[self.mode.upper()]["result_path_pem"]
         self.reset()
 
     def get_dataset_dict(self):
-        annos = json.load(open(self.anno_file))
-        self.video_dict = {}
-        for video_name in annos.keys():
-            video_subset = annos[video_name]["subset"]
-            if self.subset in video_subset:
+        if self.mode == "infer":
+            annos = json.load(open(self.file_list))
+            self.video_dict = {}
+            for video_name in annos.keys():
                 self.video_dict[video_name] = annos[video_name]
+        else:
+            annos = json.load(open(self.anno_file))
+            self.video_dict = {}
+            for video_name in annos.keys():
+                video_subset = annos[video_name]["subset"]
+                if self.subset in video_subset:
+                    self.video_dict[video_name] = annos[video_name]
         self.video_list = list(self.video_dict.keys())
         self.video_list.sort()
 
@@ -47,10 +56,9 @@ class MetricsCalculator():
         logger.info('Resetting {} metrics...'.format(self.mode))
         self.aggr_loss = 0.0
         self.aggr_batch_size = 0
-        if self.mode == 'test' or 'infer':
-            result_path = "data/output/PEM_results"
-            if not os.path.exists(result_path):
-                os.makedirs(result_path)
+        if self.mode == 'test' or self.mode == 'infer':
+            if not os.path.exists(self.output_path_pem):
+                os.makedirs(self.output_path_pem)
 
     def save_results(self, pred_iou, props_info, fid):
         video_name = self.video_list[fid]
@@ -61,7 +69,9 @@ class MetricsCalculator():
         df["xmin_score"] = props_info[0, 2, :]
         df["xmax_score"] = props_info[0, 3, :]
         df["iou_score"] = pred_iou.squeeze()
-        df.to_csv("data/output/PEM_results/" + video_name + ".csv", index=False)
+        df.to_csv(
+            os.path.join(self.output_path_pem, video_name + ".csv"),
+            index=False)
 
     def accumulate(self, fetch_list):
         cur_batch_size = 1  # iteration counter
@@ -79,16 +89,18 @@ class MetricsCalculator():
     def accumulate_infer_results(self, fetch_list):
         pred_iou = np.array(fetch_list[0])
         props_info = np.array(fetch_list[1])
-        fid = fetch_list[2][0][0]
+        fid = fetch_list[2][0]
         self.save_results(pred_iou, props_info, fid)
 
     def finalize_metrics(self):
         self.avg_loss = self.aggr_loss / self.aggr_batch_size
         if self.mode == 'test':
-            bsn_post_processing(self.video_dict, self.subset)
+            bsn_post_processing(self.video_dict, self.subset,
+                                self.output_path_pem, self.result_path_pem)
 
     def finalize_infer_metrics(self):
-        bsn_post_processing(self.video_dict, self.subset)
+        bsn_post_processing(self.video_dict, self.subset, self.output_path_pem,
+                            self.result_path_pem)
 
     def get_computed_metrics(self):
         json_stats = {}

@@ -97,9 +97,7 @@ class BMN(ModelBase):
             feed_list.append(fileid)
         elif self.mode == 'infer':
             # only image feature input when inference
-            fileid = fluid.layers.data(
-                name='fileid', shape=fileid_shape, dtype='int64')
-            feed_list.append(fileid)
+            pass
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -108,7 +106,7 @@ class BMN(ModelBase):
             assert self.mode != 'infer', \
                         'pyreader is not recommendated when infer, please set use_pyreader to be false.'
             self.py_reader = fluid.io.PyReader(
-                feed_list=feed_list, capacity=4, iterable=True)
+                feed_list=feed_list, capacity=8, iterable=True)
 
         self.feat_input = [feat]
         self.gt_iou_map = gt_iou_map
@@ -167,7 +165,7 @@ class BMN(ModelBase):
                 self.gt_iou_map, self.gt_start, self.gt_end, self.fileid
             ]
         elif self.mode == 'infer':
-            return self.feat_input + [self.fileid]
+            return self.feat_input
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -184,8 +182,7 @@ class BMN(ModelBase):
                          [self.fileid]
         elif self.mode == 'infer':
             preds = self.outputs()
-            fetch_list = [item for item in preds] + \
-                         [self.fileid]
+            fetch_list = [item for item in preds]
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))

@@ -43,9 +43,15 @@ TEST:
     batch_size: 1
     num_threads: 1
     score_thresh: 0.001
+    output_path_tem: "data/output/EVAL/TEM_results"
+    output_path_pgm_proposal: "data/output/EVAL/PGM_proposals"
+    output_path_pgm_feature: "data/output/EVAL/PGM_feature"
 
 INFER:
     subset: "test"
     filelist: 'data/dataset/bmn/infer.list'
     batch_size: 1
     num_threads: 1
+    output_path_tem: "data/output/INFER/TEM_results"
+    output_path_pgm_proposal: "data/output/INFER/PGM_proposals"
+    output_path_pgm_feature: "data/output/INFER/PGM_feature"

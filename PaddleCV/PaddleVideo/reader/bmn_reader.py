@@ -14,32 +14,26 @@
 
 import os
 import random
-import cv2
-import sys
 import numpy as np
-import gc
-import copy
 import multiprocessing
 import json
 import logging
 logger = logging.getLogger(__name__)
 
-try:
-    import cPickle as pickle
-    from cStringIO import StringIO
-except ImportError:
-    import pickle
-    from io import BytesIO
-
 from .reader_utils import DataReader
 from models.bmn.bmn_utils import iou_with_anchors, ioa_with_anchors
-
-python_ver = sys.version_info
 
 
 class BMNReader(DataReader):
     """
     Data reader for BMN model, which was stored as features extracted by prior networks
+    dataset cfg: anno_file, annotation file path,
+                 feat_path, feature path,
+                 tscale, temporal length of BM map,
+                 dscale, duration scale of BM map,
+                 anchor_xmin, anchor_xmax, the range of each point in the feature sequence,
+                 batch_size, batch size of input data,
+                 num_threads, number of threads of data processing   
     """
 
     def __init__(self, name, mode, cfg):
@@ -48,6 +42,7 @@ class BMNReader(DataReader):
         self.tscale = cfg.MODEL.tscale  # 100
         self.dscale = cfg.MODEL.dscale  # 100
         self.anno_file = cfg.MODEL.anno_file
+        self.file_list = cfg.INFER.filelist
         self.subset = cfg[mode.upper()]['subset']
         self.tgap = 1. / self.tscale
         self.feat_path = cfg.MODEL.feat_path
@@ -61,12 +56,17 @@ class BMNReader(DataReader):
             self.num_threads = 1  # set num_threads as 1 for test and infer
 
     def get_dataset_dict(self):
-        annos = json.load(open(self.anno_file))
         self.video_dict = {}
-        for video_name in annos.keys():
-            video_subset = annos[video_name]["subset"]
-            if self.subset in video_subset:
+        if self.mode == "infer":
+            annos = json.load(open(self.file_list))
+            for video_name in annos.keys():
                 self.video_dict[video_name] = annos[video_name]
+        else:
+            annos = json.load(open(self.anno_file))
+            for video_name in annos.keys():
+                video_subset = annos[video_name]["subset"]
+                if self.subset in video_subset:
+                    self.video_dict[video_name] = annos[video_name]
         self.video_list = list(self.video_dict.keys())
         self.video_list.sort()
         print("%s subset video numbers: %d" %
@@ -136,7 +136,9 @@ class BMNReader(DataReader):
         return gt_iou_map, gt_start, gt_end
 
     def load_file(self, video_name):
-        video_feat = np.load(self.feat_path + "/" + video_name + ".npy")
+        file_name = video_name + ".npy"
+        file_path = os.path.join(self.feat_path, file_name)
+        video_feat = np.load(file_path)
         video_feat = video_feat.T
         video_feat = video_feat.astype("float32")
         return video_feat
@@ -154,13 +156,11 @@ class BMNReader(DataReader):
         """reader for inference"""
 
         def reader():
-
             batch_out = []
             for video_name in self.video_list:
                 video_idx = self.video_list.index(video_name)
                 video_feat = self.load_file(video_name)
-                #print(video_idx,np.shape(video_feat))
-                batch_out.append((video_feat, video_idx, video_idx))
+                batch_out.append((video_feat, video_idx))
 
                 if len(batch_out) == self.batch_size:
                     yield batch_out

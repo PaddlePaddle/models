@@ -5,8 +5,8 @@ MODEL:
     feat_dim: 32
     hidden_dim: 128
     anno_file: "data/dataset/bmn/activitynet_1.3_annotations.json"
-    feat_path: "data/output/PGM_feature/"
-    prop_path: "data/output/PGM_proposals/"
+    feat_path: "data/output/EVAL/PGM_feature/"
+    prop_path: "data/output/EVAL/PGM_proposals/"
 
 
 TRAIN:
@@ -39,6 +39,8 @@ TEST:
     snms_t2: 0.01
     top_K: 1000
     num_gpus: 1
+    output_path_pem: "data/output/EVAL/PEM_results"
+    result_path_pem: "data/evaluate_results"
 
 INFER:
     subset: "test"
@@ -47,3 +49,7 @@ INFER:
     num_threads: 1
     top_K: 1000
     num_gpus: 1
+    feat_path: "data/output/INFER/PGM_feature/"
+    prop_path: "data/output/INFER/PGM_proposals/"
+    output_path_pem: "data/output/INFER/PEM_results"
+    result_path_pem: "data/predict_results"

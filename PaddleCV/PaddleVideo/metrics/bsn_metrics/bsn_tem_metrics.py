@@ -30,6 +30,7 @@ class MetricsCalculator():
         self.subset = cfg[self.mode.upper()][
             "subset"]  # 'train', 'validation', 'train_val'
         self.anno_file = cfg["MODEL"]["anno_file"]
+        self.file_list = cfg["INFER"]["filelist"]
         self.get_pgm_cfg(cfg)
         self.get_dataset_dict()
         self.cols = ["xmin", "xmax", "score"]
@@ -37,19 +38,32 @@ class MetricsCalculator():
         self.snippet_xmaxs = [
             1.0 / self.tscale * i for i in range(1, self.tscale + 1)
         ]
+        if self.mode == "test" or self.mode == "infer":
+            print('1212')
+            self.output_path_tem = cfg[self.mode.upper()]["output_path_tem"]
+            self.output_path_pgm_feature = cfg[self.mode.upper()][
+                "output_path_pgm_feature"]
+            self.output_path_pgm_proposal = cfg[self.mode.upper()][
+                "output_path_pgm_proposal"]
         self.reset()
 
     def get_dataset_dict(self):
-        annos = json.load(open(self.anno_file))
-        self.video_dict = {}
-        for video_name in annos.keys():
-            video_subset = annos[video_name]["subset"]
-            if self.subset == "train_val":
-                if "train" in video_subset or "validation" in video_subset:
-                    self.video_dict[video_name] = annos[video_name]
-            else:
-                if self.subset in video_subset:
-                    self.video_dict[video_name] = annos[video_name]
+        if self.mode == "infer":
+            annos = json.load(open(self.file_list))
+            self.video_dict = {}
+            for video_name in annos.keys():
+                self.video_dict[video_name] = annos[video_name]
+        else:
+            annos = json.load(open(self.anno_file))
+            self.video_dict = {}
+            for video_name in annos.keys():
+                video_subset = annos[video_name]["subset"]
+                if self.subset == "train_val":
+                    if "train" in video_subset or "validation" in video_subset:
+                        self.video_dict[video_name] = annos[video_name]
+                else:
+                    if self.subset in video_subset:
+                        self.video_dict[video_name] = annos[video_name]
         self.video_list = list(self.video_dict.keys())
         self.video_list.sort()
 
@@ -78,16 +92,13 @@ class MetricsCalculator():
         self.aggr_end_loss = 0.0
         self.aggr_action_loss = 0.0
         self.aggr_batch_size = 0
-        if self.mode == 'test' or 'infer':
-            result_path = "data/output/TEM_results"
-            if not os.path.exists(result_path):
-                os.makedirs(result_path)
-            result_path = "data/output/PGM_feature"
-            if not os.path.exists(result_path):
-                os.makedirs(result_path)
-            result_path = "data/output/PGM_proposals"
-            if not os.path.exists(result_path):
-                os.makedirs(result_path)
+        if self.mode == 'test' or self.mode == 'infer':
+            if not os.path.exists(self.output_path_tem):
+                os.makedirs(self.output_path_tem)
+            if not os.path.exists(self.output_path_pgm_feature):
+                os.makedirs(self.output_path_pgm_feature)
+            if not os.path.exists(self.output_path_pgm_proposal):
+                os.makedirs(self.output_path_pgm_proposal)
 
     def save_results(self, pred_tem, fid):
         video_name = self.video_list[fid]
@@ -97,7 +108,8 @@ class MetricsCalculator():
         output_tem = np.stack([pred_start, pred_end, pred_action], axis=1)
         video_df = pd.DataFrame(output_tem, columns=["start", "end", "action"])
         video_df.to_csv(
-            "data/output/TEM_results/" + video_name + ".csv", index=False)
+            os.path.join(self.output_path_tem, video_name + ".csv"),
+            index=False)
 
     def accumulate(self, fetch_list):
         cur_batch_size = 1  # iteration counter
@@ -119,7 +131,7 @@ class MetricsCalculator():
 
     def accumulate_infer_results(self, fetch_list):
         pred_tem = np.array(fetch_list[0])
-        fid = fetch_list[1][0][0]
+        fid = fetch_list[1][0]
         self.save_results(pred_tem, fid)
 
     def finalize_metrics(self):
@@ -129,19 +141,26 @@ class MetricsCalculator():
         self.avg_action_loss = self.aggr_action_loss / self.aggr_batch_size
         if self.mode == 'test':
             print("start generate proposals of %s subset" % self.subset)
-            pgm_gen_proposal(self.video_dict, self.pgm_config)
+            pgm_gen_proposal(self.video_dict, self.pgm_config,
+                             self.output_path_tem,
+                             self.output_path_pgm_proposal)
             print("finish generate proposals of %s subset" % self.subset)
             print("start generate proposals feature of %s subset" % self.subset)
-            pgm_gen_feature(self.video_dict, self.pgm_config)
+            pgm_gen_feature(self.video_dict, self.pgm_config,
+                            self.output_path_tem, self.output_path_pgm_proposal,
+                            self.output_path_pgm_feature)
             print("finish generate proposals feature of %s subset" %
                   self.subset)
 
     def finalize_infer_metrics(self):
         print("start generate proposals of %s subset" % self.subset)
-        pgm_gen_proposal(self.video_dict, self.pgm_config)
+        pgm_gen_proposal(self.video_dict, self.pgm_config, self.output_path_tem,
+                         self.output_path_pgm_proposal)
         print("finish generate proposals of %s subset" % self.subset)
         print("start generate proposals feature of %s subset" % self.subset)
-        pgm_gen_feature(self.video_dict, self.pgm_config)
+        pgm_gen_feature(self.video_dict, self.pgm_config, self.output_path_tem,
+                        self.output_path_pgm_proposal,
+                        self.output_path_pgm_feature)
         print("finish generate proposals feature of %s subset" % self.subset)
 
     def get_computed_metrics(self):

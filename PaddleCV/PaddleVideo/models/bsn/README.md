@@ -32,6 +32,7 @@ TEM模块以snippet-level的特征序列作为输入，预测每一个时序位�
     export CUDA_VISIBLE_DEVICES=0
     export FLAGS_eager_delete_tensor_gb=0.0
     export FLAGS_fraction_of_gpu_memory_to_use=0.98
+    export FLAGS_fast_eager_deletion_mode=1
     python train.py --model_name=BsnTem \
                     --config=./configs/bsn_tem.yaml \
                     --log_interval=10 \
@@ -51,7 +52,7 @@ TEM模块以snippet-level的特征序列作为输入，预测每一个时序位�
 
 *  采用Adam优化器，初始learning\_rate=0.001
 *  权重衰减系数为1e-4
-*  学习率在迭代次数达到4200的时候做一次衰减
+*  学习率在迭代次数达到4200的时候做一次衰减，衰减系数为0.1
 
 PEM模块以PGM模块输出的BSP特征作为输入，输出proposal包含动作类别的置信度。
 数据准备完毕后，可以通过如下两种方式启动训练：
@@ -59,6 +60,7 @@ PEM模块以PGM模块输出的BSP特征作为输入，输出proposal包含动作
     export CUDA_VISIBLE_DEVICES=0
     export FLAGS_eager_delete_tensor_gb=0.0
     export FLAGS_fraction_of_gpu_memory_to_use=0.98
+    export FLAGS_fast_eager_deletion_mode=1
     python train.py --model_name=BsnPem \
                     --config=./configs/bsn_pem.yaml \
                     --log_interval=10 \
@@ -69,7 +71,7 @@ PEM模块以PGM模块输出的BSP特征作为输入，输出proposal包含动作
 
     bash run.sh train BsnPem ./configs/bsn_pem.yaml
 
-- 请先运行[TEM模块评估代码](#模型评估)，该代码会自动调用PGM模块生成PEM模块运行所需的BSP特征，特征的默认存储路径为data/output/PGM\_feature。
+- 请先运行[TEM模块评估代码](#模型评估)，该代码会自动调用PGM模块生成PEM模块运行所需的BSP特征，特征的默认存储路径为data/output/EVAL/PGM\_feature。
 
 - 从头开始训练，使用上述启动命令行或者脚本程序即可启动训练，不需要用到预训练模型
 
@@ -80,7 +82,7 @@ PEM模块以PGM模块输出的BSP特征作为输入，输出proposal包含动作
 
 *  采用Adam优化器，初始learning\_rate=0.01
 *  权重衰减系数为1e-5
-*  学习率在迭代次数达到6000的时候做一次衰减
+*  学习率在迭代次数达到6000的时候做一次衰减，衰减系数为0.1
 
 
 ## 模型评估
@@ -99,7 +101,7 @@ TEM模块可通过如下两种方式进行模型评估:
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnTem_final.pdparams)进行评估
 
-- 上述程序会将运行结果保存在data/output/TEM\_results文件夹下，同时调用PGM模块生成proposal和BSP特征，分别保存在data/output/PGM\_proposals和data/output/PGM\_feature路径下。
+- 上述程序会将运行结果保存在data/output/EVAL/TEM\_results文件夹下，同时调用PGM模块生成proposal和BSP特征，分别保存在data/output/EVAL/PGM\_proposals和data/output/EVAL/PGM\_feature路径下。
 
 - 使用CPU进行评估时，请将上面的命令行或者run.sh脚本中的`use_gpu`设置为False
 
@@ -117,7 +119,7 @@ TEM评估模块完成后，PEM模块可通过如下两种方式进行模型评�
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnPem_final.pdparams)进行评估。
 
-- 上述程序会将运行结果保存在data/output/PEM\_results文件夹下，测试结果保存在data/evaluate\_results/bsn\_results\_validation.json文件中。使用ActivityNet官方提供的测试脚本，即可计算AR@AN、AUC。具体计算过程请参考[指标计算](../../metrics/bmn_metrics/README.md)
+- 上述程序会将运行结果保存在data/output/EVAL/PEM\_results文件夹下，测试结果保存在data/evaluate\_results/bsn\_results\_validation.json文件中。使用ActivityNet官方提供的测试脚本，即可计算AR@AN、AUC。具体计算过程请参考[指标计算](../../metrics/bmn_metrics/README.md)
 
 - 使用CPU进行评估时，请将上面的命令行或者run.sh脚本中的`use_gpu`设置为False
 
@@ -147,7 +149,7 @@ TEM模块可通过如下两种方式启动模型推断：
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnTem_final.pdparams)进行推断。
 
-- 上述程序会将运行结果保存在data/output的子目录TEM\_results、PGM\_proposals、PGM\_feature中。
+- 上述程序会将运行结果保存在data/output/INFER的子目录TEM\_results、PGM\_proposals、PGM\_feature中。
 
 - 使用CPU进行推断时，请将命令行或者run.sh脚本中的`use_gpu`设置为False
 
@@ -168,7 +170,7 @@ PEM模块可通过如下两种方式启动模型推断：
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnPem_final.pdparams)进行推断。
 
-- 上述程序会将运行结果保存在data/output/PEM\_results文件夹下，测试结果保存在data/predict\_results/bsn\_results\_test.json文件中。
+- 上述程序会将运行结果保存在data/output/INFER/PEM\_results文件夹下，测试结果保存在data/predict\_results/bsn\_results\_test.json文件中。
 
 - 使用CPU进行推断时，请将命令行或者run.sh脚本中的`use_gpu`设置为False
 

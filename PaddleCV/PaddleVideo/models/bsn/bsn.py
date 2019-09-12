@@ -92,9 +92,7 @@ class BsnTem(ModelBase):
             feed_list.append(fileid)
         elif self.mode == 'infer':
             # only image feature input when inference
-            fileid = fluid.layers.data(
-                name='fileid', shape=fileid_shape, dtype='int64')
-            feed_list.append(fileid)
+            pass
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -103,7 +101,7 @@ class BsnTem(ModelBase):
             assert self.mode != 'infer', \
                         'pyreader is not recommendated when infer, please set use_pyreader to be false.'
             self.py_reader = fluid.io.PyReader(
-                feed_list=feed_list, capacity=4, iterable=True)
+                feed_list=feed_list, capacity=8, iterable=True)
 
         self.feat_input = [feat]
         self.gt_start = gt_start
@@ -156,7 +154,7 @@ class BsnTem(ModelBase):
                 self.gt_start, self.gt_end, self.gt_action, self.fileid
             ]
         elif self.mode == 'infer':
-            return self.feat_input + [self.fileid]
+            return self.feat_input
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -173,8 +171,7 @@ class BsnTem(ModelBase):
                          [self.fileid]
         elif self.mode == 'infer':
             preds = self.outputs()
-            fetch_list = [item for item in preds] + \
-                         [self.fileid]
+            fetch_list = [item for item in preds]
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -191,7 +188,7 @@ class BsnTem(ModelBase):
 
 
 class BsnPem(ModelBase):
-    """BsnTem model"""
+    """BsnPem model"""
 
     def __init__(self, name, cfg, mode='train'):
         super(BsnPem, self).__init__(name, cfg, mode=mode)
@@ -250,10 +247,7 @@ class BsnPem(ModelBase):
         elif self.mode == 'infer':
             props_info = fluid.layers.data(
                 name='props_info', shape=props_info_shape, dtype='float32')
-            fileid = fluid.layers.data(
-                name='fileid', shape=fileid_shape, dtype='int64')
             feed_list.append(props_info)
-            feed_list.append(fileid)
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -312,7 +306,7 @@ class BsnPem(ModelBase):
         elif self.mode == 'test':
             return self.feat_input + [self.gt_iou, self.props_info, self.fileid]
         elif self.mode == 'infer':
-            return self.feat_input + [self.props_info, self.fileid]
+            return self.feat_input + [self.props_info]
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -330,7 +324,7 @@ class BsnPem(ModelBase):
         elif self.mode == 'infer':
             preds = self.outputs()
             fetch_list = [item for item in preds] + \
-                         [self.props_info, self.fileid]
+                         [self.props_info]
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))

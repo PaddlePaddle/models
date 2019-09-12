@@ -28,25 +28,29 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
-    export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+    export CUDA_VISIBLE_DEVICES=0,1,2,3
     export FLAGS_eager_delete_tensor_gb=0.0
     export FLAGS_fraction_of_gpu_memory_to_use=0.98
+    export FLAGS_fast_eager_deletion_mode=1
     python train.py --model_name=BMN \
                     --config=./configs/bmn.yaml \
                     --log_interval=10 \
                     --valid_interval=1 \
                     --use_gpu=True \
-                    --save_dir=./data/checkpoints \
+                    --save_dir=./data/checkpoints
 
     bash run.sh train BMN ./configs/bmn.yaml
 
 - 从头开始训练，使用上述启动命令行或者脚本程序即可启动训练，不需要用到预训练模型。
 
+- 若使用第二种方式，请在run.sh脚本文件中设置4卡训练：
+    export CUDA_VISIBLE_DEVICES=0,1,2,3
+
 **训练策略：**
 
 *  采用Adam优化器，初始learning\_rate=0.001
 *  权重衰减系数为1e-4
-*  学习率在迭代次数达到4200的时候做一次衰减
+*  学习率在迭代次数达到4200的时候做一次衰减，衰减系数为0.1
 
 
 ## 模型评估
@@ -65,7 +69,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BMN_final.pdparams)进行评估。
 
-- 上述程序会将运行结果保存在data/output/BMN\_results文件夹下，测试结果保存在data/evaluate\_results/bmn\_results\_validation.json文件中。使用ActivityNet官方提供的测试脚本，即可计算AR@AN和AUC。具体计算过程请参考[指标计算](../../metrics/bmn_metrics/README.md)。
+- 上述程序会将运行结果保存在data/output/EVAL\BMN\_results文件夹下，测试结果保存在data/evaluate\_results/bmn\_results\_validation.json文件中。使用ActivityNet官方提供的测试脚本，即可计算AR@AN和AUC。具体计算过程请参考[指标计算](../../metrics/bmn_metrics/README.md)。
 
 - 使用CPU进行评估时，请将上面的命令行或者run.sh脚本中的`use_gpu`设置为False。
 
@@ -96,7 +100,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备
 
 - 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BMN_final.pdparams)进行推断。
 
-- 上述程序会将运行结果保存在data/output/BMN\_results文件夹下，测试结果保存在data/predict\_results/bmn\_results\_test.json文件中。
+- 上述程序会将运行结果保存在data/output/INFER/BMN\_results文件夹下，测试结果保存在data/predict\_results/bmn\_results\_test.json文件中。
 
 - 使用CPU进行推断时，请将命令行或者run.sh脚本中的`use_gpu`设置为False
 

@@ -1,9 +1,20 @@
-#coding=UTF-8
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
 
 import paddle.fluid as fluid
 from paddle.fluid import ParamAttr
 import numpy as np
-#from .ctcn_utils import get_ctcn_conv_initializer as get_init
 import math
 
 DATATYPE = 'float32'
@@ -83,7 +94,7 @@ class BMN_NET(object):
         return conv
 
     def net(self, input):
-        # Base Module of BMN #
+        # Base Module of BMN
         x_1d = self.conv1d(
             input,
             input_size=400,
@@ -102,7 +113,7 @@ class BMN_NET(object):
             act="relu",
             name="Base_2")
 
-        # Temporal Evaluation Module of BMN #
+        # Temporal Evaluation Module of BMN
         x_1d_s = self.conv1d(
             x_1d,
             num_k=self.hidden_dim_1d,
@@ -126,7 +137,7 @@ class BMN_NET(object):
         x_1d_s = fluid.layers.squeeze(input=x_1d_s, axes=[1])
         x_1d_e = fluid.layers.squeeze(input=x_1d_e, axes=[1])
 
-        # Proposal Evaluation Module of BMN #
+        # Proposal Evaluation Module of BMN
         x_1d = self.conv1d(
             x_1d,
             num_k=self.hidden_dim_2d,
@@ -169,8 +180,7 @@ class BMN_NET(object):
             mask_vector = [1 for i in range(self.tscale - idx)
                            ] + [0 for i in range(idx)]
             bm_mask.append(mask_vector)
-        bm_mask = np.array(bm_mask)
-        bm_mask = bm_mask.astype(np.float32)
+        bm_mask = np.array(bm_mask, dtype=np.float32)
         self.bm_mask = fluid.layers.create_global_var(
             shape=[self.dscale, self.tscale],
             value=0,
@@ -213,7 +223,6 @@ class BMN_NET(object):
 
     def _get_interp1d_mask(self):
         # generate sample mask for each point in Boundary-Matching Map
-        #if True:#self.is_training:
         mask_mat = []
         for start_index in range(self.tscale):
             mask_mat_vector = []

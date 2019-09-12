@@ -1,3 +1,8 @@
+'''
+Calculate AR@N and AUC;
+Modefied from ActivityNet Gitub repository](https://github.com/activitynet/ActivityNet.git)
+'''
+
 import sys
 sys.path.append('../../Evaluation')
 
