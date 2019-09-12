@@ -37,7 +37,7 @@ class DPN(object):
         args = self.get_net_args(self.layers)
         bws = args['bw']
         inc_sec = args['inc_sec']
-        rs = args['bw']
+        rs = args['r']
         k_r = args['k_r']
         k_sec = args['k_sec']
         G = args['G']
@@ -121,12 +121,10 @@ class DPN(object):
             pool_type='avg', )
 
         stdv = 0.01
-        param_attr = fluid.param_attr.ParamAttr(
-            initializer=fluid.initializer.Uniform(-stdv, stdv))
         fc6 = fluid.layers.fc(input=pool5,
                               size=class_dim,
-                              param_attr=param_attr,
-                              name="fc6")
+                              param_attr=ParamAttr(initializer=fluid.initializer.Uniform(-stdv, stdv), name='fc_weights'),
+                              bias_attr=ParamAttr(name='fc_offset'))
 
         return fc6
 
@@ -317,7 +315,7 @@ def DPN68():
 
 
 def DPN92():
-    onvodel = DPN(layers=92)
+    model = DPN(layers=92)
     return model
 
 

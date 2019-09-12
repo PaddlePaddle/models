@@ -88,10 +88,8 @@ def parse_args():
     add_arg('data_dir',                 str,    "./data/ILSVRC2012/",   "The ImageNet dataset root directory.")
     add_arg('pretrained_model',         str,    None,                   "Whether to load pretrained model.")
     add_arg('checkpoint',               str,    None,                   "Whether to resume checkpoint.")
-    add_arg('save_params',              str,    "./output",                   "Whether to save params.")
-
     add_arg('print_step',               int,    10,                     "The steps interval to print logs")
-    add_arg('save_step',                int,    100,                    "The steps interval to save checkpoints")
+    add_arg('save_step',                int,    1,                      "The steps interval to save checkpoints")
 
     # SOLVER AND HYPERPARAMETERS
     add_arg('model',                    str,    "ResNet50",   "The name of network.")
@@ -121,12 +119,11 @@ def parse_args():
     parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
     # SWITCH
-    add_arg('use_inplace',              bool,   True,                   "Whether to use inplace memory optimization.")
     #NOTE: (2019/08/08) FP16 is moving to PaddlePaddle/Fleet now
     #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
-    add_arg('label_smoothing_epsilon',  float,  0.2,                    "The value of label_smoothing_epsilon parameter")
+    add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
     add_arg('random_seed',              int,    None,                   "random seed")
@@ -371,7 +368,7 @@ def best_strategy_compiled(args, program, loss):
         return program
     else:
         build_strategy = fluid.compiler.BuildStrategy()
-        build_strategy.enable_inplace = args.use_inplace
+        build_strategy.enable_inplace = True
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_threads = fluid.core.get_cuda_device_count()

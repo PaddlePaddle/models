@@ -340,6 +340,10 @@ python compress.py \
 本示例先用模拟退火策略搜索出一组tokens, 再用搜索出的tokens初始化构建模型进行训练。
 
 > tokens：light_nas将搜索空间中的CNN模型映射为一组token, token可以唯一地表示一个CNN模型。搜索过程就是在不断优化token, 使其构建得到的模型性能更强。
+>
+> 在light_nas中，token是一个长度为`30`的list，以每`6`个数为一组，共有`5`组
+>
+> 每组中的`6`个数分别代表： `0:通道扩增系数，1:卷积核数量，2:网络层数，3:卷积核尺寸，4.是否用shorcut，5.是否用SE(squeeze excitation)`
 
 step1: 进入路径`PaddlePaddle/models/PaddleSlim/light_nas/`。
 
@@ -351,7 +355,7 @@ step4: 执行`sh run.sh`, 可根据实际情况修改`run.sh`中的`CUDA_VISIBLE
 
 step5: 修改`light_nas_space.py`文件中的`LightNASSpace::init_tokens`, 使其返回step4中搜到的最优tokens。
 
-step6: 修改compress.xml文件，将compressor下的`strategies`去掉。
+step6: 修改`compress.xml`文件，将compressor下的`strategies`去掉。
 
 step7: 执行`sh run.sh`进行训练任务。
 
