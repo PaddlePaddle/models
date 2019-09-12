@@ -29,5 +29,19 @@ test_epoch设置加载第10轮训练的模型。
 
 注意：最后的 log info是测试数据集的整体 Logloss 和 AUC。
 
-## 结果
+## 单机结果
 训练集训练10轮后，测试集的LogLoss : `0.48657` 和 AUC : `0.7308`。
+
+## 多机训练
+运行命令本地模拟多机场景，默认使用2 X 2，即2个pserver，2个trainer的方式组网训练。
+```bash
+sh cluster_train.sh
+```
+注意: 
+
+- 本地模拟需要关闭代理
+
+- 0号trainer保存模型参数，预测任务参考单机预测
+
+- 每次训练完成后需要手动停止pserver进程，使用以下命令查看pserver进程：
+  >ps -ef | grep python
