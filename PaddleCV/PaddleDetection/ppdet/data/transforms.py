@@ -385,7 +385,8 @@ class MixUp(object):
         gt_score1, gt_score2 = sample1['gt_score'], sample2['gt_score']
         gt_box = np.concatenate((gt_box1, gt_box2), axis=0)
         gt_label = np.concatenate((gt_label1, gt_label2), axis=0)
-        gt_score = np.concatenate((gt_score1, gt_score2), axis=0)
+        gt_score = np.concatenate((gt_score1 * factor,
+                                   gt_score2 * (1. - factor)), axis=0)
 
         img1, img2 = sample1['image'], sample2['image']
         h1, w1, _ = img1.shape
