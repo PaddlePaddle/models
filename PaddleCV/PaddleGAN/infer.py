@@ -26,7 +26,7 @@ import numpy as np
 import imageio
 import glob
 from util.config import add_arguments, print_arguments
-from data_reader import celeba_reader_creator, triplex_reader_creator
+from data_reader import celeba_reader_creator, reader_creator, triplex_reader_creato
 from util.utility import check_attribute_conflict, check_gpu, save_batch_image
 from util import utility
 import copy
@@ -78,9 +78,16 @@ def infer(args):
         name='label_org_', shape=[args.c_dim], dtype='float32')
     label_trg_ = fluid.layers.data(
         name='label_trg_', shape=[args.c_dim], dtype='float32')
+    image_name = fluid.layers.data(
+        name='image_name', shape=[args.n_samples], dtype='int32')
 
     model_name = 'net_G'
     if args.model_net == 'CycleGAN':
+        py_reader = fluid.io.PyReader(
+            feed_list=[input, image_name],
+            capacity=4,  ## batch_size * 4
+            iterable=True,
+            use_double_buffer=True)
         from network.CycleGAN_network import CycleGAN_model
         model = CycleGAN_model()
         if args.input_style == "A":
@@ -90,15 +97,35 @@ def infer(args):
         else:
             raise "Input with style [%s] is not supported." % args.input_style
     elif args.model_net == 'Pix2pix':
+        py_reader = fluid.io.PyReader(
+            feed_list=[input, image_name],
+            capacity=4,  ## batch_size * 4
+            iterable=True,
+            use_double_buffer=True)
+
         from network.Pix2pix_network import Pix2pix_model
         model = Pix2pix_model()
         fake = model.network_G(input, "generator", cfg=args)
     elif args.model_net == 'StarGAN':
+
+        py_reader = fluid.io.PyReader(
+            feed_list=[input, label_org_, label_trg_, image_name],
+            capacity=32,
+            iterable=True,
+            use_double_buffer=True)
+
         from network.StarGAN_network import StarGAN_model
         model = StarGAN_model()
         fake = model.network_G(input, label_trg_, name="g_main", cfg=args)
     elif args.model_net == 'STGAN':
         from network.STGAN_network import STGAN_model
+
+        py_reader = fluid.io.PyReader(
+            feed_list=[input, label_org_, label_trg_, image_name],
+            capacity=32,
+            iterable=True,
+            use_double_buffer=True)
+
         model = STGAN_model()
         fake, _ = model.network_G(
             input,
@@ -109,6 +136,13 @@ def infer(args):
             is_test=True)
     elif args.model_net == 'AttGAN':
         from network.AttGAN_network import AttGAN_model
+
+        py_reader = fluid.io.PyReader(
+            feed_list=[input, label_org_, label_trg_, image_name],
+            capacity=32,
+            iterable=True,
+            use_double_buffer=True)
+
         model = AttGAN_model()
         fake, _ = model.network_G(
             input,
@@ -124,14 +158,14 @@ def infer(args):
             name='conditions', shape=[1], dtype='float32')
 
         from network.CGAN_network import CGAN_model
-        model = CGAN_model()
+        model = CGAN_model(args.n_samples)
         fake = model.network_G(noise, conditions, name="G")
     elif args.model_net == 'DCGAN':
         noise = fluid.layers.data(
             name='noise', shape=[args.noise_size], dtype='float32')
 
         from network.DCGAN_network import DCGAN_model
-        model = DCGAN_model()
+        model = DCGAN_model(args.n_samples)
         fake = model.network_G(noise, name="G")
     elif args.model_net == 'SPADE':
         from network.SPADE_network import SPADE_model
@@ -143,6 +177,13 @@ def infer(args):
     else:
         raise NotImplementedError("model_net {} is not support".format(
             args.model_net))
+
+    def _compute_start_end(image_name):
+        image_name_start = np.array(image_name)[0].astype('int32')
+        image_name_end = image_name_start + args.n_samples - 1
+        image_name_save = str(np.array(image_name)[0].astype('int32')) + '.jpg'
+        print("read {}.jpg ~ {}.jpg".format(image_name_start, image_name_end))
+        return image_name_save
 
     # prepare environment
     place = fluid.CPUPlace()
@@ -167,36 +208,34 @@ def infer(args):
             args=args,
             mode="VAL")
         reader_test = test_reader.make_reader(return_name=True)
-        for data in zip(reader_test()):
-            real_img, label_org, name = data[0]
-            print("read {}".format(name))
-            label_trg = copy.deepcopy(label_org)
-            tensor_img = fluid.LoDTensor()
-            tensor_label_org = fluid.LoDTensor()
-            tensor_label_trg = fluid.LoDTensor()
-            tensor_label_org_ = fluid.LoDTensor()
-            tensor_label_trg_ = fluid.LoDTensor()
-            tensor_img.set(real_img, place)
-            tensor_label_org.set(label_org, place)
-            real_img_temp = save_batch_image(real_img)
+        py_reader.decorate_batch_generator(
+            reader_test,
+            places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
+        for data in py_reader():
+            real_img, label_org, label_trg, image_name = data[0]['input'], data[
+                0]['label_org_'], data[0]['label_trg_'], data[0]['image_name']
+            image_name_save = _compute_start_end(image_name)
+            real_img_temp = save_batch_image(np.array(real_img))
             images = [real_img_temp]
             for i in range(args.c_dim):
-                label_trg_tmp = copy.deepcopy(label_trg)
-                for j in range(len(label_org)):
+                label_trg_tmp = copy.deepcopy(np.array(label_trg))
+                for j in range(len(label_trg_tmp)):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
                     label_trg_tmp = check_attribute_conflict(
                         label_trg_tmp, attr_names[i], attr_names)
-                label_org_ = list(map(lambda x: ((x * 2) - 1) * 0.5, label_org))
-                label_trg_ = list(
+                label_org_tmp = list(
+                    map(lambda x: ((x * 2) - 1) * 0.5, np.array(label_org)))
+                label_trg_tmp = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
                 if args.model_net == 'AttGAN':
-                    for k in range(len(label_org)):
-                        label_trg_[k][i] = label_trg_[k][i] * 2.0
-                tensor_label_org_.set(label_org_, place)
-                tensor_label_trg.set(label_trg, place)
-                tensor_label_trg_.set(label_trg_, place)
+                    for k in range(len(label_trg_tmp)):
+                        label_trg_tmp[k][i] = label_trg_tmp[k][i] * 2.0
+                tensor_label_org_ = fluid.LoDTensor()
+                tensor_label_trg_ = fluid.LoDTensor()
+                tensor_label_org_.set(label_org_tmp, place)
+                tensor_label_trg_.set(label_trg_tmp, place)
                 out = exe.run(feed={
-                    "input": tensor_img,
+                    "input": real_img,
                     "label_org_": tensor_label_org_,
                     "label_trg_": tensor_label_trg_
                 },
@@ -204,10 +243,11 @@ def infer(args):
                 fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            if len(label_org) > 1:
+            if len(np.array(label_org)) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(args.output + "/fake_img_" + name[0], (
-                (images_concat + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                os.path.join(args.output, "fake_img_" + image_name_save), (
+                    (images_concat + 1) * 127.5).astype(np.uint8))
     elif args.model_net == 'StarGAN':
         test_reader = celeba_reader_creator(
             image_dir=args.dataset_dir,
@@ -215,61 +255,66 @@ def infer(args):
             args=args,
             mode="VAL")
         reader_test = test_reader.make_reader(return_name=True)
-        for data in zip(reader_test()):
-            real_img, label_org, name = data[0]
-            print("read {}".format(name))
-            tensor_img = fluid.LoDTensor()
-            tensor_label_org = fluid.LoDTensor()
-            tensor_img.set(real_img, place)
-            tensor_label_org.set(label_org, place)
-            real_img_temp = save_batch_image(real_img)
+        py_reader.decorate_batch_generator(
+            reader_test,
+            places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
+        for data in py_reader():
+            real_img, label_org, label_trg, image_name = data[0]['input'], data[
+                0]['label_org_'], data[0]['label_trg_'], data[0]['image_name']
+            image_name_save = _compute_start_end(image_name)
+            real_img_temp = save_batch_image(np.array(real_img))
             images = [real_img_temp]
             for i in range(args.c_dim):
-                label_trg_tmp = copy.deepcopy(label_org)
-                for j in range(len(label_org)):
+                label_trg_tmp = copy.deepcopy(np.array(label_org))
+                for j in range(len(np.array(label_org))):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
-                    label_trg = check_attribute_conflict(
+                    label_trg_tmp = check_attribute_conflict(
                         label_trg_tmp, attr_names[i], attr_names)
-                tensor_label_trg = fluid.LoDTensor()
-                tensor_label_trg.set(label_trg, place)
+                tensor_label_trg_ = fluid.LoDTensor()
+                tensor_label_trg_.set(label_trg_tmp, place)
                 out = exe.run(
-                    feed={"input": tensor_img,
-                          "label_trg_": tensor_label_trg},
+                    feed={"input": real_img,
+                          "label_trg_": tensor_label_trg_},
                     fetch_list=[fake.name])
                 fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            if len(label_org) > 1:
+            if len(np.array(label_org)) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(args.output + "/fake_img_" + name[0], (
-                (images_concat + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                os.path.join(args.output, "fake_img_" + image_name_save), (
+                    (images_concat + 1) * 127.5).astype(np.uint8))
 
     elif args.model_net == 'Pix2pix' or args.model_net == 'CycleGAN':
-        for file in glob.glob(args.dataset_dir):
-            print("read {}".format(file))
-            image_name = os.path.basename(file)
-            image = Image.open(file).convert('RGB')
-            image = image.resize((args.image_size, args.image_size), Image.BICUBIC)
-            image = np.array(image).transpose([2, 0, 1]).astype('float32')
-            image = image / 255.0
-            image = (image - 0.5) / 0.5
-            data = image[np.newaxis, :]
-            tensor = fluid.LoDTensor()
-            tensor.set(data, place)
-
-            fake_temp = exe.run(fetch_list=[fake.name], feed={"input": tensor})
+        test_reader = reader_creator(
+            image_dir=args.dataset_dir,
+            list_filename=args.test_list,
+            shuffle=False,
+            batch_size=args.n_samples,
+            mode="VAL")
+        reader_test = test_reader.make_reader(args, return_name=True)
+        py_reader.decorate_batch_generator(
+            reader_test,
+            places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
+        id2name = test_reader.id2name
+        for data in py_reader():
+            real_img, image_name = data[0]['input'], data[0]['image_name']
+            image_name = id2name[np.array(image_name).astype('int32')[0]]
+            print("read: ", image_name)
+            fake_temp = exe.run(fetch_list=[fake.name],
+                                feed={"input": real_img})
             fake_temp = np.squeeze(fake_temp[0]).transpose([1, 2, 0])
-            input_temp = np.squeeze(data).transpose([1, 2, 0])
+            input_temp = np.squeeze(np.array(real_img)[0]).transpose([1, 2, 0])
 
-            imageio.imwrite(args.output + "/fake_" + image_name, (
-                (fake_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(
+                os.path.join(args.output, "fake_" + image_name), (
+                    (fake_temp + 1) * 127.5).astype(np.uint8))
     elif args.model_net == 'SPADE':
         test_reader = triplex_reader_creator(
             image_dir=args.dataset_dir,
             list_filename=args.test_list,
             shuffle=False,
             batch_size=1,
-            drop_last=False,
             mode="TEST")
         reader_test = test_reader.make_reader(
             args, return_name=True)
@@ -327,7 +372,7 @@ def infer(args):
 
         fig = utility.plot(fake_image)
         plt.savefig(
-            os.path.join(args.output, '/fake_dcgan.png'), bbox_inches='tight')
+            os.path.join(args.output, 'fake_dcgan.png'), bbox_inches='tight')
         plt.close(fig)
     else:
         raise NotImplementedError("model_net {} is not support".format(

@@ -80,27 +80,24 @@ class reader_creator(object):
                  list_filename,
                  shuffle=False,
                  batch_size=1,
-                 drop_last=False,
                  mode="TRAIN"):
         self.image_dir = image_dir
         self.list_filename = list_filename
         self.batch_size = batch_size
         self.mode = mode
 
+        self.name2id = {}
+        self.id2name = {}
+
         self.lines = open(self.list_filename).readlines()
 
         if self.mode == "TRAIN":
             self.shuffle = shuffle
-            self.drop_last = drop_last
         else:
             self.shuffle = False
-            self.drop_last = False
 
     def len(self):
-        if self.drop_last or len(self.lines) % self.batch_size == 0:
-            return len(self.lines) // self.batch_size
-        else:
-            return len(self.lines) // self.batch_size + 1
+        return len(self.lines) // self.batch_size
 
     def make_reader(self, args, return_name=False):
         print(self.image_dir, self.list_filename)
@@ -111,9 +108,11 @@ class reader_creator(object):
 
             if self.shuffle:
                 np.random.shuffle(self.lines)
-
-            for file in self.lines:
+            
+            for i, file in enumerate(self.lines):
                 file = file.strip('\n\r\t ')
+                self.name2id[os.path.basename(file)] = i
+                self.id2name[i] = os.path.basename(file)
                 img = Image.open(os.path.join(self.image_dir, file)).convert(
                     'RGB')
                 if self.mode == "TRAIN":
@@ -131,7 +130,7 @@ class reader_creator(object):
 
                 if return_name:
                     batch_out.append(img)
-                    batch_out_name.append(os.path.basename(file))
+                    batch_out_name.append(i)
                 else:
                     batch_out.append(img)
                 if len(batch_out) == self.batch_size:
@@ -139,13 +138,8 @@ class reader_creator(object):
                         yield batch_out, batch_out_name
                         batch_out_name = []
                     else:
-                        yield batch_out
+                        yield [batch_out]
                     batch_out = []
-            if self.drop_last == False and len(batch_out) != 0:
-                if return_name:
-                    yield batch_out, batch_out_name
-                else:
-                    yield batch_out
 
         return reader
 
@@ -158,14 +152,12 @@ class pair_reader_creator(reader_creator):
                  list_filename,
                  shuffle=False,
                  batch_size=1,
-                 drop_last=False,
                  mode="TRAIN"):
         super(pair_reader_creator, self).__init__(
             image_dir,
             list_filename,
             shuffle=shuffle,
             batch_size=batch_size,
-            drop_last=drop_last,
             mode=mode)
 
     def make_reader(self, args, return_name=False):
@@ -177,12 +169,15 @@ class pair_reader_creator(reader_creator):
             batch_out_name = []
             if self.shuffle:
                 np.random.shuffle(self.lines)
-            for line in self.lines:
+            for i, line in enumerate(self.lines):
                 files = line.strip('\n\r\t ').split('\t')
                 img1 = Image.open(os.path.join(self.image_dir, files[
                     0])).convert('RGB')
                 img2 = Image.open(os.path.join(self.image_dir, files[
                     1])).convert('RGB')
+
+                self.name2id[os.path.basename(files[0])] = i
+                self.id2name[i] = os.path.basename(files[0])
 
                 if self.mode == "TRAIN":
                     param = get_preprocess_param(args.image_size,
@@ -215,7 +210,7 @@ class pair_reader_creator(reader_creator):
                 batch_out_1.append(img1)
                 batch_out_2.append(img2)
                 if return_name:
-                    batch_out_name.append(os.path.basename(files[0]))
+                    batch_out_name.append(i)
                 if len(batch_out_1) == self.batch_size:
                     if return_name:
                         yield batch_out_1, batch_out_2, batch_out_name
@@ -224,11 +219,6 @@ class pair_reader_creator(reader_creator):
                         yield batch_out_1, batch_out_2
                     batch_out_1 = []
                     batch_out_2 = []
-            if self.drop_last == False and len(batch_out_1) != 0:
-                if return_name:
-                    yield batch_out_1, batch_out_2, batch_out_name
-                else:
-                    yield batch_out_1, batch_out_2
 
         return reader
 
@@ -241,14 +231,12 @@ class triplex_reader_creator(reader_creator):
                  list_filename,
                  shuffle=False,
                  batch_size=1,
-                 drop_last=False,
                  mode="TRAIN"):
         super(triplex_reader_creator, self).__init__(
             image_dir,
             list_filename,
             shuffle=shuffle,
             batch_size=batch_size,
-            drop_last=drop_last,
             mode=mode)
 
     def make_reader(self, args, return_name=False):
@@ -310,25 +298,13 @@ class triplex_reader_creator(reader_creator):
                         img3 = img3.resize((args.crop_width, args.crop_height),
                                            Image.NEAREST)
 
-                ###trans img1 to label
-                #input_label = np.zeros((args.label_nc, img1.size[1], img1.size[0]))
-                #for i in range(args.label_nc):
-                #    input_label[i]=np.where(img1==i,1,0)
-                #img1 = input_label
                 img1 = np.array(img1)
                 index = img1[np.newaxis, :,:]
                 input_label = np.zeros((args.label_nc, index.shape[1], index.shape[2]))
                 np.put_along_axis(input_label,index,1.0,0)
-                #TODO:hard code
-                #input_label = np.ones((args.label_nc, index.shape[1], index.shape[2]))
                 img1 = input_label
-                #print(img1)
-                ###end trans
-                #img1 = img1.transpose([2, 0, 1])
-                #print(np.array(img2))
                 img2 = (np.array(img2).astype('float32') / 255.0 - 0.5) / 0.5
                 img2 = img2.transpose([2, 0, 1])
-                #print(img2)
                 if not args.no_instance:
                     img3 = np.array(img3)[:, :, np.newaxis]
                     img3 = img3.transpose([2, 0, 1])
@@ -341,9 +317,6 @@ class triplex_reader_creator(reader_creator):
                     edge[:, :-1, :] = edge[:, :-1, :] | (img3[:, 1:, :] != img3[:, :-1, :])
                     img3 = edge.astype('float32')
                     ###end extracte
-                #print(img3)
-                #TODO:hard code
-                #img3 = np.ones((1, index.shape[1], index.shape[2]))
                 batch_out_1.append(img1)
                 batch_out_2.append(img2)
                 if not args.no_instance:
@@ -365,17 +338,6 @@ class triplex_reader_creator(reader_creator):
                     batch_out_1 = []
                     batch_out_2 = []
                     batch_out_3 = []
-            if self.drop_last == False and len(batch_out_1) != 0:
-                if return_name:
-                    if not args.no_instance:
-                        yield batch_out_1, batch_out_2, batch_out_3, batch_out_name
-                    else:
-                        yield batch_out_1, batch_out_2, batch_out_name
-                else:
-                    if not args.no_instance:
-                        yield batch_out_1, batch_out_2, batch_out_3
-                    else:
-                        yield batch_out_1, batch_out_2
 
         return reader
 
@@ -399,17 +361,14 @@ class celeba_reader_creator(reader_creator):
         attr2idx = {}
         for i, attr_name in enumerate(all_attr_names):
             attr2idx[attr_name] = i
-        lines = lines[2:]
 
         if self.mode == "TRAIN":
             self.batch_size = args.batch_size
-            self.drop_last = args.drop_last
             self.shuffle = args.shuffle
             lines = lines[2:train_end]
         else:
             self.batch_size = args.n_samples
             self.shuffle = False
-            self.drop_last = False
             if self.mode == "TEST":
                 lines = lines[train_end:test_end]
             else:
@@ -417,20 +376,17 @@ class celeba_reader_creator(reader_creator):
 
         self.images = []
         attr_names = args.selected_attrs.split(',')
-        for line in lines:
+        for i, line in enumerate(lines):
             arr = line.strip().split()
             name = os.path.join('img_align_celeba', arr[0])
             label = []
             for attr_name in attr_names:
                 idx = attr2idx[attr_name]
                 label.append(arr[idx + 1] == "1")
-            self.images.append((name, label))
+            self.images.append((name, label, arr[0]))
 
     def len(self):
-        if self.drop_last or len(self.images) % self.batch_size == 0:
-            return len(self.images) // self.batch_size
-        else:
-            return len(self.images) // self.batch_size + 1
+        return len(self.images) // self.batch_size
 
     def make_reader(self, return_name=False):
         print(self.image_dir, self.list_filename)
@@ -438,10 +394,11 @@ class celeba_reader_creator(reader_creator):
         def reader():
             batch_out_1 = []
             batch_out_2 = []
+            batch_out_3 = []
             batch_out_name = []
             if self.shuffle:
                 np.random.shuffle(self.images)
-            for file, label in self.images:
+            for file, label, f_name in self.images:
                 img = Image.open(os.path.join(self.image_dir, file))
                 label = np.array(label).astype("float32")
                 if self.args.model_net == "StarGAN":
@@ -455,20 +412,19 @@ class celeba_reader_creator(reader_creator):
                 batch_out_1.append(img)
                 batch_out_2.append(label)
                 if return_name:
-                    batch_out_name.append(os.path.basename(file))
+                    batch_out_name.append(int(f_name.split('.')[0]))
                 if len(batch_out_1) == self.batch_size:
+                    batch_out_3 = np.copy(batch_out_2)
+                    if self.shuffle:
+                        np.random.shuffle(batch_out_3)
                     if return_name:
-                        yield batch_out_1, batch_out_2, batch_out_name
+                        yield batch_out_1, batch_out_2, batch_out_3, batch_out_name
                         batch_out_name = []
                     else:
-                        yield batch_out_1, batch_out_2
+                        yield batch_out_1, batch_out_2, batch_out_3
                     batch_out_1 = []
                     batch_out_2 = []
-            if self.drop_last == False and len(batch_out_1) != 0:
-                if return_name:
-                    yield batch_out_1, batch_out_2, batch_out_name
-                else:
-                    yield batch_out_1, batch_out_2
+                    batch_out_3 = []
 
         return reader
 
@@ -549,17 +505,17 @@ class data_reader(object):
                     list_filename=trainA_list,
                     shuffle=self.cfg.shuffle,
                     batch_size=self.cfg.batch_size,
-                    drop_last=self.cfg.drop_last,
                     mode="TRAIN")
                 b_train_reader = reader_creator(
                     image_dir=dataset_dir,
                     list_filename=trainB_list,
                     shuffle=self.cfg.shuffle,
                     batch_size=self.cfg.batch_size,
-                    drop_last=self.cfg.drop_last,
                     mode="TRAIN")
                 a_reader_test = None
                 b_reader_test = None
+                a_id2name = None
+                b_id2name = None
                 if self.cfg.run_test:
                     testA_list = os.path.join(dataset_dir, "testA.txt")
                     testB_list = os.path.join(dataset_dir, "testB.txt")
@@ -568,25 +524,25 @@ class data_reader(object):
                         list_filename=testA_list,
                         shuffle=False,
                         batch_size=1,
-                        drop_last=self.cfg.drop_last,
                         mode="TEST")
                     b_test_reader = reader_creator(
                         image_dir=dataset_dir,
                         list_filename=testB_list,
                         shuffle=False,
                         batch_size=1,
-                        drop_last=self.cfg.drop_last,
                         mode="TEST")
                     a_reader_test = a_test_reader.make_reader(
                         self.cfg, return_name=True)
                     b_reader_test = b_test_reader.make_reader(
                         self.cfg, return_name=True)
+                    a_id2name = a_test_reader.id2name
+                    b_id2name = b_test_reader.id2name
 
                 batch_num = max(a_train_reader.len(), b_train_reader.len())
                 a_reader = a_train_reader.make_reader(self.cfg)
                 b_reader = b_train_reader.make_reader(self.cfg)
 
-                return a_reader, b_reader, a_reader_test, b_reader_test, batch_num
+                return a_reader, b_reader, a_reader_test, b_reader_test, batch_num, a_id2name, b_id2name
 
             elif self.cfg.model_net in ['StarGAN', 'STGAN', 'AttGAN']:
                 dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
@@ -611,7 +567,7 @@ class data_reader(object):
                     reader_test = test_reader.make_reader(return_name=True)
                 batch_num = train_reader.len()
                 reader = train_reader.make_reader()
-                return reader, reader_test, batch_num
+                return reader, reader_test, batch_num, None
 
             elif self.cfg.model_net in ['Pix2pix']:
                 dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
@@ -623,9 +579,9 @@ class data_reader(object):
                     list_filename=train_list,
                     shuffle=self.cfg.shuffle,
                     batch_size=self.cfg.batch_size,
-                    drop_last=self.cfg.drop_last,
                     mode="TRAIN")
                 reader_test = None
+                id2name = None
                 if self.cfg.run_test:
                     test_list = os.path.join(dataset_dir, "test.txt")
                     if self.cfg.test_list is not None:
@@ -635,7 +591,6 @@ class data_reader(object):
                         list_filename=test_list,
                         shuffle=False,
                         batch_size=1,
-                        drop_last=self.cfg.drop_last,
                         mode="TEST")
                     reader_test = test_reader.make_reader(
                         self.cfg, return_name=True)
@@ -652,7 +607,6 @@ class data_reader(object):
                     list_filename=train_list,
                     shuffle=self.cfg.shuffle,
                     batch_size=self.cfg.batch_size,
-                    drop_last=self.cfg.drop_last,
                     mode="TRAIN")
                 reader_test = None
                 if self.cfg.run_test:
@@ -664,13 +618,13 @@ class data_reader(object):
                         list_filename=test_list,
                         shuffle=False,
                         batch_size=1,
-                        drop_last=self.cfg.drop_last,
                         mode="TEST")
                     reader_test = test_reader.make_reader(
                         self.cfg, return_name=True)
+                    id2name = test_reader.id2name
                 batch_num = train_reader.len()
                 reader = train_reader.make_reader(self.cfg)
-                return reader, reader_test, batch_num
+                return reader, reader_test, batch_num, id2name
             else:
                 dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
                 train_list = os.path.join(dataset_dir, 'train.txt')
@@ -679,14 +633,15 @@ class data_reader(object):
                 train_reader = reader_creator(
                     image_dir=dataset_dir, list_filename=train_list)
                 reader_test = None
+                id2name = None
                 if self.cfg.run_test:
                     test_list = os.path.join(dataset_dir, "test.txt")
                     test_reader = reader_creator(
                         image_dir=dataset_dir,
                         list_filename=test_list,
-                        batch_size=self.cfg.n_samples,
-                        drop_last=self.cfg.drop_last)
+                        batch_size=self.cfg.n_samples)
                     reader_test = test_reader.get_test_reader(
                         self.cfg, shuffle=False, return_name=True)
+                    id2name = test_reader.id2name
                 batch_num = train_reader.len()
-                return train_reader, reader_test, batch_num
+                return train_reader, reader_test, batch_num, id2name
