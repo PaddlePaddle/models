@@ -23,11 +23,11 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 
 __all__ = [
-    "SE_ResNeXt", "SE_ResNeXt50_32x4d_vd", "SE_ResNeXt101_32x4d_vd", "SE154_vd"
+    "SE_ResNeXt_vd", "SE_ResNeXt50_32x4d_vd", "SE_ResNeXt101_32x4d_vd", "SENet154_vd"
 ]
 
 
-class SE_ResNeXt():
+class SE_ResNeXt_vd():
     def __init__(self, layers=50):
         self.layers = layers
 
@@ -262,7 +262,8 @@ class SE_ResNeXt():
             pool_size=2,
             pool_stride=2,
             pool_padding=0,
-            pool_type='avg')
+            pool_type='avg',
+            ceil_mode=True)
 
         conv = fluid.layers.conv2d(
             input=pool,
@@ -312,16 +313,16 @@ class SE_ResNeXt():
         return scale
 
 
-def SE_ResNeXt50_32x4d_vd():
-    model = SE_ResNeXt(layers=50)
+def SE_ResNeXt50_vd_32x4d():
+    model = SE_ResNeXt_vd(layers=50)
     return model
 
 
-def SE_ResNeXt101_32x4d_vd():
-    model = SE_ResNeXt(layers=101)
+def SE_ResNeXt101_vd_32x4d():
+    model = SE_ResNeXt_vd(layers=101)
     return model
 
 
-def SE_154_vd():
-    model = SE_ResNeXt(layers=152)
+def SENet154_vd():
+    model = SE_ResNeXt_vd(layers=152)
     return model

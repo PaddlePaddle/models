@@ -170,6 +170,7 @@ def save_test_image(epoch,
             res_inputB = Image.fromarray(((input_B_temp + 1) * 127.5).astype(
                 np.uint8))
             res_inputB.save(os.path.join(out_path, inputB_name))
+
     elif cfg.model_net == "SPADE":
         for data in zip(A_test_reader()):
             data_A, data_B, data_C, name = data[0]
@@ -195,6 +196,7 @@ def save_test_image(epoch,
             res_real = Image.fromarray(((input_B_temp + 1) * 127.5).astype(
                 np.uint8))
             res_real.save(out_path+"/real_"+str(epoch)+"_"+name)
+
     elif cfg.model_net == "StarGAN":
         for data in A_test_reader():
             real_img, label_org, label_trg, image_name = data[0][

@@ -123,7 +123,7 @@ def parse_args():
     #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
-    add_arg('label_smoothing_epsilon',  float,  0.2,                    "The value of label_smoothing_epsilon parameter")
+    add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
     add_arg('random_seed',              int,    None,                   "random seed")
