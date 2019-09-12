@@ -22,6 +22,8 @@ import logging
 import numpy as np
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid.layers import control_flow
+from paddle.fluid.contrib.extend_optimizer import extend_with_decoupled_weight_decay
 import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 
 from models.point_rcnn import PointRCNN
@@ -60,8 +62,8 @@ def parse_args():
     parser.add_argument(
         '--epoch',
         type=int,
-        default=201,
-        help='epoch number. default 201.')
+        default=200,
+        help='epoch number. default 200.')
     parser.add_argument(
         '--save_dir',
         type=str,
@@ -107,8 +109,17 @@ def parse_args():
     return args
 
 
-def exponential_with_clip(learning_rate, decay_steps, decay_rate,
-                                  min_lr):
+def cosine_warmup_decay(learning_rate, warmup_factor, decay_factor,
+                        total_step, warmup_pct):
+    def annealing_cos(start, end, pct):
+	"Cosine anneal from `start` to `end` as pct goes from 0.0 to 1.0."
+	cos_out = fluid.layers.cos(pct * np.pi) + 1.
+        return cos_out * (start - end) / 2. + end
+
+    warmup_start_lr = learning_rate * warmup_factor
+    decay_end_lr = learning_rate * decay_factor
+    warmup_step = total_step * warmup_pct
+
     global_step = lr_scheduler._decay_step_counter()
 
     lr = fluid.layers.create_global_var(
@@ -118,22 +129,18 @@ def exponential_with_clip(learning_rate, decay_steps, decay_rate,
         persistable=False,
         name="learning_rate")
 
-    with fluid.layers.control_flow.Switch() as switch:
-        for i in range(len(decay_steps)):
-            decay_step_val = fluid.layers.fill_constant(
-                shape=[1],
-                dtype='float32',
-                value=float(decay_steps[i]),
-                force_cpu=True)
-            with switch.case(global_step < decay_step_val):
-                decayed_lr = learning_rate * (decay_rate ** i)
-                decayed_lr = max(decayed_lr, min_lr)
-                fluid.layers.assign(np.array(decayed_lr).astype('float32'), lr)
+    warmup_step_var = fluid.layers.fill_constant(
+        shape=[1], dtype='float32', value=float(warmup_step), force_cpu=True)
 
-        lr_min_var = fluid.layers.fill_constant(
-            shape=[1], dtype='float32', value=float(min_lr))
-        with switch.default():
-            fluid.layers.assign(lr_min_var, lr)
+    with control_flow.Switch() as switch:
+        with switch.case(global_step < warmup_step_var):
+            cur_lr = annealing_cos(warmup_start_lr, learning_rate,
+                                   global_step / warmup_step_var)
+            fluid.layers.assign(cur_lr, lr)
+        with switch.case(global_step >= warmup_step_var):
+            cur_lr = annealing_cos(learning_rate, decay_end_lr,
+                                   (global_step - warmup_step_var) / (total_step - warmup_step))
+            fluid.layers.assign(cur_lr, lr)
 
     return lr
 
@@ -185,13 +192,22 @@ def train():
             train_feeds = train_model.get_feeds()
             train_outputs = train_model.get_outputs()
             train_loss = train_outputs['loss']
-            optimizer = fluid.optimizer.Adam(
-                learning_rate=fluid.layers.linear_lr_warmup(
-                    learning_rate=fluid.layers.piecewise_decay(
-                        boundaries=boundaries, values=values),
-                    warmup_steps=cfg.TRAIN.WARMUP_EPOCH * steps_per_epoch,
-                    start_lr=cfg.TRAIN.WARMUP_MIN,
-                    end_lr=cfg.TRAIN.LR),
+            fluid.clip.set_gradient_clip(fluid.clip.GradientClipByGlobalNorm(clip_norm=cfg.TRAIN.GRAD_NORM_CLIP))
+            AdamW = extend_with_decoupled_weight_decay(fluid.optimizer.Adam)
+            optimizer = AdamW(
+            # optimizer = fluid.optimizer.Adam(
+                learning_rate=cosine_warmup_decay(
+                    learning_rate=cfg.TRAIN.LR,
+                    warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
+                    decay_factor=1e-5,
+                    total_step=steps_per_epoch * args.epoch,
+                    warmup_pct=cfg.TRAIN.PCT_START),
+                # learning_rate=fluid.layers.linear_lr_warmup(
+                #     learning_rate=fluid.layers.piecewise_decay(
+                #         boundaries=boundaries, values=values),
+                #         warmup_steps=cfg.TRAIN.WARMUP_EPOCH * steps_per_epoch,
+                #         start_lr=cfg.TRAIN.WARMUP_MIN,
+                #         end_lr=cfg.TRAIN.LR),
                 # learning_rate=fluid.layers.linear_lr_warmup(
                 #     learning_rate=exponential_with_clip(
                 #         cfg.TRAIN.LR,
@@ -201,9 +217,13 @@ def train():
                 #     warmup_steps=cfg.TRAIN.WARMUP_EPOCH,
                 #     start_lr=cfg.TRAIN.WARMUP_MIN,
                 #     end_lr=cfg.TRAIN.LR),
-                regularization=fluid.regularizer.L2Decay(cfg.TRAIN.WEIGHT_DECAY))
+                beta1=0.9, beta2=0.99,
+                # regularization=fluid.regularizer.L2Decay(cfg.TRAIN.WEIGHT_DECAY))
+                weight_decay=cfg.TRAIN.WEIGHT_DECAY)
             optimizer.minimize(train_loss)
             lr = optimizer._global_learning_rate()
+            logger.info("Optimizer learning rate name: {}".format(lr.name))
+            print("optimizer betas:", optimizer._beta1, optimizer._beta2)
     train_keys, train_values = parse_outputs(train_outputs)
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
@@ -232,11 +252,7 @@ def train():
         fluid.io.save_persistables(exe, path, prog)
 
     # get reader
-    # readers = []
-    # for i in range(8):
-    #     readers.append(kitti_rcnn_reader.get_reader(args.batch_size, train_feeds))
-    # train_reader = paddle.reader.multiprocess_reader(readers)
-    train_reader = kitti_rcnn_reader.get_reader(args.batch_size, train_feeds)
+    train_reader = kitti_rcnn_reader.get_reader(args.batch_size, train_feeds, True)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     train_stat = Stat()
@@ -260,6 +276,7 @@ def train():
         except fluid.core.EOFException:
             logger.info("[TRAIN] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, train_stat.get_mean_log(), np.mean(train_periods[2:])))
             save_model(exe, train_prog, os.path.join(args.save_dir, str(epoch_id)))
+            train_stat.reset()
             train_periods = []
         finally:
             train_pyreader.reset()

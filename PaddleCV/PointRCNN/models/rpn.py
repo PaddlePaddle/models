@@ -19,7 +19,7 @@ import numpy as np
 
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.initializer import Constant
+from paddle.fluid.initializer import Normal, Constant
 
 from models.pointnet2_msg import PointNet2MSG
 from models.pointnet2_modules import conv_bn
@@ -57,7 +57,16 @@ class RPN(object):
             cls_out = conv_bn(cls_out, self.cfg.RPN.CLS_FC[i], bn=self.cfg.RPN.USE_BN, name='rpn_cls_{}'.format(i))
             if i == 0 and self.cfg.RPN.DP_RATIO > 0:
                 cls_out = fluid.layers.dropout(cls_out, self.cfg.RPN.DP_RATIO)
-        cls_out = conv_bn(cls_out, 1, bn=False, act=None, name='rpn_cls_out')
+        # cls_out = conv_bn(cls_out, 1, bn=False, act=None, name='rpn_cls_out')
+        cls_out = fluid.layers.conv2d(cls_out,
+                                      num_filters=1,
+				      filter_size=1,
+				      stride=1,
+				      padding=0,
+				      dilation=1,
+                                      param_attr=ParamAttr(name='rpn_cls_out_conv_weights'),
+                                      bias_attr=ParamAttr(name='rpn_cls_out_conv_bias',
+                                                          initializer=Constant(-np.log(99))))
         self.cls_out = fluid.layers.squeeze(cls_out, axes=[1, 3])
 
         # regression branch
@@ -72,7 +81,16 @@ class RPN(object):
             reg_out = conv_bn(reg_out, self.cfg.RPN.REG_FC[i], bn=self.cfg.RPN.USE_BN, name='rpn_reg_{}'.format(i))
             if i == 0 and self.cfg.RPN.DP_RATIO > 0:
                 reg_out = fluid.layers.dropout(reg_out, self.cfg.RPN.DP_RATIO)
-        reg_out = conv_bn(reg_out, reg_channel, bn=False, act=None, name='rpn_reg_out')
+        # reg_out = conv_bn(reg_out, reg_channel, bn=False, act=None, name='rpn_reg_out')
+        reg_out = fluid.layers.conv2d(reg_out,
+                                      num_filters=reg_channel,
+				      filter_size=1,
+				      stride=1,
+				      padding=0,
+				      dilation=1,
+                                      param_attr=ParamAttr(name='rpn_reg_out_conv_weights',
+                                                           initializer=Normal(0, 0.001)),
+                                      bias_attr=ParamAttr(name='rpn_reg_out_conv_bias'))
         reg_out = fluid.layers.squeeze(reg_out, axes=[3])
         self.reg_out = fluid.layers.transpose(reg_out, [0, 2, 1])
 

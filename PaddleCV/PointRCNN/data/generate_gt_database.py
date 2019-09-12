@@ -68,8 +68,12 @@ class GTDatabaseGenerator(KittiReader):
                 continue
 
             boxes_pts_mask_list = pts_utils.pts_in_boxes3d(pts_rect, gt_boxes3d)
+            # print('boxes_pts_mask_list', boxes_pts_mask_list.shape)
+            # np.save('boxes_pts_mask_list.npy', boxes_pts_mask_list)
+            # if idx > 10:
+            #     break
 
-            for k in range(boxes_pts_mask_list.__len__()):
+            for k in range(boxes_pts_mask_list.shape[0]):
                 pt_mask_flag = (boxes_pts_mask_list[k] == 1)
                 cur_pts = pts_rect[pt_mask_flag].astype(np.float32)
                 cur_pts_intensity = pts_intensity[pt_mask_flag].astype(np.float32)
