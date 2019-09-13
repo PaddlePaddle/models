@@ -43,6 +43,8 @@ TEM模块以snippet-level的特征序列作为输入，预测每一个时序位�
 
     bash run.sh train BsnTem ./configs/bsn_tem.yaml
 
+- 代码运行需要先安装pandas
+
 - 从头开始训练，使用上述启动命令行或者脚本程序即可启动训练，不需要用到预训练模型
 
 - 若使用第二种方式，请在run.sh脚本文件中设置单卡训练：

@@ -41,7 +41,9 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备
 
     bash run.sh train BMN ./configs/bmn.yaml
 
-- 从头开始训练，使用上述启动命令行或者脚本程序即可启动训练，不需要用到预训练模型。
+- 代码运行需要先安装pandas
+
+- 从头开始训练，使用上述启动命令行或者脚本程序即可启动训练，不需要用到预训练模型
 
 - 若使用第二种方式，请在run.sh脚本文件中设置4卡训练：
     export CUDA_VISIBLE_DEVICES=0,1,2,3
