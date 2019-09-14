@@ -65,7 +65,7 @@ class FaceBoxNet(object):
             name="pool_1")
 
         conv_2_1 = self._conv_norm(
-            input=input,
+            input=pool1,
             num_filters=48,
             filter_size=3,
             stride=2,
