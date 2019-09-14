@@ -26,6 +26,7 @@ except Exception:
 import numpy as np
 
 from paddle import fluid
+from paddle.fluid import framework
 from ppdet.core.workspace import register, serializable
 
 from . import datasets
@@ -159,6 +160,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
         prefetch_to_gpu (bool): prefetch data to CUDA device.
     """
     __category__ = 'data'
+    __shared__ = ['use_gpu']
 
     def __init__(self,
                  dataset,
@@ -174,6 +176,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
                  buffer_size=2,
                  pin_memory=False,
                  prefetch_to_gpu=False,
+                 use_gpu=False,
                  yolo_class_fix=False):
         if isinstance(dataset, dict):
             kwargs = dataset
@@ -184,38 +187,27 @@ class DataLoaderBuilder(dataloader.DataLoader):
         self.auto_reset = auto_reset
         self.yolo_class_fix = yolo_class_fix
 
-        env = os.environ
-        if 'FLAGS_selected_gpus' in env:
-            prefetch_device = int(env['FLAGS_selected_gpus'])
-        else:
-            prefetch_device = 0
-
         if prefetch_to_gpu:
-            place = fluid.CUDAPlace(prefetch_device)
+            places = framework.cuda_places()
         elif pin_memory:
-            place = fluid.CUDAPinnedPlace()
+            places = [fluid.CUDAPinnedPlace()] * len(framework.cuda_places())
+        elif use_gpu:
+            places = [fluid.CPUPlace()] * len(framework.cuda_places())
         else:
-            place = fluid.CPUPlace()
-        self.place = place
+            places = framework.cpu_places()
+        self.places = places
 
-        self.coalesce_size = 1
-        rank = 0
-        world_size = 1
         init_seed = random.randint(0, 1e5)
-        if 'PADDLE_TRAINER_ID' in env and 'PADDLE_TRAINERS_NUM' in env:
-            rank = int(env['PADDLE_TRAINER_ID'])
-            world_size = int(env['PADDLE_TRAINERS_NUM'])
+        rank = int(os.getenv('PADDLE_TRAINER_ID', 0))
+        world_size = int(os.getenv('PADDLE_TRAINERS_NUM', 1))
+        if world_size > 1:
             init_seed = 42 * world_size
-        else:
-            # XXX assume training with GPU
-            self.coalesce_size = fluid.core.get_cuda_device_count()
-
-        if world_size > 1 and multiprocessing:
-            from ppdet.utils.cli import ColorTTY
-            color_tty = ColorTTY()
-            print(color_tty.bold(color_tty.red(
-                "it is recommended to set `dataloader.multiprocessing` "
-                "to `false` when training in distributed mode")))
+            if multiprocessing:
+                from ppdet.utils.cli import ColorTTY
+                color_tty = ColorTTY()
+                print(color_tty.bold(color_tty.red(
+                    "it is recommended to set `dataloader.multiprocessing` "
+                    "to `false` when training in distributed mode")))
 
         if isinstance(sampler, dict):
             kwargs = sampler
@@ -233,33 +225,29 @@ class DataLoaderBuilder(dataloader.DataLoader):
             dataset, sampler, sample_transforms, batch_transforms + [extract],
             num_workers, multiprocessing, buffer_size, rank)
 
-    def _to_tensor(self, feed_dict):
+    def _to_tensor(self, feed_dict, place):
         for k, (ndarray, seq_length) in feed_dict.items():
             if self.yolo_class_fix and k == 'gt_label':
                 ndarray -= 1
             t = fluid.core.LoDTensor()
             if seq_length is not None:
                 t.set_recursive_sequence_lengths(seq_length)
-            t.set(ndarray, self.place)
+            t.set(ndarray, place)
             feed_dict[k] = t
         return feed_dict
 
     def __next__(self):
-        if self.coalesce_size == 1:
+        feed_list = []
+        coalesced_extra_dict = {}
+        for place in self.places:
             feed_dict, extra_dict = next(self._iter)
-            return [self._to_tensor(feed_dict)], extra_dict
-        else:
-            feed_list = []
-            coalesced_extra_dict = {}
-            for _ in range(self.coalesce_size):
-                feed_dict, extra_dict = next(self._iter)
-                feed_list.append(self._to_tensor(feed_dict))
-                for k, v in extra_dict.items():
-                    if k not in coalesced_extra_dict:
-                        coalesced_extra_dict[k] = v
-                    else:
-                        coalesced_extra_dict[k] += v
-            return feed_list, coalesced_extra_dict
+            feed_list.append(self._to_tensor(feed_dict, place))
+            for k, v in extra_dict.items():
+                if k not in coalesced_extra_dict:
+                    coalesced_extra_dict[k] = v
+                else:
+                    coalesced_extra_dict[k] += v
+        return feed_list, coalesced_extra_dict
 
     def __iter__(self):
         self._iter = super(DataLoaderBuilder, self).__iter__()
