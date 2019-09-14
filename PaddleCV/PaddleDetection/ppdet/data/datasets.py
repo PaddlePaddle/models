@@ -149,12 +149,12 @@ class COCODataSet(DataSet):
 
             gt_box = np.array(gt_box, dtype=np.float32)
             gt_label = np.array([class_map[cls] for cls in gt_label],
-                                dtype=np.int32)
+                                dtype=np.int32)[:, np.newaxis]
 
             sample['gt_box'] = gt_box
             sample['gt_label'] = gt_label
             sample['gt_score'] = np.ones_like(gt_label, dtype=np.float32)
-            sample['is_crowd'] = np.array(is_crowd, np.int32)
+            sample['is_crowd'] = np.array(is_crowd, np.int32)[:, np.newaxis]
             if self.use_mask:
                 sample['gt_poly'] = gt_poly
 
@@ -261,11 +261,13 @@ class PascalVocDataSet(DataSet):
                 y2 = min(h, float(_get(obj, 'bndbox.ymax')))
                 gt_box.append([x1, y1, x2, y2])
             sample['gt_box'] = np.array(gt_box, dtype=np.float32)
-            sample['gt_label'] = np.array(gt_label, dtype=np.int32)
-            sample['gt_scores'] = np.ones(len(objs), dtype=np.float32)
-            sample['is_crowd'] = np.zeros(len(objs), dtype=np.int32)
+            sample['gt_label'] = np.array(
+                gt_label, dtype=np.int32)[:, np.newaxis]
+            sample['gt_scores'] = np.ones([len(objs), 1], dtype=np.float32)
+            sample['is_crowd'] = np.zeros([len(objs), 1], dtype=np.int32)
             sample['gt_poly'] = []
-            sample['difficult'] = np.array(difficult, dtype=np.int32)
+            sample['difficult'] = np.array(
+                difficult, dtype=np.int32)[:, np.newaxis]
             return sample
 
         self.samples = [parse_xml(idx) for idx in indices]

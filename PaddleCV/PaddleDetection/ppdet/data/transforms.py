@@ -323,12 +323,13 @@ class RandomCrop(object):
             if found:
                 sample['image'] = self._crop_image(sample['image'], crop_box)
                 sample['gt_box'] = np.take(cropped_box, valid_ids, axis=0)
-                sample['gt_label'] = np.take(sample['gt_label'], valid_ids)
+                sample['gt_label'] = np.take(
+                    sample['gt_label'], valid_ids, axis=0)
                 sample['width'] = crop_box[2] - crop_box[0]
                 sample['height'] = crop_box[3] - crop_box[1]
                 if 'gt_score' in sample:
                     sample['gt_score'] = np.take(
-                        sample['gt_score'], valid_ids)
+                        sample['gt_score'], valid_ids, axis=0)
                 return sample
 
         return sample
@@ -422,11 +423,10 @@ class NormalizeLabels(object):
             sample['gt_box'] = np.zeros(
                 [self.num_instances, 4], dtype=np.float32)
             sample['gt_label'] = np.zeros(
-                [self.num_instances], dtype=np.int32)
+                [self.num_instances, 1], dtype=np.int32)
             if 'gt_score' in sample:
                 sample['gt_score'] = np.zeros(
-                    [self.num_instances], dtype=np.float32)
-            return sample
+                    [self.num_instances, 1], dtype=np.float32)
 
         if self.normalize_box:
             w = sample['width']
@@ -435,9 +435,9 @@ class NormalizeLabels(object):
         if self.num_instances is None:
             return sample
 
-        # cap then pad labels
+        # cap then pad labels, also squeeze `gt_label` and `gt_score`
         gt_box = sample['gt_box'][:self.num_instances, :]
-        gt_label = sample['gt_label'][:self.num_instances]
+        gt_label = sample['gt_label'][:self.num_instances, 0]
         pad = self.num_instances - gt_label.size
         gt_box_padded = np.pad(gt_box, ((0, pad), (0, 0)), mode='constant')
         gt_label_padded = np.pad(gt_label, [(0, pad)], mode='constant')
@@ -445,7 +445,7 @@ class NormalizeLabels(object):
         sample['gt_label'] = gt_label_padded
 
         if 'gt_score' in sample:
-            gt_score = sample['gt_score'][:self.num_instances]
+            gt_score = sample['gt_score'][:self.num_instances, 0]
             gt_score_padded = np.pad(gt_score, [(0, pad)], mode='constant')
             sample['gt_score'] = gt_score_padded
 
