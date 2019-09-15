@@ -236,31 +236,70 @@ class DataLoaderBuilder(dataloader.DataLoader):
             feed_dict[k] = t
         return feed_dict
 
+    def _merge_seq_length(self, seq_lengths):
+        results = seq_lengths[0]
+        if results is None:
+            return None
+        for idx, v in enumerate(results):
+            for rest in seq_lengths[1:]:
+                v += rest[idx]
+        return results
+
     def __next__(self):
         feed_list = []
         coalesced_extra_dict = {}
+        _drained = False
         for place in self.places:
-            feed_dict, extra_dict = next(self._iter)
-            feed_list.append(self._to_tensor(feed_dict, place))
-            for k, v in extra_dict.items():
-                if k not in coalesced_extra_dict:
-                    coalesced_extra_dict[k] = v
+            try:
+                feed_dict, extra_dict = next(self._iter)
+            except StopIteration:
+                if self.auto_reset:
+                    self.reset()
+                    feed_dict, extra_dict = next(self._iter)
                 else:
-                    coalesced_extra_dict[k] += v
+                    _drained = True
+            finally:
+                if not _drained:
+                    feed_list.append((feed_dict, place))
+                    for k, v in extra_dict.items():
+                        if k not in coalesced_extra_dict:
+                            coalesced_extra_dict[k] = v
+                        else:
+                            coalesced_extra_dict[k] += v
+                else:
+                    break
+
+        if _drained and len(feed_list) == 0:
+            raise StopIteration
+
+        # XXX merge remaining items into single dict, let executor split it
+        if _drained and len(feed_list) != len(self.places):
+            # place = self.places[0]
+            # if self.places[0] != fluid.CPUPlace():
+            #     place = fluid.CUDAPinnedPlace()
+            # XXX pinned memory needs patch to paddle, use CPU for now
+            place = fluid.CPUPlace()
+
+            if len(feed_list) == 1:
+                feed_list = self._to_tensor(feed_list[0][0], place)
+            else:
+                feed_dicts = [data[0] for data in feed_list]
+                coalesced_feed_dict = {}
+                for k in feed_dicts[0].keys():
+                    ndarrays = [d[k][0] for d in feed_dicts]
+                    seq_lengths = [d[k][1] for d in feed_dicts]
+                    coalesced_feed_dict[k] = [
+                        np.concatenate(ndarrays),
+                        self._merge_seq_length(seq_lengths)]
+                feed_list = self._to_tensor(
+                    coalesced_feed_dict, place)
+        else:
+            feed_list = [self._to_tensor(*v) for v in feed_list]
         return feed_list, coalesced_extra_dict
 
     def __iter__(self):
         self._iter = super(DataLoaderBuilder, self).__iter__()
-        if not self.auto_reset:
-            return self
-
-        def forever():
-            while True:
-                try:
-                    yield self.__next__()
-                except StopIteration:
-                    self.reset()
-        return forever()
+        return self
 
 
 @register
