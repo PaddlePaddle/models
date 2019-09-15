@@ -413,10 +413,16 @@ class MixUp(object):
 
 
 class NormalizeLabels(object):
-    def __init__(self, num_instances=50, normalize_box=True):
+    def __init__(self, num_instances=50, normalize_box=True, to_center=True):
         super(NormalizeLabels, self).__init__()
         self.num_instances = num_instances
         self.normalize_box = normalize_box
+        self.to_center = to_center
+
+    def corner_to_center(self, box):
+        box[:, 2:] = box[:, 2:] - box[:, :2]
+        box[:, :2] = box[:, :2] + box[:, 2:] / 2.
+        return box
 
     def __call__(self, sample):
         if 'gt_box' in sample and len(sample['gt_box']) == 0:
@@ -432,6 +438,10 @@ class NormalizeLabels(object):
             w = sample['width']
             h = sample['height']
             sample['gt_box'] /= np.array([w, h] * 2, dtype=np.float32)
+
+        if self.to_center:
+            sample['gt_box'] = self.corner_to_center(sample['gt_box'])
+
         if self.num_instances is None:
             return sample
 
