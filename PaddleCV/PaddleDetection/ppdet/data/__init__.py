@@ -228,7 +228,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
     def _to_tensor(self, feed_dict, place):
         for k, (ndarray, seq_length) in feed_dict.items():
             if self.yolo_class_fix and k == 'gt_label':
-                ndarray -= 1
+                ndarray = np.clip(ndarray - 1, 0, None)
             t = fluid.core.LoDTensor()
             if seq_length is not None:
                 t.set_recursive_sequence_lengths(seq_length)
