@@ -1,7 +1,5 @@
-# coding:utf8
-"""
-util tools
-"""
+# -*- coding: UTF-8 -*-
+
 import os
 import sys
 import math

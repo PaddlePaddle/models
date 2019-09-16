@@ -1,4 +1,5 @@
-#coding:utf8
+# -*- coding: UTF-8 -*-
+
 import argparse
 import sys
 import os
