@@ -61,58 +61,9 @@ PaddleDetection的目的是为工业界和学术界提供大量易使用的目�
 
 ## 开始
 
-## 快速开始
+## 快速入门
 
-PaddleDetection提供了快速开始的demo利于用户能够快速上手，使用小数据集，[下载链接](https://dataset.bj.bcebos.com/PaddleDetection_demo/fruit-detection.tar)。
-
-训练命令如下：
-
-```bash
-export PYTHONPATH=$PYTHONPATH:.
-export CUDA_VISIBLE_DEVICES=0
-python -u tools/train.py -c configs/yolov3_mobilenet_v1_fruit.yml \
-                        --use_tb=True \
-                        --tb_log_dir=tb_fruit_dir/scalar \
-                        --eval \
-```
-
-训练期间可以通过tensorboard实时观察loss和精度值，启动命令如下：
-
-```bash
-tensorboard --logdir tb_fruit_dir/scalar/ --host <host_IP> --port <port_num>
-```
-
-tensorboard结果显示如下：
-
-<div align="center">
-  <img src="demo/tensorboard_fruit.jpg" />
-</div>
-
-
-训练模型[下载链接](https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_fruit.tar)
-
-评估命令如下：
-
-```bash
-export PYTHONPATH=$PYTHONPATH:.
-export CUDA_VISIBLE_DEVICES=0
-python -u tools/eval.py -c configs/yolov3_mobilenet_v1_fruit.yml
-```
-
-预测命令如下
-
-```bash
-export PYTHONPATH=$PYTHONPATH:.
-export CUDA_VISIBLE_DEVICES=0
-python -u tools/infer.py -c configs/yolov3_mobilenet_v1_fruit.yml
-```
-
-预测图片如下：
-
-<p align="center">
-  <img src="demo/orange_71.jpg" height=400 width=300 hspace='10'/>
-  <img src="demo/orange_71_detection.jpg" height=400 width=300 hspace='10'/>
-</p>
+PaddleDetection提供了快速开始的demo利于用户能够快速上手，示例请参考[QUICK_STARTED_cn.md](docs/QUICK_STARTED_cn.md)
 
 更多训练及评估流程，请参考[GETTING_STARTED_cn.md](docs/GETTING_STARTED_cn.md).
 

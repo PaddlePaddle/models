@@ -83,7 +83,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 - 若本地未找到数据集，将自动下载数据集并保存在`~/.cache/paddle/dataset`中。
 - 预训练模型自动下载并保存在`〜/.cache/paddle/weights`中。
 - 模型checkpoints默认保存在`output`中（可配置）。
-- 进行模型fine-tune时，用户可将`pretrain_weights`配置为PaddlePaddle发布的模型，加载模型时finetune_exclude_pretrained_params中的字段匹配的参数不被加载，可以为通配符匹配方式。详细说明请参考[Transfer Learning](TRANSFER_LEARNING.md)
+- 进行模型fine-tune时，用户可将`pretrain_weights`配置为PaddlePaddle发布的模型，加载模型时finetune_exclude_pretrained_params中的字段匹配的参数不被加载，可以为通配符匹配方式。详细说明请参考[Transfer Learning](TRANSFER_LEARNING_cn.md)
 - 更多参数配置，请参考[配置文件](../configs)。
 - RCNN系列模型CPU训练在PaddlePaddle 1.5.1及以下版本暂不支持，将在下个版本修复。
 
