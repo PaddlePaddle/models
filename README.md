@@ -311,7 +311,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### DAM
 
-[深度注意力机制模型(Deep Attention Maching)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit/deep_attention_matching)是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。
+[深度注意力机制模型(Deep Attention Maching)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DAM)是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。
 
 |      | Ubuntu Corpus | Douban Conversation Corpus |       |       |       |       |       |       |       |       |
 | ---- | ------------- | -------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
