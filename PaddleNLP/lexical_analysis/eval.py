@@ -1,4 +1,4 @@
-#coding:utf8
+# -*- coding: UTF-8 -*-
 import argparse
 import os
 import time

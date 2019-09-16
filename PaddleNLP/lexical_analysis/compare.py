@@ -1,4 +1,4 @@
-#coding=utf-8
+# -*- coding: UTF-8 -*-
 """
 evaluate wordseg for LAC and other open-source wordseg tools
 """
