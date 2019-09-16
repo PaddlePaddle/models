@@ -78,6 +78,8 @@ class Sampler(object):
                                 for s in self.bucket_sizes])
 
     def reset(self):
+        if not hasattr(self, 'num_batches'):
+            self.setup()
         if not self.shuffle:
             def rand_perm(x):
                 return x
