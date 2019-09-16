@@ -247,7 +247,7 @@ def main():
             if FLAGS.eval:
                 anno_file = getattr(eval_loader.dataset, 'annotation_file', None)
                 # evaluation
-                results = eval_run(exe, compiled_eval_prog, eval_pyreader,
+                results = eval_run(exe, compiled_eval_prog, eval_loader,
                                    eval_keys, eval_values, eval_cls)
                 resolution = None
                 if 'mask' in results[0]:
