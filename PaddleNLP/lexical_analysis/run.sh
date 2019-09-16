@@ -92,7 +92,6 @@ function run_inference() {
         --bigru_num 2 \
         --use_cuda False \
         --init_checkpoint ./model_baseline \
-        --infer_data ./data/infer.tsv \
         --word_dict_path ./conf/word.dic \
         --label_dict_path ./conf/tag.dic \
         --word_rep_dict_path ./conf/q2b.dic \
