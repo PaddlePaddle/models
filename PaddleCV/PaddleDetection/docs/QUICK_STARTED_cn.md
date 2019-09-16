@@ -53,8 +53,8 @@ python -u tools/infer.py -c configs/yolov3_mobilenet_v1_fruit.yml
 预测图片如下：
 
 <p align="center">
-  <img src="../demo/orange_71.jpg" height=500 width=500 hspace='10'/>
-  <img src="../demo/orange_71_detection.jpg" height=500 width=500 hspace='10'/>
+  <img src="../demo/orange_71.jpg" height=400 width=400 hspace='10'/>
+  <img src="../demo/orange_71_detection.jpg" height=400 width=400 hspace='10'/>
 </p>
 
 更多训练及评估流程，请参考[GETTING_STARTED_cn.md](GETTING_STARTED_cn.md).

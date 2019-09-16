@@ -216,8 +216,13 @@ The calculation rules are as follows，they are equivalent: </br>
 | 4           | 0.005          | 360000    | [240000, 320000] |
 | 8           | 0.01           | 180000    | [120000, 160000] |
 
+
 **Q:**  How to reduce GPU memory usage? </br>
 **A:**  Setting environment variable FLAGS_conv_workspace_size_limit to a smaller
 number can reduce GPU memory footprint without affecting training speed.
 Take Mask-RCNN (R50) as example, by setting `export FLAGS_conv_workspace_size_limit=512`,
 batch size could reach 4 per GPU (Tesla V100 16GB).
+
+
+**Q:** How to define customized labels when using own dataset in VOC format? </br>
+**A:** Set `use_default_lable: true` in dataset of configs, and add `ImageSets/Main/label_list.txt` which define customized labels.
