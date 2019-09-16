@@ -89,4 +89,4 @@ cd models/PaddleNLP/sentiment_classification
 
 ### 复杂任务
  - [对话模型工具箱](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit)
- - [阅读理解](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/reading_comprehension)
+ - [阅读理解](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DuReader)
