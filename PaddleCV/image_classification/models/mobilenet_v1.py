@@ -216,8 +216,3 @@ def MobileNetV1_x1_0():
 def MobileNetV1_x0_75():
     model = MobileNetV1(scale=0.75)
     return model
-
-
-def MobileNetV1():
-    model = MobileNetV1(scale=1.0)
-    return model
