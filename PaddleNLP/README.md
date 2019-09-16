@@ -39,7 +39,6 @@ PaddleNLP 完全基于[PaddlePaddle Fluid](http://www.paddlepaddle.org/)开发�
 │   ├── ernie
 │   ├── padding.py
 │   └── tokenizer
-├── reading_comprehension             # 阅读理解
 ├── sentiment_classification          # 文本情感分析
 ├── similarity_net                    # 短文本语义匹配
 ```
