@@ -29,10 +29,14 @@ from paddle import fluid
 from paddle.fluid import framework
 from ppdet.core.workspace import register, serializable
 
+from ppdet.utils.cli import ColorTTY
+
 from . import datasets
 from . import samplers
 from . import transforms
 from . import dataloader
+
+color_tty = ColorTTY()
 
 for m in [datasets, samplers, transforms]:
     for c in getattr(m, '__all__'):
@@ -203,8 +207,6 @@ class DataLoaderBuilder(dataloader.DataLoader):
         if world_size > 1:
             init_seed = 42 * world_size
             if multiprocessing:
-                from ppdet.utils.cli import ColorTTY
-                color_tty = ColorTTY()
                 print(color_tty.bold(color_tty.red(
                     "it is recommended to set `dataloader.multiprocessing` "
                     "to `false` when training in distributed mode")))
@@ -220,6 +222,12 @@ class DataLoaderBuilder(dataloader.DataLoader):
                 sampler = samplers.Sampler(dataset, batch_size, **kwargs)
 
         extract = ExtractFields(feed_vars, extra_vars)
+
+        if buffer_size < 2 * len(self.places):
+            print(color_tty.bold(color_tty.yellow(
+                "it is recommended to set a `buffer_size` no less than "
+                "2 * num_devices ({}), but currently set to {}".format(
+                    2 * len(self.places), buffer_size))))
 
         super(DataLoaderBuilder, self).__init__(
             dataset, sampler, sample_transforms, batch_transforms + [extract],
