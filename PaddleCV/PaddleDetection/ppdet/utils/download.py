@@ -126,7 +126,7 @@ def get_dataset_path(path, annotation, image_dir):
 
     # not match any dataset in DATASETS
     raise ValueError("Dataset {} is not valid and cannot parse dataset type "
-                     "'{}' for automaticly downloading, which only support "
+                     "'{}' for automaticly downloading, which only supports "
                      "'voc' and 'coco' currently".format(path, osp.split(path)[-1]))
 
 
