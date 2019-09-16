@@ -297,6 +297,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
             feed_list = [self._to_tensor(*v) for v in feed_list]
         return feed_list, coalesced_extra_dict
 
+    next = __next__
+
     def __iter__(self):
         self._iter = super(DataLoaderBuilder, self).__iter__()
         return self
