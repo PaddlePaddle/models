@@ -17,7 +17,6 @@ from __future__ import absolute_import
 import numbers
 import os
 import random
-from multiprocessing.pool import ThreadPool
 
 try:
     from collections.abc import Mapping
@@ -202,10 +201,6 @@ class DataLoaderBuilder(dataloader.DataLoader):
             places = framework.cpu_places()
         self.places = places
 
-        self._worker_pool = ThreadPool(1)
-        self._next_idx = 0
-        self._double_buffer = [[], []]
-
         init_seed = random.randint(0, 1e5)
         rank = int(os.getenv('PADDLE_TRAINER_ID', 0))
         world_size = int(os.getenv('PADDLE_TRAINERS_NUM', 1))
@@ -258,16 +253,10 @@ class DataLoaderBuilder(dataloader.DataLoader):
                 v += rest[idx]
         return results
 
-    def _worker_fn(self, feed_list):
-        return [self._to_tensor(*v) for v in feed_list]
-
-    def _buffer_next(self):
-        self._next_idx = (self._next_idx + 1) % 2
-
+    def __next__(self):
         feed_list = []
         coalesced_extra_dict = {}
         _drained = False
-
         for place in self.places:
             try:
                 feed_dict, extra_dict = next(self._iter)
@@ -279,7 +268,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
                     _drained = True
             finally:
                 if not _drained:
-                    feed_list.append([feed_dict, place])
+                    feed_list.append((feed_dict, place))
                     for k, v in extra_dict.items():
                         if k not in coalesced_extra_dict:
                             coalesced_extra_dict[k] = v
@@ -289,8 +278,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
                     break
 
         if _drained and len(feed_list) == 0:
-            self._double_buffer[self._next_idx] = None
-            return
+            raise StopIteration
 
         # XXX merge remaining items into single dict, let executor split it
         if _drained and len(feed_list) != len(self.places):
@@ -301,7 +289,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
             place = fluid.CPUPlace()
 
             if len(feed_list) == 1:
-                feed_list[0][1] = place
+                feed_list = self._to_tensor(feed_list[0][0], place)
             else:
                 feed_dicts = [data[0] for data in feed_list]
                 coalesced_feed_dict = {}
@@ -311,26 +299,16 @@ class DataLoaderBuilder(dataloader.DataLoader):
                     coalesced_feed_dict[k] = [
                         np.concatenate(ndarrays),
                         self._merge_seq_length(seq_lengths)]
-                feed_list = [[coalesced_feed_dict, place]]
-
-        f = self._worker_pool.apply_async(self._worker_fn, [feed_list])
-        self._double_buffer[self._next_idx] = [f, coalesced_extra_dict]
-
-    def __next__(self):
-        buffered = self._double_buffer[self._next_idx]
-        if buffered is None:
-            raise StopIteration
-        feed_list = buffered[0].get()
-        if len(feed_list) != len(self.places):
-            feed_list = feed_list[0]
-        self._buffer_next()
-        return feed_list, buffered[1]
+                feed_list = self._to_tensor(
+                    coalesced_feed_dict, place)
+        else:
+            feed_list = [self._to_tensor(*v) for v in feed_list]
+        return feed_list, coalesced_extra_dict
 
     next = __next__
 
     def __iter__(self):
         self._iter = super(DataLoaderBuilder, self).__iter__()
-        self._buffer_next()
         return self
 
 
