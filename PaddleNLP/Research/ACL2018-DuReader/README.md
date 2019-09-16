@@ -42,7 +42,7 @@ DuReader基线系统利用[PaddlePaddle](http://paddlepaddle.org)深度学习框
 
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
-cd models/PaddleNLP/reading_comprehension
+cd models/PaddleNLP/reading_comprehension/
 ```
 
 
