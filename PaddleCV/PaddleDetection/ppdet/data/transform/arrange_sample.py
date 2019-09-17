@@ -93,7 +93,7 @@ class ArrangeRCNN(BaseOperator):
 @register_op
 class ArrangeEvalRCNN(BaseOperator):
     """
-    Transform dict to the tuple format needed for training.
+    Transform dict to the tuple format needed for evaluation.
     """
 
     def __init__(self):
@@ -107,7 +107,8 @@ class ArrangeEvalRCNN(BaseOperator):
             context: a dict which contains additional info.
         Returns:
             sample: a tuple containing the following items:
-                    (image, im_info, im_id)
+                    (image, im_info, im_id, im_shape, gt_bbox,
+                    gt_class, difficult)
         """
         im = sample['image']
         keys = list(sample.keys())
