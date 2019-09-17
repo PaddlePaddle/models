@@ -48,23 +48,8 @@ class VGGNet():
         elif self.layers == 19:
             return [conv1, conv2, conv3, conv4, conv5]
 
-    #def conv_block(self, input, num_filter, groups, num, name=""):
     def conv_block(self, input, num_filter, groups, name=""):
         conv = input
-        #for i in range(groups):
-        #    conv = fluid.layers.conv2d(
-        #        input=conv,
-        #        num_filters=num_filter,
-        #        filter_size=3,
-        #        stride=1,
-        #        padding=1,
-        #        act='relu',
-        #        param_attr=fluid.param_attr.ParamAttr(name=name+".features.%d.weight"%(num),
-        #            initializer=fluid.initializer.Normal(scale=0.01), trainable=False),
-        #        bias_attr=fluid.param_attr.ParamAttr(name=name+".features.%d.bias"%(num),
-        #            initializer=fluid.initializer.Constant(value=0.0), trainable=False))
-        #    num += 2
-        #return fluid.layers.pool2d(input=conv, pool_size=2, pool_type='max', pool_stride=2), num+1
         for i in range(groups):
             conv = fluid.layers.conv2d(
                 input=conv,
@@ -75,8 +60,6 @@ class VGGNet():
                 act='relu',
                 param_attr=fluid.param_attr.ParamAttr(
                     name=name + str(i + 1) + "_weights", trainable=False),
-                #bias_attr=fluid.param_attr.ParamAttr(
-                #    name=name + str(i + 1) + "_offset", initializer=fluid.initializer.Constant(value=0.0), trainable=False)
                 bias_attr=False
                 )
             if i == 0:

@@ -108,8 +108,6 @@ class GTrainer():
                     beta2=0.999,
                     name="net_G")
             optimizer.minimize(self.g_loss, parameter_list=vars)
-            with open("gen_program.txt", "w") as f:
-                print(self.program, file=f)
 
 
 class DTrainer():
@@ -188,18 +186,6 @@ class DTrainer():
 
 class SPADE(object):
     def add_special_args(self, parser):
-        parser.add_argument(
-            '--net_G',
-            type=str,
-            default="unet_256",
-            help="Choose the Pix2pix generator's network, choose in [resnet_9block|resnet_6block|unet_128|unet_256]"
-        )
-        parser.add_argument(
-            '--net_D',
-            type=str,
-            default="basic",
-            help="Choose the Pix2pix discriminator's network, choose in [basic|nlayers|pixel]"
-        )
         parser.add_argument(
             '--vgg19_pretrain',
             type=str,
@@ -297,6 +283,15 @@ class SPADE(object):
         gen_trainer = GTrainer(input_A, input_B, input_C, self.cfg, self.batch_num)
         dis_trainer = DTrainer(input_A, input_B, input_C, input_fake, self.cfg,
                                self.batch_num)
+        py_reader = fluid.io.PyReader(
+            feed_list=[input_A, input_B, input_C],
+            capacity=4,  ## batch_size * 4
+            iterable=True,
+            use_double_buffer=True)
+       py_reader.decorate_batch_generator(
+            self.train_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
@@ -311,7 +306,6 @@ class SPADE(object):
         ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = False
-        build_strategy.memory_optimize = False
         build_strategy.sync_batch_norm = True
 
         gen_trainer_program = fluid.CompiledProgram(
@@ -327,8 +321,8 @@ class SPADE(object):
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            for i in range(self.batch_num):
-                data_A, data_B, data_C = next(self.train_reader())
+            for tensor in py_reader():
+                data_A, data_B, data_C = tensor[0]['input_A'], tensor[0]['input_B'], tensor[0]['input_C']
                 tensor_A = fluid.LoDTensor()
                 tensor_B = fluid.LoDTensor()
                 tensor_C = fluid.LoDTensor()
@@ -375,9 +369,22 @@ class SPADE(object):
 
             if self.cfg.run_test:
                 test_program = gen_trainer.infer_program
+                image_name = fluid.layers.data(
+                    name='image_name',
+                    shape=[self.cfg.batch_size],
+                    dtype="int32")
+                test_py_reader = fluid.io.PyReader(
+                    feed_list=[input_A, input_B, image_name],
+                    capacity=4,  ## batch_size * 4
+                    iterable=True,
+                    use_double_buffer=True)
+                test_py_reader.decorate_batch_generator(
+                    self.test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
                                         test_program, gen_trainer,
-                                        self.test_reader)
+                                        test_py_reader)
 
             if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,
