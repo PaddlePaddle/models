@@ -20,7 +20,7 @@ python -u tools/train.py -c configs/yolov3_mobilenet_v1_fruit.yml \
                         --eval \
 ```
 
-训练使用yolov3\_mobilenet\_v1基于COCO数据集训练好的模型进行finetune。训练期间可以通过tensorboard实时观察loss和精度值，启动命令如下：
+训练使用`yolov3_mobilenet_v1`基于COCO数据集训练好的模型进行finetune。训练期间可以通过tensorboard实时观察loss和精度值，启动命令如下：
 
 ```bash
 tensorboard --logdir tb_fruit_dir/scalar/ --host <host_IP> --port <port_num>

@@ -19,7 +19,7 @@ python -u tools/train.py -c configs/yolov3_mobilenet_v1_fruit.yml \
                         --eval \
 ```
 
-Use yolov3\_mobilenet\_v1 to fine-tune the model from COCO dataset. Meanwhile, loss and mAP can be observed on tensorboard.  
+Use `yolov3_mobilenet_v1` to fine-tune the model from COCO dataset. Meanwhile, loss and mAP can be observed on tensorboard.  
 
 ```bash
 tensorboard --logdir tb_fruit_dir/scalar/ --host <host_IP> --port <port_num>

@@ -225,4 +225,8 @@ batch size could reach 4 per GPU (Tesla V100 16GB).
 
 
 **Q:** How to define customized labels when using own dataset in VOC format? </br>
-**A:** Set `use_default_lable: true` in dataset of configs, and add `ImageSets/Main/label_list.txt` which define customized labels.
+**A:** Set `use_default_lable: false` in dataset of configs, and add customized labels by data tools to `ImageSets/Main/label_list.txt`. Commend is as follows:
+
+```bash
+python -u ppdet/data/tools/generate_data_for_training.py --type=xml --annotation=fruit-detection/ImageSets/Main/train.txt --samples=-1
+```

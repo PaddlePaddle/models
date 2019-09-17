@@ -63,7 +63,7 @@ OptimizerBuilder:
 YoloTrainFeed:
   batch_size: 1
   dataset:
-    dataset_dir: fruit-detection
+    dataset_dir: dataset/fruit/fruit-detection
     annotation: ./ImageSets/Main/train.txt
     image_dir: ./JPEGImages
     use_default_label: false
@@ -110,7 +110,7 @@ YoloEvalFeed:
   batch_size: 1
   image_shape: [3, 608, 608]
   dataset:
-    dataset_dir: fruit-detection
+    dataset_dir: dataset/fruit/fruit-detection
     annotation: ./ImageSets/Main/val.txt
     image_dir: ./JPEGImages
     use_default_label: false
@@ -120,6 +120,6 @@ YoloTestFeed:
   batch_size: 1
   image_shape: [3, 608, 608]
   dataset:
-    dataset_dir: fruit-detection
+    dataset_dir: dataset/fruit/fruit-detection
     annotation: ./ImageSets/Main/label_list.txt
     use_default_label: false
