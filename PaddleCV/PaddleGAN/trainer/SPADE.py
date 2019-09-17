@@ -69,7 +69,6 @@ class GTrainer():
                 for j in range(num_intermediate_outputs):
                     self.gan_feat_loss = fluid.layers.reduce_mean(fluid.layers.abs(fluid.layers.elementwise_sub(
                         x=self.pred_fake[i][j], y=self.pred_real[i][j]))) * cfg.lambda_feat / num_D
-                    ###pred_real.detouch()?
             self.gan_feat_loss.persistable = True
             ########VGG Feat loss
             weights = [1.0/32, 1.0/16, 1.0/8, 1.0/4, 1.0]
@@ -80,7 +79,6 @@ class GTrainer():
             for i in range(len(fake_vgg)):
                 self.vgg_loss += weights[i] * fluid.layers.reduce_mean(fluid.layers.abs(fluid.layers.elementwise_sub(
                         x=fake_vgg[i], y=real_vgg[i])))
-                ###real_vgg.detouch()?
             self.vgg_loss.persistable = True
             self.g_loss = (self.gan_loss + self.gan_feat_loss + self.vgg_loss)/3 
             lr = cfg.learning_rate
@@ -190,69 +188,64 @@ class SPADE(object):
             '--vgg19_pretrain',
             type=str,
             default="./VGG19_pretrained",
-            help="Choose the Pix2pix discriminator's network, choose in [basic|nlayers|pixel]"
+            help="VGG19 pretrained model for vgg loss"
         )
         parser.add_argument(
             '--crop_width',
             type=int,
             default=1024,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="crop width for training SPADE")
         parser.add_argument(
             '--crop_height',
             type=int,
             default=512,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="crop height for training SPADE")
         parser.add_argument(
             '--load_width',
             type=int,
             default=1124,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="load width for training SPADE")
         parser.add_argument(
             '--load_height',
             type=int,
             default=612,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="load height for training SPADE")
         parser.add_argument(
             '--d_nlayers',
             type=int,
             default=4,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="num of discriminator layers for SPADE")
         parser.add_argument(
             '--label_nc',
             type=int,
             default=36,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="label numbers of SPADE")
         parser.add_argument(
             '--ngf',
             type=int,
             default=64,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="base channels of generator in SPADE")
         parser.add_argument(
             '--ndf',
             type=int,
             default=64,
-            help="only used when Pix2pix discriminator is nlayers")
-        parser.add_argument(
-            '--nef',
-            type=int,
-            default=16,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="base channels of discriminator in SPADE")
         parser.add_argument(
             '--num_D',
             type=int,
             default=2,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="number of discriminators in SPADE")
         parser.add_argument(
             '--lambda_feat',
             type=float,
             default=10,
-            help="only used when Pix2pix discriminator is nlayers")
+            help="weight term of feature loss")
         parser.add_argument(
             '--lambda_vgg',
             type=float,
             default=10,
-            help="only used when Pix2pix discriminator is nlayers")
-        parser.add_argument('--no_instance', type=bool, default=False, help="Whether to use drouput.")
+            help="weight term of vgg loss")
+        parser.add_argument('--no_instance', type=bool, default=False, help="Whether to use instance label.")
 
         return parser
 
