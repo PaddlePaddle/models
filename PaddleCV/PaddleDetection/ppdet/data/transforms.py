@@ -247,9 +247,9 @@ class RandomExpand(object):
         w = int(width * expand_ratio)
         y = np.random.randint(0, h - height)
         x = np.random.randint(0, w - width)
-        canvas = np.ones((h, w, 3), dtype=np.float32)
-        canvas *= np.array(self.fill_value, dtype=np.float32)
-        canvas[y:y + height, x:x + width, :] = img.astype(np.float32)
+        canvas = np.ones((h, w, 3), dtype=img.dtype)
+        canvas *= np.array(self.fill_value, dtype=img.dtype)
+        canvas[y:y + height, x:x + width, :] = img
 
         sample['height'] = h
         sample['width'] = w
@@ -402,7 +402,7 @@ class MixUp(object):
         canvas[:h1, :w1, :] = img1 * factor
         canvas[:h2, :w2, :] += img2 * (1. - factor)
 
-        sample1['image'] = canvas
+        sample1['image'] = canvas.astype(np.uint8)
         sample1['gt_box'] = gt_box
         sample1['gt_label'] = gt_label
         sample1['gt_score'] = gt_score
