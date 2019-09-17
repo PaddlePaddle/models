@@ -104,7 +104,6 @@ class DataSetReader(object):
             if box[2] <= 0 and box[3] <= 0:
                 continue
 
-            img['gt_id'][gt_index] = np.int32(target['id'])
             img['gt_boxes'][gt_index] = box
             img['gt_labels'][gt_index] = \
                 self.category_to_id_map[target['category_id']]
@@ -121,7 +120,6 @@ class DataSetReader(object):
             assert os.path.exists(img['image']), \
                     "image {} not found.".format(img['image'])
             box_num = cfg.max_box_num
-            img['gt_id'] = np.zeros((cfg.max_box_num), dtype=np.int32)
             img['gt_boxes'] = np.zeros((cfg.max_box_num, 4), dtype=np.float32)
             img['gt_labels'] = np.zeros((cfg.max_box_num), dtype=np.int32)
             for k in ['date_captured', 'url', 'license', 'file_name']:
@@ -303,6 +301,12 @@ def train(size=416,
 
     if not use_multiprocess_reader:
         return generator
+    else:
+        print("multiprocess is not fully compatible with Windows, "
+                "you can set --use_multiprocess_reader=False if you "
+                "are training on Windows and there are errors incured "
+                "by multiprocess.")
+        print("multiprocess reader starting up, it takes a while...")
 
     def infinite_reader():
         while True:

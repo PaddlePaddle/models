@@ -18,8 +18,10 @@ from __future__ import print_function
 
 import os
 import time
-import multiprocessing
 import numpy as np
+import datetime
+from collections import deque
+from tools.configure import print_total_cfg
 
 
 def set_paddle_flags(**kwargs):
@@ -28,15 +30,13 @@ def set_paddle_flags(**kwargs):
             os.environ[key] = str(value)
 
 
-# NOTE(paddle-dev): All of these flags should be
-# set before `import paddle`. Otherwise, it would
-# not take any effect. 
+# NOTE(paddle-dev): All of these flags should be set before 
+# `import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
     FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
 )
 
 from paddle import fluid
-
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
 
@@ -55,22 +55,23 @@ logger = logging.getLogger(__name__)
 
 def main():
     cfg = load_config(FLAGS.config)
-
     if 'architecture' in cfg:
         main_arch = cfg.architecture
     else:
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
+    if 'log_iter' not in cfg:
+        cfg.log_iter = 20
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
+    print_total_cfg(cfg)
 
     if cfg.use_gpu:
         devices_num = fluid.core.get_cuda_device_count()
     else:
-        devices_num = int(
-            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+        devices_num = int(os.environ.get('CPU_NUM', 1))
 
     if 'train_feed' not in cfg:
         train_feed = create(main_arch + 'TrainFeed')
@@ -86,7 +87,6 @@ def main():
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    model = create(main_arch)
     lr_builder = create('LearningRate')
     optim_builder = create('OptimizerBuilder')
 
@@ -95,15 +95,13 @@ def main():
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
+            model = create(main_arch)
             train_pyreader, feed_vars = create_feed(train_feed)
             train_fetches = model.train(feed_vars)
             loss = train_fetches['loss']
             lr = lr_builder()
             optimizer = optim_builder(lr)
             optimizer.minimize(loss)
-
-    train_reader = create_reader(train_feed, cfg.max_iters * devices_num)
-    train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     # parse train fetches
     train_keys, train_values, _ = parse_fetches(train_fetches)
@@ -113,43 +111,69 @@ def main():
         eval_prog = fluid.Program()
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
+                model = create(main_arch)
                 eval_pyreader, feed_vars = create_feed(eval_feed)
                 fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
 
-        eval_reader = create_reader(eval_feed)
+        eval_reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
         eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
-        # parse train fetches
-        extra_keys = ['im_info', 'im_id'] if cfg.metric == 'COCO' else []
+        # parse eval fetches
+        extra_keys = []
+        if cfg.metric == 'COCO':
+            extra_keys = ['im_info', 'im_id', 'im_shape']
+        if cfg.metric == 'VOC':
+            extra_keys = ['gt_box', 'gt_label', 'is_difficult']
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
     # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = False
-    build_strategy.enable_inplace = True
     sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     # only enable sync_bn in multi GPU devices
-    build_strategy.sync_batch_norm = sync_bn and devices_num > 1 \
-				     and cfg.use_gpu
+    build_strategy.sync_batch_norm = sync_bn and devices_num > 1 and cfg.use_gpu
+
+    exec_strategy = fluid.ExecutionStrategy()
+    # iteration number when CompiledProgram tries to drop local execution scopes.
+    # Set it to be 1 to save memory usages, so that unused variables in
+    # local execution scopes can be deleted after each iteration.
+    exec_strategy.num_iteration_per_drop_scope = 1
+
     train_compile_program = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
-            loss_name=loss.name, build_strategy=build_strategy)
+            loss_name=loss.name, build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     if FLAGS.eval:
         eval_compile_program = fluid.compiler.CompiledProgram(eval_prog)
 
     exe.run(startup_prog)
 
-    freeze_bn = getattr(model.backbone, 'freeze_norm', False)
+    fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
-    elif cfg.pretrain_weights and freeze_bn:
+    elif cfg.pretrain_weights and fuse_bn:
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:
         checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
+
+    train_reader = create_reader(
+                    train_feed, 
+                    (cfg.max_iters - start_iter) * devices_num,
+                    FLAGS.dataset_dir)
+    train_pyreader.decorate_sample_list_generator(train_reader, place)
+
+
+    # whether output bbox is normalized in model output layer
+    is_bbox_normalized = False
+    if hasattr(model, 'is_bbox_normalized') and \
+            callable(model.is_bbox_normalized):
+        is_bbox_normalized = model.is_bbox_normalized()
+
+    # if map_type not set, use default 11point, only use in VOC eval
+    map_type = cfg.map_type if 'map_type' in cfg else '11point'
 
     train_stats = TrainingStats(cfg.log_smooth_window, train_keys)
     train_pyreader.start()
@@ -158,19 +182,43 @@ def main():
 
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
+    time_stat = deque(maxlen=cfg.log_iter)
+    best_box_ap_list = [0.0, 0]  #[map, iter]
+
+    # use tb-paddle to log data
+    if FLAGS.use_tb:
+        from tb_paddle import SummaryWriter
+        tb_writer = SummaryWriter(FLAGS.tb_log_dir)
+        tb_loss_step = 0
+        tb_mAP_step = 0
+
     for it in range(start_iter, cfg.max_iters):
         start_time = end_time
         end_time = time.time()
+        time_stat.append(end_time - start_time)
+        time_cost = np.mean(time_stat)
+        eta_sec = (cfg.max_iters - it) * time_cost
+        eta = str(datetime.timedelta(seconds=int(eta_sec)))
         outs = exe.run(train_compile_program, fetch_list=train_values)
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
+
+        # use tb-paddle to log loss
+        if FLAGS.use_tb:
+            if it % cfg.log_iter == 0:
+                for loss_name, loss_value in stats.items():
+                    tb_writer.add_scalar(loss_name, loss_value, tb_loss_step)
+                tb_loss_step += 1
+
         train_stats.update(stats)
         logs = train_stats.log()
-        strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}'.format(
-            it, np.mean(outs[-1]), logs, end_time - start_time)
-        logger.info(strs)
+        if it % cfg.log_iter == 0:
+            strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
+                it, np.mean(outs[-1]), logs, time_cost, eta)
+            logger.info(strs)
 
-        if it > 0 and it % cfg.snapshot_iter == 0:
-            checkpoint.save(exe, train_prog, os.path.join(save_dir, str(it)))
+        if it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1:
+            save_name = str(it) if it != cfg.max_iters - 1 else "model_final"
+            checkpoint.save(exe, train_prog, os.path.join(save_dir, save_name))
 
             if FLAGS.eval:
                 # evaluation
@@ -179,10 +227,23 @@ def main():
                 resolution = None
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
-                eval_results(results, eval_feed, cfg.metric, resolution,
-                             FLAGS.output_file)
+                box_ap_stats = eval_results(
+                    results, eval_feed, cfg.metric, cfg.num_classes, resolution,
+                    is_bbox_normalized, FLAGS.output_eval, map_type)
+                
+                # use tb_paddle to log mAP
+                if FLAGS.use_tb:
+                    tb_writer.add_scalar("mAP", box_ap_stats[0], tb_mAP_step)
+                    tb_mAP_step += 1
+                
+                if box_ap_stats[0] > best_box_ap_list[0]:
+                    best_box_ap_list[0] = box_ap_stats[0]
+                    best_box_ap_list[1] = it
+                    checkpoint.save(exe, train_prog,
+                                    os.path.join(save_dir, "best_model"))
+                logger.info("Best test box ap: {}, in iter: {}".format(
+                    best_box_ap_list[0], best_box_ap_list[1]))
 
-    checkpoint.save(exe, train_prog, os.path.join(save_dir, "model_final"))
     train_pyreader.reset()
 
 
@@ -200,10 +261,25 @@ if __name__ == '__main__':
         default=False,
         help="Whether to perform evaluation in train")
     parser.add_argument(
-        "-f",
-        "--output_file",
+        "--output_eval",
         default=None,
         type=str,
-        help="Evaluation file name, default to bbox.json and mask.json.")
+        help="Evaluation directory, default is current directory.")
+    parser.add_argument(
+        "-d",
+        "--dataset_dir",
+        default=None,
+        type=str,
+        help="Dataset path, same as DataFeed.dataset.dataset_dir")
+    parser.add_argument(
+        "--use_tb",
+        type=bool,
+        default=False,
+        help="whether to record the data to Tensorboard.")
+    parser.add_argument(
+        '--tb_log_dir',
+        type=str,
+        default="tb_log_dir/scalar",
+        help='Tensorboard logging directory for scalar.')
     FLAGS = parser.parse_args()
     main()

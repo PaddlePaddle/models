@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -9,11 +22,25 @@ import time
 import argparse
 import functools
 
+
+def set_paddle_flags(**kwargs):
+    for key, value in kwargs.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect. 
+set_paddle_flags(
+    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
+)
+
 import paddle
 import paddle.fluid as fluid
 from pyramidbox import PyramidBox
 import reader
-from utility import add_arguments, print_arguments
+from utility import add_arguments, print_arguments, check_cuda
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -29,9 +56,9 @@ add_arg('model_save_dir',   str,   'output',        "The path to save model.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image width.")
 add_arg('mean_BGR',         str,   '104., 117., 123.', "Mean value for B,G,R channel which will be subtracted.")
-add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 add_arg('data_dir',         str,   'data',          "The base dir of dataset")
+add_arg('use_multiprocess', bool,  True,            "Whether use multi-process for data preprocessing.")
 parser.add_argument('--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 parser.add_argument('--batch_num', type=int, help="batch num for ce")
 parser.add_argument('--num_devices', type=int, default=1, help='Number of GPU devices')
@@ -110,7 +137,6 @@ def train(args, config, train_params, train_file_list):
     use_gpu = args.use_gpu
     model_save_dir = args.model_save_dir
     pretrained_model = args.pretrained_model
-    with_memory_optimization = args.with_mem_opt
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
@@ -138,9 +164,6 @@ def train(args, config, train_params, train_file_list):
         startup_prog = startup_prog,
         args=args)
 
-    if with_memory_optimization:
-        fluid.memory_optimize(train_prog)
-
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
@@ -163,7 +186,8 @@ def train(args, config, train_params, train_file_list):
                                 train_file_list,
                                 batch_size_per_device,
                                 shuffle = is_shuffle,
-                                num_workers = num_workers)
+                                use_multiprocess=args.use_multiprocess,
+                                num_workers=num_workers)
     train_py_reader.decorate_paddle_reader(train_reader)
 
     if args.parallel:
@@ -247,6 +271,7 @@ def get_cards(args):
 if __name__ == '__main__':
     args = parser.parse_args()
     print_arguments(args)
+    check_cuda(args.use_gpu)
 
     data_dir = os.path.join(args.data_dir, 'WIDER_train/images/')
     train_file_list = os.path.join(args.data_dir,

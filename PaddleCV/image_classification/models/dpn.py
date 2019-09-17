@@ -27,22 +27,9 @@ from paddle.fluid.param_attr import ParamAttr
 
 __all__ = ["DPN", "DPN68", "DPN92", "DPN98", "DPN107", "DPN131"]
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
-
 
 class DPN(object):
     def __init__(self, layers=68):
-        self.params = train_parameters
         self.layers = layers
 
     def net(self, input, class_dim=1000):
@@ -50,7 +37,7 @@ class DPN(object):
         args = self.get_net_args(self.layers)
         bws = args['bw']
         inc_sec = args['inc_sec']
-        rs = args['bw']
+        rs = args['r']
         k_r = args['k_r']
         k_sec = args['k_sec']
         G = args['G']
@@ -134,12 +121,10 @@ class DPN(object):
             pool_type='avg', )
 
         stdv = 0.01
-        param_attr = fluid.param_attr.ParamAttr(
-            initializer=fluid.initializer.Uniform(-stdv, stdv))
         fc6 = fluid.layers.fc(input=pool5,
                               size=class_dim,
-                              param_attr=param_attr,
-                              name="fc6")
+                              param_attr=ParamAttr(initializer=fluid.initializer.Uniform(-stdv, stdv), name='fc_weights'),
+                              bias_attr=ParamAttr(name='fc_offset'))
 
         return fc6
 
@@ -330,7 +315,7 @@ def DPN68():
 
 
 def DPN92():
-    onvodel = DPN(layers=92)
+    model = DPN(layers=92)
     return model
 
 

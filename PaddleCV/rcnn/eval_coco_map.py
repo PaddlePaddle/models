@@ -22,7 +22,7 @@ from eval_helper import *
 import paddle
 import paddle.fluid as fluid
 import reader
-from utility import print_arguments, parse_args
+from utility import print_arguments, parse_args, check_gpu
 import models.model_builder as model_builder
 import models.resnet as resnet
 import json
@@ -114,7 +114,7 @@ def eval():
     if cfg.MASK_ON:
         assert len(
             segms_res) > 0, "The number of valid mask detected is zero.\n \
-            Please use reasonable model and check input data.."
+            Please use reasonable model and check input data."
 
     with open("detection_bbox_result.json", 'w') as outfile:
         json.dump(dts_res, outfile)
@@ -139,4 +139,5 @@ def eval():
 if __name__ == '__main__':
     args = parse_args()
     print_arguments(args)
+    check_gpu(args.use_gpu)
     eval()

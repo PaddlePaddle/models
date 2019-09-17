@@ -38,7 +38,6 @@ add_arg('num_epochs',       int,   140,                          "Number of epoc
 add_arg('total_images',     int,   144406,                       "Training image number.")
 add_arg('kp_dim',           int,   16,                           "Class number.")
 add_arg('model_save_dir',   str,   "output",                     "Model save directory")
-add_arg('with_mem_opt',     bool,  True,                         "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   "pretrained/resnet_50/115",   "Whether to use pretrained model.")
 add_arg('checkpoint',       str,   None,                         "Whether to resume checkpoint.")
 add_arg('lr',               float, 0.001,                        "Set learning rate.")
@@ -124,10 +123,6 @@ def train(args):
     optimizer = optimizer_setting(args, params)
     optimizer.minimize(loss)
 
-    if args.with_mem_opt:
-        fluid.memory_optimize(fluid.default_main_program(),
-                              skip_opt_set=[loss.name, output.name, target.name])
-
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
@@ -175,5 +170,6 @@ def train(args):
 
 if __name__ == '__main__':
     args = parser.parse_args()
+    check_cuda(args.use_gpu)
     train(args)
 

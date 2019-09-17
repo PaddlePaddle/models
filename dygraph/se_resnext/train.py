@@ -1,4 +1,4 @@
-# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,10 +26,16 @@ from paddle.fluid.dygraph.base import to_variable
 import sys
 import math
 import argparse
+import ast
 
 parser = argparse.ArgumentParser("Training for Se-ResNeXt.")
 parser.add_argument("-e", "--epoch", default=200, type=int, help="set epoch")
 parser.add_argument("--ce", action="store_true", help="run ce") 
+parser.add_argument(
+        "--use_data_parallel",
+        type=ast.literal_eval,
+        default=False,
+        help="The flag indicating whether to shuffle instances in each pass.")
 args = parser.parse_args()
 batch_size = 64
 train_parameters = {
@@ -361,22 +367,30 @@ def train():
         epoch_num = args.epoch
     batch_size = train_parameters["batch_size"]
 
-    with fluid.dygraph.guard():
+    trainer_count = fluid.dygraph.parallel.Env().nranks
+    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
+        if args.use_data_parallel else fluid.CUDAPlace(0)
+    with fluid.dygraph.guard(place):
         if args.ce:
             print("ce mode")
             seed = 90
             np.random.seed(seed)
             fluid.default_startup_program().random_seed = seed
             fluid.default_main_program().random_seed = seed
-        
+        if args.use_data_parallel:
+            strategy = fluid.dygraph.parallel.prepare_context() 
         se_resnext = SeResNeXt("se_resnext")
         optimizer = optimizer_setting(train_parameters)
+        if args.use_data_parallel:
+            se_resnext = fluid.dygraph.parallel.DataParallel(se_resnext, strategy)
         train_reader = paddle.batch(
             paddle.dataset.flowers.train(use_xmap=False),
             batch_size=batch_size,
             drop_last=True
             )
-        
+        if args.use_data_parallel:
+            train_reader = fluid.contrib.reader.distributed_batch_reader(
+                train_reader)
         test_reader = paddle.batch(
             paddle.dataset.flowers.test(use_xmap=False), batch_size=32)       
 
@@ -407,7 +421,12 @@ def train():
                 acc_top5 = fluid.layers.accuracy(input=softmax_out, label=label, k=5)
 
                 dy_out = avg_loss.numpy()
-                avg_loss.backward()
+                if args.use_data_parallel:
+                    avg_loss = se_resnext.scale_loss(avg_loss)
+                    avg_loss.backward()
+                    se_resnext.apply_collective_grads()
+                else:
+                    avg_loss.backward()
 
                 optimizer.minimize(avg_loss)
                 se_resnext.clear_gradients()
@@ -418,7 +437,6 @@ def train():
                 total_acc5 += acc_top5.numpy()
                 total_sample += 1
                 if batch_id % 10 == 0:
-                    print(fluid.dygraph.base._print_debug_msg())
                     print( "epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f lr %0.5f" % \
                            ( epoch_id, batch_id, total_loss / total_sample, \
                              total_acc1 / total_sample, total_acc5 / total_sample, lr))

@@ -76,6 +76,7 @@ class STGAN_model(object):
                       n_atts=cfg.c_dim,
                       dim=cfg.d_base_dims,
                       fc_dim=cfg.d_fc_dim,
+                      norm=cfg.dis_norm,
                       n_layers=cfg.n_layers,
                       name=name)
 
@@ -91,16 +92,16 @@ class STGAN_model(object):
         for i in range(n_layers):
             d = min(dim * 2**i, MAX_DIM)
             z = conv2d(
-                z,
-                d,
-                4,
-                2,
+                input=z,
+                num_filters=d,
+                filter_size=4,
+                stride=2,
                 padding_type='SAME',
                 norm="batch_norm",
                 activation_fn='leaky_relu',
                 name=name + str(i),
                 use_bias=False,
-                relufactor=0.01,
+                relufactor=0.2,
                 initial='kaiming',
                 is_test=is_test)
             zs.append(z)
@@ -124,15 +125,15 @@ class STGAN_model(object):
         for i in range(n_layers):
             d = min(dim * 2**(n_layers - 1 - i), MAX_DIM)
             output = self.gru_cell(
-                zs[n_layers - 1 - i],
-                state,
-                d,
+                in_data=zs[n_layers - 1 - i],
+                state=state,
+                out_channel=d,
                 kernel_size=kernel_size,
                 norm=norm,
                 pass_state=pass_state,
                 name=name + str(i),
                 is_test=is_test)
-            zs_.insert(0, output[0] + zs[n_layers - 1 - i])
+            zs_.insert(0, output[0])
             if inject_layers > i:
                 state = self.concat(output[1], a)
             else:
@@ -156,10 +157,10 @@ class STGAN_model(object):
             if i < n_layers - 1:
                 d = min(dim * 2**(n_layers - 1 - i), MAX_DIM)
                 z = deconv2d(
-                    z,
-                    d,
-                    4,
-                    2,
+                    input=z,
+                    num_filters=d,
+                    filter_size=4,
+                    stride=2,
                     padding_type='SAME',
                     name=name + str(i),
                     norm='batch_norm',
@@ -173,10 +174,10 @@ class STGAN_model(object):
                     z = self.concat(z, a)
             else:
                 x = z = deconv2d(
-                    z,
-                    3,
-                    4,
-                    2,
+                    input=z,
+                    num_filters=3,
+                    filter_size=4,
+                    stride=2,
                     padding_type='SAME',
                     name=name + str(i),
                     activation_fn='tanh',
@@ -198,35 +199,38 @@ class STGAN_model(object):
         for i in range(n_layers):
             d = min(dim * 2**i, MAX_DIM)
             y = conv2d(
-                y,
-                d,
-                4,
-                2,
-                norm=None,
-                padding=1,
+                input=y,
+                num_filters=d,
+                filter_size=4,
+                stride=2,
+                norm=norm,
+                padding_type="SAME",
                 activation_fn='leaky_relu',
                 name=name + str(i),
-                use_bias=True,
-                relufactor=0.01,
+                use_bias=(norm == None),
+                relufactor=0.2,
                 initial='kaiming')
 
         logit_gan = linear(
-            y,
-            fc_dim,
-            activation_fn='relu',
+            input=y,
+            output_size=fc_dim,
+            activation_fn='leaky_relu',
             name=name + 'fc_adv_1',
             initial='kaiming')
         logit_gan = linear(
-            logit_gan, 1, name=name + 'fc_adv_2', initial='kaiming')
+            logit_gan, output_size=1, name=name + 'fc_adv_2', initial='kaiming')
 
         logit_att = linear(
-            y,
-            fc_dim,
-            activation_fn='relu',
+            input=y,
+            output_size=fc_dim,
+            activation_fn='leaky_relu',
             name=name + 'fc_cls_1',
             initial='kaiming')
         logit_att = linear(
-            logit_att, n_atts, name=name + 'fc_cls_2', initial='kaiming')
+            logit_att,
+            output_size=n_atts,
+            name=name + 'fc_cls_2',
+            initial='kaiming')
 
         return logit_gan, logit_att
 
@@ -240,10 +244,10 @@ class STGAN_model(object):
                  name='gru',
                  is_test=False):
         state_ = deconv2d(
-            state,
-            out_channel,
-            4,
-            2,
+            input=state,
+            num_filters=out_channel,
+            filter_size=4,
+            stride=2,
             padding_type='SAME',
             name=name + '_deconv2d',
             use_bias=True,
@@ -251,10 +255,10 @@ class STGAN_model(object):
             is_test=is_test,
         )  # upsample and make `channel` identical to `out_channel`
         reset_gate = conv2d(
-            fluid.layers.concat(
+            input=fluid.layers.concat(
                 [in_data, state_], axis=1),
-            out_channel,
-            kernel_size,
+            num_filters=out_channel,
+            filter_size=kernel_size,
             norm=norm,
             activation_fn='sigmoid',
             padding_type='SAME',
@@ -263,10 +267,10 @@ class STGAN_model(object):
             initial='kaiming',
             is_test=is_test)
         update_gate = conv2d(
-            fluid.layers.concat(
+            input=fluid.layers.concat(
                 [in_data, state_], axis=1),
-            out_channel,
-            kernel_size,
+            num_filters=out_channel,
+            filter_size=kernel_size,
             norm=norm,
             activation_fn='sigmoid',
             padding_type='SAME',
@@ -276,10 +280,10 @@ class STGAN_model(object):
             is_test=is_test)
         left_state = reset_gate * state_
         new_info = conv2d(
-            fluid.layers.concat(
+            input=fluid.layers.concat(
                 [in_data, left_state], axis=1),
-            out_channel,
-            kernel_size,
+            num_filters=out_channel,
+            filter_size=kernel_size,
             norm=norm,
             activation_fn='tanh',
             name=name + '_info',

@@ -77,7 +77,7 @@ def base_parse_args(parser):
     add_arg('epoch', int, 200, "The number of epoch to be trained.")
     add_arg('g_base_dims', int, 64, "Base channels in generator")
     add_arg('d_base_dims', int, 64, "Base channels in discriminator")
-    add_arg('load_size', int, 286, "the image size when load the image")
+    add_arg('image_size', int, 286, "the image size when load the image")
     add_arg('crop_type', str, 'Centor',
             "the crop type, choose = ['Centor', 'Random']")
     add_arg('crop_size', int, 256, "crop size when preprocess image")

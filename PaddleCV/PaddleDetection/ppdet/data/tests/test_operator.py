@@ -1,9 +1,22 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import os
 import unittest
 import logging
 import numpy as np
 import set_env
-from data import transform as tf
+import ppdet.data.transform as tf
 logging.basicConfig(level=logging.INFO)
 
 
@@ -47,7 +60,7 @@ class TestBase(unittest.TestCase):
             'target_size': 300,
             'max_size': 1333
         }]
-        mapper = tf.build(ops_conf)
+        mapper = tf.build_mapper(ops_conf)
         self.assertTrue(mapper is not None)
         data = self.sample.copy()
         result0 = mapper(data)
@@ -55,14 +68,14 @@ class TestBase(unittest.TestCase):
         self.assertEqual(len(result0['image'].shape), 3)
         # RandFlipImage
         ops_conf = [{'op': 'RandomFlipImage'}]
-        mapper = tf.build(ops_conf)
+        mapper = tf.build_mapper(ops_conf)
         self.assertTrue(mapper is not None)
         result1 = mapper(result0)
         self.assertEqual(result1['image'].shape, result0['image'].shape)
         self.assertEqual(result1['gt_bbox'].shape, result0['gt_bbox'].shape)
         # NormalizeImage
         ops_conf = [{'op': 'NormalizeImage', 'is_channel_first': False}]
-        mapper = tf.build(ops_conf)
+        mapper = tf.build_mapper(ops_conf)
         self.assertTrue(mapper is not None)
         result2 = mapper(result1)
         im1 = result1['image']
@@ -71,7 +84,7 @@ class TestBase(unittest.TestCase):
             self.assertEqual(count, im1.shape[0] * im1.shape[1], im1.shape[2])
         # ArrangeSample
         ops_conf = [{'op': 'ArrangeRCNN'}]
-        mapper = tf.build(ops_conf)
+        mapper = tf.build_mapper(ops_conf)
         self.assertTrue(mapper is not None)
         result3 = mapper(result2)
         self.assertEqual(type(result3), tuple)
@@ -93,7 +106,7 @@ class TestBase(unittest.TestCase):
                               [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
                               [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]]
         }]
-        mapper = tf.build(ops_conf)
+        mapper = tf.build_mapper(ops_conf)
         self.assertTrue(mapper is not None)
         data = self.sample.copy()
         result = mapper(data)
@@ -111,7 +124,7 @@ class TestBase(unittest.TestCase):
             'max_ratio': 1.5,
             'prob': 1
         }]
-        mapper = tf.build(ops_conf)
+        mapper = tf.build_mapper(ops_conf)
         self.assertTrue(mapper is not None)
         data = self.sample.copy()
         result = mapper(data)
@@ -130,7 +143,7 @@ class TestBase(unittest.TestCase):
             'op': 'RandomInterpImage',
             'target_size': 608
         }]
-        mapper = tf.build(ops_conf)
+        mapper = tf.build_mapper(ops_conf)
         self.assertTrue(mapper is not None)
         data = self.sample.copy()
         result = mapper(data)

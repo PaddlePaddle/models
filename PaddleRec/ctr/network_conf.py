@@ -107,7 +107,8 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim, sparse_
 def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
 
     def embedding_layer(input):
-        return fluid.layers.embedding(
+        """embedding_layer"""
+        emb = fluid.layers.embedding(
             input=input,
             is_sparse=True,
             # you need to patch https://github.com/PaddlePaddle/Paddle/pull/14190
@@ -116,6 +117,7 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
             size=[sparse_feature_dim, embedding_size],
             param_attr=fluid.ParamAttr(name="SparseFeatFactors",
                                        initializer=fluid.initializer.Uniform()))
+        return fluid.layers.sequence_pool(input=emb, pool_type='average')
 
     dense_input = fluid.layers.data(
         name="dense_input", shape=[dense_feature_dim], dtype='float32')

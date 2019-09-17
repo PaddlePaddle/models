@@ -25,13 +25,13 @@ class SentaProcessor(object):
         self.num_examples = {"train": -1, "dev": -1, "infer": -1}
         np.random.seed(random_seed)
 
-    def get_train_examples(self, data_dir, epoch):
+    def get_train_examples(self, data_dir, epoch, shuffle):
         return data_reader((self.data_dir + "/train.tsv"), self.vocab,
-                           self.num_examples, "train", epoch)
+                           self.num_examples, "train", epoch, shuffle)
 
-    def get_dev_examples(self, data_dir, epoch):
+    def get_dev_examples(self, data_dir, epoch, shuffle):
         return data_reader((self.data_dir + "/dev.tsv"), self.vocab,
-                           self.num_examples, "dev", epoch)
+                           self.num_examples, "dev", epoch, shuffle)
 
     def get_test_examples(self, data_dir, epoch):
         return data_reader((self.data_dir + "/test.tsv"), self.vocab,
@@ -52,12 +52,12 @@ class SentaProcessor(object):
     def data_generator(self, batch_size, phase='train', epoch=1, shuffle=True):
         if phase == "train":
             return paddle.batch(
-                self.get_train_examples(self.data_dir, epoch),
+                self.get_train_examples(self.data_dir, epoch, shuffle),
                 batch_size,
                 drop_last=True)
         elif phase == "dev":
             return paddle.batch(
-                self.get_dev_examples(self.data_dir, epoch),
+                self.get_dev_examples(self.data_dir, epoch, shuffle),
                 batch_size,
                 drop_last=True)
         elif phase == "infer":

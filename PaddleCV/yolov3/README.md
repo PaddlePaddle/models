@@ -94,6 +94,8 @@ dataset/coco/
        --class_num=${category_num}
 
 - 通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
+- 若在Windows环境下训练模型，建议设置`--use_multiprocess_reader=False`。
+- 通过`--worker_num=`设置多进程数据读取器进程数，默认进程数为8，若训练机器CPU核数较少，建议设小该值。
 - 可选参数见：
 
     python train.py --help
@@ -218,7 +220,7 @@ YOLOv3检测原理
 
 ### 模型结构
 
-YOLOv3将输入图像分成S\*S个格子，每个格子预测B个bounding box，每个bounding box预测内容包括: Location(x, y, w, h)、Confidence Score和C个类别的概率，因此YOLOv3输出层的channel数为S\*S\*B\*(5 + C)。YOLOv3的loss函数也有三部分组成：Location误差，Confidence误差和分类误差。
+YOLOv3将输入图像分成S\*S个格子，每个格子预测B个bounding box，每个bounding box预测内容包括: Location(x, y, w, h)、Confidence Score和C个类别的概率，因此YOLOv3输出层的channel数为B\*(5 + C)。YOLOv3的loss函数也有三部分组成：Location误差，Confidence误差和分类误差。
 
 YOLOv3的网络结构如下图所示:
 <p align="center">

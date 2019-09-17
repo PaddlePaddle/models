@@ -71,7 +71,7 @@ class Settings(object):
         return self._ap_version
 
     @property
-    def apply_distort(self):
+    def apply_expand(self):
         return self._apply_expand
 
     @property
@@ -283,6 +283,7 @@ def train(settings,
           file_list,
           batch_size,
           shuffle=True,
+          use_multiprocess=True,
           num_workers=8,
           enable_ce=False):
     file_path = os.path.join(settings.data_dir, file_list)
@@ -294,14 +295,15 @@ def train(settings,
         image_ids = coco_api.getImgIds()
         images = coco_api.loadImgs(image_ids)
         np.random.shuffle(images)
-        n = int(math.ceil(len(images) // num_workers))
-        image_lists = [images[i:i + n] for i in range(0, len(images), n)]
-
         if '2014' in file_list:
             sub_dir = "train2014"
         elif '2017' in file_list:
             sub_dir = "train2017"
         data_dir = os.path.join(settings.data_dir, sub_dir)
+
+        n = int(math.ceil(len(images) // num_workers)) if use_multiprocess \
+            else len(images)
+        image_lists = [images[i:i + n] for i in range(0, len(images), n)]
         for l in image_lists:
             readers.append(
                 coco(settings, coco_api, l, 'train', batch_size, shuffle,
@@ -309,11 +311,16 @@ def train(settings,
     else:
         images = [line.strip() for line in open(file_path)]
         np.random.shuffle(images)
-        n = int(math.ceil(len(images) // num_workers))
+        n = int(math.ceil(len(images) // num_workers)) if use_multiprocess \
+            else len(images)
         image_lists = [images[i:i + n] for i in range(0, len(images), n)]
         for l in image_lists:
             readers.append(pascalvoc(settings, l, 'train', batch_size, shuffle))
-    return paddle.reader.multiprocess_reader(readers, False)
+    print("use_multiprocess ", use_multiprocess)
+    if use_multiprocess:
+        return paddle.reader.multiprocess_reader(readers, False)
+    else:
+        return readers[0]
 
 
 def test(settings, file_list, batch_size):

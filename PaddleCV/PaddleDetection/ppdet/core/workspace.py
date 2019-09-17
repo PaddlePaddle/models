@@ -21,8 +21,9 @@ import os
 import sys
 
 import yaml
+import copy
 
-from .config.schema import SchemaDict, extract_schema
+from .config.schema import SchemaDict, SharedConfig, extract_schema
 from .config.yaml_helpers import serializable
 
 __all__ = [
@@ -58,7 +59,8 @@ def load_config(file_path):
     """
     _, ext = os.path.splitext(file_path)
     assert ext in ['.yml', '.yaml'], "only support yaml files for now"
-    merge_config(yaml.load(open(file_path), Loader=yaml.Loader))
+    with open(file_path) as f:
+        merge_config(yaml.load(f, Loader=yaml.Loader))
     return global_config
 
 
@@ -135,7 +137,8 @@ def create(cls_or_name, **kwargs):
     assert type(cls_or_name) in [type, str
                                  ], "should be a class or name of a class"
     name = type(cls_or_name) == str and cls_or_name or cls_or_name.__name__
-    assert name in global_config and isinstance(global_config[name], SchemaDict), \
+    assert name in global_config and \
+        isinstance(global_config[name], SchemaDict), \
         "the module {} is not registered".format(name)
     config = global_config[name]
     config.update(kwargs)
@@ -144,9 +147,26 @@ def create(cls_or_name, **kwargs):
 
     kwargs = {}
     kwargs.update(global_config[name])
+
+    # parse `shared` annoation of registered modules
+    if getattr(config, 'shared', None):
+        for k in config.shared:
+            target_key = config[k]
+            shared_conf = config.schema[k].default
+            assert isinstance(shared_conf, SharedConfig)
+            if target_key is not None and not isinstance(
+                    target_key, SharedConfig):
+                continue   # value is given for the module
+            elif shared_conf.key in global_config:
+                # `key` is present in config
+                kwargs[k] = global_config[shared_conf.key]
+            else:
+                kwargs[k] = shared_conf.default_value
+
+    # parse `inject` annoation of registered modules
     if getattr(config, 'inject', None):
         for k in config.inject:
-            target_key = global_config[name][k]
+            target_key = config[k]
             # optional dependency
             if target_key is None:
                 continue
@@ -163,4 +183,7 @@ def create(cls_or_name, **kwargs):
                     kwargs[k] = target
             else:
                 raise ValueError("Unsupported injection type:", target_key)
+    # prevent modification of global config values of reference types
+    # (e.g., list, dict) from within the created module instances
+    kwargs = copy.deepcopy(kwargs)
     return cls(**kwargs)
