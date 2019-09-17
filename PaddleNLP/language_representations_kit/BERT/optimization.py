@@ -19,7 +19,7 @@ from __future__ import print_function
 
 import numpy as np
 import paddle.fluid as fluid
-from utils.fp16 import create_master_params_grads, master_param_to_train_param
+from utils.fp16 import create_master_params_grads, master_param_to_train_param, apply_dynamic_loss_scaling
 
 
 def linear_warmup_decay(learning_rate, warmup_steps, num_train_steps):
@@ -59,32 +59,42 @@ def optimization(loss,
                  weight_decay,
                  scheduler='linear_warmup_decay',
                  use_fp16=False,
-                 loss_scaling=1.0):
-    if warmup_steps > 0:
-        if scheduler == 'noam_decay':
+                 use_dynamic_loss_scaling=False,
+                 init_loss_scaling=1.0,
+                 incr_every_n_steps=1000,
+                 decr_every_n_nan_or_inf=2,
+                 incr_ratio=2.0,
+                 decr_ratio=0.8):
+
+    scheduled_lr, loss_scaling = None, None
+    if scheduler == 'noam_decay':
+        if warmup_steps > 0:
             scheduled_lr = fluid.layers.learning_rate_scheduler\
              .noam_decay(1/(warmup_steps *(learning_rate ** 2)),
-                         warmup_steps)
-        elif scheduler == 'linear_warmup_decay':
-            scheduled_lr = linear_warmup_decay(learning_rate, warmup_steps,
-                                               num_train_steps)
+           warmup_steps)
         else:
-            raise ValueError("Unkown learning rate scheduler, should be "
-                             "'noam_decay' or 'linear_warmup_decay'")
-        optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr)
+            printf(
+                "WARNING: noam decay should have postive warmup steps, using "
+                "constant learning rate instead!")
+            scheduled_lr = fluid.layers.create_global_var(
+                name=fluid.unique_name.generate("learning_rate"),
+                shape=[1],
+                value=learning_rate,
+                dtype='float32',
+                persistable=True)
+    elif scheduler == 'linear_warmup_decay':
+        scheduled_lr = linear_warmup_decay(learning_rate, warmup_steps,
+                                           num_train_steps)
     else:
-        optimizer = fluid.optimizer.Adam(learning_rate=learning_rate)
-        scheduled_lr = learning_rate
+        raise ValueError("Unkown learning rate scheduler, should be "
+                         "'noam_decay' or 'linear_warmup_decay'")
 
-    clip_norm_thres = 1.0
-    # When using mixed precision training, scale the gradient clip threshold
-    # by loss_scaling
-    if use_fp16 and loss_scaling > 1.0:
-        clip_norm_thres *= loss_scaling
+    optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr)
     fluid.clip.set_gradient_clip(
-        clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=clip_norm_thres))
+        clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=1.0))
 
-    def exclude_from_weight_decay(name):
+    def exclude_from_weight_decay(param):
+        name = param.name.rstrip(".master")
         if name.find("layer_norm") > -1:
             return True
         bias_suffix = ["_bias", "_b", ".b_0"]
@@ -96,19 +106,33 @@ def optimization(loss,
     param_list = dict()
 
     if use_fp16:
+        loss_scaling = fluid.layers.create_global_var(
+            name=fluid.unique_name.generate("loss_scaling"),
+            shape=[1],
+            value=init_loss_scaling,
+            dtype='float32',
+            persistable=True)
+        loss *= loss_scaling
+
         param_grads = optimizer.backward(loss)
         master_param_grads = create_master_params_grads(
             param_grads, train_program, startup_prog, loss_scaling)
 
-        for param, _ in master_param_grads:
-            param_list[param.name] = param * 1.0
-            param_list[param.name].stop_gradient = True
+        if weight_decay > 0:
+            for param, _ in master_param_grads:
+                param_list[param.name] = param * 1.0
+                param_list[param.name].stop_gradient = True
+
+        if use_dynamic_loss_scaling:
+            apply_dynamic_loss_scaling(
+                loss_scaling, master_param_grads, incr_every_n_steps,
+                decr_every_n_nan_or_inf, incr_ratio, decr_ratio)
 
         optimizer.apply_gradients(master_param_grads)
 
         if weight_decay > 0:
             for param, grad in master_param_grads:
-                if exclude_from_weight_decay(param.name.rstrip(".master")):
+                if exclude_from_weight_decay(param):
                     continue
                 with param.block.program._optimized_guard(
                     [param, grad]), fluid.framework.name_scope("weight_decay"):
@@ -120,15 +144,16 @@ def optimization(loss,
                                     train_program)
 
     else:
-        for param in train_program.global_block().all_parameters():
-            param_list[param.name] = param * 1.0
-            param_list[param.name].stop_gradient = True
+        if weight_decay > 0:
+            for param in train_program.global_block().all_parameters():
+                param_list[param.name] = param * 1.0
+                param_list[param.name].stop_gradient = True
 
         _, param_grads = optimizer.minimize(loss)
 
         if weight_decay > 0:
             for param, grad in param_grads:
-                if exclude_from_weight_decay(param.name):
+                if exclude_from_weight_decay(param):
                     continue
                 with param.block.program._optimized_guard(
                     [param, grad]), fluid.framework.name_scope("weight_decay"):
@@ -136,4 +161,4 @@ def optimization(loss,
                         param.name] * weight_decay * scheduled_lr
                     fluid.layers.assign(output=param, input=updated_param)
 
-    return scheduled_lr
+    return scheduled_lr, loss_scaling

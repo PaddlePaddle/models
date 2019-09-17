@@ -30,7 +30,7 @@ import trainer
 def train(cfg):
 
     MODELS = [
-        "CGAN", "DCGAN", "Pix2pix", "CycleGAN", "StarGAN", "AttGAN", "STGAN"
+        "CGAN", "DCGAN", "Pix2pix", "CycleGAN", "StarGAN", "AttGAN", "STGAN", "SPADE"
     ]
     if cfg.model_net not in MODELS:
         raise NotImplementedError("{} is not support!".format(cfg.model_net))
@@ -38,24 +38,25 @@ def train(cfg):
     reader = data_reader(cfg)
 
     if cfg.model_net in ['CycleGAN']:
-        a_reader, b_reader, a_reader_test, b_reader_test, batch_num = reader.make_data(
+        a_reader, b_reader, a_reader_test, b_reader_test, batch_num, a_id2name, b_id2name = reader.make_data(
         )
     else:
         if cfg.dataset in ['mnist']:
             train_reader = reader.make_data()
         else:
-            train_reader, test_reader, batch_num = reader.make_data()
+            train_reader, test_reader, batch_num, id2name = reader.make_data()
 
     if cfg.model_net in ['CGAN', 'DCGAN']:
         if cfg.dataset != 'mnist':
             raise NotImplementedError("CGAN/DCGAN only support MNIST now!")
         model = trainer.__dict__[cfg.model_net](cfg, train_reader)
     elif cfg.model_net in ['CycleGAN']:
-        model = trainer.__dict__[cfg.model_net](
-            cfg, a_reader, b_reader, a_reader_test, b_reader_test, batch_num)
+        model = trainer.__dict__[cfg.model_net](cfg, a_reader, b_reader,
+                                                a_reader_test, b_reader_test,
+                                                batch_num, a_id2name, b_id2name)
     else:
         model = trainer.__dict__[cfg.model_net](cfg, train_reader, test_reader,
-                                                batch_num)
+                                                batch_num, id2name)
 
     model.build_model()
 

@@ -37,7 +37,9 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml -o use_gpu=false
 - `--eval`: Whether to perform evaluation in training, default is `False`
 - `--output_eval`: If perform evaluation in training, this edits evaluation directory, default is current directory.
 - `-d` or `--dataset_dir`: Dataset path, same as `dataset_dir` of configs. Such as: `-d dataset/coco`
-- `-o`: Set configuration options in config file. Such as: `-o weights=output/faster_rcnn_r50_1x/model_final`
+- `-o`: Set configuration options in config file. Such as: `-o max_iters=180000`
+- `--use_tb`: Whether to record the data with [tb-paddle](https://github.com/linshuliang/tb-paddle), so as to display in Tensorboard, default is `False`
+- `--tb_log_dir`: tb-paddle logging directory for scalar, default is `tb_log_dir/scalar`
 
 
 ##### Examples
@@ -60,7 +62,6 @@ the best model with highest MAP is saved at each `snapshot_iter`. `best_model` h
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export PYTHONPATH=$PYTHONPATH:.
 python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
-                         -o weights=output/faster_rcnn_r50_1x/model_final \
                          -d dataset/coco
 ```
 
@@ -151,10 +152,13 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_dir=demo
 - `--output_dir`: Directory for storing the output visualization files.
 - `--draw_threshold`: Threshold to reserve the result for visualization. Default is 0.5.
 - `--save_inference_model`: Save inference model in output_dir if True.
+- `--use_tb`: Whether to record the data with [tb-paddle](https://github.com/linshuliang/tb-paddle), so as to display in Tensorboard, default is `False`
+- `--tb_log_dir`: tb-paddle logging directory for image, default is `tb_log_dir/image`
 
 #### Examples
 
 - Output specified directory && Set up threshold
+
 ```bash
 # run on GPU with:
 export PYTHONPATH=$PYTHONPATH:.
@@ -163,11 +167,16 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml \
                       --infer_img=demo/000000570688.jpg \
                       --output_dir=infer_output/ \
                       --draw_threshold=0.5 \
-                      -o weights=output/faster_rcnn_r50_1x/model_final
+                      -o weights=output/faster_rcnn_r50_1x/model_final \
+                      --use_tb=Ture
 ```
-The visualization files are saved in `output` by default, to specify a different
-path, simply add a `--output_dir=` flag.  
-`--draw_threshold` is an optional argument. Default is 0.5. Different thresholds will produce different results depending on the calculation of [NMS](https://ieeexplore.ieee.org/document/1699659). If users want to infer according to customized model path, `-o weights` can be set for specified path.
+
+The visualization files are saved in `output` by default, to specify a different path, simply add a `--output_dir=` flag.  
+`--draw_threshold` is an optional argument. Default is 0.5. 
+Different thresholds will produce different results depending on the calculation of [NMS](https://ieeexplore.ieee.org/document/1699659).
+If users want to infer according to customized model path, `-o weights` can be set for specified path.
+`--use_tb` is an optional argument, if `--use_tb` is `True`, the tb-paddle will record data in directory, 
+so users can see the results in Tensorboard.
 
 - Save inference model
 

@@ -16,9 +16,9 @@ PaddleNLP 完全基于[PaddlePaddle Fluid](http://www.paddlepaddle.org/)开发�
 
 ```text
 .
+├── Research                          # 百度NLP在research方面的工作集合
 ├── dialogue_model_toolkit            # 对话模型工具箱
 ├── emotion_detection                 # 对话情绪识别
-├── knowledge_driven_dialogue         # 知识驱动对话
 ├── language_model                    # 语言模型
 ├── language_representations_kit      # 语言表示工具箱
 ├── lexical_analysis                  # 词法分析
@@ -39,7 +39,6 @@ PaddleNLP 完全基于[PaddlePaddle Fluid](http://www.paddlepaddle.org/)开发�
 │   ├── ernie
 │   ├── padding.py
 │   └── tokenizer
-├── reading_comprehension             # 阅读理解
 ├── sentiment_classification          # 文本情感分析
 ├── similarity_net                    # 短文本语义匹配
 ```
@@ -89,5 +88,4 @@ cd models/PaddleNLP/sentiment_classification
 
 ### 复杂任务
  - [对话模型工具箱](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit)
- - [知识驱动对话](https://github.com/baidu/knowledge-driven-dialogue/tree/master)
- - [阅读理解](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/reading_comprehension)
+ - [阅读理解](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DuReader)

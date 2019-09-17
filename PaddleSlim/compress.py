@@ -24,13 +24,15 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',       int,  64*4,                 "Minibatch size.")
 add_arg('use_gpu',          bool, True,                "Whether to use GPU or not.")
+add_arg('total_images',     int,  1281167,              "Training image number.")
 add_arg('class_dim',        int,  1000,                "Class number.")
 add_arg('image_shape',      str,  "3,224,224",         "Input image size")
-add_arg('model',            str, "MobileNet",          "Set the network to use.")
+add_arg('model',            str,  "MobileNet",          "Set the network to use.")
 add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
-add_arg('teacher_model',    str, None,          "Set the teacher network to use.")
+add_arg('teacher_model',    str,  None,          "Set the teacher network to use.")
 add_arg('teacher_pretrained_model', str,  None,                "Whether to use pretrained model.")
-add_arg('compress_config',  str, None,                 "The config file for compression with yaml format.")
+add_arg('compress_config',  str,  None,                 "The config file for compression with yaml format.")
+add_arg('quant_only',       bool, False,                "Only do quantization-aware training.")
 # yapf: enable
 
 model_list = [m for m in dir(models) if "__" not in m]
@@ -64,12 +66,20 @@ def compress(args):
         acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
     val_program = fluid.default_main_program().clone()
-
+    if args.quant_only:
+        boundaries=[args.total_images / args.batch_size * 10,
+                    args.total_images / args.batch_size * 16]
+        values=[1e-4, 1e-5, 1e-6]
+    else:
+        boundaries=[args.total_images / args.batch_size * 30,
+                    args.total_images / args.batch_size * 60,
+                    args.total_images / args.batch_size * 90]
+        values=[0.1, 0.01, 0.001, 0.0001]
     opt = fluid.optimizer.Momentum(
         momentum=0.9,
         learning_rate=fluid.layers.piecewise_decay(
-            boundaries=[5000 * 30, 5000 * 60, 5000 * 90],
-            values=[0.1, 0.01, 0.001, 0.0001]),
+            boundaries=boundaries,
+            values=values),
         regularization=fluid.regularizer.L2Decay(4e-5))
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
