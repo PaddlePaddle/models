@@ -19,6 +19,16 @@ def parse_args():
         default='data/test_valid',
         help='The path of test and valid data')
     parser.add_argument(
+        '--vocab_dir',
+        type=str,
+        default='data/vocab',
+        help='The path of generated vocabs')
+    parser.add_argument(
+        '--cat_feat_num',
+        type=str,
+        default='data/cat_feature_num.txt',
+        help='The path of generated cat_feature_num.txt')
+    parser.add_argument(
         '--batch_size', type=int, default=512, help="Batch size")
     parser.add_argument(
         '--steps',
@@ -56,6 +66,12 @@ def parse_args():
         type=bool,
         default=True,
         help='Whether use batch norm in dnn part')
+    parser.add_argument(
+        '--is_sparse',
+        action='store_true',
+        required=False,
+        default=False,
+        help='embedding and nce will use sparse or not, (default: False)')
     parser.add_argument(
         '--clip_by_norm', type=float, default=100.0, help="gradient clip norm")
     parser.add_argument('--print_steps', type=int, default=100)

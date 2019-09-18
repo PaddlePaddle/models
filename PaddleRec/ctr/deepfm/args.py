@@ -14,6 +14,11 @@ def parse_args():
         default='data/test_data',
         help='The path of test data (default: models)')
     parser.add_argument(
+        '--feat_dict',
+        type=str,
+        default='data/aid_data/feat_dict_10.pkl2',
+        help='The path of feat_dict')
+    parser.add_argument(
         '--batch_size',
         type=int,
         default=100,

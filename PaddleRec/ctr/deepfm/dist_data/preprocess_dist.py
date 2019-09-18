@@ -4,45 +4,21 @@ from collections import Counter
 import shutil
 import pickle
 
-
-def get_raw_data():
-    if not os.path.isdir('raw_data'):
-        os.mkdir('raw_data')
-
-    fin = open('train.txt', 'r')
-    fout = open('raw_data/part-0', 'w')
-    for line_idx, line in enumerate(fin):
-        if line_idx % 200000 == 0 and line_idx != 0:
-            fout.close()
-            cur_part_idx = int(line_idx / 200000)
-            fout = open('raw_data/part-' + str(cur_part_idx), 'w')
-        fout.write(line)
-    fout.close()
-    fin.close()
+SPLIT_RATIO = 0.9
+INPUT_FILE = 'dist_data_demo.txt'
+TRAIN_FILE = os.path.join('dist_train_data', 'tr')
+TEST_FILE = os.path.join('dist_test_data', 'ev')
 
 
 def split_data():
-    split_rate_ = 0.9
-    dir_train_file_idx_ = 'aid_data/train_file_idx.txt'
-    filelist_ = [
-        'raw_data/part-%d' % x for x in range(len(os.listdir('raw_data')))
-    ]
-
-    if not os.path.exists(dir_train_file_idx_):
-        train_file_idx = list(
-            numpy.random.choice(
-                len(filelist_), int(len(filelist_) * split_rate_), False))
-        with open(dir_train_file_idx_, 'w') as fout:
-            fout.write(str(train_file_idx))
-    else:
-        with open(dir_train_file_idx_, 'r') as fin:
-            train_file_idx = eval(fin.read())
-
-    for idx in range(len(filelist_)):
-        if idx in train_file_idx:
-            shutil.move(filelist_[idx], 'train_data')
-        else:
-            shutil.move(filelist_[idx], 'test_data')
+    all_lines = []
+    for line in open(INPUT_FILE):
+        all_lines.append(line)
+    split_line_idx = int(len(all_lines) * SPLIT_RATIO)
+    with open(TRAIN_FILE, 'w') as f:
+        f.writelines(all_lines[:split_line_idx])
+    with open(TEST_FILE, 'w') as f:
+        f.writelines(all_lines[split_line_idx:])
 
 
 def get_feat_dict():
@@ -55,20 +31,20 @@ def get_feat_dict():
         # print('generate a feature dict')
         # Count the number of occurrences of discrete features
         feat_cnt = Counter()
-        with open('train.txt', 'r') as fin:
+        with open(INPUT_FILE, 'r') as fin:
             for line_idx, line in enumerate(fin):
-                if line_idx % 100000 == 0:
-                    print('generating feature dict', line_idx / 45000000)
                 features = line.lstrip('\n').split('\t')
                 for idx in categorical_range_:
                     if features[idx] == '': continue
                     feat_cnt.update([features[idx]])
 
-        # Only retain discrete features with high frequency 
-        dis_feat_set = set()
+        # Only retain discrete features with high frequency
+        # not filter low freq in small dataset
+        freq_ = 0
+        feat_set = set()
         for feat, ot in feat_cnt.items():
             if ot >= freq_:
-                dis_feat_set.add(feat)
+                feat_set.add(feat)
 
         # Create a dictionary for continuous and discrete features
         feat_dict = {}
@@ -79,11 +55,11 @@ def get_feat_dict():
             tc += 1
         # Discrete features
         cnt_feat_set = set()
-        with open('train.txt', 'r') as fin:
+        with open(INPUT_FILE, 'r') as fin:
             for line_idx, line in enumerate(fin):
                 features = line.rstrip('\n').split('\t')
                 for idx in categorical_range_:
-                    if features[idx] == '' or features[idx] not in dis_feat_set:
+                    if features[idx] == '' or features[idx] not in feat_set:
                         continue
                     if features[idx] not in cnt_feat_set:
                         cnt_feat_set.add(features[idx])
@@ -97,14 +73,13 @@ def get_feat_dict():
 
 
 if __name__ == '__main__':
-    if not os.path.isdir('train_data'):
-        os.mkdir('train_data')
-    if not os.path.isdir('test_data'):
-        os.mkdir('test_data')
+    if not os.path.isdir('dist_train_data'):
+        os.mkdir('dist_train_data')
+    if not os.path.isdir('dist_test_data'):
+        os.mkdir('dist_test_data')
     if not os.path.isdir('aid_data'):
         os.mkdir('aid_data')
 
-    get_raw_data()
     split_data()
     get_feat_dict()
 
