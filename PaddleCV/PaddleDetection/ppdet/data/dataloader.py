@@ -178,16 +178,16 @@ class _MultiWorkerLoaderIter(object):
             return np.random.randint(0, 2**31)
 
     def _queue_next(self):
-       if self._sent_idx - self._recv_idx > self.buffer_size:
-           return
-       ids = next(self._iter, None)
-       if ids is None:
-           return
-       future = self._worker_pool.apply_async(
-           self._worker_fn,
-           (self._sent_idx, ids, self._worker_context, self._batch_seed()))
-       self._out_buffer[self._sent_idx] = future
-       self._sent_idx += 1
+        if self._sent_idx - self._recv_idx > self.buffer_size:
+            return
+        ids = next(self._iter, None)
+        if ids is None:
+            return
+        future = self._worker_pool.apply_async(
+            self._worker_fn,
+            (self._sent_idx, ids, self._worker_context, self._batch_seed()))
+        self._out_buffer[self._sent_idx] = future
+        self._sent_idx += 1
 
     def __next__(self):
         steps_ahead = len(self._out_buffer)
