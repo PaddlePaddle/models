@@ -72,7 +72,7 @@ def group_all(xyz, features=None, use_xyz=True):
         return grouped_xyz
 
 
-def conv_bn(input, out_channels, bn=True, bn_momentum=0.1, act='relu', name=None):
+def conv_bn(input, out_channels, bn=True, bn_momentum=0.05, act='relu', name=None):
     param_attr = ParamAttr(name='{}_conv_weight'.format(name),
                            # initializer=fluid.initializer.Constant(1.376)
                            )

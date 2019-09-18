@@ -16,6 +16,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+from collections import OrderedDict
 
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
@@ -28,35 +29,36 @@ __all__ = ["PointRCNN"]
 
 
 class PointRCNN(object):
-    def __init__(self, cfg, batch_size, use_xyz=True, mode='TRAIN'):
+    def __init__(self, cfg, batch_size, use_xyz=True, mode='TRAIN', prog=None):
         self.cfg = cfg
         self.batch_size = batch_size
         self.use_xyz = use_xyz
         self.mode = mode
         self.is_train = mode == 'TRAIN'
         self.num_points = self.cfg.RPN.NUM_POINTS
+        self.prog = prog
         self.inputs = None
         self.pyreader = None
 
     def build_inputs(self):
-        pts_input = fluid.layers.data(name='pts_input', shape=[self.num_points, 3], dtype='float32')
-        rpn_cls_label = fluid.layers.data(name='rpn_cls_label', shape=[self.num_points], dtype='float32')
-        rpn_reg_label = fluid.layers.data(name='rpn_reg_label', shape=[self.num_points, 7], dtype='float32')
+        self.inputs = OrderedDict()
+        self.inputs['sample_id'] = fluid.layers.data(name='sample_id', shape=[1], dtype='int32')
+        self.inputs['pts_input'] = fluid.layers.data(name='pts_input', shape=[self.num_points, 3], dtype='float32')
+        self.inputs['pts_rect'] = fluid.layers.data(name='pts_rect', shape=[self.num_points, 3], dtype='float32')
+        self.inputs['pts_features'] = fluid.layers.data(name='pts_features', shape=[self.num_points, 1], dtype='float32')
+        self.inputs['rpn_cls_label'] = fluid.layers.data(name='rpn_cls_label', shape=[self.num_points], dtype='int32')
+        self.inputs['rpn_reg_label'] = fluid.layers.data(name='rpn_reg_label', shape=[self.num_points, 7], dtype='float32')
+        self.inputs['gt_boxes3d'] = fluid.layers.data(name='gt_boxes3d', shape=[7], lod_level=1, dtype='float32')
         self.pyreader = fluid.io.PyReader(
-                feed_list=[pts_input, rpn_cls_label, rpn_reg_label],
+                feed_list=self.inputs.values(),
                 capacity=64,
                 use_double_buffer=True,
                 iterable=False)
-        self.inputs = {
-                "pts_input": pts_input,
-                "rpn_cls_label": rpn_cls_label,
-                "rpn_reg_label": rpn_reg_label,
-                }
 
     def build(self):
         self.build_inputs()
         if self.cfg.RPN.ENABLED:
-            self.rpn = RPN(self.cfg, self.batch_size, self.use_xyz, self.mode)
+            self.rpn = RPN(self.cfg, self.batch_size, self.use_xyz, self.mode, self.prog)
             self.rpn.build(self.inputs)
             self.rpn_outpus = self.rpn.get_outputs()
         if self.cfg.RCNN.ENABLED:
@@ -64,17 +66,18 @@ class PointRCNN(object):
             # self.rcnn = RCNN()
         self.outputs = self.rpn_outpus
         
-        self.outputs = {}
-        if self.mode == 'TRAIN':
-            self.outputs['rpn_loss'] = self.rpn.get_loss()[0] if self.cfg.RPN.ENABLED else 0.
-            self.outputs['rcnn_loss'] = self.rcnn.get_loss() if self.cfg.RCNN.ENABLED else 0.
-            self.outputs['loss'] = self.outputs['rpn_loss'] + self.outputs['rcnn_loss']
+        if self.cfg.RPN.ENABLED:
+            self.outputs['rpn_loss'] = self.rpn.get_loss()[0]
+        if self.cfg.RCNN.ENABLED:
+            self.outputs['rcnn_loss'] = self.rcnn.get_loss()
+        self.outputs['loss'] = self.outputs.get('rpn_loss', 0.) \
+                             + self.outputs.get('rcnn_loss', 0.)
 
     def get_feeds(self):
-        return ['pts_input', 'rpn_cls_label', 'rpn_reg_label']
+        return self.inputs.keys()
 
     def get_outputs(self):
-        self.outputs.pop('rcnn_loss')
+        # ret_keys = ['loss', 'rpn_loss', 'rcnn_loss', ]
         return self.outputs
 
     def get_loss(self):

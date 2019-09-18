@@ -47,12 +47,24 @@ def check_gpu(use_gpu):
         pass
 
 
-def parse_outputs(outputs):
+def parse_outputs(outputs, filter_key=None, extra_keys=None, prog=None):
     keys, values = [], []
     for k, v in outputs.items():
+        if filter_key is not None and k.find(filter_key) < 0:
+            continue
         keys.append(k)
         v.persistable = True
         values.append(v.name)
+
+    if prog is not None and extra_keys is not None:
+        for k in extra_keys:
+            try:
+                v = fluid.framework._get_var(k, prog)
+                keys.append(k)
+                v.persistable = True
+                values.append(v)
+            except:
+                pass
     return keys, values
 
 

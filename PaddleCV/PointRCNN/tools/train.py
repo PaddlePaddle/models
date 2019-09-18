@@ -181,6 +181,9 @@ def train():
     boundaries = [i * steps_per_epoch for i in cfg.TRAIN.DECAY_STEP_LIST]
     values = [cfg.TRAIN.LR * (cfg.TRAIN.LR_DECAY ** i) for i in range(len(boundaries) + 1)]
 
+    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+
     # build model
     startup = fluid.Program()
     train_prog = fluid.Program()
@@ -193,21 +196,21 @@ def train():
             train_outputs = train_model.get_outputs()
             train_loss = train_outputs['loss']
             fluid.clip.set_gradient_clip(fluid.clip.GradientClipByGlobalNorm(clip_norm=cfg.TRAIN.GRAD_NORM_CLIP))
-            AdamW = extend_with_decoupled_weight_decay(fluid.optimizer.Adam)
-            optimizer = AdamW(
-            # optimizer = fluid.optimizer.Adam(
-                learning_rate=cosine_warmup_decay(
-                    learning_rate=cfg.TRAIN.LR,
-                    warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
-                    decay_factor=1e-5,
-                    total_step=steps_per_epoch * args.epoch,
-                    warmup_pct=cfg.TRAIN.PCT_START),
-                # learning_rate=fluid.layers.linear_lr_warmup(
-                #     learning_rate=fluid.layers.piecewise_decay(
-                #         boundaries=boundaries, values=values),
-                #         warmup_steps=cfg.TRAIN.WARMUP_EPOCH * steps_per_epoch,
-                #         start_lr=cfg.TRAIN.WARMUP_MIN,
-                #         end_lr=cfg.TRAIN.LR),
+            # AdamW = extend_with_decoupled_weight_decay(fluid.optimizer.Adam)
+            # optimizer = AdamW(
+            optimizer = fluid.optimizer.Adam(
+                # learning_rate=cosine_warmup_decay(
+                #     learning_rate=cfg.TRAIN.LR,
+                #     warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
+                #     decay_factor=1e-5,
+                #     total_step=steps_per_epoch * args.epoch,
+                #     warmup_pct=cfg.TRAIN.PCT_START),
+                learning_rate=fluid.layers.linear_lr_warmup(
+                    learning_rate=fluid.layers.piecewise_decay(
+                        boundaries=boundaries, values=values),
+                        warmup_steps=cfg.TRAIN.WARMUP_EPOCH * steps_per_epoch,
+                        start_lr=cfg.TRAIN.WARMUP_MIN,
+                        end_lr=cfg.TRAIN.LR),
                 # learning_rate=fluid.layers.linear_lr_warmup(
                 #     learning_rate=exponential_with_clip(
                 #         cfg.TRAIN.LR,
@@ -218,17 +221,13 @@ def train():
                 #     start_lr=cfg.TRAIN.WARMUP_MIN,
                 #     end_lr=cfg.TRAIN.LR),
                 beta1=0.9, beta2=0.99,
-                # regularization=fluid.regularizer.L2Decay(cfg.TRAIN.WEIGHT_DECAY))
-                weight_decay=cfg.TRAIN.WEIGHT_DECAY)
+                regularization=fluid.regularizer.L2Decay(cfg.TRAIN.WEIGHT_DECAY))
+                # weight_decay=cfg.TRAIN.WEIGHT_DECAY)
             optimizer.minimize(train_loss)
             lr = optimizer._global_learning_rate()
             logger.info("Optimizer learning rate name: {}".format(lr.name))
             print("optimizer betas:", optimizer._beta1, optimizer._beta2)
-    train_keys, train_values = parse_outputs(train_outputs)
-
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
-    exe = fluid.Executor(place)
-    exe.run(startup)
+    train_keys, train_values = parse_outputs(train_outputs, 'loss')
 
     if args.resume:
         assert os.path.exists(args.resume), \
@@ -244,6 +243,8 @@ def train():
     train_compile_prog = fluid.compiler.CompiledProgram(
             train_prog).with_data_parallel(loss_name=train_loss.name,
                     build_strategy=build_strategy)
+
+    exe.run(startup)
 
     def save_model(exe, prog, path):
         if os.path.isdir(path):
