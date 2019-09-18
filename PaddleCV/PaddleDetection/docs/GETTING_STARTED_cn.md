@@ -217,11 +217,3 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 **A:**  可通过设置环境变量`FLAGS_conv_workspace_size_limit`为较小的值来减少显存消耗，并且不
 会影响训练速度。以Mask-RCNN（R50）为例，设置`export FLAGS_conv_workspace_size_limit = 512`，
 batch size可以达到每GPU 4 (Tesla V100 16GB)。
-
-
-**Q:**  在使用VOC格式的自定义数据集时，如何使用自定义标签？</br>
-**A:**  可在配置文件中的dataset下设置`use_default_lable: false`，同时使用数据工具添加自定义数据集中的标签，位置为`ImageSets/Main/label_list.txt`，命令如下：
-
-```bash
-python -u ppdet/data/tools/generate_data_for_training.py --type=xml --annotation=fruit-detection/ImageSets/Main/train.txt --samples=-1
-```
