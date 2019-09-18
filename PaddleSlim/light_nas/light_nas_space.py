@@ -195,6 +195,10 @@ def get_all_ops(ifshortcut=True, ifse=True, strides=[1, 2, 2, 2, 1, 2, 1]):
     # fc, converted to 1x1 conv
     op_params.append(('conv', 0, 0, 1, 1280, 1, 1, class_dim, 1, 1, 0, 1, 1))
     op_params.append(('eltwise', 2, 1, 1000, 1, 1))
+
+    op_params.append(('softmax', -1, 1, 1000, 1, 1))
+    op_params.append(('eltwise', 1, 1, 1, 1, 1))
+    op_params.append(('eltwise', 2, 1, 1, 1, 1))
     return list(set(op_params))
 
 
