@@ -244,7 +244,11 @@ def main():
                 logger.info("Best test box ap: {}, in iter: {}".format(
                     best_box_ap_list[0], best_box_ap_list[1]))
 
-    train_pyreader.reset()
+    # try to reset reader and join threads
+    try:
+        train_pyreader.reset()
+    except NotImplementedError as e:
+        logger.warn("Reader reset not defined: {}".format(str(e)))
 
 
 if __name__ == '__main__':
