@@ -41,12 +41,31 @@
 - [**Fine-Tuning**: 预训练模型如何应用到特定 NLP 任务上](#nlp-任务的-fine-tuning)
   - [语句和句对分类任务](#语句和句对分类任务)
   - [阅读理解 SQuAD](#阅读理解-squad)
-## 动态混合精度训练
 - [**动态混合精度训练**: 利用混合精度加速训练](#动态混合精度训练)
 - [**模型转换**: 如何将 BERT TensorFlow 模型转换为 Paddle Fluid 模型](#模型转换)
 - [**模型部署**: 多硬件环境模型部署支持](#模型部署)
   - [产出用于部署的 inference model](#保存-inference-model)
   - [inference 接口调用示例](#inference-接口调用示例)
+
+## 目录结构
+```text
+.
+├── data                     # 示例数据
+├── inference                # 预测部署示例
+├── model                    # 模型定义
+├── reader                   # 数据读取
+├── utils                    # 辅助文件
+├── batching.py              # 构建 batch 脚本
+├── convert_params.py        # 参数转换脚本
+├── optimization.py          # 优化方法定义
+├── predict_classifier.py    # 分类任务生成 inference model
+|── run_classifier.py        # 分类任务的 fine tuning
+|── run_squad.py             # 阅读理解任务 SQuAD 的 fine tuning
+|── test_local_dist.sh       # 本地模拟分布式预训练
+|── tokenization.py          # 原始文本的 token 化
+|── train.py                 # 预训练过程的定义
+|── train.sh                 # 预训练任务的启动脚本
+```
 
 ## 安装
 本项目依赖于 Paddle Fluid **1.5.1** 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。如果需要进行 TensorFlow 模型到 Paddle Fluid 参数的转换，则需要同时安装 TensorFlow 1.12。
