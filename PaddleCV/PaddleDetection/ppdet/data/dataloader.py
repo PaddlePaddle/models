@@ -93,7 +93,7 @@ def _apply_transform(idx, dataset, transform, batch_seed=None, step=0):
         if hasattr(dataset, 'samples'):
             # XXX sample2 is read-only, avoid deepcopy if possible
             sample2 = dataset.samples[idx2]
-            sample2['image'] = dataset._read_image(sample['file'])
+            sample2['image'] = dataset._read_image(sample2['file'])
         else:
             sample2 = dataset[idx2]
         sample = (sample, sample2)
