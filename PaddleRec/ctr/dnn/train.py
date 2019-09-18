@@ -14,12 +14,10 @@ import reader
 from network_conf import ctr_dnn_model
 from multiprocessing import cpu_count
 
-
 # disable gpu training for this example
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
@@ -85,7 +83,7 @@ def parse_args():
     parser.add_argument(
         '--role',
         type=str,
-        default='pserver', # trainer or pserver
+        default='pserver',  # trainer or pserver
         help='The path for model to store (default: models)')
     parser.add_argument(
         '--endpoints',
@@ -117,7 +115,7 @@ def parse_args():
 
 def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
                trainer_num, trainer_id):
-    
+
     if args.enable_ce:
         SEED = 102
         train_program.random_seed = SEED
@@ -163,43 +161,52 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
 
         try:
             while True:
-                loss_val, auc_val, batch_auc_val = pe.run(fetch_list=[loss.name, auc_var.name, batch_auc_var.name])
+                loss_val, auc_val, batch_auc_val = pe.run(
+                    fetch_list=[loss.name, auc_var.name, batch_auc_var.name])
                 loss_val = np.mean(loss_val)
                 auc_val = np.mean(auc_val)
                 batch_auc_val = np.mean(batch_auc_val)
 
-                logger.info("TRAIN --> pass: {} batch: {} loss: {} auc: {}, batch_auc: {}"
-                      .format(pass_id, batch_id, loss_val/args.batch_size, auc_val, batch_auc_val))
+                logger.info(
+                    "TRAIN --> pass: {} batch: {} loss: {} auc: {}, batch_auc: {}"
+                    .format(pass_id, batch_id, loss_val / args.batch_size,
+                            auc_val, batch_auc_val))
                 if batch_id % 1000 == 0 and batch_id != 0:
-                    model_dir = args.model_output_dir + '/batch-' + str(batch_id)
+                    model_dir = args.model_output_dir + '/batch-' + str(
+                        batch_id)
                     if args.trainer_id == 0:
-                        fluid.io.save_persistables(executor=exe, dirname=model_dir,
-                                                   main_program=fluid.default_main_program())
+                        fluid.io.save_persistables(
+                            executor=exe,
+                            dirname=model_dir,
+                            main_program=fluid.default_main_program())
                 batch_id += 1
         except fluid.core.EOFException:
             py_reader.reset()
-        print("pass_id: %d, pass_time_cost: %f" % (pass_id, time.time() - pass_start))
+        print("pass_id: %d, pass_time_cost: %f" %
+              (pass_id, time.time() - pass_start))
 
         total_time += time.time() - pass_start
 
         model_dir = args.model_output_dir + '/pass-' + str(pass_id)
         if args.trainer_id == 0:
-            fluid.io.save_persistables(executor=exe, dirname=model_dir,
-                                       main_program=fluid.default_main_program())
+            fluid.io.save_persistables(
+                executor=exe,
+                dirname=model_dir,
+                main_program=fluid.default_main_program())
 
     # only for ce
     if args.enable_ce:
         threads_num, cpu_num = get_cards(args)
-        epoch_idx = args.num_passes 
+        epoch_idx = args.num_passes
         print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, total_time / epoch_idx))
+              (cpu_num, threads_num, total_time / epoch_idx))
         print("kpis\ttrain_loss_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, loss_val/args.batch_size))
+              (cpu_num, threads_num, loss_val / args.batch_size))
         print("kpis\ttrain_auc_val_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, auc_val))
+              (cpu_num, threads_num, auc_val))
         print("kpis\ttrain_batch_auc_val_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, batch_auc_val))
-        
+              (cpu_num, threads_num, batch_auc_val))
+
 
 def train():
     args = parse_args()
@@ -207,7 +214,8 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, auc_var, batch_auc_var, py_reader, _ = ctr_dnn_model(args.embedding_size, args.sparse_feature_dim)
+    loss, auc_var, batch_auc_var, py_reader, _ = ctr_dnn_model(
+        args.embedding_size, args.sparse_feature_dim)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
     optimizer.minimize(loss)
     if args.cloud_train:
@@ -228,23 +236,26 @@ def train():
     if args.is_local:
         logger.info("run local training")
         main_program = fluid.default_main_program()
-        train_loop(args, main_program, py_reader, loss, auc_var, batch_auc_var, 1, 0)
+        train_loop(args, main_program, py_reader, loss, auc_var, batch_auc_var,
+                   1, 0)
     else:
         logger.info("run dist training")
         t = fluid.DistributeTranspiler()
-        t.transpile(args.trainer_id, pservers=args.endpoints, trainers=args.trainers)
+        t.transpile(
+            args.trainer_id, pservers=args.endpoints, trainers=args.trainers)
         if args.role == "pserver" or args.role == "PSERVER":
             logger.info("run pserver")
             prog = t.get_pserver_program(args.current_endpoint)
-            startup = t.get_startup_program(args.current_endpoint, pserver_program=prog)
+            startup = t.get_startup_program(
+                args.current_endpoint, pserver_program=prog)
             exe = fluid.Executor(fluid.CPUPlace())
             exe.run(startup)
             exe.run(prog)
         elif args.role == "trainer" or args.role == "TRAINER":
             logger.info("run trainer")
             train_prog = t.get_trainer_program()
-            train_loop(args, train_prog, py_reader, loss, auc_var, batch_auc_var,
-                       args.trainers, args.trainer_id)
+            train_loop(args, train_prog, py_reader, loss, auc_var,
+                       batch_auc_var, args.trainers, args.trainer_id)
         else:
             raise ValueError(
                 'PADDLE_TRAINING_ROLE environment variable must be either TRAINER or PSERVER'
