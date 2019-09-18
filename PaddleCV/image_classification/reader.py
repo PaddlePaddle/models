@@ -23,6 +23,10 @@ import signal
 
 import paddle
 import paddle.fluid as fluid
+from autoaugment import ImageNetPolicy
+from PIL import Image
+
+policy = None
 
 random.seed(0)
 np.random.seed(0)
@@ -200,7 +204,6 @@ def create_mixup_reader(settings, rd):
 
     return mixup_reader
 
-
 def process_image(sample, settings, mode, color_jitter, rotate):
     """ process_image """
 
@@ -215,7 +218,7 @@ def process_image(sample, settings, mode, color_jitter, rotate):
         if rotate:
             img = rotate_image(img)
         if crop_size > 0:
-            img = random_crop(img, crop_size, settings)
+            img = random_crop(img, crop_size, settings, interpolation=settings.interpolation)
         if color_jitter:
             img = distort_color(img)
         if np.random.randint(0, 2) == 1:
@@ -223,10 +226,18 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     else:
         if crop_size > 0:
             target_size = settings.resize_short_size
-            img = resize_short(img, target_size)
+            img = resize_short(img, target_size, interpolation=settings.interpolation)
             img = crop_image(img, target_size=crop_size, center=True)
 
-    img = img[:, :, ::-1].astype('float32').transpose((2, 0, 1)) / 255
+    img = img[:, :, ::-1]
+
+    if 'use_aa' in settings and settings.use_aa and mode == 'train':
+        img = np.ascontiguousarray(img)
+        img = Image.fromarray(img)
+        img = policy(img)
+        img = np.asarray(img)
+
+    img = img.astype('float32').transpose((2, 0, 1)) / 255
     img_mean = np.array(mean).reshape((3, 1, 1))
     img_std = np.array(std).reshape((3, 1, 1))
     img -= img_mean
@@ -294,6 +305,11 @@ def train(settings):
     assert os.path.isfile(
         file_list), "{} doesn't exist, please check data list path".format(
             file_list)
+
+    if 'use_aa' in settings and settings.use_aa:
+        global policy
+        policy = ImageNetPolicy()
+
     reader = _reader_creator(
         settings,
         file_list,
@@ -317,6 +333,7 @@ def val(settings):
     Returns:
         eval reader
     """
+
     file_list = os.path.join(settings.data_dir, 'val_list.txt')
     assert os.path.isfile(
         file_list), "{} doesn't exist, please check data list path".format(
