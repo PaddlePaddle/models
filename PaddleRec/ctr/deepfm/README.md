@@ -51,7 +51,7 @@ When the training set is iterated to the 22nd round, the testing Logloss is `0.4
 </p>
 
 ## Distributed Train
-We emulates distributed training on a local machine. In default, we use 2 X 2，i.e. 2 pservers X 2 trainers。
+We emulate distributed training on a local machine. In default, we use 2 X 2，i.e. 2 pservers X 2 trainers。
 
 ### Download and preprocess distributed demo dataset
 This small demo dataset(a few lines from Criteo dataset) only test if distributed training can train.
