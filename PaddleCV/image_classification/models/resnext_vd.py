@@ -158,7 +158,8 @@ class ResNeXt():
             pool_size=2,
             pool_stride=2,
             pool_padding=0,
-            pool_type='avg')
+            pool_type='avg',
+            ceil_mode=True)
 
         conv = fluid.layers.conv2d(
             input=pool,
