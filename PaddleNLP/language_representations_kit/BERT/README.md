@@ -41,14 +41,34 @@
 - [**Fine-Tuning**: 预训练模型如何应用到特定 NLP 任务上](#nlp-任务的-fine-tuning)
   - [语句和句对分类任务](#语句和句对分类任务)
   - [阅读理解 SQuAD](#阅读理解-squad)
-- [**混合精度训练**: 利用混合精度加速训练](#混合精度训练)
+- [**动态混合精度训练**: 利用混合精度加速训练](#动态混合精度训练)
 - [**模型转换**: 如何将 BERT TensorFlow 模型转换为 Paddle Fluid 模型](#模型转换)
 - [**模型部署**: 多硬件环境模型部署支持](#模型部署)
   - [产出用于部署的 inference model](#保存-inference-model)
   - [inference 接口调用示例](#inference-接口调用示例)
 
+## 目录结构
+```text
+.
+├── data                     # 示例数据
+├── inference                # 预测部署示例
+├── model                    # 模型定义
+├── reader                   # 数据读取
+├── utils                    # 辅助文件
+├── batching.py              # 构建 batch 脚本
+├── convert_params.py        # 参数转换脚本
+├── optimization.py          # 优化方法定义
+├── predict_classifier.py    # 分类任务生成 inference model
+|── run_classifier.py        # 分类任务的 fine tuning
+|── run_squad.py             # 阅读理解任务 SQuAD 的 fine tuning
+|── test_local_dist.sh       # 本地模拟分布式预训练
+|── tokenization.py          # 原始文本的 token 化
+|── train.py                 # 预训练过程的定义
+|── train.sh                 # 预训练任务的启动脚本
+```
+
 ## 安装
-本项目依赖于 Paddle Fluid **1.5.1**，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。如果需要进行 TensorFlow 模型到 Paddle Fluid 参数的转换，则需要同时安装 TensorFlow 1.12。
+本项目依赖于 Paddle Fluid **1.5.1** 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。如果需要进行 TensorFlow 模型到 Paddle Fluid 参数的转换，则需要同时安装 TensorFlow 1.12。
 
 ## 预训练
 
@@ -59,7 +79,7 @@
 我们给出了 token 化后的示例明文数据: [`demo_wiki_tokens.txt`](./data/demo_wiki_tokens.txt)，其中每行数据为2个 tab 分隔的句子，示例如下:
 
 ```
-1 . 雏 凤 鸣 剧 团   2 . 古 典 之 门 ： 帝 女 花 3 . 戏 曲 之 旅 ： 第 155 期 心 系 唐 氏 慈 善 戏 曲 晚 会 4 . 区 文 凤 , 郑 燕 虹 1999 编 ， 香 港 当 代 粤 剧 人 名 录 ， 中 大 音 乐 系 5 . 王 胜 泉 , 张 文 珊 2011 编 ， 香 港 当 代 粤 剧 人 名 录 ， 中 大 音 乐 系
+1 . 雏 凤 鸣 剧 团	2 . 古 典 之 门 ： 帝 女 花 3 . 戏 曲 之 旅 ： 第 155 期 心 系 唐 氏 慈 善 戏 曲 晚 会 4 . 区 文 凤 , 郑 燕 虹 1999 编 ， 香 港 当 代 粤 剧 人 名 录 ， 中 大 音 乐 系 5 . 王 胜 泉 , 张 文 珊 2011 编 ， 香 港 当 代 粤 剧 人 名 录 ， 中 大 音 乐 系
 ```
 
 同时我们也给出了 id 化后的部分训练数据：[`demo_wiki_train.gz`](./data/train/demo_wiki_train.gz)、和测试数据：[`demo_wiki_validation.gz`](./data/validation/demo_wiki_validation.gz)，每行数据为1个训练样本，示例如下:
@@ -294,21 +314,17 @@ python ${SQUAD_PATH}/evaluate-v2.0.py ${SQUAD_PATH}/dev-v2.0.json ${CHECKPOINT_P
 其中会输出 `best_f1_thresh` 是最佳阈值，可以使用这个阈值重新训练，或者从 `nbest_predictions.json` 中重新抽取最终 `prediction`。
 训练方法与前面大体相同，只需要设定 `--null_score_diff_threshold` 参数的值为测评时输出的 `best_f1_thresh` ，通常这个值在 -1.0 到 -5.0 之间。
 
-## 混合精度训练
+## 动态混合精度训练
 
-预训练过程和 Fine-tuning 均支持 FP16/FP32 混合精度训练。要使能混合精度训练，只需在前面所述的这些训练启动命令中加入参数
+预训练过程和 Fine-tuning 均支持 FP16/FP32 动态混合精度训练（Auto Mixed-Precision training, AMP）。在 V100/T4 等支持 tensorcore 的 GPU 设备上，AMP 能显著地加速训练过程。要使能 AMP，只需在前面所述的这些训练启动命令中加入参数
 
 ```
 --use_fp16=true \
 ```
 
-为了减少混合精度训练的精度损失，通常在训练过程中计算误差的反向传播时，会将损失函数乘上一个大于 1.0 的因子，这里可以通过如下方式设置这个因子
+为了减少混合精度训练的精度损失，通常在训练过程中计算误差的反向传播时，会将损失函数乘上一个大于 1.0 的因子 `loss_scaling`。在动态混合精度训练过程中，`loss_scaling` 会动态调整，使得训练过程相对于 FP32 尽可能无精度损失。
 
-```
---loss_scaling=8.0 \
-```
-
-实验表明，在 BERT 相关的任务中 `loss_scaling` 的取值范围在 8.0 ~ 128.0 之间时模型训练精度没有显著的损失，在 V100 GPU 上混合精度训练相对于 FP32 训练有 1.7 左右的加速比。
+实验表明，在 GPU V100 上 BERT BASE 的 AMP 训练相对于 FP32 训练有 1.7x 的加速比， BERT LARGE 有 2.0x 的加速比。
 
 更多的细节，可参见[参考论文](https://arxiv.org/abs/1710.03740)。
 

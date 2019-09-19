@@ -56,26 +56,21 @@ class TSM(ModelBase):
         image_shape[0] = image_shape[0] * self.seglen
         image_shape = [self.seg_num] + image_shape
         self.use_pyreader = use_pyreader
+
+        image = fluid.layers.data(
+            name='image', shape=image_shape, dtype='float32')
+        if self.mode != 'infer':
+            label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+        else:
+            label = None
+
         if use_pyreader:
             assert self.mode != 'infer', \
                         'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            py_reader = fluid.layers.py_reader(
-                capacity=100,
-                shapes=[[-1] + image_shape, [-1] + [1]],
-                dtypes=['float32', 'int64'],
-                name='train_py_reader'
-                if self.is_training else 'test_py_reader',
-                use_double_buffer=True)
-            image, label = fluid.layers.read_file(py_reader)
+            py_reader = fluid.io.PyReader(
+                feed_list=[image, label], capacity=4, iterable=True)
             self.py_reader = py_reader
-        else:
-            image = fluid.layers.data(
-                name='image', shape=image_shape, dtype='float32')
-            if self.mode != 'infer':
-                label = fluid.layers.data(
-                    name='label', shape=[1], dtype='int64')
-            else:
-                label = None
+
         self.feature_input = [image]
         self.label_input = label
 
@@ -121,6 +116,21 @@ class TSM(ModelBase):
             self.label_input
         ]
 
+    def fetches(self):
+        if self.mode == 'train' or self.mode == 'valid':
+            losses = self.loss()
+            fetch_list = [losses, self.network_outputs[0], self.label_input]
+        elif self.mode == 'test':
+            losses = self.loss()
+            fetch_list = [losses, self.network_outputs[0], self.label_input]
+        elif self.mode == 'infer':
+            fetch_list = self.network_outputs
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+        return fetch_list
+
     def pretrain_info(self):
         return (
             'ResNet50_pretrained',
@@ -129,8 +139,8 @@ class TSM(ModelBase):
 
     def weights_info(self):
         return (
-            'tsm_kinetics',
-            'https://paddlemodels.bj.bcebos.com/video_classification/tsm_kinetics.tar.gz'
+            'TSM_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/TSM_final.pdparams'
         )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):

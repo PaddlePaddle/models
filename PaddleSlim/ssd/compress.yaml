@@ -1,0 +1,21 @@
+version: 1.0
+pruners:
+    pruner_1:
+        class: 'StructurePruner'
+        pruning_axis:
+            '*': 0
+        criterions:
+            '*': 'l1_norm'
+strategies:
+    uniform_pruning_strategy:
+        class: 'UniformPruneStrategy'
+        pruner: 'pruner_1'
+        start_epoch: 0
+        target_ratio: 0.2
+        pruned_params: 'conv2d_[1-9].w_0|conv2d_1[0-2].w_0'
+compressor:
+    epoch: 200
+    #init_model: './checkpoints/0' # Please enable this option for loading checkpoint.
+    checkpoint_path: './checkpoints/'
+    strategies:
+        - uniform_pruning_strategy
