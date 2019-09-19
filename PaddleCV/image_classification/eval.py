@@ -47,6 +47,8 @@ parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456
 parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 add_arg('crop_size',        int,  224,                  "The value of crop size")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
+add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
+add_arg('save_dir',            str,  "", "Directory to save.")
 # yapf: enable
 
 
@@ -66,7 +68,7 @@ def eval(args):
 
     # model definition
     if args.model.startswith('EfficientNet'):
-        model = models.__dict__[args.model](is_test=True)
+        model = models.__dict__[args.model](is_test=True, padding_type=args.padding_type)
     else:
         model = models.__dict__[args.model]()
 

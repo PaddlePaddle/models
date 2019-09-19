@@ -25,12 +25,12 @@ def initial_type(name,
                 fan_in = input.shape[1]
         bound = 1 / math.sqrt(fan_in)
         param_attr = fluid.ParamAttr(
-            name=name + "_w",
+            name=name + "_weights",
             initializer=fluid.initializer.Uniform(
                 low=-bound, high=bound))
         if use_bias == True:
             bias_attr = fluid.ParamAttr(
-                name=name + '_b',
+                name=name + '_offset',
                 initializer=fluid.initializer.Uniform(
                     low=-bound, high=bound))
         else:
@@ -38,23 +38,23 @@ def initial_type(name,
     elif init == 'google':
         n = filter_size * filter_size * fan_out
         param_attr = fluid.ParamAttr(
-            name=name + "_w",
+            name=name + "_weights",
             initializer=fluid.initializer.NormalInitializer(
                 loc=0.0, scale=math.sqrt(2.0 / n)))
         if use_bias == True:
             bias_attr = fluid.ParamAttr(
-                name=name + "_b", initializer=fluid.initializer.Constant(0.0))
+                name=name + "_offset", initializer=fluid.initializer.Constant(0.0))
         else:
             bias_attr = False
 
     else:
         param_attr = fluid.ParamAttr(
-            name=name + "_w",
+            name=name + "_weights",
             initializer=fluid.initializer.NormalInitializer(
                 loc=0.0, scale=stddev))
         if use_bias == True:
             bias_attr = fluid.ParamAttr(
-                name=name + "_b", initializer=fluid.initializer.Constant(0.0))
+                name=name + "_offset", initializer=fluid.initializer.Constant(0.0))
         else:
             bias_attr = False
     return param_attr, bias_attr
@@ -69,9 +69,9 @@ def cal_padding(img_size, stride, filter_size, dilation=1):
 
 def init_batch_norm_layer(name="batch_norm"):
     param_attr = fluid.ParamAttr(
-        name=name + '_w', initializer=fluid.initializer.Constant(1.0))
+        name=name + '_scale', initializer=fluid.initializer.Constant(1.0))
     bias_attr = fluid.ParamAttr(
-        name=name + '_b', initializer=fluid.initializer.Constant(value=0.0))
+        name=name + '_offset', initializer=fluid.initializer.Constant(value=0.0))
     return param_attr, bias_attr
 
 def init_fc_layer(fout, name='fc'):
@@ -79,24 +79,24 @@ def init_fc_layer(fout, name='fc'):
     init_range = 1.0 / math.sqrt(n)
 
     param_attr = fluid.ParamAttr(
-        name=name + '_w', initializer=fluid.initializer.UniformInitializer(
+        name=name + '_weights', initializer=fluid.initializer.UniformInitializer(
                 low=-init_range, high=init_range))
     bias_attr = fluid.ParamAttr(
-        name=name + '_b', initializer=fluid.initializer.Constant(value=0.0))
+        name=name + '_offset', initializer=fluid.initializer.Constant(value=0.0))
     return param_attr, bias_attr
 
 def norm_layer(input, norm_type='batch_norm', name=None):
     if norm_type == 'batch_norm':
         param_attr = fluid.ParamAttr(
-            name=name + '_w', initializer=fluid.initializer.Constant(1.0))
+            name=name + '_weights', initializer=fluid.initializer.Constant(1.0))
         bias_attr = fluid.ParamAttr(
-            name=name + '_b', initializer=fluid.initializer.Constant(value=0.0))
+            name=name + '_offset', initializer=fluid.initializer.Constant(value=0.0))
         return fluid.layers.batch_norm(
             input,
             param_attr=param_attr,
             bias_attr=bias_attr,
             moving_mean_name=name + '_mean',
-            moving_variance_name=name + '_var')
+            moving_variance_name=name + '_variance')
 
     elif norm_type == 'instance_norm':
         helper = fluid.layer_helper.LayerHelper("instance_norm", **locals())

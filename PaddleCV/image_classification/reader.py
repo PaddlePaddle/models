@@ -18,12 +18,9 @@ import random
 import functools
 import numpy as np
 import cv2
-import io
-import signal
 
 import paddle
-import paddle.fluid as fluid
-from autoaugment import ImageNetPolicy
+from utils.autoaugment import ImageNetPolicy
 from PIL import Image
 
 policy = None

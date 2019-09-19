@@ -12,19 +12,6 @@ from .layers import conv2d, init_batch_norm_layer, init_fc_layer
 __all__ = ['EfficientNet', 'EfficientNetB0', 'EfficientNetB1', 'EfficientNetB2', 'EfficientNetB3', 'EfficientNetB4',
            'EfficientNetB5', 'EfficientNetB6', 'EfficientNetB7']
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
-
-
 GlobalParams = collections.namedtuple('GlobalParams', [
     'batch_norm_momentum', 'batch_norm_epsilon', 'dropout_rate',
     'num_classes', 'width_coefficient', 'depth_coefficient',
@@ -56,7 +43,7 @@ def efficientnet_params(model_name):
 
 def efficientnet(width_coefficient=None, depth_coefficient=None,
                  dropout_rate=0.2, drop_connect_rate=0.2):
-
+    """ Get block arguments according to parameter and coefficients. """
     blocks_args = [
         'r1_k3_s11_e1_i32_o16_se0.25', 'r2_k3_s22_e6_i16_o24_se0.25',
         'r2_k5_s22_e6_i24_o40_se0.25', 'r3_k3_s22_e6_i40_o80_se0.25',
@@ -115,12 +102,8 @@ def round_repeats(repeats, global_params):
     return int(math.ceil(multiplier * repeats))
 
 
-def swish(x):
-    return x * fluid.layers.sigmoid(x)
-
 class EfficientNet():
     def __init__(self, name='b0', padding_type='SAME', override_params=None, is_test=False):
-        self.params = train_parameters
         valid_names = ['b' + str(i) for i in range(8)]
         assert name in valid_names, 'efficient name should be in b0~b7'
         model_name = 'efficientnet-' + name
@@ -244,8 +227,8 @@ class EfficientNet():
                                            momentum=bn_mom,
                                            epsilon=bn_eps,
                                            name=bn_name,
-                                           moving_mean_name=bn_name + '.running_mean',
-                                           moving_variance_name=bn_name + '.running_var',
+                                           moving_mean_name=bn_name + '_mean',
+                                           moving_variance_name=bn_name + '_variance',
                                            param_attr=param_attr,
                                            bias_attr=bias_attr)
 

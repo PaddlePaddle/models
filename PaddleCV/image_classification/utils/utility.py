@@ -121,7 +121,7 @@ def parse_args():
     add_arg('use_aa',                   bool,   False,                  "Whether to use auto augment")
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('warm_up_epochs',           float,  5.0,                    "The value of warm up epochs")
-    add_arg('decay_steps',              float,  2.4,                    "Decay steps of exponential decay learning rate scheduler")
+    add_arg('decay_epochs',             float,  2.4,                    "Decay epochs of exponential decay learning rate scheduler")
     add_arg('decay_rate',               float,  0.97,                   "Decay rate of exponential decay learning rate scheduler")
     add_arg('drop_connect_rate',        float,  0.2,                    "The value of drop connect rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")

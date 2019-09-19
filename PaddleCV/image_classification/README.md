@@ -115,6 +115,8 @@ bash run.sh train 模型名
 * **l2_decay**: l2_decay值，默认值: 1e-4
 * **momentum_rate**: momentum_rate值，默认值: 0.9
 * **step_epochs**: piecewise dacay的decay step，默认值：[30,60,90]
+* **decay_epochs**: exponential decay的间隔epoch数, 默认值: 2.4.
+* **decay_rate**: exponential decay的下降率, 默认值: 0.97.
 
 数据读取器和预处理配置：
 
@@ -125,6 +127,7 @@ bash run.sh train 模型名
 * **crop_size**: 指定裁剪的大小，默认值:224
 * **use_mixup**: 是否对数据进行mixup处理，默认值: False
 * **mixup_alpha**: 指定mixup处理时的alpha值，默认值: 0.2
+* **use_aa**: 是否对数据进行auto augment处理. 默认值:False.
 * **reader_thread**: 多线程reader的线程数量，默认值: 8
 * **reader_buf_size**: 多线程reader的buf_size， 默认值: 2048
 * **interpolation**: 插值方法， 默认值：None
@@ -138,6 +141,9 @@ bash run.sh train 模型名
 * **use_label_smoothing**: 是否对数据进行label smoothing处理，默认值: False
 * **label_smoothing_epsilon**: label_smoothing的epsilon， 默认值:0.1
 * **random_seed**: 随机数种子， 默认值: 1000
+* **padding_type**: efficientNet中卷积操作的padding方式, 默认值: "SAME".
+* **use_ema**: 是否在更新模型参数时使用ExponentialMovingAverage. 默认值: False.
+* **ema_decay**: ExponentialMovingAverage的decay rate. 默认值: 0.9999.
 
 **数据读取器说明：** 数据读取器定义在```reader.py```文件中，现在默认基于cv2的数据读取器， 在[训练阶段](#模型训练)，默认采用的增广方式是随机裁剪与水平翻转， 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 
@@ -147,6 +153,7 @@ bash run.sh train 模型名
 * 中心裁剪
 * 长宽调整
 * 水平翻转
+* 自动增强
 
 ### 参数微调
 
@@ -169,6 +176,20 @@ python eval.py \
        --pretrained_model=${path_to_pretrain_model}
 ```
 注意：根据具体模型和任务添加并调整其他参数
+
+### 指数滑动平均的模型评估
+
+注意: 如果你使用指数滑动平均来训练模型(--use_ema=True)，并且想要评估指数滑动平均后的模型，需要使用ema_clean.py将训练中保存下来的ema模型名字转换成原始模型参数的名字。
+
+```
+python ema_clean.py \
+       --ema_model_dir=your_ema_model_dir \
+       --cleaned_model_dir=your_cleaned_model_dir
+       
+python eval.py \
+       --model=model_name \
+       --pretrained_model=your_cleaned_model_dir
+```
 
 ### 模型预测
 
@@ -361,6 +382,17 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |[ResNeXt101_32x48d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x48d_wsl_pretrained.tar) | 85.37% | 97.69% | 161.722 |  |
 |[Fix_ResNeXt101_32x48d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/Fix_ResNeXt101_32x48d_wsl_pretrained.tar) | 86.26% | 97.97% | 236.091 |  |
 
+### EfficientNet Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[EfficientNetB0](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_pretrained.tar) | 77.38% | 93.31% | 10.303 | 4.334 |
+|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar) | 79.15% | 94.41% | 15.626 | 6.502 |
+|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar) | 79.85% | 94.74% | 17.847 | 7.558 |
+|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar) | 81.15% | 95.41% | 25.993 | 10.937 |
+|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar) | 82.85% | 96.23% | 47.734 | 18.536 |
+|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar) | 83.62% | 96.72% | 88.578 | 32.102 |
+|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar) | 84.00% | 96.88% | 138.670 | 51.059 |
+|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar) | 84.30% | 96.89% | 234.364 | 82.107 |
 
 ## FAQ
 
@@ -400,6 +432,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 - SqueezeNet: [SQUEEZENET: ALEXNET-LEVEL ACCURACY WITH 50X FEWER PARAMETERS AND <0.5MB MODEL SIZE](https://arxiv.org/abs/1602.07360), Forrest N. Iandola, Song Han, Matthew W. Moskewicz, Khalid Ashraf, William J. Dally, Kurt Keutzer
 - ResNeXt101_wsl: [Exploring the Limits of Weakly Supervised Pretraining](https://arxiv.org/abs/1805.00932), Dhruv Mahajan, Ross Girshick, Vignesh Ramanathan, Kaiming He, Manohar Paluri, Yixuan Li, Ashwin Bharambe, Laurens van der Maaten
 - Fix_ResNeXt101_wsl: [Fixing the train-test resolution discrepancy](https://arxiv.org/abs/1906.06423), Hugo Touvron, Andrea Vedaldi, Matthijs Douze, Herve ́ Je ́gou
+- EfficientNet: [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946), Mingxing Tan, Quoc V. Le
 
 ## 版本更新
 - 2018/12/03 **Stage1**: 更新AlexNet，ResNet50，ResNet101，MobileNetV1
@@ -412,6 +445,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 - 2019/07/19 **Stage6**: 更新ShuffleNetV2_x0_25，ShuffleNetV2_x0_33，ShuffleNetV2_x0_5，ShuffleNetV2_x1_0，ShuffleNetV2_x1_5，ShuffleNetV2_x2_0，MobileNetV2_x0_25，MobileNetV2_x1_5，MobileNetV2_x2_0，ResNeXt50_vd_64x4d，ResNeXt101_32x4d，ResNeXt152_32x4d
 - 2019/08/01 **Stage7**: 更新DarkNet53，DenseNet121，Densenet161，DenseNet169，DenseNet201，DenseNet264，SqueezeNet1_0，SqueezeNet1_1，ResNeXt50_vd_32x4d，ResNeXt152_64x4d，ResNeXt101_32x8d_wsl，ResNeXt101_32x16d_wsl，ResNeXt101_32x32d_wsl，ResNeXt101_32x48d_wsl，Fix_ResNeXt101_32x48d_wsl
 - 2019/09/11 **Stage8**: 更新ResNet18_vd，ResNet34_vd，MobileNetV1_x0_25，MobileNetV1_x0_5，MobileNetV1_x0_75，MobileNetV2_x0_75，MobilenNetV3_small_x1_0，DPN68，DPN92，DPN98，DPN107，DPN131，ResNeXt101_vd_32x4d，ResNeXt152_vd_64x4d，Xception65，Xception71，Xception41_deeplab，Xception65_deeplab，SE_ResNet50_vd
+- 2019/09/20 更新EfficientNet
 
 ## 如何贡献代码
 

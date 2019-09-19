@@ -23,7 +23,6 @@ import paddle.fluid as fluid
 import paddle.fluid.layers.ops as ops
 from paddle.fluid.initializer import init_on_cpu
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
-from paddle.fluid.layers import control_flow
 
 
 def cosine_decay(learning_rate, step_each_epoch, epochs=120):
@@ -68,7 +67,7 @@ def cosine_decay_with_warmup(learning_rate, step_each_epoch, epochs=120):
                 fluid.layers.tensor.assign(input=decayed_lr, output=lr)
     return lr
 
-def exponential_decay_with_warmup(learning_rate, step_each_epoch, decay_steps, decay_rate=0.97, warm_up_epoch=5.0):
+def exponential_decay_with_warmup(learning_rate, step_each_epoch, decay_epochs, decay_rate=0.97, warm_up_epoch=5.0):
     """Applies exponential decay to the learning rate.
     """
     global_step = _decay_step_counter()
@@ -84,15 +83,15 @@ def exponential_decay_with_warmup(learning_rate, step_each_epoch, decay_steps, d
 
     with init_on_cpu():
         epoch = ops.floor(global_step / step_each_epoch)
-        with control_flow.Switch() as switch:
+        with fluid.layers.control_flow.Switch() as switch:
             with switch.case(epoch < warmup_epoch):
                 decayed_lr = learning_rate * (global_step / (step_each_epoch * warmup_epoch))
-                fluid.layers.tensor.assign(input=decayed_lr, output=lr)
+                fluid.layers.assign(input=decayed_lr, output=lr)
             with switch.default():
-                div_res = (global_step - warmup_epoch * step_each_epoch) / decay_steps
+                div_res = (global_step - warmup_epoch * step_each_epoch) / decay_epochs
                 div_res = ops.floor(div_res)
                 decayed_lr = learning_rate * (decay_rate ** div_res)
-                fluid.layers.tensor.assign(input=decayed_lr, output=lr)
+                fluid.layers.assign(input=decayed_lr, output=lr)
 
     return lr
 
@@ -152,7 +151,7 @@ class Optimizer(object):
         self.step_epochs = args.step_epochs
         self.num_epochs = args.num_epochs
         self.warm_up_epochs = args.warm_up_epochs
-        self.decay_steps = args.decay_steps
+        self.decay_epochs = args.decay_epochs
         self.decay_rate = args.decay_rate
         self.total_images = args.total_images
 
@@ -217,7 +216,7 @@ class Optimizer(object):
         learning_rate = exponential_decay_with_warmup(
             learning_rate=self.lr,
             step_each_epoch=self.step,
-            decay_steps=self.step * self.decay_steps,
+            decay_epochs=self.step * self.decay_epochs,
             decay_rate=self.decay_rate,
             warm_up_epoch=self.warm_up_epochs)
         optimizer = fluid.optimizer.RMSProp(
