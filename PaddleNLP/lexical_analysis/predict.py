@@ -22,7 +22,6 @@ model_g.add_arg("grnn_hidden_dim", int, 256, "The number of hidden nodes in the 
 model_g.add_arg("bigru_num", int, 2, "The number of bi_gru layers in the network.")
 model_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
 
-
 # 2. data parameters
 data_g = utils.ArgumentGroup(parser, "data", "data paths")
 data_g.add_arg("word_dict_path", str, "./conf/word.dic", "The path of the word dictionary.")
@@ -68,7 +67,7 @@ def do_infer(args):
     exe.run(fluid.default_startup_program())
 
     # load model
-    utils.init_checkpoint(exe, args.init_checkpoint+'.pdckpt', infer_program)
+    utils.init_checkpoint(exe, args.init_checkpoint, infer_program)
 
     result = infer_process(
         exe=exe,

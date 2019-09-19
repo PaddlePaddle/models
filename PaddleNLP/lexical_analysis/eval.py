@@ -59,7 +59,7 @@ def do_eval(args):
     exe.run(fluid.default_startup_program())
 
     # load model
-    utils.init_checkpoint(exe, args.init_checkpoint+'.pdckpt', test_program)
+    utils.init_checkpoint(exe, args.init_checkpoint, test_program)
     test_process(exe=exe,
                  program=test_program,
                  reader=pyreader,

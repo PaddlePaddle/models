@@ -69,7 +69,7 @@ def do_train(args):
     exe.run(startup_program)
 
     if args.init_checkpoint:
-        utils.init_checkpoint(exe, args.init_checkpoint+'.pdckpt', train_program)
+        utils.init_checkpoint(exe, args.init_checkpoint, train_program)
     if dev_count>1:
         device = "GPU" if args.use_cuda else "CPU"
         print("%d %s are used to train model"%(dev_count, device))
@@ -131,7 +131,7 @@ def do_train(args):
 
             # save checkpoints
             if step % args.save_steps == 0 and step != 0:
-                save_path = os.path.join(args.model_save_dir, "step_" + str(step) + '.pdckpt')
+                save_path = os.path.join(args.model_save_dir, "step_" + str(step))
                 fluid.io.save_persistables(exe, save_path, train_program)
             step += 1
         

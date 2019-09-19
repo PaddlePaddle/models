@@ -33,7 +33,7 @@ def save_inference_model(args):
     # load pretrain check point
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    utils.init_checkpoint(exe, args.init_checkpoint+'.pdckpt', infer_program)
+    utils.init_checkpoint(exe, args.init_checkpoint, infer_program)
 
     fluid.io.save_inference_model(args.inference_save_dir,
                                   ['words'],

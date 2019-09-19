@@ -53,7 +53,6 @@ tar xvf lexical_analysis-dataset-2.0.0.tar.gz
 # download baseline model
 hub download lexical_analysis
 tar xvf lexical_analysis-2.0.0.tar.gz
-mv model_baseline model_baseline.pdckpt
 
 # download ERNIE finetuned model
 hub download lexical_analysis_finetuned
@@ -65,7 +64,6 @@ tar xvf lexical_analysis_finetuned-1.0.0.tar.gz
 # download baseline model
 wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-2.0.0.tar.gz
 tar xvf lexical_analysis-2.0.0.tar.gz
-mv model_baseline model_baseline.pdckpt
 
 # download ERNIE finetuned model
 wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis_finetuned-1.0.0.tar.gz
