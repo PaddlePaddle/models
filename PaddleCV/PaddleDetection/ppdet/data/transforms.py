@@ -19,6 +19,7 @@ try:
 except Exception:
     from collections import Sequence
 
+from numbers import Number
 import numpy as np
 import cv2
 
@@ -226,9 +227,9 @@ class RandomExpand(object):
         assert ratio > 1.01, "expand ratio must be larger than 1.01"
         self.ratio = ratio
         self.prob = prob
-        assert isinstance(fill_value, (float, Sequence)), \
+        assert isinstance(fill_value, (Number, Sequence)), \
             "fill value must be either float or sequence"
-        if isinstance(fill_value, float):
+        if isinstance(fill_value, Number):
             fill_value = (fill_value,) * 3
         if not isinstance(fill_value, tuple):
             fill_value = tuple(fill_value)
