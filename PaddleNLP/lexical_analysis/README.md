@@ -6,7 +6,7 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 
 |模型|Precision|Recall|F1-score|
 |:-:|:-:|:-:|:-:|
-|Lexical Analysis|87.7%|88.5%|88.1%|
+|Lexical Analysis|89.2%|89.4%|89.3%|
 |BERT finetuned|90.2%|90.4%|90.3%|
 |ERNIE finetuned|91.7%|91.7%|91.7%|
 
