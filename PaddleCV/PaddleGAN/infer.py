@@ -26,7 +26,7 @@ import numpy as np
 import imageio
 import glob
 from util.config import add_arguments, print_arguments
-from data_reader import celeba_reader_creator, reader_creator, triplex_reader_creato
+from data_reader import celeba_reader_creator, reader_creator, triplex_reader_creator
 from util.utility import check_attribute_conflict, check_gpu, save_batch_image
 from util import utility
 import copy
@@ -170,8 +170,10 @@ def infer(args):
     elif args.model_net == 'SPADE':
         from network.SPADE_network import SPADE_model
         model = SPADE_model()
-        input_label = fluid.layers.data(name='input_label', shape=data_shape, dtype='float32')
-        input_ins = fluid.layers.data(name='input_ins', shape=data_shape, dtype='float32')
+        input_label = fluid.layers.data(
+            name='input_label', shape=data_shape, dtype='float32')
+        input_ins = fluid.layers.data(
+            name='input_ins', shape=data_shape, dtype='float32')
         input_ = fluid.layers.concat([input_label, input_ins], 1)
         fake = model.network_G(input_, "generator", cfg=args, is_test=True)
     else:
@@ -316,8 +318,7 @@ def infer(args):
             shuffle=False,
             batch_size=1,
             mode="TEST")
-        reader_test = test_reader.make_reader(
-            args, return_name=True)
+        reader_test = test_reader.make_reader(args, return_name=True)
         for data in zip(reader_test()):
             data_A, data_B, data_C, name = data[0]
             name = name[0]
