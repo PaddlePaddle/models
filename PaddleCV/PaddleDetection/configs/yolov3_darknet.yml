@@ -60,8 +60,8 @@ TrainDataLoader:
   pin_memory: false
   prefetch_to_gpu: false
   yolo_class_fix: true
-  num_workers: 4
-  buffer_size: 8
+  num_workers: 8
+  buffer_size: 4
   dataset:
     type: coco
     root_dir: /root/data

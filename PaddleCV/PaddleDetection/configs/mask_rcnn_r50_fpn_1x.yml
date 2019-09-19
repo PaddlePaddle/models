@@ -21,7 +21,7 @@ ResNet:
   depth: 50
   feature_maps: [2, 3, 4, 5]
   freeze_at: 2
-  norm_type: bn
+  norm_type: affine_channel
 
 FPN:
   max_level: 6
@@ -110,7 +110,7 @@ OptimizerBuilder:
 
 TrainDataLoader:
   batch_size: 1
-  multiprocessing: true
+  multiprocessing: false
   pin_memory: false
   prefetch_to_gpu: false
   num_workers: 2
@@ -124,7 +124,7 @@ TrainDataLoader:
     use_empty: false
     use_mask: true
   sampler:
-    aspect_ratio_thresholds: [1.0]
+    # aspect_ratio_thresholds: [1.0]
     shuffle: true
     sync_seed_schedule: true
   feed_vars:
