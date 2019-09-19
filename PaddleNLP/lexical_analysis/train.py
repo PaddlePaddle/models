@@ -69,7 +69,7 @@ def do_train(args):
     exe.run(startup_program)
 
     if args.init_checkpoint:
-        utils.init_checkpoint(exe, args.init_checkpoint, train_program)
+        utils.init_checkpoint(exe, args.init_checkpoint+'.pdckpt', train_program)
     if dev_count>1:
         device = "GPU" if args.use_cuda else "CPU"
         print("%d %s are used to train model"%(dev_count, device))

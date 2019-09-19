@@ -40,8 +40,8 @@ sh download.sh
 
 下载数据集文件，解压后会生成 `./data/` 文件夹
 ```bash
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-dataset-1.0.0.tar.gz
-tar xvf lexical_analysis-dataset-1.0.0.tar.gz
+wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-dataset-2.0.0.tar.gz
+tar xvf lexical_analysis-dataset-2.0.0.tar.gz
 ```
 
 #### 3. 预训练模型
@@ -52,7 +52,8 @@ tar xvf lexical_analysis-dataset-1.0.0.tar.gz
 ```bash
 # download baseline model
 hub download lexical_analysis
-tar xvf lexical_analysis-1.0.0.tar.gz
+tar xvf lexical_analysis-2.0.0.tar.gz
+mv model_baseline model_baseline.pdckpt
 
 # download ERNIE finetuned model
 hub download lexical_analysis_finetuned
@@ -62,8 +63,9 @@ tar xvf lexical_analysis_finetuned-1.0.0.tar.gz
 方式二：直接下载
 ```bash
 # download baseline model
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-1.0.0.tar.gz
-tar xvf lexical_analysis-1.0.0.tar.gz
+wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-2.0.0.tar.gz
+tar xvf lexical_analysis-2.0.0.tar.gz
+mv model_baseline model_baseline.pdckpt
 
 # download ERNIE finetuned model
 wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis_finetuned-1.0.0.tar.gz
