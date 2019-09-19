@@ -214,7 +214,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
         if isinstance(sampler, dict):
             kwargs = sampler
             kwargs['rank'] = rank
-            kwargs['world_size'] = world_size
+            if 'world_size' not in kwargs:
+                kwargs['world_size'] = world_size
             if 'init_seed' not in kwargs:
                 kwargs['init_seed'] = init_seed
             # XXX currently we only have one default sampler

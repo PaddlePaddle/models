@@ -166,6 +166,7 @@ EvalDataLoader:
   sampler:
     shuffle: false
     pad_batch: false
+    world_size: 1
   feed_vars:
   - image
   - name: im_info
