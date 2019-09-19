@@ -8,6 +8,7 @@ python -u cluster_train.py \
     --train_data_dir data/train_data \
     --model_output_dir cluster_model \
     --is_local 0 \
+    --is_sparse \
     --role pserver \
     --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
     --current_endpoint 127.0.0.1:6000 \
@@ -19,6 +20,7 @@ python -u cluster_train.py \
     --train_data_dir data/train_data \
     --model_output_dir cluster_model \
     --is_local 0 \
+    --is_sparse \
     --role pserver \
     --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
     --current_endpoint 127.0.0.1:6001 \
@@ -32,6 +34,7 @@ python -u cluster_train.py \
     --model_output_dir cluster_model \
     --use_gpu 0 \
     --is_local 0 \
+    --is_sparse \
     --role trainer \
     --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
     --trainers 2 \
@@ -45,6 +48,7 @@ python -u cluster_train.py \
     --model_output_dir cluster_model \
     --use_gpu 0 \
     --is_local 0 \
+    --is_sparse \
     --role trainer \
     --endpoints 127.0.0.1:6000,127.0.0.1:6001 \
     --trainers 2 \

@@ -63,6 +63,12 @@ def parse_args():
         default='relu',
         help='The activation of each layers (default: relu)')
     parser.add_argument(
+        '--is_sparse',
+        action='store_true',
+        required=False,
+        default=False,
+        help='embedding will use sparse or not, (default: False)')
+    parser.add_argument(
         '--lr', type=float, default=1e-4, help='Learning rate (default: 1e-4)')
     parser.add_argument(
         '--reg', type=float, default=1e-4, help=' (default: 1e-4)')
@@ -110,7 +116,7 @@ def train():
 
     loss, auc, data_list = ctr_deepfm_model(args.embedding_size, args.num_field,
                                             args.num_feat, args.layer_sizes,
-                                            args.act, args.reg)
+                                            args.act, args.reg, args.is_sparse)
     optimizer = fluid.optimizer.SGD(
         learning_rate=args.lr,
         regularization=fluid.regularizer.L2DecayRegularizer(args.reg))

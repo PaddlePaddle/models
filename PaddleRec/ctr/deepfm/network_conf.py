@@ -2,8 +2,13 @@ import paddle.fluid as fluid
 import math
 
 
-def ctr_deepfm_model(embedding_size, num_field, num_feat, layer_sizes, act,
-                     reg):
+def ctr_deepfm_model(embedding_size,
+                     num_field,
+                     num_feat,
+                     layer_sizes,
+                     act,
+                     reg,
+                     is_sparse=False):
     init_value_ = 0.1
 
     raw_feat_idx = fluid.layers.data(
@@ -22,6 +27,7 @@ def ctr_deepfm_model(embedding_size, num_field, num_feat, layer_sizes, act,
 
     first_weights = fluid.layers.embedding(
         input=feat_idx,
+        is_sparse=is_sparse,
         dtype='float32',
         size=[num_feat + 1, 1],
         padding_idx=0,
@@ -36,6 +42,7 @@ def ctr_deepfm_model(embedding_size, num_field, num_feat, layer_sizes, act,
 
     feat_embeddings = fluid.layers.embedding(
         input=feat_idx,
+        is_sparse=is_sparse,
         dtype='float32',
         size=[num_feat + 1, embedding_size],
         padding_idx=0,

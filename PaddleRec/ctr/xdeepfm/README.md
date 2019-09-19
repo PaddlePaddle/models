@@ -34,6 +34,8 @@ test_epoch设置加载第10轮训练的模型。
 
 ## 多机训练
 运行命令本地模拟多机场景，默认使用2 X 2模式，即2个pserver，2个trainer的方式组网训练。
+
+数据下载同上面命令。
 ```bash
 sh cluster_train.sh
 ```

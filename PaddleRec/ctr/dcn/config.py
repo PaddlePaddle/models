@@ -71,7 +71,7 @@ def parse_args():
         action='store_true',
         required=False,
         default=False,
-        help='embedding and nce will use sparse or not, (default: False)')
+        help='embedding will use sparse or not, (default: False)')
     parser.add_argument(
         '--clip_by_norm', type=float, default=100.0, help="gradient clip norm")
     parser.add_argument('--print_steps', type=int, default=100)

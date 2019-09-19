@@ -77,6 +77,12 @@ def parse_args():
     parser.add_argument('--use_gpu', type=int, default=1)
     parser.add_argument('--print_steps', type=int, default=50)
     parser.add_argument('--is_local', type=int, default=1, help='whether local')
+    parser.add_argument(
+        '--is_sparse',
+        action='store_true',
+        required=False,
+        default=False,
+        help='embedding will use sparse or not, (default: False)')
 
     # dist params
     parser.add_argument(
@@ -117,7 +123,8 @@ def train():
 
     loss, auc, data_list = eval('network_conf.' + args.model_name)(
         args.embedding_size, args.num_field, args.num_feat,
-        args.layer_sizes_dnn, args.act, args.reg, args.layer_sizes_cin)
+        args.layer_sizes_dnn, args.act, args.reg, args.layer_sizes_cin,
+        args.is_sparse)
     optimizer = fluid.optimizer.SGD(
         learning_rate=args.lr,
         regularization=fluid.regularizer.L2DecayRegularizer(args.reg))
@@ -131,7 +138,8 @@ def train():
         dataset.set_pipe_command('python criteo_reader.py')
         dataset.set_batch_size(args.batch_size)
         dataset.set_filelist([
-            args.train_data_dir + '/' + x for x in os.listdir(args.train_data_dir)
+            args.train_data_dir + '/' + x
+            for x in os.listdir(args.train_data_dir)
         ])
 
         if args.use_gpu == 1:
@@ -158,9 +166,7 @@ def train():
             if args.trainer_id == 0:  # only trainer 0 save model
                 print("save model in {}".format(model_dir))
                 fluid.io.save_persistables(
-                    executor=exe,
-                    dirname=model_dir,
-                    main_program=main_program)
+                    executor=exe, dirname=model_dir, main_program=main_program)
 
         print("train time cost {:.4f}".format(time.time() - start_time))
         print("finish training")
@@ -175,7 +181,8 @@ def train():
             args.trainer_id, pservers=args.endpoints, trainers=args.trainers)
         if args.role == "pserver":
             print("run psever")
-            pserver_prog, pserver_startup = t.get_pserver_programs(args.current_endpoint)
+            pserver_prog, pserver_startup = t.get_pserver_programs(
+                args.current_endpoint)
 
             exe = fluid.Executor(fluid.CPUPlace())
             exe.run(pserver_startup)
