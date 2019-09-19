@@ -406,7 +406,7 @@ class MixUp(object):
         canvas[:h1, :w1, :] = img1 * factor
         canvas[:h2, :w2, :] += img2 * (1. - factor)
 
-        sample1['image'] = canvas.astype(np.uint8)
+        sample1['image'] = canvas
         sample1['gt_box'] = gt_box
         sample1['gt_label'] = gt_label
         sample1['gt_score'] = gt_score
