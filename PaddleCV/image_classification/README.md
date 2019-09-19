@@ -127,7 +127,7 @@ bash run.sh train 模型名
 * **crop_size**: 指定裁剪的大小，默认值:224
 * **use_mixup**: 是否对数据进行mixup处理，默认值: False
 * **mixup_alpha**: 指定mixup处理时的alpha值，默认值: 0.2
-* **use_aa**: 是否对数据进行auto augment处理. 默认值:False.
+* **use_aa**: 是否对数据进行auto augment处理. 默认值: False.
 * **reader_thread**: 多线程reader的线程数量，默认值: 8
 * **reader_buf_size**: 多线程reader的buf_size， 默认值: 2048
 * **interpolation**: 插值方法， 默认值：None
@@ -153,7 +153,7 @@ bash run.sh train 模型名
 * 中心裁剪
 * 长宽调整
 * 水平翻转
-* 自动增强
+* 自动增广
 
 ### 参数微调
 

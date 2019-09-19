@@ -48,7 +48,6 @@ parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224,
 add_arg('crop_size',        int,  224,                  "The value of crop size")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
-add_arg('save_dir',            str,  "", "Directory to save.")
 # yapf: enable
 
 
