@@ -39,6 +39,17 @@ test_epoch设置加载第10轮训练的模型。
 ```bash
 sh cluster_train.sh
 ```
+参数说明：
+- train_data_dir: 训练数据目录
+- model_output_dir: 模型保存目录
+- is_local: 是否单机本地训练(单机模拟多机分布式训练是为0)
+- is_sparse: embedding是否使用sparse
+- role: 进程角色(pserver或trainer)
+- endpoints: 所有pserver地址和端口
+- current_endpoint: 当前pserver(role是pserver)端口和地址
+- trainers: trainer数量
+
+其他参数见cluster_train.py
 
 预测
 ```bash
@@ -46,7 +57,7 @@ python infer.py --model_output_dir cluster_model --test_epoch 10 --use_gpu=0
 ```
 注意:
 
-- 本地模拟需要关闭代理
+- 本地模拟需要关闭代理，e.g. unset http_proxy, unset https_proxy
 
 - 0号trainer保存模型参数
 

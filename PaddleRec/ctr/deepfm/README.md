@@ -64,6 +64,18 @@ Train
 ```bash
 sh cluster_train.sh
 ```
+params of cluster_train.sh：
+- train_data_dir: path of train data
+- model_output_dir: path of saved model
+- is_local: local or distributed training(set 0 in distributed training)
+- is_sparse: whether to use sparse update in embedding.
+- role: role of process(pserver or trainer)
+- endpoints: ip:port of all pservers
+- current_endpoint: ip:port of current pserver(role should be pserver)
+- trainers: the number of trainers
+
+other params explained in cluster_train.py
+
 Infer
 ```bash
 python infer.py --model_output_dir cluster_model --test_epoch 50 --test_data_dir=dist_data/dist_test_data --feat_dict='dist_data/aid_data/feat_dict_10.pkl2'
