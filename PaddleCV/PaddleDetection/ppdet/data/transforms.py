@@ -246,6 +246,8 @@ class RandomExpand(object):
         expand_ratio = np.random.uniform(1.01, self.ratio)
         h = int(height * expand_ratio)
         w = int(width * expand_ratio)
+        if not h > height or not w > width:
+            return sample
         y = np.random.randint(0, h - height)
         x = np.random.randint(0, w - width)
         canvas = np.ones((h, w, 3), dtype=img.dtype)
