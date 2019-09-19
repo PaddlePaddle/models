@@ -250,9 +250,9 @@ class RandomExpand(object):
             return sample
         y = np.random.randint(0, h - height)
         x = np.random.randint(0, w - width)
-        canvas = np.ones((h, w, 3), dtype=img.dtype)
-        canvas *= np.array(self.fill_value, dtype=img.dtype)
-        canvas[y:y + height, x:x + width, :] = img
+        canvas = np.ones((h, w, 3), dtype=np.uint8)
+        canvas *= np.array(self.fill_value, dtype=np.uint8)
+        canvas[y:y + height, x:x + width, :] = img.astype(np.uint8)
 
         sample['height'] = h
         sample['width'] = w
