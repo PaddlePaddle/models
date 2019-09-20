@@ -89,14 +89,23 @@ def infer_process(exe, program, reader, fetch_vars, dataset):
     :param reader: data reader
     :return: the list of prediction result
     """
-    results = []
-    for data in tqdm(reader()):
+    def input_check(data):
+        if data[0]['words'].lod()[0][-1]==0:
+            return data[0]['words']
+        return None
 
+    results = []
+    for data in reader():
+        crf_decode = input_check(data)
+        if crf_decode:
+            results += utils.parse_result(crf_decode, crf_decode, dataset)
+            continue
 
         words, crf_decode = exe.run(program,
                              fetch_list=fetch_vars,
                              feed=data,
                              return_numpy=False,
+                             use_program_cache=True,
                              )
         results += utils.parse_result(words, crf_decode, dataset)
     return results
