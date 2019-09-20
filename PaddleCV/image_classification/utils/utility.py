@@ -105,7 +105,12 @@ def parse_args():
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
     add_arg('momentum_rate',            float,  0.9,                    "The value of momentum_rate.")
+    add_arg('warm_up_epochs',           float,  5.0,                    "The value of warm up epochs")
+    add_arg('decay_epochs',             float,  2.4,                    "Decay epochs of exponential decay learning rate scheduler")
+    add_arg('decay_rate',               float,  0.97,                   "Decay rate of exponential decay learning rate scheduler")
+    add_arg('drop_connect_rate',        float,  0.2,                    "The value of drop connect rate")
     parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
+
     # READER AND PREPROCESS
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
@@ -117,14 +122,7 @@ def parse_args():
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
     add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
     add_arg('interpolation',            int,    None,                   "The interpolation mode")
-    add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
     add_arg('use_aa',                   bool,   False,                  "Whether to use auto augment")
-    add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
-    add_arg('warm_up_epochs',           float,  5.0,                    "The value of warm up epochs")
-    add_arg('decay_epochs',             float,  2.4,                    "Decay epochs of exponential decay learning rate scheduler")
-    add_arg('decay_rate',               float,  0.97,                   "Decay rate of exponential decay learning rate scheduler")
-    add_arg('drop_connect_rate',        float,  0.2,                    "The value of drop connect rate")
-    add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
     parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
@@ -137,6 +135,9 @@ def parse_args():
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
     add_arg('random_seed',              int,    None,                   "random seed")
+    add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
+    add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
+    add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     # yapf: enable
 
     args = parser.parse_args()
