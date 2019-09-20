@@ -6,7 +6,6 @@ import sys
 
 import paddle.fluid as fluid
 import paddle
-from tqdm import tqdm
 
 import utils
 import reader
