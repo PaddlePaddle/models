@@ -106,7 +106,9 @@ Solver and hyperparameters:
 * **lr**: initialized learning rate. Default: 0.1.
 * **l2_decay**: L2_decay parameter. Default: 1e-4.
 * **momentum_rate**: momentum_rate. Default: 0.9.
-* **step_epochs**: decay step of piecewise step, Default: [30,60,90]
+* **step_epochs**: decay step of piecewise step, Default: [30,60,90].
+* **decay_epochs**: decay epoch of exponential decay, Default: 2.4.
+* **decay_rate**: decay rate of exponential decay, Default: 0.97.
 
 Reader and preprocess:
 
@@ -117,6 +119,7 @@ Reader and preprocess:
 * **crop_size**: the crop size, Default: 224.
 * **use_mixup**: whether to use mixup data processing or not. Default:False.
 * **mixup_alpha**: the mixup_alpha parameter. Default: 0.2.
+* **use_aa**: whether to use auto augment data processing or not. Default:False.
 * **reader_thread**: the number of threads in multi thread reader, Default: 8
 * **reader_buf_size**: the buff size of multi thread reader, Default: 2048
 * **interpolation**: interpolation method, Default: None
@@ -129,7 +132,10 @@ Switch:
 * **use_gpu**: whether to use GPU or not. Default: True.
 * **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
 * **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.1.
-* **random_seed**: random seed for debugging, Default: 1000
+* **random_seed**: random seed for debugging, Default: 1000.
+* **padding_type**: padding type of convolution for efficientNet, Default: "SAME".
+* **use_ema**: whether to use ExponentialMovingAverage or not. Default: False.
+* **ema_decay**: the value of ExponentialMovingAverage decay rate. Default: 0.9999.
 
 **data reader introduction:** Data reader is defined in ```reader.py```, default reader is implemented by opencv. In the [Training](#training) Stage, random crop and flipping are applied, while center crop is applied in the [Evaluation](#evaluation) and [Inference](#inference) stages. Supported data augmentation includes:
 
@@ -139,6 +145,7 @@ Switch:
 * center crop
 * resize
 * flipping
+* auto augment
 
 ### Finetuning
 
@@ -163,6 +170,20 @@ python eval.py \
 ```
 
 Note: Add and adjust other parameters accroding to specific models and tasks.
+
+### ExponentialMovingAverage Evaluation
+
+Note: if you train model with flag use_ema, and you want to evaluate your ExponentialMovingAverage model, you should clean your saved model first.
+
+```
+python ema_clean.py \
+       --ema_model_dir=your_ema_model_dir \
+       --cleaned_model_dir=your_cleaned_model_dir
+       
+python eval.py \
+       --model=model_name \
+       --pretrained_model=your_cleaned_model_dir
+```
 
 ### Inference
 
@@ -343,6 +364,18 @@ Pretrained models can be downloaded by clicking related model names.
 |[ResNeXt101_32x48d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x48d_wsl_pretrained.tar) | 85.37% | 97.69% | 161.722 |  |
 |[Fix_ResNeXt101_32x48d_wsl](https://paddle-imagenet-models-name.bj.bcebos.com/Fix_ResNeXt101_32x48d_wsl_pretrained.tar) | 86.26% | 97.97% | 236.091 |  |
 
+### EfficientNet Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[EfficientNetB0](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_pretrained.tar) | 77.38% | 93.31% | 10.303 | 4.334 |
+|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar) | 79.15% | 94.41% | 15.626 | 6.502 |
+|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar) | 79.85% | 94.74% | 17.847 | 7.558 |
+|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar) | 81.15% | 95.41% | 25.993 | 10.937 |
+|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar) | 82.85% | 96.23% | 47.734 | 18.536 |
+|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar) | 83.62% | 96.72% | 88.578 | 32.102 |
+|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar) | 84.00% | 96.88% | 138.670 | 51.059 |
+|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar) | 84.30% | 96.89% | 234.364 | 82.107 |
+
 ## FAQ
 
 **Q:** How to solve this problem when I try to train a 6-classes dataset with indicating pretrained_model parameter ?
@@ -374,6 +407,7 @@ Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:100
 - SqueezeNet: [SQUEEZENET: ALEXNET-LEVEL ACCURACY WITH 50X FEWER PARAMETERS AND <0.5MB MODEL SIZE](https://arxiv.org/abs/1602.07360), Forrest N. Iandola, Song Han, Matthew W. Moskewicz, Khalid Ashraf, William J. Dally, Kurt Keutzer
 - ResNeXt101_wsl: [Exploring the Limits of Weakly Supervised Pretraining](https://arxiv.org/abs/1805.00932), Dhruv Mahajan, Ross Girshick, Vignesh Ramanathan, Kaiming He, Manohar Paluri, Yixuan Li, Ashwin Bharambe, Laurens van der Maaten
 - Fix_ResNeXt101_wsl: [Fixing the train-test resolution discrepancy](https://arxiv.org/abs/1906.06423), Hugo Touvron, Andrea Vedaldi, Matthijs Douze, Herve ́ Je ́gou
+- EfficientNet: [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946), Mingxing Tan, Quoc V. Le
 
 ## Update
 
@@ -387,6 +421,7 @@ Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:100
 - 2019/07/19 **Stage6**: Update ShuffleNetV2_x0_25, ShuffleNetV2_x0_33, ShuffleNetV2_x0_5, ShuffleNetV2_x1_0, ShuffleNetV2_x1_5, ShuffleNetV2_x2_0, MobileNetV2_x0_25, MobileNetV2_x1_5, MobileNetV2_x2_0, ResNeXt50_vd_64x4d, ResNeXt101_32x4d, ResNeXt152_32x4d
 - 2019/08/01 **Stage7**: Update DarkNet53, DenseNet121. Densenet161, DenseNet169, DenseNet201, DenseNet264, SqueezeNet1_0, SqueezeNet1_1, ResNeXt50_vd_32x4d, ResNeXt152_64x4d, ResNeXt101_32x8d_wsl, ResNeXt101_32x16d_wsl, ResNeXt101_32x32d_wsl, ResNeXt101_32x48d_wsl, Fix_ResNeXt101_32x48d_wsl
 - 2019/09/11 **Stage8**: Update ResNet18_vd，ResNet34_vd，MobileNetV1_x0_25，MobileNetV1_x0_5，MobileNetV1_x0_75，MobileNetV2_x0_75，MobilenNetV3_small_x1_0，DPN68，DPN92，DPN98，DPN107，DPN131，ResNeXt101_vd_32x4d，ResNeXt152_vd_64x4d，Xception65，Xception71，Xception41_deeplab，Xception65_deeplab，SE_ResNet50_vd
+- 2019/09/20 Update EfficientNet
 
 ## Contribute
 
