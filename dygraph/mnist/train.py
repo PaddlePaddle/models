@@ -31,7 +31,8 @@ def parse_args():
         "--use_data_parallel",
         type=ast.literal_eval,
         default=False,
-        help="The flag indicating whether to shuffle instances in each pass.")
+        help="The flag indicating whether to use data parallel mode to train the model."
+    )
     parser.add_argument("-e", "--epoch", default=5, type=int, help="set epoch")
     parser.add_argument("--ce", action="store_true", help="run ce")
     args = parser.parse_args()
