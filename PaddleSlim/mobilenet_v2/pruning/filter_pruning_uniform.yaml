@@ -12,11 +12,11 @@ strategies:
         pruner: 'pruner_1'
         start_epoch: 0
         target_ratio: 0.5
-        pruned_params: '.*linear_weights'
-        metric_name: 'acc_top1'
+        pruned_params: '.*[r|d]_weights'
+#        pruned_params: '.*linear_weights'
+#        pruned_params: '.*expand_weights'
 compressor:
-    epoch: 200
-    #init_model: './checkpoints/0' # Please enable this option for loading checkpoint.
+    epoch: 1
     checkpoint_path: './checkpoints/'
     strategies:
         - uniform_pruning_strategy

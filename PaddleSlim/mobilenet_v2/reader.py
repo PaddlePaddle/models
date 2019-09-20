@@ -187,5 +187,5 @@ def val(data_dir=DATA_DIR):
 
 
 def test(data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'val_list.txt')
+    file_list = os.path.join(data_dir, 'test_list.txt.100')
     return _reader_creator(file_list, 'test', shuffle=False, data_dir=data_dir)
