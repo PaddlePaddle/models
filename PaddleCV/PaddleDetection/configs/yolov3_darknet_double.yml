@@ -1,0 +1,191 @@
+architecture: YOLOv3
+use_gpu: true
+max_iters: 250100
+log_smooth_window: 20
+save_dir: output
+snapshot_iter: 10000
+metric: COCO
+pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
+weights: output/yolov3_darknet/model_final
+num_classes: 80
+
+YOLOv3:
+  backbone: DarkNet
+  yolo_head: YOLOv3Head
+
+DarkNet:
+  norm_type: sync_bn
+  norm_decay: 0.
+  depth: 53
+
+YOLOv3Head:
+  anchor_masks: [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+  anchors: [[10, 13], [16, 30], [33, 23],
+            [30, 61], [62, 45], [59, 119],
+            [116, 90], [156, 198], [373, 326]]
+  norm_decay: 0.
+  ignore_thresh: 0.7
+  label_smooth: true
+  nms:
+    background_label: -1
+    keep_top_k: 100
+    nms_threshold: 0.45
+    nms_top_k: 1000
+    normalized: false
+    score_threshold: 0.01
+
+LearningRate:
+  base_lr: 0.002
+  schedulers:
+  - !PiecewiseDecay
+    gamma: 0.1
+    milestones:
+    - 200000
+    - 225000
+  - !LinearWarmup
+    start_factor: 0.
+    steps: 4000
+
+OptimizerBuilder:
+  optimizer:
+    momentum: 0.9
+    type: Momentum
+  regularizer:
+    factor: 0.0005
+    type: L2
+
+TrainDataLoader:
+  batch_size: 16
+  multiprocessing: true
+  pin_memory: false
+  prefetch_to_gpu: true
+  yolo_class_fix: true
+  num_workers: 8
+  buffer_size: 4
+  dataset:
+    type: coco
+    root_dir: /root/data
+    annotation_file: annotations/instances_train2017.json
+    image_dir: train2017
+    use_crowd: false
+    use_empty: false
+    use_mask: false
+  sampler:
+    shuffle: true
+    sync_seed_schedule: true
+  feed_vars:
+  - image
+  - gt_box
+  - gt_label
+  - gt_score
+  extra_vars:
+  - id
+  sample_transforms:
+  - !MixUp
+    alpha: 1.5
+    beta: 1.5
+    steps: 227500
+  - !RandomExpand
+    ratio: 4.0
+    prob: 0.5
+    fill_value: [0, 0, 0]
+  - !RandomCrop
+    thresholds: [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
+    aspect_ratio: [0.5, 2.0]
+    scaling: [0.3, 1.0]
+    num_attempts: 50
+    allow_no_crop: true
+  - !RandomFlip
+    prob: 0.5
+  - !Resize
+    random_shape: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
+    interp: random
+  - !ColorDistort
+    brightness: [0.5, 1.5, 0.5]
+    contrast: [0.5, 1.5, 0.5]
+    saturation: [0.5, 1.5, 0.5]
+    hue: [-18, 18, 0.5]
+  - !NormalizePermute
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  - !NormalizeLabels
+    num_instances: 50
+    normalize_box: true
+    to_center: true
+  batch_transforms:
+  - !PadToStride
+    stride: 1
+
+EvalDataLoader:
+  batch_size: 8
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  yolo_class_fix: true
+  num_workers: 4
+  buffer_size: 8
+  dataset:
+    type: coco
+    root_dir: /root/data
+    annotation_file: annotations/instances_val2017.json
+    image_dir: val2017
+    use_crowd: false
+    use_empty: true
+    use_mask: false
+  sampler:
+    shuffle: false
+    pad_batch: false
+    world_size: 1
+  feed_vars:
+  - image
+  - name: im_size
+    fields:
+    - orig_height
+    - orig_width
+  extra_vars:
+  - id
+  sample_transforms:
+  - !Resize
+    random_shape: [608]
+    interp: 2
+  - !NormalizePermute
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  batch_transforms:
+  - !PadToStride
+    stride: 1
+
+TestDataLoader:
+  batch_size: 1
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  yolo_class_fix: true
+  num_workers: 4
+  buffer_size: 8
+  dataset:
+    type: folder
+    root_dir: /root/data
+  sampler:
+    shuffle: false
+    pad_batch: false
+  feed_vars:
+  - image
+  - name: im_size
+    fields:
+    - orig_height
+    - orig_width
+  extra_vars:
+  - file
+  sample_transforms:
+  - !Resize
+    random_shape: [608]
+    interp: 2
+  - !NormalizePermute
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  batch_transforms:
+  - !PadToStride
+    stride: 1
