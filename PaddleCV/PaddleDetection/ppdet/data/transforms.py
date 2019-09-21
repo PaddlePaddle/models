@@ -72,8 +72,8 @@ class Resize(object):
 
             dim_max, dim_min = w > h and (w, h) or (h, w)
             scale = min(self.max_dim / dim_max, target_dim / dim_min)
-            resize_w = round(w * scale)
-            resize_h = round(h * scale)
+            resize_w = int(round(w * scale))
+            resize_h = int(round(h * scale))
             sample['scale'] = scale
             # XXX this is for RCNN
             # commonly the labels (bboxes and masks) are scaled by the
