@@ -78,9 +78,7 @@ class Resize(object):
             # XXX this is for RCNN
             # commonly the labels (bboxes and masks) are scaled by the
             # dataloader, but somehow Paddle choose to do it later.
-            # This is why we need to pass "scale" around, and this also results
-            # in some other caveats, e.g., all transformations that modify
-            # bboxes (currently `RandomFlip`) must be applied BEFORE `Resize`.
+            # This is why we need to pass "scale" around
 
         sample['image'] = cv2.resize(
             sample['image'], (resize_w, resize_h), interpolation=interp)
@@ -100,7 +98,7 @@ class RandomFlip(object):
 
         img = sample['image']
         sample['image'] = img[:, ::-1, :]
-        w = sample['width']
+        w = sample['orig_width']
 
         if 'gt_box' in sample and len(sample['gt_box']) > 0:
             swap = sample['gt_box'].copy()
