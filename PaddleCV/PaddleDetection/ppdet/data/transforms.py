@@ -220,7 +220,7 @@ class NormalizePermute(object):
 
 
 class RandomExpand(object):
-    def __init__(self, ratio=4., prob=0.5, fill_value=(0,) * 3):
+    def __init__(self, ratio=4., prob=0.5, fill_value=(127.5,) * 3):
         super(RandomExpand, self).__init__()
         assert ratio > 1.01, "expand ratio must be larger than 1.01"
         self.ratio = ratio

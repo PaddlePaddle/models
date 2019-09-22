@@ -88,7 +88,7 @@ TrainDataLoader:
   - !RandomExpand
     ratio: 4.0
     prob: 0.5
-    fill_value: [0, 0, 0]
+    fill_value: [127, 127, 127]
   - !RandomCrop
     thresholds: [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
     aspect_ratio: [0.5, 2.0]
