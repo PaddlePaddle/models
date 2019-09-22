@@ -59,7 +59,7 @@ def get_feat_dict():
             for line_idx, line in enumerate(fin):
                 if line_idx % 100000 == 0:
                     print('generating feature dict', line_idx / 45000000)
-                features = line.lstrip('\n').split('\t')
+                features = line.rstrip('\n').split('\t')
                 for idx in categorical_range_:
                     if features[idx] == '': continue
                     feat_cnt.update([features[idx]])
