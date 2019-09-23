@@ -21,7 +21,7 @@ def ctr_xdeepfm_model(embedding_size,
     label = fluid.layers.data(
         name='label', shape=[1], dtype='float32')  # None * 1
     feat_idx = fluid.layers.reshape(raw_feat_idx,
-                                    [-1, num_field, 1])  # None * num_field * 1
+                                    [-1, 1])  # (None * num_field) * 1
     feat_value = fluid.layers.reshape(
         raw_feat_value, [-1, num_field, 1])  # None * num_field * 1
 
@@ -31,8 +31,10 @@ def ctr_xdeepfm_model(embedding_size,
         dtype='float32',
         size=[num_feat + 1, embedding_size],
         padding_idx=0,
-        param_attr=fluid.ParamAttr(
-            initializer=initer))  # None * num_field * embedding_size
+        param_attr=fluid.ParamAttr(initializer=initer))
+    feat_embeddings = fluid.layers.reshape(
+        feat_embeddings,
+        [-1, num_field, embedding_size])  # None * num_field * embedding_size
     feat_embeddings = feat_embeddings * feat_value  # None * num_field * embedding_size
 
     # -------------------- linear  --------------------
@@ -43,7 +45,9 @@ def ctr_xdeepfm_model(embedding_size,
         dtype='float32',
         size=[num_feat + 1, 1],
         padding_idx=0,
-        param_attr=fluid.ParamAttr(initializer=initer))  # None * num_field * 1
+        param_attr=fluid.ParamAttr(initializer=initer))
+    weights_linear = fluid.layers.reshape(
+        weights_linear, [-1, num_field, 1])  # None * num_field * 1
     b_linear = fluid.layers.create_parameter(
         shape=[1],
         dtype='float32',
