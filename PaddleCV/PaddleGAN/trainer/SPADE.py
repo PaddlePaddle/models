@@ -342,12 +342,6 @@ class SPADE(object):
             for tensor in py_reader():
                 data_A, data_B, data_C = tensor[0]['input_A'], tensor[0][
                     'input_B'], tensor[0]['input_C']
-                tensor_A = fluid.LoDTensor()
-                tensor_B = fluid.LoDTensor()
-                tensor_C = fluid.LoDTensor()
-                tensor_A.set(data_A, place)
-                tensor_B.set(data_B, place)
-                tensor_C.set(data_C, place)
                 s_time = time.time()
                 # optimize the generator network
                 g_loss_gan, g_loss_vgg, g_loss_feat, fake_B_tmp = exe.run(
@@ -357,9 +351,9 @@ class SPADE(object):
                         gen_trainer.gan_feat_loss, gen_trainer.fake_B
                     ],
                     feed={
-                        "input_label": tensor_A,
-                        "input_img": tensor_B,
-                        "input_ins": tensor_C
+                        "input_label": data_A,
+                        "input_img": data_B,
+                        "input_ins": data_C
                     })
 
                 # optimize the discriminator network
@@ -369,9 +363,9 @@ class SPADE(object):
                         dis_trainer.gan_loss_real, dis_trainer.gan_loss_fake
                     ],
                     feed={
-                        "input_label": tensor_A,
-                        "input_img": tensor_B,
-                        "input_ins": tensor_C,
+                        "input_label": data_A,
+                        "input_img": data_B,
+                        "input_ins": data_C,
                         "input_fake": fake_B_tmp
                     })
 
