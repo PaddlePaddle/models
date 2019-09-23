@@ -23,6 +23,7 @@ import struct
 import os
 import paddle
 import random
+import sys
 
 
 def RandomCrop(img, crop_w, crop_h):
@@ -56,6 +57,17 @@ def get_preprocess_param(load_size, crop_size):
         "load_size": load_size,
         "crop_size": crop_size
     }
+
+
+def get_preprocess_param(load_width, load_height, crop_width, crop_height):
+    if crop_width == load_width:
+        x = 0
+        y = 0
+    else:
+        x = np.random.randint(0, np.maximum(0, load_width - crop_width))
+        y = np.random.randint(0, np.maximum(0, load_height - crop_height))
+    flip = np.random.rand() > 0.5
+    return {"crop_pos": (x, y), "flip": flip}
 
 
 class reader_creator(object):
@@ -205,6 +217,132 @@ class pair_reader_creator(reader_creator):
                         yield batch_out_1, batch_out_2
                     batch_out_1 = []
                     batch_out_2 = []
+
+        return reader
+
+
+class triplex_reader_creator(reader_creator):
+    ''' read and preprocess dataset'''
+
+    def __init__(self,
+                 image_dir,
+                 list_filename,
+                 shuffle=False,
+                 batch_size=1,
+                 mode="TRAIN"):
+        super(triplex_reader_creator, self).__init__(
+            image_dir,
+            list_filename,
+            shuffle=shuffle,
+            batch_size=batch_size,
+            mode=mode)
+
+    def make_reader(self, args, return_name=False):
+        print(self.image_dir, self.list_filename)
+        print("files length:", len(self.lines))
+
+        def reader():
+            batch_out_1 = []
+            batch_out_2 = []
+            batch_out_3 = []
+            batch_out_name = []
+            if self.shuffle:
+                np.random.shuffle(self.lines)
+            for line in self.lines:
+                files = line.strip('\n\r\t ').split('\t')
+                if len(files) != 3:
+                    print("files is not equal to 3!")
+                    sys.exit(-1)
+                #label image instance
+                img1 = Image.open(os.path.join(self.image_dir, files[0]))
+                img2 = Image.open(os.path.join(self.image_dir, files[
+                    1])).convert('RGB')
+                if not args.no_instance:
+                    img3 = Image.open(os.path.join(self.image_dir, files[2]))
+
+                if self.mode == "TRAIN":
+                    param = get_preprocess_param(
+                        args.load_width, args.load_height, args.crop_width,
+                        args.crop_height)
+                    img1 = img1.resize((args.load_width, args.load_height),
+                                       Image.NEAREST)
+                    img2 = img2.resize((args.load_width, args.load_height),
+                                       Image.BICUBIC)
+                    if not args.no_instance:
+                        img3 = img3.resize((args.load_width, args.load_height),
+                                           Image.NEAREST)
+                    if args.crop_type == 'Centor':
+                        img1 = CentorCrop(img1, args.crop_width,
+                                          args.crop_height)
+                        img2 = CentorCrop(img2, args.crop_width,
+                                          args.crop_height)
+                        if not args.no_instance:
+                            img3 = CentorCrop(img3, args.crop_width,
+                                              args.crop_height)
+                    elif args.crop_type == 'Random':
+                        x = param['crop_pos'][0]
+                        y = param['crop_pos'][1]
+                        img1 = img1.crop(
+                            (x, y, x + args.crop_width, y + args.crop_height))
+                        img2 = img2.crop(
+                            (x, y, x + args.crop_width, y + args.crop_height))
+                        if not args.no_instance:
+                            img3 = img3.crop((x, y, x + args.crop_width,
+                                              y + args.crop_height))
+                else:
+                    img1 = img1.resize((args.crop_width, args.crop_height),
+                                       Image.NEAREST)
+                    img2 = img2.resize((args.crop_width, args.crop_height),
+                                       Image.BICUBIC)
+                    if not args.no_instance:
+                        img3 = img3.resize((args.crop_width, args.crop_height),
+                                           Image.NEAREST)
+
+                img1 = np.array(img1)
+                index = img1[np.newaxis, :, :]
+                input_label = np.zeros(
+                    (args.label_nc, index.shape[1], index.shape[2]))
+                np.put_along_axis(input_label, index, 1.0, 0)
+                img1 = input_label
+                img2 = (np.array(img2).astype('float32') / 255.0 - 0.5) / 0.5
+                img2 = img2.transpose([2, 0, 1])
+                if not args.no_instance:
+                    img3 = np.array(img3)[:, :, np.newaxis]
+                    img3 = img3.transpose([2, 0, 1])
+                    ###extracte edge from instance
+                    edge = np.zeros(img3.shape)
+                    edge = edge.astype('int8')
+                    edge[:, :, 1:] = edge[:, :, 1:] | (
+                        img3[:, :, 1:] != img3[:, :, :-1])
+                    edge[:, :, :-1] = edge[:, :, :-1] | (
+                        img3[:, :, 1:] != img3[:, :, :-1])
+                    edge[:, 1:, :] = edge[:, 1:, :] | (
+                        img3[:, 1:, :] != img3[:, :-1, :])
+                    edge[:, :-1, :] = edge[:, :-1, :] | (
+                        img3[:, 1:, :] != img3[:, :-1, :])
+                    img3 = edge.astype('float32')
+                    ###end extracte
+                batch_out_1.append(img1)
+                batch_out_2.append(img2)
+                if not args.no_instance:
+                    batch_out_3.append(img3)
+                if return_name:
+                    batch_out_name.append(os.path.basename(files[0]))
+                if len(batch_out_1) == self.batch_size:
+                    if return_name:
+                        if not args.no_instance:
+                            yield batch_out_1, batch_out_2, batch_out_3, batch_out_name
+                        else:
+                            yield batch_out_1, batch_out_2, batch_out_name
+                        batch_out_name = []
+                    else:
+                        if not args.no_instance:
+                            yield batch_out_1, batch_out_2, batch_out_3
+                        else:
+                            yield batch_out_1, batch_out_2
+                    batch_out_1 = []
+                    batch_out_2 = []
+                    batch_out_3 = []
 
         return reader
 
@@ -454,6 +592,34 @@ class data_reader(object):
                     if self.cfg.test_list is not None:
                         test_list = self.cfg.test_list
                     test_reader = pair_reader_creator(
+                        image_dir=dataset_dir,
+                        list_filename=test_list,
+                        shuffle=False,
+                        batch_size=1,
+                        mode="TEST")
+                    reader_test = test_reader.make_reader(
+                        self.cfg, return_name=True)
+                    id2name = test_reader.id2name
+                batch_num = train_reader.len()
+                reader = train_reader.make_reader(self.cfg)
+                return reader, reader_test, batch_num, id2name
+            elif self.cfg.model_net in ['SPADE']:
+                dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
+                train_list = os.path.join(dataset_dir, 'train.txt')
+                if self.cfg.train_list is not None:
+                    train_list = self.cfg.train_list
+                train_reader = triplex_reader_creator(
+                    image_dir=dataset_dir,
+                    list_filename=train_list,
+                    shuffle=self.cfg.shuffle,
+                    batch_size=self.cfg.batch_size,
+                    mode="TRAIN")
+                reader_test = None
+                if self.cfg.run_test:
+                    test_list = os.path.join(dataset_dir, "test.txt")
+                    if self.cfg.test_list is not None:
+                        test_list = self.cfg.test_list
+                    test_reader = triplex_reader_creator(
                         image_dir=dataset_dir,
                         list_filename=test_list,
                         shuffle=False,
