@@ -37,3 +37,4 @@ from .densenet import DenseNet121, DenseNet161, DenseNet169, DenseNet201, DenseN
 from .squeezenet import SqueezeNet1_0, SqueezeNet1_1
 from .darknet import DarkNet53
 from .resnext101_wsl import ResNeXt101_32x8d_wsl, ResNeXt101_32x16d_wsl, ResNeXt101_32x32d_wsl, ResNeXt101_32x48d_wsl, Fix_ResNeXt101_32x48d_wsl
+from .efficientnet import EfficientNet, EfficientNetB0, EfficientNetB1, EfficientNetB2, EfficientNetB3, EfficientNetB4, EfficientNetB5, EfficientNetB6, EfficientNetB7
