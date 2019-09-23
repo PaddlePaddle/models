@@ -237,6 +237,9 @@ class triplex_reader_creator(reader_creator):
             batch_size=batch_size,
             mode=mode)
 
+    self.name2id = {}
+    self.id2name = {}
+
     def make_reader(self, args, return_name=False):
         print(self.image_dir, self.list_filename)
         print("files length:", len(self.lines))
@@ -248,11 +251,13 @@ class triplex_reader_creator(reader_creator):
             batch_out_name = []
             if self.shuffle:
                 np.random.shuffle(self.lines)
-            for line in self.lines:
+            for i, line in enumerate(self.lines):
                 files = line.strip('\n\r\t ').split('\t')
                 if len(files) != 3:
                     print("files is not equal to 3!")
                     sys.exit(-1)
+                self.name2id[os.path.basename(files[0])] = i
+                self.id2name[i] = os.path.basename(files[0])
                 #label image instance
                 img1 = Image.open(os.path.join(self.image_dir, files[0]))
                 img2 = Image.open(os.path.join(self.image_dir, files[
@@ -327,7 +332,7 @@ class triplex_reader_creator(reader_creator):
                 if not args.no_instance:
                     batch_out_3.append(img3)
                 if return_name:
-                    batch_out_name.append(os.path.basename(files[0]))
+                    batch_out_name.append(i)
                 if len(batch_out_1) == self.batch_size:
                     if return_name:
                         if not args.no_instance:
