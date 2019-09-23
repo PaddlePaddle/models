@@ -67,8 +67,8 @@ class KittiRCNNReader(KittiReader):
 
         self.npoints = npoints
         self.sample_id_list = []
-        # self.random_select = random_select
-        self.random_select = False # debug
+        self.random_select = random_select
+        # self.random_select = False # debug
 
         if split == 'train_aug':
             self.aug_label_dir = os.path.join(aug_scene_data_dir, 'training', 'aug_label')
@@ -313,10 +313,10 @@ class KittiRCNNReader(KittiReader):
             ret_pts_rect = pts_rect[choice, :]
             ret_pts_intensity = pts_intensity[choice] - 0.5  # translate intensity to [-0.5, 0.5]
         else:
-            # ret_pts_rect = pts_rect
-            ret_pts_rect = np.zeros((self.npoints, pts_rect.shape[1])).astype(pts_rect.dtype)
-            num_ = min(self.npoints, pts_rect.shape[0])
-            ret_pts_rect[:num_] = pts_rect[:num_] # debug
+            ret_pts_rect = pts_rect
+            # ret_pts_rect = np.zeros((self.npoints, pts_rect.shape[1])).astype(pts_rect.dtype)
+            # num_ = min(self.npoints, pts_rect.shape[0])
+            # ret_pts_rect[:num_] = pts_rect[:num_] # debug
             ret_pts_intensity = pts_intensity - 0.5
 
         pts_features = [ret_pts_intensity.reshape(-1, 1)]
