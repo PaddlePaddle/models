@@ -62,7 +62,7 @@ def parse_outputs(outputs, filter_key=None, extra_keys=None, prog=None):
                 v = fluid.framework._get_var(k, prog)
                 keys.append(k)
                 v.persistable = True
-                values.append(v)
+                values.append(v.name)
             except:
                 pass
     return keys, values

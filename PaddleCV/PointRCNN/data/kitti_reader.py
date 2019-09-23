@@ -31,7 +31,7 @@ __all__ = ["KittiReader"]
 
 class KittiReader(object):
     def __init__(self, data_dir, split='train'):
-        assert split in ['train', 'test'], "unknown split {}".format(split)
+        assert split in ['train', 'val', 'test'], "unknown split {}".format(split)
         self.split = split
         self.is_test = self.split == 'test'
         self.imageset_dir = os.path.join(data_dir, 'KITTI', 'object', 'testing' if self.is_test else 'training')

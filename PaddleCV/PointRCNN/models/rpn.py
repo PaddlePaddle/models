@@ -61,8 +61,9 @@ class RPN(object):
         # classification branch
         for i in range(self.cfg.RPN.CLS_FC.__len__()):
             cls_out = conv_bn(cls_out, self.cfg.RPN.CLS_FC[i], bn=self.cfg.RPN.USE_BN, name='rpn_cls_{}'.format(i))
-            # if i == 0 and self.cfg.RPN.DP_RATIO > 0:
-            #     cls_out = fluid.layers.dropout(cls_out, self.cfg.RPN.DP_RATIO)
+            if i == 0 and self.cfg.RPN.DP_RATIO > 0:
+                cls_out = fluid.layers.dropout(cls_out, self.cfg.RPN.DP_RATIO, dropout_implementation="upscale_in_train")
+                # cls_out = fluid.layers.dropout(cls_out, self.cfg.RPN.DP_RATIO)
         # cls_out = conv_bn(cls_out, 1, bn=False, act=None, name='rpn_cls_out')
         cls_out = fluid.layers.conv2d(cls_out,
                                       num_filters=1,
@@ -70,13 +71,9 @@ class RPN(object):
 				      stride=1,
 				      padding=0,
 				      dilation=1,
-                                      param_attr=ParamAttr(
-                                          initializer=Constant(1.376),
-                                          name='rpn_cls_out_conv_weights'),
+                                      param_attr=ParamAttr(name='rpn_cls_out_conv_weight'),
                                       bias_attr=ParamAttr(name='rpn_cls_out_conv_bias',
-                                                          initializer=Constant(6.213),
-                                                          # initializer=Constant(-np.log(99))
-                                                          ))
+                                                          initializer=Constant(-np.log(99))))
         cls_out = fluid.layers.squeeze(cls_out, axes=[1, 3])
         self.outputs['rpn_cls'] = cls_out
 
@@ -90,8 +87,9 @@ class RPN(object):
 
         for i in range(self.cfg.RPN.REG_FC.__len__()):
             reg_out = conv_bn(reg_out, self.cfg.RPN.REG_FC[i], bn=self.cfg.RPN.USE_BN, name='rpn_reg_{}'.format(i))
-            # if i == 0 and self.cfg.RPN.DP_RATIO > 0:
-            #     reg_out = fluid.layers.dropout(reg_out, self.cfg.RPN.DP_RATIO)
+            if i == 0 and self.cfg.RPN.DP_RATIO > 0:
+                reg_out = fluid.layers.dropout(reg_out, self.cfg.RPN.DP_RATIO, dropout_implementation="upscale_in_train")
+                # reg_out = fluid.layers.dropout(reg_out, self.cfg.RPN.DP_RATIO)
         # reg_out = conv_bn(reg_out, reg_channel, bn=False, act=None, name='rpn_reg_out')
         reg_out = fluid.layers.conv2d(reg_out,
                                       num_filters=reg_channel,
@@ -99,13 +97,9 @@ class RPN(object):
 				      stride=1,
 				      padding=0,
 				      dilation=1,
-                                      param_attr=ParamAttr(name='rpn_reg_out_conv_weights',
-                                                           # initializer=Normal(0, 0.001),
-                                                           initializer=Constant(7.392),
-                                                           ),
-                                      bias_attr=ParamAttr(
-                                          initializer=Constant(3.213),
-                                          name='rpn_reg_out_conv_bias'))
+                                      param_attr=ParamAttr(name='rpn_reg_out_conv_weight',
+                                                           initializer=Normal(0, 0.001),),
+                                      bias_attr=ParamAttr(name='rpn_reg_out_conv_bias'))
         reg_out = fluid.layers.squeeze(reg_out, axes=[3])
         reg_out = fluid.layers.transpose(reg_out, [0, 2, 1])
         self.outputs['rpn_reg'] = reg_out

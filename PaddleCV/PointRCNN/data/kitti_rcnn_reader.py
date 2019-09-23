@@ -37,6 +37,13 @@ __all__ = ["KittiRCNNReader"]
 logger = logging.getLogger(__name__)
 
 
+def has_empty(data):
+    for d in data:
+        if isinstance(d, np.ndarray) and len(d) == 0:
+            return True
+    return False
+
+
 class KittiRCNNReader(KittiReader):
     def __init__(self, data_dir, npoints=16384, split='train', classes='Car', mode='TRAIN',
                  random_select=True, rcnn_training_roi_dir=None, rcnn_training_feature_dir=None,
@@ -60,7 +67,8 @@ class KittiRCNNReader(KittiReader):
 
         self.npoints = npoints
         self.sample_id_list = []
-        self.random_select = random_select
+        # self.random_select = random_select
+        self.random_select = False # debug
 
         if split == 'train_aug':
             self.aug_label_dir = os.path.join(aug_scene_data_dir, 'training', 'aug_label')
@@ -305,7 +313,10 @@ class KittiRCNNReader(KittiReader):
             ret_pts_rect = pts_rect[choice, :]
             ret_pts_intensity = pts_intensity[choice] - 0.5  # translate intensity to [-0.5, 0.5]
         else:
-            ret_pts_rect = pts_rect
+            # ret_pts_rect = pts_rect
+            ret_pts_rect = np.zeros((self.npoints, pts_rect.shape[1])).astype(pts_rect.dtype)
+            num_ = min(self.npoints, pts_rect.shape[0])
+            ret_pts_rect[:num_] = pts_rect[:num_] # debug
             ret_pts_intensity = pts_intensity - 0.5
 
         pts_features = [ret_pts_intensity.reshape(-1, 1)]
@@ -588,10 +599,14 @@ class KittiRCNNReader(KittiReader):
         def reader():
             batch_out = []
             idxs = np.arange(self.__len__())
-            np.random.shuffle(idxs)
+            if self.mode == 'TRAIN':
+                np.random.shuffle(idxs)
             for idx in idxs:
                 sample_all = self.__getitem__(idx)
                 sample = [sample_all[f] for f in fields]
+                if self.mode != 'TRAIN' and has_empty(sample):
+                    logger.info("sample field empty")
+                    continue
                 batch_out.append(sample)
                 if len(batch_out) >= batch_size:
                     yield batch_out

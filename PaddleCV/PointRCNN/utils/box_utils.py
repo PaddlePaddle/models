@@ -217,3 +217,31 @@ def box_nms(boxes, scores, proposals, thresh, topk, nms_type='normal'):
         proposals = proposals[1:][iou < thresh]
     return nmsed_scores, nmsed_proposals
 
+
+def boxes_iou3d(boxes1, boxes2):
+    boxes1_bev = boxes3d_to_bev(boxes1)
+    boxes2_bev = boxes3d_to_bev(boxes2)
+
+    # bev overlap
+    overlaps_bev = np.zeros((boxes1_bev.shape[0], boxes2_bev.shape[0]))
+    for i in range(boxes1_bev.shape[0]):
+        overlaps_bev[i, :] = box_overlap_rotate(boxes1_bev[i], boxes2_bev)
+
+    # height overlap
+    boxes1_height_min = (boxes1[:, 1] - boxes1[:, 3]).reshape(-1, 1)
+    boxes1_height_max = boxes1[:, 1].reshape(-1, 1)
+    boxes2_height_min = (boxes2[:, 1] - boxes2[:, 3]).reshape(1, -1)
+    boxes2_height_max = boxes2[:, 1].reshape(1, -1)
+
+    max_of_min = np.maximum(boxes1_height_min, boxes2_height_min)
+    min_of_max = np.minimum(boxes1_height_max, boxes2_height_max)
+    overlaps_h = np.maximum(min_of_max - max_of_min, 0.)
+
+    # 3d iou
+    overlaps_3d = overlaps_bev * overlaps_h
+
+    vol_a = (boxes1[:, 3] * boxes1[:, 4] * boxes1[:, 5]).reshape(-1, 1)
+    vol_b = (boxes2[:, 3] * boxes2[:, 4] * boxes2[:, 5]).reshape(1, -1)
+    iou3d = overlaps_3d / np.maximum(vol_a + vol_b - overlaps_3d, 1e-7)
+
+    return iou3d

@@ -66,12 +66,13 @@ class PointRCNN(object):
             # self.rcnn = RCNN()
         self.outputs = self.rpn_outpus
         
-        if self.cfg.RPN.ENABLED:
-            self.outputs['rpn_loss'] = self.rpn.get_loss()[0]
-        if self.cfg.RCNN.ENABLED:
-            self.outputs['rcnn_loss'] = self.rcnn.get_loss()
-        self.outputs['loss'] = self.outputs.get('rpn_loss', 0.) \
-                             + self.outputs.get('rcnn_loss', 0.)
+        if self.mode == 'TRAIN':
+            if self.cfg.RPN.ENABLED:
+                self.outputs['rpn_loss'] = self.rpn.get_loss()[0]
+            if self.cfg.RCNN.ENABLED:
+                self.outputs['rcnn_loss'] = self.rcnn.get_loss()
+            self.outputs['loss'] = self.outputs.get('rpn_loss', 0.) \
+                                 + self.outputs.get('rcnn_loss', 0.)
 
     def get_feeds(self):
         return self.inputs.keys()

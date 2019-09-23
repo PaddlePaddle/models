@@ -127,7 +127,7 @@ def fc_bn(input,out_channels,bn=False,bn_momentum=0.1,act='relu',name=None):
         out = fluid.layers.relu(out)
     return out
 
-def MLP(features, out_channels_list, bn=True, bn_momentum=0.9, act='relu', name=None):
+def MLP(features, out_channels_list, bn=True, bn_momentum=0.05, act='relu', name=None):
     out = features
     for i, out_channels in enumerate(out_channels_list):
         out = conv_bn(out, out_channels, bn=bn, act=act, bn_momentum=bn_momentum, name=name + "_{}".format(i))
