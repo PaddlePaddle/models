@@ -30,18 +30,20 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 图像分类是根据图像的语义信息对不同类别图像进行区分，是计算机视觉中重要的基础问题，是物体检测、图像分割、物体跟踪、行为分析、人脸识别等其他高层视觉任务的基础，在许多领域都有着广泛的应用。如：安防领域的人脸识别和智能视频分析等，交通领域的交通场景识别，互联网领域基于内容的图像检索和相册自动归类，医学领域的图像识别等。
 
-| **模型名称**                                                 | **模型简介**                                                 | **数据集**          | **评估指标**    **top-1/top-5    accuracy(CV2)** |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------- | ------------------------------------------------ |
-| [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 首次在CNN中成功的应用了ReLU、Dropout和LRN，并使用GPU进行运算加速 | ImageNet-2012验证集 | 56.72%/79.17%                                    |
-| [VGG](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在AlexNet的基础上使用3*3小卷积核，增加网络深度，具有很好的泛化能力 | ImageNet-2012验证集 | 72.56%/90.93%                                    |
-| [GoogleNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在不增加计算负载的前提下增加了网络的深度和宽度，性能更加优越 | ImageNet-2012验证集 | 70.70%/89.66%                                    |
-| [ResNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | Residual Network，引入了新的残差结构，解决了随着网络加深，准确率下降的问题 | ImageNet-2012验证集 | 80.93%/95.33%                                    |
-| [ResNet-D](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 融合多种对ResNet改进策略，ResNet50_vd的top1准确率达到79.84% | ImageNet-2012验证集 | 79.84%/94.93%                                    |
-| [Inception-v4](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 将Inception模块与Residual Connection进行结合，通过ResNet的结构极大地加速训练并获得性能的提升 | ImageNet-2012验证集 | 80.77%/95.26%                                    |
-| [MobileNet   v1](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 将传统的卷积结构改造成两层卷积结构的网络，在基本不影响准确率的前提下大大减少计算时间，更适合移动端和嵌入式视觉应用 | ImageNet-2012验证集 | 70.99%/89.68%                                    |
-| [MobileNet   v2](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | MobileNet结构的微调，直接在thinner的bottleneck层上进行skip learning连接以及对bottleneck layer不进行ReLu非线性处理可取得更好的结果 | ImageNet-2012验证集 | 72.15%/90.65%                                    |
-| [SE_ResNeXt](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在ResNeXt 基础、上加入了SE（Sequeeze-and-Excitation）   模块，提高了识别准确率，在ILSVRC 2017 的分类项目中取得了第一名 | ImageNet-2012验证集 | 81.40%/95.48%                                    |
-| [ShuffleNet   v2](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | ECCV2018，轻量级CNN网络，在速度和准确度之间做了很好地平衡。在同等复杂度下，比ShuffleNet和MobileNetv2更准确，更适合移动端以及无人车领域 | ImageNet-2012验证集 | 70.03%/89.17%                                    |
+| **模型名称** | **模型简介** | **数据集** | **评估指标 top-1/top-5 accuracy** |
+| - | - | - | - |
+| [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 首次在CNN中成功的应用了ReLU、Dropout和LRN，并使用GPU进行运算加速 | ImageNet-2012验证集 | 56.72%/79.17% |
+| [VGG19](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在AlexNet的基础上使用3*3小卷积核，增加网络深度，具有很好的泛化能力 | ImageNet-2012验证集 | 72.56%/90.93% |
+| [GoogLeNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在不增加计算负载的前提下增加了网络的深度和宽度，性能更加优越 | ImageNet-2012验证集 | 70.70%/89.66% |
+| [ResNet50](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | Residual Network，引入了新的残差结构，解决了随着网络加深，准确率下降的问题 | ImageNet-2012验证集 | 76.50%/93.00% |
+| [ResNet200_vd](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 融合多种对ResNet改进策略，ResNet200_vd的top1准确率达到80.93% | ImageNet-2012验证集 | 80.93%/95.33% |
+| [Inceptionv4](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 将Inception模块与Residual Connection进行结合，通过ResNet的结构极大地加速训练并获得性能的提升 | ImageNet-2012验证集 | 80.77%/95.26% |
+| [MobileNetV1](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 将传统的卷积结构改造成两层卷积结构的网络，在基本不影响准确率的前提下大大减少计算时间，更适合移动端和嵌入式视觉应用 | ImageNet-2012验证集 | 70.99%/89.68% |
+| [MobileNetV2](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | MobileNet结构的微调，直接在thinner的bottleneck层上进行skip learning连接以及对bottleneck layer不进行ReLu非线性处理可取得更好的结果 | ImageNet-2012验证集 | 72.15%/90.65% |
+| [SENet154_vd](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | 在ResNeXt 基础、上加入了SE（Sequeeze-and-Excitation）模块，提高了识别准确率，在ILSVRC 2017 的分类项目中取得了第一名 | ImageNet-2012验证集 | 81.40%/95.48% |
+| [ShuffleNetV2](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification) | ECCV2018，轻量级CNN网络，在速度和准确度之间做了很好地平衡。在同等复杂度下，比ShuffleNet和MobileNetv2更准确，更适合移动端以及无人车领域 | ImageNet-2012验证集 | 70.03%/89.17% |
+
+更多图像分类模型请参考[Image Classification](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification)
 
 ### 目标检测
 
@@ -122,6 +124,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [Attention   Cluster](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | CVPR'18提出的视频多模态特征注意力聚簇融合方法 | Youtube-8M                 | GAP   = 84% |
 | [NeXtVlad](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2nd-Youtube-8M比赛第3名的模型 | Youtube-8M                 | GAP   = 87% |
 | [C-TCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2018年ActivityNet夺冠方案 | ActivityNet1.3 | MAP=31%    |
+| [BSN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 为视频动作定位问题提供高效的proposal生成方法 | ActivityNet1.3 | AUC=66.64%    |
+| [BMN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2019年ActivityNet夺冠方案 | ActivityNet1.3 | AUC=67.19%    |
 
 ## PaddleNLP
 
@@ -178,7 +182,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 阅读理解
 
-[MRC(Machine Reading Comprehension)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/reading_comprehension)机器阅读理解(MRC)是自然语言处理(NLP)中的关键任务之一，开源的DuReader升级了经典的阅读理解BiDAF模型，去掉了char级别的embedding，在预测层中使用了[pointer network](https://arxiv.org/abs/1506.03134)，并且参考了[R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)中的一些网络结构，效果上有了大幅提升
+[MRC(Machine Reading Comprehension)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DuReader)机器阅读理解(MRC)是自然语言处理(NLP)中的关键任务之一，开源的DuReader升级了经典的阅读理解BiDAF模型，去掉了char级别的embedding，在预测层中使用了[pointer network](https://arxiv.org/abs/1506.03134)，并且参考了[R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)中的一些网络结构，效果上有了大幅提升
 
 | **Model**                                                | **Dev ROUGE-L** | **Test ROUGE-L** |
 | -------------------------------------------------------- | --------------- | ---------------- |
@@ -309,7 +313,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### DAM
 
-[深度注意力机制模型(Deep Attention Maching)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit/deep_attention_matching)是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。
+[深度注意力机制模型(Deep Attention Maching)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DAM)是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。
 
 |      | Ubuntu Corpus | Douban Conversation Corpus |       |       |       |       |       |       |       |       |
 | ---- | ------------- | -------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |

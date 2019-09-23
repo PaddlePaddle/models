@@ -1,2 +1,0 @@
-02065c4adec24860c52b0192a3615d8d  dureader_machine_reading-bidaf-1.0.0.tar.gz
-a6b4678ccf319a0c8812b80aed71c24b  dureader_machine_reading-dataset-2.0.0.tar.gz
