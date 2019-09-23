@@ -227,7 +227,6 @@ def calc_iou_recall(rets, thresh_list):
 	rpn_iou = float(correct) / max(float(union), 1.0)
 	rpn_iou_sum += rpn_iou
         logger.info('sample_id {} rpn_iou {} correct {} union {} fg_mask {}'.format(sample_id, rpn_iou, correct, union, np.sum(fg_mask)))
-    logger.info("batch end")
 
     return len(gt_boxes3d_num), gt_box_num, rpn_iou_sum, recalled_bbox_list
 
