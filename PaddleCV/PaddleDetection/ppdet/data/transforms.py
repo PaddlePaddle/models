@@ -435,6 +435,7 @@ class NormalizeLabels(object):
             if 'gt_score' in sample:
                 sample['gt_score'] = np.zeros(
                     [self.num_instances, 1], dtype=np.float32)
+            return sample
 
         if self.normalize_box:
             w = sample['width']
