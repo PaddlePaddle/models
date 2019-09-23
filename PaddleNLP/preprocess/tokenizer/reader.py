@@ -1,9 +1,23 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 The file_reader converts raw corpus to input.
 """
 import os
 import __future__
 import io
+
 
 def file_reader(file_dir,
                 word2id_dict,
@@ -15,6 +29,7 @@ def file_reader(file_dir,
     """
     word_dict_len = max(map(int, word2id_dict.values())) + 1
     label_dict_len = max(map(int, label2id_dict.values())) + 1
+
     def reader():
         """
         the data generator
@@ -24,7 +39,8 @@ def file_reader(file_dir,
             for filename in files:
                 if not filename.startswith(filename_feature):
                     continue
-                for line in io.open(os.path.join(root, filename), 'r', encoding='utf8'):
+                for line in io.open(
+                        os.path.join(root, filename), 'r', encoding='utf8'):
                     index += 1
                     bad_line = False
                     line = line.strip("\n")
@@ -52,8 +68,9 @@ def file_reader(file_dir,
                         else:
                             target_idx.append(int(label2id_dict["O"]))
                     if len(word_idx) != len(target_idx):
-                        continue             
+                        continue
                     yield word_idx, target_idx
+
     return reader
 
 
@@ -68,6 +85,7 @@ def test_reader(file_dir,
     #print (word2id_dict)
     word_dict_len = max(map(int, word2id_dict.values())) + 1
     label_dict_len = max(map(int, label2id_dict.values())) + 1
+
     #print word_dict_len
     #print label_dict_len
     def reader():
@@ -94,6 +112,7 @@ def test_reader(file_dir,
                 else:
                     word_idx.append(int(word2id_dict["OOV"]))
             yield word_idx, words
+
     return reader
 
 

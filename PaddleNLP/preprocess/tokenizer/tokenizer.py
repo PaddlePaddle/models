@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 This module provides wordseg tools
 """
@@ -11,11 +24,12 @@ import time
 import sys
 import io
 
-if sys.version_info > (3,):
+if sys.version_info > (3, ):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 else:
     reload(sys)
     sys.setdefaultencoding("utf8")
+
 
 def parse_args():
     """
@@ -26,32 +40,27 @@ def parse_args():
         '--batch_size',
         type=int,
         default=5,
-        help='The size of a batch. (default: %(default)d)'
-    )
+        help='The size of a batch. (default: %(default)d)')
     parser.add_argument(
         '--model_path',
         type=str,
         default='./conf/model',
-        help='A path to the model. (default: %(default)s)'
-    )
+        help='A path to the model. (default: %(default)s)')
     parser.add_argument(
         '--test_data_dir',
         type=str,
         default='./data/test_data',
-        help='A directory with test data files. (default: %(default)s)'
-    )
+        help='A directory with test data files. (default: %(default)s)')
     parser.add_argument(
         "--word_dict_path",
         type=str,
         default="./conf/word.dic",
-        help="The path of the word dictionary. (default: %(default)s)"
-    )
+        help="The path of the word dictionary. (default: %(default)s)")
     parser.add_argument(
         "--label_dict_path",
         type=str,
         default="./conf/tag.dic",
-        help="The path of the label dictionary. (default: %(default)s)"
-    )
+        help="The path of the label dictionary. (default: %(default)s)")
     parser.add_argument(
         "--word_rep_dict_path",
         type=str,
@@ -104,17 +113,15 @@ def infer(args):
     Tokenize
     """
     id2word_dict = reader.load_dict(args.word_dict_path)
-    word2id_dict = reader.load_reverse_dict(args.word_dict_path) 
+    word2id_dict = reader.load_reverse_dict(args.word_dict_path)
 
     id2label_dict = reader.load_dict(args.label_dict_path)
     label2id_dict = reader.load_reverse_dict(args.label_dict_path)
     q2b_dict = reader.load_dict(args.word_rep_dict_path)
     test_data = paddle.batch(
-                    reader.test_reader(args.test_data_dir,
-                        word2id_dict,
-                        label2id_dict,
-                        q2b_dict),
-                    batch_size = args.batch_size)
+        reader.test_reader(args.test_data_dir, word2id_dict, label2id_dict,
+                           q2b_dict),
+        batch_size=args.batch_size)
     place = fluid.CPUPlace()
     #place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
@@ -130,9 +137,9 @@ def infer(args):
             #print(word_idx)
             word_list = [x[1] for x in data]
             (crf_decode, ) = exe.run(inference_program,
-                                 feed={"word":word_idx},
-                                 fetch_list=fetch_targets,
-                                 return_numpy=False)
+                                     feed={"word": word_idx},
+                                     fetch_list=fetch_targets,
+                                     return_numpy=False)
             lod_info = (crf_decode.lod())[0]
             np_data = np.array(crf_decode)
             assert len(data) == len(lod_info) - 1
@@ -145,7 +152,7 @@ def infer(args):
                 cur_full_tag = ""
                 words = word_list[sen_index]
                 for tag_index in range(lod_info[sen_index],
-                                        lod_info[sen_index + 1]):
+                                       lod_info[sen_index + 1]):
                     cur_word = words[word_index]
                     cur_tag = id2label_dict[str(np_data[tag_index][0])]
                     if cur_tag.endswith("-B") or cur_tag.endswith("O"):
