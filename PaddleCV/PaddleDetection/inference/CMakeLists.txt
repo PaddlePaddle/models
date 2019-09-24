@@ -228,23 +228,23 @@ endif()
 # set(CMAKE_CXX_FLAGS "-g ${CMAKE_CXX_FLAGS}")
 
 SET(PADDLESEG_INFERENCE_SRCS  preprocessor/preprocessor.cpp 
-    preprocessor/preprocessor_seg.cpp predictor/seg_predictor.cpp 
-    preprocessor/preprocessor_classify.cpp predictor/classify_predictor.cpp 
+#    preprocessor/preprocessor_seg.cpp predictor/seg_predictor.cpp 
+#    preprocessor/preprocessor_classify.cpp predictor/classify_predictor.cpp 
     preprocessor/preprocessor_detection.cpp predictor/detection_predictor.cpp)
 
 ADD_LIBRARY(libpaddleseg_inference STATIC ${PADDLESEG_INFERENCE_SRCS})
 target_link_libraries(libpaddleseg_inference ${DEPS})
 
-add_executable(seg_demo seg_demo.cpp)
-add_executable(classify_demo classify_demo.cpp)
+#add_executable(seg_demo seg_demo.cpp)
+#add_executable(classify_demo classify_demo.cpp)
 add_executable(detection_demo detection_demo.cpp)
 
 ADD_DEPENDENCIES(libpaddleseg_inference ext-yaml-cpp)
-ADD_DEPENDENCIES(seg_demo ext-yaml-cpp libpaddleseg_inference)
-ADD_DEPENDENCIES(classify_demo ext-yaml-cpp libpaddleseg_inference)
+#ADD_DEPENDENCIES(seg_demo ext-yaml-cpp libpaddleseg_inference)
+#ADD_DEPENDENCIES(classify_demo ext-yaml-cpp libpaddleseg_inference)
 ADD_DEPENDENCIES(detection_demo ext-yaml-cpp libpaddleseg_inference)
-target_link_libraries(seg_demo ${DEPS} libpaddleseg_inference)
-target_link_libraries(classify_demo ${DEPS} libpaddleseg_inference)
+#target_link_libraries(seg_demo ${DEPS} libpaddleseg_inference)
+#target_link_libraries(classify_demo ${DEPS} libpaddleseg_inference)
 target_link_libraries(detection_demo ${DEPS} libpaddleseg_inference)
 
 if (WIN32)
