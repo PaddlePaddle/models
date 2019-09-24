@@ -68,13 +68,15 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
         help=help + ' Default: %(default)s.',
         **kwargs)
 
+
 def fmt_time():
     """ get formatted time for now
     """
     now_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     return now_str
 
-def recall_topk(fea, lab, k = 1):
+
+def recall_topk(fea, lab, k=1):
     def _recall_topk(fea, lab):
         if fea.shape[0] == 0:
             return 0
@@ -82,10 +84,10 @@ def recall_topk(fea, lab, k = 1):
         fea = fea.reshape(fea.shape[0], -1)
         n = np.sqrt(np.sum(fea**2, 1)).reshape(-1, 1)
         fea = fea / n
-        a = np.sum(fea ** 2, 1).reshape(-1, 1)
+        a = np.sum(fea**2, 1).reshape(-1, 1)
         b = a.T
         ab = np.dot(fea, fea.T)
-        d = a + b - 2*ab
+        d = a + b - 2 * ab
         d = d + np.eye(len(fea)) * 1e8
         sorted_index = np.argsort(d, 1)
         res = 0
@@ -97,14 +99,15 @@ def recall_topk(fea, lab, k = 1):
                     break
         return res
 
-    sep_len=1600
+    sep_len = 1600
     res = 0
     for i in range(int(lab.shape[0] / sep_len) + 1):
-        sub_fea = fea[i*sep_len: (i+1) * sep_len]
-        sub_lab = lab[i*sep_len: (i+1) * sep_len]
+        sub_fea = fea[i * sep_len:(i + 1) * sep_len]
+        sub_lab = lab[i * sep_len:(i + 1) * sep_len]
         res += _recall_topk(sub_fea, sub_lab)
 
     return res / lab.shape[0]
+
 
 def get_gpu_num():
     visibledevice = os.getenv('CUDA_VISIBLE_DEVICES')
@@ -112,7 +115,8 @@ def get_gpu_num():
         devicenum = len(visibledevice.split(','))
     else:
         devicenum = subprocess.check_output(
-            [str.encode('nvidia-smi'), str.encode('-L')]).decode('utf-8').count('\n')
+            [str.encode('nvidia-smi'), str.encode('-L')]).decode('utf-8').count(
+                '\n')
     return devicenum
 
 def check_cuda(use_cuda, err = \
@@ -125,4 +129,3 @@ def check_cuda(use_cuda, err = \
             sys.exit(1)
     except Exception as e:
         pass
-
