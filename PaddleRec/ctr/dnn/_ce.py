@@ -7,34 +7,39 @@ from kpi import CostKpi
 from kpi import DurationKpi
 from kpi import AccKpi
 
-
-each_pass_duration_cpu1_thread1_kpi = DurationKpi('each_pass_duration_cpu1_thread1', 0.08, 0, actived=True)
+each_pass_duration_cpu1_thread1_kpi = DurationKpi(
+    'each_pass_duration_cpu1_thread1', 0.08, 0, actived=True)
 train_loss_cpu1_thread1_kpi = CostKpi('train_loss_cpu1_thread1', 0.08, 0)
 train_auc_val_cpu1_thread1_kpi = AccKpi('train_auc_val_cpu1_thread1', 0.08, 0)
-train_batch_auc_val_cpu1_thread1_kpi = AccKpi('train_batch_auc_val_cpu1_thread1', 0.08, 0)
-each_pass_duration_cpu1_thread8_kpi = DurationKpi('each_pass_duration_cpu1_thread8', 0.08, 0, actived=True)
+train_batch_auc_val_cpu1_thread1_kpi = AccKpi(
+    'train_batch_auc_val_cpu1_thread1', 0.08, 0)
+each_pass_duration_cpu1_thread8_kpi = DurationKpi(
+    'each_pass_duration_cpu1_thread8', 0.08, 0, actived=True)
 train_loss_cpu1_thread8_kpi = CostKpi('train_loss_cpu1_thread8', 0.08, 0)
 train_auc_val_cpu1_thread8_kpi = AccKpi('train_auc_val_cpu1_thread8', 0.08, 0)
-train_batch_auc_val_cpu1_thread8_kpi = AccKpi('train_batch_auc_val_cpu1_thread8', 0.08, 0)
-each_pass_duration_cpu8_thread8_kpi = DurationKpi('each_pass_duration_cpu8_thread8', 0.08, 0, actived=True)
+train_batch_auc_val_cpu1_thread8_kpi = AccKpi(
+    'train_batch_auc_val_cpu1_thread8', 0.08, 0)
+each_pass_duration_cpu8_thread8_kpi = DurationKpi(
+    'each_pass_duration_cpu8_thread8', 0.08, 0, actived=True)
 train_loss_cpu8_thread8_kpi = CostKpi('train_loss_cpu8_thread8', 0.08, 0)
 train_auc_val_cpu8_thread8_kpi = AccKpi('train_auc_val_cpu8_thread8', 0.08, 0)
-train_batch_auc_val_cpu8_thread8_kpi = AccKpi('train_batch_auc_val_cpu8_thread8', 0.08, 0)
+train_batch_auc_val_cpu8_thread8_kpi = AccKpi(
+    'train_batch_auc_val_cpu8_thread8', 0.08, 0)
 
 tracking_kpis = [
-        each_pass_duration_cpu1_thread1_kpi,
-        train_loss_cpu1_thread1_kpi,
-        train_auc_val_cpu1_thread1_kpi,
-        train_batch_auc_val_cpu1_thread1_kpi,
-        each_pass_duration_cpu1_thread8_kpi,
-        train_loss_cpu1_thread8_kpi,
-        train_auc_val_cpu1_thread8_kpi,
-        train_batch_auc_val_cpu1_thread8_kpi,
-        each_pass_duration_cpu8_thread8_kpi,
-        train_loss_cpu8_thread8_kpi,
-        train_auc_val_cpu8_thread8_kpi,
-        train_batch_auc_val_cpu8_thread8_kpi,
-        ]
+    each_pass_duration_cpu1_thread1_kpi,
+    train_loss_cpu1_thread1_kpi,
+    train_auc_val_cpu1_thread1_kpi,
+    train_batch_auc_val_cpu1_thread1_kpi,
+    each_pass_duration_cpu1_thread8_kpi,
+    train_loss_cpu1_thread8_kpi,
+    train_auc_val_cpu1_thread8_kpi,
+    train_batch_auc_val_cpu1_thread8_kpi,
+    each_pass_duration_cpu8_thread8_kpi,
+    train_loss_cpu8_thread8_kpi,
+    train_auc_val_cpu8_thread8_kpi,
+    train_batch_auc_val_cpu8_thread8_kpi,
+]
 
 
 def parse_log(log):

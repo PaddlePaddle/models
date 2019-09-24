@@ -69,7 +69,7 @@ def printable_text(text):
 def load_vocab(vocab_file):
     """Loads a vocabulary file into a dictionary."""
     vocab = collections.OrderedDict()
-    fin = open(vocab_file)
+    fin = open(vocab_file, encoding="utf8")
     for num, line in enumerate(fin):
         items = convert_to_unicode(line.strip()).split("\t")
         if len(items) > 2:

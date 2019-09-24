@@ -23,11 +23,11 @@ import reader
 from get_ops_from_program import get_ops_from_program
 
 total_images = 1281167
-lr = 0.1
-num_epochs = 240
+lr = 0.016
+num_epochs = 350
 batch_size = 512
-lr_strategy = "cosine_decay"
-l2_decay = 4e-5
+lr_strategy = "exponential_decay_with_RMSProp"
+l2_decay = 1e-5
 momentum_rate = 0.9
 image_shape = [3, 224, 224]
 class_dim = 1000

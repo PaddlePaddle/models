@@ -13,8 +13,7 @@ import logging
 
 import paddle.fluid.contrib.utils.hdfs_utils as hdfs_utils
 
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("cloud")
 logger.setLevel(logging.INFO)
 
@@ -93,7 +92,13 @@ def download():
     local_train_data_dir = os.getenv("TRAIN_DATA_LOCAL", "data")
     hdfs_train_data_dir = os.getenv("TRAIN_DATA_HDFS", "")
 
-    downloads = hdfs_utils.multi_download(client, hdfs_train_data_dir, local_train_data_dir, 0, 1, multi_processes=1)
+    downloads = hdfs_utils.multi_download(
+        client,
+        hdfs_train_data_dir,
+        local_train_data_dir,
+        0,
+        1,
+        multi_processes=1)
 
     print(downloads)
     for d in downloads:
@@ -111,7 +116,8 @@ def download():
 def env_declar():
     logging.info("********  Rename Cluster Env to PaddleFluid Env ********")
 
-    if os.environ["TRAINING_ROLE"] == "PSERVER" or os.environ["PADDLE_IS_LOCAL"] == "0":
+    if os.environ["TRAINING_ROLE"] == "PSERVER" or os.environ[
+            "PADDLE_IS_LOCAL"] == "0":
         os.environ["PADDLE_TRAINING_ROLE"] = os.environ["TRAINING_ROLE"]
         os.environ["PADDLE_PSERVER_PORT"] = os.environ["PADDLE_PORT"]
         os.environ["PADDLE_PSERVER_IPS"] = os.environ["PADDLE_PSERVERS"]
@@ -137,7 +143,9 @@ if __name__ == '__main__':
         if os.environ["PADDLE_TRAINING_ROLE"] == "PSERVER":
             logging.info("PSERVER do not need to download datas")
         else:
-            logging.info("NEED_CUSTOM_DOWNLOAD is True, will download train data with hdfs_utils")
+            logging.info(
+                "NEED_CUSTOM_DOWNLOAD is True, will download train data with hdfs_utils"
+            )
             download()
 
     run()

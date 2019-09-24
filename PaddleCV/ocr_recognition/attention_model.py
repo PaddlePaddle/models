@@ -325,7 +325,7 @@ def attention_infer(images, num_classes, use_cudnn=True):
             topk_indices,
             accu_scores,
             beam_size,
-            1,  # end_id
+            eos,  # end_id
             #level=0
         )
 
