@@ -106,7 +106,12 @@ def prune_feed_vars(feeded_var_names, target_vars, prog):
     """
     exist_var_names = []
     prog = prog.clone()
-    prog = prog._prune(feeded_var_names, targets=target_vars)
+    try:
+        prog = prog._prune(feeded_var_names, targets=target_vars)
+    except:
+        logger.warning('_prune interface has updated after PaddlePaddle 1.6, '
+                       'previous inferface is used now.')
+        prog = prog._prune(targets=target_vars)
     global_block = prog.global_block()
     for name in feeded_var_names:
         try:
