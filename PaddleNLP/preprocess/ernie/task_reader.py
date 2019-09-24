@@ -66,7 +66,7 @@ class BaseReader(object):
 
     def _read_tsv(self, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with open(input_file, "r") as f:
+        with open(input_file, "r", encoding="utf8") as f:
             reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
             headers = next(reader)
             Example = namedtuple('Example', headers)
