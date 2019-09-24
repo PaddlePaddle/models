@@ -12,10 +12,10 @@
 
 ### Step1: 下载代码
 
-1. `mkdir -p /root/projects/ && cd /root/projects`
-2. `git clone https://github.com/sjtubinlong/PaddleSolution.git`
+1. `mkdir -p /root/projects/paddle_models && cd /root/projects/paddle_models`
+2. `git clone https://github.com/joey12300/models.git`
 
-`C++`预测代码在`/root/projects/PaddleSolution/deploy` 目录，该目录不依赖任何`PaddleSolution`下其他目录。
+`C++`预测代码在`/root/projects/paddle_models/models/PaddleCV/PaddleDetection/inference` 目录，该目录不依赖任何`PaddleDetection`下其他目录。
 
 
 ### Step2: 下载PaddlePaddle C++ 预测库 fluid_inference
@@ -65,7 +65,8 @@ make install
 执行下列操作时，**注意**把对应的参数改为你的上述依赖库实际路径：
 
 ```shell
-cd /root/projects/PaddleSolution/deploy
+cd /root/projects/paddle_models/models/PaddleCV/PaddleDetection/inference
+
 mkdir build && cd build
 cmake .. -DWITH_GPU=ON  -DPADDLE_DIR=/root/projects/fluid_inference -DCUDA_LIB=/usr/local/cuda/lib64/ -DOPENCV_DIR=/root/projects/opencv3/ -DCUDNN_LIB=/usr/local/cuda/lib64/
 make
@@ -77,7 +78,7 @@ make
 执行命令：
 
 ```
-./seg_demo --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
+./detection_demo --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
 ```
 
 更详细说明请参考ReadMe文档： [预测和可视化部分](../README.md)

@@ -15,10 +15,10 @@ Windows 平台下，我们使用`Visual Studio 2015` 和 `Visual Studio 2019 Com
 
 ### Step1: 下载代码
 
-1. 点击下载源代码：[下载地址](https://github.com/sjtubinlong/PaddleSolution/archive/master.zip)
-2. 解压，解压后目录重命名为`PaddleSolution`
+1. 点击下载源代码：[下载地址](https://github.com/joey12300/models/archive/develop.zip)
+2. 解压，解压后目录重命名为`paddle_models`
 
-以下代码目录路径为`D:\projects\PaddleSolution` 为例。
+以下代码目录路径为`D:\projects\paddle_models` 为例。
 
 
 ### Step2: 下载PaddlePaddle C++ 预测库 fluid_inference
@@ -89,13 +89,13 @@ fluid_inference
 上述`Visual Studio 2019`编译产出的可执行文件在`out\build\x64-Release`目录下，打开`cmd`，并切换到该目录：
 
 ```
-cd D:\projects\PaddleSolution\deploy\out\build\x64-Release
+cd D:\projects\paddle_models\models\PaddleCV\PaddleDetection\inference\build\x64-Release
 ```
 
 之后执行命令：
 
 ```
-seg_demo.exe --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
+detection_demo.exe --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
 ```
 
 更详细说明请参考ReadMe文档： [预测和可视化部分](../README.md)
