@@ -1,7 +1,4 @@
 architecture: SSD
-train_feed: SSDTrainFeed
-eval_feed: SSDEvalFeed
-test_feed: SSDTestFeed
 pretrain_weights: https://paddlemodels.bj.bcebos.com/object_detection/ssd_mobilenet_v1_coco_pretrained.tar
 use_gpu: true
 max_iters: 28000
@@ -56,27 +53,119 @@ OptimizerBuilder:
     factor: 0.00005
     type: L2
 
-SSDTrainFeed:
+TrainDataLoader:
   batch_size: 32
-  use_process: true
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  num_workers: 4
+  buffer_size: 4
   dataset:
-    dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: true
+    type: voc
+    root_dir: /root/data/VOCdevkit/VOC_all/
+    subset: train
+  sampler:
+    shuffle: true
+    sync_seed_schedule: true
+  feed_vars:
+  - image
+  - name: gt_box
+    lod_level: 1
+  - name: gt_label
+    lod_level: 1
+  extra_vars:
+  - id
+  sample_transforms:
+  - !RandomExpand
+    ratio: 4.0
+    prob: 0.5
+    fill_value: [127, 127, 127]
+  - !RandomCrop
+    thresholds: [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
+    aspect_ratio: [0.5, 2.0]
+    scaling: [0.3, 1.0]
+    num_attempts: 50
+    allow_no_crop: true
+  - !RandomFlip
+    prob: 0.5
+  - !Resize
+    random_shape: [300]
+    interp: 1
+  - !ColorDistort
+    brightness: [0.875, 1.125, 0.5]
+    contrast: [0.5, 1.5, 0.5]
+    saturation: [0.5, 1.5, 0.5]
+    hue: [-18, 18, 0.5]
+  - !NormalizePermute
+    mean: [127.5, 127.5, 127.5]
+    std: [127.502231, 127.502231, 127.502231]
+  - !NormalizeLabels
+    normalize_box: true
 
-SSDEvalFeed:
+EvalDataLoader:
   batch_size: 64
-  use_process: true
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  num_workers: 4
+  buffer_size: 4
   dataset:
-    dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: true
-  drop_last: false
+    type: voc
+    root_dir: /root/data/VOCdevkit/VOC_all/
+    subset: val
+  sampler:
+    shuffle: false
+    pad_batch: false
+    world_size: 1
+  feed_vars:
+  - image
+  - name: gt_box
+    lod_level: 1
+  - name: gt_label
+    lod_level: 1
+  - name: is_difficult
+    lod_level: 1
+  - name: im_shape
+    fields:
+    - orig_height
+    - orig_width
+  extra_vars:
+  - id
+  sample_transforms:
+  - !Resize
+    random_shape: [300]
+    interp: 1
+  - !NormalizePermute
+    mean: [127.5, 127.5, 127.5]
+    std: [127.502231, 127.502231, 127.502231]
 
-SSDTestFeed:
+TestDataLoader:
   batch_size: 1
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  num_workers: 4
+  buffer_size: 8
   dataset:
-    use_default_label: true
-  drop_last: false
+    type: folder
+    root_dir: /root/data
+  sampler:
+    shuffle: false
+    pad_batch: false
+  feed_vars:
+  - image
+  - name: im_shape
+    fields:
+    - orig_height
+    - orig_width
+  extra_vars:
+  - file
+  sample_transforms:
+  - !Resize
+    random_shape: [300]
+    interp: 1
+  - !NormalizePermute
+    mean: [127.5, 127.5, 127.5]
+    std: [127.502231, 127.502231, 127.502231]
