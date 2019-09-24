@@ -97,7 +97,7 @@ def recall_topk(fea, lab, k = 1):
                     break
         return res
 
-    sep_len=1000
+    sep_len=1600
     res = 0
     for i in range(int(lab.shape[0] / sep_len) + 1):
         sub_fea = fea[i*sep_len: (i+1) * sep_len]
