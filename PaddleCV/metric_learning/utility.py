@@ -75,25 +75,36 @@ def fmt_time():
     return now_str
 
 def recall_topk(fea, lab, k = 1):
-    fea = np.array(fea)
-    fea = fea.reshape(fea.shape[0], -1)
-    n = np.sqrt(np.sum(fea**2, 1)).reshape(-1, 1)
-    fea = fea / n
-    a = np.sum(fea ** 2, 1).reshape(-1, 1)
-    b = a.T
-    ab = np.dot(fea, fea.T)
-    d = a + b - 2*ab
-    d = d + np.eye(len(fea)) * 1e8
-    sorted_index = np.argsort(d, 1)
+    def _recall_topk(fea, lab):
+        if fea.shape[0] == 0:
+            return 0
+        fea = np.array(fea)
+        fea = fea.reshape(fea.shape[0], -1)
+        n = np.sqrt(np.sum(fea**2, 1)).reshape(-1, 1)
+        fea = fea / n
+        a = np.sum(fea ** 2, 1).reshape(-1, 1)
+        b = a.T
+        ab = np.dot(fea, fea.T)
+        d = a + b - 2*ab
+        d = d + np.eye(len(fea)) * 1e8
+        sorted_index = np.argsort(d, 1)
+        res = 0
+        for i in range(len(fea)):
+            for j in range(k):
+                pred = lab[sorted_index[i][j]]
+                if lab[i] == pred:
+                    res += 1.0
+                    break
+        return res
+
+    sep_len=1000
     res = 0
-    for i in range(len(fea)):
-        for j in range(k):
-            pred = lab[sorted_index[i][j]]
-            if lab[i] == pred:
-                res += 1.0
-                break
-    res = res / len(fea)
-    return res
+    for i in range(int(lab.shape[0] / sep_len) + 1):
+        sub_fea = fea[i*sep_len: (i+1) * sep_len]
+        sub_lab = lab[i*sep_len: (i+1) * sep_len]
+        res += _recall_topk(sub_fea, sub_lab)
+
+    return res / lab.shape[0]
 
 def get_gpu_num():
     visibledevice = os.getenv('CUDA_VISIBLE_DEVICES')
