@@ -1,0 +1,19 @@
+DEPLOY:
+    USE_GPU: 1
+    MODEL_PATH: "/root/projects/models/deeplabv3p_xception65_cityscapes"
+    MODEL_NAME: "unet"
+    MODEL_FILENAME: "__model__"
+    PARAMS_FILENAME: "__params__"
+    RESIZE_TYPE: "UNPADDING"
+    EVAL_CROP_SIZE: (2049, 1025)
+    TARGET_SHORT_SIZE: 1
+    MEAN: [127.5, 127.5, 127.5]
+    STD: [127.5, 127.5, 127.5]  
+    IMAGE_TYPE: "rgb"
+    NUM_CLASSES: 19
+    CHANNELS : 3
+    PRE_PROCESSOR: "SegPreProcessor"
+    PREDICTOR_MODE: "NATIVE"
+    BATCH_SIZE : 1
+    RESIZE_MAX_SIZE: -1
+    CROP_SIZE: (2049, 1025)
