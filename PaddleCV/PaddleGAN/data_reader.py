@@ -237,8 +237,8 @@ class triplex_reader_creator(reader_creator):
             batch_size=batch_size,
             mode=mode)
 
-    self.name2id = {}
-    self.id2name = {}
+        self.name2id = {}
+        self.id2name = {}
 
     def make_reader(self, args, return_name=False):
         print(self.image_dir, self.list_filename)
@@ -376,13 +376,18 @@ class celeba_reader_creator(reader_creator):
             self.batch_size = args.batch_size
             self.shuffle = args.shuffle
             lines = lines[2:train_end]
-        else:
+        elif self.mode == 'TEST':
             self.batch_size = args.n_samples
             self.shuffle = False
-            if self.mode == "TEST":
-                lines = lines[train_end:test_end]
-            else:
-                lines = lines[test_end:]
+            lines = lines[train_end:test_end]
+        elif self.mode == 'VAL':
+            self.batch_size = args.n_samples
+            self.shuffle = False
+            lines = lines[2:]
+        else:
+            raise NotImplementedError(
+                "Wrong Reader MODE: {}, mode must in [TRAIN|TEST|VAL]".format(
+                    self.mode))
 
         self.images = []
         attr_names = args.selected_attrs.split(',')
