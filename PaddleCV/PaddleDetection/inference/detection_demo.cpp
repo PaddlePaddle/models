@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     }
 
     // 2. get all the images with extension '.jpeg' at input_dir
-    auto imgs = PaddleSolution::utils::get_directory_images(FLAGS_input_dir, ".jpeg|.jpg|.JPEG|.JPG");
+    auto imgs = PaddleSolution::utils::get_directory_images(FLAGS_input_dir, ".jpeg|.jpg|.JPEG|.JPG|.bmp|.BMP|.png|.PNG");
 
     // 3. predict
     predictor.predict(imgs);
