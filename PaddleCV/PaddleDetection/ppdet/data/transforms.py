@@ -199,7 +199,9 @@ class ColorDistort(object):
 
 
 class NormalizePermute(object):
-    def __init__(self, mean=[0.485, 0.456, 0.406], std=[1, 1, 1]):
+    def __init__(self,
+                 mean=[123.675, 116.28, 103.53],
+                 std=[58.395, 57.120, 57.375]):
         super(NormalizePermute, self).__init__()
         self.mean = mean
         self.std = std
@@ -209,7 +211,6 @@ class NormalizePermute(object):
         img = img.astype(np.float32)
 
         img = img.transpose((2, 0, 1))
-        img.__imul__(1. / 255)
         mean = np.array(self.mean, dtype=np.float32)
         std = np.array(self.std, dtype=np.float32)
         invstd = 1. / std

@@ -106,8 +106,8 @@ TrainDataLoader:
     saturation: [0.5, 1.5, 0.5]
     hue: [-18, 18, 0.5]
   - !NormalizePermute
-    mean: [0.485, 0.456, 0.406]
-    std: [0.229, 0.224, 0.225]
+    mean: [123.675, 116.28, 103.53]
+    std: [58.395, 57.120, 57.375]
   - !NormalizeLabels
     num_instances: 50
     normalize_box: true
@@ -150,8 +150,8 @@ EvalDataLoader:
     random_shape: [608]
     interp: 2
   - !NormalizePermute
-    mean: [0.485, 0.456, 0.406]
-    std: [0.229, 0.224, 0.225]
+    mean: [123.675, 116.28, 103.53]
+    std: [58.395, 57.120, 57.375]
   batch_transforms:
   - !PadToStride
     stride: 1
@@ -184,8 +184,8 @@ TestDataLoader:
     random_shape: [608]
     interp: 2
   - !NormalizePermute
-    mean: [0.485, 0.456, 0.406]
-    std: [0.229, 0.224, 0.225]
+    mean: [123.675, 116.28, 103.53]
+    std: [58.395, 57.120, 57.375]
   batch_transforms:
   - !PadToStride
     stride: 1
