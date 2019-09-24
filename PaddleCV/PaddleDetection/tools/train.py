@@ -36,6 +36,7 @@ set_paddle_flags(
 )
 
 from paddle import fluid
+from paddle.fluid.contrib import mixed_precision
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
 
@@ -115,6 +116,11 @@ def main():
             loss = train_fetches['loss']
             lr = lr_builder()
             optimizer = optim_builder(lr)
+            if FLAGS.fp16:
+                optimizer = mixed_precision.decorate(
+                    optimizer=optimizer,
+                    init_loss_scaling=FLAGS.loss_scale,
+                    use_dynamic_loss_scaling=False)
             optimizer.minimize(loss)
 
     # parse train fetches
@@ -268,6 +274,16 @@ def main():
 
 if __name__ == '__main__':
     parser = ArgsParser()
+    parser.add_argument(
+        "--fp16",
+        action='store_true',
+        default=False,
+        help="Enable mixed precision training.")
+    parser.add_argument(
+        "--loss_scale",
+        default=8.,
+        type=float,
+        help="Mixed precision training loss scale.")
     parser.add_argument(
         "-r",
         "--resume_checkpoint",
