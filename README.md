@@ -124,6 +124,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [Attention   Cluster](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | CVPR'18提出的视频多模态特征注意力聚簇融合方法 | Youtube-8M                 | GAP   = 84% |
 | [NeXtVlad](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2nd-Youtube-8M比赛第3名的模型 | Youtube-8M                 | GAP   = 87% |
 | [C-TCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2018年ActivityNet夺冠方案 | ActivityNet1.3 | MAP=31%    |
+| [BSN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 为视频动作定位问题提供高效的proposal生成方法 | ActivityNet1.3 | AUC=66.64%    |
+| [BMN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2019年ActivityNet夺冠方案 | ActivityNet1.3 | AUC=67.19%    |
 
 ## PaddleNLP
 
@@ -180,7 +182,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 阅读理解
 
-[MRC(Machine Reading Comprehension)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/reading_comprehension)机器阅读理解(MRC)是自然语言处理(NLP)中的关键任务之一，开源的DuReader升级了经典的阅读理解BiDAF模型，去掉了char级别的embedding，在预测层中使用了[pointer network](https://arxiv.org/abs/1506.03134)，并且参考了[R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)中的一些网络结构，效果上有了大幅提升
+[MRC(Machine Reading Comprehension)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DuReader)机器阅读理解(MRC)是自然语言处理(NLP)中的关键任务之一，开源的DuReader升级了经典的阅读理解BiDAF模型，去掉了char级别的embedding，在预测层中使用了[pointer network](https://arxiv.org/abs/1506.03134)，并且参考了[R-NET](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/05/r-net.pdf)中的一些网络结构，效果上有了大幅提升
 
 | **Model**                                                | **Dev ROUGE-L** | **Test ROUGE-L** |
 | -------------------------------------------------------- | --------------- | ---------------- |
@@ -311,7 +313,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### DAM
 
-[深度注意力机制模型(Deep Attention Maching)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_model_toolkit/deep_attention_matching)是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。
+[深度注意力机制模型(Deep Attention Maching)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DAM)是开放领域多轮对话匹配模型。根据多轮对话历史和候选回复内容，排序出最合适的回复。
 
 |      | Ubuntu Corpus | Douban Conversation Corpus |       |       |       |       |       |       |       |       |
 | ---- | ------------- | -------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |

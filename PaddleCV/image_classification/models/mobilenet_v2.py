@@ -228,8 +228,3 @@ def MobileNetV2_x1_5():
 def MobileNetV2_x2_0():
     model = MobileNetV2(scale=2.0)
     return model
-
-
-def MobileNetV2():
-    model = MobileNetV2(scale=1.0)
-    return model

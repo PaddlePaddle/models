@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from functools import partial
 import numpy as np
 
@@ -51,12 +64,12 @@ def position_encoding_init(n_position, d_pos_vec):
     channels = d_pos_vec
     position = np.arange(n_position)
     num_timescales = channels // 2
-    log_timescale_increment = (
-        np.log(float(1e4) / float(1)) / (num_timescales - 1))
-    inv_timescales = np.exp(
-        np.arange(num_timescales)) * -log_timescale_increment
-    scaled_time = np.expand_dims(position, 1) * np.expand_dims(
-        inv_timescales, 0)
+    log_timescale_increment = (np.log(float(1e4) / float(1)) /
+                               (num_timescales - 1))
+    inv_timescales = np.exp(np.arange(
+        num_timescales)) * -log_timescale_increment
+    scaled_time = np.expand_dims(position, 1) * np.expand_dims(inv_timescales,
+                                                               0)
     signal = np.concatenate([np.sin(scaled_time), np.cos(scaled_time)], axis=1)
     signal = np.pad(signal, [[0, 0], [0, np.mod(channels, 2)]], 'constant')
     position_enc = signal
@@ -91,17 +104,15 @@ def multi_head_attention(queries,
         """
         Add linear projection to queries, keys, and values.
         """
-        q = layers.fc(
-            input=queries,
-            size=d_key * n_head,
-            bias_attr=False,
-            num_flatten_dims=2)
+        q = layers.fc(input=queries,
+                      size=d_key * n_head,
+                      bias_attr=False,
+                      num_flatten_dims=2)
         # For encoder-decoder attention in inference, insert the ops and vars
         # into global block to use as cache among beam search.
         fc_layer = wrap_layer_with_block(
-            layers.fc,
-            fluid.default_main_program().current_block().
-            parent_idx) if cache is not None and static_kv else layers.fc
+            layers.fc, fluid.default_main_program().current_block(
+            ).parent_idx) if cache is not None and static_kv else layers.fc
         k = fc_layer(
             input=keys,
             size=d_key * n_head,
@@ -132,12 +143,12 @@ def multi_head_attention(queries,
         # into global block to use as cache among beam search.
         reshape_layer = wrap_layer_with_block(
             layers.reshape,
-            fluid.default_main_program().current_block().
-            parent_idx) if cache is not None and static_kv else layers.reshape
+            fluid.default_main_program().current_block(
+            ).parent_idx) if cache is not None and static_kv else layers.reshape
         transpose_layer = wrap_layer_with_block(
             layers.transpose,
-            fluid.default_main_program().current_block().parent_idx
-        ) if cache is not None and static_kv else layers.transpose
+            fluid.default_main_program().current_block().
+            parent_idx) if cache is not None and static_kv else layers.transpose
         reshaped_k = reshape_layer(
             x=keys, shape=[0, 0, n_head, d_key], inplace=True)
         k = transpose_layer(x=reshaped_k, perm=[0, 2, 1, 3])
@@ -214,8 +225,10 @@ def multi_head_attention(queries,
     out = __combine_heads(ctx_multiheads)
 
     # Project back to the model size.
-    proj_out = layers.fc(
-        input=out, size=d_model, bias_attr=False, num_flatten_dims=2)
+    proj_out = layers.fc(input=out,
+                         size=d_model,
+                         bias_attr=False,
+                         num_flatten_dims=2)
     return proj_out
 
 
@@ -225,14 +238,13 @@ def positionwise_feed_forward(x, d_inner_hid, d_hid, dropout_rate):
     This module consists of two linear transformations with a ReLU activation
     in between, which is applied to each position separately and identically.
     """
-    hidden = layers.fc(
-        input=x, size=d_inner_hid, num_flatten_dims=2, act="relu")
+    hidden = layers.fc(input=x,
+                       size=d_inner_hid,
+                       num_flatten_dims=2,
+                       act="relu")
     if dropout_rate:
         hidden = layers.dropout(
-            hidden,
-            dropout_prob=dropout_rate,
-            seed=dropout_seed,
-            is_test=False)
+            hidden, dropout_prob=dropout_rate, seed=dropout_seed, is_test=False)
     out = layers.fc(input=hidden, size=d_hid, num_flatten_dims=2)
     return out
 
@@ -313,8 +325,7 @@ def prepare_encoder(src_word,
         param_attr=fluid.ParamAttr(
             name=pos_enc_param_names[0], trainable=False))
     src_pos_enc.stop_gradient = True
-    enc_input = (
-        1 - beta) * src_word_emb + beta * mean_phone_emb + src_pos_enc
+    enc_input = (1 - beta) * src_word_emb + beta * mean_phone_emb + src_pos_enc
     return layers.dropout(
         enc_input, dropout_prob=dropout_rate, seed=dropout_seed,
         is_test=False) if dropout_rate else enc_input
@@ -374,8 +385,8 @@ def encoder_layer(enc_input,
     """
     attn_output = multi_head_attention(
         pre_process_layer(enc_input, preprocess_cmd,
-                          prepostprocess_dropout), None, None, attn_bias,
-        d_key, d_value, d_model, n_head, attention_dropout)
+                          prepostprocess_dropout), None, None, attn_bias, d_key,
+        d_value, d_model, n_head, attention_dropout)
     attn_output = post_process_layer(enc_input, attn_output, postprocess_cmd,
                                      prepostprocess_dropout)
     ffd_output = positionwise_feed_forward(
@@ -415,8 +426,7 @@ def encoder(enc_input,
             attention_dropout,
             relu_dropout,
             preprocess_cmd,
-            postprocess_cmd,
-        )
+            postprocess_cmd, )
         enc_input = enc_output
     enc_output = pre_process_layer(enc_output, preprocess_cmd,
                                    prepostprocess_dropout)
@@ -459,8 +469,7 @@ def decoder_layer(dec_input,
         dec_input,
         slf_attn_output,
         postprocess_cmd,
-        prepostprocess_dropout,
-    )
+        prepostprocess_dropout, )
     enc_attn_output = multi_head_attention(
         pre_process_layer(slf_attn_output, preprocess_cmd,
                           prepostprocess_dropout),
@@ -479,21 +488,18 @@ def decoder_layer(dec_input,
         slf_attn_output,
         enc_attn_output,
         postprocess_cmd,
-        prepostprocess_dropout,
-    )
+        prepostprocess_dropout, )
     ffd_output = positionwise_feed_forward(
         pre_process_layer(enc_attn_output, preprocess_cmd,
                           prepostprocess_dropout),
         d_inner_hid,
         d_model,
-        relu_dropout,
-    )
+        relu_dropout, )
     dec_output = post_process_layer(
         enc_attn_output,
         ffd_output,
         postprocess_cmd,
-        prepostprocess_dropout,
-    )
+        prepostprocess_dropout, )
     return dec_output
 
 
@@ -632,8 +638,7 @@ def transformer(src_vocab_size,
         postprocess_cmd,
         weight_sharing,
         beta,
-        enc_inputs,
-    )
+        enc_inputs, )
 
     predict = wrap_decoder(
         trg_vocab_size,
@@ -651,14 +656,14 @@ def transformer(src_vocab_size,
         postprocess_cmd,
         weight_sharing,
         dec_inputs,
-        enc_output,
-    )
+        enc_output, )
 
     # Padding index do not contribute to the total loss. The weights is used to
     # cancel padding index in calculating the loss.
     if label_smooth_eps:
         label = layers.label_smooth(
-            label=layers.one_hot(input=label, depth=trg_vocab_size),
+            label=layers.one_hot(
+                input=label, depth=trg_vocab_size),
             epsilon=label_smooth_eps)
 
     cost = layers.softmax_with_cross_entropy(
@@ -730,8 +735,7 @@ def wrap_encoder(src_vocab_size,
         attention_dropout,
         relu_dropout,
         preprocess_cmd,
-        postprocess_cmd,
-    )
+        postprocess_cmd, )
     return enc_output
 
 
@@ -803,8 +807,9 @@ def wrap_decoder(trg_vocab_size,
                 word_emb_param_names[0]),
             transpose_y=True)
     else:
-        predict = layers.fc(
-            input=dec_output, size=trg_vocab_size, bias_attr=False)
+        predict = layers.fc(input=dec_output,
+                            size=trg_vocab_size,
+                            bias_attr=False)
     if dec_inputs is None:
         # Return probs for independent decoder program.
         predict = layers.softmax(predict)
@@ -879,8 +884,7 @@ def fast_decode(src_vocab_size,
             force_cpu=True)
         step_idx = layers.fill_constant(
             shape=[1], dtype=start_tokens.dtype, value=0, force_cpu=True)
-        cond = layers.less_than(
-            x=step_idx, y=max_len)  # default force_cpu=True
+        cond = layers.less_than(x=step_idx, y=max_len)  # default force_cpu=True
         while_op = layers.While(cond)
         # array states will be stored for each step.
         ids = layers.array_write(

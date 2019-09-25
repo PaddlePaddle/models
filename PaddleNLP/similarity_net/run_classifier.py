@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 SimNet Task
 """
@@ -164,16 +177,16 @@ def train(conf_dict, args):
         infer_program = fluid.default_main_program().clone(for_test=True)
         avg_cost = loss.compute(pred, label)
         avg_cost.persistable = True
-    
+
     # operate Optimization
     optimizer.ops(avg_cost)
     executor = fluid.Executor(place)
     executor.run(fluid.default_startup_program())
 
     if args.init_checkpoint is not None:
-        utils.init_checkpoint(executor, args.init_checkpoint, 
-                fluid.default_startup_program())
-    
+        utils.init_checkpoint(executor, args.init_checkpoint,
+                              fluid.default_startup_program())
+
     # Get and run executor
     parallel_executor = fluid.ParallelExecutor(
         use_cuda=args.use_cuda,
