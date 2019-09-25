@@ -10,7 +10,7 @@ MODEL_SAVE_PATH=./save_models
 
 # run_train
 train() {
-    /home/disk1/du/gaocan/0-bin/8-paddle/2-fluid.1.5.1/paddle_release_home/python/bin/python -u run_ernie_classifier.py \
+    python -u run_ernie_classifier.py \
         --use_cuda true \
         --verbose true \
         --do_train true \
@@ -38,7 +38,7 @@ train() {
 
 # run_eval
 evaluate() {
-    /home/disk1/du/gaocan/0-bin/8-paddle/2-fluid.1.5.1/paddle_release_home/python/bin/python -u run_ernie_classifier.py \
+    python -u run_ernie_classifier.py \
         --use_cuda true \
         --verbose true \
         --do_train false \
@@ -54,7 +54,7 @@ evaluate() {
         --model_type "ernie_base" \
         --num_labels 2
     
-    /home/disk1/du/gaocan/0-bin/8-paddle/2-fluid.1.5.1/paddle_release_home/python/bin/python -u run_ernie_classifier.py \
+    python -u run_ernie_classifier.py \
         --use_cuda true \
         --verbose true \
         --do_train false \
@@ -73,7 +73,7 @@ evaluate() {
 
 # run_infer
 infer() {
-    /home/disk1/du/gaocan/0-bin/8-paddle/2-fluid.1.5.1/paddle_release_home/python/bin/python -u run_ernie_classifier.py \
+    python -u run_ernie_classifier.py \
         --use_cuda true \
         --verbose true \
         --do_train false \
@@ -92,7 +92,7 @@ infer() {
 
 # run_save_inference_model
 save_inference_model() {
-    /home/disk1/du/gaocan/0-bin/8-paddle/2-fluid.1.5.1/paddle_release_home/python/bin/python -u inference_model_ernie.py \
+    python -u inference_model_ernie.py \
         --use_cuda true \
         --do_save_inference_model true \
         --init_checkpoint ./save_models/step_4801/ \
