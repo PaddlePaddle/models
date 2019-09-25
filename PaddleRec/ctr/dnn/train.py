@@ -109,6 +109,11 @@ def parse_args():
         '--enable_ce',
         action='store_true',
         help='If set, run the task with continuous evaluation logs.')
+    parser.add_argument(
+        '--use_iterable_py_reader',
+        type=bool,
+        default=False,
+        help="Whether to use_iterable PyReader")
 
     return parser.parse_args()
 
@@ -128,7 +133,11 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
             buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
 
-    py_reader.decorate_paddle_reader(train_reader)
+    cpu_num = int(os.environ.get('CPU_NUM', cpu_count()))
+
+    # py_reader.decorate_paddle_reader(train_reader)
+    py_reader.set_sample_list_generator(
+        train_reader, places=fluid.cpu_places(cpu_num))
     data_name_list = []
 
     place = fluid.CPUPlace()
@@ -140,7 +149,6 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
     if os.getenv("NUM_THREADS", ""):
         exec_strategy.num_threads = int(os.getenv("NUM_THREADS"))
 
-    cpu_num = int(os.environ.get('CPU_NUM', cpu_count()))
     build_strategy.reduce_strategy = \
         fluid.BuildStrategy.ReduceStrategy.Reduce if cpu_num > 1 \
             else fluid.BuildStrategy.ReduceStrategy.AllReduce
@@ -154,34 +162,49 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
         exec_strategy=exec_strategy)
 
     total_time = 0
+
+    def record_metrics(pass_id, batch_id, loss_val, auc_val, batch_auc_val):
+        loss_val = np.mean(loss_val)
+        auc_val = np.mean(auc_val)
+        batch_auc_val = np.mean(batch_auc_val)
+        logger.info(
+            "TRAIN --> pass: {} batch: {} loss: {} auc: {}, batch_auc: {}"
+            .format(pass_id, batch_id, loss_val / args.batch_size, auc_val,
+                    batch_auc_val))
+        if batch_id % 1000 == 0 and batch_id != 0:
+            model_dir = args.model_output_dir + '/batch-' + str(batch_id)
+
+            if args.trainer_id == 0:
+                fluid.io.save_persistables(
+                    executor=exe,
+                    dirname=model_dir,
+                    main_program=fluid.default_main_program())
+
     for pass_id in range(args.num_passes):
         pass_start = time.time()
         batch_id = 0
-        py_reader.start()
+        if not py_reader.iterable:
+            py_reader.start()
 
-        try:
-            while True:
+            try:
+                while True:
+                    loss_val, auc_val, batch_auc_val = pe.run(fetch_list=[
+                        loss.name, auc_var.name, batch_auc_var.name
+                    ])
+                    record_metrics(pass_id, batch_id, loss_val, auc_val,
+                                   batch_auc_val)
+                    batch_id += 1
+            except fluid.core.EOFException:
+                py_reader.reset()
+        else:
+            for data in py_reader():
                 loss_val, auc_val, batch_auc_val = pe.run(
+                    feed=data,
                     fetch_list=[loss.name, auc_var.name, batch_auc_var.name])
-                loss_val = np.mean(loss_val)
-                auc_val = np.mean(auc_val)
-                batch_auc_val = np.mean(batch_auc_val)
-
-                logger.info(
-                    "TRAIN --> pass: {} batch: {} loss: {} auc: {}, batch_auc: {}"
-                    .format(pass_id, batch_id, loss_val / args.batch_size,
-                            auc_val, batch_auc_val))
-                if batch_id % 1000 == 0 and batch_id != 0:
-                    model_dir = args.model_output_dir + '/batch-' + str(
-                        batch_id)
-                    if args.trainer_id == 0:
-                        fluid.io.save_persistables(
-                            executor=exe,
-                            dirname=model_dir,
-                            main_program=fluid.default_main_program())
+                record_metrics(pass_id, batch_id, loss_val, auc_val,
+                               batch_auc_val)
                 batch_id += 1
-        except fluid.core.EOFException:
-            py_reader.reset()
+
         print("pass_id: %d, pass_time_cost: %f" %
               (pass_id, time.time() - pass_start))
 
@@ -215,7 +238,8 @@ def train():
         os.mkdir(args.model_output_dir)
 
     loss, auc_var, batch_auc_var, py_reader, _ = ctr_dnn_model(
-        args.embedding_size, args.sparse_feature_dim)
+        args.embedding_size, args.sparse_feature_dim, True,
+        args.use_iterable_py_reader)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
     optimizer.minimize(loss)
     if args.cloud_train:

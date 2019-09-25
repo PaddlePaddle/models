@@ -21,6 +21,7 @@ import numpy as np
 import time
 import sys
 
+
 def set_paddle_flags(flags):
     for key, value in flags.items():
         if os.environ.get(key, None) is None:
@@ -60,7 +61,9 @@ def build_program(is_train, main_prog, startup_prog, args):
         is_test = False if is_train else True
         override_params = {"drop_connect_rate": args.drop_connect_rate}
         padding_type = args.padding_type
-        model = models.__dict__[args.model](is_test=is_test, override_params=override_params, padding_type=padding_type)
+        model = models.__dict__[args.model](is_test=is_test,
+                                            override_params=override_params,
+                                            padding_type=padding_type)
     else:
         model = models.__dict__[args.model]()
     with fluid.program_guard(main_prog, startup_prog):
@@ -79,38 +82,58 @@ def build_program(is_train, main_prog, startup_prog, args):
                 global_lr.persistable = True
                 loss_out.append(global_lr)
                 if args.use_ema:
-                    global_steps = fluid.layers.learning_rate_scheduler._decay_step_counter()
-                    ema = ExponentialMovingAverage(args.ema_decay, thres_steps=global_steps)
+                    global_steps = fluid.layers.learning_rate_scheduler._decay_step_counter(
+                    )
+                    ema = ExponentialMovingAverage(
+                        args.ema_decay, thres_steps=global_steps)
                     ema.update()
                     loss_out.append(ema)
             loss_out.append(py_reader)
     return loss_out
 
-def validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record):
+
+def validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id,
+             train_batch_metrics_record):
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
-    test_py_reader.start()
-    try:
+
+    def record_metrics(test_batch_id, test_batch_elapse, test_batch_metrics):
+        test_batch_time_record.append(test_batch_elapse)
+        test_batch_metrics_avg = np.mean(np.array(test_batch_metrics), axis=1)
+        test_batch_metrics_record.append(test_batch_metrics_avg)
+        print_info(pass_id, test_batch_id, args.print_step,
+                   test_batch_metrics_avg, test_batch_elapse, "batch")
+        sys.stdout.flush()
+
+    if not test_py_reader.iterable:
+        test_py_reader.start()
+        try:
+            while True:
+                t1 = time.time()
+                test_batch_metrics = exe.run(program=test_prog,
+                                             fetch_list=test_fetch_list)
+                t2 = time.time()
+                record_metrics(test_batch_id, t2 - t1, test_batch_metrics)
+                test_batch_id += 1
+
+        except fluid.core.EOFException:
+            test_py_reader.reset()
+    else:
+        test_reader = iter(test_py_reader)
         while True:
             t1 = time.time()
+            data = next(test_reader, None)
+            if data is None:
+                break
+
             test_batch_metrics = exe.run(program=test_prog,
+                                         feed=data,
                                          fetch_list=test_fetch_list)
             t2 = time.time()
-            test_batch_elapse = t2 - t1
-            test_batch_time_record.append(test_batch_elapse)
-
-            test_batch_metrics_avg = np.mean(
-                np.array(test_batch_metrics), axis=1)
-            test_batch_metrics_record.append(test_batch_metrics_avg)
-
-            print_info(pass_id, test_batch_id, args.print_step,
-                       test_batch_metrics_avg, test_batch_elapse, "batch")
-            sys.stdout.flush()
+            record_metrics(test_batch_id, t2 - t1, test_batch_metrics)
             test_batch_id += 1
 
-    except fluid.core.EOFException:
-        test_py_reader.reset()
     #train_epoch_time_avg = np.mean(np.array(train_batch_time_record))
     train_epoch_metrics_avg = np.mean(
         np.array(train_batch_metrics_record), axis=0)
@@ -122,6 +145,7 @@ def validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, tra
     print_info(pass_id, 0, 0,
                list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
                test_epoch_time_avg, "epoch")
+
 
 def train(args):
     """Train model
@@ -178,8 +202,11 @@ def train(args):
     test_reader = paddle.batch(
         test_reader, batch_size=args.test_batch_size, drop_last=True)
 
-    train_py_reader.decorate_sample_list_generator(train_reader, place)
-    test_py_reader.decorate_sample_list_generator(test_reader, place)
+    reader_places = fluid.cuda_places() if args.use_gpu else fluid.cpu_places()
+    train_py_reader.decorate_sample_list_generator(
+        train_reader, places=reader_places)
+    test_py_reader.decorate_sample_list_generator(
+        test_reader, places=reader_places[0])
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
                                                  train_fetch_vars[0])
@@ -190,35 +217,54 @@ def train(args):
         train_batch_time_record = []
         train_batch_metrics_record = []
 
-        train_py_reader.start()
+        def record_metrics(train_batch_id, train_batch_elapse,
+                           train_batch_metrics):
+            train_batch_time_record.append(train_batch_elapse)
+            train_batch_metrics_avg = np.mean(
+                np.array(train_batch_metrics), axis=1)
+            train_batch_metrics_record.append(train_batch_metrics_avg)
+            print_info(pass_id, train_batch_id, args.print_step,
+                       train_batch_metrics_avg, train_batch_elapse, "batch")
+            sys.stdout.flush()
+            train_batch_id += 1
 
-        try:
+        if not train_py_reader.iterable:
+            train_py_reader.start()
+
+            try:
+                while True:
+                    t1 = time.time()
+                    train_batch_metrics = exe.run(compiled_train_prog,
+                                                  fetch_list=train_fetch_list)
+                    t2 = time.time()
+                    record_metrics(train_batch_id, t2 - t1, train_batch_metrics)
+                    train_batch_id += 1
+
+            except fluid.core.EOFException:
+                train_py_reader.reset()
+        else:
+            train_reader = iter(train_py_reader)
             while True:
                 t1 = time.time()
+                data = next(train_reader, None)
+                if data is None:
+                    break
                 train_batch_metrics = exe.run(compiled_train_prog,
+                                              feed=data,
                                               fetch_list=train_fetch_list)
                 t2 = time.time()
-                train_batch_elapse = t2 - t1
-                train_batch_time_record.append(train_batch_elapse)
-                train_batch_metrics_avg = np.mean(
-                    np.array(train_batch_metrics), axis=1)
-                train_batch_metrics_record.append(train_batch_metrics_avg)
-
-                print_info(pass_id, train_batch_id, args.print_step,
-                           train_batch_metrics_avg, train_batch_elapse, "batch")
-                sys.stdout.flush()
+                record_metrics(train_batch_id, t2 - t1, train_batch_metrics)
                 train_batch_id += 1
-
-        except fluid.core.EOFException:
-            train_py_reader.reset()
 
         if args.use_ema:
             print('ExponentialMovingAverage validate start...')
             with ema.apply(exe):
-                validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
+                validate(args, test_py_reader, exe, test_prog, test_fetch_list,
+                         pass_id, train_batch_metrics_record)
             print('ExponentialMovingAverage validate over!')
 
-        validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
+        validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id,
+                 train_batch_metrics_record)
         #For now, save model per epoch.
         if pass_id % args.save_step == 0:
             save_model(args, exe, train_prog, pass_id)

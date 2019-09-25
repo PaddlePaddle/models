@@ -9,6 +9,7 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 import six
+import sys
 import reader
 from net import skip_gram_word2vec
 
@@ -78,6 +79,11 @@ def parse_args():
         required=False,
         default=False,
         help='print speed or not , (default: False)')
+    parser.add_argument(
+        '--use_iterable_py_reader',
+        type=bool,
+        default=False,
+        help='whether to use iterable py_reader')
     return parser.parse_args()
 
 
@@ -114,9 +120,11 @@ def convert_python_to_tensor(weight, batch_size, sample_reader):
 
 def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                weight):
+    cpu_num = len(fluid.cpu_places())
 
-    py_reader.decorate_tensor_provider(
-        convert_python_to_tensor(weight, args.batch_size, reader.train()))
+    py_reader.set_batch_generator(
+        convert_python_to_tensor(weight, args.batch_size, reader.train()),
+        places=fluid.cpu_places(cpu_num))
 
     place = fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -125,11 +133,11 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.use_experimental_executor = True
 
-    print("CPU_NUM:" + str(os.getenv("CPU_NUM")))
-    exec_strategy.num_threads = int(os.getenv("CPU_NUM"))
+    print("CPU_NUM:" + str(cpu_num))
+    exec_strategy.num_threads = cpu_num
 
     build_strategy = fluid.BuildStrategy()
-    if int(os.getenv("CPU_NUM")) > 1:
+    if cpu_num > 1:
         build_strategy.reduce_strategy = fluid.BuildStrategy.ReduceStrategy.Reduce
 
     train_exe = fluid.ParallelExecutor(
@@ -139,16 +147,23 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
         build_strategy=build_strategy,
         exec_strategy=exec_strategy)
 
+    time_used = 0
+    samples_num = 0
+
     for pass_id in range(args.num_passes):
-        py_reader.start()
+        if not py_reader.iterable:
+            py_reader.start()
+        else:
+            iter(py_reader)
+
         time.sleep(10)
         epoch_start = time.time()
         batch_id = 0
         start = time.time()
         try:
             while True:
-
-                loss_val = train_exe.run(fetch_list=[loss.name])
+                feed = next(py_reader) if py_reader.iterable else None
+                loss_val = train_exe.run(fetch_list=[loss.name], feed=feed)
                 loss_val = np.mean(loss_val)
 
                 if batch_id % args.print_batch == 0:
@@ -160,10 +175,16 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                     if batch_id % 500 == 0 and batch_id != 0:
                         elapsed = (time.time() - start)
                         start = time.time()
-                        samples = 1001 * args.batch_size * int(
-                            os.getenv("CPU_NUM"))
+                        samples = 1001 * args.batch_size * cpu_num
                         logger.info("Time used: {}, Samples/Sec: {}".format(
                             elapsed, samples / elapsed))
+                        samples_num += samples
+                        time_used += elapsed
+
+                        if batch_id >= 10000:
+                            if not py_reader.iterable:
+                                py_reader.reset()
+                            break
 
                 if batch_id % args.save_step == 0 and batch_id != 0:
                     model_dir = args.model_output_dir + '/pass-' + str(
@@ -173,8 +194,10 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                         print("model saved in %s" % model_dir)
                 batch_id += 1
 
-        except fluid.core.EOFException:
-            py_reader.reset()
+        except (StopIteration, fluid.core.EOFException):
+            if not py_reader.iterable:
+                py_reader.reset()
+
             epoch_end = time.time()
             logger.info("Epoch: {0}, Train total expend: {1} ".format(
                 pass_id, epoch_end - epoch_start))
@@ -182,6 +205,8 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
             if trainer_id == 0:
                 fluid.io.save_params(executor=exe, dirname=model_dir)
                 print("model saved in %s" % model_dir)
+
+    print('Samples/Sec: {}'.format(samples_num / time_used))
 
 
 def GetFileList(data_path):
@@ -205,7 +230,8 @@ def train(args):
         word2vec_reader.dict_size,
         args.embedding_size,
         is_sparse=args.is_sparse,
-        neg_num=args.nce_num)
+        neg_num=args.nce_num,
+        use_iterable_py_reader=args.use_iterable_py_reader)
 
     optimizer = fluid.optimizer.SGD(
         learning_rate=fluid.layers.exponential_decay(
@@ -225,4 +251,5 @@ def train(args):
 
 if __name__ == '__main__':
     args = parse_args()
+    print(args)
     train(args)

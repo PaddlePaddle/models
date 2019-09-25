@@ -132,6 +132,11 @@ def parse_args():
         default=True,
         help="The flag indicating whether to use py_reader.")
     parser.add_argument(
+        "--use_iterable_py_reader",
+        type=ast.literal_eval,
+        default=True,
+        help="The flag indicating whether to use iterable py_reader.")
+    parser.add_argument(
         "--fetch_steps",
         type=int,
         default=100,
@@ -330,12 +335,29 @@ def prepare_data_generator(args,
         # to make data on each device have similar token number
         data_reader = split(data_reader, count)
     if args.use_py_reader:
-        pyreader.decorate_tensor_provider(
-            py_reader_provider_wrapper(data_reader, place))
+        places = fluid.cuda_places(
+        ) if TrainTaskConfig.use_gpu else fluid.cpu_places()
+        pyreader.set_batch_generator(
+            py_reader_provider_wrapper(data_reader, place), places=places)
         data_reader = None
     else:  # Data generator for multi-devices
         data_reader = stack(data_reader, count)
     return data_reader
+
+
+def prepare_init_feed_dict_list(feed_dict_list, count):
+    for idx in range(count):
+        pos_enc_tables = dict()
+        for pos_enc_param_name in pos_enc_param_names:
+            pos_enc_tables[pos_enc_param_name] = position_encoding_init(
+                ModelHyperParams.max_length + 1, ModelHyperParams.d_model)
+        if len(feed_dict_list) <= idx:
+            feed_dict_list.append(pos_enc_tables)
+        else:
+            feed_dict_list[idx] = dict(
+                list(pos_enc_tables.items()) + list(feed_dict_list[idx]
+                                                    .items()))
+    return feed_dict_list
 
 
 def prepare_feed_dict_list(data_generator, init_flag, count):
@@ -354,17 +376,7 @@ def prepare_feed_dict_list(data_generator, init_flag, count):
                 ModelHyperParams.d_model)
             feed_dict_list.append(data_input_dict)
     if init_flag:
-        for idx in range(count):
-            pos_enc_tables = dict()
-            for pos_enc_param_name in pos_enc_param_names:
-                pos_enc_tables[pos_enc_param_name] = position_encoding_init(
-                    ModelHyperParams.max_length + 1, ModelHyperParams.d_model)
-            if len(feed_dict_list) <= idx:
-                feed_dict_list.append(pos_enc_tables)
-            else:
-                feed_dict_list[idx] = dict(
-                    list(pos_enc_tables.items()) + list(feed_dict_list[idx]
-                                                        .items()))
+        prepare_init_feed_dict_list(feed_dict_list, count)
 
     return feed_dict_list if len(feed_dict_list) == count else None
 
@@ -414,6 +426,7 @@ def test_context(exe, train_exe, dev_count):
                 ModelHyperParams.weight_sharing,
                 TrainTaskConfig.label_smooth_eps,
                 use_py_reader=args.use_py_reader,
+                use_iterable_py_reader=args.use_iterable_py_reader,
                 is_test=True)
     test_prog = test_prog.clone(for_test=True)
     test_data = prepare_data_generator(
@@ -443,19 +456,25 @@ def test_context(exe, train_exe, dev_count):
         test_total_token = 0
 
         if args.use_py_reader:
-            pyreader.start()
+            if not pyreader.iterable:
+                pyreader.start()
+            else:
+                iter(pyreader)
             data_generator = None
         else:
             data_generator = test_data()
         while True:
             try:
-                feed_dict_list = prepare_feed_dict_list(data_generator, False,
-                                                        dev_count)
+                if args.use_py_reader and args.use_iterable_py_reader:
+                    feed_dict_list = next(pyreader)
+                else:
+                    feed_dict_list = prepare_feed_dict_list(data_generator,
+                                                            False, dev_count)
                 outs = test_exe.run(fetch_list=[sum_cost.name, token_num.name],
                                     feed=feed_dict_list)
             except (StopIteration, fluid.core.EOFException):
                 # The current pass is over.
-                if args.use_py_reader:
+                if args.use_py_reader and not args.use_iterable_py_reader:
                     pyreader.reset()
                 break
             sum_cost_val, token_num_val = np.array(outs[0]), np.array(outs[1])
@@ -536,7 +555,10 @@ def train_loop(exe,
         pass_start_time = time.time()
 
         if args.use_py_reader:
-            pyreader.start()
+            if not pyreader.iterable:
+                pyreader.start()
+            else:
+                iter_py_reader = iter(pyreader)
             data_generator = None
         else:
             data_generator = train_data()
@@ -544,8 +566,13 @@ def train_loop(exe,
         batch_id = 0
         while True:
             try:
-                feed_dict_list = prepare_feed_dict_list(data_generator,
-                                                        init_flag, dev_count)
+                if args.use_py_reader and args.use_iterable_py_reader:
+                    feed_dict_list = next(pyreader)
+                    if init_flag:
+                        prepare_init_feed_dict_list(feed_dict_list, dev_count)
+                else:
+                    feed_dict_list = prepare_feed_dict_list(
+                        data_generator, init_flag, dev_count)
                 outs = train_exe.run(
                     fetch_list=[sum_cost.name, token_num.name]
                     if step_idx % args.fetch_steps == 0 else [],
@@ -593,7 +620,7 @@ def train_loop(exe,
                 step_idx += 1
             except (StopIteration, fluid.core.EOFException):
                 # The current pass is over.
-                if args.use_py_reader:
+                if args.use_py_reader and not args.use_iterable_py_reader:
                     pyreader.reset()
                 break
 
@@ -670,6 +697,7 @@ def train(args):
                 ModelHyperParams.weight_sharing,
                 TrainTaskConfig.label_smooth_eps,
                 use_py_reader=args.use_py_reader,
+                use_iterable_py_reader=args.use_iterable_py_reader,
                 is_test=False)
 
             optimizer = None

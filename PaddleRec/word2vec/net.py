@@ -20,22 +20,24 @@ import numpy as np
 import paddle.fluid as fluid
 
 
-def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
+def skip_gram_word2vec(dict_size,
+                       embedding_size,
+                       is_sparse=False,
+                       neg_num=5,
+                       use_iterable_py_reader=False):
 
-    datas = []
+    words = []
     input_word = fluid.layers.data(name="input_word", shape=[1], dtype='int64')
     true_word = fluid.layers.data(name='true_label', shape=[1], dtype='int64')
     neg_word = fluid.layers.data(
         name="neg_label", shape=[neg_num], dtype='int64')
 
-    datas.append(input_word)
-    datas.append(true_word)
-    datas.append(neg_word)
+    words.append(input_word)
+    words.append(true_word)
+    words.append(neg_word)
 
-    py_reader = fluid.layers.create_py_reader_by_data(
-        capacity=64, feed_list=datas, name='py_reader', use_double_buffer=True)
+    py_reader = fluid.io.DataLoader.from_generator(capacity=64, feed_list=words)
 
-    words = fluid.layers.read_file(py_reader)
     init_width = 0.5 / embedding_size
     input_emb = fluid.layers.embedding(
         input=words[0],
