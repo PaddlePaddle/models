@@ -1,4 +1,4 @@
-architecture: FaceBox
+architecture: FaceBoxes
 train_feed: BlazeFaceTrainFeed
 eval_feed: BlazeFaceEvalFeed
 test_feed: BlazeFaceTestFeed
@@ -9,14 +9,16 @@ snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
-save_dir: output_facebox
+save_dir: output
 eval_mode: matlab
 multi_scale: true
-weights: output/facebox/model_final/
+weights: output/faceboxes/model_final/
 num_classes: 2
 
-FaceBox:
+FaceBoxes:
   backbone: FaceBoxNet
+  densities: [[2, 1, 1], [1, 1]]
+  fixed_sizes: [[16., 32., 64.], [96., 128.]]
   output_decoder:
     keep_top_k: 750
     nms_threshold: 0.3
@@ -25,6 +27,7 @@ FaceBox:
 
 FaceBoxNet:
   with_extra_blocks: true
+  lite_edition: true
 
 LearningRate:
   base_lr: 0.001
@@ -35,8 +38,8 @@ LearningRate:
 
 OptimizerBuilder:
   optimizer:
-    momentum: 0.9
-    type: Momentum
+    momentum: 0.0
+    type: RMSPropOptimizer
   regularizer:
     factor: 0.0005
     type: L2

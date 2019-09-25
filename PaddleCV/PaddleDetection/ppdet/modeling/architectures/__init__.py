@@ -21,7 +21,7 @@ from . import yolov3
 from . import ssd
 from . import retinanet
 from . import blazeface
-from . import facebox
+from . import faceboxes
 
 from .faster_rcnn import *
 from .mask_rcnn import *
@@ -30,4 +30,4 @@ from .yolov3 import *
 from .ssd import *
 from .retinanet import *
 from .blazeface import *
-from .facebox import *
+from .faceboxes import *
