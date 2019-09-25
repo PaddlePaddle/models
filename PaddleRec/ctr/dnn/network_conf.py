@@ -136,7 +136,10 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim,
     return avg_cost, auc_var, batch_auc_var, py_reader
 
 
-def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
+def ctr_dnn_model(embedding_size,
+                  sparse_feature_dim,
+                  use_py_reader=True,
+                  use_iterable_py_reader=False):
     def embedding_layer(input):
         """embedding_layer"""
         emb = fluid.layers.embedding(
@@ -166,12 +169,16 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
 
     py_reader = None
     if use_py_reader:
+        py_reader = fluid.io.DataLoader.from_generator(
+            capacity=64, feed_list=words, iterable=use_iterable_py_reader)
+        '''
         py_reader = fluid.layers.create_py_reader_by_data(
             capacity=64,
             feed_list=words,
             name='py_reader',
             use_double_buffer=True)
         words = fluid.layers.read_file(py_reader)
+        '''
 
     sparse_embed_seq = list(map(embedding_layer, words[1:-1]))
     concated = fluid.layers.concat(sparse_embed_seq + words[0:1], axis=1)

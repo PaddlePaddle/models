@@ -541,6 +541,7 @@ def transformer(src_vocab_size,
                 weight_sharing,
                 label_smooth_eps,
                 use_py_reader=False,
+                use_iterable_py_reader=False,
                 is_test=False):
     if weight_sharing:
         assert src_vocab_size == trg_vocab_size, (
@@ -550,11 +551,10 @@ def transformer(src_vocab_size,
     data_input_names = encoder_data_input_fields + \
                 decoder_data_input_fields[:-1] + label_data_input_fields
 
+    all_inputs = make_all_inputs(data_input_names)
     if use_py_reader:
-        all_inputs, reader = make_all_py_reader_inputs(data_input_names,
-                                                       is_test)
-    else:
-        all_inputs = make_all_inputs(data_input_names)
+        reader = fluid.io.DataLoader.from_generator(
+            feed_list=all_inputs, capacity=20, iterable=use_iterable_py_reader)
 
     enc_inputs_len = len(encoder_data_input_fields)
     dec_inputs_len = len(decoder_data_input_fields[:-1])

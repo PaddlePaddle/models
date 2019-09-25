@@ -18,17 +18,20 @@ train(){
         --sort_type pool \
         --pool_size 10000 \
         --enable_ce True \
+        --use_iterable_py_reader True \
         weight_sharing False \
         pass_num 20 \
         dropout_seed 10
 }
 
-cudaid=${transformer:=0} # use 0-th card as default
-export CUDA_VISIBLE_DEVICES=$cudaid
+#cudaid=${transformer:=0} # use 0-th card as default
+#export CUDA_VISIBLE_DEVICES=$cudaid
 
-train | python _ce.py
+#train | python _ce.py
 
 cudaid=${transformer_m:=0,1,2,3} # use 0,1,2,3 card as default
 export CUDA_VISIBLE_DEVICES=$cudaid
 
-train | python _ce.py
+train
+
+#train | python _ce.py

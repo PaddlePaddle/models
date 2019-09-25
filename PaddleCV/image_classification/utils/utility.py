@@ -33,6 +33,7 @@ from paddle.fluid.wrapped_decorator import signature_safe_contextmanager
 from paddle.fluid.framework import Program, program_guard, name_scope, default_main_program
 from paddle.fluid import unique_name, layers
 
+
 def print_arguments(args):
     """Print argparse's arguments.
 
@@ -112,6 +113,7 @@ def parse_args():
     parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
 
     # READER AND PREPROCESS
+    add_arg('use_iterable_py_reader',   bool,   False,                  "Whether the created PyReader object is iterable")
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
     add_arg('upper_ratio',              float,  4./3.,                  "The value of upper_ratio in ramdom_crop")
@@ -181,7 +183,8 @@ def check_args(args):
 
     # check learning rate strategy
     lr_strategy_list = [
-        "piecewise_decay", "cosine_decay", "linear_decay", "cosine_decay_warmup", "exponential_decay_warmup"
+        "piecewise_decay", "cosine_decay", "linear_decay",
+        "cosine_decay_warmup", "exponential_decay_warmup"
     ]
     if args.lr_strategy not in lr_strategy_list:
         warnings.warn(
@@ -300,14 +303,14 @@ def create_pyreader(is_train, args):
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
             capacity=64,
             use_double_buffer=True,
-            iterable=False)
+            iterable=args.use_iterable_py_reader)
         return py_reader, [feed_image, feed_y_a, feed_y_b, feed_lam]
     else:
         py_reader = fluid.io.PyReader(
             feed_list=[feed_image, feed_label],
             capacity=64,
             use_double_buffer=True,
-            iterable=False)
+            iterable=args.use_iterable_py_reader)
 
         return py_reader, [feed_image, feed_label]
 
@@ -400,8 +403,11 @@ def best_strategy_compiled(args, program, loss):
 
 
 class ExponentialMovingAverage(object):
-
-    def __init__(self, decay=0.999, thres_steps=None, zero_debias=False, name=None):
+    def __init__(self,
+                 decay=0.999,
+                 thres_steps=None,
+                 zero_debias=False,
+                 name=None):
         self._decay = decay
         self._thres_steps = thres_steps
         self._name = name if name is not None else ''
@@ -421,7 +427,7 @@ class ExponentialMovingAverage(object):
         self._ema_vars = {}
         for param, tmp in self._params_tmps:
             with param.block.program._optimized_guard(
-                    [param, tmp]), name_scope('moving_average'):
+                [param, tmp]), name_scope('moving_average'):
                 self._ema_vars[param.name] = self._create_ema_vars(param)
 
         self.apply_program = Program()
@@ -491,14 +497,14 @@ class ExponentialMovingAverage(object):
         param_master_emas = []
         for param, tmp in self._params_tmps:
             with param.block.program._optimized_guard(
-                    [param, tmp]), name_scope('moving_average'):
+                [param, tmp]), name_scope('moving_average'):
                 param_ema = self._ema_vars[param.name]
                 if param.name + '.master' in self._ema_vars:
                     master_ema = self._ema_vars[param.name + '.master']
                     param_master_emas.append([param_ema, master_ema])
                 else:
                     ema_t = param_ema * self._decay_var + param * (
-                            1 - self._decay_var)
+                        1 - self._decay_var)
                     layers.assign(input=ema_t, output=param_ema)
 
         # for fp16 params

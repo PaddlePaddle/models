@@ -13,7 +13,7 @@ train(){
         --batch_size 2048 \
         --sort_type pool \
         --pool_size 10000 \
-        --print_step 1 \
+        --print_step 100 \
         --weight_sharing False \
         --epoch 20 \
         --enable_ce True \
@@ -25,9 +25,11 @@ train(){
 cudaid=${transformer:=0} # use 0-th card as default
 export CUDA_VISIBLE_DEVICES=$cudaid
 
-train | python _ce.py
+train
 
-cudaid=${transformer_m:=0,1,2,3} # use 0,1,2,3 card as default
-export CUDA_VISIBLE_DEVICES=$cudaid
+#train | python _ce.py
 
-train | python _ce.py
+#cudaid=${transformer_m:=0,1,2,3} # use 0,1,2,3 card as default
+#export CUDA_VISIBLE_DEVICES=$cudaid
+
+#train | python _ce.py

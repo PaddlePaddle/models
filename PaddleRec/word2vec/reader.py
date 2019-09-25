@@ -48,6 +48,8 @@ class Word2VecReader(object):
         id_counts = []
         word_id = 0
 
+        print('Constructor called')
+
         with io.open(dict_path, 'r', encoding='utf-8') as f:
             for line in f:
                 word, count = line.split()[0], int(line.split()[1])
