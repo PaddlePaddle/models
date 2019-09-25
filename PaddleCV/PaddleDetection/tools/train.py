@@ -150,8 +150,7 @@ def main():
 
     # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
-    if 'RCNN' in main_arch:
-        build_strategy.fuse_all_optimizer_ops = False
+    build_strategy.fuse_all_optimizer_ops = False
     if FLAGS.fp16:
         build_strategy.fuse_all_reduce_ops = False
     # only enable sync_bn in multi GPU devices
