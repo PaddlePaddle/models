@@ -13,6 +13,7 @@ import numpy as np
 import logging
 import logging.handlers
 import paddle.fluid as fluid
+import io
 """
 ******functions for file processing******
 """
@@ -22,10 +23,7 @@ def load_vocab(file_path):
     load the given vocabulary
     """
     vocab = {}
-    if six.PY3:
-        f = open(file_path, "r", encoding="utf-8")
-    else:
-        f = open(file_path, "r")
+    f = io.open(file_path, "r", encoding="utf-8")
     for line in f:
         items = line.strip("\n").split("\t")
         if items[0] not in vocab:
