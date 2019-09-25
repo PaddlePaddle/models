@@ -43,28 +43,22 @@ class FaceBoxes(object):
 
     __category__ = 'architecture'
     __inject__ = ['backbone', 'output_decoder']
-    __shared__ = ['num_classes']
+    __shared__ = ['num_classes', 'densities', 'fixed_sizes']
 
     def __init__(self,
                  backbone="FaceBoxNet",
                  output_decoder=SSDOutputDecoder().__dict__,
-                 min_sizes=[[16., 32., 64.], [96.], [128.]],
-                 max_sizes=[[32., 64., 96.], [128.], [256.]],
-                 steps=[4., 16., 64],
-                 num_classes=2,
-                 use_density_prior_box=True,
-                 original_edition=True):
+                 densities=[[4, 2, 1], [1], [1]],
+                 fixed_sizes=[[32., 64., 128.], [256.], [512.]],
+                 num_classes=2):
         super(FaceBoxes, self).__init__()
         self.backbone = backbone
         self.num_classes = num_classes
         self.output_decoder = output_decoder
         if isinstance(output_decoder, dict):
             self.output_decoder = SSDOutputDecoder(**output_decoder)
-        self.min_sizes = min_sizes
-        self.max_sizes = max_sizes
-        self.steps = steps
-        self.use_density_prior_box = use_density_prior_box
-        self.original_edition = original_edition
+        self.densities = densities
+        self.fixed_sizes = fixed_sizes
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
@@ -72,7 +66,7 @@ class FaceBoxes(object):
             gt_box = feed_vars['gt_box']
             gt_label = feed_vars['gt_label']
 
-        body_feats = self.backbone(im, self.original_edition)
+        body_feats = self.backbone(im)
         locs, confs, box, box_var = self._multi_box_head(
             inputs=body_feats, image=im, num_classes=self.num_classes)
 
@@ -93,18 +87,14 @@ class FaceBoxes(object):
             pred = self.output_decoder(locs, confs, box, box_var)
             return {'bbox': pred}
 
-    def _multi_box_head(self,
-                        inputs,
-                        image,
-                        num_classes=2):
+    def _multi_box_head(self, inputs, image, num_classes=2):
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
             compile_shape = [
                 trans.shape[0], np.prod(trans.shape[1:]) // last_dim, last_dim
             ]
 
-            return fluid.layers.reshape(
-                trans, shape=compile_shape)
+            return fluid.layers.reshape(trans, shape=compile_shape)
 
         def _is_list_or_tuple_(data):
             return (isinstance(data, list) or isinstance(data, tuple))
@@ -114,51 +104,34 @@ class FaceBoxes(object):
         b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
 
         for i, input in enumerate(inputs):
-            if self.use_density_prior_box:
-                if i == 0:
-                    box, var = fluid.layers.density_prior_box(
-                        input,
-                        image,
-                        densities=[4, 2, 1],
-                        fixed_sizes=[32, 64, 128],
-                        fixed_ratios=[1.],
-                        clip=False,
-                        offset=0.5)
-                elif i == 1:
-                    box, var = fluid.layers.density_prior_box(
-                        input,
-                        image,
-                        densities=[1],
-                        fixed_sizes=[256],
-                        fixed_ratios=[1.],
-                        clip=False,
-                        offset=0.5)
-                elif i == 2:
-                    box, var = fluid.layers.density_prior_box(
-                        input,
-                        image,
-                        densities=[1],
-                        fixed_sizes=[512],
-                        fixed_ratios=[1.],
-                        clip=False,
-                        offset=0.5)
-            else:
-                min_size = self.min_sizes[i]
-                max_size = self.max_sizes[i]
-                if not _is_list_or_tuple_(min_size):
-                    min_size = [min_size]
-                if not _is_list_or_tuple_(max_size):
-                    max_size = [max_size]
-
-                box, var = fluid.layers.prior_box(
+            densities = self.densities[i]
+            fixed_sizes = self.fixed_sizes[i]
+            if i == 0:
+                box, var = fluid.layers.density_prior_box(
                     input,
                     image,
-                    min_sizes=min_size,
-                    max_sizes=max_size,
-                    steps=[self.steps[i]] * 2,
-                    aspect_ratios=[1.],
+                    densities=densities,
+                    fixed_sizes=fixed_sizes,
+                    fixed_ratios=[1.],
                     clip=False,
-                    flip=False,
+                    offset=0.5)
+            elif i == 1:
+                box, var = fluid.layers.density_prior_box(
+                    input,
+                    image,
+                    densities=densities,
+                    fixed_sizes=fixed_sizes,
+                    fixed_ratios=[1.],
+                    clip=False,
+                    offset=0.5)
+            elif i == 2:
+                box, var = fluid.layers.density_prior_box(
+                    input,
+                    image,
+                    densities=densities,
+                    fixed_sizes=fixed_sizes,
+                    fixed_ratios=[1.],
+                    clip=False,
                     offset=0.5)
 
             print("[ygh-debug] num_boxes:{}".format(box.shape))

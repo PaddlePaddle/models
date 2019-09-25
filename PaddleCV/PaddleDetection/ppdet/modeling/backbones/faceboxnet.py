@@ -33,19 +33,17 @@ class FaceBoxNet(object):
         with_extra_blocks (bool): whether or not extra blocks should be added
     """
 
-    def __init__(self,
-                 with_extra_blocks=True,
-                 original_edition=True):
+    def __init__(self, with_extra_blocks=True, lite_edition=False):
         super(FaceBoxNet, self).__init__()
 
         self.with_extra_blocks = with_extra_blocks
-        self.original_edition = original_edition
+        self.lite_edition = lite_edition
 
     def __call__(self, input):
-        if self.original_edition:
-            return self._original_edition(input)
-        else:
+        if self.lite_edition:
             return self._simplified_edition(input)
+        else:
+            return self._original_edition(input)
 
     def _simplified_edition(self, input):
         conv_1_1 = self._conv_norm_crelu(
@@ -135,7 +133,7 @@ class FaceBoxNet(object):
             padding=3,
             act='relu',
             name="conv_1")
-        # TODO to confirm
+
         pool_1 = fluid.layers.pool2d(
             input=conv_1,
             pool_size=3,
@@ -144,7 +142,7 @@ class FaceBoxNet(object):
             pool_type='max',
             name="pool_1")
 
-        conv_2 = self._conv_norm(
+        conv_2 = self._conv_norm_crelu(
             input=pool_1,
             num_filters=64,
             filter_size=5,
@@ -152,7 +150,7 @@ class FaceBoxNet(object):
             padding=2,
             act='relu',
             name="conv_2")
-        # TODO to confirm
+
         pool_2 = fluid.layers.pool2d(
             input=conv_1,
             pool_size=3,
