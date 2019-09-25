@@ -57,7 +57,7 @@ def load_params(exe, prog, path, ignore_params=[]):
     """
 
     if is_url(path):
-        path = get_weight_path(path)
+        path = get_weights_path(path)
 
     if not os.path.exists(path):
         raise ValueError("Model pretrain path {} does not "
@@ -146,7 +146,7 @@ def load_and_fusebn(exe, prog, path):
     logger.info('Load model and fuse batch norm from {}...'.format(path))
 
     if is_url(path):
-        path = get_weight_path(path)
+        path = get_weights_path(path)
 
     if not os.path.exists(path):
         raise ValueError("Model path {} does not exists.".format(path))

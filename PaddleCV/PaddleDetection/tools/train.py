@@ -47,7 +47,6 @@ from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
 import ppdet.utils.checkpoint as checkpoint
-from ppdet.utils.finetune_utils import get_ignore_params
 from ppdet.modeling.model_input import create_feed
 
 import logging
