@@ -171,7 +171,7 @@ def _reader_creator(file_list,
 
 
 def train(data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'train_list.txt.100')
+    file_list = os.path.join(data_dir, 'train_list.txt')
     return _reader_creator(
         file_list,
         'train',
@@ -182,7 +182,7 @@ def train(data_dir=DATA_DIR):
 
 
 def val(data_dir=DATA_DIR):
-    file_list = os.path.join(data_dir, 'val_list.txt.100')
+    file_list = os.path.join(data_dir, 'val_list.txt')
     return _reader_creator(file_list, 'val', shuffle=False, data_dir=data_dir)
 
 

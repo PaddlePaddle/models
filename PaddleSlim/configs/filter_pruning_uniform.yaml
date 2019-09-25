@@ -12,7 +12,7 @@ strategies:
         pruner: 'pruner_1'
         start_epoch: 0
         target_ratio: 0.5
-        pruned_params: '.*linear_weights'
+        pruned_params: '.*_sep_weights'
         metric_name: 'acc_top1'
 compressor:
     epoch: 200
