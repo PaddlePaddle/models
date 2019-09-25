@@ -52,7 +52,8 @@ class FaceBoxes(object):
                  max_sizes=[[32., 64., 96.], [128.], [256.]],
                  steps=[4., 16., 64],
                  num_classes=2,
-                 use_density_prior_box=True):
+                 use_density_prior_box=True,
+                 original_edition=True):
         super(FaceBoxes, self).__init__()
         self.backbone = backbone
         self.num_classes = num_classes
@@ -62,7 +63,8 @@ class FaceBoxes(object):
         self.min_sizes = min_sizes
         self.max_sizes = max_sizes
         self.steps = steps
-        self.use_density_prior_box = use_density_prior_box 
+        self.use_density_prior_box = use_density_prior_box
+        self.original_edition = original_edition
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
@@ -70,7 +72,7 @@ class FaceBoxes(object):
             gt_box = feed_vars['gt_box']
             gt_label = feed_vars['gt_label']
 
-        body_feats = self.backbone(im)
+        body_feats = self.backbone(im, self.original_edition)
         locs, confs, box, box_var = self._multi_box_head(
             inputs=body_feats, image=im, num_classes=self.num_classes)
 
