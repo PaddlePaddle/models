@@ -76,7 +76,7 @@ def compress(args):
     #print("="*50+"student_model_params"+"="*50)
     #for v in fluid.default_main_program().list_vars():
     #    print(v.name, v.shape)
-    #val_program = fluid.default_main_program().clone()
+    val_program = fluid.default_main_program().clone()
     if args.quant_only:
         boundaries = [
             args.total_images / args.batch_size * 10,
