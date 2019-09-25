@@ -118,34 +118,34 @@ mobile预测模型可使用PaddleLite进行加载预测，可参见教程[Paddle
 
 ### MobileNetV1
 
-| FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
+| weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
-|baseline|70.99%/89.68% |- |- |-|
-|-10%|- |- |- |-|
-|-30%|- |- |- |-|
-|-50%|- |- |- |-|
+|baseline|- |70.99%/89.68%|- |-|
+|abs_max|abs_max|- |- |-|
+|abs_max|moving_average_abs_max|- |- |-|
+|channel_wise_abs_max|abs_max|- |- |-|
 
 >训练超参：
 
 ### MobileNetV2
 
-| FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
+| weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
-|baseline|72.15%/90.65% |- |- |-|
-|-10%|- |- |- |-|
-|-30%|- |- |- |-|
-|-50%|- |- |- |-|
+|baseline|- |72.15%/90.65%|- |-|
+|abs_max|abs_max|- |- |-|
+|abs_max|moving_average_abs_max|- |- |-|
+|channel_wise_abs_max|abs_max|- |- |-|
 
 >训练超参：
 
 ### ResNet50
 
-| FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
+| weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
-|baseline|76.50%/93.00% |- |- |-|
-|-10%|- |- |- |-|
-|-30%|- |- |- |-|
-|-50%|- |- |- |-|
+|baseline|- |76.50%/93.00%|- |-|
+|abs_max|abs_max|- |- |-|
+|abs_max|moving_average_abs_max|- |- |-|
+|channel_wise_abs_max|abs_max|- |- |-|
 
 >训练超参：
 
