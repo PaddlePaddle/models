@@ -222,3 +222,9 @@ The calculation rules are as follows，they are equivalent: </br>
 number can reduce GPU memory footprint without affecting training speed.
 Take Mask-RCNN (R50) as example, by setting `export FLAGS_conv_workspace_size_limit=512`,
 batch size could reach 4 per GPU (Tesla V100 16GB).
+
+
+**Q:**  How to change data preprocessing? </br>
+**A:**  Set `sample_transform` in configuration. Note that **the whole transforms** need to be added in configuration.
+For example, `DecodeImage`, `NormalizeImage` and `Permute` in RCNN models. For detail description, please refer
+to [config_example](config_example).

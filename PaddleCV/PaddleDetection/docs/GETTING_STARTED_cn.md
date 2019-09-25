@@ -217,3 +217,8 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 **A:**  可通过设置环境变量`FLAGS_conv_workspace_size_limit`为较小的值来减少显存消耗，并且不
 会影响训练速度。以Mask-RCNN（R50）为例，设置`export FLAGS_conv_workspace_size_limit = 512`，
 batch size可以达到每GPU 4 (Tesla V100 16GB)。
+
+
+**Q:**  如何修改数据预处理? </br>
+**A:**  可在配置文件中设置 `sample_transform`。注意需要在配置文件中加入**完整预处理**
+例如RCNN模型中`DecodeImage`, `NormalizeImage` and `Permute`。更多详细描述请参考[配置案例](config_example)。
