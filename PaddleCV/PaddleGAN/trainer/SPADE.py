@@ -274,11 +274,13 @@ class SPADE(object):
                  cfg=None,
                  train_reader=None,
                  test_reader=None,
-                 batch_num=1):
+                 batch_num=1,
+                 id2name=None):
         self.cfg = cfg
         self.train_reader = train_reader
         self.test_reader = test_reader
         self.batch_num = batch_num
+        self.id2name = id2name
 
     def build_model(self):
         data_shape = [-1, 3, self.cfg.crop_height, self.cfg.crop_width]
@@ -324,7 +326,7 @@ class SPADE(object):
         ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = False
-        build_strategy.sync_batch_norm = True
+        build_strategy.sync_batch_norm = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
@@ -340,14 +342,8 @@ class SPADE(object):
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for tensor in py_reader():
-                data_A, data_B, data_C = tensor[0]['input_A'], tensor[0][
-                    'input_B'], tensor[0]['input_C']
-                tensor_A = fluid.LoDTensor()
-                tensor_B = fluid.LoDTensor()
-                tensor_C = fluid.LoDTensor()
-                tensor_A.set(data_A, place)
-                tensor_B.set(data_B, place)
-                tensor_C.set(data_C, place)
+                data_A, data_B, data_C = tensor[0]['input_label'], tensor[0][
+                    'input_img'], tensor[0]['input_ins']
                 s_time = time.time()
                 # optimize the generator network
                 g_loss_gan, g_loss_vgg, g_loss_feat, fake_B_tmp = exe.run(
@@ -357,9 +353,9 @@ class SPADE(object):
                         gen_trainer.gan_feat_loss, gen_trainer.fake_B
                     ],
                     feed={
-                        "input_label": tensor_A,
-                        "input_img": tensor_B,
-                        "input_ins": tensor_C
+                        "input_label": data_A,
+                        "input_img": data_B,
+                        "input_ins": data_C
                     })
 
                 # optimize the discriminator network
@@ -369,9 +365,9 @@ class SPADE(object):
                         dis_trainer.gan_loss_real, dis_trainer.gan_loss_fake
                     ],
                     feed={
-                        "input_label": tensor_A,
-                        "input_img": tensor_B,
-                        "input_ins": tensor_C,
+                        "input_label": data_A,
+                        "input_img": data_B,
+                        "input_ins": data_C,
                         "input_fake": fake_B_tmp
                     })
 
@@ -396,7 +392,7 @@ class SPADE(object):
                     shape=[self.cfg.batch_size],
                     dtype="int32")
                 test_py_reader = fluid.io.PyReader(
-                    feed_list=[input_A, input_B, image_name],
+                    feed_list=[input_A, input_B, input_C, image_name],
                     capacity=4,  ## batch_size * 4
                     iterable=True,
                     use_double_buffer=True)
@@ -404,9 +400,15 @@ class SPADE(object):
                     self.test_reader,
                     places=fluid.cuda_places()
                     if self.cfg.use_gpu else fluid.cpu_places())
-                utility.save_test_image(epoch_id, self.cfg, exe, place,
-                                        test_program, gen_trainer,
-                                        test_py_reader)
+                utility.save_test_image(
+                    epoch_id,
+                    self.cfg,
+                    exe,
+                    place,
+                    test_program,
+                    gen_trainer,
+                    test_py_reader,
+                    A_id2name=self.id2name)
 
             if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,

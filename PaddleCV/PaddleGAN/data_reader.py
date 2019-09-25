@@ -67,11 +67,9 @@ def get_preprocess_param(load_width, load_height, crop_width, crop_height):
         x = np.random.randint(0, np.maximum(0, load_width - crop_width))
         y = np.random.randint(0, np.maximum(0, load_height - crop_height))
     flip = np.random.rand() > 0.5
-    return {
-        "crop_pos": (x, y),
-        "flip": flip}
+    return {"crop_pos": (x, y), "flip": flip}
 
-        
+
 class reader_creator(object):
     ''' read and preprocess dataset'''
 
@@ -108,7 +106,7 @@ class reader_creator(object):
 
             if self.shuffle:
                 np.random.shuffle(self.lines)
-            
+
             for i, file in enumerate(self.lines):
                 file = file.strip('\n\r\t ')
                 self.name2id[os.path.basename(file)] = i
@@ -239,6 +237,9 @@ class triplex_reader_creator(reader_creator):
             batch_size=batch_size,
             mode=mode)
 
+    self.name2id = {}
+    self.id2name = {}
+
     def make_reader(self, args, return_name=False):
         print(self.image_dir, self.list_filename)
         print("files length:", len(self.lines))
@@ -250,23 +251,24 @@ class triplex_reader_creator(reader_creator):
             batch_out_name = []
             if self.shuffle:
                 np.random.shuffle(self.lines)
-            for line in self.lines:
+            for i, line in enumerate(self.lines):
                 files = line.strip('\n\r\t ').split('\t')
                 if len(files) != 3:
                     print("files is not equal to 3!")
                     sys.exit(-1)
+                self.name2id[os.path.basename(files[0])] = i
+                self.id2name[i] = os.path.basename(files[0])
                 #label image instance
-                img1 = Image.open(os.path.join(self.image_dir, files[
-                    0]))
+                img1 = Image.open(os.path.join(self.image_dir, files[0]))
                 img2 = Image.open(os.path.join(self.image_dir, files[
                     1])).convert('RGB')
                 if not args.no_instance:
-                    img3 = Image.open(os.path.join(self.image_dir, files[
-                        2]))
+                    img3 = Image.open(os.path.join(self.image_dir, files[2]))
 
                 if self.mode == "TRAIN":
-                    param = get_preprocess_param(args.load_width, args.load_height,
-                                                 args.crop_width, args.crop_height)
+                    param = get_preprocess_param(
+                        args.load_width, args.load_height, args.crop_width,
+                        args.crop_height)
                     img1 = img1.resize((args.load_width, args.load_height),
                                        Image.NEAREST)
                     img2 = img2.resize((args.load_width, args.load_height),
@@ -275,10 +277,13 @@ class triplex_reader_creator(reader_creator):
                         img3 = img3.resize((args.load_width, args.load_height),
                                            Image.NEAREST)
                     if args.crop_type == 'Centor':
-                        img1 = CentorCrop(img1, args.crop_width, args.crop_height)
-                        img2 = CentorCrop(img2, args.crop_width, args.crop_height)
+                        img1 = CentorCrop(img1, args.crop_width,
+                                          args.crop_height)
+                        img2 = CentorCrop(img2, args.crop_width,
+                                          args.crop_height)
                         if not args.no_instance:
-                            img3 = CentorCrop(img3, args.crop_width, args.crop_height)
+                            img3 = CentorCrop(img3, args.crop_width,
+                                              args.crop_height)
                     elif args.crop_type == 'Random':
                         x = param['crop_pos'][0]
                         y = param['crop_pos'][1]
@@ -287,8 +292,8 @@ class triplex_reader_creator(reader_creator):
                         img2 = img2.crop(
                             (x, y, x + args.crop_width, y + args.crop_height))
                         if not args.no_instance:
-                            img3 = img3.crop(
-                                (x, y, x + args.crop_width, y + args.crop_height))
+                            img3 = img3.crop((x, y, x + args.crop_width,
+                                              y + args.crop_height))
                 else:
                     img1 = img1.resize((args.crop_width, args.crop_height),
                                        Image.NEAREST)
@@ -299,9 +304,10 @@ class triplex_reader_creator(reader_creator):
                                            Image.NEAREST)
 
                 img1 = np.array(img1)
-                index = img1[np.newaxis, :,:]
-                input_label = np.zeros((args.label_nc, index.shape[1], index.shape[2]))
-                np.put_along_axis(input_label,index,1.0,0)
+                index = img1[np.newaxis, :, :]
+                input_label = np.zeros(
+                    (args.label_nc, index.shape[1], index.shape[2]))
+                np.put_along_axis(input_label, index, 1.0, 0)
                 img1 = input_label
                 img2 = (np.array(img2).astype('float32') / 255.0 - 0.5) / 0.5
                 img2 = img2.transpose([2, 0, 1])
@@ -311,10 +317,14 @@ class triplex_reader_creator(reader_creator):
                     ###extracte edge from instance
                     edge = np.zeros(img3.shape)
                     edge = edge.astype('int8')
-                    edge[:, :, 1:] = edge[:, :, 1:] | (img3[:, :, 1:] != img3[:, :, :-1])
-                    edge[:, :, :-1] = edge[:, :, :-1] | (img3[:, :, 1:] != img3[:, :, :-1])
-                    edge[:, 1:, :] = edge[:, 1:, :] | (img3[:, 1:, :] != img3[:, :-1, :])
-                    edge[:, :-1, :] = edge[:, :-1, :] | (img3[:, 1:, :] != img3[:, :-1, :])
+                    edge[:, :, 1:] = edge[:, :, 1:] | (
+                        img3[:, :, 1:] != img3[:, :, :-1])
+                    edge[:, :, :-1] = edge[:, :, :-1] | (
+                        img3[:, :, 1:] != img3[:, :, :-1])
+                    edge[:, 1:, :] = edge[:, 1:, :] | (
+                        img3[:, 1:, :] != img3[:, :-1, :])
+                    edge[:, :-1, :] = edge[:, :-1, :] | (
+                        img3[:, 1:, :] != img3[:, :-1, :])
                     img3 = edge.astype('float32')
                     ###end extracte
                 batch_out_1.append(img1)
@@ -322,7 +332,7 @@ class triplex_reader_creator(reader_creator):
                 if not args.no_instance:
                     batch_out_3.append(img3)
                 if return_name:
-                    batch_out_name.append(os.path.basename(files[0]))
+                    batch_out_name.append(i)
                 if len(batch_out_1) == self.batch_size:
                     if return_name:
                         if not args.no_instance:
@@ -594,9 +604,10 @@ class data_reader(object):
                         mode="TEST")
                     reader_test = test_reader.make_reader(
                         self.cfg, return_name=True)
+                    id2name = test_reader.id2name
                 batch_num = train_reader.len()
                 reader = train_reader.make_reader(self.cfg)
-                return reader, reader_test, batch_num
+                return reader, reader_test, batch_num, id2name
             elif self.cfg.model_net in ['SPADE']:
                 dataset_dir = os.path.join(self.cfg.data_dir, self.cfg.dataset)
                 train_list = os.path.join(dataset_dir, 'train.txt')

@@ -241,8 +241,9 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 
 - 注意
    - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
-   - 2：InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同，InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
-   - 3：调用动态链接库预测时需要将训练模型转换为二进制模型
+   - 2：除EfficientNet外，InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同，InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
+   - 3: EfficientNetB0~B7的分辨率大小分别为224x224，240x240，260x260，300x300，380x380，456x456，528x528，600x600，预测时的resize_short_size在其分辨率的长或高的基础上加32，如EfficientNetB1的resize_short_size为272，在该系列模型训练和预测的过程中，图片resize参数interpolation的值设置为2（cubic插值方式），该模型在训练过程中使用了指数滑动平均策略，具体请参考[指数滑动平均](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage)。
+   - 4：调用动态链接库预测时需要将训练模型转换为二进制模型。
 
         ```bash
         python infer.py \
@@ -251,7 +252,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
                --save_inference=True
         ```
 
-   - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
+   - 5: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 
 
 ### AlexNet
@@ -386,13 +387,15 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
 |[EfficientNetB0](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_pretrained.tar) | 77.38% | 93.31% | 10.303 | 4.334 |
-|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar) | 79.15% | 94.41% | 15.626 | 6.502 |
-|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar) | 79.85% | 94.74% | 17.847 | 7.558 |
-|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar) | 81.15% | 95.41% | 25.993 | 10.937 |
-|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar) | 82.85% | 96.23% | 47.734 | 18.536 |
-|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar) | 83.62% | 96.72% | 88.578 | 32.102 |
-|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar) | 84.00% | 96.88% | 138.670 | 51.059 |
-|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar) | 84.30% | 96.89% | 234.364 | 82.107 |
+|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar)<sup>[1](#trans)</sup> | 79.15% | 94.41% | 15.626 | 6.502 |
+|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar)<sup>[1](#trans)</sup> | 79.85% | 94.74% | 17.847 | 7.558 |
+|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar)<sup>[1](#trans)</sup> | 81.15% | 95.41% | 25.993 | 10.937 |
+|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar)<sup>[1](#trans)</sup> | 82.85% | 96.23% | 47.734 | 18.536 |
+|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[1](#trans)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
+|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[1](#trans)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
+|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[1](#trans)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
+
+<a name="trans">[1]</a> 表示该预训练权重是由[官方的代码仓库](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)转换来的。
 
 ## FAQ
 

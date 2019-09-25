@@ -172,28 +172,25 @@ def save_test_image(epoch,
             res_inputB.save(os.path.join(out_path, inputB_name))
     elif cfg.model_net == "SPADE":
         for data in A_test_reader():
-            data_A, data_B, data_C, name = data[0]['input_A'], data[0]['input_B'], data[0]['input_C'], data[0]['image_name']
-            tensor_A = fluid.LoDTensor()
-            tensor_B = fluid.LoDTensor()
-            tensor_C = fluid.LoDTensor()
-            tensor_A.set(data_A, place)
-            tensor_B.set(data_B, place)
-            tensor_C.set(data_C, place)
-            fake_B_temp = exe.run(
-                test_program,
-                fetch_list=[g_trainer.fake_B],
-                feed={"input_label": tensor_A,
-                      "input_img": tensor_B,
-                      "input_ins": tensor_C})
+            data_A, data_B, data_C, name = data[0]['input_label'], data[0][
+                'input_img'], data[0]['input_ins'], data[0]['image_name']
+            fake_B_temp = exe.run(test_program,
+                                  fetch_list=[g_trainer.fake_B],
+                                  feed={
+                                      "input_label": data_A,
+                                      "input_img": data_B,
+                                      "input_ins": data_C
+                                  })
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
             input_B_temp = np.squeeze(data_B[0]).transpose([1, 2, 0])
+            image_name = A_id2name[np.array(name).astype('int32')[0]]
 
             res_fakeB = Image.fromarray(((fake_B_temp + 1) * 127.5).astype(
                 np.uint8))
-            res_fakeB.save(out_path+"/fakeB_"+str(epoch)+"_"+name)
+            res_fakeB.save(out_path + "/fakeB_" + str(epoch) + "_" + image_name)
             res_real = Image.fromarray(((input_B_temp + 1) * 127.5).astype(
                 np.uint8))
-            res_real.save(out_path+"/real_"+str(epoch)+"_"+name)
+            res_real.save(out_path + "/real_" + str(epoch) + "_" + image_name)
     elif cfg.model_net == "StarGAN":
         for data in A_test_reader():
             real_img, label_org, label_trg, image_name = data[0][

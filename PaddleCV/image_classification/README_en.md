@@ -226,15 +226,16 @@ Pretrained models can be downloaded by clicking related model names.
 
 - Note
     - 1: ResNet50_vd_v2 is the distilled version of ResNet50_vd.
-    - 2: The image resolution feeded in InceptionV4 and Xception net is ```299x299```, Fix_ResNeXt101_32x48d_wsl is ```320x320```, DarkNet is ```256x256```, others are ```224x224```.In test time, the resize_short_size of the DarkNet53 and Fix_ResNeXt101_32x48d_wsl series networks is the same as the width or height of the input image resolution, the InceptionV4 and Xception network resize_short_size is 320, and the other networks resize_short_size are 256.
-    - 3: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
+    - 2: In addition to EfficientNet, the image resolution feeded in InceptionV4 and Xception net is ```299x299```, Fix_ResNeXt101_32x48d_wsl is ```320x320```, DarkNet is ```256x256```, others are ```224x224```.In test time, the resize_short_size of the DarkNet53 and Fix_ResNeXt101_32x48d_wsl series networks is the same as the width or height of the input image resolution, the InceptionV4 and Xception network resize_short_size is 320, and the other networks resize_short_size are 256.
+    - 3: The resolutions of EfficientNetB0~B7 are ```224x224```,```240x240```,```260x260```,```300x300```,```380x380```,```456x456```,```528x528```,```600x600``` respectively, the resize_short_size in the inference phase is increased by 32 on the basis of the length or height of the resolution, for example, the resize_short_size of EfficientNetB1 is 272.In the process of training and inference phase of these series of models, the value of the resize parameter interpolation is set to 2 (cubic interpolation mode). Besides, the model uses  ExponentialMovingAverage during the training process, this trick please refer to [ExponentialMovingAverage](https://www.paddlepaddle.org.cn/documentation/docs/en/1.5/api/optimizer.html#exponentialmovingaverage).
+    - 4: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
         ```bash
         python infer.py\
             --model=model_name \
             --pretrained_model=${path_to_pretrained_model} \
             --save_inference=True
         ```
-    - 4: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
+    - 5: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
 ### AlexNet
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -368,13 +369,15 @@ Pretrained models can be downloaded by clicking related model names.
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
 |[EfficientNetB0](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_pretrained.tar) | 77.38% | 93.31% | 10.303 | 4.334 |
-|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar) | 79.15% | 94.41% | 15.626 | 6.502 |
-|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar) | 79.85% | 94.74% | 17.847 | 7.558 |
-|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar) | 81.15% | 95.41% | 25.993 | 10.937 |
-|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar) | 82.85% | 96.23% | 47.734 | 18.536 |
-|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar) | 83.62% | 96.72% | 88.578 | 32.102 |
-|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar) | 84.00% | 96.88% | 138.670 | 51.059 |
-|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar) | 84.30% | 96.89% | 234.364 | 82.107 |
+|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar)<sup>[1](#trans)</sup> | 79.15% | 94.41% | 15.626 | 6.502 |
+|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar)<sup>[1](#trans)</sup> | 79.85% | 94.74% | 17.847 | 7.558 |
+|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar)<sup>[1](#trans)</sup> | 81.15% | 95.41% | 25.993 | 10.937 |
+|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar)<sup>[1](#trans)</sup> | 82.85% | 96.23% | 47.734 | 18.536 |
+|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[1](#trans)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
+|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[1](#trans)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
+|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[1](#trans)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
+
+<a name="trans">[1]</a> means the pretrained weight is converted form [original repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet).
 
 ## FAQ
 

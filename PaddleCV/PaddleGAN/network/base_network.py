@@ -34,18 +34,27 @@ def cal_padding(img_size, stride, filter_size, dilation=1):
     return out_size // 2, out_size - out_size // 2
 
 
-def norm_layer(input, norm_type='batch_norm', name=None, is_test=False, affine=True):
+def norm_layer(input,
+               norm_type='batch_norm',
+               name=None,
+               is_test=False,
+               affine=True):
     if norm_type == 'batch_norm':
         if affine == True:
             param_attr = fluid.ParamAttr(
                 name=name + '_w', initializer=fluid.initializer.Constant(1.0))
             bias_attr = fluid.ParamAttr(
-                name=name + '_b', initializer=fluid.initializer.Constant(value=0.0))
+                name=name + '_b',
+                initializer=fluid.initializer.Constant(value=0.0))
         else:
             param_attr = fluid.ParamAttr(
-                name=name + '_w', initializer=fluid.initializer.Constant(1.0), trainable=False)
+                name=name + '_w',
+                initializer=fluid.initializer.Constant(1.0),
+                trainable=False)
             bias_attr = fluid.ParamAttr(
-                name=name + '_b', initializer=fluid.initializer.Constant(value=0.0), trainable=False)
+                name=name + '_b',
+                initializer=fluid.initializer.Constant(value=0.0),
+                trainable=False)
         return fluid.layers.batch_norm(
             input,
             param_attr=param_attr,
@@ -147,7 +156,7 @@ def conv2d(input,
            name="conv2d",
            norm=None,
            activation_fn=None,
-           relufactor=0.0,
+           relufactor=0.2,
            use_bias=False,
            padding_type=None,
            initial="normal",
@@ -209,6 +218,9 @@ def conv2d(input,
     if activation_fn == 'relu':
         conv = fluid.layers.relu(conv, name=name + '_relu')
     elif activation_fn == 'leaky_relu':
+        if relufactor == 0.0:
+            raise Warning(
+                "the activation is leaky_relu, but the relufactor is 0")
         conv = fluid.layers.leaky_relu(
             conv, alpha=relufactor, name=name + '_leaky_relu')
     elif activation_fn == 'tanh':
@@ -234,7 +246,7 @@ def deconv2d(input,
              name="deconv2d",
              norm=None,
              activation_fn=None,
-             relufactor=0.0,
+             relufactor=0.2,
              use_bias=False,
              padding_type=None,
              output_size=None,
@@ -391,6 +403,8 @@ def conv_and_pool(x, num_filters, name, stddev=0.02, act=None):
         bias_attr=bias_attr,
         act=act)
     return out
+
+
 def conv2d_spectral_norm(input,
                          num_filters=64,
                          filter_size=7,
@@ -404,29 +418,38 @@ def conv2d_spectral_norm(input,
                          use_bias=False,
                          padding_type=None,
                          initial="normal",
-                         is_test=False, norm_affine=True):
+                         is_test=False,
+                         norm_affine=True):
     b, c, h, w = input.shape
     height = num_filters
     width = c * filter_size * filter_size
     helper = fluid.layer_helper.LayerHelper("conv2d_spectral_norm", **locals())
     dtype = helper.input_dtype()
     weight_param = fluid.ParamAttr(
-        name=name+".weight_orig",
+        name=name + ".weight_orig",
         initializer=fluid.initializer.Constant(1.0),
         trainable=True)
     weight = helper.create_parameter(
-        attr=weight_param, shape=(num_filters, c, filter_size, filter_size), dtype=dtype)
-    weight_spectral_norm = fluid.layers.spectral_norm(weight, dim=0, name=name+".spectral_norm")
+        attr=weight_param,
+        shape=(num_filters, c, filter_size, filter_size),
+        dtype=dtype)
+    weight_spectral_norm = fluid.layers.spectral_norm(
+        weight, dim=0, name=name + ".spectral_norm")
     weight = weight_spectral_norm
     if use_bias:
         bias_attr = fluid.ParamAttr(
             name=name + "_b", initializer=fluid.initializer.Constant(0.0))
     else:
         bias_attr = False
-    conv = conv2d_with_filter(input, weight, stride, padding, bias_attr=bias_attr, name=name)
+    conv = conv2d_with_filter(
+        input, weight, stride, padding, bias_attr=bias_attr, name=name)
     if norm is not None:
         conv = norm_layer(
-            input=conv, norm_type=norm, name=name + "_norm", is_test=is_test, affine=norm_affine)
+            input=conv,
+            norm_type=norm,
+            name=name + "_norm",
+            is_test=is_test,
+            affine=norm_affine)
     if activation_fn == 'relu':
         conv = fluid.layers.relu(conv, name=name + '_relu')
     elif activation_fn == 'leaky_relu':
