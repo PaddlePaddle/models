@@ -30,13 +30,13 @@ cd data && sh download_preprocess.sh && cd ..
 
 After executing these commands, 3 folders "train_data", "test_data" and "aid_data" will be generated. The folder "train_data" contains 90% of the raw data, while the rest 10% is in "test_data". The folder "aid_data" contains a created feature dictionary "feat_dict.pkl2".
 
-## Train
+## Local Train
 
 ```bash
 nohup python local_train.py --model_output_dir models >> train_log 2>&1 &
 ```
 
-## Infer
+## Local Infer
 ```bash
 nohup python infer.py --model_output_dir models --test_epoch 1 >> infer_log 2>&1 &
 ```
@@ -49,3 +49,47 @@ When the training set is iterated to the 22nd round, the testing Logloss is `0.4
 <p align="center">
 <img src="./picture/deepfm_result.png" height=200 hspace='10'/> <br />
 </p>
+
+## Distributed Train
+We emulate distributed training on a local machine. In default, we use 2 X 2，i.e. 2 pservers X 2 trainers。
+
+### Download and preprocess distributed demo dataset
+This small demo dataset(a few lines from Criteo dataset) only test if distributed training can train.
+```bash
+cd dist_data && sh dist_data_download.sh && cd ..
+```
+
+### Distributed Train and Infer
+Train
+```bash
+sh cluster_train.sh
+```
+params of cluster_train.sh：
+- train_data_dir: path of train data
+- model_output_dir: path of saved model
+- is_local: local or distributed training(set 0 in distributed training)
+- is_sparse: whether to use sparse update in embedding. If not set, default is flase.
+- role: role of process(pserver or trainer)
+- endpoints: ip:port of all pservers
+- current_endpoint: ip:port of current pserver(role should be pserver)
+- trainers: the number of trainers
+
+other params explained in cluster_train.py
+
+Infer
+```bash
+python infer.py --model_output_dir cluster_model --test_epoch 50 --test_data_dir=dist_data/dist_test_data --feat_dict='dist_data/aid_data/feat_dict_10.pkl2'
+```
+
+Notes:
+- **Proxy must be closed**, e.g. unset http_proxy, unset https_proxy.
+
+- The first trainer(with trainer_id 0) saves model params.
+
+- After each training, pserver processes should be stop manually. You can use command below:
+  >ps -ef | grep python
+
+- We use Dataset API to load data，it's only supported on Linux now.
+
+## Distributed Train with Fleet
+Fleet is High-Level API for distributed training in PaddlePaddle. See [DeepFM example](https://github.com/PaddlePaddle/Fleet/tree/develop/examples/deepFM) in Fleet Repo.

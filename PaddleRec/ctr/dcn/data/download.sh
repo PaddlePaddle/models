@@ -15,7 +15,7 @@ wget --no-check-certificate -c https://s3-eu-west-1.amazonaws.com/kaggle-display
 echo "download finished"
 
 echo "extracting ..."
-tar xzvf dac.tar.gz
+tar xzf dac.tar.gz >/dev/null 2>&1
 wc -l $trainfile | awk '{print $1}' > line_nums.log
 
 echo "extract finished"
