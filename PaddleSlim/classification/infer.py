@@ -20,14 +20,15 @@ import functools
 
 import paddle
 import paddle.fluid as fluid
-import reader
+import imagenet_reader as reader
+sys.path.append("..")
 from utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
 # yapf: disable
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('use_gpu',          bool, False,                 "Whether to use GPU or not.")
-add_arg('model_path', str,  "./checkpoints/0/eval_model/",                 "Whether to use pretrained model.")
+add_arg('model_path', str,  "./pruning/checkpoints/resnet50/2/eval_model/",                 "Whether to use pretrained model.")
 # yapf: enable
 
 def infer(args):
@@ -40,9 +41,6 @@ def infer(args):
                                       exe,
                                       model_filename="__model__.infer",
                                       params_filename="__params__")
-    print test_program
-    print feed_target_names
-    print fetch_targets
     test_reader = paddle.batch(reader.test(), batch_size=1)
     feeder = fluid.DataFeeder(place=place, feed_list=feed_target_names, program=test_program)
 

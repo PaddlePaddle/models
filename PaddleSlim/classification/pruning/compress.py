@@ -5,8 +5,10 @@ import paddle
 import argparse
 import functools
 import paddle.fluid as fluid
-import reader
-from mobilenet_v2 import MobileNetV2
+sys.path.append("..")
+import imagenet_reader as reader
+import models
+sys.path.append("../../")
 from utility import add_arguments, print_arguments
 
 from paddle.fluid.contrib.slim import Compressor
@@ -20,25 +22,32 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('batch_size',       int,  64*4,                 "Minibatch size.")
 add_arg('use_gpu',          bool, True,                "Whether to use GPU or not.")
+add_arg('model',            str,  None,                "The target model.")
 add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
 add_arg('config_file',  str, None,                 "The config file for compression with yaml format.")
 # yapf: enable
+
+
+model_list = [m for m in dir(models) if "__" not in m]
 
 def compress(args):
     class_dim=1000
     image_shape="3,224,224"
     image_shape = [int(m) for m in image_shape.split(",")]
-
+    assert args.model in model_list, "{} is not in lists: {}".format(args.model, model_list)
     image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
     # model definition
-    model = MobileNetV2()
+    model = models.__dict__[args.model]()
     out = model.net(input=image, class_dim=class_dim)
     cost = fluid.layers.cross_entropy(input=out, label=label)
     avg_cost = fluid.layers.mean(x=cost)
     acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
     val_program = fluid.default_main_program().clone()
+#    for param in fluid.default_main_program().global_block().all_parameters():
+#        print param.name, param.shape
+#    return
     opt = fluid.optimizer.Momentum(
         momentum=0.9,
         learning_rate=fluid.layers.piecewise_decay(

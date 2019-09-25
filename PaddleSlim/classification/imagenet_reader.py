@@ -14,7 +14,7 @@ DATA_DIM = 224
 THREAD = 16
 BUF_SIZE = 10240
 
-DATA_DIR = 'data/ILSVRC2012'
+DATA_DIR = '/root/workspace/models/PaddleSlim/data/ILSVRC2012'
 
 img_mean = np.array([0.485, 0.456, 0.406]).reshape((3, 1, 1))
 img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1))
