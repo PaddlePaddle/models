@@ -12,7 +12,7 @@ import os
 
 
 class CriteoDataset(dg.MultiSlotDataGenerator):
-    def setup(self):
+    def setup(self, vocab_dir):
         self.cont_min_ = [0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.cont_max_ = [
             5775, 257675, 65535, 969, 23159456, 431037, 56311, 6047, 29019, 11,
@@ -35,7 +35,7 @@ class CriteoDataset(dg.MultiSlotDataGenerator):
         for i in range(26):
             lookup_idx = 1  # remain 0 for default value
             for line in open(
-                    os.path.join('data/vocab', 'C' + str(i + 1) + '.txt')):
+                    os.path.join(vocab_dir, 'C' + str(i + 1) + '.txt')):
                 self.cat_feat_idx_dict_list[i][line.strip()] = lookup_idx
                 lookup_idx += 1
 
@@ -89,5 +89,8 @@ class CriteoDataset(dg.MultiSlotDataGenerator):
 
 if __name__ == '__main__':
     criteo_dataset = CriteoDataset()
-    criteo_dataset.setup()
+    if len(sys.argv) <= 1:
+        sys.stderr.write("feat_dict needed for criteo reader.")
+        exit(1)
+    criteo_dataset.setup(sys.argv[1])
     criteo_dataset.run_from_stdin()

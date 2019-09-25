@@ -15,6 +15,7 @@ import paddle.fluid as fluid
 from config import parse_args
 from reader import CriteoDataset
 from network import DCN
+from collections import OrderedDict
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('fluid')
@@ -28,16 +29,18 @@ def infer():
     place = fluid.CPUPlace()
     inference_scope = fluid.Scope()
 
-    test_files = [
+    test_valid_files = [
         os.path.join(args.test_valid_data_dir, fname)
         for fname in next(os.walk(args.test_valid_data_dir))[2]
     ]
-
-    test_files = random.sample(test_files, int(len(test_files) * 0.5))
+    test_files = random.sample(test_valid_files,
+                               int(len(test_valid_files) * 0.5))
+    if not test_files:
+        test_files = test_valid_files
     print('test files num {}'.format(len(test_files)))
 
     criteo_dataset = CriteoDataset()
-    criteo_dataset.setup()
+    criteo_dataset.setup(args.vocab_dir)
     test_reader = criteo_dataset.test_reader(test_files, args.batch_size, 100)
 
     startup_program = fluid.framework.Program()
@@ -46,8 +49,14 @@ def infer():
 
     with fluid.scope_guard(inference_scope):
         with fluid.framework.program_guard(test_program, startup_program):
+            cat_feat_dims_dict = OrderedDict()
+            for line in open(args.cat_feat_num):
+                spls = line.strip().split()
+                assert len(spls) == 2
+                cat_feat_dims_dict[spls[0]] = int(spls[1])
             dcn_model = DCN(args.cross_num, args.dnn_hidden_units,
-                            args.l2_reg_cross, args.use_bn)
+                            args.l2_reg_cross, args.use_bn, args.clip_by_norm,
+                            cat_feat_dims_dict, args.is_sparse)
             dcn_model.build_network(is_test=True)
 
             exe = fluid.Executor(place)

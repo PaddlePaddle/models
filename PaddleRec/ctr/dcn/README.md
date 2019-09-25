@@ -4,15 +4,18 @@
 
 ```text
 .
-├── README.md            # 文档
-├── local_train.py       # 本地训练脚本
-├── infer.py             # 预测脚本
-├── network.py           # 网络结构
-├── config.py            # 参数配置
-├── reader.py            # 读取数据相关的函数
+├── README.md                       # 文档
+├── local_train.py                  # 本地训练脚本
+├── infer.py                        # 预测脚本
+├── network.py                      # 网络结构
+├── config.py                       # 参数配置
+├── reader.py                       # 读取数据相关的函数
 ├── data/
-    ├── download.sh      # 下载数据脚本
-    ├── preprocess.py    # 数据预处理脚本
+    ├── download.sh                 # 下载数据脚本
+    ├── preprocess.py               # 数据预处理脚本
+├── dist_data/
+    ├── dist_data_download.sh       # 下载单机模拟多机小样本数据脚本
+    ├── preprocess_dist.py          # 小样本数据预处理脚本
 
 ```
 
@@ -20,7 +23,7 @@
 DCN模型介绍可以参阅论文[Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)
 
 ## 环境
-- PaddlePaddle 1.5.1
+- PaddlePaddle 1.5.2
 
 ## 数据下载
 
@@ -62,3 +65,39 @@ nohup python -u infer.py --test_epoch 2 > test.log &
 ```text
 loss: [0.44703564]      auc_val: [0.80654419]
 ```
+
+## 多机训练
+首先使用命令下载并预处理小规模样例数据集：
+```bash
+cd dist_data && sh dist_download.sh && cd ..
+```
+运行命令本地模拟多机场景，默认使用2 X 2，即2个pserver，2个trainer的方式组网训练。
+```bash
+sh cluster_train.sh
+```
+参数说明：
+- train_data_dir: 训练数据目录
+- model_output_dir: 模型保存目录
+- is_local: 是否单机本地训练(单机模拟多机分布式训练是为0)
+- is_sparse: embedding是否使用sparse。如果没有设置，默认是False
+- role: 进程角色(pserver或trainer)
+- endpoints: 所有pserver地址和端口
+- current_endpoint: 当前pserver(role是pserver)端口和地址
+- trainers: trainer数量
+
+其他参数见cluster_train.py
+
+预测
+```bash
+python infer.py --model_output_dir cluster_model --test_epoch 10 --test_valid_data_dir dist_data/dist_test_valid_data --vocab_dir dist_data/vocab --cat_feat_num dist_data/cat_feature_num.txt
+```
+注意:
+
+- 本地模拟需要关闭代理，e.g. unset http_proxy, unset https_proxy
+
+- 0号trainer保存模型参数
+
+- 每次训练完成后需要手动停止pserver进程，使用以下命令查看pserver进程：
+  >ps -ef | grep python
+
+- 数据读取使用dataset模式，目前仅支持运行在Linux环境下
