@@ -124,7 +124,7 @@ EvalDataLoader:
     lod_level: 1
   - name: gt_label
     lod_level: 1
-  - name: is_difficult
+  - name: difficult
     lod_level: 1
   - name: im_shape
     fields:
