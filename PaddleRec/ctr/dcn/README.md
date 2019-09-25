@@ -79,7 +79,7 @@ sh cluster_train.sh
 - train_data_dir: 训练数据目录
 - model_output_dir: 模型保存目录
 - is_local: 是否单机本地训练(单机模拟多机分布式训练是为0)
-- is_sparse: embedding是否使用sparse
+- is_sparse: embedding是否使用sparse。如果没有设置，默认是False
 - role: 进程角色(pserver或trainer)
 - endpoints: 所有pserver地址和端口
 - current_endpoint: 当前pserver(role是pserver)端口和地址

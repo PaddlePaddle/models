@@ -73,7 +73,7 @@ def parse_args():
     parser.add_argument(
         '--reg', type=float, default=1e-4, help=' (default: 1e-4)')
     parser.add_argument('--num_field', type=int, default=39)
-    parser.add_argument('--num_feat', type=int, default=21534)
+    parser.add_argument('--num_feat', type=int, default=135483)
     parser.add_argument('--use_gpu', type=int, default=1)
 
     # dist params

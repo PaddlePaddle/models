@@ -68,7 +68,7 @@ params of cluster_train.sh：
 - train_data_dir: path of train data
 - model_output_dir: path of saved model
 - is_local: local or distributed training(set 0 in distributed training)
-- is_sparse: whether to use sparse update in embedding.
+- is_sparse: whether to use sparse update in embedding. If not set, default is flase.
 - role: role of process(pserver or trainer)
 - endpoints: ip:port of all pservers
 - current_endpoint: ip:port of current pserver(role should be pserver)
