@@ -17,7 +17,6 @@ import multiprocessing
 import sys
 from collections import namedtuple
 
-from tqdm import tqdm
 import paddle.fluid as fluid
 
 import creator
@@ -248,7 +247,7 @@ def do_infer(args):
     dataset = Dataset(id2word_dict, id2label_dict)
 
     # make prediction
-    for data in tqdm(pyreader()):
+    for data in pyreader():
         (words, crf_decode) = exe.run(infer_program,
                                       fetch_list=[infer_ret["words"], infer_ret["crf_decode"]],
                                       feed=data[0],

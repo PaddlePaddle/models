@@ -60,36 +60,40 @@ def test_inference_model(model_dir, text_list, dataset):
     exe = fluid.Executor(place)
 
     # transfer text data to input tensor
-    UNK = dataset.word2id_dict[u'OOV']
     lod = []
     for text in text_list:
-        lod.append(np.array([dataset.word2id_dict.get(word, UNK)
-                             for word in text]).astype(np.int64))
+        lod.append(np.array(dataset.word_to_ids(text.strip())).astype(np.int64))
     base_shape = [[len(c) for c in lod]]
     tensor_words = fluid.create_lod_tensor(lod, base_shape, place)
 
-    # load inference model
-    inference_scope = fluid.core.Scope()
-    with fluid.scope_guard(inference_scope):
-        [inferencer, feed_target_names,
-         fetch_targets] = fluid.io.load_inference_model(model_dir, exe,
-                 model_filename='model.pdmodel',
-                 params_filename='params.pdparams',
-                 )
-        assert feed_target_names[0] == "words"
-        print("Load inference model from %s"%(model_dir))
+    # for empty input, output the same empty
+    if(sum(base_shape[0]) == 0 ):
+        crf_decode = [tensor_words]
+    else:
+        # load inference model
+        inference_scope = fluid.core.Scope()
+        with fluid.scope_guard(inference_scope):
+            [inferencer, feed_target_names,
+            fetch_targets] = fluid.io.load_inference_model(model_dir, exe,
+                    model_filename='model.pdmodel',
+                    params_filename='params.pdparams',
+                    )
+            assert feed_target_names[0] == "words"
+            print("Load inference model from %s"%(model_dir))
 
-        # get lac result
-        crf_decode = exe.run(inferencer,
+            # get lac result
+            crf_decode = exe.run(inferencer,
                              feed={feed_target_names[0]:tensor_words},
                              fetch_list=fetch_targets,
-                             return_numpy=False)
+                             return_numpy=False,
+                             use_program_cache=True,
+                             )
 
-        # parse the crf_decode result
-        result = utils.parse_result(tensor_words,crf_decode[0], dataset)
-        for i,(sent, tags) in enumerate(result):
-            result_list = ['(%s, %s)'%(ch, tag) for ch, tag in zip(sent,tags)]
-            print(''.join(result_list))
+    # parse the crf_decode result
+    result = utils.parse_result(tensor_words,crf_decode[0], dataset)
+    for i,(sent, tags) in enumerate(result):
+        result_list = ['(%s, %s)'%(ch, tag) for ch, tag in zip(sent,tags)]
+        print(''.join(result_list))
 
 
 if __name__=="__main__":
