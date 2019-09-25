@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import argparse
 import ast
 import multiprocessing
@@ -56,11 +69,6 @@ def parse_args():
         default=" ",
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. ")
-    parser.add_argument(
-        "--use_mem_opt",
-        type=ast.literal_eval,
-        default=True,
-        help="The flag indicating whether to use memory optimization.")
     parser.add_argument(
         "--use_py_reader",
         type=ast.literal_eval,
@@ -211,9 +219,6 @@ def fast_infer(args):
 
     # This is used here to set dropout to the test mode.
     infer_program = fluid.default_main_program().clone(for_test=True)
-
-    if args.use_mem_opt:
-        fluid.memory_optimize(infer_program)
 
     if InferTaskConfig.use_gpu:
         place = fluid.CUDAPlace(0)

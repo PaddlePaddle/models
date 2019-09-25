@@ -1,8 +1,22 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 This module provide nets for text classification
 """
 
 import paddle.fluid as fluid
+
 
 def bow_net(data,
             label,
@@ -192,6 +206,7 @@ def gru_net(data,
 
 
 def textcnn_net(data,
+<<<<<<< HEAD
             label,
             dict_dim,
             emb_dim=128,
@@ -200,6 +215,16 @@ def textcnn_net(data,
             class_dim=2,
             win_sizes=None,
             is_prediction=False):
+=======
+                label,
+                dict_dim,
+                emb_dim=128,
+                hid_dim=128,
+                hid_dim2=96,
+                class_dim=2,
+                win_sizes=None,
+                is_infer=False):
+>>>>>>> upstream/develop
     """
     Textcnn_net
     """

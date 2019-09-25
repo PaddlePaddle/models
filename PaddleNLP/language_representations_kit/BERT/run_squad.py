@@ -52,8 +52,16 @@ train_g.add_arg("warmup_proportion", float,  0.1,
                 "Proportion of training steps to perform linear learning rate warmup for.")
 train_g.add_arg("save_steps",        int,    1000,   "The steps interval to save checkpoints.")
 train_g.add_arg("use_fp16",          bool,   False,  "Whether to use fp16 mixed precision training.")
-train_g.add_arg("loss_scaling",      float,  1.0,
+train_g.add_arg("use_dynamic_loss_scaling",    bool,   True,   "Whether to use dynamic loss scaling in mixed precision training.")
+train_g.add_arg("init_loss_scaling",           float,  2**32,
                 "Loss scaling factor for mixed precision training, only valid when use_fp16 is enabled.")
+train_g.add_arg("incr_every_n_steps",          int,    1000,   "Increases loss scaling every n consecutive.")
+train_g.add_arg("decr_every_n_nan_or_inf",     int,    2,
+                "Decreases loss scaling every n accumulated steps with nan or inf gradients.")
+train_g.add_arg("incr_ratio",                  float,  2.0,
+                "The multiplier to use when increasing the loss scaling.")
+train_g.add_arg("decr_ratio",                  float,  0.8,
+                "The less-than-one-multiplier to use when decreasing.")
 
 log_g = ArgumentGroup(parser, "logging", "logging related.")
 log_g.add_arg("skip_steps",          int,    10,    "The steps interval to print loss.")
@@ -164,9 +172,6 @@ def create_model(bert_config, is_training=False):
         start_loss = compute_loss(start_logits, start_positions)
         end_loss = compute_loss(end_logits, end_positions)
         total_loss = (start_loss + end_loss) / 2.0
-        if args.use_fp16 and args.loss_scaling > 1.0:
-            total_loss = total_loss * args.loss_scaling
-
         return pyreader, total_loss, num_seqs
     else:
         return pyreader, unique_id, start_logits, end_logits, num_seqs
@@ -274,7 +279,7 @@ def train(args):
                     bert_config=bert_config,
                     is_training=True)
 
-                scheduled_lr = optimization(
+                scheduled_lr, loss_scaling = optimization(
                     loss=loss,
                     warmup_steps=warmup_steps,
                     num_train_steps=max_train_steps,
@@ -284,8 +289,12 @@ def train(args):
                     weight_decay=args.weight_decay,
                     scheduler=args.lr_scheduler,
                     use_fp16=args.use_fp16,
-                    loss_scaling=args.loss_scaling)
-
+                    use_dynamic_loss_scaling=args.use_dynamic_loss_scaling,
+                    init_loss_scaling=args.init_loss_scaling,
+                    incr_every_n_steps=args.incr_every_n_steps,
+                    decr_every_n_nan_or_inf=args.decr_every_n_nan_or_inf,
+                    incr_ratio=args.incr_ratio,
+                    decr_ratio=args.decr_ratio)
 
         if args.verbose:
             if args.in_tokens:
@@ -305,7 +314,6 @@ def train(args):
                 test_pyreader, unique_ids, start_logits, end_logits, num_seqs = create_model(
                     bert_config=bert_config,
                     is_training=False)
-
 
         test_prog = test_prog.clone(for_test=True)
 
@@ -357,20 +365,18 @@ def train(args):
             try:
                 steps += 1
                 if steps % args.skip_steps == 0:
-                    if warmup_steps <= 0:
-                        fetch_list = [loss.name, num_seqs.name]
+                    if args.use_fp16:
+                        fetch_list = [loss.name, scheduled_lr.name, num_seqs.name, loss_scaling.name]
                     else:
-                        fetch_list = [
-                            loss.name, scheduled_lr.name, num_seqs.name
-                        ]
+                        fetch_list = [loss.name, scheduled_lr.name, num_seqs.name]
                 else:
                     fetch_list = []
 
                 outputs = exe.run(train_compiled_program, fetch_list=fetch_list)
 
                 if steps % args.skip_steps == 0:
-                    if warmup_steps <= 0:
-                        np_loss, np_num_seqs = outputs
+                    if args.use_fp16:
+                        np_loss, np_lr, np_num_seqs, np_scaling = outputs
                     else:
                         np_loss, np_lr, np_num_seqs = outputs
                     total_cost.extend(np_loss * np_num_seqs)
@@ -379,9 +385,9 @@ def train(args):
                     if args.verbose:
                         verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size(
                         )
-                        verbose += "learning rate: %f" % (
-                            np_lr[0]
-                            if warmup_steps > 0 else args.learning_rate)
+                        verbose += "learning rate: %f " % np_lr[0]
+                        if args.use_fp16:
+                            verbose += ", loss scaling: %f" % np_scaling[0]
                         print(verbose)
 
                     time_end = time.time()

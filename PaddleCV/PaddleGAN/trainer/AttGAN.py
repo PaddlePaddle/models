@@ -55,6 +55,9 @@ class GTrainer():
                     fluid.layers.square(
                         fluid.layers.elementwise_sub(
                             x=self.pred_fake, y=ones)))
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
 
             self.g_loss_cls = fluid.layers.mean(
                 fluid.layers.sigmoid_cross_entropy_with_logits(self.cls_fake,
@@ -126,6 +129,9 @@ class DTrainer():
                     cfg=cfg,
                     name="discriminator")
                 self.d_loss = self.d_loss_real + self.d_loss_fake + 1.0 * self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
 
             self.d_loss_real.persistable = True
             self.d_loss_fake.persistable = True
@@ -153,11 +159,11 @@ class DTrainer():
                 beta = fluid.layers.uniform_random_batch_size_like(
                     input=a, shape=a.shape, min=0.0, max=1.0)
                 mean = fluid.layers.reduce_mean(
-                    a, range(len(a.shape)), keep_dim=True)
+                    a, dim=list(range(len(a.shape))), keep_dim=True)
                 input_sub_mean = fluid.layers.elementwise_sub(a, mean, axis=0)
                 var = fluid.layers.reduce_mean(
                     fluid.layers.square(input_sub_mean),
-                    range(len(a.shape)),
+                    dim=list(range(len(a.shape))),
                     keep_dim=True)
                 b = beta * fluid.layers.sqrt(var) * 0.5 + a
             shape = [a.shape[0]]
@@ -297,7 +303,10 @@ class AttGAN(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
-        py_reader.decorate_batch_generator(self.train_reader, places=place)
+        py_reader.decorate_batch_generator(
+            self.train_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -307,7 +316,6 @@ class AttGAN(object):
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
@@ -371,7 +379,9 @@ class AttGAN(object):
                     iterable=True,
                     use_double_buffer=True)
                 test_py_reader.decorate_batch_generator(
-                    self.test_reader, places=place)
+                    self.test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
 
                 test_program = test_gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
