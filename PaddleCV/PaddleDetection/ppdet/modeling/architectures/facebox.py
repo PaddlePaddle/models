@@ -48,9 +48,9 @@ class FaceBox(object):
     def __init__(self,
                  backbone="FaceBoxNet",
                  output_decoder=SSDOutputDecoder().__dict__,
-                 min_sizes=[16., [32., 64., 96.]],
-                 max_sizes=[32., [64., 96., 128.]],
-                 steps=[4., 16.],
+                 min_sizes=[[16., 32., 64.], [96.], [128.]],
+                 max_sizes=[[32., 64., 96.], [128.], [256.]],
+                 steps=[4., 16., 64],
                  num_classes=2):
         super(FaceBox, self).__init__()
         self.backbone = backbone
@@ -112,33 +112,42 @@ class FaceBox(object):
         b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
 
         for i, input in enumerate(inputs):
-            min_size = self.min_sizes[i]
-            max_size = self.max_sizes[i]
-            if not _is_list_or_tuple_(min_size):
-                min_size = [min_size]
-            if not _is_list_or_tuple_(max_size):
-                max_size = [max_size]
-
             if use_density_prior_box:
                 if i == 0:
                     box, var = fluid.layers.density_prior_box(
                         input,
                         image,
-                        densities=[2, 1, 1],
+                        densities=[4, 2, 1],
                         fixed_sizes=[16, 32, 64],
                         fixed_ratios=[1.],
                         clip=False,
                         offset=0.5)
-                if i == 1:
+                elif i == 1:
                     box, var = fluid.layers.density_prior_box(
                         input,
                         image,
-                        densities=[1, 1],
-                        fixed_sizes=[96, 128],
+                        densities=[1],
+                        fixed_sizes=[128],
+                        fixed_ratios=[1.],
+                        clip=False,
+                        offset=0.5)
+                elif i == 2:
+                    box, var = fluid.layers.density_prior_box(
+                        input,
+                        image,
+                        densities=[1],
+                        fixed_sizes=[256],
                         fixed_ratios=[1.],
                         clip=False,
                         offset=0.5)
             else:
+                min_size = self.min_sizes[i]
+                max_size = self.max_sizes[i]
+                if not _is_list_or_tuple_(min_size):
+                    min_size = [min_size]
+                if not _is_list_or_tuple_(max_size):
+                    max_size = [max_size]
+
                 box, var = fluid.layers.prior_box(
                     input,
                     image,

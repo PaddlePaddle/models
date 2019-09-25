@@ -2,14 +2,14 @@ architecture: FaceBox
 train_feed: BlazeFaceTrainFeed
 eval_feed: BlazeFaceEvalFeed
 test_feed: BlazeFaceTestFeed
-pretrain_weights:
+pretrain_weights: 
 use_gpu: true
 max_iters: 180000
 snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
-save_dir: output_facebox
+save_dir: output_facebox_origin_640x640_190925
 eval_mode: matlab
 multi_scale: true
 weights: output/facebox/model_final/
@@ -35,8 +35,8 @@ LearningRate:
 
 OptimizerBuilder:
   optimizer:
-    momentum: 0.9
-    type: Momentum
+    momentum: 0.0
+    type: RMSPropOptimizer
   regularizer:
     factor: 0.0005
     type: L2

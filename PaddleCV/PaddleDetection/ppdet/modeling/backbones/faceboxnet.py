@@ -38,7 +38,13 @@ class FaceBoxNet(object):
 
         self.with_extra_blocks = with_extra_blocks
 
-    def __call__(self, input):
+    def __call__(self, input, original_edition=True):
+        if original_edition:
+            return self._original_edition(input)
+        else:
+            return self._simplified_edition(input)
+
+    def _simplified_edition(self, input):
         conv_1_1 = self._conv_norm_crelu(
             input=input,
             num_filters=8,
@@ -116,6 +122,98 @@ class FaceBoxNet(object):
         print("{}:{}".format("output1", layers[-2].shape))
         print("{}:{}".format("output2", layers[-1].shape))
         return layers[-2], layers[-1]
+
+    def _original_edition(self, input):
+        conv_1 = self._conv_norm_crelu(
+            input=input,
+            num_filters=24,
+            filter_size=7,
+            stride=4,
+            padding=3,
+            act='relu',
+            name="conv_1")
+        # TODO to confirm
+        pool_1 = fluid.layers.pool2d(
+            input=conv_1,
+            pool_size=3,
+            pool_stride=2,
+            pool_padding=1,
+            pool_type='max',
+            name="pool_1")
+
+        conv_2 = self._conv_norm(
+            input=pool_1,
+            num_filters=64,
+            filter_size=5,
+            stride=2,
+            padding=2,
+            act='relu',
+            name="conv_2")
+        # TODO to confirm
+        pool_2 = fluid.layers.pool2d(
+            input=conv_1,
+            pool_size=3,
+            pool_stride=2,
+            pool_padding=1,
+            pool_type='max',
+            name="pool_2")
+
+        conv_inception = pool_2
+
+        for i in range(3):
+            conv_inception = self._inceptionA(conv_inception, i)
+
+        layers = []
+        layers.append(conv_inception)
+
+        conv_3_1 = self._conv_norm(
+            input=conv_inception,
+            num_filters=128,
+            filter_size=1,
+            stride=1,
+            padding=0,
+            act='relu',
+            name="conv_3_1")
+
+        conv_3_2 = self._conv_norm(
+            input=conv_3_1,
+            num_filters=256,
+            filter_size=3,
+            stride=2,
+            padding=1,
+            act='relu',
+            name="conv_3_2")
+
+        layers.append(conv_3_2)
+
+        conv_4_1 = self._conv_norm(
+            input=conv_3_2,
+            num_filters=128,
+            filter_size=1,
+            stride=1,
+            padding=0,
+            act='relu',
+            name="conv_4_1")
+
+        conv_4_2 = self._conv_norm(
+            input=conv_4_1,
+            num_filters=256,
+            filter_size=3,
+            stride=2,
+            padding=1,
+            act='relu',
+            name="conv_4_2")
+
+        layers.append(conv_4_2)
+
+        if not self.with_extra_blocks:
+            return layers[-1]
+        print("layers' length is {}".format(len(layers)))
+        print("{}:{}".format("output1", layers[-3].shape))
+        print("{}:{}".format("output1", layers[-2].shape))
+        print("{}:{}".format("output2", layers[-1].shape))
+
+        return layers[-3], layers[-2], layers[-1]
 
     def _conv_norm(
             self,
