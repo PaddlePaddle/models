@@ -50,7 +50,7 @@ def do_train(args):
         os.environ['CPU_NUM'] = str(dev_count)
         place = fluid.CPUPlace()
 
-    train_reader = creator.create_pyreader(args, file_name=args.test_data,
+    train_reader = creator.create_pyreader(args, file_name=args.train_data,
                                        feed_list=train_ret['feed_list'],
                                        place=place,
                                        mode='lac',

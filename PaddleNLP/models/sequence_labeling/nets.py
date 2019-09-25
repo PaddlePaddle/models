@@ -20,7 +20,7 @@ def lex_net(word, args, vocab_size, num_labels, for_infer = True, target=None):
     """
     word_emb_dim = args.word_emb_dim
     grnn_hidden_dim = args.grnn_hidden_dim
-    emb_lr = args.emb_learning_rate if 'crf_learning_rate' in dir(args) else 1.0
+    emb_lr = args.emb_learning_rate if 'emb_learning_rate' in dir(args) else 1.0
     crf_lr = args.emb_learning_rate if 'crf_learning_rate' in dir(args) else 1.0
     bigru_num = args.bigru_num
     init_bound = 0.1
@@ -72,7 +72,6 @@ def lex_net(word, args, vocab_size, num_labels, for_infer = True, target=None):
         """
         Configure the network
         """
-        # ipdb.set_trace()
         word_embedding = fluid.layers.embedding(
             input=word,
             size=[vocab_size, word_emb_dim],
