@@ -122,7 +122,7 @@ fc10_weights (1280L, 1000L)
 ### MobileNetV1
 
 | FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
-|---|---|---|---|
+|---|---|---|---|---|
 |baseline|70.99%/89.68% |- |- |-|
 |-10%|- |- |- |-|
 |-30%|- |- |- |-|
@@ -133,7 +133,7 @@ fc10_weights (1280L, 1000L)
 ### MobileNetV2
 
 | FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
-|---|---|---|---|
+|---|---|---|---|---|
 |baseline|72.15%/90.65% |- |- |-|
 |-10%|- |- |- |-|
 |-30%|- |- |- |-|
@@ -144,7 +144,7 @@ fc10_weights (1280L, 1000L)
 ### ResNet50
 
 | FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
-|---|---|---|---|
+|---|---|---|---|---|
 |baseline|76.50%/93.00% |- |- |-|
 |-10%|- |- |- |-|
 |-30%|- |- |- |-|
