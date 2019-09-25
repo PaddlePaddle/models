@@ -25,13 +25,13 @@ from paddle.fluid.regularizer import L2Decay
 from ppdet.core.workspace import register
 from ppdet.modeling.ops import SSDOutputDecoder
 
-__all__ = ['FaceBox']
+__all__ = ['FaceBoxes']
 
 
 @register
-class FaceBox(object):
+class FaceBoxes(object):
     """
-    FaceBox: Sub-millisecond Neural Face Detection on Mobile GPUs,
+    FaceBoxes: Sub-millisecond Neural Face Detection on Mobile GPUs,
                see https://https://arxiv.org/abs/1708.05234
 
     Args:
@@ -51,8 +51,9 @@ class FaceBox(object):
                  min_sizes=[[16., 32., 64.], [96.], [128.]],
                  max_sizes=[[32., 64., 96.], [128.], [256.]],
                  steps=[4., 16., 64],
-                 num_classes=2):
-        super(FaceBox, self).__init__()
+                 num_classes=2,
+                 use_density_prior_box=True):
+        super(FaceBoxes, self).__init__()
         self.backbone = backbone
         self.num_classes = num_classes
         self.output_decoder = output_decoder
@@ -61,6 +62,7 @@ class FaceBox(object):
         self.min_sizes = min_sizes
         self.max_sizes = max_sizes
         self.steps = steps
+        self.use_density_prior_box = use_density_prior_box 
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
@@ -92,17 +94,15 @@ class FaceBox(object):
     def _multi_box_head(self,
                         inputs,
                         image,
-                        num_classes=2,
-                        use_density_prior_box=True):
+                        num_classes=2):
         def permute_and_reshape(input, last_dim):
             trans = fluid.layers.transpose(input, perm=[0, 2, 3, 1])
             compile_shape = [
                 trans.shape[0], np.prod(trans.shape[1:]) // last_dim, last_dim
             ]
-            run_shape = fluid.layers.assign(
-                np.array([0, -1, last_dim]).astype("int32"))
+
             return fluid.layers.reshape(
-                trans, shape=compile_shape, actual_shape=run_shape)
+                trans, shape=compile_shape)
 
         def _is_list_or_tuple_(data):
             return (isinstance(data, list) or isinstance(data, tuple))
@@ -112,7 +112,7 @@ class FaceBox(object):
         b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
 
         for i, input in enumerate(inputs):
-            if use_density_prior_box:
+            if self.use_density_prior_box:
                 if i == 0:
                     box, var = fluid.layers.density_prior_box(
                         input,

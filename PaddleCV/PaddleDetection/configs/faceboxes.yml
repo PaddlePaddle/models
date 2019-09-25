@@ -1,4 +1,4 @@
-architecture: FaceBox
+architecture: FaceBoxes
 train_feed: BlazeFaceTrainFeed
 eval_feed: BlazeFaceEvalFeed
 test_feed: BlazeFaceTestFeed
@@ -9,13 +9,13 @@ snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: WIDERFACE
-save_dir: output
+save_dir: output_faceboxes
 eval_mode: matlab
 multi_scale: true
-weights: output/facebox/model_final/
+weights: output/faceboxes/model_final/
 num_classes: 2
 
-FaceBox:
+FaceBoxes:
   backbone: FaceBoxNet
   output_decoder:
     keep_top_k: 750

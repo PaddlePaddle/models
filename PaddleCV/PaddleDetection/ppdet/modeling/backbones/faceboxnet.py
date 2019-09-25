@@ -27,19 +27,22 @@ __all__ = ['FaceBoxNet']
 @register
 class FaceBoxNet(object):
     """
-    FaceBox, see https://https://arxiv.org/abs/1708.05234
+    FaceBoxes, see https://https://arxiv.org/abs/1708.05234
 
     Args:
         with_extra_blocks (bool): whether or not extra blocks should be added
     """
 
-    def __init__(self, with_extra_blocks=True):
+    def __init__(self,
+                 with_extra_blocks=True,
+                 original_edition=True):
         super(FaceBoxNet, self).__init__()
 
         self.with_extra_blocks = with_extra_blocks
+        self.original_edition = original_edition
 
-    def __call__(self, input, original_edition=True):
-        if original_edition:
+    def __call__(self, input):
+        if self.original_edition:
             return self._original_edition(input)
         else:
             return self._simplified_edition(input)
