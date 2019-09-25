@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 
 import os
 import shutil
+import time
 import numpy as np
 import re
 import paddle.fluid as fluid

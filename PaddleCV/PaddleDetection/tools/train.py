@@ -199,6 +199,12 @@ def main():
                     FLAGS.dataset_dir)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
+    train_reader = create_reader(
+                    train_feed,
+                    (cfg.max_iters - start_iter) * devices_num,
+                    FLAGS.dataset_dir)
+    train_pyreader.decorate_sample_list_generator(train_reader, place)
+
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
     if hasattr(model, 'is_bbox_normalized') and \
