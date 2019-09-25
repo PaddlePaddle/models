@@ -85,7 +85,6 @@ class Sampler(object):
                 return x
         elif self.sync_seed_schedule:
             seed = self.epoch + self.init_seed
-            print("set rank {} random seed to: {}".format(self.rank, seed))
             rand_perm = np.random.RandomState(seed).permutation
             # XXX do not use with `itertools.cycle`,
             # should work fine for regular for loops or enumerate()
