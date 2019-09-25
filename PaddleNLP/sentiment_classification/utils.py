@@ -1,16 +1,3 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """
 Arguments for configuration
 """
@@ -44,7 +31,6 @@ class ArgumentGroup(object):
     """
     Argument Class
     """
-
     def __init__(self, parser, title, des):
         self._group = parser.add_argument_group(title=title, description=des)
 
@@ -93,12 +79,13 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
         predicate=existed_persitables)
     print("Load model from {}".format(init_checkpoint_path))
 
-
-def data_reader(file_path, word_dict, num_examples, phrase, epoch):
+    
+def data_reader(file_path, word_dict, num_examples, phrase, epoch, max_seq_len):
     """
     Convert word sequence into slot
     """
     unk_id = len(word_dict)
+    pad_id = 0
     all_data = []
     with io.open(file_path, "r", encoding='utf8') as fin:
         for line in fin:
@@ -109,27 +96,30 @@ def data_reader(file_path, word_dict, num_examples, phrase, epoch):
                 sys.stderr.write("[NOTICE] Error Format Line!")
                 continue
             label = int(cols[1])
-            wids = [
-                word_dict[x] if x in word_dict else unk_id
-                for x in cols[0].split(" ")
-            ]
-            all_data.append((wids, label))
+            wids = [word_dict[x] if x in word_dict else unk_id
+                    for x in cols[0].split(" ")]
+            seq_len = len(wids)
+            if seq_len < max_seq_len:
+                for i in range(max_seq_len - seq_len):
+                    wids.append(pad_id)
+            else:
+                wids = wids[:max_seq_len]
+                seq_len = max_seq_len
+            all_data.append((wids, label, seq_len))
 
     if phrase == "train":
         random.shuffle(all_data)
 
     num_examples[phrase] = len(all_data)
-
+        
     def reader():
         """
         Reader Function
         """
         for epoch_index in range(epoch):
-            for doc, label in all_data:
-                yield doc, label
-
+            for doc, label, seq_len in all_data:
+                yield doc, label, seq_len
     return reader
-
 
 def load_vocab(file_path):
     """
