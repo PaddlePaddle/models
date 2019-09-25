@@ -52,7 +52,7 @@
 .
 ├── senta_config.json           # 配置文件
 ├── config.py                   # 配置文件读取接口
-├── inference_model.py		    # 保存 inference_model 的脚本
+├── inference_model.py		     # 保存 inference_model 的脚本
 ├── inference_ernie_model.py	# 保存 inference_ernie__model 的脚本
 ├── reader.py                   # 数据读取接口
 ├── run_classifier.py           # 项目的主程序入口，包括训练、预测、评估
@@ -69,7 +69,7 @@
 训练、预测、评估使用的数据可以由用户根据实际的应用场景，自己组织数据。数据由两列组成，以制表符分隔，第一列是以空格分词的中文文本（分词预处理方法将在下文具体说明），文件为utf8编码；第二列是情感倾向分类的类别（0表示消极；1表示积极），注意数据文件第一行固定表示为"text_a\tlabel"
 
 ```text
-特 喜欢 这种 好看的 狗狗                  1
+特 喜欢 这种 好看的 狗狗                 1
 这 真是 惊艳 世界 的 中国 黑科技          1
 环境 特别 差 ，脏兮兮 的，再也 不去 了     0
 ```
@@ -93,7 +93,7 @@ tar -zxvf sentiment_classification-dataset-1.0.0.tar.gz
 ```text
 .
 ├── train.tsv				# 训练集
-├── train.tsv       # 验证集
+├── train.tsv           # 验证集
 ├── test.tsv				# 测试集
 ├── word_dict.txt			# 词典
 ```
