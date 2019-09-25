@@ -244,7 +244,7 @@ class RandomExpand(object):
         height = sample['height']
         width = sample['width']
 
-        expand_ratio = np.random.uniform(1.01, self.ratio)
+        expand_ratio = np.random.uniform(1., self.ratio)
         h = int(height * expand_ratio)
         w = int(width * expand_ratio)
         if not h > height or not w > width:
