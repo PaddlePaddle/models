@@ -12,7 +12,6 @@
 # see the license for the specific language governing permissions and
 # limitations under the license.
 
-import paddle
 import paddle.fluid as fluid
 from paddle.fluid.contrib.slim.core import Compressor
 from light_nas_space import LightNASSpace

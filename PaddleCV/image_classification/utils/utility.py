@@ -29,7 +29,9 @@ import signal
 
 import paddle
 import paddle.fluid as fluid
-
+from paddle.fluid.wrapped_decorator import signature_safe_contextmanager
+from paddle.fluid.framework import Program, program_guard, name_scope, default_main_program
+from paddle.fluid import unique_name, layers
 
 def print_arguments(args):
     """Print argparse's arguments.
@@ -103,7 +105,12 @@ def parse_args():
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
     add_arg('momentum_rate',            float,  0.9,                    "The value of momentum_rate.")
+    add_arg('warm_up_epochs',           float,  5.0,                    "The value of warm up epochs")
+    add_arg('decay_epochs',             float,  2.4,                    "Decay epochs of exponential decay learning rate scheduler")
+    add_arg('decay_rate',               float,  0.97,                   "Decay rate of exponential decay learning rate scheduler")
+    add_arg('drop_connect_rate',        float,  0.2,                    "The value of drop connect rate")
     parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
+
     # READER AND PREPROCESS
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
@@ -115,6 +122,7 @@ def parse_args():
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
     add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
     add_arg('interpolation',            int,    None,                   "The interpolation mode")
+    add_arg('use_aa',                   bool,   False,                  "Whether to use auto augment")
     parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
     parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
@@ -123,10 +131,13 @@ def parse_args():
     #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
-    add_arg('label_smoothing_epsilon',  float,  0.2,                    "The value of label_smoothing_epsilon parameter")
+    add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
     add_arg('random_seed',              int,    None,                   "random seed")
+    add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
+    add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
+    add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     # yapf: enable
 
     args = parser.parse_args()
@@ -170,7 +181,7 @@ def check_args(args):
 
     # check learning rate strategy
     lr_strategy_list = [
-        "piecewise_decay", "cosine_decay", "linear_decay", "cosine_decay_warmup"
+        "piecewise_decay", "cosine_decay", "linear_decay", "cosine_decay_warmup", "exponential_decay_warmup"
     ]
     if args.lr_strategy not in lr_strategy_list:
         warnings.warn(
@@ -185,6 +196,11 @@ def check_args(args):
         assert args.interpolation in [
             0, 1, 2, 3, 4
         ], "Wrong interpolation, please set:\n0: cv2.INTER_NEAREST\n1: cv2.INTER_LINEAR\n2: cv2.INTER_CUBIC\n3: cv2.INTER_AREA\n4: cv2.INTER_LANCZOS4"
+
+    if args.padding_type:
+        assert args.padding_type in [
+            "SAME", "VALID", "DYNAMIC"
+        ], "Wrong padding_type, please set:\nSAME\nVALID\nDYNAMIC"
 
     assert args.checkpoint is None or args.pretrained_model is None, "Do not init model by checkpoint and pretrained_model both."
 
@@ -368,7 +384,8 @@ def best_strategy_compiled(args, program, loss):
         return program
     else:
         build_strategy = fluid.compiler.BuildStrategy()
-        build_strategy.enable_inplace = True
+        #Feature will be supported in Fluid v1.6
+        #build_strategy.enable_inplace = True
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_threads = fluid.core.get_cuda_device_count()
@@ -380,3 +397,141 @@ def best_strategy_compiled(args, program, loss):
             exec_strategy=exec_strategy)
 
         return compiled_program
+
+
+class ExponentialMovingAverage(object):
+
+    def __init__(self, decay=0.999, thres_steps=None, zero_debias=False, name=None):
+        self._decay = decay
+        self._thres_steps = thres_steps
+        self._name = name if name is not None else ''
+        self._decay_var = self._get_ema_decay()
+
+        self._params_tmps = []
+        for param in default_main_program().global_block().all_parameters():
+            if param.do_model_average != False:
+                tmp = param.block.create_var(
+                    name=unique_name.generate(".".join(
+                        [self._name + param.name, 'ema_tmp'])),
+                    dtype=param.dtype,
+                    persistable=False,
+                    stop_gradient=True)
+                self._params_tmps.append((param, tmp))
+
+        self._ema_vars = {}
+        for param, tmp in self._params_tmps:
+            with param.block.program._optimized_guard(
+                    [param, tmp]), name_scope('moving_average'):
+                self._ema_vars[param.name] = self._create_ema_vars(param)
+
+        self.apply_program = Program()
+        block = self.apply_program.global_block()
+        with program_guard(main_program=self.apply_program):
+            decay_pow = self._get_decay_pow(block)
+            for param, tmp in self._params_tmps:
+                param = block._clone_variable(param)
+                tmp = block._clone_variable(tmp)
+                ema = block._clone_variable(self._ema_vars[param.name])
+                layers.assign(input=param, output=tmp)
+                # bias correction
+                if zero_debias:
+                    ema = ema / (1.0 - decay_pow)
+                layers.assign(input=ema, output=param)
+
+        self.restore_program = Program()
+        block = self.restore_program.global_block()
+        with program_guard(main_program=self.restore_program):
+            for param, tmp in self._params_tmps:
+                tmp = block._clone_variable(tmp)
+                param = block._clone_variable(param)
+                layers.assign(input=tmp, output=param)
+
+    def _get_ema_decay(self):
+        with default_main_program()._lr_schedule_guard():
+            decay_var = layers.tensor.create_global_var(
+                shape=[1],
+                value=self._decay,
+                dtype='float32',
+                persistable=True,
+                name="scheduled_ema_decay_rate")
+
+            if self._thres_steps is not None:
+                decay_t = (self._thres_steps + 1.0) / (self._thres_steps + 10.0)
+                with layers.control_flow.Switch() as switch:
+                    with switch.case(decay_t < self._decay):
+                        layers.tensor.assign(decay_t, decay_var)
+                    with switch.default():
+                        layers.tensor.assign(
+                            np.array(
+                                [self._decay], dtype=np.float32),
+                            decay_var)
+        return decay_var
+
+    def _get_decay_pow(self, block):
+        global_steps = layers.learning_rate_scheduler._decay_step_counter()
+        decay_var = block._clone_variable(self._decay_var)
+        decay_pow_acc = layers.elementwise_pow(decay_var, global_steps + 1)
+        return decay_pow_acc
+
+    def _create_ema_vars(self, param):
+        param_ema = layers.create_global_var(
+            name=unique_name.generate(self._name + param.name + '_ema'),
+            shape=param.shape,
+            value=0.0,
+            dtype=param.dtype,
+            persistable=True)
+
+        return param_ema
+
+    def update(self):
+        """
+        Update Exponential Moving Average. Should only call this method in
+        train program.
+        """
+        param_master_emas = []
+        for param, tmp in self._params_tmps:
+            with param.block.program._optimized_guard(
+                    [param, tmp]), name_scope('moving_average'):
+                param_ema = self._ema_vars[param.name]
+                if param.name + '.master' in self._ema_vars:
+                    master_ema = self._ema_vars[param.name + '.master']
+                    param_master_emas.append([param_ema, master_ema])
+                else:
+                    ema_t = param_ema * self._decay_var + param * (
+                            1 - self._decay_var)
+                    layers.assign(input=ema_t, output=param_ema)
+
+        # for fp16 params
+        for param_ema, master_ema in param_master_emas:
+            default_main_program().global_block().append_op(
+                type="cast",
+                inputs={"X": master_ema},
+                outputs={"Out": param_ema},
+                attrs={
+                    "in_dtype": master_ema.dtype,
+                    "out_dtype": param_ema.dtype
+                })
+
+    @signature_safe_contextmanager
+    def apply(self, executor, need_restore=True):
+        """
+        Apply moving average to parameters for evaluation.
+
+        Args:
+            executor (Executor): The Executor to execute applying.
+            need_restore (bool): Whether to restore parameters after applying.
+        """
+        executor.run(self.apply_program)
+        try:
+            yield
+        finally:
+            if need_restore:
+                self.restore(executor)
+
+    def restore(self, executor):
+        """Restore parameters.
+
+        Args:
+            executor (Executor): The Executor to execute restoring.
+        """
+        executor.run(self.restore_program)
