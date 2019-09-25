@@ -150,10 +150,12 @@ def main():
 
     # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
-    sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
+    if 'RCNN' in main_arch:
+        build_strategy.fuse_all_optimizer_ops = False
     if FLAGS.fp16:
         build_strategy.fuse_all_reduce_ops = False
     # only enable sync_bn in multi GPU devices
+    sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     build_strategy.sync_batch_norm = sync_bn and devices_num > 1 \
         and cfg.use_gpu
 
