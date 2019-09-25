@@ -16,7 +16,7 @@
 关于配置文件如何编写您可以参考：
 
 - [PaddleSlim配置文件编写说明](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md#122-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E7%9A%84%E4%BD%BF%E7%94%A8)
-- [蒸馏策略配置文件编写说明]([https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md#23-%E8%92%B8%E9%A6%8F](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md#23-蒸馏))
+- [蒸馏策略配置文件编写说明](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md#23-%E8%92%B8%E9%A6%8F)
 
 这里以MobileNetV2模型为例，MobileNetV2的主要结构为Inverted residuals, 如图1所示：
 
