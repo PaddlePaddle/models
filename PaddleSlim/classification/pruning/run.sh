@@ -5,7 +5,7 @@ nohup python compress.py \
 --use_gpu 0 \
 --batch_size 1 \
 --pretrained_model ../pretrain/MobileNetV1_pretrained \
---config_file "./configs/mobilenet_v1.yaml"
+--config_file "./configs/mobilenet_v1.yaml" \
 > mobilenet_v1.log 2>&1 &
 tailf mobilenet_v1.log
 

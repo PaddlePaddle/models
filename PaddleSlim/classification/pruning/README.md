@@ -4,7 +4,7 @@
 
 ## 概述
 
-该示例使用PaddleSlim提供的[卷积通道剪裁压缩策略]()对分类模型进行压缩。
+该示例使用PaddleSlim提供的[卷积通道剪裁压缩策略](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/tutorial.md#2-%E5%8D%B7%E7%A7%AF%E6%A0%B8%E5%89%AA%E8%A3%81%E5%8E%9F%E7%90%86)对分类模型进行压缩。
 在阅读该示例前，建议您先了解以下内容：
 
 - [分类模型的常规训练方法](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification)
@@ -96,7 +96,7 @@ fc10_weights (1280L, 1000L)
 
 如果不需要保存评估模型，可以在定义Compressor对象时，将`save_eval_model`选项设置为False（默认为True）。
 
-脚本[PaddleSlim/classification/eval.py]()中为使用该模型在评估数据集上做评估的示例。
+脚本<a href="../eval.py">PaddleSlim/classification/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
 
 ## 预测
 
@@ -106,11 +106,11 @@ fc10_weights (1280L, 1000L)
 该模型会保存在`${checkpoint_path}/${epoch_id}/eval_model/`路径下，包含`__model__.infer`和`__params__`两个文件。
 其中，`__model__.infer`用于保存模型结构信息，`__params__`用于保存参数（parameters）信息。
 
-更多关于`prune_infer_model`选项的介绍，请参考：[Compressor API]()
+更多关于`prune_infer_model`选项的介绍，请参考：[Compressor介绍](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md#121-%E5%A6%82%E4%BD%95%E6%94%B9%E5%86%99%E6%99%AE%E9%80%9A%E8%AE%AD%E7%BB%83%E8%84%9A%E6%9C%AC)
 
 ### python预测
 
-在脚本[infer.py](PaddleSlim/classification/eval.py)中展示了如何使用fluid python API加载使用预测模型进行预测。
+在脚本<a href="../infer.py">PaddleSlim/classification/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
 
 ### PaddleLite
 
