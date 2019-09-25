@@ -118,7 +118,7 @@ class FaceBox(object):
                         input,
                         image,
                         densities=[4, 2, 1],
-                        fixed_sizes=[16, 32, 64],
+                        fixed_sizes=[32, 64, 128],
                         fixed_ratios=[1.],
                         clip=False,
                         offset=0.5)
@@ -127,7 +127,7 @@ class FaceBox(object):
                         input,
                         image,
                         densities=[1],
-                        fixed_sizes=[128],
+                        fixed_sizes=[256],
                         fixed_ratios=[1.],
                         clip=False,
                         offset=0.5)
@@ -136,7 +136,7 @@ class FaceBox(object):
                         input,
                         image,
                         densities=[1],
-                        fixed_sizes=[256],
+                        fixed_sizes=[512],
                         fixed_ratios=[1.],
                         clip=False,
                         offset=0.5)
