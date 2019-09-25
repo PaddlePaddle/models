@@ -315,7 +315,7 @@ class RandomCrop(object):
                 crop_box = [crop_x, crop_y, crop_x + crop_w, crop_y + crop_h]
                 iou = self._iou_matrix(gt_box,
                                        np.array([crop_box], dtype=np.float32))
-                if iou.min() < thresh:
+                if iou.max() < thresh:
                     continue
 
                 cropped_box, valid_ids = self._crop_box_with_center_constraint(
