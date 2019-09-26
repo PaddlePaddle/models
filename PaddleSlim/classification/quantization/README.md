@@ -111,7 +111,9 @@ float预测模型可直接使用原生PaddlePaddle Fluid预测方法进行预测
 在脚本<a href="../infer.py">PaddleSlim/classification/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
 
 ### PaddleLite预测
-mobile预测模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如何加载运行量化模型](https://github.com/PaddlePaddle/Paddle-Lite/wiki/model_quantization)
+float预测模型可使用Paddle-Lite进行加载预测，可参见教程[Paddle-Lite如何加载运行量化模型](https://github.com/PaddlePaddle/Paddle-Lite/wiki/model_quantization)。
+
+mobile预测模型兼容Paddle-Lite（Paddle-Mobile的升级版）, 使用方法可参考[Paddle-Lite文档](https://paddlepaddle.github.io/Paddle-Lite/).
 
 
 ## 示例结果
