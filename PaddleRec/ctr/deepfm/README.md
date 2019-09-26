@@ -78,7 +78,7 @@ other params explained in cluster_train.py
 
 Infer
 ```bash
-python infer.py --model_output_dir cluster_model --test_epoch 50 --test_data_dir=dist_data/dist_test_data --feat_dict='dist_data/aid_data/feat_dict_10.pkl2'
+python infer.py --model_output_dir cluster_model --test_epoch 10 --test_data_dir=dist_data/dist_test_data --feat_dict='dist_data/aid_data/feat_dict_10.pkl2'
 ```
 
 Notes:
