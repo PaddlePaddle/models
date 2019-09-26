@@ -267,8 +267,8 @@ class PascalVocDataSet(DataSet):
             sample['gt_box'] = np.array(gt_box, dtype=np.float32)
             sample['gt_label'] = np.array(
                 gt_label, dtype=np.int32)[:, np.newaxis]
-            sample['gt_scores'] = np.ones([len(objs), 1], dtype=np.float32)
             sample['is_crowd'] = np.zeros([len(objs), 1], dtype=np.int32)
+            sample['gt_score'] = np.ones([len(objs), 1], dtype=np.float32)
             sample['gt_poly'] = []
             sample['difficult'] = np.array(
                 difficult, dtype=np.int32)[:, np.newaxis]
