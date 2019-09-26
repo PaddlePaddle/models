@@ -120,18 +120,11 @@ EvalDataLoader:
     world_size: 1
   feed_vars:
   - image
-  - name: gt_box
-    lod_level: 1
-  - name: gt_label
-    lod_level: 1
-  - name: difficult
-    lod_level: 1
-  - name: im_shape
-    fields:
-    - orig_height
-    - orig_width
   extra_vars:
   - id
+  - gt_box
+  - gt_label
+  - difficult
   sample_transforms:
   - !Resize
     random_shape: [300]
@@ -139,6 +132,8 @@ EvalDataLoader:
   - !NormalizePermute
     mean: [127.5, 127.5, 127.5]
     std: [127.502231, 127.502231, 127.502231]
+  - !NormalizeLabels
+    normalize_box: true
 
 TestDataLoader:
   batch_size: 1

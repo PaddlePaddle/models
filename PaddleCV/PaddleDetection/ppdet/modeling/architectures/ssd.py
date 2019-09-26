@@ -59,7 +59,7 @@ class SSD(object):
     def build(self, mode='train'):
         im = fluid.layers.data(
             name='image', shape=[3, 300, 300], dtype='float32')
-        if mode == 'train' or mode == 'eval':
+        if mode == 'train':
             gt_box = fluid.layers.data(
                 name='gt_box', shape=[4], dtype='float32', lod_level=1)
             gt_label = fluid.layers.data(

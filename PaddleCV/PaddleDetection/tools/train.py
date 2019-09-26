@@ -145,8 +145,6 @@ def main():
         extra_keys = []
         if cfg.metric == 'COCO':
             extra_keys = ['im_info', 'im_shape']
-        if cfg.metric == 'VOC':
-            extra_keys = ['gt_box', 'gt_label', 'is_difficult']
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
