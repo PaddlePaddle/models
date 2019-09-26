@@ -259,8 +259,8 @@ class PascalVocDataSet(DataSet):
                 difficult.append(int(_get(obj, 'difficult')))
                 x1 = max(0, float(_get(obj, 'bndbox.xmin')))
                 y1 = max(0, float(_get(obj, 'bndbox.ymin')))
-                x2 = min(w, float(_get(obj, 'bndbox.xmax')))
-                y2 = min(h, float(_get(obj, 'bndbox.ymax')))
+                x2 = min(w - 1, float(_get(obj, 'bndbox.xmax')))
+                y2 = min(h - 1, float(_get(obj, 'bndbox.ymax')))
                 gt_box.append([x1, y1, x2, y2])
             if not self.use_empty and len(gt_label) == 0:
                 return None
