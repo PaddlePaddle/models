@@ -90,7 +90,7 @@ TrainDataLoader:
     prob: 0.5
   - !Resize
     target_dim: 300
-    interp: 1
+    interp: 3
   - !ColorDistort
     brightness: [0.875, 1.125, 0.5]
     contrast: [0.5, 1.5, 0.5]
@@ -128,7 +128,7 @@ EvalDataLoader:
   sample_transforms:
   - !Resize
     target_dim: 300
-    interp: 1
+    interp: 3
   - !NormalizePermute
     mean: [127.5, 127.5, 127.5]
     std: [127.502231, 127.502231, 127.502231]
@@ -160,7 +160,7 @@ TestDataLoader:
   sample_transforms:
   - !Resize
     target_dim: 300
-    interp: 1
+    interp: 3
   - !NormalizePermute
     mean: [127.5, 127.5, 127.5]
     std: [127.502231, 127.502231, 127.502231]
