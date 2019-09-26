@@ -43,7 +43,7 @@ class Resize(object):
 
     @property
     def batch_seed(self):
-        return bool(self.target_dim)
+        return isinstance(self.target_dim, Sequence)
 
     def __call__(self, sample):
         w = sample['width']
@@ -54,9 +54,16 @@ class Resize(object):
             interp = np.random.choice(range(5))
 
         if self.target_dim:
-            assert 'batch_seed' in sample, "target_dim requires batch_seed"
-            seed = sample['batch_seed']
-            dim = np.random.RandomState(seed).choice(self.target_dim)
+            assert (self.resize_shorter is None
+                    and self.resize_longer is None), \
+                "do not set both target_dim and resize_shorter/resize_longer"
+            if isinstance(self.target_dim, Sequence):
+                assert 'batch_seed' in sample, \
+                    "random target_dim requires batch_seed"
+                seed = sample['batch_seed']
+                dim = np.random.RandomState(seed).choice(self.target_dim)
+            else:
+                dim = self.target_dim
             resize_w = resize_h = dim
             scale_x = dim / w
             scale_y = dim / h

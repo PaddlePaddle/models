@@ -147,7 +147,7 @@ EvalDataLoader:
   - id
   sample_transforms:
   - !Resize
-    target_dim: [608]
+    target_dim: 608
     interp: 2
   - !NormalizePermute
     mean: [123.675, 116.28, 103.53]
@@ -181,7 +181,7 @@ TestDataLoader:
   - file
   sample_transforms:
   - !Resize
-    target_dim: [608]
+    target_dim: 608
     interp: 2
   - !NormalizePermute
     mean: [123.675, 116.28, 103.53]
