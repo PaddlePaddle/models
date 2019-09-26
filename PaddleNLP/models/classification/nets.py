@@ -1,24 +1,11 @@
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """
 This module provide nets for text classification
 """
 
 import paddle.fluid as fluid
 
-
 def bow_net(data,
+            seq_len,
             label,
             dict_dim,
             emb_dim=128,
@@ -31,6 +18,7 @@ def bow_net(data,
     """
     # embedding layer
     emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim])
+    emb = fluid.layers.sequence_unpad(emb, length=seq_len)
     # bow layer
     bow = fluid.layers.sequence_pool(input=emb, pool_type='sum')
     bow_tanh = fluid.layers.tanh(bow)
@@ -49,6 +37,7 @@ def bow_net(data,
 
 
 def cnn_net(data,
+            seq_len,
             label,
             dict_dim,
             emb_dim=128,
@@ -62,7 +51,7 @@ def cnn_net(data,
     """
     # embedding layer
     emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim])
-
+    emb = fluid.layers.sequence_unpad(emb, length=seq_len)
     # convolution layer
     conv_3 = fluid.nets.sequence_conv_pool(
         input=emb,
@@ -85,6 +74,7 @@ def cnn_net(data,
 
 
 def lstm_net(data,
+             seq_len,
              label,
              dict_dim,
              emb_dim=128,
@@ -101,7 +91,7 @@ def lstm_net(data,
         input=data,
         size=[dict_dim, emb_dim],
         param_attr=fluid.ParamAttr(learning_rate=emb_lr))
-
+    emb = fluid.layers.sequence_unpad(emb, length=seq_len)
     # Lstm layer
     fc0 = fluid.layers.fc(input=emb, size=hid_dim * 4)
 
@@ -126,6 +116,7 @@ def lstm_net(data,
 
 
 def bilstm_net(data,
+               seq_len,
                label,
                dict_dim,
                emb_dim=128,
@@ -142,6 +133,8 @@ def bilstm_net(data,
         input=data,
         size=[dict_dim, emb_dim],
         param_attr=fluid.ParamAttr(learning_rate=emb_lr))
+    
+    emb = fluid.layers.sequence_unpad(emb, length=seq_len)
 
     fc0 = fluid.layers.fc(input=emb, size=hid_dim * 4)
     rfc0 = fluid.layers.fc(input=emb, size=hid_dim * 4)
@@ -170,6 +163,7 @@ def bilstm_net(data,
 
 
 def gru_net(data,
+            seq_len,
             label,
             dict_dim,
             emb_dim=128,
@@ -185,7 +179,7 @@ def gru_net(data,
         input=data,
         size=[dict_dim, emb_dim],
         param_attr=fluid.ParamAttr(learning_rate=emb_lr))
-
+    emb = fluid.layers.sequence_unpad(emb, length=seq_len)
     fc0 = fluid.layers.fc(input=emb, size=hid_dim * 3)
 
     gru_h = fluid.layers.dynamic_gru(input=fc0, size=hid_dim, is_reverse=False)
@@ -206,16 +200,6 @@ def gru_net(data,
 
 
 def textcnn_net(data,
-<<<<<<< HEAD
-            label,
-            dict_dim,
-            emb_dim=128,
-            hid_dim=128,
-            hid_dim2=96,
-            class_dim=2,
-            win_sizes=None,
-            is_prediction=False):
-=======
                 label,
                 dict_dim,
                 emb_dim=128,
@@ -224,7 +208,6 @@ def textcnn_net(data,
                 class_dim=2,
                 win_sizes=None,
                 is_infer=False):
->>>>>>> upstream/develop
     """
     Textcnn_net
     """
@@ -233,7 +216,7 @@ def textcnn_net(data,
 
     # embedding layer
     emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim])
-
+    emb = fluid.layers.sequence_unpad(emb, length=seq_len)
     # convolution layer
     convs = []
     for win_size in win_sizes:

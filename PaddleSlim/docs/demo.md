@@ -349,19 +349,21 @@ step1: 进入路径`PaddlePaddle/models/PaddleSlim/light_nas/`。
 
 step2: （可选）按照[使用手册](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md#245-延时评估器生成方式)中说明的方法生成好延时评估器表格 `latency_lookup_table.txt`，放置到当前路径。
 
-step3: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`。
+step3: （可选）修改 `light_nas_space.py` 文件中的LATENCY_LOOKUP_TABLE_PATH， 更改为 LATENCY_LOOKUP_TABLE_PATH='latency_lookup_table.txt'。
 
-step4: 修改 `compress.yaml` 文件, 将参数 `server_ip` 设置为当前机器的 IP。
+step4: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`。
 
-step5: （可选）修改 `compress.yaml` 文件，将参数 `target_latency` 设置为用户的目标延时。
+step5: 修改 `compress.yaml` 文件, 将参数 `server_ip` 设置为当前机器的 IP。
 
-step6: 执行 `sh run.sh`, 可根据实际情况修改 `run.sh` 中的 `CUDA_VISIBLE_DEVICES`。
+step6: （可选）修改 `compress.yaml` 文件，将参数 `target_latency` 设置为用户的目标延时。
 
-step7: 修改 `light_nas_space.py` 文件中的 `LightNASSpace::init_tokens`, 使其返回step6中搜到的最优tokens。
+step7: 执行 `sh run.sh`, 可根据实际情况修改 `run.sh` 中的 `CUDA_VISIBLE_DEVICES`。
 
-step8: 修改 `compress.yaml` 文件，将 `compressor` 下的 `strategies` 去掉。
+step8: 修改 `light_nas_space.py` 文件中的 `LightNASSpace::init_tokens`, 使其返回step6中搜到的最优tokens。
 
-step9: 执行 `sh run.sh` 进行训练任务。
+step9: 修改 `compress.yaml` 文件，将 `compressor` 下的 `strategies` 去掉。
+
+step10: 执行 `sh run.sh` 进行训练任务。
 
 该示例基于 Flops 约束的两组结果如下：
 
