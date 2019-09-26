@@ -168,10 +168,12 @@ class COCODataSet(DataSet):
 class PascalVocDataSet(DataSet):
     def __init__(self,
                  root_dir='VOCdevkit/VOC2012',
-                 subset='train'):
+                 subset='train',
+                 use_empty=False):
         super(PascalVocDataSet, self).__init__()
         self.root_dir = root_dir
         self.subset = subset
+        self.use_empty = use_empty
         label_map = {
             'aeroplane': 1,
             'bicycle': 2,
@@ -260,6 +262,8 @@ class PascalVocDataSet(DataSet):
                 x2 = min(w, float(_get(obj, 'bndbox.xmax')))
                 y2 = min(h, float(_get(obj, 'bndbox.ymax')))
                 gt_box.append([x1, y1, x2, y2])
+            if not self.use_empty and len(gt_label) == 0:
+                return None
             sample['gt_box'] = np.array(gt_box, dtype=np.float32)
             sample['gt_label'] = np.array(
                 gt_label, dtype=np.int32)[:, np.newaxis]
@@ -270,7 +274,8 @@ class PascalVocDataSet(DataSet):
                 difficult, dtype=np.int32)[:, np.newaxis]
             return sample
 
-        self.samples = [parse_xml(idx) for idx in indices]
+        samples = [parse_xml(idx) for idx in indices]
+        self.samples = list(filter(lambda x: x is not None, samples))
 
 
 class ListDataSet(DataSet):
