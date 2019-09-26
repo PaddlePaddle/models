@@ -44,12 +44,14 @@ class _Compose(object):
         return self.batch_seed
 
     def __call__(self, sample):
+        sample2 = None
         if isinstance(sample, tuple):
             sample, sample2 = sample
 
         for transform in self.transforms:
             if hasattr(transform, 'is_mixup'):
-                sample = transform(sample, sample2)
+                if sample2 is not None:
+                    sample = transform(sample, sample2)
             else:
                 sample = transform(sample)
 
