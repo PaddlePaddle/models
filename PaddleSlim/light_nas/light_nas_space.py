@@ -41,7 +41,7 @@ NAS_KERNEL_SIZE = [3, 5]
 NAS_FILTERS_MULTIPLIER = [3, 4, 5, 6]
 NAS_SHORTCUT = [0, 1]
 NAS_SE = [0, 1]
-LATENCY_LOOKUP_TABLE_PATH = 'latency_lookup_table.txt'
+LATENCY_LOOKUP_TABLE_PATH = None
 
 
 def get_bottleneck_params_list(var):
