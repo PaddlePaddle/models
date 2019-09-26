@@ -58,29 +58,129 @@ OptimizerBuilder:
     factor: 0.0005
     type: L2
 
-YoloTrainFeed:
+TrainDataLoader:
   batch_size: 8
-  dataset:
-    dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: true
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  yolo_class_fix: true
   num_workers: 8
-  bufsize: 128
-  use_process: true
-  mixup_epoch: 250
+  buffer_size: 4
+  dataset:
+    type: voc
+    root_dir: /root/data/VOCdevkit/VOC_all/
+    subset: train
+  sampler:
+    shuffle: true
+    sync_seed_schedule: true
+  feed_vars:
+  - image
+  - gt_box
+  - gt_label
+  - gt_score
+  extra_vars:
+  - id
+  sample_transforms:
+  - !MixUp
+    alpha: 1.5
+    beta: 1.5
+    steps: 20500
+  - !RandomExpand
+    ratio: 4.0
+    prob: 0.5
+    fill_value: [127, 127, 127]
+  - !RandomCrop
+    thresholds: [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
+    aspect_ratio: [0.5, 2.0]
+    scaling: [0.3, 1.0]
+    num_attempts: 50
+    allow_no_crop: true
+  - !RandomFlip
+    prob: 0.5
+  - !Resize
+    target_dim: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
+    interp: random
+  - !ColorDistort
+    brightness: [0.5, 1.5, 0.5]
+    contrast: [0.5, 1.5, 0.5]
+    saturation: [0.5, 1.5, 0.5]
+    hue: [-18, 18, 0.5]
+  - !NormalizePermute
+    mean: [123.675, 116.28, 103.53]
+    std: [58.395, 57.120, 57.375]
+  - !NormalizeLabels
+    num_instances: 50
+    normalize_box: true
+    to_center: true
+  batch_transforms:
+  - !PadToStride
+    stride: 1
 
-YoloEvalFeed:
+EvalDataLoader:
   batch_size: 8
-  image_shape: [3, 608, 608]
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  yolo_class_fix: true
+  num_workers: 4
+  buffer_size: 8
   dataset:
-    dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
-    use_default_label: true
+    type: voc
+    root_dir: /root/data/VOCdevkit/VOC_all/
+    subset: val
+  sampler:
+    shuffle: false
+    pad_batch: false
+    world_size: 1
+  feed_vars:
+  - image
+  extra_vars:
+  - id
+  - gt_box
+  - gt_label
+  - difficult
+  sample_transforms:
+  - !Resize
+    target_dim: 608
+    interp: 2
+  - !NormalizePermute
+    mean: [123.675, 116.28, 103.53]
+    std: [58.395, 57.120, 57.375]
+  batch_transforms:
+  - !PadToStride
+    stride: 1
 
-YoloTestFeed:
+TestDataLoader:
   batch_size: 1
-  image_shape: [3, 608, 608]
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  yolo_class_fix: true
+  num_workers: 4
+  buffer_size: 8
   dataset:
-    use_default_label: true
+    type: folder
+    root_dir: /root/data
+  sampler:
+    shuffle: false
+    pad_batch: false
+  feed_vars:
+  - image
+  - name: im_size
+    fields:
+    - orig_height
+    - orig_width
+  extra_vars:
+  - file
+  sample_transforms:
+  - !Resize
+    target_dim: 608
+    interp: 2
+  - !NormalizePermute
+    mean: [123.675, 116.28, 103.53]
+    std: [58.395, 57.120, 57.375]
+  batch_transforms:
+  - !PadToStride
+    stride: 1
