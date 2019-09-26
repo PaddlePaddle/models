@@ -418,7 +418,8 @@ class MixUp(object):
 
 
 class NormalizeLabels(object):
-    def __init__(self, num_instances=50, normalize_box=True, to_center=True):
+    def __init__(
+            self, num_instances=None, normalize_box=False, to_center=False):
         super(NormalizeLabels, self).__init__()
         self.num_instances = num_instances
         self.normalize_box = normalize_box
