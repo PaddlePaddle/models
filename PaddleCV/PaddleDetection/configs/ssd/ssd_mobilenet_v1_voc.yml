@@ -89,7 +89,7 @@ TrainDataLoader:
   - !RandomFlip
     prob: 0.5
   - !Resize
-    random_shape: [300]
+    target_dim: [300]
     interp: 1
   - !ColorDistort
     brightness: [0.875, 1.125, 0.5]
@@ -127,7 +127,7 @@ EvalDataLoader:
   - difficult
   sample_transforms:
   - !Resize
-    random_shape: [300]
+    target_dim: [300]
     interp: 1
   - !NormalizePermute
     mean: [127.5, 127.5, 127.5]
@@ -159,7 +159,7 @@ TestDataLoader:
   - file
   sample_transforms:
   - !Resize
-    random_shape: [300]
+    target_dim: [300]
     interp: 1
   - !NormalizePermute
     mean: [127.5, 127.5, 127.5]

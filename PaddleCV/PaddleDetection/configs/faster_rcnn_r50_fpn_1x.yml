@@ -137,8 +137,8 @@ TrainDataLoader:
   - !RandomFlip
     prob: 0.5
   - !Resize
-    target_dim: 800
-    max_dim: 1333
+    resize_shorter: 800
+    resize_longer: 1333
     interp: 1
   - !NormalizePermute
     mean: [123.675, 116.28, 103.53]
@@ -183,8 +183,8 @@ EvalDataLoader:
   - id
   sample_transforms:
   - !Resize
-    target_dim: 800
-    max_dim: 1333
+    resize_shorter: 800
+    resize_longer: 1333
     interp: 1
   - !NormalizePermute
     mean: [123.675, 116.28, 103.53]
@@ -223,8 +223,8 @@ TestDataLoader:
   - file
   sample_transforms:
   - !Resize
-    target_dim: 800
-    max_dim: 1333
+    resize_shorter: 800
+    resize_longer: 1333
     interp: 1
   - !NormalizePermute
     mean: [123.675, 116.28, 103.53]

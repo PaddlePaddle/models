@@ -31,19 +31,19 @@ __all__ = ['RandomFlip', 'RandomExpand', 'RandomCrop', 'ColorDistort',
 
 class Resize(object):
     def __init__(self,
-                 target_dim=None,
-                 max_dim=None,
-                 random_shape=[],
+                 resize_shorter=None,
+                 resize_longer=None,
+                 target_dim=[],
                  interp=cv2.INTER_LINEAR):
         super(Resize, self).__init__()
+        self.resize_shorter = resize_shorter
+        self.resize_longer = resize_longer
         self.target_dim = target_dim
-        self.max_dim = max_dim
-        self.random_shape = random_shape
         self.interp = interp  # 'random' for yolov3
 
     @property
     def batch_seed(self):
-        return bool(self.random_shape)
+        return bool(self.target_dim)
 
     def __call__(self, sample):
         w = sample['width']
@@ -53,10 +53,10 @@ class Resize(object):
         if interp == 'random':
             interp = np.random.choice(range(5))
 
-        if self.random_shape:
-            assert 'batch_seed' in sample, "random_shape requires batch_seed"
+        if self.target_dim:
+            assert 'batch_seed' in sample, "target_dim requires batch_seed"
             seed = sample['batch_seed']
-            dim = np.random.RandomState(seed).choice(self.random_shape)
+            dim = np.random.RandomState(seed).choice(self.target_dim)
             resize_w = resize_h = dim
             scale_x = dim / w
             scale_y = dim / h
@@ -66,12 +66,12 @@ class Resize(object):
                 sample['gt_box'] = np.clip(
                     sample['gt_box'] * scale_array, 0, dim - 1)
         else:
-            target_dim = self.target_dim
-            if isinstance(self.target_dim, Sequence):
-                target_dim = np.random.choice(target_dim)
+            resize_shorter = self.resize_shorter
+            if isinstance(self.resize_shorter, Sequence):
+                resize_shorter = np.random.choice(resize_shorter)
 
             dim_max, dim_min = w > h and (w, h) or (h, w)
-            scale = min(self.max_dim / dim_max, target_dim / dim_min)
+            scale = min(self.resize_longer / dim_max, resize_shorter / dim_min)
             resize_w = int(round(w * scale))
             resize_h = int(round(h * scale))
             sample['scale'] = scale
