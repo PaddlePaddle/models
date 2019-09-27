@@ -300,7 +300,7 @@ class RandomCrop(object):
         # The probability is not exactly the same, kinda resembling the
         # "Monty Hall" problem. Actually carrying out the attempts will affect
         # observability (just like opening doors in the "Monty Hall" game).
-        thresholds = self.thresholds.copy()
+        thresholds = list(self.thresholds)
         if self.allow_no_crop:
             thresholds.append('no_crop')
         np.random.shuffle(thresholds)

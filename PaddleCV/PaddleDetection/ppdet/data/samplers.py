@@ -138,6 +138,9 @@ class Sampler(object):
         self._step += 1
         return ids
 
+    # python 2 compatibility
+    next = __next__
+
     def __len__(self):
         if not hasattr(self, 'num_batches'):
             self.setup()
