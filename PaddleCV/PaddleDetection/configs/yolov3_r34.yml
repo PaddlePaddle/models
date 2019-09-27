@@ -118,9 +118,6 @@ TrainDataLoader:
     num_instances: 50
     normalize_box: true
     to_center: true
-  batch_transforms:
-  - !PadToStride
-    stride: 1
 
 EvalDataLoader:
   batch_size: 8
@@ -158,9 +155,6 @@ EvalDataLoader:
   - !NormalizePermute
     mean: [123.675, 116.28, 103.53]
     std: [58.395, 57.120, 57.375]
-  batch_transforms:
-  - !PadToStride
-    stride: 1
 
 TestDataLoader:
   batch_size: 1
@@ -192,6 +186,3 @@ TestDataLoader:
   - !NormalizePermute
     mean: [123.675, 116.28, 103.53]
     std: [58.395, 57.120, 57.375]
-  batch_transforms:
-  - !PadToStride
-    stride: 1
