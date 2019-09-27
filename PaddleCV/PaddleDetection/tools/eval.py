@@ -17,7 +17,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import multiprocessing
 
 
 def set_paddle_flags(**kwargs):
@@ -63,12 +62,6 @@ def main():
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
     print_total_cfg(cfg)
-
-    if cfg.use_gpu:
-        devices_num = fluid.core.get_cuda_device_count()
-    else:
-        devices_num = int(
-            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     if 'eval_feed' not in cfg:
         eval_feed = create(main_arch + 'EvalFeed')

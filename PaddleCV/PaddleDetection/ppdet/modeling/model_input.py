@@ -18,7 +18,6 @@ from __future__ import division
 
 from collections import OrderedDict
 from ppdet.data.transform.operators import *
-import copy
 
 from paddle import fluid
 

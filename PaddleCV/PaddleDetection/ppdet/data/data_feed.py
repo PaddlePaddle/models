@@ -692,10 +692,11 @@ class MaskRCNNTestFeed(DataFeed):
                  image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
+                     NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False),
                      Permute(to_bgr=False, channel_first=True)
                  ],
                  batch_transforms=[PadBatch()],
@@ -956,10 +957,11 @@ class YoloEvalFeed(DataFeed):
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      ResizeImage(target_size=608, interp=2),
-                     NormalizeImage(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225],
-                                    is_scale=True,
-                                    is_channel_first=False),
+                     NormalizeImage(
+                         mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225],
+                         is_scale=True,
+                         is_channel_first=False),
                      Permute(to_bgr=False),
                  ],
                  batch_transforms=[],
@@ -1010,13 +1012,11 @@ class YoloTestFeed(DataFeed):
                  image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
-                     ResizeImage(
-                         target_size=608, interp=2),
-                     NormalizeImage(
-                         mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225],
-                         is_scale=True,
-                         is_channel_first=False),
+                     ResizeImage(target_size=608, interp=2),
+                     NormalizeImage(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225],
+                                    is_scale=True,
+                                    is_channel_first=False),
                      Permute(to_bgr=False),
                  ],
                  batch_transforms=[],

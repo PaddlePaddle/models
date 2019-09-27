@@ -107,7 +107,6 @@ def eval_run(exe,
     """
     Run evaluation program, return program outputs.
     """
-
     iter_id = 0
     results = []
     if len(cls) != 0:
@@ -151,7 +150,7 @@ def eval_run(exe,
                 res = clean_res(
                     res, ['im_info', 'bbox', 'im_id', 'im_shape', 'mask'])
             results.append(res)
-            if iter_id % 1 == 0:
+            if iter_id % 100 == 0:
                 logger.info('Test iter {}'.format(iter_id))
             iter_id += 1
             images_num += len(res['bbox'][1][0]) if has_bbox else 1

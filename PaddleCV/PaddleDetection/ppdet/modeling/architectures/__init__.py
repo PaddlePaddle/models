@@ -19,6 +19,7 @@ from . import faster_rcnn_ms_test
 from . import mask_rcnn
 from . import mask_rcnn_ms_test
 from . import cascade_rcnn
+from . import cascade_rcnn_ms_test
 from . import cascade_mask_rcnn
 from . import yolov3
 from . import ssd
