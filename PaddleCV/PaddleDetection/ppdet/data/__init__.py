@@ -19,9 +19,9 @@ import os
 import random
 
 try:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 except Exception:
-    from collections import Mapping
+    from collections import Mapping, Sequence
 
 import numpy as np
 
@@ -58,32 +58,38 @@ class ExtractFields(object):
         self.feed_vars = feed_vars
         self.extra_vars = extra_vars
 
-        self._normalized_vars = []
-        for var in self.feed_vars:
-            if isinstance(var, str):
-                name = var
-                fields = [var]
-                lod_level = 0
+        self._normalized_vars = [self._normalize(v) for v in self.feed_vars]
+        self._normalized_vars += [
+            self._normalize(v, True) for v in self.extra_vars]
+
+    def _normalize(self, var, extra=False):
+        if isinstance(var, str):
+            name = var
+            fields = [var]
+            lod_level = 0
+        else:
+            assert isinstance(var, Mapping), \
+                "feed_var should be either string or dict like object"
+            name = var['name']
+            if 'fields' in var:
+                fields = var['fields']
             else:
-                assert isinstance(var, Mapping), \
-                    "feed_var should be either string or dict like object"
-                name = var['name']
-                if 'fields' in var:
-                    fields = var['fields']
-                else:
-                    fields = [name]
-                lod_level = 'lod_level' in var and var['lod_level'] or 0
-            self._normalized_vars.append({
-                'name': name,
+                fields = [name]
+            lod_level = 'lod_level' in var and var['lod_level'] or 0
+        return {'name': name,
                 'fields': fields,
-                'lod_level': lod_level})
+                'lod_level': lod_level,
+                'extra': extra}
 
     def __call__(self, batch):
         feed_dict = {}
+        extra_dict = {}
+
         for var in self._normalized_vars:
             name = var['name']
             lod_level = var['lod_level']
             fields = var['fields']
+            extra = var['extra']
 
             arr_list = []
             seq_length = None
@@ -96,23 +102,31 @@ class ExtractFields(object):
                     arr = batch[f]
 
                 if lod_level == 0:
-                    # 'image' may already be stacked by `PadToStride`
-                    if not isinstance(arr, (np.ndarray, numbers.Number)):
+                    # stack only feed vars or combined fields
+                    if (not extra or len(fields) > 1) and isinstance(
+                            arr, Sequence) and isinstance(arr[0], np.ndarray):
                         arr = np.stack(arr)
                     arr_list.append(arr)
                     continue
 
-                flat, seq_length = self._flatten(arr, lod_level + 1)
-                arr_list.append(flat)
-
-            if seq_length is not None:
-                seq_length = seq_length[1:]
+                if not extra:
+                    flat, seq_length = self._flatten(arr, lod_level + 1)
+                    arr_list.append(flat)
 
             # combine fields
             if len(fields) == 1:
                 ndarray = arr_list[0]
             else:
                 ndarray = np.column_stack(np.broadcast_arrays(*arr_list))
+                if extra:
+                    ndarray = [ndarray]
+
+            if extra:
+                extra_dict[name] = ndarray
+                continue
+
+            if seq_length is not None:
+                seq_length = seq_length[1:]
 
             if not isinstance(ndarray, np.ndarray):
                 ndarray = np.asarray(ndarray)
@@ -123,7 +137,6 @@ class ExtractFields(object):
 
             feed_dict[name] = (ndarray, seq_length)
 
-        extra_dict = {key: batch[key] for key in self.extra_vars}
         return feed_dict, extra_dict
 
     def _flatten(self, arr, lod_level):
