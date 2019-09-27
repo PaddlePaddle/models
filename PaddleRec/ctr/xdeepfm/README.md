@@ -12,7 +12,7 @@ sh download.sh
 ```
 
 ## 环境
-- PaddlePaddle 1.5
+- PaddlePaddle 1.6
 
 ## 单机训练
 ```bash
@@ -34,6 +34,8 @@ test_epoch设置加载第10轮训练的模型。
 
 ## 多机训练
 运行命令本地模拟多机场景，默认使用2 X 2模式，即2个pserver，2个trainer的方式组网训练。
+
+**注意：在多机训练中，建议使用Paddle 1.6版本以上或[最新版本](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/Tables.html#whl-dev)。**
 
 数据下载同上面命令。
 ```bash
@@ -62,6 +64,7 @@ python infer.py --model_output_dir cluster_model --test_epoch 10 --use_gpu=0
 - 0号trainer保存模型参数
 
 - 每次训练完成后需要手动停止pserver进程，使用以下命令查看pserver进程：
-  >ps -ef | grep python
+  
+>ps -ef | grep python
 
 - 数据读取使用dataset模式，目前仅支持运行在Linux环境下
