@@ -148,15 +148,14 @@ EvalDataLoader:
   - !Resize
     target_dim: 608
     interp: 2
+    scale_box: false
   - !NormalizePermute
     mean: [123.675, 116.28, 103.53]
     std: [58.395, 57.120, 57.375]
-  - !NormalizeLabels
-    normalize_box: true
-    to_center: true
   batch_transforms:
   - !PadToStride
     stride: 1
+  - !NormalizeLabels {}
 
 TestDataLoader:
   batch_size: 1
