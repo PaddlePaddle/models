@@ -1,12 +1,12 @@
 # Transfer Learning
 
-Transfer learning aims at learning new knowledge from existing knowledge. Usually, the dataset is relatively small in detection task. As a resualt, training on ImageNet as pretrained model directly may not get high performance and it's essential to use tranfer learning by open-source models from the COCO/VOC dataset.
+Transfer learning aims at learning new knowledge from existing knowledge. For example, take pretrained model from ImageNet to initialize detection models, or take pretrained model from COCO dataset to initialize train detection models in PascalVOC dataset.
 
 In transfer learning, if different dataset and the number of classes is used, the dimensional inconsistency will causes in loading parameters related to the number of classes; On the other hand, if more complicated model is used, need to motify the open-source model construction and selective load parameters. Thus, PaddleDetection should designate parameter fields and ignore loading the parameters which match the fields.
 
 ## Transfer Learning in PaddleDetection
 
-In PaddleDetection, if users want to use transfer learning and selective load parameters, use following commend:
+In transfer learning, it's needed to load pretrained model selectively. Set `finetune_exclude_pretrained_params` in YAML configuration files or set `-o finetune_exclude_pretrained_params` in command line.
 
 ```python
 export PYTHONPATH=$PYTHONPATH:.

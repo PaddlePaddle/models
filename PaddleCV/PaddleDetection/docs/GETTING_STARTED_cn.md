@@ -58,7 +58,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml --eval
 当边训练边测试时，在每次snapshot\_iter会评测出最佳mAP模型保存到
 `best_model`文件夹下，`best_model`的路径和`model_final`的路径相同。
 
-- 设置配置文件参数 && 指定数据集路径
+- 指定数据集路径
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
@@ -67,7 +67,10 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
                          -d dataset/coco
 ```
 
-- 模型fine-tune
+- Fine-tune其他任务
+
+使用预训练模型fine-tune其他任务时，在YAML配置文件中设置`finetune_exclude_pretrained_params`或在命令行中添加`-o finetune_exclude_pretrained_params`对预训练模型进行选择性加载。
+
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export PYTHONPATH=$PYTHONPATH:.
@@ -107,7 +110,7 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 
 #### 例子
 
-- 设置配置文件参数 && 指定数据集路径
+- 指定数据集路径
 ```bash
 # GPU评估
 export CUDA_VISIBLE_DEVICES=0

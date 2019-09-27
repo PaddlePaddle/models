@@ -58,7 +58,7 @@ causes time-consuming in training, we suggest decreasing evaluation times or eva
 the best model with highest MAP is saved at each `snapshot_iter`. `best_model` has the same path as `model_final`.
 
 
-- configuration options and assign Dataset path
+- Assign dataset path
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export PYTHONPATH=$PYTHONPATH:.
@@ -66,7 +66,10 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
                          -d dataset/coco
 ```
 
-- Model fine-tune
+- Fine-tune other task
+
+When using pre-trained model to fine-tune other task, the excluded pre-trained parameters can be set by finetune_exclude_pretrained_params in YAML config or -o finetune_exclude_pretrained_params in the arguments.
+
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export PYTHONPATH=$PYTHONPATH:.
@@ -90,7 +93,6 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 
 ## Evaluation
 
-
 ```bash
 # run on GPU with:
 export PYTHONPATH=$PYTHONPATH:.
@@ -107,7 +109,7 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 
 #### Examples
 
-- configuration options && assign Dataset path
+- Evaluate with assigned weights path and dataset path
 ```bash
 # run on GPU with:
 export PYTHONPATH=$PYTHONPATH:.
@@ -117,7 +119,7 @@ python -u tools/eval.py -c configs/faster_rcnn_r50_1x.yml \
                         -d dataset/coco
 ```
 
-- Evaluation with json
+- Evaluate with json
 ```bash
 # run on GPU with:
 export PYTHONPATH=$PYTHONPATH:.

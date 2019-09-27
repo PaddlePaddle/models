@@ -2,11 +2,16 @@ English | [简体中文](QUICK_STARTED_cn.md)
 
 # Quick Start
 
-PaddleDetection provided a demo for users to get started. Finetune the model trained by PaddlePaddle on small dataset.
+This tutorial fine-tunes a tiny dataset by pretrained detection model for users to get a model and learn PaddleDetection quickly. The model can be trained in around 15min with good performance. 
 
 ## Data Preparation
 
-Dataset refers to [Kaggle](https://www.kaggle.com/mbkinaci/fruit-images-for-object-detection), which contains 240 images in train dataset and 60 images in test dataset. Data categories are apple, orange and banana. Download [here](https://dataset.bj.bcebos.com/PaddleDetection_demo/fruit-detection.tar) and uncompress the dataset after download, script for data preparation is located at [download.sh](../dataset/fruit/download.sh).
+Dataset refers to [Kaggle](https://www.kaggle.com/mbkinaci/fruit-images-for-object-detection), which contains 240 images in train dataset and 60 images in test dataset. Data categories are apple, orange and banana. Download [here](https://dataset.bj.bcebos.com/PaddleDetection_demo/fruit-detection.tar) and uncompress the dataset after download, script for data preparation is located at [download.sh](../dataset/fruit/download.sh). Command is as follows:
+
+```bash
+cd dataset/fruit
+sh download.sh
+```
 
 Training command is as follows:
 
