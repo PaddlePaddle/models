@@ -14,7 +14,7 @@ TEST_RESULT_PATH=./test_result
 INFER_RESULT_PATH=./infer_result
 TASK_MODE='pairwise'
 CONFIG_PATH=./config/bow_pairwise.json
-INIT_CHECKPOINT=./model_files/bow_pairwise/5/
+INIT_CHECKPOINT=./model_files/simnet_bow_pairwise_pretrained_model/
 
 
 # run_train
