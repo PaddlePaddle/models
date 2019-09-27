@@ -5,7 +5,7 @@
     "vocab_size": 240465,
     "vocab_path": "./data/vocab.txt",
     "data_dir": "./data",
-    "inference_model_dir": "",
+    "inference_model_dir": "./inference_model",
     "save_checkpoint_dir": "",
     "init_checkpoint": "",
     "lr": 0.02,

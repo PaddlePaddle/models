@@ -24,35 +24,14 @@ import six
 import json
 import argparse
 
-<<<<<<< HEAD
 def str2bool(value):
-=======
-
-class EmoTectConfig(object):
->>>>>>> upstream/develop
     """
     String to Boolean
     """
-<<<<<<< HEAD
     # because argparse does not support to parse "true, False" as python
     # boolean directly
     return value.lower() in ("true", "t", "1")
 
-=======
-
-    def __init__(self, config_path):
-        self._config_dict = self._parse(config_path)
-
-    def _parse(self, config_path):
-        try:
-            with open(config_path) as json_file:
-                config_dict = json.load(json_file)
-        except Exception:
-            raise IOError("Error in parsing emotect model config file '%s'" %
-                          config_path)
-        else:
-            return config_dict
->>>>>>> upstream/develop
 
 class ArgumentGroup(object):
     """
@@ -95,19 +74,21 @@ class PDConfig(object):
         run_type_g.add_arg("do_val", bool, False, "Whether to perform evaluation.")
         run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
         run_type_g.add_arg("do_save_inference_model", bool, False, "Whether to perform save inference model.")
-        
+
         model_g = ArgumentGroup(parser, "Model config options", "")
-        model_g.add_arg("model_type", str, "cnn_net", "Model type to run the task.", 
+        model_g.add_arg("model_type", str, "cnn_net", "Model type to run the task.",
             choices=["bow_net","cnn_net", "lstm_net", "bilstm_net", "gru_net", "textcnn_net"])
+        model_g.add_arg("num_labels", int, 3 , "Number of labels for classification")
         model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
         model_g.add_arg("save_checkpoint_dir", str, None, "Directory path to save checkpoints")
         model_g.add_arg("inference_model_dir", str, None, "Directory path to save inference model")
 
-        
+
         data_g = ArgumentGroup(parser, "Data config options", "")
         data_g.add_arg("data_dir", str, None, "Directory path to training data.")
         data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
         data_g.add_arg("vocab_size", str, None, "Vocabulary size.")
+        data_g.add_arg("max_seq_len", int, 128, "Number of words of the longest sequence.")
 
         train_g = ArgumentGroup(parser, "Training config options", "")
         train_g.add_arg("lr", float, 0.002, "The Learning rate value for training.")
@@ -121,7 +102,7 @@ class PDConfig(object):
 
         log_g = ArgumentGroup(parser, "Logging options", "")
         log_g.add_arg("verbose", bool, False, "Whether to output verbose log")
-        log_g.add_arg("task_name", str, None, "The name of task to perform sentiment classification.")
+        log_g.add_arg("task_name", str, None, "The name of task to perform emotion detection")
         log_g.add_arg('enable_ce', bool, False, 'If set, run the task with continuous evaluation logs.')
 
         custom_g = ArgumentGroup(parser, "Customize options", "")
@@ -144,8 +125,8 @@ class PDConfig(object):
             with open(file_path, "r") as fin:
                 self.json_config = json.load(fin)
         except Exception as e:
-            raise IOError("Error in parsing json config file '%s'" % file_path)  
-        
+            raise IOError("Error in parsing json config file '%s'" % file_path)
+
         for name in self.json_config:
             # use `six.string_types` but not `str` for compatible with python2 and python3
             if not isinstance(self.json_config[name], (int, float, bool, six.string_types)):
@@ -186,7 +167,7 @@ class PDConfig(object):
         dtype = new_arg[1]
         dvalue = new_arg[2]
         desc = new_arg[3] if len(new_arg) == 4 else "Description is not provided."
-        
+
         self.add_arg(name, dtype, dvalue, desc)
         return self
 

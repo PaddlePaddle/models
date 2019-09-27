@@ -3,9 +3,6 @@ export FLAGS_enable_parallel_graph=1
 export FLAGS_sync_nccl_allreduce=1
 export CUDA_VISIBLE_DEVICES=0
 export FLAGS_fraction_of_gpu_memory_to_use=0.95
-TASK_NAME='emotion_detection'
-DATA_PATH=./data/
-VOCAB_PATH=./data/vocab.txt
 CKPT_PATH=./save_models/textcnn
 MODEL_PATH=./save_models/textcnn/step_756
 
@@ -21,7 +18,7 @@ train() {
         --save_checkpoint_dir ${CKPT_PATH} \
         --save_steps 200 \
         --validation_steps 200 \
-        --skip_steps 200 
+        --skip_steps 200
 }
 # run_eval on test.tsv
 evaluate() {
@@ -29,7 +26,7 @@ evaluate() {
         --use_cuda false \
         --do_val true \
         --batch_size 128 \
-        --init_checkpoint ${MODEL_PATH} 
+        --init_checkpoint ${MODEL_PATH}
 }
 # run_infer on infer.tsv
 infer() {
@@ -37,7 +34,7 @@ infer() {
         --use_cuda false \
         --do_infer true \
         --batch_size 32 \
-        --init_checkpoint ${MODEL_PATH} 
+        --init_checkpoint ${MODEL_PATH}
 }
 
 # run_save_inference_model
@@ -65,12 +62,12 @@ main() {
             save_inference_model "$@";
             ;;
         help)
-            echo "Usage: ${BASH_SOURCE} {train|eval|infer}";
+            echo "Usage: ${BASH_SOURCE} {train|eval|infer|save_inference_model}";
             return 0;
             ;;
         *)
             echo "unsupport command [${cmd}]";
-            echo "Usage: ${BASH_SOURCE} {train|eval|infer}";
+            echo "Usage: ${BASH_SOURCE} {train|eval|infer|save_inference_model}";
             return 1;
             ;;
     esac

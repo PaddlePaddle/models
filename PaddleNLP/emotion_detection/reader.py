@@ -29,43 +29,45 @@ class EmoTectProcessor(object):
     Processor class for data convertors for EmoTect.
     """
 
-    def __init__(self, data_dir, vocab_path, random_seed=None):
+    def __init__(self, data_dir, vocab_path, random_seed=None, max_seq_len=128):
         self.data_dir = data_dir
         self.vocab = load_vocab(vocab_path)
         self.num_examples = {"train": -1, "dev": -1, "test": -1, "infer": -1}
         np.random.seed(random_seed)
+        self.max_seq_len = max_seq_len
 
-    def get_train_examples(self, data_dir, epoch=1):
+    def get_train_examples(self, data_dir, epoch, max_seq_len):
         """
         Load training examples
         """
         return data_reader(
             os.path.join(self.data_dir, "train.tsv"), self.vocab,
-            self.num_examples, "train", epoch)
+            self.num_examples, "train", epoch, max_seq_len)
 
-    def get_dev_examples(self, data_dir):
+    def get_dev_examples(self, data_dir, epoch, max_seq_len):
         """
         Load dev examples
         """
         return data_reader(
             os.path.join(self.data_dir, "dev.tsv"), self.vocab,
-            self.num_examples, "dev")
+            self.num_examples, "dev", epoch, max_seq_len)
 
-    def get_test_examples(self, data_dir):
+    def get_test_examples(self, data_dir, epoch, max_seq_len):
         """
         Load test examples
         """
         return data_reader(
             os.path.join(self.data_dir, "test.tsv"), self.vocab,
-            self.num_examples, "test")
+            self.num_examples, "test", epoch, max_seq_len)
 
-    def get_infer_examples(self, data_dir):
+    def get_infer_examples(self, data_dir, epoch, max_seq_len):
         """
         Load infer querys
         """
         return data_reader(
             os.path.join(self.data_dir, "infer.tsv"), self.vocab,
-            self.num_examples, "infer")
+            self.num_examples, "infer", epoch, max_seq_len)
+
 
     def get_labels(self):
         """
@@ -95,16 +97,16 @@ class EmoTectProcessor(object):
         """
         if phase == "train":
             return paddle.batch(
-                self.get_train_examples(self.data_dir, epoch), batch_size)
+                self.get_train_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         elif phase == "dev":
             return paddle.batch(
-                self.get_dev_examples(self.data_dir), batch_size)
+                self.get_dev_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         elif phase == "test":
             return paddle.batch(
-                self.get_test_examples(self.data_dir), batch_size)
+                self.get_test_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         elif phase == "infer":
             return paddle.batch(
-                self.get_infer_examples(self.data_dir), batch_size)
+                self.get_infer_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         else:
             raise ValueError(
                 "Unknown phase, which should be in ['train', 'dev', 'test', 'infer']."
