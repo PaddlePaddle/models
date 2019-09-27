@@ -30,8 +30,8 @@ from ppdet.data.transform.operators import (
     RandomFaceCropImage, Permute)
 
 from ppdet.data.transform.arrange_sample import (
-    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD,
-    ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO, ArrangeBlazeFace,
+    ArrangeRCNN, ArrangeEvalRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD,
+    ArrangeTestSSD, ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO, ArrangeBlazeFace,
     ArrangeTestBlazeFace)
 
 __all__ = [
