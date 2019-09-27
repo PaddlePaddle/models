@@ -11,9 +11,9 @@ In transfer learning, it's needed to load pretrained model selectively. Set `fin
 ```python
 export PYTHONPATH=$PYTHONPATH:.
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-python -u tool/train.py -c configs/faster_rcnn_r50_1x.yml \
+python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
                         -o pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/faster_rcnn_r50_1x.tar \
-                           finetune_exclude_pretrained_params = ['cls_score','bbox_pred']
+                           finetune_exclude_pretrained_params=['cls_score','bbox_pred']
 ```
 
 * Note:

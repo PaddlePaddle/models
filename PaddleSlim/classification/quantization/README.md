@@ -37,7 +37,7 @@ cost = fluid.layers.cross_entropy(input=out, label=label)
 可以通过命令`python compress.py`用默认参数执行压缩任务，通过`python compress.py --help`查看可配置参数，简述如下：
 
 - use_gpu: 是否使用gpu。如果选择使用GPU，请确保当前环境和Paddle版本支持GPU。默认为True。
-- batch_size: 在剪裁之后，对模型进行fine-tune训练时用的batch size。
+- batch_size: 在量化之后，对模型进行fine-tune训练时用的batch size。
 - model: 要压缩的目标模型，该示例支持'MobileNet', 'MobileNetV2'和'ResNet50'。
 - pretrained_model: 预训练模型的路径，可以从[这里](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#%E5%B7%B2%E5%8F%91%E5%B8%83%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%85%B6%E6%80%A7%E8%83%BD)下载。
 - config_file: 压缩策略的配置文件。
@@ -111,7 +111,9 @@ float预测模型可直接使用原生PaddlePaddle Fluid预测方法进行预测
 在脚本<a href="../infer.py">PaddleSlim/classification/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
 
 ### PaddleLite预测
-mobile预测模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如何加载运行量化模型](https://github.com/PaddlePaddle/Paddle-Lite/wiki/model_quantization)
+float预测模型可使用Paddle-Lite进行加载预测，可参见教程[Paddle-Lite如何加载运行量化模型](https://github.com/PaddlePaddle/Paddle-Lite/wiki/model_quantization)。
+
+mobile预测模型兼容Paddle-Lite（Paddle-Mobile的升级版）, 使用方法可参考[Paddle-Lite文档](https://paddlepaddle.github.io/Paddle-Lite/).
 
 
 ## 示例结果

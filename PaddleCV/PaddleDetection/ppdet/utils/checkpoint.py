@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import errno
 import os
 import shutil
 import time
@@ -46,6 +47,7 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
+
 def load_params(exe, prog, path, ignore_params=[]):
     """
     Load model from the given path.
@@ -53,7 +55,7 @@ def load_params(exe, prog, path, ignore_params=[]):
         exe (fluid.Executor): The fluid.Executor object.
         prog (fluid.Program): load weight to which Program object.
         path (string): URL string or loca model path.
-        ignore_map (bool): ignore variable to load when finetuning.
+        ignore_params (bool): ignore variable to load when finetuning.
     """
 
     if is_url(path):

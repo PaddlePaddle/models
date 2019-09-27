@@ -332,21 +332,21 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
                 print(
                     "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
-                           "%2.2f sec" % time_info))
+                           "%2.4f sec" % time_info))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 print(
                     "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%.5f" % lr, "%2.2f sec" % time_info))
+                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 print(
                     "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%2.2f sec" % time_info))
+                           "%.5f" % acc5, "%2.4f sec" % time_info))
             else:
                 raise Exception(
                     "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".

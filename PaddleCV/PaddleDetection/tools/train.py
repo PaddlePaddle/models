@@ -102,7 +102,7 @@ def main():
         device_id = int(env['FLAGS_selected_gpus'])
     else:
         device_id = 0
-    place = fluid.CUDAPlace(device_id)
+    place = fluid.CUDAPlace(device_id) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
     lr_builder = create('LearningRate')
@@ -167,8 +167,8 @@ def main():
     # local execution scopes can be deleted after each iteration.
     exec_strategy.num_iteration_per_drop_scope = 1
     if FLAGS.dist:
-        dist_utils.prepare_for_multi_process(
-            exe, build_strategy, startup_prog, train_prog)
+        dist_utils.prepare_for_multi_process(exe, build_strategy, startup_prog,
+                                             train_prog)
         exec_strategy.num_threads = 1
 
     exe.run(startup_prog)
@@ -198,10 +198,8 @@ def main():
                     FLAGS.dataset_dir)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
-    train_reader = create_reader(
-                    train_feed,
-                    (cfg.max_iters - start_iter) * devices_num,
-                    FLAGS.dataset_dir)
+    train_reader = create_reader(train_feed, (cfg.max_iters - start_iter) *
+                                 devices_num, FLAGS.dataset_dir)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     # whether output bbox is normalized in model output layer

@@ -27,7 +27,7 @@ To download the MRQA datasets, run
 ```
 cd scripts && bash download_data.sh && cd ..
 ```
-The training and prediction datasets will be saved in `./data/train/` and `./data/dev/`, respectively.
+The training and prediction datasets will be saved in `./scripts/train/` and `./scripts/dev/`, respectively.
 
 The Multi_task_learning model only supports dataset files in SQuAD format. Before running the model on MRQA datasets, one need to convert the official MRQA data to SQuAD format. To do the conversion, run
 ```
@@ -39,7 +39,7 @@ For convenience, we provide a script to combine all the training and development
 ```
 cd scripts && bash combine.sh && cd ..
 ```
-The combined files will be saved in `./data/train/mrqa-combined.raw.json` and `./data/dev/mrqa-combined.raw.json`.
+The combined files will be saved in `./scripts/train/mrqa-combined.raw.json` and `./scripts/dev/mrqa-combined.raw.json`.
 
 ### Models Preparation
 In this competition, We use google squad2.0 model as pretrain model [Model Link](https://worksheets.codalab.org/worksheets/0x3852e60a51d2444680606556d404c657)
