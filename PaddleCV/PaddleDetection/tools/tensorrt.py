@@ -121,7 +121,7 @@ def create_inputs(data, architecture, use_cpp_engine=True):
         inputs += [create_tensor(im_size, 'int32', use_cpp_engine)]
     elif architecture == 'SSD':
         pass
-    elif architecture == 'RetinaNet' or architecture == 'CascadeRCNN':
+    elif architecture == 'RetinaNet':  #or architecture == 'CascadeRCNN':
         im_info = data['im_info'][0]
         inputs += [create_tensor(im_info, 'float32', use_cpp_engine)]
     else:
