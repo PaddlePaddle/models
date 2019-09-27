@@ -36,6 +36,7 @@ set_paddle_flags(
 )
 
 from paddle import fluid
+from paddle.fluid.contrib import mixed_precision
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
 
@@ -98,7 +99,7 @@ def main():
         device_id = int(env['FLAGS_selected_gpus'])
     else:
         device_id = 0
-    place = fluid.CUDAPlace(device_id)
+    place = fluid.CUDAPlace(device_id) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
     lr_builder = create('LearningRate')
@@ -115,6 +116,11 @@ def main():
             loss = train_fetches['loss']
             lr = lr_builder()
             optimizer = optim_builder(lr)
+            if FLAGS.fp16:
+                optimizer = mixed_precision.decorate(
+                    optimizer=optimizer,
+                    init_loss_scaling=FLAGS.loss_scale,
+                    use_dynamic_loss_scaling=False)
             optimizer.minimize(loss)
 
     # parse train fetches
@@ -144,8 +150,11 @@ def main():
 
     # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
-    sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
+    build_strategy.fuse_all_optimizer_ops = False
+    if FLAGS.fp16:
+        build_strategy.fuse_all_reduce_ops = False
     # only enable sync_bn in multi GPU devices
+    sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
     build_strategy.sync_batch_norm = sync_bn and devices_num > 1 \
         and cfg.use_gpu
 
@@ -155,8 +164,8 @@ def main():
     # local execution scopes can be deleted after each iteration.
     exec_strategy.num_iteration_per_drop_scope = 1
     if FLAGS.dist:
-        dist_utils.prepare_for_multi_process(
-            exe, build_strategy, startup_prog, train_prog)
+        dist_utils.prepare_for_multi_process(exe, build_strategy, startup_prog,
+                                             train_prog)
         exec_strategy.num_threads = 1
 
     exe.run(startup_prog)
@@ -178,10 +187,8 @@ def main():
     elif cfg.pretrain_weights:
         checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
 
-    train_reader = create_reader(
-                    train_feed,
-                    (cfg.max_iters - start_iter) * devices_num,
-                    FLAGS.dataset_dir)
+    train_reader = create_reader(train_feed, (cfg.max_iters - start_iter) *
+                                 devices_num, FLAGS.dataset_dir)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     # whether output bbox is normalized in model output layer
@@ -268,6 +275,16 @@ def main():
 
 if __name__ == '__main__':
     parser = ArgsParser()
+    parser.add_argument(
+        "--fp16",
+        action='store_true',
+        default=False,
+        help="Enable mixed precision training.")
+    parser.add_argument(
+        "--loss_scale",
+        default=8.,
+        type=float,
+        help="Mixed precision training loss scale.")
     parser.add_argument(
         "-r",
         "--resume_checkpoint",

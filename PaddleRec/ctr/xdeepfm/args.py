@@ -69,5 +69,11 @@ def parse_args():
         help='The name of model (default: ctr_xdeepfm_model)')
     parser.add_argument('--use_gpu', type=int, default=1)
     parser.add_argument('--print_steps', type=int, default=50)
+    parser.add_argument(
+        '--is_sparse',
+        action='store_true',
+        required=False,
+        default=False,
+        help='embedding will use sparse or not, (default: False)')
 
     return parser.parse_args()
