@@ -100,15 +100,9 @@ def main():
         json_eval_results(
             eval_feed, cfg.metric, json_directory=FLAGS.output_eval)
         return
-    # compile program for multi-devices
-    if devices_num <= 1:
-        compile_program = fluid.compiler.CompiledProgram(eval_prog)
-    else:
-        build_strategy = fluid.BuildStrategy()
-        build_strategy.memory_optimize = False
-        build_strategy.enable_inplace = False
-        compile_program = fluid.compiler.CompiledProgram(
-            eval_prog).with_data_parallel(build_strategy=build_strategy)
+
+    compile_program = fluid.compiler.CompiledProgram(
+        eval_prog).with_data_parallel()
 
     # load model
     exe.run(startup_prog)
