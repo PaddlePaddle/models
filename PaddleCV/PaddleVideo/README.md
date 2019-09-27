@@ -14,10 +14,12 @@
 | [TSN](./models/tsn/README.md) | 视频分类| ECCV'16提出的基于2D-CNN经典解决方案 |
 | [Non-local](./models/nonlocal_model/README.md) | 视频分类| 视频非局部关联建模模型 |
 | [C-TCN](./models/ctcn/README.md) | 视频动作定位| 2018年ActivityNet夺冠方案 |
+| [BSN](./models/bsn/README.md) | 视频动作定位| 为视频动作定位问题提供高效的proposal生成方法 |
+| [BMN](./models/bmn/README.md) | 视频动作定位| 2019年ActivityNet夺冠方案 |
 
 ### 主要特点
 
-- 包含视频分类和动作定位方向的多个主流领先模型，其中Attention LSTM，Attention Cluster和NeXtVLAD是比较流行的特征序列模型，Non-local, TSN, TSM和StNet是End-to-End的视频分类模型。Attention LSTM模型速度快精度高，NeXtVLAD是2nd-Youtube-8M比赛中最好的单模型, TSN是基于2D-CNN的经典解决方案，TSM是基于时序移位的简单高效视频时空建模方法，Non-local模型提出了视频非局部关联建模方法。Attention Cluster和StNet是百度自研模型，分别发表于CVPR2018和AAAI2019，是Kinetics600比赛第一名中使用到的模型。C-TCN动作定位模型也是百度自研，2018年ActivityNet比赛的夺冠方案。
+- 包含视频分类和动作定位方向的多个主流领先模型，其中Attention LSTM，Attention Cluster和NeXtVLAD是比较流行的特征序列模型，Non-local, TSN, TSM和StNet是End-to-End的视频分类模型。Attention LSTM模型速度快精度高，NeXtVLAD是2nd-Youtube-8M比赛中最好的单模型, TSN是基于2D-CNN的经典解决方案，TSM是基于时序移位的简单高效视频时空建模方法，Non-local模型提出了视频非局部关联建模方法。Attention Cluster和StNet是百度自研模型，分别发表于CVPR2018和AAAI2019，是Kinetics600比赛第一名中使用到的模型。C-TCN动作定位模型也是百度自研，2018年ActivityNet比赛的夺冠方案。BSN模型采用自底向上的方法生成proposal,为视频动作定位问题中proposal的生成提供高效的解决方案。BMN模型是百度自研模型，2019年ActivityNet夺冠方案。
 
 - 提供了适合视频分类和动作定位任务的通用骨架代码，用户可一键式高效配置模型完成训练和评测。
 
@@ -170,9 +172,11 @@ run.sh
 
 - 基于ActivityNet的动作定位模型：
 
-| 模型 | Batch Size | 环境配置 | cuDNN版本 | MAP | 下载链接 |
+| 模型 | Batch Size | 环境配置 | cuDNN版本 | 精度 | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
-| C-TCN | 16 | 8卡P40 | 7.1 | 0.31| [model](https://paddlemodels.bj.bcebos.com/video_detection/CTCN_final.pdparams) |
+| C-TCN | 16 | 8卡P40 | 7.1 | 0.31 (MAP) | [model](https://paddlemodels.bj.bcebos.com/video_detection/CTCN_final.pdparams) |
+| BSN | 16 | 1卡K40 | 7.0 | 66.64% (AUC) | [model-tem](https://paddlemodels.bj.bcebos.com/video_detection/BsnTem_final.pdparams), [model-pem](https://paddlemodels.bj.bcebos.com/video_detection/BsnPem_final.pdparams) |
+| BMN | 16 | 4卡K40 | 7.0 | 67.19% (AUC) | [model](https://paddlemodels.bj.bcebos.com/video_detection/BMN_final.pdparams) |
 
 
 ## 参考文献
@@ -184,6 +188,9 @@ run.sh
 - [Temporal Segment Networks: Towards Good Practices for Deep Action Recognition](https://arxiv.org/abs/1608.00859), Limin Wang, Yuanjun Xiong, Zhe Wang, Yu Qiao, Dahua Lin, Xiaoou Tang, Luc Van Gool
 - [Temporal Shift Module for Efficient Video Understanding](https://arxiv.org/abs/1811.08383v1), Ji Lin, Chuang Gan, Song Han
 - [Non-local Neural Networks](https://arxiv.org/abs/1711.07971v1), Xiaolong Wang, Ross Girshick, Abhinav Gupta, Kaiming He
+- [Bsn: Boundary sensitive network for temporal action proposal generation](http://arxiv.org/abs/1806.02964), Tianwei Lin, Xu Zhao, Haisheng Su, Chongjing Wang, Ming Yang.
+- [BMN: Boundary-Matching Network for Temporal Action Proposal Generation](https://arxiv.org/abs/1907.09702), Tianwei Lin, Xiao Liu, Xin Li, Errui Ding, Shilei Wen.
+
 
 ## 版本更新
 

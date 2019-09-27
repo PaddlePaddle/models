@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import os
 import time
+import sys
 import argparse
 import numpy as np
 import multiprocessing
@@ -321,7 +322,10 @@ def train(args):
     exec_strategy.num_iteration_per_drop_scope = args.num_iteration_per_drop_scope
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.num_trainers = nccl2_num_trainers
+    if not sys.platform == "win32":
+        build_strategy.num_trainers = nccl2_num_trainers
+    elif  nccl2_num_trainers > 1:
+        raise ValueError("Windows platform doesn't support distributed training!")
     build_strategy.trainer_id = nccl2_trainer_id
     # use_ngraph is for CPU only, please refer to README_ngraph.md for details
     use_ngraph = os.getenv('FLAGS_use_ngraph')

@@ -176,7 +176,11 @@ def do_predict(args):
         pos_enc_param.set(
             position_encoding_init(args.max_length + 1, args.d_model), place)
 
-    compiled_test_prog = fluid.CompiledProgram(test_prog)
+    exe_strategy = fluid.ExecutionStrategy()
+    # to clear tensor array after each iteration
+    exe_strategy.num_iteration_per_drop_scope = 1
+    compiled_test_prog = fluid.CompiledProgram(test_prog).with_data_parallel(
+        exec_strategy=exe_strategy, places=place)
 
     f = open(args.output_file, "wb")
     # start predicting

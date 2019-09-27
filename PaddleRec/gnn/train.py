@@ -101,8 +101,10 @@ def train():
     feed_list = [e.name for e in feed_datas]
 
     if use_parallel:
+        exec_strategy = fluid.ExecutionStrategy()
+        exec_strategy.num_threads = 1 if os.name == 'nt' else 0
         train_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda, loss_name=loss.name)
+            use_cuda=use_cuda, loss_name=loss.name, exec_strategy=exec_strategy)
     else:
         train_exe = exe
 
