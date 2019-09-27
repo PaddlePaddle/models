@@ -63,12 +63,6 @@ def main():
     check_gpu(cfg.use_gpu)
     print_total_cfg(cfg)
 
-    if cfg.use_gpu:
-        devices_num = fluid.core.get_cuda_device_count()
-    else:
-        devices_num = int(
-            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
-
     if 'eval_loader' not in cfg:
         eval_loader = create('EvalDataLoader')
     else:
