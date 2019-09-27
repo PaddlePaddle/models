@@ -192,12 +192,6 @@ def main():
         checkpoint.load_params(
             exe, train_prog, cfg.pretrain_weights, ignore_params=ignore_params)
 
-    train_reader = create_reader(
-                    train_feed,
-                    (cfg.max_iters - start_iter) * devices_num,
-                    FLAGS.dataset_dir)
-    train_pyreader.decorate_sample_list_generator(train_reader, place)
-
     train_reader = create_reader(train_feed, (cfg.max_iters - start_iter) *
                                  devices_num, FLAGS.dataset_dir)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
