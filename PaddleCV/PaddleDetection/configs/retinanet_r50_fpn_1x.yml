@@ -86,7 +86,7 @@ TrainDataLoader:
     use_empty: false
     use_mask: false
   sampler:
-    aspect_ratio_thresholds: [1.0]
+    # aspect_ratio_thresholds: [1.0]
     shuffle: true
     sync_seed_schedule: true
   feed_vars:
