@@ -153,8 +153,6 @@ def main():
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
-    if cfg['metric'] == 'VOC':
-        extra_keys = ['im_id', 'im_shape']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # parse dataset category
