@@ -22,25 +22,14 @@ import paddle
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ["ResNeXt", "ResNeXt50_64x4d", "ResNeXt101_64x4d", "ResNeXt152_64x4d",  "ResNeXt50_32x4d", "ResNeXt101_32x4d",
-           "ResNeXt152_32x4d"]
-
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
+__all__ = [
+    "ResNeXt", "ResNeXt50_64x4d", "ResNeXt101_64x4d", "ResNeXt152_64x4d",
+    "ResNeXt50_32x4d", "ResNeXt101_32x4d", "ResNeXt152_32x4d"
+]
 
 
 class ResNeXt():
     def __init__(self, layers=50, cardinality=64):
-        self.params = train_parameters
         self.layers = layers
         self.cardinality = cardinality
 
@@ -57,7 +46,7 @@ class ResNeXt():
             depth = [3, 4, 23, 3]
         elif layers == 152:
             depth = [3, 8, 36, 3]
-            
+
         num_filters1 = [256, 512, 1024, 2048]
         num_filters2 = [128, 256, 512, 1024]
 
@@ -67,7 +56,7 @@ class ResNeXt():
             filter_size=7,
             stride=2,
             act='relu',
-            name="res_conv1") #debug
+            name="res_conv1")  #debug
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
@@ -86,19 +75,22 @@ class ResNeXt():
                     conv_name = "res" + str(block + 2) + chr(97 + i)
                 conv = self.bottleneck_block(
                     input=conv,
-                    num_filters=num_filters1[block] if cardinality == 64 else num_filters2[block],
+                    num_filters=num_filters1[block]
+                    if cardinality == 64 else num_filters2[block],
                     stride=2 if i == 0 and block != 0 else 1,
                     cardinality=cardinality,
                     name=conv_name)
 
         pool = fluid.layers.pool2d(
-            input=conv, pool_size=7, pool_type='avg', global_pooling=True)
+            input=conv, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
-        out = fluid.layers.fc(input=pool,
-                              size=class_dim,
-                              param_attr=fluid.param_attr.ParamAttr(
-                                  initializer=fluid.initializer.Uniform(-stdv, stdv),name='fc_weights'),
-                              bias_attr=fluid.param_attr.ParamAttr(name='fc_offset'))
+        out = fluid.layers.fc(
+            input=pool,
+            size=class_dim,
+            param_attr=fluid.param_attr.ParamAttr(
+                initializer=fluid.initializer.Uniform(-stdv, stdv),
+                name='fc_weights'),
+            bias_attr=fluid.param_attr.ParamAttr(name='fc_offset'))
         return out
 
     def conv_bn_layer(self,
@@ -158,13 +150,16 @@ class ResNeXt():
             name=name + "_branch2b")
         conv2 = self.conv_bn_layer(
             input=conv1,
-            num_filters=num_filters if cardinality == 64 else num_filters*2,
+            num_filters=num_filters if cardinality == 64 else num_filters * 2,
             filter_size=1,
             act=None,
             name=name + "_branch2c")
 
         short = self.shortcut(
-            input, num_filters if cardinality == 64 else num_filters*2, stride, name=name + "_branch1")
+            input,
+            num_filters if cardinality == 64 else num_filters * 2,
+            stride,
+            name=name + "_branch1")
 
         return fluid.layers.elementwise_add(
             x=short, y=conv2, act='relu', name=name + ".add.output.5")
@@ -173,6 +168,7 @@ class ResNeXt():
 def ResNeXt50_64x4d():
     model = ResNeXt(layers=50, cardinality=64)
     return model
+
 
 def ResNeXt50_32x4d():
     model = ResNeXt(layers=50, cardinality=32)
@@ -183,6 +179,7 @@ def ResNeXt101_64x4d():
     model = ResNeXt(layers=101, cardinality=64)
     return model
 
+
 def ResNeXt101_32x4d():
     model = ResNeXt(layers=101, cardinality=32)
     return model
@@ -191,6 +188,7 @@ def ResNeXt101_32x4d():
 def ResNeXt152_64x4d():
     model = ResNeXt(layers=152, cardinality=64)
     return model
+
 
 def ResNeXt152_32x4d():
     model = ResNeXt(layers=152, cardinality=32)

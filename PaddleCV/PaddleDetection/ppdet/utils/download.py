@@ -81,7 +81,7 @@ def get_dataset_path(path, annotation, image_dir):
     if _dataset_exists(path, annotation, image_dir):
         return path
 
-    logger.info("Dataset {} not exists, try searching {} or "
+    logger.info("Dataset {} is not valid for reason above, try searching {} or "
                 "downloading dataset...".format(
                     osp.realpath(path), DATASET_HOME))
 
@@ -125,7 +125,19 @@ def get_dataset_path(path, annotation, image_dir):
             return data_dir
 
     # not match any dataset in DATASETS
-    raise ValueError("{} not exists or unknow dataset type".format(path))
+    raise ValueError("Dataset {} is not valid and cannot parse dataset type "
+                     "'{}' for automaticly downloading, which only supports "
+                     "'voc' and 'coco' currently".format(path, osp.split(path)[-1]))
+
+
+def map_path(url, root_dir):
+    # parse path after download to decompress under root_dir
+    fname = url.split('/')[-1]
+    zip_formats = ['.zip', '.tar', '.gz']
+    fpath = fname
+    for zip_format in zip_formats:
+        fpath = fpath.replace(zip_format, '')
+    return osp.join(root_dir, fpath)
 
 
 def get_path(url, root_dir, md5sum=None):
@@ -140,12 +152,7 @@ def get_path(url, root_dir, md5sum=None):
     md5sum (str): md5 sum of download package
     """
     # parse path after download to decompress under root_dir
-    fname = url.split('/')[-1]
-    zip_formats = ['.zip', '.tar', '.gz']
-    fpath = fname
-    for zip_format in zip_formats:
-        fpath = fpath.replace(zip_format, '')
-    fullpath = osp.join(root_dir, fpath)
+    fullpath = map_path(url, root_dir)
 
     # For same zip file, decompressed directory name different
     # from zip file name, rename by following map
@@ -171,20 +178,23 @@ def _dataset_exists(path, annotation, image_dir):
     Check if user define dataset exists
     """
     if not osp.exists(path):
-        logger.info("Config dataset_dir {} not exits".format(path))
+        logger.info("Config dataset_dir {} is not exits, "
+                "dataset config is not valid".format(path))
         return False
 
     if annotation:
         annotation_path = osp.join(path, annotation)
         if not osp.isfile(annotation_path):
             logger.info("Config annotation {} is not a "
-                        "file".format(annotation_path))
+                        "file, dataset config is not "
+                        "valid".format(annotation_path))
             return False
     if image_dir:
         image_path = osp.join(path, image_dir)
         if not osp.isdir(image_path):
             logger.info("Config image_dir {} is not a "
-                        "directory".format(image_path))
+                        "directory, dataset config is not "
+                        "valid".format(image_path))
             return False
     return True
 

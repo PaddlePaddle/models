@@ -123,7 +123,7 @@ class CGAN(object):
                 loss_name=d_trainer.d_loss.name, build_strategy=build_strategy)
 
         if self.cfg.run_test:
-            image_path = os.path.join(self.cfg.output, 'images')
+            image_path = os.path.join(self.cfg.output, 'test')
             if not os.path.exists(image_path):
                 os.makedirs(image_path)
         t_time = 0

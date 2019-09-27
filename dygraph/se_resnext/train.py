@@ -30,12 +30,13 @@ import ast
 
 parser = argparse.ArgumentParser("Training for Se-ResNeXt.")
 parser.add_argument("-e", "--epoch", default=200, type=int, help="set epoch")
-parser.add_argument("--ce", action="store_true", help="run ce") 
+parser.add_argument("--ce", action="store_true", help="run ce")
 parser.add_argument(
-        "--use_data_parallel",
-        type=ast.literal_eval,
-        default=False,
-        help="The flag indicating whether to shuffle instances in each pass.")
+    "--use_data_parallel",
+    type=ast.literal_eval,
+    default=False,
+    help="The flag indicating whether to use data parallel mode to train the model."
+)
 args = parser.parse_args()
 batch_size = 64
 train_parameters = {
@@ -51,11 +52,12 @@ train_parameters = {
     "batch_size": batch_size,
     "lr": 0.0125,
     "total_images": 6149,
-    "num_epochs":200
+    "num_epochs": 200
 }
 
 momentum_rate = 0.9
 l2_decay = 1.2e-4
+
 
 def optimizer_setting(params):
     ls = params["learning_strategy"]
@@ -63,7 +65,7 @@ def optimizer_setting(params):
         total_images = 6149
     else:
         total_images = params["total_images"]
-    
+
     batch_size = ls["batch_size"]
     step = int(math.ceil(float(total_images) / batch_size))
     bd = [step * e for e in ls["epochs"]]
@@ -71,7 +73,7 @@ def optimizer_setting(params):
     num_epochs = params["num_epochs"]
     optimizer = fluid.optimizer.Momentum(
         learning_rate=fluid.layers.cosine_decay(
-            learning_rate=lr,step_each_epoch=step,epochs=num_epochs),
+            learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
         momentum=momentum_rate,
         regularization=fluid.regularizer.L2Decay(l2_decay))
 
@@ -97,7 +99,7 @@ class ConvBNLayer(fluid.dygraph.Layer):
             groups=groups,
             act=None,
             bias_attr=False,
-	    param_attr=fluid.ParamAttr(name="weights"))
+            param_attr=fluid.ParamAttr(name="weights"))
 
         self._batch_norm = BatchNorm(self.full_name(), num_filters, act=act)
 
@@ -114,20 +116,21 @@ class SqueezeExcitation(fluid.dygraph.Layer):
         super(SqueezeExcitation, self).__init__(name_scope)
         self._pool = Pool2D(
             self.full_name(), pool_size=0, pool_type='avg', global_pooling=True)
-        stdv = 1.0/math.sqrt(num_channels*1.0)
+        stdv = 1.0 / math.sqrt(num_channels * 1.0)
         self._squeeze = FC(
             self.full_name(),
             size=num_channels // reduction_ratio,
             param_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv,stdv)),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             act='relu')
-        stdv = 1.0/math.sqrt(num_channels/16.0*1.0)
+        stdv = 1.0 / math.sqrt(num_channels / 16.0 * 1.0)
         self._excitation = FC(
             self.full_name(),
             size=num_channels,
             param_attr=fluid.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv,stdv)),
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
             act='sigmoid')
+
     def forward(self, input):
         y = self._pool(input)
         y = self._squeeze(y)
@@ -310,7 +313,7 @@ class SeResNeXt(fluid.dygraph.Layer):
         for bottleneck_block in self.bottleneck_block_list:
             y = bottleneck_block(y)
         y = self.pool2d_avg(y)
-        y = fluid.layers.dropout(y, dropout_prob=0.5,seed=100)
+        y = fluid.layers.dropout(y, dropout_prob=0.5, seed=100)
         y = self.out(y)
         return y
 
@@ -318,7 +321,7 @@ class SeResNeXt(fluid.dygraph.Layer):
 def eval(model, data):
 
     model.eval()
-    batch_size=32
+    batch_size = 32
     total_loss = 0.0
     total_acc1 = 0.0
     total_acc5 = 0.0
@@ -336,7 +339,7 @@ def eval(model, data):
         label._stop_gradient = True
         out = model(img)
 
-        softmax_out = fluid.layers.softmax(out,use_cudnn=False)
+        softmax_out = fluid.layers.softmax(out, use_cudnn=False)
         loss = fluid.layers.cross_entropy(input=softmax_out, label=label)
         avg_loss = fluid.layers.mean(x=loss)
         acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
@@ -351,7 +354,7 @@ def eval(model, data):
             print("test | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
                   ( batch_id, total_loss / total_sample, \
                    total_acc1 / total_sample, total_acc5 / total_sample))
-	    
+
     if args.ce:
         print("kpis\ttest_acc1\t%0.3f" % (total_acc1 / total_sample))
         print("kpis\ttest_acc5\t%0.3f" % (total_acc5 / total_sample))
@@ -360,8 +363,9 @@ def eval(model, data):
           (total_loss / total_sample, \
            total_acc1 / total_sample, total_acc5 / total_sample))
 
+
 def train():
-    
+
     epoch_num = train_parameters["num_epochs"]
     if args.ce:
         epoch_num = args.epoch
@@ -378,21 +382,21 @@ def train():
             fluid.default_startup_program().random_seed = seed
             fluid.default_main_program().random_seed = seed
         if args.use_data_parallel:
-            strategy = fluid.dygraph.parallel.prepare_context() 
+            strategy = fluid.dygraph.parallel.prepare_context()
         se_resnext = SeResNeXt("se_resnext")
         optimizer = optimizer_setting(train_parameters)
         if args.use_data_parallel:
-            se_resnext = fluid.dygraph.parallel.DataParallel(se_resnext, strategy)
+            se_resnext = fluid.dygraph.parallel.DataParallel(se_resnext,
+                                                             strategy)
         train_reader = paddle.batch(
             paddle.dataset.flowers.train(use_xmap=False),
             batch_size=batch_size,
-            drop_last=True
-            )
+            drop_last=True)
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
         test_reader = paddle.batch(
-            paddle.dataset.flowers.test(use_xmap=False), batch_size=32)       
+            paddle.dataset.flowers.test(use_xmap=False), batch_size=32)
 
         for epoch_id in range(epoch_num):
             total_loss = 0.0
@@ -400,25 +404,26 @@ def train():
             total_acc5 = 0.0
             total_sample = 0
             for batch_id, data in enumerate(train_reader()):
-                
-                dy_x_data = np.array(
-                    [x[0].reshape(3, 224, 224)
-                    for x in data]).astype('float32')
-                y_data = np.array(
-                    [x[1] for x in data]).astype('int64').reshape(
-                        batch_size, 1)
+
+                dy_x_data = np.array([x[0].reshape(3, 224, 224)
+                                      for x in data]).astype('float32')
+                y_data = np.array([x[1] for x in data]).astype('int64').reshape(
+                    batch_size, 1)
 
                 img = to_variable(dy_x_data)
                 label = to_variable(y_data)
                 label.stop_gradient = True
 
                 out = se_resnext(img)
-                softmax_out = fluid.layers.softmax(out,use_cudnn=False)
-                loss = fluid.layers.cross_entropy(input=softmax_out, label=label)
+                softmax_out = fluid.layers.softmax(out, use_cudnn=False)
+                loss = fluid.layers.cross_entropy(
+                    input=softmax_out, label=label)
                 avg_loss = fluid.layers.mean(x=loss)
-                
-                acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
-                acc_top5 = fluid.layers.accuracy(input=softmax_out, label=label, k=5)
+
+                acc_top1 = fluid.layers.accuracy(
+                    input=softmax_out, label=label, k=1)
+                acc_top5 = fluid.layers.accuracy(
+                    input=softmax_out, label=label, k=5)
 
                 dy_out = avg_loss.numpy()
                 if args.use_data_parallel:
@@ -430,7 +435,7 @@ def train():
 
                 optimizer.minimize(avg_loss)
                 se_resnext.clear_gradients()
-                
+
                 lr = optimizer._global_learning_rate().numpy()
                 total_loss += dy_out
                 total_acc1 += acc_top1.numpy()
@@ -451,6 +456,7 @@ def train():
             se_resnext.eval()
             eval(se_resnext, test_reader)
             se_resnext.train()
+
 
 if __name__ == '__main__':
     train()

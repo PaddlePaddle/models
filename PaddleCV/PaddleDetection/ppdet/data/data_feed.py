@@ -29,8 +29,8 @@ from ppdet.data.transform.operators import (
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
     Permute, Flip_Augment, Multiscale_Test_Resize)
 from ppdet.data.transform.arrange_sample import (
-    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeTestSSD, ArrangeYOLO,
-    ArrangeEvalYOLO, ArrangeTestYOLO)
+    ArrangeRCNN, ArrangeEvalRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD,
+    ArrangeTestSSD, ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'PadMSTest', 'DataSet',
@@ -495,7 +495,8 @@ class FasterRCNNEvalFeed(DataFeed):
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_info', 'im_id', 'im_shape'],
+                 fields=['image', 'im_info', 'im_id', 'im_shape', 'gt_box',
+                         'gt_label', 'is_difficult'],
                  image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
@@ -516,7 +517,7 @@ class FasterRCNNEvalFeed(DataFeed):
                  enable_multiscale=False,
                  num_scale=1,
                  enable_aug_flip=False):
-        sample_transforms.append(ArrangeTestRCNN())
+        sample_transforms.append(ArrangeEvalRCNN())
         super(FasterRCNNEvalFeed, self).__init__(
             dataset,
             fields,
