@@ -151,6 +151,7 @@ def main():
     # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
     build_strategy.fuse_all_optimizer_ops = False
+    build_strategy.fuse_elewise_add_act_ops = True
     if FLAGS.fp16:
         build_strategy.fuse_all_reduce_ops = False
     # only enable sync_bn in multi GPU devices
