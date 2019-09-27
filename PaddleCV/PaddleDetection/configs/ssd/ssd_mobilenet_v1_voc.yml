@@ -62,7 +62,7 @@ TrainDataLoader:
   buffer_size: 4
   dataset:
     type: voc
-    root_dir: /root/data/VOCdevkit/VOC_all/
+    root_dir: dataset/voc/VOCdevkit/VOC_all/
     subset: train
   sampler:
     shuffle: true
@@ -112,7 +112,7 @@ EvalDataLoader:
   buffer_size: 4
   dataset:
     type: voc
-    root_dir: /root/data/VOCdevkit/VOC_all/
+    root_dir: dataset/voc/VOCdevkit/VOC_all/
     subset: val
   sampler:
     shuffle: false
@@ -145,7 +145,7 @@ TestDataLoader:
   buffer_size: 8
   dataset:
     type: folder
-    root_dir: /root/data
+    root_dir: demo
   sampler:
     shuffle: false
     pad_batch: false

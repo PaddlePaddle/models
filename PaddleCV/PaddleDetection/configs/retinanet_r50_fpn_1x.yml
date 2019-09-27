@@ -76,10 +76,10 @@ TrainDataLoader:
   pin_memory: false
   prefetch_to_gpu: false
   num_workers: 2
-  buffer_size: 4
+  buffer_size: 2
   dataset:
     type: coco
-    root_dir: /root/data
+    root_dir: dataset/coco
     annotation_file: annotations/instances_train2017.json
     image_dir: train2017
     use_crowd: false
@@ -117,16 +117,16 @@ TrainDataLoader:
     stride: 128
 
 EvalDataLoader:
-  batch_size: 1
+  batch_size: 2
   auto_reset: false
   multiprocessing: false
   pin_memory: false
   prefetch_to_gpu: false
   num_workers: 2
-  buffer_size: 4
+  buffer_size: 2
   dataset:
     type: coco
-    root_dir: /root/data
+    root_dir: dataset/coco
     annotation_file: annotations/instances_val2017.json
     image_dir: val2017
     use_crowd: false
@@ -169,10 +169,10 @@ TestDataLoader:
   pin_memory: false
   prefetch_to_gpu: false
   num_workers: 2
-  buffer_size: 4
+  buffer_size: 2
   dataset:
     type: folder
-    root_dir: /root/data
+    root_dir: demo
   sampler:
     shuffle: false
     pad_batch: false

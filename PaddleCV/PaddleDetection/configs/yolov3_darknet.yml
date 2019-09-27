@@ -64,7 +64,7 @@ TrainDataLoader:
   buffer_size: 4
   dataset:
     type: coco
-    root_dir: /root/data
+    root_dir: dataset/coco
     annotation_file: annotations/instances_train2017.json
     image_dir: train2017
     use_crowd: false
@@ -127,7 +127,7 @@ EvalDataLoader:
   buffer_size: 8
   dataset:
     type: coco
-    root_dir: /root/data
+    root_dir: dataset/coco
     annotation_file: annotations/instances_val2017.json
     image_dir: val2017
     use_crowd: false
@@ -167,7 +167,7 @@ TestDataLoader:
   buffer_size: 8
   dataset:
     type: folder
-    root_dir: /root/data
+    root_dir: demo
   sampler:
     shuffle: false
     pad_batch: false
