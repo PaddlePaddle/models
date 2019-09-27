@@ -77,7 +77,7 @@ def get_feat_dict():
         for idx in continuous_range_:
             feat_dict[idx] = tc
             tc += 1
-        for feat in feat_set:
+        for feat in dis_feat_set:
             feat_dict[feat] = tc
             tc += 1
         # Save dictionary
