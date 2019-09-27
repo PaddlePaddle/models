@@ -26,12 +26,11 @@ def load(anno_path,
     Load WiderFace records with 'anno_path'
 
     Args:
-        @anno_path (str): root directory for voc annotation data
-        @sample_num (int): number of samples to load, -1 means all
-        @use_default_label (bool): whether use the default mapping of label to id
-        @with_background (bool): whether load background as a class.
+        anno_path (str): root directory for voc annotation data
+        sample_num (int): number of samples to load, -1 means all
+        with_background (bool): whether load background as a class.
                                  if True, total class number will
-                                 be 81. default True
+                                 be 2. default True
 
     Returns:
         (records, catname2clsid)
@@ -39,12 +38,8 @@ def load(anno_path,
         {
             'im_file': im_fname, # image file name
             'im_id': im_id, # image id
-            'h': im_h, # height of image
-            'w': im_w, # width
-            'is_crowd': is_crowd,
             'gt_class': gt_class,
             'gt_bbox': gt_bbox,
-            'gt_poly': gt_poly,
         }
         'cname2id' is a dict to map category name to class id
     """
@@ -59,8 +54,8 @@ def load(anno_path,
     for item in file_lists:
         im_fname = item[0]
         im_id = np.array([ct])
-        gt_bbox = np.zeros((len(item), 4), dtype=np.float32)
-        gt_class = np.ones((len(item), 1), dtype=np.int32)
+        gt_bbox = np.zeros((len(item) - 2, 4), dtype=np.float32)
+        gt_class = np.ones((len(item) - 2, 1), dtype=np.int32)
         for index_box in range(len(item)):
             if index_box >= 2:
                 temp_info_box = item[index_box].split(' ')
@@ -75,7 +70,7 @@ def load(anno_path,
                 ymin = max(0, ymin)
                 xmax = xmin + w
                 ymax = ymin + h
-                gt_bbox[index_box] = [xmin, ymin, xmax, ymax]
+                gt_bbox[index_box - 2] = [xmin, ymin, xmax, ymax]
 
         widerface_rec = {
             'im_file': im_fname,
@@ -90,7 +85,7 @@ def load(anno_path,
         ct += 1
         if sample_num > 0 and ct >= sample_num:
             break
-    assert len(records) > 0, 'not found any voc widerfac in %s' % (anno_path)
+    assert len(records) > 0, 'not found any widerface in %s' % (anno_path)
     logger.info('{} samples in file {}'.format(ct, anno_path))
     return records, cname2cid
 
@@ -109,7 +104,7 @@ def _load_file_list(input_txt):
             file_dict[num_class] = []
             file_dict[num_class].append(line_txt)
         if '.jpg' not in line_txt:
-            if len(line_txt) >= 4:
+            if len(line_txt) > 6:
                 split_str = line_txt.split(' ')
                 x1_min = float(split_str[0])
                 y1_min = float(split_str[1])
@@ -126,7 +121,7 @@ def _load_file_list(input_txt):
 
 def widerface_label(with_background=True):
     labels_map = {
-	    'face': 1
+            'face': 1
     }
     if not with_background:
         labels_map = {k: v - 1 for k, v in labels_map.items()}

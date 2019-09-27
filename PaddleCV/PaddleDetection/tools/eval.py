@@ -17,7 +17,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import multiprocessing
 
 
 def set_paddle_flags(**kwargs):
@@ -34,11 +33,11 @@ set_paddle_flags(
 
 import paddle.fluid as fluid
 
+from ppdet.utils.cli import print_total_cfg
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results, json_eval_results
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
-from ppdet.utils.widerface_eval import WiderfaceEval
 from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
@@ -63,12 +62,7 @@ def main():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
-
-    if cfg.use_gpu:
-        devices_num = fluid.core.get_cuda_device_count()
-    else:
-        devices_num = int(
-            os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+    print_total_cfg(cfg)
 
     if 'eval_feed' not in cfg:
         eval_feed = create(main_arch + 'EvalFeed')
@@ -79,24 +73,18 @@ def main():
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    if 'multi_scale' not in cfg:
-        cfg.multi_scale = False
-
     # build program
     model = create(main_arch)
     startup_prog = fluid.Program()
     eval_prog = fluid.Program()
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
-            use_pyreader = False if cfg.multi_scale else True
-            pyreader, feed_vars = create_feed(
-                eval_feed, use_pyreader=use_pyreader)
+            pyreader, feed_vars = create_feed(eval_feed)
             fetches = model.eval(feed_vars)
     eval_prog = eval_prog.clone(True)
 
     reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
-    if not cfg.multi_scale:
-        pyreader.decorate_sample_list_generator(reader, place)
+    pyreader.decorate_sample_list_generator(reader, place)
 
     # eval already exists json file
     if FLAGS.json_eval:
@@ -104,48 +92,25 @@ def main():
             "In json_eval mode, PaddleDetection will evaluate json files in "
             "output_eval directly. And proposal.json, bbox.json and mask.json "
             "will be detected by default.")
-
         json_eval_results(
             eval_feed, cfg.metric, json_directory=FLAGS.output_eval)
         return
-    # compile program for multi-devices
-    if devices_num <= 1:
-        compile_program = fluid.compiler.CompiledProgram(eval_prog)
-    else:
-        build_strategy = fluid.BuildStrategy()
-        build_strategy.memory_optimize = False
-        build_strategy.enable_inplace = False
-        compile_program = fluid.compiler.CompiledProgram(
-            eval_prog).with_data_parallel(build_strategy=build_strategy)
+
+    compile_program = fluid.compiler.CompiledProgram(
+        eval_prog).with_data_parallel()
 
     # load model
     exe.run(startup_prog)
     if 'weights' in cfg:
         checkpoint.load_pretrain(exe, eval_prog, cfg.weights)
 
-    assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE'], \
+    assert cfg.metric in ['COCO', 'VOC'], \
             "unknown metric type {}".format(cfg.metric)
-    if cfg.metric == 'WIDERFACE' and cfg.multi_scale:
-        eval_mode = 'matlab'
-        if 'eval_mode' in cfg:
-            eval_mode = cfg.eval_mode
-        anno_file = getattr(eval_feed.dataset, 'annotation', None)
-        WiderfaceEval(
-            exe,
-            eval_prog,
-            fetches,
-            reader,
-            anno_file,
-            pred_dir=FLAGS.output_eval,
-            eval_mode=eval_mode)
-        return
     extra_keys = []
     if cfg.metric == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg.metric == 'VOC':
         extra_keys = ['gt_box', 'gt_label', 'is_difficult']
-    if cfg.metric == 'WIDERFACE':
-        extra_keys = ['im_id', 'im_shape']
 
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 
@@ -156,12 +121,15 @@ def main():
         is_bbox_normalized = model.is_bbox_normalized()
 
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
+
     # evaluation
     resolution = None
     if 'mask' in results[0]:
         resolution = model.mask_head.resolution
-    eval_results(results, eval_feed, reader, cfg.metric, cfg.num_classes,
-                 resolution, is_bbox_normalized, FLAGS.output_eval)
+    # if map_type not set, use default 11point, only use in VOC eval
+    map_type = cfg.map_type if 'map_type' in cfg else '11point'
+    eval_results(results, eval_feed, cfg.metric, cfg.num_classes, resolution,
+                 is_bbox_normalized, FLAGS.output_eval, map_type)
 
 
 if __name__ == '__main__':

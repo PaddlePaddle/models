@@ -36,14 +36,17 @@ class FaceBoxes(object):
 
     Args:
         backbone (object): backbone instance
-        multi_box_head (object): `MultiBoxHead` instance
         output_decoder (object): `SSDOutputDecoder` instance
-        metric (object): `Metric` instance for training
+        densities (list|None): the densities of generated density prior boxes, 
+            this attribute should be a list or tuple of integers.
+        fixed_sizes (list|None): the fixed sizes of generated density prior boxes,
+            this attribute should a list or tuple of same length with `densities`.
+        num_classes (int): number of output classes
     """
 
     __category__ = 'architecture'
     __inject__ = ['backbone', 'output_decoder']
-    __shared__ = ['num_classes', 'densities', 'fixed_sizes']
+    __shared__ = ['num_classes']
 
     def __init__(self,
                  backbone="FaceBoxNet",
@@ -71,15 +74,8 @@ class FaceBoxes(object):
             inputs=body_feats, image=im, num_classes=self.num_classes)
 
         if mode == 'train':
-            loss = fluid.layers.ssd_loss(
-                locs,
-                confs,
-                gt_box,
-                gt_label,
-                box,
-                box_var,
-                overlap_threshold=0.35,
-                neg_overlap=0.35)
+            loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
+                    box_var, overlap_threshold=0.35, neg_overlap=0.35)
             loss = fluid.layers.reduce_sum(loss)
             loss.persistable = True
             return {'loss': loss}
@@ -93,7 +89,6 @@ class FaceBoxes(object):
             compile_shape = [
                 trans.shape[0], np.prod(trans.shape[1:]) // last_dim, last_dim
             ]
-
             return fluid.layers.reshape(trans, shape=compile_shape)
 
         def _is_list_or_tuple_(data):
@@ -134,12 +129,10 @@ class FaceBoxes(object):
                     clip=False,
                     offset=0.5)
 
-            print("[ygh-debug] num_boxes:{}".format(box.shape))
             num_boxes = box.shape[2]
 
             box = fluid.layers.reshape(box, shape=[-1, 4])
             var = fluid.layers.reshape(var, shape=[-1, 4])
-            print("[ygh-debug] num_boxes:{}".format(num_boxes))
             num_loc_output = num_boxes * 4
             num_conf_output = num_boxes * num_classes
             # get loc

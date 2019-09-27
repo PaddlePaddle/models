@@ -19,11 +19,11 @@ from __future__ import print_function
 import logging
 import numpy as np
 import os
+import time
 
 import paddle.fluid as fluid
 
 from ppdet.utils.voc_eval import bbox_eval as voc_bbox_eval
-from ppdet.utils.widerface_eval import widerface_bbox_eval
 
 __all__ = ['parse_fetches', 'eval_run', 'eval_results', 'json_eval_results']
 
@@ -49,7 +49,6 @@ def parse_fetches(fetches, prog=None, extra_keys=None):
         for k in extra_keys:
             try:
                 v = fluid.framework._get_var(k, prog)
-                v.persistable = True
                 keys.append(k)
                 values.append(v.name)
             except Exception:
@@ -71,6 +70,10 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
             cls[i].reset(exe)
             values.append(accum_map)
 
+    images_num = 0
+    start_time = time.time()
+    has_bbox = 'bbox' in keys
+
     try:
         pyreader.start()
         while True:
@@ -85,21 +88,31 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
             if iter_id % 100 == 0:
                 logger.info('Test iter {}'.format(iter_id))
             iter_id += 1
+            images_num += len(res['bbox'][1][0]) if has_bbox else 1
     except (StopIteration, fluid.core.EOFException):
         pyreader.reset()
     logger.info('Test finish iter {}'.format(iter_id))
+
+    end_time = time.time()
+    fps = images_num / (end_time - start_time)
+    if has_bbox:
+        logger.info('Total number of images: {}, inference time: {} fps.'.
+                    format(images_num, fps))
+    else:
+        logger.info('Total iteration: {}, inference time: {} batch/s.'.format(
+            images_num, fps))
 
     return results
 
 
 def eval_results(results,
                  feed,
-                 reader,
                  metric,
                  num_classes,
                  resolution=None,
                  is_bbox_normalized=False,
-                 output_directory=None):
+                 output_directory=None,
+                 map_type='11point'):
     """Evaluation for evaluation program results"""
     box_ap_stats = []
     if metric == 'COCO':
@@ -128,20 +141,18 @@ def eval_results(results,
             if output_directory:
                 output = os.path.join(output_directory, 'mask.json')
             mask_eval(results, anno_file, output, resolution)
-    elif metric == 'VOC':
+    else:
         if 'accum_map' in results[-1]:
             res = np.mean(results[-1]['accum_map'][0])
             logger.info('mAP: {:.2f}'.format(res * 100.))
             box_ap_stats.append(res * 100.)
         elif 'bbox' in results[0]:
             box_ap = voc_bbox_eval(
-                results, num_classes, is_bbox_normalized=is_bbox_normalized)
+                results,
+                num_classes,
+                is_bbox_normalized=is_bbox_normalized,
+                map_type=map_type)
             box_ap_stats.append(box_ap)
-    elif metric == 'WIDERFACE':
-        anno_file = getattr(feed.dataset, 'annotation', None)
-        box_ap = widerface_bbox_eval(
-            results, reader, anno_file, is_bbox_normalized=is_bbox_normalized)
-        box_ap_stats.append(box_ap)
     return box_ap_stats
 
 

@@ -27,7 +27,7 @@ from ppdet.data.reader import Reader
 from ppdet.data.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
-    Permute)
+    RandomFaceCropImage, Permute)
 
 from ppdet.data.transform.arrange_sample import (
     ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD,
@@ -1032,7 +1032,7 @@ class BlazeFaceTrainFeed(DataFeed):
     def __init__(self,
                  dataset=WiderFaceDataSet().__dict__,
                  fields=['image', 'gt_box', 'gt_label'],
-                 image_shape=[3, 128, 128],
+                 image_shape=[3, 640, 640],
                  sample_transforms=[
                      DecodeImage(to_rgb=True, with_mixup=False),
                      NormalizeBox(),
@@ -1040,15 +1040,15 @@ class BlazeFaceTrainFeed(DataFeed):
                                    brightness_upper=1.125,
                                    is_order=True),
                      ExpandImage(max_ratio=4, prob=0.5),
-                     CropImage(batch_sampler=[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0],
-                                [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]],
-                               satisfy_all=False, avoid_no_bbox=True),
-                     RandomInterpImage(target_size=128),
+                     RandomFaceCropImage(
+                         anchor_sampler=[[1, 10, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.2, 0.0]],
+                         batch_sampler=[[1, 50, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                                        [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                                        [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                                        [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                                        [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]],
+                         target_size=640),
+                     RandomInterpImage(target_size=640),
                      RandomFlipImage(is_normalized=True),
                      Permute(),
                      NormalizeImage(mean=[104., 117., 123.],
@@ -1056,7 +1056,7 @@ class BlazeFaceTrainFeed(DataFeed):
                                     is_scale=False)
                  ],
                  batch_transforms=[],
-                 batch_size=32,
+                 batch_size=8,
                  shuffle=True,
                  samples=-1,
                  drop_last=True,
@@ -1089,10 +1089,10 @@ class BlazeFaceEvalFeed(DataFeed):
             dataset=WiderFaceDataSet(WIdERFACE_VAL_ANNOTATION,
                                      WIdERFACE_VAL_IMAGE_DIR).__dict__,
             fields=['image', 'im_id', 'im_shape'],
-            image_shape=[3, 128, 128],
+            image_shape=[3, 640, 640],
             sample_transforms=[
                 DecodeImage(to_rgb=True, with_mixup=False),
-                ResizeImage(target_size=128, use_cv2=False, interp=1),
+                ResizeImage(target_size=640, use_cv2=False, interp=1),
                 Permute(),
                 NormalizeImage(
                     mean=[104., 117., 123],
@@ -1131,10 +1131,10 @@ class BlazeFaceTestFeed(DataFeed):
     def __init__(self,
                  dataset=SimpleDataSet(WIdERFACE_VAL_ANNOTATION).__dict__,
                  fields=['image', 'im_id', 'im_shape'],
-                 image_shape=[3, 128, 128],
+                 image_shape=[3, 640, 640],
                  sample_transforms=[
                      DecodeImage(to_rgb=True, with_mixup=False),
-                     ResizeImage(target_size=128, use_cv2=False, interp=1),
+                     ResizeImage(target_size=640, use_cv2=False, interp=1),
                      Permute(),
                      NormalizeImage(
                          mean=[104., 117., 123],

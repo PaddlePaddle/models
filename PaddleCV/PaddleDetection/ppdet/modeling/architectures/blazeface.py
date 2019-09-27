@@ -36,9 +36,12 @@ class BlazeFace(object):
 
     Args:
         backbone (object): backbone instance
-        multi_box_head (object): `MultiBoxHead` instance
         output_decoder (object): `SSDOutputDecoder` instance
-        metric (object): `Metric` instance for training
+        min_sizes (list|None): min sizes of generated prior boxes.
+        max_sizes (list|None): max sizes of generated prior boxes. Default: None.
+        num_classes (int): number of output classes
+        use_density_prior_box (bool): whether or not use density_prior_box
+            instead of prior_box
     """
 
     __category__ = 'architecture'
@@ -48,10 +51,11 @@ class BlazeFace(object):
     def __init__(self,
                  backbone="BlazeNet",
                  output_decoder=SSDOutputDecoder().__dict__,
-                 min_sizes=[9., [15., 45., 75.]],
-                 max_sizes=[15., [45., 75., 105.]],
-                 steps=[4., 16.],
-                 num_classes=2):
+                 min_sizes=[[16.,24.], [32., 48., 64., 80., 96., 128.]],
+                 max_sizes=None,
+                 steps=[8., 16.],
+                 num_classes=2,
+                 use_density_prior_box=False):
         super(BlazeFace, self).__init__()
         self.backbone = backbone
         self.num_classes = num_classes
@@ -61,6 +65,7 @@ class BlazeFace(object):
         self.min_sizes = min_sizes
         self.max_sizes = max_sizes
         self.steps = steps
+        self.use_density_prior_box = use_density_prior_box
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
@@ -70,7 +75,8 @@ class BlazeFace(object):
 
         body_feats = self.backbone(im)
         locs, confs, box, box_var = self._multi_box_head(
-            inputs=body_feats, image=im, num_classes=self.num_classes)
+            inputs=body_feats, image=im, num_classes=self.num_classes,
+            use_density_prior_box=self.use_density_prior_box)
 
         if mode == 'train':
             loss = fluid.layers.ssd_loss(
@@ -99,10 +105,7 @@ class BlazeFace(object):
             compile_shape = [
                 trans.shape[0], np.prod(trans.shape[1:]) // last_dim, last_dim
             ]
-            run_shape = fluid.layers.assign(
-                np.array([0, -1, last_dim]).astype("int32"))
-            return fluid.layers.reshape(
-                trans, shape=compile_shape, actual_shape=run_shape)
+            return fluid.layers.reshape(trans, shape=compile_shape)
 
         def _is_list_or_tuple_(data):
             return (isinstance(data, list) or isinstance(data, tuple))
@@ -113,19 +116,14 @@ class BlazeFace(object):
 
         for i, input in enumerate(inputs):
             min_size = self.min_sizes[i]
-            max_size = self.max_sizes[i]
-            if not _is_list_or_tuple_(min_size):
-                min_size = [min_size]
-            if not _is_list_or_tuple_(max_size):
-                max_size = [max_size]
 
             if use_density_prior_box:
                 if i == 0:
                     box, var = fluid.layers.density_prior_box(
                         input,
                         image,
-                        densities=[2, 1, 1],
-                        fixed_sizes=[16, 32, 64],
+                        densities=[2, 2],
+                        fixed_sizes=[16., 24.],
                         fixed_ratios=[1.],
                         clip=False,
                         offset=0.5)
@@ -133,8 +131,8 @@ class BlazeFace(object):
                     box, var = fluid.layers.density_prior_box(
                         input,
                         image,
-                        densities=[1, 1],
-                        fixed_sizes=[96, 128],
+                        densities=[2, 1, 1, 1, 1, 1],
+                        fixed_sizes=[32., 48., 64., 80., 96., 128.],
                         fixed_ratios=[1.],
                         clip=False,
                         offset=0.5)
@@ -143,19 +141,17 @@ class BlazeFace(object):
                     input,
                     image,
                     min_sizes=min_size,
-                    max_sizes=max_size,
+                    max_sizes=None,
                     steps=[self.steps[i]] * 2,
                     aspect_ratios=[1.],
                     clip=False,
                     flip=False,
                     offset=0.5)
 
-            print("[ygh-debug] num_boxes:{}".format(box.shape))
             num_boxes = box.shape[2]
 
             box = fluid.layers.reshape(box, shape=[-1, 4])
             var = fluid.layers.reshape(var, shape=[-1, 4])
-            print("[ygh-debug] num_boxes:{}".format(num_boxes))
             num_loc_output = num_boxes * 4
             num_conf_output = num_boxes * num_classes
             # get loc

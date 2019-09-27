@@ -31,9 +31,12 @@ class FaceBoxNet(object):
 
     Args:
         with_extra_blocks (bool): whether or not extra blocks should be added
+        lite_edition (bool): whether or not is FaceBoxes-lite
     """
 
-    def __init__(self, with_extra_blocks=True, lite_edition=False):
+    def __init__(self,
+                 with_extra_blocks=True,
+                 lite_edition=False):
         super(FaceBoxNet, self).__init__()
 
         self.with_extra_blocks = with_extra_blocks
@@ -119,9 +122,6 @@ class FaceBoxNet(object):
 
         if not self.with_extra_blocks:
             return layers[-1]
-        print("layers' length is {}".format(len(layers)))
-        print("{}:{}".format("output1", layers[-2].shape))
-        print("{}:{}".format("output2", layers[-1].shape))
         return layers[-2], layers[-1]
 
     def _original_edition(self, input):
@@ -209,10 +209,6 @@ class FaceBoxNet(object):
 
         if not self.with_extra_blocks:
             return layers[-1]
-        print("layers' length is {}".format(len(layers)))
-        print("{}:{}".format("output1", layers[-3].shape))
-        print("{}:{}".format("output1", layers[-2].shape))
-        print("{}:{}".format("output2", layers[-1].shape))
 
         return layers[-3], layers[-2], layers[-1]
 
@@ -224,7 +220,7 @@ class FaceBoxNet(object):
             stride,
             padding,
             num_groups=1,
-            act='relu',  # None
+            act='relu',
             use_cudnn=True,
             name=None):
         parameter_attr = ParamAttr(
@@ -253,7 +249,7 @@ class FaceBoxNet(object):
             stride,
             padding,
             num_groups=1,
-            act='relu',  # None
+            act='relu',
             use_cudnn=True,
             name=None):
         parameter_attr = ParamAttr(
@@ -271,7 +267,6 @@ class FaceBoxNet(object):
             use_cudnn=use_cudnn,
             param_attr=parameter_attr,
             bias_attr=False)
-        print("{}:{}".format(name, conv.shape))
 
         conv_a = fluid.layers.batch_norm(input=conv, act=act)
         conv_b = fluid.layers.scale(conv_a, -1)
@@ -364,6 +359,7 @@ class FaceBoxNet(object):
             act='relu',
             name='inceptionA_' + idx + '_conv4_3')
 
-        concat = fluid.layers.concat([conv1, conv2, conv3, conv4], axis=1)
+        concat = fluid.layers.concat(
+                [conv1, conv2, conv3, conv4], axis=1)
 
         return concat
