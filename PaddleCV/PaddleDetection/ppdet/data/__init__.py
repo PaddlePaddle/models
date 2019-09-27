@@ -52,11 +52,12 @@ type_map = {
 class ExtractFields(object):
     def __init__(self,
                  feed_vars=[],
-                 extra_vars=[]):
+                 extra_vars=[], yolo_class_fix=False):
 
         super(ExtractFields, self).__init__()
         self.feed_vars = feed_vars
         self.extra_vars = extra_vars
+        self.yolo_class_fix = yolo_class_fix
 
         self._normalized_vars = [self._normalize(v) for v in self.feed_vars]
         self._normalized_vars += [
@@ -100,6 +101,8 @@ class ExtractFields(object):
                     arr = f
                 else:
                     arr = batch[f]
+                    if self.yolo_class_fix and f == 'gt_label':
+                        arr = [np.clip(a - 1, 0, None) for a in arr]
 
                 if lod_level == 0:
                     # stack only feed vars or combined fields
@@ -235,7 +238,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
             if 'type' not in kwargs:
                 sampler = samplers.Sampler(dataset, batch_size, **kwargs)
 
-        extract = ExtractFields(feed_vars, extra_vars)
+        extract = ExtractFields(feed_vars, extra_vars, yolo_class_fix)
 
         if buffer_size < 2 * len(self.places):
             print(color_tty.bold(color_tty.yellow(
@@ -249,8 +252,6 @@ class DataLoaderBuilder(dataloader.DataLoader):
 
     def _to_tensor(self, feed_dict, place):
         for k, (ndarray, seq_length) in feed_dict.items():
-            if self.yolo_class_fix and k == 'gt_label':
-                ndarray = np.clip(ndarray - 1, 0, None)
             t = fluid.core.LoDTensor()
             if seq_length is not None:
                 t.set_recursive_sequence_lengths(seq_length)
