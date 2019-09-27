@@ -26,7 +26,7 @@ import numpy as np
 import imageio
 import glob
 from util.config import add_arguments, print_arguments
-from data_reader import celeba_reader_creator, reader_creator
+from data_reader import celeba_reader_creator, reader_creator, triplex_reader_creator
 from util.utility import check_attribute_conflict, check_gpu, save_batch_image
 from util import utility
 import copy
@@ -44,13 +44,19 @@ add_arg('init_model',        str,   None,              "The init model file of d
 add_arg('output',            str,   "./infer_result",  "The directory the infer result to be saved to.")
 add_arg('input_style',       str,   "A",               "The style of the input, A or B")
 add_arg('norm_type',         str,   "batch_norm",      "Which normalization to used")
+add_arg('crop_type',         str,   None,      "Which crop type to use")
 add_arg('use_gpu',           bool,  True,              "Whether to use GPU to train.")
 add_arg('dropout',           bool,  False,             "Whether to use dropout")
 add_arg('g_base_dims',       int,   64,                "Base channels in CycleGAN generator")
+add_arg('ngf',       int,   64,                "Base channels in SPADE generator")
 add_arg('c_dim',             int,   13,                "the size of attrs")
 add_arg('use_gru',           bool,  False,             "Whether to use GRU")
 add_arg('crop_size',         int,   178,               "crop size")
 add_arg('image_size',        int,   128,               "image size")
+add_arg('load_height',        int,   128,               "image size")
+add_arg('load_width',        int,   128,               "image size")
+add_arg('crop_height',        int,   128,               "height of crop size")
+add_arg('crop_width',        int,   128,               "width of crop size")
 add_arg('selected_attrs',    str,
     "Bald,Bangs,Black_Hair,Blond_Hair,Brown_Hair,Bushy_Eyebrows,Eyeglasses,Male,Mouth_Slightly_Open,Mustache,No_Beard,Pale_Skin,Young",
 "the attributes we selected to change")
@@ -60,6 +66,8 @@ add_arg('dataset_dir',       str,   "./data/celeba/",                "the datase
 add_arg('n_layers',          int,   5,                 "default layers in generotor")
 add_arg('gru_n_layers',      int,   4,                 "default layers of GRU in generotor")
 add_arg('noise_size',        int,   100,               "the noise dimension")
+add_arg('label_nc',        int,   36,               "label numbers of SPADE")
+add_arg('no_instance', type=bool, default=False, help="Whether to use instance label.")
 # yapf: enable
 
 
@@ -159,6 +167,15 @@ def infer(args):
         from network.DCGAN_network import DCGAN_model
         model = DCGAN_model(args.n_samples)
         fake = model.network_G(noise, name="G")
+    elif args.model_net == 'SPADE':
+        from network.SPADE_network import SPADE_model
+        model = SPADE_model()
+        input_label = fluid.layers.data(
+            name='input_label', shape=data_shape, dtype='float32')
+        input_ins = fluid.layers.data(
+            name='input_ins', shape=data_shape, dtype='float32')
+        input_ = fluid.layers.concat([input_label, input_ins], 1)
+        fake = model.network_G(input_, "generator", cfg=args, is_test=True)
     else:
         raise NotImplementedError("model_net {} is not support".format(
             args.model_net))
@@ -294,6 +311,32 @@ def infer(args):
             imageio.imwrite(
                 os.path.join(args.output, "fake_" + image_name), (
                     (fake_temp + 1) * 127.5).astype(np.uint8))
+    elif args.model_net == 'SPADE':
+        test_reader = triplex_reader_creator(
+            image_dir=args.dataset_dir,
+            list_filename=args.test_list,
+            shuffle=False,
+            batch_size=1,
+            mode="TEST")
+        reader_test = test_reader.make_reader(args, return_name=True)
+        for data in zip(reader_test()):
+            data_A, data_B, data_C, name = data[0]
+            name = name[0]
+            tensor_A = fluid.LoDTensor()
+            tensor_C = fluid.LoDTensor()
+            tensor_A.set(data_A, place)
+            tensor_C.set(data_C, place)
+            fake_B_temp = exe.run(
+                fetch_list=[fake.name],
+                feed={"input_label": tensor_A,
+                      "input_ins": tensor_C})
+            fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(data_B[0]).transpose([1, 2, 0])
+
+            imageio.imwrite(args.output + "/fakeB_" + "_" + name, (
+                (fake_B_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(args.output + "/real_" + "_" + name, (
+                (input_B_temp + 1) * 127.5).astype(np.uint8))
 
     elif args.model_net == 'CGAN':
         noise_data = np.random.uniform(

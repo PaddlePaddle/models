@@ -28,7 +28,8 @@ def parse_args():
         "--use_data_parallel",
         type=ast.literal_eval,
         default=False,
-        help="The flag indicating whether to shuffle instances in each pass.")
+        help="The flag indicating whether to use data parallel mode to train the model."
+    )
     args = parser.parse_args()
     return args
 

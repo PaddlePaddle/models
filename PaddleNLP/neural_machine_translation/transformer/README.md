@@ -33,7 +33,7 @@
 
    本项目依赖于 PaddlePaddle Fluid 1.5.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
-2. 安装代码
+2. 下载代码
 
     克隆代码库到本地
     ```shell
@@ -83,7 +83,7 @@ python -u main.py \
   --batch_size 4096
 ```
 
-以上命令中传入了执行训练（`do_train`）、训练轮数（`epoch`）和训练数据文件路径（注意请正确设置，支持通配符）等参数，更多参数的使用以及支持的模型超参数可以参见 `transformer.yaml` 配置文件，其中默认提供了 Transformer base model 的配置，如需调整可以在配置文件中更改或通过命令行传入（命令行传入内容将覆盖配置文件中的设置）。如可以通过以下命令来训练 Transformer 论文中的 big model：
+以上命令中传入了执行训练（`do_train`）、训练轮数（`epoch`）和训练数据文件路径（注意请正确设置，支持通配符）等参数，更多参数的使用以及支持的模型超参数可以参见 `transformer.yaml` 配置文件，其中默认提供了 Transformer base model 的配置，如需调整可以在配置文件中更改或通过命令行传入（命令行传入内容将覆盖配置文件中的设置）。可以通过以下命令来训练 Transformer 论文中的 big model：
 
 ```sh
 # open garbage collection to save memory
@@ -194,7 +194,7 @@ BLEU = 26.35, 57.7/32.1/20.0/13.0 (BP=1.000, ratio=1.013, hyp_len=63903, ref_len
 
 ### 预训练模型
 
-我们这里提供了对应有以上 BLEU 值的 [base model](https://transformer-res.bj.bcebos.com/base_model_params.tar.gz) 和 [big model](https://transformer-res.bj.bcebos.com/big_model_params.tar.gz) 的模型参数提供下载使用。
+我们这里提供了对应有以上 BLEU 值的 [base model](https://transformer-res.bj.bcebos.com/base_model_params.tar.gz) 和 [big model](https://transformer-res.bj.bcebos.com/big_model_params.tar.gz) 的模型参数提供下载使用（注意，模型使用了提供下载的数据进行训练和测试）。
 
 ## 进阶使用
 
@@ -242,10 +242,10 @@ Decoder 具有和 Encoder 类似的结构，只是相比于组成 Encoder 的 la
 
 ## FAQ
 
-**Q:** 预测结果中样本数少于输入的样本数是什么原因
+**Q:** 预测结果中样本数少于输入的样本数是什么原因  
 **A:** 若样本中最大长度超过 `transformer.yaml` 中 `max_length` 的默认设置，请注意运行时增大 `--max_length` 的设置，否则超长样本将被过滤。
 
-**Q:** 预测时最大长度超过了训练时的最大长度怎么办
+**Q:** 预测时最大长度超过了训练时的最大长度怎么办  
 **A:** 由于训练时 `max_length` 的设置决定了保存模型 position encoding 的大小，若预测时长度超过 `max_length`，请调大该值，会重新生成更大的 position encoding 表。
 
 
