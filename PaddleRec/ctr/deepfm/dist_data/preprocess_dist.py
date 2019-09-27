@@ -33,7 +33,7 @@ def get_feat_dict():
         feat_cnt = Counter()
         with open(INPUT_FILE, 'r') as fin:
             for line_idx, line in enumerate(fin):
-                features = line.lstrip('\n').split('\t')
+                features = line.rstrip('\n').split('\t')
                 for idx in categorical_range_:
                     if features[idx] == '': continue
                     feat_cnt.update([features[idx]])
@@ -53,20 +53,9 @@ def get_feat_dict():
         for idx in continuous_range_:
             feat_dict[idx] = tc
             tc += 1
-        # Discrete features
-        cnt_feat_set = set()
-        with open(INPUT_FILE, 'r') as fin:
-            for line_idx, line in enumerate(fin):
-                features = line.rstrip('\n').split('\t')
-                for idx in categorical_range_:
-                    if features[idx] == '' or features[idx] not in feat_set:
-                        continue
-                    if features[idx] not in cnt_feat_set:
-                        cnt_feat_set.add(features[idx])
-                        feat_dict[features[idx]] = tc
-                        tc += 1
-
-        # Save dictionary
+        for feat in feat_set:
+            feat_dict[feat] = tc
+            tc += 1
         with open(dir_feat_dict_, 'wb') as fout:
             pickle.dump(feat_dict, fout, protocol=2)
         print('args.num_feat ', len(feat_dict) + 1)

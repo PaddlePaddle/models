@@ -15,7 +15,7 @@ This model implementation reproduces the result of the paper "DeepFM: A Factoriz
 ```
 
 ## Environment
-- PaddlePaddle 1.5
+- PaddlePaddle 1.6
 
 ## Download and preprocess data
 
@@ -53,6 +53,8 @@ When the training set is iterated to the 22nd round, the testing Logloss is `0.4
 ## Distributed Train
 We emulate distributed training on a local machine. In default, we use 2 X 2，i.e. 2 pservers X 2 trainers。
 
+**Note: we suggest to use Paddle >= 1.6 or [the latest Paddle](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/Tables.html#whl-dev) in distributed train.**
+
 ### Download and preprocess distributed demo dataset
 This small demo dataset(a few lines from Criteo dataset) only test if distributed training can train.
 ```bash
@@ -78,7 +80,7 @@ other params explained in cluster_train.py
 
 Infer
 ```bash
-python infer.py --model_output_dir cluster_model --test_epoch 50 --test_data_dir=dist_data/dist_test_data --feat_dict='dist_data/aid_data/feat_dict_10.pkl2'
+python infer.py --model_output_dir cluster_model --test_epoch 10 --test_data_dir=dist_data/dist_test_data --feat_dict='dist_data/aid_data/feat_dict_10.pkl2'
 ```
 
 Notes:
@@ -87,7 +89,8 @@ Notes:
 - The first trainer(with trainer_id 0) saves model params.
 
 - After each training, pserver processes should be stop manually. You can use command below:
-  >ps -ef | grep python
+  
+>ps -ef | grep python
 
 - We use Dataset API to load data，it's only supported on Linux now.
 
