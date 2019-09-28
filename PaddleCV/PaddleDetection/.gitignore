@@ -56,6 +56,3 @@ coverage.xml
 /docs/_build/
 
 *.json
-
-# Demo dataset
-dataset/fruit/download.sh
