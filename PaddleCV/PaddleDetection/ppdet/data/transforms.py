@@ -34,12 +34,14 @@ class Resize(object):
                  resize_shorter=None,
                  resize_longer=None,
                  target_dim=[],
-                 interp=cv2.INTER_LINEAR):
+                 interp=cv2.INTER_LINEAR,
+                 scale_box=None):
         super(Resize, self).__init__()
         self.resize_shorter = resize_shorter
         self.resize_longer = resize_longer
         self.target_dim = target_dim
         self.interp = interp  # 'random' for yolov3
+        self.scale_box = scale_box
 
     @property
     def batch_seed(self):
@@ -67,11 +69,13 @@ class Resize(object):
             resize_w = resize_h = dim
             scale_x = dim / w
             scale_y = dim / h
-            # XXX this is for YOLOv3 and SSD, bboxes are scaled
-            scale_array = np.array([scale_x, scale_y] * 2, dtype=np.float32)
+            # XXX default to scale bbox for YOLO and SSD
             if 'gt_box' in sample and len(sample['gt_box']) > 0:
-                sample['gt_box'] = np.clip(
-                    sample['gt_box'] * scale_array, 0, dim - 1)
+                if self.scale_box or self.scale_box is None:
+                    scale_array = np.array([scale_x, scale_y] * 2,
+                                           dtype=np.float32)
+                    sample['gt_box'] = np.clip(
+                        sample['gt_box'] * scale_array, 0, dim - 1)
         else:
             resize_shorter = self.resize_shorter
             if isinstance(self.resize_shorter, Sequence):
@@ -82,12 +86,18 @@ class Resize(object):
             resize_w = int(round(w * scale))
             resize_h = int(round(h * scale))
             sample['scale'] = scale
-            # XXX this is for RCNN
+            # XXX this is for RCNN, scaling bbox by default
             # commonly the labels (bboxes and masks) are scaled by the
             # dataloader, but somehow Paddle choose to do it later.
             # This is why we need to pass "scale" around, and this also results
             # in some other caveats, e.g., all transformations that modify
             # bboxes (currently `RandomFlip`) must be applied BEFORE `Resize`.
+            if 'gt_box' in sample and len(sample['gt_box']) > 0:
+                if self.scale_box:
+                    scale_array = np.array([scale, scale] * 2,
+                                           dtype=np.float32)
+                    sample['gt_box'] = np.clip(
+                        sample['gt_box'] * scale_array, 0, dim - 1)
 
         sample['image'] = cv2.resize(
             sample['image'], (resize_w, resize_h), interpolation=interp)
