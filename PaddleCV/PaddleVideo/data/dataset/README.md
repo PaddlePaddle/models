@@ -162,3 +162,7 @@ Non-local模型也使用kinetics数据集，不过其数据处理方式和其他
 ## C-TCN
 
 C-TCN模型使用ActivityNet 1.3数据集，具体使用方法见[C-TCN数据说明](./ctcn/README.md)
+
+## TALL
+
+TALL模型使用TACoS数据集，具体使用方法见[TALL数据说明](./tall/README.md)
