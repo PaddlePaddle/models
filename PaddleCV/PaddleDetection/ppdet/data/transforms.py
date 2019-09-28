@@ -439,6 +439,8 @@ class NormalizeLabels(object):
 
     def __call__(self, sample):
         if 'gt_box' in sample and len(sample['gt_box']) == 0:
+            if self.num_instances is None:
+                return sample
             sample['gt_box'] = np.zeros(
                 [self.num_instances, 4], dtype=np.float32)
             sample['gt_label'] = np.zeros(
