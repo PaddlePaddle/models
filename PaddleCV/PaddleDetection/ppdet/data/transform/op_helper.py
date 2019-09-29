@@ -328,7 +328,7 @@ def satisfy_sample_constraint_coverage(sampler, sample_bbox, gt_bboxes):
             gt_bboxes[i][0], gt_bboxes[i][1], gt_bboxes[i][2], gt_bboxes[i][3]
         ]
         if has_jaccard_overlap:
-            overlap = jaccard_overlap_face(sample_bbox, object_bbox)
+            overlap = jaccard_overlap(sample_bbox, object_bbox)
             if sampler[6] != 0 and \
                     overlap < sampler[6]:
                 continue
