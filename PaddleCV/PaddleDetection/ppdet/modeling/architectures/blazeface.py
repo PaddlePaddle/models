@@ -42,6 +42,8 @@ class BlazeFace(object):
         num_classes (int): number of output classes
         use_density_prior_box (bool): whether or not use density_prior_box
             instead of prior_box
+        densities (list|None): the densities of generated density prior boxes,
+            this attribute should be a list or tuple of integers
     """
 
     __category__ = 'architecture'
