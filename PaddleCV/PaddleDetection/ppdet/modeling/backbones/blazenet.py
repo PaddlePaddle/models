@@ -33,7 +33,7 @@ class BlazeNet(object):
         blaze_filters (list): number of filter for each blaze block
         double_blaze_filters (list): number of filter for each double_blaze block
         with_extra_blocks (bool): whether or not extra blocks should be added
-        is_lite (bool): whether or not is blazeface-lite
+        lite_edition (bool): whether or not is blazeface-lite
     """
 
     def __init__(
@@ -42,16 +42,16 @@ class BlazeNet(object):
             double_blaze_filters=[[48, 24, 96, 2], [96, 24, 96], [96, 24, 96],
                                   [96, 24, 96, 2], [96, 24, 96], [96, 24, 96]],
             with_extra_blocks=True,
-            is_lite=False):
+            lite_edition=False):
         super(BlazeNet, self).__init__()
 
         self.blaze_filters = blaze_filters
         self.double_blaze_filters = double_blaze_filters
         self.with_extra_blocks = with_extra_blocks
-        self.is_lite = is_lite
+        self.lite_edition = lite_edition
 
     def __call__(self, input):
-        if not self.is_lite:
+        if not self.lite_edition:
             conv1_num_filters = self.blaze_filters[0][0]
             conv = self._conv_norm(
                 input=input,
@@ -70,19 +70,32 @@ class BlazeNet(object):
                         conv, v[0], v[1], name='blaze_{}'.format(k))
                 elif len(v) == 3:
                     conv = self.BlazeBlock(
-                        conv, v[0], v[1], stride=v[2], name='blaze_{}'.format(k))
+                        conv,
+                        v[0],
+                        v[1],
+                        stride=v[2],
+                        name='blaze_{}'.format(k))
 
             layers = []
             for k, v in enumerate(self.double_blaze_filters):
                 assert len(v) in [3, 4], \
                     "blaze_filters {} not in [3, 4]"
                 if len(v) == 3:
-                    conv = self.BlazeBlock(conv, v[0], v[1],
-                            double_channels=v[2], name='double_blaze_{}'.format(k))
+                    conv = self.BlazeBlock(
+                        conv,
+                        v[0],
+                        v[1],
+                        double_channels=v[2],
+                        name='double_blaze_{}'.format(k))
                 elif len(v) == 4:
                     layers.append(conv)
-                    conv = self.BlazeBlock(conv, v[0], v[1], double_channels=v[2],
-                        stride=v[3], name='double_blaze_{}'.format(k))
+                    conv = self.BlazeBlock(
+                        conv,
+                        v[0],
+                        v[1],
+                        double_channels=v[2],
+                        stride=v[3],
+                        name='double_blaze_{}'.format(k))
             layers.append(conv)
 
             if not self.with_extra_blocks:
@@ -105,14 +118,14 @@ class BlazeNet(object):
             conv7 = self.Blaze_lite(conv6, 42, 48, 2, 'conv7')
             in_ch = 48
             for i in range(5):
-                conv7 = self.Blaze_lite(
-                        conv7, in_ch, in_ch + 8, 1, 'conv{}'.format(8 + i))
+                conv7 = self.Blaze_lite(conv7, in_ch, in_ch + 8, 1,
+                                        'conv{}'.format(8 + i))
                 in_ch += 8
             assert in_ch == 88
             conv13 = self.Blaze_lite(conv7, 88, 96, 2, 'conv13')
             for i in range(4):
-                conv13 = self.Blaze_lite(
-                        conv13, 96, 96, 1, 'conv{}'.format(14 + i))
+                conv13 = self.Blaze_lite(conv13, 96, 96, 1,
+                                         'conv{}'.format(14 + i))
 
             return conv7, conv13
 

@@ -20,9 +20,7 @@ from .coco_eval import bbox2out
 import logging
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    'bbox2out', 'get_category_info'
-]
+__all__ = ['bbox2out', 'get_category_info']
 
 
 def get_category_info(anno_file=None,

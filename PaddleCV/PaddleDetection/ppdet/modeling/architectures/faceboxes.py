@@ -37,7 +37,7 @@ class FaceBoxes(object):
     Args:
         backbone (object): backbone instance
         output_decoder (object): `SSDOutputDecoder` instance
-        densities (list|None): the densities of generated density prior boxes, 
+        densities (list|None): the densities of generated density prior boxes,
             this attribute should be a list or tuple of integers.
         fixed_sizes (list|None): the fixed sizes of generated density prior boxes,
             this attribute should a list or tuple of same length with `densities`.
@@ -74,8 +74,15 @@ class FaceBoxes(object):
             inputs=body_feats, image=im, num_classes=self.num_classes)
 
         if mode == 'train':
-            loss = fluid.layers.ssd_loss(locs, confs, gt_box, gt_label, box,
-                    box_var, overlap_threshold=0.35, neg_overlap=0.35)
+            loss = fluid.layers.ssd_loss(
+                locs,
+                confs,
+                gt_box,
+                gt_label,
+                box,
+                box_var,
+                overlap_threshold=0.35,
+                neg_overlap=0.35)
             loss = fluid.layers.reduce_sum(loss)
             loss.persistable = True
             return {'loss': loss}
@@ -101,33 +108,14 @@ class FaceBoxes(object):
         for i, input in enumerate(inputs):
             densities = self.densities[i]
             fixed_sizes = self.fixed_sizes[i]
-            if i == 0:
-                box, var = fluid.layers.density_prior_box(
-                    input,
-                    image,
-                    densities=densities,
-                    fixed_sizes=fixed_sizes,
-                    fixed_ratios=[1.],
-                    clip=False,
-                    offset=0.5)
-            elif i == 1:
-                box, var = fluid.layers.density_prior_box(
-                    input,
-                    image,
-                    densities=densities,
-                    fixed_sizes=fixed_sizes,
-                    fixed_ratios=[1.],
-                    clip=False,
-                    offset=0.5)
-            elif i == 2:
-                box, var = fluid.layers.density_prior_box(
-                    input,
-                    image,
-                    densities=densities,
-                    fixed_sizes=fixed_sizes,
-                    fixed_ratios=[1.],
-                    clip=False,
-                    offset=0.5)
+            box, var = fluid.layers.density_prior_box(
+                input,
+                image,
+                densities=densities,
+                fixed_sizes=fixed_sizes,
+                fixed_ratios=[1.],
+                clip=False,
+                offset=0.5)
 
             num_boxes = box.shape[2]
 
