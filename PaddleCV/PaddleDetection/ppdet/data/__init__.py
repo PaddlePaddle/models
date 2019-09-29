@@ -207,7 +207,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
         self.auto_reset = auto_reset
         self.yolo_class_fix = yolo_class_fix
 
-        if prefetch_to_gpu:
+        if use_gpu and prefetch_to_gpu:
             places = framework.cuda_places()
         elif pin_memory:
             places = [fluid.CUDAPinnedPlace()] * len(framework.cuda_places())
