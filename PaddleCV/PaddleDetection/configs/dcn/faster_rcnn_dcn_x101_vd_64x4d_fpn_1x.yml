@@ -108,134 +108,36 @@ OptimizerBuilder:
     factor: 0.0001
     type: L2
 
-TrainDataLoader:
+FasterRCNNTrainFeed:
+  # batch size per device
   batch_size: 1
-  multiprocessing: false
-  pin_memory: false
-  prefetch_to_gpu: false
-  num_workers: 2
-  buffer_size: 2
   dataset:
-    type: coco
-    root_dir: dataset/coco
-    annotation_file: annotations/instances_train2017.json
+    dataset_dir: dataset/coco
     image_dir: train2017
-    use_crowd: false
-    use_empty: false
-    use_mask: false
-  sampler:
-    # aspect_ratio_thresholds: [1.0]
-    shuffle: true
-    sync_seed_schedule: true
-  feed_vars:
-  - image
-  - name: gt_box
-    lod_level: 1
-  - name: gt_label
-    lod_level: 1
-  - name: is_crowd
-    lod_level: 1
-  - name: im_info
-    fields:
-    - height
-    - width
-    - scale
-  sample_transforms:
-  - !RandomFlip
-    prob: 0.5
-  - !Resize
-    resize_shorter: 800
-    resize_longer: 1333
-    interp: 1
-  - !NormalizePermute
-    mean: [123.675, 116.28, 103.53]
-    std: [58.395, 57.120, 57.375]
+    annotation: annotations/instances_train2017.json
   batch_transforms:
-  - !PadToStride
-    stride: 32
-
-EvalDataLoader:
-  batch_size: 1
-  auto_reset: false
-  multiprocessing: false
-  pin_memory: false
-  prefetch_to_gpu: false
+  - !PadBatch
+    pad_to_stride: 32
   num_workers: 2
-  buffer_size: 2
+  shuffle: true
+
+FasterRCNNEvalFeed:
+  batch_size: 1
   dataset:
-    type: coco
-    root_dir: dataset/coco
-    annotation_file: annotations/instances_val2017.json
+    dataset_dir: dataset/coco
+    annotation: annotations/instances_val2017.json
     image_dir: val2017
-    use_crowd: false
-    use_empty: true
-    use_mask: false
-  sampler:
-    shuffle: false
-    pad_batch: false
-    world_size: 1
-  feed_vars:
-  - image
-  - name: im_info
-    fields:
-    - padded_height
-    - padded_width
-    - scale
-  - name: im_shape
-    fields:
-    - orig_height
-    - orig_width
-    - 1.
-  extra_vars:
-  - id
-  sample_transforms:
-  - !Resize
-    resize_shorter: 800
-    resize_longer: 1333
-    interp: 1
-  - !NormalizePermute
-    mean: [123.675, 116.28, 103.53]
-    std: [58.395, 57.120, 57.375]
   batch_transforms:
-  - !PadToStride
-    stride: 32
-
-TestDataLoader:
-  batch_size: 1
-  auto_reset: false
-  multiprocessing: false
-  pin_memory: false
-  prefetch_to_gpu: false
+  - !PadBatch
+    pad_to_stride: 32
   num_workers: 2
-  buffer_size: 2
+
+FasterRCNNTestFeed:
+  batch_size: 1
   dataset:
-    type: folder
-    root_dir: demo
-  sampler:
-    shuffle: false
-    pad_batch: false
-  feed_vars:
-  - image
-  - name: im_info
-    fields:
-    - padded_height
-    - padded_width
-    - scale
-  - name: im_shape
-    fields:
-    - orig_height
-    - orig_width
-    - 1.
-  extra_vars:
-  - file
-  sample_transforms:
-  - !Resize
-    resize_shorter: 800
-    resize_longer: 1333
-    interp: 1
-  - !NormalizePermute
-    mean: [123.675, 116.28, 103.53]
-    std: [58.395, 57.120, 57.375]
+    annotation: dataset/coco/annotations/instances_val2017.json
   batch_transforms:
-  - !PadToStride
-    stride: 32
+  - !PadBatch
+    pad_to_stride: 32
+  num_workers: 2
+  shuffle: false
