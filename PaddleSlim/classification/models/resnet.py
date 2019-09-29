@@ -77,6 +77,7 @@ class ResNet():
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
+        fc_name = fc_name if fc_name is None else prefix_name + fc_name
         out = fluid.layers.fc(input=pool,
                               size=class_dim,
                               act='softmax',
