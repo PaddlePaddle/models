@@ -11,6 +11,7 @@ metric: COCO
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
 weights: output/yolov3_darknet/model_final
 num_classes: 80
+enable_ce: false
 
 YOLOv3:
   backbone: DarkNet
@@ -66,6 +67,7 @@ YoloTrainFeed:
   num_workers: 8
   bufsize: 128
   use_process: true
+  shuffle: true
 
 YoloEvalFeed:
   batch_size: 8

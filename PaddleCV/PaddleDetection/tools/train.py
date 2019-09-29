@@ -113,6 +113,9 @@ def main():
     # build program
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
+    if 'enable_ce' in cfg and cfg.enable_ce:
+        startup_prog.random_seed = 1000
+        train_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
@@ -247,6 +250,10 @@ def main():
             strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
                 it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
+        #only for continuous evaluation
+        if 'enable_ce' in cfg and cfg.enable_ce and it == cfg.max_iters - 1:
+            print("kpis\t{}_train_loss\t{}".format(cfg.architecture, stats['loss']))
+            print("kpis\t{}_train_time\t{}".format(cfg.architecture, time_cost))
 
         if (it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1) \
            and (not FLAGS.dist or trainer_id == 0):
