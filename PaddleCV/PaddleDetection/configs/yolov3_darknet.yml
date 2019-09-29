@@ -84,6 +84,7 @@ TrainDataLoader:
   - !MixUp
     alpha: 1.5
     beta: 1.5
+    steps: 455000
   - !RandomExpand
     ratio: 4.0
     prob: 0.5

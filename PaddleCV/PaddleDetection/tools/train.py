@@ -183,6 +183,7 @@ def main():
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
+        train_loader.step = start_iter
     elif cfg.pretrain_weights and fuse_bn and not ignore_params:
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:

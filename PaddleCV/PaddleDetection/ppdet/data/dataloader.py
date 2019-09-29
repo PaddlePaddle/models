@@ -26,7 +26,7 @@ __all__ = ['DataLoader']
 
 
 class _Compose(object):
-    def __init__(self, transforms, step_per_epoch=0):
+    def __init__(self, transforms):
         super(_Compose, self).__init__()
         assert transforms and isinstance(transforms, Sequence), \
             "sample_transforms must a sequence of callables"
@@ -34,7 +34,7 @@ class _Compose(object):
         mixup = list(filter(lambda x: hasattr(x, 'is_mixup'), transforms))
         self.use_mixup = bool(mixup)
         if self.use_mixup:
-            self.mixup_steps = mixup[0].epochs * step_per_epoch
+            self.mixup_steps = mixup[0].steps
 
     @property
     def need_seeding(self):
@@ -87,7 +87,8 @@ def _apply_transform(idx, dataset, transform, batch_seed=None, step=0):
     # batch_seed = batch_idx * rank
     if batch_seed is not None:
         sample['batch_seed'] = batch_seed
-    if transform.use_mixup and transform.mixup_steps > step:
+    if transform.use_mixup and (transform.mixup_steps > step
+                                or transform.mixup_steps < 0):
         idx2 = np.random.choice(np.delete(np.arange(
             len(dataset)), idx))
         if hasattr(dataset, 'samples'):
@@ -234,7 +235,7 @@ class DataLoader(object):
         assert sampler is not None or dataset.mode != 'indexable', \
             "Sampler is required for indexable dataset"
 
-        self.transform = _Compose(sample_transforms, len(self))
+        self.transform = _Compose(sample_transforms)
         self.batchify = _Batchify(batch_transforms)
 
     def __len__(self):
