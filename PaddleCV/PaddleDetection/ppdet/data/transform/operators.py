@@ -33,7 +33,7 @@ from ppdet.core.workspace import serializable
 from .op_helper import (satisfy_sample_constraint, filter_and_process,
                         generate_sample_bbox, clip_bbox, data_anchor_sampling,
                         satisfy_sample_constraint_coverage, crop_image_sampling,
-                        generate_sample_bbox_square)
+                        generate_sample_bbox_square, bbox_area_sampling)
 
 logger = logging.getLogger(__name__)
 

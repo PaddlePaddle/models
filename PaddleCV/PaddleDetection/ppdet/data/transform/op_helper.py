@@ -65,7 +65,6 @@ def filter_and_process(sample_bbox, bboxes, labels, scores=None):
     new_bboxes = []
     new_labels = []
     new_scores = []
-    #for i in range(len(labels)):
     for i in range(len(bboxes)):
         new_bbox = [0, 0, 0, 0]
         obj_bbox = [bboxes[i][0], bboxes[i][1], bboxes[i][2], bboxes[i][3]]
@@ -103,7 +102,7 @@ def bbox_area_sampling(bboxes, labels, scores, target_size, min_size):
         else:
             new_bboxes.append(bbox)
             new_labels.append(labels[i])
-            scores.append(new_scores[i])
+            new_scores.append(scores[i])
     bboxes = np.array(new_bboxes)
     labels = np.array(new_labels)
     scores = np.array(new_scores)
