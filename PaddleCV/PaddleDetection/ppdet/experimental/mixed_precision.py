@@ -45,8 +45,8 @@ class StaticLossScale(LossScale):
         .. code-block:: python
 
             from paddle import fluid
-            from paddle.fluid.mixed_precision import (mixed_precision_context,
-                                                      StaticLossScale)
+            from ppdet.experimental import (mixed_precision_context,
+                                            StaticLossScale)
 
             with mixed_precision_context(StaticLossScale(8.), True) as ctx:
                 # ...
@@ -73,7 +73,7 @@ class DynamicLossScale(LossScale):
 
     Args:
         init_loss_scale (float): initial loss scale value.
-        increment_every (int): minimum 'good' steps before increase loss scale.
+        increment_every (int): minimum 'good' steps before loss scale increase.
         factor (float): increase/decrease loss scale by this much.
 
     Examples:
@@ -81,8 +81,8 @@ class DynamicLossScale(LossScale):
         .. code-block:: python
 
             from paddle import fluid
-            from paddle.fluid.mixed_precision import (mixed_precision_context,
-                                                      StaticLossScale)
+            from ppdet.experimental import (mixed_precision_context,
+                                            DynamicLossScale)
 
             loss_scale = DynamicLossScale(8., 1000, 4.)
             with mixed_precision_context(loss_scale, True) as ctx:
@@ -157,7 +157,7 @@ class mixed_precision_context(object):
         .. code-block:: python
 
             from paddle import fluid
-            from paddle.fluid.mixed_precision import mixed_precision_context
+            from ppdet.experimental import mixed_precision_context
 
             with mixed_precision_context('dynamic', True) as ctx:
                 # cast inputs to float16
@@ -235,10 +235,10 @@ def create_parameter(self,
         return param
 
     param16 = self.main_program.current_block().create_var(
-        name=param.name + '.cast',
+        name=param.name + '.fp16',
         dtype='float16',
-        type=core.VarDesc.VarType.LOD_TENSOR,
-        persistable=False)    # XXX triage
+        type=param.type,
+        persistable=False)
     self.append_op(
         type='cast',
         inputs={'X': [param]},
