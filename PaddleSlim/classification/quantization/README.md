@@ -123,11 +123,21 @@ mobile预测模型兼容Paddle-Lite（Paddle-Mobile的升级版）, 使用方法
 | weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
 |baseline|- |70.99%/89.68%|- |-|
-|abs_max|abs_max|- |- |-|
-|abs_max|moving_average_abs_max|- |- |-|
-|channel_wise_abs_max|abs_max|- |- |-|
+|abs_max|abs_max|70.74%/89.55% |- |-|
+|abs_max|moving_average_abs_max|70.89%/89.67% |- |-|
+|channel_wise_abs_max|abs_max|70.93%/89.65% |- |-|
 
 >训练超参：
+
+优化器
+```
+fluid.optimizer.Momentum(momentum=0.9,
+                         learning_rate=fluid.layers.piecewise_decay(
+                         boundaries=[5000 * 12],
+                         values=[0.0001, 0.00001]),
+                         regularization=fluid.regularizer.L2Decay(1e-4))
+```
+batch size 1024
 
 ### MobileNetV2
 
@@ -145,10 +155,20 @@ mobile预测模型兼容Paddle-Lite（Paddle-Mobile的升级版）, 使用方法
 | weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
 |baseline|- |76.50%/93.00%|- |-|
-|abs_max|abs_max|- |- |-|
-|abs_max|moving_average_abs_max|- |- |-|
-|channel_wise_abs_max|abs_max|- |- |-|
+|abs_max|abs_max|76.71%/93.10% |- |-|
+|abs_max|moving_average_abs_max|76.54%/93.12% |- |-|
+|channel_wise_abs_max|abs_max|76.56%/93.05% |- |-|
 
 >训练超参：
+
+优化器
+```
+fluid.optimizer.Momentum(momentum=0.9,
+                         learning_rate=fluid.layers.piecewise_decay(
+                         boundaries=[5000 * 12],
+                         values=[0.0001, 0.00001]),
+                         regularization=fluid.regularizer.L2Decay(1e-4))
+```
+batch size 1024
 
 ## FAQ
