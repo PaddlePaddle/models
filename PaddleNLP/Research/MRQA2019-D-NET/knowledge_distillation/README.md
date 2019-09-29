@@ -30,7 +30,7 @@ models:
 
 ./data/pretrain_model/squad2_model: pretrain model(google squad2.0 model as pretrain model [Model Link](https://worksheets.codalab.org/worksheets/0x3852e60a51d2444680606556d404c657)).
 
-./saved_models/knowledge_distillation_model: baidu trained knowledge distillation model.
+./data/saved_models/knowledge_distillation_model: baidu trained knowledge distillation model.
 
 ## 3、Train and Predict
 Train and predict  knowledge distillation model

@@ -9,6 +9,8 @@ We use PaddlePaddle PALM(multi-task Learning Library) to train MRQA2019 MRC mult
 git clone https://github.com/PaddlePaddle/PALM.git
 ```
 
+PALM user guide: [README.md](https://github.com/PaddlePaddle/PALM/blob/master/README.md)
+
 ### Environment
 - Python >= 2.7
 - cuda >= 9.0
