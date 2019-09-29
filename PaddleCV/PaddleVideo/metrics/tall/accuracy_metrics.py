@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+
 import numpy as np
-from six.moves import xrange
-import time
-import pickle
-import operator
+import datetime
+import logging
 
 
 class MetricsCalculator():
@@ -27,7 +31,7 @@ class MetricsCalculator():
 
     def reset(self):
 	logger.info("Resetting {} metrics...".format(self.mode))
-	return
+	
     def finalize_metrics(self):
 	return
     def calculate_metrics(self,):
