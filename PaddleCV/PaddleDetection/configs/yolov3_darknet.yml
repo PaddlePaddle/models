@@ -85,10 +85,15 @@ TrainDataLoader:
     alpha: 1.5
     beta: 1.5
     steps: 455000
+  - !ColorDistort
+    brightness: [0.5, 1.5, 0.5]
+    contrast: [0.5, 1.5, 0.5]
+    saturation: [0.5, 1.5, 0.5]
+    hue: [-18, 18, 0.5]
   - !RandomExpand
     ratio: 4.0
     prob: 0.5
-    fill_value: [127, 127, 127]
+    fill_value: [123.675, 116.28, 103.53]
   - !RandomCrop
     thresholds: [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
     aspect_ratio: [0.5, 2.0]
@@ -100,11 +105,6 @@ TrainDataLoader:
   - !Resize
     target_dim: [320, 352, 384, 416, 448, 480, 512, 544, 576, 608]
     interp: random
-  - !ColorDistort
-    brightness: [0.5, 1.5, 0.5]
-    contrast: [0.5, 1.5, 0.5]
-    saturation: [0.5, 1.5, 0.5]
-    hue: [-18, 18, 0.5]
   - !NormalizePermute
     mean: [123.675, 116.28, 103.53]
     std: [58.395, 57.120, 57.375]
