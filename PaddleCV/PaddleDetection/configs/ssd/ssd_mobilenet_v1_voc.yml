@@ -81,6 +81,7 @@ TrainDataLoader:
     contrast: [0.5, 1.5, 0.5]
     saturation: [0.5, 1.5, 0.5]
     hue: [-18, 18, 0.5]
+    random_apply: false
   - !RandomExpand
     ratio: 4.0
     prob: 0.5

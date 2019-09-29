@@ -136,12 +136,14 @@ class ColorDistort(object):
                  hue=[-18, 18, 0.5],
                  saturation=[0.5, 1.5, 0.5],
                  contrast=[0.5, 1.5, 0.5],
-                 brightness=[0.5, 1.5, 0.5]):
+                 brightness=[0.5, 1.5, 0.5],
+                 random_apply=True):
         super(ColorDistort, self).__init__()
         self.hue = hue
         self.saturation = saturation
         self.contrast = contrast
         self.brightness = brightness
+        self.random_apply = random_apply
 
     def apply_hue(self, img):
         low, high, prob = self.hue
@@ -203,6 +205,18 @@ class ColorDistort(object):
 
     def __call__(self, sample):
         img = sample['image']
+        if self.random_apply:
+            distortions = np.random.permutation([
+                self.apply_brightness,
+                self.apply_contrast,
+                self.apply_saturation,
+                self.apply_hue
+            ])
+            for func in distortions:
+                img = func(img)
+            sample['image'] = img
+            return sample
+
         img = self.apply_brightness(img)
 
         if np.random.randint(0, 2):
