@@ -366,12 +366,13 @@ class RandomCrop(object):
 
 
 class MixUp(object):
-    def __init__(self, alpha=1.5, beta=1.5):
+    def __init__(self, alpha=1.5, beta=1.5, epochs=250):
         super(MixUp, self).__init__()
         assert alpha > 0., "alpha should be positive"
         assert beta > 0., "beta should be positive"
         self.alpha = alpha
         self.beta = beta
+        self.epochs = epochs
         self.is_mixup = True
 
     def __call__(self, sample1, sample2):

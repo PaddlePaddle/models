@@ -26,13 +26,15 @@ __all__ = ['DataLoader']
 
 
 class _Compose(object):
-    def __init__(self, transforms):
+    def __init__(self, transforms, step_per_epoch=0):
         super(_Compose, self).__init__()
         assert transforms and isinstance(transforms, Sequence), \
             "sample_transforms must a sequence of callables"
         self.transforms = transforms
-        self.use_mixup = bool(list(filter(
-            lambda x: hasattr(x, 'is_mixup'), transforms)))
+        mixup = list(filter(lambda x: hasattr(x, 'is_mixup'), transforms))
+        self.use_mixup = bool(mixup)
+        if self.use_mixup:
+            self.mixup_steps = mixup[0].epochs * step_per_epoch
 
     @property
     def need_seeding(self):
@@ -42,7 +44,7 @@ class _Compose(object):
         return self.batch_seed
 
     def __call__(self, sample):
-        if self.use_mixup:
+        if isinstance(sample, tuple):
             sample, sample2 = sample
 
         for transform in self.transforms:
@@ -73,7 +75,7 @@ class _Batchify(object):
         return batch_dict
 
 
-def _apply_transform(idx, dataset, transform, batch_seed=None):
+def _apply_transform(idx, dataset, transform, batch_seed=None, step=0):
     assert not transform.use_mixup or dataset.mode == 'indexable', \
         'mixup only works with indexable datasets'
 
@@ -85,7 +87,7 @@ def _apply_transform(idx, dataset, transform, batch_seed=None):
     # batch_seed = batch_idx * rank
     if batch_seed is not None:
         sample['batch_seed'] = batch_seed
-    if transform.use_mixup:
+    if transform.use_mixup and transform.mixup_steps > step:
         idx2 = np.random.choice(np.delete(np.arange(
             len(dataset)), idx))
         if hasattr(dataset, 'samples'):
@@ -106,14 +108,14 @@ def _process_worker_init(dataset, transforms, batchify):
 def _process_worker_fn(idx, ids, context=None, batch_seed=None):
     global _worker_context
     dataset, transform, batchify = _worker_context
-    samples = [_apply_transform(i, dataset, transform, batch_seed)
+    samples = [_apply_transform(i, dataset, transform, batch_seed, idx)
                for i in ids]
     return batchify(samples)
 
 
 def _thread_worker_fn(idx, ids, context, batch_seed=None):
     dataset, transform, batchify = context
-    samples = [_apply_transform(i, dataset, transform, batch_seed)
+    samples = [_apply_transform(i, dataset, transform, batch_seed, idx)
                for i in ids]
     return batchify(samples)
 
@@ -126,7 +128,7 @@ class _SingleWorkerLoaderIter(object):
         self.batchify = loader.batchify
         self.rank = loader.rank
         self._iter = iter(loader.sampler)
-        self._batch_idx = 0
+        self._batch_idx = loader.step
 
     def _batch_seed(self):
         if self.transform.need_seeding:
@@ -136,8 +138,9 @@ class _SingleWorkerLoaderIter(object):
 
     def __next__(self):
         ids = next(self._iter)
-        samples = [_apply_transform(
-            i, self.dataset, self.transform, self._batch_seed()) for i in ids]
+        samples = [
+            _apply_transform(i, self.dataset, self.transform,
+                             self._batch_seed(), self._batch_idx) for i in ids]
         batch = self.batchify(samples)
         self._batch_idx += 1
         return batch
@@ -154,8 +157,8 @@ class _MultiWorkerLoaderIter(object):
         self.buffer_size = loader.buffer_size
         self._iter = iter(loader.sampler)
         self._out_buffer = {}
-        self._recv_idx = 0
-        self._sent_idx = 0
+        self._recv_idx = loader.step
+        self._sent_idx = loader.step
 
         worker_context = (loader.dataset, loader.transform, loader.batchify)
         if loader.multiprocessing:
@@ -226,11 +229,12 @@ class DataLoader(object):
         self.multiprocessing = multiprocessing
         self.buffer_size = buffer_size
         self.rank = rank
+        self.step = 0
 
         assert sampler is not None or dataset.mode != 'indexable', \
             "Sampler is required for indexable dataset"
 
-        self.transform = _Compose(sample_transforms)
+        self.transform = _Compose(sample_transforms, len(self))
         self.batchify = _Batchify(batch_transforms)
 
     def __len__(self):
