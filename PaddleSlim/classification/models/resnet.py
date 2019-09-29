@@ -81,7 +81,7 @@ class ResNet():
         out = fluid.layers.fc(input=pool,
                               size=class_dim,
                               act='softmax',
-                              name=prefix_name + fc_name,
+                              name=fc_name,
                               param_attr=fluid.param_attr.ParamAttr(
                                   initializer=fluid.initializer.Uniform(-stdv,
                                                                         stdv)))
