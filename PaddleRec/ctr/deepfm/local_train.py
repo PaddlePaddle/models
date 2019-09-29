@@ -17,9 +17,9 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, auc, data_list = ctr_deepfm_model(args.embedding_size, args.num_field,
-                                            args.num_feat, args.layer_sizes,
-                                            args.act, args.reg)
+    loss, auc, data_list, auc_states = ctr_deepfm_model(
+        args.embedding_size, args.num_field, args.num_feat, args.layer_sizes,
+        args.act, args.reg)
     optimizer = fluid.optimizer.SGD(
         learning_rate=args.lr,
         regularization=fluid.regularizer.L2DecayRegularizer(args.reg))

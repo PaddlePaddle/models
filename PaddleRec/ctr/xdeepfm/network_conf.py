@@ -134,4 +134,5 @@ def ctr_xdeepfm_model(embedding_size,
                                                           label=label_int,
                                                           slide_steps=0)
 
-    return batch_cost, auc_var, [raw_feat_idx, raw_feat_value, label]
+    return batch_cost, auc_var, [raw_feat_idx, raw_feat_value,
+                                 label], auc_states

@@ -207,4 +207,4 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
     auc_var, batch_auc_var, auc_states = \
         fluid.layers.auc(input=predict, label=words[-1], num_thresholds=2 ** 12, slide_steps=20)
 
-    return avg_cost, auc_var, batch_auc_var, py_reader, words
+    return avg_cost, auc_var, batch_auc_var, py_reader, words, auc_states

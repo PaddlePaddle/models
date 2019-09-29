@@ -64,9 +64,8 @@ class DCN(object):
         # auc
         prob_2d = fluid.layers.concat([1 - self.prob, self.prob], 1)
         label_int = fluid.layers.cast(self.target_input, 'int64')
-        auc_var, batch_auc_var, auc_states = fluid.layers.auc(input=prob_2d,
-                                                              label=label_int,
-                                                              slide_steps=0)
+        auc_var, batch_auc_var, self.auc_states = fluid.layers.auc(
+            input=prob_2d, label=label_int, slide_steps=0)
         self.auc_var = auc_var
 
         # logloss

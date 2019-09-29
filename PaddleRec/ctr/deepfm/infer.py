@@ -4,6 +4,7 @@ import pickle
 
 # disable gpu training for this example 
 import os
+
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 import paddle
 import paddle.fluid as fluid
@@ -37,7 +38,7 @@ def infer():
 
     with fluid.scope_guard(inference_scope):
         with fluid.framework.program_guard(test_program, startup_program):
-            loss, auc, data_list = ctr_deepfm_model(
+            loss, auc, data_list, auc_states = ctr_deepfm_model(
                 args.embedding_size, args.num_field, args.num_feat,
                 args.layer_sizes, args.act, args.reg)
 
@@ -48,11 +49,8 @@ def infer():
                 dirname=cur_model_path,
                 main_program=fluid.default_main_program())
 
-            auc_states_names = ['_generated_var_2', '_generated_var_3']
-            for name in auc_states_names:
-                param = inference_scope.var(name).get_tensor()
-                param_array = np.zeros(param._get_dims()).astype("int64")
-                param.set(param_array, place)
+            for var in auc_states:  # reset auc states
+                set_zero(var.name, scope=inference_scope, place=place)
 
             loss_all = 0
             num_ins = 0
@@ -68,6 +66,25 @@ def infer():
             print(
                 'The last log info is the total Logloss and AUC for all test data. '
             )
+
+
+def set_zero(var_name,
+             scope=fluid.global_scope(),
+             place=fluid.CPUPlace(),
+             param_type="int64"):
+    """
+    Set tensor of a Variable to zero.
+
+    Args:
+        var_name(str): name of Variable
+        scope(Scope): Scope object, default is fluid.global_scope()
+        place(Place): Place object, default is fluid.CPUPlace()
+        param_type(str): param data type, default is int64
+
+    """
+    param = scope.var(var_name).get_tensor()
+    param_array = np.zeros(param._get_dims()).astype(param_type)
+    param.set(param_array, place)
 
 
 if __name__ == '__main__':

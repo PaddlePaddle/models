@@ -214,7 +214,7 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, auc_var, batch_auc_var, py_reader, _ = ctr_dnn_model(
+    loss, auc_var, batch_auc_var, py_reader, _, auc_states = ctr_dnn_model(
         args.embedding_size, args.sparse_feature_dim)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
     optimizer.minimize(loss)

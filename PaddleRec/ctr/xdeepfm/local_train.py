@@ -12,7 +12,7 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, auc, data_list = eval('network_conf.' + args.model_name)(
+    loss, auc, data_list, auc_states = eval('network_conf.' + args.model_name)(
         args.embedding_size, args.num_field, args.num_feat,
         args.layer_sizes_dnn, args.act, args.reg, args.layer_sizes_cin)
     optimizer = fluid.optimizer.SGD(

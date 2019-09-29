@@ -60,7 +60,7 @@ def infer():
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
     with fluid.framework.program_guard(test_program, startup_program):
-        loss, auc_var, batch_auc_var, _, data_list = ctr_dnn_model(
+        loss, auc_var, batch_auc_var, _, data_list, auc_states = ctr_dnn_model(
             args.embedding_size, args.sparse_feature_dim, False)
 
         exe = fluid.Executor(place)
@@ -77,9 +77,8 @@ def infer():
             param_array = np.zeros(param._get_dims()).astype("int64")
             param.set(param_array, place)
 
-        auc_states_names = ['_generated_var_2', '_generated_var_3']
-        for name in auc_states_names:
-            set_zero(name)
+        for var in auc_states:
+            set_zero(var.name)
 
         for batch_id, data in enumerate(test_reader()):
             loss_val, auc_val = exe.run(test_program,
