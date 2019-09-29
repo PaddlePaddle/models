@@ -117,7 +117,6 @@ OptimizerBuilder:
 TrainDataLoader:
   batch_size: 1
   multiprocessing: false
-  pin_memory: false
   prefetch_to_gpu: false
   num_workers: 2
   buffer_size: 2
@@ -168,7 +167,6 @@ EvalDataLoader:
   batch_size: 1
   auto_reset: false
   multiprocessing: false
-  pin_memory: false
   prefetch_to_gpu: false
   num_workers: 2
   buffer_size: 2
@@ -214,7 +212,6 @@ TestDataLoader:
   batch_size: 1
   auto_reset: false
   multiprocessing: false
-  pin_memory: false
   prefetch_to_gpu: false
   num_workers: 2
   buffer_size: 2

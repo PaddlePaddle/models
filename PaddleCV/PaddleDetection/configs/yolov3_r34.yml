@@ -63,7 +63,6 @@ OptimizerBuilder:
 TrainDataLoader:
   batch_size: 8
   multiprocessing: false
-  pin_memory: false
   prefetch_to_gpu: false
   yolo_class_fix: true
   num_workers: 8
@@ -123,7 +122,6 @@ EvalDataLoader:
   batch_size: 8
   auto_reset: false
   multiprocessing: false
-  pin_memory: false
   prefetch_to_gpu: false
   yolo_class_fix: true
   num_workers: 4
@@ -160,7 +158,6 @@ TestDataLoader:
   batch_size: 1
   auto_reset: false
   multiprocessing: false
-  pin_memory: false
   prefetch_to_gpu: false
   yolo_class_fix: true
   num_workers: 4
