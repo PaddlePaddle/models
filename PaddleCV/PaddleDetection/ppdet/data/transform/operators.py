@@ -32,8 +32,7 @@ from ppdet.core.workspace import serializable
 
 from .op_helper import (satisfy_sample_constraint, filter_and_process,
                         generate_sample_bbox, clip_bbox, data_anchor_sampling,
-                        satisfy_sample_constraint_coverage,
-                        filter_and_process_sampling, crop_image_sampling,
+                        satisfy_sample_constraint_coverage, crop_image_sampling,
                         generate_sample_bbox_square)
 
 logger = logging.getLogger(__name__)
@@ -603,11 +602,11 @@ class CropImage(BaseOperator):
 
 
 @register_op
-class RandomFaceCropImage(BaseOperator):
+class CropImageWithDataAchorSampling(BaseOperator):
     def __init__(self,
-                 anchor_sampler,
                  batch_sampler,
                  target_size,
+                 anchor_sampler=None,
                  sampling_prob=0.5,
                  min_face_size=8,
                  avoid_no_bbox=True):
@@ -630,7 +629,7 @@ class RandomFaceCropImage(BaseOperator):
             min aspect ratio, max aspect ratio,
             min overlap, max overlap, min coverage, max coverage]
         """
-        super(RandomFaceCropImage, self).__init__()
+        super(CropImageWithDataAchorSampling, self).__init__()
         self.anchor_sampler = anchor_sampler
         self.batch_sampler = batch_sampler
         self.target_size = target_size
@@ -663,6 +662,7 @@ class RandomFaceCropImage(BaseOperator):
 
         prob = np.random.uniform(0., 1.)
         if prob > self.sampling_prob:  # anchor sampling
+            assert self.anchor_sampler
             scale_array = np.array([16, 32, 64, 128])
             for sampler in self.anchor_sampler:
                 found = 0
@@ -683,10 +683,12 @@ class RandomFaceCropImage(BaseOperator):
                 idx = int(np.random.uniform(0, len(sampled_bbox)))
                 sample_bbox = sampled_bbox.pop(idx)
 
-                crop_bbox, crop_class, crop_score = \
-                    filter_and_process_sampling(
-                        sample_bbox, gt_bbox, gt_class,
-                        self.target_size, self.min_face_size, gt_score)
+                crop_bbox, crop_class, crop_score = filter_and_process(
+                    sample_bbox, gt_bbox, gt_class, gt_score)
+                crop_bbox, crop_class, crop_score = bbox_area_sampling(
+                    crop_bbox, crop_class, crop_score, self.target_size,
+                    self.min_face_size)
+
                 if self.avoid_no_bbox:
                     if len(crop_bbox) < 1:
                         continue
@@ -716,10 +718,14 @@ class RandomFaceCropImage(BaseOperator):
                 idx = int(np.random.uniform(0, len(sampled_bbox)))
                 sample_bbox = sampled_bbox.pop(idx)
                 sample_bbox = clip_bbox(sample_bbox)
-                crop_bbox, crop_class, crop_score = \
-                    filter_and_process_sampling(
-                        sample_bbox, gt_bbox, gt_class,
-                        self.target_size, self.min_face_size, gt_score)
+
+                crop_bbox, crop_class, crop_score = filter_and_process(
+                    sample_bbox, gt_bbox, gt_class, gt_score)
+                # sampling bbox according the bbox area
+                crop_bbox, crop_class, crop_score = bbox_area_sampling(
+                    crop_bbox, crop_class, crop_score, self.target_size,
+                    self.min_face_size)
+
                 if self.avoid_no_bbox:
                     if len(crop_bbox) < 1:
                         continue

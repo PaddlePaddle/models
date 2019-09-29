@@ -51,14 +51,27 @@ def bbox_area(src_bbox):
         return width * height
 
 
+def is_overlap(object_bbox, sample_bbox):
+    if object_bbox[0] >= sample_bbox[2] or \
+       object_bbox[2] <= sample_bbox[0] or \
+       object_bbox[1] >= sample_bbox[3] or \
+       object_bbox[3] <= sample_bbox[1]:
+        return False
+    else:
+        return True
+
+
 def filter_and_process(sample_bbox, bboxes, labels, scores=None):
     new_bboxes = []
     new_labels = []
     new_scores = []
-    for i in range(len(labels)):
+    #for i in range(len(labels)):
+    for i in range(len(bboxes)):
         new_bbox = [0, 0, 0, 0]
         obj_bbox = [bboxes[i][0], bboxes[i][1], bboxes[i][2], bboxes[i][3]]
         if not meet_emit_constraint(obj_bbox, sample_bbox):
+            continue
+        if not is_overlap(obj_bbox, sample_bbox):
             continue
         sample_width = sample_bbox[2] - sample_bbox[0]
         sample_height = sample_bbox[3] - sample_bbox[1]
@@ -78,37 +91,19 @@ def filter_and_process(sample_bbox, bboxes, labels, scores=None):
     return bboxes, labels, scores
 
 
-def filter_and_process_sampling(sample_bbox,
-                                gt_bbox,
-                                labels,
-                                target_size,
-                                min_face_size,
-                                scores=None):
+def bbox_area_sampling(bboxes, labels, scores, target_size, min_size):
     new_bboxes = []
     new_labels = []
     new_scores = []
-    for i in range(len(gt_bbox)):
-        sample_label = []
-        object_bbox = [
-            gt_bbox[i][0], gt_bbox[i][1], gt_bbox[i][2], gt_bbox[i][3]
-        ]
-        if not meet_emit_constraint(object_bbox, sample_bbox):
+    for i, bbox in enumerate(bboxes):
+        w = float((bbox[2] - bbox[0]) * target_size)
+        h = float((bbox[3] - bbox[1]) * target_size)
+        if w * h < float(min_size * min_size):
             continue
-        proj_bbox = project_bbox(object_bbox, sample_bbox)
-        if proj_bbox:
-            real_width = float((proj_bbox[2] - proj_bbox[0]) * target_size)
-            real_height = float((proj_bbox[3] - proj_bbox[1]) * target_size)
-            if real_width * real_height < float(min_face_size * min_face_size):
-                continue
-            else:
-                sample_label.append(float(proj_bbox[0]))
-                sample_label.append(float(proj_bbox[1]))
-                sample_label.append(float(proj_bbox[2]))
-                sample_label.append(float(proj_bbox[3]))
-                new_labels.append([labels[i][0]])
-                new_bboxes.append(sample_label)
-                if scores is not None:
-                    new_scores.append([scores[i][0]])
+        else:
+            new_bboxes.append(bbox)
+            new_labels.append(labels[i])
+            scores.append(new_scores[i])
     bboxes = np.array(new_bboxes)
     labels = np.array(new_labels)
     scores = np.array(new_scores)
@@ -348,51 +343,6 @@ def satisfy_sample_constraint_coverage(sampler, sample_bbox, gt_bboxes):
         if found:
             return True
     return found
-
-
-def project_bbox(object_bbox, sample_bbox):
-    if object_bbox[0] >= sample_bbox[2] or \
-       object_bbox[2] <= sample_bbox[0] or \
-       object_bbox[1] >= sample_bbox[3] or \
-       object_bbox[3] <= sample_bbox[1]:
-        return False
-    else:
-        proj_bbox = [0, 0, 0, 0]
-        sample_width = sample_bbox[2] - sample_bbox[0]
-        sample_height = sample_bbox[3] - sample_bbox[1]
-        proj_bbox[0] = (object_bbox[0] - sample_bbox[0]) / sample_width
-        proj_bbox[1] = (object_bbox[1] - sample_bbox[1]) / sample_height
-        proj_bbox[2] = (object_bbox[2] - sample_bbox[0]) / sample_width
-        proj_bbox[3] = (object_bbox[3] - sample_bbox[1]) / sample_height
-        proj_bbox = clip_bbox(proj_bbox)
-        if bbox_area(proj_bbox) > 0:
-            return proj_bbox
-        else:
-            return False
-
-
-def transform_labels_sampling(gt_bbox, sample_bbox, resize_val, min_face_size):
-    sample_labels = []
-    for i in range(len(gt_bbox)):
-        sample_label = []
-        object_bbox = [
-            gt_bbox[i][0], gt_bbox[i][1], gt_bbox[i][2], gt_bbox[i][3]
-        ]
-        if not meet_emit_constraint(object_bbox, sample_bbox):
-            continue
-        proj_bbox = project_bbox(object_bbox, sample_bbox)
-        if proj_bbox:
-            real_width = float((proj_bbox[2] - proj_bbox[0]) * resize_val)
-            real_height = float((proj_bbox[3] - proj_bbox[1]) * resize_val)
-            if real_width * real_height < float(min_face_size * min_face_size):
-                continue
-            else:
-                sample_label.append(float(proj_bbox[0]))
-                sample_label.append(float(proj_bbox[1]))
-                sample_label.append(float(proj_bbox[2]))
-                sample_label.append(float(proj_bbox[3]))
-                sample_labels.append(sample_label)
-    return sample_labels
 
 
 def crop_image_sampling(img, sample_bbox, image_width, image_height,
