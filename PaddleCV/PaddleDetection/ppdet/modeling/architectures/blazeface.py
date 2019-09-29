@@ -51,11 +51,12 @@ class BlazeFace(object):
     def __init__(self,
                  backbone="BlazeNet",
                  output_decoder=SSDOutputDecoder().__dict__,
-                 min_sizes=[[16.,24.], [32., 48., 64., 80., 96., 128.]],
+                 min_sizes=[[16., 24.], [32., 48., 64., 80., 96., 128.]],
                  max_sizes=None,
                  steps=[8., 16.],
                  num_classes=2,
-                 use_density_prior_box=False):
+                 use_density_prior_box=False,
+                 densities=[[2, 2], [2, 1, 1, 1, 1, 1]]):
         super(BlazeFace, self).__init__()
         self.backbone = backbone
         self.num_classes = num_classes
@@ -66,6 +67,7 @@ class BlazeFace(object):
         self.max_sizes = max_sizes
         self.steps = steps
         self.use_density_prior_box = use_density_prior_box
+        self.densities = densities
 
     def build(self, feed_vars, mode='train'):
         im = feed_vars['image']
@@ -75,7 +77,9 @@ class BlazeFace(object):
 
         body_feats = self.backbone(im)
         locs, confs, box, box_var = self._multi_box_head(
-            inputs=body_feats, image=im, num_classes=self.num_classes,
+            inputs=body_feats,
+            image=im,
+            num_classes=self.num_classes,
             use_density_prior_box=self.use_density_prior_box)
 
         if mode == 'train':
@@ -118,24 +122,15 @@ class BlazeFace(object):
             min_size = self.min_sizes[i]
 
             if use_density_prior_box:
-                if i == 0:
-                    box, var = fluid.layers.density_prior_box(
-                        input,
-                        image,
-                        densities=[2, 2],
-                        fixed_sizes=[16., 24.],
-                        fixed_ratios=[1.],
-                        clip=False,
-                        offset=0.5)
-                if i == 1:
-                    box, var = fluid.layers.density_prior_box(
-                        input,
-                        image,
-                        densities=[2, 1, 1, 1, 1, 1],
-                        fixed_sizes=[32., 48., 64., 80., 96., 128.],
-                        fixed_ratios=[1.],
-                        clip=False,
-                        offset=0.5)
+                densities = self.densities[i]
+                box, var = fluid.layers.density_prior_box(
+                    input,
+                    image,
+                    densities=densities,
+                    fixed_sizes=min_size,
+                    fixed_ratios=[1.],
+                    clip=False,
+                    offset=0.5)
             else:
                 box, var = fluid.layers.prior_box(
                     input,
