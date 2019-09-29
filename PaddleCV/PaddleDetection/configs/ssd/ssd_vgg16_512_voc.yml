@@ -120,7 +120,7 @@ EvalDataLoader:
   auto_reset: false
   multiprocessing: false
   pin_memory: false
-  prefetch_to_gpu: false
+  prefetch_to_gpu: true
   num_workers: 4
   buffer_size: 4
   dataset:
