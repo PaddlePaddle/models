@@ -62,90 +62,123 @@ OptimizerBuilder:
     factor: 0.0005
     type: L2
 
-SSDTrainFeed:
+TrainDataLoader:
   batch_size: 8
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  num_workers: 4
+  buffer_size: 4
   dataset:
-    dataset_dir: dataset/coco
-    annotation: annotations/instances_train2017.json
+    type: coco
+    root_dir: dataset/coco
+    annotation_file: annotations/instances_train2017.json
     image_dir: train2017
-  image_shape: [3, 512, 512]
+    use_crowd: false
+    use_empty: false
+    use_mask: false
+  sampler:
+    shuffle: true
+    sync_seed_schedule: true
+  feed_vars:
+  - image
+  - name: gt_box
+    lod_level: 1
+  - name: gt_label
+    lod_level: 1
+  extra_vars:
+  - id
   sample_transforms:
-  - !DecodeImage
-    to_rgb: true
-    with_mixup: false
-  - !NormalizeBox {}
-  - !RandomDistort
-    brightness_lower: 0.875
-    brightness_upper: 1.125
-    is_order: true
-  - !ExpandImage
-    max_ratio: 4
-    mean: [104, 117, 123]
+  - !ColorDistort
+    brightness: [0.875, 1.125, 0.5]
+    contrast: [0.5, 1.5, 0.5]
+    saturation: [0.5, 1.5, 0.5]
+    hue: [-18, 18, 0.5]
+    random_apply: false
+  - !RandomExpand
+    ratio: 4.0
     prob: 0.5
-  - !CropImage
-    avoid_no_bbox: true
-    batch_sampler:
-    - [1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0]
-    - [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 0.0]
-    - [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 0.0]
-    - [1, 50, 0.3, 1.0, 0.5, 2.0, 0.5, 0.0]
-    - [1, 50, 0.3, 1.0, 0.5, 2.0, 0.7, 0.0]
-    - [1, 50, 0.3, 1.0, 0.5, 2.0, 0.9, 0.0]
-    - [1, 50, 0.3, 1.0, 0.5, 2.0, 0.0, 1.0]
-    satisfy_all: false
-  - !ResizeImage
-    interp: 1
-    target_size: 512
-    use_cv2: false
-  - !RandomFlipImage
-    is_normalized: true
-  - !Permute
-    to_bgr: false
-  - !NormalizeImage
-    is_scale: false
+    fill_value: [104, 117, 123]
+  - !RandomCrop
+    thresholds: [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
+    aspect_ratio: [0.5, 2.0]
+    scaling: [0.3, 1.0]
+    num_attempts: 50
+    allow_no_crop: true
+  - !RandomFlip
+    prob: 0.5
+  - !Resize
+    target_dim: 512
+    interp: 3
+  - !NormalizePermute
     mean: [104, 117, 123]
     std: [1, 1, 1]
+  - !NormalizeLabels
+    normalize_box: true
 
-SSDEvalFeed:
+EvalDataLoader:
   batch_size: 8
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: true
+  num_workers: 4
+  buffer_size: 4
   dataset:
-    dataset_dir: dataset/coco
-    annotation: annotations/instances_val2017.json
+    type: coco
+    root_dir: dataset/coco
+    annotation_file: annotations/instances_val2017.json
     image_dir: val2017
-  drop_last: false
-  image_shape: [3, 512, 512]
+    use_crowd: false
+    use_empty: true
+    use_mask: false
+  sampler:
+    shuffle: false
+    pad_batch: false
+    world_size: 1
+  feed_vars:
+  - image
+  extra_vars:
+  - id
+  - gt_box
+  - gt_label
+  - difficult
   sample_transforms:
-  - !DecodeImage
-    to_rgb: true
-    with_mixup: false
-  - !ResizeImage
-    interp: 1
-    target_size: 512
-    use_cv2: false
-  - !Permute
-    to_bgr: false
-  - !NormalizeImage
-    is_scale: false
+  - !Resize
+    target_dim: 512
+    interp: 3
+  - !NormalizePermute
     mean: [104, 117, 123]
     std: [1, 1, 1]
+  - !NormalizeLabels
+    normalize_box: true
 
-SSDTestFeed:
+TestDataLoader:
   batch_size: 1
+  auto_reset: false
+  multiprocessing: false
+  pin_memory: false
+  prefetch_to_gpu: false
+  num_workers: 4
+  buffer_size: 8
   dataset:
-    annotation: dataset/coco/annotations/instances_val2017.json
-  image_shape: [3, 512, 512]
+    type: folder
+    root_dir: demo
+  sampler:
+    shuffle: false
+    pad_batch: false
+  feed_vars:
+  - image
+  - name: im_shape
+    fields:
+    - orig_height
+    - orig_width
+  extra_vars:
+  - file
   sample_transforms:
-  - !DecodeImage
-    to_rgb: true
-    with_mixup: false
-  - !ResizeImage
-    interp: 1
-    max_size: 0
-    target_size: 512
-    use_cv2: false
-  - !Permute
-    to_bgr: false
-  - !NormalizeImage
-    is_scale: false
+  - !Resize
+    target_dim: 512
+    interp: 3
+  - !NormalizePermute
     mean: [104, 117, 123]
     std: [1, 1, 1]
