@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Emotion Detection Task
 """
@@ -21,7 +22,6 @@ from __future__ import print_function
 
 import os
 import time
-import argparse
 import multiprocessing
 import sys
 sys.path.append("../")
@@ -32,107 +32,55 @@ import numpy as np
 
 from models.classification import nets
 from models.model_check import check_cuda
+from config import PDConfig
 import reader
-import config
 import utils
-
-parser = argparse.ArgumentParser(__doc__)
-model_g = utils.ArgumentGroup(parser, "model", "model configuration and paths.")
-model_g.add_arg("config_path", str, None,
-                "Path to the json file for EmoTect model config.")
-model_g.add_arg("init_checkpoint", str, None,
-                "Init checkpoint to resume training from.")
-model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
-
-train_g = utils.ArgumentGroup(parser, "training", "training options.")
-train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
-train_g.add_arg("save_steps", int, 10000,
-                "The steps interval to save checkpoints.")
-train_g.add_arg("validation_steps", int, 1000,
-                "The steps interval to evaluate model performance.")
-train_g.add_arg("lr", float, 0.002, "The Learning rate value for training.")
-
-log_g = utils.ArgumentGroup(parser, "logging", "logging related")
-log_g.add_arg("skip_steps", int, 10, "The steps interval to print loss.")
-log_g.add_arg("verbose", bool, False, "Whether to output verbose log")
-
-data_g = utils.ArgumentGroup(
-    parser, "data", "Data paths, vocab paths and data processing options")
-data_g.add_arg("data_dir", str, None, "Directory path to training data.")
-data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
-data_g.add_arg("batch_size", int, 256,
-               "Total examples' number in batch for training.")
-data_g.add_arg("random_seed", int, 0, "Random seed.")
-
-run_type_g = utils.ArgumentGroup(parser, "run_type", "running type options.")
-run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
-run_type_g.add_arg("task_name", str, None,
-                   "The name of task to perform sentiment classification.")
-run_type_g.add_arg("do_train", bool, False, "Whether to perform training.")
-run_type_g.add_arg("do_val", bool, False, "Whether to perform evaluation.")
-run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
-
-parser.add_argument(
-    '--enable_ce',
-    action='store_true',
-    help='If set, run the task with continuous evaluation logs.')
-
-args = parser.parse_args()
 
 
 def create_model(args,
                  pyreader_name,
-                 emotect_config,
                  num_labels,
-                 is_infer=False):
+                 is_prediction=False):
     """
-    Create Model for sentiment classification
+    Create Model for Emotion Detection
     """
-    if is_infer:
-        pyreader = fluid.layers.py_reader(
-            capacity=16,
-            shapes=[[-1, 1]],
-            dtypes=['int64'],
-            lod_levels=[1],
-            name=pyreader_name,
-            use_double_buffer=False)
-    else:
-        pyreader = fluid.layers.py_reader(
-            capacity=16,
-            shapes=([-1, 1], [-1, 1]),
-            dtypes=('int64', 'int64'),
-            lod_levels=(1, 0),
-            name=pyreader_name,
-            use_double_buffer=False)
+    data = fluid.layers.data(name="words", shape=[-1, args.max_seq_len, 1], dtype="int64")
+    label = fluid.layers.data(name="label", shape=[-1, 1], dtype="int64")
+    seq_len = fluid.layers.data(name="seq_len", shape=[-1, 1], dtype="int64")
 
-    if emotect_config['model_type'] == "cnn_net":
+    if is_prediction:
+        pyreader = fluid.io.PyReader(
+            feed_list=[data, seq_len],
+            capacity=16,
+            iterable=False,
+            return_list=False)
+    else:
+        pyreader = fluid.io.PyReader(
+            feed_list=[data, label, seq_len],
+            capacity=16,
+            iterable=False,
+            return_list=False)
+
+    if args.model_type == "cnn_net":
         network = nets.cnn_net
-    elif emotect_config['model_type'] == "bow_net":
+    elif args.model_type == "bow_net":
         network = nets.bow_net
-    elif emotect_config['model_type'] == "lstm_net":
+    elif args.model_type == "lstm_net":
         network = nets.lstm_net
-    elif emotect_config['model_type'] == "bilstm_net":
+    elif args.model_type == "bilstm_net":
         network = nets.bilstm_net
-    elif emotect_config['model_type'] == "gru_net":
+    elif args.model_type == "gru_net":
         network = nets.gru_net
-    elif emotect_config['model_type'] == "textcnn_net":
+    elif args.model_type == "textcnn_net":
         network = nets.textcnn_net
     else:
         raise ValueError("Unknown network type!")
 
-    if is_infer:
-        data = fluid.layers.read_file(pyreader)
-        probs = network(
-            data,
-            None,
-            emotect_config["vocab_size"],
-            class_dim=num_labels,
-            is_infer=True)
-        return pyreader, probs
+    if is_prediction:
+        probs = network(data, seq_len, None, args.vocab_size, class_dim=num_labels, is_prediction=True)
+        return pyreader, probs, [data.name, seq_len.name]
 
-    data, label = fluid.layers.read_file(pyreader)
-    avg_loss, probs = network(
-        data, label, emotect_config["vocab_size"], class_dim=num_labels)
+    avg_loss, probs = network(data, seq_len, label, args.vocab_size, class_dim=num_labels)
     num_seqs = fluid.layers.create_tensor(dtype='int64')
     accuracy = fluid.layers.accuracy(input=probs, label=label, total=num_seqs)
     return pyreader, avg_loss, accuracy, num_seqs
@@ -187,8 +135,6 @@ def main(args):
     """
     Main Function
     """
-    emotect_config = config.EmoTectConfig(args.config_path)
-
     if args.use_cuda:
         place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
     else:
@@ -196,11 +142,11 @@ def main(args):
     exe = fluid.Executor(place)
 
     task_name = args.task_name.lower()
-    processor = reader.EmoTectProcessor(
-        data_dir=args.data_dir,
-        vocab_path=args.vocab_path,
-        random_seed=args.random_seed)
-    num_labels = len(processor.get_labels())
+    processor = reader.EmoTectProcessor(data_dir=args.data_dir,
+                                      vocab_path=args.vocab_path,
+                                      random_seed=args.random_seed)
+    #num_labels = len(processor.get_labels())
+    num_labels = args.num_labels
 
     if not (args.do_train or args.do_val or args.do_infer):
         raise ValueError("For args `do_train`, `do_val` and `do_infer`, at "
@@ -229,9 +175,8 @@ def main(args):
                 train_pyreader, loss, accuracy, num_seqs = create_model(
                     args,
                     pyreader_name='train_reader',
-                    emotect_config=emotect_config,
                     num_labels=num_labels,
-                    is_infer=False)
+                    is_prediction=False)
 
                 sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.lr)
                 sgd_optimizer.minimize(loss)
@@ -243,27 +188,41 @@ def main(args):
                   (lower_mem, upper_mem, unit))
 
     if args.do_val:
+        if args.do_train:
+            test_data_generator = processor.data_generator(
+                batch_size=args.batch_size,
+                phase='dev',
+                epoch=1)
+        else:
+            test_data_generator = processor.data_generator(
+                batch_size=args.batch_size,
+                phase='test',
+                epoch=1)
+
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
                 test_pyreader, loss, accuracy, num_seqs = create_model(
                     args,
                     pyreader_name='test_reader',
-                    emotect_config=emotect_config,
                     num_labels=num_labels,
-                    is_infer=False)
+                    is_prediction=False)
         test_prog = test_prog.clone(for_test=True)
 
     if args.do_infer:
+        infer_data_generator = processor.data_generator(
+            batch_size=args.batch_size,
+            phase='infer',
+            epoch=1)
+
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
-                infer_pyreader, probs = create_model(
+                infer_pyreader, probs, _ = create_model(
                     args,
                     pyreader_name='infer_reader',
-                    emotect_config=emotect_config,
                     num_labels=num_labels,
-                    is_infer=True)
+                    is_prediction=True)
         test_prog = test_prog.clone(for_test=True)
 
     exe.run(startup_prog)
@@ -280,11 +239,15 @@ def main(args):
 
     if args.do_train:
         train_exe = exe
-        train_pyreader.decorate_paddle_reader(train_data_generator)
+        train_pyreader.decorate_sample_list_generator(train_data_generator)
     else:
         train_exe = None
-    if args.do_val or args.do_infer:
+    if args.do_val:
         test_exe = exe
+        test_pyreader.decorate_sample_list_generator(test_data_generator)
+    if args.do_infer:
+        test_exe = exe
+        infer_pyreader.decorate_sample_list_generator(infer_data_generator)
 
     if args.do_train:
         train_pyreader.start()
@@ -332,24 +295,24 @@ def main(args):
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
-                    save_path = os.path.join(args.output_dir,
-                                             "step_" + str(steps))
+                    save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
                     fluid.io.save_persistables(exe, save_path, train_program)
 
                 if steps % args.validation_steps == 0:
                     # evaluate on dev set
                     if args.do_val:
-                        test_pyreader.decorate_paddle_reader(
-                            processor.data_generator(
-                                batch_size=args.batch_size,
-                                phase='dev',
-                                epoch=1))
                         evaluate(test_exe, test_prog, test_pyreader,
                                  [loss.name, accuracy.name, num_seqs.name],
                                  "dev")
 
             except fluid.core.EOFException:
-                save_path = os.path.join(args.output_dir, "step_" + str(steps))
+                print("final step: %d " % steps)
+                if args.do_val:
+                    evaluate(test_exe, test_prog, test_pyreader,
+                        [loss.name, accuracy.name, num_seqs.name],
+                        "dev")
+
+                save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
                 fluid.io.save_persistables(exe, save_path, train_program)
                 train_pyreader.reset()
                 break
@@ -372,19 +335,17 @@ def main(args):
 
     # evaluate on test set
     if not args.do_train and args.do_val:
-        test_pyreader.decorate_paddle_reader(
-            processor.data_generator(
-                batch_size=args.batch_size, phase='test', epoch=1))
         print("Final test result:")
         evaluate(test_exe, test_prog, test_pyreader,
-                 [loss.name, accuracy.name, num_seqs.name], "test")
+                 [loss.name, accuracy.name, num_seqs.name],
+                 "test")
 
     # infer
     if args.do_infer:
-        infer_pyreader.decorate_paddle_reader(
-            processor.data_generator(
-                batch_size=args.batch_size, phase='infer', epoch=1))
-        infer(test_exe, test_prog, infer_pyreader, [probs.name], "infer")
+        print("Final infer result:")
+        infer(test_exe, test_prog, infer_pyreader,
+             [probs.name],
+             "infer")
 
 
 def get_cards():
@@ -396,6 +357,8 @@ def get_cards():
 
 
 if __name__ == "__main__":
-    utils.print_arguments(args)
+    args = PDConfig('config.json')
+    args.build()
+    args.print_arguments()
     check_cuda(args.use_cuda)
     main(args)
