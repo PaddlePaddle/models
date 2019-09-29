@@ -528,8 +528,6 @@ class CropImage(BaseOperator):
             batch_sampler (list): Multiple sets of different
                                   parameters for cropping.
             satisfy_all (bool): whether all boxes must satisfy.
-            avoid_no_bbox (bool): whether to to avoid the 
-                                  situation where the box does not appear.
             e.g.[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
@@ -540,6 +538,8 @@ class CropImage(BaseOperator):
            [max sample, max trial, min scale, max scale,
             min aspect ratio, max aspect ratio,
             min overlap, max overlap]
+            avoid_no_bbox (bool): whether to to avoid the 
+                                  situation where the box does not appear.
         """
         super(CropImage, self).__init__()
         self.batch_sampler = batch_sampler
@@ -605,37 +605,42 @@ class CropImage(BaseOperator):
 class CropImageWithDataAchorSampling(BaseOperator):
     def __init__(self,
                  batch_sampler,
-                 target_size,
                  anchor_sampler=None,
+                 target_size=None,
+                 das_anchor_scales=[16, 32, 64, 128],
                  sampling_prob=0.5,
-                 min_face_size=8,
+                 min_size=8.,
                  avoid_no_bbox=True):
         """
         Args:
             anchor_sampler (list): anchor_sampling sets of different
                                   parameters for cropping.
-            batch_sampler (list): in `CropImage` Multiple sets of different
+            batch_sampler (list): Multiple sets of different
                                   parameters for cropping.
-
+              e.g.[[1, 10, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.2, 0.0]]
+                  [[1, 50, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                   [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                   [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                   [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                   [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]]
+              [max sample, max trial, min scale, max scale,
+               min aspect ratio, max aspect ratio,
+               min overlap, max overlap, min coverage, max coverage]
+            target_size (bool): target image size.
+            das_anchor_scales (list[float]): a list of anchor scales in data
+                anchor smapling.
+            min_size (float): minimum size of sampled bbox.
             avoid_no_bbox (bool): whether to to avoid the
                                   situation where the box does not appear.
-            e.g.[[1, 10, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.2, 0.0]]
-                [[1, 50, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
-                 [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
-                 [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
-                 [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
-                 [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]]
-           [max sample, max trial, min scale, max scale,
-            min aspect ratio, max aspect ratio,
-            min overlap, max overlap, min coverage, max coverage]
         """
         super(CropImageWithDataAchorSampling, self).__init__()
         self.anchor_sampler = anchor_sampler
         self.batch_sampler = batch_sampler
         self.target_size = target_size
         self.sampling_prob = sampling_prob
-        self.min_face_size = min_face_size
+        self.min_size = min_size
         self.avoid_no_bbox = avoid_no_bbox
+        self.scale_array = np.array(das_anchor_scales)
 
     def __call__(self, sample, context):
         """
@@ -663,14 +668,13 @@ class CropImageWithDataAchorSampling(BaseOperator):
         prob = np.random.uniform(0., 1.)
         if prob > self.sampling_prob:  # anchor sampling
             assert self.anchor_sampler
-            scale_array = np.array([16, 32, 64, 128])
             for sampler in self.anchor_sampler:
                 found = 0
                 for i in range(sampler[1]):
                     if found >= sampler[0]:
                         break
                     sample_bbox = data_anchor_sampling(
-                        gt_bbox, image_width, image_height, scale_array,
+                        gt_bbox, image_width, image_height, self.scale_array,
                         self.target_size)
                     if sample_bbox == 0:
                         break
@@ -687,7 +691,7 @@ class CropImageWithDataAchorSampling(BaseOperator):
                     sample_bbox, gt_bbox, gt_class, gt_score)
                 crop_bbox, crop_class, crop_score = bbox_area_sampling(
                     crop_bbox, crop_class, crop_score, self.target_size,
-                    self.min_face_size)
+                    self.min_size)
 
                 if self.avoid_no_bbox:
                     if len(crop_bbox) < 1:
@@ -724,7 +728,7 @@ class CropImageWithDataAchorSampling(BaseOperator):
                 # sampling bbox according the bbox area
                 crop_bbox, crop_class, crop_score = bbox_area_sampling(
                     crop_bbox, crop_class, crop_score, self.target_size,
-                    self.min_face_size)
+                    self.min_size)
 
                 if self.avoid_no_bbox:
                     if len(crop_bbox) < 1:
