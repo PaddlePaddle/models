@@ -35,6 +35,8 @@ nltk.download("cmudict")
 
 ![DeepVoice3 model architecture](./_images/model_architecture.png)
 
+The model consists of an encoder, a decoder and a converter (and a speaker embedding for multispeaker models). The encoder, together with the decoder forms the seq2seq part of the model, and the converter forms the postnet part.
+
 ## Project Structure
 
 ```text
@@ -59,6 +61,8 @@ nltk.download("cmudict")
 There are many hyperparameters to be tuned depending on the specification of model and dataset you are working on. Hyperparameters that are known to work good are provided in the repository. See `presets` directory for details. Now we only provide preset with LJSpeech dataset (`deepvoice3_ljspeech.json`). Support for more models and datasets is pending.
 
 Note that `preprocess.py`, `train.py` and `synthesis.py` all accept a `--preset` parameter. To ensure consistency, you should use the same preset for preprocessing, training and synthesizing.
+
+Note that you can overwrite preset hyperparameters with command line argument `--hparams`, just pass several key-value pair in  `${key}=${value}` format seperated by comma （`,`）. For example `--hparams="batch_size=8, nepochs=500"` can overwrite default values in the preset json file. For more details about hyperparameters, see `hparams.py`, which contains the definition of `hparams`. Priority order of hyperparameters is command line option `--hparams` > `--preset` json configuration file > definition of hparams in `hparams.py`.
 
 Some hyperparameters are only related to training, like `batch_size`, `checkpoint_interval` and you can use different values for preprocessing and training. But hyperparameters related to data preprocessing, like `num_mels` and `ref_level_db`, should be kept the same for preprocessing and training.
 
@@ -108,7 +112,7 @@ python train.py --data-root=${data-root} --use-gpu \
     --hparams="parameters you may want to override"
 ```
 
-Note that you can overwrite preset hyperparameters with command line argument `--hparams`, just pass several key-value pair in  `${key}=${value}` format seperated by comma `,`. For example `--hparams="batch_size=8, nepochs=500"` can overwrite default values in the preset json file. See `python train.py --help` for more details.
+For more details about `train.py`, see `python train.py --help`.
 
 #### load checkpoints
 

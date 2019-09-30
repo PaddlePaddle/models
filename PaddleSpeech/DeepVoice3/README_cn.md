@@ -35,6 +35,8 @@ nltk.download("cmudict")
 
 ![DeepVoice3 模型结构](./_images/model_architecture.png)
 
+模型包含 encoder, decoder, converter 几个部分，对于 multispeaker 数据集，还有一个 speaker embedding。其中 encoder 和 decoder 构成 seq2seq 部分，converter 构成 postnet 部分。
+
 ## 项目结构
 
 ```text
@@ -60,8 +62,11 @@ nltk.download("cmudict")
 
 `preprocess.py`，`train.py`，`synthesis.py` 都接受 `--preset` 参数。为了保持一致性，最好在数据预处理，模型训练和语音合成时使用相同的预设配置。
 
+可以通过 `--hparams` 参数来覆盖预设的超参数配置，参数格式是逗号分隔的键值对 `${key}=${value}`，例如 `--hparams="batch_size=8, nepochs=500"`。关于超参数设置更多细节可以参考 `hparams.py` ，其中定义了 hparams。超参数的优先级序列是：通过命令行参数 `--hparams` 传入的参数优先级高于通过 `--preset` 参数传入的 json 配置文件，高于 `hparams.py` 中的定义。
+
 部分参数可以只和训练有关，如 `batch_size`, `checkpoint_interval`, 用户在训练时可以使用不同的值。但部分参数和数据预处理相关，如 `num_mels` 和 `ref_level_db`, 这些参数在数据预处理和训练时候应该保持一致。
 
+关于超参数设置更多细节可以参考 `hparams.py` ，其中定义了 hparams。超参数的优先级序列是：通过命令行参数 `--hparams` 传入的参数优先级高于通过 `--preset` 参数传入的 json 配置文件，高于 `hparams.py` 中的定义。
 
 ### 数据集
 
@@ -108,7 +113,7 @@ python train.py --data-root=${data-root} --use-gpu \
     --hparams="parameters you may want to override"
 ```
 
-注意可以通过 `--hparams` 参数来覆盖预设的超参数配置，参数格式是逗号分隔的键值对 `${key}=${value}`，例如 `--hparams="batch_size=8, nepochs=500"`。更多使用说明请参考 `python train.py --help` 给出的提示。
+用于可以通过 `python train.py --help` 查看 `train.py` 的详细使用方法。
 
 #### 加载保存的模型
 
@@ -138,9 +143,9 @@ python train.py --data-root=${data-root} --use-gpu \
 ```bash
 python -m paddle.distributed.launch \
     --started_port ${port_of_the_first_worker} \
-  --selected_gpus ${logical_gpu_ids_to_choose} \
-  --log_dir ${path_of_write_log} \
-  training_script ...
+    --selected_gpus ${logical_gpu_ids_to_choose} \
+    --log_dir ${path_of_write_log} \
+    training_script ...
 ```
 
 paddle.distributed.launch 通过多进程的方式进行并行训练。`--selected_gpus` 指的是选择的 GPU 的逻辑序号，`started_port` 指的是 0 号显卡的使用的端口号，`--log_dir` 是日志保存的目录，每个进程的输出会在这个文件夹中保存为单独的文件。再在后面接上需要启动的脚本文件及其参数即可。这部分和单卡训练的脚本一致，但是需要传入 `--use-data-paralle` 以使用数据并行训练。示例命令如下。
