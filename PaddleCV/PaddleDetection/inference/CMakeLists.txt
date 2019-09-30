@@ -250,7 +250,8 @@ endif()
 SET(PADDLESEG_INFERENCE_SRCS  preprocessor/preprocessor.cpp 
 #    preprocessor/preprocessor_seg.cpp predictor/seg_predictor.cpp 
 #    preprocessor/preprocessor_classify.cpp predictor/classify_predictor.cpp 
-    preprocessor/preprocessor_detection.cpp predictor/detection_predictor.cpp)
+    preprocessor/preprocessor_detection.cpp predictor/detection_predictor.cpp 
+    utils/detection_result.pb.cc)
 
 ADD_LIBRARY(libpaddleseg_inference STATIC ${PADDLESEG_INFERENCE_SRCS})
 target_link_libraries(libpaddleseg_inference ${DEPS})
