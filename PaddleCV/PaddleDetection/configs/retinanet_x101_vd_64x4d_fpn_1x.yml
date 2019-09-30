@@ -6,7 +6,7 @@ max_iters: 180000
 use_gpu: true
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_64x4d_pretrained.tar
 weights: output/retinanet_x101_vd_64x4d_fpn_1x/model_final
-inference_shape: [3, 800, 1333]
+inference_shape: [-1, 3, 800, 1333]
 inference_vars: ['image', 'im_info']
 log_smooth_window: 20
 log_iter: 20

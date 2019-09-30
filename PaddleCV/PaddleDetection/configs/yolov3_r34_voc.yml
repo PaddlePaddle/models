@@ -11,7 +11,7 @@ metric: VOC
 map_type: 11point
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet34_pretrained.tar
 weights: output/yolov3_r34_voc/model_final
-inference_shape: [3, 608, 608]
+inference_shape: [-1, 3, 608, 608]
 inference_vars: ['image', 'im_size']
 num_classes: 20
 

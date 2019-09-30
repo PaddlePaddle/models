@@ -11,7 +11,7 @@ metric: COCO
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/VGG16_caffe_pretrained.tar
 save_dir: output
 weights: output/ssd_vgg16_300/model_final
-inference_shape: [3, 300, 300]
+inference_shape: [-1, 3, 300, 300]
 inference_vars: ['image', 'im_shape']
 num_classes: 81
 
