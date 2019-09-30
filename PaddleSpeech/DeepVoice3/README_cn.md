@@ -116,9 +116,9 @@ python train.py --data-root=${data-root} --use-gpu \
 
 #### 训练模型的一部分
 
-用户可以通过 `--train-seq2seq-only` 或者 `--train-postnet-only` 来实现固定模型的其他部分，只训练需要训练的部分。但当只训练模型的一部分时，其他的部分需要充从保存的模型中加载。
+用户可以通过 `--train-seq2seq-only` 或者 `--train-postnet-only` 来实现固定模型的其他部分，只训练需要训练的部分。但当只训练模型的一部分时，其他的部分需要从保存的模型中加载。
 
-当只训练模型的 `seq2seq` 或者 `postnet` 部分时分训练时使用 `--checkpoint` 加载整个模型并保持相同的配置。注意，当只训练 `postnet` 的时候，需要保证配置中的`use_decoder_state_for_postnet_input=false`，因为在这种情况下，postnet 使用真实的 mel 频谱作为输入。
+当只训练模型的 `seq2seq` 部分或者 `postnet` 部分时，需要使用 `--checkpoint` 加载整个模型并保持相同的配置。注意，当只训练 `postnet` 的时候，需要保证配置中的`use_decoder_state_for_postnet_input=false`，因为在这种情况下，postnet 使用真实的 mel 频谱作为输入。
 
 示例:
 
@@ -150,7 +150,7 @@ export CUDA_VISIBLE_DEVICES=2,3,4,5    # The IDs of visible physical devices
 python -m paddle.distributed.launch \
     --selected_gpus=0,1,2,3 --log_dir ${multi_gpu_log_dir} \
     train.py --data-root=${data-root} \
-    --use-gpu --use-data-parallel \ # enable parallel here
+    --use-gpu --use-data-parallel \
     --preset=${preset_json_path} \
     --hparams="parameters you may want to override"
 ```

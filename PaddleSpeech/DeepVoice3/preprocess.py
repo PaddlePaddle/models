@@ -7,9 +7,9 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-import os
+import io
 import six
-import codecs
+import os
 from multiprocessing import cpu_count
 from tqdm import tqdm
 import importlib
@@ -44,19 +44,17 @@ def preprocess(mod, in_dir, out_root, num_workers):
 
 
 def write_metadata(metadata, out_dir):
-    with codecs.open(
-            os.path.join(out_dir, 'train.txt'), 'w', encoding='utf-8') as f:
-        if six.PY2:
-            for m in metadata:
-                f.write('|'.join([
-                    codecs.encode(x, "utf-8")
-                    if isinstance(x, (str, unicode)) else str(x) for x in m
-                ]) + '\n')
-        elif six.PY3:
-            for m in metadata:
-                f.write('|'.join([str(x) for x in m]) + '\n')
-        else:
-            raise ValueError("Not running on Python2 or Python 3?")
+    if six.PY3:
+        string_type = str
+    elif six.PY2:
+        string_type = unicode
+    else:
+        raise ValueError("Not running on Python2 or Python 3?")
+    with io.open(
+            os.path.join(out_dir, 'train.txt'), 'wt', encoding='utf-8') as f:
+        for m in metadata:
+            f.write(u'|'.join([string_type(x) for x in m]) + '\n')
+
     frames = sum([m[2] for m in metadata])
     frame_shift_ms = hparams.hop_size / hparams.sample_rate * 1000
     hours = frames * frame_shift_ms / (3600 * 1000)

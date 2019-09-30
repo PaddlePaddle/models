@@ -138,9 +138,9 @@ Training on multiple GPUs with data parallel is enabled. You can run `train.py` 
 ```bash
 python -m paddle.distributed.launch \
     --started_port ${port_of_the_first_worker} \
-  --selected_gpus ${logical_gpu_ids_to_choose} \
-  --log_dir ${path_of_write_log} \
-  training_script ...
+    --selected_gpus ${logical_gpu_ids_to_choose} \
+    --log_dir ${path_of_write_log} \
+    training_script ...
 ```
 
 `paddle.distributed.launch` parallelizes training in multiprocessing mode.`--selected_gpus` means the logical ids of the selected GPUs, and `started_port` means the port used by the first worker.  Outputs of each worker are saved in `--log_dir.` Then follows the command for training on a single GPU, except that   you should pass `--use-data-paralle` in addition.
@@ -150,7 +150,7 @@ export CUDA_VISIBLE_DEVICES=2,3,4,5    # The IDs of visible physical devices
 python -m paddle.distributed.launch \
     --selected_gpus=0,1,2,3 --log_dir ${multi_gpu_log_dir} \
     train.py --data-root=${data-root} \
-    --use-gpu --use-data-parallel \ # enable parallel here
+    --use-gpu --use-data-parallel \
     --preset=${preset_json_path} \
     --hparams="parameters you may want to override"
 ```
