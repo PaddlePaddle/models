@@ -7,7 +7,7 @@ use_gpu: true
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_64x4d_pretrained.tar
 weights: output/retinanet_x101_vd_64x4d_fpn_1x/model_final
 inference_shape: [3, 800, 1333]
-inference_vars: ['image', 'im_info', 'im_shape']
+inference_vars: ['image', 'im_info']
 log_smooth_window: 20
 log_iter: 20
 snapshot_iter: 30000
@@ -149,11 +149,6 @@ EvalDataLoader:
     - padded_height
     - padded_width
     - scale
-  - name: im_shape
-    fields:
-    - orig_height
-    - orig_width
-    - 1.
   extra_vars:
   - id
   sample_transforms:
@@ -188,11 +183,6 @@ TestDataLoader:
     - padded_height
     - padded_width
     - scale
-  - name: im_shape
-    fields:
-    - orig_height
-    - orig_width
-    - 1.
   extra_vars:
   - file
   sample_transforms:

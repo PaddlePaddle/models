@@ -4,7 +4,7 @@ use_gpu: true
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos_pretrained.tar
 weights: output/retinanet_r50_fpn_1x/model_final
 inference_shape: [3, 800, 1333]
-inference_vars: ['image', 'im_info', 'im_shape']
+inference_vars: ['image', 'im_info']
 log_smooth_window: 20
 snapshot_iter: 10000
 metric: COCO
@@ -143,11 +143,6 @@ EvalDataLoader:
     - padded_height
     - padded_width
     - scale
-  - name: im_shape
-    fields:
-    - orig_height
-    - orig_width
-    - 1.
   extra_vars:
   - id
   sample_transforms:
@@ -182,11 +177,6 @@ TestDataLoader:
     - padded_height
     - padded_width
     - scale
-  - name: im_shape
-    fields:
-    - orig_height
-    - orig_width
-    - 1.
   extra_vars:
   - file
   sample_transforms:
