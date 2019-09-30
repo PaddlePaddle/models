@@ -58,14 +58,13 @@ class SSD(object):
 
     def build(self, mode='train', image_shape=None):
         if image_shape is None:
-            image_shape = [3, 300, 300]
-        im = fluid.layers.data(
-            name='image', shape=image_shape, dtype='float32')
+            image_shape = [-1, 3, -1, -1]
+        im = fluid.data(name='image', shape=image_shape, dtype='float32')
         if mode == 'train':
-            gt_box = fluid.layers.data(
-                name='gt_box', shape=[4], dtype='float32', lod_level=1)
-            gt_label = fluid.layers.data(
-                name='gt_label', shape=[1], dtype='int32', lod_level=1)
+            gt_box = fluid.data(
+                name='gt_box', shape=[-1, 4], dtype='float32', lod_level=1)
+            gt_label = fluid.data(
+                name='gt_label', shape=[-1, 1], dtype='int32', lod_level=1)
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
         # cast inputs to FP16

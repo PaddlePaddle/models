@@ -46,9 +46,8 @@ class YOLOv3(object):
 
     def build(self, mode='train', image_shape=None):
         if image_shape is None:
-            image_shape = [3, 608, 608]
-        im = fluid.layers.data(
-            name='image', shape=image_shape, dtype='float32')
+            image_shape = [-1, 3, -1, -1]
+        im = fluid.data(name='image', shape=image_shape, dtype='float32')
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
 
@@ -67,20 +66,19 @@ class YOLOv3(object):
             body_feats = [fluid.layers.cast(v, 'float32') for v in body_feats]
 
         if mode == 'train':
-            gt_box = fluid.layers.data(
-                name='gt_box', shape=[50, 4], dtype='float32')
-            gt_label = fluid.layers.data(
-                name='gt_label', shape=[50], dtype='int32')
-            gt_score = fluid.layers.data(
-                name='gt_score', shape=[50], dtype='float32')
+            gt_box = fluid.data(
+                name='gt_box', shape=[-1, 50, 4], dtype='float32')
+            gt_label = fluid.data(
+                name='gt_label', shape=[-1, 50], dtype='int32')
+            gt_score = fluid.data(
+                name='gt_score', shape=[-1, 50], dtype='float32')
 
             return {
                 'loss': self.yolo_head.get_loss(body_feats, gt_box, gt_label,
                                                 gt_score)
             }
         else:
-            im_size = fluid.layers.data(
-                name='im_size', shape=[2], dtype='int32')
+            im_size = fluid.data(name='im_size', shape=[-1, 2], dtype='int32')
             return self.yolo_head.get_prediction(body_feats, im_size)
 
     def train(self):
