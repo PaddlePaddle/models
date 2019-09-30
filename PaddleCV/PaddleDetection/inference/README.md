@@ -142,7 +142,16 @@ DEPLOY:
 | input_dir | 需要预测的图片目录 |
 
 
-配置文件说明请参考上一步，样例程序会扫描input_dir目录下的所有图片，并生成对应的预测结果到屏幕，并保存到results.txt.可使用工具脚本xxx.py将检测结果可视化。
+配置文件说明请参考上一步，样例程序会扫描input_dir目录下的所有图片，并生成对应的预测结果到屏幕，并保存到X.pb文件（X为对应图片的文件名）. 可使用工具脚本detection_visualization.py将检测结果可视化。
+
+```bash 
+python detection_visualization.py img img.pb
+```
 
 检测结果（每个图片的结果用空行隔开）
-![检测结果](./demo_images/demo.png)
+
+```原图：```
+![原图](./demo_images/00000001.jpg)
+
+```检测结果图：```
+![检测结果](./demo_images/00000001.jpg.png)
