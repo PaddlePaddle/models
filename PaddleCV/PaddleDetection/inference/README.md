@@ -26,7 +26,7 @@ deploy
 │   ├── detection # 示例yolov3目标检测测试图片目录
 │   └── detection_rcnn # 示例faster rcnn + fpn目标检测测试图片目录
 ├── tools
-│   └── visualize.py # 示例人像分割模型结果可视化脚本
+│   └── detection_visualization.py # 示例图像检测结果可视化脚本
 ├── docs
 │   ├── linux_build.md # Linux 编译指南
 │   ├── windows_vs2015_build.md # windows VS2015编译指南
