@@ -221,7 +221,7 @@ YOLOv3 detection principle
 
 ### Model structure
 
-YOLOv3 divides the input image in to S\*S grids and predict B bounding boxes in each grid, predictions of boxes include Location(x, y, w, h), Confidence Score and probabilities of C classes, therefore YOLOv3 output layer has S\*S\*B\*(5 + C) channels. YOLOv3 loss consists of three parts: location loss, confidence loss and classification loss.
+YOLOv3 divides the input image in to S\*S grids and predict B bounding boxes in each grid, predictions of boxes include Location(x, y, w, h), Confidence Score and probabilities of C classes, therefore YOLOv3 output layer has B\*(5 + C) channels. YOLOv3 loss consists of three parts: location loss, confidence loss and classification loss.
 The bone network of YOLOv3 is darknet53, the structure of YOLOv3 is as follow:
 <p align="center">
 <img src="image/YOLOv3_structure.jpg" height=400 width=400 hspace='10'/> <br />

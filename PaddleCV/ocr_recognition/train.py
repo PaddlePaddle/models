@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Trainer for OCR CTC or attention model."""
 from __future__ import absolute_import
 from __future__ import division
@@ -19,26 +32,33 @@ import numpy as np
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
-add_arg('batch_size',        int,   32,         "Minibatch size.")
-add_arg('total_step',        int,   720000,    "The number of iterations. Zero or less means whole training set. More than 0 means the training set might be looped until # of iterations is reached.")
-add_arg('log_period',        int,   1000,       "Log period.")
-add_arg('save_model_period', int,   15000,      "Save model period. '-1' means never saving the model.")
-add_arg('eval_period',       int,   15000,      "Evaluate period. '-1' means never evaluating the model.")
-add_arg('save_model_dir',    str,   "./models", "The directory the model to be saved to.")
-add_arg('train_images',      str,   None,       "The directory of images to be used for training.")
-add_arg('train_list',        str,   None,       "The list file of images to be used for training.")
-add_arg('test_images',       str,   None,       "The directory of images to be used for test.")
-add_arg('test_list',         str,   None,       "The list file of images to be used for training.")
-add_arg('model',    str,   "crnn_ctc",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
-add_arg('init_model',        str,   None,       "The init model file of directory.")
-add_arg('use_gpu',           bool,  True,      "Whether use GPU to train.")
-add_arg('min_average_window',int,   10000,     "Min average window.")
-add_arg('max_average_window',int,   12500,     "Max average window. It is proposed to be set as the number of minibatch in a pass.")
-add_arg('average_window',    float, 0.15,      "Average window.")
-add_arg('parallel',          bool,  False,     "Whether use parallel training.")
-add_arg('profile',           bool,  False,      "Whether to use profiling.")
-add_arg('skip_batch_num',    int,   0,          "The number of first minibatches to skip as warm-up for better performance test.")
-add_arg('skip_test',         bool,  False,      "Whether to skip test phase.")
+add_arg('batch_size',        int,     32,         "Minibatch size.")
+
+add_arg('lr',                float,   1e-3,         "Learning rate.")
+add_arg('lr_decay_strategy', str,     None,         "Learning rate decay strategy. 'piecewise_decay' or None is valid.")
+add_arg('l2decay',           float,   4e-4,         "L2 decay rate.")
+add_arg('momentum',          float,   0.9,         "Momentum rate.")
+add_arg('gradient_clip',     float,   10.0,         "The threshold of gradient clipping.")
+
+add_arg('total_step',        int,     720000,    "The number of iterations. Zero or less means whole training set. More than 0 means the training set might be looped until # of iterations is reached.")
+add_arg('log_period',        int,     1000,       "Log period.")
+add_arg('save_model_period', int,     15000,      "Save model period. '-1' means never saving the model.")
+add_arg('eval_period',       int,     15000,      "Evaluate period. '-1' means never evaluating the model.")
+add_arg('save_model_dir',    str,     "./models", "The directory the model to be saved to.")
+add_arg('train_images',      str,     None,       "The directory of images to be used for training.")
+add_arg('train_list',        str,     None,       "The list file of images to be used for training.")
+add_arg('test_images',       str,     None,       "The directory of images to be used for test.")
+add_arg('test_list',         str,     None,       "The list file of images to be used for training.")
+add_arg('model',             str,     "crnn_ctc",           "Which type of network to be used. 'crnn_ctc' or 'attention'")
+add_arg('init_model',        str,     None,       "The init model file of directory.")
+add_arg('use_gpu',           bool,    True,      "Whether use GPU to train.")
+add_arg('min_average_window',int,     10000,     "Min average window.")
+add_arg('max_average_window',int,     12500,     "Max average window. It is proposed to be set as the number of minibatch in a pass.")
+add_arg('average_window',    float,   0.15,      "Average window.")
+add_arg('parallel',          bool,    False,     "Whether use parallel training.")
+add_arg('profile',           bool,    False,      "Whether to use profiling.")
+add_arg('skip_batch_num',    int,     0,          "The number of first minibatches to skip as warm-up for better performance test.")
+add_arg('skip_test',         bool,    False,      "Whether to skip test phase.")
 # yapf: enable
 
 
@@ -118,12 +138,13 @@ def train(args):
         for data in test_reader():
             exe.run(inference_program, feed=get_feeder_data(data, place))
         _, test_seq_error = error_evaluator.eval(exe)
-        print("\nTime: %s; Iter[%d]; Test seq error: %s.\n" %
-              (time.time(), iter_num, str(test_seq_error[0])))
+        print("\n[%s] - Iter[%d]; Test seq error: %s.\n" %
+              (time.asctime( time.localtime(time.time())), iter_num, str(test_seq_error[0])))
 
         #Note: The following logs are special for CE monitoring.
         #Other situations do not need to care about these logs.
-        print("kpis	test_acc	%f" % (1 - test_seq_error[0]))
+        if 'ce_mode' in os.environ:
+            print("kpis	test_acc	%f" % (1 - test_seq_error[0]))
 
     def save_model(args, exe, iter_num):
         filename = "model_%05d" % iter_num
@@ -158,14 +179,15 @@ def train(args):
             iter_num += 1
             # training log
             if iter_num % args.log_period == 0:
-                print("\nTime: %s; Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f"
-                      % (time.time(), iter_num,
+                print("\n[%s] - Iter[%d]; Avg loss: %.3f; Avg seq err: %.3f"
+                      % (time.asctime( time.localtime(time.time())), iter_num,
                          total_loss / (args.log_period * args.batch_size),
                          total_seq_error / (args.log_period * args.batch_size)))
-                print("kpis	train_cost	%f" % (total_loss / (args.log_period *
+                if 'ce_mode' in os.environ:
+                    print("kpis	train_cost	%f" % (total_loss / (args.log_period *
                                                             args.batch_size)))
-                print("kpis	train_acc	%f" % (
-                    1 - total_seq_error / (args.log_period * args.batch_size)))
+                    print("kpis	train_acc	%f" % (
+                        1 - total_seq_error / (args.log_period * args.batch_size)))
                 total_loss = 0.0
                 total_seq_error = 0.0
 
@@ -185,7 +207,8 @@ def train(args):
                 else:
                     save_model(args, exe, iter_num)
         end_time = time.time()
-        print("kpis	train_duration	%f" % (end_time - start_time))
+        if 'ce_mode' in os.environ:
+            print("kpis	train_duration	%f" % (end_time - start_time))
         # Postprocess benchmark data
         latencies = batch_times[args.skip_batch_num:]
         latency_avg = np.average(latencies)

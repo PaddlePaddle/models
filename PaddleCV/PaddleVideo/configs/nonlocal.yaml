@@ -1,0 +1,94 @@
+MODEL:
+    name: "NONLOCAL"
+    num_classes: 400
+    image_mean: 114.75
+    image_std: 57.375
+    depth: 50
+    dataset: 'kinetics400'
+    video_arc_choice: 1
+    use_affine: False
+    fc_init_std: 0.01
+    bn_momentum: 0.9
+    bn_epsilon: 1.0e-5
+    bn_init_gamma: 0.
+
+RESNETS:
+    num_groups: 1
+    width_per_group: 64
+    trans_func: bottleneck_transformation_3d
+
+NONLOCAL:
+    bn_momentum: 0.9
+    bn_epsilon: 1.0e-5
+    bn_init_gamma: 0.0
+    layer_mod: 2
+    conv3_nonlocal: True
+    conv4_nonlocal: True
+    conv_init_std: 0.01
+    no_bias: 0
+    use_maxpool: True
+    use_softmax: True
+    use_scale: True
+    use_zero_init_conv: False
+    use_bn: True
+    use_affine: False
+
+TRAIN:
+    epoch: 120
+    num_reader_threads: 8
+    batch_size: 64
+    num_gpus: 8
+    filelist: './data/dataset/nonlocal/trainlist.txt'
+    crop_size: 224
+    sample_rate: 8
+    video_length: 8
+    jitter_scales: [256, 320]
+
+    dropout_rate: 0.5
+    learning_rate: 0.01
+    learning_rate_decay: 0.1
+    step_sizes: [150000, 150000, 100000]
+    max_iter: 400000
+
+    weight_decay: 0.0001
+    weight_decay_bn: 0.0
+    momentum: 0.9
+    nesterov: True
+    scale_momentum: True
+
+VALID:
+    num_reader_threads: 8
+    batch_size: 64
+    filelist: './data/dataset/nonlocal/vallist.txt'
+    crop_size: 224
+    sample_rate: 8
+    video_length: 8
+    jitter_scales: [256, 320]
+
+TEST:
+    num_reader_threads: 8
+    batch_size: 4
+    filelist: './data/dataset/nonlocal/testlist.txt'
+    filename_gt: './data/dataset/nonlocal/vallist.txt'
+    checkpoint_dir: './output'
+    crop_size: 256
+    sample_rate: 8
+    video_length: 8
+    jitter_scales: [256, 256]
+    num_test_clips: 30
+    dataset_size: 19761
+    use_multi_crop: 1
+
+INFER:
+    num_reader_threads: 1
+    batch_size: 1
+    filelist: './data/dataset/nonlocal/inferlist.txt'
+    checkpoint_dir: './output'
+    crop_size: 256
+    sample_rate: 8
+    video_length: 8
+    jitter_scales: [256, 256]
+    num_test_clips: 30
+    use_multi_crop: 1
+    video_path: ""
+    kinetics_labels: "./data/dataset/kinetics_labels.json"

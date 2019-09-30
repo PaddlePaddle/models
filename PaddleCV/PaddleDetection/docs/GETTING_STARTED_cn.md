@@ -38,27 +38,45 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml -o use_gpu=false
 - `--eval`: 是否边训练边测试，默认是 `False`
 - `--output_eval`: 如果边训练边测试, 这个参数可以编辑评测保存json路径, 默认是当前目录。
 - `-d` or `--dataset_dir`: 数据集路径, 同配置文件里的`dataset_dir`. 例如: `-d dataset/coco`
-- `-o`: 设置配置文件里的参数内容。 例如: `-o weights=output/faster_rcnn_r50_1x/model_final`
+- `-c`: 选择配置文件，所有配置文件在`configs/`中
+- `-o`: 设置配置文件里的参数内容。例如: `-o max_iters=180000`。使用`-o`配置相较于`-c`选择的配置文件具有更高的优先级。
+- `--use_tb`: 是否使用[tb-paddle](https://github.com/linshuliang/tb-paddle)记录数据，进而在TensorBoard中显示，默认是False。
+- `--tb_log_dir`: 指定 tb-paddle 记录数据的存储路径，默认是`tb_log_dir/scalar`。
 
 ##### 例子
 
 - 边训练边测试
+
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export PYTHONPATH=$PYTHONPATH:.
 python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml --eval
 ```
-可通过设置`--eval`在训练epoch中交替执行评估, 评估在每个snapshot_iter时开始。可在配置文件的`snapshot_iter`处修改。
-如果验证集很大，测试将会比较耗时，影响训练速度，建议减少评估次数，或训练完再进行评估。当边训练边测试时，在每次snapshot_iter会评测出最佳mAP模型保存到
+
+可通过设置`--eval`在训练epoch中交替执行评估, 评估在每个snapshot\_iter时开始。可在配置文件的`snapshot_iter`处修改。
+如果验证集很大，测试将会比较耗时，影响训练速度，建议减少评估次数，或训练完再进行评估。
+当边训练边测试时，在每次snapshot\_iter会评测出最佳mAP模型保存到
 `best_model`文件夹下，`best_model`的路径和`model_final`的路径相同。
 
-- 设置配置文件参数 && 指定数据集路径
+- 指定数据集路径
+
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export PYTHONPATH=$PYTHONPATH:.
 python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
-                         -o weights=output/faster_rcnn_r50_1x/model_final \
                          -d dataset/coco
+```
+
+- Fine-tune其他任务
+
+使用预训练模型fine-tune其他任务时，在YAML配置文件中设置`finetune_exclude_pretrained_params`或在命令行中添加`-o finetune_exclude_pretrained_params`对预训练模型进行选择性加载。
+
+```bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export PYTHONPATH=$PYTHONPATH:.
+python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
+                         -o pretrain_weights=output/faster_rcnn_r50_1x/model_final/ \
+                            finetune_exclude_pretrained_params = ['cls_score','bbox_pred']
 ```
 
 ##### 提示
@@ -68,6 +86,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 - 若本地未找到数据集，将自动下载数据集并保存在`~/.cache/paddle/dataset`中。
 - 预训练模型自动下载并保存在`〜/.cache/paddle/weights`中。
 - 模型checkpoints默认保存在`output`中（可配置）。
+- 进行模型fine-tune时，用户可将`pretrain_weights`配置为PaddlePaddle发布的模型，加载模型时finetune_exclude_pretrained_params中的字段匹配的参数不被加载，可以为通配符匹配方式。详细说明请参考[Transfer Learning](TRANSFER_LEARNING_cn.md)
 - 更多参数配置，请参考[配置文件](../configs)。
 - RCNN系列模型CPU训练在PaddlePaddle 1.5.1及以下版本暂不支持，将在下个版本修复。
 
@@ -91,7 +110,7 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 
 #### 例子
 
-- 设置配置文件参数 && 指定数据集路径
+- 指定数据集路径
 ```bash
 # GPU评估
 export CUDA_VISIBLE_DEVICES=0
@@ -144,11 +163,14 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_dir=demo
 
 - `--output_dir`: 输出推断后可视化文件。
 - `--draw_threshold`: 设置推断的阈值。默认是0.5.
-- `--save_inference_model`: 设为`True`时，将预测模型保存到output_dir中.
+- `--save_inference_model`: 设为`True`时，将预测模型保存到output\_dir中.
+- `--use_tb`: 是否使用[tb-paddle](https://github.com/linshuliang/tb-paddle)记录数据，进而在TensorBoard中显示，默认是False。
+- `--tb_log_dir`: 指定 tb-paddle 记录数据的存储路径，默认是`tb_log_dir/image`。
 
 #### 例子
 
 - 设置输出路径 && 设置推断阈值
+
 ```bash
 # GPU推断
 export CUDA_VISIBLE_DEVICES=0
@@ -157,12 +179,15 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml \
                       --infer_img=demo/000000570688.jpg \
                       --output_dir=infer_output/ \
                       --draw_threshold=0.5 \
-                      -o weights=output/faster_rcnn_r50_1x/model_final
+                      -o weights=output/faster_rcnn_r50_1x/model_final \
+                      --use_tb=True
 ```
 
 
 可视化文件默认保存在`output`中，可通过`--output_dir=`指定不同的输出路径。  
-`--draw_threshold` 是个可选参数. 根据 [NMS](https://ieeexplore.ieee.org/document/1699659) 的计算，不同阈值会产生不同的结果。如果用户需要对自定义路径的模型进行推断，可以设置`-o weights`指定模型路径。
+`--draw_threshold` 是个可选参数. 根据 [NMS](https://ieeexplore.ieee.org/document/1699659) 的计算，
+不同阈值会产生不同的结果。如果用户需要对自定义路径的模型进行推断，可以设置`-o weights`指定模型路径。
+`--use_tb`是个可选参数，当为`True`时，可使用 TensorBoard 来可视化参数的变化趋势和图片。
 
 - 保存推断模型
 
@@ -195,3 +220,8 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 **A:**  可通过设置环境变量`FLAGS_conv_workspace_size_limit`为较小的值来减少显存消耗，并且不
 会影响训练速度。以Mask-RCNN（R50）为例，设置`export FLAGS_conv_workspace_size_limit = 512`，
 batch size可以达到每GPU 4 (Tesla V100 16GB)。
+
+
+**Q:**  如何修改数据预处理? </br>
+**A:**  可在配置文件中设置 `sample_transform`。注意需要在配置文件中加入**完整预处理**
+例如RCNN模型中`DecodeImage`, `NormalizeImage` and `Permute`。更多详细描述请参考[配置案例](config_example)。

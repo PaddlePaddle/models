@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -29,6 +42,10 @@ class GTrainer():
                         x=image_real, y=self.rec_img)))
             self.pred_fake, self.cls_fake = model.network_D(
                 self.fake_img, cfg, name="d_main")
+            if cfg.gan_mode != 'wgan':
+                raise NotImplementedError(
+                    "gan_mode {} is not support! only support wgan".format(
+                        cfg.gan_mode))
             #wgan
             self.g_loss_fake = -1 * fluid.layers.mean(self.pred_fake)
 
@@ -91,6 +108,10 @@ class DTrainer():
             self.d_loss_cls = fluid.layers.reduce_sum(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     self.cls_real, label_org)) / cfg.batch_size
+            if cfg.gan_mode != 'wgan':
+                raise NotImplementedError(
+                    "gan_mode {} is not support! only support wgan".format(
+                        cfg.gan_mode))
             #wgan
             self.d_loss_fake = fluid.layers.mean(self.pred_fake)
             self.d_loss_real = -1 * fluid.layers.mean(self.pred_real)
@@ -260,7 +281,10 @@ class StarGAN(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
-        py_reader.decorate_batch_generator(self.train_reader, places=place)
+        py_reader.decorate_batch_generator(
+            self.train_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -270,7 +294,6 @@ class StarGAN(object):
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
@@ -333,7 +356,9 @@ class StarGAN(object):
                     iterable=True,
                     use_double_buffer=True)
                 test_py_reader.decorate_batch_generator(
-                    self.test_reader, places=place)
+                    self.test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
                                         test_program, gen_trainer,

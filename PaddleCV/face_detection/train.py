@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -43,7 +56,6 @@ add_arg('model_save_dir',   str,   'output',        "The path to save model.")
 add_arg('resize_h',         int,   640,             "The resized image height.")
 add_arg('resize_w',         int,   640,             "The resized image width.")
 add_arg('mean_BGR',         str,   '104., 117., 123.', "Mean value for B,G,R channel which will be subtracted.")
-add_arg('with_mem_opt',     bool,  True,            "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str,   './vgg_ilsvrc_16_fc_reduced/', "The init model path.")
 add_arg('data_dir',         str,   'data',          "The base dir of dataset")
 add_arg('use_multiprocess', bool,  True,            "Whether use multi-process for data preprocessing.")
@@ -125,7 +137,6 @@ def train(args, config, train_params, train_file_list):
     use_gpu = args.use_gpu
     model_save_dir = args.model_save_dir
     pretrained_model = args.pretrained_model
-    with_memory_optimization = args.with_mem_opt
 
     devices = os.getenv("CUDA_VISIBLE_DEVICES") or ""
     devices_num = len(devices.split(","))
@@ -152,9 +163,6 @@ def train(args, config, train_params, train_file_list):
         main_prog = train_prog,
         startup_prog = startup_prog,
         args=args)
-
-    if with_memory_optimization:
-        fluid.memory_optimize(train_prog)
 
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

@@ -80,11 +80,12 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
     print("Load model from {}".format(init_checkpoint_path))
 
     
-def data_reader(file_path, word_dict, num_examples, phrase, epoch):
+def data_reader(file_path, word_dict, num_examples, phrase, epoch, max_seq_len):
     """
     Convert word sequence into slot
     """
     unk_id = len(word_dict)
+    pad_id = 0
     all_data = []
     with io.open(file_path, "r", encoding='utf8') as fin:
         for line in fin:
@@ -97,7 +98,14 @@ def data_reader(file_path, word_dict, num_examples, phrase, epoch):
             label = int(cols[1])
             wids = [word_dict[x] if x in word_dict else unk_id
                     for x in cols[0].split(" ")]
-            all_data.append((wids, label))
+            seq_len = len(wids)
+            if seq_len < max_seq_len:
+                for i in range(max_seq_len - seq_len):
+                    wids.append(pad_id)
+            else:
+                wids = wids[:max_seq_len]
+                seq_len = max_seq_len
+            all_data.append((wids, label, seq_len))
 
     if phrase == "train":
         random.shuffle(all_data)
@@ -109,8 +117,8 @@ def data_reader(file_path, word_dict, num_examples, phrase, epoch):
         Reader Function
         """
         for epoch_index in range(epoch):
-            for doc, label in all_data:
-                yield doc, label
+            for doc, label, seq_len in all_data:
+                yield doc, label, seq_len
     return reader
 
 def load_vocab(file_path):

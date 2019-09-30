@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # --coding=utf-8
 """
 SimNet utilities.
@@ -16,6 +29,7 @@ import paddle.fluid as fluid
 """
 ******functions for file processing******
 """
+
 
 def load_vocab(file_path):
     """
@@ -47,7 +61,8 @@ def get_result_file(args):
     """
     with codecs.open(args.test_data_dir, "r", "utf-8") as test_file:
         with codecs.open("predictions.txt", "r", "utf-8") as predictions_file:
-            with codecs.open(args.test_result_path, "w", "utf-8") as test_result_file:
+            with codecs.open(args.test_result_path, "w",
+                             "utf-8") as test_result_file:
                 test_datas = [line.strip("\n") for line in test_file]
                 predictions = [line.strip("\n") for line in predictions_file]
                 for test_data, prediction in zip(test_datas, predictions):
@@ -287,7 +302,7 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
     """
     assert os.path.exists(
         init_checkpoint_path), "[%s] cann't be found." % init_checkpoint_path
-    
+
     def existed_persitables(var):
         if not fluid.io.is_persistable(var):
             return False
@@ -299,4 +314,3 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
         main_program=main_program,
         predicate=existed_persitables)
     print("Load model from {}".format(init_checkpoint_path))
-

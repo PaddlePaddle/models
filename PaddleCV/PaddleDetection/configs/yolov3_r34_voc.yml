@@ -8,6 +8,7 @@ log_smooth_window: 20
 save_dir: output
 snapshot_iter: 2000
 metric: VOC
+map_type: 11point
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet34_pretrained.tar
 weights: output/yolov3_r34_voc/model_final
 num_classes: 20
@@ -74,6 +75,7 @@ YoloTrainFeed:
 
 YoloEvalFeed:
   batch_size: 8
+  image_shape: [3, 608, 608]
   dataset:
     dataset_dir: dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
@@ -82,5 +84,6 @@ YoloEvalFeed:
 
 YoloTestFeed:
   batch_size: 1
+  image_shape: [3, 608, 608]
   dataset:
     use_default_label: true

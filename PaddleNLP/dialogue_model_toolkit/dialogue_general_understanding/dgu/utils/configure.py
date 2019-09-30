@@ -95,8 +95,6 @@ class ArgConfig(object):
         )
         train_g.add_arg("save_steps", int, 1000,
                         "The steps interval to save checkpoints.")
-        train_g.add_arg("use_fp16", bool, False,
-                        "Whether to use fp16 mixed precision training.")
         train_g.add_arg(
             "loss_scaling", float, 1.0,
             "Loss scaling factor for mixed precision training, only valid when use_fp16 is enabled."

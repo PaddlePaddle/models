@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # -*- coding: UTF-8 -*-
 """
 evaluate wordseg for LAC and other open-source wordseg tools
@@ -20,7 +33,7 @@ def to_unicode(string):
 def to_set(words):
     """ cut list to set of (string, off) """
     off = 0
-    s= set()
+    s = set()
     for w in words:
         if w:
             s.add((off, w))
@@ -145,7 +158,7 @@ def get_pkuseg_result(sentences):
     seg = pkuseg.pkuseg()
     preds = []
     for sentence in sentences:
-        sent_seg  = " ".join(seg.cut(sentence))
+        sent_seg = " ".join(seg.cut(sentence))
         sent_seg = to_unicode(sent_seg)
         preds.append(sent_seg)
     return preds
@@ -161,7 +174,8 @@ def get_hanlp_result(sentences):
     preds = []
     for sentence in sentences:
         arraylist = HanLP.segment(sentence)
-        sent_seg = " ".join([term.toString().split("/")[0] for term in arraylist])
+        sent_seg = " ".join(
+            [term.toString().split("/")[0] for term in arraylist])
         sent_seg = to_unicode(sent_seg)
         preds.append(sent_seg)
     return preds

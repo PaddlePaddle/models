@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import os
 import time
+import sys
 import argparse
 import numpy as np
 import multiprocessing
@@ -52,8 +53,16 @@ train_g.add_arg("warmup_steps",      int,    4000,    "Total steps to perform wa
 train_g.add_arg("save_steps",        int,    10000,   "The steps interval to save checkpoints.")
 train_g.add_arg("validation_steps",  int,    1000,    "The steps interval to evaluate model performance.")
 train_g.add_arg("use_fp16",          bool,   False,   "Whether to use fp16 mixed precision training.")
-train_g.add_arg("loss_scaling",      float,  1.0,
+train_g.add_arg("use_dynamic_loss_scaling",    bool,   True,   "Whether to use dynamic loss scaling in mixed precision training.")
+train_g.add_arg("init_loss_scaling",           float,  2**32,
                 "Loss scaling factor for mixed precision training, only valid when use_fp16 is enabled.")
+train_g.add_arg("incr_every_n_steps",          int,    1000,   "Increases loss scaling every n consecutive.")
+train_g.add_arg("decr_every_n_nan_or_inf",     int,    2,
+                "Decreases loss scaling every n accumulated steps with nan or inf gradients.")
+train_g.add_arg("incr_ratio",                  float,  2.0,
+                "The multiplier to use when increasing the loss scaling.")
+train_g.add_arg("decr_ratio",                  float,  0.8,
+                "The less-than-one-multiplier to use when decreasing.")
 
 log_g = ArgumentGroup(parser,     "logging", "logging related.")
 log_g.add_arg("skip_steps",          int,    10,    "The steps interval to print loss.")
@@ -112,9 +121,6 @@ def create_model(bert_config):
 
     next_sent_acc, mask_lm_loss, total_loss = bert.get_pretraining_output(
         mask_label, mask_pos, labels)
-
-    if args.use_fp16 and args.loss_scaling > 1.0:
-        total_loss *= args.loss_scaling
 
     return pyreader, next_sent_acc, mask_lm_loss, total_loss
 
@@ -220,7 +226,7 @@ def train(args):
         with fluid.unique_name.guard():
             train_pyreader, next_sent_acc, mask_lm_loss, total_loss = create_model(
                 bert_config=bert_config)
-            scheduled_lr = optimization(
+            scheduled_lr, loss_scaling = optimization(
                 loss=total_loss,
                 warmup_steps=args.warmup_steps,
                 num_train_steps=args.num_train_steps,
@@ -230,7 +236,12 @@ def train(args):
                 weight_decay=args.weight_decay,
                 scheduler=args.lr_scheduler,
                 use_fp16=args.use_fp16,
-                loss_scaling=args.loss_scaling)
+                use_dynamic_loss_scaling=args.use_dynamic_loss_scaling,
+                init_loss_scaling=args.init_loss_scaling,
+                incr_every_n_steps=args.incr_every_n_steps,
+                decr_every_n_nan_or_inf=args.decr_every_n_nan_or_inf,
+                incr_ratio=args.incr_ratio,
+                decr_ratio=args.decr_ratio)
 
     test_prog = fluid.Program()
     with fluid.program_guard(test_prog, startup_prog):
@@ -311,7 +322,10 @@ def train(args):
     exec_strategy.num_iteration_per_drop_scope = args.num_iteration_per_drop_scope
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.num_trainers = nccl2_num_trainers
+    if not sys.platform == "win32":
+        build_strategy.num_trainers = nccl2_num_trainers
+    elif  nccl2_num_trainers > 1:
+        raise ValueError("Windows platform doesn't support distributed training!")
     build_strategy.trainer_id = nccl2_trainer_id
     # use_ngraph is for CPU only, please refer to README_ngraph.md for details
     use_ngraph = os.getenv('FLAGS_use_ngraph')
@@ -341,7 +355,7 @@ def train(args):
     time_begin = time.time()
     while steps < args.num_train_steps:
         try:
-            steps += nccl2_num_trainers
+            steps += 1
             skip_steps = args.skip_steps * nccl2_num_trainers
 
             if nccl2_trainer_id != 0:
@@ -351,34 +365,45 @@ def train(args):
                     exe.run(fetch_list=[], program=train_compiled_program)
                 continue
 
-            if steps % skip_steps != 0:
+            if steps % args.skip_steps != 0:
                 if use_ngraph:
                     exe.run(fetch_list=[], program=train_program)
                 else:
                     exe.run(fetch_list=[], program=train_compiled_program)
 
             else:
+                fetch_list=[next_sent_acc.name, mask_lm_loss.name, total_loss.name,
+                        scheduled_lr.name]
+                if args.use_fp16:
+                    fetch_list.append(loss_scaling.name)
+
                 if use_ngraph:
-                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = exe.run(
-                        fetch_list=[
-                            next_sent_acc.name, mask_lm_loss.name, total_loss.name,
-                            scheduled_lr.name], program=train_program)
+                    outputs = exe.run(
+                        fetch_list=fetch_list, program=train_program)
                 else:
-                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = exe.run(
-                        fetch_list=[
-                            next_sent_acc.name, mask_lm_loss.name, total_loss.name,
-                            scheduled_lr.name], program=train_compiled_program)
+                    outputs = exe.run(
+                        fetch_list=fetch_list, program=train_compiled_program)
+
+                if args.use_fp16:
+                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr, np_scaling = outputs
+                else:
+                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = outputs
 
                 acc.extend(each_next_acc)
                 lm_cost.extend(each_mask_lm_cost)
                 cost.extend(each_total_cost)
 
-                print("feed_queue size", train_pyreader.queue.size())
                 time_end = time.time()
                 used_time = time_end - time_begin
                 epoch, current_file_index, total_file, current_file = data_reader.get_progress(
                 )
-                print("current learning_rate:%f" % np_lr[0])
+                if args.verbose:
+                    verbose = "feed_queue size: %d, " %train_pyreader.queue.size()
+                    verbose += "current learning_rate: %f, " % np_lr[0]
+                    if args.use_fp16:
+                        verbose += "loss scaling: %f" % np_scaling[0]
+                    print(verbose)
+
                 print("epoch: %d, progress: %d/%d, step: %d, loss: %f, "
                       "ppl: %f, next_sent_acc: %f, speed: %f steps/s, file: %s"
                       % (epoch, current_file_index, total_file, steps,

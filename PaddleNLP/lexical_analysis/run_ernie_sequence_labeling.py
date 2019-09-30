@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Baidu's open-source Lexical Analysis tool for Chinese, including:
     1. Word Segmentation,
@@ -52,9 +65,6 @@ def evaluate(exe, test_program, test_pyreader, test_ret):
 
     print("\t[test] loss: %.5f, P: %.5f, R: %.5f, F1: %.5f, elapsed time: %.3f s"
         % (np.mean(total_loss), precision, recall, f1, end_time - start_time))
-
-
-
 
 def do_train(args):
     """
