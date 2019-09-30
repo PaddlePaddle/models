@@ -141,7 +141,7 @@ def eval_results(results,
             if output_directory:
                 output = os.path.join(output_directory, 'mask.json')
             mask_eval(results, anno_file, output, resolution)
-    else:
+    elif metric == 'VOC':
         if 'accum_map' in results[-1]:
             res = np.mean(results[-1]['accum_map'][0])
             logger.info('mAP: {:.2f}'.format(res * 100.))
@@ -153,6 +153,9 @@ def eval_results(results,
                 is_bbox_normalized=is_bbox_normalized,
                 map_type=map_type)
             box_ap_stats.append(box_ap)
+    elif metric == 'WIDERFACE':
+        from ppdet.utils.widerface_eval_utils import exe_face_eval_results
+        box_ap_stats = exe_face_eval_results(results, output_directory)
     return box_ap_stats
 
 
