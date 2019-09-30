@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import argparse
 import ast
 import copy
@@ -113,11 +126,6 @@ def parse_args():
         default=False,
         help="The flag indicating whether to run the task "
         "for continuous evaluation.")
-    parser.add_argument(
-        "--use_mem_opt",
-        type=ast.literal_eval,
-        default=True,
-        help="The flag indicating whether to use memory optimization.")
     parser.add_argument(
         "--use_py_reader",
         type=ast.literal_eval,
@@ -681,9 +689,6 @@ def train(args):
             else:
                 optimizer = fluid.optimizer.SGD(0.003)
             optimizer.minimize(avg_cost)
-
-    if args.use_mem_opt:
-        fluid.memory_optimize(train_prog)
 
     if args.local:
         logging.info("local start_up:")

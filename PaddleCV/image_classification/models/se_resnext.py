@@ -27,23 +27,9 @@ __all__ = [
     "SE_ResNeXt152_32x4d"
 ]
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "dropout_seed": None,
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [40, 80, 100],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
-
 
 class SE_ResNeXt():
     def __init__(self, layers=50):
-        self.params = train_parameters
         self.layers = layers
 
     def net(self, input, class_dim=1000):
@@ -134,13 +120,8 @@ class SE_ResNeXt():
                     name=str(n) + '_' + str(i + 1))
 
         pool = fluid.layers.pool2d(
-            input=conv,
-            pool_size=7,
-            pool_type='avg',
-            global_pooling=True,
-            use_cudnn=False)
-        drop = fluid.layers.dropout(
-            x=pool, dropout_prob=0.5, seed=self.params['dropout_seed'])
+            input=conv, pool_type='avg', global_pooling=True, use_cudnn=False)
+        drop = fluid.layers.dropout(x=pool, dropout_prob=0.5)
         stdv = 1.0 / math.sqrt(drop.shape[1] * 1.0)
         out = fluid.layers.fc(
             input=drop,
@@ -230,11 +211,7 @@ class SE_ResNeXt():
                            reduction_ratio,
                            name=None):
         pool = fluid.layers.pool2d(
-            input=input,
-            pool_size=0,
-            pool_type='avg',
-            global_pooling=True,
-            use_cudnn=False)
+            input=input, pool_type='avg', global_pooling=True, use_cudnn=False)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         squeeze = fluid.layers.fc(
             input=pool,

@@ -17,10 +17,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import errno
 import os
 import shutil
+import time
 import numpy as np
-
+import re
 import paddle.fluid as fluid
 
 from .download import get_weights_path
@@ -31,6 +33,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     'load_checkpoint',
     'load_and_fusebn',
+    'load_params',
     'save',
 ]
 
@@ -44,14 +47,16 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
-def load_pretrain(exe, prog, path):
+def load_params(exe, prog, path, ignore_params=[]):
     """
     Load model from the given path.
     Args:
         exe (fluid.Executor): The fluid.Executor object.
         prog (fluid.Program): load weight to which Program object.
         path (string): URL string or loca model path.
+        ignore_params (bool): ignore variable to load when finetuning.
     """
+
     if is_url(path):
         path = get_weights_path(path)
 
@@ -59,13 +64,23 @@ def load_pretrain(exe, prog, path):
         raise ValueError("Model pretrain path {} does not "
                          "exists.".format(path))
 
-    logger.info('Loading pretrained model from {}...'.format(path))
+    logger.info('Loading parameters from {}...'.format(path))
 
     def _if_exist(var):
-        b = os.path.exists(os.path.join(path, var.name))
-        if b:
+        do_ignore = False
+        param_exist = os.path.exists(os.path.join(path, var.name))
+        if len(ignore_params) > 0:
+            # Parameter related to num_classes will be ignored in finetuning
+            do_ignore_list = [
+                bool(re.match(name, var.name)) for name in ignore_params
+            ]
+            do_ignore = any(do_ignore_list)
+            if do_ignore and param_exist:
+                logger.info('In load_params, ignore {}'.format(var.name))
+        do_load = param_exist and not do_ignore
+        if do_load:
             logger.debug('load weight {}'.format(var.name))
-        return b
+        return do_load
 
     fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
 
@@ -130,6 +145,7 @@ def load_and_fusebn(exe, prog, path):
         path (string): the path to save model.
     """
     logger.info('Load model and fuse batch norm from {}...'.format(path))
+
     if is_url(path):
         path = get_weights_path(path)
 
@@ -138,6 +154,7 @@ def load_and_fusebn(exe, prog, path):
 
     def _if_exist(var):
         b = os.path.exists(os.path.join(path, var.name))
+
         if b:
             logger.debug('load weight {}'.format(var.name))
         return b
@@ -159,6 +176,7 @@ def load_and_fusebn(exe, prog, path):
 
     inner_prog = fluid.Program()
     inner_start_prog = fluid.Program()
+    inner_block = inner_prog.global_block()
     with fluid.program_guard(inner_prog, inner_start_prog):
         for block in prog.blocks:
             ops = list(block.ops)
@@ -181,10 +199,20 @@ def load_and_fusebn(exe, prog, path):
                         break
 
                     bias = block.var(bias_name)
-                    mean_vb = fluid.layers.create_parameter(
-                        bias.shape, bias.dtype, mean_name)
-                    variance_vb = fluid.layers.create_parameter(
-                        bias.shape, bias.dtype, variance_name)
+
+                    mean_vb = inner_block.create_var(
+                        name=mean_name,
+                        type=bias.type,
+                        shape=bias.shape,
+                        dtype=bias.dtype,
+                        persistable=True)
+                    variance_vb = inner_block.create_var(
+                        name=variance_name,
+                        type=bias.type,
+                        shape=bias.shape,
+                        dtype=bias.dtype,
+                        persistable=True)
+
                     mean_variances.add(mean_vb)
                     mean_variances.add(variance_vb)
 

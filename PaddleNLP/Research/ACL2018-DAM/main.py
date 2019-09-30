@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Deep Attention Matching Network
 """
@@ -145,13 +158,6 @@ def train(args):
                     decay_rate=0.9,
                     staircase=True))
             optimizer.minimize(loss)
-            print("begin memory optimization ...")
-            print(
-                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-            fluid.memory_optimize(train_program)
-            print("end memory optimization ...")
-            print(
-                time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     test_program = fluid.Program()
     test_startup = fluid.Program()
@@ -181,9 +187,8 @@ def train(args):
 
     print("device count %d" % dev_count)
     print("theoretical memory usage: ")
-    print(
-        fluid.contrib.memory_usage(
-            program=train_program, batch_size=args.batch_size))
+    print(fluid.contrib.memory_usage(
+        program=train_program, batch_size=args.batch_size))
 
     exe = fluid.Executor(place)
     exe.run(train_startup)
@@ -254,9 +259,8 @@ def train(args):
             if (args.save_path is not None) and (step % save_step == 0):
                 save_path = os.path.join(args.save_path, "step_" + str(step))
                 print("Save model at step %d ... " % step)
-                print(
-                    time.strftime('%Y-%m-%d %H:%M:%S',
-                                  time.localtime(time.time())))
+                print(time.strftime('%Y-%m-%d %H:%M:%S',
+                                    time.localtime(time.time())))
                 fluid.io.save_persistables(exe, save_path, train_program)
 
                 score_path = os.path.join(args.save_path, 'score.' + str(step))
@@ -301,9 +305,8 @@ def train(args):
                     save_path = os.path.join(args.save_path,
                                              "step_" + str(step))
                     print("Save model at step %d ... " % step)
-                    print(
-                        time.strftime('%Y-%m-%d %H:%M:%S',
-                                      time.localtime(time.time())))
+                    print(time.strftime('%Y-%m-%d %H:%M:%S',
+                                        time.localtime(time.time())))
                     fluid.io.save_persistables(exe, save_path, train_program)
 
                     score_path = os.path.join(args.save_path,
@@ -382,12 +385,6 @@ def test(args):
             decay_rate=0.9,
             staircase=True))
     optimizer.minimize(loss)
-
-    print("begin memory optimization ...")
-    print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
-    fluid.memory_optimize(fluid.default_main_program())
-    print("end memory optimization ...")
-    print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     if args.use_cuda:
         place = fluid.CUDAPlace(0)

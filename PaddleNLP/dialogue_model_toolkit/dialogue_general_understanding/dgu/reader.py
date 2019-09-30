@@ -14,11 +14,12 @@
 """data reader"""
 import os
 import csv
+import sys
 import types
 import numpy as np
 
-import tokenization
-from batching import prepare_batch_data
+from dgu import tokenization
+from dgu.batching import prepare_batch_data
 
 
 class DataProcessor(object):
@@ -109,7 +110,7 @@ class DataProcessor(object):
         with open(input_file, "r") as f:
             reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
             lines = []
-            for line in reader:
+            for line in reader: 
                 lines.append(line)
             return lines
 
@@ -202,15 +203,15 @@ class InputExample(object):
     def __init__(self, guid, text_a, text_b=None, text_c=None, label=None):
         """Constructs a InputExample.
 
-    Args:
-      guid: Unique id for the example.
-      text_a: string. The untokenized text of the first sequence. For single
+        Args:
+        guid: Unique id for the example.
+        text_a: string. The untokenized text of the first sequence. For single
         sequence tasks, only this sequence must be specified.
-      text_b: (Optional) string. The untokenized text of the second sequence.
+        text_b: (Optional) string. The untokenized text of the second sequence.
         Only must be specified for sequence pair tasks.
-      label: (Optional) string. The label of the example. This should be
+        label: (Optional) string. The label of the example. This should be
         specified for train and dev examples, but not for test examples.
-    """
+        """
         self.guid = guid
         self.text_a = text_a
         self.text_b = text_b
@@ -251,7 +252,11 @@ class UDCProcessor(DataProcessor):
         """Creates examples for the training and dev sets."""
         examples = []
         print("UDC dataset is too big, loading data spent a long time, please wait patiently..................")
-        for (i, line) in enumerate(lines):
+        for (i, line) in enumerate(lines): 
+            if len(line) < 3: 
+                print("data format error: %s" % "\t".join(line))
+                print("data row contains at least three parts: label\tconv1\t.....\tresponse")
+                continue
             guid = "%s-%d" % (set_type, i)
             text_a = "\t".join(line[1: -1])
             text_a = tokenization.convert_to_unicode(text_a)
@@ -368,7 +373,11 @@ class ATISSlotProcessor(DataProcessor):
     def _create_examples(self, lines, set_type): 
         """Creates examples for the training and dev sets."""
         examples = []
-        for (i, line) in enumerate(lines):
+        for (i, line) in enumerate(lines): 
+            if len(line) != 2: 
+                print("data format error: %s" % "\t".join(line))
+                print("data row contains two parts: conversation_content \t label1 label2 label3")
+                continue
             guid = "%s-%d" % (set_type, i)
             text_a = line[0]
             label = line[1]
@@ -413,7 +422,11 @@ class ATISIntentProcessor(DataProcessor):
     def _create_examples(self, lines, set_type): 
         """Creates examples for the training and dev sets."""
         examples = []
-        for (i, line) in enumerate(lines):
+        for (i, line) in enumerate(lines): 
+            if len(line) != 2: 
+                print("data format error: %s" % "\t".join(line))
+                print("data row contains two parts: label \t conversation_content")
+                continue
             guid = "%s-%d" % (set_type, i)
             text_a = line[1]
             text_a = tokenization.convert_to_unicode(text_a)
@@ -471,6 +484,10 @@ class DSTC2Processor(DataProcessor):
         index = 0
         conv_example = []
         for (i, line) in enumerate(lines): 
+            if len(line) != 3: 
+                print("data format error: %s" % "\t".join(line))
+                print("data row contains three parts: conversation_content \t question \1 answer \t state1 state2 state3......")
+                continue
             conv_no = line[0]
             text_a = line[1]
             label_list = line[2].split()
@@ -622,6 +639,10 @@ def create_multi_turn_examples(lines, set_type):
     conv_example = []
     index = 0
     for (i, line) in enumerate(lines): 
+        if len(line) != 4: 
+            print("data format error: %s" % "\t".join(line))
+            print("data row contains four parts: conversation_id \t label \t caller \t conversation_content")
+            continue
         tokens = line
         conv_no = tokens[0]
         if conv_no != conv_id and i != 0: 

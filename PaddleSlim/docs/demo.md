@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
   <h3>
     <a href="usage.md">
       使用文档
@@ -13,7 +13,6 @@
     </a>
   </h3>
 </div>
-
 
 ---
 # Paddle模型压缩工具库使用示例
@@ -33,14 +32,14 @@
 ## 0. 概述
 该示例参考[PaddlePaddle/models/fluid/PaddleCV/image_classification](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/image_classification)下代码，分别实现了以下策略：
 
-1. <a href="#31-蒸馏">蒸馏</a>：用ResNet50对MobileNetV1的在ImageNet 1000数据上的蒸馏训练。
-2. <a href="#32-uniform剪切">剪切</a>：对预训练好的MobileNetV1进行剪切
-3. <a href="#35-int8量化训练">量化</a>：对预训练好的MobileNetV1进行int8量化训练
-4. <a href="#36-蒸馏后int8量化">蒸馏量化组合</a>：先用ResNet50对MobileNetV1进行蒸馏，再对蒸馏后得到的模型进行int8量化训练。
-5. <a href="#37-剪切后int8量化">剪切量化组合</a>：先用Uniform剪切策略对MobileNetV1进行剪切，再对剪切后的模型进行int8量化训练
-5. <a href="#38-小模型结构搜索示例">小模型结构搜索示例</a>: 先用模拟退火策略搜索出一组tokens, 再用该tokens构建网络进行训练。
+1. <a href="#31-蒸馏">蒸馏</a>：用ResNet50对MobileNetV1的在ImageNet 1000数据上的蒸馏训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L42)。
+2. <a href="#32-uniform剪切">剪切</a>：对预训练好的MobileNetV1进行剪切, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L65)。
+3. <a href="#35-int8量化训练">量化</a>：对预训练好的MobileNetV1进行int8量化训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L81)
+4. <a href="#36-蒸馏后int8量化">蒸馏量化组合</a>：先用ResNet50对MobileNetV1进行蒸馏，再对蒸馏后得到的模型进行int8量化训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L99)。
+5. <a href="#37-剪切后int8量化">剪切量化组合</a>：先用Uniform剪切策略对MobileNetV1进行剪切，再对剪切后的模型进行int8量化训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh#L114)。
+6. <a href="#38-小模型结构搜索示例">小模型结构搜索示例</a>: 先用模拟退火策略搜索出一组tokens, 再用该tokens构建网络进行训练, [code](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/run.sh)。
 
-本示例完整代码链接：https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim
+本示例完整代码链接：https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/run.sh
 
 使用方式：
 克隆[PaddlePaddle/models](https://github.com/PaddlePaddle/models)到本地，并进入models/fluid/PaddleSlim路径。
@@ -336,35 +335,59 @@ python compress.py \
 | ---                            | ---             | ---        |
 | MobileNet v1（剪切FLOPS -50%） | -86.47%（2.3M） | 69.20%     |
 
-### 3.7 小模型结构搜索示例
+### 3.8 小模型结构搜索示例
 
 本示例先用模拟退火策略搜索出一组tokens, 再用搜索出的tokens初始化构建模型进行训练。
 
+> tokens：light_nas将搜索空间中的CNN模型映射为一组token, token可以唯一地表示一个CNN模型。搜索过程就是在不断优化token, 使其构建得到的模型性能更强。
+>
+> 在light_nas中，token是一个长度为`30`的list，以每`6`个数为一组，共有`5`组
+>
+> 每组中的`6`个数分别代表： `0:通道扩增系数，1:卷积核数量，2:网络层数，3:卷积核尺寸，4.是否用shorcut，5.是否用SE(squeeze excitation)`
+
 step1: 进入路径`PaddlePaddle/models/PaddleSlim/light_nas/`。
 
-step2: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`。
+step2: （可选）按照[使用手册](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md#245-延时评估器生成方式)中说明的方法生成好延时评估器表格 `latency_lookup_table.txt`，放置到当前路径。
 
-step3: 修改`compress.xml`文件, 将参数server_ip设置为当前机器的ip。
+step3: （可选）修改 `light_nas_space.py` 文件中的LATENCY_LOOKUP_TABLE_PATH， 更改为 LATENCY_LOOKUP_TABLE_PATH='latency_lookup_table.txt'。
 
-step4: 执行`sh run.sh`, 可根据实际情况修改`run.sh`中的`CUDA_VISIBLE_DEVICES`。
+step4: 在当前路径下，新建软链接指向上级目录的data: `ln -s ../data data`。
 
-step5: 修改`light_nas_space.py`文件中的`LightNASSpace::init_tokens`, 使其返回step4中搜到的最优tokens。
+step5: 修改 `compress.yaml` 文件, 将参数 `server_ip` 设置为当前机器的 IP。
 
-step6: 修改compress.xml文件，将compressor下的`strategies`去掉。
+step6: （可选）修改 `compress.yaml` 文件，将参数 `target_latency` 设置为用户的目标延时。
 
-step7: 执行`sh run.sh`进行训练任务。
+step7: 执行 `sh run.sh`, 可根据实际情况修改 `run.sh` 中的 `CUDA_VISIBLE_DEVICES`。
 
-该示例两组结果如下：
+step8: 修改 `light_nas_space.py` 文件中的 `LightNASSpace::init_tokens`, 使其返回step6中搜到的最优tokens。
 
-| - | Light-NAS-model0| Light-NAS-model1 | MobileNetV2 |
-|---|---|---|---|
-| FLOPS|-3% | -17% | -0% |
-| top1 accuracy| 72.45%|  71.84%| 71.90% |
-|GPU cost|1.2K GPU hours(V100)|1.2K GPU hours(V100)|-|
-|tokens|tokens1|tokens2||
+step9: 修改 `compress.yaml` 文件，将 `compressor` 下的 `strategies` 去掉。
+
+step10: 执行 `sh run.sh` 进行训练任务。
+
+该示例基于 Flops 约束的两组结果如下：
+
+| -                | FLOPS | Top1/Top5 accuracy | GPU cost             | token  |
+|------------------|-------|--------------------|----------------------|--------|
+| MobileNetV2      | 0%    | 71.90% / 90.55%    | -                    | -      |
+| Light-NAS-model0 | -3%   | 72.45% / 90.70%    | 1.2K GPU hours(V100) | token0 |
+| Light-NAS-model1 | -17%  | 71.84% / 90.45%    | 1.2K GPU hours(V100) | token1 |
 
 
-| token name | tokens|
-|---|---|
-|tokens1|[3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 2, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0]|
-|tokens2|[3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 2, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1]|
+基于硬件耗时的模型结构搜索实验：
+
+| -             | Latency | Top1/Top5 accuracy | GPU cost            | token  |
+|---------------|---------|--------------------|---------------------|--------|
+| MobileNetV2   | 0%      | 71.90% / 90.55%    | -                   | -      |
+| RK3288 开发板  | -22%    | 71.97% / 90.35%    | 1.2K GPU hours(V100) | token2 |
+| Android 手机  | -20%    | 72.06% / 90.36%    | 1.2K GPU hours(V100) | token3 |
+| iPhone 手机   | -16%    | 72.22% / 90.47%    | 1.2K GPU hours(V100) | token4 |
+
+
+| token name | tokens |
+|------------|--------|
+| tokens0    | [3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 2, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0] |
+| tokens1    | [3, 1, 1, 0, 1, 0, 3, 2, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 2, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1] |
+| tokens2    | [0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 2, 2, 1, 0, 1, 1, 2, 1, 0, 0, 0, 0, 3, 2, 1, 0, 1, 0] |
+| tokens3    | [3, 0, 0, 0, 1, 0, 1, 2, 0, 0, 1, 0, 0, 2, 0, 1, 1, 0, 3, 1, 0, 1, 1, 0, 0, 2, 1, 1, 1, 0] |
+| tokens4    | [3, 1, 0, 0, 1, 0, 3, 1, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 3, 1, 1, 0, 1, 0] |

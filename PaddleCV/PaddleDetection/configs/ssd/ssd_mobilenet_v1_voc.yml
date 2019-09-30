@@ -8,17 +8,15 @@ max_iters: 28000
 snapshot_iter: 2000
 log_smooth_window: 1
 metric: VOC
+map_type: 11point
 save_dir: output
 weights: output/ssd_mobilenet_v1_voc/model_final/
+# 20(label_class) + 1(background)
 num_classes: 21
 
 SSD:
   backbone: MobileNet
   multi_box_head: MultiBoxHead
-  metric:
-    ap_version: 11point
-    evaluate_difficult: false
-    overlap_threshold: 0.5
   output_decoder:
     background_label: 0
     keep_top_k: 200

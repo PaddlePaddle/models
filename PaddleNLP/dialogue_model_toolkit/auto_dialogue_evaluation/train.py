@@ -129,6 +129,7 @@ def do_train(args):
 
     steps = 0
     begin_time = time.time()
+    time_begin =  time.time()
 
     for epoch_step in range(args.epoch): 
         data_reader.start()
@@ -136,7 +137,6 @@ def do_train(args):
         ce_loss = 0.0
         while True:
             try: 
-                steps += 1
                 fetch_list = [loss.name]
                 outputs = exe.run(compiled_train_prog, fetch_list=fetch_list)
                 np_loss = outputs
@@ -144,14 +144,20 @@ def do_train(args):
                 ce_loss = np.array(np_loss).mean()
 
                 if steps % args.print_steps == 0: 
-                    print('epoch: %d, step: %s, avg loss %s' % (epoch_step, steps, sum_loss / args.print_steps))
+                    time_end = time.time()
+                    used_time = time_end - time_begin
+                    current_time = time.strftime('%Y-%m-%d %H:%M:%S',
+                                                time.localtime(time.time()))
+                    print('%s epoch: %d, step: %s, avg loss %s, speed: %f steps/s' % (current_time, epoch_step, steps, sum_loss / args.print_steps, args.print_steps / used_time))
                     sum_loss = 0.0
+                    time_begin = time.time()
 
                 if steps % args.save_steps == 0: 
                     if args.save_checkpoint:
                         save_load_io.save_checkpoint(args, exe, train_prog, "step_" + str(steps))
                     if args.save_param: 
                         save_load_io.save_param(args, exe, train_prog, "step_" + str(steps))
+                steps += 1
             except fluid.core.EOFException:  
                 data_reader.reset()
                 break

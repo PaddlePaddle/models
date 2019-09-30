@@ -23,6 +23,10 @@ OUTPUT_PATH="./data/output"
 INFERENCE_MODEL="data/inference_models"
 PYTHON_PATH="python"
 
+if [ -f ${SAVE_MODEL_PATH} ]; then
+    rm ${SAVE_MODEL_PATH}
+fi
+
 if [ ! -d ${SAVE_MODEL_PATH} ]; then
 	mkdir ${SAVE_MODEL_PATH}
 fi
@@ -116,8 +120,7 @@ function train()
        --learning_rate=${learning_rate} \
        --weight_decay=0.01 \
        --max_seq_len=${max_seq_len} \
-       --print_steps=${print_steps} \
-       --use_fp16 false;
+       --print_steps=${print_steps};
 }
 
 #predicting

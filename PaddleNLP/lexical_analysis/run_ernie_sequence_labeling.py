@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 Baidu's open-source Lexical Analysis tool for Chinese, including:
     1. Word Segmentation,
@@ -53,9 +66,6 @@ def evaluate(exe, test_program, test_pyreader, test_ret):
     print("\t[test] loss: %.5f, P: %.5f, R: %.5f, F1: %.5f, elapsed time: %.3f s"
         % (np.mean(total_loss), precision, recall, f1, end_time - start_time))
 
-
-
-
 def do_train(args):
     """
     Main Function
@@ -85,21 +95,19 @@ def do_train(args):
     with fluid.program_guard(train_program, startup_prog):
         with fluid.unique_name.guard():
             # user defined model based on ernie embeddings
-            train_ret = creator.create_ernie_model(args, ernie_config, is_prediction=False)
+            train_ret = creator.create_ernie_model(args, ernie_config)
 
             # ernie pyreader
             train_pyreader = creator.create_pyreader(args, file_name=args.train_data,
                                                   feed_list=train_ret['feed_list'],
-                                                  mode="ernie",
-                                                  place=place,
-                                                  iterable=True)
+                                                  model="ernie",
+                                                  place=place)
 
             test_program = train_program.clone(for_test=True)
             test_pyreader = creator.create_pyreader(args, file_name=args.test_data,
                                                   feed_list=train_ret['feed_list'],
-                                                  mode="ernie",
-                                                  place=place,
-                                                  iterable=True)
+                                                  model="ernie",
+                                                  place=place)
 
             optimizer = fluid.optimizer.Adam(learning_rate=args.base_learning_rate)
             fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=1.0))
@@ -185,15 +193,14 @@ def do_eval(args):
     test_program = fluid.Program()
     with fluid.program_guard(test_program, fluid.default_startup_program()):
         with fluid.unique_name.guard():
-            test_ret = creator.create_ernie_model(args, ernie_config, is_prediction=False)
+            test_ret = creator.create_ernie_model(args, ernie_config)
     test_program = test_program.clone(for_test=True)
 
     pyreader = creator.create_pyreader(args, file_name=args.test_data,
                                           feed_list=test_ret['feed_list'],
-                                          mode="ernie",
+                                          model="ernie",
                                           place=place,
-                                          iterable=True,
-                                          for_test=True,)
+                                          mode='test',)
 
     print('program startup')
 
@@ -221,16 +228,15 @@ def do_infer(args):
     infer_program = fluid.Program()
     with fluid.program_guard(infer_program, fluid.default_startup_program()):
         with fluid.unique_name.guard():
-            infer_ret = creator.create_ernie_model(args, ernie_config, is_prediction=False)
+            infer_ret = creator.create_ernie_model(args, ernie_config)
     infer_program = infer_program.clone(for_test=True)
     print(args.test_data)
     pyreader, reader = creator.create_pyreader(args, file_name=args.test_data,
                                           feed_list=infer_ret['feed_list'],
-                                          mode="ernie",
+                                          model="ernie",
                                           place=place,
-                                          iterable=True,
                                           return_reader=True,
-                                          for_test=True)
+                                          mode='test')
 
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())

@@ -1,3 +1,17 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# -*- coding: UTF-8 -*-
 """
 The function lex_net(args) define the lexical analysis network structure
 """
@@ -57,27 +71,19 @@ def create_model(args,  vocab_size, num_labels, mode = 'train'):
 
 
 
-def create_pyreader(args, file_name, feed_list, place, mode='lac', reader=None, iterable=True, return_reader=False, for_test=False):
+def create_pyreader(args, file_name, feed_list, place, model='lac', reader=None, return_reader=False, mode='train'):
     # init reader
     pyreader = fluid.io.PyReader(
         feed_list=feed_list,
         capacity=300,
         use_double_buffer=True,
-        iterable=iterable
+        iterable=True
     )
-    if mode == 'lac':
+    if model == 'lac':
         if reader==None:
             reader = Dataset(args)
         # create lac pyreader
-        if for_test:
-            pyreader.decorate_sample_list_generator(
-                paddle.batch(
-                    reader.file_reader(file_name),
-                    batch_size=args.batch_size
-                ),
-                places=place
-            )
-        else:
+        if mode == 'train':
             pyreader.decorate_sample_list_generator(
                 paddle.batch(
                     paddle.reader.shuffle(
@@ -88,8 +94,16 @@ def create_pyreader(args, file_name, feed_list, place, mode='lac', reader=None, 
                 ),
                 places=place
             )
+        else:
+            pyreader.decorate_sample_list_generator(
+                paddle.batch(
+                    reader.file_reader(file_name, mode=mode),
+                    batch_size=args.batch_size
+                ),
+                places=place
+            )
 
-    elif mode == 'ernie':
+    elif model == 'ernie':
         # create ernie pyreader
         if reader==None:
             reader = task_reader.SequenceLabelReader(
@@ -100,17 +114,17 @@ def create_pyreader(args, file_name, feed_list, place, mode='lac', reader=None, 
                 in_tokens=False,
                 random_seed=args.random_seed)
 
-        if for_test:
+        if mode == 'train':
             pyreader.decorate_batch_generator(
                 reader.data_generator(
-                    file_name, args.batch_size, epoch=1, shuffle=False, phase='test'
+                    file_name, args.batch_size, args.epoch, shuffle=True, phase="train"
                 ),
                 places=place
             )
         else:
             pyreader.decorate_batch_generator(
                 reader.data_generator(
-                    file_name, args.batch_size, args.epoch, shuffle=True, phase="train"
+                    file_name, args.batch_size, epoch=1, shuffle=False, phase=mode
                 ),
                 places=place
             )
@@ -120,17 +134,12 @@ def create_pyreader(args, file_name, feed_list, place, mode='lac', reader=None, 
     else:
         return pyreader
 
-def create_ernie_model(args,
-                 # embeddings,
-                 # labels,
-                 ernie_config,
-                 is_prediction=False):
+def create_ernie_model(args, ernie_config):
 
     """
     Create Model for LAC based on ERNIE encoder
     """
     # ERNIE's input data
-
     src_ids = fluid.layers.data(name='src_ids', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
     sent_ids = fluid.layers.data(name='sent_ids', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
     pos_ids = fluid.layers.data(name='pos_ids', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
@@ -150,8 +159,6 @@ def create_ernie_model(args,
     words = fluid.layers.sequence_unpad(src_ids, seq_lens)
     labels = fluid.layers.sequence_unpad(padded_labels, seq_lens)
 
-
-    # sentence_embeddings = embeddings["sentence_embeddings"]
     token_embeddings = embeddings["token_embeddings"]
 
     emission = fluid.layers.fc(
@@ -163,52 +170,39 @@ def create_ernie_model(args,
             regularizer=fluid.regularizer.L2DecayRegularizer(
                 regularization_coeff=1e-4)))
 
-
-    if is_prediction:
-        size = emission.shape[1]
-        fluid.layers.create_parameter(shape=[size + 2, size],
-                                      dtype=emission.dtype,
-                                      name='crfw')
-        crf_decode = fluid.layers.crf_decoding(
-            input=emission, param_attr=fluid.ParamAttr(name='crfw'))
-        ret= {
-            "feed_list": [src_ids, sent_ids, pos_ids, input_mask, seq_lens],
-            "crf_decode":crf_decode}
-
-    else:
-        crf_cost = fluid.layers.linear_chain_crf(
-            input=emission,
-            label=labels,
-            param_attr=fluid.ParamAttr(
-                name='crfw',
-                learning_rate=args.crf_learning_rate))
-        avg_cost = fluid.layers.mean(x=crf_cost)
-        crf_decode = fluid.layers.crf_decoding(
-            input=emission, param_attr=fluid.ParamAttr(name='crfw'))
+    crf_cost = fluid.layers.linear_chain_crf(
+        input=emission,
+        label=labels,
+        param_attr=fluid.ParamAttr(
+            name='crfw',
+            learning_rate=args.crf_learning_rate))
+    avg_cost = fluid.layers.mean(x=crf_cost)
+    crf_decode = fluid.layers.crf_decoding(
+        input=emission, param_attr=fluid.ParamAttr(name='crfw'))
 
 
-        (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
-         num_correct_chunks) = fluid.layers.chunk_eval(
-             input=crf_decode,
-             label=labels,
-             chunk_scheme="IOB",
-             num_chunk_types=int(math.ceil((args.num_labels - 1) / 2.0)))
-        chunk_evaluator = fluid.metrics.ChunkEvaluator()
-        chunk_evaluator.reset()
+    (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
+     num_correct_chunks) = fluid.layers.chunk_eval(
+         input=crf_decode,
+         label=labels,
+         chunk_scheme="IOB",
+         num_chunk_types=int(math.ceil((args.num_labels - 1) / 2.0)))
+    chunk_evaluator = fluid.metrics.ChunkEvaluator()
+    chunk_evaluator.reset()
 
-        ret = {
-            "feed_list": [src_ids, sent_ids, pos_ids, input_mask, padded_labels, seq_lens],
-            "words":words,
-            "labels":labels,
-            "avg_cost":avg_cost,
-            "crf_decode":crf_decode,
-            "precision" : precision,
-            "recall": recall,
-            "f1_score": f1_score,
-            "chunk_evaluator":chunk_evaluator,
-            "num_infer_chunks":num_infer_chunks,
-            "num_label_chunks":num_label_chunks,
-            "num_correct_chunks":num_correct_chunks
-        }
+    ret = {
+        "feed_list": [src_ids, sent_ids, pos_ids, input_mask, padded_labels, seq_lens],
+        "words":words,
+        "labels":labels,
+        "avg_cost":avg_cost,
+        "crf_decode":crf_decode,
+        "precision" : precision,
+        "recall": recall,
+        "f1_score": f1_score,
+        "chunk_evaluator":chunk_evaluator,
+        "num_infer_chunks":num_infer_chunks,
+        "num_label_chunks":num_label_chunks,
+        "num_correct_chunks":num_correct_chunks
+    }
 
     return ret

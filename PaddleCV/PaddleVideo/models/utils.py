@@ -21,13 +21,13 @@ __all__ = ['decompress', 'download', 'AttrDict']
 
 def decompress(path):
     t = tarfile.open(path)
-    t.extractall(path='/'.join(path.split('/')[:-1]))
+    t.extractall(path=os.path.split(path)[0])
     t.close()
     os.remove(path)
 
 
 def download(url, path):
-    weight_dir = '/'.join(path.split('/')[:-1])
+    weight_dir = os.path.split(path)[0]
     if not os.path.exists(weight_dir):
         os.makedirs(weight_dir)
 

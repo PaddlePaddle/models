@@ -24,7 +24,6 @@ verbose: False
 do_lower_case: False
 random_seed: 0
 use_cuda: True
-task_name: ""
 in_tokens: False
 do_save_inference_model: False
 enable_ce: ""
