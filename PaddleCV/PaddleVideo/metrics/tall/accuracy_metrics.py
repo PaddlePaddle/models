@@ -31,8 +31,14 @@ class MetricsCalculator():
 
     def reset(self):
 	logger.info("Resetting {} metrics...".format(self.mode))
-	
+	self.IoU_thresh = [0.1, 0.3, 0.5, 0.7]
+	self.all_correct_num_10 = [0.0] * 5
+	self.all_correct_num_5 = [0.0] * 5
+	self.all_correct_num_1 = [0.0] * 5
+        self.all_retrievd = 0.0
+    
     def finalize_metrics(self):
+
 	return
     def calculate_metrics(self,):
 	return

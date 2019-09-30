@@ -22,7 +22,6 @@ import paddle
 import paddle.fluid as fluid
 import functools
 
-import pdb
 
 random.seed(0)
 
@@ -35,17 +34,18 @@ class TallReader(DataReader):
     def __init__(self, name, mode, cfg):
 	self.name = name
 	self.mode = mode
-	self.cfg = cfg
+	self.cfg = cfg	
 
     def create_reader(self):
         cfg = self.cfg
         mode = self.mode
-               
+         
 	if self.mode == 'train':
 	    train_batch_size = cfg.TRAIN.batch_size
 	    return paddle.batch(train(cfg),batch_size = train_batch_size, drop_last=True)
 	elif self.mode == 'valid':
-	    return test(cfg)
+	    test_batch_size = cfg.VALID.batch_size
+	    return paddle.batch(test(cfg),batch_size = test_batch_size, drop_last=True)
 	else:
 	    logger.info("Not implemented")
 	    raise NotImplementedError
@@ -201,13 +201,13 @@ def train(cfg):
                             clip_sentence_pairs_iou.append((clip_sentence[0], clip_sentence[1], clip_name, start_offset, end_offset))
     #                        count += 1
     #    if count > 200:
-    #        break
+    #   /yield     break
     num_samples_iou = len(clip_sentence_pairs_iou)
     print "TRAIN: " + str(len(clip_sentence_pairs_iou))+" iou clip-sentence pairs are readed"
     
     return make_train_reader(cfg, clip_sentence_pairs_iou, shuffle=True, is_train=True)
 
-class test(cfg):
+class TACoS_Test_dataset(cfg):
     '''
     '''
     def __init__(self, cfg):
@@ -304,3 +304,35 @@ class test(cfg):
                 comb_feat = np.hstack((left_context_feat,feature_data,right_context_feat))
                 movie_clip_featmap.append((self.sliding_clip_names[k], comb_feat))
         return movie_clip_featmap, movie_clip_sentences
+
+
+def test(cfg):
+    test_dataset = TACoS_Test_dataset(cfg)
+
+    idx = 0
+    for movie_name in test_dataset.movie_names:
+        idx += 1
+        print("%d/%d" % (idx, all_number))
+
+        movie_clip_featmaps, movie_clip_sentences = test_dataset.load_movie_slidingclip(movie_name, 16)
+        print("sentences: " + str(len(movie_clip_sentences)))
+        print("clips: " + str(len(movie_clip_featmaps)))  # candidate clips)
+
+        sentence_image_mat = np.zeros([len(movie_clip_sentences), len(movie_clip_featmaps)])
+        sentence_image_reg_mat = np.zeros([len(movie_clip_sentences), len(movie_clip_featmaps), 2])
+
+        for k in range(len(movie_clip_sentences)):
+            sent_vec = movie_clip_sentences[k][1]
+            sent_vec = np.reshape(sent_vec, [1, sent_vec.shape[0]])  # 1,4800
+            #sent_vec = torch.from_numpy(sent_vec).cuda()
+            
+            for t in range(len(movie_clip_featmaps)):
+                featmap = movie_clip_featmaps[t][1]
+                visual_clip_name = movie_clip_featmaps[t][0]
+                
+                start = float(visual_clip_name.split("_")[1])
+                end = float(visual_clip_name.split("_")[2].split("_")[0])
+                
+                featmap = np.reshape(featmap, [1, featmap.shape[0]])
+                feed_data = [[featmap, sent_vec, start, end, k, t, movie_clip_sentences, movie_clip_featmaps]]
+		yield feed_data

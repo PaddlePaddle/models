@@ -430,12 +430,24 @@ class TallMetrics(Metrics):
 	self.name =  name
  	self.mode =mode
 	self.calculator = tall_metrics.MetricsCalculator(cfg=cfg, name=self.name, mode=self.mode)
+        self.IoU_thresh = [0.1, 0.3, 0.5, 0.7]
+        self.all_correct_num_10 = [0.0] * 5
+        self.all_correct_num_5 = [0.0] * 5
+        self.all_correct_num_1 = [0.0] * 5
+        self.all_retrievd = 0.0
 
     def calculator_and_log_out(self, fetch_list, info=""):
 	if self.mode == "train":
             loss = np.array(fetch_list[0])
 	    logger.info(info +'\tLoss = {}'.format('%.6f' % np.mean(loss)))
-	elif self.mode == "valid":
+
+
+	elif self.mode == "test":
+	    
+	    pass
+    
+    def accumalate():
+	if self.mode == "test":
 	    outs = fetch_list[0]
 	    outputs = np.squeeze(outs)
 	    start = fetch_list[1]
@@ -459,27 +471,34 @@ class TallMetrics(Metrics):
 	    clips = [b[0] for b in movie_clip_featmaps]
 	    sclips = [b[0] for b in movie_clip_sentences]
 
-            for i in range(len(IoU_thresh)):
-            	IoU = IoU_thresh[i]
-            	correct_num_10 = compute_IoU_recall_top_n_forreg(10, IoU, sentence_image_mat, sentence_image_reg_mat, sclips, iclips)
-            	correct_num_5 = compute_IoU_recall_top_n_forreg(5, IoU, sentence_image_mat, sentence_image_reg_mat, sclips, iclips)
-            	correct_num_1 = compute_IoU_recall_top_n_forreg(1, IoU, sentence_image_mat, sentence_image_reg_mat, sclips, iclips)
-            	logger.info(info + " IoU=" + str(IoU) + ", R@10: " + str(correct_num_10 / len(sclips)) + "; IoU=" + str(IoU) + ", R@5: " + str(correct_num_5 / len(sclips)) + "; IoU=" + str(IoU) + ", R@1: " + str(correct_num_1 / len(sclips)))
+            for i in range(len(sel.IoU_thresh)):
+            	IoU = self.IoU_thresh[i]
+            	self.current_correct_num_10 = compute_IoU_recall_top_n_forreg(10, IoU, sentence_image_mat, sentence_image_reg_mat, sclips, iclips)
+            	self_current_correct_num_5 = compute_IoU_recall_top_n_forreg(5, IoU, sentence_image_mat, sentence_image_reg_mat, sclips, iclips)
+            	self.current_correct_num_1 = compute_IoU_recall_top_n_forreg(1, IoU, sentence_image_mat, sentence_image_reg_mat, sclips, iclips)
+            	
+		#logger.info(info + " IoU=" + str(IoU) + ", R@10: " + str(correct_num_10 / len(sclips)) + "; IoU=" + str(IoU) + ", R@5: " + str(correct_num_5 / len(sclips)) + "; IoU=" + str(IoU) + ", R@1: " + str(correct_num_1 / len(sclips)))
 
-            	all_correct_num_10[i] += correct_num_10
-            	all_correct_num_5[i] += correct_num_5
-            	all_correct_num_1[i] += correct_num_1
-            all_retrievd += len(sclips)
+            	self.all_correct_num_10[i] += correct_num_10
+            	self.all_correct_num_5[i] += correct_num_5
+            	self.all_correct_num_1[i] += correct_num_1
+            
+	    self.all_retrievd += len(sclips)
 
-	else: 
-	    pass
-    
-    def accumalate():
 
     def finalize_and_log_out(self, info="", savedir="/"):
+	all_retrievd = self.all_retrievd
+	for k in range(len(self.IoU_thresh)):
+           print(" IoU=" + str(self.IoU_thresh[k]) + ", R@10: " + str(all_correct_num_10[k] / all_retrievd) + "; IoU=" + str(self.IoU_thresh[k]) + ", R@5: " + str(all_correct_num_5[k] / all_retrievd) + "; IoU=" + str(self.IoU_thresh[k]) + ", R@1: " + str(all_correct_num_1[k] / all_retrievd))
+        
+    	R1_IOU5 = self all_correct_num_1[2] / all_retrievd
+    	R5_IOU5 = self.all_correct_num_5[2] / all_retrievd
+
+    	print "{}\n".format("best_R1_IOU5: %0.3f" % R1_IOU5)
+    	print "{}\n".format("best_R5_IOU5: %0.3f" % R5_IOU5)
 
     def reset(self):
-	self.calculator.clear()
+	self.calculator.reset()
 
 
 class MetricsZoo(object):
