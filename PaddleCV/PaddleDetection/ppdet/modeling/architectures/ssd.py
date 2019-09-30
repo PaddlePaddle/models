@@ -56,9 +56,11 @@ class SSD(object):
         if isinstance(output_decoder, dict):
             self.output_decoder = SSDOutputDecoder(**output_decoder)
 
-    def build(self, mode='train'):
+    def build(self, mode='train', image_shape=None):
+        if image_shape is None:
+            image_shape = [3, 300, 300]
         im = fluid.layers.data(
-            name='image', shape=[3, 300, 300], dtype='float32')
+            name='image', shape=image_shape, dtype='float32')
         if mode == 'train':
             gt_box = fluid.layers.data(
                 name='gt_box', shape=[4], dtype='float32', lod_level=1)
@@ -99,8 +101,8 @@ class SSD(object):
     def eval(self):
         return self.build('eval')
 
-    def test(self):
-        return self.build('test')
+    def test(self, image_shape=None):
+        return self.build('test', image_shape=image_shape)
 
     @property
     def is_bbox_normalized(self):

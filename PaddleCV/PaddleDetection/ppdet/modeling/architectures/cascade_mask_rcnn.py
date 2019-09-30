@@ -79,9 +79,11 @@ class CascadeMaskRCNN(object):
         ]
         self.cascade_rcnn_loss_weight = [1.0, 0.5, 0.25]
 
-    def build(self, mode='train'):
+    def build(self, mode='train', image_shape=None):
+        if image_shape is None:
+            image_shape = [3, 800, 1333]
         im = fluid.layers.data(
-            name='image', shape=[3, 800, 1333], dtype='float32')
+            name='image', shape=image_shape, dtype='float32')
         im_info = fluid.layers.data(name='im_info', shape=[3], dtype='float32')
         if mode == 'train':
             gt_box = fluid.layers.data(
@@ -267,5 +269,5 @@ class CascadeMaskRCNN(object):
     def eval(self):
         return self.build('test')
 
-    def test(self):
-        return self.build('test')
+    def test(self, image_shape=None):
+        return self.build('test', image_shape=image_shape)

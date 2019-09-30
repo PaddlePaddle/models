@@ -17,7 +17,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import glob
 
 import numpy as np
 from PIL import Image
@@ -63,47 +62,6 @@ def get_save_image_name(output_dir, image_path):
     return os.path.join(output_dir, "{}".format(name)) + ext
 
 
-def prune_feed_vars(feeded_var_names, target_vars, prog):
-    """
-    Filter out feed variables which are not in program,
-    pruned feed variables are only used in post processing
-    on model output, which are not used in program, such
-    as im_id to identify image order, im_shape to clip bbox
-    in image.
-    """
-    exist_var_names = []
-    prog = prog.clone()
-    prog = prog._prune(feeded_var_names, targets=target_vars)
-    global_block = prog.global_block()
-    for name in feeded_var_names:
-        try:
-            v = global_block.var(name)
-            exist_var_names.append(str(v.name))
-        except Exception:
-            logger.info('save_inference_model pruned unused feed '
-                        'variables {}'.format(name))
-            pass
-    return exist_var_names
-
-
-def save_infer_model(FLAGS, exe, feeded_var_names, test_fetches, infer_prog):
-    cfg_name = os.path.basename(FLAGS.config).split('.')[0]
-    save_dir = os.path.join(FLAGS.output_dir, cfg_name)
-    target_vars = list(test_fetches.values())
-    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars,
-                                       infer_prog)
-    logger.info("Save inference model to {}, input: {}, output: "
-                "{}...".format(save_dir, feeded_var_names,
-                               [str(var.name) for var in target_vars]))
-    fluid.io.save_inference_model(
-        save_dir,
-        feeded_var_names=feeded_var_names,   # WTF is `feeded`??
-        target_vars=target_vars,
-        executor=exe,
-        main_program=infer_prog,
-        params_filename="__params__")
-
-
 def main():
     cfg = load_config(FLAGS.config)
 
@@ -125,9 +83,6 @@ def main():
     if FLAGS.dataset_dir is not None:
         test_loader.dataset.root_dir = FLAGS.dataset_dir
 
-    feed_var_names = [isinstance(v, str) and v or v['name']
-                      for v in test_loader.feed_vars]
-
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
@@ -144,12 +99,9 @@ def main():
     if cfg.weights:
         checkpoint.load_params(exe, infer_prog, cfg.weights)
 
-    if FLAGS.save_inference_model:
-        save_infer_model(FLAGS, exe, feed_var_names, test_fetches, infer_prog)
-
     # parse infer fetches
     assert cfg.metric in ['COCO', 'VOC'], \
-            "unknown metric type {}".format(cfg.metric)
+        "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
@@ -175,7 +127,7 @@ def main():
         from tb_paddle import SummaryWriter
         tb_writer = SummaryWriter(FLAGS.tb_log_dir)
         tb_image_step = 0
-        tb_image_frame = 0 # each frame can display ten pictures at most.
+        tb_image_frame = 0  # each frame can display ten pictures at most.
 
     counter = 0
     for it, (feed_data, extra) in enumerate(test_loader):
@@ -256,11 +208,6 @@ if __name__ == '__main__':
         type=float,
         default=0.5,
         help="Threshold to reserve the result for visualization.")
-    parser.add_argument(
-        "--save_inference_model",
-        action='store_true',
-        default=False,
-        help="Save inference model in output_dir if True.")
     parser.add_argument(
         "--use_tb",
         type=bool,

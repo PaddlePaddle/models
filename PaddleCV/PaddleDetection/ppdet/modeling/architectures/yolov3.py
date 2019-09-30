@@ -44,9 +44,11 @@ class YOLOv3(object):
         self.backbone = backbone
         self.yolo_head = yolo_head
 
-    def build(self, mode='train'):
+    def build(self, mode='train', image_shape=None):
+        if image_shape is None:
+            image_shape = [3, 608, 608]
         im = fluid.layers.data(
-            name='image', shape=[3, 608, 608], dtype='float32')
+            name='image', shape=image_shape, dtype='float32')
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
 
@@ -87,5 +89,5 @@ class YOLOv3(object):
     def eval(self):
         return self.build(mode='test')
 
-    def test(self):
-        return self.build(mode='test')
+    def test(self, image_shape=None):
+        return self.build(mode='test', image_shape=image_shape)
