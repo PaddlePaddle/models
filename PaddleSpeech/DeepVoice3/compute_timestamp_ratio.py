@@ -1,4 +1,4 @@
-# Part of code was adpated from https://github.com/r9y9/deepvoice3_pytorch/compute_timestamp_ratio.py
+# Part of code was adpated from https://github.com/r9y9/deepvoice3_pytorch/tree/master/compute_timestamp_ratio.py
 # Copyright (c) 2017: Ryuichi Yamamoto.
 
 import argparse

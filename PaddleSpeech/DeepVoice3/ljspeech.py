@@ -1,4 +1,4 @@
-# Part of code was adpated from https://github.com/r9y9/deepvoice3_pytorch/ljspeech.py
+# This file is copied from https://github.com/r9y9/deepvoice3_pytorch/tree/master/ljspeech.py
 # Copyright (c) 2017: Ryuichi Yamamoto.
 
 from concurrent.futures import ProcessPoolExecutor
