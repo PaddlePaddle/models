@@ -75,6 +75,7 @@ params of cluster_train.sh：
 - endpoints: ip:port of all pservers
 - current_endpoint: ip:port of current pserver(role should be pserver)
 - trainers: the number of trainers
+- load_model_dir: the path of model to load before training. This param should be set on pservers.
 
 other params explained in cluster_train.py
 
@@ -89,10 +90,10 @@ Notes:
 - The first trainer(with trainer_id 0) saves model params.
 
 - After each training, pserver processes should be stop manually. You can use command below:
-  
+
 >ps -ef | grep python
 
 - We use Dataset API to load data，it's only supported on Linux now.
 
-## Distributed Train with Fleet
-Fleet is High-Level API for distributed training in PaddlePaddle. See [DeepFM example](https://github.com/PaddlePaddle/Fleet/tree/develop/examples/deepFM) in Fleet Repo.
+### Distributed Train with Fleet
+Fleet is High-Level API for distributed training in PaddlePaddle. See more [Fleet examples](https://github.com/PaddlePaddle/Fleet/tree/develop/examples) in this Repo.

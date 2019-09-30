@@ -87,6 +87,7 @@ sh cluster_train.sh
 - endpoints: 所有pserver地址和端口
 - current_endpoint: 当前pserver(role是pserver)端口和地址
 - trainers: trainer数量
+- load_model_dir: 模型加载路径。在pserver上设置该参数。
 
 其他参数见cluster_train.py
 
@@ -101,7 +102,10 @@ python infer.py --model_output_dir cluster_model --test_epoch 10 --test_valid_da
 - 0号trainer保存模型参数
 
 - 每次训练完成后需要手动停止pserver进程，使用以下命令查看pserver进程：
-  
+
 >ps -ef | grep python
-  
+
 - 数据读取使用dataset模式，目前仅支持运行在Linux环境下
+
+### 使用Fleet进行分布式训练
+Fleet是PaddlePaddle分布式训练的高级API. 更多示例可以参考[Fleet examples](https://github.com/PaddlePaddle/Fleet/tree/develop/examples)。

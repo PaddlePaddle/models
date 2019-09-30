@@ -5,6 +5,9 @@ import time
 import network_conf
 
 import paddle.fluid as fluid
+import paddle.fluid.incubate.fleet.base.role_maker as role_maker
+from paddle.fluid.incubate.fleet.parameter_server.distribute_transpiler import fleet
+from paddle.fluid.transpiler.distribute_transpiler import DistributeTranspilerConfig
 
 
 def parse_args():
@@ -86,6 +89,11 @@ def parse_args():
 
     # dist params
     parser.add_argument(
+        '--load_model_dir',
+        type=str,
+        default=None,
+        help='The path for saved model loading before training')
+    parser.add_argument(
         '--num_devices', type=int, default=1, help='Number of GPU devices')
     parser.add_argument(
         '--role', type=str, default='pserver', help='trainer or pserver')
@@ -118,8 +126,29 @@ def train():
     args = parse_args()
     print(args)
 
-    if not os.path.isdir(args.model_output_dir):
+    endpoints = [ep.strip() for ep in args.endpoints.split(",")]
+    if args.role.upper() == "PSERVER":
+        current_id = endpoints.index(args.current_endpoint)
+    else:
+        current_id = args.trainer_id
+    role = role_maker.UserDefinedRoleMaker(
+        current_id=current_id,
+        role=role_maker.Role.WORKER
+        if args.role.upper() == "TRAINER" else role_maker.Role.SERVER,
+        worker_num=args.trainers,
+        server_endpoints=endpoints)
+
+    is_first_trainer = False
+    if args.role.upper() == "TRAINER" and current_id == 0:
+        is_first_trainer = True
+
+    if is_first_trainer and not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
+
+    fleet.init(role)
+
+    strategy = DistributeTranspilerConfig()
+    strategy.sync_mode = False
 
     loss, auc, data_list, auc_states = eval('network_conf.' + args.model_name)(
         args.embedding_size, args.num_field, args.num_feat,
@@ -128,9 +157,11 @@ def train():
     optimizer = fluid.optimizer.SGD(
         learning_rate=args.lr,
         regularization=fluid.regularizer.L2DecayRegularizer(args.reg))
+    if not args.is_local:
+        optimizer = fleet.distributed_optimizer(optimizer, strategy)
     optimizer.minimize(loss)
 
-    def train_loop(main_program):
+    def train_loop(main_program, startup_program):
         """ train network """
         start_time = time.time()
         dataset = fluid.DatasetFactory().create_dataset()
@@ -148,7 +179,7 @@ def train():
         else:
             exe = fluid.Executor(fluid.CPUPlace())
             dataset.set_thread(args.num_thread)
-        exe.run(fluid.default_startup_program())
+        exe.run(startup_program)
 
         for epoch_id in range(args.num_epoch):
             start = time.time()
@@ -163,7 +194,7 @@ def train():
             model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
             sys.stderr.write('epoch%d is finished and takes %f s\n' % (
                 (epoch_id + 1), time.time() - start))
-            if args.trainer_id == 0:  # only trainer 0 save model
+            if is_first_trainer:  # only trainer 0 save model
                 print("save model in {}".format(model_dir))
                 fluid.io.save_persistables(
                     executor=exe, dirname=model_dir, main_program=main_program)
@@ -173,23 +204,21 @@ def train():
 
     if args.is_local:
         print("run local training")
-        train_loop(fluid.default_main_program())
+        train_loop(fluid.default_main_program(),
+                   fluid.default_startup_program())
     else:
         print("run distribute training")
-        t = fluid.DistributeTranspiler()
-        t.transpile(
-            args.trainer_id, pservers=args.endpoints, trainers=args.trainers)
-        if args.role == "pserver":
-            print("run psever")
-            pserver_prog, pserver_startup = t.get_pserver_programs(
-                args.current_endpoint)
-
-            exe = fluid.Executor(fluid.CPUPlace())
-            exe.run(pserver_startup)
-            exe.run(pserver_prog)
-        elif args.role == "trainer":
+        if fleet.is_server():
+            print("run pserver")
+            if args.load_model_dir:
+                print('load model from path %s' % args.load_model_dir)
+            fleet.init_server(args.load_model_dir)
+            fleet.run_server()
+        elif fleet.is_worker():
             print("run trainer")
-            train_loop(t.get_trainer_program())
+            fleet.init_worker()
+            train_loop(fleet.main_program, fleet.startup_program)
+            fleet.stop_worker()
 
 
 if __name__ == "__main__":

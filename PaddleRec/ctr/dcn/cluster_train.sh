@@ -7,6 +7,7 @@
 python -u cluster_train.py \
     --train_data_dir dist_data/dist_train_data \
     --model_output_dir cluster_model \
+    #--load_model_dir cluster_model/epoch_10 \
     --is_local 0 \
     --is_sparse \
     --role pserver \
@@ -19,6 +20,7 @@ python -u cluster_train.py \
 python -u cluster_train.py \
     --train_data_dir dist_data/dist_train_data \
     --model_output_dir cluster_model \
+    #--load_model_dir cluster_model/epoch_10 \
     --is_local 0 \
     --is_sparse \
     --role pserver \
