@@ -8,11 +8,11 @@ We implement Deepvoice3 model in paddle fluid with dynamic graph, which is conve
 
 ### Install paddlepaddle
 
-For fastetr training speed and better support, it is recommended that you install the lasted develop version of paddlepaddle. You can either download the lasted dev wheel or build paddle from source.
+For faster training speed and better support, it is recommended that you install the lasted develop version of paddlepaddle. You can either download the lasted dev wheel or build paddle from source.
 
 1.  Download lasted wheel. See [**Multi-version whl package list - dev**](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/Tables.html#permalink-7--whl-dev) for more details.
 
-2. Build paddlepaddle from source. See [**Compile From Source Code**](https://www.paddlepaddle.org.cn/documentation/docs/en/1.5/beginners_guide/install/compile/fromsource_en.html) for more details. Note that if you wan to enable data parallel trainning for multiple GPUs, you should set `-DWITH_DISTRIBUTE=ON` with cmake.
+2. Build paddlepaddle from source. See [**Compile From Source Code**](https://www.paddlepaddle.org.cn/documentation/docs/en/1.5/beginners_guide/install/compile/fromsource_en.html) for more details. Note that if you want to enable data parallel training for multiple GPUs, you should set `-DWITH_DISTRIBUTE=ON` with cmake.
 
 ### Other Requirements
 
@@ -31,14 +31,36 @@ nltk.download("punkt")
 nltk.download("cmudict")
 ```
 
+## Model Architecture
+
+![DeepVoice3 model architecture](./_images/model_architecture.png)
+
+## Project Structure
+
+```text
+├── audio.py                        # audio processing
+├── compute_timestamp_ratio.py      # script to compute position rate
+├── conversion                      # parameter conversion from pytorch model
+├── requirements.txt                # requirements
+├── hparams.py                      # HParam class for deepvoice3
+├── hparam_tf                       # hyper parameter related stuffs
+├── ljspeech.py                     # functions for ljspeech preprocessing
+├── preprocess.py                   # preprocrssing script
+├── presets                         # preset hyperparameters
+├── deepvoice3_paddle               # DeepVoice3 model implementation
+├── eval_model.py                   # functions for model evaluation
+├── synthesis.py                    # script for speech synthesis
+├── train_model.py                  # functions for model training
+└── train.py                        # script for model training
+```
 
 ## Usage
 
-There are many hyper parameters to be tuned depending on the specification of model and dataset you are working on. Hyperparameters that are known to work good are provided in the repository. See `presets` directory for details. Now we only provide presets with LJSpeech dataset (`deepvoice3_ljspeech.json`). Support for more models and datasets is pending.
+There are many hyperparameters to be tuned depending on the specification of model and dataset you are working on. Hyperparameters that are known to work good are provided in the repository. See `presets` directory for details. Now we only provide preset with LJSpeech dataset (`deepvoice3_ljspeech.json`). Support for more models and datasets is pending.
 
-Note that  `preprocess.py`, `train.py`, `synthesis.py` all accept a `--preset` parameter. To ensure consistency, you should use the same preset for preprocessing, training and synthesizing.
+Note that `preprocess.py`, `train.py` and `synthesis.py` all accept a `--preset` parameter. To ensure consistency, you should use the same preset for preprocessing, training and synthesizing.
 
-Some hyperparameters are only related to training, like `batch_size`, `checkpoint_interval`, you can use different values when training. But hyperparameters related to data preprocessing, like `num_mels` and `ref_level_db`, should be kept the same for preprocessing and training.
+Some hyperparameters are only related to training, like `batch_size`, `checkpoint_interval` and you can use different values for preprocessing and training. But hyperparameters related to data preprocessing, like `num_mels` and `ref_level_db`, should be kept the same for preprocessing and training.
 
 
 ### Dataset

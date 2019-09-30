@@ -35,7 +35,8 @@ def build_parser():
 
 
 def preprocess(mod, in_dir, out_root, num_workers):
-    os.makedirs(out_dir, exist_ok=True)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     metadata = mod.build_from_path(in_dir, out_dir, num_workers, tqdm=tqdm)
     write_metadata(metadata, out_dir)
 

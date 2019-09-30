@@ -31,6 +31,29 @@ nltk.download("punkt")
 nltk.download("cmudict")
 ```
 
+## 模型结构
+
+![DeepVoice3 模型结构](./_images/model_architecture.png)
+
+## 项目结构
+
+```text
+├── audio.py                        # 用于处理处理音频的函数
+├── compute_timestamp_ratio.py      # 计算 position rate 的脚本
+├── conversion                      # 用于转换 pytorch 实现的参数
+├── requirements.txt                # 项目依赖
+├── hparams.py                      # DeepVoice3 运行超参数配置类的定义
+├── hparam_tf                       # 超参数相关
+├── ljspeech.py                     # ljspeech 数据集预处理
+├── preprocess.py                   # 通用预处理脚本
+├── presets                         # 预设超参数配置
+├── deepvoice3_paddle               # DeepVoice3 模型实现的主要文件
+├── eval_model.py                   # 模型测评相关函数
+├── synthesis.py                    # 用于语音合成的脚本
+├── train_model.py                  # 模型训练相关函数
+└── train.py                        # 用于模型训练的脚本
+```
+
 ## 使用方法
 
 根据所使用的模型配置和数据集的不同，有不少超参数需要进行调节。我们提供已知结果较好的超参数设置，详见 `presets` 文件夹。目前我们只提供 LJSpeech 的预设配置 （`deepvoice3_ljspeech.json`）。后续将提供更多模型和数据集的预设配置。
@@ -93,7 +116,7 @@ python train.py --data-root=${data-root} --use-gpu \
 
 #### 训练模型的一部分
 
-用户可以通过 `--train-seq2seq-only` 或者 `--train-postnet-only` 来实现固定模型的其他部分，只训练需要训练的部分。但当只训练模型的一部分时，其他的部分需要充已保存的模型中加载。
+用户可以通过 `--train-seq2seq-only` 或者 `--train-postnet-only` 来实现固定模型的其他部分，只训练需要训练的部分。但当只训练模型的一部分时，其他的部分需要充从保存的模型中加载。
 
 当只训练模型的 `seq2seq` 或者 `postnet` 部分时分训练时使用 `--checkpoint` 加载整个模型并保持相同的配置。注意，当只训练 `postnet` 的时候，需要保证配置中的`use_decoder_state_for_postnet_input=false`，因为在这种情况下，postnet 使用真实的 mel 频谱作为输入。
 
