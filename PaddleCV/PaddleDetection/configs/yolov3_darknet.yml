@@ -7,6 +7,8 @@ snapshot_iter: 10000
 metric: COCO
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
 weights: output/yolov3_darknet/model_final
+inference_shape: [3, 608, 608]
+inference_vars: ['image', 'im_size']
 num_classes: 80
 
 YOLOv3:

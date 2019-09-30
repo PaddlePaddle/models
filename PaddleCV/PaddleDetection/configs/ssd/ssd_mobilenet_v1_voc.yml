@@ -8,6 +8,8 @@ metric: VOC
 map_type: 11point
 save_dir: output
 weights: output/ssd_mobilenet_v1_voc/model_final/
+inference_shape: [3, 300, 300]
+inference_vars: ['image', 'im_shape']
 # 20(label_class) + 1(background)
 num_classes: 21
 

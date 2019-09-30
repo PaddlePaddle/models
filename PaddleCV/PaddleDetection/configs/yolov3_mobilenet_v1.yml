@@ -10,6 +10,8 @@ snapshot_iter: 2000
 metric: COCO
 pretrain_weights: http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar
 weights: output/yolov3_mobilenet_v1/model_final
+inference_shape: [3, 608, 608]
+inference_vars: ['image', 'im_size']
 num_classes: 80
 
 YOLOv3:
