@@ -14,22 +14,7 @@
 
 from __future__ import absolute_import
 
-from . import resnet
-from . import resnext
-from . import darknet
-from . import mobilenet
-from . import senet
-from . import fpn
-from . import vgg
-from . import blazenet
-from . import faceboxnet
+from .mixed_precision import *
+from . import mixed_precision
 
-from .resnet import *
-from .resnext import *
-from .darknet import *
-from .mobilenet import *
-from .senet import *
-from .fpn import *
-from .vgg import *
-from .blazenet import *
-from .faceboxnet import *
+__all__ = mixed_precision.__all__

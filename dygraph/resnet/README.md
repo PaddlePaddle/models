@@ -6,6 +6,8 @@ DyGraph模式下Residual Network实现
 Residual Network（ResNet）是常用的图像分类模型。我们实现了在paddlepaddle的DyGraph模式下相应的实现。可以对比原先静态图下实现（[Residual Network](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)）来了解paddle中DyGraph模式。
 运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。如果您的PaddlePaddle安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新PaddlePaddle安装版本。
 
+动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
+
 
 ## 代码结构
 ```
