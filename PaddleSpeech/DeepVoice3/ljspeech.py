@@ -4,6 +4,7 @@
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 import numpy as np
+import codecs
 import os
 import audio
 from hparams import hparams
@@ -27,7 +28,8 @@ def build_from_path(in_dir, out_dir, num_workers=1, tqdm=lambda x: x):
     executor = ProcessPoolExecutor(max_workers=num_workers)
     futures = []
     index = 1
-    with open(os.path.join(in_dir, 'metadata.csv'), encoding='utf-8') as f:
+    with codecs.open(
+            os.path.join(in_dir, 'metadata.csv'), encoding='utf-8') as f:
         for line in f:
             parts = line.strip().split('|')
             wav_path = os.path.join(in_dir, 'wavs', '%s.wav' % parts[0])

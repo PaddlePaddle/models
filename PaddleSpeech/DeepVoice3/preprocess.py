@@ -8,6 +8,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import codecs
 from multiprocessing import cpu_count
 from tqdm import tqdm
 import importlib
@@ -42,7 +43,8 @@ def preprocess(mod, in_dir, out_root, num_workers):
 
 
 def write_metadata(metadata, out_dir):
-    with open(os.path.join(out_dir, 'train.txt'), 'w', encoding='utf-8') as f:
+    with codecs.open(
+            os.path.join(out_dir, 'train.txt'), 'w', encoding='utf-8') as f:
         for m in metadata:
             f.write('|'.join([str(x) for x in m]) + '\n')
     frames = sum([m[2] for m in metadata])
