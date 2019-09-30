@@ -133,7 +133,7 @@ def bilstm_net(data,
         input=data,
         size=[dict_dim, emb_dim],
         param_attr=fluid.ParamAttr(learning_rate=emb_lr))
-    
+
     emb = fluid.layers.sequence_unpad(emb, length=seq_len)
 
     fc0 = fluid.layers.fc(input=emb, size=hid_dim * 4)
@@ -200,15 +200,15 @@ def gru_net(data,
 
 
 def textcnn_net(data,
-            seq_len,
-            label,
-            dict_dim,
-            emb_dim=128,
-            hid_dim=128,
-            hid_dim2=96,
-            class_dim=2,
-            win_sizes=None,
-            is_prediction=False):
+                seq_len,
+                label,
+                dict_dim,
+                emb_dim=128,
+                hid_dim=128,
+                hid_dim2=96,
+                class_dim=2,
+                win_sizes=None,
+                is_prediction=False):
     """
     Textcnn_net
     """

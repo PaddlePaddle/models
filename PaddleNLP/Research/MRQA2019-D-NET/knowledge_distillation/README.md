@@ -9,7 +9,7 @@ Model ensemble can improve the generalization of MRC models. However, such appro
 - Python >= 2.7
 - cuda >= 9.0
 - cudnn >= 7.0
-- PaddlePaddle >= 1.5.0 Please refer to Installation Guide [Installation Guide](http://www.paddlepaddle.org/#quick-start)
+- PaddlePaddle >= 1.6 Please refer to Installation Guide [Installation Guide](http://www.paddlepaddle.org/#quick-start)
 
 ### Data and Models Preparation
 User can get the data and trained knowledge_distillation models directly we provided: 
