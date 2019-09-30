@@ -1,7 +1,4 @@
 architecture: SSD
-train_feed: SSDTrainFeed
-eval_feed: SSDEvalFeed
-test_feed: SSDTestFeed
 use_gpu: true
 max_iters: 120000
 snapshot_iter: 10000

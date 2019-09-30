@@ -1,7 +1,4 @@
 architecture: YOLOv3
-train_feed: YoloTrainFeed
-eval_feed: YoloEvalFeed
-test_feed: YoloTestFeed
 use_gpu: true
 max_iters: 70000
 log_smooth_window: 20

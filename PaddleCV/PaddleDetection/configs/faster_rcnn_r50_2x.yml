@@ -1,7 +1,4 @@
 architecture: FasterRCNN
-train_feed: FasterRCNNTrainFeed
-eval_feed: FasterRCNNEvalFeed
-test_feed: FasterRCNNTestFeed
 use_gpu: true
 max_iters: 360000
 log_smooth_window: 20
