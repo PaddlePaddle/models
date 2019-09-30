@@ -190,6 +190,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
                  batch_transforms=[],
                  feed_vars=[],
                  extra_vars=[],
+                 num_devices=None,
                  num_workers=0,
                  auto_reset=True,
                  multiprocessing=False,
@@ -207,12 +208,15 @@ class DataLoaderBuilder(dataloader.DataLoader):
         self.auto_reset = auto_reset
         self.yolo_class_fix = yolo_class_fix
 
-        if use_gpu and prefetch_to_gpu:
-            places = framework.cuda_places()
-        elif pin_memory:
-            places = [fluid.CUDAPinnedPlace()] * len(framework.cuda_places())
-        elif use_gpu:
-            places = [fluid.CPUPlace()] * len(framework.cuda_places())
+        if use_gpu:
+            if num_devices is None:
+                num_devices = len(framework.cuda_places())
+            if prefetch_to_gpu:
+                places = framework.cuda_places()[:num_devices]
+            elif pin_memory:
+                places = [fluid.CUDAPinnedPlace()] * num_devices
+            else:
+                places = [fluid.CPUPlace()] * num_devices
         else:
             places = framework.cpu_places()
         self.places = places
