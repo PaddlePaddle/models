@@ -300,13 +300,15 @@ class RandomCrop(object):
                  thresholds=[.0, .1, .3, .5, .7, .9],
                  scaling=[.3, 1.],
                  num_attempts=50,
-                 allow_no_crop=True):
+                 allow_no_crop=True,
+                 cover_all_box=False):
         super(RandomCrop, self).__init__()
         self.aspect_ratio = aspect_ratio
         self.thresholds = thresholds
         self.scaling = scaling
         self.num_attempts = num_attempts
         self.allow_no_crop = allow_no_crop
+        self.cover_all_box = cover_all_box
 
     def __call__(self, sample):
         if 'gt_box' in sample and len(sample['gt_box']) == 0:
@@ -347,6 +349,9 @@ class RandomCrop(object):
                 iou = self._iou_matrix(gt_box,
                                        np.array([crop_box], dtype=np.float32))
                 if iou.max() < thresh:
+                    continue
+
+                if self.cover_all_box and iou.min() < thresh:
                     continue
 
                 cropped_box, valid_ids = self._crop_box_with_center_constraint(
