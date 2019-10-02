@@ -249,11 +249,9 @@ class DataLoaderBuilder(dataloader.DataLoader):
 
         extract = ExtractFields(feed_vars, extra_vars, yolo_class_fix)
 
-        if buffer_size < 2 * len(self.places):
-            print(color_tty.bold(color_tty.yellow(
-                "it is recommended to set a `buffer_size` no less than "
-                "2 * num_devices ({}), but currently set to {}".format(
-                    2 * len(self.places), buffer_size))))
+        if 'PADDLE_TRAINERS_NUM' not in os.environ:
+            buffer_size *= num_devices
+            num_workers *= num_devices
 
         super(DataLoaderBuilder, self).__init__(
             dataset, sampler, sample_transforms, batch_transforms + [extract],
