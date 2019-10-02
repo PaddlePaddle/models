@@ -117,8 +117,8 @@ class Sampler(object):
         # shuffle along batch index then split by number of shards
         batches = np.array(shuffled_indices).reshape(*shape)
         shuffled_shards = rand_perm(batches).reshape(
-            self.world_size, -1, self.batch_size).tolist()
-        self._shard = shuffled_shards[self.rank]
+            self.world_size, -1, self.batch_size)
+        self._shard = shuffled_shards[self.rank].tolist()
         self._step = 0
 
     def __iter__(self):
