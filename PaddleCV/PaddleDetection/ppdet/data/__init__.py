@@ -49,6 +49,11 @@ type_map = {
 }
 
 
+def register_dataset(name, cls):
+    global type_map
+    type_map[name] = cls
+
+
 class ExtractFields(object):
     def __init__(self,
                  feed_vars=[],
