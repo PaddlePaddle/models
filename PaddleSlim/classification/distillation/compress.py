@@ -106,15 +106,12 @@ def compress(args):
 
         fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
-    val_reader = paddle.batch(
-        reader.val(data_dir='../data/ILSVRC2012'), batch_size=args.batch_size)
+    val_reader = paddle.batch(reader.val(), batch_size=args.batch_size)
     val_feed_list = [('image', image.name), ('label', label.name)]
     val_fetch_list = [('acc_top1', acc_top1.name), ('acc_top5', acc_top5.name)]
 
     train_reader = paddle.batch(
-        reader.train(data_dir='../data/ILSVRC2012'),
-        batch_size=args.batch_size,
-        drop_last=True)
+        reader.train(), batch_size=args.batch_size, drop_last=True)
     train_feed_list = [('image', image.name), ('label', label.name)]
     train_fetch_list = [('loss', avg_cost.name)]
 

@@ -16,7 +16,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from paddle import fluid
+from collections import OrderedDict
+
+import paddle.fluid as fluid
+
+from ppdet.experimental import mixed_precision_global_state
 from ppdet.core.workspace import register
 
 __all__ = ['MaskRCNN']
@@ -79,7 +83,18 @@ class MaskRCNN(object):
                 "{} has no {} field".format(feed_vars, var)
         im_info = feed_vars['im_info']
 
+        mixed_precision_enabled = mixed_precision_global_state() is not None
+        # cast inputs to FP16
+        if mixed_precision_enabled:
+            im = fluid.layers.cast(im, 'float16')
+
+        # backbone
         body_feats = self.backbone(im)
+
+        # cast features back to FP32
+        if mixed_precision_enabled:
+            body_feats = OrderedDict((k, fluid.layers.cast(v, 'float32'))
+                                     for k, v in body_feats.items())
 
         # FPN
         if self.fpn is not None:
@@ -133,7 +148,8 @@ class MaskRCNN(object):
 
         else:
             if self.rpn_only:
-                im_scale = fluid.layers.slice(im_info, [1], starts=[2], ends=[3])
+                im_scale = fluid.layers.slice(
+                    im_info, [1], starts=[2], ends=[3])
                 im_scale = fluid.layers.sequence_expand(im_scale, rois)
                 rois = rois / im_scale
                 return {'proposal': rois}
