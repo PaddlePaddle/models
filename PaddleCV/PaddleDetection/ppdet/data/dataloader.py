@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import division
+
 try:
     from collections.abc import Sequence
 except Exception:
@@ -103,17 +105,17 @@ def _process_worker_init(dataset, transforms, batchify):
     _worker_context = (dataset, transforms, batchify)
 
 
-def _process_worker_fn(idx, ids, context=None, batch_seed=None):
+def _process_worker_fn(step, ids, context=None, batch_seed=None):
     global _worker_context
     dataset, transform, batchify = _worker_context
-    samples = [_apply_transform(i, dataset, transform, batch_seed, idx)
+    samples = [_apply_transform(i, dataset, transform, batch_seed, step)
                for i in ids]
     return batchify(samples)
 
 
-def _thread_worker_fn(idx, ids, context, batch_seed=None):
+def _thread_worker_fn(step, ids, context, batch_seed=None):
     dataset, transform, batchify = context
-    samples = [_apply_transform(i, dataset, transform, batch_seed, idx)
+    samples = [_apply_transform(i, dataset, transform, batch_seed, step)
                for i in ids]
     return batchify(samples)
 
@@ -125,8 +127,9 @@ class _SingleWorkerLoaderIter(object):
         self.transform = loader.transform
         self.batchify = loader.batchify
         self.rank = loader.rank
+        self.num_devices = loader.num_devices
         self._iter = iter(loader.sampler)
-        self._batch_idx = loader.step
+        self._batch_idx = loader.step * self.num_devices
 
     def _batch_seed(self):
         if self.transform.need_seeding:
@@ -136,9 +139,11 @@ class _SingleWorkerLoaderIter(object):
 
     def __next__(self):
         ids = next(self._iter)
+        # XXX assume pad batch is enabled during training
+        cur_step = (self._batch_idx + self.num_devices - 1) // self.num_devices
         samples = [
             _apply_transform(i, self.dataset, self.transform,
-                             self._batch_seed(), self._batch_idx) for i in ids]
+                             self._batch_seed(), cur_step) for i in ids]
         batch = self.batchify(samples)
         self._batch_idx += 1
         return batch
@@ -152,11 +157,12 @@ class _MultiWorkerLoaderIter(object):
         self.dataset = loader.dataset
         self.transform = loader.transform
         self.rank = loader.rank
+        self.num_devices = loader.num_devices
         self.buffer_size = loader.buffer_size
         self._iter = iter(loader.sampler)
         self._out_buffer = {}
-        self._recv_idx = loader.step
-        self._sent_idx = loader.step
+        self._recv_idx = loader.step * self.num_devices
+        self._sent_idx = loader.step * self.num_devices
 
         worker_context = (loader.dataset, loader.transform, loader.batchify)
         if loader.multiprocessing:
@@ -184,9 +190,11 @@ class _MultiWorkerLoaderIter(object):
         ids = next(self._iter, None)
         if ids is None:
             return
+        # XXX assume pad batch is enabled during training
+        cur_step = (self._sent_idx + self.num_devices - 1) // self.num_devices
         future = self._worker_pool.apply_async(
             self._worker_fn,
-            (self._sent_idx, ids, self._worker_context, self._batch_seed()))
+            (cur_step, ids, self._worker_context, self._batch_seed()))
         self._out_buffer[self._sent_idx] = future
         self._sent_idx += 1
 
@@ -214,6 +222,7 @@ class DataLoader(object):
                  sample_transforms=[],
                  batch_transforms=None,
                  num_workers=0,
+                 num_devices=1,
                  multiprocessing=False,
                  buffer_size=2,
                  rank=0):
@@ -224,6 +233,7 @@ class DataLoader(object):
         self.sample_transforms = sample_transforms
         self.batch_transforms = batch_transforms
         self.num_workers = num_workers
+        self.num_devices = num_devices
         self.multiprocessing = multiprocessing
         self.buffer_size = buffer_size
         self.rank = rank

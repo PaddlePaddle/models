@@ -224,6 +224,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
                 places = [fluid.CPUPlace()] * num_devices
         else:
             places = framework.cpu_places()
+            if num_devices is None:
+                num_devices = len(places)
         self.places = places
 
         init_seed = random.randint(0, 1e5)
@@ -255,7 +257,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
 
         super(DataLoaderBuilder, self).__init__(
             dataset, sampler, sample_transforms, batch_transforms + [extract],
-            num_workers, multiprocessing, buffer_size, rank)
+            num_workers, num_devices, multiprocessing, buffer_size, rank)
 
     def _to_tensor(self, feed_dict, place):
         for k, (ndarray, seq_length) in feed_dict.items():
