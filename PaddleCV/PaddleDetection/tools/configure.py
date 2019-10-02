@@ -19,7 +19,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 import yaml
 
-from ppdet.core.workspace import get_registered_modules, load_config
+from ppdet.core.workspace import get_registered_modules, load_config, dump_value
 from ppdet.utils.cli import ColorTTY, print_total_cfg
 
 color_tty = ColorTTY()
@@ -39,8 +39,7 @@ MISC_CONFIG = {
     "snapshot_iter": 10000,
     "use_gpu": True,
 }
-
-
+"""
 def dump_value(value):
     # XXX this is hackish, but collections.abc is not available in python 2
     if hasattr(value, '__dict__') or isinstance(value, (dict, tuple, list)):
@@ -51,6 +50,7 @@ def dump_value(value):
     else:
         # primitive types
         return str(value)
+"""
 
 
 def dump_config(module, minimal=False):

@@ -33,14 +33,14 @@ set_paddle_flags(
 
 import paddle.fluid as fluid
 
-from ppdet.utils.cli import print_total_cfg
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results, json_eval_results
 import ppdet.utils.checkpoint as checkpoint
-from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
 from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
+from ppdet.utils.cli import print_total_cfg
+from ppdet.utils.cli import ArgsParser
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -68,6 +68,8 @@ def main():
     else:
         eval_feed = create(cfg.eval_feed)
 
+    multi_scale_test = getattr(cfg, 'MultiScaleTEST', None)
+
     # define executor
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -79,7 +81,7 @@ def main():
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
             pyreader, feed_vars = create_feed(eval_feed)
-            fetches = model.eval(feed_vars)
+            fetches = model.eval(feed_vars, multi_scale_test)
     eval_prog = eval_prog.clone(True)
     reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
     pyreader.decorate_sample_list_generator(reader, place)
@@ -122,15 +124,16 @@ def main():
     sub_keys = None
     sub_values = None
     # build sub-program
-    if 'sub_architecture' in cfg:
-        sub_arch = cfg.sub_architecture
-        sub_model = create(sub_arch)
+    if 'Mask' in main_arch and multi_scale_test:
+        #sub_arch = cfg.sub_architecture
+        #sub_model = create(sub_arch)
         sub_eval_prog = fluid.Program()
         with fluid.program_guard(sub_eval_prog, startup_prog):
             with fluid.unique_name.guard():
                 _, feed_vars = create_feed(
                     eval_feed, use_pyreader=False, sub_prog_feed=True)
-                sub_fetches = sub_model.eval(feed_vars)
+                sub_fetches = model.eval(
+                    feed_vars, multi_scale_test, mask_branch=True)
                 extra_keys = []
                 if cfg.metric == 'COCO':
                     extra_keys = ['im_id', 'im_shape']
@@ -149,10 +152,7 @@ def main():
     # evaluation
     resolution = None
     if 'mask' in results[0]:
-        if 'sub_architecture' in cfg:
-            resolution = sub_model.mask_head.resolution
-        else:
-            resolution = model.mask_head.resolution
+        resolution = model.mask_head.resolution
     # if map_type not set, use default 11point, only use in VOC eval
     map_type = cfg.map_type if 'map_type' in cfg else '11point'
     eval_results(results, eval_feed, cfg.metric, cfg.num_classes, resolution,

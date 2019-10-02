@@ -130,10 +130,13 @@ def eval_run(exe,
                 k: (np.array(v), v.recursive_sequence_lengths())
                 for k, v in zip(keys, outs)
             }
-            if getattr(cfg, 'MultiScaleTEST', None) is not None:
+            multi_scale_test = getattr(cfg, 'MultiScaleTEST', None)
+            sub_arch = 'Mask' in cfg.architecture and multi_scale_test
+
+            if multi_scale_test:
                 post_res = mstest_box_post_process(res, cfg)
                 res.update(post_res)
-            if getattr(cfg, 'sub_architecture', None) is not None:
+            if sub_arch:
                 place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
                 sub_feed = get_sub_feed(res, place)
                 sub_prog_outs = exe.run(sub_prog,
@@ -146,7 +149,7 @@ def eval_run(exe,
                 }
                 post_res = mstest_mask_post_process(sub_prog_res, cfg)
                 res.update(post_res)
-            if getattr(cfg, 'MultiScaleTEST', None) is not None:
+            if multi_scale_test:
                 res = clean_res(
                     res, ['im_info', 'bbox', 'im_id', 'im_shape', 'mask'])
             results.append(res)

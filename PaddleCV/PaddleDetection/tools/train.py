@@ -72,9 +72,11 @@ def main():
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
+
     if 'log_iter' not in cfg:
         cfg.log_iter = 20
-
+    if 'multi_scale_test' not in cfg:
+        cfg.multi_scale_test = False
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
     print_total_cfg(cfg)
@@ -133,7 +135,7 @@ def main():
             with fluid.unique_name.guard():
                 model = create(main_arch)
                 eval_pyreader, feed_vars = create_feed(eval_feed)
-                fetches = model.eval(feed_vars)
+                fetches = model.eval(feed_vars, cfg.multi_scale_test)
         eval_prog = eval_prog.clone(True)
 
         eval_reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)

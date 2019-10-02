@@ -77,12 +77,8 @@ def build_post_map(coarsest_stride=1,
             padding_batch = []
             padding_images = []
             data = batch_data[0]
-            if len(data) - 3 != num_scale:
-                raise ValueError(
-                    "num_scale: {} is not equal to the number of actual multiscale resized images: {}".
-                    format(num_scale, len(data) - 3))
             for i, input in enumerate(data):
-                if i < len(data) - 3:
+                if i < num_scale:
                     im_c, im_h, im_w = input.shape
                     max_h = int(
                         np.ceil(im_h / coarsest_stride) * coarsest_stride)
@@ -91,7 +87,7 @@ def build_post_map(coarsest_stride=1,
                     padding_im = np.zeros(
                         (im_c, max_h, max_w), dtype=np.float32)
                     padding_im[:, :im_h, :im_w] = input
-                    data[-3][3 * i:3 * i + 2] = [max_h, max_w]
+                    data[num_scale][3 * i:3 * i + 2] = [max_h, max_w]
                     padding_batch.append(padding_im)
                 else:
                     padding_batch.append(input)

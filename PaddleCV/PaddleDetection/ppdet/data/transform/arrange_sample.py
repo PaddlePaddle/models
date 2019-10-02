@@ -110,8 +110,11 @@ class ArrangeEvalRCNN(BaseOperator):
                     (image, im_info, im_id, im_shape, gt_bbox,
                     gt_class, difficult)
         """
-        im = sample['image']
-        keys = list(sample.keys())
+        ims = []
+        keys = sorted(list(sample.keys()))
+        for k in keys:
+            if 'image' in k:
+                ims.append(sample[k])
         if 'im_info' in keys:
             im_info = sample['im_info']
         else:
@@ -127,7 +130,9 @@ class ArrangeEvalRCNN(BaseOperator):
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
         difficult = sample['difficult']
-        outs = (im, im_info, im_id, im_shape, gt_bbox, gt_class, difficult)
+        remain_list = [im_info, im_id, im_shape, gt_bbox, gt_class, difficult]
+        ims.extend(remain_list)
+        outs = tuple(ims)
         return outs
 
 
