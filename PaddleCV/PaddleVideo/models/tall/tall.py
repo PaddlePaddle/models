@@ -37,9 +37,8 @@ class TALL(ModelBase):
 	self.sentence_embedding_size = self.get_config_from_sec("model", "sentence_embedding_size")
 	self.hidden_size = self.get_config_from_sec("model", "hidden_size")
 	self.output_size = self.get_config_from_sec("model", "output_size")
-	self.pretrained_model = None
+	#self.pretrained_model = None
 	#pretrained_model = "output/20/"
-
         self.epochs = self.get_config_from_sec("train", "epoch")
 	self.context_size = self.get_config_from_sec("train", "context_size"）
 	self.context_num = self.get_config_from_sec("train", "context_num"）
@@ -47,7 +46,7 @@ class TALL(ModelBase):
 	self.sent_vec_dim = self.get_config_from_sec("train", "sent_vec_dim"）
 	self.off_size = self.get_config_from_sec("train", "off_size")
 	self.movie_length_info = self.get_config_from_sec("train", "movie_length_info")	
-
+	# different params in train/test mode
 	self.batch_size =self.get_config_from_sec(self.mode, "batch_size"）
 	self.clip_sentvec = self.get_config_from_sec(self.mode, "test_clip_sentvec")	
 	self.sliding_clip_path= selyf.get_config_from_sec(self.mode, "sliding_clip_path")
@@ -75,38 +74,34 @@ class TALL(ModelBase):
 	self.use_pyreader = use_pyreader
 
 	if use_pyreader:
-	    if self.mode == "train":
-	    	py_reader = fluid.io.PyReader(feed_list=[self.images, self.sentences, self.offsets], capacity=4, iterable=True)
-	    elif self.mode == "valid":
-		py_reader = fluid.io.PyReader(feed_list=[self.images, self.sentences], capacity=4, iterable=True)
+	    feed_list = [self.images, self.sentences, slef.offsets] if self.mode == "train" else [self.images, self.sentences]
+	    py_reader = fluid.io.PyReader(feed_list=feed_list, capacity=4, iterable=True)
 
 	    self.py_reader = py_reader
-
  
     def create_model_args(self):
 	cfg = {}
 	cfg["images"] = self.images
 	cfg["sentences"] = self.sentences
-	if self.mode=="train":
-	    cfg["offsets"] = self.offsets
 	cfg["semantic_size"] = self.semantic_size
+	cfg["hidden_size"] = self.hidden_size	
 	cfg["output_size"] = self.output_size
-	cfg["hidden_size"] = self.hidden_size
 	return cfg
 
     def build_model(self):
 	cfg = self.create_model_args()
-	videomodel = tall_model.TALL(mode=self.mode, cfg=cfg)
-	outs, offs = videomodel.net()
-	self.network_outputs = [outs, offs]
+	videomodel = TALL(mode=self.mode, cfg=cfg)
+	outs = videomodel.net()
+	self.network_outputs = [outs, self.offsets] if self.mode == "train" else [outs]
 
-    def optimizer():
+    def optimizer(self):
+	assert self.mode == 'train','optimizer only can be get in train mode.'
         fluid.clip.set_gradient_clip(
             clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=5.0))
-    
         return fluid.optimizer.Adam(learning_rate=1e-3)
 
     def loss(self):
+	assert self.mode == 'train'
 	outs = self.network_outputs[0]
 	offs = self.network_outputs[1]
     	sim_score_mat = outs[0]
@@ -148,17 +143,17 @@ class TALL(ModelBase):
 	return self.network_outputs
 
     def feeds(self):
-	return [self.images, self.sentences, self.offsets]
+	return [self.images, self.sentences, self.offsets] is self.mode=="train" else [self.images, self.sentences]
 
     def fetchs(self):
-	fetch_list = [self.loss()]
+	fetch_list = [self.loss()] if self.mode=="train" else [self.network_outputs]
 	return fetch_list
 
     def pretrain_info(self):
-	return
+	return('TALL_pretrained', '')
 
     def weights_info(self):
-	return
+	return ('TALL_final.pdparams', '')
 
     def load_pretraine_params(self, exe, pretrain, prog, place):
 	def is_parameter(var):

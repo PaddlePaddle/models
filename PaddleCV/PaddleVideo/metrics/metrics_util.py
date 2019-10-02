@@ -441,61 +441,15 @@ class TallMetrics(Metrics):
             loss = np.array(fetch_list[0])
 	    logger.info(info +'\tLoss = {}'.format('%.6f' % np.mean(loss)))
 
-
-	elif self.mode == "test":
-	    
+	elif self.mode == "test": 
 	    pass
     
     def accumalate():
 	if self.mode == "test":
-	    outs = fetch_list[0]
-	    outputs = np.squeeze(outs)
-	    start = fetch_list[1]
-	    end = fetch_list[2]
-	    k = fetch_list[3]
-	    t = fetch_list[4]
-	
-	    movie_clip_sentences = fetch_list[5]
-	    movie_clip_featmaps = fetch_lkist[6]
-
-            sentence_image_mat = np.zeros([len(movie_clip_sentences), len(movie_clip_featmaps)])
-	    sentence_image_reg_mat = np.zeros([len(movie_clip_sentences), len(movie_clip_featmaps    ), 2])
-	    sentence_image_mat[k, t] = outputs[0]
-	    # sentence_image_mat[k, t] = expit(outputs[0]) * conf_score
-            reg_end = end + outputs[2]
-            reg_start = start + outputs[1]
-	    sentence_image_reg_mat[k, t, 0] = reg_start
-	    sentence_image_reg_mat[k, t, 1] = reg_end
-
-
-	    clips = [b[0] for b in movie_clip_featmaps]
-	    sclips = [b[0] for b in movie_clip_sentences]
-
-            for i in range(len(sel.IoU_thresh)):
-            	IoU = self.IoU_thresh[i]
-            	self.current_correct_num_10 = compute_IoU_recall_top_n_forreg(10, IoU, sentence_image_mat, sentence_image_reg_mat, sclips, iclips)
-            	self_current_correct_num_5 = compute_IoU_recall_top_n_forreg(5, IoU, sentence_image_mat, sentence_image_reg_mat, sclips, iclips)
-            	self.current_correct_num_1 = compute_IoU_recall_top_n_forreg(1, IoU, sentence_image_mat, sentence_image_reg_mat, sclips, iclips)
-            	
-		#logger.info(info + " IoU=" + str(IoU) + ", R@10: " + str(correct_num_10 / len(sclips)) + "; IoU=" + str(IoU) + ", R@5: " + str(correct_num_5 / len(sclips)) + "; IoU=" + str(IoU) + ", R@1: " + str(correct_num_1 / len(sclips)))
-
-            	self.all_correct_num_10[i] += correct_num_10
-            	self.all_correct_num_5[i] += correct_num_5
-            	self.all_correct_num_1[i] += correct_num_1
-            
-	    self.all_retrievd += len(sclips)
-
+	    self.calculator.accumalate(self, fetch_list)
 
     def finalize_and_log_out(self, info="", savedir="/"):
-	all_retrievd = self.all_retrievd
-	for k in range(len(self.IoU_thresh)):
-           print(" IoU=" + str(self.IoU_thresh[k]) + ", R@10: " + str(all_correct_num_10[k] / all_retrievd) + "; IoU=" + str(self.IoU_thresh[k]) + ", R@5: " + str(all_correct_num_5[k] / all_retrievd) + "; IoU=" + str(self.IoU_thresh[k]) + ", R@1: " + str(all_correct_num_1[k] / all_retrievd))
-        
-    	R1_IOU5 = self all_correct_num_1[2] / all_retrievd
-    	R5_IOU5 = self.all_correct_num_5[2] / all_retrievd
-
-    	print "{}\n".format("best_R1_IOU5: %0.3f" % R1_IOU5)
-    	print "{}\n".format("best_R5_IOU5: %0.3f" % R5_IOU5)
+	self.calculator.finalize_and_log_out()
 
     def reset(self):
 	self.calculator.reset()

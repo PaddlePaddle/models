@@ -23,7 +23,7 @@ TRAIN:
     dataset : TACoS
     model : TALL
 
-VALID:
+TEST:
     batch_size : 1
     context_num : 1
     context_size : 128

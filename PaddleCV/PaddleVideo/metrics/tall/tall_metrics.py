@@ -37,13 +37,14 @@ class MetricsCalculator():
 	self.all_correct_num_1 = [0.0] * 5
         self.all_retrievd = 0.0
     
-    def finalize_metrics(self):
+    def calculate_and_log_out(self, fetch_list, info=""):
 
-	return
-    def calculate_metrics(self,):
-	return
+
     def accumalate(self):
 	return
+
+    def finalize_and_log_out(self, info="", savedir="./"):
+
 
 
 

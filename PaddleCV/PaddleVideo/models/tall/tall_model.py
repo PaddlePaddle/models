@@ -22,8 +22,6 @@ class TALL(object):
     def __init__(self, mode, cfg):
 	self.images = cfg["images"]
 	self.sentences = cfg["sentences"]
-	if self.mode == "train":
-	    self.offsets = cfg[offsets]
 	self.semantic_size = cfg["semantic_size"]
 	self.hidden_size = cfg["hidden_size"]
 	self.output_size = cfg["output_size"]
@@ -46,9 +44,9 @@ class TALL(object):
 
     def net(self)	
        # visual2semantic
-    	transformed_clip_train = fluid.layers.fc(
+    	transformed_clip = fluid.layers.fc(
         	input=self.images,
-        	size=semantic_size,
+        	size=self.semantic_size,
         	act=None,
         	name='v2s_lt',
         	param_attr=fluid.ParamAttr(
@@ -56,11 +54,11 @@ class TALL(object):
             		initializer=fluid.initializer.NormalInitializer(loc=0.0, scale=1.0, seed=0)),
         	bias_attr=False)
     	#l2_normalize
-    	transformed_clip_train = fluid.layers.l2_normalize(x=transformed_clip_train, axis=1)
+    	transformed_clip = fluid.layers.l2_normalize(x=transformed_clip, axis=1)
     	# sentence2semantic
-   	transformed_sentence_train = fluid.layers.fc(
+   	transformed_sentence = fluid.layers.fc(
             input=self.sentences,
-            size=semantic_size,
+            size=self.semantic_size,
             act=None,
             name='s2s_lt',
             param_attr=fluid.ParamAttr(
@@ -68,30 +66,29 @@ class TALL(object):
             	initializer=fluid.initializer.NormalInitializer(loc=0.0, scale=1.0, seed=0)),
             bias_attr=False)
     	#l2_normalize
-    	transformed_sentence_train = fluid.layers.l2_normalize(x=transformed_sentence_train, axis=1)
+    	transformed_sentence = fluid.layers.l2_normalize(x=transformed_sentence, axis=1)
         
-	cross_modal_vec_train=_cross_modal_comb(transformed_clip_train, transformed_sentence_train)
-    	cross_modal_vec_train=fluid.layers.unsqueeze(input=cross_modal_vec_train, axes=[0])
-    	cross_modal_vec_train=fluid.layers.transpose(cross_modal_vec_train, perm=[0, 3, 1, 2])
+	cross_modal_vec=_cross_modal_comb(transformed_clip_train, transformed_sentence)
+    	cross_modal_vec=fluid.layers.unsqueeze(input=cross_modal_vec, axes=[0])
+    	cross_modal_vec=fluid.layers.transpose(cross_modal_vec, perm=[0, 3, 1, 2])
     
     	mid_output = fluid.layers.conv2d(
-            input=cross_modal_vec_train,
-            num_filters=hidden_size,
+            input=cross_modal_vec,
+            num_filters=self.hidden_size,
             filter_size=1,
             stride=1,
             act="relu",
             param_attr=fluid.param_attr.ParamAttr(name="mid_out_weights"),
             bias_attr=False)
 
-    	sim_score_mat_train = fluid.layers.conv2d(
+    	sim_score_mat = fluid.layers.conv2d(
             input=mid_output,
-            num_filters=output_size,
+            num_filters=self.output_size,
             filter_size=1,
             stride=1,
             act=None,
             param_attr=fluid.param_attr.ParamAttr(name="sim_mat_weights"),
             bias_attr=False)
-    	self.sim_score_mat_train = fluid.layers.squeeze(input=sim_score_mat_train, axes=[0])
-    	return self.sim_score_mat_train, self.offsets
 
-	
+    	sim_score_mat = fluid.layers.squeeze(input=sim_score_mat, axes=[0])
+    	return sim_score_mat	
