@@ -125,8 +125,6 @@ def main():
     sub_values = None
     # build sub-program
     if 'Mask' in main_arch and multi_scale_test:
-        #sub_arch = cfg.sub_architecture
-        #sub_model = create(sub_arch)
         sub_eval_prog = fluid.Program()
         with fluid.program_guard(sub_eval_prog, startup_prog):
             with fluid.unique_name.guard():

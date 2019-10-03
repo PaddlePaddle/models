@@ -34,7 +34,7 @@ __all__ = [
     'create',
     'register',
     'serializable',
-    'value',
+    'dump_value',
 ]
 
 
