@@ -257,7 +257,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
 
         super(DataLoaderBuilder, self).__init__(
             dataset, sampler, sample_transforms, batch_transforms + [extract],
-            num_workers, num_devices, multiprocessing, buffer_size, rank)
+            num_workers, num_devices, multiprocessing, buffer_size)
 
     def _to_tensor(self, feed_dict, place):
         for k, (ndarray, seq_length) in feed_dict.items():

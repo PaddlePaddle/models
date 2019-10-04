@@ -88,7 +88,6 @@ def _apply_transform(idx, dataset, transform, batch_seed=None, step=0):
 
     sample = dataset[idx]
     # for random shape, ensure same size is chosen for the same batch
-    # batch_seed = batch_idx * rank
     if batch_seed is not None:
         sample['batch_seed'] = batch_seed
     if transform.use_mixup and (transform.mixup_steps > step
@@ -126,16 +125,13 @@ class _SingleWorkerLoaderIter(object):
         self.dataset = loader.dataset
         self.transform = loader.transform
         self.batchify = loader.batchify
-        self.rank = loader.rank
         self.num_devices = loader.num_devices
         self._iter = iter(loader.sampler)
         self._batch_idx = loader.step * self.num_devices
 
     def _batch_seed(self):
         if self.transform.need_seeding:
-            return (self._batch_idx + 1) * (self.rank + 1)
-        else:
-            return None
+            return np.random.randint(0, 2**31)
 
     def __next__(self):
         ids = next(self._iter)
@@ -156,7 +152,6 @@ class _MultiWorkerLoaderIter(object):
         super(_MultiWorkerLoaderIter, self).__init__()
         self.dataset = loader.dataset
         self.transform = loader.transform
-        self.rank = loader.rank
         self.num_devices = loader.num_devices
         self.buffer_size = loader.buffer_size
         self._iter = iter(loader.sampler)
@@ -224,8 +219,7 @@ class DataLoader(object):
                  num_workers=0,
                  num_devices=1,
                  multiprocessing=False,
-                 buffer_size=2,
-                 rank=0):
+                 buffer_size=2):
         super(DataLoader, self).__init__()
 
         self.dataset = dataset
@@ -236,7 +230,6 @@ class DataLoader(object):
         self.num_devices = num_devices
         self.multiprocessing = multiprocessing
         self.buffer_size = buffer_size
-        self.rank = rank
         self.step = 0
 
         assert sampler is not None or dataset.mode != 'indexable', \
