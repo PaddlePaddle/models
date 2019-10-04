@@ -227,6 +227,7 @@ class DataLoaderBuilder(dataloader.DataLoader):
             if num_devices is None:
                 num_devices = len(places)
         self.places = places
+        self._tensor_dicts = [{} for _ in places]
 
         init_seed = random.randint(0, 1e5)
         rank = int(os.getenv('PADDLE_TRAINER_ID', 0))
@@ -259,14 +260,16 @@ class DataLoaderBuilder(dataloader.DataLoader):
             dataset, sampler, sample_transforms, batch_transforms + [extract],
             num_workers, num_devices, multiprocessing, buffer_size)
 
-    def _to_tensor(self, feed_dict, place):
+    def _to_tensor(self, feed_dict, place, out=None):
+        if out is None:
+            out = {}
         for k, (ndarray, seq_length) in feed_dict.items():
-            t = fluid.core.LoDTensor()
+            if k not in out:
+                out[k] = fluid.core.LoDTensor()
+            out[k].set(ndarray, place)
             if seq_length is not None:
-                t.set_recursive_sequence_lengths(seq_length)
-            t.set(ndarray, place)
-            feed_dict[k] = t
-        return feed_dict
+                out[k].set_recursive_sequence_lengths(seq_length)
+        return out
 
     def _merge_seq_length(self, seq_lengths):
         results = seq_lengths[0]
@@ -326,7 +329,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
                 feed_list = self._to_tensor(
                     coalesced_feed_dict, place)
         else:
-            feed_list = [self._to_tensor(*v) for v in feed_list]
+            feed_list = [self._to_tensor(v[0], v[1], o) for v, o in zip(
+                feed_list, self._tensor_dicts)]
         return feed_list, coalesced_extra_dict
 
     next = __next__
