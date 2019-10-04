@@ -142,7 +142,7 @@ TestDataLoader:
   multiprocessing: false
   prefetch_to_gpu: false
   num_workers: 4
-  buffer_size: 8
+  buffer_size: 4
   dataset:
     type: folder
     root_dir: demo

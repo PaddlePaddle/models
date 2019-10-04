@@ -64,7 +64,7 @@ TrainDataLoader:
   multiprocessing: false
   prefetch_to_gpu: false
   yolo_class_fix: true
-  num_workers: 8
+  num_workers: 4
   buffer_size: 4
   dataset:
     type: coco
@@ -124,7 +124,7 @@ EvalDataLoader:
   prefetch_to_gpu: false
   yolo_class_fix: true
   num_workers: 4
-  buffer_size: 8
+  buffer_size: 4
   dataset:
     type: coco
     root_dir: dataset/coco
@@ -160,7 +160,7 @@ TestDataLoader:
   prefetch_to_gpu: false
   yolo_class_fix: true
   num_workers: 4
-  buffer_size: 8
+  buffer_size: 4
   dataset:
     type: folder
     root_dir: demo
