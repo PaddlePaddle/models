@@ -135,9 +135,10 @@ EvalDataLoader:
   - image
   extra_vars:
   - id
-  - gt_box
-  - gt_label
-  - difficult
+  - name: im_shape
+    fields:
+    - orig_height
+    - orig_width
   sample_transforms:
   - !Resize
     target_dim: 300
