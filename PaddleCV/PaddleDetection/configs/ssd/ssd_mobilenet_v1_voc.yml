@@ -97,7 +97,8 @@ TrainDataLoader:
     prob: 0.5
   - !Resize
     target_dim: 300
-    interp: 3
+    interp: 1
+    force_pil: true
   - !NormalizePermute
     mean: [127.5, 127.5, 127.5]
     std: [127.502231, 127.502231, 127.502231]
@@ -130,7 +131,8 @@ EvalDataLoader:
   sample_transforms:
   - !Resize
     target_dim: 300
-    interp: 3
+    interp: 1
+    force_pil: true
   - !NormalizePermute
     mean: [127.5, 127.5, 127.5]
     std: [127.502231, 127.502231, 127.502231]
@@ -161,7 +163,8 @@ TestDataLoader:
   sample_transforms:
   - !Resize
     target_dim: 300
-    interp: 3
+    interp: 1
+    force_pil: true
   - !NormalizePermute
     mean: [127.5, 127.5, 127.5]
     std: [127.502231, 127.502231, 127.502231]
