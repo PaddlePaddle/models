@@ -307,6 +307,11 @@ class DataLoaderBuilder(dataloader.DataLoader):
         if _drained and len(feed_list) == 0:
             raise StopIteration
 
+        if len(self.places) > 0:
+            for k, v in coalesced_extra_dict.items():
+                if isinstance(v, Sequence) and isinstance(v[0], np.ndarray):
+                    coalesced_extra_dict[k] = [np.concatenate(v)]
+
         # XXX merge remaining items into single dict, let executor split it
         if _drained and len(feed_list) != len(self.places):
             # place = self.places[0]
