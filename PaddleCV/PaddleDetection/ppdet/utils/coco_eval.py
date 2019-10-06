@@ -206,6 +206,9 @@ def bbox2out(results, clsid2catid, is_bbox_normalized=False):
         if bboxes.shape == (1, 1) or bboxes is None:
             continue
 
+        if is_bbox_normalized and len(t['im_shape']) > 1:
+            t['im_shape'] = [np.concatenate(t['im_shape'])]
+
         k = 0
         for i in range(len(lengths)):
             num = lengths[i]
