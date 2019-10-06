@@ -94,8 +94,9 @@ def main():
             anno_file, cfg.metric, json_directory=FLAGS.output_eval)
         return
 
-    compile_program = fluid.compiler.CompiledProgram(
-        eval_prog).with_data_parallel()
+    compile_program = fluid.compiler.CompiledProgram(eval_prog)
+    if main_arch in ['YOLOv3']:
+        compile_program = compile_program.with_data_parallel()
 
     # load model
     exe.run(startup_prog)

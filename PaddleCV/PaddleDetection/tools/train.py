@@ -173,8 +173,10 @@ def main():
         exec_strategy=exec_strategy)
 
     if FLAGS.eval:
-        compiled_eval_prog = fluid.compiler.CompiledProgram(
-            eval_prog).with_data_parallel(share_vars_from=compiled_train_prog)
+        compiled_eval_prog = fluid.compiler.CompiledProgram(eval_prog)
+        if main_arch in ['YOLOv3']:
+            compiled_eval_prog = compiled_eval_prog.with_data_parallel(
+                share_vars_from=compiled_train_prog)
 
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
