@@ -480,6 +480,8 @@ class NormalizeLabels(object):
             sample['gt_label'] = sample['gt_label'].squeeze(-1)
             if 'gt_score' in sample:
                 sample['gt_score'] = sample['gt_score'].squeeze(-1)
+            if 'difficult' in sample:
+                sample['difficult'] = sample['difficult'].squeeze(-1)
 
         if 'gt_box' in sample and len(sample['gt_box']) == 0:
             if self.num_instances is None:
