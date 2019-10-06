@@ -35,13 +35,15 @@ class Resize(object):
                  resize_longer=None,
                  target_dim=[],
                  interp=cv2.INTER_LINEAR,
-                 scale_box=None):
+                 scale_box=None,
+                 force_pil=False):
         super(Resize, self).__init__()
         self.resize_shorter = resize_shorter
         self.resize_longer = resize_longer
         self.target_dim = target_dim
         self.interp = interp  # 'random' for yolov3
         self.scale_box = scale_box
+        self.force_pil = force_pil
 
     @property
     def batch_seed(self):
@@ -99,8 +101,15 @@ class Resize(object):
                     sample['gt_box'] = np.clip(
                         sample['gt_box'] * scale_array, 0, dim - 1)
 
-        sample['image'] = cv2.resize(
-            sample['image'], (resize_w, resize_h), interpolation=interp)
+        if self.force_pil:
+            from PIL import Image
+            img = Image.fromarray(sample['image'])
+            img = img.resize((resize_w, resize_h), interp)
+            img = np.array(img)
+            sample['image'] = img
+        else:
+            sample['image'] = cv2.resize(
+                sample['image'], (resize_w, resize_h), interpolation=interp)
         sample['width'] = resize_w
         sample['height'] = resize_h
         return sample
