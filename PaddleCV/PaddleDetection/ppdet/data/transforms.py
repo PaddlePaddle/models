@@ -467,6 +467,11 @@ class NormalizeLabels(object):
         return box
 
     def __call__(self, sample):
+        if self.num_instances is None:
+            sample['gt_label'] = sample['gt_label'].squeeze(-1)
+            if 'gt_score' in sample:
+                sample['gt_score'] = sample['gt_score'].squeeze(-1)
+
         if 'gt_box' in sample and len(sample['gt_box']) == 0:
             if self.num_instances is None:
                 return sample
@@ -488,9 +493,6 @@ class NormalizeLabels(object):
             sample['gt_box'] = self.corner_to_center(sample['gt_box'])
 
         if self.num_instances is None:
-            sample['gt_label'] = sample['gt_label'].squeeze(-1)
-            if 'gt_score' in sample:
-                sample['gt_score'] = sample['gt_score'].squeeze(-1)
             return sample
 
         # cap then pad labels, also squeeze `gt_label` and `gt_score`
