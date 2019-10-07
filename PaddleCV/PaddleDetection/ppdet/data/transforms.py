@@ -463,12 +463,13 @@ class MixUp(object):
 
 
 class NormalizeLabels(object):
-    def __init__(
-            self, num_instances=None, normalize_box=False, to_center=False):
+    def __init__(self, num_instances=None, normalize_box=False,
+                 to_center=False, squeeze_last=False):
         super(NormalizeLabels, self).__init__()
         self.num_instances = num_instances
         self.normalize_box = normalize_box
         self.to_center = to_center
+        self.squeeze_last = squeeze_last
 
     def corner_to_center(self, box):
         box[:, 2:] = box[:, 2:] - box[:, :2]
@@ -476,7 +477,7 @@ class NormalizeLabels(object):
         return box
 
     def __call__(self, sample):
-        if self.num_instances is None:
+        if self.squeeze_last and self.num_instances is None:
             sample['gt_label'] = sample['gt_label'].squeeze(-1)
             if 'gt_score' in sample:
                 sample['gt_score'] = sample['gt_score'].squeeze(-1)
