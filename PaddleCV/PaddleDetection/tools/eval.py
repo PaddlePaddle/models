@@ -123,7 +123,6 @@ def main():
         is_bbox_normalized = model.is_bbox_normalized()
 
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
-    print(results[0])
     # evaluation
     resolution = None
     if 'mask' in results[0]:
