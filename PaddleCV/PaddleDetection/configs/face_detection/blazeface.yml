@@ -98,6 +98,7 @@ SSDEvalFeed:
   - !DecodeImage
     to_rgb: true
     with_mixup: false
+  - !NormalizeBox {}
   - !ResizeImage
     interp: 1
     target_size: 640

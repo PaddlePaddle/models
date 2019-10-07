@@ -112,7 +112,7 @@ def main():
     if cfg.metric == 'VOC':
         extra_keys = ['gt_box', 'gt_label', 'is_difficult']
     if cfg.metric == 'WIDERFACE':
-        extra_keys = ['im_id', 'im_shape']
+        extra_keys = ['im_id', 'im_shape', 'gt_box']
 
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 

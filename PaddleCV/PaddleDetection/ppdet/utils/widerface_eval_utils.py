@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import numpy as np
 
 from ppdet.data.source.widerface_loader import widerface_label
 from ppdet.utils.coco_eval import bbox2out
@@ -54,7 +55,7 @@ def exe_face_eval_results(
 
     def isSameFace(face_gt, face_pred):
         iou = calIOU(face_gt, face_pred)
-        return iou >= 0.5
+        return iou >= 0.3
 
     def evaluationSingleImage(faces_gt, faces_pred):
         pred_is_true = [False] * len(faces_pred)
@@ -63,7 +64,7 @@ def exe_face_eval_results(
             isFace = False
             for j in range(len(faces_gt)):
                 if gt_been_pred[j] == 0:
-                    isFace = isSameFace(faces_gt[j], faces_pred[i])
+                    isFace = isSameFace(faces_gt[j], faces_pred[i][2:])
                     if isFace == 1:
                         gt_been_pred[j] = True
                         break
@@ -73,27 +74,27 @@ def exe_face_eval_results(
     faces_num_gt = 0
     score_res_pair = {}
     for t in eval_results:
-        bboxes = t['bbox'][0].tolist()
-
+        bboxes = t['bbox'][0]
         if bboxes.shape == (1, 1) or bboxes is None:
             continue
+        bboxes = bboxes.tolist()
 
         gt_boxes = t['gt_box'][0].tolist()
         gt_box_lengths = t['gt_box'][1][0]
-        faces_num_gt += gt_box_lengths
+        faces_num_gt += np.sum(gt_box_lengths)
 
         pred_is_true = evaluationSingleImage(gt_boxes, bboxes)
-
         for i in range(0, len(pred_is_true)):
-            nowScore = bboxes[i][-1]
+            nowScore = bboxes[i][1]
             if score_res_pair.has_key(nowScore):
                 score_res_pair[nowScore].append(int(pred_is_true[i]))
             else:
                 score_res_pair[nowScore] = [int(pred_is_true[i])]
     keys = score_res_pair.keys()
     keys.sort(reverse=True)
-
-    res_file = os.path.join(output_eval_dir, output_fname)
+    res_file = output_fname
+    if output_eval_dir != None:
+        res_file = os.path.join(output_eval_dir, output_fname)
     outfile = open(res_file, 'w')
     tp_num = 0
     predict_num = 0
