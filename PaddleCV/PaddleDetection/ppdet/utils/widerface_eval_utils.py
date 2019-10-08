@@ -118,9 +118,10 @@ def exe_face_eval_results(
     outfile.write('AP={}\n'.format(ap))
 
     logger.info(
-        "AP = {}\nFor more details, please checkout the evaluation res at {},\n"
+        "AP = {}\nFor more details, please checkout the evaluation res at {}"
         .format(ap, res_file))
     outfile.close()
+    return ap
 
 
 def get_category_info(anno_file=None,
