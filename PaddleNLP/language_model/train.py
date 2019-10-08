@@ -176,8 +176,6 @@ def main():
     exec_strategy.num_iteration_per_drop_scope = 100
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.enable_inplace = True
-    build_strategy.memory_optimize = False
     build_strategy.fuse_all_optimizer_ops = True
 
     if args.parallel:

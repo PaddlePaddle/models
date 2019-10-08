@@ -398,8 +398,6 @@ def train(args):
                     ema = fluid.optimizer.ExponentialMovingAverage(args.ema_decay)
                     ema.update()
 
-                fluid.memory_optimize(train_program, skip_opt_set=[loss.name, num_seqs.name])
-
         if args.verbose:
             if args.in_tokens:
                 lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
@@ -443,9 +441,6 @@ def train(args):
 
                 if args.use_ema and 'ema' not in dir():
                     ema = fluid.optimizer.ExponentialMovingAverage(args.ema_decay)
-
-                fluid.memory_optimize(test_prog, skip_opt_set=[unique_ids.name,
-                    start_logits.name, end_logits.name, num_seqs.name])
 
         test_prog = test_prog.clone(for_test=True)
         # if args.random_seed is not None:

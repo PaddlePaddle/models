@@ -168,7 +168,6 @@ def train(args):
             train_model.load_pretrain_params(exe, pretrain, train_prog, place)
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.enable_inplace = True
     if args.model_name in ['CTCN']:
         build_strategy.enable_sequential_execution = True
 
