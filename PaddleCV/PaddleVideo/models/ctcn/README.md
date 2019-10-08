@@ -25,8 +25,6 @@ C-TCN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准�
 数据准备完毕后，可以通过如下两种方式启动训练：
 
     export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-    export FLAGS_fast_eager_deletion_mode=1
-    export FLAGS_eager_delete_tensor_gb=0.0
     export FLAGS_fraction_of_gpu_memory_to_use=0.98
     python train.py --model_name=CTCN \
                     --config=./configs/ctcn.yaml \

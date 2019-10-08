@@ -1,7 +1,5 @@
 #!/bin/bash
 export FLAGS_fraction_of_gpu_memory_to_use=0.02
-export FLAGS_eager_delete_tensor_gb=0.0
-export FLAGS_fast_eager_deletion_mode=1
 export CUDA_VISIBLE_DEVICES=0,1,2,3     #   which GPU to use
 
 function run_train() {

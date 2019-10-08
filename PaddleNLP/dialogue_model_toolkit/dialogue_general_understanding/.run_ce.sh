@@ -52,12 +52,6 @@ train_mrda(){
   --enable_ce=store_true 
 }
 
-# FIXME(zjl): this model would fail when GC is enabled,
-# but it seems that this error is from the model itself.
-# See issue here: https://github.com/PaddlePaddle/Paddle/issues/18994#event-2532039900       
-# To fix ce, disable gc in this model temporarily.  
-export FLAGS_eager_delete_tensor_gb=1
-
 cudaid=${multi:=0,1,2,3}
 export CUDA_VISIBLE_DEVICES=$cudaid
 train_atis_slot | python _ce.py

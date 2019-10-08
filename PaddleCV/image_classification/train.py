@@ -31,7 +31,6 @@ def set_paddle_flags(flags):
 # set before `import paddle`. Otherwise, it would
 # not take any effect. 
 set_paddle_flags({
-    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
     'FLAGS_fraction_of_gpu_memory_to_use': 0.98
 })
 

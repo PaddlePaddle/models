@@ -98,8 +98,6 @@ python train.py --help
 ```sh
 # 显存使用的比例，显存不足可适当增大，最大为1
 export FLAGS_fraction_of_gpu_memory_to_use=1.0
-# 显存清理的阈值，显存不足可适当减小，最小为0，为负数时不启用
-export FLAGS_eager_delete_tensor_gb=0.8
 python -u train.py \
   --src_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
   --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \

@@ -29,9 +29,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备
 数据准备完毕后，可以通过如下两种方式启动训练：
 
     export CUDA_VISIBLE_DEVICES=0,1,2,3
-    export FLAGS_eager_delete_tensor_gb=0.0
     export FLAGS_fraction_of_gpu_memory_to_use=0.98
-    export FLAGS_fast_eager_deletion_mode=1
     python train.py --model_name=BMN \
                     --config=./configs/bmn.yaml \
                     --log_interval=10 \

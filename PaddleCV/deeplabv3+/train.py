@@ -27,12 +27,6 @@ def set_paddle_flags(flags):
 # set before `import paddle`. Otherwise, it would
 # not take any effect. 
 set_paddle_flags({
-    'FLAGS_eager_delete_tensor_gb': 0,  # enable GC 
-    # You can omit the following settings, because the default
-    # value of FLAGS_memory_fraction_of_eager_deletion is 1,
-    # and default value of FLAGS_fast_eager_deletion_mode is 1 
-    'FLAGS_memory_fraction_of_eager_deletion': 1,
-    'FLAGS_fast_eager_deletion_mode': 1,
     # Setting the default used gpu memory
     'FLAGS_fraction_of_gpu_memory_to_use': 0.98
 })
