@@ -209,7 +209,6 @@ def train(args,
     if parallel:
         loss.persistable = True
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = True
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
             use_cuda=use_gpu, loss_name=loss.name, build_strategy=build_strategy)
 

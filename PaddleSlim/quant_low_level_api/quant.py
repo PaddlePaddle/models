@@ -255,7 +255,6 @@ def train(args):
         load_persistable_nodes(exe, checkpoint, main_graph)
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
     binary = fluid.CompiledProgram(main_graph.graph).with_data_parallel(
         loss_name=train_cost.name, build_strategy=build_strategy)

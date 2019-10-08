@@ -199,7 +199,6 @@ exec_strategy.num_iteration_per_drop_scope = 100
 build_strategy = fluid.BuildStrategy()
 if args.memory_optimize:
     build_strategy.fuse_relu_depthwise_conv = True
-    build_strategy.enable_inplace = True
 
 place = fluid.CPUPlace()
 if args.use_gpu:

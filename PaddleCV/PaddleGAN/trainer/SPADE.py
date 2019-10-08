@@ -323,9 +323,7 @@ class SPADE(object):
             utility.init_checkpoints(self.cfg, exe, gen_trainer, "net_G")
             utility.init_checkpoints(self.cfg, exe, dis_trainer, "net_D")
 
-        ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
         build_strategy.sync_batch_norm = False
 
         gen_trainer_program = fluid.CompiledProgram(

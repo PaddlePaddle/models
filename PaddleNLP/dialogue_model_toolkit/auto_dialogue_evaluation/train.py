@@ -122,7 +122,6 @@ def do_train(args):
         print("finish init word embedding  ...")
 
     build_strategy = fluid.compiler.BuildStrategy()
-    build_strategy.enable_inplace = True
 
     compiled_train_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
                 loss_name=loss.name, build_strategy=build_strategy)

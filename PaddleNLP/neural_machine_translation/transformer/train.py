@@ -233,7 +233,6 @@ def do_train(args):
         init_from_pretrain_model(args, exe, train_prog)
 
     build_strategy = fluid.compiler.BuildStrategy()
-    build_strategy.enable_inplace = True
     exec_strategy = fluid.ExecutionStrategy()
     if num_trainers > 1:
         dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog)
