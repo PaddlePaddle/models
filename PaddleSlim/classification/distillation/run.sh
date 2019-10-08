@@ -2,9 +2,6 @@
 
 # download pretrain model
 root_url="http://paddle-imagenet-models-name.bj.bcebos.com"
-MobileNetV1="MobileNetV1_pretrained.tar"
-MobileNetV2="MobileNetV2_pretrained.tar"
-ResNet34="ResNet34_pretrained.tar"
 ResNet50="ResNet50_pretrained.tar"
 pretrain_dir='../pretrain'
 
@@ -14,15 +11,6 @@ fi
 
 cd ${pretrain_dir}
 
-if [ ! -f ${MobileNetV2} ]; then
-    wget ${root_url}/${MobileNetV2}
-    tar xf ${MobileNetV2}
-fi
-
-if [ ! -f ${ResNet34} ]; then
-    wget ${root_url}/${ResNet34}
-    tar xf ${ResNet34}
-fi
 if [ ! -f ${ResNet50} ]; then
     wget ${root_url}/${ResNet50}
     tar xf ${ResNet50}
@@ -62,7 +50,7 @@ for files in $(ls res50_*)
 done
 cd -
 
-# for mobilenet_v2 distillation
+## for mobilenet_v2 distillation
 #cd ${pretrain_dir}/ResNet50_pretrained
 #for files in $(ls res50_*)
 #    do mv $files ${files#*_}
@@ -86,7 +74,7 @@ cd -
 #done
 #cd -
 
-# for resnet34 distillation
+## for resnet34 distillation
 #cd ${pretrain_dir}/ResNet50_pretrained
 #for files in $(ls res50_*)
 #    do mv $files ${files#*_}
@@ -96,16 +84,7 @@ cd -
 #done
 #cd -
 #
-#cd ${pretrain_dir}/ResNet34_pretrained
-#for files in $(ls res34_*)
-#    do mv $files ${files#*_}
-#done
-#for files in $(ls *)
-#    do mv $files "res34_"$files
-#done
-#cd -
-#
-#python compress.py \
+#python -u compress.py \
 #--model "ResNet34" \
 #--teacher_model "ResNet50" \
 #--teacher_pretrained_model ../pretrain/ResNet50_pretrained \
@@ -118,10 +97,3 @@ cd -
 #    do mv $files ${files#*_}
 #done
 #cd -
-#
-#cd ${pretrain_dir}/ResNet34_pretrained
-#for files in $(ls res34_*)
-#    do mv $files ${files#*_}
-#done
-#cd -
-

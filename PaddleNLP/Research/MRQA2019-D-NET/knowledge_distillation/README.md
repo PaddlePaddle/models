@@ -9,7 +9,7 @@ Model ensemble can improve the generalization of MRC models. However, such appro
 - Python >= 2.7
 - cuda >= 9.0
 - cudnn >= 7.0
-- PaddlePaddle >= 1.5.0 Please refer to Installation Guide [Installation Guide](http://www.paddlepaddle.org/#quick-start)
+- PaddlePaddle >= 1.6 Please refer to Installation Guide [Installation Guide](http://www.paddlepaddle.org/#quick-start)
 
 ### Data and Models Preparation
 User can get the data and trained knowledge_distillation models directly we provided: 
@@ -30,7 +30,7 @@ models:
 
 ./data/pretrain_model/squad2_model: pretrain model(google squad2.0 model as pretrain model [Model Link](https://worksheets.codalab.org/worksheets/0x3852e60a51d2444680606556d404c657)).
 
-./saved_models/knowledge_distillation_model: baidu trained knowledge distillation model.
+./data/saved_models/knowledge_distillation_model: baidu trained knowledge distillation model.
 
 ## 3、Train and Predict
 Train and predict  knowledge distillation model

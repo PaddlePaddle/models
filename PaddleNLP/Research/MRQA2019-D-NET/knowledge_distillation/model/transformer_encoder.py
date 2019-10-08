@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 from functools import partial
+from functools import reduce
 import numpy as np
 
 import paddle.fluid as fluid
