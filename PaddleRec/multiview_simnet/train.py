@@ -96,8 +96,8 @@ def start_train(args):
 
     dataset = reader.SyntheticDataset(args.sparse_feature_dim, args.query_slots,
                                       args.title_slots)
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
+    train_reader = fluid.io.batch(
+        fluid.io.shuffle(
             dataset.train(), buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
     place = fluid.CPUPlace()

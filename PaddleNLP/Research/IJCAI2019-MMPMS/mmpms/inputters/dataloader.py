@@ -50,12 +50,12 @@ class DataLoader(object):
             return data
 
         if shuffle:
-            self.reader = paddle.batch(
-                paddle.reader.shuffle(
+            self.reader = fluid.io.batch(
+                fluid.io.shuffle(
                     data_reader, buf_size=buf_size),
                 batch_size=batch_size)
         else:
-            self.reader = paddle.batch(data_reader, batch_size=batch_size)
+            self.reader = fluid.io.batch(data_reader, batch_size=batch_size)
         self.num_batches = math.ceil(len(data) / batch_size)
         self.place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
 

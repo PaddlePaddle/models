@@ -23,6 +23,7 @@ from PIL import Image
 from PIL import ImageDraw
 import image_util
 import paddle
+import paddle.fluid as fluid
 
 
 class Settings(object):
@@ -313,7 +314,7 @@ def train(settings,
         image_lists = [images[i:i + n] for i in range(0, len(images), n)]
         for l in image_lists:
             readers.append(pascalvoc(settings, l, 'train', batch_size, shuffle))
-    return paddle.reader.multiprocess_reader(readers, False)
+    return fluid.io.multiprocess_reader(readers, False)
 
 
 def test(settings, file_list, batch_size):

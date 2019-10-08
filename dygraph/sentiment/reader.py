@@ -16,6 +16,7 @@ from utils import load_vocab
 from utils import data_reader
 
 import paddle
+import paddle.fluid as fluid
 
 
 class SentaProcessor(object):
@@ -51,17 +52,17 @@ class SentaProcessor(object):
 
     def data_generator(self, batch_size, phase='train', epoch=1, shuffle=True):
         if phase == "train":
-            return paddle.batch(
+            return fluid.io.batch(
                 self.get_train_examples(self.data_dir, epoch, shuffle),
                 batch_size,
                 drop_last=True)
         elif phase == "dev":
-            return paddle.batch(
+            return fluid.io.batch(
                 self.get_dev_examples(self.data_dir, epoch, shuffle),
                 batch_size,
                 drop_last=True)
         elif phase == "infer":
-            return paddle.batch(
+            return fluid.io.batch(
                 self.get_test_examples(self.data_dir, epoch),
                 batch_size,
                 drop_last=True)

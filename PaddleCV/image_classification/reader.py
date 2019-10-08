@@ -20,6 +20,7 @@ import numpy as np
 import cv2
 
 import paddle
+import paddle.fluid as fluid
 from utils.autoaugment import ImageNetPolicy
 from PIL import Image
 
@@ -281,7 +282,7 @@ def _reader_creator(settings,
         color_jitter=color_jitter,
         rotate=rotate)
 
-    return paddle.reader.xmap_readers(
+    return fluid.io.xmap_readers(
         mapper,
         reader,
         settings.reader_thread,

@@ -22,6 +22,7 @@ from PIL import Image
 from os import path
 from paddle.dataset.image import load_image
 import paddle
+import paddle.fluid as fluid
 import random
 
 try:
@@ -276,7 +277,7 @@ def test(batch_size=1,
         test_images_dir = path.join(data_dir, TEST_DATA_DIR_NAME)
     if test_list_file is None:
         test_list_file = path.join(data_dir, TEST_LIST_FILE_NAME)
-    return paddle.batch(
+    return fluid.io.batch(
         generator.test_reader(test_images_dir, test_list_file), batch_size)
 
 
@@ -286,7 +287,7 @@ def inference(batch_size=1,
               cycle=False,
               model="crnn_ctc"):
     generator = DataGenerator(model)
-    return paddle.batch(
+    return fluid.io.batch(
         generator.infer_reader(infer_images_dir, infer_list_file, cycle),
         batch_size)
 

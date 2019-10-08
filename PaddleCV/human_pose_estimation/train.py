@@ -138,7 +138,7 @@ def train(args):
         fluid.io.load_persistables(exe, args.checkpoint)
 
     # Dataloader
-    train_reader = paddle.batch(reader.train(), batch_size=args.batch_size)
+    train_reader = fluid.io.batch(reader.train(), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, target, target_weight])
 
     train_exe = fluid.ParallelExecutor(

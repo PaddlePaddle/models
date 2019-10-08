@@ -298,13 +298,13 @@ def train_resnet():
         if args.use_data_parallel:
             resnet = fluid.dygraph.parallel.DataParallel(resnet, strategy)
 
-        train_reader = paddle.batch(
+        train_reader = fluid.io.batch(
             paddle.dataset.flowers.train(use_xmap=False), batch_size=batch_size)
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
 
-        test_reader = paddle.batch(
+        test_reader = fluid.io.batch(
             paddle.dataset.flowers.test(use_xmap=False), batch_size=batch_size)
 
         #file_name = './model/epoch_0.npz'

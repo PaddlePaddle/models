@@ -15,6 +15,7 @@
 import sys
 import os
 import paddle
+import paddle.fluid as fluid
 
 
 def parse_fields(fields):
@@ -44,7 +45,7 @@ def imdb_data_feed_reader(data_dir, batch_size, buf_size):
                     words, label = parse_fields(fields)
                     yield words, label
 
-    test_reader = paddle.batch(
-        paddle.reader.shuffle(
+    test_reader = fluid.io.batch(
+        fluid.io.shuffle(
             reader, buf_size=buf_size), batch_size=batch_size)
     return test_reader

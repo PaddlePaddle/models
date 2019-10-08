@@ -99,7 +99,7 @@ def infer(args):
 
     label_reverse_dict = load_reverse_dict(args.test_label_file)
 
-    test_data = paddle.batch(
+    test_data = fluid.io.batch(
         reader.file_reader(args.test_data_dir), batch_size=args.batch_size)
     place = fluid.CUDAPlace(0) if args.device == 'GPU' else fluid.CPUPlace()
     feeder = fluid.DataFeeder(feed_list=[word, mention, target], place=place)

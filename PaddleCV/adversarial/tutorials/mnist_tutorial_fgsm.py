@@ -53,13 +53,13 @@ def main():
     exe = fluid.Executor(place)
 
     BATCH_SIZE = 1
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
+    train_reader = fluid.io.batch(
+        fluid.io.shuffle(
             paddle.dataset.mnist.train(), buf_size=128 * 10),
         batch_size=BATCH_SIZE)
 
-    test_reader = paddle.batch(
-        paddle.reader.shuffle(
+    test_reader = fluid.io.batch(
+        fluid.io.shuffle(
             paddle.dataset.mnist.test(), buf_size=128 * 10),
         batch_size=BATCH_SIZE)
 

@@ -54,7 +54,7 @@ def infer():
     inference_scope = fluid.Scope()
 
     dataset = reader.CriteoDataset(args.sparse_feature_dim)
-    test_reader = paddle.batch(
+    test_reader = fluid.io.batch(
         dataset.test([args.data_path]), batch_size=args.batch_size)
 
     startup_program = fluid.framework.Program()

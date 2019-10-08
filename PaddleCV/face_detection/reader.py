@@ -29,6 +29,7 @@ import six
 import math
 from itertools import islice
 import paddle
+import paddle.fluid as fluid
 import image_util
 
 
@@ -296,7 +297,7 @@ def train(settings,
         for iterm in split_lists:
             readers.append(
                 train_generator(settings, iterm, batch_size, shuffle))
-        return paddle.reader.multiprocess_reader(readers, False)
+        return fluid.io.multiprocess_reader(readers, False)
     else:
         return train_generator(settings, file_lists, batch_size, shuffle)
 

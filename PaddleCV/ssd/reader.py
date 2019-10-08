@@ -23,6 +23,7 @@ from PIL import Image
 from PIL import ImageDraw
 import image_util
 import paddle
+import paddle.fluid as fluid
 
 
 class Settings(object):
@@ -318,7 +319,7 @@ def train(settings,
             readers.append(pascalvoc(settings, l, 'train', batch_size, shuffle))
     print("use_multiprocess ", use_multiprocess)
     if use_multiprocess:
-        return paddle.reader.multiprocess_reader(readers, False)
+        return fluid.io.multiprocess_reader(readers, False)
     else:
         return readers[0]
 

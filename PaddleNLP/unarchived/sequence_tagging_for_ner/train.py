@@ -93,21 +93,21 @@ def main(train_data_file,
     sgd_optimizer.minimize(avg_cost)
 
     if "CE_MODE_X" not in os.environ:
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
+        train_reader = fluid.io.batch(
+            fluid.io.shuffle(
                 reader.data_reader(train_data_file, word_dict, label_dict),
                 buf_size=20000),
             batch_size=batch_size)
-        test_reader = paddle.batch(
-            paddle.reader.shuffle(
+        test_reader = fluid.io.batch(
+            fluid.io.shuffle(
                 reader.data_reader(test_data_file, word_dict, label_dict),
                 buf_size=20000),
             batch_size=batch_size)
     else:
-        train_reader = paddle.batch(
+        train_reader = fluid.io.batch(
             reader.data_reader(train_data_file, word_dict, label_dict),
             batch_size=batch_size)
-        test_reader = paddle.batch(
+        test_reader = fluid.io.batch(
             reader.data_reader(test_data_file, word_dict, label_dict),
             batch_size=batch_size)
 

@@ -388,14 +388,14 @@ def train():
         if args.use_data_parallel:
             se_resnext = fluid.dygraph.parallel.DataParallel(se_resnext,
                                                              strategy)
-        train_reader = paddle.batch(
+        train_reader = fluid.io.batch(
             paddle.dataset.flowers.train(use_xmap=False),
             batch_size=batch_size,
             drop_last=True)
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
-        test_reader = paddle.batch(
+        test_reader = fluid.io.batch(
             paddle.dataset.flowers.test(use_xmap=False), batch_size=32)
 
         for epoch_id in range(epoch_num):

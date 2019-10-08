@@ -41,7 +41,7 @@ def eval(args):
                                       exe,
                                       model_filename="__model__",
                                       params_filename="__params__")
-    val_reader = paddle.batch(reader.val(), batch_size=128)
+    val_reader = fluid.io.batch(reader.val(), batch_size=128)
     feeder = fluid.DataFeeder(place=place, feed_list=feed_target_names, program=val_program)
 
     results=[] 

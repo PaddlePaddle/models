@@ -22,7 +22,7 @@ def BuildWord_IdMap(dict_path):
 def prepare_data(file_dir, dict_path, batch_size):
     w2i, i2w = BuildWord_IdMap(dict_path)
     vocab_size = len(i2w)
-    reader = paddle.batch(test(file_dir, w2i), batch_size)
+    reader = fluid.io.batch(test(file_dir, w2i), batch_size)
     return vocab_size, reader, i2w
 
 

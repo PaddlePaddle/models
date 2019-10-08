@@ -1134,7 +1134,7 @@ def train():
             transformer = fluid.dygraph.parallel.DataParallel(transformer,
                                                               strategy)
 
-        reader = paddle.batch(
+        reader = fluid.io.batch(
             wmt16.train(ModelHyperParams.src_vocab_size,
                         ModelHyperParams.trg_vocab_size),
             batch_size=TrainTaskConfig.batch_size)

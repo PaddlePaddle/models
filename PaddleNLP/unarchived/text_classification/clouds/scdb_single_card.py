@@ -463,10 +463,10 @@ def train_net(vocab="./thirdparty/train.vocab",
     w_dict = scdb_word_dict(vocab=vocab)
     test_files = ["./thirdparty" + os.sep + f for f in test_list]
 
-    train_reader = paddle.batch(
+    train_reader = fluid.io.batch(
         scdb_train_data(train_dir, w_dict), batch_size=256)
 
-    test_reader = [paddle.batch(scdb_test_data(test_file, w_dict), batch_size = 50) \
+    test_reader = [fluid.io.batch(scdb_test_data(test_file, w_dict), batch_size = 50) \
             for test_file in test_files]
 
     start_train(

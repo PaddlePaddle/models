@@ -38,7 +38,7 @@ def infer(model_path, batch_size, test_data_file, vocab_file, target_file,
     label_dict = load_dict(target_file)
     label_reverse_dict = load_reverse_dict(target_file)
 
-    test_data = paddle.batch(
+    test_data = fluid.io.batch(
         reader.data_reader(test_data_file, word_dict, label_dict),
         batch_size=batch_size)
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()

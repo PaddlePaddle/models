@@ -116,8 +116,8 @@ def to_lodtensor(data, place):
 def prepare_data(batch_size, buffer_size=1000, word_freq_threshold=0):
     """ prepare the English Pann Treebank (PTB) data """
     vocab = build_dict(word_freq_threshold)
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
+    train_reader = fluid.io.batch(
+        fluid.io.shuffle(
             reader_creator(
                 cluster_train_dir + train_file,
                 vocab,
@@ -125,7 +125,7 @@ def prepare_data(batch_size, buffer_size=1000, word_freq_threshold=0):
                 data_type=DataType.SEQ),
             buf_size=buffer_size),
         batch_size)
-    test_reader = paddle.batch(
+    test_reader = fluid.io.batch(
         reader_creator(
             cluster_test_dir + test_file,
             vocab,

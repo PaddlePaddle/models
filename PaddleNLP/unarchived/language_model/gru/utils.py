@@ -42,22 +42,22 @@ def prepare_data(batch_size,
     """ prepare the English Pann Treebank (PTB) data """
     vocab = paddle.dataset.imikolov.build_dict(word_freq_threshold)
     if enable_ce:
-        train_reader = paddle.batch(
+        train_reader = fluid.io.batch(
             paddle.dataset.imikolov.train(
                 vocab,
                 buffer_size,
                 data_type=paddle.dataset.imikolov.DataType.SEQ),
             batch_size)
     else:
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
+        train_reader = fluid.io.batch(
+            fluid.io.shuffle(
                 paddle.dataset.imikolov.train(
                     vocab,
                     buffer_size,
                     data_type=paddle.dataset.imikolov.DataType.SEQ),
                 buf_size=buffer_size),
             batch_size)
-    test_reader = paddle.batch(
+    test_reader = fluid.io.batch(
         paddle.dataset.imikolov.test(
             vocab, buffer_size, data_type=paddle.dataset.imikolov.DataType.SEQ),
         batch_size)

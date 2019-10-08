@@ -85,8 +85,8 @@ def create_pyreader(args, file_name, feed_list, place, model='lac', reader=None,
         # create lac pyreader
         if mode == 'train':
             pyreader.decorate_sample_list_generator(
-                paddle.batch(
-                    paddle.reader.shuffle(
+                fluid.io.batch(
+                    fluid.io.shuffle(
                         reader.file_reader(file_name),
                         buf_size=args.traindata_shuffle_buffer
                     ),
@@ -96,7 +96,7 @@ def create_pyreader(args, file_name, feed_list, place, model='lac', reader=None,
             )
         else:
             pyreader.decorate_sample_list_generator(
-                paddle.batch(
+                fluid.io.batch(
                     reader.file_reader(file_name, mode=mode),
                     batch_size=args.batch_size
                 ),

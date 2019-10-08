@@ -202,8 +202,8 @@ def train_async(args):
     train_batch_size = args.train_batch_size / devicenum
     test_batch_size = args.test_batch_size
     
-    train_reader = paddle.batch(reader.train(args), batch_size=train_batch_size, drop_last=True)
-    test_reader = paddle.batch(reader.test(args), batch_size=test_batch_size, drop_last=False)
+    train_reader = fluid.io.batch(reader.train(args), batch_size=train_batch_size, drop_last=True)
+    test_reader = fluid.io.batch(reader.test(args), batch_size=test_batch_size, drop_last=False)
     test_feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
     train_py_reader.decorate_paddle_reader(train_reader)
 

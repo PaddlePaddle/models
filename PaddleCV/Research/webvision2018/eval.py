@@ -82,7 +82,7 @@ def eval(args):
     test_batch_size = args.batch_size
 
     img_size = image_shape[1]
-    test_reader = paddle.batch(reader.test(args, img_size), batch_size=test_batch_size)
+    test_reader = fluid.io.batch(reader.test(args, img_size), batch_size=test_batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     targets = []

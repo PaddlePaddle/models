@@ -122,8 +122,8 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
         fluid.default_startup_program().random_seed = SEED
 
     dataset = reader.CriteoDataset(args.sparse_feature_dim)
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
+    train_reader = fluid.io.batch(
+        fluid.io.shuffle(
             dataset.train([args.train_data_path], trainer_num, trainer_id),
             buf_size=args.batch_size * 100),
         batch_size=args.batch_size)

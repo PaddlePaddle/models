@@ -107,9 +107,9 @@ def train(args):
     A_pool = ImagePool()
     B_pool = ImagePool()
 
-    A_reader = paddle.batch(
+    A_reader = fluid.io.batch(
         data_reader.a_reader(shuffle=shuffle), args.batch_size)()
-    B_reader = paddle.batch(
+    B_reader = fluid.io.batch(
         data_reader.b_reader(shuffle=shuffle), args.batch_size)()
     if not args.run_ce:
         A_test_reader = data_reader.a_test_reader()
