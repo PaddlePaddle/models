@@ -34,14 +34,12 @@ class SimNetConfig(object):
             with open(config_path) as json_file:
                 config_dict = json.load(json_file)
         except Exception:
-            raise IOError("Error in parsing simnet model config file '%s'" %
-                          config_path)
+            raise IOError("Error in parsing simnet model config file '%s'" % config_path)
 
         else:
             if config_dict["task_mode"] != self.task_mode:
                 raise ValueError(
-                    "the config '{}' does not match the task_mode '{}'".format(
-                        self.config_path, self.task_mode))
+                    "the config '{}' does not match the task_mode '{}'".format(self.config_path, self.task_mode))
             return config_dict
 
     def __getitem__(self, key):
