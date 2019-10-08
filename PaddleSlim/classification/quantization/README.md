@@ -5,6 +5,8 @@
 ## 概述
 
 该示例使用PaddleSlim提供的[量化压缩策略](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/tutorial.md#1-quantization-aware-training%E9%87%8F%E5%8C%96%E4%BB%8B%E7%BB%8D)对分类模型进行压缩。
+>本文默认使用ILSVRC2012数据集，数据集存放在`models/PaddleSlim/data/`路径下, 可以参考[数据准备](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#数据准备)在执行训练脚本run.sh前配置好您的数据集
+
 在阅读该示例前，建议您先了解以下内容：
 
 - [分类模型的常规训练方法](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification)
@@ -123,11 +125,21 @@ mobile预测模型兼容Paddle-Lite（Paddle-Mobile的升级版）, 使用方法
 | weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
 |baseline|- |70.99%/89.68%|- |-|
-|abs_max|abs_max|- |- |-|
-|abs_max|moving_average_abs_max|- |- |-|
-|channel_wise_abs_max|abs_max|- |- |-|
+|abs_max|abs_max|70.74%/89.55% |- |-|
+|abs_max|moving_average_abs_max|70.89%/89.67% |- |-|
+|channel_wise_abs_max|abs_max|70.93%/89.65% |- |-|
 
 >训练超参：
+
+优化器
+```
+fluid.optimizer.Momentum(momentum=0.9,
+                         learning_rate=fluid.layers.piecewise_decay(
+                         boundaries=[5000 * 12],
+                         values=[0.0001, 0.00001]),
+                         regularization=fluid.regularizer.L2Decay(1e-4))
+```
+batch size 1024
 
 ### MobileNetV2
 
@@ -145,10 +157,20 @@ mobile预测模型兼容Paddle-Lite（Paddle-Mobile的升级版）, 使用方法
 | weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
 |baseline|- |76.50%/93.00%|- |-|
-|abs_max|abs_max|- |- |-|
-|abs_max|moving_average_abs_max|- |- |-|
-|channel_wise_abs_max|abs_max|- |- |-|
+|abs_max|abs_max|76.71%/93.10% |- |-|
+|abs_max|moving_average_abs_max|76.54%/93.12% |- |-|
+|channel_wise_abs_max|abs_max|76.56%/93.05% |- |-|
 
 >训练超参：
+
+优化器
+```
+fluid.optimizer.Momentum(momentum=0.9,
+                         learning_rate=fluid.layers.piecewise_decay(
+                         boundaries=[5000 * 12],
+                         values=[0.0001, 0.00001]),
+                         regularization=fluid.regularizer.L2Decay(1e-4))
+```
+batch size 1024
 
 ## FAQ
