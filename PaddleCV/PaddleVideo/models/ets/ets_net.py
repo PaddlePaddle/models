@@ -1,10 +1,22 @@
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 import paddle.fluid as fluid
 from paddle.fluid import ParamAttr
 import numpy as np
 
-
 DATATYPE = 'float32'
-
 
 class ETSNET(object):
     def __init__(self, feat_size, fc_dim, gru_hidden_dim, max_length, beam_size,
@@ -93,18 +105,28 @@ class ETSNET(object):
                                        bias_attr=False)
         word_embedding = fluid.layers.embedding(input=word,
                                                 size=[self.dict_size, self.word_emb_dim])
-        rnn = fluid.layers.DynamicRNN()
-        with rnn.block():
-            x = rnn.step_input(word_embedding)
-            pre_state = rnn.memory(init=decoder_boot, need_reorder=True)
-            encoded_sequence = rnn.static_input(encoded_sequence)
-            encoded_proj = rnn.static_input(encoded_proj)
-            out, current_state = self.cell(x, pre_state, encoded_sequence, encoded_proj)
-            prob = fluid.layers.fc(input=out, size=self.dict_size, act='softmax')
-            rnn.update_memory(pre_state, current_state)
-            rnn.output(prob)
 
-        return rnn()
+        pad_value = fluid.layers.assign(input=np.array([0.], dtype=np.float32))
+        word_embedding, length = fluid.layers.sequence_pad(word_embedding, pad_value)
+        word_embedding = fluid.layers.transpose(word_embedding, [1, 0, 2])
+
+        rnn = fluid.layers.StaticRNN()
+        with rnn.step():
+            x = rnn.step_input(word_embedding)
+            pre_state = rnn.memory(init=decoder_boot)
+            out, current_state = cell(x, pre_state, encoded_sequence, encoded_proj)
+            prob = fluid.layers.fc(input=out, size=dict_size, act='softmax')
+
+            rnn.update_memory(pre_state, current_state)
+            rnn.step_output(prob)
+
+        rnn_out = rnn()
+        rnn_out = fluid.layers.transpose(rnn_out, [1, 0, 2])
+
+        length = fluid.layers.reshape(length, [-1])
+        rnn_out = fluid.layers.sequence_unpad(x=rnn_out, length=length)
+
+        return rnn_out
 
     def infer_decoder(self, encoded_sequence, encoded_vector, encoded_proj):
         decoder_boot = fluid.layers.fc(

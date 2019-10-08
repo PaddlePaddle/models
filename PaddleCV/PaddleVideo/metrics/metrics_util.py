@@ -449,13 +449,12 @@ class ETSMetrics(Metrics):
         self.calculator.accumulate(fetch_list)
 
     def finalize_and_log_out(self, info='', savedir='./'):
-        if (self.mode == 'test') or (self.mode == 'infer'):
+        if self.mode == 'valid':
+            logger.info(info)
+        else:  #test or infer
             self.calculator.finalize_metrics(savedir)
-            metrics_dict = self.calculator.get_computed_metrics()
-            acc = metrics_dict['acc']
-            logger.info(info + '\tacc: {}'.format('%.6f' % acc))
-        elif self.mode == 'valid':
-            pass
+            if self.mode == 'test':
+                logger.info(info + 'please refer to metrics/ets_metrics/README.md to get accuracy')
 
     def reset(self):
         self.calculator.reset()

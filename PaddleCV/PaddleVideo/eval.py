@@ -110,8 +110,16 @@ def test(args):
     epoch_period = []
     for test_iter, data in enumerate(test_reader()):
         cur_time = time.time()
-        test_outs = exe.run(fetch_list=test_fetch_list,
-                            feed=test_feeder.feed(data))
+        if args.model_name == 'ETS':
+            feat_data = [items[:3] for items in data]
+            vinfo = [items[3:] for items in data]
+            test_outs = exe.run(fetch_list=test_fetch_list,
+                                feed=test_feeder.feed(feat_data),
+                                return_numpy=False)
+            test_outs += vinfo
+        else:
+            test_outs = exe.run(fetch_list=test_fetch_list,
+                                feed=test_feeder.feed(data))
         period = time.time() - cur_time
         epoch_period.append(period)
         test_metrics.accumulate(test_outs)

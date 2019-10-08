@@ -46,7 +46,7 @@ class MetricsCalculator():
         if self.mode == 'valid':
             loss = fetch_list[0]
             self.aggr_loss += np.mean(np.array(loss))
-        elif self.mode == 'test':
+        elif (self.mode == 'test') or (self.mode == 'infer'):
             seq_ids = fetch_list[0]
             seq_scores = fetch_list[1]
             vid = fetch_list[2][0]
@@ -73,6 +73,7 @@ class MetricsCalculator():
                         self.result_dict[vid].append({'timestamp': [stime, etime], 'sentence': sent})
 
     def accumulate_infer_results(self, fetch_list):
+        # the same as test
         pass
 
     def finalize_metrics(self, savedir):
@@ -83,11 +84,8 @@ class MetricsCalculator():
 
 
     def finalize_infer_metrics(self, savedir):
+        # the same as test
         pass
 
     def get_computed_metrics(self):
-        acc = os.system('python evaluate.py -s ' + self.filepath)
-        json_stats = {}
-        json_stats['acc'] = self.acc
-        return json_stats
-
+        pass
