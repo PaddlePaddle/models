@@ -41,6 +41,8 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml -o use_gpu=false
 - `-o`: Set configuration options in config file. Such as: `-o max_iters=180000`. `-o` has higher priority to file configured by `-c`
 - `--use_tb`: Whether to record the data with [tb-paddle](https://github.com/linshuliang/tb-paddle), so as to display in Tensorboard, default is `False`
 - `--tb_log_dir`: tb-paddle logging directory for scalar, default is `tb_log_dir/scalar`
+- `--fp16`: Whether to enable mixed precision training, default is `False`
+- `--loss_scale`: Loss scaling factor for mixed precision training, default is `8.0`
 
 
 ##### Examples

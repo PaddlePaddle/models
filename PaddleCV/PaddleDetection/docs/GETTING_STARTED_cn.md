@@ -42,6 +42,8 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml -o use_gpu=false
 - `-o`: 设置配置文件里的参数内容。例如: `-o max_iters=180000`。使用`-o`配置相较于`-c`选择的配置文件具有更高的优先级。
 - `--use_tb`: 是否使用[tb-paddle](https://github.com/linshuliang/tb-paddle)记录数据，进而在TensorBoard中显示，默认是False。
 - `--tb_log_dir`: 指定 tb-paddle 记录数据的存储路径，默认是`tb_log_dir/scalar`。
+- `--fp16`: 是否使用混合精度训练模式，默认是`False`。
+- `--loss_scale`: 设置混合精度训练模式中损失值的缩放比例，默认是`8.0`。
 
 ##### 例子
 
