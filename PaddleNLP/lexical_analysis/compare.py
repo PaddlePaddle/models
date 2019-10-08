@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#coding=utf-8
+# -*- coding: UTF-8 -*-
 """
 evaluate wordseg for LAC and other open-source wordseg tools
 """
@@ -275,6 +275,4 @@ def evaluate_all():
 
 
 if __name__ == "__main__":
-    import ipdb
-    #ipdb.set_trace()
     evaluate_all()
