@@ -93,7 +93,7 @@ def main():
     if FLAGS.dataset_dir is not None:
         train_loader.dataset.root_dir = FLAGS.dataset_dir
 
-    if FLAGS.eval:
+    if FLAGS.eval and (not FLAGS.dist or trainer_id == 0):
         if 'eval_loader' not in cfg:
             eval_loader = create('EvalDataLoader')
         else:
@@ -133,7 +133,7 @@ def main():
     train_keys, train_values, _ = parse_fetches(train_fetches)
     train_values.append(lr)
 
-    if FLAGS.eval:
+    if FLAGS.eval and (not FLAGS.dist or trainer_id == 0):
         eval_prog = fluid.Program()
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
@@ -172,7 +172,7 @@ def main():
         build_strategy=build_strategy,
         exec_strategy=exec_strategy)
 
-    if FLAGS.eval:
+    if FLAGS.eval and (not FLAGS.dist or trainer_id == 0):
         compiled_eval_prog = fluid.compiler.CompiledProgram(eval_prog)
         if main_arch in ['YOLOv3']:
             compiled_eval_prog = compiled_eval_prog.with_data_parallel(
