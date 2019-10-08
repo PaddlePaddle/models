@@ -20,20 +20,6 @@ import shutil
 import math
 import multiprocessing
 
-
-def set_paddle_flags(**kwargs):
-    for key, value in kwargs.items():
-        if os.environ.get(key, None) is None:
-            os.environ[key] = str(value)
-
-
-# NOTE(paddle-dev): All of these flags should be
-# set before `import paddle`. Otherwise, it would
-# not take any effect. 
-set_paddle_flags(
-    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
-)
-
 import paddle
 import paddle.fluid as fluid
 import reader
@@ -208,10 +194,8 @@ def train(args,
 
     if parallel:
         loss.persistable = True
-        build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = True
         train_exe = fluid.ParallelExecutor(main_program=train_prog,
-            use_cuda=use_gpu, loss_name=loss.name, build_strategy=build_strategy)
+            use_cuda=use_gpu, loss_name=loss.name)
 
     test_reader = reader.test(data_args, val_file_list, batch_size)
     test_py_reader.decorate_paddle_reader(test_reader)

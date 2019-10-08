@@ -1,5 +1,4 @@
 export CUDA_VISIBLE_DEVICES=3
-export FLAGS_eager_delete_tensor_gb=0.0
 
 #train on ubuntu 
 python -u main.py \

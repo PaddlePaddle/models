@@ -88,7 +88,6 @@ def do_train(args):
         exec_strategy = fluid.ExecutionStrategy()
         # exec_strategy.num_threads = dev_count * 6
         build_strategy = fluid.compiler.BuildStrategy()
-        # build_strategy.enable_inplace = True
 
         compiled_prog = fluid.compiler.CompiledProgram(train_program).with_data_parallel(
             loss_name=train_ret['avg_cost'].name,

@@ -26,8 +26,6 @@ def set_paddle_flags(flags):
 
 set_paddle_flags({
     'FLAGS_conv_workspace_size_limit': 500,
-    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc
-    'FLAGS_memory_fraction_of_eager_deletion': 1,
     'FLAGS_fraction_of_gpu_memory_to_use': 0.98
 })
 
@@ -119,8 +117,6 @@ def train():
 
     if cfg.parallel:
         build_strategy = fluid.BuildStrategy()
-        build_strategy.memory_optimize = False
-        build_strategy.enable_inplace = True
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_iteration_per_drop_scope = 10
 

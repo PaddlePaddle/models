@@ -147,7 +147,6 @@ export current_endpoint=192.168.0.17:9185
 
 ```shell
 export FLAGS_sync_nccl_allreduce=0
-export FLAGS_eager_delete_tensor_gb=1
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
 BERT_BASE_PATH="chinese_L-12_H-768_A-12"
@@ -209,7 +208,6 @@ SQuAD v1.1
 
  ```shell
 export FLAGS_sync_nccl_allreduce=0
-export FLAGS_eager_delete_tensor_gb=1
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 BERT_BASE_PATH="uncased_L-12_H-768_A-12"
@@ -255,7 +253,6 @@ python ${SQUAD_PATH}/evaluate-v1.1.py ${SQUAD_PATH}/dev-v1.1.json ${CHECKPOINT_P
 
 ```shell
 export FLAGS_sync_nccl_allreduce=0
-export FLAGS_eager_delete_tensor_gb=1
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 BERT_BASE_PATH="uncased_L-12_H-768_A-12"
 CHECKPOINT_PATH=/path/to/save/checkpoints/

@@ -279,10 +279,6 @@ class CycleGAN(object):
             utility.init_checkpoints(self.cfg, exe, d_A_trainer, "net_DA")
             utility.init_checkpoints(self.cfg, exe, d_B_trainer, "net_DB")
 
-        ### memory optim
-        build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = True
-
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
                 loss_name=gen_trainer.g_loss.name,

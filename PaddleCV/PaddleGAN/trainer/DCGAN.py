@@ -107,16 +107,12 @@ class DCGAN(object):
             utility.init_checkpoints(self.cfg, exe, g_trainer, "net_G")
             utility.init_checkpoints(self.cfg, exe, d_trainer, "net_D")
 
-        ### memory optim
-        build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = True
-
         g_trainer_program = fluid.CompiledProgram(
             g_trainer.program).with_data_parallel(
-                loss_name=g_trainer.g_loss.name, build_strategy=build_strategy)
+                loss_name=g_trainer.g_loss.name)
         d_trainer_program = fluid.CompiledProgram(
             d_trainer.program).with_data_parallel(
-                loss_name=d_trainer.d_loss.name, build_strategy=build_strategy)
+                loss_name=d_trainer.d_loss.name)
 
         if self.cfg.run_test:
             image_path = os.path.join(self.cfg.output, 'test')

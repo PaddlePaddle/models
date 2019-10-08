@@ -25,8 +25,6 @@ def set_paddle_flags(flags):
 
 
 set_paddle_flags({
-    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc
-    'FLAGS_memory_fraction_of_eager_deletion': 1,
     'FLAGS_fraction_of_gpu_memory_to_use': 0.98
 })
 
@@ -111,7 +109,6 @@ def train():
         fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.memory_optimize = False  #gc and memory optimize may conflict
     syncbn = cfg.syncbn
     if (syncbn and devices_num <= 1) or num_trainers > 1:
         print("Disable syncbn in single device")

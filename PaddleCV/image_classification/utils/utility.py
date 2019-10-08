@@ -387,8 +387,6 @@ def best_strategy_compiled(args, program, loss):
         return program
     else:
         build_strategy = fluid.compiler.BuildStrategy()
-        #Feature will be supported in Fluid v1.6
-        #build_strategy.enable_inplace = True
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_threads = fluid.core.get_cuda_device_count()

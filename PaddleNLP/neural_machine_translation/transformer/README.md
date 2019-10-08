@@ -68,8 +68,6 @@
 以提供的英德翻译数据为例，可以执行以下命令进行模型训练：
 
 ```sh
-# open garbage collection to save memory
-export FLAGS_eager_delete_tensor_gb=0.0
 # setting visible devices for training
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
@@ -86,8 +84,6 @@ python -u main.py \
 以上命令中传入了执行训练（`do_train`）、训练轮数（`epoch`）和训练数据文件路径（注意请正确设置，支持通配符）等参数，更多参数的使用以及支持的模型超参数可以参见 `transformer.yaml` 配置文件，其中默认提供了 Transformer base model 的配置，如需调整可以在配置文件中更改或通过命令行传入（命令行传入内容将覆盖配置文件中的设置）。可以通过以下命令来训练 Transformer 论文中的 big model：
 
 ```sh
-# open garbage collection to save memory
-export FLAGS_eager_delete_tensor_gb=0.0
 # setting visible devices for training
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
@@ -124,8 +120,6 @@ python -u main.py \
 以英德翻译数据为例，模型训练完成后可以执行以下命令对指定文件中的文本进行翻译：
 
 ```sh
-# open garbage collection to save memory
-export FLAGS_eager_delete_tensor_gb=0.0
 # setting visible devices for prediction
 export CUDA_VISIBLE_DEVICES=0
 
@@ -145,8 +139,6 @@ python -u main.py \
  由 `predict_file` 指定的文件中文本的翻译结果会输出到 `output_file` 指定的文件。执行预测时需要设置 `init_from_params` 来给出模型所在目录，更多参数的使用可以在 `transformer.yaml` 文件中查阅注释说明并进行更改设置。注意若在执行预测时设置了模型超参数，应与模型训练时的设置一致，如若训练时使用 big model 的参数设置，则预测时对应类似如下命令：
 
 ```sh
-# open garbage collection to save memory
-export FLAGS_eager_delete_tensor_gb=0.0
 # setting visible devices for prediction
 export CUDA_VISIBLE_DEVICES=0
 

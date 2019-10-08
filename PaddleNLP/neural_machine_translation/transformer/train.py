@@ -32,8 +32,6 @@ import dist_utils
 import reader
 from transformer import create_net, position_encoding_init
 
-if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
-    os.environ['FLAGS_eager_delete_tensor_gb'] = '0'
 # num_trainers is used for multi-process gpu training
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
@@ -233,7 +231,6 @@ def do_train(args):
         init_from_pretrain_model(args, exe, train_prog)
 
     build_strategy = fluid.compiler.BuildStrategy()
-    build_strategy.enable_inplace = True
     exec_strategy = fluid.ExecutionStrategy()
     if num_trainers > 1:
         dist_utils.prepare_for_multi_process(exe, build_strategy, train_prog)
