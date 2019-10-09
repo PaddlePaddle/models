@@ -123,7 +123,7 @@ python train.py --data-root=${data-root} --use-gpu \
 
 用户可以通过 `--train-seq2seq-only` 或者 `--train-postnet-only` 来实现固定模型的其他部分，只训练需要训练的部分。但当只训练模型的一部分时，其他的部分需要从保存的模型中加载。
 
-当只训练模型的 `seq2seq` 部分或者 `postnet` 部分时，需要使用 `--checkpoint` 加载整个模型并保持相同的配置。注意，当只训练 `postnet` 的时候，需要保证配置中的`use_decoder_state_for_postnet_input=false`，因为在这种情况下，postnet 使用真实的 mel 频谱作为输入。
+当只训练模型的 `seq2seq` 部分或者 `postnet` 部分时，需要使用 `--checkpoint` 加载整个模型并保持相同的配置。注意，当只训练 `postnet` 的时候，需要保证配置中的`use_decoder_state_for_postnet_input=false`，因为在这种情况下，postnet 使用真实的 mel 频谱作为输入。注意，`use_decoder_state_for_postnet_input` 的默认值是 `True`。
 
 示例:
 
@@ -180,7 +180,7 @@ tensorboard --logdir=${log_dir} --host=$HOSTNAME --port=8888
 给定一组文本，使用  `synthesis.py` 从一个训练好的模型来合成语音，使用方法如下。
 
 ```bash
-python infer.py --use-gpu --preset=${preset_json_path} \
+python synthesis.py --use-gpu --preset=${preset_json_path} \
     --hparams="parameters you may want to override" \
       ${checkpoint} ${text_list_file} ${dst_dir}}
 ```
@@ -199,7 +199,7 @@ A text-to-speech synthesis system typically consists of multiple stages, such as
 
 根据 [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654), 对于不同的数据集，会有不同的 position rate. 有两个不同的 position rate，一个用于 query 一个用于 key， 这在论文中称为 $\omega_1$ 和 $\omega_2$ ，在预设配置文件中的名字分别为 `query_position_rate` 和 `key_position_rate`。
 
-比如 LJSpeech 数据集的 `query_position_rate` 和 `key_position_rate` 分别为 `1.0` 和 `1.385`。这些值可以 `compute_timestamp_ratio.py`。使用如下命令计算。
+比如 LJSpeech 数据集的 `query_position_rate` 和 `key_position_rate` 分别为 `1.0` 和 `1.385`。这些值可以使用 `compute_timestamp_ratio.py` 计算，命令如下，其中 `${data_root}` 是预处理后的数据集路径。
 
 ```bash
 python compute_timestamp_ratio.py --preset=${preset_json_path} \

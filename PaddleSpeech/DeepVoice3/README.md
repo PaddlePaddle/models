@@ -123,7 +123,7 @@ You can load saved checkpoint and resume training with `--checkpoint`, if you wa
 
 You can also train parts of the model while freezing other parts, by passing `--train-seq2seq-only` or `--train-postnet-only`. When training only parts of the model, other parts should be loaded from saved checkpoints.
 
-To train only the `seq2seq` or `postnet`, you should load from a whole model  with `--checkpoint`and keep the same configurations. Note that when training only the `postnet`, you should set `use_decoder_state_for_postnet_input=false`, because when train only the postnet, the postnet takes the ground truth mel-spectrogram as input.
+To train only the `seq2seq` or `postnet`, you should load from a whole model  with `--checkpoint`and keep the same configurations. Note that when training only the `postnet`, you should set `use_decoder_state_for_postnet_input=false`, because when train only the postnet, the postnet takes the ground truth mel-spectrogram as input. Note that the default value for `use_decoder_state_for_postnet_input` is `True`.
 
 example:
 
@@ -180,7 +180,7 @@ tensorboard --logdir=${log_dir} --host=$HOSTNAME --port=8888
 Given a list of text, `synthesis.py` synthesize audio signals from a trained model.
 
 ```bash
-python infer.py --use-gpu --preset=${preset_json_path} \
+python synthesis.py --use-gpu --preset=${preset_json_path} \
     --hparams="parameters you may want to override" \
       ${checkpoint} ${text_list_file} ${dst_dir}}
 ```
@@ -199,7 +199,7 @@ generated waveform files and alignment files are saved in `${dst_dir}`.
 
 According to [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654), the position rate is different for different datasets. There are 2 position rates, one for the query and the other for the key, which are referred to as $\omega_1$ and $\omega_2$ in th paper, and the corresponding names in preset json are `query_position_rate` and `key_position_rate`.
 
-For example, the `query_position_rate` and `key_position_rate` for LJSpeech are `1.0` and `1.385`, respectively. These values are computed with `compute_timestamp_ratio.py`. Run the command below.
+For example, the `query_position_rate` and `key_position_rate` for LJSpeech are `1.0` and `1.385`, respectively. These values are computed with `compute_timestamp_ratio.py`. Run the command below, where `${data_root}` means the path of the preprocessed dataset.
 
 ```bash
 python compute_timestamp_ratio.py --preset=${preset_json_path} \
