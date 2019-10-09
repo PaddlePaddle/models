@@ -6,7 +6,7 @@ import paddle.fluid as fluid
 import math
 from paddle.fluid.param_attr import ParamAttr
 
-__all__ = ["ResNet", "ResNet50", "ResNet101", "ResNet152"]
+__all__ = ["ResNet", "ResNet34", "ResNet50", "ResNet101", "ResNet152"]
 
 train_parameters = {
     "input_size": [3, 224, 224],
@@ -22,17 +22,19 @@ train_parameters = {
 
 
 class ResNet():
-    def __init__(self, layers=50):
+    def __init__(self, layers=50, prefix_name=''):
         self.params = train_parameters
         self.layers = layers
+        self.prefix_name = prefix_name
 
     def net(self, input, class_dim=1000, conv1_name='conv1', fc_name=None):
         layers = self.layers
-        supported_layers = [50, 101, 152]
+        prefix_name = self.prefix_name if self.prefix_name is '' else self.prefix_name + '_'
+        supported_layers = [34, 50, 101, 152]
         assert layers in supported_layers, \
             "supported layers are {} but input layer is {}".format(supported_layers, layers)
 
-        if layers == 50:
+        if layers == 34 or layers == 50:
             depth = [3, 4, 6, 3]
         elif layers == 101:
             depth = [3, 4, 23, 3]
@@ -48,7 +50,7 @@ class ResNet():
             filter_size=7,
             stride=2,
             act='relu',
-            name=conv1_name)
+            name=prefix_name + conv1_name)
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
@@ -65,6 +67,7 @@ class ResNet():
                         conv_name = "res" + str(block + 2) + "b" + str(i)
                 else:
                     conv_name = "res" + str(block + 2) + chr(97 + i)
+                conv_name = prefix_name + conv_name
                 conv = self.bottleneck_block(
                     input=conv,
                     num_filters=num_filters[block],
@@ -74,6 +77,7 @@ class ResNet():
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
+        fc_name = fc_name if fc_name is None else prefix_name + fc_name
         out = fluid.layers.fc(input=pool,
                               size=class_dim,
                               act='softmax',
@@ -102,10 +106,17 @@ class ResNet():
             param_attr=ParamAttr(name=name + "_weights"),
             bias_attr=False,
             name=name + '.conv2d.output.1')
-        if name == "conv1":
-            bn_name = "bn_" + name
+        if self.prefix_name == '':
+            if name == "conv1":
+                bn_name = "bn_" + name
+            else:
+                bn_name = "bn" + name[3:]
         else:
-            bn_name = "bn" + name[3:]
+            if name.split("_")[1] == "conv1":
+                bn_name = name.split("_", 1)[0] + "_bn_" + name.split("_", 1)[1]
+            else:
+                bn_name = name.split("_", 1)[0] + "_bn" + name.split("_",
+                                                                     1)[1][3:]
         return fluid.layers.batch_norm(
             input=conv,
             act=act,
@@ -150,8 +161,13 @@ class ResNet():
             x=short, y=conv2, act='relu', name=name + ".add.output.5")
 
 
-def ResNet50():
-    model = ResNet(layers=50)
+def ResNet34(prefix_name=''):
+    model = ResNet(layers=34, prefix_name=prefix_name)
+    return model
+
+
+def ResNet50(prefix_name=''):
+    model = ResNet(layers=50, prefix_name=prefix_name)
     return model
 
 

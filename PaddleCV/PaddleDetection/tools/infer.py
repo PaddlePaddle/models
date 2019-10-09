@@ -106,7 +106,7 @@ def prune_feed_vars(feeded_var_names, target_vars, prog):
     """
     exist_var_names = []
     prog = prog.clone()
-    prog = prog._prune(feeded_var_names, targets=target_vars)
+    prog = prog._prune(targets=target_vars)
     global_block = prog.global_block()
     for name in feeded_var_names:
         try:
@@ -178,7 +178,7 @@ def main():
 
     exe.run(startup_prog)
     if cfg.weights:
-        checkpoint.load_checkpoint(exe, infer_prog, cfg.weights)
+        checkpoint.load_params(exe, infer_prog, cfg.weights)
 
     if FLAGS.save_inference_model:
         save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)

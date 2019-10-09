@@ -33,14 +33,14 @@ set_paddle_flags(
 
 import paddle.fluid as fluid
 
-from ppdet.utils.cli import print_total_cfg
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results, json_eval_results
 import ppdet.utils.checkpoint as checkpoint
-from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
 from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
+from ppdet.utils.cli import print_total_cfg
+from ppdet.utils.cli import ArgsParser
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -102,7 +102,7 @@ def main():
     # load model
     exe.run(startup_prog)
     if 'weights' in cfg:
-        checkpoint.load_pretrain(exe, eval_prog, cfg.weights)
+        checkpoint.load_params(exe, eval_prog, cfg.weights)
 
     assert cfg.metric in ['COCO', 'VOC'], \
             "unknown metric type {}".format(cfg.metric)
