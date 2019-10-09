@@ -57,7 +57,7 @@ export CUDA_VISIBLE_DEVICES=0
 #tailf mobilenet_v2.log
 
 # for compression of resnet34
-python3 -u compress.py \
+python -u compress.py \
     --model "ResNet34" \
     --use_gpu 1 \
     --batch_size 32 \
