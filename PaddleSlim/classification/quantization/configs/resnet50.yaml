@@ -3,7 +3,7 @@ strategies:
     quantization_strategy:
         class: 'QuantizationStrategy'
         start_epoch: 0
-        end_epoch: 0 
+        end_epoch: 29 
         float_model_save_path: './output/resnet50/float'
         mobile_model_save_path: './output/resnet50/mobile'
         int8_model_save_path: './output/resnet50/int8'
@@ -14,7 +14,7 @@ strategies:
         save_in_nodes: ['image']
         save_out_nodes: ['fc_0.tmp_2']
 compressor:
-    epoch: 2
+    epoch: 30
     checkpoint_path: './checkpoints/resnet50/'
     strategies:
         - quantization_strategy

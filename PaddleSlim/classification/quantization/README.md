@@ -64,22 +64,10 @@ PaddlePaddle框架中有四个和量化相关的IrPass, 分别是QuantizationTra
 
 >注意：配置文件中的信息不会保存在断点中，重启前对配置文件的修改将会生效。
 
+### 保存评估和预测模型
+如果在配置文件的量化策略中设置了`float_model_save_path`, `int8_model_save_path`, `mobile_model_save_path`, 在训练结束后，会保存模型量化压缩之后用于评估和预测的模型。接下来介绍这三种模型的区别。
 
-## 评估
-
-如果在配置文件中设置了`checkpoint_path`，则每个epoch会保存一个量化后的用于评估的模型，
-该模型会保存在`${checkpoint_path}/${epoch_id}/eval_model/`路径下，包含`__model__`和`__params__`两个文件。
-其中，`__model__`用于保存模型结构信息，`__params__`用于保存参数（parameters）信息。模型结构和训练时一样。
-
-如果不需要保存评估模型，可以在定义Compressor对象时，将`save_eval_model`选项设置为False（默认为True）。
-
-脚本<a href="../eval.py">PaddleSlim/classification/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
-
-## 预测
-
-如果在配置文件的量化策略中设置了`float_model_save_path`, `int8_model_save_path`, `mobile_model_save_path`, 在训练结束后，会保存模型量化压缩之后用于预测的模型。接下来介绍这三种预测模型的区别。
-
-### float预测模型
+#### float模型
 在介绍量化训练时的模型结构时介绍了PaddlePaddle框架中有四个和量化相关的IrPass, 分别是QuantizationTransformPass、QuantizationFreezePass、ConvertToInt8Pass以及TransformForMobilePass。float预测模型是在应用QuantizationFreezePass并删除eval_program中多余的operators之后，保存的模型。
 
 QuantizationFreezePass主要用于改变IrGraph中量化op和反量化op的顺序，即将类似图1中的量化op和反量化op顺序改变为图2中的布局。除此之外，QuantizationFreezePass还会将`conv2d`、`depthwise_conv2d`、`mul`等算子的权重离线量化为int8_t范围内的值(但数据类型仍为float32)，以减少预测过程中对权重的量化操作，示例如图2：
@@ -89,7 +77,7 @@ QuantizationFreezePass主要用于改变IrGraph中量化op和反量化op的顺�
 <strong>图2：应用QuantizationFreezePass后的结果</strong>
 </p>
 
-### int8预测模型
+#### int8模型
 在对训练网络进行QuantizationFreezePass之后，执行ConvertToInt8Pass，
 其主要目的是将执行完QuantizationFreezePass后输出的权重类型由`FP32`更改为`INT8`。换言之，用户可以选择将量化后的权重保存为float32类型（不执行ConvertToInt8Pass）或者int8_t类型（执行ConvertToInt8Pass），示例如图3：
 
@@ -98,13 +86,37 @@ QuantizationFreezePass主要用于改变IrGraph中量化op和反量化op的顺�
 <strong>图3：应用ConvertToInt8Pass后的结果</strong>
 </p>
 
-### mobile预测模型
+####  mobile模型
 经TransformForMobilePass转换后，用户可得到兼容[paddle-lite](https://github.com/PaddlePaddle/Paddle-Lite)移动端预测库的量化模型。paddle-mobile中的量化op和反量化op的名称分别为`quantize`和`dequantize`。`quantize`算子和PaddlePaddle框架中的`fake_quantize_abs_max`算子簇的功能类似，`dequantize` 算子和PaddlePaddle框架中的`fake_dequantize_max_abs`算子簇的功能相同。若选择paddle-mobile执行量化训练输出的模型，则需要将`fake_quantize_abs_max`等算子改为`quantize`算子以及将`fake_dequantize_max_abs`等算子改为`dequantize`算子，示例如图4：
 
 <p align="center">
 <img src="../../docs/images/usage/TransformForMobilePass.png" height=400 width=400 hspace='10'/> <br />
 <strong>图4：应用TransformForMobilePass后的结果</strong>
 </p>
+
+## 评估
+
+### 每个epoch保存的评估模型
+因为量化的最终模型只有在end_epoch时保存一次，不能保证保存的模型是最好的，因此
+如果在配置文件中设置了`checkpoint_path`，则每个epoch会保存一个量化后的用于评估的模型，
+该模型会保存在`${checkpoint_path}/${epoch_id}/eval_model/`路径下，包含`__model__`和`__params__`两个文件。
+其中，`__model__`用于保存模型结构信息，`__params__`用于保存参数（parameters）信息。模型结构和训练时一样。
+
+如果不需要保存评估模型，可以在定义Compressor对象时，将`save_eval_model`选项设置为False（默认为True）。
+
+脚本<a href="../eval.py">PaddleSlim/classification/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
+
+在评估之后，选取效果最好的epoch的模型，可使用脚本 <a href='./freeze.py'>PaddleSlim/classification/freeze.py</a>将该模型转化为以上介绍的三种模型：float模型，int8模型，mo
+bile模型，需要配置的参数为：
+
+- model_path, 加载的模型路径，`为${checkpoint_path}/${epoch_id}/eval_model/`
+- weight_quant_type 模型参数的量化方式，和配置文件中的类型保持一致
+- save_path `float`, `int8`, `mobile`模型的保存路径，分别为 `${save_path}/float/`, `${save_path}/int8/`, `${save_path}/mobile/`
+
+### 最终评估模型
+最终使用的评估模型是float模型，使用脚本<a href="../eval.py">PaddleSlim/classification/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
+
+## 预测
 
 ### python预测
 
@@ -139,7 +151,7 @@ fluid.optimizer.Momentum(momentum=0.9,
                          values=[0.0001, 0.00001]),
                          regularization=fluid.regularizer.L2Decay(1e-4))
 ```
-batch size 1024
+8卡，batch size 1024，epoch 30, 挑选好的结果
 
 ### MobileNetV2
 
@@ -171,6 +183,7 @@ fluid.optimizer.Momentum(momentum=0.9,
                          values=[0.0001, 0.00001]),
                          regularization=fluid.regularizer.L2Decay(1e-4))
 ```
-batch size 1024
+8卡，batch size 1024，epoch 30, 挑选好的结果
+
 
 ## FAQ
