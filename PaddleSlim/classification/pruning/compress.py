@@ -80,16 +80,7 @@ def compress(args):
     acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
     val_program = fluid.default_main_program().clone()
-#    for param in fluid.default_main_program().global_block().all_parameters():
-#        print param.name, param.shape
-#    return
-    opt = fluid.optimizer.Momentum(
-        momentum=0.9,
-        learning_rate=fluid.layers.piecewise_decay(
-            boundaries=[5000 * 30, 5000 * 60, 5000 * 90],
-            values=[0.1, 0.01, 0.001, 0.0001]),
-        regularization=fluid.regularizer.L2Decay(4e-5))
-
+    opt = create_optimizer(args)
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
