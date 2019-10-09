@@ -23,7 +23,8 @@ import time
 import subprocess
 import distutils.util
 import numpy as np
-
+import sys
+import paddle.fluid as fluid
 from paddle.fluid import core
 
 
@@ -86,9 +87,11 @@ def recall_topk(fea, lab, k = 1):
     sorted_index = np.argsort(d, 1)
     res = 0
     for i in range(len(fea)):
-        pred = lab[sorted_index[i][0]]
-        if lab[i] == pred:
-            res += 1.0
+        for j in range(k):
+            pred = lab[sorted_index[i][j]]
+            if lab[i] == pred:
+                res += 1.0
+                break
     res = res / len(fea)
     return res
 
@@ -100,4 +103,15 @@ def get_gpu_num():
         devicenum = subprocess.check_output(
             [str.encode('nvidia-smi'), str.encode('-L')]).decode('utf-8').count('\n')
     return devicenum
+
+def check_cuda(use_cuda, err = \
+    "\nYou can not set use_cuda = True in the model because you are using paddlepaddle-cpu.\n \
+    Please: 1. Install paddlepaddle-gpu to run your models on GPU or 2. Set use_cuda = False to run models on CPU.\n"
+                                                                                                                     ):
+    try:
+        if use_cuda == True and fluid.is_compiled_with_cuda() == False:
+            print(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
 

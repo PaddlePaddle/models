@@ -1,0 +1,1 @@
+python infer.py --init_model output/cyclegan/checkpoints/199/ --dataset_dir data/cityscapes/ --image_size 256 --n_samples 1 --crop_size 256 --input_style B --test_list ./data/cityscapes/testB.txt --model_net CycleGAN --net_G resnet_9block  --g_base_dims 32 --output ./infer_result/cyclegan/

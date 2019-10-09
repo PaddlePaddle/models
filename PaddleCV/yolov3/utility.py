@@ -23,7 +23,7 @@ import distutils.util
 import numpy as np
 import six
 from collections import deque
-from paddle.fluid import core
+import paddle.fluid as fluid
 import argparse
 import functools
 from config import *
@@ -87,6 +87,24 @@ class SmoothedValue(object):
         return self.loss_sum / self.iter_cnt
 
 
+def check_gpu(use_gpu):
+    """
+    Log error and exit when set use_gpu=True in paddlepaddle
+    cpu version.
+    """
+    err = "Config use_gpu cannot be set as True while you are " \
+          "using paddlepaddle cpu version ! \nPlease try: \n" \
+          "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
+          "\t2. Set --use_gpu=False to run model on CPU"
+
+    try:
+        if use_gpu and not fluid.is_compiled_with_cuda():
+            print(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
+
+
 def parse_args():
     """return all args
     """
@@ -102,7 +120,8 @@ def parse_args():
     add_arg('class_num',        int,    80,          "Class number.")
     add_arg('data_dir',         str,    'dataset/coco',        "The data root path.")
     add_arg('start_iter',       int,    0,      "Start iteration.")
-    add_arg('use_multiprocess', bool,   True,   "add multiprocess.")
+    add_arg('use_multiprocess_reader', bool,   True,   "whether use multiprocess reader.")
+    add_arg('worker_num',       int,   8,   "worker number for multiprocess reader.")
     #SOLVER
     add_arg('batch_size',       int,    8,      "Mini-batch size per device.")
     add_arg('learning_rate',    float,  0.001,  "Learning rate.")

@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -32,7 +45,7 @@ depthwise_regularizer = fluid.regularizer.L2DecayRegularizer(
 def scope(name):
     global name_scope
     bk = name_scope
-    name_scope = name_scope + name + '/'
+    name_scope = name_scope + name + os.sep
     yield
     name_scope = bk
 
@@ -62,11 +75,11 @@ def conv(*args, **kargs):
         init_std = 0.09
     elif "logit" in name_scope:
         init_std = 0.01
-    elif name_scope.endswith('depthwise/'):
+    elif name_scope.endswith('depthwise' + os.sep):
         init_std = 0.33
     else:
         init_std = 0.06
-    if name_scope.endswith('depthwise/'):
+    if name_scope.endswith('depthwise' + os.sep):
         regularizer = depthwise_regularizer
     else:
         regularizer = None

@@ -71,7 +71,7 @@ def train():
 
     batch_size = args.batch_size
     items_num = reader.read_config(args.config_path)
-    loss, acc, py_reader, feed_datas = network.network(batch_size, items_num, args.hidden_size,
+    loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size,
                                 args.step)
 
     data_reader = reader.Data(args.train_path, True)
@@ -101,8 +101,10 @@ def train():
     feed_list = [e.name for e in feed_datas]
 
     if use_parallel:
+        exec_strategy = fluid.ExecutionStrategy()
+        exec_strategy.num_threads = 1 if os.name == 'nt' else 0
         train_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda, loss_name=loss.name)
+            use_cuda=use_cuda, loss_name=loss.name, exec_strategy=exec_strategy)
     else:
         train_exe = exe
 

@@ -18,7 +18,7 @@
 ---
 # Paddle模型压缩工具库使用说明
 
-本文第一章介绍PaddleSlim模块通用功能的使用，不涉及具体压缩策略的细节。第二、三、四章分别介绍量化训练、剪切、蒸馏三种压缩策略的使用方式。
+本文第一章介绍PaddleSlim模块通用功能的使用，不涉及具体压缩策略的细节。第二章分别用4小节介绍量化训练、剪裁、蒸馏和轻量级模型结构搜索四种压缩策略的使用方式。
 建议在看具体策略使用方式之前，先浏览下对应的原理介绍：<a href="tutorial.md">算法原理介绍</a>
 
 >在本文中不区分operator和layer的概念。不区分loss和cost的概念。
@@ -27,8 +27,9 @@
 
 - [通用功能使用说明](#1-paddleslim通用功能使用介绍)
 - [量化使用说明](#21-量化训练)
-- [剪切使用说明](#22-卷积核剪切)
+- [剪裁使用说明](#22-模型通道剪裁)
 - [蒸馏使用说明](#23-蒸馏)
+- [轻量级模型结构搜索使用说明](#24-基于硬件的轻量级模型结构搜索)
 
 
 ## 1. PaddleSlim通用功能使用介绍
@@ -58,7 +59,7 @@
 
 这一步的产出应该是两个[Program](http://paddlepaddle.org/documentation/docs/zh/1.3/api_cn/fluid_cn.html#program)实例：
 
-- **train_program:** 用于在压缩过程中迭代训练模型，该program必须包含loss。一般改program不要有backward op和weights update op，否则不能使用蒸馏策略。
+- **train_program:** 用于在压缩过程中迭代训练模型，该program必须包含loss。一般该program不要有backward op和weights update op，否则不能使用蒸馏策略。
 
 - **eval_program:** 用于在压缩过程中评估模型的精度，一般会包含accuracy、IoU等评估指标的计算layer。
 
@@ -77,7 +78,7 @@
 #### 1.1.2.3. optimizer
 [fluid.optimizer API](http://www.paddlepaddle.org/documentation/docs/zh/1.3/api_cn/optimizer_cn.html)
 
-在不同的使用场景下，用户需要提供0个、1个或2两个optimizer:
+在不同的使用场景下，用户需要提供0个、1个或2个optimizer:
 
 - **0个optimizer:** 在模型搭建阶段的train_program已经是一个包含了反向op和模型weight更新op的网络，则不用再提供optimizer
 - **1个optimizer:** train_program只有前向计算op, 则需要提供一个optimizer，用于优化训练train_program.
@@ -85,7 +86,7 @@
 
 #### 1.1.2.4. load pretrain model
 
-- 剪切：需要加载pretrain model
+- 剪裁：需要加载pretrain model
 - 蒸馏：根据需要选择是否加载pretrain model
 - 量化训练：需要加载pretrain model
 
@@ -171,8 +172,8 @@ pruners:
             '*': 'l1_norm'
 ```
 
-第二步：注册剪切策略
-如下所示，我们注册两个uniform剪切策略，分别在第0个epoch和第10个epoch将模型的FLOPS剪掉10%.
+第二步：注册剪裁策略
+如下所示，我们注册两个uniform剪裁策略，分别在第0个epoch和第10个epoch将模型的FLOPS剪掉10%.
 ```python
 strategies:
     pruning_strategy_0:
@@ -204,13 +205,20 @@ compress_pass:
         - pruning_strategy_1
 ```
 
+compress_pass下可配置的参数有：
+
+- **epoch**: 整个压缩任务执行的epoch数量。
+- **init_model**: 初始化模型路径。在裁剪策略中，会根据`init_model`中`parameter`的`shape`对当前网络进行裁剪。
+- **checkpoint_path**: 保存`checkpoint`的路径, checkpoint中包含了模型训练信息和策略执行信息。在重启任务时，会自动从`checkpoint`路径下加载最新的`checkpoint`，所以用户需要根据自己的需求决定是否修改`checkpoint`。
+- **strategies**: 在当前压缩任务中依次生效的策略。
+
 
 ## 2. 模型压缩策略使用介绍
 
-本章依次介绍量化训练、卷积核剪切和蒸馏三种策略的使用方式，在此之前建议先浏览相应策略的原理介绍：
+本章依次介绍量化训练、模型通道剪裁和蒸馏三种策略的使用方式，在此之前建议先浏览相应策略的原理介绍：
 
 - [量化训练原理](tutorial.md#1-quantization-aware-training量化介绍)
-- [卷积核剪切原理](tutorial.md#2-卷积核剪切原理)
+- [模型通道剪裁原理](tutorial.md#2-模型通道剪裁原理)
 - [蒸馏原理](tutorial.md#3-蒸馏)
 
 ### 2.1 量化训练
@@ -288,14 +296,14 @@ strategies:
 
 量化训练High-Level API是对Low-Level API的高层次封装，这使得用户仅需编写少量的代码和配置文件即可进行量化训练。然而，封装必然会带来使用灵活性的降低。因此，若用户在进行量化训练时需要更多的灵活性，可参考 [量化训练Low-Level API使用示例](../quant_low_level_api/README.md) 。
 
-### 2.2 卷积核剪切
-该策略通过减少指定卷积层中卷积核的数量，达到缩减模型大小和计算复杂度的目的。根据选取剪切比例的策略的不同，又细分为以下两个方式：
+### 2.2 模型通道剪裁
+该策略通过减少指定卷积层中卷积核的数量，达到缩减模型大小和计算复杂度的目的。根据选取剪裁比例的策略的不同，又细分为以下两个方式：
 
-- uniform pruning: 每层剪切掉相同比例的卷积核数量。
-- sensitive pruning: 根据每层敏感度，剪切掉不同比例的卷积核数量。
+- uniform pruning: 每层剪裁掉相同比例的卷积核数量。
+- sensitive pruning: 根据每层敏感度，剪裁掉不同比例的卷积核数量。
 
-两种剪切方式都需要加载预训练模型。
-卷积核剪切是基于结构剪切，所以在配置文件中需要注册一个`StructurePruner`,  如下所示：
+两种剪裁方式都需要加载预训练模型。
+通道剪裁是基于结构剪裁，所以在配置文件中需要注册一个`StructurePruner`,  如下所示：
 
 ```
 pruners:
@@ -310,13 +318,13 @@ pruners:
 其中，一个配置文件可注册多个pruners, 所有pruner需要放在`pruners`关键字下, `pruner`的可配置参数有：
 
 - **class:** pruner 的类型，目前只支持`StructurePruner`
-- **pruning_axis:** 剪切的纬度；'`conv*': 0`表示对所有的卷积层filter weight的第0维进行剪切，即对卷积层filter的数量进行剪切。
-- **criterions**： 通过通配符指定剪切不同parameter时用的排序方式。目前仅支持`l1_norm`.
+- **pruning_axis:** 剪裁的纬度；'`conv*': 0`表示对所有的卷积层filter weight的第0维进行剪裁，即对卷积层filter的数量进行剪裁。
+- **criterions**： 通过通配符指定剪裁不同parameter时用的排序方式。目前仅支持`l1_norm`.
 
 
 #### 2.2.1 uniform pruning
 
-uniform pruning剪切策略需要在配置文件的`strategies`关键字下注册`UniformPruneStrategy`实例，并将其添加至compressor的strategies列表中。
+uniform pruning剪裁策略需要在配置文件的`strategies`关键字下注册`UniformPruneStrategy`实例，并将其添加至compressor的strategies列表中。
 如下所示：
 ```
 strategies:
@@ -333,17 +341,17 @@ compressor:
 ```
 UniformPruneStrategy的可配置参数有：
 
-- **class:** 如果使用Uniform剪切策略，请设置为`UniformPruneStrategy`
-- **pruner:** StructurePruner实例的名称，需要在配置文件中注册。在pruner中指定了对单个parameter的剪切方式。
-- **start_epoch:** 开始剪切策略的epoch. 在start_epoch开始之前，该策略会对网络中的filter数量进行剪切，从start_epoch开始对被剪切的网络进行fine-tune训练，直到整个压缩任务结束。
+- **class:** 如果使用Uniform剪裁策略，请设置为`UniformPruneStrategy`
+- **pruner:** StructurePruner实例的名称，需要在配置文件中注册。在pruner中指定了对单个parameter的剪裁方式。
+- **start_epoch:** 开始剪裁策略的epoch. 在start_epoch开始之前，该策略会对网络中的filter数量进行剪裁，从start_epoch开始对被剪裁的网络进行fine-tune训练，直到整个压缩任务结束。
 - **target_ratio:** 将目标网络的FLOPS剪掉的比例。
-- **pruned_params:** 被剪切的parameter的名称，支持通配符。如，‘*’为对所有parameter进行剪切，‘conv*’意为对所有名义以‘conv’开头的parameter进行剪切。
+- **pruned_params:** 被剪裁的parameter的名称，支持通配符。如，‘*’为对所有parameter进行剪裁，‘conv*’意为对所有名义以‘conv’开头的parameter进行剪裁。
 
 
 
 #### 2.2.2  sensitive pruning
 
-sensitive剪切策略需要在配置文件的`strategies`关键字下注册`SensitivePruneStrategy`实例，并将其添加至compressor的strategies列表中。
+sensitive剪裁策略需要在配置文件的`strategies`关键字下注册`SensitivePruneStrategy`实例，并将其添加至compressor的strategies列表中。
 如下所示：
 ```
 strategies:
@@ -365,14 +373,70 @@ compressor:
 ```
 SensitivePruneStrategy可配置的参数有：
 
-- **class:** 如果使用敏感度剪切策略，请设置为`SensitivePruneStrategy`
-- **pruner:** StructurePruner实例的名称，需要在配置文件中注册。在pruner中指定了对单个parameter的剪切方式。
-- **start_epoch:** 开始剪切策略的epoch。 在start_epoch开始之前，该策略会对网络中的filter数量进行第一次剪切。
-- **delta_rate:** 统计敏感度信息时，剪切率从0到1，依次递增delta_rate. 具体细节可参考[原理介绍文档]()
+- **class:** 如果使用敏感度剪裁策略，请设置为`SensitivePruneStrategy`
+- **pruner:** StructurePruner实例的名称，需要在配置文件中注册。在pruner中指定了对单个parameter的剪裁方式。
+- **start_epoch:** 开始剪裁策略的epoch。 在start_epoch开始之前，该策略会对网络中的filter数量进行第一次剪裁。
+- **delta_rate:** 统计敏感度信息时，剪裁率从0到1，依次递增delta_rate. 具体细节可参考[原理介绍文档]()
 - **target_ratio:** 将目标网络的FLOPS剪掉的比例。
-- **num_steps:** 整个剪切过程的步数。每次迭代剪掉的比例为：$step = 1 - (1-target\_ratio)^{\frac{1}{num\_steps}}$
-- **eval_rate:** 计算敏感度时，随机抽取使用的验证数据的比例。在迭代剪切中，为了快速重新计算每一步的每个parameter的敏感度，建议随机选取部分验证数据进行计算。当`num_steps`等于1时，建议使用全量数据进行计算。
+- **num_steps:** 整个剪裁过程的步数。每次迭代剪掉的比例为：$step = 1 - (1-target\_ratio)^{\frac{1}{num\_steps}}$
+- **eval_rate:** 计算敏感度时，随机抽取使用的验证数据的比例。在迭代剪裁中，为了快速重新计算每一步的每个parameter的敏感度，建议随机选取部分验证数据进行计算。当`num_steps`等于1时，建议使用全量数据进行计算。
 
+#### 2.2.3  auto filter pruning
+
+该策略使用模拟退火算法搜索得到一组剪裁率，按搜索到的这组剪裁率剪裁网络，并对剪裁后的网络进行训练。
+
+自动通道剪裁策略需要在配置文件的`strategies`关键字下注册`AutoPruneStrategy`实例，并将其添加至compressor的strategies列表中。
+如下所示：
+```
+strategies:
+    auto_pruning_strategy:
+        class: 'AutoPruneStrategy'
+        pruner: 'pruner_1'
+        controller: 'sa_controller'
+        start_epoch: 0
+        end_epoch: 500
+        retrain_epoch: 0
+        max_ratio: 0.50
+        min_ratio: 0.48
+        uniform_range: 0.4
+        pruned_params: '.*_sep_weights'
+        metric_name: 'acc_top1'
+compressor:
+    epoch: 500
+    checkpoint_path: './checkpoints/'
+    strategies:
+        - auto_pruning_strategy
+```
+AutoPruneStrategy可配置的参数有：
+
+- **class:** 如果使用自动通道剪裁策略，请设置为`AutoPruneStrategy`。
+- **pruner:** StructurePruner实例的名称，需要在配置文件中注册。在pruner中指定了对单个parameter的剪裁方式。
+- **controller:** 用于搜索的controller, 需要在当前配置文件提前注册，下文会详细介绍其注册方法。
+
+- **start_epoch:** 开始搜索剪裁率组合的的epoch。
+- **end_epoch:** 结束搜索剪裁率组合的epoch。 在end_epoch，该策略会根据当前搜索到的最好的剪裁率组合对网络进行剪裁。
+
+- **retrain_epoch:** 评估一个模型性能之前，需要训练的epoch的数量。默认为0。
+- **max_ratio:** 剪掉FLOPS的最高比例。
+- **target_ratio:** 剪掉FLOPS的最低比例。
+- **uniform_range:** 每个Parameter最多允许被剪掉的比例。
+- **pruned_params:** 被剪裁的parameter的名称，支持通配符。如，‘*’为对所有parameter进行剪裁，‘conv*’意为对所有名义以‘conv’开头的parameter进行剪裁。
+- **metric_name：** 评估模型性能的指标。
+
+controller的配置方式如下：
+
+```
+controllers:
+    sa_controller:
+        class: 'SAController'
+        reduce_rate: 0.85
+        init_temperature: 10.24
+        max_iter_number: 300
+```
+- **class:** distiller类名称，当前可选：`SAController`。
+- **reduce_rate:** float类型；温度的衰减率。
+- **init_temperature:** float类型；初始化温度。
+- **max_iter_number:** int类型；在得到一个满足FLOPS限制的tokens之前，最多尝试的次数。
 
 ### 2.3 蒸馏
 
@@ -452,3 +516,206 @@ distillers:
 - **student_temperature:** 在计算softmax_with_cross_entropy之前，用该系数除student_feature_map。
 - **teacher_temperature:** 在计算softmax_with_cross_entropy之前，用该系数除teacher_feature_map。
 - **distillation_loss_weight:** 当前定义的loss对应的权重。默认为1.0
+
+
+### 2.4 基于硬件的轻量级模型结构搜索
+
+该功能基于模拟退火算法，实现了基于不同硬件的轻量级模型结构的快速搜索，简称为LightNAS (Light Network Architecture Search).
+
+使用该功能，需要用户做三个工作：
+
+- 定义搜索空间
+- （可选）基于不同的硬件，例如Android/iOS移动端、Android开发板等，配置延时评估器
+- 配置LightNASStrategy，并启动搜索任务
+
+#### 2.4.1 定义搜索空间
+
+用户需要通过继承[SearchSpace类](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/fluid/contrib/slim/nas/search_space.py#L19)并重写其方法来定义搜索空间。用户需要重写实现的方法有：
+
+- `init_tokens`: `tokens` 以数组的形式格式表示网络结构，一个 `tokens` 对应一个网络结构。`init_tokens` 指搜索的初始化 `tokens`。
+
+- `range_table`: 以数组的形式指定 `tokens` 数组中每个位置的取值范围，其长度与 `tokens` 长度相同。`tokens[i]` 的取值范围为 `[0, range_table[i])`。
+
+- `create_net`: 根据指定的 `tokens` 构造初始化 `Program`、训练 `Program` 和测试 `Program`。
+
+在[PaddlePaddle/models/light_nas](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)下，定义了经过验证的一个搜索空间，建议一般用户直接用该搜索空间。
+
+在构造 `Compressor` 对象时，按以下方式将 `SearchSpace` 实例传入：
+
+```
+...
+space = LightNASSpace()
+...
+com_pass = Compressor(
+    place,
+    fluid.global_scope(),
+    train_prog,
+    train_reader=train_reader,
+    train_feed_list=None,
+    train_fetch_list=train_fetch_list,
+    eval_program=test_prog,
+    eval_reader=test_reader,
+    eval_feed_list=None,
+    eval_fetch_list=val_fetch_list,
+    train_optimizer=None,
+    search_space=space)
+```
+
+#### 2.4.2 (可选) 基于不同硬件，配置延时评估器
+
+用户需要根据自己定义的搜索空间，类似[LightNASSpace类](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)中的 `get_all_ops` 函数，重写获取搜索空间所有可能 op 的方法。
+
+用户需要根据其搜索空间所有可能的 op，生成延时评估器表格。延时评估器表格一般存放在类似[LightNASSpace类](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)里面的 `LATENCY_LOOKUP_TABLE_PATH=latency_lookup_table.txt` 路径下。后面会详细介绍延时评估器表格的生成方式。
+
+用户需要通过继承[SearchSpace类](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/fluid/contrib/slim/nas/search_space.py#L19)并重写下面方法：
+
+- `get_model_latency`: 参数 `program` 对应搜索到的某一个网络结构。使用该功能，用户能够根据不同硬件提前生成延时评估器表格，然后查询获取各个搜索到的网络的延时。
+
+#### 2.4.3 配置 LightNASStrategy
+
+在配置文件中，配置搜索策略方式如下：
+```
+strategies:
+    light_nas_strategy:
+        class: 'LightNASStrategy'
+        controller: 'sa_controller'
+        target_flops: 592948064
+        target_latency: 0
+        end_epoch: 500
+        retrain_epoch: 5
+        metric_name: 'acc_top1'
+        server_ip: ''
+        server_port: 8871
+        is_server: True
+        search_steps: 100
+```
+其中， 需要在关键字 `strategies` 下注册策略实例，可配置参数有：
+
+- **class:** 策略类的名称，轻量级模型结构搜索策略请设置为LightNASStrategy。
+- **controller:** 用于搜索的controller, 需要在当前配置文件提前注册，下文会详细介绍其注册方法。
+- **target_flops:** FLOPS限制，搜索出的网络结构的FLOPS不超过该数值。
+- **target_latency** 评估延时限制，搜索出的网络结构评估的延时不超过该数值。0 表示不限制，不会启动基于硬件的网络搜索。
+- **end_epoch:** 当前client结束搜索策略的epoch。
+- **retrain_epoch:** 在评估模型结构性能之前，需要训练的epoch数量。(end_epoch-0)/retrain_epoch为当前client搜索出的网络结构的数量。
+- **metric_name：** 评估模型性能的指标。
+- **server_ip:** 指定controller server的ip。默认为空，即自动获取当前机器的ip。
+- **server_port:** 指定controller server监听的端口。
+- **is_server:** 以当前配置文件启动的进程是否包含controller server. 整个搜索任务必须有且只有一个controller server。
+- **search_steps:** controller server搜索的步数，也就是server产出的网络结构的数量。
+
+controller的配置方式如下：
+
+```
+controllers:
+    sa_controller:
+        class: 'SAController'
+        reduce_rate: 0.85
+        init_temperature: 10.24
+        max_iter_number: 300
+```
+- **class:** distiller类名称，当前可选：`SAController`。
+- **reduce_rate:** float类型；温度的衰减率。
+- **init_temperature:** float类型；初始化温度。
+- **max_iter_number:** int类型；在得到一个满足FLOPS限制的tokens之前，最多尝试的次数。
+
+#### 2.4.4 分布式搜索
+
+单机多任务：
+
+单机多任务是指在一个机器上启动一个 controller server 和多个 client，client 从 controller 获取 tokens，根据 tokens 组建网络并训练评估，最后返回 reward 给 controller server。
+
+在Compressor::run()执行时，会首先判断配置文件中的`is_server`是否为`True`, 然后做如下操作：
+
+- True: 判断当前路径下是否存在 `slim_LightNASStrategy_controller_server.socket` 文件，如果存在，则仅启动一个 client，如果不存在，则启动一个 controller server 和一个 client。
+
+- False: 仅启动一个 client。
+
+多机搜索：
+
+多机搜索是指在一个机器上启动一个controller server，在多台机器上启动若干client。在启动controller server的机器上的配置文件里的is_server要设置为True。其它机器上的配置文件中的`is_server`要手动设置为False, 同时`server_ip`和`server_port`要设置为controller server对应的`ip`和`port`.
+
+>注意： 在重启controller server时，`slim_LightNASStrategy_controller_server.socket` 文件可能不会被及时清除，所以需要用户手动删除该文件。在后续版本中，会修复完善该问题。
+
+#### 2.4.5 延时评估器生成方式
+
+1. 延时评估器表格的标准形式
+
+    延时评估器表格一般存放在一个 .txt 文件中。对于不同的硬件平台，我们都会根据搜索空间中的所有可能 op 生成延时评估器表格。延时评估器表格中的每一行都对应一个 op，其内容形式如下：
+
+    - `conv flag_bias flag_relu n_in c_in h_in w_in c_out groups kernel padding stride dilation latency`
+    - `activation active_type n_in c_in h_in w_in latency`
+    - `batch_norm active_type n_in c_in h_in w_in latency`
+    - `eltwise eltwise_type n_in c_in h_in w_in latency`
+    - `pooling flag_global_pooling n_in c_in h_in w_in kernel padding stride ceil_mode pool_type latency`
+    - `softmax axis n_in c_in h_in w_in latency`
+
+    其中 `conv`、`activation`、`batch_norm`、`eltwise`、`pooling`、`softmax` 分别代表卷积运算、激活函数、batch normalization、elementwise 运算、池化以及 softmax 运算。目前主要支持了这些 op。参数含义如下：
+
+    - active_type (string) - 激活函数类型，包含：relu, prelu, sigmoid, relu6, tanh。
+    - eltwise_type (int) - 按元素操作算子类型，其中 1 表示 elementwise_mul，2 表示elementwise_add，3 表示 elementwise_max。
+    - pool_type (int) - 池化类型，其中 1 表示 pooling_max，2 表示 pooling_average_include_padding，3 表示 pooling_average_exclude_padding。
+    - flag_bias (int) - 是否有 bias（0：无，1：有）。
+    - flag_global_pooling (int) - 是否为全局池化（0：不是，1：是）。
+    - flag_relu (int) - 是否有 relu（0：无，1：有）。
+    - n_in (int) - 输入 Tensor 的批尺寸 (batch size)。
+    - c_in (int) - 输入 Tensor 的通道 (channel) 数。
+    - h_in (int) - 输入 Tensor 的特征高度。
+    - w_in (int) - 输入 Tensor 的特征宽度。
+    - c_out (int) - 输出 Tensor 的通道 (channel) 数。
+    - groups (int) - 卷积二维层（Conv2D Layer）的组数。
+    - kernel (int) - 卷积核大小。
+    - padding (int) - 填充 (padding) 大小。
+    - stride (int) - 步长 (stride) 大小。
+    - dilation (int) - 膨胀 (dilation) 大小。
+    - axis (int) - 执行 softmax 计算的维度索引，应该在 [−1，rank − 1] 范围内，其中 rank 是输入变量的秩。
+    - ceil_mode (int) - 是否用 ceil 函数计算输出高度和宽度。0 表示使用 floor 函数，1 表示使用 ceil 函数。
+    - latency (float) - 当前op的延时时间
+
+2. 不同硬件平台延时评估器的生成方法
+
+    Android 系统:
+
+    - 用户从[这里](https://paddle-slim-models.bj.bcebos.com/Android_demo.zip)下载 Android 系统的延时评估器生成工具。
+    - 安装ADB。比如 macOS 系统, 可以利用brew一键安装，`brew cask install android-platform-tools`。
+    - 连接硬件平台。利用 adb devices 查看当前连接的设备，判断是否正确连接。
+    - 进入工具目录 Android_demo，命令行输入 `sh push2android.sh`, 把必要的文件放置到硬件平台。
+    - 在 `models/PaddleSlim/light_nas/` 目录下运行 `python get_latency_lookup_table.py` 就可以获取当前搜索空间的延时评估器表格 `latency_lookup_table.txt`。
+    - 另外一种方式：用户还可以将`models/PaddleSlim/light_nas/light_nas_space.py` 中的 `get_all_ops` 函数获取的所有 op 写入文件中，比如 `lightnas_ops.txt`，然后调用延时评估器生成工具包 `Android_demo` 目录下的 `get_latency_lookup_table.py` 函数产生评估器表格。
+
+    备注1：我们基于[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)预测库编写，编译并获取重要 op 单测延时、网络模型延时的二进制文件。重要 op 单测延时的二进制文件都被命名为 `get_{op}_latency`，其中对于不同 op 的单测程序，替换 `get_{op}_latency` 中的 `{op}` 为该 op 名称。所有单测均输出一个表示平均延时的浮点数。这些单测文件的调用方法如下：
+
+    - `./get_activation_latency "threads test_iter active_type n_in c_in h_in w_in"`
+    - `./get_batch_norm_latency "threads test_iter active_type n_in c_in h_in w_in"`
+    - `./get_conv_latency "threads test_iter flag_bias flag_relu n_in c_in h_in w_in c_out group kernel padding stride dilation"`
+    - `./get_eltwise_latency "threads test_iter eltwise_type n_in c_in h_in w_in"`
+    - `./get_pooling_latency "threads test_iter flag_global_pooling n_in c_in h_in w_in kernel padding stride ceil_mode pool_type"`
+    - `./get_softmax_latency "threads test_iter axis n_in c_in h_in w_in"`
+
+    可以看出，他们传入了一个字符串参数，这些字符串参数除开最初始的 `threads` 和 `test_iter` 以外，都与延时评估器表格中各个 op 的参数一样，其中
+
+    - threads (int) - 线程数（最大为手机支持的线程数）。
+    - test_iter (int) - 执行单测次数。
+
+    我们同样提供了测试整个模型延时的二进制文件，命名为 `get_net_latency`，它返回的是整个模型的延时。调用方法如下：
+
+    - `./get_net_latency model_path threads test_iter`
+
+    其中 `model_path` 是保存 PaddlePaddle 模型的路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/io_cn.html#save-inference-model)将参数保存为单独的文件。如何单独使用这些二进制文件可以参看[这里](https://github.com/PaddlePaddle/Paddle-Lite/blob/develop/mobile/doc/development_android.md)或者`get_latency_lookup_table.py`里面的类似方法。
+
+    备注2：用户如果有其他 op 的开发需求，可以根据 Paddle Mobile 的[op单测](https://github.com/PaddlePaddle/Paddle-Lite/tree/develop/mobile/test/operators)进行开发，基于android端的编译方法可以参见[这里](https://github.com/PaddlePaddle/Paddle-Lite/blob/develop/mobile/doc/development_android.md)，欢迎大家贡献代码。
+
+    我们提供的示例 op 的单测代码可以在[这里](https://paddle-slim-models.bj.bcebos.com/android_op_test.zip)下载。用户通过 `git clone https://github.com/PaddlePaddle/Paddle-Lite.git` 命令, 将 android_op_test 里面的单测代码放置到 `Paddle-Lite/mobile/test/operators` 目录，然后修改 `Paddle-Lite/mobile/test/CMakeList.txt` 进行编译即可生成所需的二进制文件。
+
+    iOS系统：
+
+    - 用户从[这里](https://paddle-slim-models.bj.bcebos.com/OpLatency.zip)下载iOS系统的延时评估器生成工具 OpLatency。
+    - 与Android系统不同的是，在使用延时评估器生成工具之前，用户需要把从 `models/PaddleSlim/light_nas/light_nas_space.py` 中的 `get_all_ops` 函数里面得到的搜索空间所有 op 参数写入到一个 .txt 文件中。该文件与延时评估器表格类似，每行内容对应一个 op，仅仅缺少该 op 的延时数据。在 LightNAS 中，我们将它命名为`lightnas_ops.txt`。
+    - 用户需要安装 Xcode，连接 iOS 硬件平台，目前不支持虚拟设备。注意选中项目名称 OpLatency，在 General-->Signing 中修改 developer 信息。
+    - 将上述准备好的 `lightnas_ops.txt` 文件拖入工程。注意根据提示勾选 `Add to targets`。
+    - 在 ViewController 我们调用了 OCWrapper 类里面的 `get_latency_lookup_table` 方法，修改其输入输出参数为 `lightnas_ops.txt` 与 `latency_lookup_table.txt`。
+    - 运行 OpLatency，生成手机 APP 的同时，程序会在 APP 沙盒中生成一个当前搜索空间的延时评估器表格 `latency_lookup_table.txt`。
+    - 点击 Windows-->Devices and Simulators-->OpLatency->Download Container 将沙盒下载到 PC，右键点击显示包内容，在 AppData-->Documents 即能找到延时评估器表格。
+
+    备注1：我们同样提供了测试整个模型延时的方法。可以在 ViewController 调用 OCWrapper 类里面的 `get_net_latency` 方法。其中 `get_net_latency` 的参数为 model 和 params 路径，用户需要利用 [paddle.fluid.io.save_inference_model](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/io_cn.html#save-inference-model)将所有参数打包存储。
+
+    备注2：用户如果有其他 op 的开发需求，可以根据我们[这里](https://paddle-slim-models.bj.bcebos.com/ios_op_test.zip)提供的代码示例进行开发。使用方法：解压并在命令行运行 `sh run.sh` 即可生成 OpLatency 里面所需的打包文件 `libpaddle-mobile.a` 和头文件 `ios_op_test.h`。
