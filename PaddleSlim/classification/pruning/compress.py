@@ -24,11 +24,46 @@ add_arg('batch_size',       int,  64*4,                 "Minibatch size.")
 add_arg('use_gpu',          bool, True,                "Whether to use GPU or not.")
 add_arg('model',            str,  None,                "The target model.")
 add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
-add_arg('config_file',  str, None,                 "The config file for compression with yaml format.")
+add_arg('lr',               float,  0.1,               "The learning rate used to fine-tune pruned model.")
+add_arg('lr_strategy',      str,  "piecewise_decay",   "The learning rate decay strategy.")
+add_arg('l2_decay',         float,  3e-5,               "The l2_decay parameter.")
+add_arg('momentum_rate',    float,  0.9,               "The value of momentum_rate.")
+add_arg('num_epochs',       int,  120,               "The number of total epochs.")
+add_arg('total_images',     int,  1281167,               "The number of total training images.")
+parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
+add_arg('config_file',      str, None,                 "The config file for compression with yaml format.")
 # yapf: enable
 
 
 model_list = [m for m in dir(models) if "__" not in m]
+
+def piecewise_decay(args):
+        bd = [self.step * e for e in args.step_epochs]
+        lr = [self.lr * (0.1**i) for i in range(len(bd) + 1)]
+        learning_rate = fluid.layers.piecewise_decay(boundaries=bd, values=lr)
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=learning_rate,
+            momentum=args.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(args.l2_decay))
+        return optimizer
+
+def cosine_decay(args):
+        step = int(math.ceil(float(args.total_images) / args.batch_size))
+        learning_rate = fluid.layers.cosine_decay(
+            learning_rate=args.lr,
+            step_each_epoch=step,
+            epochs=args.num_epochs)
+        optimizer = fluid.optimizer.Momentum(
+            learning_rate=learning_rate,
+            momentum=args.momentum_rate,
+            regularization=fluid.regularizer.L2Decay(args.l2_decay))
+        return optimizer
+
+def create_optimizer(args):
+    if args.lr_strategy == "piecewise_decay":
+        return piecewise_decay(args)
+    elif args.lr_strategy == "cosine_decay":
+        return cosine_decay(args)
 
 def compress(args):
     class_dim=1000
