@@ -62,10 +62,11 @@ There are many hyperparameters to be tuned depending on the specification of mod
 
 Note that `preprocess.py`, `train.py` and `synthesis.py` all accept a `--preset` parameter. To ensure consistency, you should use the same preset for preprocessing, training and synthesizing.
 
-Note that you can overwrite preset hyperparameters with command line argument `--hparams`, just pass several key-value pair in  `${key}=${value}` format seperated by comma （`,`）. For example `--hparams="batch_size=8, nepochs=500"` can overwrite default values in the preset json file. For more details about hyperparameters, see `hparams.py`, which contains the definition of `hparams`. Priority order of hyperparameters is command line option `--hparams` > `--preset` json configuration file > definition of hparams in `hparams.py`.
+Note that you can overwrite preset hyperparameters with command line argument `--hparams`, just pass several key-value pair in  `${key}=${value}` format seperated by comma （`,`）. For example `--hparams="batch_size=8, nepochs=500"` can overwrite default values in the preset json file.
 
 Some hyperparameters are only related to training, like `batch_size`, `checkpoint_interval` and you can use different values for preprocessing and training. But hyperparameters related to data preprocessing, like `num_mels` and `ref_level_db`, should be kept the same for preprocessing and training.
 
+For more details about hyperparameters, see `hparams.py`, which contains the definition of `hparams`. Priority order of hyperparameters is command line option `--hparams` > `--preset` json configuration file > definition of hparams in `hparams.py`.
 
 ### Dataset
 

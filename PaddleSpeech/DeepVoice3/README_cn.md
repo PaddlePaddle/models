@@ -62,7 +62,7 @@ nltk.download("cmudict")
 
 `preprocess.py`，`train.py`，`synthesis.py` 都接受 `--preset` 参数。为了保持一致性，最好在数据预处理，模型训练和语音合成时使用相同的预设配置。
 
-可以通过 `--hparams` 参数来覆盖预设的超参数配置，参数格式是逗号分隔的键值对 `${key}=${value}`，例如 `--hparams="batch_size=8, nepochs=500"`。关于超参数设置更多细节可以参考 `hparams.py` ，其中定义了 hparams。超参数的优先级序列是：通过命令行参数 `--hparams` 传入的参数优先级高于通过 `--preset` 参数传入的 json 配置文件，高于 `hparams.py` 中的定义。
+可以通过 `--hparams` 参数来覆盖预设的超参数配置，参数格式是逗号分隔的键值对 `${key}=${value}`，例如 `--hparams="batch_size=8, nepochs=500"`。
 
 部分参数可以只和训练有关，如 `batch_size`, `checkpoint_interval`, 用户在训练时可以使用不同的值。但部分参数和数据预处理相关，如 `num_mels` 和 `ref_level_db`, 这些参数在数据预处理和训练时候应该保持一致。
 
