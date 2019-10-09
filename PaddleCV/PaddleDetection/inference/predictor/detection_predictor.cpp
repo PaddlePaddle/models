@@ -101,8 +101,8 @@ namespace PaddleSolution {
             auto param_file = utils::path_join(model_dir, params_filename);
             config.SetModel(prog_file, param_file);
             config.SwitchUseFeedFetchOps(false);
-            //config.SwitchSpecifyInputNames(true);
-            //config.EnableMemoryOptim(false, false);                        
+            config.SwitchSpecifyInputNames(true);
+            config.EnableMemoryOptim(false, false);                        
             _main_predictor = paddle::CreatePaddlePredictor(config);
         } else {
             return -1;
