@@ -82,6 +82,24 @@ or running run.sh scripts
 bash run.sh train model_name
 ```
 
+**multiprocess training:**
+
+If you have multiple gpus, this method is strongly recommended, because it can improve training speed dramatically.
+You can start the multiprocess training step by:
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
+       --model=ResNet50 \
+       --batch_size=256 \
+       --total_images=1281167 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --lr_strategy=piecewise_decay \
+       --lr=0.1
+```
+
+or reference scripts/train/ResNet50_dist.sh
+
 **parameter introduction:**
 
 Environment settings:
