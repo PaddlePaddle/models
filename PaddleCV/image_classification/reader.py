@@ -20,6 +20,7 @@ import numpy as np
 import cv2
 
 import paddle
+from paddle import fluid
 from utils.autoaugment import ImageNetPolicy
 from PIL import Image
 
@@ -308,7 +309,7 @@ class ImageNetReader:
             color_jitter=color_jitter,
             rotate=rotate)
 
-        return paddle.reader.xmap_readers(
+        return fluid.io.xmap_readers(
             mapper,
             data_reader,
             settings.reader_thread,
@@ -345,6 +346,10 @@ class ImageNetReader:
 
         if settings.use_mixup == True:
             reader = create_mixup_reader(settings, reader)
+            reader = fluid.io.batch(
+                reader,
+                batch_size=int(settings.batch_size / paddle.fluid.core.get_cuda_device_count()),
+                drop_last=True)
         return reader
 
 

@@ -102,6 +102,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
        --image_shape=3,224,224 \
        --model_save_dir=output/ \
        --lr_strategy=piecewise_decay \
+       --reader_thread=4 \
        --lr=0.1
 ```
 或者参考 scripts/train/ResNet50_dist.sh

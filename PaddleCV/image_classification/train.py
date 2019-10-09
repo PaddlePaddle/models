@@ -169,12 +169,6 @@ def train(args):
     num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
     imagenet_reader = reader.ImageNetReader(0 if num_trainers > 1 else None)
     train_reader = imagenet_reader.train(settings=args)
-    if args.use_mixup:
-        train_reader = paddle.batch(
-            train_reader,
-            batch_size=int(args.batch_size / fluid.core.get_cuda_device_count()),
-            drop_last=True)
-
     test_reader = imagenet_reader.val(settings=args)
 
     train_py_reader.decorate_sample_list_generator(train_reader, place)
