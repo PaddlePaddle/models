@@ -236,11 +236,11 @@ namespace PaddleSolution {
             }
             std::cout << ")" << std::endl;
        
-            const size_t nums = _outputs.front().data.length() / sizeof(float);
-            if (out_num % batch_size != 0 || out_num != nums) {
-                LOG(ERROR) << "outputs data size mismatch with shape size.";
-                return -1;
-            }
+        //    const size_t nums = _outputs.front().data.length() / sizeof(float);
+        //    if (out_num % batch_size != 0 || out_num != nums) {
+        //        LOG(ERROR) << "outputs data size mismatch with shape size.";
+        //        return -1;
+        //    }
             float* out_addr = (float *)(_outputs[0].data.data());
             output_detection_result(out_addr, _outputs[0].lod, imgs_batch);
         }
