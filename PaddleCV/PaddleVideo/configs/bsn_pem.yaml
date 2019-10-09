@@ -1,0 +1,55 @@
+MODEL:
+    name: "BSNPEM"
+    tscale: 100
+    top_K: 500
+    feat_dim: 32
+    hidden_dim: 128
+    anno_file: "data/dataset/bmn/activitynet_1.3_annotations.json"
+    feat_path: "data/output/EVAL/PGM_feature/"
+    prop_path: "data/output/EVAL/PGM_proposals/"
+
+
+TRAIN:
+    subset: "train"
+    epoch: 15
+    batch_size: 16
+    num_threads: 8
+    use_gpu: True
+    num_gpus: 1
+    learning_rate: 0.01
+    learning_rate_decay: 0.1
+    lr_decay_iter: 6000
+    l2_weight_decay: 1e-5
+    top_K: 500
+
+VALID:
+    subset: "validation"
+    batch_size: 16
+    num_threads: 8
+    use_gpu: True
+    num_gpus: 1
+    top_K: 500
+
+TEST:
+    subset: "validation"
+    batch_size: 1
+    num_threads: 1
+    snms_alpha: 0.9
+    snms_t1: 0.004
+    snms_t2: 0.01
+    top_K: 1000
+    num_gpus: 1
+    output_path_pem: "data/output/EVAL/PEM_results"
+    result_path_pem: "data/evaluate_results"
+
+INFER:
+    subset: "test"
+    filelist: 'data/dataset/bmn/infer.list'
+    batch_size: 1
+    num_threads: 1
+    top_K: 1000
+    num_gpus: 1
+    feat_path: "data/output/INFER/PGM_feature/"
+    prop_path: "data/output/INFER/PGM_proposals/"
+    output_path_pem: "data/output/INFER/PEM_results"
+    result_path_pem: "data/predict_results"

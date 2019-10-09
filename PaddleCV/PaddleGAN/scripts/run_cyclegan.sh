@@ -1,0 +1,1 @@
+python train.py --model_net CycleGAN --dataset cityscapes --batch_size 1 --net_G resnet_9block --g_base_dim 32 --net_D basic --norm_type batch_norm --epoch 200 --image_size 286 --crop_size 256 --crop_type Random --output ./output/cyclegan/ > log_out 2>log_err 

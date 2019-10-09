@@ -1,9 +1,9 @@
-[submodule "fluid/PaddleNLP/LAC"]
-	path = fluid/PaddleNLP/LAC
-	url = https://github.com/baidu/lac.git
-[submodule "fluid/PaddleNLP/SimNet"]
-	path = fluid/PaddleNLP/SimNet
-	url = https://github.com/baidu/AnyQ.git
-[submodule "fluid/PaddleNLP/Senta"]
-	path = fluid/PaddleNLP/Senta
-	url = https://github.com/baidu/Senta.git
+[submodule "PaddleNLP/language_representations_kit/ERNIE"]
+	path = PaddleNLP/language_representations_kit/ERNIE
+	url = https://github.com/PaddlePaddle/ERNIE
+[submodule "PaddleRL"]
+	path = PaddleRL
+	url = https://github.com/PaddlePaddle/PARL
+[submodule "PaddleCV/PaddleSeg"]
+	path = PaddleCV/PaddleSeg
+	url = https://github.com/PaddlePaddle/PaddleSeg
