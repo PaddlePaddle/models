@@ -4,10 +4,10 @@
 #export GLOG_logtostderr=1
 
 # start pserver0
+# if you want to load model before training, add "--load_model_dir cluster_model/epoch_10" in pserver role command.
 python -u cluster_train.py \
     --train_data_dir data/train_data \
     --model_output_dir cluster_model \
-    #--load_model_dir cluster_model/epoch_10 \
     --is_local 0 \
     --is_sparse \
     --role pserver \
@@ -17,10 +17,10 @@ python -u cluster_train.py \
     > pserver0.log 2>&1 &
 
 # start pserver1
+# if you want to load model before training, add "--load_model_dir cluster_model/epoch_10" in pserver role command.
 python -u cluster_train.py \
     --train_data_dir data/train_data \
     --model_output_dir cluster_model \
-    #--load_model_dir cluster_model/epoch_10 \
     --is_local 0 \
     --is_sparse \
     --role pserver \
