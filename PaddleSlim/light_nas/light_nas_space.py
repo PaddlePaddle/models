@@ -271,9 +271,9 @@ class LightNASSpace(SearchSpace):
         test_prog = test_prog.clone(for_test=True)
         train_batch_size = batch_size / 4
         test_batch_size = batch_size
-        train_reader = paddle.batch(
+        train_reader = fluid.io.batch(
             reader.train(), batch_size=train_batch_size, drop_last=True)
-        test_reader = paddle.batch(reader.val(), batch_size=test_batch_size)
+        test_reader = fluid.io.batch(reader.val(), batch_size=test_batch_size)
 
         with fluid.program_guard(train_prog, startup_prog):
             train_py_reader.decorate_paddle_reader(train_reader)

@@ -86,8 +86,8 @@ def parse_args():
 def start_infer(args, model_path):
     dataset = reader.SyntheticDataset(args.sparse_feature_dim, args.query_slots,
                                       args.title_slots)
-    test_reader = paddle.batch(
-        paddle.reader.shuffle(
+    test_reader = fluid.io.batch(
+        fluid.io.shuffle(
             dataset.valid(), buf_size=args.batch_size * 100),
         batch_size=args.batch_size)
     place = fluid.CPUPlace()

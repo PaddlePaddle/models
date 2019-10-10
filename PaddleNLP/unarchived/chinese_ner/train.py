@@ -307,12 +307,12 @@ def main(args):
 
         chunk_evaluator = fluid.metrics.ChunkEvaluator()
 
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
+        train_reader = fluid.io.batch(
+            fluid.io.shuffle(
                 reader.file_reader(args.train_data_dir), buf_size=2000000),
             batch_size=args.batch_size)
-        test_reader = paddle.batch(
-            paddle.reader.shuffle(
+        test_reader = fluid.io.batch(
+            fluid.io.shuffle(
                 reader.file_reader(args.test_data_dir), buf_size=2000000),
             batch_size=args.batch_size)
 

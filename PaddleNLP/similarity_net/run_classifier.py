@@ -182,7 +182,7 @@ def train(conf_dict, args):
         return auc and acc
         """
         # Get Batch Data
-        batch_data = paddle.batch(get_valid_examples, args.batch_size, drop_last=False)
+        batch_data = fluid.io.batch(get_valid_examples, args.batch_size, drop_last=False)
         test_pyreader.decorate_paddle_reader(batch_data)
         test_pyreader.start()
         pred_list = []
@@ -219,8 +219,8 @@ def train(conf_dict, args):
     ce_info = []
     train_exe = exe
     for epoch_id in range(args.epoch):
-        train_batch_data = paddle.batch(
-            paddle.reader.shuffle(
+        train_batch_data = fluid.io.batch(
+            fluid.io.shuffle(
                 get_train_examples, buf_size=10000),
             args.batch_size,
             drop_last=False)
@@ -343,7 +343,7 @@ def test(conf_dict, args):
     startup_prog = fluid.Program()
 
     get_test_examples = simnet_process.get_reader("test")
-    batch_data = paddle.batch(get_test_examples, args.batch_size, drop_last=False)
+    batch_data = fluid.io.batch(get_test_examples, args.batch_size, drop_last=False)
 
     test_prog = fluid.Program()
 
@@ -446,7 +446,7 @@ def infer(conf_dict, args):
     startup_prog = fluid.Program()
 
     get_infer_examples = simnet_process.get_infer_reader
-    batch_data = paddle.batch(get_infer_examples, args.batch_size, drop_last=False)
+    batch_data = fluid.io.batch(get_infer_examples, args.batch_size, drop_last=False)
 
     test_prog = fluid.Program()
 

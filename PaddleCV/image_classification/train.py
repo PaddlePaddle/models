@@ -169,13 +169,13 @@ def train(args):
     init_model(exe, args, train_prog)
 
     train_reader = reader.train(settings=args)
-    train_reader = paddle.batch(
+    train_reader = fluid.io.batch(
         train_reader,
         batch_size=int(args.batch_size / fluid.core.get_cuda_device_count()),
         drop_last=True)
 
     test_reader = reader.val(settings=args)
-    test_reader = paddle.batch(
+    test_reader = fluid.io.batch(
         test_reader, batch_size=args.test_batch_size, drop_last=True)
 
     train_py_reader.decorate_sample_list_generator(train_reader, place)

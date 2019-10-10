@@ -28,7 +28,7 @@ def infer():
         args.test_data_dir + '/' + x for x in os.listdir(args.test_data_dir)
     ]
     criteo_dataset = CriteoDataset()
-    test_reader = paddle.batch(
+    test_reader = fluid.io.batch(
         criteo_dataset.test(test_files), batch_size=args.batch_size)
 
     startup_program = fluid.framework.Program()

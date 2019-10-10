@@ -249,15 +249,15 @@ def train(args):
     train_reader_list = []
     corpus_num = len(args.corpus_type_list)
     for i in range(corpus_num):
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
+        train_reader = fluid.io.batch(
+            fluid.io.shuffle(
                 reader.file_reader(args.traindata_dir, word2id_dict,
                                    label2id_dict, word_rep_dict,
                                    args.corpus_type_list[i]),
                 buf_size=args.traindata_shuffle_buffer),
             batch_size=int(args.batch_size * args.corpus_proportion_list[i]))
         train_reader_list.append(train_reader)
-    test_reader = paddle.batch(
+    test_reader = fluid.io.batch(
         reader.file_reader(args.testdata_dir, word2id_dict, label2id_dict,
                            word_rep_dict),
         batch_size=args.batch_size)

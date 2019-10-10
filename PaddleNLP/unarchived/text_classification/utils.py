@@ -79,19 +79,19 @@ def prepare_data(data_type="imdb",
 
     if data_type == "imdb":
         if "CE_MODE_X" in os.environ:
-            train_reader = paddle.batch(
+            train_reader = fluid.io.batch(
                 paddle.dataset.imdb.train(word_dict), batch_size=batch_size)
 
-            test_reader = paddle.batch(
+            test_reader = fluid.io.batch(
                 paddle.dataset.imdb.test(word_dict), batch_size=batch_size)
         else:
-            train_reader = paddle.batch(
-                paddle.reader.shuffle(
+            train_reader = fluid.io.batch(
+                fluid.io.shuffle(
                     paddle.dataset.imdb.train(word_dict), buf_size=buf_size),
                 batch_size=batch_size)
 
-            test_reader = paddle.batch(
-                paddle.reader.shuffle(
+            test_reader = fluid.io.batch(
+                fluid.io.shuffle(
                     paddle.dataset.imdb.test(word_dict), buf_size=buf_size),
                 batch_size=batch_size)
     else:

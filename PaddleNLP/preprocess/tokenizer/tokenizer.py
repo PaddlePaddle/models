@@ -118,7 +118,7 @@ def infer(args):
     id2label_dict = reader.load_dict(args.label_dict_path)
     label2id_dict = reader.load_reverse_dict(args.label_dict_path)
     q2b_dict = reader.load_dict(args.word_rep_dict_path)
-    test_data = paddle.batch(
+    test_data = fluid.io.batch(
         reader.test_reader(args.test_data_dir, word2id_dict, label2id_dict,
                            q2b_dict),
         batch_size=args.batch_size)

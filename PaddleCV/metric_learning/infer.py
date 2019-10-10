@@ -70,7 +70,7 @@ def infer(args):
 
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    infer_reader = paddle.batch(reader.infer(args), batch_size=args.batch_size, drop_last=False)
+    infer_reader = fluid.io.batch(reader.infer(args), batch_size=args.batch_size, drop_last=False)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     fetch_list = [out.name]

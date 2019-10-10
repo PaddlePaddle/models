@@ -231,9 +231,9 @@ def train(args):
 
     train_batch_size = args.batch_size / device_num
     test_batch_size = 1 if activation_quant_type == 'abs_max' else 8
-    train_reader = paddle.batch(
+    train_reader = fluid.io.batch(
         reader.train(data_dir=data_dir), batch_size=train_batch_size, drop_last=True)
-    test_reader = paddle.batch(reader.val(data_dir=data_dir), batch_size=test_batch_size)
+    test_reader = fluid.io.batch(reader.val(data_dir=data_dir), batch_size=test_batch_size)
 
     train_py_reader.decorate_paddle_reader(train_reader)
     test_py_reader.decorate_paddle_reader(test_reader)

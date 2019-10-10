@@ -113,7 +113,7 @@ def valid(args):
         fluid.io.load_persistables(exe, args.checkpoint)
 
     # Dataloader
-    valid_reader = paddle.batch(reader.valid(), batch_size=args.batch_size)
+    valid_reader = fluid.io.batch(reader.valid(), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, target, target_weight, center, scale, score])
 
     valid_exe = fluid.ParallelExecutor(

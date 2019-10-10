@@ -467,22 +467,22 @@ def train_net(vocab="./thirdparty/train.vocab",
     w_dict = scdb_word_dict(vocab=vocab)
     test_files = [ "./thirdparty" + os.sep + f for f in test_list]
 
-    train_reader = paddle.batch(
+    train_reader = fluid.io.batch(
                         scdb_train_data(train_dir, w_dict),
                         batch_size = 256)
 
-    test_reader = [paddle.batch(scdb_test_data(test_file, w_dict), batch_size = 50) \
+    test_reader = [fluid.io.batch(scdb_test_data(test_file, w_dict), batch_size = 50) \
             for test_file in test_files]
     """
     w_dict = paddle.dataset.imdb.word_dict()
     print("dict ready")
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
+    train_reader = fluid.io.batch(
+        fluid.io.shuffle(
             paddle.dataset.imdb.train(w_dict), buf_size=50000),
         batch_size=128)
 
-    test_reader = paddle.batch(
-        paddle.reader.shuffle(
+    test_reader = fluid.io.batch(
+        fluid.io.shuffle(
             paddle.dataset.imdb.test(w_dict), buf_size=50000),
         batch_size=128)
     test_reader = [test_reader]

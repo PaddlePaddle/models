@@ -96,11 +96,11 @@ def train(args):
         exe = fluid.Executor(fluid.CUDAPlace(0))
     exe.run(fluid.default_startup_program())
     if args.run_ce:
-        train_reader = paddle.batch(
+        train_reader = fluid.io.batch(
             paddle.dataset.mnist.train(), batch_size=args.batch_size)
     else:
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
+        train_reader = fluid.io.batch(
+            fluid.io.shuffle(
                 paddle.dataset.mnist.train(), buf_size=60000),
             batch_size=args.batch_size)
 

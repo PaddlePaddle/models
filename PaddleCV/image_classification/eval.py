@@ -102,7 +102,7 @@ def eval(args):
 
     fluid.io.load_persistables(exe, args.pretrained_model)
 
-    val_reader = paddle.batch(
+    val_reader = fluid.io.batch(
         reader.val(settings=args), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 

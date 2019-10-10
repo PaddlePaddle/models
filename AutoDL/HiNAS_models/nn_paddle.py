@@ -92,14 +92,14 @@ class Model(object):
         test_files = reader.test10()
 
         if FLAGS.shuffle_image:
-            train_reader = paddle.batch(
-                paddle.reader.shuffle(train_files, dataset_train_size),
+            train_reader = fluid.io.batch(
+                fluid.io.shuffle(train_files, dataset_train_size),
                 batch_size=FLAGS.batch_size)
         else:
-            train_reader = paddle.batch(
+            train_reader = fluid.io.batch(
                 train_files, batch_size=FLAGS.batch_size)
 
-        test_reader = paddle.batch(test_files, batch_size=FLAGS.batch_size)
+        test_reader = fluid.io.batch(test_files, batch_size=FLAGS.batch_size)
 
         costs = []
         accs = []

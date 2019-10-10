@@ -5,6 +5,7 @@ dataset and reader
 """
 import math
 import sys
+import paddle.fluid as fluid
 import paddle.fluid.incubate.data_generator as dg
 import pickle
 from collections import Counter
@@ -73,9 +74,8 @@ class CriteoDataset(dg.MultiSlotDataGenerator):
                         label_feat_list = self._process_line(line)
                         yield label_feat_list
 
-        import paddle
-        batch_iter = paddle.batch(
-            paddle.reader.buffered(
+        batch_iter = fluid.io.batch(
+            fluid.io.buffered(
                 local_iter, size=buf_size), batch_size=batch)
         return batch_iter
 

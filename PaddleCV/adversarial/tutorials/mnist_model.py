@@ -69,8 +69,8 @@ def main():
     PASS_NUM = 3
     ACC_THRESHOLD = 0.98
     LOSS_THRESHOLD = 10.0
-    train_reader = paddle.batch(
-        paddle.reader.shuffle(
+    train_reader = fluid.io.batch(
+        fluid.io.shuffle(
             paddle.dataset.mnist.train(), buf_size=500),
         batch_size=BATCH_SIZE)
 

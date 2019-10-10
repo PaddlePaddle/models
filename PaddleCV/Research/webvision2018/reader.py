@@ -17,6 +17,7 @@ import random
 import functools
 import numpy as np
 import paddle
+import paddle.fluid as fluid
 import cv2
 import io
 
@@ -141,7 +142,7 @@ def _reader_creator(file_list,
 
     image_mapper = functools.partial(process_image,
             mode=mode, color_jitter=color_jitter, rotate=rotate, crop_size=crop_size)
-    reader = paddle.reader.xmap_readers(
+    reader = fluid.io.xmap_readers(
             image_mapper, reader, THREAD, BUF_SIZE, order=True)
     return reader
 

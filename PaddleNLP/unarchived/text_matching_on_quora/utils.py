@@ -191,8 +191,8 @@ def prepare_data(data_type,
         def prepare_reader(reader):
             if duplicate_data:
                 reader = duplicate(reader)
-            reader = paddle.batch(
-                paddle.reader.shuffle(
+            reader = fluid.io.batch(
+                fluid.io.shuffle(
                     reader, buf_size=buf_size),
                 batch_size=batch_size,
                 drop_last=False)

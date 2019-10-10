@@ -41,7 +41,7 @@ def infer(args):
                                       exe,
                                       model_filename="__model__.infer",
                                       params_filename="__params__")
-    test_reader = paddle.batch(reader.test(), batch_size=1)
+    test_reader = fluid.io.batch(reader.test(), batch_size=1)
     feeder = fluid.DataFeeder(place=place, feed_list=feed_target_names, program=test_program)
 
     results=[] 

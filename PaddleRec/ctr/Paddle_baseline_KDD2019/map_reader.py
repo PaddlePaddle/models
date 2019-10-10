@@ -14,6 +14,7 @@
 
 import sys
 import json
+import paddle.fluid as fluid
 import paddle.fluid.incubate.data_generator as dg
 
 
@@ -98,9 +99,8 @@ class MapDataset(dg.MultiSlotDataGenerator):
                         dense_feature, sparse_feature, sparse_feature_fm, label = self._process_line(line)
                         yield [dense_feature] + sparse_feature + [sparse_feature_fm] + [label]
 
-        import paddle
-        batch_iter = paddle.batch(
-            paddle.reader.shuffle(
+        batch_iter = fluid.io.batch(
+            fluid.io.shuffle(
                 local_iter, buf_size=buf_size),
             batch_size=batch)
         return batch_iter
@@ -116,9 +116,8 @@ class MapDataset(dg.MultiSlotDataGenerator):
                         dense_feature, sparse_feature, sparse_feature_fm, label = self._process_line(line)
                         yield [dense_feature] + sparse_feature + [sparse_feature_fm] + [label]
 
-        import paddle
-        batch_iter = paddle.batch(
-            paddle.reader.buffered(
+        batch_iter = fluid.io.batch(
+            fluid.io.buffered(
                 local_iter, size=buf_size),
             batch_size=batch)
         return batch_iter

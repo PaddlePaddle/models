@@ -26,6 +26,7 @@ except ImportError:
     from io import BytesIO
 import numpy as np
 import paddle
+import paddle.fluid as fluid
 from PIL import Image, ImageEnhance
 import logging
 
@@ -225,7 +226,7 @@ class KineticsReader(DataReader):
             img_mean=img_mean,
             img_std=img_std)
 
-        return paddle.reader.xmap_readers(mapper, reader, num_threads, buf_size)
+        return fluid.io.xmap_readers(mapper, reader, num_threads, buf_size)
 
 
 def imgs_transform(imgs,
