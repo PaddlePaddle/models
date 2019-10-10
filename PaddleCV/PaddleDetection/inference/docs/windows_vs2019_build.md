@@ -15,7 +15,7 @@ Windows 平台下，我们使用`Visual Studio 2015` 和 `Visual Studio 2019 Com
 
 ### Step1: 下载代码
 
-1. 点击下载源代码：[下载地址](https://github.com/joey12300/models/archive/develop.zip)
+1. 点击下载源代码：[下载地址](https://github.com/PaddlePaddle/models/archive/develop.zip)
 2. 解压，解压后目录重命名为`paddle_models`
 
 以下代码目录路径为`D:\projects\paddle_models` 为例。

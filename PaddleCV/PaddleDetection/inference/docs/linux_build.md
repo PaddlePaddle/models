@@ -13,7 +13,7 @@
 ### Step1: 下载代码
 
 1. `mkdir -p /root/projects/paddle_models && cd /root/projects/paddle_models`
-2. `git clone https://github.com/joey12300/models.git`
+2. `git clone https://github.com/PaddlePaddle/models.git`
 
 `C++`预测代码在`/root/projects/paddle_models/models/PaddleCV/PaddleDetection/inference` 目录，该目录不依赖任何`PaddleDetection`下其他目录。
 

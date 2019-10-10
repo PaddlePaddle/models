@@ -64,7 +64,7 @@ call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd6
 
 ```
 # 切换到预测库所在目录
-cd /d D:\projects\PaddleSeg\inference\
+cd /d D:\projects\PaddleSolution\deploy\
 # 创建构建目录, 重新构建只需要删除该目录即可
 mkdir build
 cd build
@@ -77,7 +77,7 @@ D:\projects\PaddleSeg\inference\build> cmake .. -G "Visual Studio 14 2015 Win64"
 * 生成可执行文件
 
 ```
-D:\projects\PaddleSeg\inference\build> msbuild /m /p:Configuration=Release cpp_inference_demo.sln
+D:\projects\PaddleSolution\deploy\build> msbuild /m /p:Configuration=Release cpp_inference_demo.sln
 ```
 
 ### Step5: 预测及可视化
@@ -90,7 +90,7 @@ cd /d D:\projects\PaddleSolution\deploy\build\release
 之后执行命令：
 
 ```
-seg_demo.exe --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
+detection_demo.exe --conf=/path/to/your/conf --input_dir=/path/to/your/input/data/directory
 ```
 
 更详细说明请参考ReadMe文档： [预测和可视化部分](../README.md)
