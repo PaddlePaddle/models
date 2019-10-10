@@ -32,7 +32,7 @@ def lm_model(hidden_size,
              init_scale=0.1,
              dropout=None,
              rnn_model='static',
-             use_py_reader=False):
+             use_dataloader=False):
     def padding_rnn(input_embedding, len=3, init_hidden=None, init_cell=None):
         weight_1_arr = []
         weight_2_arr = []
@@ -377,7 +377,7 @@ def lm_model(hidden_size,
     layers.assign(input=last_hidden, output=init_hidden)
 
     feeding_list = ['x', 'y', 'init_hidden', 'init_cell']
-    if use_py_reader:
-        return loss, last_hidden, last_cell, feeding_list, py_reader
+    if use_dataloader:
+        return loss, last_hidden, last_cell, feeding_list, dataloader
     else:
         return loss, last_hidden, last_cell, feeding_list
