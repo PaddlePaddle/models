@@ -37,7 +37,12 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml -o use_gpu=false
 - `--eval`: Whether to perform evaluation in training, default is `False`
 - `--output_eval`: If perform evaluation in training, this edits evaluation directory, default is current directory.
 - `-d` or `--dataset_dir`: Dataset path, same as `dataset_dir` of configs. Such as: `-d dataset/coco`
-- `-o`: Set configuration options in config file. Such as: `-o max_iters=180000`
+- `-c`: Select config file and all files are saved in `configs/`
+- `-o`: Set configuration options in config file. Such as: `-o max_iters=180000`. `-o` has higher priority to file configured by `-c`
+- `--use_tb`: Whether to record the data with [tb-paddle](https://github.com/linshuliang/tb-paddle), so as to display in Tensorboard, default is `False`
+- `--tb_log_dir`: tb-paddle logging directory for scalar, default is `tb_log_dir/scalar`
+- `--fp16`: Whether to enable mixed precision training (requires GPU), default is `False`
+- `--loss_scale`: Loss scaling factor for mixed precision training, default is `8.0`
 
 
 ##### Examples
@@ -55,7 +60,7 @@ causes time-consuming in training, we suggest decreasing evaluation times or eva
 the best model with highest MAP is saved at each `snapshot_iter`. `best_model` has the same path as `model_final`.
 
 
-- configuration options and assign Dataset path
+- Configure dataset path
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 export PYTHONPATH=$PYTHONPATH:.
@@ -63,6 +68,17 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
                          -d dataset/coco
 ```
 
+- Fine-tune other task
+
+When using pre-trained model to fine-tune other task, the excluded pre-trained parameters can be set by finetune_exclude_pretrained_params in YAML config or -o finetune_exclude_pretrained_params in the arguments.
+
+```bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export PYTHONPATH=$PYTHONPATH:.
+python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
+                         -o pretrain_weights=output/faster_rcnn_r50_1x/model_final/ \
+                            finetune_exclude_pretrained_params = ['cls_score','bbox_pred']
+```
 
 ##### NOTES
 
@@ -71,13 +87,13 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 - Dataset will be downloaded automatically and cached in `~/.cache/paddle/dataset` if not be found locally.
 - Pretrained model is downloaded automatically and cached in `~/.cache/paddle/weights`.
 - Model checkpoints are saved in `output` by default (configurable).
+- When finetuning, users could set `pretrain_weights` to the models published by PaddlePaddle. Parameters matched by fields in finetune_exclude_pretrained_params will be ignored in loading and fields can be wildcard matching. For detailed information, please refer to [Transfer Learning](TRANSFER_LEARNING.md).
 - To check out hyper parameters used, please refer to the [configs](../configs).
 - RCNN models training on CPU is not supported on PaddlePaddle<=1.5.1 and will be fixed on later version.
 
 
 
 ## Evaluation
-
 
 ```bash
 # run on GPU with:
@@ -95,7 +111,7 @@ python tools/eval.py -c configs/faster_rcnn_r50_1x.yml
 
 #### Examples
 
-- configuration options && assign Dataset path
+- Evaluate by specified weights path and dataset path
 ```bash
 # run on GPU with:
 export PYTHONPATH=$PYTHONPATH:.
@@ -105,7 +121,7 @@ python -u tools/eval.py -c configs/faster_rcnn_r50_1x.yml \
                         -d dataset/coco
 ```
 
-- Evaluation with json
+- Evaluate with json
 ```bash
 # run on GPU with:
 export PYTHONPATH=$PYTHONPATH:.
@@ -150,10 +166,13 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_dir=demo
 - `--output_dir`: Directory for storing the output visualization files.
 - `--draw_threshold`: Threshold to reserve the result for visualization. Default is 0.5.
 - `--save_inference_model`: Save inference model in output_dir if True.
+- `--use_tb`: Whether to record the data with [tb-paddle](https://github.com/linshuliang/tb-paddle), so as to display in Tensorboard, default is `False`
+- `--tb_log_dir`: tb-paddle logging directory for image, default is `tb_log_dir/image`
 
 #### Examples
 
 - Output specified directory && Set up threshold
+
 ```bash
 # run on GPU with:
 export PYTHONPATH=$PYTHONPATH:.
@@ -162,11 +181,16 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml \
                       --infer_img=demo/000000570688.jpg \
                       --output_dir=infer_output/ \
                       --draw_threshold=0.5 \
-                      -o weights=output/faster_rcnn_r50_1x/model_final
+                      -o weights=output/faster_rcnn_r50_1x/model_final \
+                      --use_tb=Ture
 ```
-The visualization files are saved in `output` by default, to specify a different
-path, simply add a `--output_dir=` flag.  
-`--draw_threshold` is an optional argument. Default is 0.5. Different thresholds will produce different results depending on the calculation of [NMS](https://ieeexplore.ieee.org/document/1699659). If users want to infer according to customized model path, `-o weights` can be set for specified path.
+
+The visualization files are saved in `output` by default, to specify a different path, simply add a `--output_dir=` flag.
+`--draw_threshold` is an optional argument. Default is 0.5.
+Different thresholds will produce different results depending on the calculation of [NMS](https://ieeexplore.ieee.org/document/1699659).
+If users want to infer according to customized model path, `-o weights` can be set for specified path.
+`--use_tb` is an optional argument, if `--use_tb` is `True`, the tb-paddle will record data in directory,
+so users can see the results in Tensorboard.
 
 - Save inference model
 
@@ -186,18 +210,25 @@ Save inference model by set `--save_inference_model`, which can be loaded by Pad
 
 **Q:**  Why do I get `NaN` loss values during single GPU training? </br>
 **A:**  The default learning rate is tuned to multi-GPU training (8x GPUs), it must
-be adapted for single GPU training accordingly (e.g., divide by 8).  
-The calculation rules are as follows，they are equivalent: </br>  
+be adapted for single GPU training accordingly (e.g., divide by 8).
+The calculation rules are as follows，they are equivalent: </br>
 
 
-| GPU number  | Learning rate  | Max_iters | Milestones       |  
-| :---------: | :------------: | :-------: | :--------------: |  
+| GPU number  | Learning rate  | Max_iters | Milestones       |
+| :---------: | :------------: | :-------: | :--------------: |
 | 2           | 0.0025         | 720000    | [480000, 640000] |
 | 4           | 0.005          | 360000    | [240000, 320000] |
 | 8           | 0.01           | 180000    | [120000, 160000] |
+
 
 **Q:**  How to reduce GPU memory usage? </br>
 **A:**  Setting environment variable FLAGS_conv_workspace_size_limit to a smaller
 number can reduce GPU memory footprint without affecting training speed.
 Take Mask-RCNN (R50) as example, by setting `export FLAGS_conv_workspace_size_limit=512`,
 batch size could reach 4 per GPU (Tesla V100 16GB).
+
+
+**Q:**  How to change data preprocessing? </br>
+**A:**  Set `sample_transform` in configuration. Note that **the whole transforms** need to be added in configuration.
+For example, `DecodeImage`, `NormalizeImage` and `Permute` in RCNN models. For detail description, please refer
+to [config_example](config_example).

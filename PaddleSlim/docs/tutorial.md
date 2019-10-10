@@ -1,4 +1,6 @@
-﻿<div align="center">
+﻿>本文包含大量行内公式，将公式转为图片会导致各种排版问题，建议您使用浏览器插件[MathJax Plugin for Github](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima)渲染该页公式。后续我们会将该文档迁移至[PaddlePaddle官网](https://www.paddlepaddle.org)。
+
+<div align="center">
   <h3>
     <a href="usage.md">
       使用文档
@@ -267,6 +269,23 @@ e^{\frac{(r_k-r)}{T_k}} & r_k < r\\
 <img src="images/tutorial/light-nas-block.png" height=300 width=600 hspace='10'/> <br />
 <strong>图10</strong>
 </p>
+
+
+### 4.3 模型延时评估
+
+搜索过程支持 FLOPS 约束和模型延时约束。而基于 Android/iOS 移动端、开发板等硬件平台，迭代搜索过程中不断测试模型的延时不仅消耗时间而且非常不方便，因此我们开发了模型延时评估器来评估搜索得到模型的延时。通过延时评估器评估得到的延时与模型实际测试的延时波动偏差小于 10%。
+
+延时评估器分为配置硬件延时评估器和评估模型延时两个阶段，配置硬件延时评估器只需要执行一次，而评估模型延时则在搜索过程中不断评估搜索得到的模型延时。
+
+- 配置硬件延时评估器
+
+    1. 获取搜索空间中所有不重复的 op 及其参数
+    2. 获取每组 op 及其参数的延时
+
+- 评估模型延时
+
+    1. 获取给定模型的所有 op 及其参数
+    2. 根据给定模型的所有 op 及参数，利用延时评估器去估计模型的延时
 
 
 ## 5. 参考文献

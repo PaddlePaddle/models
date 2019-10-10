@@ -108,8 +108,6 @@ def train(args, config, train_file_list, optimizer_method):
                     regularization=fluid.regularizer.L2Decay(0.0005),
                 )
             optimizer.minimize(loss)
-    fluid.memory_optimize(train_prog)
-
 
     place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
