@@ -42,7 +42,6 @@ from utils import *
 import models
 from build_model import create_model
 
-
 def build_program(is_train, main_prog, startup_prog, args):
     """build program, and add grad op in program accroding to different mode
 
@@ -167,25 +166,20 @@ def train(args):
 
     #init model by checkpoint or pretrianed model.
     init_model(exe, args, train_prog)
-
-    train_reader = reader.train(settings=args)
-    train_reader = paddle.batch(
-        train_reader,
-        batch_size=int(args.batch_size / fluid.core.get_cuda_device_count()),
-        drop_last=True)
-
-    test_reader = reader.val(settings=args)
-    test_reader = paddle.batch(
-        test_reader, batch_size=args.test_batch_size, drop_last=True)
+    num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+    imagenet_reader = reader.ImageNetReader(0 if num_trainers > 1 else None)
+    train_reader = imagenet_reader.train(settings=args)
+    test_reader = imagenet_reader.val(settings=args)
 
     train_py_reader.decorate_sample_list_generator(train_reader, place)
     test_py_reader.decorate_sample_list_generator(test_reader, place)
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
-                                                 train_fetch_vars[0])
-
+                                                 train_fetch_vars[0], exe)
+    trainer_id = int(os.getenv("PADDLE_TRAINER_ID", 0))
     for pass_id in range(args.num_epochs):
-
+        if num_trainers > 1:
+            imagenet_reader.set_shuffle_seed(pass_id + (args.random_seed if args.random_seed else 0))
         train_batch_id = 0
         train_batch_time_record = []
         train_batch_metrics_record = []
@@ -203,30 +197,32 @@ def train(args):
                 train_batch_metrics_avg = np.mean(
                     np.array(train_batch_metrics), axis=1)
                 train_batch_metrics_record.append(train_batch_metrics_avg)
-
-                print_info(pass_id, train_batch_id, args.print_step,
-                           train_batch_metrics_avg, train_batch_elapse, "batch")
-                sys.stdout.flush()
+                if trainer_id == 0:
+                    print_info(pass_id, train_batch_id, args.print_step,
+                               train_batch_metrics_avg, train_batch_elapse, "batch")
+                    sys.stdout.flush()
                 train_batch_id += 1
 
         except fluid.core.EOFException:
             train_py_reader.reset()
 
-        if args.use_ema:
-            print('ExponentialMovingAverage validate start...')
-            with ema.apply(exe):
-                validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
-            print('ExponentialMovingAverage validate over!')
+        if trainer_id == 0:
+            if args.use_ema:
+                print('ExponentialMovingAverage validate start...')
+                with ema.apply(exe):
+                    validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
+                print('ExponentialMovingAverage validate over!')
 
-        validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
-        #For now, save model per epoch.
-        if pass_id % args.save_step == 0:
-            save_model(args, exe, train_prog, pass_id)
+            validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
+            #For now, save model per epoch.
+            if pass_id % args.save_step == 0:
+                save_model(args, exe, train_prog, pass_id)
 
 
 def main():
     args = parse_args()
-    print_arguments(args)
+    if int(os.getenv("PADDLE_TRAINER_ID", 0)) == 0:
+        print_arguments(args)
     check_args(args)
     train(args)
 

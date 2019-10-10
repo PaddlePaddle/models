@@ -92,7 +92,7 @@ def prepare_reader(is_train, pyreader, args, pass_id=1):
         bs = args.batch_size / get_device_num()
     else:
         bs = 16
-    pyreader.decorate_paddle_reader(paddle.batch(reader, batch_size=bs))
+    pyreader.decorate_paddle_reader(fluid.io.batch(reader, batch_size=bs))
 
 
 def build_program(is_train, main_prog, startup_prog, args):

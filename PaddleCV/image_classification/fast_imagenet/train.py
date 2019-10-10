@@ -284,7 +284,7 @@ def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
         min_scale=min_scale,
         shuffle_seed=epoch_id + 1)
     train_py_reader.decorate_paddle_reader(
-        paddle.batch(
+        fluid.io.batch(
             train_reader, batch_size=train_bs))
 
     test_reader = reader.test(
@@ -292,7 +292,7 @@ def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
         bs=val_bs * DEVICE_NUM,
         sz=img_dim,
         rect_val=rect_val)
-    test_batched_reader = paddle.batch(
+    test_batched_reader = fluid.io.batch(
         test_reader, batch_size=val_bs * DEVICE_NUM)
 
     return test_batched_reader
