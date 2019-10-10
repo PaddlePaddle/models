@@ -116,7 +116,7 @@ def main():
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
-            train_pyreader, feed_vars = create_feed(train_feed)
+            train_loader, feed_vars = create_feed(train_feed)
 
             with mixed_precision_context(FLAGS.loss_scale, FLAGS.fp16) as ctx:
                 train_fetches = model.train(feed_vars)
@@ -139,12 +139,12 @@ def main():
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
                 model = create(main_arch)
-                eval_pyreader, feed_vars = create_feed(eval_feed)
+                eval_loader, feed_vars = create_feed(eval_feed)
                 fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
 
         eval_reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
-        eval_pyreader.decorate_sample_list_generator(eval_reader, place)
+        eval_loader.set_sample_list_generator(eval_reader, place)
 
         # parse eval fetches
         extra_keys = []
@@ -196,7 +196,7 @@ def main():
 
     train_reader = create_reader(train_feed, (cfg.max_iters - start_iter) *
                                  devices_num, FLAGS.dataset_dir)
-    train_pyreader.decorate_sample_list_generator(train_reader, place)
+    train_loader.set_sample_list_generator(train_reader, place)
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
@@ -208,7 +208,7 @@ def main():
     map_type = cfg.map_type if 'map_type' in cfg else '11point'
 
     train_stats = TrainingStats(cfg.log_smooth_window, train_keys)
-    train_pyreader.start()
+    train_loader.start()
     start_time = time.time()
     end_time = time.time()
 
@@ -255,7 +255,7 @@ def main():
 
             if FLAGS.eval:
                 # evaluation
-                results = eval_run(exe, compiled_eval_prog, eval_pyreader,
+                results = eval_run(exe, compiled_eval_prog, eval_loader,
                                    eval_keys, eval_values, eval_cls)
                 resolution = None
                 if 'mask' in results[0]:
@@ -277,7 +277,7 @@ def main():
                 logger.info("Best test box ap: {}, in iter: {}".format(
                     best_box_ap_list[0], best_box_ap_list[1]))
 
-    train_pyreader.reset()
+    train_loader.reset()
 
 
 if __name__ == '__main__':

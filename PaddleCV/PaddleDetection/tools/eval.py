@@ -79,12 +79,12 @@ def main():
     eval_prog = fluid.Program()
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
-            pyreader, feed_vars = create_feed(eval_feed)
+            loader, feed_vars = create_feed(eval_feed)
             fetches = model.eval(feed_vars)
     eval_prog = eval_prog.clone(True)
 
     reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
-    pyreader.decorate_sample_list_generator(reader, place)
+    loader.set_sample_list_generator(reader, place)
 
     # eval already exists json file
     if FLAGS.json_eval:
@@ -120,7 +120,7 @@ def main():
             callable(model.is_bbox_normalized):
         is_bbox_normalized = model.is_bbox_normalized()
 
-    results = eval_run(exe, compile_program, pyreader, keys, values, cls)
+    results = eval_run(exe, compile_program, loader, keys, values, cls)
 
     # evaluation
     resolution = None
