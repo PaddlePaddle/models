@@ -37,7 +37,22 @@
 - config: 检测库的配置，其中配置了训练超参数、数据集信息等。
 - slim_file: PaddleSlim的配置文件，参见[配置文件说明](#配置文件说明)。
 
-您可以通过运行脚本`run.sh`运行该示例，请确保已正确下载[pretrained model](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#%E5%B7%B2%E5%8F%91%E5%B8%83%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%85%B6%E6%80%A7%E8%83%BD)。
+您可以通过运行一下命令运行该示例，请确保已正确下载[pretrained model](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#%E5%B7%B2%E5%8F%91%E5%B8%83%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%85%B6%E6%80%A7%E8%83%BD)。
+step1: 开启显存优化策略
+```
+export FLAGS_fast_eager_deletion_mode=1
+export FLAGS_eager_delete_tensor_gb=0.0
+```
+step2: 设置gpu卡
+```
+export CUDA_VISIBLE_DEVICES=0
+```
+step3: 开始训练
+```
+python compress.py \
+    -s yolov3_mobilenet_v1_slim.yaml \
+    -c yolov3_mobilenet_v1_voc.yml 
+```
 
 ### 训练时的模型结构
 这部分介绍来源于[量化low-level API介绍](https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim/quant_low_level_api#1-%E9%87%8F%E5%8C%96%E8%AE%AD%E7%BB%83low-level-apis%E4%BB%8B%E7%BB%8D)。
