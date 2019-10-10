@@ -259,7 +259,7 @@ def infer():
         total_acc, total_num_seqs = [], []
 
         restore, _ = fluid.load_dygraph(args.checkpoints)
-        cnn_net_infer.load_dict(restore)
+        cnn_net_infer.set_dict(restore)
         cnn_net_infer.eval()
 
         steps = 0

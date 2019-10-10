@@ -53,7 +53,7 @@ def test():
         cycle_gan = Cycle_Gan("cycle_gan")
         save_dir = args.init_model + str(epoch)
         restore, _ = fluid.load_dygraph(save_dir)
-        cycle_gan.load_dict(restore)
+        cycle_gan.set_dict(restore)
         cycle_gan.eval()
         for data_A , data_B in zip(A_test_reader(), B_test_reader()): 
             A_name = data_A[1]

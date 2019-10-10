@@ -151,7 +151,7 @@ def inference_mnist():
         mnist_infer = MNIST("mnist")
         # load checkpoint
         model_dict, _ = fluid.load_dygraph("save_temp")
-        mnist_infer.load_dict(model_dict)
+        mnist_infer.set_dict(model_dict)
         print("checkpoint loaded")
 
         # start evaluate mode
