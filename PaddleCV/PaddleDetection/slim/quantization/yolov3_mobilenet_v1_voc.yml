@@ -62,7 +62,7 @@ OptimizerBuilder:
 YoloTrainFeed:
   batch_size: 8
   dataset:
-    dataset_dir: dataset/voc
+    dataset_dir: ../../dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
     image_dir: VOCdevkit/VOC_all/JPEGImages
     use_default_label: true
@@ -75,7 +75,7 @@ YoloEvalFeed:
   batch_size: 8
   image_shape: [3, 608, 608]
   dataset:
-    dataset_dir: dataset/voc
+    dataset_dir: ../../dataset/voc
     annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
     image_dir: VOCdevkit/VOC_all/JPEGImages
     use_default_label: true
