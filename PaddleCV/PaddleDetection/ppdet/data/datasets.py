@@ -204,6 +204,14 @@ class PascalVocDataSet(DataSet):
             self.root_dir, 'ImageSets/Main/{}.txt'.format(self.subset))
 
     @property
+    def image_dir(self):
+        return os.path.join(self.root_dir, 'JPEGImages')
+
+    @property
+    def anno_dir(self):
+        return os.path.join(self.root_dir, 'Annotations')
+
+    @property
     def aspect_ratios(self):
         if not hasattr(self, '_aspect_ratios'):
             if not hasattr(self, 'samples'):
@@ -226,9 +234,6 @@ class PascalVocDataSet(DataSet):
 
     def _load(self):
         import xml.etree.ElementTree as ET
-
-        image_dir = os.path.join(self.root_dir, 'JPEGImages')
-        anno_dir = os.path.join(self.root_dir, 'Annotations')
         indices = open(self.annotation_file).readlines()
 
         def _get(root, path):
@@ -240,13 +245,14 @@ class PascalVocDataSet(DataSet):
         def parse_xml(idx):
             idx = idx.strip()
             sample = {'id': idx}
-            xml_file = os.path.join(anno_dir, idx + '.xml')
+            xml_file = os.path.join(self.anno_dir, idx + '.xml')
             tree = ET.parse(xml_file)
 
             objs = tree.findall('object')
             h = int(_get(tree, 'size.height'))
             w = int(_get(tree, 'size.width'))
-            sample['file'] = os.path.join(image_dir, _get(tree, 'filename'))
+            sample['file'] = os.path.join(self.image_dir,
+                                          _get(tree, 'filename'))
             sample['width'] = w
             sample['height'] = h
             sample['orig_width'] = w
