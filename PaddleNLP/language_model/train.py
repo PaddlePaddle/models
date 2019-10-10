@@ -124,10 +124,10 @@ def main():
                 init_scale=config.init_scale,
                 dropout=config.dropout,
                 rnn_model=config.rnn_model,
-                use_py_reader=args.use_py_reader)
+                use_dataloader=args.use_dataloader)
 
-            if args.use_py_reader:
-                py_reader = res_vars[-1]
+            if args.use_dataloader:
+                dataloader = res_vars[-1]
                 res_vars = res_vars[:-1]
             loss, last_hidden, last_cell, feed_order = res_vars
 
@@ -159,7 +159,7 @@ def main():
                 init_scale=config.init_scale,
                 dropout=config.dropout,
                 rnn_model=config.rnn_model,
-                use_py_reader=False)
+                use_dataloader=False)
     # Some op behaves differently for train and inference, we need to call
     # this clone function to ensure every op is right for inference.
     inference_program = inference_program.clone(for_test=True)
@@ -176,8 +176,6 @@ def main():
     exec_strategy.num_iteration_per_drop_scope = 100
 
     build_strategy = fluid.BuildStrategy()
-    build_strategy.enable_inplace = True
-    build_strategy.memory_optimize = False
     build_strategy.fuse_all_optimizer_ops = True
 
     if args.parallel:
@@ -310,7 +308,7 @@ def main():
         ppl = np.exp(total_loss / iters)
         return ppl
 
-    def train_an_epoch_py_reader(epoch_id, batch_times):
+    def train_an_epoch_dataloader(epoch_id, batch_times):
         # get train epoch size
         log_interval = get_log_interval(len(train_data))
 
@@ -319,7 +317,7 @@ def main():
         total_loss = 0
         iters = 0
 
-        py_reader.start()
+        dataloader.start()
         batch_id = 0
         try:
             while True:
@@ -361,14 +359,14 @@ def main():
 
                 batch_id += 1
         except fluid.core.EOFException:
-            py_reader.reset()
+            dataloader.reset()
 
         batch_times.append(time.time() - batch_start_time)
         ppl = np.exp(total_loss / iters)
         return ppl
 
     def train():
-        if args.use_py_reader:
+        if args.use_dataloader:
 
             def data_gen():
                 data_iter_size = config.batch_size // device_count
@@ -380,14 +378,14 @@ def main():
                     y = y.reshape((-1, 1))
                     yield x, y
 
-            py_reader.decorate_tensor_provider(data_gen)
+            dataloader.set_batch_generator(data_gen)
 
         total_time = 0.0
         for epoch_id in range(config.max_epoch):
             batch_times = []
             epoch_start_time = time.time()
-            if args.use_py_reader:
-                train_ppl = train_an_epoch_py_reader(epoch_id, batch_times)
+            if args.use_dataloader:
+                train_ppl = train_an_epoch_dataloader(epoch_id, batch_times)
             else:
                 train_ppl = train_an_epoch(epoch_id, batch_times)
             epoch_time = time.time() - epoch_start_time
