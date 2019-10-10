@@ -232,7 +232,7 @@ def train():
                     if steps % args.save_steps == 0:
                         save_path = "save_dir_" + str(steps)
                         print('save model to: ' + save_path)
-                        fluid.dygraph.save_persistables(cnn_net.state_dict(),
+                        fluid.save_dygraph(cnn_net.state_dict(),
                                                         save_path)
                 if enable_profile:
                         print('save profile result into /tmp/profile_file')
@@ -258,7 +258,7 @@ def infer():
         print('Do inferring ...... ')
         total_acc, total_num_seqs = [], []
 
-        restore, _ = fluid.dygraph.load_persistables(args.checkpoints)
+        restore, _ = fluid.load_dygraph(args.checkpoints)
         cnn_net_infer.load_dict(restore)
         cnn_net_infer.eval()
 

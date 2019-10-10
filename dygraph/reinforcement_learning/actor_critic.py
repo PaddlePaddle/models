@@ -200,5 +200,5 @@ with fluid.dygraph.guard():
             print("Solved! Running reward is now {} and "
                   "the last episode runs to {} time steps!".format(
                       running_reward, t))
-            fluid.dygraph.save_persistables(policy.state_dict(), args.save_dir)
+            fluid.save_dygraph(policy.state_dict(), args.save_dir)
             break
