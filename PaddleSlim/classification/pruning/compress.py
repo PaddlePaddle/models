@@ -4,6 +4,7 @@ import logging
 import paddle
 import argparse
 import functools
+import math
 import paddle.fluid as fluid
 sys.path.append("..")
 import imagenet_reader as reader
@@ -38,26 +39,27 @@ add_arg('config_file',      str, None,                 "The config file for comp
 model_list = [m for m in dir(models) if "__" not in m]
 
 def piecewise_decay(args):
-        bd = [self.step * e for e in args.step_epochs]
-        lr = [self.lr * (0.1**i) for i in range(len(bd) + 1)]
-        learning_rate = fluid.layers.piecewise_decay(boundaries=bd, values=lr)
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=learning_rate,
-            momentum=args.momentum_rate,
-            regularization=fluid.regularizer.L2Decay(args.l2_decay))
-        return optimizer
+    step = int(math.ceil(float(args.total_images) / args.batch_size))
+    bd = [step * e for e in args.step_epochs]
+    lr = [args.lr * (0.1**i) for i in range(len(bd) + 1)]
+    learning_rate = fluid.layers.piecewise_decay(boundaries=bd, values=lr)
+    optimizer = fluid.optimizer.Momentum(
+        learning_rate=learning_rate,
+        momentum=args.momentum_rate,
+        regularization=fluid.regularizer.L2Decay(args.l2_decay))
+    return optimizer
 
 def cosine_decay(args):
-        step = int(math.ceil(float(args.total_images) / args.batch_size))
-        learning_rate = fluid.layers.cosine_decay(
-            learning_rate=args.lr,
-            step_each_epoch=step,
-            epochs=args.num_epochs)
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=learning_rate,
-            momentum=args.momentum_rate,
-            regularization=fluid.regularizer.L2Decay(args.l2_decay))
-        return optimizer
+    step = int(math.ceil(float(args.total_images) / args.batch_size))
+    learning_rate = fluid.layers.cosine_decay(
+        learning_rate=args.lr,
+        step_each_epoch=step,
+        epochs=args.num_epochs)
+    optimizer = fluid.optimizer.Momentum(
+        learning_rate=learning_rate,
+        momentum=args.momentum_rate,
+        regularization=fluid.regularizer.L2Decay(args.l2_decay))
+    return optimizer
 
 def create_optimizer(args):
     if args.lr_strategy == "piecewise_decay":
@@ -86,10 +88,8 @@ def compress(args):
     exe.run(fluid.default_startup_program())
 
     if args.pretrained_model:
-
         def if_exist(var):
             return os.path.exists(os.path.join(args.pretrained_model, var.name))
-
         fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
     val_reader = paddle.batch(reader.val(), batch_size=args.batch_size)
