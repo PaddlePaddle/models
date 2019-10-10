@@ -245,8 +245,8 @@ class DataLoaderBuilder(dataloader.DataLoader):
         extract = ExtractFields(feed_vars, extra_vars, yolo_class_fix)
 
         if 'PADDLE_TRAINERS_NUM' not in os.environ:
-            buffer_size *= num_devices
-            num_workers *= num_devices
+            buffer_size = min(num_devices * buffer_size, 8)
+            num_workers = min(num_devices * num_workers, 8)
 
         super(DataLoaderBuilder, self).__init__(
             dataset, sampler, sample_transforms, batch_transforms + [extract],
