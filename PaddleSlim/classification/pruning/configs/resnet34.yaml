@@ -14,7 +14,7 @@ strategies:
         target_ratio: 0.5
         pruned_params: '.*branch.*_weights'
 compressor:
-    epoch: 4
-    checkpoint_path: './checkpoints/resnet50/'
+    epoch: 121
+    checkpoint_path: './checkpoints/resnet34/'
     strategies:
         - uniform_pruning_strategy
