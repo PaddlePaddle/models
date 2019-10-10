@@ -19,6 +19,7 @@ try:
 except Exception:
     from collections import Sequence
 
+import gc
 from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
 
@@ -158,7 +159,14 @@ class _MultiWorkerLoaderIter(object):
         self._out_buffer = {}
         self._recv_idx = loader.step * self.num_devices
         self._sent_idx = loader.step * self.num_devices
+        self._loader = loader
 
+        self._init_pool()
+        for _ in range(loader.buffer_size):
+            self._queue_next()
+
+    def _init_pool(self):
+        loader = self._loader
         worker_context = (loader.dataset, loader.transform, loader.batchify)
         if loader.multiprocessing:
             # `maxtasksperchild` is needed to avoid OOM
@@ -172,8 +180,10 @@ class _MultiWorkerLoaderIter(object):
             self._worker_fn = _thread_worker_fn
             self._worker_context = worker_context
 
-        for _ in range(loader.buffer_size):
-            self._queue_next()
+    def _gc(self):
+        self._worker_pool.close()
+        self._worker_pool.join()
+        gc.collect()  # gc anyway just in case
 
     def _batch_seed(self):
         if self.transform.need_seeding:
@@ -198,8 +208,12 @@ class _MultiWorkerLoaderIter(object):
         for _ in range(self.buffer_size + 1 - steps_ahead):
             self._queue_next()
         if self._recv_idx == self._sent_idx:
+            gc.collect()  # gc anyway just in case
             assert not self._out_buffer, "result queue should be empty by now"
+            self._gc()
+            self._init_pool()
             raise StopIteration
+
         assert self._recv_idx < self._sent_idx
         assert self._recv_idx in self._out_buffer
         future = self._out_buffer.pop(self._recv_idx)
