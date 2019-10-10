@@ -220,9 +220,9 @@ class Pix2pix(object):
         input_fake = fluid.layers.data(
             name='input_fake', shape=data_shape, dtype='float32')
 
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[input_A, input_B],
-            capacity=4,  ## batch_size * 4
+            capacity=4,
             iterable=True,
             use_double_buffer=True)
 
@@ -232,7 +232,7 @@ class Pix2pix(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
-        py_reader.decorate_batch_generator(
+        loader.set_batch_generator(
             self.train_reader,
             places=fluid.cuda_places()
             if self.cfg.use_gpu else fluid.cpu_places())
@@ -259,7 +259,7 @@ class Pix2pix(object):
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            for tensor in py_reader():
+            for tensor in loader():
                 s_time = time.time()
 
                 tensor_A, tensor_B = tensor[0]['input_A'], tensor[0]['input_B']
@@ -302,12 +302,12 @@ class Pix2pix(object):
                     name='image_name',
                     shape=[self.cfg.batch_size],
                     dtype="int32")
-                test_py_reader = fluid.io.PyReader(
+                test_loader = fluid.io.DataLoader.from_generator(
                     feed_list=[input_A, input_B, image_name],
-                    capacity=4,  ## batch_size * 4
+                    capacity=4,
                     iterable=True,
                     use_double_buffer=True)
-                test_py_reader.decorate_batch_generator(
+                test_loader.set_batch_generator(
                     self.test_reader,
                     places=fluid.cuda_places()
                     if self.cfg.use_gpu else fluid.cpu_places())
@@ -319,7 +319,7 @@ class Pix2pix(object):
                     place,
                     test_program,
                     gen_trainer,
-                    test_py_reader,
+                    test_loader,
                     A_id2name=self.id2name)
 
             if self.cfg.save_checkpoints:
