@@ -121,6 +121,8 @@ fc10_weights (1280L, 1000L)
 
 ## 示例结果
 
+注：以下表格中的`model_size`为预测章节介绍的`__params__`文件的大小。
+
 ### MobileNetV1
 
 | FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
@@ -130,13 +132,14 @@ fc10_weights (1280L, 1000L)
 |-30%|- |- |- |-|
 |-50%|- |- |- |-|
 
->训练超参
-batch size: 256
-lr_strategy: piecewise_decay
-step_epochs: 30, 60, 90
-num_epochs: 120
-l2_decay: 3e-5
-lr: 0.1
+#### 训练超参
+
+- batch size: 256
+- lr_strategy: piecewise_decay
+- step_epochs: 30, 60, 90
+- num_epochs: 120
+- l2_decay: 3e-5
+- lr: 0.1
 
 ### MobileNetV2
 
@@ -147,12 +150,13 @@ lr: 0.1
 |-30%|- |- |- |-|
 |-50%|- |- |- |-|
 
->训练超参：
-batch size: 500
-lr_strategy: cosine_decay
-num_epochs: 240
-l2_decay: 4e-5
-lr: 0.1
+#### 训练超参
+
+- batch size: 500
+- lr_strategy: cosine_decay
+- num_epochs: 240
+- l2_decay: 4e-5
+- lr: 0.1
 
 
 ### ResNet50
@@ -164,11 +168,17 @@ lr: 0.1
 |-30%|- |- |- |-|
 |-50%|- |- |- |-|
 
->训练超参
-batch size: 256
-lr_strategy: cosine_decay
-num_epochs: 120
-l2_decay: 1e-4
-lr: 0.1
+#### 训练超参
+
+- batch size: 256
+- lr_strategy: cosine_decay
+- num_epochs: 120
+- l2_decay: 1e-4
+- lr: 0.1
 
 ## FAQ
+
+### 1. 如何压缩Paddle分类库中的其它模型或自定义的分类模型？
+
+建议您参考`models/PaddleSlim/classification/models`路径下的模型定义文件添加新的分类模型，您可以从[Paddle图像分类库](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification)拷贝模型定义文件或自己编写模型定义文件。更多细节请参考[分类模型的常规训练方法](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification)和[PaddleSlim使用文档](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md)
+
