@@ -105,9 +105,9 @@ def _mixup_model(data, model, args, is_train):
 
 
 def create_model(model, args, is_train):
-    """Create model, include basic model, googlenet model and mixup model
+    """Create model , include basic model, googlenet model and mixup model
     """
-    py_reader, data = utility.create_pyreader(is_train, args)
+    loader, data = utility.create_dataloader(is_train, args)
 
     if args.model == "GoogLeNet":
         loss_out = _googlenet_model(data, model, args, is_train)
@@ -116,4 +116,4 @@ def create_model(model, args, is_train):
             loss_out = _mixup_model(data, model, args, is_train)
         else:
             loss_out = _basic_model(data, model, args, is_train)
-    return py_reader, loss_out
+    return loader, loss_out

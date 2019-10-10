@@ -34,6 +34,7 @@ from paddle.fluid.framework import Program, program_guard, name_scope, default_m
 from paddle.fluid import unique_name, layers
 from utils import dist_utils
 
+
 def print_arguments(args):
     """Print argparse's arguments.
 
@@ -182,7 +183,8 @@ def check_args(args):
 
     # check learning rate strategy
     lr_strategy_list = [
-        "piecewise_decay", "cosine_decay", "linear_decay", "cosine_decay_warmup", "exponential_decay_warmup"
+        "piecewise_decay", "cosine_decay", "linear_decay",
+        "cosine_decay_warmup", "exponential_decay_warmup"
     ]
     if args.lr_strategy not in lr_strategy_list:
         warnings.warn(
@@ -268,18 +270,18 @@ def save_model(args, exe, train_prog, info):
     print("Already save model in %s" % (model_path))
 
 
-def create_pyreader(is_train, args):
-    """create PyReader
+def create_dataloader(is_train, args):
+    """create dataloader
 
     Usage:
-        Using mixup process in training, it will return 5 results, include py_reader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include py_reader, image, and label.
+        Using mixup process in training, it will return 5 results, include dataloader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include dataloader, image, and label.
 
     Args: 
         is_train: mode
         args: arguments
 
     Returns:
-        py_reader and the input data of net, 
+        data_loader and the input data of net, 
     """
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
@@ -297,20 +299,20 @@ def create_pyreader(is_train, args):
         feed_lam = fluid.layers.data(
             name="feed_lam", shape=[1], dtype="float32", lod_level=0)
 
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.Dataloader.from_generator(
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
             capacity=64,
             use_double_buffer=True,
             iterable=False)
-        return py_reader, [feed_image, feed_y_a, feed_y_b, feed_lam]
+        return loader, [feed_image, feed_y_a, feed_y_b, feed_lam]
     else:
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.Dataloader.from_generator(
             feed_list=[feed_image, feed_label],
             capacity=64,
             use_double_buffer=True,
             iterable=False)
 
-        return py_reader, [feed_image, feed_label]
+        return loader, [feed_image, feed_label]
 
 
 def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
@@ -408,8 +410,11 @@ def best_strategy_compiled(args, program, loss, exe):
 
 
 class ExponentialMovingAverage(object):
-
-    def __init__(self, decay=0.999, thres_steps=None, zero_debias=False, name=None):
+    def __init__(self,
+                 decay=0.999,
+                 thres_steps=None,
+                 zero_debias=False,
+                 name=None):
         self._decay = decay
         self._thres_steps = thres_steps
         self._name = name if name is not None else ''
@@ -429,7 +434,7 @@ class ExponentialMovingAverage(object):
         self._ema_vars = {}
         for param, tmp in self._params_tmps:
             with param.block.program._optimized_guard(
-                    [param, tmp]), name_scope('moving_average'):
+                [param, tmp]), name_scope('moving_average'):
                 self._ema_vars[param.name] = self._create_ema_vars(param)
 
         self.apply_program = Program()
@@ -499,14 +504,14 @@ class ExponentialMovingAverage(object):
         param_master_emas = []
         for param, tmp in self._params_tmps:
             with param.block.program._optimized_guard(
-                    [param, tmp]), name_scope('moving_average'):
+                [param, tmp]), name_scope('moving_average'):
                 param_ema = self._ema_vars[param.name]
                 if param.name + '.master' in self._ema_vars:
                     master_ema = self._ema_vars[param.name + '.master']
                     param_master_emas.append([param_ema, master_ema])
                 else:
                     ema_t = param_ema * self._decay_var + param * (
-                            1 - self._decay_var)
+                        1 - self._decay_var)
                     layers.assign(input=ema_t, output=param_ema)
 
         # for fp16 params
