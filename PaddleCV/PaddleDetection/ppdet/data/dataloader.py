@@ -172,7 +172,7 @@ class _MultiWorkerLoaderIter(object):
             # `maxtasksperchild` is needed to avoid OOM
             self._worker_pool = Pool(
                 loader.num_workers, initializer=_process_worker_init,
-                initargs=worker_context, maxtasksperchild=16)
+                initargs=worker_context, maxtasksperchild=2048)
             self._worker_fn = _process_worker_fn
             self._worker_context = None
         else:
