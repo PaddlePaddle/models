@@ -53,12 +53,12 @@ def compress(args):
     val_program = fluid.default_main_program().clone()
 
     # quantization usually use small learning rate
-    values = [1e-4, 1e-5, 1e-6]
+    values = [1e-4, 1e-5]
     opt = fluid.optimizer.Momentum(
         momentum=0.9,
         learning_rate=fluid.layers.piecewise_decay(
-            boundaries=[5000 * 30, 5000 * 60], values=values),
-        regularization=fluid.regularizer.L2Decay(4e-5))
+            boundaries=[5000 * 12], values=values),
+        regularization=fluid.regularizer.L2Decay(1e-4))
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
