@@ -130,7 +130,13 @@ fc10_weights (1280L, 1000L)
 |-30%|- |- |- |-|
 |-50%|- |- |- |-|
 
->训练超参：
+>训练超参
+batch size: 256
+lr_strategy: piecewise_decay
+step_epochs: 30, 60, 90
+num_epochs: 120
+l2_decay: 3e-5
+lr: 0.1
 
 ### MobileNetV2
 
@@ -142,6 +148,12 @@ fc10_weights (1280L, 1000L)
 |-50%|- |- |- |-|
 
 >训练超参：
+batch size: 500
+lr_strategy: cosine_decay
+num_epochs: 240
+l2_decay: 4e-5
+lr: 0.1
+
 
 ### ResNet50
 
@@ -152,6 +164,11 @@ fc10_weights (1280L, 1000L)
 |-30%|- |- |- |-|
 |-50%|- |- |- |-|
 
->训练超参：
+>训练超参
+batch size: 256
+lr_strategy: cosine_decay
+num_epochs: 120
+l2_decay: 1e-4
+lr: 0.1
 
 ## FAQ

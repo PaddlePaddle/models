@@ -4,6 +4,7 @@ import logging
 import paddle
 import argparse
 import functools
+import math
 import paddle.fluid as fluid
 sys.path.append("..")
 import imagenet_reader as reader
@@ -24,11 +25,47 @@ add_arg('batch_size',       int,  64*4,                 "Minibatch size.")
 add_arg('use_gpu',          bool, True,                "Whether to use GPU or not.")
 add_arg('model',            str,  None,                "The target model.")
 add_arg('pretrained_model', str,  None,                "Whether to use pretrained model.")
-add_arg('config_file',  str, None,                 "The config file for compression with yaml format.")
+add_arg('lr',               float,  0.1,               "The learning rate used to fine-tune pruned model.")
+add_arg('lr_strategy',      str,  "piecewise_decay",   "The learning rate decay strategy.")
+add_arg('l2_decay',         float,  3e-5,               "The l2_decay parameter.")
+add_arg('momentum_rate',    float,  0.9,               "The value of momentum_rate.")
+add_arg('num_epochs',       int,  120,               "The number of total epochs.")
+add_arg('total_images',     int,  1281167,               "The number of total training images.")
+parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
+add_arg('config_file',      str, None,                 "The config file for compression with yaml format.")
 # yapf: enable
 
 
 model_list = [m for m in dir(models) if "__" not in m]
+
+def piecewise_decay(args):
+    step = int(math.ceil(float(args.total_images) / args.batch_size))
+    bd = [step * e for e in args.step_epochs]
+    lr = [args.lr * (0.1**i) for i in range(len(bd) + 1)]
+    learning_rate = fluid.layers.piecewise_decay(boundaries=bd, values=lr)
+    optimizer = fluid.optimizer.Momentum(
+        learning_rate=learning_rate,
+        momentum=args.momentum_rate,
+        regularization=fluid.regularizer.L2Decay(args.l2_decay))
+    return optimizer
+
+def cosine_decay(args):
+    step = int(math.ceil(float(args.total_images) / args.batch_size))
+    learning_rate = fluid.layers.cosine_decay(
+        learning_rate=args.lr,
+        step_each_epoch=step,
+        epochs=args.num_epochs)
+    optimizer = fluid.optimizer.Momentum(
+        learning_rate=learning_rate,
+        momentum=args.momentum_rate,
+        regularization=fluid.regularizer.L2Decay(args.l2_decay))
+    return optimizer
+
+def create_optimizer(args):
+    if args.lr_strategy == "piecewise_decay":
+        return piecewise_decay(args)
+    elif args.lr_strategy == "cosine_decay":
+        return cosine_decay(args)
 
 def compress(args):
     class_dim=1000
@@ -45,25 +82,14 @@ def compress(args):
     acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
     val_program = fluid.default_main_program().clone()
-#    for param in fluid.default_main_program().global_block().all_parameters():
-#        print param.name, param.shape
-#    return
-    opt = fluid.optimizer.Momentum(
-        momentum=0.9,
-        learning_rate=fluid.layers.piecewise_decay(
-            boundaries=[5000 * 30, 5000 * 60, 5000 * 90],
-            values=[0.1, 0.01, 0.001, 0.0001]),
-        regularization=fluid.regularizer.L2Decay(4e-5))
-
+    opt = create_optimizer(args)
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
     if args.pretrained_model:
-
         def if_exist(var):
             return os.path.exists(os.path.join(args.pretrained_model, var.name))
-
         fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
     val_reader = paddle.batch(reader.val(), batch_size=args.batch_size)
