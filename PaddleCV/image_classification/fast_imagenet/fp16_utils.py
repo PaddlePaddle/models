@@ -67,7 +67,6 @@ def create_master_params_grads(params_grads,
                                startup_prog,
                                scale_loss):
     master_params_grads = []      # master p, g on local device
-    #main_prog._current_role = OpRole.Backward
     with main_prog._backward_role_guard():
         for p, g in params_grads:
             # create master parameters
