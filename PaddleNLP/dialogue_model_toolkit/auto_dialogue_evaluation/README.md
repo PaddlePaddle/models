@@ -28,7 +28,7 @@
 - cuda >= 9.0
 - cudnn >= 7.0
 - pandas >= 0.20.1
-- PaddlePaddle >= 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 本模块使用bert作为pretrain model进行模型的finetuning训练，训练速度较慢，建议安装GPU版本的PaddlePaddle
+- PaddlePaddle >= 1.6.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 本模块使用bert作为pretrain model进行模型的finetuning训练，训练速度较慢，建议安装GPU版本的PaddlePaddle
 
 &ensp;&ensp;注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
 

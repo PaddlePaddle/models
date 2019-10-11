@@ -88,12 +88,11 @@ class CGAN(object):
 
     def build_model(self):
 
-        img = fluid.layers.data(name='img', shape=[784], dtype='float32')
-        condition = fluid.layers.data(
-            name='condition', shape=[1], dtype='float32')
-        noise = fluid.layers.data(
-            name='noise', shape=[self.cfg.noise_size], dtype='float32')
-        label = fluid.layers.data(name='label', shape=[1], dtype='float32')
+        img = fluid.data(name='img', shape=[-1, 784], dtype='float32')
+        condition = fluid.data(name='condition', shape=[-1, 1], dtype='float32')
+        noise = fluid.data(
+            name='noise', shape=[-1, self.cfg.noise_size], dtype='float32')
+        label = fluid.data(name='label', shape=[-1, 1], dtype='float32')
 
         g_trainer = GTrainer(noise, condition, self.cfg)
         d_trainer = DTrainer(img, condition, label, self.cfg)

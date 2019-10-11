@@ -85,21 +85,21 @@ class BertModel(object):
 
     def _build_model(self, src_ids, position_ids, sentence_ids, input_mask):
         # padding id in vocabulary must be set to 0
-        emb_out = fluid.layers.embedding(
+        emb_out = fluid.input.embedding(
             input=src_ids,
             size=[self._voc_size, self._emb_size],
             dtype=self._dtype,
             param_attr=fluid.ParamAttr(
                 name=self._word_emb_name, initializer=self._param_initializer),
             is_sparse=False)
-        position_emb_out = fluid.layers.embedding(
+        position_emb_out = fluid.input.embedding(
             input=position_ids,
             size=[self._max_position_seq_len, self._emb_size],
             dtype=self._dtype,
             param_attr=fluid.ParamAttr(
                 name=self._pos_emb_name, initializer=self._param_initializer))
 
-        sent_emb_out = fluid.layers.embedding(
+        sent_emb_out = fluid.input.embedding(
             sentence_ids,
             size=[self._sent_types, self._emb_size],
             dtype=self._dtype,
