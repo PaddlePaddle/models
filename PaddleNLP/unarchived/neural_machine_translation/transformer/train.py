@@ -768,6 +768,8 @@ def train(args):
 
 if __name__ == "__main__":
     LOG_FORMAT = "[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s"
+    logger = logging.getLogger()
+    logger.handlers = []
     logging.basicConfig(
         stream=sys.stdout, level=logging.DEBUG, format=LOG_FORMAT)
     logging.getLogger().setLevel(logging.INFO)
