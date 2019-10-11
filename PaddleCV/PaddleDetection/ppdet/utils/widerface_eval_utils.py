@@ -46,7 +46,6 @@ def cal_iou(rect1, rect2):
     return float(intersection) / union
 
 
-
 def widerface_eval(
         eval_results,
         output_eval_dir,
