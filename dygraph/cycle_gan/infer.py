@@ -52,8 +52,8 @@ def infer():
             os.makedirs(out_path)
         cycle_gan = Cycle_Gan("cycle_gan")
         save_dir = args.init_model 
-        restore, _ = fluid.dygraph.load_persistables(save_dir)
-        cycle_gan.load_dict(restore)
+        restore, _ = fluid.load_dygraph(save_dir)
+        cycle_gan.set_dict(restore)
         cycle_gan.eval()
         for file in glob.glob(args.input):
             print ("read %s" % file)

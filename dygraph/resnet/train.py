@@ -380,7 +380,7 @@ def train_resnet():
                 args.use_data_parallel and
                 fluid.dygraph.parallel.Env().local_rank == 0)
             if save_parameters:
-                fluid.dygraph.save_persistables(resnet.state_dict(),
+                fluid.save_dygraph(resnet.state_dict(),
                                                 'resnet_params')
 
 

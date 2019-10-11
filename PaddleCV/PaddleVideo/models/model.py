@@ -23,7 +23,7 @@ except:
 import paddle.fluid as fluid
 from .utils import download, AttrDict
 
-WEIGHT_DIR = os.path.expanduser("~/.paddle/weights")
+WEIGHT_DIR = os.path.join(os.path.expanduser('~'), '.paddle', 'weights')
 
 logger = logging.getLogger(__name__)
 

@@ -27,7 +27,7 @@ def infer():
         args.test_data_dir + '/' + x for x in os.listdir(args.test_data_dir)
     ]
     criteo_dataset = CriteoDataset()
-    criteo_dataset.setup()
+    criteo_dataset.setup(args.feat_dict)
     test_reader = paddle.batch(
         criteo_dataset.test(test_files), batch_size=args.batch_size)
 

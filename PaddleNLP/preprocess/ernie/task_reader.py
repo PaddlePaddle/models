@@ -27,7 +27,17 @@ import numpy as np
 
 from preprocess.ernie import tokenization
 from preprocess.padding import pad_batch_data
+import io
 
+def csv_reader(fd, delimiter='\t'):
+    def gen():
+        for i in fd:
+            slots = i.rstrip('\n').split(delimiter)
+            if len(slots) == 1:
+                yield slots,
+            else:
+                yield slots
+    return gen()
 
 class BaseReader(object):
     """BaseReader for classify and sequence labeling task"""
@@ -66,8 +76,8 @@ class BaseReader(object):
 
     def _read_tsv(self, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with open(input_file, "r", encoding="utf8") as f:
-            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+        with io.open(input_file, "r", encoding="utf8") as f:
+            reader = csv_reader(f, delimiter="\t")
             headers = next(reader)
             Example = namedtuple('Example', headers)
 
@@ -228,8 +238,8 @@ class ClassifyReader(BaseReader):
 
     def _read_tsv(self, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with open(input_file, "r", encoding="utf8") as f:
-            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+        with io.open(input_file, "r", encoding="utf8") as f:
+            reader = csv_reader(f, delimiter="\t")
             headers = next(reader)
             text_indices = [
                 index for index, h in enumerate(headers) if h != "label"

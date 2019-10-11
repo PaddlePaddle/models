@@ -32,6 +32,7 @@ import paddle.fluid as fluid
 from paddle.fluid.wrapped_decorator import signature_safe_contextmanager
 from paddle.fluid.framework import Program, program_guard, name_scope, default_main_program
 from paddle.fluid import unique_name, layers
+from utils import dist_utils
 
 def print_arguments(args):
     """Print argparse's arguments.
@@ -332,21 +333,21 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
                 print(
                     "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
-                           "%2.2f sec" % time_info))
+                           "%2.4f sec" % time_info))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 print(
                     "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%.5f" % lr, "%2.2f sec" % time_info))
+                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 print(
                     "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%2.2f sec" % time_info))
+                           "%.5f" % acc5, "%2.4f sec" % time_info))
             else:
                 raise Exception(
                     "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".
@@ -376,7 +377,7 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
         raise Exception("Illegal info_mode")
 
 
-def best_strategy_compiled(args, program, loss):
+def best_strategy_compiled(args, program, loss, exe):
     """make a program which wrapped by a compiled program
     """
 
@@ -390,6 +391,13 @@ def best_strategy_compiled(args, program, loss):
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_threads = fluid.core.get_cuda_device_count()
         exec_strategy.num_iteration_per_drop_scope = 10
+
+        num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+        if num_trainers > 1 and args.use_gpu:
+            dist_utils.prepare_for_multi_process(exe, build_strategy, program)
+            # NOTE: the process is fast when num_threads is 1
+            # for multi-process training.
+            exec_strategy.num_threads = 1
 
         compiled_program = fluid.CompiledProgram(program).with_data_parallel(
             loss_name=loss.name,
