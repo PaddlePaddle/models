@@ -44,12 +44,6 @@ python -u compress.py \
 > mobilenet_v1.log 2>&1 &
 tailf mobilenet_v1.log
 
-cd ${pretrain_dir}/ResNet50_pretrained
-for files in $(ls res50_*)
-    do mv $files ${files#*_}
-done
-cd -
-
 ## for mobilenet_v2 distillation
 #cd ${pretrain_dir}/ResNet50_pretrained
 #for files in $(ls res50_*)
@@ -67,12 +61,6 @@ cd -
 #--compress_config ./configs/mobilenetv2_resnet50_distillation.yaml\
 #> mobilenet_v2.log 2>&1 &
 #tailf mobilenet_v2.log
-#
-#cd ${pretrain_dir}/ResNet50_pretrained
-#for files in $(ls res50_*)
-#    do mv $files ${files#*_}
-#done
-#cd -
 
 ## for resnet34 distillation
 #cd ${pretrain_dir}/ResNet50_pretrained
@@ -91,9 +79,3 @@ cd -
 #--compress_config ./configs/resnet34_resnet50_distillation.yaml \
 #> resnet34.log 2>&1 &
 #tailf resnet34.log
-#
-#cd ${pretrain_dir}/ResNet50_pretrained
-#for files in $(ls res50_*)
-#    do mv $files ${files#*_}
-#done
-#cd -
