@@ -17,7 +17,6 @@ import paddle.fluid as fluid
 
 
 def nccl2_prepare(args, startup_program, main_program):
-    # envs = args.dist_env
     trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
     current_endpoint = os.getenv("PADDLE_CURRENT_ENDPOINT", "127.0.0.1:6170")
     trainer_endpoints = os.getenv("PADDLE_TRAINER_ENDPOINTS", "127.0.0.1:6170")
