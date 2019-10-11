@@ -25,36 +25,38 @@ from ppdet.utils.coco_eval import bbox2out
 import logging
 logger = logging.getLogger(__name__)
 
-__all__ = ['exe_face_eval_results', 'bbox2out', 'get_category_info']
+__all__ = ['widerface_eval', 'bbox2out', 'get_category_info']
 
 
-def exe_face_eval_results(
+def cal_iou(rect1, rect2):
+    lt_x = max(rect1[0], rect2[0])
+    lt_y = max(rect1[1], rect2[1])
+    rb_x = min(rect1[2], rect2[2])
+    rb_y = min(rect1[3], rect2[3])
+    if (rb_x > lt_x) and (rb_y > lt_y):
+        intersection = (rb_x - lt_x) * (rb_y - lt_y)
+    else:
+        return 0
+
+    area1 = (rect1[2] - rect1[0]) * (rect1[3] - rect1[1])
+    area2 = (rect2[2] - rect2[0]) * (rect2[3] - rect2[1])
+
+    intersection = min(intersection, area1, area2)
+    union = area1 + area2 - intersection
+    return float(intersection) / union
+
+
+
+def widerface_eval(
         eval_results,
         output_eval_dir,
         output_fname='pred_result.txt', ):
     """
-    Calculate ap according to prediction result file `result`
+    Calculate ap according to prediction result list `eval_results`
     """
 
-    def calIOU(rect1, rect2):
-        lt_x = max(rect1[0], rect2[0])
-        lt_y = max(rect1[1], rect2[1])
-        rb_x = min(rect1[2], rect2[2])
-        rb_y = min(rect1[3], rect2[3])
-        if (rb_x > lt_x) and (rb_y > lt_y):
-            intersection = (rb_x - lt_x) * (rb_y - lt_y)
-        else:
-            return 0
-
-        area1 = (rect1[2] - rect1[0]) * (rect1[3] - rect1[1])
-        area2 = (rect2[2] - rect2[0]) * (rect2[3] - rect2[1])
-
-        intersection = min(intersection, area1, area2)
-        union = area1 + area2 - intersection
-        return float(intersection) / union
-
     def isSameFace(face_gt, face_pred):
-        iou = calIOU(face_gt, face_pred)
+        iou = cal_iou(face_gt, face_pred)
         return iou >= 0.3
 
     def evaluationSingleImage(faces_gt, faces_pred):

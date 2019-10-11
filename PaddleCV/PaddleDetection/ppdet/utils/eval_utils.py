@@ -154,8 +154,8 @@ def eval_results(results,
                 map_type=map_type)
             box_ap_stats.append(box_ap)
     elif metric == 'WIDERFACE':
-        from ppdet.utils.widerface_eval_utils import exe_face_eval_results
-        box_ap = exe_face_eval_results(results, output_directory)
+        from ppdet.utils.widerface_eval_utils import widerface_eval
+        box_ap = widerface_eval(results, output_directory)
         box_ap_stats.append(box_ap)
     return box_ap_stats
 

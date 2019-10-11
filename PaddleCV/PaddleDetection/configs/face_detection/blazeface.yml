@@ -11,7 +11,7 @@ log_iter: 20
 metric: WIDERFACE
 save_dir: output
 weights: output/balzeface/model_final/
-eval_mode: matlab
+eval_mode: widerface
 # 1(label_class) + 1(background)
 num_classes: 2
 

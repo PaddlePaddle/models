@@ -199,7 +199,7 @@ def main():
     if cfg.metric == "VOC":
         from ppdet.utils.voc_eval import bbox2out, get_category_info
     if cfg.metric == "WIDERFACE":
-        from ppdet.utils.widerface_utils import bbox2out, get_category_info
+        from ppdet.utils.widerface_eval_utils import bbox2out, get_category_info
 
     anno_file = getattr(test_feed.dataset, 'annotation', None)
     with_background = getattr(test_feed, 'with_background', True)
