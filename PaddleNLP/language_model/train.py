@@ -168,6 +168,15 @@ def main():
     exe = Executor(place)
     exe.run(startup_program)
 
+    if args.init_from_pretrain_model:
+        if not os.path.exists(args.init_from_pretrain_model + '.pdparams'):
+            print(args.init_from_pretrain_model)
+            raise Warning("The pretrained params do not exist.")
+            return
+        fluid.load(main_program, args.init_from_pretrain_model)
+        print("finish initing model from pretrained params from %s" %
+              (args.init_from_pretrain_model))
+
     device_count = len(fluid.cuda_places()) if args.use_gpu else len(
         fluid.cpu_places())
 
@@ -280,7 +289,6 @@ def main():
                 epoch_id=epoch_id,
                 with_lr=True,
                 device_count=device_count)
-
             batch_start_time = time.time()
             fetch_outs = exe.run(train_program,
                                  feed=input_data_feed,
@@ -304,7 +312,6 @@ def main():
                 print(
                     "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
                     % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
-
         ppl = np.exp(total_loss / iters)
         return ppl
 
@@ -435,8 +442,9 @@ def main():
                         len(valid_data), config.batch_size, config.num_steps))
 
             save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
-            fluid.io.save_persistables(
-                executor=exe, dirname=save_model_dir, main_program=main_program)
+            #fluid.io.save_persistables(
+            #    executor=exe, dirname=save_model_dir, main_program=main_program)
+            fluid.save(main_program, save_model_dir + "/params")
             print("Saved model to: %s.\n" % save_model_dir)
 
     with profile_context(args.profile):
