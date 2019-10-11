@@ -79,8 +79,9 @@ class PaddleDataLoader(object):
             offset = self.rank_id * imgs_per_worker
             for i in xrange(self.concurrent):
                 start = i * imgs_per_process + offset
-                end = (i + 1
-                       ) * imgs_per_process + offset if i != self.concurrent - 1 else (self.rank_id + 1) * imgs_per_worker
+                end = (i + 1) * imgs_per_process + offset \
+                    if i != self.concurrent - 1 \
+                    else (self.rank_id + 1) * imgs_per_worker
                 sliced_indices = self.indices[start:end]
                 print("process: {}, start: {}, end: {}".format(i, start, end))
                 index_queue = multiprocessing.Queue(self.queue_size)
@@ -114,7 +115,8 @@ def train(traindir, sz, min_scale=0.08, shuffle_seed=0, rank_id=0, size=1):
     ]
     train_dataset = datasets.ImageFolder(traindir,
                                          transforms.Compose(train_tfms))
-    return PaddleDataLoader(train_dataset, shuffle_seed=shuffle_seed, rank_id=rank_id, size=size).reader()
+    return PaddleDataLoader(train_dataset, shuffle_seed=shuffle_seed, 
+        rank_id=rank_id, size=size).reader()
 
 
 def test(valdir, bs, sz, rect_val=False):
