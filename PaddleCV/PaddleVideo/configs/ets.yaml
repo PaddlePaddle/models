@@ -10,12 +10,12 @@ MODEL:
   START: "<s>"
   END: "<e>"
   UNK: "<unk>"
-  feat_path: './data/dataset/ets/resnet152_features_activitynet_5fps_320x240.pkl'
+  feat_path: './data/dataset/ets/data_dict'
   dict_file: './data/dataset/ets/dict.txt'
 
 TRAIN:
   epoch: 40
-  batch_size: 255 
+  batch_size: 256 
   l2_weight_decay: 1e-4
   clip_norm: 5.0
   num_threads: 8
@@ -23,15 +23,15 @@ TRAIN:
   filelist: './data/dataset/ets/train.list'
 
   use_gpu: True
-  num_gpus: 3
+  num_gpus: 4
 
 VALID:
   filelist: './data/dataset/ets/val.list'
-  batch_size: 16
-  num_threads: 1
+  batch_size: 256
+  num_threads: 8
   buffer_size: 1024
   use_gpu: True
-  num_gpus: 3 
+  num_gpus: 4
 
 TEST:
   filelist: './data/dataset/ets/val.list'
@@ -43,4 +43,4 @@ INFER:
   filelist: './data/dataset/ets/infer.list'
   batch_size: 1
   num_threads: 1
-
+  buffer_size: 1024

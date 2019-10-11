@@ -36,18 +36,17 @@ class ETS(ModelBase):
     def get_config(self):
         self.feat_size = self.get_config_from_sec('MODEL', 'feat_size')
         self.fc_dim = self.get_config_from_sec('MODEL', 'fc_dim')
-        self.gru_hidden_dim = self.get_config_from_sec('MODEL', 'gru_hidden_dim')
+        self.gru_hidden_dim = self.get_config_from_sec('MODEL',
+                                                       'gru_hidden_dim')
         self.decoder_size = self.get_config_from_sec('MODEL', 'decoder_size')
         self.word_emb_dim = self.get_config_from_sec('MODEL', 'word_emb_dim')
         self.dict_file = self.get_config_from_sec('MODEL', 'dict_file')
         self.max_length = self.get_config_from_sec('MODEL', 'max_length')
         self.beam_size = self.get_config_from_sec('MODEL', 'beam_size')
 
-
         self.num_epochs = self.get_config_from_sec('train', 'epoch')
         self.l2_weight_decay = self.get_config_from_sec('train',
                                                         'l2_weight_decay')
-        self.l2_weight_decay = self.get_config_from_sec('train', 'l2_weight_decay')
         self.clip_norm = self.get_config_from_sec('train', 'clip_norm')
 
     def build_input(self, use_pyreader=True):
@@ -64,33 +63,26 @@ class ETS(ModelBase):
         init_scores = None
 
         self.use_pyreader = use_pyreader
-        feat = fluid.layers.data(name='feat',
-                         shape=feat_shape,
-                         dtype='float32',
-                         lod_level=1)
+        feat = fluid.layers.data(
+            name='feat', shape=feat_shape, dtype='float32', lod_level=1)
 
         feed_list = []
         feed_list.append(feat)
         if (self.mode == 'train') or (self.mode == 'valid'):
-            word = fluid.layers.data(name='word',
-                                     shape=word_shape,
-                                     dtype='int64',
-                                     lod_level=1)
-            word_next = fluid.layers.data(name='word_next',
-                                      shape=word_next_shape,
-                                      dtype='int64',
-                                      lod_level=1)
+            word = fluid.layers.data(
+                name='word', shape=word_shape, dtype='int64', lod_level=1)
+            word_next = fluid.layers.data(
+                name='word_next',
+                shape=word_next_shape,
+                dtype='int64',
+                lod_level=1)
             feed_list.append(word)
             feed_list.append(word_next)
         elif (self.mode == 'test') or (self.mode == 'infer'):
-            init_ids = fluid.layers.data(name="init_ids",
-                                         shape=[1],
-                                         dtype="int64",
-                                         lod_level=2)
-            init_scores = fluid.layers.data(name="init_scores",
-                                            shape=[1],
-                                            dtype="float32",
-                                            lod_level=2)
+            init_ids = fluid.layers.data(
+                name="init_ids", shape=[1], dtype="int64", lod_level=2)
+            init_scores = fluid.layers.data(
+                name="init_scores", shape=[1], dtype="float32", lod_level=2)
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -138,10 +130,12 @@ class ETS(ModelBase):
             beam_size=cfg['beam_size'],
             mode=self.mode)
         if (self.mode == 'train') or (self.mode == 'valid'):
-            prob = self.videomodel.net(feat=self.feature_input[0], word=self.word)
+            prob = self.videomodel.net(feat=self.feature_input[0],
+                                       word=self.word)
             self.network_outputs = [prob]
         elif (self.mode == 'test') or (self.mode == 'infer'):
-            translation_ids, translation_scores = self.videomodel.net(feat=self.feature_input[0], word=self.word)
+            translation_ids, translation_scores = self.videomodel.net(
+                feat=self.feature_input[0], word=self.word)
             self.network_outputs = [translation_ids, translation_scores]
 
     def optimizer(self):
@@ -196,4 +190,3 @@ class ETS(ModelBase):
 
     def weights_info(self):
         pass
-

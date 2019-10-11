@@ -28,6 +28,7 @@ from .reader_utils import DataReader
 
 python_ver = sys.version_info
 
+
 class ETSReader(DataReader):
     """
     Data reader for ETS model, which was stored as features extracted by prior networks
@@ -55,7 +56,7 @@ class ETSReader(DataReader):
         with open(self.dict_file, 'r') as f:
             for i, line in enumerate(f):
                 word_dict[line.strip().split()[0]] = i
-        return  word_dict 
+        return word_dict
 
     def create_reader(self):
         """reader creator for ets model"""
@@ -72,34 +73,48 @@ class ETSReader(DataReader):
 
             with open(self.filelist) as f:
                 lines = f.readlines()
-                reader_list = [line.strip() for line in lines if line.strip() != '']
+                reader_list = [
+                    line.strip() for line in lines if line.strip() != ''
+                ]
 
-            data_dict, word_dict = self.load_file()
+            word_dict = self.load_file()
             for line in reader_list:
                 vid, stime, etime, sentence = line.split('\t')
                 stime, etime = float(stime), float(etime)
-                datas = data_dict[vid]
-                feat = datas[int(stime * 5): int(etime * 5 + 0.5), :]
+
+                if python_ver < (3, 0):
+                    datas = pickle.load(
+                        open(os.path.join(self.feat_path, vid), 'rb'))
+                else:
+                    datas = pickle.load(
+                        open(os.path.join(self.feat_path, vid), 'rb'),
+                        encoding='bytes')
+
+                feat = datas[int(stime * 5):int(etime * 5 + 0.5), :]
                 init_ids = np.array([[0]], dtype='int64')
                 init_scores = np.array([[0.]], dtype='float32')
                 if feat.shape[0] == 0:
                     continue
 
-                batch_out.append((feat, init_ids, init_scores, vid, stime, etime))
+                batch_out.append(
+                    (feat, init_ids, init_scores, vid, stime, etime))
                 if len(batch_out) == self.batch_size:
                     yield batch_out
                     batch_out = []
 
         return reader
 
-
     def make_multiprocess_reader(self):
         """multiprocess reader"""
+
         def process_data(sample):
             vid, feat, stime, etime, sentence = sample
 
             if self.mode == 'train' or self.mode == 'valid':
-                word_ids = [word_dict.get(w, word_dict[self.UNK]) for w in sentence.split()]
+                word_ids = [
+                    word_dict.get(w, word_dict[self.UNK])
+                    for w in sentence.split()
+                ]
                 word_ids_next = word_ids + [word_dict[self.END]]
                 word_ids = [word_dict[self.START]] + word_ids
                 return feat, word_ids, word_ids_next
@@ -109,19 +124,29 @@ class ETSReader(DataReader):
                 return feat, init_ids, init_scores, vid, stime, etime
             else:
                 raise NotImplementedError('mode {} not implemented'.format(
-                self.mode))
+                    self.mode))
 
         def make_reader():
             def reader():
                 lines = open(self.filelist).readlines()
-                reader_list = [line.strip() for line in lines if line.strip() != '']
+                reader_list = [
+                    line.strip() for line in lines if line.strip() != ''
+                ]
                 if self.mode == 'train':
                     random.shuffle(reader_list)
                 for line in reader_list:
                     vid, stime, etime, sentence = line.split('\t')
                     stime, etime = float(stime), float(etime)
-                    datas = pickle.load(open(os.path.join(self.feat_path, vid)))
-                    feat = datas[int(stime * 5): int(etime * 5 + 0.5), :]
+
+                    if python_ver < (3, 0):
+                        datas = pickle.load(
+                            open(os.path.join(self.feat_path, vid), 'rb'))
+                    else:
+                        datas = pickle.load(
+                            open(os.path.join(self.feat_path, vid), 'rb'),
+                            encoding='bytes')
+
+                    feat = datas[int(stime * 5):int(etime * 5 + 0.5), :]
                     if feat.shape[0] == 0:
                         continue
 
@@ -129,7 +154,8 @@ class ETSReader(DataReader):
 
             mapper = functools.partial(process_data)
 
-            return paddle.reader.xmap_readers(mapper, reader, self.num_threads, self.buffer_size)
+            return paddle.reader.xmap_readers(mapper, reader, self.num_threads,
+                                              self.buffer_size)
 
         def batch_reader():
             batch_out = []
@@ -142,4 +168,3 @@ class ETSReader(DataReader):
         word_dict = self.load_file()
         _reader = make_reader()
         return batch_reader
-

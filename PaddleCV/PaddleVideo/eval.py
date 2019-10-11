@@ -91,6 +91,8 @@ def test(args):
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
+    exe.run(fluid.default_startup_program())
+
     if args.weights:
         assert os.path.exists(
             args.weights), "Given weight dir {} not exist.".format(args.weights)
