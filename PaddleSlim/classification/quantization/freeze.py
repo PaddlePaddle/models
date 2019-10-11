@@ -86,7 +86,7 @@ def eval(args):
             executor=exe,
             main_program=server_program,
             model_filename='model',
-            params_filename='params')
+            params_filename='weights')
 
     _logger.info("convert the weights into int8 type")
     convert_int8_pass = ConvertToInt8Pass(
@@ -101,7 +101,7 @@ def eval(args):
             executor=exe,
             main_program=server_int8_program,
             model_filename='model',
-            params_filename='params')
+            params_filename='weights')
 
     _logger.info("convert the freezed pass to paddle-lite execution")
     mobile_pass = TransformForMobilePass()
@@ -114,7 +114,7 @@ def eval(args):
             executor=exe,
             main_program=mobile_program,
             model_filename='model',
-            params_filename='params')
+            params_filename='weights')
 
 def main():
     args = parser.parse_args()
