@@ -19,8 +19,7 @@ PaddlePaddle Fast ImageNet using the dynmiac batch size, dynamic image size, rec
         |-train
         `-validation
     ```
-1. Install the requirements by `pip install -r requirements.txt`.
-1. Launch the training job: `python train.py --data_dir /data/imagenet`
+1. Launch the training job: `sh train_scripts/run.sh`
 1. Learning curve, we launch the training job on V100 GPU card:
 <p align="center">
 <img src="src/acc_curve.png" hspace='10' /> <br />

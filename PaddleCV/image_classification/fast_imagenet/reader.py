@@ -21,7 +21,6 @@ import numpy as np
 import math
 import random
 import pickle
-from tqdm import tqdm
 import time
 import multiprocessing
 
@@ -35,16 +34,20 @@ class PaddleDataLoader(object):
     def __init__(self,
                  dataset,
                  indices=None,
-                 concurrent=24,
-                 queue_size=3072,
+                 concurrent=4,
+                 queue_size=400,
                  shuffle=True,
-                 shuffle_seed=0):
+                 shuffle_seed=0,
+                 rank_id=0,
+                 size=1):
         self.dataset = dataset
         self.indices = indices
         self.concurrent = concurrent
         self.shuffle = shuffle
         self.shuffle_seed = shuffle_seed
         self.queue_size = queue_size // self.concurrent
+        self.rank_id = rank_id
+        self.size = size
 
     def _worker_loop(self, queue, worker_indices, worker_id):
         cnt = 0
@@ -68,12 +71,18 @@ class PaddleDataLoader(object):
                 random.shuffle(self.indices)
                 print("shuffle indices: %s ..." % self.indices[:10])
 
-            imgs_per_worker = int(math.ceil(total_img / self.concurrent))
+            imgs_per_worker = int(math.ceil(total_img / self.size))
+            total_size = imgs_per_worker * self.size
+            self.indices += self.indices[:total_size - total_img]
+            assert len(self.indices) == total_size
+            imgs_per_process = int(math.ceil(imgs_per_worker / self.concurrent))
+            offset = self.rank_id * imgs_per_worker
             for i in xrange(self.concurrent):
-                start = i * imgs_per_worker
+                start = i * imgs_per_process + offset
                 end = (i + 1
-                       ) * imgs_per_worker if i != self.concurrent - 1 else None
+                       ) * imgs_per_process + offset if i != self.concurrent - 1 else (self.rank_id + 1) * imgs_per_worker
                 sliced_indices = self.indices[start:end]
+                print("process: {}, start: {}, end: {}".format(i, start, end))
                 index_queue = multiprocessing.Queue(self.queue_size)
                 w = multiprocessing.Process(
                     target=self._worker_loop,
@@ -98,14 +107,14 @@ class PaddleDataLoader(object):
         return _reader_creator
 
 
-def train(traindir, sz, min_scale=0.08, shuffle_seed=0):
+def train(traindir, sz, min_scale=0.08, shuffle_seed=0, rank_id=0, size=1):
     train_tfms = [
         transforms.RandomResizedCrop(
             sz, scale=(min_scale, 1.0)), transforms.RandomHorizontalFlip()
     ]
     train_dataset = datasets.ImageFolder(traindir,
                                          transforms.Compose(train_tfms))
-    return PaddleDataLoader(train_dataset, shuffle_seed=shuffle_seed).reader()
+    return PaddleDataLoader(train_dataset, shuffle_seed=shuffle_seed, rank_id=rank_id, size=size).reader()
 
 
 def test(valdir, bs, sz, rect_val=False):
@@ -164,12 +173,9 @@ def sort_ar(valdir):
     idx2ar_file = valdir + '/../sorted_idxar.p'
     if os.path.isfile(idx2ar_file):
         return pickle.load(open(idx2ar_file, 'rb'))
-    print(
-        'Creating AR indexes. Please be patient this may take a couple minutes...'
-    )
-    val_dataset = datasets.ImageFolder(
-        valdir)  # AS: TODO: use Image.open instead of looping through dataset
-    sizes = [img[0].size for img in tqdm(val_dataset, total=len(val_dataset))]
+    print('Creating AR indexes. This may take a couple minutes...')
+    val_dataset = datasets.ImageFolder(valdir)
+    sizes = [img[0].size for img in val_dataset]
     idx_ar = [(i, round(s[0] * 1.0 / s[1], 5)) for i, s in enumerate(sizes)]
     sorted_idxar = sorted(idx_ar, key=lambda x: x[1])
     pickle.dump(sorted_idxar, open(idx2ar_file, 'wb'))

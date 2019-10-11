@@ -27,7 +27,7 @@ import paddle.fluid as fluid
 import paddle.fluid.profiler as profiler
 import utils
 
-__all__ = ["FastImageNet"]
+__all__ = ["FastImageNet", "lr_decay"]
 
 
 class FastImageNet():
@@ -35,18 +35,11 @@ class FastImageNet():
         self.layers = layers
         self.is_train = is_train
 
-    def net(self, input, class_dim=1000, img_size=224, is_train=True):
+    def net(self, input, class_dim=1000):
         layers = self.layers
-        supported_layers = [50, 101, 152]
-        assert layers in supported_layers, \
-            "supported layers are {} but input layer is {}".format(supported_layers, layers)
+        assert layers == 50, "Only supported layer is 50 now."
 
-        if layers == 50:
-            depth = [3, 4, 6, 3]
-        elif layers == 101:
-            depth = [3, 4, 23, 3]
-        elif layers == 152:
-            depth = [3, 8, 36, 3]
+        depth = [3, 4, 6, 3]
         num_filters = [64, 128, 256, 512]
 
         conv = self.conv_bn_layer(
@@ -64,7 +57,6 @@ class FastImageNet():
                     input=conv,
                     num_filters=num_filters[block],
                     stride=2 if i == 0 and block != 0 else 1)
-        pool_size = int(img_size / 32)
         pool = fluid.layers.pool2d(
             input=conv, pool_type='avg', global_pooling=True)
         out = fluid.layers.fc(
@@ -134,14 +126,13 @@ class FastImageNet():
         return fluid.layers.elementwise_add(x=short, y=conv2, act='relu')
 
 
-def lr_decay(lrs, epochs, bs, total_image):
+def lr_decay(lrs, epochs, bs, total_image, num_trainers=1):
     boundaries = []
     values = []
     for idx, epoch in enumerate(epochs):
-        step = total_image // bs[idx]
-        if step * bs[idx] < total_image:
-            step += 1
-        ratio = (lrs[idx][1] - lrs[idx][0]) * 1.0 / (epoch[1] - epoch[0])
+        images_per_trainer = int(math.ceil(total_image / num_trainers))
+        step = int(math.ceil(images_per_trainer / bs[idx]))
+        ratio = (lrs[idx][1] - lrs[idx][0])*1.0 / (epoch[1] - epoch[0])
         lr_base = lrs[idx][0]
         for s in range(epoch[0], epoch[1]):
             if boundaries:
