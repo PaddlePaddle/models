@@ -289,13 +289,13 @@ class SPADE(object):
         ]
         edge_shape = [-1, 1, self.cfg.crop_height, self.cfg.crop_width]
 
-        input_A = fluid.layers.data(
+        input_A = fluid.data(
             name='input_label', shape=label_shape, dtype='float32')
-        input_B = fluid.layers.data(
+        input_B = fluid.data(
             name='input_img', shape=data_shape, dtype='float32')
-        input_C = fluid.layers.data(
+        input_C = fluid.data(
             name='input_ins', shape=edge_shape, dtype='float32')
-        input_fake = fluid.layers.data(
+        input_fake = fluid.data(
             name='input_fake', shape=data_shape, dtype='float32')
 
         gen_trainer = GTrainer(input_A, input_B, input_C, self.cfg,
@@ -325,7 +325,7 @@ class SPADE(object):
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
+        build_strategy.enable_inplace = True
         build_strategy.sync_batch_norm = False
 
         gen_trainer_program = fluid.CompiledProgram(
@@ -387,9 +387,9 @@ class SPADE(object):
 
             if self.cfg.run_test:
                 test_program = gen_trainer.infer_program
-                image_name = fluid.layers.data(
+                image_name = fluid.data(
                     name='image_name',
-                    shape=[self.cfg.batch_size],
+                    shape=[-1, self.cfg.batch_size],
                     dtype="int32")
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[input_A, input_B, input_C, image_name],
