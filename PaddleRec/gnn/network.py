@@ -19,36 +19,36 @@ import paddle.fluid as fluid
 import paddle.fluid.layers as layers
 
 
-def network(items_num, hidden_size, step):
+def network(items_num, hidden_size, step, bs):
     stdv = 1.0 / math.sqrt(hidden_size)
 
-    items = layers.data(
+    items = fluid.data(
         name="items",
-        shape=[1, 1],
-        dtype="int64") #[batch_size, uniq_max, 1]
-    seq_index = layers.data(
+        shape=[bs, -1],
+        dtype="int64") #[batch_size, uniq_max]
+    seq_index = fluid.data(
         name="seq_index",
-        shape=[1],
-        dtype="int32") #[batch_size, seq_max]
-    last_index = layers.data(
+        shape=[bs, -1, 2],
+        dtype="int32") #[batch_size, seq_max, 2]
+    last_index = fluid.data(
         name="last_index",
-        shape=[1],
-        dtype="int32") #[batch_size, 1]
-    adj_in = layers.data(
+        shape=[bs, 2],
+        dtype="int32") #[batch_size, 2]
+    adj_in = fluid.data(
         name="adj_in",
-        shape=[1,1],
+        shape=[bs, -1, -1],
         dtype="float32") #[batch_size, seq_max, seq_max]
-    adj_out = layers.data(
+    adj_out = fluid.data(
         name="adj_out",
-        shape=[1,1],
+        shape=[bs, -1, -1],
         dtype="float32") #[batch_size, seq_max, seq_max]
-    mask = layers.data(
+    mask = fluid.data(
         name="mask",
-        shape=[1, 1],
+        shape=[bs, -1, 1],
         dtype="float32") #[batch_size, seq_max, 1]
-    label = layers.data(
+    label = fluid.data(
         name="label",
-        shape=[1],
+        shape=[bs, 1],
         dtype="int64") #[batch_size, 1]
 
     datas = [items, seq_index, last_index, adj_in, adj_out, mask, label]
@@ -57,19 +57,17 @@ def network(items_num, hidden_size, step):
     feed_datas = fluid.layers.read_file(py_reader)
     items, seq_index, last_index, adj_in, adj_out, mask, label = feed_datas
 
-    items_emb = layers.embedding(
+    items_emb = fluid.embedding(
         input=items,
         param_attr=fluid.ParamAttr(
             name="emb",
             initializer=fluid.initializer.Uniform(
                 low=-stdv, high=stdv)),
         size=[items_num, hidden_size])  #[batch_size, uniq_max, h]
-    items_emb_shape = layers.shape(items_emb)
 
     pre_state = items_emb
     for i in range(step):
-        pre_state = layers.reshape(
-            x=pre_state, shape=[-1, 1, hidden_size], actual_shape=items_emb_shape)
+        pre_state = layers.reshape(x=pre_state, shape=[bs, -1, hidden_size])
         state_in = layers.fc(
             input=pre_state,
             name="state_in",
@@ -104,24 +102,12 @@ def network(items_num, hidden_size, step):
             bias_attr=False)
         pre_state, _, _ = fluid.layers.gru_unit(
             input=gru_fc,
-            hidden=layers.reshape(
-                x=pre_state, shape=[-1, hidden_size]),
+            hidden=layers.reshape(x=pre_state, shape=[-1, hidden_size]),
             size=3 * hidden_size)
 
-    final_state = pre_state #[batch_size * uniq_max, h]
-
-    seq_origin_shape = layers.assign(np.array([0,0,hidden_size-1]).astype("int32"))
-    seq_origin_shape += layers.shape(layers.unsqueeze(seq_index,[2])) #value: [batch_size, seq_max, h]
-    seq_origin_shape.stop_gradient = True
-
-    seq_index = layers.reshape(seq_index, shape=[-1])
-    seq = layers.gather(final_state, seq_index)  #[batch_size * seq_max, h]
-    last = layers.gather(final_state, last_index)  #[batch_size, h]
-
-    seq = layers.reshape(
-        seq, shape=[-1, 1, hidden_size], actual_shape=seq_origin_shape)  #[batch_size, seq_max, h]
-    last = layers.reshape(
-        last, shape=[-1, hidden_size])  #[batch_size, h]
+    final_state = layers.reshape(pre_state, shape=[bs, -1, hidden_size])
+    seq = layers.gather_nd(final_state, seq_index)
+    last = layers.gather_nd(final_state, last_index)
 
     seq_fc = layers.fc(
         input=seq,
@@ -184,13 +170,13 @@ def network(items_num, hidden_size, step):
             low=-stdv, high=stdv)))  #[batch_size, h]
 
     all_vocab = layers.create_global_var(
-        shape=[items_num - 1, 1],
+        shape=[items_num - 1],
         value=0,
         dtype="int64",
         persistable=True,
         name="all_vocab")
 
-    all_emb = layers.embedding(
+    all_emb = fluid.embedding(
         input=all_vocab,
         param_attr=fluid.ParamAttr(
             name="emb",

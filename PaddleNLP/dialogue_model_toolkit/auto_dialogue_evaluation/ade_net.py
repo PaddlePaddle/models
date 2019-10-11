@@ -35,7 +35,7 @@ def create_net(
     label = model_input.labels
 
     #emb
-    context_emb = fluid.layers.embedding(
+    context_emb = fluid.input.embedding(
         input=context_wordseq,
         size=[args.vocab_size, args.emb_size],
         is_sparse=True,
@@ -43,7 +43,7 @@ def create_net(
             name=word_emb_name,
             initializer=fluid.initializer.Normal(scale=0.1)))
 
-    response_emb = fluid.layers.embedding(
+    response_emb = fluid.input.embedding(
         input=response_wordseq,
         size=[args.vocab_size, args.emb_size],
         is_sparse=True,

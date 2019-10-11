@@ -48,12 +48,12 @@ def do_train(args):
         startup_prog.random_seed = args.random_seed
 
         with fluid.unique_name.guard(): 
-            context_wordseq = fluid.layers.data(
-                    name='context_wordseq', shape=[1], dtype='int64', lod_level=1)
-            response_wordseq = fluid.layers.data(
-                    name='response_wordseq', shape=[1], dtype='int64', lod_level=1)
-            labels = fluid.layers.data(
-                    name='labels', shape=[1], dtype='int64')
+            context_wordseq = fluid.data(
+                    name='context_wordseq', shape=[-1, 1], dtype='int64', lod_level=1)
+            response_wordseq = fluid.data(
+                    name='response_wordseq', shape=[-1, 1], dtype='int64', lod_level=1)
+            labels = fluid.data(
+                    name='labels', shape=[-1, 1], dtype='int64')
 
             input_inst = [context_wordseq, response_wordseq, labels]
             input_field = InputField(input_inst)
