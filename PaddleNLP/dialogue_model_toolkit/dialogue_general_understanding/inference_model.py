@@ -59,23 +59,23 @@ def do_save_inference_model(args):
             # define inputs of the network
             num_labels = len(processors[task_name].get_labels()) 
 
-            src_ids = fluid.layers.data(
-                        name='src_ids', shape=[args.max_seq_len, 1], dtype='int64')
-            pos_ids = fluid.layers.data(
-                        name='pos_ids', shape=[args.max_seq_len, 1], dtype='int64')
-            sent_ids = fluid.layers.data(
-                        name='sent_ids', shape=[args.max_seq_len, 1], dtype='int64')
-            input_mask = fluid.layers.data(
-                        name='input_mask', shape=[args.max_seq_len, 1], dtype='float32')
+            src_ids = fluid.data(
+                        name='src_ids', shape=[-1, args.max_seq_len], dtype='int64')
+            pos_ids = fluid.data(
+                        name='pos_ids', shape=[-1, args.max_seq_len], dtype='int64')
+            sent_ids = fluid.data(
+                        name='sent_ids', shape=[-1, args.max_seq_len], dtype='int64')
+            input_mask = fluid.data(
+                        name='input_mask', shape=[-1, args.max_seq_len], dtype='float32')
             if args.task_name == 'atis_slot': 
-                labels = fluid.layers.data(
-                        name='labels', shape=[args.max_seq_len], dtype='int64')
+                labels = fluid.data(
+                        name='labels', shape=[-1, args.max_seq_len], dtype='int64')
             elif args.task_name in ['dstc2', 'dstc2_asr', 'multi-woz']:
-                labels = fluid.layers.data(
-                        name='labels', shape=[num_labels], dtype='int64')
+                labels = fluid.data(
+                        name='labels', shape=[-1, num_labels], dtype='int64')
             else: 
-                labels = fluid.layers.data(
-                        name='labels', shape=[1], dtype='int64')
+                labels = fluid.data(
+                        name='labels', shape=[-1, 1], dtype='int64')
             
             input_inst = [src_ids, pos_ids, sent_ids, input_mask, labels]
             input_field = InputField(input_inst)
