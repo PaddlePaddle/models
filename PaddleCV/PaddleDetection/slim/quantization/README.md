@@ -78,8 +78,8 @@ PaddlePaddle框架中有四个和量化相关的IrPass, 分别是QuantizationTra
 
 如果在配置文件的量化策略中设置了`float_model_save_path`, `int8_model_save_path`, `mobile_model_save_path`, 在训练结束后，会保存模型量化压缩之后用于预测的模型。接下来介绍这三种预测模型的区别。
 
-#### float模型
-在介绍量化训练时的模型结构时介绍了PaddlePaddle框架中有四个和量化相关的IrPass, 分别是QuantizationTransformPass、QuantizationFreezePass、ConvertToInt8Pass以及TransformForMobilePass。float预测模型是在应用QuantizationFreezePass并删除eval_program中多余的operators之后，保存的模型。
+#### FP32模型
+在介绍量化训练时的模型结构时介绍了PaddlePaddle框架中有四个和量化相关的IrPass, 分别是QuantizationTransformPass、QuantizationFreezePass、ConvertToInt8Pass以及TransformForMobilePass。FP32模型是在应用QuantizationFreezePass并删除eval_program中多余的operators之后，保存的模型。
 
 QuantizationFreezePass主要用于改变IrGraph中量化op和反量化op的顺序，即将类似图1中的量化op和反量化op顺序改变为图2中的布局。除此之外，QuantizationFreezePass还会将`conv2d`、`depthwise_conv2d`、`mul`等算子的权重离线量化为int8_t范围内的值(但数据类型仍为float32)，以减少预测过程中对权重的量化操作，示例如图2：
 
@@ -88,7 +88,7 @@ QuantizationFreezePass主要用于改变IrGraph中量化op和反量化op的顺�
 <strong>图2：应用QuantizationFreezePass后的结果</strong>
 </p>
 
-#### int8模型
+#### 8-bit模型
 在对训练网络进行QuantizationFreezePass之后，执行ConvertToInt8Pass，
 其主要目的是将执行完QuantizationFreezePass后输出的权重类型由`FP32`更改为`INT8`。换言之，用户可以选择将量化后的权重保存为float32类型（不执行ConvertToInt8Pass）或者int8_t类型（执行ConvertToInt8Pass），示例如图3：
 
@@ -125,7 +125,7 @@ python eval.py --model_path ${checkpoint_path}/${epoch_id}/eval_model/ --model_n
 
 - model_path, 加载的模型路径，`为${checkpoint_path}/${epoch_id}/eval_model/`
 - weight_quant_type 模型参数的量化方式，和配置文件中的类型保持一致
-- save_path `float`, `int8`, `mobile`模型的保存路径，分别为 `${save_path}/float/`, `${save_path}/int8/`, `${save_path}/mobile/`
+- save_path `FP32`, `8-bit`, `mobile`模型的保存路径，分别为 `${save_path}/float/`, `${save_path}/int8/`, `${save_path}/mobile/`
 
 ### 最终评估模型
 最终使用的评估模型是float模型，使用脚本<a href="./eval.py">slim/quantization/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
@@ -140,7 +140,7 @@ python eval.py --model_path ${float_model_path}  --model_name model --params_nam
 
 
 ### PaddleLite预测
-float预测模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如何加载运行量化模型](https://github.com/PaddlePaddle/Paddle-Lite/wiki/model_quantization)
+FP32模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如何加载运行量化模型](https://github.com/PaddlePaddle/Paddle-Lite/wiki/model_quantization)
 
 
 ## 示例结果
