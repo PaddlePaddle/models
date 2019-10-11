@@ -441,8 +441,9 @@ def main():
                     format(
                         len(valid_data), config.batch_size, config.num_steps))
 
-            save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
-            fluid.save(main_program, save_model_dir + "/params")
+            save_model_dir = os.path.join(args.save_model_dir,
+                                          str(epoch_id), "params")
+            fluid.save(main_program, save_model_dir)
             print("Saved model to: %s.\n" % save_model_dir)
 
     with profile_context(args.profile):
