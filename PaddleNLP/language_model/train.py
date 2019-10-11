@@ -442,8 +442,6 @@ def main():
                         len(valid_data), config.batch_size, config.num_steps))
 
             save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
-            #fluid.io.save_persistables(
-            #    executor=exe, dirname=save_model_dir, main_program=main_program)
             fluid.save(main_program, save_model_dir + "/params")
             print("Saved model to: %s.\n" % save_model_dir)
 
