@@ -156,7 +156,6 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 ```
 export FLAGS_sync_nccl_allreduce=0
-export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
 export CUDA_VISIBLE_DEVICES=0  #GPU单卡训练
 #export CUDA_VISIBLE_DEVICES=0,1,2,3  #GPU多卡训练
@@ -222,7 +221,6 @@ task_type: train、predict、evaluate、inference, 选择4个参数选项中任�
 
 ```
 export FLAGS_sync_nccl_allreduce=0
-export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
 export CUDA_VISIBLE_DEVICES=0  #GPU单卡训练
 #export CUDA_VISIBLE_DEVICES=0,1,2,3  #GPU多卡训练
@@ -298,7 +296,6 @@ export CUDA_VISIBLE_DEVICES=0 #用户可自行指定空闲的卡
 
 ```
 export FLAGS_sync_nccl_allreduce=0
-export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
 export CUDA_VISIBLE_DEVICES=0  #单卡预测
 #export CUDA_VISIBLE_DEVICES=  #CPU预测
@@ -346,7 +343,6 @@ task_type: train、predict、evaluate、inference, 选择4个参数选项中任�
 
 ```
 export FLAGS_sync_nccl_allreduce=0
-export FLAGS_eager_delete_tensor_gb=1  #开启显存优化
 
 export CUDA_VISIBLE_DEVICES=0  #单卡预测
 #export CUDA_VISIBLE_DEVICES=  #CPU预测

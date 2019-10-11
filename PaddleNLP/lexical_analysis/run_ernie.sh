@@ -1,7 +1,5 @@
 #set -eux
 export FLAGS_fraction_of_gpu_memory_to_use=0.02
-export FLAGS_eager_delete_tensor_gb=0.0
-export FLAGS_fast_eager_deletion_mode=1
 # export FLAGS_sync_nccl_allreduce=1
 # export NCCL_DEBUG=INFO
 # export NCCL_IB_GID_INDEX=3

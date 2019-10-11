@@ -1,5 +1,4 @@
 export CPU_NUM=1
-export FLAGS_eager_delete_tensor_gb=0.0
 
 #train on ubuntu 
 python -u main.py \

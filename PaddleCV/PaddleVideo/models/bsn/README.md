@@ -30,9 +30,7 @@ TEM模块以snippet-level的特征序列作为输入，预测每一个时序位�
 数据准备完毕后，可以通过如下两种方式启动训练：
 
     export CUDA_VISIBLE_DEVICES=0
-    export FLAGS_eager_delete_tensor_gb=0.0
     export FLAGS_fraction_of_gpu_memory_to_use=0.98
-    export FLAGS_fast_eager_deletion_mode=1
     python train.py --model_name=BsnTem \
                     --config=./configs/bsn_tem.yaml \
                     --log_interval=10 \
@@ -60,9 +58,7 @@ PEM模块以PGM模块输出的BSP特征作为输入，输出proposal包含动作
 数据准备完毕后，可以通过如下两种方式启动训练：
 
     export CUDA_VISIBLE_DEVICES=0
-    export FLAGS_eager_delete_tensor_gb=0.0
     export FLAGS_fraction_of_gpu_memory_to_use=0.98
-    export FLAGS_fast_eager_deletion_mode=1
     python train.py --model_name=BsnPem \
                     --config=./configs/bsn_pem.yaml \
                     --log_interval=10 \

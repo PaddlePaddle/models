@@ -1,7 +1,6 @@
 #!/bin/bash
 # This file is only used for continuous evaluation.
 
-export FLAGS_eager_delete_tensor_gb=0.0
 export CUDA_VISIBLE_DEVICES=3
 
 if [ ! -d 'pretrain' ]; then

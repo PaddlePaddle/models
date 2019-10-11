@@ -32,8 +32,6 @@ import dist_utils
 import reader
 from transformer import create_net, position_encoding_init
 
-if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
-    os.environ['FLAGS_eager_delete_tensor_gb'] = '0'
 # num_trainers is used for multi-process gpu training
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 

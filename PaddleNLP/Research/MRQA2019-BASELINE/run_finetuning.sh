@@ -18,7 +18,6 @@
 set -xe
 
 export FLAGS_sync_nccl_allreduce=0
-export FLAGS_eager_delete_tensor_gb=1
 
 # set CUDA_VISIBLE_DEVICES
 export CUDA_VISIBLE_DEVICES=0

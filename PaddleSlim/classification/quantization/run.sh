@@ -30,10 +30,6 @@ fi
 
 cd -
 
-# enable GC strategy
-export FLAGS_fast_eager_deletion_mode=1
-export FLAGS_eager_delete_tensor_gb=0.0
-
 export CUDA_VISIBLE_DEVICES=0
 
 ## for quantization for mobilenet_v1
