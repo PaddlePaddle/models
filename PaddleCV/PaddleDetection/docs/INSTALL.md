@@ -36,7 +36,7 @@ python -c "import paddle; print(paddle.__version__)"
 
 ### Requirements:
 
-- Python2 or Python3
+- Python3
 - CUDA >= 8.0
 - cuDNN >= 5.0
 - nccl >= 2.1.2
