@@ -47,8 +47,7 @@ def nccl2_prepare(args, startup_program, main_program):
 
 def dist_env():
     """
-    Return a dict of all variable that distributed training may use.
-    NOTE: you may rewrite this function to suit your cluster environments.
+    Return a dict of all variables that distributed training may use.
     """
     trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))
     num_trainers = int(os.getenv("PADDLE_TRAINERS_NUM", "1"))
