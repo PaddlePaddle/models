@@ -54,18 +54,18 @@ def widerface_eval(
     Calculate ap according to prediction result list `eval_results`
     """
 
-    def isSameFace(face_gt, face_pred):
+    def is_same_face(face_gt, face_pred):
         iou = cal_iou(face_gt, face_pred)
         return iou >= 0.3
 
-    def evaluationSingleImage(faces_gt, faces_pred):
+    def eval_single_image(faces_gt, faces_pred):
         pred_is_true = [False] * len(faces_pred)
         gt_been_pred = [False] * len(faces_gt)
         for i in range(len(faces_pred)):
             isFace = False
             for j in range(len(faces_gt)):
                 if gt_been_pred[j] == 0:
-                    isFace = isSameFace(faces_gt[j], faces_pred[i][2:])
+                    isFace = is_same_face(faces_gt[j], faces_pred[i][2:])
                     if isFace == 1:
                         gt_been_pred[j] = True
                         break
@@ -84,7 +84,7 @@ def widerface_eval(
         gt_box_lengths = t['gt_box'][1][0]
         faces_num_gt += np.sum(gt_box_lengths)
 
-        pred_is_true = evaluationSingleImage(gt_boxes, bboxes)
+        pred_is_true = eval_single_image(gt_boxes, bboxes)
         for i in range(0, len(pred_is_true)):
             nowScore = bboxes[i][1]
             if score_res_pair.has_key(nowScore):
