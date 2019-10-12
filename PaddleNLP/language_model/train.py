@@ -40,7 +40,7 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 from args import *
-from models.model_check import check_cuda
+from models.model_check import check_cuda, check_version
 from models.language_model import lm_model
 from config import RNNConfig
 import logging
@@ -88,7 +88,10 @@ def save_para_npz(train_prog, train_exe):
 def main():
     args = parse_args()
 
+    # check if set use_gpu=True in paddlepaddle cpu version
     check_cuda(args.use_gpu)
+    # check if paddlepaddle version is satisfied
+    check_version()
 
     logger = logging.getLogger("lm")
     logger.setLevel(logging.INFO)
