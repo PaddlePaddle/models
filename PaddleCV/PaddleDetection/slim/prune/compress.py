@@ -20,17 +20,9 @@ import os
 import time
 import multiprocessing
 import numpy as np
-import datetime
-from collections import deque
 import sys
 sys.path.append("../../")
 from paddle.fluid.contrib.slim import Compressor
-from paddle.fluid.framework import IrGraph
-from paddle.fluid import core
-from paddle.fluid.contrib.slim.quantization import QuantizationTransformPass
-from paddle.fluid.contrib.slim.quantization import QuantizationFreezePass
-from paddle.fluid.contrib.slim.quantization import ConvertToInt8Pass
-from paddle.fluid.contrib.slim.quantization import TransformForMobilePass
 
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
@@ -44,12 +36,9 @@ set_paddle_flags(
 )
 
 from paddle import fluid
-
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
-
 from ppdet.utils.eval_utils import parse_fetches, eval_results
-from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
 import ppdet.utils.checkpoint as checkpoint
@@ -65,6 +54,12 @@ def eval_run(exe, compile_program, reader, keys, values, cls, test_feed):
     """
     iter_id = 0
     results = []
+    if len(cls) != 0:
+        values = []
+        for i in range(len(cls)):
+            _, accum_map = cls[i].get_map_var()
+            cls[i].reset(exe)
+            values.append(accum_map)
 
     images_num = 0
     start_time = time.time()
@@ -75,7 +70,7 @@ def eval_run(exe, compile_program, reader, keys, values, cls, test_feed):
                      'im_size': data['im_size']}
         outs = exe.run(compile_program,
                        feed=feed_data,
-                       fetch_list=values[0],
+                       fetch_list=[values[0]],
                        return_numpy=False)
         outs.append(data['gt_box'])
         outs.append(data['gt_label'])
@@ -123,6 +118,10 @@ def main():
         devices_num = int(
             os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
+    if 'train_feed' not in cfg:
+        train_feed = create(main_arch + 'TrainFeed')
+    else:
+        train_feed = create(cfg.train_feed)
 
     if 'eval_feed' not in cfg:
         eval_feed = create(main_arch + 'EvalFeed')
@@ -132,91 +131,118 @@ def main():
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    _, test_feed_vars = create_feed(eval_feed, iterable=True)
+    lr_builder = create('LearningRate')
+    optim_builder = create('OptimizerBuilder')
+
+    # build program
+    startup_prog = fluid.Program()
+    train_prog = fluid.Program()
+    with fluid.program_guard(train_prog, startup_prog):
+        with fluid.unique_name.guard():
+            model = create(main_arch)
+            train_loader, feed_vars = create_feed(train_feed, iterable=True)
+            train_fetches = model.train(feed_vars)
+            loss = train_fetches['loss']
+            lr = lr_builder()
+            optimizer = optim_builder(lr)
+            optimizer.minimize(loss)
+
+
+    train_reader = create_reader(train_feed, cfg.max_iters * devices_num,
+                                 FLAGS.dataset_dir)
+    train_loader.set_sample_list_generator(train_reader, place)
+
+    # parse train fetches
+    train_keys, train_values, _ = parse_fetches(train_fetches)
+    train_keys.append("lr")
+    train_values.append(lr.name)
+
+    train_fetch_list=[]
+    for k, v in zip(train_keys, train_values):
+        train_fetch_list.append((k, v))
+
+    eval_prog = fluid.Program()
+    with fluid.program_guard(eval_prog, startup_prog):
+        with fluid.unique_name.guard():
+            model = create(main_arch)
+            _, test_feed_vars = create_feed(eval_feed, iterable=True)
+            fetches = model.eval(test_feed_vars)
+
+    eval_prog = eval_prog.clone(True)
 
     eval_reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
     #eval_pyreader.decorate_sample_list_generator(eval_reader, place)
     test_data_feed = fluid.DataFeeder(test_feed_vars.values(), place)
 
+    # parse eval fetches
+    extra_keys = []
+    if cfg.metric == 'COCO':
+        extra_keys = ['im_info', 'im_id', 'im_shape']
+    if cfg.metric == 'VOC':
+        extra_keys = ['gt_box', 'gt_label', 'is_difficult']
+    eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
+                                                         extra_keys)
+    eval_fetch_list=[]
+    for k, v in zip(eval_keys, eval_values):
+        eval_fetch_list.append((k, v))
 
-    assert os.path.exists(FLAGS.model_path)
-    infer_prog, feed_names, fetch_targets = fluid.io.load_inference_model(
-            dirname=FLAGS.model_path, executor=exe,
-            model_filename='__model__',
-            params_filename='__params__')
+    exe.run(startup_prog)
+    checkpoint.load_params(exe, train_prog, cfg.pretrain_weights)
 
-    eval_keys = ['bbox', 'gt_box', 'gt_label', 'is_difficult']
-    eval_values = ['multiclass_nms_0.tmp_0', 'gt_box', 'gt_label', 'is_difficult']
-    eval_cls = []
-    eval_values[0] = fetch_targets[0]
+    best_box_ap_list = []
 
-    results = eval_run(exe, infer_prog, eval_reader,
-                        eval_keys, eval_values, eval_cls, test_data_feed)
+    def eval_func(program, scope):
 
-    resolution = None
-    if 'mask' in results[0]:
-        resolution = model.mask_head.resolution
-    box_ap_stats = eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
-            resolution, False, FLAGS.output_eval)
+        #place = fluid.CPUPlace()
+        #exe = fluid.Executor(place)
+        results = eval_run(exe, program, eval_reader,
+                           eval_keys, eval_values, eval_cls, test_data_feed)
 
-    logger.info("freeze the graph for inference")
-    test_graph = IrGraph(core.Graph(infer_prog.desc), for_test=True)
+        resolution = None
+        if 'mask' in results[0]:
+            resolution = model.mask_head.resolution
+        box_ap_stats = eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
+                     resolution, False, FLAGS.output_eval)
+        if len(best_box_ap_list) == 0:
+            best_box_ap_list.append(box_ap_stats[0])
+        elif box_ap_stats[0] > best_box_ap_list[0]:
+            best_box_ap_list[0] = box_ap_stats[0]
+            checkpoint.save(exe, train_prog, os.path.join(save_dir,"best_model"))
+        logger.info("Best test box ap: {}".format(
+            best_box_ap_list[0]))
+        return best_box_ap_list[0]
 
-    freeze_pass = QuantizationFreezePass(
-            scope=fluid.global_scope(),
-            place=place,
-            weight_quantize_type=FLAGS.weight_quant_type)
-    freeze_pass.apply(test_graph)
-    server_program = test_graph.to_program()
-    fluid.io.save_inference_model(
-            dirname=os.path.join(FLAGS.save_path, 'float'),
-            feeded_var_names=feed_names,
-            target_vars=fetch_targets,
-            executor=exe,
-            main_program=server_program,
-            model_filename='model',
-            params_filename='weights')
+    test_feed = [('image', test_feed_vars['image'].name),
+                 ('im_size', test_feed_vars['im_size'].name)]
 
-    logger.info("convert the weights into int8 type")
-    convert_int8_pass = ConvertToInt8Pass(
-            scope=fluid.global_scope(),
-            place=place)
-    convert_int8_pass.apply(test_graph)
-    server_int8_program = test_graph.to_program()
-    fluid.io.save_inference_model(
-            dirname=os.path.join(FLAGS.save_path, 'int8'),
-            feeded_var_names=feed_names,
-            target_vars=fetch_targets,
-            executor=exe,
-            main_program=server_int8_program,
-            model_filename='model',
-            params_filename='weights')
-
-    logger.info("convert the freezed pass to paddle-lite execution")
-    mobile_pass = TransformForMobilePass()
-    mobile_pass.apply(test_graph)
-    mobile_program = test_graph.to_program()
-    fluid.io.save_inference_model(
-            dirname=os.path.join(FLAGS.save_path, 'mobile'),
-            feeded_var_names=feed_names,
-            target_vars=fetch_targets,
-            executor=exe,
-            main_program=mobile_program,
-            model_filename='model',
-            params_filename='weights')
-
-
+    com = Compressor(
+        place,
+        fluid.global_scope(),
+        train_prog,
+        train_reader=train_reader,
+        train_feed_list=[(key, value.name) for key, value in feed_vars.items()],
+        train_fetch_list=train_fetch_list,
+        eval_program=eval_prog,
+        eval_reader=eval_reader,
+        eval_feed_list=test_feed,
+        eval_func={'map': eval_func},
+        eval_fetch_list=[eval_fetch_list[0]],
+        save_eval_model=True,
+        prune_infer_model=[["image", "im_size"],["multiclass_nms_0.tmp_0"]],
+        train_optimizer=None)
+    com.config(FLAGS.slim_file)
+    com.run()
 
 
 
 if __name__ == '__main__':
     parser = ArgsParser()
     parser.add_argument(
-        "-m",
-        "--model_path",
+        "-s",
+        "--slim_file",
         default=None,
         type=str,
-        help="path of checkpoint")
+        help="Config file of PaddleSlim.")
     parser.add_argument(
         "--output_eval",
         default=None,
@@ -228,16 +254,5 @@ if __name__ == '__main__':
         default=None,
         type=str,
         help="Dataset path, same as DataFeed.dataset.dataset_dir")
-    parser.add_argument(
-        "--weight_quant_type",
-        default='abs_max',
-        type=str,
-        help="quantization type for weight")
-    parser.add_argument(
-        "--save_path",
-        default='./output',
-        type=str,
-        help="path to save quantization inference model")
-
     FLAGS = parser.parse_args()
     main()
