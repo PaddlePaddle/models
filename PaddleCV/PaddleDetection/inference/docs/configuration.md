@@ -58,18 +58,14 @@ DEPLOY:
     # 含义：图片通道数
     CHANNELS : 3
     # 类型：required string
-    # 含义：预处理方式，目前提供图像分割的通用预处理类SegPreProcessor、图像分类的通用预处理类
-    # ClassifyPreProcessor以及图像检测的通用预处理类DetectionPreProcessor.
-    PRE_PROCESSOR: "SegPreProcessor"
+    # 含义：预处理方式，目前提供图像检测的通用预处理类DetectionPreProcessor.
+    PRE_PROCESSOR: "DetectionPreProcessor"
     # 类型：required string
     # 含义：预测模式，支持 NATIVE 和 ANALYSIS
     PREDICTOR_MODE: "ANALYSIS"
     # 类型：required int
     # 含义：每次预测的 batch_size
     BATCH_SIZE : 3
-    # 类型：optional tuple
-    # 含义：图像裁剪的目标尺寸，默认等于EVAL_CROP_SIZE的值
-    CROP_SIZE: (513, 513)
     # 类型：optional int
     # 含义: 输入张量的个数。大部分模型不需要设置。 默认值为1.
     FEEDS_SIZE: 2
