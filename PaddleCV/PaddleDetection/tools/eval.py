@@ -104,15 +104,13 @@ def main():
     if 'weights' in cfg:
         checkpoint.load_params(exe, eval_prog, cfg.weights)
 
-    assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE'], \
+    assert cfg.metric in ['COCO', 'VOC'], \
             "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg.metric == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg.metric == 'VOC':
         extra_keys = ['gt_box', 'gt_label', 'is_difficult']
-    if cfg.metric == 'WIDERFACE':
-        extra_keys = ['im_id', 'im_shape', 'gt_box']
 
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 
@@ -123,6 +121,7 @@ def main():
         is_bbox_normalized = model.is_bbox_normalized()
 
     results = eval_run(exe, compile_program, pyreader, keys, values, cls)
+
     # evaluation
     resolution = None
     if 'mask' in results[0]:

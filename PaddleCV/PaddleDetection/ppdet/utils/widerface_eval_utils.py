@@ -25,108 +25,146 @@ from ppdet.utils.coco_eval import bbox2out
 import logging
 logger = logging.getLogger(__name__)
 
-__all__ = ['widerface_eval', 'bbox2out', 'get_category_info']
+__all__ = [
+    'get_shrink', 'bbox_vote', 'save_widerface_bboxes', 'save_fddb_bboxes',
+    'to_chw_bgr', 'bbox2out', 'get_category_info'
+]
 
 
-def cal_iou(rect1, rect2):
-    lt_x = max(rect1[0], rect2[0])
-    lt_y = max(rect1[1], rect2[1])
-    rb_x = min(rect1[2], rect2[2])
-    rb_y = min(rect1[3], rect2[3])
-    if (rb_x > lt_x) and (rb_y > lt_y):
-        intersection = (rb_x - lt_x) * (rb_y - lt_y)
-    else:
-        return 0
-
-    area1 = (rect1[2] - rect1[0]) * (rect1[3] - rect1[1])
-    area2 = (rect2[2] - rect2[0]) * (rect2[3] - rect2[1])
-
-    intersection = min(intersection, area1, area2)
-    union = area1 + area2 - intersection
-    return float(intersection) / union
-
-
-def widerface_eval(
-        eval_results,
-        output_eval_dir,
-        confs_threshold=0.3,
-        output_fname='pred_result.txt'):
+def to_chw_bgr(image):
     """
-    Calculate ap according to prediction result list `eval_results`
+    Transpose image from HWC to CHW and from RBG to BGR.
+    Args:
+        image (np.array): an image with HWC and RBG layout.
     """
+    # HWC to CHW
+    if len(image.shape) == 3:
+        image = np.swapaxes(image, 1, 2)
+        image = np.swapaxes(image, 1, 0)
+    # RBG to BGR
+    image = image[[2, 1, 0], :, :]
+    return image
 
-    def is_same_face(face_gt, face_pred):
-        iou = cal_iou(face_gt, face_pred)
-        return iou >= 0.5
 
-    def eval_single_image(faces_gt, faces_pred):
-        pred_is_true = [False] * len(faces_pred)
-        gt_been_pred = [False] * len(faces_gt)
-        for i in range(len(faces_pred)):
-            isFace = False
-            for j in range(len(faces_gt)):
-                if gt_been_pred[j] == 0:
-                    isFace = is_same_face(faces_gt[j], faces_pred[i][2:])
-                    if isFace == 1:
-                        gt_been_pred[j] = True
-                        break
-            pred_is_true[i] = isFace
-        return pred_is_true
+def bbox_vote(det):
+    order = det[:, 4].ravel().argsort()[::-1]
+    det = det[order, :]
+    if det.shape[0] == 0:
+        dets = np.array([[10, 10, 20, 20, 0.002]])
+        det = np.empty(shape=[0, 5])
+    while det.shape[0] > 0:
+        # IOU
+        area = (det[:, 2] - det[:, 0] + 1) * (det[:, 3] - det[:, 1] + 1)
+        xx1 = np.maximum(det[0, 0], det[:, 0])
+        yy1 = np.maximum(det[0, 1], det[:, 1])
+        xx2 = np.minimum(det[0, 2], det[:, 2])
+        yy2 = np.minimum(det[0, 3], det[:, 3])
+        w = np.maximum(0.0, xx2 - xx1 + 1)
+        h = np.maximum(0.0, yy2 - yy1 + 1)
+        inter = w * h
+        o = inter / (area[0] + area[:] - inter)
 
-    logger.info("Please wait a moment, calculating ap ...")
-    faces_num_gt = 0
-    score_res_pair = {}
-    for t in eval_results:
-        bboxes = t['bbox'][0]
-        keep_index = np.where(bboxes[:, 1] >= confs_threshold)[0]
-        bboxes = bboxes[keep_index,:]
-        if bboxes.shape == (1, 1) or bboxes is None:
+        # nms
+        merge_index = np.where(o >= 0.3)[0]
+        det_accu = det[merge_index, :]
+        det = np.delete(det, merge_index, 0)
+        if merge_index.shape[0] <= 1:
+            if det.shape[0] == 0:
+                try:
+                    dets = np.row_stack((dets, det_accu))
+                except:
+                    dets = det_accu
             continue
-        bboxes = bboxes.tolist()
+        det_accu[:, 0:4] = det_accu[:, 0:4] * np.tile(det_accu[:, -1:], (1, 4))
+        max_score = np.max(det_accu[:, 4])
+        det_accu_sum = np.zeros((1, 5))
+        det_accu_sum[:, 0:4] = np.sum(det_accu[:, 0:4],
+                                      axis=0) / np.sum(det_accu[:, -1:])
+        det_accu_sum[:, 4] = max_score
+        try:
+            dets = np.row_stack((dets, det_accu_sum))
+        except:
+            dets = det_accu_sum
+    dets = dets[0:750, :]
+    # Only keep 0.3 or more
+    keep_index = np.where(dets[:, 4] >= 0.01)[0]
+    dets = dets[keep_index, :]
+    return dets
 
-        gt_boxes = t['gt_box'][0].tolist()
-        gt_box_lengths = t['gt_box'][1][0]
-        faces_num_gt += len(gt_boxes) #np.sum(gt_box_lengths)
 
-        pred_is_true = eval_single_image(gt_boxes, bboxes)
-        for i in range(0, len(pred_is_true)):
-            bbox_score = bboxes[i][1]
-            if score_res_pair.has_key(bbox_score):
-                score_res_pair[bbox_score].append(int(pred_is_true[i]))
+def get_shrink(height, width):
+    """
+    Args:
+        height (int): image height.
+        width (int): image width.
+    """
+    # avoid out of memory
+    max_shrink_v1 = (0x7fffffff / 577.0 / (height * width))**0.5
+    max_shrink_v2 = ((678 * 1024 * 2.0 * 2.0) / (height * width))**0.5
+
+    def get_round(x, loc):
+        str_x = str(x)
+        if '.' in str_x:
+            str_before, str_after = str_x.split('.')
+            len_after = len(str_after)
+            if len_after >= 3:
+                str_final = str_before + '.' + str_after[0:loc]
+                return float(str_final)
             else:
-                score_res_pair[bbox_score] = [int(pred_is_true[i])]
-    score_keys = score_res_pair.keys()
-    score_keys.sort(reverse=True)
-    pred_res_file = output_fname
-    if output_eval_dir != None:
-        pred_res_file = os.path.join(output_eval_dir, output_fname)
-    pred_outfile = open(pred_res_file, 'w')
-    true_positive_num = 0
-    predict_num = 0
-    precision_list = []
-    recall_list = []
-    pred_outfile.write("recall falsePositiveNum precision scoreThreshold\n")
-    for i in range(len(score_keys)):
-        k = score_keys[i]
-        v = score_res_pair[k]
-        predict_num += len(v)
-        true_positive_num += sum(v)
-        false_positive_num = predict_num - true_positive_num
-        recall = float(true_positive_num) / faces_num_gt
-        precision = float(true_positive_num) / predict_num
-        pred_outfile.write('{} {} {} {}\n'.format(recall, false_positive_num, precision, k))
-        precision_list.append(float(true_positive_num) / predict_num)
-        recall_list.append(recall)
-    ap = precision_list[0] * recall_list[0]
-    for i in range(1, len(precision_list)):
-        ap += precision_list[i] * (recall_list[i] - recall_list[i - 1])
-    pred_outfile.write('AP={}\n'.format(ap))
+                return x
 
-    logger.info(
-        "AP = {}\nFor more details, please checkout the evaluation res at {}"
-        .format(ap, pred_res_file))
-    pred_outfile.close()
-    return ap
+    max_shrink = get_round(min(max_shrink_v1, max_shrink_v2), 2) - 0.3
+    if max_shrink >= 1.5 and max_shrink < 2:
+        max_shrink = max_shrink - 0.1
+    elif max_shrink >= 2 and max_shrink < 3:
+        max_shrink = max_shrink - 0.2
+    elif max_shrink >= 3 and max_shrink < 4:
+        max_shrink = max_shrink - 0.3
+    elif max_shrink >= 4 and max_shrink < 5:
+        max_shrink = max_shrink - 0.4
+    elif max_shrink >= 5:
+        max_shrink = max_shrink - 0.5
+
+    shrink = max_shrink if max_shrink < 1 else 1
+    return shrink, max_shrink
+
+
+def save_widerface_bboxes(image_path, bboxes_scores, output_dir):
+    image_name = image_path.split('/')[-1]
+    image_class = image_path.split('/')[-2]
+    odir = os.path.join(output_dir, image_class)
+    if not os.path.exists(odir):
+        os.makedirs(odir)
+
+    ofname = os.path.join(odir, '%s.txt' % (image_name[:-4]))
+    f = open(ofname, 'w')
+    f.write('{:s}\n'.format(image_class + '/' + image_name))
+    f.write('{:d}\n'.format(bboxes_scores.shape[0]))
+    for box_score in bboxes_scores:
+        xmin, ymin, xmax, ymax, score = box_score
+        f.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'.format(xmin, ymin, (
+            xmax - xmin + 1), (ymax - ymin + 1), score))
+    f.close()
+    logger.info("The predicted result is saved as {}".format(ofname))
+
+
+def save_fddb_bboxes(bboxes_scores,
+                     output_dir,
+                     output_fname='pred_fddb_res.txt'):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    predict_file = os.path.join(output_dir, output_fname)
+    f = open(predict_file, 'w')
+    for image_path, dets in bboxes_scores.iteritems():
+        f.write('{:s}\n'.format(image_path))
+        f.write('{:d}\n'.format(dets.shape[0]))
+        for box_score in dets:
+            xmin, ymin, xmax, ymax, score = box_score
+            width, height = xmax - xmin, ymax - ymin
+            f.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'
+                    .format(xmin, ymin, width, height, score))
+    logger.info("The predicted result is saved as {}".format(predict_file))
+    return predict_file
 
 
 def get_category_info(anno_file=None,

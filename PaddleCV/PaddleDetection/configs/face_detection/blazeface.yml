@@ -11,7 +11,6 @@ log_iter: 20
 metric: WIDERFACE
 save_dir: output
 weights: output/blazeface/model_final/
-eval_mode: widerface
 # 1(label_class) + 1(background)
 num_classes: 2
 
@@ -90,7 +89,7 @@ SSDEvalFeed:
   fields: ['image', 'im_id', 'gt_box']
   dataset:
     dataset_dir: dataset/wider_face
-    annotation: wider_face_split/wider_face_val_bbx_gt.txt   
+    annotation: annotFile.txt #wider_face_split/wider_face_val_bbx_gt.txt   
     image_dir: WIDER_val/images
   drop_last: false
   image_shape: [3, 640, 640]
