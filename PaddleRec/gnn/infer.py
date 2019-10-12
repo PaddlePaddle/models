@@ -55,7 +55,7 @@ def infer(args):
     test_data = reader.Data(args.test_path, False)
     place = fluid.CUDAPlace(0) if args.use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size, args.step)
+    loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size, args.step, batch_size)
     exe.run(fluid.default_startup_program())
     infer_program = fluid.default_main_program().clone(for_test=True)
 

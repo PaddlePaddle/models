@@ -198,8 +198,10 @@ def main():
     exe.run(startup_prog)
 
     start_iter = 0
-    checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
 
+    checkpoint.load_params(exe, train_prog, cfg.pretrain_weights)
+
+    best_box_ap_list = []
 
     def eval_func(program, scope):
 
@@ -207,7 +209,6 @@ def main():
         #exe = fluid.Executor(place)
         results = eval_run(exe, program, eval_reader,
                            eval_keys, eval_values, eval_cls, test_data_feed)
-        best_box_ap_list = []
 
         resolution = None
         if 'mask' in results[0]:

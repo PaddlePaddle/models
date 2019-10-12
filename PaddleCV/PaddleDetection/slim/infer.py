@@ -17,11 +17,12 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import sys
 import glob
 
 import numpy as np
 from PIL import Image
-
+sys.path.append("../../")
 
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
@@ -36,7 +37,6 @@ set_paddle_flags(
 )
 
 from paddle import fluid
-
 from ppdet.utils.cli import print_total_cfg
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.modeling.model_input import create_feed
@@ -44,7 +44,7 @@ from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
 from ppdet.utils.cli import ArgsParser
-from ppdet.utils.check import check_gpu, check_version
+from ppdet.utils.check import check_gpu
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
 
@@ -96,48 +96,6 @@ def get_test_images(infer_dir, infer_img):
     return images
 
 
-def prune_feed_vars(feeded_var_names, target_vars, prog):
-    """
-    Filter out feed variables which are not in program,
-    pruned feed variables are only used in post processing
-    on model output, which are not used in program, such
-    as im_id to identify image order, im_shape to clip bbox
-    in image.
-    """
-    exist_var_names = []
-    prog = prog.clone()
-    prog = prog._prune(targets=target_vars)
-    global_block = prog.global_block()
-    for name in feeded_var_names:
-        try:
-            v = global_block.var(name)
-            exist_var_names.append(str(v.name))
-        except Exception:
-            logger.info('save_inference_model pruned unused feed '
-                        'variables {}'.format(name))
-            pass
-    return exist_var_names
-
-
-def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
-    cfg_name = os.path.basename(FLAGS.config).split('.')[0]
-    save_dir = os.path.join(FLAGS.output_dir, cfg_name)
-    feeded_var_names = [var.name for var in feed_vars.values()]
-    target_vars = list(test_fetches.values())
-    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars,
-                                       infer_prog)
-    logger.info("Save inference model to {}, input: {}, output: "
-                "{}...".format(save_dir, feeded_var_names,
-                               [str(var.name) for var in target_vars]))
-    fluid.io.save_inference_model(
-        save_dir,
-        feeded_var_names=feeded_var_names,
-        target_vars=target_vars,
-        executor=exe,
-        main_program=infer_prog,
-        params_filename="__params__")
-
-
 def main():
     cfg = load_config(FLAGS.config)
 
@@ -150,9 +108,7 @@ def main():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
-    # check if paddlepaddle version is satisfied
-    check_version()
-    print_total_cfg(cfg)
+    # print_total_cfg(cfg)
 
     if 'test_feed' not in cfg:
         test_feed = create(main_arch + 'TestFeed')
@@ -161,29 +117,20 @@ def main():
 
     test_images = get_test_images(FLAGS.infer_dir, FLAGS.infer_img)
     test_feed.dataset.add_images(test_images)
+    
 
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    model = create(main_arch)
 
-    startup_prog = fluid.Program()
-    infer_prog = fluid.Program()
-    with fluid.program_guard(infer_prog, startup_prog):
-        with fluid.unique_name.guard():
-            loader, feed_vars = create_feed(test_feed, iterable=True)
-            test_fetches = model.test(feed_vars)
-    infer_prog = infer_prog.clone(True)
+    infer_prog, feed_var_names, fetch_list = fluid.io.load_inference_model(
+            dirname=FLAGS.model_path, model_filename=FLAGS.model_name,
+            params_filename=FLAGS.params_name,
+            executor=exe)
 
     reader = create_reader(test_feed)
-    loader.set_sample_list_generator(reader, place)
-
-    exe.run(startup_prog)
-    if cfg.weights:
-        checkpoint.load_params(exe, infer_prog, cfg.weights)
-
-    if FLAGS.save_inference_model:
-        save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
+    feeder = fluid.DataFeeder(place=place, feed_list=feed_var_names,
+                program=infer_prog)
 
     # parse infer fetches
     assert cfg.metric in ['COCO', 'VOC'], \
@@ -193,7 +140,7 @@ def main():
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg['metric'] == 'VOC':
         extra_keys = ['im_id', 'im_shape']
-    keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
+    keys, values, _ = parse_fetches({'bbox':fetch_list}, infer_prog, extra_keys)
 
     # parse dataset category
     if cfg.metric == 'COCO':
@@ -209,9 +156,6 @@ def main():
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
-    if hasattr(model, 'is_bbox_normalized') and \
-            callable(model.is_bbox_normalized):
-        is_bbox_normalized = model.is_bbox_normalized()
 
     # use tb-paddle to log image
     if FLAGS.use_tb:
@@ -221,15 +165,18 @@ def main():
         tb_image_frame = 0  # each frame can display ten pictures at most. 
 
     imid2path = reader.imid2path
-    for iter_id, data in enumerate(loader()):
+    keys = ['bbox']
+    for iter_id, data in enumerate(reader()):
+        feed_data = [[d[0], d[1]] for d in data]
         outs = exe.run(infer_prog,
-                       feed=data,
-                       fetch_list=values,
+                       feed=feeder.feed(feed_data),
+                       fetch_list=fetch_list,
                        return_numpy=False)
         res = {
             k: (np.array(v), v.recursive_sequence_lengths())
             for k, v in zip(keys, outs)
         }
+        res['im_id'] = [[d[2] for d in data]]
         logger.info('Infer iter {}'.format(iter_id))
 
         bbox_results = None
@@ -301,11 +248,6 @@ if __name__ == '__main__':
         default=0.5,
         help="Threshold to reserve the result for visualization.")
     parser.add_argument(
-        "--save_inference_model",
-        action='store_true',
-        default=False,
-        help="Save inference model in output_dir if True.")
-    parser.add_argument(
         "--use_tb",
         type=bool,
         default=False,
@@ -315,5 +257,20 @@ if __name__ == '__main__':
         type=str,
         default="tb_log_dir/image",
         help='Tensorboard logging directory for image.')
+    parser.add_argument(
+        '--model_path',
+        type=str,
+        default=None,
+        help="inference model path")
+    parser.add_argument(
+        '--model_name',
+        type=str,
+        default='__model__.infer',
+        help="model filename for inference model")
+    parser.add_argument(
+        '--params_name',
+        type=str,
+        default='__params__',
+        help="params filename for inference model")
     FLAGS = parser.parse_args()
     main()
