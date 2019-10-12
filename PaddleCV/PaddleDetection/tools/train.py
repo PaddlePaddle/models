@@ -93,7 +93,7 @@ def main():
         train_feed = create(main_arch + 'TrainFeed')
     else:
         train_feed = create(cfg.train_feed)
-
+    
     if FLAGS.eval:
         if 'eval_feed' not in cfg:
             eval_feed = create(main_arch + 'EvalFeed')
@@ -113,14 +113,14 @@ def main():
     # build program
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
-    if 'enable_ce' in cfg and cfg.enable_ce:
+    if FLAGS.enable_ce:
         startup_prog.random_seed = 1000
         train_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
             train_pyreader, feed_vars = create_feed(train_feed)
-
+        
             with mixed_precision_context(FLAGS.loss_scale, FLAGS.fp16) as ctx:
                 train_fetches = model.train(feed_vars)
 
@@ -251,7 +251,7 @@ def main():
                 it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
         #only for continuous evaluation
-        if 'enable_ce' in cfg and cfg.enable_ce and it == cfg.max_iters - 1:
+        if FLAGS.enable_ce and it == cfg.max_iters - 1:
             print("kpis\t{}_train_loss\t{}".format(cfg.architecture, stats['loss']))
             print("kpis\t{}_train_time\t{}".format(cfg.architecture, time_cost))
 
@@ -331,5 +331,10 @@ if __name__ == '__main__':
         type=str,
         default="tb_log_dir/scalar",
         help='Tensorboard logging directory for scalar.')
+    parser.add_argument(
+        '--enable_ce',
+        type=bool,
+        default=False,
+        help='If set True, enable continuous evaluation job.')
     FLAGS = parser.parse_args()
     main()

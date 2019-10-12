@@ -14,7 +14,7 @@ FasterRCNN_train_time_kpi = DurationKpi('FasterRCNN_train_time', 0.08, 0, active
                                         desc='train speed in 8 GPU card')
 MaskRCNN_train_loss_kpi = CostKpi('MaskRCNN_train_loss', 0.08, 0, actived=True, desc='train cost')
 MaskRCNN_train_time_kpi = DurationKpi('MaskRCNN_train_time', 0.08, 0, actived=True, desc='train speed in 8 GPU card')
-YOLOv3_train_loss_kpi = CostKpi('YOLOv3_train_loss', 0.5, 0, actived=True, desc='train cost')
+YOLOv3_train_loss_kpi = CostKpi('YOLOv3_train_loss', 0.3, 0, actived=True, desc='train cost')
 YOLOv3_train_time_kpi = DurationKpi('YOLOv3_train_time', 0.1, 0, actived=True, desc='train speed in 8 GPU card')
 tracking_kpis = [CascadeRCNN_train_loss_kpi, CascadeRCNN_train_time_kpi, FasterRCNN_train_loss_kpi,
                  FasterRCNN_train_time_kpi, MaskRCNN_train_loss_kpi, MaskRCNN_train_time_kpi, YOLOv3_train_loss_kpi,

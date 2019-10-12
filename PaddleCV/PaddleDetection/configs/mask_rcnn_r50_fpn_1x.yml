@@ -11,7 +11,6 @@ pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos
 metric: COCO
 weights: output/mask_rcnn_r50_fpn_1x/model_final/
 num_classes: 81
-enable_ce: false
 
 MaskRCNN:
   backbone: ResNet
@@ -122,7 +121,6 @@ MaskRCNNTrainFeed:
   - !PadBatch
     pad_to_stride: 32
   num_workers: 2
-  shuffle: true
 
 MaskRCNNEvalFeed:
   batch_size: 1

@@ -11,7 +11,6 @@ pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_cos
 metric: COCO
 weights: output/faster_rcnn_r50_fpn_1x/model_final
 num_classes: 81
-enable_ce: false
 
 FasterRCNN:
   backbone: ResNet
@@ -116,7 +115,6 @@ FasterRCNNTrainFeed:
     pad_to_stride: 32
   drop_last: false
   num_workers: 2
-  shuffle: true
 
 FasterRCNNEvalFeed:
   batch_size: 1
