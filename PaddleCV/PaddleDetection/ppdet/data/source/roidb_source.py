@@ -64,8 +64,8 @@ class RoiDbSource(Dataset):
         self._fname = anno_file
         self._image_dir = image_dir
         if image_dir is not None:
-            assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (
-                image_dir)
+            assert os.path.isdir(image_dir), \
+                    'image_dir {} is not a directory'.format(image_dir)
         self._roidb = None
         self._pos = -1
         self._drained = False
