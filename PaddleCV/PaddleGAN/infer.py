@@ -83,9 +83,6 @@ def infer(args):
 
     model_name = 'net_G'
 
-    if args.model_net in ['CycleGAN', 'Pix2pix']:
-        check_version()
-
     if args.model_net == 'CycleGAN':
         loader = fluid.io.DataLoader.from_generator(
             feed_list=[input, image_name],
@@ -387,4 +384,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print_arguments(args)
     check_gpu(args.use_gpu)
+    check_version()
     infer(args)

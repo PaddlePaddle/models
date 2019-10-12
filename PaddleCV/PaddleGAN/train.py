@@ -66,8 +66,7 @@ if __name__ == "__main__":
     cfg = config.parse_args()
     config.print_arguments(cfg)
     utility.check_gpu(cfg.use_gpu)
-    if cfg.model_net == 'Pix2pix':
-        utility.check_version()
+    utility.check_version()
     if cfg.profile:
         if cfg.use_gpu:
             with fluid.profiler.profiler('All', 'total',
