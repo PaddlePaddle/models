@@ -101,13 +101,48 @@ step1: 设置gpu卡
 export CUDA_VISIBLE_DEVICES=0
 ```
 step2: 开始训练
+
+使用PaddleDetection提供的配置文件在用8卡进行训练：
+
 ```
 python compress.py \
     -s yolov3_mobilenet_v1_slim.yaml \
-    -c yolov3_mobilenet_v1_voc.yml 
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -o max_iters=258
+```
+
+>通过命令行覆盖设置max_iters选项，因为PaddleDetection中训练是以`batch`为单位迭代的，并没有涉及`epoch`的概念，但是PaddleSlim需要知道当前训练进行到第几个`epoch`, 所以需要将`max_iters`设置为一个`epoch`内的`batch`的数量。
+
+如果要调整训练卡数，需要调整配置文件`yolov3_mobilenet_v1_voc.yml`中的以下参数：
+
+- **max_iters:** 一个`epoch`中batch的数量，需要设置为`total_num / batch_size`, 其中`total_num`为训练样本总数量，`batch_size`为多卡上总的batch size.
+- **LearningRate/schedulers/PiecewiseDecay/milestones：**请根据batch size的变化对其调整。
+- **LearningRate/schedulers/PiecewiseDecay/LinearWarmup/steps：** 请根据batch size的变化对其进行调整。
+- **YoloTrainFeed/batch_size:** 单张卡上的batch size, 受限于显存大小。
+
+
+以下为4卡训练示例，通过命令行覆盖`yolov3_mobilenet_v1_voc.yml`中的参数：
+
+```
+python compress.py \
+    -s yolov3_mobilenet_v1_slim.yaml \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -o max_iters=258 \
+    -o YoloTrainFeed.batch_size = 16
+```
+
+以下为2卡训练示例，受显存所制，单卡`batch_size`不变，总`batch_size`减小，一个epoch内batch数量增加，同时需要调整学习率相关参数，如下：
+```
+python compress.py \
+    -s yolov3_mobilenet_v1_slim.yaml \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -o max_iters=516 \
+    -o YoloTrainFeed.batch_size = 16 \
+    -o LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [110000, 124000]}, !LinearWarmup {start_factor: 0., steps: 2000}]'
 ```
 
 通过`python compress.py --help`查看可配置参数。
+通过`python ../../tools/configure.py ${option_name} help`查看如何通过命令行覆盖配置文件`yolov3_mobilenet_v1_voc.yml`中的参数。
 
 ### 保存断点（checkpoint）
 
@@ -157,13 +192,3 @@ python compress.py \
 |-50%|- |- |- |-|
 
 ## FAQ
-
-### 1. 如何根据不同GPU卡数调整训练参数
-该示例默认的配置适用于4卡训练，如果要调整训练卡数，需要调整配置文件`yolov3_mobilenet_v1_voc.yml`中的以下参数：
-
-- **max_iters:** 一个`epoch`中batch的数量，需要设置为`total_num / batch_size`, 其中`total_num`为训练样本总数量，`batch_size`为多卡上总的batch size.
-- **LearningRate/schedulers/PiecewiseDecay/milestones：**请根据batch size的变化对其调整。
-- **LearningRate/schedulers/PiecewiseDecay/LinearWarmup/steps：** 请根据batch size的变化对其进行调整。
-- **YoloTrainFeed/batch_size:** 单张卡上的batch size, 受限于显存大小。
-
-
