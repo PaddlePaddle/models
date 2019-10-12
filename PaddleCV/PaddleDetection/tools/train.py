@@ -335,6 +335,7 @@ if __name__ == '__main__':
         '--enable_ce',
         type=bool,
         default=False,
-        help='If set True, enable continuous evaluation job.')
+        help="If set True, enable continuous evaluation job."
+        "This flag is only used for internal test.")
     FLAGS = parser.parse_args()
     main()
