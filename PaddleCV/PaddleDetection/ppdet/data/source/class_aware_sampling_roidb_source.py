@@ -27,6 +27,7 @@ import random
 import copy
 import collections
 import pickle as pkl
+import numpy as np
 from ..dataset import Dataset
 
 
@@ -70,14 +71,13 @@ class ClassAwareSamplingRoiDbSource(Dataset):
             assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (
                 image_dir)
         self._roidb = None
-        self.cls_img_id_map = None
-        self.img_id_sampler = None
-        self.classes = None
         self._drained = False
         self._samples = samples
         self._load_img = load_img
         self.use_default_label = use_default_label
         self._with_background = with_background
+        self._img_weights = None
+        self.classes = None
         self.cname2cid = cname2cid
         self.random_img = True
 
@@ -91,11 +91,10 @@ class ClassAwareSamplingRoiDbSource(Dataset):
         if self._epoch < 0:
             self.reset()
 
-        sample_class = random.choice(self.classes)
-        img_id = self.img_id_sampler[sample_class].next()
-
-        _pos = self.img_id_pos_map[img_id]
+        _pos = np.random.choice(
+            self._samples, 1, replace=False, p=self._img_weights)[0]
         sample = copy.deepcopy(self._roidb[_pos])
+
         if self._load_img:
             sample['image'] = self._load_image(sample['im_file'])
         else:
@@ -124,17 +123,27 @@ class ClassAwareSamplingRoiDbSource(Dataset):
         if self._roidb is None:
             self._roidb = self._load()
 
-            img_id_pos_map = {}
-            img_id_sampler = {}
-            for i, roidb in enumerate(self._roidb):
-                img_id_pos_map[roidb['im_id'][0]] = i
-                for gt_cls in set(roidb['gt_class'][:, 0]):
-                    img_id_sampler.setdefault(
-                        gt_cls, ImgSampler(
-                            random=self.random_img)).append(roidb['im_id'][0])
-            self.img_id_pos_map = img_id_pos_map
-            self.img_id_sampler = img_id_sampler
-            self.classes = list(img_id_sampler.keys())
+        imgs_cls = []
+        num_per_cls = {}
+        self._img_weights = []
+        # Calculate the probabilities of each sample
+        for i, roidb in enumerate(self._roidb):
+            img_cls = set(
+                [k for cls in self._roidb[i]['gt_class'] for k in cls])
+            imgs_cls.append(img_cls)
+            for c in img_cls:
+                if c not in num_per_cls:
+                    num_per_cls[c] = 1
+                else:
+                    num_per_cls[c] += 1
+
+        for i in range(len(self._roidb)):
+            weights = 0
+            for c in imgs_cls[i]:
+                weights += 1 / num_per_cls[c]
+            self._img_weights.append(weights)
+        # Probabilities sum to 1
+        self._img_weights = self._img_weights / np.sum(self._img_weights)
 
         self._samples = len(self._roidb)
 
@@ -156,31 +165,3 @@ class ClassAwareSamplingRoiDbSource(Dataset):
         """ return epoch id for latest sample
         """
         return self._epoch
-
-
-class ImgSampler(object):
-    def __init__(self, random=True):
-        super(ImgSampler, self).__init__()
-        self.img_ids = []
-        self.pos = 0
-        self.random = random
-
-    def __len__(self):
-        return len(self.img_ids)
-
-    def append(self, img_id):
-        self.img_ids.append(img_id)
-
-    def next(self):
-        if self.random:
-            img_id = random.choice(self.img_ids)
-        else:
-            img_id = self.img_ids[self.pos]
-            self.pos += 1
-            if self.pos >= len(self):
-                self.reset()
-        return img_id
-
-    def reset(self):
-        random.shuffle(self.img_ids)
-        self.pos = 0
