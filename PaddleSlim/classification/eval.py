@@ -51,6 +51,7 @@ def eval(args):
 
         # top1_acc, top5_acc
         if len(feed_target_names) == 1:
+            # eval "infer model", which input is image, output is classification probability
             image = [[d[0]] for d in data]
             label = [[d[1]] for d in data]
             feed_data = feeder.feed(image)
@@ -70,6 +71,7 @@ def eval(args):
             top_5 = acc_num / len(label)
             results.append([top_1, top_5])
         else:
+            # eval "eval model", which inputs are image and label, output is top1 and top5 accuracy
             result = exe.run(val_program,
                           feed=feeder.feed(data),
                           fetch_list=fetch_targets)
