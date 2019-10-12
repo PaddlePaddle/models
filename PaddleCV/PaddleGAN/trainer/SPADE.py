@@ -283,11 +283,11 @@ class SPADE(object):
         self.id2name = id2name
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.crop_height, self.cfg.crop_width]
+        data_shape = [None, 3, self.cfg.crop_height, self.cfg.crop_width]
         label_shape = [
-            -1, self.cfg.label_nc, self.cfg.crop_height, self.cfg.crop_width
+            None, self.cfg.label_nc, self.cfg.crop_height, self.cfg.crop_width
         ]
-        edge_shape = [-1, 1, self.cfg.crop_height, self.cfg.crop_width]
+        edge_shape = [None, 1, self.cfg.crop_height, self.cfg.crop_width]
 
         input_A = fluid.data(
             name='input_label', shape=label_shape, dtype='float32')
@@ -389,7 +389,7 @@ class SPADE(object):
                 test_program = gen_trainer.infer_program
                 image_name = fluid.data(
                     name='image_name',
-                    shape=[-1, self.cfg.batch_size],
+                    shape=[None, self.cfg.batch_size],
                     dtype="int32")
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[input_A, input_B, input_C, image_name],
