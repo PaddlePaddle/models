@@ -328,7 +328,10 @@ class DataLoaderBuilder(dataloader.DataLoader):
     next = __next__
 
     def __iter__(self):
-        self._iter = super(DataLoaderBuilder, self).__iter__()
+        if not hasattr(self, '_iter'):
+            self._iter = super(DataLoaderBuilder, self).__iter__()
+        else:
+            self.reset()
         return self
 
 
