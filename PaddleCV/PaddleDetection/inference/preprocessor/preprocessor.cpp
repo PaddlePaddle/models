@@ -8,7 +8,7 @@ namespace PaddleSolution {
 
     std::shared_ptr<ImagePreProcessor> create_processor(const std::string& conf_file) {
 
-        auto config = std::make_shared<PaddleSolution::PaddleSegModelConfigPaser>();
+        auto config = std::make_shared<PaddleSolution::PaddleModelConfigPaser>();
         if (!config->load_config(conf_file)) {
             LOG(FATAL) << "fail to laod conf file [" << conf_file << "]";
             return nullptr;

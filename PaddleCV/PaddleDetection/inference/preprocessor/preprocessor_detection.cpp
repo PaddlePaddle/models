@@ -108,7 +108,7 @@ namespace PaddleSolution {
         return true;
     }
 
-    bool DetectionPreProcessor::init(std::shared_ptr<PaddleSolution::PaddleSegModelConfigPaser> config) {
+    bool DetectionPreProcessor::init(std::shared_ptr<PaddleSolution::PaddleModelConfigPaser> config) {
         _config = config;
         return true;
     }

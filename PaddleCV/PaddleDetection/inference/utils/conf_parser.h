@@ -7,10 +7,10 @@
 #include <yaml-cpp/yaml.h>
 namespace PaddleSolution {
 
-    class PaddleSegModelConfigPaser {
+    class PaddleModelConfigPaser {
 	std::map<std::string, int> _scaling_map;
     public:
-        PaddleSegModelConfigPaser()
+        PaddleModelConfigPaser()
             :_class_num(0),
             _channels(0),
             _use_gpu(0),
@@ -24,7 +24,7 @@ namespace PaddleSolution {
 	    _coarsest_stride(1)
 	     {
         }
-        ~PaddleSegModelConfigPaser() {
+        ~PaddleModelConfigPaser() {
         }
 
         void reset() {

@@ -7,7 +7,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "utils/seg_conf_parser.h"
+#include "utils/conf_parser.h"
 
 namespace  PaddleSolution {
 

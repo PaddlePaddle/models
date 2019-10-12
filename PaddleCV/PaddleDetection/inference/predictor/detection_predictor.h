@@ -11,7 +11,7 @@
 #include <opencv2/opencv.hpp>
 #include <paddle_inference_api.h>
 
-#include <utils/seg_conf_parser.h>
+#include <utils/conf_parser.h>
 #include <utils/utils.h>
 #include <preprocessor/preprocessor.h>
 
@@ -31,7 +31,7 @@ namespace PaddleSolution {
         std::vector<std::string> _imgs_batch;
         std::vector<paddle::PaddleTensor> _outputs;
 
-        PaddleSolution::PaddleSegModelConfigPaser _model_config;
+        PaddleSolution::PaddleModelConfigPaser _model_config;
         std::shared_ptr<PaddleSolution::ImagePreProcessor> _preprocessor;
         std::unique_ptr<paddle::PaddlePredictor> _main_predictor;
     };
