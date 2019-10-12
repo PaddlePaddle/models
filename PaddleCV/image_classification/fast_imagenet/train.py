@@ -283,8 +283,7 @@ def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
         rank_id=trainer_id,
         size=num_trainers)
     train_py_reader.decorate_paddle_reader(
-        paddle.batch(
-            train_reader, batch_size=train_bs))
+        paddle.batch(train_reader, batch_size=train_bs))
 
     test_reader = reader.test(
         valdir="%s/%svalidation" % (args.data_dir, trn_dir),
@@ -422,7 +421,7 @@ def train_parallel(args):
                 break
 
     if trainer_id == 0 and args.model_save_dir:
-        if not os.path.isdir(model_path):
+        if not os.path.isdir(args.model_save_dir):
             os.makedirs(args.model_save_dir)
         fluid.io.save_persistables(startup_exe, model_path)
     print("total train time: ", total_train_time)
