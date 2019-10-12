@@ -58,7 +58,6 @@ class ClassAwareSamplingRoiDbSource(Dataset):
             mixup_epoch (int): parse mixup in first n epoch
             with_background (bool): whether load background 
                                     as a class
-            random_img(bool): in random way or sequential way
         """
         super(ClassAwareSamplingRoiDbSource, self).__init__()
         self._epoch = -1
