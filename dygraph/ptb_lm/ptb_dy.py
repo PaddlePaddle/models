@@ -26,6 +26,7 @@ import numpy as np
 import six
 
 import reader
+import model_check
 import time
 
 from args import *
@@ -232,8 +233,13 @@ class PtbModel(fluid.Layer):
 
 
 def train_ptb_lm():
-
     args = parse_args()
+
+    # check if set use_gpu=True in paddlepaddle cpu version
+    model_check.check_cuda(args.use_gpu)
+    # check if paddlepaddle version is satisfied
+    model_check.check_version()
+
     model_type = args.model_type
 
     vocab_size = 10000
