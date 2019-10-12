@@ -46,7 +46,7 @@ from ppdet.utils import dist_utils
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
-from ppdet.utils.check import check_gpu
+from ppdet.utils.check import check_gpu, check_version
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.modeling.model_input import create_feed
 
@@ -81,6 +81,8 @@ def main():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
+    # check if paddlepaddle version is satisfied
+    check_version()
     if not FLAGS.dist or trainer_id == 0:
         print_total_cfg(cfg)
 

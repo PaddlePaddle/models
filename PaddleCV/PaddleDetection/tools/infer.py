@@ -44,7 +44,7 @@ from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
 from ppdet.utils.cli import ArgsParser
-from ppdet.utils.check import check_gpu
+from ppdet.utils.check import check_gpu, check_version
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
 
@@ -150,6 +150,8 @@ def main():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
+    # check if paddlepaddle version is satisfied
+    check_version()
     print_total_cfg(cfg)
 
     if 'test_feed' not in cfg:

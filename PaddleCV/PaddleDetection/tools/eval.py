@@ -35,7 +35,7 @@ import paddle.fluid as fluid
 
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results, json_eval_results
 import ppdet.utils.checkpoint as checkpoint
-from ppdet.utils.check import check_gpu
+from ppdet.utils.check import check_gpu, check_version
 from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
 from ppdet.core.workspace import load_config, merge_config, create
@@ -62,6 +62,8 @@ def main():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
+    # check if paddlepaddle version is satisfied
+    check_version()
     print_total_cfg(cfg)
 
     if 'eval_feed' not in cfg:
