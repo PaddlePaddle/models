@@ -297,7 +297,7 @@ def create_batch(batch):
     # text positions
     text_positions = np.array(
         [_pad(np.arange(1, len(x[0]) + 1), max_input_len) for x in batch],
-        dtype=np.int)
+        dtype=np.int64)
     text_positions = np.expand_dims(text_positions, axis=-1)
 
     max_decoder_target_len = max_target_len // r // downsample_step
@@ -306,7 +306,8 @@ def create_batch(batch):
     s, e = 1, max_decoder_target_len + 1
     frame_positions = np.tile(
         np.expand_dims(
-            np.arange(s, e), axis=0), (len(batch), 1))
+            np.arange(
+                s, e, dtype=np.int64), axis=0), (len(batch), 1))
     frame_positions = np.expand_dims(frame_positions, axis=-1)
 
     # done flags
