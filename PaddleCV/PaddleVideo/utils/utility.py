@@ -14,11 +14,13 @@
 
 import os
 import signal
+import logging
 import paddle
 import paddle.fluid as fluid
 
 __all__ = ['AttrDict']
 
+logger = logging.getLogger(__name__)
 
 def _term(sig_num, addition):
     print('current pid is %s, group id is %s' % (os.getpid(), os.getpgrp()))
