@@ -251,7 +251,6 @@ def main():
                 # evaluation
                 results = eval_run(exe, compiled_eval_prog, eval_loader,
                                    eval_keys, eval_values, eval_cls)
-                eval_loader.reset()
                 resolution = None
                 if 'mask' in results[0]:
                     resolution = model.mask_head.resolution
