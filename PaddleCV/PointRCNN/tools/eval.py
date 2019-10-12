@@ -68,7 +68,7 @@ def parse_args():
         '--ckpt_dir',
         type=str,
         # default='checkpoints_adamw_cosine/199',
-        default='test',
+        default='checkpoints/199',
         help='specify a ckpt directory to be evaluated if needed')
     parser.add_argument(
         '--output_dir',
@@ -226,7 +226,7 @@ def calc_iou_recall(rets, thresh_list):
 	union = np.sum(fg_mask) + np.sum(cur_seg_mask > 0) - correct
 	rpn_iou = float(correct) / max(float(union), 1.0)
 	rpn_iou_sum += rpn_iou
-        logger.info('sample_id {} rpn_iou {} correct {} union {} fg_mask {}'.format(sample_id, rpn_iou, correct, union, np.sum(fg_mask)))
+        logger.debug('sample_id {} rpn_iou {} correct {} union {} fg_mask {}'.format(sample_id, rpn_iou, correct, union, np.sum(fg_mask)))
 
     return len(gt_boxes3d_num), gt_box_num, rpn_iou_sum, recalled_bbox_list
 
@@ -271,7 +271,6 @@ def eval():
     extra_keys = ['sample_id', 'pts_rect', 'pts_features', 'pts_input', 'gt_boxes3d', 'rpn_cls_label'] \
                     if args.train_mode == 'rpn' and args.save_rpn_feature else ['sample_id', 'rpn_cls_label', 'gt_boxes3d']
     eval_keys, eval_values = parse_outputs(eval_outputs, prog=eval_prog, extra_keys=extra_keys)
-    print(eval_keys, eval_values)
 
     eval_compile_prog = fluid.compiler.CompiledProgram(
             eval_prog).with_data_parallel()
@@ -319,10 +318,6 @@ def eval():
         eval_pyreader.start()
         eval_iter = 0
         eval_periods = []
-        # debug_keys = ['rpn_cls_out_conv_weight', 'rpn_cls_out_conv_bias', 'dropout_cls', 'dropout_reg']
-        # debug_values = ['rpn_cls_out_conv_weight', 'rpn_cls_out_conv_bias', 'dropout_0.tmp_0', 'dropout_1.tmp_0']
-        # eval_keys += debug_keys
-        # eval_values += debug_values
         while True:
             cur_time = time.time()
             eval_outs = exe.run(eval_compile_prog, fetch_list=eval_values, return_numpy=False)
@@ -349,7 +344,7 @@ def eval():
         avg_rpn_iou = total_rpn_iou / max(len(kitti_rcnn_reader), 1.)
         logger.info("average rpn iou: {:.3f}".format(avg_rpn_iou))
         for idx, thresh in enumerate(thresh_list):
-            recall = total_recalled_bbox_list[idx] / max(total_gt_bbox, 1.)
+            recall = float(total_recalled_bbox_list[idx]) / max(total_gt_bbox, 1.)
             logger.info("total bbox recall(thresh={:.3f}): {} / {} = {:.3f}".format(
                 thresh, total_recalled_bbox_list[idx], total_gt_bbox, recall))
     finally:

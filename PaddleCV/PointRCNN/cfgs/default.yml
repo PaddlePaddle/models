@@ -143,7 +143,7 @@ TRAIN:
     BNM_CLIP: 0.01
     BN_DECAY_STEP_LIST: [1000]
 
-    OPTIMIZER: adam_onecycle  # adam, adam_onecycle
+    OPTIMIZER: adam # adam, adam_onecycle
     WEIGHT_DECAY: 0.001  # L2 regularization
     MOMENTUM: 0.9
 

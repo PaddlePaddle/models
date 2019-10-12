@@ -133,7 +133,7 @@ def pointnet_sa_module(xyz,
                        mlps=[],
                        feature=None,
                        bn=True,
-		       bn_momentum=0.1,
+		       bn_momentum=0.05,
                        use_xyz=True,
                        name=None):
     """
@@ -179,7 +179,7 @@ def pointnet_sa_module(xyz,
     return (new_xyz, out)
 
 
-def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True, bn_momentum=0.9, name=None):
+def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True, bn_momentum=0.05, name=None):
     """
     PointNet Feature Propagation Module
 

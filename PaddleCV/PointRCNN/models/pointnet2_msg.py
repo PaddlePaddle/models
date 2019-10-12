@@ -51,7 +51,7 @@ class PointNet2MSG(object):
         for i in range(self.cfg.RPN.FP_MLPS.__len__()):
             self.FP_confs.append({"mlp": self.cfg.RPN.FP_MLPS[i]})
 
-    def build(self, bn_momentum=0.9):
+    def build(self, bn_momentum=0.05):
         xyzs, features = [self.xyz], [self.feature]
         for i, SA_conf in enumerate(self.SA_confs):
             xyzi, featurei = pointnet_sa_module(
