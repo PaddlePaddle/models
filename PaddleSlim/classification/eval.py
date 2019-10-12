@@ -29,6 +29,8 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('use_gpu',          bool, False,                 "Whether to use GPU or not.")
 add_arg('model_path', str,  "./pruning/checkpoints/resnet50/2/eval_model/",                 "Whether to use pretrained model.")
+add_arg('model_name', str,  "__model__", "model filename for inference model")
+add_arg('params_name', str, "__params__", "params filename for inference model")
 # yapf: enable
 
 def eval(args):
@@ -39,8 +41,8 @@ def eval(args):
 
     val_program, feed_target_names, fetch_targets = fluid.io.load_inference_model(args.model_path,
                                       exe,
-                                      model_filename="__model__",
-                                      params_filename="__params__")
+                                      model_filename=args.model_name,
+                                      params_filename=args.params_name)
     val_reader = paddle.batch(reader.val(), batch_size=128)
     feeder = fluid.DataFeeder(place=place, feed_list=feed_target_names, program=val_program)
 
@@ -48,11 +50,33 @@ def eval(args):
     for batch_id, data in enumerate(val_reader()):
 
         # top1_acc, top5_acc
-        result = exe.run(val_program,
+        if len(feed_target_names) == 1:
+            # eval "infer model", which input is image, output is classification probability
+            image = [[d[0]] for d in data]
+            label = [[d[1]] for d in data]
+            feed_data = feeder.feed(image)
+            pred = exe.run(val_program,
+                        feed=feed_data,
+                        fetch_list=fetch_targets)
+            pred = np.array(pred[0])
+            label = np.array(label)
+            sort_array = pred.argsort(axis=1)
+            top_1_pred = sort_array[:, -1:][:, ::-1]
+            top_1 = np.mean(label == top_1_pred)
+            top_5_pred = sort_array[:, -5:][:, ::-1]
+            acc_num = 0
+            for i in range(len(label)):
+                if label[i][0] in top_5_pred[i]:
+                    acc_num += 1
+            top_5 = acc_num / len(label)
+            results.append([top_1, top_5])
+        else:
+            # eval "eval model", which inputs are image and label, output is top1 and top5 accuracy
+            result = exe.run(val_program,
                           feed=feeder.feed(data),
                           fetch_list=fetch_targets)
-        result = [np.mean(r) for r in result]
-        results.append(result)
+            result = [np.mean(r) for r in result]
+            results.append(result)
     result = np.mean(np.array(results), axis=0)
     print("top1_acc/top5_acc= {}".format(result))
     sys.stdout.flush()
