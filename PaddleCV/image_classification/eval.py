@@ -101,9 +101,9 @@ def eval(args):
     exe.run(fluid.default_startup_program())
 
     fluid.io.load_persistables(exe, args.pretrained_model)
+    imagenet_reader = reader.ImageNetReader()
+    val_reader = imagenet_reader.val(settings=args)
 
-    val_reader = paddle.batch(
-        reader.val(settings=args), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     test_info = [[], [], []]
