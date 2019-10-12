@@ -3,13 +3,13 @@ train_feed: YoloTrainFeed
 eval_feed: YoloEvalFeed
 test_feed: YoloTestFeed
 use_gpu: true
-max_iters: 70000
+max_iters: 1000
 log_smooth_window: 20
 save_dir: output
 snapshot_iter: 2000
 metric: VOC
 map_type: 11point
-pretrain_weights: http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar
+pretrain_weights: https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar
 weights: output/yolov3_mobilenet_v1_voc/model_final
 num_classes: 20
 
@@ -45,8 +45,8 @@ LearningRate:
   - !PiecewiseDecay
     gamma: 0.1
     milestones:
+    - 1000
     - 2000
-    - 8000
 #- !LinearWarmup
 #start_factor: 0.
 #steps: 1000
