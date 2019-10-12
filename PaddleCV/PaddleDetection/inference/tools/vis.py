@@ -60,9 +60,7 @@ if __name__ == "__main__":
             detection_result = detection_result_pb2.DetectionResult()
             detection_result.ParseFromString(f.read())
             img = cv2.imread(Flags.img_path)
-            #img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            #draw = ImageDraw.Draw(img)
             class2LabelMap = dict()
             with open(Flags.c2l_path, "r", encoding="utf-8") as json_f:
                 class2LabelMap = json.load(json_f)
@@ -79,7 +77,6 @@ if __name__ == "__main__":
                         box_thickness = 2
                         color = tuple([int(c) for c in color_list[box_class]])
                         cv2.rectangle(img, ptLeftTop, ptRightBottom, color, box_thickness, 8)
-                        #draw.rectangle([ptLeftTop, ptRightBottom], width=box_thickness, outline=color)
                         if text_point1[1] < 0:
                             text_point1 = (int(box.left_top_x), int(box.right_bottom_y + 15))
                             text_point2 = (text_point1[0], text_point1[1] + 15)
@@ -87,9 +84,5 @@ if __name__ == "__main__":
                         
                         cv2.putText(img, text_class_str, text_point1, cv2.FONT_HERSHEY_SIMPLEX, text_scale, WHITE, text_thickness)
                         cv2.putText(img, text_score_str, text_point2, cv2.FONT_HERSHEY_SIMPLEX, text_scale, WHITE, text_thickness)
-                        #textSize = 20
-                        #fontText = ImageFont.truetype(size=textSize, encoding="utf-8")
-                        #draw.text(text_point1, text_class_str, WHITE, font=ImageFont.load_default())
-                        #draw.text(text_point2, text_score_str, WHITE)
                 img = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
                 cv2.imwrite(Flags.img_path + ".png", img)
