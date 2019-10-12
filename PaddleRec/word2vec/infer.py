@@ -185,6 +185,7 @@ def infer_step(args, vocab_size, test_reader, use_cuda, i2w):
 
 
 if __name__ == "__main__":
+    utils.check_version()
     args = parse_args()
     start_index = args.start_index
     last_index = args.last_index

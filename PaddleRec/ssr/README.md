@@ -12,6 +12,10 @@ Sequence Semantic Retrieval(SSR) Model shares the similar idea with Multi-Rate D
 - The idea of SSR is to model a user's personalized interest of an item through matching model structure, and the representation of a news item can be computed online even the news item does not exist in training dataset.
 - With the representation of news items, we are able to build an vector indexing service online for news prediction and this is the retrieval part of SSR.
 
+## Version
+**Now all models in PaddleRec require PaddlePaddle version 1.6 or higher, or suitable develop version.**
+
+
 ## Dataset
 Dataset preprocessing follows the method of [GRU4Rec Project](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleRec/gru4rec). Note that you should reuse scripts from GRU4Rec project for data preprocessing.
 
