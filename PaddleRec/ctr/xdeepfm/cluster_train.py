@@ -5,6 +5,7 @@ import time
 import network_conf
 
 import paddle.fluid as fluid
+import utils
 
 
 def parse_args():
@@ -193,4 +194,5 @@ def train():
 
 
 if __name__ == "__main__":
+    utils.check_version()
     train()
