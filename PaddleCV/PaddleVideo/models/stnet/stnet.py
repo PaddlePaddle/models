@@ -51,25 +51,24 @@ class STNET(ModelBase):
         self.target_size = self.get_config_from_sec(self.mode, 'target_size')
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
 
-    def build_input(self, use_pyreader=True):
+    def build_input(self, use_dataloader=True):
         image_shape = [3, self.target_size, self.target_size]
         image_shape[0] = image_shape[0] * self.seglen
-        image_shape = [self.seg_num] + image_shape
-        self.use_pyreader = use_pyreader
+        image_shape = [None, self.seg_num] + image_shape
+        self.use_dataloader = use_dataloader
 
-        image = fluid.layers.data(
+        image = fluid.data(
             name='image', shape=image_shape, dtype='float32')
         if self.mode != 'infer':
-            label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+            label = fluid.data(name='label', shape=[None, 1], dtype='int64')
         else:
             label = None
 
-        if use_pyreader:
+        if use_dataloader:
             assert self.mode != 'infer', \
-                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            py_reader = fluid.io.PyReader(
-                feed_list=[image, label], capacity=4, iterable=True)
-            self.py_reader = py_reader
+                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
+                            feed_list=[image, label], capacity=4, iterable=True)
 
         self.feature_input = [image]
         self.label_input = label
@@ -167,3 +166,4 @@ class STNET(ModelBase):
         param_numpy = np.mean(param_numpy, axis=1, keepdims=True) / self.seglen
         param_numpy = np.repeat(param_numpy, 3 * self.seglen, axis=1)
         param_tensor.set(param_numpy.astype(np.float32), place)
+
