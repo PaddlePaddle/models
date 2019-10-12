@@ -117,9 +117,10 @@ python compress.py \
 如果要调整训练卡数，需要调整配置文件`yolov3_mobilenet_v1_voc.yml`中的以下参数：
 
 - **max_iters:** 一个`epoch`中batch的数量，需要设置为`total_num / batch_size`, 其中`total_num`为训练样本总数量，`batch_size`为多卡上总的batch size.
-- **LearningRate/schedulers/PiecewiseDecay/milestones：**请根据batch size的变化对其调整。
-- **LearningRate/schedulers/PiecewiseDecay/LinearWarmup/steps：** 请根据batch size的变化对其进行调整。
-- **YoloTrainFeed/batch_size:** 单张卡上的batch size, 受限于显存大小。
+- **YoloTrainFeed.batch_size:** 单张卡上的batch size, 受限于显存大小。
+- **LeaningRate.base_lr:** 根据多卡的总`batch_size`调整`base_lr`，两者大小正相关，可以简单的按比例进行调整。
+- **LearningRate.schedulers.PiecewiseDecay.milestones：**请根据batch size的变化对其调整。
+- **LearningRate.schedulers.PiecewiseDecay.LinearWarmup.steps：** 请根据batch size的变化对其进行调整。
 
 
 以下为4卡训练示例，通过命令行覆盖`yolov3_mobilenet_v1_voc.yml`中的参数：
@@ -133,12 +134,13 @@ python compress.py \
     -d "../../dataset/voc"
 ```
 
-以下为2卡训练示例，受显存所制，单卡`batch_size`不变，总`batch_size`减小，一个epoch内batch数量增加，同时需要调整学习率相关参数，如下：
+以下为2卡训练示例，受显存所制，单卡`batch_size`不变，总`batch_size`减小，`base_lr`减小，一个epoch内batch数量增加，同时需要调整学习率相关参数，如下：
 ```
 python compress.py \
     -s yolov3_mobilenet_v1_slim.yaml \
     -c ../../configs/yolov3_mobilenet_v1_voc.yml \
     -o max_iters=516 \
+    -o LeaningRate.base_lr=0.005 \ # 0.001 /2
     -o YoloTrainFeed.batch_size = 16 \
     -o LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [110000, 124000]}, !LinearWarmup {start_factor: 0., steps: 2000}]' \
     -d "../../dataset/voc"
