@@ -178,7 +178,7 @@ python compress.py \
 
 ### python预测
 
-在脚本<a href="../../tools/infer.py">PaddleDetection/tools/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
+在脚本<a href="../infer.py">PaddleDetection/tools/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
 
 ### PaddleLite
 

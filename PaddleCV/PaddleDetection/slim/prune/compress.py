@@ -140,7 +140,7 @@ def main():
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
-            train_pyreader, feed_vars = create_feed(train_feed)
+            train_loader, feed_vars = create_feed(train_feed, iterable=True)
             train_fetches = model.train(feed_vars)
             loss = train_fetches['loss']
             lr = lr_builder()
@@ -150,7 +150,7 @@ def main():
 
     train_reader = create_reader(train_feed, cfg.max_iters * devices_num,
                                  FLAGS.dataset_dir)
-    train_pyreader.decorate_sample_list_generator(train_reader, place)
+    train_loader.set_sample_list_generator(train_reader, place)
 
     # parse train fetches
     train_keys, train_values, _ = parse_fetches(train_fetches)
@@ -165,7 +165,7 @@ def main():
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
-            eval_pyreader, test_feed_vars = create_feed(eval_feed, use_pyreader=False)
+            _, test_feed_vars = create_feed(eval_feed, iterable=True)
             fetches = model.eval(test_feed_vars)
 
     eval_prog = eval_prog.clone(True)
@@ -219,8 +219,8 @@ def main():
         place,
         fluid.global_scope(),
         train_prog,
-        train_reader=train_pyreader,
-        train_feed_list=None,
+        train_reader=train_reader,
+        train_feed_list=[(key, value.name) for key, value in feed_vars.items()],
         train_fetch_list=train_fetch_list,
         eval_program=eval_prog,
         eval_reader=eval_reader,
