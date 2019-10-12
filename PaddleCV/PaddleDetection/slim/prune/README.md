@@ -48,7 +48,7 @@ for param in fluid.default_main_program().global_block().all_parameters():
 ```
 
 
-从可视化结果，我们可以排除后续会做concat的卷积层，总终得到如下要裁剪的参数名称：
+从可视化结果，我们可以排除后续会做concat的卷积层，最终得到如下要裁剪的参数名称：
 
 ```
 conv2_1_sep_weights
