@@ -41,21 +41,21 @@ class AttentionCluster(ModelBase):
             self.learning_rate = self.get_config_from_sec('train',
                                                           'learning_rate', 1e-3)
 
-    def build_input(self, use_pyreader=True):
+    def build_input(self, use_dataloader=True):
         self.feature_input = []
         for name, dim in zip(self.feature_names, self.feature_dims):
             self.feature_input.append(
-                fluid.layers.data(
-                    shape=[self.seg_num, dim], dtype='float32', name=name))
+                fluid.data(
+                    shape=[None, self.seg_num, dim], dtype='float32', name=name))
         if self.mode != 'infer':
-            self.label_input = fluid.layers.data(
-                shape=[self.class_num], dtype='float32', name='label')
+            self.label_input = fluid.data(
+                shape=[None, self.class_num], dtype='float32', name='label')
         else:
             self.label_input = None
-        if use_pyreader:
+        if use_dataloader:
             assert self.mode != 'infer', \
-                    'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            self.py_reader = fluid.io.PyReader(
+                    'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
                 feed_list=self.feature_input + [self.label_input],
                 capacity=8,
                 iterable=True)

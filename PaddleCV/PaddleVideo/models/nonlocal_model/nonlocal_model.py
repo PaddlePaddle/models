@@ -39,27 +39,27 @@ class NonLocal(ModelBase):
         # crop size
         self.crop_size = self.get_config_from_sec(self.mode, 'crop_size')
 
-    def build_input(self, use_pyreader=True):
-        input_shape = [3, self.video_length, self.crop_size, self.crop_size]
-        label_shape = [1]
+    def build_input(self, use_dataloader=True):
+        input_shape = [None, 3, self.video_length, self.crop_size, self.crop_size]
+        label_shape = [None, 1]
 
-        data = fluid.layers.data(
+        data = fluid.data(
             name='train_data' if self.is_training else 'test_data',
             shape=input_shape,
             dtype='float32')
         if self.mode != 'infer':
-            label = fluid.layers.data(
+            label = fluid.data(
                 name='train_label' if self.is_training else 'test_label',
                 shape=label_shape,
                 dtype='int64')
         else:
             label = None
 
-        if use_pyreader:
+        if use_dataloader:
             assert self.mode != 'infer', \
-                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            self.py_reader = fluid.io.PyReader(
-                feed_list=[data, label], capacity=4, iterable=True)
+                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
+                               feed_list=[data, label], capacity=4, iterable=True)
 
         self.feature_input = [data]
         self.label_input = label
