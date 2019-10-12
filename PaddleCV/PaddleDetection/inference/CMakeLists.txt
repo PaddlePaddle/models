@@ -209,7 +209,6 @@ endif()
 if (NOT WIN32)    
     set(OPENCV_LIB_DIR ${OPENCV_DIR}/lib)
     if(EXISTS "${OPENCV_LIB_DIR}")
-#        set(OPENCV_LIB_DIR ${OPENCV_DIR}/lib)
 	    message("OPENCV_LIB:" ${OPENCV_LIB_DIR})
     else()
         set(OPENCV_LIB_DIR ${OPENCV_DIR}/lib64)	
@@ -218,7 +217,6 @@ if (NOT WIN32)
    
     set(OPENCV_3RD_LIB_DIR ${OPENCV_DIR}/share/OpenCV/3rdparty/lib)
     if(EXISTS "${OPENCV_3RD_LIB_DIR}")
-#        set(OPENCV_3RD_LIB_DIR ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64)
 	    message("OPENCV_3RD_LIB_DIR:" ${OPENCV_3RD_LIB_DIR})
     else()
         set(OPENCV_3RD_LIB_DIR ${OPENCV_DIR}/share/OpenCV/3rdparty/lib64)
@@ -248,28 +246,20 @@ endif()
 # set(CMAKE_CXX_FLAGS "-g ${CMAKE_CXX_FLAGS}")
 
 SET(PADDLESEG_INFERENCE_SRCS  preprocessor/preprocessor.cpp 
-#    preprocessor/preprocessor_seg.cpp predictor/seg_predictor.cpp 
-#    preprocessor/preprocessor_classify.cpp predictor/classify_predictor.cpp 
     preprocessor/preprocessor_detection.cpp predictor/detection_predictor.cpp 
     utils/detection_result.pb.cc)
 
 ADD_LIBRARY(libpaddleseg_inference STATIC ${PADDLESEG_INFERENCE_SRCS})
 target_link_libraries(libpaddleseg_inference ${DEPS})
 
-#add_executable(seg_demo seg_demo.cpp)
-#add_executable(classify_demo classify_demo.cpp)
 add_executable(detection_demo detection_demo.cpp)
 
 ADD_DEPENDENCIES(libpaddleseg_inference ext-yaml-cpp)
-#ADD_DEPENDENCIES(seg_demo ext-yaml-cpp libpaddleseg_inference)
-#ADD_DEPENDENCIES(classify_demo ext-yaml-cpp libpaddleseg_inference)
 ADD_DEPENDENCIES(detection_demo ext-yaml-cpp libpaddleseg_inference)
-#target_link_libraries(seg_demo ${DEPS} libpaddleseg_inference)
-#target_link_libraries(classify_demo ${DEPS} libpaddleseg_inference)
 target_link_libraries(detection_demo ${DEPS} libpaddleseg_inference)
 
 if (WIN32)
-    add_custom_command(TARGET seg_demo POST_BUILD
+    add_custom_command(TARGET detection_demo POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mklml/lib/mklml.dll ./mklml.dll
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mklml/lib/libiomp5md.dll ./libiomp5md.dll
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PADDLE_DIR}/third_party/install/mkldnn/lib/mkldnn.dll ./mkldnn.dll
