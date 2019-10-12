@@ -59,8 +59,8 @@ class RoiDbSource(Dataset):
         """
         super(RoiDbSource, self).__init__()
         self._epoch = -1
-        assert os.path.isfile(anno_file) or os.path.isdir(
-            anno_file), 'invalid file[%s] for RoiDbSource' % (anno_file)
+        assert os.path.isfile(anno_file) or os.path.isdir(anno_file), \
+                'anno_file {} is not a file or a directory'.format(anno_file)
         self._fname = anno_file
         self._image_dir = image_dir
         if image_dir is not None:
