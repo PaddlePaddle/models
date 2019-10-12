@@ -61,7 +61,6 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
     """
     Run evaluation program, return program outputs.
     """
-    print("eval_run begin")
     iter_id = 0
     results = []
     if len(cls) != 0:
@@ -74,7 +73,7 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
     images_num = 0
     start_time = time.time()
     has_bbox = 'bbox' in keys
-    print("values: {}".format(values))
+
     try:
         pyreader.start()
         while True:
@@ -86,7 +85,7 @@ def eval_run(exe, compile_program, pyreader, keys, values, cls):
                 for k, v in zip(keys, outs)
             }
             results.append(res)
-            if iter_id % 1 == 0:
+            if iter_id % 100 == 0:
                 logger.info('Test iter {}'.format(iter_id))
             iter_id += 1
             images_num += len(res['bbox'][1][0]) if has_bbox else 1
