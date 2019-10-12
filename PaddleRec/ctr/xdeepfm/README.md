@@ -12,7 +12,7 @@ sh download.sh
 ```
 
 ## 环境
-- PaddlePaddle 1.6
+- **要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
 
 ## 单机训练
 ```bash

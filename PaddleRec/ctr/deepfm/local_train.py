@@ -6,6 +6,7 @@ from network_conf import ctr_deepfm_model
 import time
 import numpy
 import pickle
+import utils
 
 
 def train():
@@ -59,4 +60,5 @@ def train():
 
 
 if __name__ == '__main__':
+    utils.check_version()
     train()
