@@ -125,7 +125,7 @@ def recall_topk_parallel(fea, lab, k):
     N = 100
     L = fea.shape[0] / N
     params = []
-    for i in xrange(N):
+    for i in range(N):
         if i == N - 1:
             s, e = int(i * L), int(fea.shape[0])
         else:
