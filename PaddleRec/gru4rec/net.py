@@ -69,6 +69,8 @@ def train_bpr_network(vocab_size, neg_size, hid_size, drop_out=0.2):
             name="emb",
             initializer=fluid.initializer.XavierInitializer(),
             learning_rate=emb_lr_x))
+    emb_src = fluid.layers.squeeze(input=emb_src, axes=[1])
+
 
     emb_src_drop = fluid.layers.dropout(emb_src, dropout_prob=drop_out)
 
@@ -134,6 +136,7 @@ def train_cross_entropy_network(vocab_size, neg_size, hid_size, drop_out=0.2):
             name="emb",
             initializer=fluid.initializer.XavierInitializer(),
             learning_rate=emb_lr_x))
+    emb_src = fluid.layers.squeeze(input=emb_src, axes=[1])
 
     emb_src_drop = fluid.layers.dropout(emb_src, dropout_prob=drop_out)
 
