@@ -77,7 +77,7 @@ def eval_run(exe, compile_program, reader, keys, values, cls, test_feed):
                      'im_size': data['im_size']}
         outs = exe.run(compile_program,
                        feed=feed_data,
-                       fetch_list=values[0],
+                       fetch_list=[values[0]],
                        return_numpy=False)
         outs.append(data['gt_box'])
         outs.append(data['gt_label'])
@@ -161,12 +161,12 @@ def main():
 
     # parse train fetches
     train_keys, train_values, _ = parse_fetches(train_fetches)
-    train_values.append(lr)
+    train_keys.append("lr")
+    train_values.append(lr.name)
 
     train_fetch_list=[]
     for k, v in zip(train_keys, train_values):
         train_fetch_list.append((k, v))
-    print("train_fetch_list: {}".format(train_fetch_list))
 
     eval_prog = fluid.Program()
     with fluid.program_guard(eval_prog, startup_prog):
@@ -174,6 +174,7 @@ def main():
             model = create(main_arch)
             eval_pyreader, test_feed_vars = create_feed(eval_feed, use_pyreader=False)
             fetches = model.eval(test_feed_vars)
+
     eval_prog = eval_prog.clone(True)
 
     eval_reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
@@ -188,7 +189,6 @@ def main():
         extra_keys = ['gt_box', 'gt_label', 'is_difficult']
     eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
-    # print(eval_values)
 
     eval_fetch_list=[]
     for k, v in zip(eval_keys, eval_values):
@@ -198,6 +198,7 @@ def main():
     exe.run(startup_prog)
 
     start_iter = 0
+
     checkpoint.load_params(exe, train_prog, cfg.pretrain_weights)
 
 
@@ -205,8 +206,6 @@ def main():
 
         #place = fluid.CPUPlace()
         #exe = fluid.Executor(place)
-        print("eval_keys: {}".format(eval_keys))
-        print("eval_values: {}".format(eval_values))
         results = eval_run(exe, program, eval_reader,
                            eval_keys, eval_values, eval_cls, test_data_feed)
         best_box_ap_list = []
@@ -241,6 +240,7 @@ def main():
         eval_func={'map': eval_func},
         eval_fetch_list=[eval_fetch_list[0]],
         save_eval_model=True,
+        prune_infer_model=[["image"],["multiclass_nms_0.tmp_0"]],
         train_optimizer=None)
     com.config(FLAGS.slim_file)
     com.run()

@@ -94,9 +94,20 @@ yolo_block.2.tip.conv.weights
 根据<a href="../../tools/train.py">PaddleDetection/tools/train.py</a>编写压缩脚本compress.py。
 在该脚本中定义了Compressor对象，用于执行压缩任务。
 
+### 执行示例
 
-您可以通过运行脚本`run.sh`运行该示例。
+step1: 设置gpu卡
+```
+export CUDA_VISIBLE_DEVICES=0
+```
+step2: 开始训练
+```
+python compress.py \
+    -s yolov3_mobilenet_v1_slim.yaml \
+    -c yolov3_mobilenet_v1_voc.yml 
+```
 
+通过`python compress.py --help`查看可配置参数。
 
 ### 保存断点（checkpoint）
 
@@ -146,3 +157,13 @@ yolo_block.2.tip.conv.weights
 |-50%|- |- |- |-|
 
 ## FAQ
+
+### 1. 如何根据不同GPU卡数调整训练参数
+该示例默认的配置适用于4卡训练，如果要调整训练卡数，需要调整配置文件`yolov3_mobilenet_v1_voc.yml`中的以下参数：
+
+- **max_iters:** 一个`epoch`中batch的数量，需要设置为`total_num / batch_size`, 其中`total_num`为训练样本总数量，`batch_size`为多卡上总的batch size.
+- **LearningRate/schedulers/PiecewiseDecay/milestones：**请根据batch size的变化对其调整。
+- **LearningRate/schedulers/PiecewiseDecay/LinearWarmup/steps：** 请根据batch size的变化对其进行调整。
+- **YoloTrainFeed/batch_size:** 单张卡上的batch size, 受限于显存大小。
+
+
