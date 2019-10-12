@@ -24,7 +24,7 @@
 DCN模型介绍可以参阅论文[Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)
 
 ## 环境
-- 目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本
+- **目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本**
 
 ## 数据下载
 
