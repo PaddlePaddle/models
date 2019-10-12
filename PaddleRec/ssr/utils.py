@@ -16,7 +16,7 @@ def construct_train_data(file_dir, vocab_path, batch_size):
     vocab_size = get_vocab_size(vocab_path)
     files = [file_dir + '/' + f for f in os.listdir(file_dir)]
     y_data = reader.YoochooseDataset(vocab_size)
-    train_reader = paddle.batch(
+    train_reader = fluid.io.batch(
         paddle.reader.shuffle(
             y_data.train(files), buf_size=batch_size * 100),
         batch_size=batch_size)
@@ -27,7 +27,7 @@ def construct_test_data(file_dir, vocab_path, batch_size):
     vocab_size = get_vocab_size(vocab_path)
     files = [file_dir + '/' + f for f in os.listdir(file_dir)]
     y_data = reader.YoochooseDataset(vocab_size)
-    test_reader = paddle.batch(y_data.test(files), batch_size=batch_size)
+    test_reader = fluid.io.batch(y_data.test(files), batch_size=batch_size)
     return test_reader, vocab_size
 
 

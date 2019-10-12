@@ -110,7 +110,7 @@ def prepare_data(file_dir,
             batch_size * 20)
     else:
         vocab_size = get_vocab_size(vocab_path)
-        reader = paddle.io.batch(
+        reader = fluid.io.batch(
             test(
                 file_dir, buffer_size, data_type=DataType.SEQ), batch_size)
     return vocab_size, reader

@@ -35,7 +35,7 @@ mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tok
 
 ```bash
 mkdir data
-wget https://paddlerec.bj.bcebos.com/word2vec/1-billion-word-language-modeling-benchmark-r13output.tar
+wget --no-check-certificate https://paddlerec.bj.bcebos.com/word2vec/1-billion-word-language-modeling-benchmark-r13output.tar
 tar xvf 1-billion-word-language-modeling-benchmark-r13output.tar
 mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/ data/
 ```
@@ -44,7 +44,7 @@ mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tok
 
 ```bash
 mkdir data
-wget https://paddlerec.bj.bcebos.com/word2vec/text.tar
+wget --no-check-certificate https://paddlerec.bj.bcebos.com/word2vec/text.tar
 tar xvf text.tar
 mv text data/
 ```
@@ -105,9 +105,9 @@ sh cluster_train.sh
 
 ```bash
 #全量数据集测试集
-wget https://paddlerec.bj.bcebos.com/word2vec/test_dir.tar
+wget --no-check-certificate https://paddlerec.bj.bcebos.com/word2vec/test_dir.tar
 #样本数据集测试集
-wget https://paddlerec.bj.bcebos.com/word2vec/test_mid_dir.tar
+wget --no-check-certificate https://paddlerec.bj.bcebos.com/word2vec/test_mid_dir.tar
 ```
 
 预测命令，注意词典名称需要加后缀"_word_to_id_", 此文件是预处理阶段生成的。

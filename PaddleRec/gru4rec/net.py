@@ -206,6 +206,7 @@ def infer_network(vocab_size, batch_size, hid_size, dropout=0.2):
         dtype="int64")
     emb_all_label = fluid.embedding(
         input=all_label, size=[vocab_size, hid_size], param_attr="emb")
+    emb_all_label = fluid.layers.squeeze(input=emb_all_label, axes=[1])
     emb_all_label_drop = fluid.layers.dropout(
         emb_all_label, dropout_prob=dropout, is_test=True)
 
