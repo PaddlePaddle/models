@@ -17,11 +17,9 @@ deploy
 ├── detection_demo.cpp # 完成图像检测预测任务C++代码
 │
 ├── conf
-│   ├── detection_yolov3.yaml # 示例yolov3目标检测配置
 │   ├── detection_rcnn.yaml #示例faster rcnn 目标检测配置
 │   └── detection_rcnn_fpn.yaml #示例faster rcnn + fpn目标检测配置
 ├── images
-│   ├── detection # 示例yolov3目标检测测试图片目录
 │   └── detection_rcnn # 示例faster rcnn + fpn目标检测测试图片目录
 ├── tools
 │   └── vis.py # 示例图像检测结果可视化脚本
@@ -52,38 +50,36 @@ deploy
 
 ## 预测并可视化结果
 
-完成编译后，便生成了需要的可执行文件和链接库。这里以我们基于`yolov3`实现的`iphone划痕检测`模型为例，介绍部署图像检测模型的通用流程。
+完成编译后，便生成了需要的可执行文件和链接库。这里以我们基于`faster rcnn`检测模型为例，介绍部署图像检测模型的通用流程。
 
 ### 1. 下载模型文件
-我们提供了一个基于yolov3模型的iphone划痕检测应用的示例用于测试，点击右侧地址下载：[yolov3示例模型下载地址](https://paddleseg.bj.bcebos.com/inference/yolov3_darknet_iphone.zip)。
-
-（还提供faster rcnn，faster rcnn+fpn模型用于预测coco17数据集，可在以下链接下载：[faster rcnn示例模型下载地址](https://paddleseg.bj.bcebos.com/inference/faster_rcnn_pp50.zip)，
- [faster rcnn + fpn示例模型下载地址](https://paddleseg.bj.bcebos.com/inference/faster_rcnn_pp50_fpn.zip)）
+我们提供faster rcnn，faster rcnn+fpn模型用于预测coco17数据集，可在以下链接下载：[faster rcnn示例模型下载地址](https://paddleseg.bj.bcebos.com/inference/faster_rcnn_pp50.zip)，
+ [faster rcnn + fpn示例模型下载地址](https://paddleseg.bj.bcebos.com/inference/faster_rcnn_pp50_fpn.zip)。
 
 下载并解压，解压后目录结构如下：
 ```
-yolov3_darknet_iphone
+faster_rcnn_pp50/
 ├── __model__ # 模型文件
 │
 └── __params__ # 参数文件
 ```
 解压后把上述目录拷贝到合适的路径：
 
-**假设**`Windows`系统上，我们模型和参数文件所在路径为`D:\projects\models\yolov3_darknet_iphone`。
+**假设**`Windows`系统上，我们模型和参数文件所在路径为`D:\projects\models\faster_rcnn_pp50`。
 
-**假设**`Linux`上对应的路径则为`/root/projects/models/yolov3_darknet_iphone`。
+**假设**`Linux`上对应的路径则为`/root/projects/models/faster_rcnn_pp50/`。
 
 
 ### 2. 修改配置
 
-`inference`源代码(即本目录)的`conf`目录下提供了示例基于yolov3模型的iphone划痕检测应用的配置文件`detection_yolov3.yaml`, 相关的字段含义和说明如下：
+`inference`源代码(即本目录)的`conf`目录下提供了示例基于faster rcnn的配置文件`detection_rcnn.yaml`, 相关的字段含义和说明如下：
 
 ```yaml
 DEPLOY:
     # 是否使用GPU预测
     USE_GPU: 1
     # 模型和参数文件所在目录路径
-    MODEL_PATH: "/root/projects/models/yolov3_darknet_iphone"
+    MODEL_PATH: "/root/projects/models/faster_rcnn_pp50"
     # 模型文件名
     MODEL_FILENAME: "__model__"
     # 参数文件名
@@ -91,9 +87,9 @@ DEPLOY:
     # 预测图片的标准输入，尺寸不一致会resize
     EVAL_CROP_SIZE: (608, 608)
     # resize方式，支持 UNPADDING和RANGE_SCALING
-    RESIZE_TYPE: "UNPADDING"
+    RESIZE_TYPE: "RANGE_SCALING"
     # 短边对齐的长度，仅在RANGE_SCALING下有效
-    TARGET_SHORT_SIZE : 256
+    TARGET_SHORT_SIZE : 800
     # 均值
     MEAN:  [0.4647, 0.4647, 0.4647]
     # 方差
@@ -111,9 +107,9 @@ DEPLOY:
     # 每次预测的 batch_size
     BATCH_SIZE : 3 
     # 长边伸缩的最大长度，-1代表无限制。
-    RESIZE_MAX_SIZE: -1
+    RESIZE_MAX_SIZE: 1333
     # 输入的tensor数量。
-    FEEDS_SIZE: 2
+    FEEDS_SIZE: 3
 
 ```
 修改字段`MODEL_PATH`的值为你在**上一步**下载并解压的模型文件所放置的目录即可。更多配置文件字段介绍，请参考文档[预测部署方案配置文件说明](./docs/configuration.md)。
@@ -124,11 +120,11 @@ DEPLOY:
 
 `Linux` 系统中执行以下命令：
 ```shell
-./detection_demo --conf=conf/detection_yolov3.yaml --input_dir=images/detection
+./detection_demo --conf=conf/detection_rcnn.yaml --input_dir=images/detection_rcnn
 ```
 `Windows` 中执行以下命令:
 ```shell
-.\detection_demo.exe --conf=conf\detection_yolov3.yaml --input_dir=images\detection\
+.\detection_demo.exe --conf=conf\detection_rcnn.yaml --input_dir=images\detection_rcnn\
 ```
 
 
@@ -139,7 +135,7 @@ DEPLOY:
 | conf | 模型配置的Yaml文件路径 |
 | input_dir | 需要预测的图片目录 |
 
-
+·
 配置文件说明请参考上一步，样例程序会扫描input_dir目录下的所有图片，并为每一张图片生成对应的预测结果，输出到屏幕，并在`X`同一目录下保存到`X.pb文件`（X为对应图片的文件名）。可使用工具脚本vis.py将检测结果可视化。
 
 **检测结果可视化**
