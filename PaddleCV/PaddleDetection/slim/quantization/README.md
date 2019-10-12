@@ -121,14 +121,14 @@ QuantizationFreezePass主要用于改变IrGraph中量化op和反量化op的顺�
 
 如果不需要保存评估模型，可以在定义Compressor对象时，将`save_eval_model`选项设置为False（默认为True）。
 
-脚本<a href="./eval.py">slim/quantization/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
+脚本<a href="../eval.py">slim/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
 运行命令为：
 ```
 python eval.py \
     --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
     --model_name __model__ \
     --params_name __params__ \
-    -c yolov3_mobilenet_v1_voc.yml
+    -c quantization/yolov3_mobilenet_v1_voc.yml
 ```
 
 在评估之后，选取效果最好的epoch的模型，可使用脚本 <a href='./freeze.py'>slim/quantization/freeze.py</a>将该模型转化为以上介绍的三种模型：FP32模型，int8模型，mobile模型，需要配置的参数为：
@@ -146,14 +146,14 @@ python freeze.py \
 ```
 
 ### 最终评估模型
-最终使用的评估模型是FP32模型，使用脚本<a href="./eval.py">slim/quantization/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
+最终使用的评估模型是FP32模型，使用脚本<a href="../eval.py">slim/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
 运行命令为：
 ```
 python eval.py \
     --model_path ${float_model_path} 
     --model_name model \
     --params_name weights \
-    -c yolov3_mobilenet_v1_voc.yml
+    -c quantization/yolov3_mobilenet_v1_voc.yml
 ```
 
 ## 预测
@@ -161,7 +161,7 @@ python eval.py \
 ### python预测
 FP32模型可直接使用原生PaddlePaddle Fluid预测方法进行预测。
 
-在脚本<a href="./infer.py">slim/quantization/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
+在脚本<a href="../infer.py">slim/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
 
 运行命令示例:
 ```
@@ -169,8 +169,8 @@ python infer.py \
     --model_path ${save_path}/float \
     --model_name model \
     --params_name weights \
-    -c yolov3_mobilenet_v1_voc.yml \
-    --infer_dir ../../demo
+    -c quantization/yolov3_mobilenet_v1_voc.yml \
+    --infer_dir ../demo
 ```
 
 
