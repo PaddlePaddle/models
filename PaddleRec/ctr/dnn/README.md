@@ -20,7 +20,7 @@ factorization machines, please refer to the paper [factorization
 machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)
 
 ## Environment
-**PaddlePaddle version should >= 1.6, or using develop version.**
+**Now all models in PaddleRec require PaddlePaddle version 1.6 or higher, or suitable develop version.**
 You should install PaddlePaddle Fluid first, and run:
 
 ```shell
