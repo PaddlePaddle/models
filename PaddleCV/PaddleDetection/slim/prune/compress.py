@@ -20,13 +20,9 @@ import os
 import time
 import multiprocessing
 import numpy as np
-import datetime
-from collections import deque
 import sys
 sys.path.append("../../")
 from paddle.fluid.contrib.slim import Compressor
-from paddle.fluid.framework import IrGraph
-from paddle.fluid import core
 
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
@@ -40,12 +36,9 @@ set_paddle_flags(
 )
 
 from paddle import fluid
-
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
-
 from ppdet.utils.eval_utils import parse_fetches, eval_results
-from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
 import ppdet.utils.checkpoint as checkpoint
@@ -189,18 +182,14 @@ def main():
         extra_keys = ['gt_box', 'gt_label', 'is_difficult']
     eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
-
     eval_fetch_list=[]
     for k, v in zip(eval_keys, eval_values):
         eval_fetch_list.append((k, v))
 
-
     exe.run(startup_prog)
-
-    start_iter = 0
-
     checkpoint.load_params(exe, train_prog, cfg.pretrain_weights)
 
+    best_box_ap_list = []
 
     def eval_func(program, scope):
 
@@ -208,7 +197,6 @@ def main():
         #exe = fluid.Executor(place)
         results = eval_run(exe, program, eval_reader,
                            eval_keys, eval_values, eval_cls, test_data_feed)
-        best_box_ap_list = []
 
         resolution = None
         if 'mask' in results[0]:
@@ -240,7 +228,7 @@ def main():
         eval_func={'map': eval_func},
         eval_fetch_list=[eval_fetch_list[0]],
         save_eval_model=True,
-        prune_infer_model=[["image"],["multiclass_nms_0.tmp_0"]],
+        prune_infer_model=[["image", "im_size"],["multiclass_nms_0.tmp_0"]],
         train_optimizer=None)
     com.config(FLAGS.slim_file)
     com.run()
