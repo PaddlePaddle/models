@@ -108,7 +108,8 @@ step2: 开始训练
 python compress.py \
     -s yolov3_mobilenet_v1_slim.yaml \
     -c ../../configs/yolov3_mobilenet_v1_voc.yml \
-    -o max_iters=258
+    -o max_iters=258 \
+    -d "../../dataset/voc"
 ```
 
 >通过命令行覆盖设置max_iters选项，因为PaddleDetection中训练是以`batch`为单位迭代的，并没有涉及`epoch`的概念，但是PaddleSlim需要知道当前训练进行到第几个`epoch`, 所以需要将`max_iters`设置为一个`epoch`内的`batch`的数量。
@@ -128,7 +129,8 @@ python compress.py \
     -s yolov3_mobilenet_v1_slim.yaml \
     -c ../../configs/yolov3_mobilenet_v1_voc.yml \
     -o max_iters=258 \
-    -o YoloTrainFeed.batch_size = 16
+    -o YoloTrainFeed.batch_size = 16 \
+    -d "../../dataset/voc"
 ```
 
 以下为2卡训练示例，受显存所制，单卡`batch_size`不变，总`batch_size`减小，一个epoch内batch数量增加，同时需要调整学习率相关参数，如下：
@@ -138,7 +140,8 @@ python compress.py \
     -c ../../configs/yolov3_mobilenet_v1_voc.yml \
     -o max_iters=516 \
     -o YoloTrainFeed.batch_size = 16 \
-    -o LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [110000, 124000]}, !LinearWarmup {start_factor: 0., steps: 2000}]'
+    -o LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [110000, 124000]}, !LinearWarmup {start_factor: 0., steps: 2000}]' \
+    -d "../../dataset/voc"
 ```
 
 通过`python compress.py --help`查看可配置参数。
