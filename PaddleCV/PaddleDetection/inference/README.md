@@ -149,7 +149,9 @@ python vis.py --img_path=../build/images/detection_rcnn/000000087038.jpg --img_r
 检测结果（每个图片的结果用空行隔开）
 
 ```原图：```
+
 ![原图](./demo_images/000000087038.jpg)
 
 ```检测结果图：```
+
 ![检测结果](./demo_images/000000087038.jpg.png)
