@@ -75,19 +75,19 @@ class CascadeRCNN(object):
 
     def build(self, mode='train', image_shape=None):
         if image_shape is None:
-            image_shape = [-1, 3, -1, -1]
+            image_shape = [None, 3, None, None]
         im = fluid.data(name='image', shape=image_shape, dtype='float32')
-        im_info = fluid.data(name='im_info', shape=[-1, 3], dtype='float32')
+        im_info = fluid.data(name='im_info', shape=[None, 3], dtype='float32')
         if mode == 'train':
             gt_box = fluid.data(
-                name='gt_box', shape=[-1, 4], dtype='float32', lod_level=1)
+                name='gt_box', shape=[None, 4], dtype='float32', lod_level=1)
             gt_label = fluid.data(
-                name='gt_label', shape=[-1, 1], dtype='int32', lod_level=1)
+                name='gt_label', shape=[None, 1], dtype='int32', lod_level=1)
             is_crowd = fluid.data(
-                name='is_crowd', shape=[-1, 1], dtype='int32', lod_level=1)
+                name='is_crowd', shape=[None, 1], dtype='int32', lod_level=1)
         else:
             im_shape = fluid.data(
-                name='im_shape', shape=[-1, 3], dtype='float32')
+                name='im_shape', shape=[None, 3], dtype='float32')
 
         mixed_precision_enabled = mixed_precision_global_state() is not None
         # cast inputs to FP16
@@ -172,7 +172,7 @@ class CascadeRCNN(object):
 
     def _decode_box(self, proposals, bbox_pred, curr_stage):
         rcnn_loc_delta_r = fluid.layers.reshape(
-            bbox_pred, (-1, self.cls_agnostic_bbox_reg, 4))
+            bbox_pred, (None, self.cls_agnostic_bbox_reg, 4))
         # only use fg box delta to decode box
         rcnn_loc_delta_s = fluid.layers.slice(
             rcnn_loc_delta_r, axes=[1], starts=[1], ends=[2])
@@ -183,7 +183,7 @@ class CascadeRCNN(object):
             code_type='decode_center_size',
             box_normalized=False,
             axis=1, )
-        refined_bbox = fluid.layers.reshape(refined_bbox, shape=[-1, 4])
+        refined_bbox = fluid.layers.reshape(refined_bbox, shape=[None, 4])
 
         return refined_bbox
 

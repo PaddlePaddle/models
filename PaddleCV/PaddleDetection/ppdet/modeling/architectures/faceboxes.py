@@ -119,8 +119,8 @@ class FaceBoxes(object):
 
             num_boxes = box.shape[2]
 
-            box = fluid.layers.reshape(box, shape=[-1, 4])
-            var = fluid.layers.reshape(var, shape=[-1, 4])
+            box = fluid.layers.reshape(box, shape=[None, 4])
+            var = fluid.layers.reshape(var, shape=[None, 4])
             num_loc_output = num_boxes * 4
             num_conf_output = num_boxes * num_classes
             # get loc
