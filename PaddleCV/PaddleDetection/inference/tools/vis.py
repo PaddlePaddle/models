@@ -54,8 +54,8 @@ if __name__ == "__main__":
     else:
         Flags(sys.argv) 
         color_list = colormap(rgb=True)
-        text_thickness = 1 
-        text_scale = 0.5 
+        text_thickness = 1
+        text_scale = 0.3
         with open(Flags.img_result_path, "rb") as f:
             detection_result = detection_result_pb2.DetectionResult()
             detection_result.ParseFromString(f.read())
@@ -67,22 +67,24 @@ if __name__ == "__main__":
                 for box in detection_result.detection_boxes:
                     if box.score >= Flags.threshold:
                         box_class = getattr(box, 'class')
-                        text_class_str = "Label: %s" % class2LabelMap.get(str(box_class))
-                        text_score_str = "Score: %.4f" % (box.score)
-                        text_point1 = (int(box.left_top_x), int(box.left_top_y - 30))
-                        text_point2 = (text_point1[0], text_point1[1] + 15)
+                        text_class_score_str = "%s %.2f" % (class2LabelMap.get(str(box_class)), box.score)
+                        text_point = (int(box.left_top_x), int(box.left_top_y))
 
                         ptLeftTop = (int(box.left_top_x), int(box.left_top_y))
                         ptRightBottom = (int(box.right_bottom_x), int(box.right_bottom_y))
-                        box_thickness = 2
+                        box_thickness = 1
                         color = tuple([int(c) for c in color_list[box_class]])
                         cv2.rectangle(img, ptLeftTop, ptRightBottom, color, box_thickness, 8)
-                        if text_point1[1] < 0:
-                            text_point1 = (int(box.left_top_x), int(box.right_bottom_y + 15))
-                            text_point2 = (text_point1[0], text_point1[1] + 15)
+                        if text_point[1] < 0:
+                            text_point = (int(box.left_top_x), int(box.right_bottom_y))
                         WHITE = (255, 255, 255)
+                        font = cv2.FONT_HERSHEY_SIMPLEX
+                        text_size = cv2.getTextSize(text_class_score_str, font, text_scale, text_thickness)
                         
-                        cv2.putText(img, text_class_str, text_point1, cv2.FONT_HERSHEY_SIMPLEX, text_scale, WHITE, text_thickness)
-                        cv2.putText(img, text_score_str, text_point2, cv2.FONT_HERSHEY_SIMPLEX, text_scale, WHITE, text_thickness)
-                img = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
+                        text_box_left_top = (text_point[0], text_point[1] - text_size[0][1])
+                        text_box_right_bottom = (text_point[0] + text_size[0][0], text_point[1])
+
+                        cv2.rectangle(img, text_box_left_top, text_box_right_bottom, color, -1, 8)
+                        cv2.putText(img, text_class_score_str, text_point, font, text_scale, WHITE, text_thickness)
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 cv2.imwrite(Flags.img_path + ".png", img)

@@ -140,16 +140,16 @@ DEPLOY:
 
 **检测结果可视化**
 
-运行可视化脚本时，只需输入命令行参数图片路径、检测结果pb文件路径、目标框阈值以及类别-标签映射文件路径即可得到可视化的图片`X.png` (tools目录下提供iphone划痕以及coco17的类别标签映射文件,iphone.json和coco17.json)。
+运行可视化脚本时，只需输入命令行参数图片路径、检测结果pb文件路径、目标框阈值以及类别-标签映射文件路径即可得到可视化的图片`X.png` (tools目录下提供coco17的类别标签映射文件coco17.json)。
 
 ```bash 
-python vis.py --img_path=/path/to/image --img_result_path=/path/to/image_result.pb --threshold=0.1 --c2l_path=/path/to/class2label.json
+python vis.py --img_path=../build/images/detection_rcnn/000000087038.jpg --img_result_path=../build/images/detection_rcnn/000000087038.jpg.pb --threshold=0.1 --c2l_path=coco17.json
 ```
 
 检测结果（每个图片的结果用空行隔开）
 
 ```原图：```
-![原图](./demo_images/00000001.jpg)
+![原图](./demo_images/000000087038.jpg)
 
 ```检测结果图：```
-![检测结果](./demo_images/00000001.jpg.png)
+![检测结果](./demo_images/000000087038.jpg.png)
