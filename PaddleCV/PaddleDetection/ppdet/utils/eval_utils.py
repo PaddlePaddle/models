@@ -131,12 +131,12 @@ def eval_run(exe,
                 for k, v in zip(keys, outs)
             }
             multi_scale_test = getattr(cfg, 'MultiScaleTEST', None)
-            sub_arch = 'Mask' in cfg.architecture and multi_scale_test
+            mask_multi_scale_test = 'Mask' in cfg.architecture and multi_scale_test
 
             if multi_scale_test:
                 post_res = mstest_box_post_process(res, cfg)
                 res.update(post_res)
-            if sub_arch:
+            if mask_multi_scale_test:
                 place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
                 sub_feed = get_sub_feed(res, place)
                 sub_prog_outs = exe.run(sub_prog,

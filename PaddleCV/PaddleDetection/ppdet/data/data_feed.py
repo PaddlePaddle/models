@@ -27,7 +27,7 @@ from ppdet.data.reader import Reader
 from ppdet.data.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
-    Permute, Flip_Augment, Multiscale_Test_Resize)
+    Permute, FlipImage, MultiscaleTestResize)
 from ppdet.data.transform.arrange_sample import (
     ArrangeRCNN, ArrangeEvalRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD,
     ArrangeTestSSD, ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)

@@ -38,10 +38,13 @@ def build_post_map(coarsest_stride=1,
           {
             coarsest_stride (int): stride of the coarsest FPN level
             is_padding (bool): whether to padding in minibatch
-            random_shapes: (list of int): resize to image to random
-                                          shapes, [] for not resize.
-            multi_scales: (list of int): resize image by random
-                                          scales, [] for not resize.
+            random_shapes (list of int): resize to image to random shapes, 
+                [] for not resize.
+            multi_scales (list of int): resize image by random scales, 
+                [] for not resize.
+            use_padded_im_info (bool): whether to update im_info after padding
+            enable_multiscale_test (bool): whether to use multiscale test.
+            num_scale (int) : the number of scales for multiscale test.
           }
     Returns:
         a mapper function which accept one argument 'batch' and

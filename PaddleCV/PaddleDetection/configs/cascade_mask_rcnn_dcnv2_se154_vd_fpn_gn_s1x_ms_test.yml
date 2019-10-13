@@ -210,7 +210,7 @@ MaskRCNNEvalFeed:
   sample_transforms: 
   - !DecodeImage
     to_rgb: False
-  - !Flip_Augment {}
+  - !FlipImage {}
   - !NormalizeImage
     is_channel_first: false
     is_scale: False
@@ -222,7 +222,7 @@ MaskRCNNEvalFeed:
     - 1.0 
     - 1.0 
     - 1.0 
-  - !Multiscale_Test_Resize
+  - !MultiscaleTestResize
     origin_target_size: 800
     origin_max_size: 1333
     target_size:

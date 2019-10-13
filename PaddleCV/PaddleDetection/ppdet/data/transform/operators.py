@@ -122,12 +122,12 @@ class DecodeImage(BaseOperator):
 
 
 @register_op
-class Flip_Augment(BaseOperator):
+class FlipImage(BaseOperator):
     def __init__(self):
         """
         Add flipped image to sample.
         """
-        super(Flip_Augment, self).__init__()
+        super(FlipImage, self).__init__()
         #self.enable = enable
 
     def __call__(self, sample, context=None):
@@ -136,13 +136,12 @@ class Flip_Augment(BaseOperator):
             raise TypeError("{}: image type is not numpy.".format(self))
         if len(im.shape) != 3:
             raise ImageError('{}: image is not 3-dimensional.'.format(self))
-        #if self.enable:
         sample['flip_image'] = im[:, ::-1, :]
         return sample
 
 
 @register_op
-class Multiscale_Test_Resize(BaseOperator):
+class MultiscaleTestResize(BaseOperator):
     def __init__(self,
                  origin_target_size=800,
                  origin_max_size=1333,
@@ -159,7 +158,7 @@ class Multiscale_Test_Resize(BaseOperator):
             max_size (int): the max size of image.
             interp (int): the interpolation method.
         """
-        super(Multiscale_Test_Resize, self).__init__()
+        super(MultiscaleTestResize, self).__init__()
         self.origin_target_size = int(origin_target_size)
         self.origin_max_size = int(origin_max_size)
         self.max_size = int(max_size)

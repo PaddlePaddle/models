@@ -64,9 +64,9 @@ def create_feed(feed, use_pyreader=True, sub_prog_feed=False):
     base_name_list = ['image']
     num_scale = getattr(feed, 'num_scale', 1)
     sample_transform = feed.sample_transforms
-    aug_flip = [t for t in sample_transform if isinstance(t, Flip_Augment)]
+    aug_flip = [t for t in sample_transform if isinstance(t, FlipImage)]
     multiscale_test = [
-        t for t in sample_transform if isinstance(t, Multiscale_Test_Resize)
+        t for t in sample_transform if isinstance(t, MultiscaleTestResize)
     ]
 
     if any(aug_flip):
