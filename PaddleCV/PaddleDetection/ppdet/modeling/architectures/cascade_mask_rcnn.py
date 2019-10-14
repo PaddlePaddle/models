@@ -195,8 +195,9 @@ class CascadeMaskRCNN(object):
         else:
             mask_name = 'mask_pred'
             mask_pred, bbox_pred = self.single_scale_eval(
-                body_feats, spatial_scale, im_info, mask_name, roi_feat_list,
-                rcnn_pred_list, proposal_list, feed_vars['im_shape'], bbox_pred)
+                body_feats, spatial_scale, im_info, mask_name, bbox_pred,
+                roi_feat_list, rcnn_pred_list, proposal_list,
+                feed_vars['im_shape'])
             return {'bbox': bbox_pred, 'mask': mask_pred}
 
     def build_multi_scale(self, feed_vars, mask_branch=False):
@@ -290,7 +291,8 @@ class CascadeMaskRCNN(object):
                     spatial_scale,
                     im_info,
                     mask_name,
-                    bbox_pred=bbox_pred)
+                    bbox_pred=bbox_pred,
+                    use_multi_test=True)
                 result[mask_name] = mask_pred
         return result
 
@@ -299,14 +301,15 @@ class CascadeMaskRCNN(object):
                           spatial_scale,
                           im_info,
                           mask_name,
+                          bbox_pred,
                           roi_feat_list=None,
                           rcnn_pred_list=None,
                           proposal_list=None,
                           im_shape=None,
-                          bbox_pred=None):
+                          use_multi_test=False):
         if self.fpn is None:
             last_feat = body_feats[list(body_feats.keys())[-1]]
-        if bbox_pred is not None:
+        if not use_multi_test:
             bbox_pred = self.bbox_head.get_prediction(
                 im_info, im_shape, roi_feat_list, rcnn_pred_list, proposal_list,
                 self.cascade_bbox_reg_weights)

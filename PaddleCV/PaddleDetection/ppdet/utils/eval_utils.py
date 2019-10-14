@@ -131,7 +131,7 @@ def eval_run(exe,
                 for k, v in zip(keys, outs)
             }
             multi_scale_test = getattr(cfg, 'MultiScaleTEST', None)
-            mask_multi_scale_test = 'Mask' in cfg.architecture and multi_scale_test
+            mask_multi_scale_test = multi_scale_test and 'Mask' in cfg.architecture
 
             if multi_scale_test:
                 post_res = mstest_box_post_process(res, cfg)

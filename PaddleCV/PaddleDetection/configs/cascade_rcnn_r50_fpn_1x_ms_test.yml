@@ -132,7 +132,6 @@ FasterRCNNEvalFeed:
   sample_transforms:
   - !DecodeImage
     to_rgb: true
-  - !FlipImage {}
   - !NormalizeImage
     is_channel_first: false
     is_scale: true
@@ -157,6 +156,7 @@ FasterRCNNEvalFeed:
     - 1100
     - 1200
     max_size: 2000
+    use_flip: true
   - !Permute
     channel_first: true
     to_bgr: false
