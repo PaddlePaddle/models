@@ -16,6 +16,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import io
+
 from paddle import fluid
 import paddle.fluid.dygraph as dg
 
@@ -202,7 +204,7 @@ if __name__ == "__main__":
 
     # Load preset if specified
     if args.preset is not None:
-        with open(args.preset) as f:
+        with io.open(args.preset) as f:
             hparams.parse_json(f.read())
     # Override hyper parameters
     hparams.parse(args.hparams)

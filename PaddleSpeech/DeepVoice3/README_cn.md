@@ -86,7 +86,7 @@ python preprocess.py \
     ${name} ${in_dir} ${out_dir}
 ```
 
-目前 `${dataset_name}$` 只支持 `ljspeech`。未来将会支持更多数据集。
+目前 `${name}$` 只支持 `ljspeech`。未来将会支持更多数据集。
 
 假设你使用 `presers/deepvoice3_ljspeech.json` 作为处理 LJSpeech 的预设配置文件，并且解压后的数据集位于  `~/data/LJSpeech-1.1`, 那么使用如下的命令进行数据预处理。
 
@@ -182,7 +182,7 @@ tensorboard --logdir=${log_dir} --host=$HOSTNAME --port=8888
 ```bash
 python synthesis.py --use-gpu --preset=${preset_json_path} \
     --hparams="parameters you may want to override" \
-      ${checkpoint} ${text_list_file} ${dst_dir}}
+      ${checkpoint} ${text_list_file} ${dst_dir}
 ```
 
 示例文本文件如下:

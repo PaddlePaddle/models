@@ -19,6 +19,7 @@ from __future__ import print_function
 import argparse
 import sys
 import os
+import io
 from os.path import dirname, join, basename, splitext, exists
 from tqdm import tqdm
 import numpy as np
@@ -107,7 +108,7 @@ if __name__ == "__main__":
 
     # Load preset if specified
     if preset is not None:
-        with open(preset) as f:
+        with io.open(preset) as f:
             hparams.parse_json(f.read())
     # Override hyper parameters
     hparams.parse(args.hparams)
@@ -126,10 +127,10 @@ if __name__ == "__main__":
 
         if not os.path.exists(dst_dir):
             os.mkdir(dst_dir)
-        with open(text_list_file_path, "rb") as f:
+        with io.open(text_list_file_path, "rt", encoding="utf-8") as f:
             lines = f.readlines()
             for idx, line in enumerate(lines):
-                text = line.decode("utf-8")[:-1]
+                text = line[:-1]
                 words = nltk.word_tokenize(text)
                 waveform, alignment, _, _ = tts(model,
                                                 text,

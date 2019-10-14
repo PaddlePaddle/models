@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import argparse
 import sys
+import io
 import numpy as np
 from hparams import hparams, hparams_debug_string
 from deepvoice3_paddle.data import TextDataSource, MelSpecDataSource
@@ -38,7 +39,7 @@ if __name__ == "__main__":
 
     # Load preset if specified
     if preset is not None:
-        with open(preset) as f:
+        with io.open(preset) as f:
             hparams.parse_json(f.read())
     # Override hyper parameters
     hparams.parse(args.hparams)

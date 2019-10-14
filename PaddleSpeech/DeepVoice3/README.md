@@ -86,7 +86,7 @@ python preprocess.py \
     ${name} ${in_dir} ${out_dir}
 ```
 
-Now `${dataset_name}$` only supports `ljspeech`. Support for other datasets is pending.
+Now `${name}$` only supports `ljspeech`. Support for other datasets is pending.
 
 Assuming that you use `presers/deepvoice3_ljspeech.json` for LJSpeech and the path of the unziped dataset is `~/data/LJSpeech-1.1`, then you can preprocess data with the following command.
 
@@ -182,7 +182,7 @@ Given a list of text, `synthesis.py` synthesize audio signals from a trained mod
 ```bash
 python synthesis.py --use-gpu --preset=${preset_json_path} \
     --hparams="parameters you may want to override" \
-      ${checkpoint} ${text_list_file} ${dst_dir}}
+      ${checkpoint} ${text_list_file} ${dst_dir}
 ```
 
 Example test_list.txt:
