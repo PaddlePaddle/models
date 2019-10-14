@@ -37,23 +37,72 @@
 - config: 检测库的配置，其中配置了训练超参数、数据集信息等。
 - slim_file: PaddleSlim的配置文件，参见[配置文件说明](#配置文件说明)。
 
-您可以通过运行以下命令运行该示例，请确保已正确下载[pretrained model](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#%E5%B7%B2%E5%8F%91%E5%B8%83%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%85%B6%E6%80%A7%E8%83%BD)。
+您可以通过运行以下命令运行该示例。
 
-step1: 开启显存优化策略
+step1: 设置gpu卡
 ```
-export FLAGS_fast_eager_deletion_mode=1
-export FLAGS_eager_delete_tensor_gb=0.0
+export CUDA_VISIBLE_DEVICES=0
 ```
-step2: 设置gpu卡,目前的超参设置适合2卡训练
+step2: 开始训练
 ```
-export CUDA_VISIBLE_DEVICES=0,1
-```
-step3: 开始训练
+使用PaddleDetection提供的配置文件在用8卡进行训练：
+
 ```
 python compress.py \
     -s yolov3_mobilenet_v1_slim.yaml \
-    -c yolov3_mobilenet_v1_voc.yml 
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -d "../../dataset/voc" \
+    -o max_iters=258 \
+    LearningRate.base_lr=0.0001 \
+    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]' \
+    pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
+    YoloTrainFeed.batch_size=64
 ```
+
+>通过命令行覆盖设置max_iters选项，因为PaddleDetection中训练是以`batch`为单位迭代的，并没有涉及`epoch`的概念，但是PaddleSlim需要知道当前训练进行到第几个`epoch`, 所以需要将`max_iters`设置为一个`epoch`内的`batch`的数量。
+
+如果要调整训练卡数，需要调整配置文件`yolov3_mobilenet_v1_voc.yml`中的以下参数：
+
+- **max_iters:** 一个`epoch`中batch的数量，需要设置为`total_num / batch_size`, 其中`total_num`为训练样本总数量，`batch_size`为多卡上总的batch size.
+- **YoloTrainFeed.batch_size:** 当使用DataLoader时，表示单张卡上的batch size; 当使用普通reader时，则表示多卡上的总的batch_size。batch_size受限于显存大小。
+- **LeaningRate.base_lr:** 根据多卡的总`batch_size`调整`base_lr`，两者大小正相关，可以简单的按比例进行调整。
+- **LearningRate.schedulers.PiecewiseDecay.milestones：**请根据batch size的变化对其调整。
+- **LearningRate.schedulers.PiecewiseDecay.LinearWarmup.steps：** 请根据batch size的变化对其进行调整。
+
+
+以下为4卡训练示例，通过命令行覆盖`yolov3_mobilenet_v1_voc.yml`中的参数：
+
+```
+python compress.py \
+    -s yolov3_mobilenet_v1_slim.yaml \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -d "../../dataset/voc" \
+    -o max_iters=258 \
+    LearningRate.base_lr=0.0001 \
+    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]' \
+    pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
+    YoloTrainFeed.batch_size=64
+  
+```
+
+以下为2卡训练示例，受显存所制，单卡`batch_size`不变, 总`batch_size`减小，`base_lr`减小，一个epoch内batch数量增加，同时需要调整学习率相关参数，如下：
+
+```
+python compress.py \
+    -s yolov3_mobilenet_v1_slim.yaml \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -d "../../dataset/voc" \
+    -o max_iters=516 \
+    LearningRate.base_lr=0.00005 \
+    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [516, 1012]}]' \
+    pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
+    YoloTrainFeed.batch_size=32
+```
+
+通过`python compress.py --help`查看可配置参数。
+通过`python ../../tools/configure.py ${option_name} help`查看如何通过命令行覆盖配置文件`yolov3_mobilenet_v1_voc.yml`中的参数。
+
+
 
 ### 训练时的模型结构
 这部分介绍来源于[量化low-level API介绍](https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim/quant_low_level_api#1-%E9%87%8F%E5%8C%96%E8%AE%AD%E7%BB%83low-level-apis%E4%BB%8B%E7%BB%8D)。
@@ -128,7 +177,8 @@ python ../eval.py \
     --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
     --model_name __model__ \
     --params_name __params__ \
-    -c yolov3_mobilenet_v1_voc.yml
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -d "../../dataset/voc" 
 ```
 
 在评估之后，选取效果最好的epoch的模型，可使用脚本 <a href='./freeze.py'>slim/quantization/freeze.py</a>将该模型转化为以上介绍的三种模型：FP32模型，int8模型，mobile模型，需要配置的参数为：
@@ -153,7 +203,8 @@ python ../eval.py \
     --model_path ${float_model_path} 
     --model_name model \
     --params_name weights \
-    -c yolov3_mobilenet_v1_voc.yml
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -d "../../dataset/voc"
 ```
 
 ## 预测
@@ -169,7 +220,7 @@ python ../infer.py \
     --model_path ${save_path}/float \
     --model_name model \
     --params_name weights \
-    -c yolov3_mobilenet_v1_voc.yml \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
     --infer_dir ../../demo
 ```
 
