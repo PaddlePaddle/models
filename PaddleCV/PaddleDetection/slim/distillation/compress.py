@@ -24,8 +24,6 @@ from collections import deque, OrderedDict
 from paddle.fluid.contrib.slim.core import Compressor
 from paddle.fluid.framework import IrGraph
 
-#from paddle.fluid import core
-
 
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
@@ -79,7 +77,7 @@ def eval_run(exe, compile_program, reader, keys, values, cls, test_feed):
         feed_data = {'image': data['image'], 'im_size': data['im_size']}
         outs = exe.run(compile_program,
                        feed=feed_data,
-                       fetch_list=values[0],
+                       fetch_list=[values[0]],
                        return_numpy=False)
         outs.append(data['gt_box'])
         outs.append(data['gt_label'])

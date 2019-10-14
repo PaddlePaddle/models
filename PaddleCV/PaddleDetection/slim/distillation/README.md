@@ -54,7 +54,7 @@ strategies:
         class: 'DistillationStrategy'
         distillers: ['l2_distiller']
         start_epoch: 0
-        end_epoch: 35
+        end_epoch: 270
 ```
 
 我们也可以根据上述操作为蒸馏策略选择其他loss，PaddleSlim支持的有`FSP_loss`, `L2_loss`和`softmax_with_cross_entropy_loss` 。
@@ -110,10 +110,10 @@ strategies:
 
 ### MobileNetV1-YOLO-V3
 
-| FLOPS |Inf time(fps)|Box AP|
-|---|---|---|
-|baseline|104.291     |76.2     |
-|蒸馏后|- |- |
+| FLOPS |Box AP|
+|---|---|
+|baseline|76.2     |
+|蒸馏后|- |
 
 
 ## FAQ
