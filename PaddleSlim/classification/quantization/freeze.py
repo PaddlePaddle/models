@@ -53,20 +53,32 @@ def eval(args):
 
     val_program, feed_names, fetch_targets = fluid.io.load_inference_model(args.model_path,
                                       exe,
-                                      model_filename="__model__",
+                                      model_filename="__model__.infer",
                                       params_filename="__params__")
     val_reader = paddle.batch(reader.val(), batch_size=128)
     feeder = fluid.DataFeeder(place=place, feed_list=feed_names, program=val_program)
 
     results=[]
     for batch_id, data in enumerate(val_reader()):
+        image = [[d[0]] for d in data]
+        label = [[d[1]] for d in data]
+        feed_data = feeder.feed(image)
+        pred = exe.run(val_program,
+                        feed=feed_data,
+                        fetch_list=fetch_targets)
+        pred = np.array(pred[0])
+        label = np.array(label)
+        sort_array = pred.argsort(axis=1)
+        top_1_pred = sort_array[:, -1:][:, ::-1]
+        top_1 = np.mean(label == top_1_pred)
+        top_5_pred = sort_array[:, -5:][:, ::-1]
+        acc_num = 0
+        for i in range(len(label)):
+            if label[i][0] in top_5_pred[i]:
+                acc_num += 1
+        top_5 = acc_num / len(label)
+        results.append([top_1, top_5])
 
-        # top1_acc, top5_acc
-        result = exe.run(val_program,
-                          feed=feeder.feed(data),
-                          fetch_list=fetch_targets)
-        result = [np.mean(r) for r in result]
-        results.append(result)
     result = np.mean(np.array(results), axis=0)
     print("top1_acc/top5_acc= {}".format(result))
     sys.stdout.flush()
