@@ -46,7 +46,7 @@ export PYTHONPATH=$PYTHONPATH:.
 python -u tools/infer.py -c contrib/VehicleDetection/vehicle_yolov3_darknet.yml \
                          -o weights=https://paddlemodels.bj.bcebos.com/object_detection/vehicle_yolov3_darknet.tar \ 
                          --infer_dir contrib/VehicleDetection/demo \
-                         --draw_threshold 0.3 \
+                         --draw_threshold 0.2 \
                          --output_dir contrib/VehicleDetection/demo/output
 
 ```
