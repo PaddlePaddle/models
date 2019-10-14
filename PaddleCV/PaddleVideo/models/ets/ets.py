@@ -49,10 +49,10 @@ class ETS(ModelBase):
                                                         'l2_weight_decay')
         self.clip_norm = self.get_config_from_sec('train', 'clip_norm')
 
-    def build_input(self, use_pyreader=True):
-        feat_shape = [self.feat_size]
-        word_shape = [1]
-        word_next_shape = [1]
+    def build_input(self, use_dataloader=True):
+        feat_shape = [None, self.feat_size]
+        word_shape = [None, 1]
+        word_next_shape = [None, 1]
 
         # set init data to None
         py_reader = None
@@ -62,16 +62,16 @@ class ETS(ModelBase):
         init_ids = None
         init_scores = None
 
-        self.use_pyreader = use_pyreader
-        feat = fluid.layers.data(
+        self.use_dataloader = use_dataloader
+        feat = fluid.data(
             name='feat', shape=feat_shape, dtype='float32', lod_level=1)
 
         feed_list = []
         feed_list.append(feat)
         if (self.mode == 'train') or (self.mode == 'valid'):
-            word = fluid.layers.data(
+            word = fluid.data(
                 name='word', shape=word_shape, dtype='int64', lod_level=1)
-            word_next = fluid.layers.data(
+            word_next = fluid.data(
                 name='word_next',
                 shape=word_next_shape,
                 dtype='int64',
@@ -79,18 +79,21 @@ class ETS(ModelBase):
             feed_list.append(word)
             feed_list.append(word_next)
         elif (self.mode == 'test') or (self.mode == 'infer'):
-            init_ids = fluid.layers.data(
-                name="init_ids", shape=[1], dtype="int64", lod_level=2)
-            init_scores = fluid.layers.data(
-                name="init_scores", shape=[1], dtype="float32", lod_level=2)
+            init_ids = fluid.data(
+                name="init_ids", shape=[None, 1], dtype="int64", lod_level=2)
+            init_scores = fluid.data(
+                name="init_scores",
+                shape=[None, 1],
+                dtype="float32",
+                lod_level=2)
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
 
-        if use_pyreader:
+        if use_dataloader:
             assert self.mode != 'infer', \
-                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            self.py_reader = fluid.io.PyReader(
+                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
                 feed_list=feed_list, capacity=16, iterable=True)
 
         self.feature_input = [feat]
