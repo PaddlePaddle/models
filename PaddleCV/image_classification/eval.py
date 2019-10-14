@@ -46,6 +46,8 @@ add_arg('reader_buf_size',  int,  2048,                 "The buf size of multi t
 parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
 parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 add_arg('crop_size',        int,  224,                  "The value of crop size")
+add_arg('interpolation',    int,  None,                 "The interpolation mode")
+add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 # yapf: enable
 
 
@@ -64,7 +66,10 @@ def eval(args):
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
 
     # model definition
-    model = models.__dict__[args.model]()
+    if args.model.startswith('EfficientNet'):
+        model = models.__dict__[args.model](is_test=True, padding_type=args.padding_type)
+    else:
+        model = models.__dict__[args.model]()
 
     if args.model == "GoogLeNet":
         out0, out1, out2 = model.net(input=image, class_dim=args.class_dim)
@@ -96,9 +101,9 @@ def eval(args):
     exe.run(fluid.default_startup_program())
 
     fluid.io.load_persistables(exe, args.pretrained_model)
+    imagenet_reader = reader.ImageNetReader()
+    val_reader = imagenet_reader.val(settings=args)
 
-    val_reader = paddle.batch(
-        reader.val(settings=args), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     test_info = [[], [], []]

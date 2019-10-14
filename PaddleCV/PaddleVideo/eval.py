@@ -26,6 +26,7 @@ import models
 from reader import get_reader
 from metrics import get_metrics
 from utils.utility import check_cuda
+from utils.utility import check_version
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -83,7 +84,7 @@ def test(args):
 
     # build model
     test_model = models.get_model(args.model_name, test_config, mode='test')
-    test_model.build_input(use_pyreader=False)
+    test_model.build_input(use_dataloader=False)
     test_model.build_model()
     test_feeds = test_model.feeds()
     test_fetch_list = test_model.fetches()
@@ -130,6 +131,7 @@ if __name__ == "__main__":
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
     check_cuda(args.use_gpu)
+    check_version()
     logger.info(args)
 
     test(args)

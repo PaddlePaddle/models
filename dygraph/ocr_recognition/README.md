@@ -6,6 +6,8 @@ DyGraph模式下ocr recognition实现
 ocr任务是识别图片单行的字母信息，在动态图下使用了带attention的seq2seq结构，静态图实现可以参考（[ocr recognition](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition)）
 运行本目录下的程序示例需要使用PaddlePaddle develop最新版本。
 
+动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
+
 
 ## 代码结构
 ```

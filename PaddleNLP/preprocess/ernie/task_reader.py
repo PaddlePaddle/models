@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 This module provides reader for classification and sequence labing
 """
@@ -14,10 +27,21 @@ import numpy as np
 
 from preprocess.ernie import tokenization
 from preprocess.padding import pad_batch_data
+import io
 
+def csv_reader(fd, delimiter='\t'):
+    def gen():
+        for i in fd:
+            slots = i.rstrip('\n').split(delimiter)
+            if len(slots) == 1:
+                yield slots,
+            else:
+                yield slots
+    return gen()
 
 class BaseReader(object):
     """BaseReader for classify and sequence labeling task"""
+
     def __init__(self,
                  vocab_path,
                  label_map_config=None,
@@ -52,8 +76,8 @@ class BaseReader(object):
 
     def _read_tsv(self, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with open(input_file, "r") as f:
-            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+        with io.open(input_file, "r", encoding="utf8") as f:
+            reader = csv_reader(f, delimiter="\t")
             headers = next(reader)
             Example = namedtuple('Example', headers)
 
@@ -211,10 +235,11 @@ class BaseReader(object):
 
 class ClassifyReader(BaseReader):
     """ClassifyReader"""
+
     def _read_tsv(self, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with open(input_file, "r") as f:
-            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+        with io.open(input_file, "r", encoding="utf8") as f:
+            reader = csv_reader(f, delimiter="\t")
             headers = next(reader)
             text_indices = [
                 index for index, h in enumerate(headers) if h != "label"
@@ -239,7 +264,10 @@ class ClassifyReader(BaseReader):
 
         # padding
         padded_token_ids, input_mask, seq_lens = pad_batch_data(
-            batch_token_ids, pad_idx=self.pad_id, return_input_mask=True, return_seq_lens=True)
+            batch_token_ids,
+            pad_idx=self.pad_id,
+            return_input_mask=True,
+            return_seq_lens=True)
         padded_text_type_ids = pad_batch_data(
             batch_text_type_ids, pad_idx=self.pad_id)
         padded_position_ids = pad_batch_data(
@@ -255,6 +283,7 @@ class ClassifyReader(BaseReader):
 
 class SequenceLabelReader(BaseReader):
     """SequenceLabelReader"""
+
     def _pad_batch_records(self, batch_records):
         batch_token_ids = [record.token_ids for record in batch_records]
         batch_text_type_ids = [record.text_type_ids for record in batch_records]
@@ -314,7 +343,9 @@ class SequenceLabelReader(BaseReader):
         position_ids = list(range(len(token_ids)))
         text_type_ids = [0] * len(token_ids)
         no_entity_id = len(self.label_map) - 1
-        labels = [label if label in self.label_map else u"O" for label in labels]
+        labels = [
+            label if label in self.label_map else u"O" for label in labels
+        ]
         label_ids = [no_entity_id] + [
             self.label_map[label] for label in labels
         ] + [no_entity_id]
@@ -332,6 +363,7 @@ class SequenceLabelReader(BaseReader):
 
 class ExtractEmbeddingReader(BaseReader):
     """ExtractEmbeddingReader"""
+
     def _pad_batch_records(self, batch_records):
         batch_token_ids = [record.token_ids for record in batch_records]
         batch_text_type_ids = [record.text_type_ids for record in batch_records]

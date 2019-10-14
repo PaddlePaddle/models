@@ -72,7 +72,7 @@ def train():
     batch_size = args.batch_size
     items_num = reader.read_config(args.config_path)
     loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size,
-                                args.step)
+                                args.step, batch_size)
 
     data_reader = reader.Data(args.train_path, True)
     logger.info("load data complete")
@@ -96,13 +96,15 @@ def train():
 
     all_vocab = fluid.global_scope().var("all_vocab").get_tensor()
     all_vocab.set(
-        np.arange(1, items_num).astype("int64").reshape((-1, 1)), place)
+        np.arange(1, items_num).astype("int64").reshape((-1)), place)
 
     feed_list = [e.name for e in feed_datas]
 
     if use_parallel:
+        exec_strategy = fluid.ExecutionStrategy()
+        exec_strategy.num_threads = 1 if os.name == 'nt' else 0
         train_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda, loss_name=loss.name)
+            use_cuda=use_cuda, loss_name=loss.name, exec_strategy=exec_strategy)
     else:
         train_exe = exe
 
@@ -168,6 +170,21 @@ def get_cards(args):
     num = len(cards.split(","))
     return num
 
+def check_version():
+    """
+    Log error and exit when the installed version of paddlepaddle is
+    not satisfied.
+    """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        logger.error(err)
+        sys.exit(1)
 
 if __name__ == "__main__":
+    check_version()
     train()

@@ -153,8 +153,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     cycle_pix_dataset = [
         'apple2orange', 'summer2winter_yosemite', 'horse2zebra', 'monet2photo',
-        'cezanne2photo', 'ukiyoe2photo', 'vangogh2photo', 'maps', 'cityscapes',
-        'facades', 'iphone2dslr_flower', 'ae_photos', 'mini'
+        'cezanne2photo', 'ukiyoe2photo', 'vangogh2photo', 'maps', 'facades',
+        'iphone2dslr_flower', 'ae_photos', 'mini'
     ]
 
     pwd = os.path.join(os.path.dirname(__file__), 'data')

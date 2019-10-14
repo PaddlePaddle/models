@@ -5,6 +5,7 @@ import os
 import random
 import sys
 import time
+from collections import OrderedDict
 
 import paddle.fluid as fluid
 
@@ -21,15 +22,21 @@ def train(args):
     :param args: hyperparams of model
     :return:
     """
+    cat_feat_dims_dict = OrderedDict()
+    for line in open(args.cat_feat_num):
+        spls = line.strip().split()
+        assert len(spls) == 2
+        cat_feat_dims_dict[spls[0]] = int(spls[1])
     dcn_model = DCN(args.cross_num, args.dnn_hidden_units, args.l2_reg_cross,
-                    args.use_bn, args.clip_by_norm)
+                    args.use_bn, args.clip_by_norm, cat_feat_dims_dict,
+                    args.is_sparse)
     dcn_model.build_network()
     dcn_model.backward(args.lr)
 
     # config dataset
     dataset = fluid.DatasetFactory().create_dataset()
     dataset.set_use_var(dcn_model.data_list)
-    pipe_command = 'python reader.py'
+    pipe_command = 'python reader.py {}'.format(args.vocab_dir)
     dataset.set_pipe_command(pipe_command)
     dataset.set_batch_size(args.batch_size)
     dataset.set_thread(args.num_thread)

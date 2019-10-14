@@ -47,7 +47,8 @@ parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456
 parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 add_arg('crop_size',        int,  224,                  "The value of crop size")
 add_arg('topk',             int,  1,                    "topk")
-add_arg('label_path',            str,  "./utils/tools/readable_label.txt", "readable label filepath")
+add_arg('label_path',       str,  "./utils/tools/readable_label.txt", "readable label filepath")
+add_arg('interpolation',    int,  None,                 "The interpolation mode")
 # yapf: enable
 
 
@@ -87,9 +88,9 @@ def infer(args):
         print("model: ", args.model, " is already saved")
         exit(0)
 
-    test_batch_size = 1
-    test_reader = paddle.batch(
-        reader.test(settings=args), batch_size=test_batch_size)
+    args.test_batch_size = 1
+    imagenet_reader = reader.ImageNetReader()
+    test_reader = imagenet_reader.test(settings=args)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     TOPK = args.topk

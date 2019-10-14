@@ -37,7 +37,7 @@ set_paddle_flags(
 
 from paddle import fluid
 
-from tools.configure import print_total_cfg
+from ppdet.utils.cli import print_total_cfg
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.modeling.model_input import create_feed
 from ppdet.data.data_feed import create_reader
@@ -111,7 +111,7 @@ def prune_feed_vars(feeded_var_names, target_vars, prog):
     for name in feeded_var_names:
         try:
             v = global_block.var(name)
-            exist_var_names.append(v.name)
+            exist_var_names.append(str(v.name))
         except Exception:
             logger.info('save_inference_model pruned unused feed '
                         'variables {}'.format(name))
@@ -128,7 +128,7 @@ def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
                                        infer_prog)
     logger.info("Save inference model to {}, input: {}, output: "
                 "{}...".format(save_dir, feeded_var_names,
-                               [var.name for var in target_vars]))
+                               [str(var.name) for var in target_vars]))
     fluid.io.save_inference_model(
         save_dir,
         feeded_var_names=feeded_var_names,
@@ -178,18 +178,18 @@ def main():
 
     exe.run(startup_prog)
     if cfg.weights:
-        checkpoint.load_checkpoint(exe, infer_prog, cfg.weights)
+        checkpoint.load_params(exe, infer_prog, cfg.weights)
 
     if FLAGS.save_inference_model:
         save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
 
     # parse infer fetches
-    assert cfg.metric in ['COCO', 'VOC'], \
+    assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE'], \
             "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
-    if cfg['metric'] == 'VOC':
+    if cfg['metric'] == 'VOC' or cfg['metric'] == 'WIDERFACE':
         extra_keys = ['im_id', 'im_shape']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
@@ -198,6 +198,8 @@ def main():
         from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
     if cfg.metric == "VOC":
         from ppdet.utils.voc_eval import bbox2out, get_category_info
+    if cfg.metric == "WIDERFACE":
+        from ppdet.utils.widerface_eval_utils import bbox2out, get_category_info
 
     anno_file = getattr(test_feed.dataset, 'annotation', None)
     with_background = getattr(test_feed, 'with_background', True)
@@ -216,7 +218,7 @@ def main():
         from tb_paddle import SummaryWriter
         tb_writer = SummaryWriter(FLAGS.tb_log_dir)
         tb_image_step = 0
-        tb_image_frame = 0 # each frame can display ten pictures at most. 
+        tb_image_frame = 0  # each frame can display ten pictures at most. 
 
     imid2path = reader.imid2path
     for iter_id, data in enumerate(reader()):
@@ -257,7 +259,7 @@ def main():
                                       int(im_id), catid2name,
                                       FLAGS.draw_threshold, bbox_results,
                                       mask_results)
-            
+
             # use tb-paddle to log image with bbox
             if FLAGS.use_tb:
                 infer_image_np = np.array(image)

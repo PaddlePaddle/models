@@ -23,7 +23,7 @@ except:
 import paddle.fluid as fluid
 from .utils import download, AttrDict
 
-WEIGHT_DIR = os.path.expanduser("~/.paddle/weights")
+WEIGHT_DIR = os.path.join(os.path.expanduser('~'), '.paddle', 'weights')
 
 logger = logging.getLogger(__name__)
 
@@ -65,13 +65,13 @@ class ModelBase(object):
         self.is_training = (mode == 'train')
         self.mode = mode
         self.cfg = cfg
-        self.py_reader = None
+        self.dataloader = None
 
     def build_model(self):
         "build model struct"
         raise NotImplementError(self, self.build_model)
 
-    def build_input(self, use_pyreader):
+    def build_input(self, use_dataloader):
         "build input Variable"
         raise NotImplementError(self, self.build_input)
 
@@ -114,8 +114,8 @@ class ModelBase(object):
         wget.download(url, path)
         return path
 
-    def pyreader(self):
-        return self.py_reader
+    def dataloader(self):
+        return self.dataloader
 
     def epoch_num(self):
         "get train epoch num"

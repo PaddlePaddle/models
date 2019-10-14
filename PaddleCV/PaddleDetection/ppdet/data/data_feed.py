@@ -30,8 +30,8 @@ from ppdet.data.transform.operators import (
     Permute)
 
 from ppdet.data.transform.arrange_sample import (
-    ArrangeRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD, ArrangeTestSSD,
-    ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
+    ArrangeRCNN, ArrangeEvalRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD,
+    ArrangeTestSSD, ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
@@ -476,7 +476,8 @@ class FasterRCNNEvalFeed(DataFeed):
     def __init__(self,
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
-                 fields=['image', 'im_info', 'im_id', 'im_shape'],
+                 fields=['image', 'im_info', 'im_id', 'im_shape', 'gt_box',
+                         'gt_label', 'is_difficult'],
                  image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
@@ -494,7 +495,7 @@ class FasterRCNNEvalFeed(DataFeed):
                  drop_last=False,
                  num_workers=2,
                  use_padded_im_info=True):
-        sample_transforms.append(ArrangeTestRCNN())
+        sample_transforms.append(ArrangeEvalRCNN())
         super(FasterRCNNEvalFeed, self).__init__(
             dataset,
             fields,
@@ -780,7 +781,7 @@ class SSDEvalFeed(DataFeed):
             bufsize=10,
             use_process=False,
             memsize=None):
-        sample_transforms.append(ArrangeEvalSSD())
+        sample_transforms.append(ArrangeEvalSSD(fields))
         super(SSDEvalFeed, self).__init__(
             dataset,
             fields,

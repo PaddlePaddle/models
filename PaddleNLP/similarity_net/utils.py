@@ -1,8 +1,21 @@
-# --coding=utf-8
+#encoding=utf-8
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 SimNet utilities.
 """
-
+import argparse
 import time
 import sys
 import re
@@ -13,6 +26,7 @@ import numpy as np
 import logging
 import logging.handlers
 import paddle.fluid as fluid
+import io
 """
 ******functions for file processing******
 """
@@ -22,10 +36,7 @@ def load_vocab(file_path):
     load the given vocabulary
     """
     vocab = {}
-    if six.PY3:
-        f = open(file_path, "r", encoding="utf-8")
-    else:
-        f = open(file_path, "r")
+    f = io.open(file_path, "r", encoding="utf-8")
     for line in f:
         items = line.strip("\n").split("\t")
         if items[0] not in vocab:
@@ -154,6 +165,58 @@ class ArgumentGroup(object):
             type=type,
             help=help + ' Default: %(default)s.',
             **kwargs)
+
+class ArgConfig(object):
+    def __init__(self):
+        parser = argparse.ArgumentParser()
+
+        model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
+        model_g.add_arg("config_path", str, None, "Path to the json file for EmoTect model config.")
+        model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
+        model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
+        model_g.add_arg("task_mode", str, None, "task mode: pairwise or pointwise")
+
+        train_g = ArgumentGroup(parser, "training", "training options.")
+        train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
+        train_g.add_arg("save_steps", int, 200, "The steps interval to save checkpoints.")
+        train_g.add_arg("validation_steps", int, 100, "The steps interval to evaluate model performance.")
+
+        log_g = ArgumentGroup(parser, "logging", "logging related")
+        log_g.add_arg("skip_steps", int, 10, "The steps interval to print loss.")
+        log_g.add_arg("verbose_result", bool, True, "Whether to output verbose result.")
+        log_g.add_arg("test_result_path", str, "test_result", "Directory path to test result.")
+        log_g.add_arg("infer_result_path", str, "infer_result", "Directory path to infer result.")
+
+        data_g = ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
+        data_g.add_arg("train_data_dir", str, None, "Directory path to training data.")
+        data_g.add_arg("valid_data_dir", str, None, "Directory path to valid data.")
+        data_g.add_arg("test_data_dir", str, None, "Directory path to testing data.")
+        data_g.add_arg("infer_data_dir", str, None, "Directory path to infer data.")
+        data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
+        data_g.add_arg("batch_size", int, 32, "Total examples' number in batch for training.")
+
+        run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
+        run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
+        run_type_g.add_arg("task_name", str, None, "The name of task to perform sentiment classification.")
+        run_type_g.add_arg("do_train", bool, False, "Whether to perform training.")
+        run_type_g.add_arg("do_valid", bool, False, "Whether to perform dev.")
+        run_type_g.add_arg("do_test", bool, False, "Whether to perform testing.")
+        run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
+        run_type_g.add_arg("compute_accuracy", bool, False, "Whether to compute accuracy.")
+        run_type_g.add_arg("lamda", float, 0.91, "When task_mode is pairwise, lamda is the threshold for calculating the accuracy.")
+
+        custom_g = ArgumentGroup(parser, "customize", "customized options.")
+        self.custom_g = custom_g
+
+        parser.add_argument('--enable_ce',action='store_true',help='If set, run the task with continuous evaluation logs.')
+
+        self.parser = parser
+
+    def add_arg(self, name, dtype, default, descrip):
+        self.custom_g.add_arg(name, dtype, default, descrip)
+
+    def build_conf(self):
+        return self.parser.parse_args()
 
 
 def print_arguments(args):
