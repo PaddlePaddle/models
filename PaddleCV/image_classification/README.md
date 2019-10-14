@@ -90,6 +90,23 @@ python train.py \
 bash run.sh train 模型名
 ```
 
+**多进程模型训练：**
+
+如果你有多张GPU卡的话，我们强烈建议你使用多进程模式来训练模型，这会极大的提升训练速度。启动方式如下：
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
+       --model=ResNet50 \
+       --batch_size=256 \
+       --total_images=1281167 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --lr_strategy=piecewise_decay \
+       --reader_thread=4 \
+       --lr=0.1
+```
+或者参考 scripts/train/ResNet50_dist.sh
+
 **参数说明：**
 
 环境配置部分：

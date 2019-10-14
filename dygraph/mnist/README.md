@@ -2,6 +2,8 @@
 当我们学习编程的时候，编写的第一个程序一般是实现打印"Hello World"。而机器学习（或深度学习）的入门教程，一般都是 MNIST 数据库上的手写识别问题。原因是手写识别属于典型的图像分类问题，比较简单，同时MNIST数据集也很完备。
 本页将介绍如何使用PaddlePaddle在DyGraph模式下实现MNIST，包括[安装](#installation)、[训练](#training-a-model)、[输出](#log)、[参数保存](#save)、[模型评估](#evaluation)。
 
+动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
+
 ---
 ## 内容
 - [安装](#installation)

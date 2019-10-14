@@ -61,17 +61,17 @@ class NEXTVLAD(ModelBase):
         # other params
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
 
-    def build_input(self, use_pyreader=True):
-        rgb_shape = [self.video_feature_size]
-        audio_shape = [self.audio_feature_size]
-        label_shape = [self.num_classes]
+    def build_input(self, use_dataloader=True):
+        rgb_shape = [None, self.video_feature_size]
+        audio_shape = [None, self.audio_feature_size]
+        label_shape = [None, self.num_classes]
 
-        rgb = fluid.layers.data(
+        rgb = fluid.data(
             name='train_rgb' if self.is_training else 'test_rgb',
             shape=rgb_shape,
             dtype='uint8',
             lod_level=1)
-        audio = fluid.layers.data(
+        audio = fluid.data(
             name='train_audio' if self.is_training else 'test_audio',
             shape=audio_shape,
             dtype='uint8',
@@ -79,16 +79,16 @@ class NEXTVLAD(ModelBase):
         if self.mode == 'infer':
             label = None
         else:
-            label = fluid.layers.data(
+            label = fluid.data(
                 name='train_label' if self.is_training else 'test_label',
                 shape=label_shape,
                 dtype='float32')
 
-        if use_pyreader:
+        if use_dataloader:
             assert self.mode != 'infer', \
-                    'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            self.py_reader = fluid.io.PyReader(
-                feed_list=[rgb, audio, label], capacity=8, iterable=True)
+                    'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
+                                feed_list=[rgb, audio, label], capacity=8, iterable=True)
         self.feature_input = [rgb, audio]
         self.label_input = label
 

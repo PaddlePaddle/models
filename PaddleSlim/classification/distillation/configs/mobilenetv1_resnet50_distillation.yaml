@@ -3,7 +3,7 @@ distillers:
     fsp_distiller:
         class: 'FSPDistiller'
         teacher_pairs: [['res50_res2a_branch2a.conv2d.output.1.tmp_0', 'res50_res3a_branch2a.conv2d.output.1.tmp_0']]
-        student_pairs: [['depthwise_conv2d_1.tmp_0', 'conv2d_3.tmp_0']]
+        student_pairs: [['depthwise_conv2d_1.tmp_0', 'depthwise_conv2d_2.tmp_0']]
         distillation_loss_weight: 1
     l2_distiller:
         class: 'L2Distiller'

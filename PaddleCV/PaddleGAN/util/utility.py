@@ -150,7 +150,7 @@ def save_test_image(epoch,
                                         "input_B": B_data})
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
             input_A_temp = np.squeeze(np.array(A_data)[0]).transpose([1, 2, 0])
-            input_B_temp = np.squeeze(np.array(A_data)[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(np.array(B_data)[0]).transpose([1, 2, 0])
 
             fakeB_name = "fakeB_" + str(epoch) + "_" + A_id2name[np.array(
                 image_name).astype('int32')[0]]

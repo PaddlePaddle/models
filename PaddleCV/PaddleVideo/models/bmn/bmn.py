@@ -52,47 +52,46 @@ class BMN(ModelBase):
                                                         'l2_weight_decay')
         self.lr_decay_iter = self.get_config_from_sec('train', 'lr_decay_iter')
 
-    def build_input(self, use_pyreader=True):
-        feat_shape = [self.feat_dim, self.tscale]
-        gt_iou_map_shape = [self.dscale, self.tscale]
-        gt_start_shape = [self.tscale]
-        gt_end_shape = [self.tscale]
-        fileid_shape = [1]
-        self.use_pyreader = use_pyreader
+    def build_input(self, use_dataloader=True):
+        feat_shape = [None, self.feat_dim, self.tscale]
+        gt_iou_map_shape = [None, self.dscale, self.tscale]
+        gt_start_shape = [None, self.tscale]
+        gt_end_shape = [None, self.tscale]
+        fileid_shape = [None, 1]
+        self.use_dataloader = use_dataloader
         # set init data to None
-        py_reader = None
         feat = None
         gt_iou_map = None
         gt_start = None
         gt_end = None
         fileid = None
 
-        feat = fluid.layers.data(name='feat', shape=feat_shape, dtype='float32')
+        feat = fluid.data(name='feat', shape=feat_shape, dtype='float32')
 
         feed_list = []
         feed_list.append(feat)
         if (self.mode == 'train') or (self.mode == 'valid'):
-            gt_start = fluid.layers.data(
+            gt_start = fluid.data(
                 name='gt_start', shape=gt_start_shape, dtype='float32')
-            gt_end = fluid.layers.data(
+            gt_end = fluid.data(
                 name='gt_end', shape=gt_end_shape, dtype='float32')
-            gt_iou_map = fluid.layers.data(
+            gt_iou_map = fluid.data(
                 name='gt_iou_map', shape=gt_iou_map_shape, dtype='float32')
             feed_list.append(gt_iou_map)
             feed_list.append(gt_start)
             feed_list.append(gt_end)
 
         elif self.mode == 'test':
-            gt_start = fluid.layers.data(
+            gt_start = fluid.data(
                 name='gt_start', shape=gt_start_shape, dtype='float32')
-            gt_end = fluid.layers.data(
+            gt_end = fluid.data(
                 name='gt_end', shape=gt_end_shape, dtype='float32')
-            gt_iou_map = fluid.layers.data(
+            gt_iou_map = fluid.data(
                 name='gt_iou_map', shape=gt_iou_map_shape, dtype='float32')
             feed_list.append(gt_iou_map)
             feed_list.append(gt_start)
             feed_list.append(gt_end)
-            fileid = fluid.layers.data(
+            fileid = fluid.data(
                 name='fileid', shape=fileid_shape, dtype='int64')
             feed_list.append(fileid)
         elif self.mode == 'infer':
@@ -102,11 +101,11 @@ class BMN(ModelBase):
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
 
-        if use_pyreader:
+        if use_dataloader:
             assert self.mode != 'infer', \
-                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            self.py_reader = fluid.io.PyReader(
-                feed_list=feed_list, capacity=8, iterable=True)
+                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
+                               feed_list=feed_list, capacity=8, iterable=True)
 
         self.feat_input = [feat]
         self.gt_iou_map = gt_iou_map

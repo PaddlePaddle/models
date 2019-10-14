@@ -22,8 +22,8 @@ import json
 import numpy as np
 import paddle.fluid as fluid
 
-from palm.nets.transformer_encoder import encoder as encoder
-from palm.nets.transformer_encoder import pre_process_layer as pre_process_layer
+from pdnlp.nets.transformer_encoder import encoder as encoder
+from pdnlp.nets.transformer_encoder import pre_process_layer as pre_process_layer
 
 
 class BertModel(object):
