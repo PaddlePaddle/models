@@ -109,6 +109,64 @@ BLEU = 33.21, 64.7/39.9/26.7/17.7
 
 ## 进阶使用
 
+### 自定义数据
+
+- 训练：
+  
+  修改 `train.py` 中的如下代码段
+
+  ```python
+        reader = paddle.batch(wmt16.train(ModelHyperParams.src_vocab_size,
+                                          ModelHyperParams.trg_vocab_size),
+                              batch_size=TrainTaskConfig.batch_size)
+  ```
+  
+  
+  将其中的 `wmt16.train` 替换为类似如下的 python generator ：
+
+  ```python
+  def reader(file_name, src_dict, trg_dict):
+    start_id = src_dict[START_MARK]  # BOS
+    end_id = src_dict[END_MARK]  # EOS
+    unk_id = src_dict[UNK_MARK]  # UNK
+
+    src_col, trg_col = 0, 1
+
+    for line in open(file_name, "r"):
+        line = line.strip()
+        line_split = line.strip().split("\t")
+        if len(line_split) != 2:
+            continue
+        src_words = line_split[src_col].split()
+        src_ids = [start_id] + [
+            src_dict.get(w, unk_id) for w in src_words
+        ] + [end_id]
+
+        trg_words = line_split[trg_col].split()
+        trg_ids = [trg_dict.get(w, unk_id) for w in trg_words]
+
+        trg_ids_next = trg_ids + [end_id]
+        trg_ids = [start_id] + trg_ids
+
+        yield src_ids, trg_ids, trg_ids_next
+  ```
+
+该 generator 产生的数据为单个样本，是包含源句（src_ids），目标句（trg_ids）和标签（trg_ids_next）三个 integer list 的 tuple；其中 src_ids 包含 BOS 和 EOS 的 id，trg_ids 包含 BOS 的 id，trg_ids_next 包含 EOS 的 id。
+
+- 预测：
+  修改 `predict.py` 中的如下代码段
+
+  ```python
+        reader = paddle.batch(wmt16.test(ModelHyperParams.src_vocab_size,
+                                         ModelHyperParams.trg_vocab_size),
+                              batch_size=InferTaskConfig.batch_size)
+        id2word = wmt16.get_dict("de",
+                                 ModelHyperParams.trg_vocab_size,
+                                 reverse=True)
+  ```
+
+  将其中的 `wmt16.test` 替换为和训练部分类似的 python generator ；另外还需要提供将 id 映射到 word 的 python dict 作为 `id2word` .
+
 ### 模型原理介绍
 
 Transformer 是论文 [Attention Is All You Need](https://arxiv.org/abs/1706.03762) 中提出的用以完成机器翻译（machine translation, MT）等序列到序列（sequence to sequence, Seq2Seq）学习任务的一种全新网络结构。其同样使用了 Seq2Seq 任务中典型的编码器-解码器（Encoder-Decoder）的框架结构，但相较于此前广泛使用的循环神经网络（Recurrent Neural Network, RNN），其完全使用注意力（Attention）机制来实现序列到序列的建模，整体网络结构如图1所示。
