@@ -62,8 +62,8 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope, loc_bin_siz
 
     # xz localization loss
     x_offset_label, y_offset_label, z_offset_label = reg_label[:, 0:1], reg_label[:, 1:2], reg_label[:, 2:3]
-    x_shift = fluid.layers.clip(x_offset_label + loc_scope, 0, loc_scope * 2 - 1e-3)
-    z_shift = fluid.layers.clip(z_offset_label + loc_scope, 0, loc_scope * 2 - 1e-3)
+    x_shift = fluid.layers.clip(x_offset_label + loc_scope, 0., loc_scope * 2 - 1e-3)
+    z_shift = fluid.layers.clip(z_offset_label + loc_scope, 0., loc_scope * 2 - 1e-3)
     x_bin_label = fluid.layers.cast(x_shift / loc_bin_size, dtype='int64')
     z_bin_label = fluid.layers.cast(z_shift / loc_bin_size, dtype='int64')
 
@@ -106,7 +106,7 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope, loc_bin_siz
         y_res_l, y_res_r = y_bin_r, y_bin_r + loc_y_bin_num
         start_offset = y_res_r
 
-        y_shift = fluid.layers.clip(y_offset_label + loc_y_scope, 0, loc_y_scope * 2 - 1e-3)
+        y_shift = fluid.layers.clip(y_offset_label + loc_y_scope, 0., loc_y_scope * 2 - 1e-3)
         y_bin_label = fluid.layers.cast(y_shift / loc_y_bin_size, dtype='int64')
         y_res_label = y_shift - (fluid.layers.cast(y_bin_label, dtype=y_shift.dtype) * loc_y_bin_size + loc_y_bin_size / 2.)
         y_res_norm_label = y_res_label / loc_y_bin_size

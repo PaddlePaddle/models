@@ -98,7 +98,7 @@ class RPN(object):
 				      padding=0,
 				      dilation=1,
                                       param_attr=ParamAttr(name='rpn_reg_out_conv_weight',
-                                                           initializer=Normal(0, 0.001),),
+                                                           initializer=Normal(0., 0.001),),
                                       bias_attr=ParamAttr(name='rpn_reg_out_conv_bias'))
         reg_out = fluid.layers.squeeze(reg_out, axes=[3])
         reg_out = fluid.layers.transpose(reg_out, [0, 2, 1])

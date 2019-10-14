@@ -22,6 +22,8 @@ import paddle.fluid as fluid
 import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 from paddle.fluid.layers import control_flow
 
+import logging
+logger = logging.getLogger(__name__)
 
 def cosine_warmup_decay(learning_rate, warmup_factor, decay_factor,
                         total_step, warmup_pct):
@@ -40,7 +42,7 @@ def cosine_warmup_decay(learning_rate, warmup_factor, decay_factor,
         shape=[1],
         value=float(learning_rate),
         dtype='float32',
-        persistable=False,
+        persistable=True,
         name="learning_rate")
 
     warmup_step_var = fluid.layers.fill_constant(

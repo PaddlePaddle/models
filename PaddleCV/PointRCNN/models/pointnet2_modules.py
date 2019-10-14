@@ -198,7 +198,7 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         # TODO
         interp_feats = fluid.layers.expand()
     else:
-        dist, idx = fluid.layers.three_nn(unknown, known, eps=0)
+        dist, idx = fluid.layers.three_nn(unknown, known, eps=0.)
         dist.stop_gradient = True
         idx.stop_gradient = True
         dist = fluid.layers.sqrt(dist)

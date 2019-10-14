@@ -127,7 +127,7 @@ def cosine_warmup_decay(learning_rate, warmup_factor, decay_factor,
         shape=[1],
         value=float(learning_rate),
         dtype='float32',
-        persistable=False,
+        persistable=True,
         name="learning_rate")
 
     warmup_step_var = fluid.layers.fill_constant(
@@ -282,7 +282,7 @@ def train():
                 if train_iter % args.log_interval == 0:
                     log_str = ""
                     for name, values in zip(train_keys + ['learning_rate'], train_outs):
-                        log_str += "{}: {:.4f}, ".format(name, np.mean(values))
+                        log_str += "{}: {:.6f}, ".format(name, np.mean(values))
                     logger.info("[TRAIN] Epoch {}, batch {}: {}time: {:.2f}".format(epoch_id, train_iter, log_str, period))
                 train_iter += 1
         except fluid.core.EOFException:
