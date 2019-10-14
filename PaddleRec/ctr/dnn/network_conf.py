@@ -31,20 +31,22 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim,
         """
         sparse_fm_layer
         """
-        first_embeddings = fluid.layers.embedding(
+        first_embeddings = fluid.embedding(
             input=input,
             dtype='float32',
             size=[emb_dict_size, 1],
             is_sparse=True)
+        first_embeddings = fluid.layers.squeeze(input=first_embeddings, axes=[1])
         first_order = fluid.layers.sequence_pool(
             input=first_embeddings, pool_type='sum')
 
-        nonzero_embeddings = fluid.layers.embedding(
+        nonzero_embeddings = fluid.embedding(
             input=input,
             dtype='float32',
             size=[emb_dict_size, factor_size],
             param_attr=fm_param_attr,
             is_sparse=True)
+        nonzero_embeddings = fluid.layers.squeeze(input=nonzero_embeddings, axes=[1])
         summed_features_emb = fluid.layers.sequence_pool(
             input=nonzero_embeddings, pool_type='sum')
         summed_features_emb_square = fluid.layers.square(summed_features_emb)
@@ -57,8 +59,8 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim,
             summed_features_emb_square - squared_sum_features_emb)
         return first_order, second_order
 
-    dense_input = fluid.layers.data(
-        name="dense_input", shape=[dense_feature_dim], dtype='float32')
+    dense_input = fluid.data(
+        name="dense_input", shape=[None, dense_feature_dim], dtype='float32')
 
     sparse_input_ids = [
         fluid.layers.data(
@@ -66,7 +68,7 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim,
         for i in range(1, 27)
     ]
 
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+    label = fluid.data(name='label', shape=[None, 1], dtype='int64')
 
     datas = [dense_input] + sparse_input_ids + [label]
 
@@ -96,6 +98,7 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim,
             size=[sparse_feature_dim, factor_size],
             param_attr=sparse_fm_param_attr,
             is_sparse=True)
+        emb = fluid.layers.squeeze(input=emb, axes=[1])
         return fluid.layers.sequence_pool(input=emb, pool_type='average')
 
     sparse_embed_seq = list(map(embedding_layer, sparse_input_ids))
@@ -139,7 +142,7 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim,
 def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
     def embedding_layer(input):
         """embedding_layer"""
-        emb = fluid.layers.embedding(
+        emb = fluid.embedding(
             input=input,
             is_sparse=True,
             # you need to patch https://github.com/PaddlePaddle/Paddle/pull/14190
@@ -149,18 +152,19 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
             param_attr=fluid.ParamAttr(
                 name="SparseFeatFactors",
                 initializer=fluid.initializer.Uniform()))
+        emb = fluid.layers.squeeze(input=emb, axes=[1])
         return fluid.layers.sequence_pool(input=emb, pool_type='average')
 
-    dense_input = fluid.layers.data(
-        name="dense_input", shape=[dense_feature_dim], dtype='float32')
+    dense_input = fluid.data(
+        name="dense_input", shape=[None, dense_feature_dim], dtype='float32')
 
     sparse_input_ids = [
-        fluid.layers.data(
-            name="C" + str(i), shape=[1], lod_level=1, dtype='int64')
+        fluid.data(
+            name="C" + str(i), shape=[None, 1], lod_level=1, dtype='int64')
         for i in range(1, 27)
     ]
 
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+    label = fluid.data(name='label', shape=[None, 1], dtype='int64')
 
     words = [dense_input] + sparse_input_ids + [label]
 

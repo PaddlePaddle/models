@@ -40,13 +40,13 @@ class DCN(object):
 
     def build_network(self, is_test=False):
         # data input
-        self.target_input = fluid.layers.data(
-            name='label', shape=[1], dtype='float32')
+        self.target_input = fluid.data(
+            name='label', shape=[None, 1], dtype='float32')
 
         data_dict = OrderedDict()
         for feat_name in self.feat_dims_dict:
-            data_dict[feat_name] = fluid.layers.data(
-                name=feat_name, shape=[1], dtype='float32')
+            data_dict[feat_name] = fluid.data(
+                name=feat_name, shape=[None, 1], dtype='float32')
 
         self.net_input = self._create_embedding_input(data_dict)
 
@@ -120,7 +120,7 @@ class DCN(object):
 
     def _create_embedding_input(self, data_dict):
         # sparse embedding
-        sparse_emb_dict = OrderedDict((name, fluid.layers.embedding(
+        sparse_emb_dict = OrderedDict((name, fluid.embedding(
             input=fluid.layers.cast(
                 data_dict[name], dtype='int64'),
             size=[
