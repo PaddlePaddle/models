@@ -223,6 +223,9 @@ class _MultiWorkerLoaderIter(object):
 
     next = __next__
 
+    def __del__(self):
+        self._gc()
+
 
 class DataLoader(object):
     def __init__(self,
