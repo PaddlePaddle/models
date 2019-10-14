@@ -22,4 +22,4 @@ sleep 3
 # start main server
 # usage: python main_server.py --model_name
 # the model_name specifies the model to be used in the ensemble.
-nohup python main_server.py --ernie --xlnet --bert > main_server.log 2>&1 &
+nohup python main_server.py --ernie --xlnet > main_server.log 2>&1 &
