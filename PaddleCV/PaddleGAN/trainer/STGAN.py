@@ -284,15 +284,15 @@ class STGAN(object):
     def build_model(self):
         data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
 
-        image_real = fluid.data(
+        image_real = fluid.layers.data(
             name='image_real', shape=data_shape, dtype='float32')
-        label_org = fluid.data(
+        label_org = fluid.layers.data(
             name='label_org', shape=[-1, self.cfg.c_dim], dtype='float32')
-        label_trg = fluid.data(
+        label_trg = fluid.layers.data(
             name='label_trg', shape=[-1, self.cfg.c_dim], dtype='float32')
-        label_org_ = fluid.data(
+        label_org_ = fluid.layers.data(
             name='label_org_', shape=[-1, self.cfg.c_dim], dtype='float32')
-        label_trg_ = fluid.data(
+        label_trg_ = fluid.layers.data(
             name='label_trg_', shape=[-1, self.cfg.c_dim], dtype='float32')
 
         test_gen_trainer = GTrainer(image_real, label_org, label_org_,
@@ -378,7 +378,7 @@ class STGAN(object):
                 batch_id += 1
 
             if self.cfg.run_test:
-                image_name = fluid.data(
+                image_name = fluid.layers.data(
                     name='image_name',
                     shape=[-1, self.cfg.n_samples],
                     dtype='int32')

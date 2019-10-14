@@ -261,11 +261,11 @@ class StarGAN(object):
     def build_model(self):
         data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
 
-        image_real = fluid.data(
+        image_real = fluid.layers.data(
             name='image_real', shape=data_shape, dtype='float32')
-        label_org = fluid.data(
+        label_org = fluid.layers.data(
             name='label_org', shape=[-1, self.cfg.c_dim], dtype='float32')
-        label_trg = fluid.data(
+        label_trg = fluid.layers.data(
             name='label_trg', shape=[-1, self.cfg.c_dim], dtype='float32')
 
         py_reader = fluid.io.PyReader(
@@ -346,7 +346,7 @@ class StarGAN(object):
                 batch_id += 1
 
             if self.cfg.run_test:
-                image_name = fluid.data(
+                image_name = fluid.layers.data(
                     name='image_name',
                     shape=[-1, self.cfg.n_samples],
                     dtype='int32')

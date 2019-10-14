@@ -289,13 +289,13 @@ class SPADE(object):
         ]
         edge_shape = [-1, 1, self.cfg.crop_height, self.cfg.crop_width]
 
-        input_A = fluid.data(
+        input_A = fluid.layers.data(
             name='input_label', shape=label_shape, dtype='float32')
-        input_B = fluid.data(
+        input_B = fluid.layers.data(
             name='input_img', shape=data_shape, dtype='float32')
-        input_C = fluid.data(
+        input_C = fluid.layers.data(
             name='input_ins', shape=edge_shape, dtype='float32')
-        input_fake = fluid.data(
+        input_fake = fluid.layers.data(
             name='input_fake', shape=data_shape, dtype='float32')
 
         gen_trainer = GTrainer(input_A, input_B, input_C, self.cfg,
@@ -387,7 +387,7 @@ class SPADE(object):
 
             if self.cfg.run_test:
                 test_program = gen_trainer.infer_program
-                image_name = fluid.data(
+                image_name = fluid.layers.data(
                     name='image_name',
                     shape=[-1, self.cfg.batch_size],
                     dtype="int32")
