@@ -40,7 +40,7 @@ python -u compress.py \
 -c ../../configs/yolov3_mobilenet_v1_voc.yml \
 -t yolov3_resnet34.yml \
 -s yolov3_mobilenet_v1_yolov3_resnet34_distillation.yml \
--o YoloTrainFeed.batch_size=16 \
+-o YoloTrainFeed.batch_size=64 \
 -d ../../dataset/voc \
 --teacher_pretrained ./pretrain/yolov3_r34_voc \
 > yolov3_distallation.log 2>&1 &
