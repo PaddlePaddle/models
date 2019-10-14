@@ -72,7 +72,7 @@ def train():
     batch_size = args.batch_size
     items_num = reader.read_config(args.config_path)
     loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size,
-                                args.step, batch_size)
+                                args.step)
 
     data_reader = reader.Data(args.train_path, True)
     logger.info("load data complete")
@@ -96,7 +96,7 @@ def train():
 
     all_vocab = fluid.global_scope().var("all_vocab").get_tensor()
     all_vocab.set(
-        np.arange(1, items_num).astype("int64").reshape((-1)), place)
+        np.arange(1, items_num).astype("int64").reshape((-1, 1)), place)
 
     feed_list = [e.name for e in feed_datas]
 
