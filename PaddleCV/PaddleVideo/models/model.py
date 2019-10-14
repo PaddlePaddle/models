@@ -65,13 +65,13 @@ class ModelBase(object):
         self.is_training = (mode == 'train')
         self.mode = mode
         self.cfg = cfg
-        self.dataloader = None
+        self.py_reader = None
 
     def build_model(self):
         "build model struct"
         raise NotImplementError(self, self.build_model)
 
-    def build_input(self, use_dataloader):
+    def build_input(self, use_pyreader):
         "build input Variable"
         raise NotImplementError(self, self.build_input)
 
@@ -114,8 +114,8 @@ class ModelBase(object):
         wget.download(url, path)
         return path
 
-    def dataloader(self):
-        return self.dataloader
+    def pyreader(self):
+        return self.py_reader
 
     def epoch_num(self):
         "get train epoch num"
