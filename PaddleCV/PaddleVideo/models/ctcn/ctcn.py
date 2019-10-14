@@ -51,36 +51,37 @@ class CTCN(ModelBase):
         self.momentum = self.get_config_from_sec('train', 'momentum')
         self.lr_decay_iter = self.get_config_from_sec('train', 'lr_decay_iter')
 
-    def build_input(self, use_dataloader=True):
-        image_shape = [None, 1, self.img_size, self.concept_size]
-        loc_shape = [None, self.total_num_anchors, 2]
-        cls_shape = [None, self.total_num_anchors]
-        fileid_shape = [None, 1]
-        self.use_dataloader = use_dataloader
+    def build_input(self, use_pyreader=True):
+        image_shape = [1, self.img_size, self.concept_size]
+        loc_shape = [self.total_num_anchors, 2]
+        cls_shape = [self.total_num_anchors]
+        fileid_shape = [1]
+        self.use_pyreader = use_pyreader
         # set init data to None
+        py_reader = None
         image = None
         loc_targets = None
         cls_targets = None
         fileid = None
 
-        image = fluid.data(
+        image = fluid.layers.data(
             name='image', shape=image_shape, dtype='float32')
 
         feed_list = []
         feed_list.append(image)
         if (self.mode == 'train') or (self.mode == 'valid'):
-            loc_targets = fluid.data(
+            loc_targets = fluid.layers.data(
                 name='loc_targets', shape=loc_shape, dtype='float32')
-            cls_targets = fluid.data(
+            cls_targets = fluid.layers.data(
                 name='cls_targets', shape=cls_shape, dtype='int64')
             feed_list.append(loc_targets)
             feed_list.append(cls_targets)
         elif self.mode == 'test':
-            loc_targets = fluid.data(
+            loc_targets = fluid.layers.data(
                 name='loc_targets', shape=loc_shape, dtype='float32')
-            cls_targets = fluid.data(
+            cls_targets = fluid.layers.data(
                 name='cls_targets', shape=cls_shape, dtype='int64')
-            fileid = fluid.data(
+            fileid = fluid.layers.data(
                 name='fileid', shape=fileid_shape, dtype='int64')
             feed_list.append(loc_targets)
             feed_list.append(cls_targets)
@@ -92,11 +93,11 @@ class CTCN(ModelBase):
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
 
-        if use_dataloader:
+        if use_pyreader:
             assert self.mode != 'infer', \
-                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
-            self.dataloader = fluid.io.DataLoader.from_generator(
-                               feed_list=feed_list, capacity=4, iterable=True)
+                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
+            self.py_reader = fluid.io.PyReader(
+                feed_list=feed_list, capacity=4, iterable=True)
 
         self.feature_input = [image]
         self.cls_targets = cls_targets
