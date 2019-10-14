@@ -54,7 +54,7 @@ python compress.py \
     -d "../../dataset/voc" \
     -o max_iters=258 \
     LearningRate.base_lr=0.0001 \
-    learningrate.schedulers='[!piecewisedecay {gamma: 0.1, milestones: [258, 516]}]' \
+    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]' \
     pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
     YoloTrainFeed.batch_size=64
 ```
@@ -79,7 +79,7 @@ python compress.py \
     -d "../../dataset/voc" \
     -o max_iters=258 \
     LearningRate.base_lr=0.0001 \
-    learningrate.schedulers='[!piecewisedecay {gamma: 0.1, milestones: [258, 516]}]' \
+    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]' \
     pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
     YoloTrainFeed.batch_size=64
   
@@ -94,7 +94,7 @@ python compress.py \
     -d "../../dataset/voc" \
     -o max_iters=516 \
     LearningRate.base_lr=0.00005 \
-    learningrate.schedulers='[!piecewisedecay {gamma: 0.1, milestones: [516, 1012]}]' \
+    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [516, 1012]}]' \
     pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
     YoloTrainFeed.batch_size=32
 ```
