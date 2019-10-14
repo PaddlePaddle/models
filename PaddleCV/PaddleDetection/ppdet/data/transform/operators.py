@@ -595,7 +595,7 @@ class ExpandImage(BaseOperator):
         """
         Expand the image and modify bounding box.
         Operators:
-            1. Scale the image weight and height.
+            1. Scale the image width and height.
             2. Construct new images with new height and width.
             3. Fill the new image with the mean.
             4. Put original imge into new image.
@@ -670,7 +670,7 @@ class CropImage(BaseOperator):
         """
         Crop the image and modify bounding box.
         Operators:
-            1. Scale the image weight and height.
+            1. Scale the image width and height.
             2. Crop the image according to a radom sample.
             3. Rescale the bounding box.
             4. Determine if the new bbox is satisfied in the new image.
@@ -760,13 +760,13 @@ class CropImageWithDataAchorSampling(BaseOperator):
         self.sampling_prob = sampling_prob
         self.min_size = min_size
         self.avoid_no_bbox = avoid_no_bbox
-        self.scale_array = np.array(das_anchor_scales)
+        self.das_anchor_scales = np.array(das_anchor_scales)
 
     def __call__(self, sample, context):
         """
         Crop the image and modify bounding box.
         Operators:
-            1. Scale the image weight and height.
+            1. Scale the image width and height.
             2. Crop the image according to a radom sample.
             3. Rescale the bounding box.
             4. Determine if the new bbox is satisfied in the new image.
@@ -794,8 +794,8 @@ class CropImageWithDataAchorSampling(BaseOperator):
                     if found >= sampler[0]:
                         break
                     sample_bbox = data_anchor_sampling(
-                        gt_bbox, image_width, image_height, self.scale_array,
-                        self.target_size)
+                        gt_bbox, image_width, image_height,
+                        self.das_anchor_scales, self.target_size)
                     if sample_bbox == 0:
                         break
                     if satisfy_sample_constraint_coverage(sampler, sample_bbox,

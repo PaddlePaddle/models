@@ -21,12 +21,13 @@ import logging
 import numpy as np
 import paddle.fluid as fluid
 
-from utils.train_utils import train_with_pyreader
+from utils.train_utils import train_with_dataloader
 import models
 from utils.config_utils import *
 from reader import get_reader
 from metrics import get_metrics
 from utils.utility import check_cuda
+from utils.utility import check_version
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -124,7 +125,7 @@ def train(args):
         train_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup):
         with fluid.unique_name.guard():
-            train_model.build_input(use_pyreader=True)
+            train_model.build_input(use_dataloader=True)
             train_model.build_model()
             # for the input, has the form [data1, data2,..., label], so train_feeds[-1] is label
             train_feeds = train_model.feeds()
@@ -134,16 +135,16 @@ def train(args):
                 item.persistable = True
             optimizer = train_model.optimizer()
             optimizer.minimize(train_loss)
-            train_pyreader = train_model.pyreader()
+            train_dataloader = train_model.dataloader()
 
     valid_prog = fluid.Program()
     with fluid.program_guard(valid_prog, startup):
         with fluid.unique_name.guard():
-            valid_model.build_input(use_pyreader=True)
+            valid_model.build_input(use_dataloader=True)
             valid_model.build_model()
             valid_feeds = valid_model.feeds()
             valid_fetch_list = valid_model.fetches()
-            valid_pyreader = valid_model.pyreader()
+            valid_dataloader = valid_model.dataloader()
             for item in valid_fetch_list:
                 item.persistable = True
 
@@ -190,8 +191,8 @@ def train(args):
             gpus = gpus.split(",")
             num_gpus = len(gpus)
             assert num_gpus == train_config.TRAIN.num_gpus, \
-                   "num_gpus({}) set by CUDA_VISIBLE_DEVICES" \
-                   "shoud be the same as that" \
+                   "num_gpus({}) set by CUDA_VISIBLE_DEVICES " \
+                   "shoud be the same as that " \
                    "set in {}({})".format(
                    num_gpus, args.config, train_config.TRAIN.num_gpus)
         bs_denominator = train_config.TRAIN.num_gpus
@@ -210,16 +211,16 @@ def train(args):
     epochs = args.epoch or train_model.epoch_num()
 
     exe_places = fluid.cuda_places() if args.use_gpu else fluid.cpu_places()
-    train_pyreader.decorate_sample_list_generator(
+    train_dataloader.set_sample_list_generator(
         train_reader, places=exe_places)
-    valid_pyreader.decorate_sample_list_generator(
+    valid_dataloader.set_sample_list_generator(
         valid_reader, places=exe_places)
 
-    train_with_pyreader(
+    train_with_dataloader(
         exe,
         train_prog,
         compiled_train_prog,  #train_exe,
-        train_pyreader,
+        train_dataloader,
         train_fetch_list,
         train_metrics,
         epochs=epochs,
@@ -229,7 +230,7 @@ def train(args):
         save_model_name=args.model_name,
         fix_random_seed=args.fix_random_seed,
         compiled_test_prog=compiled_valid_prog,  #test_exe=valid_exe,
-        test_pyreader=valid_pyreader,
+        test_dataloader=valid_dataloader,
         test_fetch_list=valid_fetch_list,
         test_metrics=valid_metrics)
 
@@ -238,6 +239,7 @@ if __name__ == "__main__":
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
     check_cuda(args.use_gpu)
+    check_version()
     logger.info(args)
 
     if not os.path.exists(args.save_dir):

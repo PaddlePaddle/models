@@ -30,6 +30,7 @@ import models
 from reader import get_reader
 from metrics import get_metrics
 from utils.utility import check_cuda
+from utils.utility import check_version
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -100,7 +101,7 @@ def infer(args):
     infer_config = merge_configs(config, 'infer', vars(args))
     print_configs(infer_config, "Infer")
     infer_model = models.get_model(args.model_name, infer_config, mode='infer')
-    infer_model.build_input(use_pyreader=False)
+    infer_model.build_input(use_dataloader=False)
     infer_model.build_model()
     infer_feeds = infer_model.feeds()
     infer_outputs = infer_model.outputs()
@@ -165,6 +166,7 @@ if __name__ == "__main__":
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
     check_cuda(args.use_gpu)
+    check_version()
     logger.info(args)
 
     infer(args)

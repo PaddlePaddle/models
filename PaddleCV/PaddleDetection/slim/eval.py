@@ -142,8 +142,8 @@ def main():
     assert os.path.exists(FLAGS.model_path)
     infer_prog, feed_names, fetch_targets = fluid.io.load_inference_model(
             dirname=FLAGS.model_path, executor=exe,
-            model_filename='__model__',
-            params_filename='__params__')
+            model_filename=FLAGS.model_name,
+            params_filename=FLAGS.params_name)
 
     eval_keys = ['bbox', 'gt_box', 'gt_label', 'is_difficult']
     eval_values = ['multiclass_nms_0.tmp_0', 'gt_box', 'gt_label', 'is_difficult']
@@ -156,57 +156,8 @@ def main():
     resolution = None
     if 'mask' in results[0]:
         resolution = model.mask_head.resolution
-    box_ap_stats = eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
+    eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
             resolution, False, FLAGS.output_eval)
-
-    logger.info("freeze the graph for inference")
-    test_graph = IrGraph(core.Graph(infer_prog.desc), for_test=True)
-
-    freeze_pass = QuantizationFreezePass(
-            scope=fluid.global_scope(),
-            place=place,
-            weight_quantize_type=FLAGS.weight_quant_type)
-    freeze_pass.apply(test_graph)
-    server_program = test_graph.to_program()
-    fluid.io.save_inference_model(
-            dirname=os.path.join(FLAGS.save_path, 'float'),
-            feeded_var_names=feed_names,
-            target_vars=fetch_targets,
-            executor=exe,
-            main_program=server_program,
-            model_filename='model',
-            params_filename='weights')
-
-    logger.info("convert the weights into int8 type")
-    convert_int8_pass = ConvertToInt8Pass(
-            scope=fluid.global_scope(),
-            place=place)
-    convert_int8_pass.apply(test_graph)
-    server_int8_program = test_graph.to_program()
-    fluid.io.save_inference_model(
-            dirname=os.path.join(FLAGS.save_path, 'int8'),
-            feeded_var_names=feed_names,
-            target_vars=fetch_targets,
-            executor=exe,
-            main_program=server_int8_program,
-            model_filename='model',
-            params_filename='weights')
-
-    logger.info("convert the freezed pass to paddle-lite execution")
-    mobile_pass = TransformForMobilePass()
-    mobile_pass.apply(test_graph)
-    mobile_program = test_graph.to_program()
-    fluid.io.save_inference_model(
-            dirname=os.path.join(FLAGS.save_path, 'mobile'),
-            feeded_var_names=feed_names,
-            target_vars=fetch_targets,
-            executor=exe,
-            main_program=mobile_program,
-            model_filename='model',
-            params_filename='weights')
-
-
-
 
 
 if __name__ == '__main__':
@@ -229,15 +180,15 @@ if __name__ == '__main__':
         type=str,
         help="Dataset path, same as DataFeed.dataset.dataset_dir")
     parser.add_argument(
-        "--weight_quant_type",
-        default='abs_max',
+        "--model_name",
+        default='model',
         type=str,
-        help="quantization type for weight")
+        help="model file name to load_inference_model")
     parser.add_argument(
-        "--save_path",
-        default='./output',
+        "--params_name",
+        default='params',
         type=str,
-        help="path to save quantization inference model")
+        help="params file name to load_inference_model")
 
     FLAGS = parser.parse_args()
     main()
