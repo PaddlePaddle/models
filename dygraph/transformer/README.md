@@ -8,19 +8,15 @@
 
 ### 数据集说明
 
-我们使用公开的 [WMT'16 EN-DE 数据集](http://www.statmt.org/wmt16/translation-task.html)训练
+我们使用[WMT-16](http://www.statmt.org/wmt16/)新增的[multimodal task](http://www.statmt.org/wmt16/multimodal-task.html)中的[translation task](http://www.statmt.org/wmt16/multimodal-task.html#task1)的数据集作为示例。该数据集为英德翻译数据，包含29001条训练数据，1000条测试数据。
 
-
-可以将下载好的wmt16数据集放在`~/.cache/paddle/dataset/wmt16/`目录下
+该数据集内置在了Paddle中，可以通过 `paddle.dataset.wmt16` 使用，执行本项目中的训练代码数据集将自动下载到 `~/.cache/paddle/dataset/wmt16/` 目录下。
 
 ### 安装说明
 
 1. paddle安装
 
-   本项目依赖于 Paddlepaddle Fluid 1.4.1，请参考安装指南进行安装。
-
-2. 安装代码
-3. 环境依赖
+   本项目依赖于 PaddlePaddle Fluid 1.6.0 及以上版本（1.6.0 待近期正式发版，可先使用 develop），请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 ### 执行训练：
 如果是使用GPU单卡训练，启动训练的方式:
@@ -28,11 +24,19 @@
 env CUDA_VISIBLE_DEVICES=0 python train.py
 ```
 
-这里`CUDA_VISIBLE_DEVICES=0`表示是执行在0号设备卡上，请根据自身情况修改这个参数。
+这里`CUDA_VISIBLE_DEVICES=0`表示是执行在0号设备卡上，请根据自身情况修改这个参数。如需调整其他模型及训练参数，可在 `config.py` 中修改或使用如下方式传入：
+
+```sh
+python train.py \
+  n_head 16 \
+  d_model 1024 \
+  d_inner_hid 4096 \
+  prepostprocess_dropout 0.3
+```
 
 Paddle动态图支持多进程多卡进行模型训练，启动训练的方式：
 ```
-python -m paddle.distributed.launch --selected_gpus=0,1,2,3 --log_dir ./mylog train.py   --use_data_parallel 1
+python -m paddle.distributed.launch --selected_gpus=0,1,2,3 --log_dir ./mylog train.py --use_data_parallel 1
 ```
 此时，程序会将每个进程的输出log导入到`./mylog`路径下：
 ```
@@ -63,6 +67,45 @@ python -m paddle.distributed.launch --selected_gpus=0,1,2,3 --log_dir ./mylog tr
     pass num : 0, batch_id: 100, dy_graph avg loss: [7.611051]
     pass num : 0, batch_id: 110, dy_graph avg loss: [7.4179897]
     pass num : 0, batch_id: 120, dy_graph avg loss: [7.318419]
+
+
+### 执行预测
+
+训练完成后，使用如下命令进行预测：
+
+```
+env CUDA_VISIBLE_DEVICES=0 python predict.py
+```
+
+预测结果将输出到 `predict.txt` 文件中（可在运行时通过 `--output_file` 更改），其他模型与预测参数也可在 `config.py` 中修改或使用如下方式传入：
+
+```sh
+python predict.py \
+  n_head 16 \
+  d_model 1024 \
+  d_inner_hid 4096 \
+  prepostprocess_dropout 0.3
+```
+
+完成预测后，可以借助第三方工具进行 BLEU 指标的评估，可按照如下方式进行：
+
+```sh
+# 提取 reference 数据
+tar -zxvf ~/.cache/paddle/dataset/wmt16/wmt16.tar.gz
+awk 'BEGIN {FS="\t"}; {print $2}' wmt16/test > ref.de
+
+# clone mosesdecoder代码
+git clone https://github.com/moses-smt/mosesdecoder.git
+
+# 进行评估
+perl mosesdecoder/scripts/generic/multi-bleu.perl ref.de < predict.txt
+```
+
+使用默认配置单卡训练20个 epoch 训练的模型约有如下评估结果：
+```
+BLEU = 33.21, 64.7/39.9/26.7/17.7
+```
+
 
 ## 进阶使用
 
