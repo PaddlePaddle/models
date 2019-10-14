@@ -92,21 +92,6 @@ class ClassAwareSamplingRoiDbSource(RoiDbSource):
 
         return sample
 
-    def _load(self):
-        """ load data from file
-        """
-        from . import loader
-        records, cname2cid = loader.load(self._fname, self._samples,
-                                         self._with_background, True,
-                                         self.use_default_label, self.cname2cid)
-        self.cname2cid = cname2cid
-        return records
-
-    def _load_image(self, where):
-        fn = os.path.join(self._image_dir, where)
-        with open(fn, 'rb') as f:
-            return f.read()
-
     def _calc_img_weights(self):
         """ calculate the probabilities of each sample
         """
@@ -145,19 +130,3 @@ class ClassAwareSamplingRoiDbSource(RoiDbSource):
 
         if self._epoch < 0:
             self._epoch = 0
-
-    def size(self):
-        """ implementation of Dataset.size
-        """
-        return len(self._roidb)
-
-    def drained(self):
-        """ implementation of Dataset.drained
-        """
-        assert self._epoch >= 0, 'The first epoch has not begin!'
-        return False
-
-    def epoch_id(self):
-        """ return epoch id for latest sample
-        """
-        return self._epoch
