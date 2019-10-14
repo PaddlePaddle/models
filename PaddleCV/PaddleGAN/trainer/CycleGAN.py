@@ -349,9 +349,9 @@ class CycleGAN(object):
 
             if self.cfg.run_test:
                 A_image_name = fluid.layers.data(
-                    name='A_image_name', shape=[-1, 1], dtype='int32')
+                    name='A_image_name', shape=[1], dtype='int32')
                 B_image_name = fluid.layers.data(
-                    name='B_image_name', shape=[-1, 1], dtype='int32')
+                    name='B_image_name', shape=[1], dtype='int32')
                 A_test_py_reader = fluid.io.PyReader(
                     feed_list=[input_A, A_image_name],
                     capacity=4,

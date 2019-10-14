@@ -275,13 +275,13 @@ class AttGAN(object):
         image_real = fluid.layers.data(
             name='image_real', shape=data_shape, dtype='float32')
         label_org = fluid.layers.data(
-            name='label_org', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_org', shape=[self.cfg.c_dim], dtype='float32')
         label_trg = fluid.layers.data(
-            name='label_trg', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_trg', shape=[self.cfg.c_dim], dtype='float32')
         label_org_ = fluid.layers.data(
-            name='label_org_', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_org_', shape=[self.cfg.c_dim], dtype='float32')
         label_trg_ = fluid.layers.data(
-            name='label_trg_', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_trg_', shape=[self.cfg.c_dim], dtype='float32')
 
         py_reader = fluid.io.PyReader(
             feed_list=[image_real, label_org, label_trg],
@@ -371,7 +371,7 @@ class AttGAN(object):
             if self.cfg.run_test:
                 image_name = fluid.layers.data(
                     name='image_name',
-                    shape=[-1, self.cfg.n_samples],
+                    shape=[self.cfg.n_samples],
                     dtype='int32')
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[image_real, label_org, label_trg, image_name],

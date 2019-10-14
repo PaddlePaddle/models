@@ -89,7 +89,6 @@ def infer(args):
             capacity=4,  ## batch_size * 4
             iterable=True,
             use_double_buffer=True)
-
         from network.CycleGAN_network import CycleGAN_model
         model = CycleGAN_model()
         if args.input_style == "A":

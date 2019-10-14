@@ -389,7 +389,7 @@ class SPADE(object):
                 test_program = gen_trainer.infer_program
                 image_name = fluid.layers.data(
                     name='image_name',
-                    shape=[-1, self.cfg.batch_size],
+                    shape=[self.cfg.batch_size],
                     dtype="int32")
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[input_A, input_B, input_C, image_name],

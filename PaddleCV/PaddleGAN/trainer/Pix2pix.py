@@ -222,7 +222,7 @@ class Pix2pix(object):
 
         py_reader = fluid.io.PyReader(
             feed_list=[input_A, input_B],
-            capacity=4,
+            capacity=4,  ## batch_size * 4
             iterable=True,
             use_double_buffer=True)
 
@@ -300,11 +300,11 @@ class Pix2pix(object):
             if self.cfg.run_test:
                 image_name = fluid.layers.data(
                     name='image_name',
-                    shape=[-1, self.cfg.batch_size],
+                    shape=[self.cfg.batch_size],
                     dtype="int32")
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[input_A, input_B, image_name],
-                    capacity=4,
+                    capacity=4,  ## batch_size * 4
                     iterable=True,
                     use_double_buffer=True)
                 test_py_reader.decorate_batch_generator(
