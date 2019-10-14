@@ -34,6 +34,7 @@ PaddleDetection提供了使用COCO数据集对Yolo V3进行训练的参数配置
 模型在我们内部数据上的精度指标为：
 
 IOU=.50:.05:.95时的AP为 0.545。
+
 IOU=.5时的AP为 0.764。
 
 ### 4. 预测
@@ -81,6 +82,7 @@ PaddleDetection提供了使用COCO数据集对Yolo V3进行训练的参数配置
 模型在我们针对监控场景的内部数据上精度指标为：
 
 IOU=.5时的AP为 0.792。
+
 IOU=.5-.95时的AP为 0.518。
 
 ### 3. 预测
@@ -98,5 +100,7 @@ python -u tools/infer.py -c contrib/PedestrianDetection/pedestrian_yolov3_darkne
 ```
 
 预测结果示例：
+
 ![](PedestrianDetection/demo/output/001.png)
+
 ![](PedestrianDetection/demo/output/004.png)

@@ -3,7 +3,7 @@
 We provide some models implemented by PaddlePaddle to detect objects in specific scenarios, users can download the models and use them in these scenarios.
 
 | Task                 | Algorithm | Box AP | Download                                                                                |
-|:---------------------|:---------:|:------:| :----------------------------------------------------------------------------------- -: |
+|:---------------------|:---------:|:------:| :-------------------------------------------------------------------------------------: |
 | Vehicle Detection    |  Yolo V3  |  54.5  | [model](https://paddlemodels.bj.bcebos.com/object_detection/vehicle_yolov3_darknet.tar) |
 | Pedestrian Detection |  Yolo V3  |  51.8  | [model](https://paddlemodels.bj.bcebos.com/object_detection/pedestrian_yolov3_darknet.tar) |
 
@@ -33,6 +33,7 @@ PaddleDetection provides users with a configuration file [yolov3_darnet.yml](htt
 The accuracy of the model trained and evaluated on our private data is shown as followed:
 
 AP at IoU=.50:.05:.95 is 0.545.
+
 AP at IoU=.50 is 0.764.
 
 ### 4. Inference
@@ -79,6 +80,7 @@ PaddleDetection provides users with a configuration file [yolov3_darnet.yml](htt
 The accuracy of the model trained and evaluted on our private data is shown as followed:
 
 AP at IoU=.50:.05:.95 is 0.518.
+
 AP at IoU=.50 is 0.792.
 
 ### 4. Inference
@@ -98,4 +100,5 @@ python -u tools/infer.py -c contrib/PedestrianDetection/pedestrian_yolov3_darkne
 Some inference results are visualized below:
 
 ![](PedestrianDetection/demo/output/001.png)
+
 ![](PedestrianDetection/demo/output/004.png)
