@@ -139,7 +139,8 @@ class ETSNET(object):
 
         return rnn_out
 
-    def infer_decoder(self, encoded_sequence, encoded_vector, encoded_proj):
+    def infer_decoder(self, init_ids, init_scores, encoded_sequence,
+                      encoded_vector, encoded_proj):
         decoder_boot = fluid.layers.fc(input=encoded_vector,
                                        size=self.decoder_size,
                                        act='tanh',
@@ -149,10 +150,6 @@ class ETSNET(object):
             shape=[1], dtype='int64', value=self.max_length)
         counter = fluid.layers.zeros(shape=[1], dtype='int64', force_cpu=True)
 
-        init_ids = fluid.layers.data(
-            name="init_ids", shape=[1], dtype="int64", lod_level=2)
-        init_scores = fluid.layers.data(
-            name="init_scores", shape=[1], dtype="float32", lod_level=2)
         # create and init arrays to save selected ids, scores and states for each step
         ids_array = fluid.layers.array_write(init_ids, i=counter)
         scores_array = fluid.layers.array_write(init_scores, i=counter)
@@ -222,15 +219,18 @@ class ETSNET(object):
 
         return translation_ids, translation_scores
 
-    def net(self, feat, word):
+    def net(self, feat, *input_decoder):
         encoded_sequence, encoded_vector, encoded_proj = self.encoder(feat)
         if (self.mode == 'train') or (self.mode == 'valid'):
+            word, = input_decoder
             prob = self.train_decoder(word, encoded_sequence, encoded_vector,
                                       encoded_proj)
             return prob
         else:
+            init_ids, init_scores = input_decoder
             translation_ids, translation_scores = self.infer_decoder(
-                encoded_sequence, encoded_vector, encoded_proj)
+                init_ids, init_scores, encoded_sequence, encoded_vector,
+                encoded_proj)
             return translation_ids, translation_scores
 
     def loss(self, prob, word_next):

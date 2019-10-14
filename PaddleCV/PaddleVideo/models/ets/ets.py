@@ -130,12 +130,11 @@ class ETS(ModelBase):
             beam_size=cfg['beam_size'],
             mode=self.mode)
         if (self.mode == 'train') or (self.mode == 'valid'):
-            prob = self.videomodel.net(feat=self.feature_input[0],
-                                       word=self.word)
+            prob = self.videomodel.net(self.feature_input[0], self.word)
             self.network_outputs = [prob]
         elif (self.mode == 'test') or (self.mode == 'infer'):
             translation_ids, translation_scores = self.videomodel.net(
-                feat=self.feature_input[0], word=self.word)
+                self.feature_input[0], self.init_ids, self.init_scores)
             self.network_outputs = [translation_ids, translation_scores]
 
     def optimizer(self):
@@ -160,9 +159,7 @@ class ETS(ModelBase):
         return self.loss_
 
     def outputs(self):
-        translation_ids = self.network_outputs[0]
-        translation_scores = self.network_outputs[1]
-        return [translation_ids, translation_scores]
+        return self.network_outputs
 
     def feeds(self):
         if (self.mode == 'train') or (self.mode == 'valid'):

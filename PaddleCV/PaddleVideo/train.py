@@ -173,8 +173,6 @@ def train(args):
         build_strategy.enable_sequential_execution = True
 
     exec_strategy = fluid.ExecutionStrategy()
-    if args.model_name in ['ETS']:
-        exec_strategy.num_iteration_per_drop_scope = 1
 
     compiled_train_prog = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
