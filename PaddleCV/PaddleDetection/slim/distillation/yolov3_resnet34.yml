@@ -1,4 +1,7 @@
 architecture: YOLOv3
+log_smooth_window: 20
+metric: VOC
+map_type: 11point
 num_classes: 20
 weight_prefix_name: teacher_
 
