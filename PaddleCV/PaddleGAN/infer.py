@@ -83,12 +83,11 @@ def infer(args):
 
     model_name = 'net_G'
     if args.model_net == 'CycleGAN':
-        loader = fluid.io.DataLoader.from_generator(
+        py_reader = fluid.io.PyReader(
             feed_list=[input, image_name],
             capacity=4,  ## batch_size * 4
             iterable=True,
             use_double_buffer=True)
-
         from network.CycleGAN_network import CycleGAN_model
         model = CycleGAN_model()
         if args.input_style == "A":
@@ -98,7 +97,7 @@ def infer(args):
         else:
             raise "Input with style [%s] is not supported." % args.input_style
     elif args.model_net == 'Pix2pix':
-        loader = fluid.io.DataLoader.from_generator(
+        py_reader = fluid.io.PyReader(
             feed_list=[input, image_name],
             capacity=4,  ## batch_size * 4
             iterable=True,
@@ -296,11 +295,11 @@ def infer(args):
             batch_size=args.n_samples,
             mode="VAL")
         reader_test = test_reader.make_reader(args, return_name=True)
-        loader.set_batch_generator(
+        py_reader.decorate_batch_generator(
             reader_test,
             places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
         id2name = test_reader.id2name
-        for data in loader():
+        for data in py_reader():
             real_img, image_name = data[0]['input'], data[0]['image_name']
             image_name = id2name[np.array(image_name).astype('int32')[0]]
             print("read: ", image_name)
