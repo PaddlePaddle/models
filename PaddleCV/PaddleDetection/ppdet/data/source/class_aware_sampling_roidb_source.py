@@ -28,10 +28,10 @@ import copy
 import collections
 import pickle as pkl
 import numpy as np
-from ..dataset import Dataset
+from .roidb_source import RoiDbSource
 
 
-class ClassAwareSamplingRoiDbSource(Dataset):
+class ClassAwareSamplingRoiDbSource(RoiDbSource):
     """ interface to load class aware sampling roidb data from files
     """
 
@@ -59,26 +59,17 @@ class ClassAwareSamplingRoiDbSource(Dataset):
             with_background (bool): whether load background 
                                     as a class
         """
-        super(ClassAwareSamplingRoiDbSource, self).__init__()
-        self._epoch = -1
-        assert os.path.isfile(anno_file) or os.path.isdir(
-            anno_file), 'invalid file[%s] for ClassAwareSamplingRoidbSource' % (
-                anno_file)
-        self._fname = anno_file
-        self._image_dir = image_dir
-        if image_dir is not None:
-            assert os.path.isdir(image_dir), 'invalid image directory[%s]' % (
-                image_dir)
-        self._roidb = None
-        self._drained = False
-        self._samples = samples
-        self._load_img = load_img
-        self.use_default_label = use_default_label
-        self._with_background = with_background
+        super(ClassAwareSamplingRoiDbSource, self).__init__(
+            anno_file=anno_file,
+            image_dir=image_dir,
+            samples=samples,
+            is_shuffle=is_shuffle,
+            load_img=load_img,
+            cname2cid=cname2cid,
+            use_default_label=use_default_label,
+            mixup_epoch=mixup_epoch,
+            with_background=with_background)
         self._img_weights = None
-        self.classes = None
-        self.cname2cid = cname2cid
-        self.random_img = True
 
     def __str__(self):
         return 'ClassAwareSamplingRoidbSource(fname:%s,epoch:%d,size:%d)' \
@@ -116,16 +107,12 @@ class ClassAwareSamplingRoiDbSource(Dataset):
         with open(fn, 'rb') as f:
             return f.read()
 
-    def reset(self):
-        """ implementation of Dataset.reset
+    def _calc_img_weights(self):
+        """ calculate the probabilities of each sample
         """
-        if self._roidb is None:
-            self._roidb = self._load()
-
         imgs_cls = []
         num_per_cls = {}
-        self._img_weights = []
-        # Calculate the probabilities of each sample
+        img_weights = []
         for i, roidb in enumerate(self._roidb):
             img_cls = set(
                 [k for cls in self._roidb[i]['gt_class'] for k in cls])
@@ -140,9 +127,19 @@ class ClassAwareSamplingRoiDbSource(Dataset):
             weights = 0
             for c in imgs_cls[i]:
                 weights += 1 / num_per_cls[c]
-            self._img_weights.append(weights)
+            img_weights.append(weights)
         # Probabilities sum to 1
-        self._img_weights = self._img_weights / np.sum(self._img_weights)
+        img_weights = img_weights / np.sum(img_weights)
+        return img_weights
+
+    def reset(self):
+        """ implementation of Dataset.reset
+        """
+        if self._roidb is None:
+            self._roidb = self._load()
+
+        if self._img_weights is None:
+            self._img_weights = self._calc_img_weights()
 
         self._samples = len(self._roidb)
 
