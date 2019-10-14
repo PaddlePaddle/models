@@ -4,8 +4,8 @@
 
 | 任务                 | 算法 | 精度(Box AP) | 下载                                                                                |
 |:---------------------|:---------:|:------:| :---------------------------------------------------------------------------------: |
-| 车辆检测    |  Yolo V3  |  54.5  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/vehicle_yolov3_darknet.tar) |
-| 行人检测 |  Yolo V3  |  51.8  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/pedestrian_yolov3_darknet.tar) |
+| 车辆检测    |  YOLOv3  |  54.5  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/vehicle_yolov3_darknet.tar) |
+| 行人检测 |  YOLOv3  |  51.8  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/pedestrian_yolov3_darknet.tar) |
 
 
 ## 车辆检测（Vehicle Detection）
@@ -14,11 +14,11 @@
 
 ### 1. 模型结构
 
-Backbone为Dacknet53的Yolo V3。
+Backbone为Dacknet53的YOLOv3。
 
 ### 2. 训练参数配置
 
-PaddleDetection提供了使用COCO数据集对Yolo V3进行训练的参数配置文件[yolov3_darnet.yml](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/PaddleDetection/configs/yolov3_darknet.yml)，与之相比，在进行车辆检测的模型训练时，我们对以下参数进行了修改：
+PaddleDetection提供了使用COCO数据集对YOLOv3进行训练的参数配置文件[yolov3_darnet.yml](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/PaddleDetection/configs/yolov3_darknet.yml)，与之相比，在进行车辆检测的模型训练时，我们对以下参数进行了修改：
 
 * max_iters: 120000
 * num_classes: 6
@@ -64,12 +64,12 @@ python -u tools/infer.py -c contrib/VehicleDetection/vehicle_yolov3_darknet.yml 
 
 ### 1. 模型结构
 
-Backbone为Dacknet53的Yolo V3。
+Backbone为Dacknet53的YOLOv3。
 
 
 ### 2. 训练参数配置
 
-PaddleDetection提供了使用COCO数据集对Yolo V3进行训练的参数配置文件[yolov3_darnet.yml](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/PaddleDetection/configs/yolov3_darknet.yml)，与之相比，在进行行人检测的模型训练时，我们对以下参数进行了修改：
+PaddleDetection提供了使用COCO数据集对YOLOv3进行训练的参数配置文件[yolov3_darnet.yml](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/PaddleDetection/configs/yolov3_darknet.yml)，与之相比，在进行行人检测的模型训练时，我们对以下参数进行了修改：
 
 * max_iters: 200000
 * num_classes: 1
