@@ -7,7 +7,8 @@
 该示例使用PaddleSlim提供的[卷积通道剪裁压缩策略](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/tutorial.md#2-%E5%8D%B7%E7%A7%AF%E6%A0%B8%E5%89%AA%E8%A3%81%E5%8E%9F%E7%90%86)对检测库中的模型进行压缩。
 在阅读该示例前，建议您先了解以下内容：
 
-- <a href="../..README_cn.md">检测库的常规训练方法</a>
+- <a href="../../README_cn.md">检测库的常规训练方法</a>
+- [检测模型数据准备](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/PaddleDetection/docs/INSTALL_cn.md#%E6%95%B0%E6%8D%AE%E9%9B%86)
 - [PaddleSlim使用文档](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/usage.md)
 
 
@@ -130,7 +131,7 @@ python compress.py \
     -s yolov3_mobilenet_v1_slim.yaml \
     -c ../../configs/yolov3_mobilenet_v1_voc.yml \
     -o max_iters=258 \
-    -o YoloTrainFeed.batch_size = 16 \
+    YoloTrainFeed.batch_size=16 \
     -d "../../dataset/voc"
 ```
 
@@ -140,9 +141,9 @@ python compress.py \
     -s yolov3_mobilenet_v1_slim.yaml \
     -c ../../configs/yolov3_mobilenet_v1_voc.yml \
     -o max_iters=516 \
-    -o LeaningRate.base_lr=0.005 \ # 0.001 /2
-    -o YoloTrainFeed.batch_size = 16 \
-    -o LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [110000, 124000]}, !LinearWarmup {start_factor: 0., steps: 2000}]' \
+    LeaningRate.base_lr=0.005 \ # 0.001 /2
+    YoloTrainFeed.batch_size=16 \
+    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [110000, 124000]}, !LinearWarmup {start_factor: 0., steps: 2000}]' \
     -d "../../dataset/voc"
 ```
 
@@ -189,11 +190,9 @@ python compress.py \
 
 ### MobileNetV1-YOLO-V3
 
-| FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
+| FLOPS |Box AP| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
-|baseline|- |- |- |-|
-|-10%|- |- |- |-|
-|-30%|- |- |- |-|
-|-50%|- |- |- |-|
+|baseline|76.2 |93M |- |-|
+|-50%|69.48 |51M |- |-|
 
 ## FAQ
