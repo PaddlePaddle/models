@@ -148,7 +148,7 @@ def main():
             optimizer.minimize(loss)
 
 
-    train_reader = create_reader(train_feed, cfg.max_iters * devices_num,
+    train_reader = create_reader(train_feed, cfg.max_iters,
                                  FLAGS.dataset_dir)
     train_loader.set_sample_list_generator(train_reader, place)
 
