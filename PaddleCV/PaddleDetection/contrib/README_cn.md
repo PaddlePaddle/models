@@ -2,6 +2,12 @@
 
 我们提供了针对不同场景的基于PaddlePaddle的检测模型，用户可以下载模型进行使用。
 
+| 任务                 | 算法 | 精度(Box AP) | 下载                                                                                |
+|:---------------------|:---------:|:------:| :---------------------------------------------------------------------------------: |
+| 车辆检测    |  Yolo V3  |  54.5  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/vehicle_yolov3_darknet.tar) |
+| 行人检测 |  Yolo V3  |  51.8  | [下载链接](https://paddlemodels.bj.bcebos.com/object_detection/pedestrian_yolov3_darknet.tar) |
+
+
 ## 车辆检测（Vehicle Detection）
 
 车辆检测的主要应用之一是交通监控。在这样的监控场景中，待检测的车辆多为道路红绿灯柱上的摄像头拍摄所得。
@@ -10,14 +16,27 @@
 
 Backbone为Dacknet53的Yolo V3。
 
-### 2. 精度指标
+### 2. 训练参数配置
 
-模型在我们业务数据上的精度指标为：
+PaddleDetection提供了使用COCO数据集对Yolo V3进行训练的参数配置文件[yolov3_darnet.yml](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/PaddleDetection/configs/yolov3_darknet.yml)，与之相比，在进行车辆检测的模型训练时，我们对以下参数进行了修改：
 
-IOU=.50:.05:.95时的AP为0.545。
-IOU=.5时的AP为0.764。
+* max_iters: 120000
+* num_classes: 6
+* anchors: [[8, 9], [10, 23], [19, 15], [23, 33], [40, 25], [54, 50], [101, 80], [139, 145], [253, 224]]
+* label_smooth: false
+* nms/nms_top_k: 400
+* nms/score_threshold: 0.005
+* milestones: [60000, 80000]
+* dataset_dir: dataset/vehicle
 
-### 3. 预测
+### 3. 精度指标
+
+模型在我们内部数据上的精度指标为：
+
+IOU=.50:.05:.95时的AP为 0.545。
+IOU=.5时的AP为 0.764。
+
+### 4. 预测
 
 用户可以使用我们训练好的模型进行车辆检测：
 
@@ -25,7 +44,7 @@ IOU=.5时的AP为0.764。
 export CUDA_VISIBLE_DEVICES=0
 export PYTHONPATH=$PYTHONPATH:.
 python -u tools/infer.py -c contrib/VehicleDetection/vehicle_yolov3_darknet.yml \
-                         -o weights= \ 
+                         -o weights=https://paddlemodels.bj.bcebos.com/object_detection/vehicle_yolov3_darknet.tar \ 
                          --infer_dir contrib/VehicleDetection/demo \
                          --draw_threshold 0.3 \
                          --output_dir contrib/VehicleDetection/demo/output
@@ -44,14 +63,25 @@ python -u tools/infer.py -c contrib/VehicleDetection/vehicle_yolov3_darknet.yml 
 
 ### 1. 模型结构
 
-Backbone为Dacknet53的Yolo V3
+Backbone为Dacknet53的Yolo V3。
+
+
+### 2. 训练参数配置
+
+PaddleDetection提供了使用COCO数据集对Yolo V3进行训练的参数配置文件[yolov3_darnet.yml](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/PaddleDetection/configs/yolov3_darknet.yml)，与之相比，在进行行人检测的模型训练时，我们对以下参数进行了修改：
+
+* max_iters: 200000
+* num_classes: 1
+* snapshot_iter: 5000
+* milestones: [150000, 180000]
+* dataset_dir: dataset/pedestrian
 
 ### 2. 精度指标
 
-模型在针对监控场景的业务数据上精度指标为：
+模型在我们针对监控场景的内部数据上精度指标为：
 
-IOU=0.5  mAP: 0.792
-IOU=0.5-0.95  mAP: 0.518
+IOU=.5时的AP为 0.792。
+IOU=.5-.95时的AP为 0.518。
 
 ### 3. 预测
 
@@ -61,7 +91,7 @@ IOU=0.5-0.95  mAP: 0.518
 export CUDA_VISIBLE_DEVICES=0
 export PYTHONPATH=$PYTHONPATH:.
 python -u tools/infer.py -c contrib/PedestrianDetection/pedestrian_yolov3_darknet.yml \ 
-                         -o weights= \
+                         -o weights=https://paddlemodels.bj.bcebos.com/object_detection/pedestrian_yolov3_darknet.tar \
                          --infer_dir contrib/PedestrianDetection/demo \ 
                          --draw_threshold 0.3 \
                          --output_dir contrib/PedestrianDetection/demo/output

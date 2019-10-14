@@ -3,13 +3,13 @@ train_feed: YoloTrainFeed
 eval_feed: YoloEvalFeed
 test_feed: YoloTestFeed
 use_gpu: true
-max_iters: 500200
+max_iters: 120000
 log_smooth_window: 20
 save_dir: output
 snapshot_iter: 2000
 metric: COCO
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
-weights: vehicle_model_iter41999
+weights: https://paddlemodels.bj.bcebos.com/object_detection/vehicle_yolov3_darknet.tar
 num_classes: 6
 
 YOLOv3:
@@ -43,8 +43,8 @@ LearningRate:
   - !PiecewiseDecay
     gamma: 0.1
     milestones:
-    - 400000
-    - 450000
+    - 60000
+    - 80000
   - !LinearWarmup
     start_factor: 0.
     steps: 4000

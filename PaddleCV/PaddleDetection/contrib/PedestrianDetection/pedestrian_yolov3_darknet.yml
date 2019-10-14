@@ -9,7 +9,7 @@ save_dir: output
 snapshot_iter: 5000
 metric: COCO
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/DarkNet53_pretrained.tar
-weights: yolov3-pedestrian
+weights: https://paddlemodels.bj.bcebos.com/object_detection/pedestrian_yolov3_darknet.tar
 num_classes: 1
 
 YOLOv3:
