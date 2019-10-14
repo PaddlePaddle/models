@@ -59,7 +59,7 @@ def create_model(args,  vocab_size, num_labels, mode = 'train'):
         "targets": targets,
         "avg_cost":avg_cost,
         "crf_decode": crf_decode,
-        "precision" : precision,
+        "precision": precision,
         "recall": recall,
         "f1_score": f1_score,
         "chunk_evaluator": chunk_evaluator,
@@ -171,7 +171,7 @@ def create_ernie_model(args, ernie_config):
 
     crf_cost = fluid.layers.linear_chain_crf(
         input=emission,
-            label=padded_labels,
+        label=padded_labels,
         param_attr=fluid.ParamAttr(
             name='crfw',
             learning_rate=args.crf_learning_rate),
@@ -192,8 +192,8 @@ def create_ernie_model(args, ernie_config):
 
     ret = {
         "feed_list": [src_ids, sent_ids, pos_ids, input_mask, padded_labels, seq_lens],
-            "words":src_ids,
-            "labels":padded_labels,
+        "words":src_ids,
+        "labels":padded_labels,
         "avg_cost":avg_cost,
         "crf_decode":crf_decode,
         "precision" : precision,
