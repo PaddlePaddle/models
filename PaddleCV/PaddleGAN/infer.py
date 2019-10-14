@@ -27,7 +27,7 @@ import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator, reader_creator, triplex_reader_creator
-from util.utility import check_attribute_conflict, check_gpu, save_batch_image
+from util.utility import check_attribute_conflict, check_gpu, save_batch_image, check_version
 from util import utility
 import copy
 
@@ -82,6 +82,7 @@ def infer(args):
         name='image_name', shape=[args.n_samples], dtype='int32')
 
     model_name = 'net_G'
+
     if args.model_net == 'CycleGAN':
         loader = fluid.io.DataLoader.from_generator(
             feed_list=[input, image_name],
@@ -383,4 +384,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print_arguments(args)
     check_gpu(args.use_gpu)
+    check_version()
     infer(args)

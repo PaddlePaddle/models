@@ -211,7 +211,7 @@ class Pix2pix(object):
         self.id2name = id2name
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.crop_size, self.cfg.crop_size]
+        data_shape = [None, 3, self.cfg.crop_size, self.cfg.crop_size]
 
         input_A = fluid.data(name='input_A', shape=data_shape, dtype='float32')
         input_B = fluid.data(name='input_B', shape=data_shape, dtype='float32')
@@ -298,7 +298,7 @@ class Pix2pix(object):
             if self.cfg.run_test:
                 image_name = fluid.data(
                     name='image_name',
-                    shape=[-1, self.cfg.batch_size],
+                    shape=[None, self.cfg.batch_size],
                     dtype="int32")
                 test_loader = fluid.io.DataLoader.from_generator(
                     feed_list=[input_A, input_B, image_name],

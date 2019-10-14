@@ -282,18 +282,18 @@ class STGAN(object):
         self.batch_num = batch_num
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
+        data_shape = [None, 3, self.cfg.image_size, self.cfg.image_size]
 
         image_real = fluid.data(
             name='image_real', shape=data_shape, dtype='float32')
         label_org = fluid.data(
-            name='label_org', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_org', shape=[None, self.cfg.c_dim], dtype='float32')
         label_trg = fluid.data(
-            name='label_trg', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_trg', shape=[None, self.cfg.c_dim], dtype='float32')
         label_org_ = fluid.data(
-            name='label_org_', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_org_', shape=[None, self.cfg.c_dim], dtype='float32')
         label_trg_ = fluid.data(
-            name='label_trg_', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_trg_', shape=[None, self.cfg.c_dim], dtype='float32')
 
         test_gen_trainer = GTrainer(image_real, label_org, label_org_,
                                     label_trg, label_trg_, self.cfg,
@@ -380,7 +380,7 @@ class STGAN(object):
             if self.cfg.run_test:
                 image_name = fluid.data(
                     name='image_name',
-                    shape=[-1, self.cfg.n_samples],
+                    shape=[None, self.cfg.n_samples],
                     dtype='int32')
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[image_real, label_org, label_trg, image_name],
