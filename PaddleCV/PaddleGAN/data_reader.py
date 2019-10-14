@@ -179,7 +179,7 @@ class pair_reader_creator(reader_creator):
 
                 if self.mode == "TRAIN":
                     param = get_preprocess_param2(args.image_size,
-                                                 args.crop_size)
+                                                  args.crop_size)
                     img1 = img1.resize((args.image_size, args.image_size),
                                        Image.BICUBIC)
                     img2 = img2.resize((args.image_size, args.image_size),
