@@ -30,6 +30,7 @@ from models.point_rcnn import PointRCNN
 from data.kitti_rcnn_reader import KittiRCNNReader
 from utils.run_utils import check_gpu, parse_outputs, Stat 
 from utils.config import cfg, load_config
+from utils.optimizer import optimize
 
 logging.root.handlers = []
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -195,38 +196,48 @@ def train():
             train_feeds = train_model.get_feeds()
             train_outputs = train_model.get_outputs()
             train_loss = train_outputs['loss']
-            fluid.clip.set_gradient_clip(fluid.clip.GradientClipByGlobalNorm(clip_norm=cfg.TRAIN.GRAD_NORM_CLIP))
-            # AdamW = extend_with_decoupled_weight_decay(fluid.optimizer.Adam)
-            # optimizer = AdamW(
-            optimizer = fluid.optimizer.Adam(
-                # learning_rate=cosine_warmup_decay(
-                #     learning_rate=cfg.TRAIN.LR,
-                #     warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
-                #     decay_factor=1e-5,
-                #     total_step=steps_per_epoch * args.epoch,
-                #     warmup_pct=cfg.TRAIN.PCT_START),
-                learning_rate=fluid.layers.linear_lr_warmup(
-                    learning_rate=fluid.layers.piecewise_decay(
-                        boundaries=boundaries, values=values),
-                        warmup_steps=cfg.TRAIN.WARMUP_EPOCH * steps_per_epoch,
-                        start_lr=cfg.TRAIN.WARMUP_MIN,
-                        end_lr=cfg.TRAIN.LR),
-                # learning_rate=fluid.layers.linear_lr_warmup(
-                #     learning_rate=exponential_with_clip(
-                #         cfg.TRAIN.LR,
-                #         [0] + cfg.TRAIN.DECAY_STEP_LIST,
-                #         cfg.TRAIN.LR_DECAY,
-                #         cfg.TRAIN.LR_CLIP),
-                #     warmup_steps=cfg.TRAIN.WARMUP_EPOCH,
-                #     start_lr=cfg.TRAIN.WARMUP_MIN,
-                #     end_lr=cfg.TRAIN.LR),
-                beta1=0.9, beta2=0.99,
-                regularization=fluid.regularizer.L2Decay(cfg.TRAIN.WEIGHT_DECAY))
-                # weight_decay=cfg.TRAIN.WEIGHT_DECAY)
-            optimizer.minimize(train_loss)
-            lr = optimizer._global_learning_rate()
-            logger.info("Optimizer learning rate name: {}".format(lr.name))
-            print("optimizer betas:", optimizer._beta1, optimizer._beta2)
+            # # fluid.clip.set_gradient_clip(fluid.clip.GradientClipByGlobalNorm(clip_norm=cfg.TRAIN.GRAD_NORM_CLIP))
+            # # AdamW = extend_with_decoupled_weight_decay(fluid.optimizer.Adam)
+            # # optimizer = AdamW(
+            # optimizer = fluid.optimizer.Adam(
+            #     # learning_rate=cosine_warmup_decay(
+            #     #     learning_rate=cfg.TRAIN.LR,
+            #     #     warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
+            #     #     decay_factor=1e-5,
+            #     #     total_step=steps_per_epoch * args.epoch,
+            #     #     warmup_pct=cfg.TRAIN.PCT_START),
+            #     learning_rate=fluid.layers.linear_lr_warmup(
+            #         learning_rate=fluid.layers.piecewise_decay(
+            #             boundaries=boundaries, values=values),
+            #             warmup_steps=cfg.TRAIN.WARMUP_EPOCH * steps_per_epoch,
+            #             start_lr=cfg.TRAIN.WARMUP_MIN,
+            #             end_lr=cfg.TRAIN.LR),
+            #     # learning_rate=fluid.layers.linear_lr_warmup(
+            #     #     learning_rate=exponential_with_clip(
+            #     #         cfg.TRAIN.LR,
+            #     #         [0] + cfg.TRAIN.DECAY_STEP_LIST,
+            #     #         cfg.TRAIN.LR_DECAY,
+            #     #         cfg.TRAIN.LR_CLIP),
+            #     #     warmup_steps=cfg.TRAIN.WARMUP_EPOCH,
+            #     #     start_lr=cfg.TRAIN.WARMUP_MIN,
+            #     #     end_lr=cfg.TRAIN.LR),
+            #     beta1=0.9, beta2=0.99,
+            #     regularization=fluid.regularizer.L2Decay(cfg.TRAIN.WEIGHT_DECAY))
+            #     # weight_decay=cfg.TRAIN.WEIGHT_DECAY)
+            # optimizer.minimize(train_loss)
+            # lr = optimizer._global_learning_rate()
+            # logger.info("Optimizer learning rate name: {}".format(lr.name))
+            # print("optimizer betas:", optimizer._beta1, optimizer._beta2)
+            lr = optimize(train_loss,
+                                    learning_rate=cfg.TRAIN.LR,
+                                    warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
+                                    decay_factor=1e-5,
+                                    total_step=steps_per_epoch * args.epoch,
+                                    warmup_pct=cfg.TRAIN.PCT_START,
+                                    train_program=train_prog,
+                                    startup_prog=startup,
+                                    weight_decay=cfg.TRAIN.WEIGHT_DECAY,
+                                    clip_norm=cfg.TRAIN.GRAD_NORM_CLIP)
     train_keys, train_values = parse_outputs(train_outputs, 'loss')
 
     if args.resume:
