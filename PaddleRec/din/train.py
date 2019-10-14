@@ -78,7 +78,7 @@ def train():
                                                  args.num_devices)
     logger.info("reading data completes")
 
-    avg_cost, pred = network.network(item_count, cat_count)
+    avg_cost, pred = network.network(item_count, cat_count, max_len)
     fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(
         clip_norm=5.0))
     base_lr = args.base_lr
