@@ -9,7 +9,6 @@ import time
 import network
 import reader
 import random
-import sys
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
@@ -86,7 +85,7 @@ def train():
     #data_reader, max_len = reader.prepare_reader(train_path, args.batch_size)
     logger.info("reading data completes")
 
-    avg_cost, pred = network.network(item_count, cat_count)
+    avg_cost, pred = network.network(item_count, cat_count, 433)
     #fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=5.0))
     base_lr = args.base_lr
     boundaries = [410000]
@@ -168,21 +167,6 @@ def train():
         logger.info("run trainer")
         train_loop(t.get_trainer_program())
 
-def check_version():
-    """
-    Log error and exit when the installed version of paddlepaddle is
-    not satisfied.
-    """
-    err = "PaddlePaddle version 1.6 or higher is required, " \
-          "or a suitable develop version is satisfied as well. \n" \
-          "Please make sure the version is good with your code." \
-
-    try:
-        fluid.require_version('1.6.0')
-    except Exception as e:
-        logger.error(err)
-        sys.exit(1)
 
 if __name__ == "__main__":
-    check_version()
     train()

@@ -31,7 +31,6 @@ SR-GNN模型的介绍可以参阅论文[Session-based Recommendation with Graph 
 
 我们复现了论文效果，在DIGINETICA数据集上P@20可以达到50.7
 
-**目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
 
 ## 数据下载及预处理
 
