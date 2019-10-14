@@ -46,7 +46,7 @@ from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches, eval_results
 from ppdet.utils.stats import TrainingStats
-from ppdet.utils.cli import ArgsParser
+from ppdet.utils.cli import ArgsParser, print_total_cfg
 from ppdet.utils.check import check_gpu, check_version
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.modeling.model_input import create_feed
@@ -77,7 +77,7 @@ def eval_run(exe, compile_program, reader, keys, values, cls, test_feed):
                      'im_size': data['im_size']}
         outs = exe.run(compile_program,
                        feed=feed_data,
-                       fetch_list=values[0],
+                       fetch_list=[values[0]],
                        return_numpy=False)
         outs.append(data['gt_box'])
         outs.append(data['gt_label'])
@@ -118,8 +118,8 @@ def main():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
+    # print_total_cfg(cfg)
     #check_version()
-
     if cfg.use_gpu:
         devices_num = fluid.core.get_cuda_device_count()
     else:
@@ -156,7 +156,7 @@ def main():
             optimizer.minimize(loss)
 
 
-    train_reader = create_reader(train_feed, cfg.max_iters * devices_num,
+    train_reader = create_reader(train_feed, cfg.max_iters,
                                  FLAGS.dataset_dir)
     train_loader.set_sample_list_generator(train_reader, place)
 
@@ -220,7 +220,6 @@ def main():
             best_box_ap_list.append(box_ap_stats[0])
         elif box_ap_stats[0] > best_box_ap_list[0]:
             best_box_ap_list[0] = box_ap_stats[0]
-            checkpoint.save(exe, train_prog, os.path.join(save_dir,"best_model"))
         logger.info("Best test box ap: {}".format(
             best_box_ap_list[0]))
         return best_box_ap_list[0]
