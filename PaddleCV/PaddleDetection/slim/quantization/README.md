@@ -64,7 +64,7 @@ python compress.py \
 如果要调整训练卡数，需要调整配置文件`yolov3_mobilenet_v1_voc.yml`中的以下参数：
 
 - **max_iters:** 一个`epoch`中batch的数量，需要设置为`total_num / batch_size`, 其中`total_num`为训练样本总数量，`batch_size`为多卡上总的batch size.
-- **YoloTrainFeed.batch_size:** 单张卡上的batch size, 受限于显存大小。
+- **YoloTrainFeed.batch_size:** 当使用DataLoader时，表示单张卡上的batch size; 当使用普通reader时，则表示多卡上的总的batch_size。batch_size受限于显存大小。
 - **LeaningRate.base_lr:** 根据多卡的总`batch_size`调整`base_lr`，两者大小正相关，可以简单的按比例进行调整。
 - **LearningRate.schedulers.PiecewiseDecay.milestones：**请根据batch size的变化对其调整。
 - **LearningRate.schedulers.PiecewiseDecay.LinearWarmup.steps：** 请根据batch size的变化对其进行调整。
@@ -85,7 +85,7 @@ python compress.py \
   
 ```
 
-以下为2卡训练示例，受显存所制，单卡`batch_size`不变，总`batch_size`减小，`base_lr`减小，一个epoch内batch数量增加，同时需要调整学习率相关参数，如下：
+以下为2卡训练示例，受显存所制，单卡`batch_size`不变, 总`batch_size`减小，`base_lr`减小，一个epoch内batch数量增加，同时需要调整学习率相关参数，如下：
 
 ```
 python compress.py \
