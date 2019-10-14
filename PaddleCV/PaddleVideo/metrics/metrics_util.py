@@ -28,6 +28,7 @@ from metrics.detections import detection_metrics as detection_metrics
 from metrics.bmn_metrics import bmn_proposal_metrics as bmn_proposal_metrics
 from metrics.bsn_metrics import bsn_tem_metrics as bsn_tem_metrics
 from metrics.bsn_metrics import bsn_pem_metrics as bsn_pem_metrics
+from metrics.ets_metrics import ets_metrics as ets_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -421,6 +422,44 @@ class BsnPemMetrics(Metrics):
         self.calculator.reset()
 
 
+class ETSMetrics(Metrics):
+    def __init__(self, name, mode, cfg):
+        self.name = name
+        self.mode = mode
+        args = {}
+        args['dict_file'] = cfg.MODEL.dict_file
+        args['mode'] = mode
+        args['name'] = name
+        self.calculator = ets_metrics.MetricsCalculator(**args)
+
+
+    def calculate_and_log_out(self, fetch_list, info=''):
+        if (self.mode == 'train') or (self.mode == 'valid'):
+            loss = np.array(fetch_list[0])
+            logger.info(
+            info + '\tLoss = {}'.format('%.08f' % np.mean(loss)))
+        elif self.mode == "test":
+            translation_ids = np.array(fetch_list[0])
+            translation_scores = np.array(fetch_list[1])
+            logger.info(
+                info + '\ttranslation_ids = {}, \ttranslation_scores = {}'.format(
+                    '%.01f' % np.mean(translation_ids), '%.04f' % np.mean(translation_scores)))
+
+    def accumulate(self, fetch_list):
+        self.calculator.accumulate(fetch_list)
+
+    def finalize_and_log_out(self, info='', savedir='./'):
+        if self.mode == 'valid':
+            logger.info(info)
+        else:  #test or infer
+            self.calculator.finalize_metrics(savedir)
+            if self.mode == 'test':
+                logger.info(info + 'please refer to metrics/ets_metrics/README.md to get accuracy')
+
+    def reset(self):
+        self.calculator.reset()
+
+
 class MetricsZoo(object):
     def __init__(self):
         self.metrics_zoo = {}
@@ -461,3 +500,4 @@ regist_metrics("CTCN", DetectionMetrics)
 regist_metrics("BMN", BmnMetrics)
 regist_metrics("BSNTEM", BsnTemMetrics)
 regist_metrics("BSNPEM", BsnPemMetrics)
+regist_metrics("ETS", ETSMetrics)

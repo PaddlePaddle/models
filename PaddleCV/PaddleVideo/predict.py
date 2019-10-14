@@ -109,6 +109,8 @@ def infer(args):
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
+    exe.run(fluid.default_startup_program())
+
     filelist = args.filelist or infer_config.INFER.filelist
     filepath = args.video_path or infer_config.INFER.get('filepath', '')
     if filepath != '':
@@ -137,16 +139,26 @@ def infer(args):
     periods = []
     cur_time = time.time()
     for infer_iter, data in enumerate(infer_reader()):
-        data_feed_in = [items[:-1] for items in data]
-        video_id = [items[-1] for items in data]
-        infer_outs = exe.run(fetch_list=fetch_list,
-                             feed=infer_feeder.feed(data_feed_in))
+        if args.model_name == 'ETS':
+            data_feed_in = [items[:3] for items in data]
+            vinfo = [items[3:] for items in data]
+            video_id = [items[0] for items in vinfo]
+            infer_outs = exe.run(fetch_list=fetch_list,
+                                 feed=infer_feeder.feed(data_feed_in),
+                                 return_numpy=False)
+            infer_result_list = infer_outs + vinfo
+        else:
+            data_feed_in = [items[:-1] for items in data]
+            video_id = [items[-1] for items in data]
+            infer_outs = exe.run(fetch_list=fetch_list,
+                                 feed=infer_feeder.feed(data_feed_in))
+            infer_result_list = [item for item in infer_outs] + [video_id]
+
         prev_time = cur_time
         cur_time = time.time()
         period = cur_time - prev_time
         periods.append(period)
 
-        infer_result_list = [item for item in infer_outs] + [video_id]
         infer_metrics.accumulate(infer_result_list)
 
         if args.log_interval > 0 and infer_iter % args.log_interval == 0:

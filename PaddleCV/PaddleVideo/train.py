@@ -173,12 +173,18 @@ def train(args):
     if args.model_name in ['CTCN']:
         build_strategy.enable_sequential_execution = True
 
+    exec_strategy = fluid.ExecutionStrategy()
+
     compiled_train_prog = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(
-            loss_name=train_loss.name, build_strategy=build_strategy)
+            loss_name=train_loss.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
     compiled_valid_prog = fluid.compiler.CompiledProgram(
         valid_prog).with_data_parallel(
-            share_vars_from=compiled_train_prog, build_strategy=build_strategy)
+            share_vars_from=compiled_train_prog,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
 
     # get reader
     bs_denominator = 1
