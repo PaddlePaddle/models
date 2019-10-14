@@ -148,7 +148,7 @@ def main():
             optimizer.minimize(loss)
 
 
-    train_reader = create_reader(train_feed, cfg.max_iters * devices_num,
+    train_reader = create_reader(train_feed, cfg.max_iters,
                                  FLAGS.dataset_dir)
     train_loader.set_sample_list_generator(train_reader, place)
 
@@ -207,7 +207,6 @@ def main():
             best_box_ap_list.append(box_ap_stats[0])
         elif box_ap_stats[0] > best_box_ap_list[0]:
             best_box_ap_list[0] = box_ap_stats[0]
-            checkpoint.save(exe, train_prog, os.path.join(save_dir,"best_model"))
         logger.info("Best test box ap: {}".format(
             best_box_ap_list[0]))
         return best_box_ap_list[0]
