@@ -25,7 +25,7 @@
 
 ## 安装
 
-在当前模型库运行样例代码需要PaddlePaddle Fluid v.1.6.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前模型库运行样例代码需要PaddlePaddle Fluid v.1.5.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ### 其他环境依赖
 
