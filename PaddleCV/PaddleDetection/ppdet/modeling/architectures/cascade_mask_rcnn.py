@@ -306,7 +306,7 @@ class CascadeMaskRCNN(object):
                           bbox_pred=None):
         if self.fpn is None:
             last_feat = body_feats[list(body_feats.keys())[-1]]
-        if not bbox_pred:
+        if bbox_pred is not None:
             bbox_pred = self.bbox_head.get_prediction(
                 im_info, im_shape, roi_feat_list, rcnn_pred_list, proposal_list,
                 self.cascade_bbox_reg_weights)

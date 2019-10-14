@@ -210,7 +210,6 @@ MaskRCNNEvalFeed:
   sample_transforms: 
   - !DecodeImage
     to_rgb: False
-  - !FlipImage {}
   - !NormalizeImage
     is_channel_first: false
     is_scale: False
@@ -235,12 +234,14 @@ MaskRCNNEvalFeed:
     - 1100
     - 1200
     max_size: 2000
+    use_flip: true
   - !Permute
     channel_first: true
     to_bgr: false
   batch_transforms:
   - !PadMSTest
     pad_to_stride: 32
+  # num_scale = (len(target_size) + 1) * (1 + use_flip)
   num_scale: 18
   num_workers: 2
 

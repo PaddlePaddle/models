@@ -122,32 +122,14 @@ class DecodeImage(BaseOperator):
 
 
 @register_op
-class FlipImage(BaseOperator):
-    def __init__(self):
-        """
-        Add flipped image to sample.
-        """
-        super(FlipImage, self).__init__()
-        #self.enable = enable
-
-    def __call__(self, sample, context=None):
-        im = sample['image']
-        if not isinstance(im, np.ndarray):
-            raise TypeError("{}: image type is not numpy.".format(self))
-        if len(im.shape) != 3:
-            raise ImageError('{}: image is not 3-dimensional.'.format(self))
-        sample['flip_image'] = im[:, ::-1, :]
-        return sample
-
-
-@register_op
 class MultiscaleTestResize(BaseOperator):
     def __init__(self,
                  origin_target_size=800,
                  origin_max_size=1333,
                  target_size=[],
                  max_size=2000,
-                 interp=cv2.INTER_LINEAR):
+                 interp=cv2.INTER_LINEAR,
+                 use_flip=True):
         """
         Rescale image to the each size in target size, and capped at max_size.
 
@@ -157,12 +139,14 @@ class MultiscaleTestResize(BaseOperator):
             target_size (list): A list of target sizes of image's short side.
             max_size (int): the max size of image.
             interp (int): the interpolation method.
+            use_flip (bool): whether use flip augmentation.
         """
         super(MultiscaleTestResize, self).__init__()
         self.origin_target_size = int(origin_target_size)
         self.origin_max_size = int(origin_max_size)
         self.max_size = int(max_size)
         self.interp = int(interp)
+        self.use_flip = use_flip
 
         if not isinstance(target_size, list):
             raise TypeError(
@@ -190,8 +174,8 @@ class MultiscaleTestResize(BaseOperator):
             raise ZeroDivisionError('{}: min size of image is 0'.format(self))
         base_name_list = ['image']
         origin_ims['image'] = im
-        use_flip = [k for k in sample.keys() if 'flip' in k]
-        if use_flip:
+        if self.use_flip:
+            sample['flip_image'] = im[:, ::-1, :]
             base_name_list.append('flip_image')
             origin_ims['flip_image'] = sample['flip_image']
         im_info = []

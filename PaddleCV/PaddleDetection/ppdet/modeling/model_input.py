@@ -64,12 +64,18 @@ def create_feed(feed, use_pyreader=True, sub_prog_feed=False):
     base_name_list = ['image']
     num_scale = getattr(feed, 'num_scale', 1)
     sample_transform = feed.sample_transforms
-    aug_flip = [t for t in sample_transform if isinstance(t, FlipImage)]
-    multiscale_test = [
-        t for t in sample_transform if isinstance(t, MultiscaleTestResize)
-    ]
+    multiscale_test = False
+    aug_flip = False
+    for t in sample_transform:
+        if isinstance(t, MultiscaleTestResize):
+            multiscale_test = True
+            aug_flip = t.use_flip
+            assert (len(t.target_size)+1)*(aug_flip+1) == num_scale, \
+                "num_scale: {} is not equal to the actual number of scale: {}."\
+                .format(num_scale, (len(t.target_size)+1)*(aug_flip+1))
+            break
 
-    if any(aug_flip):
+    if aug_flip:
         num_scale //= 2
         base_name_list.insert(0, 'flip_image')
         feed_var_map['flip_image'] = {
@@ -78,8 +84,9 @@ def create_feed(feed, use_pyreader=True, sub_prog_feed=False):
             'dtype': 'float32',
             'lod_level': 0
         }
+
     image_name_list = []
-    if any(multiscale_test):
+    if multiscale_test:
         for base_name in base_name_list:
             for i in range(0, num_scale):
                 name = base_name if i == 0 else base_name + '_scale_' + str(i -
