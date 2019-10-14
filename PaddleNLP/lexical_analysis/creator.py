@@ -169,26 +169,24 @@ def create_ernie_model(args, ernie_config):
                 regularization_coeff=1e-4)),
         num_flatten_dims=2)
 
-
     crf_cost = fluid.layers.linear_chain_crf(
         input=emission,
             label=padded_labels,
         param_attr=fluid.ParamAttr(
             name='crfw',
-                learning_rate=args.crf_learning_rate),
-            length=seq_lens)
+            learning_rate=args.crf_learning_rate),
+        length=seq_lens)
     avg_cost = fluid.layers.mean(x=crf_cost)
     crf_decode = fluid.layers.crf_decoding(
             input=emission, param_attr=fluid.ParamAttr(name='crfw'),length=seq_lens)
 
-
     (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
      num_correct_chunks) = fluid.layers.chunk_eval(
-         input=crf_decode,
-             label=squeeze_labels,
-         chunk_scheme="IOB",
-             num_chunk_types=int(math.ceil((args.num_labels - 1) / 2.0)),
-             seq_length=seq_lens)
+        input=crf_decode,
+        label=squeeze_labels,
+        chunk_scheme="IOB",
+        num_chunk_types=int(math.ceil((args.num_labels - 1) / 2.0)),
+        seq_length=seq_lens)
     chunk_evaluator = fluid.metrics.ChunkEvaluator()
     chunk_evaluator.reset()
 
