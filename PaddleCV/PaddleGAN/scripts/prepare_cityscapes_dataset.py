@@ -47,7 +47,7 @@ def propress_cityscapes(gtFine_dir, leftImg8bit_dir, output_dir, phase):
         seg_image.save(save_path, format='JPEG', subsampling=0, quality=100)
 
         if i % 10 == 0:
-            print("proprecess %d ~ %d images." % (i, i + 10))
+            print("preprocess %d ~ %d images." % (i, i + 10))
 
 
 if __name__ == '__main__':
