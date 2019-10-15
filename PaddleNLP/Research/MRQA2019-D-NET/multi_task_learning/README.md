@@ -65,7 +65,7 @@ Once everything is in the right place, one can start training
 cd PALM
 bash run_multi_task.sh
 ```
-The fine-tuned parameters and model predictions will be saved in `PALM/output_model/firstrun`, as specified by `mtl_config.yaml`.
+The fine-tuned parameters and model predictions will be saved in `PALM/output/`, as specified by `mtl_config.yaml`.
 
 ## 4. Evaluation
 The scripts for evaluation are in the folder `scripts/`. Here we provide an example for the usage of those scripts. 
