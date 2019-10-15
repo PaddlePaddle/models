@@ -20,6 +20,8 @@
 
 同时，在推断速度方面，基于Paddle预测库的加速方法，推断速度比darknet高30%.
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122277)
+
 ## 快速开始
 
 ### 安装
@@ -268,26 +270,26 @@ if cfg.pretrain:
     fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     cat_idxs = [3, 19, 25, 41, 58, 73]
-    # the first 5 channels is x, y, w, h, objectness, 
+    # the first 5 channels is x, y, w, h, objectness,
     # the following 80 channel is for 80 categories
     channel_idxs = np.array(range(5) + [idx + 5 for idx in cat_idxs])
     # we have 3 yolo_output layers
-    for i in range(3): 
+    for i in range(3):
         # crop conv weights
         weights_tensor = fluid.global_scope().find_var(
                           "yolo_output.{}.conv.weights".format(i)).get_tensor()
         weights = np.array(weights_tensor)
         # each yolo_output layer has 3 anchors, 85 channels of each anchor
-        weights = np.concatenate(weights[channel_idxs], 
-                                 weights[85 + channel_idxs], 
+        weights = np.concatenate(weights[channel_idxs],
+                                 weights[85 + channel_idxs],
                                  weights[170 + channel_idxs])
         weights_tensor.set(weights.astype('float32'), place)
         # crop conv bias
         bias_tensor = fluid.global_scope().find_var(
                         "yolo_output.{}.conv.bias".format(i)).get_tensor()
         bias = np.array(bias_tensor)
-        bias = np.concatenate(bias[channel_idxs], 
-                              bias[85 + channel_idxs], 
+        bias = np.concatenate(bias[channel_idxs],
+                              bias[85 + channel_idxs],
                               bias[150 + channel_idxs])
         bias_tensor.set(bias.astype('float32'), place)
 
@@ -323,4 +325,3 @@ if cfg.pretrain:
 
 - [heavengate](https://github.com/heavengate)
 - [tink2123](https://github.com/tink2123)
-

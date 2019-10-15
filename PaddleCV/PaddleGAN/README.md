@@ -62,6 +62,8 @@
 
 ```
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122272)
+
 ## 快速开始
 
 ### 安装说明

@@ -14,6 +14,10 @@
 
 Running sample code in this directory requires PaddelPaddle Fluid v.1.3.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/en/1.3/beginners_guide/install/index_en.html) and make an update.
 
+We also recommend users to take a look at: 
+[MaskRCNN](https://aistudio.baidu.com/aistudio/projectDetail/122273)
+[Faster RCNN](https://aistudio.baidu.com/aistudio/projectDetail/122275)
+
 ## Introduction
 
 Region Convolutional Neural Network (RCNN) models are two stages detector. According to proposals and feature extraction, obtain class and more precise proposals.

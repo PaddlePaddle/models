@@ -19,6 +19,8 @@
 
 &ensp;&ensp;&ensp;&ensp;2. 利用少量标注数据（特定对话系统或场景的人工打分），在匹配模型基础上进行微调，可以显著提高该对话系统或场景的评估效果。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122301)
+
 ## 快速开始
 
 ### 安装说明
@@ -35,7 +37,7 @@
 #### &ensp;&ensp;b、下载代码
 
 &ensp;&ensp;&ensp;&ensp;克隆数据集代码库到本地
-    
+
 ```
 git clone https://github.com/PaddlePaddle/models.git
 cd models/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation
@@ -54,7 +56,7 @@ cd models/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation
 &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;模型结构: finetuning阶段学习表示到计算logits部分和第一阶段模型结构相同，区别在于finetuning阶段计算square_error_cost loss；
 
 &ensp;&ensp;&ensp;&ensp;用于第二阶段fine-tuning的对话系统包括下面四部分：
-    
+
 ```
 human: 人工模拟的对话系统；
 keywords：seq2seq keywords对话系统；
@@ -66,7 +68,7 @@ seq2seq_naive：naive seq2seq model对话系统；
 
 ### 数据准备
 &ensp;&ensp;&ensp;&ensp;数据集说明：本模块内只提供训练方法，真实涉及的匹配数据及4个对话系统的数据只开源测试集数据，仅提供样例，用户如有自动化评估对话系统的需求，可自行准备业务数据集按照文档提供流程进行训练；
-    
+
 ```
 unlabel_data（第一阶段训练匹配数据集）
 
@@ -78,12 +80,12 @@ label_data（第二阶段finetuning数据集）
 ```
 
 &ensp;&ensp;&ensp;&ensp;数据集、相关模型下载：
-    
+
 ```
 cd ade && bash prepare_data_and_model.sh
 ```
 
-&ensp;&ensp;&ensp;&ensp;数据路径：data/input/data/   
+&ensp;&ensp;&ensp;&ensp;数据路径：data/input/data/  
 
 &ensp;&ensp;&ensp;&ensp;模型路径：data/saved_models/trained_models/
 
@@ -98,9 +100,9 @@ loss_type: loss类型, 可选CLS或者L2
 training_file: 训练数据路径
 val_file: 验证集路径
 predict_file: 预测文件路径
-print_steps: 每隔print_steps个步数打印一次日志 
+print_steps: 每隔print_steps个步数打印一次日志
 save_steps: 每隔save_steps个步数来保存一次模型
-num_scan_data: 
+num_scan_data:
 word_emb_init: 用于初始化embedding的词表路径
 init_model: 初始化模型路径
 use_cuda: 是否使用cuda, 如果是gpu训练时，设置成true
@@ -121,7 +123,7 @@ evaluation_file: 参与评估的inference 文件
 vocab_path: 词表路径
 max_seq_len: 输入最大序列长度
 random_seed: 随机种子设置
-do_save_inference_model: 是否保存inference model 
+do_save_inference_model: 是否保存inference model
 encable_ce: 是否开启ce
 ```
 
@@ -135,19 +137,19 @@ encable_ce: 是否开启ce
 bash run.sh matching train
 ```
 
-&ensp;&ensp;&ensp;&ensp;如果为CPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU训练:
 
 ```
-请将run.sh内参数设置为: 
+请将run.sh内参数设置为:
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;如果为GPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU训练:
 
 ```
-请将run.sh内参数设置为: 
+请将run.sh内参数设置为:
 1、如果为单卡训练（用户指定空闲的单卡）：
-export CUDA_VISIBLE_DEVICES=0 
+export CUDA_VISIBLE_DEVICES=0
 2、如果为多卡训练（用户指定空闲的多张卡）：
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 ```
@@ -199,7 +201,7 @@ python -u main.py \
       --emb_size=256 \
       --vocab_size=484016 \
       --learning_rate=0.001 \
-      --sample_pro=0.1 
+      --sample_pro=0.1
 ```
 
 注意: 用户进行模型训练、预测、评估等, 可通过修改data/config/ade.yaml配置文件或者从命令行传入来进行参数配置, 优先推荐命令行参数传入;
@@ -278,17 +280,17 @@ python -u main.py \
 bash run.sh matching predict
 ```
 
-&ensp;&ensp;&ensp;&ensp;如果为CPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU预测:
 
 ```
-请将run.sh内参数设置为: 
+请将run.sh内参数设置为:
 export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;如果为GPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU预测:
 
 ```
-请将run.sh内参数设置为: 
+请将run.sh内参数设置为:
 单卡预测：
 export CUDA_VISIBLE_DEVICES=0 #用户可自行指定空闲的卡
 ```
@@ -376,7 +378,7 @@ python -u main.py \
 ### 模型评估
 
 &ensp;&ensp;&ensp;&ensp;模块中5个任务，各任务支持计算的评估指标内容如下：
-    
+
 ```
 第一阶段：
 matching: 使用R1@2, R1@10, R2@10, R5@10四个指标进行评估排序模型的效果；
@@ -391,7 +393,7 @@ seq2seq_naive：使用spearman相关系数来衡量评估模型对系统的打�
 &ensp;&ensp;&ensp;&ensp;效果上，以四个不同的对话系统（seq2seq\_naive／seq2seq\_att／keywords／human）为例，使用对话自动评估工具进行自动评估。
 
 &ensp;&ensp;&ensp;&ensp;1. 无标注数据情况下，直接使用预训练好的评估工具进行评估；
-    
+
 &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;在四个对话系统上，自动评估打分和人工评估打分spearman相关系数，如下：
 
    ||seq2seq\_naive|seq2seq\_att|keywords|human|
@@ -419,7 +421,7 @@ bash run.sh matching evaluate
 
 注：评估计算ground_truth和predict_label之间的打分，默认CPU计算即可；
 
-#### &ensp;&ensp;&ensp;&ensp;方式二: 执行评估相关的代码: 
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行评估相关的代码:
 
 ```
 export CUDA_VISIBLE_DEVICES=  #指默认CPU评估
@@ -445,7 +447,7 @@ task_type: train、predict、evaluate、inference, 选择4个参数选项中任�
 评估示例： bash run.sh human evaluate
 ```
 
-#### &ensp;&ensp;&ensp;&ensp;方式二: 执行评估相关的代码: 
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行评估相关的代码:
 
 ```
 export CUDA_VISIBLE_DEVICES=  #指默认CPU评估
@@ -467,22 +469,22 @@ python -u main.py \
 bash run.sh matching inference
 ```
 
-&ensp;&ensp;&ensp;&ensp;如果为CPU执行inference model过程: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU执行inference model过程:
 
 ```
-请将run.sh内参数设置为: 
+请将run.sh内参数设置为:
 export CUDA_VISIBLE_DEVICES=
 ```
 
 &ensp;&ensp;&ensp;&ensp;如果为GPU执行inference model过程:
 
 ```
-请将run.sh内参数设置为: 
+请将run.sh内参数设置为:
 单卡推断（用户指定空闲的单卡）：
 export CUDA_VISIBLE_DEVICES=0
 ```
 
-#### &ensp;&ensp;&ensp;&ensp;方式二: 执行inference model相关的代码: 
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行inference model相关的代码:
 
 ```
 export CUDA_VISIBLE_DEVICES=0  # 指GPU单卡推断
@@ -505,7 +507,7 @@ python -u main.py \
 
 #### 2、第二阶段finetuning模型的推断：
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本保存inference model
- 
+
 ```
 bash run.sh task_name task_type
 参数说明：
@@ -517,7 +519,7 @@ task_type: train、predict、evaluate、inference, 选择4个参数选项中任�
 
 &ensp;&ensp;&ensp;&ensp;CPU和GPU指定方式同模型推断1中所示；
 
-#### &ensp;&ensp;&ensp;&ensp;方式二: 执行inference model相关的代码: 
+#### &ensp;&ensp;&ensp;&ensp;方式二: 执行inference model相关的代码:
 
 ```
 export CUDA_VISIBLE_DEVICES=0  # 指GPU单卡推断
