@@ -167,7 +167,8 @@ def train(args):
                 dy_step = dy_step + 1
                 if dy_step % 10 == 0:
                     print("pass num : {}, batch_id: {}, dy_graph avg loss: {}".
-                          format(i, dy_step, dy_avg_cost.numpy()))
+                          format(i, dy_step,
+                                 dy_avg_cost.numpy() * trainer_count))
 
             # switch to evaluation mode
             transformer.eval()
@@ -185,7 +186,8 @@ def train(args):
             print("pass : {} finished, validation avg loss: {}".format(
                 i, sum_cost / token_num))
 
-        fluid.save_dygraph(transformer.state_dict(), args.model_file)
+        if fluid.dygraph.parallel.Env().dev_id == 0:
+            fluid.save_dygraph(transformer.state_dict(), args.model_file)
 
 
 if __name__ == '__main__':

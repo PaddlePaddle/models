@@ -18,6 +18,10 @@
 
    本项目依赖于 PaddlePaddle Fluid 1.6.0 及以上版本（1.6.0 待近期正式发版，可先使用 develop），请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
+2. 环境依赖
+
+   多卡运行需要 NCCL 2.4.7 版本。
+
 ### 执行训练：
 如果是使用GPU单卡训练，启动训练的方式:
 ```
@@ -36,7 +40,7 @@ python train.py \
 
 Paddle动态图支持多进程多卡进行模型训练，启动训练的方式：
 ```
-python -m paddle.distributed.launch --selected_gpus=0,1,2,3 --log_dir ./mylog train.py --use_data_parallel 1
+python -m paddle.distributed.launch --started_port 9999 --selected_gpus=0,1,2,3 --log_dir ./mylog train.py --use_data_parallel 1
 ```
 此时，程序会将每个进程的输出log导入到`./mylog`路径下：
 ```
