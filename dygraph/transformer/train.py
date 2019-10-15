@@ -108,6 +108,7 @@ def train(args):
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
 
+        # define model
         transformer = TransFormer(
             'transformer', ModelHyperParams.src_vocab_size,
             ModelHyperParams.trg_vocab_size, ModelHyperParams.max_length + 1,
@@ -118,27 +119,35 @@ def train(args):
             ModelHyperParams.attention_dropout, ModelHyperParams.relu_dropout,
             ModelHyperParams.preprocess_cmd, ModelHyperParams.postprocess_cmd,
             ModelHyperParams.weight_sharing, TrainTaskConfig.label_smooth_eps)
-
+        # define optimizer
         optimizer = fluid.optimizer.Adam(learning_rate=NoamDecay(
             ModelHyperParams.d_model, TrainTaskConfig.warmup_steps,
             TrainTaskConfig.learning_rate),
                                          beta1=TrainTaskConfig.beta1,
                                          beta2=TrainTaskConfig.beta2,
                                          epsilon=TrainTaskConfig.eps)
-
+        #
         if args.use_data_parallel:
             transformer = fluid.dygraph.parallel.DataParallel(
                 transformer, strategy)
 
-        reader = paddle.batch(wmt16.train(ModelHyperParams.src_vocab_size,
-                                          ModelHyperParams.trg_vocab_size),
-                              batch_size=TrainTaskConfig.batch_size)
+        # define data generator for training and validation
+        train_reader = paddle.batch(wmt16.train(
+            ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size),
+                                    batch_size=TrainTaskConfig.batch_size)
         if args.use_data_parallel:
-            reader = fluid.contrib.reader.distributed_batch_reader(reader)
+            train_reader = fluid.contrib.reader.distributed_batch_reader(
+                train_reader)
+        val_reader = paddle.batch(wmt16.test(ModelHyperParams.src_vocab_size,
+                                             ModelHyperParams.trg_vocab_size),
+                                  batch_size=TrainTaskConfig.batch_size)
 
+        # loop for training iterations
         for i in range(TrainTaskConfig.pass_num):
             dy_step = 0
-            for batch in reader():
+            sum_cost = 0
+            transformer.train()
+            for batch in train_reader():
                 enc_inputs, dec_inputs, label, weights = prepare_train_input(
                     batch, ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
                     ModelHyperParams.n_head)
@@ -152,14 +161,29 @@ def train(args):
                     transformer.apply_collective_grads()
                 else:
                     dy_avg_cost.backward()
-
                 optimizer.minimize(dy_avg_cost)
                 transformer.clear_gradients()
+
                 dy_step = dy_step + 1
                 if dy_step % 10 == 0:
                     print("pass num : {}, batch_id: {}, dy_graph avg loss: {}".
                           format(i, dy_step, dy_avg_cost.numpy()))
-            print("pass : {} finished".format(i))
+
+            # switch to evaluation mode
+            transformer.eval()
+            sum_cost = 0
+            token_num = 0
+            for batch in val_reader():
+                enc_inputs, dec_inputs, label, weights = prepare_train_input(
+                    batch, ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
+                    ModelHyperParams.n_head)
+
+                dy_sum_cost, dy_avg_cost, dy_predict, dy_token_num = transformer(
+                    enc_inputs, dec_inputs, label, weights)
+                sum_cost += dy_sum_cost.numpy()
+                token_num += dy_token_num.numpy()
+            print("pass : {} finished, validation avg loss: {}".format(
+                i, sum_cost / token_num))
 
         fluid.save_dygraph(transformer.state_dict(), args.model_file)
 

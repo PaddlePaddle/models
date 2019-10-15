@@ -748,7 +748,7 @@ class TransFormer(Layer):
 
         3. `grow_finish` compares the already finished candidates in the finished queue
         and newly added finished candidates from `grow_topk`, and selects the top
-        `beam_size` finished candidates as the inputs.
+        `beam_size` finished candidates.
         """
         def expand_to_beam_size(tensor, beam_size):
             tensor = layers.reshape(tensor,

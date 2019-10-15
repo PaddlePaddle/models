@@ -103,7 +103,7 @@ perl mosesdecoder/scripts/generic/multi-bleu.perl ref.de < predict.txt
 
 使用默认配置单卡训练20个 epoch 训练的模型约有如下评估结果：
 ```
-BLEU = 33.21, 64.7/39.9/26.7/17.7
+BLEU = 32.38, 64.3/39.1/25.9/16.9 (BP=1.000, ratio=1.001, hyp_len=12122, ref_len=12104)
 ```
 
 
