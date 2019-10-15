@@ -78,7 +78,7 @@ def train():
                                                  args.num_devices)
     logger.info("reading data completes")
 
-    avg_cost, pred = network.network(item_count, cat_count)
+    avg_cost, pred = network.network(item_count, cat_count, max_len)
     fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(
         clip_norm=5.0))
     base_lr = args.base_lr
@@ -173,21 +173,6 @@ def get_cards(args):
     else:
         return args.num_devices
 
-def check_version():
-    """
-    Log error and exit when the installed version of paddlepaddle is
-    not satisfied.
-    """
-    err = "PaddlePaddle version 1.6 or higher is required, " \
-          "or a suitable develop version is satisfied as well. \n" \
-          "Please make sure the version is good with your code." \
-
-    try:
-        fluid.require_version('1.6.0')
-    except Exception as e:
-        logger.error(err)
-        sys.exit(1)
 
 if __name__ == "__main__":
-    check_version()
     train()
