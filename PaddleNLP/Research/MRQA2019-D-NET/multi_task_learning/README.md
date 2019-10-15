@@ -53,7 +53,7 @@ bash wget_pretrained_model.sh
 ## 3. Training
 In the following example, we use PALM library to preform a MLT with 3 tasks (i.e. machine reading comprehension as main task, masked lagnuage model and paragraph ranking as auxiliary tasks). For a detialed instruction on PALM, please refer to the [user guide](https://github.com/PaddlePaddle/PALM/blob/v1.0/README.md).
 
-The PALM library requires a config file for every single task and an main config file `mtl_config.yaml`, which control the training behavior and hyper-parameters. For simplicity, we have prepared those files in the `multi_task_learning/configs` folder. To move the configuration files, data set and model parameters to the correct directory, run
+The PALM library requires a config file for every single task and a main config file `mtl_config.yaml`, which control the training behavior and hyper-parameters. For simplicity, we have prepared those files in the `multi_task_learning/configs` folder. To move the configuration files, data set and model parameters to the correct directory, run
 
 ```
 bash run_build_palm.sh
@@ -68,12 +68,15 @@ bash run_multi_task.sh
 The fine-tuned parameters and model predictions will be saved in `PALM/output_model/firstrun`, as specified by `mtl_config.yaml`.
 
 ## 4. Evaluation
+The scripts for evaluation are in the folder `scripts/`. Here we provide an example for the usage of those scripts. 
+Before evaluation, one need a json file which contains the prediction results on the MRQA dev set. For convenience, we prepare two model prediction files with different MTL configurations, which have been saved in the `prediction_results/` folder, as downloaded in section **Download data**. 
+
 To evaluate the result, run
+
 ```
 bash run_evaluation.sh
 ```
-Note that we use the evaluation script for SQuAD 1.1 here, which is equivalent to the official one.
-
+The F1 and EM score of the two model predictions will be saved into `prediction_results/BERT_MLM.log` and `prediction_results/BERT_MLM_ParaRank.log`. The macro average of F1 score will be printed on the console. The table below shows the results of our experiments with different MTL configurations.
 
 |models |in-domain dev (Macro-F1)|out-of-domain dev (Macro-F1) |
 | ------------- | ------------ | ------------ |
