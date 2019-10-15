@@ -33,6 +33,8 @@ SR-GNN模型的介绍可以参阅论文[Session-based Recommendation with Graph 
 
 **目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124382)
+
 ## 数据下载及预处理
 
 使用[DIGINETICA](http://cikm2016.cs.iupui.edu/cikm-cup)数据集。可以按照下述过程操作获得数据集以及进行简单的数据预处理。

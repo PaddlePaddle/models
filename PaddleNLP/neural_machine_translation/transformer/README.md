@@ -25,6 +25,8 @@
 
 本项目是机器翻译领域主流模型 Transformer 的 PaddlePaddle 实现， 包含模型训练，预测以及使用自定义数据等内容。用户可以基于发布的内容搭建自己的翻译模型。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122281)
+
 ## 快速开始
 
 ### 安装说明
