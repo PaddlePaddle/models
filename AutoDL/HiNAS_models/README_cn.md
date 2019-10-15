@@ -1,6 +1,8 @@
 # Image Classification Models
 本目录下包含6个图像分类模型，都是百度大数据实验室 Hierarchical Neural Architecture Search (HiNAS) 项目通过机器自动发现的模型，在CIFAR-10数据集上达到96.1%的准确率。这6个模型分为两类，前3个没有skip link，分别命名为 HiNAS 0-2号，后三个网络带有skip link，功能类似于Resnet中的shortcut connection，分别命名 HiNAS 3-5号。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122279)
+
 ---
 ## Table of Contents
 - [Installation](#installation)

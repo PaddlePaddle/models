@@ -2,11 +2,14 @@
 ## 简介
 ### 任务说明
 短文本语义匹配(SimilarityNet, SimNet)是一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MMDNN等核心网络结构形式，提供语义相似度计算训练和预测框架，适用于信息检索、新闻推荐、智能客服等多个应用场景，帮助企业解决语义匹配问题。可通过[AI开放平台-短文本相似度](https://ai.baidu.com/tech/nlp_basic/simnet)线上体验。
+
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124373)
+
 ### 效果说明
 基于百度海量搜索数据，我们训练了一个SimNet-BOW-Pairwise语义匹配模型，在一些真实的FAQ问答场景中，该模型效果比基于字面的相似度方法AUC提升5%以上，我们基于百度自建测试集（包含聊天、客服等数据集）和语义匹配数据集(LCQMC)进行评测，效果如下表所示。LCQMC数据集以Accuracy为评测指标，而pairwise模型的输出为相似度，因此我们采用0.958作为分类阈值，相比于基线模型中网络结构同等复杂的CBOW模型（准确率为0.737），我们模型的准确率为0.7532。
 
 
-| 模型       | 百度知道         | ECOM        |QQSIM | UNICOM | 
+| 模型       | 百度知道         | ECOM        |QQSIM | UNICOM |
 |:-----------:|:-------------:|:-------------:|:-------------:|:-------------:|
 |   | AUC  | AUC | AUC|正逆序比|
 |BOW_Pairwise|0.6767|0.7329|0.7650|1.5630|
@@ -60,7 +63,7 @@ sh run.sh infer
 #### 训练与验证
 用户可以基于示例数据构建训练集和开发集，可以运行下面的命令，进行模型训练和开发集验证。
 ```shell
-sh run.sh train 
+sh run.sh train
 ```
 用户也可以指定./run.sh中train()函数里的INIT_CHECKPOINT的值，载入训练好的模型进行热启动训练。
 ## 进阶使用
