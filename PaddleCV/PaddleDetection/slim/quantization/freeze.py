@@ -142,7 +142,7 @@ def main():
     assert os.path.exists(FLAGS.model_path)
     infer_prog, feed_names, fetch_targets = fluid.io.load_inference_model(
             dirname=FLAGS.model_path, executor=exe,
-            model_filename='__model__',
+            model_filename='__model__.infer',
             params_filename='__params__')
 
     eval_keys = ['bbox', 'gt_box', 'gt_label', 'is_difficult']

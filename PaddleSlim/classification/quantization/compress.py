@@ -95,6 +95,7 @@ def compress(args):
         eval_fetch_list=val_fetch_list,
         teacher_programs=[],
         train_optimizer=opt,
+        prune_infer_model=[[image.name], [out.name]],
         distiller_optimizer=None)
     com_pass.config(args.config_file)
     com_pass.run()
