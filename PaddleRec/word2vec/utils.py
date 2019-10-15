@@ -22,9 +22,23 @@ def BuildWord_IdMap(dict_path):
 def prepare_data(file_dir, dict_path, batch_size):
     w2i, i2w = BuildWord_IdMap(dict_path)
     vocab_size = len(i2w)
-    reader = paddle.batch(test(file_dir, w2i), batch_size)
+    reader = fluid.io.batch(test(file_dir, w2i), batch_size)
     return vocab_size, reader, i2w
 
+def check_version():
+     """
+     Log error and exit when the installed version of paddlepaddle is
+     not satisfied.
+     """
+     err = "PaddlePaddle version 1.6 or higher is required, " \
+           "or a suitable develop version is satisfied as well. \n" \
+           "Please make sure the version is good with your code." \
+
+     try:
+         fluid.require_version('1.6.0')
+     except Exception as e:
+         logger.error(err)
+         sys.exit(1)
 
 def native_to_unicode(s):
     if _is_unicode(s):

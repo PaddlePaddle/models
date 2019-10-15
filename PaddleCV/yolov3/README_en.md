@@ -20,6 +20,8 @@ We use many image augment and label smooth tricks from [Bag of Freebies for Trai
 
 With execution acceleration method in Paddle framework prediction library, inference speed of YOLOv3 in our impliment can be 30% faster than darknet framework.
 
+We also recommend users to take a look at the  [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122277)
+
 ## Quick Start
 
 ### Installation
@@ -94,7 +96,7 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
        --data_dir=${path_to_data} \
        --class_num=${category_num}
 
-- Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train. 
+- Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train.
 - It is recommended to set `--use_multiprocess_reader=False` when training on Windows.
 - Set `--worker_num=` to specifiy multiprocess reader worker number, which is default 8, if the number of CPU cores in the training environment is small, it is recommended to set worker number to a small value.
 - For more help on arguments:
@@ -268,26 +270,26 @@ if cfg.pretrain:
     fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     cat_idxs = [3, 19, 25, 41, 58, 73]
-    # the first 5 channels is x, y, w, h, objectness, 
+    # the first 5 channels is x, y, w, h, objectness,
     # the following 80 channel is for 80 categories
     channel_idxs = np.array(range(5) + [idx + 5 for idx in cat_idxs])
     # we have 3 yolo_output layers
-    for i in range(3): 
+    for i in range(3):
         # crop conv weights
         weights_tensor = fluid.global_scope().find_var(
                           "yolo_output.{}.conv.weights".format(i)).get_tensor()
         weights = np.array(weights_tensor)
         # each yolo_output layer has 3 anchors, 85 channels of each anchor
-        weights = np.concatenate(weights[channel_idxs], 
-                                 weights[85 + channel_idxs], 
+        weights = np.concatenate(weights[channel_idxs],
+                                 weights[85 + channel_idxs],
                                  weights[170 + channel_idxs])
         weights_tensor.set(weights.astype('float32'), place)
         # crop conv bias
         bias_tensor = fluid.global_scope().find_var(
                         "yolo_output.{}.conv.bias".format(i)).get_tensor()
         bias = np.array(bias_tensor)
-        bias = np.concatenate(bias[channel_idxs], 
-                              bias[85 + channel_idxs], 
+        bias = np.concatenate(bias[channel_idxs],
+                              bias[85 + channel_idxs],
                               bias[150 + channel_idxs])
         bias_tensor.set(bias.astype('float32'), place)
 
@@ -323,4 +325,3 @@ If you can fix a issue or add a new feature, please open a PR to us. If your PR 
 
 - [heavengate](https://github.com/heavengate)
 - [tink2123](https://github.com/tink2123)
-

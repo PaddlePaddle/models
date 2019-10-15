@@ -1,6 +1,8 @@
 # Image Classification Models
 This directory contains six image classification models, which are models automatically discovered by Baidu Big Data Lab (BDL) Hierarchical Neural Architecture Search project (HiNAS), achieving 96.1% accuracy on CIFAR-10 dataset. These models are divided into two categories. The first three have no skip link, named HiNAS 0-2, and the last three networks contain skip links, which are similar to the shortcut connections in Resnet, named HiNAS 3-5.
 
+We also recommend users to take a look at the  [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122279)
+
 ---
 ## Table of Contents
 - [Installation](#installation)

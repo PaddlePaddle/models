@@ -3,6 +3,8 @@
 [BERT](https://arxiv.org/abs/1810.04805) 是一个迁移能力很强的通用语义表示模型， 以 [Transformer](https://arxiv.org/abs/1706.03762) 为网络基本组件，以双向 `Masked Language Model`  
 和 `Next Sentence Prediction` 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。本项目是 BERT 在 Paddle Fluid 上的开源实现。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122282)
+
 ### 发布要点
 
 1）完整支持 BERT 模型训练到部署, 包括:
@@ -79,7 +81,7 @@
 我们给出了 token 化后的示例明文数据: [`demo_wiki_tokens.txt`](./data/demo_wiki_tokens.txt)，其中每行数据为2个 tab 分隔的句子，示例如下:
 
 ```
-1 . 雏 凤 鸣 剧 团	2 . 古 典 之 门 ： 帝 女 花 3 . 戏 曲 之 旅 ： 第 155 期 心 系 唐 氏 慈 善 戏 曲 晚 会 4 . 区 文 凤 , 郑 燕 虹 1999 编 ， 香 港 当 代 粤 剧 人 名 录 ， 中 大 音 乐 系 5 . 王 胜 泉 , 张 文 珊 2011 编 ， 香 港 当 代 粤 剧 人 名 录 ， 中 大 音 乐 系
+1 . 雏 凤 鸣 剧 团    2 . 古 典 之 门 ： 帝 女 花 3 . 戏 曲 之 旅 ： 第 155 期 心 系 唐 氏 慈 善 戏 曲 晚 会 4 . 区 文 凤 , 郑 燕 虹 1999 编 ， 香 港 当 代 粤 剧 人 名 录 ， 中 大 音 乐 系 5 . 王 胜 泉 , 张 文 珊 2011 编 ， 香 港 当 代 粤 剧 人 名 录 ， 中 大 音 乐 系
 ```
 
 同时我们也给出了 id 化后的部分训练数据：[`demo_wiki_train.gz`](./data/train/demo_wiki_train.gz)、和测试数据：[`demo_wiki_validation.gz`](./data/validation/demo_wiki_validation.gz)，每行数据为1个训练样本，示例如下:
