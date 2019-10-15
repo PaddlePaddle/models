@@ -2,19 +2,22 @@ import paddle.fluid as fluid
 import paddle.fluid.layers.nn as nn
 import paddle.fluid.layers.tensor as tensor
 import paddle.fluid.layers.control_flow as cf
-import paddle.fluid.layers.io as io
 
 def network(vocab_text_size, vocab_tag_size, emb_dim=10, hid_dim=1000, win_size=5, margin=0.1, neg_size=5):
     """ network definition """
-    text = io.data(name="text", shape=[1], lod_level=1, dtype='int64')
-    pos_tag = io.data(name="pos_tag", shape=[1], lod_level=1, dtype='int64')
-    neg_tag = io.data(name="neg_tag", shape=[1], lod_level=1, dtype='int64')
-    text_emb = nn.embedding(
+    text = fluid.data(name="text", shape=[None, 1], lod_level=1, dtype='int64')
+    pos_tag = fluid.data(name="pos_tag", shape=[None, 1], lod_level=1, dtype='int64')
+    neg_tag = fluid.data(name="neg_tag", shape=[None, 1], lod_level=1, dtype='int64')
+    text_emb = fluid.embedding(
             input=text, size=[vocab_text_size, emb_dim], param_attr="text_emb")
-    pos_tag_emb = nn.embedding(
+    text_emb = fluid.layers.squeeze(input=text_emb, axes=[1])
+    pos_tag_emb = fluid.embedding(
             input=pos_tag, size=[vocab_tag_size, emb_dim], param_attr="tag_emb")
-    neg_tag_emb = nn.embedding(
+    pos_tag_emb = fluid.layers.squeeze(input=pos_tag_emb, axes=[1])
+    neg_tag_emb = fluid.embedding(
             input=neg_tag, size=[vocab_tag_size, emb_dim], param_attr="tag_emb")
+    neg_tag_emb = fluid.layers.squeeze(input=neg_tag_emb, axes=[1])
+
 
     conv_1d = fluid.nets.sequence_conv_pool(
             input=text_emb,

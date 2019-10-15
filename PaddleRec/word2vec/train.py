@@ -224,5 +224,6 @@ def train(args):
 
 
 if __name__ == '__main__':
+    utils.check_version()
     args = parse_args()
     train(args)

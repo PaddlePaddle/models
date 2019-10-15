@@ -26,6 +26,7 @@ TagSpace模型的介绍可以参阅论文[#TagSpace: Semantic Embeddings from Ha
 
 Tagspace模型学习文本及标签的embedding表示，应用于工业级的标签推荐，具体应用场景有feed新闻标签推荐。
 
+**Now all models in PaddleRec require PaddlePaddle version 1.6 or higher, or suitable develop version.**
 
 ## 数据下载及预处理
 
