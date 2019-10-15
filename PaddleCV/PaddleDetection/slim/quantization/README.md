@@ -44,7 +44,6 @@ step1: 设置gpu卡
 export CUDA_VISIBLE_DEVICES=0
 ```
 step2: 开始训练
-```
 使用PaddleDetection提供的配置文件在用8卡进行训练：
 
 ```
