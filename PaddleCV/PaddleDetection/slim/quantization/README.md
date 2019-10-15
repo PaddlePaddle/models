@@ -178,7 +178,7 @@ python ../eval.py \
 
 - model_path, 加载的模型路径，`为${checkpoint_path}/${epoch_id}/eval_model/`
 - weight_quant_type 模型参数的量化方式，和配置文件中的类型保持一致
-- save_path `FP32`, `8-bit` 模型的保存路径，分别为 `${save_path}/float/`, `${save_path}/int8/`, `${save_path}/` 
+- save_path `FP32`, `8-bit` 模型的保存路径，分别为 `${save_path}/float/`, `${save_path}/int8/`
 
 运行命令示例：
 ```
