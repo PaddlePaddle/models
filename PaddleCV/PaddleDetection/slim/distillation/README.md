@@ -115,7 +115,7 @@ python ../eval.py \
 ```
 python ../infer.py \
     --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
-    --model_name __model__ \
+    --model_name __model__.infer \
     --params_name __params__ \
     -c ../../configs/yolov3_mobilenet_v1_voc.yml \
     --infer_dir ../../demo

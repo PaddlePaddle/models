@@ -129,7 +129,7 @@ python eval.py \
 python infer.py \
     --use_gpu True \
     --model_path ${save_path}/eval_model/ \
-    --model_name __model__ \
+    --model_name __model__.infer \
     --params_name __params__
 ```
 
