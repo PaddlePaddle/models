@@ -360,10 +360,10 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 版本号        | tar包                                                         | zip包                                                         |
 | ------------- | ------------------------------------------------------------- | ------------------------------------------------------------- |
-| models 1.5.1  | [.tar.gz](https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.tar.gz) | [.zip](https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.zip) |
-| models 1.5    | [.tar.gz](https://paddlepaddle-modles.bj.bcebos.com/models-1.5.tar.gz)   | [.zip](https://paddlepaddle-modles.bj.bcebos.com/models-1.5.zip)   |
-| models 1.4    | [.tar.gz](https://paddlepaddle-modles.bj.bcebos.com/models-1.4.tar.gz)   | [.zip](https://paddlepaddle-modles.bj.bcebos.com/models-1.4.zip)   |
-| models 1.3    | [.tar.gz](https://paddlepaddle-modles.bj.bcebos.com/models-1.3.tar.gz)   | [.zip](https://paddlepaddle-modles.bj.bcebos.com/models-1.3.zip)   |
+| models 1.5.1  | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.tar.gz | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.zip |
+| models 1.5    | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.tar.gz   | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.zip   |
+| models 1.4    | https://paddlepaddle-modles.bj.bcebos.com/models-1.4.tar.gz   | https://paddlepaddle-modles.bj.bcebos.com/models-1.4.zip   |
+| models 1.3    | https://paddlepaddle-modles.bj.bcebos.com/models-1.3.tar.gz   | https://paddlepaddle-modles.bj.bcebos.com/models-1.3.zip   |
 
 
 ## License
