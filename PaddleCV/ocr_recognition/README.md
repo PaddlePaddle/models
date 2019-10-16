@@ -1,4 +1,4 @@
->注意：在paddle1.5版本上训练attention model有收敛问题，建议您暂时使用paddle1.4版本，后续我们会修复该问题。
+>注意：在paddle1.5版本上训练attention model有收敛问题，建议您暂时使用paddle1.4版本和models1.5分支，后续我们会修复该问题。
 
 ## 代码结构
 ```
