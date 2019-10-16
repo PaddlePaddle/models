@@ -162,6 +162,8 @@ FP32模型可使用Paddle-Lite进行加载预测，可参见教程[Paddle-Lite�
 
 ## 示例结果
 
+>当前release的结果并非超参调优后的最好结果，仅做示例参考，后续我们会优化当前结果。
+
 ### MobileNetV1
 
 | weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)| 模型下载|
