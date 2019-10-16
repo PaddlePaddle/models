@@ -118,7 +118,7 @@ TrainDataLoader:
     stride: 128
 
 EvalDataLoader:
-  batch_size: 2
+  batch_size: 1
   auto_reset: false
   multiprocessing: false
   prefetch_to_gpu: false
