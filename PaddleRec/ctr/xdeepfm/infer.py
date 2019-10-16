@@ -8,6 +8,7 @@ import paddle.fluid as fluid
 from args import parse_args
 from criteo_reader import CriteoDataset
 import network_conf
+import utils
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('fluid')
@@ -72,4 +73,5 @@ def infer():
 
 
 if __name__ == '__main__':
+    utils.check_version()
     infer()

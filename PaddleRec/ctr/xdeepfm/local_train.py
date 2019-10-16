@@ -56,4 +56,5 @@ def train():
 
 
 if __name__ == '__main__':
+    utils.check_version()
     train()

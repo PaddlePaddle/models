@@ -15,6 +15,7 @@
 ```
 
 ## 运行环境
+**要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
 需要先安装PaddlePaddle Fluid，然后运行：
 
 ```shell

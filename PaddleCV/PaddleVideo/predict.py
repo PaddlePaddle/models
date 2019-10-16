@@ -30,6 +30,7 @@ import models
 from reader import get_reader
 from metrics import get_metrics
 from utils.utility import check_cuda
+from utils.utility import check_version
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -100,13 +101,15 @@ def infer(args):
     infer_config = merge_configs(config, 'infer', vars(args))
     print_configs(infer_config, "Infer")
     infer_model = models.get_model(args.model_name, infer_config, mode='infer')
-    infer_model.build_input(use_pyreader=False)
+    infer_model.build_input(use_dataloader=False)
     infer_model.build_model()
     infer_feeds = infer_model.feeds()
     infer_outputs = infer_model.outputs()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+
+    exe.run(fluid.default_startup_program())
 
     filelist = args.filelist or infer_config.INFER.filelist
     filepath = args.video_path or infer_config.INFER.get('filepath', '')
@@ -136,16 +139,26 @@ def infer(args):
     periods = []
     cur_time = time.time()
     for infer_iter, data in enumerate(infer_reader()):
-        data_feed_in = [items[:-1] for items in data]
-        video_id = [items[-1] for items in data]
-        infer_outs = exe.run(fetch_list=fetch_list,
-                             feed=infer_feeder.feed(data_feed_in))
+        if args.model_name == 'ETS':
+            data_feed_in = [items[:3] for items in data]
+            vinfo = [items[3:] for items in data]
+            video_id = [items[0] for items in vinfo]
+            infer_outs = exe.run(fetch_list=fetch_list,
+                                 feed=infer_feeder.feed(data_feed_in),
+                                 return_numpy=False)
+            infer_result_list = infer_outs + vinfo
+        else:
+            data_feed_in = [items[:-1] for items in data]
+            video_id = [items[-1] for items in data]
+            infer_outs = exe.run(fetch_list=fetch_list,
+                                 feed=infer_feeder.feed(data_feed_in))
+            infer_result_list = [item for item in infer_outs] + [video_id]
+
         prev_time = cur_time
         cur_time = time.time()
         period = cur_time - prev_time
         periods.append(period)
 
-        infer_result_list = [item for item in infer_outs] + [video_id]
         infer_metrics.accumulate(infer_result_list)
 
         if args.log_interval > 0 and infer_iter % args.log_interval == 0:
@@ -165,6 +178,7 @@ if __name__ == "__main__":
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
     check_cuda(args.use_gpu)
+    check_version()
     logger.info(args)
 
     infer(args)

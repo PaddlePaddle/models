@@ -16,6 +16,7 @@ from config import parse_args
 from reader import CriteoDataset
 from network import DCN
 from collections import OrderedDict
+import utils
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('fluid')
@@ -94,4 +95,5 @@ def infer():
 
 
 if __name__ == '__main__':
+    utils.check_version()
     infer()

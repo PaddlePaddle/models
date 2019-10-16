@@ -26,6 +26,7 @@ import models
 from reader import get_reader
 from metrics import get_metrics
 from utils.utility import check_cuda
+from utils.utility import check_version
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -83,13 +84,15 @@ def test(args):
 
     # build model
     test_model = models.get_model(args.model_name, test_config, mode='test')
-    test_model.build_input(use_pyreader=False)
+    test_model.build_input(use_dataloader=False)
     test_model.build_model()
     test_feeds = test_model.feeds()
     test_fetch_list = test_model.fetches()
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+
+    exe.run(fluid.default_startup_program())
 
     if args.weights:
         assert os.path.exists(
@@ -110,8 +113,16 @@ def test(args):
     epoch_period = []
     for test_iter, data in enumerate(test_reader()):
         cur_time = time.time()
-        test_outs = exe.run(fetch_list=test_fetch_list,
-                            feed=test_feeder.feed(data))
+        if args.model_name == 'ETS':
+            feat_data = [items[:3] for items in data]
+            vinfo = [items[3:] for items in data]
+            test_outs = exe.run(fetch_list=test_fetch_list,
+                                feed=test_feeder.feed(feat_data),
+                                return_numpy=False)
+            test_outs += vinfo
+        else:
+            test_outs = exe.run(fetch_list=test_fetch_list,
+                                feed=test_feeder.feed(data))
         period = time.time() - cur_time
         epoch_period.append(period)
         test_metrics.accumulate(test_outs)
@@ -130,6 +141,7 @@ if __name__ == "__main__":
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
     check_cuda(args.use_gpu)
+    check_version()
     logger.info(args)
 
     test(args)

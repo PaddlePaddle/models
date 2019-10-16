@@ -17,7 +17,7 @@ def bow_net(data,
     Bow net
     """
     # embedding layer
-    emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim])
+    emb = fluid.embedding(input=data, size=[dict_dim, emb_dim])
     emb = fluid.layers.sequence_unpad(emb, length=seq_len)
     # bow layer
     bow = fluid.layers.sequence_pool(input=emb, pool_type='sum')
@@ -50,7 +50,7 @@ def cnn_net(data,
     Conv net
     """
     # embedding layer
-    emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim])
+    emb = fluid.embedding(input=data, size=[dict_dim, emb_dim])
     emb = fluid.layers.sequence_unpad(emb, length=seq_len)
     # convolution layer
     conv_3 = fluid.nets.sequence_conv_pool(
@@ -87,7 +87,7 @@ def lstm_net(data,
     Lstm net
     """
     # embedding layer
-    emb = fluid.layers.embedding(
+    emb = fluid.embedding(
         input=data,
         size=[dict_dim, emb_dim],
         param_attr=fluid.ParamAttr(learning_rate=emb_lr))
@@ -129,7 +129,7 @@ def bilstm_net(data,
     Bi-Lstm net
     """
     # embedding layer
-    emb = fluid.layers.embedding(
+    emb = fluid.embedding(
         input=data,
         size=[dict_dim, emb_dim],
         param_attr=fluid.ParamAttr(learning_rate=emb_lr))
@@ -175,7 +175,7 @@ def gru_net(data,
     """
     gru net
     """
-    emb = fluid.layers.embedding(
+    emb = fluid.embedding(
         input=data,
         size=[dict_dim, emb_dim],
         param_attr=fluid.ParamAttr(learning_rate=emb_lr))
@@ -216,7 +216,7 @@ def textcnn_net(data,
         win_sizes = [1, 2, 3]
 
     # embedding layer
-    emb = fluid.layers.embedding(input=data, size=[dict_dim, emb_dim])
+    emb = fluid.embedding(input=data, size=[dict_dim, emb_dim])
     emb = fluid.layers.sequence_unpad(emb, length=seq_len)
     # convolution layer
     convs = []

@@ -25,6 +25,7 @@
 | BERT | 93.6% | 92.3%  | 78.6%  |
 | ERNIE | 94.4% | 94.0% | 80.6% |
 
+同时推荐用户参考[IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122291)
 
 ## 快速开始
 
@@ -32,7 +33,7 @@
 
 1. PaddlePaddle 安装
 
-   本项目依赖于 PaddlePaddle Fluid 1.3.2 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle Fluid 1.6 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 2. 代码安装
 
@@ -45,7 +46,7 @@
 
 3. 环境依赖
 
-   请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 部分的内容
+   Python 2 的版本要求 2.7.15+，Python 3 的版本要求 3.5.1+/3.6/3.7，其它环境请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 部分的内容
 
 ### 代码结构说明
 
@@ -195,7 +196,7 @@ sh run.sh save_inference_model
 同时裁剪后的模型使用方法详见```inference_model.py```，测试命令如下:
 
 ```shell
-python inference_model.py 
+python inference_model.py
 ```
 
 

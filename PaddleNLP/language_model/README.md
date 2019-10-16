@@ -7,6 +7,8 @@
 
 **目前语言模型要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
 
+同时推荐用户参考[IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122290)
+
 ## 2. 效果说明
 在small meidum large三个不同配置情况的ppl对比：
 

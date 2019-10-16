@@ -71,6 +71,7 @@ def infer(test_reader, vocab_tag, use_cuda, model_path, epoch):
 
 
 if __name__ == "__main__":
+    utils.check_version()
     args = parse_args()
     start_index = args.start_index
     last_index = args.last_index

@@ -520,6 +520,8 @@ distillers:
 
 ### 2.4 基于硬件的轻量级模型结构搜索
 
+>注意：该功能暂时不支持windows环境
+
 该功能基于模拟退火算法，实现了基于不同硬件的轻量级模型结构的快速搜索，简称为LightNAS (Light Network Architecture Search).
 
 使用该功能，需要用户做三个工作：

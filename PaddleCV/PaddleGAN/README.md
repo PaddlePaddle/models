@@ -21,7 +21,7 @@
 注意：
 1. StarGAN，AttGAN和STGAN由于梯度惩罚所需的操作目前只支持GPU，需使用GPU训练。
 2. GAN模型目前仅仅验证了单机单卡训练和预测结果。
-3. CGAN和DCGAN两个模型训练使用的数据集为MNIST数据集；StarGAN，AttGAN和STGAN的数据集为CelebA数据集。Pix2Pix和CycleGAN支持的数据集可以参考download.py中的cycle_pix_dataset。
+3. CGAN和DCGAN两个模型训练使用的数据集为MNIST数据集；StarGAN，AttGAN和STGAN的数据集为CelebA数据集。Pix2Pix和CycleGAN支持的数据集可以参考download.py中的cycle_pix_dataset。cityscapes数据集需要从[官方](https://www.cityscapes-dataset.com)下载数据，下载完之后使用`scripts/prepare_cityscapes_dataset.py`处理，处理后的文件夹命名为cityscapes并放入data目录下即可。
 4. PaddlePaddle1.5.1及之前的版本不支持在AttGAN和STGAN模型里的判别器加上的instance norm。如果要在判别器中加上instance norm，请源码编译develop分支并安装。
 5. 中间效果图保存在${output_dir}/test文件夹中。对于Pix2Pix来说，inputA 和inputB 代表输入的两种风格的图片，fakeB表示生成图片；对于CycleGAN来说，inputA表示输入图片，fakeB表示inputA根据生成的图片，cycA表示fakeB经过生成器重构出来的对应于inputA的重构图片；对于StarGAN，AttGAN和STGAN来说，第一行表示原图，之后的每一行都代表一种属性变换。
 6. infer过程使用的test_list文件和训练过程中使用的train_list具有相同格式，第一行为样本数量，第二行为属性，之后的行中第一个表示图片名称，之后的-1和1表示该图片是否拥有该属性(1为有该属性，-1为没有该属性)。
@@ -62,12 +62,14 @@
 
 ```
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122272)
+
 ## 快速开始
 
 ### 安装说明
 **安装[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)：**
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.6或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 其他依赖包：
 1. `pip install imageio` 或者 `pip install -r requirements.txt` 安装imageio包（保存图片代码中所依赖的包）

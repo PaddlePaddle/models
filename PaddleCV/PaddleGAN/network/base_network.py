@@ -64,12 +64,6 @@ def norm_layer(input,
             moving_variance_name=name + '_var')
 
     elif norm_type == 'instance_norm':
-        helper = fluid.layer_helper.LayerHelper("instance_norm", **locals())
-        dtype = helper.input_dtype()
-        epsilon = 1e-5
-        mean = fluid.layers.reduce_mean(input, dim=[2, 3], keep_dim=True)
-        var = fluid.layers.reduce_mean(
-            fluid.layers.square(input - mean), dim=[2, 3], keep_dim=True)
         if name is not None:
             scale_name = name + "_scale"
             offset_name = name + "_offset"
@@ -91,15 +85,8 @@ def norm_layer(input,
                 name=offset_name,
                 initializer=fluid.initializer.Constant(0.0),
                 trainable=False)
-        scale = helper.create_parameter(
-            attr=scale_param, shape=input.shape[1:2], dtype=dtype)
-        offset = helper.create_parameter(
-            attr=offset_param, shape=input.shape[1:2], dtype=dtype)
-
-        tmp = fluid.layers.elementwise_mul(x=(input - mean), y=scale, axis=1)
-        tmp = tmp / fluid.layers.sqrt(var + epsilon)
-        tmp = fluid.layers.elementwise_add(tmp, offset, axis=1)
-        return tmp
+        return fluid.layers.instance_norm(
+            input, param_attr=scale_param, bias_attr=offset_param)
     else:
         raise NotImplementedError("norm type: [%s] is not support" % norm_type)
 

@@ -17,6 +17,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 import os
 import time
 import argparse
@@ -219,17 +223,6 @@ def main(args):
                     decr_every_n_nan_or_inf=args.decr_every_n_nan_or_inf,
                     incr_ratio=args.incr_ratio,
                     decr_ratio=args.decr_ratio)
-
-        if args.verbose:
-            if args.in_tokens:
-                lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
-                    program=train_program,
-                    batch_size=args.batch_size // args.max_seq_len)
-            else:
-                lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
-                    program=train_program, batch_size=args.batch_size)
-            print("Theoretical memory usage in training: %.3f - %.3f %s" %
-                  (lower_mem, upper_mem, unit))
 
     if args.do_val:
         dev_prog = fluid.Program()
