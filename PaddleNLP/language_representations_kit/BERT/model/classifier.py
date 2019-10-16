@@ -25,9 +25,8 @@ from model.bert import BertModel
 def create_model(args, bert_config, num_labels, is_prediction=False):
     input_fields = {
         'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'labels'],
-        'shapes':
-        [[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
-         [-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1], [-1, 1]],
+        'shapes': [[None, None], [None, None], [None, None],
+                   [-1, args.max_seq_len, 1], [-1, 1]],
         'dtypes': ['int64', 'int64', 'int64', 'float32', 'int64'],
         'lod_levels': [0, 0, 0, 0, 0],
     }
@@ -59,6 +58,7 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
         dropout_implementation="upscale_in_train")
     logits = fluid.layers.fc(
         input=cls_feats,
+        num_flatten_dims=2,
         size=num_labels,
         param_attr=fluid.ParamAttr(
             name="cls_out_w",
@@ -73,6 +73,7 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
         ]
         return pyreader, probs, feed_targets_name
 
+    logits = fluid.layers.reshape(logits, [-1, num_labels], inplace=True)
     ce_loss, probs = fluid.layers.softmax_with_cross_entropy(
         logits=logits, label=labels, return_softmax=True)
     loss = fluid.layers.mean(x=ce_loss)

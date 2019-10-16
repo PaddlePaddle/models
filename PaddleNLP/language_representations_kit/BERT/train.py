@@ -98,9 +98,8 @@ args = parser.parse_args()
 def create_model(bert_config):
     input_fields = {
         'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'mask_label', 'mask_pos', 'labels'],
-        'shapes': [[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
-                [-1, args.max_seq_len, 1],
-                [-1, args.max_seq_len, 1], [-1, 1], [-1, 1], [-1, 1]],
+        'shapes': [[None, None], [None, None], [None, None],
+                [None, None, 1], [None, 1], [None, 1], [None, 1]],
         'dtypes': ['int64', 'int64', 'int64', 'float32', 'int64', 'int64', 'int64'],
         'lod_levels': [0, 0, 0, 0, 0, 0, 0],
     }
@@ -263,16 +262,6 @@ def train(args):
         dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     print("Device count %d" % dev_count)
-    if args.verbose:
-        if args.in_tokens:
-            lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
-         program=train_program,
-         batch_size=args.batch_size // args.max_seq_len)
-        else:
-            lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
-         program=train_program, batch_size=args.batch_size)
-        print("Theoretical memory usage in training: %.3f - %.3f %s" %
-              (lower_mem, upper_mem, unit))
 
     nccl2_num_trainers = 1
     nccl2_trainer_id = 0

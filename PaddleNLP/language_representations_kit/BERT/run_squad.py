@@ -108,8 +108,7 @@ def create_model(bert_config, is_training=False):
     if is_training:
         input_fields = {
             'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'start_positions', 'end_positions'],
-            'shapes': [[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
-                    [-1, args.max_seq_len, 1],
+            'shapes': [[None, None], [None, None], [None, None],
                     [-1, args.max_seq_len, 1], [-1, 1], [-1, 1]],
             'dtypes': [
                 'int64', 'int64', 'int64', 'float32', 'int64', 'int64'],
@@ -118,8 +117,7 @@ def create_model(bert_config, is_training=False):
     else:
         input_fields = {
             'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'unique_id'],
-            'shapes': [[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
-                    [-1, args.max_seq_len, 1],
+            'shapes': [[None, None], [None, None], [None, None],
                     [-1, args.max_seq_len, 1], [-1, 1]],
             'dtypes': [
                 'int64', 'int64', 'int64', 'float32', 'int64'],
@@ -299,17 +297,6 @@ def train(args):
                     decr_every_n_nan_or_inf=args.decr_every_n_nan_or_inf,
                     incr_ratio=args.incr_ratio,
                     decr_ratio=args.decr_ratio)
-
-        if args.verbose:
-            if args.in_tokens:
-                lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
-                    program=train_program,
-                    batch_size=args.batch_size // args.max_seq_len)
-            else:
-                lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
-                    program=train_program, batch_size=args.batch_size)
-            print("Theoretical memory usage in training:  %.3f - %.3f %s" %
-                  (lower_mem, upper_mem, unit))
 
     if args.do_predict:
         test_prog = fluid.Program()

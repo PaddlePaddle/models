@@ -155,7 +155,7 @@ def pad_batch_data(insts,
     inst_data = np.array([
         list(inst) + list([pad_idx] * (max_len - len(inst))) for inst in insts
     ])
-    return_list += [inst_data.astype("int64").reshape([-1, max_len, 1])]
+    return_list += [inst_data.astype("int64").reshape([-1, max_len])]
 
     # position data
     if return_pos:
@@ -164,7 +164,7 @@ def pad_batch_data(insts,
             for inst in insts
         ])
 
-        return_list += [inst_pos.astype("int64").reshape([-1, max_len, 1])]
+        return_list += [inst_pos.astype("int64").reshape([-1, max_len])]
 
     if return_input_mask:
         # This is used to avoid attention on paddings.

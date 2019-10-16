@@ -224,17 +224,6 @@ def main(args):
                     incr_ratio=args.incr_ratio,
                     decr_ratio=args.decr_ratio)
 
-        if args.verbose:
-            if args.in_tokens:
-                lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
-                    program=train_program,
-                    batch_size=args.batch_size // args.max_seq_len)
-            else:
-                lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
-                    program=train_program, batch_size=args.batch_size)
-            print("Theoretical memory usage in training: %.3f - %.3f %s" %
-                  (lower_mem, upper_mem, unit))
-
     if args.do_val:
         dev_prog = fluid.Program()
         with fluid.program_guard(dev_prog, startup_prog):

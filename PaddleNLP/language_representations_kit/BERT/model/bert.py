@@ -82,21 +82,21 @@ class BertModel(object):
 
     def _build_model(self, src_ids, position_ids, sentence_ids, input_mask):
         # padding id in vocabulary must be set to 0
-        emb_out = fluid.layers.embedding(
+        emb_out = fluid.embedding(
             input=src_ids,
             size=[self._voc_size, self._emb_size],
             dtype=self._dtype,
             param_attr=fluid.ParamAttr(
                 name=self._word_emb_name, initializer=self._param_initializer),
             is_sparse=False)
-        position_emb_out = fluid.layers.embedding(
+        position_emb_out = fluid.embedding(
             input=position_ids,
             size=[self._max_position_seq_len, self._emb_size],
             dtype=self._dtype,
             param_attr=fluid.ParamAttr(
                 name=self._pos_emb_name, initializer=self._param_initializer))
 
-        sent_emb_out = fluid.layers.embedding(
+        sent_emb_out = fluid.embedding(
             sentence_ids,
             size=[self._sent_types, self._emb_size],
             dtype=self._dtype,
@@ -148,6 +148,7 @@ class BertModel(object):
             input=self._enc_out, axes=[1], starts=[0], ends=[1])
         next_sent_feat = fluid.layers.fc(
             input=next_sent_feat,
+            num_flatten_dims=2,
             size=self._emb_size,
             act="tanh",
             param_attr=fluid.ParamAttr(
@@ -209,11 +210,14 @@ class BertModel(object):
 
         next_sent_fc_out = fluid.layers.fc(
             input=next_sent_feat,
+            num_flatten_dims=2,
             size=2,
             param_attr=fluid.ParamAttr(
                 name="next_sent_fc.w_0", initializer=self._param_initializer),
             bias_attr="next_sent_fc.b_0")
 
+        next_sent_fc_out = fluid.layers.reshape(
+            next_sent_fc_out, [-1, 2], inplace=True)
         next_sent_loss, next_sent_softmax = fluid.layers.softmax_with_cross_entropy(
             logits=next_sent_fc_out, label=labels, return_softmax=True)
 
