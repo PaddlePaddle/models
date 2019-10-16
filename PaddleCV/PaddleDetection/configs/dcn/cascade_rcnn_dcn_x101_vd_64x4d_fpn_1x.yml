@@ -157,7 +157,6 @@ EvalDataLoader:
   auto_reset: false
   multiprocessing: false
   prefetch_to_gpu: false
-  num_devices: 1
   num_workers: 2
   buffer_size: 2
   dataset:
