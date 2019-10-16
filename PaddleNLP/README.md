@@ -70,10 +70,10 @@ cd models/PaddleNLP/sentiment_classification
 ```text
 .
 ├── Research                          # 百度NLP在research方面的工作集合
-├── PaddleMT        								  # 机器翻译相关代码，数据，预训练模型
+├── PaddleMT                          # 机器翻译相关代码，数据，预训练模型
 ├── PaddleDialogue                    # 对话系统相关代码，数据，预训练模型
-├── PaddleMRC         								# 阅读理解相关代码，数据，预训练模型
-├── PaddleLARK									      # 语言表示工具箱
+├── PaddleMRC                         # 阅读理解相关代码，数据，预训练模型
+├── PaddleLARK                        # 语言表示工具箱
 ├── language_model                    # 语言模型
 ├── lexical_analysis                  # LAC词法分析
 ├── models                            # 共享网络
