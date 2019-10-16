@@ -87,6 +87,16 @@ strategies:
 
 如果不需要保存评估模型，可以在定义Compressor对象时，将`save_eval_model`选项设置为False（默认为True）。
 
+运行命令为：
+```
+python ../eval.py \
+    --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
+    --model_name __model__ \
+    --params_name __params__ \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -d "../../dataset/voc"
+```
+
 ## 预测
 
 如果在配置文件中设置了`checkpoint_path`，并且在定义Compressor对象时指定了`prune_infer_model`选项，则每个epoch都会
@@ -100,6 +110,15 @@ strategies:
 ### python预测
 
 在脚本<a href="../infer.py">slim/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
+
+```
+python ../infer.py \
+    --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
+    --model_name __model__ \
+    --params_name __params__ \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    --infer_dir ../../demo
+```
 
 ### PaddleLite
 

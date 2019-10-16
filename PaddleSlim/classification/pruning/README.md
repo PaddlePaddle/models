@@ -37,7 +37,7 @@ PaddleSlim暂时无法对`depthwise convolution`直接进行剪裁， 因为`dep
 ```
 for param in fluid.default_main_program().global_block().all_parameters():
     if 'weights' in param.name:
-        print param.name, param.shape
+        print(param.name, param.shape)
 ```
 
 结果如下：
@@ -100,6 +100,16 @@ fc10_weights (1280L, 1000L)
 
 脚本<a href="../eval.py">PaddleSlim/classification/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
 
+运行命令示例:
+```bash
+python eval.py \
+    --use_gpu True \
+    --model_path ${save_path}/eval_model/ \
+    --model_name __model__ \
+    --params_name __params__
+
+```
+
 ## 预测
 
 如果在配置文件中设置了`checkpoint_path`，并且在定义Compressor对象时指定了`prune_infer_model`选项，则每个epoch都会
@@ -113,6 +123,15 @@ fc10_weights (1280L, 1000L)
 ### python预测
 
 在脚本<a href="../infer.py">PaddleSlim/classification/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
+
+运行命令示例:
+```bash
+python infer.py \
+    --use_gpu True \
+    --model_path ${save_path}/eval_model/ \
+    --model_name __model__ \
+    --params_name __params__
+```
 
 ### PaddleLite
 
