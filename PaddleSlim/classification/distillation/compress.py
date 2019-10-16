@@ -95,7 +95,6 @@ def compress(args):
     train_fetch_list = [('loss', avg_cost.name)]
 
     teacher_programs = []
-    distiller_optimizer = None
 
     teacher_model = models.__dict__[args.teacher_model](prefix_name='res50')
     # define teacher program
