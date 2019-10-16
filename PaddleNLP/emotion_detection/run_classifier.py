@@ -32,30 +32,30 @@ import numpy as np
 
 from models.classification import nets
 from models.model_check import check_cuda
+from models.model_check import check_version
 from config import PDConfig
 import reader
 import utils
 
 
 def create_model(args,
-                 pyreader_name,
                  num_labels,
                  is_prediction=False):
     """
     Create Model for Emotion Detection
     """
-    data = fluid.layers.data(name="words", shape=[-1, args.max_seq_len, 1], dtype="int64")
-    label = fluid.layers.data(name="label", shape=[-1, 1], dtype="int64")
-    seq_len = fluid.layers.data(name="seq_len", shape=[-1, 1], dtype="int64")
+    data = fluid.data(name="words", shape=[-1, args.max_seq_len], dtype="int64")
+    label = fluid.data(name="label", shape=[-1, 1], dtype="int64")
+    seq_len = fluid.data(name="seq_len", shape=[-1], dtype="int64")
 
     if is_prediction:
-        pyreader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[data, seq_len],
             capacity=16,
             iterable=False,
             return_list=False)
     else:
-        pyreader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[data, label, seq_len],
             capacity=16,
             iterable=False,
@@ -78,19 +78,20 @@ def create_model(args,
 
     if is_prediction:
         probs = network(data, seq_len, None, args.vocab_size, class_dim=num_labels, is_prediction=True)
-        return pyreader, probs, [data.name, seq_len.name]
+        print(seq_len.shape)
+        return loader, probs, [data.name, seq_len.name]
 
     avg_loss, probs = network(data, seq_len, label, args.vocab_size, class_dim=num_labels)
     num_seqs = fluid.layers.create_tensor(dtype='int64')
     accuracy = fluid.layers.accuracy(input=probs, label=label, total=num_seqs)
-    return pyreader, avg_loss, accuracy, num_seqs
+    return loader, avg_loss, accuracy, num_seqs
 
 
-def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
+def evaluate(exe, test_program, test_loader, fetch_list, eval_phase):
     """
     Evaluation Function
     """
-    test_pyreader.start()
+    test_loader.start()
     total_cost, total_acc, total_num_seqs = [], [], []
     time_begin = time.time()
     while True:
@@ -105,7 +106,7 @@ def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
             total_acc.extend(np_acc * np_num_seqs)
             total_num_seqs.extend(np_num_seqs)
         except fluid.core.EOFException:
-            test_pyreader.reset()
+            test_loader.reset()
             break
     time_end = time.time()
     print("[%s evaluation] avg loss: %f, avg acc: %f, elapsed time: %f s" %
@@ -113,8 +114,8 @@ def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
            np.sum(total_acc) / np.sum(total_num_seqs), time_end - time_begin))
 
 
-def infer(exe, infer_program, infer_pyreader, fetch_list, infer_phase):
-    infer_pyreader.start()
+def infer(exe, infer_program, infer_loader, fetch_list, infer_phase):
+    infer_loader.start()
     time_begin = time.time()
     while True:
         try:
@@ -125,7 +126,7 @@ def infer(exe, infer_program, infer_pyreader, fetch_list, infer_phase):
                 print("%d\t%f\t%f\t%f" %
                       (np.argmax(probs), probs[0], probs[1], probs[2]))
         except fluid.core.EOFException as e:
-            infer_pyreader.reset()
+            infer_loader.reset()
             break
     time_end = time.time()
     print("[%s] elapsed time: %f s" % (infer_phase, time_end - time_begin))
@@ -172,9 +173,8 @@ def main(args):
 
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
-                train_pyreader, loss, accuracy, num_seqs = create_model(
+                train_loader, loss, accuracy, num_seqs = create_model(
                     args,
-                    pyreader_name='train_reader',
                     num_labels=num_labels,
                     is_prediction=False)
 
@@ -202,9 +202,8 @@ def main(args):
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
-                test_pyreader, loss, accuracy, num_seqs = create_model(
+                test_loader, loss, accuracy, num_seqs = create_model(
                     args,
-                    pyreader_name='test_reader',
                     num_labels=num_labels,
                     is_prediction=False)
         test_prog = test_prog.clone(for_test=True)
@@ -218,9 +217,8 @@ def main(args):
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
-                infer_pyreader, probs, _ = create_model(
+                infer_loader, probs, _ = create_model(
                     args,
-                    pyreader_name='infer_reader',
                     num_labels=num_labels,
                     is_prediction=True)
         test_prog = test_prog.clone(for_test=True)
@@ -239,18 +237,18 @@ def main(args):
 
     if args.do_train:
         train_exe = exe
-        train_pyreader.decorate_sample_list_generator(train_data_generator)
+        train_loader.set_sample_list_generator(train_data_generator)
     else:
         train_exe = None
     if args.do_val:
         test_exe = exe
-        test_pyreader.decorate_sample_list_generator(test_data_generator)
+        test_loader.set_sample_list_generator(test_data_generator)
     if args.do_infer:
         test_exe = exe
-        infer_pyreader.decorate_sample_list_generator(infer_data_generator)
+        infer_loader.set_sample_list_generator(infer_data_generator)
 
     if args.do_train:
-        train_pyreader.start()
+        train_loader.start()
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
         time_begin = time.time()
@@ -276,7 +274,7 @@ def main(args):
                     total_num_seqs.extend(np_num_seqs)
 
                     if args.verbose:
-                        verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size(
+                        verbose = "train loader queue size: %d, " % train_loader.queue.size(
                         )
                         print(verbose)
 
@@ -301,20 +299,20 @@ def main(args):
                 if steps % args.validation_steps == 0:
                     # evaluate on dev set
                     if args.do_val:
-                        evaluate(test_exe, test_prog, test_pyreader,
+                        evaluate(test_exe, test_prog, test_loader,
                                  [loss.name, accuracy.name, num_seqs.name],
                                  "dev")
 
             except fluid.core.EOFException:
                 print("final step: %d " % steps)
                 if args.do_val:
-                    evaluate(test_exe, test_prog, test_pyreader,
+                    evaluate(test_exe, test_prog, test_loader,
                         [loss.name, accuracy.name, num_seqs.name],
                         "dev")
 
                 save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
                 fluid.io.save_persistables(exe, save_path, train_program)
-                train_pyreader.reset()
+                train_loader.reset()
                 break
 
     if args.do_train and args.enable_ce:
@@ -336,14 +334,14 @@ def main(args):
     # evaluate on test set
     if not args.do_train and args.do_val:
         print("Final test result:")
-        evaluate(test_exe, test_prog, test_pyreader,
+        evaluate(test_exe, test_prog, test_loader,
                  [loss.name, accuracy.name, num_seqs.name],
                  "test")
 
     # infer
     if args.do_infer:
         print("Final infer result:")
-        infer(test_exe, test_prog, infer_pyreader,
+        infer(test_exe, test_prog, infer_loader,
              [probs.name],
              "infer")
 
@@ -361,4 +359,5 @@ if __name__ == "__main__":
     args.build()
     args.print_arguments()
     check_cuda(args.use_cuda)
+    check_version()
     main(args)
