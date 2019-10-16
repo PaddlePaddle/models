@@ -30,18 +30,18 @@ from models.transformer_encoder import encoder, pre_process_layer
 
 def ernie_pyreader(args, pyreader_name):
     """define standard ernie pyreader"""
-    pyreader = fluid.layers.py_reader(
-        capacity=50,
-        shapes=[[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
-                [-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1], [-1, 1],
-                [-1, 1]],
-        dtypes=['int64', 'int64', 'int64', 'float32', 'int64', 'int64'],
-        lod_levels=[0, 0, 0, 0, 0, 0],
-        name=pyreader_name,
-        use_double_buffer=True)
+    src_ids = fluid.data(name='1', shape=[-1, args.max_seq_len, 1], dtype='int64')
+    sent_ids = fluid.data(name='2', shape=[-1, args.max_seq_len, 1], dtype='int64')
+    pos_ids = fluid.data(name='3', shape=[-1, args.max_seq_len, 1], dtype='int64')
+    input_mask = fluid.data(name='4', shape=[-1, args.max_seq_len, 1], dtype='float32')
+    labels = fluid.data(name='5', shape=[-1, 1], dtype='int64')
+    seq_lens = fluid.data(name='6', shape=[-1], dtype='int64')
 
-    (src_ids, sent_ids, pos_ids, input_mask, labels,
-     seq_lens) = fluid.layers.read_file(pyreader)
+    pyreader = fluid.io.DataLoader.from_generator(
+        feed_list=[src_ids, sent_ids, pos_ids, input_mask, labels, seq_lens],
+        capacity=50,
+        iterable=False,
+        use_double_buffer=True)
 
     ernie_inputs = {
         "src_ids": src_ids,

@@ -44,9 +44,8 @@ def do_save_inference_model(args):
 
     with fluid.program_guard(test_prog, startup_prog):
         with fluid.unique_name.guard():
-            infer_pyreader, probs, feed_target_names = create_model(
+            infer_loader, probs, feed_target_names = create_model(
                 args,
-                pyreader_name='infer_reader',
                 num_labels=args.num_labels,
                 is_prediction=True)
 
@@ -79,20 +78,7 @@ def test_inference_model(args, texts):
         dev_count = int(os.environ.get('CPU_NUM', 1))
         place = fluid.CPUPlace()
 
-    test_prog = fluid.default_main_program()
-    startup_prog = fluid.default_startup_program()
-
-    with fluid.program_guard(test_prog, startup_prog):
-        with fluid.unique_name.guard():
-            infer_pyreader, probs, feed_target_names = create_model(
-                args,
-                pyreader_name='infer_reader',
-                num_labels=args.num_labels,
-                is_prediction=True)
-
-    test_prog = test_prog.clone(for_test=True)
     exe = fluid.Executor(place)
-    exe.run(startup_prog)
 
     assert (args.inference_model_dir)
     infer_program, feed_names, fetch_targets = fluid.io.load_inference_model(
@@ -107,9 +93,8 @@ def test_inference_model(args, texts):
         wids, seq_len = utils.pad_wid(wids)
         data.append(wids)
         seq_lens.append(seq_len)
-    batch_size = len(data)
-    data = np.array(data).reshape((batch_size, 128, 1))
-    seq_lens = np.array(seq_lens).reshape((batch_size, 1))
+    data = np.array(data)
+    seq_lens = np.array(seq_lens)
 
     pred = exe.run(infer_program,
                 feed={
