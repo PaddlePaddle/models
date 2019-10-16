@@ -188,8 +188,6 @@ def do_train(args):
             sum_cost, avg_cost, token_num = create_net(
                 is_training=True, model_input=input_field, args=args)
 
-            sum_cost.persistable = avg_cost.persistable = token_num.persistable = True
-
             # define the optimizer
 
             with fluid.default_main_program()._lr_schedule_guard():
@@ -206,7 +204,7 @@ def do_train(args):
     # prepare training
 
     ## decorate the pyreader with batch_generator
-    input_field.reader.decorate_batch_generator(batch_generator)
+    input_field.loader.set_batch_generator(batch_generator)
 
     ## define the executor and program for training
 
@@ -254,7 +252,7 @@ def do_train(args):
     step_idx = 0
     for pass_id in range(args.epoch):
         pass_start_time = time.time()
-        input_field.reader.start()
+        input_field.loader.start()
 
         batch_id = 0
         while True:
@@ -303,7 +301,7 @@ def do_train(args):
                 step_idx += 1
 
             except fluid.core.EOFException:
-                input_field.reader.reset()
+                input_field.loader.reset()
                 break
 
         time_consumed = time.time() - pass_start_time

@@ -15,9 +15,9 @@
 # The placeholder for batch_size in compile time. Must be -1 currently to be
 # consistent with some ops' infer-shape output in compile time, such as the
 # sequence_expand op used in beamsearch decoder.
-batch_size = -1
+batch_size = None
 # The placeholder for squence length in compile time.
-seq_len = 256
+seq_len = None
 # The placeholder for head number in compile time.
 n_head = 8
 # The placeholder for model dim in compile time.
@@ -27,11 +27,11 @@ d_model = 512
 # compile time.
 input_descs = {
     # The actual data shape of src_word is:
-    # [batch_size, max_src_len_in_batch, 1]
-    "src_word": [(batch_size, seq_len, 1), "int64", 2],
+    # [batch_size, max_src_len_in_batch]
+    "src_word": [(batch_size, seq_len), "int64", 2],
     # The actual data shape of src_pos is:
     # [batch_size, max_src_len_in_batch, 1]
-    "src_pos": [(batch_size, seq_len, 1), "int64"],
+    "src_pos": [(batch_size, seq_len), "int64"],
     # This input is used to remove attention weights on paddings in the
     # encoder.
     # The actual data shape of src_slf_attn_bias is:
@@ -39,11 +39,11 @@ input_descs = {
     "src_slf_attn_bias": [(batch_size, n_head, seq_len, seq_len), "float32"],
     # The actual data shape of trg_word is:
     # [batch_size, max_trg_len_in_batch, 1]
-    "trg_word": [(batch_size, seq_len, 1), "int64",
+    "trg_word": [(batch_size, seq_len), "int64",
                  2],  # lod_level is only used in fast decoder.
     # The actual data shape of trg_pos is:
     # [batch_size, max_trg_len_in_batch, 1]
-    "trg_pos": [(batch_size, seq_len, 1), "int64"],
+    "trg_pos": [(batch_size, seq_len), "int64"],
     # This input is used to remove attention weights on paddings and
     # subsequent words in the decoder.
     # The actual data shape of trg_slf_attn_bias is:
@@ -60,11 +60,11 @@ input_descs = {
     "enc_output": [(batch_size, seq_len, d_model), "float32"],
     # The actual data shape of label_word is:
     # [batch_size * max_trg_len_in_batch, 1]
-    "lbl_word": [(batch_size * seq_len, 1), "int64"],
+    "lbl_word": [(None, 1), "int64"],
     # This input is used to mask out the loss of paddding tokens.
     # The actual data shape of label_weight is:
     # [batch_size * max_trg_len_in_batch, 1]
-    "lbl_weight": [(batch_size * seq_len, 1), "float32"],
+    "lbl_weight": [(None, 1), "float32"],
     # This input is used in beam-search decoder.
     "init_score": [(batch_size, 1), "float32", 2],
     # This input is used in beam-search decoder for the first gather

@@ -93,7 +93,7 @@ class InputField(object):
         self.feed_list_str = []
         self.feed_list = []
 
-        self.reader = None
+        self.loader = None
 
         if input_slots:
             for input_slot in input_slots:
@@ -135,22 +135,17 @@ class InputField(object):
 
         for _name, _shape, _dtype, _lod_level in zip(
                 self.names, self.shapes, self.dtypes, self.lod_levels):
-            self.input_slots[_name] = fluid.layers.data(
+            self.input_slots[_name] = fluid.data(
                 name=_name, shape=_shape, dtype=_dtype, lod_level=_lod_level)
 
         for name in self.feed_list_str:
             self.feed_list.append(self.input_slots[name])
 
-        if build_pyreader:
-            self.reader = fluid.io.PyReader(
-                feed_list=self.feed_list, capacity=capacity, iterable=iterable)
-
-    def start(self, generator=None):
-
-        if generator is not None:
-            self.reader.decorate_batch_generator(generator)
-
-        self.reader.start()
+        self.loader = fluid.io.DataLoader.from_generator(
+            feed_list=self.feed_list,
+            capacity=capacity,
+            iterable=(not build_pyreader),
+            use_double_buffer=True)
 
 
 if __name__ == "__main__":

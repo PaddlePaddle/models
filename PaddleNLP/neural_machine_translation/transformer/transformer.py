@@ -297,20 +297,19 @@ def prepare_encoder_decoder(src_word,
     [batch_size, max_src_length_in_batch, d_model].
     This module is used at the bottom of the encoder stacks.
     """
-    src_word_emb = layers.embedding(
+    src_word_emb = fluid.embedding(
         src_word,
         size=[src_vocab_size, src_emb_dim],
         padding_idx=bos_idx,  # set embedding of bos to 0
-        param_attr=fluid.ParamAttr(
-            name=word_emb_param_name,
-            initializer=fluid.initializer.Normal(0., src_emb_dim**-0.5)))
+        param_attr=fluid.ParamAttr(name=word_emb_param_name,
+                                   initializer=fluid.initializer.Normal(
+                                       0., src_emb_dim**-0.5)))
 
     src_word_emb = layers.scale(x=src_word_emb, scale=src_emb_dim**0.5)
-    src_pos_enc = layers.embedding(
-        src_pos,
-        size=[src_max_len, src_emb_dim],
-        param_attr=fluid.ParamAttr(
-            name=pos_enc_param_name, trainable=False))
+    src_pos_enc = fluid.embedding(src_pos,
+                                  size=[src_max_len, src_emb_dim],
+                                  param_attr=fluid.ParamAttr(
+                                      name=pos_enc_param_name, trainable=False))
     src_pos_enc.stop_gradient = True
     enc_input = src_word_emb + src_pos_enc
     return layers.dropout(
@@ -506,38 +505,8 @@ def decoder(dec_input,
     return dec_output
 
 
-def make_all_inputs(input_fields):
-    """
-    Define the input data layers for the transformer model.
-    """
-    inputs = []
-    for input_field in input_fields:
-        input_var = layers.data(
-            name=input_field,
-            shape=input_descs[input_field][0],
-            dtype=input_descs[input_field][1],
-            lod_level=input_descs[input_field][2]
-            if len(input_descs[input_field]) == 3 else 0,
-            append_batch_size=False)
-        inputs.append(input_var)
-    return inputs
-
-
-def make_all_py_reader_inputs(input_fields, is_test=False):
-    reader = layers.py_reader(
-        capacity=20,
-        name="test_reader" if is_test else "train_reader",
-        shapes=[input_descs[input_field][0] for input_field in input_fields],
-        dtypes=[input_descs[input_field][1] for input_field in input_fields],
-        lod_levels=[
-            input_descs[input_field][2]
-            if len(input_descs[input_field]) == 3 else 0
-            for input_field in input_fields
-        ])
-    return layers.read_file(reader), reader
-
-
-def transformer(src_vocab_size,
+def transformer(model_input,
+                src_vocab_size,
                 trg_vocab_size,
                 max_length,
                 n_layer,
@@ -554,96 +523,76 @@ def transformer(src_vocab_size,
                 weight_sharing,
                 label_smooth_eps,
                 bos_idx=0,
-                use_py_reader=False,
-                is_test=False,
-                model_input=None):
+                is_test=False):
     if weight_sharing:
         assert src_vocab_size == trg_vocab_size, (
             "Vocabularies in source and target should be same for weight sharing."
         )
 
-    if model_input:
-        enc_inputs = (model_input.src_word, model_input.src_pos,
-                      model_input.src_slf_attn_bias)
-        dec_inputs = (model_input.trg_word, model_input.trg_pos,
-                      model_input.trg_slf_attn_bias,
-                      model_input.trg_src_attn_bias)
-        label = model_input.lbl_word
-        weights = model_input.lbl_weight
-    else:
-        data_input_names = encoder_data_input_fields + \
-                    decoder_data_input_fields[:-1] + label_data_input_fields
+    enc_inputs = (model_input.src_word, model_input.src_pos,
+                  model_input.src_slf_attn_bias)
+    dec_inputs = (model_input.trg_word, model_input.trg_pos,
+                  model_input.trg_slf_attn_bias, model_input.trg_src_attn_bias)
+    label = model_input.lbl_word
+    weights = model_input.lbl_weight
 
-        if use_py_reader:
-            all_inputs, reader = make_all_py_reader_inputs(data_input_names,
-                                                           is_test)
-        else:
-            all_inputs = make_all_inputs(data_input_names)
+    enc_output = wrap_encoder(enc_inputs,
+                              src_vocab_size,
+                              max_length,
+                              n_layer,
+                              n_head,
+                              d_key,
+                              d_value,
+                              d_model,
+                              d_inner_hid,
+                              prepostprocess_dropout,
+                              attention_dropout,
+                              relu_dropout,
+                              preprocess_cmd,
+                              postprocess_cmd,
+                              weight_sharing,
+                              bos_idx=bos_idx)
 
-        enc_inputs_len = len(encoder_data_input_fields)
-        dec_inputs_len = len(decoder_data_input_fields[:-1])
-        enc_inputs = all_inputs[0:enc_inputs_len]
-        dec_inputs = all_inputs[enc_inputs_len:enc_inputs_len + dec_inputs_len]
-        label = all_inputs[-2]
-        weights = all_inputs[-1]
-
-    enc_output = wrap_encoder(
-        src_vocab_size,
-        max_length,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        prepostprocess_dropout,
-        attention_dropout,
-        relu_dropout,
-        preprocess_cmd,
-        postprocess_cmd,
-        weight_sharing,
-        enc_inputs,
-        bos_idx=bos_idx)
-
-    predict = wrap_decoder(
-        trg_vocab_size,
-        max_length,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        prepostprocess_dropout,
-        attention_dropout,
-        relu_dropout,
-        preprocess_cmd,
-        postprocess_cmd,
-        weight_sharing,
-        dec_inputs,
-        enc_output, )
+    predict = wrap_decoder(dec_inputs,
+                           trg_vocab_size,
+                           max_length,
+                           n_layer,
+                           n_head,
+                           d_key,
+                           d_value,
+                           d_model,
+                           d_inner_hid,
+                           prepostprocess_dropout,
+                           attention_dropout,
+                           relu_dropout,
+                           preprocess_cmd,
+                           postprocess_cmd,
+                           weight_sharing,
+                           enc_output=enc_output)
 
     # Padding index do not contribute to the total loss. The weights is used to
     # cancel padding index in calculating the loss.
     if label_smooth_eps:
-        label = layers.label_smooth(
-            label=layers.one_hot(
-                input=label, depth=trg_vocab_size),
-            epsilon=label_smooth_eps)
+        # TODO: use fluid.input.one_hot after softmax_with_cross_entropy removing
+        # the enforcement that the last dimension of label must be 1.
+        label = layers.label_smooth(label=layers.one_hot(input=label,
+                                                         depth=trg_vocab_size),
+                                    epsilon=label_smooth_eps)
 
     cost = layers.softmax_with_cross_entropy(
         logits=predict,
         label=label,
         soft_label=True if label_smooth_eps else False)
-    weighted_cost = cost * weights
+    weighted_cost = layers.elementwise_mul(x=cost, y=weights, axis=0)
     sum_cost = layers.reduce_sum(weighted_cost)
     token_num = layers.reduce_sum(weights)
     token_num.stop_gradient = True
     avg_cost = sum_cost / token_num
-    return sum_cost, avg_cost, predict, token_num, reader if use_py_reader else None
+    return sum_cost, avg_cost, predict, token_num
 
 
-def wrap_encoder(src_vocab_size,
+def wrap_encoder(enc_inputs,
+                 src_vocab_size,
                  max_length,
                  n_layer,
                  n_head,
@@ -657,17 +606,11 @@ def wrap_encoder(src_vocab_size,
                  preprocess_cmd,
                  postprocess_cmd,
                  weight_sharing,
-                 enc_inputs=None,
                  bos_idx=0):
     """
     The wrapper assembles together all needed layers for the encoder.
     """
-    if enc_inputs is None:
-        # This is used to implement independent encoder program in inference.
-        src_word, src_pos, src_slf_attn_bias = make_all_inputs(
-            encoder_data_input_fields)
-    else:
-        src_word, src_pos, src_slf_attn_bias = enc_inputs
+    src_word, src_pos, src_slf_attn_bias = enc_inputs
     enc_input = prepare_encoder(
         src_word,
         src_pos,
@@ -694,7 +637,8 @@ def wrap_encoder(src_vocab_size,
     return enc_output
 
 
-def wrap_decoder(trg_vocab_size,
+def wrap_decoder(dec_inputs,
+                 trg_vocab_size,
                  max_length,
                  n_layer,
                  n_head,
@@ -708,7 +652,6 @@ def wrap_decoder(trg_vocab_size,
                  preprocess_cmd,
                  postprocess_cmd,
                  weight_sharing,
-                 dec_inputs=None,
                  enc_output=None,
                  caches=None,
                  gather_idx=None,
@@ -716,12 +659,7 @@ def wrap_decoder(trg_vocab_size,
     """
     The wrapper assembles together all needed layers for the decoder.
     """
-    if dec_inputs is None:
-        # This is used to implement independent decoder program in inference.
-        trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias, enc_output = \
-            make_all_inputs(decoder_data_input_fields)
-    else:
-        trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias = dec_inputs
+    trg_word, trg_pos, trg_slf_attn_bias, trg_src_attn_bias = dec_inputs
 
     dec_input = prepare_decoder(
         trg_word,
@@ -770,66 +708,36 @@ def wrap_decoder(trg_vocab_size,
     return predict
 
 
-def fast_decode(src_vocab_size,
-                trg_vocab_size,
-                max_in_len,
-                n_layer,
-                n_head,
-                d_key,
-                d_value,
-                d_model,
-                d_inner_hid,
-                prepostprocess_dropout,
-                attention_dropout,
-                relu_dropout,
-                preprocess_cmd,
-                postprocess_cmd,
-                weight_sharing,
-                beam_size,
-                max_out_len,
-                bos_idx,
-                eos_idx,
-                use_py_reader=False,
-                model_input=None):
+def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
+                n_layer, n_head, d_key, d_value, d_model, d_inner_hid,
+                prepostprocess_dropout, attention_dropout, relu_dropout,
+                preprocess_cmd, postprocess_cmd, weight_sharing, beam_size,
+                max_out_len, bos_idx, eos_idx):
     """
     Use beam search to decode. Caches will be used to store states of history
     steps which can make the decoding faster.
     """
-    if model_input:
-        enc_inputs = (model_input.src_word, model_input.src_pos,
-                      model_input.src_slf_attn_bias)
-        dec_inputs = (model_input.trg_word, model_input.init_score,
-                      model_input.init_idx, model_input.trg_src_attn_bias)
-    else:
-        data_input_names = encoder_data_input_fields + fast_decoder_data_input_fields
+    enc_inputs = (model_input.src_word, model_input.src_pos,
+                  model_input.src_slf_attn_bias)
+    dec_inputs = (model_input.trg_word, model_input.init_score,
+                  model_input.init_idx, model_input.trg_src_attn_bias)
 
-        if use_py_reader:
-            all_inputs, reader = make_all_py_reader_inputs(data_input_names)
-        else:
-            all_inputs = make_all_inputs(data_input_names)
-
-        enc_inputs_len = len(encoder_data_input_fields)
-        dec_inputs_len = len(fast_decoder_data_input_fields)
-        enc_inputs = all_inputs[0:enc_inputs_len]
-        dec_inputs = all_inputs[enc_inputs_len:enc_inputs_len + dec_inputs_len]
-
-    enc_output = wrap_encoder(
-        src_vocab_size,
-        max_in_len,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        prepostprocess_dropout,
-        attention_dropout,
-        relu_dropout,
-        preprocess_cmd,
-        postprocess_cmd,
-        weight_sharing,
-        enc_inputs,
-        bos_idx=bos_idx)
+    enc_output = wrap_encoder(enc_inputs,
+                              src_vocab_size,
+                              max_in_len,
+                              n_layer,
+                              n_head,
+                              d_key,
+                              d_value,
+                              d_model,
+                              d_inner_hid,
+                              prepostprocess_dropout,
+                              attention_dropout,
+                              relu_dropout,
+                              preprocess_cmd,
+                              postprocess_cmd,
+                              weight_sharing,
+                              bos_idx=bos_idx)
     start_tokens, init_scores, parent_idx, trg_src_attn_bias = dec_inputs
 
     def beam_search():
@@ -875,7 +783,7 @@ def fast_decode(src_vocab_size,
             pre_ids = layers.array_read(array=ids, i=step_idx)
             # Since beam_search_op dosen't enforce pre_ids' shape, we can do
             # inplace reshape here which actually change the shape of pre_ids.
-            pre_ids = layers.reshape(pre_ids, (-1, 1, 1), inplace=True)
+            # pre_ids = layers.reshape(pre_ids, (-1, 1, 1), inplace=True)
             pre_scores = layers.array_read(array=scores, i=step_idx)
             # gather cell states corresponding to selected parent
             pre_src_attn_bias = layers.gather(
@@ -884,30 +792,29 @@ def fast_decode(src_vocab_size,
                 x=layers.fill_constant_batch_size_like(
                     input=pre_src_attn_bias,  # cann't use lod tensor here
                     value=1,
-                    shape=[-1, 1, 1],
+                    shape=[-1, 1],
                     dtype=pre_ids.dtype),
                 y=step_idx,
                 axis=0)
-            logits = wrap_decoder(
-                trg_vocab_size,
-                max_in_len,
-                n_layer,
-                n_head,
-                d_key,
-                d_value,
-                d_model,
-                d_inner_hid,
-                prepostprocess_dropout,
-                attention_dropout,
-                relu_dropout,
-                preprocess_cmd,
-                postprocess_cmd,
-                weight_sharing,
-                dec_inputs=(pre_ids, pre_pos, None, pre_src_attn_bias),
-                enc_output=enc_output,
-                caches=caches,
-                gather_idx=parent_idx,
-                bos_idx=bos_idx)
+            logits = wrap_decoder((pre_ids, pre_pos, None, pre_src_attn_bias),
+                                  trg_vocab_size,
+                                  max_in_len,
+                                  n_layer,
+                                  n_head,
+                                  d_key,
+                                  d_value,
+                                  d_model,
+                                  d_inner_hid,
+                                  prepostprocess_dropout,
+                                  attention_dropout,
+                                  relu_dropout,
+                                  preprocess_cmd,
+                                  postprocess_cmd,
+                                  weight_sharing,
+                                  enc_output=enc_output,
+                                  caches=caches,
+                                  gather_idx=parent_idx,
+                                  bos_idx=bos_idx)
             # intra-beam topK
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)
@@ -941,51 +848,26 @@ def fast_decode(src_vocab_size,
         return finished_ids, finished_scores
 
     finished_ids, finished_scores = beam_search()
-    return finished_ids, finished_scores, reader if use_py_reader else None
+    return finished_ids, finished_scores
 
 
 def create_net(is_training, model_input, args):
     if is_training:
-        sum_cost, avg_cost, _, token_num, _ = transformer(
-            args.src_vocab_size,
-            args.trg_vocab_size,
-            args.max_length + 1,
-            args.n_layer,
-            args.n_head,
-            args.d_key,
-            args.d_value,
-            args.d_model,
-            args.d_inner_hid,
-            args.prepostprocess_dropout,
-            args.attention_dropout,
-            args.relu_dropout,
-            args.preprocess_cmd,
-            args.postprocess_cmd,
-            args.weight_sharing,
-            args.label_smooth_eps,
-            args.bos_idx,
-            model_input=model_input)
+        sum_cost, avg_cost, _, token_num = transformer(
+            model_input, args.src_vocab_size, args.trg_vocab_size,
+            args.max_length + 1, args.n_layer, args.n_head, args.d_key,
+            args.d_value, args.d_model, args.d_inner_hid,
+            args.prepostprocess_dropout, args.attention_dropout,
+            args.relu_dropout, args.preprocess_cmd, args.postprocess_cmd,
+            args.weight_sharing, args.label_smooth_eps, args.bos_idx)
         return sum_cost, avg_cost, token_num
     else:
-        out_ids, out_scores, _ = fast_decode(
-            args.src_vocab_size,
-            args.trg_vocab_size,
-            args.max_length + 1,
-            args.n_layer,
-            args.n_head,
-            args.d_key,
-            args.d_value,
-            args.d_model,
-            args.d_inner_hid,
-            args.prepostprocess_dropout,
-            args.attention_dropout,
-            args.relu_dropout,
-            args.preprocess_cmd,
-            args.postprocess_cmd,
-            args.weight_sharing,
-            args.beam_size,
-            args.max_out_len,
-            args.bos_idx,
-            args.eos_idx,
-            model_input=model_input)
+        out_ids, out_scores = fast_decode(
+            model_input, args.src_vocab_size, args.trg_vocab_size,
+            args.max_length + 1, args.n_layer, args.n_head, args.d_key,
+            args.d_value, args.d_model, args.d_inner_hid,
+            args.prepostprocess_dropout, args.attention_dropout,
+            args.relu_dropout, args.preprocess_cmd, args.postprocess_cmd,
+            args.weight_sharing, args.beam_size, args.max_out_len, args.bos_idx,
+            args.eos_idx)
         return out_ids, out_scores
