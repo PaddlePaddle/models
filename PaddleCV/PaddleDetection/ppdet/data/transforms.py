@@ -385,7 +385,7 @@ class RandomCrop(object):
 
     def _iou_matrix(self, a, b):
         tl_i = np.maximum(a[:, np.newaxis, :2], b[:, :2])
-        br_i = np.maximum(a[:, np.newaxis, 2:], b[:, 2:])
+        br_i = np.minimum(a[:, np.newaxis, 2:], b[:, 2:])
 
         area_i = np.prod(br_i - tl_i, axis=2) * (tl_i < br_i).all(axis=2)
         area_a = np.prod(a[:, 2:] - a[:, :2], axis=1)
