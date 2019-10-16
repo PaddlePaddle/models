@@ -17,7 +17,7 @@ In the MRQA 2019 shared task, We use [PALM](https://github.com/PaddlePaddle/PALM
 - Python >= 2.7
 - cuda >= 9.0
 - cudnn >= 7.0
-- PaddlePaddle 1.5.2 (Please refer to the Installation Guide [Installation Guide](http://www.paddlepaddle.org/#quick-start))
+- PaddlePaddle 1.6 (Please refer to the Installation Guide [Installation Guide](http://www.paddlepaddle.org/#quick-start))
 - PALM v1.0
 
 ### Install PALM
