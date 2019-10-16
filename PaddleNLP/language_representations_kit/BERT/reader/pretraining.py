@@ -15,6 +15,7 @@
 from __future__ import print_function
 from __future__ import division
 
+import io
 import os
 import numpy as np
 import types
@@ -125,7 +126,7 @@ class DataReader(object):
     def load_vocab(self, vocab_file):
         """Loads a vocabulary file into a dictionary."""
         vocab = collections.OrderedDict()
-        fin = open(vocab_file)
+        fin = io.open(vocab_file, encoding="utf8")
         for num, line in enumerate(fin):
             items = self.convert_to_unicode(line.strip()).split("\t")
             if len(items) > 2:
