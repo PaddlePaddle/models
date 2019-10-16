@@ -73,7 +73,7 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
         ]
         return pyreader, probs, feed_targets_name
 
-    logits = fluid.layers.reshape(logits, [-1, num_labels])
+    logits = fluid.layers.reshape(logits, [-1, num_labels], inplace=True)
     ce_loss, probs = fluid.layers.softmax_with_cross_entropy(
         logits=logits, label=labels, return_softmax=True)
     loss = fluid.layers.mean(x=ce_loss)
