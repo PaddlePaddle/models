@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""BERT (PaddlePaddle) model wrapper"""
+"""ERNIE (PaddlePaddle) model wrapper"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -11,7 +11,9 @@ import multiprocessing
 import argparse
 import numpy as np
 import paddle.fluid as fluid
-from task_reader.mrqa import DataProcessor, get_answers
+from pdnlp.toolkit.configure import ArgumentGroup
+from task_reader.mrqa_infer import DataProcessor, get_answers
+from pdnlp.toolkit.init import init_pretraining_params, init_checkpoint
 
 ema_decay = 0.9999
 verbose = False
@@ -19,12 +21,14 @@ max_seq_len = 512
 max_query_length = 64
 max_answer_length = 30
 in_tokens = False
-do_lower_case = False
+do_lower_case = True
 doc_stride = 128
 n_best_size = 20
 use_cuda = True
 
-class BertModelWrapper():
+
+
+class ERNIEModelWrapper():
     """
     Wrap a tnet model
      the basic processes include input checking, preprocessing, calling tf-serving

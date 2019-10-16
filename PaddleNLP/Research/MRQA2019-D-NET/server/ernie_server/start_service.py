@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-BERT model service
+ERNIE model service
 """
 import json
 import sys
@@ -14,9 +14,7 @@ from flask import Flask
 from flask import Response
 from flask import request
 import mrc_service
-import model_wrapper
-import argparse
-
+import model_wrapper as ernie_wrapper
 
 assert len(sys.argv) == 3 or len(sys.argv) == 4, "Usage: python serve.py <model_dir> <port> [process_mode]"
 if len(sys.argv) == 3:
@@ -25,17 +23,16 @@ if len(sys.argv) == 3:
 else:
     _, model_dir, port, mode = sys.argv
 
-max_batch_size = 5
-
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
-model = model_wrapper.BertModelWrapper(model_dir=model_dir)
-server = mrc_service.MRQAService('MRQA service', app.logger)
+ernie_model = ernie_wrapper.ERNIEModelWrapper(model_dir=model_dir)
+server = mrc_service.BasicMRCService('Short answer MRC service', app.logger)
 
 @app.route('/', methods=['POST'])
 def mrqa_service():
     """Description"""
-    return server(model, process_mode=mode, max_batch_size=max_batch_size)
+    model = ernie_model
+    return server(model, process_mode=mode, max_batch_size=5)
 
 
 if __name__ == '__main__':
