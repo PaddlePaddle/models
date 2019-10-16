@@ -29,6 +29,21 @@ def check_cuda(use_cuda, err = \
     except Exception as e:
         pass
 
+def check_version():
+    """
+    Log error and exit when the installed version of paddlepaddle is
+    not satisfied.
+    """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+        "or a suitable develop version is satisfied as well. \n" \
+        "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        print(err)
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     check_cuda(True)
