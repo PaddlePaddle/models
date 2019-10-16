@@ -72,6 +72,11 @@ def parse_args():
         type=str,
         default="models",
         help='dir of the saved model.')
+    parser.add_argument(
+        '--init_from_pretrain_model',
+        type=str,
+        default=None,
+        help='dir to init model.')
     parser.add_argument('--enable_ce', action='store_true')
     parser.add_argument('--batch_size', type=int, default=0, help='batch size')
     parser.add_argument('--max_epoch', type=int, default=0, help='max epoch')
