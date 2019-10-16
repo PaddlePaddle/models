@@ -121,7 +121,7 @@ You can load saved checkpoint and resume training with `--checkpoint`, if you wa
 
 #### train a part of the model
 
-You can also train parts of the model while freezing other parts, by passing `--train-seq2seq-only` or `--train-postnet-only`. When training only parts of the model, other parts should be loaded from saved checkpoints.
+You can also train parts of the model while freezing other parts, by passing `--train-seq2seq-only` or `--train-postnet-only`. When training only parts of the model, other parts should be loaded from saved checkpoint.
 
 To train only the `seq2seq` or `postnet`, you should load from a whole model  with `--checkpoint`and keep the same configurations. Note that when training only the `postnet`, you should set `use_decoder_state_for_postnet_input=false`, because when train only the postnet, the postnet takes the ground truth mel-spectrogram as input. Note that the default value for `use_decoder_state_for_postnet_input` is `True`.
 
@@ -133,7 +133,7 @@ python train.py --data-root=${data-root} --use-gpu \
     --preset=${preset_json_path} \
     --hparams="parameters you may want to override" \
     --train-seq2seq-only \
-    --checkpoint=${path_of_the_saved_model}
+    --output=${directory_to_save_results}
 ```
 
 ### Training on multiple GPUs
@@ -162,14 +162,14 @@ python -m paddle.distributed.launch \
 
 In the example above, we set only GPU `2, 3, 4, 5` to be visible. Then `--selected_gpus="0, 1, 2, 3"` means the logical ids of the selected gpus, which correpond to GPU `2, 3, 4, 5`.
 
-Model checkpoints (directory ending with `.model`)  are saved in `./checkpoints` per 10000 steps by default. Layer-wise averaged attention alignments (.png) are saved in `.checkpointys/alignment_ave`. And alignments for each attention layer are saved in `.checkpointys/alignment_layer{attention_layer_num}` per 10000 steps for inspection.
+Model checkpoints (`*.pdparams` for the model and `*.pdoptim` for the optimizer)  are saved in `${directory_to_save_results}/checkpoints` per 10000 steps by default. Layer-wise averaged attention alignments (.png) are saved in `${directory_to_save_results}/checkpoints/alignment_ave`. And alignments for each attention layer are saved in `${directory_to_save_results}/checkpoints/alignment_layer{attention_layer_num}` per 10000 steps for inspection.
 
 Synthesis results of 6 sentences (hardcoded in `eval_model.py`) are saved in `checkpoints/eval`, including  `step{step_num}_text{text_id}_single_alignment.png` for averaged alignments and `step{step_num}_text{text_id}_single_predicted.wav` for the predicted waveforms.
 
 
 ### Monitor with Tensorboard
 
-Logs with tensorboard are saved in `./log/${datetime}`  directory by default. You can monitor logs by tensorboard.
+Logs with tensorboard are saved in `${directory_to_save_results}/log/`  directory by default. You can monitor logs by tensorboard.
 
 ```bash
 tensorboard --logdir=${log_dir} --host=$HOSTNAME --port=8888

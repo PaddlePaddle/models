@@ -35,7 +35,6 @@ from deepvoice3_paddle.dry_run import dry_run
 from hparams import hparams
 from train import make_deepvoice3_from_hparams
 from eval_model import tts, plot_alignment
-from deepvoice3_paddle.save_load import load_checkpoint
 
 
 def build_parser():
@@ -52,14 +51,6 @@ def build_parser():
         "--use-gpu",
         action="store_true",
         help="Whether to use gpu for generation.")
-    parser.add_argument(
-        "--checkpoint-seq2seq",
-        type=str,
-        help="Load seq2seq model from checkpoint path.")
-    parser.add_argument(
-        "--checkpoint-postnet",
-        type=str,
-        help="Load postnet model from checkpoint path.")
     parser.add_argument(
         "--file-name-suffix", type=str, default="", help="File name suffix.")
     parser.add_argument(
@@ -92,8 +83,6 @@ if __name__ == "__main__":
     text_list_file_path = args.text_list_file
     dst_dir = args.dst_dir
     use_gpu = args.use_gpu
-    checkpoint_seq2seq_path = args.checkpoint_seq2seq
-    checkpoint_postnet_path = args.checkpoint_postnet
 
     max_decoder_steps = args.max_decoder_steps
     file_name_suffix = args.file_name_suffix
@@ -119,14 +108,15 @@ if __name__ == "__main__":
         # Model
         model = make_deepvoice3_from_hparams(hparams)
         dry_run(model)
-        load_checkpoint(checkpoint_path, model)
+        model_dict, _ = dg.load_dygraph(args.checkpoint)
+        model.set_dict(model_dict)
 
         checkpoint_name = splitext(basename(checkpoint_path))[0]
 
         model.seq2seq.decoder.max_decoder_steps = max_decoder_steps
 
         if not os.path.exists(dst_dir):
-            os.mkdir(dst_dir)
+            os.makedirs(dst_dir)
         with io.open(text_list_file_path, "rt", encoding="utf-8") as f:
             lines = f.readlines()
             for idx, line in enumerate(lines):

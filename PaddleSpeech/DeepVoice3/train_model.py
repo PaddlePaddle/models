@@ -23,19 +23,15 @@ from paddle import fluid
 import paddle.fluid.dygraph as dg
 
 from tqdm import tqdm
-from deepvoice3_paddle.save_load import save_checkpoint
 from eval_model import eval_model, save_states
 
 
 def train_model(model, loader, criterion, optimizer, clipper, writer, args,
                 hparams):
     assert fluid.framework.in_dygraph_mode(
-    ), "this function must be run with dygraph guard"
+    ), "this function must be run within dygraph guard"
 
     local_rank = dg.parallel.Env().local_rank
-
-    if not os.path.exists(args.checkpoint_dir):
-        os.mkdir(args.checkpoint_dir)
 
     # amount of shifting when compute losses
     linear_shift = hparams.outputs_per_step
@@ -44,6 +40,8 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
     global_step = 0
     global_epoch = 0
     ismultispeaker = model.n_speakers > 1
+    checkpoint_dir = os.path.join(args.output, "checkpoints")
+    tensorboard_dir = os.path.join(args.output, "log")
 
     for epoch in range(hparams.nepochs):
         epoch_loss = 0.
@@ -169,6 +167,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
                     loss = mel_loss + done_loss
             else:
                 loss = lin_loss
+
             if writer is not None:
                 writer.add_scalar("loss", float(loss.numpy()), global_step)
 
@@ -183,15 +182,18 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
 
             if (local_rank == 0 and global_step > 0 and
                     global_step % hparams.checkpoint_interval == 0):
+
                 save_states(global_step, writer, mel_outputs, linear_outputs,
                             alignments, mel, linear,
-                            input_lengths.numpy(), args.checkpoint_dir)
-                save_checkpoint(model, optimizer, args.checkpoint_dir,
-                                global_step)
+                            input_lengths.numpy(), checkpoint_dir)
+                step_path = os.path.join(
+                    checkpoint_dir, "checkpoint_{:09d}".format(global_step))
+                dg.save_dygraph(model.state_dict(), step_path)
+                dg.save_dygraph(optimizer.state_dict(), step_path)
 
             if (local_rank == 0 and global_step > 0 and
                     global_step % hparams.eval_interval == 0):
-                eval_model(global_step, writer, model, args.checkpoint_dir,
+                eval_model(global_step, writer, model, checkpoint_dir,
                            ismultispeaker)
 
             if args.use_data_parallel:
@@ -232,5 +234,8 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
 
             global_step += 1
 
+        average_loss_in_epoch = epoch_loss / (step + 1)
+        print("Epoch loss: {}".format(average_loss_in_epoch))
+        writer.add_scalar("average_loss_in_epoch", average_loss_in_epoch,
+                          global_epoch)
         global_epoch += 1
-        print("Epoch loss: {}".format(epoch_loss / (step + 1)))

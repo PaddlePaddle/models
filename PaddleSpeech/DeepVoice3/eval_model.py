@@ -23,7 +23,7 @@ from warnings import warn
 from datetime import datetime
 
 import matplotlib
-# Force matplotlib to not use any Xwindows backend.
+# Force matplotlib not to use any Xwindows backend.
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 from matplotlib import cm
@@ -109,7 +109,7 @@ def prepare_spec_image(spectrogram):
             where T means the time steps of the spectrogram. It is treated 
             as the width of the image. And C means the channels of the
             spectrogram, which is treated as the height of the image. And 4
-            means it is a 'ARGP' format.
+            means it is a 'ARGB' format.
     """
 
     # [0, 1]

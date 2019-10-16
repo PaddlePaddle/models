@@ -1,4 +1,3 @@
-# coding: utf-8
 # Part of code was adpated from https://github.com/r9y9/deepvoice3_pytorch/tree/master/preprocess.py
 # Copyright (c) 2017: Ryuichi Yamamoto.
 

@@ -133,7 +133,7 @@ python train.py --data-root=${data-root} --use-gpu \
     --preset=${preset_json_path} \
     --hparams="parameters you may want to override" \
     --train-seq2seq-only \
-    --checkpoint=${path_of_the_saved_model}
+    --output=${directory_to_save_results}
 ```
 
 ### 使用 GPU 多卡训练
@@ -144,7 +144,7 @@ python train.py --data-root=${data-root} --use-gpu \
 python -m paddle.distributed.launch \
     --started_port ${port_of_the_first_worker} \
     --selected_gpus ${logical_gpu_ids_to_choose} \
-    --log_dir ${path_of_write_log} \
+    --log_dir ${path_to_write_log} \
     training_script ...
 ```
 
@@ -157,19 +157,20 @@ python -m paddle.distributed.launch \
     train.py --data-root=${data-root} \
     --use-gpu --use-data-parallel \
     --preset=${preset_json_path} \
-    --hparams="parameters you may want to override"
+    --hparams="parameters you may want to override" \
+    --output=${directory_to_save_results}
 ```
 
 上述的示例中，设置了 `2, 3, 4, 5` 号显卡为可见的 GPU。然后 `--selected_gpus=0,1,2,3` 选择的是 GPU 的逻辑序号，分别对应于  `2, 3, 4, 5` 号卡。
 
-模型默认被保存为后缀为 `.model`的文件夹，保存在 `./checkpoints` 文件夹中。多层平均的注意力机制对齐结果被保存为 `.png` 图片，默认保存在 `.checkpointys/alignment_ave` 中。每一层的注意力机制对齐结果默认被保存在 `.checkpointys/alignment_layer{attention_layer_num}`文件夹中。默认每 10000 步保存一次用于查看。
+模型默认被保存为后缀为 `.model`的文件夹，保存在 `${directory_to_save_results}/checkpoints` 文件夹中。多层平均的注意力机制对齐结果被保存为 `.png` 图片，默认保存在 `${directory_to_save_results}/checkpoints/alignment_ave` 中。每一层的注意力机制对齐结果默认被保存在 `${directory_to_save_results}/checkpoints/alignment_layer{attention_layer_num}`文件夹中。默认每 10000 步保存一次用于查看。
 
 对 6 个给定的句子的语音合成结果保存在 `checkpoints/eval` 中，包含多层平均平均的注意力机制对齐结果，这被保存为名为  `step{step_num}_text{text_id}_single_alignment.png` 的图片；以及合成的音频文件，保存为名为 `step{step_num}_text{text_id}_single_predicted.wav` 的音频。
 
 
 ### 使用 Tensorboard 查看训练
 
-Tensorboard 训练日志默认被保存在 `./log/${datetime}` 文件夹，可以通过 tensorboard 查看。使用方法如下。
+Tensorboard 训练日志被保存在 `${directory_to_save_results}/log/` 文件夹，可以通过 tensorboard 查看。使用方法如下。
 
 ```bash
 tensorboard --logdir=${log_dir} --host=$HOSTNAME --port=8888
