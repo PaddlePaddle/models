@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +23,7 @@ import os
 import random
 import logging
 import math
-
+import io
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.framework as framework
@@ -45,8 +46,6 @@ import pickle
 
 from attention_model import AttentionModel
 from base_model import BaseModel
-
-SEED = 123
 
 
 def infer():
@@ -130,7 +129,7 @@ def infer():
 
     tar_id2vocab = []
     tar_vocab_file = args.vocab_prefix + "." + args.tar_lang
-    with open(tar_vocab_file, "r") as f:
+    with io.open(tar_vocab_file, "r", encoding='utf-8') as f:
         for line in f.readlines():
             tar_id2vocab.append(line.strip())
 
@@ -138,26 +137,26 @@ def infer():
     infer_output_dir = infer_output_file.split('/')[0]
     if not os.path.exists(infer_output_dir):
         os.mkdir(infer_output_dir)
-    out_file = open(infer_output_file, 'w')
 
-    for batch_id, batch in enumerate(train_data_iter):
-        input_data_feed, word_num = prepare_input(batch, epoch_id=0)
-        fetch_outs = exe.run(program=main_program,
-                             feed=input_data_feed,
-                             fetch_list=[trans_res.name],
-                             use_program_cache=False)
+    with io.open(infer_output_file, 'w', encoding='utf-8') as out_file:
 
-        for ins in fetch_outs[0]:
-            res = [tar_id2vocab[e] for e in ins[:, 0].reshape(-1)]
-            new_res = []
-            for ele in res:
-                if ele == "</s>":
-                    break
-                new_res.append(ele)
+        for batch_id, batch in enumerate(train_data_iter):
+            input_data_feed, word_num = prepare_input(batch, epoch_id=0)
+            fetch_outs = exe.run(program=main_program,
+                                 feed=input_data_feed,
+                                 fetch_list=[trans_res.name],
+                                 use_program_cache=False)
 
-            out_file.write(' '.join(new_res))
-            out_file.write('\n')
-    out_file.close()
+            for ins in fetch_outs[0]:
+                res = [tar_id2vocab[e] for e in ins[:, 0].reshape(-1)]
+                new_res = []
+                for ele in res:
+                    if ele == "</s>":
+                        break
+                    new_res.append(ele)
+
+                out_file.write(' '.join(new_res))
+                out_file.write('\n')
 
 
 def check_version():

@@ -7,15 +7,15 @@
 ```
 .
 ├── README.md              # 文档，本文件
-├── args.py                # 训练、预测以及模型参数
-├── reader.py              # 数据读入文件
-├── util.py                # 数据处理文件
+├── args.py                # 训练、预测以及模型参数配置程序
+├── reader.py              # 数据读入程序
+├── download.py            # 数据下载程序
 ├── train.py               # 训练主程序
 ├── infer.py               # 预测主程序
 ├── run.sh                 # 默认配置的启动脚本
 ├── infer.sh               # 默认配置的解码脚本
-├── attention_model.py     # 带注意力机制的翻译模型配置
-└── base_model.py          # 无注意力机制的翻译模型配置
+├── attention_model.py     # 带注意力机制的翻译模型程序
+└── base_model.py          # 无注意力机制的翻译模型程序
 ```
 
 ## 简介
@@ -27,6 +27,8 @@
 本目录包含两个经典的机器翻译模型一个base model（不带attention机制），一个带attention机制的翻译模型 .在现阶段，其表现已被很多新模型（如[Transformer](https://arxiv.org/abs/1706.03762)）超越。但除机器翻译外，该模型是许多序列到序列（sequence to sequence, 以下简称Seq2Seq）类模型的基础，很多解决其他NLP问题的模型均以此模型为基础；因此其在NLP领域具有重要意义，并被广泛用作Baseline.
 
 本目录下此范例模型的实现，旨在展示如何用Paddle Fluid的 **<font color='red'>新Seq2Seq API</font>** 实现一个带有注意力机制（Attention）的RNN模型来解决Seq2Seq类问题，以及如何使用带有Beam Search算法的解码器。如果您仅仅只是需要在机器翻译方面有着较好翻译效果的模型，则建议您参考[Transformer的Paddle Fluid实现](https://github.com/PaddlePaddle/models/tree/develop/fluid/neural_machine_translation/transformer)。
+
+**新 Seq2Seq API 组网更简单，从1.6版本开始不推荐使用low-level的API。如果您确实需要使用low-level的API来实现自己模型，样例可参看1.5版本 [RNN Search](https://github.com/PaddlePaddle/models/tree/release/1.5/PaddleNLP/unarchived/neural_machine_translation/rnn_search)。**
 
 ## 模型概览
 
@@ -41,10 +43,10 @@ RNN Search模型使用了经典的编码器-解码器（Encoder-Decoder）的框
 ### 数据获取
 
 ```
-cd data && sh download_en-vi.sh
+python download.py
 ```
 
-## 训练模型
+## 模型训练
 
 `run.sh`包含训练程序的主函数，要使用默认参数开始训练，只需要简单地执行：
 
@@ -76,7 +78,9 @@ python train.py \
 
 训练程序会在每个epoch训练结束之后，save一次模型。
 
-当模型训练完成之后， 可以利用infer.py的脚本进行预测，默认使用beam search的方法进行预测，加载第10个epoch的模型进行预测，对test的数据集进行解码
+## 模型预测
+
+当模型训练完成之后， 可以利用infer.sh的脚本进行预测，默认使用beam search的方法进行预测，加载第10个epoch的模型进行预测，对test的数据集进行解码
 
 ```
 sh infer.sh
@@ -104,20 +108,22 @@ python infer.py \
     --use_gpu True
 ```
 
-## 效果
+## 效果评价
 
-单个模型 beam_size = 10
+使用 [*multi-bleu.perl*](https://github.com/moses-smt/mosesdecoder.git) 工具来评价模型预测的翻译质量，使用方法如下：
+
+```sh
+mosesdecoder/scripts/generic/multi-bleu.perl tst2013.vi < infer_output.txt
+```
+
+单个模型 beam_size = 10的效果如下：
 
 ```
-no attention
-
+> no attention
 tst2012 BLEU: 10.99
 tst2013 BLEU: 11.23
 
-
-
-with attention
-
+>with attention
 tst2012 BLEU: 22.85
 tst2013 BLEU: 25.68
 ```

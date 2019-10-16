@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,8 +43,6 @@ from base_model import BaseModel
 from attention_model import AttentionModel
 import logging
 import pickle
-
-SEED = 123
 
 
 @contextlib.contextmanager

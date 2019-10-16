@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +19,7 @@ from __future__ import print_function
 
 import collections
 import os
+import io
 import sys
 import numpy as np
 
@@ -28,7 +30,7 @@ UNK_ID = 0
 
 def _read_words(filename):
     data = []
-    with open(filename, "r") as f:
+    with io.open(filename, "r", encoding='utf-8') as f:
         if Py3:
             return f.read().replace("\n", "<eos>").split()
         else:
@@ -37,7 +39,7 @@ def _read_words(filename):
 
 def read_all_line(filenam):
     data = []
-    with open(filename, "r") as f:
+    with io.open(filename, "r", encoding='utf-8') as f:
         for line in f.readlines():
             data.append(line.strip())
 
@@ -46,7 +48,7 @@ def _build_vocab(filename):
 
     vocab_dict = {}
     ids = 0
-    with open(filename, "r") as f:
+    with io.open(filename, "r", encoding='utf-8') as f:
         for line in f.readlines():
             vocab_dict[line.strip()] = ids
             ids += 1
@@ -59,7 +61,7 @@ def _build_vocab(filename):
 def _para_file_to_ids(src_file, tar_file, src_vocab, tar_vocab):
 
     src_data = []
-    with open(src_file, "r") as f_src:
+    with io.open(src_file, "r", encoding='utf-8') as f_src:
         for line in f_src.readlines():
             arra = line.strip().split()
             ids = [src_vocab[w] if w in src_vocab else UNK_ID for w in arra]
@@ -68,7 +70,7 @@ def _para_file_to_ids(src_file, tar_file, src_vocab, tar_vocab):
             src_data.append(ids)
 
     tar_data = []
-    with open(tar_file, "r") as f_tar:
+    with io.open(tar_file, "r", encoding='utf-8') as f_tar:
         for line in f_tar.readlines():
             arra = line.strip().split()
             ids = [tar_vocab[w] if w in tar_vocab else UNK_ID for w in arra]
