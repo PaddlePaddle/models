@@ -23,6 +23,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
   * [文本生成（机器翻译&对话生成）](#文本生成)
 * [智能推荐(PaddleRec)](#PaddleRec)
 * [其他模型](#其他模型)
+* [快速下载模型库](#快速下载模型库)
 
 ## PaddleCV
 
@@ -354,7 +355,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [DoubleDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 将Double Q的想法应用在DQN上，解决过优化问题                  |
 | [DuelingDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 改进了DQN模型，提高了模型的性能                              |
 
-##快速下载
+##快速下载模型库
 
 由于github在国内的下载速度不稳定，我们提供了models各版本压缩包的百度云下载地址，以便用户更快速的获取代码。
 
