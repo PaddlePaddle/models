@@ -80,6 +80,7 @@ def ernie_encoder_with_paddle_hub(ernie_inputs, max_seq_len):
     embeddings = {
         "sentence_embeddings": cls_feats,
         "token_embeddings": unpad_enc_out,
+        "padded_token_embeddings": enc_out
     }
 
     for k, v in embeddings.items():
@@ -99,11 +100,14 @@ def ernie_encoder(ernie_inputs, ernie_config):
         config=ernie_config)
 
     enc_out = ernie.get_sequence_output()
+    unpad_enc_out = fluid.layers.sequence_unpad(
+        enc_out, length=ernie_inputs["seq_lens"])
     cls_feats = ernie.get_pooled_output()
 
     embeddings = {
         "sentence_embeddings": cls_feats,
-        "token_embeddings": enc_out,
+        "token_embeddings": unpad_enc_out,
+        "padded_token_embeddings": enc_out
     }
 
     for k, v in embeddings.items():

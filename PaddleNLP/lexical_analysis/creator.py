@@ -157,11 +157,11 @@ def create_ernie_model(args, ernie_config):
     }
     embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
-    token_embeddings = embeddings["token_embeddings"]
+    padded_token_embeddings = embeddings["padded_token_embeddings"]
 
     emission = fluid.layers.fc(
         size=args.num_labels,
-        input=token_embeddings,
+        input=padded_token_embeddings,
         param_attr=fluid.ParamAttr(
             initializer=fluid.initializer.Uniform(
                 low=-args.init_bound, high=args.init_bound),
