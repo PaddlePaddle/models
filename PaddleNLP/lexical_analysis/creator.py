@@ -146,6 +146,7 @@ def create_ernie_model(args, ernie_config):
     input_mask = fluid.layers.data(name='input_mask', shape=[args.max_seq_len, 1], dtype='float32',lod_level=0)
     padded_labels =fluid.layers.data(name='padded_labels', shape=[args.max_seq_len], dtype='int64',lod_level=0)
     seq_lens = fluid.layers.data(name='seq_lens', shape=[-1], dtype='int64',lod_level=0)
+    squeeze_labels = fluid.layers.squeeze(padded_labels, axes=[-1])
 
     ernie_inputs = {
         "src_ids": src_ids,
@@ -182,7 +183,7 @@ def create_ernie_model(args, ernie_config):
     (precision, recall, f1_score, num_infer_chunks, num_label_chunks,
      num_correct_chunks) = fluid.layers.chunk_eval(
         input=crf_decode,
-        label=padded_labels,
+        label=squeeze_labels,
         chunk_scheme="IOB",
         num_chunk_types=int(math.ceil((args.num_labels - 1) / 2.0)),
         seq_length=seq_lens)

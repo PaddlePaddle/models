@@ -33,7 +33,7 @@ def ernie_pyreader(args, pyreader_name):
     pyreader = fluid.layers.py_reader(
         capacity=50,
         shapes=[[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
-                [-1, args.max_seq_len, 1], [-1, args.max_seq_len], [-1, 1],
+                [-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1], [-1, 1],
                 [-1, 1]],
         dtypes=['int64', 'int64', 'int64', 'float32', 'int64', 'int64'],
         lod_levels=[0, 0, 0, 0, 0, 0],
