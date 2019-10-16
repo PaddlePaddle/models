@@ -192,6 +192,7 @@ python ../eval.py \
 
 在脚本<a href="../infer.py">PaddleDetection/tools/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
 
+运行命令为：
 ```
 python ../infer.py \
     --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
