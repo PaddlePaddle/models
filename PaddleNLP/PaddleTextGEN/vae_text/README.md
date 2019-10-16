@@ -29,7 +29,7 @@
 
 PTB dataset，原始下载地址为: http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz。
 
-SWDA dataset，原始下载地址为：https://github.com/snakeztc/NeuralDialog-CVAE，感谢作者@[snakeztc](https://github.com/snakeztc)。我们过滤了数据集中长度小于5的短句子。
+SWDA dataset，来源于[Knowledge-Guided CVAE for dialog generation](https://arxiv.org/pdf/1703.10960.pdf)，原始数据集下载地址为：https://github.com/snakeztc/NeuralDialog-CVAE ，感谢作者@[snakeztc](https://github.com/snakeztc)。我们过滤了数据集中长度小于5的短句子。
 
 ### 数据获取
 
