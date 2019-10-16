@@ -68,7 +68,7 @@ class PointRCNN(object):
         
         if self.mode == 'TRAIN':
             if self.cfg.RPN.ENABLED:
-                self.outputs['rpn_loss'] = self.rpn.get_loss()[0]
+                self.outputs['rpn_loss'], self.outputs['rpn_loss_cls'], self.outputs['rpn_loss_reg'] = self.rpn.get_loss()
             if self.cfg.RCNN.ENABLED:
                 self.outputs['rcnn_loss'] = self.rcnn.get_loss()
             self.outputs['loss'] = self.outputs.get('rpn_loss', 0.) \

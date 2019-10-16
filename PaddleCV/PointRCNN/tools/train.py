@@ -77,6 +77,11 @@ def parse_args():
         help='path to resume training based on previous checkpoints. '
         'None for not resuming any checkpoints.')
     parser.add_argument(
+        '--resume_epoch',
+        type=int,
+        default=0,
+        help='resume epoch id')
+    parser.add_argument(
         '--gt_database',
         type=str,
         default='data/gt_database/train_gt_database_3level_Car.pkl',
@@ -238,12 +243,23 @@ def train():
                                     startup_prog=startup,
                                     weight_decay=cfg.TRAIN.WEIGHT_DECAY,
                                     clip_norm=cfg.TRAIN.GRAD_NORM_CLIP)
+    # prog_clip = train_prog.clone()
+    # train_loss_clip = prog_clip.block(0).var(train_loss.name)
+    # p_g_clip = fluid.backward.append_backward(loss=train_loss_clip)
+    # with fluid.program_guard(main_program=prog_clip):
+	# fluid.clip.set_gradient_clip(
+	#     fluid.clip.GradientClipByGlobalNorm(clip_norm=cfg.TRAIN.GRAD_NORM_CLIP))
+	# p_g_clip = fluid.clip.append_gradient_clip_ops(p_g_clip)
+    #
     train_keys, train_values = parse_outputs(train_outputs, 'loss')
+
+    exe.run(startup)
 
     if args.resume:
         assert os.path.exists(args.resume), \
                 "Given resume weight dir {} not exist.".format(args.resume)
         def if_exist(var):
+            # logger.info("{}: {}".format(var.name, os.path.exists(os.path.join(args.resume, var.name))))
             return os.path.exists(os.path.join(args.resume, var.name))
         fluid.io.load_vars(
             exe, args.resume, predicate=if_exist, main_program=train_prog)
@@ -251,11 +267,10 @@ def train():
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
+    build_strategy.fuse_all_optimizer_ops = False
     train_compile_prog = fluid.compiler.CompiledProgram(
             train_prog).with_data_parallel(loss_name=train_loss.name,
                     build_strategy=build_strategy)
-
-    exe.run(startup)
 
     def save_model(exe, prog, path):
         if os.path.isdir(path):
@@ -268,7 +283,7 @@ def train():
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     train_stat = Stat()
-    for epoch_id in range(args.epoch):
+    for epoch_id in range(args.resume_epoch, args.epoch):
         try:
             train_pyreader.start()
             train_iter = 0
