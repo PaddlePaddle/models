@@ -48,16 +48,21 @@ def ernie_pyreader(args, pyreader_name):
     labels = fluid.layers.data(
         name="labels", shape=[-1, 1], dtype="int64")
     seq_lens = fluid.layers.data(
-        name="seq_lens", shape=[-1, 1], dtype="int64")
-
-    pyreader = fluid.io.PyReader(feed_list=[src_ids, sent_ids, pos_ids, input_mask, labels, seq_lens],
-        capacity=4, iterable=False)
+        name="seq_lens", shape=[-1], dtype="int64")
+    
+    pyreader = fluid.io.DataLoader.from_generator(
+        feed_list=[src_ids, sent_ids, pos_ids, input_mask, labels, seq_lens],
+        capacity=50,
+        iterable=False,
+        use_double_buffer=True)
+    
     ernie_inputs = {
         "src_ids": src_ids,
         "sent_ids": sent_ids,
         "pos_ids": pos_ids,
         "input_mask": input_mask,
         "seq_lens": seq_lens}
+    
     return pyreader, ernie_inputs, labels
 
 def create_model(args,
@@ -299,15 +304,15 @@ def main(args):
 
     if args.do_train:
         train_exe = exe
-        train_pyreader.decorate_batch_generator(train_data_generator)
+        train_pyreader.set_batch_generator(train_data_generator)
     else:
         train_exe = None
     if args.do_val:
         test_exe = exe
-        test_pyreader.decorate_batch_generator(test_data_generator)
+        test_pyreader.set_batch_generator(test_data_generator)
     if args.do_infer:
         test_exe = exe
-        infer_pyreader.decorate_batch_generator(infer_data_generator)
+        infer_pyreader.set_batch_generator(infer_data_generator)
 
     if args.do_train:
         train_pyreader.start()

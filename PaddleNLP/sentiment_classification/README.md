@@ -29,7 +29,7 @@
 
 1. PaddlePaddle 安装
 
-   本项目依赖于 PaddlePaddle Fluid 1.3.2 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle Fluid 1.6 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 2. 代码安装
 
@@ -42,7 +42,7 @@
 
 3. 环境依赖
 
-   请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 部分的内容
+   Python 2 的版本要求 2.7.15+，Python 3 的版本要求 3.5.1+/3.6/3.7，其它环境请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 部分的内容
 
 ### 代码结构说明
 
