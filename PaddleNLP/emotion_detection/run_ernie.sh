@@ -37,7 +37,7 @@ evaluate() {
         --verbose true \
         --do_val true \
         --use_paddle_hub false \
-        --batch_size 2 \
+        --batch_size 32 \
         --init_checkpoint ${CKPT_PATH}/step_907 \
         --test_set ${TASK_DATA_PATH}/test.tsv \
         --vocab_path ${MODEL_PATH}/vocab.txt \

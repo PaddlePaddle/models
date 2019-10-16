@@ -78,7 +78,6 @@ def create_model(args,
 
     if is_prediction:
         probs = network(data, seq_len, None, args.vocab_size, class_dim=num_labels, is_prediction=True)
-        print(seq_len.shape)
         return loader, probs, [data.name, seq_len.name]
 
     avg_loss, probs = network(data, seq_len, label, args.vocab_size, class_dim=num_labels)
