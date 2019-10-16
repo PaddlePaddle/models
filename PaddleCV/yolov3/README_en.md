@@ -28,7 +28,7 @@ We also recommend users to take a look at the  [IPython Notebook demo](https:/
 
 **Install [PaddlePaddle](https://github.com/PaddlePaddle/Paddle):**
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v.1.5 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.5/beginners_guide/install/index_en.html) and make an update.
 
 **Install the [COCO-API](https://github.com/cocodataset/cocoapi):**
 
