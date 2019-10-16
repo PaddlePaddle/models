@@ -354,6 +354,18 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [DoubleDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 将Double Q的想法应用在DQN上，解决过优化问题                  |
 | [DuelingDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 改进了DQN模型，提高了模型的性能                              |
 
+##快速下载
+
+由于github在国内的下载速度不稳定，我们提供了models各版本压缩包的百度云下载地址，以便用户更快速的获取代码。
+
+| 版本号        | tar包                                                         | zip包                                                         |
+| ------------- | ------------------------------------------------------------- | ------------------------------------------------------------- |
+| models 1.5.1  | [.tar.gz](https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.tar.gz) | [.zip](https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.zip) |
+| models 1.5    | [.tar.gz](https://paddlepaddle-modles.bj.bcebos.com/models-1.5.tar.gz)   | [.zip](https://paddlepaddle-modles.bj.bcebos.com/models-1.5.zip)   |
+| models 1.4    | [.tar.gz](https://paddlepaddle-modles.bj.bcebos.com/models-1.4.tar.gz)   | [.zip](https://paddlepaddle-modles.bj.bcebos.com/models-1.4.zip)   |
+| models 1.3    | [.tar.gz](https://paddlepaddle-modles.bj.bcebos.com/models-1.3.tar.gz)   | [.zip](https://paddlepaddle-modles.bj.bcebos.com/models-1.3.zip)   |
+
+
 ## License
 This tutorial is contributed by [PaddlePaddle](https://github.com/PaddlePaddle/Paddle) and licensed under the [Apache-2.0 license](LICENSE).
 
