@@ -111,7 +111,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
                     linear_predicted, linear_target, linear_mask)
                 lin_loss = criterion.binary_divergence_weight * lin_div \
                     + (1 - criterion.binary_divergence_weight) * lin_l1_loss
-                if writer is not None:
+                if writer is not None and local_rank == 0:
                     writer.add_scalar("linear_loss",
                                       float(lin_loss.numpy()), global_step)
                     writer.add_scalar("linear_l1_loss",
@@ -132,7 +132,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
                                                       mel_mask)
                 mel_loss = criterion.binary_divergence_weight * mel_div \
                     + (1 - criterion.binary_divergence_weight) * mel_l1_loss
-                if writer is not None:
+                if writer is not None and local_rank == 0:
                     writer.add_scalar("mel_loss",
                                       float(mel_loss.numpy()), global_step)
                     writer.add_scalar("mel_l1_loss",
@@ -141,7 +141,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
                                       float(mel_div.numpy()), global_step)
 
                 done_loss = criterion.done_loss(done_hat, done)
-                if writer is not None:
+                if writer is not None and local_rank == 0:
                     writer.add_scalar("done_loss",
                                       float(done_loss.numpy()), global_step)
 
@@ -151,7 +151,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
                     attn_loss = criterion.attention_loss(alignments,
                                                          input_lengths.numpy(),
                                                          decoder_length)
-                    if writer is not None:
+                    if writer is not None and local_rank == 0:
                         writer.add_scalar("attention_loss",
                                           float(attn_loss.numpy()), global_step)
 
@@ -168,7 +168,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
             else:
                 loss = lin_loss
 
-            if writer is not None:
+            if writer is not None and local_rank == 0:
                 writer.add_scalar("loss", float(loss.numpy()), global_step)
 
             if isinstance(optimizer._learning_rate,
@@ -176,7 +176,8 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
                 current_lr = optimizer._learning_rate.step().numpy()
             else:
                 current_lr = optimizer._learning_rate
-            writer.add_scalar("learning_rate", current_lr, global_step)
+            if writer is not None and local_rank == 0:
+                writer.add_scalar("learning_rate", current_lr, global_step)
 
             epoch_loss += loss.numpy()[0]
 
@@ -236,6 +237,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
 
         average_loss_in_epoch = epoch_loss / (step + 1)
         print("Epoch loss: {}".format(average_loss_in_epoch))
-        writer.add_scalar("average_loss_in_epoch", average_loss_in_epoch,
-                          global_epoch)
+        if writer is not None and local_rank == 0:
+            writer.add_scalar("average_loss_in_epoch", average_loss_in_epoch,
+                              global_epoch)
         global_epoch += 1
