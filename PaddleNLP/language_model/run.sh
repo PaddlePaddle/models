@@ -6,7 +6,7 @@ function run_train() {
     python train.py \
         --data_path data/simple-examples/data/ \
         --model_type small \
-        --use_gpu True \
+        --use_gpu True
 }
 
 run_train
