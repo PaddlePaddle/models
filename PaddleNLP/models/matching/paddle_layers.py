@@ -36,7 +36,7 @@ class EmbeddingLayer(object):
         """
         operation
         """
-        emb = fluid.layers.embedding(
+        emb = fluid.embedding(
             input=input,
             size=[self.dict_size, self.emb_dim],
             is_sparse=True,

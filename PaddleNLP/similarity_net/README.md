@@ -19,7 +19,7 @@
 |UNICOM|联通客服|客服|
 ## 快速开始
 #### 版本依赖
-本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
+本项目依赖于 Paddlepaddle Fluid 1.6，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
 
 python版本依赖python 2.7
 #### 安装代码

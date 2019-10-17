@@ -19,7 +19,7 @@ INIT_CHECKPOINT=./model_files/simnet_bow_pairwise_pretrained_model/
 
 # run_train
 train() {
-	python run_classifier.py \
+    python run_classifier.py \
 		--task_name ${TASK_NAME} \
 		--use_cuda False \
 		--do_train True \
@@ -44,7 +44,7 @@ train() {
 }
 #run_evaluate
 evaluate() {
-	python run_classifier.py \
+	/home/work/diliyaer/test/python/bin/python run_classifier.py \
 		--task_name ${TASK_NAME} \
 		--use_cuda false \
 		--do_test True \
@@ -61,7 +61,7 @@ evaluate() {
 }
 # run_infer
 infer() {
-	python run_classifier.py \
+	/home/work/diliyaer/test/python/bin/python run_classifier.py \
 		--task_name ${TASK_NAME} \
 		--use_cuda false \
 		--do_infer True \
