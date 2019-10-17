@@ -5,6 +5,7 @@ In personalized recommendation scenario, a user often is provided with several i
 
 **Now all models in PaddleRec require PaddlePaddle version 1.6 or higher, or suitable develop version.**
 
+We also recommend users to take a look at the [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122294)
 
 ## Dataset
 Currently, synthetic dataset is provided for proof of concept and we aim to add more real world dataset in this project in the future. The result is inaccurate because of synthetic dataset.

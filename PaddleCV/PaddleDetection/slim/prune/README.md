@@ -30,7 +30,7 @@ from paddle.fluid.framework import IrGraph
 from paddle.fluid import core
 
 graph = IrGraph(core.Graph(train_prog.desc), for_test=True)
-marked_nodes = set() 
+marked_nodes = set()
 for op in graph.all_op_nodes():
     print(op.name())
     if op.name().find('conv') > -1:
@@ -40,12 +40,12 @@ graph.draw('.', 'forward', marked_nodes)
 
 该示例中MobileNetV1-YoloV3模型结构的可视化结果：<a href="./images/MobileNetV1-YoloV3.pdf">MobileNetV1-YoloV3.pdf</a>
 
-同时通过以下命令观察目标卷积层的参数（parameters）的名称和shape: 
+同时通过以下命令观察目标卷积层的参数（parameters）的名称和shape:
 
 ```
 for param in fluid.default_main_program().global_block().all_parameters():
     if 'weights' in param.name:
-        print param.name, param.shape
+        print(param.name, param.shape)
 ```
 
 
@@ -121,7 +121,7 @@ python compress.py \
 - **max_iters:** 一个`epoch`中batch的数量，需要设置为`total_num / batch_size`, 其中`total_num`为训练样本总数量，`batch_size`为多卡上总的batch size.
 - **YoloTrainFeed.batch_size:** 当使用DataLoader时，表示单张卡上的batch size; 当使用普通reader时，则表示多卡上的总的`batch_size`。`batch_size`受限于显存大小。
 - **LeaningRate.base_lr:** 根据多卡的总`batch_size`调整`base_lr`，两者大小正相关，可以简单的按比例进行调整。
-- **LearningRate.schedulers.PiecewiseDecay.milestones：**请根据batch size的变化对其调整。
+- **LearningRate.schedulers.PiecewiseDecay.milestones：** 请根据batch size的变化对其调整。
 - **LearningRate.schedulers.PiecewiseDecay.LinearWarmup.steps：** 请根据batch size的变化对其进行调整。
 
 
@@ -168,6 +168,16 @@ python compress.py \
 
 如果不需要保存评估模型，可以在定义Compressor对象时，将`save_eval_model`选项设置为False（默认为True）。
 
+运行命令为：
+```
+python ../eval.py \
+    --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
+    --model_name __model__ \
+    --params_name __params__ \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -d "../../dataset/voc"
+```
+
 ## 预测
 
 如果在配置文件中设置了`checkpoint_path`，并且在定义Compressor对象时指定了`prune_infer_model`选项，则每个epoch都会
@@ -181,6 +191,16 @@ python compress.py \
 ### python预测
 
 在脚本<a href="../infer.py">PaddleDetection/tools/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
+
+运行命令为：
+```
+python ../infer.py \
+    --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
+    --model_name __model__.infer \
+    --params_name __params__ \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    --infer_dir ../../demo
+```
 
 ### PaddleLite
 

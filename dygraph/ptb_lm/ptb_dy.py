@@ -14,6 +14,7 @@
 
 from __future__ import print_function
 
+import os
 import unittest
 import paddle.fluid as fluid
 import paddle.fluid.core as core
@@ -25,6 +26,7 @@ import numpy as np
 import six
 
 import reader
+import model_check
 import time
 
 from args import *
@@ -200,7 +202,6 @@ class PtbModel(fluid.Layer):
 
         x_emb = self.embedding(input)
 
-        #print( self.x_emb.numpy() )
         x_emb = fluid.layers.reshape(
             x_emb, shape=[-1, self.num_steps, self.hidden_size])
         if self.dropout is not None and self.dropout > 0.0:
@@ -211,7 +212,6 @@ class PtbModel(fluid.Layer):
         rnn_out, last_hidden, last_cell = self.simple_lstm_rnn(x_emb, init_h,
                                                                init_c)
 
-        #print( "rnn_out", rnn_out.numpy() )
         rnn_out = fluid.layers.reshape(
             rnn_out, shape=[-1, self.num_steps, self.hidden_size])
         projection = fluid.layers.matmul(rnn_out, self.softmax_weight)
@@ -228,14 +228,18 @@ class PtbModel(fluid.Layer):
         return loss, last_hidden, last_cell
 
     def debug_emb(self):
-        #print("1111", self.x_emb.gradient() )
 
         np.save("emb_grad", self.x_emb.gradient())
 
 
 def train_ptb_lm():
-
     args = parse_args()
+
+    # check if set use_gpu=True in paddlepaddle cpu version
+    model_check.check_cuda(args.use_gpu)
+    # check if paddlepaddle version is satisfied
+    model_check.check_version()
+
     model_type = args.model_type
 
     vocab_size = 10000
@@ -307,6 +311,15 @@ def train_ptb_lm():
             num_steps=num_steps,
             init_scale=init_scale,
             dropout=dropout)
+
+        if args.init_from_pretrain_model:
+            if not os.path.exists(args.init_from_pretrain_model + '.pdparams'):
+                print(args.init_from_pretrain_model)
+                raise Warning("The pretrained params do not exist.")
+                return
+            fluid.load_dygraph(args.init_from_pretrain_model)
+            print("finish initing model from pretrained params from %s" %
+                  (args.init_from_pretrain_model))
 
         dy_param_updated = dict()
         dy_param_init = dict()
@@ -409,15 +422,20 @@ def train_ptb_lm():
 
                 if batch_id > 0 and batch_id % log_interval == 0:
                     ppl = np.exp(total_loss / iters)
-                    print(epoch_id, "ppl ", batch_id, ppl[0],
-                          sgd._global_learning_rate().numpy())
+                    print("-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f" %
+                          (epoch_id, batch_id, ppl[0],
+                           sgd._global_learning_rate().numpy()))
 
             print("one ecpoh finished", epoch_id)
             print("time cost ", time.time() - start_time)
             ppl = np.exp(total_loss / iters)
-            print("ppl ", epoch_id, ppl[0])
+            print("-- Epoch:[%d]; ppl: %.5f" % (epoch_id, ppl[0]))
             if args.ce:
                 print("kpis\ttrain_ppl\t%0.3f" % ppl[0])
+            save_model_dir = os.path.join(args.save_model_dir,
+                                          str(epoch_id), 'params')
+            fluid.save_dygraph(ptb_model.state_dict(), save_model_dir)
+            print("Saved model to: %s.\n" % save_model_dir)
 
         eval(ptb_model, test_data)
 

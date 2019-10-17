@@ -28,6 +28,8 @@ Tagspace模型学习文本及标签的embedding表示，应用于工业级的标
 
 **Now all models in PaddleRec require PaddlePaddle version 1.6 or higher, or suitable develop version.**
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122298)
+
 ## 数据下载及预处理
 
 数据地址： [ag news dataset](https://github.com/mhjabreel/CharCNN/tree/master/data/)

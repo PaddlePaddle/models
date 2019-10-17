@@ -158,3 +158,4 @@ mobile_pass.apply(test_graph)
 >
 > **注意:** 目前PaddlePaddle框架在Server端只支持使用float目录下的量化模型做预测。
 
+> **注意：**本示例中的run.sh脚本仅适用于linux系统，在windows环境下，请参考run.sh内容编写适合windows环境的脚本。

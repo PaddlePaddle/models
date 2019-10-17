@@ -40,7 +40,7 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 from args import *
-from models.model_check import check_cuda
+from models.model_check import check_cuda, check_version
 from models.language_model import lm_model
 from config import RNNConfig
 import logging
@@ -88,7 +88,10 @@ def save_para_npz(train_prog, train_exe):
 def main():
     args = parse_args()
 
+    # check if set use_gpu=True in paddlepaddle cpu version
     check_cuda(args.use_gpu)
+    # check if paddlepaddle version is satisfied
+    check_version()
 
     logger = logging.getLogger("lm")
     logger.setLevel(logging.INFO)
@@ -167,6 +170,15 @@ def main():
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = Executor(place)
     exe.run(startup_program)
+
+    if args.init_from_pretrain_model:
+        if not os.path.exists(args.init_from_pretrain_model + '.pdparams'):
+            print(args.init_from_pretrain_model)
+            raise Warning("The pretrained params do not exist.")
+            return
+        fluid.load(main_program, args.init_from_pretrain_model)
+        print("finish initing model from pretrained params from %s" %
+              (args.init_from_pretrain_model))
 
     device_count = len(fluid.cuda_places()) if args.use_gpu else len(
         fluid.cpu_places())
@@ -280,7 +292,6 @@ def main():
                 epoch_id=epoch_id,
                 with_lr=True,
                 device_count=device_count)
-
             batch_start_time = time.time()
             fetch_outs = exe.run(train_program,
                                  feed=input_data_feed,
@@ -304,7 +315,6 @@ def main():
                 print(
                     "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
                     % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
-
         ppl = np.exp(total_loss / iters)
         return ppl
 
@@ -434,9 +444,9 @@ def main():
                     format(
                         len(valid_data), config.batch_size, config.num_steps))
 
-            save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
-            fluid.io.save_persistables(
-                executor=exe, dirname=save_model_dir, main_program=main_program)
+            save_model_dir = os.path.join(args.save_model_dir,
+                                          str(epoch_id), "params")
+            fluid.save(main_program, save_model_dir)
             print("Saved model to: %s.\n" % save_model_dir)
 
     with profile_context(args.profile):

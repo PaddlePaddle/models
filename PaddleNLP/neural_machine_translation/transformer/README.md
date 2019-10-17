@@ -5,9 +5,8 @@
 ```text
 .
 ├── images               # README 文档中的图片
-├── palm                 # 工具包
+├── utils                # 工具包
 ├── desc.py              # 输入描述文件
-├── dist_utils.py        # 多进程训练工具
 ├── gen_data.sh          # 数据生成脚本
 ├── inference_model.py   # 保存 inference_model 的脚本
 ├── main.py              # 主程序入口
@@ -25,13 +24,15 @@
 
 本项目是机器翻译领域主流模型 Transformer 的 PaddlePaddle 实现， 包含模型训练，预测以及使用自定义数据等内容。用户可以基于发布的内容搭建自己的翻译模型。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122281)
+
 ## 快速开始
 
 ### 安装说明
 
 1. paddle安装
 
-   本项目依赖于 PaddlePaddle Fluid 1.5.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle 1.6及以上版本或适当的develop版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 2. 下载代码
 

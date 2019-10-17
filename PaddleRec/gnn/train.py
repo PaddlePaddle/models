@@ -22,6 +22,7 @@ import paddle.fluid as fluid
 import argparse
 import network
 import reader
+import sys
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
