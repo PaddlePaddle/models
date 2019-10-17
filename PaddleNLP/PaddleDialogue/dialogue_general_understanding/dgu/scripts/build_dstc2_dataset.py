@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +18,7 @@ import json
 import sys
 import csv
 import os
+import io
 import re
 
 import commonlib
@@ -55,17 +57,17 @@ class DSTC2(object):
         """
         tag_id = 1
         self.map_tag_dict['none'] = 0
-        with open(self.onto_json, 'r') as fr: 
-            ontology = json.load(fr)
-            slots_values = ontology['informable']
-            for slot in slots_values: 
-                for value in slots_values[slot]: 
-                    key = "%s_%s" % (slot, value)
-                    self.map_tag_dict[key] = tag_id
-                    tag_id += 1
-                key = "%s_none" % (slot)
+        fr = io.open(self.onto_json, 'r', encoding="utf8")
+        ontology = json.load(fr)
+        slots_values = ontology['informable']
+        for slot in slots_values: 
+            for value in slots_values[slot]: 
+                key = "%s_%s" % (slot, value)
                 self.map_tag_dict[key] = tag_id
                 tag_id += 1
+            key = "%s_none" % (slot)
+            self.map_tag_dict[key] = tag_id
+            tag_id += 1
 
     def _parser_dataset(self, data_type): 
         """
@@ -79,31 +81,33 @@ class DSTC2(object):
             os.makedirs(self.out_asr_dir)
         out_file = os.path.join(self.out_dir, "%s.txt" % data_type)
         out_asr_file = os.path.join(self.out_asr_dir, "%s.txt" % data_type)
-        with open(out_file, 'w') as fw, open(out_asr_file, 'w') as fw_asr: 
-            data_list = self.data_dict.get(data_type)
-            for fn in data_list: 
-                log_file = os.path.join(fn, "log.json")
-                label_file = os.path.join(fn, "label.json")
-                with open(log_file, 'r') as f_log, open(label_file, 'r') as f_label: 
-                    log_json = json.load(f_log)
-                    label_json = json.load(f_label)
-                    session_id = log_json['session-id']
-                    assert len(label_json["turns"]) == len(log_json["turns"])
-                    for i in range(len(label_json["turns"])): 
-                        log_turn = log_json["turns"][i]
-                        label_turn = label_json["turns"][i]
-                        assert log_turn["turn-index"] == label_turn["turn-index"]
-                        labels = ["%s_%s" % (slot, label_turn["goal-labels"][slot]) for slot in label_turn["goal-labels"]]
-                        labels_ids = " ".join([str(self.map_tag_dict.get(label, self.map_tag_dict["%s_none" % label.split('_')[0]])) for label in labels])
-                        mach = log_turn['output']['transcript']
-                        user = label_turn['transcription']
-                        if not labels_ids.strip(): 
-                            labels_ids = self.map_tag_dict['none']
-                        out = "%s\t%s\1%s\t%s" % (session_id, mach, user, labels_ids)
-                        user_asr = log_turn['input']['live']['asr-hyps'][0]['asr-hyp'].strip()
-                        out_asr = "%s\t%s\1%s\t%s" % (session_id, mach, user_asr, labels_ids)
-                        fw.write("%s\n" % out.encode('utf8'))
-                        fw_asr.write("%s\n" % out_asr.encode('utf8'))
+        fw = io.open(out_file, 'w', encoding="utf8")
+        fw_asr = io.open(out_asr_file, 'w', encoding="utf8")
+        data_list = self.data_dict.get(data_type)
+        for fn in data_list: 
+            log_file = os.path.join(fn, "log.json")
+            label_file = os.path.join(fn, "label.json")
+            f_log = io.open(log_file, 'r', encoding="utf8")
+            f_label = io.open(label_file, 'r', encoding="utf8")
+            log_json = json.load(f_log)
+            label_json = json.load(f_label)
+            session_id = log_json['session-id']
+            assert len(label_json["turns"]) == len(log_json["turns"])
+            for i in range(len(label_json["turns"])): 
+                log_turn = log_json["turns"][i]
+                label_turn = label_json["turns"][i]
+                assert log_turn["turn-index"] == label_turn["turn-index"]
+                labels = ["%s_%s" % (slot, label_turn["goal-labels"][slot]) for slot in label_turn["goal-labels"]]
+                labels_ids = " ".join([str(self.map_tag_dict.get(label, self.map_tag_dict["%s_none" % label.split('_')[0]])) for label in labels])
+                mach = log_turn['output']['transcript']
+                user = label_turn['transcription']
+                if not labels_ids.strip(): 
+                    labels_ids = self.map_tag_dict['none']
+                out = "%s\t%s\1%s\t%s" % (session_id, mach, user, labels_ids)
+                user_asr = log_turn['input']['live']['asr-hyps'][0]['asr-hyp'].strip()
+                out_asr = "%s\t%s\1%s\t%s" % (session_id, mach, user_asr, labels_ids)
+                fw.write("%s\n" % out.encode('utf8'))
+                fw_asr.write("%s\n" % out_asr.encode('utf8'))
 
     def get_train_dataset(self): 
         """
@@ -127,9 +131,9 @@ class DSTC2(object):
         """
         get tag and map ids file
         """
-        with open(self.map_tag, 'w') as fw: 
-            for elem in self.map_tag_dict: 
-                fw.write("%s\t%s\n" % (elem, self.map_tag_dict[elem]))
+        fw = io.open(self.map_tag, 'w', encoding="utf8")
+        for elem in self.map_tag_dict: 
+            fw.write("%s\t%s\n" % (elem, self.map_tag_dict[elem]))
 
     def main(self): 
         """

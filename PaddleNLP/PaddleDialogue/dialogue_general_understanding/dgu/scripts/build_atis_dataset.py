@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved. 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +19,7 @@ import json
 import sys
 import csv
 import os
+import io
 import re
 
 
@@ -51,8 +53,8 @@ class ATIS(object):
             os.makedirs(self.out_intent_dir)
         src_examples = []
         json_file = os.path.join(self.src_dir, "%s.json" % data_type)
-        with open(json_file, 'r') as load_f:
-            json_dict = json.load(load_f)
+        load_f = io.open(json_file, 'r', encoding="utf8")
+        json_dict = json.load(load_f)
         examples = json_dict['rasa_nlu_data']['common_examples']
         for example in examples: 
             text = example.get('text')
@@ -66,62 +68,62 @@ class ATIS(object):
         parser intent dataset
         """
         out_filename = "%s/%s.txt" % (self.out_intent_dir, data_type)
-        with open(out_filename, 'w') as fw: 
-            for example in examples: 
-                if example[1] not in self.intent_dict: 
-                    self.intent_dict[example[1]] = self.intent_id
-                    self.intent_id += 1
-                fw.write("%s\t%s\n" % (self.intent_dict[example[1]], example[0].lower()))
+        fw = io.open(out_filename, 'w', encoding="utf8")
+        for example in examples: 
+            if example[1] not in self.intent_dict: 
+                self.intent_dict[example[1]] = self.intent_id
+                self.intent_id += 1
+            fw.write("%s\t%s\n" % (self.intent_dict[example[1]], example[0].lower()))
 
-        with open(self.map_tag_intent, 'w') as fw: 
-            for tag in self.intent_dict: 
-                fw.write("%s\t%s\n" % (tag, self.intent_dict[tag]))
+        fw = io.open(self.map_tag_intent, 'w', encoding="utf8")
+        for tag in self.intent_dict: 
+            fw.write("%s\t%s\n" % (tag, self.intent_dict[tag]))
 
     def _parser_slot_data(self, examples, data_type): 
         """
         parser slot dataset
         """
         out_filename = "%s/%s.txt" % (self.out_slot_dir, data_type)
-        with open(out_filename, 'w') as fw:
-            for example in examples: 
-                tags = []
-                text = example[0]
-                entities = example[2]
-                if not entities: 
-                    tags = [str(self.slot_dict['O'])] * len(text.strip().split())
-                    continue
-                for i in range(len(entities)): 
-                    enty = entities[i]
-                    start = enty['start']
-                    value_num = len(enty['value'].split())
-                    tags_slot = []
-                    for j in range(value_num): 
-                        if j == 0: 
-                            bround_tag = "B"
-                        else: 
-                            bround_tag = "I"
-                        tag = "%s-%s" % (bround_tag, enty['entity'])
-                        if tag not in self.slot_dict: 
-                            self.slot_dict[tag] = self.slot_id
-                            self.slot_id += 1
-                        tags_slot.append(str(self.slot_dict[tag]))
-                    if i == 0: 
-                        if start not in [0, 1]: 
-                            prefix_num = len(text[: start].strip().split())
-                            tags.extend([str(self.slot_dict['O'])] * prefix_num)
-                        tags.extend(tags_slot)
+        fw = io.open(out_filename, 'w', encoding="utf8")
+        for example in examples: 
+            tags = []
+            text = example[0]
+            entities = example[2]
+            if not entities: 
+                tags = [str(self.slot_dict['O'])] * len(text.strip().split())
+                continue
+            for i in range(len(entities)): 
+                enty = entities[i]
+                start = enty['start']
+                value_num = len(enty['value'].split())
+                tags_slot = []
+                for j in range(value_num): 
+                    if j == 0: 
+                        bround_tag = "B"
                     else: 
-                        prefix_num = len(text[entities[i - 1]['end']: start].strip().split())
+                        bround_tag = "I"
+                    tag = "%s-%s" % (bround_tag, enty['entity'])
+                    if tag not in self.slot_dict: 
+                        self.slot_dict[tag] = self.slot_id
+                        self.slot_id += 1
+                    tags_slot.append(str(self.slot_dict[tag]))
+                if i == 0: 
+                    if start not in [0, 1]: 
+                        prefix_num = len(text[: start].strip().split())
                         tags.extend([str(self.slot_dict['O'])] * prefix_num)
-                        tags.extend(tags_slot)
-                if entities[-1]['end'] < len(text): 
-                    suffix_num = len(text[entities[-1]['end']:].strip().split())
-                    tags.extend([str(self.slot_dict['O'])] * suffix_num)
-                fw.write("%s\t%s\n" % (text.encode('utf8'), " ".join(tags).encode('utf8')))
+                    tags.extend(tags_slot)
+                else: 
+                    prefix_num = len(text[entities[i - 1]['end']: start].strip().split())
+                    tags.extend([str(self.slot_dict['O'])] * prefix_num)
+                    tags.extend(tags_slot)
+            if entities[-1]['end'] < len(text): 
+                suffix_num = len(text[entities[-1]['end']:].strip().split())
+                tags.extend([str(self.slot_dict['O'])] * suffix_num)
+            fw.write("%s\t%s\n" % (text.encode('utf8'), " ".join(tags).encode('utf8')))
         
-        with open(self.map_tag_slot, 'w') as fw: 
-            for slot in self.slot_dict: 
-                fw.write("%s\t%s\n" % (slot, self.slot_dict[slot]))
+        fw = io.open(self.map_tag_slot, 'w', encoding="utf8")
+        for slot in self.slot_dict: 
+            fw.write("%s\t%s\n" % (slot, self.slot_dict[slot]))
 
     def get_train_dataset(self): 
         """

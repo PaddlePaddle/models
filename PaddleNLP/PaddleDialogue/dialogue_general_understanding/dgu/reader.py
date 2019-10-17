@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 # limitations under the License.
 """data reader"""
 import os
+import io
 import csv
 import sys
 import types
@@ -107,12 +109,12 @@ class DataProcessor(object):
     @classmethod
     def _read_tsv(cls, input_file, quotechar=None):
         """Reads a tab separated value file."""
-        with open(input_file, "r") as f:
-            reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
-            lines = []
-            for line in reader: 
-                lines.append(line)
-            return lines
+        f = io.open(input_file, "r", encoding="utf8")
+        reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
+        lines = []
+        for line in reader: 
+            lines.append(line)
+        return lines
 
     def get_num_examples(self, phase):
         """Get number of examples for train, dev or test."""
