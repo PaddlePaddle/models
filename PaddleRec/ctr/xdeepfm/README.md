@@ -8,7 +8,7 @@
 
 demo数据集，在data目录下执行命令，下载数据
 ```bash
-sh download.sh
+python download.py
 ```
 
 ## 环境
@@ -39,6 +39,7 @@ test_epoch设置加载第10轮训练的模型。
 
 数据下载同上面命令。
 ```bash
+# 该sh不支持Windows
 sh cluster_train.sh
 ```
 参数说明：
@@ -64,7 +65,7 @@ python infer.py --model_output_dir cluster_model --test_epoch 10 --use_gpu=0
 - 0号trainer保存模型参数
 
 - 每次训练完成后需要手动停止pserver进程，使用以下命令查看pserver进程：
-  
+
 >ps -ef | grep python
 
 - 数据读取使用dataset模式，目前仅支持运行在Linux环境下

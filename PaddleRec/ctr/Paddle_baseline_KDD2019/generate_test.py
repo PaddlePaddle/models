@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import argparse
 import logging
 import numpy as np
@@ -22,11 +21,11 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import paddle
 import paddle.fluid as fluid
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 num_context_feature = 22
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="PaddlePaddle DeepFM example")
@@ -59,6 +58,7 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def to_lodtensor(data, place):
     seq_lens = [len(seq) for seq in data]
     cur_len = 0
@@ -71,7 +71,6 @@ def to_lodtensor(data, place):
     res = fluid.LoDTensor()
     res.set(flattened_data, place)
     res.set_lod([lod])
-
 
     return res
 
@@ -91,13 +90,15 @@ def data2tensor(data, place):
         sparse_data = to_lodtensor([x[1 + i] for x in data], place)
         feed_dict["context" + str(i)] = sparse_data
 
-    context_fm = to_lodtensor(np.array([x[-2] for x in data]).astype("float32"), place)
+    context_fm = to_lodtensor(
+        np.array([x[-2] for x in data]).astype("float32"), place)
 
     feed_dict["context_fm"] = context_fm
     y_data = np.array([x[-1] for x in data]).astype("int64")
     y_data = y_data.reshape([-1, 1])
     feed_dict["label"] = y_data
     return feed_dict
+
 
 def test():
     args = parse_args()
@@ -112,13 +113,14 @@ def test():
     exe = fluid.Executor(place)
 
     whole_filelist = ["./out/normed_test_session.txt"]
-    test_files = whole_filelist[int(0.0 * len(whole_filelist)):int(1.0 * len(whole_filelist))]
-
+    test_files = whole_filelist[int(0.0 * len(whole_filelist)):int(1.0 * len(
+        whole_filelist))]
 
     epochs = 1
 
     for i in range(epochs):
-        cur_model_path = args.model_path + "/epoch" + str(1) + ".model"
+        cur_model_path = os.path.join(args.model_path,
+                                      "epoch" + str(1) + ".model")
         with open("./testres/res" + str(i), 'w') as r:
             with fluid.scope_guard(test_scope):
                 [inference_program, feed_target_names, fetch_targets] = \
@@ -129,9 +131,11 @@ def test():
                 for batch_id, data in enumerate(test_reader()):
                     print(len(data[0]))
                     feed_dict = data2tensor(data, place)
-                    loss_val, auc_val, accuracy, predict, _ = exe.run(inference_program,
-                                                feed=feed_dict,
-                                                fetch_list=fetch_targets, return_numpy=False)
+                    loss_val, auc_val, accuracy, predict, _ = exe.run(
+                        inference_program,
+                        feed=feed_dict,
+                        fetch_list=fetch_targets,
+                        return_numpy=False)
 
                     x = np.array(predict)
                     for j in range(x.shape[0]):

@@ -12,7 +12,6 @@ import paddle.fluid as fluid
 
 import reader
 from network_conf import ctr_dnn_model
-from multiprocessing import cpu_count
 import utils
 
 # disable gpu training for this example
@@ -107,6 +106,11 @@ def parse_args():
         default=1,
         help='The num of trianers, (default: 1)')
     parser.add_argument(
+        '--cpu_count',
+        type=int,
+        default=1,
+        help='The number of cpu to use when training (default: 1)')
+    parser.add_argument(
         '--enable_ce',
         action='store_true',
         help='If set, run the task with continuous evaluation logs.')
@@ -141,7 +145,7 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
     if os.getenv("NUM_THREADS", ""):
         exec_strategy.num_threads = int(os.getenv("NUM_THREADS"))
 
-    cpu_num = int(os.environ.get('CPU_NUM', cpu_count()))
+    cpu_num = int(os.environ.get('CPU_NUM', args.cpu_count))
     build_strategy.reduce_strategy = \
         fluid.BuildStrategy.ReduceStrategy.Reduce if cpu_num > 1 \
             else fluid.BuildStrategy.ReduceStrategy.AllReduce
@@ -173,8 +177,8 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
                     .format(pass_id, batch_id, loss_val / args.batch_size,
                             auc_val, batch_auc_val))
                 if batch_id % 1000 == 0 and batch_id != 0:
-                    model_dir = args.model_output_dir + '/batch-' + str(
-                        batch_id)
+                    model_dir = os.path.join(args.model_output_dir,
+                                             'batch-' + str(batch_id))
                     if args.trainer_id == 0:
                         fluid.io.save_persistables(
                             executor=exe,
@@ -188,7 +192,7 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
 
         total_time += time.time() - pass_start
 
-        model_dir = args.model_output_dir + '/pass-' + str(pass_id)
+        model_dir = os.path.join(args.model_output_dir, 'pass-' + str(pass_id))
         if args.trainer_id == 0:
             fluid.io.save_persistables(
                 executor=exe,
