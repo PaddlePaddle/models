@@ -16,8 +16,8 @@ PaddleRec
 | [SequenceSemanticRetrieval](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ssr) |   召回   | 解决了 GRU4Rec 模型无法预测训练数据集中不存在的项目，比如新闻推荐的问题。它由两个部分组成：一个是匹配模型部分，另一个是检索部分  |
 | [Word2Vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec) |   词向量   | 训练得到词的向量表示、广泛应用于NLP、推荐等任务场景。 |
 | [Multiview-Simnet](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/multiview_simnet) |   排序   | 多视角Simnet模型是可以融合用户以及推荐项目的多个视角的特征并进行个性化匹配学习的一体化模型。这类模型在很多工业化的场景中都会被使用到，比如百度的Feed产品中 |
-| [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gnn) | 排序 | DIN，全称为Deep Interest Network。特点为对历史序列建模的过程中结合了预估目标的信息。 |
-| [DeepInterestNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/din) | 召回 | SR-GNN，全称为Session-based Recommendations with Graph Neural Network（GNN）。使用GNN进行会话序列建模。  |
+| [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gnn) | 召回 | SR-GNN，全称为Session-based Recommendations with Graph Neural Network（GNN）。使用GNN进行会话序列建模。 |
+| [DeepInterestNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/din) | 排序 | DIN，全称为Deep Interest Network。特点为对历史序列建模的过程中结合了预估目标的信息。  |
 | [DeepFM](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ctr/deepfm) |   推荐系统   | DeepFM，全称Factorization-Machine based Neural Network。经典的CTR推荐算法，网络由DNN和FM两部分组成。 |
 | [XDeepFM](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ctr/xdeepfm) |   推荐系统   | xDeepFM，全称extreme Factorization Machine。对DeepFM和DCN的改进，提出CIN（Compressed Interaction Network），使用vector-wise等级的显示特征交叉。 |
 | [DCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ctr/dcn) |   推荐系统   | 全称Deep & Cross Network。提出一种新的交叉网络（cross network），在每个层上明确地应用特征交叉。  |
