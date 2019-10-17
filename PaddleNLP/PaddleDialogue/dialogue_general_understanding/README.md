@@ -63,7 +63,7 @@ SWDA：Switchboard Dialogue Act Corpus;
 &ensp;&ensp;&ensp;&ensp;数据集、相关模型下载：
 
 ```
-cd dgu && bash prepare_data_and_model.sh
+python dgu/prepare_data_and_model.py 
 ```
 &ensp;&ensp;&ensp;&ensp;数据路径：data/input/data
 

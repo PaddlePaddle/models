@@ -21,7 +21,6 @@ import os
 import sys
 import time
 import numpy as np
-import multiprocessing
 
 import paddle
 import paddle.fluid as fluid
@@ -111,8 +110,7 @@ def do_train(args):
             if args.use_cuda: 
                 dev_count = fluid.core.get_cuda_device_count()
             else: 
-                dev_count = int(
-                    os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+                dev_count = int(os.environ.get('CPU_NUM', 1))
             
             batch_generator = processor.data_generator(
                 batch_size=args.batch_size,
