@@ -85,7 +85,7 @@ You can defined datasets by yourself, we recommend using annotations in COCO for
 
     sh ./weights/download.sh
 
-**NOTE:**: Windows users can download weights from links in `./weights/download.sh`.
+**NOTE:** Windows users can download weights from links in `./weights/download.sh`.
 
 Set `--pretrain` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
 Please make sure that pre-trained model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
