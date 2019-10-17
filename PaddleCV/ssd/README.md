@@ -37,9 +37,9 @@ The script `download.py` will also create training and testing file lists.
 
 We provide two pre-trained models. The one is MobileNet-v1 SSD trained on COCO dataset, but removed the convolutional predictors for COCO dataset. This model can be used to initialize the models when training other datasets, like PASCAL VOC. The other pre-trained model is MobileNet-v1 trained on ImageNet 2012 dataset but removed the last weights and bias in the Fully-Connected layer. Download MobileNet-v1 SSD:
 
-    ```
-    sh ./pretrained/download_coco.sh
-    ```
+```bash
+sh ./pretrained/download_coco.sh
+```
 
 **NOTE:** Windows users can download weights from link in `./pretrained/download_coco.sh`.
 

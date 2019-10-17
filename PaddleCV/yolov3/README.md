@@ -85,7 +85,7 @@ dataset/coco/
 
     sh ./weights/download.sh
 
-**注意** Windows用户可通过`./weights/download.sh`中的链接直接下载和解压。
+**注意：** Windows用户可通过`./weights/download.sh`中的链接直接下载和解压。
 
 通过设置`--pretrain` 加载预训练模型。同时在fine-tune时也采用该设置加载已训练模型。
 请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。

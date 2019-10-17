@@ -39,9 +39,9 @@ python download.py
 
 我们提供了两个预训练模型。第一个模型是在 COCO 数据集上预训练的 MobileNet-v1 SSD，我们将它的预测头移除了以便在 COCO 以外的数据集上进行训练。第二个模型是在 ImageNet 2012 数据集上预训练的 MobileNet-v1，我们也将最后的全连接层移除以便进行目标检测训练。下载 MobileNet-v1 SSD:
 
-    ```
-    sh ./pretrained/download_coco.sh
-    ```
+```bash
+sh ./pretrained/download_coco.sh
+```
 
 **注意：** Windows用户可通过`./pretrained/download_coco.sh`中的链接直接下载和解压。
 
