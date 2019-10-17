@@ -4,6 +4,7 @@
 
 ELMo(Embeddings from Language Models) 是重要的通用语义表示模型之一，以双向 LSTM  为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。本项目是 ELMo 在 Paddle Fluid 上的开源实现, 基于百科类数据训练并发布了预训练模型。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124374)
 
 ### 发布要点:
 1） 基于百科类数据训练的 [ELMo 中文预训练模型](https://dureader.gz.bcebos.com/elmo/baike_elmo_checkpoint.tar.gz);

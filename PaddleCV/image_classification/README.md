@@ -26,6 +26,8 @@
 ## 简介
 图像分类是计算机视觉的重要领域，它的目标是将图像分类到预定义的标签。近期，许多研究者提出很多不同种类的神经网络，并且极大的提升了分类算法的性能。本页将介绍如何使用PaddlePaddle进行图像分类。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122278)
+
 ## 快速开始
 
 ### 安装说明
@@ -44,7 +46,8 @@ pip install numpy
 
 ### 数据准备
 
-下面给出了ImageNet分类任务的样例，首先，通过如下的方式进行数据的准备：
+下面给出了ImageNet分类任务的样例
+在Linux系统下通过如下的方式进行数据的准备：
 ```
 cd data/ILSVRC2012/
 sh download_imagenet2012.sh
@@ -66,6 +69,8 @@ train/n02483708/n02483708_2436.jpeg 369
 val/ILSVRC2012_val_00000001.jpeg 65
 ```
 注意：可能需要根据本地环境调整reader.py中相关路径来正确读取数据。
+
+**Windows系统下请用户自行下载ImageNet数据。[label下载链接](http://paddle-imagenet-models.bj.bcebos.com/ImageNet_label.tgz)**
 
 ### 模型训练
 
@@ -89,6 +94,23 @@ python train.py \
 ```bash
 bash run.sh train 模型名
 ```
+
+**多进程模型训练：**
+
+如果你有多张GPU卡的话，我们强烈建议你使用多进程模式来训练模型，这会极大的提升训练速度。启动方式如下：
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
+       --model=ResNet50 \
+       --batch_size=256 \
+       --total_images=1281167 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --lr_strategy=piecewise_decay \
+       --reader_thread=4 \
+       --lr=0.1
+```
+或者参考 scripts/train/ResNet50_dist.sh
 
 **参数说明：**
 
@@ -185,7 +207,7 @@ python eval.py \
 python ema_clean.py \
        --ema_model_dir=your_ema_model_dir \
        --cleaned_model_dir=your_cleaned_model_dir
-       
+
 python eval.py \
        --model=model_name \
        --pretrained_model=your_cleaned_model_dir
@@ -241,8 +263,9 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 
 - 注意
    - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
-   - 2：InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同，InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
-   - 3：调用动态链接库预测时需要将训练模型转换为二进制模型
+   - 2：除EfficientNet外，InceptionV4和Xception采用的输入图像的分辨率为299x299，DarkNet53为256x256，Fix_ResNeXt101_32x48d_wsl为320x320，其余模型使用的分辨率均为224x224。在预测时，DarkNet53与Fix_ResNeXt101_32x48d_wsl系列网络resize_short_size与输入的图像分辨率的宽或高相同，InceptionV4和Xception网络resize_short_size为320，其余网络resize_short_size均为256。
+   - 3: EfficientNetB0~B7的分辨率大小分别为224x224，240x240，260x260，300x300，380x380，456x456，528x528，600x600，预测时的resize_short_size在其分辨率的长或高的基础上加32，如EfficientNetB1的resize_short_size为272，在该系列模型训练和预测的过程中，图片resize参数interpolation的值设置为2（cubic插值方式），该模型在训练过程中使用了指数滑动平均策略，具体请参考[指数滑动平均](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage)。
+   - 4：调用动态链接库预测时需要将训练模型转换为二进制模型。
 
         ```bash
         python infer.py \
@@ -251,7 +274,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
                --save_inference=True
         ```
 
-   - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
+   - 5: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 
 
 ### AlexNet
@@ -386,13 +409,15 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
 |[EfficientNetB0](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_pretrained.tar) | 77.38% | 93.31% | 10.303 | 4.334 |
-|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar) | 79.15% | 94.41% | 15.626 | 6.502 |
-|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar) | 79.85% | 94.74% | 17.847 | 7.558 |
-|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar) | 81.15% | 95.41% | 25.993 | 10.937 |
-|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar) | 82.85% | 96.23% | 47.734 | 18.536 |
-|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar) | 83.62% | 96.72% | 88.578 | 32.102 |
-|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar) | 84.00% | 96.88% | 138.670 | 51.059 |
-|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar) | 84.30% | 96.89% | 234.364 | 82.107 |
+|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar)<sup>[1](#trans)</sup> | 79.15% | 94.41% | 15.626 | 6.502 |
+|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar)<sup>[1](#trans)</sup> | 79.85% | 94.74% | 17.847 | 7.558 |
+|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar)<sup>[1](#trans)</sup> | 81.15% | 95.41% | 25.993 | 10.937 |
+|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar)<sup>[1](#trans)</sup> | 82.85% | 96.23% | 47.734 | 18.536 |
+|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[1](#trans)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
+|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[1](#trans)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
+|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[1](#trans)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
+
+<a name="trans">[1]</a> 表示该预训练权重是由[官方的代码仓库](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)转换来的。
 
 ## FAQ
 

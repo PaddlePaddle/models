@@ -44,6 +44,9 @@ session-based推荐应用场景非常广泛，比如用户的商品浏览、新�
 
 
 运行样例程序可跳过'RSC15 数据下载及预处理'部分
+
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122296)
+
 ## RSC15 数据下载及预处理
 
 运行命令 下载RSC15官网数据集

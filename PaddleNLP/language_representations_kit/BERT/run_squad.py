@@ -17,6 +17,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 import argparse
 import collections
 import multiprocessing

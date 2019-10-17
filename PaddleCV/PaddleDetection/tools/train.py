@@ -29,17 +29,20 @@ def set_paddle_flags(**kwargs):
             os.environ[key] = str(value)
 
 
-# NOTE(paddle-dev): All of these flags should be set before 
+# NOTE(paddle-dev): All of these flags should be set before
 # `import paddle`. Otherwise, it would not take any effect.
 set_paddle_flags(
     FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
 )
 
 from paddle import fluid
+
+from ppdet.experimental import mixed_precision_context
 from ppdet.core.workspace import load_config, merge_config, create
 from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.cli import print_total_cfg
+from ppdet.utils import dist_utils
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
@@ -54,6 +57,15 @@ logger = logging.getLogger(__name__)
 
 
 def main():
+    env = os.environ
+    FLAGS.dist = 'PADDLE_TRAINER_ID' in env and 'PADDLE_TRAINERS_NUM' in env
+    if FLAGS.dist:
+        trainer_id = int(env['PADDLE_TRAINER_ID'])
+        import random
+        local_seed = (99 + trainer_id)
+        random.seed(local_seed)
+        np.random.seed(local_seed)
+
     cfg = load_config(FLAGS.config)
     if 'architecture' in cfg:
         main_arch = cfg.architecture
@@ -61,12 +73,17 @@ def main():
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
+
     if 'log_iter' not in cfg:
         cfg.log_iter = 20
 
+    ignore_params = cfg.finetune_exclude_pretrained_params \
+                 if 'finetune_exclude_pretrained_params' in cfg else []
+
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
-    print_total_cfg(cfg)
+    if not FLAGS.dist or trainer_id == 0:
+        print_total_cfg(cfg)
 
     if cfg.use_gpu:
         devices_num = fluid.core.get_cuda_device_count()
@@ -84,7 +101,11 @@ def main():
         else:
             eval_feed = create(cfg.eval_feed)
 
-    place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
+    if 'FLAGS_selected_gpus' in env:
+        device_id = int(env['FLAGS_selected_gpus'])
+    else:
+        device_id = 0
+    place = fluid.CUDAPlace(device_id) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
     lr_builder = create('LearningRate')
@@ -97,11 +118,24 @@ def main():
         with fluid.unique_name.guard():
             model = create(main_arch)
             train_pyreader, feed_vars = create_feed(train_feed)
-            train_fetches = model.train(feed_vars)
-            loss = train_fetches['loss']
-            lr = lr_builder()
-            optimizer = optim_builder(lr)
-            optimizer.minimize(loss)
+
+            if FLAGS.fp16:
+                assert (getattr(model.backbone, 'norm_type', None)
+                        != 'affine_channel'), \
+                    '--fp16 currently does not support affine channel, ' \
+                    ' please modify backbone settings to use batch norm'
+
+            with mixed_precision_context(FLAGS.loss_scale, FLAGS.fp16) as ctx:
+                train_fetches = model.train(feed_vars)
+
+                loss = train_fetches['loss']
+                if FLAGS.fp16:
+                    loss *= ctx.get_loss_scale_var()
+                lr = lr_builder()
+                optimizer = optim_builder(lr)
+                optimizer.minimize(loss)
+                if FLAGS.fp16:
+                    loss /= ctx.get_loss_scale_var()
 
     # parse train fetches
     train_keys, train_values, _ = parse_fetches(train_fetches)
@@ -125,40 +159,50 @@ def main():
             extra_keys = ['im_info', 'im_id', 'im_shape']
         if cfg.metric == 'VOC':
             extra_keys = ['gt_box', 'gt_label', 'is_difficult']
+        if cfg.metric == 'WIDERFACE':
+            extra_keys = ['im_id', 'im_shape', 'gt_box']
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
     # compile program for multi-devices
     build_strategy = fluid.BuildStrategy()
-    sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
+    build_strategy.fuse_all_optimizer_ops = False
+    build_strategy.fuse_elewise_add_act_ops = True
     # only enable sync_bn in multi GPU devices
-    build_strategy.sync_batch_norm = sync_bn and devices_num > 1 and cfg.use_gpu
+    sync_bn = getattr(model.backbone, 'norm_type', None) == 'sync_bn'
+    build_strategy.sync_batch_norm = sync_bn and devices_num > 1 \
+        and cfg.use_gpu
 
     exec_strategy = fluid.ExecutionStrategy()
     # iteration number when CompiledProgram tries to drop local execution scopes.
     # Set it to be 1 to save memory usages, so that unused variables in
     # local execution scopes can be deleted after each iteration.
     exec_strategy.num_iteration_per_drop_scope = 1
-
-    train_compile_program = fluid.compiler.CompiledProgram(
-        train_prog).with_data_parallel(
-            loss_name=loss.name,
-            build_strategy=build_strategy,
-            exec_strategy=exec_strategy)
-    if FLAGS.eval:
-        eval_compile_program = fluid.compiler.CompiledProgram(eval_prog)
+    if FLAGS.dist:
+        dist_utils.prepare_for_multi_process(exe, build_strategy, startup_prog,
+                                             train_prog)
+        exec_strategy.num_threads = 1
 
     exe.run(startup_prog)
+    compiled_train_prog = fluid.CompiledProgram(train_prog).with_data_parallel(
+        loss_name=loss.name,
+        build_strategy=build_strategy,
+        exec_strategy=exec_strategy)
+
+    if FLAGS.eval:
+        compiled_eval_prog = fluid.compiler.CompiledProgram(eval_prog)
 
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
     start_iter = 0
+
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
-    elif cfg.pretrain_weights and fuse_bn:
+    elif cfg.pretrain_weights and fuse_bn and not ignore_params:
         checkpoint.load_and_fusebn(exe, train_prog, cfg.pretrain_weights)
     elif cfg.pretrain_weights:
-        checkpoint.load_pretrain(exe, train_prog, cfg.pretrain_weights)
+        checkpoint.load_params(
+            exe, train_prog, cfg.pretrain_weights, ignore_params=ignore_params)
 
     train_reader = create_reader(train_feed, (cfg.max_iters - start_iter) *
                                  devices_num, FLAGS.dataset_dir)
@@ -180,7 +224,7 @@ def main():
 
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
-    time_stat = deque(maxlen=cfg.log_iter)
+    time_stat = deque(maxlen=cfg.log_smooth_window)
     best_box_ap_list = [0.0, 0]  #[map, iter]
 
     # use tb-paddle to log data
@@ -197,7 +241,7 @@ def main():
         time_cost = np.mean(time_stat)
         eta_sec = (cfg.max_iters - it) * time_cost
         eta = str(datetime.timedelta(seconds=int(eta_sec)))
-        outs = exe.run(train_compile_program, fetch_list=train_values)
+        outs = exe.run(compiled_train_prog, fetch_list=train_values)
         stats = {k: np.array(v).mean() for k, v in zip(train_keys, outs[:-1])}
 
         # use tb-paddle to log loss
@@ -209,18 +253,19 @@ def main():
 
         train_stats.update(stats)
         logs = train_stats.log()
-        if it % cfg.log_iter == 0:
+        if it % cfg.log_iter == 0 and (not FLAGS.dist or trainer_id == 0):
             strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
                 it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
 
-        if it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1:
+        if (it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1) \
+           and (not FLAGS.dist or trainer_id == 0):
             save_name = str(it) if it != cfg.max_iters - 1 else "model_final"
             checkpoint.save(exe, train_prog, os.path.join(save_dir, save_name))
 
             if FLAGS.eval:
                 # evaluation
-                results = eval_run(exe, eval_compile_program, eval_pyreader,
+                results = eval_run(exe, compiled_eval_prog, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
                 resolution = None
                 if 'mask' in results[0]:
@@ -253,6 +298,16 @@ if __name__ == '__main__':
         default=None,
         type=str,
         help="Checkpoint path for resuming training.")
+    parser.add_argument(
+        "--fp16",
+        action='store_true',
+        default=False,
+        help="Enable mixed precision training.")
+    parser.add_argument(
+        "--loss_scale",
+        default=8.,
+        type=float,
+        help="Mixed precision training loss scale.")
     parser.add_argument(
         "--eval",
         action='store_true',
