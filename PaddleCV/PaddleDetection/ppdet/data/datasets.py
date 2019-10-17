@@ -321,7 +321,7 @@ class ImageFolder(ListDataSet):
                     samples.append({'file': path})
 
             return samples
-        super(ImageFolder, self).__init__(find_image_files, root_dir)
+        super(ImageFolder, self).__init__(find_image_files)
 
 
 class StreamDataSet(DataSet):
