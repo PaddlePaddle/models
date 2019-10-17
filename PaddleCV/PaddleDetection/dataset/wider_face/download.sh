@@ -1,5 +1,5 @@
 # All rights `PaddleDetection` reserved
-# Citation:
+# References:
 #   @inproceedings{yang2016wider,
 #   Author = {Yang, Shuo and Luo, Ping and Loy, Chen Change and Tang, Xiaoou},
 #   Booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},

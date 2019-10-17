@@ -60,6 +60,17 @@ DATASETS = {
             'http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar',
             'b6e924de25625d8de591ea690078ad9f', ),
     ], ["VOCdevkit/VOC_all"]),
+    'wider_face': ([
+        (
+            'https://dataset.bj.bcebos.com/wider_face/WIDER_train.zip',
+            '3fedf70df600953d25982bcd13d91ba2', ),
+        (
+            'https://dataset.bj.bcebos.com/wider_face/WIDER_val.zip',
+            'dfa7d7e790efa35df3788964cf0bbaea', ),
+        (
+            'https://dataset.bj.bcebos.com/wider_face/wider_face_split.zip',
+            'a4a898d6193db4b9ef3260a68bad0dc7', ),
+    ], ["WIDER_train", "WIDER_val", "wider_face_split"]),
 }
 
 DOWNLOAD_RETRY_LIMIT = 3
@@ -108,13 +119,13 @@ def get_dataset_path(path, annotation, image_dir):
                 output_dir = osp.join(data_dir, dataset[1][0])
                 devkit_dir = "/".join(output_dir.split('/')[:-1])
                 years = ['2007', '2012']
-                # merge dir in output_tmp_dir at first, move to 
+                # merge dir in output_tmp_dir at first, move to
                 # output_dir after merge sucessed.
                 output_tmp_dir = osp.join(data_dir, 'tmp')
                 if osp.isdir(output_tmp_dir):
                     shutil.rmtree(output_tmp_dir)
                 # NOTE(dengkaipeng): since using auto download VOC
-                # dataset, VOC default label list should be used, 
+                # dataset, VOC default label list should be used,
                 # do not generate label_list.txt here. For default
                 # label, see ../data/source/voc_loader.py
                 merge_and_create_list(devkit_dir, years, output_tmp_dir)
@@ -127,7 +138,8 @@ def get_dataset_path(path, annotation, image_dir):
     # not match any dataset in DATASETS
     raise ValueError("Dataset {} is not valid and cannot parse dataset type "
                      "'{}' for automaticly downloading, which only supports "
-                     "'voc' and 'coco' currently".format(path, osp.split(path)[-1]))
+                     "'voc' and 'coco' currently".format(path,
+                                                         osp.split(path)[-1]))
 
 
 def map_path(url, root_dir):
@@ -179,7 +191,7 @@ def _dataset_exists(path, annotation, image_dir):
     """
     if not osp.exists(path):
         logger.info("Config dataset_dir {} is not exits, "
-                "dataset config is not valid".format(path))
+                    "dataset config is not valid".format(path))
         return False
 
     if annotation:
@@ -302,7 +314,7 @@ def _decompress(fname):
 
 def _move_and_merge_tree(src, dst):
     """
-    Move src directory to dst, if dst is already exists, 
+    Move src directory to dst, if dst is already exists,
     merge src to dst
     """
     if not osp.exists(dst):

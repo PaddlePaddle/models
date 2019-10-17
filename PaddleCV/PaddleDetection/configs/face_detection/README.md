@@ -4,6 +4,11 @@ English | [简体中文](README_cn.md)
 The goal of FaceDetection is to provide efficient and high-speed face detection solutions,
 including cutting-edge and classic models.
 
+
+<div align="center">
+  <img src="../../demo/output/12_Group_Group_12_Group_Group_12_935.jpg" />
+</div>
+
 ## Data Pipline
 We use the [WIDER FACE dataset](http://shuoyang1213.me/WIDERFACE/) to carry out the training
 and testing of the model, the official website gives detailed data introduction.
@@ -46,7 +51,7 @@ download them from [WIDER FACE dataset](http://shuoyang1213.me/WIDERFACE/),
 the decompressed datasets will be cached in ~/.cache/paddle/dataset/ and can be discovered
 automatically subsequently.
 
-#### Data Augmentation
+### Data Augmentation
 
 - **Data-anchor-sampling:** Randomly transform the scale of the image to a certain range of scales,
 greatly enhancing the scale change of the face. The specific operation is to obtain $v=\sqrt{width * height}$
@@ -62,10 +67,10 @@ Please refer to [DATA.md](../../docs/DATA.md#APIs) for details.
 Supported architectures is shown in the below table, please refer to
 [Algorithm Description](#Algorithm-Description) for details of the algorithm.
 
-|                    | Original | Lite <sup>[1](#lite)</sup> | NAS <sup>[2](#nas)</sup> |
-|:------------------:|:--------:|:--------------------------:|:------------------------:|
-| [BlazeFace]()      | ✓        |                          ✓ | ✓                        |
-| [FaceBoxes]()      | ✓        |                          ✓ | x                        |
+|                          | Original | Lite <sup>[1](#lite)</sup> | NAS <sup>[2](#nas)</sup> |
+|:------------------------:|:--------:|:--------------------------:|:------------------------:|
+| [BlazeFace](#BlazeFace)  | ✓        |                          ✓ | ✓                        |
+| [FaceBoxes](#FaceBoxes)  | ✓        |                          ✓ | x                        |
 
 <a name="lite">[1]</a> `Lite` edition means reduces the number of network layers and channels.  
 <a name="nas">[2]</a> `NAS` edition means use `Neural Architecture Search` algorithm to
@@ -75,9 +80,9 @@ optimized network structure.
 - [ ] HamBox
 - [ ] Pyramidbox
 
-#### Model Zoo
+### Model Zoo
 
-##### mAP in WIDER FACE
+#### mAP in WIDER FACE
 
 | Architecture | Type     | Size | Img/gpu | Lr schd | Easy Set | Medium Set | Hard Set |
 |:------------:|:--------:|:----:|:-------:|:-------:|:--------:|:----------:|:--------:|
@@ -88,11 +93,12 @@ optimized network structure.
 | FaceBoxes    | Lite     | 640  |    8    | 32w     | 0.898    | 0.872      | 0.752    |
 
 **NOTES:**  
-- Get mAP in `Easy/Medium/Hard Set` by multi-scale evaluation in `tools/face_eval.py`
+- Get mAP in `Easy/Medium/Hard Set` by multi-scale evaluation in `tools/face_eval.py`.
+For details can refer to [Evaluation](#Evaluate-on-the-WIDER-FACE).
 - BlazeFace-Lite Training and Testing ues [blazeface.yml](../../configs/face_detection/blazeface.yml)
 configs file and set `lite_edition: true`.
 
-##### mAP in FDDB
+#### mAP in FDDB
 
 | Architecture | Type     | Size | DistROC | ContROC |
 |:------------:|:--------:|:----:|:-------:|:-------:|
@@ -102,38 +108,41 @@ configs file and set `lite_edition: true`.
 | FaceBoxes    | Original | 640  | 0.985   | 0.731   |
 | FaceBoxes    | Lite     | 640  | 0.987   | 0.741   |
 
+**NOTES:**  
+- Get mAP by multi-scale evaluation on the FDDB dataset.
+For details can refer to [Evaluation](#Evaluate-on-the-FDDB).
 
-##### Infer Time comparison  
+#### Infer Time and Model Size comparison  
 
-| Architecture | Type     | ARM (fps)      | P4 (fps)       | CPU        |
-|:------------:|:--------:|:--------------:|:--------------:|:----------:|
-| BlazeFace    | Original | -              | -              | -          |
-| BlazeFace    | Lite     | -              | -              | -          |
-| BlazeFace    | NAS      | -              | -              | -          |
-| FaceBoxes    | Original | -              | -              | -          |
-| FaceBoxes    | Lite     | -              | -              | -          |
+| Architecture | Type     | Size | P4 (ms)   | CPU (ms) | ARM (ms)   | File size (MB) | Flops     |
+|:------------:|:--------:|:----:|:---------:|:--------:|:----------:|:--------------:|:---------:|
+| BlazeFace    | Original | 128  | -         | -        | -          | -              | -         |
+| BlazeFace    | Lite     | 128  | -         | -        | -          | -              | -         |
+| BlazeFace    | NAS      | 128  | -         | -        | -          | -              | -         |
+| FaceBoxes    | Original | 128  | -         | -        | -          | -              | -         |
+| FaceBoxes    | Lite     | 128  | -         | -        | -          | -              | -         |
+| BlazeFace    | Original | 320  | -         | -        | -          | -              | -         |
+| BlazeFace    | Lite     | 320  | -         | -        | -          | -              | -         |
+| BlazeFace    | NAS      | 320  | -         | -        | -          | -              | -         |
+| FaceBoxes    | Original | 320  | -         | -        | -          | -              | -         |
+| FaceBoxes    | Lite     | 320  | -         | -        | -          | -              | -         |
+| BlazeFace    | Original | 640  | -         | -        | -          | -              | -         |
+| BlazeFace    | Lite     | 640  | -         | -        | -          | -              | -         |
+| BlazeFace    | NAS      | 640  | -         | -        | -          | -              | -         |
+| FaceBoxes    | Original | 640  | -         | -        | -          | -              | -         |
+| FaceBoxes    | Lite     | 640  | -         | -        | -          | -              | -         |
+
 
 **NOTES:**  
-- CPU: i5-7360U @ 2.30GHz, input size: 512x512
+- CPU: i5-7360U @ 2.30GHz. Single core and single thread.
 
-##### Model size comparison
 
-| Architecture | Type     | File size (MB) | Flops     |
-|:------------:|:--------:|:--------------:|:---------:|
-| BlazeFace    | Original | -              | -         |
-| BlazeFace    | Lite     | -              | -         |
-| BlazeFace    | NAS      | -              | -         |
-| FaceBoxes    | Original | -              | -         |
-| FaceBoxes    | Lite     | -              | -         |
-
-**NOTES:**  
-- todo
 
 ## Get Started
 `Training` and `Inference` please refer to [GETTING_STARTED.md](../../docs/GETTING_STARTED.md)
 - **NOTES:**  Currently we do not support evaluation in training.
 
-#### Evaluation
+### Evaluation
 ```
 export CUDA_VISIBLE_DEVICES=0
 export PYTHONPATH=$PYTHONPATH:.
@@ -144,16 +153,71 @@ python tools/face_eval.py -c configs/face_detection/blazeface.yml
 - `-f` or `--output_eval`: Evaluation file directory, default is `output/pred`.
 - `-e` or `--eval_mode`: Evaluation mode, include `widerface` and `fddb`, default is `widerface`.
 
+After the evaluation is completed, the test result in txt format will be generated in `output/pred`,
+and then mAP will be calculated according to different data sets:
+
+#### Evaluate on the WIDER FACE
+- Download the official evaluation script to evaluate the AP metrics:
+```
+wget http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/support/eval_script/eval_tools.zip
+unzip eval_tools.zip && rm -f eval_tools.zip
+```
+- Modify the result path and the name of the curve to be drawn in `eval_tools/wider_eval.m`:
+```
+# Modify the folder name where the result is stored.
+pred_dir = './pred';  
+# Modify the name of the curve to be drawn
+legend_name = 'Fluid-BlazeFace';
+```
+- `wider_eval.m` is the main execution program of the evaluation module. The run command is as follows:
+```
+matlab -nodesktop -nosplash -nojvm -r "run wider_eval.m;quit;"
+```
+
+#### Evaluate on the FDDB
+- Download the official dataset and evaluation script to evaluate the ROC metrics:
+```
+#external link to the Faces in the Wild data set
+wget http://tamaraberg.com/faceDataset/originalPics.tar.gz
+#The annotations are split into ten folds. See README for details.
+wget http://vis-www.cs.umass.edu/fddb/FDDB-folds.tgz
+#information on directory structure and file formats
+wget http://vis-www.cs.umass.edu/fddb/README.txt
+```
+- Install OpenCV: Requires [OpenCV library](http://sourceforge.net/projects/opencvlibrary/)  
+If the utility 'pkg-config' is not available for your operating system,
+edit the Makefile to manually specify the OpenCV flags as following:
+```
+INCS = -I/usr/local/include/opencv
+LIBS = -L/usr/local/lib -lcxcore -lcv -lhighgui -lcvaux -lml
+```
+
+- Compile FDDB evaluation code: execute `make` in evaluation folder.
+
+- Generate full image path list and groundtruth in FDDB-folds. The run command is as follows:
+```
+cat `ls|grep -v"ellipse"` > filePath.txt` and `cat *ellipse* > fddb_annotFile.txt`
+```
+- Evaluation
+Finally evaluation command is:
+```
+./evaluate -a ./FDDB/FDDB-folds/fddb_annotFile.txt \
+           -d DETECTION_RESULT.txt -f 0 \
+           -i ./FDDB -l ./FDDB/FDDB-folds/filePath.txt \
+           -r ./OUTPUT_DIR -z .jpg
+```
+**NOTES:** The interpretation of the argument can be performed by `./evaluate --help`.
+
 ## Algorithm Description
 
-#### Blazeface
+### BlazeFace
 **Introduction:**  
 [BlazeFace](https://arxiv.org/abs/1907.05047) is Google Research published face detection model.
 It's lightweight but good performance, and tailored for mobile GPU inference. It runs at a speed
 of 200-1000+ FPS on flagship devices.
 
 **Particularity:**  
-- Anchor scheme stops at 8×8, 6 anchors per pixel at that resolution.
+- Anchor scheme stops at 8×8(input 128x128), 6 anchors per pixel at that resolution.
 - 5 single, and 6 double BlazeBlocks: 5×5 depthwise convs, same accuracy with fewer layers.
 - Replace the non-maximum suppression algorithm with a blending strategy that estimates the
 regression parameters of a bounding box as a weighted mean between the overlapping predictions.
@@ -164,8 +228,24 @@ regression parameters of a bounding box as a weighted mean between the overlappi
 - NAS: use `Neural Architecture Search` algorithm to optimized network structure,
 less network layer and conv channel number than `Lite`.
 
-#### FaceBoxes
+### FaceBoxes
+**Introduction:**
+[FaceBoxes](https://arxiv.org/abs/1708.05234) which named A CPU Real-time Face Detector
+with High Accuracy is face detector proposed by Shifeng Zhang, with high performance on
+both speed and accuracy. This paper is published by IJCB(2017).
 
+**Particularity:**
+- Anchor scheme stops at 20x20, 10x10, 5x5, which network input size is 640x640,
+including 3, 1, 1 anchors per pixel at each resolution. The corresponding densities
+are 1, 2, 4(20x20), 4(10x10) and 4(5x5).
+- 2 convs with CReLU, 2 poolings, 3 inceptions and 2 convs with ReLU.
+- Use density prior box to improve detection accuracy.
+
+**Edition information:**
+- Original: Reference original paper reproduction.
+- Lite: 2 convs with CReLU, 1 pooling, 2 convs with ReLU, 3 inceptions and 2 convs with ReLU.
+Anchor scheme stops at 80x80 and 40x40, including 3, 1 anchors per pixel at each resolution.
+The corresponding densities are 1, 2, 4(80x80) and 4(40x40), using less conv channel number than lite.
 
 
 ## Contributing
