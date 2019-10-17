@@ -16,3 +16,12 @@ PaddleRec
 - [Word2Vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec)
 - [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gnn)
 - [DeepInterestNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/din)
+
+
+|                        模型                        |                           应用场景                           |                             简介                             |
+| :------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| [GRU4Rec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gru4rec) | session-based推荐 | 首次将RNN（GRU）运用于session-based推荐，核心思想是在一个session中，用户点击一系列item的行为看做一个序列，用来训练RNN模型 |
+|               **词向量（word2vec）**               |                         [word2vec]()                         | 提供单机多卡，多机等分布式训练中文词向量能力，支持主流>词向量模型（skip-gram，cbow等），可以快速使用自定义数据训练词向量模型。 |
+|                    **语言模型**                    | [Language_model](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model) | 基于循环神经网络（RNN）的经典神经语言模型（neural language model）。 |
+|                 **情感分类**:fire:                 | [Senta](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/sentiment_classification)，[EmotionDetection](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/emotion_detection) | Senta（Sentiment Classification，简称Senta）和EmotionDetection两个项目分别提供了面向*通用场 >景*和*人机对话场景专用*的情感倾向性分析模型。 |
+|              **文本相似度计算**:fire:              | [SimNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/similarity_net) | SimNet，又称为Similarity Net>，为您提供高效可靠的文本相似度计算工具和预训练模型。 |
