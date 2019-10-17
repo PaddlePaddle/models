@@ -17,9 +17,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import six
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 import argparse
 import collections
@@ -129,7 +131,7 @@ def create_model(bert_config, is_training=False):
                       dtype=input_fields['dtypes'][i],
                       lod_level=input_fields['lod_levels'][i]) for i in range(len(input_fields['names']))]
 
-    pyreader = fluid.io.PyReader(feed_list=inputs, capacity=50, iterable=False)
+    data_loader = fluid.io.DataLoader.from_generator(feed_list=inputs, capacity=50, iterable=False)
 
     if is_training:
         (src_ids, pos_ids, sent_ids, input_mask, start_positions, end_positions) = inputs
@@ -174,23 +176,23 @@ def create_model(bert_config, is_training=False):
         start_loss = compute_loss(start_logits, start_positions)
         end_loss = compute_loss(end_logits, end_positions)
         total_loss = (start_loss + end_loss) / 2.0
-        return pyreader, total_loss, num_seqs
+        return data_loader, total_loss, num_seqs
     else:
-        return pyreader, unique_id, start_logits, end_logits, num_seqs
+        return data_loader, unique_id, start_logits, end_logits, num_seqs
 
 
 RawResult = collections.namedtuple("RawResult",
                                    ["unique_id", "start_logits", "end_logits"])
 
 
-def predict(test_exe, test_program, test_pyreader, fetch_list, processor):
+def predict(test_exe, test_program, test_data_loader, fetch_list, processor):
     if not os.path.exists(args.checkpoints):
         os.makedirs(args.checkpoints)
     output_prediction_file = os.path.join(args.checkpoints, "predictions.json")
     output_nbest_file = os.path.join(args.checkpoints, "nbest_predictions.json")
     output_null_log_odds_file = os.path.join(args.checkpoints, "null_odds.json")
 
-    test_pyreader.start()
+    test_data_loader.start()
     all_results = []
     time_begin = time.time()
     while True:
@@ -209,7 +211,7 @@ def predict(test_exe, test_program, test_pyreader, fetch_list, processor):
                         start_logits=start_logits,
                         end_logits=end_logits))
         except fluid.core.EOFException:
-            test_pyreader.reset()
+            test_data_loader.reset()
             break
     time_end = time.time()
 
@@ -277,7 +279,7 @@ def train(args):
         train_program = fluid.Program()
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
-                train_pyreader, loss, num_seqs = create_model(
+                train_data_loader, loss, num_seqs = create_model(
                     bert_config=bert_config,
                     is_training=True)
 
@@ -302,7 +304,7 @@ def train(args):
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
-                test_pyreader, unique_ids, start_logits, end_logits, num_seqs = create_model(
+                test_data_loader, unique_ids, start_logits, end_logits, num_seqs = create_model(
                     bert_config=bert_config,
                     is_training=False)
 
@@ -346,9 +348,9 @@ def train(args):
         train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
                  loss_name=loss.name, exec_strategy=exec_strategy)
 
-        train_pyreader.decorate_batch_generator(train_data_generator, place)
+        train_data_loader.set_batch_generator(train_data_generator, place)
 
-        train_pyreader.start()
+        train_data_loader.start()
         steps = 0
         total_cost, total_num_seqs = [], []
         time_begin = time.time()
@@ -374,7 +376,7 @@ def train(args):
                     total_num_seqs.extend(np_num_seqs)
 
                     if args.verbose:
-                        verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size(
+                        verbose = "train data_loader queue size: %d, " % train_data_loader.queue.size(
                         )
                         verbose += "learning rate: %f " % np_lr[0]
                         if args.use_fp16:
@@ -401,11 +403,11 @@ def train(args):
                 save_path = os.path.join(args.checkpoints,
                                          "step_" + str(steps) + "_final")
                 fluid.io.save_persistables(exe, save_path, train_program)
-                train_pyreader.reset()
+                train_data_loader.reset()
                 break
 
     if args.do_predict:
-        test_pyreader.decorate_batch_generator(
+        test_data_loader.set_batch_generator(
             processor.data_generator(
                 data_path=args.predict_file,
                 batch_size=args.batch_size,
@@ -414,7 +416,7 @@ def train(args):
                 dev_count=1,
                 epoch=1), place)
 
-        predict(exe, test_prog, test_pyreader, [
+        predict(exe, test_prog, test_data_loader, [
             unique_ids.name, start_logits.name, end_logits.name, num_seqs.name
         ], processor)
 

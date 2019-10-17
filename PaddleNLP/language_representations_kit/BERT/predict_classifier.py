@@ -17,6 +17,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import six
+import sys
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+
 import os
 import time
 import argparse
@@ -82,7 +88,7 @@ def main(args):
     predict_startup = fluid.Program()
     with fluid.program_guard(predict_prog, predict_startup):
         with fluid.unique_name.guard():
-            predict_pyreader, probs, feed_target_names = create_model(
+            predict_data_loader, probs, feed_target_names = create_model(
                 args,
                 bert_config=bert_config,
                 num_labels=num_labels,
@@ -112,11 +118,11 @@ def main(args):
     predict_exe = fluid.ParallelExecutor(
         use_cuda=args.use_cuda, main_program=predict_prog)
 
-    predict_pyreader.decorate_batch_generator(
+    predict_data_loader.set_batch_generator(
         processor.data_generator(
             batch_size=args.batch_size, phase='test', epoch=1, shuffle=False))
 
-    predict_pyreader.start()
+    predict_data_loader.start()
     all_results = []
     time_begin = time.time()
     while True:
@@ -124,7 +130,7 @@ def main(args):
             results = predict_exe.run(fetch_list=[probs.name])
             all_results.extend(results[0])
         except fluid.core.EOFException:
-            predict_pyreader.reset()
+            predict_data_loader.reset()
             break
     time_end = time.time()
 
