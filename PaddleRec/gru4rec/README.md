@@ -281,7 +281,7 @@ model:model_r@20/epoch_10 recall@20:0.681 time_cost(s):12.2
 
 可参考cluster_train.py 配置其他多机环境
 
-运行命令本地模拟多机场景
+运行命令本地模拟多机场景, 暂不支持windows
 ```
 sh cluster_train.sh
 ```

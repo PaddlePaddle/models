@@ -10,7 +10,8 @@ import paddle.fluid as fluid
 import paddle
 import net
 import utils
-
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 def parse_args():
     parser = argparse.ArgumentParser("PaddlePaddle Word2vec infer example")

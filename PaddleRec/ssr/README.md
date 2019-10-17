@@ -43,7 +43,7 @@ cpu 单机多卡训练
 CPU_NUM=10 python train.py --train_dir train_data --use_cuda 0 --parallel 1 --batch_size 50 --model_dir model_output --num_devices 10
 ```
 
-本地模拟多机训练
+本地模拟多机训练, 不支持windows.
 ``` bash
 sh cluster_train.sh
 ```

@@ -2,6 +2,9 @@ import sys
 import six
 import collections
 import os
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 def word_count(input_file, word_freq=None):
     """
@@ -25,11 +28,11 @@ def build_dict(min_word_freq=0, train_dir="", test_dir=""):
     word_freq = collections.defaultdict(int)
     files = os.listdir(train_dir)
     for fi in files:
-        with open(train_dir + '/' + fi, "r") as f:
+        with open(os.path.join(train_dir, fi), "r", encoding='utf-8') as f:
             word_freq = word_count(f, word_freq)
     files = os.listdir(test_dir)
     for fi in files:
-        with open(test_dir + '/' + fi, "r") as f:
+        with open(os.path.join(test_dir, fi), "r", encoding='utf-8') as f:
             word_freq = word_count(f, word_freq)
 
     word_freq = [x for x in six.iteritems(word_freq) if x[1] > min_word_freq]
@@ -44,8 +47,8 @@ def write_paddle(word_idx, train_dir, test_dir, output_train_dir, output_test_di
     if not os.path.exists(output_train_dir):
         os.mkdir(output_train_dir)
     for fi in files:
-        with open(train_dir + '/' + fi, "r") as f:
-            with open(output_train_dir + '/' + fi, "w") as wf:
+        with open(os.path.join(train_dir, fi), "r", encoding='utf-8') as f:
+            with open(os.path.join(output_train_dir, fi), "w", encoding='utf-8') as wf:
                 for l in f:
                     l = l.strip().split()
                     l = [word_idx.get(w) for w in l]
@@ -57,8 +60,8 @@ def write_paddle(word_idx, train_dir, test_dir, output_train_dir, output_test_di
     if not os.path.exists(output_test_dir):
         os.mkdir(output_test_dir)
     for fi in files:
-        with open(test_dir + '/' + fi, "r") as f:
-            with open(output_test_dir + '/' + fi, "w") as wf:
+        with open(os.path.join(test_dir, fi), "r", encoding='utf-8') as f:
+            with open(os.path.join(output_test_dir, fi), "w", encoding='utf-8') as wf:
                 for l in f:
                     l = l.strip().split()
                     l = [word_idx.get(w) for w in l]
@@ -68,7 +71,7 @@ def write_paddle(word_idx, train_dir, test_dir, output_train_dir, output_test_di
 
 def text2paddle(train_dir, test_dir, output_train_dir, output_test_dir, output_vocab):
     vocab = build_dict(0, train_dir, test_dir)
-    with open(output_vocab, "w") as wf:
+    with open(output_vocab, "w", encoding='utf-8') as wf:
         wf.write(str(len(vocab)) + "\n")
         #wf.write(str(vocab))
     write_paddle(vocab, train_dir, test_dir, output_train_dir, output_test_dir)

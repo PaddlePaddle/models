@@ -7,7 +7,7 @@ import paddle
 
 
 def get_vocab_size(vocab_path):
-    with open(vocab_path, "r") as rf:
+    with open(vocab_path, "r", encoding='utf-8') as rf:
         line = rf.readline()
         return int(line.strip())
 

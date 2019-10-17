@@ -8,6 +8,8 @@ import numpy as np
 import paddle.fluid as fluid
 import paddle
 import csv
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 def to_lodtensor(data, place):
     """ convert to LODtensor """
@@ -126,7 +128,7 @@ def train_reader_creator(file_dir, tag_size, neg_size, n, data_type):
     def reader():
         files = os.listdir(file_dir)
         for fi in files:
-            with open(file_dir + '/' + fi, "r") as f:
+            with open(os.path.join(file_dir, fi), "r", encoding='utf-8') as f:
                 for l in f:
                     l = l.strip().split(",")
                     pos_index = int(l[0])
@@ -156,7 +158,7 @@ def test_reader_creator(file_dir, tag_size, n, data_type):
     def reader():
         files = os.listdir(file_dir)
         for fi in files:
-            with open(file_dir + '/' + fi, "r") as f:
+            with open(os.path.join(file_dir, fi), "r", encoding='utf-8') as f:
                 for l in f:
                     l = l.strip().split(",")
                     pos_index = int(l[0])

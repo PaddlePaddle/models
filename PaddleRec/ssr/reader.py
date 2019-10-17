@@ -33,7 +33,7 @@ class YoochooseVocab(Vocab):
     def load(self, filelist):
         idx = 0
         for f in filelist:
-            with open(f, "r") as fin:
+            with open(f, "r", encoding='utf-8') as fin:
                 for line in fin:
                     group = line.strip().split()
                     for item in group:
@@ -64,7 +64,7 @@ class YoochooseDataset(Dataset):
     def _reader_creator(self, filelist, is_train):
         def reader():
             for f in filelist:
-                with open(f, 'r') as fin:
+                with open(f, 'r', encoding='utf-8') as fin:
                     line_idx = 0
                     for line in fin:
                         ids = line.strip().split()
