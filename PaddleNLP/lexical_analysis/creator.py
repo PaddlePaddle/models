@@ -34,8 +34,8 @@ def create_model(args,  vocab_size, num_labels, mode = 'train'):
     """create lac model"""
 
     # model's input data
-    words = fluid.layers.data(name='words', shape=[-1, 1], dtype='int64',lod_level=1)
-    targets = fluid.layers.data(name='targets', shape=[-1, 1], dtype='int64', lod_level= 1)
+    words = fluid.data(name='words', shape=[-1, 1], dtype='int64',lod_level=1)
+    targets = fluid.data(name='targets', shape=[-1, 1], dtype='int64', lod_level= 1)
 
     # for inference process
     if mode=='infer':
@@ -87,7 +87,7 @@ def create_pyreader(args, file_name, feed_list, place, model='lac', reader=None,
         if mode == 'train':
             pyreader.decorate_sample_list_generator(
                 fluid.io.batch(
-                    paddle.reader.shuffle(
+                    fluid.io.shuffle(
                         reader.file_reader(file_name),
                         buf_size=args.traindata_shuffle_buffer
                     ),
@@ -141,12 +141,12 @@ def create_ernie_model(args, ernie_config):
     Create Model for LAC based on ERNIE encoder
     """
     # ERNIE's input data
-    src_ids = fluid.layers.data(name='src_ids', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
-    sent_ids = fluid.layers.data(name='sent_ids', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
-    pos_ids = fluid.layers.data(name='pos_ids', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
-    input_mask = fluid.layers.data(name='input_mask', shape=[args.max_seq_len, 1], dtype='float32',lod_level=0)
-    padded_labels =fluid.layers.data(name='padded_labels', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
-    seq_lens = fluid.layers.data(name='seq_lens', shape=[-1], dtype='int64',lod_level=0)
+    src_ids = fluid.data(name='src_ids', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
+    sent_ids = fluid.data(name='sent_ids', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
+    pos_ids = fluid.data(name='pos_ids', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
+    input_mask = fluid.data(name='input_mask', shape=[args.max_seq_len, 1], dtype='float32',lod_level=0)
+    padded_labels =fluid.data(name='padded_labels', shape=[args.max_seq_len, 1], dtype='int64',lod_level=0)
+    seq_lens = fluid.data(name='seq_lens', shape=[-1], dtype='int64',lod_level=0)
     squeeze_labels = fluid.layers.squeeze(padded_labels, axes=[-1])
 
     ernie_inputs = {
