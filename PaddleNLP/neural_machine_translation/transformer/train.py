@@ -22,13 +22,13 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 
-#include palm for easier nlp coding
-from palm.toolkit.input_field import InputField
-from palm.toolkit.configure import PDConfig
+import utils.dist_utils as dist_utils
+from utils.input_field import InputField
+from utils.configure import PDConfig
+from utils.check import check_gpu, check_version
 
 # include task-specific libs
 import desc
-import dist_utils
 import reader
 from transformer import create_net, position_encoding_init
 
@@ -188,8 +188,6 @@ def do_train(args):
             sum_cost, avg_cost, token_num = create_net(
                 is_training=True, model_input=input_field, args=args)
 
-            sum_cost.persistable = avg_cost.persistable = token_num.persistable = True
-
             # define the optimizer
 
             with fluid.default_main_program()._lr_schedule_guard():
@@ -206,7 +204,7 @@ def do_train(args):
     # prepare training
 
     ## decorate the pyreader with batch_generator
-    input_field.reader.decorate_batch_generator(batch_generator)
+    input_field.loader.set_batch_generator(batch_generator)
 
     ## define the executor and program for training
 
@@ -254,7 +252,7 @@ def do_train(args):
     step_idx = 0
     for pass_id in range(args.epoch):
         pass_start_time = time.time()
-        input_field.reader.start()
+        input_field.loader.start()
 
         batch_id = 0
         while True:
@@ -303,7 +301,7 @@ def do_train(args):
                 step_idx += 1
 
             except fluid.core.EOFException:
-                input_field.reader.reset()
+                input_field.loader.reset()
                 break
 
         time_consumed = time.time() - pass_start_time
@@ -323,5 +321,7 @@ if __name__ == "__main__":
     args = PDConfig(yaml_file="./transformer.yaml")
     args.build()
     args.Print()
+    check_gpu(args.use_cuda)
+    check_version()
 
     do_train(args)
