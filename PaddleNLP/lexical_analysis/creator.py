@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# -*- coding: UTF-8 -*-
+
 """
-The function lex_net(args) define the lexical analysis network structure
+Define the function to create lexical analysis model and model's data reader
 """
 import sys
 import os
@@ -85,7 +86,7 @@ def create_pyreader(args, file_name, feed_list, place, model='lac', reader=None,
         # create lac pyreader
         if mode == 'train':
             pyreader.decorate_sample_list_generator(
-                paddle.batch(
+                fluid.io.batch(
                     paddle.reader.shuffle(
                         reader.file_reader(file_name),
                         buf_size=args.traindata_shuffle_buffer
@@ -96,7 +97,7 @@ def create_pyreader(args, file_name, feed_list, place, model='lac', reader=None,
             )
         else:
             pyreader.decorate_sample_list_generator(
-                paddle.batch(
+                fluid.io.batch(
                     reader.file_reader(file_name, mode=mode),
                     batch_size=args.batch_size
                 ),

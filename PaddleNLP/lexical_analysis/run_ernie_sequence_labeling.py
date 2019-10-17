@@ -37,6 +37,7 @@ import utils
 sys.path.append("..")
 from models.representation.ernie import ErnieConfig
 from models.model_check import check_cuda
+from model_check import check_version
 
 def evaluate(exe, test_program, test_pyreader, test_ret):
     """
@@ -271,6 +272,7 @@ if __name__ == "__main__":
     utils.load_yaml(parser, './conf/ernie_args.yaml')
     args = parser.parse_args()
     check_cuda(args.use_cuda)
+    check_version()
     utils.print_arguments(args)
 
     if args.mode == 'train':
