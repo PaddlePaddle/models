@@ -181,6 +181,8 @@ class _MultiWorkerLoaderIter(object):
             self._worker_context = worker_context
 
     def _gc(self):
+        if not hasattr(self, '_worker_pool'):
+            return
         self._worker_pool.close()
         self._worker_pool.join()
         gc.collect()  # gc anyway just in case
