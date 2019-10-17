@@ -114,7 +114,7 @@ SPADE使用的[cityscapes](https://www.cityscapes-dataset.com)数据集可以自
 
 - 每个GAN都给出了一份运行示例，放在scripts文件夹内，用户可以直接运行训练脚本快速开始训练。
 - 用户可以通过设置`--model_net`参数来选择想要训练的模型，通过设置`--dataset`参数来选择训练所需要的数据集。
-- SPADE模型的训练需要在主目录下新建一个VGG19_pretrained目录，从[该链接](https://paddle-imagenet-models-name.bj.bcebos.com/VGG19_pretrained.tar)下载在ImageNet上预训练好的VGG19模型，解压之后把VGG19模型的参数名改成`vgg19\_`开头的参数名。
+- SPADE模型的训练需要在主目录下新建一个VGG19_pretrained目录，从[该链接](https://paddle-imagenet-models-name.bj.bcebos.com/VGG19_pretrained.tar)下载在ImageNet上预训练好的VGG19模型，解压之后把VGG19模型的参数名改成`vgg19_`开头的参数名。
 
 ### 模型测试
 模型测试是利用训练完成的生成模型进行图像生成。infer.py是主要的执行程序，调用示例如下：
