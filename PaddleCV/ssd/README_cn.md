@@ -18,6 +18,7 @@ SSD 目标检测模型
 
 SSD 可以方便地插入到任何一种标准卷积网络中，比如 VGG、ResNet 或者 MobileNet，这些网络被称作检测器的基网络。在这个示例中我们使用 [MobileNet](https://arxiv.org/abs/1704.04861)。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122276)
 
 ### 数据准备
 

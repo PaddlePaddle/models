@@ -27,6 +27,8 @@ English | [中文](README.md)
 
 Image classification, which is an important field of computer vision, is to classify images into pre-defined labels. Recently, many researchers have developed different kinds of neural networks and highly improved the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
 
+We also recommend users to take a look at the  [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122278)
+
 ## Quick Start
 
 ### Installation
@@ -81,6 +83,25 @@ or running run.sh scripts
 ```bash
 bash run.sh train model_name
 ```
+
+**multiprocess training:**
+
+If you have multiple gpus, this method is strongly recommended, because it can improve training speed dramatically.
+You can start the multiprocess training step by:
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
+       --model=ResNet50 \
+       --batch_size=256 \
+       --total_images=1281167 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --lr_strategy=piecewise_decay \
+       --reader_thread=4 \
+       --lr=0.1
+```
+
+or reference scripts/train/ResNet50_dist.sh
 
 **parameter introduction:**
 
@@ -179,7 +200,7 @@ Note: if you train model with flag use_ema, and you want to evaluate your Expone
 python ema_clean.py \
        --ema_model_dir=your_ema_model_dir \
        --cleaned_model_dir=your_cleaned_model_dir
-       
+
 python eval.py \
        --model=model_name \
        --pretrained_model=your_cleaned_model_dir

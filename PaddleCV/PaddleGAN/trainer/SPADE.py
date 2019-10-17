@@ -325,7 +325,7 @@ class SPADE(object):
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
+        build_strategy.enable_inplace = True
         build_strategy.sync_batch_norm = False
 
         gen_trainer_program = fluid.CompiledProgram(

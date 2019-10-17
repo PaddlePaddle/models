@@ -204,7 +204,7 @@ def train(args):
                     break
 
             if args.save_checkpoints:
-                fluid.dygraph.save_persistables(
+                fluid.save_dygraph(
                     cycle_gan.state_dict(),
                     args.output + "/checkpoints/{}".format(epoch))
 
