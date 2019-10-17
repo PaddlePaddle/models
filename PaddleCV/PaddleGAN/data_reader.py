@@ -47,7 +47,7 @@ def RandomHorizonFlip(img):
     return img
 
 
-def get_preprocess_param(load_size, crop_size):
+def get_preprocess_param2(load_size, crop_size):
     x = np.random.randint(0, np.maximum(0, load_size - crop_size))
     y = np.random.randint(0, np.maximum(0, load_size - crop_size))
     flip = np.random.rand() > 0.5
@@ -59,7 +59,7 @@ def get_preprocess_param(load_size, crop_size):
     }
 
 
-def get_preprocess_param(load_width, load_height, crop_width, crop_height):
+def get_preprocess_param4(load_width, load_height, crop_width, crop_height):
     if crop_width == load_width:
         x = 0
         y = 0
@@ -178,8 +178,8 @@ class pair_reader_creator(reader_creator):
                 self.id2name[i] = os.path.basename(files[0])
 
                 if self.mode == "TRAIN":
-                    param = get_preprocess_param(args.image_size,
-                                                 args.crop_size)
+                    param = get_preprocess_param2(args.image_size,
+                                                  args.crop_size)
                     img1 = img1.resize((args.image_size, args.image_size),
                                        Image.BICUBIC)
                     img2 = img2.resize((args.image_size, args.image_size),
@@ -266,7 +266,7 @@ class triplex_reader_creator(reader_creator):
                     img3 = Image.open(os.path.join(self.image_dir, files[2]))
 
                 if self.mode == "TRAIN":
-                    param = get_preprocess_param(
+                    param = get_preprocess_param4(
                         args.load_width, args.load_height, args.crop_width,
                         args.crop_height)
                     img1 = img1.resize((args.load_width, args.load_height),

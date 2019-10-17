@@ -18,6 +18,7 @@ The Single Shot MultiBox Detector (SSD)
 
 SSD is readily pluggable into a wide variant standard convolutional network, such as VGG, ResNet, or MobileNet, which is also called base network or backbone. In this tutorial we used [MobileNet](https://arxiv.org/abs/1704.04861).
 
+We also recommend users to take a look at the  [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122276)
 
 ### Data Preparation
 

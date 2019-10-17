@@ -26,6 +26,8 @@
 ## 简介
 图像分类是计算机视觉的重要领域，它的目标是将图像分类到预定义的标签。近期，许多研究者提出很多不同种类的神经网络，并且极大的提升了分类算法的性能。本页将介绍如何使用PaddlePaddle进行图像分类。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122278)
+
 ## 快速开始
 
 ### 安装说明
@@ -89,6 +91,23 @@ python train.py \
 ```bash
 bash run.sh train 模型名
 ```
+
+**多进程模型训练：**
+
+如果你有多张GPU卡的话，我们强烈建议你使用多进程模式来训练模型，这会极大的提升训练速度。启动方式如下：
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
+       --model=ResNet50 \
+       --batch_size=256 \
+       --total_images=1281167 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --lr_strategy=piecewise_decay \
+       --reader_thread=4 \
+       --lr=0.1
+```
+或者参考 scripts/train/ResNet50_dist.sh
 
 **参数说明：**
 
@@ -185,7 +204,7 @@ python eval.py \
 python ema_clean.py \
        --ema_model_dir=your_ema_model_dir \
        --cleaned_model_dir=your_cleaned_model_dir
-       
+
 python eval.py \
        --model=model_name \
        --pretrained_model=your_cleaned_model_dir

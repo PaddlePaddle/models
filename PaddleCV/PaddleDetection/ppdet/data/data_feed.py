@@ -27,18 +27,18 @@ from ppdet.data.reader import Reader
 from ppdet.data.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
-    Permute)
-
+    Permute, MultiscaleTestResize)
 from ppdet.data.transform.arrange_sample import (
     ArrangeRCNN, ArrangeEvalRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD,
     ArrangeTestSSD, ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
 
 __all__ = [
-    'PadBatch', 'MultiScale', 'RandomShape', 'DataSet', 'CocoDataSet',
-    'DataFeed', 'TrainFeed', 'EvalFeed', 'FasterRCNNTrainFeed',
-    'MaskRCNNTrainFeed', 'FasterRCNNTestFeed', 'MaskRCNNTestFeed',
-    'SSDTrainFeed', 'SSDEvalFeed', 'SSDTestFeed', 'YoloTrainFeed',
-    'YoloEvalFeed', 'YoloTestFeed', 'create_reader'
+    'PadBatch', 'MultiScale', 'RandomShape', 'PadMSTest', 'DataSet',
+    'CocoDataSet', 'DataFeed', 'TrainFeed', 'EvalFeed', 'FasterRCNNTrainFeed',
+    'MaskRCNNTrainFeed', 'FasterRCNNEvalFeed', 'MaskRCNNEvalFeed',
+    'FasterRCNNTestFeed', 'MaskRCNNTestFeed', 'SSDTrainFeed', 'SSDEvalFeed',
+    'SSDTestFeed', 'YoloTrainFeed', 'YoloEvalFeed', 'YoloTestFeed',
+    'create_reader'
 ]
 
 
@@ -69,6 +69,10 @@ def _prepare_data_config(feed, args_path):
         'MIXUP_EPOCH': mixup_epoch,
         'TYPE': type(feed.dataset).__source__
     }
+
+    if feed.mode == 'TRAIN':
+        data_config['CLASS_AWARE_SAMPLING'] = getattr(
+            feed, 'class_aware_sampling', False)
 
     if len(getattr(feed.dataset, 'images', [])) > 0:
         data_config['IMAGES'] = feed.dataset.images
@@ -109,6 +113,7 @@ def create_reader(feed, max_iter=0, args_path=None, my_source=None):
     pad = [t for t in batch_transforms if isinstance(t, PadBatch)]
     rand_shape = [t for t in batch_transforms if isinstance(t, RandomShape)]
     multi_scale = [t for t in batch_transforms if isinstance(t, MultiScale)]
+    pad_ms_test = [t for t in batch_transforms if isinstance(t, PadMSTest)]
 
     if any(pad):
         transform_config['IS_PADDING'] = True
@@ -118,6 +123,10 @@ def create_reader(feed, max_iter=0, args_path=None, my_source=None):
         transform_config['RANDOM_SHAPES'] = rand_shape[0].sizes
     if any(multi_scale):
         transform_config['MULTI_SCALES'] = multi_scale[0].scales
+    if any(pad_ms_test):
+        transform_config['ENABLE_MULTISCALE_TEST'] = True
+        transform_config['NUM_SCALE'] = feed.num_scale
+        transform_config['COARSEST_STRIDE'] = pad_ms_test[0].pad_to_stride
 
     if hasattr(inspect, 'getfullargspec'):
         argspec = inspect.getfullargspec
@@ -180,6 +189,20 @@ class RandomShape(object):
     def __init__(self, sizes=[]):
         super(RandomShape, self).__init__()
         self.sizes = sizes
+
+
+@serializable
+class PadMSTest(object):
+    """
+    Padding for multi-scale test
+ 
+    Args:
+        pad_to_stride (int): pad to multiple of strides, e.g., 32
+    """
+
+    def __init__(self, pad_to_stride=0):
+        super(PadMSTest, self).__init__()
+        self.pad_to_stride = pad_to_stride
 
 
 @serializable
@@ -301,7 +324,8 @@ class DataFeed(object):
                  bufsize=10,
                  use_process=False,
                  memsize=None,
-                 use_padded_im_info=False):
+                 use_padded_im_info=False,
+                 class_aware_sampling=False):
         super(DataFeed, self).__init__()
         self.fields = fields
         self.image_shape = image_shape
@@ -318,6 +342,7 @@ class DataFeed(object):
         self.memsize = memsize
         self.dataset = dataset
         self.use_padded_im_info = use_padded_im_info
+        self.class_aware_sampling = class_aware_sampling
         if isinstance(dataset, dict):
             self.dataset = DataSet(**dataset)
 
@@ -447,7 +472,8 @@ class FasterRCNNTrainFeed(DataFeed):
                  bufsize=10,
                  num_workers=2,
                  use_process=False,
-                 memsize=None):
+                 memsize=None,
+                 class_aware_sampling=False):
         # XXX this should be handled by the data loader, since `fields` is
         # given, just collect them
         sample_transforms.append(ArrangeRCNN())
@@ -464,7 +490,8 @@ class FasterRCNNTrainFeed(DataFeed):
             bufsize=bufsize,
             num_workers=num_workers,
             use_process=use_process,
-            memsize=memsize)
+            memsize=memsize,
+            class_aware_sampling=class_aware_sampling)
         # XXX these modes should be unified
         self.mode = 'TRAIN'
 
@@ -494,7 +521,10 @@ class FasterRCNNEvalFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  num_workers=2,
-                 use_padded_im_info=True):
+                 use_padded_im_info=True,
+                 enable_multiscale=False,
+                 num_scale=1,
+                 enable_aug_flip=False):
         sample_transforms.append(ArrangeEvalRCNN())
         super(FasterRCNNEvalFeed, self).__init__(
             dataset,
@@ -509,6 +539,9 @@ class FasterRCNNEvalFeed(DataFeed):
             num_workers=num_workers,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'VAL'
+        self.enable_multiscale = enable_multiscale
+        self.num_scale = num_scale
+        self.enable_aug_flip = enable_aug_flip
 
 
 @register
@@ -632,7 +665,10 @@ class MaskRCNNEvalFeed(DataFeed):
                  drop_last=False,
                  num_workers=2,
                  use_process=False,
-                 use_padded_im_info=True):
+                 use_padded_im_info=True,
+                 enable_multiscale=False,
+                 num_scale=1,
+                 enable_aug_flip=False):
         sample_transforms.append(ArrangeTestRCNN())
         super(MaskRCNNEvalFeed, self).__init__(
             dataset,
@@ -648,6 +684,9 @@ class MaskRCNNEvalFeed(DataFeed):
             use_process=use_process,
             use_padded_im_info=use_padded_im_info)
         self.mode = 'VAL'
+        self.enable_multiscale = enable_multiscale
+        self.num_scale = num_scale
+        self.enable_aug_flip = enable_aug_flip
 
 
 @register
@@ -781,7 +820,7 @@ class SSDEvalFeed(DataFeed):
             bufsize=10,
             use_process=False,
             memsize=None):
-        sample_transforms.append(ArrangeEvalSSD())
+        sample_transforms.append(ArrangeEvalSSD(fields))
         super(SSDEvalFeed, self).__init__(
             dataset,
             fields,
@@ -891,7 +930,8 @@ class YoloTrainFeed(DataFeed):
                  use_process=True,
                  memsize=None,
                  num_max_boxes=50,
-                 mixup_epoch=250):
+                 mixup_epoch=250,
+                 class_aware_sampling=False):
         sample_transforms.append(ArrangeYOLO())
         super(YoloTrainFeed, self).__init__(
             dataset,
@@ -907,7 +947,8 @@ class YoloTrainFeed(DataFeed):
             num_workers=num_workers,
             bufsize=bufsize,
             use_process=use_process,
-            memsize=memsize)
+            memsize=memsize,
+            class_aware_sampling=class_aware_sampling)
         self.num_max_boxes = num_max_boxes
         self.mixup_epoch = mixup_epoch
         self.mode = 'TRAIN'

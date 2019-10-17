@@ -82,6 +82,7 @@ def infer(args):
         name='image_name', shape=[args.n_samples], dtype='int32')
 
     model_name = 'net_G'
+
     if args.model_net == 'CycleGAN':
         py_reader = fluid.io.PyReader(
             feed_list=[input, image_name],

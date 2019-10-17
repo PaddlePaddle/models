@@ -88,9 +88,9 @@ def infer(args):
         print("model: ", args.model, " is already saved")
         exit(0)
 
-    test_batch_size = 1
-    test_reader = paddle.batch(
-        reader.test(settings=args), batch_size=test_batch_size)
+    args.test_batch_size = 1
+    imagenet_reader = reader.ImageNetReader()
+    test_reader = imagenet_reader.test(settings=args)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     TOPK = args.topk
