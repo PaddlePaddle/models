@@ -112,10 +112,9 @@ def build_program(args,
                             use_double_buffer=True)
                 input, label = fluid.layers.read_file(pyreader)
             else:
-                input = fluid.layers.data(
-                    name="image", shape=[3, 244, 244], dtype="uint8")
-                label = fluid.layers.data(
-                    name="label", shape=[1], dtype="int64")
+                input = fluid.data(
+                    name="image", shape=[None, 3, 244, 244], dtype="uint8")
+                label = fluid.data(name="label", shape=[None, 1], dtype="int64")
             cast_img_type = "float16" if args.fp16 else "float32"
             cast = fluid.layers.cast(input, cast_img_type)
             img_mean = fluid.layers.create_global_var(
