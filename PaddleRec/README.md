@@ -11,7 +11,7 @@ PaddleRec
 
 |                        模型                        |                      应用场景                         |                             简介                             |
 | :------------------------------------------------: | :---------------------------------------------------: | :----------------------------------------------------------: |
-| [GRU4Rec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gru4rec) |     Session-based 推荐     | 首次将RNN（GRU）运用于session-based推荐，核心思想是在一个session中，用户点击一系列item的行为看做一个序列，用来训练RNN模型 |
+| [GRU4Rec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gru4rec) |     Session-based 推荐, 图网络推荐     | 首次将RNN（GRU）运用于session-based推荐，核心思想是在一个session中，用户点击一系列item的行为看做一个序列，用来训练RNN模型 |
 | [TagSpace](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/tagspace) |                  标签推荐                     | Tagspace模型学习文本及标签的embedding表示，应用于工业级的标签推荐，具体应用场景有feed新闻标签推荐。|
 | [SequenceSemanticRetrieval](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ssr) |   召回   | 解决了 GRU4Rec 模型无法预测训练数据集中不存在的项目，比如新闻推荐的问题。它由两个部分组成：一个是匹配模型部分，另一个是检索部分  |
 | [Word2Vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec) |   词向量   | 训练得到词的向量表示、广泛应用于NLP、推荐等任务场景。 |
