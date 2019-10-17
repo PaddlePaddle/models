@@ -128,6 +128,8 @@ python ../infer.py \
 
 ## 示例结果
 
+>当前release的结果并非超参调优后的最好结果，仅做示例参考，后续我们会优化当前结果。
+
 ### MobileNetV1-YOLO-V3
 
 | FLOPS |Box AP|
