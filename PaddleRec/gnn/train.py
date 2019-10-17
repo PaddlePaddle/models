@@ -140,7 +140,7 @@ def train():
         except fluid.core.EOFException:
             py_reader.reset()
         logger.info("epoch loss: %.4lf" % (np.mean(epoch_sum)))
-        save_dir = args.model_path + "/epoch_" + str(i)
+        save_dir = os.path.join(args.model_path, "epoch_" + str(i))
         fetch_vars = [loss, acc]
         fluid.io.save_inference_model(save_dir, feed_list, fetch_vars, exe)
         logger.info("model saved in " + save_dir)
