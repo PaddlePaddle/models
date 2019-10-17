@@ -22,13 +22,13 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 
-#include palm for easier nlp coding
-from palm.toolkit.input_field import InputField
-from palm.toolkit.configure import PDConfig
+import utils.dist_utils as dist_utils
+from utils.input_field import InputField
+from utils.configure import PDConfig
+from utils.check import check_gpu, check_version
 
 # include task-specific libs
 import desc
-import dist_utils
 import reader
 from transformer import create_net, position_encoding_init
 
@@ -321,5 +321,7 @@ if __name__ == "__main__":
     args = PDConfig(yaml_file="./transformer.yaml")
     args.build()
     args.Print()
+    check_gpu(args.use_cuda)
+    check_version()
 
     do_train(args)
