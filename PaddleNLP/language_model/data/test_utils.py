@@ -26,7 +26,6 @@ lasttime = time.time()
 FLUSH_INTERVAL = 0.1
 
 LOCAL_PATH = os.path.dirname(os.path.abspath(__file__))
-PDSEG_PATH = os.path.join(LOCAL_PATH, "..", "pdseg")
 
 
 def get_platform():
@@ -157,4 +156,3 @@ def download_file_and_uncompress(url,
             savename = _uncompress_file(savepath, extrapath, delete_file,
                                         print_progress)
             savename = os.path.join(extrapath, savename)
-        shutil.move(savename, extraname)
