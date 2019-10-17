@@ -41,7 +41,8 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
     ]
     (src_ids, pos_ids, sent_ids, input_mask, labels) = inputs
 
-    pyreader = fluid.io.PyReader(feed_list=inputs, capacity=50, iterable=False)
+    data_loader = fluid.io.DataLoader.from_generator(
+        feed_list=inputs, capacity=50, iterable=False)
 
     bert = BertModel(
         src_ids=src_ids,
@@ -71,7 +72,7 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
         feed_targets_name = [
             src_ids.name, pos_ids.name, sent_ids.name, input_mask.name
         ]
-        return pyreader, probs, feed_targets_name
+        return data_loader, probs, feed_targets_name
 
     logits = fluid.layers.reshape(logits, [-1, num_labels], inplace=True)
     ce_loss, probs = fluid.layers.softmax_with_cross_entropy(
@@ -81,4 +82,4 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
     num_seqs = fluid.layers.create_tensor(dtype='int64')
     accuracy = fluid.layers.accuracy(input=probs, label=labels, total=num_seqs)
 
-    return pyreader, loss, probs, accuracy, num_seqs
+    return data_loader, loss, probs, accuracy, num_seqs

@@ -17,9 +17,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import six
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 import os
 import time
@@ -107,8 +109,8 @@ args = parser.parse_args()
 # yapf: enable.
 
 
-def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
-    test_pyreader.start()
+def evaluate(exe, test_program, test_data_loader, fetch_list, eval_phase):
+    test_data_loader.start()
     total_cost, total_acc, total_num_seqs = [], [], []
     time_begin = time.time()
     while True:
@@ -119,7 +121,7 @@ def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
             total_acc.extend(np_acc * np_num_seqs)
             total_num_seqs.extend(np_num_seqs)
         except fluid.core.EOFException:
-            test_pyreader.reset()
+            test_data_loader.reset()
             break
     time_end = time.time()
     print("[%s evaluation] ave loss: %f, ave acc: %f, elapsed time: %f s" %
@@ -203,7 +205,7 @@ def main(args):
 
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
-                train_pyreader, loss, probs, accuracy, num_seqs = create_model(
+                train_data_loader, loss, probs, accuracy, num_seqs = create_model(
                     args,
                     bert_config=bert_config,
                     num_labels=num_labels)
@@ -228,13 +230,13 @@ def main(args):
         dev_prog = fluid.Program()
         with fluid.program_guard(dev_prog, startup_prog):
             with fluid.unique_name.guard():
-                dev_pyreader, loss, probs, accuracy, num_seqs = create_model(
+                dev_data_loader, loss, probs, accuracy, num_seqs = create_model(
                     args,
                     bert_config=bert_config,
                     num_labels=num_labels)
 
         dev_prog = dev_prog.clone(for_test=True)
-        dev_pyreader.decorate_batch_generator(
+        dev_data_loader.set_batch_generator(
                             processor.data_generator(
                                 batch_size=args.batch_size,
                                 phase='dev',
@@ -246,13 +248,13 @@ def main(args):
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
-                test_pyreader, loss, probs, accuracy, num_seqs = create_model(
+                test_data_loader, loss, probs, accuracy, num_seqs = create_model(
                     args,
                     bert_config=bert_config,
                     num_labels=num_labels)
 
         test_prog = test_prog.clone(for_test=True)
-        test_pyreader.decorate_batch_generator(
+        test_data_loader.set_batch_generator(
                             processor.data_generator(
                                 batch_size=args.batch_size,
                                 phase='test',
@@ -305,11 +307,11 @@ def main(args):
         train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
                  loss_name=loss.name, build_strategy=build_strategy)
 
-        train_pyreader.decorate_batch_generator(train_data_generator, place)
+        train_data_loader.set_batch_generator(train_data_generator, place)
 
 
     if args.do_train:
-        train_pyreader.start()
+        train_data_loader.start()
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
         time_begin = time.time()
@@ -339,7 +341,7 @@ def main(args):
                     total_num_seqs.extend(np_num_seqs)
 
                     if args.verbose:
-                        verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size(
+                        verbose = "train data_loader queue size: %d, " % train_data_loader.queue.size(
                         )
                         verbose += "learning rate: %f" % np_lr[0]
                         if args.use_fp16:
@@ -375,18 +377,18 @@ def main(args):
                     throughput = []
                     # evaluate dev set
                     if args.do_val:
-                        evaluate(exe, dev_prog, dev_pyreader,
+                        evaluate(exe, dev_prog, dev_data_loader,
                                  [loss.name, accuracy.name, num_seqs.name],
                                  "dev")
                     # evaluate test set
                     if args.do_test:
-                        evaluate(exe, test_prog, test_pyreader,
+                        evaluate(exe, test_prog, test_data_loader,
                                  [loss.name, accuracy.name, num_seqs.name],
                                  "test")
             except fluid.core.EOFException:
                 save_path = os.path.join(args.checkpoints, "step_" + str(steps))
                 fluid.io.save_persistables(exe, save_path, train_program)
-                train_pyreader.reset()
+                train_data_loader.reset()
                 break
         if args.enable_ce:
             card_num = get_cards()
@@ -410,13 +412,13 @@ def main(args):
     # final eval on dev set
     if args.do_val:
         print("Final validation result:")
-        evaluate(exe, dev_prog, dev_pyreader,
+        evaluate(exe, dev_prog, dev_data_loader,
                  [loss.name, accuracy.name, num_seqs.name], "dev")
 
     # final eval on test set
     if args.do_test:
         print("Final test result:")
-        evaluate(exe, test_prog, test_pyreader,
+        evaluate(exe, test_prog, test_data_loader,
                  [loss.name, accuracy.name, num_seqs.name], "test")
 
 

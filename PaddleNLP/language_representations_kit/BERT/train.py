@@ -17,13 +17,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import six
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 import os
 import time
-import sys
 import argparse
 import numpy as np
 import multiprocessing
@@ -111,7 +112,7 @@ def create_model(bert_config):
 
     (src_ids, pos_ids, sent_ids, input_mask, mask_label, mask_pos, labels) = inputs
 
-    pyreader = fluid.io.PyReader(feed_list=inputs, capacity=50, iterable=False)
+    data_loader = fluid.io.DataLoader.from_generator(feed_list=inputs, capacity=50, iterable=False)
 
     bert = BertModel(
         src_ids=src_ids,
@@ -125,14 +126,14 @@ def create_model(bert_config):
     next_sent_acc, mask_lm_loss, total_loss = bert.get_pretraining_output(
         mask_label, mask_pos, labels)
 
-    return pyreader, next_sent_acc, mask_lm_loss, total_loss
+    return data_loader, next_sent_acc, mask_lm_loss, total_loss
 
 
 def predict_wrapper(args,
                     exe,
                     bert_config,
                     test_prog=None,
-                    pyreader=None,
+                    data_loader=None,
                     fetch_list=None):
     # Context to do validation.
     data_path = args.test_set_dir if args.do_test else args.validation_set_dir
@@ -147,7 +148,7 @@ def predict_wrapper(args,
         max_seq_len=args.max_seq_len,
         is_test=True)
 
-    pyreader.decorate_batch_generator(data_reader.data_generator())
+    data_loader.set_batch_generator(data_reader.data_generator())
 
     if args.do_test:
         assert args.init_checkpoint is not None, "[FATAL] Please use --init_checkpoint '/path/to/checkpoints' \
@@ -155,8 +156,8 @@ def predict_wrapper(args,
 
         init_pretraining_params(exe, args.init_checkpoint, test_prog)
 
-    def predict(exe=exe, pyreader=pyreader):
-        pyreader.start()
+    def predict(exe=exe, data_loader=data_loader):
+        data_loader.start()
 
         cost = 0
         lm_cost = 0
@@ -175,7 +176,7 @@ def predict_wrapper(args,
                     print("[test_set] steps: %d" % steps)
 
             except fluid.core.EOFException:
-                pyreader.reset()
+                data_loader.reset()
                 break
 
         used_time = time.time() - time_begin
@@ -192,7 +193,7 @@ def test(args):
     test_startup = fluid.Program()
     with fluid.program_guard(test_prog, test_startup):
         with fluid.unique_name.guard():
-            test_pyreader, next_sent_acc, mask_lm_loss, total_loss = create_model(
+            test_data_loader, next_sent_acc, mask_lm_loss, total_loss = create_model(
                 bert_config=bert_config)
 
     test_prog = test_prog.clone(for_test=True)
@@ -206,7 +207,7 @@ def test(args):
         exe,
         bert_config,
         test_prog=test_prog,
-        pyreader=test_pyreader,
+        data_loader=test_data_loader,
         fetch_list=[next_sent_acc.name, mask_lm_loss.name, total_loss.name])
 
     print("test begin")
@@ -227,7 +228,7 @@ def train(args):
     startup_prog = fluid.Program()
     with fluid.program_guard(train_program, startup_prog):
         with fluid.unique_name.guard():
-            train_pyreader, next_sent_acc, mask_lm_loss, total_loss = create_model(
+            train_data_loader, next_sent_acc, mask_lm_loss, total_loss = create_model(
                 bert_config=bert_config)
             scheduled_lr, loss_scaling = optimization(
                 loss=total_loss,
@@ -249,7 +250,7 @@ def train(args):
     test_prog = fluid.Program()
     with fluid.program_guard(test_prog, startup_prog):
         with fluid.unique_name.guard():
-            test_pyreader, next_sent_acc, mask_lm_loss, total_loss = create_model(
+            test_data_loader, next_sent_acc, mask_lm_loss, total_loss = create_model(
                 bert_config=bert_config)
 
     test_prog = test_prog.clone(for_test=True)
@@ -334,13 +335,13 @@ def train(args):
             exe,
             bert_config,
             test_prog=test_prog,
-            pyreader=test_pyreader,
+            data_loader=test_data_loader,
             fetch_list=[
                 next_sent_acc.name, mask_lm_loss.name, total_loss.name
             ])
 
-    train_pyreader.decorate_batch_generator(data_reader.data_generator())
-    train_pyreader.start()
+    train_data_loader.set_batch_generator(data_reader.data_generator())
+    train_data_loader.start()
     steps = 0
     cost = []
     lm_cost = []
@@ -391,7 +392,7 @@ def train(args):
                 epoch, current_file_index, total_file, current_file = data_reader.get_progress(
                 )
                 if args.verbose:
-                    verbose = "feed_queue size: %d, " %train_pyreader.queue.size()
+                    verbose = "feed_queue size: %d, " %train_data_loader.queue.size()
                     verbose += "current learning_rate: %f, " % np_lr[0]
                     if args.use_fp16:
                         verbose += "loss scaling: %f" % np_scaling[0]
@@ -426,7 +427,7 @@ def train(args):
                        np.mean(np.array(vali_acc) / vali_steps), vali_speed))
 
         except fluid.core.EOFException:
-            train_pyreader.reset()
+            train_data_loader.reset()
             break
 
 if __name__ == '__main__':
