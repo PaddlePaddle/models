@@ -14,6 +14,7 @@
 # limitations under the License.
 """Run BERT on SQuAD 1.1 and SQuAD 2.0."""
 
+import io
 import six
 import math
 import json
@@ -95,7 +96,7 @@ class InputFeatures(object):
 
 def read_squad_examples(input_file, is_training, version_2_with_negative=False):
     """Read a SQuAD json file into a list of SquadExample."""
-    with open(input_file, "r") as reader:
+    with io.open(input_file, "r", encoding="utf8") as reader:
         input_data = json.load(reader)["data"]
 
     def is_whitespace(c):
@@ -763,15 +764,15 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
 
         all_nbest_json[example.qas_id] = nbest_json
 
-    with open(output_prediction_file, "w") as writer:
-        writer.write(json.dumps(all_predictions, indent=4) + "\n")
+    with io.open(output_prediction_file, "w", encoding="utf8") as writer:
+        writer.write(json.dumps(all_predictions, indent=4) + u"\n")
 
-    with open(output_nbest_file, "w") as writer:
-        writer.write(json.dumps(all_nbest_json, indent=4) + "\n")
+    with io.open(output_nbest_file, "w", encoding="utf8") as writer:
+        writer.write(json.dumps(all_nbest_json, indent=4) + u"\n")
 
     if version_2_with_negative:
-        with open(output_null_log_odds_file, "w") as writer:
-            writer.write(json.dumps(scores_diff_json, indent=4) + "\n")
+        with io.open(output_null_log_odds_file, "w", encoding="utf8") as writer:
+            writer.write(json.dumps(scores_diff_json, indent=4) + u"\n")
 
 
 def get_final_text(pred_text, orig_text, do_lower_case, verbose):

@@ -11,13 +11,13 @@ from flask import Flask
 from flask import Response
 from flask import request
 import numpy as np
+import argparse
 from multiprocessing.dummy import Pool as ThreadPool
 
 app = Flask(__name__)
 
 logger = logging.getLogger('flask')
-url_1 = 'http://127.0.0.1:5118'   # url for model1
-url_2 = 'http://127.0.0.1:5120'   # url for model2
+
 
 def ensemble_example(answers, n_models=None):
     if n_models is None:
@@ -50,32 +50,45 @@ def mrqa_main():
         return nbest
     try:
         input_json = request.get_json(silent=True)
-
-        pool = ThreadPool(2)
-        res1 = pool.apply_async(_call_model, (url_1, input_json))
-        res2 = pool.apply_async(_call_model, (url_2, input_json))
-        nbest1 = res1.get()
-        nbest2 = res2.get()
-        # print(res1)
-        # print(nbest1)
+        n_models = len(urls)
+        pool = ThreadPool(n_models)
+        results = []
+        for url in urls:
+            result = pool.apply_async(_call_model, (url, input_json))
+            results.append(result.get())
         pool.close()
         pool.join()
-
-        nbest1 = nbest1.json()['results']
-        nbest2 = nbest2.json()['results']
-        qids = list(nbest1.keys())
+        nbests = [nbest.json()['results'] for nbest in results]
+        qids = list(nbests[0].keys())
         for qid in qids:
-            ensemble_nbest = ensemble_example([nbest1[qid], nbest2[qid]], n_models=2)
+            ensemble_nbest = ensemble_example([nbest[qid] for nbest in nbests], n_models=n_models)
             pred[qid] = ensemble_nbest[0]['text']
     except Exception as e:
         pred['error'] = 'empty'
-        # logger.error('Error in mrc server - {}'.format(e))
         logger.exception(e)
 
-    # import pdb; pdb.set_trace()  # XXX BREAKPOINT
     return Response(json.dumps(pred), mimetype='application/json')
 
 
 if __name__ == '__main__':
+    url_1 = 'http://127.0.0.1:5118'   # url for ernie
+    url_2 = 'http://127.0.0.1:5119'   # url for xl-net
+    url_3 = 'http://127.0.0.1:5120'   # url for bert
+    parser = argparse.ArgumentParser('main server')
+    parser.add_argument('--ernie', action='store_true', default=False, help="Include ERNIE")
+    parser.add_argument('--xlnet', action='store_true', default=False, help="Include XL-NET")
+    parser.add_argument('--bert', action='store_true', default=False, help="Include BERT")
+    args = parser.parse_args()
+    urls = []
+    if args.ernie:
+        print('Include ERNIE model')
+        urls.append(url_1)
+    if args.xlnet:
+        print('Include XL-NET model')
+        urls.append(url_2)
+    if args.bert:
+        print('Include BERT model')
+        urls.append(url_3)
+    assert len(urls) > 0, "At lease one model is required"
     app.run(host='127.0.0.1', port=5121, debug=False, threaded=False, processes=1)
 
