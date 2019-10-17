@@ -208,7 +208,6 @@ class _MultiWorkerLoaderIter(object):
         for _ in range(self.buffer_size + 1 - steps_ahead):
             self._queue_next()
         if self._recv_idx == self._sent_idx:
-            gc.collect()  # gc anyway just in case
             assert not self._out_buffer, "result queue should be empty by now"
             self._gc()
             self._init_pool()
