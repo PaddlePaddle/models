@@ -326,7 +326,7 @@ def infer(args):
         for data in zip(reader_test()):
             data_A, data_B, data_C, name = data[0]
             name = id2name[np.array(name).astype('int32')[0]]
-            print("read: {}" % name)
+            print("read: ", name)
             tensor_A = fluid.LoDTensor()
             tensor_C = fluid.LoDTensor()
             tensor_A.set(data_A, place)
