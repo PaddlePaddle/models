@@ -63,10 +63,10 @@ python train.py \
 
 ## 模型预测
 
-当模型训练完成之后， 可以利用infer.sh的脚本进行预测，默认选择加载第k个epoch的模型进行预测，生成batch_size条短文本。
+当模型训练完成之后， 可以利用infer.sh的脚本进行预测，选择加载模型保存目录下的第 k 个epoch的模型进行预测，生成batch_size条短文本。
 
 ```
-sh infer.sh ptb/swda
+sh infer.sh ptb/swda k
 ```
 
 如果需要修改模型预测输出的参数设置，也可以通过下面命令配置：
@@ -79,7 +79,7 @@ python infer.py \
         --max_grad_norm 5.0 \
         --dataset_prefix data/${dataset}/${dataset} \
         --use_gpu True \
-        --reload_model ${dataset}_model/epoch_30 \
+        --reload_model ${dataset}_model/epoch_${k} \
 ```
 
 ## 效果评价
