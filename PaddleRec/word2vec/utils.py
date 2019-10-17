@@ -12,7 +12,7 @@ import preprocess
 def BuildWord_IdMap(dict_path):
     word_to_id = dict()
     id_to_word = dict()
-    with open(dict_path, 'r') as f:
+    with open(dict_path, 'r', encoding='utf-8') as f:
         for line in f:
             word_to_id[line.split(' ')[0]] = int(line.split(' ')[1])
             id_to_word[int(line.split(' ')[1])] = line.split(' ')[0]
@@ -89,7 +89,7 @@ def reader_creator(file_dir, word_to_id):
     def reader():
         files = os.listdir(file_dir)
         for fi in files:
-            with open(file_dir + '/' + fi, "r") as f:
+            with open(os.path.join(file_dir, fi), "r", encoding='utf-8') as f:
                 for line in f:
                     if ':' in line:
                         pass

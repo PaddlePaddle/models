@@ -86,7 +86,7 @@ def to_lodtensor_bpr_test(raw_data, vocab_size, place):
 
 
 def get_vocab_size(vocab_path):
-    with open(vocab_path, "r") as rf:
+    with open(vocab_path, "r", encoding='utf-8') as rf:
         line = rf.readline()
         return int(line.strip())
 
@@ -184,7 +184,7 @@ def reader_creator(file_dir, n, data_type):
     def reader():
         files = os.listdir(file_dir)
         for fi in files:
-            with open(file_dir + '/' + fi, "r") as f:
+            with open(os.path.join(file_dir, fi), "r", encoding='utf-8') as f:
                 for l in f:
                     if DataType.SEQ == data_type:
                         l = l.strip().split()
