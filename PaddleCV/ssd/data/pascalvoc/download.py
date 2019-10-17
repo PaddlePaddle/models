@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,10 +11,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import os
 import os.path as osp
+import sys
 import re
 import random
+import tarfile
+import logging
+
+from paddle.dataset.common import download
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+DATASETS = {
+    'pascalvoc': [
+        ('http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
+         '6cd6e144f989b92b3379bac3b3de84fd', ),
+        ('http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar',
+         'c52e279531787c972589f7e41ab4ae64', ),
+        ('http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar',
+         'b6e924de25625d8de591ea690078ad9f', ),
+    ],
+}
 
 devkit_dir = './VOCdevkit'
 years = ['2007', '2012']
@@ -73,5 +94,22 @@ def prepare_filelist(devkit_dir, years, output_dir):
             ftest.write(item[0] + ' ' + item[1] + '\n')
 
 
-if __name__ == '__main__':
-    prepare_filelist(devkit_dir, years, '.')
+
+def download_decompress_file(data_dir, url, md5):
+    logger.info("Downloading from {}".format(url))
+    tar_file = download(url, data_dir, md5)
+    logger.info("Decompressing {}".format(tar_file))
+    with tarfile.open(tar_file) as tf:
+        tf.extractall(path=data_dir)
+    os.remove(tar_file)
+
+
+if __name__ == "__main__":
+    data_dir = osp.split(osp.realpath(sys.argv[0]))[0]
+    for name, infos in DATASETS.items():
+        for info in infos:
+            download_decompress_file(data_dir, info[0], info[1])
+        if name == 'pascalvoc':
+            logger.info("create list for pascalvoc dataset.")
+            prepare_filelist(devkit_dir, years, data_dir)
+        logger.info("Download dataset {} finished.".format(name))

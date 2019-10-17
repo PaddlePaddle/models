@@ -50,8 +50,9 @@ To train the model, COCO-API is needed. Installation is as follows:
 
 Train the model on [MS-COCO dataset](http://cocodataset.org/#download), we also provide download script as follows:
 
-    cd dataset/coco
-    ./download.sh
+```bash
+python dataset/coco/download.py
+```
 
 The data catalog structure is as follows:
 
@@ -83,6 +84,8 @@ You can defined datasets by yourself, we recommend using annotations in COCO for
 **download the pre-trained model:** This sample provides DarkNet-53 pre-trained [model](https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz), which is converted from [pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74). You can download pre-trained model as:
 
     sh ./weights/download.sh
+
+**NOTE:**: Windows users can download weights from links in `./weights/download.sh`.
 
 Set `--pretrain` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
 Please make sure that pre-trained model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.

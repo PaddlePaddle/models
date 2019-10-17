@@ -50,8 +50,9 @@
 
 在[MS-COCO数据集](http://cocodataset.org/#download)上进行训练，通过如下方式下载数据集。
 
-    cd dataset/coco
-    ./download.sh
+```bash
+python dataset/coco/download.py
+```
 
 数据目录结构如下：
 
@@ -83,6 +84,8 @@ dataset/coco/
 **下载预训练模型：** 本示例提供DarkNet-53预训练[模型](https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz)，该模型转换自作者提供的预训练权重[pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74)，采用如下命令下载预训练模型：
 
     sh ./weights/download.sh
+
+**注意** Windows用户可通过`./weights/download.sh`中的链接直接下载和解压。
 
 通过设置`--pretrain` 加载预训练模型。同时在fine-tune时也采用该设置加载已训练模型。
 请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。
