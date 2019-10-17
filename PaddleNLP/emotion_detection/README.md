@@ -56,7 +56,8 @@
 .
 ├── config.json             # 配置文件
 ├── config.py               # 配置文件读取接口
-├── inference_model.py			# 保存 inference_model 的脚本
+├── download.py             # 下载数据及预训练模型脚本
+├── inference_model.py      # 保存 inference_model 的脚本
 ├── reader.py               # 数据读取接口
 ├── run_classifier.py       # 项目的主程序入口，包括训练、预测、评估
 ├── run.sh                  # 训练、预测、评估运行脚本
@@ -86,15 +87,15 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 
 #### 公开数据集
 
-这里我们提供一份已标注的、经过分词预处理的机器人聊天数据集，只需运行数据下载脚本 ```sh download_data.sh```，运行成功后，会生成文件夹 ```data```，其目录结构如下：
+这里我们提供一份已标注的、经过分词预处理的机器人聊天数据集，只需运行数据下载脚本 ```sh download_data.sh```，或者 ```python download.py dataset``` 运行成功后，会生成文件夹 ```data```，其目录结构如下：
 
 ```text
 .
-├── train.tsv				# 训练集
-├── dev.tsv					# 验证集
-├── test.tsv				# 测试集
-├── infer.tsv				# 待预测数据
-├── vocab.txt				# 词典
+├── train.tsv       # 训练集
+├── dev.tsv         # 验证集
+├── test.tsv        # 测试集
+├── infer.tsv       # 待预测数据
+├── vocab.txt       # 词典
 ```
 
 ### 单机训练
@@ -181,6 +182,8 @@ tar xvf emotion_detection_ernie_finetune-1.0.0.tar.gz
 
 ```shell
 sh download_model.sh
+# 或者
+python download.py model
 ```
 
 以上两种方式会将预训练的 TextCNN 模型和 ERNIE模型，保存在```pretrain_models```目录下，可直接修改```run.sh```脚本中的```init_checkpoint```参数进行评估、预测。

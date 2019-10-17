@@ -41,11 +41,12 @@ SR-GNN模型的介绍可以参阅论文[Session-based Recommendation with Graph 
 
 * Step 1: 运行如下命令,下载DIGINETICA数据集并进行预处理
 ```
-cd data && sh download.sh
+cd data && python download.py
 ```
 
 * Step 2: 产生训练集、测试集和config文件
 ```
+mkdir diginetica
 python preprocess.py --dataset diginetica
 cd ..
 ```

@@ -61,7 +61,7 @@ def infer(args):
     infer_program = fluid.default_main_program().clone(for_test=True)
 
     for epoch_num in range(args.start_index, args.last_index + 1):
-        model_path = args.model_path + "epoch_" + str(epoch_num)
+        model_path = os.path.join(args.model_path,  "epoch_" + str(epoch_num))
         try:
             if not os.path.exists(model_path):
                 raise ValueError()
