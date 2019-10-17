@@ -73,7 +73,7 @@ def main(arguments):
         '--data_dir',
         help='directory to save data to',
         type=str,
-        default='new_data')
+        default='data')
     parser.add_argument(
         '-t',
         '--task',

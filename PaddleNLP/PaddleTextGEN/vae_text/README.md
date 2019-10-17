@@ -86,12 +86,12 @@ python infer.py \
 
 ```sh
 PTB数据集:
-dev ppl: 102.31
-test ppl: 108.58
+Test PPL: 102.24
+Test NLL: 108.22
 
 SWDA数据集:
-dev ppl: 65.86
-test ppl: 65.26
+Test PPL: 64.21
+Test NLL: 81.92
 ```
 
 ## 生成样例
