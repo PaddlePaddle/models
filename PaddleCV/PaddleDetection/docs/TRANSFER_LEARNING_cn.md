@@ -8,7 +8,7 @@
 
 在迁移学习中，对预训练模型进行选择性加载，可通过如下两种方式实现：
 
-1. 在 YMAL 配置文件中通过设置`finetune_exclude_pretrained_params`字段。可参考[配置文件](../configs/yolov3_mobilenet_v1_fruit.yml)
+1. 在 YMAL 配置文件中通过设置`finetune_exclude_pretrained_params`字段。可参考[配置文件](../configs/yolov3_mobilenet_v1_fruit.yml#L15)
 2. 在 train.py的启动参数中设置 -o finetune_exclude_pretrained_params。例如：
 
 ```python
