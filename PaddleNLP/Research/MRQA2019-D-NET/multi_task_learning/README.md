@@ -44,10 +44,10 @@ In our MTL experiments, we use BERT as our shared encoder. The parameters are in
 
 ```
 1、cd scripts
-2、download cased_model_01.tar.gz from link
+2、# download cased_model_01.tar.gz from link
 3、mkdir cased_model_01 && mv cased_model_01.tar.gz cased_model_01 && cd cased_model_01 && tar -xvf cased_model_01.tar.gz && cd ..
 4、python convert_model_params.py --init_tf_checkpoint cased_model_01/model.ckpt --fluid_params_dir params
-5、mkdir fluid_models && mv cased_model_01/vocab.txt cased_model_01/bert_config.json params fluid_models 
+5、mkdir squad2_model && mv cased_model_01/vocab.txt cased_model_01/bert_config.json params squad2_model 
 ```
 
 Alternatively, user can directly **download the parameters that we have converted**: 

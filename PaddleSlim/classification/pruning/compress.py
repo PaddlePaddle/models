@@ -72,8 +72,8 @@ def compress(args):
     image_shape="3,224,224"
     image_shape = [int(m) for m in image_shape.split(",")]
     assert args.model in model_list, "{} is not in lists: {}".format(args.model, model_list)
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+    image = fluid.data(name='image', shape=[None] + image_shape, dtype='float32')
+    label = fluid.data(name='label', shape=[None, 1], dtype='int64')
     # model definition
     model = models.__dict__[args.model]()
     out = model.net(input=image, class_dim=class_dim)
