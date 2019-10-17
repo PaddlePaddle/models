@@ -46,7 +46,8 @@ pip install numpy
 
 ### 数据准备
 
-下面给出了ImageNet分类任务的样例，首先，通过如下的方式进行数据的准备：
+下面给出了ImageNet分类任务的样例
+在Linux系统下通过如下的方式进行数据的准备：
 ```
 cd data/ILSVRC2012/
 sh download_imagenet2012.sh
@@ -68,6 +69,8 @@ train/n02483708/n02483708_2436.jpeg 369
 val/ILSVRC2012_val_00000001.jpeg 65
 ```
 注意：可能需要根据本地环境调整reader.py中相关路径来正确读取数据。
+
+**Windows系统下请用户自行下载ImageNet数据。[label下载链接](http://paddle-imagenet-models.bj.bcebos.com/ImageNet_label.tgz)**
 
 ### 模型训练
 
