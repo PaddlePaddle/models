@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
 from __future__ import print_function, absolute_import, division
 
 import os
@@ -21,7 +19,6 @@ TEST_DIR = 'dist_test_valid_data'
 TRAIN_FILE = os.path.join(TRAIN_DIR, 'tr')
 TEST_FILE = os.path.join(TEST_DIR, 'ev')
 SPLIT_RATIO = 0.9
-LINE_NUMS = "line_nums.log"
 FREQ_THR = 10
 
 INT_COLUMN_NAMES = ['I' + str(i) for i in range(1, 14)]
