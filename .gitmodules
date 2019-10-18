@@ -7,3 +7,6 @@
 [submodule "PaddleCV/PaddleSeg"]
 	path = PaddleCV/PaddleSeg
 	url = https://github.com/PaddlePaddle/PaddleSeg
+[submodule "AutoDL"]
+	path = AutoDL
+	url = https://github.com/PaddlePaddle/AutoDL.git
