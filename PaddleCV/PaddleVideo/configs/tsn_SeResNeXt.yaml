@@ -1,0 +1,54 @@
+MODEL:
+    name: "TSN"
+    format: "mp4_fast"
+    backbone: "SeResNeXt"
+    num_classes: 600
+    seg_num: 3
+    seglen: 1
+    image_mean: [0.485, 0.456, 0.406]
+    image_std: [0.229, 0.224, 0.225]
+    num_layers: 152
+    topk: 5
+
+TRAIN:
+    epoch: 35
+    short_size: 256
+    target_size: 256
+    num_reader_threads: 12
+    buf_size: 1024
+    batch_size: 80
+    use_gpu: True
+    num_gpus: 8
+    filelist: "./data/dataset/kinetics/kinetics600_train_mp4.list"
+    learning_rate: 0.01
+    learning_rate_decay: 0.1
+    l2_weight_decay: 1e-4
+    momentum: 0.9
+    total_videos: 395387
+
+VALID:
+    short_size: 256
+    target_size: 256
+    num_reader_threads: 12
+    buf_size: 1024
+    batch_size: 80
+    filelist: "./data/dataset/kinetics/kinetics600_val_mp4.list"
+
+TEST:
+    seg_num: 7
+    short_size: 256
+    target_size: 256
+    num_reader_threads: 12
+    buf_size: 1024
+    batch_size: 16
+    filelist: "./data/dataset/kinetics/kinetics600_test_mp4.list"
+
+INFER:
+    short_size: 256
+    target_size: 256
+    num_reader_threads: 12
+    buf_size: 1024
+    batch_size: 1
+    filelist: "./data/dataset/kinetics/kinetics600_infer_mp4.list"
+    video_path: ""
+    kinetics_labels: "./data/dataset/kinetics_labels.json"

@@ -79,7 +79,7 @@
 
 ## Kinetics数据集
 
-Kinetics数据集是DeepMind公开的大规模视频动作识别数据集，有Kinetics400与Kinetics600两个版本。这里使用Kinetics400数据集，具体的数据预处理过程如下。
+Kinetics数据集是DeepMind公开的大规模视频动作识别数据集，有Kinetics400与Kinetics600两个版本。以Kinetics400为例，具体的数据预处理过程如下。
 
 ### mp4视频下载
 在Code\_Root目录下创建文件夹
