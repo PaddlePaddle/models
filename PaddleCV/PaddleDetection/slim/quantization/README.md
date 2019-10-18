@@ -185,7 +185,9 @@ python ../eval.py \
 python freeze.py \
     --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
     --weight_quant_type ${weight_quant_type} \
-    --save_path ${any path you want}
+    --save_path ${any path you want} \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -d "../../dataset/voc"
 ```
 
 ### 最终评估模型
