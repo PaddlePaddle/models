@@ -180,8 +180,8 @@ def train(args):
     train_reader = imagenet_reader.train(settings=args)
     test_reader = imagenet_reader.val(settings=args)
 
-    train_data_loader.decorate_sample_list_generator(train_reader, place)
-    test_data_loader.decorate_sample_list_generator(test_reader, place)
+    train_data_loader.set_sample_list_generator(train_reader, place)
+    test_data_loader.set_sample_list_generator(test_reader, place)
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
                                                  train_fetch_vars[0], exe)
