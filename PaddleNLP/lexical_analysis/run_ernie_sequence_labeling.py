@@ -37,7 +37,7 @@ import utils
 sys.path.append("..")
 from models.representation.ernie import ErnieConfig
 from models.model_check import check_cuda
-from model_check import check_version
+from models.model_check import check_version
 
 def evaluate(exe, test_program, test_pyreader, test_ret):
     """
@@ -161,6 +161,7 @@ def do_train(args):
                 fetch_list = []
 
             start_time = time.time()
+
             outputs = exe.run(program=compiled_prog, feed=data[0], fetch_list=fetch_list)
             end_time = time.time()
             if steps % args.print_steps == 0:
