@@ -265,7 +265,10 @@ class ImageNetReader:
                         rotate=False,
                         data_dir=None):
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-        batch_size = settings.batch_size / paddle.fluid.core.get_cuda_device_count()
+        if mode == 'test':
+            batch_size = 1
+        else:
+            batch_size = settings.batch_size / paddle.fluid.core.get_cuda_device_count()
         def reader():
             def read_file_list():
                 with open(file_list) as flist:

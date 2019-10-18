@@ -164,6 +164,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 * **label_smoothing_epsilon**: label_smoothing的epsilon， 默认值:0.1
 * **random_seed**: 随机数种子， 默认值: 1000
 * **padding_type**: efficientNet中卷积操作的padding方式, 默认值: "SAME".
+* **use_se**: efficientNet中是否使用Squeeze-and-Excitation模块, 默认值: True.
 * **use_ema**: 是否在更新模型参数时使用ExponentialMovingAverage. 默认值: False.
 * **ema_decay**: ExponentialMovingAverage的decay rate. 默认值: 0.9999.
 
@@ -416,8 +417,11 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[1](#trans)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
 |[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[1](#trans)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
 |[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[1](#trans)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
+|[EfficientNetB0_small](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_Small_pretrained.tar)<sup>[2](#trans)</sup> | 75.80% | 92.58% | 3.342 | 2.729 |
 
 <a name="trans">[1]</a> 表示该预训练权重是由[官方的代码仓库](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)转换来的。
+
+<a name="trans">[2]</a> 表示该预训练权重是在EfficientNetB0的基础上去除se模块，并使用通用的卷积训练的，精度稍稍下降，但是速度大幅提升。
 
 ## FAQ
 
