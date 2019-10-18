@@ -59,7 +59,9 @@ def build_program(is_train, main_prog, startup_prog, args):
         is_test = False if is_train else True
         override_params = {"drop_connect_rate": args.drop_connect_rate}
         padding_type = args.padding_type
-        model = models.__dict__[args.model](is_test=is_test, override_params=override_params, padding_type=padding_type)
+        use_se = args.use_se
+        model = models.__dict__[args.model](is_test=is_test, override_params=override_params,
+                                            padding_type=padding_type, use_se=use_se)
     else:
         model = models.__dict__[args.model]()
     with fluid.program_guard(main_prog, startup_prog):
