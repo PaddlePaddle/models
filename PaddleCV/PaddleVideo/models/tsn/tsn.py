@@ -159,17 +159,24 @@ class TSN(ModelBase):
         elif self.backbone == "SeResNeXt":
             return (
                 'SeResNeXt_pretrained',
-                ''
-                ###debug###
+                'https://paddlemodels.bj.bcebos.com/video_classification/SeResNeXt152_pretrained.tar.gz'
             )
         else:
             pass
 
     def weights_info(self):
-        return (
-            'TSN_final.pdparams',
-            'https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams'
-        )
+        if self.backbone == 'ResNet':
+            return (
+                'TSN_final.pdparams',
+                'https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams'
+            )
+        elif self.backbone == "SeResNeXt":
+            return (
+                'TSN_SeResNeXt_final.pdparams',
+                'https://paddlemodels.bj.bcebos.com/video_classification/TSN_SeResNeXt_final.pdparams'
+            )
+        else:
+            pass
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
         def is_parameter(var):
