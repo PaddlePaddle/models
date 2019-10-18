@@ -17,6 +17,7 @@ from paddle.fluid import ParamAttr
 
 from ..model import ModelBase
 from .tsn_res_model import TSN_ResNet
+from .tsn_SeResNeXt_model import TSN_SeResNeXt
 
 import logging
 logger = logging.getLogger(__name__)
@@ -158,6 +159,7 @@ class TSN(ModelBase):
         elif self.backbone == "SeResNeXt":
             return (
                 'SeResNeXt_pretrained',
+                ''
                 ###debug###
             )
         else:
