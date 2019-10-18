@@ -19,7 +19,7 @@ Temporal Segment Network (TSN) 是视频分类领域经典的基于2D-CNN的解�
 
 ## 数据准备
 
-TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。数据下载及准备请参考[数据说明](../../data/dataset/README.md)
+TSN的训练数据采用由DeepMind公布的Kinetics-400(以ResNet为backbone)和Kinetics-600（以SE-ResNeXt为backbone）动作识别数据集。数据下载及准备请参考[数据说明](../../data/dataset/README.md)
 
 ## 模型训练
 

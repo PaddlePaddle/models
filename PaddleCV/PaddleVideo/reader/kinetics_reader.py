@@ -159,7 +159,10 @@ class KineticsReader(DataReader):
             # when infer, we store vid as label
             label = int(sample[1])
             try:
-                imgs = mp4_loader(mp4_path, seg_num, seglen, mode)
+                if format == "mp4":
+                    imgs = mp4_loader(mp4_path, seg_num, seglen, mode)
+                elif format == "mp4_fast":
+                    imgs = mp4_loader_fast(mp4_path, seg_num, seglen, mode)
                 if len(imgs) < 1:
                     logger.error('{} frame length {} less than 1.'.format(
                         mp4_path, len(imgs)))
@@ -212,6 +215,8 @@ class KineticsReader(DataReader):
             decode_func = decode_pickle
         elif format == 'mp4':
             decode_func = decode_mp4
+        elif format == 'mp4_fast':
+            decode_func = decode_mp4
         else:
             raise "Not implemented format {}".format(format)
 
@@ -224,7 +229,6 @@ class KineticsReader(DataReader):
             target_size=target_size,
             img_mean=img_mean,
             img_std=img_std)
-
         return paddle.reader.xmap_readers(mapper, reader, num_threads, buf_size)
 
 
@@ -478,3 +482,49 @@ def mp4_loader(filepath, nsample, seglen, mode):
             imgs.append(img)
 
     return imgs
+
+
+def mp4_loader_fast(filepath, nsample, seglen, mode):
+    cap = cv2.VideoCapture(filepath)
+    videolen = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    allidx = sampleidx(videolen, nsample, seglen, mode)
+    assert (sorted(allidx) == allidx)
+
+    imgs = []
+    for idx in allidx:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+        nextframeno = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+        for frameidx in range(idx, idx + seglen):
+            ret, frame = cap.read()
+            if not ret:
+                logging.error('fail to get frame %s[%s]', filepath, frameidx)
+                return imgs
+            frame = Image.fromarray(frame, mode='RGB')
+            imgs.append(frame)
+    return imgs
+
+
+def sampleidx(videolen, nsample, seglen, mode):
+    average_dur = int(videolen / nsample)
+    allidx = []
+    for i in range(nsample):
+        idx = 0
+        if mode == 'train':
+            if average_dur >= seglen:
+                idx = random.randint(0, average_dur - seglen)
+                idx += i * average_dur
+            elif average_dur >= 1:
+                idx += i * average_dur
+            else:
+                idx = i
+        else:
+            if average_dur >= seglen:
+                idx = (average_dur - 1) // 2
+                idx += i * average_dur
+            elif average_dur >= 1:
+                idx += i * average_dur
+            else:
+                idx = i
+        allidx.append(idx)
+    return allidx

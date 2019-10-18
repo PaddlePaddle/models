@@ -1,6 +1,7 @@
 MODEL:
     name: "TSN"
     format: "pkl"
+    backbone: "ResNet"
     num_classes: 400
     seg_num: 3
     seglen: 1
