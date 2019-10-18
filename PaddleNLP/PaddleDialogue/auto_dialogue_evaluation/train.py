@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.                                                                                                      
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """train auto dialogue evaluation task"""
-
+import io
 import os
 import sys
 import six
 import time
 import numpy as np
-import multiprocessing
 
 import paddle
 import paddle.fluid as fluid
@@ -76,8 +76,7 @@ def do_train(args):
                 dev_count = fluid.core.get_cuda_device_count()
                 place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
             else: 
-                dev_count = int(
-                    os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+                dev_count = int(os.environ.get('CPU_NUM', 1))
                 place = fluid.CPUPlace()
 
             processor = reader.DataProcessor(
@@ -115,9 +114,9 @@ def do_train(args):
     if args.word_emb_init:
         print("start loading word embedding init ...")
         if six.PY2:
-            word_emb = np.array(pickle.load(open(args.word_emb_init, 'rb'))).astype('float32')
+            word_emb = np.array(pickle.load(io.open(args.word_emb_init, 'rb'))).astype('float32')
         else:
-            word_emb = np.array(pickle.load(open(args.word_emb_init, 'rb'), encoding="bytes")).astype('float32')
+            word_emb = np.array(pickle.load(io.open(args.word_emb_init, 'rb'), encoding="bytes")).astype('float32')
         set_word_embedding(word_emb, place)
         print("finish init word embedding  ...")
 

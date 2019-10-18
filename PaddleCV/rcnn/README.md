@@ -38,8 +38,9 @@ Mask RCNN is a two stage model as well. At the first stage, it generates proposa
 
 Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download dataset as below:
 
-    cd dataset/coco
-    ./download.sh
+```bash
+python dataset/coco/download.py
+```
 
 The data catalog structure is as follows:
 
@@ -66,6 +67,8 @@ The data catalog structure is as follows:
 **download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
 
     sh ./pretrained/download.sh
+
+**NOTE:** Windows users can download weights from links in `./pretrained/download.sh`.
 
 Set `pretrained_model` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
 Please make sure that pretrained_model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.

@@ -60,10 +60,10 @@ def parse_args():
         default=False,
         help='Whether profiling the trainning [True|False]')
     parser.add_argument(
-        '--use_dataloader',
+        '--use_py_reader',
         type=str2bool,
         default=False,
-        help='Whether using dataloader to feed data [True|False]')
+        help='Whether using py_reader to feed data [True|False]')
     parser.add_argument(
         '--log_path',
         help='path of the log file. If not set, logs are printed to console')

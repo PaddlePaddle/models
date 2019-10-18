@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved. 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 # limitations under the License.
 """Reader for auto dialogue evaluation"""
 
+import io
 import sys
 import time
 import random
@@ -34,12 +36,12 @@ class DataProcessor(object):
         """load examples"""
         examples = []
         index = 0
-        with open(self.data_file, 'r') as fr: 
-            for line in fr: 
-                if index !=0 and index % 100 == 0: 
-                    print("processing data: %d" % index)
-                index += 1
-                examples.append(line.strip())
+        fr = io.open(self.data_file, 'r', encoding="utf8")
+        for line in fr: 
+            if index !=0 and index % 100 == 0: 
+                print("processing data: %d" % index)
+            index += 1
+            examples.append(line.strip())
         return examples
 
     def get_num_examples(self, phase): 
@@ -47,7 +49,7 @@ class DataProcessor(object):
         if phase not in ['train', 'dev', 'test']: 
             raise ValueError(
                 "Unknown phase, which should be in ['train', 'dev', 'test'].")
-        count = len(open(self.data_file,'rU').readlines())
+        count = len(io.open(self.data_file, 'r', encoding="utf8").readlines())
         self.num_examples[phase] = count
         return self.num_examples[phase]
 

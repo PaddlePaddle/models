@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved. 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import os
 import sys
 import numpy as np
@@ -142,15 +144,16 @@ def do_predict(args):
 
     np.set_printoptions(precision=4, suppress=True)
     print("Write the predicted results into the output_prediction_file")
-    with open(args.output_prediction_file, 'w') as fw: 
-        if task_name not in ['atis_slot']: 
-            for index, result in enumerate(all_results):
-                tags = pred_func(result)
-                fw.write("%s\t%s\n" % (index, tags))
-        else:
-            tags = pred_func(all_results, args.max_seq_len)
-            for index, tag in enumerate(tags):
-                fw.write("%s\t%s\n" % (index, tag))
+    
+    fw = io.open(args.output_prediction_file, 'w', encoding="utf8")
+    if task_name not in ['atis_slot']: 
+        for index, result in enumerate(all_results):
+            tags = pred_func(result)
+            fw.write("%s\t%s\n" % (index, tags))
+    else:
+        tags = pred_func(all_results, args.max_seq_len)
+        for index, tag in enumerate(tags):
+            fw.write("%s\t%s\n" % (index, tag))
 
 
 if __name__ == "__main__":
