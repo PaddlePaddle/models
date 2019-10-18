@@ -128,7 +128,7 @@ ActivityNet官方提供了Kinetics的下载工具，具体参考其[官方repo ]
 
 这样即可将mp4文件解码并保存为pkl文件。
 
-**TSN SeResNeXt训练使用原始mp4数据，请参考 - [生成训练和验证集list](生成训练和验证集list)**
+**TSN SeResNeXt训练使用原始mp4数据，请参考[生成训练和验证集list](#生成训练和验证集list)**
 
 ### 生成训练和验证集list
 
