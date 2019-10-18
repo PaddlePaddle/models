@@ -166,7 +166,8 @@ run.sh
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | Top-1 | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
 | StNet | 128 | 8卡P40 | 7.1 | 0.69 | [model](https://paddlemodels.bj.bcebos.com/video_classification/STNET_final.pdparams) |
-| TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams) |
+| TSN-ResNet | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams) |
+| TSN-SeResNeXt | 80 | 8卡P40 | 7.1 | 0.74 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_SeResNeXt_final.pdparams) |
 | TSM | 128 | 8卡P40 | 7.1 | 0.70 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSM_final.pdparams) |
 | Non-local | 64 | 8卡P40 | 7.1 | 0.74 | [model](https://paddlemodels.bj.bcebos.com/video_classification/NONLOCAL_final.pdparams) |
 
