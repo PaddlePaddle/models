@@ -219,7 +219,6 @@ class Encoder(dg.Layer):
             values (Variable), Shape(B, C_embed, 1, T_enc), the encoded
                 representation for values.
         """
-
         x = self.embed(x)
 
         x = fluid.layers.dropout(
