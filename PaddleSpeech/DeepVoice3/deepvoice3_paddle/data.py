@@ -15,6 +15,7 @@
 import numpy as np
 import random
 
+import io
 import platform
 from os.path import dirname, join
 
@@ -52,15 +53,14 @@ class TextDataSource(FileDataSource):
 
     def collect_files(self):
         meta = join(self.data_root, "train.txt")
-        with open(meta, "rb") as f:
+        with io.open(meta, "rt", encoding="utf-8") as f:
             lines = f.readlines()
-        l = lines[0].decode("utf-8").split("|")
+        l = lines[0].split("|")
         assert len(l) == 4 or len(l) == 5
         self.multi_speaker = len(l) == 5
-        texts = list(map(lambda l: l.decode("utf-8").split("|")[3], lines))
+        texts = list(map(lambda l: l.split("|")[3], lines))
         if self.multi_speaker:
-            speaker_ids = list(
-                map(lambda l: int(l.decode("utf-8").split("|")[-1]), lines))
+            speaker_ids = list(map(lambda l: int(l.split("|")[-1]), lines))
             # Filter by speaker_id
             # using multi-speaker dataset as a single speaker dataset
             if self.speaker_id is not None:
@@ -106,21 +106,18 @@ class _NPYDataSource(FileDataSource):
 
     def collect_files(self):
         meta = join(self.data_root, "train.txt")
-        with open(meta, "rb") as f:
+        with io.open(meta, "rt", encoding="utf-8") as f:
             lines = f.readlines()
-        l = lines[0].decode("utf-8").split("|")
+        l = lines[0].split("|")
         assert len(l) == 4 or len(l) == 5
         multi_speaker = len(l) == 5
-        self.frame_lengths = list(
-            map(lambda l: int(l.decode("utf-8").split("|")[2]), lines))
+        self.frame_lengths = list(map(lambda l: int(l.split("|")[2]), lines))
 
-        paths = list(
-            map(lambda l: l.decode("utf-8").split("|")[self.col], lines))
+        paths = list(map(lambda l: l.split("|")[self.col], lines))
         paths = list(map(lambda f: join(self.data_root, f), paths))
 
         if multi_speaker and self.speaker_id is not None:
-            speaker_ids = list(
-                map(lambda l: int(l.decode("utf-8").split("|")[-1]), lines))
+            speaker_ids = list(map(lambda l: int(l.split("|")[-1]), lines))
             # Filter by speaker_id
             # using multi-speaker dataset as a single speaker dataset
             indices = np.array(speaker_ids) == self.speaker_id
@@ -297,7 +294,7 @@ def create_batch(batch):
     # text positions
     text_positions = np.array(
         [_pad(np.arange(1, len(x[0]) + 1), max_input_len) for x in batch],
-        dtype=np.int)
+        dtype=np.int64)
     text_positions = np.expand_dims(text_positions, axis=-1)
 
     max_decoder_target_len = max_target_len // r // downsample_step
@@ -306,7 +303,8 @@ def create_batch(batch):
     s, e = 1, max_decoder_target_len + 1
     frame_positions = np.tile(
         np.expand_dims(
-            np.arange(s, e), axis=0), (len(batch), 1))
+            np.arange(
+                s, e, dtype=np.int64), axis=0), (len(batch), 1))
     frame_positions = np.expand_dims(frame_positions, axis=-1)
 
     # done flags

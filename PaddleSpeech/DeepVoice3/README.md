@@ -62,10 +62,11 @@ There are many hyperparameters to be tuned depending on the specification of mod
 
 Note that `preprocess.py`, `train.py` and `synthesis.py` all accept a `--preset` parameter. To ensure consistency, you should use the same preset for preprocessing, training and synthesizing.
 
-Note that you can overwrite preset hyperparameters with command line argument `--hparams`, just pass several key-value pair in  `${key}=${value}` format seperated by comma （`,`）. For example `--hparams="batch_size=8, nepochs=500"` can overwrite default values in the preset json file. For more details about hyperparameters, see `hparams.py`, which contains the definition of `hparams`. Priority order of hyperparameters is command line option `--hparams` > `--preset` json configuration file > definition of hparams in `hparams.py`.
+Note that you can overwrite preset hyperparameters with command line argument `--hparams`, just pass several key-value pair in  `${key}=${value}` format seperated by comma （`,`）. For example `--hparams="batch_size=8, nepochs=500"` can overwrite default values in the preset json file.
 
 Some hyperparameters are only related to training, like `batch_size`, `checkpoint_interval` and you can use different values for preprocessing and training. But hyperparameters related to data preprocessing, like `num_mels` and `ref_level_db`, should be kept the same for preprocessing and training.
 
+For more details about hyperparameters, see `hparams.py`, which contains the definition of `hparams`. Priority order of hyperparameters is command line option `--hparams` > `--preset` json configuration file > definition of hparams in `hparams.py`.
 
 ### Dataset
 
@@ -85,7 +86,7 @@ python preprocess.py \
     ${name} ${in_dir} ${out_dir}
 ```
 
-Now `${dataset_name}$` only supports `ljspeech`. Support for other datasets is pending.
+Now `${name}$` only supports `ljspeech`. Support for other datasets is pending.
 
 Assuming that you use `presers/deepvoice3_ljspeech.json` for LJSpeech and the path of the unziped dataset is `~/data/LJSpeech-1.1`, then you can preprocess data with the following command.
 
@@ -120,9 +121,9 @@ You can load saved checkpoint and resume training with `--checkpoint`, if you wa
 
 #### train a part of the model
 
-You can also train parts of the model while freezing other parts, by passing `--train-seq2seq-only` or `--train-postnet-only`. When training only parts of the model, other parts should be loaded from saved checkpoints.
+You can also train parts of the model while freezing other parts, by passing `--train-seq2seq-only` or `--train-postnet-only`. When training only parts of the model, other parts should be loaded from saved checkpoint.
 
-To train only the `seq2seq` or `postnet`, you should load from a whole model  with `--checkpoint`and keep the same configurations. Note that when training only the `postnet`, you should set `use_decoder_state_for_postnet_input=false`, because when train only the postnet, the postnet takes the ground truth mel-spectrogram as input.
+To train only the `seq2seq` or `postnet`, you should load from a whole model  with `--checkpoint`and keep the same configurations. Note that when training only the `postnet`, you should set `use_decoder_state_for_postnet_input=false`, because when train only the postnet, the postnet takes the ground truth mel-spectrogram as input. Note that the default value for `use_decoder_state_for_postnet_input` is `True`.
 
 example:
 
@@ -132,7 +133,7 @@ python train.py --data-root=${data-root} --use-gpu \
     --preset=${preset_json_path} \
     --hparams="parameters you may want to override" \
     --train-seq2seq-only \
-    --checkpoint=${path_of_the_saved_model}
+    --output=${directory_to_save_results}
 ```
 
 ### Training on multiple GPUs
@@ -161,14 +162,14 @@ python -m paddle.distributed.launch \
 
 In the example above, we set only GPU `2, 3, 4, 5` to be visible. Then `--selected_gpus="0, 1, 2, 3"` means the logical ids of the selected gpus, which correpond to GPU `2, 3, 4, 5`.
 
-Model checkpoints (directory ending with `.model`)  are saved in `./checkpoints` per 10000 steps by default. Layer-wise averaged attention alignments (.png) are saved in `.checkpointys/alignment_ave`. And alignments for each attention layer are saved in `.checkpointys/alignment_layer{attention_layer_num}` per 10000 steps for inspection.
+Model checkpoints (`*.pdparams` for the model and `*.pdoptim` for the optimizer)  are saved in `${directory_to_save_results}/checkpoints` per 10000 steps by default. Layer-wise averaged attention alignments (.png) are saved in `${directory_to_save_results}/checkpoints/alignment_ave`. And alignments for each attention layer are saved in `${directory_to_save_results}/checkpoints/alignment_layer{attention_layer_num}` per 10000 steps for inspection.
 
 Synthesis results of 6 sentences (hardcoded in `eval_model.py`) are saved in `checkpoints/eval`, including  `step{step_num}_text{text_id}_single_alignment.png` for averaged alignments and `step{step_num}_text{text_id}_single_predicted.wav` for the predicted waveforms.
 
 
 ### Monitor with Tensorboard
 
-Logs with tensorboard are saved in `./log/${datetime}`  directory by default. You can monitor logs by tensorboard.
+Logs with tensorboard are saved in `${directory_to_save_results}/log/`  directory by default. You can monitor logs by tensorboard.
 
 ```bash
 tensorboard --logdir=${log_dir} --host=$HOSTNAME --port=8888
@@ -179,9 +180,9 @@ tensorboard --logdir=${log_dir} --host=$HOSTNAME --port=8888
 Given a list of text, `synthesis.py` synthesize audio signals from a trained model.
 
 ```bash
-python infer.py --use-gpu --preset=${preset_json_path} \
+python synthesis.py --use-gpu --preset=${preset_json_path} \
     --hparams="parameters you may want to override" \
-      ${checkpoint} ${text_list_file} ${dst_dir}}
+      ${checkpoint} ${text_list_file} ${dst_dir}
 ```
 
 Example test_list.txt:
@@ -198,7 +199,7 @@ generated waveform files and alignment files are saved in `${dst_dir}`.
 
 According to [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654), the position rate is different for different datasets. There are 2 position rates, one for the query and the other for the key, which are referred to as $\omega_1$ and $\omega_2$ in th paper, and the corresponding names in preset json are `query_position_rate` and `key_position_rate`.
 
-For example, the `query_position_rate` and `key_position_rate` for LJSpeech are `1.0` and `1.385`, respectively. These values are computed with `compute_timestamp_ratio.py`. Run the command below.
+For example, the `query_position_rate` and `key_position_rate` for LJSpeech are `1.0` and `1.385`, respectively. These values are computed with `compute_timestamp_ratio.py`. Run the command below, where `${data_root}` means the path of the preprocessed dataset.
 
 ```bash
 python compute_timestamp_ratio.py --preset=${preset_json_path} \
