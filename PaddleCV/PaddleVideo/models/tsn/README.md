@@ -46,7 +46,9 @@ SeResNeXt152权重：加载在ImageNet上训练的SeResNeXt152权重作为初始
 
 - 可下载已发布的模型， 通过`--resume`指定权重存放路径进行finetune等开发
 ResNet50权重模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams)
-SeResNeXt152权重模型[model]()
+SeResNeXt152权重模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_SeResNeXt_final.pdparams)
+| TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams) |
+
 
 **数据读取器说明：** 模型读取Kinetics-400或者Kinetics-600数据集中的`mp4`数据，每条数据抽取`seg_num`段，每段抽取1帧图像，对每帧图像做随机增强后，缩放至`target_size`。
 
@@ -73,7 +75,7 @@ SeResNeXt152权重模型[model]()
 
 - 若未指定`--weights`参数，脚本会下载已发布的模型进行评估。
 以ResNet50权重初始化的TSN模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams)
-以SeResNeXt152权重初始化的TSN模型[model]()
+以SeResNeXt152权重初始化的TSN模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_SeResNeXt_final.pdparams)
 
 - 评估结果以log的形式直接打印输出TOP1\_ACC、TOP5\_ACC等精度指标
 
@@ -111,7 +113,7 @@ Top-5: 91.18
 
 - 若未指定`--weights`参数，脚本会下载已发布模型进行推断
 以ResNet50为初始化权重的TSN模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams)
-以SeResNeXt152为初始化权重的TSN模型[model]()
+以SeResNeXt152为初始化权重的TSN模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_SeResNeXt_final.pdparams)
 
 - 模型推断结果以log的形式直接打印输出，可以看到测试样本的分类预测概率。
 
