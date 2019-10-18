@@ -225,7 +225,7 @@ if __name__ == "__main__":
         model = make_deepvoice3_from_hparams(hparams)
         optimizer, clipper = make_optimizer_from_hparams(hparams)
         print("Log event path: {}".format(tensorboard_dir))
-        writer = SummaryWriter(tensorboard_dir)
+        writer = SummaryWriter(tensorboard_dir) if local_rank == 0 else None
         criterion = make_loss_from_hparams(hparams)
 
         # loading saved model
