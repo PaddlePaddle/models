@@ -106,7 +106,7 @@ def prune_feed_vars(feeded_var_names, target_vars, prog):
     """
     exist_var_names = []
     prog = prog.clone()
-    prog = prog._prune(feeded_var_names, targets=target_vars)
+    prog = prog._prune(targets=target_vars)
     global_block = prog.global_block()
     for name in feeded_var_names:
         try:
@@ -184,12 +184,12 @@ def main():
         save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
 
     # parse infer fetches
-    assert cfg.metric in ['COCO', 'VOC'], \
+    assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE'], \
             "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
-    if cfg['metric'] == 'VOC':
+    if cfg['metric'] == 'VOC' or cfg['metric'] == 'WIDERFACE':
         extra_keys = ['im_id', 'im_shape']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
@@ -198,6 +198,8 @@ def main():
         from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
     if cfg.metric == "VOC":
         from ppdet.utils.voc_eval import bbox2out, get_category_info
+    if cfg.metric == "WIDERFACE":
+        from ppdet.utils.widerface_eval_utils import bbox2out, get_category_info
 
     anno_file = getattr(test_feed.dataset, 'annotation', None)
     with_background = getattr(test_feed, 'with_background', True)

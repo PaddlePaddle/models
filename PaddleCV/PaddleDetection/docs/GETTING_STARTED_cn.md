@@ -42,6 +42,8 @@ python tools/train.py -c configs/faster_rcnn_r50_1x.yml -o use_gpu=false
 - `-o`: 设置配置文件里的参数内容。例如: `-o max_iters=180000`。使用`-o`配置相较于`-c`选择的配置文件具有更高的优先级。
 - `--use_tb`: 是否使用[tb-paddle](https://github.com/linshuliang/tb-paddle)记录数据，进而在TensorBoard中显示，默认是False。
 - `--tb_log_dir`: 指定 tb-paddle 记录数据的存储路径，默认是`tb_log_dir/scalar`。
+- `--fp16`: 是否使用混合精度训练模式（需GPU训练），默认是`False`。
+- `--loss_scale`: 设置混合精度训练模式中损失值的缩放比例，默认是`8.0`。
 
 ##### 例子
 
@@ -69,7 +71,10 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 
 - Fine-tune其他任务
 
-使用预训练模型fine-tune其他任务时，在YAML配置文件中设置`finetune_exclude_pretrained_params`或在命令行中添加`-o finetune_exclude_pretrained_params`对预训练模型进行选择性加载。
+使用预训练模型fine-tune其他任务时，可采用如下两种方式：
+
+1. 在YAML配置文件中设置`finetune_exclude_pretrained_params`
+2. 在命令行中添加-o finetune_exclude_pretrained_params对预训练模型进行选择性加载。
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
@@ -78,6 +83,21 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
                          -o pretrain_weights=output/faster_rcnn_r50_1x/model_final/ \
                             finetune_exclude_pretrained_params = ['cls_score','bbox_pred']
 ```
+
+- 混合精度训练
+
+通过设置 `--fp16` 命令行选项可以启用混合精度训练。目前混合精度训练已经在Faster-FPN, Mask-FPN 及 Yolov3 上进行验证，几乎没有精度损失（小于0.2 mAP)。
+
+建议使用多进程方式来进一步加速混合精度训练。示例如下。
+
+```bash
+export PYTHONPATH=$PYTHONPATH:.
+python -m paddle.distributed.launch --selected_gpus 0,1,2,3,4,5,6,7 tools/train.py --fp16 -c configs/faster_rcnn_r50_fpn_1x.yml
+```
+
+如果训练过程中loss出现`NaN`，请尝试调节`--loss_scale`选项数值，细节请参看混合精度训练相关的[Nvidia文档](https://docs.nvidia.com/deeplearning/sdk/mixed-precision-training/index.html#mptrain)。
+
+另外，请注意将配置文件中的 `norm_type` 由 `affine_channel` 改为 `bn`。
 
 ##### 提示
 
@@ -184,7 +204,7 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml \
 ```
 
 
-可视化文件默认保存在`output`中，可通过`--output_dir=`指定不同的输出路径。  
+可视化文件默认保存在`output`中，可通过`--output_dir=`指定不同的输出路径。
 `--draw_threshold` 是个可选参数. 根据 [NMS](https://ieeexplore.ieee.org/document/1699659) 的计算，
 不同阈值会产生不同的结果。如果用户需要对自定义路径的模型进行推断，可以设置`-o weights`指定模型路径。
 `--use_tb`是个可选参数，当为`True`时，可使用 TensorBoard 来可视化参数的变化趋势和图片。
@@ -205,12 +225,12 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 ## FAQ
 
 **Q:**  为什么我使用单GPU训练loss会出`NaN`? </br>
-**A:**  默认学习率是适配多GPU训练(8x GPU)，若使用单GPU训练，须对应调整学习率（例如，除以8）。  
-计算规则表如下所示，它们是等价的: </br>  
+**A:**  默认学习率是适配多GPU训练(8x GPU)，若使用单GPU训练，须对应调整学习率（例如，除以8）。
+计算规则表如下所示，它们是等价的: </br>
 
 
-| GPU数  | 学习率  | 最大轮数 | 变化节点       |  
-| :---------: | :------------: | :-------: | :--------------: |  
+| GPU数  | 学习率  | 最大轮数 | 变化节点       |
+| :---------: | :------------: | :-------: | :--------------: |
 | 2           | 0.0025         | 720000    | [480000, 640000] |
 | 4           | 0.005          | 360000    | [240000, 320000] |
 | 8           | 0.01           | 180000    | [120000, 160000] |

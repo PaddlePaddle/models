@@ -236,7 +236,6 @@ if __name__ == "__main__":
             assert hparams.use_decoder_state_for_postnet_input is False, \
                 "when training only the postnet, there is no decoder states"
 
-        # dry_run(model) # TODO(delete it safely)
         if args.checkpoint is not None:
             model_dict, optimizer_dict = dg.load_dygraph(args.checkpoint)
 

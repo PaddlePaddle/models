@@ -73,18 +73,18 @@ class Dataset(object):
 
     def get_num_examples(self, filename):
         """num of line of file"""
-        return sum(1 for line in io.open(filename, "r", encoding='utf-8'))
+        return sum(1 for line in open(filename, "r"))
 
     def word_to_ids(self, words):
         """convert word to word index"""
         word_ids = []
         for word in words:
-            if word in self.word_replace_dict:
-                word = self.word_replace_dict[word]
+            word = self.word_replace_dict.get(word, word)
             if word not in self.word2id_dict:
                 word = "OOV"
             word_id = self.word2id_dict[word]
             word_ids.append(word_id)
+
         return word_ids
 
     def label_to_ids(self, labels):
@@ -105,20 +105,19 @@ class Dataset(object):
 
         def wrapper():
             fread = io.open(filename, "r", encoding="utf-8")
-            headline = next(fread)
-            headline = headline.strip().split("\t")
             if mode == "infer":
-                assert len(headline) == 1 and headline[0] == "text_a"
                 for line in fread:
-                    words = line.strip("\n").split("\002")
+                    words= line.strip()
                     word_ids = self.word_to_ids(words)
-                    yield word_ids[0:max_seq_len], [0 for _ in word_ids][
-                        0:max_seq_len]
+                    yield (word_ids[0:max_seq_len],)
             else:
-                assert len(headline) == 2 and headline[
-                    0] == "text_a" and headline[1] == "label"
+                headline = next(fread)
+                headline = headline.strip().split('\t')
+                assert len(headline) == 2 and headline[0] == "text_a" and headline[1] == "label"
                 for line in fread:
                     words, labels = line.strip("\n").split("\t")
+                    if len(words)<1:
+                        continue
                     word_ids = self.word_to_ids(words.split("\002"))
                     label_ids = self.label_to_ids(labels.split("\002"))
                     assert len(word_ids) == len(label_ids)

@@ -6,7 +6,10 @@
 
 ## PaddleDetection进行迁移学习
 
-在迁移学习中，对预训练模型进行选择性加载，可通过在 YMAL 配置文件中通过设置 finetune_exclude_pretrained_params字段，也可通过在 train.py的启动参数中设置 -o finetune_exclude_pretrained_params。
+在迁移学习中，对预训练模型进行选择性加载，可通过如下两种方式实现：
+
+1. 在 YMAL 配置文件中通过设置`finetune_exclude_pretrained_params`字段。可参考[配置文件](../configs/yolov3_mobilenet_v1_fruit.yml#L15)
+2. 在 train.py的启动参数中设置 -o finetune_exclude_pretrained_params。例如：
 
 ```python
 export PYTHONPATH=$PYTHONPATH:.
@@ -18,7 +21,7 @@ python -u tools/train.py -c configs/faster_rcnn_r50_1x.yml \
 
 * 说明：
 
-1. pretrain\_weights的路径为COCO数据集上开源的faster RCNN模型链接
+1. pretrain\_weights的路径为COCO数据集上开源的faster RCNN模型链接，完整模型链接可参考[MODEL_ZOO](MODEL_ZOO_cn.md)
 2. finetune\_exclude\_pretrained\_params中设置参数字段，如果参数名能够匹配以上参数字段（通配符匹配方式），则在模型加载时忽略该参数。
 
 如果用户需要利用自己的数据进行finetune，模型结构不变，只需要忽略与类别数相关的参数。PaddleDetection给出了不同模型类型所对应的忽略参数字段。如下表所示：</br>

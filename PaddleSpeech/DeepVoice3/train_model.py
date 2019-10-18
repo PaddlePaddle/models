@@ -183,7 +183,6 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
 
             if (local_rank == 0 and global_step > 0 and
                     global_step % hparams.checkpoint_interval == 0):
-
                 save_states(global_step, writer, mel_outputs, linear_outputs,
                             alignments, mel, linear,
                             input_lengths.numpy(), checkpoint_dir)
