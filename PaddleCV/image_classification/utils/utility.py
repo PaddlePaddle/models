@@ -319,14 +319,14 @@ def create_data_loader(is_train, args):
         feed_lam = fluid.data(
             name="feed_lam", shape=[None, 1], dtype="float32", lod_level=0)
 
-        data_loader = fluid.io.Dataloader.from_generator(
+        data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
             capacity=64,
             use_double_buffer=True,
             iterable=False)
         return data_loader, [feed_image, feed_y_a, feed_y_b, feed_lam]
     else:
-        data_loader = fluid.io.Dataloader.from_generator(
+        data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_label],
             capacity=64,
             use_double_buffer=True,
