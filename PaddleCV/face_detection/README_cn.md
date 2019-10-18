@@ -109,6 +109,7 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 **注意**：
   - 本次开源模型中CPM模块与论文中有些许不同，相比论文中CPM模块训练和测试速度更快。
   - Pyramid Anchors模块的body部分可以针对不同情况，进行相应的长宽设置来调参。同时face、head、body部分的loss对应的系数也可以通过调参优化。
+  - 针对GPU资源有限时，可采取显存优化策略，`train.py` 与 `derface_eval.py` 已经加入部分显存优化FLAGS，详情更多内容请参考[API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/flags/memory_cn.html#flags-fraction-of-gpu-memory-to-use)
 
 
 ### 模型评估
