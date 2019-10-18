@@ -53,8 +53,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 更多图像分类模型请参考 [Image Classification](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification)。
 
-基于 PaddlePaddle 动态图实现的图像分类模型请参考 [dygraph/resnet](https://github.com/PaddlePaddle/models/tree/develop/dygraph/resnet) 和 [dygraph/se_resnext](https://github.com/PaddlePaddle/models/tree/develop/dygraph/se_resnext)。
-
 ### 目标检测
 
 目标检测任务的目标是给定一张图像或是一个视频帧，让计算机找出其中所有目标的位置，并给出每个目标的具体类别。对于计算机而言，能够“看到”的是图像被编码之后的数字，但很难解图像或是视频帧中出现了人或是物体这样的高层语义概念，也就更加难以定位目标出现在图像中哪个区域。目标检测模型请参考 [PaddleDetection](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection)。
@@ -103,8 +101,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [STGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 人脸特定属性转换，只输入有变化的标签，引入 GRU 结构，更好的选择变化的属性 | Celeba     |
 | [SPADE](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) | 提出一种考虑空间语义信息的归一化方法，从而更好的保留语义信息，生成更为逼真的图像，可用于图像翻译。 | Cityscapes |
 
-基于 PaddlePaddle 动态图实现的 CycleGAN 请参考 [dygraph/cycle_gan](https://github.com/PaddlePaddle/models/tree/develop/dygraph/cycle_gan)。	
-
 ### 场景文字识别
 
 场景文字识别是在图像背景复杂、分辨率低下、字体多样、分布随意等情况下，将图像信息转化为文字序列的过程，可认为是一种特别的翻译过程：将图像输入翻译为自然语言输出。
@@ -113,8 +109,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | -------------- |
 | [CRNN-CTC](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用 CTC model 识别图片中单行英文字符，用于端到端的文本行图片识别方法 | 单行不定长的英文字符串图片 | 错误率= 22.3%  |
 | [OCR   Attention](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition) | 使用 attention 识别图片中单行英文字符，用于端到端的自然场景文本识别 | 单行不定长的英文字符串图片 | 错误率 = 15.8% |
-
-基于 PaddlePaaddle 动态图实现的 OCR 模型请参考 [dygraph/ocr_recognition](https://github.com/PaddlePaddle/models/tree/develop/dygraph/ocr_recognition)。
 
 ### 度量学习
 
@@ -146,8 +140,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [BMN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2019 年 ActivityNet 夺冠方案 | ActivityNet1.3 | AUC=67.19%    |
 | [ETS](https://github.com/PaddlePaddle/models/tree/release/1.6/PaddleCV/PaddleVideo/models/ets) | 视频摘要生成领域的基准模型 | ActivityNet Captions | METEOR：10.0 |
 
-
-
 ## PaddleNLP
 
 [**PaddleNLP**](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP) 是基于 PaddlePaddle 深度学习框架开发的自然语言处理 (NLP) 工具，算法，模型和数据的开源项目。百度在 NLP 领域十几年的深厚积淀为 PaddleNLP 提供了强大的核心动力。使用 PaddleNLP，您可以得到：
@@ -170,9 +162,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 语言模型
 
-- [基于LSTM的语言模型任务](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model)，给定一个输入词序列（中文需要先分词、英文需要 tokenize），计算其 PPL（语言模型困惑度，用于表示模型生成句子的流利程度）。
-
-- 基于 PaddlePaddle **动态图** 实现的基于 LSTM 的语音模型请参考 [dygraph/ptb_lm](https://github.com/PaddlePaddle/models/tree/develop/dygraph/ptb_lm)。
+[基于LSTM的语言模型任务](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model)，给定一个输入词序列（中文需要先分词、英文需要 tokenize），计算其 PPL（语言模型困惑度，用于表示模型生成句子的流利程度）。
 
 ### NLP 核心技术
 
@@ -202,7 +192,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 - [EmotionDetection](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/emotion_detection) (Emotion Detection，简称EmoTect)，专注于识别**人机对话场景**中用户的情绪，针对智能对话场景中的用户文本，自动判断该文本的情绪类别。
 
-- 基于 PaddlePaddle 动态图实现的情感分类模型请参考 [dygraph/sentiment](https://github.com/PaddlePaddle/models/tree/develop/dygraph/sentiment)。
 
 #### 阅读理解
 
@@ -215,9 +204,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 机器翻译
 
-- [PaddleMT](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/neural_machine_translation/transformer) (Paddle Machine Translation)，基于论文 [Attention Is All You Need](https://arxiv.org/abs/1706.03762) 的经典机器翻译模型。
-
-- 基于 PaddlePaddle 动态图实现的 Transformer 机器翻译模型参考  [dygraph/transformer](https://github.com/PaddlePaddle/models/tree/develop/dygraph/transformer)。
+[PaddleMT](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/neural_machine_translation/transformer) (Paddle Machine Translation)，基于论文 [Attention Is All You Need](https://arxiv.org/abs/1706.03762) 的经典机器翻译模型。
 
 
 #### 对话系统
@@ -264,6 +251,10 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 PaddleSlim 模型压缩工具库的实验结果和模型库见 [详细实验结果与ModelZoo](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/model_zoo.md)。
 
+## 基于动态图实现的模型
+
+自 PaddlePaddle fluid 1.5 版本正式支持动态图模式以来，模型库新增若干基于动态图实现的模型，请参考 [dygraph](https://github.com/PaddlePaddle/models/blob/develop/dygraph/)，这些模型可以作为了解和使用 PaddlePaddle 动态图模式的示例。目前 PaddlePaddle 的动态图功能正在活跃开发中，API 可能发生变动。
+
 ## 其他模型
 
 | 模型名称                                                     | 模型简介                                                     |
@@ -272,7 +263,7 @@ PaddleSlim 模型压缩工具库的实验结果和模型库见 [详细实验结�
 | [DoubleDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 将Double Q的想法应用在DQN上，解决过优化问题                  |
 | [DuelingDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 改进了DQN模型，提高了模型的性能                              |
 | [CIKM2019-MONOPOLY](https://github.com/PaddlePaddle/models/tree/develop/PaddleST/Research/CIKM2019-MONOPOLY) | Monopoly是一个实用的 POI 商业智能算法，能够利用少量的房产价格，对大量其他的固定资产进行价值估计。 该算法全面适配 MapReduce 的分布式计算框架，能够快速用于工业部署。 |
-| [reinforcement_learning](https://github.com/PaddlePaddle/models/tree/develop/dygraph/reinforcement_learning) | 基于 PaddlePaddle 动态图实现的 REINFORCE 增强学习模型。      |
+
 
 ## 快速下载模型库
 
