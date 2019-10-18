@@ -1,4 +1,4 @@
-# -*- encoding: utf8 -*-
+# -*- encoding: UTF8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,10 +96,10 @@ def test_inference_model(args, texts):
 
     assert (args.inference_model_dir)
     infer_program, feed_names, fetch_targets = fluid.io.load_inference_model(
-            dirname=args.inference_model_dir,
-            executor=exe,
-            model_filename="model.pdmodel",
-            params_filename="params.pdparams")
+        dirname=args.inference_model_dir,
+        executor=exe,
+        model_filename="model.pdmodel",
+        params_filename="params.pdparams")
     data = []
     seq_lens = []
     for query in texts:
@@ -112,13 +112,13 @@ def test_inference_model(args, texts):
     seq_lens = np.array(seq_lens).reshape((batch_size, 1))
 
     pred = exe.run(infer_program,
-                feed={
-                    feed_names[0]:data,
-                    feed_names[1]:seq_lens},
-                fetch_list=fetch_targets,
-                return_numpy=True)
+                   feed={feed_names[0]: data,
+                         feed_names[1]: seq_lens},
+                   fetch_list=fetch_targets,
+                   return_numpy=True)
     for probs in pred[0]:
-        print("%d\t%f\t%f\t%f" % (np.argmax(probs), probs[0], probs[1], probs[2]))
+        print("%d\t%f\t%f\t%f" %
+              (np.argmax(probs), probs[0], probs[1], probs[2]))
 
 
 if __name__ == "__main__":
@@ -131,4 +131,3 @@ if __name__ == "__main__":
     else:
         texts = [u"我 讨厌 你 ， 哼哼 哼 。 。", u"我 喜欢 你 ， 爱 你 哟"]
         test_inference_model(args, texts)
-
