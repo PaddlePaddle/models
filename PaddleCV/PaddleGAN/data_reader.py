@@ -618,6 +618,11 @@ class data_reader(object):
                 train_list = os.path.join(dataset_dir, 'train.txt')
                 if self.cfg.train_list is not None:
                     train_list = self.cfg.train_list
+                if not os.path.exists(train_list):
+                    print(
+                        "train_list is NOT EXIST!!! Please prepare train list first"
+                    )
+                    sys.exit(1)
                 train_reader = triplex_reader_creator(
                     image_dir=dataset_dir,
                     list_filename=train_list,
@@ -629,6 +634,11 @@ class data_reader(object):
                     test_list = os.path.join(dataset_dir, "test.txt")
                     if self.cfg.test_list is not None:
                         test_list = self.cfg.test_list
+                    if not os.path.exists(test_list):
+                        print(
+                            "test_list is NOT EXIST!!! Please prepare test list first"
+                        )
+                        sys.exit(1)
                     test_reader = triplex_reader_creator(
                         image_dir=dataset_dir,
                         list_filename=test_list,

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +17,7 @@
 import sys
 import csv
 import os
+import io
 import re
 
 import commonlib
@@ -64,18 +66,18 @@ class MRDA(object):
         dadb_list = self.data_dict[data_type]
         for dadb_key in dadb_list: 
             dadb_file = self.dadb_dict[dadb_key]
-            with open(dadb_file, 'r') as fr: 
-                row = csv.reader(fr, delimiter = ',')
-                for line in row: 
-                    elems = line
-                    conv_id = elems[2]
-                    conv_id_list.append(conv_id)
-                    if len(elems) != 14: 
-                        continue
-                    error_code = elems[3]
-                    da_tag = elems[-9]
-                    da_ori_tag = elems[-6]
-                    dadb_dict[conv_id] = (error_code, da_ori_tag, da_tag)
+            fr = io.open(dadb_file, 'r', encoding="utf8")
+            row = csv.reader(fr, delimiter = ',')
+            for line in row: 
+                elems = line
+                conv_id = elems[2]
+                conv_id_list.append(conv_id)
+                if len(elems) != 14: 
+                    continue
+                error_code = elems[3]
+                da_tag = elems[-9]
+                da_ori_tag = elems[-6]
+                dadb_dict[conv_id] = (error_code, da_ori_tag, da_tag)
         return dadb_dict, conv_id_list
 
     def load_trans(self, data_type): 
@@ -84,16 +86,16 @@ class MRDA(object):
         trans_list = self.data_dict[data_type]
         for trans_key in trans_list: 
             trans_file = self.trans_dict[trans_key]
-            with open(trans_file, 'r') as fr: 
-                row = csv.reader(fr, delimiter = ',')
-                for line in row: 
-                    elems = line
-                    if len(elems) != 3: 
-                        continue
-                    conv_id = elems[0]
-                    text = elems[1]
-                    text_process = elems[2]
-                    trans_dict[conv_id] = (text, text_process)
+            fr = io.open(trans_file, 'r', encoding="utf8")
+            row = csv.reader(fr, delimiter = ',')
+            for line in row: 
+                elems = line
+                if len(elems) != 3: 
+                    continue
+                conv_id = elems[0]
+                text = elems[1]
+                text_process = elems[2]
+                trans_dict[conv_id] = (text, text_process)
         return trans_dict
 
     def _parser_dataset(self, data_type): 
@@ -103,23 +105,23 @@ class MRDA(object):
         out_filename = "%s/%s.txt" % (self.out_dir, data_type)
         dadb_dict, conv_id_list = self.load_dadb(data_type)
         trans_dict = self.load_trans(data_type)
-        with open(out_filename, 'w') as fw: 
-            for elem in conv_id_list: 
-                v_dadb = dadb_dict[elem]
-                v_trans = trans_dict[elem]
-                da_tag = v_dadb[2]
-                if da_tag not in self.tag_dict: 
-                    continue
-                tag = self.tag_dict[da_tag]
-                if tag == "Z": 
-                    continue
-                if tag not in self.map_tag_dict: 
-                    self.map_tag_dict[tag] = self.tag_id
-                    self.tag_id += 1
-                caller = elem.split('_')[0].split('-')[-1]
-                conv_no = elem.split('_')[0].split('-')[0]
-                out = "%s\t%s\t%s\t%s" % (conv_no, self.map_tag_dict[tag], caller, v_trans[0])
-                fw.write("%s\n" % out)
+        fw = io.open(out_filename, 'w', encoding="utf8")
+        for elem in conv_id_list: 
+            v_dadb = dadb_dict[elem]
+            v_trans = trans_dict[elem]
+            da_tag = v_dadb[2]
+            if da_tag not in self.tag_dict: 
+                continue
+            tag = self.tag_dict[da_tag]
+            if tag == "Z": 
+                continue
+            if tag not in self.map_tag_dict: 
+                self.map_tag_dict[tag] = self.tag_id
+                self.tag_id += 1
+            caller = elem.split('_')[0].split('-')[-1]
+            conv_no = elem.split('_')[0].split('-')[0]
+            out = "%s\t%s\t%s\t%s" % (conv_no, self.map_tag_dict[tag], caller, v_trans[0])
+            fw.write("%s\n" % out)
 
     def get_train_dataset(self): 
         """
@@ -143,9 +145,9 @@ class MRDA(object):
         """
         get tag and map ids file
         """
-        with open(self.map_tag, 'w') as fw: 
-            for elem in self.map_tag_dict: 
-                fw.write("%s\t%s\n" % (elem, self.map_tag_dict[elem]))
+        fw = io.open(self.map_tag, 'w', encoding="utf8")
+        for elem in self.map_tag_dict: 
+            fw.write("%s\t%s\n" % (elem, self.map_tag_dict[elem]))
 
     def main(self): 
         """

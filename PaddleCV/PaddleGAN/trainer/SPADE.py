@@ -19,6 +19,7 @@ from network.SPADE_network import SPADE_model
 from util import utility
 import paddle.fluid as fluid
 import sys
+import os
 import time
 import network.vgg as vgg
 import pickle as pkl
@@ -316,6 +317,12 @@ class SPADE(object):
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
+
+        if not os.path.exists(self.cfg.vgg19_pretrain):
+            print(
+                "directory VGG19_pretrain NOT EXIST!!! Please download VGG19 first."
+            )
+            sys.exit(1)
         gen_trainer.vgg.load_vars(exe, gen_trainer.program,
                                   self.cfg.vgg19_pretrain)
 

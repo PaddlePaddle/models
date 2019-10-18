@@ -7,5 +7,6 @@ checkpoints/
 weights/
 !weights/*.sh
 dataset/coco/
+!dataset/coco/*.py
 log*
 output*

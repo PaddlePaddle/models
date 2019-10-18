@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved. 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +15,7 @@
 """evaluate task metrics"""
 
 import sys
+import io
 
 
 class EvalDA(object):
@@ -33,18 +35,18 @@ class EvalDA(object):
         """
         pred_label = []
         refer_label = []
-        with open(self.refer_file, 'r') as fr: 
-            for line in fr:  
-                label = line.rstrip('\n').split('\t')[1]
-                refer_label.append(int(label))
+        fr = io.open(self.refer_file, 'r', encoding="utf8")
+        for line in fr:  
+            label = line.rstrip('\n').split('\t')[1]
+            refer_label.append(int(label))
         idx = 0
-        with open(self.pred_file, 'r') as fr: 
-            for line in fr: 
-                elems = line.rstrip('\n').split('\t')
-                if len(elems) != 2 or not elems[0].isdigit():
-                    continue
-                tag_id = int(elems[1])
-                pred_label.append(tag_id)
+        fr = io.open(self.pred_file, 'r', encoding="utf8")
+        for line in fr: 
+            elems = line.rstrip('\n').split('\t')
+            if len(elems) != 2 or not elems[0].isdigit():
+                continue
+            tag_id = int(elems[1])
+            pred_label.append(tag_id)
         return pred_label, refer_label
 
     def evaluate(self): 
@@ -78,18 +80,18 @@ class EvalATISIntent(object):
         """
         pred_label = []
         refer_label = []
-        with open(self.refer_file, 'r') as fr: 
-            for line in fr:  
-                label = line.rstrip('\n').split('\t')[0]
-                refer_label.append(int(label))
+        fr = io.open(self.refer_file, 'r', encoding="utf8")
+        for line in fr:  
+            label = line.rstrip('\n').split('\t')[0]
+            refer_label.append(int(label))
         idx = 0
-        with open(self.pred_file, 'r') as fr: 
-            for line in fr: 
-                elems = line.rstrip('\n').split('\t')
-                if len(elems) != 2 or not elems[0].isdigit():
-                    continue
-                tag_id = int(elems[1])
-                pred_label.append(tag_id)
+        fr = io.open(self.pred_file, 'r', encoding="utf8")
+        for line in fr: 
+            elems = line.rstrip('\n').split('\t')
+            if len(elems) != 2 or not elems[0].isdigit():
+                continue
+            tag_id = int(elems[1])
+            pred_label.append(tag_id)
         return pred_label, refer_label
 
     def evaluate(self): 
@@ -123,18 +125,18 @@ class EvalATISSlot(object):
         """
         pred_label = []
         refer_label = []
-        with open(self.refer_file, 'r') as fr: 
-            for line in fr: 
-                labels = line.rstrip('\n').split('\t')[1].split()
-                labels = [int(l) for l in labels]
-                refer_label.append(labels)
-        with open(self.pred_file, 'r') as fr: 
-            for line in fr: 
-                if len(line.split('\t')) != 2 or not line[0].isdigit(): 
-                    continue
-                labels = line.rstrip('\n').split('\t')[1].split()[1:]
-                labels = [int(l) for l in labels]
-                pred_label.append(labels)
+        fr = io.open(self.refer_file, 'r', encoding="utf8")
+        for line in fr: 
+            labels = line.rstrip('\n').split('\t')[1].split()
+            labels = [int(l) for l in labels]
+            refer_label.append(labels)
+        fr = io.open(self.pred_file, 'r', encoding="utf8")
+        for line in fr: 
+            if len(line.split('\t')) != 2 or not line[0].isdigit(): 
+                continue
+            labels = line.rstrip('\n').split('\t')[1].split()[1:]
+            labels = [int(l) for l in labels]
+            pred_label.append(labels)
         pred_label_equal = []
         refer_label_equal = []
         assert len(refer_label) == len(pred_label)
@@ -208,19 +210,19 @@ class EvalUDC(object):
         """
         data = [] 
         refer_label = []
-        with open(self.refer_file, 'r') as fr: 
-            for line in fr: 
-                label = line.rstrip('\n').split('\t')[0]
-                refer_label.append(label)
+        fr = io.open(self.refer_file, 'r', encoding="utf8")
+        for line in fr: 
+            label = line.rstrip('\n').split('\t')[0]
+            refer_label.append(label)
         idx = 0
-        with open(self.pred_file, 'r') as fr: 
-            for line in fr: 
-                elems = line.rstrip('\n').split('\t')
-                if len(elems) != 2 or not elems[0].isdigit(): 
-                    continue
-                match_prob = elems[1]
-                data.append((float(match_prob), int(refer_label[idx])))
-                idx += 1
+        fr = io.open(self.pred_file, 'r', encoding="utf8")
+        for line in fr: 
+            elems = line.rstrip('\n').split('\t')
+            if len(elems) != 2 or not elems[0].isdigit(): 
+                continue
+            match_prob = elems[1]
+            data.append((float(match_prob), int(refer_label[idx])))
+            idx += 1
         return data
 
     def get_p_at_n_in_m(self, data, n, m, ind):
@@ -281,17 +283,17 @@ class EvalDSTC2(object):
         """
         pred_label = []
         refer_label = []
-        with open(self.refer_file, 'r') as fr: 
-            for line in fr: 
-                line = line.strip('\n')
-                labels = [int(l) for l in line.split('\t')[-1].split()]
-                labels = sorted(list(set(labels)))
-                refer_label.append(" ".join([str(l) for l in labels]))
+        fr = io.open(self.refer_file, 'r', encoding="utf8")
+        for line in fr: 
+            line = line.strip('\n')
+            labels = [int(l) for l in line.split('\t')[-1].split()]
+            labels = sorted(list(set(labels)))
+            refer_label.append(" ".join([str(l) for l in labels]))
         all_pred = []
-        with open(self.pred_file, 'r') as fr: 
-            for line in fr: 
-                line = line.strip('\n')
-                all_pred.append(line)
+        fr = io.open(self.pred_file, 'r', encoding="utf8")
+        for line in fr: 
+            line = line.strip('\n')
+            all_pred.append(line)
         all_pred = all_pred[len(all_pred) - len(refer_label):]
         for line in all_pred: 
             labels = [int(l) for l in line.split('\t')[-1].split()]
