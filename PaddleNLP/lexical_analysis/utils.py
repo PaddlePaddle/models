@@ -50,7 +50,7 @@ class ArgumentGroup(object):
 
 def load_yaml(parser, file_name, **kwargs):
     with open(file_name) as f:
-        args = yaml.load(f)
+        args = yaml.load(f, Loader=yaml.FullLoader)
         for title in args:
             group = parser.add_argument_group(title=title, description='')
             for name in args[title]:

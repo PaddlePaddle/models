@@ -85,7 +85,7 @@ def lex_net(word, args, vocab_size, num_labels, for_infer = True, target=None):
         """
         Configure the network
         """
-        word_embedding = fluid.layers.embedding(
+        word_embedding = fluid.embedding(
             input=word,
             size=[vocab_size, word_emb_dim],
             dtype='float32',
