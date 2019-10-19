@@ -25,7 +25,7 @@ from paddle.fluid.layers import control_flow
 import logging
 logger = logging.getLogger(__name__)
 
-def cosine_warmup_decay(learning_rate, warmup_factor, decay_factor,
+def cosine_warmup_decay(learning_rate, betas, warmup_factor, decay_factor,
                         total_step, warmup_pct):
     def annealing_cos(start, end, pct):
 	"Cosine anneal from `start` to `end` as pct goes from 0.0 to 1.0."
@@ -44,6 +44,12 @@ def cosine_warmup_decay(learning_rate, warmup_factor, decay_factor,
         dtype='float32',
         persistable=True,
         name="learning_rate")
+    beta1 = fluid.layers.create_global_var(
+        shape=[1],
+        value=float(betas[0]),
+        dtype='float32',
+        persistable=True,
+        name="beta1")
 
     warmup_step_var = fluid.layers.fill_constant(
         shape=[1], dtype='float32', value=float(warmup_step), force_cpu=True)
@@ -53,12 +59,18 @@ def cosine_warmup_decay(learning_rate, warmup_factor, decay_factor,
             cur_lr = annealing_cos(warmup_start_lr, learning_rate,
                                    global_step / warmup_step_var)
             fluid.layers.assign(cur_lr, lr)
+            cur_beta1 = annealing_cos(betas[0], betas[1],
+                                   global_step / warmup_step_var)
+            fluid.layers.assign(cur_beta1, beta1)
         with switch.case(global_step >= warmup_step_var):
             cur_lr = annealing_cos(learning_rate, decay_end_lr,
                                    (global_step - warmup_step_var) / (total_step - warmup_step))
             fluid.layers.assign(cur_lr, lr)
+            cur_beta1 = annealing_cos(betas[1], betas[0],
+                                   (global_step - warmup_step_var) / (total_step - warmup_step))
+            fluid.layers.assign(cur_beta1, beta1)
 
-    return lr
+    return lr, beta1
 
 
 def optimize(loss,
@@ -71,13 +83,14 @@ def optimize(loss,
              startup_prog,
              weight_decay,
              clip_norm,
-             beta1=0.85,
+             beta1=0.9,
              beta2=0.99,
+             betas=[0.95, 0.85],
              scheduler='cosine_warmup_decay'):
 
     scheduled_lr= None
     if scheduler == 'cosine_warmup_decay':
-        scheduled_lr = cosine_warmup_decay(learning_rate, warmup_factor,
+        scheduled_lr, scheduled_beta1 = cosine_warmup_decay(learning_rate, betas, warmup_factor,
                                            decay_factor, total_step,
                                            warmup_pct)
     else:
@@ -85,7 +98,9 @@ def optimize(loss,
                          "'cosine_warmup_decay'")
 
     optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr,
-                                     beta1=beta1, beta2=beta2)
+                                     beta1=beta1,
+                                     beta2=beta2,
+                                     actual_beta1=scheduled_beta1)
     fluid.clip.set_gradient_clip(
         clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=clip_norm))
 
