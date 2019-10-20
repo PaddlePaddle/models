@@ -48,6 +48,7 @@ parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224,
 add_arg('crop_size',        int,  224,                  "The value of crop size")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
+add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
 # yapf: enable
 
 
@@ -67,7 +68,8 @@ def eval(args):
 
     # model definition
     if args.model.startswith('EfficientNet'):
-        model = models.__dict__[args.model](is_test=True, padding_type=args.padding_type)
+        model = models.__dict__[args.model](is_test=True, padding_type=args.padding_type,
+                                            use_se=args.use_se)
     else:
         model = models.__dict__[args.model]()
 

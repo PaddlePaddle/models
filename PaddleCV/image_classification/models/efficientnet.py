@@ -103,7 +103,7 @@ def round_repeats(repeats, global_params):
 
 
 class EfficientNet():
-    def __init__(self, name='b0', padding_type='SAME', override_params=None, is_test=False):
+    def __init__(self, name='b0', padding_type='SAME', override_params=None, is_test=False, use_se=True):
         valid_names = ['b' + str(i) for i in range(8)]
         assert name in valid_names, 'efficient name should be in b0~b7'
         model_name = 'efficientnet-' + name
@@ -112,6 +112,7 @@ class EfficientNet():
         self._bn_eps = self._global_params.batch_norm_epsilon
         self.is_test = is_test
         self.padding_type = padding_type
+        self.use_se = use_se
 
     def net(self, input, class_dim=1000, is_test=False):
 
@@ -243,7 +244,7 @@ class EfficientNet():
     def mb_conv_block(self, inputs, block_args, is_test=False, drop_connect_rate=None, name=None):
         # Expansion and Depthwise Convolution
         oup = block_args.input_filters * block_args.expand_ratio  # number of output channels
-        has_se = (block_args.se_ratio is not None) and (0 < block_args.se_ratio <= 1)
+        has_se = self.use_se and (block_args.se_ratio is not None) and (0 < block_args.se_ratio <= 1)
         id_skip = block_args.id_skip  # skip connection and drop connect
         conv = inputs
         if block_args.expand_ratio != 1:
@@ -413,41 +414,41 @@ class BlockDecoder(object):
         return block_strings
 
 
-def EfficientNetB0(is_test=False, padding_type='SAME', override_params=None):
-    model = EfficientNet(name='b0', is_test=is_test, padding_type=padding_type, override_params=override_params)
+def EfficientNetB0(is_test=False, padding_type='SAME', override_params=None, use_se=True):
+    model = EfficientNet(name='b0', is_test=is_test, padding_type=padding_type, override_params=override_params, use_se=use_se)
     return model
 
 
-def EfficientNetB1(is_test=False, padding_type='SAME', override_params=None):
-    model = EfficientNet(name='b1', is_test=is_test, padding_type=padding_type, override_params=override_params)
+def EfficientNetB1(is_test=False, padding_type='SAME', override_params=None, use_se=True):
+    model = EfficientNet(name='b1', is_test=is_test, padding_type=padding_type, override_params=override_params, use_se=use_se)
     return model
 
 
-def EfficientNetB2(is_test=False, padding_type='SAME', override_params=None):
-    model = EfficientNet(name='b2', is_test=is_test, padding_type=padding_type, override_params=override_params)
+def EfficientNetB2(is_test=False, padding_type='SAME', override_params=None, use_se=True):
+    model = EfficientNet(name='b2', is_test=is_test, padding_type=padding_type, override_params=override_params, use_se=use_se)
     return model
 
 
-def EfficientNetB3(is_test=False, padding_type='SAME', override_params=None):
-    model = EfficientNet(name='b3', is_test=is_test, padding_type=padding_type, override_params=override_params)
+def EfficientNetB3(is_test=False, padding_type='SAME', override_params=None, use_se=True):
+    model = EfficientNet(name='b3', is_test=is_test, padding_type=padding_type, override_params=override_params, use_se=use_se)
     return model
 
 
-def EfficientNetB4(is_test=False, padding_type='SAME', override_params=None):
-    model = EfficientNet(name='b4', is_test=is_test, padding_type=padding_type, override_params=override_params)
+def EfficientNetB4(is_test=False, padding_type='SAME', override_params=None, use_se=True):
+    model = EfficientNet(name='b4', is_test=is_test, padding_type=padding_type, override_params=override_params, use_se=use_se)
     return model
 
 
-def EfficientNetB5(is_test=False, padding_type='SAME', override_params=None):
-    model = EfficientNet(name='b5', is_test=is_test, padding_type=padding_type, override_params=override_params)
+def EfficientNetB5(is_test=False, padding_type='SAME', override_params=None, use_se=True):
+    model = EfficientNet(name='b5', is_test=is_test, padding_type=padding_type, override_params=override_params, use_se=use_se)
     return model
 
 
-def EfficientNetB6(is_test=False, padding_type='SAME', override_params=None):
-    model = EfficientNet(name='b6', is_test=is_test, padding_type=padding_type, override_params=override_params)
+def EfficientNetB6(is_test=False, padding_type='SAME', override_params=None, use_se=True):
+    model = EfficientNet(name='b6', is_test=is_test, padding_type=padding_type, override_params=override_params, use_se=use_se)
     return model
 
 
-def EfficientNetB7(is_test=False, padding_type='SAME', override_params=None):
-    model = EfficientNet(name='b7', is_test=is_test, padding_type=padding_type, override_params=override_params)
+def EfficientNetB7(is_test=False, padding_type='SAME', override_params=None, use_se=True):
+    model = EfficientNet(name='b7', is_test=is_test, padding_type=padding_type, override_params=override_params, use_se=use_se)
     return model
