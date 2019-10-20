@@ -64,7 +64,7 @@ nltk.download("cmudict")
 
 可以通过 `--hparams` 参数来覆盖预设的超参数配置，参数格式是逗号分隔的键值对 `${key}=${value}`，例如 `--hparams="batch_size=8, nepochs=500"`。
 
-部分参数可以只和训练有关，如 `batch_size`, `checkpoint_interval`, 用户在训练时可以使用不同的值。但部分参数和数据预处理相关，如 `num_mels` 和 `ref_level_db`, 这些参数在数据预处理和训练时候应该保持一致。
+部分参数只和训练有关，如 `batch_size`, `checkpoint_interval`, 用户在训练时可以使用不同的值。但部分参数和数据预处理相关，如 `num_mels` 和 `ref_level_db`, 这些参数在数据预处理和训练时候应该保持一致。
 
 关于超参数设置更多细节可以参考 `hparams.py` ，其中定义了 hparams。超参数的优先级序列是：通过命令行参数 `--hparams` 传入的参数优先级高于通过 `--preset` 参数传入的 json 配置文件，高于 `hparams.py` 中的定义。
 
@@ -88,12 +88,12 @@ python preprocess.py \
 
 目前 `${name}$` 只支持 `ljspeech`。未来将会支持更多数据集。
 
-假设你使用 `presers/deepvoice3_ljspeech.json` 作为处理 LJSpeech 的预设配置文件，并且解压后的数据集位于  `~/data/LJSpeech-1.1`, 那么使用如下的命令进行数据预处理。
+假设你使用 `presers/deepvoice3_ljspeech.json` 作为处理 LJSpeech 的预设配置文件，并且解压后的数据集位于  `./data/LJSpeech-1.1`, 那么使用如下的命令进行数据预处理。
 
 ```bash
 python preprocess.py \
     --preset=presets/deepvoice3_ljspeech.json \
-    ljspeech ~/data/LJSpeech-1.1/ ./data/ljspeech
+    ljspeech ./data/LJSpeech-1.1/ ./data/ljspeech
 ```
 
 数据处理完成后，你会在 `./data/ljspeech` 看到提取的特征，包含如下文件。
@@ -138,7 +138,7 @@ python train.py --data-root=${data-root} --use-gpu \
 
 ### 使用 GPU 多卡训练
 
-本模型支持使用多个 GPU 通过数据并行的方式 训练。方法是使用 `paddle.distributed.launch` 模块来启动 `train.py`。
+本模型支持使用多个 GPU 通过数据并行的方式训练。方法是使用 `paddle.distributed.launch` 模块来启动 `train.py`。
 
 ```bash
 python -m paddle.distributed.launch \
@@ -163,9 +163,9 @@ python -m paddle.distributed.launch \
 
 上述的示例中，设置了 `2, 3, 4, 5` 号显卡为可见的 GPU。然后 `--selected_gpus=0,1,2,3` 选择的是 GPU 的逻辑序号，分别对应于  `2, 3, 4, 5` 号卡。
 
-模型默认被保存为后缀为 `.model`的文件夹，保存在 `${directory_to_save_results}/checkpoints` 文件夹中。多层平均的注意力机制对齐结果被保存为 `.png` 图片，默认保存在 `${directory_to_save_results}/checkpoints/alignment_ave` 中。每一层的注意力机制对齐结果默认被保存在 `${directory_to_save_results}/checkpoints/alignment_layer{attention_layer_num}`文件夹中。默认每 10000 步保存一次用于查看。
+模型 (模型参数保存为`*.pdparams` 文件，优化器被保存为 `*.pdopt` 文件)保存在 `${directory_to_save_results}/checkpoints` 文件夹中。多层平均的注意力机制对齐结果被保存为 `.png` 图片，默认保存在 `${directory_to_save_results}/checkpoints/alignment_ave` 中。每一层的注意力机制对齐结果默认被保存在 `${directory_to_save_results}/checkpoints/alignment_layer{attention_layer_num}`文件夹中。默认每 10000 步保存一次用于查看。
 
-对 6 个给定的句子的语音合成结果保存在 `checkpoints/eval` 中，包含多层平均平均的注意力机制对齐结果，这被保存为名为  `step{step_num}_text{text_id}_single_alignment.png` 的图片；以及合成的音频文件，保存为名为 `step{step_num}_text{text_id}_single_predicted.wav` 的音频。
+对 6 个给定的句子的语音合成结果保存在 `${directory_to_save_results}/checkpoints/eval` 中，包含多层平均平均的注意力机制对齐结果，这被保存为名为  `step{step_num}_text{text_id}_single_alignment.png` 的图片；以及合成的音频文件，保存为名为 `step{step_num}_text{text_id}_single_predicted.wav` 的音频。
 
 
 ### 使用 Tensorboard 查看训练
@@ -200,7 +200,7 @@ A text-to-speech synthesis system typically consists of multiple stages, such as
 
 根据 [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654), 对于不同的数据集，会有不同的 position rate. 有两个不同的 position rate，一个用于 query 一个用于 key， 这在论文中称为 $\omega_1$ 和 $\omega_2$ ，在预设配置文件中的名字分别为 `query_position_rate` 和 `key_position_rate`。
 
-比如 LJSpeech 数据集的 `query_position_rate` 和 `key_position_rate` 分别为 `1.0` 和 `1.385`。这些值可以使用 `compute_timestamp_ratio.py` 计算，命令如下，其中 `${data_root}` 是预处理后的数据集路径。
+比如 LJSpeech 数据集的 `query_position_rate` 和 `key_position_rate` 分别为 `1.0` 和 `1.385`。固定 `query_position_rate` 为 1.0，`key_position_rate` 可以使用 `compute_timestamp_ratio.py` 计算，命令如下，其中 `${data_root}` 是预处理后的数据集路径。
 
 ```bash
 python compute_timestamp_ratio.py --preset=${preset_json_path} \
