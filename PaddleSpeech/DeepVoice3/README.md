@@ -8,11 +8,11 @@ We implement Deepvoice3 model in paddle fluid with dynamic graph, which is conve
 
 ### Install paddlepaddle
 
-For faster training speed and better support, it is recommended that you install the lasted develop version of paddlepaddle. You can either download the lasted dev wheel or build paddle from source.
+This implementation requires paddlepaddle 1.6. You can either download the compiled package or build paddle from source.
 
-1.  Download lasted wheel. See [**Multi-version whl package list - dev**](https://www.paddlepaddle.org.cn/documentation/docs/en/beginners_guide/install/Tables_en.html#multi-version-whl-package-list-dev) for more details.
+1. Install the compiled package, via pip, conda or docker. See [**Installation Mannuals**](https://www.paddlepaddle.org.cn/documentation/docs/en/beginners_guide/install/index_en.html) for more details.
 
-2. Build paddlepaddle from source. See [**Compile From Source Code**](https://www.paddlepaddle.org.cn/documentation/docs/en/1.5/beginners_guide/install/compile/fromsource_en.html) for more details. Note that if you want to enable data parallel training for multiple GPUs, you should set `-DWITH_DISTRIBUTE=ON` with cmake.
+2. Build paddlepaddle from source. See [**Compile From Source Code**](https://www.paddlepaddle.org.cn/documentation/docs/en/beginners_guide/install/compile/fromsource_en.html) for more details. Note that if you want to enable data parallel training for multiple GPUs, you should set `-DWITH_DISTRIBUTE=ON` with cmake.
 
 ### Other Requirements
 
