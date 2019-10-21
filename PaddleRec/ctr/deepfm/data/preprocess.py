@@ -92,7 +92,7 @@ def get_feat_dict():
 
         # Save dictionary
         with open(dir_feat_dict_, 'wb') as fout:
-            pickle.dump(feat_dict, fout)
+            pickle.dump(feat_dict, fout, protocol=2)
         print('args.num_feat ', len(feat_dict) + 1)
 
 

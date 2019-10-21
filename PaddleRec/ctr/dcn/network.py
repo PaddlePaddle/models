@@ -14,23 +14,21 @@ class DCN(object):
                  dnn_hidden_units=(128, 128),
                  l2_reg_cross=1e-5,
                  dnn_use_bn=False,
-                 clip_by_norm=None):
+                 clip_by_norm=None,
+                 cat_feat_dims_dict=None,
+                 is_sparse=False):
         self.cross_num = cross_num
         self.dnn_hidden_units = dnn_hidden_units
         self.l2_reg_cross = l2_reg_cross
         self.dnn_use_bn = dnn_use_bn
         self.clip_by_norm = clip_by_norm
-
-        self.cat_feat_dims_dict = OrderedDict()
+        self.cat_feat_dims_dict = cat_feat_dims_dict if cat_feat_dims_dict else OrderedDict(
+        )
+        self.is_sparse = is_sparse
 
         self.dense_feat_names = ['I' + str(i) for i in range(1, 14)]
         self.sparse_feat_names = ['C' + str(i) for i in range(1, 27)]
         target = ['label']
-
-        for line in open('data/cat_feature_num.txt'):
-            spls = line.strip().split()
-            assert len(spls) == 2
-            self.cat_feat_dims_dict[spls[0]] = int(spls[1])
 
         # {feat_name: dims}
         self.feat_dims_dict = OrderedDict(
@@ -122,16 +120,14 @@ class DCN(object):
 
     def _create_embedding_input(self, data_dict):
         # sparse embedding
-        sparse_emb_dict = OrderedDict((
-            name, fluid.layers.embedding(
-                input=fluid.layers.cast(
-                    data_dict[name], dtype='int64'),
-                size=[
-                    self.feat_dims_dict[name] + 1,
-                    6 * int(pow(self.feat_dims_dict[name], 0.25))
-                ]))
-            for name in self.sparse_feat_names
-        )
+        sparse_emb_dict = OrderedDict((name, fluid.layers.embedding(
+            input=fluid.layers.cast(
+                data_dict[name], dtype='int64'),
+            size=[
+                self.feat_dims_dict[name] + 1,
+                6 * int(pow(self.feat_dims_dict[name], 0.25))
+            ],
+            is_sparse=self.is_sparse)) for name in self.sparse_feat_names)
 
         # combine dense and sparse_emb
         dense_input_list = [
