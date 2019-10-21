@@ -73,7 +73,7 @@ class Dataset(object):
 
     def get_num_examples(self, filename):
         """num of line of file"""
-        return sum(1 for line in open(filename, "r"))
+        return sum(1 for line in io.open(filename, "r", encoding='utf8'))
 
     def word_to_ids(self, words):
         """convert word to word index"""
@@ -107,16 +107,17 @@ class Dataset(object):
             fread = io.open(filename, "r", encoding="utf-8")
             if mode == "infer":
                 for line in fread:
-                    words= line.strip()
+                    words = line.strip()
                     word_ids = self.word_to_ids(words)
-                    yield (word_ids[0:max_seq_len],)
+                    yield (word_ids[0:max_seq_len], )
             else:
                 headline = next(fread)
                 headline = headline.strip().split('\t')
-                assert len(headline) == 2 and headline[0] == "text_a" and headline[1] == "label"
+                assert len(headline) == 2 and headline[
+                    0] == "text_a" and headline[1] == "label"
                 for line in fread:
                     words, labels = line.strip("\n").split("\t")
-                    if len(words)<1:
+                    if len(words) < 1:
                         continue
                     word_ids = self.word_to_ids(words.split("\002"))
                     label_ids = self.label_to_ids(labels.split("\002"))
