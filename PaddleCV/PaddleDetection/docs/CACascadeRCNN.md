@@ -14,7 +14,7 @@ CACascade RCNN是百度视觉技术部在Objects365 2019 Challenge上夺冠的�
   <img src="../demo/cas.png"/>
 </div>
 
-本次公布的最好单模型是一个基于Cascade RCNN的两阶段检测模型，在此基础上将Backbone替换为更加强大的SENet154模型，Deformable Conv模块以及更复杂二阶段网络结构，针对BatchSize比较小的情况增加了Group Normalization操作并同时使用了多尺度训练，最终达到了非常理想的效果。
+本次公布的最好单模型是一个基于Cascade RCNN的两阶段检测模型，在此基础上将Backbone替换为更加强大的SENet154模型，Deformable Conv模块以及更复杂二阶段网络结构，针对BatchSize比较小的情况增加了Group Normalization操作并同时使用了多尺度训练，最终达到了非常理想的效果。预训练模型先后分别在ImageNet和COCO数据集上进行了训练，会在启动训练时自动下载。
 
 ## 使用方法
 
