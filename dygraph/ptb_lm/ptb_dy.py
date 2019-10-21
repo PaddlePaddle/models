@@ -37,7 +37,7 @@ if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding("utf-8")
 
-
+origin = 0
 class SimpleLSTMRNN(fluid.Layer):
     def __init__(self,
                  name_scope,
@@ -70,7 +70,10 @@ class SimpleLSTMRNN(fluid.Layer):
                 dtype="float32",
                 default_initializer=fluid.initializer.UniformInitializer(
                     low=-self._init_scale, high=self._init_scale))
-            self.weight_1_arr.append(self.add_parameter('w_%d' % i, weight_1))
+            if origin:
+                self.weight_1_arr.append(self.add_parameter('w_%d' % i, weight_1))
+            else:
+                self.weight_1_arr.append(self.add_parameter('w_%d' % i, weight_1)._ivar)
             bias_1 = self.create_parameter(
                 attr=fluid.ParamAttr(
                     initializer=fluid.initializer.UniformInitializer(
@@ -78,7 +81,10 @@ class SimpleLSTMRNN(fluid.Layer):
                 shape=[self._hidden_size * 4],
                 dtype="float32",
                 default_initializer=fluid.initializer.Constant(0.0))
-            self.bias_arr.append(self.add_parameter('b_%d' % i, bias_1))
+            if origin:
+                self.bias_arr.append(self.add_parameter('b_%d' % i, bias_1))
+            else:
+                self.bias_arr.append(self.add_parameter('b_%d' % i, bias_1)._ivar)
 
     def forward(self, input_embedding, init_hidden=None, init_cell=None):
         self.cell_array = []
@@ -114,9 +120,13 @@ class SimpleLSTMRNN(fluid.Layer):
                 gate_input = fluid.layers.elementwise_add(gate_input, bias)
                 i, j, f, o = fluid.layers.split(
                     gate_input, num_or_sections=4, dim=-1)
-                c = pre_cell * fluid.layers.sigmoid(f) + fluid.layers.sigmoid(
-                    i) * fluid.layers.tanh(j)
-                m = fluid.layers.tanh(c) * fluid.layers.sigmoid(o)
+                # c = pre_cell * fluid.layers.sigmoid(f) + fluid.layers.sigmoid(
+                #     i) * fluid.layers.tanh(j)
+                # m = fluid.layers.tanh(c) * fluid.layers.sigmoid(o)
+                t1 = fluid.layers.elementwise_mul(pre_cell, fluid.layers.sigmoid(f))
+                t2 = fluid.layers.elementwise_mul(fluid.layers.sigmoid(i), fluid.layers.tanh(j))
+                c = fluid.layers.elementwise_add(t1, t2)
+                m = fluid.layers.elementwise_mul(fluid.layers.tanh(c), fluid.layers.sigmoid(o))
                 self.hidden_array[k] = m
                 self.cell_array[k] = c
                 self._input = m
@@ -180,12 +190,16 @@ class PtbModel(fluid.Layer):
             dtype="float32",
             default_initializer=fluid.initializer.UniformInitializer(
                 low=-self.init_scale, high=self.init_scale))
+        if not origin:
+            self.softmax_weight = self.softmax_weight._ivar
         self.softmax_bias = self.create_parameter(
             attr=fluid.ParamAttr(),
             shape=[self.vocab_size],
             dtype="float32",
             default_initializer=fluid.initializer.UniformInitializer(
                 low=-self.init_scale, high=self.init_scale))
+        if not origin:
+            self.softmax_bias = self.softmax_bias._ivar                
 
     def build_once(self, input, label, init_hidden, init_cell):
         pass
@@ -223,7 +237,7 @@ class PtbModel(fluid.Layer):
         loss = fluid.layers.reshape(loss, shape=[-1, self.num_steps])
         loss = fluid.layers.reduce_mean(loss, dim=[0])
         loss = fluid.layers.reduce_sum(loss)
-        loss.permissions = True
+        #loss.persistable = True
 
         return loss, last_hidden, last_cell
 
@@ -322,7 +336,10 @@ def train_ptb_lm():
 
         batch_len = len(train_data) // batch_size
         total_batch_size = (batch_len - 1) // num_steps
+        print(total_batch_size)
+        
         log_interval = total_batch_size // 20
+        print(log_interval)
 
         bd = []
         lr_arr = [1.0]
@@ -357,10 +374,13 @@ def train_ptb_lm():
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
                                                             init_cell)
 
-                out_loss = dy_loss.numpy()
+                #out_loss = dy_loss.numpy()
+                out_loss = framework._var_base_to_np(dy_loss)
 
-                init_hidden_data = last_hidden.numpy()
-                init_cell_data = last_cell.numpy()
+                # init_hidden_data = last_hidden.numpy()
+                # init_cell_data = last_cell.numpy()
+                init_hidden_data = framework._var_base_to_np(last_hidden)
+                init_cell_data = framework._var_base_to_np(last_cell)
 
                 total_loss += out_loss
                 iters += num_steps
@@ -396,30 +416,36 @@ def train_ptb_lm():
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
                                                             init_cell)
 
-                out_loss = dy_loss.numpy()
+                if origin:
+                    out_loss = dy_loss.numpy()
+                    init_hidden_data = last_hidden.numpy()
+                    init_cell_data = last_cell.numpy()
+                else:
+                    out_loss = framework._var_base_to_np(dy_loss)
+                    init_hidden_data = framework._var_base_to_np(last_hidden)
+                    init_cell_data = framework._var_base_to_np(last_cell)
 
-                init_hidden_data = last_hidden.numpy()
-                init_cell_data = last_cell.numpy()
                 dy_loss.backward()
                 sgd.minimize(dy_loss, grad_clip=grad_clip)
-
+                
+                
                 ptb_model.clear_gradients()
                 total_loss += out_loss
                 iters += num_steps
 
                 if batch_id > 0 and batch_id % log_interval == 0:
                     ppl = np.exp(total_loss / iters)
-                    print(epoch_id, "ppl ", batch_id, ppl[0],
-                          sgd._global_learning_rate().numpy())
+                    print(epoch_id, "ppl ", batch_id, ppl[0], sgd._global_learning_rate().numpy())
 
             print("one ecpoh finished", epoch_id)
             print("time cost ", time.time() - start_time)
-            ppl = np.exp(total_loss / iters)
-            print("ppl ", epoch_id, ppl[0])
-            if args.ce:
-                print("kpis\ttrain_ppl\t%0.3f" % ppl[0])
+            break
+            # ppl = np.exp(total_loss / iters)
+            # print("ppl ", epoch_id, ppl[0])
+            # if args.ce:
+            #     print("kpis\ttrain_ppl\t%0.3f" % ppl[0])
 
-        eval(ptb_model, test_data)
+        #eval(ptb_model, test_data)
 
 
 train_ptb_lm()
