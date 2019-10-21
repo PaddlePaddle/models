@@ -148,6 +148,50 @@ def parse_result(words, crf_decode, dataset):
     return batch_out
 
 
+def parse_padding_result(words, crf_decode, seq_lens, dataset):
+    """ parse padding result """
+    words = np.squeeze(words)
+    batch_size = len(seq_lens)
+
+    batch_out = []
+    for sent_index in range(batch_size):
+
+        sent = [
+            dataset.id2word_dict[str(id)]
+            for id in words[sent_index][1:seq_lens[sent_index] - 1]
+        ]
+        tags = [
+            dataset.id2label_dict[str(id)]
+            for id in crf_decode[sent_index][1:seq_lens[sent_index] - 1]
+        ]
+
+        sent_out = []
+        tags_out = []
+        parital_word = ""
+        for ind, tag in enumerate(tags):
+            # for the first word
+            if parital_word == "":
+                parital_word = sent[ind]
+                tags_out.append(tag.split('-')[0])
+                continue
+
+            # for the beginning of word
+            if tag.endswith("-B") or (tag == "O" and tags[ind - 1] != "O"):
+                sent_out.append(parital_word)
+                tags_out.append(tag.split('-')[0])
+                parital_word = sent[ind]
+                continue
+
+            parital_word += sent[ind]
+
+        # append the last word, except for len(tags)=0
+        if len(sent_out) < len(tags_out):
+            sent_out.append(parital_word)
+
+        batch_out.append([sent_out, tags_out])
+    return batch_out
+
+
 def init_checkpoint(exe, init_checkpoint_path, main_program):
     """
     Init CheckPoint
