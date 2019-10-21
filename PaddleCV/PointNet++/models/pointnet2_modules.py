@@ -24,6 +24,7 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
+from ext_op import *
 
 __all__ = ["conv_bn", "pointnet_sa_module", "pointnet_fp_module","fc_bn"]
 
@@ -43,15 +44,15 @@ def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
     Returns:
         out (Variable): features with shape [B, npoint, nsample, C + 3]
     """
-    idx = fluid.layers.query_ball(xyz, new_xyz, radius, nsample)
+    idx = query_ball(xyz, new_xyz, radius, nsample)
     idx.stop_gradient = True
-    grouped_xyz = fluid.layers.group_points(xyz, idx)
+    grouped_xyz = group_points(xyz, idx)
     expand_new_xyz = fluid.layers.unsqueeze(new_xyz, axes=[2])
     expand_new_xyz = fluid.layers.expand(expand_new_xyz, [1, 1, grouped_xyz.shape[2], 1])
     grouped_xyz -= expand_new_xyz
 
     if features is not None:
-        grouped_features = fluid.layers.group_points(features, idx)
+        grouped_features = group_points(features, idx)
         return fluid.layers.concat([grouped_xyz, grouped_features], axis=-1) \
                 if use_xyz else grouped_features
     else:
@@ -160,9 +161,9 @@ def pointnet_sa_module(xyz,
     assert len(radiuss) == len(nsamples) == len(mlps), \
             "radiuss, nsamples, mlps length should be same"
 
-    farthest_idx = fluid.layers.farthest_point_sampling(xyz, npoint)
+    farthest_idx = farthest_point_sampling(xyz, npoint)
     farthest_idx.stop_gradient = True
-    new_xyz = fluid.layers.gather_point(xyz, farthest_idx) if npoint is not None else None
+    new_xyz = gather_point(xyz, farthest_idx) if npoint is not None else None
 
     out = None
     if feature is not None:
@@ -202,7 +203,7 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         # TODO
         interp_feats = fluid.layers.expand()
     else:
-        dist, idx = fluid.layers.three_nn(unknown, known, eps=0)
+        dist, idx = three_nn(unknown, known, eps=0)
 	dist.stop_gradient = True
 	idx.stop_gradient = True
         dist = fluid.layers.sqrt(dist)
@@ -211,7 +212,7 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         norm = fluid.layers.reduce_sum(dist_recip, dim=-1, keep_dim=True)
         weight = dist_recip / norm
 	weight.stop_gradient = True
-        interp_feats = fluid.layers.three_interp(known_feats, weight, idx)
+        interp_feats = three_interp(known_feats, weight, idx)
 
     new_features = interp_feats if unknown_feats is None else \
                     fluid.layers.concat([interp_feats, unknown_feats], axis=-1)

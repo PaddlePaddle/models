@@ -16,7 +16,7 @@ nvcc ${op}.cu -c -o ${op}.cu.o -ccbin cc -DPADDLE_WITH_CUDA -DEIGEN_USE_GPU -DPA
     -I ${include_dir}/third_party/boost \
     -I ${include_dir}/third_party/eigen3 \
     -I ${include_dir}/third_party/threadpool/src/extern_threadpool \
-    -I ${include_dir}/third_party \
+    -I ${include_dir}/third_party/dlpack/include \
     -I ${include_dir}
 done
 
@@ -28,7 +28,7 @@ g++ farthest_point_sampling_op.cc farthest_point_sampling_op.cu.o gather_point_o
   -I ${include_dir}/third_party/install/zlib/include \
   -I ${include_dir}/third_party/boost \
   -I ${include_dir}/third_party/eigen3 \
-  -I ${include_dir}/third_party \
+  -I ${include_dir}/third_party/dlpack/include \
   -I ${include_dir} \
   -L ${lib_dir} \
   -L /usr/local/cuda/lib64 -lpaddle_framework -lcudart

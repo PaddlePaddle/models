@@ -12,19 +12,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-from __future__ import absolute_import
+from . import pointnet_lib
+from pointnet_lib import *
 
-from . import pointnet2_modules
-from . import pointnet2_seg
-# from . import pointnet2_modules_dy
-# from . import pointnet2_seg_dy
-
-from .pointnet2_modules import *
-from .pointnet2_seg import *
-# from .pointnet2_modules_dy import *
-# from .pointnet2_seg_dy import *
-
-__all__ = pointnet2_modules.__all__
-__all__ += pointnet2_seg.__all__
-# __all__ += pointnet2_modules_dy.__all__
-# __all__ += pointnet2_seg_dy.__all__
+__all__ = pointnet_lib.__all__

@@ -4,7 +4,10 @@ import paddle.fluid as fluid
 file_dir = os.path.dirname(os.path.abspath(__file__))
 fluid.load_op_library(os.path.join(file_dir, 'src/pointnet_lib.so'))
 
-from paddle.fluid.layer_helper import CustomLayerHelper
+from paddle.fluid.layer_helper import LayerHelper
+
+__all__ = ['three_nn', 'three_interp', 'query_ball', 'gather_point',
+            'farthest_point_sampling', 'group_points']
 
 
 def three_nn(input, known, eps=1e-10, name=None):
@@ -40,7 +43,7 @@ def three_nn(input, known, eps=1e-10, name=None):
             known = fluid.layers.data(name='known', shape=[32, 3], dtype='float32')
             distance, idx = fluid.layers.three_nn(input, known)
     """
-    helper = CustomLayerHelper('three_nn', **locals())
+    helper = LayerHelper('three_nn', **locals())
     dtype = helper.input_dtype()
     dist = helper.create_variable_for_type_inference(dtype)
     idx = helper.create_variable_for_type_inference(dtype)
@@ -85,7 +88,7 @@ def three_interp(input, weight, idx, name=None):
             index = fluid.layers.data(name='index', shape=[32, 3], dtype='int32')
             out = fluid.layers.three_interp(x, weight, index)
     """
-    helper = CustomLayerHelper('three_interp', **locals())
+    helper = LayerHelper('three_interp', **locals())
     dtype = helper.input_dtype()
     out = helper.create_variable_for_type_inference(dtype)
     helper.append_op(
@@ -122,7 +125,7 @@ def query_ball(input, new_points, radius, n_sample):
 
 
     """
-    helper = CustomLayerHelper('query_ball', **locals())
+    helper = LayerHelper('query_ball', **locals())
     dtype = helper.input_dtype()
     out = helper.create_variable_for_type_inference(dtype)
     helper.append_op(
@@ -156,7 +159,7 @@ def farthest_point_sampling(input, sampled_point_num):
         )
     '''
 
-    helper = CustomLayerHelper('farthest_point_sampling', **locals())
+    helper = LayerHelper('farthest_point_sampling', **locals())
     dtype = input.dtype
     op_out = helper.create_variable_for_type_inference(dtype)
     helper.append_op(
@@ -198,7 +201,7 @@ def gather_point(input, index):
             output = fluid.layers.gather_point(x, index)
     """
 
-    helper = CustomLayerHelper('gather_point', **locals())
+    helper = LayerHelper('gather_point', **locals())
     dtype = helper.input_dtype()
     out = helper.create_variable_for_type_inference(dtype)
     helper.append_op(
@@ -206,4 +209,42 @@ def gather_point(input, index):
         inputs={"X": input,
                 "Index": index},
         outputs={"Output": out})
+    return out
+
+
+def group_points(input, idx, name=None):
+    """
+    **Group Points Layer**
+
+    This operator group input points with index.
+
+    Args:
+        input (Variable): The input tensor of three_interp operator. This
+                          is a 3-D tensor with shape of [B, N, C].
+        idx (Variable): The index tensor of three_interp operator. This
+                          is a 3-D tensor with shape of [B, M, S].
+        name(str|None): A name for this layer(optional). If set None, the layer
+                        will be named automatically.
+
+    Returns:
+        output (Variable): The output tensor of three_interp operator.
+                             This is a 4-D tensor with shape of [B, M, S, C].
+
+    Examples:
+
+        .. code-block:: python
+
+            import paddle.fluid as fluid
+            x = fluid.layers.data(name='x', shape=[16, 3], dtype='float32')
+            index = fluid.layers.data(name='index', shape=[32, 3], dtype='int32')
+            out  = fluid.layers.group_points(x, index)
+    """
+    helper = LayerHelper('group_points', **locals())
+    dtype = helper.input_dtype()
+    out = helper.create_variable_for_type_inference(dtype)
+    helper.append_op(
+        type="group_points",
+        inputs={"X": input,
+                "Idx": idx},
+        outputs={"Out": out, })
     return out
