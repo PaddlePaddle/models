@@ -35,7 +35,7 @@ data/
 ├──Stanford_Online_Products.zip 
 ```
 
-if you are windows user, you can download the dataset using below ftp link and unzip file to ```data``` directory.
+if you are Windows user, you can download the dataset using below ftp link and unzip file to ```data``` directory.
 ```
 SOP: ftp://cs.stanford.edu/cs/cvgl/Stanford_Online_Products.zip
 ```

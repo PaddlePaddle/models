@@ -35,7 +35,7 @@ data/
 ├──Stanford_Online_Products.zip
 ```
 
-如果你是windows用户，你可以通过下面的ftp链接下载数据集，然后解压到```data```目录下.
+如果你是Windows用户，你可以通过下面的ftp链接下载数据集，然后解压到```data```目录下。
 ```
 SOP: ftp://cs.stanford.edu/cs/cvgl/Stanford_Online_Products.zip
 ```
