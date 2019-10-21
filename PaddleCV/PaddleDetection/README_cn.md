@@ -2,7 +2,7 @@
 
 # PaddleDetection
 
-PaddleDetection的目的是为工业界和学术界提供丰富、易用的目标检测模型。不仅性能优越、易于部署，同时能够灵活的满足算法研究的需求。
+PaddleDetection的目的是为工业界和学术界提供丰富、易用的目标检测模型。不仅性能优越、易于部署，而且能够灵活的满足算法研究的需求。
 
 <div align="center">
   <img src="demo/output/000000570688.jpg" />
@@ -15,15 +15,15 @@ PaddleDetection的目的是为工业界和学术界提供丰富、易用的目�
 
 - 易部署:
 
-  PaddleDetection的模型中使用的核心算子均通过C++或CUDA实现，基于PaddlePaddle的高性能推理引擎支持跨平台的推理部署的能力。
+  PaddleDetection的模型中使用的核心算子均通过C++或CUDA实现，同时基于PaddlePaddle的高性能推理引擎可以方便地部署在多种硬件平台上。
 
 - 高灵活度：
 
-  PaddleDetection模块化设计解耦各个组件，模型结构以及数据预处理流程，均可通过修改配置文件轻松实现可定制化。
+  PaddleDetection通过模块化设计来解耦各个组件，基于配置文件可以轻松地搭建各种检测模型。
 
 - 高性能：
 
-  基于PaddlePaddle的高性能底层框架，在模型训练速度、显存占用上有一定的优势。例如，YOLOv3的训练速度快于其他框架，Mask-RCNN(ResNet50)可以在Tesla V100 16GB环境下以每个GPU 4张图片输入实现多卡训练。
+  基于PaddlePaddle框架的高性能内核，在模型训练速度、显存占用上有一定的优势。例如，YOLOv3的训练速度快于其他框架，在Tesla V100 16GB环境下，Mask-RCNN(ResNet50)可以单卡Batch Size可以达到4 (甚至到5)。
 
 支持的模型结构：
 
@@ -33,8 +33,9 @@ PaddleDetection的目的是为工业界和学术界提供丰富、易用的目�
 | Faster R-CNN + FPN | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       | ✗   |
 | Mask R-CNN         | ✓      |                             ✓ | x          | ✓     | ✗         | ✗       | ✗   |
 | Mask R-CNN + FPN   | ✓      |                             ✓ | ✓          | ✓     | ✗         | ✗       | ✗   |
-| Cascade R-CNN      | ✓      |                             ✓ | ✗          | ✗     | ✗         | ✗       | ✗   |
-| RetinaNet          | ✓      |                             ✗ | ✗          | ✗     | ✗         | ✗       | ✗   |
+| Cascade Faster-CNN | ✓      |                             ✓ | ✓          | ✗     | ✗         | ✗       | ✗  |
+| Cascade Mask-CNN   | ✓      |                             ✗ | ✗          | ✓     | ✗         | ✗       | ✗   |
+| RetinaNet          | ✓      |                             ✗ | ✓          | ✗     | ✗         | ✗       | ✗   |
 | YOLOv3             | ✓      |                             ✗ | ✗          | ✗     | ✓         | ✓       | ✗   |
 | SSD                | ✗      |                             ✗ | ✗          | ✗     | ✓         | ✗       | ✓   |
 
