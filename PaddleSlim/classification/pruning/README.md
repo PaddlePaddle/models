@@ -62,7 +62,7 @@ fc10_weights (1280L, 1000L)
 
 综上，我们将MobileNetV2配置文件中的`pruned_params`设置为`.*[r|d]_weights`。
 
-我们可以用上述操作观察MobileNetV1和ResNet50的参数名称规律，然后设置合适的正则表达式来剪裁合适的参数。
+我们可以用上述操作观察MobileNetV1和ResNet34的参数名称规律，然后设置合适的正则表达式来剪裁合适的参数。
 
 
 ## 训练
@@ -74,7 +74,7 @@ fc10_weights (1280L, 1000L)
 
 - use_gpu: 是否使用gpu。如果选择使用GPU，请确保当前环境和Paddle版本支持GPU。默认为True。
 - batch_size: 在剪裁之后，对模型进行fine-tune训练时用的batch size。
-- model: 要压缩的目标模型，该示例支持'MobileNetV1', 'MobileNetV2'和'ResNet50'。
+- model: 要压缩的目标模型，该示例支持'MobileNetV1', 'MobileNetV2'和'ResNet34'。
 - pretrained_model: 预训练模型的路径，可以从[这里](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#%E5%B7%B2%E5%8F%91%E5%B8%83%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%85%B6%E6%80%A7%E8%83%BD)下载。
 - config_file: 压缩策略的配置文件。
 
@@ -125,10 +125,8 @@ fc10_weights (1280L, 1000L)
 
 | FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
-|baseline|70.99%/89.68% |- |- |-|
-|-10%|- |- |- |-|
-|-30%|- |- |- |-|
-|-50%|- |- |- |-|
+|baseline|70.99%/89.68% |19M |- |-|
+|-50%|69.66%/88.92% |9M |- |-|
 
 >训练超参
 batch size: 256
@@ -143,8 +141,6 @@ lr: 0.1
 | FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
 |baseline|72.15%/90.65% |- |- |-|
-|-10%|- |- |- |-|
-|-30%|- |- |- |-|
 |-50%|- |- |- |-|
 
 >训练超参：
@@ -155,13 +151,11 @@ l2_decay: 4e-5
 lr: 0.1
 
 
-### ResNet50
+### ResNet34
 
 | FLOPS |top1_acc/top5_acc| model_size |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
 |baseline|76.50%/93.00% |- |- |-|
-|-10%|- |- |- |-|
-|-30%|- |- |- |-|
 |-50%|- |- |- |-|
 
 >训练超参
