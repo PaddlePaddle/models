@@ -118,7 +118,7 @@ OptimizerBuilder:
 FasterRCNNTrainFeed:
   batch_size: 1
   dataset:
-    dataset_dir: dataset/obj365
+    dataset_dir: dataset/objects365
     annotation: annotations/train.json
     image_dir: train
   sample_transforms: 
@@ -189,7 +189,7 @@ FasterRCNNTrainFeed:
 FasterRCNNEvalFeed:
   batch_size: 1
   dataset:
-    dataset_dir: dataset/obj365
+    dataset_dir: dataset/objects365
     annotation: annotations/val.json
     image_dir: val
   batch_transforms:

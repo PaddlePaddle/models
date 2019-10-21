@@ -3,7 +3,7 @@
 CACascade RCNN是百度视觉技术部在Objects365 2019 Challenge上夺冠的最佳单模型之一，Objects365是在通用物体检测领域的一个全新的数据集，旨在促进对自然场景不同对象的检测研究。Objects365在63万张图像上标注了365个对象类，训练集中共有超过1000万个边界框。这里放出的是Full Track任务中最好的单模型之一。
 
 <div align="center">
-  <img src="../demo/obj365_pred.png"/>
+  <img src="../demo/obj365_gt.png"/>
 </div>
 
 ## 方法描述
@@ -21,6 +21,16 @@ CACascade RCNN是百度视觉技术部在Objects365 2019 Challenge上夺冠的�
 1.准备数据
 
 数据需要通过[Objects365官方网站](https://www.objects365.org/download.html)进行申请下载，数据下载后将数据放置在dataset目录中。
+```
+${THIS REPO ROOT}
+  \--dataset
+      \-- objects365
+           \-- annotations
+                |-- train.json
+                |-- val.json
+           \-- train
+           \-- val
+```
 
 2.启动训练模型
 
@@ -29,6 +39,10 @@ python tools/train.py -c configs/obj365/cascade_rcnn_dcnv2_se154_vd_fpn_gn.yml
 ```
 
 3.模型预测结果
+
+|        模型         | 验证集 mAP |                           下载链接                           |
+| :-----------------: | :--------: | :----------------------------------------------------------: |
+| CACascadeRCNN SE154 |    31.7    | [model](https://paddlemodels.bj.bcebos.com/object_detection/cascade_rcnn_dcnv2_se154_vd_fpn_gn_cas_obj365.tar) |
 
 ## 模型效果
 
