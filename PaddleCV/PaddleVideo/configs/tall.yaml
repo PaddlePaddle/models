@@ -21,9 +21,9 @@ TRAIN:
   context_num : 1
   context_size : 128
   sent_vec_dim : 4800
-  sliding_clip_path : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/Interval64_128_256_512_overlap0.8_c3d_fc6/"
-  clip_sentvec : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/train_clip-sentvec.pkl"
-  movie_length_info : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/video_allframes_info.pkl"
+  sliding_clip_path : "./data/dataset/tall/Interval64_128_256_512_overlap0.8_c3d_fc6/"
+  clip_sentvec : "./data/dataset/tall/train_clip-sentvec.pkl"
+  movie_length_info : "./data/dataset/tall/video_allframes_info.pkl"
 
 VALID:
   use_gpu : True
@@ -39,9 +39,9 @@ VALID:
   context_num : 1
   context_size : 128
   sent_vec_dim : 4800
-  sliding_clip_path : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/Interval64_128_256_512_overlap0.8_c3d_fc6/"
-  clip_sentvec : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/train_clip-sentvec.pkl"
-  movie_length_info : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/video_allframes_info.pkl"
+  sliding_clip_path : "./data/dataset/tall/Interval64_128_256_512_overlap0.8_c3d_fc6/"
+  clip_sentvec : "./data/dataset/tall/train_clip-sentvec.pkl"
+  movie_length_info : "./data/dataset/tall/video_allframes_info.pkl"
 
 TEST:
   batch_size : 1
@@ -51,8 +51,8 @@ TEST:
   context_size : 128
   sent_vec_dim : 4800
   semantic_size : 4800
-  sliding_clip_path : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/Interval128_256_overlap0.8_c3d_fc6/"
-  clip_sentvec : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/test_clip-sentvec.pkl"
+  sliding_clip_path : "./data/dataset/tall/Interval128_256_overlap0.8_c3d_fc6/"
+  clip_sentvec : "./data/dataset/tall/test_clip-sentvec.pkl"
 
 INFER:
   batch_size: 1
@@ -62,6 +62,6 @@ INFER:
   sent_vec_dim: 4800
   semantic_size: 4800
 
-  filelist: "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/infer"
-  sliding_clip_path : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/infer/infer_feat"
-  clip_sentvec : "/workspace/PaddleProject/Experiment/tall/origin-zz/local/dataset/tacos/infer/infer_clip-sen.pkl"
+  filelist: "./data/dataset/tall/infer"
+  sliding_clip_path : "./data/dataset/tall/infer/infer_feat"
+  clip_sentvec : "./data/dataset/tall/infer/infer_clip-sen.pkl"
