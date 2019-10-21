@@ -80,7 +80,7 @@
 | ssd_vgg16_512                         | 27.471                        | 28.328                                      | 19.328                                      | 68.685                      | 69.808                                    |
 | ssd_vgg16_512_voc                     | 18.721                        | 19.636                                      | 12.004                                      | 54.688                      | 56.174                                    |
 
-1. 你可能发现RCNN系列模型Fluid-TensorRT速度相比Fluid预测没有优势，原因是: TensorRT仅支持定长输入，当前基于ResNet系列的RCNN模型，只有backbone部分采用了TensorRT子图计算，比较耗时的stage-5没有基于TensorRT计算。 Fluid对CNN模型也做了一系列的融合优化。后续TensorRT版本升级、或有其他优化策略时再更新数据。
+1. RCNN系列模型Fluid-TensorRT速度相比Fluid预测没有优势，原因是: TensorRT仅支持定长输入，当前基于ResNet系列的RCNN模型，只有backbone部分采用了TensorRT子图计算，比较耗时的stage-5没有基于TensorRT计算。 Fluid对CNN模型也做了一系列的融合优化。后续TensorRT版本升级、或有其他优化策略时再更新数据。
 2. YOLO v3系列模型，Fluid-TensorRT相比Fluid预测加速5% - 10%不等。
 3. SSD和YOLOv3系列模型 TensorRT-FP16预测速度有一定的优势，加速约20% - 40%不等。具体如下图。
 
