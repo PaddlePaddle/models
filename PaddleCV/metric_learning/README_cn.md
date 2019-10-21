@@ -23,6 +23,23 @@ cd data/
 sh download_sop.sh
 ```
 
+SOP数据集的目录结构如下图:
+```
+data/
+├──Stanford_Online_Products
+│   ├── bicycle_final
+│   ├── bicycle_final.txt
+│   ├── cabinet_final
+│   ├── cabinet_final.txt
+|   ...
+├──Stanford_Online_Products.zip
+```
+
+如果你是Windows用户，你可以通过下面的ftp链接下载数据集，然后解压到```data```目录下。
+```
+SOP: ftp://cs.stanford.edu/cs/cvgl/Stanford_Online_Products.zip
+```
+
 ## 模型训练 
 
 为了训练度量学习模型，我们需要一个神经网络模型作为骨架模型（如[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar)）和度量学习代价函数来进行优化。我们首先使用 softmax 或者 arcmargin 来进行训练，然后使用其它的代价函数来进行微调，例如：triplet，quadruplet和eml。下面是一个使用arcmargin训练的例子：
