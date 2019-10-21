@@ -530,15 +530,17 @@ distillers:
 
 #### 2.4.1 定义搜索空间
 
-用户需要通过继承[SearchSpace类](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/fluid/contrib/slim/nas/search_space.py#L19)并重写其方法来定义搜索空间。用户需要重写实现的方法有：
+模型结构搜索是一种自动的模型结构设计方法。它的目的是从众多可能的模型结构中自动搜索出一个性能最优的模型。这些众多可能的模型结构的集合就是搜索空间。在我们的轻量级模型结构搜索中，我们通过改变卷积的输入输出channel数等得到不同的模型结构，因此搜索空间的定义是通过模型结构中的这些可变参数确定的。如果用户自己定义搜索空间，用户需要通过继承[SearchSpace类](https://github.com/PaddlePaddle/Paddle/blob/develop/python/paddle/fluid/contrib/slim/nas/search_space.py#L19)并重写其方法来定义搜索空间。用户需要重写实现的方法有：
 
-- `init_tokens`: `tokens` 以数组的形式格式表示网络结构，一个 `tokens` 对应一个网络结构。`init_tokens` 指搜索的初始化 `tokens`。
+- `init_tokens`: `tokens` 以数组的形式格式表示网络结构，一个 `tokens` 对应一个网络结构。`init_tokens` 指搜索的初始化 `tokens` 。备注：在 light_nas_space.py 里面 token 中的每个元素定义了 Inverted residuals 结构里面的通道扩增系数、卷积核数量、网络层数、卷积核尺寸、是否用 shortcut 结构、是否利用 SE 结构。用户如果结合自己的任务，可能用到不同于 Inverted residuals 的结构，可以自己确定网络中可变的参数，然后将这些参数映射到自己的 tokens。
 
-- `range_table`: 以数组的形式指定 `tokens` 数组中每个位置的取值范围，其长度与 `tokens` 长度相同。`tokens[i]` 的取值范围为 `[0, range_table[i])`。
+- `range_table`: 以数组的形式指定 `tokens` 数组中每个位置的取值范围，其长度与 `tokens` 长度相同。`tokens[i]` 的取值范围为 `[0, range_table[i])`。他们对应上述可变参数，如通道扩增稀疏、卷积核数量等的取值范围。用户同样可以根据自己的任务变化这些取值范围。
 
-- `create_net`: 根据指定的 `tokens` 构造初始化 `Program`、训练 `Program` 和测试 `Program`。
+- `create_net`: 根据指定的 `tokens` 构造初始化 `Program`、训练 `Program` 和测试 `Program`。在构建不同的 Light-NAS 网络时，将 token 对应到 Inverted residuals 中的每个参数，这里利用了 bottleneck_params_list，然后相应模型结构的位置读取 bottleneck_params_list 里面的值进行组建网络模型。备注：如果用户根据自身任务用到不同于 light_nas_space 的模型结构，用户可以将其模型结构的可变参数作为输入，并共同组成一个类似 bottleneck_params_list 的输入。当然，bottleneck_params_list 本质上是对 tokens 的重组，用户可以将他们理解为本质是一样的。
 
 在[PaddlePaddle/models/light_nas](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)下，定义了经过验证的一个搜索空间，建议一般用户直接用该搜索空间。
+
+备注：值得再次重申的是，如果用户根据自身任务需要用到不同于 Light-NAS 的模型结构时，用户首先需要确定其自身使用的模型结构哪些参数可变。然后将这些可变的参数作为组建网络模型 create_net 的输入，即 bottleneck_params_list。然后将 bottleneck_params_list 与 tokens 对应，并确定各个 token 的变化范围，得到 range_table。搜索时，就可以通过变化 tokens， 得到不同的模型结构了。
 
 在构造 `Compressor` 对象时，按以下方式将 `SearchSpace` 实例传入：
 
@@ -563,7 +565,7 @@ com_pass = Compressor(
 
 #### 2.4.2 (可选) 基于不同硬件，配置延时评估器
 
-用户需要根据自己定义的搜索空间，类似[LightNASSpace类](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)中的 `get_all_ops` 函数，重写获取搜索空间所有可能 op 的方法。
+用户需要根据自己定义的搜索空间，类似[LightNASSpace类](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)中的 `get_all_ops` 函数，重写获取搜索空间所有可能 op 的方法。目前 `get_all_ops` 函数是根据对Light-NAS的理解 brute force 地找出所有的 op， 用户如果有更好的方法，欢迎贡献思想和代码。
 
 用户需要根据其搜索空间所有可能的 op，生成延时评估器表格。延时评估器表格一般存放在类似[LightNASSpace类](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/light_nas/light_nas_space.py)里面的 `LATENCY_LOOKUP_TABLE_PATH=latency_lookup_table.txt` 路径下。后面会详细介绍延时评估器表格的生成方式。
 
