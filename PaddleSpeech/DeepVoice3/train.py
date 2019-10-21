@@ -16,6 +16,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+import io
+
 from paddle import fluid
 import paddle.fluid.dygraph as dg
 
@@ -27,18 +30,11 @@ from deepvoice3_paddle.data import (TextDataSource, MelSpecDataSource,
                                     LinearSpecDataSource,
                                     PartialyRandomizedSimilarTimeLengthSampler,
                                     Dataset, make_loader, create_batch)
-
 from deepvoice3_paddle import frontend
 from deepvoice3_paddle.builder import deepvoice3, WindowRange
 from deepvoice3_paddle.dry_run import dry_run
-
-from deepvoice3_paddle.save_load import load_checkpoint, _load_embedding, save_checkpoint
-
 from train_model import train_model
 from deepvoice3_paddle.loss import TTSLoss
-
-import platform
-from datetime import datetime
 from tensorboardX import SummaryWriter
 
 
@@ -57,10 +53,10 @@ def build_arg_parser():
     parser.add_argument(
         "--use-gpu", action="store_true", help="Whether to use gpu training.")
     parser.add_argument(
-        "--checkpoint-dir",
+        "--output",
         type=str,
-        default="checkpoints",
-        help="Directory where to save model checkpoints")
+        default="result",
+        help="Directory to save results")
     parser.add_argument(
         "--preset",
         type=str,
@@ -87,9 +83,6 @@ def build_arg_parser():
         "--train-postnet-only",
         action="store_true",
         help="Train only postnet model.")
-    parser.add_argument("--log-event-path", type=str, help="Log event path.")
-    parser.add_argument(
-        "--load-embedding", type=str, help="Load embedding from checkpoint.")
     parser.add_argument(
         "--speaker-id",
         type=int,
@@ -152,21 +145,6 @@ def make_optimizer_from_hparams(hparams):
     return optim, clipper
 
 
-def make_writer_from_args(args):
-    if args.log_event_path is None:
-        if platform.system() == "Windows":
-            log_event_path = "log/run-test" + str(datetime.now()).replace(
-                " ", "_").replace(":", "_")
-        else:
-            log_event_path = "log/run-test" + str(datetime.now()).replace(" ",
-                                                                          "_")
-    else:
-        log_event_path = args.log_event_path
-    print("Log event path: {}".format(log_event_path))
-    writer = SummaryWriter(log_event_path)
-    return writer
-
-
 def make_loss_from_hparams(hparams):
     criterion = TTSLoss(
         hparams.masked_loss_weight, hparams.priority_freq_weight,
@@ -202,11 +180,18 @@ if __name__ == "__main__":
 
     # Load preset if specified
     if args.preset is not None:
-        with open(args.preset) as f:
+        with io.open(args.preset) as f:
             hparams.parse_json(f.read())
     # Override hyper parameters
     hparams.parse(args.hparams)
     print(hparams_debug_string())
+
+    checkpoint_dir = os.path.join(args.output, "checkpoints")
+    tensorboard_dir = os.path.join(args.output, "log")
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+    if not os.path.exists(tensorboard_dir):
+        os.makedirs(tensorboard_dir)
 
     data_root = args.data_root
     speaker_id = args.speaker_id
@@ -239,7 +224,8 @@ if __name__ == "__main__":
 
         model = make_deepvoice3_from_hparams(hparams)
         optimizer, clipper = make_optimizer_from_hparams(hparams)
-        writer = make_writer_from_args(args)
+        print("Log event path: {}".format(tensorboard_dir))
+        writer = SummaryWriter(tensorboard_dir) if local_rank == 0 else None
         criterion = make_loss_from_hparams(hparams)
 
         # loading saved model
@@ -250,17 +236,8 @@ if __name__ == "__main__":
             assert hparams.use_decoder_state_for_postnet_input is False, \
                 "when training only the postnet, there is no decoder states"
 
-        dry_run(model)
-
         if args.checkpoint is not None:
-            load_checkpoint(
-                args.checkpoint,
-                model,
-                optimizer,
-                reset_optimizer=args.reset_optimizer)
-
-        if args.load_embedding is not None:
-            _load_embedding(args.load_embedding, model)
+            model_dict, optimizer_dict = dg.load_dygraph(args.checkpoint)
 
         if args.use_data_parallel:
             strategy = dg.parallel.prepare_context()
