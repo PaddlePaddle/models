@@ -47,7 +47,6 @@ SeResNeXt152权重：加载在ImageNet上训练的SeResNeXt152权重作为初始
 - 可下载已发布的模型， 通过`--resume`指定权重存放路径进行finetune等开发
 ResNet50权重模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams)
 SeResNeXt152权重模型[model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_SeResNeXt_final.pdparams)
-| TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams) |
 
 
 **数据读取器说明：** 模型读取Kinetics-400或者Kinetics-600数据集中的`mp4`数据，每条数据抽取`seg_num`段，每段抽取1帧图像，对每帧图像做随机增强后，缩放至`target_size`。
