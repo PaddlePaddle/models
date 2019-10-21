@@ -113,4 +113,4 @@ If you find PLATO useful in your work, please cite the following Arxiv paper:
 ## Contact information
 For help or issues using PLATO, please submit a GitHub issue.
 
-For personal communication related to PLATO, please contact Siqi Bao ('baosiqi@baidu.com'), or Huang He ('hehuang@baidu.com').
+For personal communication related to PLATO, please contact Siqi Bao (`baosiqi@baidu.com`), or Huang He (`hehuang@baidu.com`).
