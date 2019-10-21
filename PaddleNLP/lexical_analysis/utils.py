@@ -48,19 +48,21 @@ class ArgumentGroup(object):
             help=help + ' Default: %(default)s.',
             **kwargs)
 
+
 def load_yaml(parser, file_name, **kwargs):
     with open(file_name) as f:
-        args = yaml.load(f, Loader=yaml.FullLoader)
+        args = yaml.load(f)
         for title in args:
             group = parser.add_argument_group(title=title, description='')
             for name in args[title]:
                 _type = type(args[title][name]['val'])
-                _type = str2bool if _type==bool else _type
+                _type = str2bool if _type == bool else _type
                 group.add_argument(
-                    "--"+name,
+                    "--" + name,
                     default=args[title][name]['val'],
                     type=_type,
-                    help=args[title][name]['meaning'] + ' Default: %(default)s.',
+                    help=args[title][name]['meaning'] +
+                    ' Default: %(default)s.',
                     **kwargs)
 
 
@@ -115,7 +117,9 @@ def parse_result(words, crf_decode, dataset):
     for sent_index in range(batch_size):
         begin, end = offset_list[sent_index], offset_list[sent_index + 1]
         sent = [dataset.id2word_dict[str(id[0])] for id in words[begin:end]]
-        tags = [dataset.id2label_dict[str(id[0])] for id in crf_decode[begin:end]]
+        tags = [
+            dataset.id2label_dict[str(id[0])] for id in crf_decode[begin:end]
+        ]
 
         sent_out = []
         tags_out = []
@@ -128,7 +132,7 @@ def parse_result(words, crf_decode, dataset):
                 continue
 
             # for the beginning of word
-            if tag.endswith("-B") or (tag == "O" and tags[ind-1]!="O"):
+            if tag.endswith("-B") or (tag == "O" and tags[ind - 1] != "O"):
                 sent_out.append(parital_word)
                 tags_out.append(tag.split('-')[0])
                 parital_word = sent[ind]
@@ -137,11 +141,12 @@ def parse_result(words, crf_decode, dataset):
             parital_word += sent[ind]
 
         # append the last word, except for len(tags)=0
-        if len(sent_out)<len(tags_out):
+        if len(sent_out) < len(tags_out):
             sent_out.append(parital_word)
 
-        batch_out.append([sent_out,tags_out])
+        batch_out.append([sent_out, tags_out])
     return batch_out
+
 
 def init_checkpoint(exe, init_checkpoint_path, main_program):
     """
@@ -164,6 +169,7 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
         main_program=main_program,
         predicate=existed_persitables)
     print("Load model from {}".format(init_checkpoint_path))
+
 
 def init_pretraining_params(exe,
                             pretraining_params_path,
