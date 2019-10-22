@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 evaluate wordseg for LAC and other open-source wordseg tools
 """
@@ -21,6 +20,7 @@ from __future__ import division
 
 import sys
 import os
+from io import open
 
 
 def to_unicode(string):
@@ -71,7 +71,7 @@ def load_testdata(datapath="./data/test_data/test_part"):
     """none"""
     sentences = []
     sent_seg_list = []
-    for line in open(datapath):
+    for line in open(datapath, 'r', encoding='utf8'):
         sent, label = line.strip().split("\t")
         sentences.append(sent)
 
@@ -110,7 +110,7 @@ def get_lac_result():
         `sh run.sh | tail -n 100 > result.txt`
     """
     sent_seg_list = []
-    for line in open("./result.txt"):
+    for line in open("./result.txt", 'r', encoding='utf8'):
         line = line.strip().split(" ")
         words = [pair.split("/")[0] for pair in line]
         labels = [pair.split("/")[1] for pair in line]
