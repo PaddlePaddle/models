@@ -55,7 +55,7 @@ def infer(args):
         # for infer time
         if infer_time:
             warmup_times = 10
-            repeats_time = 30
+            repeats_time = 100
             feed_data = feeder.feed(data)
             for i in range(warmup_times):
                 exe.run(compile_prog,
