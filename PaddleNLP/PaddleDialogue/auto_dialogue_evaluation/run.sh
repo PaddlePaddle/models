@@ -77,7 +77,7 @@ function pretrain_train()
       --emb_size=256 \
       --vocab_size=484016 \
       --learning_rate=0.001 \
-      --sample_pro 0.1 
+      --sample_pro=0.1 
 }
 
 function finetuning_train()
@@ -111,7 +111,7 @@ function finetuning_train()
       --emb_size=256 \
       --vocab_size=484016 \
       --learning_rate=0.001 \
-      --sample_pro 0.1
+      --sample_pro=0.1
 }
 
 #predict
