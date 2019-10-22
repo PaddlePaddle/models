@@ -26,13 +26,13 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
     input_fields = {
         'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'labels'],
         'shapes': [[None, None], [None, None], [None, None],
-                   [-1, args.max_seq_len, 1], [-1, 1]],
+                   [None, args.max_seq_len, 1], [None, 1]],
         'dtypes': ['int64', 'int64', 'int64', 'float32', 'int64'],
         'lod_levels': [0, 0, 0, 0, 0],
     }
 
     inputs = [
-        fluid.layers.data(
+        fluid.data(
             name=input_fields['names'][i],
             shape=input_fields['shapes'][i],
             dtype=input_fields['dtypes'][i],
