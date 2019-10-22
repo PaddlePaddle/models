@@ -7,3 +7,6 @@
 [submodule "AutoDL"]
 	path = AutoDL
 	url = https://github.com/PaddlePaddle/AutoDL.git
+[submodule "PaddleNLP/PaddleLARK/ERNIE"]
+	path = PaddleNLP/PaddleLARK/ERNIE
+	url = https://github.com/PaddlePaddle/ERNIE.git
