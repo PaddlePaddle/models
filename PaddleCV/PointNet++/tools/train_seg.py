@@ -21,6 +21,7 @@ import ast
 import logging
 import numpy as np
 import paddle.fluid as fluid
+# import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 
 from models import *
 from data.indoor3d_reader import Indoor3DReader
@@ -82,8 +83,8 @@ def parse_args():
     parser.add_argument(
         '--decay_steps',
         type=int,
-        default=2e5,
-        help='learning rate and batch norm momentum decay steps, default 2e5')
+        default=6250,
+        help='learning rate and batch norm momentum decay steps, default 6250')
     parser.add_argument(
         '--weight_decay',
         type=float,
@@ -119,6 +120,25 @@ def parse_args():
     return args
 
 
+# def exponential_with_clip(learning_rate, decay_steps, decay_rate,
+#                                   min_lr):
+#     global_step = lr_scheduler._decay_step_counter()
+#
+#     lr = fluid.layers.create_global_var(
+#         shape=[1],
+#         value=float(learning_rate),
+#         dtype='float32',
+#         persistable=True,
+#         name="learning_rate")
+#
+#     decayed_lr = learning_rate * (decay_rate ** fluid.layers.floor(global_step / decay_steps))
+#     # decayed_lr = max(decayed_lr, min_lr)
+#     decayed_lr = fluid.layers.clip(decayed_lr, min_lr, learning_rate)
+#     fluid.layers.assign(decayed_lr, lr)
+#
+#     return lr
+
+
 def train():
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
@@ -143,6 +163,9 @@ def train():
                     decay_steps=args.decay_steps,
                     decay_rate=args.lr_decay,
                     staircase=True)
+            lr = fluid.layers.clip(lr, 1e-5, args.lr)
+            # lr = exponential_with_clip(args.lr, args.decay_steps,
+            #                            args.decay_steps, 1e-5)
             optimizer = fluid.optimizer.Adam(learning_rate=lr,
                     regularization=fluid.regularizer.L2Decay(args.weight_decay))
             optimizer.minimize(train_loss)
@@ -174,6 +197,7 @@ def train():
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
     build_strategy.enable_inplace = False
+    build_strategy.fuse_all_optimizer_ops = False
     train_compile_prog = fluid.compiler.CompiledProgram(
             train_prog).with_data_parallel(loss_name=train_loss.name,
                     build_strategy=build_strategy)
@@ -220,13 +244,12 @@ def train():
                 if train_iter % args.log_interval == 0:
                     log_str = ""
                     for name, values in zip(train_keys + ['learning_rate'], train_outs):
-                        log_str += "{}: {:.4f}, ".format(name, np.mean(values))
+                        log_str += "{}: {:.5f}, ".format(name, np.mean(values))
                     logger.info("[TRAIN] Epoch {}, batch {}: {}time: {:.2f}".format(epoch_id, train_iter, log_str, period))
                 train_iter += 1
         except fluid.core.EOFException:
-            logger.info("[TRAIN] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, train_stat.get_mean_log(), np.mean(train_periods[2:])))
+            logger.info("[TRAIN] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, train_stat.get_mean_log(), np.mean(train_periods[1:])))
             save_model(exe, train_prog, os.path.join(args.save_dir, str(epoch_id)))
-            train_periods = []
             
             # evaluation
             try:
@@ -246,11 +269,16 @@ def train():
                         logger.info("[TEST] Epoch {}, batch {}: {}time: {:.2f}".format(epoch_id, test_iter, log_str, period))
                     test_iter += 1
             except fluid.core.EOFException:
-                logger.info("[TEST] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, test_stat.get_mean_log(), np.mean(test_periods[2:])))
+                logger.info("[TEST] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, test_stat.get_mean_log(), np.mean(test_periods[1:])))
+            finally:
+                test_pyreader.reset()
+                test_stat.reset()
                 test_periods = []
 
         finally:
             train_pyreader.reset()
+            train_stat.reset()
+            train_periods = []
 
 
 if __name__ == "__main__":
