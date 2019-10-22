@@ -73,9 +73,10 @@ def optimization(loss,
              .noam_decay(1/(warmup_steps *(learning_rate ** 2)),
            warmup_steps)
         else:
-            printf(
-                "WARNING: noam decay should have postive warmup steps, using "
-                "constant learning rate instead!")
+            print(
+                "WARNING: noam decay of learning rate should have postive warmup "
+                "steps but given {}, using constant learning rate instead!"
+                .format(warmup_steps))
             scheduled_lr = fluid.layers.create_global_var(
                 name=fluid.unique_name.generate("learning_rate"),
                 shape=[1],
@@ -83,8 +84,20 @@ def optimization(loss,
                 dtype='float32',
                 persistable=True)
     elif scheduler == 'linear_warmup_decay':
-        scheduled_lr = linear_warmup_decay(learning_rate, warmup_steps,
-                                           num_train_steps)
+        if warmup_steps > 0:
+            scheduled_lr = linear_warmup_decay(learning_rate, warmup_steps,
+                                               num_train_steps)
+        else:
+            print(
+                "WARNING: linear warmup decay of learning rate should have "
+                "postive warmup steps but given {}, use constant learning rate "
+                "instead!".format(warmup_steps))
+            scheduled_lr = fluid.layers.create_global_var(
+                name=fluid.unique_name.generate("learning_rate"),
+                shape=[1],
+                value=learning_rate,
+                dtype='float32',
+                persistable=True)
     else:
         raise ValueError("Unkown learning rate scheduler, should be "
                          "'noam_decay' or 'linear_warmup_decay'")

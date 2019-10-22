@@ -17,6 +17,7 @@ import sys
 import numpy as np
 import argparse
 import functools
+import time
 
 import paddle
 import paddle.fluid as fluid
@@ -46,9 +47,26 @@ def infer(args):
     test_reader = paddle.batch(reader.test(), batch_size=1)
     feeder = fluid.DataFeeder(place=place, feed_list=feed_target_names, program=test_program)
 
-    results=[] 
+    results=[]
+    #for infer time, if you don't need, please change infer_time to False
+    infer_time = True
     for batch_id, data in enumerate(test_reader()):
-
+        # for infer time
+        if infer_time:
+            warmup_times = 10
+            repeats_time = 30
+            feed_data = feeder.feed(data)
+            for i in range(warmup_times):
+                exe.run(test_program,
+                        feed=feed_data,
+                        fetch_list=fetch_targets)
+            start_time = time.time()
+            for i in range(repeats_time):
+                exe.run(test_program,
+                        feed=feed_data,
+                        fetch_list=fetch_targets)
+            print("infer time: {} ms/sample".format((time.time()-start_time) * 1000 / repeats_time))
+            infer_time = False
         # top1_acc, top5_acc
         result = exe.run(test_program,
                           feed=feeder.feed(data),
