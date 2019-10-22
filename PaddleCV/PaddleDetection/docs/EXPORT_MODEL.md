@@ -11,12 +11,12 @@
 
 ## 使用示例
 
-我们使用[训练/评估/推断](GETTING_STARTED_cn.md)中训练得到的模型进行试用，脚本如下
+使用[训练/评估/推断](GETTING_STARTED_cn.md)中训练得到的模型进行试用，脚本如下
 
 ```bash
-python tools/save_inference_model.py -c configs/faster_rcnn_r50_fpn_1x.yaml \
-        -o weights=output/faster_rcnn_r50_fpn_1x/model_final \
+python tools/save_inference_model.py -c configs/faster_rcnn_r50_1x.yaml \
+        -o weights=output/faster_rcnn_r50_1x/model_final \
         --output_dir=./inference_model
 ```
 
-- 预测模型会导出到`output/faster_rcnn_r50_fpn_1x`目录下，模型名和参数名分别为`__model__`和`__params__`。
+- 预测模型会导出到`output/faster_rcnn_r50_1x`目录下，模型名和参数名分别为`__model__`和`__params__`。
