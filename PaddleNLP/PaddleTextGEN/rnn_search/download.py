@@ -45,7 +45,7 @@ def main(arguments):
         os.mkdir(tar_path)
 
     for filename in filenames:
-        url = os.path.join(remote_path, filename)
+        url = remote_path + '/' + filename
         tar_file = os.path.join(tar_path, filename)
         URLLIB.urlretrieve(url, tar_file)
     print("Downloaded sucess......")
