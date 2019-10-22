@@ -60,9 +60,8 @@ def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
     save_dir = os.path.join(FLAGS.output_dir, cfg_name)
     feed_var_names = [var.name for var in feed_vars.values()]
     target_vars = list(test_fetches.values())
-    feed_var_names = prune_feed_vars(feed_var_names, target_vars,
-                                       infer_prog)
-    logger.info("Save inference model to {}, input: {}, output: "
+    feed_var_names = prune_feed_vars(feed_var_names, target_vars, infer_prog)
+    logger.info("Export inference model to {}, input: {}, output: "
                 "{}...".format(save_dir, feed_var_names,
                                [str(var.name) for var in target_vars]))
     fluid.io.save_inference_model(

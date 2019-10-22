@@ -1,6 +1,6 @@
 # 模型导出
 
-训练得到一个满足要求的模型后，如果想要将该模型接入到C++预测库或者Serving服务，需要通过`tools/save_inference_model.py`导出该模型。
+训练得到一个满足要求的模型后，如果想要将该模型接入到C++预测库或者Serving服务，需要通过`tools/export_model.py`导出该模型。
 
 ## 启动参数说明
 
@@ -14,7 +14,7 @@
 使用[训练/评估/推断](GETTING_STARTED_cn.md)中训练得到的模型进行试用，脚本如下
 
 ```bash
-python tools/save_inference_model.py -c configs/faster_rcnn_r50_1x.yaml \
+python tools/export_model.py -c configs/faster_rcnn_r50_1x.yaml \
         -o weights=output/faster_rcnn_r50_1x/model_final \
         --output_dir=./inference_model
 ```
