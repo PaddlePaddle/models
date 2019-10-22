@@ -253,7 +253,7 @@ PaddleSlim 模型压缩工具库的实验结果和模型库见 [详细实验结�
 
 ## 基于动态图实现的模型
 
-自 PaddlePaddle fluid 1.5 版本正式支持动态图模式以来，模型库新增若干基于动态图实现的模型，请参考 [dygraph](https://github.com/PaddlePaddle/models/blob/develop/dygraph/)，这些模型可以作为了解和使用 PaddlePaddle 动态图模式的示例。目前 PaddlePaddle 的动态图功能正在活跃开发中，API 可能发生变动。
+自 PaddlePaddle fluid 1.5 版本正式支持动态图模式以来，模型库新增若干基于动态图实现的模型，请参考 [dygraph](https://github.com/PaddlePaddle/models/blob/develop/dygraph/)，这些模型可以作为了解和使用 PaddlePaddle 动态图模式的示例。目前 PaddlePaddle 的动态图功能正在活跃开发中，API 可能发生变动，欢迎用户试用并给我们反馈。
 
 ## 其他模型
 
