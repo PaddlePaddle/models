@@ -81,7 +81,7 @@ def infer():
     exe = Executor(place)
     exe.run(framework.default_startup_program())
 
-    dir_name = './' + args.reload_model
+    dir_name = args.reload_model
     print("dir name", dir_name)
     fluid.io.load_params(exe, dir_name)
     vocab, tar_id2vocab = get_vocab(args.dataset_prefix)
