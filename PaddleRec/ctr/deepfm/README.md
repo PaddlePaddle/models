@@ -25,7 +25,7 @@ To preprocess the raw dataset, we min-max normalize continuous features to [0, 1
 
 Download and preprocess data:
 ```bash
-cd data && sh download_preprocess.sh && cd ..
+cd data && python download_preprocess.py && cd ..
 ```
 
 After executing these commands, 3 folders "train_data", "test_data" and "aid_data" will be generated. The folder "train_data" contains 90% of the raw data, while the rest 10% is in "test_data". The folder "aid_data" contains a created feature dictionary "feat_dict.pkl2".
@@ -58,12 +58,13 @@ We emulate distributed training on a local machine. In default, we use 2 X 2，i
 ### Download and preprocess distributed demo dataset
 This small demo dataset(a few lines from Criteo dataset) only test if distributed training can train.
 ```bash
-cd dist_data && sh dist_data_download.sh && cd ..
+cd dist_data && python dist_data_download.py && cd ..
 ```
 
 ### Distributed Train and Infer
 Train
 ```bash
+# 该sh不支持Windows
 sh cluster_train.sh
 ```
 params of cluster_train.sh：
@@ -89,7 +90,7 @@ Notes:
 - The first trainer(with trainer_id 0) saves model params.
 
 - After each training, pserver processes should be stop manually. You can use command below:
-  
+
 >ps -ef | grep python
 
 - We use Dataset API to load data，it's only supported on Linux now.

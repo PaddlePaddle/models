@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# -*- coding: UTF-8 -*-
+
 import argparse
 import os
 import time
@@ -25,6 +26,7 @@ import reader
 import creator
 sys.path.append('../models/')
 from model_check import check_cuda
+from model_check import check_version
 
 parser = argparse.ArgumentParser(__doc__)
 # 1. model parameters
@@ -109,4 +111,5 @@ def test_process(exe, program, reader, test_ret):
 if __name__ == '__main__':
     args = parser.parse_args()
     check_cuda(args.use_cuda)
+    check_version()
     do_eval(args)

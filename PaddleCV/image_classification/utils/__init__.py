@@ -12,4 +12,4 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 from .optimizer import cosine_decay, lr_warmup, cosine_decay_with_warmup, exponential_decay_with_warmup, Optimizer, create_optimizer
-from .utility import add_arguments, print_arguments, parse_args, check_gpu, check_args, init_model, save_model, create_pyreader, print_info, best_strategy_compiled, init_model, save_model, ExponentialMovingAverage
+from .utility import add_arguments, print_arguments, parse_args, check_gpu, check_args, init_model, save_model, create_data_loader, print_info, best_strategy_compiled, init_model, save_model, ExponentialMovingAverage

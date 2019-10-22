@@ -12,6 +12,7 @@ import reader
 import utils
 sys.path.append('../models/')
 from model_check import check_cuda
+from model_check import check_version
 
 def save_inference_model(args):
 
@@ -101,6 +102,7 @@ if __name__=="__main__":
     utils.load_yaml(parser,'conf/args.yaml')
     args = parser.parse_args()
     check_cuda(args.use_cuda)
+    check_version()
     print("save inference model")
     save_inference_model(args)
     

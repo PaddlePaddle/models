@@ -19,6 +19,7 @@ from __future__ import print_function
 import os
 import sys
 import glob
+import time
 
 import numpy as np
 from PIL import Image
@@ -166,8 +167,29 @@ def main():
 
     imid2path = reader.imid2path
     keys = ['bbox']
+    infer_time = True
     for iter_id, data in enumerate(reader()):
         feed_data = [[d[0], d[1]] for d in data]
+        # for infer time
+        if infer_time:
+            warmup_times = 10
+            repeats_time = 30
+            feed_data_dict = feeder.feed(feed_data);
+            for i in range(warmup_times):
+                exe.run(infer_prog,
+                        feed=feed_data_dict,
+                        fetch_list=fetch_list,
+                        return_numpy=False)
+            start_time = time.time()
+            for i in range(repeats_time):
+                exe.run(infer_prog,
+                        feed=feed_data_dict,
+                        fetch_list=fetch_list,
+                        return_numpy=False)
+
+            print("infer time: {} ms/sample".format((time.time()-start_time) * 1000 / repeats_time))
+            infer_time = False
+
         outs = exe.run(infer_prog,
                        feed=feeder.feed(feed_data),
                        fetch_list=fetch_list,
