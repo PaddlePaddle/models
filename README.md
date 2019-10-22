@@ -66,8 +66,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [YOLOv3](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 速度和精度均衡的目标检测网络，相比于原作者 darknet 中的 YOLO v3 实现，PaddlePaddle 实现参考了论文 [Bag of Tricks for Image Classification with Convolutional Neural Networks](https://arxiv.org/pdf/1812.01187.pdf) 增加了 mixup，label_smooth 等处理，精度 (mAP(0.50: 0.95)) 相比于原作者提高了 4.7 个绝对百分点，在此基础上加入 synchronize batch normalization, 最终精度相比原作者提高 5.9 个绝对百分点。 | MS-COCO    | 基于DarkNet   mAP(0.50: 0.95)=   38.9%                  |
 | [PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/face_detection) | **PyramidBox** **模型是百度自主研发的人脸检测模型**，利用上下文信息解决困难人脸的检测问题，网络表达能力高，鲁棒性强。于18年3月份在 WIDER Face 数据集上取得第一名 | WIDER FACE | mAP   （Easy/Medium/Hard   set）=   96.0%/ 94.8%/ 88.8% |
 | [Cascade RCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | Cascade R-CNN 在 Faster R-CNN 框架下，通过级联多个检测器，在训练过程中选取不同的 IoU 阈值，逐步提高目标定位的精度，从而获取优异的检测性能。 | MS-COCO    | 基于ResNet 50 mAP (0.50: 0.95) = 40.9%                  |
-| [Faceboxes](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 经典的人脸检测网络，被称为“高精度CPU实时人脸检测器”。网络中使用率CReLU、density_prior_box等组件，使得模型的精度和速度得到平衡与提升。相比于PyramidBox，预测与计算更快，模型更小，精度也保持高水平。 | WIDER FACE | mAP (Easy/Medium/Hard Set) = 0.898/0.872/0.752          |
-| [BlazeFace](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 高速的人脸检测网络，由5个单的和6个双BlazeBlocks、和SSD的架构构成。它轻巧但性能良好，并且专为移动GPU推理量身定制。 | WIDER FACE | mAP Easy/Medium/Hard Set = 0.915/0.892/0.797            |
+| [Faceboxes](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 经典的人脸检测网络，被称为“高精度 CPU 实时人脸检测器”。网络中使用率 CReLU、density_prior_bo x等组件，使得模型的精度和速度得到平衡与提升。相比于 PyramidBox，预测与计算更快，模型更小，精度也保持高水平。 | WIDER FACE | mAP (Easy/Medium/Hard Set) = 0.898/0.872/0.752          |
+| [BlazeFace](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection) | 高速的人脸检测网络，由5个单的和6个双 BlazeBlocks、和 SSD 的架构构成。它轻巧但性能良好，并且专为移动 GPU 推理量身定制。 | WIDER FACE | mAP Easy/Medium/Hard Set = 0.915/0.892/0.797            |
 
 ### 图像分割
 
@@ -88,7 +88,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 ### 图像生成
 
-图像生成是指根据输入向量，生成目标图像。这里的输入向量可以是随机的噪声或用户指定的条件向量。具体的应用场景有：手写体生成、人脸合成、风格迁移、图像修复等。[PaddleGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) 包含和图像生成相关的模型多个模型。
+图像生成是指根据输入向量，生成目标图像。这里的输入向量可以是随机的噪声或用户指定的条件向量。具体的应用场景有：手写体生成、人脸合成、风格迁移、图像修复等。[PaddleGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN) 包含和图像生成相关的多个模型。
 
 | 模型名称                                                     | 模型简介                                                     | 数据集     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------- |
@@ -157,7 +157,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | 中文词法分析 | [LAC(Lexical Analysis of Chinese)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis) | 百度自主研发中文特色模型词法分析任务，集成了中文分词、词性标注和命名实体识别任务。输入是一个字符串，而输出是句子中的词边界和词性、实体类别。 |
 | 词向量       | [Word2vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec) | 提供单机多卡，多机等分布式训练中文词向量能力，支持主流词向量模型（skip-gram，cbow等），可以快速使用自定义数据训练词向量模型。 |
-| 语言模型     | [Language_model](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model) | 给定一个输入词序列（中文需要先分词、英文需要 tokenize），计算其 PPL（语言模型困惑度，用于表示模型生成句子的流利程度）。 |
+| 语言模型     | [Language_model](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model) | 给定一个输入词序列（中文需要先分词、英文需要先 tokenize），计算其生成概率。 语言模型的评价指标 PPL(困惑度)，用于表示模型生成句子的流利程度。 |
 
 ### NLP 核心技术
 
@@ -167,9 +167,9 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [ERNIE(Enhanced Representation from kNowledge IntEgration)](https://github.com/PaddlePaddle/ERNIE) | 百度自研的语义表示模型，通过建模海量数据中的词、实体及实体关系，学习真实世界的语义知识。相较于 BERT 学习原始语言信号，ERNIE 直接对先验语义知识单元进行建模，增强了模型语义表示能力。 |
-| [BERT(Bidirectional Encoder Representation from Transformers)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK/BERT) | 一个迁移能力很强的通用语义表示模型， 以 Transformer 为网络基本组件，以双向 Masked Language Model和 Next Sentence Prediction 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。 |
-| [ELMo(Embeddings from Language Models)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK/ELMo) | 重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。 |
+| [ERNIE](https://github.com/PaddlePaddle/ERNIE)(Enhanced Representation from kNowledge IntEgration) | 百度自研的语义表示模型，通过建模海量数据中的词、实体及实体关系，学习真实世界的语义知识。相较于 BERT 学习原始语言信号，ERNIE 直接对先验语义知识单元进行建模，增强了模型语义表示能力。 |
+| [BERT](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK/BERT)(Bidirectional Encoder Representation from Transformers) | 一个迁移能力很强的通用语义表示模型， 以 Transformer 为网络基本组件，以双向 Masked Language Model和 Next Sentence Prediction 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。 |
+| [ELMo](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK/ELMo)(Embeddings from Language Models) | 重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。 |
 
 #### 文本相似度计算
 
@@ -177,7 +177,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 文本生成
 
-[PaddleTextGEN](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleTextGEN) (Paddle Text Generation) 是一个基于 PaddlePaddle 的文本生成框架，并提供了一些列经典文本生成模型案例，如 vanilla seq2seq，seq2seq with attention，variational seq2seq 模型等。
+[PaddleTextGEN](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleTextGEN) (Paddle Text Generation) ,一个基于 PaddlePaddle 的文本生成框架，提供了一些列经典文本生成模型案例，如 vanilla seq2seq，seq2seq with attention，variational seq2seq 模型等。
 
 ### NLP 系统应用
 
@@ -190,7 +190,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 阅读理解
 
-[PaddleMRC](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleMRC) (Paddle Machine Reading Comprehension)，集合了百度在阅读理解领域相关的模型，工具，开源数据集等一些列工作。
+[PaddleMRC](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleMRC) (Paddle Machine Reading Comprehension)，集合了百度在阅读理解领域相关的模型，工具，开源数据集等一系列工作。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -210,7 +210,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [DGU](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue/dialogue_general_understanding) (Dialogue General Understanding，通用对话理解模型) | 覆盖了包括**检索式聊天系统**中 context-response matching 任务和**任务完成型对话系统**中**意图识别**，**槽位解析**，**状态追踪**等常见对话系统任务，在 6 项国际公开数据集中都获得了最佳效果。 |
 | [ADEM](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue/auto_dialogue_evaluation) (Auto Dialogue Evaluation Model) | 评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。 |
-| [Proactive Conversation](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2019-DuConv) | 包含百度开源的知识驱动的开放领域对话数据集 [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv)，以及基线模型，对应论文 [Proactive Human-Machine Conversation with Explicit Conversation Goals](https://arxiv.org/abs/1906.05572) 发表于 ACL2019。 |
+| [Proactive Conversation](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2019-DuConv) | 包含百度开源的知识驱动的开放领域对话数据集 [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv)，以及基线模型。对应论文 [Proactive Human-Machine Conversation with Explicit Conversation Goals](https://arxiv.org/abs/1906.05572) 发表于 ACL2019。 |
 | [DAM](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DAM)（Deep Attention Matching Network，深度注意力机制模型） | 开放领域多轮对话匹配模型，对应论文 [Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network](https://aclweb.org/anthology/P18-1103/) 发表于 ACL2018。 |
 
 百度最新前沿工作开源，请参考 [Research](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research)。
@@ -222,13 +222,13 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型                                                         | 应用场景                       | 简介                                                         |
 | :----------------------------------------------------------- | :----------------------------- | :----------------------------------------------------------- |
-| [GRU4Rec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gru4rec) | Session-based 推荐, 图网络推荐 | 首次将RNN（GRU）运用于session-based推荐，核心思想是在一个session中，用户点击一系列item的行为看做一个序列，用来训练RNN模型 |
-| [TagSpace](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/tagspace) | 标签推荐                       | Tagspace模型学习文本及标签的embedding表示，应用于工业级的标签推荐，具体应用场景有feed新闻标签推荐。 |
+| [GRU4Rec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gru4rec) | Session-based 推荐, 图网络推荐 | 首次将 RNN（GRU）运用于 session-based 推荐，核心思想是在一个 session 中，用户点击一系列item的行为看做一个序列，用来训练 RNN 模型 |
+| [TagSpace](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/tagspace) | 标签推荐                       | Tagspace 模型学习文本及标签的 embedding 表示，应用于工业级的标签推荐，具体应用场景有 feed 新闻标签推荐。 |
 | [SequenceSemanticRetrieval](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ssr) | 召回                           | 解决了 GRU4Rec 模型无法预测训练数据集中不存在的项目，比如新闻推荐的问题。它由两个部分组成：一个是匹配模型部分，另一个是检索部分 |
-| [Word2Vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec) | 词向量                         | 训练得到词的向量表示、广泛应用于NLP、推荐等任务场景。        |
-| [Multiview-Simnet](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/multiview_simnet) | 排序                           | 多视角Simnet模型是可以融合用户以及推荐项目的多个视角的特征并进行个性化匹配学习的一体化模型。这类模型在很多工业化的场景中都会被使用到，比如百度的Feed产品中 |
-| [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gnn) | 召回                           | SR-GNN，全称为Session-based Recommendations with Graph Neural Network（GNN）。使用GNN进行会话序列建模。 |
-| [DeepInterestNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/din) | 排序                           | DIN，全称为Deep Interest Network。特点为对历史序列建模的过程中结合了预估目标的信息。 |
+| [Word2Vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec) | 词向量                         | 训练得到词的向量表示、广泛应用于 NLP 、推荐等任务场景。      |
+| [Multiview-Simnet](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/multiview_simnet) | 排序                           | 多视角Simnet模型是可以融合用户以及推荐项目的多个视角的特征并进行个性化匹配学习的一体化模型。这类模型在很多工业化的场景中都会被使用到，比如百度的 Feed 产品中 |
+| [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gnn) | 召回                           | SR-GNN，全称为 Session-based Recommendations with Graph Neural Network（GNN）。使用 GNN 进行会话序列建模。 |
+| [DeepInterestNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/din) | 排序                           | DIN，全称为 Deep Interest Network。特点为对历史序列建模的过程中结合了预估目标的信息。 |
 | [DeepFM](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ctr/deepfm) | 推荐系统                       | DeepFM，全称 Factorization-Machine based Neural Network。经典的 CTR 推荐算法，网络由DNN和FM两部分组成。 |
 | [DCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ctr/dcn) | 推荐系统                       | 全称 Deep & Cross Network。提出一种新的交叉网络（cross network），在每个层上明确地应用特征交叉。 |
 | [XDeepFM](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ctr/xdeepfm) | 推荐系统                       | xDeepFM，全称 extreme Factorization Machine。对 DeepFM 和 DCN 的改进，提出 CIN（Compressed Interaction Network），使用 vector-wise 等级的显示特征交叉。 |
@@ -240,12 +240,12 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [DeepASR](https://github.com/PaddlePaddle/models/blob/develop/PaddleSpeech/DeepASR/README_cn.md) | 利用 PaddlePaddle 框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器。 |
-| [DeepSpeech2](https://github.com/PaddlePaddle/DeepSpeech)    | 一个采用 PaddlePaddle 平台的端到端自动语音识别（ASR）引擎的开源项目，具体原理请参考这篇论文 [Deep Speech 2: End-to-End Speech Recognition in English and Mandarin](https://arxiv.org/abs/1512.02595)。 |
+| [DeepSpeech2](https://github.com/PaddlePaddle/DeepSpeech)    | 一个采用 PaddlePaddle 平台的端到端自动语音识别（ASR）引擎的开源项目，具体原理请参考论文 [Deep Speech 2: End-to-End Speech Recognition in English and Mandarin](https://arxiv.org/abs/1512.02595)。 |
 | [DeepVoice3](https://github.com/PaddlePaddle/models/tree/develop/PaddleSpeech/DeepVoice3) | 百度研发的基于卷积神经网络的端到端语音合成模型，对应论文 [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654)， 基于 PaddlePaddle 动态图实现。 |
 
 ## PaddleSlim
 
-[PaddleSlim](https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim) 是PaddlePaddle框架的一个子模块，主要用于压缩图像领域模型。在PaddleSlim中，不仅实现了目前主流的网络剪枝、量化、蒸馏三种压缩策略，还实现了超参数搜索和小模型网络结构搜索功能。在后续版本中，会添加更多的压缩策略，以及完善对NLP领域模型的支持。
+[PaddleSlim](https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim) 是 PaddlePaddle 框架的一个子模块，主要用于压缩图像领域模型。在 PaddleSlim 中，不仅实现了目前主流的网络剪枝、量化、蒸馏三种压缩策略，还实现了超参数搜索和小模型网络结构搜索功能。在后续版本中，会添加更多的压缩策略，以及完善对 NLP 领域模型的支持。
 
 PaddleSlim 模型压缩工具库的实验结果和模型库见 [详细实验结果与ModelZoo](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/model_zoo.md)。
 
@@ -257,10 +257,10 @@ PaddleSlim 模型压缩工具库的实验结果和模型库见 [详细实验结�
 
 | 模型名称                                                     | 模型简介                                                     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [DQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | value-based强化学习算法，第一个成功地将深度学习和强化学习结合起来的模型 |
-| [DoubleDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 将Double Q的想法应用在DQN上，解决过优化问题                  |
-| [DuelingDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 改进了DQN模型，提高了模型的性能                              |
-| [CIKM2019-MONOPOLY](https://github.com/PaddlePaddle/models/tree/develop/PaddleST/Research/CIKM2019-MONOPOLY) | Monopoly是一个实用的 POI 商业智能算法，能够利用少量的房产价格，对大量其他的固定资产进行价值估计。 该算法全面适配 MapReduce 的分布式计算框架，能够快速用于工业部署。 |
+| [DQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | value-based 强化学习算法，第一个成功地将深度学习和强化学习结合起来的模型 |
+| [DoubleDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 将 Double Q 的想法应用在 DQN 上，解决过优化问题              |
+| [DuelingDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 改进了 DQN 模型，提高了模型的性能                            |
+| [CIKM2019-MONOPOLY](https://github.com/PaddlePaddle/models/tree/develop/PaddleST/Research/CIKM2019-MONOPOLY) | Monopoly 是一个实用的 POI 商业智能算法，能够利用少量的房产价格，对大量其他的固定资产进行价值估计。 该算法全面适配 MapReduce 的分布式计算框架，能够快速用于工业部署。 |
 
 
 ## 快速下载模型库
