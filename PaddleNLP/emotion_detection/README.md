@@ -25,7 +25,7 @@
 | BERT | 93.6% | 92.3%  | 78.6%  |
 | ERNIE | 94.4% | 94.0% | 80.6% |
 
-同时推荐用户参考[IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122291)
+同时推荐用户参考[IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122291)。
 
 ## 快速开始
 
@@ -33,7 +33,7 @@
 
 1. PaddlePaddle 安装
 
-   本项目依赖于 PaddlePaddle Fluid 1.6 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle Fluid 1.6 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装。
 
 2. 代码安装
 
@@ -46,7 +46,7 @@
 
 3. 环境依赖
 
-   Python 2 的版本要求 2.7.15+，Python 3 的版本要求 3.5.1+/3.6/3.7，其它环境请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 部分的内容
+   Python 2 的版本要求 2.7.15+，Python 3 的版本要求 3.5.1+/3.6/3.7，其它环境请参考 PaddlePaddle [安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 部分的内容。
 
 ### 代码结构说明
 
@@ -305,7 +305,7 @@ Final test result:
 
 我们也提供了使用 PaddleHub 加载 ERNIE 模型的选项，PaddleHub 是 PaddlePaddle 的预训练模型管理工具，可以一行代码完成预训练模型的加载，简化预训练模型的使用和迁移学习。更多相关的介绍，可以查看 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
 
-注意：使用该选项需要先安装PaddleHub，安装命令如下
+注意：使用该选项需要先安装PaddleHub >= 1.2.0，安装命令如下
 ```shell
 pip install paddlehub
 ```
@@ -335,6 +335,8 @@ sh run_ernie.sh infer
 ```
 
 ## 版本更新
+
+2019/10/21 PaddlePaddle1.6适配，添加download.py脚本。
 
 2019/08/26 规范化配置的使用，对模块内数据处理代码进行了重构，更新README结构，提高易用性。
 

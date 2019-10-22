@@ -122,7 +122,7 @@ class PDConfig(object):
             return
 
         try:
-            with open(file_path, "r") as fin:
+            with io.open(file_path, "r") as fin:
                 self.json_config = json.load(fin)
         except Exception as e:
             raise IOError("Error in parsing json config file '%s'" % file_path)
