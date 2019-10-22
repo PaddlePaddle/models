@@ -105,7 +105,7 @@ def create_model(bert_config):
         'lod_levels': [0, 0, 0, 0, 0, 0, 0],
     }
 
-    inputs = [fluid.layers.data(name=input_fields['names'][i],
+    inputs = [fluid.data(name=input_fields['names'][i],
                       shape=input_fields['shapes'][i],
                       dtype=input_fields['dtypes'][i],
                       lod_level=input_fields['lod_levels'][i]) for i in range(len(input_fields['names']))]
