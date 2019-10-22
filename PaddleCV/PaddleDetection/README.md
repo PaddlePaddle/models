@@ -70,7 +70,7 @@ Advanced Features:
 - [Introduction to the configuration workflow](docs/CONFIG.md)
 - [Examples for detailed configuration explanation](docs/config_example/)
 - [IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
-- [Transfer learning document](docs/TRANSFER_LEARNING_cn.md)
+- [Transfer learning document](docs/TRANSFER_LEARNING.md)
 
 ## Model Zoo
 
