@@ -47,61 +47,49 @@ Supported Architectures:
 | Cascade Faster-RCNN |   ✓    |                             ✓ |     ✓      |   ✗   |     ✗     |    ✗    |  ✗   |
 | Cascade Mask-RCNN   |   ✓    |                             ✗ |     ✗      |   ✓   |     ✗     |    ✗    |  ✗   |
 | RetinaNet           |   ✓    |                             ✗ |     ✗      |   ✗   |     ✗     |    ✗    |  ✗   |
-| Yolov3              |   ✓    |                             ✗ |     ✗      |   ✗   |     ✓     |    ✓    |  ✗   |
+| YOLOv3              |   ✓    |                             ✗ |     ✗      |   ✗   |     ✓     |    ✓    |  ✗   |
 | SSD                 |   ✗    |                             ✗ |     ✗      |   ✗   |     ✓     |    ✗    |  ✓   |
 
 <a name="vd">[1]</a> [ResNet-vd](https://arxiv.org/pdf/1812.01187) models offer much improved accuracy with negligible performance cost.
 
 Advanced Features:
 
-- [x] **Synchronized Batch Norm**: currently used by Yolo V3.
+- [x] **Synchronized Batch Norm**: currently used by YOLOv3.
 - [x] **Group Norm**
 - [x] **Modulated Deformable Convolution**
 - [x] **Deformable PSRoI Pooling**
 
 **NOTE:** Synchronized batch normalization can only be used on multiple GPU devices, can not be used on CPU devices or single GPU device.
 
-
-
 ## Get Started
 
 - [Installation guide](docs/INSTALL.md)
 - [Quick Start on small dataset](docs/QUICK_STARTED.md)
-- [Training, evaluation and arguments description](docs/GETTING_STARTED.md)
+- [Guide to traing, evaluate and arguments description](docs/GETTING_STARTED.md)
 - [Guide to preprocess pipeline and custom dataset](docs/DATA.md)
 - [Introduction to the configuration workflow](docs/CONFIG.md)
-- [Example for detailed configuration explanation](docs/config_example/)
+- [Examples for detailed configuration explanation](docs/config_example/)
 - [IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
-- [Transfer learning](docs/TRANSFER_LEARNING_cn.md)
-
-
+- [Transfer learning document](docs/TRANSFER_LEARNING_cn.md)
 
 ## Model Zoo
 
 - Pretrained models are available in the [PaddleDetection model zoo](docs/MODEL_ZOO.md).
-- [Face detection models](configs/face_detection/README_cn.md)
+- [Face detection models](configs/face_detection/README.md)
 - [Pretrained models for pedestrian  and vehicle detection](contrib/README.md)
-
-
 
 ## Model compression
 
 - [ Quantification aware training example](slim/quantization)
 - [ Pruning compression example](slim/prune)
 
-
-
 ## Depoly
 
 - [C++ inference depolyment](inference/README.md)
 
-
-
 ## Benchmark
 
 - [Inference benchmark](docs/BENCHMARK_INFER_cn.md)
-
-
 
 
 ## Updates
