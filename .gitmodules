@@ -10,3 +10,6 @@
 [submodule "PaddleNLP/PaddleLARK/ERNIE"]
 	path = PaddleNLP/PaddleLARK/ERNIE
 	url = https://github.com/PaddlePaddle/ERNIE.git
+[submodule "PaddleSpeech/DeepSpeech"]
+	path = PaddleSpeech/DeepSpeech
+	url = https://github.com/PaddlePaddle/DeepSpeech.git
