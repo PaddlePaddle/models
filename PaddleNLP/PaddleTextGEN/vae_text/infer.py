@@ -32,9 +32,14 @@ from paddle.fluid.executor import Executor
 import reader
 
 import sys
+line_tok = '\n'
+space_tok = ' '
 if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding("utf-8")
+    line_tok = u'\n'
+    space_tok = u' '
+
 import os
 
 from args import *
@@ -98,8 +103,8 @@ def infer():
             if EOS_ID in line:
                 end_id = np.where(line == EOS_ID)[0][0]
             new_line = [tar_id2vocab[e[0]] for e in line[1:end_id]]
-            out_file.write(' '.join(new_line))
-            out_file.write('\n')
+            out_file.write(space_tok.join(new_line))
+            out_file.write(line_tok)
 
 
 def check_version():

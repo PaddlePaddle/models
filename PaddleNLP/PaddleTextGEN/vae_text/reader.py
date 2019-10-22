@@ -25,6 +25,11 @@ import io
 from collections import Counter
 Py3 = sys.version_info[0] == 3
 
+if Py3:
+    line_tok = '\n'
+else:
+    line_tok = u'\n'
+
 PAD_ID = 0
 BOS_ID = 1
 EOS_ID = 2
@@ -59,7 +64,7 @@ def _vocab(vocab_file, train_file, max_vocab_cnt):
     with io.open(vocab_file, "w", encoding='utf-8') as f:
         for voc, fre in vocab_count[0:max_vocab_cnt]:
             f.write(voc)
-            f.write('\n')
+            f.write(line_tok)
 
 
 def _build_vocab(vocab_file, train_file=None, max_vocab_cnt=-1):
@@ -198,5 +203,4 @@ def get_data_iter(raw_data,
             end_index = min((i + 1) * batch_size, len(b_src))
             batch_data = new_cache[i * batch_size:end_index]
             src_ids, src_mask = to_pad_np(batch_data)
-            #print( "src ids", src_ids )
             yield (src_ids, src_mask)

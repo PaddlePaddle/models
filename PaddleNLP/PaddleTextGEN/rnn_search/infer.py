@@ -32,9 +32,13 @@ from paddle.fluid.executor import Executor
 import reader
 
 import sys
+line_tok = '\n'
+space_tok = ' '
 if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding("utf-8")
+    line_tok = u'\n'
+    space_tok = u' '
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
@@ -155,8 +159,8 @@ def infer():
                         break
                     new_res.append(ele)
 
-                out_file.write(' '.join(new_res))
-                out_file.write('\n')
+                out_file.write(space_tok.join(new_res))
+                out_file.write(line_tok)
 
 
 def check_version():
