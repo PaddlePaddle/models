@@ -75,7 +75,7 @@ infer() {
 }
 
 main() {
-	local cmd=${1:-help}
+    local cmd=${1:-help}
     case "${cmd}" in
         train)
             train "$@";
