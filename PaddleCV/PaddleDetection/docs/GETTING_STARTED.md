@@ -146,6 +146,17 @@ moment, but it is a planned feature
   Different thresholds will produce different results depending on the calculation of [NMS](https://ieeexplore.ieee.org/document/1699659).
 
 
+- Export model
+
+  ```bash
+  python tools/export_model.py -c configs/faster_rcnn_r50_1x.yml \
+                      --output_dir=inference_model \
+                      -o weights=output/faster_rcnn_r50_1x/model_final \
+                         FasterRCNNTestFeed.image_shape=[3,800,1333]
+  ```
+
+  Save inference model `tools/export_model.py`, which can be loaded by PaddlePaddle predict library.
+
 ## FAQ
 
 **Q:**  Why do I get `NaN` loss values during single GPU training? </br>
