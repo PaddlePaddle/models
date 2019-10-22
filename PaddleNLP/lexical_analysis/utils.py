@@ -20,6 +20,7 @@ import sys
 import numpy as np
 import paddle.fluid as fluid
 import yaml
+import io
 
 
 def str2bool(v):
@@ -50,7 +51,7 @@ class ArgumentGroup(object):
 
 
 def load_yaml(parser, file_name, **kwargs):
-    with open(file_name) as f:
+    with io.open(file_name, 'r', encoding='utf8') as f:
         args = yaml.load(f)
         for title in args:
             group = parser.add_argument_group(title=title, description='')

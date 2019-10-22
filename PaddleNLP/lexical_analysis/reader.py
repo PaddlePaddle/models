@@ -14,6 +14,7 @@
 """
 The file_reader converts raw corpus to input.
 """
+
 import os
 import argparse
 import __future__
