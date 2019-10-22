@@ -17,4 +17,4 @@ python train.py \
         --test_data_prefix data/en-vi/tst2013 \
         --vocab_prefix data/en-vi/vocab \
         --use_gpu True \
-        --model_path ./attention_models
+        --model_path attention_models

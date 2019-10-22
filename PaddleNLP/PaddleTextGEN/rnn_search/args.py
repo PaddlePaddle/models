@@ -92,7 +92,7 @@ def parse_args():
     parser.add_argument(
         "--model_path",
         type=str,
-        default='./model',
+        default='model',
         help="model path for model to save")
 
     parser.add_argument(
@@ -103,7 +103,7 @@ def parse_args():
     parser.add_argument(
         "--infer_output_file",
         type=str,
-        default='./infer_output',
+        default='infer_output',
         help="file name for inference output")
     parser.add_argument(
         "--beam_size", type=int, default=10, help="file name for inference")

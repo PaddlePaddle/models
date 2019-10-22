@@ -190,8 +190,7 @@ class BaseModel(object):
     def _compute_loss(self, dec_output):
         loss = layers.softmax_with_cross_entropy(
             logits=dec_output, label=self.label, soft_label=False)
-
-        loss = layers.reshape(loss, shape=[self.batch_size, -1])
+        loss = layers.unsqueeze(loss, axes=[2])
 
         max_tar_seq_len = layers.shape(self.tar)[1]
         tar_mask = layers.sequence_mask(
@@ -199,9 +198,6 @@ class BaseModel(object):
         loss = loss * tar_mask
         loss = layers.reduce_mean(loss, dim=[0])
         loss = layers.reduce_sum(loss)
-
-        loss.permissions = True
-
         return loss
 
     def _beam_search(self, enc_last_hidden, enc_last_cell):

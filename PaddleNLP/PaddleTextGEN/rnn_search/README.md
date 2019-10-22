@@ -54,7 +54,7 @@ python download.py
 sh run.sh
 ```
 
-默认使用带有注意力机制的RNN模型，可以通过修改`--attention' 为False来训练不带注意力机制的RNN模型。
+默认使用带有注意力机制的RNN模型，可以通过修改 --attention 为False来训练不带注意力机制的RNN模型。
 
 ```
 python train.py \

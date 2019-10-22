@@ -100,7 +100,7 @@ def parse_args():
     parser.add_argument(
         "--model_path",
         type=str,
-        default='./model',
+        default='model',
         help="model path for model to save")
 
     parser.add_argument(
@@ -109,7 +109,7 @@ def parse_args():
     parser.add_argument(
         "--infer_output_file",
         type=str,
-        default='./infer_output.txt',
+        default='infer_output.txt',
         help="file name for inference output")
 
     parser.add_argument(

@@ -34,12 +34,6 @@ class AttentionDecoderCell(DecoderCell):
                  init_scale=0.1):
         super(AttentionDecoderCell, self).__init__(num_layers, hidden_size,
                                                    dropout_prob, init_scale)
-        '''
-        self.attention_weight = layers.create_parameter([self.hidden_size * 2, self.hidden_size], dtype="float32", name="attention_weight", \
-                default_initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale))
-        self.memory_weight = layers.create_parameter([self.hidden_size, self.hidden_size], dtype="float32", name="memory_weight", \
-                default_initializer=fluid.initializer.UniformInitializer(low=-init_scale, high=init_scale))
-        '''
 
     def attention(self, query, enc_output, mask=None):
         query = layers.unsqueeze(query, [1])
@@ -93,7 +87,10 @@ class AttentionModel(BaseModel):
                  batch_size,
                  num_layers=1,
                  init_scale=0.1,
-                 dropout=None):
+                 dropout=None,
+                 beam_start_token=1,
+                 beam_end_token=2,
+                 beam_max_step_num=100):
         super(AttentionModel, self).__init__(
             hidden_size,
             src_vocab_size,
@@ -102,6 +99,9 @@ class AttentionModel(BaseModel):
             num_layers=num_layers,
             init_scale=init_scale,
             dropout=dropout)
+        self.beam_start_token = beam_start_token
+        self.beam_end_token = beam_end_token
+        self.beam_max_step_num = beam_max_step_num
 
     def _build_decoder(self, enc_final_state, mode='train', beam_size=10):
         output_layer = lambda x: layers.fc(x,
@@ -132,9 +132,6 @@ class AttentionModel(BaseModel):
             dec_output = output_layer(dec_output)
 
         elif mode == 'beam_search':
-            start_token = 1
-            end_token = 2
-            max_length = 100
             output_layer = lambda x: layers.fc(x,
                                             size=self.tar_vocab_size,
                                             num_flatten_dims=len(x.shape) - 1,
@@ -142,8 +139,8 @@ class AttentionModel(BaseModel):
                                             bias_attr=False)
             beam_search_decoder = BeamSearchDecoder(
                 dec_cell,
-                start_token,
-                end_token,
+                self.beam_start_token,
+                self.beam_end_token,
                 beam_size,
                 embedding_fn=self.tar_embeder,
                 output_fn=output_layer)
@@ -154,7 +151,7 @@ class AttentionModel(BaseModel):
             outputs, _ = dynamic_decode(
                 beam_search_decoder,
                 inits=dec_initial_states,
-                max_step_num=max_length,
+                max_step_num=self.beam_max_step_num,
                 enc_output=enc_output,
                 enc_padding_mask=enc_padding_mask)
             return outputs

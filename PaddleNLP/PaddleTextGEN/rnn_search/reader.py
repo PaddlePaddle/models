@@ -34,7 +34,7 @@ def _read_words(filename):
         if Py3:
             return f.read().replace("\n", "<eos>").split()
         else:
-            return f.read().decode("utf-8").replace("\n", "<eos>").split()
+            return f.read().decode("utf-8").replace(u"\n", u"<eos>").split()
 
 
 def read_all_line(filenam):

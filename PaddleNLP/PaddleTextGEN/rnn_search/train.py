@@ -70,66 +70,55 @@ def main():
         fluid.default_main_program().random_seed = 102
         framework.default_startup_program().random_seed = 102
 
-    # Training process
+    train_program = fluid.Program()
+    startup_program = fluid.Program()
 
-    if args.attention:
-        model = AttentionModel(
-            hidden_size,
-            src_vocab_size,
-            tar_vocab_size,
-            batch_size,
-            num_layers=num_layers,
-            init_scale=init_scale,
-            dropout=dropout)
-    else:
-        model = BaseModel(
-            hidden_size,
-            src_vocab_size,
-            tar_vocab_size,
-            batch_size,
-            num_layers=num_layers,
-            init_scale=init_scale,
-            dropout=dropout)
+    with fluid.program_guard(train_program, startup_program):
+        # Training process
 
-    loss = model.build_graph()
-    # clone from default main program and use it as the validation program
-    main_program = fluid.default_main_program()
-    inference_program = fluid.default_main_program().clone(for_test=True)
+        if args.attention:
+            model = AttentionModel(
+                hidden_size,
+                src_vocab_size,
+                tar_vocab_size,
+                batch_size,
+                num_layers=num_layers,
+                init_scale=init_scale,
+                dropout=dropout)
+        else:
+            model = BaseModel(
+                hidden_size,
+                src_vocab_size,
+                tar_vocab_size,
+                batch_size,
+                num_layers=num_layers,
+                init_scale=init_scale,
+                dropout=dropout)
+        loss = model.build_graph()
+        inference_program = train_program.clone(for_test=True)
+        fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(
+            clip_norm=max_grad_norm))
+        lr = args.learning_rate
+        opt_type = args.optimizer
+        if opt_type == "sgd":
+            optimizer = fluid.optimizer.SGD(lr)
+        elif opt_type == "adam":
+            optimizer = fluid.optimizer.Adam(lr)
+        else:
+            print("only support [sgd|adam]")
+            raise Exception("opt type not support")
 
-    fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(
-        clip_norm=max_grad_norm))
-
-    lr = args.learning_rate
-    opt_type = args.optimizer
-    if opt_type == "sgd":
-        optimizer = fluid.optimizer.SGD(lr)
-    elif opt_type == "adam":
-        optimizer = fluid.optimizer.Adam(lr)
-    else:
-        print("only support [sgd|adam]")
-        raise Exception("opt type not support")
-
-    optimizer.minimize(loss)
+        optimizer.minimize(loss)
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = Executor(place)
-    exe.run(framework.default_startup_program())
+    exe.run(startup_program)
 
     device_count = len(fluid.cuda_places()) if args.use_gpu else len(
         fluid.cpu_places())
-    if device_count > 1:
-        raise Exception("Training using multi-GPUs is not supported now.")
 
-    exec_strategy = fluid.ExecutionStrategy()
-    exec_strategy.num_threads = device_count
-    exec_strategy.num_iteration_per_drop_scope = 100
-
-    build_strategy = fluid.BuildStrategy()
-    build_strategy.enable_inplace = True
-    build_strategy.memory_optimize = False
-    #    build_strategy.fuse_all_optimizer_ops = True
-
-    train_program = framework.default_main_program()
+    CompiledProgram = fluid.CompiledProgram(train_program).with_data_parallel(
+        loss_name=loss.name)
 
     train_data_prefix = args.train_data_prefix
     eval_data_prefix = args.eval_data_prefix
@@ -204,15 +193,15 @@ def main():
                 batch_start_time = time.time()
                 input_data_feed, word_num = prepare_input(
                     batch, epoch_id=epoch_id)
-                fetch_outs = exe.run(program=train_program,
+                word_count += word_num
+                fetch_outs = exe.run(program=CompiledProgram,
                                      feed=input_data_feed,
                                      fetch_list=[loss.name],
                                      use_program_cache=True)
 
-                cost_train = np.array(fetch_outs[0])
+                cost_train = np.mean(fetch_outs[0])
                 # print(cost_train)
                 total_loss += cost_train * batch_size
-                word_count += word_num
                 batch_end_time = time.time()
                 batch_time = batch_end_time - batch_start_time
                 batch_times.append(batch_time)
@@ -235,7 +224,7 @@ def main():
             if not args.profile:
                 dir_name = args.model_path + "/epoch_" + str(epoch_id)
                 print("begin to save", dir_name)
-                fluid.io.save_params(exe, dir_name)
+                fluid.io.save_params(exe, dir_name, main_program=train_program)
                 print("save finished")
                 dev_ppl = eval(valid_data)
                 print("dev ppl", dev_ppl)
