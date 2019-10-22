@@ -111,7 +111,7 @@ def create_model(bert_config, is_training=False):
         input_fields = {
             'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'start_positions', 'end_positions'],
             'shapes': [[None, None], [None, None], [None, None],
-                    [-1, args.max_seq_len, 1], [-1, 1], [-1, 1]],
+                    [None, args.max_seq_len, 1], [None, 1], [None, 1]],
             'dtypes': [
                 'int64', 'int64', 'int64', 'float32', 'int64', 'int64'],
             'lod_levels': [0, 0, 0, 0, 0, 0],
@@ -120,13 +120,13 @@ def create_model(bert_config, is_training=False):
         input_fields = {
             'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'unique_id'],
             'shapes': [[None, None], [None, None], [None, None],
-                    [-1, args.max_seq_len, 1], [-1, 1]],
+                    [None, args.max_seq_len, 1], [None, 1]],
             'dtypes': [
                 'int64', 'int64', 'int64', 'float32', 'int64'],
             'lod_levels': [0, 0, 0, 0, 0],
         }
 
-    inputs = [fluid.layers.data(name=input_fields['names'][i],
+    inputs = [fluid.data(name=input_fields['names'][i],
                       shape=input_fields['shapes'][i],
                       dtype=input_fields['dtypes'][i],
                       lod_level=input_fields['lod_levels'][i]) for i in range(len(input_fields['names']))]
