@@ -86,7 +86,7 @@ class SimNetProcessor(object):
                         yield [query, title]
             else:
                 with io.open(self.args.train_data_dir, "r",
-                                 encoding="utf-8") as file:
+                                 encoding="utf8") as file:
                     for line in file:
                         query, pos_title, neg_title = line.strip().split("\t")
                         if len(query) == 0 or len(pos_title) == 0 or len(
