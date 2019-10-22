@@ -15,9 +15,9 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
   * [度量学习](#度量学习)
   * [视频分类和动作定位](#视频分类和动作定位)
 * [智能文本处理(PaddleNLP)](#PaddleNLP)
-  * [NLP 基础技术](#NLP 基础技术)
-  * [NLP 核心技术](#NLP 核心技术)
-  * [NLP 系统应用](#NLP 系统应用)
+  * [NLP 基础技术](#"NLP 基础技术")
+  * [NLP 核心技术](#"NLP 核心技术")
+  * [NLP 系统应用](#"NLP 系统应用")
 * [智能推荐(PaddleRec)](#PaddleRec)
 * [智能语音(PaddleSpeech)](#PaddleSpeech)
 * [模型压缩(PaddleSlim)](#PaddleSlim)
@@ -130,7 +130,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | ----------- |
 | [TSN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | ECCV'16 提出的基于 2D-CNN 经典解决方案 | Kinetics-400               | Top-1 = 67% |
 | [Non-Local](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 视频非局部关联建模模型 | Kinetics-400               | Top-1 = 74% |
-| [stNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | AAAI'19 提出的视频联合时空建模方法 | Kinetics-400               | Top-1 = 69% |
+| [StNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | AAAI'19 提出的视频联合时空建模方法 | Kinetics-400               | Top-1 = 69% |
 | [TSM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 基于时序移位的简单高效视频时空建模方法 | Kinetics-400               | Top-1 = 70% |
 | [Attention   LSTM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 常用模型，速度快精度高 | Youtube-8M                 | GAP   = 86% |
 | [Attention   Cluster](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | CVPR'18 提出的视频多模态特征注意力聚簇融合方法 | Youtube-8M                 | GAP   = 84% |
@@ -153,16 +153,11 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 ### NLP 基础技术
 
-#### 中文词法分析
-[LAC(Lexical Analysis of Chinese)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis) 百度自主研发中文特色模型词法分析任务，集成了中文分词、词性标注和命名实体识别任务。输入是一个字符串，而输出是句子中的词边界和词性、实体类别。
-
-#### 词向量
-
-[Word2vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec) 提供单机多卡，多机等分布式训练中文词向量能力，支持主流词向量模型（skip-gram，cbow等），可以快速使用自定义数据训练词向量模型。
-
-#### 语言模型
-
-[基于LSTM的语言模型任务](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model)，给定一个输入词序列（中文需要先分词、英文需要 tokenize），计算其 PPL（语言模型困惑度，用于表示模型生成句子的流利程度）。
+| 任务类型     | 目录                                                         | 简介                                                         |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 中文词法分析 | [LAC(Lexical Analysis of Chinese)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis) | 百度自主研发中文特色模型词法分析任务，集成了中文分词、词性标注和命名实体识别任务。输入是一个字符串，而输出是句子中的词边界和词性、实体类别。 |
+| 词向量       | [Word2vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec) | 提供单机多卡，多机等分布式训练中文词向量能力，支持主流词向量模型（skip-gram，cbow等），可以快速使用自定义数据训练词向量模型。 |
+| 语言模型     | [Language_model](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_model) | 给定一个输入词序列（中文需要先分词、英文需要 tokenize），计算其 PPL（语言模型困惑度，用于表示模型生成句子的流利程度）。 |
 
 ### NLP 核心技术
 
@@ -170,11 +165,11 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 [PaddleLARK](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_representations_kit) (Paddle LAngauge Representation ToolKit) 是传统语言模型的进一步发展，通过在大规模语料上训练得到的通用的语义表示模型，可以助益其他自然语言处理任务，是通用预训练 + 特定任务精调范式的体现。PaddleLARK 集成了 ELMO，BERT，ERNIE 1.0，ERNIE 2.0，XLNet 等热门中英文预训练模型。
 
-- [ERNIE(Enhanced Representation from kNowledge IntEgration)](https://github.com/PaddlePaddle/LARK/tree/develop/ERNIE) 百度自研的语义表示模型，通过建模海量数据中的词、实体及实体关系，学习真实世界的语义知识。相较于 BERT 学习原始语言信号，ERNIE 直接对先验语义知识单元进行建模，增强了模型语义表示能力。
-
-- [BERT(Bidirectional Encoder Representation from Transformers)](https://github.com/PaddlePaddle/LARK/tree/develop/BERT) 是一个迁移能力很强的通用语义表示模型， 以 Transformer 为网络基本组件，以双向 Masked Language Model和 Next Sentence Prediction 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。
-
-- [ELMo(Embeddings from Language Models)](https://github.com/PaddlePaddle/LARK/tree/develop/ELMo)是重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。
+| 模型                                                         | 简介                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [ERNIE(Enhanced Representation from kNowledge IntEgration)](https://github.com/PaddlePaddle/ERNIE) | 百度自研的语义表示模型，通过建模海量数据中的词、实体及实体关系，学习真实世界的语义知识。相较于 BERT 学习原始语言信号，ERNIE 直接对先验语义知识单元进行建模，增强了模型语义表示能力。 |
+| [BERT(Bidirectional Encoder Representation from Transformers)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK/BERT) | 一个迁移能力很强的通用语义表示模型， 以 Transformer 为网络基本组件，以双向 Masked Language Model和 Next Sentence Prediction 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。 |
+| [ELMo(Embeddings from Language Models)](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK/ELMo) | 重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。 |
 
 #### 文本相似度计算
 
@@ -188,36 +183,37 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 情感分析
 
-- [Senta](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/sentiment_classification) (Sentiment Classification，简称Senta) 是面向**通用场景**的情感分类模型，针对带有主观描述的中文文本，可自动判断该文本的情感极性类别。
-
-- [EmotionDetection](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/emotion_detection) (Emotion Detection，简称EmoTect)，专注于识别**人机对话场景**中用户的情绪，针对智能对话场景中的用户文本，自动判断该文本的情绪类别。
-
+| 模型                                                         | 简介                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [Senta](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/sentiment_classification) (Sentiment Classification，简称Senta) | 面向**通用场景**的情感分类模型，针对带有主观描述的中文文本，可自动判断该文本的情感极性类别。 |
+| [EmotionDetection](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/emotion_detection) (Emotion Detection，简称EmoTect) | 专注于识别**人机对话场景**中用户的情绪，针对智能对话场景中的用户文本，自动判断该文本的情绪类别。 |
 
 #### 阅读理解
 
 [PaddleMRC](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleMRC) (Paddle Machine Reading Comprehension)，集合了百度在阅读理解领域相关的模型，工具，开源数据集等一些列工作。
 
-- [DuReader](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DuReader): 包含百度开源的基于真实搜索用户行为的中文大规模阅读理解数据集以及基线模型。
-
-- [KT-Net](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2019-KTNET) :结合知识的阅读理解模型，Squad 曾排名第一。
-- [D-Net](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/MRQA2019-D-NET): 阅读理解十项全能模型，在 EMNLP2019 国际阅读理解大赛夺得 10 项冠军。
+| 模型                                                         | 简介                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [DuReader](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DuReader) | 包含百度开源的基于真实搜索用户行为的中文大规模阅读理解数据集以及基线模型。 |
+| [KT-Net](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2019-KTNET) | 结合知识的阅读理解模型，Squad 曾排名第一。                   |
+| [D-Net](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/MRQA2019-D-NET) | 阅读理解十项全能模型，在 EMNLP2019 国际阅读理解大赛夺得 10 项冠军。 |
 
 #### 机器翻译
 
-[PaddleMT](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/neural_machine_translation/transformer) (Paddle Machine Translation)，基于论文 [Attention Is All You Need](https://arxiv.org/abs/1706.03762) 的经典机器翻译模型。
-
+[PaddleMT](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/neural_machine_translation/transformer) ，全称为Paddle Machine Translation，基于Transformer的经典机器翻译模型，基于论文 [Attention Is All You Need](https://arxiv.org/abs/1706.03762)。
 
 #### 对话系统
 
 [PaddleDialogue](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue) 包含对话系统方向的模型、数据集和工具。
 
-- [DGU](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue/dialogue_general_understanding) (Dialogue General Understanding，通用对话理解模型) 覆盖了包括**检索式聊天系统**中 context-response matching 任务和**任务完成型对话系统**中**意图识别**，**槽位解析**，**状态追踪**等常见对话系统任务，在 6 项国际公开数据集中都获得了最佳效果。
+| 模型                                                         | 简介                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [DGU](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue/dialogue_general_understanding) (Dialogue General Understanding，通用对话理解模型) | 覆盖了包括**检索式聊天系统**中 context-response matching 任务和**任务完成型对话系统**中**意图识别**，**槽位解析**，**状态追踪**等常见对话系统任务，在 6 项国际公开数据集中都获得了最佳效果。 |
+| [ADEM](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue/auto_dialogue_evaluation) (Auto Dialogue Evaluation Model) | 评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。 |
+| [Proactive Conversation](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2019-DuConv) | 包含百度开源的知识驱动的开放领域对话数据集 [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv)，以及基线模型，对应论文 [Proactive Human-Machine Conversation with Explicit Conversation Goals](https://arxiv.org/abs/1906.05572) 发表于 ACL2019。 |
+| [DAM](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DAM)（Deep Attention Matching Network，深度注意力机制模型） | 开放领域多轮对话匹配模型，对应论文 [Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network](https://aclweb.org/anthology/P18-1103/) 发表于 ACL2018。 |
 
-- [ADEM](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue/auto_dialogue_evaluation) (Auto Dialogue Evaluation Model)：评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。
-
-- [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv) 百度开源的知识驱动的开放领域对话数据集，以及基线模型，对应论文 [Proactive Human-Machine Conversation with Explicit Conversation Goals](https://arxiv.org/abs/1906.05572) 发表于 ACL2019。
-
-- [DAM](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DAM)（Deep Attention Matching Network，深度注意力机制模型）是开放领域多轮对话匹配模型，对应论文 [Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network](https://aclweb.org/anthology/P18-1103/) 发表于 ACL2018。
+百度最新前沿工作开源，请参考 [Research](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research)。
 
 ## PaddleRec
 
@@ -238,12 +234,14 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [XDeepFM](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ctr/xdeepfm) | 推荐系统                       | xDeepFM，全称 extreme Factorization Machine。对 DeepFM 和 DCN 的改进，提出 CIN（Compressed Interaction Network），使用 vector-wise 等级的显示特征交叉。 |
 
 ## PaddleSpeech
+
 [PaddleSpeech](https://github.com/PaddlePaddle/models/tree/develop/PaddleSpeech) 包含语音识别和语音合成相关的模型。
 
-- [DeepASR](https://github.com/PaddlePaddle/models/blob/develop/PaddleSpeech/DeepASR/README_cn.md)，利用 PaddlePaddle 框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器。
-- [DeepSpeech2](https://github.com/PaddlePaddle/DeepSpeech)是一个采用 PaddlePaddle 平台的端到端自动语音识别（ASR）引擎的开源项目，具体原理请参考这篇论文 [Deep Speech 2: End-to-End Speech Recognition in English and Mandarin](https://arxiv.org/abs/1512.02595)。
-
-- [DeepVoice3](https://github.com/PaddlePaddle/models/tree/develop/PaddleSpeech/DeepVoice3), 百度研发的基于卷积神经网络的端到端语音合成模型，对应论文 [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654)， 基于 PaddlePaddle 动态图实现。
+| 模型                                                         | 简介                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [DeepASR](https://github.com/PaddlePaddle/models/blob/develop/PaddleSpeech/DeepASR/README_cn.md) | 利用 PaddlePaddle 框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器。 |
+| [DeepSpeech2](https://github.com/PaddlePaddle/DeepSpeech)    | 一个采用 PaddlePaddle 平台的端到端自动语音识别（ASR）引擎的开源项目，具体原理请参考这篇论文 [Deep Speech 2: End-to-End Speech Recognition in English and Mandarin](https://arxiv.org/abs/1512.02595)。 |
+| [DeepVoice3](https://github.com/PaddlePaddle/models/tree/develop/PaddleSpeech/DeepVoice3) | 百度研发的基于卷积神经网络的端到端语音合成模型，对应论文 [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654)， 基于 PaddlePaddle 动态图实现。 |
 
 ## PaddleSlim
 
