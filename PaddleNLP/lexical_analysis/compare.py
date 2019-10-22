@@ -20,6 +20,7 @@ from __future__ import division
 
 import sys
 import os
+import io
 
 
 def to_unicode(string):
@@ -70,7 +71,7 @@ def load_testdata(datapath="./data/test_data/test_part"):
     """none"""
     sentences = []
     sent_seg_list = []
-    for line in open(datapath):
+    for line in io.open(datapath, 'r', encoding='utf8'):
         sent, label = line.strip().split("\t")
         sentences.append(sent)
 
@@ -109,7 +110,7 @@ def get_lac_result():
         `sh run.sh | tail -n 100 > result.txt`
     """
     sent_seg_list = []
-    for line in open("./result.txt"):
+    for line in io.open("./result.txt", 'r', encoding='utf8'):
         line = line.strip().split(" ")
         words = [pair.split("/")[0] for pair in line]
         labels = [pair.split("/")[1] for pair in line]
