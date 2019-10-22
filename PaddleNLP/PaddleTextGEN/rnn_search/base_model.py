@@ -98,7 +98,9 @@ class BaseModel(object):
                  num_layers=1,
                  init_scale=0.1,
                  dropout=None,
-                 batch_first=True):
+                 beam_start_token=1,
+                 beam_end_token=2,
+                 beam_max_step_num=100):
 
         self.hidden_size = hidden_size
         self.src_vocab_size = src_vocab_size
@@ -107,7 +109,9 @@ class BaseModel(object):
         self.num_layers = num_layers
         self.init_scale = init_scale
         self.dropout = dropout
-        self.batch_first = batch_first
+        self.beam_start_token = beam_start_token
+        self.beam_end_token = beam_end_token
+        self.beam_max_step_num = beam_max_step_num
         self.src_embeder = lambda x: fluid.embedding(
             input=x,
             size=[self.src_vocab_size, self.hidden_size],
@@ -170,13 +174,10 @@ class BaseModel(object):
 
             return dec_output
         elif mode == 'beam_search':
-            start_token = 1
-            end_token = 2
-            max_length = 100
             beam_search_decoder = BeamSearchDecoder(
                 dec_cell,
-                start_token,
-                end_token,
+                self.beam_start_token,
+                self.beam_end_token,
                 beam_size,
                 embedding_fn=self.tar_embeder,
                 output_fn=output_layer)
@@ -184,7 +185,7 @@ class BaseModel(object):
             outputs, _ = dynamic_decode(
                 beam_search_decoder,
                 inits=enc_final_state,
-                max_step_num=max_length)
+                max_step_num=self.beam_max_step_num)
             return outputs
 
     def _compute_loss(self, dec_output):

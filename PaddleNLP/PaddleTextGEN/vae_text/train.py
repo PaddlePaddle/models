@@ -255,7 +255,8 @@ def main():
                 best_nll = test_nll
                 best_ppl = test_ppl
                 best_epoch_id = epoch_id
-                dir_name = args.model_path + "/epoch_" + str(best_epoch_id)
+                dir_name = os.path.join(args.model_path,
+                                        "epoch_" + str(best_epoch_id))
                 print("save model {}".format(dir_name))
                 fluid.io.save_params(exe, dir_name, main_program)
             else:

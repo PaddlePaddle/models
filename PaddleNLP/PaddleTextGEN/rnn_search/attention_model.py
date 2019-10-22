@@ -99,9 +99,6 @@ class AttentionModel(BaseModel):
             num_layers=num_layers,
             init_scale=init_scale,
             dropout=dropout)
-        self.beam_start_token = beam_start_token
-        self.beam_end_token = beam_end_token
-        self.beam_max_step_num = beam_max_step_num
 
     def _build_decoder(self, enc_final_state, mode='train', beam_size=10):
         output_layer = lambda x: layers.fc(x,

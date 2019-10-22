@@ -222,7 +222,8 @@ def main():
                 % (epoch_id, epoch_time, sum(batch_times) / len(batch_times)))
 
             if not args.profile:
-                dir_name = args.model_path + "/epoch_" + str(epoch_id)
+                dir_name = os.path.join(args.model_path,
+                                        "epoch_" + str(epoch_id))
                 print("begin to save", dir_name)
                 fluid.io.save_params(exe, dir_name, main_program=train_program)
                 print("save finished")
