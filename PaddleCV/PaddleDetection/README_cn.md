@@ -51,7 +51,7 @@ PaddleDetection的目的是为工业界和学术界提供丰富、易用的目�
 **注意:** Synchronized batch normalization 只能在多GPU环境下使用，不能在CPU环境或者单GPU环境下使用。
 
 
-# 使用教程
+## 使用教程
 
 - [安装说明](docs/INSTALL_cn.md)
 - [快速开始](docs/QUICK_STARTED_cn.md)
@@ -62,24 +62,24 @@ PaddleDetection的目的是为工业界和学术界提供丰富、易用的目�
 - [IPython Notebook demo](demo/mask_rcnn_demo.ipynb)
 - [迁移学习教程](docs/TRANSFER_LEARNING_cn.md)
 
-# 模型库
+## 模型库
 
 - [模型库](docs/MODEL_ZOO_cn.md)
 - [人脸检测模型](configs/face_detection/README_cn.md)
 - [行人检测和车辆检测预训练模型](contrib/README_cn.md)
 
 
-### 模型压缩
+## 模型压缩
 - [量化训练压缩示例](slim/quantization)
 - [剪枝压缩示例](slim/prune)
 
-### 推理部署
+## 推理部署
 
 - [C++推理部署](inference/README.md)
 
-### Benchmark
+## Benchmark
 
-- [推理Benchmark]()
+- [推理Benchmark](docs/BENCHMARK_INFER_cn.md)
 
 
 
@@ -89,8 +89,9 @@ PaddleDetection的目的是为工业界和学术界提供丰富、易用的目�
 
 - 增加人脸检测模型BlazeFace、Faceboxes。
 - 丰富基于COCO的模型，精度高达51.9%。
-- 增加基于Object365的模型CACascadeRCNN。
+- 增加Objects365 2019 Challenge上夺冠的最佳单模型之一CACascade-RCNN。
 - 增加行人检测和车辆检测预训练模型。
+- 支持FP16训练。
 - 增加跨平台的C++推理部署方案。
 - 增加模型压缩示例。
 
