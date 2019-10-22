@@ -25,14 +25,13 @@
 - cudnn >= 7.0
 - PaddlePaddle >= 1.6.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 由于模块内模型基于bert做finetuning, 训练速度较慢, 建议用户安装GPU版本PaddlePaddle进行训练。
 
-&ensp;&ensp;注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
 #### &ensp;&ensp;b、下载代码
 
 &ensp;&ensp;&ensp;&ensp;克隆代码库到本地
 
 ```
 git clone https://github.com/PaddlePaddle/models.git
-cd models/PaddleNLP/dialogue_model_toolkit/dialogue_general_understanding
+cd models/PaddleNLP/PaddleDialogue/dialogue_general_understanding
 ```
 
 ### 任务简介
