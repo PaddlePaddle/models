@@ -159,6 +159,38 @@ python infer.py \
 ### PaddleLite预测
 FP32模型可使用Paddle-Lite进行加载预测，可参见教程[Paddle-Lite如何加载运行量化模型](https://github.com/PaddlePaddle/Paddle-Lite/wiki/model_quantization)。
 
+## 如何进行部分量化
+
+通过在定义op时指定 ``name_scope``为 ``skip_quant``可对这个op跳过量化。比如在<a href="../models/resnet.py">PaddleSlim/classification/models/resnet.py</a>中，将某个conv的定义作如下改变：
+
+原定义：
+```
+conv = self.conv_bn_layer(
+                input=input,
+                num_filters=64,
+                filter_size=7,
+                stride=2,
+                act='relu',
+                name=prefix_name + conv1_name)
+
+```
+
+跳过量化时的定义：
+
+```
+
+with fluid.name_scope('skip_quant'):
+    conv = self.conv_bn_layer(
+                input=input,
+                num_filters=64,
+                filter_size=7,
+                stride=2,
+                act='relu',
+                name=prefix_name + conv1_name)
+
+```
+在脚本 <a href="./compress.py">PaddleSlim/classification/quantization/compress.py</a> 中，统计了``conv`` op的数量和以``fake_quantize``开头的量化op的数量，在对一些``conv`` op跳过之后，可发现以``fake_quantize``开头的量化op的数量变少。
+
 
 ## 示例结果
 
