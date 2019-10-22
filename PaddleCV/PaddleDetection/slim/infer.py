@@ -168,21 +168,23 @@ def main():
     imid2path = reader.imid2path
     keys = ['bbox']
     infer_time = True
+    compile_prog = fluid.compiler.CompiledProgram(infer_prog)
+
     for iter_id, data in enumerate(reader()):
         feed_data = [[d[0], d[1]] for d in data]
         # for infer time
         if infer_time:
             warmup_times = 10
-            repeats_time = 30
+            repeats_time = 100
             feed_data_dict = feeder.feed(feed_data);
             for i in range(warmup_times):
-                exe.run(infer_prog,
+                exe.run(compile_prog,
                         feed=feed_data_dict,
                         fetch_list=fetch_list,
                         return_numpy=False)
             start_time = time.time()
             for i in range(repeats_time):
-                exe.run(infer_prog,
+                exe.run(compile_prog,
                         feed=feed_data_dict,
                         fetch_list=fetch_list,
                         return_numpy=False)
@@ -190,7 +192,7 @@ def main():
             print("infer time: {} ms/sample".format((time.time()-start_time) * 1000 / repeats_time))
             infer_time = False
 
-        outs = exe.run(infer_prog,
+        outs = exe.run(compile_prog,
                        feed=feeder.feed(feed_data),
                        fetch_list=fetch_list,
                        return_numpy=False)

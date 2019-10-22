@@ -50,6 +50,7 @@ def infer(args):
     results=[]
     #for infer time, if you don't need, please change infer_time to False
     infer_time = True
+    compile_prog = fluid.compiler.CompiledProgram(test_program)
     for batch_id, data in enumerate(test_reader()):
         # for infer time
         if infer_time:
@@ -57,18 +58,18 @@ def infer(args):
             repeats_time = 30
             feed_data = feeder.feed(data)
             for i in range(warmup_times):
-                exe.run(test_program,
+                exe.run(compile_prog,
                         feed=feed_data,
                         fetch_list=fetch_targets)
             start_time = time.time()
             for i in range(repeats_time):
-                exe.run(test_program,
+                exe.run(compile_prog,
                         feed=feed_data,
                         fetch_list=fetch_targets)
             print("infer time: {} ms/sample".format((time.time()-start_time) * 1000 / repeats_time))
             infer_time = False
         # top1_acc, top5_acc
-        result = exe.run(test_program,
+        result = exe.run(compile_prog,
                           feed=feeder.feed(data),
                           fetch_list=fetch_targets)
         result = np.array(result[0])
