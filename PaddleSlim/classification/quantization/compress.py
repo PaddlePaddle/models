@@ -100,14 +100,14 @@ def compress(args):
     com_pass.config(args.config_file)
     com_pass.run()
     conv_op_num = 0
-    fake_quant_op_name = 0
+    fake_quant_op_num = 0
     for op in com_pass.context.eval_graph.ops():
         if op._op.type == 'conv2d':
             conv_op_num += 1
         elif op._op.type.startswith('fake_quantize'):
-            fake_quant_op_name += 1
+            fake_quant_op_num += 1
     print('conv op num {}'.format(conv_op_num))
-    print('fake quant op {}'.format(fake_quant_op_name))
+    print('fake quant op num {}'.format(fake_quant_op_num))
 
 
 
