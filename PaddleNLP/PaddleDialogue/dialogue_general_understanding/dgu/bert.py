@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import io
 import sys
 import six
 import json
@@ -33,8 +35,8 @@ class BertConfig(object):
 
     def _parse(self, config_path):
         try:
-            with open(config_path) as json_file:
-                config_dict = json.load(json_file)
+            json_file = io.open(config_path, 'r', encoding="utf8")
+            config_dict = json.load(json_file)
         except Exception:
             raise IOError("Error in parsing bert model config file '%s'" %
                           config_path)

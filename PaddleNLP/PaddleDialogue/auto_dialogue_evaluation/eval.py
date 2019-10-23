@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.                                                                                                      
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 # limitations under the License.
 """evaluation metrics"""
 
+import io
 import os
 import sys
 import numpy as np
@@ -24,22 +26,22 @@ from ade.utils.configure import PDConfig
 def do_eval(args): 
     """evaluate metrics"""
     labels = []
-    with open(args.evaluation_file, 'r') as fr: 
-        for line in fr: 
-            tokens = line.strip().split('\t')
-            assert len(tokens) == 3 
-            label = int(tokens[2])
-            labels.append(label)
+    fr = io.open(args.evaluation_file, 'r', encoding="utf8")
+    for line in fr: 
+        tokens = line.strip().split('\t')
+        assert len(tokens) == 3 
+        label = int(tokens[2])
+        labels.append(label)
 
     scores = []
-    with open(args.output_prediction_file, 'r') as fr: 
-        for line in fr:
-            tokens = line.strip().split('\t')
-            assert len(tokens) == 2
-            score = tokens[1].strip("[]").split()
-            score = np.array(score)
-            score = score.astype(np.float64)
-            scores.append(score)
+    fr = io.open(args.output_prediction_file, 'r', encoding="utf8")
+    for line in fr:
+        tokens = line.strip().split('\t')
+        assert len(tokens) == 2
+        score = tokens[1].strip("[]").split()
+        score = np.array(score)
+        score = score.astype(np.float64)
+        scores.append(score)
 
     if args.loss_type == 'CLS': 
         recall_dict = evaluate.evaluate_Recall(list(zip(scores, labels)))

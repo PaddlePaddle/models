@@ -25,14 +25,13 @@
 - cudnn >= 7.0
 - PaddlePaddle >= 1.6.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 由于模块内模型基于bert做finetuning, 训练速度较慢, 建议用户安装GPU版本PaddlePaddle进行训练。
 
-&ensp;&ensp;注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
 #### &ensp;&ensp;b、下载代码
 
 &ensp;&ensp;&ensp;&ensp;克隆代码库到本地
 
 ```
 git clone https://github.com/PaddlePaddle/models.git
-cd models/PaddleNLP/dialogue_model_toolkit/dialogue_general_understanding
+cd models/PaddleNLP/PaddleDialogue/dialogue_general_understanding
 ```
 
 ### 任务简介
@@ -61,9 +60,9 @@ SWDA：Switchboard Dialogue Act Corpus;
 ```
 
 &ensp;&ensp;&ensp;&ensp;数据集、相关模型下载：
-
+&ensp;&ensp;&ensp;&ensp;linux环境下：
 ```
-cd dgu && bash prepare_data_and_model.sh
+python dgu/prepare_data_and_model.py 
 ```
 &ensp;&ensp;&ensp;&ensp;数据路径：data/input/data
 
@@ -71,11 +70,19 @@ cd dgu && bash prepare_data_and_model.sh
 
 &ensp;&ensp;&ensp;&ensp;已训练模型路径：data/saved_models/trained_models
 
+&ensp;&ensp;&ensp;&ensp;windows环境下：
+```
+python dgu\prepare_data_and_model.py 
+```
 
 &ensp;&ensp;&ensp;&ensp;下载的数据集中已提供了训练集，测试集和验证集，用户如果需要重新生成某任务数据集的训练数据，可执行：
 
 ```
-cd dgu/scripts && bash run_build_data.sh task_name
+linux环境下：
+cd dgu/scripts && python run_build_data.py task_name
+windows环境下：
+cd dgu\scripts && python run_build_data.py task_name
+
 参数说明：
 task_name: udc, swda, mrda, atis, dstc2,  选择5个数据集选项中用户需要生成的数据名
 
@@ -145,6 +152,7 @@ encable_ce: 是否开启ce
 
 ### 单机训练
 
+#### linux环境下
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
 
 ```
@@ -226,7 +234,13 @@ python -u main.py \
 1) 采用方式二时，模型训练过程可参考run.sh内相关任务的参数设置
 2) 用户进行模型训练、预测、评估等, 可通过修改data/config/dgu.yaml配置文件或者从命令行传入来进行参数配置, 优先推荐命令行参数传入;
 
+#### windows环境下
+```
+python -u main.py --task_name=atis_intent --use_cuda=false --do_train=true --in_tokens=true --epoch=20 --batch_size=4096 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --init_from_pretrain_model=data\pretrain_model\uncased_L-12_H-768_A-12\params --save_model_path=data\saved_models\atis_intent --save_param=params --save_steps=100 --learning_rate=2e-5 --weight_decay=0.01 --max_seq_len=128 --print_steps=10
+```
+
 ### 模型预测
+#### linux环境下
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本预测
 
 ```
@@ -291,6 +305,11 @@ python -u main.py \
 
 注：采用方式二时，模型预测过程可参考run.sh内具体任务的参数设置
 
+#### windows环境下
+```
+python -u main.py --task_name=atis_intent --use_cuda=false --do_predict=true --in_tokens=true --batch_size=4096 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --init_from_params=data\saved_models\trained_models\atis_intent\params --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --output_prediction_file=data\output\pred_atis_intent --max_seq_len=128
+```
+
 ### 模型评估
 &ensp;&ensp;&ensp;&ensp;模块中6个任务，各任务支持计算的评估指标内容如下：
 
@@ -313,6 +332,8 @@ swda：使用acc指标来评估DA任务分类结果;
 | 评估指标 | R1@10 | R2@10 | R5@10 | F1 | JOINT ACC | ACC | ACC | ACC |
 | SOTA | 76.70% | 87.40% | 96.90% | 96.89% | 74.50% | 98.32% | 81.30% | 91.70% |
 | DGU | 82.03% | 90.59% | 97.73% | 97.14% | 91.23% | 97.76% | 80.37% | 91.53% |
+
+#### linux环境下
 
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本评估
 
@@ -338,6 +359,11 @@ python -u main.py \
     --do_eval=true \
     --evaluation_file="./data/input/data/atis/${TASK_NAME}/test.txt" \
     --output_prediction_file="./data/output/pred_${TASK_NAME}"
+```
+
+#### windows环境下
+```
+python -u main.py --task_name=atis_intent --use_cuda=false --do_eval=true --evaluation_file=data\input\data\atis\atis_intent\test.txt --output_prediction_file=data\output\pred_atis_intent 
 ```
 
 ### 模型推断

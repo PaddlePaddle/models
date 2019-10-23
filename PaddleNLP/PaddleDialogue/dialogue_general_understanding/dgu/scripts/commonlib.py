@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 # limitations under the License.
 """common function"""
 import sys
+import io
 import os
 
 
@@ -48,13 +50,13 @@ def load_dict(conf):
     load swda dataset config
     """
     conf_dict = dict()
-    with open(conf, 'r') as fr: 
-        for line in fr: 
-            line = line.strip()
-            elems = line.split('\t')
-            if elems[0] not in conf_dict: 
-                conf_dict[elems[0]] = []
-            conf_dict[elems[0]].append(elems[1])
+    fr = io.open(conf, 'r', encoding="utf8")
+    for line in fr: 
+        line = line.strip()
+        elems = line.split('\t')
+        if elems[0] not in conf_dict: 
+            conf_dict[elems[0]] = []
+        conf_dict[elems[0]].append(elems[1])
     return conf_dict
 
 
@@ -63,11 +65,11 @@ def load_voc(conf):
     load map dict
     """
     map_dict = {}
-    with open(conf, 'r') as fr:  
-        for line in fr:   
-            line = line.strip()
-            elems = line.split('\t')
-            map_dict[elems[0]] = elems[1]
+    fr = io.open(conf, 'r', encoding="utf8")
+    for line in fr:   
+        line = line.strip()
+        elems = line.split('\t')
+        map_dict[elems[0]] = elems[1]
     return map_dict
 
 

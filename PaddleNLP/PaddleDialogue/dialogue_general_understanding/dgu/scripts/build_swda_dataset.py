@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +17,7 @@
 import sys
 import csv
 import os
+import io
 import re
 
 import commonlib
@@ -56,18 +58,18 @@ class SWDA(object):
         parser train dev test dataset
         """
         out_filename = "%s/%s.txt" % (self.out_dir, data_type)
-        with open(out_filename, 'w') as fw: 
-            for name in self.data_dict[data_type]: 
-                file_path = self.file_dict[name]
-                with open(file_path, 'r') as fr: 
-                    idx = 0
-                    row = csv.reader(fr, delimiter = ',')
-                    for r in row: 
-                        if idx == 0: 
-                            idx += 1
-                            continue
-                        out = self._parser_utterence(r)
-                        fw.write("%s\n" % out)
+        fw = io.open(out_filename, 'w', encoding='utf8')
+        for name in self.data_dict[data_type]: 
+            file_path = self.file_dict[name]
+            fr = io.open(file_path, 'r', encoding="utf8")
+            idx = 0
+            row = csv.reader(fr, delimiter = ',')
+            for r in row: 
+                if idx == 0: 
+                    idx += 1
+                    continue
+                out = self._parser_utterence(r)
+                fw.write("%s\n" % out)
 
     def _clean_text(self, text): 
         """
@@ -209,9 +211,9 @@ class SWDA(object):
         """
         get tag and map ids file
         """
-        with open(self.map_tag, 'w') as fw: 
-            for elem in self.map_tag_dict: 
-                fw.write("%s\t%s\n" % (elem, self.map_tag_dict[elem]))
+        fw = io.open(self.map_tag, 'w', encoding='utf8')
+        for elem in self.map_tag_dict: 
+            fw.write("%s\t%s\n" % (elem, self.map_tag_dict[elem]))
 
     def main(self): 
         """

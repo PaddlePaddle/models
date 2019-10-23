@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved. 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import io
 import os
 import sys
 import argparse
@@ -38,8 +40,8 @@ class JsonConfig(object):
 
     def _parse(self, config_path):
         try:
-            with open(config_path) as json_file:
-                config_dict = json.load(json_file)
+            json_file = io.open(config_path, 'r', encoding="utf8")
+            config_dict = json.load(json_file)
         except:
             raise IOError("Error in parsing bert model config file '%s'" %
                           config_path)
@@ -212,9 +214,9 @@ class PDConfig(object):
             raise Warning("the json file %s does not exist." % file_path)
             return
 
-        with open(file_path, "r") as fin:
-            self.json_config = json.loads(fin.read())
-            fin.close()
+        fin = io.open(file_path, "r", encoding="utf8")
+        self.json_config = json.loads(fin.read())
+        fin.close()
 
         if fuse_args:
             for name in self.json_config:
@@ -236,9 +238,9 @@ class PDConfig(object):
             raise Warning("the yaml file %s does not exist." % file_path)
             return
 
-        with open(file_path, "r") as fin:
-            self.yaml_config = yaml.load(fin, Loader=yaml.SafeLoader)
-            fin.close()
+        fin = io.open(file_path, "r", encoding="utf8")
+        self.yaml_config = yaml.load(fin, Loader=yaml.SafeLoader)
+        fin.close()
 
         if fuse_args:
             for name in self.yaml_config:
