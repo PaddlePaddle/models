@@ -26,11 +26,13 @@
 ## 简介
 图像分类是计算机视觉的重要领域，它的目标是将图像分类到预定义的标签。近期，许多研究者提出很多不同种类的神经网络，并且极大的提升了分类算法的性能。本页将介绍如何使用PaddlePaddle进行图像分类。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122278)
+
 ## 快速开始
 
 ### 安装说明
 
-在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.6或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
 
 #### 环境依赖
 
@@ -202,7 +204,7 @@ python eval.py \
 python ema_clean.py \
        --ema_model_dir=your_ema_model_dir \
        --cleaned_model_dir=your_cleaned_model_dir
-       
+
 python eval.py \
        --model=model_name \
        --pretrained_model=your_cleaned_model_dir

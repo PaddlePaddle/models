@@ -1,3 +1,5 @@
+>注意：本文中所提的run.sh仅适用于linux系统，在windows环境下，请参考run.sh内容编写适配windows环境的脚本。
+
 <div align="center">
   <h3>
     <a href="usage.md">
@@ -336,6 +338,8 @@ python compress.py \
 | MobileNet v1（剪切FLOPS -50%） | -86.47%（2.3M） | 69.20%     |
 
 ### 3.8 小模型结构搜索示例
+
+>注意：小模型结构搜索暂不支持windows系统
 
 本示例先用模拟退火策略搜索出一组tokens, 再用搜索出的tokens初始化构建模型进行训练。
 

@@ -239,6 +239,7 @@ def main():
         eval_feed_list=test_feed,
         eval_func={'map': eval_func},
         eval_fetch_list=[eval_fetch_list[0]],
+        prune_infer_model=[["image", "im_size"],["multiclass_nms_0.tmp_0"]],
         train_optimizer=None)
     com.config(FLAGS.slim_file)
     com.run()

@@ -42,6 +42,9 @@ cd data && sh data_process.sh && cd ..
 pip install pandas
 ```
 
+**Windows系统下请用户自行下载数据进行解压，下载链接为:[reviews_Electronics](http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_Electronics_5.json.gz)和[meta_Electronics](http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Electronics.json.gz)。**
+
+
 * Step 2: 产生训练集、测试集和config文件
 ```
 python build_dataset.py

@@ -10,7 +10,8 @@ import paddle.fluid as fluid
 import paddle
 import net
 import utils
-
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 def parse_args():
     parser = argparse.ArgumentParser("PaddlePaddle Word2vec infer example")
@@ -78,13 +79,13 @@ def infer_epoch(args, vocab_size, test_reader, use_cuda, i2w):
                     b_size = len([dat[0] for dat in data])
                     wa = np.array(
                         [dat[0] for dat in data]).astype("int64").reshape(
-                            b_size, 1)
+                            b_size)
                     wb = np.array(
                         [dat[1] for dat in data]).astype("int64").reshape(
-                            b_size, 1)
+                            b_size)
                     wc = np.array(
                         [dat[2] for dat in data]).astype("int64").reshape(
-                            b_size, 1)
+                            b_size)
 
                     label = [dat[3] for dat in data]
                     input_word = [dat[4] for dat in data]
@@ -95,7 +96,7 @@ def infer_epoch(args, vocab_size, test_reader, use_cuda, i2w):
                                        "analogy_c": wc,
                                        "all_label":
                                        np.arange(vocab_size).reshape(
-                                           vocab_size, 1).astype("int64"),
+                                           vocab_size).astype("int64"),
                                    },
                                    fetch_list=[pred.name, values],
                                    return_numpy=False)
@@ -145,13 +146,13 @@ def infer_step(args, vocab_size, test_reader, use_cuda, i2w):
                         b_size = len([dat[0] for dat in data])
                         wa = np.array(
                             [dat[0] for dat in data]).astype("int64").reshape(
-                                b_size, 1)
+                                b_size)
                         wb = np.array(
                             [dat[1] for dat in data]).astype("int64").reshape(
-                                b_size, 1)
+                                b_size)
                         wc = np.array(
                             [dat[2] for dat in data]).astype("int64").reshape(
-                                b_size, 1)
+                                b_size)
 
                         label = [dat[3] for dat in data]
                         input_word = [dat[4] for dat in data]
@@ -162,7 +163,7 @@ def infer_step(args, vocab_size, test_reader, use_cuda, i2w):
                                 "analogy_b": wb,
                                 "analogy_c": wc,
                                 "all_label":
-                                np.arange(vocab_size).reshape(vocab_size, 1),
+                                np.arange(vocab_size).reshape(vocab_size),
                             },
                             fetch_list=[pred.name, values],
                             return_numpy=False)
@@ -185,6 +186,7 @@ def infer_step(args, vocab_size, test_reader, use_cuda, i2w):
 
 
 if __name__ == "__main__":
+    utils.check_version()
     args = parse_args()
     start_index = args.start_index
     last_index = args.last_index

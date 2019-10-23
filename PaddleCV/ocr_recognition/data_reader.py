@@ -32,7 +32,7 @@ except NameError:
 SOS = 0
 EOS = 1
 NUM_CLASSES = 95
-DATA_SHAPE = [1, 48, 512]
+DATA_SHAPE = [1, 48, None]
 
 DATA_MD5 = "7256b1d5420d8c3e74815196e58cdad5"
 DATA_URL = "http://paddle-ocr-data.bj.bcebos.com/data.tar.gz"

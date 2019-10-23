@@ -20,7 +20,7 @@ For general information about PaddleDetection, please see [README.md](../README.
 
 ## PaddlePaddle
 
-Running PaddleDetection requires PaddlePaddle Fluid v.1.5 and later. please follow the instructions in [installation document](http://www.paddlepaddle.org.cn/).
+Running PaddleDetection requires PaddlePaddle Fluid v.1.6 and later. please follow the instructions in [installation document](http://www.paddlepaddle.org.cn/).
 
 Please make sure your PaddlePaddle installation was successful and the version
 of your PaddlePaddle is not lower than required. Verify with the following commands.
@@ -110,15 +110,15 @@ On the other hand, to download the datasets, run the following commands:
 - COCO
 
 ```
-cd dataset/coco
-./download.sh
+export PYTHONPATH=$PYTHONPATH:.
+python dataset/coco/download_coco.py
 ```
 
 - Pascal VOC
 
 ```
-cd dataset/voc
-./download.sh
+export PYTHONPATH=$PYTHONPATH:.
+python dataset/voc/download_voc.py
 ```
 
 **Download datasets automatically:**

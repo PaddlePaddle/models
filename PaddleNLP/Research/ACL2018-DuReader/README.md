@@ -14,10 +14,12 @@ DuReader是一个大规模、面向真实应用、由人类生成的中文阅读
 
 更多关于DuReader数据集的详细信息可在[DuReader官网](https://ai.baidu.com//broad/subordinate?dataset=dureader)找到。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122349)
+
 ## DuReader基线系统
 
 DuReader基线系统利用[PaddlePaddle](http://paddlepaddle.org)深度学习框架，针对[DuReader阅读理解数据集](https://ai.baidu.com//broad/subordinate?dataset=dureader)实现并升级了一个经典的阅读理解模型 —— [BiDAF](https://arxiv.org/abs/1611.01603). 该基线系统相较于DuReader论文中的基线，效果上有了大幅提升(在DuReader2.0验证集、测试集的表现见下表)
-  
+
 |      Model     | Dev ROUGE-L | Test ROUGE-L |
 | :------------- | :---------: | :----------: |
 | BiDAF (原始[论文](https://arxiv.org/abs/1711.05073)基线) |    39.29    |     45.90    |
@@ -33,7 +35,7 @@ DuReader基线系统利用[PaddlePaddle](http://paddlepaddle.org)深度学习框
  * 系统：CentOS 6.3, cuda 9.0, CuDNN 7.0
  * python 2.7.13
  * PaddlePaddle 1.3.1
- 
+
 ### 安装PaddlePaddle
 关于PaddlePaddle框架的安装教程，详见[PaddlePaddle官方网站](http://www.paddlepaddle.org/#quick-start)。
 
@@ -112,7 +114,7 @@ sh run.sh --train --pass_num 5 --trainset ../data/extracted/trainset/zhidao.trai
 ```
 以上参数配置会对模型进行5轮训练，并在每轮结束后利用验证集自动进行评估。每轮过后，程序会自动将模型参数保存到`data/models`文件夹当中，并以该轮的ID命名。
 
-如果开发者需要改变模型训练时的超参数， 例如初始学习率、隐层维度等，可以通过指定以下参数来实现： 
+如果开发者需要改变模型训练时的超参数， 例如初始学习率、隐层维度等，可以通过指定以下参数来实现：
 
 ```
 sh run.sh --train --pass_num 5 --learning_rate 0.00001 --hidden_size 100 --trainset ../data/extracted/trainset/zhidao.train.json ../data/extracted/trainset/search.train.json --devset ../data/extracted/devset/zhidao.dev.json ../data/extracted/devset/search.dev.json

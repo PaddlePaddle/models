@@ -44,6 +44,12 @@ session-based推荐应用场景非常广泛，比如用户的商品浏览、新�
 
 
 运行样例程序可跳过'RSC15 数据下载及预处理'部分
+
+
+**要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
+
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122296)
+
 ## RSC15 数据下载及预处理
 
 运行命令 下载RSC15官网数据集
@@ -275,7 +281,7 @@ model:model_r@20/epoch_10 recall@20:0.681 time_cost(s):12.2
 
 可参考cluster_train.py 配置其他多机环境
 
-运行命令本地模拟多机场景
+运行命令本地模拟多机场景, 暂不支持windows
 ```
 sh cluster_train.sh
 ```

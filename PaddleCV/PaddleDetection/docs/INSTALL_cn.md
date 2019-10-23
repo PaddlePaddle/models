@@ -20,7 +20,7 @@ PaddleDetection的相关信息，请参考[README.md](../README.md).
 ## PaddlePaddle
 
 
-运行PaddleDetection需要PaddlePaddle Fluid v.1.5及更高版本。请按照[安装文档](http://www.paddlepaddle.org.cn/)中的说明进行操作。
+运行PaddleDetection需要PaddlePaddle Fluid v.1.6及更高版本。请按照[安装文档](http://www.paddlepaddle.org.cn/)中的说明进行操作。
 
 请确保您的PaddlePaddle安装成功并且版本不低于需求版本。使用以下命令进行验证。
 
@@ -109,15 +109,15 @@ ln -sf <path/to/voc> <path/to/paddle_detection>/dataset/voc
 - COCO
 
 ```
-cd dataset/coco
-./download.sh
+export PYTHONPATH=$PYTHONPATH:.
+python dataset/coco/download_coco.py
 ```
 
 - Pascal VOC
 
 ```
-cd dataset/voc
-./download.sh
+export PYTHONPATH=$PYTHONPATH:.
+python dataset/voc/download_voc.py
 ```
 
 **自动下载数据集：**

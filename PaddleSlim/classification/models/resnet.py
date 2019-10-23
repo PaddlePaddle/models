@@ -44,6 +44,8 @@ class ResNet():
 
         # TODO(wanghaoshuang@baidu.com):
         # fix name("conv1") conflict between student and teacher in distillation.
+        
+        #with fluid.name_scope('skip_quant'):
         conv = self.conv_bn_layer(
             input=input,
             num_filters=64,
@@ -52,11 +54,11 @@ class ResNet():
             act='relu',
             name=prefix_name + conv1_name)
         conv = fluid.layers.pool2d(
-            input=conv,
-            pool_size=3,
-            pool_stride=2,
-            pool_padding=1,
-            pool_type='max')
+                input=conv,
+                pool_size=3,
+                pool_stride=2,
+                pool_padding=1,
+                pool_type='max')
 
         if layers >= 50:
             for block in range(len(depth)):

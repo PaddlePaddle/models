@@ -22,9 +22,9 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 
-#include palm for easier nlp coding
-from palm.toolkit.input_field import InputField
-from palm.toolkit.configure import PDConfig
+from utils.input_field import InputField
+from utils.configure import PDConfig
+from utils.check import check_gpu, check_version
 
 # include task-specific libs
 import desc
@@ -149,7 +149,6 @@ def do_predict(args):
                 is_training=False, model_input=input_field, args=args)
             out_ids, out_scores = predictions
 
-            out_ids.persistable = out_scores.persistable = True
     # This is used here to set dropout to the test mode.
     test_prog = test_prog.clone(for_test=True)
 
@@ -185,8 +184,8 @@ def do_predict(args):
     f = open(args.output_file, "wb")
     # start predicting
     ## decorate the pyreader with batch_generator
-    input_field.reader.decorate_batch_generator(batch_generator)
-    input_field.reader.start()
+    input_field.loader.set_batch_generator(batch_generator)
+    input_field.loader.start()
     while True:
         try:
             seq_ids, seq_scores = exe.run(
@@ -231,5 +230,7 @@ if __name__ == "__main__":
     args = PDConfig(yaml_file="./transformer.yaml")
     args.build()
     args.Print()
+    check_gpu(args.use_cuda)
+    check_version()
 
     do_predict(args)

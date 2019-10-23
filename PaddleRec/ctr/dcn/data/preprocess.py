@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
 from __future__ import print_function, absolute_import, division
 
 import os
@@ -19,7 +17,6 @@ VOCAB_DIR = 'vocab'
 TRAIN_DIR = 'train'
 TEST_VALID_DIR = 'test_valid'
 SPLIT_RATIO = 0.9
-LINE_NUMS = "line_nums.log"
 FREQ_THR = 10
 
 INT_COLUMN_NAMES = ['I' + str(i) for i in range(1, 14)]
@@ -113,11 +110,13 @@ def split_data():
             fout.close()
             data_dir = TEST_VALID_DIR
             cur_part_idx = int(line_idx / 200000)
-            fout = open(data_dir + '/part-' + str(cur_part_idx), 'w')
+            fout = open(
+                os.path.join(data_dir, 'part-' + str(cur_part_idx)), 'w')
         if line_idx % 200000 == 0 and line_idx != 0:
             fout.close()
             cur_part_idx = int(line_idx / 200000)
-            fout = open(data_dir + '/part-' + str(cur_part_idx), 'w')
+            fout = open(
+                os.path.join(data_dir, 'part-' + str(cur_part_idx)), 'w')
         fout.write(line)
     fout.close()
     fin.close()

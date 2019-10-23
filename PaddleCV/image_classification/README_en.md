@@ -27,11 +27,13 @@ English | [中文](README.md)
 
 Image classification, which is an important field of computer vision, is to classify images into pre-defined labels. Recently, many researchers have developed different kinds of neural networks and highly improved the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
 
+We also recommend users to take a look at the  [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122278)
+
 ## Quick Start
 
 ### Installation
 
-Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.5 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.5, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) and make an update.
+Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.6 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.6, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html) and make an update.
 
 ### Data preparation
 
@@ -198,7 +200,7 @@ Note: if you train model with flag use_ema, and you want to evaluate your Expone
 python ema_clean.py \
        --ema_model_dir=your_ema_model_dir \
        --cleaned_model_dir=your_cleaned_model_dir
-       
+
 python eval.py \
        --model=model_name \
        --pretrained_model=your_cleaned_model_dir

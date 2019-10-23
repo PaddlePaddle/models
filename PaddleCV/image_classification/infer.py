@@ -59,7 +59,8 @@ def infer(args):
                                                                      model_list)
     assert os.path.isdir(args.pretrained_model
                          ), "please load right pretrained model path for infer"
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
+    image = fluid.data(
+        name='image', shape=[None] + image_shape, dtype='float32')
     model = models.__dict__[args.model]()
     if args.model == "GoogLeNet":
         out, _, _ = model.net(input=image, class_dim=args.class_dim)
@@ -120,6 +121,7 @@ def main():
     args = parser.parse_args()
     print_arguments(args)
     check_gpu()
+    check_version()
     infer(args)
 
 

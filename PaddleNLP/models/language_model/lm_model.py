@@ -255,16 +255,10 @@ def lm_model(hidden_size,
         return real_res, last_hidden, last_cell
 
     batch_size_each = batch_size // fluid.core.get_cuda_device_count()
-    x = layers.data(
-        name="x",
-        shape=[batch_size_each, num_steps, 1],
-        dtype='int64',
-        append_batch_size=False)
-    y = layers.data(
-        name="y",
-        shape=[batch_size_each * num_steps, 1],
-        dtype='int64',
-        append_batch_size=False)
+    x = fluid.data(
+        name="x", shape=[batch_size_each, num_steps, 1], dtype='int64')
+    y = fluid.data(
+        name="y", shape=[batch_size_each * num_steps, 1], dtype='int64')
 
     if use_dataloader:
         dataloader = fluid.io.DataLoader.from_generator(
@@ -273,16 +267,14 @@ def lm_model(hidden_size,
             iterable=False,
             use_double_buffer=True)
 
-    init_hidden = layers.data(
+    init_hidden = fluid.data(
         name="init_hidden",
         shape=[num_layers, batch_size_each, hidden_size],
-        dtype='float32',
-        append_batch_size=False)
-    init_cell = layers.data(
+        dtype='float32')
+    init_cell = fluid.data(
         name="init_cell",
         shape=[num_layers, batch_size_each, hidden_size],
-        dtype='float32',
-        append_batch_size=False)
+        dtype='float32')
 
     init_cell.persistable = True
     init_hidden.persistable = True

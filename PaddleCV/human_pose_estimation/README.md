@@ -7,6 +7,8 @@ This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http
 
 > **Video in Demo**: *Bruno Mars - That’s What I Like [Official Video]*.
 
+We also recommend users to take a look at the [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122271)
+
 ## Requirements
 
   - Python == 2.7 or 3.6

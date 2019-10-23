@@ -39,7 +39,7 @@ categorical features. For the test dataset, the labels are omitted.
 
 Download dataset:
 ```bash
-cd data && ./download.sh && cd ..
+cd data && python download.py && cd ..
 ```
 
 ## Model
@@ -73,6 +73,7 @@ In distributed training setting, training data is splited by trainer_id, so that
  do not overlap among trainers
 
 ```bash
+# this shell not support Windows
 sh cluster_train.sh
 ```
 

@@ -190,9 +190,9 @@ def ctc_train_net(args, data_shape, num_classes):
     learning_rate_decay = None
     regularizer = fluid.regularizer.L2Decay(L2_RATE)
 
-    images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
-    label = fluid.layers.data(
-        name='label', shape=[1], dtype='int32', lod_level=1)
+    images = fluid.data(name='pixel', shape=[None] + data_shape, dtype='float32')
+    label = fluid.data(
+        name='label', shape=[None, 1], dtype='int32', lod_level=1)
     fc_out = encoder_net(
         images,
         num_classes,

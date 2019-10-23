@@ -6,6 +6,7 @@ import numpy as np
 import paddle.fluid as fluid
 import paddle
 import os
+import io
 
 
 def to_lodtensor(data, place):
@@ -86,7 +87,7 @@ def to_lodtensor_bpr_test(raw_data, vocab_size, place):
 
 
 def get_vocab_size(vocab_path):
-    with open(vocab_path, "r") as rf:
+    with io.open(vocab_path, "r", encoding='utf-8') as rf:
         line = rf.readline()
         return int(line.strip())
 
@@ -110,10 +111,26 @@ def prepare_data(file_dir,
             batch_size * 20)
     else:
         vocab_size = get_vocab_size(vocab_path)
-        reader = paddle.batch(
+        reader = fluid.io.batch(
             test(
                 file_dir, buffer_size, data_type=DataType.SEQ), batch_size)
     return vocab_size, reader
+
+
+def check_version():
+    """
+     Log error and exit when the installed version of paddlepaddle is
+     not satisfied.
+     """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        logger.error(err)
+        sys.exit(1)
 
 
 def sort_batch(reader, batch_size, sort_group_size, drop_last=False):
@@ -170,7 +187,8 @@ def reader_creator(file_dir, n, data_type):
     def reader():
         files = os.listdir(file_dir)
         for fi in files:
-            with open(file_dir + '/' + fi, "r") as f:
+            with io.open(
+                    os.path.join(file_dir, fi), "r", encoding='utf-8') as f:
                 for l in f:
                     if DataType.SEQ == data_type:
                         l = l.strip().split()

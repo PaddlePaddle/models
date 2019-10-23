@@ -1,4 +1,4 @@
->运行该示例前请安装Paddle1.6或更高版本
+>运行该示例前请安装Paddle1.6或更高版本。本示例中的run.sh脚本仅适用于linux系统，在windows环境下，请参考run.sh内容编写适合windows环境的脚本。
 
 # 分类模型知识蒸馏示例
 
@@ -34,12 +34,12 @@
 ```python
 # 观察student model的Variable
 for v in fluid.default_main_program().list_vars():
-    print v.name, v.shape
+    print(v.name, v.shape)
 ```
 ```python
 # 观察teacher model的Variable
 for v in teacher_program.list_vars():
-    print v.name, v.shape
+    print(v.name, v.shape)
 ```
 
 经过对比可以发现，`student model`和`teacher model`预测的输出分别为：
@@ -111,6 +111,16 @@ strategies:
 
 脚本<a href="../eval.py">PaddleSlim/classification/eval.py</a>中为使用该模型在评估数据集上做评估的示例。
 
+运行命令示例:
+```bash
+python eval.py \
+    --use_gpu True \
+    --model_path ${save_path}/eval_model/ \
+    --model_name __model__ \
+    --params_name __params__
+
+```
+
 ## 预测
 
 如果在配置文件中设置了`checkpoint_path`，并且在定义Compressor对象时指定了`prune_infer_model`选项，则每个epoch都会
@@ -125,12 +135,23 @@ strategies:
 
 在脚本<a href="../infer.py">PaddleSlim/classification/infer.py</a>中展示了如何使用fluid python API加载使用预测模型进行预测。
 
+运行命令示例:
+```bash
+python infer.py \
+    --use_gpu True \
+    --model_path ${save_path}/eval_model/ \
+    --model_name __model__.infer \
+    --params_name __params__
+```
+
 ### PaddleLite
 
 该示例中产出的预测（inference）模型可以直接用PaddleLite进行加载使用。
 关于PaddleLite如何使用，请参考：[PaddleLite使用文档](https://github.com/PaddlePaddle/Paddle-Lite/wiki#%E4%BD%BF%E7%94%A8)
 
 ## 示例结果
+
+> 当前release的结果并非超参调优后的最好结果，仅做示例参考，后续我们会优化当前结果。
 
 ### MobileNetV1
 
@@ -144,7 +165,7 @@ strategies:
 - batch size: 256
 - lr_strategy: piecewise_decay
 - step_epochs: 30, 60, 90
-- num_epochs: 120
+- num_epochs: 130
 - l2_decay: 4e-5
 - init lr: 0.1
 
@@ -160,7 +181,7 @@ strategies:
 - batch size: 256
 - lr_strategy: piecewise_decay
 - step_epochs: 30, 60, 90
-- num_epochs: 120
+- num_epochs: 130
 - l2_decay: 4e-5
 - init lr: 0.1
 
@@ -176,7 +197,7 @@ strategies:
 - batch size: 256
 - lr_strategy: piecewise_decay
 - step_epochs: 30, 60, 90
-- num_epochs: 120
+- num_epochs: 130
 - l2_decay: 4e-5
 - init lr: 0.1
 
