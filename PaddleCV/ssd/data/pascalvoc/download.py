@@ -15,6 +15,7 @@
 import os
 import os.path as osp
 import sys
+import io
 import re
 import random
 import tarfile
@@ -63,7 +64,7 @@ def walk_dir(devkit_dir, year):
             else:
                 continue
             fpath = osp.join(filelist_dir, fname)
-            for line in open(fpath):
+            for line in io.open(fpath):
                 name_prefix = line.strip().split()[0]
                 if name_prefix in added:
                     continue
@@ -85,11 +86,11 @@ def prepare_filelist(devkit_dir, years, output_dir):
         trainval_list.extend(trainval)
         test_list.extend(test)
     random.shuffle(trainval_list)
-    with open(osp.join(output_dir, 'trainval.txt'), 'w') as ftrainval:
+    with io.open(osp.join(output_dir, 'trainval.txt'), 'w') as ftrainval:
         for item in trainval_list:
             ftrainval.write(item[0] + ' ' + item[1] + '\n')
 
-    with open(osp.join(output_dir, 'test.txt'), 'w') as ftest:
+    with io.open(osp.join(output_dir, 'test.txt'), 'w') as ftest:
         for item in test_list:
             ftest.write(item[0] + ' ' + item[1] + '\n')
 
