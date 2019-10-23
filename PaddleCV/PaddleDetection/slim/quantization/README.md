@@ -53,7 +53,7 @@ python compress.py \
     -d "../../dataset/voc" \
     -o max_iters=258 \
     LearningRate.base_lr=0.0001 \
-    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]' \
+    LearningRate.schedulers="[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]" \
     pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
     YoloTrainFeed.batch_size=64
 ```
@@ -78,7 +78,7 @@ python compress.py \
     -d "../../dataset/voc" \
     -o max_iters=258 \
     LearningRate.base_lr=0.0001 \
-    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]' \
+    LearningRate.schedulers="[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]" \
     pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
     YoloTrainFeed.batch_size=64
   
@@ -93,7 +93,7 @@ python compress.py \
     -d "../../dataset/voc" \
     -o max_iters=516 \
     LearningRate.base_lr=0.00005 \
-    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [516, 1012]}]' \
+    LearningRate.schedulers="[!PiecewiseDecay {gamma: 0.1, milestones: [516, 1012]}]" \
     pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
     YoloTrainFeed.batch_size=32
 ```
@@ -228,7 +228,7 @@ FP32模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如
 
 >当前release的结果并非超参调优后的最好结果，仅做示例参考，后续我们会优化当前结果。
 
-### MobileNetV1
+### MobileNetV1-YOLO-V3
 
 | weight量化方式 | activation量化方式| Box ap |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
@@ -236,8 +236,6 @@ FP32模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如
 |abs_max|abs_max|- |- |-|
 |abs_max|moving_average_abs_max|- |- |-|
 |channel_wise_abs_max|abs_max|- |- |-|
-
->训练超参：
 
 
 ## FAQ

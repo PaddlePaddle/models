@@ -4,10 +4,11 @@ import os
 import logging
 import paddle.fluid as fluid
 import paddle
+import io
 
 
 def get_vocab_size(vocab_path):
-    with open(vocab_path, "r", encoding='utf-8') as rf:
+    with io.open(vocab_path, "r", encoding='utf-8') as rf:
         line = rf.readline()
         return int(line.strip())
 
@@ -30,20 +31,22 @@ def construct_test_data(file_dir, vocab_path, batch_size):
     test_reader = fluid.io.batch(y_data.test(files), batch_size=batch_size)
     return test_reader, vocab_size
 
+
 def check_version():
-     """
+    """
      Log error and exit when the installed version of paddlepaddle is
      not satisfied.
      """
-     err = "PaddlePaddle version 1.6 or higher is required, " \
-           "or a suitable develop version is satisfied as well. \n" \
-           "Please make sure the version is good with your code." \
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
 
-     try:
-         fluid.require_version('1.6.0')
-     except Exception as e:
-         logger.error(err)
-         sys.exit(1)
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        logger.error(err)
+        sys.exit(1)
+
 
 def infer_data(raw_data, place):
     data = [dat[0] for dat in raw_data]
