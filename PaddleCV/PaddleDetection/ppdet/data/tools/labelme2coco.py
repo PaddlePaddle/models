@@ -197,13 +197,11 @@ def main():
 
     # Allocate the dataset.
     total_num = len(glob.glob(osp.join(args.json_input_dir, '*.json')))
-    print(total_num)
     if args.train_proportion != 0:
         train_num = int(total_num * args.train_proportion)
         os.makedirs(args.output_dir + '/train')
     else:
         train_num = 0
-    print(train_num)
     if args.val_proportion == 0.0:
         val_num = 0
         test_num = total_num - train_num
