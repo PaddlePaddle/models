@@ -161,7 +161,7 @@ FP32模型可使用Paddle-Lite进行加载预测，可参见教程[Paddle-Lite�
 
 ## 如何进行部分量化
 
-通过在定义op时指定 ``name_scope``为 ``skip_quant``可对这个op跳过量化。比如在<a href="../models/resnet.py">PaddleSlim/classification/models/resnet.py</a>中，将某个conv的定义作如下改变：
+现在支持量化的op有 ``['conv2d', 'depthwise_conv2d', 'mul']``, 通过在定义op时指定 ``name_scope``为 ``skip_quant``可对这个op跳过量化。比如在<a href="../models/resnet.py">PaddleSlim/classification/models/resnet.py</a>中，将某个conv的定义作如下改变：
 
 原定义：
 ```
