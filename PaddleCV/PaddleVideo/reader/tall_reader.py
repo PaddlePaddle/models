@@ -26,7 +26,10 @@ random.seed(0)
 import logging
 logger = logging.getLogger(__name__)
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 from .reader_utils import DataReader
 
@@ -155,15 +158,15 @@ class TALLReader(DataReader):
             movie_clip_names[movie_name].append(k)
         self.movie_names = list(movie_names_set)
         logger.info(self.mode.upper() + ':' + str(len(self.movie_names)) +
-                    " movies.")  #
+                    " movies.")
 
         # read sliding windows, and match them with the groundtruths to make training samples
         sliding_clips_tmp = os.listdir(self.sliding_clip_path)  #161396
         self.clip_sentence_pairs_iou = []
         if self.mode == 'valid':
+            # TALL model doesn't take validation during training, it will test after all the training epochs finish.
             return
         if self.mode == 'train':
-            #count = 0
             for clip_name in sliding_clips_tmp:
                 if clip_name.split(".")[2] == "npy":
                     movie_name = clip_name.split("_")[0]
@@ -274,10 +277,6 @@ class TALLReader(DataReader):
             elif self.mode == 'train':
                 random.shuffle(self.clip_sentence_pairs_iou)
                 for clip_sentence_pair in self.clip_sentence_pairs_iou:
-                    # index_list = list(range(len(self.clip_sentence_pairs_iou)))
-                    # random.shuffle(index_list)
-                    # for i in index_list:
-                    #     clip_sentence_pair = self.clip_sentence_pairs_iou[i]
                     offset = np.zeros(2, dtype=np.float32)
                     clip_name = clip_sentence_pair[0]
                     feat_path = os.path.join(self.sliding_clip_path,
@@ -298,9 +297,7 @@ class TALLReader(DataReader):
                         batch_out = []
 
             elif self.mode == 'test':
-                idx = 0
                 for movie_name in self.movie_names:
-                    idx += 1
                     movie_clip_featmaps, movie_clip_sentences = self.load_movie_slidingclip(
                         self.clip_sentence_pairs, self.clip_sentence_pairs_iou,
                         movie_name)

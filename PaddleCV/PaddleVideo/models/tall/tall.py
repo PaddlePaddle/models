@@ -61,16 +61,12 @@ class TALL(ModelBase):
         self.use_dataloader = use_dataloader
 
         images = fluid.data(
-            name='train_visual',
-            shape=[None, visual_shape],
-            dtype='float32',
-            lod_level=0)
+            name='train_visual', shape=[None, visual_shape], dtype='float32')
 
         sentences = fluid.data(
             name='train_sentences',
             shape=[None, sentence_shape],
-            dtype='float32',
-            lod_level=0)
+            dtype='float32')
 
         feed_list = []
         feed_list.append(images)

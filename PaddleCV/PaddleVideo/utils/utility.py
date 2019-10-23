@@ -68,6 +68,4 @@ def check_version():
         fluid.require_version('1.6.0')
     except Exception as e:
         logger.error(err)
-
-
-#         sys.exit(1)
+        sys.exit(1)

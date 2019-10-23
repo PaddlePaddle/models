@@ -46,7 +46,7 @@ class TALLNET(object):
                                          [1, self.batch_size, 1])
 
         concat_feature = fluid.layers.concat(
-            [vv_feature, ss_feature], axis=2)  #1,1,2048
+            [vv_feature, ss_feature], axis=2)  #B,B,2048
 
         mul_feature = vv_feature * ss_feature  # B,B,1024
         add_feature = vv_feature + ss_feature  # B,B,1024
@@ -56,8 +56,6 @@ class TALLNET(object):
         return comb_feature
 
     def net(self, images, sentences):
-        #  fluid.layers.Print(images, message='images', summarize=100)
-        #  fluid.layers.Print(sentences, message='sentences', summarize = 100)
         # visual2semantic
         transformed_clip = fluid.layers.fc(
             input=images,
@@ -114,11 +112,9 @@ class TALLNET(object):
             param_attr=fluid.param_attr.ParamAttr(name="sim_mat_weights"),
             bias_attr=False)
         sim_score_mat = fluid.layers.squeeze(input=sim_score_mat, axes=[0])
-        #  fluid.layers.Print(sim_score_mat, message='sim_score_mat', summarize=100)
         return sim_score_mat
 
     def loss(self, outs, offs):
-        #   fluid.layers.Print(offs, message='offs', summarize=100)
         sim_score_mat = outs[0]
         p_reg_mat = outs[1]
         l_reg_mat = outs[2]
