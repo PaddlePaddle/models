@@ -7,8 +7,9 @@ import argparse
 import io
 import math
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
 prog = re.compile("[^a-z ]", flags=0)
 
 
@@ -113,9 +114,13 @@ def filter_corpus(args):
     if not os.path.exists(args.output_corpus_dir):
         os.makedirs(args.output_corpus_dir)
     for file in os.listdir(args.input_corpus_dir):
-        with io.open(os.path.join(args.output_corpus_dir, 'convert_' + file), "w", encoding='utf-8') as wf:
+        with io.open(
+                os.path.join(args.output_corpus_dir, 'convert_' + file),
+                "w",
+                encoding='utf-8') as wf:
             with io.open(
-                    os.path.join(args.input_corpus_dir, file), encoding='utf-8') as rf:
+                    os.path.join(args.input_corpus_dir, file),
+                    encoding='utf-8') as rf:
                 print(os.path.join(args.input_corpus_dir, file))
                 for line in rf:
                     signal = False

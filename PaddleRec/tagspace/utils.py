@@ -9,8 +9,9 @@ import paddle.fluid as fluid
 import paddle
 import csv
 import io
-reload(sys)
-sys.setdefaultencoding('utf-8')
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
 
 
 def to_lodtensor(data, place):

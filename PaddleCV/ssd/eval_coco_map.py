@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import io
 import time
 import numpy as np
 import argparse
@@ -128,8 +129,8 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
                 print("Batch {0}".format(batch_id))
             dts_res += get_dt_res(nmsed_out_v, data)
 
-        with open("detection_result.json", 'w') as outfile:
-            json.dump(dts_res, outfile)
+        with io.open("detection_result.json", 'w') as outfile:
+            outfile.write(unicode(json.dumps(dts_res)))
         print("start evaluate using coco api")
         cocoGt = COCO(os.path.join(data_args.data_dir, test_list))
         cocoDt = cocoGt.loadRes("detection_result.json")
