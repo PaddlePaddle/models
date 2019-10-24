@@ -119,7 +119,7 @@ def test(args):
             test_outs = exe.run(fetch_list=test_fetch_list,
                                 feed=test_feeder.feed(feat_data),
                                 return_numpy=False)
-            test_outs += vinfo
+            test_outs += [vinfo]
         else:
             test_outs = exe.run(fetch_list=test_fetch_list,
                                 feed=test_feeder.feed(data))
