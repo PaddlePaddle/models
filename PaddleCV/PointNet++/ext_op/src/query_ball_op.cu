@@ -12,6 +12,8 @@ limitations under the License. */
 #include "paddle/fluid/framework/eigen.h"
 #include "paddle/fluid/framework/op_registry.h"
 
+#include "util.cu.h"
+
 namespace paddle {
 namespace operators {
 
@@ -38,10 +40,6 @@ __global__ void QueryBall(int b,
 
   for (int j = index; j < m; j += stride) {
     int cnt = 0;
-    for (int q = 0; q < nsample; ++q) {
-      idx[j * nsample + q] = 0;
-    }
-
     for (int k = 0; k < n; ++k) {
       if (cnt == nsample)
         break;  // only pick the FIRST nsample points in the ball
@@ -87,17 +85,15 @@ public:
     int n = points->dims()[1];
     int m = new_points->dims()[1];
     // allocate memory
-    output->mutable_data<int>({batch_size, m, nsample}, ctx.GetPlace());
+    int* p_out_points = output->mutable_data<int>({batch_size, m, nsample}, ctx.GetPlace());
 
-    // faltten
-    auto points_flat = framework::EigenVector<T>::Flatten(*points);
-    const T *p_points = &(points_flat(0));
+    auto& dev_ctx = ctx.template device_context<platform::CUDADeviceContext>();
+    int pnum = output->numel();
+    Zero<int><<<(pnum + 512 - 1) / 512, 512, 0, dev_ctx.stream()>>>(p_out_points,
+                                                               pnum);
 
-    auto new_points_flat = framework::EigenVector<T>::Flatten(*new_points);
-    const T *p_new_points = &(new_points_flat(0));
-
-    auto out_points_flat = framework::EigenVector<int>::Flatten(*output);
-    int *p_out_points = &(out_points_flat(0));
+    const T *p_points = points->data<T>();
+    const T *p_new_points = new_points->data<T>();
 
     QueryBall<<<batch_size, 256>>>(batch_size,
                                    n,

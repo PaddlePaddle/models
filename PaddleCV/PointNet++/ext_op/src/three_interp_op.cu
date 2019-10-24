@@ -66,9 +66,6 @@ __global__ void KeThreeInterpBw(T* input_grad,
     int w_idx = bi * n * 3 + ni * 3;
     platform::CudaAtomicAdd(&input_grad[input_base_idx + idx[w_idx] * c + ci],
                             output_grad[tid] * weight[w_idx]);
-    /* if (ci == 0) printf("(%d, %d, %d): w_idx=%d, output_grad=%f, weight=%f,
-     * idx=%d\n", bi, ni, ci, w_idx, output_grad[tid], weight[w_idx],
-     * idx[w_idx]); */
     platform::CudaAtomicAdd(
         &input_grad[input_base_idx + idx[w_idx + 1] * c + ci],
         output_grad[tid] * weight[w_idx + 1]);

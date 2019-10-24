@@ -48,7 +48,7 @@ def parse_args():
         '--batch_size',
         type=int,
         default=1,
-        help='training batch size, default 1')
+        help='evaluation batch size, default 1')
     parser.add_argument(
         '--num_points',
         type=int,
@@ -68,12 +68,12 @@ def parse_args():
         '--data_dir',
         type=str,
         default='dataset/Indoor3DSemSeg/indoor3d_sem_seg_hdf5_data',
-        help='directory name to save train snapshoot')
+        help='dataset directory')
     parser.add_argument(
         '--log_interval',
         type=int,
         default=100,
-        help='mini-batch interval to log.')
+        help='mini-batch interval for logging.')
     args = parser.parse_args()
     return args
 
@@ -83,12 +83,17 @@ def eval():
     # check whether the installed paddle is compiled with GPU
     check_gpu(args.use_gpu)
 
+    assert args.model in ['MSG', 'SSG'], \
+            "--model can only be 'MSG' or 'SSG'"
+
     # build model
     startup = fluid.Program()
     eval_prog = fluid.Program()
     with fluid.program_guard(eval_prog, startup):
         with fluid.unique_name.guard():
-            eval_model = PointNet2SemSegMSG(args.num_classes, args.num_points)
+            eval_model = PointNet2SemSegMSG(args.num_classes, args.num_points) \
+                           if args.model == 'MSG' else \
+                         PointNet2SemSegSSG(args.num_classes, args.num_points) \
             eval_model.build_model()
             eval_feeds = eval_model.get_feeds()
             eval_outputs = eval_model.get_outputs()

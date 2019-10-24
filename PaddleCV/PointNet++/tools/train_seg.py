@@ -98,7 +98,7 @@ def parse_args():
         '--data_dir',
         type=str,
         default='dataset/Indoor3DSemSeg/indoor3d_sem_seg_hdf5_data',
-        help='directory name to save train snapshoot')
+        help='dataset directory')
     parser.add_argument(
         '--save_dir',
         type=str,
@@ -114,7 +114,7 @@ def parse_args():
         '--log_interval',
         type=int,
         default=1,
-        help='mini-batch interval to log.')
+        help='mini-batch interval for logging.')
     args = parser.parse_args()
     return args
 
@@ -127,12 +127,17 @@ def train():
     if not os.path.isdir(args.save_dir):
         os.makedirs(args.save_dir)
 
+    assert args.model in ['MSG', 'SSG'], \
+            "--model can only be 'MSG' or 'SSG'"
+
     # build model
     startup = fluid.Program()
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup):
         with fluid.unique_name.guard():
-            train_model = PointNet2SemSegMSG(args.num_classes, args.num_points)
+            train_model = PointNet2SemSegMSG(args.num_classes, args.num_points) \
+                            if args.model == "MSG" else \
+                          PointNet2SemSegSSG(args.num_classes, args.num_points)
             train_model.build_model()
             train_feeds = train_model.get_feeds()
             train_pyreader = train_model.get_pyreader()
@@ -152,7 +157,9 @@ def train():
     test_prog = fluid.Program()
     with fluid.program_guard(test_prog, startup):
         with fluid.unique_name.guard():
-            test_model = PointNet2SemSegMSG(args.num_classes, args.num_points)
+            test_model = PointNet2SemSegMSG(args.num_classes, args.num_points) \
+                           if args.model == "MSG" else \
+                         PointNet2SemSegSSG(args.num_classes, args.num_points)
             test_model.build_model()
             test_feeds = test_model.get_feeds()
             test_outputs = test_model.get_outputs()
@@ -187,18 +194,6 @@ def train():
         logger.info("Save model to {}".format(path))
         fluid.io.save_persistables(exe, path, prog)
 
-    # def _train_reader():
-    #     def reader():
-    #         np.random.seed(2333)
-    #         xyz = np.random.random((4096, 3)).astype('float32')
-    #         feature = np.random.random((4096, 6)).astype('float32')
-    #         label = np.random.uniform(0, 13, (4096, 1)).astype('int64')
-    #         for i in range(10):
-    #             yield [(xyz, feature, label)]
-    #     return reader
-    # train_reader = _train_reader()
-    # test_reader = _train_reader()
-    
     # get reader
     indoor_reader = Indoor3DReader(args.data_dir)
     train_reader = indoor_reader.get_reader(args.batch_size, args.num_points, mode='train')
