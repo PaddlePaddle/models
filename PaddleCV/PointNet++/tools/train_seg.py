@@ -21,7 +21,6 @@ import ast
 import logging
 import numpy as np
 import paddle.fluid as fluid
-# import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 
 from models import *
 from data.indoor3d_reader import Indoor3DReader
@@ -120,25 +119,6 @@ def parse_args():
     return args
 
 
-# def exponential_with_clip(learning_rate, decay_steps, decay_rate,
-#                                   min_lr):
-#     global_step = lr_scheduler._decay_step_counter()
-#
-#     lr = fluid.layers.create_global_var(
-#         shape=[1],
-#         value=float(learning_rate),
-#         dtype='float32',
-#         persistable=True,
-#         name="learning_rate")
-#
-#     decayed_lr = learning_rate * (decay_rate ** fluid.layers.floor(global_step / decay_steps))
-#     # decayed_lr = max(decayed_lr, min_lr)
-#     decayed_lr = fluid.layers.clip(decayed_lr, min_lr, learning_rate)
-#     fluid.layers.assign(decayed_lr, lr)
-#
-#     return lr
-
-
 def train():
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
@@ -164,8 +144,6 @@ def train():
                     decay_rate=args.lr_decay,
                     staircase=True)
             lr = fluid.layers.clip(lr, 1e-5, args.lr)
-            # lr = exponential_with_clip(args.lr, args.decay_steps,
-            #                            args.decay_steps, 1e-5)
             optimizer = fluid.optimizer.Adam(learning_rate=lr,
                     regularization=fluid.regularizer.L2Decay(args.weight_decay))
             optimizer.minimize(train_loss)

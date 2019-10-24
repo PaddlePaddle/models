@@ -44,7 +44,7 @@ class Indoor3DReader(object):
     def _load_h5_file(self, fname):
         assert osp.isfile(fname), \
                 "{} is not a file".format(fname)
-        f = h5py.File(fname)
+        f = h5py.File(fname, mode='r')
         return f['data'][:], f['label'][:]
 
     def load_data(self):

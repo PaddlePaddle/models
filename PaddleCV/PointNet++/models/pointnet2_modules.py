@@ -73,13 +73,9 @@ def group_all(xyz, features=None, use_xyz=True):
         return grouped_xyz
 
 
-def conv_bn(input, out_channels, bn=True, bn_momentum=0.9, act='relu', name=None):
-    param_attr = ParamAttr(name='{}_conv_weight'.format(name),
-                           # initializer=fluid.initializer.Constant(1.376)
-                           )
-    bias_attr = ParamAttr(
-            # initializer=fluid.initializer.Constant(0.213),
-                          name='{}_conv_bias'.format(name)) \
+def conv_bn(input, out_channels, bn=True, bn_momentum=0.1, act='relu', name=None):
+    param_attr = ParamAttr(name='{}_conv_weight'.format(name),)
+    bias_attr = ParamAttr(name='{}_conv_bias'.format(name)) \
                                   if not bn else False
     out = fluid.layers.conv2d(input,
                               num_filters=out_channels,
@@ -91,17 +87,12 @@ def conv_bn(input, out_channels, bn=True, bn_momentum=0.9, act='relu', name=None
                               bias_attr=bias_attr,
 			      act=act if not bn else None)
     if bn:
-        print("bn_momentum", bn_momentum)
         bn_name = name + "_bn"
         out = fluid.layers.batch_norm(out,
                                       act=act,
 				      momentum=bn_momentum,
-                                      param_attr=ParamAttr(
-                                          # initializer=fluid.initializer.Constant(2.673),
-                                          name=bn_name + "_scale"),
-                                      bias_attr=ParamAttr(
-                                          # initializer=fluid.initializer.Constant(1.467),
-                                          name=bn_name + "_offset"),
+                                      param_attr=ParamAttr(name=bn_name + "_scale"),
+                                      bias_attr=ParamAttr(name=bn_name + "_offset"),
                                       moving_mean_name=bn_name + '_mean',
                                       moving_variance_name=bn_name + '_var')
 
@@ -181,7 +172,6 @@ def pointnet_sa_module(xyz,
             out = MLP(out, mlp, bn=bn, bn_momentum=bn_momentum, name=name + '_mlp{}'.format(i)) # TODO(dengkaipeng): mlp[1:] ?
 	    if npoint is None:
 	        out = fluid.layers.transpose(out,perm=[0,1,3,2])
-	    # [-1,1024,128,1]
             out = fluid.layers.pool2d(out, pool_size=[1, out.shape[3]], pool_type='max')
             out = fluid.layers.squeeze(out, axes=[-1])
             outs.append(out)

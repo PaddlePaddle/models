@@ -1,0 +1,4 @@
+checkpoints*
+ext_op/src/*.o
+ext_op/src/*.so
+*.log*

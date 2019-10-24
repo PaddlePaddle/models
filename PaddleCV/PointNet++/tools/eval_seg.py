@@ -47,7 +47,7 @@ def parse_args():
     parser.add_argument(
         '--batch_size',
         type=int,
-        default=16,
+        default=1,
         help='training batch size, default 1')
     parser.add_argument(
         '--num_points',
@@ -72,7 +72,7 @@ def parse_args():
     parser.add_argument(
         '--log_interval',
         type=int,
-        default=1,
+        default=100,
         help='mini-batch interval to log.')
     args = parser.parse_args()
     return args
@@ -103,7 +103,7 @@ def eval():
     assert os.path.exists(args.weights), "weights {} not exists.".format(args.weights)
     def if_exist(var):
         return os.path.exists(os.path.join(args.weights, var.name))
-    fluid.io.load_vars(exe, args.weights, predicate=if_exist)
+    fluid.io.load_vars(exe, args.weights, eval_prog, predicate=if_exist)
 
     eval_compile_prog = fluid.compiler.CompiledProgram(eval_prog)
     
@@ -130,7 +130,7 @@ def eval():
                 logger.info("[EVAL] batch {}: {}time: {:.2f}".format(eval_iter, log_str, period))
             eval_iter += 1
     except fluid.core.EOFException:
-        logger.info("[EVAL] Eval finished, {}average time: {:.2f}".format(epoch_id, eval_stat.get_mean_log(), np.mean(eval_periods[1:])))
+        logger.info("[EVAL] Eval finished, {}average time: {:.2f}".format(eval_stat.get_mean_log(), np.mean(eval_periods[1:])))
     finally:
         eval_pyreader.reset()
 

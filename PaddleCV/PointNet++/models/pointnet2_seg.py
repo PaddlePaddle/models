@@ -55,7 +55,7 @@ class PointNet2SemSeg(object):
                 iterable=False)
         self.feed_vars = [self.xyz, self.feature, self.label]
 
-    def build_model(self, bn_momentum=0.9):
+    def build_model(self, bn_momentum=0.1):
         self.build_input()
 
         xyzs, features = [self.xyz], [self.feature]
@@ -82,8 +82,7 @@ class PointNet2SemSeg(object):
         out = fluid.layers.transpose(features[0], perm=[0, 2, 1])
         out = fluid.layers.unsqueeze(out, axes=[-1])
         out = conv_bn(out, out_channels=128, bn=True, bn_momentum=bn_momentum, name="output_1")
-        # out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
-        out = fluid.layers.dropout(out, 0.5)
+        out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
         out = conv_bn(out, out_channels=self.num_classes, bn=False, act=None, name="output_2")
         out = fluid.layers.squeeze(out, axes=[-1])
         out = fluid.layers.transpose(out, perm=[0, 2, 1])
