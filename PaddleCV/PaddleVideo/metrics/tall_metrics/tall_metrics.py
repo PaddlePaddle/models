@@ -106,22 +106,32 @@ class MetricsCalculator():
             self.aggr_loss += np.mean(np.array(loss))
         elif (self.mode == 'test') or (self.mode == 'infer'):
             outputs = fetch_list[0]
-            start = fetch_list[1][0]
-            end = fetch_list[1][1]
-            k = fetch_list[1][2]
-            t = fetch_list[1][3]
-            movie_clip_sentences = fetch_list[1][4]
-            movie_clip_featmaps = fetch_list[1][5]
-            movie_name = fetch_list[1][6]
+            b_start = [item[0] for item in fetch_list[1]]
+            b_end = [item[1] for item in fetch_list[1]]
+            b_k = [item[2] for item in fetch_list[1]]
+            b_t = [item[3] for item in fetch_list[1]]
+            b_movie_clip_sentences = [item[4] for item in fetch_list[1]]
+            b_movie_clip_featmaps = [item[5] for item in fetch_list[1]]
+            b_movie_name = [item[6] for item in fetch_list[1]]
 
-            item_res = [outputs, start, end, k, t]
+            batch_size = len(b_start)
+            for i in range(batch_size):
+                start = b_start[i]
+                end = b_end[i]
+                k = b_k[i]
+                t = b_t[i]
+                movie_clip_sentences = b_movie_clip_sentences[i]
+                movie_clip_featmaps = b_movie_clip_featmaps[i]
+                movie_name = b_movie_name[i]
 
-            if movie_name not in self.result_dict.keys():
-                self.result_dict[movie_name] = []
-                self.result_dict[movie_name].append(movie_clip_sentences)
-                self.result_dict[movie_name].append(movie_clip_featmaps)
+                item_res = [outputs, start, end, k, t]
 
-            self.result_dict[movie_name].append(item_res)
+                if movie_name not in self.result_dict.keys():
+                    self.result_dict[movie_name] = []
+                    self.result_dict[movie_name].append(movie_clip_sentences)
+                    self.result_dict[movie_name].append(movie_clip_featmaps)
+
+                self.result_dict[movie_name].append(item_res)
 
     def accumulate_infer_results(self, fetch_list):
         # the same as test
