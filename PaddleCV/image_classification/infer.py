@@ -49,6 +49,8 @@ add_arg('crop_size',        int,  224,                  "The value of crop size"
 add_arg('topk',             int,  1,                    "topk")
 add_arg('label_path',       str,  "./utils/tools/readable_label.txt", "readable label filepath")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
+add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
+add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
 # yapf: enable
 
 
@@ -61,7 +63,13 @@ def infer(args):
                          ), "please load right pretrained model path for infer"
     image = fluid.data(
         name='image', shape=[None] + image_shape, dtype='float32')
-    model = models.__dict__[args.model]()
+
+    if args.model.startswith('EfficientNet'):
+        model = models.__dict__[args.model](is_test=True, padding_type=args.padding_type,
+                                            use_se=args.use_se)
+    else:
+        model = models.__dict__[args.model]()
+
     if args.model == "GoogLeNet":
         out, _, _ = model.net(input=image, class_dim=args.class_dim)
     else:
