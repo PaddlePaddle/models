@@ -268,8 +268,6 @@ class TALLReader(DataReader):
         return reader
 
     def make_reader(self):
-        """multiprocess reader"""
-
         def reader():
             batch_out = []
             if self.mode == 'valid':
