@@ -155,6 +155,14 @@ def infer(args):
                                  feed=infer_feeder.feed(data_feed_in),
                                  return_numpy=True)
             infer_result_list = infer_outs + [vinfo]
+        elif args.model_name == 'BsnPem':
+            data_feed_in = [items[:1] for items in data]
+            vinfo = [items[1:] for items in data]
+            video_id = [items[2] for items in data]
+            infer_outs = exe.run(fetch_list=fetch_list,
+                                 feed=infer_feeder.feed(data_feed_in),
+                                 return_numpy=False)
+            infer_result_list = infer_outs + [vinfo]
         else:
             data_feed_in = [items[:-1] for items in data]
             video_id = [items[-1] for items in data]

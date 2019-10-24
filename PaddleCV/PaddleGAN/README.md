@@ -16,7 +16,7 @@
 
 ## 模型简介
 
-本图像生成模型库包含CGAN\[[3](#参考文献)\], DCGAN\[[4](#参考文献)\], Pix2Pix\[[5](#参考文献)\], CycleGAN\[[6](#参考文献)\], StarGAN\[[7](#参考文献)\], AttGAN\[[8](#参考文献)\], STGAN\[[9](#参考文献)\]。
+本图像生成模型库包含CGAN\[[3](#参考文献)\], DCGAN\[[4](#参考文献)\], Pix2Pix\[[5](#参考文献)\], CycleGAN\[[6](#参考文献)\], StarGAN\[[7](#参考文献)\], AttGAN\[[8](#参考文献)\], STGAN\[[9](#参考文献)\], SPADE\[[13](#参考文献)\]。
 
 注意：
 1. StarGAN，AttGAN和STGAN由于梯度惩罚所需的操作目前只支持GPU，需使用GPU训练。
@@ -86,6 +86,7 @@ StarGAN，AttGAN和STGAN采用celeba\[[11](#参考文献)\]数据集进行属性
 通过指定dataset参数来下载相应的数据集。
 
 StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)数据集可以自行下载。
+SPADE使用的[cityscapes](https://www.cityscapes-dataset.com)数据集可以自行下载。下载完成后新建一个目录data/cityscapes/，并在目录下准备3个子目录，分别是真实图片、分割图、实例图。准备一个train_list和test_list，每一行的顺序是分割图\t真实图\t实例图。
 
 **自定义数据集：**
 如果您要使用自定义的数据集，只要设置成对应的生成模型所需要的数据格式，并放在data文件夹下，然后把`--dataset`参数设置成您自定义数据集的名称，data_reader.py文件就会自动去data文件夹中寻找数据。
@@ -113,6 +114,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 
 - 每个GAN都给出了一份运行示例，放在scripts文件夹内，用户可以直接运行训练脚本快速开始训练。
 - 用户可以通过设置`--model_net`参数来选择想要训练的模型，通过设置`--dataset`参数来选择训练所需要的数据集。
+- SPADE模型的训练需要在主目录下新建一个VGG19_pretrained目录，从[该链接](https://paddle-imagenet-models-name.bj.bcebos.com/VGG19_pretrained.tar)下载在ImageNet上预训练好的VGG19模型，解压之后把VGG19模型的参数名改成`vgg19_`开头的参数名。
 
 ### 模型测试
 模型测试是利用训练完成的生成模型进行图像生成。infer.py是主要的执行程序，调用示例如下：
@@ -183,6 +185,7 @@ STGAN的效果图(图片属性分别为：original image, Bald, Bangs, Black Hai
 | StarGAN  | [StarGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stargan_G.tar.gz)  |
 | AttGAN   | [AttGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/attgan_G.tar.gz)   |
 | STGAN    | [STGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stgan_G.tar.gz)    |
+| SPADE    | [SPADE的预训练模型]()  ([SPADE需要的vgg预训练模型]())
 
 
 ## 进阶使用
@@ -201,6 +204,8 @@ StarGAN多领域属性迁移，引入辅助分类帮助单个判别器判断多�
 AttGAN利用分类损失和重构损失来保证改变特定的属性，可用于人脸特定属性转换。
 
 STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属性，可用于人脸特定属性转换。
+
+SPADE提出一种考虑空间语义信息的归一化方法，从而更好的保留语义信息，生成更为逼真的图像，可用于图像翻译。
 
 ### 模型概览
 
@@ -243,6 +248,13 @@ AttGAN的网络结构[8]
 <p align="center">
 <img src="images/stgan_net.png" width=800 /> <br />
 STGAN的网络结构[9]
+</p>
+
+- SPADE中整体网络结构如下图所示。SPADE在网络中的卷积层使用了[谱归一化](\[[12](#参考文献)\])，把输入图像的语义mask图像作为生成网络输入，拼接了语义mask和生成器的输出为判别网络的输入。SPADE提出了一种基于空间信息的归一化方法\(SPatially-Adaptive \(DE\)normalization\)，在进行归一化的时候可以更好的利用语义信息，从而生成更为逼真的图像。更为具体的网络结构可以参考network/SPADE_network.py文件或者论文中的附录部分。
+
+<p align="center">
+<img src="images/spade_net.png" width=800 /> <br />
+SPADE整体的网络结构[10]
 </p>
 
 
@@ -290,6 +302,10 @@ STGAN的网络结构[9]
 [10] [The Cityscapes Dataset for Semantic Urban Scene Understanding](https://arxiv.org/abs/1604.01685)
 
 [11] [Deep Learning Face Attributes in the Wild](https://arxiv.org/abs/1411.7766)
+
+[12] [Spectral Normalization for Generative Adversarial Networks](https://arxiv.org/abs/1802.05957)
+
+[13] [Semantic Image Synthesis with Spatially-Adaptive Normalization](https://arxiv.org/abs/1903.07291)
 
 
 ## 版本更新

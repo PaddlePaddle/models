@@ -16,8 +16,6 @@ import paddle.fluid as fluid
 from paddle.fluid import ParamAttr
 import numpy as np
 
-DATATYPE = 'float32'
-
 
 class TALLNET(object):
     def __init__(self,
