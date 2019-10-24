@@ -12,7 +12,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 """
-Contains PointNet++ MSG classification models
+Contains PointNet++ classification models
 """
 
 from __future__ import absolute_import
@@ -27,7 +27,7 @@ from paddle.fluid.initializer import Constant
 from pointnet2_modules import *
 
 
-class PointNet2MSGCls(object):
+class PointNet2Cls(object):
     def __init__(self, num_classes, use_xyz=True):
         self.num_classes = num_classes
         self.use_xyz = use_xyz
@@ -42,16 +42,16 @@ class PointNet2MSGCls(object):
         self.xyz = fluid.layers.data(name='xyz', shape=[32, 3], dtype='float32', lod_level=0)
         self.feature = fluid.layers.data(name='feature', shape=[32, 6], dtype='float32', lod_level=0)
         self.label = fluid.layers.data(name='label', shape=[1], dtype='int64', lod_level=0)
-        # self.py_reader = fluid.io.PyReader(
-        #         feed_list=[self.xyz, self.feature, self.label],
-        #         capacity=64,
-        #         use_double_buffer=True,
-        #         iterable=False)
+        self.py_reader = fluid.io.PyReader(
+                feed_list=[self.xyz, self.feature, self.label],
+                capacity=64,
+                use_double_buffer=True,
+                iterable=False)
 
     def build_model(self):
         self.build_input()
 
-        xyz, feature = self.xyz, self.feature # self.feature:[-1,32,6]
+        xyz, feature = self.xyz, self.feature
         for i, SA_conf in enumerate(self.SA_confs):
             xyz, feature = pointnet_sa_module(
                     xyz=xyz,
@@ -59,15 +59,13 @@ class PointNet2MSGCls(object):
                     use_xyz=self.use_xyz,
                     name="sa_{}".format(i),
                     **SA_conf)
-	#feature:[-1.1.1024]
-	#transpose_10.tmp_0
 	out = fluid.layers.transpose(feature,perm=[0,2,1])
         out = fluid.layers.squeeze(out,axes=[-1])
 
 	out = fc_bn(out,out_channels=512,bn=True,name="fc_1")
-        #out = fluid.layers.dropout(out, 0.5)
+        out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
         out = fc_bn(out,out_channels=256,bn=True,name="fc_2")
-        #out = fluid.layers.dropout(out, 0.5)
+        out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
         out = fc_bn(out,out_channels=self.num_classes,act=None,name="fc_3")
 
 	#softmax
@@ -97,9 +95,36 @@ class PointNet2MSGCls(object):
         return self.loss, self.acc1, self.acc5
 
 
-class PointNet2CLSMSG(PointNet2MSGCls):
+class PointNet2ClsSSG(PointNet2Cls):
     def __init__(self, num_classes, use_xyz=True):
-        super(PointNet2CLSMSG, self).__init__(num_classes, use_xyz)
+        super(PointNet2ClsSSG, self).__init__(num_classes, use_xyz)
+
+    def model_config(self):
+        self.SA_confs = [
+            {
+                "npoint": 512,
+                "radiuss": [0.2],
+                "nsamples": [64],
+                "mlps": [[64, 64, 128]],
+            },
+            {
+                "npoint": 128,
+                "radiuss": [0.4],
+                "nsamples": [64],
+                "mlps": [[128, 128, 256]],
+            },
+            {
+                "npoint":None,
+		"radiuss": [None],
+		"nsamples":[None],
+		"mlps": [[256, 512, 1024]],
+            },
+        ]
+
+
+class PointNet2ClsMSG(PointNet2Cls):
+    def __init__(self, num_classes, use_xyz=True):
+        super(PointNet2ClsMSG, self).__init__(num_classes, use_xyz)
 
     def model_config(self):
         self.SA_confs = [
@@ -128,7 +153,7 @@ class PointNet2CLSMSG(PointNet2MSGCls):
 if __name__ == "__main__":
     num_classes = 13
     
-    model = PointNet2CLSMSG(num_classes)
+    model = PointNet2ClsMSG(num_classes)
     model.build_model()
     loss,_,_ = model.get_outputs()
     opt = fluid.optimizer.AdamOptimizer(learning_rate=3e-2)

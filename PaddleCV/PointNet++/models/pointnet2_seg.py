@@ -25,7 +25,6 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 from .pointnet2_modules import *
-# from pointnet2_modules import *
 
 __all__ = ["PointNet2SemSegSSG", "PointNet2SemSegMSG"]
 
@@ -76,7 +75,7 @@ class PointNet2SemSeg(object):
                     unknown_feats=features[i - 1],
                     known_feats=features[i],
                     bn_momentum=bn_momentum,
-                    name="fp_{}".format(i),
+                    name="fp_{}".format(i+len(self.FP_confs)),
                     **self.FP_confs[i])
 
         out = fluid.layers.transpose(features[0], perm=[0, 2, 1])
