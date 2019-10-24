@@ -100,7 +100,7 @@ class BsnTem(ModelBase):
             assert self.mode != 'infer', \
                         'dataloader is not recommendated when infer, please set use_dataloader to be false.'
             self.dataloader = fluid.io.DataLoader.from_generator(
-                              feed_list=feed_list, capacity=8, iterable=True)
+                feed_list=feed_list, capacity=8, iterable=True)
 
         self.feat_input = [feat]
         self.gt_start = gt_start
@@ -213,7 +213,7 @@ class BsnPem(ModelBase):
 
     def build_input(self, use_dataloader=True):
         feat_shape = [None, self.top_K, self.feat_dim]
-        gt_iou_shape = [None. self.top_K, 1]
+        gt_iou_shape = [None, self.top_K, 1]
         props_info_shape = [None, self.top_K, 4]
         fileid_shape = [None, 1]
         self.use_dataloader = use_dataloader
@@ -243,9 +243,7 @@ class BsnPem(ModelBase):
                 name='fileid', shape=fileid_shape, dtype='int64')
             feed_list.append(fileid)
         elif self.mode == 'infer':
-            props_info = fluid.data(
-                name='props_info', shape=props_info_shape, dtype='float32')
-            feed_list.append(props_info)
+            pass
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -254,7 +252,7 @@ class BsnPem(ModelBase):
             assert self.mode != 'infer', \
                         'dataloader is not recommendated when infer, please set use_dataloader to be false.'
             self.dataloader = fluid.io.DataLoader.from_generator(
-                                feed_list=feed_list, capacity=4, iterable=True)
+                feed_list=feed_list, capacity=4, iterable=True)
 
         self.feat_input = [feat]
         self.gt_iou = gt_iou
@@ -304,7 +302,7 @@ class BsnPem(ModelBase):
         elif self.mode == 'test':
             return self.feat_input + [self.gt_iou, self.props_info, self.fileid]
         elif self.mode == 'infer':
-            return self.feat_input + [self.props_info]
+            return self.feat_input
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -321,8 +319,7 @@ class BsnPem(ModelBase):
                          [self.props_info, self.fileid]
         elif self.mode == 'infer':
             preds = self.outputs()
-            fetch_list = [item for item in preds] + \
-                         [self.props_info]
+            fetch_list = [item for item in preds]
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
