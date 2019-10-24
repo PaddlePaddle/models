@@ -1,5 +1,6 @@
 # Deep Voice 3 with Paddle Fluid
 
+[English](README.md)
 
 Paddle 实现的 Deepvoice3，一个基于卷积神经网络的语音合成 (Text to Speech) 模型。本实现基于 [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654) 。
 
