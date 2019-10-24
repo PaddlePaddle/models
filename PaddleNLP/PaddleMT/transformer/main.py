@@ -20,12 +20,11 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 
-#include palm for easier nlp coding
-from palm.toolkit.configure import PDConfig
-
+from utils.configure import PDConfig
 from train import do_train
 from predict import do_predict
 from inference_model import do_save_inference_model
+
 
 if __name__ == "__main__":
     LOG_FORMAT = "[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s"
