@@ -1,5 +1,7 @@
 # Deep Voice 3 with Paddle Fluid
 
+[中文版](README_cn.md)
+
 Paddle fluid implementation of DeepVoice 3, a convolutional network based text-to-speech synthesis model. The implementation is based on [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654).
 
 We implement Deepvoice3 model in paddle fluid with dynamic graph, which is convenient for flexible network architectures.
