@@ -24,7 +24,7 @@ In the MRQA 2019 shared task, We use [PALM](https://github.com/PaddlePaddle/PALM
 To install PALM v0.1, run the follwing command under `multi_task_learning/`,
 
 ```
-git clone --branch v1.0 --depth 1 https://github.com/PaddlePaddle/PALM.git
+git clone --branch v0.1 --depth 1 https://github.com/PaddlePaddle/PALM.git
 ```
 
 For more instructions, see the PALM user guide: [README.md](https://github.com/PaddlePaddle/PALM/blob/v0.1/README.md)
