@@ -140,7 +140,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [C-TCN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2018 年 ActivityNet 夺冠方案 | ActivityNet1.3 | MAP=31%    |
 | [BSN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 为视频动作定位问题提供高效的 proposal 生成方法 | ActivityNet1.3 | AUC=66.64%    |
 | [BMN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo) | 2019 年 ActivityNet 夺冠方案 | ActivityNet1.3 | AUC=67.19%    |
-| [ETS](https://github.com/PaddlePaddle/models/tree/release/1.6/PaddleCV/PaddleVideo/models/ets) | 视频摘要生成领域的基准模型 | ActivityNet Captions | METEOR：10.0 |
+| [ETS](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo/models/ets) | 视频摘要生成领域的基准模型 | ActivityNet Captions | METEOR：10.0 |
+| [TALL](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo/models/tall) | 视频Grounding方向的BaseLine模型 | TACoS | R1@IOU5=0.13 |
 
 ## PaddleNLP
 
@@ -165,7 +166,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 语义表示
 
-[PaddleLARK](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/language_representations_kit) (Paddle LAngauge Representation ToolKit) 是传统语言模型的进一步发展，通过在大规模语料上训练得到的通用的语义表示模型，可以助益其他自然语言处理任务，是通用预训练 + 特定任务精调范式的体现。PaddleLARK 集成了 ELMO，BERT，ERNIE 1.0，ERNIE 2.0，XLNet 等热门中英文预训练模型。
+[PaddleLARK](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK) (Paddle LAngauge Representation ToolKit) 是传统语言模型的进一步发展，通过在大规模语料上训练得到的通用的语义表示模型，可以助益其他自然语言处理任务，是通用预训练 + 特定任务精调范式的体现。PaddleLARK 集成了 ELMO，BERT，ERNIE 1.0，ERNIE 2.0，XLNet 等热门中英文预训练模型。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
