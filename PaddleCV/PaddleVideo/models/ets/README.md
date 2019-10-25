@@ -76,7 +76,7 @@ ETS的训练数据采用ActivityNet Captions提供的数据集，数据下载及
 
 | METEOR |
 | :----: |
-|  10.0  |
+|  9.8  |
 
 
 ## 模型推断
