@@ -397,12 +397,12 @@ def test(conf_dict, args):
                 output = test_exe.run(program=test_prog,fetch_list=fetch_list)
                 if args.task_mode == "pairwise":
                     pred_list += list(map(lambda item: float(item[0]), output[0]))
-                    predictions_file.write("\n".join(
-                        map(lambda item: str((item[0] + 1) / 2).decode(), output[0])) + "\n")
+                    predictions_file.write(u"\n".join(
+                        map(lambda item: str((item[0] + 1) / 2), output[0])) + "\n")
                 else:
                     pred_list += map(lambda item: item, output[0])
-                    predictions_file.write("\n".join(
-                        map(lambda item: str(np.argmax(item)).decode(), output[0])) + "\n")
+                    predictions_file.write(u"\n".join(
+                        map(lambda item: str(np.argmax(item)), output[0])) + "\n")
             except fluid.core.EOFException:
                 test_pyreader.reset()
                 break
@@ -490,9 +490,9 @@ def infer(conf_dict, args):
                 output = test_exe.run(program=test_prog,fetch_list=fetch_list)
                 if args.task_mode == "pairwise":
                     preds_list += list(
-                        map(lambda item: str((item[0] + 1) / 2).decode(), output[0]))
+                        map(lambda item: str((item[0] + 1) / 2), output[0]))
                 else:
-                    preds_list += map(lambda item: str(np.argmax(item)).decode(), output[0])
+                    preds_list += map(lambda item: str(np.argmax(item)), output[0])
             except fluid.core.EOFException:
                 infer_pyreader.reset()
                 break
