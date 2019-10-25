@@ -167,8 +167,8 @@ coco = Reader(ccfg.DATA, ccfg.TRANSFORM, maxiter=-1)
 
 - 选择1：将数据集转换为COCO格式。
 ```
- # 在./tools/中提供了X2coco.py用于将labelme标注的数据集或cityscape数据集转换为COCO数据集
- python ./ppdet/data/tools/X2coco.py --dataset_type labelme
+ # 在./tools/中提供了x2coco.py用于将labelme标注的数据集或cityscape数据集转换为COCO数据集
+ python ./ppdet/data/tools/x2coco.py --dataset_type labelme
                                 --json_input_dir ./labelme_annos/
                                 --image_input_dir ./labelme_imgs/
                                 --output_dir ./cocome/
