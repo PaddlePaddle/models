@@ -99,6 +99,8 @@ class KineticsReader(DataReader):
                 img_mean=self.img_mean,
                 img_std=self.img_std)
         else:
+            assert os.path.exists(self.filelist), \
+                        '{} not exist, please check the data list'.format(self.filelist)
             _reader = self._reader_creator(self.filelist, self.mode, seg_num=self.seg_num, seglen = self.seglen, \
                              short_size = self.short_size, target_size = self.target_size, \
                              img_mean = self.img_mean, img_std = self.img_std, \

@@ -14,7 +14,7 @@ import utils
 import reader
 from run_ernie_classifier import ernie_pyreader
 from models.representation.ernie import ErnieConfig
-from models.representation.ernie import ernie_encoder
+from models.representation.ernie import ernie_encoder, ernie_encoder_with_paddle_hub
 from preprocess.ernie import task_reader
 
 def do_save_inference_model(args):
@@ -39,8 +39,11 @@ def do_save_inference_model(args):
             infer_pyreader, ernie_inputs, labels = ernie_pyreader(
                 args,
                 pyreader_name="infer_reader")
-
-            embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+            
+            if args.use_paddle_hub:
+                embeddings = ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+            else:
+                embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
 
             probs = create_model(args,
                     embeddings,

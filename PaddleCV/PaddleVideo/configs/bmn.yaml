@@ -7,7 +7,7 @@ MODEL:
     num_sample: 32
     num_sample_perbin: 3
     anno_file: "data/dataset/bmn/activitynet_1.3_annotations.json"
-    feat_path: '/paddle/PaddleProject/data/fix_feat_100'
+    feat_path: 'data/dataset/bmn/fix_feat_100'
 
 TRAIN:
     subset: "train"

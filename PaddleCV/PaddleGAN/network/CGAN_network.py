@@ -83,7 +83,7 @@ class CGAN_model(object):
             name=name + '_dc2',
             output_size=[self.img_w, self.img_h])
         out = fluid.layers.reshape(o_dc2, [-1, self.img_w * self.img_h])
-        return o_dc2
+        return out
 
     def network_D(self, input, label, name="discriminator"):
         # concat image and label

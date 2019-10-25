@@ -3,8 +3,10 @@ import six
 import collections
 import os
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
 
 def word_count(input_file, word_freq=None):
     """
@@ -42,13 +44,16 @@ def build_dict(min_word_freq=0, train_dir="", test_dir=""):
     return word_idx
 
 
-def write_paddle(word_idx, train_dir, test_dir, output_train_dir, output_test_dir):
+def write_paddle(word_idx, train_dir, test_dir, output_train_dir,
+                 output_test_dir):
     files = os.listdir(train_dir)
     if not os.path.exists(output_train_dir):
         os.mkdir(output_train_dir)
     for fi in files:
         with open(os.path.join(train_dir, fi), "r", encoding='utf-8') as f:
-            with open(os.path.join(output_train_dir, fi), "w", encoding='utf-8') as wf:
+            with open(
+                    os.path.join(output_train_dir, fi), "w",
+                    encoding='utf-8') as wf:
                 for l in f:
                     l = l.strip().split()
                     l = [word_idx.get(w) for w in l]
@@ -61,7 +66,9 @@ def write_paddle(word_idx, train_dir, test_dir, output_train_dir, output_test_di
         os.mkdir(output_test_dir)
     for fi in files:
         with open(os.path.join(test_dir, fi), "r", encoding='utf-8') as f:
-            with open(os.path.join(output_test_dir, fi), "w", encoding='utf-8') as wf:
+            with open(
+                    os.path.join(output_test_dir, fi), "w",
+                    encoding='utf-8') as wf:
                 for l in f:
                     l = l.strip().split()
                     l = [word_idx.get(w) for w in l]
@@ -69,7 +76,9 @@ def write_paddle(word_idx, train_dir, test_dir, output_train_dir, output_test_di
                         wf.write(str(w) + " ")
                     wf.write("\n")
 
-def text2paddle(train_dir, test_dir, output_train_dir, output_test_dir, output_vocab):
+
+def text2paddle(train_dir, test_dir, output_train_dir, output_test_dir,
+                output_vocab):
     vocab = build_dict(0, train_dir, test_dir)
     with open(output_vocab, "w", encoding='utf-8') as wf:
         wf.write(str(len(vocab)) + "\n")
@@ -82,4 +91,5 @@ test_dir = sys.argv[2]
 output_train_dir = sys.argv[3]
 output_test_dir = sys.argv[4]
 output_vocab = sys.argv[5]
-text2paddle(train_dir, test_dir, output_train_dir, output_test_dir, output_vocab)
+text2paddle(train_dir, test_dir, output_train_dir, output_test_dir,
+            output_vocab)
