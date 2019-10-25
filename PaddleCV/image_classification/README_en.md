@@ -37,7 +37,8 @@ Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and la
 
 ### Data preparation
 
-An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
+An example for ImageNet classification is as follows.
+For Linux system, preparation of imagenet data can be done as:
 
 ```bash
 cd data/ILSVRC2012/
@@ -62,6 +63,7 @@ val/ILSVRC2012_val_00000001.jpeg 65
 ```
 
 Note: You may need to modify the data path in reader.py to load data correctly.
+**For windows system, Users should download ImageNet data by themselves. and the label list can be downloaded in [Here](http://paddle-imagenet-models.bj.bcebos.com/ImageNet_label.tgz)**
 
 ### Training
 
