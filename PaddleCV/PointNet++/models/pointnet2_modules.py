@@ -159,20 +159,18 @@ def pointnet_sa_module(xyz,
     farthest_idx.stop_gradient = True
     new_xyz = gather_point(xyz, farthest_idx) if npoint is not None else None
 
-    out = None
-    if feature is not None:
-        outs = []
-        for i, (radius, nsample, mlp) in enumerate(zip(radiuss, nsamples, mlps)):
-            out = query_and_group(xyz, new_xyz, radius, nsample, feature, use_xyz) if npoint is not None else group_all(xyz, feature, use_xyz)
-            out = fluid.layers.transpose(out, perm=[0, 3, 1, 2])
-            out = MLP(out, mlp, bn=bn, bn_momentum=bn_momentum, name=name + '_mlp{}'.format(i))
-	    if npoint is None:
-	        out = fluid.layers.transpose(out,perm=[0,1,3,2])
-            out = fluid.layers.pool2d(out, pool_size=[1, out.shape[3]], pool_type='max')
-            out = fluid.layers.squeeze(out, axes=[-1])
-            outs.append(out)
-        out = fluid.layers.concat(outs, axis=1)
-        out = fluid.layers.transpose(out, perm=[0, 2, 1])
+    outs = []
+    for i, (radius, nsample, mlp) in enumerate(zip(radiuss, nsamples, mlps)):
+        out = query_and_group(xyz, new_xyz, radius, nsample, feature, use_xyz) if npoint is not None else group_all(xyz, feature, use_xyz)
+        out = fluid.layers.transpose(out, perm=[0, 3, 1, 2])
+        out = MLP(out, mlp, bn=bn, bn_momentum=bn_momentum, name=name + '_mlp{}'.format(i))
+        if npoint is None:
+            out = fluid.layers.transpose(out,perm=[0,1,3,2])
+        out = fluid.layers.pool2d(out, pool_size=[1, out.shape[3]], pool_type='max')
+        out = fluid.layers.squeeze(out, axes=[-1])
+        outs.append(out)
+    out = fluid.layers.concat(outs, axis=1)
+    out = fluid.layers.transpose(out, perm=[0, 2, 1])
 
     return (new_xyz, out)
 

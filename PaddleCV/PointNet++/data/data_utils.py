@@ -111,3 +111,17 @@ class PointcloudRotatePerturbation(object):
             points[:, 0:3] = np.matmul(pc_xyz, rotation_matrix.T)
             points[:, 3:] = np.matmul(pc_normals, rotation_matrix.T)
             return points
+
+
+class PointcloudRandomInputDropout(object):
+    def __init__(self, max_dropout_ratio=0.875):
+        assert max_dropout_ratio >= 0 and max_dropout_ratio < 1
+        self.max_dropout_ratio = max_dropout_ratio
+
+    def __call__(self, points):
+        dropout_ratio = np.random.random() * self.max_dropout_ratio  # 0~0.875
+        drop_idx = np.where(np.random.random((points.shape[0])) <= dropout_ratio)[0]
+        if len(drop_idx) > 0:
+            points[drop_idx] = points[0]  # set to the first point
+
+        return points

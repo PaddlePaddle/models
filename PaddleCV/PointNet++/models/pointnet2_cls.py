@@ -24,12 +24,15 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
-from pointnet2_modules import *
+from .pointnet2_modules import *
+
+__all__ = ["PointNet2ClsSSG", "PointNet2ClsMSG"]
 
 
 class PointNet2Cls(object):
-    def __init__(self, num_classes, use_xyz=True):
+    def __init__(self, num_classes, num_points, use_xyz=True):
         self.num_classes = num_classes
+        self.num_points = num_points
         self.use_xyz = use_xyz
         self.out_feature = None
         self.pyreader = None
@@ -39,19 +42,20 @@ class PointNet2Cls(object):
         self.SA_confs = []
 
     def build_input(self):
-        self.xyz = fluid.layers.data(name='xyz', shape=[32, 3], dtype='float32', lod_level=0)
-        self.feature = fluid.layers.data(name='feature', shape=[32, 6], dtype='float32', lod_level=0)
+        self.xyz = fluid.layers.data(name='xyz', shape=[self.num_points, 3], dtype='float32', lod_level=0)
+        # self.feature = fluid.layers.data(name='feature', shape=[self.num_points, 6], dtype='float32', lod_level=0)
         self.label = fluid.layers.data(name='label', shape=[1], dtype='int64', lod_level=0)
-        self.py_reader = fluid.io.PyReader(
-                feed_list=[self.xyz, self.feature, self.label],
+        self.pyreader = fluid.io.PyReader(
+                feed_list=[self.xyz, self.label],
                 capacity=64,
                 use_double_buffer=True,
                 iterable=False)
+        self.feed_vars = [self.xyz, self.label]
 
     def build_model(self):
         self.build_input()
 
-        xyz, feature = self.xyz, self.feature
+        xyz, feature = self.xyz, None
         for i, SA_conf in enumerate(self.SA_confs):
             xyz, feature = pointnet_sa_module(
                     xyz=xyz,
@@ -59,7 +63,7 @@ class PointNet2Cls(object):
                     use_xyz=self.use_xyz,
                     name="sa_{}".format(i),
                     **SA_conf)
-	out = fluid.layers.transpose(feature,perm=[0,2,1])
+	out = fluid.layers.transpose(feature, perm=[0,2,1])
         out = fluid.layers.squeeze(out,axes=[-1])
 
 	out = fc_bn(out,out_channels=512,bn=True,name="fc_1")
@@ -86,13 +90,16 @@ class PointNet2Cls(object):
         pred = fluid.layers.reshape(out, shape=[-1, self.num_classes])
         label = fluid.layers.reshape(self.label, shape=[-1, 1])
         self.acc1 = fluid.layers.accuracy(pred, label, k=1)
-        self.acc5 = fluid.layers.accuracy(pred, label, k=5)
+        # self.acc5 = fluid.layers.accuracy(pred, label, k=5)
 
     def get_feeds(self):
         return self.feed_vars
 
     def get_outputs(self):
-        return self.loss, self.acc1, self.acc5
+        return {"loss": self.loss, "accuracy": self.acc1}
+
+    def get_pyreader(self):
+        return self.pyreader
 
 
 class PointNet2ClsSSG(PointNet2Cls):
@@ -153,7 +160,7 @@ class PointNet2ClsMSG(PointNet2Cls):
 if __name__ == "__main__":
     num_classes = 13
     
-    model = PointNet2ClsMSG(num_classes)
+    model = PointNet2ClsMSG(num_classes, 32)
     model.build_model()
     loss,_,_ = model.get_outputs()
     opt = fluid.optimizer.AdamOptimizer(learning_rate=3e-2)

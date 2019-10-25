@@ -22,14 +22,19 @@ import os.path as osp
 import numpy as np
 import h5py
 import random
+import logging
 
-import data_utils as d_utils
+__all__ = ["ModelNet40ClsReader"]
+
+logger = logging.getLogger(__name__)
 
 
 class ModelNet40ClsReader(object):
-    def __init__(self, data_dir,train,transforms=None):
+    def __init__(self, data_dir, mode='train', transforms=None):
+        assert mode in ['train', 'test'], \
+                "mode can only be 'train' or 'test'"
         self.data_dir = data_dir
-        self.train = train
+        self.mode = mode 
         self.transforms = transforms
         self.load_data()
 
@@ -42,12 +47,13 @@ class ModelNet40ClsReader(object):
     def _load_h5_file(self, fname):
         assert osp.isfile(fname), \
                 "{} is not a file".format(fname)
-        f = h5py.File(fname)
+        f = h5py.File(fname, mode='r')
         return f['data'][:], f['label'][:]
 
     def load_data(self):
-        # read files.txt
-        if self.train:
+        logger.info("Loading ModelNet40 dataset {} split from {} "
+                    "...".format(self.mode, self.data_dir))
+        if self.mode == 'train':
             files_fname = osp.join(self.data_dir, 'train_files.txt')
             files = self._read_data_file(files_fname)
         else:
@@ -62,19 +68,19 @@ class ModelNet40ClsReader(object):
             labels.append(label)
         self.points = np.concatenate(points, 0)
         self.labels = np.concatenate(labels, 0)
-
-
-
+        logger.info("Load {} data finished".format(self.mode))
 
     def get_reader(self, batch_size, num_points, shuffle=True):
         self.actual_number_of_points = min(max(np.random.randint(num_points * 0.8, num_points*1.2),1),
                                       self.points.shape[1])
 
-        idxs = np.arange(len(self.points))
-        if shuffle:
+        points = self.points
+        labels = self.labels
+        if shuffle and self.mode == 'train':
+            idxs = np.arange(len(self.points))
             np.random.shuffle(idxs)
-        points = self.points[idxs]
-        labels = self.labels[idxs]
+            points = points[idxs]
+            labels = labels[idxs]
 
         def reader():
             batch_out = []
@@ -88,13 +94,20 @@ class ModelNet40ClsReader(object):
                 if self.transforms is not None:
                     for trans in self.transforms:
                         c_points = trans(c_points)
-                batch_out.append((c_points, l))
+                
+                xyz = c_points[:, :3]
+                feature = c_points[:, 3:]
+                label = l[:, np.newaxis]
+                # batch_out.append((xyz, feature, label))
+                batch_out.append((xyz, label))
+
                 if len(batch_out) == batch_size:
                     yield batch_out
                     batch_out = []
         return reader
 
 if __name__ == "__main__":
+    import data_utils as d_utils
 
     trans_list = [
         d_utils.PointcloudRotate(axis=np.array([1, 0, 0])),
