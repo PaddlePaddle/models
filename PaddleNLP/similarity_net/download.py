@@ -143,7 +143,7 @@ if __name__ == '__main__':
         pwd = os.path.join(os.path.dirname(__file__), './')
         download_dataset(pwd)
     elif sys.argv[1] == "model":
-        pwd = os.path.join(os.path.dirname(__file__), './model_files')
+        pwd = os.path.join(os.path.dirname(__file__), './pretrain_models')
         download_model(pwd)
     else:
         usage()
