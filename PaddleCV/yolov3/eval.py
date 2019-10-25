@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 import os
 import io
+import six
 import time
 import json
 import numpy as np
@@ -115,7 +116,8 @@ def eval():
         total_time += end_time - start_time
 
     with io.open("yolov3_result.json", 'w') as outfile:
-        outfile.write(unicode(json.dumps(dts_res)))
+        encode_func = unicode if six.PY2 else str
+        outfile.write(encode_func(json.dumps(dts_res)))
     print("start evaluate detection result with coco api")
     coco = COCO(os.path.join(cfg.data_dir, test_list))
     cocoDt = coco.loadRes("yolov3_result.json")

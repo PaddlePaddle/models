@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 import os
 import io
+import six
 import time
 import numpy as np
 from eval_helper import *
@@ -118,7 +119,8 @@ def eval():
             Please use reasonable model and check input data."
 
     with io.open("detection_bbox_result.json", 'w') as outfile:
-        outfile.write(unicode(json.dumps(dts_res)))
+        encode_func = unicode if six.PY2 else str
+        outfile.write(encode_func(json.dumps(dts_res)))
     print("start evaluate bbox using coco api")
     cocoDt = cocoGt.loadRes("detection_bbox_result.json")
     cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
@@ -128,7 +130,8 @@ def eval():
 
     if cfg.MASK_ON:
         with io.open("detection_segms_result.json", 'w') as outfile:
-            outfile.write(unicode(json.dumps(segms_res)))
+            encode_func = unicode if six.PY2 else str
+            outfile.write(encode_func(json.dumps(segms_res)))
         print("start evaluate mask using coco api")
         cocoDt = cocoGt.loadRes("detection_segms_result.json")
         cocoEval = COCOeval(cocoGt, cocoDt, 'segm')
