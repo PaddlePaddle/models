@@ -4,7 +4,7 @@ TALL模型使用TACoS数据集，数据准备过程如下：
 
 步骤一. 训练和测试集：
 
-- 训练和测试使用提取好的数据特征，请参考[数据下载](https://github.com/jiyanggao/TALL)进行模型训练与评估；
+- 训练和测试使用提取好的数据特征，请参考TALL模型原作者提供的[数据下载](https://github.com/jiyanggao/TALL)方法进行模型训练与评估；
 
 步骤二. infer数据
 
