@@ -183,9 +183,9 @@ whole data pipeline is fully customizable through the yaml configuration files.
 
 - Option 1: Convert the dataset to COCO format.
 ```sh
- # a small utility (`tools/X2coco.py`) is provided to convert
+ # a small utility (`tools/x2coco.py`) is provided to convert
  # Labelme-annotated dataset or cityscape dataset to COCO format.
- python ./ppdet/data/tools/X2coco.py --dataset_type labelme
+ python ./ppdet/data/tools/x2coco.py --dataset_type labelme
                                 --json_input_dir ./labelme_annos/
                                 --image_input_dir ./labelme_imgs/
                                 --output_dir ./cocome/
