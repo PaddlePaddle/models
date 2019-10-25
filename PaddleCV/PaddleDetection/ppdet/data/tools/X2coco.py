@@ -205,6 +205,11 @@ def main():
         default=0.0)
     args = parser.parse_args()
     try:
+        assert args.dataset_type in ['labelme', 'cityscape']
+    except AssertionError as e:
+        print('Now only support the cityscape dataset and labelme dataset!!')
+        os._exit(0)
+    try:
         assert os.path.exists(args.json_input_dir)
     except AssertionError as e:
         print('The json folder does not exist!')
