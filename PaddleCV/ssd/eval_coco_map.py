@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 import io
+import six
 import time
 import numpy as np
 import argparse
@@ -130,7 +131,8 @@ def eval(args, data_args, test_list, batch_size, model_dir=None):
             dts_res += get_dt_res(nmsed_out_v, data)
 
         with io.open("detection_result.json", 'w') as outfile:
-            outfile.write(unicode(json.dumps(dts_res)))
+            encode_func = unicode if six.PY2 else str
+            outfile.write(encode_func(json.dumps(dts_res)))
         print("start evaluate using coco api")
         cocoGt = COCO(os.path.join(data_args.data_dir, test_list))
         cocoDt = cocoGt.loadRes("detection_result.json")
