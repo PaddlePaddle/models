@@ -130,7 +130,7 @@ def deal_json(ds_type, img_path, json_path):
     image_num = -1
     for img_file in os.listdir(img_path):
         img_label = img_file.split('.')[0]
-        if img_file.split('.')[-1] not in ['jpg', 'jpeg', 'png', 'JPEG', 'JPG']:
+        if img_file.split('.')[-1] not in ['bmp', 'jpg', 'jpeg', 'png', 'JPEG', 'JPG', 'PNG']:
             continue
         label_file = osp.join(json_path, img_label + '.json')
         print('Generating dataset from:', label_file)
