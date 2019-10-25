@@ -44,7 +44,7 @@ train() {
 }
 #run_evaluate
 evaluate() {
-	/home/work/diliyaer/test/python/bin/python run_classifier.py \
+	python run_classifier.py \
 		--task_name ${TASK_NAME} \
 		--use_cuda false \
 		--do_test True \
@@ -61,7 +61,7 @@ evaluate() {
 }
 # run_infer
 infer() {
-	/home/work/diliyaer/test/python/bin/python run_classifier.py \
+	python run_classifier.py \
 		--task_name ${TASK_NAME} \
 		--use_cuda false \
 		--do_infer True \
