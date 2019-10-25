@@ -117,7 +117,7 @@ def parse_args():
 
     parser.add_argument(
         '--use_gpu',
-        type=bool,
+        type=eval,
         default=False,
         help='Whether using gpu [True|False]')
 
