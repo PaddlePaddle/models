@@ -38,7 +38,8 @@ def compress(args):
     image_shape = "3,224,224"
     image_shape = [int(m) for m in image_shape.split(",")]
 
-    image = fluid.data(name='image', shape=[None] + image_shape, dtype='float32')
+    image = fluid.data(
+        name='image', shape=[None] + image_shape, dtype='float32')
     label = fluid.data(name='label', shape=[None, 1], dtype='int64')
     # model definition
     model = models.__dict__[args.model]()
@@ -99,6 +100,7 @@ def compress(args):
         distiller_optimizer=None)
     com_pass.config(args.config_file)
     com_pass.run()
+
     conv_op_num = 0
     fake_quant_op_num = 0
     for op in com_pass.context.eval_graph.ops():
@@ -108,7 +110,6 @@ def compress(args):
             fake_quant_op_num += 1
     print('conv op num {}'.format(conv_op_num))
     print('fake quant op num {}'.format(fake_quant_op_num))
-
 
 
 def main():
