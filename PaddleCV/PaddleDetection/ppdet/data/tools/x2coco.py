@@ -128,6 +128,7 @@ def deal_json(ds_type, img_path, json_path):
     annotations_list = []
     labels_list = []
     image_num = -1
+    object_num = -1
     for img_file in os.listdir(img_path):
         img_label = img_file.split('.')[0]
         if img_file.split('.')[-1] not in ['bmp', 'jpg', 'jpeg', 'png', 'JPEG', 'JPG', 'PNG']:
@@ -141,7 +142,6 @@ def deal_json(ds_type, img_path, json_path):
                 images_list.append(images_labelme(data, image_num))
             elif ds_type == 'cityscape':
                 images_list.append(images_cityscape(data, image_num, img_file)) 
-            object_num = -1
             if ds_type == 'labelme':
                 for shapes in data['shapes']:
                     object_num = object_num + 1
