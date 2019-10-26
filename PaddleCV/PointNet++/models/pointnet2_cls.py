@@ -43,7 +43,6 @@ class PointNet2Cls(object):
 
     def build_input(self):
         self.xyz = fluid.layers.data(name='xyz', shape=[self.num_points, 3], dtype='float32', lod_level=0)
-        # self.feature = fluid.layers.data(name='feature', shape=[self.num_points, 6], dtype='float32', lod_level=0)
         self.label = fluid.layers.data(name='label', shape=[1], dtype='int64', lod_level=0)
         self.pyreader = fluid.io.PyReader(
                 feed_list=[self.xyz, self.label],
@@ -63,7 +62,7 @@ class PointNet2Cls(object):
                     use_xyz=self.use_xyz,
                     name="sa_{}".format(i),
                     **SA_conf)
-	out = fluid.layers.transpose(feature, perm=[0,2,1])
+	out = fluid.layers.transpose(feature, perm=[0, 2, 1])
         out = fluid.layers.squeeze(out,axes=[-1])
 
 	out = fc_bn(out,out_channels=512,bn=True,name="fc_1")
@@ -72,15 +71,7 @@ class PointNet2Cls(object):
         out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
         out = fc_bn(out,out_channels=self.num_classes,act=None,name="fc_3")
 
-	#softmax
-        #self.pred_ = fluid.layers.softmax(out)
-
-        # calc loss
-        #self.loss = fluid.layers.cross_entropy(self.pred_, self.label)
-        #self.loss = fluid.layers.reduce_mean(self.loss)
-
 	#sigmoid
-
 	label_onehot = fluid.layers.one_hot(self.label, depth=self.num_classes)
 	label_float = fluid.layers.cast(label_onehot, dtype='float32')
 	self.loss = fluid.layers.sigmoid_cross_entropy_with_logits(out,label_float)
@@ -90,7 +81,6 @@ class PointNet2Cls(object):
         pred = fluid.layers.reshape(out, shape=[-1, self.num_classes])
         label = fluid.layers.reshape(self.label, shape=[-1, 1])
         self.acc1 = fluid.layers.accuracy(pred, label, k=1)
-        # self.acc5 = fluid.layers.accuracy(pred, label, k=5)
 
     def get_feeds(self):
         return self.feed_vars
@@ -103,8 +93,8 @@ class PointNet2Cls(object):
 
 
 class PointNet2ClsSSG(PointNet2Cls):
-    def __init__(self, num_classes, use_xyz=True):
-        super(PointNet2ClsSSG, self).__init__(num_classes, use_xyz)
+    def __init__(self, num_classes, num_points, use_xyz=True):
+        super(PointNet2ClsSSG, self).__init__(num_classes, num_points, use_xyz)
 
     def model_config(self):
         self.SA_confs = [
@@ -130,8 +120,8 @@ class PointNet2ClsSSG(PointNet2Cls):
 
 
 class PointNet2ClsMSG(PointNet2Cls):
-    def __init__(self, num_classes, use_xyz=True):
-        super(PointNet2ClsMSG, self).__init__(num_classes, use_xyz)
+    def __init__(self, num_classes, num_points, use_xyz=True):
+        super(PointNet2ClsMSG, self).__init__(num_classes, num_points, use_xyz)
 
     def model_config(self):
         self.SA_confs = [
@@ -139,13 +129,17 @@ class PointNet2ClsMSG(PointNet2Cls):
                 "npoint": 512,
                 "radiuss": [0.1, 0.2, 0.4],
                 "nsamples": [16, 32, 128],
-                "mlps": [[32, 32, 64], [64, 64, 128], [64,96,128]],
+                "mlps": [[32, 32, 64],
+                         [64, 64, 128],
+                         [64,96,128]],
             },
             {
                 "npoint": 128,
                 "radiuss": [0.2, 0.4, 0.8],
                 "nsamples": [32, 64, 128],
-                "mlps": [[64, 64, 128], [128, 128, 256], [128,128,256]],
+                "mlps": [[64, 64, 128],
+                         [128, 128, 256],
+                         [128,128,256]],
             },
             {
                 "npoint":None,

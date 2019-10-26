@@ -71,9 +71,7 @@ class ModelNet40ClsReader(object):
         logger.info("Load {} data finished".format(self.mode))
 
     def get_reader(self, batch_size, num_points, shuffle=True):
-        self.actual_number_of_points = min(max(np.random.randint(num_points * 0.8, num_points*1.2),1),
-                                      self.points.shape[1])
-
+        self.num_points = min(num_points, self.points.shape[1])
         points = self.points
         labels = self.labels
         if shuffle and self.mode == 'train':
@@ -87,7 +85,7 @@ class ModelNet40ClsReader(object):
             for point, label in zip(points, labels):
                 p = point.copy()
                 l = label.copy()
-                pt_idxs = np.arange(self.actual_number_of_points)
+                pt_idxs = np.arange(self.num_points)
                 if shuffle:
                     np.random.shuffle(pt_idxs)
                 c_points = p[pt_idxs]
@@ -96,9 +94,9 @@ class ModelNet40ClsReader(object):
                         c_points = trans(c_points)
                 
                 xyz = c_points[:, :3]
-                feature = c_points[:, 3:]
+                # modelnet40 only have xyz features
+                # feature = c_points[:, 3:]
                 label = l[:, np.newaxis]
-                # batch_out.append((xyz, feature, label))
                 batch_out.append((xyz, label))
 
                 if len(batch_out) == batch_size:

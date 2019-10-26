@@ -206,11 +206,8 @@ def train():
     ]
     modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='train', transforms=trans_list)
     train_reader = modelnet_reader.get_reader(args.batch_size, args.num_points)
-    # for data in train_reader():
-    #     print("data len", len(data))
-    #     print(data[0][0].shape, data[0][1].shape, data[0][2].shape)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
-    modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='test', transforms=trans_list)
+    modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='test', transforms=None)
     test_reader = modelnet_reader.get_reader(args.batch_size, args.num_points)
     test_pyreader.decorate_sample_list_generator(test_reader, place)
 
