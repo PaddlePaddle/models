@@ -65,20 +65,19 @@ class PointNet2Cls(object):
 	out = fluid.layers.transpose(feature, perm=[0, 2, 1])
         out = fluid.layers.squeeze(out,axes=[-1])
 
-	out = fc_bn(out,out_channels=512,bn=True,name="fc_1")
+	out = fc_bn(out,out_channels=512, bn=True, name="fc_1")
         out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
-        out = fc_bn(out,out_channels=256,bn=True,name="fc_2")
+        out = fc_bn(out,out_channels=256, bn=True, name="fc_2")
         out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
-        out = fc_bn(out,out_channels=self.num_classes,act=None,name="fc_3")
+        out = fc_bn(out,out_channels=self.num_classes, act=None, name="fc_3")
+        pred = fluid.layers.softmax(out)
 
-	#sigmoid
-	label_onehot = fluid.layers.one_hot(self.label, depth=self.num_classes)
-	label_float = fluid.layers.cast(label_onehot, dtype='float32')
-	self.loss = fluid.layers.sigmoid_cross_entropy_with_logits(out,label_float)
-	self.loss = fluid.layers.reduce_mean(self.loss)
+        # calc loss
+        self.loss = fluid.layers.cross_entropy(pred, self.label)
+        self.loss = fluid.layers.reduce_mean(self.loss)
 
         # calc acc
-        pred = fluid.layers.reshape(out, shape=[-1, self.num_classes])
+        pred = fluid.layers.reshape(pred, shape=[-1, self.num_classes])
         label = fluid.layers.reshape(self.label, shape=[-1, 1])
         self.acc1 = fluid.layers.accuracy(pred, label, k=1)
 

@@ -88,8 +88,8 @@ def parse_args():
     parser.add_argument(
         '--weight_decay',
         type=float,
-        default=0.,
-        help='L2 regularization weight decay coeff, default 0.')
+        default=1e-5,
+        help='L2 regularization weight decay coeff, default 1e-5.')
     parser.add_argument(
         '--epoch',
         type=int,

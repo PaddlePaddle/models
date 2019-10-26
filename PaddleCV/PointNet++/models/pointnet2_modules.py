@@ -98,7 +98,7 @@ def conv_bn(input, out_channels, bn=True, bn_momentum=0.1, act='relu', name=None
 
     return out
 
-def fc_bn(input,out_channels,bn=False,bn_momentum=0.1,act='relu',name=None):
+def fc_bn(input, out_channels, bn=False, bn_momentum=0.1, act='relu', name=None):
     param_attr = ParamAttr(name='{}_fc_weight'.format(name))
     if not bn:
         bias_attr = ParamAttr(name='{}_fc_bias'.format(name))
@@ -109,9 +109,13 @@ def fc_bn(input,out_channels,bn=False,bn_momentum=0.1,act='relu',name=None):
 			  param_attr=param_attr,
 			  bias_attr=bias_attr)
     if bn:
-        out = fluid.layers.batch_norm(out, momentum=bn_momentum)
-                                      # param_attr=ParamAttr(initializer=fluid.initializer.Constant(2.673)),
-                                      # bias_attr=ParamAttr(initializer=fluid.initializer.Constant(1.467)))
+        bn_name = name + "_bn"
+        out = fluid.layers.batch_norm(out,
+                                      momentum=bn_momentum,
+                                      param_attr=ParamAttr(name=bn_name + "_scale"),
+                                      bias_attr=ParamAttr(name=bn_name + "_offset"),
+                                      moving_mean_name=bn_name + '_mean',
+                                      moving_variance_name=bn_name + '_var')
     if act == "relu":
         out = fluid.layers.relu(out)
     return out
