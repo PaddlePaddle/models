@@ -85,7 +85,8 @@ def get_weights_path(url):
     """Get weights path from WEIGHT_HOME, if not exists,
     download it from url.
     """
-    return get_path(url, WEIGHTS_HOME)
+    path, _ = get_path(url, WEIGHTS_HOME)
+    return path
 
 
 def get_dataset_path(path, annotation, image_dir):
@@ -107,7 +108,7 @@ def get_dataset_path(path, annotation, image_dir):
                         "{}".format(path, name))
             data_dir = osp.join(DATASET_HOME, name)
 
-            # For voc, only check merged dir VOCdevkit/VOC2012, VOCdevkit/VOC2007
+            # For voc, only check dir VOCdevkit/VOC2012, VOCdevkit/VOC2007
             if name == 'voc':
                 exists = True
                 for sub_dir in dataset[1]:
@@ -119,7 +120,7 @@ def get_dataset_path(path, annotation, image_dir):
                 if exists:
                     return data_dir
 
-            # voc exist is check above, voc is not exist here
+            # voc exist is checked above, voc is not exist here
             check_exist = name != 'voc'
             for url, md5sum in dataset[0]:
                 get_path(url, data_dir, md5sum, check_exist)

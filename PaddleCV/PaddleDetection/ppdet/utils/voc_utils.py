@@ -32,10 +32,6 @@ def create_list(devkit_dir, years, output_dir):
         2. val.txt
         3. test.txt
     """
-    # os.makedirs(osp.join(output_dir, 'Annotations/'))
-    # os.makedirs(osp.join(output_dir, 'ImageSets/Main/'))
-    # os.makedirs(osp.join(output_dir, 'JPEGImages/'))
-
     trainval_list = []
     test_list = []
     for year in years:
@@ -87,12 +83,6 @@ def _walk_voc_dir(devkit_dir, year, output_dir):
                 added.add(name_prefix)
                 ann_path = osp.join(annotation_dir, name_prefix + '.xml')
                 img_path = osp.join(img_dir, name_prefix + '.jpg')
-                # new_ann_path = osp.join(output_dir, 'Annotations/',
-                #                         name_prefix + '.xml')
-                # new_img_path = osp.join(output_dir, 'JPEGImages/',
-                #                         name_prefix + '.jpg')
-                # shutil.copy(ann_path, new_ann_path)
-                # shutil.copy(img_path, new_img_path)
                 img_ann_list.append((img_path, ann_path))
 
     return trainval_list, test_list

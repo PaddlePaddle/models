@@ -26,8 +26,7 @@ def get_roidb(anno_path,
     Load VOC records with annotations in xml directory 'anno_path'
 
     Notes:
-    ${anno_path}/ImageSets/Main/train.txt must contains xml file names for annotations
-    ${anno_path}/Annotations/xxx.xml must contain annotation info for one record
+    ${anno_path} must contains xml file and image file path for annotations
 
     Args:
         anno_path (str): root directory for voc annotation data
@@ -138,8 +137,7 @@ def load(anno_path,
     xml directory 'anno_path'
 
     Notes:
-    ${anno_path}/train.txt must contains xml file names for annotations
-    ${anno_path}/Annotations/xxx.xml must contain annotation info for one record
+    ${anno_path} must contains xml file and image file path for annotations
 
     Args:
         @anno_path (str): root directory for voc annotation data
