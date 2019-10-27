@@ -70,7 +70,7 @@ YoloTrainFeed:
   mixup_epoch: 250
 
 YoloEvalFeed:
-  batch_size: 1
+  batch_size: 8
   image_shape: [3, 608, 608]
   dataset:
     dataset_dir: dataset/voc
