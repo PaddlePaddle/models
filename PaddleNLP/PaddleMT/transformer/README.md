@@ -5,9 +5,8 @@
 ```text
 .
 ├── images               # README 文档中的图片
-├── palm                 # 工具包
+├── utils                # 工具包
 ├── desc.py              # 输入描述文件
-├── dist_utils.py        # 多进程训练工具
 ├── gen_data.sh          # 数据生成脚本
 ├── inference_model.py   # 保存 inference_model 的脚本
 ├── main.py              # 主程序入口
@@ -33,14 +32,14 @@
 
 1. paddle安装
 
-   本项目依赖于 PaddlePaddle Fluid 1.5.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle 1.6及以上版本或适当的develop版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 2. 下载代码
 
     克隆代码库到本地
     ```shell
     git clone https://github.com/PaddlePaddle/models.git
-    cd models/PaddleNLP/neural_machine_translation/transformer
+    cd models/PaddleNLP/PaddleMT/transformer
     ```
 
 3. 环境依赖
