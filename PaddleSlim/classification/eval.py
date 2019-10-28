@@ -33,22 +33,24 @@ add_arg('model_name', str,  "__model__", "model filename for inference model")
 add_arg('params_name', str, "__params__", "params filename for inference model")
 # yapf: enable
 
+
 def eval(args):
     # parameters from arguments
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
 
-    val_program, feed_target_names, fetch_targets = fluid.io.load_inference_model(args.model_path,
-                                      exe,
-                                      model_filename=args.model_name,
-                                      params_filename=args.params_name)
+    val_program, feed_target_names, fetch_targets = fluid.io.load_inference_model(
+        args.model_path,
+        exe,
+        model_filename=args.model_name,
+        params_filename=args.params_name)
     val_reader = paddle.batch(reader.val(), batch_size=128)
-    feeder = fluid.DataFeeder(place=place, feed_list=feed_target_names, program=val_program)
+    feeder = fluid.DataFeeder(
+        place=place, feed_list=feed_target_names, program=val_program)
 
-    results=[] 
+    results = []
     for batch_id, data in enumerate(val_reader()):
-
         # top1_acc, top5_acc
         if len(feed_target_names) == 1:
             # eval "infer model", which input is image, output is classification probability
@@ -56,8 +58,8 @@ def eval(args):
             label = [[d[1]] for d in data]
             feed_data = feeder.feed(image)
             pred = exe.run(val_program,
-                        feed=feed_data,
-                        fetch_list=fetch_targets)
+                           feed=feed_data,
+                           fetch_list=fetch_targets)
             pred = np.array(pred[0])
             label = np.array(label)
             sort_array = pred.argsort(axis=1)
@@ -73,18 +75,20 @@ def eval(args):
         else:
             # eval "eval model", which inputs are image and label, output is top1 and top5 accuracy
             result = exe.run(val_program,
-                          feed=feeder.feed(data),
-                          fetch_list=fetch_targets)
+                             feed=feeder.feed(data),
+                             fetch_list=fetch_targets)
             result = [np.mean(r) for r in result]
             results.append(result)
     result = np.mean(np.array(results), axis=0)
     print("top1_acc/top5_acc= {}".format(result))
     sys.stdout.flush()
 
+
 def main():
     args = parser.parse_args()
     print_arguments(args)
     eval(args)
+
 
 if __name__ == '__main__':
     main()

@@ -110,14 +110,18 @@ python infer.py \
 mosesdecoder/scripts/generic/multi-bleu.perl tst2013.vi < infer_output.txt
 ```
 
-单个模型 beam_size = 10的效果如下：
+每个模型分别训练了10次，单次取第10个epoch保存的模型进行预测，取beam_size=10。效果如下（为了便于观察，对10次结果按照升序进行了排序）：
 
 ```
 > no attention
-tst2012 BLEU: 10.99
-tst2013 BLEU: 11.23
+tst2012 BLEU:
+[10.75 10.85 10.9  10.94 10.97 11.01 11.01 11.04 11.13 11.4]
+tst2013 BLEU:
+[10.71 10.71 10.74 10.76 10.91 10.94 11.02 11.16 11.21 11.44]
 
->with attention
-tst2012 BLEU: 22.85
-tst2013 BLEU: 25.68
+> with attention
+tst2012 BLEU:
+[21.14 22.34 22.54 22.65 22.71 22.71 23.08 23.15 23.3  23.4]
+tst2013 BLEU:
+[23.41 24.79 25.11 25.12 25.19 25.24 25.39 25.61 25.61 25.63]
 ```

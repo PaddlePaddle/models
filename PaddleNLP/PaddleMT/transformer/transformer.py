@@ -301,16 +301,15 @@ def prepare_encoder_decoder(src_word,
         src_word,
         size=[src_vocab_size, src_emb_dim],
         padding_idx=bos_idx,  # set embedding of bos to 0
-        param_attr=fluid.ParamAttr(
-            name=word_emb_param_name,
-            initializer=fluid.initializer.Normal(0., src_emb_dim**-0.5)))
+        param_attr=fluid.ParamAttr(name=word_emb_param_name,
+                                   initializer=fluid.initializer.Normal(
+                                       0., src_emb_dim**-0.5)))
 
     src_word_emb = layers.scale(x=src_word_emb, scale=src_emb_dim**0.5)
-    src_pos_enc = fluid.embedding(
-        src_pos,
-        size=[src_max_len, src_emb_dim],
-        param_attr=fluid.ParamAttr(
-            name=pos_enc_param_name, trainable=False))
+    src_pos_enc = fluid.embedding(src_pos,
+                                  size=[src_max_len, src_emb_dim],
+                                  param_attr=fluid.ParamAttr(
+                                      name=pos_enc_param_name, trainable=False))
     src_pos_enc.stop_gradient = True
     enc_input = src_word_emb + src_pos_enc
     return layers.dropout(
@@ -537,51 +536,48 @@ def transformer(model_input,
     label = model_input.lbl_word
     weights = model_input.lbl_weight
 
-    enc_output = wrap_encoder(
-        enc_inputs,
-        src_vocab_size,
-        max_length,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        prepostprocess_dropout,
-        attention_dropout,
-        relu_dropout,
-        preprocess_cmd,
-        postprocess_cmd,
-        weight_sharing,
-        bos_idx=bos_idx)
+    enc_output = wrap_encoder(enc_inputs,
+                              src_vocab_size,
+                              max_length,
+                              n_layer,
+                              n_head,
+                              d_key,
+                              d_value,
+                              d_model,
+                              d_inner_hid,
+                              prepostprocess_dropout,
+                              attention_dropout,
+                              relu_dropout,
+                              preprocess_cmd,
+                              postprocess_cmd,
+                              weight_sharing,
+                              bos_idx=bos_idx)
 
-    predict = wrap_decoder(
-        dec_inputs,
-        trg_vocab_size,
-        max_length,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        prepostprocess_dropout,
-        attention_dropout,
-        relu_dropout,
-        preprocess_cmd,
-        postprocess_cmd,
-        weight_sharing,
-        enc_output=enc_output)
+    predict = wrap_decoder(dec_inputs,
+                           trg_vocab_size,
+                           max_length,
+                           n_layer,
+                           n_head,
+                           d_key,
+                           d_value,
+                           d_model,
+                           d_inner_hid,
+                           prepostprocess_dropout,
+                           attention_dropout,
+                           relu_dropout,
+                           preprocess_cmd,
+                           postprocess_cmd,
+                           weight_sharing,
+                           enc_output=enc_output)
 
     # Padding index do not contribute to the total loss. The weights is used to
     # cancel padding index in calculating the loss.
     if label_smooth_eps:
         # TODO: use fluid.input.one_hot after softmax_with_cross_entropy removing
         # the enforcement that the last dimension of label must be 1.
-        label = layers.label_smooth(
-            label=layers.one_hot(
-                input=label, depth=trg_vocab_size),
-            epsilon=label_smooth_eps)
+        label = layers.label_smooth(label=layers.one_hot(input=label,
+                                                         depth=trg_vocab_size),
+                                    epsilon=label_smooth_eps)
 
     cost = layers.softmax_with_cross_entropy(
         logits=predict,
@@ -726,23 +722,22 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
     dec_inputs = (model_input.trg_word, model_input.init_score,
                   model_input.init_idx, model_input.trg_src_attn_bias)
 
-    enc_output = wrap_encoder(
-        enc_inputs,
-        src_vocab_size,
-        max_in_len,
-        n_layer,
-        n_head,
-        d_key,
-        d_value,
-        d_model,
-        d_inner_hid,
-        prepostprocess_dropout,
-        attention_dropout,
-        relu_dropout,
-        preprocess_cmd,
-        postprocess_cmd,
-        weight_sharing,
-        bos_idx=bos_idx)
+    enc_output = wrap_encoder(enc_inputs,
+                              src_vocab_size,
+                              max_in_len,
+                              n_layer,
+                              n_head,
+                              d_key,
+                              d_value,
+                              d_model,
+                              d_inner_hid,
+                              prepostprocess_dropout,
+                              attention_dropout,
+                              relu_dropout,
+                              preprocess_cmd,
+                              postprocess_cmd,
+                              weight_sharing,
+                              bos_idx=bos_idx)
     start_tokens, init_scores, parent_idx, trg_src_attn_bias = dec_inputs
 
     def beam_search():
@@ -801,26 +796,25 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
                     dtype=pre_ids.dtype),
                 y=step_idx,
                 axis=0)
-            logits = wrap_decoder(
-                (pre_ids, pre_pos, None, pre_src_attn_bias),
-                trg_vocab_size,
-                max_in_len,
-                n_layer,
-                n_head,
-                d_key,
-                d_value,
-                d_model,
-                d_inner_hid,
-                prepostprocess_dropout,
-                attention_dropout,
-                relu_dropout,
-                preprocess_cmd,
-                postprocess_cmd,
-                weight_sharing,
-                enc_output=enc_output,
-                caches=caches,
-                gather_idx=parent_idx,
-                bos_idx=bos_idx)
+            logits = wrap_decoder((pre_ids, pre_pos, None, pre_src_attn_bias),
+                                  trg_vocab_size,
+                                  max_in_len,
+                                  n_layer,
+                                  n_head,
+                                  d_key,
+                                  d_value,
+                                  d_model,
+                                  d_inner_hid,
+                                  prepostprocess_dropout,
+                                  attention_dropout,
+                                  relu_dropout,
+                                  preprocess_cmd,
+                                  postprocess_cmd,
+                                  weight_sharing,
+                                  enc_output=enc_output,
+                                  caches=caches,
+                                  gather_idx=parent_idx,
+                                  bos_idx=bos_idx)
             # intra-beam topK
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)
