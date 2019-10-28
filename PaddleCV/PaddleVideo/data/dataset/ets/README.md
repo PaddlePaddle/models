@@ -28,7 +28,6 @@ ets
   |----feat_data/
   |----train.list
   |----val.list
-  |----preprocess.sh
   |----generate_train_pickle.py
   |----generate_data.py
   |----generate_infer_data.py
