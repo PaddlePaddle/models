@@ -65,7 +65,6 @@ YoloTrainFeed:
   dataset:
     dataset_dir: dataset/fruit/fruit-detection
     annotation: trainval.txt
-    # image_dir: ./JPEGImages
     use_default_label: false
   num_workers: 16
   bufsize: 128
@@ -112,7 +111,6 @@ YoloEvalFeed:
   dataset:
     dataset_dir: dataset/fruit/fruit-detection
     annotation: test.txt
-    # image_dir: ./JPEGImages
     use_default_label: false
  
 
@@ -121,5 +119,4 @@ YoloTestFeed:
   image_shape: [3, 608, 608]
   dataset:
     dataset_dir: dataset/fruit/fruit-detection
-    # annotation: ./ImageSets/Main/label_list.txt
     use_default_label: false
