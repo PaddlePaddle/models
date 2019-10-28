@@ -196,8 +196,7 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         new_features (Variable): new features with shape [B, N, mlp[-1]]
     """
     if known is None:
-        # TODO
-        interp_feats = fluid.layers.expand()
+        raise NotImplementedError("Not implement known as None currently.")
     else:
         dist, idx = three_nn(unknown, known, eps=0)
 	dist.stop_gradient = True
