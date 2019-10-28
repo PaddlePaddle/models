@@ -36,14 +36,15 @@ Loads `COCO` type datasets with directory structures like this:
   │   ├── instances_train2017.json
   │   ├── instances_val2014.json
   │   ├── instances_val2017.json
-  |   ...
+  │   |   ...
   ├── train2017
   │   ├── 000000000009.jpg
   │   ├── 000000580008.jpg
-  |   ...
+  │   |   ...
   ├── val2017
   │   ├── 000000000139.jpg
   │   ├── 000000000285.jpg
+  │   |   ...
   |   ...
   ```
 
@@ -51,28 +52,29 @@ Loads `COCO` type datasets with directory structures like this:
 Loads `Pascal VOC` like datasets with directory structure like this:
 
   ```
-  data/pascalvoc/
-  ├──Annotations
-  │   ├── i000050.jpg
-  │   ├── 003876.xml
-  |   ...
-  ├── ImageSets
-  │   ├──Main
-              └── train.txt
-              └── val.txt
-              └── test.txt
-              └── dog_train.txt
-              └── dog_trainval.txt
-              └── dog_val.txt
-              └── dog_test.txt
-              └── ...
-  │   ├──Layout
-               └──...
-  │   ├── Segmentation
-                └──...
-  ├── JPEGImages
-  │   ├── 000050.jpg
-  │   ├── 003876.jpg
+  dataset/voc/
+  ├── train.txt
+  ├── val.txt
+  ├── test.txt
+  ├── label_list (optional)
+  ├── VOCdevkit/VOC2007
+  │   ├── Annotations
+  │       ├── 001789.xml
+  │       |   ...
+  │   ├── JPEGImages 
+  │       ├── 001789.xml
+  │       |   ...
+  │   ├── ImageSets
+  │       |   ...
+  ├── VOCdevkit/VOC2012
+  │   ├── Annotations
+  │       ├── 003876.xml
+  │       |   ...
+  │   ├── JPEGImages 
+  │       ├── 003876.xml
+  │       |   ...
+  │   ├── ImageSets
+  │       |   ...
   |   ...
   ```
 

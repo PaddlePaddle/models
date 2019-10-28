@@ -22,14 +22,15 @@
   │   ├── instances_train2017.json
   │   ├── instances_val2014.json
   │   ├── instances_val2017.json
-  |   ...
+  │   |   ...
   ├── train2017
   │   ├── 000000000009.jpg
   │   ├── 000000580008.jpg
-  |   ...
+  │   |   ...
   ├── val2017
   │   ├── 000000000139.jpg
   │   ├── 000000000285.jpg
+  │   |   ...
   |   ...
   ```
 
@@ -39,32 +40,31 @@
 
 
   ```
-  data/pascalvoc/
-  ├──Annotations
-  │   ├── i000050.jpg
-  │   ├── 003876.xml
-  |   ...
-  ├── ImageSets
-  │   ├──Main
-              └── train.txt
-              └── val.txt
-              └── test.txt
-              └── dog_train.txt
-              └── dog_trainval.txt
-              └── dog_val.txt
-              └── dog_test.txt
-              └── ...
-  │   ├──Layout
-               └──...
-  │   ├── Segmentation
-                └──...
-  ├── JPEGImages
-  │   ├── 000050.jpg
-  │   ├── 003876.jpg
+  dataset/voc/
+  ├── train.txt
+  ├── val.txt
+  ├── test.txt
+  ├── label_list (optional)
+  ├── VOCdevkit/VOC2007
+  │   ├── Annotations
+  │       ├── 001789.xml
+  │       |   ...
+  │   ├── JPEGImages 
+  │       ├── 001789.xml
+  │       |   ...
+  │   ├── ImageSets
+  │       |   ...
+  ├── VOCdevkit/VOC2012
+  │   ├── Annotations
+  │       ├── 003876.xml
+  │       |   ...
+  │   ├── JPEGImages 
+  │       ├── 003876.xml
+  │       |   ...
+  │   ├── ImageSets
+  │       |   ...
   |   ...
   ```
-
-
 
 - Roidb数据源
     该数据集主要由COCO数据集和Pascal VOC数据集转换而成的pickle文件，包含一个dict，而dict中只包含一个命名为‘records’的list（可能还有一个命名为‘cname2cid’的字典），其内容如下所示：
