@@ -27,6 +27,7 @@ Parses various data sources and creates `data.Dataset` instances. Currently,
 following data sources are supported:
 
 - COCO data source
+
 Loads `COCO` type datasets with directory structures like this:
 
   ```
@@ -49,6 +50,7 @@ Loads `COCO` type datasets with directory structures like this:
   ```
 
 - Pascal VOC data source
+
 Loads `Pascal VOC` like datasets with directory structure like this:
 
   ```
