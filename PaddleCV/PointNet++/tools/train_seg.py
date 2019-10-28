@@ -72,13 +72,8 @@ def parse_args():
     parser.add_argument(
         '--bn_momentum',
         type=float,
-        default=0.9,
-        help='initial batch norm momentum, default 0.9')
-    parser.add_argument(
-        '--bn_decay',
-        type=float,
-        default=0.5,
-        help='batch norm momentum decay gamma, default 0.5')
+        default=0.1,
+        help='initial batch norm momentum, default 0.1')
     parser.add_argument(
         '--decay_steps',
         type=int,
@@ -138,7 +133,7 @@ def train():
             train_model = PointNet2SemSegMSG(args.num_classes, args.num_points) \
                             if args.model == "MSG" else \
                           PointNet2SemSegSSG(args.num_classes, args.num_points)
-            train_model.build_model()
+            train_model.build_model(bn_momentum=args.bn_momentum)
             train_feeds = train_model.get_feeds()
             train_pyreader = train_model.get_pyreader()
             train_outputs = train_model.get_outputs()

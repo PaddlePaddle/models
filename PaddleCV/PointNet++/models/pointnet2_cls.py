@@ -51,7 +51,7 @@ class PointNet2Cls(object):
                 iterable=False)
         self.feed_vars = [self.xyz, self.label]
 
-    def build_model(self):
+    def build_model(self, bn_momentum=0.1):
         self.build_input()
 
         xyz, feature = self.xyz, None
@@ -150,37 +150,3 @@ class PointNet2ClsMSG(PointNet2Cls):
         ]
 
 
-
-if __name__ == "__main__":
-    num_classes = 13
-    
-    model = PointNet2ClsMSG(num_classes, 32)
-    model.build_model()
-    loss,_,_ = model.get_outputs()
-    opt = fluid.optimizer.AdamOptimizer(learning_rate=3e-2)
-    #opt = fluid.optimizer.SGD(learning_rate=3e-2)
-    opt.minimize(loss)
-
-    place = fluid.CUDAPlace(0)
-    exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program()) 
-    # print param.name
-    #for i,var in enumerate(fluid.default_startup_program().list_vars()):
-    #    print(i,var.name)
-
-    np.random.seed(1333)
-    xyz_np = np.random.uniform(-100, 100, (8, 32, 3)).astype('float32')
-    feature_np = np.random.uniform(-100, 100, (8, 32, 6)).astype('float32')
-    label_np = np.random.uniform(0, num_classes, (8, 1)).astype('int64')
-    #print("xyz", xyz_np)
-    #print("feaure", feature_np)
-    print("label", label_np)
-    for i in range(10):
-        ret = exe.run(fetch_list=["batch_norm_22.w_1","fc_3_fc_weight@GRAD",loss.name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-	#print("batch_norm_22.w_0:",ret[0])
-	#print("fc weight:",ret[1])
-	print("loss:",ret[-1])
-    #ret = exe.run(fetch_list=["relu_0.tmp_0","relu_1.tmp_0","relu_2.tmp_0", outs[0].name, outs[1].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    #print(ret)
-    # print("ret0", ret[0].shape, ret[0])
-    # ret[0].tofile("out.data")

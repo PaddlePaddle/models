@@ -117,15 +117,3 @@ class Indoor3DReader(object):
 
         return reader
 
-if __name__ == "__main__":
-    ir = Indoor3DReader("dataset/Indoor3DSemSeg/indoor3d_sem_seg_hdf5_data")
-
-    train_reader = ir.get_reader(32, 4096)
-    for i, data in enumerate(train_reader()):
-        if i == 0:
-            print(data[0][0].shape, data[0][1].shape, data[0][2].shape)
-        print('train', i, len(data))
-
-    test_reader = ir.get_reader(32, 4096, 'test')
-    for i, data in enumerate(test_reader()):
-        print('test', i, len(data))

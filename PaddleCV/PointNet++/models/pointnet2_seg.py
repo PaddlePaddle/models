@@ -185,31 +185,3 @@ class PointNet2SemSegMSG(PointNet2SemSeg):
             {"mlp": [512, 512]},
         ]
 
-
-if __name__ == "__main__":
-    num_classes = 13
-    num_points = 32
-    # model = PointNet2SemSegSSG(num_classes)
-    model = PointNet2SemSegMSG(num_classes, num_points)
-    model.build_model()
-    outs = model.get_outputs()
-    print(outs)
-
-    place = fluid.CUDAPlace(0)
-    exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
-
-    np.random.seed(2333)
-    xyz_np = np.random.uniform(-100, 100, (8, 32, 3)).astype('float32')
-    feature_np = np.random.uniform(-100, 100, (8, 32, 6)).astype('float32')
-    label_np = np.random.uniform(0, num_classes, (8, 32, 1)).astype('int64')
-    # print("xyz", xyz_np)
-    # print("feaure", feature_np)
-    # print("label", label_np)
-    # ret = exe.run(fetch_list=[out.name for out in outs], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    for param in model.parameters():
-        print(param.name)
-    ret = exe.run(fetch_list=["conv2d_33.tmp_1", outs['loss'].name, outs['accuracy'].name], feed={'xyz': xyz_np, 'feature': feature_np, 'label': label_np})
-    print("ret0", ret[0].shape, ret[0])
-    print("ret1-", ret[1:])
-    # ret[0].tofile("out.data")

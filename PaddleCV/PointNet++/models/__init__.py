@@ -17,17 +17,11 @@ from __future__ import absolute_import
 from . import pointnet2_modules
 from . import pointnet2_seg
 from . import pointnet2_cls
-# from . import pointnet2_modules_dy
-# from . import pointnet2_seg_dy
 
 from .pointnet2_modules import *
 from .pointnet2_seg import *
 from .pointnet2_cls import *
-# from .pointnet2_modules_dy import *
-# from .pointnet2_seg_dy import *
 
 __all__ = pointnet2_modules.__all__
 __all__ += pointnet2_seg.__all__
 __all__ += pointnet2_cls.__all__
-# __all__ += pointnet2_modules_dy.__all__
-# __all__ += pointnet2_seg_dy.__all__

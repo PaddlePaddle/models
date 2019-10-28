@@ -4,4 +4,4 @@ export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
-python tools/train_seg.py --model=MSG
+python tools/train_cls.py --model=MSG

@@ -104,34 +104,3 @@ class ModelNet40ClsReader(object):
                     batch_out = []
         return reader
 
-if __name__ == "__main__":
-    import data_utils as d_utils
-
-    trans_list = [
-        d_utils.PointcloudRotate(axis=np.array([1, 0, 0])),
-        d_utils.PointcloudScale(),
-        d_utils.PointcloudTranslate(),
-        d_utils.PointcloudJitter(),
-        d_utils.PointcloudRotatePerturbation(),
-    ]
-
-
-
-
-    train_ir = ModelNet40ClsReader("modelnet40_ply_hdf5_2048",train=True,transforms=trans_list)
-    test_ir = ModelNet40ClsReader("modelnet40_ply_hdf5_2048",train=False)
-
-    train_reader = train_ir.get_reader(1, 16)
-
-    # test
-    a = next(train_reader())
-    print("train",a,len(a[0][0]))
-
-    """
-    for i, data in enumerate(train_reader()):
-        print('train', i, len(data))
-
-    test_reader = test_ir.get_reader(32, 4096)
-    for i, data in enumerate(test_reader()):
-        print('test', i, len(data))
-    """
