@@ -138,8 +138,7 @@ def get_dataset_path(path, annotation, image_dir):
 
 
 def create_voc_list(data_dir, devkit_subdir='VOCdevkit'):
-    logger.info("Download voc dataset successed, "
-                "create voc file list...")
+    logger.info("Create voc file list...")
     devkit_dir = osp.join(data_dir, devkit_subdir)
     years = ['2007', '2012']
 
@@ -148,6 +147,7 @@ def create_voc_list(data_dir, devkit_subdir='VOCdevkit'):
     # do not generate label_list.txt here. For default
     # label, see ../data/source/voc_loader.py
     create_list(devkit_dir, years, data_dir)
+    logger.info("Create voc file list finished")
 
 
 def map_path(url, root_dir):
@@ -206,8 +206,6 @@ def download_dataset(path, dataset=None):
     dataset_info = DATASETS[dataset][0]
     for info in dataset_info:
         get_path(info[0], path, info[1], False)
-    if dataset == 'voc':
-        create_voc_list(path)
     logger.info("Download dataset {} finished.".format(dataset))
 
 

@@ -174,7 +174,7 @@ def load(anno_path,
     ct = 0
     cname2cid = {}
     if not use_default_label:
-        label_path = os.path.join(part[0], 'label_list')
+        label_path = os.path.join(data_dir, 'label_list')
         with open(label_path, 'r') as fr:
             label_id = int(with_background)
             for line in fr.readlines():

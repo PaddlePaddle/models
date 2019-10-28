@@ -124,6 +124,7 @@ python dataset/coco/download_coco.py
 ```
 export PYTHONPATH=$PYTHONPATH:.
 python dataset/voc/download_voc.py
+python dataset/voc/create_list.py
 ```
 
 **自动下载数据集：**
