@@ -169,7 +169,7 @@ def pointnet_sa_module(xyz,
         out = fluid.layers.transpose(out, perm=[0, 3, 1, 2])
         out = MLP(out, mlp, bn=bn, bn_momentum=bn_momentum, name=name + '_mlp{}'.format(i))
         if npoint is None:
-            out = fluid.layers.transpose(out,perm=[0,1,3,2])
+            out = fluid.layers.transpose(out,perm=[0, 1, 3, 2])
         out = fluid.layers.pool2d(out, pool_size=[1, out.shape[3]], pool_type='max')
         out = fluid.layers.squeeze(out, axes=[-1])
         outs.append(out)

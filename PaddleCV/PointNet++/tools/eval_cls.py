@@ -114,15 +114,7 @@ def eval():
     eval_compile_prog = fluid.compiler.CompiledProgram(eval_prog)
     
     # get reader
-    trans_list = [
-        PointcloudScale(),
-        PointcloudRotate(),
-        PointcloudRotatePerturbation(),
-        PointcloudTranslate(),
-        PointcloudJitter(),
-        # PointcloudRandomInputDropout(),
-    ]
-    modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='test', transforms=[])
+    modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='test')
     eval_reader = modelnet_reader.get_reader(args.batch_size, args.num_points)
     eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
