@@ -66,6 +66,10 @@
   |   ...
   ```
 
+**说明：** 如果你在yaml配置文件中设置`use_default_label=False`, 将从`label_list.txt`
+中读取类别列表，反之则可以没有`label_list.txt`文件，检测库会使用Pascal VOC数据集的默
+认类别列表，默认类别列表定义在[voc\_loader.py](../ppdet/data/source/voc_loader.py)
+
 - Roidb数据源
     该数据集主要由COCO数据集和Pascal VOC数据集转换而成的pickle文件，包含一个dict，而dict中只包含一个命名为‘records’的list（可能还有一个命名为‘cname2cid’的字典），其内容如下所示：
 ```python

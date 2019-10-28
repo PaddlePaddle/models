@@ -78,6 +78,11 @@ Loads `Pascal VOC` like datasets with directory structure like this:
   |   ...
   ```
 
+**NOTE:** If you set `use_default_label=False` in yaml configs, the `label_list.txt`
+of Pascal VOC dataset will be read, otherwise, `label_list.txt` is unnecessary and
+the default Pascal VOC label list which defined in 
+[voc\_loader.py](../ppdet/data/source/voc_loader.py) will be used.
+
 - Roidb data source
 A generalized data source serialized as pickle files, which have the following
 structure:
