@@ -59,7 +59,6 @@ def main():
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
-
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
     # check if paddlepaddle version is satisfied
@@ -70,6 +69,8 @@ def main():
         eval_feed = create(main_arch + 'EvalFeed')
     else:
         eval_feed = create(cfg.eval_feed)
+
+    multi_scale_test = getattr(cfg, 'MultiScaleTEST', None)
 
     # define executor
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
@@ -82,9 +83,11 @@ def main():
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
             loader, feed_vars = create_feed(eval_feed)
-            fetches = model.eval(feed_vars)
+            if multi_scale_test is None:
+                fetches = model.eval(feed_vars)
+            else:
+                fetches = model.eval(feed_vars, multi_scale_test)
     eval_prog = eval_prog.clone(True)
-
     reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
     loader.set_sample_list_generator(reader, place)
 
@@ -122,7 +125,31 @@ def main():
             callable(model.is_bbox_normalized):
         is_bbox_normalized = model.is_bbox_normalized()
 
-    results = eval_run(exe, compile_program, loader, keys, values, cls)
+    sub_eval_prog = None
+    sub_keys = None
+    sub_values = None
+    # build sub-program
+    if 'Mask' in main_arch and multi_scale_test:
+        sub_eval_prog = fluid.Program()
+        with fluid.program_guard(sub_eval_prog, startup_prog):
+            with fluid.unique_name.guard():
+                _, feed_vars = create_feed(eval_feed, False, sub_prog_feed=True)
+                sub_fetches = model.eval(
+                    feed_vars, multi_scale_test, mask_branch=True)
+                extra_keys = []
+                if cfg.metric == 'COCO':
+                    extra_keys = ['im_id', 'im_shape']
+                if cfg.metric == 'VOC':
+                    extra_keys = ['gt_box', 'gt_label', 'is_difficult']
+        sub_keys, sub_values, _ = parse_fetches(sub_fetches, sub_eval_prog,
+                                                extra_keys)
+        sub_eval_prog = sub_eval_prog.clone(True)
+
+        if 'weights' in cfg:
+            checkpoint.load_params(exe, sub_eval_prog, cfg.weights)
+
+    results = eval_run(exe, compile_program, loader, keys, values, cls, cfg,
+                       sub_eval_prog, sub_keys, sub_values)
 
     # evaluation
     resolution = None

@@ -24,10 +24,12 @@ import sys
 sys.path.append("../../")
 from paddle.fluid.contrib.slim import Compressor
 
+
 def set_paddle_flags(**kwargs):
     for key, value in kwargs.items():
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
+
 
 # NOTE(paddle-dev): All of these flags should be set before
 # `import paddle`. Otherwise, it would not take any effect.
@@ -48,6 +50,8 @@ import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
+
+
 def eval_run(exe, compile_program, reader, keys, values, cls, test_feed):
     """
     Run evaluation program, return program outputs.
@@ -66,8 +70,7 @@ def eval_run(exe, compile_program, reader, keys, values, cls, test_feed):
     has_bbox = 'bbox' in keys
     for data in reader():
         data = test_feed.feed(data)
-        feed_data = {'image': data['image'],
-                     'im_size': data['im_size']}
+        feed_data = {'image': data['image'], 'im_size': data['im_size']}
         outs = exe.run(compile_program,
                        feed=feed_data,
                        fetch_list=[values[0]],
@@ -140,24 +143,21 @@ def main():
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
-            train_loader, feed_vars = create_feed(train_feed, iterable=True)
+            _, feed_vars = create_feed(train_feed, True)
             train_fetches = model.train(feed_vars)
             loss = train_fetches['loss']
             lr = lr_builder()
             optimizer = optim_builder(lr)
             optimizer.minimize(loss)
 
-
-    train_reader = create_reader(train_feed, cfg.max_iters,
-                                 FLAGS.dataset_dir)
-    train_loader.set_sample_list_generator(train_reader, place)
+    train_reader = create_reader(train_feed, cfg.max_iters, FLAGS.dataset_dir)
 
     # parse train fetches
     train_keys, train_values, _ = parse_fetches(train_fetches)
     train_keys.append("lr")
     train_values.append(lr.name)
 
-    train_fetch_list=[]
+    train_fetch_list = []
     for k, v in zip(train_keys, train_values):
         train_fetch_list.append((k, v))
 
@@ -165,13 +165,12 @@ def main():
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
-            _, test_feed_vars = create_feed(eval_feed, iterable=True)
+            _, test_feed_vars = create_feed(eval_feed, True)
             fetches = model.eval(test_feed_vars)
 
     eval_prog = eval_prog.clone(True)
 
     eval_reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
-    #eval_pyreader.decorate_sample_list_generator(eval_reader, place)
     test_data_feed = fluid.DataFeeder(test_feed_vars.values(), place)
 
     # parse eval fetches
@@ -181,8 +180,8 @@ def main():
     if cfg.metric == 'VOC':
         extra_keys = ['gt_box', 'gt_label', 'is_difficult']
     eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
-                                                         extra_keys)
-    eval_fetch_list=[]
+                                                     extra_keys)
+    eval_fetch_list = []
     for k, v in zip(eval_keys, eval_values):
         eval_fetch_list.append((k, v))
 
@@ -195,20 +194,20 @@ def main():
 
         #place = fluid.CPUPlace()
         #exe = fluid.Executor(place)
-        results = eval_run(exe, program, eval_reader,
-                           eval_keys, eval_values, eval_cls, test_data_feed)
+        results = eval_run(exe, program, eval_reader, eval_keys, eval_values,
+                           eval_cls, test_data_feed)
 
         resolution = None
         if 'mask' in results[0]:
             resolution = model.mask_head.resolution
-        box_ap_stats = eval_results(results, eval_feed, cfg.metric, cfg.num_classes,
-                     resolution, False, FLAGS.output_eval)
+        box_ap_stats = eval_results(results, eval_feed, cfg.metric,
+                                    cfg.num_classes, resolution, False,
+                                    FLAGS.output_eval)
         if len(best_box_ap_list) == 0:
             best_box_ap_list.append(box_ap_stats[0])
         elif box_ap_stats[0] > best_box_ap_list[0]:
             best_box_ap_list[0] = box_ap_stats[0]
-        logger.info("Best test box ap: {}".format(
-            best_box_ap_list[0]))
+        logger.info("Best test box ap: {}".format(best_box_ap_list[0]))
         return best_box_ap_list[0]
 
     test_feed = [('image', test_feed_vars['image'].name),
@@ -227,11 +226,10 @@ def main():
         eval_func={'map': eval_func},
         eval_fetch_list=[eval_fetch_list[0]],
         save_eval_model=True,
-        prune_infer_model=[["image", "im_size"],["multiclass_nms_0.tmp_0"]],
+        prune_infer_model=[["image", "im_size"], ["multiclass_nms_0.tmp_0"]],
         train_optimizer=None)
     com.config(FLAGS.slim_file)
     com.run()
-
 
 
 if __name__ == '__main__':
