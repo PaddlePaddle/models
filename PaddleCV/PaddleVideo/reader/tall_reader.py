@@ -139,8 +139,8 @@ class TALLReader(DataReader):
 
         self.clip_sentence_pairs = []
         for l in cs:
-            clip_name = l[0]
-            sent_vecs = l[1]
+            clip_name = l[0].decode('utf-8')  #byte object to string
+            sent_vecs = l[1]  #numpy array
             for sent_vec in sent_vecs:
                 self.clip_sentence_pairs.append((clip_name, sent_vec))  #10146
         logger.info(self.mode.upper() + ':' + str(
@@ -185,7 +185,8 @@ class TALLReader(DataReader):
                                                       (start, end))
                                 if nIoL < 0.15:
                                     movie_length = movie_length_info[
-                                        movie_name.split(".")[0]]
+                                        movie_name.split(".")[0].encode(
+                                            'utf-8')]  #str to byte
                                     start_offset = o_start - start
                                     end_offset = o_end - end
                                     self.clip_sentence_pairs_iou.append(

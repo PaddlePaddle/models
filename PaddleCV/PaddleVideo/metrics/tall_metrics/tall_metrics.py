@@ -46,7 +46,7 @@ class MetricsCalculator():
         if len(x1) == 0:
             return pick
 
-        union = map(operator.sub, x2, x1)  # union = x2-x1
+        union = list(map(operator.sub, x2, x1))  # union = x2-x1
 
         I = [i[0] for i in sorted(
             enumerate(sim), key=lambda x: x[1])]  # sort and get index
