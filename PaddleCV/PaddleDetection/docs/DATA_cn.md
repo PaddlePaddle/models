@@ -44,7 +44,7 @@
   ├── train.txt
   ├── val.txt
   ├── test.txt
-  ├── label_list (optional)
+  ├── label_list.txt (optional)
   ├── VOCdevkit/VOC2007
   │   ├── Annotations
   │       ├── 001789.xml

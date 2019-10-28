@@ -56,7 +56,7 @@ Loads `Pascal VOC` like datasets with directory structure like this:
   ├── train.txt
   ├── val.txt
   ├── test.txt
-  ├── label_list (optional)
+  ├── label_list.txt (optional)
   ├── VOCdevkit/VOC2007
   │   ├── Annotations
   │       ├── 001789.xml

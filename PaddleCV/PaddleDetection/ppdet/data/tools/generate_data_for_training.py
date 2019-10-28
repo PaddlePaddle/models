@@ -118,7 +118,7 @@ def dump_voc_as_pickle(args):
     roidb_fname = save_dir + "/%s.roidb" % (dsname)
     with open(roidb_fname, "wb") as fout:
         pkl.dump((roidb, cat2id), fout)
-    anno_path = os.path.join(anno_path.split('/train.txt')[0], 'label_list')
+    anno_path = os.path.join(anno_path.split('/train.txt')[0], 'label_list.txt')
     with open(anno_path, 'w') as fw:
         for key in cat2id.keys():
             fw.write(key + '\n')
