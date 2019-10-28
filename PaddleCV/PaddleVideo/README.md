@@ -37,6 +37,10 @@
 
 - CUDNN >= 7.0
 
+- pandas
+
+- h5py
+
 - 使用Youtube-8M数据集时，需要将tfrecord数据转化成pickle格式，需要用到Tensorflow，详见[数据说明](./data/dataset/README.md)中Youtube-8M部分。与此相关的模型是Attention Cluster, Attention LSTM, NeXtVLAD，使用其他模型请忽略此项。
 
 - 使用Kinetics数据集时，如果需要将mp4文件提前解码并保存成pickle格式，需要用到ffmpeg，详见[数据说明](./data/dataset/README.md)中Kinetics部分。需要说明的是Nonlocal模型虽然也使用Kinetics数据集，但输入数据是视频源文件，不需要提前解码，不涉及此项。与此相关的模型是TSN, TSM, StNet，使用其他模型请忽略此项。

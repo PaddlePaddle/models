@@ -189,4 +189,7 @@ class ETS(ModelBase):
         return (None, None)
 
     def weights_info(self):
-        pass
+        return (
+            'ETS_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_caption/ETS_final.pdparams'
+        )

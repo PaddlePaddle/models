@@ -142,7 +142,7 @@ def infer(args):
         if args.model_name == 'ETS':
             data_feed_in = [items[:3] for items in data]
             vinfo = [items[3:] for items in data]
-            video_id = [items[6] for items in vinfo]
+            video_id = [items[0] for items in vinfo]
             infer_outs = exe.run(fetch_list=fetch_list,
                                  feed=infer_feeder.feed(data_feed_in),
                                  return_numpy=False)
@@ -150,7 +150,7 @@ def infer(args):
         elif args.model_name == 'TALL':
             data_feed_in = [items[:2] for items in data]
             vinfo = [items[2:] for items in data]
-            video_id = [items[0] for items in vinfo]
+            video_id = [items[6] for items in vinfo]
             infer_outs = exe.run(fetch_list=fetch_list,
                                  feed=infer_feeder.feed(data_feed_in),
                                  return_numpy=True)
