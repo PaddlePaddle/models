@@ -61,7 +61,7 @@ SSDTrainFeed:
   use_process: true
   dataset:
     dataset_dir: dataset/voc
-    annotation: train.txt
+    annotation: trainval.txt
     use_default_label: true
 
 SSDEvalFeed:
@@ -69,7 +69,7 @@ SSDEvalFeed:
   use_process: true
   dataset:
     dataset_dir: dataset/voc
-    annotation: val.txt
+    annotation: test.txt
     use_default_label: true
   drop_last: false
 

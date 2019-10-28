@@ -67,7 +67,8 @@ def get_roidb(anno_path,
             line = fr.readline()
             if not line:
                 break
-            img_file, xml_file = line.strip().split()[:2]
+            img_file, xml_file = [os.path.join(data_dir, x) \
+                    for x in line.strip().split()[:2]]
             if not os.path.isfile(xml_file):
                 continue
             tree = ET.parse(xml_file)
@@ -174,7 +175,7 @@ def load(anno_path,
     ct = 0
     cname2cid = {}
     if not use_default_label:
-        label_path = os.path.join(data_dir, 'label_list')
+        label_path = os.path.join(data_dir, 'label_list.txt')
         with open(label_path, 'r') as fr:
             label_id = int(with_background)
             for line in fr.readlines():
@@ -188,7 +189,8 @@ def load(anno_path,
             line = fr.readline()
             if not line:
                 break
-            img_file, xml_file = line.strip().split()[:2]
+            img_file, xml_file = [os.path.join(data_dir, x) \
+                    for x in line.strip().split()[:2]]
             if not os.path.isfile(xml_file):
                 continue
             tree = ET.parse(xml_file)

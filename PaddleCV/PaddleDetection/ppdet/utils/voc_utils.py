@@ -28,9 +28,8 @@ __all__ = ['create_list']
 def create_list(devkit_dir, years, output_dir):
     """
     create following list:
-        1. train.txt
-        2. val.txt
-        3. test.txt
+        1. trainval.txt
+        2. test.txt
     """
     trainval_list = []
     test_list = []
@@ -40,18 +39,15 @@ def create_list(devkit_dir, years, output_dir):
         test_list.extend(test)
 
     random.shuffle(trainval_list)
-    with open(osp.join(output_dir, 'train.txt'), 'w') as ftrainval:
+    with open(osp.join(output_dir, 'trainval.txt'), 'w') as ftrainval:
         for item in trainval_list:
             ftrainval.write(item[0] + ' ' + item[1] + '\n')
 
-    with open(osp.join(output_dir, 'val.txt'), 'w') as fval:
-        with open(osp.join(output_dir, 'test.txt'), 'w') as ftest:
-            ct = 0
-            for item in test_list:
-                ct += 1
-                fval.write(item[0] + ' ' + item[1] + '\n')
-                if ct <= 1000:
-                    ftest.write(item[0] + ' ' + item[1] + '\n')
+    with open(osp.join(output_dir, 'test.txt'), 'w') as fval:
+        ct = 0
+        for item in test_list:
+            ct += 1
+            fval.write(item[0] + ' ' + item[1] + '\n')
 
 
 def _get_voc_dir(devkit_dir, year, type):
@@ -81,8 +77,10 @@ def _walk_voc_dir(devkit_dir, year, output_dir):
                 if name_prefix in added:
                     continue
                 added.add(name_prefix)
-                ann_path = osp.join(annotation_dir, name_prefix + '.xml')
-                img_path = osp.join(img_dir, name_prefix + '.jpg')
+                ann_path = osp.join(osp.relpath(annotation_dir, output_dir),
+                                    name_prefix + '.xml')
+                img_path = osp.join(osp.relpath(img_dir, output_dir),
+                                    name_prefix + '.jpg')
                 img_ann_list.append((img_path, ann_path))
 
     return trainval_list, test_list
