@@ -32,15 +32,13 @@
 - pandas >= 0.20.1
 - PaddlePaddle >= 1.6.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 本模块使用bert作为pretrain model进行模型的finetuning训练，训练速度较慢，建议安装GPU版本的PaddlePaddle
 
-&ensp;&ensp;注意：使用Windows GPU环境的用户，需要将示例代码中的[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
-
 #### &ensp;&ensp;b、下载代码
 
 &ensp;&ensp;&ensp;&ensp;克隆数据集代码库到本地
 
 ```
 git clone https://github.com/PaddlePaddle/models.git
-cd models/PaddleNLP/dialogue_model_toolkit/auto_dialogue_evaluation
+cd models/PaddleNLP/PaddleDialogue/auto_dialogue_evaluation
 ```
 
 ### 任务简介
@@ -79,15 +77,24 @@ label_data（第二阶段finetuning数据集）
 4、seq2seq_naive：传统seq2seq model产出的标注对话数据；
 ```
 
-&ensp;&ensp;&ensp;&ensp;数据集、相关模型下载：
+&ensp;&ensp;&ensp;&ensp;数据集、相关模型下载
+&ensp;&ensp;&ensp;&ensp;linux环境下：
 
 ```
 python ade/prepare_data_and_model.py
 ```
+&ensp;&ensp;&ensp;&ensp;数据路径：data/input/data
 
-&ensp;&ensp;&ensp;&ensp;数据路径：data/input/data/  
+&ensp;&ensp;&ensp;&ensp;模型路径：data/saved_models/trained_models
 
-&ensp;&ensp;&ensp;&ensp;模型路径：data/saved_models/trained_models/
+&ensp;&ensp;&ensp;&ensp;windows环境下：
+```
+python ade\prepare_data_and_model.py
+```
+&ensp;&ensp;&ensp;&ensp;数据路径：data\input\data
+
+&ensp;&ensp;&ensp;&ensp;模型路径：data\saved_models\trained_models
+
 
 &ensp;&ensp;&ensp;&ensp;下载经过预处理的数据，运行该脚本之后，data目录下会存在unlabel_data(train.ids/val.ids/test.ids)，lable_data: human、keywords、seq2seq_att、seq2seq_naive(四个任务数据train.ids/val.ids/test.ids)，以及word2ids.
 
@@ -130,6 +137,7 @@ encable_ce: 是否开启ce
 ### 单机训练
 
 #### 1、第一阶段matching模型的训练：
+#### linux环境下：
 
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
 
@@ -206,7 +214,14 @@ python -u main.py \
 
 注意: 用户进行模型训练、预测、评估等, 可通过修改data/config/ade.yaml配置文件或者从命令行传入来进行参数配置, 优先推荐命令行参数传入;
 
+#### windows环境下：
+训练：
+```
+python -u main.py --do_train=true --use_cuda=false --loss_type=CLS --max_seq_len=50 --save_model_path=data\saved_models\matching_pretrained  --save_param=params  --training_file=data\input\data\unlabel_data\train.ids --epoch=20 --print_step=1 --save_step=400 --batch_size=256 --hidden_size=256 --emb_size=256 --vocab_size=484016 --learning_rate=0.001 --sample_pro=0.1
+```
+
 #### 2、第二阶段finetuning模型的训练：
+#### linux环境下：
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本训练
 
 ```
@@ -271,9 +286,14 @@ python -u main.py \
       --sample_pro=0.1
 ```
 
+#### windows环境下：
+```
+python -u main.py --do_train=true --use_cuda=false --loss_type=L2 --max_seq_len=50 --save_model_path=data\saved_models\human_finetuned  --save_param=params  --training_file=data\input\data\label_data\human\train.ids --epoch=50 --print_step=1 --save_step=400 --batch_size=256 --hidden_size=256 --emb_size=256 --vocab_size=484016 --learning_rate=0.001 --sample_pro=0.1
+```
+
 ### 模型预测
 #### 1、第一阶段matching模型的预测：
-
+#### linux环境下：
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本预测
 
 ```
@@ -329,8 +349,15 @@ python -u main.py \
 
 注：采用方式二时，模型预测过程可参考run.sh内具体任务的参数设置
 
+#### windows环境下：
+预测：
+```
+python -u main.py --do_predict=true --use_cuda=false --predict_file=data\input\data\unlabel_data\test.ids --init_from_params=data\saved_models\trained_models\matching_pretrained\params --loss_type=CLS --output_prediction_file=data\output\pretrain_matching_predict --max_seq_len=50 --batch_size=256 --hidden_size=256 --emb_size=256 --vocab_size=484016
+```
+
 #### 2、第二阶段finetuning模型的预测：
 
+#### linux环境下：
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本预测
 
 ```
@@ -375,6 +402,11 @@ python -u main.py \
       --vocab_size=484016
 ```
 
+#### windows环境下：
+```
+python -u main.py --do_predict=true --use_cuda=false --predict_file=data\input\data\label_data\human\test.ids --init_from_params=data\saved_models\trained_models\human_finetuned\params --loss_type=L2 --output_prediction_file=data\output\finetuning_human_predict --max_seq_len=50 --batch_size=256 --hidden_size=256 --emb_size=256 --vocab_size=484016
+```
+
 ### 模型评估
 
 &ensp;&ensp;&ensp;&ensp;模块中5个任务，各任务支持计算的评估指标内容如下：
@@ -412,6 +444,7 @@ seq2seq_naive：使用spearman相关系数来衡量评估模型对系统的打�
    |--|:--:|--:|:--:|--:|
    |cor|0.474|0.477|0.443|0.378|
 
+#### linux环境下：
 #### 1、第一阶段matching模型的评估：
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本评估
 
@@ -434,8 +467,14 @@ python -u main.py \
       --output_prediction_file="data/output/pretrain_matching_predict" \
       --loss_type="CLS"
 ```
+#### windows环境下：
+评估： 
+```
+python -u main.py --do_eval=true --use_cuda=false --evaluation_file=data\input\data\unlabel_data\test.ids --output_prediction_file=data\output\pretrain_matching_predict --loss_type=CLS
+```
 
 #### 2、第二阶段finetuning模型的评估：
+#### linux环境下：
 #### &ensp;&ensp;&ensp;&ensp;方式一: 推荐直接使用模块内脚本评估
 
 ```
@@ -459,6 +498,11 @@ python -u main.py \
       --evaluation_file="data/input/data/label_data/human/test.ids" \
       --output_prediction_file="data/output/finetuning_human_predict" \
       --loss_type="L2"
+```
+
+#### windows环境下：
+```
+python -u main.py --do_eval=true --use_cuda=false --evaluation_file=data\input\data\label_data\human\test.ids --output_prediction_file=data\output\finetuning_human_predict --loss_type=L2
 ```
 
 ### 模型推断

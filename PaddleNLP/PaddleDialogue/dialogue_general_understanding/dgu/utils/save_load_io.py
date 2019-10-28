@@ -112,8 +112,8 @@ def save_param(args, exe, program, dirname):
     param_dir = os.path.join(args.save_model_path, args.save_param)
 
     if not os.path.exists(param_dir):
-        os.mkdir(param_dir)
-
+        os.makedirs(param_dir)
+    
     fluid.io.save_params(
         exe,
         os.path.join(param_dir, dirname),

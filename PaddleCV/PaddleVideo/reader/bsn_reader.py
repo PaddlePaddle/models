@@ -13,12 +13,15 @@
 #limitations under the License.
 
 import os
+import platform
 import random
 import numpy as np
 import pandas as pd
 import multiprocessing
 import json
 import logging
+import functools
+import paddle
 logger = logging.getLogger(__name__)
 
 from .reader_utils import DataReader
@@ -136,7 +139,11 @@ class BSNVideoReader(DataReader):
         if self.num_threads == 1:
             return self.make_reader()
         else:
-            return self.make_multiprocess_reader()
+            sysstr = platform.system()
+            if sysstr == 'Windows':
+                return self.make_multithread_reader()
+            else:
+                return self.make_multiprocess_reader()
 
     def make_infer_reader(self):
         """reader for inference"""
@@ -181,6 +188,42 @@ class BSNVideoReader(DataReader):
                     batch_out = []
 
         return reader
+
+    def make_multithread_reader(self):
+        def reader():
+            if self.mode == 'train':
+                random.shuffle(self.video_list)
+
+            for video_name in self.video_list:
+                video_idx = self.video_list.index(video_name)
+                yield [video_name, video_idx]
+
+        def process_data(sample, mode):
+            video_name = sample[0]
+            video_idx = sample[1]
+            video_feat = self.load_file(video_name)
+            gt_start, gt_end, gt_action = self.get_video_label(video_name)
+            if mode == 'train' or mode == 'valid':
+                return (video_feat, gt_start, gt_end, gt_action)
+            elif mode == 'test':
+                return (video_feat, gt_start, gt_end, gt_action, video_idx)
+            else:
+                raise NotImplementedError('mode {} not implemented'.format(
+                    self.mode))
+
+        mapper = functools.partial(process_data, mode=self.mode)
+
+        def batch_reader():
+            xreader = paddle.reader.xmap_readers(mapper, reader,
+                                                 self.num_threads, 1024)
+            batch = []
+            for item in xreader():
+                batch.append(item)
+                if len(batch) == self.batch_size:
+                    yield batch
+                    batch = []
+
+        return batch_reader
 
     def make_multiprocess_reader(self):
         """multiprocess reader"""
@@ -304,8 +347,10 @@ class BSNProposalReader(DataReader):
         props_end = pdf.xmax.values[:]
         props_start_score = pdf.xmin_score.values[:]
         props_end_score = pdf.xmax_score.values[:]
-        props_info = np.stack(
-            [props_start, props_end, props_start_score, props_end_score])
+        props_info = np.hstack([
+            props_start[:, np.newaxis], props_end[:, np.newaxis],
+            props_start_score[:, np.newaxis], props_end_score[:, np.newaxis]
+        ])
         if self.mode == "infer":
             return props_info
         else:
@@ -325,7 +370,11 @@ class BSNProposalReader(DataReader):
         if self.num_threads == 1:
             return self.make_reader()
         else:
-            return self.make_multiprocess_reader()
+            sysstr = platform.system()
+            if sysstr == 'Windows':
+                return self.make_multithread_reader()
+            else:
+                return self.make_multiprocess_reader()
 
     def make_infer_reader(self):
         """reader for inference"""
@@ -370,6 +419,41 @@ class BSNProposalReader(DataReader):
                     batch_out = []
 
         return reader
+
+    def make_multithread_reader(self):
+        def reader():
+            if self.mode == 'train':
+                random.shuffle(self.video_list)
+            for video_name in self.video_list:
+                video_idx = self.video_list.index(video_name)
+                yield [video_name, video_idx]
+
+        def process_data(sample, mode):
+            video_name = sample[0]
+            video_idx = sample[1]
+            props_feat = self.load_file(video_name)
+            props_iou, props_info = self.get_props(video_name)
+            if mode == 'train' or mode == 'valid':
+                return (props_feat, props_iou)
+            elif mode == 'test':
+                return (props_feat, props_iou, props_info, video_idx)
+            else:
+                raise NotImplementedError('mode {} not implemented'.format(
+                    mode))
+
+        mapper = functools.partial(process_data, mode=self.mode)
+
+        def batch_reader():
+            xreader = paddle.reader.xmap_readers(mapper, reader,
+                                                 self.num_threads, 1024)
+            batch = []
+            for item in xreader():
+                batch.append(item)
+                if len(batch) == self.batch_size:
+                    yield batch
+                    batch = []
+
+        return batch_reader
 
     def make_multiprocess_reader(self):
         """multiprocess reader"""
