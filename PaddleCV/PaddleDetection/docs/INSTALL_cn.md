@@ -20,7 +20,7 @@ PaddleDetection的相关信息，请参考[README.md](../README.md).
 ## PaddlePaddle
 
 
-运行PaddleDetection需要PaddlePaddle Fluid v.1.5及更高版本。请按照[安装文档](http://www.paddlepaddle.org.cn/)中的说明进行操作。
+运行PaddleDetection需要PaddlePaddle Fluid v.1.6及更高版本。请按照[安装文档](http://www.paddlepaddle.org.cn/)中的说明进行操作。
 
 请确保您的PaddlePaddle安装成功并且版本不低于需求版本。使用以下命令进行验证。
 

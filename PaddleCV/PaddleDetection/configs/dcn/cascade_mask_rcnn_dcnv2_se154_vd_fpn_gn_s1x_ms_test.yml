@@ -205,7 +205,7 @@ MaskRCNNEvalFeed:
   batch_size: 1
   dataset:
     dataset_dir: dataset/coco
-    annotation: annotations/instances_val2017.json
+    annotation: annotations/instances_val2017_debug_139.json
     image_dir: val2017
   sample_transforms: 
   - !DecodeImage
@@ -242,13 +242,30 @@ MaskRCNNEvalFeed:
   - !PadMSTest
     pad_to_stride: 32
   # num_scale = (len(target_size) + 1) * (1 + use_flip)
-  num_scale: 18
+  num_scale: 32
   num_workers: 2
 
 MaskRCNNTestFeed:
   batch_size: 1
   dataset:
     annotation: dataset/coco/annotations/instances_val2017.json
+  sample_transforms: 
+  - !DecodeImage
+    to_rgb: False
+  - !NormalizeImage
+    is_channel_first: false
+    is_scale: False
+    mean:
+    - 102.9801 
+    - 115.9465
+    - 122.7717
+    std:
+    - 1.0 
+    - 1.0 
+    - 1.0 
+  - !Permute
+    channel_first: true
+    to_bgr: false
   batch_transforms:
   - !PadBatch
     pad_to_stride: 32
