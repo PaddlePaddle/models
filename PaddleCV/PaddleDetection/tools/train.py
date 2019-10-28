@@ -46,7 +46,7 @@ from ppdet.utils import dist_utils
 from ppdet.utils.eval_utils import parse_fetches, eval_run, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser
-from ppdet.utils.check import check_gpu, check_version
+from ppdet.utils.check import check_gpu
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.modeling.model_input import create_feed
 
@@ -73,16 +73,12 @@ def main():
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
+
     if 'log_iter' not in cfg:
         cfg.log_iter = 20
 
-    ignore_params = cfg.finetune_exclude_pretrained_params \
-                 if 'finetune_exclude_pretrained_params' in cfg else []
-
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
-    # check if paddlepaddle version is satisfied
-    check_version()
     if not FLAGS.dist or trainer_id == 0:
         print_total_cfg(cfg)
 
@@ -118,7 +114,13 @@ def main():
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
-            train_loader, feed_vars = create_feed(train_feed)
+            train_pyreader, feed_vars = create_feed(train_feed)
+
+            if FLAGS.fp16:
+                assert (getattr(model.backbone, 'norm_type', None)
+                        != 'affine_channel'), \
+                    '--fp16 currently does not support affine channel, ' \
+                    ' please modify backbone settings to use batch norm'
 
             with mixed_precision_context(FLAGS.loss_scale, FLAGS.fp16) as ctx:
                 train_fetches = model.train(feed_vars)
@@ -141,12 +143,12 @@ def main():
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
                 model = create(main_arch)
-                eval_loader, feed_vars = create_feed(eval_feed)
+                eval_pyreader, feed_vars = create_feed(eval_feed)
                 fetches = model.eval(feed_vars)
         eval_prog = eval_prog.clone(True)
 
         eval_reader = create_reader(eval_feed, args_path=FLAGS.dataset_dir)
-        eval_loader.set_sample_list_generator(eval_reader, place)
+        eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
         # parse eval fetches
         extra_keys = []
@@ -188,8 +190,11 @@ def main():
         compiled_eval_prog = fluid.compiler.CompiledProgram(eval_prog)
 
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
-    start_iter = 0
 
+    ignore_params = cfg.finetune_exclude_pretrained_params \
+                 if 'finetune_exclude_pretrained_params' in cfg else []
+
+    start_iter = 0
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
@@ -201,7 +206,7 @@ def main():
 
     train_reader = create_reader(train_feed, (cfg.max_iters - start_iter) *
                                  devices_num, FLAGS.dataset_dir)
-    train_loader.set_sample_list_generator(train_reader, place)
+    train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     # whether output bbox is normalized in model output layer
     is_bbox_normalized = False
@@ -213,13 +218,13 @@ def main():
     map_type = cfg.map_type if 'map_type' in cfg else '11point'
 
     train_stats = TrainingStats(cfg.log_smooth_window, train_keys)
-    train_loader.start()
+    train_pyreader.start()
     start_time = time.time()
     end_time = time.time()
 
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
-    time_stat = deque(maxlen=cfg.log_iter)
+    time_stat = deque(maxlen=cfg.log_smooth_window)
     best_box_ap_list = [0.0, 0]  #[map, iter]
 
     # use tb-paddle to log data
@@ -260,7 +265,7 @@ def main():
 
             if FLAGS.eval:
                 # evaluation
-                results = eval_run(exe, compiled_eval_prog, eval_loader,
+                results = eval_run(exe, compiled_eval_prog, eval_pyreader,
                                    eval_keys, eval_values, eval_cls)
                 resolution = None
                 if 'mask' in results[0]:
@@ -282,7 +287,7 @@ def main():
                 logger.info("Best test box ap: {}, in iter: {}".format(
                     best_box_ap_list[0], best_box_ap_list[1]))
 
-    train_loader.reset()
+    train_pyreader.reset()
 
 
 if __name__ == '__main__':

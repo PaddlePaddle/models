@@ -42,6 +42,7 @@ python -u compress.py \
 -s yolov3_mobilenet_v1_yolov3_resnet34_distillation.yml \
 -o YoloTrainFeed.batch_size=64 \
 -d ../../dataset/voc \
+ /paddle/wangguanzhong/data/pascalvoc/ \
 --teacher_pretrained ./pretrain/yolov3_r34_voc \
 > yolov3_distallation.log 2>&1 &
 tailf yolov3_distallation.log

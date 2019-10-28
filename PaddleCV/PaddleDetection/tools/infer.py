@@ -44,7 +44,7 @@ from ppdet.data.data_feed import create_reader
 
 from ppdet.utils.eval_utils import parse_fetches
 from ppdet.utils.cli import ArgsParser
-from ppdet.utils.check import check_gpu, check_version
+from ppdet.utils.check import check_gpu
 from ppdet.utils.visualizer import visualize_results
 import ppdet.utils.checkpoint as checkpoint
 
@@ -96,48 +96,6 @@ def get_test_images(infer_dir, infer_img):
     return images
 
 
-def prune_feed_vars(feeded_var_names, target_vars, prog):
-    """
-    Filter out feed variables which are not in program,
-    pruned feed variables are only used in post processing
-    on model output, which are not used in program, such
-    as im_id to identify image order, im_shape to clip bbox
-    in image.
-    """
-    exist_var_names = []
-    prog = prog.clone()
-    prog = prog._prune(targets=target_vars)
-    global_block = prog.global_block()
-    for name in feeded_var_names:
-        try:
-            v = global_block.var(name)
-            exist_var_names.append(str(v.name))
-        except Exception:
-            logger.info('save_inference_model pruned unused feed '
-                        'variables {}'.format(name))
-            pass
-    return exist_var_names
-
-
-def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
-    cfg_name = os.path.basename(FLAGS.config).split('.')[0]
-    save_dir = os.path.join(FLAGS.output_dir, cfg_name)
-    feeded_var_names = [var.name for var in feed_vars.values()]
-    target_vars = list(test_fetches.values())
-    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars,
-                                       infer_prog)
-    logger.info("Save inference model to {}, input: {}, output: "
-                "{}...".format(save_dir, feeded_var_names,
-                               [str(var.name) for var in target_vars]))
-    fluid.io.save_inference_model(
-        save_dir,
-        feeded_var_names=feeded_var_names,
-        target_vars=target_vars,
-        executor=exe,
-        main_program=infer_prog,
-        params_filename="__params__")
-
-
 def main():
     cfg = load_config(FLAGS.config)
 
@@ -150,8 +108,6 @@ def main():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
-    # check if paddlepaddle version is satisfied
-    check_version()
     print_total_cfg(cfg)
 
     if 'test_feed' not in cfg:
@@ -171,19 +127,16 @@ def main():
     infer_prog = fluid.Program()
     with fluid.program_guard(infer_prog, startup_prog):
         with fluid.unique_name.guard():
-            loader, feed_vars = create_feed(test_feed, iterable=True)
+            _, feed_vars = create_feed(test_feed, use_pyreader=False)
             test_fetches = model.test(feed_vars)
     infer_prog = infer_prog.clone(True)
 
     reader = create_reader(test_feed)
-    loader.set_sample_list_generator(reader, place)
+    feeder = fluid.DataFeeder(place=place, feed_list=feed_vars.values())
 
     exe.run(startup_prog)
     if cfg.weights:
         checkpoint.load_params(exe, infer_prog, cfg.weights)
-
-    if FLAGS.save_inference_model:
-        save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
 
     # parse infer fetches
     assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE'], \
@@ -223,9 +176,9 @@ def main():
         tb_image_frame = 0  # each frame can display ten pictures at most. 
 
     imid2path = reader.imid2path
-    for iter_id, data in enumerate(loader()):
+    for iter_id, data in enumerate(reader()):
         outs = exe.run(infer_prog,
-                       feed=data,
+                       feed=feeder.feed(data),
                        fetch_list=values,
                        return_numpy=False)
         res = {
@@ -302,11 +255,6 @@ if __name__ == '__main__':
         type=float,
         default=0.5,
         help="Threshold to reserve the result for visualization.")
-    parser.add_argument(
-        "--save_inference_model",
-        action='store_true',
-        default=False,
-        help="Save inference model in output_dir if True.")
     parser.add_argument(
         "--use_tb",
         type=bool,

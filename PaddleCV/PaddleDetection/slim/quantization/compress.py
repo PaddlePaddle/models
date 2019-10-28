@@ -49,7 +49,7 @@ from ppdet.data.data_feed import create_reader
 from ppdet.utils.eval_utils import parse_fetches, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser, print_total_cfg
-from ppdet.utils.check import check_gpu, check_version
+from ppdet.utils.check import check_gpu
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.modeling.model_input import create_feed
 
@@ -151,7 +151,7 @@ def main():
     with fluid.program_guard(train_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
-            train_loader, feed_vars = create_feed(train_feed, iterable=True)
+            _, feed_vars = create_feed(train_feed, False)
             train_fetches = model.train(feed_vars)
             loss = train_fetches['loss']
             lr = lr_builder()
@@ -159,7 +159,6 @@ def main():
             optimizer.minimize(loss)
 
     train_reader = create_reader(train_feed, cfg.max_iters, FLAGS.dataset_dir)
-    train_loader.set_sample_list_generator(train_reader, place)
 
     # parse train fetches
     train_keys, train_values, _ = parse_fetches(train_fetches)
@@ -174,7 +173,7 @@ def main():
     with fluid.program_guard(eval_prog, startup_prog):
         with fluid.unique_name.guard():
             model = create(main_arch)
-            _, test_feed_vars = create_feed(eval_feed, iterable=True)
+            _, test_feed_vars = create_feed(eval_feed, False)
             fetches = model.eval(test_feed_vars)
     eval_prog = eval_prog.clone(True)
 
@@ -199,6 +198,7 @@ def main():
     exe.run(startup_prog)
 
     start_iter = 0
+
     checkpoint.load_params(exe, train_prog, cfg.pretrain_weights)
 
     best_box_ap_list = []
