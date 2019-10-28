@@ -32,7 +32,7 @@
 
 ### 安装说明
 
-在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.6或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
 
 #### 环境依赖
 
@@ -46,7 +46,7 @@ pip install numpy
 
 ### 数据准备
 
-下面给出了ImageNet分类任务的样例
+下面给出了ImageNet分类任务的样例，
 在Linux系统下通过如下的方式进行数据的准备：
 ```
 cd data/ILSVRC2012/
@@ -70,7 +70,7 @@ val/ILSVRC2012_val_00000001.jpeg 65
 ```
 注意：可能需要根据本地环境调整reader.py中相关路径来正确读取数据。
 
-**Windows系统下请用户自行下载ImageNet数据。[label下载链接](http://paddle-imagenet-models.bj.bcebos.com/ImageNet_label.tgz)**
+**Windows系统下请用户自行下载ImageNet数据，[label下载链接](http://paddle-imagenet-models.bj.bcebos.com/ImageNet_label.tgz)**
 
 ### 模型训练
 
