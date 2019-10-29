@@ -126,8 +126,9 @@ def load_pretrain_params_from_file(exe, prog, pretrained_file, place):
                 prog_tensor.set(new_value, place)
                 logger.info("load param {}".format(name))
     else:
-        raise TypeError, \
-            "pretrained file is not in a directory, not suitable to load params".format(pretrained_file)
+        raise TypeError(
+            "pretrained file {} is not in a directory, not suitable to load params".
+            format(pretrained_file))
 
 
 def get_common_names(param_name_list, param_name_from_file):

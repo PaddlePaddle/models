@@ -8,8 +8,4 @@ BMN模型使用ActivityNet 1.3数据集，使用方法有如下两种方式：
 
 方式二：
 
-我们也在[百度网盘](https://pan.baidu.com/s/19GI3_-uZbd_XynUO6g-8YQ)和[谷歌云盘](https://drive.google.com/file/d/1ISemndlSDS2FtqQOKL0t3Cjj9yk2yznF/view?usp=sharing)提供了处理好的视频特征。若使用百度网盘下载，在解压前请使用如下命令：
-
-    cat zip_csv_mean_100.z* > csv_mean_100.zip
-
-解压完成后，请相应修改configs/bmn.yaml文件中的特征路径feat\_path。
+我们也提供了处理好的视频特征，请分别下载[bmn\_feat1](https://paddlemodels.bj.bcebos.com/video_detection/bmn_feat1.tar.gz)和[bmn\_feat2](https://paddlemodels.bj.bcebos.com/video_detection/bmn_feat2.tar.gz)，解压后将数据合并在同一文件夹中，同时相应的修改configs/bmn.yaml文件中的特征路径feat\_path。
