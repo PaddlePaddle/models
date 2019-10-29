@@ -23,6 +23,7 @@ import os
 
 URLLIB=urllib
 if sys.version_info >= (3, 0): 
+    import urllib.request
     URLLIB=urllib.request
 
 DATA_MODEL_PATH = {"DATA_PATH": "https://baidu-nlp.bj.bcebos.com/dmtk_data_1.0.0.tar.gz", 

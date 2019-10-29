@@ -97,7 +97,7 @@ class MetricsCalculator():
             os.path.join(self.output_path, "%s.csv" % video_name), index=False)
 
     def accumulate(self, fetch_list):
-        cur_batch_size = 1  # iteration counter
+        cur_batch_size = 1  # iteration counter,for test and inference, batch_size=1
         total_loss = fetch_list[0]
         tem_loss = fetch_list[1]
         pem_reg_loss = fetch_list[2]

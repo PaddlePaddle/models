@@ -53,7 +53,7 @@ python compress.py \
     -d "../../dataset/voc" \
     -o max_iters=258 \
     LearningRate.base_lr=0.0001 \
-    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]' \
+    LearningRate.schedulers="[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]" \
     pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
     YoloTrainFeed.batch_size=64
 ```
@@ -78,10 +78,10 @@ python compress.py \
     -d "../../dataset/voc" \
     -o max_iters=258 \
     LearningRate.base_lr=0.0001 \
-    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]' \
+    LearningRate.schedulers="[!PiecewiseDecay {gamma: 0.1, milestones: [258, 516]}]" \
     pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
     YoloTrainFeed.batch_size=64
-  
+
 ```
 
 以下为2卡训练示例，受显存所制，单卡`batch_size`不变, 总`batch_size`减小，`base_lr`减小，一个epoch内batch数量增加，同时需要调整学习率相关参数，如下：
@@ -93,7 +93,7 @@ python compress.py \
     -d "../../dataset/voc" \
     -o max_iters=516 \
     LearningRate.base_lr=0.00005 \
-    LearningRate.schedulers='[!PiecewiseDecay {gamma: 0.1, milestones: [516, 1012]}]' \
+    LearningRate.schedulers="[!PiecewiseDecay {gamma: 0.1, milestones: [516, 1012]}]" \
     pretrain_weights=https://paddlemodels.bj.bcebos.com/object_detection/yolov3_mobilenet_v1_voc.tar \
     YoloTrainFeed.batch_size=32
 ```
@@ -171,7 +171,7 @@ python ../eval.py \
     --model_name __model__ \
     --params_name __params__ \
     -c ../../configs/yolov3_mobilenet_v1_voc.yml \
-    -d "../../dataset/voc" 
+    -d "../../dataset/voc"
 ```
 
 在评估之后，选取效果最好的epoch的模型，可使用脚本 <a href='./freeze.py'>slim/quantization/freeze.py</a>将该模型转化为以上介绍的2种模型：FP32模型，int8模型，需要配置的参数为：
@@ -185,7 +185,9 @@ python ../eval.py \
 python freeze.py \
     --model_path ${checkpoint_path}/${epoch_id}/eval_model/ \
     --weight_quant_type ${weight_quant_type} \
-    --save_path ${any path you want}
+    --save_path ${any path you want} \
+    -c ../../configs/yolov3_mobilenet_v1_voc.yml \
+    -d "../../dataset/voc"
 ```
 
 ### 最终评估模型
@@ -193,7 +195,7 @@ python freeze.py \
 运行命令为：
 ```
 python ../eval.py \
-    --model_path ${float_model_path} 
+    --model_path ${float_model_path}
     --model_name model \
     --params_name weights \
     -c ../../configs/yolov3_mobilenet_v1_voc.yml \
@@ -226,7 +228,7 @@ FP32模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如
 
 >当前release的结果并非超参调优后的最好结果，仅做示例参考，后续我们会优化当前结果。
 
-### MobileNetV1
+### MobileNetV1-YOLO-V3
 
 | weight量化方式 | activation量化方式| Box ap |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|
@@ -235,9 +237,5 @@ FP32模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如
 |abs_max|moving_average_abs_max|- |- |-|
 |channel_wise_abs_max|abs_max|- |- |-|
 
->训练超参：
-
 
 ## FAQ
-
-

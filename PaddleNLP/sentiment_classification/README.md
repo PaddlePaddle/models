@@ -118,10 +118,10 @@ Running type options:
 
 Model config options:
   --model_type {bow_net,cnn_net,lstm_net,bilstm_net,gru_net,textcnn_net}
-                        Model type to run the task. Default: textcnn_net.
+                        Model type to run the task. Default: bilstm_net.
   --init_checkpoint INIT_CHECKPOINT
                         Init checkpoint to resume training from. Default: .
-  --save_checkpoint_dir SAVE_CHECKPOINT_DIR
+  --checkpoints SAVE_CHECKPOINT_DIR
                         Directory path to save checkpoints Default: .
 ...
 """

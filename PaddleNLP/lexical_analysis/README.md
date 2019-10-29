@@ -37,18 +37,18 @@ PaddlePaddle的版本要求是：Python 2 版本是 2.7.15+、Python 3 版本是
 本项目涉及的**数据集**和**预训练模型**的数据可通过执行以下脚本进行快速下载，若仅需使用部分数据，可根据需要参照下列介绍进行部分下载
 
 ```bash
-python download.py all
+python downloads.py all
 ```
 或在支持运行shell脚本的环境下执行：
 ```bash
-sh download.sh
+sh downloads.sh
 ```
 
 #### 2. 训练数据集
 
 下载数据集文件，解压后会生成 `./data/` 文件夹
 ```bash
-python download.py dataset
+python downloads.py dataset
 ```
 
 #### 3. 预训练模型
@@ -56,10 +56,10 @@ python download.py dataset
 我们开源了在自建数据集上训练的词法分析模型，可供用户直接使用，可通过下述链接进行下载:
 ```bash
 # download baseline model
-python download.py lac
+python downloads.py lac
 
 # download ERNIE finetuned model
-python download.py finetuned
+python downloads.py finetuned
 ```
 
 注：若需进行ERNIE Finetune训练，需自行下载  [ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，下载链接为： [https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz)，下载后解压至 `./pretrained/` 目录下。
@@ -172,7 +172,7 @@ python inference_model.py \
     1. 从原始数据文件中抽取出句子和标签，构造句子序列和标签序列
     2. 将句子序列中的特殊字符进行转换
     3. 依据词典获取词对应的整数索引
-    
+
 ### 代码结构说明
 ```text
 .

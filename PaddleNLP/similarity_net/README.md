@@ -22,7 +22,7 @@
 |UNICOM|联通客服|客服|
 ## 快速开始
 #### 版本依赖
-本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
+本项目依赖于 Paddlepaddle Fluid 1.6，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
 
 python版本依赖python 2.7
 #### 安装代码
@@ -36,10 +36,18 @@ cd models/PaddleNLP/similarity_net
 ```shell
 sh download_data.sh
 ```
+或者
+```
+python download.py dataset
+```
 #### 模型准备
 我们开源了基于大规模数据训练好的```pairwise```模型（基于bow模型训练），用户可以通过运行命令下载预训练好的模型，该模型将保存在```./model_files/simnet_bow_pairwise_pretrained_model/```下。
 ```shell
 sh download_pretrained_model.sh
+```
+或者
+```
+python download.py model
 ```
 
 #### 评估
@@ -137,6 +145,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 ├── reader.py：定义了读入数据的相关函数
 ├── utils.py：定义了其他常用的功能函数
 ├── Config: 定义多种模型的配置文件
+├── download.py: 下载数据及预训练模型脚本
 ```
 
 ### 如何训练

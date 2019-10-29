@@ -40,7 +40,7 @@ cost = fluid.layers.cross_entropy(input=out, label=label)
 
 - use_gpu: 是否使用gpu。如果选择使用GPU，请确保当前环境和Paddle版本支持GPU。默认为True。
 - batch_size: 在量化之后，对模型进行fine-tune训练时用的batch size。
-- model: 要压缩的目标模型，该示例支持'MobileNet', 'MobileNetV2'和'ResNet50'。
+- model: 要压缩的目标模型，该示例支持'MobileNet', 'MobileNetV2'和'ResNet34'。
 - pretrained_model: 预训练模型的路径，可以从[这里](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#%E5%B7%B2%E5%8F%91%E5%B8%83%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%85%B6%E6%80%A7%E8%83%BD)下载。
 - config_file: 压缩策略的配置文件。
 
@@ -159,6 +159,38 @@ python infer.py \
 ### PaddleLite预测
 FP32模型可使用Paddle-Lite进行加载预测，可参见教程[Paddle-Lite如何加载运行量化模型](https://github.com/PaddlePaddle/Paddle-Lite/wiki/model_quantization)。
 
+## 如何进行部分量化
+
+通过在定义op时指定 ``name_scope``为 ``skip_quant``可对这个op跳过量化。比如在<a href="../models/resnet.py">PaddleSlim/classification/models/resnet.py</a>中，将某个conv的定义作如下改变：
+
+原定义：
+```
+conv = self.conv_bn_layer(
+                input=input,
+                num_filters=64,
+                filter_size=7,
+                stride=2,
+                act='relu',
+                name=prefix_name + conv1_name)
+
+```
+
+跳过量化时的定义：
+
+```
+
+with fluid.name_scope('skip_quant'):
+    conv = self.conv_bn_layer(
+                input=input,
+                num_filters=64,
+                filter_size=7,
+                stride=2,
+                act='relu',
+                name=prefix_name + conv1_name)
+
+```
+在脚本 <a href="./compress.py">PaddleSlim/classification/quantization/compress.py</a> 中，统计了``conv`` op的数量和以``fake_quantize``开头的量化op的数量，在对一些``conv`` op跳过之后，可发现以``fake_quantize``开头的量化op的数量变少。
+
 
 ## 示例结果
 
@@ -196,14 +228,23 @@ fluid.optimizer.Momentum(momentum=0.9,
 
 >训练超参：
 
-### ResNet50
+优化器
+```
+fluid.optimizer.Momentum(momentum=0.9,
+                         learning_rate=fluid.layers.piecewise_decay(
+                         boundaries=[5000 * 12],
+                         values=[0.0001, 0.00001]),
+                         regularization=fluid.regularizer.L2Decay(1e-4))
+```
+8卡，batch size 1024，epoch 30, 挑选好的结果
+### ResNet34
 
 | weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|模型下载|
 |---|---|---|---|---|---|
-|baseline|- |76.50%/93.00%|- |-|[下载模型](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar)|
-|abs_max|abs_max|76.71%/93.10% |- |-|[下载模型](https://paddle-slim-models.bj.bcebos.com/quantization%2Fresnet50_w_abs_a_abs_7670_9310.tar.gz)|
-|abs_max|moving_average_abs_max|76.65%/93.12% |- |-|[下载模型](https://paddle-slim-models.bj.bcebos.com/quantization%2Fresnet50_w_abs_a_move_7665_9312.tar.gz) |
-|channel_wise_abs_max|abs_max|76.56%/93.05% |- |-| [下载模型](https://paddle-slim-models.bj.bcebos.com/quantization%2Fresnet50_w_chan_a_abs_7656_9304.tar.gz)|
+|baseline|- |74.57%/92.14%|- |-|-|
+|abs_max|abs_max||- |-|-|
+|abs_max|moving_average_abs_max||- |-|-|
+|channel_wise_abs_max|abs_max||- |-| -|
 
 >训练超参：
 
