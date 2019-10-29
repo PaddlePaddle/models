@@ -32,6 +32,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
     assert fluid.framework.in_dygraph_mode(
     ), "this function must be run within dygraph guard"
 
+    n_trainers = dg.parallel.Env().nranks
     local_rank = dg.parallel.Env().local_rank
 
     # amount of shifting when compute losses
@@ -249,20 +250,9 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
     
     end_time = time.time()
     epoch_time = (end_time - start_time) / global_epoch 
-    card_num = get_cards()
     print("kpis\teach_epoch_duration_frame%s_card%s\t%s" %
-            (hparams.outputs_per_step, card_num, epoch_time))
+            (hparams.outputs_per_step, n_trainers, epoch_time))
     print("kpis\ttrain_cost_frame%s_card%s\t%f" %
-            (hparams.outputs_per_step, card_num, ce_loss))
+            (hparams.outputs_per_step, n_trainers, ce_loss))
 
-
-def get_cards():
-    """
-    get gpu number used by CUDA_VISIBLE_DEVICES
-    """
-    num = 0
-    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
-    if cards != '':
-        num = len(cards.split(","))
-    return num
 
