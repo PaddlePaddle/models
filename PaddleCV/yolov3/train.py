@@ -193,6 +193,7 @@ def train():
                profiler.start_profiler("All")
             elif args.is_profiler and iter_id == 10:
                  profiler.stop_profiler("total", args.profiler_path)
+                 return
 
             if (iter_id + 1) % cfg.snapshot_iter == 0:
                 save_model("model_iter{}".format(iter_id))
