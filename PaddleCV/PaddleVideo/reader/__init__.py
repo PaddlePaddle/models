@@ -3,6 +3,9 @@ from .feature_reader import FeatureReader
 from .kinetics_reader import KineticsReader
 from .nonlocal_reader import NonlocalReader
 from .ctcn_reader import CTCNReader
+from .bmn_reader import BMNReader
+from .bsn_reader import BSNVideoReader
+from .bsn_reader import BSNProposalReader
 
 # regist reader, sort by alphabet
 regist_reader("ATTENTIONCLUSTER", FeatureReader)
@@ -13,3 +16,6 @@ regist_reader("TSM", KineticsReader)
 regist_reader("TSN", KineticsReader)
 regist_reader("STNET", KineticsReader)
 regist_reader("CTCN", CTCNReader)
+regist_reader("BMN", BMNReader)
+regist_reader("BSNTEM", BSNVideoReader)
+regist_reader("BSNPEM", BSNProposalReader)

@@ -23,22 +23,10 @@ import paddle.fluid as fluid
 
 __all__ = ['AlexNet']
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [40, 70, 100],
-        "steps": [0.01, 0.001, 0.0001, 0.00001]
-    }
-}
-
 
 class AlexNet():
     def __init__(self):
-        self.params = train_parameters
+        pass
 
     def net(self, input, class_dim=1000):
         stdv = 1.0 / math.sqrt(input.shape[1] * 11 * 11)

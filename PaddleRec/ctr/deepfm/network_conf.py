@@ -2,8 +2,13 @@ import paddle.fluid as fluid
 import math
 
 
-def ctr_deepfm_model(embedding_size, num_field, num_feat, layer_sizes, act,
-                     reg):
+def ctr_deepfm_model(embedding_size,
+                     num_field,
+                     num_feat,
+                     layer_sizes,
+                     act,
+                     reg,
+                     is_sparse=False):
     init_value_ = 0.1
 
     raw_feat_idx = fluid.layers.data(
@@ -14,35 +19,41 @@ def ctr_deepfm_model(embedding_size, num_field, num_feat, layer_sizes, act,
         name='label', shape=[1], dtype='float32')  # None * 1
 
     feat_idx = fluid.layers.reshape(raw_feat_idx,
-                                    [-1, num_field, 1])  # None * num_field * 1
+                                    [-1, 1])  # (None * num_field) * 1
     feat_value = fluid.layers.reshape(
         raw_feat_value, [-1, num_field, 1])  # None * num_field * 1
 
     # -------------------- first order term  --------------------
 
-    first_weights = fluid.layers.embedding(
+    first_weights_re = fluid.layers.embedding(
         input=feat_idx,
+        is_sparse=is_sparse,
         dtype='float32',
         size=[num_feat + 1, 1],
         padding_idx=0,
         param_attr=fluid.ParamAttr(
             initializer=fluid.initializer.TruncatedNormalInitializer(
                 loc=0.0, scale=init_value_),
-            regularizer=fluid.regularizer.L1DecayRegularizer(
-                reg)))  # None * num_field * 1
+            regularizer=fluid.regularizer.L1DecayRegularizer(reg)))
+    first_weights = fluid.layers.reshape(
+        first_weights_re, shape=[-1, num_field, 1])  # None * num_field * 1
     y_first_order = fluid.layers.reduce_sum((first_weights * feat_value), 1)
 
     # -------------------- second order term  --------------------
 
-    feat_embeddings = fluid.layers.embedding(
+    feat_embeddings_re = fluid.layers.embedding(
         input=feat_idx,
+        is_sparse=is_sparse,
         dtype='float32',
         size=[num_feat + 1, embedding_size],
         padding_idx=0,
         param_attr=fluid.ParamAttr(
             initializer=fluid.initializer.TruncatedNormalInitializer(
-                loc=0.0, scale=init_value_ / math.sqrt(float(
-                    embedding_size)))))  # None * num_field * embedding_size
+                loc=0.0, scale=init_value_ / math.sqrt(float(embedding_size)))))
+    feat_embeddings = fluid.layers.reshape(
+        feat_embeddings_re,
+        shape=[-1, num_field,
+               embedding_size])  # None * num_field * embedding_size
     feat_embeddings = feat_embeddings * feat_value  # None * num_field * embedding_size
 
     # sum_square part

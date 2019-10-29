@@ -17,6 +17,7 @@ DeepLabv3+ 是DeepLab语义分割系列网络的最新作，其前作有 DeepLab
 
 ![](./imgs/model.png)
 
+Python Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124366)
 
 ## 数据准备
 

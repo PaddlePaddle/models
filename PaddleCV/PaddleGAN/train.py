@@ -30,7 +30,8 @@ import trainer
 def train(cfg):
 
     MODELS = [
-        "CGAN", "DCGAN", "Pix2pix", "CycleGAN", "StarGAN", "AttGAN", "STGAN"
+        "CGAN", "DCGAN", "Pix2pix", "CycleGAN", "StarGAN", "AttGAN", "STGAN",
+        "SPADE"
     ]
     if cfg.model_net not in MODELS:
         raise NotImplementedError("{} is not support!".format(cfg.model_net))

@@ -189,8 +189,6 @@ def train(args):
     losses = [[], []]
     t_time = 0
     build_strategy = fluid.BuildStrategy()
-    build_strategy.enable_inplace = False
-    build_strategy.memory_optimize = False
 
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.num_threads = 1

@@ -171,7 +171,6 @@ def train(args):
     build_strategy.enable_inplace = True
     if args.model_name in ['CTCN']:
         build_strategy.enable_sequential_execution = True
-    #build_strategy.memory_optimize = True
 
     compiled_train_prog = fluid.compiler.CompiledProgram(
         train_prog).with_data_parallel(

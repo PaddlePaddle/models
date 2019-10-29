@@ -1,3 +1,5 @@
+>注意：在paddle1.5版本上训练attention model有收敛问题，建议您暂时使用paddle1.4版本，后续我们会修复该问题。
+
 ## 代码结构
 ```
 ├── data_reader.py  # 下载、读取、处理数据。
@@ -6,7 +8,9 @@
 ├── train.py   # 用于模型的训练。
 ├── infer.py   # 加载训练好的模型文件，对新数据进行预测。
 ├── eval.py     # 评估模型在指定数据集上的效果。
-└── utils.py    # 定义通用的函数。
+├─ utils.py    # 定义通用的函数。
+├── run_crnn_ctc.sh     # 执行crnn_ctc模型训练任务
+└── run_attention.sh    # 执行attention模型训练任务
 ```
 
 
@@ -136,14 +140,14 @@ env CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --parallel=True
 
 执行`python train.py --help`可查看更多使用方式和参数详细说明。
 
-图2为使用默认参数在默认数据集上训练`CTC model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为22.0%.
+图2为执行脚本`run_crnn_ctc.sh`在默认数据集上训练`CTC model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为22.0%.
 
 <p align="center">
 <img src="images/train.jpg" width="400" hspace='10'/> <br/>
 <strong>图 2</strong>
 </p>
 
-图3为使用默认参数在默认数据集上训练`attention model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为16.25%.
+图3为执行脚本`run_attention.sh`在默认数据集上训练`attention model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为16.25%.
 
 <p align="center">
 <img src="images/train_attention.jpg" width="400" hspace='10'/> <br/>

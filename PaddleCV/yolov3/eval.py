@@ -16,6 +16,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
+import io
+import six
 import time
 import json
 import numpy as np
@@ -113,8 +115,9 @@ def eval():
         print("batch id: {}, time: {}".format(batch_id, end_time - start_time))
         total_time += end_time - start_time
 
-    with open("yolov3_result.json", 'w') as outfile:
-        json.dump(dts_res, outfile)
+    with io.open("yolov3_result.json", 'w') as outfile:
+        encode_func = unicode if six.PY2 else str
+        outfile.write(encode_func(json.dumps(dts_res)))
     print("start evaluate detection result with coco api")
     coco = COCO(os.path.join(cfg.data_dir, test_list))
     cocoDt = coco.loadRes("yolov3_result.json")

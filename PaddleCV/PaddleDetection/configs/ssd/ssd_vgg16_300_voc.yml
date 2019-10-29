@@ -8,9 +8,11 @@ snapshot_iter: 10000
 log_smooth_window: 20
 log_iter: 20
 metric: VOC
+map_type: 11point
 pretrain_weights: https://paddle-imagenet-models-name.bj.bcebos.com/VGG16_caffe_pretrained.tar
 save_dir: output
 weights: output/ssd_vgg16_300_voc/model_final/
+# 20(label_class) + 1(background)
 num_classes: 21
 
 SSD:
@@ -62,8 +64,7 @@ SSDTrainFeed:
   batch_size: 8
   dataset:
     dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
+    annotation: trainval.txt
     use_default_label: true
   image_shape: [3, 300, 300]
   sample_transforms:
@@ -107,8 +108,7 @@ SSDEvalFeed:
   batch_size: 32
   dataset:
     dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
+    annotation: test.txt
     use_default_label: true
   drop_last: false
   image_shape: [3, 300, 300]

@@ -9,7 +9,7 @@ import os
 
 
 class CriteoDataset(dg.MultiSlotDataGenerator):
-    def setup(self):
+    def setup(self, feat_dict_name):
         self.cont_min_ = [0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.cont_max_ = [
             5775, 257675, 65535, 969, 23159456, 431037, 56311, 6047, 29019, 46,
@@ -21,8 +21,7 @@ class CriteoDataset(dg.MultiSlotDataGenerator):
         ]
         self.continuous_range_ = range(1, 14)
         self.categorical_range_ = range(14, 40)
-        self.feat_dict_ = pickle.load(
-            open('data/aid_data/feat_dict_10.pkl2', 'rb'))
+        self.feat_dict_ = pickle.load(open(feat_dict_name, 'rb'))
 
     def _process_line(self, line):
         features = line.rstrip('\n').split('\t')
@@ -68,5 +67,8 @@ class CriteoDataset(dg.MultiSlotDataGenerator):
 
 if __name__ == '__main__':
     criteo_dataset = CriteoDataset()
-    criteo_dataset.setup()
+    if len(sys.argv) <= 1:
+        sys.stderr.write("feat_dict needed for criteo reader.")
+        exit(1)
+    criteo_dataset.setup(sys.argv[1])
     criteo_dataset.run_from_stdin()

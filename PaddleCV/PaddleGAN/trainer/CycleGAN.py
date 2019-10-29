@@ -259,8 +259,14 @@ class CycleGAN(object):
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
 
-        A_py_reader.decorate_batch_generator(self.A_reader, places=place)
-        B_py_reader.decorate_batch_generator(self.B_reader, places=place)
+        A_py_reader.decorate_batch_generator(
+            self.A_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
+        B_py_reader.decorate_batch_generator(
+            self.B_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
 
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
@@ -359,9 +365,13 @@ class CycleGAN(object):
                     use_double_buffer=True)
 
                 A_test_py_reader.decorate_batch_generator(
-                    self.A_test_reader, places=place)
+                    self.A_test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 B_test_py_reader.decorate_batch_generator(
-                    self.B_test_reader, places=place)
+                    self.B_test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
                 utility.save_test_image(
                     epoch_id,

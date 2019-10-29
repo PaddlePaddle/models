@@ -20,6 +20,7 @@ Cycle GAN 是一种image to image 的图像生成网络，实现了非对称图�
 图1.网络结构
 </p>
 
+动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
 
 ## 代码结构
 ```
@@ -100,7 +101,7 @@ env CUDA_VISIBLE_DEVICES=0 python test.py --epoch=200
 ```
 env CUDA_VISIBLE_DEVICES=0 python infer.py \
     --init_model="./output_0/checkpoints/199" --input="./image/testA/123_A.jpg" \
-    --input_style=A 
+    --input_style=A
 ```
 
 分割图像生成真实街景：
@@ -108,7 +109,7 @@ env CUDA_VISIBLE_DEVICES=0 python infer.py \
 ```
 env CUDA_VISIBLE_DEVICES=0 python infer.py \
     --init_model="./output_0/checkpoints/199" --input="./image/testB/78_B.jpg" \
-    --input_style=B 
+    --input_style=B
 ```
 生成结果在 `output_0/single`中
 

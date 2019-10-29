@@ -200,7 +200,6 @@ build_strategy = fluid.BuildStrategy()
 if args.memory_optimize:
     build_strategy.fuse_relu_depthwise_conv = True
     build_strategy.enable_inplace = True
-    build_strategy.memory_optimize = True
 
 place = fluid.CPUPlace()
 if args.use_gpu:

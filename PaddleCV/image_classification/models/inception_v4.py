@@ -24,22 +24,11 @@ from paddle.fluid.param_attr import ParamAttr
 
 __all__ = ['InceptionV4']
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
-
 
 class InceptionV4():
     def __init__(self):
-        self.params = train_parameters
+
+        pass
 
     def net(self, input, class_dim=1000):
         x = self.inception_stem(input)
@@ -56,7 +45,7 @@ class InceptionV4():
             x = self.inceptionC(x, name=str(i + 1))
 
         pool = fluid.layers.pool2d(
-            input=x, pool_size=8, pool_type='avg', global_pooling=True)
+            input=x, pool_type='avg', global_pooling=True)
 
         drop = fluid.layers.dropout(x=pool, dropout_prob=0.2)
 

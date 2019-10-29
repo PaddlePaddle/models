@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 
 import numpy as np
 import os
+import sys
 import random
 import time
 import copy
@@ -302,10 +303,11 @@ def train(size=416,
     if not use_multiprocess_reader:
         return generator
     else:
-        print("multiprocess is not fully compatible with Windows, "
-                "you can set --use_multiprocess_reader=False if you "
-                "are training on Windows and there are errors incured "
-                "by multiprocess.")
+        if sys.platform == "win32":
+            print("multiprocess is not fully compatible with Windows, "
+                    "you can set --use_multiprocess_reader=False if you "
+                    "are training on Windows and there are errors incured "
+                    "by multiprocess.")
         print("multiprocess reader starting up, it takes a while...")
 
     def infinite_reader():
@@ -333,8 +335,10 @@ def train(size=416,
                     enqueuer.stop()
                     return
                 generator_out = None
+        except Exception as e:
+            print("Exception occured in reader: {}".format(str(e)))
         finally:
-            if enqueuer is not None:
+            if enqueuer:
                 enqueuer.stop()
 
     return reader

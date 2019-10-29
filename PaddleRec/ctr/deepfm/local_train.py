@@ -30,7 +30,7 @@ def train():
 
     dataset = fluid.DatasetFactory().create_dataset()
     dataset.set_use_var(data_list)
-    pipe_command = 'python criteo_reader.py'
+    pipe_command = 'python criteo_reader.py {}'.format(args.feat_dict)
     dataset.set_pipe_command(pipe_command)
     dataset.set_batch_size(args.batch_size)
     dataset.set_thread(args.num_thread)
