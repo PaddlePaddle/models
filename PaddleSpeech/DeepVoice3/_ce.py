@@ -7,10 +7,10 @@ from kpi import CostKpi
 from kpi import DurationKpi
 from kpi import AccKpi
 
-each_epoch_duration_frame1_card1 = DurationKpi("each_epoch_duration_frame1_card1", 0.01, actived=True)
-train_cost_frame1_card1 = CostKpi("train_cost_frame1_card1", 0.01, actived=True)
-each_epoch_duration_frame4_card1 = DurationKpi("each_epoch_duration_frame4_card1", 0.01, actived=True)
-train_cost_frame4_card1 = CostKpi("train_cost_frame4_card1", 0.01, actived=True)
+each_epoch_duration_frame1_card1 = DurationKpi("each_epoch_duration_frame1_card1", 0.02, actived=True)
+train_cost_frame1_card1 = CostKpi("train_cost_frame1_card1", 0.02, actived=True)
+each_epoch_duration_frame4_card1 = DurationKpi("each_epoch_duration_frame4_card1", 0.05, actived=True)
+train_cost_frame4_card1 = CostKpi("train_cost_frame4_card1", 0.02, actived=True)
 
 
 tracking_kpis = [
