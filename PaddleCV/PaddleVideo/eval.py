@@ -108,19 +108,35 @@ def test(args):
     test_feeder = fluid.DataFeeder(place=place, feed_list=test_feeds)
 
     epoch_period = []
+
     for test_iter, data in enumerate(test_reader()):
-        cur_time = time.time()
-        test_outs = exe.run(fetch_list=test_fetch_list,
+	if args.model_name!="TALL":
+            cur_time = time.time()
+            test_outs = exe.run(fetch_list=test_fetch_list,
                             feed=test_feeder.feed(data))
-        period = time.time() - cur_time
-        epoch_period.append(period)
-        test_metrics.accumulate(test_outs)
+            period = time.time() - cur_time
+            epoch_period.append(period)
+            test_metrics.accumulate(test_outs)
 
         # metric here
-        if args.log_interval > 0 and test_iter % args.log_interval == 0:
-            info_str = '[EVAL] Batch {}'.format(test_iter)
-            test_metrics.calculate_and_log_out(test_outs, info_str)
-
+            if args.log_interval > 0 and test_iter % args.log_interval == 0:
+            	info_str = '[EVAL] Batch {}'.format(test_iter)
+            	test_metrics.calculate_and_log_out(test_outs, info_str)
+	else: 
+	    data_feed_in = [items[:2] for items in data]
+	    
+	    cur_time = time.time()
+	    test_outs = exe.run(fetch_list=test_fetch_list,
+			    feed=test_feeder(data_feed_in))
+	    period = time.time() - cur_time
+	    epoch_period.append(period)
+            
+            calc_info = [items[2:] for items in data]
+	    test_result_list = [item for item in test_outs] + calc_info
+	
+	    test_metrics.accumulate(test_result_list)
+	    
+	    #shipping back to develop metrics
     if not os.path.isdir(args.save_dir):
         os.makedirs(args.save_dir)
     test_metrics.finalize_and_log_out("[EVAL] eval finished. ", args.save_dir)

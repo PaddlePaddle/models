@@ -28,6 +28,10 @@ from metrics.detections import detection_metrics as detection_metrics
 from metrics.bmn_metrics import bmn_proposal_metrics as bmn_proposal_metrics
 from metrics.bsn_metrics import bsn_tem_metrics as bsn_tem_metrics
 from metrics.bsn_metrics import bsn_pem_metrics as bsn_pem_metrics
+from metrics.tall import accuracy_metrics as tall_metrics
+
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -420,6 +424,36 @@ class BsnPemMetrics(Metrics):
     def reset(self):
         self.calculator.reset()
 
+##shipping
+class TallMetrics(Metrics):
+    def __init__(self, name, model, cfg):
+	self.name =  name
+ 	self.mode =mode
+	self.calculator = tall_metrics.MetricsCalculator(cfg=cfg, name=self.name, mode=self.mode)
+        self.IoU_thresh = [0.1, 0.3, 0.5, 0.7]
+        self.all_correct_num_10 = [0.0] * 5
+        self.all_correct_num_5 = [0.0] * 5
+        self.all_correct_num_1 = [0.0] * 5
+        self.all_retrievd = 0.0
+
+    def calculator_and_log_out(self, fetch_list, info=""):
+	if self.mode == "train":
+            loss = np.array(fetch_list[0])
+	    logger.info(info +'\tLoss = {}'.format('%.6f' % np.mean(loss)))
+
+	elif self.mode == "test": 
+	    pass
+    
+    def accumalate():
+	if self.mode == "test":
+	    self.calculator.accumalate(self, fetch_list)
+
+    def finalize_and_log_out(self, info="", savedir="/"):
+	self.calculator.finalize_and_log_out()
+
+    def reset(self):
+	self.calculator.reset()
+
 
 class MetricsZoo(object):
     def __init__(self):
@@ -461,3 +495,4 @@ regist_metrics("CTCN", DetectionMetrics)
 regist_metrics("BMN", BmnMetrics)
 regist_metrics("BSNTEM", BsnTemMetrics)
 regist_metrics("BSNPEM", BsnPemMetrics)
+redist_metrics("TALL", TallMetrics)
