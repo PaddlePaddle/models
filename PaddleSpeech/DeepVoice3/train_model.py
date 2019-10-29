@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import time
 from itertools import chain
 
 from paddle import fluid
@@ -31,6 +32,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
     assert fluid.framework.in_dygraph_mode(
     ), "this function must be run within dygraph guard"
 
+    n_trainers = dg.parallel.Env().nranks
     local_rank = dg.parallel.Env().local_rank
 
     # amount of shifting when compute losses
@@ -42,6 +44,9 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
     ismultispeaker = model.n_speakers > 1
     checkpoint_dir = os.path.join(args.output, "checkpoints")
     tensorboard_dir = os.path.join(args.output, "log")
+
+    ce_loss = 0
+    start_time = time.time()
 
     for epoch in range(hparams.nepochs):
         epoch_loss = 0.
@@ -183,6 +188,7 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
 
             if (local_rank == 0 and global_step > 0 and
                     global_step % hparams.checkpoint_interval == 0):
+
                 save_states(global_step, writer, mel_outputs, linear_outputs,
                             alignments, mel, linear,
                             input_lengths.numpy(), checkpoint_dir)
@@ -239,4 +245,14 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
         if writer is not None and local_rank == 0:
             writer.add_scalar("average_loss_in_epoch", average_loss_in_epoch,
                               global_epoch)
+        ce_loss = average_loss_in_epoch
         global_epoch += 1
+    
+    end_time = time.time()
+    epoch_time = (end_time - start_time) / global_epoch 
+    print("kpis\teach_epoch_duration_frame%s_card%s\t%s" %
+            (hparams.outputs_per_step, n_trainers, epoch_time))
+    print("kpis\ttrain_cost_frame%s_card%s\t%f" %
+            (hparams.outputs_per_step, n_trainers, ce_loss))
+
+
