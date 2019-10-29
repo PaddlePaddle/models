@@ -45,7 +45,6 @@ def train_model(model, loader, criterion, optimizer, clipper, writer, args,
     tensorboard_dir = os.path.join(args.output, "log")
 
     ce_loss = 0
-    total_time = 0
     start_time = time.time()
 
     for epoch in range(hparams.nepochs):
