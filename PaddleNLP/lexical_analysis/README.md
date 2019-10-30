@@ -60,10 +60,14 @@ python downloads.py lac
 
 # download ERNIE finetuned model
 python downloads.py finetuned
+
+# download ERNIE model for training
+python downloads.py ernie
 ```
 
-注：若需进行ERNIE Finetune训练，需自行下载  [ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，下载链接为： [https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz)，下载后解压至 `./pretrained/` 目录下。
-
+注：若需进行ERNIE Finetune训练，需先行下载
+[ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，通过命令`python
+downloads.py ernie`可完成下载
 ### 模型评估
 
 我们基于自建的数据集训练了一个词法分析的模型，可以直接用这个模型对测试集 `./data/test.tsv` 进行验证，
@@ -77,8 +81,9 @@ sh run_ernie.sh eval
 
 ### 模型训练
 基于示例的数据集，可通过下面的命令，在训练集 `./data/train.tsv` 上进行训练，示例包含程序在单机单卡/多卡，以及CPU多线程的运行设置
-> Warning: 若需进行ERNIE Finetune训练，需自行下载  [ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，下载链接为： [https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz)，下载后解压至 `./pretrained/` 目录下。
-
+> Waring: 若需进行ERNIE Finetune训练，需先行下载
+[ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，通过命令`python
+downloads.py ernie`可完成下载
 ```bash
 # baseline model, using single GPU
 sh run.sh train_single_gpu
