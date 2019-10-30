@@ -61,13 +61,15 @@ class MetricsCalculator():
                 os.makedirs(self.output_path_pem)
 
     def save_results(self, pred_iou, props_info, fid):
-        video_name = self.video_list[fid]
-
+        if self.mode == 'infer':
+            video_name = self.video_list[fid[0]]
+        else:
+            video_name = self.video_list[fid[0][0]]
         df = pd.DataFrame()
-        df["xmin"] = props_info[0, 0, :]
-        df["xmax"] = props_info[0, 1, :]
-        df["xmin_score"] = props_info[0, 2, :]
-        df["xmax_score"] = props_info[0, 3, :]
+        df["xmin"] = props_info[0, :, 0]
+        df["xmax"] = props_info[0, :, 1]
+        df["xmin_score"] = props_info[0, :, 2]
+        df["xmax_score"] = props_info[0, :, 3]
         df["iou_score"] = pred_iou.squeeze()
         df.to_csv(
             os.path.join(self.output_path_pem, video_name + ".csv"),
@@ -83,13 +85,13 @@ class MetricsCalculator():
         if self.mode == 'test':
             pred_iou = np.array(fetch_list[1])
             props_info = np.array(fetch_list[2])
-            fid = fetch_list[3][0][0]
+            fid = np.array(fetch_list[3])
             self.save_results(pred_iou, props_info, fid)
 
     def accumulate_infer_results(self, fetch_list):
         pred_iou = np.array(fetch_list[0])
-        props_info = np.array(fetch_list[1])
-        fid = fetch_list[2][0]
+        props_info = np.array([item[0] for item in fetch_list[1]])
+        fid = [item[1] for item in fetch_list[1]]
         self.save_results(pred_iou, props_info, fid)
 
     def finalize_metrics(self):

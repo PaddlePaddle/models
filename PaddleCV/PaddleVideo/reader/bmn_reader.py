@@ -13,11 +13,15 @@
 #limitations under the License.
 
 import os
+import platform
 import random
 import numpy as np
 import multiprocessing
 import json
 import logging
+import functools
+import paddle
+
 logger = logging.getLogger(__name__)
 
 from .reader_utils import DataReader
@@ -150,7 +154,11 @@ class BMNReader(DataReader):
         if self.num_threads == 1:
             return self.make_reader()
         else:
-            return self.make_multiprocess_reader()
+            sysstr = platform.system()
+            if sysstr == 'Windows':
+                return self.make_multithread_reader()
+            else:
+                return self.make_multiprocess_reader()
 
     def make_infer_reader(self):
         """reader for inference"""
@@ -195,6 +203,41 @@ class BMNReader(DataReader):
                     batch_out = []
 
         return reader
+
+    def make_multithread_reader(self):
+        def reader():
+            if self.mode == 'train':
+                random.shuffle(self.video_list)
+            for video_name in self.video_list:
+                video_idx = self.video_list.index(video_name)
+                yield [video_name, video_idx]
+
+        def process_data(sample, mode):
+            video_name = sample[0]
+            video_idx = sample[1]
+            video_feat = self.load_file(video_name)
+            gt_iou_map, gt_start, gt_end = self.get_video_label(video_name)
+            if mode == 'train' or mode == 'valid':
+                return (video_feat, gt_iou_map, gt_start, gt_end)
+            elif mode == 'test':
+                return (video_feat, gt_iou_map, gt_start, gt_end, video_idx)
+            else:
+                raise NotImplementedError('mode {} not implemented'.format(
+                    mode))
+
+        mapper = functools.partial(process_data, mode=self.mode)
+
+        def batch_reader():
+            xreader = paddle.reader.xmap_readers(mapper, reader,
+                                                 self.num_threads, 1024)
+            batch = []
+            for item in xreader():
+                batch.append(item)
+                if len(batch) == self.batch_size:
+                    yield batch
+                    batch = []
+
+        return batch_reader
 
     def make_multiprocess_reader(self):
         """multiprocess reader"""

@@ -75,7 +75,7 @@ elif [ "$mode"x == "eval"x ]; then
 elif [ "$mode"x == "predict"x ]; then
     echo $mode $name $configs $weights
     if [ "$weights"x != ""x ]; then
-        python -i predict.py --model_name=$name \
+        python predict.py --model_name=$name \
                           --config=$configs \
                           --log_interval=$log_interval \
                           --weights=$weights \
