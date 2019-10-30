@@ -364,7 +364,6 @@ def test(conf_dict, args):
                         is_inference=True)
                     left_feat, pos_score = net.predict(left, pos_right)
                     pred = pos_score
-                    #print(pred)
             test_prog = test_prog.clone(for_test=True)
 
         else:
