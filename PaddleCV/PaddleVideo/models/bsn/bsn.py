@@ -47,46 +47,47 @@ class BsnTem(ModelBase):
                                                         'l2_weight_decay')
         self.lr_decay_iter = self.get_config_from_sec('train', 'lr_decay_iter')
 
-    def build_input(self, use_dataloader=True):
-        feat_shape = [None, self.feat_dim, self.tscale]
-        gt_start_shape = [None, self.tscale]
-        gt_end_shape = [None, self.tscale]
-        gt_action_shape = [None, self.tscale]
-        fileid_shape = [None, 1]
-        self.use_dataloader = use_dataloader
+    def build_input(self, use_pyreader=True):
+        feat_shape = [self.feat_dim, self.tscale]
+        gt_start_shape = [self.tscale]
+        gt_end_shape = [self.tscale]
+        gt_action_shape = [self.tscale]
+        fileid_shape = [1]
+        self.use_pyreader = use_pyreader
         # set init data to None
+        py_reader = None
         feat = None
         gt_start = None
         gt_end = None
         gt_action = None
         fileid = None
 
-        feat = fluid.data(name='feat', shape=feat_shape, dtype='float32')
+        feat = fluid.layers.data(name='feat', shape=feat_shape, dtype='float32')
 
         feed_list = []
         feed_list.append(feat)
         if (self.mode == 'train') or (self.mode == 'valid'):
-            gt_start = fluid.data(
+            gt_start = fluid.layers.data(
                 name='gt_start', shape=gt_start_shape, dtype='float32')
-            gt_end = fluid.data(
+            gt_end = fluid.layers.data(
                 name='gt_end', shape=gt_end_shape, dtype='float32')
-            gt_action = fluid.data(
+            gt_action = fluid.layers.data(
                 name='gt_action', shape=gt_action_shape, dtype='float32')
             feed_list.append(gt_start)
             feed_list.append(gt_end)
             feed_list.append(gt_action)
 
         elif self.mode == 'test':
-            gt_start = fluid.data(
+            gt_start = fluid.layers.data(
                 name='gt_start', shape=gt_start_shape, dtype='float32')
-            gt_end = fluid.data(
+            gt_end = fluid.layers.data(
                 name='gt_end', shape=gt_end_shape, dtype='float32')
-            gt_action = fluid.data(
+            gt_action = fluid.layers.data(
                 name='gt_action', shape=gt_action_shape, dtype='float32')
             feed_list.append(gt_start)
             feed_list.append(gt_end)
             feed_list.append(gt_action)
-            fileid = fluid.data(
+            fileid = fluid.layers.data(
                 name='fileid', shape=fileid_shape, dtype='int64')
             feed_list.append(fileid)
         elif self.mode == 'infer':
@@ -96,11 +97,11 @@ class BsnTem(ModelBase):
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
 
-        if use_dataloader:
+        if use_pyreader:
             assert self.mode != 'infer', \
-                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
-            self.dataloader = fluid.io.DataLoader.from_generator(
-                              feed_list=feed_list, capacity=8, iterable=True)
+                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
+            self.py_reader = fluid.io.PyReader(
+                feed_list=feed_list, capacity=8, iterable=True)
 
         self.feat_input = [feat]
         self.gt_start = gt_start
@@ -211,50 +212,51 @@ class BsnPem(ModelBase):
                                                         'l2_weight_decay')
         self.lr_decay_iter = self.get_config_from_sec('train', 'lr_decay_iter')
 
-    def build_input(self, use_dataloader=True):
-        feat_shape = [None, self.top_K, self.feat_dim]
-        gt_iou_shape = [None. self.top_K, 1]
-        props_info_shape = [None, self.top_K, 4]
-        fileid_shape = [None, 1]
-        self.use_dataloader = use_dataloader
+    def build_input(self, use_pyreader=True):
+        feat_shape = [self.top_K, self.feat_dim]
+        gt_iou_shape = [self.top_K, 1]
+        props_info_shape = [self.top_K, 4]
+        fileid_shape = [1]
+        self.use_pyreader = use_pyreader
         # set init data to None
+        py_reader = None
         feat = None
         gt_iou = None
         props_info = None
         fileid = None
 
-        feat = fluid.data(name='feat', shape=feat_shape, dtype='float32')
+        feat = fluid.layers.data(name='feat', shape=feat_shape, dtype='float32')
 
         feed_list = []
         feed_list.append(feat)
         if (self.mode == 'train') or (self.mode == 'valid'):
-            gt_iou = fluid.data(
+            gt_iou = fluid.layers.data(
                 name='gt_iou', shape=gt_iou_shape, dtype='float32')
             feed_list.append(gt_iou)
 
         elif self.mode == 'test':
-            gt_iou = fluid.data(
+            gt_iou = fluid.layers.data(
                 name='gt_iou', shape=gt_iou_shape, dtype='float32')
-            props_info = fluid.data(
+            props_info = fluid.layers.data(
                 name='props_info', shape=props_info_shape, dtype='float32')
             feed_list.append(gt_iou)
             feed_list.append(props_info)
-            fileid = fluid.data(
+            fileid = fluid.layers.data(
                 name='fileid', shape=fileid_shape, dtype='int64')
             feed_list.append(fileid)
         elif self.mode == 'infer':
-            props_info = fluid.data(
+            props_info = fluid.layers.data(
                 name='props_info', shape=props_info_shape, dtype='float32')
             feed_list.append(props_info)
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
 
-        if use_dataloader:
+        if use_pyreader:
             assert self.mode != 'infer', \
-                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
-            self.dataloader = fluid.io.DataLoader.from_generator(
-                                feed_list=feed_list, capacity=4, iterable=True)
+                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
+            self.py_reader = fluid.io.PyReader(
+                feed_list=feed_list, capacity=4, iterable=True)
 
         self.feat_input = [feat]
         self.gt_iou = gt_iou

@@ -424,7 +424,8 @@ class ResNetC5(ResNet):
                  freeze_norm=True,
                  norm_decay=0.,
                  variant='b',
-                 feature_maps=[5]):
+                 feature_maps=[5],
+                 weight_prefix_name=''):
         super(ResNetC5, self).__init__(depth, freeze_at, norm_type, freeze_norm,
                                        norm_decay, variant, feature_maps)
         self.severed_head = True

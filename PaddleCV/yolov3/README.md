@@ -20,6 +20,8 @@
 
 同时，在推断速度方面，基于Paddle预测库的加速方法，推断速度比darknet高30%.
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122277)
+
 ## 快速开始
 
 ### 安装
@@ -40,7 +42,7 @@
 
 **安装[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)：**
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.4或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.4/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ### 数据准备
 
@@ -48,8 +50,9 @@
 
 在[MS-COCO数据集](http://cocodataset.org/#download)上进行训练，通过如下方式下载数据集。
 
-    cd dataset/coco
-    ./download.sh
+```bash
+python dataset/coco/download.py
+```
 
 数据目录结构如下：
 
@@ -81,6 +84,8 @@ dataset/coco/
 **下载预训练模型：** 本示例提供DarkNet-53预训练[模型](https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz)，该模型转换自作者提供的预训练权重[pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74)，采用如下命令下载预训练模型：
 
     sh ./weights/download.sh
+
+**注意：** Windows用户可通过`./weights/download.sh`中的链接直接下载和解压。
 
 通过设置`--pretrain` 加载预训练模型。同时在fine-tune时也采用该设置加载已训练模型。
 请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。
@@ -268,26 +273,26 @@ if cfg.pretrain:
     fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     cat_idxs = [3, 19, 25, 41, 58, 73]
-    # the first 5 channels is x, y, w, h, objectness, 
+    # the first 5 channels is x, y, w, h, objectness,
     # the following 80 channel is for 80 categories
     channel_idxs = np.array(range(5) + [idx + 5 for idx in cat_idxs])
     # we have 3 yolo_output layers
-    for i in range(3): 
+    for i in range(3):
         # crop conv weights
         weights_tensor = fluid.global_scope().find_var(
                           "yolo_output.{}.conv.weights".format(i)).get_tensor()
         weights = np.array(weights_tensor)
         # each yolo_output layer has 3 anchors, 85 channels of each anchor
-        weights = np.concatenate(weights[channel_idxs], 
-                                 weights[85 + channel_idxs], 
+        weights = np.concatenate(weights[channel_idxs],
+                                 weights[85 + channel_idxs],
                                  weights[170 + channel_idxs])
         weights_tensor.set(weights.astype('float32'), place)
         # crop conv bias
         bias_tensor = fluid.global_scope().find_var(
                         "yolo_output.{}.conv.bias".format(i)).get_tensor()
         bias = np.array(bias_tensor)
-        bias = np.concatenate(bias[channel_idxs], 
-                              bias[85 + channel_idxs], 
+        bias = np.concatenate(bias[channel_idxs],
+                              bias[85 + channel_idxs],
                               bias[150 + channel_idxs])
         bias_tensor.set(bias.astype('float32'), place)
 
@@ -323,4 +328,3 @@ if cfg.pretrain:
 
 - [heavengate](https://github.com/heavengate)
 - [tink2123](https://github.com/tink2123)
-

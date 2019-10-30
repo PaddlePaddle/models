@@ -51,24 +51,25 @@ class TSM(ModelBase):
         self.target_size = self.get_config_from_sec(self.mode, 'target_size')
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
 
-    def build_input(self, use_dataloader=True):
+    def build_input(self, use_pyreader=True):
         image_shape = [3, self.target_size, self.target_size]
         image_shape[0] = image_shape[0] * self.seglen
-        image_shape = [None, self.seg_num] + image_shape
-        self.use_dataloader = use_dataloader
+        image_shape = [self.seg_num] + image_shape
+        self.use_pyreader = use_pyreader
 
-        image = fluid.data(
+        image = fluid.layers.data(
             name='image', shape=image_shape, dtype='float32')
         if self.mode != 'infer':
-            label = fluid.data(name='label', shape=[None, 1], dtype='int64')
+            label = fluid.layers.data(name='label', shape=[1], dtype='int64')
         else:
             label = None
 
-        if use_dataloader:
+        if use_pyreader:
             assert self.mode != 'infer', \
-                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
-            self.dataloader = fluid.io.DataLoader.from_generator(
-                                feed_list=[image, label], capacity=4, iterable=True)
+                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
+            py_reader = fluid.io.PyReader(
+                feed_list=[image, label], capacity=4, iterable=True)
+            self.py_reader = py_reader
 
         self.feature_input = [image]
         self.label_input = label

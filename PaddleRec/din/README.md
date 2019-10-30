@@ -29,7 +29,6 @@ DIN通过一个兴趣激活模块(Activation Unit)，用预估目标Candidate AD
 
 最后我们将这相关的用户兴趣表达、用户静态特征和上下文相关特征，以及ad相关的特征拼接起来，输入到后续的多层DNN网络，最后预测得到用户对当前目标ADs的点击概率。
 
-**目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
 
 ## 数据下载及预处理
 
@@ -41,6 +40,9 @@ cd data && sh data_process.sh && cd ..
 ```
 pip install pandas
 ```
+
+**Windows系统下请用户自行下载数据进行解压，下载链接为:[reviews_Electronics](http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_Electronics_5.json.gz)和[meta_Electronics](http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/meta_Electronics.json.gz)。**
+
 
 * Step 2: 产生训练集、测试集和config文件
 ```

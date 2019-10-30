@@ -25,6 +25,7 @@
 | BERT | 93.6% | 92.3%  | 78.6%  |
 | ERNIE | 94.4% | 94.0% | 80.6% |
 
+同时推荐用户参考[IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122291)
 
 ## 快速开始
 
@@ -195,7 +196,7 @@ sh run.sh save_inference_model
 同时裁剪后的模型使用方法详见```inference_model.py```，测试命令如下:
 
 ```shell
-python inference_model.py 
+python inference_model.py
 ```
 
 

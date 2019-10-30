@@ -26,11 +26,13 @@
 ## 简介
 图像分类是计算机视觉的重要领域，它的目标是将图像分类到预定义的标签。近期，许多研究者提出很多不同种类的神经网络，并且极大的提升了分类算法的性能。本页将介绍如何使用PaddlePaddle进行图像分类。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122278)
+
 ## 快速开始
 
 ### 安装说明
 
-在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.5.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要python 2.7及以上版本，PadddlePaddle Fluid v1.6或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据 [安装文档](http://paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html) 中的说明来更新PaddlePaddle。
 
 #### 环境依赖
 
@@ -44,7 +46,8 @@ pip install numpy
 
 ### 数据准备
 
-下面给出了ImageNet分类任务的样例，首先，通过如下的方式进行数据的准备：
+下面给出了ImageNet分类任务的样例，
+在Linux系统下通过如下的方式进行数据的准备：
 ```
 cd data/ILSVRC2012/
 sh download_imagenet2012.sh
@@ -66,6 +69,8 @@ train/n02483708/n02483708_2436.jpeg 369
 val/ILSVRC2012_val_00000001.jpeg 65
 ```
 注意：可能需要根据本地环境调整reader.py中相关路径来正确读取数据。
+
+**Windows系统下请用户自行下载ImageNet数据，[label下载链接](http://paddle-imagenet-models.bj.bcebos.com/ImageNet_label.tgz)**
 
 ### 模型训练
 
@@ -159,6 +164,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 * **label_smoothing_epsilon**: label_smoothing的epsilon， 默认值:0.1
 * **random_seed**: 随机数种子， 默认值: 1000
 * **padding_type**: efficientNet中卷积操作的padding方式, 默认值: "SAME".
+* **use_se**: efficientNet中是否使用Squeeze-and-Excitation模块, 默认值: True.
 * **use_ema**: 是否在更新模型参数时使用ExponentialMovingAverage. 默认值: False.
 * **ema_decay**: ExponentialMovingAverage的decay rate. 默认值: 0.9999.
 
@@ -202,7 +208,7 @@ python eval.py \
 python ema_clean.py \
        --ema_model_dir=your_ema_model_dir \
        --cleaned_model_dir=your_cleaned_model_dir
-       
+
 python eval.py \
        --model=model_name \
        --pretrained_model=your_cleaned_model_dir
@@ -411,8 +417,11 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[1](#trans)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
 |[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[1](#trans)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
 |[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[1](#trans)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
+|[EfficientNetB0_small](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_Small_pretrained.tar)<sup>[2](#trans)</sup> | 75.80% | 92.58% | 3.342 | 2.729 |
 
 <a name="trans">[1]</a> 表示该预训练权重是由[官方的代码仓库](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)转换来的。
+
+<a name="trans">[2]</a> 表示该预训练权重是在EfficientNetB0的基础上去除se模块，并使用通用的卷积训练的，精度稍稍下降，但是速度大幅提升。
 
 ## FAQ
 

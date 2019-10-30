@@ -31,7 +31,8 @@ SR-GNN模型的介绍可以参阅论文[Session-based Recommendation with Graph 
 
 我们复现了论文效果，在DIGINETICA数据集上P@20可以达到50.7
 
-**目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
+
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124382)
 
 ## 数据下载及预处理
 
@@ -39,11 +40,12 @@ SR-GNN模型的介绍可以参阅论文[Session-based Recommendation with Graph 
 
 * Step 1: 运行如下命令,下载DIGINETICA数据集并进行预处理
 ```
-cd data && sh download.sh
+cd data && python download.py
 ```
 
 * Step 2: 产生训练集、测试集和config文件
 ```
+mkdir diginetica
 python preprocess.py --dataset diginetica
 cd ..
 ```
