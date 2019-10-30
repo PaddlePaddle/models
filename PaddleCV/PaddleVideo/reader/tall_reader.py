@@ -167,7 +167,12 @@ class TALLReader(DataReader):
             # TALL model doesn't take validation during training, it will test after all the training epochs finish.
             return
         if self.mode == 'train':
+            num_sliding_clips = len(sliding_clips_tmp)
+            count = 0
             for clip_name in sliding_clips_tmp:
+                count += 1
+                logger.info('processing data ............' + str(count) + '/' +
+                            str(num_sliding_clips))
                 if clip_name.split(".")[2] == "npy":
                     movie_name = clip_name.split("_")[0]
                     for clip_sentence in self.clip_sentence_pairs:
