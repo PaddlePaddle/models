@@ -157,7 +157,11 @@ def box_overlap_rotate(cur_box, boxes):
             if check_in_box2d(box, cur_corners[l]):
                 cross_points[cnt, :] = cur_corners[l]
                 cnt += 1
-        poly_center = np.sum(cross_points[:cnt, :], axis=0) / cnt
+
+        if cnt > 0:
+            poly_center = np.sum(cross_points[:cnt, :], axis=0) / cnt
+        else:
+            poly_center[:] = np.zeros((2,))
 
         # sort the points of polygon
         for j in range(cnt - 1):

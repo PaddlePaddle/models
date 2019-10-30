@@ -39,8 +39,7 @@ FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
-np.random.seed(1024) # use same seed
-
+np.random.seed(1024) # use same random seed
 
 def parse_args():
     parser = argparse.ArgumentParser("PointRCNN semantic segmentation train script")
@@ -55,7 +54,7 @@ def parse_args():
         default=True,
         help='default use gpu.')
     parser.add_argument(
-        '--train_mode',
+        '--eval_mode',
         type=str,
         default='rpn',
         help='specify the training mode')
@@ -68,7 +67,7 @@ def parse_args():
         '--ckpt_dir',
         type=str,
         # default='checkpoints_adamw_cosine/199',
-        default='checkpoints/199',
+        default='checkpoints/198',
         help='specify a ckpt directory to be evaluated if needed')
     parser.add_argument(
         '--output_dir',
@@ -128,17 +127,16 @@ def save_rpn_feature(rets, kitti_features_dir):
         rpn_scores_raw_file = os.path.join(kitti_features_dir, '%06d_rawscore.npy' % s_id)
         np.save(rpn_scores_raw_file, rpn_cls[i])
 
-# def save_kitti_result(sample_id, calib, bbox3d, kitti_output_dir, scores, img_shape):
 def save_kitti_result(rets, seg_output_dir, kitti_output_dir, reader, classes):
     sample_id = rets['sample_id'][0]
     roi_scores_row = rets['roi_scores_row'][0]
+    bboxes3d = rets['rois'][0]
     pts_rect = rets['pts_rect'][0]
     seg_mask = rets['seg_mask'][0]
     rpn_cls_label = rets['rpn_cls_label'][0]
     gt_boxes3d = rets['gt_boxes3d'][0]
     gt_boxes3d_num = rets['gt_boxes3d'][1]
 
-    gt_box_idx = 0
     for i in range(len(sample_id)):
         s_id = sample_id[i, 0]
 
@@ -150,8 +148,7 @@ def save_kitti_result(rets, seg_output_dir, kitti_output_dir, reader, classes):
         np.save(seg_output_file, seg_result_data)
 
         scores = roi_scores_row[i, :]
-        bbox3d = gt_boxes3d[gt_box_idx: gt_box_idx + gt_boxes3d_num[0][i]]
-        gt_box_idx += gt_boxes3d_num[0][i]
+        bbox3d = bboxes3d[i, :]
         img_shape = reader.get_image_shape(s_id)
         calib = reader.get_calib(s_id)
 
@@ -166,6 +163,7 @@ def save_kitti_result(rets, seg_output_dir, kitti_output_dir, reader, classes):
         img_boxes_w = img_boxes[:, 2] - img_boxes[:, 0]
         img_boxes_h = img_boxes[:, 3] - img_boxes[:, 1]
         box_valid_mask = np.logical_and(img_boxes_w < img_shape[1] * 0.8, img_boxes_h < img_shape[0] * 0.8)
+        print("img_boxes shape:", img_boxes.shape, np.sum(box_valid_mask))
 
         kitti_output_file = os.path.join(kitti_output_dir, '%06d.txt' % s_id)
         with open(kitti_output_file, 'w') as f:
@@ -180,10 +178,6 @@ def save_kitti_result(rets, seg_output_dir, kitti_output_dir, reader, classes):
                     classes, alpha, img_boxes[k, 0], img_boxes[k, 1], img_boxes[k, 2], img_boxes[k, 3], 
                     bbox3d[k, 3], bbox3d[k, 4], bbox3d[k, 5], bbox3d[k, 0], bbox3d[k, 1], bbox3d[k, 2],
                     bbox3d[k, 6], scores[k]))
-                # print('%s -1 -1 %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f' %
-                #       (cfg.CLASSES, alpha, img_boxes[k, 0], img_boxes[k, 1], img_boxes[k, 2], img_boxes[k, 3],
-                #        bbox3d[k, 3], bbox3d[k, 4], bbox3d[k, 5], bbox3d[k, 0], bbox3d[k, 1], bbox3d[k, 2],
-                #        bbox3d[k, 6], scores[k]), file=f)
 
 
 def calc_iou_recall(rets, thresh_list):
@@ -211,14 +205,13 @@ def calc_iou_recall(rets, thresh_list):
 	    k -= 1
 	cur_gt_boxes3d = cur_gt_boxes3d[:k + 1]
 
-	# recalled_num = 0
 	if cur_gt_boxes3d.shape[0] > 0:
 	    iou3d = boxes_iou3d(cur_boxes3d, cur_gt_boxes3d[:, 0:7])
+            # logger.info("iou3d {}".format(iou3d))
 	    gt_max_iou = iou3d.max(axis=0)
 
 	    for idx, thresh in enumerate(thresh_list):
 		recalled_bbox_list[idx] += np.sum(gt_max_iou > thresh)
-	    # recalled_num = (gt_max_iou > 0.7).sum().item()
 	    gt_box_num += cur_gt_boxes3d.__len__()
 
 	fg_mask = cur_rpn_cls_label > 0
@@ -226,7 +219,7 @@ def calc_iou_recall(rets, thresh_list):
 	union = np.sum(fg_mask) + np.sum(cur_seg_mask > 0) - correct
 	rpn_iou = float(correct) / max(float(union), 1.0)
 	rpn_iou_sum += rpn_iou
-        logger.debug('sample_id {} rpn_iou {} correct {} union {} fg_mask {}'.format(sample_id, rpn_iou, correct, union, np.sum(fg_mask)))
+        logger.info('sample_id {} rpn_iou {} correct {} union {} fg_mask {}'.format(sample_id, rpn_iou, correct, union, np.sum(fg_mask)))
 
     return len(gt_boxes3d_num), gt_box_num, rpn_iou_sum, recalled_bbox_list
 
@@ -241,13 +234,13 @@ def eval():
     if not os.path.isdir(args.output_dir):
         os.makedirs(args.output_dir)
 
-    if args.train_mode == 'rpn':
+    if args.eval_mode == 'rpn':
         cfg.RPN.ENABLED = True
         cfg.RCNN.ENABLED = False
-    elif args.train_mode == 'rcnn':
+    elif args.eval_mode == 'rcnn':
         cfg.RCNN.ENABLED = True
         cfg.RPN.ENABLED = cfg.RPN.FIXED = True
-    elif args.train_mode == 'rcnn_offline':
+    elif args.eval_mode == 'rcnn_offline':
         cfg.RCNN.ENABLED = True
         cfg.RPN.ENABLED = False
     else:
@@ -269,7 +262,7 @@ def eval():
     eval_prog = eval_prog.clone(True)
 
     extra_keys = ['sample_id', 'pts_rect', 'pts_features', 'pts_input', 'gt_boxes3d', 'rpn_cls_label'] \
-                    if args.train_mode == 'rpn' and args.save_rpn_feature else ['sample_id', 'rpn_cls_label', 'gt_boxes3d']
+                    if args.eval_mode == 'rpn' and args.save_rpn_feature else ['sample_id', 'rpn_cls_label', 'gt_boxes3d']
     eval_keys, eval_values = parse_outputs(eval_outputs, prog=eval_prog, extra_keys=extra_keys)
 
     eval_compile_prog = fluid.compiler.CompiledProgram(
@@ -280,6 +273,8 @@ def eval():
     # load checkpoint
     assert os.path.isdir(args.ckpt_dir), "ckpt_dir {} not a directory".format(args.ckpt_dir)
     def if_exist(var):
+        if os.path.exists(os.path.join(args.ckpt_dir, var.name)):
+            logger.info("Load {}".format(var.name))
         return os.path.exists(os.path.join(args.ckpt_dir, var.name))
     fluid.io.load_vars(exe, args.ckpt_dir, eval_prog, predicate=if_exist)
 
@@ -311,7 +306,9 @@ def eval():
                                     classes=cfg.CLASSES,
                                     rcnn_eval_roi_dir=args.rcnn_eval_roi_dir,
                                     rcnn_eval_feature_dir=args.rcnn_eval_feature_dir)
-    eval_reader = kitti_rcnn_reader.get_reader(args.batch_size, eval_feeds, False)
+    eval_reader = kitti_rcnn_reader.get_reader(args.batch_size, eval_feeds, 
+                                               drop_last=False,
+                                               drop_empty=(not args.save_rpn_feature))
     eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
     try:
@@ -324,19 +321,21 @@ def eval():
             rets = {k: (np.array(v), v.recursive_sequence_lengths()) 
                         for k, v in zip(eval_keys, eval_outs)}
             period = time.time() - cur_time
+            logger.info("exe run: {}s".format(period))
             eval_periods.append(period)
 
-            # eval_stat.update(eval_keys, eval_outs)
-            cnt, gt_box_num, rpn_iou_sum, recalled_bbox_list = calc_iou_recall(rets, thresh_list)
-            total_cnt += cnt
-            total_gt_bbox += gt_box_num
-            total_rpn_iou += rpn_iou_sum
-            total_recalled_bbox_list = [x + y for x, y in zip(total_recalled_bbox_list, recalled_bbox_list)]
-
-
-            if args.save_rpn_feature:
+            if not args.save_rpn_feature:
+                cnt, gt_box_num, rpn_iou_sum, recalled_bbox_list = calc_iou_recall(rets, thresh_list)
+                total_cnt += cnt
+                total_gt_bbox += gt_box_num
+                total_rpn_iou += rpn_iou_sum
+                total_recalled_bbox_list = [x + y for x, y in zip(total_recalled_bbox_list, recalled_bbox_list)]
+                logger.info("total_cnt={}, total_gt_bbox={}, total_rpn_iou={}, total_recalled_bbox_list={}".format(total_cnt, total_gt_bbox, total_rpn_iou, total_recalled_bbox_list))
+            else:
                 save_rpn_feature(rets, kitti_feature_dir)
                 save_kitti_result(rets, seg_output_dir, kitti_output_dir, kitti_rcnn_reader, cfg.CLASSES)
+
+            logger.info("[EVAL] eval iter {}".format(eval_iter))
 
             eval_iter += 1
     except fluid.core.EOFException:

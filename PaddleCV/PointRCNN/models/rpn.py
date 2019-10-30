@@ -108,7 +108,6 @@ class RPN(object):
             rpn_scores_row = cls_out
             rpn_scores_norm = fluid.layers.sigmoid(rpn_scores_row)
             seg_mask = fluid.layers.cast(rpn_scores_norm > self.cfg.RPN.SCORE_THRESH, dtype='float32')
-            seg_mask = fluid.layers.cast(rpn_scores_norm > self.cfg.RPN.SCORE_THRESH, dtype='float32')
             pts_depth = fluid.layers.sqrt(fluid.layers.reduce_sum(backbone_xyz * backbone_xyz, dim=2))
             proposal_func = get_proposal_func(self.cfg, self.mode)
             proposal_input = fluid.layers.concat([fluid.layers.unsqueeze(rpn_scores_row, axes=[-1]),

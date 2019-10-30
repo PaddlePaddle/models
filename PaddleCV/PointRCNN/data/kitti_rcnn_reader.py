@@ -254,6 +254,8 @@ class KittiRCNNReader(KittiReader):
         return pts_valid_flag
 
     def get_rpn_sample(self, index):
+        # index = 1 # debug
+        # np.random.seed(index)
         sample_id = int(self.sample_id_list[index])
         if sample_id < 10000:
             calib = self.get_calib(sample_id)
@@ -313,10 +315,12 @@ class KittiRCNNReader(KittiReader):
             ret_pts_rect = pts_rect[choice, :]
             ret_pts_intensity = pts_intensity[choice] - 0.5  # translate intensity to [-0.5, 0.5]
         else:
-            ret_pts_rect = pts_rect
-            # ret_pts_rect = np.zeros((self.npoints, pts_rect.shape[1])).astype(pts_rect.dtype)
-            # num_ = min(self.npoints, pts_rect.shape[0])
-            # ret_pts_rect[:num_] = pts_rect[:num_] # debug
+            # ret_pts_rect = pts_rect
+
+            ret_pts_rect = np.zeros((self.npoints, pts_rect.shape[1])).astype(pts_rect.dtype)
+            num_ = min(self.npoints, pts_rect.shape[0])
+            ret_pts_rect[:num_] = pts_rect[:num_] # debug
+
             ret_pts_intensity = pts_intensity - 0.5
 
         pts_features = [ret_pts_intensity.reshape(-1, 1)]
@@ -595,7 +599,7 @@ class KittiRCNNReader(KittiReader):
         else:
             raise NotImplementedError
 
-    def get_reader(self, batch_size, fields, drop_last=False):
+    def get_reader(self, batch_size, fields, drop_last=False, drop_empty=False):
         def reader():
             batch_out = []
             idxs = np.arange(self.__len__())
@@ -604,15 +608,20 @@ class KittiRCNNReader(KittiReader):
             for idx in idxs:
                 sample_all = self.__getitem__(idx)
                 sample = [sample_all[f] for f in fields]
-                if self.mode != 'TRAIN' and has_empty(sample):
-                    logger.info("sample field empty")
+                if drop_empty and has_empty(sample):
+                    logger.debug("sample field empty")
                     continue
                 batch_out.append(sample)
                 if len(batch_out) >= batch_size:
                     yield batch_out
                     batch_out = []
+                # import sys
+                # print(sample_all)
+                # sys.stdout.flush()
+                # return
             if not drop_last:
-                yield batch_out
+                if len(batch_out) > 0:
+                    yield batch_out
         return reader
 
 
