@@ -27,10 +27,10 @@ SSD 可以方便地插入到任何一种标准卷积网络中，比如 VGG、Res
 
 ```
 cd data/pascalvoc
-./download.sh
+python download.py
 ```
 
-`download.sh` 命令会自动创建训练和测试用的列表文件。
+`download.py` 脚本会自动创建训练和测试用的列表文件。
 
 
 ### 模型训练
@@ -39,9 +39,11 @@ cd data/pascalvoc
 
 我们提供了两个预训练模型。第一个模型是在 COCO 数据集上预训练的 MobileNet-v1 SSD，我们将它的预测头移除了以便在 COCO 以外的数据集上进行训练。第二个模型是在 ImageNet 2012 数据集上预训练的 MobileNet-v1，我们也将最后的全连接层移除以便进行目标检测训练。下载 MobileNet-v1 SSD:
 
-    ```
-    ./pretrained/download_coco.sh
-    ```
+```bash
+sh ./pretrained/download_coco.sh
+```
+
+**注意：** Windows用户可通过`./pretrained/download_coco.sh`中的链接直接下载和解压。
 
 声明：MobileNet-v1 SSD 模型转换自[TensorFlow model](https://github.com/tensorflow/models/blob/f87a58cd96d45de73c9a8330a06b2ab56749a7fa/research/object_detection/g3doc/detection_model_zoo.md)。MobileNet-v1 模型转换自[Caffe](https://github.com/shicai/MobileNet-Caffe)。
 

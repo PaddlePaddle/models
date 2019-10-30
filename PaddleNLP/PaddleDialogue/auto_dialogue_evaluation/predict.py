@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.                                                                                                      
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """predict auto dialogue evaluation task"""
-
+import io
 import os
 import sys
 import six
 import time
 import numpy as np
-import multiprocessing
 
 import paddle
 import paddle.fluid as fluid
@@ -109,9 +109,9 @@ def do_predict(args):
 
     scores = scores[: num_test_examples]
     print("Write the predicted results into the output_prediction_file")
-    with open(args.output_prediction_file, 'w') as fw: 
-        for index, score in enumerate(scores): 
-            fw.write("%s\t%s\n" % (index, score))
+    fw = io.open(args.output_prediction_file, 'w', encoding="utf8")
+    for index, score in enumerate(scores): 
+        fw.write("%s\t%s\n" % (index, score))
     print("finish........................................")
 
 

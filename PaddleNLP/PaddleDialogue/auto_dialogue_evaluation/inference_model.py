@@ -18,7 +18,6 @@ import sys
 import six
 import numpy as np
 import time
-import multiprocessing
 import paddle
 import paddle.fluid as fluid
 

@@ -21,8 +21,8 @@ import json
 import random
 import collections
 import numpy as np
-import tokenization
-from batching import prepare_batch_data
+from task_reader import tokenization
+from task_reader.batching import prepare_batch_data
 
 
 class MRQAExample(object):

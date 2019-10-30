@@ -38,8 +38,9 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 在[MS-COCO数据集](http://cocodataset.org/#download)上进行训练，通过如下方式下载数据集。
 
-    cd dataset/coco
-    ./download.sh
+```bash
+python dataset/coco/download.py
+```
 
 数据目录结构如下：
 
@@ -67,6 +68,8 @@ data/coco/
 **下载预训练模型：** 本示例提供Resnet-50预训练模型，该模性转换自Caffe，并对批标准化层(Batch Normalization Layer)进行参数融合。采用如下命令下载预训练模型：
 
     sh ./pretrained/download.sh
+
+**注意:** Windows用户可通过`./pretrained/download.sh`中的链接直接下载和解压。
 
 通过初始化`pretrained_model` 加载预训练模型。同时在参数微调时也采用该设置加载已训练模型。
 请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。
