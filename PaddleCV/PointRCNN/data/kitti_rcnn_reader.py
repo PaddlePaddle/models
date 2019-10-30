@@ -368,6 +368,9 @@ class KittiRCNNReader(KittiReader):
             sample_info['gt_boxes3d'] = aug_gt_boxes3d
             return sample_info
 
+        if self.mode == 'EVAL' and aug_gt_boxes3d.shape[0] == 0:
+            aug_gt_boxes3d = np.zeros((1, aug_gt_boxes3d.shape[1]))
+
         # generate training labels
         rpn_cls_label, rpn_reg_label = self.generate_rpn_training_labels(aug_pts_rect, aug_gt_boxes3d)
         sample_info['pts_input'] = pts_input
@@ -599,7 +602,7 @@ class KittiRCNNReader(KittiReader):
         else:
             raise NotImplementedError
 
-    def get_reader(self, batch_size, fields, drop_last=False, drop_empty=False):
+    def get_reader(self, batch_size, fields, drop_last=False):
         def reader():
             batch_out = []
             idxs = np.arange(self.__len__())
@@ -608,9 +611,6 @@ class KittiRCNNReader(KittiReader):
             for idx in idxs:
                 sample_all = self.__getitem__(idx)
                 sample = [sample_all[f] for f in fields]
-                if drop_empty and has_empty(sample):
-                    logger.debug("sample field empty")
-                    continue
                 batch_out.append(sample)
                 if len(batch_out) >= batch_size:
                     yield batch_out

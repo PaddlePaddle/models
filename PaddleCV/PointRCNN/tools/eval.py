@@ -306,9 +306,7 @@ def eval():
                                     classes=cfg.CLASSES,
                                     rcnn_eval_roi_dir=args.rcnn_eval_roi_dir,
                                     rcnn_eval_feature_dir=args.rcnn_eval_feature_dir)
-    eval_reader = kitti_rcnn_reader.get_reader(args.batch_size, eval_feeds, 
-                                               drop_last=False,
-                                               drop_empty=(not args.save_rpn_feature))
+    eval_reader = kitti_rcnn_reader.get_reader(args.batch_size, eval_feeds, False)
     eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
     try:
@@ -340,12 +338,13 @@ def eval():
             eval_iter += 1
     except fluid.core.EOFException:
         logger.info("[EVAL] total {} iter finished, average time: {:.2f}".format(eval_iter, np.mean(eval_periods[2:])))
-        avg_rpn_iou = total_rpn_iou / max(len(kitti_rcnn_reader), 1.)
-        logger.info("average rpn iou: {:.3f}".format(avg_rpn_iou))
-        for idx, thresh in enumerate(thresh_list):
-            recall = float(total_recalled_bbox_list[idx]) / max(total_gt_bbox, 1.)
-            logger.info("total bbox recall(thresh={:.3f}): {} / {} = {:.3f}".format(
-                thresh, total_recalled_bbox_list[idx], total_gt_bbox, recall))
+        if not args.save_rpn_feature:
+            avg_rpn_iou = total_rpn_iou / max(len(kitti_rcnn_reader), 1.)
+            logger.info("average rpn iou: {:.3f}".format(avg_rpn_iou))
+            for idx, thresh in enumerate(thresh_list):
+                recall = float(total_recalled_bbox_list[idx]) / max(total_gt_bbox, 1.)
+                logger.info("total bbox recall(thresh={:.3f}): {} / {} = {:.3f}".format(
+                    thresh, total_recalled_bbox_list[idx], total_gt_bbox, recall))
     finally:
         eval_pyreader.reset()
 
