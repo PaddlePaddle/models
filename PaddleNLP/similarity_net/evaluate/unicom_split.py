@@ -15,9 +15,12 @@
 split unicom file
 """
 
-with open("../data/unicom", "r") as unicom_file:
-    with open("./unicom_infer", "w") as infer_file:
-        with open("./unicom_label", "w") as label_file:
+import io
+
+
+with io.open("../data/unicom", "r", encoding="utf8") as unicom_file:
+    with io.open("./unicom_infer", "w", encoding="utf8") as infer_file:
+        with io.open("./unicom_label", "w", encoding="utf8") as label_file:
             for line in unicom_file:
                 line = line.strip().split('\t')
                 infer_file.write("\t".join(line[:2]) + '\n')
