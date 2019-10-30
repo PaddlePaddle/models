@@ -16,7 +16,7 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 
 #### 1.PaddlePaddle 安装
 
-本项目依赖 PaddlePaddle 1.4.0 及以上版本和PaddleHub 1.0.0及以上版本 ，PaddlePaddle安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)，PaddleHub安装参考 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)。
+本项目依赖 PaddlePaddle 1.6.0 及以上版本和PaddleHub 1.0.0及以上版本 ，PaddlePaddle安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)，PaddleHub安装参考 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)。
 
 > Warning: GPU 和 CPU 版本的 PaddlePaddle 分别是 paddlepaddle-gpu 和 paddlepaddle，请安装时注意区别。
 
