@@ -35,7 +35,7 @@ def load_vocab(file_path):
     load the given vocabulary
     """
     vocab = {}
-    f = io.open(file_path, "r", encoding="utf-8")
+    f = io.open(file_path, "r", encoding="utf8")
     for line in f:
         items = line.strip("\n").split("\t")
         if items[0] not in vocab:
