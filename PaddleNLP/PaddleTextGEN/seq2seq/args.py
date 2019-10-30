@@ -122,6 +122,17 @@ def parse_args():
 
     parser.add_argument(
         "--profile", action='store_true', help="Whether enable the profile.")
+    ##profiler args
+    parser.add_argument(
+        "--is_profiler", 
+        type=int,
+        default=0,
+        help="The switch of profiler tools." )
+    parser.add_argument(
+        "--profiler_path",
+        type=str,
+        default='./',
+        help="the profiler output file path") 
 
     args = parser.parse_args()
     return args
