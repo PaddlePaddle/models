@@ -19,7 +19,7 @@ INIT_CHECKPOINT=./model_files/simnet_bow_pairwise_pretrained_model/
 
 # run_train
 train() {
-	python run_classifier.py \
+    python run_classifier.py \
 		--task_name ${TASK_NAME} \
 		--use_cuda False \
 		--do_train True \
