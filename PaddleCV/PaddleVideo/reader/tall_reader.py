@@ -144,7 +144,7 @@ class TALLReader(DataReader):
             for sent_vec in sent_vecs:
                 self.clip_sentence_pairs.append((clip_name, sent_vec))  #10146
         logger.info(self.mode.upper() + ':' + str(
-            len(self.clip_sentence_pairs)) + " clip-sentence pairs are readed")
+            len(self.clip_sentence_pairs)) + " clip-sentence pairs are read")
 
         movie_names_set = set()
         movie_clip_names = {}
@@ -198,7 +198,7 @@ class TALLReader(DataReader):
                                         (clip_sentence[0], clip_sentence[1],
                                          clip_name, start_offset, end_offset))
             logger.info('TRAIN:' + str(len(self.clip_sentence_pairs_iou)) +
-                        " iou clip-sentence pairs are readed")
+                        " iou clip-sentence pairs are read")
 
         elif (self.mode == 'test') or (self.mode == 'infer'):
             for clip_name in sliding_clips_tmp:
@@ -210,7 +210,7 @@ class TALLReader(DataReader):
                             [1])
 
             logger.info('TEST:' + str(len(self.clip_sentence_pairs_iou)) +
-                        " iou clip-sentence pairs are readed")
+                        " iou clip-sentence pairs are read")
 
     def load_movie_slidingclip(self, clip_sentence_pairs,
                                clip_sentence_pairs_iou, movie_name):
