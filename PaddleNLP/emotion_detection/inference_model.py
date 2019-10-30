@@ -45,9 +45,7 @@ def do_save_inference_model(args):
     with fluid.program_guard(test_prog, startup_prog):
         with fluid.unique_name.guard():
             infer_loader, probs, feed_target_names = create_model(
-                args,
-                num_labels=args.num_labels,
-                is_prediction=True)
+                args, num_labels=args.num_labels, is_prediction=True)
 
     test_prog = test_prog.clone(for_test=True)
     exe = fluid.Executor(place)
@@ -82,10 +80,10 @@ def test_inference_model(args, texts):
 
     assert (args.inference_model_dir)
     infer_program, feed_names, fetch_targets = fluid.io.load_inference_model(
-            dirname=args.inference_model_dir,
-            executor=exe,
-            model_filename="model.pdmodel",
-            params_filename="params.pdparams")
+        dirname=args.inference_model_dir,
+        executor=exe,
+        model_filename="model.pdmodel",
+        params_filename="params.pdparams")
     data = []
     seq_lens = []
     for query in texts:
@@ -97,13 +95,13 @@ def test_inference_model(args, texts):
     seq_lens = np.array(seq_lens)
 
     pred = exe.run(infer_program,
-                feed={
-                    feed_names[0]:data,
-                    feed_names[1]:seq_lens},
-                fetch_list=fetch_targets,
-                return_numpy=True)
+                   feed={feed_names[0]: data,
+                         feed_names[1]: seq_lens},
+                   fetch_list=fetch_targets,
+                   return_numpy=True)
     for probs in pred[0]:
-        print("%d\t%f\t%f\t%f" % (np.argmax(probs), probs[0], probs[1], probs[2]))
+        print("%d\t%f\t%f\t%f" %
+              (np.argmax(probs), probs[0], probs[1], probs[2]))
 
 
 if __name__ == "__main__":
@@ -116,4 +114,3 @@ if __name__ == "__main__":
     else:
         texts = [u"我 讨厌 你 ， 哼哼 哼 。 。", u"我 喜欢 你 ， 爱 你 哟"]
         test_inference_model(args, texts)
-
