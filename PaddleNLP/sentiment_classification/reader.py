@@ -72,12 +72,12 @@ class SentaProcessor(object):
         Generate data for train, dev or infer
         """
         if phase == "train":
-            return paddle.batch(self.get_train_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
+            return fluid.io.batch(self.get_train_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
             #return self.get_train_examples(self.data_dir, epoch, self.max_seq_len)
         elif phase == "dev":
-            return paddle.batch(self.get_dev_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
+            return fluid.io.batch(self.get_dev_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         elif phase == "infer":
-            return paddle.batch(self.get_test_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
+            return fluid.io.batch(self.get_test_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         else:
             raise ValueError(
                 "Unknown phase, which should be in ['train', 'dev', 'infer'].")
