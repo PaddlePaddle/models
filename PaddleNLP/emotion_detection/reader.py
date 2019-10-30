@@ -96,16 +96,16 @@ class EmoTectProcessor(object):
         Generate data for train, dev or test
         """
         if phase == "train":
-            return paddle.batch(
+            return fluid.io.batch(
                 self.get_train_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         elif phase == "dev":
-            return paddle.batch(
+            return fluid.io.batch(
                 self.get_dev_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         elif phase == "test":
-            return paddle.batch(
+            return fluid.io.batch(
                 self.get_test_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         elif phase == "infer":
-            return paddle.batch(
+            return fluid.io.batch(
                 self.get_infer_examples(self.data_dir, epoch, self.max_seq_len), batch_size)
         else:
             raise ValueError(

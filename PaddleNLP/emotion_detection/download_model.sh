@@ -1,7 +1,7 @@
 #!/bin/bash
 
-mkdir -p models
-cd models
+mkdir -p pretrain_models
+cd pretrain_models
 
 # download pretrain model file to ./models/
 MODEL_CNN=https://baidu-nlp.bj.bcebos.com/emotion_detection_textcnn-1.0.0.tar.gz

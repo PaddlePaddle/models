@@ -12,11 +12,11 @@
 
 ## 生成文件列表
 
-打开generate\_list.sh，将其中的TRAIN\_DIR和VALID\_DIR修改成用户所保存的mp4文件路径，运行脚本
+运行下面的代码即可生成trainlist.txt、vallist.txt和testlist.txt，
 
-    bash generate_list.sh
+    python generate_filelist.py ${TRAIN_DIR} ${VALID_DIR}
 
-即可生成trainlist.txt、vallist.txt和testlist.txt。
+其中TRAIN\_DIR和VALID\_DIR分别是存放训练和验证数据集文件的路径。注意请确认[kinetics-400\_train.csv](https://github.com/activitynet/ActivityNet/tree/master/Crawler/Kinetics/data/kinetics-400_train.csv)已经下载到本地，不然运行generate\_filelist.py时会报错。
 
 另外，如果要观察模型推断的效果，可以复制testlist.txt生成inferlist.txt，
 
