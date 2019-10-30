@@ -1,6 +1,6 @@
 [English](README.md)
 
-运行本目录下的程序示例需要使用 PaddlePaddle v1.6.0及以上版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新 PaddlePaddle 安装版本。
+运行本目录下的程序示例需要使用 PaddlePaddle v1.6.0及以上版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/index_cn.html)中的说明更新 PaddlePaddle 安装版本。
 
 ---
 

@@ -1,6 +1,6 @@
 [中文](README_cn.md)
 
-The minimum PaddlePaddle version needed for the code sample in this directory is v1.6.0. If you are on a version of PaddlePaddle earlier than this, [please update your installation](http://www.paddlepaddle.org/docs/develop/documentation/en/build_and_install/pip_install_en.html).
+The minimum PaddlePaddle version needed for the code sample in this directory is v1.6.0. If you are on a version of PaddlePaddle earlier than this, [please update your installation](https://www.paddlepaddle.org.cn/documentation/docs/en/beginners_guide/index_en.html).
 
 ---
 
