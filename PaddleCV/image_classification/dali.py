@@ -156,6 +156,9 @@ def build(settings, mode='train'):
         place.set_place(p)
         device_id = place.gpu_device_id()
         file_list = os.path.join(file_root, 'val_list.txt')
+        if not os.path.exists(file_list):
+            file_list = None
+            file_root = os.path.join(file_root, 'val')
         pipe = HybridValPipe(file_root, file_list, batch_size,
                              resize_shorter, crop, interp, mean, std,
                              device_id=device_id)
@@ -166,6 +169,9 @@ def build(settings, mode='train'):
                                    last_batch_padded=True)
 
     file_list = os.path.join(file_root, 'train_list.txt')
+    if not os.path.exists(file_list):
+        file_list = None
+        file_root = os.path.join(file_root, 'train')
 
     if 'PADDLE_TRAINER_ID' in env and 'PADDLE_TRAINERS_NUM' in env:
         shard_id = int(env['PADDLE_TRAINER_ID'])
