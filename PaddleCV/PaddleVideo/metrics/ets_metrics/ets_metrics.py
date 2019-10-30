@@ -23,11 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class MetricsCalculator():
-    def __init__(self,
-                 name='ETS',
-                 mode='train',
-                 dict_file =''
-                 ):
+    def __init__(self, name='ETS', mode='train', dict_file=''):
         self.name = name
         self.mode = mode  # 'train', 'valid', 'test', 'infer'
         self.dict_file = dict_file
@@ -49,9 +45,14 @@ class MetricsCalculator():
         elif (self.mode == 'test') or (self.mode == 'infer'):
             seq_ids = fetch_list[0]
             seq_scores = fetch_list[1]
-            vid = fetch_list[2][0]
-            stime = fetch_list[2][1]
-            etime = fetch_list[2][2]
+            b_vid = [item[0] for item in fetch_list[2]]
+            b_stime = [item[1] for item in fetch_list[2]]
+            b_etime = [item[2] for item in fetch_list[2]]
+
+            # for test and inference, batch size=1
+            vid = b_vid[0]
+            stime = b_stime[0]
+            etime = b_etime[0]
 
             #get idx_to_word
             self.idx_to_word = dict()
@@ -65,12 +66,20 @@ class MetricsCalculator():
                 for j in range(end - start)[:1]:
                     sub_start = seq_ids.lod()[1][start + j]
                     sub_end = seq_ids.lod()[1][start + j + 1]
-                    sent = " ".join([self.idx_to_word[idx]
-                                     for idx in np.array(seq_ids)[sub_start:sub_end][1:-1]])
+                    sent = " ".join([
+                        self.idx_to_word[idx]
+                        for idx in np.array(seq_ids)[sub_start:sub_end][1:-1]
+                    ])
                     if vid not in self.result_dict:
-                        self.result_dict[vid] = [{'timestamp': [stime, etime], 'sentence': sent}]
+                        self.result_dict[vid] = [{
+                            'timestamp': [stime, etime],
+                            'sentence': sent
+                        }]
                     else:
-                        self.result_dict[vid].append({'timestamp': [stime, etime], 'sentence': sent})
+                        self.result_dict[vid].append({
+                            'timestamp': [stime, etime],
+                            'sentence': sent
+                        })
 
     def accumulate_infer_results(self, fetch_list):
         # the same as test
@@ -79,9 +88,16 @@ class MetricsCalculator():
     def finalize_metrics(self, savedir):
         self.filepath = os.path.join(savedir, self.out_file)
         with open(self.filepath, 'w') as f:
-            f.write(json.dumps({'version': 'VERSION 1.0', 'results': self.result_dict, 'external_data': {}}, indent=2))
-            logger.info('results has been saved into file: {}'.format(self.filepath))
-
+            f.write(
+                json.dumps(
+                    {
+                        'version': 'VERSION 1.0',
+                        'results': self.result_dict,
+                        'external_data': {}
+                    },
+                    indent=2))
+            logger.info('results has been saved into file: {}'.format(
+                self.filepath))
 
     def finalize_infer_metrics(self, savedir):
         # the same as test

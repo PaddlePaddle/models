@@ -22,9 +22,8 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 
-#include palm for easier nlp coding
-from palm.toolkit.input_field import InputField
-from palm.toolkit.configure import PDConfig
+from utils.input_field import InputField
+from utils.configure import PDConfig
 
 # include task-specific libs
 import desc

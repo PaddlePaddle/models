@@ -17,6 +17,7 @@ from __future__ import print_function
 from __future__ import division
 
 from collections import OrderedDict
+from ppdet.data.transform.operators import *
 
 from paddle import fluid
 
@@ -38,7 +39,7 @@ feed_var_def = [
 # yapf: enable
 
 
-def create_feed(feed, iterable=False):
+def create_feed(feed, iterable=False, sub_prog_feed=False):
     image_shape = feed.image_shape
     feed_var_map = {var['name']: var for var in feed_var_def}
     feed_var_map['image'] = {
@@ -60,6 +61,58 @@ def create_feed(feed, iterable=False):
         feed_var_map['gt_box']['lod_level'] = 0
         feed_var_map['is_difficult']['lod_level'] = 0
 
+    base_name_list = ['image']
+    num_scale = getattr(feed, 'num_scale', 1)
+    sample_transform = feed.sample_transforms
+    multiscale_test = False
+    aug_flip = False
+    for t in sample_transform:
+        if isinstance(t, MultiscaleTestResize):
+            multiscale_test = True
+            aug_flip = t.use_flip
+            assert (len(t.target_size)+1)*(aug_flip+1) == num_scale, \
+                "num_scale: {} is not equal to the actual number of scale: {}."\
+                .format(num_scale, (len(t.target_size)+1)*(aug_flip+1))
+            break
+
+    if aug_flip:
+        num_scale //= 2
+        base_name_list.insert(0, 'flip_image')
+        feed_var_map['flip_image'] = {
+            'name': 'flip_image',
+            'shape': image_shape,
+            'dtype': 'float32',
+            'lod_level': 0
+        }
+
+    image_name_list = []
+    if multiscale_test:
+        for base_name in base_name_list:
+            for i in range(0, num_scale):
+                name = base_name if i == 0 else base_name + '_scale_' + str(i -
+                                                                            1)
+                feed_var_map[name] = {
+                    'name': name,
+                    'shape': image_shape,
+                    'dtype': 'float32',
+                    'lod_level': 0
+                }
+                image_name_list.append(name)
+        feed_var_map['im_info']['shape'] = [feed.num_scale * 3]
+        feed.fields = image_name_list + feed.fields[1:]
+    if sub_prog_feed:
+        box_names = ['bbox', 'bbox_flip']
+        for box_name in box_names:
+            sub_prog_feed = {
+                'name': box_name,
+                'shape': [6],
+                'dtype': 'float32',
+                'lod_level': 1
+            }
+
+            feed.fields = feed.fields + [box_name]
+            feed_var_map[box_name] = sub_prog_feed
+
     feed_vars = OrderedDict([(key, fluid.layers.data(
         name=feed_var_map[key]['name'],
         shape=feed_var_map[key]['shape'],
@@ -70,5 +123,5 @@ def create_feed(feed, iterable=False):
         feed_list=list(feed_vars.values()),
         capacity=64,
         use_double_buffer=True,
-        iterable=iterable)
+        iterable=iterable) if not sub_prog_feed else None
     return loader, feed_vars
