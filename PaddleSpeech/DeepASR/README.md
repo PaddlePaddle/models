@@ -19,7 +19,7 @@ DeepASR (Deep Automatic Speech Recognition) is a speech recognition system based
 
 
 ### Introduction
-DeepASR is an acoustic model of a single conv layer and multi-layer stacked LSTMP structure. Convolution is used for preliminary feature extraction, and multi-layer LSTMP is used to model the timing relationship, using cross entropy as the loss function. [LSTMP](https://arxiv.org/abs/1402.1128) (LSTM with recurrent projection layer) is an extension of the traditional LSTM. It adds a mapping layer to the LSTM, maps the hidden layer to the lower dimension and enters to the next time step. This structure greatly improves the performance of the LSTM while greatly reducing the parameter size and computational complexity of the LSTM.
+DeepASR is an acoustic model of a single conv layer and multi-layer stacked LSTMP structure. Convolution is used for preliminary feature extraction, and multi-layer LSTMP is used to model the timing relationship, using cross entropy as the loss function. [LSTMP](https://arxiv.org/abs/1402.1128) (LSTM with recurrent projection layer) is an extension of the traditional LSTM. It adds a projection layer to the LSTM, projecting the hidden layer to the lower dimension and enters to the next time step. This structure greatly improves the performance of the LSTM while greatly reducing the parameter size and computational complexity of the LSTM.
 
 <p align="center">
 <img src="images/lstmp.png" height=240 width=480 hspace='10'/> <br />
@@ -64,7 +64,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -u train.py \
                    --mean_var global_mean_var \
                    --parallel
 ```
-where `train_feature.lst` and `train_label.lst` are the feature list file and the label list file of the training data. Similarly, `val_feature.lst` and `val_label.lst` correspond to the list file of the validation data. In the actual training process, important parameters such as modeling unit size and learning rate should be correctly specified. For instructions on these parameters, please run:
+where `train_feature.lst` and `train_label.lst` are the feature list file and the label list file of the training data. Similarly, `val_feature.lst` and `val_label.lst` correspond to the list file of the validation data. In the actual training process, important arguments such as LSTMP's hidden unit size and learning rate should be correctly specified. For instructions on these parameters, please run:
 
 ```shell
 python train.py --help
@@ -115,7 +115,7 @@ key3 text3
 ```
 
 ### Aishell example
-This section uses the [Aishell dataset](http://www.aishelltech.com/kysjcp) as an example to show how to perform data preprocessing to decoding output. Aishell is a Mandarin voice data set opened by Beijing Hillbeck. It is 178 hours long and contains 400 voices from different accent area recorders. The original data can be obtained from [openslr](http://www.openslr.org/33). To simplify the process, here is a data set that has been preprocessed for download:
+This section uses the [Aishell dataset](http://www.aishelltech.com/kysjcp) as an example to show how to perform data preprocessing to decoding output. Aishell is an open Chinese Mandarin speech database published by Beijing Shell Shell Technology Co.,Ltd. It is 178 hours long and contains 400 voices from different accent area recorders. The original data can be obtained from [openslr](http://www.openslr.org/33). To simplify the process, here is a data set that has been preprocessed for download:
 
 ```
 cd examples/aishell
@@ -133,7 +133,7 @@ Training:
 ```
 sh train.sh
 ```
-The default is to use 4 card GPU for training. In the actual process, the parameters such as batch_size and learning rate can be dynamically adjusted according to the number of available GPUs and the size of the memory. The typical loss function and accuracy trend during training are shown in Figure 2.
+The default is to use 4 GPUs for training. In the actual process, the arguments such as batch_size and learning rate can be dynamically adjusted according to the number of available GPUs and the size of the memory. The typical curves for cost and accuracy during training are shown in Figure 2.
 
 <p align="center">
 <img src="images/learning_curve.png" height=480 width=640 hspace='10'/> <br />

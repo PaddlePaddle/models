@@ -68,7 +68,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -u train.py \
                    --mean_var global_mean_var \
                    --parallel
 ```
-其中`train_feature.lst`和`train_label.lst`分别是训练数据集的特征列表文件和标注列表文件，类似的，`val_feature.lst`和`val_label.lst`对应的则是验证集的列表文件。实际训练过程中要正确指定建模单元大小、学习率等重要参数。关于这些参数的说明，请运行
+其中`train_feature.lst`和`train_label.lst`分别是训练数据集的特征列表文件和标注列表文件，类似的，`val_feature.lst`和`val_label.lst`对应的则是验证集的列表文件。实际训练过程中要正确指定 LSTMP 隐藏层的大小、学习率等重要参数。关于这些参数的说明，请运行
 
 ```shell
 python train.py --help
