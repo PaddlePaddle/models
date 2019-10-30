@@ -15,6 +15,9 @@
 comput unicom
 """
 
+import io
+
+
 infer_results = []
 labels = []
 result = []
@@ -23,11 +26,11 @@ temp_query = ""
 pos_num = 0.0
 neg_num = 0.0
 
-with open("./unicom_infer_result", "r") as infer_result_file:
+with io.open("./unicom_infer_result", "r", encoding="utf8") as infer_result_file:
     for line in infer_result_file:
         infer_results.append(line.strip().split("\t"))
 
-with open("./unicom_label", "r") as label_file:
+with io.open("./unicom_label", "r", encoding="utf8") as label_file:
     for line in label_file:
         labels.append(line.strip().split("\t"))
 
