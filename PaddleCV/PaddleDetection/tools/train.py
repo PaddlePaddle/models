@@ -49,6 +49,7 @@ from ppdet.utils.cli import ArgsParser
 from ppdet.utils.check import check_gpu
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.modeling.model_input import create_feed
+from paddle.fluid import profiler
 
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -257,6 +258,12 @@ def main():
             strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
                 it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
+        ###profiler tools
+        if FLAGS.is_profiler and it == 5:
+           profiler.start_profiler("All")
+        elif FLAGS.is_profiler and it == 10:
+             profiler.stop_profiler("total", FLAGS.profiler_path)
+             return
 
         if (it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1) \
            and (not FLAGS.dist or trainer_id == 0):
@@ -334,5 +341,15 @@ if __name__ == '__main__':
         type=str,
         default="tb_log_dir/scalar",
         help='Tensorboard logging directory for scalar.')
+    parser.add_argument(
+        '--is_profiler',
+        type=int,
+        default=0,
+        help='The switch of profiler tools.')
+    parser.add_argument(
+        '--profiler_path',
+        type=str,
+        default="./",
+        help='The profiler output file path.')
     FLAGS = parser.parse_args()
     main()
