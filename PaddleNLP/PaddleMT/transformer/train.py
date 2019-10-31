@@ -21,6 +21,7 @@ import time
 import numpy as np
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 
 import utils.dist_utils as dist_utils
 from utils.input_field import InputField
@@ -299,6 +300,12 @@ def do_train(args):
 
                 batch_id += 1
                 step_idx += 1
+                #profiler tools
+                if args.is_profiler and pass_id == 0 and batch_id == 10:
+                   profiler.start_profiler("All")
+                elif args.is_profiler and pass_id == 0 and batch_id == 15: 
+                     profiler.stop_profiler("total", args.profiler_path)
+                     return
 
             except fluid.core.EOFException:
                 input_field.loader.reset()

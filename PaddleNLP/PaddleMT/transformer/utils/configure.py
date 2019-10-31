@@ -198,6 +198,8 @@ class PDConfig(object):
         self.default_g.add_arg("do_save_inference_model", bool, False,
                                "Whether to perform model saving for inference.")
 
+        self.default_g.add_arg("is_profiler", int, 0, "the switch of profiler tools.")
+        self.default_g.add_arg("profiler_path", str, './', "the profiler output file path.")
         self.parser = parser
 
         if json_file != "":
