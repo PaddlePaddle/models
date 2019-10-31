@@ -128,7 +128,6 @@ class MetricsCalculator():
 
     def accumulate_infer_results(self, fetch_list):
         fname = fetch_list[2][0]
-        print('fname', fetch_list[2])
         loc_pred = np.array(fetch_list[0])
         cls_pred = np.array(fetch_list[1])
         assert len(loc_pred) == 1, "please set batchsize to be 1 when infer"

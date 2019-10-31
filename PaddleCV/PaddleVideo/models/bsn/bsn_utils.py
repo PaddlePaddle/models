@@ -31,7 +31,6 @@ def iou_with_anchors(anchors_min, anchors_max, box_min, box_max):
     int_xmax = np.minimum(anchors_max, box_max)
     inter_len = np.maximum(int_xmax - int_xmin, 0.)
     union_len = len_anchors - inter_len + box_max - box_min
-    #print inter_len,union_len
     jaccard = np.divide(inter_len, union_len)
     return jaccard
 

@@ -1,3 +1,5 @@
+English | [简体中文](TRANSFER_LEARNING_cn.md)
+
 # Transfer Learning
 
 Transfer learning aims at learning new knowledge from existing knowledge. For example, take pretrained model from ImageNet to initialize detection models, or take pretrained model from COCO dataset to initialize train detection models in PascalVOC dataset.
@@ -6,7 +8,10 @@ In transfer learning, if different dataset and the number of classes is used, th
 
 ## Transfer Learning in PaddleDetection
 
-In transfer learning, it's needed to load pretrained model selectively. Set `finetune_exclude_pretrained_params` in YAML configuration files or set `-o finetune_exclude_pretrained_params` in command line.
+In transfer learning, it's needed to load pretrained model selectively. The following two methods can be used:
+
+1. Set `finetune_exclude_pretrained_params` in YAML configuration files. Please refer to [configure file](../configs/yolov3_mobilenet_v1_fruit.yml#L15)
+2. Set -o finetune_exclude_pretrained_params in command line. For example:
 
 ```python
 export PYTHONPATH=$PYTHONPATH:.
