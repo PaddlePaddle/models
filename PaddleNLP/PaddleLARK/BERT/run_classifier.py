@@ -39,6 +39,7 @@ from utils.args import ArgumentGroup, print_arguments, check_cuda
 from utils.init import init_pretraining_params, init_checkpoint
 from utils.cards import get_cards
 import dist_utils
+from paddle.fluid import profiler
 
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
@@ -84,15 +85,16 @@ data_g.add_arg("vocab_path",    str,  None,  "Vocabulary path.")
 data_g.add_arg("max_seq_len",   int,  512,   "Number of words of the longest seqence.")
 data_g.add_arg("batch_size",    int,  32,    "Total examples' number in batch for training. see also --in_tokens.")
 data_g.add_arg("in_tokens",     bool, False,
-              "If set, the batch size will be the maximum number of tokens in one batch. "
-              "Otherwise, it will be the maximum number of examples in one batch.")
+               "If set, the batch size will be the maximum number of tokens in one batch. "
+               "Otherwise, it will be the maximum number of examples in one batch.")
 data_g.add_arg("do_lower_case", bool, True,
                "Whether to lower case the input text. Should be True for uncased models and False for cased models.")
 data_g.add_arg("random_seed",   int,  0,     "Random seed.")
-
 run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
 run_type_g.add_arg("use_cuda",                     bool,   True,  "If set, use GPU for training.")
 run_type_g.add_arg("use_fast_executor",            bool,   False, "If set, use fast parallel executor (in experiment).")
+run_type_g.add_arg("profiler_path",                str,    './', "the profiler output file path.")
+run_type_g.add_arg("is_profiler",                  int,    0,     "the profiler switch.")
 run_type_g.add_arg("shuffle",                      bool,   True,  "")
 run_type_g.add_arg("num_iteration_per_drop_scope", int,    1,     "Ihe iteration intervals to clean up temporary variables.")
 run_type_g.add_arg("task_name",                    str,    None,
@@ -102,7 +104,6 @@ run_type_g.add_arg("do_val",                       bool,   True,  "Whether to pe
 run_type_g.add_arg("do_test",                      bool,   True,  "Whether to perform evaluation on test data set.")
 
 parser.add_argument("--enable_ce", action='store_true', help="The flag indicating whether to run the task for continuous evaluation.")
-
 args = parser.parse_args()
 # yapf: enable.
 
@@ -361,6 +362,12 @@ def main(args):
                     )
                     time_end = time.time()
                     used_time = time_end - time_begin
+                    ##profiler tools
+                    if args.is_profiler and current_epoch == 0 and steps== 500:
+                       profiler.start_profiler("All")
+                    elif args.is_profiler and current_epoch == 0 and steps == 1000:
+                         profiler.stop_profiler("total", args.profiler_path)
+                         return
 
                     log_record = "epoch: {}, progress: {}/{}, step: {}, ave loss: {}, ave acc: {}".format(
                            current_epoch, current_example, num_train_examples,
