@@ -7,15 +7,15 @@ The minimum PaddlePaddle version needed for the code sample in this directory is
 DeepASR (Deep Automatic Speech Recognition) is a speech recognition system based on PaddlePaddle FLuid and Kaldi. It uses the Fluid framework to perform the configuration and training of acoustic models in speech recognition and integrates Kaldi decoder. It is designed to facilitate Kaldi users to implement the rapid and large-scale training of acoustic models, and to use Kaldi to complete complex speech data preprocessing and final decoding processes.
 
 ### Content
-- [Introduction](#Introduction)
-- [Installation](#Installation)
-- [Data reprocessing](#Data-reprocessing)
-- [Training](#Training)
-- [Perf profiling](#Perf-profiling)
-- [Inference & Decoding](#Inference-&-Decoding)
-- [Scoring error rate](#Scoring-error-rate)
-- [Aishell example](#Aishell-example)
-- [Question and Contribution](#Question-and-Contribution)
+- [Introduction](#introduction)
+- [Installation](#installation)
+- [Data reprocessing](#data-reprocessing)
+- [Training](#training)
+- [Perf profiling](#perf-profiling)
+- [Inference & Decoding](#inference-&-decoding)
+- [Scoring error rate](#scoring-error-rate)
+- [Aishell example](#aishell-example)
+- [Question and Contribution](#question-and-contribution)
 
 
 ### Introduction
