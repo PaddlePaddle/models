@@ -12,7 +12,7 @@ DeepASR (Deep Automatic Speech Recognition) is a speech recognition system based
 - [Data reprocessing](#data-reprocessing)
 - [Training](#training)
 - [Perf profiling](#perf-profiling)
-- [Inference & Decoding](#inference-&-decoding)
+- [Inference & Decoding](#inference-decoding)
 - [Scoring error rate](#scoring-error-rate)
 - [Aishell example](#aishell-example)
 - [Question and Contribution](#question-and-contribution)
