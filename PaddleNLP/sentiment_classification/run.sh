@@ -1,7 +1,7 @@
 #! /bin/bash
 export FLAGS_enable_parallel_graph=1
 export FLAGS_sync_nccl_allreduce=1
-export CUDA_VISIBLE_DEVICES=12
+export CUDA_VISIBLE_DEVICES=0
 export FLAGS_fraction_of_gpu_memory_to_use=0.95
 export CPU_NUM=1
 
