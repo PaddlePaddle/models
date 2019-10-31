@@ -42,6 +42,7 @@ import reader
 from utils import *
 import models
 from build_model import create_model
+from paddle.fluid import profiler
 
 
 def build_program(is_train, main_prog, startup_prog, args):
@@ -215,7 +216,12 @@ def train(args):
                                "batch")
                     sys.stdout.flush()
                 train_batch_id += 1
-
+                ##profiler tools
+                if args.is_profiler and pass_id == 0 and train_batch_id == 10: 
+                   profiler.start_profiler("All")
+                elif args.is_profiler and pass_id == 0 and train_batch_id == 15:
+                      profiler.stop_profiler("total", args.profiler_path)
+                      return
         except fluid.core.EOFException:
             train_data_loader.reset()
 

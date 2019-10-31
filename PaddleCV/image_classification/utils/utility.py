@@ -128,6 +128,10 @@ def parse_args():
     parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
     parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
+    # READER AND PREPROCESS
+    add_arg('is_profiler',                int,    0,                   "the profiler switch.")
+    add_arg('profiler_path',              str,    './',                   "the profiler output file path.")
+
     # SWITCH
     #NOTE: (2019/08/08) FP16 is moving to PaddlePaddle/Fleet now
     #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
