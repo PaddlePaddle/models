@@ -8,11 +8,27 @@ XLNet 与 [BERT](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/P
 
 [XLNet: Generalized Autoregressive Pretraining for Language Understanding](https://arxiv.org/abs/1906.08237)
 
+## 目录结构
+
+```
+├── model/                        # 模型结构定义目录
+│   ├── classifier.py             # 回归/分类模型结构
+│   ├── xlnet.py                  # XLNet 模型结构
+├── reader/                       # 数据读取 reader 定义目录
+│   ├── cls.py                    # 分类任务数据读取
+│   ├── squad.py                  # squad 数据读取
+├── utils/                        # 辅助文件目录
+│── modeling.py                   # 网络定义模块
+│── optimization.py               # 优化方法
+│── run_classifier.py             # 运行回归/分类任务的脚本
+│── run_squad.py                  # 运行 squad 任务的脚本
+```
+
 ## 安装
 
 该项目要求 Paddle Fluid 1.6.0 及以上版本，请参考 [安装指南](https://www.paddlepaddle.org.cn/start) 进行安装。
 
-## Pre-trained models
+## 预训练模型
 
 这里提供了从官方开源模型转换而来的两个预训练模型供下载
 

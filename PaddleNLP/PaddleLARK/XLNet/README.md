@@ -8,7 +8,21 @@ For more details, please refer to the research paper
 
 [XLNet: Generalized Autoregressive Pretraining for Language Understanding](https://arxiv.org/abs/1906.08237)
 
+## Directory structure
 
+```
+├── model/                        # directory for model structure definition
+│   ├── classifier.py             # model for regression/classification
+│   ├── xlnet.py                  # model for XLNet
+├── reader/                       # directory for data reader
+│   ├── cls.py                    # data reader for regression/classification
+│   ├── squad.py                  # data reader for squad
+├── utils/                        # directory for utility files
+│── modeling.py                   # network modules
+│── optimization.py               # optimization method
+│── run_classifier.py             # script for running regression/classification task
+│── run_squad.py                  # script for running squad
+```
 
 ## Installation
 
