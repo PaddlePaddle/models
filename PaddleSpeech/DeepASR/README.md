@@ -12,7 +12,7 @@ DeepASR (Deep Automatic Speech Recognition) is a speech recognition system based
 - [Data reprocessing](#data-reprocessing)
 - [Training](#training)
 - [Perf profiling](#perf-profiling)
-- [Inference & Decoding](#inference-&-decoding)
+- [Inference and Decoding](#inference-and-decoding)
 - [Scoring error rate](#scoring-error-rate)
 - [Aishell example](#aishell-example)
 - [Question and Contribution](#question-and-contribution)
@@ -84,7 +84,7 @@ CUDA_VISIBLE_DEVICES=0 python -u tools/profile.py \
                    --mean_var global_mean_var
 ```
 
-### Inference & Decoding
+### Inference and Decoding
 After fully training the acoustic model, using the model checkpoint saved in the training process, the input audio data can be decoded and output, and the sound to text recognition result can be obtained.
 
 ```
