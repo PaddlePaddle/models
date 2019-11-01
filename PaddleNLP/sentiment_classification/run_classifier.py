@@ -21,6 +21,7 @@ from nets import cnn_net
 from nets import bilstm_net
 from nets import gru_net
 from models.model_check import check_cuda
+from models.model_check import check_version
 from config import PDConfig
 
 import paddle
@@ -39,11 +40,11 @@ def create_model(args,
     """
     
     data = fluid.layers.data(
-            name="src_ids", shape=[-1, args.max_seq_len, 1], dtype='int64')
+            name="src_ids", shape=[-1, args.max_seq_len], dtype='int64')
     label = fluid.layers.data(
             name="label", shape=[-1, 1], dtype="int64")
     seq_len = fluid.layers.data(
-            name="seq_len", shape=[-1, 1], dtype="int64")
+            name="seq_len", shape=[-1], dtype="int64")
     
     data_reader = fluid.io.PyReader(feed_list=[data, label, seq_len], 
         capacity=4, iterable=False)

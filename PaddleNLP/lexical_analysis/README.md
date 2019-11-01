@@ -16,7 +16,7 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 
 #### 1.PaddlePaddle 安装
 
-本项目依赖 PaddlePaddle 1.4.0 及以上版本和PaddleHub 1.0.0及以上版本 ，PaddlePaddle安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)，PaddleHub安装参考 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)。
+本项目依赖 PaddlePaddle 1.6.0 及以上版本和PaddleHub 1.0.0及以上版本 ，PaddlePaddle安装请参考官网 [快速安装](http://www.paddlepaddle.org/paddle#quick-start)，PaddleHub安装参考 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)。
 
 > Warning: GPU 和 CPU 版本的 PaddlePaddle 分别是 paddlepaddle-gpu 和 paddlepaddle，请安装时注意区别。
 
@@ -26,6 +26,10 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
  git clone https://github.com/PaddlePaddle/models.git
  cd models/PaddleNLP/lexical_analysis
 ```
+
+#### 3. 环境依赖
+PaddlePaddle的版本要求是：Python 2 版本是 2.7.15+、Python 3 版本是 3.5.1+/3.6/3.7。LAC的代码可支持Python2/3，无具体版本限制
+
 ### 数据准备
 
 #### 1. 快速下载
@@ -33,45 +37,37 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 本项目涉及的**数据集**和**预训练模型**的数据可通过执行以下脚本进行快速下载，若仅需使用部分数据，可根据需要参照下列介绍进行部分下载
 
 ```bash
-sh download.sh
+python downloads.py all
+```
+或在支持运行shell脚本的环境下执行：
+```bash
+sh downloads.sh
 ```
 
 #### 2. 训练数据集
 
 下载数据集文件，解压后会生成 `./data/` 文件夹
 ```bash
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-dataset-2.0.0.tar.gz
-tar xvf lexical_analysis-dataset-2.0.0.tar.gz
+python downloads.py dataset
 ```
 
 #### 3. 预训练模型
 
-我们开源了在自建数据集上训练的词法分析模型，可供用户直接使用，这里提供两种下载方式：
-
-方式一：基于 PaddleHub 命令行工具，PaddleHub 的安装参考 [PaddleHub](https://github.com/PaddlePaddle/PaddleHub)
+我们开源了在自建数据集上训练的词法分析模型，可供用户直接使用，可通过下述链接进行下载:
 ```bash
 # download baseline model
-hub download lexical_analysis
-tar xvf lexical_analysis-2.0.0.tar.gz
+python downloads.py lac
 
 # download ERNIE finetuned model
-hub download lexical_analysis_finetuned
-tar xvf lexical_analysis_finetuned-1.0.0.tar.gz
+python downloads.py finetuned
+
+# download ERNIE model for training
+python downloads.py ernie
 ```
 
-方式二：直接下载
-```bash
-# download baseline model
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis-2.0.0.tar.gz
-tar xvf lexical_analysis-2.0.0.tar.gz
-
-# download ERNIE finetuned model
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/lexical_analysis_finetuned-1.0.0.tar.gz
-tar xvf lexical_analysis_finetuned-1.0.0.tar.gz
-```
-
-注：若需进行ERNIE Finetune训练，需自行下载  [ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，下载链接为： [https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz)，下载后解压至 `./pretrained/` 目录下。
-
+注：若需进行ERNIE Finetune训练，需先行下载
+[ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，通过命令`python
+downloads.py ernie`可完成下载
 ### 模型评估
 
 我们基于自建的数据集训练了一个词法分析的模型，可以直接用这个模型对测试集 `./data/test.tsv` 进行验证，
@@ -85,8 +81,9 @@ sh run_ernie.sh eval
 
 ### 模型训练
 基于示例的数据集，可通过下面的命令，在训练集 `./data/train.tsv` 上进行训练，示例包含程序在单机单卡/多卡，以及CPU多线程的运行设置
-> Warning: 若需进行ERNIE Finetune训练，需自行下载  [ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，下载链接为： [https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz)，下载后解压至 `./pretrained/` 目录下。
-
+> Waring: 若需进行ERNIE Finetune训练，需先行下载
+[ERNIE](https://baidu-nlp.bj.bcebos.com/ERNIE_stable-1.0.1.tar.gz) 开放的模型，通过命令`python
+downloads.py ernie`可完成下载
 ```bash
 # baseline model, using single GPU
 sh run.sh train_single_gpu
@@ -180,7 +177,7 @@ python inference_model.py \
     1. 从原始数据文件中抽取出句子和标签，构造句子序列和标签序列
     2. 将句子序列中的特殊字符进行转换
     3. 依据词典获取词对应的整数索引
-    
+
 ### 代码结构说明
 ```text
 .
@@ -189,6 +186,7 @@ python inference_model.py \
 ├── compare.py                          # 执行LAC与其他开源分词的对比脚本
 ├── creator.py                          # 执行创建网络和数据读取器的脚本
 ├── data/                               # 存放数据集的目录
+├── downloads.py                        # 用于下载数据和模型的脚本
 ├── downloads.sh                        # 用于下载数据和模型的脚本
 ├── eval.py                             # 词法分析评估的脚本
 ├── inference_model.py                  # 执行保存inference_model的脚本，用于准备上线部署环境

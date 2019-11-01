@@ -1,3 +1,5 @@
+# **该项目已被迁移到 https://github.com/PaddlePaddle/PaddleDetection**
+
 [English](README.md) | 简体中文
 
 # PaddleDetection

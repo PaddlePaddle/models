@@ -1,3 +1,5 @@
+**该项目已被迁移至[PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), 这个项目包含了更多的检测模型。**
+
 # YOLOv3 目标检测
 
 ---
