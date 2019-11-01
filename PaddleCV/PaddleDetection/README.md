@@ -1,6 +1,8 @@
 <font size="40">**This project has been deprecated, please visit https://github.com/PaddlePaddle/PaddleDetection**</font> <br /> 
 
 <font size="20">size为1</font><br /> 
+<font size=5>字体、字号和颜色</font>
+
 
 
 English | [简体中文](README_cn.md)
