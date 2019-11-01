@@ -1,4 +1,6 @@
-<font size="40">**This project has been deprecated, please visit https://github.com/PaddlePaddle/PaddleDetection**</font>
+<font size="40">**This project has been deprecated, please visit https://github.com/PaddlePaddle/PaddleDetection**</font> <br /> 
+
+<font size="20">size为1</font><br /> 
 
 
 English | [简体中文](README_cn.md)
