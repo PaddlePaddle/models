@@ -1,3 +1,4 @@
+**该项目已被迁移至[PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg), 这个项目包含了更多的分割模型。**
 
 ## 代码结构
 ```
