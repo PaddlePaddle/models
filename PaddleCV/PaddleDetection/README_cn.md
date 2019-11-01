@@ -1,4 +1,4 @@
-# **该项目被移动到 https://github.com/PaddlePaddle/PaddleDetection**
+# **该项目已被迁移到 https://github.com/PaddlePaddle/PaddleDetection**
 
 [English](README.md) | 简体中文
 
