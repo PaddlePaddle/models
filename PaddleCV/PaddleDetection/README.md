@@ -1,3 +1,6 @@
+<font size=8> ** This project has been deprecated, please visit https://github.com/PaddlePaddle/PaddleDetection ** </font>
+
+
 English | [简体中文](README_cn.md)
 
 # PaddleDetection
