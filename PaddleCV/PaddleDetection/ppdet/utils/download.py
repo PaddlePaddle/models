@@ -131,7 +131,7 @@ def _merge_voc_dir(data_dir, output_subdir):
     logger.info("Download voc dataset successed, merge "
                 "VOC2007 and VOC2012 to VOC_all...")
     output_dir = osp.join(data_dir, output_subdir)
-    devkit_dir = "/".join(output_dir.split('/')[:-1])
+    devkit_dir = osp.split(output_dir)[0]
     years = ['2007', '2012']
     # merge dir in output_tmp_dir at first, move to 
     # output_dir after merge sucessed.
@@ -151,7 +151,7 @@ def _merge_voc_dir(data_dir, output_subdir):
 
 def map_path(url, root_dir):
     # parse path after download to decompress under root_dir
-    fname = url.split('/')[-1]
+    fname = osp.split(url)[-1]
     zip_formats = ['.zip', '.tar', '.gz']
     fpath = fname
     for zip_format in zip_formats:
@@ -181,7 +181,7 @@ def get_path(url, root_dir, md5sum=None):
     }
     for k, v in decompress_name_map.items():
         if fullpath.find(k) >= 0:
-            fullpath = '/'.join(fullpath.split('/')[:-1] + [v])
+            fullpath = osp.join(osp.split(fullpath)[0], v)
 
     if osp.exists(fullpath):
         logger.info("Found {}".format(fullpath))
@@ -241,7 +241,7 @@ def _download(url, path, md5sum=None):
     if not osp.exists(path):
         os.makedirs(path)
 
-    fname = url.split('/')[-1]
+    fname = osp.split(url)[-1]
     fullname = osp.join(path, fname)
     retry_cnt = 0
 
@@ -308,7 +308,7 @@ def _decompress(fname):
     # decompress to fpath_tmp directory firstly, if decompress
     # successed, move decompress files to fpath and delete
     # fpath_tmp and remove download compress file.
-    fpath = '/'.join(fname.split('/')[:-1])
+    fpath = osp.split(fname)[0]
     fpath_tmp = osp.join(fpath, 'tmp')
     if osp.isdir(fpath_tmp):
         shutil.rmtree(fpath_tmp)
