@@ -105,4 +105,4 @@ TALL的训练数据采用TACoS数据集，数据下载及准备请参考[数据�
 
 ## 参考论文
 
-- [TALL: Temporal Activity Localization via Language Query](https://arxiv.org/abs/1705.02101)。
+- [TALL: Temporal Activity Localization via Language Query](https://arxiv.org/abs/1705.02101), Jiyang Gao, Chen Sun, Zhenheng Yang, Ram Nevatia.

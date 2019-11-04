@@ -104,4 +104,4 @@ ETS的训练数据采用ActivityNet Captions提供的数据集，数据下载及
 
 ## 参考论文
 
-- [Describing Videos by Exploiting Temporal Structure](https://arxiv.org/abs/1502.08029)。
+- [Describing Videos by Exploiting Temporal Structure](https://arxiv.org/abs/1502.08029), Li Yao, Atousa Torabi, Kyunghyun Cho, Nicolas Ballas, Christopher Pal, Hugo Larochelle, Aaron Courville.
