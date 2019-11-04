@@ -73,7 +73,8 @@ DATASETS = {
     ], ["WIDER_train", "WIDER_val", "wider_face_split"]),
     'fruit': ([(
         'https://dataset.bj.bcebos.com/PaddleDetection_demo/fruit-detection.tar',
-        '374554a7633b1b68d6a5fbb7c061b8ba', ), ], ["fruit-detection"]),
+        'ee4a1bf2e321b75b0850cc6e063f79d7', ), ], ["fruit-detection"]),
+    'objects365': (),
 }
 
 DOWNLOAD_RETRY_LIMIT = 3
@@ -103,6 +104,11 @@ def get_dataset_path(path, annotation, image_dir):
         if os.path.split(path.strip().lower())[-1] == name:
             logger.info("Parse dataset_dir {} as dataset "
                         "{}".format(path, name))
+            if name == 'objects365':
+                raise NotImplementedError(
+                    "Dataset {} is not valid for download automatically."
+                    "Please apply and download the dataset from."
+                    "https://www.objects365.org/download.html")
             data_dir = osp.join(DATASET_HOME, name)
 
             # For voc, only check merged dir VOC_all
