@@ -73,8 +73,8 @@ def parse_args():
     parser.add_argument(
         '--bn_momentum',
         type=float,
-        default=0.1,
-        help='initial batch norm momentum, default 0.1')
+        default=0.99,
+        help='initial batch norm momentum, default 0.99')
     parser.add_argument(
         '--decay_steps',
         type=int,

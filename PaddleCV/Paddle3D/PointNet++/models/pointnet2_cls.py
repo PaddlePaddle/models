@@ -51,7 +51,7 @@ class PointNet2Cls(object):
                 iterable=False)
         self.feed_vars = [self.xyz, self.label]
 
-    def build_model(self, bn_momentum=0.1):
+    def build_model(self, bn_momentum=0.99):
         self.build_input()
 
         xyz, feature = self.xyz, None
