@@ -427,7 +427,8 @@ def conv2d_spectral_norm(input,
     dtype = helper.input_dtype()
     weight_param = fluid.ParamAttr(
         name=name + ".weight_orig",
-        initializer=fluid.initializer.Constant(1.0),
+        initializer=fluid.initializer.Normal(
+            loc=0.0, scale=1.0),
         trainable=True)
     weight = helper.create_parameter(
         attr=weight_param,
@@ -438,7 +439,9 @@ def conv2d_spectral_norm(input,
     weight = weight_spectral_norm
     if use_bias:
         bias_attr = fluid.ParamAttr(
-            name=name + "_b", initializer=fluid.initializer.Constant(0.0))
+            name=name + "_b",
+            initializer=fluid.initializer.Normal(
+                loc=0.0, scale=1.0))
     else:
         bias_attr = False
     conv = conv2d_with_filter(

@@ -37,7 +37,6 @@ python tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/0000005
 |       --json_eval        |       eval     |  是否通过已存在的bbox.json或者mask.json进行评估  |  False  |  json文件路径在`--output_eval`中设置  |
 |       --output_dir       |      infer     |  输出推断后可视化文件  |  `./output`  |  `--output_dir output`  |
 |    --draw_threshold      |      infer     |  可视化时分数阈值  |  0.5  |  `--draw_threshold 0.7`  |
-|  --save\_inference_model |      infer      |  是否保存预测模型  |  False  |  预测模型保存路径为`--output_dir`设置的路径  |
 |      --infer_dir         |       infer     |  用于推断的图片文件夹路径  |  None  |    |
 |      --infer_img         |       infer     |  用于推断的图片路径  |  None  |  相较于`--infer_dir`具有更高优先级  |
 |        --use_tb          |   train/infer   |  是否使用[tb-paddle](https://github.com/linshuliang/tb-paddle)记录数据，进而在TensorBoard中显示  |  False  |      |
@@ -145,18 +144,6 @@ python -m paddle.distributed.launch --selected_gpus 0,1,2,3,4,5,6,7 tools/train.
   `--draw_threshold` 是个可选参数. 根据 [NMS](https://ieeexplore.ieee.org/document/1699659) 的计算，
   不同阈值会产生不同的结果。如果用户需要对自定义路径的模型进行推断，可以设置`-o weights`指定模型路径。
 
-- 保存推断模型
-
-  ```bash
-  # GPU推断
-  export CUDA_VISIBLE_DEVICES=0
-  python -u tools/infer.py -c configs/faster_rcnn_r50_1x.yml --infer_img=demo/000000570688.jpg \
-                      --save_inference_model
-  ```
-
-  通过设置`--save_inference_model`保存可供PaddlePaddle预测库加载的推断模型。
-
-
 ## FAQ
 
 **Q:**  为什么我使用单GPU训练loss会出`NaN`? </br>
@@ -180,3 +167,7 @@ batch size可以达到每GPU 4 (Tesla V100 16GB)。
 **Q:**  如何修改数据预处理? </br>
 **A:**  可在配置文件中设置 `sample_transform`。注意需要在配置文件中加入**完整预处理**
 例如RCNN模型中`DecodeImage`, `NormalizeImage` and `Permute`。更多详细描述请参考[配置案例](config_example)。
+
+
+**Q:** affine_channel和batch norm是什么关系?
+**A:** 在RCNN系列模型加载预训练模型初始化，有时候会固定住batch norm的参数, 使用预训练模型中的全局均值和方式，并且batch norm的scale和bias参数不更新，已发布的大多ResNet系列的RCNN模型采用这种方式。这种情况下可以在config中设置norm_type为bn或affine_channel, freeze_norm为true (默认为true)，两种方式等价。affne_channel的计算方式为`scale * x + bias`。只不过设置affine_channel时，内部对batch norm的参数自动做了融合。如果训练使用的affine_channel，用保存的模型做初始化，训练其他任务时，即可使用affine_channel, 也可使用batch norm, 参数均可正确加载。

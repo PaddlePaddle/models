@@ -8,6 +8,10 @@ from tblib import Traceback
 import numpy as np
 
 
+def lodtensor_to_ndarray(result):
+    return np.array(result), result.lod()
+
+
 def to_lodtensor(data, place):
     """convert tensor to lodtensor
     """

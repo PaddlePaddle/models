@@ -119,10 +119,11 @@ def create_master_params_grads(params_grads, main_prog, startup_prog,
 def master_param_to_train_param(master_params_grads, params_grads, main_prog):
     for idx, m_p_g in enumerate(master_params_grads):
         train_p, _ = params_grads[idx]
-        if train_p.name.find("layer_norm") > -1:
-            continue
         with main_prog._optimized_guard([m_p_g[0], m_p_g[1]]):
-            append_cast_op(m_p_g[0], train_p, main_prog)
+            if train_p.name.find("layer_norm") > -1:
+                fluid.layers.assign(m_p_g[0], train_p)
+            else:
+                append_cast_op(m_p_g[0], train_p, main_prog)
 
 
 def update_loss_scaling(is_overall_finite, prev_loss_scaling, num_good_steps,

@@ -1,3 +1,5 @@
+# **该项目已被迁移到 https://github.com/PaddlePaddle/PaddleDetection**
+
 [English](README.md) | 简体中文
 
 # PaddleDetection
@@ -75,6 +77,7 @@ PaddleDetection的目的是为工业界和学术界提供丰富、易用的目�
 
 ## 推理部署
 
+- [模型导出教程](docs/EXPORT_MODEL.md)
 - [C++推理部署](inference/README.md)
 
 ## Benchmark

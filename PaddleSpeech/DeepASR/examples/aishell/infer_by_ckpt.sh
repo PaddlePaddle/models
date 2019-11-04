@@ -5,6 +5,7 @@ python -u ../../infer_by_ckpt.py --batch_size 96  \
                         --checkpoint checkpoints/deep_asr.latest.checkpoint \
                         --infer_feature_lst data/test_feature.lst  \
                         --mean_var data/global_mean_var \
+                        --device CPU \
                         --frame_dim 80  \
                         --class_num 3040 \
                         --num_threads 24  \
