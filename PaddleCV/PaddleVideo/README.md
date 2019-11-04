@@ -209,8 +209,8 @@ run.sh
 - [Non-local Neural Networks](https://arxiv.org/abs/1711.07971v1), Xiaolong Wang, Ross Girshick, Abhinav Gupta, Kaiming He
 - [Bsn: Boundary sensitive network for temporal action proposal generation](http://arxiv.org/abs/1806.02964), Tianwei Lin, Xu Zhao, Haisheng Su, Chongjing Wang, Ming Yang.
 - [BMN: Boundary-Matching Network for Temporal Action Proposal Generation](https://arxiv.org/abs/1907.09702), Tianwei Lin, Xiao Liu, Xin Li, Errui Ding, Shilei Wen.
-- [Describing Videos by Exploiting Temporal Structure](https://arxiv.org/abs/1502.08029).
-- [TALL: Temporal Activity Localization via Language Query](https://arxiv.org/abs/1705.02101).
+- [Describing Videos by Exploiting Temporal Structure](https://arxiv.org/abs/1502.08029), Li Yao, Atousa Torabi, Kyunghyun Cho, Nicolas Ballas, Christopher Pal, Hugo Larochelle, Aaron Courville.
+- [TALL: Temporal Activity Localization via Language Query](https://arxiv.org/abs/1705.02101), Jiyang Gao, Chen Sun, Zhenheng Yang, Ram Nevatia.
 
 ## 版本更新
 
