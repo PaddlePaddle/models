@@ -185,11 +185,13 @@ run.sh
 | BMN | 16 | 4卡K40 | 7.0 | 67.19% (AUC) | [model](https://paddlemodels.bj.bcebos.com/video_detection/BMN_final.pdparams) |
 
 - 基于ActivityNet Captions的视频描述模型:
+
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | METEOR | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
 | ETS | 256 | 4卡P40 | 7.0 | 9.8 | [model](https://paddlemodels.bj.bcebos.com/video_caption/ETS_final.pdparams) |
 
 - 基于TACoS的视频查找模型:
+
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | R1@IOU5 | R5@IOU5 | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----: | :----------: |
 | TALL | 56 | 1卡P40 | 7.2 | 0.13 | 0.24 | [model](https://paddlemodels.bj.bcebos.com/video_grounding/TALL_final.pdparams) |
