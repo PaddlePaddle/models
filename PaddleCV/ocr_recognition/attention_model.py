@@ -82,8 +82,8 @@ def encoder_net(images, rnn_hidden_size=200, is_test=False, use_cudnn=True):
         filter_size=[conv_features.shape[2], 1])
 
     pad_value = fluid.layers.assign(input=np.array([0.0], dtype=np.float32))
-    sliced_feature_pad, output_len = fluid.layers.sequence_pad(
-        sliced_feature, pad_value, maxlen=48)
+    sliced_feature_pad, output_len = fluid.layers.sequence_pad(sliced_feature,
+                                                               pad_value)
 
     para_attr = fluid.ParamAttr(initializer=fluid.initializer.Normal(0.0, 0.02))
     bias_attr = fluid.ParamAttr(
