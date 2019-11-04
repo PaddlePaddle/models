@@ -25,7 +25,7 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
 
-__all__ = ["conv_bn", "pointnet_sa_module", "pointnet_fp_module","fc_bn"]
+__all__ = ["conv_bn", "pointnet_sa_module", "pointnet_fp_module", "MLP"]
 
 
 def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
@@ -45,13 +45,16 @@ def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
     """
     idx = fluid.layers.query_ball(xyz, new_xyz, radius, nsample)
     idx.stop_gradient = True
+    xyz = fluid.layers.transpose(xyz,perm=[0,2,1])
     grouped_xyz = fluid.layers.group_points(xyz, idx)
+    grouped_xyz = fluid.layers.transpose(grouped_xyz,perm=[0,2,3,1])
     expand_new_xyz = fluid.layers.unsqueeze(new_xyz, axes=[2])
     expand_new_xyz = fluid.layers.expand(expand_new_xyz, [1, 1, grouped_xyz.shape[2], 1])
     grouped_xyz -= expand_new_xyz
 
     if features is not None:
         grouped_features = fluid.layers.group_points(features, idx)
+        grouped_features = fluid.layers.transpose(grouped_features,perm=[0,2,3,1])
         return fluid.layers.concat([grouped_xyz, grouped_features], axis=-1) \
                 if use_xyz else grouped_features
     else:
@@ -66,16 +69,18 @@ def group_all(xyz, features=None, use_xyz=True):
     """
     grouped_xyz = fluid.layers.unsqueeze(xyz, axes=[2]) #[-1,128,1,3]
     if features is not None:
+        features = fluid.layers.transpose(features,perm=[0,2,1])
         grouped_features = fluid.layers.unsqueeze(features, axes=[2]) # [-1,128,1,640]
         return fluid.layers.concat([grouped_xyz, grouped_features], axis=-1) if use_xyz else grouped_features
     else:
         return grouped_xyz
 
 
-def conv_bn(input, out_channels, bn=True, bn_momentum=0.05, act='relu', name=None):
+def conv_bn(input, out_channels, bn=True, bn_momentum=0.95, act='relu', name=None):
     param_attr = ParamAttr(name='{}_conv_weight'.format(name),)
     bias_attr = ParamAttr(name='{}_conv_bias'.format(name)) \
                                   if not bn else False
+    print("bn_momentum", bn_momentum)
     out = fluid.layers.conv2d(input,
                               num_filters=out_channels,
                               filter_size=1,
@@ -97,29 +102,8 @@ def conv_bn(input, out_channels, bn=True, bn_momentum=0.05, act='relu', name=Non
 
     return out
 
-def fc_bn(input,out_channels,bn=False,bn_momentum=0.05,act='relu',name=None):
-    param_attr = ParamAttr(name='{}_fc_weight'.format(name),
-                           initializer=fluid.initializer.Constant(2.4))
-    if not bn:
-        bias_attr = ParamAttr(name='{}_fc_bias'.format(name),
-                              initializer=fluid.initializer.Constant(1.4))
-    else:
-        bias_attr = False
-    out = fluid.layers.fc(input,
-                          size=out_channels,
-			  param_attr=param_attr,
-			  bias_attr=bias_attr)
-    if bn:
-        out = fluid.layers.batch_norm(out,
-	                              momentum=bn_momentum,
-                                      param_attr=ParamAttr(initializer=fluid.initializer.Constant(2.673)),
-                                      bias_attr=ParamAttr(initializer=fluid.initializer.Constant(1.467)))
-    if act == "relu":
-        print("act is relu:",act)
-        out = fluid.layers.relu(out)
-    return out
 
-def MLP(features, out_channels_list, bn=True, bn_momentum=0.05, act='relu', name=None):
+def MLP(features, out_channels_list, bn=True, bn_momentum=0.95, act='relu', name=None):
     out = features
     for i, out_channels in enumerate(out_channels_list):
         out = conv_bn(out, out_channels, bn=bn, act=act, bn_momentum=bn_momentum, name=name + "_{}".format(i))
@@ -133,7 +117,7 @@ def pointnet_sa_module(xyz,
                        mlps=[],
                        feature=None,
                        bn=True,
-		       bn_momentum=0.05,
+		       bn_momentum=0.95,
                        use_xyz=True,
                        name=None):
     """
@@ -179,7 +163,7 @@ def pointnet_sa_module(xyz,
     return (new_xyz, out)
 
 
-def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True, bn_momentum=0.05, name=None):
+def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True, bn_momentum=0.95, name=None):
     """
     PointNet Feature Propagation Module
 

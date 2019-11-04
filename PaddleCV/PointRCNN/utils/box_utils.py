@@ -161,7 +161,7 @@ def box_overlap_rotate(cur_box, boxes):
         if cnt > 0:
             poly_center = np.sum(cross_points[:cnt, :], axis=0) / cnt
         else:
-            poly_center[:] = np.zeros((2,))
+            poly_center = np.zeros((2,))
 
         # sort the points of polygon
         for j in range(cnt - 1):

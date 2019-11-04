@@ -22,15 +22,20 @@ from __future__ import print_function
 import os
 import logging
 import numpy as np
+from scipy.spatial import Delaunay
 try:
     import cPickle as pickle
 except:
     import pickle
 
-import data.kitti_utils as kitti_utils
+#import data.kitti_utils as kitti_utils
+#import utils.kitti_utils as kitti_utils_py
 import pts_utils
+import utils.cyops.kitti_utils as kitti_utils
+import utils.cyops.roipool3d_utils as roipool3d_utils
 from data.kitti_reader import KittiReader
 from utils.config import cfg
+from collections import OrderedDict
 
 __all__ = ["KittiRCNNReader"]
 
@@ -42,6 +47,23 @@ def has_empty(data):
         if isinstance(d, np.ndarray) and len(d) == 0:
             return True
     return False
+
+
+def in_hull(p, hull):
+    """
+    :param p: (N, K) test points
+    :param hull: (M, K) M corners of a box
+    :return (N) bool
+    """
+    try:
+        if not isinstance(hull, Delaunay):
+            hull = Delaunay(hull)
+        flag = hull.find_simplex(p) >= 0
+    except scipy.spatial.qhull.QhullError:
+        print('Warning: not a hull %s' % str(hull))
+        flag = np.zeros(p.shape[0], dtype=np.bool)
+
+    return flag
 
 
 class KittiRCNNReader(KittiReader):
@@ -486,6 +508,16 @@ class KittiRCNNReader(KittiReader):
 
         return True, pts_rect, pts_intensity, extra_gt_boxes3d, extra_gt_obj_list
 
+    def rotate_box3d_along_y(self, box3d, rot_angle):
+        old_x, old_z, ry = box3d[0], box3d[2], box3d[6]
+        old_beta = np.arctan2(old_z, old_x)
+        alpha = -np.sign(old_beta) * np.pi / 2 + old_beta + ry
+        box3d = kitti_utils.rotate_pc_along_y(box3d.reshape(1, 7), rot_angle=rot_angle)[0]
+        new_x, new_z = box3d[0], box3d[2]
+        new_beta = np.arctan2(new_z, new_x)
+        box3d[6] = np.sign(new_beta) * np.pi / 2 + alpha - new_beta
+        return box3d
+
     def data_augmentation(self, aug_pts_rect, aug_gt_boxes3d, gt_alpha, sample_id=None, mustaug=False, stage=1):
         """
         :param aug_pts_rect: (N, 3)
@@ -554,13 +586,13 @@ class KittiRCNNReader(KittiReader):
         extend_gt_corners = kitti_utils.boxes3d_to_corners3d(extend_gt_boxes3d, rotate=True)
         for k in range(gt_boxes3d.shape[0]):
             box_corners = gt_corners[k]
-            fg_pt_flag = kitti_utils.in_hull(pts_rect, box_corners)
+            fg_pt_flag = in_hull(pts_rect, box_corners)
             fg_pts_rect = pts_rect[fg_pt_flag]
             cls_label[fg_pt_flag] = 1
 
             # enlarge the bbox3d, ignore nearby points
             extend_box_corners = extend_gt_corners[k]
-            fg_enlarge_flag = kitti_utils.in_hull(pts_rect, extend_box_corners)
+            fg_enlarge_flag = in_hull(pts_rect, extend_box_corners)
             ignore_flag = np.logical_xor(fg_pt_flag, fg_enlarge_flag)
             cls_label[ignore_flag] = -1
 
@@ -576,6 +608,427 @@ class KittiRCNNReader(KittiReader):
             reg_label[fg_pt_flag, 6] = gt_boxes3d[k][6]  # ry
 
         return cls_label, reg_label
+
+    def get_rcnn_sample_jit(self, index):
+        sample_id = int(self.sample_id_list[index])
+        rpn_xyz, rpn_features, rpn_intensity, seg_mask = \
+            self.get_rpn_features(self.rcnn_training_feature_dir, sample_id)
+
+        # load rois and gt_boxes3d for this sample
+        roi_file = os.path.join(self.rcnn_training_roi_dir, '%06d.txt' % sample_id)
+        roi_obj_list = kitti_utils.get_objects_from_label(roi_file)
+        roi_boxes3d = kitti_utils.objs_to_boxes3d(roi_obj_list)
+        # roi_scores = kitti_utils.objs_to_scores(roi_obj_list)
+
+        gt_obj_list = self.filtrate_objects(self.get_label(sample_id))
+        gt_boxes3d = kitti_utils.objs_to_boxes3d(gt_obj_list)
+        '''
+        sample_info = {#'sample_id': sample_id,
+                       'rpn_xyz': rpn_xyz,
+                       'rpn_features': rpn_features,
+                       'rpn_intensity': rpn_intensity,
+                       'seg_mask': seg_mask,
+                       'roi_boxes3d': roi_boxes3d,
+                       'gt_boxes3d': gt_boxes3d,
+                       'pts_depth': np.linalg.norm(rpn_xyz, ord=2, axis=1)}
+        '''
+        sample_info = OrderedDict()
+        sample_info["sample_id"] = sample_id
+        sample_info['rpn_xyz'] = rpn_xyz
+        sample_info['rpn_features'] = rpn_features
+        sample_info['rpn_intensity'] = rpn_intensity
+        sample_info['seg_mask'] = seg_mask
+        sample_info['roi_boxes3d'] = roi_boxes3d
+        sample_info['pts_depth'] = np.linalg.norm(rpn_xyz, ord=2, axis=1)
+        sample_info['gt_boxes3d'] = gt_boxes3d
+        #print("gt_boxes3d: ", gt_boxes3d)
+
+        '''
+        print("-----read data-----")
+        for k, v in sample_info.items():
+            if k not in ['sample_id', 'pts_input']:
+                #if k not in ['gt_boxes3d','roi_boxes3d'] :
+                #    sample_info[k] = np.expand_dims(sample_info[k], axis=0)
+                print(k, sample_info[k].shape)
+        '''
+        return sample_info
+
+    def sample_bg_inds(self, hard_bg_inds, easy_bg_inds, bg_rois_per_this_image):
+        if hard_bg_inds.size > 0 and easy_bg_inds.size > 0:
+            hard_bg_rois_num = int(bg_rois_per_this_image * cfg.RCNN.HARD_BG_RATIO)
+            easy_bg_rois_num = bg_rois_per_this_image - hard_bg_rois_num
+
+            # sampling hard bg
+            rand_num = np.floor(np.random.rand(hard_bg_rois_num) * hard_bg_inds.size).astype(np.int32)
+            hard_bg_inds = hard_bg_inds[rand_num]
+            # sampling easy bg
+            rand_num = np.floor(np.random.rand(easy_bg_rois_num) * easy_bg_inds.size).astype(np.int32)
+            easy_bg_inds = easy_bg_inds[rand_num]
+
+            bg_inds = np.concatenate([hard_bg_inds, easy_bg_inds], axis=0)
+        elif hard_bg_inds.size > 0 and easy_bg_inds.size == 0:
+            hard_bg_rois_num = bg_rois_per_this_image
+            # sampling hard bg
+            rand_num = np.floor(np.random.rand(hard_bg_rois_num) * hard_bg_inds.size).astype(np.int32)
+            bg_inds = hard_bg_inds[rand_num]
+        elif hard_bg_inds.size == 0 and easy_bg_inds.size > 0:
+            easy_bg_rois_num = bg_rois_per_this_image
+            # sampling easy bg
+            rand_num = np.floor(np.random.rand(easy_bg_rois_num) * easy_bg_inds.size).astype(np.int32)
+            bg_inds = easy_bg_inds[rand_num]
+        else:
+            raise NotImplementedError
+
+        return bg_inds
+
+    def aug_roi_by_noise_batch(self, roi_boxes3d, gt_boxes3d, aug_times=10):
+        """
+        :param roi_boxes3d: (N, 7)
+        :param gt_boxes3d: (N, 7)
+        :return:
+        """
+        iou_of_rois = np.zeros(roi_boxes3d.shape[0], dtype=np.float32)
+        for k in range(roi_boxes3d.__len__()):
+            temp_iou = cnt = 0
+            roi_box3d = roi_boxes3d[k]
+            gt_box3d = gt_boxes3d[k]
+            pos_thresh = min(cfg.RCNN.REG_FG_THRESH, cfg.RCNN.CLS_FG_THRESH)
+            gt_corners = kitti_utils.boxes3d_to_corners3d(gt_box3d.reshape(1, 7), True)
+            aug_box3d = roi_box3d
+            while temp_iou < pos_thresh and cnt < aug_times:
+                if np.random.rand() < 0.2:
+                    aug_box3d = roi_box3d  # p=0.2 to keep the original roi box
+                else:
+                    aug_box3d = self.random_aug_box3d(roi_box3d)
+                aug_corners = kitti_utils.boxes3d_to_corners3d(aug_box3d.reshape(1, 7), True)
+                iou3d = kitti_utils.get_iou3d(aug_corners, gt_corners)
+                temp_iou = iou3d[0][0]
+                cnt += 1
+            roi_boxes3d[k] = aug_box3d
+            iou_of_rois[k] = temp_iou
+        return roi_boxes3d, iou_of_rois
+
+    @staticmethod
+    def canonical_transform_batch(pts_input, roi_boxes3d, gt_boxes3d):
+        """
+        :param pts_input: (N, npoints, 3 + C)
+        :param roi_boxes3d: (N, 7)
+        :param gt_boxes3d: (N, 7)
+        :return:
+        """
+        roi_ry = roi_boxes3d[:, 6] % (2 * np.pi)  # 0 ~ 2pi
+        #print("roi_ry: ", roi_ry.shape)
+        roi_center = roi_boxes3d[:, 0:3]
+        # shift to center
+        pts_input[:, :, [0, 1, 2]] = pts_input[:, :, [0, 1, 2]] - roi_center.reshape(-1, 1, 3)
+        gt_boxes3d_ct = np.copy(gt_boxes3d)
+        gt_boxes3d_ct[:, 0:3] = gt_boxes3d_ct[:, 0:3] - roi_center
+        # rotate to the direction of head
+        gt_boxes3d_ct = kitti_utils.rotate_pc_along_y_np(
+            gt_boxes3d_ct.reshape(-1, 1, 7),
+            #roi_ry.reshape(-1, 7)
+            roi_ry,
+        )
+        # TODO: check here
+        #gt_boxes3d_ct[:, 6] = gt_boxes3d_ct[:, 6] - roi_ry
+        pts_input = kitti_utils.rotate_pc_along_y_np(
+            pts_input, roi_ry
+        )
+        return pts_input, gt_boxes3d_ct
+
+    def get_rcnn_training_sample_batch(self, index):
+        sample_id = int(self.sample_id_list[index])
+        rpn_xyz, rpn_features, rpn_intensity, seg_mask = \
+            self.get_rpn_features(self.rcnn_training_feature_dir, sample_id)
+
+        # load rois and gt_boxes3d for this sample
+        roi_file = os.path.join(self.rcnn_training_roi_dir, '%06d.txt' % sample_id)
+        roi_obj_list = kitti_utils.get_objects_from_label(roi_file)
+        roi_boxes3d = kitti_utils.objs_to_boxes3d(roi_obj_list)
+        # roi_scores = kitti_utils.objs_to_scores(roi_obj_list)
+
+        gt_obj_list = self.filtrate_objects(self.get_label(sample_id))
+        gt_boxes3d = kitti_utils.objs_to_boxes3d(gt_obj_list)
+
+        # calculate original iou
+        iou3d = kitti_utils.get_iou3d(kitti_utils.boxes3d_to_corners3d(roi_boxes3d, True),
+                                      kitti_utils.boxes3d_to_corners3d(gt_boxes3d, True))
+        max_overlaps, gt_assignment = iou3d.max(axis=1), iou3d.argmax(axis=1)
+        max_iou_of_gt, roi_assignment = iou3d.max(axis=0), iou3d.argmax(axis=0)
+        roi_assignment = roi_assignment[max_iou_of_gt > 0].reshape(-1)
+
+        # sample fg, easy_bg, hard_bg
+        fg_rois_per_image = int(np.round(cfg.RCNN.FG_RATIO * cfg.RCNN.ROI_PER_IMAGE))
+        fg_thresh = min(cfg.RCNN.REG_FG_THRESH, cfg.RCNN.CLS_FG_THRESH)
+        fg_inds = np.nonzero(max_overlaps >= fg_thresh)[0]
+        fg_inds = np.concatenate((fg_inds, roi_assignment), axis=0)  # consider the roi which has max_overlaps with gt as fg
+
+        easy_bg_inds = np.nonzero((max_overlaps < cfg.RCNN.CLS_BG_THRESH_LO))[0]
+        hard_bg_inds = np.nonzero((max_overlaps < cfg.RCNN.CLS_BG_THRESH) &
+                                  (max_overlaps >= cfg.RCNN.CLS_BG_THRESH_LO))[0]
+
+        fg_num_rois = fg_inds.size
+        bg_num_rois = hard_bg_inds.size + easy_bg_inds.size
+
+        if fg_num_rois > 0 and bg_num_rois > 0:
+            # sampling fg
+            fg_rois_per_this_image = min(fg_rois_per_image, fg_num_rois)
+            rand_num = np.random.permutation(fg_num_rois)
+            fg_inds = fg_inds[rand_num[:fg_rois_per_this_image]]
+
+            # sampling bg
+            bg_rois_per_this_image = cfg.RCNN.ROI_PER_IMAGE  - fg_rois_per_this_image
+            bg_inds = self.sample_bg_inds(hard_bg_inds, easy_bg_inds, bg_rois_per_this_image)
+
+        elif fg_num_rois > 0 and bg_num_rois == 0:
+            # sampling fg
+            rand_num = np.floor(np.random.rand(cfg.RCNN.ROI_PER_IMAGE ) * fg_num_rois)
+            # rand_num = torch.from_numpy(rand_num).type_as(gt_boxes3d).long()
+            fg_inds = fg_inds[rand_num]
+            fg_rois_per_this_image = cfg.RCNN.ROI_PER_IMAGE
+            bg_rois_per_this_image = 0
+        elif bg_num_rois > 0 and fg_num_rois == 0:
+            # sampling bg
+            bg_rois_per_this_image = cfg.RCNN.ROI_PER_IMAGE
+            bg_inds = self.sample_bg_inds(hard_bg_inds, easy_bg_inds, bg_rois_per_this_image)
+            fg_rois_per_this_image = 0
+        else:
+            import pdb
+            pdb.set_trace()
+            raise NotImplementedError
+
+        # augment the rois by noise
+        roi_list, roi_iou_list, roi_gt_list = [], [], []
+        if fg_rois_per_this_image > 0:
+            fg_rois_src = roi_boxes3d[fg_inds].copy()
+            gt_of_fg_rois = gt_boxes3d[gt_assignment[fg_inds]]
+            fg_rois, fg_iou3d = self.aug_roi_by_noise_batch(fg_rois_src, gt_of_fg_rois, aug_times=10)
+            roi_list.append(fg_rois)
+            roi_iou_list.append(fg_iou3d)
+            roi_gt_list.append(gt_of_fg_rois)
+
+        if bg_rois_per_this_image > 0:
+            bg_rois_src = roi_boxes3d[bg_inds].copy()
+            gt_of_bg_rois = gt_boxes3d[gt_assignment[bg_inds]]
+            bg_rois, bg_iou3d = self.aug_roi_by_noise_batch(bg_rois_src, gt_of_bg_rois, aug_times=1)
+            roi_list.append(bg_rois)
+            roi_iou_list.append(bg_iou3d)
+            roi_gt_list.append(gt_of_bg_rois)
+
+        rois = np.concatenate(roi_list, axis=0)
+        iou_of_rois = np.concatenate(roi_iou_list, axis=0)
+        gt_of_rois = np.concatenate(roi_gt_list, axis=0)
+
+        # collect extra features for point cloud pooling
+        if cfg.RCNN.USE_INTENSITY:
+            pts_extra_input_list = [rpn_intensity.reshape(-1, 1), seg_mask.reshape(-1, 1)]
+        else:
+            pts_extra_input_list = [seg_mask.reshape(-1, 1)]
+
+        if cfg.RCNN.USE_DEPTH:
+            pts_depth = (np.linalg.norm(rpn_xyz, ord=2, axis=1) / 70.0) - 0.5
+            pts_extra_input_list.append(pts_depth.reshape(-1, 1))
+        pts_extra_input = np.concatenate(pts_extra_input_list, axis=1)
+
+        # pts, pts_feature, boxes3d, pool_extra_width, sampled_pt_num
+        pts_input, pts_features, pts_empty_flag = roipool3d_utils.roipool3d_cpu(
+            rpn_xyz, rpn_features, rois, pts_extra_input,
+            cfg.RCNN.POOL_EXTRA_WIDTH,
+            sampled_pt_num=cfg.RCNN.NUM_POINTS,
+            #canonical_transform=False
+        )
+
+        # data augmentation
+        if cfg.AUG_DATA and self.mode == 'TRAIN':
+            for k in range(rois.__len__()):
+                aug_pts = pts_input[k, :, 0:3].copy()
+                aug_gt_box3d = gt_of_rois[k].copy()
+                aug_roi_box3d = rois[k].copy()
+
+                # calculate alpha by ry
+                temp_boxes3d = np.concatenate([aug_roi_box3d.reshape(1, 7), aug_gt_box3d.reshape(1, 7)], axis=0)
+                temp_x, temp_z, temp_ry = temp_boxes3d[:, 0], temp_boxes3d[:, 2], temp_boxes3d[:, 6]
+                temp_beta = np.arctan2(temp_z, temp_x).astype(np.float64)
+                temp_alpha = -np.sign(temp_beta) * np.pi / 2 + temp_beta + temp_ry
+
+                # data augmentation
+                aug_pts, aug_boxes3d, aug_method = self.data_augmentation(aug_pts, temp_boxes3d, temp_alpha,
+                                                                          mustaug=True, stage=2)
+
+                # assign to original data
+                pts_input[k, :, 0:3] = aug_pts
+                rois[k] = aug_boxes3d[0]
+                gt_of_rois[k] = aug_boxes3d[1]
+
+        valid_mask = (pts_empty_flag == 0).astype(np.int32)
+        # regression valid mask
+        reg_valid_mask = (iou_of_rois > cfg.RCNN.REG_FG_THRESH).astype(np.int32) & valid_mask
+
+        # classification label
+        cls_label = (iou_of_rois > cfg.RCNN.CLS_FG_THRESH).astype(np.int32)
+        invalid_mask = (iou_of_rois > cfg.RCNN.CLS_BG_THRESH) & (iou_of_rois < cfg.RCNN.CLS_FG_THRESH)
+        cls_label[invalid_mask] = -1
+        cls_label[valid_mask == 0] = -1
+
+        #print("canonical_transform_batch: ", pts_input.shape, rois.shape, gt_of_rois.shape)
+        # canonical transform and sampling
+        pts_input_ct, gt_boxes3d_ct = self.canonical_transform_batch(pts_input, rois, gt_of_rois)
+
+        pts_input_ = np.concatenate((pts_input_ct, pts_features), axis=-1)
+        sample_info = OrderedDict()
+
+        sample_info['sample_id'] = sample_id
+        sample_info['pts_input'] = pts_input_
+        sample_info['pts_feature'] = pts_features
+        sample_info['roi_boxes3d'] = rois
+        sample_info['cls_label'] = cls_label
+        sample_info['reg_valid_mask'] = reg_valid_mask
+        sample_info['gt_boxes3d_ct'] = gt_boxes3d_ct
+        sample_info['gt_of_rois'] = gt_of_rois
+        """
+        for k,v in sample_info.items():
+            if k not in ['sample_id']:
+                print(k, v.shape)
+        """
+        return sample_info
+
+    @staticmethod
+    def random_aug_box3d(box3d):
+        """
+        :param box3d: (7) [x, y, z, h, w, l, ry]
+        random shift, scale, orientation
+        """
+        if cfg.RCNN.REG_AUG_METHOD == 'single':
+            pos_shift = (np.random.rand(3) - 0.5)  # [-0.5 ~ 0.5]
+            hwl_scale = (np.random.rand(3) - 0.5) / (0.5 / 0.15) + 1.0  #
+            angle_rot = (np.random.rand(1) - 0.5) / (0.5 / (np.pi / 12))  # [-pi/12 ~ pi/12]
+
+            aug_box3d = np.concatenate([box3d[0:3] + pos_shift, box3d[3:6] * hwl_scale,
+                                        box3d[6:7] + angle_rot])
+            return aug_box3d
+        elif cfg.RCNN.REG_AUG_METHOD == 'multiple':
+            # pos_range, hwl_range, angle_range, mean_iou
+            range_config = [[0.2, 0.1, np.pi / 12, 0.7],
+                            [0.3, 0.15, np.pi / 12, 0.6],
+                            [0.5, 0.15, np.pi / 9, 0.5],
+                            [0.8, 0.15, np.pi / 6, 0.3],
+                            [1.0, 0.15, np.pi / 3, 0.2]]
+            idx = np.random.randint(len(range_config))
+
+            pos_shift = ((np.random.rand(3) - 0.5) / 0.5) * range_config[idx][0]
+            hwl_scale = ((np.random.rand(3) - 0.5) / 0.5) * range_config[idx][1] + 1.0
+            angle_rot = ((np.random.rand(1) - 0.5) / 0.5) * range_config[idx][2]
+
+            aug_box3d = np.concatenate([box3d[0:3] + pos_shift, box3d[3:6] * hwl_scale, box3d[6:7] + angle_rot])
+            return aug_box3d
+        elif cfg.RCNN.REG_AUG_METHOD == 'normal':
+            x_shift = np.random.normal(loc=0, scale=0.3)
+            y_shift = np.random.normal(loc=0, scale=0.2)
+            z_shift = np.random.normal(loc=0, scale=0.3)
+            h_shift = np.random.normal(loc=0, scale=0.25)
+            w_shift = np.random.normal(loc=0, scale=0.15)
+            l_shift = np.random.normal(loc=0, scale=0.5)
+            ry_shift = ((np.random.rand() - 0.5) / 0.5) * np.pi / 12
+
+            aug_box3d = np.array([box3d[0] + x_shift, box3d[1] + y_shift, box3d[2] + z_shift, box3d[3] + h_shift,
+                                  box3d[4] + w_shift, box3d[5] + l_shift, box3d[6] + ry_shift])
+            return aug_box3d
+        else:
+            raise NotImplementedError
+
+    def get_proposal_from_file(self, index):
+        sample_id = int(self.image_idx_list[index])
+        proposal_file = os.path.join(self.rcnn_eval_roi_dir, '%06d.txt' % sample_id)
+        roi_obj_list = kitti_utils.get_objects_from_label(proposal_file)
+
+        rpn_xyz, rpn_features, rpn_intensity, seg_mask = self.get_rpn_features(self.rcnn_eval_feature_dir, sample_id)
+        pts_rect, pts_rpn_features, pts_intensity = rpn_xyz, rpn_features, rpn_intensity
+
+        roi_box3d_list, roi_scores = [], []
+        for obj in roi_obj_list:
+            box3d = np.array([obj.pos[0], obj.pos[1], obj.pos[2], obj.h, obj.w, obj.l, obj.ry], dtype=np.float32)
+            roi_box3d_list.append(box3d.reshape(1, 7))
+            roi_scores.append(obj.score)
+
+        roi_boxes3d = np.concatenate(roi_box3d_list, axis=0)  # (N, 7)
+        roi_scores = np.array(roi_scores, dtype=np.float32)  # (N)
+
+        if cfg.RCNN.ROI_SAMPLE_JIT:
+            sample_dict = {'sample_id': sample_id,
+                           'rpn_xyz': rpn_xyz,
+                           'rpn_features': rpn_features,
+                           'seg_mask': seg_mask,
+                           'roi_boxes3d': roi_boxes3d,
+                           'roi_scores': roi_scores,
+                           'pts_depth': np.linalg.norm(rpn_xyz, ord=2, axis=1)}
+
+            if self.mode != 'TEST':
+                gt_obj_list = self.filtrate_objects(self.get_label(sample_id))
+                gt_boxes3d = kitti_utils.objs_to_boxes3d(gt_obj_list)
+
+                roi_corners = kitti_utils.boxes3d_to_corners3d(roi_boxes3d,True)
+                gt_corners = kitti_utils.boxes3d_to_corners3d(gt_boxes3d,True)
+                iou3d = kitti_utils.get_iou3d(roi_corners, gt_corners)
+                if gt_boxes3d.shape[0] > 0:
+                    gt_iou = iou3d.max(axis=1)
+                else:
+                    gt_iou = np.zeros(roi_boxes3d.shape[0]).astype(np.float32)
+
+                sample_dict['gt_boxes3d'] = gt_boxes3d
+                sample_dict['gt_iou'] = gt_iou
+            return sample_dict
+
+        if cfg.RCNN.USE_INTENSITY:
+            pts_extra_input_list = [pts_intensity.reshape(-1, 1), seg_mask.reshape(-1, 1)]
+        else:
+            pts_extra_input_list = [seg_mask.reshape(-1, 1)]
+
+        if cfg.RCNN.USE_DEPTH:
+            cur_depth = np.linalg.norm(pts_rect, axis=1, ord=2)
+            cur_depth_norm = (cur_depth / 70.0) - 0.5
+            pts_extra_input_list.append(cur_depth_norm.reshape(-1, 1))
+
+        pts_extra_input = np.concatenate(pts_extra_input_list, axis=1)
+        pts_input, pts_features, _= roipool3d_utils.roipool3d_cpu(
+            pts_rect, pts_rpn_features, roi_boxes3d, pts_extra_input, 
+            cfg.RCNN.POOL_EXTRA_WIDTH, sampled_pt_num=cfg.RCNN.NUM_POINTS
+        )
+        pts_input = np.concatenate((pts_input, pts_features), axis=-1)
+        
+        sample_dict = OrderedDict()
+        sample_dict['sample_id'] = sample_id 
+        sample_dict['pts_input'] = pts_input 
+        sample_dict['pts_feature'] = pts_features 
+        sample_dict['roi_boxes3d'] = roi_boxes3d 
+        #sample_dict['roi_scores'] = roi_scores 
+        #sample_dict['roi_size'] = roi_boxes3d[:, 3:6]
+
+        if self.mode == 'TEST':
+            return sample_dict
+
+        gt_obj_list = self.filtrate_objects(self.get_label(sample_id))
+        gt_boxes3d = np.zeros((gt_obj_list.__len__(), 7), dtype=np.float32)
+
+        for k, obj in enumerate(gt_obj_list):
+            gt_boxes3d[k, 0:3], gt_boxes3d[k, 3], gt_boxes3d[k, 4], gt_boxes3d[k, 5], gt_boxes3d[k, 6] \
+                = obj.pos, obj.h, obj.w, obj.l, obj.ry
+
+        if gt_boxes3d.__len__() == 0:
+            gt_iou = np.zeros((roi_boxes3d.shape[0]), dtype=np.float32)
+        else:
+            roi_corners = kitti_utils.boxes3d_to_corners3d(roi_boxes3d,True)
+            gt_corners = kitti_utils.boxes3d_to_corners3d(gt_boxes3d,True)
+            iou3d = kitti_utils.get_iou3d(roi_corners, gt_corners)
+            gt_iou = iou3d.max(axis=1)
+        
+        #sample_dict['gt_iou'] = gt_iou
+        #sample_dict['gt_boxes3d'] = gt_boxes3d
+        #for k,v in sample_dict.items():
+        #    if k == 'sample_id':
+        #        continue 
+        #    print("Eval data: ", v.shape)
+        
+        return sample_dict
 
     def __len__(self):
         if cfg.RPN.ENABLED:
@@ -602,6 +1055,92 @@ class KittiRCNNReader(KittiReader):
         else:
             raise NotImplementedError
 
+    def padding_batch(self, batch_data, batch_size):
+        max_roi = 0
+        max_gt = 0 
+        
+        for k in range(batch_size):
+            # roi_boxes3d
+            max_roi = max(max_roi, batch_data[k][3].shape[0])
+            # gt_boxes3d
+            max_gt = max(max_gt, batch_data[k][-1].shape[0])
+        batch_roi_boxes3d = np.zeros((batch_size, max_roi, 7))
+        batch_gt_boxes3d = np.zeros((batch_size, max_gt, 7), dtype=np.float32)
+        
+        for i, data in enumerate(batch_data):
+            roi_num = data[3].shape[0]
+            gt_num = data[-1].shape[0]
+            batch_roi_boxes3d[i,:roi_num,:] = data[3]
+            batch_gt_boxes3d[i,:gt_num,:] = data[-1]
+
+        new_batch = []
+        for i, data in enumerate(batch_data):
+            new_batch.append(data[:3])
+            # roi_boxes3d
+            new_batch[i].append(batch_roi_boxes3d[i])
+            # ... 
+            new_batch[i].extend(data[4:7])
+            # gt_boxes3d
+            new_batch[i].append(batch_gt_boxes3d[i])
+        return new_batch
+
+    def padding_batch_eval(self, batch_data, batch_size):
+        max_pts = 0 
+        max_feats = 0
+        max_roi = 0
+        #max_iou = 0
+        #max_gt = 0
+        for k in range(batch_size):
+            # pts_input
+            max_pts = max(max_pts, batch_data[k][-3].shape[0])
+            # pts_feature
+            max_feats = max(max_feats, batch_data[k][-2].shape[0])
+            # roi_boxes3d
+            max_roi = max(max_roi, batch_data[k][-1].shape[0])
+            # gt_iou 
+            #max_iou = max(max_iou, batch_data[k][-2].shape[0])
+            # gt_boxes3d
+            #max_gt = max(max_gt, batch_data[k][-1].shape[0])
+        #print("padding num: ", max_pts, max_feats, max_roi, max_iou, max_gt) 
+        batch_pts_input = np.zeros((batch_size, max_pts, 512, 133), dtype=np.float32)
+        batch_pts_feat = np.zeros((batch_size, max_feats, 512, 128), dtype=np.float32)
+        batch_roi_boxes3d = np.zeros((batch_size, max_roi, 7), dtype=np.float32)
+        #batch_gt_iou = np.zeros((batch_size, max_iou), dtype=np.float32)
+        #batch_gt_boxes3d = np.zeros((batch_size, max_gt, 7), dtype=np.float32)
+        
+        for i, data in enumerate(batch_data):
+            # num
+            pts_num = data[-3].shape[0]
+            pts_feat_num = data[-2].shape[0]
+            roi_num = data[-1].shape[0]
+            #iou_num = data[-2].shape[0]
+            #gt_num = data[-1].shape[0]
+            #print("ori data num: ", pts_num, pts_feat_num, roi_num, iou_num, gt_num) 
+            # data
+            batch_pts_input[i, :pts_num, :, :] = data[-3]
+            batch_pts_feat[i, :pts_feat_num, :, :] = data[-2]
+            batch_roi_boxes3d[i,:roi_num,:] = data[-1]
+            #batch_gt_iou[i,:iou_num] = data[-2] 
+            #batch_gt_boxes3d[i,:gt_num,:] = data[-1]
+            
+        new_batch = []
+        for i, data in enumerate(batch_data):
+            #new_batch.append([np.array(batch_data[0])])
+            new_batch.append(data[:-3])
+            # pts_input
+            new_batch[i].append(batch_pts_input[i])
+            # pts_feat 
+            new_batch[i].append(batch_pts_feat[i])
+            # roi_boxes3d
+            new_batch[i].append(batch_roi_boxes3d[i])
+            # gt_iou
+            #new_batch[i].append(batch_gt_iou[i])
+            # gt_boxes3d
+            #new_batch[i].append(batch_gt_boxes3d[i])
+            #for one_d in new_batch[i]:
+            #    print(one_d.shape)
+        return new_batch
+
     def get_reader(self, batch_size, fields, drop_last=False):
         def reader():
             batch_out = []
@@ -611,9 +1150,20 @@ class KittiRCNNReader(KittiReader):
             for idx in idxs:
                 sample_all = self.__getitem__(idx)
                 sample = [sample_all[f] for f in fields]
+                if has_empty(sample):
+                    logger.info("sample field: %d has empty field"%len(sample))
+                    continue
                 batch_out.append(sample)
                 if len(batch_out) >= batch_size:
-                    yield batch_out
+                    if cfg.RPN.ENABLED:
+                        yield batch_out
+                    else:
+                        if self.mode == 'TRAIN':
+                            yield self.padding_batch(batch_out, batch_size)
+                        elif self.mode == 'EVAL':
+                            yield self.padding_batch_eval(batch_out, batch_size)
+                        else:
+                            print("not only support train/eval padding")
                     batch_out = []
                 # import sys
                 # print(sample_all)

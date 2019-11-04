@@ -38,6 +38,9 @@ logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
+rpn_data_dir = "/paddle/PointRCNN/output/rpn/default/eval/epoch_200/train_aug/"
+# rpn_data_dir = "./output"
+
 def parse_args():
     parser = argparse.ArgumentParser("PointRCNN semantic segmentation train script")
     parser.add_argument(
@@ -89,11 +92,13 @@ def parse_args():
     parser.add_argument(
         '--rcnn_training_roi_dir',
         type=str,
+        # default="/paddle/PointRCNN/output/rpn/default/eval/epoch_200/train_aug/detections/data", #None,
         default=None,
 	help='specify the saved rois for rcnn training when using rcnn_offline mode')
     parser.add_argument(
         '--rcnn_training_feature_dir',
         type=str,
+        # default="/paddle/PointRCNN/output/rpn/default/eval/epoch_200/train_aug/features", #None,
         default=None,
 	help='specify the saved features for rcnn training when using rcnn_offline mode')
     parser.add_argument(

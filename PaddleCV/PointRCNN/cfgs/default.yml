@@ -68,7 +68,7 @@ RCNN:
     ENABLED: True
 
     # config of input
-    ROI_SAMPLE_JIT: True
+    ROI_SAMPLE_JIT: False 
     REG_AUG_METHOD: multiple  # multiple, single, normal
     ROI_FG_AUG_TIMES: 10
 
