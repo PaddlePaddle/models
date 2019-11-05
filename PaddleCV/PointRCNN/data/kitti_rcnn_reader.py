@@ -22,6 +22,7 @@ from __future__ import print_function
 import os
 import logging
 import numpy as np
+import scipy
 from scipy.spatial import Delaunay
 try:
     import cPickle as pickle

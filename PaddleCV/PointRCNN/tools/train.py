@@ -92,14 +92,14 @@ def parse_args():
     parser.add_argument(
         '--rcnn_training_roi_dir',
         type=str,
-        # default="/paddle/PointRCNN/output/rpn/default/eval/epoch_200/train_aug/detections/data", #None,
-        default=None,
+        default="/paddle/PointRCNN/output/rpn/default/eval/epoch_200/train_aug/detections/data", #None,
+        # default=None,
 	help='specify the saved rois for rcnn training when using rcnn_offline mode')
     parser.add_argument(
         '--rcnn_training_feature_dir',
         type=str,
-        # default="/paddle/PointRCNN/output/rpn/default/eval/epoch_200/train_aug/features", #None,
-        default=None,
+        default="/paddle/PointRCNN/output/rpn/default/eval/epoch_200/train_aug/features", #None,
+        # default=None,
 	help='specify the saved features for rcnn training when using rcnn_offline mode')
     parser.add_argument(
         '--rcnn_eval_roi_dir',
