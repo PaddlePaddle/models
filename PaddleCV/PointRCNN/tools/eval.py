@@ -201,7 +201,7 @@ def calc_iou_recall(rets, thresh_list):
         gt_box_idx += gt_boxes3d_num[0][i]
 
 	k = cur_gt_boxes3d.__len__() - 1
-	while k > 0 and np.sum(cur_gt_boxes3d[k]) == 0:
+	while k >= 0 and np.sum(cur_gt_boxes3d[k]) == 0:
 	    k -= 1
 	cur_gt_boxes3d = cur_gt_boxes3d[:k + 1]
 

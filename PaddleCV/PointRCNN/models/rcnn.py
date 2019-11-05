@@ -251,22 +251,32 @@ class RCNN(object):
 
 
         # RCNN classification loss
-        assert self.cfg.RCNN.LOSS_CLS == "SigmoidFocalLoss", \
+        assert self.cfg.RCNN.LOSS_CLS in ["SigmoidFocalLoss", "BinaryCrossEntropy"], \
                 "unsupported RCNN cls loss type {}".format(self.cfg.RCNN.LOSS_CLS)
 
-        cls_flat = fluid.layers.reshape(self.cls_out, shape=[-1])
-        cls_label_flat = fluid.layers.reshape(rcnn_cls_label, shape=[-1])
-        cls_label_flat = fluid.layers.cast(cls_label_flat, dtype=cls_flat.dtype)
-        cls_target = fluid.layers.cast(cls_label_flat>0, dtype=cls_flat.dtype)
-        cls_label_flat.stop_gradient = True
-        pos = fluid.layers.cast(cls_label_flat > 0, dtype=cls_flat.dtype)
-        pos.stop_gradient = True
-        pos_normalizer = fluid.layers.reduce_sum(pos)
-        cls_weights = fluid.layers.cast(cls_label_flat >= 0, dtype=cls_flat.dtype)
-        cls_weights = cls_weights / fluid.layers.clip(pos_normalizer, min=1.0, max=1e10)
-        cls_weights.stop_gradient = True
-        rcnn_loss_cls = sigmoid_focal_loss(cls_flat, cls_target, cls_weights)
-        rcnn_loss_cls = fluid.layers.reduce_sum(rcnn_loss_cls)
+        if self.cfg.RCNN.LOSS_CLS == "SigmoidFocalLoss":
+            cls_flat = fluid.layers.reshape(self.cls_out, shape=[-1])
+            cls_label_flat = fluid.layers.reshape(rcnn_cls_label, shape=[-1])
+            cls_label_flat = fluid.layers.cast(cls_label_flat, dtype=cls_flat.dtype)
+            cls_target = fluid.layers.cast(cls_label_flat>0, dtype=cls_flat.dtype)
+            cls_label_flat.stop_gradient = True
+            pos = fluid.layers.cast(cls_label_flat > 0, dtype=cls_flat.dtype)
+            pos.stop_gradient = True
+            pos_normalizer = fluid.layers.reduce_sum(pos)
+            cls_weights = fluid.layers.cast(cls_label_flat >= 0, dtype=cls_flat.dtype)
+            cls_weights = cls_weights / fluid.layers.clip(pos_normalizer, min=1.0, max=1e10)
+            cls_weights.stop_gradient = True
+            rcnn_loss_cls = sigmoid_focal_loss(cls_flat, cls_target, cls_weights)
+            rcnn_loss_cls = fluid.layers.reduce_sum(rcnn_loss_cls)
+        else: # BinaryCrossEntropy
+            cls_label = fluid.layers.reshape(rcnn_cls_label, shape=self.cls_out.shape)
+            cls_valid_mask = fluid.layers.cast(cls_label >= 0, dtype=self.cls_out.dtype)
+            cls_label = fluid.layers.cast(cls_label, dtype=self.cls_out.dtype)
+            cls_label.stop_gradient = True
+            rcnn_loss_cls = fluid.layers.sigmoid_cross_entropy_with_logits(self.cls_out, cls_label)
+            cls_mask_normalzer = fluid.layers.reduce_sum(cls_valid_mask)
+            rcnn_loss_cls = fluid.layers.reduce_sum(rcnn_loss_cls * cls_valid_mask) \
+                                / fluid.layers.clip(cls_mask_normalzer, min=1.0, max=1e10)
 
         # RCNN regression loss
         #reg_out = fluid.layers.reshape(self.reg_out, [self.batch_size,-1]) #(bs, -1)
