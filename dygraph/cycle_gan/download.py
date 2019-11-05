@@ -136,7 +136,7 @@ def download_cycle_pix(dir_path, dataname):
         for zip_file in zip_f.namelist():
             zip_f.extract(zip_file, dir_path)
 
-    ### generator .txt file according to dirs
+    ### generate .txt file according to dirs
     dirs = os.listdir(os.path.join(dir_path, '{}'.format(dataname)))
     for d in dirs:
         txt_file = d + '.txt'
