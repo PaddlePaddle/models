@@ -22,7 +22,7 @@ import os
 import random
 import math
 import contextlib
-
+from distutils.dir_util import mkpath
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.framework as framework
@@ -112,7 +112,7 @@ def main():
     config = RNNConfig(args)
 
     if not os.path.exists(args.save_model_dir):
-        os.mkdir(args.save_model_dir)
+        mkpath(args.save_model_dir)
 
     # define train program
     main_program = fluid.Program()
@@ -449,7 +449,7 @@ def main():
 
             save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
             if not os.path.exists(save_model_dir):
-                os.mkdir(save_model_dir)
+                mkpath(save_model_dir)
             save_model_dir = os.path.join(save_model_dir, 'params')
 
             fluid.save(main_program, save_model_dir)
