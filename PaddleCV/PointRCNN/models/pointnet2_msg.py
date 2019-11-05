@@ -53,16 +53,17 @@ class PointNet2MSG(object):
 
     def build(self, bn_momentum=0.95):
         xyzs, features = [self.xyz], [self.feature]
+        xyzi, featurei = self.xyz, self.feature
         for i, SA_conf in enumerate(self.SA_confs):
             xyzi, featurei = pointnet_sa_module(
-                    xyz=xyzs[i],
-                    feature=features[i],
+                    xyz=xyzi,
+                    feature=featurei,
                     bn_momentum=bn_momentum,
                     use_xyz=self.use_xyz,
                     name="sa_{}".format(i),
                     **SA_conf)
             xyzs.append(xyzi)
-            features.append(featurei)
+            features.append(fluid.layers.transpose(featurei, perm=[0, 2, 1]))
         for i in range(-1, -(len(self.FP_confs) + 1), -1):
             features[i - 1] = pointnet_fp_module(
                     unknown=xyzs[i - 1],

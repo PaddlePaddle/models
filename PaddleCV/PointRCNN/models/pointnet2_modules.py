@@ -147,14 +147,11 @@ def pointnet_sa_module(xyz,
     outs = []
     for i, (radius, nsample, mlp) in enumerate(zip(radiuss, nsamples, mlps)):
         out = query_and_group(xyz, new_xyz, radius, nsample, feature, use_xyz) if npoint is not None else group_all(xyz, feature, use_xyz)
-        print("before mlp", out.shape)
         out = MLP(out, mlp, bn=bn, bn_momentum=bn_momentum, name=name + '_mlp{}'.format(i))
-        print("after mlp", out.shape)
         out = fluid.layers.pool2d(out, pool_size=[1, out.shape[3]], pool_type='max')
         out = fluid.layers.squeeze(out, axes=[-1])
         outs.append(out)
     out = fluid.layers.concat(outs, axis=1)
-    out = fluid.layers.transpose(out, perm=[0, 2, 1])
 
     return (new_xyz, out)
 

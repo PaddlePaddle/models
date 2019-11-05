@@ -160,18 +160,19 @@ class RCNN(object):
             features = [feature]
         
         # forward
+        xyzi, featurei = xyzs[-1], features[-1]
         for k in range(len(self.cfg.RCNN.SA_CONFIG.NPOINTS)):
             mlps = self.cfg.RCNN.SA_CONFIG.MLPS[k]
             npoint = self.cfg.RCNN.SA_CONFIG.NPOINTS[k] if self.cfg.RCNN.SA_CONFIG.NPOINTS[k] != -1 else None
             
-            if k ==0:
-                features_k = features[k]
-            else:
-                features_k = fluid.layers.transpose(features[k],perm=[0,2,1])
+            # if k ==0:
+            #     features_k = features[k]
+            # else:
+            #     features_k = fluid.layers.transpose(features[k],perm=[0,2,1])
             
             xyzi, featurei = pointnet_sa_module(
-                xyz=xyzs[k],
-                feature = features_k,
+                xyz=xyzi,
+                feature = featurei,
                 bn = self.cfg.RCNN.USE_BN,
                 use_xyz = self.use_xyz,
                 name = "sa_{}".format(k),
@@ -184,7 +185,7 @@ class RCNN(object):
             features.append(featurei)
         
         head_in = features[-1]
-        head_in = fluid.layers.transpose(head_in, [0, 2, 1])
+        # head_in = fluid.layers.transpose(head_in, [0, 2, 1])
         head_in = fluid.layers.unsqueeze(head_in, axes=[2])
         
         cls_out = head_in
