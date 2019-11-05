@@ -111,6 +111,9 @@ def main():
 
     config = RNNConfig(args)
 
+    if not os.path.exists(args.save_model_dir):
+        os.mkdir(args.save_model_dir)
+
     # define train program
     main_program = fluid.Program()
     startup_program = fluid.Program()
@@ -444,8 +447,11 @@ def main():
                     format(
                         len(valid_data), config.batch_size, config.num_steps))
 
-            save_model_dir = os.path.join(args.save_model_dir,
-                                          str(epoch_id), "params")
+            save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
+            if not os.path.exists(save_model_dir):
+                os.mkdir(save_model_dir)
+            save_model_dir = os.path.join(save_model_dir, 'params')
+
             fluid.save(main_program, save_model_dir)
             print("Saved model to: %s.\n" % save_model_dir)
 
