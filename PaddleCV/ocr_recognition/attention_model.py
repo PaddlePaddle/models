@@ -16,6 +16,7 @@ from __future__ import division
 from __future__ import print_function
 import paddle.fluid as fluid
 import six
+import numpy as np
 
 decoder_size = 128
 word_vector_dim = 128
@@ -23,6 +24,7 @@ max_length = 100
 sos = 0
 eos = 1
 beam_size = 1
+
 
 def conv_bn_pool(input,
                  group,
@@ -79,32 +81,42 @@ def encoder_net(images, rnn_hidden_size=200, is_test=False, use_cudnn=True):
         stride=[1, 1],
         filter_size=[conv_features.shape[2], 1])
 
+    pad_value = fluid.layers.assign(input=np.array([0.0], dtype=np.float32))
+    sliced_feature_pad, output_len = fluid.layers.sequence_pad(sliced_feature,
+                                                               pad_value)
+
     para_attr = fluid.ParamAttr(initializer=fluid.initializer.Normal(0.0, 0.02))
     bias_attr = fluid.ParamAttr(
         initializer=fluid.initializer.Normal(0.0, 0.02), learning_rate=2.0)
 
-    fc_1 = fluid.layers.fc(input=sliced_feature,
+    fc_1 = fluid.layers.fc(input=sliced_feature_pad,
                            size=rnn_hidden_size * 3,
                            param_attr=para_attr,
-                           bias_attr=False)
-    fc_2 = fluid.layers.fc(input=sliced_feature,
+                           bias_attr=False,
+                           num_flatten_dims=2)
+    fc_2 = fluid.layers.fc(input=sliced_feature_pad,
                            size=rnn_hidden_size * 3,
                            param_attr=para_attr,
-                           bias_attr=False)
-
-    gru_forward = fluid.layers.dynamic_gru(
-        input=fc_1,
-        size=rnn_hidden_size,
+                           bias_attr=False,
+                           num_flatten_dims=2)
+    gru_cell_forward = fluid.layers.GRUCell(
+        hidden_size=rnn_hidden_size,
         param_attr=para_attr,
         bias_attr=bias_attr,
-        candidate_activation='relu')
-    gru_backward = fluid.layers.dynamic_gru(
-        input=fc_2,
-        size=rnn_hidden_size,
-        is_reverse=True,
+        activation=fluid.layers.relu)
+    gru_cell_backward = fluid.layers.GRUCell(
+        hidden_size=rnn_hidden_size,
         param_attr=para_attr,
         bias_attr=bias_attr,
-        candidate_activation='relu')
+        activation=fluid.layers.relu)
+    gru_forward, _ = fluid.layers.rnn(gru_cell_forward, inputs=fc_1)
+    gru_backward, _ = fluid.layers.rnn(gru_cell_backward,
+                                       inputs=fc_2,
+                                       is_reverse=True)
+    output_len = fluid.layers.reshape(output_len, [-1])
+    gru_forward = fluid.layers.sequence_unpad(x=gru_forward, length=output_len)
+    gru_backward = fluid.layers.sequence_unpad(
+        x=gru_backward, length=output_len)
 
     encoded_vector = fluid.layers.concat(
         input=[gru_forward, gru_backward], axis=1)
@@ -121,30 +133,48 @@ def gru_decoder_with_attention(target_embedding, encoder_vec, encoder_proj,
         decoder_state_proj = fluid.layers.fc(input=decoder_state,
                                              size=decoder_size,
                                              bias_attr=False)
-        decoder_state_expand = fluid.layers.sequence_expand(
-            x=decoder_state_proj, y=encoder_proj)
-        concated = encoder_proj + decoder_state_expand
+        decoder_state_proj = fluid.layers.unsqueeze(
+            decoder_state_proj, axes=[1])
+        decoder_state_expand = fluid.layers.expand(
+            decoder_state_proj, [1, encoder_proj.shape[1], 1])
+        concated = fluid.layers.elementwise_add(encoder_proj,
+                                                decoder_state_expand)
         concated = fluid.layers.tanh(x=concated)
         attention_weights = fluid.layers.fc(input=concated,
                                             size=1,
                                             act=None,
-                                            bias_attr=False)
-        attention_weights = fluid.layers.sequence_softmax(
-            input=attention_weights)
-        weigths_reshape = fluid.layers.reshape(x=attention_weights, shape=[-1])
+                                            bias_attr=False,
+                                            num_flatten_dims=2)
+        attention_weights = fluid.layers.softmax(input=attention_weights)
         scaled = fluid.layers.elementwise_mul(
-            x=encoder_vec, y=weigths_reshape, axis=0)
-        context = fluid.layers.sequence_pool(input=scaled, pool_type='sum')
+            x=encoder_vec, y=attention_weights, axis=0)
+        scaled = fluid.layers.unsqueeze(scaled, axes=[3])
+        context = fluid.layers.pool2d(
+            input=scaled,
+            pool_type='avg',
+            pool_size=[scaled.shape[-2], scaled.shape[-1]])
+        context = fluid.layers.squeeze(context, axes=[2, 3])
         return context
 
-    rnn = fluid.layers.DynamicRNN()
+    pad_value = fluid.layers.assign(np.array([0.0], dtype=np.float32))
+    target_embedding_pad, target_embedding_length = fluid.layers.sequence_pad(
+        target_embedding, pad_value)
+    target_embedding_length = fluid.layers.reshape(target_embedding_length,
+                                                   [-1])
 
-    with rnn.block():
-        current_word = rnn.step_input(target_embedding)
-        encoder_vec = rnn.static_input(encoder_vec)
-        encoder_proj = rnn.static_input(encoder_proj)
-        hidden_mem = rnn.memory(init=decoder_boot, need_reorder=True)
-        context = simple_attention(encoder_vec, encoder_proj, hidden_mem)
+    target_embedding_pad = fluid.layers.transpose(target_embedding_pad,
+                                                  [1, 0, 2])
+    encoder_vec_pad, _ = fluid.layers.sequence_pad(
+        encoder_vec, pad_value, maxlen=48)
+    encoder_proj_pad, _ = fluid.layers.sequence_pad(
+        encoder_proj, pad_value, maxlen=48)
+    rnn = fluid.layers.StaticRNN()
+
+    with rnn.step():
+        current_word = rnn.step_input(target_embedding_pad)
+        hidden_mem = rnn.memory(init=decoder_boot)
+        context = simple_attention(encoder_vec_pad, encoder_proj_pad,
+                                   hidden_mem)
         fc_1 = fluid.layers.fc(input=context,
                                size=decoder_size * 3,
                                bias_attr=False)
@@ -159,8 +189,13 @@ def gru_decoder_with_attention(target_embedding, encoder_vec, encoder_proj,
                               size=num_classes + 2,
                               bias_attr=True,
                               act='softmax')
-        rnn.output(out)
-    return rnn()
+        rnn.step_output(out)
+    rnn_out = rnn()
+    rnn_out = fluid.layers.transpose(rnn_out, [1, 0, 2])
+    rnn_out = fluid.layers.sequence_unpad(
+        x=rnn_out, length=target_embedding_length)
+
+    return rnn_out
 
 
 def attention_train_net(args, data_shape, num_classes):
@@ -188,7 +223,8 @@ def attention_train_net(args, data_shape, num_classes):
     prediction = gru_decoder_with_attention(trg_embedding, encoded_vector,
                                             encoded_proj, decoder_boot,
                                             decoder_size, num_classes)
-    fluid.clip.set_gradient_clip(fluid.clip.GradientClipByValue(args.gradient_clip))
+    fluid.clip.set_gradient_clip(
+        fluid.clip.GradientClipByValue(args.gradient_clip))
     label_out = fluid.layers.cast(x=label_out, dtype='int64')
 
     _, maxid = fluid.layers.topk(input=prediction, k=1)
