@@ -133,22 +133,27 @@ def gru_decoder_with_attention(target_embedding, encoder_vec, encoder_proj,
         decoder_state_proj = fluid.layers.fc(input=decoder_state,
                                              size=decoder_size,
                                              bias_attr=False)
-        decoder_state_expand = fluid.layers.sequence_expand(
-            x=decoder_state_proj, y=encoder_proj)
-        #concated = encoder_proj + decoder_state_expand
+        decoder_state_proj = fluid.layers.unsqueeze(
+            decoder_state_proj, axes=[1])
+        decoder_state_expand = fluid.layers.expand(
+            decoder_state_proj, [1, encoder_proj.shape[1], 1])
         concated = fluid.layers.elementwise_add(encoder_proj,
                                                 decoder_state_expand)
         concated = fluid.layers.tanh(x=concated)
         attention_weights = fluid.layers.fc(input=concated,
                                             size=1,
                                             act=None,
-                                            bias_attr=False)
-        attention_weights = fluid.layers.sequence_softmax(
-            input=attention_weights)
-        weigths_reshape = fluid.layers.reshape(x=attention_weights, shape=[-1])
+                                            bias_attr=False,
+                                            num_flatten_dims=2)
+        attention_weights = fluid.layers.softmax(input=attention_weights)
         scaled = fluid.layers.elementwise_mul(
-            x=encoder_vec, y=weigths_reshape, axis=0)
-        context = fluid.layers.sequence_pool(input=scaled, pool_type='sum')
+            x=encoder_vec, y=attention_weights, axis=0)
+        scaled = fluid.layers.unsqueeze(scaled, axes=[3])
+        context = fluid.layers.pool2d(
+            input=scaled,
+            pool_type='avg',
+            pool_size=[scaled.shape[-2], scaled.shape[-1]])
+        context = fluid.layers.squeeze(context, axes=[2, 3])
         return context
 
     pad_value = fluid.layers.assign(np.array([0.0], dtype=np.float32))
@@ -159,12 +164,17 @@ def gru_decoder_with_attention(target_embedding, encoder_vec, encoder_proj,
 
     target_embedding_pad = fluid.layers.transpose(target_embedding_pad,
                                                   [1, 0, 2])
+    encoder_vec_pad, _ = fluid.layers.sequence_pad(
+        encoder_vec, pad_value, maxlen=48)
+    encoder_proj_pad, _ = fluid.layers.sequence_pad(
+        encoder_proj, pad_value, maxlen=48)
     rnn = fluid.layers.StaticRNN()
 
     with rnn.step():
         current_word = rnn.step_input(target_embedding_pad)
         hidden_mem = rnn.memory(init=decoder_boot)
-        context = simple_attention(encoder_vec, encoder_proj, hidden_mem)
+        context = simple_attention(encoder_vec_pad, encoder_proj_pad,
+                                   hidden_mem)
         fc_1 = fluid.layers.fc(input=context,
                                size=decoder_size * 3,
                                bias_attr=False)
