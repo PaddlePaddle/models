@@ -220,11 +220,16 @@ class RCNN(object):
             'rcnn_cls':self.cls_out,
             'rcnn_reg':self.reg_out,
         }
-        # fluid.layers.Print(self.cls_out, summarize=10)
-        # fluid.layers.Print(self.reg_out, summarize=10)
+        #fluid.layers.Print(self.cls_out, summarize=10)
+        #fluid.layers.Print(self.reg_out, summarize=10)
+        if self.training:
+            self.ret_dict.update(self.target_dict)
+        elif not self.training:
+            self.ret_dict['pts_input'] = inputs['pts_input']
+            self.ret_dict['roi_boxes3d'] = inputs['roi_boxes3d']
+            self.ret_dict['gt_iou'] = inputs['gt_iou'] 
+            self.ret_dict['gt_boxes3d'] = inputs['gt_boxes3d']
 
-        self.ret_dict.update(self.target_dict)
-        if not self.training:
             if self.cls_out.shape[1] == 1:
                 raw_scores = fluid.layers.reshape(self.cls_out, shape=[-1])
                 norm_scores = fluid.layers.sigmoid(raw_scores)

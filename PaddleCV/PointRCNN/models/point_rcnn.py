@@ -71,15 +71,17 @@ class PointRCNN(object):
                 self.inputs['sample_id'] = fluid.layers.data(name='sample_id', shape=[-1], dtype='int32', append_batch_size=APPEND_BATCH)
                 self.inputs['pts_input'] = fluid.layers.data(name='pts_input', shape=[-1,512,133], dtype='float32', append_batch_size=APPEND_BATCH)
                 self.inputs['pts_feature'] = fluid.layers.data(name='pts_feature', shape=[-1,512,128], dtype='float32', append_batch_size=APPEND_BATCH)
-                self.inputs['roi_boxes3d'] = fluid.layers.data(name='roi_boxes3d', shape=[-1,7], dtype='float32', append_batch_size=APPEND_BATCH)
+                self.inputs['roi_boxes3d'] = fluid.layers.data(name='roi_boxes3d', shape=[-1,-1,7], dtype='float32', append_batch_size=False, lod_level=0)
                 if self.is_train:
                     self.inputs['cls_label'] = fluid.layers.data(name='cls_label', shape=[-1], dtype='float32', append_batch_size=APPEND_BATCH)
                     self.inputs['reg_valid_mask'] = fluid.layers.data(name='reg_valid_mask', shape=[-1], dtype='float32', append_batch_size=APPEND_BATCH)
                     self.inputs['gt_boxes3d_ct'] = fluid.layers.data(name='gt_boxes3d_ct', shape=[-1,7], dtype='float32', append_batch_size=APPEND_BATCH)
                     self.inputs['gt_of_rois'] = fluid.layers.data(name='gt_of_rois', shape=[-1,7], dtype='float32', append_batch_size=APPEND_BATCH)
                 else:
-                    self.inputs['gt_iou'] = fluid.layers.data(name='gt_iou', shape=[-1,100], dtype='float32', append_batch_size=APPEND_BATCH)
-                    self.inputs['gt_boxes3d'] = fluid.layers.data(name='gt_boxes3d', shape=[-1,7], dtype='float32', append_batch_size=APPEND_BATCH)
+                    #pass 
+                    self.inputs['gt_iou'] = fluid.layers.data(name='gt_iou', shape=[-1], dtype='float32', append_batch_size=APPEND_BATCH)
+                    self.inputs['gt_boxes3d'] = fluid.layers.data(name='gt_boxes3d', shape=[-1,-1,7], dtype='float32', append_batch_size=False, lod_level=0)
+                
 
         self.pyreader = fluid.io.PyReader(
                 feed_list=self.inputs.values(),

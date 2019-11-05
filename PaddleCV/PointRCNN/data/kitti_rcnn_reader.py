@@ -890,6 +890,7 @@ class KittiRCNNReader(KittiReader):
         for k,v in sample_info.items():
             if k not in ['sample_id']:
                 print(k, v.shape)
+            np.save("./debug_data/%s.npy"%k, v)
         """
         return sample_info
 
@@ -1022,8 +1023,8 @@ class KittiRCNNReader(KittiReader):
             iou3d = kitti_utils.get_iou3d(roi_corners, gt_corners)
             gt_iou = iou3d.max(axis=1)
         
-        #sample_dict['gt_iou'] = gt_iou
-        #sample_dict['gt_boxes3d'] = gt_boxes3d
+        sample_dict['gt_iou'] = gt_iou
+        sample_dict['gt_boxes3d'] = gt_boxes3d
         #for k,v in sample_dict.items():
         #    if k == 'sample_id':
         #        continue 
@@ -1089,45 +1090,45 @@ class KittiRCNNReader(KittiReader):
         max_pts = 0 
         max_feats = 0
         max_roi = 0
-        #max_iou = 0
-        #max_gt = 0
+        max_iou = 0
+        max_gt = 0
         for k in range(batch_size):
             # pts_input
-            max_pts = max(max_pts, batch_data[k][-3].shape[0])
+            max_pts = max(max_pts, batch_data[k][1].shape[0])
             # pts_feature
-            max_feats = max(max_feats, batch_data[k][-2].shape[0])
+            max_feats = max(max_feats, batch_data[k][2].shape[0])
             # roi_boxes3d
-            max_roi = max(max_roi, batch_data[k][-1].shape[0])
+            max_roi = max(max_roi, batch_data[k][3].shape[0])
             # gt_iou 
-            #max_iou = max(max_iou, batch_data[k][-2].shape[0])
+            max_iou = max(max_iou, batch_data[k][-2].shape[0])
             # gt_boxes3d
-            #max_gt = max(max_gt, batch_data[k][-1].shape[0])
+            max_gt = max(max_gt, batch_data[k][-1].shape[0])
         #print("padding num: ", max_pts, max_feats, max_roi, max_iou, max_gt) 
         batch_pts_input = np.zeros((batch_size, max_pts, 512, 133), dtype=np.float32)
         batch_pts_feat = np.zeros((batch_size, max_feats, 512, 128), dtype=np.float32)
         batch_roi_boxes3d = np.zeros((batch_size, max_roi, 7), dtype=np.float32)
-        #batch_gt_iou = np.zeros((batch_size, max_iou), dtype=np.float32)
-        #batch_gt_boxes3d = np.zeros((batch_size, max_gt, 7), dtype=np.float32)
+        batch_gt_iou = np.zeros((batch_size, max_iou), dtype=np.float32)
+        batch_gt_boxes3d = np.zeros((batch_size, max_gt, 7), dtype=np.float32)
         
         for i, data in enumerate(batch_data):
             # num
-            pts_num = data[-3].shape[0]
-            pts_feat_num = data[-2].shape[0]
-            roi_num = data[-1].shape[0]
-            #iou_num = data[-2].shape[0]
-            #gt_num = data[-1].shape[0]
+            pts_num = data[1].shape[0]
+            pts_feat_num = data[2].shape[0]
+            roi_num = data[3].shape[0]
+            iou_num = data[-2].shape[0]
+            gt_num = data[-1].shape[0]
             #print("ori data num: ", pts_num, pts_feat_num, roi_num, iou_num, gt_num) 
             # data
-            batch_pts_input[i, :pts_num, :, :] = data[-3]
-            batch_pts_feat[i, :pts_feat_num, :, :] = data[-2]
-            batch_roi_boxes3d[i,:roi_num,:] = data[-1]
-            #batch_gt_iou[i,:iou_num] = data[-2] 
-            #batch_gt_boxes3d[i,:gt_num,:] = data[-1]
+            batch_pts_input[i, :pts_num, :, :] = data[1]
+            batch_pts_feat[i, :pts_feat_num, :, :] = data[2]
+            batch_roi_boxes3d[i,:roi_num,:] = data[3]
+            batch_gt_iou[i,:iou_num] = data[-2] 
+            batch_gt_boxes3d[i,:gt_num,:] = data[-1]
             
         new_batch = []
         for i, data in enumerate(batch_data):
             #new_batch.append([np.array(batch_data[0])])
-            new_batch.append(data[:-3])
+            new_batch.append(data[:1])
             # pts_input
             new_batch[i].append(batch_pts_input[i])
             # pts_feat 
@@ -1135,9 +1136,9 @@ class KittiRCNNReader(KittiReader):
             # roi_boxes3d
             new_batch[i].append(batch_roi_boxes3d[i])
             # gt_iou
-            #new_batch[i].append(batch_gt_iou[i])
+            new_batch[i].append(batch_gt_iou[i])
             # gt_boxes3d
-            #new_batch[i].append(batch_gt_boxes3d[i])
+            new_batch[i].append(batch_gt_boxes3d[i])
             #for one_d in new_batch[i]:
             #    print(one_d.shape)
         return new_batch
