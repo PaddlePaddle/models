@@ -198,8 +198,9 @@ class RCNN(object):
                 # Debug
                 # pass 
         cls_channel = 1 if self.num_classes == 2 else self.num_classes
-        cls_out = conv_bn(cls_out, cls_channel, act=None, name="cls_out", bn=True)
+        cls_out = conv_bn(cls_out, cls_channel, act=None, name="cls_out", bn=self.cfg.RCNN.USE_BN)
         self.cls_out = fluid.layers.squeeze(cls_out,axes=[1,3])
+        # fluid.layers.Print(self.cls_out, message="cls_out", summarize=100)
        
         per_loc_bin_num = int(self.cfg.RCNN.LOC_SCOPE / self.cfg.RCNN.LOC_BIN_SIZE) * 2
         loc_y_bin_num = int(self.cfg.RCNN.LOC_Y_SCOPE / self.cfg.RCNN.LOC_Y_BIN_SIZE) * 2
@@ -212,8 +213,9 @@ class RCNN(object):
                 # Debug
                 #pass 
 
-        reg_out = conv_bn(reg_out, reg_channel, act=None, name="reg_out", bn=True)
+        reg_out = conv_bn(reg_out, reg_channel, act=None, name="reg_out", bn=self.cfg.RCNN.USE_BN)
         self.reg_out = fluid.layers.squeeze(reg_out, axes=[2,3])
+        # fluid.layers.Print(self.reg_out, message="reg_out", summarize=100)
 
         
         self.ret_dict = {
