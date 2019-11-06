@@ -65,12 +65,12 @@ def rotate_pc_along_y_np(np.ndarray pc, np.ndarray rot_angle):
     cdef np.ndarray cosa, sina, raw_1, raw_2, R, pc_temp
     cosa = np.cos(rot_angle).reshape(-1, 1)
     sina = np.sin(rot_angle).reshape(-1, 1)
-    raw_1 = np.concatenate((cosa, -sina), axis=1)
-    raw_2 = np.concatenate((sina, cosa), axis=1)
+    raw_1 = np.concatenate([cosa, -sina], axis=1)
+    raw_2 = np.concatenate([sina, cosa], axis=1)
     # # (N, 2, 2)
     R = np.concatenate((np.expand_dims(raw_1, axis=1), np.expand_dims(raw_2, axis=1)), axis=1)
     pc_temp = pc[:, :, [0, 2]]
-    pc[:, :, [0, 2]] = np.squeeze(np.matmul(pc_temp, R.transpose(0, 2, 1)), axis=1)
+    pc[:, :, [0, 2]] = np.matmul(pc_temp, R.transpose(0, 2, 1))
     
     return pc
 
