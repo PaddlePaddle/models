@@ -38,7 +38,6 @@ nohup python -u compress.py \
 --batch_size 256 \
 --total_images 1281167 \
 --lr_strategy "piecewise_decay" \
---num_epochs 120 \
 --lr 0.1 \
 --l2_decay 3e-5 \
 --pretrained_model ../pretrain/MobileNetV1_pretrained \
@@ -53,7 +52,6 @@ tailf mobilenet_v1.log
 #--batch_size 256 \
 #--total_images 1281167 \
 #--lr_strategy "cosine_decay" \
-#--num_epochs 240 \
 #--lr 0.1 \
 #--l2_decay 4e-5 \
 #--pretrained_model ../pretrain/MobileNetV2_pretrained \
@@ -70,7 +68,6 @@ tailf mobilenet_v1.log
 #--total_images 1281167 \
 #--lr_strategy "cosine_decay" \
 #--lr 0.1 \
-#--num_epochs 120 \
 #--l2_decay 1e-4 \
 #--pretrained_model ../pretrain/ResNet34_pretrained \
 #--config_file "./configs/resnet34.yaml" \
