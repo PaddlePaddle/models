@@ -44,6 +44,8 @@ class ResNet():
 
         # TODO(wanghaoshuang@baidu.com):
         # fix name("conv1") conflict between student and teacher in distillation.
+
+        #with fluid.name_scope('skip_quant'):
         conv = self.conv_bn_layer(
             input=input,
             num_filters=64,
@@ -80,12 +82,12 @@ class ResNet():
             stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
             fc_name = fc_name if fc_name is None else prefix_name + fc_name
             out = fluid.layers.fc(input=pool,
-                              size=class_dim,
-                              act='softmax',
-                              name=fc_name,
-                              param_attr=fluid.param_attr.ParamAttr(
-                                  initializer=fluid.initializer.Uniform(-stdv,
-                                                                        stdv)))
+                                  size=class_dim,
+                                  act='softmax',
+                                  name=fc_name,
+                                  param_attr=fluid.param_attr.ParamAttr(
+                                      initializer=fluid.initializer.Uniform(
+                                          -stdv, stdv)))
         else:
             for block in range(len(depth)):
                 for i in range(depth[block]):
@@ -151,7 +153,7 @@ class ResNet():
             moving_mean_name=bn_name + '_mean',
             moving_variance_name=bn_name + '_variance', )
 
-    def shortcut(self, input, ch_out, stride, is_first,  name):
+    def shortcut(self, input, ch_out, stride, is_first, name):
         ch_in = input.shape[1]
         if ch_in != ch_out or stride != 1 or is_first == True:
             return self.conv_bn_layer(input, ch_out, 1, stride, name=name)
@@ -180,11 +182,15 @@ class ResNet():
             name=name + "_branch2c")
 
         short = self.shortcut(
-            input, num_filters * 4, stride, is_first=False, name=name + "_branch1")
+            input,
+            num_filters * 4,
+            stride,
+            is_first=False,
+            name=name + "_branch1")
 
         return fluid.layers.elementwise_add(
             x=short, y=conv2, act='relu', name=name + ".add.output.5")
-    
+
     def basic_block(self, input, num_filters, stride, is_first, name):
         conv0 = self.conv_bn_layer(
             input=input,
@@ -202,7 +208,6 @@ class ResNet():
         short = self.shortcut(
             input, num_filters, stride, is_first, name=name + "_branch1")
         return fluid.layers.elementwise_add(x=short, y=conv1, act='relu')
-
 
 
 def ResNet34(prefix_name=''):

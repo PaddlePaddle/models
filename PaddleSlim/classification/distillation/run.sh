@@ -58,7 +58,7 @@ tailf mobilenet_v1.log
 #--model "MobileNetV2" \
 #--teacher_model "ResNet50" \
 #--teacher_pretrained_model ../pretrain/ResNet50_pretrained \
-#--compress_config ./configs/mobilenetv2_resnet50_distillation.yaml\
+#--compress_config ./configs/mobilenetv2_resnet50_distillation.yaml \
 #> mobilenet_v2.log 2>&1 &
 #tailf mobilenet_v2.log
 

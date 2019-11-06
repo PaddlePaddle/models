@@ -35,8 +35,8 @@ parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], 
 add_arg('config_file',      str, None,                 "The config file for compression with yaml format.")
 # yapf: enable
 
-
 model_list = [m for m in dir(models) if "__" not in m]
+
 
 def piecewise_decay(args):
     step = int(math.ceil(float(args.total_images) / args.batch_size))
@@ -49,17 +49,17 @@ def piecewise_decay(args):
         regularization=fluid.regularizer.L2Decay(args.l2_decay))
     return optimizer
 
+
 def cosine_decay(args):
     step = int(math.ceil(float(args.total_images) / args.batch_size))
     learning_rate = fluid.layers.cosine_decay(
-        learning_rate=args.lr,
-        step_each_epoch=step,
-        epochs=args.num_epochs)
+        learning_rate=args.lr, step_each_epoch=step, epochs=args.num_epochs)
     optimizer = fluid.optimizer.Momentum(
         learning_rate=learning_rate,
         momentum=args.momentum_rate,
         regularization=fluid.regularizer.L2Decay(args.l2_decay))
     return optimizer
+
 
 def create_optimizer(args):
     if args.lr_strategy == "piecewise_decay":
@@ -67,13 +67,16 @@ def create_optimizer(args):
     elif args.lr_strategy == "cosine_decay":
         return cosine_decay(args)
 
+
 def compress(args):
-    class_dim=1000
-    image_shape="3,224,224"
+    class_dim = 1000
+    image_shape = "3,224,224"
     image_shape = [int(m) for m in image_shape.split(",")]
-    assert args.model in model_list, "{} is not in lists: {}".format(args.model, model_list)
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+    assert args.model in model_list, "{} is not in lists: {}".format(args.model,
+                                                                     model_list)
+    image = fluid.data(
+        name='image', shape=[None] + image_shape, dtype='float32')
+    label = fluid.data(name='label', shape=[None, 1], dtype='int64')
     # model definition
     model = models.__dict__[args.model]()
     out = model.net(input=image, class_dim=class_dim)
@@ -88,8 +91,10 @@ def compress(args):
     exe.run(fluid.default_startup_program())
 
     if args.pretrained_model:
+
         def if_exist(var):
             return os.path.exists(os.path.join(args.pretrained_model, var.name))
+
         fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
 
     val_reader = paddle.batch(reader.val(), batch_size=args.batch_size)

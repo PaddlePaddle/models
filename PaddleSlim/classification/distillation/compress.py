@@ -44,8 +44,9 @@ def compress(args):
 
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+    image = fluid.data(
+        name='image', shape=[None] + image_shape, dtype='float32')
+    label = fluid.data(name='label', shape=[None, 1], dtype='int64')
     # model definition
     model = models.__dict__[args.model]()
 
@@ -95,7 +96,6 @@ def compress(args):
     train_fetch_list = [('loss', avg_cost.name)]
 
     teacher_programs = []
-    distiller_optimizer = None
 
     teacher_model = models.__dict__[args.teacher_model](prefix_name='res50')
     # define teacher program
