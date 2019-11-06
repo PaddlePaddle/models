@@ -116,19 +116,6 @@ def eval(args):
         model_filename='model',
         params_filename='weights')
 
-    _logger.info("convert the freezed pass to paddle-lite execution")
-    mobile_pass = TransformForMobilePass()
-    mobile_pass.apply(test_graph)
-    mobile_program = test_graph.to_program()
-    fluid.io.save_inference_model(
-        dirname=os.path.join(args.save_path, 'mobile'),
-        feeded_var_names=feed_names,
-        target_vars=fetch_targets,
-        executor=exe,
-        main_program=mobile_program,
-        model_filename='model',
-        params_filename='weights')
-
 
 def main():
     args = parser.parse_args()
