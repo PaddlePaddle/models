@@ -28,7 +28,7 @@ model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("checkpoints", str, "checkpoints", "Path to save checkpoints")
 
 train_g = ArgumentGroup(parser, "training", "training options.")
-train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
+train_g.add_arg("epoch", int, 100, "Number of epoches for training.")
 train_g.add_arg("save_steps", int, 1000,
                 "The steps interval to save checkpoints.")
 train_g.add_arg("validation_steps", int, 200,
@@ -139,10 +139,18 @@ def train():
         elif args.model_type == 'bow_net':
             model = nets.BOW("bow_net", args.vocab_size, args.batch_size,
                              args.padding_size)
+        elif args.model_type == 'lstm_net':
+            model = nets.LSTM("lstm_net", args.vocab_size, args.batch_size,
+                              args.padding_size)
         sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.lr)
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
-
+        last_hidden = None
+        last_cell = None
+        init_hidden_data = np.zeros(
+            (1, args.batch_size, 128 * 4), dtype='float32')
+        init_cell_data = np.zeros(
+            (1, args.batch_size, 128 * 4), dtype='float32')
         for eop in range(args.epoch):
             time_begin = time.time()
             for batch_id, data in enumerate(train_data_generator()):
@@ -166,7 +174,16 @@ def train():
                             args.batch_size, 1))
 
                     model.train()
-                    avg_cost, prediction, acc = model(doc, label)
+
+                    if args.model_type == 'lstm_net':
+                        init_hidden = to_variable(init_hidden_data)
+                        init_cell = to_variable(init_cell_data)
+                        avg_cost, prediction, acc, last_hidden, last_cell = model(
+                            doc, init_hidden, init_cell, label)
+                        init_hidden_data = last_hidden.numpy()
+                        init_cell_data = last_cell.numpy()
+                    else:
+                        avg_cost, prediction, acc = model(doc, label)
                     avg_cost.backward()
                     np_mask = (doc.numpy() != args.vocab_size).astype('int32')
                     word_num = np.sum(np_mask)
@@ -206,8 +223,18 @@ def train():
                                 np.array([x[1] for x in eval_data]).astype(
                                     'int64').reshape(args.batch_size, 1))
                             eval_doc = to_variable(eval_np_doc.reshape(-1, 1))
-                            eval_avg_cost, eval_prediction, eval_acc = model(
-                                eval_doc, eval_label)
+                            if args.model_type == 'lstm_net':
+                                init_hidden = to_variable(init_hidden_data)
+                                init_cell = to_variable(init_cell_data)
+                                eval_avg_cost, eval_prediction, eval_acc, last_hidden, last_cell = model(
+                                    eval_doc, init_hidden, init_cell,
+                                    eval_label)
+                                init_hidden_data = to_variable(
+                                    last_hidden.numpy())
+                                init_cell_data = to_variable(last_cell.numpy())
+                            else:
+                                eval_avg_cost, eval_prediction, eval_acc = model(
+                                    eval_doc, eval_label)
 
                             eval_np_mask = (
                                 eval_np_doc != args.vocab_size).astype('int32')
@@ -266,6 +293,9 @@ def infer():
         elif args.model_type == 'bow_net':
             model_infer = nets.BOW("bow_net", args.vocab_size, args.batch_size,
                                    args.padding_size)
+        elif args.model_type == 'lstm_net':
+            model_infer = nets.LSTM("lstm_net", args.vocab_size,
+                                    args.batch_size, args.padding_size)
         print('Do inferring ...... ')
         total_acc, total_num_seqs = [], []
 
