@@ -25,15 +25,14 @@ from model.bert import BertModel
 def create_model(args, bert_config, num_labels, is_prediction=False):
     input_fields = {
         'names': ['src_ids', 'pos_ids', 'sent_ids', 'input_mask', 'labels'],
-        'shapes':
-        [[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
-         [-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1], [-1, 1]],
+        'shapes': [[None, None], [None, None], [None, None],
+                   [None, args.max_seq_len, 1], [None, 1]],
         'dtypes': ['int64', 'int64', 'int64', 'float32', 'int64'],
         'lod_levels': [0, 0, 0, 0, 0],
     }
 
     inputs = [
-        fluid.layers.data(
+        fluid.data(
             name=input_fields['names'][i],
             shape=input_fields['shapes'][i],
             dtype=input_fields['dtypes'][i],
@@ -42,7 +41,8 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
     ]
     (src_ids, pos_ids, sent_ids, input_mask, labels) = inputs
 
-    pyreader = fluid.io.PyReader(feed_list=inputs, capacity=50, iterable=False)
+    data_loader = fluid.io.DataLoader.from_generator(
+        feed_list=inputs, capacity=50, iterable=False)
 
     bert = BertModel(
         src_ids=src_ids,
@@ -59,6 +59,7 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
         dropout_implementation="upscale_in_train")
     logits = fluid.layers.fc(
         input=cls_feats,
+        num_flatten_dims=2,
         size=num_labels,
         param_attr=fluid.ParamAttr(
             name="cls_out_w",
@@ -71,8 +72,9 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
         feed_targets_name = [
             src_ids.name, pos_ids.name, sent_ids.name, input_mask.name
         ]
-        return pyreader, probs, feed_targets_name
+        return data_loader, probs, feed_targets_name
 
+    logits = fluid.layers.reshape(logits, [-1, num_labels], inplace=True)
     ce_loss, probs = fluid.layers.softmax_with_cross_entropy(
         logits=logits, label=labels, return_softmax=True)
     loss = fluid.layers.mean(x=ce_loss)
@@ -80,4 +82,4 @@ def create_model(args, bert_config, num_labels, is_prediction=False):
     num_seqs = fluid.layers.create_tensor(dtype='int64')
     accuracy = fluid.layers.accuracy(input=probs, label=labels, total=num_seqs)
 
-    return pyreader, loss, probs, accuracy, num_seqs
+    return data_loader, loss, probs, accuracy, num_seqs

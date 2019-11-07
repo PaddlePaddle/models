@@ -6,6 +6,8 @@ from .ctcn_reader import CTCNReader
 from .bmn_reader import BMNReader
 from .bsn_reader import BSNVideoReader
 from .bsn_reader import BSNProposalReader
+from .ets_reader import ETSReader
+from .tall_reader import TALLReader
 
 # regist reader, sort by alphabet
 regist_reader("ATTENTIONCLUSTER", FeatureReader)
@@ -19,3 +21,5 @@ regist_reader("CTCN", CTCNReader)
 regist_reader("BMN", BMNReader)
 regist_reader("BSNTEM", BSNVideoReader)
 regist_reader("BSNPEM", BSNProposalReader)
+regist_reader("ETS", ETSReader)
+regist_reader("TALL", TALLReader)

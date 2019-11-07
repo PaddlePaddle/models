@@ -22,7 +22,7 @@ import os
 import random
 import math
 import contextlib
-
+from distutils.dir_util import mkpath
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.framework as framework
@@ -110,6 +110,9 @@ def main():
     logger.info('Running with args : {}'.format(args))
 
     config = RNNConfig(args)
+
+    if not os.path.exists(args.save_model_dir):
+        mkpath(args.save_model_dir)
 
     # define train program
     main_program = fluid.Program()
@@ -206,11 +209,12 @@ def main():
     train_data, valid_data, test_data = ptb_data
 
     def generate_init_data():
+        batch_size = config.batch_size * device_count
         init_hidden = np.zeros(
-            (config.num_layers, config.batch_size, config.hidden_size),
+            (batch_size, config.num_layers, config.hidden_size),
             dtype='float32')
         init_cell = np.zeros(
-            (config.num_layers, config.batch_size, config.hidden_size),
+            (batch_size, config.num_layers, config.hidden_size),
             dtype='float32')
         return init_hidden, init_cell
 
@@ -244,8 +248,8 @@ def main():
 
     def eval(data):
         # when eval the batch_size set to 1
-        eval_data_iter = reader.get_data_iter(data, config.batch_size,
-                                              config.num_steps)
+        eval_data_iter = reader.get_data_iter(data, config.batch_size *
+                                              device_count, config.num_steps)
         total_loss = 0.0
         iters = 0
         init_hidden, init_cell = generate_init_data()
@@ -277,8 +281,8 @@ def main():
     def train_an_epoch(epoch_id, batch_times):
         # get train epoch size
         log_interval = get_log_interval(len(train_data))
-        train_data_iter = reader.get_data_iter(train_data, config.batch_size,
-                                               config.num_steps)
+        train_data_iter = reader.get_data_iter(train_data, config.batch_size *
+                                               device_count, config.num_steps)
 
         total_loss = 0
         iters = 0
@@ -307,7 +311,6 @@ def main():
             lr = np.array(fetch_outs[1])
             init_hidden = np.array(fetch_outs[2])
             init_cell = np.array(fetch_outs[3])
-
             total_loss += cost_train
             iters += config.num_steps
             if batch_id > 0 and batch_id % log_interval == 0:
@@ -379,7 +382,7 @@ def main():
         if args.use_dataloader:
 
             def data_gen():
-                data_iter_size = config.batch_size // device_count
+                data_iter_size = config.batch_size
                 train_batches = reader.get_data_iter(train_data, data_iter_size,
                                                      config.num_steps)
                 for batch in train_batches:
@@ -444,8 +447,11 @@ def main():
                     format(
                         len(valid_data), config.batch_size, config.num_steps))
 
-            save_model_dir = os.path.join(args.save_model_dir,
-                                          str(epoch_id), "params")
+            save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
+            if not os.path.exists(save_model_dir):
+                mkpath(save_model_dir)
+            save_model_dir = os.path.join(save_model_dir, 'params')
+
             fluid.save(main_program, save_model_dir)
             print("Saved model to: %s.\n" % save_model_dir)
 

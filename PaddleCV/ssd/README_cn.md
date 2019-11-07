@@ -1,3 +1,5 @@
+**该项目已被迁移至[PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), 这个项目包含了更多的检测模型。**
+
 ## SSD 目标检测
 
 ## Table of Contents

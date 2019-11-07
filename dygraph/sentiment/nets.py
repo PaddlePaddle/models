@@ -14,6 +14,7 @@
 import paddle.fluid as fluid
 from paddle.fluid.dygraph.nn import Conv2D, Pool2D, FC, Embedding
 from paddle.fluid.dygraph.base import to_variable
+import numpy as np
 
 
 class SimpleConvPool(fluid.dygraph.Layer):
@@ -79,6 +80,50 @@ class CNN(fluid.dygraph.Layer):
         fc_1 = self._fc1(conv_3)
         prediction = self._fc_prediction(fc_1)
 
+        if label:
+            cost = fluid.layers.cross_entropy(input=prediction, label=label)
+            avg_cost = fluid.layers.mean(x=cost)
+            acc = fluid.layers.accuracy(input=prediction, label=label)
+
+            return avg_cost, prediction, acc
+        else:
+            return prediction
+
+
+class BOW(fluid.dygraph.Layer):
+    def __init__(self, name_scope, dict_dim, batch_size, seq_len):
+        super(BOW, self).__init__(name_scope)
+        self.dict_dim = dict_dim
+        self.emb_dim = 128
+        self.hid_dim = 128
+        self.fc_hid_dim = 96
+        self.class_dim = 2
+        self.batch_size = batch_size
+        self.seq_len = seq_len
+        self.embedding = Embedding(
+            self.full_name(),
+            size=[self.dict_dim + 1, self.emb_dim],
+            dtype='float32',
+            is_sparse=False)
+        self._fc1 = FC(self.full_name(), size=self.fc_hid_dim, act="tanh")
+        self._fc2 = FC(self.full_name(), size=self.class_dim, act="tanh")
+        self._fc_prediction = FC(self.full_name(),
+                                 size=self.class_dim,
+                                 act="softmax")
+
+    def forward(self, inputs, label=None):
+        emb = self.embedding(inputs)
+        o_np_mask = (inputs.numpy() != self.dict_dim).astype('float32')
+        mask_emb = fluid.layers.expand(
+            to_variable(o_np_mask), [1, self.hid_dim])
+        emb = emb * mask_emb
+        emb = fluid.layers.reshape(
+            emb, shape=[-1, 1, self.seq_len, self.hid_dim])
+        bow_1 = fluid.layers.reduce_sum(emb, dim=1)
+        bow_1 = fluid.layers.tanh(bow_1)
+        fc_1 = self._fc1(bow_1)
+        fc_2 = self._fc2(fc_1)
+        prediction = self._fc_prediction(fc_2)
         if label:
             cost = fluid.layers.cross_entropy(input=prediction, label=label)
             avg_cost = fluid.layers.mean(x=cost)

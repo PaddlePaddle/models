@@ -1,4 +1,4 @@
-#encoding=utf-8
+# -*- encoding:utf-8 -*-
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,6 @@ import sys
 import re
 import os
 import six
-import codecs
 import numpy as np
 import logging
 import logging.handlers
@@ -36,7 +35,7 @@ def load_vocab(file_path):
     load the given vocabulary
     """
     vocab = {}
-    f = io.open(file_path, "r", encoding="utf-8")
+    f = io.open(file_path, "r", encoding="utf8")
     for line in f:
         items = line.strip("\n").split("\t")
         if items[0] not in vocab:
@@ -56,9 +55,9 @@ def get_result_file(args):
       result_file: merge sample and predict result
 
     """
-    with codecs.open(args.test_data_dir, "r", "utf-8") as test_file:
-        with codecs.open("predictions.txt", "r", "utf-8") as predictions_file:
-            with codecs.open(args.test_result_path, "w", "utf-8") as test_result_file:
+    with io.open(args.test_data_dir, "r", encoding="utf8") as test_file:
+        with io.open("predictions.txt", "r", encoding="utf8") as predictions_file:
+            with io.open(args.test_result_path, "w", encoding="utf8") as test_result_file:
                 test_datas = [line.strip("\n") for line in test_file]
                 predictions = [line.strip("\n") for line in predictions_file]
                 for test_data, prediction in zip(test_datas, predictions):
