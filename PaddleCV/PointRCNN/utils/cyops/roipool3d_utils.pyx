@@ -4,7 +4,8 @@ cimport numpy as np
 cimport cython 
 from libc.math cimport sin, cos 
 
-
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cdef enlarge_box3d(np.ndarray boxes3d, int extra_width):
     """
     :param boxes3d: (N, 7) [x, y, z, h, w, l, ry]
@@ -17,7 +18,8 @@ cdef enlarge_box3d(np.ndarray boxes3d, int extra_width):
     large_boxes3d[:, 1] += extra_width
     return large_boxes3d
 
-
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cdef pt_in_box(float x, float y, float z, float cx, float bottom_y, float cz, float h, float w, float l, float angle):
     cdef float max_ids = 10.0
     cdef float cy = bottom_y - h / 2.0
@@ -32,13 +34,28 @@ cdef pt_in_box(float x, float y, float z, float cx, float bottom_y, float cz, fl
     cdef float flag = (x_rot >= -l / 2.0) and (x_rot <= l / 2.0) and (z_rot >= -w / 2.0) and (z_rot <= w / 2.0)
     return flag
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef _rotate_pc_along_y(np.ndarray pc, float rot_angle):
+    """
+    params pc: (N, 3+C), (N, 3) is in the rectified camera coordinate
+    params rot_angle: rad scalar
+    Output pc: updated pc with XYZ rotated
+    """
+    cosval = np.cos(rot_angle)
+    sinval = np.sin(rot_angle)
+    rotmat = np.array([[cosval, -sinval], [sinval, cosval]])
+    pc[:, [0, 2]] = np.dot(pc[:, [0, 2]], np.transpose(rotmat))
+    return pc
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def roipool3d_cpu(
         np.ndarray[float, ndim=2] pts, 
         np.ndarray[float, ndim=2] pts_feature, 
         np.ndarray[float, ndim=2] boxes3d, 
         np.ndarray[float, ndim=2] pts_extra_input, 
-        int pool_extra_width, int sampled_pt_num, int batch_size=1):
+        int pool_extra_width, int sampled_pt_num, int batch_size=1, bint canonical_transform=False):
     cdef np.ndarray pts_feature_all = np.concatenate((pts_extra_input, pts_feature), axis=1)
 
     cdef np.ndarray larged_boxes3d = enlarge_box3d(boxes3d.reshape(-1, 7), pool_extra_width).reshape(batch_size, -1, 7)
@@ -86,7 +103,7 @@ def roipool3d_cpu(
             
             for j in range(pts_num):
                 x = x_i[j][0]
-                y = x_i[j][0]
+                y = x_i[j][1]
                 z = x_i[j][2]
                 cur_in_flag = pt_in_box(x,y,z,cx,bottom_y,cz,h,w,l,ry)
                 if cur_in_flag:
@@ -113,6 +130,16 @@ def roipool3d_cpu(
     pooled_pts = np.concatenate((pooled_pts, pooled_features[:,:,0:extra_input_len]),axis=2)
     pooled_features = pooled_features[:,:,extra_input_len:]
     
+    if canonical_transform:
+        # Translate to the roi coordinates
+        roi_ry = boxes3d[:, 6] % (2 * np.pi)  # 0~2pi
+        roi_center = boxes3d[:, 0:3]
+        # shift to center
+        pooled_pts[:, :, 0:3] = pooled_pts[:, :, 0:3] - roi_center[:, np.newaxis, :]
+        for k in range(pooled_pts.shape[0]):
+            pooled_pts[k] = _rotate_pc_along_y(pooled_pts[k], roi_ry[k])
+        return pooled_pts, pooled_features, pooled_empty_flag
+
     return pooled_pts, pooled_features, pooled_empty_flag
 
 
