@@ -6,6 +6,7 @@
 | 模型 | dev |
 | :------| :------ |
 | CNN | 90.6% |
+| BOW | 90.1% |
 
 动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
 
