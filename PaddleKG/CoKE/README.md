@@ -1,7 +1,7 @@
 # CoKE: Contextualized Knowledge Graph Embedding
 ## Introduction
 
-This is the [PaddlePaddle](https://www.paddlepaddle.org.cn/) implementation of the CoKE model for Knowledge Graph Embedding(KGE).
+This is the [PaddlePaddle](https://www.paddlepaddle.org.cn/) implementation of the [CoKE](https://arxiv.org/abs/1911.02168) model for Knowledge Graph Embedding(KGE).
 
 CoKE is a novel KGE paradigm that learns dynamic, flexible, and fully contextualized entity and relation representations for a given Knowledge Graph(KG).
 It takes a sequence of entities and relations as input, and uses [Transformer](https://arxiv.org/abs/1706.03762) to obtain contextualized representations for its components.
@@ -158,6 +158,18 @@ These are also given in the `configs/${TASK}_job_config.sh` files.
 |WN18RR| L=6, H=256, A=4|3e-4 | 0.15 | 800 | 1024 | 0.1 |
 |pathqueryFB | L=6, H=256, A=4 | 3e-4 | 1 | 10 | 2048 | 0.1 |
 |pathqueryWN | L=6, H=256, A=4 | 3e-4 | 1 | 5 | 2048 | 0.1 |
+
+## Citation
+If you use any source code included in this project in your work, please cite the following paper:
+
+```
+@article{wang2019:coke,
+  title={CoKE: Contextualized Knowledge Graph Embedding},
+  author={Wang, Quan and Huang, Pingping and Wang, Haifeng and Dai, Songtai and Jiang, Wenbin and Liu, Jing and Lyu, Yajuan and Wu, Hua},
+  journal={arXiv:1911.02168},
+  year={2019}
+}
+```
 
 
 ## Copyright and License
