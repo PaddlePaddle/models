@@ -15,7 +15,7 @@ This model implementation reproduces the result of the paper "DeepFM: A Factoriz
 ```
 
 ## Environment
-- PaddlePaddle 1.6
+- **Now all models in PaddleRec require PaddlePaddle version 1.6 or higher, or suitable develop version.**
 
 ## Download and preprocess data
 
@@ -80,7 +80,7 @@ other params explained in cluster_train.py
 
 Infer
 ```bash
-python infer.py --model_output_dir cluster_model --test_epoch 10 --test_data_dir=dist_data/dist_test_data --feat_dict='dist_data/aid_data/feat_dict_10.pkl2'
+python infer.py --model_output_dir cluster_model --test_epoch 10 --num_feat 141443 --test_data_dir=dist_data/dist_test_data --feat_dict='dist_data/aid_data/feat_dict_10.pkl2'
 ```
 
 Notes:

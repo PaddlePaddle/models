@@ -10,6 +10,7 @@ import paddle.fluid as fluid
 
 import reader
 from network_conf import ctr_dnn_model
+import utils
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
@@ -91,4 +92,5 @@ def infer():
 
 
 if __name__ == '__main__':
+    utils.check_version()
     infer()

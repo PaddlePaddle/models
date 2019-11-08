@@ -7,6 +7,7 @@ from collections import OrderedDict
 import paddle.fluid as fluid
 
 from network import DCN
+import utils
 
 
 def parse_args():
@@ -194,4 +195,5 @@ def train():
 
 
 if __name__ == "__main__":
+    utils.check_version()
     train()

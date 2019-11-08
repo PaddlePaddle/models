@@ -11,6 +11,7 @@ import paddle.fluid as fluid
 
 from config import parse_args
 from network import DCN
+import utils
 """
 train DCN model
 """
@@ -86,4 +87,5 @@ def train(args):
 if __name__ == '__main__':
     args = parse_args()
     print(args)
+    utils.check_version()
     train(args)
