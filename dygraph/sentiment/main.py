@@ -147,10 +147,8 @@ def train():
         total_cost, total_acc, total_num_seqs = [], [], []
         last_hidden = None
         last_cell = None
-        init_hidden_data = np.zeros(
-            (1, args.batch_size, 128 * 4), dtype='float32')
-        init_cell_data = np.zeros(
-            (1, args.batch_size, 128 * 4), dtype='float32')
+        init_hidden_data = np.zeros((1, args.batch_size, 128), dtype='float32')
+        init_cell_data = np.zeros((1, args.batch_size, 128), dtype='float32')
         for eop in range(args.epoch):
             time_begin = time.time()
             for batch_id, data in enumerate(train_data_generator()):

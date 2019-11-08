@@ -246,7 +246,7 @@ class LSTM(fluid.dygraph.Layer):
         self.hid_dim = 128
         self.fc_hid_dim = 96
         self.class_dim = 2
-        self.lstm_num_steps = 1
+        self.lstm_num_steps = 60
         self.lstm_num_layers = 1
         self.batch_size = batch_size
         self.seq_len = seq_len
@@ -256,16 +256,14 @@ class LSTM(fluid.dygraph.Layer):
             dtype='float32',
             param_attr=fluid.ParamAttr(learning_rate=30),
             is_sparse=False)
-        self._fc1 = FC(self.full_name(),
-                       size=self.hid_dim * 4,
-                       num_flatten_dims=2)
+        self._fc1 = FC(self.full_name(), size=self.hid_dim, num_flatten_dims=2)
         self._fc2 = FC(self.full_name(), size=self.fc_hid_dim, act="tanh")
         self._fc_prediction = FC(self.full_name(),
                                  size=self.class_dim,
                                  act="softmax")
         self.simple_lstm_rnn = SimpleLSTMRNN(
             self.full_name(),
-            self.hid_dim * 4,
+            self.hid_dim,
             num_steps=self.lstm_num_steps,
             num_layers=self.lstm_num_layers,
             init_scale=0.1,
@@ -277,18 +275,16 @@ class LSTM(fluid.dygraph.Layer):
         mask_emb = fluid.layers.expand(
             to_variable(o_np_mask), [1, self.hid_dim])
         emb = emb * mask_emb
-        emb = fluid.layers.reshape(
-            emb, shape=[-1, 1, self.seq_len, self.hid_dim])
-        emb = fluid.layers.reduce_max(emb, dim=1)
+        emb = fluid.layers.reshape(emb, shape=[-1, self.seq_len, self.hid_dim])
         fc_1 = self._fc1(emb)
         init_h = fluid.layers.reshape(
-            init_hidden, shape=[self.lstm_num_layers, -1, self.hid_dim * 4])
+            init_hidden, shape=[self.lstm_num_layers, -1, self.hid_dim])
         init_c = fluid.layers.reshape(
-            init_cell, shape=[self.lstm_num_layers, -1, self.hid_dim * 4])
+            init_cell, shape=[self.lstm_num_layers, -1, self.hid_dim])
         real_res, last_hidden, last_cell = self.simple_lstm_rnn(fc_1, init_h,
                                                                 init_c)
         last_hidden = fluid.layers.reshape(
-            last_hidden, shape=[-1, self.hid_dim * 4])
+            last_hidden, shape=[-1, self.hid_dim])
         tanh_1 = fluid.layers.tanh(last_hidden)
         fc_2 = self._fc2(tanh_1)
         prediction = self._fc_prediction(fc_2)
