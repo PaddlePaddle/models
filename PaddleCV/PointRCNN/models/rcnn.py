@@ -227,8 +227,10 @@ class RCNN(object):
         if self.training:
             self.ret_dict.update(self.target_dict)
         elif not self.training:
+            self.ret_dict['sample_id'] = inputs['sample_id']
             self.ret_dict['pts_input'] = inputs['pts_input']
             self.ret_dict['roi_boxes3d'] = inputs['roi_boxes3d']
+            self.ret_dict['roi_scores'] = inputs['roi_scores']
             self.ret_dict['gt_iou'] = inputs['gt_iou'] 
             self.ret_dict['gt_boxes3d'] = inputs['gt_boxes3d']
 
