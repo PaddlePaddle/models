@@ -728,13 +728,14 @@ class KittiRCNNReader(KittiReader):
         # rotate to the direction of head
         gt_boxes3d_ct = kitti_utils.rotate_pc_along_y_np(
             gt_boxes3d_ct.reshape(-1, 1, 7),
-            #roi_ry.reshape(-1, 7)
             roi_ry,
         )
         # TODO: check here
-        #gt_boxes3d_ct[:, 6] = gt_boxes3d_ct[:, 6] - roi_ry
+        gt_boxes3d_ct = gt_boxes3d_ct.reshape(-1,7)
+        gt_boxes3d_ct[:, 6] = gt_boxes3d_ct[:, 6] - roi_ry
         pts_input = kitti_utils.rotate_pc_along_y_np(
-            pts_input, roi_ry
+            pts_input, 
+            roi_ry
         )
         return pts_input, gt_boxes3d_ct
 
@@ -993,9 +994,10 @@ class KittiRCNNReader(KittiReader):
             pts_extra_input_list.append(cur_depth_norm.reshape(-1, 1))
 
         pts_extra_input = np.concatenate(pts_extra_input_list, axis=1)
-        pts_input, pts_features, _= roipool3d_utils.roipool3d_cpu(
+        pts_input, pts_features, _ = roipool3d_utils.roipool3d_cpu(
             pts_rect, pts_rpn_features, roi_boxes3d, pts_extra_input, 
-            cfg.RCNN.POOL_EXTRA_WIDTH, sampled_pt_num=cfg.RCNN.NUM_POINTS
+            cfg.RCNN.POOL_EXTRA_WIDTH, sampled_pt_num=cfg.RCNN.NUM_POINTS,
+            canonical_transform=True
         )
         pts_input = np.concatenate((pts_input, pts_features), axis=-1)
         
@@ -1004,7 +1006,7 @@ class KittiRCNNReader(KittiReader):
         sample_dict['pts_input'] = pts_input 
         sample_dict['pts_feature'] = pts_features 
         sample_dict['roi_boxes3d'] = roi_boxes3d 
-        #sample_dict['roi_scores'] = roi_scores 
+        sample_dict['roi_scores'] = roi_scores 
         #sample_dict['roi_size'] = roi_boxes3d[:, 3:6]
 
         if self.mode == 'TEST':
@@ -1092,8 +1094,10 @@ class KittiRCNNReader(KittiReader):
         max_pts = 0 
         max_feats = 0
         max_roi = 0
+        max_score = 0
         max_iou = 0
         max_gt = 0
+        
         for k in range(batch_size):
             # pts_input
             max_pts = max(max_pts, batch_data[k][1].shape[0])
@@ -1137,6 +1141,8 @@ class KittiRCNNReader(KittiReader):
             new_batch[i].append(batch_pts_feat[i])
             # roi_boxes3d
             new_batch[i].append(batch_roi_boxes3d[i])
+            # roi_scores 
+            new_batch[i].append(data[4])
             # gt_iou
             new_batch[i].append(batch_gt_iou[i])
             # gt_boxes3d
@@ -1165,7 +1171,8 @@ class KittiRCNNReader(KittiReader):
                         if self.mode == 'TRAIN':
                             yield self.padding_batch(batch_out, batch_size)
                         elif self.mode == 'EVAL':
-                            yield self.padding_batch_eval(batch_out, batch_size)
+                            #yield self.padding_batch_eval(batch_out, batch_size)
+                            yield batch_out
                         else:
                             print("not only support train/eval padding")
                     batch_out = []
