@@ -98,7 +98,7 @@ def parse_args():
     parser.add_argument(
         '--save_dir',
         type=str,
-        default='checkpoints',
+        default='checkpoints_cls',
         help='directory name to save train snapshoot')
     parser.add_argument(
         '--resume',

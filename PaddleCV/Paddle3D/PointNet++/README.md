@@ -5,8 +5,6 @@
 
 - [Introduction](#introduction)
 - [Quick Start](#quick-start)
-- [Advanced Usage](#advanced-usage)
-- [FAQ](#faq)
 - [Reference](#reference)
 - [Update](#update)
 
@@ -30,7 +28,7 @@ Running sample code in this directory requires PaddelPaddle Fluid v.1.6 and late
 
 **ModelNet40 dataset:**
 
-PointNet++ classification models are reproduced on [ModelNet40 dataset](https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip), we also provide download scripts as follows:
+PointNet++ classification models are trained on [ModelNet40 dataset](https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip), we also provide download scripts as follows:
 
 ```
 cd dataset/ModelNet40
@@ -54,7 +52,7 @@ The dataset catalog structure is as follows:
 
 **Indoor3DSemSeg dataset:**
 
-PointNet++ semantic segmentation models are reproduced on [Indoor3DSemSeg dataset](https://shapenet.cs.stanford.edu/media/indoor3d_sem_seg_hdf5_data.zip), we also provide download scripts as follows:
+PointNet++ semantic segmentation models are trained on [Indoor3DSemSeg dataset](https://shapenet.cs.stanford.edu/media/indoor3d_sem_seg_hdf5_data.zip), we also provide download scripts as follows:
 
 ```
 cd dataset/Indoor3DSemSeg
@@ -85,6 +83,21 @@ sh make.sh
 
 If the compilation is finished successfully, `pointnet2_lib.so` will be generated under `exr_op/src`.
 
+Make sure custom operations pass as follows:
+
+```
+# export paddle libs to LD_LIBRARY_PATH for custom op library
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
+
+cd ext_op
+python test/test_farthest_point_sampling_op.py
+python test/test_gather_point_op.py
+python test/test_group_points_op.py
+python test/test_query_ball_op.py
+python test/test_three_interp_op.py
+python test/test_three_nn_op.py
+```
+
 ### Training
 
 **Classification Model:**
@@ -104,10 +117,10 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.98
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
 # start training
-python tools/train_cls.py --model=MSG --batch_size=16 --save_dir=checkpoints_msg_cls
+python train_cls.py --model=MSG --batch_size=16 --save_dir=checkpoints_msg_cls
 ```
 
-We also provide quick start script for training classification model as follows:
+We also provided quick start script for training classification model as follows:
 
 ```
 sh scripts/train_cls.sh
@@ -130,13 +143,78 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.98
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
 # start training
-python tools/train_seg.py --model=MSG --batch_size=32 --save_dir=checkpoints_msg_seg
+python train_seg.py --model=MSG --batch_size=32 --save_dir=checkpoints_msg_seg
 ```
 
-We also provide quick start scripts for training semantic segmentation model as follows:
+We also provided quick start scripts for training semantic segmentation model as follows:
 
 ```
 sh scripts/train_seg.sh
 ```
 
 ### Evaluation
+
+**Classification Model:**
+
+For PointNet++ classification model, evaluation can be start as follows:
+
+```
+# For single GPU deivces
+export CUDA_VISIBLE_DEVICES=0
+
+# export paddle libs to LD_LIBRARY_PATH for custom op library
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
+
+# start evaluation with given weights
+python train_cls.py --model=MSG --weights=checkpoints_cls/200
+```
+
+We also provided quick start script for training classification model as follows:
+
+```
+sh scripts/eval_cls.sh
+```
+
+Classification model evaluation result is shown as below:
+
+| model | Top-1 | download |
+| :----- | :---: | :---: |
+| SSG(Single-Scale Group) | 87.6 | [model]() |
+| MSG(Multi-Scale Group)  | 89.2 | [model]() |
+
+**Semantic Segmentation Model:**
+
+For PointNet++ semantic segmentation model, evaluation can be start as follows:
+
+```
+# For single GPU deivces
+export CUDA_VISIBLE_DEVICES=0
+
+# export paddle libs to LD_LIBRARY_PATH for custom op library
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
+
+# start evaluation with given weights 
+python eval_seg.py --model=MSG --weights=checkpoints_seg/200
+```
+
+We also provided quick start scripts for training semantic segmentation model as follows:
+
+```
+sh scripts/eval_seg.sh
+```
+
+Semantic segmentation model evaluation result is shown as below:
+
+| model | Top-1 |
+| :----- | :---: |
+| SSG(Single-Scale Group) | 86.1 | [model]() |
+| MSG(Multi-Scale Group)  | 86.8 | [model]() |
+
+## Reference
+
+- [PointNet++: Deep Hierarchical Feature Learning on Point Sets in a Metric Space](https://arxiv.org/abs/1706.02413), Charles R. Qi, Li Yi, Hao Su, Leonidas J. Guibas.
+- [PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation](https://www.semanticscholar.org/paper/PointNet%3A-Deep-Learning-on-Point-Sets-for-3D-and-Qi-Su/d997beefc0922d97202789d2ac307c55c2c52fba), Charles Ruizhongtai Qi, Hao Su, Kaichun Mo, Leonidas J. Guibas.
+
+## Update
+
+- 11/2019, Add PointNet++ classification and semantic segmentation model.
