@@ -11,7 +11,16 @@
 ## Introduction
 
 [PointNet++](https://arxiv.org/abs/1706.02413) is a point classification and segmentation model for 3D data proposed by Charles R. Qi, Li Yi, Hao Su, Leonidas J. Guibas.
-This model is a extension work based on PointNet.
+This model is a extension work based on PointNet, network structure is shown as below.
+
+<p align="center">
+<img src="image/pointnet2.jpg" height=400 width=600 hspace='10'/> <br />
+YOLOv3 detection principle
+</p>
+
+PointNet++ extract features of point clouds data with hierarchical point set feature learning, perform set abstractions by grouping and sampling points at fisrt to extract
+local region patterns, then use multi-layer perceptron to get point features. PointNet++ alse used point feature propagation for semantic segmentation model, adopt a hierarchical
+propagation strategy with distance based interpolation and across level skip links, point features was upsampled to obtain point features for all the original points.
 
 **NOTE:** PointNet++ model builds base on custom C++ operations, which can only support GPU devices and compiled on Linux/Unix currently, this model **cannot run on Windows or CPU deivices**.
 
@@ -205,8 +214,8 @@ sh scripts/eval_seg.sh
 
 Semantic segmentation model evaluation result is shown as below:
 
-| model | Top-1 |
-| :----- | :---: |
+| model | Top-1 | download |
+| :----- | :---: | :---: |
 | SSG(Single-Scale Group) | 86.1 | [model]() |
 | MSG(Multi-Scale Group)  | 86.8 | [model]() |
 
