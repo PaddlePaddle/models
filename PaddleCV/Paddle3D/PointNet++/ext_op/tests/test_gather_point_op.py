@@ -1,4 +1,4 @@
-# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,41 +20,34 @@ import paddle.fluid as fluid
 import pointnet_lib
 
 
-def farthest_point_sampling_np(xyz, npoint):
-    B, N, C = xyz.shape
-    S = npoint
-
-    centroids = np.zeros((B, S))
-    distance = np.ones((B, N)) * 1e10
-    farthest = 0
-    batch_indices = np.arange(B).astype('int32')
-    for i in range(S):
-        centroids[:, i] = farthest
-        centroid = xyz[batch_indices, farthest, :].reshape((B, 1, 3))
-        dist = np.sum((xyz - centroid)**2, -1)
-        mask = dist < distance
-        distance[mask] = dist[mask]
-        farthest = np.argmax(distance, -1)
-    return centroids.astype('int32')
+def gather_point_np(points, index):
+    result = []
+    for i in range(len(index)):
+        a = points[i][index[i]]
+        result.append(a.tolist())
+    return result
 
 
-class TestFarthestPointSamplingOp(unittest.TestCase):
+class TestGatherPointOp(unittest.TestCase):
     def test_check_output(self):
         x_shape = (1, 512, 3)
         x_type = 'float32'
-        sampled_point_num = 256
+        idx_shape = (1, 32)
+        idx_type = 'int32'
 
         x = fluid.layers.data(
             name='x', shape=x_shape, dtype=x_type, append_batch_size=False)
-        y = pointnet_lib.farthest_point_sampling(x, sampled_point_num)
+        idx = fluid.layers.data(
+            name='idx', shape=idx_shape, dtype=idx_type, append_batch_size=False)
+        y = pointnet_lib.gather_point(x, idx)
 
-        x_np = np.random.randint(1, 100, (x_shape[0] * x_shape[1] *
-                                          3, )).reshape(x_shape).astype(x_type)
-        out_np = farthest_point_sampling_np(x_np, sampled_point_num)
+        x_np = np.random.uniform(-10, 10, x_shape).astype(x_type)
+        idx_np = np.random.randint(0, x_shape[1], idx_shape).astype(idx_type)
+        out_np = gather_point_np(x_np, idx_np)
 
         place = fluid.CUDAPlace(0)
         exe = fluid.Executor(place)
-        outs = exe.run(feed={'x': x_np}, fetch_list=[y])
+        outs = exe.run(feed={'x': x_np, 'idx': idx_np}, fetch_list=[y])
 
         self.assertTrue(np.allclose(outs[0], out_np))
 

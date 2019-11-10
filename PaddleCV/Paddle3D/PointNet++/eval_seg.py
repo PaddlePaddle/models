@@ -93,7 +93,7 @@ def eval():
         with fluid.unique_name.guard():
             eval_model = PointNet2SemSegMSG(args.num_classes, args.num_points) \
                            if args.model == 'MSG' else \
-                         PointNet2SemSegSSG(args.num_classes, args.num_points) \
+                         PointNet2SemSegSSG(args.num_classes, args.num_points)
             eval_model.build_model()
             eval_feeds = eval_model.get_feeds()
             eval_outputs = eval_model.get_outputs()
