@@ -1,6 +1,3 @@
-export FLAGS_enable_parallel_graph=1
-export FLAGS_sync_nccl_allreduce=1
-
 
 train(){
 python run_classifier.py \
