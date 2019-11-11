@@ -39,12 +39,12 @@ A经过3个reshape操作输出维度均为CN（N = H*W）的B、C、D；
 数据集来源：AIstudio数据集页面上[下载](https://aistudio.baidu.com/aistudio/datasetDetail/11503)，放到dataset文件夹下，其目录结构如下：
 ```text
 dataset
-├── cityscapes            # Cityscapes数据集
-    ├── gtFine            # 精细化标注的label
-    ├── leftImg8bit       # 训练，验证，测试图片      
-    ├── trainLabels.txt   # 训练图片路径
-    ├── valLabels.txt     # 验证图片路径            
-        ...               ...
+  ├── cityscapes               # Cityscapes数据集
+         ├── gtFine            # 精细化标注的label
+         ├── leftImg8bit       # 训练，验证，测试图片      
+         ├── trainLabels.txt   # 训练图片路径
+         ├── valLabels.txt     # 验证图片路径            
+              ...               ...
 ```
 ## 训练说明
 
