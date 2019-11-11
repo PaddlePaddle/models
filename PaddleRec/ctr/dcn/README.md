@@ -10,6 +10,7 @@
 ├── network.py                      # 网络结构
 ├── config.py                       # 参数配置
 ├── reader.py                       # 读取数据相关的函数
+├── utils.py                        # 通用函数
 ├── data/
     ├── download.sh                 # 下载数据脚本
     ├── preprocess.py               # 数据预处理脚本
@@ -23,7 +24,7 @@
 DCN模型介绍可以参阅论文[Deep & Cross Network for Ad Click Predictions](https://arxiv.org/abs/1708.05123)
 
 ## 环境
-- PaddlePaddle 1.6
+- **目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本**
 
 ## 数据下载
 

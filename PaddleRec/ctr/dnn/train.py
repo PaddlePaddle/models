@@ -13,6 +13,7 @@ import paddle.fluid as fluid
 import reader
 from network_conf import ctr_dnn_model
 from multiprocessing import cpu_count
+import utils
 
 # disable gpu training for this example
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -269,4 +270,5 @@ def get_cards(args):
 
 
 if __name__ == '__main__':
+    utils.check_version()
     train()
