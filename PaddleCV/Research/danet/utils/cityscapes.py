@@ -1,10 +1,17 @@
-# -*- encoding: utf-8 -*-
-# Software: PyCharm
-# Time    : 2019/9/13 
-# Author  : Wang
-# File    : cityscapes.py
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-"""准备 cityscapes path_pairs"""
 
 from __future__ import absolute_import
 
@@ -27,7 +34,7 @@ class CityScapes(BaseDataSet):
         assert os.path.exists(root), "please download cityscapes data_set, put in dataset(dir),or check root"
         self.image_path, self.label_path = self._get_cityscapes_pairs(root, split)
         assert len(self.image_path) == len(self.label_path), "please check image_length = label_length"
-        self.print_param()  # 用于核对当前数据集的信息
+        self.print_param()  
 
     def print_param(self):  # 用于核对当前数据集的信息
         print('INFO: dataset_root: {}, split: {}, '
@@ -69,6 +76,3 @@ class CityScapes(BaseDataSet):
     def get_path_pairs(self):
         return self.image_path, self.label_path
 
-
-if __name__ == '__main__':
-    CityScapes(split='train_val', base_size=520, crop_size=480, scale=True)
