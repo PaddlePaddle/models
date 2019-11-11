@@ -161,7 +161,7 @@ def main(args):
     start_prog.random_seed = args.seed
     train_prog.random_seed = args.seed
 
-    # clone 必须在优化器之前
+    # clone 
     test_prog = train_prog.clone(for_test=True)
 
     logging.basicConfig(level=logging.INFO,
@@ -232,7 +232,6 @@ def main(args):
         build_strategy = fluid.BuildStrategy()
         build_strategy.sync_batch_norm = True
         print("sync_batch_norm = True!")
-        # build_strategy.enable_inplace = True
         compiled_train_prog = fluid.compiler.CompiledProgram(train_prog).with_data_parallel(
             loss_name=train_avg_loss.name,
             build_strategy=build_strategy,
