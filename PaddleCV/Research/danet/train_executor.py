@@ -1,8 +1,18 @@
-# -*- encoding: utf-8 -*-
-# Software: PyCharm
-# Time    : 2019/9/15 
-# Author  : Wang
-# File    : train_executor.py
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import os
 
 os.environ['FLAGS_eager_delete_tensor_gb'] = "0.0"
@@ -37,13 +47,6 @@ def get_model(args):
 def mean_iou(pred, label, num_classes=19):
     label = fluid.layers.elementwise_min(fluid.layers.cast(label, np.int32),
                                          fluid.layers.assign(np.array([num_classes], dtype=np.int32)))
-    # GPU暂不支持 ‘==’， 静态图
-    # label_array = label.numpy()  # shape = [4, 384, 768]  4*384*768 > 1024**2
-    # # 忽略值
-    # label_ig = fluid.dygraph.to_variable((label_array == num_classes).astype('int32'))  # 等同上面
-    # # 不可忽略值
-    # label_ng = fluid.dygraph.to_variable((label_array != num_classes).astype('int32'))  # 等同上面
-    # print(label_ng)
     label_ig = (label == num_classes).astype('int32')
     label_ng = (label != num_classes).astype('int32')
     pred = fluid.layers.cast(fluid.layers.argmax(pred, axis=1), 'int32')
@@ -53,15 +56,15 @@ def mean_iou(pred, label, num_classes=19):
     return miou, wrong, correct
 
 
-def loss_fn(pred, pred2, pred3, label):
+def loss_fn(pred, pred2, pred3, label, num_classes=19):
     pred = fluid.layers.transpose(pred, perm=[0, 2, 3, 1])
-    pred = fluid.layers.reshape(pred, [-1, 19])
+    pred = fluid.layers.reshape(pred, [-1, num_classes])
 
     pred2 = fluid.layers.transpose(pred2, perm=[0, 2, 3, 1])
-    pred2 = fluid.layers.reshape(pred2, [-1, 19])
+    pred2 = fluid.layers.reshape(pred2, [-1, num_classes])
 
     pred3 = fluid.layers.transpose(pred3, perm=[0, 2, 3, 1])
-    pred3 = fluid.layers.reshape(pred3, [-1, 19])
+    pred3 = fluid.layers.reshape(pred3, [-1, num_classes])
 
     label = fluid.layers.reshape(label, [-1, 1])
 
@@ -84,8 +87,7 @@ def save_model(save_dir, exe, program=None):
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir, ignore_errors=True)
         os.makedirs(save_dir)
-        fluid.io.save_params(exe, save_dir, program)
-        # fluid.io.save_persistables(exe, save_dir, program)
+        fluid.io.save_persistables(exe, save_dir, program)
         print('已保存: {}'.format(os.path.basename(save_dir)))
     else:
         os.makedirs(save_dir)
@@ -95,7 +97,6 @@ def save_model(save_dir, exe, program=None):
 
 def load_model(save_dir, exe, program=None):
     if os.path.exists(save_dir):
-        # fluid.io.load_params(exe, save_dir, program)
         fluid.io.load_persistables(exe, save_dir, program)
         print('存在, 加载成功')
     else:
@@ -190,7 +191,7 @@ def main(args):
 
             model = get_model(args)
             pred, pred2, pred3 = model(image)
-            train_loss = loss_fn(pred, pred2, pred3, label)
+            train_loss = loss_fn(pred, pred2, pred3, label, num_classes=num_classes)
             train_avg_loss = fluid.layers.mean(train_loss)
             optimizer = optimizer_setting(args)
             optimizer.minimize(train_avg_loss)
@@ -200,7 +201,7 @@ def main(args):
     with fluid.program_guard(test_prog, start_prog):
         with fluid.unique_name.guard():
             test_py_reader = fluid.io.PyReader(feed_list=[image, label],
-                                               capacity=8,
+                                               capacity=64,
                                                iterable=False,
                                                use_double_buffer=True)
             val_data = cityscapes_val(data_root=data_root,
@@ -215,8 +216,7 @@ def main(args):
 
             model = get_model(args)
             pred, pred2, pred3 = model(image)
-
-            test_loss = loss_fn(pred, pred2, pred3, label)
+            test_loss = loss_fn(pred, pred2, pred3, label, num_classes=num_classes)
             test_avg_loss = fluid.layers.mean(test_loss)
             # miou不是真实的
             miou, wrong, correct = mean_iou(pred, label, num_classes=num_classes)
@@ -239,7 +239,6 @@ def main(args):
             exec_strategy=exec_strategy)
     else:
         compiled_train_prog = fluid.compiler.CompiledProgram(train_prog)
-
 
     # 加载预训练模型
     if args.load_pretrained_model:
@@ -278,21 +277,12 @@ def main(args):
         logging.info('training, epoch = {}'.format(epoch + 1))
         train_py_reader.start()
         batch_id = 0
-        # all_correct = np.array([0], dtype=np.int64)
-        # all_wrong = np.array([0], dtype=np.int64)
         while True:
             try:
                 train_fetch_list = [train_avg_loss, miou, wrong, correct]
                 train_avg_loss_value, train_iou_value, w, c = exe.run(
                     program=compiled_train_prog,
                     fetch_list=train_fetch_list)
-                # wrong_value = w[:-1] + all_wrong
-                # right_value = c[:-1] + all_correct
-                # all_wrong = wrong_value.copy()
-                # all_correct = right_value.copy()
-                # mp = (wrong_value + right_value) != 0
-                # miou2 = np.mean((right_value[mp] * 1.0 / (right_value[mp] + wrong_value[mp])))
-                # print('mIoU: %s' % (miou2))
 
                 train_iou_manager.update(train_iou_value, weight=batch_size * num)
                 train_avg_loss_manager.update(train_avg_loss_value, weight=batch_size * num)
@@ -339,7 +329,7 @@ def main(args):
             save_dir = './checkpoint/DAnet_epoch_train'
             save_model(save_dir, exe, program=train_prog)
 
-        # ----------------------------- test ---------------------------------------------
+        # test
         test_py_reader.start()
         test_iou_manager.reset()
         test_avg_loss_manager.reset()
