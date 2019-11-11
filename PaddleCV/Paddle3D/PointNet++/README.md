@@ -1,50 +1,58 @@
-# PointNet++ classification and semantic segmentation model
+# PointNet++ 分类和语义分割模型
 
 ---
-## Table of Contents
+## 内容
 
-- [Introduction](#introduction)
-- [Quick Start](#quick-start)
-- [Reference](#reference)
-- [Update](#update)
+- [简介](#简介)
+- [快速开始](#快速开始)
+- [参考文献](#参考文献)
+- [版本更新](#版本更新)
 
-## Introduction
+## 简介
 
-[PointNet++](https://arxiv.org/abs/1706.02413) is a point classification and segmentation model for 3D data proposed by Charles R. Qi, Li Yi, Hao Su, Leonidas J. Guibas.
-This model is a extension work based on PointNet, network structure is shown as below.
+[PointNet++](https://arxiv.org/abs/1706.02413) 是 Charles R. Qi, Li Yi, Hao Su, Leonidas J. Guibas 等人提出的，针对3D数据进行分类和语义分割的模型。该模型基于PointNet进行了拓展, 使用分层点集特征学习来提取点云数据的特征，首先通过对输入point进行分组和采样提取局部区域模式，然后使用多层感知器来获取点特征。PointNet++ 还将点特征传播用于语义分割模型，采用基于距离插值和跨级跳转连接的分层传播策略，对点特征进行向上采样，获得所有原始点的点特征。
+
+
+网络结构如下所示：
 
 <p align="center">
-<img src="image/pointnet2.jpg" height=400 width=600 hspace='10'/> <br />
-YOLOv3 detection principle
+<img src="image/pointnet2.jpg" height=300 width=800 hspace='10'/> <br />
+用于点集分类和分割的 PointNet++ 网络结构
 </p>
 
-PointNet++ extract features of point clouds data with hierarchical point set feature learning, perform set abstractions by grouping and sampling points at fisrt to extract
-local region patterns, then use multi-layer perceptron to get point features. PointNet++ alse used point feature propagation for semantic segmentation model, adopt a hierarchical
-propagation strategy with distance based interpolation and across level skip links, point features was upsampled to obtain point features for all the original points.
+集合抽象层是网络的基本模块，每个集合抽象层由三个关键层构成:采样层、分组层和特征提取层。
 
-**NOTE:** PointNet++ model builds base on custom C++ operations, which can only support GPU devices and compiled on Linux/Unix currently, this model **cannot run on Windows or CPU deivices**.
+- **采样层**：采样层使用最远点采样(FPS)的方法，从输入点中选择一组点，它定义了局部区域的中心。与随机抽样的方法相比，在质心数目相同的情况下，FPS可以更好的覆盖整个点集。
+
+- **分组层**：分组层通过寻找中心体周围的“邻近”点来构造局部区域集。在度量空间采样的点集中，点的邻域由度量距离定义。这种方法被称为“query ball”，它使得局部区域的特征在空间上更加一般化。
+
+- **特征提取层**: 特征提取层使用 mini-PointNet 对分组层给出的各个区域进行特征提取，获得局部特征。
 
 
-## Quick Start
 
-### Installation
+**注意:** PointNet++ 模型构建依赖于自定义的 C++ 算子，目前仅支持GPU设备在Linux/Unix系统上进行编译，本模型**不能运行在Windows系统或CPU设备上**
 
-**Install [PaddlePaddle](https://github.com/PaddlePaddle/Paddle):**
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.6 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.6/beginners_guide/install/index_en.html) and make an update.
+## 快速开始
 
-### Data preparation
+### 安装
 
-**ModelNet40 dataset:**
+**安装 [PaddlePaddle](https://github.com/PaddlePaddle/Paddle):**
 
-PointNet++ classification models are trained on [ModelNet40 dataset](https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip), we also provide download scripts as follows:
+在当前目录下运行样例代码需要 PaddelPaddle Fluid v.1.6 或以上的版本. 如果你的运行环境中的 PaddlePaddle 低于此版本, 请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/en/1.6/beginners_guide/install/index_en.html) 中的说明来更新 PaddlePaddle.
+
+### 数据准备
+
+**ModelNet40 数据集:**
+
+PointNet++ 分类模型在 [ModelNet40 数据集](https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip)上进行训练，我们提供了数据集下载脚本：
 
 ```
 cd dataset/ModelNet40
 sh download.sh
 ```
 
-The dataset catalog structure is as follows:
+数据目录结构如下所示：
 
 ```
   dataset/ModelNet40/modelnet40_ply_hdf5_2048
@@ -59,16 +67,16 @@ The dataset catalog structure is as follows:
 
 ```
 
-**Indoor3DSemSeg dataset:**
+**Indoor3DSemSeg 数据集:**
 
-PointNet++ semantic segmentation models are trained on [Indoor3DSemSeg dataset](https://shapenet.cs.stanford.edu/media/indoor3d_sem_seg_hdf5_data.zip), we also provide download scripts as follows:
+PointNet++ 分类模型在 [Indoor3DSemSeg 数据集](https://shapenet.cs.stanford.edu/media/indoor3d_sem_seg_hdf5_data.zip)上进行训练，我们提供了数据集下载脚本：
 
 ```
 cd dataset/Indoor3DSemSeg
 sh download.sh
 ```
 
-The dataset catalog structure is as follows:
+数据目录结构如下所示：
 
 ```
   dataset/Indoor3DSemSeg/
@@ -80,22 +88,22 @@ The dataset catalog structure is as follows:
 
 ```
 
-### Compile custom operations
+### 编译自定义算子
 
-Custom operations are supported since Paddle Fluid v1.6, please make sure you are using Paddle not less than v1.6.
-Custom operations can be compiled as follows:
+PaddlePaddle Fluid 从 v1.6 版本开始支持自定义算子实现，请确保你的 Paddle 版本不低于 v1.6
+
+自定义算子可通过以下方式进行编译：
 
 ```
 cd ext_op/src
 sh make.sh
 ```
+成功编译后，`exr_op/src` 目录下将会生成 `pointnet2_lib.so` 
 
-If the compilation is finished successfully, `pointnet2_lib.so` will be generated under `exr_op/src`.
-
-Make sure custom operations pass as follows:
+执行下列操作，确保自定义算子编译正确：
 
 ```
-# export paddle libs to LD_LIBRARY_PATH for custom op library
+# 设置动态库的路径到 LD_LIBRARY_PATH 中
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
 cd ext_op
@@ -107,123 +115,123 @@ python test/test_three_interp_op.py
 python test/test_three_nn_op.py
 ```
 
-### Training
+### 训练
 
-**Classification Model:**
+**分类模型:**
 
-For PointNet++ classification model, training can be start as follows:
+可通过如下方式启动 PointNet++ 分类模型的训练：
 
 ```
-# For single GPU deivces
+# 指定单卡GPU训练
 export CUDA_VISIBLE_DEVICES=0
 
-# enable gc to save GPU memory
+# 开启 gc 节省显存
 export FLAGS_fast_eager_deletion_mode=1
 export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
-# export paddle libs to LD_LIBRARY_PATH for custom op library
+# 设置动态库的路径到 LD_LIBRARY_PATH 中
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
-# start training
+# 开始训练
 python train_cls.py --model=MSG --batch_size=16 --save_dir=checkpoints_msg_cls
 ```
 
-We also provided quick start script for training classification model as follows:
+我们同时提供了训练分类模型的“快速开始”脚本：
 
 ```
 sh scripts/train_cls.sh
 ```
 
-**Semantic Segmentation Model:**
+**语义分割模型:**
 
-For PointNet++ semantic segmentation model, training can be start as follows:
+可通过如下方式启动 PointNet++ 语义分割模型的训练：
 
 ```
-# For single GPU deivces
+# 指定单卡GPU训练
 export CUDA_VISIBLE_DEVICES=0
 
-# enable gc to save GPU memory
+# 开启 gc 节省显存
 export FLAGS_fast_eager_deletion_mode=1
 export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
-# export paddle libs to LD_LIBRARY_PATH for custom op library
+# 设置动态库的路径到 LD_LIBRARY_PATH 中
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
-# start training
+# 开始训练
 python train_seg.py --model=MSG --batch_size=32 --save_dir=checkpoints_msg_seg
 ```
 
-We also provided quick start scripts for training semantic segmentation model as follows:
+我们同时提供了训练语义分割模型的“快速开始”脚本：
 
 ```
 sh scripts/train_seg.sh
 ```
 
-### Evaluation
+### 模型评估
 
-**Classification Model:**
+**分类模型:**
 
-For PointNet++ classification model, evaluation can be start as follows:
+可通过如下方式启动 PointNet++ 分类模型的评估：
 
 ```
-# For single GPU deivces
+# 指定单卡GPU
 export CUDA_VISIBLE_DEVICES=0
 
-# export paddle libs to LD_LIBRARY_PATH for custom op library
+# 设置动态库的路径到 LD_LIBRARY_PATH 中
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
-# start evaluation with given weights
-python train_cls.py --model=MSG --weights=checkpoints_cls/200
+# 对给定权重进行评估
+python eval_cls.py --model=MSG --weights=checkpoints_cls/200
 ```
 
-We also provided quick start script for training classification model as follows:
+我们同时提供了评估分类模型的“快速开始”脚本：
 
 ```
 sh scripts/eval_cls.sh
 ```
 
-Classification model evaluation result is shown as below:
+分类模型的评估结果如下所示：
 
 | model | Top-1 | download |
 | :----- | :---: | :---: |
 | SSG(Single-Scale Group) | 87.6 | [model]() |
 | MSG(Multi-Scale Group)  | 89.2 | [model]() |
 
-**Semantic Segmentation Model:**
+**语义分割模型:**
 
-For PointNet++ semantic segmentation model, evaluation can be start as follows:
+可通过如下方式启动 PointNet++ 语义分割模型的评估：
 
 ```
-# For single GPU deivces
+# 指定单卡GPU
 export CUDA_VISIBLE_DEVICES=0
 
-# export paddle libs to LD_LIBRARY_PATH for custom op library
+# 设置动态库的路径到 LD_LIBRARY_PATH 中
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
-# start evaluation with given weights 
+# 对给定权重进行评估
 python eval_seg.py --model=MSG --weights=checkpoints_seg/200
 ```
 
-We also provided quick start scripts for training semantic segmentation model as follows:
+我们同时提供了评估语义分割模型的“快速开始”脚本：
 
 ```
 sh scripts/eval_seg.sh
 ```
 
-Semantic segmentation model evaluation result is shown as below:
+语义分割模型的评估结果如下所示：
 
 | model | Top-1 | download |
 | :----- | :---: | :---: |
 | SSG(Single-Scale Group) | 86.1 | [model]() |
 | MSG(Multi-Scale Group)  | 86.8 | [model]() |
 
-## Reference
+## 参考文献
 
 - [PointNet++: Deep Hierarchical Feature Learning on Point Sets in a Metric Space](https://arxiv.org/abs/1706.02413), Charles R. Qi, Li Yi, Hao Su, Leonidas J. Guibas.
 - [PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation](https://www.semanticscholar.org/paper/PointNet%3A-Deep-Learning-on-Point-Sets-for-3D-and-Qi-Su/d997beefc0922d97202789d2ac307c55c2c52fba), Charles Ruizhongtai Qi, Hao Su, Kaichun Mo, Leonidas J. Guibas.
 
-## Update
+## 版本更新
 
-- 11/2019, Add PointNet++ classification and semantic segmentation model.
+- 11/2019, 新增 PointNet++ 分类和语义分割模型。
