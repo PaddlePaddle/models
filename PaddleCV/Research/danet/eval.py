@@ -183,7 +183,7 @@ def eval(args, model_path):
                     height = int(1.0 * h * long_size / w + 0.5)
                     short_size = height
 
-                cur_img = resize_image(image, height, width)  # height, width是经过尺度变换的大小
+                cur_img = resize_image(image, height, width)  
                 # 右下角pad
                 if long_size <= crop_size:
                     pad_img = pad_single_image(cur_img, crop_size)
@@ -214,7 +214,7 @@ def eval(args, model_path):
                     h_grids = int(math.ceil(1.0 * (ph - crop_size) / stride)) + 1
                     w_grids = int(math.ceil(1.0 * (pw - crop_size) / stride)) + 1
                     outputs = np.zeros(shape=[1, num_classes, ph, pw], dtype='float32')
-                    count_norm = np.zeros(shape=[1, 1, ph, pw], dtype='int32')  # 计数器，记录像素点输入网络的次数
+                    count_norm = np.zeros(shape=[1, 1, ph, pw], dtype='int32')  
                     for idh in range(h_grids):
                         for idw in range(w_grids):
                             h0 = idh * stride
@@ -227,7 +227,7 @@ def eval(args, model_path):
                             pad_crop_img = fluid.dygraph.to_variable(pad_crop_img)
                             pred1, pred2, pred3 = model(pad_crop_img)  # shape [1, num_class, h, w]
                             pred = pred1.numpy()  # channel, h, w
-                            outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  # 只截取有效区域
+                            outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  
                             count_norm[:, :, h0:h1, w0:w1] += 1 
                             if flip:
                                 pad_img_filp = flip_left_right_image(crop_img) 
@@ -237,7 +237,7 @@ def eval(args, model_path):
                                 pred1, pred2, pred3 = model(pad_img_array)  
                                 pred1 = fluid.layers.reverse(pred1, axis=3)  
                                 pred = pred1.numpy()
-                                outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  # 只截取有效区域
+                                outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  
                                 count_norm[:, :, h0:h1, w0:w1] += 1    
                     assert ((count_norm == 0).sum() == 0)
                     outputs = outputs / count_norm
