@@ -118,7 +118,9 @@ python train.py --data-root=${data-root} --use-gpu \
 
 #### 加载保存的模型
 
-用户可以通过 `--checkpoint` 参数加载保存的模型并恢复训练。如果你想要重置优化器的状态，在训练脚本加入 `--reset-optimizer` 参数。
+我们提供了使用默认的配置文件训练的模型 [dv3.single_frame](https://paddlespeech.bj.bcebos.com/Parakeet/dv3.single_frame.tar.gz) 供用户下载。使用 `tar xzvf dv3.single_frame.tar.gz` 解压下载的文件，会得到 `config.json`, `model.pdparams` and `README.md`。其中 `config.json` 是模型训练时使用的配置文件，`model.pdparams` 是参数文件，`README.md` 是模型的简要说明。
+
+用户可以通过 `--checkpoint` 参数加载保存的模型并恢复训练（注意：只需要传基础文件名，不需要扩展名，例如需要加载 `model.pdparams` 那么，只需要使用 `--checkpoint=model`）。如果同一个文件夹内有一个和参数文件基础文件名相同，而后缀为 `.pdopt` 的文件，（如 `model.pdopt`，即优化器文件），那么该文件也会被自动加载。如果你想要重置优化器的状态，在训练脚本加入 `--reset-optimizer` 参数。
 
 #### 训练模型的一部分
 

@@ -1,3 +1,5 @@
+**This model has been moved to [PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), which includes more detection models.**
+
 ## SSD Object Detection
 
 ## Table of Contents

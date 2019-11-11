@@ -185,7 +185,6 @@ def lm_model(hidden_size,
                 pre_cell = cell_array[k]
                 weight_1 = weight_1_arr[k]
                 bias = bias_arr[k]
-
                 nn = layers.concat([input, pre_hidden], 1)
                 gate_input = layers.matmul(x=nn, y=weight_1)
 
@@ -255,10 +254,8 @@ def lm_model(hidden_size,
         return real_res, last_hidden, last_cell
 
     batch_size_each = batch_size // fluid.core.get_cuda_device_count()
-    x = fluid.data(
-        name="x", shape=[batch_size_each, num_steps, 1], dtype='int64')
-    y = fluid.data(
-        name="y", shape=[batch_size_each * num_steps, 1], dtype='int64')
+    x = fluid.data(name="x", shape=[None, num_steps, 1], dtype='int64')
+    y = fluid.data(name="y", shape=[None, 1], dtype='int64')
 
     if use_dataloader:
         dataloader = fluid.io.DataLoader.from_generator(
@@ -269,15 +266,17 @@ def lm_model(hidden_size,
 
     init_hidden = fluid.data(
         name="init_hidden",
-        shape=[num_layers, batch_size_each, hidden_size],
+        shape=[None, num_layers, hidden_size],
         dtype='float32')
     init_cell = fluid.data(
         name="init_cell",
-        shape=[num_layers, batch_size_each, hidden_size],
+        shape=[None, num_layers, hidden_size],
         dtype='float32')
-
     init_cell.persistable = True
     init_hidden.persistable = True
+
+    init_hidden = layers.transpose(init_hidden, perm=[1, 0, 2])
+    init_cell = layers.transpose(init_cell, perm=[1, 0, 2])
 
     init_hidden_reshape = layers.reshape(
         init_hidden, shape=[num_layers, -1, hidden_size])
@@ -373,9 +372,8 @@ def lm_model(hidden_size,
     # can be used directly in next batch. This can avoid the fetching of
     # last_hidden and last_cell and feeding of init_hidden and init_cell in
     # each training step.
-    layers.assign(input=last_cell, output=init_cell)
-    layers.assign(input=last_hidden, output=init_hidden)
-
+    last_hidden = layers.transpose(last_hidden, perm=[1, 0, 2])
+    last_cell = layers.transpose(last_cell, perm=[1, 0, 2])
     feeding_list = ['x', 'y', 'init_hidden', 'init_cell']
     if use_dataloader:
         return loss, last_hidden, last_cell, feeding_list, dataloader

@@ -307,32 +307,33 @@ def convert_examples_to_features(
                 end_position = 0
 
             if example_index < 3:
-                print("*** Example ***")
-                print("unique_id: %s" % (unique_id))
-                print("example_index: %s" % (example_index))
-                print("doc_span_index: %s" % (doc_span_index))
-                print("tokens: %s" % " ".join(
+                print(u"*** Example ***")
+                print(u"unique_id: %s" % (unique_id))
+                print(u"example_index: %s" % (example_index))
+                print(u"doc_span_index: %s" % (doc_span_index))
+                print(u"tokens: %s" % " ".join(
                     [tokenization.printable_text(x) for x in tokens]))
-                print("token_to_orig_map: %s" % " ".join([
+                print(u"token_to_orig_map: %s" % " ".join([
                     "%d:%d" % (x, y)
                     for (x, y) in six.iteritems(token_to_orig_map)
                 ]))
-                print("token_is_max_context: %s" % " ".join([
+                print(u"token_is_max_context: %s" % " ".join([
                     "%d:%s" % (x, y)
                     for (x, y) in six.iteritems(token_is_max_context)
                 ]))
-                print("input_ids: %s" % " ".join([str(x) for x in input_ids]))
-                print("input_mask: %s" % " ".join([str(x) for x in input_mask]))
-                print("segment_ids: %s" %
+                print(u"input_ids: %s" % " ".join([str(x) for x in input_ids]))
+                print(u"input_mask: %s" %
+                      " ".join([str(x) for x in input_mask]))
+                print(u"segment_ids: %s" %
                       " ".join([str(x) for x in segment_ids]))
                 if is_training and example.is_impossible:
-                    print("impossible example")
+                    print(u"impossible example")
                 if is_training and not example.is_impossible:
                     answer_text = " ".join(tokens[start_position:(end_position +
                                                                   1)])
-                    print("start_position: %d" % (start_position))
-                    print("end_position: %d" % (end_position))
-                    print("answer: %s" %
+                    print(u"start_position: %d" % (start_position))
+                    print(u"end_position: %d" % (end_position))
+                    print(u"answer: %s" %
                           (tokenization.printable_text(answer_text)))
 
             feature = InputFeatures(
@@ -825,7 +826,7 @@ def get_final_text(pred_text, orig_text, do_lower_case, verbose):
     start_position = tok_text.find(pred_text)
     if start_position == -1:
         if verbose:
-            print("Unable to find text: '%s' in '%s'" % (pred_text, orig_text))
+            print(u"Unable to find text: '%s' in '%s'" % (pred_text, orig_text))
         return orig_text
     end_position = start_position + len(pred_text) - 1
 
@@ -834,7 +835,7 @@ def get_final_text(pred_text, orig_text, do_lower_case, verbose):
 
     if len(orig_ns_text) != len(tok_ns_text):
         if verbose:
-            print("Length not equal after stripping spaces: '%s' vs '%s'",
+            print(u"Length not equal after stripping spaces: '%s' vs '%s'",
                   orig_ns_text, tok_ns_text)
         return orig_text
 
@@ -852,7 +853,7 @@ def get_final_text(pred_text, orig_text, do_lower_case, verbose):
 
     if orig_start_position is None:
         if verbose:
-            print("Couldn't map start position")
+            print(u"Couldn't map start position")
         return orig_text
 
     orig_end_position = None
@@ -863,7 +864,7 @@ def get_final_text(pred_text, orig_text, do_lower_case, verbose):
 
     if orig_end_position is None:
         if verbose:
-            print("Couldn't map end position")
+            print(u"Couldn't map end position")
         return orig_text
 
     output_text = orig_text[orig_start_position:(orig_end_position + 1)]

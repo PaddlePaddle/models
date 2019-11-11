@@ -21,7 +21,8 @@ import math
 import paddle.fluid as fluid
 from paddle.fluid.initializer import NormalInitializer
 
-def lex_net(word, args, vocab_size, num_labels, for_infer = True, target=None):
+
+def lex_net(word, args, vocab_size, num_labels, for_infer=True, target=None):
     """
     define the lexical analysis network structure
     word: stores the input of the model
@@ -85,7 +86,7 @@ def lex_net(word, args, vocab_size, num_labels, for_infer = True, target=None):
         """
         Configure the network
         """
-        word_embedding = fluid.layers.embedding(
+        word_embedding = fluid.embedding(
             input=word,
             size=[vocab_size, word_emb_dim],
             dtype='float32',
@@ -115,18 +116,16 @@ def lex_net(word, args, vocab_size, num_labels, for_infer = True, target=None):
                 input=emission,
                 label=target,
                 param_attr=fluid.ParamAttr(
-                    name='crfw',
-                    learning_rate=crf_lr))
+                    name='crfw', learning_rate=crf_lr))
             avg_cost = fluid.layers.mean(x=crf_cost)
             crf_decode = fluid.layers.crf_decoding(
                 input=emission, param_attr=fluid.ParamAttr(name='crfw'))
-            return avg_cost,crf_decode
+            return avg_cost, crf_decode
 
         else:
             size = emission.shape[1]
-            fluid.layers.create_parameter(shape = [size + 2, size],
-                                          dtype=emission.dtype,
-                                          name='crfw')
+            fluid.layers.create_parameter(
+                shape=[size + 2, size], dtype=emission.dtype, name='crfw')
             crf_decode = fluid.layers.crf_decoding(
                 input=emission, param_attr=fluid.ParamAttr(name='crfw'))
 

@@ -119,7 +119,10 @@ For more details about `train.py`, see `python train.py --help`.
 
 #### load checkpoints
 
-You can load saved checkpoint and resume training with `--checkpoint`, if you wan to reset optimizer states, pass `--reset-optimizer` in addition.
+We provide a trained model ([dv3.single_frame](https://paddlespeech.bj.bcebos.com/Parakeet/dv3.single_frame.tar.gz)) for downloading, which is trained with the default preset. Unzip the downloaded file with `tar xzvf dv3.single_frame.tar.gz`, you will get `config.json`, `model.pdparams` and `README.md`. `config.json` is the preset json with which the model is trained, `model.pdparams` is the parameter file, and `README.md` is a brief introduction of the model.
+
+You can load saved checkpoint and resume training with `--checkpoint` (You only need to provide the base name of the parameter file, eg. if you want to load `model.pdparams`, just use `--checkpoint=model`). If there is also a file with the same basename and extension name `.pdopt` in the same folder with the model file (i.e. `model.pdopt`, which is the optimizer file), it is also loaded automatically. If you wan to reset optimizer states, pass `--reset-optimizer` in addition.
+
 
 #### train a part of the model
 
