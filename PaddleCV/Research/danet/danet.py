@@ -281,7 +281,6 @@ class ResNet(fluid.dygraph.Layer):
                                            name=name_scope)
 
         self._avgpool = fluid.dygraph.Pool2D(name_scope,
-                                             # pool_size=7,
                                              global_pooling=True,
                                              pool_type='avg')
         self.fc = fluid.dygraph.FC(name_scope,
@@ -543,7 +542,6 @@ class DAHead(fluid.dygraph.Layer):
         batch_size, num_channels = position.shape[:2]
 
         # dropout2d
-        # ones 需要确定的维度，不可以使用-1，所以需要传入batch_size
         ones = fluid.layers.ones(shape=[self.batch_size, num_channels], dtype='float32')
         dropout1d_P = fluid.layers.dropout(ones, 0.1)
         out_position_drop2d = fluid.layers.elementwise_mul(position, dropout1d_P, axis=0)
