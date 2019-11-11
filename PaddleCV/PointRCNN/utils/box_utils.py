@@ -205,6 +205,8 @@ def box_nms(boxes, scores, proposals, thresh, topk, nms_type='normal'):
             "unknown nms type {}".format(nms_type)
     order = np.argsort(-scores)
     boxes = boxes[order]
+    scores = scores[order]
+    proposals = proposals[order]
 
     nmsed_scores = []
     nmsed_proposals = []
@@ -228,6 +230,8 @@ def box_nms_eval(boxes, scores, proposals, thresh, nms_type='rotate'):
     #print("box_nms boxes, scores, proposals: ", boxes.shape, scores.shape, proposals.shape)
     order = np.argsort(-scores)
     boxes = boxes[order]
+    scores = scores[order]
+    proposals = proposals[order]
 
     nmsed_scores = []
     nmsed_proposals = []
