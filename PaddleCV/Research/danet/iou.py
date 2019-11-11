@@ -1,57 +1,28 @@
-# -*- coding: utf-8 -*-
-# @Author : W
-# @Time : 2019/6/21
-# @File : iou.py
-# @Software: PyCharm
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 import numpy as np
 
 
 class IOUMetric:
-    """
-    Class to calculate mean-iou using fast_hist method
-    调用方式：
-    iou = IOUMetric(num_classes=21)
-    for ...test_loader:
-        iou.add_batch(pred_np,label_np)
-    iou.evaluate()
-    """
+
 
     def __init__(self, num_classes):
         self.num_classes = num_classes+1
         self.hist = np.zeros((num_classes+1, num_classes+1))
-        # 混淆矩阵：
-        """
-            row: 真值
-            col: 预测值
-            对角线即预测正确的个数
-            iou = 重叠 /（行和 + 列和 - 重叠）
-            
-            例如：
-            样例一：
-                pred_np = np.array([[[0, 2, 2, 2],  [2, 1, 1, 2]]])
-                label_np = np.array([[[2, 1, 2, 255], [2, 1, 1, 255]]])
-                
-               [[0. 0. 0. 0.]       label中有0个像素点（行和）是第0类，预测有0个像素的是第0类
-                [0. 2. 1. 0.]       label中有3个像素点（行和）是第1类；预测有2个像素的是第1类，有一个像素点是第2类
-                [1. 0. 2. 0.]       label中有3个像素点（行和）是第2类；预测有2个像素的是第2类，有一个像素点是第0类
-                [0. 0. 0. 2.]]      label中有2个像素点（行和）是第3类，预测有2个像素的是第3类，注意该类是忽略类别，不参与iou
-            
-            iou = [0,  0.66666667,  0.5  , 1]
-                  0/1,     2/3   ,  2/4  , 2/2
-            
-            样例二：
-                pred_np = np.array([[[0, 0, 2, 2],  [2, 1, 1, 2]]])
-                label_np = np.array([[[0, 1, 2, 255], [2, 1, 1, 255]]])
-               [[1. 0. 0. 0.]       label中有1个像素点（行和）是第0类；预测有1个像素的是第0类
-                [1. 2. 0. 0.]       label中有3个像素点（行和）是第1类；预测有2个像素的是第1类，有一个像素点是第0类
-                [0. 0. 2. 0.]       label中有2个像素点（行和）是第2类；预测有2个像素的是第2类
-                [0. 0. 0. 2.]]      label中有2个像素点（行和）是第3类，预测有2个像素的是第3类，注意该类是忽略类别，不参与iou
-            
-            iou = [0.5,  0.66666667,  1  ,  1]
-                   1/2,     2/3    , 2/2 ,  2/2    
-        """
-
+        
     def _fast_hist(self, label_pred, label_true):
         mask = (label_true >= 0) & (label_true < self.num_classes)
         hist = np.bincount(
@@ -73,11 +44,6 @@ class IOUMetric:
             self.hist += self._fast_hist(lp.flatten(), lt.flatten())
 
     def evaluate(self):
-        # diag = np.diag(self.hist)
-        # total = self.hist.sum()
-        # col = self.hist.sum(axis=0)
-        # row = self.hist.sum(axis=1)
-
         acc = np.diag(self.hist).sum() / self.hist.sum()
         acc_cls = np.nanmean(np.diag(self.hist) / self.hist.sum(axis=1))
         iu = np.diag(self.hist) / (self.hist.sum(axis=1) + self.hist.sum(axis=0) - np.diag(self.hist))
@@ -104,20 +70,3 @@ class IOUMetric:
         iu = np.diag(self.hist) / (self.hist.sum(axis=1) + self.hist.sum(axis=0) - np.diag(self.hist))
         return iu
 
-
-if __name__ == '__main__':
-    pred_np = np.array([[[0, 0, 2, 2],  [2, 1, 1, 2]]])
-    label_np = np.array([[[0, 1, 2, 255], [2, 1, 1, 255]]])
-    # label_np = np.array([[[2, 0, 0, 255], [2, 1, 1, 255]]])
-    print(pred_np.shape)
-    iou = IOUMetric(3)
-    iou.add_batch(pred_np, label_np)
-    print(iou.hist)
-    acc, acc_cls, iu, mean_iu, fwavacc, kappa = iou.evaluate()
-    print('acc = {}'.format(acc))
-    print('acc_cls = {}'.format(acc_cls))
-    print('iu = {}'.format(iu))
-    print('mean_iu = {}'.format(mean_iu))
-    print('mean_iu = {}'.format(np.nanmean(iu[:-1])))  # 真正的iou
-    print('fwavacc = {}'.format(fwavacc))
-    print('kappa = {}'.format(kappa))
