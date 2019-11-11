@@ -140,5 +140,8 @@ def roipool3d_cpu(
             pooled_pts[k] = _rotate_pc_along_y(pooled_pts[k], roi_ry[k])
         return pooled_pts, pooled_features, pooled_empty_flag
 
+    return pooled_pts, pooled_features, pooled_empty_flag
+
+
 #def roipool3d_cpu(pts, pts_feature, boxes3d, pts_extra_input, pool_extra_width, sampled_pt_num=512, batch_size=1):
 #    return _roipool3d_cpu(pts, pts_feature, boxes3d, pts_extra_input, pool_extra_width, sampled_pt_num, batch_size)

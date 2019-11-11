@@ -284,7 +284,8 @@ def train():
         fluid.io.save_persistables(exe, path, prog)
 
     # get reader
-    train_reader = kitti_rcnn_reader.get_reader(args.batch_size, train_feeds, True)
+    # train_reader = kitti_rcnn_reader.get_reader(args.batch_size, train_feeds, True)
+    train_reader = kitti_rcnn_reader.get_multiprocess_reader(args.batch_size, train_feeds, drop_last=True)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
     train_stat = Stat()

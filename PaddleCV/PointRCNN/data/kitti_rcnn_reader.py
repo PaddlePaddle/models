@@ -21,6 +21,7 @@ from __future__ import print_function
 
 import os
 import logging
+import multiprocessing
 import numpy as np
 import scipy
 from scipy.spatial import Delaunay
@@ -833,6 +834,7 @@ class KittiRCNNReader(KittiReader):
         pts_extra_input = np.concatenate(pts_extra_input_list, axis=1)
 
         # pts, pts_feature, boxes3d, pool_extra_width, sampled_pt_num
+        rpn_features = rpn_features.transpose((1, 0))
         pts_input, pts_features, pts_empty_flag = roipool3d_utils.roipool3d_cpu(
             rpn_xyz, rpn_features, rois, pts_extra_input,
             cfg.RCNN.POOL_EXTRA_WIDTH,
@@ -1181,6 +1183,54 @@ class KittiRCNNReader(KittiReader):
             if not drop_last:
                 if len(batch_out) > 0:
                     yield batch_out
+        return reader
+
+    def get_multiprocess_reader(self, batch_size, fields, proc_num=8, max_queue_len=128, drop_last=False):
+        def read_to_queue(idxs, queue):
+            for idx in idxs:
+                sample_all = self.__getitem__(idx)
+                sample = [sample_all[f] for f in fields]
+                queue.put(sample)
+            queue.put(None)
+
+        def reader():
+            sample_num = self.__len__()
+            idxs = np.arange(self.__len__())
+            if self.mode == 'TRAIN':
+                np.random.shuffle(idxs)
+
+            proc_idxs = []
+            proc_sample_num = int(sample_num / proc_num)
+            start_idx = 0
+            for i in range(proc_num - 1):
+                proc_idxs.append(idxs[start_idx:start_idx + proc_sample_num])
+                start_idx += proc_sample_num
+            proc_idxs.append(idxs[start_idx:])
+
+            queue = multiprocessing.Queue(max_queue_len)
+            p_list = []
+            for i in range(proc_num):
+                p_list.append(multiprocessing.Process(
+                    target=read_to_queue, args=(proc_idxs[i], queue,)))
+                p_list[-1].start()
+
+            finish_num = 0
+            batch_out = []
+            while finish_num < len(p_list):
+                sample = queue.get()
+                if sample is None:
+                    finish_num += 1
+                else:
+                    batch_out.append(sample)
+                    if len(batch_out) == batch_size:
+                        yield batch_out
+                        batch_out = []
+
+            # join process
+            for p in p_list:
+                if p.is_alive():
+                    p.join()
+
         return reader
 
 
