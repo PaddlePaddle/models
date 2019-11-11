@@ -148,7 +148,6 @@ def eval(args, model_path):
             model_param, _ = fluid.dygraph.load_dygraph(model_path)
             model.load_dict(model_param)
         else:
-            # print('请设置load_better_model = True!')
             raise ValueError('请设置load_better_model = True!')
         assert len(model_param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
                                                             "请核对模型是否初始化/模型是否一致"
@@ -340,7 +339,7 @@ if __name__ == '__main__':
     options = Options()
     args = options.parse()
     options.print_args()
-    # model_path = 'DANet101_better_model_paddle1.5.2'
+    # model_path = 'checkpoint/DANet101_better_model_paddle1.5.2'
     model_path = 'checkpoint/DANet101_better_model_paddle1.6'
     eval(args, model_path)
    
