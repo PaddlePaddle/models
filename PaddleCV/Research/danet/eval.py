@@ -341,6 +341,6 @@ if __name__ == '__main__':
     args = options.parse()
     options.print_args()
     # model_path = 'DANet101_better_model_paddle1.5.2'
-    model_path = 'checkpoint/DANet50_pretrained_model_paddle1.6'
+    model_path = 'checkpoint/DANet101_better_model_paddle1.6'
     eval(args, model_path)
-    # save_png_test('dataset/cityscapes/gtFine/train/aachen/aachen_000000_000019_gtFine_labelTrainIds.png')
+   
