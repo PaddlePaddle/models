@@ -18,7 +18,6 @@ import numpy as np
 
 class IOUMetric:
 
-
     def __init__(self, num_classes):
         self.num_classes = num_classes+1
         self.hist = np.zeros((num_classes+1, num_classes+1))
