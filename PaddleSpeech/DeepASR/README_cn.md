@@ -1,23 +1,25 @@
-运行本目录下的程序示例需要使用 PaddlePaddle v0.14及以上版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](http://www.paddlepaddle.org/docs/develop/documentation/zh/build_and_install/pip_install_cn.html)中的说明更新 PaddlePaddle 安装版本。
+[English](README.md)
+
+运行本目录下的程序示例需要使用 PaddlePaddle v1.6.0及以上版本。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/index_cn.html)中的说明更新 PaddlePaddle 安装版本。
 
 ---
 
 DeepASR (Deep Automatic Speech Recognition) 是一个基于PaddlePaddle FLuid与[Kaldi](http://www.kaldi-asr.org)的语音识别系统。其利用Fluid框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器。旨在方便已对 Kaldi 的较为熟悉的用户实现中声学模型的快速、大规模训练，并利用kaldi完成复杂的语音数据预处理和最终的解码过程。
 
 ### 目录
-- [模型概览](#model-overview)
-- [安装](#installation)
-- [数据预处理](#data-reprocessing)
-- [模型训练](#training)
-- [训练过程中的时间分析](#perf-profiling)
-- [预测和解码](#infer-decoding)
-- [评估错误率](#scoring-error-rate)
-- [Aishell 实例](#aishell-example)
-- [欢迎贡献更多的实例](#how-to-contrib)
+- [模型概览](#模型概览)
+- [安装](#安装)
+- [数据预处理](#数据预处理)
+- [模型训练](#声学模型的训练)
+- [训练过程中的时间分析](#训练过程中的时间分析)
+- [预测和解码](#预测和解码)
+- [错误率评估](#错误率评估)
+- [Aishell 实例](#aishell-实例)
+- [欢迎贡献更多的实例](#欢迎贡献更多的实例)
 
 ### 模型概览
 
-DeepASR的声学模型是一个单卷积层加多层层叠LSTMP 的结构，利用卷积来进行初步的特征提取，并用多层的LSTMP来对时序关系进行建模，所用到的损失函数是交叉熵。[LSTMP](https://arxiv.org/abs/1402.1128)(LSTM with recurrent projection layer)是传统 LSTM 的拓展，在 LSTM 的基础上增加了一个映射层，将隐含层映射到较低的维度并输入下一个时间步，这种结构在大为减小 LSTM 的参数规模和计算复杂度的同时还提升了 LSTM 的性能表现。
+DeepASR是一个单卷积层加多层层叠LSTMP 结构的声学模型，利用卷积来进行初步的特征提取，并用多层的LSTMP来对时序关系进行建模，使用交叉熵作为损失函数。[LSTMP](https://arxiv.org/abs/1402.1128)(LSTM with recurrent projection layer)是传统 LSTM 的拓展，在 LSTM 的基础上增加了一个映射层，将隐含层映射到较低的维度并输入下一个时间步，这种结构在大为减小 LSTM 的参数规模和计算复杂度的同时还提升了 LSTM 的性能表现。
 
 <p align="center">
 <img src="images/lstmp.png" height=240 width=480 hspace='10'/> <br />
@@ -66,7 +68,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -u train.py \
                    --mean_var global_mean_var \
                    --parallel
 ```
-其中`train_feature.lst`和`train_label.lst`分别是训练数据集的特征列表文件和标注列表文件，类似的，`val_feature.lst`和`val_label.lst`对应的则是验证集的列表文件。实际训练过程中要正确指定建模单元大小、学习率等重要参数。关于这些参数的说明，请运行
+其中`train_feature.lst`和`train_label.lst`分别是训练数据集的特征列表文件和标注列表文件，类似的，`val_feature.lst`和`val_label.lst`对应的则是验证集的列表文件。实际训练过程中要正确指定 LSTMP 隐藏层的大小、学习率等重要参数。关于这些参数的说明，请运行
 
 ```shell
 python train.py --help
@@ -75,7 +77,7 @@ python train.py --help
 
 ### 训练过程中的时间分析
 
-利用Fluid提供的性能分析工具profiler，可对训练过程进行性能分析，获取网络中operator级别的执行时间
+利用Fluid提供的性能分析工具profiler，可对训练过程进行性能分析，获取网络中operator级别的执行时间。
 
 ```shell
 CUDA_VISIBLE_DEVICES=0 python -u tools/profile.py \
@@ -89,7 +91,7 @@ CUDA_VISIBLE_DEVICES=0 python -u tools/profile.py \
 
 ### 预测和解码
 
-在充分训练好声学模型之后，利用训练过程中保存下来的模型checkpoint，可对输入的音频数据进行解码输出，得到声音到文字的识别结果
+在充分训练好声学模型之后，利用训练过程中保存下来的模型checkpoint，可对输入的音频数据进行解码输出，得到声音到文字的识别结果.
 
 ```
 CUDA_VISIBLE_DEVICES=0,1,2,3 python -u infer_by_ckpt.py \
@@ -101,7 +103,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -u infer_by_ckpt.py \
                         --parallel
 ```
 
-### 评估错误率
+### 错误率评估
 
 对语音识别系统的评价常用的指标有词错误率(Word Error Rate, WER)和字错误率(Character Error Rate, CER), 在DeepASR中也实现了相关的度量工具，其运行方式为
 
@@ -121,7 +123,7 @@ key3 text3
 
 ### Aishell 实例
 
-本节以[Aishell数据集](http://www.aishelltech.com/kysjcp)为例，展示如何完成从数据预处理到解码输出。Aishell是由北京希尔贝克公司所开放的中文普通话语音数据集，时长178小时，包含了400名来自不同口音区域录制者的语音，原始数据可由[openslr](http://www.openslr.org/33)获取。为简化流程，这里提供了已完成预处理的数据集供下载：
+本节以[Aishell数据集](http://www.aishelltech.com/kysjcp)为例，展示如何完成从数据预处理到解码输出的过程。Aishell是由北京希尔贝克公司所开放的中文普通话语音数据集，时长178小时，包含了400名来自不同口音区域录制者的语音，原始数据可由[openslr](http://www.openslr.org/33)获取。为简化流程，这里提供了已完成预处理的数据集供下载：
 
 ```
 cd examples/aishell
@@ -171,7 +173,7 @@ BAC009S0768W0128 土地 交易 可能 随着 供应 淡季 的 到来 而 降温
 sh score_cer.sh
 ```
 
-其输出类似于如下所示
+其输出样例如下所示
 
 ```
 Error rate[cer] = 0.101971 (10683/104765),

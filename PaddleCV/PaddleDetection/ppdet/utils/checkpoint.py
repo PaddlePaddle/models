@@ -47,6 +47,36 @@ def is_url(path):
     return path.startswith('http://') or path.startswith('https://')
 
 
+def _get_weight_path(path):
+    env = os.environ
+    if 'PADDLE_TRAINERS_NUM' in env and 'PADDLE_TRAINER_ID' in env:
+        trainer_id = int(env['PADDLE_TRAINER_ID'])
+        num_trainers = int(env['PADDLE_TRAINERS_NUM'])
+        if num_trainers <= 1:
+            path = get_weights_path(path)
+        else:
+            from ppdet.utils.download import map_path, WEIGHTS_HOME
+            weight_path = map_path(path, WEIGHTS_HOME)
+            lock_path = weight_path + '.lock'
+            if not os.path.exists(weight_path):
+                try:
+                    os.makedirs(os.path.dirname(weight_path))
+                except OSError as e:
+                    if e.errno != errno.EEXIST:
+                        raise
+                with open(lock_path, 'w'):  # touch    
+                    os.utime(lock_path, None)
+                if trainer_id == 0:
+                    get_weights_path(path)
+                    os.remove(lock_path)
+                else:
+                    while os.path.exists(lock_path):
+                        time.sleep(1)
+            path = weight_path
+    else:
+        path = get_weights_path(path)
+    return path
+
 
 def load_params(exe, prog, path, ignore_params=[]):
     """
@@ -56,10 +86,12 @@ def load_params(exe, prog, path, ignore_params=[]):
         prog (fluid.Program): load weight to which Program object.
         path (string): URL string or loca model path.
         ignore_params (bool): ignore variable to load when finetuning.
+            It can be specified by finetune_exclude_pretrained_params 
+            and the usage can refer to docs/TRANSFER_LEARNING.md
     """
 
     if is_url(path):
-        path = get_weights_path(path)
+        path = _get_weight_path(path)
 
     if not os.path.exists(path):
         raise ValueError("Model pretrain path {} does not "
@@ -95,7 +127,7 @@ def load_checkpoint(exe, prog, path):
         path (string): URL string or loca model path.
     """
     if is_url(path):
-        path = get_weights_path(path)
+        path = _get_weight_path(path)
 
     if not os.path.exists(path):
         raise ValueError("Model checkpoint path {} does not "
@@ -145,10 +177,11 @@ def load_and_fusebn(exe, prog, path):
         prog (fluid.Program): save weight from which Program object.
         path (string): the path to save model.
     """
-    logger.info('Load model and fuse batch norm from {}...'.format(path))
+    logger.info('Load model and fuse batch norm if have from {}...'.format(
+        path))
 
     if is_url(path):
-        path = get_weights_path(path)
+        path = _get_weight_path(path)
 
     if not os.path.exists(path):
         raise ValueError("Model path {} does not exists.".format(path))
@@ -177,6 +210,7 @@ def load_and_fusebn(exe, prog, path):
 
     inner_prog = fluid.Program()
     inner_start_prog = fluid.Program()
+    inner_block = inner_prog.global_block()
     with fluid.program_guard(inner_prog, inner_start_prog):
         for block in prog.blocks:
             ops = list(block.ops)
@@ -199,10 +233,20 @@ def load_and_fusebn(exe, prog, path):
                         break
 
                     bias = block.var(bias_name)
-                    mean_vb = fluid.layers.create_parameter(
-                        bias.shape, bias.dtype, mean_name)
-                    variance_vb = fluid.layers.create_parameter(
-                        bias.shape, bias.dtype, variance_name)
+
+                    mean_vb = inner_block.create_var(
+                        name=mean_name,
+                        type=bias.type,
+                        shape=bias.shape,
+                        dtype=bias.dtype,
+                        persistable=True)
+                    variance_vb = inner_block.create_var(
+                        name=variance_name,
+                        type=bias.type,
+                        shape=bias.shape,
+                        dtype=bias.dtype,
+                        persistable=True)
+
                     mean_variances.add(mean_vb)
                     mean_variances.add(variance_vb)
 
@@ -210,8 +254,11 @@ def load_and_fusebn(exe, prog, path):
                         [scale_name, bias_name, mean_name, variance_name])
 
     if not bn_in_path:
-        raise ValueError("There is no params of batch norm in model {}.".format(
-            path))
+        fluid.io.load_vars(exe, path, prog, vars=all_vars)
+        logger.warning(
+            "There is no paramters of batch norm in model {}. "
+            "Skip to fuse batch norm. And load paramters done.".format(path))
+        return
 
     # load running mean and running variance on cpu place into global scope.
     place = fluid.CPUPlace()

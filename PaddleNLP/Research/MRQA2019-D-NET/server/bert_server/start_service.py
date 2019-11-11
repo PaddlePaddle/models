@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Provide MRC service for TOP1 short answer extraction system
-Note the services here share some global pre/post process objects, which
-are **NOT THREAD SAFE**. Try to use multi-process instead of multi-thread
-for deployment.
+"""
+BERT model service
 """
 import json
 import sys

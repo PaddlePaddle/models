@@ -15,6 +15,7 @@
 ```
 
 ## 运行环境
+**要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
 需要先安装PaddlePaddle Fluid，然后运行：
 
 ```shell
@@ -28,7 +29,7 @@ pip install -r requirements.txt
 
 下载数据集：
 ```bash
-cd data && ./download.sh && cd ..
+cd data && python download.py && cd ..
 ```
 
 ## 模型
@@ -55,6 +56,7 @@ python train.py \
 本地启动一个2 trainer 2 pserver的分布式训练任务，分布式场景下训练数据会按照trainer的id进行切分，保证trainer之间的训练数据不会重叠，提高训练效率
 
 ```bash
+# 该sh不支持Windows
 sh cluster_train.sh
 ```
 

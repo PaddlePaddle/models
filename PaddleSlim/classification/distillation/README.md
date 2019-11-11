@@ -5,6 +5,8 @@
 ## 概述
 
 该示例使用PaddleSlim提供的[蒸馏策略]([https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/tutorial.md#3-%E8%92%B8%E9%A6%8F](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/tutorial.md#3-蒸馏))对分类模型进行知识蒸馏。
+>本文默认使用ILSVRC2012数据集，数据集存放在`models/PaddleSlim/data/`路径下, 可以参考[数据准备](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#数据准备)在执行训练脚本run.sh前配置好您的数据集
+
 在阅读该示例前，建议您先了解以下内容：
 
 - [分类模型的常规训练方法](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification)
@@ -137,16 +139,30 @@ strategies:
 | baseline | 70.99%/89.68%     |
 | 蒸馏后     | -                 |
 
->训练超参：
+#### 训练超参
+
+- batch size: 256
+- lr_strategy: piecewise_decay
+- step_epochs: 30, 60, 90
+- num_epochs: 120
+- l2_decay: 4e-5
+- init lr: 0.1
 
 ### MobileNetV2
 
 | FLOPS    | top1_acc/top5_acc |
 | -------- | ----------------- |
 | baseline | 72.15%/90.65%     |
-| 蒸馏后     | -                 |
+| 蒸馏后     | 70.66%/90.42%                 |
 
->训练超参：
+#### 训练超参
+
+- batch size: 256
+- lr_strategy: piecewise_decay
+- step_epochs: 30, 60, 90
+- num_epochs: 120
+- l2_decay: 4e-5
+- init lr: 0.1
 
 ### ResNet34
 
@@ -155,6 +171,13 @@ strategies:
 | baseline | 74.57%/92.14%     |
 | 蒸馏后     | -                 |
 
->训练超参：
+#### 训练超参
+
+- batch size: 256
+- lr_strategy: piecewise_decay
+- step_epochs: 30, 60, 90
+- num_epochs: 120
+- l2_decay: 4e-5
+- init lr: 0.1
 
 ## FAQ

@@ -19,6 +19,7 @@ from network.SPADE_network import SPADE_model
 from util import utility
 import paddle.fluid as fluid
 import sys
+import os
 import time
 import network.vgg as vgg
 import pickle as pkl
@@ -283,19 +284,19 @@ class SPADE(object):
         self.id2name = id2name
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.crop_height, self.cfg.crop_width]
+        data_shape = [None, 3, self.cfg.crop_height, self.cfg.crop_width]
         label_shape = [
-            -1, self.cfg.label_nc, self.cfg.crop_height, self.cfg.crop_width
+            None, self.cfg.label_nc, self.cfg.crop_height, self.cfg.crop_width
         ]
-        edge_shape = [-1, 1, self.cfg.crop_height, self.cfg.crop_width]
+        edge_shape = [None, 1, self.cfg.crop_height, self.cfg.crop_width]
 
-        input_A = fluid.layers.data(
+        input_A = fluid.data(
             name='input_label', shape=label_shape, dtype='float32')
-        input_B = fluid.layers.data(
+        input_B = fluid.data(
             name='input_img', shape=data_shape, dtype='float32')
-        input_C = fluid.layers.data(
+        input_C = fluid.data(
             name='input_ins', shape=edge_shape, dtype='float32')
-        input_fake = fluid.layers.data(
+        input_fake = fluid.data(
             name='input_fake', shape=data_shape, dtype='float32')
 
         gen_trainer = GTrainer(input_A, input_B, input_C, self.cfg,
@@ -316,6 +317,12 @@ class SPADE(object):
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
+
+        if not os.path.exists(self.cfg.vgg19_pretrain):
+            print(
+                "directory VGG19_pretrain NOT EXIST!!! Please download VGG19 first."
+            )
+            sys.exit(1)
         gen_trainer.vgg.load_vars(exe, gen_trainer.program,
                                   self.cfg.vgg19_pretrain)
 
@@ -325,7 +332,7 @@ class SPADE(object):
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
+        build_strategy.enable_inplace = True
         build_strategy.sync_batch_norm = False
 
         gen_trainer_program = fluid.CompiledProgram(
@@ -387,9 +394,9 @@ class SPADE(object):
 
             if self.cfg.run_test:
                 test_program = gen_trainer.infer_program
-                image_name = fluid.layers.data(
+                image_name = fluid.data(
                     name='image_name',
-                    shape=[self.cfg.batch_size],
+                    shape=[None, self.cfg.batch_size],
                     dtype="int32")
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[input_A, input_B, input_C, image_name],

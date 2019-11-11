@@ -18,7 +18,6 @@ from __future__ import print_function
 
 import math
 
-import paddle
 import paddle.fluid as fluid
 import paddle.fluid.layers.ops as ops
 from paddle.fluid.initializer import init_on_cpu
@@ -142,7 +141,6 @@ class Optimizer(object):
     """
 
     def __init__(self, args):
-
         self.batch_size = args.batch_size
         self.lr = args.lr
         self.lr_strategy = args.lr_strategy

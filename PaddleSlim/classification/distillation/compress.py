@@ -34,7 +34,6 @@ add_arg('pretrained_model', str,  None,                "Whether to use pretraine
 add_arg('teacher_model',    str,  None,          "Set the teacher network to use.")
 add_arg('teacher_pretrained_model', str,  None,                "Whether to use pretrained model.")
 add_arg('compress_config',  str,  None,                 "The config file for compression with yaml format.")
-add_arg('quant_only',       bool, False,                "Only do quantization-aware training.")
 # yapf: enable
 
 model_list = [m for m in dir(models) if "__" not in m]
@@ -50,45 +49,25 @@ def compress(args):
     # model definition
     model = models.__dict__[args.model]()
 
-    if args.model is "GoogleNet":
-        out0, out1, out2 = model.net(input=image, class_dim=args.class_dim)
-        cost0 = fluid.layers.cross_entropy(input=out0, label=label)
-        cost1 = fluid.layers.cross_entropy(input=out1, label=label)
-        cost2 = fluid.layers.cross_entropy(input=out2, label=label)
-        avg_cost0 = fluid.layers.mean(x=cost0)
-        avg_cost1 = fluid.layers.mean(x=cost1)
-        avg_cost2 = fluid.layers.mean(x=cost2)
-        avg_cost = avg_cost0 + 0.3 * avg_cost1 + 0.3 * avg_cost2
-        acc_top1 = fluid.layers.accuracy(input=out0, label=label, k=1)
-        acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
+    if args.model == 'ResNet34':
+        model.prefix_name = 'res34'
+        out = model.net(input=image, class_dim=args.class_dim, fc_name='fc_0')
     else:
-        if args.model == 'ResNet34':
-            model.prefix_name = 'res34'
-            out = model.net(input=image,
-                            class_dim=args.class_dim,
-                            fc_name='fc_0')
-        else:
-            out = model.net(input=image, class_dim=args.class_dim)
-        cost = fluid.layers.cross_entropy(input=out, label=label)
-        avg_cost = fluid.layers.mean(x=cost)
-        acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
-        acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
+        out = model.net(input=image, class_dim=args.class_dim)
+    cost = fluid.layers.cross_entropy(input=out, label=label)
+    avg_cost = fluid.layers.mean(x=cost)
+    acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
+    acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
     #print("="*50+"student_model_params"+"="*50)
     #for v in fluid.default_main_program().list_vars():
     #    print(v.name, v.shape)
+
     val_program = fluid.default_main_program().clone()
-    if args.quant_only:
-        boundaries = [
-            args.total_images / args.batch_size * 10,
-            args.total_images / args.batch_size * 16
-        ]
-        values = [1e-4, 1e-5, 1e-6]
-    else:
-        boundaries = [
-            args.total_images / args.batch_size * 30, args.total_images /
-            args.batch_size * 60, args.total_images / args.batch_size * 90
-        ]
-        values = [0.1, 0.01, 0.001, 0.0001]
+    boundaries = [
+        args.total_images / args.batch_size * 30, args.total_images /
+        args.batch_size * 60, args.total_images / args.batch_size * 90
+    ]
+    values = [0.1, 0.01, 0.001, 0.0001]
     opt = fluid.optimizer.Momentum(
         momentum=0.9,
         learning_rate=fluid.layers.piecewise_decay(
@@ -117,37 +96,39 @@ def compress(args):
 
     teacher_programs = []
     distiller_optimizer = None
-    if args.teacher_model:
-        teacher_model = models.__dict__[args.teacher_model](prefix_name='res50')
-        # define teacher program
-        teacher_program = fluid.Program()
-        startup_program = fluid.Program()
-        with fluid.program_guard(teacher_program, startup_program):
-            img = teacher_program.global_block()._clone_variable(
-                image, force_persistable=False)
-            predict = teacher_model.net(img,
-                                        class_dim=args.class_dim,
-                                        fc_name='fc_0')
-        #print("="*50+"teacher_model_params"+"="*50)
-        #for v in teacher_program.list_vars():
-        #    print(v.name, v.shape)
-        exe.run(startup_program)
-        assert args.teacher_pretrained_model and os.path.exists(
-            args.teacher_pretrained_model
-        ), "teacher_pretrained_model should be set when teacher_model is not None."
 
-        def if_exist(var):
-            return os.path.exists(
-                os.path.join(args.teacher_pretrained_model, var.name))
+    teacher_model = models.__dict__[args.teacher_model](prefix_name='res50')
+    # define teacher program
+    teacher_program = fluid.Program()
+    startup_program = fluid.Program()
+    with fluid.program_guard(teacher_program, startup_program):
+        img = teacher_program.global_block()._clone_variable(
+            image, force_persistable=False)
+        predict = teacher_model.net(img,
+                                    class_dim=args.class_dim,
+                                    fc_name='fc_0')
+    #print("="*50+"teacher_model_params"+"="*50)
+    #for v in teacher_program.list_vars():
+    #    print(v.name, v.shape)
+    #return
 
-        fluid.io.load_vars(
-            exe,
-            args.teacher_pretrained_model,
-            main_program=teacher_program,
-            predicate=if_exist)
+    exe.run(startup_program)
+    assert args.teacher_pretrained_model and os.path.exists(
+        args.teacher_pretrained_model
+    ), "teacher_pretrained_model should be set when teacher_model is not None."
 
-        distiller_optimizer = opt
-        teacher_programs.append(teacher_program.clone(for_test=True))
+    def if_exist(var):
+        return os.path.exists(
+            os.path.join(args.teacher_pretrained_model, var.name))
+
+    fluid.io.load_vars(
+        exe,
+        args.teacher_pretrained_model,
+        main_program=teacher_program,
+        predicate=if_exist)
+
+    distiller_optimizer = opt
+    teacher_programs.append(teacher_program.clone(for_test=True))
 
     com_pass = Compressor(
         place,

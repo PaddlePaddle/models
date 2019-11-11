@@ -20,6 +20,7 @@
 ## 介绍
 本例实现了skip-gram模式的word2vector模型。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124377)
 
 ## 数据下载
 全量数据集使用的是来自1 Billion Word Language Model Benchmark的(http://www.statmt.org/lm-benchmark) 的数据集.

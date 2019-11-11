@@ -10,6 +10,7 @@ from paddle.fluid.incubate.fleet.parameter_server.distribute_transpiler import f
 from paddle.fluid.transpiler.distribute_transpiler import DistributeTranspilerConfig
 
 from network import DCN
+import utils
 
 
 def parse_args():
@@ -192,7 +193,8 @@ def train():
                 fetch_info=['total_loss', 'avg_logloss', 'auc'],
                 debug=False,
                 print_period=args.print_steps)
-            model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
+            model_dir = os.path.join(args.model_output_dir,
+                                     'epoch_' + str(epoch_id + 1))
             sys.stderr.write('epoch%d is finished and takes %f s\n' % (
                 (epoch_id + 1), time.time() - start))
             if is_first_trainer:  # only trainer 0 save model
@@ -223,4 +225,5 @@ def train():
 
 
 if __name__ == "__main__":
+    utils.check_version()
     train()

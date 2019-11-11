@@ -150,8 +150,8 @@ def inference_mnist():
     with fluid.dygraph.guard(place):
         mnist_infer = MNIST("mnist")
         # load checkpoint
-        model_dict, _ = fluid.dygraph.load_persistables("save_dir")
-        mnist_infer.load_dict(model_dict)
+        model_dict, _ = fluid.load_dygraph("save_temp")
+        mnist_infer.set_dict(model_dict)
         print("checkpoint loaded")
 
         # start evaluate mode
@@ -245,7 +245,7 @@ def train_mnist(args):
             args.use_data_parallel and
             fluid.dygraph.parallel.Env().local_rank == 0)
         if save_parameters:
-            fluid.dygraph.save_persistables(mnist.state_dict(), "save_dir")
+            fluid.save_dygraph(mnist.state_dict(), "save_temp")
             print("checkpoint saved")
 
         inference_mnist()

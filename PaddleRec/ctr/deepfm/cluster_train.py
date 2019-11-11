@@ -8,6 +8,7 @@ import paddle.fluid as fluid
 import paddle.fluid.incubate.fleet.base.role_maker as role_maker
 from paddle.fluid.incubate.fleet.parameter_server.distribute_transpiler import fleet
 from paddle.fluid.transpiler.distribute_transpiler import DistributeTranspilerConfig
+import utils
 
 
 def parse_args():
@@ -164,7 +165,7 @@ def train():
         dataset.set_batch_size(args.batch_size)
         dataset.set_thread(args.num_thread)
         train_filelist = [
-            args.train_data_dir + '/' + x
+            os.path.join(args.train_data_dir, x)
             for x in os.listdir(args.train_data_dir)
         ]
 
@@ -185,9 +186,10 @@ def train():
                 dataset=dataset,
                 fetch_list=[loss],
                 fetch_info=['epoch %d batch loss' % (epoch_id + 1)],
-                print_period=20,
+                print_period=5,
                 debug=False)
-            model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
+            model_dir = os.path.join(args.model_output_dir,
+                                     'epoch_' + str(epoch_id + 1))
             sys.stderr.write('epoch%d is finished and takes %f s\n' % (
                 (epoch_id + 1), time.time() - start))
             if is_first_trainer:  # only trainer 0 save model
@@ -218,4 +220,5 @@ def train():
 
 
 if __name__ == "__main__":
+    utils.check_version()
     train()

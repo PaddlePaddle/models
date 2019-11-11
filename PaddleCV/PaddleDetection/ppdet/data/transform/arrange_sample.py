@@ -110,8 +110,11 @@ class ArrangeEvalRCNN(BaseOperator):
                     (image, im_info, im_id, im_shape, gt_bbox,
                     gt_class, difficult)
         """
-        im = sample['image']
-        keys = list(sample.keys())
+        ims = []
+        keys = sorted(list(sample.keys()))
+        for k in keys:
+            if 'image' in k:
+                ims.append(sample[k])
         if 'im_info' in keys:
             im_info = sample['im_info']
         else:
@@ -127,7 +130,9 @@ class ArrangeEvalRCNN(BaseOperator):
         gt_bbox = sample['gt_bbox']
         gt_class = sample['gt_class']
         difficult = sample['difficult']
-        outs = (im, im_info, im_id, im_shape, gt_bbox, gt_class, difficult)
+        remain_list = [im_info, im_id, im_shape, gt_bbox, gt_class, difficult]
+        ims.extend(remain_list)
+        outs = tuple(ims)
         return outs
 
 
@@ -148,10 +153,13 @@ class ArrangeTestRCNN(BaseOperator):
             context: a dict which contains additional info.
         Returns:
             sample: a tuple containing the following items:
-                    (image, im_info, im_id)
+                    (image, im_info, im_id, im_shape)
         """
-        im = sample['image']
-        keys = list(sample.keys())
+        ims = []
+        keys = sorted(list(sample.keys()))
+        for k in keys:
+            if 'image' in k:
+                ims.append(sample[k])
         if 'im_info' in keys:
             im_info = sample['im_info']
         else:
@@ -164,7 +172,9 @@ class ArrangeTestRCNN(BaseOperator):
         # bbox prediction needs im_info as input in format of [N, 3],
         # so im_shape is appended by 1 to match dimension.
         im_shape = np.array((h, w, 1), dtype=np.float32)
-        outs = (im, im_info, im_id, im_shape)
+        remain_list = [im_info, im_id, im_shape]
+        ims.extend(remain_list)
+        outs = tuple(ims)
         return outs
 
 
@@ -200,8 +210,9 @@ class ArrangeEvalSSD(BaseOperator):
     Transform dict to tuple format needed for training.
     """
 
-    def __init__(self):
+    def __init__(self, fields):
         super(ArrangeEvalSSD, self).__init__()
+        self.fields = fields
 
     def __call__(self, sample, context=None):
         """
@@ -212,17 +223,25 @@ class ArrangeEvalSSD(BaseOperator):
         Returns:
             sample: a tuple containing the following items: (image)
         """
-        im = sample['image']
+        outs = []
         if len(sample['gt_bbox']) != len(sample['gt_class']):
             raise ValueError("gt num mismatch: bbox and class.")
-        im_id = sample['im_id']
-        h = sample['h']
-        w = sample['w']
-        im_shape = np.array((h, w))
-        gt_bbox = sample['gt_bbox']
-        gt_class = sample['gt_class']
-        difficult = sample['difficult']
-        outs = (im, im_shape, im_id, gt_bbox, gt_class, difficult)
+        for field in self.fields:
+            if field == 'im_shape':
+                h = sample['h']
+                w = sample['w']
+                im_shape = np.array((h, w))
+                outs.append(im_shape)
+            elif field == 'is_difficult':
+                outs.append(sample['difficult'])
+            elif field == 'gt_box':
+                outs.append(sample['gt_bbox'])
+            elif field == 'gt_label':
+                outs.append(sample['gt_class'])
+            else:
+                outs.append(sample[field])
+
+        outs = tuple(outs)
 
         return outs
 

@@ -41,144 +41,148 @@ def positional_embedding(pos_seq, inv_freq, bsz=None):
 
 def positionwise_ffn(inp, d_model, d_inner, dropout_prob, param_initializer=None,
                      act_type='relu', name='ff'):
-  """Position-wise Feed-forward Network."""
-  if act_type not in ['relu', 'gelu']:
-      raise ValueError('Unsupported activation type {}'.format(act_type))
+    """Position-wise Feed-forward Network."""
+    if act_type not in ['relu', 'gelu']:
+        raise ValueError('Unsupported activation type {}'.format(act_type))
 
-  output = fluid.layers.fc(input=inp, size=d_inner, act=act_type,
+    output = fluid.layers.fc(input=inp, size=d_inner, act=act_type,
                            num_flatten_dims=2,
                            param_attr=fluid.ParamAttr(
                              name=name+'_layer_1_weight', initializer=param_initializer),
                            bias_attr=name+'_layer_1_bias')
-  output = fluid.layers.dropout(output, dropout_prob=dropout_prob,
+    output = fluid.layers.dropout(output, dropout_prob=dropout_prob,
                                 dropout_implementation="upscale_in_train", is_test=False)
-  output = fluid.layers.fc(output, size=d_model,
+    output = fluid.layers.fc(output, size=d_model,
                            num_flatten_dims=2,
                            param_attr=fluid.ParamAttr(
                                name=name+'_layer_2_weight', initializer=param_initializer),
                            bias_attr=name+'_layer_2_bias')
-  output = fluid.layers.dropout(output, dropout_prob=dropout_prob,
+    output = fluid.layers.dropout(output, dropout_prob=dropout_prob,
                              dropout_implementation="upscale_in_train", is_test=False)
-  output = fluid.layers.layer_norm(output + inp, begin_norm_axis=len(output.shape)-1,
+    output = fluid.layers.layer_norm(output + inp, begin_norm_axis=len(output.shape)-1,
                                    epsilon=1e-12,
                                    param_attr=fluid.ParamAttr(name=name+'_layer_norm_scale',
                                        initializer=fluid.initializer.Constant(1.)),
                                    bias_attr=fluid.ParamAttr(name+'_layer_norm_bias',
                                        initializer=fluid.initializer.Constant(0.)))
-  return output
+    return output
 
 
 def head_projection(h, d_model, n_head, d_head, param_initializer, name=''):
-  """Project hidden states to a specific head with a 4D-shape."""
-  proj_weight=fluid.layers.create_parameter(
+    """Project hidden states to a specific head with a 4D-shape."""
+    proj_weight=fluid.layers.create_parameter(
                 shape=[d_model, n_head, d_head],
                 dtype=h.dtype,
                 attr=fluid.ParamAttr(name=name+'_weight', initializer=param_initializer),
                 is_bias=False)
  
-  # ibh,hnd->ibnd 
-  head = fluid.layers.mul(x=h, y=proj_weight, x_num_col_dims=2, y_num_col_dims=1)
-  return head 
+    # ibh,hnd->ibnd 
+    head = fluid.layers.mul(x=h, y=proj_weight, x_num_col_dims=2, y_num_col_dims=1)
+    return head 
+
 
 def post_attention(h, attn_vec, d_model, n_head, d_head, dropout,
                    param_initializer, residual=True, name=''):
-  """Post-attention processing."""
-  # post-attention projection (back to `d_model`)
-  proj_o=fluid.layers.create_parameter(
+    """Post-attention processing."""
+    # post-attention projection (back to `d_model`)
+    proj_o=fluid.layers.create_parameter(
                 shape=[d_model, n_head, d_head],
                 dtype=h.dtype,
                 attr=fluid.ParamAttr(name=name+'_o_weight', initializer=param_initializer),
                 is_bias=False)
-  # ibnd,hnd->ibh
-  proj_o = fluid.layers.transpose(proj_o, perm=[1, 2, 0])
-  attn_out = fluid.layers.mul(x=attn_vec, y=proj_o, x_num_col_dims=2, y_num_col_dims=2)
+    # ibnd,hnd->ibh
+    proj_o = fluid.layers.transpose(proj_o, perm=[1, 2, 0])
+    attn_out = fluid.layers.mul(x=attn_vec, y=proj_o, x_num_col_dims=2, y_num_col_dims=2)
 
-  attn_out = fluid.layers.dropout(attn_out, dropout_prob=dropout,
+    attn_out = fluid.layers.dropout(attn_out, dropout_prob=dropout,
                              dropout_implementation="upscale_in_train", is_test=False)
 
-  if residual:
-      output = fluid.layers.layer_norm(attn_out + h, begin_norm_axis=len(attn_out.shape)-1,
+    if residual:
+        output = fluid.layers.layer_norm(attn_out + h, begin_norm_axis=len(attn_out.shape)-1,
                                    epsilon=1e-12,
                                    param_attr=fluid.ParamAttr(name=name+'_layer_norm_scale',
                                        initializer=fluid.initializer.Constant(1.)),
                                    bias_attr=fluid.ParamAttr(name+'_layer_norm_bias',
                                        initializer=fluid.initializer.Constant(0.)))
-  else:
-      output = fluid.layers.layer_norm(attn_out, begin_norm_axis=len(attn_out.shape)-1,
+    else:
+        output = fluid.layers.layer_norm(attn_out, begin_norm_axis=len(attn_out.shape)-1,
                                    epsilon=1e-12,
                                    param_attr=fluid.ParamAttr(name=name+'_layer_norm_scale',
                                        initializer=fluid.initializer.Constant(1.)),
                                    bias_attr=fluid.ParamAttr(name+'_layer_norm_bias',
                                        initializer=fluid.initializer.Constant(0.)))
 
-  return output
+    return output
+
 
 def abs_attn_core(q_head, k_head, v_head, attn_mask, dropatt, scale):
-  """Core absolute positional attention operations."""
+    """Core absolute positional attention operations."""
 
-  attn_score = einsum4x4('ibnd,jbnd->ijbn', q_head, k_head) 
+    attn_score = einsum4x4('ibnd,jbnd->ijbn', q_head, k_head) 
 
-  attn_score *= scale
-  if attn_mask is not None:
-    attn_score = attn_score - 1e30 * attn_mask
+    attn_score *= scale
+    if attn_mask is not None:
+        attn_score = attn_score - 1e30 * attn_mask
 
-  # attention probability
-  attn_prob = fluid.layers.softmax(attn_score, axis=1)
-  attn_prob = fluid.layers.dropout(attn_prob, dropout_prob=dropatt, 
+    # attention probability
+    attn_prob = fluid.layers.softmax(attn_score, axis=1)
+    attn_prob = fluid.layers.dropout(attn_prob, dropout_prob=dropatt, 
                   dropout_implementation="upscale_in_train", is_test=False)
 
-  # attention output
-  attn_vec = einsum4x4('ijbn,jbnd->ibnd', attn_prob, v_head)
+    # attention output
+    attn_vec = einsum4x4('ijbn,jbnd->ibnd', attn_prob, v_head)
 
-  return attn_vec
+    return attn_vec
+
 
 def rel_attn_core(q_head, k_head_h, v_head_h, k_head_r, seg_embed, seg_mat,
                   r_w_bias, r_r_bias, r_s_bias, attn_mask, dropatt,
                   scale):
-  """Core relative positional attention operations."""
-  ## content based attention score
-  ac = einsum4x4('ibnd,jbnd->ijbn', fluid.layers.elementwise_add(q_head, r_w_bias, 2), k_head_h) 
+    """Core relative positional attention operations."""
+    ## content based attention score
+    ac = einsum4x4('ibnd,jbnd->ijbn', fluid.layers.elementwise_add(q_head, r_w_bias, 2), k_head_h) 
 
-  # position based attention score
-  bd = einsum4x4('ibnd,jbnd->ijbn', fluid.layers.elementwise_add(q_head, r_r_bias, 2), k_head_r)
+    # position based attention score
+    bd = einsum4x4('ibnd,jbnd->ijbn', fluid.layers.elementwise_add(q_head, r_r_bias, 2), k_head_r)
 
-  #klen = fluid.layers.slice(fluid.layers.shape(ac), axes=[0], starts=[1], ends=[2])
+    #klen = fluid.layers.slice(fluid.layers.shape(ac), axes=[0], starts=[1], ends=[2])
  
-  bd = rel_shift(bd, klen=ac.shape[1])
+    bd = rel_shift(bd, klen=ac.shape[1])
 
-  # segment based attention score
-  if seg_mat is None:
-    ef = 0
-  else:
-    ef = 0
-    """
-    bsz = fluid.layers.slice(fluid.layers.shape(q_head), axes=[0], starts=[1], ends=[2])
-    bsz.stop_gradient = True
-    """
-    #seg_embed = fluid.layers.unsqueeze(input=seg_embed, axes=[0])
-    seg_embed = fluid.layers.stack([seg_embed]*q_head.shape[0], axis=0)
+    # segment based attention score
+    if seg_mat is None:
+        ef = 0
+    else:
+        ef = 0
+        """
+        bsz = fluid.layers.slice(fluid.layers.shape(q_head), axes=[0], starts=[1], ends=[2])
+        bsz.stop_gradient = True
+        """
+        #seg_embed = fluid.layers.unsqueeze(input=seg_embed, axes=[0])
+        seg_embed = fluid.layers.stack([seg_embed]*q_head.shape[0], axis=0)
     
-    ef = einsum4x4('ibnd,isnd->ibns', fluid.layers.elementwise_add(q_head, r_s_bias, 2), seg_embed)
-    ef = einsum4x4('ijbs,ibns->ijbn', seg_mat, ef)
-  # merge attention scores and perform masking
+        ef = einsum4x4('ibnd,isnd->ibns', fluid.layers.elementwise_add(q_head, r_s_bias, 2), seg_embed)
+        ef = einsum4x4('ijbs,ibns->ijbn', seg_mat, ef)
+        # merge attention scores and perform masking
 
-  attn_score = (ac + bd + ef) * scale
+    attn_score = (ac + bd + ef) * scale
 
-  if attn_mask is not None:
-    # attn_score = attn_score * (1 - attn_mask) - 1e30 * attn_mask
-    attn_score = attn_score - 1e30 * attn_mask
+    if attn_mask is not None:
+        # attn_score = attn_score * (1 - attn_mask) - 1e30 * attn_mask
+        attn_score = attn_score - 1e30 * attn_mask
 
-  # attention probability
-  #attn_prob = fluid.layers.softmax(attn_score, axis=1)
-  attn_score = fluid.layers.transpose(attn_score, [0, 2, 3, 1])
-  attn_prob = fluid.layers.softmax(attn_score)
-  attn_prob = fluid.layers.transpose(attn_prob, [0, 3, 1, 2])
-  attn_prob = fluid.layers.dropout(attn_prob, dropatt, 
+    # attention probability
+    #attn_prob = fluid.layers.softmax(attn_score, axis=1)
+    attn_score = fluid.layers.transpose(attn_score, [0, 2, 3, 1])
+    attn_prob = fluid.layers.softmax(attn_score)
+    attn_prob = fluid.layers.transpose(attn_prob, [0, 3, 1, 2])
+    attn_prob = fluid.layers.dropout(attn_prob, dropatt, 
                                    dropout_implementation="upscale_in_train")
 
-  # attention output
-  attn_vec = einsum4x4('ijbn,jbnd->ibnd', attn_prob, v_head_h)
-  return attn_vec
+    # attention output
+    attn_vec = einsum4x4('ijbn,jbnd->ibnd', attn_prob, v_head_h)
+    return attn_vec
+
 
 def rel_shift(x, klen=-1):
     """perform relative shift to form the relative attention score."""
@@ -192,67 +196,69 @@ def rel_shift(x, klen=-1):
 
 
 def _cache_mem(curr_out, prev_mem, mem_len, reuse_len=None):
-  """cache hidden states into memory."""
-  if mem_len is None or mem_len == 0:
-      return None
-  else:
-      if reuse_len is not None and reuse_len > 0:
-          curr_out = curr_out[:reuse_len]
+    """cache hidden states into memory."""
+    if mem_len is None or mem_len == 0:
+        return None
+    else:
+        if reuse_len is not None and reuse_len > 0:
+            curr_out = curr_out[:reuse_len]
 
-      if prev_mem is None:
-         new_mem = curr_out[-mem_len:]
-      else:
-        new_mem = tf.concat([prev_mem, curr_out], 0)[-mem_len:]
+        if prev_mem is None:
+            new_mem = curr_out[-mem_len:]
+        else:
+            new_mem = tf.concat([prev_mem, curr_out], 0)[-mem_len:]
 
-  new_mem.stop_gradient = True
-  return new_mem
+    new_mem.stop_gradient = True
+    return new_mem
+
 
 def relative_positional_encoding(qlen, klen, d_model, clamp_len, attn_type,
                                  bi_data, bsz=None, dtype=None):
-  """create relative positional encoding."""
-  freq_seq = fluid.layers.range(0, d_model, 2.0, 'float32')
-  if dtype is not None and dtype != 'float32':
-    freq_seq = tf.cast(freq_seq, dtype=dtype)
-  inv_freq = 1 / (10000 ** (freq_seq / d_model))
-
-  if attn_type == 'bi':
-    beg, end = klen, -qlen
-  elif attn_type == 'uni':
-    beg, end = klen, -1
-  else:
-    raise ValueError('Unknown `attn_type` {}.'.format(attn_type))
-
-  if bi_data:
-    fwd_pos_seq = fluid.layers.range(beg, end, -1.0, 'float32')
-    bwd_pos_seq = fluid.layers.range(-beg, -end, 1.0, 'float32')
-
+    """create relative positional encoding."""
+    freq_seq = fluid.layers.range(0, d_model, 2.0, 'float32')
     if dtype is not None and dtype != 'float32':
-      fwd_pos_seq =fluid.layers.cast(fwd_pos_seq, dtype='float32')
-      bwd_pos_seq = fluid.layers.cast(bwd_pos_seq, dtype='float32')
+        freq_seq = tf.cast(freq_seq, dtype=dtype)
+    inv_freq = 1 / (10000 ** (freq_seq / d_model))
 
-    if clamp_len > 0:
-      fwd_pos_seq = fluid.layers.clip(fwd_pos_seq, -clamp_len, clamp_len)
-      bwd_pos_seq = fluid.layers.clip(bwd_pos_seq, -clamp_len, clamp_len)
-
-    if bsz is not None:
-      # With bi_data, the batch size should be divisible by 2.
-      assert bsz % 2 == 0
-      fwd_pos_emb = positional_embedding(fwd_pos_seq, inv_freq, bsz//2)
-      bwd_pos_emb = positional_embedding(bwd_pos_seq, inv_freq, bsz//2)
+    if attn_type == 'bi':
+        beg, end = klen, -qlen
+    elif attn_type == 'uni':
+        beg, end = klen, -1
     else:
-      fwd_pos_emb = positional_embedding(fwd_pos_seq, inv_freq)
-      bwd_pos_emb = positional_embedding(bwd_pos_seq, inv_freq)
+        raise ValueError('Unknown `attn_type` {}.'.format(attn_type))
 
-    pos_emb = fluid.layers.concat([fwd_pos_emb, bwd_pos_emb], axis=1)
-  else:
-    fwd_pos_seq = fluid.layers.range(beg, end, -1.0, 'float32')
-    if dtype is not None and dtype != 'float32':
-      fwd_pos_seq = fluid.layers.cast(fwd_pos_seq, dtype=dtype)
-    if clamp_len > 0:
-      fwd_pos_seq = fluid.layers.clip(fwd_pos_seq, -clamp_len, clamp_len)
-    pos_emb = positional_embedding(fwd_pos_seq, inv_freq, bsz)
-    fluid.layers.reshape(pos_emb, [2*qlen, -1, d_model], inplace=True)
-  return pos_emb
+    if bi_data:
+        fwd_pos_seq = fluid.layers.range(beg, end, -1.0, 'float32')
+        bwd_pos_seq = fluid.layers.range(-beg, -end, 1.0, 'float32')
+
+        if dtype is not None and dtype != 'float32':
+            fwd_pos_seq =fluid.layers.cast(fwd_pos_seq, dtype='float32')
+            bwd_pos_seq = fluid.layers.cast(bwd_pos_seq, dtype='float32')
+
+        if clamp_len > 0:
+            fwd_pos_seq = fluid.layers.clip(fwd_pos_seq, -clamp_len, clamp_len)
+            bwd_pos_seq = fluid.layers.clip(bwd_pos_seq, -clamp_len, clamp_len)
+
+        if bsz is not None:
+            # With bi_data, the batch size should be divisible by 2.
+            assert bsz % 2 == 0
+            fwd_pos_emb = positional_embedding(fwd_pos_seq, inv_freq, bsz//2)
+            bwd_pos_emb = positional_embedding(bwd_pos_seq, inv_freq, bsz//2)
+        else:
+            fwd_pos_emb = positional_embedding(fwd_pos_seq, inv_freq)
+            bwd_pos_emb = positional_embedding(bwd_pos_seq, inv_freq)
+
+        pos_emb = fluid.layers.concat([fwd_pos_emb, bwd_pos_emb], axis=1)
+    else:
+        fwd_pos_seq = fluid.layers.range(beg, end, -1.0, 'float32')
+        if dtype is not None and dtype != 'float32':
+            fwd_pos_seq = fluid.layers.cast(fwd_pos_seq, dtype=dtype)
+        if clamp_len > 0:
+            fwd_pos_seq = fluid.layers.clip(fwd_pos_seq, -clamp_len, clamp_len)
+        pos_emb = positional_embedding(fwd_pos_seq, inv_freq, bsz)
+        fluid.layers.reshape(pos_emb, [2*qlen, -1, d_model], inplace=True)
+    return pos_emb
+
 
 def rel_multihead_attn(h, r, r_w_bias, r_r_bias, seg_mat, r_s_bias, seg_embed,
                        attn_mask, mems, d_model, n_head, d_head, dropout,
@@ -299,58 +305,58 @@ def transformer_xl(inp_k, n_token, n_layer, d_model, n_head,
                 use_fp16=False, name='', **kwargs):
     """
     Defines a Transformer-XL computation graph with additional
-	support for XLNet.
-	Args:
-	inp_k: int32 Tensor in shape [len, bsz], the input token IDs.
-	seg_id: int32 Tensor in shape [len, bsz], the input segment IDs.
-	input_mask: float32 Tensor in shape [len, bsz], the input mask.
-	  0 for real tokens and 1 for padding.
-	mems: a list of float32 Tensors in shape [mem_len, bsz, d_model], memory
-	  from previous batches. The length of the list equals n_layer.
-	  If None, no memory is used.
-	perm_mask: float32 Tensor in shape [len, len, bsz].
-	  If perm_mask[i, j, k] = 0, i attend to j in batch k;
-	  if perm_mask[i, j, k] = 1, i does not attend to j in batch k.
-	  If None, each position attends to all the others.
-	target_mapping: float32 Tensor in shape [num_predict, len, bsz].
-	  If target_mapping[i, j, k] = 1, the i-th predict in batch k is
-	  on the j-th token.
-	  Only used during pretraining for partial prediction.
-	  Set to None during finetuning.
-	inp_q: float32 Tensor in shape [len, bsz].
-	  1 for tokens with losses and 0 for tokens without losses.
-	  Only used during pretraining for two-stream attention.
-	  Set to None during finetuning.
-	n_layer: int, the number of layers.
-	d_model: int, the hidden size.
-	n_head: int, the number of attention heads.
-	d_head: int, the dimension size of each attention head.
-	d_inner: int, the hidden size in feed-forward layers.
-	ff_activation: str, "relu" or "gelu".
-	untie_r: bool, whether to untie the biases in attention.
-	n_token: int, the vocab size.
-	is_training: bool, whether in training mode.
-	use_tpu: bool, whether TPUs are used.
-	use_fp16: bool, use bfloat16 instead of float32.
-	dropout: float, dropout rate.
-	dropatt: float, dropout rate on attention probabilities.
-	init: str, the initialization scheme, either "normal" or "uniform".
-	init_range: float, initialize the parameters with a uniform distribution
-	  in [-init_range, init_range]. Only effective when init="uniform".
-	init_std: float, initialize the parameters with a normal distribution
-	  with mean 0 and stddev init_std. Only effective when init="normal".
-	mem_len: int, the number of tokens to cache.
-	reuse_len: int, the number of tokens in the currect batch to be cached
-	  and reused in the future.
-	bi_data: bool, whether to use bidirectional input pipeline.
-	  Usually set to True during pretraining and False during finetuning.
-	clamp_len: int, clamp all relative distances larger than clamp_len.
-	  -1 means no clamping.
-	same_length: bool, whether to use the same attention length for each token.
-	summary_type: str, "last", "first", "mean", or "attn". The method
-	  to pool the input to get a vector representation.
-	initializer: A tf initializer.
-	scope: scope name for the computation graph.
+    support for XLNet.
+    Args:
+    inp_k: int32 Tensor in shape [len, bsz], the input token IDs.
+    seg_id: int32 Tensor in shape [len, bsz], the input segment IDs.
+    input_mask: float32 Tensor in shape [len, bsz], the input mask.
+        0 for real tokens and 1 for padding.
+    mems: a list of float32 Tensors in shape [mem_len, bsz, d_model], memory
+        from previous batches. The length of the list equals n_layer.
+        If None, no memory is used.
+    perm_mask: float32 Tensor in shape [len, len, bsz].
+        If perm_mask[i, j, k] = 0, i attend to j in batch k;
+        if perm_mask[i, j, k] = 1, i does not attend to j in batch k.
+        If None, each position attends to all the others.
+    target_mapping: float32 Tensor in shape [num_predict, len, bsz].
+        If target_mapping[i, j, k] = 1, the i-th predict in batch k is
+        on the j-th token.
+        Only used during pretraining for partial prediction.
+        Set to None during finetuning.
+    inp_q: float32 Tensor in shape [len, bsz].
+        1 for tokens with losses and 0 for tokens without losses.
+        Only used during pretraining for two-stream attention.
+        Set to None during finetuning.
+    n_layer: int, the number of layers.
+    d_model: int, the hidden size.
+    n_head: int, the number of attention heads.
+    d_head: int, the dimension size of each attention head.
+    d_inner: int, the hidden size in feed-forward layers.
+    ff_activation: str, "relu" or "gelu".
+    untie_r: bool, whether to untie the biases in attention.
+    n_token: int, the vocab size.
+    is_training: bool, whether in training mode.
+    use_tpu: bool, whether TPUs are used.
+    use_fp16: bool, use bfloat16 instead of float32.
+    dropout: float, dropout rate.
+    dropatt: float, dropout rate on attention probabilities.
+    init: str, the initialization scheme, either "normal" or "uniform".
+    init_range: float, initialize the parameters with a uniform distribution
+        in [-init_range, init_range]. Only effective when init="uniform".
+    init_std: float, initialize the parameters with a normal distribution
+        with mean 0 and stddev init_std. Only effective when init="normal".
+    mem_len: int, the number of tokens to cache.
+    reuse_len: int, the number of tokens in the currect batch to be cached
+        and reused in the future.
+    bi_data: bool, whether to use bidirectional input pipeline.
+        Usually set to True during pretraining and False during finetuning.
+    clamp_len: int, clamp all relative distances larger than clamp_len.
+        -1 means no clamping.
+    same_length: bool, whether to use the same attention length for each token.
+    summary_type: str, "last", "first", "mean", or "attn". The method
+        to pool the input to get a vector representation.
+    initializer: A tf initializer.
+    scope: scope name for the computation graph.
     """
     print('memory input {}'.format(mems))
     data_type = "float16" if use_fp16 else "float32"
@@ -365,7 +371,7 @@ def transformer_xl(inp_k, n_token, n_layer, d_model, n_head,
     # causal attention mask
     if attn_type == 'uni':
         attn_mask = fluid.layers.create_global_var(
-	                name='attn_mask', 
+                    name='attn_mask', 
                         shape=[qlen, klen, 1, 1], 
                         value=0.0, 
                         dtype=data_type, persistable=True)
@@ -413,21 +419,21 @@ def transformer_xl(inp_k, n_token, n_layer, d_model, n_head,
         non_tgt_mask = None
 
     if untie_r:
-      r_w_bias = fluid.layers.create_parameter(shape=[n_layer, n_head, d_head], dtype=data_type, 
+        r_w_bias = fluid.layers.create_parameter(shape=[n_layer, n_head, d_head], dtype=data_type, 
                                  attr=fluid.ParamAttr(name=name+'_r_w_bias', initializer=initializer), 
                                  is_bias=True)
-      r_w_bias = [fluid.layers.slice(r_w_bias, axes=[0], starts=[i], ends=[i+1]) for i in range(n_layer)]
-      r_w_bias = [fluid.layers.squeeze(r_w_bias[i], axes=[0]) for i in range(n_layer)]
-      r_r_bias = fluid.layers.create_parameter(shape=[n_layer, n_head, d_head], dtype=data_type, 
+        r_w_bias = [fluid.layers.slice(r_w_bias, axes=[0], starts=[i], ends=[i+1]) for i in range(n_layer)]
+        r_w_bias = [fluid.layers.squeeze(r_w_bias[i], axes=[0]) for i in range(n_layer)]
+        r_r_bias = fluid.layers.create_parameter(shape=[n_layer, n_head, d_head], dtype=data_type, 
                                  attr=fluid.ParamAttr(name=name+'_r_r_bias', initializer=initializer), 
                                  is_bias=True)
-      r_r_bias = [fluid.layers.slice(r_r_bias, axes=[0], starts=[i], ends=[i+1]) for i in range(n_layer)]
-      r_r_bias = [fluid.layers.squeeze(r_r_bias[i], axes=[0]) for i in range(n_layer)]
+        r_r_bias = [fluid.layers.slice(r_r_bias, axes=[0], starts=[i], ends=[i+1]) for i in range(n_layer)]
+        r_r_bias = [fluid.layers.squeeze(r_r_bias[i], axes=[0]) for i in range(n_layer)]
     else:
-      r_w_bias = fluid.layers.create_parameter(shape=[n_head, d_head], dtype=data_type, 
+        r_w_bias = fluid.layers.create_parameter(shape=[n_head, d_head], dtype=data_type, 
                                  attr=fluid.ParamAttr(name=name+'_r_w_bias', initializer=initializer), 
                                  is_bias=True)
-      r_r_bias = fluid.layers.create_parameter(shape=[n_head, d_head], dtype=data_type, 
+        r_r_bias = fluid.layers.create_parameter(shape=[n_head, d_head], dtype=data_type, 
                                  attr=fluid.ParamAttr(name=name+'_r_r_bias', initializer=initializer), 
                                  is_bias=True)
 
@@ -442,28 +448,28 @@ def transformer_xl(inp_k, n_token, n_layer, d_model, n_head,
         param_attr=fluid.ParamAttr(name=name+'_word_embedding', initializer=initializer))
 
     if inp_q is not None:
-       pass
+        pass
 
     output_h = fluid.layers.dropout(word_emb_k, dropout_prob=dropout,
                                    dropout_implementation="upscale_in_train") 
     
     if inp_q is not None:
-       pass
+        pass
 
     if seg_id is not None:
-	if untie_r:
-	    r_s_bias = fluid.layers.create_parameter(shape=[n_layer, n_head, d_head], dtype=data_type, 
-				     attr=fluid.ParamAttr(name=name+'_r_s_bias', initializer=initializer), 
-				     is_bias=True)
+        if untie_r:
+            r_s_bias = fluid.layers.create_parameter(shape=[n_layer, n_head, d_head], dtype=data_type, 
+                        attr=fluid.ParamAttr(name=name+'_r_s_bias', initializer=initializer), 
+                        is_bias=True)
             r_s_bias = [fluid.layers.slice(r_s_bias, axes=[0], starts=[i], ends=[i+1]) for i in range(n_layer)]
             r_s_bias = [fluid.layers.squeeze(r_s_bias[i], axes=[0]) for i in range(n_layer)]
-	else:
-	    r_s_bias = fluid.layers.create_parameter(shape=[n_head, d_head], dtype=data_type, 
-				     attr=fluid.ParamAttr(name=name+'_r_s_bias', initializer=initializer), 
-				     is_bias=True)
+        else:
+            r_s_bias = fluid.layers.create_parameter(shape=[n_head, d_head], dtype=data_type, 
+                        attr=fluid.ParamAttr(name=name+'_r_s_bias', initializer=initializer), 
+                        is_bias=True)
 
         seg_embed = fluid.layers.create_parameter(shape=[n_layer, 2, n_head, d_head],
-			      dtype=data_type, attr=fluid.ParamAttr(name=name+'_seg_embed', 
+                              dtype=data_type, attr=fluid.ParamAttr(name=name+'_seg_embed', 
                               initializer=initializer))
         seg_embed = [fluid.layers.slice(seg_embed, axes=[0], starts=[i], ends=[i+1]) for i in range(n_layer)]
         seg_embed = [fluid.layers.squeeze(seg_embed[i], axes=[0]) for i in range(n_layer)]
@@ -497,7 +503,7 @@ def transformer_xl(inp_k, n_token, n_layer, d_model, n_head,
     pos_emb.stop_gradient = True
     ##### Attention layers
     if mems is None:
-      mems = [None] * n_layer
+        mems = [None] * n_layer
     for i in range(n_layer):
         # cache new mems
         #new_mems.append(_cache_mem(output_h, mems[i], mem_len, reuse_len)) 
@@ -548,6 +554,7 @@ def transformer_xl(inp_k, n_token, n_layer, d_model, n_head,
     new_mems = None
     return output, new_mems, lookup_table
 
+
 def lm_loss(hidden, target, n_token, d_model, initializer, lookup_table=None,
             tie_weight=False, bi_data=True):
 
@@ -578,53 +585,54 @@ def summarize_sequence(summary_type, hidden, d_model, n_head, d_head, dropout,
                        dropatt, input_mask, is_training, initializer,
                        scope=None, reuse=None, use_proj=True):
 
-  """
-      Different classification tasks may not may not share the same parameters
-      to summarize the sequence features.
-      If shared, one can keep the `scope` to the default value `None`.
-      Otherwise, one should specify a different `scope` for each task.
-  """
+    """
+    Different classification tasks may not may not share the same parameters
+    to summarize the sequence features.
+    If shared, one can keep the `scope` to the default value `None`.
+    Otherwise, one should specify a different `scope` for each task.
+    """
 
-  with tf.variable_scope(scope, 'sequnece_summary', reuse=reuse):
-    if summary_type == 'last':
-      summary = hidden[-1]
-    elif summary_type == 'first':
-      summary = hidden[0]
-    elif summary_type == 'mean':
-      summary = tf.reduce_mean(hidden, axis=0)
-    elif summary_type == 'attn':
-      bsz = tf.shape(hidden)[1]
+    with tf.variable_scope(scope, 'sequnece_summary', reuse=reuse):
+        if summary_type == 'last':
+            summary = hidden[-1]
+        elif summary_type == 'first':
+            summary = hidden[0]
+        elif summary_type == 'mean':
+            summary = tf.reduce_mean(hidden, axis=0)
+        elif summary_type == 'attn':
+            bsz = tf.shape(hidden)[1]
 
-      summary_bias = tf.get_variable('summary_bias', [d_model],
+            summary_bias = tf.get_variable('summary_bias', [d_model],
                                      dtype=hidden.dtype,
                                      initializer=initializer)
-      summary_bias = tf.tile(summary_bias[None, None], [1, bsz, 1])
+            summary_bias = tf.tile(summary_bias[None, None], [1, bsz, 1])
 
-      if input_mask is not None:
-        input_mask = input_mask[None, :, :, None]
+            if input_mask is not None:
+                input_mask = input_mask[None, :, :, None]
 
-      summary = multihead_attn(summary_bias, hidden, hidden, input_mask,
+            summary = multihead_attn(summary_bias, hidden, hidden, input_mask,
                                d_model, n_head, d_head, dropout, dropatt,
                                is_training, initializer, residual=False)
-      summary = summary[0]
-    else:
-      raise ValueError('Unsupported summary type {}'.format(summary_type))
+            summary = summary[0]
+        else:
+            raise ValueError('Unsupported summary type {}'.format(summary_type))
 
-    # use another projection as in BERT
-    if use_proj:
-      summary = tf.layers.dense(
-          summary,
-          d_model,
-          activation=tf.tanh,
-          initializer=initializer,
-          name='summary')
+        # use another projection as in BERT
+        if use_proj:
+            summary = tf.layers.dense(
+                        summary,
+                        d_model,
+                        activation=tf.tanh,
+                        initializer=initializer,
+                        name='summary')
 
-    # dropout
-    summary = tf.layers.dropout(
-        summary, dropout, training=is_training,
-        name='dropout')
+        # dropout
+        summary = tf.layers.dropout(
+                summary, dropout, training=is_training,
+                name='dropout')
 
-  return summary
+    return summary
+
 
 def classification_loss(hidden, labels, n_class, initializer, name, reuse=None,
                         return_logits=False):
@@ -641,10 +649,10 @@ def classification_loss(hidden, labels, n_class, initializer, name, reuse=None,
         param_attr=fluid.ParamAttr(name=name+'_logits', initializer=initializer))
 
     one_hot_target = fluid.layers.one_hot(labels, depth=n_class, dtype=hidden.dtype)
-    loss = -fuid.layers.reduce_sum(fluid.layers.log_softmax(logits) * one_hot_target, -1)
+    loss = -fluid.layers.reduce_sum(fluid.layers.log_softmax(logits) * one_hot_target, -1)
 
     if return_logits:
-      return loss, logits
+        return loss, logits
 
     return loss
 
@@ -661,6 +669,6 @@ def regression_loss(hidden, labels, initializer, name='transformer',
     loss = tf.square(logits - labels)
 
     if return_logits:
-      return loss, logits
+        return loss, logits
 
     return loss 

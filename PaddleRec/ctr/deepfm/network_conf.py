@@ -11,12 +11,12 @@ def ctr_deepfm_model(embedding_size,
                      is_sparse=False):
     init_value_ = 0.1
 
-    raw_feat_idx = fluid.layers.data(
-        name='feat_idx', shape=[num_field], dtype='int64')
-    raw_feat_value = fluid.layers.data(
-        name='feat_value', shape=[num_field], dtype='float32')
-    label = fluid.layers.data(
-        name='label', shape=[1], dtype='float32')  # None * 1
+    raw_feat_idx = fluid.data(
+        name='feat_idx', shape=[None, num_field], dtype='int64')
+    raw_feat_value = fluid.data(
+        name='feat_value', shape=[None, num_field], dtype='float32')
+    label = fluid.data(
+        name='label', shape=[None, 1], dtype='float32')  # None * 1
 
     feat_idx = fluid.layers.reshape(raw_feat_idx,
                                     [-1, 1])  # (None * num_field) * 1
@@ -25,7 +25,7 @@ def ctr_deepfm_model(embedding_size,
 
     # -------------------- first order term  --------------------
 
-    first_weights_re = fluid.layers.embedding(
+    first_weights_re = fluid.embedding(
         input=feat_idx,
         is_sparse=is_sparse,
         dtype='float32',
@@ -41,7 +41,7 @@ def ctr_deepfm_model(embedding_size,
 
     # -------------------- second order term  --------------------
 
-    feat_embeddings_re = fluid.layers.embedding(
+    feat_embeddings_re = fluid.embedding(
         input=feat_idx,
         is_sparse=is_sparse,
         dtype='float32',

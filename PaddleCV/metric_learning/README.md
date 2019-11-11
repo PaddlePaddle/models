@@ -23,6 +23,23 @@ cd data/
 sh download_sop.sh
 ```
 
+SOP dataset directory structure like this:
+```
+data/
+├──Stanford_Online_Products
+│   ├── bicycle_final
+│   ├── bicycle_final.txt
+│   ├── cabinet_final
+│   ├── cabinet_final.txt
+|   ...
+├──Stanford_Online_Products.zip 
+```
+
+if you are Windows user, you can download the dataset using below ftp link and unzip file to ```data``` directory.
+```
+SOP: ftp://cs.stanford.edu/cs/cvgl/Stanford_Online_Products.zip
+```
+
 ## Training metric learning models
 
 To train a metric learning model, one need to set the neural network as backbone and the metric loss function to optimize. You can download [ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar) pretrained on imagenet dataset as backbone. We train meiric learning model using softmax or arcmargin loss firstly, and then fine-turned the model using other metric learning loss, such as triplet, quadruplet and eml loss. One example of training using arcmargin loss is shown below:

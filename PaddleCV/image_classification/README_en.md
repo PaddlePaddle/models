@@ -27,15 +27,18 @@ English | [中文](README.md)
 
 Image classification, which is an important field of computer vision, is to classify images into pre-defined labels. Recently, many researchers have developed different kinds of neural networks and highly improved the classification performance. This page introduces how to do image classification with PaddlePaddle Fluid.
 
+We also recommend users to take a look at the  [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122278)
+
 ## Quick Start
 
 ### Installation
 
-Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.5 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.5, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html) and make an update.
+Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.6 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.6, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html) and make an update.
 
 ### Data preparation
 
-An example for ImageNet classification is as follows. First of all, preparation of imagenet data can be done as:
+An example for ImageNet classification is as follows.
+For Linux system, preparation of imagenet data can be done as:
 
 ```bash
 cd data/ILSVRC2012/
@@ -60,6 +63,7 @@ val/ILSVRC2012_val_00000001.jpeg 65
 ```
 
 Note: You may need to modify the data path in reader.py to load data correctly.
+**For windows system, Users should download ImageNet data by themselves. and the label list can be downloaded in [Here](http://paddle-imagenet-models.bj.bcebos.com/ImageNet_label.tgz)**
 
 ### Training
 
@@ -81,6 +85,25 @@ or running run.sh scripts
 ```bash
 bash run.sh train model_name
 ```
+
+**multiprocess training:**
+
+If you have multiple gpus, this method is strongly recommended, because it can improve training speed dramatically.
+You can start the multiprocess training step by:
+```
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
+       --model=ResNet50 \
+       --batch_size=256 \
+       --total_images=1281167 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --model_save_dir=output/ \
+       --lr_strategy=piecewise_decay \
+       --reader_thread=4 \
+       --lr=0.1
+```
+
+or reference scripts/train/ResNet50_dist.sh
 
 **parameter introduction:**
 
@@ -134,6 +157,7 @@ Switch:
 * **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.1.
 * **random_seed**: random seed for debugging, Default: 1000.
 * **padding_type**: padding type of convolution for efficientNet, Default: "SAME".
+* **use_se**: whether to use Squeeze-and-Excitation module in efficientNet, Default: True.
 * **use_ema**: whether to use ExponentialMovingAverage or not. Default: False.
 * **ema_decay**: the value of ExponentialMovingAverage decay rate. Default: 0.9999.
 
@@ -179,7 +203,7 @@ Note: if you train model with flag use_ema, and you want to evaluate your Expone
 python ema_clean.py \
        --ema_model_dir=your_ema_model_dir \
        --cleaned_model_dir=your_cleaned_model_dir
-       
+
 python eval.py \
        --model=model_name \
        --pretrained_model=your_cleaned_model_dir
@@ -376,8 +400,11 @@ Pretrained models can be downloaded by clicking related model names.
 |[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[1](#trans)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
 |[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[1](#trans)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
 |[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[1](#trans)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
+|[EfficientNetB0_small](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_Small_pretrained.tar)<sup>[2](#trans)</sup> | 75.80% | 92.58% | 3.342 | 2.729 |
 
 <a name="trans">[1]</a> means the pretrained weight is converted form [original repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet).
+
+<a name="trans">[2]</a> means the pretrained weight is based on EfficientNetB0, removed Squeeze-and-Excitation module and use general convolution. This model speed is much faster.
 
 ## FAQ
 

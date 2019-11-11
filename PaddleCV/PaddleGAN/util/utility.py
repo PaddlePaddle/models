@@ -150,7 +150,7 @@ def save_test_image(epoch,
                                         "input_B": B_data})
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
             input_A_temp = np.squeeze(np.array(A_data)[0]).transpose([1, 2, 0])
-            input_B_temp = np.squeeze(np.array(A_data)[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(np.array(B_data)[0]).transpose([1, 2, 0])
 
             fakeB_name = "fakeB_" + str(epoch) + "_" + A_id2name[np.array(
                 image_name).astype('int32')[0]]
@@ -409,3 +409,19 @@ def check_gpu(use_gpu):
             sys.exit(1)
     except Exception as e:
         pass
+
+
+def check_version():
+    """
+    Log error and exit when the installed version of paddlepaddle is
+    not satisfied.
+    """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        print(err)
+        sys.exit(1)

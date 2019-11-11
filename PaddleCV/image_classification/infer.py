@@ -49,6 +49,8 @@ add_arg('crop_size',        int,  224,                  "The value of crop size"
 add_arg('topk',             int,  1,                    "topk")
 add_arg('label_path',       str,  "./utils/tools/readable_label.txt", "readable label filepath")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
+add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
+add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
 # yapf: enable
 
 
@@ -59,8 +61,16 @@ def infer(args):
                                                                      model_list)
     assert os.path.isdir(args.pretrained_model
                          ), "please load right pretrained model path for infer"
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    model = models.__dict__[args.model]()
+    image = fluid.data(
+        name='image', shape=[None] + image_shape, dtype='float32')
+
+    if args.model.startswith('EfficientNet'):
+        model = models.__dict__[args.model](is_test=True,
+                                            padding_type=args.padding_type,
+                                            use_se=args.use_se)
+    else:
+        model = models.__dict__[args.model]()
+
     if args.model == "GoogLeNet":
         out, _, _ = model.net(input=image, class_dim=args.class_dim)
     else:
@@ -88,9 +98,9 @@ def infer(args):
         print("model: ", args.model, " is already saved")
         exit(0)
 
-    test_batch_size = 1
-    test_reader = paddle.batch(
-        reader.test(settings=args), batch_size=test_batch_size)
+    args.test_batch_size = 1
+    imagenet_reader = reader.ImageNetReader()
+    test_reader = imagenet_reader.test(settings=args)
     feeder = fluid.DataFeeder(place=place, feed_list=[image])
 
     TOPK = args.topk
@@ -120,6 +130,7 @@ def main():
     args = parser.parse_args()
     print_arguments(args)
     check_gpu()
+    check_version()
     infer(args)
 
 

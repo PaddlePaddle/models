@@ -38,8 +38,9 @@ def compress(args):
     image_shape = "3,224,224"
     image_shape = [int(m) for m in image_shape.split(",")]
 
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+    image = fluid.data(
+        name='image', shape=[None] + image_shape, dtype='float32')
+    label = fluid.data(name='label', shape=[None, 1], dtype='int64')
     # model definition
     model = models.__dict__[args.model]()
 
@@ -53,12 +54,12 @@ def compress(args):
     val_program = fluid.default_main_program().clone()
 
     # quantization usually use small learning rate
-    values = [1e-4, 1e-5, 1e-6]
+    values = [1e-4, 1e-5]
     opt = fluid.optimizer.Momentum(
         momentum=0.9,
         learning_rate=fluid.layers.piecewise_decay(
-            boundaries=[5000 * 30, 5000 * 60], values=values),
-        regularization=fluid.regularizer.L2Decay(4e-5))
+            boundaries=[5000 * 12], values=values),
+        regularization=fluid.regularizer.L2Decay(1e-4))
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -95,9 +96,20 @@ def compress(args):
         eval_fetch_list=val_fetch_list,
         teacher_programs=[],
         train_optimizer=opt,
+        prune_infer_model=[[image.name], [out.name]],
         distiller_optimizer=None)
     com_pass.config(args.config_file)
     com_pass.run()
+
+    conv_op_num = 0
+    fake_quant_op_num = 0
+    for op in com_pass.context.eval_graph.ops():
+        if op._op.type == 'conv2d':
+            conv_op_num += 1
+        elif op._op.type.startswith('fake_quantize'):
+            fake_quant_op_num += 1
+    print('conv op num {}'.format(conv_op_num))
+    print('fake quant op num {}'.format(fake_quant_op_num))
 
 
 def main():

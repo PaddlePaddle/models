@@ -17,7 +17,7 @@ from __future__ import division
 from __future__ import print_function
 
 from collections import OrderedDict
-
+import copy
 from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Xavier
@@ -87,13 +87,8 @@ class FPN(object):
                     learning_rate=2.,
                     regularizer=L2Decay(0.)),
                 name=lateral_name)
-        shape = fluid.layers.shape(upper_output)
-        shape_hw = fluid.layers.slice(shape, axes=[0], starts=[2], ends=[4])
-        out_shape_ = shape_hw * 2
-        out_shape = fluid.layers.cast(out_shape_, dtype='int32')
-        out_shape.stop_gradient = True
         topdown = fluid.layers.resize_nearest(
-            upper_output, scale=2., actual_shape=out_shape, name=topdown_name)
+            upper_output, scale=2., name=topdown_name)
 
         return lateral + topdown
 
@@ -110,6 +105,7 @@ class FPN(object):
                 their name.
             spatial_scale(list): A list of multiplicative spatial scale factor.
         """
+        spatial_scale = copy.deepcopy(self.spatial_scale)
         body_name_list = list(body_dict.keys())[::-1]
         num_backbone_stages = len(body_name_list)
         self.fpn_inner_output = [[] for _ in range(num_backbone_stages)]
@@ -179,7 +175,7 @@ class FPN(object):
             fpn_dict[fpn_name] = fpn_output
             fpn_name_list.append(fpn_name)
         if not self.has_extra_convs and self.max_level - self.min_level == len(
-                self.spatial_scale):
+                spatial_scale):
             body_top_name = fpn_name_list[0]
             body_top_extension = fluid.layers.pool2d(
                 fpn_dict[body_top_name],
@@ -189,9 +185,9 @@ class FPN(object):
                 name=body_top_name + '_subsampled_2x')
             fpn_dict[body_top_name + '_subsampled_2x'] = body_top_extension
             fpn_name_list.insert(0, body_top_name + '_subsampled_2x')
-            self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
+            spatial_scale.insert(0, spatial_scale[0] * 0.5)
         # Coarser FPN levels introduced for RetinaNet
-        highest_backbone_level = self.min_level + len(self.spatial_scale) - 1
+        highest_backbone_level = self.min_level + len(spatial_scale) - 1
         if self.has_extra_convs and self.max_level > highest_backbone_level:
             fpn_blob = body_dict[body_name_list[0]]
             for i in range(highest_backbone_level + 1, self.max_level + 1):
@@ -215,6 +211,6 @@ class FPN(object):
                     name=fpn_name)
                 fpn_dict[fpn_name] = fpn_blob
                 fpn_name_list.insert(0, fpn_name)
-                self.spatial_scale.insert(0, self.spatial_scale[0] * 0.5)
+                spatial_scale.insert(0, spatial_scale[0] * 0.5)
         res_dict = OrderedDict([(k, fpn_dict[k]) for k in fpn_name_list])
-        return res_dict, self.spatial_scale
+        return res_dict, spatial_scale

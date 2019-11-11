@@ -40,6 +40,7 @@ class SPADE_model(object):
             padding=1,
             name=name + "_fc",
             use_bias=True,
+            initial="kaiming",
             is_test=is_test)
         x = self.SPADEResnetBlock(
             x,
@@ -88,6 +89,7 @@ class SPADE_model(object):
             padding=1,
             name=name + "_conv_img",
             use_bias=True,
+            initial="kaiming",
             is_test=is_test)
         x = fluid.layers.tanh(x)
 
@@ -148,6 +150,7 @@ class SPADE_model(object):
             padding=pw,
             activation_fn='relu',
             name=name + ".mlp_shared.0",
+            initial="kaiming",
             use_bias=True)
         gamma = conv2d(
             actv,
@@ -155,6 +158,7 @@ class SPADE_model(object):
             ks,
             padding=pw,
             name=name + ".mlp_gamma",
+            initial="kaiming",
             use_bias=True)
         beta = conv2d(
             actv,
@@ -162,6 +166,7 @@ class SPADE_model(object):
             ks,
             padding=pw,
             name=name + ".mlp_beta",
+            initial="kaiming",
             use_bias=True)
         param_attr = fluid.ParamAttr(
             name=name + ".param_free_norm.weight",
@@ -219,6 +224,7 @@ def build_discriminator_Nlayers(input,
         name=name + ".model0.0",
         activation_fn='leaky_relu',
         relufactor=0.2,
+        initial="kaiming",
         use_bias=True)
     d_dims = d_base_dims
     res_list.append(res1)
@@ -248,6 +254,7 @@ def build_discriminator_Nlayers(input,
         0.02,
         1,
         name + ".model{}.0".format(d_nlayers),
+        initial="kaiming",
         use_bias=True)
     res_list.append(o_c4)
     return res_list

@@ -14,7 +14,7 @@ strategies:
         target_ratio: 0.5
         pruned_params: '.*_sep_weights'
 compressor:
-    epoch: 3
+    epoch: 121
     checkpoint_path: './checkpoints/mobilenet_v1/'
     strategies:
         - uniform_pruning_strategy

@@ -29,6 +29,8 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('use_gpu',          bool, False,                 "Whether to use GPU or not.")
 add_arg('model_path', str,  "./pruning/checkpoints/resnet50/2/eval_model/",                 "Whether to use pretrained model.")
+add_arg('model_name', str,  "__model__.infer",  "inference model filename")
+add_arg('params_name', str, "__params__", "inference model params filename")
 # yapf: enable
 
 def infer(args):
@@ -39,8 +41,8 @@ def infer(args):
 
     test_program, feed_target_names, fetch_targets = fluid.io.load_inference_model(args.model_path,
                                       exe,
-                                      model_filename="__model__.infer",
-                                      params_filename="__params__")
+                                      model_filename=args.model_name,
+                                      params_filename=args.params_name)
     test_reader = paddle.batch(reader.test(), batch_size=1)
     feeder = fluid.DataFeeder(place=place, feed_list=feed_target_names, program=test_program)
 
@@ -51,7 +53,8 @@ def infer(args):
         result = exe.run(test_program,
                           feed=feeder.feed(data),
                           fetch_list=fetch_targets)
-        print result
+        result = np.array(result[0])
+        print(result.argsort(axis=1)[:,-1:][::-1])
     sys.stdout.flush()
 
 def main():

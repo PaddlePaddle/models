@@ -1,0 +1,14 @@
+numba==0.45.1
+numpy==1.16.4
+nltk==3.4.4
+scipy
+unidecode==1.1.1
+inflect==2.1.0
+librosa==0.7.0
+tqdm==4.35.0
+tensorboardX==1.8
+matplotlib
+requests==2.22.0
+lws==1.2.4
+nnmnkwii
+tensorboard
