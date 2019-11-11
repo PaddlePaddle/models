@@ -1,12 +1,4 @@
-# -*- encoding: utf-8 -*-
-# Software: PyCharm
-# Time    : 2019/9/13 
-# Author  : Wang
-# File    : cityscapes_data.py
-
-"""
-    cityscapes 数据迭代器
-"""
+"""准备 cityscapes path_pairs"""
 
 import random
 import paddle
