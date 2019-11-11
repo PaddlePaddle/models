@@ -49,8 +49,6 @@ python train.py \
         2>&1 | tee train.log
 ```
 
-pass 2训练结束后，训练的AUC为`0.78325`。
-
 ### 分布式训练
 
 本地启动一个2 trainer 2 pserver的分布式训练任务，分布式场景下训练数据会按照trainer的id进行切分，保证trainer之间的训练数据不会重叠，提高训练效率
@@ -70,7 +68,7 @@ python infer.py \
         --data_path data/raw/train.txt
 ```
 
-加载pass-2的模型, 测试AUC为`0.79385`。
+加载pass-2的模型, 预期测试AUC为`0.794`。
 
 注意：infer.py跑完最后输出的AUC才是整个预测文件的整体AUC。train.txt文件在reader.py中被分为训练和测试两部分，所以这里数据不会和训练重叠。
 

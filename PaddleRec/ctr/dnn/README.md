@@ -64,8 +64,6 @@ python train.py \
         2>&1 | tee train.log
 ```
 
-After training pass 2 finished, the training AUC is `0.78325`.
-
 ### Distributed Train
 Run a 2 pserver 2 trainer distribute training on a single machine.
 In distributed training setting, training data is splited by trainer_id, so that training data
@@ -86,7 +84,7 @@ python infer.py \
         --data_path data/raw/train.txt
 ```
 
-Load models in `models/pass-2`, the testing Auc is `0.79385`.
+Load models in `models/pass-2`, the expected testing Auc is `0.794`.
 
 Note: The AUC value in the last log info is the total AUC for all test dataset. Here, train.txt is splited inside the reader.py so that validation data does not have overlap with training data.
 
