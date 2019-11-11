@@ -1,8 +1,18 @@
-# -*- encoding: utf-8 -*-
-# Software: PyCharm
-# Time    : 2019/9/13 
-# Author  : Wang
-# File    : base.py
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import random
 import numpy as np
 from PIL import Image, ImageOps, ImageFilter, ImageEnhance
@@ -16,7 +26,6 @@ sys.path.append(rootPath)
 
 
 class BaseDataSet:
-    """数据基类，实现数据增强，image、label处理"""
 
     def __init__(self, root, split, base_size=1024, crop_size=768, scale=True):
         self.root = root
@@ -30,12 +39,6 @@ class BaseDataSet:
         self.label_path = None
 
     def sync_transform(self, image, label):
-        """
-        针对train, 含数据增强
-        :param image:
-        :param label:
-        :return: 增强后的image, label
-        """
         crop_size = self.crop_size
         if self.scale:
             short_size = random.randint(int(self.base_size * 0.75), int(self.base_size * 2.0))
@@ -57,20 +60,15 @@ class BaseDataSet:
             out_w = int(1.0 * w / h * out_h)
         image = image.resize((out_w, out_h), Image.BILINEAR)
         label = label.resize((out_w, out_h), Image.NEAREST)
-        # print(np.array(label))
-        # print(image.size)
 
         # 四周填充
-        # 如果短的一边比裁剪的size小，则填充，image补mean,label补255
         if short_size < crop_size:
             pad_h = crop_size - out_h if out_h < crop_size else 0
             pad_w = crop_size - out_w if out_w < crop_size else 0
-            # print('pad_size', pad_w, pad_h)
             image = ImageOps.expand(image, border=(pad_w // 2, pad_h // 2, pad_w - pad_w // 2, pad_h - pad_h // 2),
                                     fill=0)
             label = ImageOps.expand(label, border=(pad_w // 2, pad_h // 2, pad_w - pad_w // 2, pad_h - pad_h // 2),
                                     fill=255)
-            # print(np.array(image).shape)
 
         # 随机裁剪
         w, h = image.size
@@ -103,12 +101,6 @@ class BaseDataSet:
         return image, label
 
     def sync_val_transform(self, image, label):
-        """
-        针对 val, 不含数据增强，只有同比例变换，中心裁剪
-        :param image:
-        :param label:
-        :return: 中心裁剪后的image, label
-        """
         crop_size = self.crop_size
         short_size = self.base_size
 
@@ -133,18 +125,4 @@ class BaseDataSet:
         return image, label
 
     def eval(self, image):
-        """针对 test, 不含数据增强，只有同比例变换，中心裁剪"""
         pass
-
-
-if __name__ == '__main__':
-    b = BaseDataSet(r'..\2007_000027.jpg', 'train')
-    image = Image.open(r'..\2007_000033.jpg', 'r')
-    label = Image.open(r'..\2007_000033.png', 'r')
-    image, label = b.sync_transform(image, label)
-    print(image.size)
-    print(label.size)
-    # label = label.convert('P')
-    print(np.array(label)[240])
-    image.show()
-    label.show()
