@@ -64,9 +64,6 @@ python train.py \
         2>&1 | tee train.log
 ```
 
-After training pass 1 batch 40000, the testing AUC is `0.801178` and the testing
-cost is `0.445196`.
-
 ### Distributed Train
 Run a 2 pserver 2 trainer distribute training on a single machine.
 In distributed training setting, training data is splited by trainer_id, so that training data
@@ -83,9 +80,12 @@ The command line options for infering can be listed by `python infer.py -h`.
 To make inference for the test dataset:
 ```bash
 python infer.py \
-        --model_path models/ \
+        --model_path models/pass-2 \
         --data_path data/raw/train.txt
 ```
+
+Load models in `models/pass-2`, the expected testing Auc is `0.794`.
+
 Note: The AUC value in the last log info is the total AUC for all test dataset. Here, train.txt is splited inside the reader.py so that validation data does not have overlap with training data.
 
 ## Train on Baidu Cloud
