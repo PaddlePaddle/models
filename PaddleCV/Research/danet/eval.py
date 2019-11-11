@@ -1,8 +1,16 @@
-# -*- encoding: utf-8 -*-
-# Software: PyCharm
-# Time    : 2019/10/15
-# Author  : Wang
-# File    : eval_no_dropout.py
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 import os
@@ -38,41 +46,31 @@ data_std = np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
 
 
 def pad_single_image(image, crop_size):
-    """单张图片填补，右下角填补，补0
-        image.size = 64 , 64
-        new_im = pad_single_image(image, 128), 会返回128*128的图片，右下角是填0
-    """
     w, h = image.size
     pad_h = crop_size - h if h < crop_size else 0
     pad_w = crop_size - w if w < crop_size else 0
-    # print('pad_size', pad_w, pad_h)
     image = ImageOps.expand(image, border=(0, 0, pad_w, pad_h), fill=0)
     assert (image.size[0] >= crop_size and image.size[1] >= crop_size)
     return image
 
 
 def crop_image(image, h0, w0, h1, w1):
-    """单张图片裁剪
-        crop_image(im, 0, 0, 64, 64), 会裁出左上角64*64的图片
-    """
     return image.crop((w0, h0, w1, h1))
 
 
 def flip_left_right_image(image):
-    """图片左右翻转"""
     return image.transpose(Image.FLIP_LEFT_RIGHT)
 
 
 def resize_image(image, out_h, out_w, mode=Image.BILINEAR):
-    """图片resize"""
     return image.resize((out_w, out_h), mode)
 
 
 def mapper_image(image):
     image_array = np.array(image)  # HWC
     image_array = image_array.transpose((2, 0, 1))  # CHW
-    image_array = image_array / 255.0  # 归一化
-    image_array = (image_array - data_mean) / data_std  # 标准化
+    image_array = image_array / 255.0  
+    image_array = (image_array - data_mean) / data_std  
     image_array = image_array.astype('float32')
     image_array = image_array[np.newaxis, :]
     return image_array
@@ -100,15 +98,8 @@ def copy_model(path, new_path):
 def mean_iou(pred, label, num_classes=19):
     label = fluid.layers.elementwise_min(fluid.layers.cast(label, np.int32),
                                          fluid.layers.assign(np.array([num_classes], dtype=np.int32)))
-    # GPU暂不支持 ‘==’， 静态图
-    # label_array = label.numpy()  # shape = [4, 384, 768]  4*384*768 > 1024**2
-    # # 忽略值
-    # label_ig = fluid.dygraph.to_variable((label_array == num_classes).astype('int32'))  # 等同上面
-    # # 不可忽略值
-    # label_ng = fluid.dygraph.to_variable((label_array != num_classes).astype('int32'))  # 等同上面
-    # print(label_ng)
-    label_ig = (label == num_classes).astype('int32')  # 程序运行
-    label_ng = (label != num_classes).astype('int32')  # 程序运行
+    label_ig = (label == num_classes).astype('int32')  
+    label_ng = (label != num_classes).astype('int32')  
     pred = fluid.layers.cast(fluid.layers.argmax(pred, axis=1), 'int32')
     pred = pred * label_ng + label_ig * num_classes
     miou, wrong, correct = fluid.layers.mean_iou(pred, label, num_classes + 1)
@@ -124,10 +115,6 @@ def eval(args, model_path):
         crop_size = args.crop_size  # 输入网络大小 1024
         multi_scales = args.multi_scales  # 多尺度测试
         flip = args.flip  # 左右翻转测试
-        base_size = 2048
-        crop_size = 1024
-        multi_scales = False  # 多尺度测试
-        flip = True  # 左右翻转测试
 
         if not multi_scales:
             scales = [1.0]
@@ -175,7 +162,7 @@ def eval(args, model_path):
               format(base_size, crop_size))
         print('scales: {}'.format(scales))
         print('val ing...')
-        palette = pat()  # 调色板
+        palette = pat()  
         for data in reader():
             # print(data)
             image = data[0]
@@ -184,12 +171,9 @@ def eval(args, model_path):
             save_png_path = label_path.replace('val', '{}_val'.format(args.backbone)).replace('test', '{}_test'.format(args.backbone))
             label_np = np.array(label)
             w, h = image.size  # h 1024, w 2048
-            # print('源图片size: ', h, w)
             scores = np.zeros(shape=[num_classes, h, w], dtype='float32')  # 得分矩阵
             for scale in scales:
                 long_size = int(math.ceil(base_size * scale))  # long_size
-
-                # 同比例缩放, height, width是经过尺度变换的大小, 方便后续截取图片
                 if h > w:
                     height = long_size
                     width = int(1.0 * w * long_size / h + 0.5)
@@ -200,22 +184,21 @@ def eval(args, model_path):
                     short_size = height
 
                 cur_img = resize_image(image, height, width)  # height, width是经过尺度变换的大小
-                # 右下角填补  __|
+                # 右下角pad
                 if long_size <= crop_size:
                     pad_img = pad_single_image(cur_img, crop_size)
-                    # pad_img.show()
                     pad_img = mapper_image(pad_img)
                     pad_img = fluid.dygraph.to_variable(pad_img)
                     pred1, pred2, pred3 = model(pad_img)
                     pred1 = pred1.numpy()
                     outputs = pred1[:, :, :height, :width]
                     if flip:
-                        pad_img_filp = flip_left_right_image(cur_img)  # 左右翻转
+                        pad_img_filp = flip_left_right_image(cur_img)  
                         pad_img_filp = pad_single_image(pad_img_filp, crop_size)  # pad
                         pad_img_filp = mapper_image(pad_img_filp)
                         pad_img_filp = fluid.dygraph.to_variable(pad_img_filp)
                         pred1, pred2, pred3 = model(pad_img_filp)
-                        pred1 = fluid.layers.reverse(pred1, axis=3)  # 左右翻转
+                        pred1 = fluid.layers.reverse(pred1, axis=3)  
                         pred1 = pred1.numpy()
                         outputs += pred1[:, :, :height, :width]
                 else:
@@ -245,33 +228,31 @@ def eval(args, model_path):
                             pred1, pred2, pred3 = model(pad_crop_img)  # shape [1, num_class, h, w]
                             pred = pred1.numpy()  # channel, h, w
                             outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  # 只截取有效区域
-                            count_norm[:, :, h0:h1, w0:w1] += 1  # 计数器+1
+                            count_norm[:, :, h0:h1, w0:w1] += 1 
                             if flip:
-                                pad_img_filp = flip_left_right_image(crop_img)  # 左右翻转
+                                pad_img_filp = flip_left_right_image(crop_img) 
                                 pad_img_filp = pad_single_image(pad_img_filp, crop_size)  # pad
                                 pad_img_array = mapper_image(pad_img_filp)
                                 pad_img_array = fluid.dygraph.to_variable(pad_img_array)
-                                pred1, pred2, pred3 = model(pad_img_array)  # shape [1, 19, h, w]
-                                pred1 = fluid.layers.reverse(pred1, axis=3)  # 左右翻转
+                                pred1, pred2, pred3 = model(pad_img_array)  
+                                pred1 = fluid.layers.reverse(pred1, axis=3)  
                                 pred = pred1.numpy()
                                 outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  # 只截取有效区域
-                                count_norm[:, :, h0:h1, w0:w1] += 1    # 计数器+1
+                                count_norm[:, :, h0:h1, w0:w1] += 1    
                     assert ((count_norm == 0).sum() == 0)
                     outputs = outputs / count_norm
-                    outputs = outputs[:, :, :height, :width]  # 只截取有效区域, 防止边角
+                    outputs = outputs[:, :, :height, :width]  
                 outputs = fluid.dygraph.to_variable(outputs)
                 outputs = fluid.layers.resize_bilinear(outputs, out_shape=[h, w])
-                # shape [1, channel, h, w], h, w是原图片大小
                 score = outputs.numpy()[0]
                 scores += score   # scopes 是所有尺度的和， shape: [channel, h, w]
-                pred = np.argmax(score, axis=0).astype('uint8')  # [h, w] 用于可视化
+                pred = np.argmax(score, axis=0).astype('uint8')  
                 picture_path = '{}'.format(save_png_path).replace('.png', '_scale_{}'.format(scale))
                 save_png(pred, palette, picture_path)
-            pred = np.argmax(scores, axis=0).astype('uint8')  # [h, w] 用于可视化+计算iou
+            pred = np.argmax(scores, axis=0).astype('uint8') 
             picture_path = '{}'.format(save_png_path).replace('.png', '_scores')
             save_png(pred, palette, picture_path)
             iou.add_batch(pred, label_np)   # 计算iou
-        # shutil.rmtree(new_model_path, ignore_errors=True)
         print('eval done!')
         acc, acc_cls, iu, mean_iu, fwavacc, kappa = iou.evaluate()
         print('acc = {}'.format(acc))
@@ -289,11 +270,6 @@ def eval(args, model_path):
 
 
 def save_png(pred_value, palette, name):
-    """
-    :param pred_value: 类别数组
-    :param palette: 调色板
-    :param name: 图片路径文件名
-    """
     if isinstance(pred_value, np.ndarray):
         if pred_value.ndim == 3:
             batch_size = pred_value.shape[0]
@@ -302,9 +278,7 @@ def save_png(pred_value, palette, name):
                 image = Image.fromarray(pred_value).convert('P')
                 image.putpalette(palette)
                 save_path = '{}.png'.format(name)
-                # print(save_path)
                 save_dir = os.path.dirname(save_path)
-                # print(save_dir)
                 if not os.path.exists(save_dir):
                     os.makedirs(save_dir)
                 image.save(save_path)
@@ -323,7 +297,6 @@ def save_png(pred_value, palette, name):
             image.putpalette(palette)
             save_path = '{}.png'.format(name)
             save_dir = os.path.dirname(save_path)
-            # print(save_dir)
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
             image.save(save_path)
@@ -332,14 +305,12 @@ def save_png(pred_value, palette, name):
 
 
 def save_png_test(path):
-    # 用于测试保存图片 path用灰度（值为类别）图片，
     im = Image.open(path)
     im_array = np.array(im).astype('uint8')
     save_png(im_array, pat(), 'save_png_test')
 
 
 def pat():
-    # 调色板， 用于保存可视化图片
     palette = []
     for i in range(256):
         palette.extend((i, i, i))
