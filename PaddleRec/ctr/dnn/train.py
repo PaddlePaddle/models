@@ -12,6 +12,7 @@ import paddle.fluid as fluid
 
 import reader
 from network_conf import ctr_dnn_model
+from multiprocessing import cpu_count
 import utils
 
 # disable gpu training for this example
@@ -106,11 +107,6 @@ def parse_args():
         default=1,
         help='The num of trianers, (default: 1)')
     parser.add_argument(
-        '--cpu_count',
-        type=int,
-        default=1,
-        help='The number of cpu to use when training (default: 1)')
-    parser.add_argument(
         '--enable_ce',
         action='store_true',
         help='If set, run the task with continuous evaluation logs.')
@@ -145,7 +141,7 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
     if os.getenv("NUM_THREADS", ""):
         exec_strategy.num_threads = int(os.getenv("NUM_THREADS"))
 
-    cpu_num = int(os.environ.get('CPU_NUM', args.cpu_count))
+    cpu_num = int(os.environ.get('CPU_NUM', cpu_count()))
     build_strategy.reduce_strategy = \
         fluid.BuildStrategy.ReduceStrategy.Reduce if cpu_num > 1 \
             else fluid.BuildStrategy.ReduceStrategy.AllReduce
