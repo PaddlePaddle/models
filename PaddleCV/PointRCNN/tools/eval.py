@@ -706,13 +706,23 @@ def eval():
             ret_dict['cls_acc'] = avg_cls_acc
             ret_dict['cls_acc_refined'] = avg_cls_acc_refined
             ret_dict['det_num'] = avg_det_num
-
-            for idx, thresh in enumerate(thresh_list):
-                cur_recall = total_recalled_bbox_list[idx] / max(total_gt_bbox, 1.0)
-                ret_dict['recall(thresh=%.2f)' % thresh] = cur_recall
-            
+             
             for k,v in ret_dict.items():
                 print(k, v)
+            
+            for idx, thresh in enumerate(thresh_list):
+                cur_roi_recall = total_roi_recalled_bbox_list[idx] / max(total_gt_bbox, 1.0)
+                #ret_dict['rpn_recall(thresh=%.2f)' % thresh] = cur_roi_recall 
+                print('total roi bbox recall(thresh=%.3f): %d / %d = %f' % (
+                    thresh, total_roi_recalled_bbox_list[idx], total_gt_bbox, cur_roi_recall))
+            
+            for idx, thresh in enumerate(thresh_list):
+                cur_recall = total_recalled_bbox_list[idx] / max(total_gt_bbox, 1.0)
+                #ret_dict['recall(thresh=%.2f)' % thresh] = cur_recall
+                print('recall(thresh=%.2f) %.2f' % (thresh, cur_recall))
+            
+            #for k,v in ret_dict.items():
+            #    print(k, v)
 
         eval_pyreader.reset()
 
