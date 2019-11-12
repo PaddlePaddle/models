@@ -38,6 +38,7 @@ set_paddle_flags({
 
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import reader
 from utils import *
 import models
@@ -188,6 +189,7 @@ def train(args):
     compiled_train_prog = best_strategy_compiled(args, train_prog,
                                                  train_fetch_vars[0], exe)
     trainer_id = int(os.getenv("PADDLE_TRAINER_ID", 0))
+    total_batch_num = 0  #this is for benchmark
     for pass_id in range(args.num_epochs):
         if num_trainers > 1:
             imagenet_reader.set_shuffle_seed(pass_id + (
@@ -197,9 +199,9 @@ def train(args):
         train_batch_metrics_record = []
 
         train_data_loader.start()
-
         try:
-            while True:
+            #while True:
+            while total_batch_num <= args.max_iter:
                 t1 = time.time()
                 train_batch_metrics = exe.run(compiled_train_prog,
                                               fetch_list=train_fetch_list)
@@ -215,11 +217,19 @@ def train(args):
                                "batch")
                     sys.stdout.flush()
                 train_batch_id += 1
+                total_batch_num = total_batch_num + 1 #this is for benchmark
+
+                ##profiler tools
+                if args.is_profiler and pass_id == 0 and train_batch_id == 10: 
+                   profiler.start_profiler("All")
+                elif args.is_profiler and pass_id == 0 and train_batch_id == 15:
+                      profiler.stop_profiler("total", args.profiler_path)
+                      return
 
         except fluid.core.EOFException:
             train_data_loader.reset()
 
-        if trainer_id == 0:
+        if trainer_id == 0 and args.validate:
             if args.use_ema:
                 print('ExponentialMovingAverage validate start...')
                 with ema.apply(exe):
