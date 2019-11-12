@@ -367,23 +367,23 @@ class CAM(fluid.dygraph.Layer):
 
     def forward(self, inputs):
         batch_size, c, h, w = inputs.shape
-        out_b = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])  # BCN
-        out_c = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])  # BCN
-        out_c_t = fluid.layers.transpose(out_c, perm=[0, 2, 1])  # BNC
-        mul_bc = fluid.layers.matmul(out_b, out_c_t)  # BCC
+        out_b = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])  
+        out_c = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])  
+        out_c_t = fluid.layers.transpose(out_c, perm=[0, 2, 1])  
+        mul_bc = fluid.layers.matmul(out_b, out_c_t)  
 
         mul_bc_max = fluid.layers.reduce_max(mul_bc, dim=-1, keep_dim=True)
         mul_bc_max = fluid.layers.expand(mul_bc_max, expand_times=[1, 1, c])
-        x = fluid.layers.elementwise_sub(mul_bc_max, mul_bc)  # BCC
+        x = fluid.layers.elementwise_sub(mul_bc_max, mul_bc)  
 
-        attention = fluid.layers.softmax(x, use_cudnn=True, axis=-1)  # BCC
+        attention = fluid.layers.softmax(x, use_cudnn=True, axis=-1)  
 
-        out_d = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])  # BCN
-        attention_mul = fluid.layers.matmul(attention, out_d)  # BCN
+        out_d = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])  
+        attention_mul = fluid.layers.matmul(attention, out_d)  
 
-        attention_reshape = fluid.layers.reshape(attention_mul, shape=[batch_size, self.in_channels, h, w])  # BCHW
-        gamma_attention = fluid.layers.elementwise_mul(attention_reshape, self.gamma)  # BCHW
-        out = fluid.layers.elementwise_add(gamma_attention, inputs)  # BCHW
+        attention_reshape = fluid.layers.reshape(attention_mul, shape=[batch_size, self.in_channels, h, w])  
+        gamma_attention = fluid.layers.elementwise_mul(attention_reshape, self.gamma)  
+        out = fluid.layers.elementwise_add(gamma_attention, inputs)  
         return out
 
 
@@ -440,22 +440,22 @@ class PAM(fluid.dygraph.Layer):
 
     def forward(self, inputs):
         batch_size, c, h, w = inputs.shape
-        out_b = self._convB(inputs)  # BCHW
-        out_b_reshape = fluid.layers.reshape(out_b, shape=[batch_size, self.channel_in, h * w])  # BCN
-        out_b_reshape_t = fluid.layers.transpose(out_b_reshape, perm=[0, 2, 1])  # BNC
-        out_c = self._convC(inputs)  # BCHW
-        out_c_reshape = fluid.layers.reshape(out_c, shape=[batch_size, self.channel_in, h * w])  # BCN
+        out_b = self._convB(inputs)  
+        out_b_reshape = fluid.layers.reshape(out_b, shape=[batch_size, self.channel_in, h * w])  
+        out_b_reshape_t = fluid.layers.transpose(out_b_reshape, perm=[0, 2, 1])  
+        out_c = self._convC(inputs)  
+        out_c_reshape = fluid.layers.reshape(out_c, shape=[batch_size, self.channel_in, h * w])  
 
-        mul_bc = fluid.layers.matmul(out_b_reshape_t, out_c_reshape)  # BNN
-        soft_max_bc = fluid.layers.softmax(mul_bc, use_cudnn=True, axis=-1)  # BNN
+        mul_bc = fluid.layers.matmul(out_b_reshape_t, out_c_reshape)  
+        soft_max_bc = fluid.layers.softmax(mul_bc, use_cudnn=True, axis=-1)  
 
-        out_d = self._convD(inputs)  # BCHW
-        out_d_reshape = fluid.layers.reshape(out_d, shape=[batch_size, self.channel_in * 8, h * w])  # BCN
+        out_d = self._convD(inputs)  
+        out_d_reshape = fluid.layers.reshape(out_d, shape=[batch_size, self.channel_in * 8, h * w])  
         attention = fluid.layers.matmul(out_d_reshape, fluid.layers.transpose(soft_max_bc, perm=[0, 2, 1]))
-        attention = fluid.layers.reshape(attention, shape=[batch_size, self.channel_in * 8, h, w])  # BCHW
+        attention = fluid.layers.reshape(attention, shape=[batch_size, self.channel_in * 8, h, w])  
 
-        gamma_attention = fluid.layers.elementwise_mul(attention, self.gamma)  # BCHW
-        out = fluid.layers.elementwise_add(gamma_attention, inputs)  # BCHW
+        gamma_attention = fluid.layers.elementwise_mul(attention, self.gamma)  
+        out = fluid.layers.elementwise_add(gamma_attention, inputs)  
         return out
 
 
@@ -560,7 +560,7 @@ class DAHead(fluid.dygraph.Layer):
         channel_out = self._cam_last_conv(out_channel_drop2d)
 
         feat_sum = fluid.layers.elementwise_add(position, channel, axis=1)
-        feat_sum_batch_size, feat_sum_num_channels = feat_sum.shape[:2]  # B, out_channel
+        feat_sum_batch_size, feat_sum_num_channels = feat_sum.shape[:2]  
 
         # dropout2d
         feat_sum_ones = fluid.layers.ones(shape=[self.batch_size, feat_sum_num_channels], dtype='float32')
