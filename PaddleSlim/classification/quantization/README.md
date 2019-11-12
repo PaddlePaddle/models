@@ -196,13 +196,16 @@ with fluid.name_scope('skip_quant'):
 
 >当前release的结果并非超参调优后的最好结果，仅做示例参考，后续我们会优化当前结果。
 
+>注： lite端运行手机信息：Android手机，
+型号：BKL-AL20，运行内存RAM：4GB 6GB，CPU核心数：八核 4*A73 2.36GHz+4*A53 1.8GHz，操作系统：EMUI 8.0，CPU品牌：麒麟970
+
 ### MobileNetV1
 
 | weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)| 模型下载|
 |---|---|---|---|---| ---|
 |baseline|- |70.99%/89.68%|- |-| [下载模型](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar)|
 |abs_max|abs_max|70.74%/89.55% |- |-| [下载模型](https://paddle-slim-models.bj.bcebos.com/quantization%2Fmobilenetv1_w_abs_a_abs_7074_8955.tar.gz)|
-|abs_max|moving_average_abs_max|70.89%/89.67% |- |-| [下载模型](https://paddle-slim-models.bj.bcebos.com/quantization%2Fmobilenetv1_w_abs_a_move_7089_8967.tar.gz)|
+|abs_max|moving_average_abs_max|70.89%/89.67% |5.18|37.65| [下载模型](https://paddle-slim-models.bj.bcebos.com/quantization%2Fmobilenetv1_w_abs_a_move_7089_8967.tar.gz)|
 |channel_wise_abs_max|abs_max|70.93%/89.65% |- |-|[下载模型](https://paddle-slim-models.bj.bcebos.com/quantization%2Fmobilenetv1_w_chan_a_abs_7093_8965.tar.gz)|
 
 >训练超参：
@@ -223,7 +226,7 @@ fluid.optimizer.Momentum(momentum=0.9,
 |---|---|---|---|---|
 |baseline|- |72.15%/90.65%|- |-|
 |abs_max|abs_max|- |- |-|
-|abs_max|moving_average_abs_max|- |- |-|
+|abs_max|moving_average_abs_max|72.19%/90.71%|9.43 |56.09|
 |channel_wise_abs_max|abs_max|- |- |-|
 
 >训练超参：
@@ -239,12 +242,12 @@ fluid.optimizer.Momentum(momentum=0.9,
 8卡，batch size 1024，epoch 30, 挑选好的结果
 ### ResNet34
 
-| weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|模型下载|
+| weight量化方式 | activation量化方式| top1_acc/top5_acc |Paddle Fluid inference time(ms)| Paddle Lite inference time(ms)|
 |---|---|---|---|---|---|
-|baseline|- |74.57%/92.14%|- |-|-|
-|abs_max|abs_max||- |-|-|
-|abs_max|moving_average_abs_max||- |-|-|
-|channel_wise_abs_max|abs_max||- |-| -|
+|baseline|- |74.57%/92.14%|- |-|
+|abs_max|abs_max|-|- |-|
+|abs_max|moving_average_abs_max|74.63%/92.17%|7.20|392.59|
+|channel_wise_abs_max|abs_max|-|- |-|
 
 >训练超参：
 
