@@ -28,7 +28,7 @@ model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("checkpoints", str, "checkpoints", "Path to save checkpoints")
 
 train_g = ArgumentGroup(parser, "training", "training options.")
-train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
+train_g.add_arg("epoch", int, 100, "Number of epoches for training.")
 train_g.add_arg("save_steps", int, 1000,
                 "The steps interval to save checkpoints.")
 train_g.add_arg("validation_steps", int, 200,
@@ -81,6 +81,18 @@ def profile_context(profile=True):
             yield
     else:
         yield
+
+
+def get_max_lens(data, padding_size):
+    max_lens = 0
+    for x in data:
+        lens = len(x[0])
+        if lens > max_lens:
+            max_lens = lens
+    if (max_lens) > padding_size:
+        return padding_size
+    else:
+        return max_lens
 
 
 if args.ce:
@@ -139,17 +151,22 @@ def train():
         elif args.model_type == 'bow_net':
             model = nets.BOW("bow_net", args.vocab_size, args.batch_size,
                              args.padding_size)
+        elif args.model_type == 'gru_net':
+            model = nets.GRU("gru_net", args.vocab_size, args.batch_size,
+                             args.padding_size)
+        elif args.model_type == 'bigru_net':
+            model = nets.BiGRU("bigru_net", args.vocab_size, args.batch_size,
+                               args.padding_size)
         sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.lr)
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
-
+        gru_hidden_data = np.zeros((args.batch_size, 128), dtype='float32')
         for eop in range(args.epoch):
             time_begin = time.time()
             for batch_id, data in enumerate(train_data_generator()):
                 enable_profile = steps > args.profile_steps
-
+                #max_lens=get_max_lens(data,args.padding_size)
                 with profile_context(enable_profile):
-
                     steps += 1
                     doc = to_variable(
                         np.array([
@@ -160,11 +177,9 @@ def train():
                                    constant_values=(args.vocab_size))
                             for x in data
                         ]).astype('int64').reshape(-1, 1))
-
                     label = to_variable(
                         np.array([x[1] for x in data]).astype('int64').reshape(
                             args.batch_size, 1))
-
                     model.train()
                     avg_cost, prediction, acc = model(doc, label)
                     avg_cost.backward()
@@ -192,6 +207,9 @@ def train():
                         total_eval_cost, total_eval_acc, total_eval_num_seqs = [], [], []
                         model.eval()
                         eval_steps = 0
+                        gru_hidden_data = np.zeros(
+                            (args.batch_size, 128), dtype='float32')
+                        #max_lens=get_max_lens(data,args.padding_size)
                         for eval_batch_id, eval_data in enumerate(
                                 eval_data_generator()):
                             eval_np_doc = np.array([
@@ -208,7 +226,6 @@ def train():
                             eval_doc = to_variable(eval_np_doc.reshape(-1, 1))
                             eval_avg_cost, eval_prediction, eval_acc = model(
                                 eval_doc, eval_label)
-
                             eval_np_mask = (
                                 eval_np_doc != args.vocab_size).astype('int32')
                             eval_word_num = np.sum(eval_np_mask)
@@ -266,9 +283,14 @@ def infer():
         elif args.model_type == 'bow_net':
             model_infer = nets.BOW("bow_net", args.vocab_size, args.batch_size,
                                    args.padding_size)
+        elif args.model_type == 'gru_net':
+            model_infer = nets.GRU("gru_net", args.vocab_size, args.batch_size,
+                                   args.padding_size)
+        elif args.model_type == 'bigru_net':
+            model_infer = nets.BiGRU("bigru_net", args.vocab_size,
+                                     args.batch_size, args.padding_size)
         print('Do inferring ...... ')
         total_acc, total_num_seqs = [], []
-
         restore, _ = fluid.load_dygraph(args.checkpoints)
         cnn_net_infer.set_dict(restore)
         cnn_net_infer.eval()
@@ -277,9 +299,9 @@ def infer():
         time_begin = time.time()
         for batch_id, data in enumerate(infer_data_generator()):
             steps += 1
+            max_lens = get_max_lens(data, args.padding_size)
             np_doc = np.array([
-                np.pad(x[0][0:args.padding_size],
-                       (0, args.padding_size - len(x[0][0:args.padding_size])),
+                np.pad(x[0][0:max_lens], (0, max_lens - len(x[0][0:max_lens])),
                        'constant',
                        constant_values=(args.vocab_size)) for x in data
             ]).astype('int64').reshape(-1, 1)
