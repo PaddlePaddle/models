@@ -119,8 +119,6 @@ export CUDA_VISIBLE_DEVICES=0
 
 python eval.py --backbone resnet101 --load_better_model True --batch_size 1 --crop_size 1024 --base_size 2048 --cuda True --multi_scales True --flip True --dilated True --multi_grid True --multi_dilation [4, 8, 16]
 ```
-#### 【注】
-##### 使用多尺度验证需要耗费更长的时间(大概16小时)
 
 ## 验证结果
 评测指标：mean IOU(平均交并比)
