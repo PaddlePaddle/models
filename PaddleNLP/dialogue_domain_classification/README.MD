@@ -185,7 +185,7 @@ sh run.sh test
 传统的二分类任务中，通常使用准确率、召回率和F1值对模型效果进行评估。
 
 <p align="center">
-![fuction](./imgs/function.png)
+  <img src="./imgs/function.png" />
 </p>
 
 
