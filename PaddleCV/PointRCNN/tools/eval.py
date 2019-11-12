@@ -143,13 +143,13 @@ def save_rpn_feature(rets, kitti_features_dir):
 def save_kitti_result(rets, seg_output_dir, kitti_output_dir, reader, classes):
     sample_id = rets['sample_id'][0]
     roi_scores_row = rets['roi_scores_row'][0]
+    bboxes3d = rets['rois'][0]
     pts_rect = rets['pts_rect'][0]
     seg_mask = rets['seg_mask'][0]
     rpn_cls_label = rets['rpn_cls_label'][0]
     gt_boxes3d = rets['gt_boxes3d'][0]
     gt_boxes3d_num = rets['gt_boxes3d'][1]
 
-    gt_box_idx = 0
     for i in range(len(sample_id)):
         s_id = sample_id[i, 0]
 
@@ -161,8 +161,7 @@ def save_kitti_result(rets, seg_output_dir, kitti_output_dir, reader, classes):
         np.save(seg_output_file, seg_result_data)
 
         scores = roi_scores_row[i, :]
-        bbox3d = gt_boxes3d[gt_box_idx: gt_box_idx + gt_boxes3d_num[0][i]]
-        gt_box_idx += gt_boxes3d_num[0][i]
+        bbox3d = bboxes3d[i, :]
         img_shape = reader.get_image_shape(s_id)
         calib = reader.get_calib(s_id)
 
@@ -222,7 +221,7 @@ def calc_iou_recall(rets, thresh_list):
         gt_box_idx += gt_boxes3d_num[0][i]
 
         k = cur_gt_boxes3d.__len__() - 1
-        while k > 0 and np.sum(cur_gt_boxes3d[k]) == 0:
+        while k >= 0 and np.sum(cur_gt_boxes3d[k]) == 0:
             k -= 1
         cur_gt_boxes3d = cur_gt_boxes3d[:k + 1]
 
@@ -419,7 +418,7 @@ def save_kitti_format(sample_id, calib, bbox3d, kitti_output_dir, scores, img_sh
             beta = np.arctan2(z, x)
             alpha = -np.sign(beta) * np.pi / 2 + beta + ry
 
-            f.write('%s -1 -1 %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f' %
+            f.write('%s -1 -1 %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n' %
                   (cfg.CLASSES, alpha, img_boxes[k, 0], img_boxes[k, 1], img_boxes[k, 2], img_boxes[k, 3],
                    bbox3d[k, 3], bbox3d[k, 4], bbox3d[k, 5], bbox3d[k, 0], bbox3d[k, 1], bbox3d[k, 2],
                    bbox3d[k, 6], scores[k]))
@@ -546,13 +545,13 @@ def eval():
             eval_periods.append(period)
             
             if cfg.RPN.ENABLED:
-                cnt, gt_box_num, rpn_iou_sum, recalled_bbox_list = calc_iou_recall(
-                    rets_dict, thresh_list)
-                total_cnt += cnt
-                total_gt_bbox += gt_box_num
-                total_rpn_iou += rpn_iou_sum
-                total_recalled_bbox_list = [
-                    x + y for x, y in zip(total_recalled_bbox_list, recalled_bbox_list)]
+                # cnt, gt_box_num, rpn_iou_sum, recalled_bbox_list = calc_iou_recall(
+                #     rets_dict, thresh_list)
+                # total_cnt += cnt
+                # total_gt_bbox += gt_box_num
+                # total_rpn_iou += rpn_iou_sum
+                # total_recalled_bbox_list = [
+                #     x + y for x, y in zip(total_recalled_bbox_list, recalled_bbox_list)]
 
                 if args.save_rpn_feature:
                     save_rpn_feature(rets_dict, kitti_feature_dir)
@@ -670,8 +669,9 @@ def eval():
             cnt += 1 
             #if eval_iter == 10:
             #    break 
-            disp_dict['iter'] = eval_iter 
-            print(disp_dict)
+            # disp_dict['iter'] = eval_iter 
+            # print(disp_dict)
+            logger.info("[EVAL] iter {}".format(eval_iter))
 
     except fluid.core.EOFException:
         if cfg.RPN.ENABLED:

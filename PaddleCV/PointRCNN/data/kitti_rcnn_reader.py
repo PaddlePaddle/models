@@ -1160,9 +1160,9 @@ class KittiRCNNReader(KittiReader):
             for idx in idxs:
                 sample_all = self.__getitem__(idx)
                 sample = [sample_all[f] for f in fields]
-                if has_empty(sample):
-                    logger.info("sample field: %d has empty field"%len(sample))
-                    continue
+                # if has_empty(sample):
+                #     logger.info("sample field: %d has empty field"%len(sample))
+                #     continue
                 batch_out.append(sample)
                 if len(batch_out) >= batch_size:
                     if cfg.RPN.ENABLED:
