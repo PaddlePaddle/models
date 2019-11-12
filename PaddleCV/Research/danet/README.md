@@ -97,7 +97,7 @@ checkpoint
 ```sh
 # open garbage collection to save memory
 export FLAGS_eager_delete_tensor_gb=0.0
-# setting visible devices for prediction
+# setting visible devices for train
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 
