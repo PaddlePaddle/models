@@ -18,7 +18,6 @@ import os
 os.environ['FLAGS_eager_delete_tensor_gb'] = "0.0"
 os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.99"
 
-# 多尺度测试比较耗时， DANet101, batch_size=1, 显存需要>8G,
 
 import paddle.fluid as fluid
 import paddle
