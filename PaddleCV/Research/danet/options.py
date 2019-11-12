@@ -108,7 +108,7 @@ class Options:
                             help="use dilation policy")
         parser.add_argument("--multi_grid", default=True, type=bool,
                             help="use multi grid dilation policy")
-        parser.add_argument('--multi_dilation', type=int, default=[4, 8, 16],
+        parser.add_argument('--multi_dilation', nargs='+', type=int, default=[4, 8, 16],
                             help="multi grid dilation list")
         parser.add_argument('--scale', action='store_false', default=True,
                             help='choose to use random scale transform(0.75-2.0),default:multi scale')
