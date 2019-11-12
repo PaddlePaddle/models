@@ -81,7 +81,7 @@ dataset
     训练时paddle版本是1.5.2，代码已转为1.6版本（兼容1.6版本），预训练参数、训练好的参数来自1.5.2版本
 
 #### 配置模型文件路径  
-[预训练参数、最优模型参数下载](https://pan.baidu.com/s/1C7pe1U4SPtDqVADaMD1Oiw)
+[预训练参数、最优模型参数下载](https://pan.baidu.com/s/1zVfUy5b0MNFOnzmmv_MrXw)
 
 其目录结构如下：
 ```text
