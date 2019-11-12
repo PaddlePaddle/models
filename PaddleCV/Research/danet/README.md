@@ -36,7 +36,7 @@ A经过3个reshape操作输出维度均为CN（N = H*W）的B、C、D；
 
 训练集2975张，验证集500张，测试集1525张，图片分辨率都是1024*2048。
 
-数据集来源：AIstudio数据集页面上[下载](https://aistudio.baidu.com/aistudio/datasetDetail/11503)，cityscapes.zip解压至dataset文件夹下,train.zip解压缩到cityscapes/leftImg8bit，其目录结构如下：
+数据集来源：AIstudio数据集页面上[下载](https://aistudio.baidu.com/aistudio/datasetDetail/11503),  cityscapes.zip解压至dataset文件夹下,train.zip解压缩到cityscapes/leftImg8bit，其目录结构如下：
 ```text
 dataset
   ├── cityscapes               # Cityscapes数据集
