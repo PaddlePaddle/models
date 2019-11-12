@@ -28,7 +28,7 @@ model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("checkpoints", str, "checkpoints", "Path to save checkpoints")
 
 train_g = ArgumentGroup(parser, "training", "training options.")
-train_g.add_arg("epoch", int, 100, "Number of epoches for training.")
+train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
 train_g.add_arg("save_steps", int, 1000,
                 "The steps interval to save checkpoints.")
 train_g.add_arg("validation_steps", int, 200,
