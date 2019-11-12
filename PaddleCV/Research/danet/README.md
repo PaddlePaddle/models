@@ -101,9 +101,9 @@ export FLAGS_eager_delete_tensor_gb=0.0
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 
-python train_executor.py --backbone resnet101 --batch_size 2 --lr 0.003 --lr_scheduler ploy --epoch_num 350 --crop_size 768 --base_size 1024 --warm_up True --cuda True --use_data_parallel True --dilated True --multi_grid True --multi_dilation [4, 8, 16] --scale True --load_pretrained_model True --load_better_model False
+python train_executor.py --backbone resnet101 --batch_size 2 --lr 0.003 --lr_scheduler poly --epoch_num 350 --crop_size 768 --base_size 1024 --warm_up True --cuda True --use_data_parallel True --dilated True --multi_grid True --multi_dilation [4, 8, 16] --scale True --load_pretrained_model True --load_better_model False
 或者
-python train_dygraph.py --backbone resnet101 --batch_size 2 --lr 0.003 --lr_scheduler ploy --epoch_num 350 --crop_size 768 --base_size 1024 --warm_up True --cuda True --use_data_parallel True --dilated True --multi_grid True --multi_dilation [4, 8, 16] --scale True --load_pretrained_model True --load_better_model False
+python train_dygraph.py --backbone resnet101 --batch_size 2 --lr 0.003 --lr_scheduler poly --epoch_num 350 --crop_size 768 --base_size 1024 --warm_up True --cuda True --use_data_parallel True --dilated True --multi_grid True --multi_dilation [4, 8, 16] --scale True --load_pretrained_model True --load_better_model False
 
 ```
 #### 【注】
