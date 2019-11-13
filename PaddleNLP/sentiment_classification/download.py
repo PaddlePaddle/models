@@ -56,7 +56,7 @@ def download(url, filename):
     retry = 0
     retry_limit = 3
     chunk_size = 4096
-    while not (os.path.exists(filename):
+    while not os.path.exists(filename):
         if retry < retry_limit:
             retry += 1
         else:
@@ -104,17 +104,17 @@ def download_model(dir_path):
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
     url = BASE_URL + MODEL_NAME
-    model_path = os.path.join(dir_path, model)
+    model_path = os.path.join(dir_path, MODEL_NAME)
     print("Downloading model: %s" % url)
     # download model
-    download(url, model_path, MODEL_NAME)
+    download(url, model_path)
     # extract model.tar.gz
     print("Extracting model: %s" % model_path)
     extract(model_path, dir_path)
     os.remove(model_path)
 
 if __name__ == "__main__":
-    if len(sys) != 2:
+    if len(sys.argv) != 2:
         usage()
         sys.exit(1)
     
