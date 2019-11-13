@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -230,8 +231,8 @@ def main(args):
                 train_avg_loss.backward()
                 optimizer.minimize(train_avg_loss)
                 model.clear_gradients()
-                train_iou_manager.update(miou.numpy(), weight=batch_size*num)
-                train_avg_loss_manager.update(train_avg_loss.numpy(), weight=batch_size*num)
+                train_iou_manager.update(miou.numpy(), weight=int(batch_size*num))
+                train_avg_loss_manager.update(train_avg_loss.numpy(), weight=int(batch_size*num))
                 batch_train_str = "epoch: {}, batch: {}, train_avg_loss: {:.6f}, " \
                                   "train_miou: {:.6f}.".format(epoch + 1,
                                                                batch_id + 1,
@@ -279,8 +280,8 @@ def main(args):
                 test_loss = loss_fn(pred, pred2, pred3, label, num_classes=num_classes)
                 test_avg_loss = fluid.layers.mean(test_loss)
                 miou, wrong, correct = mean_iou(pred, label, num_classes=num_classes)
-                test_iou_manager.update(miou.numpy(), weight=batch_size*num)
-                test_avg_loss_manager.update(test_avg_loss.numpy(), weight=batch_size*num)
+                test_iou_manager.update(miou.numpy(), weight=int(batch_size*num))
+                test_avg_loss_manager.update(test_avg_loss.numpy(), weight=int(batch_size*num))
                 batch_test_str = "epoch: {}, batch: {}, test_avg_loss: {:.6f}, " \
                                  "test_miou: {:.6f}.".format(epoch + 1, batch_id + 1,
                                                              test_avg_loss.numpy()[0],
