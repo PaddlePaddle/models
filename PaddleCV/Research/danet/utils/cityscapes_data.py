@@ -79,7 +79,7 @@ def cityscapes_train(data_root='./dataset', base_size=1024, crop_size=768, scale
             length = (len(image_path) // (batch_size * gpu_num)) * (batch_size * gpu_num)
         else:
             length = len(image_path)
-        for i in range(2):
+        for i in range(length):
             if i == 0:  
                 cc = list(zip(image_path, label_path))
                 random.shuffle(cc)
@@ -96,7 +96,7 @@ def cityscapes_val(data_root='./dataset', base_size=1024, crop_size=768, scale=T
     image_path, label_path = city.get_path_pairs()
 
     def reader():
-        for i in range(len(image_path[:2])):
+        for i in range(len(image_path)):
             yield image_path[i], label_path[i], city
 
     if xmap:
