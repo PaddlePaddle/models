@@ -222,10 +222,10 @@ def train(args):
 
                 ##profiler tools
                 if args.is_profiler and pass_id == 0 and train_batch_id == 100: 
-                   profiler.start_profiler("All")
+                    profiler.start_profiler("All")
                 elif args.is_profiler and pass_id == 0 and train_batch_id == 150:
-                      profiler.stop_profiler("total", args.profiler_path)
-                      return
+                    profiler.stop_profiler("total", args.profiler_path)
+                    return
 
         except fluid.core.EOFException:
             train_data_loader.reset()
