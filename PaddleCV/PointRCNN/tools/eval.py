@@ -19,6 +19,7 @@ import shutil
 import argparse
 import ast
 import logging
+import multiprocessing
 import numpy as np
 from collections import OrderedDict 
 import paddle
@@ -108,8 +109,6 @@ def parse_args():
     return args
 
 
-# def save_rpn_feature(seg_result, rpn_scores_raw, pts_features, backbone_xyz, backbone_features, kitti_features_dir,
-#                       sample_id):
 def save_rpn_feature(rets, kitti_features_dir):
     """
     save rpn features for RCNN training
@@ -188,15 +187,9 @@ def save_kitti_result(rets, seg_output_dir, kitti_output_dir, reader, classes):
                 alpha = -np.sign(beta) * np.pi / 2 + beta + ry
 
                 f.write('{} -1 -1 {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f} {:.4f}\n'.format(
-                    classes, alpha, img_boxes[k, 0], img_boxes[k,
-                                                               1], img_boxes[k, 2], img_boxes[k, 3],
-                    bbox3d[k, 3], bbox3d[k, 4], bbox3d[k,
-                                                       5], bbox3d[k, 0], bbox3d[k, 1], bbox3d[k, 2],
+                    classes, alpha, img_boxes[k, 0], img_boxes[k, 1], img_boxes[k, 2], img_boxes[k, 3],
+                    bbox3d[k, 3], bbox3d[k, 4], bbox3d[k, 5], bbox3d[k, 0], bbox3d[k, 1], bbox3d[k, 2],
                     bbox3d[k, 6], scores[k]))
-                # print('%s -1 -1 %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f' %
-                #       (cfg.CLASSES, alpha, img_boxes[k, 0], img_boxes[k, 1], img_boxes[k, 2], img_boxes[k, 3],
-                #        bbox3d[k, 3], bbox3d[k, 4], bbox3d[k, 5], bbox3d[k, 0], bbox3d[k, 1], bbox3d[k, 2],
-                #        bbox3d[k, 6], scores[k]), file=f)
 
 
 def calc_iou_recall(rets, thresh_list):
@@ -225,14 +218,12 @@ def calc_iou_recall(rets, thresh_list):
             k -= 1
         cur_gt_boxes3d = cur_gt_boxes3d[:k + 1]
 
-        # recalled_num = 0
         if cur_gt_boxes3d.shape[0] > 0:
             iou3d = boxes_iou3d(cur_boxes3d, cur_gt_boxes3d[:, 0:7])
             gt_max_iou = iou3d.max(axis=0)
 
             for idx, thresh in enumerate(thresh_list):
                 recalled_bbox_list[idx] += np.sum(gt_max_iou > thresh)
-            # recalled_num = (gt_max_iou > 0.7).sum().item()
             gt_box_num += cur_gt_boxes3d.__len__()
 
         fg_mask = cur_rpn_cls_label > 0
@@ -246,19 +237,6 @@ def calc_iou_recall(rets, thresh_list):
 
     return len(gt_boxes3d_num), gt_box_num, rpn_iou_sum, recalled_bbox_list
 
-def rotate_pc_along_y_py(pc, rot_angle):
-    
-    cosa = np.cos(rot_angle).reshape(-1, 1)
-    sina = np.sin(rot_angle).reshape(-1, 1)
-    raw_1 = np.concatenate((cosa, -sina), axis=1)
-    raw_2 = np.concatenate((sina, cosa), axis=1)
-    # # (N, 2, 2)
-    R = np.concatenate((np.expand_dims(raw_1, axis=1), np.expand_dims(raw_2, axis=1)), axis=1)
-    
-    pc_temp = pc[:, [0, 2]]
-    pc_temp = np.expand_dims(pc_temp, axis=1)
-    pc[:, [0, 2]] = np.squeeze(np.matmul(pc_temp, R.transpose(0, 2, 1)), axis=1)
-    return pc
 
 def decode_bbox_target(roi_box3d, pred_reg, anchor_size, loc_scope,
                        loc_bin_size, num_head_bin, get_xz_fine=True,
@@ -423,6 +401,27 @@ def save_kitti_format(sample_id, calib, bbox3d, kitti_output_dir, scores, img_sh
                    bbox3d[k, 3], bbox3d[k, 4], bbox3d[k, 5], bbox3d[k, 0], bbox3d[k, 1], bbox3d[k, 2],
                    bbox3d[k, 6], scores[k]))
 
+def rpn_metric(queue, mdict, thresh_list, is_save_rpn_feature, kitti_feature_dir,
+               seg_output_dir, kitti_output_dir, kitti_rcnn_reader, classes):
+    while True:
+        rets_dict = queue.get()
+        if rets_dict is None:
+            return 
+
+        cnt, gt_box_num, rpn_iou_sum, recalled_bbox_list = calc_iou_recall(
+            rets_dict, thresh_list)
+        mdict['total_cnt'] += cnt
+        mdict['total_gt_bbox'] += gt_box_num
+        mdict['total_rpn_iou'] += rpn_iou_sum
+        for i, bbox_num in enumerate(recalled_bbox_list):
+            mdict['total_recalled_bbox_list_{}'.format(i)] += bbox_num
+
+        if is_save_rpn_feature:
+            save_rpn_feature(rets_dict, kitti_feature_dir)
+            save_kitti_result(
+                rets_dict, seg_output_dir, kitti_output_dir, kitti_rcnn_reader, classes)
+
+
 def eval():
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
@@ -460,15 +459,13 @@ def eval():
             eval_outputs = eval_model.get_outputs()
     eval_prog = eval_prog.clone(True)
 
-    extra_keys = []  # ['sample_id', 'pts_rect', 'pts_features', 'pts_input', 'gt_boxes3d', 'rpn_cls_label'] \
-    #   if args.eval_mode == 'rpn' and args.save_rpn_feature else ['sample_id', 'rpn_cls_label', 'gt_boxes3d']
+    extra_keys = []
     if args.eval_mode == 'rpn':
         extra_keys.extend(['sample_id', 'rpn_cls_label', 'gt_boxes3d'])
         if args.save_rpn_feature:
             extra_keys.extend(['pts_rect', 'pts_features', 'pts_input',])
     eval_keys, eval_values = parse_outputs(
         eval_outputs, prog=eval_prog, extra_keys=extra_keys)
-    print("Fetch Data: ", eval_keys, eval_values)
 
     eval_compile_prog = fluid.compiler.CompiledProgram(
         eval_prog).with_data_parallel()
@@ -483,16 +480,16 @@ def eval():
         return os.path.exists(os.path.join(args.ckpt_dir, var.name))
     fluid.io.load_vars(exe, args.ckpt_dir, eval_prog, predicate=if_exist)
 
+    kitti_feature_dir = os.path.join(args.output_dir, 'features')
+    kitti_output_dir = os.path.join(args.output_dir, 'detections', 'data')
+    seg_output_dir = os.path.join(args.output_dir, 'seg_result')
     if args.save_rpn_feature:
-        kitti_feature_dir = os.path.join(args.output_dir, 'features')
         if os.path.exists(kitti_feature_dir):
             shutil.rmtree(kitti_feature_dir)
         os.makedirs(kitti_feature_dir)
-        kitti_output_dir = os.path.join(args.output_dir, 'detections', 'data')
         if os.path.exists(kitti_output_dir):
             shutil.rmtree(kitti_output_dir)
         os.makedirs(kitti_output_dir)
-        seg_output_dir = os.path.join(args.output_dir, 'seg_result')
         if os.path.exists(seg_output_dir):
             shutil.rmtree(seg_output_dir)
         os.makedirs(seg_output_dir)
@@ -508,12 +505,6 @@ def eval():
         if not os.path.exists(refine_output_dir):
             os.makedirs(refine_output_dir)
 
-    thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
-    total_recalled_bbox_list = [0] * 5
-    total_gt_bbox = 0
-    total_cnt = 0
-    total_rpn_iou = 0.
-
     # get reader
     kitti_rcnn_reader = KittiRCNNReader(data_dir='./data',
                                         npoints=cfg.RPN.NUM_POINTS,
@@ -524,6 +515,25 @@ def eval():
                                         rcnn_eval_feature_dir=args.rcnn_eval_feature_dir)
     eval_reader = kitti_rcnn_reader.get_reader(args.batch_size, eval_feeds, False)
     eval_pyreader.decorate_sample_list_generator(eval_reader, place)
+
+
+    if cfg.RPN.ENABLED:
+        queue = multiprocessing.Queue(128)
+        thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
+        mgr = multiprocessing.Manager()
+        mdict = mgr.dict()
+        mdict['total_gt_bbox'] = 0.
+        mdict['total_cnt'] = 0.
+        mdict['total_rpn_iou'] = 0.
+        for i in range(len(thresh_list)):
+            mdict['total_recalled_bbox_list_{}'.format(i)] = 0.
+
+        p_list = []
+        for i in range(4):
+            p_list.append(multiprocessing.Process(target=rpn_metric,
+                        args=(queue, mdict, thresh_list, args.save_rpn_feature, kitti_feature_dir,
+                              seg_output_dir, kitti_output_dir, kitti_rcnn_reader, cfg.CLASSES)))
+            p_list[-1].start()
 
     cnt = 0
     final_total = 0  
@@ -541,24 +551,15 @@ def eval():
             eval_outs = exe.run(eval_compile_prog, fetch_list=eval_values, return_numpy=False)
             rets_dict = {k: (np.array(v), v.recursive_sequence_lengths()) 
                     for k, v in zip(eval_keys, eval_outs)}
+            # eval_outs = exe.run(eval_compile_prog, fetch_list=eval_values, return_numpy=True)
+            # rets_dict = {}
+            # for k,v in zip(eval_keys, eval_outs):
+            #     rets_dict[k] = v
             period = time.time() - cur_time
             eval_periods.append(period)
+            queue.put(rets_dict)
             
-            if cfg.RPN.ENABLED:
-                # cnt, gt_box_num, rpn_iou_sum, recalled_bbox_list = calc_iou_recall(
-                #     rets_dict, thresh_list)
-                # total_cnt += cnt
-                # total_gt_bbox += gt_box_num
-                # total_rpn_iou += rpn_iou_sum
-                # total_recalled_bbox_list = [
-                #     x + y for x, y in zip(total_recalled_bbox_list, recalled_bbox_list)]
-
-                if args.save_rpn_feature:
-                    save_rpn_feature(rets_dict, kitti_feature_dir)
-                    save_kitti_result(
-                        rets_dict, seg_output_dir, kitti_output_dir, kitti_rcnn_reader, cfg.CLASSES)
-
-            elif cfg.RCNN.ENABLED:
+            if cfg.RCNN.ENABLED:
                 rcnn_cls = rets_dict['rcnn_cls']
                 rcnn_reg = rets_dict['rcnn_reg']
                 roi_boxes3d = rets_dict['roi_boxes3d']
@@ -662,27 +663,27 @@ def eval():
                 calib = kitti_rcnn_reader.get_calib(sample_id)
                 final_total += pred_boxes3d_selected.shape[0]
                 save_kitti_format(sample_id, calib, pred_boxes3d_selected, final_output_dir, scores_selected, image_shape)
-            else:
-                print("Only support RPN/RCNN!!!")
 
             eval_iter += 1
             cnt += 1 
-            #if eval_iter == 10:
-            #    break 
-            # disp_dict['iter'] = eval_iter 
-            # print(disp_dict)
             logger.info("[EVAL] iter {}".format(eval_iter))
 
     except fluid.core.EOFException:
         if cfg.RPN.ENABLED:
+            for i in range(len(p_list)):
+                queue.put(None)
+            for p in p_list:
+                if p.is_alive():
+                    p.join()
+
             logger.info("[EVAL] total {} iter finished, average time: {:.2f}".format(
                 eval_iter, np.mean(eval_periods[2:])))
-            avg_rpn_iou = total_rpn_iou / max(len(kitti_rcnn_reader), 1.)
+            avg_rpn_iou = mdict['total_rpn_iou'] / max(len(kitti_rcnn_reader), 1.)
             logger.info("average rpn iou: {:.3f}".format(avg_rpn_iou))
             for idx, thresh in enumerate(thresh_list):
-                recall = total_recalled_bbox_list[idx] / max(total_gt_bbox, 1.)
+                recall = mdict['total_recalled_bbox_list_{}'.format(idx)] / max(mdict['total_gt_bbox'], 1.)
                 logger.info("total bbox recall(thresh={:.3f}): {} / {} = {:.3f}".format(
-                    thresh, total_recalled_bbox_list[idx], total_gt_bbox, recall))
+                    thresh, mdict['total_recalled_bbox_list_{}'.format(idx)], mdict['total_gt_bbox'], recall))
 
     finally:
         if cfg.RCNN.ENABLED:
