@@ -7,19 +7,22 @@
 | :------| :------ |
 | CNN | 90.6% |
 | BOW | 90.1% |
+| GRU | 90.0% |
+| BIGRU | 89.7% |
+
 
 动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
 
 
 ## 快速开始
 
-本项目依赖于 Paddlepaddle 1.5.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+本项目依赖于 Paddlepaddle 1.5.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装。
 
-python版本依赖python 2.7或python 3.5及以上版本
+python版本依赖python 2.7或python 3.5及以上版本。
 
 #### 安装代码
 
-克隆数据集代码库到本地
+克隆数据集代码库到本地。
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
 cd models/dygraph/sentiment
@@ -35,14 +38,15 @@ tar -zxvf sentiment_classification-dataset-1.0.0.tar.gz
 
 #### 模型训练
 
-基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
+基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证。
+model_type从bow_net，cnn_net，gru_net，bigru_net中选择。
 ```shell
-python main.py
+python main.py --model_type=bow_net
 ```
 
 #### 模型预测
 
-利用已有模型，可以运行下面命令，对未知label的数据（test.tsv）进行预测
+利用已有模型，可以运行下面命令，对未知label的数据（test.tsv）进行预测。
 ```shell
 python main.py --do_train false --do_infer true --checkpoints ./path_to_save_models
 ```
