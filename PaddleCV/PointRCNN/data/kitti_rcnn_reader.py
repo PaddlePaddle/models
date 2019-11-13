@@ -834,7 +834,6 @@ class KittiRCNNReader(KittiReader):
         pts_extra_input = np.concatenate(pts_extra_input_list, axis=1)
 
         # pts, pts_feature, boxes3d, pool_extra_width, sampled_pt_num
-        rpn_features = rpn_features.transpose((1, 0))
         pts_input, pts_features, pts_empty_flag = roipool3d_utils.roipool3d_cpu(
             rpn_xyz, rpn_features, rois, pts_extra_input,
             cfg.RCNN.POOL_EXTRA_WIDTH,
@@ -1160,9 +1159,9 @@ class KittiRCNNReader(KittiReader):
             for idx in idxs:
                 sample_all = self.__getitem__(idx)
                 sample = [sample_all[f] for f in fields]
-                # if has_empty(sample):
-                #     logger.info("sample field: %d has empty field"%len(sample))
-                #     continue
+                if has_empty(sample):
+                    logger.info("sample field: %d has empty field"%len(sample))
+                    continue
                 batch_out.append(sample)
                 if len(batch_out) >= batch_size:
                     if cfg.RPN.ENABLED:

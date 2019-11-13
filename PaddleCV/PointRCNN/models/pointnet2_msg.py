@@ -74,8 +74,7 @@ class PointNet2MSG(object):
                     name="fp_{}".format(i),
                     **self.FP_confs[i])
 
-        out = fluid.layers.transpose(features[0], perm=[0, 2, 1])
-        return xyzs[0], out
+        return xyzs[0], features[0]
 
 
 if __name__ == "__main__":

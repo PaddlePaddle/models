@@ -55,6 +55,7 @@ class RPN(object):
         self.outputs['backbone_xyz'] = backbone_xyz
         self.outputs['backbone_feature'] = backbone_feature
 
+        backbone_feature = fluid.layers.transpose(backbone_feature, perm=[0, 2, 1])
         cls_out = fluid.layers.unsqueeze(backbone_feature, axes=[-1])
         reg_out = cls_out
 
