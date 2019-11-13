@@ -132,11 +132,6 @@ def parse_args():
     #NOTE: (2019/08/08) FP16 is moving to PaddlePaddle/Fleet now
     #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
-    #add args for profiler
-    add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
-    add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
-    add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
-    add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
@@ -147,7 +142,11 @@ def parse_args():
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     add_arg('use_se',                   bool,   True,                   "Whether to use Squeeze-and-Excitation module for EfficientNet.")
     # yapf: enable
-
+    #NOTE: args for profiler
+    add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
+    add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
+    add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
+    add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
     args = parser.parse_args()
 
     return args
