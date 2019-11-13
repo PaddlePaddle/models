@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -134,16 +135,17 @@ def eval(args, model_path):
         y = model(x)
         iou = IOUMetric(num_classes)
         # 加载最优模型
-        if args.load_better_model and paddle.__version__ == '1.5.2':
+        if paddle.__version__ == '1.5.2' and args.load_better_model:
             assert os.path.exists(model_path), "请核对模型文件地址是否存在"
             print('better model exist!')
             new_model_path = 'dygraph/' + model_path
             copy_model(model_path, new_model_path)
             model_param, _ = fluid.dygraph.load_persistables(new_model_path)
             model.load_dict(model_param)
-        elif args.load_better_model and paddle.__version__ == '1.6.0':
+        elif args.load_better_model:
             assert os.path.exists(model_path + '.pdparams'), "请核对模型文件地址是否存在, 1.6版本只能加载一个独立文件"
             print('better model exist!')
+            print('require paddle version >= 1.6.0)
             model_param, _ = fluid.dygraph.load_dygraph(model_path)
             model.load_dict(model_param)
         else:
