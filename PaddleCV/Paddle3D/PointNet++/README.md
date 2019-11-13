@@ -106,7 +106,11 @@ sh make.sh
 # 设置动态库的路径到 LD_LIBRARY_PATH 中
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
-cd ext_op
+# 回到 ext_op 目录，添加 PYTHONPATH
+cd ..
+export PYTHONPATH=$PYTHONPATH:`pwd`
+
+# 运行单测 
 python test/test_farthest_point_sampling_op.py
 python test/test_gather_point_op.py
 python test/test_group_points_op.py
@@ -114,6 +118,18 @@ python test/test_query_ball_op.py
 python test/test_three_interp_op.py
 python test/test_three_nn_op.py
 ```
+单测运行成功会输出提示信息，如下所示：
+
+```
+.
+----------------------------------------------------------------------
+Ran 1 test in 13.205s
+
+OK
+```
+
+更多关于自定义算子的编译说明，可阅读 ext_op/README.md
+
 
 ### 训练
 

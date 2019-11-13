@@ -107,13 +107,26 @@ Make sure custom operations pass as follows:
 # export paddle libs to LD_LIBRARY_PATH for custom op library
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
-cd ext_op
+# back to ext_op and add PYTHONPATH
+cd ..
+export PYTHONPATH=$PYTHONPATH:`pwd`
+
+# Run unit tests
 python test/test_farthest_point_sampling_op.py
 python test/test_gather_point_op.py
 python test/test_group_points_op.py
 python test/test_query_ball_op.py
 python test/test_three_interp_op.py
 python test/test_three_nn_op.py
+```
+The prompt message for successful running is as follows:
+
+```
+.
+----------------------------------------------------------------------
+Ran 1 test in 13.205s
+
+OK
 ```
 
 ### Training
