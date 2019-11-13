@@ -343,16 +343,16 @@ if __name__ == '__main__':
         default="tb_log_dir/scalar",
         help='Tensorboard logging directory for scalar.')
 
-    #args for profiler tools, used for benchmark
+    #NOTE:args for profiler tools, used for benchmark
     parser.add_argument(
         '--is_profiler',
         type=int,
         default=0,
-        help='The switch of profiler tools.')
+        help='The switch of profiler tools. (used for benchmark)')
     parser.add_argument(
         '--profiler_path',
         type=str,
         default="./",
-        help='The profiler output file path.')
+        help='The profiler output file path. (used for benchmark)')
     FLAGS = parser.parse_args()
     main()
