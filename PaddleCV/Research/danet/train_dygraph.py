@@ -141,8 +141,11 @@ def main(args):
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.info('DANet')
     logging.info(args)
-
-    place = fluid.CUDAPlace(0) if args.cuda else fluid.CPUPlace()
+    
+    if args.cuda:
+        gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+        
+    place = fluid.CUDAPlace(gpu_id) if args.cuda else fluid.CPUPlace()
     train_loss_title = 'Train_loss'
     test_loss_title = 'Test_loss'
 
