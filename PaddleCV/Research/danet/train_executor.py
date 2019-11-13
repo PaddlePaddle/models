@@ -87,7 +87,8 @@ def save_model(save_dir, exe, program=None):
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir, ignore_errors=True)
         os.makedirs(save_dir)
-        fluid.io.save_persistables(exe, save_dir, program)
+        # fluid.io.save_persistables(exe, save_dir, program)
+        fluid.io.save_params(exe, save_dir, program)
         print('已保存: {}'.format(os.path.basename(save_dir)))
     else:
         os.makedirs(save_dir)
@@ -97,7 +98,8 @@ def save_model(save_dir, exe, program=None):
 
 def load_model(save_dir, exe, program=None):
     if os.path.exists(save_dir):
-        fluid.io.load_persistables(exe, save_dir, program)
+        # fluid.io.load_persistables(exe, save_dir, program)
+        fluid.io.load_params(exe, save_dir, program)
         print('存在, 加载成功')
     else:
         raise Exception('请核对地址')
@@ -220,8 +222,9 @@ def main(args):
             test_avg_loss = fluid.layers.mean(test_loss)
             # miou不是真实的
             miou, wrong, correct = mean_iou(pred, label, num_classes=num_classes)
-
-    place = fluid.CUDAPlace(0) if args.cuda else fluid.CPUPlace()
+    
+    gpu_id = int(os.environ('FLAGS_selected_gpus', 0)
+    place = fluid.CUDAPlace(gpu_id) if args.cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(start_prog)
 
@@ -290,8 +293,6 @@ def main(args):
                                                                  batch_id + 1,
                                                                  train_avg_loss_value[0],
                                                                  train_iou_value[0])
-                save_dir = './checkpoint/DAnet_better_train_{:.4f}'.format(22.5)
-                save_model(save_dir, exe, program=train_prog)
                 if batch_id % 40 == 0:
                     logging.info(batch_train_str)
                     print(batch_train_str)
