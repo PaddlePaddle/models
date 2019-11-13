@@ -36,6 +36,7 @@ set_paddle_flags(
 )
 
 from paddle import fluid
+from paddle.fluid import profiler
 
 from ppdet.experimental import mixed_precision_context
 from ppdet.core.workspace import load_config, merge_config, create
@@ -258,6 +259,13 @@ def main():
                 it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
 
+        # profiler tools, used for benchmark
+        if FLAGS.is_profiler and it == 5:
+            profiler.start_profiler("All")
+        elif FLAGS.is_profiler and it == 10:
+            profiler.stop_profiler("total", FLAGS.profiler_path)
+              return
+
         if (it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1) \
            and (not FLAGS.dist or trainer_id == 0):
             save_name = str(it) if it != cfg.max_iters - 1 else "model_final"
@@ -334,5 +342,17 @@ if __name__ == '__main__':
         type=str,
         default="tb_log_dir/scalar",
         help='Tensorboard logging directory for scalar.')
+
+    #NOTE:args for profiler tools, used for benchmark
+    parser.add_argument(
+        '--is_profiler',
+        type=int,
+        default=0,
+        help='The switch of profiler tools. (used for benchmark)')
+    parser.add_argument(
+        '--profiler_path',
+        type=str,
+        default="./",
+        help='The profiler output file path. (used for benchmark)')
     FLAGS = parser.parse_args()
     main()
