@@ -142,7 +142,11 @@ def parse_args():
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     add_arg('use_se',                   bool,   True,                   "Whether to use Squeeze-and-Excitation module for EfficientNet.")
     # yapf: enable
-
+    #NOTE: args for profiler
+    add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
+    add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
+    add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
+    add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
     args = parser.parse_args()
 
     return args
