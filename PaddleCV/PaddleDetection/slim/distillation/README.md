@@ -135,7 +135,7 @@ python ../infer.py \
 | FLOPS |Box AP|
 |---|---|
 |baseline|76.2     |
-|蒸馏后|- |
+|蒸馏后|76.27 |
 
 
 ## FAQ
