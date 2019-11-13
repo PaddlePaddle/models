@@ -223,12 +223,13 @@ def main(args):
             # miou不是真实的
             miou, wrong, correct = mean_iou(pred, label, num_classes=num_classes)
     
-    gpu_id = int(os.environ('FLAGS_selected_gpus', 0))
+    if args.cuda:
+        gpu_id = int(os.environ('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(gpu_id) if args.cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(start_prog)
 
-    if args.use_data_parallel:
+    if args.use_data_parallel and args.cuda:
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_threads = fluid.core.get_cuda_device_count()
         exec_strategy.num_iteration_per_drop_scope = 100
@@ -317,13 +318,13 @@ def main(args):
 
         # save_model
         if better_miou_train < train_iou_manager.eval()[0]:
-            shutil.rmtree('./checkpoint/DAnet_better_train_{:.4f}'.format(better_miou_train),
+            shutil.rmtree('./checkpoint/DANet_better_train_{:.4f}'.format(better_miou_train),
                           ignore_errors=True)
             better_miou_train = train_iou_manager.eval()[0]
             logging.warning(
                 '-----------train---------------better_train: {:.6f}, epoch: {}, -----------successful save train model!\n'.format(
                     better_miou_train, epoch + 1))
-            save_dir = './checkpoint/DAnet_better_train_{:.4f}'.format(better_miou_train)
+            save_dir = './checkpoint/DANet_better_train_{:.4f}'.format(better_miou_train)
             save_model(save_dir, exe, program=train_prog)
         if (epoch + 1) % 5 == 0:
             save_dir = './checkpoint/DAnet_epoch_train'
@@ -340,7 +341,7 @@ def main(args):
             try:
                 test_fetch_list = [test_avg_loss, miou, wrong, correct]
                 test_avg_loss_value, test_iou_value, _, _ = exe.run(program=test_prog,
-                                                                                                fetch_list=test_fetch_list)
+                                                                    fetch_list=test_fetch_list)
                 test_iou_manager.update(test_iou_value, weight=batch_size * num)
                 test_avg_loss_manager.update(test_avg_loss_value, weight=batch_size * num)
                 batch_test_str = "epoch: {}, batch: {}, test_avg_loss: {:.6f}, " \
@@ -372,13 +373,13 @@ def main(args):
 
         # save_model_infer
         if better_miou_test < test_iou_manager.eval()[0]:
-            shutil.rmtree('./checkpoint/infer/DAnet_better_test_{:.4f}'.format(better_miou_test),
+            shutil.rmtree('./checkpoint/infer/DANet_better_test_{:.4f}'.format(better_miou_test),
                           ignore_errors=True)
             better_miou_test = test_iou_manager.eval()[0]
             logging.warning(
                 '------------test-------------infer better_test: {:.6f}, epoch: {}, ----------------successful save infer model!\n'.format(
                     better_miou_test, epoch + 1))
-            save_dir = './checkpoint/infer/DAnet_better_test_{:.4f}'.format(better_miou_test)
+            save_dir = './checkpoint/infer/DANet_better_test_{:.4f}'.format(better_miou_test)
             # save_model(save_dir, exe, program=test_prog)
             fluid.io.save_inference_model(save_dir, [image.name], [pred, pred2, pred3], exe)
             print('successful save infer model!')
