@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +26,7 @@ rootPath = os.path.split(parentPath)[0]
 sys.path.append(rootPath)
 
 
-class BaseDataSet:
+class BaseDataSet(object):
 
     def __init__(self, root, split, base_size=1024, crop_size=768, scale=True):
         self.root = root
