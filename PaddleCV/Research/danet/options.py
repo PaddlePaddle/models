@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +18,7 @@ import os
 import argparse
 
 
-class Options:
+class Options(object):
     def __init__(self):
         parser = argparse.ArgumentParser(description='Paddle DANet Segmentation')
 
