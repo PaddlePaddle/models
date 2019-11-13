@@ -41,6 +41,7 @@ from model.classifier import create_model
 from optimization import optimization
 from utils.args import ArgumentGroup, print_arguments, check_cuda
 from utils.init import init_pretraining_params, init_checkpoint
+from utils.cards import get_cards
 
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
@@ -432,20 +433,16 @@ def main(args):
         if args.enable_ce:
             card_num = get_cards()
             ce_cost = 0
-            ce_acc = 0
             ce_time = 0
             try:
                 ce_cost = ce_info[-2][0]
-                ce_acc = ce_info[-2][1]
-                ce_time = ce_info[-2][2]
+                ce_time = ce_info[-2][1]
             except:
                 print("ce info error")
             print("kpis\ttrain_duration_%s_card%s\t%s" %
-                (args.task_name, card_num, ce_time))
+                (args.task_name.replace("-", "_"), card_num, ce_time))
             print("kpis\ttrain_cost_%s_card%s\t%f" %
-                (args.task_name, card_num, ce_cost))
-            print("kpis\ttrain_acc_%s_card%s\t%f" %
-                (args.task_name, card_num, ce_acc))
+                (args.task_name.replace("-", "_"), card_num, ce_cost))
 
 
     # final eval on dev set
