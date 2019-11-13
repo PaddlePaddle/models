@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -167,7 +168,7 @@ def main(args):
     test_prog = train_prog.clone(for_test=True)
 
     logging.basicConfig(level=logging.INFO,
-                        filename='DANet_{}_train.log'.format(args.backbone),
+                        filename='DANet_{}_train_executor.log'.format(args.backbone),
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.info('DANet')
     logging.info(args)
@@ -285,8 +286,8 @@ def main(args):
                     program=compiled_train_prog,
                     fetch_list=train_fetch_list)
 
-                train_iou_manager.update(train_iou_value, weight=batch_size * num)
-                train_avg_loss_manager.update(train_avg_loss_value, weight=batch_size * num)
+                train_iou_manager.update(train_iou_value, weight=int(batch_size * num))
+                train_avg_loss_manager.update(train_avg_loss_value, weight=int(batch_size * num))
                 batch_train_str = "epoch: {}, batch: {}, train_avg_loss: {:.6f}, " \
                                   "train_miou: {:.6f}.".format(epoch + 1,
                                                                  batch_id + 1,
@@ -310,9 +311,9 @@ def main(args):
         print(train_str + time_str + '\n')
         logging.info(train_str + time_str)
         plot_loss.append(train_loss_title, epoch, train_avg_loss_manager.eval()[0])
-        plot_loss.plot('./DANet_loss.jpg')
+        plot_loss.plot('./DANet_loss_executor.jpg')
         plot_iou.append(train_iou_title, epoch, train_iou_manager.eval()[0])
-        plot_iou.plot('./DANet_miou.jpg')
+        plot_iou.plot('./DANet_miou_executor.jpg')
 
         # save_model
         if better_miou_train < train_iou_manager.eval()[0]:
@@ -340,8 +341,8 @@ def main(args):
                 test_fetch_list = [test_avg_loss, miou, wrong, correct]
                 test_avg_loss_value, test_iou_value, _, _ = exe.run(program=test_prog,
                                                                     fetch_list=test_fetch_list)
-                test_iou_manager.update(test_iou_value, weight=batch_size * num)
-                test_avg_loss_manager.update(test_avg_loss_value, weight=batch_size * num)
+                test_iou_manager.update(test_iou_value, weight=int(batch_size * num))
+                test_avg_loss_manager.update(test_avg_loss_value, weight=int(batch_size * num))
                 batch_test_str = "epoch: {}, batch: {}, test_avg_loss: {:.6f}, " \
                                  "test_miou: {:.6f}. ".format(epoch + 1,
                                                               batch_id + 1,
@@ -365,9 +366,9 @@ def main(args):
         print(test_str + time_str + '\n')
         logging.info(test_str + time_str)
         plot_loss.append(test_loss_title, epoch, test_avg_loss_manager.eval()[0])
-        plot_loss.plot('./DANet_loss.jpg')
+        plot_loss.plot('./DANet_loss_executor.jpg')
         plot_iou.append(test_iou_title, epoch, test_iou_manager.eval()[0])
-        plot_iou.plot('./DANet_miou.jpg')
+        plot_iou.plot('./DANet_miou_executor.jpg')
 
         # save_model_infer
         if better_miou_test < test_iou_manager.eval()[0]:
