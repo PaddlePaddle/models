@@ -223,7 +223,7 @@ def main(args):
             # miou不是真实的
             miou, wrong, correct = mean_iou(pred, label, num_classes=num_classes)
     
-    gpu_id = int(os.environ('FLAGS_selected_gpus', 0)
+    gpu_id = int(os.environ('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(gpu_id) if args.cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(start_prog)
