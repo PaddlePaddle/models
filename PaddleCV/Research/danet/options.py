@@ -39,11 +39,7 @@ class Options:
                             help='crop image size')
 
         # training hyper params
-        parser.add_argument('--aux', default=True,
-                            help='Auxilary Loss')
-        parser.add_argument('--se_loss', default=True,
-                            help='Semantic Encoding Loss SE-loss')
-        parser.add_argument('--epoch_num', type=int, default=1200, metavar='N',
+        parser.add_argument('--epoch_num', type=int, default=350, metavar='N',
                             help='number of epochs to train (default: auto)')
         parser.add_argument('--start_epoch', type=int, default=0,
                             metavar='N', help='start epochs (default:0)')
@@ -55,7 +51,7 @@ class Options:
                             testing (default: same as batch size)')
 
         # optimizer params
-        parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
+        parser.add_argument('--lr', type=float, default=0.003, metavar='LR',
                             help='learning rate (default: auto)')
         parser.add_argument('--lr_scheduler', type=str, default='poly',
                             help='learning rate scheduler (default: poly)')
@@ -153,7 +149,7 @@ class Options:
                 'pascal_aug': 185,
                 'pcontext': 185,
                 'ade20k': 185,
-                'cityscapes': 185,  # 2975 // batch_size // GPU_num
+                'cityscapes': 371,  # 2975 // batch_size // GPU_num
             }
             args.step_per_epoch = step_per_epoch[args.dataset.lower()]
         if args.lr is None:
