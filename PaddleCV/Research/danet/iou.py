@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +17,7 @@
 import numpy as np
 
 
-class IOUMetric:
+class IOUMetric(object):
 
     def __init__(self, num_classes):
         self.num_classes = num_classes+1
