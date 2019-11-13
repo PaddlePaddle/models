@@ -599,7 +599,7 @@ def eval():
                     gt_boxes3d = rets_dict['gt_boxes3d']
                     
                     # recall
-                    gt_num = gt_boxes3d.shape[0]
+                    gt_num = gt_boxes3d.shape[1]
                     if gt_num > 0:
                         gt_boxes3d = gt_boxes3d.reshape((-1,7))
                         iou3d = boxes_iou3d(pred_boxes3d, gt_boxes3d)
@@ -607,15 +607,18 @@ def eval():
                         refined_iou = iou3d.max(axis=1)
 
                         for idx, thresh in enumerate(thresh_list):
-                            total_recalled_bbox_list[idx] += (gt_max_iou > thresh).sum().item()
-                        recalled_num = (gt_max_iou > 0.7).sum().item()
+                            total_recalled_bbox_list[idx] += (gt_max_iou > thresh).sum()
+                        recalled_num = (gt_max_iou > 0.7).sum()
                         total_gt_bbox += gt_num
                         roi_boxes3d = roi_boxes3d.reshape((-1,7))
                         iou3d_in = boxes_iou3d(roi_boxes3d, gt_boxes3d)
                         gt_max_iou_in = iou3d_in.max(axis=0)
 
                         for idx, thresh in enumerate(thresh_list):
-                            total_roi_recalled_bbox_list[idx] += (gt_max_iou_in > thresh).sum().item()
+                            roi_recalled_bbox_num = (gt_max_iou_in > thresh).sum()
+                            total_roi_recalled_bbox_list[idx] += roi_recalled_bbox_num 
+                            print("roi_recalled_bbox_num: ", total_roi_recalled_bbox_list[idx], roi_recalled_bbox_num) 
+                    
                     # classification accuracy
                     cls_label = gt_iou > cfg.RCNN.CLS_FG_THRESH
                     cls_label = cls_label.astype(np.float32)
@@ -711,15 +714,16 @@ def eval():
                 print(k, v)
             
             for idx, thresh in enumerate(thresh_list):
-                cur_roi_recall = total_roi_recalled_bbox_list[idx] / max(total_gt_bbox, 1.0)
+                cur_roi_recall = total_roi_recalled_bbox_list[idx] / float(max(total_gt_bbox, 1.0))
                 #ret_dict['rpn_recall(thresh=%.2f)' % thresh] = cur_roi_recall 
                 print('total roi bbox recall(thresh=%.3f): %d / %d = %f' % (
                     thresh, total_roi_recalled_bbox_list[idx], total_gt_bbox, cur_roi_recall))
             
             for idx, thresh in enumerate(thresh_list):
-                cur_recall = total_recalled_bbox_list[idx] / max(total_gt_bbox, 1.0)
+                cur_recall = total_recalled_bbox_list[idx] / max(float(total_gt_bbox), 1.0)
                 #ret_dict['recall(thresh=%.2f)' % thresh] = cur_recall
-                print('recall(thresh=%.2f) %.2f' % (thresh, cur_recall))
+                print('total bbox recall(thresh=%.2f) %d / %.2f = %.4f' % (
+                    thresh, total_recalled_bbox_list[idx], total_gt_bbox, cur_recall))
             
             #for k,v in ret_dict.items():
             #    print(k, v)
