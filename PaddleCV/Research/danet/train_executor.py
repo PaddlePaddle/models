@@ -244,17 +244,15 @@ def main(args):
 
     # 加载预训练模型
     if args.load_pretrained_model:
-        save_dir = 'checkpoint/DANet101_better_model_paddle1.5.2'
-        if os.path.exists(save_dir):
-            load_model(save_dir, exe, program=train_prog)
-            print('load pretrained model!')
+        if os.path.exists(args.save_model):
+            load_model(args.save_model, exe, program=train_prog)
+    print('load pretrained model!')
 
     # 加载最优模型
     if args.load_better_model:
-        save_dir = 'checkpoint/DANet101_better_model_paddle1.5.2'
-        if os.path.exists(save_dir):
-            load_model(save_dir, exe, program=train_prog)
-            print('load better model!')
+        if os.path.exists(args.save_model):
+            load_model(args.save_model, exe, program=train_prog)
+    print('load better model!')
 
     train_iou_manager = fluid.metrics.Accuracy()
     train_avg_loss_manager = fluid.metrics.Accuracy()
