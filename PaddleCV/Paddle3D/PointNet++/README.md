@@ -41,6 +41,8 @@
 
 在当前目录下运行样例代码需要 PaddelPaddle Fluid v.1.6 或以上的版本. 如果你的运行环境中的 PaddlePaddle 低于此版本, 请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/en/1.6/beginners_guide/install/index_en.html) 中的说明来更新 PaddlePaddle.
 
+为了使自定义算子与paddle版本兼容，建议您**优先使用源码编译paddle**，源码编译方式请参考[编译安装](https://www.paddlepaddle.org.cn/install/doc/source/ubuntu)
+
 ### 数据准备
 
 **ModelNet40 数据集:**
@@ -90,7 +92,8 @@ sh download.sh
 
 ### 编译自定义算子
 
-PaddlePaddle Fluid 从 v1.6 版本开始支持自定义算子实现，请确保你的 Paddle 版本不低于 v1.6
+PaddlePaddle Fluid 从 v1.6 版本开始支持自定义算子实现请，确保你的 Paddle 版本不低于 v1.6。
+这里默认您已经使用源码编译安装了paddle，如果您是通过 pip 安装 paddle 版本，请根据 ext_op/README.md 对编译脚本进行修改。
 
 自定义算子可通过以下方式进行编译：
 

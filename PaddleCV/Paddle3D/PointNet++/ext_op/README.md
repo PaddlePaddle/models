@@ -20,14 +20,29 @@
 >>> print(paddle.sysconfig.get_lib())
 /paddle/pyenv/local/lib/python2.7/site-packages/paddle/libs
 ```
-动态库的编译命令被写入make.sh，如果您通过编译安装高于1.6版本的Paddle，可以直接执行编译脚本：
+
+- 如果您通过源码编译安装高于1.6版本的Paddle：
+
+  动态库的编译命令被写入make.sh，可以直接执行编译脚本：
+
+  ```
+  cd src
+  sh make.sh
+  ```
+
+- 如果您直接通过pip安装已发布的 paddlepaddle>=1.6.0 的 whl 包：
+
+1. 首先您需要在本机下载 mkldnn：
 
 ```
-cd src
-sh make.sh
+cd ext_op
+# 下载 mkldnn
+git clone https://github.com/intel/mkl-dnn.git
+# 切换到指定版本
+cd mkl-dnn && git checkout aef88b7c233f48f8b945da310f1b973da31ad033
 ```
 
-如果您直接通过pip安装已发布的 paddlepaddle==1.6 的 whl 包，需要将make.sh做如下修改，增加mkldnn的编译选项：
+2. 然后需要将src/make.sh做如下修改，增加mkldnn的编译选项：
 
 ```
 include_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_include())' )
@@ -50,7 +65,7 @@ nvcc ${op}.cu -c -o ${op}.cu.o -ccbin cc -DPADDLE_WITH_CUDA -DEIGEN_USE_GPU -DPA
     -I ${include_dir}/third_party/threadpool/src/extern_threadpool \
     -I ${include_dir}/third_party/dlpack/include \
     -I ${include_dir}/third_party/ \
-    -I ../mkldnn/include \ # 可替换成本地 mklnn 路径
+    -I ../mkl-dnn/include \ # 需替换成本地 mklnn 路径
     -I ${include_dir}
 done
 
@@ -64,12 +79,19 @@ g++ farthest_point_sampling_op.cc farthest_point_sampling_op.cu.o gather_point_o
   -I ${include_dir}/third_party/eigen3 \
   -I ${include_dir}/third_party/dlpack/include \
   -I ${include_dir}/third_party/ \
-  -I ../mkldnn/include \ # 可替换成本地 mklnn 路径
+  -I ../mkl-dnn/include \ # 需替换成本地 mklnn 路径
   -I ${include_dir} \
   -L ${lib_dir} \
   -L /usr/local/cuda/lib64 -lpaddle_framework -lcudart
 
 rm *.cu.o
+```
+为避免产生兼容问题，请使用**gcc4.8.2**版本编译custom-op
+
+执行编译脚本：
+```
+cd ext_op/src
+sh make.sh
 ```
 
 最终编译会产出`pointnet_lib.so`
