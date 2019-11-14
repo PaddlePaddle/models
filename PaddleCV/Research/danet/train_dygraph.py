@@ -138,7 +138,7 @@ def main(args):
     train_prog.random_seed = args.seed
 
     logging.basicConfig(level=logging.INFO,
-                        filename='DANet_{}_train.log'.format(args.backbone),
+                        filename='DANet_{}_train_dygraph.log'.format(args.backbone),
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.info('DANet')
     logging.info(args)
@@ -165,23 +165,26 @@ def main(args):
 
         # 加载预训练模型
         if args.load_pretrained_model:
-            save_dir = 'checkpoint/DANet101_pretrained_model_paddle1.6'
-            if os.path.exists(save_dir + '.pdparams'):
-                param, _ = fluid.load_dygraph(save_dir)
-                model.set_dict(param)
-                assert len(param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
-                                                              "请核对模型是否初始化/模型是否一致"
-                print('load pretrained model!')
+            save_dir = args.save_model
+            assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is no exists".format(
+                save_dir, save_dir + '.pdparams')
+            param, _ = fluid.load_dygraph(save_dir)
+            model.set_dict(param)
+            assert len(param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
+                                                          "请核对模型是否初始化/模型是否一致"
+            print('load pretrained model!')
 
         # 加载最优模型
         if args.load_better_model:
-            save_dir = 'checkpoint/DANet101_better_model_paddle1.6'
-            if os.path.exists(save_dir + '.pdparams'):
-                param, _ = fluid.load_dygraph(save_dir)
-                model.set_dict(param)
-                assert len(param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
-                                                              "请核对模型是否初始化/模型是否一致"
-                print('load better model!')
+            save_dir = args.save_model
+            assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is no exists".format(
+                save_dir, save_dir + '.pdparams')
+            param, _ = fluid.load_dygraph(save_dir)
+            model.set_dict(param)
+            assert len(param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
+                                                          "请核对模型是否初始化/模型是否一致"
+            print('load better model!')
+
 
         optimizer = optimizer_setting(args)
         train_data = cityscapes_train(data_root=data_root,
@@ -252,16 +255,16 @@ def main(args):
             print(train_str + time_str + '\n')
             logging.info(train_str + time_str + '\n')
             plot_loss.append(train_loss_title, epoch, train_avg_loss_manager.eval()[0])
-            plot_loss.plot('./DANet_loss.jpg')
+            plot_loss.plot('./DANet_loss_dygraph.jpg')
             plot_iou.append(train_iou_title, epoch, train_iou_manager.eval()[0])
-            plot_iou.plot('./DANet_miou.jpg')
+            plot_iou.plot('./DANet_miou_dygraph.jpg')
             fluid.dygraph.save_dygraph(model.state_dict(), 'checkpoint/DANet_epoch_new')
             # save_model
             if better_miou_train < train_iou_manager.eval()[0]:
-                shutil.rmtree('checkpoint/DAnet_better_train_{:.4f}.pdparams'.format(better_miou_train), ignore_errors=True)
+                shutil.rmtree('checkpoint/DANet_better_train_{:.4f}.pdparams'.format(better_miou_train), ignore_errors=True)
                 better_miou_train = train_iou_manager.eval()[0]
                 fluid.dygraph.save_dygraph(model.state_dict(),
-                                           'checkpoint/DAnet_better_train_{:.4f}'.format(better_miou_train))
+                                           'checkpoint/DANet_better_train_{:.4f}'.format(better_miou_train))
 
             ########## test ############
             model.eval()
@@ -300,16 +303,16 @@ def main(args):
             print(test_str + time_str + '\n')
             logging.info(test_str + time_str + '\n')
             plot_loss.append(test_loss_title, epoch, test_avg_loss_manager.eval()[0])
-            plot_loss.plot('./DANet_loss.jpg')
+            plot_loss.plot('./DANet_loss_dygraph.jpg')
             plot_iou.append(test_iou_title, epoch, test_iou_manager.eval()[0])
-            plot_iou.plot('./DANet_miou.jpg')
+            plot_iou.plot('./DANet_miou_dygraph.jpg')
             model.train()
             # save_model
             if better_miou_test < test_iou_manager.eval()[0]:
-                shutil.rmtree('checkpoint/DAnet_better_test_{:.4f}.pdparams'.format(better_miou_test), ignore_errors=True)
+                shutil.rmtree('checkpoint/DANet_better_test_{:.4f}.pdparams'.format(better_miou_test), ignore_errors=True)
                 better_miou_test = test_iou_manager.eval()[0]
                 fluid.dygraph.save_dygraph(model.state_dict(),
-                                           'checkpoint/DAnet_better_test_{:.4f}'.format(better_miou_test))
+                                           'checkpoint/DANet_better_test_{:.4f}'.format(better_miou_test))
 
 
 if __name__ == '__main__':
