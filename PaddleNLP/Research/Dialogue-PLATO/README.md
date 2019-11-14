@@ -144,4 +144,4 @@ This project aims to facilitate further research progress in dialogue generation
 ## Contact information
 For help or issues using PLATO, please submit a GitHub issue.
 
-For personal communication related to PLATO, please contact Siqi Bao ('baosiqi@baidu.com'), or Huang He ('hehuang@baidu.com').
+For personal communication related to PLATO, please contact Siqi Bao (`baosiqi@baidu.com`), or Huang He (`hehuang@baidu.com`).
