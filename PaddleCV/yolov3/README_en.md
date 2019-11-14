@@ -1,3 +1,5 @@
+**This model has been move to [PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), which includes more detection models.**
+
 # YOLOv3 Objective Detection
 
 ---

@@ -41,6 +41,7 @@ from utility import (parse_args, print_arguments,
 
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import reader
 from models.yolov3 import YOLOv3
 from learning_rate import exponential_with_warmup_decay
@@ -186,6 +187,13 @@ def train():
                 iter_id, lr[0],
                 smoothed_loss.get_mean_value(), start_time - prev_start_time))
             sys.stdout.flush()
+            #add profiler tools
+            if args.is_profiler and iter_id == 5:
+                profiler.start_profiler("All")
+            elif args.is_profiler and iter_id == 10:
+                profiler.stop_profiler("total", args.profiler_path)
+                return
+
             if (iter_id + 1) % cfg.snapshot_iter == 0:
                 save_model("model_iter{}".format(iter_id))
                 print("Snapshot {} saved, average loss: {}, \

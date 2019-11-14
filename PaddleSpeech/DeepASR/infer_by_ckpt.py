@@ -16,7 +16,7 @@ import data_utils.augmentor.trans_delay as trans_delay
 import data_utils.async_data_reader as reader
 from data_utils.util import lodtensor_to_ndarray, split_infer_result
 from model_utils.model import stacked_lstmp_model
-from decoder.post_latgen_faster_mapped import Decoder
+from post_latgen_faster_mapped import Decoder
 from tools.error_rate import char_errors
 
 
@@ -188,8 +188,17 @@ def infer_from_ckpt(args):
     if not os.path.exists(args.checkpoint):
         raise IOError("Invalid checkpoint!")
 
+    feature = fluid.data(
+        name='feature',
+        shape=[None, 3, 11, args.frame_dim],
+        dtype='float32',
+        lod_level=1)
+    label = fluid.data(
+        name='label', shape=[None, 1], dtype='int64', lod_level=1)
+
     prediction, avg_cost, accuracy = stacked_lstmp_model(
-        frame_dim=args.frame_dim,
+        feature=feature,
+        label=label,
         hidden_dim=args.hidden_dim,
         proj_dim=args.proj_dim,
         stacked_num=args.stacked_num,

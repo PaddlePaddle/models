@@ -107,8 +107,11 @@ python train.py --dataset 'mpii'
 将测试图片放入根目录下的'test'文件夹中，执行
 
 ```bash
+# 默认是MPII数据集
 python test.py --checkpoint 'checkpoints/pose-resnet-50-384x384-mpii'
 ```
+
+`python test.py --help`获取更多的用法。
 
 ## 引用
 
