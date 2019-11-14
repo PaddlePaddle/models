@@ -107,7 +107,7 @@ def mean_iou(pred, label, num_classes=19):
     return miou, wrong, correct
 
 
-def eval(args, model_path):
+def eval(args):
 
     with fluid.dygraph.guard():
         num_classes = args.num_classes
