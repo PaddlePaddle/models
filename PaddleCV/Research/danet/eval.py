@@ -151,7 +151,7 @@ def eval(args):
             model_param, _ = fluid.dygraph.load_dygraph(model_path)
             model.load_dict(model_param)
         else:
-            raise ValueError('请设置load_better_model = True!')
+            raise ValueError('请设置--load_better_model and --save_model checkpoint/xxxxxxx!')
         assert len(model_param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
                                                             "请核对模型是否初始化/模型是否一致"
         model.eval()
