@@ -60,11 +60,21 @@ DATASETS = {
             'http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar',
             'b6e924de25625d8de591ea690078ad9f', ),
     ], ["VOCdevkit/VOC_all"]),
-    'fruit': ([
+    'wider_face': ([
         (
-            'https://dataset.bj.bcebos.com/PaddleDetection_demo/fruit-detection.tar',
-            '374554a7633b1b68d6a5fbb7c061b8ba', ),
-    ], ["fruit-detection"]),
+            'https://dataset.bj.bcebos.com/wider_face/WIDER_train.zip',
+            '3fedf70df600953d25982bcd13d91ba2', ),
+        (
+            'https://dataset.bj.bcebos.com/wider_face/WIDER_val.zip',
+            'dfa7d7e790efa35df3788964cf0bbaea', ),
+        (
+            'https://dataset.bj.bcebos.com/wider_face/wider_face_split.zip',
+            'a4a898d6193db4b9ef3260a68bad0dc7', ),
+    ], ["WIDER_train", "WIDER_val", "wider_face_split"]),
+    'fruit': ([(
+        'https://dataset.bj.bcebos.com/PaddleDetection_demo/fruit-detection.tar',
+        'ee4a1bf2e321b75b0850cc6e063f79d7', ), ], ["fruit-detection"]),
+    'objects365': (),
 }
 
 DOWNLOAD_RETRY_LIMIT = 3
@@ -94,6 +104,11 @@ def get_dataset_path(path, annotation, image_dir):
         if os.path.split(path.strip().lower())[-1] == name:
             logger.info("Parse dataset_dir {} as dataset "
                         "{}".format(path, name))
+            if name == 'objects365':
+                raise NotImplementedError(
+                    "Dataset {} is not valid for download automatically."
+                    "Please apply and download the dataset from."
+                    "https://www.objects365.org/download.html")
             data_dir = osp.join(DATASET_HOME, name)
 
             # For voc, only check merged dir VOC_all
@@ -114,14 +129,15 @@ def get_dataset_path(path, annotation, image_dir):
     # not match any dataset in DATASETS
     raise ValueError("Dataset {} is not valid and cannot parse dataset type "
                      "'{}' for automaticly downloading, which only supports "
-                     "'voc' and 'coco' currently".format(path, osp.split(path)[-1]))
+                     "'voc' and 'coco' currently".format(path,
+                                                         osp.split(path)[-1]))
 
 
 def _merge_voc_dir(data_dir, output_subdir):
     logger.info("Download voc dataset successed, merge "
                 "VOC2007 and VOC2012 to VOC_all...")
     output_dir = osp.join(data_dir, output_subdir)
-    devkit_dir = "/".join(output_dir.split('/')[:-1])
+    devkit_dir = osp.split(output_dir)[0]
     years = ['2007', '2012']
     # merge dir in output_tmp_dir at first, move to 
     # output_dir after merge sucessed.
@@ -141,7 +157,7 @@ def _merge_voc_dir(data_dir, output_subdir):
 
 def map_path(url, root_dir):
     # parse path after download to decompress under root_dir
-    fname = url.split('/')[-1]
+    fname = osp.split(url)[-1]
     zip_formats = ['.zip', '.tar', '.gz']
     fpath = fname
     for zip_format in zip_formats:
@@ -171,7 +187,7 @@ def get_path(url, root_dir, md5sum=None):
     }
     for k, v in decompress_name_map.items():
         if fullpath.find(k) >= 0:
-            fullpath = '/'.join(fullpath.split('/')[:-1] + [v])
+            fullpath = osp.join(osp.split(fullpath)[0], v)
 
     if osp.exists(fullpath):
         logger.info("Found {}".format(fullpath))
@@ -201,7 +217,7 @@ def _dataset_exists(path, annotation, image_dir):
     """
     if not osp.exists(path):
         logger.info("Config dataset_dir {} is not exits, "
-                "dataset config is not valid".format(path))
+                    "dataset config is not valid".format(path))
         return False
 
     if annotation:
@@ -231,7 +247,7 @@ def _download(url, path, md5sum=None):
     if not osp.exists(path):
         os.makedirs(path)
 
-    fname = url.split('/')[-1]
+    fname = osp.split(url)[-1]
     fullname = osp.join(path, fname)
     retry_cnt = 0
 
@@ -298,7 +314,7 @@ def _decompress(fname):
     # decompress to fpath_tmp directory firstly, if decompress
     # successed, move decompress files to fpath and delete
     # fpath_tmp and remove download compress file.
-    fpath = '/'.join(fname.split('/')[:-1])
+    fpath = osp.split(fname)[0]
     fpath_tmp = osp.join(fpath, 'tmp')
     if osp.isdir(fpath_tmp):
         shutil.rmtree(fpath_tmp)
@@ -324,7 +340,7 @@ def _decompress(fname):
 
 def _move_and_merge_tree(src, dst):
     """
-    Move src directory to dst, if dst is already exists, 
+    Move src directory to dst, if dst is already exists,
     merge src to dst
     """
     if not osp.exists(dst):

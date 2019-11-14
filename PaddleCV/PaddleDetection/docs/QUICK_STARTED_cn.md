@@ -2,7 +2,7 @@
 
 # 快速开始
 
-为了使得用户能够在很短的时间内快速产出模型，掌握PaddleDetection的使用方式，这篇教程通过一个预训练检测模型对小数据集进行finetune。在P40上单卡大约15min即可产出一个效果不错的模型。
+为了使得用户能够在很短的时间内快速产出模型，掌握PaddleDetection的使用方式，这篇教程通过一个预训练检测模型对小数据集进行finetune。在P40上单卡大约20min即可产出一个效果不错的模型。
 
 ## 数据准备
 
@@ -26,7 +26,7 @@ export CUDA_VISIBLE_DEVICES=0
 python -u tools/train.py -c configs/yolov3_mobilenet_v1_fruit.yml \
                         --use_tb=True \
                         --tb_log_dir=tb_fruit_dir/scalar \
-                        --eval \
+                        --eval
 ```
 
 训练使用`yolov3_mobilenet_v1`基于COCO数据集训练好的模型进行finetune。训练期间可以通过tensorboard实时观察loss和精度值，启动命令如下：

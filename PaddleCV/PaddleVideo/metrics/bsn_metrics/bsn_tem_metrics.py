@@ -39,7 +39,6 @@ class MetricsCalculator():
             1.0 / self.tscale * i for i in range(1, self.tscale + 1)
         ]
         if self.mode == "test" or self.mode == "infer":
-            print('1212')
             self.output_path_tem = cfg[self.mode.upper()]["output_path_tem"]
             self.output_path_pgm_feature = cfg[self.mode.upper()][
                 "output_path_pgm_feature"]
@@ -101,15 +100,21 @@ class MetricsCalculator():
                 os.makedirs(self.output_path_pgm_proposal)
 
     def save_results(self, pred_tem, fid):
-        video_name = self.video_list[fid]
-        pred_start = pred_tem[0, 0, :]
-        pred_end = pred_tem[0, 1, :]
-        pred_action = pred_tem[0, 2, :]
-        output_tem = np.stack([pred_start, pred_end, pred_action], axis=1)
-        video_df = pd.DataFrame(output_tem, columns=["start", "end", "action"])
-        video_df.to_csv(
-            os.path.join(self.output_path_tem, video_name + ".csv"),
-            index=False)
+        batch_size = pred_tem.shape[0]
+        for i in range(batch_size):
+            if self.mode == 'test':
+                video_name = self.video_list[fid[i][0]]
+            elif self.mode == 'infer':
+                video_name = self.video_list[fid[i]]
+            pred_start = pred_tem[i, 0, :]
+            pred_end = pred_tem[i, 1, :]
+            pred_action = pred_tem[i, 2, :]
+            output_tem = np.stack([pred_start, pred_end, pred_action], axis=1)
+            video_df = pd.DataFrame(
+                output_tem, columns=["start", "end", "action"])
+            video_df.to_csv(
+                os.path.join(self.output_path_tem, video_name + ".csv"),
+                index=False)
 
     def accumulate(self, fetch_list):
         cur_batch_size = 1  # iteration counter
@@ -126,12 +131,12 @@ class MetricsCalculator():
 
         if self.mode == 'test':
             pred_tem = np.array(fetch_list[4])
-            fid = fetch_list[5][0][0]
+            fid = fetch_list[5]
             self.save_results(pred_tem, fid)
 
     def accumulate_infer_results(self, fetch_list):
         pred_tem = np.array(fetch_list[0])
-        fid = fetch_list[1][0]
+        fid = fetch_list[1]
         self.save_results(pred_tem, fid)
 
     def finalize_metrics(self):

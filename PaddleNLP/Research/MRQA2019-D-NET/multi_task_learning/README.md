@@ -8,7 +8,7 @@ Multi task learning (MTL) has been used in many NLP tasks to obtain better langu
    -  natural language inference
    -  paragraph ranking
 
-In the MRQA 2019 shared task, We use [PALM](https://github.com/PaddlePaddle/PALM) v1.0 (a multi-task learning Library based on PaddlePaddle) to perform multi-task training, which makes the implementation of new tasks and pre-trained models much easier than from scratch.
+In the MRQA 2019 shared task, We use [PALM](https://github.com/PaddlePaddle/PALM) v0.1 (a multi-task learning Library based on PaddlePaddle) to perform multi-task training, which makes the implementation of new tasks and pre-trained models much easier than from scratch.
 
 
 ## 2.Preparation
@@ -18,16 +18,16 @@ In the MRQA 2019 shared task, We use [PALM](https://github.com/PaddlePaddle/PALM
 - cuda >= 9.0
 - cudnn >= 7.0
 - PaddlePaddle 1.6 (Please refer to the Installation Guide [Installation Guide](http://www.paddlepaddle.org/#quick-start))
-- PALM v1.0
+- PALM v0.1
 
 ### Install PALM
-To install PALM v1.0, run the follwing command under `multi_task_learning/`,
+To install PALM v0.1, run the follwing command under `multi_task_learning/`,
 
 ```
-git clone --branch v1.0 --depth 1 https://github.com/PaddlePaddle/PALM.git
+git clone --branch v0.1 --depth 1 https://github.com/PaddlePaddle/PALM.git
 ```
 
-For more instructions, see the PALM user guide: [README.md](https://github.com/PaddlePaddle/PALM/blob/v1.0/README.md)
+For more instructions, see the PALM user guide: [README.md](https://github.com/PaddlePaddle/PALM/blob/v0.1/README.md)
 
 
 ### Dowload data 
@@ -56,7 +56,7 @@ Alternatively, user can directly **download the parameters that we have converte
 bash wget_pretrained_model.sh
 ```
 ## 3. Training
-In the following example, we use PALM library to preform a MLT with 3 tasks (i.e. machine reading comprehension as main task, masked lagnuage model and paragraph ranking as auxiliary tasks). For a detialed instruction on PALM, please refer to the [user guide](https://github.com/PaddlePaddle/PALM/blob/v1.0/README.md).
+In the following example, we use PALM library to preform a MLT with 3 tasks (i.e. machine reading comprehension as main task, masked lagnuage model and paragraph ranking as auxiliary tasks). For a detialed instruction on PALM, please refer to the [user guide](https://github.com/PaddlePaddle/PALM/blob/v0.1/README.md).
 
 The PALM library requires a config file for every single task and a main config file `mtl_config.yaml`, which control the training behavior and hyper-parameters. For simplicity, we have prepared those files in the `multi_task_learning/configs` folder. To move the configuration files, data set and model parameters to the correct directory, run
 

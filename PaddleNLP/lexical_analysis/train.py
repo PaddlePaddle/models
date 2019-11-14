@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 #   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# -*- coding: UTF-8 -*-
 
 import os
 import sys
@@ -31,6 +31,7 @@ import creator
 from  eval import test_process
 sys.path.append('../models/')
 from model_check import check_cuda
+from model_check import check_version
 
 # the function to train model
 def do_train(args):
@@ -86,9 +87,9 @@ def do_train(args):
         print("%d %s are used to train model"%(dev_count, device))
         # multi cpu/gpu config
         exec_strategy = fluid.ExecutionStrategy()
-        # exec_strategy.num_threads = dev_count * 6
+
         build_strategy = fluid.compiler.BuildStrategy()
-        # build_strategy.enable_inplace = True
+
 
         compiled_prog = fluid.compiler.CompiledProgram(train_program).with_data_parallel(
             loss_name=train_ret['avg_cost'].name,
@@ -191,6 +192,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     check_cuda(args.use_cuda)
+    check_version()
 
     print(args)
 

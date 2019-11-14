@@ -26,7 +26,8 @@ def infer():
     inference_scope = fluid.Scope()
 
     test_files = [
-        args.test_data_dir + '/' + x for x in os.listdir(args.test_data_dir)
+        os.path.join(args.test_data_dir, x)
+        for x in os.listdir(args.test_data_dir)
     ]
     criteo_dataset = CriteoDataset()
     test_reader = paddle.batch(
@@ -34,7 +35,8 @@ def infer():
 
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
-    cur_model_path = args.model_output_dir + '/epoch_' + args.test_epoch
+    cur_model_path = os.path.join(args.model_output_dir,
+                                  'epoch_' + args.test_epoch)
 
     with fluid.scope_guard(inference_scope):
         with fluid.framework.program_guard(test_program, startup_program):
