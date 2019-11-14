@@ -23,13 +23,38 @@ class ModelBase(fluid.dygraph.Layer):
     """
     Basic model wrapper for static graph and dygrpah.
     """
+    _registry = dict()
+
+    @classmethod
+    def register(cls, name):
+        ModelBase._registry[name] = cls
+        return
+
+    @staticmethod
+    def by_name(name):
+        return ModelBase._registry[name]
+
+    @staticmethod
+    def create(name_scope, hparams, *args, **kwargs):
+        model_cls = ModelBase.by_name(hparams.model)
+        return model_cls(name_scope, hparams, *args, **kwargs)
 
     @classmethod
     def add_cmdline_argument(cls, parser):
         """ Add cmdline argument. """
         group = parser.add_argument_group("Model")
         group.add_argument("--init_checkpoint", type=str, default=None)
+        group.add_argument("--model", type=str, default="UnifiedTransformer",
+                           choices=["UnifiedTransformer"])
+        args, _ = parser.parse_known_args()
+        model_cls = ModelBase.by_name(args.model)
+        model_cls.add_cmdline_argument(group)
         return group
+
+    def __init__(self, name_scope, hparams):
+        super().__init__(name_scope)
+        self.init_checkpoint = hparams.init_checkpoint
+        return
 
     def __call__(self, *args, **kwargs):
         """ Re-implement __call__ function in dygraph mode. """

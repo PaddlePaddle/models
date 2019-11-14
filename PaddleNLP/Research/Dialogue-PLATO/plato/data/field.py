@@ -22,8 +22,8 @@ import pickle
 import time
 from tqdm import tqdm
 
-from tokenizer import Tokenizer
-from args import str2bool
+from plato.args import str2bool
+from plato.data.tokenizer import Tokenizer
 
 
 def max_lens(X):
@@ -77,21 +77,26 @@ class BPETextField(object):
         group.add_argument("--max_knowledge_num", type=int, default=16,
                            help="The maximum number of knowledges.")
         group.add_argument("--max_knowledge_len", type=int, default=16,
-                           help="The maximum length of each knowledges")
+                           help="The maximum length of each knowledges.")
+        group.add_argument("--tokenizer_type", type=str, default="Bert",
+                           choices=["Bert", "GPT2"],
+                           help="The type of tokenizer.")
         return group
 
-    def __init__(self, hparam):
+    def __init__(self, hparams):
         special_tokens = [self.pad_token, self.bos_token, self.eos_token, self.unk_token]
-        self.tokenizer = Tokenizer(vocab_path=hparam.vocab_path, special_tokens=special_tokens)
+        self.tokenizer = Tokenizer(vocab_path=hparams.vocab_path,
+                                   special_tokens=special_tokens,
+                                   tokenizer_type=hparams.tokenizer_type)
 
-        self.filtered = hparam.filtered
-        self.max_len = hparam.max_len
-        self.min_utt_len = hparam.min_utt_len
-        self.max_utt_len = hparam.max_utt_len
-        self.min_ctx_turn = hparam.min_ctx_turn
-        self.max_ctx_turn = hparam.max_ctx_turn - 1 # subtract reply turn
-        self.max_knowledge_num = hparam.max_knowledge_num
-        self.max_knowledge_len = hparam.max_knowledge_len
+        self.filtered = hparams.filtered
+        self.max_len = hparams.max_len
+        self.min_utt_len = hparams.min_utt_len
+        self.max_utt_len = hparams.max_utt_len
+        self.min_ctx_turn = hparams.min_ctx_turn
+        self.max_ctx_turn = hparams.max_ctx_turn - 1 # subtract reply turn
+        self.max_knowledge_num = hparams.max_knowledge_num
+        self.max_knowledge_len = hparams.max_knowledge_len
         return
 
     @property
@@ -187,6 +192,27 @@ class BPETextField(object):
         return self.min_ctx_turn <= len(utts) \
             and (not self.filtered or len(utts) <= self.max_ctx_turn)
 
+    def build_example_multi_turn(self, req):
+        examples = []
+        src = [self.tokenizer.tokenize(s) for s in req["context"]]
+        src = [s[-self.max_utt_len:] for s in src[-self.max_ctx_turn:]]
+        src = [self.numericalize(s) + [self.eos_id] for s in src]
+        ex = {"src": src}
+        examples.append(ex)
+        return examples
+
+    def build_example_multi_turn_with_knowledge(self, req):
+        examples = []
+        src = [self.tokenizer.tokenize(s) for s in req["context"]]
+        src = [s[-self.max_utt_len:] for s in src[-self.max_ctx_turn:]]
+        src = [self.numericalize(s) + [self.eos_id] for s in src]
+        knowledge = [self.tokenizer.tokenize(k) for k in req["knowledge"]]
+        knowledge = [k[:self.max_knowledge_len] for k in knowledge]
+        knowledge = [self.numericalize(k) + [self.eos_id] for k in knowledge]
+        ex = {"src": src, "knowledge": knowledge}
+        examples.append(ex)
+        return examples
+
     def build_examples_multi_turn(self, data_file, data_type="train"):
         print(f"Reading examples from '{data_file}' ...")
         examples = []
@@ -212,7 +238,7 @@ class BPETextField(object):
         print(f"Built {len(examples)} {data_type.upper()} examples ({ignored} filtered)")
         return examples
 
-    def build_examples_multi_turn_with_knoledge(self, data_file, data_type="train"):
+    def build_examples_multi_turn_with_knowledge(self, data_file, data_type="train"):
         print(f"Reading examples from '{data_file}' ...")
         examples = []
         ignored = 0

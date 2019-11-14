@@ -2,7 +2,7 @@
 set -ux
 
 SAVE_DIR=outputs/DSTC7_AVSD.infer
-VOCAB_PATH=data/vocab.txt
+VOCAB_PATH=model/Bert/vocab.txt
 DATA_DIR=data/DSTC7_AVSD
 INIT_CHECKPOINT=outputs/DSTC7_AVSD/best.model
 DATA_TYPE=multi_knowledge
@@ -15,13 +15,11 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.1
 export FLAGS_eager_delete_scope=True
 export FLAGS_eager_delete_tensor_gb=0.0
 
-if [[ ! -e $DATA_DIR/dial.test.jsonl ]]; then
-    python -u \
-        ./preprocess.py \
-        --vocab_path $VOCAB_PATH \
-        --data_dir $DATA_DIR \
-        --data_type $DATA_TYPE
-fi
+python -u \
+    ./preprocess.py \
+    --vocab_path $VOCAB_PATH \
+    --data_dir $DATA_DIR \
+    --data_type $DATA_TYPE
 
 python -u \
     ./run.py \
@@ -29,7 +27,7 @@ python -u \
     --vocab_path $VOCAB_PATH \
     --data_dir $DATA_DIR \
     --data_type $DATA_TYPE \
-    --batch_size 2 \
+    --batch_size 4 \
     --num_type_embeddings 3 \
     --use_discriminator true \
     --init_checkpoint $INIT_CHECKPOINT \

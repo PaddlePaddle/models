@@ -22,16 +22,16 @@ import os
 import numpy as np
 import paddle.fluid as fluid
 
-from args import parse_args
-from args import str2bool
-from dataloader import DataLoader
-from dataset import Dataset
-from dataset import LazyDataset
-from field import BPETextField
-from trainer import Trainer
-from models.unified_transformer import UnifiedTransformer
-from models.generator import BeamSearch
-import modules.parallel as parallel
+from plato.args import parse_args
+from plato.args import str2bool
+from plato.data.data_loader import DataLoader
+from plato.data.dataset import Dataset
+from plato.data.dataset import LazyDataset
+from plato.data.field import BPETextField
+from plato.trainer import Trainer
+from plato.models.model_base import ModelBase
+from plato.models.generator import Generator
+import plato.modules.parallel as parallel
 
 
 def main():
@@ -39,20 +39,27 @@ def main():
 
     parser.add_argument("--do_train", type=str2bool, default=False,
                         help="Whether to run trainning.")
-    parser.add_argument("--do_valid", type=str2bool, default=False,
+    parser.add_argument("--do_test", type=str2bool, default=False,
                         help="Whether to run evaluation on the test dataset.")
     parser.add_argument("--do_infer", type=str2bool, default=False,
                         help="Whether to run inference on the test dataset.")
     parser.add_argument("--num_infer_batches", type=int, default=None,
                         help="The number of batches need to infer.\n"
                         "Stay 'None': infer on entrie test dataset.")
+    parser.add_argument("--hparams_file", type=str, default=None,
+                        help="Loading hparams setting from file(.json format).")
     BPETextField.add_cmdline_argument(parser)
     Dataset.add_cmdline_argument(parser)
     Trainer.add_cmdline_argument(parser)
-    UnifiedTransformer.add_cmdline_argument(parser)
-    BeamSearch.add_cmdline_argument(parser)
+    ModelBase.add_cmdline_argument(parser)
+    Generator.add_cmdline_argument(parser)
 
     hparams = parse_args(parser)
+
+    if hparams.hparams_file and os.path.exists(hparams.hparams_file):
+        print(f"Loading hparams from {hparams.hparams_file} ...")
+        hparams.load(hparams.hparams_file)
+        print(f"Loaded hparams from {hparams.hparams_file}")
 
     print(json.dumps(hparams, indent=2))
 
@@ -63,7 +70,7 @@ def main():
     bpe = BPETextField(hparams.BPETextField)
     hparams.Model.num_token_embeddings = bpe.vocab_size
 
-    generator = BeamSearch(bpe, hparams.Generator)
+    generator = Generator.create(hparams.Generator, bpe=bpe)
 
     COLLATE_FN = {
         "multi": bpe.collate_fn_multi_turn,
@@ -74,22 +81,22 @@ def main():
     # Loading datasets
     if hparams.do_train:
         raw_train_file = os.path.join(hparams.data_dir, "dial.train")
-        train_file = raw_train_file + ".jsonl"
+        train_file = raw_train_file + f".{hparams.tokenizer_type}.jsonl"
         assert os.path.exists(train_file), f"{train_file} isn't exist"
         train_dataset = LazyDataset(train_file)
-        train_loader = DataLoader(train_dataset, hparams.Trainer, collate_fn=collate_fn)
+        train_loader = DataLoader(train_dataset, hparams.Trainer, collate_fn=collate_fn, is_train=True)
         raw_valid_file = os.path.join(hparams.data_dir, "dial.valid")
-        valid_file = raw_valid_file + ".jsonl"
+        valid_file = raw_valid_file + f".{hparams.tokenizer_type}.jsonl"
         assert os.path.exists(valid_file), f"{valid_file} isn't exist"
         valid_dataset = LazyDataset(valid_file)
         valid_loader = DataLoader(valid_dataset, hparams.Trainer, collate_fn=collate_fn)
 
-    if hparams.do_infer or hparams.do_valid:
+    if hparams.do_infer or hparams.do_test:
         raw_test_file = os.path.join(hparams.data_dir, "dial.test")
-        test_file = raw_test_file + ".jsonl"
+        test_file = raw_test_file + f".{hparams.tokenizer_type}.jsonl"
         assert os.path.exists(test_file), f"{test_file} isn't exist"
         test_dataset = LazyDataset(test_file)
-        test_loader = DataLoader(test_dataset, hparams.Trainer, collate_fn=collate_fn, is_test=True)
+        test_loader = DataLoader(test_dataset, hparams.Trainer, collate_fn=collate_fn, is_test=hparams.do_infer)
 
     def to_tensor(array):
         array = np.expand_dims(array, -1)
@@ -102,7 +109,7 @@ def main():
 
     with fluid.dygraph.guard(place):
         # Construct Model
-        model = UnifiedTransformer("Model", generator, hparams)
+        model = ModelBase.create("Model", hparams, generator=generator)
 
         # Construct Trainer
         trainer = Trainer(model, to_tensor, hparams.Trainer)
@@ -112,7 +119,7 @@ def main():
             for epoch in range(hparams.num_epochs):
                 trainer.train_epoch(train_loader, valid_loader)
 
-        if hparams.do_valid:
+        if hparams.do_test:
             # Validation process
             trainer.evaluate(test_loader, need_save=False)
 

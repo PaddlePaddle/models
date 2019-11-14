@@ -24,7 +24,7 @@ best_scorers = [
 
 def score_fn(ref, sample, scorers=def_scorers):
     # ref and sample are both dict
-    
+
     final_scores = {}
     for scorer, method in scorers:
         # print('computing %s score with COCO-EVAL...'%(scorer.method()))
@@ -77,7 +77,8 @@ for data in datas:
         acc += 1
 
     all_refs[cnt] = ref
-    all_cands[cnt] = [chosen_pred]
+    # all_cands[cnt] = [chosen_pred]
+    all_cands[cnt] = [best_pred]
     cnt += 1
 
 print(f"Acc: {acc / len(datas)}")
