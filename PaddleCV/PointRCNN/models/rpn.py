@@ -155,7 +155,7 @@ class RPN(object):
         fg_mask = fluid.layers.cast(cls_label_flat > 0, dtype=rpn_reg.dtype)
         fg_mask.stop_gradient = True
         loc_loss, angle_loss, size_loss, loss_dict = get_reg_loss(
-                                        rpn_reg, reg_label, fg_mask,
+                                        rpn_reg * fg_mask, reg_label, fg_mask,
                                         float(self.batch_size * self.cfg.RPN.NUM_POINTS),
                                         loc_scope=self.cfg.RPN.LOC_SCOPE,
                                         loc_bin_size=self.cfg.RPN.LOC_BIN_SIZE,

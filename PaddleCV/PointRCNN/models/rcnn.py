@@ -194,7 +194,8 @@ class RCNN(object):
         for i in range(0, self.cfg.RCNN.CLS_FC.__len__()):
             cls_out = conv_bn(cls_out, self.cfg.RCNN.CLS_FC[i], bn=self.cfg.RCNN.USE_BN, name='rcnn_cls_{}'.format(i))
             if i == 0 and self.cfg.RCNN.DP_RATIO >= 0:
-                cls_out = fluid.layers.dropout(cls_out, self.cfg.RCNN.DP_RATIO)
+                # cls_out = fluid.layers.dropout(cls_out, self.cfg.RCNN.DP_RATIO)
+                cls_out = fluid.layers.dropout(cls_out, self.cfg.RCNN.DP_RATIO, dropout_implementation="upscale_in_train")
                 # Debug
                 # pass 
         cls_channel = 1 if self.num_classes == 2 else self.num_classes
@@ -209,21 +210,19 @@ class RCNN(object):
         for i in range(0, self.cfg.RCNN.REG_FC.__len__()):
             reg_out = conv_bn(reg_out, self.cfg.RCNN.REG_FC[i], bn=self.cfg.RCNN.USE_BN, name='rcnn_reg_{}'.format(i))
             if i == 0 and self.cfg.RCNN.DP_RATIO >= 0:
-                reg_out = fluid.layers.dropout(reg_out, self.cfg.RCNN.DP_RATIO)
+                # reg_out = fluid.layers.dropout(reg_out, self.cfg.RCNN.DP_RATIO)
+                reg_out = fluid.layers.dropout(reg_out, self.cfg.RCNN.DP_RATIO, dropout_implementation="upscale_in_train")
                 # Debug
                 #pass 
 
         reg_out = conv_bn(reg_out, reg_channel, act=None, name="reg_out", bn=self.cfg.RCNN.USE_BN)
         self.reg_out = fluid.layers.squeeze(reg_out, axes=[2,3])
-        # fluid.layers.Print(self.reg_out, message="reg_out", summarize=100)
 
         
         self.ret_dict = {
             'rcnn_cls':self.cls_out,
             'rcnn_reg':self.reg_out,
         }
-        #fluid.layers.Print(self.cls_out, summarize=10)
-        #fluid.layers.Print(self.reg_out, summarize=10)
         if self.training:
             self.ret_dict.update(self.target_dict)
         elif not self.training:
@@ -297,7 +296,7 @@ class RCNN(object):
         anchor_size = all_anchor_size[fg_mask] if self.cfg.RCNN.SIZE_RES_ON_ROI else self.cfg.CLS_MEAN_SIZE[0]
 
         loc_loss, angle_loss, size_loss, loss_dict = get_reg_loss(
-            reg_out,
+            reg_out * fg_mask,
             gt_boxes3d_ct,
             fg_mask,
             point_num=float(self.batch_size*64),

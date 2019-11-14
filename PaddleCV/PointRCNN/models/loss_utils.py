@@ -53,6 +53,7 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope, loc_bin_siz
     :return:
     """
     fg_num = fluid.layers.cast(fluid.layers.reduce_sum(fg_mask), dtype=pred_reg.dtype)
+    fg_num = fluid.layers.clip(fg_num, min=1.0, max=point_num)
     fg_scale = float(point_num) / fg_num
 
     per_loc_bin_num = int(loc_scope / loc_bin_size) * 2
