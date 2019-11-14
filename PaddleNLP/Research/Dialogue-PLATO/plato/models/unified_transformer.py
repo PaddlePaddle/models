@@ -16,27 +16,27 @@ UnifiedTransformer
 """
 
 import numpy as np
+import paddle
 import paddle.fluid as fluid
+from paddle.fluid.dygraph import FC
 import paddle.fluid.layers as layers
 
-from args import str2bool
-from modules.embedder import Embedder
-import modules.functions as F
-from modules.transformer_block import TransformerBlock
-from models.model_base import ModelBase
-from paddle.fluid.dygraph import LayerNorm
-from paddle.fluid.dygraph import FC
+from plato.args import str2bool
+from plato.modules.embedder import Embedder
+import plato.modules.functions as F
+from plato.modules.layer_norm import LayerNorm
+from plato.modules.transformer_block import TransformerBlock
+from plato.models.model_base import ModelBase
 
 
 class UnifiedTransformer(ModelBase):
     """
-    Implement of unified transformer.
+    Implement unified transformer.
     """
 
     @classmethod
-    def add_cmdline_argument(cls, parser):
+    def add_cmdline_argument(cls, group):
         """ Add cmdline argument. """
-        group = ModelBase.add_cmdline_argument(parser)
         group.add_argument("--num_token_embeddings", type=int, default=-1,
                            help="The number of tokens in vocabulary. "
                            "It will be automatically calculated after loading vocabulary.")
@@ -80,6 +80,8 @@ class UnifiedTransformer(ModelBase):
         group.add_argument("--two_layer_predictor", type=str2bool, default=False,
                            help="Use two layer predictor. "
                            "Traditional BERT use two FC layers to predict masked token.")
+        group.add_argument("--bidirectional_context", type=str2bool, default=True,
+                           help="Whether to use bidirectional self-attention in context tokens.")
         group.add_argument("--label_smooth", type=float, default=0.0,
                            help="Use soft label to calculate NLL loss and BoW loss.")
         group.add_argument("--initializer_range", type=float, default=0.02,
@@ -93,11 +95,9 @@ class UnifiedTransformer(ModelBase):
                            help="The maximum norm of gradient.")
         return group
 
-    def __init__(self, name_scope, generator, hparams, dtype="float32"):
-        super().__init__(name_scope)
+    def __init__(self, name_scope, hparams, generator, dtype="float32"):
+        super().__init__(name_scope, hparams)
         self.generator = generator
-        self.init_checkpoint = hparams.init_checkpoint
-        self.batch_size = hparams.batch_size
         self.num_token_embeddings = hparams.num_token_embeddings
         self.num_pos_embeddings = hparams.num_pos_embeddings
         self.num_type_embeddings = hparams.num_type_embeddings
@@ -117,11 +117,9 @@ class UnifiedTransformer(ModelBase):
         self.weight_sharing = hparams.weight_sharing
         self.pos_trainable = hparams.pos_trainable
         self.two_layer_predictor = hparams.two_layer_predictor
+        self.bidirectional_context = hparams.bidirectional_context
         self.label_smooth = hparams.label_smooth
         self.initializer_range = hparams.initializer_range
-
-        if self.use_discriminator and self.batch_size == 1:
-            print("Warmming: If you use discriminator loss in traning, the batch_size must be greater than 1.")
 
         self.embedder = Embedder(self.full_name(),
                                  self.hidden_dim,
@@ -151,22 +149,23 @@ class UnifiedTransformer(ModelBase):
             self.layers.append(layer)
             self.add_sublayer(f"layer_{i}", layer)
 
-        self.post_network = FC(name_scope=self.full_name() + ".post_network",
-                               size=self.num_latent,
-                               bias_attr=False)
+        if self.num_latent > 0:
+            self.post_network = FC(name_scope=self.full_name() + ".post_network",
+                                   size=self.num_latent,
+                                   bias_attr=False)
 
-        if self.use_discriminator:
-            self.dis_ratio = hparams.dis_ratio
-            self.discriminator = FC(name_scope=self.full_name() + ".discriminator",
-                                    size=1,
-                                    act="sigmoid")
+            if self.use_discriminator:
+                self.dis_ratio = hparams.dis_ratio
+                self.discriminator = FC(name_scope=self.full_name() + ".discriminator",
+                                        size=1,
+                                        act="sigmoid")
 
         if self.two_layer_predictor:
             self.pre_predictor = FC(name_scope=self.full_name() + ".pre_predictor",
                                     size=self.hidden_dim,
                                     num_flatten_dims=2,
                                     act="gelu")
-            if self.with_bow:
+            if self.num_latent > 0 and self.with_bow:
                 self.pre_bow_predictor = FC(name_scope=self.full_name() + ".pre_bow_predictor",
                                             size=self.hidden_dim,
                                             act="gelu")
@@ -175,7 +174,7 @@ class UnifiedTransformer(ModelBase):
                                 size=self.num_token_embeddings,
                                 num_flatten_dims=2,
                                 bias_attr=False)
-        if self.with_bow:
+        if self.num_latent > 0 and self.with_bow:
             self.bow_predictor = FC(name_scope=self.full_name() + ".bow_predictor",
                                     size=self.num_token_embeddings,
                                     bias_attr=False)
@@ -199,20 +198,21 @@ class UnifiedTransformer(ModelBase):
 
     def _create_parameters(self):
         """ Create model's paramters. """
-        sequence_mask = np.tri(self.num_pos_embeddings, self.num_pos_embeddings, dtype=self._dtype)
-        self.mask_embed = self.create_parameter(
-            attr=fluid.ParamAttr(
-                name="mask_embed",
-                initializer=fluid.initializer.NormalInitializer(scale=self.initializer_range)),
-            shape=[1, 1, self.hidden_dim],
-            dtype=self._dtype)
-        self.latent_embeddings = self.create_parameter(
-            attr=fluid.ParamAttr(
-                name="latent_embeddings",
-                initializer=fluid.initializer.NormalInitializer(scale=self.initializer_range)),
-            shape=[self.num_latent, self.hidden_dim],
-            dtype=self._dtype)
+        if self.num_latent > 0:
+            self.mask_embed = self.create_parameter(
+                attr=fluid.ParamAttr(
+                    name="mask_embed",
+                    initializer=fluid.initializer.NormalInitializer(scale=self.initializer_range)),
+                shape=[1, 1, self.hidden_dim],
+                dtype=self._dtype)
+            self.latent_embeddings = self.create_parameter(
+                attr=fluid.ParamAttr(
+                    name="latent_embeddings",
+                    initializer=fluid.initializer.NormalInitializer(scale=self.initializer_range)),
+                shape=[self.num_latent, self.hidden_dim],
+                dtype=self._dtype)
 
+        sequence_mask = np.tri(self.num_pos_embeddings, self.num_pos_embeddings, dtype=self._dtype)
         self.sequence_mask = self.create_parameter(
             attr=fluid.ParamAttr(
                 name="sequence_mask",
@@ -226,24 +226,39 @@ class UnifiedTransformer(ModelBase):
         """ Load saved paramters. """
         if self.init_checkpoint is not None:
             print(f"Loading parameters from {self.init_checkpoint}")
-            models, optimizers = fluid.dygraph.load_persistables(self.init_checkpoint)
-            parameters = self.parameters()
-            parameters = {param.name: param for param in parameters}
+            if hasattr(fluid, "load_dygraph"):
+                # >= 1.6.0 compatible
+                models, optimizers = fluid.load_dygraph(self.init_checkpoint)
+            else:
+                models, optimizers = fluid.dygraph.load_persistables(self.init_checkpoint)
+            parameters = {param.name: param for param in self.parameters()}
             for name, param in models.items():
                 if name in parameters:
                     if param.shape != parameters[name].shape:
                         print(f"part of parameter({name}) random normlize initialize")
+                        if hasattr(param, "numpy"):
+                            arr = param.numpy()
+                        else:
+                            value = param.value()
+                            tensor = value.get_tensor()
+                            arr = np.array(tensor)
                         z = np.random.normal(scale=self.initializer_range,
                                              size=parameters[name].shape).astype("float32")
-                        z[:param.shape[0]] = param.numpy()
+                        if name == "Model/UnifiedTransformer_0/Embedder_0/Embedding_0.w_0":
+                            z[-param.shape[0]:] = arr
+                        else:
+                            z[:param.shape[0]] = arr
                         z = fluid.dygraph.to_variable(z)
                         models[name] = z
             for name in parameters:
-                if name not in models and parameters[name].trainable:
-                    print(f"parameter({name}) random normlize initialize")
-                    z = np.random.normal(scale=self.initializer_range,
-                                         size=parameters[name].shape).astype("float32")
-                    models[name] = fluid.dygraph.to_variable(z)
+                if name not in models:
+                    if parameters[name].trainable:
+                        print(f"parameter({name}) random normlize initialize")
+                        z = np.random.normal(scale=self.initializer_range,
+                                             size=parameters[name].shape).astype("float32")
+                        models[name] = fluid.dygraph.to_variable(z)
+                    else:
+                        models[name] = parameters[name]
             self.load_dict(models)
             print(f"Loaded parameters from {self.init_checkpoint}")
 
@@ -308,7 +323,8 @@ class UnifiedTransformer(ModelBase):
         mask_embed = self.embed_layer_norm(mask_embed)
         post_embed = layers.concat([mask_embed, embed], axis=1)
 
-        mask = self._create_mask(input_mask, append_head=True)
+        mask = self._create_mask(input_mask, auto_regressive=not self.bidirectional_context,
+                                 append_head=True)
 
         for layer in self.layers:
             post_embed = layer(post_embed, mask, None)
@@ -321,17 +337,29 @@ class UnifiedTransformer(ModelBase):
 
     def _discriminator_network(self, input_mask, embed, batch_size, src_len, tgt_len, pos_embed):
         """ Basic discriminator network implement. """
+        # if batch_size <= 1:
+        #     raise ValueError("Warmming: If you use discriminator loss in traning, the batch_size must be greater than 1.")
+
         src_embed = embed[:, :src_len]
         tgt_embed = embed[:, src_len:]
-        neg_tgt_embed = layers.reverse(tgt_embed, axis=0) # concat([tgt_embed[1:], tgt_embed[:1]], axis=0)
+        if batch_size > 1:
+            neg_tgt_embed = layers.concat([tgt_embed[1:], tgt_embed[:1]], axis=0)
+        else:
+            # Cannot train discriminator if batch_size == 1
+            neg_tgt_embed = tgt_embed
         neg_embed = layers.concat([src_embed, neg_tgt_embed], axis=1)
 
         # Create generation network mask
         src_mask = input_mask[:, :src_len]
         tgt_mask = input_mask[:, src_len:]
-        neg_tgt_mask = layers.reverse(tgt_mask, axis=0) # concat([tgt_mask[1:], tgt_mask[:1]], axis=0)
+        if batch_size > 1:
+            neg_tgt_mask = layers.concat([tgt_mask[1:], tgt_mask[:1]], axis=0)
+        else:
+            # Cannot train discriminator if batch_size == 1
+            neg_tgt_mask = tgt_mask
         neg_mask = layers.concat([src_mask, neg_tgt_mask], axis=1)
-        mask = self._create_mask(neg_mask, append_head=True)
+        mask = self._create_mask(neg_mask, auto_regressive=not self.bidirectional_context,
+                                 append_head=True)
 
         mask_embed = self.mask_embed
         mask_embed = layers.expand(mask_embed, [batch_size, 1, 1])
@@ -350,21 +378,28 @@ class UnifiedTransformer(ModelBase):
 
     def _generation_network(self, input_mask, embed, batch_size, src_len, tgt_len, latent_embed):
         """ Basic generation network implement. """
-        latent_embed = F.unsqueeze(latent_embed, [1])
-        latent_embed = self.embed_layer_norm(latent_embed)
-        dec_embed = layers.concat([latent_embed, embed], axis=1)
+        if self.num_latent > 0:
+            latent_embed = F.unsqueeze(latent_embed, [1])
+            latent_embed = self.embed_layer_norm(latent_embed)
+            dec_embed = layers.concat([latent_embed, embed], axis=1)
+        else:
+            dec_embed = embed
 
         # Create generation network mask
         src_mask = input_mask[:, :src_len]
         tgt_mask = input_mask[:, src_len:]
-        enc_mask = self._create_mask(src_mask, append_head=True)
+        enc_mask = self._create_mask(src_mask, auto_regressive=not self.bidirectional_context,
+                                     append_head=self.num_latent > 0)
         dec_mask = self._create_mask(tgt_mask, auto_regressive=True)
         mask = self._join_mask(enc_mask, dec_mask)
 
         for layer in self.layers:
             dec_embed = layer(dec_embed, mask, None)
 
-        latent_embed = dec_embed[:, 0]
+        if self.num_latent > 0:
+            latent_embed = dec_embed[:, 0]
+        else:
+            latent_embed = None
         dec_embed = dec_embed[:, -tgt_len:]
         if self.two_layer_predictor:
             dec_embed = self.pre_predictor(dec_embed)
@@ -409,30 +444,33 @@ class UnifiedTransformer(ModelBase):
         src_len = src_token.shape[1]
         tgt_len = tgt_token.shape[1]
 
-        post_embed, post_probs, post_logits = self._posteriori_network(
-            input_mask, embed, batch_size, src_len, tgt_len)
-        outputs["post_logits"] = post_logits
+        if self.num_latent > 0:
+            post_embed, post_probs, post_logits = self._posteriori_network(
+                input_mask, embed, batch_size, src_len, tgt_len)
+            outputs["post_logits"] = post_logits
 
-        if self.use_discriminator:
-            pos_probs, neg_probs = self._discriminator_network(
-                input_mask, embed, batch_size, src_len, tgt_len, post_embed)
-            outputs["pos_probs"] = pos_probs
-            outputs["neg_probs"] = neg_probs
+            if self.use_discriminator:
+                pos_probs, neg_probs = self._discriminator_network(
+                    input_mask, embed, batch_size, src_len, tgt_len, post_embed)
+                outputs["pos_probs"] = pos_probs
+                outputs["neg_probs"] = neg_probs
 
-        if is_training:
-            z = F.gumbel_softmax(post_logits, self.tau)
+            if is_training:
+                z = F.gumbel_softmax(post_logits, self.tau)
+            else:
+                indices = layers.argmax(post_logits, axis=1)
+                z = layers.one_hot(F.unsqueeze(indices, [1]), self.num_latent)
+            latent_embeddings = self.latent_embeddings
+            latent_embed = layers.matmul(z, latent_embeddings)
+            outputs["latent_embed"] = latent_embed
         else:
-            indices = layers.argmax(post_logits, axis=1)
-            z = layers.one_hot(F.unsqueeze(indices, [1]), self.num_latent)
-        latent_embeddings = self.latent_embeddings
-        latent_embed = layers.matmul(z, latent_embeddings)
-        outputs["latent_embed"] = latent_embed
+            latent_embed = None
 
         latent_embed, dec_probs = self._generation_network(
             input_mask, embed, batch_size, src_len, tgt_len, latent_embed)
         outputs["dec_probs"] = dec_probs
 
-        if self.with_bow:
+        if self.num_latent > 0 and self.with_bow:
             if self.two_layer_predictor:
                 latent_embed = self.pre_bow_predictor(latent_embed)
             bow_logits = self.bow_predictor(latent_embed)
@@ -445,7 +483,7 @@ class UnifiedTransformer(ModelBase):
         """ Calculate loss function by using inputs and outputs. """
         metrics = {}
 
-        tgt_len = layers.reduce_sum(inputs["tgt_mask"]) - 1
+        tgt_len = layers.reduce_sum(layers.reduce_sum(inputs["tgt_mask"], dim=1) - 1)
         tgt_len.stop_gradient = True
 
         label = inputs["tgt_token"][:, 1:]
@@ -462,10 +500,9 @@ class UnifiedTransformer(ModelBase):
         nll = layers.reduce_mean(nll)
         metrics["nll"] = nll
         metrics["token_nll"] = token_nll
-        metrics["token_ppl"] = layers.exp(token_nll)
         loss = nll
 
-        if self.with_bow:
+        if self.num_latent > 0 and self.with_bow:
             bow_probs = F.unsqueeze(outputs["bow_probs"], [1])
             bow_probs = layers.expand(bow_probs, [1, label.shape[1], 1])
             if self.label_smooth > 0:
@@ -480,13 +517,14 @@ class UnifiedTransformer(ModelBase):
             metrics["token_bow"] = token_bow
             loss = loss + bow
 
-        if self.use_discriminator:
+        if self.num_latent > 0 and self.use_discriminator:
             dis = 0.0 - (layers.log(outputs["pos_probs"]) + layers.log(1.0 - outputs["neg_probs"]))
             dis = layers.reduce_mean(dis)
             metrics["dis"] = dis
             loss = loss + dis * self.dis_ratio
 
         metrics["loss"] = loss
+        metrics["token_num"] = tgt_len
         return metrics
 
     def _optimize(self, loss):
@@ -518,37 +556,45 @@ class UnifiedTransformer(ModelBase):
         src_embed = self.embedder(src_token, src_pos, src_type, src_turn)
         src_embed = self.embed_layer_norm(src_embed)
 
-        src_embed = F.unsqueeze(src_embed, [1])
-        src_embed = layers.expand(src_embed, [1, self.num_latent, 1, 1])
-        src_embed = layers.reshape(src_embed, [-1, seq_len, self.hidden_dim])
+        mask = self._create_mask(src_mask, append_head=self.num_latent > 0)
 
-        latent_embed = self.latent_embeddings
-        latent_embed = F.unsqueeze(latent_embed, [1])
-        latent_embed = layers.expand(latent_embed, [batch_size, 1, 1])
-        latent_embed = self.embed_layer_norm(latent_embed)
+        if self.num_latent > 0:
+            src_embed = F.unsqueeze(src_embed, [1])
+            src_embed = layers.expand(src_embed, [1, self.num_latent, 1, 1])
+            src_embed = layers.reshape(src_embed, [-1, seq_len, self.hidden_dim])
 
-        enc_out = layers.concat([latent_embed, src_embed], axis=1)
-        mask = self._create_mask(src_mask, append_head=True)
-        mask = F.unsqueeze(mask, [1])
-        mask = layers.expand(mask, [1, self.num_latent, 1, 1])
-        mask = layers.reshape(mask, [-1, seq_len + 1, seq_len + 1])
+            latent_embed = self.latent_embeddings
+            latent_embed = F.unsqueeze(latent_embed, [1])
+            latent_embed = layers.expand(latent_embed, [batch_size, 1, 1])
+            latent_embed = self.embed_layer_norm(latent_embed)
+
+            enc_out = layers.concat([latent_embed, src_embed], axis=1)
+
+            mask = F.unsqueeze(mask, [1])
+            mask = layers.expand(mask, [1, self.num_latent, 1, 1])
+            mask = layers.reshape(mask, [-1, seq_len + 1, seq_len + 1])
+        else:
+            enc_out = src_embed
 
         cache = {}
         for l, layer in enumerate(self.layers):
             cache[f"layer_{l}"] = {}
             enc_out = layer(enc_out, mask, cache[f"layer_{l}"])
-            # state[f"mask_embed_{l}"] = enc_out[:, 0]
 
         state["cache"] = cache
         state["mask"] = mask[:, :1]
-        shape = [batch_size * self.num_latent, 1, 1]
+        if self.num_latent > 0:
+            state["batch_size"] = batch_size * self.num_latent
+            shape = [batch_size * self.num_latent, 1, 1]
+        else:
+            state["batch_size"] = batch_size
+            shape = [batch_size, 1, 1]
         state["pred_mask"] = layers.ones(shape, self._dtype)
         state["pred_pos"] = layers.zeros(shape, "int64")
         state["pred_type"] = layers.zeros(shape, "int64")
         state["pred_turn"] = layers.zeros(shape, "int64")
-        state["batch_size"] = batch_size * self.num_latent
 
-        if "tgt_token" in inputs:
+        if "tgt_token" in inputs and self.num_latent > 0:
             tgt_token = inputs["tgt_token"][:, :-1]
             tgt_mask = inputs["tgt_mask"][:, :-1]
             tgt_pos = inputs["tgt_pos"][:, :-1]
@@ -669,21 +715,32 @@ class UnifiedTransformer(ModelBase):
 
     def _infer(self, inputs):
         """ Real inference process of model. """
+        results = {}
+
         # Initial decode state.
         state = self._init_state(inputs)
-        batch_size = state["batch_size"] // self.num_latent
-        results = {}
         if "post_probs" in state:
             results["post_probs"] = state.pop("post_probs")
+
         # Generation process.
         gen_results = self.generator(self._decode, state)
         results.update(gen_results)
 
-        results["scores"] = layers.reshape(results["scores"], [batch_size, self.num_latent])
-        results["log_p"] = results["scores"]
-        results["src"] = layers.reshape(inputs["src_token"], [batch_size, -1])
-        results["tgt"] = layers.reshape(inputs["tgt_token"], [batch_size, -1])
-        results["preds"] = layers.reshape(results["preds"], [batch_size, self.num_latent, -1])
-        if self.use_discriminator:
-            results["scores"] = self._ranking(inputs, results["preds"])
+        if self.num_latent > 0:
+            batch_size = state["batch_size"] // self.num_latent
+            results["scores"] = layers.reshape(results["scores"], [batch_size, self.num_latent])
+            results["log_p"] = results["scores"]
+            results["src"] = layers.reshape(inputs["src_token"], [batch_size, -1])
+            if "tgt_token" in inputs:
+                results["tgt"] = layers.reshape(inputs["tgt_token"], [batch_size, -1])
+            results["preds"] = layers.reshape(results["preds"], [batch_size, self.num_latent, -1])
+            if self.use_discriminator:
+                results["scores"] = self._ranking(inputs, results["preds"])
+        else:
+            batch_size = state["batch_size"]
+            if "tgt_token" in inputs:
+                results["tgt"] = layers.reshape(inputs["tgt_token"], [batch_size, -1])
         return results
+
+
+UnifiedTransformer.register("UnifiedTransformer")

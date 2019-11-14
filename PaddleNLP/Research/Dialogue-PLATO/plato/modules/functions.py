@@ -22,6 +22,7 @@ import paddle.fluid.layers as layers
 
 def unsqueeze(input, axes):
     """ Implement unsqueeze in dygraph mode. """
+    # return layers.unsqueeze(input, axes)
     # op:unsqueeze has bug in dygraph
     axes = [axis if axis >= 0 else axis + len(input.shape) + 1 for axis in axes]
     axes = sorted(axes, reverse=True)
@@ -33,8 +34,9 @@ def unsqueeze(input, axes):
 
 def gumbel_softmax(input, tau=1, eps=1e-10):
     """ Basic implement of gumbel_softmax. """
-    U = layers.uniform_random(input.shape, dtype=input.dtype, min=0.0, max=1.0)
-    U.stop_gradient = True
+    U = fluid.dygraph.to_variable(np.random.rand(*input.shape))
+    # U = layers.uniform_random(input.shape, dtype=input.dtype, min=0.0, max=1.0)
+    # U.stop_gradient = True
     gumbel = 0.0 - layers.log(eps - layers.log(U + eps))
     y = input + gumbel
     return layers.softmax(y / tau)

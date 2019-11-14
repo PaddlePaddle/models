@@ -16,14 +16,14 @@ TransformerBlock class.
 """
 
 import paddle.fluid as fluid
-import paddle.fluid.layers as layers
-
-from modules.feedforward import FeedForward
-from modules.multihead_attention import MultiheadAttention
-import modules.functions as F
 from paddle.fluid.dygraph import FC
 from paddle.fluid.dygraph import Layer
-from paddle.fluid.dygraph import LayerNorm
+import paddle.fluid.layers as layers
+
+from plato.modules.feedforward import FeedForward
+from plato.modules.layer_norm import LayerNorm
+from plato.modules.multihead_attention import MultiheadAttention
+import plato.modules.functions as F
 
 
 class TransformerBlock(Layer):

@@ -2,7 +2,7 @@
 set -ux
 
 SAVE_DIR=outputs/DSTC7_AVSD
-VOCAB_PATH=data/vocab.txt
+VOCAB_PATH=model/Bert/vocab.txt
 DATA_DIR=data/DSTC7_AVSD
 INIT_CHECKPOINT=model/PLATO
 DATA_TYPE=multi_knowledge
@@ -33,7 +33,7 @@ python -u \
     --vocab_path $VOCAB_PATH \
     --data_dir $DATA_DIR \
     --data_type $DATA_TYPE \
-    --batch_size 8 \
+    --batch_size 4 \
     --valid_steps 2000 \
     --num_type_embeddings 3 \
     --use_discriminator true \
