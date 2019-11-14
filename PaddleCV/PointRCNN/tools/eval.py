@@ -391,6 +391,9 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         if rets_dict is None:
             return 
 
+        for k,v in rets_dict.items():
+            rets_dict[k] = v[0]
+
         rcnn_cls = rets_dict['rcnn_cls']
         rcnn_reg = rets_dict['rcnn_reg']
         roi_boxes3d = rets_dict['roi_boxes3d']
@@ -417,7 +420,7 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         # scoring
         if rcnn_cls.shape[1] == 1:
             raw_scores = rcnn_cls.reshape(-1)
-            norm_scores = rets_dict['norm_scores']
+            norm_scores = rets_dict['norm_scores'][0]
             pred_classes = norm_scores > cfg.RCNN.SCORE_THRESH
             pred_classes = pred_classes.astype(np.float32)
         else:
@@ -492,7 +495,7 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         calib = kitti_rcnn_reader.get_calib(sample_id)
         mdict['total_det_num'] += pred_boxes3d_selected.shape[0]
         save_kitti_format(sample_id, calib, pred_boxes3d_selected, final_output_dir, scores_selected, image_shape)
-
+        print(mdict)
 
 def eval():
     args = parse_args()
@@ -624,7 +627,7 @@ def eval():
         for i in range(4):
             p_list.append(multiprocessing.Process(
                 target=rcnn_metric,
-                args=(queue, mdict, thresh_list)
+                args=(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, refine_output_dir, final_output_dir)
             ))
             p_list[-1].start()
 
@@ -646,7 +649,9 @@ def eval():
             period = time.time() - cur_time
             eval_periods.append(period)
             queue.put(rets_dict)
+            mdict['run_time'] = period
             cnt += 1 
+            eval_iter += 1 
 
     except fluid.core.EOFException:
         if cfg.RPN.ENABLED:
