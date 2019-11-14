@@ -24,7 +24,7 @@ from paddle.fluid.dygraph import layers
 from paddle.fluid.dygraph import parallel_helper
 import paddle.fluid.framework as framework
 from paddle.fluid.layers import collective
-import paddle.fluid.dygraph.base as base
+from paddle.fluid.dygraph.base import to_variable, no_grad
 
 ParallelStrategy = core.ParallelStrategy
 
@@ -179,7 +179,7 @@ class DataParallel(layers.Layer):
         if not self._is_data_parallel_mode():
             return loss
 
-        loss_scale = base.to_variable(
+        loss_scale = to_variable(
             np.array([self._strategy.nranks]).astype("float32"))
         loss_scale.stop_gradient = True
         loss = loss / loss_scale
@@ -214,6 +214,7 @@ class DataParallel(layers.Layer):
             for g_var, g_shape in zip(origin_grad_vars, grad_shapes):
                 nn.reshape(x=g_var, shape=g_shape, inplace=True)
 
+    @no_grad
     def apply_collective_grads(self):
         """
         AllReduce the Parameters' gradient.

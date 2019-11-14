@@ -16,11 +16,11 @@ MultiheadAttention class.
 """
 
 import paddle.fluid as fluid
-import paddle.fluid.layers as layers
-
-import modules.functions as F
 from paddle.fluid.dygraph import Layer
 from paddle.fluid.dygraph import FC
+import paddle.fluid.layers as layers
+
+import plato.modules.functions as F
 
 
 class MultiheadAttention(Layer):
