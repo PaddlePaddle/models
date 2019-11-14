@@ -65,16 +65,13 @@ dataset
 	Momentum: 动量0.9，正则化系数1e-4
 	
 #### 加载预训练模型
-	设置 --load_pretrained_model True （默认为True）
+	设置 --load_pretrained_model（默认为False）
 	预训练文件：
 	    checkpoint/DANet50_pretrained_model_paddle1.6.pdparams
         checkpoint/DANet101_pretrained_model_paddle1.6.pdparams
-		
-#### 不加载预训练模型
-	从0开始训练，需要设置 --load_pretrained_model False
 
 #### 加载训练好的模型
-	设置 --load_better_model True （默认为False）
+	设置 --load_better_model（默认为False）
 	训练好的文件：
 		checkpoint/DANet101_better_model_paddle1.6.pdparams
 ##### 【注】
@@ -94,6 +91,7 @@ checkpoint
 ```
 
 ## 模型训练
+
 ```sh
 cd danet
 export PYTHONPATH=`pwd`:$PYTHONPATH
@@ -101,16 +99,26 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 export FLAGS_eager_delete_tensor_gb=0.0
 # setting visible devices for train
 export CUDA_VISIBLE_DEVICES=0,1,2,3
-
-
-python train_executor.py --backbone resnet101 --batch_size 2 --lr 0.003 --lr_scheduler poly --epoch_num 350 --crop_size 768 --base_size 1024 --warm_up True --cuda True --use_data_parallel True --dilated True --multi_grid True --multi_dilation 4 8 16 --scale True --load_pretrained_model True --load_better_model False
-或者
-python train_dygraph.py --backbone resnet101 --batch_size 2 --lr 0.003 --lr_scheduler poly --epoch_num 350 --crop_size 768 --base_size 1024 --warm_up True --cuda True --use_data_parallel True --dilated True --multi_grid True --multi_dilation 4 8 16 --scale True --load_pretrained_model True --load_better_model False
-
 ```
+
+executor执行以下命令进行训练
+```sh
+python train_executor.py --backbone resnet101 --base_size 1024 --crop_size 768 --epoch_num 350 --batch_size 2 --lr 0.003 --lr_scheduler poly --warm_up --warmup_epoch 2 --cuda --use_data_parallel --load_pretrained_model --save_model checkpoint/DANet101_better_model_paddle1.6 --multi_scales --flip --dilated --multi_grid --scale --multi_dilation 4 8 16 
+```
+参数含义： 使用ResNet101骨干网络，训练图片基础大小是1024，裁剪大小是768，训练轮数是350次，batch size是2
+学习率是0.003，学习率衰减策略是poly，使用学习率热身，热身轮数是2轮，使用GPU，使用数据并行， 加载预训练模型，设置加载的模型地址，使用多尺度测试， 使用图片左右翻转测试，使用空洞卷积，使用multi_grid，multi_dilation设置为4 8 16，使用多尺度训练 
+#### 或者
+dygraph执行以下命令进行训练
+```sh
+python train_dygraph.py --backbone resnet101 --base_size 1024 --crop_size 768 --epoch_num 350 --batch_size 2 --lr 0.003 --lr_scheduler poly --cuda --use_data_parallel --load_pretrained_model --save_model checkpoint/DANet101_better_model_paddle1.6 --multi_scales --flip --dilated --multi_grid --scale --multi_dilation 4 8 16 
+```
+参数含义： 使用ResNet101骨干网络，训练图片基础大小是1024，裁剪大小是768，训练轮数是350次，batch size是2，学习率是0.003，学习率衰减策略是poly，使用GPU， 使用数据并行，加载预训练模型，设置加载的模型地址，使用多尺度测试，使用图片左右翻转测试，使用空洞卷积，使用multi_grid，multi_dilation设置4 8 16，使用多尺度训练 
+
 #### 【注】
-##### train_executor.py使用executor方式训练（适合paddle1.5.2），train_dygraph.py使用动态图方式训练（适合paddle1.6.0），两种方式都可以
-##### 在训练阶段，验证的结果不是真实的，需要使用eval.py来获得验证的最终结果。
+##### train_executor.py使用executor方式训练（适合paddle >= 1.5.2），train_dygraph.py使用动态图方式训练（适合paddle >= 1.6.0），两种方式都可以
+##### 动态图方式训练暂时不支持学习率热身
+
+#### 在训练阶段，输出的验证结果不是真实的，需要使用eval.py来获得验证的最终结果。
  
  ## 模型验证
 ```sh
@@ -119,7 +127,7 @@ export FLAGS_eager_delete_tensor_gb=0.0
 # setting visible devices for prediction
 export CUDA_VISIBLE_DEVICES=0
 
-python eval.py --backbone resnet101 --load_better_model True --batch_size 1 --crop_size 1024 --base_size 2048 --cuda True --multi_scales True --flip True --dilated True --multi_grid True --multi_dilation 4 8 16
+python eval.py --backbone resnet101 --base_size 2048 --crop_size 1024 --cuda --use_data_parallel --load_better_model --save_model checkpoint/DANet101_better_model_paddle1.6 --multi_scales --flip --dilated --multi_grid --multi_dilation 4 8 16
 ```
 
 ## 验证结果
