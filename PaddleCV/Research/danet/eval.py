@@ -134,6 +134,7 @@ def eval(args, model_path):
         x = fluid.dygraph.to_variable(x)
         y = model(x)
         iou = IOUMetric(num_classes)
+        model_path = args.save_model
         # 加载最优模型
         if paddle.__version__ == '1.5.2' and args.load_better_model:
             assert os.path.exists(model_path), "请核对模型文件地址是否存在"
@@ -143,6 +144,7 @@ def eval(args, model_path):
             model_param, _ = fluid.dygraph.load_persistables(new_model_path)
             model.load_dict(model_param)
         elif args.load_better_model:
+            print('无法使用eval.py验证executor训练的模型，因为executor保存的模型有多个文件')
             assert os.path.exists(model_path + '.pdparams'), "请核对模型文件地址是否存在, 1.6版本只能加载一个独立文件"
             print('better model exist!')
             print('require paddle version >= 1.6.0)
@@ -342,5 +344,5 @@ if __name__ == '__main__':
     options.print_args()
     # model_path = 'checkpoint/DANet101_better_model_paddle1.5.2'
     model_path = 'checkpoint/DANet101_better_model_paddle1.6'
-    eval(args, model_path)
+    eval(args)
    
