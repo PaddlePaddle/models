@@ -60,7 +60,7 @@ class Options(object):
                             help='learning rate scheduler (default: 0.9)')
         parser.add_argument('--lr_step', type=int, default=None,
                             help='lr step to change lr')
-        parser.add_argument('--warm_up', type=bool, default=False,
+        parser.add_argument('--warm_up', action='store_true', default=False,
                             help='warm_up (default: False)')
         parser.add_argument('--warmup_epoch', type=int, default=5,
                             help='warmup_epoch (default: 5)')
@@ -74,41 +74,40 @@ class Options(object):
                             metavar='M', help='w-decay (default: 1e-4)')
 
         # cuda, seed and logging
-        parser.add_argument('--cuda', default=True, type=bool,
-                            help='use CUDA training')
-        parser.add_argument('--use_data_parallel', default=True, type=bool,
-                            help='use data_parallel training')
+        parser.add_argument('--cuda', action='store_true', default=False,
+                            help='use CUDA training, (default: False)')
+        parser.add_argument('--use_data_parallel', action='store_true', default=False,
+                            help='use data_parallel training, (default: False)')
         parser.add_argument('--seed', type=int, default=1, metavar='S',
                             help='random seed (default: 1)')
         parser.add_argument('--log_root', type=str,
                             default='./', help='set a log path folder')
 
         # checkpoint
-        parser.add_argument("--save_model", default='./checkpoint/', type=str,
-                            help="model path")
+        parser.add_argument("--save_model", default='checkpoint/DANet101_better_model_paddle1.6', type=str,
+                            help="model path, (default: checkpoint/DANet101_better_model_paddle1.6)")
 
         # finetuning pre-trained models
-        parser.add_argument("--load_pretrained_model", default=True, type=bool,
-                            help="load pretrained model (default: True)")
-
+        parser.add_argument("--load_pretrained_model", action='store_true', default=False,
+                            help="load pretrained model (default: False)")
         # load better models
-        parser.add_argument("--load_better_model", default=False, type=bool,
+        parser.add_argument("--load_better_model", action='store_true', default=False,
                             help="load better model (default: False)")
-
-        parser.add_argument('--multi-scales', type=bool, default=True,
-                            help="testing scale,default:(multi scale)")
-        parser.add_argument('--flip', type=bool, default=True,
-                            help="testing flip image,default:(True)")
+        parser.add_argument('--multi_scales', action='store_true', default=False,
+                            help="testing scale, (default: False)")
+        parser.add_argument('--flip', action='store_true', default=False,
+                            help="testing flip image, (default: False)")
 
         # multi grid dilation option
-        parser.add_argument("--dilated", default=True, type=bool,
-                            help="use dilation policy")
-        parser.add_argument("--multi_grid", default=True, type=bool,
-                            help="use multi grid dilation policy")
-        parser.add_argument('--multi_dilation', nargs='+', type=int, default=[4, 8, 16],
-                            help="multi grid dilation list")
-        parser.add_argument('--scale', action='store_false', default=True,
-                            help='choose to use random scale transform(0.75-2.0),default:multi scale')
+        parser.add_argument("--dilated", action='store_true', default=False,
+                            help="use dilation policy, (default: False)")
+        parser.add_argument("--multi_grid", action='store_true', default=False,
+                            help="use multi grid dilation policy, default: False")
+        parser.add_argument('--multi_dilation', nargs='+', type=int, default=None,
+                            help="multi grid dilation list, (default: None), can use --mutil_dilation 4 8 16")
+        parser.add_argument('--scale', action='store_true', default=False,
+                            help='choose to use random scale transform(0.75-2.0) for train, (default: False)')
+        
         # the parser
         self.parser = parser
 
