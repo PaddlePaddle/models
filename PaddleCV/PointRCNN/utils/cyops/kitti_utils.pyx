@@ -208,3 +208,128 @@ def get_objects_from_label(label_file):
         lines = f.readlines()
     objects = [object3d.Object3d(line) for line in lines]
     return objects
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def _rotate_pc_along_y(np.ndarray pc, np.ndarray angle):
+    cdef np.ndarray cosa = np.cos(angle)
+    cosa=cosa.reshape(-1, 1)
+    cdef np.ndarray sina = np.sin(angle)
+    sina = sina.reshape(-1, 1)
+
+    cdef np.ndarray R = np.concatenate([cosa, -sina, sina, cosa], axis=-1)
+    R = R.reshape(-1, 2, 2)
+    cdef np.ndarray pc_temp = pc[:, [0, 2]]
+    pc_temp = pc_temp.reshape(-1, 1, 2)
+    cdef np.ndarray pc_temp_1 = np.matmul(pc_temp, R.transpose(0, 2, 1))
+    pc_temp_1 = pc_temp_1.reshape(-1, 2)
+    pc[:,[0,2]] = pc_temp_1 
+
+    return pc
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def decode_bbox_target(
+    np.ndarray roi_box3d, 
+    np.ndarray pred_reg, 
+    np.ndarray anchor_size, 
+    float loc_scope,
+    float loc_bin_size, 
+    int num_head_bin, 
+    bint get_xz_fine=True,
+    float loc_y_scope=0.5, 
+    float loc_y_bin_size=0.25,
+    bint get_y_by_bin=False, 
+    bint get_ry_fine=False):
+    
+    cdef int per_loc_bin_num = int(loc_scope / loc_bin_size) * 2
+    cdef int loc_y_bin_num = int(loc_y_scope / loc_y_bin_size) * 2
+
+    # recover xz localization
+    cdef int x_bin_l = 0
+    cdef int x_bin_r = per_loc_bin_num
+    cdef int z_bin_l = per_loc_bin_num, 
+    cdef int z_bin_r = per_loc_bin_num * 2
+    cdef int start_offset = z_bin_r
+    cdef np.ndarray x_bin = np.argmax(pred_reg[:, x_bin_l: x_bin_r], axis=1)
+    cdef np.ndarray z_bin = np.argmax(pred_reg[:, z_bin_l: z_bin_r], axis=1)
+
+    cdef np.ndarray pos_x = x_bin.astype('float32') * loc_bin_size + loc_bin_size / 2 - loc_scope
+    cdef np.ndarray pos_z = z_bin.astype('float32') * loc_bin_size + loc_bin_size / 2 - loc_scope
+
+    if get_xz_fine:
+        x_res_l, x_res_r = per_loc_bin_num * 2, per_loc_bin_num * 3
+        z_res_l, z_res_r = per_loc_bin_num * 3, per_loc_bin_num * 4
+        start_offset = z_res_r
+
+        x_res_norm = pred_reg[:, x_res_l:x_res_r][np.arange(len(x_bin)), x_bin]
+        z_res_norm = pred_reg[:, z_res_l:z_res_r][np.arange(len(z_bin)), z_bin]
+
+        x_res = x_res_norm * loc_bin_size
+        z_res = z_res_norm * loc_bin_size
+        pos_x += x_res
+        pos_z += z_res
+
+    # recover y localization
+    if get_y_by_bin:
+        y_bin_l, y_bin_r = start_offset, start_offset + loc_y_bin_num
+        y_res_l, y_res_r = y_bin_r, y_bin_r + loc_y_bin_num
+        start_offset = y_res_r
+
+        y_bin = np.argmax(pred_reg[:, y_bin_l: y_bin_r], axis=1)
+        y_res_norm = pred_reg[:, y_res_l:y_res_r][np.arange(len(y_bin)), y_bin]
+        y_res = y_res_norm * loc_y_bin_size
+        pos_y = y_bin.astype('float32') * loc_y_bin_size + loc_y_bin_size / 2 - loc_y_scope + y_res
+        pos_y = pos_y + np.array(roi_box3d[:, 1]).reshape(-1)
+    else:
+        y_offset_l, y_offset_r = start_offset, start_offset + 1
+        start_offset = y_offset_r
+
+        pos_y = np.array(roi_box3d[:, 1]) + np.array(pred_reg[:, y_offset_l])
+        pos_y = pos_y.reshape(-1)
+
+    # recover ry rotation
+    cdef int  ry_bin_l = start_offset, 
+    cdef int ry_bin_r = start_offset + num_head_bin
+    cdef int ry_res_l = ry_bin_r, 
+    cdef int ry_res_r = ry_bin_r + num_head_bin
+
+    cdef np.ndarray ry_bin = np.argmax(pred_reg[:, ry_bin_l: ry_bin_r], axis=1)
+    cdef np.ndarray ry_res_norm = pred_reg[:, ry_res_l:ry_res_r][np.arange(len(ry_bin)), ry_bin]
+    if get_ry_fine:
+        # divide pi/2 into several bins
+        angle_per_class = (np.pi / 2) / num_head_bin
+        ry_res = ry_res_norm * (angle_per_class / 2)
+        ry = (ry_bin.astype('float32') * angle_per_class + angle_per_class / 2) + ry_res - np.pi / 4
+    else:
+        angle_per_class = (2 * np.pi) / num_head_bin
+        ry_res = ry_res_norm * (angle_per_class / 2)
+
+        # bin_center is (0, 30, 60, 90, 120, ..., 270, 300, 330)
+        ry = np.fmod(ry_bin.astype('float32') * angle_per_class + ry_res, 2 * np.pi)
+        ry[ry > np.pi] -= 2 * np.pi
+
+    # recover size
+    cdef int size_res_l = ry_res_r 
+    cdef int size_res_r = ry_res_r + 3
+    assert size_res_r == pred_reg.shape[1]
+
+    cdef np.ndarray size_res_norm = pred_reg[:, size_res_l: size_res_r]
+    cdef np.ndarray hwl = size_res_norm * anchor_size + anchor_size
+
+    # shift to original coords
+    cdef np.ndarray roi_center = np.array(roi_box3d[:, 0:3])
+    cdef np.ndarray shift_ret_box3d = np.concatenate((
+        pos_x.reshape(-1, 1),
+        pos_y.reshape(-1, 1),
+        pos_z.reshape(-1, 1),
+        hwl, ry.reshape(-1, 1)), axis=1)
+    ret_box3d = shift_ret_box3d
+    if roi_box3d.shape[1] == 7:
+        roi_ry = np.array(roi_box3d[:, 6]).reshape(-1)
+        ret_box3d = _rotate_pc_along_y(np.array(shift_ret_box3d), -roi_ry)
+        ret_box3d[:, 6] += roi_ry
+    ret_box3d[:, [0, 2]] += roi_center[:, [0, 2]]
+    
+    return ret_box3d

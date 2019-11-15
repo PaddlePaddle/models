@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 np.random.seed(1024)  # use same seed
 
-# rpn_data_dir = "/home/ai/model/pytorch/PointRCNN/output/rpn/default/eval/epoch_200/val"
+#rpn_data_dir = "/home/ai/model/pytorch/PointRCNN/output/rpn/default/eval/epoch_200/val"
 rpn_data_dir = "/paddle/PointRCNN/output/rpn/eval/eval/epoch_200/val"
 
 
@@ -90,6 +90,11 @@ def parse_args():
         action='store_true',
         default=False,
         help='save features for separately rcnn training and evaluation')
+    parser.add_argument(
+        '--save_result',
+        action='store_true',
+        default=False,
+        help='save roi and refine result of evaluation')
     parser.add_argument(
         '--rcnn_eval_roi_dir',
         type=str,
@@ -249,7 +254,6 @@ def decode_bbox_target(roi_box3d, pred_reg, anchor_size, loc_scope,
     x_bin_l, x_bin_r = 0, per_loc_bin_num
     z_bin_l, z_bin_r = per_loc_bin_num, per_loc_bin_num * 2
     start_offset = z_bin_r
-
     x_bin = np.argmax(pred_reg[:, x_bin_l: x_bin_r], axis=1)
     z_bin = np.argmax(pred_reg[:, z_bin_l: z_bin_r], axis=1)
 
@@ -385,12 +389,12 @@ def rpn_metric(queue, mdict, thresh_list, is_save_rpn_feature, kitti_feature_dir
                 rets_dict, seg_output_dir, kitti_output_dir, kitti_rcnn_reader, classes)
 
 
-def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, refine_output_dir, final_output_dir):
+def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, refine_output_dir, final_output_dir, is_save_result=False):
     while True:
         rets_dict = queue.get()
         if rets_dict is None:
             return 
-
+        
         for k,v in rets_dict.items():
             rets_dict[k] = v[0]
 
@@ -398,15 +402,16 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         rcnn_reg = rets_dict['rcnn_reg']
         roi_boxes3d = rets_dict['roi_boxes3d']
         roi_scores = rets_dict['roi_scores']
+
         # bounding box regression
         anchor_size = cfg.CLS_MEAN_SIZE[0]
         #if cfg.RCNN.SIZE_RES_ON_ROI:
         #    roi_size = rets_dict['roi_size']
         #    anchor_size = roi_size 
-        pred_boxes3d = decode_bbox_target(
+        pred_boxes3d = kitti_utils.decode_bbox_target(
             roi_boxes3d, 
             rcnn_reg,
-            anchor_size=anchor_size,
+            anchor_size=np.array(anchor_size),
             loc_scope=cfg.RCNN.LOC_SCOPE, # 1.5,
             loc_bin_size=cfg.RCNN.LOC_BIN_SIZE, # 0.5,
             num_head_bin=cfg.RCNN.NUM_HEAD_BIN, # 9,
@@ -420,7 +425,7 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         # scoring
         if rcnn_cls.shape[1] == 1:
             raw_scores = rcnn_cls.reshape(-1)
-            norm_scores = rets_dict['norm_scores'][0]
+            norm_scores = rets_dict['norm_scores']
             pred_classes = norm_scores > cfg.RCNN.SCORE_THRESH
             pred_classes = pred_classes.astype(np.float32)
         else:
@@ -473,7 +478,7 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         sample_id = rets_dict['sample_id']
         image_shape = kitti_rcnn_reader.get_image_shape(sample_id)
         
-        if True: #args.save_result:
+        if is_save_result:
             # save roi and refine results
             roi_boxes3d_np = roi_boxes3d
             pred_boxes3d_np = pred_boxes3d
@@ -485,7 +490,7 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         
         inds = norm_scores > cfg.RCNN.SCORE_THRESH
         if inds.astype(np.float32).sum() == 0:
-            print("the num of 'norm_scores > thresh' is 0")
+            logger.info("the num of 'norm_scores > thresh' is 0")
             continue
         pred_boxes3d_selected = pred_boxes3d[inds]
         raw_scores_selected = raw_scores[inds]
@@ -495,7 +500,10 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         calib = kitti_rcnn_reader.get_calib(sample_id)
         mdict['total_det_num'] += pred_boxes3d_selected.shape[0]
         save_kitti_format(sample_id, calib, pred_boxes3d_selected, final_output_dir, scores_selected, image_shape)
-        print(mdict)
+        logger.info(mdict)
+        #for k,v in mdict.items():
+        #    print("%s:%s"%(k, str(v)))
+        #print("")
 
 def eval():
     args = parse_args()
@@ -569,7 +577,7 @@ def eval():
             shutil.rmtree(seg_output_dir)
         os.makedirs(seg_output_dir)
 
-    if True: #args.save_result:
+    if True: # must make sure these dirs existing 
         roi_output_dir = os.path.join('./result_dir', 'roi_result', 'data')
         refine_output_dir = os.path.join('./result_dir', 'refine_result', 'data')
         final_output_dir = os.path.join("./result_dir", 'final_result', 'data')
@@ -581,7 +589,7 @@ def eval():
             os.makedirs(refine_output_dir)
 
     # get reader
-    kitti_rcnn_reader = KittiRCNNReader(data_dir='./data',
+    kitti_rcnn_reader = KittiRCNNReader(data_dir='./data', #'/home/ai/model/3d/train_data',
                                         npoints=cfg.RPN.NUM_POINTS,
                                         split=cfg.TEST.SPLIT,
                                         mode='EVAL',
@@ -612,7 +620,7 @@ def eval():
     
     if cfg.RCNN.ENABLED:
         
-        queue = multiprocessing.Queue(128)
+        queue = multiprocessing.Queue(256)
         mgr = multiprocessing.Manager()
         mdict = mgr.dict()
         thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
@@ -627,7 +635,7 @@ def eval():
         for i in range(4):
             p_list.append(multiprocessing.Process(
                 target=rcnn_metric,
-                args=(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, refine_output_dir, final_output_dir)
+                args=(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, refine_output_dir, final_output_dir, args.save_result)
             ))
             p_list[-1].start()
 
@@ -649,9 +657,9 @@ def eval():
             period = time.time() - cur_time
             eval_periods.append(period)
             queue.put(rets_dict)
-            mdict['run_time'] = period
+            eval_iter += 1
             cnt += 1 
-            eval_iter += 1 
+            mdict['run_time'] = period 
 
     except fluid.core.EOFException:
         if cfg.RPN.ENABLED:
@@ -694,21 +702,36 @@ def eval():
             avg_cls_acc_refined = (mdict['total_cls_acc_refined'] / max(cnt, 1.0))
             avg_det_num = (mdict['total_det_num'] / max(cnt, 1.0))
             
-            print("avg_cls_acc: ", avg_cls_acc)
-            print("avg_cls_acc_refined: ", avg_cls_acc_refined)
-            print("avg_det_num: ", avg_det_num)             
+            logger.info("avg_cls_acc: ", avg_cls_acc)
+            logger.info("avg_cls_acc_refined: ", avg_cls_acc_refined)
+            logger.info("avg_det_num: ", avg_det_num)             
             
             total_gt_bbox = mdict['total_gt_bbox']
             for idx, thresh in enumerate(thresh_list):
                 cur_roi_recall = mdict['total_roi_recalled_bbox_list_{}'.format(idx)] / float(max(total_gt_bbox, 1.0))
-                print('total roi bbox recall(thresh=%.3f): %d / %d = %f' % (
+                logger.info('total roi bbox recall(thresh=%.3f): %d / %d = %f' % (
                     thresh, mdict['total_roi_recalled_bbox_list_{}'.format(idx)], total_gt_bbox, cur_roi_recall))
             
             for idx, thresh in enumerate(thresh_list):
                 cur_recall = mdict['total_recalled_bbox_list_{}'.format(idx)] / max(float(total_gt_bbox), 1.0)
-                print('total bbox recall(thresh=%.2f) %d / %.2f = %.4f' % (
+                logger.info('total bbox recall(thresh=%.2f) %d / %.2f = %.4f' % (
                     thresh, mdict['total_recalled_bbox_list_{}'.format(idx)], total_gt_bbox, cur_recall))
             
+            if float(sys.version[:3]) > 3.6:
+                from tools.kitti_object_eval_python.evaluate import evaluate as kitti_evaluate 
+
+                label_dir = os.path.join('/home/ai/model/3d/train_data/KITTI/object/testing', 'label_2')
+                split_file = os.path.join('/home/ai/model/3d/train_data/KITTI', 'ImageSets', 'val.txt')
+                final_output_dir = os.path.join("./result_dir", 'final_result', 'data')
+                name_to_class = {'Car': 0, 'Pedestrian': 1, 'Cyclist': 2}
+                ap_result_str, ap_dict = kitti_evaluate(
+                    label_dir, final_output_dir, label_split_file=split_file,
+                     current_class=name_to_class["Car"])
+
+                logger.info("KITTI evaluate: ", ap_result_str, ap_dict)
+
+
+
         eval_pyreader.reset()
 
 
