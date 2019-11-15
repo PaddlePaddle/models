@@ -183,7 +183,7 @@ def eval(args):
         model_path = args.save_model
         # 加载最优模型
         if paddle.__version__ == '1.5.2' and args.load_better_model:
-            assert os.path.exists(model_path), "your input save_model: {} ,but '{}' is no exists".format(
+            assert os.path.exists(model_path), "your input save_model: {} ,but '{}' is not exists".format(
                 model_path, model_path)
             print('better model exist!')
             new_model_path = 'dygraph/' + model_path
@@ -191,7 +191,7 @@ def eval(args):
             model_param, _ = fluid.dygraph.load_persistables(new_model_path)
             model.load_dict(model_param)
         elif args.load_better_model:
-            assert os.path.exists(model_path + '.pdparams'), "your input save_model: {} ,but '{}' is no exists".format(
+            assert os.path.exists(model_path + '.pdparams'), "your input save_model: {} ,but '{}' is not exists".format(
                 model_path, model_path + '.pdparams')
             print('better model exist!')
             model_param, _ = fluid.dygraph.load_dygraph(model_path)
