@@ -67,8 +67,8 @@ def resize_image(image, out_h, out_w, mode=Image.BILINEAR):
 
 
 def mapper_image(image):
-    image_array = np.array(image)  # HWC
-    image_array = image_array.transpose((2, 0, 1))  # CHW
+    image_array = np.array(image)  
+    image_array = image_array.transpose((2, 0, 1)) 
     image_array = image_array / 255.0  
     image_array = (image_array - data_mean) / data_std  
     image_array = image_array.astype('float32')
