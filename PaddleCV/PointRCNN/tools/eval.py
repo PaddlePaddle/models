@@ -577,19 +577,19 @@ def eval():
             shutil.rmtree(seg_output_dir)
         os.makedirs(seg_output_dir)
 
-    if True: # must make sure these dirs existing 
-        roi_output_dir = os.path.join('./result_dir', 'roi_result', 'data')
-        refine_output_dir = os.path.join('./result_dir', 'refine_result', 'data')
-        final_output_dir = os.path.join("./result_dir", 'final_result', 'data')
-        if not os.path.exists(final_output_dir):
-            os.makedirs(final_output_dir)
-        if not os.path.exists(roi_output_dir):
-            os.makedirs(roi_output_dir)
-        if not os.path.exists(refine_output_dir):
-            os.makedirs(refine_output_dir)
+    # must make sure these dirs existing 
+    roi_output_dir = os.path.join('./result_dir', 'roi_result', 'data')
+    refine_output_dir = os.path.join('./result_dir', 'refine_result', 'data')
+    final_output_dir = os.path.join("./result_dir", 'final_result', 'data')
+    if not os.path.exists(final_output_dir):
+        os.makedirs(final_output_dir)
+    if not os.path.exists(roi_output_dir):
+        os.makedirs(roi_output_dir)
+    if not os.path.exists(refine_output_dir):
+        os.makedirs(refine_output_dir)
 
     # get reader
-    kitti_rcnn_reader = KittiRCNNReader(data_dir='./data', #'/home/ai/model/3d/train_data',
+    kitti_rcnn_reader = KittiRCNNReader(data_dir='./data',
                                         npoints=cfg.RPN.NUM_POINTS,
                                         split=cfg.TEST.SPLIT,
                                         mode='EVAL',
@@ -717,11 +717,11 @@ def eval():
                 logger.info('total bbox recall(thresh=%.2f) %d / %.2f = %.4f' % (
                     thresh, mdict['total_recalled_bbox_list_{}'.format(idx)], total_gt_bbox, cur_recall))
             
-            if float(sys.version[:3]) > 3.6:
+            if float(sys.version[:3]) >= 3.6:
                 from tools.kitti_object_eval_python.evaluate import evaluate as kitti_evaluate 
 
-                label_dir = os.path.join('/home/ai/model/3d/train_data/KITTI/object/testing', 'label_2')
-                split_file = os.path.join('/home/ai/model/3d/train_data/KITTI', 'ImageSets', 'val.txt')
+                label_dir = os.path.join('./data/KITTI/object/testing', 'label_2')
+                split_file = os.path.join('./data/KITTI', 'ImageSets', 'val.txt')
                 final_output_dir = os.path.join("./result_dir", 'final_result', 'data')
                 name_to_class = {'Car': 0, 'Pedestrian': 1, 'Cyclist': 2}
                 ap_result_str, ap_dict = kitti_evaluate(
