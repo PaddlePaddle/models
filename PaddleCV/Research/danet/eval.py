@@ -211,6 +211,11 @@ def eval(args):
               format(base_size, crop_size))
         print('scales: {}'.format(scales))
         print('val ing...')
+        logging.basicConfig(level=logging.INFO,
+                            filename='DANet_{}_eval_dygraph.log'.format(args.backbone),
+                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        logging.info('DANet')
+        logging.info(args)
         palette = pat()  
         for data in reader():
             # print(data)
@@ -303,19 +308,28 @@ def eval(args):
             save_png(pred, palette, picture_path)
             iou.add_batch(pred, label_np)   # 计算iou
         print('eval done!')
+        logging.info('eval done!')
         acc, acc_cls, iu, mean_iu, fwavacc, kappa = iou.evaluate()
         print('acc = {}'.format(acc))
+        logging.info('acc = {}'.format(acc))
         print('acc_cls = {}'.format(acc_cls))
+        logging.info('acc_cls = {}'.format(acc_cls))
         print('iu = {}'.format(iu))
+        logging.info('iu = {}'.format(iu))
         print('mean_iou(含有255) = {}'.format(mean_iu))
+        logging.info('mean_iou(include 255) = {}'.format(mean_iu))
         print('mean_iou = {}'.format(np.nanmean(iu[:-1])))  # 真正的iou
+        logging.info('mean_iou = {}'.format(np.nanmean(iu[:-1])))
         print('fwavacc = {}'.format(fwavacc))
+        logging.info('fwavacc = {}'.format(fwavacc))
         print('kappa = {}'.format(kappa))
+        logging.info('kappa = {}'.format(kappa))
         cur_time = datetime.now()
         h, remainder = divmod((cur_time - prev_time).seconds, 3600)
         m, s = divmod(remainder, 60)
         time_str = "Time %02d:%02d:%02d" % (h, m, s)
         print('val ' + time_str)
+        logging.info('val ' + time_str)
 
 
 def save_png(pred_value, palette, name):
