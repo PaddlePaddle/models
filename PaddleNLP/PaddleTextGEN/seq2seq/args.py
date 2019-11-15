@@ -127,7 +127,7 @@ def parse_args():
         "--is_profiler",
         type=int,
         default=0,
-        help="The switch of profiler tools. (used for benchmark)" )
+        help="The switch of profiler tools. (used for benchmark)")
     parser.add_argument(
         "--profiler_path",
         type=str,
