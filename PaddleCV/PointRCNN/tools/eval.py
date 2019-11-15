@@ -238,7 +238,7 @@ def calc_iou_recall(rets, thresh_list):
         union = np.sum(fg_mask) + np.sum(cur_seg_mask > 0) - correct
         rpn_iou = float(correct) / max(float(union), 1.0)
         rpn_iou_sum += rpn_iou
-        logger.info('sample_id:{}, rpn_iou:{}, gt_box_num:{}, recalled_bbox_list:{}'.format(
+        logger.debug('sample_id:{}, rpn_iou:{}, gt_box_num:{}, recalled_bbox_list:{}'.format(
             sample_id, rpn_iou, gt_box_num, str(recalled_bbox_list)))
 
     return len(gt_boxes3d_num), gt_box_num, rpn_iou_sum, recalled_bbox_list
@@ -284,7 +284,7 @@ def rpn_metric(queue, mdict, thresh_list, is_save_rpn_feature, kitti_feature_dir
         mdict['total_rpn_iou'] += rpn_iou_sum
         for i, bbox_num in enumerate(recalled_bbox_list):
             mdict['total_recalled_bbox_list_{}'.format(i)] += bbox_num
-        logger.info("rpn_metric: {}".format(str(mdict)))
+        logger.debug("rpn_metric: {}".format(str(mdict)))
 
         if is_save_rpn_feature:
             save_rpn_feature(rets_dict, kitti_feature_dir)
@@ -396,7 +396,7 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         calib = kitti_rcnn_reader.get_calib(sample_id)
         mdict['total_det_num'] += pred_boxes3d_selected.shape[0]
         save_kitti_format(sample_id, calib, pred_boxes3d_selected, final_output_dir, scores_selected, image_shape)
-        logger.info("rcnn_metric: {}".format(str(mdict)))
+        logger.debug("rcnn_metric: {}".format(str(mdict)))
 
 def eval():
     args = parse_args()
@@ -476,10 +476,11 @@ def eval():
     final_output_dir = os.path.join("./result_dir", 'final_result', 'data')
     if not os.path.exists(final_output_dir):
         os.makedirs(final_output_dir)
-    if not os.path.exists(roi_output_dir):
-        os.makedirs(roi_output_dir)
-    if not os.path.exists(refine_output_dir):
-        os.makedirs(refine_output_dir)
+    if args.save_result:
+        if not os.path.exists(roi_output_dir):
+            os.makedirs(roi_output_dir)
+        if not os.path.exists(refine_output_dir):
+            os.makedirs(refine_output_dir)
 
     # get reader
     kitti_rcnn_reader = KittiRCNNReader(data_dir='./data',
@@ -489,7 +490,7 @@ def eval():
                                         classes=cfg.CLASSES,
                                         rcnn_eval_roi_dir=args.rcnn_eval_roi_dir,
                                         rcnn_eval_feature_dir=args.rcnn_eval_feature_dir)
-    eval_reader = kitti_rcnn_reader.get_reader(args.batch_size, eval_feeds)
+    eval_reader = kitti_rcnn_reader.get_multiprocess_reader(args.batch_size, eval_feeds)
     eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
     thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
@@ -538,12 +539,7 @@ def eval():
             eval_outs = exe.run(eval_compile_prog, fetch_list=eval_values, return_numpy=False)
             rets_dict = {k: (np.array(v), v.recursive_sequence_lengths()) 
                     for k, v in zip(eval_keys, eval_outs)}
-            # eval_outs = exe.run(eval_compile_prog, fetch_list=eval_values, return_numpy=True)
-            # rets_dict = {}
-            # for k,v in zip(eval_keys, eval_outs):
-            #     rets_dict[k] = v
             run_time = time.time() - cur_time
-            mdict['run_time'] = run_time
             cur_time = time.time()
             queue.put(rets_dict)
             eval_iter += 1
