@@ -730,7 +730,8 @@ def eval():
 
                 logger.info("KITTI evaluate: ", ap_result_str, ap_dict)
 
-
+            else:
+                logger.info("kitti map only support python version >= 3.6")
 
         eval_pyreader.reset()
 
