@@ -271,6 +271,7 @@ PaddleSlim 模型压缩工具库的实验结果和模型库见 [详细实验结�
 
 | 版本号        | tar包                                                         | zip包                                                         |
 | ------------- | ------------------------------------------------------------- | ------------------------------------------------------------- |
+| models 1.6    | https://paddlepaddle-modles.bj.bcebos.com/models-1.6.tar.gz   | https://paddlepaddle-modles.bj.bcebos.com/models-1.6.zip   |
 | models 1.5.1  | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.tar.gz | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.zip |
 | models 1.5    | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.tar.gz   | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.zip   |
 | models 1.4    | https://paddlepaddle-modles.bj.bcebos.com/models-1.4.tar.gz   | https://paddlepaddle-modles.bj.bcebos.com/models-1.4.zip   |
