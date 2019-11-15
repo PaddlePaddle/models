@@ -500,10 +500,6 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         calib = kitti_rcnn_reader.get_calib(sample_id)
         mdict['total_det_num'] += pred_boxes3d_selected.shape[0]
         save_kitti_format(sample_id, calib, pred_boxes3d_selected, final_output_dir, scores_selected, image_shape)
-        logger.info(mdict)
-        #for k,v in mdict.items():
-        #    print("%s:%s"%(k, str(v)))
-        #print("")
 
 def eval():
     args = parse_args()
@@ -702,9 +698,9 @@ def eval():
             avg_cls_acc_refined = (mdict['total_cls_acc_refined'] / max(cnt, 1.0))
             avg_det_num = (mdict['total_det_num'] / max(cnt, 1.0))
             
-            logger.info("avg_cls_acc: ", avg_cls_acc)
-            logger.info("avg_cls_acc_refined: ", avg_cls_acc_refined)
-            logger.info("avg_det_num: ", avg_det_num)             
+            logger.info("avg_cls_acc: {}".format(avg_cls_acc)
+            logger.info("avg_cls_acc_refined: {}".format(avg_cls_acc_refined))
+            logger.info("avg_det_num: {}".format(avg_det_num))             
             
             total_gt_bbox = mdict['total_gt_bbox']
             for idx, thresh in enumerate(thresh_list):
@@ -728,7 +724,7 @@ def eval():
                     label_dir, final_output_dir, label_split_file=split_file,
                      current_class=name_to_class["Car"])
 
-                logger.info("KITTI evaluate: ", ap_result_str, ap_dict)
+                logger.info("KITTI evaluate: {}, {}".format(ap_result_str, ap_dict))
 
             else:
                 logger.info("kitti map only support python version >= 3.6")
