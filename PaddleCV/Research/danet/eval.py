@@ -107,8 +107,54 @@ def mean_iou(pred, label, num_classes=19):
     return miou, wrong, correct
 
 
-def eval(args):
+def change_model_executor_to_dygraph(args):
+    temp_image = fluid.layers.data(name='temp_image', shape=[3, 224, 224], dtype='float32')
+    model = get_model(args)
+    y = model(temp_image)
+    if args.cuda:
+        gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+    place = fluid.CUDAPlace(gpu_id) if args.cuda else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
+    model_path = args.save_model
+    assert os.path.exists(model_path), "请核对executor模型文件地址{}是否存在, 注意：executor模型文件是多个文件。".format(model_path)
+    fluid.io.load_persistables(exe, model_path, fluid.default_main_program())
+    print('load executor train model successful, start change!')
+    param_list = fluid.default_main_program().block(0).all_parameters()
+    param_name_list = [p.name for p in param_list]
+    temp_dict = {}
+    for name in param_name_list:
+        tensor = fluid.global_scope().find_var(name).get_tensor()
+        npt = np.asarray(tensor)
+        temp_dict[name] = npt
+    del model
+    with fluid.dygraph.guard():
+        x = np.random.randn(1, 3, 224, 224).astype('float32')
+        x = fluid.dygraph.to_variable(x)
+        model = get_model(args)
+        y = model(x)
+        new_param_dict = {}
+        for k, v in temp_dict.items():
+            value = v
+            value_shape = value.shape
+            name = k
+            tensor = fluid.layers.create_parameter(shape=value_shape,
+                                                   name=name,
+                                                   dtype='float32',
+                                                   default_initializer=fluid.initializer.NumpyArrayInitializer(value))
+            new_param_dict[name] = tensor
+        assert len(new_param_dict) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
+                                                               "请核对模型是否一致!"
+        model.set_dict(new_param_dict)
+        fluid.save_dygraph(model.state_dict(), model_path)
+        del model
+        del temp_dict
+        print('change executor model to dygraph successful!')
+        
 
+def eval(args):
+    if args.change_executor_to_dygraph:
+        change_model_executor_to_dygraph(args)
     with fluid.dygraph.guard():
         num_classes = args.num_classes
         base_size = args.base_size  # 图片最长边 2048
@@ -137,21 +183,22 @@ def eval(args):
         model_path = args.save_model
         # 加载最优模型
         if paddle.__version__ == '1.5.2' and args.load_better_model:
-            assert os.path.exists(model_path), "请核对模型文件地址是否存在"
+            assert os.path.exists(model_path), "your input save_model: {} ,but '{}' is no exists".format(
+                model_path, model_path)
             print('better model exist!')
             new_model_path = 'dygraph/' + model_path
             copy_model(model_path, new_model_path)
             model_param, _ = fluid.dygraph.load_persistables(new_model_path)
             model.load_dict(model_param)
         elif args.load_better_model:
-            print('无法使用eval.py验证executor训练的模型，因为executor保存的模型有多个文件')
-            assert os.path.exists(model_path + '.pdparams'), "请核对模型文件地址是否存在, 1.6版本只能加载一个独立文件"
+            assert os.path.exists(model_path + '.pdparams'), "your input save_model: {} ,but '{}' is no exists".format(
+                model_path, model_path + '.pdparams')
             print('better model exist!')
-            print('require paddle version >= 1.6.0)
             model_param, _ = fluid.dygraph.load_dygraph(model_path)
             model.load_dict(model_param)
         else:
             raise ValueError('请设置--load_better_model and --save_model checkpoint/xxxxxxx!')
+            
         assert len(model_param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
                                                             "请核对模型是否初始化/模型是否一致"
         model.eval()
@@ -342,7 +389,5 @@ if __name__ == '__main__':
     options = Options()
     args = options.parse()
     options.print_args()
-    # model_path = 'checkpoint/DANet101_better_model_paddle1.5.2'
-    model_path = 'checkpoint/DANet101_better_model_paddle1.6'
     eval(args)
    
