@@ -86,6 +86,10 @@ class Options(object):
         # checkpoint
         parser.add_argument("--save_model", default='checkpoint/DANet101_better_model_paddle1.6', type=str,
                             help="model path, (default: checkpoint/DANet101_better_model_paddle1.6)")
+        
+        # change executor model params to dygraph model params
+        parser.add_argument("--change_executor_to_dygraph", action='store_true', default=False,
+                            help="change executor model params to dygraph model params (default:False)")
 
         # finetuning pre-trained models
         parser.add_argument("--load_pretrained_model", action='store_true', default=False,
