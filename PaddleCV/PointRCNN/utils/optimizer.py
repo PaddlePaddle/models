@@ -104,16 +104,6 @@ def optimize(loss,
     fluid.clip.set_gradient_clip(
         clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=clip_norm))
 
-    def exclude_from_weight_decay(param):
-        name = param.name.rstrip(".master")
-        if name.find("layer_norm") > -1:
-            return True
-        bias_suffix = ["_bias", "_b", ".b_0"]
-        for suffix in bias_suffix:
-            if name.endswith(suffix):
-                return True
-        return False
-
     param_list = dict()
 
     if weight_decay > 0:
@@ -125,8 +115,6 @@ def optimize(loss,
 
     if weight_decay > 0:
         for param, grad in param_grads:
-            if exclude_from_weight_decay(param):
-                continue
             with param.block.program._optimized_guard(
                 [param, grad]), fluid.framework.name_scope("weight_decay"):
                 updated_param = param - param_list[

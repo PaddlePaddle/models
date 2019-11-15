@@ -62,7 +62,7 @@ def in_hull(p, hull):
             hull = Delaunay(hull)
         flag = hull.find_simplex(p) >= 0
     except scipy.spatial.qhull.QhullError:
-        print('Warning: not a hull %s' % str(hull))
+        logger.debug('Warning: not a hull.')
         flag = np.zeros(p.shape[0], dtype=np.bool)
 
     return flag
@@ -166,7 +166,7 @@ class KittiRCNNReader(KittiReader):
             sample_id = int(self.image_idx_list[idx])
             obj_list = self.filtrate_objects(self.get_label(sample_id))
             if len(obj_list) == 0:
-                # logger.info('No gt classes: %06d' % sample_id)
+                logger.debug('No gt classes: %06d' % sample_id)
                 continue
             self.sample_id_list.append(sample_id)
 
@@ -278,8 +278,6 @@ class KittiRCNNReader(KittiReader):
         return pts_valid_flag
 
     def get_rpn_sample(self, index):
-        # index = 1 # debug
-        # np.random.seed(index)
         sample_id = int(self.sample_id_list[index])
         if sample_id < 10000:
             calib = self.get_calib(sample_id)
@@ -643,7 +641,6 @@ class KittiRCNNReader(KittiReader):
         sample_info['roi_boxes3d'] = roi_boxes3d
         sample_info['pts_depth'] = np.linalg.norm(rpn_xyz, ord=2, axis=1)
         sample_info['gt_boxes3d'] = gt_boxes3d
-        #print("gt_boxes3d: ", gt_boxes3d)
 
         '''
         print("-----read data-----")
@@ -1025,13 +1022,9 @@ class KittiRCNNReader(KittiReader):
             gt_corners = kitti_utils.boxes3d_to_corners3d(gt_boxes3d,True)
             iou3d = kitti_utils.get_iou3d(roi_corners, gt_corners)
             gt_iou = iou3d.max(axis=1)
-        
+
         sample_dict['gt_iou'] = gt_iou
         sample_dict['gt_boxes3d'] = gt_boxes3d
-        #for k,v in sample_dict.items():
-        #    if k == 'sample_id':
-        #        continue 
-        #    print("Eval data: ", v.shape)
         
         return sample_dict
 
@@ -1175,10 +1168,6 @@ class KittiRCNNReader(KittiReader):
                         else:
                             print("not only support train/eval padding")
                     batch_out = []
-                # import sys
-                # print(sample_all)
-                # sys.stdout.flush()
-                # return
             if not drop_last:
                 if len(batch_out) > 0:
                     yield batch_out

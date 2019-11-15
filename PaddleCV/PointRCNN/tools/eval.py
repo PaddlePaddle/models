@@ -35,8 +35,6 @@ from utils.config import cfg, load_config
 from utils import calibration as calib
 import utils.cyops.kitti_utils as kitti_utils 
 from utils.cyops.kitti_utils import rotate_pc_along_y_np
-#from utils.cyops.iou3d_utils import boxes_iou3d
-#from utils.iou3d_utils import boxes_iou3d 
 from utils.box_utils import boxes_iou3d, box_nms_eval, boxes3d_to_bev
 import utils.calibration as calibration
 #from tools.kitti_object_eval_python.evaluate import evaluate
@@ -48,8 +46,11 @@ logger = logging.getLogger(__name__)
 
 np.random.seed(1024)  # use same seed
 
-#rpn_data_dir = "/home/ai/model/pytorch/PointRCNN/output/rpn/default/eval/epoch_200/val"
-rpn_data_dir = "/paddle/PointRCNN/output/rpn/eval/eval/epoch_200/val"
+# rpn_data_dir = "/home/ai/model/pytorch/PointRCNN/output/rpn/default/eval/epoch_200/val"
+# rpn_data_dir = "/paddle/PointRCNN/output/rpn/eval/eval/epoch_200/val"
+# rpn_data_dir = "./data/output/val"
+# rpn_data_dir = "./data/val"
+rpn_data_dir = "./data/train_aug_myfeature/val"
 
 
 def parse_args():
@@ -237,110 +238,11 @@ def calc_iou_recall(rets, thresh_list):
         union = np.sum(fg_mask) + np.sum(cur_seg_mask > 0) - correct
         rpn_iou = float(correct) / max(float(union), 1.0)
         rpn_iou_sum += rpn_iou
-        logger.info('sample_id {} rpn_iou {} correct {} union {} fg_mask {} recalled_bbox_list {}'.format(
-            sample_id, rpn_iou, correct, union, np.sum(fg_mask), str(recalled_bbox_list)))
+        logger.info('sample_id:{}, rpn_iou:{}, gt_box_num:{}, recalled_bbox_list:{}'.format(
+            sample_id, rpn_iou, gt_box_num, str(recalled_bbox_list)))
 
     return len(gt_boxes3d_num), gt_box_num, rpn_iou_sum, recalled_bbox_list
 
-
-def decode_bbox_target(roi_box3d, pred_reg, anchor_size, loc_scope,
-                       loc_bin_size, num_head_bin, get_xz_fine=True,
-                       loc_y_scope=0.5, loc_y_bin_size=0.25,
-                       get_y_by_bin=False, get_ry_fine=False):
-    per_loc_bin_num = int(loc_scope / loc_bin_size) * 2
-    loc_y_bin_num = int(loc_y_scope / loc_y_bin_size) * 2
-
-    # recover xz localization
-    x_bin_l, x_bin_r = 0, per_loc_bin_num
-    z_bin_l, z_bin_r = per_loc_bin_num, per_loc_bin_num * 2
-    start_offset = z_bin_r
-    x_bin = np.argmax(pred_reg[:, x_bin_l: x_bin_r], axis=1)
-    z_bin = np.argmax(pred_reg[:, z_bin_l: z_bin_r], axis=1)
-
-    pos_x = x_bin.astype('float32') * loc_bin_size + loc_bin_size / 2 - loc_scope
-    pos_z = z_bin.astype('float32') * loc_bin_size + loc_bin_size / 2 - loc_scope
-
-    if get_xz_fine:
-        x_res_l, x_res_r = per_loc_bin_num * 2, per_loc_bin_num * 3
-        z_res_l, z_res_r = per_loc_bin_num * 3, per_loc_bin_num * 4
-        start_offset = z_res_r
-
-        x_res_norm = pred_reg[:, x_res_l:x_res_r][np.arange(len(x_bin)), x_bin]
-        z_res_norm = pred_reg[:, z_res_l:z_res_r][np.arange(len(z_bin)), z_bin]
-
-        x_res = x_res_norm * loc_bin_size
-        z_res = z_res_norm * loc_bin_size
-        pos_x += x_res
-        pos_z += z_res
-
-    # recover y localization
-    if get_y_by_bin:
-        y_bin_l, y_bin_r = start_offset, start_offset + loc_y_bin_num
-        y_res_l, y_res_r = y_bin_r, y_bin_r + loc_y_bin_num
-        start_offset = y_res_r
-
-        y_bin = np.argmax(pred_reg[:, y_bin_l: y_bin_r], axis=1)
-        y_res_norm = pred_reg[:, y_res_l:y_res_r][np.arange(len(y_bin)), y_bin]
-        y_res = y_res_norm * loc_y_bin_size
-        pos_y = y_bin.astype('float32') * loc_y_bin_size + loc_y_bin_size / 2 - loc_y_scope + y_res
-        pos_y = pos_y + np.array(roi_box3d[:, 1]).reshape(-1)
-    else:
-        y_offset_l, y_offset_r = start_offset, start_offset + 1
-        start_offset = y_offset_r
-
-        pos_y = np.array(roi_box3d[:, 1]) + np.array(pred_reg[:, y_offset_l])
-        pos_y = pos_y.reshape(-1)
-
-    # recover ry rotation
-    ry_bin_l, ry_bin_r = start_offset, start_offset + num_head_bin
-    ry_res_l, ry_res_r = ry_bin_r, ry_bin_r + num_head_bin
-
-    ry_bin = np.argmax(pred_reg[:, ry_bin_l: ry_bin_r], axis=1)
-    ry_res_norm = pred_reg[:, ry_res_l:ry_res_r][np.arange(len(ry_bin)), ry_bin]
-    if get_ry_fine:
-        # divide pi/2 into several bins
-        angle_per_class = (np.pi / 2) / num_head_bin
-        ry_res = ry_res_norm * (angle_per_class / 2)
-        ry = (ry_bin.astype('float32') * angle_per_class + angle_per_class / 2) + ry_res - np.pi / 4
-    else:
-        angle_per_class = (2 * np.pi) / num_head_bin
-        ry_res = ry_res_norm * (angle_per_class / 2)
-
-        # bin_center is (0, 30, 60, 90, 120, ..., 270, 300, 330)
-        ry = np.fmod(ry_bin.astype('float32') * angle_per_class + ry_res, 2 * np.pi)
-        ry[ry > np.pi] -= 2 * np.pi
-
-    # recover size
-    size_res_l, size_res_r = ry_res_r, ry_res_r + 3
-    assert size_res_r == pred_reg.shape[1]
-
-    size_res_norm = pred_reg[:, size_res_l: size_res_r]
-    hwl = size_res_norm * anchor_size + anchor_size
-
-    def rotate_pc_along_y(pc, angle):
-        cosa = np.cos(angle).reshape(-1, 1)
-        sina = np.sin(angle).reshape(-1, 1)
-
-        R = np.concatenate([cosa, -sina, sina, cosa], axis=-1).reshape(-1, 2, 2)
-        pc_temp = pc[:, [0, 2]].reshape(-1, 1, 2)
-        pc[:, [0, 2]] = np.matmul(pc_temp, R.transpose(0, 2, 1)).reshape(-1, 2)
-
-        return pc
-
-    # shift to original coords
-    roi_center = np.array(roi_box3d[:, 0:3])
-    shift_ret_box3d = np.concatenate((
-        pos_x.reshape(-1, 1),
-        pos_y.reshape(-1, 1),
-        pos_z.reshape(-1, 1),
-        hwl, ry.reshape(-1, 1)), axis=1)
-    ret_box3d = shift_ret_box3d
-    if roi_box3d.shape[1] == 7:
-        roi_ry = np.array(roi_box3d[:, 6]).reshape(-1)
-        ret_box3d = rotate_pc_along_y(np.array(shift_ret_box3d), -roi_ry)
-        ret_box3d[:, 6] += roi_ry
-    ret_box3d[:, [0, 2]] += roi_center[:, [0, 2]]
-    return ret_box3d
 
 def save_kitti_format(sample_id, calib, bbox3d, kitti_output_dir, scores, img_shape):
     corners3d = kitti_utils.boxes3d_to_corners3d(bbox3d)
@@ -382,6 +284,7 @@ def rpn_metric(queue, mdict, thresh_list, is_save_rpn_feature, kitti_feature_dir
         mdict['total_rpn_iou'] += rpn_iou_sum
         for i, bbox_num in enumerate(recalled_bbox_list):
             mdict['total_recalled_bbox_list_{}'.format(i)] += bbox_num
+        logger.info("rpn_metric: {}".format(str(mdict)))
 
         if is_save_rpn_feature:
             save_rpn_feature(rets_dict, kitti_feature_dir)
@@ -405,20 +308,17 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
 
         # bounding box regression
         anchor_size = cfg.CLS_MEAN_SIZE[0]
-        #if cfg.RCNN.SIZE_RES_ON_ROI:
-        #    roi_size = rets_dict['roi_size']
-        #    anchor_size = roi_size 
         pred_boxes3d = kitti_utils.decode_bbox_target(
             roi_boxes3d, 
             rcnn_reg,
             anchor_size=np.array(anchor_size),
-            loc_scope=cfg.RCNN.LOC_SCOPE, # 1.5,
-            loc_bin_size=cfg.RCNN.LOC_BIN_SIZE, # 0.5,
-            num_head_bin=cfg.RCNN.NUM_HEAD_BIN, # 9,
+            loc_scope=cfg.RCNN.LOC_SCOPE,
+            loc_bin_size=cfg.RCNN.LOC_BIN_SIZE,
+            num_head_bin=cfg.RCNN.NUM_HEAD_BIN,
             get_xz_fine=True, 
-            get_y_by_bin=cfg.RCNN.LOC_Y_BY_BIN, # False,
-            loc_y_scope=cfg.RCNN.LOC_Y_SCOPE, # 0.5,
-            loc_y_bin_size=cfg.RCNN.LOC_Y_BIN_SIZE, # 0.25,
+            get_y_by_bin=cfg.RCNN.LOC_Y_BY_BIN,
+            loc_y_scope=cfg.RCNN.LOC_Y_SCOPE,
+            loc_y_bin_size=cfg.RCNN.LOC_Y_BIN_SIZE,
             get_ry_fine=True
         )
 
@@ -431,66 +331,62 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         else:
             pred_classes = np.argmax(rcnn_cls, axis=1).reshape(-1)
             raw_scores = rcnn_cls[:, pred_classes]
+
         # evaluation
-        if True: # eval mode 
-            gt_iou = rets_dict['gt_iou']
-            # (-1, -1, 7)
-            gt_boxes3d = rets_dict['gt_boxes3d']
-            
-            # recall
-            gt_num = gt_boxes3d.shape[1]
-            if gt_num > 0:
-                gt_boxes3d = gt_boxes3d.reshape((-1,7))
-                iou3d = boxes_iou3d(pred_boxes3d, gt_boxes3d)
-                gt_max_iou = iou3d.max(axis=0)
-                refined_iou = iou3d.max(axis=1)
+        gt_iou = rets_dict['gt_iou']
+        gt_boxes3d = rets_dict['gt_boxes3d']
+        
+        # recall
+        gt_num = gt_boxes3d.shape[1]
+        if gt_num > 0:
+            gt_boxes3d = gt_boxes3d.reshape((-1,7))
+            iou3d = boxes_iou3d(pred_boxes3d, gt_boxes3d)
+            gt_max_iou = iou3d.max(axis=0)
+            refined_iou = iou3d.max(axis=1)
 
-                for idx, thresh in enumerate(thresh_list):
-                    recalled_bbox_num = (gt_max_iou > thresh).sum() 
-                    mdict['total_recalled_bbox_list_{}'.format(idx)] += recalled_bbox_num
+            for idx, thresh in enumerate(thresh_list):
+                recalled_bbox_num = (gt_max_iou > thresh).sum() 
+                mdict['total_recalled_bbox_list_{}'.format(idx)] += recalled_bbox_num
 
-                recalled_num = (gt_max_iou > 0.7).sum()
-                mdict['total_gt_bbox'] += gt_num
-                roi_boxes3d = roi_boxes3d.reshape((-1,7))
-                iou3d_in = boxes_iou3d(roi_boxes3d, gt_boxes3d)
-                gt_max_iou_in = iou3d_in.max(axis=0)
+            recalled_num = (gt_max_iou > 0.7).sum()
+            mdict['total_gt_bbox'] += gt_num
+            roi_boxes3d = roi_boxes3d.reshape((-1,7))
+            iou3d_in = boxes_iou3d(roi_boxes3d, gt_boxes3d)
+            gt_max_iou_in = iou3d_in.max(axis=0)
 
-                for idx, thresh in enumerate(thresh_list):
-                    roi_recalled_bbox_num = (gt_max_iou_in > thresh).sum()
-                    mdict['total_roi_recalled_bbox_list_{}'.format(idx)] += roi_recalled_bbox_num 
-            
-            # classification accuracy
-            cls_label = gt_iou > cfg.RCNN.CLS_FG_THRESH
-            cls_label = cls_label.astype(np.float32)
-            cls_valid_mask = (gt_iou >= cfg.RCNN.CLS_FG_THRESH) | (gt_iou <= cfg.RCNN.CLS_BG_THRESH)
-            cls_valid_mask = cls_valid_mask.astype(np.float32)
-            cls_acc = (pred_classes == cls_label).astype(np.float32)
-            cls_acc = (cls_acc * cls_valid_mask).sum() / max(cls_valid_mask.sum(), 1.0) * 1.0 
-            
-            iou_thresh = 0.7 if cfg.CLASSES == 'Car' else 0.5
-            cls_label_refined = (gt_iou >= iou_thresh)
-            cls_label_refined = cls_label_refined.astype(np.float32)
-            cls_acc_refined = (pred_classes == cls_label_refined).astype(np.float32).sum() / max(cls_label_refined.shape[0], 1.0) 
-            
-            mdict['total_cls_acc'] += cls_acc
-            mdict['total_cls_acc_refined'] += cls_acc_refined
+            for idx, thresh in enumerate(thresh_list):
+                roi_recalled_bbox_num = (gt_max_iou_in > thresh).sum()
+                mdict['total_roi_recalled_bbox_list_{}'.format(idx)] += roi_recalled_bbox_num 
+        
+        # classification accuracy
+        cls_label = gt_iou > cfg.RCNN.CLS_FG_THRESH
+        cls_label = cls_label.astype(np.float32)
+        cls_valid_mask = (gt_iou >= cfg.RCNN.CLS_FG_THRESH) | (gt_iou <= cfg.RCNN.CLS_BG_THRESH)
+        cls_valid_mask = cls_valid_mask.astype(np.float32)
+        cls_acc = (pred_classes == cls_label).astype(np.float32)
+        cls_acc = (cls_acc * cls_valid_mask).sum() / max(cls_valid_mask.sum(), 1.0) * 1.0 
+        
+        iou_thresh = 0.7 if cfg.CLASSES == 'Car' else 0.5
+        cls_label_refined = (gt_iou >= iou_thresh)
+        cls_label_refined = cls_label_refined.astype(np.float32)
+        cls_acc_refined = (pred_classes == cls_label_refined).astype(np.float32).sum() / max(cls_label_refined.shape[0], 1.0) 
+        
+        mdict['total_cls_acc'] += cls_acc
+        mdict['total_cls_acc_refined'] += cls_acc_refined
             
         sample_id = rets_dict['sample_id']
         image_shape = kitti_rcnn_reader.get_image_shape(sample_id)
         
         if is_save_result:
-            # save roi and refine results
             roi_boxes3d_np = roi_boxes3d
             pred_boxes3d_np = pred_boxes3d
             calib = kitti_rcnn_reader.get_calib(sample_id)
             save_kitti_format(sample_id, calib, roi_boxes3d_np, roi_output_dir, roi_scores, image_shape)
             save_kitti_format(sample_id, calib, pred_boxes3d_np, refine_output_dir, raw_scores, image_shape)
-        # NMS and scoring
-        # scores thresh
         
         inds = norm_scores > cfg.RCNN.SCORE_THRESH
         if inds.astype(np.float32).sum() == 0:
-            logger.info("the num of 'norm_scores > thresh' is 0")
+            logger.debug("The num of 'norm_scores > thresh' of sample {} is 0".format(sample_id))
             continue
         pred_boxes3d_selected = pred_boxes3d[inds]
         raw_scores_selected = raw_scores[inds]
@@ -500,6 +396,7 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, re
         calib = kitti_rcnn_reader.get_calib(sample_id)
         mdict['total_det_num'] += pred_boxes3d_selected.shape[0]
         save_kitti_format(sample_id, calib, pred_boxes3d_selected, final_output_dir, scores_selected, image_shape)
+        logger.info("rcnn_metric: {}".format(str(mdict)))
 
 def eval():
     args = parse_args()
@@ -592,57 +489,52 @@ def eval():
                                         classes=cfg.CLASSES,
                                         rcnn_eval_roi_dir=args.rcnn_eval_roi_dir,
                                         rcnn_eval_feature_dir=args.rcnn_eval_feature_dir)
-    eval_reader = kitti_rcnn_reader.get_reader(args.batch_size, eval_feeds, False)
+    eval_reader = kitti_rcnn_reader.get_reader(args.batch_size, eval_feeds)
     eval_pyreader.decorate_sample_list_generator(eval_reader, place)
 
-
+    thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
+    queue = multiprocessing.Queue(128)
+    mgr = multiprocessing.Manager()
+    mdict = mgr.dict()
     if cfg.RPN.ENABLED:
-        queue = multiprocessing.Queue(128)
-        thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
-        mgr = multiprocessing.Manager()
-        mdict = mgr.dict()
-        mdict['total_gt_bbox'] = 0.
-        mdict['total_cnt'] = 0.
-        mdict['total_rpn_iou'] = 0.
+        mdict['total_gt_bbox'] = 0
+        mdict['total_cnt'] = 0
+        mdict['total_rpn_iou'] = 0
         for i in range(len(thresh_list)):
-            mdict['total_recalled_bbox_list_{}'.format(i)] = 0.
+            mdict['total_recalled_bbox_list_{}'.format(i)] = 0
 
         p_list = []
         for i in range(4):
-            p_list.append(multiprocessing.Process(target=rpn_metric,
-                        args=(queue, mdict, thresh_list, args.save_rpn_feature, kitti_feature_dir,
-                              seg_output_dir, kitti_output_dir, kitti_rcnn_reader, cfg.CLASSES)))
+            p_list.append(multiprocessing.Process(
+                target=rpn_metric,
+                args=(queue, mdict, thresh_list, args.save_rpn_feature, kitti_feature_dir,
+                      seg_output_dir, kitti_output_dir, kitti_rcnn_reader, cfg.CLASSES)))
             p_list[-1].start()
     
     if cfg.RCNN.ENABLED:
-        
-        queue = multiprocessing.Queue(256)
-        mgr = multiprocessing.Manager()
-        mdict = mgr.dict()
-        thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
         for i in range(len(thresh_list)):
-            mdict['total_recalled_bbox_list_{}'.format(i)] = 0. 
-            mdict['total_roi_recalled_bbox_list_{}'.format(i)] = 0. 
-        mdict['total_cls_acc'] = 0. 
-        mdict['total_cls_acc_refined'] = 0. 
-        mdict['total_det_num'] = 0.0 
-        mdict['total_gt_bbox'] = 0.0 
+            mdict['total_recalled_bbox_list_{}'.format(i)] = 0
+            mdict['total_roi_recalled_bbox_list_{}'.format(i)] = 0
+        mdict['total_cls_acc'] = 0 
+        mdict['total_cls_acc_refined'] = 0
+        mdict['total_det_num'] = 0
+        mdict['total_gt_bbox'] = 0
         p_list = []
         for i in range(4):
             p_list.append(multiprocessing.Process(
                 target=rcnn_metric,
-                args=(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir, refine_output_dir, final_output_dir, args.save_result)
+                args=(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir,
+                      refine_output_dir, final_output_dir, args.save_result)
             ))
             p_list[-1].start()
 
-    cnt = 0
     try:
         eval_pyreader.start()
         eval_iter = 0
-        eval_periods = []
+        start_time = time.time()
         
+        cur_time = time.time()
         while True:
-            cur_time = time.time()
             eval_outs = exe.run(eval_compile_prog, fetch_list=eval_values, return_numpy=False)
             rets_dict = {k: (np.array(v), v.recursive_sequence_lengths()) 
                     for k, v in zip(eval_keys, eval_outs)}
@@ -650,38 +542,57 @@ def eval():
             # rets_dict = {}
             # for k,v in zip(eval_keys, eval_outs):
             #     rets_dict[k] = v
-            period = time.time() - cur_time
-            eval_periods.append(period)
+            run_time = time.time() - cur_time
+            mdict['run_time'] = run_time
+            cur_time = time.time()
             queue.put(rets_dict)
             eval_iter += 1
-            cnt += 1 
-            mdict['run_time'] = period 
+
+            logger.info("[EVAL] iter {}, time: {:.2f}".format(
+                eval_iter, run_time))
 
     except fluid.core.EOFException:
-        if cfg.RPN.ENABLED:
-            for i in range(len(p_list)):
-                queue.put(None)
-            for p in p_list:
-                if p.is_alive():
-                    p.join()
+        # terminate metric process
+        for i in range(len(p_list)):
+            queue.put(None)
+        for p in p_list:
+            if p.is_alive():
+                p.join()
 
-            logger.info("[EVAL] total {} iter finished, average time: {:.2f}".format(
-                eval_iter, np.mean(eval_periods[2:])))
+        end_time = time.time()
+        logger.info("[EVAL] total {} iter finished, average time: {:.2f}".format(
+            eval_iter, (end_time - start_time) / float(eval_iter)))
+
+        if cfg.RPN.ENABLED:
             avg_rpn_iou = mdict['total_rpn_iou'] / max(len(kitti_rcnn_reader), 1.)
             logger.info("average rpn iou: {:.3f}".format(avg_rpn_iou))
+            total_gt_bbox = float(max(mdict['total_gt_bbox'], 1.0))
             for idx, thresh in enumerate(thresh_list):
-                recall = mdict['total_recalled_bbox_list_{}'.format(idx)] / max(mdict['total_gt_bbox'], 1.)
+                recall = mdict['total_recalled_bbox_list_{}'.format(idx)] / total_gt_bbox
                 logger.info("total bbox recall(thresh={:.3f}): {} / {} = {:.3f}".format(
                     thresh, mdict['total_recalled_bbox_list_{}'.format(idx)], mdict['total_gt_bbox'], recall))
 
-    finally:
         if cfg.RCNN.ENABLED:
-            for i in range(len(p_list)):
-                queue.put(None)
-            for p in p_list:
-                if p.is_alive():
-                    p.join()
-            # dump empty files
+            cnt = float(max(eval_iter, 1.0))
+            avg_cls_acc = mdict['total_cls_acc'] / cnt
+            avg_cls_acc_refined = mdict['total_cls_acc_refined'] / cnt
+            avg_det_num = mdict['total_det_num'] / cnt
+            
+            logger.info("avg_cls_acc: {}".format(avg_cls_acc))
+            logger.info("avg_cls_acc_refined: {}".format(avg_cls_acc_refined))
+            logger.info("avg_det_num: {}".format(avg_det_num))             
+            
+            total_gt_bbox = float(max(mdict['total_gt_bbox'], 1.0))
+            for idx, thresh in enumerate(thresh_list):
+                cur_roi_recall = mdict['total_roi_recalled_bbox_list_{}'.format(idx)] / total_gt_bbox
+                logger.info('total roi bbox recall(thresh=%.3f): %d / %d = %f' % (
+                    thresh, mdict['total_roi_recalled_bbox_list_{}'.format(idx)], total_gt_bbox, cur_roi_recall))
+            
+            for idx, thresh in enumerate(thresh_list):
+                cur_recall = mdict['total_recalled_bbox_list_{}'.format(idx)] / total_gt_bbox
+                logger.info('total bbox recall(thresh=%.2f) %d / %.2f = %.4f' % (
+                    thresh, mdict['total_recalled_bbox_list_{}'.format(idx)], total_gt_bbox, cur_recall))
+            
             split_file = os.path.join('./data/KITTI', 'ImageSets', 'val.txt')
             image_idx_list = [x.strip() for x in open(split_file).readlines()]
             empty_cnt = 0
@@ -691,28 +602,7 @@ def eval():
                     with open(cur_file, 'w') as temp_f:
                         pass
                     empty_cnt += 1
-            
-            ret_dict = {'empty_cnt': empty_cnt}
-            ret_dict['cnt'] = cnt 
-            avg_cls_acc = (mdict['total_cls_acc'] / max(cnt, 1.0))
-            avg_cls_acc_refined = (mdict['total_cls_acc_refined'] / max(cnt, 1.0))
-            avg_det_num = (mdict['total_det_num'] / max(cnt, 1.0))
-            
-            logger.info("avg_cls_acc: {}".format(avg_cls_acc)
-            logger.info("avg_cls_acc_refined: {}".format(avg_cls_acc_refined))
-            logger.info("avg_det_num: {}".format(avg_det_num))             
-            
-            total_gt_bbox = mdict['total_gt_bbox']
-            for idx, thresh in enumerate(thresh_list):
-                cur_roi_recall = mdict['total_roi_recalled_bbox_list_{}'.format(idx)] / float(max(total_gt_bbox, 1.0))
-                logger.info('total roi bbox recall(thresh=%.3f): %d / %d = %f' % (
-                    thresh, mdict['total_roi_recalled_bbox_list_{}'.format(idx)], total_gt_bbox, cur_roi_recall))
-            
-            for idx, thresh in enumerate(thresh_list):
-                cur_recall = mdict['total_recalled_bbox_list_{}'.format(idx)] / max(float(total_gt_bbox), 1.0)
-                logger.info('total bbox recall(thresh=%.2f) %d / %.2f = %.4f' % (
-                    thresh, mdict['total_recalled_bbox_list_{}'.format(idx)], total_gt_bbox, cur_recall))
-            
+
             if float(sys.version[:3]) >= 3.6:
                 from tools.kitti_object_eval_python.evaluate import evaluate as kitti_evaluate 
 
@@ -729,6 +619,7 @@ def eval():
             else:
                 logger.info("kitti map only support python version >= 3.6")
 
+    finally:
         eval_pyreader.reset()
 
 
