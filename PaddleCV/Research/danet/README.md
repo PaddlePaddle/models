@@ -129,6 +129,7 @@ export CUDA_VISIBLE_DEVICES=0
 
 python eval.py --backbone resnet101 --base_size 2048 --crop_size 1024 --cuda --use_data_parallel --load_better_model --save_model checkpoint/DANet101_better_model_paddle1.6 --multi_scales --flip --dilated --multi_grid --multi_dilation 4 8 16
 ```
+##### 如果需要把executor训练的参数转成dygraph模式下进行验证的话，请在命令行加上--change_executor_to_dygraph
 
 ## 验证结果
 评测指标：mean IOU(平均交并比)
