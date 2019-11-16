@@ -78,7 +78,6 @@ def conv_bn(input, out_channels, bn=True, bn_momentum=0.95, act='relu', name=Non
     param_attr = ParamAttr(name='{}_conv_weight'.format(name),)
     bias_attr = ParamAttr(name='{}_conv_bias'.format(name)) \
                                   if not bn else False
-    print("bn_momentum", bn_momentum)
     out = fluid.layers.conv2d(input,
                               num_filters=out_channels,
                               filter_size=1,
