@@ -166,7 +166,7 @@ def main(args):
         # 加载预训练模型
         if args.load_pretrained_model:
             save_dir = args.save_model
-            assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is no exists".format(
+            assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is not exists".format(
                 save_dir, save_dir + '.pdparams')
             param, _ = fluid.load_dygraph(save_dir)
             model.set_dict(param)
@@ -177,7 +177,7 @@ def main(args):
         # 加载最优模型
         if args.load_better_model:
             save_dir = args.save_model
-            assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is no exists".format(
+            assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is not exists".format(
                 save_dir, save_dir + '.pdparams')
             param, _ = fluid.load_dygraph(save_dir)
             model.set_dict(param)
