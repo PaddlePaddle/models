@@ -244,14 +244,14 @@ def main(args):
 
    # 加载预训练模型
     if args.load_pretrained_model:
-        assert os.path.exists(args.save_model), "your input save_model: {} ,but '{}' is no exists".format(
+        assert os.path.exists(args.save_model), "your input save_model: {} ,but '{}' is not exists".format(
             args.save_model, args.save_model)
         load_model(args.save_model, exe, program=train_prog)
         print('load pretrained model!')
 
     # 加载最优模型
     if args.load_better_model:
-        assert os.path.exists(args.save_model), "your input save_model: {} ,but '{}' is no exists".format(
+        assert os.path.exists(args.save_model), "your input save_model: {} ,but '{}' is not exists".format(
             args.save_model, args.save_model)
         load_model(args.save_model, exe, program=train_prog)
         print('load better model!')
