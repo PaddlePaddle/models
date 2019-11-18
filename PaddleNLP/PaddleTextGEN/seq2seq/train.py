@@ -27,6 +27,7 @@ import contextlib
 
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import paddle.fluid.framework as framework
 import paddle.fluid.profiler as profiler
 from paddle.fluid.executor import Executor
@@ -213,6 +214,13 @@ def main():
                     ce_ppl.append(np.exp(total_loss / word_count))
                     total_loss = 0.0
                     word_count = 0.0
+                
+                # profiler tools
+                if args.is_profiler and epoch_id == 0 and batch_id == 100:
+                    profiler.start_profiler("All")
+                elif args.is_profiler and epoch_id == 0 and batch_id == 105:
+                    profiler.stop_profiler("total", args.profiler_path)
+                    return
 
             end_time = time.time()
             epoch_time = end_time - start_time
