@@ -72,8 +72,7 @@ add_arg('use_py_reader',        bool,    True,  "Use py reader.")
 add_arg('use_multiprocessing',  bool,    False, "Use multiprocessing.")
 add_arg("num_workers",          int,     8,     "The number of python processes used to read and preprocess data.")
 # NOTE: args for profiler, used for benchmark
-add_arg("is_profiler",          int,     0,     "the switch of profiler. (used for benchmark)")
-add_arg("profiler_path",        str,     './',  "the profiler output file path. (used for benchmark)")
+add_arg("profiler_path",        str,     '/tmp/profile_file2',  "the profiler output file path. (used for benchmark)")
 parser.add_argument(
     '--enable_ce',
     action='store_true',
@@ -83,7 +82,7 @@ parser.add_argument(
 @contextlib.contextmanager
 def profile_context(profile=True):
     if profile:
-        with profiler.profiler('All', 'total', '/tmp/profile_file2'):
+        with profiler.profiler('All', 'total', args.profiler_path):
             yield
     else:
         yield
@@ -257,13 +256,6 @@ with profile_context(args.profile):
         end_time = time.time()
         total_time += end_time - begin_time
         
-        # profiler tools, used for benchmark
-        if args.is_profiler and i == 10:
-            profiler.start_profiler("All")
-        elif args.is_profiler and i == 15:
-            profiler.stop_profiler("total", args.profiler_path)
-            break
- 
         if i % 100 == 0:
             print("Model is saved to", args.save_weights_path)
             save_model()
