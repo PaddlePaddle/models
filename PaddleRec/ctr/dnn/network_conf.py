@@ -36,7 +36,8 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim,
             dtype='float32',
             size=[emb_dict_size, 1],
             is_sparse=True)
-        first_embeddings = fluid.layers.squeeze(input=first_embeddings, axes=[1])
+        first_embeddings = fluid.layers.squeeze(
+            input=first_embeddings, axes=[1])
         first_order = fluid.layers.sequence_pool(
             input=first_embeddings, pool_type='sum')
 
@@ -46,7 +47,8 @@ def ctr_deepfm_model(factor_size, sparse_feature_dim, dense_feature_dim,
             size=[emb_dict_size, factor_size],
             param_attr=fm_param_attr,
             is_sparse=True)
-        nonzero_embeddings = fluid.layers.squeeze(input=nonzero_embeddings, axes=[1])
+        nonzero_embeddings = fluid.layers.squeeze(
+            input=nonzero_embeddings, axes=[1])
         summed_features_emb = fluid.layers.sequence_pool(
             input=nonzero_embeddings, pool_type='sum')
         summed_features_emb_square = fluid.layers.square(summed_features_emb)
@@ -211,4 +213,4 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
     auc_var, batch_auc_var, auc_states = \
         fluid.layers.auc(input=predict, label=words[-1], num_thresholds=2 ** 12, slide_steps=20)
 
-    return avg_cost, auc_var, batch_auc_var, py_reader, words
+    return avg_cost, auc_var, batch_auc_var, py_reader, words, auc_states

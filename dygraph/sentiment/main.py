@@ -139,17 +139,20 @@ def train():
         elif args.model_type == 'bow_net':
             model = nets.BOW("bow_net", args.vocab_size, args.batch_size,
                              args.padding_size)
+        elif args.model_type == 'gru_net':
+            model = nets.GRU("gru_net", args.vocab_size, args.batch_size,
+                             args.padding_size)
+        elif args.model_type == 'bigru_net':
+            model = nets.BiGRU("bigru_net", args.vocab_size, args.batch_size,
+                               args.padding_size)
         sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.lr)
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
-
         for eop in range(args.epoch):
             time_begin = time.time()
             for batch_id, data in enumerate(train_data_generator()):
                 enable_profile = steps > args.profile_steps
-
                 with profile_context(enable_profile):
-
                     steps += 1
                     doc = to_variable(
                         np.array([
@@ -160,11 +163,9 @@ def train():
                                    constant_values=(args.vocab_size))
                             for x in data
                         ]).astype('int64').reshape(-1, 1))
-
                     label = to_variable(
                         np.array([x[1] for x in data]).astype('int64').reshape(
                             args.batch_size, 1))
-
                     model.train()
                     avg_cost, prediction, acc = model(doc, label)
                     avg_cost.backward()
@@ -208,7 +209,6 @@ def train():
                             eval_doc = to_variable(eval_np_doc.reshape(-1, 1))
                             eval_avg_cost, eval_prediction, eval_acc = model(
                                 eval_doc, eval_label)
-
                             eval_np_mask = (
                                 eval_np_doc != args.vocab_size).astype('int32')
                             eval_word_num = np.sum(eval_np_mask)
@@ -266,9 +266,14 @@ def infer():
         elif args.model_type == 'bow_net':
             model_infer = nets.BOW("bow_net", args.vocab_size, args.batch_size,
                                    args.padding_size)
+        elif args.model_type == 'gru_net':
+            model_infer = nets.GRU("gru_net", args.vocab_size, args.batch_size,
+                                   args.padding_size)
+        elif args.model_type == 'bigru_net':
+            model_infer = nets.BiGRU("bigru_net", args.vocab_size,
+                                     args.batch_size, args.padding_size)
         print('Do inferring ...... ')
         total_acc, total_num_seqs = [], []
-
         restore, _ = fluid.load_dygraph(args.checkpoints)
         cnn_net_infer.set_dict(restore)
         cnn_net_infer.eval()
@@ -287,9 +292,7 @@ def infer():
             label = to_variable(
                 np.array([x[1] for x in data]).astype('int64').reshape(
                     args.batch_size, 1))
-
             _, _, acc = model_infer(doc, label)
-
             mask = (np_doc != args.vocab_size).astype('int32')
             word_num = np.sum(mask)
             total_acc.append(acc.numpy() * word_num)

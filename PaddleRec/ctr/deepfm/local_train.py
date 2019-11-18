@@ -18,9 +18,9 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, auc, data_list = ctr_deepfm_model(args.embedding_size, args.num_field,
-                                            args.num_feat, args.layer_sizes,
-                                            args.act, args.reg)
+    loss, auc, data_list, auc_states = ctr_deepfm_model(
+        args.embedding_size, args.num_field, args.num_feat, args.layer_sizes,
+        args.act, args.reg)
     optimizer = fluid.optimizer.SGD(
         learning_rate=args.lr,
         regularization=fluid.regularizer.L2DecayRegularizer(args.reg))
@@ -36,7 +36,8 @@ def train():
     dataset.set_batch_size(args.batch_size)
     dataset.set_thread(args.num_thread)
     train_filelist = [
-        args.train_data_dir + '/' + x for x in os.listdir(args.train_data_dir)
+        os.path.join(args.train_data_dir, x)
+        for x in os.listdir(args.train_data_dir)
     ]
 
     print('---------------------------------------------')
@@ -46,11 +47,12 @@ def train():
         exe.train_from_dataset(
             program=fluid.default_main_program(),
             dataset=dataset,
-            fetch_list=[loss],
-            fetch_info=['epoch %d batch loss' % (epoch_id + 1)],
+            fetch_list=[loss, auc],
+            fetch_info=['epoch %d batch loss' % (epoch_id + 1), "auc"],
             print_period=1000,
             debug=False)
-        model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
+        model_dir = os.path.join(args.model_output_dir,
+                                 'epoch_' + str(epoch_id + 1))
         sys.stderr.write('epoch%d is finished and takes %f s\n' % (
             (epoch_id + 1), time.time() - start))
         fluid.io.save_persistables(

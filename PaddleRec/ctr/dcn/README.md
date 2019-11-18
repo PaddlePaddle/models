@@ -32,7 +32,7 @@ DCN模型介绍可以参阅论文[Deep & Cross Network for Ad Click Predictions]
 
 数据下载命令
 ```bash
-cd data && sh download.sh
+cd data && python download.py
 ```
 
 ## 数据处理
@@ -70,13 +70,14 @@ loss: [0.44703564]      auc_val: [0.80654419]
 ## 多机训练
 首先使用命令下载并预处理小规模样例数据集：
 ```bash
-cd dist_data && sh dist_download.sh && cd ..
+cd dist_data && python dist_download.py && cd ..
 ```
 运行命令本地模拟多机场景，默认使用2 X 2，即2个pserver，2个trainer的方式组网训练。
 
 **注意：在多机训练中，建议使用Paddle 1.6版本以上或[最新版本](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/Tables.html#whl-dev)。**
 
 ```bash
+# 该sh不支持Windows
 sh cluster_train.sh
 ```
 参数说明：
@@ -102,7 +103,7 @@ python infer.py --model_output_dir cluster_model --test_epoch 10 --test_valid_da
 - 0号trainer保存模型参数
 
 - 每次训练完成后需要手动停止pserver进程，使用以下命令查看pserver进程：
-  
+
 >ps -ef | grep python
-  
+
 - 数据读取使用dataset模式，目前仅支持运行在Linux环境下
