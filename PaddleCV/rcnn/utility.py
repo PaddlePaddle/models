@@ -149,6 +149,11 @@ def parse_args():
     add_arg('variance',         float,  [1.,1.,1.,1.],    "The variance of anchors.")
     add_arg('rpn_stride',       float,  [16.,16.],    "Stride of the feature map that RPN is attached.")
     add_arg('rpn_nms_thresh',    float,   0.7,          "NMS threshold used on RPN proposals")
+
+    #NOTE: args for profiler, used for benchmark
+    add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
+    add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
+
     # TRAIN VAL INFER
     add_arg('MASK_ON', bool, False, "Option for different models. If False, choose faster_rcnn. If True, choose mask_rcnn")
     add_arg('im_per_batch',       int,   1,        "Minibatch size.")
