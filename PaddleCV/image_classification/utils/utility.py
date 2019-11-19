@@ -100,7 +100,6 @@ def parse_args():
     add_arg('total_images',             int,    1281167,                "The number of total training images.")
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
-    add_arg('image_shape',              str,    "3,224,224",            "The size of Input image, order: [channels, height, weidth] ")
     add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
     add_arg('test_batch_size',          int,    16,                     "Test batch size on a deveice.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
@@ -141,12 +140,14 @@ def parse_args():
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     add_arg('use_se',                   bool,   True,                   "Whether to use Squeeze-and-Excitation module for EfficientNet.")
-    # yapf: enable
     #NOTE: args for profiler
     add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
     add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
     add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
     add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
+
+
+    # yapf: enable
     args = parser.parse_args()
 
     return args
@@ -305,8 +306,7 @@ def create_data_loader(is_train, args):
     Returns:
         data_loader and the input data of net, 
     """
-    image_shape = [int(m) for m in args.image_shape.split(",")]
-
+    image_shape = [3, args.crop_size, args.crop_size]
     feed_image = fluid.data(
         name="feed_image",
         shape=[None] + image_shape,
@@ -383,7 +383,6 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
 
     elif info_mode == "epoch":
         ## TODO add time elapse
-        #if isinstance(metrics,np.ndarray):
         if len(metrics) == 5:
             train_loss, _, test_loss, test_acc1, test_acc5 = metrics
             print(
@@ -412,8 +411,6 @@ def best_strategy_compiled(args, program, loss, exe):
         return program
     else:
         build_strategy = fluid.compiler.BuildStrategy()
-        #Feature will be supported in Fluid v1.6
-        #build_strategy.enable_inplace = True
 
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_threads = fluid.core.get_cuda_device_count()

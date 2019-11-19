@@ -3,9 +3,7 @@
 python train.py \
        --model=DarkNet53 \
        --batch_size=256 \
-       --total_images=1281167 \
-       --image_shape=3,256,256 \
-       --class_dim=1000 \
+       --crop_size=256 \
        --lr_strategy=cosine_decay \
        --lr=0.1 \
        --num_epochs=200 \

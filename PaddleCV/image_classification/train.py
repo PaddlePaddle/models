@@ -17,25 +17,10 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import numpy as np
 import time
 import sys
 
-
-def set_paddle_flags(flags):
-    for key, value in flags.items():
-        if os.environ.get(key, None) is None:
-            os.environ[key] = str(value)
-
-
-# NOTE(paddle-dev): All of these flags should be
-# set before `import paddle`. Otherwise, it would
-# not take any effect. 
-set_paddle_flags({
-    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
-    'FLAGS_fraction_of_gpu_memory_to_use': 0.98
-})
-
+import numpy as np
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid import profiler
@@ -48,8 +33,8 @@ from build_model import create_model
 def build_program(is_train, main_prog, startup_prog, args):
     """build program, and add grad op in program accroding to different mode
 
-    Args:
-        is_train: mode: train or test
+    Parameters:
+        is_train: indicate train mode or test mode
         main_prog: main program
         startup_prog: strartup program
         args: arguments
@@ -59,11 +44,10 @@ def build_program(is_train, main_prog, startup_prog, args):
         test mode: [Loss, data_loader]
     """
     if args.model.startswith('EfficientNet'):
-        is_test = False if is_train else True
         override_params = {"drop_connect_rate": args.drop_connect_rate}
         padding_type = args.padding_type
         use_se = args.use_se
-        model = models.__dict__[args.model](is_test=is_test,
+        model = models.__dict__[args.model](is_test=not is_train,
                                             override_params=override_params,
                                             padding_type=padding_type,
                                             use_se=use_se)
@@ -204,6 +188,7 @@ def train(args):
                 if args.max_iter and total_batch_num == args.max_iter:
                     return
                 t1 = time.time()
+
                 train_batch_metrics = exe.run(compiled_train_prog,
                                               fetch_list=train_fetch_list)
                 t2 = time.time()
@@ -218,10 +203,10 @@ def train(args):
                                "batch")
                     sys.stdout.flush()
                 train_batch_id += 1
-                total_batch_num = total_batch_num + 1 #this is for benchmark
+                total_batch_num = total_batch_num + 1  #this is for benchmark
 
                 ##profiler tools
-                if args.is_profiler and pass_id == 0 and train_batch_id == 100: 
+                if args.is_profiler and pass_id == 0 and train_batch_id == 100:
                     profiler.start_profiler("All")
                 elif args.is_profiler and pass_id == 0 and train_batch_id == 150:
                     profiler.stop_profiler("total", args.profiler_path)
