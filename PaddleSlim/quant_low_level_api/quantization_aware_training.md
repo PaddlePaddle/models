@@ -74,11 +74,11 @@ data
         ├── val
         └── val_list.txt
 ```
-3）切换到`models/PaddleSlim/quant_low_level_api`目录下，修改`run_quant.sh`内容，即将**data_dir**设置为第2)步所准备的数据集路径。最后，执行`run_quant.sh`脚本即可进行量化训练。
+3）切换到`models/PaddleSlim/quant_low_level_api`目录下，修改`run_quantization_aware_training.sh`内容，即将**data_dir**设置为第2)步所准备的数据集路径。最后，执行`run_quantization_aware_training.sh`脚本即可进行量化训练。
 
 ### 2.1 量化训练Low-Level API使用小结：
 
-* 参照[quant.py](quant.py)文件的内容，总结使用量化训练Low-Level API的方法如下：
+* 参照[quantization_aware_training.py](quantization_aware_training.py)文件的内容，总结使用量化训练Low-Level API的方法如下：
 ```python
 #startup_program = fluid.Program()
 #train_program = fluid.Program()
@@ -131,7 +131,7 @@ convert_int8_pass.apply(test_graph)
 mobile_pass = TransformForMobilePass()
 mobile_pass.apply(test_graph)
 ```
-* [run_quant.sh](run_quant.sh)脚本中的命令配置详解：
+* [run_quantization_aware_training.sh](run_quantization_aware_training.sh)脚本中的命令配置详解：
 
 ```bash
    --model：指定量化训练的模型，如MobileNet、ResNet50。
