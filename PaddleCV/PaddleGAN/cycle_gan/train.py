@@ -70,6 +70,11 @@ add_arg('run_test',          bool,  True,       "Whether to run test.")
 add_arg('use_gpu',           bool,  True,       "Whether to use GPU to train.")
 add_arg('profile',           bool,  False,       "Whether to profile.")
 add_arg('run_ce',            bool,  False,       "Whether to run for model ce.")
+
+# NOTE: args for profiler, used for benchmark
+add_arg('is_profiler',       int,  0,       "the switch of profiler. used for benchmark")
+add_arg('profiler_path',     str,  './',       "the path of profiler output files. used for benchmark")
+add_arg('max_iter',          int,  0,       "the max batch nums to train. used for benchmark")
 # yapf: enable
 
 
@@ -214,9 +219,16 @@ def train(args):
             loss_name=d_A_trainer.d_loss_A.name,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
+
+    total_batch_num = 0  #this is for benchmark
+
     for epoch in range(args.epoch):
         batch_id = 0
         for i in range(max_images_num):
+
+            if args.max_iter and total_batch_num == args.max_iter: #this for benchmark
+                return
+
             data_A = next(A_reader)
             data_B = next(B_reader)
             tensor_A = fluid.LoDTensor()
@@ -265,6 +277,14 @@ def train(args):
             losses[1].append(d_A_loss[0])
             sys.stdout.flush()
             batch_id += 1
+
+            total_batch_num = total_batch_num + 1 #this is for benchmark
+            #profiler tools for benchmark
+            if args.is_profiler and epoch == 0 and batch_id == 40:
+                profiler.start_profiler("All")
+            elif args.is_profiler and epoch == 0 and batch_id == 45:
+                profiler.stop_profiler("total", args.profiler_path)
+                return
 
         if args.run_test and not args.run_ce:
             test(epoch)
