@@ -50,9 +50,8 @@ class ShuffleNetV2():
         elif scale == 2.0:
             stage_out_channels = [-1, 24, 224, 488, 976, 2048]
         else:
-            raise ValueError("""{} groups is not supported for
-                       1x1 Grouped Convolutions""".format(num_groups))
-
+            raise NotImplementedError("This scale size:[" + str(scale) +
+                                      "] is not implemented!")
         #conv1
 
         input_channel = stage_out_channels[1]

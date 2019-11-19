@@ -8,6 +8,7 @@ import paddle.fluid as fluid
 from args import parse_args
 from criteo_reader import CriteoDataset
 import network_conf
+import utils
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('fluid')
@@ -25,7 +26,8 @@ def infer():
     inference_scope = fluid.Scope()
 
     test_files = [
-        args.test_data_dir + '/' + x for x in os.listdir(args.test_data_dir)
+        os.path.join(args.test_data_dir, x)
+        for x in os.listdir(args.test_data_dir)
     ]
     criteo_dataset = CriteoDataset()
     test_reader = paddle.batch(
@@ -33,13 +35,16 @@ def infer():
 
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
-    cur_model_path = args.model_output_dir + '/epoch_' + args.test_epoch
+    cur_model_path = os.path.join(args.model_output_dir,
+                                  'epoch_' + args.test_epoch)
 
     with fluid.scope_guard(inference_scope):
         with fluid.framework.program_guard(test_program, startup_program):
-            loss, auc, data_list = eval('network_conf.' + args.model_name)(
-                args.embedding_size, args.num_field, args.num_feat,
-                args.layer_sizes_dnn, args.act, args.reg, args.layer_sizes_cin)
+            loss, auc, data_list, auc_states = eval(
+                'network_conf.' + args.model_name)(
+                    args.embedding_size, args.num_field, args.num_feat,
+                    args.layer_sizes_dnn, args.act, args.reg,
+                    args.layer_sizes_cin)
 
             exe = fluid.Executor(place)
             feeder = fluid.DataFeeder(feed_list=data_list, place=place)
@@ -48,11 +53,8 @@ def infer():
                 dirname=cur_model_path,
                 main_program=fluid.default_main_program())
 
-            auc_states_names = ['_generated_var_2', '_generated_var_3']
-            for name in auc_states_names:
-                param = inference_scope.var(name).get_tensor()
-                param_array = np.zeros(param._get_dims()).astype("int64")
-                param.set(param_array, place)
+            for var in auc_states:  # reset auc states
+                set_zero(var.name, scope=inference_scope, place=place)
 
             loss_all = 0
             num_ins = 0
@@ -71,5 +73,23 @@ def infer():
             )
 
 
+def set_zero(var_name,
+             scope=fluid.global_scope(),
+             place=fluid.CPUPlace(),
+             param_type="int64"):
+    """
+    Set tensor of a Variable to zero.
+    Args:
+        var_name(str): name of Variable
+        scope(Scope): Scope object, default is fluid.global_scope()
+        place(Place): Place object, default is fluid.CPUPlace()
+        param_type(str): param data type, default is int64
+    """
+    param = scope.var(var_name).get_tensor()
+    param_array = np.zeros(param._get_dims()).astype(param_type)
+    param.set(param_array, place)
+
+
 if __name__ == '__main__':
+    utils.check_version()
     infer()

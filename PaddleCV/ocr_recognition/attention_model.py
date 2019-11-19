@@ -188,7 +188,7 @@ def attention_train_net(args, data_shape, num_classes):
     prediction = gru_decoder_with_attention(trg_embedding, encoded_vector,
                                             encoded_proj, decoder_boot,
                                             decoder_size, num_classes)
-    fluid.clip.set_gradient_clip(fluid.clip.GradientClipByValue(args.gradient_clip))
+    fluid.clip.set_gradient_clip(fluid.clip.GradientClipByGlobalNorm(args.gradient_clip))
     label_out = fluid.layers.cast(x=label_out, dtype='int64')
 
     _, maxid = fluid.layers.topk(input=prediction, k=1)

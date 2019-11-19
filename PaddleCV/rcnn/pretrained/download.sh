@@ -1,4 +1,4 @@
-DIR="$(dirname "$PWD -P")"
+DIR="$( cd "$(dirname "$0")" )"
 cd "$DIR"
 
 # Download the data.
