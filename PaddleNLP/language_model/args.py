@@ -80,5 +80,9 @@ def parse_args():
     parser.add_argument('--enable_ce', action='store_true')
     parser.add_argument('--batch_size', type=int, default=0, help='batch size')
     parser.add_argument('--max_epoch', type=int, default=0, help='max epoch')
+    
+    # NOTE: args for profiler, used for benchmark
+    parser.add_argument('--is_profiler', type=int, default=0, help='the switch of profiler. used for benchmark')
+    parser.add_argument('--profiler_path', type=str, default='./', help='the profiler output file path. used for benchmark')
     args = parser.parse_args()
     return args

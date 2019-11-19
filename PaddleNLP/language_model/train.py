@@ -25,6 +25,7 @@ import contextlib
 from distutils.dir_util import mkpath
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import paddle.fluid.framework as framework
 import paddle.fluid.profiler as profiler
 from paddle.fluid.executor import Executor
@@ -318,6 +319,15 @@ def main():
                 print(
                     "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
                     % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
+            
+            # profiler tools for benchmark
+            if args.is_profiler and batch_id == 132:
+                profiler.start_profiler("All")
+            elif args.is_profiler and batch_id == 140:
+                profiler.stop_profiler("total", args.profiler_path)
+                ppl = np.exp(total_loss / iters)
+                return ppl
+
         ppl = np.exp(total_loss / iters)
         return ppl
 
@@ -371,6 +381,15 @@ def main():
                         % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
 
                 batch_id += 1
+                # profiler tools for benchmark
+                if args.is_profiler and batch_id == 132:
+                    profiler.start_profiler("All")
+                elif args.is_profiler and batch_id == 140:
+                    profiler.stop_profiler("total", args.profiler_path)
+                    batch_times.append(time.time() - batch_start_time)
+                    ppl = np.exp(total_loss / iters)
+                    return ppl
+
         except fluid.core.EOFException:
             dataloader.reset()
 
