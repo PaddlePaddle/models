@@ -1,15 +1,20 @@
 export CUDA_VISIBLE_DEVICES=0
 
 root_url="https://paddle-inference-dist.bj.bcebos.com/int8"
-mobilenetv1="mobilenetv1_fp32_model.zip"
-if [ ! -f ${mobilenetv1} ]; then
-    wget ${root_url}/${mobilenetv1}
-    unzip ${mobilenetv1}
+mobilenetv1="mobilenetv1_fp32_model"
+samples="samples_100"
+if [ ! -d ${mobilenetv1} ]; then
+    wget ${root_url}/${mobilenetv1}.tgz
+    tar zxf ${mobilenetv1}.tgz
+fi
+if [ ! -d ${samples} ]; then
+    wget ${root_url}/${samples}.tgz
+    tar zxf ${samples}.tgz
 fi
 
 python post_training_quantization.py \
-    --model_dir="mobilenetv1_fp32_model" \
-    --data_path="/dataset/ILSVRC2012/" \
+    --model_dir=${mobilenetv1} \
+    --data_path=${samples} \
     --save_model_path="mobilenetv1_int8_model" \
     --algo="KL" \
     --is_full_quantize=True \
