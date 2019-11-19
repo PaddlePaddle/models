@@ -4,10 +4,10 @@
 
 ## 离线量化原理概述
 
-### 模型量化
+#### 模型量化
 模型量化是使用更少的比特数（如8-bit、3-bit、2-bit等）表示神经网络的权重和激活。模型量化可以加快推理速度、减小存储大小、降低功耗等优点。目前，模型量化主要分为离线量化（Post Training Quantization）和QAT量化（Quantization Aware Training）。
 
-### 量化方式
+#### 量化方式
 将FP32类型Tensor转换为INT8类型Tensor的过程相当于信息再编码（re-encoding information ），且要求再编码后精度损失要尽量小。FP32和INT8类型Tensor可以通过如下线性映射实现相互转换：
 $$ f = s * q + b $$
 $$ q = round((f-b)/s)$$
@@ -17,7 +17,7 @@ $$ q = round((f-b)/s)$$
 $$ f  = s * q $$
 $$ q  = round(f / s) $$
 
-### 离线量化
+#### 离线量化
 离线量化是基于采样数据，采用KL散度等方法计算量化比例因子的方法。相比QAT量化，离线量化不需要重新训练，可以快速得到量化模型。
 
 离线量化的目标是求取量化比例因子，主要有两种方法：非饱和量化方法 ( No Saturation) 和饱和量化方法 (Saturation)。非饱和量化方法计算FP32类型Tensor中绝对值的最大值`abs_max`，将其映射为127，则量化比例因子等于`abs_max/127`。饱和量化方法使用KL散度计算一个合适的阈值`T` (`T<mab_max`)，将其映射为127，则量化比例因子等于`T/127`。一般而言，对于待量化op的权重Tensor，采用非饱和量化方法，对于待量化op的激活Tensor（包括输入和输出），采用饱和量化方法 。
@@ -45,17 +45,17 @@ $$ q  = round(f / s) $$
 
 ``` python
 class PostTrainingQuantization(
-         executor,
-           sample_generator,
-                 model_dir,
-                 model_filename=None,
-                 params_filename=None,
-                 batch_size=10,
-                 batch_nums=None,
-                 scope=None,
-                 algo="KL",
-                 quantizable_op_type=["conv2d", "depthwise_conv2d", "mul"],
-                 is_full_quantize=False)
+    executor,
+    sample_generator,
+    model_dir,
+    model_filename=None,
+    params_filename=None,
+    batch_size=10,
+    batch_nums=None,
+    scope=None,
+    algo="KL",
+    quantizable_op_type=["conv2d", "depthwise_conv2d", "mul"],
+    is_full_quantize=False)
 ```
 调用上述api，传入离线量化必要的参数。参数说明：
 * executor：执行模型的executor，可以在cpu或者gpu上执行。
@@ -87,7 +87,7 @@ PostTrainingQuantization.save_quantized_model(save_model_path)
 
 > 该示例的代码放在[models/PaddleSlim/quant_low_level_api/](https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim/quant_low_level_api)目录下。如果需要执行该示例，首先clone下来[models](https://github.com/PaddlePaddle/models.git)，然后执行[run_post_training_quanzation.sh](run_post_training_quanzation.sh)脚本，最后量化模型保存在`mobilenetv1_int8_model`。
 
-1） 准备工作
+1）**准备工作**
 
 安装PaddlePaddle，准备已经训练好的FP32预测模型。
 
@@ -98,11 +98,11 @@ samples_100
 └──val_list.txt
 ```
 
-2）配置读取样本数据的接口
+2）**配置读取样本数据的接口**
 
 MobileNetV1的输入是图片和标签，所以配置读取样本数据的sample_generator，每次返回一张图片和一个标签。详细代码在[models/PaddleSlim/reader.py](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/reader.py)。
 
-3）调用离线量化
+3）**调用离线量化**
 
 调用离线量化的核心代码如下，详细代码在[post_training_quantization.py](post_training_quantization.py)。
 ``` python
