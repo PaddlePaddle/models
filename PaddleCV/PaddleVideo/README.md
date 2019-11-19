@@ -185,11 +185,13 @@ run.sh
 | BMN | 16 | 4卡K40 | 7.0 | 67.19% (AUC) | [model](https://paddlemodels.bj.bcebos.com/video_detection/BMN_final.pdparams) |
 
 - 基于ActivityNet Captions的视频描述模型:
+
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | METEOR | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
 | ETS | 256 | 4卡P40 | 7.0 | 9.8 | [model](https://paddlemodels.bj.bcebos.com/video_caption/ETS_final.pdparams) |
 
 - 基于TACoS的视频查找模型:
+
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | R1@IOU5 | R5@IOU5 | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----: | :----------: |
 | TALL | 56 | 1卡P40 | 7.2 | 0.13 | 0.24 | [model](https://paddlemodels.bj.bcebos.com/video_grounding/TALL_final.pdparams) |
@@ -207,8 +209,8 @@ run.sh
 - [Non-local Neural Networks](https://arxiv.org/abs/1711.07971v1), Xiaolong Wang, Ross Girshick, Abhinav Gupta, Kaiming He
 - [Bsn: Boundary sensitive network for temporal action proposal generation](http://arxiv.org/abs/1806.02964), Tianwei Lin, Xu Zhao, Haisheng Su, Chongjing Wang, Ming Yang.
 - [BMN: Boundary-Matching Network for Temporal Action Proposal Generation](https://arxiv.org/abs/1907.09702), Tianwei Lin, Xiao Liu, Xin Li, Errui Ding, Shilei Wen.
-- [Describing Videos by Exploiting Temporal Structure](https://arxiv.org/abs/1502.08029).
-- [TALL: Temporal Activity Localization via Language Query](https://arxiv.org/abs/1705.02101).
+- [Describing Videos by Exploiting Temporal Structure](https://arxiv.org/abs/1502.08029), Li Yao, Atousa Torabi, Kyunghyun Cho, Nicolas Ballas, Christopher Pal, Hugo Larochelle, Aaron Courville.
+- [TALL: Temporal Activity Localization via Language Query](https://arxiv.org/abs/1705.02101), Jiyang Gao, Chen Sun, Zhenheng Yang, Ram Nevatia.
 
 ## 版本更新
 

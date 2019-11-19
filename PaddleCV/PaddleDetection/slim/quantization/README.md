@@ -4,7 +4,7 @@
 
 ## 概述
 
-该示例使用PaddleSlim提供的[量化压缩策略](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/tutorial.md#1-quantization-aware-training%E9%87%8F%E5%8C%96%E4%BB%8B%E7%BB%8D)对分类模型进行压缩。
+该示例使用PaddleSlim提供的[量化压缩策略](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/tutorial.md#1-quantization-aware-training%E9%87%8F%E5%8C%96%E4%BB%8B%E7%BB%8D)对检测模型进行压缩。
 在阅读该示例前，建议您先了解以下内容：
 
 - [检测模型的常规训练方法](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleDetection)
@@ -41,10 +41,11 @@
 
 step1: 设置gpu卡
 ```
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 ```
 step2: 开始训练
-使用PaddleDetection提供的配置文件在用8卡进行训练：
+
+使用PaddleDetection提供的配置文件用8卡进行训练：
 
 ```
 python compress.py \
@@ -234,8 +235,11 @@ FP32模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如
 |---|---|---|---|---|
 |baseline|- |76.2%|- |-|
 |abs_max|abs_max|- |- |-|
-|abs_max|moving_average_abs_max|- |- |-|
+|abs_max|moving_average_abs_max|74.48%|10.99|3348.68|
 |channel_wise_abs_max|abs_max|- |- |-|
+
+> 注： lite端运行手机信息：Android手机，
+型号：BKL-AL20，运行内存RAM：4GB 6GB，CPU核心数：八核 4*A73 2.36GHz+4*A53 1.8GHz，操作系统：EMUI 8.0，CPU品牌：麒麟970
 
 
 ## FAQ

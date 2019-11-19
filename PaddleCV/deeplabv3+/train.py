@@ -39,6 +39,7 @@ set_paddle_flags({
 
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import numpy as np
 import argparse
 from reader import CityscapeDataset
@@ -70,6 +71,8 @@ add_arg('profile',              bool,    False, "Enable profiler.")
 add_arg('use_py_reader',        bool,    True,  "Use py reader.")
 add_arg('use_multiprocessing',  bool,    False, "Use multiprocessing.")
 add_arg("num_workers",          int,     8,     "The number of python processes used to read and preprocess data.")
+# NOTE: args for profiler, used for benchmark
+add_arg("profiler_path",        str,     '/tmp/profile_file2',  "the profiler output file path. (used for benchmark)")
 parser.add_argument(
     '--enable_ce',
     action='store_true',
@@ -79,7 +82,7 @@ parser.add_argument(
 @contextlib.contextmanager
 def profile_context(profile=True):
     if profile:
-        with profiler.profiler('All', 'total', '/tmp/profile_file2'):
+        with profiler.profiler('All', 'total', args.profiler_path):
             yield
     else:
         yield
@@ -252,6 +255,7 @@ with profile_context(args.profile):
         train_loss = np.mean(train_loss)
         end_time = time.time()
         total_time += end_time - begin_time
+        
         if i % 100 == 0:
             print("Model is saved to", args.save_weights_path)
             save_model()

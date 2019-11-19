@@ -49,7 +49,7 @@ from ppdet.data.data_feed import create_reader
 from ppdet.utils.eval_utils import parse_fetches, eval_results
 from ppdet.utils.stats import TrainingStats
 from ppdet.utils.cli import ArgsParser, print_total_cfg
-from ppdet.utils.check import check_gpu, check_version
+from ppdet.utils.check import check_gpu
 import ppdet.utils.checkpoint as checkpoint
 from ppdet.modeling.model_input import create_feed
 
@@ -121,8 +121,7 @@ def main():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
-    # print_total_cfg(cfg)
-    #check_version()
+
     if cfg.use_gpu:
         devices_num = fluid.core.get_cuda_device_count()
     else:

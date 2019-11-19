@@ -5,7 +5,6 @@ strategies:
         start_epoch: 0
         end_epoch: 4 
         float_model_save_path: './output/yolov3/float'
-        mobile_model_save_path: './output/yolov3/mobile'
         int8_model_save_path: './output/yolov3/int8'
         weight_bits: 8
         activation_bits: 8

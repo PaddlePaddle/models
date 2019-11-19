@@ -7,6 +7,13 @@ from collections import OrderedDict
 import paddle.fluid as fluid
 
 from network import DCN
+import utils
+
+
+def boolean_string(s):
+    if s.lower() not in {'false', 'true'}:
+        raise ValueError('Not a valid boolean string')
+    return s.lower() == 'true'
 
 
 def parse_args():
@@ -61,7 +68,7 @@ def parse_args():
         help='Cross net l2 regularizer coefficient')
     parser.add_argument(
         '--use_bn',
-        type=bool,
+        type=boolean_string,
         default=True,
         help='Whether use batch norm in dnn part')
     parser.add_argument(
@@ -161,7 +168,8 @@ def train():
                 fetch_info=['total_loss', 'avg_logloss', 'auc'],
                 debug=False,
                 print_period=args.print_steps)
-            model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
+            model_dir = os.path.join(args.model_output_dir,
+                                     'epoch_' + str(epoch_id + 1))
             sys.stderr.write('epoch%d is finished and takes %f s\n' % (
                 (epoch_id + 1), time.time() - start))
             if args.trainer_id == 0:  # only trainer 0 save model
@@ -194,4 +202,5 @@ def train():
 
 
 if __name__ == "__main__":
+    utils.check_version()
     train()

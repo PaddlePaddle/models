@@ -209,5 +209,5 @@ Paddle-Slim工具库有以下特点：
 
 模型压缩框架支持以下格式模型导出：
 
-- **Paddle Fluid模型格式：** Paddle Fluid模型格式，可通过Paddle框架加载使用。
-- **Paddle Mobile模型格式：** 仅在量化训练策略时使用，兼容[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)的模型格式。
+- **Paddle Fluid模型格式：** Paddle Fluid模型格式，可通过[Paddle](https://github.com/PaddlePaddle/Paddle)，[Paddle-Lite](https://github.com/PaddlePaddle/Paddle-Lite)框架加载使用。
+- **Paddle Mobile模型格式：** 仅在量化训练策略时使用，兼容[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)的模型格式（现Paddle Mobile已升级为[Paddle-Lite](https://github.com/PaddlePaddle/Paddle-Lite)）。
