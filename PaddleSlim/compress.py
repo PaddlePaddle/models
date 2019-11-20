@@ -48,7 +48,7 @@ def compress(args):
     # model definition
     model = models.__dict__[args.model]()
 
-    if args.model is "GoogleNet":
+    if args.model == "GoogleNet":
         out0, out1, out2 = model.net(input=image, class_dim=args.class_dim)
         cost0 = fluid.layers.cross_entropy(input=out0, label=label)
         cost1 = fluid.layers.cross_entropy(input=out1, label=label)
