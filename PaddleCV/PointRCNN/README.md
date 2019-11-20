@@ -174,7 +174,9 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.
 python eval.py --cfg=./cfgs/default.yml --eval_mode=rcnn_offline --batch_size=1 --ckpt_dir=./checkpoints/29
 
 # 运行kitt map工具
-这个工具只支持python 3.6以上， 需要通过pip安装Numpy, skim age, Numba, fire 
+这个工具只支持python 3.6以上， 需要通过pip安装numpy, skimage, Numba, fire 
+
+pip install -r requirement.txt 
 
 python3 kitti_map.py
 ```
@@ -182,11 +184,12 @@ python3 kitti_map.py
 评估结果如下所示：
 
 ```
-Car AP@0.70, 0.70, 0.70:
-bbox AP:96.91, 89.53, 88.74
-bev  AP:90.21, 87.89, 85.51
-3d   AP:89.19, 78.85, 77.91
-aos  AP:96.90, 89.41, 88.54
+Car | AP@0.70 | 0.70 | 0.70
+-|-|-|-
+bbox | AP:96.91 | 89.53 | 88.74
+bev  | AP:90.21 | 87.89 | 85.51
+3d   | AP:89.19 | 78.85 | 77.91
+aos  | AP:96.90 | 89.41 | 88.54
 ```
 
 ## 参考文献
