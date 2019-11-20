@@ -17,7 +17,7 @@
 
 <p align="center">
 <img src="image/pointnet2.jpg" height=300 width=800 hspace='10'/> <br />
-用于点集分类和分割的 PointNet++ 网络结构
+用于点云分类和分割的 PointNet++ 网络结构
 </p>
 
 集合抽象层是网络的基本模块，每个集合抽象层由三个关键层构成:采样层、分组层和特征提取层。
@@ -92,66 +92,71 @@ sh download.sh
 
 ### 编译自定义算子
 
-PaddlePaddle Fluid 从 v1.6 版本开始支持自定义算子实现请，确保你的 Paddle 版本不低于 v1.6。
-这里默认您已经使用源码编译安装了paddle，如果您是通过 pip 安装 paddle 版本，请根据 ext_op/README.md 对编译脚本进行修改。
+PaddlePaddle Fluid 从 v1.6 版本开始支持自定义算子实现，请确保你的 Paddle 版本不低于 v1.6。
 
-自定义算子可通过以下方式进行编译：
+根据您 paddle 的安装方式，选择自定义算子的编译方式
 
-```
-cd ext_op/src
-sh make.sh
-```
-成功编译后，`exr_op/src` 目录下将会生成 `pointnet2_lib.so` 
+- 如果您使用 pip 安装 paddle 版本，请根据 [自定义算子](./ext_op/README.md)对编译脚本进行修改。
 
-执行下列操作，确保自定义算子编译正确：
+- 如果您使用源码编译安装paddle，请参考如下步骤完成自定义算子的编译：
 
-```
-# 设置动态库的路径到 LD_LIBRARY_PATH 中
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
+    进入 `ext_op/src` 目录，执行编译脚本
+    ```
+    cd ext_op/src
+    sh make.sh
+    ```
 
-# 回到 ext_op 目录，添加 PYTHONPATH
-cd ..
-export PYTHONPATH=$PYTHONPATH:`pwd`
+    成功编译后，`exr_op/src` 目录下将会生成 `pointnet2_lib.so` 
 
-# 运行单测 
-python test/test_farthest_point_sampling_op.py
-python test/test_gather_point_op.py
-python test/test_group_points_op.py
-python test/test_query_ball_op.py
-python test/test_three_interp_op.py
-python test/test_three_nn_op.py
-```
-单测运行成功会输出提示信息，如下所示：
+    执行下列操作，确保自定义算子编译正确：
 
-```
-.
-----------------------------------------------------------------------
-Ran 1 test in 13.205s
+    ```
+    # 设置动态库的路径到 LD_LIBRARY_PATH 中
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
-OK
-```
+    # 回到 ext_op 目录，添加 PYTHONPATH
+    cd ..
+    export PYTHONPATH=$PYTHONPATH:`pwd`
 
-更多关于自定义算子的编译说明，可阅读 ext_op/README.md
+    # 运行单测 
+    python test/test_farthest_point_sampling_op.py
+    python test/test_gather_point_op.py
+    python test/test_group_points_op.py
+    python test/test_query_ball_op.py
+    python test/test_three_interp_op.py
+    python test/test_three_nn_op.py
+    ```
+    单测运行成功会输出提示信息，如下所示：
+
+    ```
+    .
+    ----------------------------------------------------------------------
+    Ran 1 test in 13.205s
+
+    OK
+    ```
+
+更多关于自定义算子的编译说明，请参考[自定义算子](./ext_op/README.md)
 
 
 ### 训练
+
+分类/分割模型默认使用单卡训练，在启动训练前请指定单卡GPU，并将动态库的路径添加到 LD_LIBRARY_PATH 中：
+
+```
+# 指定0号卡进行GPU训练
+export CUDA_VISIBLE_DEVICES=0
+
+# 设置动态库的路径到 LD_LIBRARY_PATH 中
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
+
+```
 
 **分类模型:**
 
 可通过如下方式启动 PointNet++ 分类模型的训练：
 
 ```
-# 指定单卡GPU训练
-export CUDA_VISIBLE_DEVICES=0
-
-# 开启 gc 节省显存
-export FLAGS_fast_eager_deletion_mode=1
-export FLAGS_eager_delete_tensor_gb=0.0
-export FLAGS_fraction_of_gpu_memory_to_use=0.98
-
-# 设置动态库的路径到 LD_LIBRARY_PATH 中
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
-
 # 开始训练
 python train_cls.py --model=MSG --batch_size=16 --save_dir=checkpoints_msg_cls
 ```
@@ -167,17 +172,6 @@ sh scripts/train_cls.sh
 可通过如下方式启动 PointNet++ 语义分割模型的训练：
 
 ```
-# 指定单卡GPU训练
-export CUDA_VISIBLE_DEVICES=0
-
-# 开启 gc 节省显存
-export FLAGS_fast_eager_deletion_mode=1
-export FLAGS_eager_delete_tensor_gb=0.0
-export FLAGS_fraction_of_gpu_memory_to_use=0.98
-
-# 设置动态库的路径到 LD_LIBRARY_PATH 中
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
-
 # 开始训练
 python train_seg.py --model=MSG --batch_size=32 --save_dir=checkpoints_msg_seg
 ```
@@ -190,17 +184,23 @@ sh scripts/train_seg.sh
 
 ### 模型评估
 
-**分类模型:**
 
-可通过如下方式启动 PointNet++ 分类模型的评估：
+分类/分割模型默认使用单卡评估，首先指定单卡GPU，并将动态库的路径添加到 LD_LIBRARY_PATH 中：
 
 ```
-# 指定单卡GPU
+# 指定0号卡进行GPU评估
 export CUDA_VISIBLE_DEVICES=0
 
 # 设置动态库的路径到 LD_LIBRARY_PATH 中
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 
+```
+
+**分类模型:**
+
+可通过如下方式启动 PointNet++ 分类模型的评估：
+
+```
 # 对给定权重进行评估
 python eval_cls.py --model=MSG --weights=checkpoints_cls/200
 ```
@@ -223,12 +223,6 @@ sh scripts/eval_cls.sh
 可通过如下方式启动 PointNet++ 语义分割模型的评估：
 
 ```
-# 指定单卡GPU
-export CUDA_VISIBLE_DEVICES=0
-
-# 设置动态库的路径到 LD_LIBRARY_PATH 中
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
-
 # 对给定权重进行评估
 python eval_seg.py --model=MSG --weights=checkpoints_seg/200
 ```
