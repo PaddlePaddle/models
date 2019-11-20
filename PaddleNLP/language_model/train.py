@@ -51,9 +51,9 @@ SEED = 123
 
 
 @contextlib.contextmanager
-def profile_context(profile=True):
+def profile_context(profile=True, profiler_path='/tmp/paddingrnn.profile'):
     if profile:
-        with profiler.profiler('All', 'total', '/tmp/paddingrnn.profile'):
+        with profiler.profiler('All', 'total', profiler_path):
             yield
     else:
         yield
@@ -321,13 +321,10 @@ def main():
                     % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
             
             # profiler tools for benchmark
-            if args.is_profiler and batch_id == 132:
-                profiler.start_profiler("All")
-            elif args.is_profiler and batch_id == 140:
-                profiler.stop_profiler("total", args.profiler_path)
-                ppl = np.exp(total_loss / iters)
-                return ppl
-
+            if args.profile and batch_id == log_interval:
+                profiler.reset_profiler()
+            elif args.profile and batch_id == (log_interval + 5):
+                break
         ppl = np.exp(total_loss / iters)
         return ppl
 
@@ -382,14 +379,10 @@ def main():
 
                 batch_id += 1
                 # profiler tools for benchmark
-                if args.is_profiler and batch_id == 132:
-                    profiler.start_profiler("All")
-                elif args.is_profiler and batch_id == 140:
-                    profiler.stop_profiler("total", args.profiler_path)
-                    batch_times.append(time.time() - batch_start_time)
-                    ppl = np.exp(total_loss / iters)
-                    return ppl
-
+                if args.profile and batch_id == log_interval:
+                    profiler.reset_profiler()
+                elif args.profile and batch_id == (log_interval + 5):
+                    break
         except fluid.core.EOFException:
             dataloader.reset()
 
@@ -474,7 +467,7 @@ def main():
             fluid.save(main_program, save_model_dir)
             print("Saved model to: %s.\n" % save_model_dir)
 
-    with profile_context(args.profile):
+    with profile_context(args.profile, args.profiler_path):
         train()
 
     test_ppl = eval(test_data)
