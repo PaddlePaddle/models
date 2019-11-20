@@ -98,6 +98,7 @@ def parse_args():
     # SOLVER AND HYPERPARAMETERS
     add_arg('model',                    str,    "ResNet50",   "The name of network.")
     add_arg('total_images',             int,    1281167,                "The number of total training images.")
+    add_arg('image_shape',              int,    224,                    "The Height or Width of image")
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
     add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
@@ -117,7 +118,6 @@ def parse_args():
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
     add_arg('upper_ratio',              float,  4./3.,                  "The value of upper_ratio in ramdom_crop")
     add_arg('resize_short_size',        int,    256,                    "The value of resize_short_size")
-    add_arg('crop_size',                int,    224,                    "The value of crop size")
     add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
@@ -306,7 +306,7 @@ def create_data_loader(is_train, args):
     Returns:
         data_loader and the input data of net, 
     """
-    image_shape = [3, args.crop_size, args.crop_size]
+    image_shape = [3, args.image_shape, args.image_shape]
     feed_image = fluid.data(
         name="feed_image",
         shape=[None] + image_shape,

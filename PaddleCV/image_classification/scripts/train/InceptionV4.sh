@@ -9,7 +9,7 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.98
 python train.py \
 	    --model=InceptionV4 \
             --batch_size=256 \
-            --crop_size=299 \
+            --image_shape=299 \
             --lr_strategy=cosine_decay \
             --lr=0.045 \
             --num_epochs=200 \
