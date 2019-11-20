@@ -47,10 +47,9 @@ import pickle
 
 
 @contextlib.contextmanager
-def profile_context(profile=True):
-    args = parse_args()
+def profile_context(profile=True, profiler_path='./seq2seq.profile'):
     if profile:
-        with profiler.profiler('All', 'total', args.profiler_path):
+        with profiler.profiler('All', 'total', profiler_path):
             yield
     else:
         yield
@@ -252,7 +251,7 @@ def main():
             print("kpis\ttrain_duration_card%s\t%s" % (card_num, _time))
             print("kpis\ttrain_ppl_card%s\t%f" % (card_num, _ppl))
 
-    with profile_context(args.profile):
+    with profile_context(args.profile, args.profiler_path):
         train()
 
 
