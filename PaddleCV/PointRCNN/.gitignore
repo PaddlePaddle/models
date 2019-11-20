@@ -9,3 +9,5 @@ utils/pts_utils/dist
 utils/pts_utils/pts_utils.egg-info
 utils/cyops/*.c
 utils/cyops/*.so
+ext_op/src/*.o
+ext_op/src/*.so

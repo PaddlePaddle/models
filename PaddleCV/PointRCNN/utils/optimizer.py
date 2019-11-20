@@ -83,14 +83,13 @@ def optimize(loss,
              startup_prog,
              weight_decay,
              clip_norm,
-             beta1=0.9,
+             beta1=[0.95, 0.85],
              beta2=0.99,
-             betas=[0.95, 0.85],
              scheduler='cosine_warmup_decay'):
 
     scheduled_lr= None
     if scheduler == 'cosine_warmup_decay':
-        scheduled_lr, scheduled_beta1 = cosine_warmup_decay(learning_rate, betas, warmup_factor,
+        scheduled_lr, scheduled_beta1 = cosine_warmup_decay(learning_rate, beta1, warmup_factor,
                                            decay_factor, total_step,
                                            warmup_pct)
     else:
@@ -98,9 +97,8 @@ def optimize(loss,
                          "'cosine_warmup_decay'")
 
     optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr,
-                                     beta1=beta1,
-                                     beta2=beta2,
-                                     actual_beta1=scheduled_beta1)
+                                     beta1=scheduled_beta1,
+                                     beta2=beta2)
     fluid.clip.set_gradient_clip(
         clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=clip_norm))
 

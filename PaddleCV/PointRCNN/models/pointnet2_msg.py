@@ -76,20 +76,3 @@ class PointNet2MSG(object):
 
         return xyzs[0], features[0]
 
-
-if __name__ == "__main__":
-    from utils.config import cfg
-    xyz = fluid.layers.data(name='xyz', shape=[32, 3], lod_level=0)
-    model = PointNet2MSG(cfg, xyz)
-    xyz, out = model.build()
-
-    place = fluid.CUDAPlace(0)
-    exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
-
-    np.random.seed(2333)
-    xyz_np = np.random.uniform(-100, 100, (8, 32, 3)).astype('float32')
-    ret = exe.run(fetch_list=["transpose_11.tmp_0", out.name], feed={'xyz': xyz_np})
-    print("SA_out", ret[0].shape, ret[0].transpose((0, 2, 1)))
-    print("feature", ret[1].shape, ret[1])
-    # ret[0].tofile("out.data")

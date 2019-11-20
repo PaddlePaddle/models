@@ -63,11 +63,8 @@ class PointRCNN(object):
                 self.inputs['seg_mask'] = fluid.layers.data(name='seg_mask', shape=[self.num_points], dtype='float32', append_batch_size=APPEND_BATCH)
                 self.inputs['roi_boxes3d'] = fluid.layers.data(name='roi_boxes3d', shape=[-1, -1, 7], dtype='float32', append_batch_size=False, lod_level=0)
                 self.inputs['pts_depth'] = fluid.layers.data(name='pts_depth', shape=[self.num_points], dtype='float32', append_batch_size=APPEND_BATCH)
-                #self.inputs['gt_boxes3d'] = fluid.layers.data(name='gt_boxes3d', shape=[-1, -1, 7], dtype='float32', append_batch_size=False, lod_level=0)
                 self.inputs['gt_boxes3d'] = fluid.layers.data(name='gt_boxes3d', shape=[-1, -1, 7], dtype='float32', append_batch_size=False, lod_level=0)
             else:
-                # batch sie 1: -1 64
-                # 'sample_id', 'pts_input', 'pts_feature', 'roi_boxes3d', 'gt_iou', 'gt_boxes3d'
                 self.inputs['sample_id'] = fluid.layers.data(name='sample_id', shape=[-1], dtype='int32', append_batch_size=APPEND_BATCH)
                 self.inputs['pts_input'] = fluid.layers.data(name='pts_input', shape=[-1,512,133], dtype='float32', append_batch_size=APPEND_BATCH)
                 self.inputs['pts_feature'] = fluid.layers.data(name='pts_feature', shape=[-1,512,128], dtype='float32', append_batch_size=APPEND_BATCH)
@@ -78,7 +75,6 @@ class PointRCNN(object):
                     self.inputs['gt_boxes3d_ct'] = fluid.layers.data(name='gt_boxes3d_ct', shape=[-1,7], dtype='float32', append_batch_size=APPEND_BATCH)
                     self.inputs['gt_of_rois'] = fluid.layers.data(name='gt_of_rois', shape=[-1,7], dtype='float32', append_batch_size=APPEND_BATCH)
                 else:
-                    #pass 
                     self.inputs['roi_scores'] = fluid.layers.data(name='roi_scores', shape=[-1,], dtype='float32', append_batch_size=APPEND_BATCH)
                     self.inputs['gt_iou'] = fluid.layers.data(name='gt_iou', shape=[-1], dtype='float32', append_batch_size=APPEND_BATCH)
                     self.inputs['gt_boxes3d'] = fluid.layers.data(name='gt_boxes3d', shape=[-1,-1,7], dtype='float32', append_batch_size=False, lod_level=0)
@@ -107,7 +103,7 @@ class PointRCNN(object):
             if self.cfg.RPN.ENABLED:
                 self.outputs['rpn_loss'], self.outputs['rpn_loss_cls'], self.outputs['rpn_loss_reg'] = self.rpn.get_loss()
             if self.cfg.RCNN.ENABLED:
-                self.outputs['rcnn_loss'] = self.rcnn.get_loss()
+                self.outputs['rcnn_loss'], self.outputs['rcnn_loss_cls'], self.outputs['rcnn_loss_reg'] = self.rcnn.get_loss()
             self.outputs['loss'] = self.outputs.get('rpn_loss', 0.) \
                                  + self.outputs.get('rcnn_loss', 0.)
 
@@ -115,7 +111,6 @@ class PointRCNN(object):
         return self.inputs.keys()
 
     def get_outputs(self):
-        # ret_keys = ['loss', 'rpn_loss', 'rcnn_loss', ]
         return self.outputs
 
     def get_loss(self):

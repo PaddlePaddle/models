@@ -24,6 +24,7 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
+from ext_op.pointnet_lib import *
 
 __all__ = ["conv_bn", "pointnet_sa_module", "pointnet_fp_module", "MLP"]
 
@@ -43,16 +44,16 @@ def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
     Returns:
         out (Variable): features with shape [B, npoint, nsample, C + 3]
     """
-    idx = fluid.layers.query_ball(xyz, new_xyz, radius, nsample)
+    idx = query_ball(xyz, new_xyz, radius, nsample)
     idx.stop_gradient = True
     xyz = fluid.layers.transpose(xyz,perm=[0,2,1])
-    grouped_xyz = fluid.layers.group_points(xyz, idx)
+    grouped_xyz = group_points(xyz, idx)
     expand_new_xyz = fluid.layers.unsqueeze(fluid.layers.transpose(new_xyz, perm=[0, 2, 1]), axes=[-1])
     expand_new_xyz = fluid.layers.expand(expand_new_xyz, [1, 1, 1, grouped_xyz.shape[3]])
     grouped_xyz -= expand_new_xyz
 
     if features is not None:
-        grouped_features = fluid.layers.group_points(features, idx)
+        grouped_features = group_points(features, idx)
         return fluid.layers.concat([grouped_xyz, grouped_features], axis=1) \
                 if use_xyz else grouped_features
     else:
@@ -66,7 +67,7 @@ def group_all(xyz, features=None, use_xyz=True):
     See query_and_group
     """
     xyz = fluid.layers.transpose(xyz,perm=[0,2,1])
-    grouped_xyz = fluid.layers.unsqueeze(xyz, axes=[2]) #[-1,128,1,3]
+    grouped_xyz = fluid.layers.unsqueeze(xyz, axes=[2])
     if features is not None:
         grouped_features = fluid.layers.unsqueeze(features, axes=[2]) # [-1,128,1,640]
         return fluid.layers.concat([grouped_xyz, grouped_features], axis=1) if use_xyz else grouped_features
@@ -139,9 +140,9 @@ def pointnet_sa_module(xyz,
     assert len(radiuss) == len(nsamples) == len(mlps), \
             "radiuss, nsamples, mlps length should be same"
 
-    farthest_idx = fluid.layers.farthest_point_sampling(xyz, npoint)
+    farthest_idx = farthest_point_sampling(xyz, npoint)
     farthest_idx.stop_gradient = True
-    new_xyz = fluid.layers.gather_point(xyz, farthest_idx) if npoint is not None else None
+    new_xyz = gather_point(xyz, farthest_idx) if npoint is not None else None
 
     outs = []
     for i, (radius, nsample, mlp) in enumerate(zip(radiuss, nsamples, mlps)):
@@ -171,10 +172,9 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         new_features (Variable): new features with shape [B, N, mlp[-1]]
     """
     if known is None:
-        # TODO
-        interp_feats = fluid.layers.expand()
+        raise NotImplementedError("Not implement known as None currently.")
     else:
-        dist, idx = fluid.layers.three_nn(unknown, known, eps=0.)
+        dist, idx = three_nn(unknown, known, eps=0.)
         dist.stop_gradient = True
         idx.stop_gradient = True
         dist = fluid.layers.sqrt(dist)
@@ -183,7 +183,7 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         norm = fluid.layers.reduce_sum(dist_recip, dim=-1, keep_dim=True)
         weight = dist_recip / norm
         weight.stop_gradient = True
-        interp_feats = fluid.layers.three_interp(known_feats, weight, idx)
+        interp_feats = three_interp(known_feats, weight, idx)
 
     new_features = interp_feats if unknown_feats is None else \
                     fluid.layers.concat([interp_feats, unknown_feats], axis=-1)
@@ -195,58 +195,3 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
     
     return new_features
 
-
-if __name__ == "__main__":
-    xyz = fluid.layers.data(name='xyz', shape=[9, 3], dtype='float32')
-    xyz_feats = fluid.layers.data(name='xyz_feats', shape=[12, 18], dtype='float32')
-    new_xyz, out = pointnet_sa_module(xyz, 4, [0.8, 1.6], [6, 3], [[3, 6], [6, 9]], xyz_feats, name="test")
-
-    place = fluid.CUDAPlace(0)
-    exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
-
-    np.random.seed(2333)
-    xyz_np = np.random.random((2, 9, 3)).astype('float32')
-    xyz_feats_np = np.random.random((2, 18, 12)).astype('float32')
-    xyz_feats_np = xyz_feats_np.transpose((0, 2, 1))
-    # print("xyz: ", xyz_np.shape, xyz_np)
-    # print("xyz_feats: ", xyz_feats_np.shape, xyz_feats_np)
-    ret = exe.run(fetch_list=[new_xyz.name, out.name], feed={'xyz': xyz_np, 'xyz_feats': xyz_feats_np})
-    print("new_xyz: ", ret[0].shape, ret[0])
-    print("out: ", ret[1].shape, ret[1].transpose((0, 2, 1)))
-    # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
-    # print("gourped_xyz0: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
-    # ret[3].tofile('grouped_xyz.data')
-    # print("grouped_feaures: ", ret[4].shape, ret[4].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
-    # ret[4].tofile('grouped_feaures.data')
-    # print("gourp0: ", ret[2].shape, ret[2]) # "transpose_0.tmp_0"
-    # print("gourp1: ", ret[3].shape, ret[3])
-    # ret[2].tofile('group0.data')
-    # print("mlp0: ", ret[2].shape, ret[2]) # "batch_norm_1.tmp_3"
-    # print("mlp1: ", ret[3].shape, ret[3])
-    # print("conv00: ", ret[2].shape, ret[2]) # "conv2d_0.tmp_1"
-    # print("conv10: ", ret[3].shape, ret[3])
-    # print("ball_query0: ", ret[2].shape, ret[2]) # "query_ball_0.tmp_0"
-    # print("ball_query1: ", ret[3].shape, ret[3])
-    # print("gourped_xyz0: ", ret[2].shape, ret[2].transpose((0, 3, 1, 2))) # "group_points_0.tmp_0"
-    # print("gourped_xyz1: ", ret[3].shape, ret[3].transpose((0, 3, 1, 2)))
-
-    # known = fluid.layers.data(name='known', shape=[9, 3], dtype='float32')
-    # unknown = fluid.layers.data(name='unknown', shape=[18, 3], dtype='float32')
-    # known_feats = fluid.layers.data(name='known_feats', shape=[9, 4], dtype='float32')
-    # unknown_feats = fluid.layers.data(name='unknown_feats', shape=[18, 8], dtype='float32')
-    # new_features = pointnet_fp_module(unknown, known, unknown_feats, known_feats, [6], name="test")
-    #
-    # place = fluid.CUDAPlace(0)
-    # exe = fluid.Executor(place)
-    # exe.run(fluid.default_startup_program())
-    #
-    # np.random.seed(2333)
-    # known_np = np.random.random((2, 9, 3)).astype('float32')
-    # unknown_np = np.random.random((2, 18, 3)).astype('float32')
-    # known_feats_np = np.random.random((2, 4, 9)).astype('float32')
-    # unknown_feats_np = np.random.random((2, 8, 18)).astype('float32')
-    # known_feats_np = known_feats_np.transpose((0, 2, 1))
-    # unknown_feats_np = unknown_feats_np.transpose((0, 2, 1))
-    # ret = exe.run(fetch_list=[new_features.name], feed={'known': known_np, 'unknown': unknown_np, 'known_feats': known_feats_np, 'unknown_feats': unknown_feats_np})
-    # print(ret[0].shape, ret[0].transpose((0, 2, 1)))

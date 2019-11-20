@@ -1221,16 +1221,3 @@ class KittiRCNNReader(KittiReader):
 
         return reader
 
-
-if __name__ == "__main__":
-    np.random.seed(2333)
-    FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-    logging.basicConfig(level=logging.INFO, format=FORMAT)
-    cfg.RPN.ENABLED = True
-    cfg.RCNN.ENABLED = False
-    cfg.GT_AUG_ENABLED = True
-    kr = KittiRCNNReader('./data', gt_database_dir='./data/gt_database/train_gt_database_3level_Car.pkl')
-    reader = kr.get_reader(2, ['pts_input', 'rpn_cls_label', 'rpn_reg_label'])
-    for i, data in enumerate(reader()):
-        print(i, len(data))
-        print(data)

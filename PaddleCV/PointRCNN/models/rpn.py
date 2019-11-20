@@ -64,8 +64,6 @@ class RPN(object):
             cls_out = conv_bn(cls_out, self.cfg.RPN.CLS_FC[i], bn=self.cfg.RPN.USE_BN, name='rpn_cls_{}'.format(i))
             if i == 0 and self.cfg.RPN.DP_RATIO > 0:
                 cls_out = fluid.layers.dropout(cls_out, self.cfg.RPN.DP_RATIO, dropout_implementation="upscale_in_train")
-                # cls_out = fluid.layers.dropout(cls_out, self.cfg.RPN.DP_RATIO)
-        # cls_out = conv_bn(cls_out, 1, bn=False, act=None, name='rpn_cls_out')
         cls_out = fluid.layers.conv2d(cls_out,
                                       num_filters=1,
 				      filter_size=1,
@@ -90,8 +88,6 @@ class RPN(object):
             reg_out = conv_bn(reg_out, self.cfg.RPN.REG_FC[i], bn=self.cfg.RPN.USE_BN, name='rpn_reg_{}'.format(i))
             if i == 0 and self.cfg.RPN.DP_RATIO > 0:
                 reg_out = fluid.layers.dropout(reg_out, self.cfg.RPN.DP_RATIO, dropout_implementation="upscale_in_train")
-                # reg_out = fluid.layers.dropout(reg_out, self.cfg.RPN.DP_RATIO)
-        # reg_out = conv_bn(reg_out, reg_channel, bn=False, act=None, name='rpn_reg_out')
         reg_out = fluid.layers.conv2d(reg_out,
                                       num_filters=reg_channel,
 				      filter_size=1,
@@ -114,7 +110,7 @@ class RPN(object):
             proposal_input = fluid.layers.concat([fluid.layers.unsqueeze(rpn_scores_row, axes=[-1]),
                                                   backbone_xyz, reg_out], axis=-1)
             proposal = self.prog.current_block().create_var(name='proposal',
-                                                            shape=[proposal_input.shape[1], 8],
+                                                            shape=[-1, proposal_input.shape[1], 8],
                                                             dtype='float32')
             fluid.layers.py_func(proposal_func, proposal_input, proposal)
             rois, roi_scores_row = proposal[:, :, :7], proposal[:, :, -1]
@@ -169,75 +165,3 @@ class RPN(object):
         self.rpn_loss = rpn_loss_cls * self.cfg.RPN.LOSS_WEIGHT[0] + rpn_loss_reg * self.cfg.RPN.LOSS_WEIGHT[1]
         return self.rpn_loss, rpn_loss_cls, rpn_loss_reg
         
-if __name__ == "__main__":
-    from utils.config import load_config, cfg
-    batch_size = 4
-    num_points = 16384
-    load_config('./cfgs/default.yml')
-    cfg.RPN.ENABLED = True
-    # cfg.RCNN.ENABLED = False
-    cfg.RCNN.ENABLED = True
-    keys = ['sample_id', 'pts_input', 'rpn_cls_label', 'rpn_reg_label', 'pts_rect', 'pts_features', 'gt_boxes3d']
-    # keys = ['pts_input', 'rpn_cls_label', 'rpn_reg_label']
-    np_inputs = {}
-    for key in keys:
-        # np_inputs[key] = np.expand_dims(np.load('/paddle/rpn_data/{}.npy'.format(key)), axis=0)
-        np_inputs[key] = np.load('/paddle/rpn_data/{}.npy'.format(key))[:batch_size]
-        print(key, np_inputs[key].shape)
-
-    sample_id = fluid.layers.data(name='sample_id', shape=[1], dtype='int32')
-    pts_input = fluid.layers.data(name='pts_input', shape=[num_points, 3], dtype='float32', stop_gradient=False)
-    pts_rect = fluid.layers.data(name='pts_rect', shape=[num_points, 3], dtype='float32')
-    pts_features = fluid.layers.data(name='pts_features', shape=[num_points, 1], dtype='float32')
-    rpn_cls_label = fluid.layers.data(name='rpn_cls_label', shape=[num_points], dtype='int32')
-    rpn_reg_label = fluid.layers.data(name='rpn_reg_label', shape=[num_points, 7], dtype='float32')
-    gt_boxes3d = fluid.layers.data(name='gt_boxes3d', shape=[100, 7], dtype='float32')
-    inputs = {
-            "pts_input": pts_input,
-            "rpn_cls_label": rpn_cls_label,
-            "rpn_reg_label": rpn_reg_label,
-            }
-    rpn = RPN(cfg, batch_size, num_points)
-    rpn.build(inputs)
-    rpn_loss, loss_cls, loss_reg = rpn.get_loss()
-    optm = fluid.optimizer.Adam(learning_rate=0.01)
-    optm.minimize(rpn_loss)
-
-    place = fluid.CUDAPlace(0)
-    exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
-    ret = exe.run(fetch_list=[
-        rpn_loss.name,
-        # loss_cls.name,
-        # loss_reg.name,
-        # rpn.backbone_xyz.name,
-        # rpn.backbone_feature.name,
-        rpn.outputs['rpn_cls'].name,
-        rpn.outputs['rpn_reg'].name,
-        'pts_input',
-        rpn.outputs['backbone_feature'].name,
-        rpn.outputs['rois'],
-        rpn.outputs['roi_scores_row'],
-        # 'sigmoid_cross_entropy_with_logits_0.tmp_0',
-        # 'sigmoid_0.tmp_0',
-        # 'cast_0.tmp_0',
-        'sqrt_4.tmp_0',
-        ], feed={
-            'sample_id': np_inputs['sample_id'],
-            'pts_input': np_inputs['pts_input'],
-            'pts_rect': np_inputs['pts_rect'],
-            'pts_features': np_inputs['pts_features'],
-            'rpn_cls_label': np_inputs['rpn_cls_label'],
-            'rpn_reg_label': np_inputs['rpn_reg_label'],
-            'gt_boxes3d': np_inputs['gt_boxes3d'],
-        })
-    print(ret)
-    np.save('rpn_cls.npy', ret[1])
-    np.save('rpn_reg.npy', ret[2])
-    np.save('pts_input.npy', ret[3])
-    np.save('backbone_features.npy', ret[4])
-    np.save('rois.npy', ret[5])
-    np.save('roi_scores_row.npy', ret[6])
-    np.save('pts_depth.npy', ret[7])
-    # np.save('rpn_scores_norm.npy', ret[7])
-    # np.save('seg_mask.npy', ret[8])

@@ -39,9 +39,6 @@ class RCNN(object):
             if self.training:
                 proposal_target = get_proposal_target_func(self.cfg)
                         
-                #tmp_list = []
-                #for item in self.inputs.items():
-                #    tmp_list.append(item[1])
                 tmp_list = [
                     self.inputs['seg_mask'],
                     self.inputs['rpn_features'],
@@ -70,10 +67,6 @@ class RCNN(object):
                 pts = fluid.layers.concat(input=[self.target_dict['sampled_pts'],self.target_dict['pts_feature']], axis=2)
                 self.debug = pts
                 self.target_dict['pts_input'] = pts
-                #for k,v in self.target_dict.items():
-                #    print("Saving %s data"%k, type(v))
-                #    print(v)
-                    #np.save("./test_data/%s.npy"%k, v)
             else:
                 rpn_xyz, rpn_features = inputs['rpn_xyz'], inputs['rpn_features']
                 batch_rois = inputs['roi_boxes3d']
@@ -96,7 +89,6 @@ class RCNN(object):
                                                                               self.cfg.RCNN.POOL_EXTRA_WIDTH,
                                                                               sampled_pt_num=self.cfg.RCNN.NUM_POINTS)
                 # canonical transformation
-                #batch_size = 1
                 batch_size = batch_rois.shape[0]
                 roi_center = batch_rois[:, :, 0:3]
                 tmp = pooled_features[:, :, :, 0:3] - fluid.layers.unsqueeze(roi_center,axes=[2])
@@ -112,9 +104,6 @@ class RCNN(object):
                 pts = fluid.layers.reshape(pooled_features,shape=[-1,pooled_features.shape[2],pooled_features.shape[3]])
         
         else:
-            # for k, v in inputs.items():
-            #     fluid.layers.Print(v, summarize=10)
-
             pts = inputs['pts_input']
             self.target_dict = {}
             self.target_dict['pts_input'] = inputs['pts_input']
@@ -126,18 +115,18 @@ class RCNN(object):
                 self.target_dict['gt_of_rois'] = inputs['gt_boxes3d_ct']
         
         xyz = pts[:,:,0:3]
-        feature = fluid.layers.transpose(pts[:,:,3:],(0,2,1)) if pts.shape[-1]>3 else None
+        feature = fluid.layers.transpose(pts[:,:,3:], [0,2,1]) if pts.shape[-1]>3 else None
         if self.cfg.RCNN.USE_RPN_FEATURES:
             self.rcnn_input_channel = 3 + int(self.cfg.RCNN.USE_INTENSITY) + \
                                       int(self.cfg.RCNN.USE_MASK) + int(self.cfg.RCNN.USE_DEPTH)
             c_out = self.cfg.RCNN.XYZ_UP_LAYER[-1]
 
             xyz_input = pts[:,:,:self.rcnn_input_channel]
-            xyz_input = fluid.layers.transpose(xyz_input,(0,2,1))
+            xyz_input = fluid.layers.transpose(xyz_input, [0,2,1])
             xyz_input = fluid.layers.unsqueeze(xyz_input, axes=[3])
             
             rpn_feature = pts[:,:,self.rcnn_input_channel:]
-            rpn_feature = fluid.layers.transpose(rpn_feature,(0,2,1))
+            rpn_feature = fluid.layers.transpose(rpn_feature, [0,2,1])
             rpn_feature = fluid.layers.unsqueeze(rpn_feature,axes=[3])
 
             xyz_feature = MLP(
@@ -165,11 +154,6 @@ class RCNN(object):
             mlps = self.cfg.RCNN.SA_CONFIG.MLPS[k]
             npoint = self.cfg.RCNN.SA_CONFIG.NPOINTS[k] if self.cfg.RCNN.SA_CONFIG.NPOINTS[k] != -1 else None
             
-            # if k ==0:
-            #     features_k = features[k]
-            # else:
-            #     features_k = fluid.layers.transpose(features[k],perm=[0,2,1])
-            
             xyzi, featurei = pointnet_sa_module(
                 xyz=xyzi,
                 feature = featurei,
@@ -185,7 +169,6 @@ class RCNN(object):
             features.append(featurei)
         
         head_in = features[-1]
-        # head_in = fluid.layers.transpose(head_in, [0, 2, 1])
         head_in = fluid.layers.unsqueeze(head_in, axes=[2])
         
         cls_out = head_in
@@ -194,14 +177,10 @@ class RCNN(object):
         for i in range(0, self.cfg.RCNN.CLS_FC.__len__()):
             cls_out = conv_bn(cls_out, self.cfg.RCNN.CLS_FC[i], bn=self.cfg.RCNN.USE_BN, name='rcnn_cls_{}'.format(i))
             if i == 0 and self.cfg.RCNN.DP_RATIO >= 0:
-                # cls_out = fluid.layers.dropout(cls_out, self.cfg.RCNN.DP_RATIO)
                 cls_out = fluid.layers.dropout(cls_out, self.cfg.RCNN.DP_RATIO, dropout_implementation="upscale_in_train")
-                # Debug
-                # pass 
         cls_channel = 1 if self.num_classes == 2 else self.num_classes
         cls_out = conv_bn(cls_out, cls_channel, act=None, name="cls_out", bn=self.cfg.RCNN.USE_BN)
         self.cls_out = fluid.layers.squeeze(cls_out,axes=[1,3])
-        # fluid.layers.Print(self.cls_out, message="cls_out", summarize=100)
        
         per_loc_bin_num = int(self.cfg.RCNN.LOC_SCOPE / self.cfg.RCNN.LOC_BIN_SIZE) * 2
         loc_y_bin_num = int(self.cfg.RCNN.LOC_Y_SCOPE / self.cfg.RCNN.LOC_Y_BIN_SIZE) * 2
@@ -210,10 +189,7 @@ class RCNN(object):
         for i in range(0, self.cfg.RCNN.REG_FC.__len__()):
             reg_out = conv_bn(reg_out, self.cfg.RCNN.REG_FC[i], bn=self.cfg.RCNN.USE_BN, name='rcnn_reg_{}'.format(i))
             if i == 0 and self.cfg.RCNN.DP_RATIO >= 0:
-                # reg_out = fluid.layers.dropout(reg_out, self.cfg.RCNN.DP_RATIO)
                 reg_out = fluid.layers.dropout(reg_out, self.cfg.RCNN.DP_RATIO, dropout_implementation="upscale_in_train")
-                # Debug
-                #pass 
 
         reg_out = conv_bn(reg_out, reg_channel, act=None, name="reg_out", bn=self.cfg.RCNN.USE_BN)
         self.reg_out = fluid.layers.squeeze(reg_out, axes=[2,3])
@@ -237,7 +213,6 @@ class RCNN(object):
                 raw_scores = fluid.layers.reshape(self.cls_out, shape=[-1])
                 norm_scores = fluid.layers.sigmoid(raw_scores)
             else:
-                # pred_classes = fluid.layers.argmax(self.cls_out, dim=1).view(-1)
                 norm_scores = fluid.layers.softmax(self.cls_out, axis=1)
             self.ret_dict['norm_scores'] = norm_scores
             
@@ -287,7 +262,6 @@ class RCNN(object):
                                 / fluid.layers.clip(cls_mask_normalzer, min=1.0, max=1e10)
 
         # RCNN regression loss
-        #reg_out = fluid.layers.reshape(self.reg_out, [self.batch_size,-1]) #(bs, -1)
         reg_out = self.reg_out
         fg_mask = fluid.layers.cast(reg_valid_mask > 0, dtype=reg_out.dtype)
         fg_mask.stop_gradient = True
@@ -312,97 +286,5 @@ class RCNN(object):
         )
         rcnn_loss_reg = loc_loss + angle_loss + size_loss * 3
         rcnn_loss = rcnn_loss_cls + rcnn_loss_reg
-        #return rcnn_loss, rcnn_loss_reg, loc_loss, angle_loss, size_loss,
-        return rcnn_loss 
+        return rcnn_loss, rcnn_loss_cls, rcnn_loss_reg
 
-if __name__ == "__main__":
-    from utils.config import load_config, cfg
-    np.random.seed(20)
-    load_config('./cfgs/default.yml')
-    batch_size=1
-    keys = ['pts_input', 'roi_boxes3d', 'gt_boxes3d', 'rpn_xyz', 'rpn_features',
-            'rpn_intensity','seg_mask','pts_depth' ]
-    np_inputs = {}
-    #print("=====start to load=========")
-    for key in keys:
-        np_inputs[key] = np.load('models/rpn_data/{}.npy'.format(key))[:batch_size]
-        #print(key, np.sum(np.abs(np_inputs[key])))
-    #print("======end load=========")
-
-    pts_input = fluid.layers.data(name='pts_input', shape=[16384, 3], dtype='float32')
-    roi_boxes3d = fluid.layers.data(name='roi_boxes3d', shape=[300, 7], dtype='float32')
-    gt_boxes3d = fluid.layers.data(name='gt_boxes3d', shape=[8, 7], dtype='float32')
-    rpn_xyz = fluid.layers.data(name='rpn_xyz', shape=[16384, 3], dtype='float32')
-    rpn_features = fluid.layers.data(name='rpn_features', shape=[16384,128], dtype='float32')
-    rpn_intensity = fluid.layers.data(name='rpn_intensity', shape=[16384], dtype='float32')
-    seg_mask = fluid.layers.data(name='seg_mask', shape=[16384], dtype='float32')
-    pts_depth = fluid.layers.data(name='pts_depth', shape=[16384], dtype='float32')
-    
-    inputs = {
-        "pts_input": pts_input,
-        "roi_boxes3d": roi_boxes3d,
-        "gt_boxes3d": gt_boxes3d,
-        "rpn_xyz": rpn_xyz,
-        "rpn_features": rpn_features,
-        "rpn_intensity": rpn_intensity,
-        "seg_mask": seg_mask,
-        "pts_depth": pts_depth,
-        #"pts_rect": pts_rect
-    }
-    
-    rcnn = RCNN(cfg,1,batch_size)
-    rcnn.build_model(inputs)
-    if rcnn.training :
-        rcnn_loss, rcnn_loss_reg, loc_loss, angle_loss, size_loss = rcnn.get_loss()
-    out, debug = rcnn.get_outputs()
-    
-    opt = fluid.optimizer.AdamOptimizer(learning_rate = 3e-2)
-    opt.minimize(rcnn_loss)
-
-    place = fluid.CUDAPlace(0)
-    exe = fluid.Executor(place)
-    exe.run(fluid.default_startup_program())
-    
-    for i in range(3):
-        ret = exe.run(
-            fetch_list=[
-                rcnn_loss.name,
-                rcnn_loss_reg.name,
-                loc_loss.name,
-                angle_loss.name,
-                size_loss.name,
-                'reduce_sum_1.tmp_0',
-                out['rcnn_cls'].name,
-                out['rcnn_reg'].name,
-                "concat_0.tmp_0",
-                "reg_valid_mask",
-                "sampled_pts",
-                "new_roi_boxes3d",
-                "gt_of_rois",
-                "pts_feature",
-                "cls_label",
-                "gt_iou"
-            ], 
-            feed={'pts_input': np_inputs['pts_input'], 
-                'roi_boxes3d': np_inputs['roi_boxes3d'], 
-                'gt_boxes3d': np_inputs['gt_boxes3d'],
-                'rpn_xyz':np_inputs['rpn_xyz'],
-                'rpn_features':np_inputs['rpn_features'],
-                'rpn_intensity':np_inputs['rpn_intensity'],
-                'seg_mask':np_inputs['seg_mask'],
-                'pts_depth':np_inputs['pts_depth']
-             })
-        save_k = [       
-                "concat_0.tmp_0",
-                "reg_valid_mask",
-                "sampled_pts",
-                "new_roi_boxes3d",
-                "gt_of_rois",
-                "pts_feature",
-                "cls_label",
-                "gt_iou"
-        ]
-        for i in range(8):
-            np.save("./test_data/%s.npy"%save_k[i*-1], ret[i*-1])
-
-        print("rcnn_loss={}, rcnn_loss_reg={}, loc_loss={}, angle_loss={}, size_loss={}, cls_loss={}".format(ret[0],ret[1],ret[2],ret[3],ret[4], ret[5]))
