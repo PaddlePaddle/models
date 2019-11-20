@@ -305,7 +305,7 @@ def main(args):
 
     if args.do_train:
         train_exe = exe
-        train_pyreader.decorate_tensor_provider(train_data_generator)
+        train_pyreader.set_batch_generator(train_data_generator)
     else:
         train_exe = None
     if args.do_val or args.do_infer:
@@ -355,7 +355,7 @@ def main(args):
                 if steps % args.validation_steps == 0:
                     # evaluate dev set
                     if args.do_val:
-                        test_pyreader.decorate_tensor_provider(
+                        test_pyreader.set_batch_generator(
                             reader.data_generator(
                                 input_file=args.dev_set,
                                 batch_size=args.batch_size,
@@ -375,7 +375,7 @@ def main(args):
 
     # eval on test set
     if not args.do_train and args.do_val:
-        test_pyreader.decorate_tensor_provider(
+        test_pyreader.set_batch_generator(
             reader.data_generator(
                 input_file=args.test_set,
                 batch_size=args.batch_size, phase='test', epoch=1,
@@ -386,7 +386,7 @@ def main(args):
 
     # infer on infer set
     if args.do_infer:
-        infer_pyreader.decorate_tensor_provider(
+        infer_pyreader.set_batch_generator(
             reader.data_generator(
                 input_file=args.infer_set,
                 batch_size=args.batch_size,

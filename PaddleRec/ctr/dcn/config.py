@@ -1,9 +1,13 @@
-#!/usr/bin/env python
-# coding: utf-8
 import argparse
 """
 global params
 """
+
+
+def boolean_string(s):
+    if s.lower() not in {'false', 'true'}:
+        raise ValueError('Not a valid boolean string')
+    return s.lower() == 'true'
 
 
 def parse_args():
@@ -63,7 +67,7 @@ def parse_args():
         help='Cross net l2 regularizer coefficient')
     parser.add_argument(
         '--use_bn',
-        type=bool,
+        type=boolean_string,
         default=True,
         help='Whether use batch norm in dnn part')
     parser.add_argument(

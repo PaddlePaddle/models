@@ -13,6 +13,7 @@ import paddle.fluid as fluid
 import reader
 from network_conf import ctr_dnn_model
 from multiprocessing import cpu_count
+import utils
 
 # disable gpu training for this example
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -172,8 +173,8 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
                     .format(pass_id, batch_id, loss_val / args.batch_size,
                             auc_val, batch_auc_val))
                 if batch_id % 1000 == 0 and batch_id != 0:
-                    model_dir = args.model_output_dir + '/batch-' + str(
-                        batch_id)
+                    model_dir = os.path.join(args.model_output_dir,
+                                             'batch-' + str(batch_id))
                     if args.trainer_id == 0:
                         fluid.io.save_persistables(
                             executor=exe,
@@ -187,7 +188,7 @@ def train_loop(args, train_program, py_reader, loss, auc_var, batch_auc_var,
 
         total_time += time.time() - pass_start
 
-        model_dir = args.model_output_dir + '/pass-' + str(pass_id)
+        model_dir = os.path.join(args.model_output_dir, 'pass-' + str(pass_id))
         if args.trainer_id == 0:
             fluid.io.save_persistables(
                 executor=exe,
@@ -214,7 +215,7 @@ def train():
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
 
-    loss, auc_var, batch_auc_var, py_reader, _ = ctr_dnn_model(
+    loss, auc_var, batch_auc_var, py_reader, _, auc_states = ctr_dnn_model(
         args.embedding_size, args.sparse_feature_dim)
     optimizer = fluid.optimizer.Adam(learning_rate=1e-4)
     optimizer.minimize(loss)
@@ -269,4 +270,5 @@ def get_cards(args):
 
 
 if __name__ == '__main__':
+    utils.check_version()
     train()

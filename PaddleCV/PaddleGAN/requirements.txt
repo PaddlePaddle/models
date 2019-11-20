@@ -1,1 +1,1 @@
-imageio
+numpy >= 1.15.0
