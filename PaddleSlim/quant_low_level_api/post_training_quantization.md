@@ -68,7 +68,7 @@ class PostTrainingQuantization(
 * scope：模型scope，默认为None，则会使用global_scope()。
 * algo：计算待量化激活Tensor的量化比例因子的方法。设置为KL，则使用KL散度方法，设置为direct，则使用abs max方法。
 * quantizable_op_type: 需要量化的op类型，默认是`["conv2d", "depthwise_conv2d", "mul"]`，列表中的值可以是任意支持量化的op类型。
-* is_full_quantize：是否进行全量化。设置为True，则对模型中所有支持量化的op进行量化；设置为False，则只对`quantizable_op_type` 中op类型进行量化。
+* is_full_quantize：是否进行全量化。设置为True，则对模型中所有支持量化的op进行量化；设置为False，则只对`quantizable_op_type` 中op类型进行量化。目前，支持的量化类型如下：'conv2d', 'depthwise_conv2d', 'mul', "pool2d", "elementwise_add", "concat", "softmax", "argmax", "transpose", "equal", "gather", "greater_equal", "greater_than", "less_equal", "less_than", "mean", "not_equal", "reshape", "reshape2", "bilinear_interp", "nearest_interp", "trilinear_interp", "slice", "squeeze", "elementwise_sub"。
 
 ```
 PostTrainingQuantization.quantize()
@@ -123,3 +123,15 @@ ptq = PostTrainingQuantization(
 quantized_program = ptq.quantize()
 ptq.save_quantized_model(args.save_model_path)
 ```
+4）**测试离线量化模型精度**
+
+使用100张样本图像，对'conv2d', 'depthwise_conv2d', 'mul', 'pool2d', 'elementwise_add'和'concat'进行量化，然后在ImageNet2012验证集上测试预测。下表列出了常见分类模型离线量化前后的精度。
+
+模型 | FP32 Top1 | FP32 Top5 | INT8 Top1 | INT8 Top5| Top1 Diff | Tp5 Diff
+-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|-
+googlenet   | 70.50% | 89.59% | 70.12% | 89.38% | 0.38% | 0.21%
+mobilenetv1 | 70.91% | 89.54% | 70.24% | 89.03% | 0.67% | 0.51%
+mobilenetv2 | 71.90% | 90.56% | 71.36% | 90.17% | 0.54% | 0.39%
+resnet50    | 76.35% | 92.80% | 76.26% | 92.81% | 0.09% | -0.01%
+vgg16       | 72.08% | 90.63% | 71.93% | 90.64% | 0.15% | -0.01%
+vgg19       | 72.56% | 90.83% | 72.55% | 90.77% | 0.01% | 0.06%
