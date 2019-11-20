@@ -48,8 +48,9 @@ import pickle
 
 @contextlib.contextmanager
 def profile_context(profile=True):
+    args = parse_args()
     if profile:
-        with profiler.profiler('All', 'total', 'seq2seq.profile'):
+        with profiler.profiler('All', 'total', args.profiler_path):
             yield
     else:
         yield
@@ -216,10 +217,9 @@ def main():
                     word_count = 0.0
                 
                 # profiler tools
-                if args.is_profiler and epoch_id == 0 and batch_id == 100:
-                    profiler.start_profiler("All")
-                elif args.is_profiler and epoch_id == 0 and batch_id == 105:
-                    profiler.stop_profiler("total", args.profiler_path)
+                if args.profile and epoch_id == 0 and batch_id == 100:
+                    profiler.reset_profiler()
+                elif args.profile and epoch_id == 0 and batch_id == 105:
                     return
 
             end_time = time.time()
