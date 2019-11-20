@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 np.random.seed(1024)  # use same seed
 
-rpn_data_dir = "./data/train_aug_myfeature/val"
+rpn_data_dir = "./data/rpn_final_nodropempty_myaug/val"
 
 
 def parse_args():

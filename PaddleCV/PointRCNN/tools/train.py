@@ -38,10 +38,9 @@ logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
-# rpn_data_dir = "/paddle/PointRCNN/output/rpn/default/eval/epoch_200/train_aug/"
-# rpn_data_dir = "./data/output"
-# rpn_data_dir = "./data/output_pytorch_weight_paddle_rpn"
-rpn_data_dir = "./data/train_aug_myfeature"
+# rpn_data_dir = "./data/train_aug_myfeature"
+# rpn_data_dir = "./data/rpn_final_nodropempty_myaug"
+rpn_data_dir = "./data/develop_custom_train_aug"
 
 def parse_args():
     parser = argparse.ArgumentParser("PointRCNN semantic segmentation train script")
@@ -94,25 +93,15 @@ def parse_args():
     parser.add_argument(
         '--rcnn_training_roi_dir',
         type=str,
-        # default=os.path.join(rpn_data_dir, "detections/data"), #None,
-        default=None,
+        default=os.path.join(rpn_data_dir, "detections/data"), #None,
+        # default=None,
 	help='specify the saved rois for rcnn training when using rcnn_offline mode')
     parser.add_argument(
         '--rcnn_training_feature_dir',
         type=str,
-        # default=os.path.join(rpn_data_dir, "features"), #None,
-        default=None,
+        default=os.path.join(rpn_data_dir, "features"), #None,
+        # default=None,
 	help='specify the saved features for rcnn training when using rcnn_offline mode')
-    parser.add_argument(
-        '--rcnn_eval_roi_dir',
-        type=str,
-        default=None,
-	help='specify the saved rois for rcnn evaluation when using rcnn_offline mode')
-    parser.add_argument(
-        '--rcnn_eval_feature_dir',
-        type=str,
-        default=None,
-	help='specify the saved features for rcnn evaluation when using rcnn_offline mode')
     parser.add_argument(
         '--log_interval',
         type=int,
@@ -208,38 +197,6 @@ def train():
             train_feeds = train_model.get_feeds()
             train_outputs = train_model.get_outputs()
             train_loss = train_outputs['loss']
-            # # fluid.clip.set_gradient_clip(fluid.clip.GradientClipByGlobalNorm(clip_norm=cfg.TRAIN.GRAD_NORM_CLIP))
-            # # AdamW = extend_with_decoupled_weight_decay(fluid.optimizer.Adam)
-            # # optimizer = AdamW(
-            # optimizer = fluid.optimizer.Adam(
-            #     # learning_rate=cosine_warmup_decay(
-            #     #     learning_rate=cfg.TRAIN.LR,
-            #     #     warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
-            #     #     decay_factor=1e-5,
-            #     #     total_step=steps_per_epoch * args.epoch,
-            #     #     warmup_pct=cfg.TRAIN.PCT_START),
-            #     learning_rate=fluid.layers.linear_lr_warmup(
-            #         learning_rate=fluid.layers.piecewise_decay(
-            #             boundaries=boundaries, values=values),
-            #             warmup_steps=cfg.TRAIN.WARMUP_EPOCH * steps_per_epoch,
-            #             start_lr=cfg.TRAIN.WARMUP_MIN,
-            #             end_lr=cfg.TRAIN.LR),
-            #     # learning_rate=fluid.layers.linear_lr_warmup(
-            #     #     learning_rate=exponential_with_clip(
-            #     #         cfg.TRAIN.LR,
-            #     #         [0] + cfg.TRAIN.DECAY_STEP_LIST,
-            #     #         cfg.TRAIN.LR_DECAY,
-            #     #         cfg.TRAIN.LR_CLIP),
-            #     #     warmup_steps=cfg.TRAIN.WARMUP_EPOCH,
-            #     #     start_lr=cfg.TRAIN.WARMUP_MIN,
-            #     #     end_lr=cfg.TRAIN.LR),
-            #     beta1=0.9, beta2=0.99,
-            #     regularization=fluid.regularizer.L2Decay(cfg.TRAIN.WEIGHT_DECAY))
-            #     # weight_decay=cfg.TRAIN.WEIGHT_DECAY)
-            # optimizer.minimize(train_loss)
-            # lr = optimizer._global_learning_rate()
-            # logger.info("Optimizer learning rate name: {}".format(lr.name))
-            # print("optimizer betas:", optimizer._beta1, optimizer._beta2)
             lr = optimize(train_loss,
                                     learning_rate=cfg.TRAIN.LR,
                                     warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
@@ -250,14 +207,6 @@ def train():
                                     startup_prog=startup,
                                     weight_decay=cfg.TRAIN.WEIGHT_DECAY,
                                     clip_norm=cfg.TRAIN.GRAD_NORM_CLIP)
-    # prog_clip = train_prog.clone()
-    # train_loss_clip = prog_clip.block(0).var(train_loss.name)
-    # p_g_clip = fluid.backward.append_backward(loss=train_loss_clip)
-    # with fluid.program_guard(main_program=prog_clip):
-	# fluid.clip.set_gradient_clip(
-	#     fluid.clip.GradientClipByGlobalNorm(clip_norm=cfg.TRAIN.GRAD_NORM_CLIP))
-	# p_g_clip = fluid.clip.append_gradient_clip_ops(p_g_clip)
-    #
     train_keys, train_values = parse_outputs(train_outputs, 'loss')
 
     exe.run(startup)
@@ -266,7 +215,7 @@ def train():
         assert os.path.exists(args.resume), \
                 "Given resume weight dir {} not exist.".format(args.resume)
         def if_exist(var):
-            # logger.info("{}: {}".format(var.name, os.path.exists(os.path.join(args.resume, var.name))))
+            logger.debug("{}: {}".format(var.name, os.path.exists(os.path.join(args.resume, var.name))))
             return os.path.exists(os.path.join(args.resume, var.name))
         fluid.io.load_vars(
             exe, args.resume, predicate=if_exist, main_program=train_prog)
@@ -286,7 +235,6 @@ def train():
         fluid.io.save_persistables(exe, path, prog)
 
     # get reader
-    # train_reader = kitti_rcnn_reader.get_reader(args.batch_size, train_feeds, True)
     train_reader = kitti_rcnn_reader.get_multiprocess_reader(args.batch_size, train_feeds, drop_last=True)
     train_pyreader.decorate_sample_list_generator(train_reader, place)
 
