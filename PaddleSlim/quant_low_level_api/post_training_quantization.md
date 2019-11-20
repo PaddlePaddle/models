@@ -128,7 +128,7 @@ ptq.save_quantized_model(args.save_model_path)
 使用100张样本图像，对'conv2d', 'depthwise_conv2d', 'mul', 'pool2d', 'elementwise_add'和'concat'进行量化，然后在ImageNet2012验证集上测试预测。下表列出了常见分类模型离线量化前后的精度。
 
 模型 | FP32 Top1 | FP32 Top5 | INT8 Top1 | INT8 Top5| Top1 Diff | Tp5 Diff
--|:-:|:-:|:-:|:-:|:-:|:-:|:-:|-
+-|:-:|:-:|:-:|:-:|:-:|:-:
 googlenet   | 70.50% | 89.59% | 70.12% | 89.38% | 0.38% | 0.21%
 mobilenetv1 | 70.91% | 89.54% | 70.24% | 89.03% | 0.67% | 0.51%
 mobilenetv2 | 71.90% | 90.56% | 71.36% | 90.17% | 0.54% | 0.39%
