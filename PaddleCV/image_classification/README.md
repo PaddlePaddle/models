@@ -251,7 +251,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 
 使用[Nvidia DALI](https://github.com/NVIDIA/DALI)预处理类库可以加速训练并提高GPU利用率。
 
-DALI预处理目前支持标准Imagenet处理步骤（ random crop -> resize -> flip -> normalize），并且支持列表文件或者文件夹方式的数据集格式。
+DALI预处理目前支持标准ImageNet处理步骤（ random crop -> resize -> flip -> normalize），并且支持列表文件或者文件夹方式的数据集格式。
 
 指定`--use_dali=True`即可开启DALI预处理，如下面的例子中，使用DALI训练ShuffleNet v2 0.25x，在8卡v100上，图片吞吐可以达到10000张/秒以上，GPU利用率在85%以上。
 
@@ -281,7 +281,7 @@ python -m paddle.distributed.launch train.py \
 #### 注意事项
 
 1. PaddlePaddle需使用1.6或以上的版本，并且需要使用GCC5.4以上编译器编译。
-2. Nvidia DALI需要使用[#1371](https://github.com/NVIDIA/DALI/pull/1371)以后的git版本。
+2. Nvidia DALI需要使用[#1371](https://github.com/NVIDIA/DALI/pull/1371)以后的git版本。请参考[此文档](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/installation.html)安装nightly版本或从源码安装。
 3. 因为DALI使用GPU进行图片预处理，需要占用部分显存，请适当调整 `FLAGS_fraction_of_gpu_memory_to_use`环境变量（如`0.8`）来预留部分显存供DALI使用。
 
 ### 自定义数据集

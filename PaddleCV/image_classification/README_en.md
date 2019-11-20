@@ -277,7 +277,7 @@ For more details please refer to [Documentation on DALI Paddle Plugin](https://d
 #### NOTES
 1. PaddlePaddle with version 1.6 or above is required, and it must be compiled
 with GCC 5.4 and up.
-2. Nvidia DALI should include this PR [#1371](https://github.com/NVIDIA/DALI/pull/1371).
+2. Nvidia DALI should include this PR [#1371](https://github.com/NVIDIA/DALI/pull/1371). Please refer to [this doc](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/installation.html) and install nightly version or build from source.
 3. Since DALI utilize the GPU for preprocessing, it will take up some GPU
    memory. Please reduce the memory used by paddle by setting the
    `FLAGS_fraction_of_gpu_memory_to_use` environment variable to a smaller
