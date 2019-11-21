@@ -71,7 +71,7 @@ class PointNet2MSG(object):
                     unknown_feats=features[i - 1],
                     known_feats=features[i],
                     bn_momentum=bn_momentum,
-                    name="fp_{}".format(i),
+                    name="fp_{}".format(i + len(self.FP_confs)),
                     **self.FP_confs[i])
 
         return xyzs[0], features[0]
