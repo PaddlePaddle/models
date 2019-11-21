@@ -32,67 +32,50 @@
 
 - 如果您直接通过pip安装已发布的 paddlepaddle>=1.6.0 的 whl 包：
 
-1. 首先您需要在本机下载 mkldnn：
+    1. 首先您需要在本机下载 mkldnn：
 
-```
-cd ext_op
-# 下载 mkldnn
-git clone https://github.com/intel/mkl-dnn.git
-# 切换到指定版本
-cd mkl-dnn && git checkout aef88b7c233f48f8b945da310f1b973da31ad033
-```
+    ```
+    cd ext_op
+    # 下载 mkldnn
+    git clone https://github.com/intel/mkl-dnn.git
+    # 切换到指定版本
+    cd mkl-dnn && git checkout aef88b7c233f48f8b945da310f1b973da31ad033
+    ```
 
-2. 然后需要将src/make.sh做如下修改，增加mkldnn的编译选项：
+    2. 然后需要将src/make.sh做如下修改，增加mkldnn的编译选项：
 
-```
-include_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_include())' )
-lib_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_lib())' )
+    ```
+    include_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_include())' )
+    lib_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_lib())' )
 
-echo $include_dir
-echo $lib_dir
+    echo $include_dir
+    echo $lib_dir
 
-OPS='farthest_point_sampling_op gather_point_op group_points_op query_ball_op three_interp_op three_nn_op'
-for op in ${OPS}
-do
-nvcc ${op}.cu -c -o ${op}.cu.o -ccbin cc -DPADDLE_WITH_CUDA -DEIGEN_USE_GPU -DPADDLE_USE_DSO -DPADDLE_WITH_MKLDNN -Xcompiler -fPIC -std=c++11 -Xcompiler -fPIC -w --expt-relaxed-constexpr -O0 -g -D_GLIBCXX_USE_CXX11_ABI=0 -DNVCC \
-    -I ${include_dir}/third_party/install \
-    -I ${include_dir}/third_party/install/gflags/include \
-    -I ${include_dir}/third_party/install/glog/include \
-    -I ${include_dir}/third_party/install/protobuf/include \
-    -I ${include_dir}/third_party/install/xxhash/include \
-    -I ${include_dir}/third_party/boost \
-    -I ${include_dir}/third_party/eigen3 \
-    -I ${include_dir}/third_party/threadpool/src/extern_threadpool \
-    -I ${include_dir}/third_party/dlpack/include \
-    -I ${include_dir}/third_party/ \
-    -I ../mkl-dnn/include \ # 需替换成本地 mklnn 路径
-    -I ${include_dir}
-done
+    OPS='farthest_point_sampling_op gather_point_op group_points_op query_ball_op three_interp_op three_nn_op'
+    for op in ${OPS}
+    do
+    nvcc ${op}.cu -c -o ${op}.cu.o -ccbin cc -DPADDLE_WITH_CUDA -DEIGEN_USE_GPU -DPADDLE_USE_DSO -DPADDLE_WITH_MKLDNN -Xcompiler -fPIC -std=c++11 -Xcompiler -fPIC -w --expt-relaxed-constexpr -O0 -g -D_GLIBCXX_USE_CXX11_ABI=0 -DNVCC \
+        -I ${include_dir}/third_party/ \
+        -I ../mkl-dnn/include \ # 需替换成本地 mklnn 路径
+        -I ${include_dir}
+    done
 
-g++ farthest_point_sampling_op.cc farthest_point_sampling_op.cu.o gather_point_op.cc gather_point_op.cu.o group_points_op.cc group_points_op.cu.o query_ball_op.cu.o query_ball_op.cc three_interp_op.cu.o three_interp_op.cc three_nn_op.cu.o three_nn_op.cc -o pointnet_lib.so -DPADDLE_WITH_MKLDNN -shared -fPIC -std=c++11 -O0 -g -D_GLIBCXX_USE_CXX11_ABI=0 \
-  -I ${include_dir}/third_party/install/protobuf/include \
-  -I ${include_dir}/third_party/install/glog/include \
-  -I ${include_dir}/third_party/install/gflags/include \
-  -I ${include_dir}/third_party/install/xxhash/include \
-  -I ${include_dir}/third_party/install/zlib/include \
-  -I ${include_dir}/third_party/boost \
-  -I ${include_dir}/third_party/eigen3 \
-  -I ${include_dir}/third_party/dlpack/include \
-  -I ${include_dir}/third_party/ \
-  -I ../mkl-dnn/include \ # 需替换成本地 mklnn 路径
-  -I ${include_dir} \
-  -L ${lib_dir} \
-  -L /usr/local/cuda/lib64 -lpaddle_framework -lcudart
+    g++ farthest_point_sampling_op.cc farthest_point_sampling_op.cu.o gather_point_op.cc gather_point_op.cu.o group_points_op.cc group_points_op.cu.o query_ball_op.cu.o query_ball_op.cc three_interp_op.cu.o three_interp_op.cc three_nn_op.cu.o three_nn_op.cc -o pointnet_lib.so -DPADDLE_WITH_MKLDNN -shared -fPIC -std=c++11 -O0 -g -D_GLIBCXX_USE_CXX11_ABI=0 \
+      -I ${include_dir}/third_party/ \
+      -I ../mkl-dnn/include \ # 需替换成本地 mklnn 路径
+      -I ${include_dir} \
+      -L ${lib_dir} \
+      -L /usr/local/cuda/lib64 -lpaddle_framework -lcudart
 
-rm *.cu.o
-```
-为避免产生兼容问题，请使用**gcc4.8.2**版本编译custom-op
+    rm *.cu.o
+    ```
+    为避免产生兼容问题，请使用**gcc4.8.2**版本编译custom-op
 
-执行编译脚本：
-```
-cd ext_op/src
-sh make.sh
-```
+    执行编译脚本：
+    ```
+    cd ext_op/src
+    sh make.sh
+    ```
 
 最终编译会产出`pointnet_lib.so`
 
