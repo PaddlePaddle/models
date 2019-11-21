@@ -15,7 +15,7 @@
 网络结构如下所示：
 
 <p align="center">
-<img src="doc/teaser.png" height=300 width=800 hspace='10'/> <br />
+<img src="images/teaser.png" height=300 width=800 hspace='10'/> <br />
 用于点云的目标检测器 PointNet++
 </p>
 
