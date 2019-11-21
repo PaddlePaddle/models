@@ -160,16 +160,16 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.
 2. 生成Groud Truth采样数据，命令如下：
 
 ```
-python generate_gt_database.py --class_name 'Car' --split train
+python tools/generate_gt_database.py --class_name 'Car' --split train
 ```
 
 3. 训练 RPN 模型
 
 ```
-python tools/train.py --cfg=./cfgs/default.yml
-                      --train_mode=rpn
-                      --batch_size=16
-                      --epoch=200
+python tools/train.py --cfg=./cfgs/default.yml \
+                      --train_mode=rpn \
+                      --batch_size=16 \
+                      --epoch=200 \
                       --save_dir=checkpoints
 ```
 
@@ -188,12 +188,12 @@ python tools/generate_aug_scene.py --class_name 'Car' --split train --aug_times 
 通过`--output_dir`指定保存输出特征和ROI的路径，默认保存到`./output`目录。
 
 ```
-python tools/eval.py --cfg=cfgs/default.yaml 
-                     --batch_size=4
-                     --eval_mode=rpn
-                     --ckpt_dir=./checkpoints/rpn/199
-                     --save_rpn_feature
-                     --output_dir=output
+python tools/eval.py --cfg=cfgs/default.yaml  \
+                     --batch_size=4 \
+                     --eval_mode=rpn \
+                     --ckpt_dir=./checkpoints/rpn/199 \
+                     --save_rpn_feature \
+                     --output_dir=output \
                      --set TEST.SPLIT train_aug TEST.RPN_POST_NMS_TOP_N 300 TEST.RPN_NMS_THRESH 0.85
 ```
 
@@ -222,11 +222,11 @@ output
 5. 离线训练rcnn，并且通过参数`--rcnn_training_roi_dir` and `--rcnn_training_feature_dir` 来指定 RPN 模型保存的输出特征和ROI路径。
 
 ```
-python tools/train.py --cfg=./cfgs/default.yml
-                      --train_mode=rcnn_offline
-                      --epoch=30
-                      --save_dir=checkpoints
-                      --rcnn_training_roi_dir=output/detections/data
+python tools/train.py --cfg=./cfgs/default.yml \
+                      --train_mode=rcnn_offline \
+                      --epoch=30 \
+                      --save_dir=checkpoints \
+                      --rcnn_training_roi_dir=output/detections/data \
                       --rcnn_training_feature_dir=output/features
 ```
 
@@ -258,10 +258,10 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.
 通过`--output_dir`指定保存输出特征和ROI的路径，默认保存到`./output`目录。
 
 ```
-python tools/eval.py --cfg=cfgs/default.yaml 
-                     --eval_mode=rpn
-                     --ckpt_dir=./checkpoints/rpn/199
-                     --save_rpn_feature
+python tools/eval.py --cfg=cfgs/default.yaml \
+                     --eval_mode=rpn \
+                     --ckpt_dir=./checkpoints/rpn/199 \
+                     --save_rpn_feature \
                      --output_dir=output
 ```
 

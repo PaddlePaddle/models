@@ -130,11 +130,11 @@ def train():
         cfg.RCNN.ENABLED = True
         cfg.RPN.ENABLED = False
     else:
-        raise NotImplementedError("unknown train mode: {}".format(train_mode))
+        raise NotImplementedError("unknown train mode: {}".format(args.train_mode))
 
-    checkpoints_dir = os.path.join(args.save_dir, train_mode)
+    checkpoints_dir = os.path.join(args.save_dir, args.train_mode)
     if not os.path.isdir(checkpoints_dir):
-        os.makedirs(args.checkpoints_dir)
+        os.makedirs(checkpoints_dir)
 
     kitti_rcnn_reader = KittiRCNNReader(data_dir=args.data_dir,
                                     npoints=cfg.RPN.NUM_POINTS,
