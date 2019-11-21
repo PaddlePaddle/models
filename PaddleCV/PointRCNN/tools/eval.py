@@ -37,8 +37,7 @@ logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 np.random.seed(1024)  # use same seed
-
-rpn_data_dir = "./data/rpn_final_nodropempty_myaug/val"
+METRIC_PROC_NUM = 4
 
 
 def parse_args():
@@ -70,6 +69,11 @@ def parse_args():
         default='checkpoints/199',
         help='specify a ckpt directory to be evaluated if needed')
     parser.add_argument(
+        '--data_dir',
+        type=str,
+        default='./data',
+        help='KITTI dataset root directory')
+    parser.add_argument(
         '--output_dir',
         type=str,
         default='output',
@@ -87,12 +91,12 @@ def parse_args():
     parser.add_argument(
         '--rcnn_eval_roi_dir',
         type=str,
-        default=rpn_data_dir+"/detections/data",  # None,
+        default=None,
         help='specify the saved rois for rcnn evaluation when using rcnn_offline mode')
     parser.add_argument(
         '--rcnn_eval_feature_dir',
         type=str,
-        default=rpn_data_dir + "/features",  # None,
+        default=None,
         help='specify the saved features for rcnn evaluation when using rcnn_offline mode')
     parser.add_argument(
         '--log_interval',
@@ -123,7 +127,7 @@ def eval():
         cfg.RCNN.ENABLED = True
         cfg.RPN.ENABLED = False
     else:
-        raise NotImplementedError
+        raise NotImplementedError("unkown eval mode: {}".format(args.eval_mode))
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -188,7 +192,7 @@ def eval():
             os.makedirs(refine_output_dir)
 
     # get reader
-    kitti_rcnn_reader = KittiRCNNReader(data_dir='./data',
+    kitti_rcnn_reader = KittiRCNNReader(data_dir=args.data_dir,
                                         npoints=cfg.RPN.NUM_POINTS,
                                         split=cfg.TEST.SPLIT,
                                         mode='EVAL',
@@ -201,8 +205,10 @@ def eval():
     thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
     queue = multiprocessing.Queue(128)
     mgr = multiprocessing.Manager()
+    lock = multiprocessing.Lock()
     mdict = mgr.dict()
     if cfg.RPN.ENABLED:
+        mdict['exit_proc'] = 0
         mdict['total_gt_bbox'] = 0
         mdict['total_cnt'] = 0
         mdict['total_rpn_iou'] = 0
@@ -210,10 +216,10 @@ def eval():
             mdict['total_recalled_bbox_list_{}'.format(i)] = 0
 
         p_list = []
-        for i in range(4):
+        for i in range(METRIC_PROC_NUM):
             p_list.append(multiprocessing.Process(
                 target=rpn_metric,
-                args=(queue, mdict, thresh_list, args.save_rpn_feature, kitti_feature_dir,
+                args=(queue, mdict, lock, thresh_list, args.save_rpn_feature, kitti_feature_dir,
                       seg_output_dir, kitti_output_dir, kitti_rcnn_reader, cfg.CLASSES)))
             p_list[-1].start()
     
@@ -221,15 +227,16 @@ def eval():
         for i in range(len(thresh_list)):
             mdict['total_recalled_bbox_list_{}'.format(i)] = 0
             mdict['total_roi_recalled_bbox_list_{}'.format(i)] = 0
+        mdict['exit_proc'] = 0
         mdict['total_cls_acc'] = 0 
         mdict['total_cls_acc_refined'] = 0
         mdict['total_det_num'] = 0
         mdict['total_gt_bbox'] = 0
         p_list = []
-        for i in range(4):
+        for i in range(METRIC_PROC_NUM):
             p_list.append(multiprocessing.Process(
                 target=rcnn_metric,
-                args=(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir,
+                args=(queue, mdict, lock, thresh_list, kitti_rcnn_reader, roi_output_dir,
                       refine_output_dir, final_output_dir, args.save_result)
             ))
             p_list[-1].start()
@@ -254,8 +261,10 @@ def eval():
 
     except fluid.core.EOFException:
         # terminate metric process
-        for i in range(len(p_list)):
+        for i in range(METRIC_PROC_NUM):
             queue.put(None)
+        while mdict['exit_proc'] < METRIC_PROC_NUM:
+            time.sleep(1)
         for p in p_list:
             if p.is_alive():
                 p.join()

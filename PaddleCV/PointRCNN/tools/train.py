@@ -38,10 +38,6 @@ logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
-# rpn_data_dir = "./data/train_aug_myfeature"
-# rpn_data_dir = "./data/rpn_final_nodropempty_myaug"
-rpn_data_dir = "./data/develop_custom_train_aug"
-
 def parse_args():
     parser = argparse.ArgumentParser("PointRCNN semantic segmentation train script")
     parser.add_argument(
@@ -86,6 +82,11 @@ def parse_args():
         default=0,
         help='resume epoch id')
     parser.add_argument(
+        '--data_dir',
+        type=str,
+        default='./data',
+        help='KITTI dataset root directory')
+    parser.add_argument(
         '--gt_database',
         type=str,
         default='data/gt_database/train_gt_database_3level_Car.pkl',
@@ -93,14 +94,12 @@ def parse_args():
     parser.add_argument(
         '--rcnn_training_roi_dir',
         type=str,
-        default=os.path.join(rpn_data_dir, "detections/data"), #None,
-        # default=None,
+        default=None,
 	help='specify the saved rois for rcnn training when using rcnn_offline mode')
     parser.add_argument(
         '--rcnn_training_feature_dir',
         type=str,
-        default=os.path.join(rpn_data_dir, "features"), #None,
-        # default=None,
+        default=None,
 	help='specify the saved features for rcnn training when using rcnn_offline mode')
     parser.add_argument(
         '--log_interval',
@@ -109,42 +108,6 @@ def parse_args():
         help='mini-batch interval to log.')
     args = parser.parse_args()
     return args
-
-
-def cosine_warmup_decay(learning_rate, warmup_factor, decay_factor,
-                        total_step, warmup_pct):
-    def annealing_cos(start, end, pct):
-	"Cosine anneal from `start` to `end` as pct goes from 0.0 to 1.0."
-	cos_out = fluid.layers.cos(pct * np.pi) + 1.
-        return cos_out * (start - end) / 2. + end
-
-    warmup_start_lr = learning_rate * warmup_factor
-    decay_end_lr = learning_rate * decay_factor
-    warmup_step = total_step * warmup_pct
-
-    global_step = lr_scheduler._decay_step_counter()
-
-    lr = fluid.layers.create_global_var(
-        shape=[1],
-        value=float(learning_rate),
-        dtype='float32',
-        persistable=True,
-        name="learning_rate")
-
-    warmup_step_var = fluid.layers.fill_constant(
-        shape=[1], dtype='float32', value=float(warmup_step), force_cpu=True)
-
-    with control_flow.Switch() as switch:
-        with switch.case(global_step < warmup_step_var):
-            cur_lr = annealing_cos(warmup_start_lr, learning_rate,
-                                   global_step / warmup_step_var)
-            fluid.layers.assign(cur_lr, lr)
-        with switch.case(global_step >= warmup_step_var):
-            cur_lr = annealing_cos(learning_rate, decay_end_lr,
-                                   (global_step - warmup_step_var) / (total_step - warmup_step))
-            fluid.layers.assign(cur_lr, lr)
-
-    return lr
 
 
 def train():
@@ -167,9 +130,9 @@ def train():
         cfg.RCNN.ENABLED = True
         cfg.RPN.ENABLED = False
     else:
-        raise NotImplementedError
+        raise NotImplementedError("unknown train mode: {}".format(train_mode))
 
-    kitti_rcnn_reader = KittiRCNNReader(data_dir='./data',
+    kitti_rcnn_reader = KittiRCNNReader(data_dir=args.data_dir,
                                     npoints=cfg.RPN.NUM_POINTS,
                                     split=cfg.TRAIN.SPLIT,
                                     mode='TRAIN',
@@ -198,15 +161,15 @@ def train():
             train_outputs = train_model.get_outputs()
             train_loss = train_outputs['loss']
             lr = optimize(train_loss,
-                                    learning_rate=cfg.TRAIN.LR,
-                                    warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
-                                    decay_factor=1e-5,
-                                    total_step=steps_per_epoch * args.epoch,
-                                    warmup_pct=cfg.TRAIN.PCT_START,
-                                    train_program=train_prog,
-                                    startup_prog=startup,
-                                    weight_decay=cfg.TRAIN.WEIGHT_DECAY,
-                                    clip_norm=cfg.TRAIN.GRAD_NORM_CLIP)
+                          learning_rate=cfg.TRAIN.LR,
+                          warmup_factor=1. / cfg.TRAIN.DIV_FACTOR,
+                          decay_factor=1e-5,
+                          total_step=steps_per_epoch * args.epoch,
+                          warmup_pct=cfg.TRAIN.PCT_START,
+                          train_program=train_prog,
+                          startup_prog=startup,
+                          weight_decay=cfg.TRAIN.WEIGHT_DECAY,
+                          clip_norm=cfg.TRAIN.GRAD_NORM_CLIP)
     train_keys, train_values = parse_outputs(train_outputs, 'loss')
 
     exe.run(startup)

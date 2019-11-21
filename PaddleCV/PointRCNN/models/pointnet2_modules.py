@@ -46,7 +46,7 @@ def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
     """
     idx = query_ball(xyz, new_xyz, radius, nsample)
     idx.stop_gradient = True
-    xyz = fluid.layers.transpose(xyz,perm=[0,2,1])
+    xyz = fluid.layers.transpose(xyz,perm=[0, 2, 1])
     grouped_xyz = group_points(xyz, idx)
     expand_new_xyz = fluid.layers.unsqueeze(fluid.layers.transpose(new_xyz, perm=[0, 2, 1]), axes=[-1])
     expand_new_xyz = fluid.layers.expand(expand_new_xyz, [1, 1, 1, grouped_xyz.shape[3]])
@@ -66,10 +66,10 @@ def group_all(xyz, features=None, use_xyz=True):
     Group all xyz and features when npoint is None
     See query_and_group
     """
-    xyz = fluid.layers.transpose(xyz,perm=[0,2,1])
+    xyz = fluid.layers.transpose(xyz,perm=[0, 2, 1])
     grouped_xyz = fluid.layers.unsqueeze(xyz, axes=[2])
     if features is not None:
-        grouped_features = fluid.layers.unsqueeze(features, axes=[2]) # [-1,128,1,640]
+        grouped_features = fluid.layers.unsqueeze(features, axes=[2])
         return fluid.layers.concat([grouped_xyz, grouped_features], axis=1) if use_xyz else grouped_features
     else:
         return grouped_xyz

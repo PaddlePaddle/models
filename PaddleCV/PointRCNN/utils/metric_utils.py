@@ -75,21 +75,26 @@ def calc_iou_recall(rets, thresh_list):
     return len(gt_boxes3d_num), gt_box_num, rpn_iou_sum, recalled_bbox_list
 
 
-def rpn_metric(queue, mdict, thresh_list, is_save_rpn_feature, kitti_feature_dir,
+def rpn_metric(queue, mdict, lock, thresh_list, is_save_rpn_feature, kitti_feature_dir,
                seg_output_dir, kitti_output_dir, kitti_rcnn_reader, classes):
     while True:
         rets_dict = queue.get()
         if rets_dict is None:
+            lock.acquire()
+            mdict['exit_proc'] += 1
+            lock.release()
             return 
 
         cnt, gt_box_num, rpn_iou_sum, recalled_bbox_list = calc_iou_recall(
             rets_dict, thresh_list)
+        lock.acquire()
         mdict['total_cnt'] += cnt
         mdict['total_gt_bbox'] += gt_box_num
         mdict['total_rpn_iou'] += rpn_iou_sum
         for i, bbox_num in enumerate(recalled_bbox_list):
             mdict['total_recalled_bbox_list_{}'.format(i)] += bbox_num
         logger.debug("rpn_metric: {}".format(str(mdict)))
+        lock.release()
 
         if is_save_rpn_feature:
             save_rpn_feature(rets_dict, kitti_feature_dir)
@@ -97,11 +102,14 @@ def rpn_metric(queue, mdict, thresh_list, is_save_rpn_feature, kitti_feature_dir
                 rets_dict, seg_output_dir, kitti_output_dir, kitti_rcnn_reader, classes)
 
 
-def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir,
+def rcnn_metric(queue, mdict, lock, thresh_list, kitti_rcnn_reader, roi_output_dir,
                 refine_output_dir, final_output_dir, is_save_result=False):
     while True:
         rets_dict = queue.get()
         if rets_dict is None:
+            lock.acquire()
+            mdict['exit_proc'] += 1
+            lock.release()
             return 
         
         for k,v in rets_dict.items():
@@ -143,26 +151,27 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir,
         gt_boxes3d = rets_dict['gt_boxes3d']
         
         # recall
-        gt_num = gt_boxes3d.shape[1]
-        if gt_num > 0:
+        if gt_boxes3d.size > 0:
+            gt_num = gt_boxes3d.shape[1]
             gt_boxes3d = gt_boxes3d.reshape((-1,7))
             iou3d = boxes_iou3d(pred_boxes3d, gt_boxes3d)
             gt_max_iou = iou3d.max(axis=0)
             refined_iou = iou3d.max(axis=1)
 
-            for idx, thresh in enumerate(thresh_list):
-                recalled_bbox_num = (gt_max_iou > thresh).sum() 
-                mdict['total_recalled_bbox_list_{}'.format(idx)] += recalled_bbox_num
-
             recalled_num = (gt_max_iou > 0.7).sum()
-            mdict['total_gt_bbox'] += gt_num
             roi_boxes3d = roi_boxes3d.reshape((-1,7))
             iou3d_in = boxes_iou3d(roi_boxes3d, gt_boxes3d)
             gt_max_iou_in = iou3d_in.max(axis=0)
 
+            lock.acquire()
+            mdict['total_gt_bbox'] += gt_num
+            for idx, thresh in enumerate(thresh_list):
+                recalled_bbox_num = (gt_max_iou > thresh).sum() 
+                mdict['total_recalled_bbox_list_{}'.format(idx)] += recalled_bbox_num
             for idx, thresh in enumerate(thresh_list):
                 roi_recalled_bbox_num = (gt_max_iou_in > thresh).sum()
                 mdict['total_roi_recalled_bbox_list_{}'.format(idx)] += roi_recalled_bbox_num 
+            lock.release()
         
         # classification accuracy
         cls_label = gt_iou > cfg.RCNN.CLS_FG_THRESH
@@ -177,9 +186,6 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir,
         cls_label_refined = cls_label_refined.astype(np.float32)
         cls_acc_refined = (pred_classes == cls_label_refined).astype(np.float32).sum() / max(cls_label_refined.shape[0], 1.0) 
         
-        mdict['total_cls_acc'] += cls_acc
-        mdict['total_cls_acc_refined'] += cls_acc_refined
-            
         sample_id = rets_dict['sample_id']
         image_shape = kitti_rcnn_reader.get_image_shape(sample_id)
         
@@ -200,7 +206,11 @@ def rcnn_metric(queue, mdict, thresh_list, kitti_rcnn_reader, roi_output_dir,
         boxes_bev_selected = boxes3d_to_bev(pred_boxes3d_selected)
         scores_selected, pred_boxes3d_selected = box_nms_eval(boxes_bev_selected, raw_scores_selected, pred_boxes3d_selected, cfg.RCNN.NMS_THRESH)
         calib = kitti_rcnn_reader.get_calib(sample_id)
-        mdict['total_det_num'] += pred_boxes3d_selected.shape[0]
         save_kitti_format(sample_id, calib, pred_boxes3d_selected, final_output_dir, scores_selected, image_shape)
+        lock.acquire()
+        mdict['total_det_num'] += pred_boxes3d_selected.shape[0]
+        mdict['total_cls_acc'] += cls_acc
+        mdict['total_cls_acc_refined'] += cls_acc_refined
+        lock.release()
         logger.debug("rcnn_metric: {}".format(str(mdict)))
 
