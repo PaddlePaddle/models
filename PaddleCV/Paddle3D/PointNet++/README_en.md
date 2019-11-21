@@ -22,7 +22,7 @@ The network structure is shown as below.
 PointNet++ architecture for Point set Segmentation and Classification
 </p>
 
-Set Abstraction layer is the basic module of the network, each set abstraction layer is makde of three key layers：Sampling layer, Grouping layer and PointNet layer.
+Set Abstraction layer is the basic module of the network, each set abstraction layer is made of three key layers：Sampling layer, Grouping layer and PointNet layer.
 
 - **Sample layer**: Sampling layer uses farthest point sampling(FPS) to select a set of points from input points, which defines the centroids of local regions. Compared with random sampling, it has better converage of the entire point set given the same number of centroids.
 
@@ -40,7 +40,49 @@ Set Abstraction layer is the basic module of the network, each set abstraction l
 
 **Install [PaddlePaddle](https://github.com/PaddlePaddle/Paddle):**
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.6 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.6/beginners_guide/install/index_en.html) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid develop [daily version wheel](https://www.paddlepaddle.org.cn/install/doc/tables#多版本whl包列表-dev-11) or compiled from PaddlePaddle [develop branch](https://github.com/PaddlePaddle/Paddle/tree/develop).
+
+In order to make the custom OP compatible with the Paddle version, it is recommended to **compile from PaddlePaddle develop branch source code**. For source code compilation, please refer to [Compile and Install](https://www.paddlepaddle.org.cn/install/doc/source/ubuntu)
+
+### Compile custom operations
+
+Please make sure you are using PaddlePaddle Fluid develop daily version or compiled from PaddlePaddle develop branch.
+Custom operations can be compiled as follows:
+
+```
+cd ext_op/src
+sh make.sh
+```
+
+If the compilation is finished successfully, `pointnet2_lib.so` will be generated under `exr_op/src`.
+
+Make sure custom operations pass as follows:
+
+```
+# export paddle libs to LD_LIBRARY_PATH for custom op library
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
+
+# back to ext_op and add PYTHONPATH
+cd ..
+export PYTHONPATH=$PYTHONPATH:`pwd`
+
+# Run unit tests
+python test/test_farthest_point_sampling_op.py
+python test/test_gather_point_op.py
+python test/test_group_points_op.py
+python test/test_query_ball_op.py
+python test/test_three_interp_op.py
+python test/test_three_nn_op.py
+```
+The prompt message for successful running is as follows:
+
+```
+.
+----------------------------------------------------------------------
+Ran 1 test in 13.205s
+
+OK
+```
 
 ### Data preparation
 
@@ -87,46 +129,6 @@ The dataset catalog structure is as follows:
   ├── ply_data_all_1.h5
   |   ...
 
-```
-
-### Compile custom operations
-
-Custom operations are supported since Paddle Fluid v1.6, please make sure you are using Paddle not less than v1.6.
-Custom operations can be compiled as follows:
-
-```
-cd ext_op/src
-sh make.sh
-```
-
-If the compilation is finished successfully, `pointnet2_lib.so` will be generated under `exr_op/src`.
-
-Make sure custom operations pass as follows:
-
-```
-# export paddle libs to LD_LIBRARY_PATH for custom op library
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
-
-# back to ext_op and add PYTHONPATH
-cd ..
-export PYTHONPATH=$PYTHONPATH:`pwd`
-
-# Run unit tests
-python test/test_farthest_point_sampling_op.py
-python test/test_gather_point_op.py
-python test/test_group_points_op.py
-python test/test_query_ball_op.py
-python test/test_three_interp_op.py
-python test/test_three_nn_op.py
-```
-The prompt message for successful running is as follows:
-
-```
-.
-----------------------------------------------------------------------
-Ran 1 test in 13.205s
-
-OK
 ```
 
 ### Training

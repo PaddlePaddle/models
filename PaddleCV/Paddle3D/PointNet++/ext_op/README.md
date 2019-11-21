@@ -1,12 +1,28 @@
-# 自定义op的编译过程
+# 自定义OP的编译过程
 
 ## 代码结构
 
-  - src: 扩展op C++/CUDA 源码
+  - src: 扩展OP C++/CUDA 源码
   - pointnet_lib.py: Python封装
-  - tests: 单测程序
+  - tests: 各OP单测程序
 
-## 编译
+## 安装PaddlePaddle
+
+请通过如下方式安装PaddlePaddle：
+
+- 通过[Paddle develop分支](https://github.com/PaddlePaddle/Paddle/tree/develop)源码编译安装，编译方法如下:
+
+  1. [Ubuntu](https://www.paddlepaddle.org.cn/install/doc/source/ubuntu)
+  1. [CentOS](https://www.paddlepaddle.org.cn/install/doc/source/centos)
+  1. [MasOS](https://www.paddlepaddle.org.cn/install/doc/source/macos)
+  1. [Windows](https://www.paddlepaddle.org.cn/install/doc/source/windows)
+
+  **说明：** 推荐使用docker编译
+
+- 安装Paddle develop[每日版本whl包](https://www.paddlepaddle.org.cn/install/doc/tables#多版本whl包列表-dev-11)
+  **说明：** Paddle develop每日版本目前采用**gcc 4.8.2**版本编译，若使用每日版本，请使用**gcc 4.8.2**版本编译自定义OP，否则可能出现兼容性问题。
+
+## 编译自定义OP
 
 自定义op需要将实现的C++、CUDA代码编译成动态库，mask.sh中通过g++/nvcc编译，当然您也可以写Makefile或者CMake。
 
@@ -21,63 +37,17 @@
 /paddle/pyenv/local/lib/python2.7/site-packages/paddle/libs
 ```
 
-- 如果您通过源码编译安装高于1.6版本的Paddle：
+我们提供动态库编译脚本如下：
 
-  动态库的编译命令被写入make.sh，可以直接执行编译脚本：
-
-  ```
-  cd src
-  sh make.sh
-  ```
-
-- 如果您直接通过pip安装已发布的 paddlepaddle>=1.6.0 的 whl 包：
-
-    1. 首先您需要在本机下载 mkldnn：
-
-    ```
-    cd ext_op
-    # 下载 mkldnn
-    git clone https://github.com/intel/mkl-dnn.git
-    # 切换到指定版本
-    cd mkl-dnn && git checkout aef88b7c233f48f8b945da310f1b973da31ad033
-    ```
-
-    2. 然后需要将src/make.sh做如下修改，增加mkldnn的编译选项：
-
-    ```
-    include_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_include())' )
-    lib_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_lib())' )
-
-    echo $include_dir
-    echo $lib_dir
-
-    OPS='farthest_point_sampling_op gather_point_op group_points_op query_ball_op three_interp_op three_nn_op'
-    for op in ${OPS}
-    do
-    nvcc ${op}.cu -c -o ${op}.cu.o -ccbin cc -DPADDLE_WITH_CUDA -DEIGEN_USE_GPU -DPADDLE_USE_DSO -DPADDLE_WITH_MKLDNN -Xcompiler -fPIC -std=c++11 -Xcompiler -fPIC -w --expt-relaxed-constexpr -O0 -g -D_GLIBCXX_USE_CXX11_ABI=0 -DNVCC \
-        -I ${include_dir}/third_party/ \
-        -I ../mkl-dnn/include \ # 需替换成本地 mklnn 路径
-        -I ${include_dir}
-    done
-
-    g++ farthest_point_sampling_op.cc farthest_point_sampling_op.cu.o gather_point_op.cc gather_point_op.cu.o group_points_op.cc group_points_op.cu.o query_ball_op.cu.o query_ball_op.cc three_interp_op.cu.o three_interp_op.cc three_nn_op.cu.o three_nn_op.cc -o pointnet_lib.so -DPADDLE_WITH_MKLDNN -shared -fPIC -std=c++11 -O0 -g -D_GLIBCXX_USE_CXX11_ABI=0 \
-      -I ${include_dir}/third_party/ \
-      -I ../mkl-dnn/include \ # 需替换成本地 mklnn 路径
-      -I ${include_dir} \
-      -L ${lib_dir} \
-      -L /usr/local/cuda/lib64 -lpaddle_framework -lcudart
-
-    rm *.cu.o
-    ```
-    为避免产生兼容问题，请使用**gcc4.8.2**版本编译custom-op
-
-    执行编译脚本：
-    ```
-    cd ext_op/src
-    sh make.sh
-    ```
+```
+cd src
+sh make.sh
+```
 
 最终编译会产出`pointnet_lib.so`
+
+**说明：** 若使用源码编译安装PaddlePaddle的方式，编译过程中`cmake`未设置`WITH_MKLDNN`的方式，
+编译自定义OP时会报错找不到`mkldnn.h`等文件，可在`make.sh`中删除编译命令中的`-DPADDLE_WITH_MKLDNN`选项。
 
 ## 设置环境变量
 
@@ -88,10 +58,10 @@ import paddle
 print(paddle.sysconfig.get_lib())
 ```
 
-假如路径为: `/paddle/pyenv/local/lib/python2.7/site-packages/paddle/libs`, 按如下方式设置即可。
+可通过如下方式添加动态库路径:
 
 ```
-export LD_LIBRARY_PATH=/paddle/pyenv/local/lib/python2.7/site-packages/paddle/libs:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
 ```
 
 ## 执行单测

@@ -39,9 +39,55 @@
 
 **安装 [PaddlePaddle](https://github.com/PaddlePaddle/Paddle):**
 
-在当前目录下运行样例代码需要 PaddelPaddle Fluid v.1.6 或以上的版本. 如果你的运行环境中的 PaddlePaddle 低于此版本, 请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/en/1.6/beginners_guide/install/index_en.html) 中的说明来更新 PaddlePaddle.
+在当前目录下运行样例代码需要 PaddelPaddle Fluid [develop每日版本](https://www.paddlepaddle.org.cn/install/doc/tables#多版本whl包列表-dev-11)或使用PaddlePaddle [develop分支](https://github.com/PaddlePaddle/Paddle/tree/develop)源码编译安装. 
 
 为了使自定义算子与paddle版本兼容，建议您**优先使用源码编译paddle**，源码编译方式请参考[编译安装](https://www.paddlepaddle.org.cn/install/doc/source/ubuntu)
+
+
+### 编译自定义OP
+
+请确认Paddle版本为PaddelPaddle Fluid develop每日版本或基于Paddle develop分支源码编译安装，**推荐使用源码编译安装的方式**。
+
+自定义OP编译方式如下：
+
+    进入 `ext_op/src` 目录，执行编译脚本
+    ```
+    cd ext_op/src
+    sh make.sh
+    ```
+
+    成功编译后，`exr_op/src` 目录下将会生成 `pointnet2_lib.so` 
+
+    执行下列操作，确保自定义算子编译正确：
+
+    ```
+    # 设置动态库的路径到 LD_LIBRARY_PATH 中
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
+
+    # 回到 ext_op 目录，添加 PYTHONPATH
+    cd ..
+    export PYTHONPATH=$PYTHONPATH:`pwd`
+
+    # 运行单测 
+    python test/test_farthest_point_sampling_op.py
+    python test/test_gather_point_op.py
+    python test/test_group_points_op.py
+    python test/test_query_ball_op.py
+    python test/test_three_interp_op.py
+    python test/test_three_nn_op.py
+    ```
+    单测运行成功会输出提示信息，如下所示：
+
+    ```
+    .
+    ----------------------------------------------------------------------
+    Ran 1 test in 13.205s
+
+    OK
+    ```
+
+**说明：** 更多关于自定义OP的编译说明，请参考[自定义OP编译](./ext_op/README.md)
+
 
 ### 数据准备
 
@@ -89,55 +135,6 @@ sh download.sh
   |   ...
 
 ```
-
-### 编译自定义算子
-
-PaddlePaddle Fluid 从 v1.6 版本开始支持自定义算子实现，请确保你的 Paddle 版本不低于 v1.6。
-
-根据您 paddle 的安装方式，选择自定义算子的编译方式
-
-- 如果您使用 pip 安装 paddle 版本，请根据 [自定义算子](./ext_op/README.md)对编译脚本进行修改。
-
-- 如果您使用源码编译安装paddle，请参考如下步骤完成自定义算子的编译：
-
-    进入 `ext_op/src` 目录，执行编译脚本
-    ```
-    cd ext_op/src
-    sh make.sh
-    ```
-
-    成功编译后，`exr_op/src` 目录下将会生成 `pointnet2_lib.so` 
-
-    执行下列操作，确保自定义算子编译正确：
-
-    ```
-    # 设置动态库的路径到 LD_LIBRARY_PATH 中
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.sysconfig.get_lib())'`
-
-    # 回到 ext_op 目录，添加 PYTHONPATH
-    cd ..
-    export PYTHONPATH=$PYTHONPATH:`pwd`
-
-    # 运行单测 
-    python test/test_farthest_point_sampling_op.py
-    python test/test_gather_point_op.py
-    python test/test_group_points_op.py
-    python test/test_query_ball_op.py
-    python test/test_three_interp_op.py
-    python test/test_three_nn_op.py
-    ```
-    单测运行成功会输出提示信息，如下所示：
-
-    ```
-    .
-    ----------------------------------------------------------------------
-    Ran 1 test in 13.205s
-
-    OK
-    ```
-
-更多关于自定义算子的编译说明，请参考[自定义算子](./ext_op/README.md)
-
 
 ### 训练
 
@@ -215,7 +212,7 @@ sh scripts/eval_cls.sh
 
 | model | Top-1 | download |
 | :----- | :---: | :---: |
-| SSG(Single-Scale Group) | 87.6 | [model]() |
+| SSG(Single-Scale Group) | 87.4 | [model]() |
 | MSG(Multi-Scale Group)  | 89.2 | [model]() |
 
 **语义分割模型:**
