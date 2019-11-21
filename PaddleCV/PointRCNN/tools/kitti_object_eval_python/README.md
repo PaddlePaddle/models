@@ -1,5 +1,5 @@
 # kitti-object-eval-python
-**Note**: This is borrowed from [traveller59/kitti-object-eval-python](https://github.com/traveller59/kitti-object-eval-python)
+**NOTE**: This is borrowed from [traveller59/kitti-object-eval-python](https://github.com/traveller59/kitti-object-eval-python)
 
 Fast kitti object detection eval in python(finish eval in less than 10 second), support 2d/bev/3d/aos. , support coco-style AP. If you use command line interface, numba need some time to compile jit functions.
 ## Dependencies

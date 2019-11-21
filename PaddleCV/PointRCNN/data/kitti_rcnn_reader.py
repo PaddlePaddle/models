@@ -30,8 +30,6 @@ try:
 except:
     import pickle
 
-#import data.kitti_utils as kitti_utils
-#import utils.kitti_utils as kitti_utils_py
 import pts_utils
 import utils.cyops.kitti_utils as kitti_utils
 import utils.cyops.roipool3d_utils as roipool3d_utils
