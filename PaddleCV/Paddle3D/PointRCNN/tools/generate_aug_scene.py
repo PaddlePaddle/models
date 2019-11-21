@@ -303,9 +303,6 @@ class AugSceneGenerator(KittiReader):
         with open(split_file, 'w') as f:
             for idx, sample_id in enumerate(split_list):
                 f.write(str(sample_id) + '\n')
-                # print(sample_id, file=f, end='')
-                # if idx != len(split_list) - 1:
-                #     print('', file=f)
         log_print('Save split file to %s' % split_file, fp=log_fp)
         target_dir = os.path.join(args.data_dir, 'KITTI/ImageSets/')
         os.system('cp %s %s' % (split_file, target_dir))

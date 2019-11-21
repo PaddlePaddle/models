@@ -203,19 +203,19 @@ python tools/eval.py --cfg=cfgs/default.yaml  \
 output
 ├── detections 
 │   ├── data          # 保存ROI数据
-│   │   ├── 00000.txt
-│   │   ├── 00003.txt
+│   │   ├── 000000.txt
+│   │   ├── 000003.txt
 │   │   ├── ...
 ├── features          # 保存输出特征
-│   ├── 00000_intensity.npy
-│   ├── 00000.npy
-│   ├── 00000_rawscore.npy
-│   ├── 00000_seg.npy
-│   ├── 00000_xyz.npy
+│   ├── 000000_intensity.npy
+│   ├── 000000.npy
+│   ├── 000000_rawscore.npy
+│   ├── 000000_seg.npy
+│   ├── 000000_xyz.npy
 │   ├── ...
 ├── seg_result        # 保存语义分割结果
-│   ├── 00000.npy
-│   ├── 00003.npy
+│   ├── 000000.npy
+│   ├── 000003.npy
 │   ├── ...
 ```
 
@@ -262,10 +262,45 @@ python tools/eval.py --cfg=cfgs/default.yaml \
                      --eval_mode=rpn \
                      --ckpt_dir=./checkpoints/rpn/199 \
                      --save_rpn_feature \
-                     --output_dir=output
+                     --output_dir=output/val
 ```
 
-3. 使用KITTI mAP工具获得评估结果
+保存RPN模型对评估数据的输出特征和ROI保存的目录结构与上述保存离线增强保存数据目录结构一致。
+
+3. 评估离线RCNN模型
+
+评估离线RCNN模型命令如下:
+
+```
+python tools/eval.py --cfg=cfgs/default.yaml \
+                     --eval_mode=rcnn_offline \
+                     --ckpt_dir=./checkpoints/rcnn_offline/29 \
+                     --rcnn_eval_roi_dir=output/val/detections/data \
+                     --rcnn_eval_feature_dir=output/val/features \
+                     --save_result
+```
+
+最终目标检测结果文件保存在`./result_dir`目录下`final_result`文件夹下，同时可通过`--save_result`开启保存`roi_output`和`refine_output`结果文件。
+`result_dir`目录结构如下：
+
+```
+result_dir
+├── final_result
+│   ├── data          # 保存最终检测结果
+│   │   ├── 000001.txt
+│   │   ├── 000002.txt
+│   │   ├── ...
+├── roi_output        # 保存ROI输出
+│   ├── 000001.txt
+│   ├── 000002.txt
+│   ├── ...
+├── refine_output     # 保存优化后检测结果
+│   ├── 000001.txt
+│   ├── 000002.txt
+│   ├── ...
+```
+
+4. 使用KITTI mAP工具获得评估结果
 
 若在评估过程中使用的python版本为3.6及以上版本，则程序会自动运行KITTI mAP评估，若使用python版本低于3.6，
 由于KITTI mAP仅支持python 3.6及以上版本，须使用对应python版本通过如下命令进行评估：
