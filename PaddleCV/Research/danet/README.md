@@ -83,10 +83,10 @@ dataset
 其目录结构如下：
 ```text
 checkpoint
-    ├── DANet50_pretrained_model_paddle1.6.pdparams       # DANet50预训练模型，适合1.6.0版本
-    ├── DANet101_pretrained_model_paddle1.6.pdparams      # DANet101预训练模型，适合1.6.0版本
-    ├── DANet101_better_model_paddle1.6.pdparams          # DANet101训练最优模型，适合1.6.0版本
-    ├── DANet101_better_model_paddle1.5.2                 # DANet101训练最优模型，只适合1.5.2版本
+    ├── DANet50_pretrained_model_paddle1.6.pdparams       # DANet50预训练模型，需要paddle >=1.6.0
+    ├── DANet101_pretrained_model_paddle1.6.pdparams      # DANet101预训练模型，需要paddle >=1.6.0
+    ├── DANet101_better_model_paddle1.6.pdparams          # DANet101训练最优模型，需要paddle >=1.6.0
+    ├── DANet101_better_model_paddle1.5.2                 # DANet101在1.5.2版本训练的最优模型，需要paddle >= 1.5.2
     
 ```
 
@@ -103,10 +103,11 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 executor执行以下命令进行训练
 ```sh
-python train_executor.py --backbone resnet101 --base_size 1024 --crop_size 768 --epoch_num 350 --batch_size 2 --lr 0.003 --lr_scheduler poly --warm_up --warmup_epoch 2 --cuda --use_data_parallel --load_pretrained_model --save_model checkpoint/DANet101_better_model_paddle1.6 --multi_scales --flip --dilated --multi_grid --scale --multi_dilation 4 8 16 
+python train_executor.py --backbone resnet101 --base_size 1024 --crop_size 768 --epoch_num 350 --batch_size 2 --lr 0.003 --lr_scheduler poly --warm_up --warmup_epoch 2 --cuda --use_data_parallel --load_pretrained_model --save_model checkpoint/DANet101_better_model_paddle1.5.2 --multi_scales --flip --dilated --multi_grid --scale --multi_dilation 4 8 16 
 ```
 参数含义： 使用ResNet101骨干网络，训练图片基础大小是1024，裁剪大小是768，训练轮数是350次，batch size是2
 学习率是0.003，学习率衰减策略是poly，使用学习率热身，热身轮数是2轮，使用GPU，使用数据并行， 加载预训练模型，设置加载的模型地址，使用多尺度测试， 使用图片左右翻转测试，使用空洞卷积，使用multi_grid，multi_dilation设置为4 8 16，使用多尺度训练 
+##### Windows下训练需要去掉 --use_data_parallel
 #### 或者
 dygraph执行以下命令进行训练
 ```sh
