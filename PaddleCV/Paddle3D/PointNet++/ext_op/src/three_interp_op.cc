@@ -111,21 +111,22 @@ protected:
   }
 };
 
-class ThreeInterpGradDescMaker : public framework::SingleGradOpDescMaker {
+template <typename T>
+class ThreeInterpGradDescMaker : public framework::SingleGradOpMaker<T> {
 public:
-  using framework::SingleGradOpDescMaker::SingleGradOpDescMaker;
+  using framework::SingleGradOpMaker<T>::SingleGradOpMaker;
 
 protected:
-  std::unique_ptr<framework::OpDesc> Apply() const override {
-    std::unique_ptr<framework::OpDesc> op(new framework::OpDesc());
-    op->SetType(ForwardOp().Type() + "_grad");
-    op->SetInput("X", Input("X"));
-    op->SetInput("Weight", Input("Weight"));
-    op->SetInput("Idx", Input("Idx"));
-    op->SetInput(framework::GradVarName("Out"), OutputGrad("Out"));
-    op->SetOutput(framework::GradVarName("X"), InputGrad("X"));
-    op->SetAttrMap(Attrs());
-    return op;
+  std::unique_ptr<T> Apply() const override {
+    auto* op = new T();
+    op->SetType("three_interp_grad");
+    op->SetInput("X", this->Input("X"));
+    op->SetInput("Weight", this->Input("Weight"));
+    op->SetInput("Idx", this->Input("Idx"));
+    op->SetInput(framework::GradVarName("Out"), this->OutputGrad("Out"));
+    op->SetOutput(framework::GradVarName("X"), this->InputGrad("X"));
+    op->SetAttrMap(this->Attrs());
+    return std::unique_ptr<T>(op);
   }
 };
 
@@ -136,5 +137,6 @@ namespace ops = paddle::operators;
 REGISTER_OPERATOR(three_interp,
                   ops::ThreeInterpOp,
                   ops::ThreeInterpOpMaker,
-                  ops::ThreeInterpGradDescMaker);
+                  ops::ThreeInterpGradDescMaker<paddle::framework::OpDesc>,
+                  ops::ThreeInterpGradDescMaker<paddle::imperative::OpBase>);
 REGISTER_OPERATOR(three_interp_grad, ops::ThreeInterpOpGrad);

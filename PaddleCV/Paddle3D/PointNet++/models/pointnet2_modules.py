@@ -46,14 +46,15 @@ def query_and_group(xyz, new_xyz, radius, nsample, features=None, use_xyz=True):
     """
     idx = query_ball(xyz, new_xyz, radius, nsample)
     idx.stop_gradient = True
+    xyz = fluid.layers.transpose(xyz,perm=[0, 2, 1])
     grouped_xyz = group_points(xyz, idx)
-    expand_new_xyz = fluid.layers.unsqueeze(new_xyz, axes=[2])
-    expand_new_xyz = fluid.layers.expand(expand_new_xyz, [1, 1, grouped_xyz.shape[2], 1])
+    expand_new_xyz = fluid.layers.unsqueeze(fluid.layers.transpose(new_xyz, perm=[0, 2, 1]), axes=[-1])
+    expand_new_xyz = fluid.layers.expand(expand_new_xyz, [1, 1, 1, grouped_xyz.shape[3]])
     grouped_xyz -= expand_new_xyz
 
     if features is not None:
         grouped_features = group_points(features, idx)
-        return fluid.layers.concat([grouped_xyz, grouped_features], axis=-1) \
+        return fluid.layers.concat([grouped_xyz, grouped_features], axis=1) \
                 if use_xyz else grouped_features
     else:
         assert use_xyz, "use_xyz should be True when features is None"
@@ -65,10 +66,11 @@ def group_all(xyz, features=None, use_xyz=True):
     Group all xyz and features when npoint is None
     See query_and_group
     """
-    grouped_xyz = fluid.layers.unsqueeze(xyz, axes=[2]) #[-1,128,1,3]
+    xyz = fluid.layers.transpose(xyz,perm=[0,2,1])
+    grouped_xyz = fluid.layers.unsqueeze(xyz, axes=[2])
     if features is not None:
-        grouped_features = fluid.layers.unsqueeze(features, axes=[2]) # [-1,128,1,640]
-        return fluid.layers.concat([grouped_xyz, grouped_features], axis=-1) if use_xyz else grouped_features
+        grouped_features = fluid.layers.unsqueeze(features, axes=[2])
+        return fluid.layers.concat([grouped_xyz, grouped_features], axis=1) if use_xyz else grouped_features
     else:
         return grouped_xyz
 
@@ -166,15 +168,11 @@ def pointnet_sa_module(xyz,
     outs = []
     for i, (radius, nsample, mlp) in enumerate(zip(radiuss, nsamples, mlps)):
         out = query_and_group(xyz, new_xyz, radius, nsample, feature, use_xyz) if npoint is not None else group_all(xyz, feature, use_xyz)
-        out = fluid.layers.transpose(out, perm=[0, 3, 1, 2])
         out = MLP(out, mlp, bn=bn, bn_momentum=bn_momentum, name=name + '_mlp{}'.format(i))
-        if npoint is None:
-            out = fluid.layers.transpose(out,perm=[0, 1, 3, 2])
         out = fluid.layers.pool2d(out, pool_size=[1, out.shape[3]], pool_type='max')
         out = fluid.layers.squeeze(out, axes=[-1])
         outs.append(out)
     out = fluid.layers.concat(outs, axis=1)
-    out = fluid.layers.transpose(out, perm=[0, 2, 1])
 
     return (new_xyz, out)
 

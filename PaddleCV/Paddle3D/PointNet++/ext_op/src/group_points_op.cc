@@ -20,10 +20,10 @@ namespace operators {
 using framework::Tensor;
 
 class GroupPointsOp : public framework::OperatorWithKernel {
-public:
+ public:
   using framework::OperatorWithKernel::OperatorWithKernel;
 
-protected:
+ protected:
   void InferShape(framework::InferShapeContext* ctx) const override {
     PADDLE_ENFORCE(ctx->HasInput("X"),
                    "Input(X) of GroupPointsOp should not be null.");
@@ -32,21 +32,21 @@ protected:
     PADDLE_ENFORCE(ctx->HasOutput("Out"),
                    "Output(Out) of GroupPointsOp should not be null.");
 
-    auto dim_x = ctx->GetInputDim("X");  // [B, N, C]
+    auto dim_x = ctx->GetInputDim("X");  // [B, C, N]
     PADDLE_ENFORCE_EQ(dim_x.size(), 3, "X's dimension must be 3");
 
-    auto dim_idx = ctx->GetInputDim("Idx");  // [B, N, S]
+    auto dim_idx = ctx->GetInputDim("Idx");  // [B, npoints, nsample]
     PADDLE_ENFORCE_EQ(dim_idx.size(), 3, "Idx's dimension must be 3");
 
-    PADDLE_ENFORCE_EQ(
-        dim_x[0], dim_idx[0], "X and Idx dim[0] should be equal.");
+    PADDLE_ENFORCE_EQ(dim_x[0], dim_idx[0],
+                      "X and Idx dim[0] should be equal.");
 
-    // output: [B, M, S, C]
-    std::vector<int64_t> dim_out({dim_x[0], dim_idx[1], dim_idx[2], dim_x[2]});
+    // output: [B, C, M, S]
+    std::vector<int64_t> dim_out({dim_x[0], dim_x[1], dim_idx[1], dim_idx[2]});
     ctx->SetOutputDim("Out", framework::make_ddim(dim_out));
   }
 
-protected:
+ protected:
   framework::OpKernelType GetExpectedKernelType(
       const framework::ExecutionContext& ctx) const override {
     return framework::OpKernelType(ctx.Input<Tensor>("X")->type(),
@@ -55,17 +55,17 @@ protected:
 };
 
 class GroupPointsOpMaker : public framework::OpProtoAndCheckerMaker {
-public:
+ public:
   void Make() override {
     AddInput("X",
              "The input tensor of group_points operator. "
-             "This is a 3-D tensor with shape of [B, N, C].");
+             "This is a 3-D tensor with shape of [B, C, N].");
     AddInput("Idx",
              "The input tensor of nearest neighbor index of group_points "
              "operator. This is a 3-D tensor with shape of [B, M, S].");
     AddOutput("Out",
               "The output tensor of group_points operator. "
-              "This is a 4-D tensor with shape of [B, M, S, C].");
+              "This is a 4-D tensor with shape of [B, C, M, S].");
 
     AddComment(R"DOC(
           This operator group input points with index.
@@ -74,10 +74,10 @@ public:
 };
 
 class GroupPointsOpGrad : public framework::OperatorWithKernel {
-public:
+ public:
   using framework::OperatorWithKernel::OperatorWithKernel;
 
-protected:
+ protected:
   void InferShape(framework::InferShapeContext* ctx) const override {
     PADDLE_ENFORCE(ctx->HasInput("Idx"), "Input(Idx) should not be null");
     PADDLE_ENFORCE(ctx->HasInput(framework::GradVarName("Out")),
@@ -96,20 +96,21 @@ protected:
   }
 };
 
-class GroupPointsGradDescMaker : public framework::SingleGradOpDescMaker {
-public:
-  using framework::SingleGradOpDescMaker::SingleGradOpDescMaker;
+template <typename T>
+class GroupPointsGradDescMaker : public framework::SingleGradOpMaker<T> {
+ public:
+  using framework::SingleGradOpMaker<T>::SingleGradOpMaker;
 
-protected:
-  std::unique_ptr<framework::OpDesc> Apply() const override {
-    std::unique_ptr<framework::OpDesc> op(new framework::OpDesc());
-    op->SetType(ForwardOp().Type() + "_grad");
-    op->SetInput("X", Input("X"));
-    op->SetInput("Idx", Input("Idx"));
-    op->SetInput(framework::GradVarName("Out"), OutputGrad("Out"));
-    op->SetOutput(framework::GradVarName("X"), InputGrad("X"));
-    op->SetAttrMap(Attrs());
-    return op;
+ protected:
+  std::unique_ptr<T> Apply() const override {
+    auto* op = new T();
+    op->SetType("group_points_grad");
+    op->SetInput("X", this->Input("X"));
+    op->SetInput("Idx", this->Input("Idx"));
+    op->SetInput(framework::GradVarName("Out"), this->OutputGrad("Out"));
+    op->SetOutput(framework::GradVarName("X"), this->InputGrad("X"));
+    op->SetAttrMap(this->Attrs());
+    return std::unique_ptr<T>(op);
   }
 };
 
@@ -117,8 +118,7 @@ protected:
 }  // namespace paddle
 
 namespace ops = paddle::operators;
-REGISTER_OPERATOR(group_points,
-                  ops::GroupPointsOp,
-                  ops::GroupPointsOpMaker,
-                  ops::GroupPointsGradDescMaker);
+REGISTER_OPERATOR(group_points, ops::GroupPointsOp, ops::GroupPointsOpMaker,
+                  ops::GroupPointsGradDescMaker<paddle::framework::OpDesc>,
+                  ops::GroupPointsGradDescMaker<paddle::imperative::OpBase>);
 REGISTER_OPERATOR(group_points_grad, ops::GroupPointsOpGrad);

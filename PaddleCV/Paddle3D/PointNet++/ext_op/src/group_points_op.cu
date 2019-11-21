@@ -14,57 +14,68 @@
 
 #include "util.cu.h"
 
+#define TOTAL_THREADS 1024
+#define THREADS_PER_BLOCK 256
+#define DIVUP(m, n) ((m) / (n) + ((m) % (n) > 0))
+
 namespace paddle {
 namespace operators {
 
 using framework::Tensor;
 
 template <typename T>
-__global__ void KeGroupPointsFw(T* output,
-                                const T* input,
-                                const int* idx,
-                                const int b,
-                                const int n,
-                                const int c,
-                                const int ms) {
-  int nthreads = b * ms;
-  int tid = blockIdx.x * blockDim.x + threadIdx.x;
-  int stride = blockDim.x * gridDim.x;
-  for (; tid < nthreads; tid += stride) {
-    int bi = tid / ms;
+__global__ void KeGroupPointsFW(int b, int c, int n, int npoints, int nsample,
+                                const T* __restrict__ points,
+                                const int* __restrict__ idx,
+                                T* __restrict__ out) {
+  // points: (B, C, N)
+  // idx: (B, npoints, nsample)
+  // output:
+  //      out: (B, C, npoints, nsample)
+  int bs_idx = blockIdx.z;
+  int c_idx = blockIdx.y;
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int pt_idx = index / nsample;
+  if (bs_idx >= b || c_idx >= c || pt_idx >= npoints) return;
 
-    int input_base_idx = bi * n * c;
-    for (int i = 0; i < c; i++) {
-      output[tid * c + i] = input[input_base_idx + idx[tid] * c + i];
-    }
-  }
+  int sample_idx = index % nsample;
+
+  idx += bs_idx * npoints * nsample + pt_idx * nsample + sample_idx;
+  int in_idx = bs_idx * c * n + c_idx * n + idx[0];
+  int out_idx = bs_idx * c * npoints * nsample + c_idx * npoints * nsample +
+                pt_idx * nsample + sample_idx;
+
+  out[out_idx] = points[in_idx];
 }
 
 template <typename T>
-__global__ void KeGroupPointsBw(T* input_grad,
-                                const T* output_grad,
-                                const int* idx,
-                                const int b,
-                                const int n,
-                                const int c,
-                                const int ms) {
-  int nthreads = b * ms;
-  int tid = blockIdx.x * blockDim.x + threadIdx.x;
-  int stride = blockDim.x * gridDim.x;
-  for (; tid < nthreads; tid += stride) {
-    int bi = tid / ms;
 
-    int input_base_idx = bi * n * c;
-    for (int i = 0; i < c; i++) {
-      platform::CudaAtomicAdd(&input_grad[input_base_idx + idx[tid] * c + i],
-                              output_grad[tid * c + i]);
-    }
-  }
+__global__ void KeGroupPointsBW(int b, int c, int n, int npoints, int nsample,
+                                const T* __restrict__ grad_out,
+                                const int* __restrict__ idx,
+                                T* __restrict__ grad_points) {
+  // grad_out: (B, C, npoints, nsample)
+  // idx: (B, npoints, nsample)
+  // output:
+  //      grad_points: (B, C, N)
+  int bs_idx = blockIdx.z;
+  int c_idx = blockIdx.y;
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int pt_idx = index / nsample;
+  if (bs_idx >= b || c_idx >= c || pt_idx >= npoints) return;
+
+  int sample_idx = index % nsample;
+  grad_out += bs_idx * c * npoints * nsample + c_idx * npoints * nsample +
+              pt_idx * nsample + sample_idx;
+  idx += bs_idx * npoints * nsample + pt_idx * nsample + sample_idx;
+
+  platform::CudaAtomicAdd(grad_points + bs_idx * c * n + c_idx * n + idx[0],
+                          grad_out[0]);
 }
 
 template <typename T>
 class GroupPointsOpCUDAKernel : public framework::OpKernel<T> {
-public:
+ public:
   void Compute(const framework::ExecutionContext& ctx) const override {
     PADDLE_ENFORCE(platform::is_gpu_place(ctx.GetPlace()),
                    "This kernel only runs on GPU device.");
@@ -75,27 +86,24 @@ public:
     auto* idx_data = idx->data<int>();
 
     const int b = input->dims()[0];
-    const int n = input->dims()[1];
-    const int c = input->dims()[2];
+    const int c = input->dims()[1];
+    const int n = input->dims()[2];
     const int m = idx->dims()[1];
     const int s = idx->dims()[2];
 
-    auto* output_data = output->mutable_data<T>({b, m, s, c}, ctx.GetPlace());
+    auto* output_data = output->mutable_data<T>({b, c, m, s}, ctx.GetPlace());
 
-    const int ms = m * s;
-    int pixelNum = b * ms;
-    int grid_dim = (pixelNum + 512 - 1) / 512;
-    grid_dim = grid_dim > 8 ? 8 : grid_dim;
-
-    KeGroupPointsFw<
-        T><<<grid_dim, 512, 0, ctx.cuda_device_context().stream()>>>(
-        output_data, input_data, idx_data, b, n, c, ms);
+    dim3 blocks(DIVUP(m * s, THREADS_PER_BLOCK), c, b);
+    dim3 threads(THREADS_PER_BLOCK);
+    KeGroupPointsFW<
+        T><<<blocks, threads, 0, ctx.cuda_device_context().stream()>>>(
+        b, c, n, m, s, input_data, idx_data, output_data);
   }
 };
 
 template <typename T>
 class GroupPointsGradOpCUDAKernel : public framework::OpKernel<T> {
-public:
+ public:
   void Compute(const framework::ExecutionContext& ctx) const override {
     auto* input = ctx.Input<Tensor>("X");
     auto* idx = ctx.Input<Tensor>("Idx");
@@ -105,33 +113,31 @@ public:
     auto output_grad_data = output_grad->data<T>();
 
     const int b = input->dims()[0];
-    const int n = input->dims()[1];
-    const int c = input->dims()[2];
+    const int c = input->dims()[1];
+    const int n = input->dims()[2];
     const int m = idx->dims()[1];
     const int s = idx->dims()[2];
 
     auto* input_grad_data =
-        input_grad->mutable_data<T>({b, n, c}, ctx.GetPlace());
-    auto& dev_ctx = ctx.template device_context<platform::CUDADeviceContext>();
+        input_grad->mutable_data<T>({b, c, n}, ctx.GetPlace());
+    auto& dev_ctx =
+        ctx.template device_context<platform::CUDADeviceContext>();
     int pnum = input_grad->numel();
     Zero<<<(pnum + 512 - 1) / 512, 512, 0, dev_ctx.stream()>>>(input_grad_data,
                                                                pnum);
 
-    const int ms = m * s;
-    int pixelNum = b * ms;
-    int grid_dim = (pixelNum + 512 - 1) / 512;
-    grid_dim = grid_dim > 8 ? 8 : grid_dim;
+    dim3 blocks(DIVUP(m * s, THREADS_PER_BLOCK), c, b);
+    dim3 threads(THREADS_PER_BLOCK);
 
-    KeGroupPointsBw<T><<<grid_dim, 512, 0, dev_ctx.stream()>>>(
-        input_grad_data, output_grad_data, idx_data, b, n, c, ms);
+    KeGroupPointsBW<<<blocks, threads, 0, dev_ctx.stream()>>>(
+        b, c, n, m, s, output_grad_data, idx_data, input_grad_data);
   }
 };
 }  // namespace operators
 }  // namespace paddle
 
 namespace ops = paddle::operators;
-REGISTER_OP_CUDA_KERNEL(group_points,
-                        ops::GroupPointsOpCUDAKernel<float>,
+REGISTER_OP_CUDA_KERNEL(group_points, ops::GroupPointsOpCUDAKernel<float>,
                         ops::GroupPointsOpCUDAKernel<double>);
 REGISTER_OP_CUDA_KERNEL(group_points_grad,
                         ops::GroupPointsGradOpCUDAKernel<float>,

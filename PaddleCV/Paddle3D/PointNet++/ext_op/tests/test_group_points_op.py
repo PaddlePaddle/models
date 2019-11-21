@@ -22,13 +22,13 @@ import pointnet_lib
 
 def group_points_np(x, idx):
     b, m, s = idx.shape
-    _, n, c = x.shape
+    _, c, n = x.shape
 
-    output = np.zeros((b, m, s, c)).astype(x.dtype)
+    output = np.zeros((b, c, m, s)).astype(x.dtype)
     for i in range(b):
         for j in range(m):
             for k in range(s):
-                output[i, j, k, :] = x[i, idx[i, j, k], :]
+                output[i, :, j, k] = x[i, :, idx[i, j, k]]
     return output
 
 
@@ -46,7 +46,7 @@ class TestGroupPointsOp(unittest.TestCase):
         y = pointnet_lib.group_points(x, idx)
 
         x_np = np.random.uniform(-10, 10, x_shape).astype(x_type)
-        idx_np = np.random.randint(0, x_shape[1], idx_shape).astype(idx_type)
+        idx_np = np.random.randint(0, x_shape[2], idx_shape).astype(idx_type)
         out_np = group_points_np(x_np, idx_np)
 
         place = fluid.CUDAPlace(0)

@@ -88,20 +88,21 @@ protected:
   }
 };
 
-class GatherPointGradDescMaker : public framework::SingleGradOpDescMaker {
+template <typename T>
+class GatherPointGradDescMaker : public framework::SingleGradOpMaker<T> {
 public:
-  using framework::SingleGradOpDescMaker::SingleGradOpDescMaker;
+  using framework::SingleGradOpMaker<T>::SingleGradOpMaker;
 
 protected:
-  std::unique_ptr<framework::OpDesc> Apply() const override {
-    std::unique_ptr<framework::OpDesc> op(new framework::OpDesc());
+  std::unique_ptr<T> Apply() const override {
+    auto* op = new T();
     op->SetType("gather_point_grad");
-    op->SetInput("X", Input("X"));
-    op->SetInput("Index", Input("Index"));
-    op->SetInput(framework::GradVarName("Output"), OutputGrad("Output"));
-    op->SetOutput(framework::GradVarName("X"), InputGrad("X"));
-    op->SetAttrMap(Attrs());
-    return op;
+    op->SetInput("X", this->Input("X"));
+    op->SetInput("Index", this->Input("Index"));
+    op->SetInput(framework::GradVarName("Output"), this->OutputGrad("Output"));
+    op->SetOutput(framework::GradVarName("X"), this->InputGrad("X"));
+    op->SetAttrMap(this->Attrs());
+    return std::unique_ptr<T>(op);
   }
 };
 
@@ -112,5 +113,6 @@ namespace ops = paddle::operators;
 REGISTER_OPERATOR(gather_point,
                   ops::GatherPointOp,
                   ops::GatherPointOpMaker,
-                  ops::GatherPointGradDescMaker);
+                  ops::GatherPointGradDescMaker<paddle::framework::OpDesc>,
+                  ops::GatherPointGradDescMaker<paddle::imperative::OpBase>);
 REGISTER_OPERATOR(gather_point_grad, ops::GatherPointOpGrad);
