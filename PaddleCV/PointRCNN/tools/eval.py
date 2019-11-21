@@ -28,7 +28,7 @@ import paddle.fluid as fluid
 from models.point_rcnn import PointRCNN
 from data.kitti_rcnn_reader import KittiRCNNReader
 from utils.run_utils import check_gpu, parse_outputs, Stat
-from utils.config import cfg, load_config
+from utils.config import cfg, load_config, set_config_from_list
 from utils.metric_utils import calc_iou_recall, rpn_metric, rcnn_metric
 
 logging.root.handlers = []
@@ -57,6 +57,7 @@ def parse_args():
         '--eval_mode',
         type=str,
         default='rpn',
+        required=True,
         help='specify the training mode')
     parser.add_argument(
         '--batch_size',
@@ -103,6 +104,12 @@ def parse_args():
         type=int,
         default=1,
         help='mini-batch interval to log.')
+    parser.add_argument(
+        '--set',
+        dest='set_cfgs',
+        default=None,
+        nargs=argparse.REMAINDER,
+        help='set extra config keys if needed.')
     args = parser.parse_args()
     return args
 
@@ -113,6 +120,8 @@ def eval():
     check_gpu(args.use_gpu)
 
     load_config(args.cfg)
+    if args.set_cfgs is not None:
+        set_config_from_list(args.set_cfgs)
 
     if not os.path.isdir(args.output_dir):
         os.makedirs(args.output_dir)
@@ -123,9 +132,11 @@ def eval():
     elif args.eval_mode == 'rcnn':
         cfg.RCNN.ENABLED = True
         cfg.RPN.ENABLED = cfg.RPN.FIXED = True
+        assert args.batch_size, "batch size must be 1 in rcnn evaluation"
     elif args.eval_mode == 'rcnn_offline':
         cfg.RCNN.ENABLED = True
         cfg.RPN.ENABLED = False
+        assert args.batch_size, "batch size must be 1 in rcnn_offline evaluation"
     else:
         raise NotImplementedError("unkown eval mode: {}".format(args.eval_mode))
 

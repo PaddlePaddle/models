@@ -54,16 +54,19 @@ def parse_args():
         '--train_mode',
         type=str,
         default='rpn',
+        required=True,
         help='specify the training mode')
     parser.add_argument(
         '--batch_size',
         type=int,
         default=16,
+        required=True,
         help='training batch size, default 16')
     parser.add_argument(
         '--epoch',
         type=int,
         default=200,
+        required=True,
         help='epoch number. default 200.')
     parser.add_argument(
         '--save_dir',
@@ -117,9 +120,6 @@ def train():
 
     load_config(args.cfg)
 
-    if not os.path.isdir(args.save_dir):
-        os.makedirs(args.save_dir)
-
     if args.train_mode == 'rpn':
         cfg.RPN.ENABLED = True
         cfg.RCNN.ENABLED = False
@@ -131,6 +131,10 @@ def train():
         cfg.RPN.ENABLED = False
     else:
         raise NotImplementedError("unknown train mode: {}".format(train_mode))
+
+    checkpoints_dir = os.path.join(args.save_dir, train_mode)
+    if not os.path.isdir(checkpoints_dir):
+        os.makedirs(args.checkpoints_dir)
 
     kitti_rcnn_reader = KittiRCNNReader(data_dir=args.data_dir,
                                     npoints=cfg.RPN.NUM_POINTS,
@@ -221,7 +225,7 @@ def train():
                 train_iter += 1
         except fluid.core.EOFException:
             logger.info("[TRAIN] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, train_stat.get_mean_log(), np.mean(train_periods[2:])))
-            save_model(exe, train_prog, os.path.join(args.save_dir, str(epoch_id)))
+            save_model(exe, train_prog, os.path.join(checkpoints_dir, str(epoch_id)))
             train_stat.reset()
             train_periods = []
         finally:

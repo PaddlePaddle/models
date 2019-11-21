@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import yaml
 import numpy as np
+from ast import literal_eval
 
 __all__ = ["load_config", "cfg"]
 
@@ -232,6 +233,26 @@ def load_config(fname):
     with open(fname) as f:
         yml_cfg = AttrDict(yaml.load(f.read(), Loader=yaml.Loader))
     _merge_cfg_a_to_b(yml_cfg, __C)
+
+
+def set_config_from_list(cfg_list):
+    assert len(cfg_list) % 2 == 0, "cfgs list length invalid"
+    for k, v in zip(cfg_list[0::2], cfg_list[1::2]):
+        key_list = k.split('.')
+        d = __C
+        for subkey in key_list[:-1]:
+            assert subkey in d
+            d = d[subkey]
+        subkey = key_list[-1]
+        assert subkey in d
+        try:
+            value = literal_eval(v)
+        except:
+            # handle the case when v is a string literal
+            value = v
+        assert type(value) == type(d[subkey]), \
+            'type {} does not match original type {}'.format(type(value), type(d[subkey]))
+        d[subkey] = value
 
 
 def _merge_cfg_a_to_b(a, b):
