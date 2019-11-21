@@ -31,7 +31,9 @@ from PIL import Image, ImageEnhance
 from ppdet.core.workspace import serializable
 
 from .op_helper import (satisfy_sample_constraint, filter_and_process,
-                        generate_sample_bbox, clip_bbox)
+                        generate_sample_bbox, clip_bbox, data_anchor_sampling,
+                        satisfy_sample_constraint_coverage, crop_image_sampling,
+                        generate_sample_bbox_square, bbox_area_sampling)
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +84,7 @@ class DecodeImage(BaseOperator):
 
         Args:
             to_rgb (bool): whether to convert BGR to RGB
+            with_mixup (bool): whether or not to mixup image and gt_bbbox/gt_score
         """
 
         super(DecodeImage, self).__init__()
@@ -115,6 +118,105 @@ class DecodeImage(BaseOperator):
         # decode mixup image
         if self.with_mixup and 'mixup' in sample:
             self.__call__(sample['mixup'], context)
+        return sample
+
+
+@register_op
+class MultiscaleTestResize(BaseOperator):
+    def __init__(self,
+                 origin_target_size=800,
+                 origin_max_size=1333,
+                 target_size=[],
+                 max_size=2000,
+                 interp=cv2.INTER_LINEAR,
+                 use_flip=True):
+        """
+        Rescale image to the each size in target size, and capped at max_size.
+
+        Args:
+            origin_target_size(int): original target size of image's short side.
+            origin_max_size(int): original max size of image.
+            target_size (list): A list of target sizes of image's short side.
+            max_size (int): the max size of image.
+            interp (int): the interpolation method.
+            use_flip (bool): whether use flip augmentation.
+        """
+        super(MultiscaleTestResize, self).__init__()
+        self.origin_target_size = int(origin_target_size)
+        self.origin_max_size = int(origin_max_size)
+        self.max_size = int(max_size)
+        self.interp = int(interp)
+        self.use_flip = use_flip
+
+        if not isinstance(target_size, list):
+            raise TypeError(
+                "Type of target_size is invalid. Must be List, now is {}".
+                format(type(target_size)))
+        self.target_size = target_size
+        if not (isinstance(self.origin_target_size, int) and isinstance(
+                self.origin_max_size, int) and isinstance(self.max_size, int)
+                and isinstance(self.interp, int)):
+            raise TypeError("{}: input type is invalid.".format(self))
+
+    def __call__(self, sample, context=None):
+        """ Resize the image numpy for multi-scale test.
+        """
+        origin_ims = {}
+        im = sample['image']
+        if not isinstance(im, np.ndarray):
+            raise TypeError("{}: image type is not numpy.".format(self))
+        if len(im.shape) != 3:
+            raise ImageError('{}: image is not 3-dimensional.'.format(self))
+        im_shape = im.shape
+        im_size_min = np.min(im_shape[0:2])
+        im_size_max = np.max(im_shape[0:2])
+        if float(im_size_min) == 0:
+            raise ZeroDivisionError('{}: min size of image is 0'.format(self))
+        base_name_list = ['image']
+        origin_ims['image'] = im
+        if self.use_flip:
+            sample['flip_image'] = im[:, ::-1, :]
+            base_name_list.append('flip_image')
+            origin_ims['flip_image'] = sample['flip_image']
+        im_info = []
+        for base_name in base_name_list:
+            im_scale = float(self.origin_target_size) / float(im_size_min)
+            # Prevent the biggest axis from being more than max_size
+            if np.round(im_scale * im_size_max) > self.origin_max_size:
+                im_scale = float(self.origin_max_size) / float(im_size_max)
+            im_scale_x = im_scale
+            im_scale_y = im_scale
+
+            resize_w = np.round(im_scale_x * float(im_shape[1]))
+            resize_h = np.round(im_scale_y * float(im_shape[0]))
+            im_resize = cv2.resize(
+                origin_ims[base_name],
+                None,
+                None,
+                fx=im_scale_x,
+                fy=im_scale_y,
+                interpolation=self.interp)
+            im_info.extend([resize_h, resize_w, im_scale])
+            sample[base_name] = im_resize
+            for i, size in enumerate(self.target_size):
+                im_scale = float(size) / float(im_size_min)
+                if np.round(im_scale * im_size_max) > self.max_size:
+                    im_scale = float(self.max_size) / float(im_size_max)
+                im_scale_x = im_scale
+                im_scale_y = im_scale
+                resize_w = np.round(im_scale_x * float(im_shape[1]))
+                resize_h = np.round(im_scale_y * float(im_shape[0]))
+                im_resize = cv2.resize(
+                    origin_ims[base_name],
+                    None,
+                    None,
+                    fx=im_scale_x,
+                    fy=im_scale_y,
+                    interpolation=self.interp)
+                im_info.extend([resize_h, resize_w, im_scale])
+                name = base_name + '_scale_' + str(i)
+                sample[name] = im_resize
+        sample['im_info'] = np.array(im_info, dtype=np.float32)
         return sample
 
 
@@ -153,7 +255,7 @@ class ResizeImage(BaseOperator):
             raise TypeError("{}: input type is invalid.".format(self))
 
     def __call__(self, sample, context=None):
-        """ Resise the image numpy.
+        """ Resize the image numpy.
         """
         im = sample['image']
         if not isinstance(im, np.ndarray):
@@ -180,9 +282,12 @@ class ResizeImage(BaseOperator):
 
             resize_w = np.round(im_scale_x * float(im_shape[1]))
             resize_h = np.round(im_scale_y * float(im_shape[0]))
-
-            sample['im_info'] = np.array(
-                [resize_h, resize_w, im_scale], dtype=np.float32)
+            im_info = [resize_h, resize_w, im_scale]
+            if 'im_info' in sample and sample['im_info'][2] != 1.:
+                sample['im_info'] = np.append(
+                    list(sample['im_info']), im_info).astype(np.float32)
+            else:
+                sample['im_info'] = np.array(im_info).astype(np.float32)
         else:
             im_scale_x = float(selected_size) / float(im_shape[1])
             im_scale_y = float(selected_size) / float(im_shape[0])
@@ -328,19 +433,21 @@ class NormalizeImage(BaseOperator):
             1.(optional) Scale the image to [0,1]
             2. Each pixel minus mean and is divided by std
         """
-        im = sample['image']
-        im = im.astype(np.float32, copy=False)
-        if self.is_channel_first:
-            mean = np.array(self.mean)[:, np.newaxis, np.newaxis]
-            std = np.array(self.std)[:, np.newaxis, np.newaxis]
-        else:
-            mean = np.array(self.mean)[np.newaxis, np.newaxis, :]
-            std = np.array(self.std)[np.newaxis, np.newaxis, :]
-        if self.is_scale:
-            im = im / 255.0
-        im -= mean
-        im /= std
-        sample['image'] = im
+        for k in sample.keys():
+            if 'image' in k:
+                im = sample[k]
+                im = im.astype(np.float32, copy=False)
+                if self.is_channel_first:
+                    mean = np.array(self.mean)[:, np.newaxis, np.newaxis]
+                    std = np.array(self.std)[:, np.newaxis, np.newaxis]
+                else:
+                    mean = np.array(self.mean)[np.newaxis, np.newaxis, :]
+                    std = np.array(self.std)[np.newaxis, np.newaxis, :]
+                if self.is_scale:
+                    im = im / 255.0
+                im -= mean
+                im /= std
+                sample[k] = im
         return sample
 
 
@@ -459,7 +566,7 @@ class ExpandImage(BaseOperator):
     def __init__(self, max_ratio, prob, mean=[127.5, 127.5, 127.5]):
         """
         Args:
-            ratio (float): the ratio of expanding
+            max_ratio (float): the ratio of expanding
             prob (float): the probability of expanding image
             mean (list): the pixel mean
         """
@@ -472,7 +579,7 @@ class ExpandImage(BaseOperator):
         """
         Expand the image and modify bounding box.
         Operators:
-            1. Scale the image weight and height.
+            1. Scale the image width and height.
             2. Construct new images with new height and width.
             3. Fill the new image with the mean.
             4. Put original imge into new image.
@@ -525,8 +632,6 @@ class CropImage(BaseOperator):
             batch_sampler (list): Multiple sets of different
                                   parameters for cropping.
             satisfy_all (bool): whether all boxes must satisfy.
-            avoid_no_bbox (bool): whether to to avoid the 
-                                  situation where the box does not appear.
             e.g.[[1, 1, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.1, 1.0],
                  [1, 50, 0.3, 1.0, 0.5, 2.0, 0.3, 1.0],
@@ -537,6 +642,8 @@ class CropImage(BaseOperator):
            [max sample, max trial, min scale, max scale,
             min aspect ratio, max aspect ratio,
             min overlap, max overlap]
+            avoid_no_bbox (bool): whether to to avoid the 
+                                  situation where the box does not appear.
         """
         super(CropImage, self).__init__()
         self.batch_sampler = batch_sampler
@@ -547,7 +654,7 @@ class CropImage(BaseOperator):
         """
         Crop the image and modify bounding box.
         Operators:
-            1. Scale the image weight and height.
+            1. Scale the image width and height.
             2. Crop the image according to a radom sample.
             3. Rescale the bounding box.
             4. Determine if the new bbox is satisfied in the new image.
@@ -599,6 +706,151 @@ class CropImage(BaseOperator):
 
 
 @register_op
+class CropImageWithDataAchorSampling(BaseOperator):
+    def __init__(self,
+                 batch_sampler,
+                 anchor_sampler=None,
+                 target_size=None,
+                 das_anchor_scales=[16, 32, 64, 128],
+                 sampling_prob=0.5,
+                 min_size=8.,
+                 avoid_no_bbox=True):
+        """
+        Args:
+            anchor_sampler (list): anchor_sampling sets of different
+                                  parameters for cropping.
+            batch_sampler (list): Multiple sets of different
+                                  parameters for cropping.
+              e.g.[[1, 10, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.2, 0.0]]
+                  [[1, 50, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                   [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                   [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                   [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0],
+                   [1, 50, 0.3, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]]
+              [max sample, max trial, min scale, max scale,
+               min aspect ratio, max aspect ratio,
+               min overlap, max overlap, min coverage, max coverage]
+            target_size (bool): target image size.
+            das_anchor_scales (list[float]): a list of anchor scales in data
+                anchor smapling.
+            min_size (float): minimum size of sampled bbox.
+            avoid_no_bbox (bool): whether to to avoid the
+                                  situation where the box does not appear.
+        """
+        super(CropImageWithDataAchorSampling, self).__init__()
+        self.anchor_sampler = anchor_sampler
+        self.batch_sampler = batch_sampler
+        self.target_size = target_size
+        self.sampling_prob = sampling_prob
+        self.min_size = min_size
+        self.avoid_no_bbox = avoid_no_bbox
+        self.das_anchor_scales = np.array(das_anchor_scales)
+
+    def __call__(self, sample, context):
+        """
+        Crop the image and modify bounding box.
+        Operators:
+            1. Scale the image width and height.
+            2. Crop the image according to a radom sample.
+            3. Rescale the bounding box.
+            4. Determine if the new bbox is satisfied in the new image.
+        Returns:
+            sample: the image, bounding box are replaced.
+        """
+        assert 'image' in sample, "image data not found"
+        im = sample['image']
+        gt_bbox = sample['gt_bbox']
+        gt_class = sample['gt_class']
+        image_width = sample['w']
+        image_height = sample['h']
+        gt_score = None
+        if 'gt_score' in sample:
+            gt_score = sample['gt_score']
+        sampled_bbox = []
+        gt_bbox = gt_bbox.tolist()
+
+        prob = np.random.uniform(0., 1.)
+        if prob > self.sampling_prob:  # anchor sampling
+            assert self.anchor_sampler
+            for sampler in self.anchor_sampler:
+                found = 0
+                for i in range(sampler[1]):
+                    if found >= sampler[0]:
+                        break
+                    sample_bbox = data_anchor_sampling(
+                        gt_bbox, image_width, image_height,
+                        self.das_anchor_scales, self.target_size)
+                    if sample_bbox == 0:
+                        break
+                    if satisfy_sample_constraint_coverage(sampler, sample_bbox,
+                                                          gt_bbox):
+                        sampled_bbox.append(sample_bbox)
+                        found = found + 1
+            im = np.array(im)
+            while sampled_bbox:
+                idx = int(np.random.uniform(0, len(sampled_bbox)))
+                sample_bbox = sampled_bbox.pop(idx)
+
+                crop_bbox, crop_class, crop_score = filter_and_process(
+                    sample_bbox, gt_bbox, gt_class, gt_score)
+                crop_bbox, crop_class, crop_score = bbox_area_sampling(
+                    crop_bbox, crop_class, crop_score, self.target_size,
+                    self.min_size)
+
+                if self.avoid_no_bbox:
+                    if len(crop_bbox) < 1:
+                        continue
+                im = crop_image_sampling(im, sample_bbox, image_width,
+                                         image_height, self.target_size)
+                sample['image'] = im
+                sample['gt_bbox'] = crop_bbox
+                sample['gt_class'] = crop_class
+                sample['gt_score'] = crop_score
+                return sample
+            return sample
+
+        else:
+            for sampler in self.batch_sampler:
+                found = 0
+                for i in range(sampler[1]):
+                    if found >= sampler[0]:
+                        break
+                    sample_bbox = generate_sample_bbox_square(
+                        sampler, image_width, image_height)
+                    if satisfy_sample_constraint_coverage(sampler, sample_bbox,
+                                                          gt_bbox):
+                        sampled_bbox.append(sample_bbox)
+                        found = found + 1
+            im = np.array(im)
+            while sampled_bbox:
+                idx = int(np.random.uniform(0, len(sampled_bbox)))
+                sample_bbox = sampled_bbox.pop(idx)
+                sample_bbox = clip_bbox(sample_bbox)
+
+                crop_bbox, crop_class, crop_score = filter_and_process(
+                    sample_bbox, gt_bbox, gt_class, gt_score)
+                # sampling bbox according the bbox area
+                crop_bbox, crop_class, crop_score = bbox_area_sampling(
+                    crop_bbox, crop_class, crop_score, self.target_size,
+                    self.min_size)
+
+                if self.avoid_no_bbox:
+                    if len(crop_bbox) < 1:
+                        continue
+                xmin = int(sample_bbox[0] * image_width)
+                xmax = int(sample_bbox[2] * image_width)
+                ymin = int(sample_bbox[1] * image_height)
+                ymax = int(sample_bbox[3] * image_height)
+                im = im[ymin:ymax, xmin:xmax]
+                sample['image'] = im
+                sample['gt_bbox'] = crop_bbox
+                sample['gt_class'] = crop_class
+                sample['gt_score'] = crop_score
+                return sample
+            return sample
+
+
+@register_op
 class NormalizeBox(BaseOperator):
     """Transform the bounding box's coornidates to [0,1]."""
 
@@ -637,13 +889,15 @@ class Permute(BaseOperator):
 
     def __call__(self, sample, context=None):
         assert 'image' in sample, "image data not found"
-        im = sample['image']
-        if self.channel_first:
-            im = np.swapaxes(im, 1, 2)
-            im = np.swapaxes(im, 1, 0)
-        if self.to_bgr:
-            im = im[[2, 1, 0], :, :]
-        sample['image'] = im
+        for k in sample.keys():
+            if 'image' in k:
+                im = sample[k]
+                if self.channel_first:
+                    im = np.swapaxes(im, 1, 2)
+                    im = np.swapaxes(im, 1, 0)
+                if self.to_bgr:
+                    im = im[[2, 1, 0], :, :]
+                sample[k] = im
         return sample
 
 

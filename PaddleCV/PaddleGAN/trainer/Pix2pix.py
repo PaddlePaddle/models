@@ -56,6 +56,9 @@ class GTrainer():
                 self.g_loss_gan = fluid.layers.mean(
                     fluid.layers.sigmoid_cross_entropy_with_logits(
                         x=self.pred, label=ones))
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
 
             self.g_loss_L1 = fluid.layers.reduce_mean(
                 fluid.layers.abs(
@@ -140,6 +143,10 @@ class DTrainer():
                 self.d_loss_fake = fluid.layers.mean(
                     fluid.layers.sigmoid_cross_entropy_with_logits(
                         x=self.pred_fake, label=zeros))
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
+
             self.d_loss = 0.5 * (self.d_loss_real + self.d_loss_fake)
             vars = []
             for var in self.program.list_vars():
@@ -195,21 +202,27 @@ class Pix2pix(object):
                  cfg=None,
                  train_reader=None,
                  test_reader=None,
-                 batch_num=1):
+                 batch_num=1,
+                 id2name=None):
         self.cfg = cfg
         self.train_reader = train_reader
         self.test_reader = test_reader
         self.batch_num = batch_num
+        self.id2name = id2name
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.crop_size, self.cfg.crop_size]
+        data_shape = [None, 3, self.cfg.crop_size, self.cfg.crop_size]
 
-        input_A = fluid.layers.data(
-            name='input_A', shape=data_shape, dtype='float32')
-        input_B = fluid.layers.data(
-            name='input_B', shape=data_shape, dtype='float32')
-        input_fake = fluid.layers.data(
+        input_A = fluid.data(name='input_A', shape=data_shape, dtype='float32')
+        input_B = fluid.data(name='input_B', shape=data_shape, dtype='float32')
+        input_fake = fluid.data(
             name='input_fake', shape=data_shape, dtype='float32')
+
+        loader = fluid.io.DataLoader.from_generator(
+            feed_list=[input_A, input_B],
+            capacity=4,
+            iterable=True,
+            use_double_buffer=True)
 
         gen_trainer = GTrainer(input_A, input_B, self.cfg, self.batch_num)
         dis_trainer = DTrainer(input_A, input_B, input_fake, self.cfg,
@@ -217,6 +230,10 @@ class Pix2pix(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
+        loader.set_batch_generator(
+            self.train_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -226,8 +243,6 @@ class Pix2pix(object):
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
-        build_strategy.memory_optimize = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
@@ -242,13 +257,10 @@ class Pix2pix(object):
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            for i in range(self.batch_num):
-                data_A, data_B = next(self.train_reader())
-                tensor_A = fluid.LoDTensor()
-                tensor_B = fluid.LoDTensor()
-                tensor_A.set(data_A, place)
-                tensor_B.set(data_B, place)
+            for tensor in loader():
                 s_time = time.time()
+
+                tensor_A, tensor_B = tensor[0]['input_A'], tensor[0]['input_B']
                 # optimize the generator network
                 g_loss_gan, g_loss_l1, fake_B_tmp = exe.run(
                     gen_trainer_program,
@@ -256,8 +268,7 @@ class Pix2pix(object):
                         gen_trainer.g_loss_gan, gen_trainer.g_loss_L1,
                         gen_trainer.fake_B
                     ],
-                    feed={"input_A": tensor_A,
-                          "input_B": tensor_B})
+                    feed=tensor)
 
                 # optimize the discriminator network
                 d_loss_real, d_loss_fake = exe.run(dis_trainer_program,
@@ -277,7 +288,7 @@ class Pix2pix(object):
                     print("epoch{}: batch{}: \n\
                          g_loss_gan: {}; g_loss_l1: {}; \n\
                          d_loss_real: {}; d_loss_fake: {}; \n\
-                         Batch_time_cost: {:.2f}"
+                         Batch_time_cost: {}"
                           .format(epoch_id, batch_id, g_loss_gan[0], g_loss_l1[
                               0], d_loss_real[0], d_loss_fake[0], batch_time))
 
@@ -285,10 +296,29 @@ class Pix2pix(object):
                 batch_id += 1
 
             if self.cfg.run_test:
+                image_name = fluid.data(
+                    name='image_name',
+                    shape=[None, self.cfg.batch_size],
+                    dtype="int32")
+                test_loader = fluid.io.DataLoader.from_generator(
+                    feed_list=[input_A, input_B, image_name],
+                    capacity=4,
+                    iterable=True,
+                    use_double_buffer=True)
+                test_loader.set_batch_generator(
+                    self.test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
-                utility.save_test_image(epoch_id, self.cfg, exe, place,
-                                        test_program, gen_trainer,
-                                        self.test_reader)
+                utility.save_test_image(
+                    epoch_id,
+                    self.cfg,
+                    exe,
+                    place,
+                    test_program,
+                    gen_trainer,
+                    test_loader,
+                    A_id2name=self.id2name)
 
             if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,

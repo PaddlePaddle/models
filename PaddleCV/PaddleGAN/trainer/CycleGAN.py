@@ -18,6 +18,7 @@ from __future__ import print_function
 from network.CycleGAN_network import CycleGAN_model
 from util import utility
 import paddle.fluid as fluid
+import paddle
 import sys
 import time
 
@@ -215,25 +216,39 @@ class CycleGAN(object):
                  B_reader=None,
                  A_test_reader=None,
                  B_test_reader=None,
-                 batch_num=1):
+                 batch_num=1,
+                 A_id2name=None,
+                 B_id2name=None):
         self.cfg = cfg
         self.A_reader = A_reader
         self.B_reader = B_reader
         self.A_test_reader = A_test_reader
         self.B_test_reader = B_test_reader
         self.batch_num = batch_num
+        self.A_id2name = A_id2name
+        self.B_id2name = B_id2name
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.crop_size, self.cfg.crop_size]
+        data_shape = [None, 3, self.cfg.crop_size, self.cfg.crop_size]
 
-        input_A = fluid.layers.data(
-            name='input_A', shape=data_shape, dtype='float32')
-        input_B = fluid.layers.data(
-            name='input_B', shape=data_shape, dtype='float32')
-        fake_pool_A = fluid.layers.data(
+        input_A = fluid.data(name='input_A', shape=data_shape, dtype='float32')
+        input_B = fluid.data(name='input_B', shape=data_shape, dtype='float32')
+        fake_pool_A = fluid.data(
             name='fake_pool_A', shape=data_shape, dtype='float32')
-        fake_pool_B = fluid.layers.data(
+        fake_pool_B = fluid.data(
             name='fake_pool_B', shape=data_shape, dtype='float32')
+
+        A_py_reader = fluid.io.PyReader(
+            feed_list=[input_A],
+            capacity=4,
+            iterable=True,
+            use_double_buffer=True)
+
+        B_py_reader = fluid.io.PyReader(
+            feed_list=[input_B],
+            capacity=4,
+            iterable=True,
+            use_double_buffer=True)
 
         gen_trainer = GTrainer(input_A, input_B, self.cfg, self.batch_num)
         d_A_trainer = DATrainer(input_B, fake_pool_B, self.cfg, self.batch_num)
@@ -241,6 +256,16 @@ class CycleGAN(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
+
+        A_py_reader.decorate_batch_generator(
+            self.A_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
+        B_py_reader.decorate_batch_generator(
+            self.B_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
+
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -255,7 +280,6 @@ class CycleGAN(object):
         ### memory optim
         build_strategy = fluid.BuildStrategy()
         build_strategy.enable_inplace = True
-        build_strategy.memory_optimize = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
@@ -270,20 +294,14 @@ class CycleGAN(object):
                 loss_name=d_B_trainer.d_loss_B.name,
                 build_strategy=build_strategy)
 
-        losses = [[], []]
         t_time = 0
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            for i in range(self.batch_num):
-                data_A = next(self.A_reader())
-                data_B = next(self.B_reader())
-                tensor_A = fluid.LoDTensor()
-                tensor_B = fluid.LoDTensor()
-                tensor_A.set(data_A, place)
-                tensor_B.set(data_B, place)
+            for data_A, data_B in zip(A_py_reader(), B_py_reader()):
                 s_time = time.time()
-                # optimize the g_A network
+                tensor_A, tensor_B = data_A[0]['input_A'], data_B[0]['input_B']
+                ## optimize the g_A network
                 g_A_loss, g_A_cyc_loss, g_A_idt_loss, g_B_loss, g_B_cyc_loss,\
                 g_B_idt_loss, fake_A_tmp, fake_B_tmp = exe.run(
                     gen_trainer_program,
@@ -319,21 +337,51 @@ class CycleGAN(object):
                     print("epoch{}: batch{}: \n\
                          d_A_loss: {}; g_A_loss: {}; g_A_cyc_loss: {}; g_A_idt_loss: {}; \n\
                          d_B_loss: {}; g_B_loss: {}; g_B_cyc_loss: {}; g_B_idt_loss: {}; \n\
-                         Batch_time_cost: {:.2f}".format(
+                         Batch_time_cost: {}".format(
                         epoch_id, batch_id, d_A_loss[0], g_A_loss[0],
                         g_A_cyc_loss[0], g_A_idt_loss[0], d_B_loss[0], g_B_loss[
                             0], g_B_cyc_loss[0], g_B_idt_loss[0], batch_time))
 
-                losses[0].append(g_A_loss[0])
-                losses[1].append(d_A_loss[0])
                 sys.stdout.flush()
                 batch_id += 1
 
             if self.cfg.run_test:
+                A_image_name = fluid.data(
+                    name='A_image_name', shape=[None, 1], dtype='int32')
+                B_image_name = fluid.data(
+                    name='B_image_name', shape=[None, 1], dtype='int32')
+                A_test_py_reader = fluid.io.PyReader(
+                    feed_list=[input_A, A_image_name],
+                    capacity=4,
+                    iterable=True,
+                    use_double_buffer=True)
+
+                B_test_py_reader = fluid.io.PyReader(
+                    feed_list=[input_B, B_image_name],
+                    capacity=4,
+                    iterable=True,
+                    use_double_buffer=True)
+
+                A_test_py_reader.decorate_batch_generator(
+                    self.A_test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
+                B_test_py_reader.decorate_batch_generator(
+                    self.B_test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
-                utility.save_test_image(epoch_id, self.cfg, exe, place,
-                                        test_program, gen_trainer,
-                                        self.A_test_reader, self.B_test_reader)
+                utility.save_test_image(
+                    epoch_id,
+                    self.cfg,
+                    exe,
+                    place,
+                    test_program,
+                    gen_trainer,
+                    A_test_py_reader,
+                    B_test_py_reader,
+                    A_id2name=self.A_id2name,
+                    B_id2name=self.B_id2name)
 
             if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,

@@ -34,12 +34,27 @@ def cal_padding(img_size, stride, filter_size, dilation=1):
     return out_size // 2, out_size - out_size // 2
 
 
-def norm_layer(input, norm_type='batch_norm', name=None, is_test=False):
+def norm_layer(input,
+               norm_type='batch_norm',
+               name=None,
+               is_test=False,
+               affine=True):
     if norm_type == 'batch_norm':
-        param_attr = fluid.ParamAttr(
-            name=name + '_w', initializer=fluid.initializer.Constant(1.0))
-        bias_attr = fluid.ParamAttr(
-            name=name + '_b', initializer=fluid.initializer.Constant(value=0.0))
+        if affine == True:
+            param_attr = fluid.ParamAttr(
+                name=name + '_w', initializer=fluid.initializer.Constant(1.0))
+            bias_attr = fluid.ParamAttr(
+                name=name + '_b',
+                initializer=fluid.initializer.Constant(value=0.0))
+        else:
+            param_attr = fluid.ParamAttr(
+                name=name + '_w',
+                initializer=fluid.initializer.Constant(1.0),
+                trainable=False)
+            bias_attr = fluid.ParamAttr(
+                name=name + '_b',
+                initializer=fluid.initializer.Constant(value=0.0),
+                trainable=False)
         return fluid.layers.batch_norm(
             input,
             param_attr=param_attr,
@@ -49,32 +64,29 @@ def norm_layer(input, norm_type='batch_norm', name=None, is_test=False):
             moving_variance_name=name + '_var')
 
     elif norm_type == 'instance_norm':
-        helper = fluid.layer_helper.LayerHelper("instance_norm", **locals())
-        dtype = helper.input_dtype()
-        epsilon = 1e-5
-        mean = fluid.layers.reduce_mean(input, dim=[2, 3], keep_dim=True)
-        var = fluid.layers.reduce_mean(
-            fluid.layers.square(input - mean), dim=[2, 3], keep_dim=True)
         if name is not None:
             scale_name = name + "_scale"
             offset_name = name + "_offset"
-        scale_param = fluid.ParamAttr(
-            name=scale_name,
-            initializer=fluid.initializer.Constant(1.0),
-            trainable=True)
-        offset_param = fluid.ParamAttr(
-            name=offset_name,
-            initializer=fluid.initializer.Constant(0.0),
-            trainable=True)
-        scale = helper.create_parameter(
-            attr=scale_param, shape=input.shape[1:2], dtype=dtype)
-        offset = helper.create_parameter(
-            attr=offset_param, shape=input.shape[1:2], dtype=dtype)
-
-        tmp = fluid.layers.elementwise_mul(x=(input - mean), y=scale, axis=1)
-        tmp = tmp / fluid.layers.sqrt(var + epsilon)
-        tmp = fluid.layers.elementwise_add(tmp, offset, axis=1)
-        return tmp
+        if affine:
+            scale_param = fluid.ParamAttr(
+                name=scale_name,
+                initializer=fluid.initializer.Constant(1.0),
+                trainable=True)
+            offset_param = fluid.ParamAttr(
+                name=offset_name,
+                initializer=fluid.initializer.Constant(0.0),
+                trainable=True)
+        else:
+            scale_param = fluid.ParamAttr(
+                name=scale_name,
+                initializer=fluid.initializer.Constant(1.0),
+                trainable=False)
+            offset_param = fluid.ParamAttr(
+                name=offset_name,
+                initializer=fluid.initializer.Constant(0.0),
+                trainable=False)
+        return fluid.layers.instance_norm(
+            input, param_attr=scale_param, bias_attr=offset_param)
     else:
         raise NotImplementedError("norm type: [%s] is not support" % norm_type)
 
@@ -131,7 +143,7 @@ def conv2d(input,
            name="conv2d",
            norm=None,
            activation_fn=None,
-           relufactor=0.0,
+           relufactor=0.2,
            use_bias=False,
            padding_type=None,
            initial="normal",
@@ -156,7 +168,7 @@ def conv2d(input,
     if padding_type == "SAME":
         top_padding, bottom_padding = cal_padding(input.shape[2], stride,
                                                   filter_size)
-        left_padding, right_padding = cal_padding(input.shape[2], stride,
+        left_padding, right_padding = cal_padding(input.shape[3], stride,
                                                   filter_size)
         height_padding = bottom_padding
         width_padding = right_padding
@@ -193,6 +205,9 @@ def conv2d(input,
     if activation_fn == 'relu':
         conv = fluid.layers.relu(conv, name=name + '_relu')
     elif activation_fn == 'leaky_relu':
+        if relufactor == 0.0:
+            raise Warning(
+                "the activation is leaky_relu, but the relufactor is 0")
         conv = fluid.layers.leaky_relu(
             conv, alpha=relufactor, name=name + '_leaky_relu')
     elif activation_fn == 'tanh':
@@ -218,7 +233,7 @@ def deconv2d(input,
              name="deconv2d",
              norm=None,
              activation_fn=None,
-             relufactor=0.0,
+             relufactor=0.2,
              use_bias=False,
              padding_type=None,
              output_size=None,
@@ -244,7 +259,7 @@ def deconv2d(input,
     if padding_type == "SAME":
         top_padding, bottom_padding = cal_padding(input.shape[2], stride,
                                                   filter_size)
-        left_padding, right_padding = cal_padding(input.shape[2], stride,
+        left_padding, right_padding = cal_padding(input.shape[3], stride,
                                                   filter_size)
         height_padding = bottom_padding
         width_padding = right_padding
@@ -272,7 +287,7 @@ def deconv2d(input,
         param_attr=param_attr,
         bias_attr=bias_attr)
 
-    if outpadding != 0 and padding_type == None:
+    if np.mean(outpadding) != 0 and padding_type == None:
         conv = fluid.layers.pad2d(
             conv, paddings=outpadding, mode='constant', pad_value=0.0)
 
@@ -375,3 +390,163 @@ def conv_and_pool(x, num_filters, name, stddev=0.02, act=None):
         bias_attr=bias_attr,
         act=act)
     return out
+
+
+def conv2d_spectral_norm(input,
+                         num_filters=64,
+                         filter_size=7,
+                         stride=1,
+                         stddev=0.02,
+                         padding=0,
+                         name="conv2d_spectral_norm",
+                         norm=None,
+                         activation_fn=None,
+                         relufactor=0.0,
+                         use_bias=False,
+                         padding_type=None,
+                         initial="normal",
+                         is_test=False,
+                         norm_affine=True):
+    b, c, h, w = input.shape
+    height = num_filters
+    width = c * filter_size * filter_size
+    helper = fluid.layer_helper.LayerHelper("conv2d_spectral_norm", **locals())
+    dtype = helper.input_dtype()
+    weight_param = fluid.ParamAttr(
+        name=name + ".weight_orig",
+        initializer=fluid.initializer.Normal(
+            loc=0.0, scale=1.0),
+        trainable=True)
+    weight = helper.create_parameter(
+        attr=weight_param,
+        shape=(num_filters, c, filter_size, filter_size),
+        dtype=dtype)
+    weight_spectral_norm = fluid.layers.spectral_norm(
+        weight, dim=0, name=name + ".spectral_norm")
+    weight = weight_spectral_norm
+    if use_bias:
+        bias_attr = fluid.ParamAttr(
+            name=name + "_b",
+            initializer=fluid.initializer.Normal(
+                loc=0.0, scale=1.0))
+    else:
+        bias_attr = False
+    conv = conv2d_with_filter(
+        input, weight, stride, padding, bias_attr=bias_attr, name=name)
+    if norm is not None:
+        conv = norm_layer(
+            input=conv,
+            norm_type=norm,
+            name=name + "_norm",
+            is_test=is_test,
+            affine=norm_affine)
+    if activation_fn == 'relu':
+        conv = fluid.layers.relu(conv, name=name + '_relu')
+    elif activation_fn == 'leaky_relu':
+        conv = fluid.layers.leaky_relu(
+            conv, alpha=relufactor, name=name + '_leaky_relu')
+    elif activation_fn == 'tanh':
+        conv = fluid.layers.tanh(conv, name=name + '_tanh')
+    elif activation_fn == 'sigmoid':
+        conv = fluid.layers.sigmoid(conv, name=name + '_sigmoid')
+    elif activation_fn == None:
+        conv = conv
+    else:
+        raise NotImplementedError("activation: [%s] is not support" %
+                                  activation_fn)
+    return conv
+
+
+def conv2d_with_filter(input,
+                       filter,
+                       stride=1,
+                       padding=0,
+                       dilation=1,
+                       groups=None,
+                       bias_attr=None,
+                       use_cudnn=True,
+                       act=None,
+                       name=None):
+    """ 
+    Similar with conv2d, this is a convolution2D layers. Difference
+    is filter can be token as input directly instead of setting filter size
+    and number of fliters. Filter is a  4-D tensor with shape 
+    [num_filter, num_channel, filter_size_h, filter_size_w].
+     Args:
+        input (Variable): The input image with [N, C, H, W] format.
+        filter(Variable): The input filter with [N, C, H, W] format.
+        stride (int|tuple): The stride size. If stride is a tuple, it must
+            contain two integers, (stride_H, stride_W). Otherwise, the
+            stride_H = stride_W = stride. Default: stride = 1.
+        padding (int|tuple): The padding size. If padding is a tuple, it must
+            contain two integers, (padding_H, padding_W). Otherwise, the
+            padding_H = padding_W = padding. Default: padding = 0.
+        dilation (int|tuple): The dilation size. If dilation is a tuple, it must
+            contain two integers, (dilation_H, dilation_W). Otherwise, the
+            dilation_H = dilation_W = dilation. Default: dilation = 1.
+        bias_attr (ParamAttr|bool|None): The parameter attribute for the bias of conv2d.
+            If it is set to False, no bias will be added to the output units.
+            If it is set to None or one attribute of ParamAttr, conv2d
+            will create ParamAttr as bias_attr. If the Initializer of the bias_attr
+            is not set, the bias is initialized zero. Default: None.
+        use_cudnn (bool): Use cudnn kernel or not, it is valid only when the cudnn
+            library is installed. Default: True
+        act (str): Activation type, if it is set to None, activation is not appended.
+            Default: None
+        name (str|None): A name for this layer(optional). If set None, the layer
+            will be named automatically. Default: None
+    Returns:
+        Variable: The tensor variable storing the convolution and \
+                  non-linearity activation result.
+    Raises:
+        ValueError: If the shapes of input, filter_size, stride, padding and
+                    groups mismatch.
+    Examples:
+        .. code-block:: python
+          data = fluid.layers.data(name='data', shape=[3, 32, 32], \
+                                  dtype='float32')
+          filter = fluid.layers.data(name='filter',shape=[10,3,3,3], \
+                                    dtype='float32',append_batch_size=False)
+          conv2d = fluid.layers.conv2d(input=data, 
+                                       filter=filter,
+                                       act="relu") 
+    """
+    helper = fluid.layer_helper.LayerHelper("conv2d_with_filter", **locals())
+    num_channels = input.shape[1]
+    num_filters = filter.shape[0]
+    num_filter_channels = filter.shape[1]
+    l_type = 'conv2d'
+    if (num_channels == groups and num_filters % num_channels == 0 and
+            not use_cudnn):
+        l_type = 'depthwise_conv2d'
+    if groups is None:
+        assert num_filter_channels == num_channels
+    else:
+        if num_channels % groups != 0:
+            raise ValueError("num_channels must be divisible by groups.")
+        if num_channels // groups != num_filter_channels:
+            raise ValueError("num_filter_channels must equal to num_channels\
+                              divided by groups.")
+    stride = fluid.layers.utils.convert_to_list(stride, 2, 'stride')
+    padding = fluid.layers.utils.convert_to_list(padding, 2, 'padding')
+    dilation = fluid.layers.utils.convert_to_list(dilation, 2, 'dilation')
+    if not isinstance(use_cudnn, bool):
+        raise ValueError("use_cudnn should be True or False")
+    pre_bias = helper.create_variable_for_type_inference(dtype=input.dtype)
+    helper.append_op(
+        type=l_type,
+        inputs={
+            'Input': input,
+            'Filter': filter,
+        },
+        outputs={"Output": pre_bias},
+        attrs={
+            'strides': stride,
+            'paddings': padding,
+            'dilations': dilation,
+            'groups': groups,
+            'use_cudnn': use_cudnn,
+            'use_mkldnn': False
+        })
+    pre_act = helper.append_bias_op(pre_bias, dim_start=1, dim_end=2)
+    return helper.append_activation(pre_act)

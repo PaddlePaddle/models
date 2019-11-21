@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -38,7 +51,6 @@ add_arg('display_iter_step', int, 10, "display_iter_step.")
 add_arg('test_iter_step', int, 1000, "test_iter_step.")
 add_arg('save_iter_step', int, 1000, "save_iter_step.")
 add_arg('use_gpu', bool, True, "Whether to use GPU or not.")
-add_arg('with_mem_opt', bool, True, "Whether to use memory optimization or not.")
 add_arg('pretrained_model', str, None, "Whether to use pretrained model.")
 add_arg('checkpoint', str, None, "Whether to resume checkpoint.")
 add_arg('model_save_dir', str, "output", "model save directory")
@@ -165,9 +177,6 @@ def train_async(args):
 
     train_fetch_list = [global_lr.name, train_cost.name, train_acc1.name, train_acc5.name]
     test_fetch_list = [test_feas.name]
-
-    if args.with_mem_opt:
-        fluid.memory_optimize(train_prog, skip_opt_set=set(train_fetch_list))
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)

@@ -26,21 +26,24 @@ Shifting Operation通过对每一个attention单元的输出添加一个独立�
 
 ## 数据准备
 
-Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数据说明](../../dataset/README.md)
+Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数据说明](../../data/dataset/README.md)
 
 ## 模型训练
 
 数据准备完毕后，可以通过如下两种方式启动训练：
 
-    python train.py --model_name=AttentionCluster
-            --config=./configs/attention_cluster.txt
-            --save_dir=checkpoints
-            --log_interval=10
-            --valid_interval=1
+    export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+    python train.py --model_name=AttentionCluster \
+                    --config=./configs/attention_cluster.yaml \
+                    --log_interval=10 \
+                    --valid_interval=1 \
+                    --use_gpu=True \
+                    --save_dir=./data/checkpoints \
+                    --fix_random_seed=False
 
-    bash scripts/train/train_attention_cluster.sh
+    bash run.sh train AttentionCluster ./configs/attention_cluster.yaml
 
-- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)通过`--resume`指定权重存放路径进行finetune等开发
+- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionCluster_final.pdparams)通过`--resume`指定权重存放路径进行finetune等开发，或者在run.sh脚本中修改resume为解压之后的权重文件存放路径。
 
 **数据读取器说明：** 模型读取Youtube-8M数据集中已抽取好的`rgb`和`audio`数据，对于每个视频的数据，均匀采样100帧，该值由配置文件中的`seg_num`参数指定。
 
@@ -56,16 +59,21 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
 可通过如下两种方式进行模型评估:
 
-    python test.py --model_name=AttentionCluster
-            --config=configs/attention_cluster.txt
-            --log_interval=1
-            --weights=$PATH_TO_WEIGHTS
+    python eval.py --model_name=AttentionCluster \
+                   --config=./configs/attention_cluster.yaml \
+                   --log_interval=1 \
+                   --weights=$PATH_TO_WEIGHTS \
+                   --use_gpu=True
 
-    bash scripts/test/test_attention_cluster.sh
+    bash run.sh eval AttentionCluster ./configs/attention_cluster.yaml
 
-- 使用`scripts/test/test_attention_cluster.sh`进行评估时，需要修改脚本中的`--weights`参数指定需要评估的权重。
+- 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)进行评估
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionCluster_final.pdparams)进行评估
+
+- 评估结果以log的形式直接打印输出GAP、Hit@1等精度指标
+
+- 使用CPU进行评估时，请将`use_gpu`设置为False
 
 当取如下参数时:
 
@@ -74,7 +82,7 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 | cluster\_nums | 32 |
 | seg\_num | 100 |
 | batch\_size | 2048 |
-| nums\_gpu | 7 |
+| num\_gpus | 8 |
 
 在2nd-YouTube-8M数据集下评估精度如下:
 
@@ -87,17 +95,26 @@ Attention Cluster模型使用2nd-Youtube-8M数据集, 数据下载及准备请�
 
 ## 模型推断
 
-可通过如下命令进行模型推断：
+可通过如下两种方式启动模型推断：
 
-    python infer.py --model_name=attention_cluster
-            --config=configs/attention_cluster.txt
-            --log_interval=1
-            --weights=$PATH_TO_WEIGHTS
-            --filelist=$FILELIST
+    python predict.py --model_name=AttentionCluster \
+                      --config=configs/attention_cluster.yaml \
+                      --log_interval=1 \
+                      --weights=$PATH_TO_WEIGHTS \
+                      --filelist=$FILELIST \
+                      --use_gpu=True
 
-- 模型推断结果存储于`AttentionCluster_infer_result`中，通过`pickle`格式存储。
+    bash run.sh predict AttentionCluster ./configs/attention_cluster.yaml
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/attention_cluster_youtube8m.tar.gz)进行推断
+- 使用python命令行启动程序时，`--filelist`参数指定待推断的文件列表，如果不设置，默认为data/dataset/youtube8m/infer.list。`--weights`参数为训练好的权重参数，如果不设置，程序会自动下载已训练好的权重。这两个参数如果不设置，请不要写在命令行，将会自动使用默认值。
+
+- 使用`run.sh`进行评估时，请修改脚本中的`weights`参数指定需要用到的权重。
+
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionCluster_final.pdparams)进行推断
+
+- 模型推断结果以log的形式直接打印输出，可以看到每个测试样本的分类预测概率。
+
+- 使用CPU进行预测时，请将`use_gpu`设置为False
 
 ## 参考论文
 

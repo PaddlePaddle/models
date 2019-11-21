@@ -2,17 +2,27 @@
 ## 简介
 ### 任务说明
 短文本语义匹配(SimilarityNet, SimNet)是一个计算短文本相似度的框架，可以根据用户输入的两个文本，计算出相似度得分。SimNet框架在百度各产品上广泛应用，主要包括BOW、CNN、RNN、MMDNN等核心网络结构形式，提供语义相似度计算训练和预测框架，适用于信息检索、新闻推荐、智能客服等多个应用场景，帮助企业解决语义匹配问题。可通过[AI开放平台-短文本相似度](https://ai.baidu.com/tech/nlp_basic/simnet)线上体验。
+
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124373)
+
 ### 效果说明
 基于百度海量搜索数据，我们训练了一个SimNet-BOW-Pairwise语义匹配模型，在一些真实的FAQ问答场景中，该模型效果比基于字面的相似度方法AUC提升5%以上，我们基于百度自建测试集（包含聊天、客服等数据集）和语义匹配数据集(LCQMC)进行评测，效果如下表所示。LCQMC数据集以Accuracy为评测指标，而pairwise模型的输出为相似度，因此我们采用0.958作为分类阈值，相比于基线模型中网络结构同等复杂的CBOW模型（准确率为0.737），我们模型的准确率为0.7532。
 
 
-| 模型       | 百度知道         | ECOM        |QQSIM | UNICOM | LCQMC |
-|:-----------:|:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
-|   | AUC  | AUC | AUC|正逆序比|Accuracy|
-|BOW_Pairwise|0.6767|0.7329|0.7650|1.5630|0.7532|
+| 模型       | 百度知道         | ECOM        |QQSIM | UNICOM |
+|:-----------:|:-------------:|:-------------:|:-------------:|:-------------:|
+|   | AUC  | AUC | AUC|正逆序比|
+|BOW_Pairwise|0.6767|0.7329|0.7650|1.5630|
+#### 测试集说明
+| 数据集       | 来源         | 垂类        |
+|:-----------:|:-------------:|:-------------:|
+|百度知道   | 百度知道问题  | 日常 |
+|ECOM|商业问句|金融|
+|QQSIM|闲聊对话|日常|
+|UNICOM|联通客服|客服|
 ## 快速开始
 #### 版本依赖
-本项目依赖于 Paddlepaddle Fluid 1.3.1，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
+本项目依赖于 Paddlepaddle Fluid 1.6，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
 
 python版本依赖python 2.7
 #### 安装代码
@@ -24,24 +34,22 @@ cd models/PaddleNLP/similarity_net
 #### 数据准备
 下载经过预处理的数据，运行命令后，data目录下会存在训练集数据示例、集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。
 ```shell
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_dataset-1.0.0.tar.gz
-tar xzf simnet_dataset-1.0.0.tar.gz
+sh download_data.sh
+```
+或者
+```
+python download.py dataset
 ```
 #### 模型准备
-我们开源了基于大规模数据训练好的```pairwise```模型（基于bow模型训练），我们提供两种下载方式，模型保在```./model_files/simnet_bow_pairwise_pretrained_model/```下。
+我们开源了基于大规模数据训练好的```pairwise```模型（基于bow模型训练），用户可以通过运行命令下载预训练好的模型，该模型将保存在```./model_files/simnet_bow_pairwise_pretrained_model/```下。
+```shell
+sh download_pretrained_model.sh
+```
+或者
+```
+python download.py model
+```
 
-##### 方式一：基于PaddleHub命令行工具（PaddleHub[安装方式](https://github.com/PaddlePaddle/PaddleHub)）
-```shell
-mkdir model_files
-hub download simnet_bow_pairwise --output_path ./
-tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
-```
-##### 方式二：直接下载
-```shell
-mkdir model_files
-wget --no-check-certificate https://baidu-nlp.bj.bcebos.com/simnet_bow-pairwise-1.0.0.tar.gz
-tar xzf simnet_bow-pairwise-1.0.0.tar.gz -C ./model_files
-```
 #### 评估
 我们公开了自建的测试集，包括百度知道、ECOM、QQSIM、UNICOM四个数据集，基于上面的预训练模型，用户可以进入evaluate目录下依次执行下列命令获取测试集评估结果。
 ```shell
@@ -63,8 +71,9 @@ sh run.sh infer
 #### 训练与验证
 用户可以基于示例数据构建训练集和开发集，可以运行下面的命令，进行模型训练和开发集验证。
 ```shell
-sh run.sh train  
+sh run.sh train
 ```
+用户也可以指定./run.sh中train()函数里的INIT_CHECKPOINT的值，载入训练好的模型进行热启动训练。
 ## 进阶使用
 
 ### 任务定义与建模
@@ -136,6 +145,7 @@ python tokenizer.py --test_data_dir ./test.txt.utf8 --batch_size 1 > test.txt.ut
 ├── reader.py：定义了读入数据的相关函数
 ├── utils.py：定义了其他常用的功能函数
 ├── Config: 定义多种模型的配置文件
+├── download.py: 下载数据及预训练模型脚本
 ```
 
 ### 如何训练
@@ -161,6 +171,7 @@ python run_classifier.py \
    --task_mode ${TASK_MODE} #训练模式，pairwise或pointwise，与相应的配置文件匹配。
    --compute_accuracy False \   #是否计算accuracy
    --lamda 0.91 \    #pairwise模式计算accuracy时的阈值
+   --init_checkpoint "" #预加载模型路径
 ```
 ### 如何组建自己的模型
 用户可以根据自己的需求，组建自定义的模型，具体方法如下所示：

@@ -31,7 +31,8 @@ def parse_args():
         "--use_data_parallel",
         type=ast.literal_eval,
         default=False,
-        help="The flag indicating whether to shuffle instances in each pass.")
+        help="The flag indicating whether to use data parallel mode to train the model."
+    )
     parser.add_argument("-e", "--epoch", default=5, type=int, help="set epoch")
     parser.add_argument("--ce", action="store_true", help="run ce")
     args = parser.parse_args()
@@ -149,8 +150,8 @@ def inference_mnist():
     with fluid.dygraph.guard(place):
         mnist_infer = MNIST("mnist")
         # load checkpoint
-        model_dict, _ = fluid.dygraph.load_persistables("save_dir")
-        mnist_infer.load_dict(model_dict)
+        model_dict, _ = fluid.load_dygraph("save_temp")
+        mnist_infer.set_dict(model_dict)
         print("checkpoint loaded")
 
         # start evaluate mode
@@ -175,7 +176,6 @@ def train_mnist(args):
     epoch_num = args.epoch
     BATCH_SIZE = 64
 
-    trainer_count = fluid.dygraph.parallel.Env().nranks
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
         if args.use_data_parallel else fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
@@ -241,8 +241,12 @@ def train_mnist(args):
             print("Loss at epoch {} , Test avg_loss is: {}, acc is: {}".format(
                 epoch, test_cost, test_acc))
 
-        fluid.dygraph.save_persistables(mnist.state_dict(), "save_dir")
-        print("checkpoint saved")
+        save_parameters = (not args.use_data_parallel) or (
+            args.use_data_parallel and
+            fluid.dygraph.parallel.Env().local_rank == 0)
+        if save_parameters:
+            fluid.save_dygraph(mnist.state_dict(), "save_temp")
+            print("checkpoint saved")
 
         inference_mnist()
 

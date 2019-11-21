@@ -106,6 +106,9 @@ Paddle-Slim工具库有以下特点：
 ### 轻量神经网络结构自动搜索（Light-NAS）
 
 - 支持基于进化算法的轻量神经网络结构自动搜索（Light-NAS）
+  - 支持分布式搜索
+  - 支持 FLOPS / 硬件延时约束
+  - 支持多平台模型延时评估
 
 ### 其它功能
 
@@ -146,7 +149,7 @@ Paddle-Slim工具库有以下特点：
 
 | FLOPS |model size| 精度损失（top5/top1）|精度（top5/top1） |
 |---|---|---|---|
-| -50%|-47.0%(9.0M)|-0.41% / -1.08%|89.13% / 69.83%|
+| -50%|-47.0%(9.0M)|-0.41% / -1.08%|88.92% / 69.66%|
 | -60%|-55.9%(7.5M)|-1.34% / -2.67%|88.22% / 68.24%|
 | -70%|-65.3%(5.9M)|-2.55% / -4.34%|86.99% / 66.57%|
 
@@ -186,15 +189,25 @@ Paddle-Slim工具库有以下特点：
 
 数据：ImageNet 1000类
 
-| |Light-NAS-model0 |Light-NAS-model1 |MobileNetV2 |
-|---|---|---|---|
-|FLOPS|-3%|-17%|-0%|
-|top1/top5 accuracy|72.45%/90.70%|71.84%/90.45%|71.90%/90.55% |
-|GPU cost|1.2K GPU hours|1.2K GPU hours|-|
+| -                | FLOPS | Top1/Top5 accuracy | GPU cost             |
+|------------------|-------|--------------------|----------------------|
+| MobileNetV2      | 0%    | 71.90% / 90.55%    | -                    |
+| Light-NAS-model0 | -3%   | 72.45% / 90.70%    | 1.2K GPU hours(V100) |
+| Light-NAS-model1 | -17%  | 71.84% / 90.45%    | 1.2K GPU hours(V100) |
+
+基于硬件耗时的模型结构搜索实验：
+
+| -             | Latency | Top1/Top5 accuracy | GPU cost            |
+|---------------|---------|--------------------|---------------------|
+| MobileNetV2   | 0%      | 71.90% / 90.55%    | -                   |
+| RK3288 开发板  | -23%    | 71.97% / 90.35%    | 1.2K GPU hours(V100) |
+| Android 手机  | -20%    | 72.06% / 90.36%    | 1.2K GPU hours(V100) |
+| iPhone 手机   | -17%    | 72.22% / 90.47%    | 1.2K GPU hours(V100) |
+
 
 ## 模型导出格式
 
 模型压缩框架支持以下格式模型导出：
 
-- **Paddle Fluid模型格式：** Paddle Fluid模型格式，可通过Paddle框架加载使用。
-- **Paddle Mobile模型格式：** 仅在量化训练策略时使用，兼容[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)的模型格式。
+- **Paddle Fluid模型格式：** Paddle Fluid模型格式，可通过[Paddle](https://github.com/PaddlePaddle/Paddle)，[Paddle-Lite](https://github.com/PaddlePaddle/Paddle-Lite)框架加载使用。
+- **Paddle Mobile模型格式：** 仅在量化训练策略时使用，兼容[Paddle Mobile](https://github.com/PaddlePaddle/paddle-mobile)的模型格式（现Paddle Mobile已升级为[Paddle-Lite](https://github.com/PaddlePaddle/Paddle-Lite)）。

@@ -82,7 +82,8 @@ cd -
 #--batch_size 64 \
 #--model "MobileNet" \
 #--pretrained_model ./pretrain/MobileNetV1_pretrained \
-#--compress_config ./configs/quantization.yaml
+#--compress_config ./configs/quantization.yaml \
+#--quant_only True
 
 # for distillation with quantization
 #-----------------------------------

@@ -13,6 +13,7 @@
 #limitations under the License.
 
 import os
+import wget
 import logging
 try:
     from configparser import ConfigParser
@@ -22,7 +23,7 @@ except:
 import paddle.fluid as fluid
 from .utils import download, AttrDict
 
-WEIGHT_DIR = os.path.expanduser("~/.paddle/weights")
+WEIGHT_DIR = os.path.join(os.path.expanduser('~'), '.paddle', 'weights')
 
 logger = logging.getLogger(__name__)
 
@@ -64,13 +65,13 @@ class ModelBase(object):
         self.is_training = (mode == 'train')
         self.mode = mode
         self.cfg = cfg
-        self.py_reader = None
+        self.dataloader = None
 
     def build_model(self):
         "build model struct"
         raise NotImplementError(self, self.build_model)
 
-    def build_input(self, use_pyreader):
+    def build_input(self, use_dataloader):
         "build input Variable"
         raise NotImplementError(self, self.build_input)
 
@@ -90,6 +91,10 @@ class ModelBase(object):
         "get feed inputs list"
         raise NotImplementError(self, self.feeds)
 
+    def fetches(self):
+        "get fetch list of model"
+        raise NotImplementError(self, self.fetches)
+
     def weights_info(self):
         "get model weight default path and download url"
         raise NotImplementError(self, self.weights_info)
@@ -98,15 +103,19 @@ class ModelBase(object):
         "get model weight file path, download weight from Paddle if not exist"
         path, url = self.weights_info()
         path = os.path.join(WEIGHT_DIR, path)
+        if not os.path.isdir(WEIGHT_DIR):
+            logger.info('{} not exists, will be created automatically.'.format(
+                WEIGHT_DIR))
+            os.makedirs(WEIGHT_DIR)
         if os.path.exists(path):
             return path
 
         logger.info("Download weights of {} from {}".format(self.name, url))
-        download(url, path)
+        wget.download(url, path)
         return path
 
-    def pyreader(self):
-        return self.py_reader
+    def dataloader(self):
+        return self.dataloader
 
     def epoch_num(self):
         "get train epoch num"
@@ -123,6 +132,10 @@ class ModelBase(object):
             return None
 
         path = os.path.join(WEIGHT_DIR, path)
+        if not os.path.isdir(WEIGHT_DIR):
+            logger.info('{} not exists, will be created automatically.'.format(
+                WEIGHT_DIR))
+            os.makedirs(WEIGHT_DIR)
         if os.path.exists(path):
             return path
 
@@ -136,7 +149,7 @@ class ModelBase(object):
         fluid.io.load_params(exe, pretrain, main_program=prog)
 
     def load_test_weights(self, exe, weights, prog, place):
-        fluid.io.load_params(exe, weights, main_program=prog)
+        fluid.io.load_params(exe, '', main_program=prog, filename=weights)
 
     def get_config_from_sec(self, sec, item, default=None):
         if sec.upper() not in self.cfg:

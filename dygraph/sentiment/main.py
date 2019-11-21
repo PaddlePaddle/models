@@ -58,6 +58,7 @@ run_type_g.add_arg("do_val", bool, True, "Whether to perform evaluation.")
 run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
 run_type_g.add_arg("profile_steps", int, 15000,
                    "The steps interval to record the performance.")
+train_g.add_arg("model_type", str, "bow_net", "Model type of training.")
 parser.add_argument("--ce", action="store_true", help="run ce")
 
 args = parser.parse_args()
@@ -87,7 +88,8 @@ if args.ce:
     seed = 90
     np.random.seed(seed)
     fluid.default_startup_program().random_seed = seed
-    fluid.default_main_program().random_seed = seed 
+    fluid.default_main_program().random_seed = seed
+
 
 def train():
     with fluid.dygraph.guard(place):
@@ -96,7 +98,7 @@ def train():
             seed = 90
             np.random.seed(seed)
             fluid.default_startup_program().random_seed = seed
-            fluid.default_main_program().random_seed = seed 
+            fluid.default_main_program().random_seed = seed
         processor = reader.SentaProcessor(
             data_dir=args.data_dir,
             vocab_path=args.vocab_path,
@@ -106,7 +108,7 @@ def train():
         num_train_examples = processor.get_num_examples(phase="train")
 
         max_train_steps = args.epoch * num_train_examples // args.batch_size // dev_count
-        
+
         if not args.ce:
             train_data_generator = processor.data_generator(
                 batch_size=args.batch_size,
@@ -131,20 +133,26 @@ def train():
                 phase='dev',
                 epoch=args.epoch,
                 shuffle=False)
-        cnn_net = nets.CNN("cnn_net", args.vocab_size, args.batch_size,
-                           args.padding_size)
-
+        if args.model_type == 'cnn_net':
+            model = nets.CNN("cnn_net", args.vocab_size, args.batch_size,
+                             args.padding_size)
+        elif args.model_type == 'bow_net':
+            model = nets.BOW("bow_net", args.vocab_size, args.batch_size,
+                             args.padding_size)
+        elif args.model_type == 'gru_net':
+            model = nets.GRU("gru_net", args.vocab_size, args.batch_size,
+                             args.padding_size)
+        elif args.model_type == 'bigru_net':
+            model = nets.BiGRU("bigru_net", args.vocab_size, args.batch_size,
+                               args.padding_size)
         sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.lr)
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
-
         for eop in range(args.epoch):
             time_begin = time.time()
             for batch_id, data in enumerate(train_data_generator()):
                 enable_profile = steps > args.profile_steps
-
                 with profile_context(enable_profile):
-
                     steps += 1
                     doc = to_variable(
                         np.array([
@@ -155,18 +163,16 @@ def train():
                                    constant_values=(args.vocab_size))
                             for x in data
                         ]).astype('int64').reshape(-1, 1))
-
                     label = to_variable(
                         np.array([x[1] for x in data]).astype('int64').reshape(
                             args.batch_size, 1))
-
-                    cnn_net.train()
-                    avg_cost, prediction, acc = cnn_net(doc, label)
+                    model.train()
+                    avg_cost, prediction, acc = model(doc, label)
                     avg_cost.backward()
                     np_mask = (doc.numpy() != args.vocab_size).astype('int32')
                     word_num = np.sum(np_mask)
                     sgd_optimizer.minimize(avg_cost)
-                    cnn_net.clear_gradients()
+                    model.clear_gradients()
                     total_cost.append(avg_cost.numpy() * word_num)
                     total_acc.append(acc.numpy() * word_num)
                     total_num_seqs.append(word_num)
@@ -185,7 +191,7 @@ def train():
 
                     if steps % args.validation_steps == 0:
                         total_eval_cost, total_eval_acc, total_eval_num_seqs = [], [], []
-                        cnn_net.eval()
+                        model.eval()
                         eval_steps = 0
                         for eval_batch_id, eval_data in enumerate(
                                 eval_data_generator()):
@@ -201,9 +207,8 @@ def train():
                                 np.array([x[1] for x in eval_data]).astype(
                                     'int64').reshape(args.batch_size, 1))
                             eval_doc = to_variable(eval_np_doc.reshape(-1, 1))
-                            eval_avg_cost, eval_prediction, eval_acc = cnn_net(
+                            eval_avg_cost, eval_prediction, eval_acc = model(
                                 eval_doc, eval_label)
-
                             eval_np_mask = (
                                 eval_np_doc != args.vocab_size).astype('int32')
                             eval_word_num = np.sum(eval_np_mask)
@@ -226,17 +231,21 @@ def train():
                              eval_steps / used_time))
                         time_begin = time.time()
                         if args.ce:
-                            print("kpis\ttrain_loss\t%0.3f" % (np.sum(total_eval_cost) / np.sum(total_eval_num_seqs)))
-                            print("kpis\ttrain_acc\t%0.3f" % (np.sum(total_eval_acc) / np.sum(total_eval_num_seqs)))
+                            print("kpis\ttrain_loss\t%0.3f" %
+                                  (np.sum(total_eval_cost) /
+                                   np.sum(total_eval_num_seqs)))
+                            print("kpis\ttrain_acc\t%0.3f" %
+                                  (np.sum(total_eval_acc) /
+                                   np.sum(total_eval_num_seqs)))
 
                     if steps % args.save_steps == 0:
                         save_path = "save_dir_" + str(steps)
                         print('save model to: ' + save_path)
-                        fluid.dygraph.save_persistables(cnn_net.state_dict(),
-                                                        save_path)
+                        fluid.dygraph.save_dygraph(model.state_dict(),
+                                                   save_path)
                 if enable_profile:
-                        print('save profile result into /tmp/profile_file')
-                        return
+                    print('save profile result into /tmp/profile_file')
+                    return
 
 
 def infer():
@@ -251,15 +260,22 @@ def infer():
             phase='infer',
             epoch=args.epoch,
             shuffle=False)
-
-        cnn_net_infer = nets.CNN("cnn_net", args.vocab_size, args.batch_size,
-                                 args.padding_size)
-
+        if args.model_type == 'cnn_net':
+            model_infer = nets.CNN("cnn_net", args.vocab_size, args.batch_size,
+                                   args.padding_size)
+        elif args.model_type == 'bow_net':
+            model_infer = nets.BOW("bow_net", args.vocab_size, args.batch_size,
+                                   args.padding_size)
+        elif args.model_type == 'gru_net':
+            model_infer = nets.GRU("gru_net", args.vocab_size, args.batch_size,
+                                   args.padding_size)
+        elif args.model_type == 'bigru_net':
+            model_infer = nets.BiGRU("bigru_net", args.vocab_size,
+                                     args.batch_size, args.padding_size)
         print('Do inferring ...... ')
         total_acc, total_num_seqs = [], []
-
-        restore, _ = fluid.dygraph.load_persistables(args.checkpoints)
-        cnn_net_infer.load_dict(restore)
+        restore, _ = fluid.load_dygraph(args.checkpoints)
+        cnn_net_infer.set_dict(restore)
         cnn_net_infer.eval()
 
         steps = 0
@@ -276,9 +292,7 @@ def infer():
             label = to_variable(
                 np.array([x[1] for x in data]).astype('int64').reshape(
                     args.batch_size, 1))
-
-            _, _, acc = cnn_net_infer(doc, label)
-
+            _, _, acc = model_infer(doc, label)
             mask = (np_doc != args.vocab_size).astype('int32')
             word_num = np.sum(mask)
             total_acc.append(acc.numpy() * word_num)

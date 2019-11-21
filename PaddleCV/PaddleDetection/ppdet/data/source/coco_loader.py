@@ -67,8 +67,8 @@ def load(anno_path, sample_num=-1, with_background=True):
     for img_id in img_ids:
         img_anno = coco.loadImgs(img_id)[0]
         im_fname = img_anno['file_name']
-        im_w = img_anno['width']
-        im_h = img_anno['height']
+        im_w = float(img_anno['width'])
+        im_h = float(img_anno['height'])
 
         ins_anno_ids = coco.getAnnIds(imgIds=img_id, iscrowd=False)
         instances = coco.loadAnns(ins_anno_ids)
@@ -83,6 +83,10 @@ def load(anno_path, sample_num=-1, with_background=True):
             if inst['area'] > 0 and x2 >= x1 and y2 >= y1:
                 inst['clean_bbox'] = [x1, y1, x2, y2]
                 bboxes.append(inst)
+            else:
+                logger.warn(
+                    'Found an invalid bbox in annotations: im_id: {}, area: {} x1: {}, y1: {}, x2: {}, y2: {}.'.
+                    format(img_id, float(inst['area']), x1, y1, x2, y2))
         num_bbox = len(bboxes)
 
         gt_bbox = np.zeros((num_bbox, 4), dtype=np.float32)
@@ -97,7 +101,8 @@ def load(anno_path, sample_num=-1, with_background=True):
             gt_class[i][0] = catid2clsid[catid]
             gt_bbox[i, :] = box['clean_bbox']
             is_crowd[i][0] = box['iscrowd']
-            gt_poly[i] = box['segmentation']
+            if 'segmentation' in box:
+                gt_poly[i] = box['segmentation']
 
         coco_rec = {
             'im_file': im_fname,

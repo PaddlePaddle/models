@@ -7,6 +7,8 @@ This is a simple demonstration of re-implementation in [PaddlePaddle.Fluid](http
 
 > **Video in Demo**: *Bruno Mars - That’s What I Like [Official Video]*.
 
+We also recommend users to take a look at the [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122271)
+
 ## Requirements
 
   - Python == 2.7 or 3.6
@@ -106,8 +108,11 @@ We also support to apply pre-trained models on customized images.
 Put the images into the folder `test` under the directory root of this repo. Then run
 
 ```bash
+# default is MPII dataset
 python test.py --checkpoint checkpoints/pose-resnet-50-384x384-mpii
 ```
+
+`python test.py --help` for more usage.
 
 If there are multiple persons in images, detectors such as [Faster R-CNN](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/rcnn), [SSD](https://github.com/PaddlePaddle/models/tree/develop/fluid/PaddleCV/object_detection) or others should be used first to crop them out. Because the simple baseline for human pose estimation is a top-down method.
 

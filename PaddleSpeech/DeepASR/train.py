@@ -150,15 +150,33 @@ def train(args):
     train_program = fluid.Program()
     train_startup = fluid.Program()
 
+    input_fields = {
+        'names': ['feature', 'label'],
+        'shapes': [[None, 3, 11, args.frame_dim], [None, 1]],
+        'dtypes': ['float32', 'int64'],
+        'lod_levels': [1, 1]
+    }
+
     with fluid.program_guard(train_program, train_startup):
         with fluid.unique_name.guard():
-            py_train_reader = fluid.layers.py_reader(
-                capacity=10,
-                shapes=([-1, 3, 11, args.frame_dim], [-1, 1]),
-                dtypes=['float32', 'int64'],
-                lod_levels=[1, 1],
-                name='train_reader')
-            feature, label = fluid.layers.read_file(py_train_reader)
+
+            inputs = [
+                fluid.data(
+                    name=input_fields['names'][i],
+                    shape=input_fields['shapes'][i],
+                    dtype=input_fields['dtypes'][i],
+                    lod_level=input_fields['lod_levels'][i])
+                for i in range(len(input_fields['names']))
+            ]
+
+            train_reader = fluid.io.DataLoader.from_generator(
+                feed_list=inputs,
+                capacity=64,
+                iterable=False,
+                use_double_buffer=True)
+
+            (feature, label) = inputs
+
             prediction, avg_cost, accuracy = stacked_lstmp_model(
                 feature=feature,
                 label=label,
@@ -174,19 +192,27 @@ def train(args):
                     decay_rate=1 / 1.2,
                     staircase=True))
             optimizer.minimize(avg_cost)
-            fluid.memory_optimize(train_program)
 
     test_program = fluid.Program()
     test_startup = fluid.Program()
     with fluid.program_guard(test_program, test_startup):
         with fluid.unique_name.guard():
-            py_test_reader = fluid.layers.py_reader(
-                capacity=10,
-                shapes=([-1, 3, 11, args.frame_dim], [-1, 1]),
-                dtypes=['float32', 'int64'],
-                lod_levels=[1, 1],
-                name='test_reader')
-            feature, label = fluid.layers.read_file(py_test_reader)
+            inputs = [
+                fluid.data(
+                    name=input_fields['names'][i],
+                    shape=input_fields['shapes'][i],
+                    dtype=input_fields['dtypes'][i],
+                    lod_level=input_fields['lod_levels'][i])
+                for i in range(len(input_fields['names']))
+            ]
+
+            test_reader = fluid.io.DataLoader.from_generator(
+                feed_list=inputs,
+                capacity=64,
+                iterable=False,
+                use_double_buffer=True)
+
+            (feature, label) = inputs
             prediction, avg_cost, accuracy = stacked_lstmp_model(
                 feature=feature,
                 label=label,
@@ -238,7 +264,7 @@ def train(args):
                                                      args.minimum_batch_size):
             yield batch_data_to_lod_tensors(args, data, fluid.CPUPlace())
 
-    py_train_reader.decorate_tensor_provider(train_data_provider)
+    train_reader.set_batch_generator(train_data_provider)
 
     if (os.path.exists(args.val_feature_lst) and
             os.path.exists(args.val_label_lst)):
@@ -255,7 +281,7 @@ def train(args):
                     args.batch_size, args.minimum_batch_size):
                 yield batch_data_to_lod_tensors(args, data, fluid.CPUPlace())
 
-        py_test_reader.decorate_tensor_provider(test_data_provider)
+        test_reader.set_batch_generator(test_data_provider)
 
     # validation
     def test(exe):
@@ -268,7 +294,7 @@ def train(args):
         test_accs = []
         while True:
             if batch_id == 0:
-                py_test_reader.start()
+                test_reader.start()
             try:
                 if args.parallel:
                     cost, acc = exe.run(
@@ -284,7 +310,7 @@ def train(args):
                 test_accs.append(np.array(acc)[0])
                 batch_id += 1
             except fluid.core.EOFException:
-                py_test_reader.reset()
+                test_reader.reset()
                 break
         return np.mean(test_costs), np.mean(test_accs)
 
@@ -294,7 +320,7 @@ def train(args):
         batch_id = 0
         while True:
             if batch_id == 0:
-                py_train_reader.start()
+                train_reader.start()
             to_print = batch_id > 0 and (batch_id % args.print_per_batches == 0)
             try:
                 if args.parallel:
@@ -308,7 +334,7 @@ def train(args):
                                    if to_print else [],
                                    return_numpy=False)
             except fluid.core.EOFException:
-                py_train_reader.reset()
+                train_reader.reset()
                 break
 
             if to_print:

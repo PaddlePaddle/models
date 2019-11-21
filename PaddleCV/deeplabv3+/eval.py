@@ -1,3 +1,16 @@
+#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -26,6 +39,7 @@ add_arg('dataset_path',         str,    None,   "Cityscape dataset path.")
 add_arg('use_gpu',              bool,   True,   "Whether use GPU or CPU.")
 add_arg('num_classes',          int,    19,     "Number of classes.")
 add_arg('use_py_reader',        bool,   True,   "Use py_reader.")
+add_arg('use_multiprocessing',  bool,   False, "Use multiprocessing.")
 add_arg('norm_type',            str,    'bn',   "Normalization type, should be 'bn' or 'gn'.")
 #yapf: enable
 
@@ -89,11 +103,6 @@ with fluid.program_guard(tp, sp):
     miou, out_wrong, out_correct = mean_iou(pred, label)
 
 tp = tp.clone(True)
-fluid.memory_optimize(
-    tp,
-    print_log=False,
-    skip_opt_set=set([pred.name, miou, out_wrong, out_correct]),
-    level=1)
 
 place = fluid.CPUPlace()
 if args.use_gpu:
@@ -111,7 +120,7 @@ if args.total_step == -1:
 else:
     total_step = args.total_step
 
-batches = dataset.get_batch_generator(batch_size, total_step)
+batches = dataset.get_batch_generator(batch_size, total_step, use_multiprocessing=args.use_multiprocessing)
 if args.use_py_reader:
     py_reader.decorate_tensor_provider(lambda :[ (yield b[0],b[1]) for b in batches])
     py_reader.start()

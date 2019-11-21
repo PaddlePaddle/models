@@ -1,3 +1,5 @@
+**This model has been moved to [PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), which includes more detection models.**
+
 # RCNN Objective Detection
 
 ---
@@ -13,6 +15,10 @@
 ## Installation
 
 Running sample code in this directory requires PaddelPaddle Fluid v.1.3.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/en/1.3/beginners_guide/install/index_en.html) and make an update.
+
+We also recommend users to take a look at: 
+[MaskRCNN](https://aistudio.baidu.com/aistudio/projectDetail/122273)
+[Faster RCNN](https://aistudio.baidu.com/aistudio/projectDetail/122275)
 
 ## Introduction
 
@@ -34,8 +40,9 @@ Mask RCNN is a two stage model as well. At the first stage, it generates proposa
 
 Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download dataset as below:
 
-    cd dataset/coco
-    ./download.sh
+```bash
+python dataset/coco/download.py
+```
 
 The data catalog structure is as follows:
 
@@ -62,6 +69,8 @@ The data catalog structure is as follows:
 **download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
 
     sh ./pretrained/download.sh
+
+**NOTE:** Windows users can download weights from links in `./pretrained/download.sh`.
 
 Set `pretrained_model` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
 Please make sure that pretrained_model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.

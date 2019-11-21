@@ -16,13 +16,15 @@
 
 ## 模型简介
 
-本图像生成模型库包含CGAN\[[3](#参考文献)\], DCGAN\[[4](#参考文献)\], Pix2Pix\[[5](#参考文献)\], CycleGAN\[[6](#参考文献)\], StarGAN\[[7](#参考文献)\], AttGAN\[[8](#参考文献)\], STGAN\[[9](#参考文献)\]。
+本图像生成模型库包含CGAN\[[3](#参考文献)\], DCGAN\[[4](#参考文献)\], Pix2Pix\[[5](#参考文献)\], CycleGAN\[[6](#参考文献)\], StarGAN\[[7](#参考文献)\], AttGAN\[[8](#参考文献)\], STGAN\[[9](#参考文献)\], SPADE\[[13](#参考文献)\]。
 
 注意：
 1. StarGAN，AttGAN和STGAN由于梯度惩罚所需的操作目前只支持GPU，需使用GPU训练。
-2. CGAN和DCGAN仅支持多batch size训练。
-3. CGAN和DCGAN两个模型训练使用的数据集为MNIST数据集；StarGAN，AttGAN和STGAN的数据集为CelebA数据集，测试集列表(test_list)和下载到的list文件格式相同，即包含测试集数量，属性列表，想要进行测试的图片和标签。Pix2Pix和CycleGAN支持的数据集可以参考download.py中的cycle_pix_dataset。
+2. GAN模型目前仅仅验证了单机单卡训练和预测结果。
+3. CGAN和DCGAN两个模型训练使用的数据集为MNIST数据集；StarGAN，AttGAN和STGAN的数据集为CelebA数据集。Pix2Pix和CycleGAN支持的数据集可以参考download.py中的cycle_pix_dataset。cityscapes数据集需要从[官方](https://www.cityscapes-dataset.com)下载数据，下载完之后使用`scripts/prepare_cityscapes_dataset.py`处理，处理后的文件夹命名为cityscapes并放入data目录下即可。
 4. PaddlePaddle1.5.1及之前的版本不支持在AttGAN和STGAN模型里的判别器加上的instance norm。如果要在判别器中加上instance norm，请源码编译develop分支并安装。
+5. 中间效果图保存在${output_dir}/test文件夹中。对于Pix2Pix来说，inputA 和inputB 代表输入的两种风格的图片，fakeB表示生成图片；对于CycleGAN来说，inputA表示输入图片，fakeB表示inputA根据生成的图片，cycA表示fakeB经过生成器重构出来的对应于inputA的重构图片；对于StarGAN，AttGAN和STGAN来说，第一行表示原图，之后的每一行都代表一种属性变换。
+6. infer过程使用的test_list文件和训练过程中使用的train_list具有相同格式，第一行为样本数量，第二行为属性，之后的行中第一个表示图片名称，之后的-1和1表示该图片是否拥有该属性(1为有该属性，-1为没有该属性)。
 
 图像生成模型库库的目录结构如下：
 ```
@@ -52,15 +54,25 @@
 │   ├── run_....py 训练启动示例
 │   ├── infer_....py 测试启动示例
 │   ├── make_pair_data.py pix2pix GAN的数据list的生成脚本
+│
+├── data 下载的数据集存放的位置
+│   ├── celeba
+│       ├── ${image_dir} 存放实际图片
+│       ├── list 文件
 
 ```
+
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122272)
 
 ## 快速开始
 
 ### 安装说明
 **安装[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)：**
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.6或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+
+其他依赖包：
+1. `pip install imageio` 或者 `pip install -r requirements.txt` 安装imageio包（保存图片代码中所依赖的包）
 
 ### 任务简介
 
@@ -74,9 +86,10 @@ StarGAN，AttGAN和STGAN采用celeba\[[11](#参考文献)\]数据集进行属性
 通过指定dataset参数来下载相应的数据集。
 
 StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)数据集可以自行下载。
+SPADE使用的[cityscapes](https://www.cityscapes-dataset.com)数据集可以自行下载。下载完成后新建一个目录data/cityscapes/，并在目录下准备3个子目录，分别是真实图片、分割图、实例图。准备一个train_list和test_list，每一行的顺序是分割图\t真实图\t实例图。
 
 **自定义数据集：**
-用户可以使用自定义的数据集，只要设置成所对应的生成模型所需要的数据格式即可。
+如果您要使用自定义的数据集，只要设置成对应的生成模型所需要的数据格式，并放在data文件夹下，然后把`--dataset`参数设置成您自定义数据集的名称，data_reader.py文件就会自动去data文件夹中寻找数据。
 
 注意: pix2pix模型数据集准备中的list文件需要通过scripts文件夹里的make_pair_data.py来生成，可以使用以下命令来生成：
   python scripts/make_pair_data.py \
@@ -85,7 +98,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 
 ### 模型训练
 
-**开始训练：** 数据准备完毕后，可以通过一下方式启动训练：
+**开始训练：** 数据准备完毕后，可以通过以下方式启动训练：
 
     python train.py \
       --model_net=$(name_of_model) \
@@ -101,6 +114,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
 
 - 每个GAN都给出了一份运行示例，放在scripts文件夹内，用户可以直接运行训练脚本快速开始训练。
 - 用户可以通过设置`--model_net`参数来选择想要训练的模型，通过设置`--dataset`参数来选择训练所需要的数据集。
+- SPADE模型的训练需要在主目录下新建一个VGG19_pretrained目录，从[该链接](https://paddle-gan-models.bj.bcebos.com/vgg19_spade.tar.gz)下载并解压在ImageNet上预训练好的VGG19模型，该模型是从分类模型页面下载的VGG19的预训练模型并为参数添加`vgg19_`的前缀用来区分和生成网络中的参数。
 
 ### 模型测试
 模型测试是利用训练完成的生成模型进行图像生成。infer.py是主要的执行程序，调用示例如下：
@@ -130,6 +144,7 @@ StarGAN, AttGAN和STGAN所需要的[Celeba](http://mmlab.ie.cuhk.edu.hk/projects
     python infer.py \
       --model_net=$(StarGAN_or_AttGAN_or_STGAN) \
       --init_model=$(path_to_init_model)\
+      --test_list=$(path_to_test_list)\
       --dataset_dir=$(path_to_data)
 
 Pix2Pix和CycleGAN的效果如图所示：
@@ -170,6 +185,7 @@ STGAN的效果图(图片属性分别为：original image, Bald, Bangs, Black Hai
 | StarGAN  | [StarGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stargan_G.tar.gz)  |
 | AttGAN   | [AttGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/attgan_G.tar.gz)   |
 | STGAN    | [STGAN的预训练模型](https://paddle-gan-models.bj.bcebos.com/stgan_G.tar.gz)    |
+| SPADE    | [SPADE的预训练模型](https://paddle-gan-models.bj.bcebos.com/spade_G.tar.gz)  ([SPADE需要的vgg19预训练模型](https://paddle-gan-models.bj.bcebos.com/vgg19_spade.tar.gz))
 
 
 ## 进阶使用
@@ -188,6 +204,8 @@ StarGAN多领域属性迁移，引入辅助分类帮助单个判别器判断多�
 AttGAN利用分类损失和重构损失来保证改变特定的属性，可用于人脸特定属性转换。
 
 STGAN只输入有变化的标签，引入GRU结构，更好的选择变化的属性，可用于人脸特定属性转换。
+
+SPADE提出一种考虑空间语义信息的归一化方法，从而更好的保留语义信息，生成更为逼真的图像，可用于图像翻译。
 
 ### 模型概览
 
@@ -232,6 +250,13 @@ AttGAN的网络结构[8]
 STGAN的网络结构[9]
 </p>
 
+- SPADE中整体网络结构如下图所示。SPADE在网络中的卷积层使用了[谱归一化](\[[12](#参考文献)\])，把输入图像的语义mask图像作为生成网络输入，拼接了语义mask和生成器的输出为判别网络的输入。SPADE提出了一种基于空间信息的归一化方法\(SPatially-Adaptive \(DE\)normalization\)，在进行归一化的时候可以更好的利用语义信息，从而生成更为逼真的图像。更为具体的网络结构可以参考network/SPADE_network.py文件或者论文中的附录部分。
+
+<p align="center">
+<img src="images/spade_net.png" width=800 /> <br />
+SPADE整体的网络结构[10]
+</p>
+
 
 注意：网络结构中的norm指的是用户可以选用batch norm或者instance norm来搭建自己的网络。
 
@@ -242,15 +267,17 @@ STGAN的网络结构[9]
 **A:** 查看是否所有的标签都转换对了。
 
 **Q:** 预测结果不正常，是怎么回事？  
-**A:** 某些GAN预测的时候batch_norm的设置需要和训练的时候行为一致，查看模型库中相应的GAN中预测时batch_norm的行为和自己模型中的预测时batch_norm的
-行为是否一致。
+**A:** 某些GAN预测的时候batch_norm的设置需要和训练的时候行为一致，查看模型库中相应的GAN中预测时batch_norm的行为和自己模型中的预测时batch_norm的行为是否一致。
 
 **Q:** 为什么STGAN和ATTGAN中变男性得到的预测结果是变女性呢？  
 **A:** 这是由于预测时标签的设置，目标标签是基于原本的标签进行改变，比如原本图片是男生，预测代码对标签进行转变的时候会自动变成相对立的标签，即女
 性，所以得到的结果是女生。如果想要原本是男生，转变之后还是男生，保持要转变的标签不变即可。
 
-**Q:** 如何使用自己的数据集进行训练？
-**A:** 对于Pix2Pix来说，只要准备好类似于Cityscapes数据集的不同风格的成对的数据即可。对于CycleGAN来说，只要准备类似于Cityscapes数据集的不同风格的数据即可。对于StarGAN，AttGAN和STGAN来说，除了需要准备类似于CelebA数据集中的图片和标签文件外，还需要把模型中的selected_attrs参数设置为想要改变的目标属性，c_dim参数这是为目标属性的个数。
+**Q:** 如何使用自己的数据集进行训练？  
+**A:** 对于Pix2Pix来说，只要准备好类似于Cityscapes数据集的不同风格的成对的数据即可。对于CycleGAN来说，只要准备类似于Cityscapes数据集的不同风格的数据即可。对于StarGAN，AttGAN和STGAN来说，除了需要准备类似于CelebA数据集中图片，包含图片数量、名称和标签信息的list文件外，还需要把模型中的selected_attrs参数设置为想要改变的目标属性，c_dim参数设置为目标属性的个数。
+
+**Q:** 如何从模型库中拿出单独的一个模型？  
+**A:** 由于trainer文件夹中的__init__.py文件默认导入了所有网络结构，所以需要删掉__init__.py文件中导入的当前模型之外的包，然后把trainer和network中不需要的模型文件删掉即可。
 
 
 ## 参考论文
@@ -275,6 +302,10 @@ STGAN的网络结构[9]
 [10] [The Cityscapes Dataset for Semantic Urban Scene Understanding](https://arxiv.org/abs/1604.01685)
 
 [11] [Deep Learning Face Attributes in the Wild](https://arxiv.org/abs/1411.7766)
+
+[12] [Spectral Normalization for Generative Adversarial Networks](https://arxiv.org/abs/1802.05957)
+
+[13] [Semantic Image Synthesis with Spatially-Adaptive Normalization](https://arxiv.org/abs/1903.07291)
 
 
 ## 版本更新

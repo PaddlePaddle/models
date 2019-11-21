@@ -60,10 +60,10 @@ def parse_args():
         default=False,
         help='Whether profiling the trainning [True|False]')
     parser.add_argument(
-        '--use_py_reader',
+        '--use_dataloader',
         type=str2bool,
         default=False,
-        help='Whether using py_reader to feed data [True|False]')
+        help='Whether using dataloader to feed data [True|False]')
     parser.add_argument(
         '--log_path',
         help='path of the log file. If not set, logs are printed to console')
@@ -72,8 +72,16 @@ def parse_args():
         type=str,
         default="models",
         help='dir of the saved model.')
+    parser.add_argument(
+        '--init_from_pretrain_model',
+        type=str,
+        default=None,
+        help='dir to init model.')
     parser.add_argument('--enable_ce', action='store_true')
     parser.add_argument('--batch_size', type=int, default=0, help='batch size')
     parser.add_argument('--max_epoch', type=int, default=0, help='max epoch')
+    
+    # NOTE: args for profiler, used for benchmark
+    parser.add_argument('--profiler_path', type=str, default='/tmp/paddingrnn.profile', help='the profiler output file path. used for benchmark')
     args = parser.parse_args()
     return args

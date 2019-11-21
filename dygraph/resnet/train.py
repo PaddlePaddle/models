@@ -38,9 +38,12 @@ def parse_args():
         "--use_data_parallel",
         type=ast.literal_eval,
         default=False,
-        help="The flag indicating whether to shuffle instances in each pass.")
-    parser.add_argument("-e", "--epoch", default=120, type=int, help="set epoch")
-    parser.add_argument("-b", "--batch_size", default=32, type=int, help="set epoch")
+        help="The flag indicating whether to use data parallel mode to train the model."
+    )
+    parser.add_argument(
+        "-e", "--epoch", default=120, type=int, help="set epoch")
+    parser.add_argument(
+        "-b", "--batch_size", default=32, type=int, help="set epoch")
     parser.add_argument("--ce", action="store_true", help="run ce")
     args = parser.parse_args()
     return args
@@ -48,6 +51,7 @@ def parse_args():
 
 args = parse_args()
 batch_size = args.batch_size
+
 
 def optimizer_setting():
 
@@ -88,7 +92,7 @@ class ConvBNLayer(fluid.dygraph.Layer):
             padding=(filter_size - 1) // 2,
             groups=groups,
             act=None,
-            bias_attr=None)
+            bias_attr=False)
 
         self._batch_norm = BatchNorm(self.full_name(), num_filters, act=act)
 
@@ -275,7 +279,6 @@ def eval(model, data):
 
 def train_resnet():
     epoch = args.epoch
-    trainer_count = fluid.dygraph.parallel.Env().nranks
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
         if args.use_data_parallel else fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
@@ -353,7 +356,6 @@ def train_resnet():
                 optimizer.minimize(avg_loss)
                 resnet.clear_gradients()
 
-
                 total_loss += dy_out
                 total_acc1 += acc_top1.numpy()
                 total_acc5 += acc_top5.numpy()
@@ -373,7 +375,13 @@ def train_resnet():
                    total_acc1 / total_sample, total_acc5 / total_sample))
             resnet.eval()
             eval(resnet, test_reader)
-            fluid.dygraph.save_persistables(resnet.state_dict(), 'resnet_params')
+
+            save_parameters = (not args.use_data_parallel) or (
+                args.use_data_parallel and
+                fluid.dygraph.parallel.Env().local_rank == 0)
+            if save_parameters:
+                fluid.save_dygraph(resnet.state_dict(),
+                                                'resnet_params')
 
 
 if __name__ == '__main__':

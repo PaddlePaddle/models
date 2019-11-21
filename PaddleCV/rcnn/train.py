@@ -40,6 +40,7 @@ import collections
 
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import reader
 import models.model_builder as model_builder
 import models.resnet as resnet
@@ -105,7 +106,6 @@ def train():
     for var in fetch_list:
         var.persistable = True
 
-    #fluid.memory_optimize(fluid.default_main_program(), skip_opt_set=set(fetch_list))
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(gpu_id) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -198,6 +198,14 @@ def train():
                 sys.stdout.flush()
                 if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
                     save_model("model_iter{}".format(iter_id))
+            
+                #profiler tools, used for benchmark
+                if args.is_profiler and iter_id == 10:
+                    profiler.start_profiler("All")
+                elif args.is_profiler and iter_id == 15: 
+                    profiler.stop_profiler("total", args.profiler_path)
+                    return
+
             end_time = time.time()
             total_time = end_time - start_time
             last_loss = np.array(outs[0]).mean()
@@ -233,6 +241,12 @@ def train():
                 save_model("model_iter{}".format(iter_id))
             if (iter_id + 1) == cfg.max_iter:
                 break
+            #profiler tools, used for benchmark
+            if args.is_profiler and iter_id == 10:
+                profiler.start_profiler("All")
+            elif args.is_profiler and iter_id == 15:
+                profiler.stop_profiler("total", args.profiler_path)
+                return
         end_time = time.time()
         total_time = end_time - start_time
         last_loss = np.array(outs[0]).mean()

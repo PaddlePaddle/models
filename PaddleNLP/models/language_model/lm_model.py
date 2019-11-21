@@ -32,7 +32,7 @@ def lm_model(hidden_size,
              init_scale=0.1,
              dropout=None,
              rnn_model='static',
-             use_py_reader=False):
+             use_dataloader=False):
     def padding_rnn(input_embedding, len=3, init_hidden=None, init_cell=None):
         weight_1_arr = []
         weight_2_arr = []
@@ -185,7 +185,6 @@ def lm_model(hidden_size,
                 pre_cell = cell_array[k]
                 weight_1 = weight_1_arr[k]
                 bias = bias_arr[k]
-
                 nn = layers.concat([input, pre_hidden], 1)
                 gate_input = layers.matmul(x=nn, y=weight_1)
 
@@ -255,37 +254,29 @@ def lm_model(hidden_size,
         return real_res, last_hidden, last_cell
 
     batch_size_each = batch_size // fluid.core.get_cuda_device_count()
-    if use_py_reader:
-        feed_shapes = [[batch_size_each, num_steps, 1],
-                       [batch_size_each * num_steps, 1]]
-        py_reader = fluid.layers.py_reader(
-            capacity=16, shapes=feed_shapes, dtypes=['int64', 'int64'])
-        x, y = fluid.layers.read_file(py_reader)
-    else:
-        x = layers.data(
-            name="x",
-            shape=[batch_size_each, num_steps, 1],
-            dtype='int64',
-            append_batch_size=False)
-        y = layers.data(
-            name="y",
-            shape=[batch_size_each * num_steps, 1],
-            dtype='int64',
-            append_batch_size=False)
+    x = fluid.data(name="x", shape=[None, num_steps, 1], dtype='int64')
+    y = fluid.data(name="y", shape=[None, 1], dtype='int64')
 
-    init_hidden = layers.data(
+    if use_dataloader:
+        dataloader = fluid.io.DataLoader.from_generator(
+            feed_list=[x, y],
+            capacity=16,
+            iterable=False,
+            use_double_buffer=True)
+
+    init_hidden = fluid.data(
         name="init_hidden",
-        shape=[num_layers, batch_size_each, hidden_size],
-        dtype='float32',
-        append_batch_size=False)
-    init_cell = layers.data(
+        shape=[None, num_layers, hidden_size],
+        dtype='float32')
+    init_cell = fluid.data(
         name="init_cell",
-        shape=[num_layers, batch_size_each, hidden_size],
-        dtype='float32',
-        append_batch_size=False)
-
+        shape=[None, num_layers, hidden_size],
+        dtype='float32')
     init_cell.persistable = True
     init_hidden.persistable = True
+
+    init_hidden = layers.transpose(init_hidden, perm=[1, 0, 2])
+    init_cell = layers.transpose(init_cell, perm=[1, 0, 2])
 
     init_hidden_reshape = layers.reshape(
         init_hidden, shape=[num_layers, -1, hidden_size])
@@ -381,11 +372,10 @@ def lm_model(hidden_size,
     # can be used directly in next batch. This can avoid the fetching of
     # last_hidden and last_cell and feeding of init_hidden and init_cell in
     # each training step.
-    layers.assign(input=last_cell, output=init_cell)
-    layers.assign(input=last_hidden, output=init_hidden)
-
+    last_hidden = layers.transpose(last_hidden, perm=[1, 0, 2])
+    last_cell = layers.transpose(last_cell, perm=[1, 0, 2])
     feeding_list = ['x', 'y', 'init_hidden', 'init_cell']
-    if use_py_reader:
-        return loss, last_hidden, last_cell, feeding_list, py_reader
+    if use_dataloader:
+        return loss, last_hidden, last_cell, feeding_list, dataloader
     else:
         return loss, last_hidden, last_cell, feeding_list

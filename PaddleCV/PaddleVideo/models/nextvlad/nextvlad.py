@@ -61,42 +61,34 @@ class NEXTVLAD(ModelBase):
         # other params
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
 
-    def build_input(self, use_pyreader=True):
-        rgb_shape = [self.video_feature_size]
-        audio_shape = [self.audio_feature_size]
-        label_shape = [self.num_classes]
-        if use_pyreader:
-            assert self.mode != 'infer', \
-                      'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            py_reader = fluid.layers.py_reader(
-                capacity=100,
-                shapes=[[-1] + rgb_shape, [-1] + audio_shape,
-                        [-1] + label_shape],
-                lod_levels=[1, 1, 0],
-                dtypes=['uint8', 'uint8', 'float32'],
-                name='train_py_reader'
-                if self.is_training else 'test_py_reader',
-                use_double_buffer=True)
-            rgb, audio, label = fluid.layers.read_file(py_reader)
-            self.py_reader = py_reader
+    def build_input(self, use_dataloader=True):
+        rgb_shape = [None, self.video_feature_size]
+        audio_shape = [None, self.audio_feature_size]
+        label_shape = [None, self.num_classes]
+
+        rgb = fluid.data(
+            name='train_rgb' if self.is_training else 'test_rgb',
+            shape=rgb_shape,
+            dtype='uint8',
+            lod_level=1)
+        audio = fluid.data(
+            name='train_audio' if self.is_training else 'test_audio',
+            shape=audio_shape,
+            dtype='uint8',
+            lod_level=1)
+        if self.mode == 'infer':
+            label = None
         else:
-            rgb = fluid.layers.data(
-                name='train_rgb' if self.is_training else 'test_rgb',
-                shape=rgb_shape,
-                dtype='uint8',
-                lod_level=1)
-            audio = fluid.layers.data(
-                name='train_audio' if self.is_training else 'test_audio',
-                shape=audio_shape,
-                dtype='uint8',
-                lod_level=1)
-            if self.mode == 'infer':
-                label = None
-            else:
-                label = fluid.layers.data(
-                    name='train_label' if self.is_training else 'test_label',
-                    shape=label_shape,
-                    dtype='float32')
+            label = fluid.data(
+                name='train_label' if self.is_training else 'test_label',
+                shape=label_shape,
+                dtype='float32')
+
+        if use_dataloader:
+            assert self.mode != 'infer', \
+                    'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
+                feed_list=[rgb, audio, label], capacity=8, iterable=True)
         self.feature_input = [rgb, audio]
         self.label_input = label
 
@@ -174,10 +166,25 @@ class NEXTVLAD(ModelBase):
             self.label_input
         ]
 
+    def fetches(self):
+        if self.mode == 'train' or self.mode == 'valid':
+            losses = self.loss()
+            fetch_list = [losses, self.predictions, self.label_input]
+        elif self.mode == 'test':
+            losses = self.loss()
+            fetch_list = [losses, self.predictions, self.label_input]
+        elif self.mode == 'infer':
+            fetch_list = [self.predictions]
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+        return fetch_list
+
     def weights_info(self):
         return (
-            'nextvlad_youtube8m',
-            'https://paddlemodels.bj.bcebos.com/video_classification/nextvlad_youtube8m.tar.gz'
+            'NEXTVLAD_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/NEXTVLAD_final.pdparams'
         )
 
 

@@ -1,3 +1,5 @@
+**This model has been move to [PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), which includes more detection models.**
+
 # YOLOv3 Objective Detection
 
 ---
@@ -20,13 +22,15 @@ We use many image augment and label smooth tricks from [Bag of Freebies for Trai
 
 With execution acceleration method in Paddle framework prediction library, inference speed of YOLOv3 in our impliment can be 30% faster than darknet framework.
 
+We also recommend users to take a look at the  [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122277)
+
 ## Quick Start
 
 ### Installation
 
 **Install [PaddlePaddle](https://github.com/PaddlePaddle/Paddle):**
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.4 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.4/beginners_guide/install/index_en.html) and make an update.
+Running sample code in this directory requires PaddelPaddle Fluid v.1.5 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://www.paddlepaddle.org/documentation/docs/en/1.5/beginners_guide/install/index_en.html) and make an update.
 
 **Install the [COCO-API](https://github.com/cocodataset/cocoapi):**
 
@@ -48,8 +52,9 @@ To train the model, COCO-API is needed. Installation is as follows:
 
 Train the model on [MS-COCO dataset](http://cocodataset.org/#download), we also provide download script as follows:
 
-    cd dataset/coco
-    ./download.sh
+```bash
+python dataset/coco/download.py
+```
 
 The data catalog structure is as follows:
 
@@ -82,6 +87,8 @@ You can defined datasets by yourself, we recommend using annotations in COCO for
 
     sh ./weights/download.sh
 
+**NOTE:** Windows users can download weights from links in `./weights/download.sh`.
+
 Set `--pretrain` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
 Please make sure that pre-trained model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
 
@@ -94,7 +101,7 @@ Please make sure that pre-trained model is downloaded and loaded correctly, othe
        --data_dir=${path_to_data} \
        --class_num=${category_num}
 
-- Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train. 
+- Set `export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7` to specifiy 8 GPUs to train.
 - It is recommended to set `--use_multiprocess_reader=False` when training on Windows.
 - Set `--worker_num=` to specifiy multiprocess reader worker number, which is default 8, if the number of CPU cores in the training environment is small, it is recommended to set worker number to a small value.
 - For more help on arguments:
@@ -221,7 +228,7 @@ YOLOv3 detection principle
 
 ### Model structure
 
-YOLOv3 divides the input image in to S\*S grids and predict B bounding boxes in each grid, predictions of boxes include Location(x, y, w, h), Confidence Score and probabilities of C classes, therefore YOLOv3 output layer has S\*S\*B\*(5 + C) channels. YOLOv3 loss consists of three parts: location loss, confidence loss and classification loss.
+YOLOv3 divides the input image in to S\*S grids and predict B bounding boxes in each grid, predictions of boxes include Location(x, y, w, h), Confidence Score and probabilities of C classes, therefore YOLOv3 output layer has B\*(5 + C) channels. YOLOv3 loss consists of three parts: location loss, confidence loss and classification loss.
 The bone network of YOLOv3 is darknet53, the structure of YOLOv3 is as follow:
 <p align="center">
 <img src="image/YOLOv3_structure.jpg" height=400 width=400 hspace='10'/> <br />
@@ -268,26 +275,26 @@ if cfg.pretrain:
     fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
 
     cat_idxs = [3, 19, 25, 41, 58, 73]
-    # the first 5 channels is x, y, w, h, objectness, 
+    # the first 5 channels is x, y, w, h, objectness,
     # the following 80 channel is for 80 categories
     channel_idxs = np.array(range(5) + [idx + 5 for idx in cat_idxs])
     # we have 3 yolo_output layers
-    for i in range(3): 
+    for i in range(3):
         # crop conv weights
         weights_tensor = fluid.global_scope().find_var(
                           "yolo_output.{}.conv.weights".format(i)).get_tensor()
         weights = np.array(weights_tensor)
         # each yolo_output layer has 3 anchors, 85 channels of each anchor
-        weights = np.concatenate(weights[channel_idxs], 
-                                 weights[85 + channel_idxs], 
+        weights = np.concatenate(weights[channel_idxs],
+                                 weights[85 + channel_idxs],
                                  weights[170 + channel_idxs])
         weights_tensor.set(weights.astype('float32'), place)
         # crop conv bias
         bias_tensor = fluid.global_scope().find_var(
                         "yolo_output.{}.conv.bias".format(i)).get_tensor()
         bias = np.array(bias_tensor)
-        bias = np.concatenate(bias[channel_idxs], 
-                              bias[85 + channel_idxs], 
+        bias = np.concatenate(bias[channel_idxs],
+                              bias[85 + channel_idxs],
                               bias[150 + channel_idxs])
         bias_tensor.set(bias.astype('float32'), place)
 
@@ -323,4 +330,3 @@ If you can fix a issue or add a new feature, please open a PR to us. If your PR 
 
 - [heavengate](https://github.com/heavengate)
 - [tink2123](https://github.com/tink2123)
-

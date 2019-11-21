@@ -146,6 +146,9 @@ def parse_args():
     add_arg('draw_thresh',      float,  0.5,
             "Confidence score threshold to draw prediction box in image in debug mode")
     add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
+    # args for profiler tools
+    add_arg('is_profiler',        int,  0,                "the switch of profiler")
+    add_arg('profiler_path',        str,  './',                "the path to save profiler output files")
     # yapf: enable
     args = parser.parse_args()
     file_name = sys.argv[0]

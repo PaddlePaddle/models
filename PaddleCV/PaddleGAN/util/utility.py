@@ -27,8 +27,8 @@ import six
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-import imageio
 import copy
+from PIL import Image
 
 img_dim = 28
 
@@ -67,6 +67,66 @@ def init_checkpoints(cfg, exe, trainer, name):
     sys.stdout.flush()
 
 
+### the initialize checkpoint is one file named checkpoint.pdparams
+def init_from_checkpoint(args, exe, trainer, name):
+    if not os.path.exists(args.init_model):
+        raise Warning("the checkpoint path does not exist.")
+        return False
+
+    fluid.io.load_persistables(
+        executor=exe,
+        dirname=os.path.join(args.init_model, name),
+        main_program=trainer.program,
+        filename="checkpoint.pdparams")
+
+    print("finish initing model from checkpoint from %s" % (args.init_model))
+
+    return True
+
+
+### save the parameters of generator to one file
+def save_param(args, exe, program, dirname, var_name="generator"):
+
+    param_dir = os.path.join(args.output, 'infer_vars')
+
+    if not os.path.exists(param_dir):
+        os.makedirs(param_dir)
+
+    def _name_has_generator(var):
+        res = (fluid.io.is_parameter(var) and var.name.startswith(var_name))
+        print(var.name, res)
+        return res
+
+    fluid.io.save_vars(
+        exe,
+        os.path.join(param_dir, dirname),
+        main_program=program,
+        predicate=_name_has_generator,
+        filename="params.pdparams")
+    print("save parameters at %s" % (os.path.join(param_dir, dirname)))
+
+    return True
+
+
+### save the checkpoint to one file
+def save_checkpoint(epoch, args, exe, trainer, dirname):
+
+    checkpoint_dir = os.path.join(args.output, 'checkpoints', str(epoch))
+
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+
+    fluid.io.save_persistables(
+        exe,
+        os.path.join(checkpoint_dir, dirname),
+        main_program=trainer.program,
+        filename="checkpoint.pdparams")
+
+    print("save checkpoint at %s" % (os.path.join(checkpoint_dir, dirname)))
+
+    return True
+
+
 def save_test_image(epoch,
                     cfg,
                     exe,
@@ -74,57 +134,84 @@ def save_test_image(epoch,
                     test_program,
                     g_trainer,
                     A_test_reader,
-                    B_test_reader=None):
+                    B_test_reader=None,
+                    A_id2name=None,
+                    B_id2name=None):
     out_path = os.path.join(cfg.output, 'test')
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     if cfg.model_net == "Pix2pix":
-        for data in zip(A_test_reader()):
-            data_A, data_B, name = data[0]
-            name = name[0]
-            tensor_A = fluid.LoDTensor()
-            tensor_B = fluid.LoDTensor()
-            tensor_A.set(data_A, place)
-            tensor_B.set(data_B, place)
-            fake_B_temp = exe.run(
-                test_program,
-                fetch_list=[g_trainer.fake_B],
-                feed={"input_A": tensor_A,
-                      "input_B": tensor_B})
+        for data in A_test_reader():
+            A_data, B_data, image_name = data[0]['input_A'], data[0][
+                'input_B'], data[0]['image_name']
+            fake_B_temp = exe.run(test_program,
+                                  fetch_list=[g_trainer.fake_B],
+                                  feed={"input_A": A_data,
+                                        "input_B": B_data})
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
-            input_A_temp = np.squeeze(data_A[0]).transpose([1, 2, 0])
-            input_B_temp = np.squeeze(data_A[0]).transpose([1, 2, 0])
+            input_A_temp = np.squeeze(np.array(A_data)[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(np.array(B_data)[0]).transpose([1, 2, 0])
 
-            imageio.imwrite(out_path + "/fakeB_" + str(epoch) + "_" + name, (
-                (fake_B_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/inputA_" + str(epoch) + "_" + name, (
-                (input_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/inputB_" + str(epoch) + "_" + name, (
-                (input_B_temp + 1) * 127.5).astype(np.uint8))
+            fakeB_name = "fakeB_" + str(epoch) + "_" + A_id2name[np.array(
+                image_name).astype('int32')[0]]
+            inputA_name = "inputA_" + str(epoch) + "_" + A_id2name[np.array(
+                image_name).astype('int32')[0]]
+            inputB_name = "inputB_" + str(epoch) + "_" + A_id2name[np.array(
+                image_name).astype('int32')[0]]
+
+            res_fakeB = Image.fromarray(((fake_B_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_fakeB.save(os.path.join(out_path, fakeB_name))
+
+            res_inputA = Image.fromarray(((input_A_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_inputA.save(os.path.join(out_path, inputA_name))
+
+            res_inputB = Image.fromarray(((input_B_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_inputB.save(os.path.join(out_path, inputB_name))
+    elif cfg.model_net == "SPADE":
+        for data in A_test_reader():
+            data_A, data_B, data_C, name = data[0]['input_label'], data[0][
+                'input_img'], data[0]['input_ins'], data[0]['image_name']
+            fake_B_temp = exe.run(test_program,
+                                  fetch_list=[g_trainer.fake_B],
+                                  feed={
+                                      "input_label": data_A,
+                                      "input_img": data_B,
+                                      "input_ins": data_C
+                                  })
+            fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(data_B[0]).transpose([1, 2, 0])
+            image_name = A_id2name[np.array(name).astype('int32')[0]]
+
+            res_fakeB = Image.fromarray(((fake_B_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_fakeB.save(out_path + "/fakeB_" + str(epoch) + "_" + image_name)
+            res_real = Image.fromarray(((input_B_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_real.save(out_path + "/real_" + str(epoch) + "_" + image_name)
     elif cfg.model_net == "StarGAN":
-        for data in zip(A_test_reader()):
-            real_img, label_org, name = data[0]
+        for data in A_test_reader():
+            real_img, label_org, label_trg, image_name = data[0][
+                'image_real'], data[0]['label_org'], data[0]['label_trg'], data[
+                    0]['image_name']
             attr_names = cfg.selected_attrs.split(',')
-            tensor_img = fluid.LoDTensor()
-            tensor_label_org = fluid.LoDTensor()
-            tensor_img.set(real_img, place)
-            tensor_label_org.set(label_org, place)
-            real_img_temp = save_batch_image(real_img)
+            real_img_temp = save_batch_image(np.array(real_img))
             images = [real_img_temp]
             for i in range(cfg.c_dim):
-                label_trg_tmp = copy.deepcopy(label_org)
-                for j in range(len(label_org)):
+                label_trg_tmp = copy.deepcopy(np.array(label_org))
+                for j in range(len(np.array(label_org))):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
-                    label_trg = check_attribute_conflict(
+                    np_label_trg = check_attribute_conflict(
                         label_trg_tmp, attr_names[i], attr_names)
-                tensor_label_trg = fluid.LoDTensor()
-                tensor_label_trg.set(label_trg, place)
+                label_trg.set(np_label_trg, place)
                 fake_temp, rec_temp = exe.run(
                     test_program,
                     feed={
-                        "image_real": tensor_img,
-                        "label_org": tensor_label_org,
-                        "label_trg": tensor_label_trg
+                        "image_real": real_img,
+                        "label_org": label_org,
+                        "label_trg": label_trg
                     },
                     fetch_list=[g_trainer.fake_img, g_trainer.rec_img])
                 fake_temp = save_batch_image(fake_temp)
@@ -132,96 +219,120 @@ def save_test_image(epoch,
                 images.append(fake_temp)
                 images.append(rec_temp)
             images_concat = np.concatenate(images, 1)
-            if len(label_org) > 1:
+            if len(np.array(label_org)) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(out_path + "/fake_img" + str(epoch) + "_" + name[0],
-                            ((images_concat + 1) * 127.5).astype(np.uint8))
+            image_name_save = "fake_img" + str(epoch) + "_" + str(
+                np.array(image_name)[0].astype('int32')) + '.jpg'
+
+            res = Image.fromarray(((images_concat + 1) * 127.5).astype(
+                np.uint8))
+            res.save(os.path.join(out_path, image_name_save))
+
     elif cfg.model_net == 'AttGAN' or cfg.model_net == 'STGAN':
-        for data in zip(A_test_reader()):
-            real_img, label_org, name = data[0]
+        for data in A_test_reader():
+            real_img, label_org, label_trg, image_name = data[0][
+                'image_real'], data[0]['label_org'], data[0]['label_trg'], data[
+                    0]['image_name']
             attr_names = cfg.selected_attrs.split(',')
-            label_trg = copy.deepcopy(label_org)
-            tensor_img = fluid.LoDTensor()
-            tensor_label_org = fluid.LoDTensor()
-            tensor_label_trg = fluid.LoDTensor()
-            tensor_label_org_ = fluid.LoDTensor()
-            tensor_label_trg_ = fluid.LoDTensor()
-            tensor_img.set(real_img, place)
-            tensor_label_org.set(label_org, place)
-            real_img_temp = save_batch_image(real_img)
+            real_img_temp = save_batch_image(np.array(real_img))
             images = [real_img_temp]
             for i in range(cfg.c_dim):
-                label_trg_tmp = copy.deepcopy(label_trg)
+                label_trg_tmp = copy.deepcopy(np.array(label_trg))
 
-                for j in range(len(label_org)):
+                for j in range(len(label_trg_tmp)):
                     label_trg_tmp[j][i] = 1.0 - label_trg_tmp[j][i]
                     label_trg_tmp = check_attribute_conflict(
                         label_trg_tmp, attr_names[i], attr_names)
 
-                label_org_ = list(map(lambda x: ((x * 2) - 1) * 0.5, label_org))
-                label_trg_ = list(
+                label_org_tmp = list(
+                    map(lambda x: ((x * 2) - 1) * 0.5, np.array(label_org)))
+                label_trg_tmp = list(
                     map(lambda x: ((x * 2) - 1) * 0.5, label_trg_tmp))
 
                 if cfg.model_net == 'AttGAN':
-                    for k in range(len(label_org)):
-                        label_trg_[k][i] = label_trg_[k][i] * 2.0
-                tensor_label_org_.set(label_org_, place)
-                tensor_label_trg.set(label_trg, place)
-                tensor_label_trg_.set(label_trg_, place)
+                    for k in range(len(label_trg_tmp)):
+                        label_trg_tmp[k][i] = label_trg_tmp[k][i] * 2.0
+                tensor_label_org_ = fluid.LoDTensor()
+                tensor_label_org_.set(label_org_tmp, place)
+                tensor_label_trg_ = fluid.LoDTensor()
+                tensor_label_trg_.set(label_trg_tmp, place)
+
                 out = exe.run(test_program,
                               feed={
-                                  "image_real": tensor_img,
-                                  "label_org": tensor_label_org,
+                                  "image_real": real_img,
+                                  "label_org": label_org,
                                   "label_org_": tensor_label_org_,
-                                  "label_trg": tensor_label_trg,
+                                  "label_trg": label_trg,
                                   "label_trg_": tensor_label_trg_
                               },
                               fetch_list=[g_trainer.fake_img])
                 fake_temp = save_batch_image(out[0])
                 images.append(fake_temp)
             images_concat = np.concatenate(images, 1)
-            if len(label_org) > 1:
+            if len(label_trg_tmp) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(out_path + "/fake_img" + str(epoch) + '_' + name[0],
-                            ((images_concat + 1) * 127.5).astype(np.uint8))
+            image_name_save = 'fake_img_' + str(epoch) + '_' + str(
+                np.array(image_name)[0].astype('int32')) + '.jpg'
+
+            res = Image.fromarray(((images_concat + 1) * 127.5).astype(
+                np.uint8))
+            res.save(os.path.join(out_path, image_name_save))
 
     else:
         for data_A, data_B in zip(A_test_reader(), B_test_reader()):
-            A_data, A_name = data_A
-            B_data, B_name = data_B
-            tensor_A = fluid.LoDTensor()
-            tensor_B = fluid.LoDTensor()
-            tensor_A.set(A_data, place)
-            tensor_B.set(B_data, place)
+            A_data, A_name = data_A[0]['input_A'], data_A[0]['A_image_name']
+            B_data, B_name = data_B[0]['input_B'], data_B[0]['B_image_name']
             fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = exe.run(
                 test_program,
                 fetch_list=[
                     g_trainer.fake_A, g_trainer.fake_B, g_trainer.cyc_A,
                     g_trainer.cyc_B
                 ],
-                feed={"input_A": tensor_A,
-                      "input_B": tensor_B})
+                feed={"input_A": A_data,
+                      "input_B": B_data})
             fake_A_temp = np.squeeze(fake_A_temp[0]).transpose([1, 2, 0])
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
             cyc_A_temp = np.squeeze(cyc_A_temp[0]).transpose([1, 2, 0])
             cyc_B_temp = np.squeeze(cyc_B_temp[0]).transpose([1, 2, 0])
-            input_A_temp = np.squeeze(data_A[0][0]).transpose([1, 2, 0])
-            input_B_temp = np.squeeze(data_B[0][0]).transpose([1, 2, 0])
+            input_A_temp = np.squeeze(np.array(A_data)).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(np.array(B_data)).transpose([1, 2, 0])
 
-            imageio.imwrite(out_path + "/fakeB_" + str(epoch) + "_" + A_name[0],
-                            ((fake_B_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/fakeA_" + str(epoch) + "_" + B_name[0],
-                            ((fake_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/cycA_" + str(epoch) + "_" + A_name[0],
-                            ((cyc_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(out_path + "/cycB_" + str(epoch) + "_" + B_name[0],
-                            ((cyc_B_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(
-                out_path + "/inputA_" + str(epoch) + "_" + A_name[0], (
-                    (input_A_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(
-                out_path + "/inputB_" + str(epoch) + "_" + B_name[0], (
-                    (input_B_temp + 1) * 127.5).astype(np.uint8))
+            fakeA_name = "fakeA_" + str(epoch) + "_" + A_id2name[np.array(
+                A_name).astype('int32')[0]]
+            fakeB_name = "fakeB_" + str(epoch) + "_" + B_id2name[np.array(
+                B_name).astype('int32')[0]]
+            inputA_name = "inputA_" + str(epoch) + "_" + A_id2name[np.array(
+                A_name).astype('int32')[0]]
+            inputB_name = "inputB_" + str(epoch) + "_" + B_id2name[np.array(
+                B_name).astype('int32')[0]]
+            cycA_name = "cycA_" + str(epoch) + "_" + A_id2name[np.array(
+                A_name).astype('int32')[0]]
+            cycB_name = "cycB_" + str(epoch) + "_" + B_id2name[np.array(
+                B_name).astype('int32')[0]]
+
+            res_fakeB = Image.fromarray(((fake_B_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_fakeB.save(os.path.join(out_path, fakeB_name))
+
+            res_fakeA = Image.fromarray(((fake_A_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_fakeA.save(os.path.join(out_path, fakeA_name))
+
+            res_cycA = Image.fromarray(((cyc_A_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_cycA.save(os.path.join(out_path, cycA_name))
+
+            res_cycB = Image.fromarray(((cyc_B_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_cycB.save(os.path.join(out_path, cycB_name))
+
+            res_inputA = Image.fromarray(((input_A_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_inputA.save(os.path.join(out_path, inputA_name))
+
+            res_inputB = Image.fromarray(((input_B_temp + 1) * 127.5).astype(
+                np.uint8))
+            res_inputB.save(os.path.join(out_path, inputB_name))
 
 
 class ImagePool(object):
@@ -273,6 +384,7 @@ def check_attribute_conflict(label_batch, attr, attrs):
 
 
 def save_batch_image(img):
+    #if img.shape[0] == 1:
     if len(img) == 1:
         res_img = np.squeeze(img).transpose([1, 2, 0])
     else:
@@ -297,3 +409,19 @@ def check_gpu(use_gpu):
             sys.exit(1)
     except Exception as e:
         pass
+
+
+def check_version():
+    """
+    Log error and exit when the installed version of paddlepaddle is
+    not satisfied.
+    """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        print(err)
+        sys.exit(1)

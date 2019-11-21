@@ -1,3 +1,7 @@
+English | [简体中文](DATA_cn.md)
+
+# Data Pipline
+
 ## Introduction
 
 The data pipeline is responsible for loading and converting data. Each
@@ -23,6 +27,7 @@ Parses various data sources and creates `data.Dataset` instances. Currently,
 following data sources are supported:
 
 - COCO data source
+
 Loads `COCO` type datasets with directory structures like this:
 
   ```
@@ -32,45 +37,53 @@ Loads `COCO` type datasets with directory structures like this:
   │   ├── instances_train2017.json
   │   ├── instances_val2014.json
   │   ├── instances_val2017.json
-  |   ...
+  │   |   ...
   ├── train2017
   │   ├── 000000000009.jpg
   │   ├── 000000580008.jpg
-  |   ...
+  │   |   ...
   ├── val2017
   │   ├── 000000000139.jpg
   │   ├── 000000000285.jpg
+  │   |   ...
   |   ...
   ```
 
 - Pascal VOC data source
+
 Loads `Pascal VOC` like datasets with directory structure like this:
 
   ```
-  data/pascalvoc/
-  ├──Annotations
-  │   ├── i000050.jpg
-  │   ├── 003876.xml
-  |   ...
-  ├── ImageSets
-  │   ├──Main
-              └── train.txt
-              └── val.txt
-              └── test.txt
-              └── dog_train.txt
-              └── dog_trainval.txt
-              └── dog_val.txt
-              └── dog_test.txt
-              └── ...
-  │   ├──Layout
-               └──...
-  │   ├── Segmentation
-                └──...
-  ├── JPEGImages
-  │   ├── 000050.jpg
-  │   ├── 003876.jpg
+  dataset/voc/
+  ├── train.txt
+  ├── val.txt
+  ├── test.txt
+  ├── label_list.txt (optional)
+  ├── VOCdevkit/VOC2007
+  │   ├── Annotations
+  │       ├── 001789.xml
+  │       |   ...
+  │   ├── JPEGImages 
+  │       ├── 001789.xml
+  │       |   ...
+  │   ├── ImageSets
+  │       |   ...
+  ├── VOCdevkit/VOC2012
+  │   ├── Annotations
+  │       ├── 003876.xml
+  │       |   ...
+  │   ├── JPEGImages 
+  │       ├── 003876.xml
+  │       |   ...
+  │   ├── ImageSets
+  │       |   ...
   |   ...
   ```
+
+**NOTE:** If you set `use_default_label=False` in yaml configs, the `label_list.txt`
+of Pascal VOC dataset will be read, otherwise, `label_list.txt` is unnecessary and
+the default Pascal VOC label list which defined in 
+[voc\_loader.py](../ppdet/data/source/voc_loader.py) will be used.
 
 - Roidb data source
 A generalized data source serialized as pickle files, which have the following
@@ -98,7 +111,7 @@ like dataset, run this command:
 # --annotation: the path of file, which contains the name of annotation files
 # --save-dir: the save path
 # --samples: the number of samples (default is -1, which mean all datas in dataset)
-python ./tools/generate_data_for_training.py
+python ./ppdet/data/tools/generate_data_for_training.py
             --type=json \
             --annotation=./annotations/instances_val2017.json \
             --save-dir=./roidb \
@@ -124,6 +137,8 @@ the corresponding data stream. Many aspect of the `Reader`, such as storage
 location, preprocessing pipeline, acceleration mode can be configured with yaml
 files.
 
+### APIs
+
 The main APIs are as follows:
 
 1. Data parsing
@@ -137,7 +152,7 @@ The main APIs are as follows:
  - `source/loader.py`: Roidb dataset parser. [source](../ppdet/data/source/loader.py)
 
 2. Operator
- `transform/operators.py`: Contains a variety of data enhancement methods, including:
+ `transform/operators.py`: Contains a variety of data augmentation methods, including:
 - `DecodeImage`: Read images in RGB format.
 - `RandomFlipImage`: Horizontal flip.
 - `RandomDistort`: Distort brightness, contrast, saturation, and hue.
@@ -148,7 +163,7 @@ The main APIs are as follows:
 - `NormalizeImage`: Normalize image pixel values.
 - `NormalizeBox`: Normalize the bounding box.
 - `Permute`: Arrange the channels of the image and optionally convert image to BGR format.
-- `MixupImage`: Mixup two images with given fraction<sup>[1](#vd)</sup>.
+- `MixupImage`: Mixup two images with given fraction<sup>[1](#mix)</sup>.
 
 <a name="mix">[1]</a> Please refer to [this paper](https://arxiv.org/pdf/1710.09412.pdf)。
 
@@ -175,16 +190,18 @@ whole data pipeline is fully customizable through the yaml configuration files.
 
 #### Custom Datasets
 
-- Option 1: Convert the dataset to COCO or VOC format.
+- Option 1: Convert the dataset to COCO format.
 ```sh
- # a small utility (`tools/labelme2coco.py`) is provided to convert
- # Labelme-annotated dataset to COCO format.
- python ./tools/labelme2coco.py --json_input_dir ./labelme_annos/
+ # a small utility (`tools/x2coco.py`) is provided to convert
+ # Labelme-annotated dataset or cityscape dataset to COCO format.
+ python ./ppdet/data/tools/x2coco.py --dataset_type labelme
+                                --json_input_dir ./labelme_annos/
                                 --image_input_dir ./labelme_imgs/
                                 --output_dir ./cocome/
                                 --train_proportion 0.8
                                 --val_proportion 0.2
                                 --test_proportion 0.0
+ # --dataset_type: The data format which is need to be converted. Currently supported are: 'labelme' and 'cityscape'
  # --json_input_dir：The path of json files which are annotated by Labelme.
  # --image_input_dir：The path of images.
  # --output_dir：The path of coverted COCO dataset.

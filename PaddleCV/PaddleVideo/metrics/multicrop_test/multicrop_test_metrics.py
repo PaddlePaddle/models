@@ -24,6 +24,7 @@ import datetime
 import logging
 from collections import defaultdict
 import pickle
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class MetricsCalculator():
         self.filename_gt = metrics_args['filename_gt']
         self.checkpoint_dir = metrics_args['checkpoint_dir']
         self.num_classes = metrics_args['num_classes']
+        self.labels_list = json.load(open(metrics_args['labels_list']))
         self.reset()
 
     def reset(self):
@@ -61,7 +63,7 @@ class MetricsCalculator():
     def calculate_metrics(self, loss, pred, labels):
         pass
 
-    def accumulate(self, loss, pred, labels):
+    def accumulate(self, pred, labels):
         labels = labels.astype(int)
         labels = labels[:, 0]
         for i in range(pred.shape[0]):
@@ -77,18 +79,26 @@ class MetricsCalculator():
             logger.info("({0} / {1}) videos".format(\
                         len(self.seen_inds), self.dataset_size))
 
+    def accumulate_infer_results(self, pred, labels):
+        for i in range(pred.shape[0]):
+            vid = labels[i][0]
+            probs = pred[i, :].tolist()
+            self.seen_inds[vid] += 1
+            if self.seen_inds[vid] > self.num_test_clips:
+                logger.warning('Video id {} have been seen. Skip.'.format(vid,
+                                                                          ))
+                continue
+            save_pairs = [vid, probs]
+            self.results.append(save_pairs)
+
     def finalize_metrics(self):
         if self.filename_gt is not None:
             evaluate_results(self.results, self.filename_gt, self.dataset_size, \
                              self.num_classes, self.num_test_clips)
-        # save temporary file
-        if not os.path.isdir(self.checkpoint_dir):
-            os.makedirs(self.checkpoint_dir)
-        pkl_path = os.path.join(self.checkpoint_dir, "results_probs.pkl")
 
-        with open(pkl_path, 'wb') as f:
-            pickle.dump(self.results, f, protocol=0)
-        logger.info('Temporary file saved to: {}'.format(pkl_path))
+    def finalize_infer_metrics(self):
+        evaluate_infer_results(self.results, self.num_classes,
+                               self.num_test_clips, self.labels_list)
 
 
 def read_groundtruth(filename_gt):
@@ -110,7 +120,9 @@ def evaluate_results(results, filename_gt, test_dataset_size, num_classes,
     counts = np.zeros(sample_num, dtype=np.int32)
     probs = np.zeros((sample_num, class_num))
 
-    assert (len(gt_labels) == sample_num)
+    assert (len(gt_labels) == sample_num), \
+             "the number of gt_labels({}) should be the same with sample_num({})".format(
+                         len(gt_labels), sample_num)
     """
     clip_accuracy: the (e.g.) 10*19761 clips' average accuracy
     clip1_accuracy: the 1st clip's accuracy (starting from frame 0)
@@ -192,3 +204,30 @@ def evaluate_results(results, filename_gt, test_dataset_size, num_classes,
     logger.info('-' * 80)
 
     return
+
+
+def evaluate_infer_results(results, num_classes, num_test_clips, labels_list):
+    probs = {}
+    counts = {}
+    for entry in results:
+        vid = entry[0]
+        pred = entry[1]
+        if vid in probs.keys():
+            assert vid in counts.keys(
+            ), "If vid in probs, it should be in counts"
+            probs[vid] = (probs[vid] * counts[vid] + pred) / (counts[vid] + 1)
+            counts[vid] += 1
+        else:
+            probs[vid] = np.copy(pred)
+            counts[vid] = 1
+
+    topk = 20
+
+    for vid in probs.keys():
+        pred = probs[vid]
+        sorted_inds = np.argsort(pred)[::-1]
+        topk_inds = sorted_inds[:topk]
+        logger.info('video {}, topk({}) preds: \n'.format(vid, topk))
+        for ind in topk_inds:
+            logger.info('\t    class: {},  probability  {} \n'.format(
+                labels_list[ind], pred[ind]))

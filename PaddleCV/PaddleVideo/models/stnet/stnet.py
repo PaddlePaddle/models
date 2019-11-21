@@ -51,31 +51,24 @@ class STNET(ModelBase):
         self.target_size = self.get_config_from_sec(self.mode, 'target_size')
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size')
 
-    def build_input(self, use_pyreader=True):
+    def build_input(self, use_dataloader=True):
         image_shape = [3, self.target_size, self.target_size]
         image_shape[0] = image_shape[0] * self.seglen
-        image_shape = [self.seg_num] + image_shape
-        self.use_pyreader = use_pyreader
-        if use_pyreader:
-            assert self.mode != 'infer', \
-                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            py_reader = fluid.layers.py_reader(
-                capacity=100,
-                shapes=[[-1] + image_shape, [-1] + [1]],
-                dtypes=['float32', 'int64'],
-                name='train_py_reader'
-                if self.is_training else 'test_py_reader',
-                use_double_buffer=True)
-            image, label = fluid.layers.read_file(py_reader)
-            self.py_reader = py_reader
+        image_shape = [None, self.seg_num] + image_shape
+        self.use_dataloader = use_dataloader
+
+        image = fluid.data(name='image', shape=image_shape, dtype='float32')
+        if self.mode != 'infer':
+            label = fluid.data(name='label', shape=[None, 1], dtype='int64')
         else:
-            image = fluid.layers.data(
-                name='image', shape=image_shape, dtype='float32')
-            if self.mode != 'infer':
-                label = fluid.layers.data(
-                    name='label', shape=[1], dtype='int64')
-            else:
-                label = None
+            label = None
+
+        if use_dataloader:
+            assert self.mode != 'infer', \
+                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
+                feed_list=[image, label], capacity=4, iterable=True)
+
         self.feature_input = [image]
         self.label_input = label
 
@@ -127,6 +120,21 @@ class STNET(ModelBase):
             self.label_input
         ]
 
+    def fetches(self):
+        if self.mode == 'train' or self.mode == 'valid':
+            losses = self.loss()
+            fetch_list = [losses, self.network_outputs[0], self.label_input]
+        elif self.mode == 'test':
+            losses = self.loss()
+            fetch_list = [losses, self.network_outputs[0], self.label_input]
+        elif self.mode == 'infer':
+            fetch_list = self.network_outputs
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+        return fetch_list
+
     def pretrain_info(self):
         return (
             'ResNet50_pretrained',
@@ -135,25 +143,81 @@ class STNET(ModelBase):
 
     def weights_info(self):
         return (
-            'stnet_kinetics',
-            'https://paddlemodels.bj.bcebos.com/video_classification/stnet_kinetics.tar.gz'
+            'STNET_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/STNET_final.pdparams'
         )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
+        """
+        The pretrained params are ResNet50 pretrained on ImageNet.
+        However, conv1_weights of StNet is not the same as that in ResNet50 because the input are super-image
+        concatanated by a series of images. When loading conv1_weights from the pretrained file, shape
+        mismatch error will be raised due to the check in fluid.io. This check on params' shape is newly
+        added in fluid.version==1.6.0. So it is recommendated to treat conv1_weights specifically.
+        The process is as following:
+          1, load params except conv1_weights from pretrain
+          2, create var named 'conv1_weights' in new_scope, and load the value from the pretrain file
+          3, get the value of conv1_weights in the new_scope and transform it
+          4, set the transformed value to conv1_weights in prog
+        """
+
         def is_parameter(var):
             if isinstance(var, fluid.framework.Parameter):
                 return isinstance(var, fluid.framework.Parameter) and (not ("fc_0" in var.name)) \
-                    and (not ("batch_norm" in var.name)) and (not ("xception" in var.name)) and (not ("conv3d" in var.name))
+                    and (not ("batch_norm" in var.name)) and (not ("xception" in var.name)) \
+                    and (not ("conv3d" in var.name)) and (not ("conv1_weights") in var.name)
 
         logger.info(
-            "Load pretrain weights from {}, exclude fc, batch_norm, xception, conv3d layers.".
+            "Load pretrain weights from {}, exclude conv1, fc, batch_norm, xception, conv3d layers.".
             format(pretrain))
-        vars = filter(is_parameter, prog.list_vars())
-        fluid.io.load_vars(exe, pretrain, vars=vars, main_program=prog)
 
-        param_tensor = fluid.global_scope().find_var(
-            "conv1_weights").get_tensor()
-        param_numpy = np.array(param_tensor)
-        param_numpy = np.mean(param_numpy, axis=1, keepdims=True) / self.seglen
+        # loaded params from pretrained file exclued conv1, fc, batch_norm, xception, conv3d
+        prog_vars = filter(is_parameter, prog.list_vars())
+        fluid.io.load_vars(exe, pretrain, vars=prog_vars, main_program=prog)
+
+        # get global scope and conv1_weights' details
+        global_scope = fluid.global_scope()
+        global_block = prog.global_block()
+        conv1_weights_name = "conv1_weights"
+        var_conv1_weights = global_block.var(conv1_weights_name)
+        tensor_conv1_weights = global_scope.var(conv1_weights_name).get_tensor()
+
+        var_type = var_conv1_weights.type
+        var_dtype = var_conv1_weights.dtype
+        var_shape = var_conv1_weights.shape
+        assert var_shape[
+            1] == 3 * self.seglen, "conv1_weights.shape[1] shoud be 3 x seglen({})".format(
+                self.seglen)
+        # transform shape to be consistent with conv1_weights of ResNet50
+        var_shape = (var_shape[0], 3, var_shape[2], var_shape[3])
+
+        # create new_scope and new_prog to create var with transformed shape
+        cpu_place = fluid.CPUPlace()
+        exe_cpu = fluid.Executor(cpu_place)
+        new_scope = fluid.Scope()
+        new_prog = fluid.Program()
+        new_start_prog = fluid.Program()
+        new_block = new_prog.global_block()
+        with fluid.scope_guard(new_scope):
+            with fluid.program_guard(new_prog, new_start_prog):
+                new_var = new_block.create_var(
+                    name=conv1_weights_name,
+                    type=var_type,
+                    shape=var_shape,
+                    dtype=var_dtype,
+                    persistable=True)
+
+        # load conv1_weights from pretrain file into the var created in new_scope
+        with fluid.scope_guard(new_scope):
+            fluid.io.load_vars(
+                exe_cpu, pretrain, main_program=new_prog, vars=[new_var])
+
+        # get the valued of loaded conv1_weights, and transform it
+        new_tensor = new_scope.var(conv1_weights_name).get_tensor()
+        new_value = np.array(new_tensor)
+        param_numpy = np.mean(new_value, axis=1, keepdims=True) / self.seglen
         param_numpy = np.repeat(param_numpy, 3 * self.seglen, axis=1)
-        param_tensor.set(param_numpy.astype(np.float32), place)
+        # set the value of conv1_weights in the original program
+        tensor_conv1_weights.set(param_numpy.astype(np.float32), place)
+
+        # All the expected pretrained params are set to prog now

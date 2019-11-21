@@ -8,6 +8,7 @@ log_smooth_window: 20
 save_dir: output
 snapshot_iter: 2000
 metric: VOC
+map_type: 11point
 pretrain_weights: http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar
 weights: output/yolov3_mobilenet_v1_voc/model_final
 num_classes: 20
@@ -62,8 +63,7 @@ YoloTrainFeed:
   batch_size: 8
   dataset:
     dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
+    annotation: trainval.txt
     use_default_label: true
   num_workers: 8
   bufsize: 128
@@ -72,13 +72,14 @@ YoloTrainFeed:
 
 YoloEvalFeed:
   batch_size: 8
+  image_shape: [3, 608, 608]
   dataset:
     dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
+    annotation: test.txt
     use_default_label: true
 
 YoloTestFeed:
   batch_size: 1
+  image_shape: [3, 608, 608]
   dataset:
     use_default_label: true

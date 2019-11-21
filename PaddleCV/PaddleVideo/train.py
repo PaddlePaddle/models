@@ -21,12 +21,13 @@ import logging
 import numpy as np
 import paddle.fluid as fluid
 
-from tools.train_utils import train_with_pyreader, train_without_pyreader
+from utils.train_utils import train_with_dataloader
 import models
-from config import *
-from datareader import get_reader
+from utils.config_utils import *
+from reader import get_reader
 from metrics import get_metrics
-from utils import check_cuda
+from utils.utility import check_cuda
+from utils.utility import check_version
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -74,11 +75,6 @@ def parse_args():
         default=True,
         help='default use gpu.')
     parser.add_argument(
-        '--no_use_pyreader',
-        action='store_true',
-        default=False,
-        help='whether to use pyreader')
-    parser.add_argument(
         '--no_memory_optimize',
         action='store_true',
         default=False,
@@ -86,7 +82,7 @@ def parse_args():
     parser.add_argument(
         '--epoch',
         type=int,
-        default=0,
+        default=None,
         help='epoch number, 0 for read from config file')
     parser.add_argument(
         '--valid_interval',
@@ -96,7 +92,7 @@ def parse_args():
     parser.add_argument(
         '--save_dir',
         type=str,
-        default='checkpoints',
+        default=os.path.join('data', 'checkpoints'),
         help='directory name to save train snapshoot')
     parser.add_argument(
         '--log_interval',
@@ -104,7 +100,7 @@ def parse_args():
         default=10,
         help='mini-batch interval to log.')
     parser.add_argument(
-        '--enable_ce',
+        '--fix_random_seed',
         type=ast.literal_eval,
         default=False,
         help='If set True, enable continuous evaluation job.')
@@ -124,47 +120,33 @@ def train(args):
     # build model
     startup = fluid.Program()
     train_prog = fluid.Program()
-    if args.enable_ce:
+    if args.fix_random_seed:
         startup.random_seed = 1000
         train_prog.random_seed = 1000
     with fluid.program_guard(train_prog, startup):
         with fluid.unique_name.guard():
-            train_model.build_input(not args.no_use_pyreader)
+            train_model.build_input(use_dataloader=True)
             train_model.build_model()
             # for the input, has the form [data1, data2,..., label], so train_feeds[-1] is label
             train_feeds = train_model.feeds()
-            train_feeds[-1].persistable = True
-            # for the output of classification model, has the form [pred]
-            # for the output of detection model, has the form [loc_pred, cls_pred]
-            train_outputs = train_model.outputs()
-            for output in train_outputs:
-                output.persistable = True
-            train_losses = train_model.loss()
-            if isinstance(train_losses, list) or isinstance(train_losses,
-                                                            tuple):
-                # for detection model, train_losses has the form [total_loss, loc_loss, cls_loss]
-                train_loss = train_losses[0]
-                for item in train_losses:
-                    item.persistable = True
-            else:
-                train_loss = train_losses
-                train_loss.persistable = True
-            # outputs, loss, label should be fetched, so set persistable to be true
+            train_fetch_list = train_model.fetches()
+            train_loss = train_fetch_list[0]
+            for item in train_fetch_list:
+                item.persistable = True
             optimizer = train_model.optimizer()
             optimizer.minimize(train_loss)
-            train_pyreader = train_model.pyreader()
+            train_dataloader = train_model.dataloader()
 
     valid_prog = fluid.Program()
     with fluid.program_guard(valid_prog, startup):
         with fluid.unique_name.guard():
-            valid_model.build_input(not args.no_use_pyreader)
+            valid_model.build_input(use_dataloader=True)
             valid_model.build_model()
             valid_feeds = valid_model.feeds()
-            # for the output of classification model, has the form [pred]
-            # for the output of detection model, has the form [loc_pred, cls_pred]
-            valid_outputs = valid_model.outputs()
-            valid_losses = valid_model.loss()
-            valid_pyreader = valid_model.pyreader()
+            valid_fetch_list = valid_model.fetches()
+            valid_dataloader = valid_model.dataloader()
+            for item in valid_fetch_list:
+                item.persistable = True
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -175,11 +157,8 @@ def train(args):
         assert os.path.exists(args.resume), \
                 "Given resume weight dir {} not exist.".format(args.resume)
 
-        def if_exist(var):
-            return os.path.exists(os.path.join(args.resume, var.name))
-
-        fluid.io.load_vars(
-            exe, args.resume, predicate=if_exist, main_program=train_prog)
+        fluid.io.load_persistables(
+            exe, '', main_program=train_prog, filename=args.resume)
     else:
         # if not in resume mode, load pretrain weights
         if args.pretrain:
@@ -193,22 +172,37 @@ def train(args):
     build_strategy.enable_inplace = True
     if args.model_name in ['CTCN']:
         build_strategy.enable_sequential_execution = True
-    #build_strategy.memory_optimize = True
 
-    train_exe = fluid.ParallelExecutor(
-        use_cuda=args.use_gpu,
-        loss_name=train_loss.name,
-        main_program=train_prog,
-        build_strategy=build_strategy)
-    valid_exe = fluid.ParallelExecutor(
-        use_cuda=args.use_gpu,
-        share_vars_from=train_exe,
-        main_program=valid_prog)
+    exec_strategy = fluid.ExecutionStrategy()
+
+    compiled_train_prog = fluid.compiler.CompiledProgram(
+        train_prog).with_data_parallel(
+            loss_name=train_loss.name,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
+    compiled_valid_prog = fluid.compiler.CompiledProgram(
+        valid_prog).with_data_parallel(
+            share_vars_from=compiled_train_prog,
+            build_strategy=build_strategy,
+            exec_strategy=exec_strategy)
 
     # get reader
     bs_denominator = 1
-    if (not args.no_use_pyreader) and args.use_gpu:
+    if args.use_gpu:
+        # check number of GPUs
+        gpus = os.getenv("CUDA_VISIBLE_DEVICES", "")
+        if gpus == "":
+            pass
+        else:
+            gpus = gpus.split(",")
+            num_gpus = len(gpus)
+            assert num_gpus == train_config.TRAIN.num_gpus, \
+                   "num_gpus({}) set by CUDA_VISIBLE_DEVICES " \
+                   "shoud be the same as that " \
+                   "set in {}({})".format(
+                   num_gpus, args.config, train_config.TRAIN.num_gpus)
         bs_denominator = train_config.TRAIN.num_gpus
+
     train_config.TRAIN.batch_size = int(train_config.TRAIN.batch_size /
                                         bs_denominator)
     valid_config.VALID.batch_size = int(valid_config.VALID.batch_size /
@@ -220,70 +214,36 @@ def train(args):
     train_metrics = get_metrics(args.model_name.upper(), 'train', train_config)
     valid_metrics = get_metrics(args.model_name.upper(), 'valid', valid_config)
 
-    if isinstance(train_losses, tuple) or isinstance(train_losses, list):
-        # for detection
-        train_fetch_list = [item.name for item in train_losses] + \
-                [x.name for x in train_outputs] + [train_feeds[-1].name]
-        valid_fetch_list = [item.name for item in valid_losses] + \
-                [x.name for x in valid_outputs] + [valid_feeds[-1].name]
-    else:
-        # for classification
-        train_fetch_list = [train_losses.name] + [
-            x.name for x in train_outputs
-        ] + [train_feeds[-1].name]
-        valid_fetch_list = [valid_losses.name] + [
-            x.name for x in valid_outputs
-        ] + [valid_feeds[-1].name]
-
     epochs = args.epoch or train_model.epoch_num()
 
-    if args.no_use_pyreader:
-        train_feeder = fluid.DataFeeder(place=place, feed_list=train_feeds)
-        valid_feeder = fluid.DataFeeder(place=place, feed_list=valid_feeds)
-        train_without_pyreader(
-            exe,
-            train_prog,
-            train_exe,
-            train_reader,
-            train_feeder,
-            train_fetch_list,
-            train_metrics,
-            epochs=epochs,
-            log_interval=args.log_interval,
-            valid_interval=args.valid_interval,
-            save_dir=args.save_dir,
-            save_model_name=args.model_name,
-            test_exe=valid_exe,
-            test_reader=valid_reader,
-            test_feeder=valid_feeder,
-            test_fetch_list=valid_fetch_list,
-            test_metrics=valid_metrics)
-    else:
-        train_pyreader.decorate_paddle_reader(train_reader)
-        valid_pyreader.decorate_paddle_reader(valid_reader)
-        train_with_pyreader(
-            exe,
-            train_prog,
-            train_exe,
-            train_pyreader,
-            train_fetch_list,
-            train_metrics,
-            epochs=epochs,
-            log_interval=args.log_interval,
-            valid_interval=args.valid_interval,
-            save_dir=args.save_dir,
-            save_model_name=args.model_name,
-            enable_ce=args.enable_ce,
-            test_exe=valid_exe,
-            test_pyreader=valid_pyreader,
-            test_fetch_list=valid_fetch_list,
-            test_metrics=valid_metrics)
+    exe_places = fluid.cuda_places() if args.use_gpu else fluid.cpu_places()
+    train_dataloader.set_sample_list_generator(train_reader, places=exe_places)
+    valid_dataloader.set_sample_list_generator(valid_reader, places=exe_places)
+
+    train_with_dataloader(
+        exe,
+        train_prog,
+        compiled_train_prog,  #train_exe,
+        train_dataloader,
+        train_fetch_list,
+        train_metrics,
+        epochs=epochs,
+        log_interval=args.log_interval,
+        valid_interval=args.valid_interval,
+        save_dir=args.save_dir,
+        save_model_name=args.model_name,
+        fix_random_seed=args.fix_random_seed,
+        compiled_test_prog=compiled_valid_prog,  #test_exe=valid_exe,
+        test_dataloader=valid_dataloader,
+        test_fetch_list=valid_fetch_list,
+        test_metrics=valid_metrics)
 
 
 if __name__ == "__main__":
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
     check_cuda(args.use_gpu)
+    check_version()
     logger.info(args)
 
     if not os.path.exists(args.save_dir):

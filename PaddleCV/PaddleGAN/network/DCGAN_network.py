@@ -16,7 +16,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from .base_network import conv2d, deconv2d, linear
+from .base_network import norm_layer, deconv2d, linear, conv_and_pool
 
 import paddle.fluid as fluid
 import numpy as np
@@ -37,30 +37,38 @@ class DCGAN_model(object):
             self.norm = "batch_norm"
 
     def network_G(self, input, name="generator"):
-        o_l1 = linear(input, self.gfc_dim, norm=self.norm, name=name + '_l1')
-        o_l2 = linear(
-            o_l1,
-            self.gf_dim * 2 * self.img_dim // 4 * self.img_dim // 4,
+        o_l1 = linear(
+            input,
+            self.gfc_dim,
             norm=self.norm,
+            activation_fn='relu',
+            name=name + '_l1')
+        o_l2 = linear(
+            input=o_l1,
+            output_size=self.gf_dim * 2 * self.img_dim // 4 * self.img_dim // 4,
+            norm=self.norm,
+            activation_fn='relu',
             name=name + '_l2')
         o_r1 = fluid.layers.reshape(
             o_l2, [-1, self.df_dim * 2, self.img_dim // 4, self.img_dim // 4])
         o_dc1 = deconv2d(
-            o_r1,
-            self.gf_dim * 2,
-            4,
-            2,
-            padding=[1, 1],
+            input=o_r1,
+            num_filters=self.gf_dim * 2,
+            filter_size=5,
+            stride=2,
+            padding=2,
             activation_fn='relu',
             output_size=[self.img_dim // 2, self.img_dim // 2],
+            use_bias=True,
             name=name + '_dc1')
         o_dc2 = deconv2d(
-            o_dc1,
-            1,
-            4,
-            2,
-            padding=[1, 1],
+            input=o_dc1,
+            num_filters=1,
+            filter_size=5,
+            stride=2,
+            padding=2,
             activation_fn='tanh',
+            use_bias=True,
             output_size=[self.img_dim, self.img_dim],
             name=name + '_dc2')
         out = fluid.layers.reshape(o_dc2, shape=[-1, 28 * 28])
@@ -69,26 +77,15 @@ class DCGAN_model(object):
     def network_D(self, input, name="discriminator"):
         o_r1 = fluid.layers.reshape(
             input, shape=[-1, 1, self.img_dim, self.img_dim])
-        o_c1 = conv2d(
-            o_r1,
-            self.df_dim,
-            4,
-            2,
-            padding=[1, 1],
-            activation_fn='leaky_relu',
-            name=name + '_c1')
-        o_c2 = conv2d(
-            o_c1,
-            self.df_dim * 2,
-            4,
-            2,
-            padding=[1, 1],
-            norm='batch_norm',
-            activation_fn='leaky_relu',
-            name=name + '_c2')
+        o_c1 = conv_and_pool(
+            o_r1, self.df_dim, name=name + '_c1', act='leaky_relu')
+        o_c2_1 = conv_and_pool(o_c1, self.df_dim * 2, name=name + '_c2')
+        o_c2_2 = norm_layer(
+            o_c2_1, norm_type='batch_norm', name=name + '_c2_bn')
+        o_c2 = fluid.layers.leaky_relu(o_c2_2, name=name + '_c2_leaky_relu')
         o_l1 = linear(
-            o_c2,
-            self.dfc_dim,
+            input=o_c2,
+            output_size=self.dfc_dim,
             norm=self.norm,
             activation_fn='leaky_relu',
             name=name + '_l1')
