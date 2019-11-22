@@ -34,8 +34,9 @@
 
 **安装PointRCNN:**
 
-1. 克隆[PaddlePaddle/models]模型库，须下载`PaddleCV/PointRCNN`目录下包含的`pybind11`子库。
+1. 克隆[PaddlePaddle/models](https://github.com/PaddlePaddle/models)模型库
 
+`pts_utils`依赖`pybind11`编译，须下载`PaddleCV/PointRCNN`目录下包含的`pybind11`子库，使用`--recursive`命令触发子库下载。
 
 ```
 git clone --recursive https://github.com/PaddlePaddle/models
@@ -134,9 +135,9 @@ PointRCNN
 │   │   ├── ImageSets
 │   │   ├── object
 │   │   │   ├──training
-│   │   │      ├──calib & velodyne & label_2 & image_2 & planes
+│   │   │   │  ├──calib & velodyne & label_2 & image_2 & planes
 │   │   │   ├──testing
-│   │   │      ├──calib & velodyne & image_2
+│   │   │   │  ├──calib & velodyne & image_2
 
 ```
 
@@ -173,7 +174,7 @@ python tools/train.py --cfg=./cfgs/default.yml \
                       --save_dir=checkpoints
 ```
 
-RPN训练checkpoints默认保存在`checkpoints/rpn`目录，也可以通过--save_dir来指定。
+RPN训练checkpoints默认保存在`checkpoints/rpn`目录，也可以通过`--save_dir`来指定。
 
 4. 生成增强离线场景数据并保存RPN模型的输出特征和ROI，用于离线训练 RCNN 模型
 
@@ -184,12 +185,11 @@ python tools/generate_aug_scene.py --class_name 'Car' --split train --aug_times 
 ```
 
 保存RPN模型对离线增强数据的输出特征和ROI，可以通过参数`--ckpt_dir`来指定RPN训练最终权重保存路径，RPN权重默认保存在`checkpoints/rpn`目录。
-保存输出特征和ROI时须指定`TEST.SPLIT`为`train_aug`，指定`TEST.RPN_POST_NMS_TOP_N=300`, `TEST.RPN_NMS_THRESH=0.85`
+保存输出特征和ROI时须指定`TEST.SPLIT`为`train_aug`，指定`TEST.RPN_POST_NMS_TOP_N`为`300`, `TEST.RPN_NMS_THRESH`为`0.85`。
 通过`--output_dir`指定保存输出特征和ROI的路径，默认保存到`./output`目录。
 
 ```
-python tools/eval.py --cfg=cfgs/default.yaml  \
-                     --batch_size=4 \
+python tools/eval.py --cfg=cfgs/default.yml  \
                      --eval_mode=rpn \
                      --ckpt_dir=./checkpoints/rpn/199 \
                      --save_rpn_feature \
@@ -224,6 +224,7 @@ output
 ```
 python tools/train.py --cfg=./cfgs/default.yml \
                       --train_mode=rcnn_offline \
+                      --batch_size=4 \
                       --epoch=30 \
                       --save_dir=checkpoints \
                       --rcnn_training_roi_dir=output/detections/data \
@@ -258,7 +259,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.
 通过`--output_dir`指定保存输出特征和ROI的路径，默认保存到`./output`目录。
 
 ```
-python tools/eval.py --cfg=cfgs/default.yaml \
+python tools/eval.py --cfg=cfgs/default.yml \
                      --eval_mode=rpn \
                      --ckpt_dir=./checkpoints/rpn/199 \
                      --save_rpn_feature \
@@ -272,7 +273,7 @@ python tools/eval.py --cfg=cfgs/default.yaml \
 评估离线RCNN模型命令如下:
 
 ```
-python tools/eval.py --cfg=cfgs/default.yaml \
+python tools/eval.py --cfg=cfgs/default.yml \
                      --eval_mode=rcnn_offline \
                      --ckpt_dir=./checkpoints/rcnn_offline/29 \
                      --rcnn_eval_roi_dir=output/val/detections/data \
@@ -286,18 +287,20 @@ python tools/eval.py --cfg=cfgs/default.yaml \
 ```
 result_dir
 ├── final_result
-│   ├── data          # 保存最终检测结果
+│   ├── data          # 最终检测结果
 │   │   ├── 000001.txt
 │   │   ├── 000002.txt
 │   │   ├── ...
-├── roi_output        # 保存ROI输出
-│   ├── 000001.txt
-│   ├── 000002.txt
-│   ├── ...
-├── refine_output     # 保存优化后检测结果
-│   ├── 000001.txt
-│   ├── 000002.txt
-│   ├── ...
+├── roi_output
+│   ├── data          # RCNN模型输出检测ROI结果
+│   │   ├── 000001.txt
+│   │   ├── 000002.txt
+│   │   ├── ...
+├── refine_output
+│   ├── data          # 解码后的检测结果
+│   │   ├── 000001.txt
+│   │   ├── 000002.txt
+│   │   ├── ...
 ```
 
 4. 使用KITTI mAP工具获得评估结果
@@ -311,12 +314,12 @@ python3 kitti_map.py
 
 使用训练最终权重[RPN模型]()和[RCNN模型]()评估结果如下所示：
 
-|  Car AP@ | 0.70(easy) | 0.70(normal) | 0.70(hard) |
-| :------- | :--------: | :----------: | :--------: |
-| bbox AP: |   89.97    |    88.53    |    88.24    |
-| bev  AP: |   88.92    |    86.00    |    85.35    |
-| 3d   AP: |   85.00    |    76.01    |    75.17    |
-| aos  AP: |   89.94    |    88.37    |    87.98    |
+|  Car AP@ | 0.70(easy) | 0.70(moderate) | 0.70(hard) |
+| :------- | :--------: | :------------: | :--------: |
+| bbox AP: |   89.97    |     88.53      |   88.24    |
+| bev  AP: |   88.92    |     86.00      |   85.35    |
+| 3d   AP: |   85.00    |     76.01      |   75.17    |
+| aos  AP: |   89.94    |     88.37      |   87.98    |
 
 
 ## 参考文献
