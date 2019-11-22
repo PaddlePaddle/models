@@ -94,14 +94,12 @@ def build_program(is_train, main_prog, startup_prog, args):
             loss_out.append(data_loader)
     return loss_out
 
-
-def validate(args, test_data_loader, exe, test_prog, test_fetch_list, pass_id,
+def validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
              train_batch_metrics_record):
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
-    test_data_loader.start()
-    for batch in test_data_loader():
+    for batch in test_iter:
         t1 = time.time()
         test_batch_metrics = exe.run(program=test_prog,
                                      feed=batch,
@@ -174,32 +172,40 @@ def train(args):
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
+    trainer_id = int(os.getenv("PADDLE_TRAINER_ID", 0))
+
     #init model by checkpoint or pretrianed model.
     init_model(exe, args, train_prog)
     num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-    imagenet_reader = reader.ImageNetReader(0 if num_trainers > 1 else None)
-    train_reader = imagenet_reader.train(settings=args)
-    test_reader = imagenet_reader.val(settings=args)
-
-    train_data_loader.set_sample_list_generator(train_reader, place)
-    test_data_loader.set_sample_list_generator(test_reader, place)
-    places = place
-    if num_trainers <= 1 and args.use_gpu:
-        places = fluid.framework.cuda_places()
+    if args.use_dali:
+        import dali
+        train_iter = dali.train(settings=args)
+        if trainer_id == 0:
+            test_iter = dali.val(settings=args)
+    else:
+        imagenet_reader = reader.ImageNetReader(0 if num_trainers > 1 else None)
+        train_reader = imagenet_reader.train(settings=args)
+        test_reader = imagenet_reader.val(settings=args)
+        places = place
+        if num_trainers <= 1 and args.use_gpu:
+            places = fluid.framework.cuda_places()
+        train_data_loader.set_sample_list_generator(train_reader, places)
+        test_data_loader.set_sample_list_generator(test_reader, place)
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
                                                  train_fetch_vars[0], exe)
-    trainer_id = int(os.getenv("PADDLE_TRAINER_ID", 0))
-    total_batch_num = 0  #this is for benchmark
     for pass_id in range(args.num_epochs):
-        if num_trainers > 1:
-            imagenet_reader.set_shuffle_seed(pass_id + (
-                args.random_seed if args.random_seed else 0))
+        if num_trainers > 1 and not args.use_dali:
+            imagenet_reader.set_shuffle_seed(pass_id + (args.random_seed if args.random_seed else 0))
         train_batch_id = 0
         train_batch_time_record = []
         train_batch_metrics_record = []
 
-        for batch in train_data_loader():
+        if not args.use_dali:
+            train_iter = train_data_loader()
+            test_iter = test_data_loader()
+
+        for batch in train_iter:
             t1 = time.time()
             train_batch_metrics = exe.run(compiled_train_prog,
                                           feed=batch,
@@ -216,21 +222,23 @@ def train(args):
                 sys.stdout.flush()
             train_batch_id += 1
 
+        if args.use_dali:
+            train_iter.reset()
+
         if trainer_id == 0 and args.validate:
             if args.use_ema:
                 print('ExponentialMovingAverage validate start...')
                 with ema.apply(exe):
-                    validate(args, test_data_loader, exe, test_prog,
-                             test_fetch_list, pass_id,
-                             train_batch_metrics_record)
+                    validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
                 print('ExponentialMovingAverage validate over!')
 
-            validate(args, test_data_loader, exe, test_prog, test_fetch_list,
-                     pass_id, train_batch_metrics_record)
+            validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
             #For now, save model per epoch.
             if pass_id % args.save_step == 0:
                 save_model(args, exe, train_prog, pass_id)
 
+            if args.use_dali:
+                test_iter.reset()
 
 def main():
     args = parse_args()
