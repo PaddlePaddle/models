@@ -246,6 +246,7 @@ def eval(args):
                     pad_img = mapper_image(pad_img)
                     pad_img = fluid.dygraph.to_variable(pad_img)
                     pred1, pred2, pred3 = model(pad_img)
+                    pred1 = pred1 + pred2 + pred3
                     pred1 = pred1.numpy()
                     outputs = pred1[:, :, :height, :width]
                     if flip:
@@ -254,6 +255,7 @@ def eval(args):
                         pad_img_filp = mapper_image(pad_img_filp)
                         pad_img_filp = fluid.dygraph.to_variable(pad_img_filp)
                         pred1, pred2, pred3 = model(pad_img_filp)
+                        pred1 = pred1 + pred2 + pred3
                         pred1 = fluid.layers.reverse(pred1, axis=3)  
                         pred1 = pred1.numpy()
                         outputs += pred1[:, :, :height, :width]
@@ -282,6 +284,7 @@ def eval(args):
                             pad_crop_img = mapper_image(pad_crop_img)
                             pad_crop_img = fluid.dygraph.to_variable(pad_crop_img)
                             pred1, pred2, pred3 = model(pad_crop_img)  # shape [1, num_class, h, w]
+                            pred1 = pred1 + pred2 + pred3
                             pred = pred1.numpy()  # channel, h, w
                             outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  
                             count_norm[:, :, h0:h1, w0:w1] += 1 
@@ -291,6 +294,7 @@ def eval(args):
                                 pad_img_array = mapper_image(pad_img_filp)
                                 pad_img_array = fluid.dygraph.to_variable(pad_img_array)
                                 pred1, pred2, pred3 = model(pad_img_array)  
+                                pred1 = pred1 + pred2 + pred3
                                 pred1 = fluid.layers.reverse(pred1, axis=3)  
                                 pred = pred1.numpy()
                                 outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  
