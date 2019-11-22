@@ -101,26 +101,24 @@ def validate(args, test_data_loader, exe, test_prog, test_fetch_list, pass_id,
     test_batch_metrics_record = []
     test_batch_id = 0
     test_data_loader.start()
-    try:
-        while True:
-            t1 = time.time()
-            test_batch_metrics = exe.run(program=test_prog,
-                                         fetch_list=test_fetch_list)
-            t2 = time.time()
-            test_batch_elapse = t2 - t1
-            test_batch_time_record.append(test_batch_elapse)
+    for batch in test_data_loader():
+        t1 = time.time()
+        test_batch_metrics = exe.run(program=test_prog,
+                                     feed=batch,
+                                     fetch_list=test_fetch_list)
+        t2 = time.time()
+        test_batch_elapse = t2 - t1
+        test_batch_time_record.append(test_batch_elapse)
 
-            test_batch_metrics_avg = np.mean(
-                np.array(test_batch_metrics), axis=1)
-            test_batch_metrics_record.append(test_batch_metrics_avg)
+        test_batch_metrics_avg = np.mean(
+            np.array(test_batch_metrics), axis=1)
+        test_batch_metrics_record.append(test_batch_metrics_avg)
 
-            print_info(pass_id, test_batch_id, args.print_step,
-                       test_batch_metrics_avg, test_batch_elapse, "batch")
-            sys.stdout.flush()
-            test_batch_id += 1
+        print_info(pass_id, test_batch_id, args.print_step,
+                   test_batch_metrics_avg, test_batch_elapse, "batch")
+        sys.stdout.flush()
+        test_batch_id += 1
 
-    except fluid.core.EOFException:
-        test_data_loader.reset()
     #train_epoch_time_avg = np.mean(np.array(train_batch_time_record))
     train_epoch_metrics_avg = np.mean(
         np.array(train_batch_metrics_record), axis=0)
@@ -185,6 +183,9 @@ def train(args):
 
     train_data_loader.set_sample_list_generator(train_reader, place)
     test_data_loader.set_sample_list_generator(test_reader, place)
+    places = place
+    if num_trainers <= 1 and args.use_gpu:
+        places = fluid.framework.cuda_places()
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
                                                  train_fetch_vars[0], exe)
@@ -198,37 +199,22 @@ def train(args):
         train_batch_time_record = []
         train_batch_metrics_record = []
 
-        train_data_loader.start()
-        try:
-            while True:
-                if args.max_iter and total_batch_num == args.max_iter:
-                    return
-                t1 = time.time()
-                train_batch_metrics = exe.run(compiled_train_prog,
-                                              fetch_list=train_fetch_list)
-                t2 = time.time()
-                train_batch_elapse = t2 - t1
-                train_batch_time_record.append(train_batch_elapse)
-                train_batch_metrics_avg = np.mean(
-                    np.array(train_batch_metrics), axis=1)
-                train_batch_metrics_record.append(train_batch_metrics_avg)
-                if trainer_id == 0:
-                    print_info(pass_id, train_batch_id, args.print_step,
-                               train_batch_metrics_avg, train_batch_elapse,
-                               "batch")
-                    sys.stdout.flush()
-                train_batch_id += 1
-                total_batch_num = total_batch_num + 1 #this is for benchmark
-
-                ##profiler tools
-                if args.is_profiler and pass_id == 0 and train_batch_id == 100: 
-                    profiler.start_profiler("All")
-                elif args.is_profiler and pass_id == 0 and train_batch_id == 150:
-                    profiler.stop_profiler("total", args.profiler_path)
-                    return
-
-        except fluid.core.EOFException:
-            train_data_loader.reset()
+        for batch in train_data_loader():
+            t1 = time.time()
+            train_batch_metrics = exe.run(compiled_train_prog,
+                                          feed=batch,
+                                          fetch_list=train_fetch_list)
+            t2 = time.time()
+            train_batch_elapse = t2 - t1
+            train_batch_time_record.append(train_batch_elapse)
+            train_batch_metrics_avg = np.mean(
+                np.array(train_batch_metrics), axis=1)
+            train_batch_metrics_record.append(train_batch_metrics_avg)
+            if trainer_id == 0:
+                print_info(pass_id, train_batch_id, args.print_step,
+                           train_batch_metrics_avg, train_batch_elapse, "batch")
+                sys.stdout.flush()
+            train_batch_id += 1
 
         if trainer_id == 0 and args.validate:
             if args.use_ema:

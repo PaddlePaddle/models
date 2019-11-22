@@ -328,14 +328,14 @@ def create_data_loader(is_train, args):
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
             capacity=64,
             use_double_buffer=True,
-            iterable=False)
+            iterable=True)
         return data_loader, [feed_image, feed_y_a, feed_y_b, feed_lam]
     else:
         data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_label],
             capacity=64,
             use_double_buffer=True,
-            iterable=False)
+            iterable=True)
 
         return data_loader, [feed_image, feed_label]
 
