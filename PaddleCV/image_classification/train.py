@@ -205,8 +205,8 @@ def train(args):
             train_iter = train_data_loader()
             test_iter = test_data_loader()
 
+        t1 = time.time()
         for batch in train_iter:
-            t1 = time.time()
             train_batch_metrics = exe.run(compiled_train_prog,
                                           feed=batch,
                                           fetch_list=train_fetch_list)
@@ -221,6 +221,7 @@ def train(args):
                            train_batch_metrics_avg, train_batch_elapse, "batch")
                 sys.stdout.flush()
             train_batch_id += 1
+            t1 = time.time()
 
         if args.use_dali:
             train_iter.reset()
