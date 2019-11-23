@@ -24,7 +24,7 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.initializer import Constant
-from ext_op.pointnet_lib import *
+from ext_op import *
 
 __all__ = ["conv_bn", "pointnet_sa_module", "pointnet_fp_module", "MLP"]
 

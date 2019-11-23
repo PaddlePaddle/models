@@ -48,7 +48,7 @@ git clone --recursive https://github.com/PaddlePaddle/models
 git submodule update --init --recursive
 ```
 
-2. 编译安装`pts_utils`, `kitti_utils`, `roipool3d_utils` 等模块
+2. 编译安装`pts_utils`, `kitti_utils`, `roipool3d_utils`, `iou_utils` 等模块
 
 ```
 sh build_and_install.sh
@@ -219,7 +219,7 @@ output
 │   ├── ...
 ```
 
-5. 离线训练rcnn，并且通过参数`--rcnn_training_roi_dir` and `--rcnn_training_feature_dir` 来指定 RPN 模型保存的输出特征和ROI路径。
+5. 离线训练RCNN，并且通过参数`--rcnn_training_roi_dir` and `--rcnn_training_feature_dir` 来指定 RPN 模型保存的输出特征和ROI路径。
 
 ```
 python tools/train.py --cfg=./cfgs/default.yml \
@@ -255,7 +255,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.
 
 2. 保存RPN模型对评估数据的输出特征和ROI
 
-保存RPN模型对评估数据的输出特征和ROI命令日下，可以通过参数`--ckpt_dir`来指定RPN训练最终权重保存路径，RPN权重默认保存在`checkpoints/rpn`目录。
+保存RPN模型对评估数据的输出特征和ROI命令如下，可以通过参数`--ckpt_dir`来指定RPN训练最终权重保存路径，RPN权重默认保存在`checkpoints/rpn`目录。
 通过`--output_dir`指定保存输出特征和ROI的路径，默认保存到`./output`目录。
 
 ```
@@ -266,7 +266,7 @@ python tools/eval.py --cfg=cfgs/default.yml \
                      --output_dir=output/val
 ```
 
-保存RPN模型对评估数据的输出特征和ROI保存的目录结构与上述保存离线增强保存数据目录结构一致。
+保存RPN模型对评估数据的输出特征和ROI保存的目录结构与上述保存离线增强数据保存目录结构一致。
 
 3. 评估离线RCNN模型
 

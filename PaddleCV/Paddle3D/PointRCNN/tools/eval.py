@@ -316,21 +316,19 @@ def eval():
             
             split_file = os.path.join('./data/KITTI', 'ImageSets', 'val.txt')
             image_idx_list = [x.strip() for x in open(split_file).readlines()]
-            empty_cnt = 0
             for k in range(image_idx_list.__len__()):
                 cur_file = os.path.join(final_output_dir, '%s.txt' % image_idx_list[k])
                 if not os.path.exists(cur_file):
                     with open(cur_file, 'w') as temp_f:
                         pass
-                    empty_cnt += 1
 
             if float(sys.version[:3]) >= 3.6:
-                from tools.kitti_object_eval_python.evaluate import evaluate as kitti_evaluate 
-
-                label_dir = os.path.join('./data/KITTI/object/testing', 'label_2')
+                label_dir = os.path.join('./data/KITTI/object/training', 'label_2')
                 split_file = os.path.join('./data/KITTI', 'ImageSets', 'val.txt')
                 final_output_dir = os.path.join("./result_dir", 'final_result', 'data')
                 name_to_class = {'Car': 0, 'Pedestrian': 1, 'Cyclist': 2}
+
+                from tools.kitti_object_eval_python.evaluate import evaluate as kitti_evaluate 
                 ap_result_str, ap_dict = kitti_evaluate(
                     label_dir, final_output_dir, label_split_file=split_file,
                      current_class=name_to_class["Car"])

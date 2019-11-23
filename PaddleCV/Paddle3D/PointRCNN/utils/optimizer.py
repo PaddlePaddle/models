@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 def cosine_warmup_decay(learning_rate, betas, warmup_factor, decay_factor,
                         total_step, warmup_pct):
     def annealing_cos(start, end, pct):
-	"Cosine anneal from `start` to `end` as pct goes from 0.0 to 1.0."
-	cos_out = fluid.layers.cos(pct * np.pi) + 1.
+        "Cosine anneal from `start` to `end` as pct goes from 0.0 to 1.0."
+        cos_out = fluid.layers.cos(pct * np.pi) + 1.
         return cos_out * (start - end) / 2. + end
 
     warmup_start_lr = learning_rate * warmup_factor

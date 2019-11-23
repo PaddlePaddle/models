@@ -81,7 +81,7 @@ class PointRCNN(object):
                 
 
         self.pyreader = fluid.io.PyReader(
-                feed_list=self.inputs.values(),
+                feed_list=list(self.inputs.values()),
                 capacity=64,
                 use_double_buffer=True,
                 iterable=False)
