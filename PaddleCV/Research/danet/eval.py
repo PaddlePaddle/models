@@ -208,6 +208,7 @@ def eval(args):
         prev_time = datetime.now()
         # reader = cityscapes_test(split='test', base_size=2048, crop_size=1024, scale=True, xmap=True)
         reader = cityscapes_test(split='val', base_size=2048, crop_size=1024, scale=True, xmap=True)
+        reader = paddle.reader.buffered(reader, size=64)
 
         print('MultiEvalModule: base_size {}, crop_size {}'.
               format(base_size, crop_size))
