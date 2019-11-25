@@ -249,17 +249,115 @@ The image classification models currently supported by PaddlePaddle are listed i
 Pretrained models can be downloaded by clicking related model names.
 
 - Note
-    - 1: ResNet50_vd_v2 is the distilled version of ResNet50_vd.
-    - 2: In addition to EfficientNet, the image resolution feeded in InceptionV4 and Xception net is ```299x299```, Fix_ResNeXt101_32x48d_wsl is ```320x320```, DarkNet is ```256x256```, others are ```224x224```.In test time, the resize_short_size of the DarkNet53 and Fix_ResNeXt101_32x48d_wsl series networks is the same as the width or height of the input image resolution, the InceptionV4 and Xception network resize_short_size is 320, and the other networks resize_short_size are 256.
-    - 3: The resolutions of EfficientNetB0~B7 are ```224x224```,```240x240```,```260x260```,```300x300```,```380x380```,```456x456```,```528x528```,```600x600``` respectively, the resize_short_size in the inference phase is increased by 32 on the basis of the length or height of the resolution, for example, the resize_short_size of EfficientNetB1 is 272.In the process of training and inference phase of these series of models, the value of the resize parameter interpolation is set to 2 (cubic interpolation mode). Besides, the model uses  ExponentialMovingAverage during the training process, this trick please refer to [ExponentialMovingAverage](https://www.paddlepaddle.org.cn/documentation/docs/en/1.5/api/optimizer.html#exponentialmovingaverage).
-    - 4: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
+
+- 1: ResNet50_vd_v2 is the distilled version of ResNet50_vd.
+
+<table>
+<tr>
+    <td>Model
+    </td>
+    <td>Resolution (image shape)
+    </td>
+    <td>Inference <b>resize_short_size</b>
+    </td>
+</tr>
+<tr>
+   <td>Inception, Xception
+   </td>
+   <td>299
+   </td>
+   <td>320
+   </td>
+</tr>
+<tr>
+    <td> DarkNet53
+    </td>
+    <td>256
+    </td>
+    <td>256
+    </td>
+</tr>
+<tr>
+   <td>Fix_ResNeXt101_32x48d_wsl
+   </td>
+   <td>320
+   </td>
+   <td>320
+   </td>
+</tr>
+<tr>
+   <td rowspan="8"> EfficientNet: <br/><br/>
+   In the inference phase, the resize_short_size increases 32 compared to the resolution <br/>
+   and using the 2nd interpolation(cubic interpolation mode). <br/>
+   The ExponentialMovingAverage method is also applied during the training process <br/>
+   Please refer to <a href="https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage">[ExponentialMovingAverage]</a>
+   </td>
+   <td>B0: 224
+   </td>
+   <td>256
+   </td>
+</tr>
+<tr>
+   <td>B1: 240
+   </td>
+   <td>272
+   </td>
+</tr>
+<tr>
+   <td>B2: 260
+   </td>
+   <td>292
+   </td>
+</tr>
+<tr>
+   <td>B3: 300
+   </td>
+   <td>332
+   </td>
+</tr>
+<tr>
+   <td>B4: 380
+   </td>
+   <td>412
+   </td>
+</tr>
+<tr>
+   <td>B5: 456
+   </td>
+   <td>488
+   </td>
+</tr>
+<tr>
+   <td>B6: 528
+   </td>
+   <td>560
+   </td>
+</tr>
+<tr>
+
+   <td>B7: 600
+   </td>
+   <td>632
+   </td>
+</tr>
+<tr>
+    <td>Other models
+    </td>
+    <td>224
+    </td>
+    <td>256
+    </td>
+</tr>
+</table>
+
+- It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
         ```bash
         python infer.py\
             --model=model_name \
             --pretrained_model=${path_to_pretrained_model} \
             --save_inference=True
         ```
-    - 5: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
+- The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
 ### AlexNet
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
