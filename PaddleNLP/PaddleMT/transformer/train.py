@@ -251,14 +251,14 @@ def do_train(args):
     # start training
 
     step_idx = 0
-    total_batch_num = 0  #this is for benchmark
+    total_batch_num = 0  # this is for benchmark
     for pass_id in range(args.epoch):
         pass_start_time = time.time()
         input_field.loader.start()
 
         batch_id = 0
         while True:
-            if args.max_iter and total_batch_num == args.max_iter: #this for benchmark
+            if args.max_iter and total_batch_num == args.max_iter: # this for benchmark
                 return
             try:
                 outs = exe.run(compiled_train_prog,
@@ -303,9 +303,9 @@ def do_train(args):
 
                 batch_id += 1
                 step_idx += 1
-                total_batch_num = total_batch_num + 1 #this is for benchmark
+                total_batch_num = total_batch_num + 1 # this is for benchmark
 
-                #profiler tools for benchmark
+                # profiler tools for benchmark
                 if args.is_profiler and pass_id == 0 and batch_id == 4 * args.print_step:
                     profiler.start_profiler("All")
                 elif args.is_profiler and pass_id == 0 and batch_id == 4 * args.print_step + 10:
