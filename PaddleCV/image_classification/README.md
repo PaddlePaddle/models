@@ -263,8 +263,9 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 可以通过点击相应模型的名称下载对应的预训练模型。
 
 - 注意
-   - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
-   - 2: <table>
+   - ResNet50_vd_v2是ResNet50_vd蒸馏版本。
+
+<table>
 <tr>
     <td>Model
     </td>
@@ -363,7 +364,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 </tr>
 </table>
 
-   - 3：调用动态链接库预测时需要将训练模型转换为二进制模型。
+   - 调用动态链接库预测时需要将训练模型转换为二进制模型。
 
         ```bash
         python infer.py \
@@ -372,7 +373,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
                --save_inference=True
         ```
 
-   - 4: ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
+   - ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 
 
 ### AlexNet
