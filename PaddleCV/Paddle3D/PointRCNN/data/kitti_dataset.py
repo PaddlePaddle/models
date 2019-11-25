@@ -23,13 +23,13 @@ import os
 import cv2
 import numpy as np
 import utils.calibration as calibration
-import data.kitti_utils as kitti_utils
+from utils.object3d import get_objects_from_label
 from PIL import Image
 
-__all__ = ["KittiReader"]
+__all__ = ["KittiDataset"]
 
 
-class KittiReader(object):
+class KittiDataset(object):
     def __init__(self, data_dir, split='train'):
         assert split in ['train', 'train_aug', 'val', 'test'], "unknown split {}".format(split)
         self.split = split
@@ -71,7 +71,8 @@ class KittiReader(object):
     def get_label(self, idx):
         label_file = os.path.join(self.label_dir, '%06d.txt' % idx)
         assert os.path.exists(label_file)
-        return kitti_utils.get_objects_from_label(label_file)
+        # return kitti_utils.get_objects_from_label(label_file)
+        return get_objects_from_label(label_file)
 
     def get_road_plane(self, idx):
         plane_file = os.path.join(self.plane_dir, '%06d.txt' % idx)

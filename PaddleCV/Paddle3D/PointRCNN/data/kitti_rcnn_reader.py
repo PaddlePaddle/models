@@ -33,7 +33,7 @@ except:
 import pts_utils
 import utils.cyops.kitti_utils as kitti_utils
 import utils.cyops.roipool3d_utils as roipool3d_utils
-from data.kitti_reader import KittiReader
+from data.kitti_dataset import KittiDataset
 from utils.config import cfg
 from collections import OrderedDict
 
@@ -66,7 +66,7 @@ def in_hull(p, hull):
     return flag
 
 
-class KittiRCNNReader(KittiReader):
+class KittiRCNNReader(KittiDataset):
     def __init__(self, data_dir, npoints=16384, split='train', classes='Car', mode='TRAIN',
                  random_select=True, rcnn_training_roi_dir=None, rcnn_training_feature_dir=None,
                  rcnn_eval_roi_dir=None, rcnn_eval_feature_dir=None, gt_database_dir=None):

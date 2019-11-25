@@ -7,7 +7,7 @@ import os
 import numpy as np
 import pickle
 
-from data.kitti_reader import KittiReader
+from data.kitti_dataset import KittiDataset
 import pts_utils 
 import argparse
 
@@ -19,7 +19,7 @@ parser.add_argument('--split', type=str, default='train')
 args = parser.parse_args()
 
 
-class GTDatabaseGenerator(KittiReader):
+class GTDatabaseGenerator(KittiDataset):
     def __init__(self, root_dir, split='train', classes=args.class_name):
         super(GTDatabaseGenerator, self).__init__(root_dir, split=split)
         self.gt_database = None

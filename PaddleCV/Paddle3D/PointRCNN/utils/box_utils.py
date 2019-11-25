@@ -227,7 +227,6 @@ def box_nms(boxes, scores, proposals, thresh, topk, nms_type='normal'):
 def box_nms_eval(boxes, scores, proposals, thresh, nms_type='rotate'):
     assert nms_type in ['normal', 'rotate'], \
             "unknown nms type {}".format(nms_type)
-    #print("box_nms boxes, scores, proposals: ", boxes.shape, scores.shape, proposals.shape)
     order = np.argsort(-scores)
     boxes = boxes[order]
     scores = scores[order]
@@ -235,22 +234,16 @@ def box_nms_eval(boxes, scores, proposals, thresh, nms_type='rotate'):
 
     nmsed_scores = []
     nmsed_proposals = []
-    #cnt = 0
     while boxes.shape[0]:
         nmsed_scores.append(scores[0])
         nmsed_proposals.append(proposals[0])
-        #cnt +=1
-        #if cnt >= topk or boxes.shape[0] == 1:
-        #    break
         iou = box_iou(boxes[0], boxes[1:], nms_type)
         inds = iou < thresh
         boxes = boxes[1:][inds]
         scores = scores[1:][inds]
         proposals = proposals[1:][inds]
-        #print("iou, boxes, scores, proposals: ", iou.shape, boxes.shape, scores.shape, proposals.shape)
     nmsed_scores = np.asarray(nmsed_scores)
     nmsed_proposals = np.asarray(nmsed_proposals)
-    #print("nmsed_scores, nmsed_proposals: ", nmsed_scores.shape, nmsed_proposals.shape)
     return nmsed_scores, nmsed_proposals 
 
 def boxes_iou3d(boxes1, boxes2):

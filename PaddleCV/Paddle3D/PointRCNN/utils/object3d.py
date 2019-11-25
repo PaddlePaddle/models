@@ -11,6 +11,13 @@ def cls_type_to_id(cls_type):
     return type_to_id[cls_type]
 
 
+def get_objects_from_label(label_file):
+    with open(label_file, 'r') as f:
+        lines = f.readlines()
+    objects = [Object3d(line) for line in lines]
+    return objects
+
+
 class Object3d(object):
     def __init__(self, line):
         label = line.strip().split(' ')

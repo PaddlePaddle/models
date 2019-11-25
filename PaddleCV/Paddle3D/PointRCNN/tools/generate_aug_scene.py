@@ -11,7 +11,7 @@ import pts_utils
 import utils.cyops.kitti_utils as kitti_utils 
 from utils.box_utils import boxes_iou3d
 from utils import calibration as calib
-from data.kitti_reader import KittiReader
+from data.kitti_dataset import KittiDataset
 import argparse
 
 np.random.seed(1024)
@@ -69,7 +69,7 @@ def save_kitti_format(calib, bbox3d, obj_list, img_shape, save_fp):
                bbox3d[k, 6]))
 
 
-class AugSceneGenerator(KittiReader):
+class AugSceneGenerator(KittiDataset):
     def __init__(self, root_dir, gt_database=None, split='train', classes=args.class_name):
         super(AugSceneGenerator, self).__init__(root_dir, split=split)
         self.gt_database = None
