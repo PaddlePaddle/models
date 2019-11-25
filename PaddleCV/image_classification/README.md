@@ -263,6 +263,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 可以通过点击相应模型的名称下载对应的预训练模型。
 
 - 注意
+
 - ResNet50_vd_v2是ResNet50_vd蒸馏版本。
 
 <table>
