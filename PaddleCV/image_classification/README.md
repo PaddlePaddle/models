@@ -305,7 +305,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
    在该系列模型训练和预测的过程中<br/>
    图片resize参数interpolation的值设置为2（cubic插值方式）<br/>
    该模型在训练过程中使用了指数滑动平均策略<br/>
-   具体请参考<a href="https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage">[指数滑动平均]</a>
+   具体请参考<a href="https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage">指数滑动平均</a>
    </td>
    <td>B0: 224
    </td>
@@ -367,12 +367,12 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 
 - 调用动态链接库预测时需要将训练模型转换为二进制模型。
 
-        ```bash
-        python infer.py \
-               --model=model_name \
-               --pretrained_model=${path_to_pretrain_model} \
-               --save_inference=True
-        ```
+    ```bash
+    python infer.py \
+           --model=model_name \
+           --pretrained_model=${path_to_pretrain_model} \
+           --save_inference=True
+    ```
 
 - ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 

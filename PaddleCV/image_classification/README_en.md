@@ -250,7 +250,7 @@ Pretrained models can be downloaded by clicking related model names.
 
 - Note
 
-- 1: ResNet50_vd_v2 is the distilled version of ResNet50_vd.
+- ResNet50_vd_v2 is the distilled version of ResNet50_vd.
 
 <table>
 <tr>
@@ -290,7 +290,7 @@ Pretrained models can be downloaded by clicking related model names.
    In the inference phase, the resize_short_size increases 32 compared to the resolution <br/>
    and using the 2nd interpolation(cubic interpolation mode). <br/>
    The ExponentialMovingAverage method is also applied during the training process <br/>
-   Please refer to <a href="https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage">[ExponentialMovingAverage]</a>
+   Please refer to <a href="https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage">ExponentialMovingAverage</a>
    </td>
    <td>B0: 224
    </td>
@@ -351,12 +351,14 @@ Pretrained models can be downloaded by clicking related model names.
 </table>
 
 - It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
-        ```bash
-        python infer.py\
-            --model=model_name \
-            --pretrained_model=${path_to_pretrained_model} \
-            --save_inference=True
-        ```
+
+    ```bash
+    python infer.py\
+        --model=model_name \
+        --pretrained_model=${path_to_pretrained_model} \
+        --save_inference=True
+    ```
+
 - The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
 ### AlexNet
