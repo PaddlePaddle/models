@@ -1,6 +1,6 @@
 <div align="center">
   <h3>
-    <a href=".README.md">
+    <a href="./README.md">
       模型量化概述
     </a>
     <span> | </span>
@@ -8,11 +8,11 @@
       模型量化原理
     </a>
     <span> | </span>
-    <a href=".quantization_aware_training.md">
+    <a href="./quantization_aware_training.md">
       QAT量化Low-Level API使用方法和示例
     </a>
     <span> | </span>
-    <a href=".post_training_quantization.md">
+    <a href="./post_training_quantization.md">
       离线量化Low-Level API使用方法和示例
     </a>
   </h3>
