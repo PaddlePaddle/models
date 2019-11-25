@@ -1,35 +1,32 @@
+<div align="center">
+  <h3>
+    <a href=".README.md">
+      模型量化概述
+    </a>
+    <span> | </span>
+    <a href="../docs/tutorial.md">
+      模型量化原理
+    </a>
+    <span> | </span>
+    <a href=".quantization_aware_training.md">
+      QAT量化Low-Level API使用方法和示例
+    </a>
+    <span> | </span>
+    <a href=".post_training_quantization.md">
+      离线量化Low-Level API使用方法和示例
+    </a>
+  </h3>
+</div>
+
+---
 # 离线量化
 
-本文首先简要概述量化的原理，然后详细说明离线量化的使用方法，最后给出MobileNetV1离线量化示例。如果想快速上手使用，可以跳过原理部分，直接阅读使用方法和示例部分。
+## 目录
 
-## 离线量化原理概述
+- [离线量化使用说明](#1-离线量化使用说明)
+- [离线量化使用示例](#2-离线量化使用示例)
 
-#### 模型量化
-模型量化是使用更少的比特数（如8-bit、3-bit、2-bit等）表示神经网络的权重和激活。模型量化可以加快推理速度、减小存储大小、降低功耗等优点。目前，模型量化主要分为离线量化（Post Training Quantization）和QAT量化（Quantization Aware Training）。
-
-#### 量化方式
-将FP32类型Tensor转换为INT8类型Tensor的过程相当于信息再编码（re-encoding information ），且要求再编码后精度损失要尽量小。FP32和INT8类型Tensor可以通过如下线性映射实现相互转换：
-$$ f = s * q + b $$
-$$ q = round((f-b)/s)$$
-其中，`f`为FP32类型的Tensor，`s`为量化比例因子，`q`为INT8类型的Tensor，`b`为FP32类型的Bias，`round`是取整。
-
-如果使用对称量化，即将FP32的数值量化到`-127~127`范围内，则不再需要偏置：
-$$ f  = s * q $$
-$$ q  = round(f / s) $$
-
-#### 离线量化
-离线量化是基于采样数据，采用KL散度等方法计算量化比例因子的方法。相比QAT量化，离线量化不需要重新训练，可以快速得到量化模型。
-
-离线量化的目标是求取量化比例因子，主要有两种方法：非饱和量化方法 ( No Saturation) 和饱和量化方法 (Saturation)。非饱和量化方法计算FP32类型Tensor中绝对值的最大值`abs_max`，将其映射为127，则量化比例因子等于`abs_max/127`。饱和量化方法使用KL散度计算一个合适的阈值`T` (`T<mab_max`)，将其映射为127，则量化比例因子等于`T/127`。一般而言，对于待量化op的权重Tensor，采用非饱和量化方法，对于待量化op的激活Tensor（包括输入和输出），采用饱和量化方法 。
-
-离线量化的内部实现步骤：
-* 加载预训练的FP32模型，配置`DataLoader`；
-* 读取样本数据，执行模型的前向推理，保存待量化op的激活Tensor的数值；
-* 基于激活Tensor的采样数据，使用饱和量化方法计算它的量化比例因子；
-* 模型权重Tensor数据一直保持不变，使用非饱和方法计算它每个通道的绝对值最大值，作为每个通道的量化比例因子；
-* 将FP32模型转成INT8模型，进行保存。
-
-## 离线量化使用说明
+## 1. 离线量化使用说明
 
 1）**准备模型和样本数据**
 
@@ -81,7 +78,7 @@ PostTrainingQuantization.save_quantized_model(save_model_path)
 调用上述接口保存离线量化模型，其中save_model_path为保存的路径。
 
 
-## 离线量化使用示例
+## 2. 离线量化使用示例
 
 下面以MobileNetV1为例，介绍离线量化Low-Level API的使用方法。
 

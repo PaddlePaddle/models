@@ -44,7 +44,7 @@
 <strong>表2：模型量化前后精度对比</strong>
 </p>
 
-目前，学术界主要将量化分为两大类：`Post Training Quantization`和`Quantization Aware Training`。`Post Training Quantization`是指使用KL散度、滑动平均等方法确定量化参数且不需要重新训练的定点量化方法。`Quantization Aware Training`是在训练过程中对量化进行建模以确定量化参数，它与`Post Training Quantization`模式相比可以提供更高的预测精度。本文主要针对`Quantization Aware Training`量化模式进行阐述说明。
+目前，学术界主要将量化分为两大类：`Post Training Quantization`和`Quantization Aware Training`。`Post Training Quantization`是指使用KL散度、滑动平均等方法确定量化参数且不需要重新训练的定点量化方法。`Quantization Aware Training`是在训练过程中对量化进行建模以确定量化参数，它与`Post Training Quantization`模式相比可以提供更高的预测精度。
 
 ### 1.2 量化原理
 
@@ -119,7 +119,18 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 
 式中，$V$ 是当前batch的最大绝对值， $Vt$是滑动平均值。$k$是一个因子，例如其值可取为0.9。
 
+#### 1.2.3 离线量化
 
+离线量化是基于采样数据，采用KL散度等方法计算量化比例因子的方法。相比QAT量化，离线量化不需要重新训练，可以快速得到量化模型。
+
+离线量化的目标是求取量化比例因子，主要有两种方法：非饱和量化方法 ( No Saturation) 和饱和量化方法 (Saturation)。非饱和量化方法计算FP32类型Tensor中绝对值的最大值`abs_max`，将其映射为127，则量化比例因子等于`abs_max/127`。饱和量化方法使用KL散度计算一个合适的阈值`T` (`T<mab_max`)，将其映射为127，则量化比例因子等于`T/127`。一般而言，对于待量化op的权重Tensor，采用非饱和量化方法，对于待量化op的激活Tensor（包括输入和输出），采用饱和量化方法 。
+
+离线量化的实现步骤如下：
+* 加载预训练的FP32模型，配置`DataLoader`；
+* 读取样本数据，执行模型的前向推理，保存待量化op的激活Tensor的数值；
+* 基于激活Tensor的采样数据，使用饱和量化方法计算它的量化比例因子；
+* 模型权重Tensor数据一直保持不变，使用非饱和方法计算它每个通道的绝对值最大值，作为每个通道的量化比例因子；
+* 将FP32模型转成INT8模型，进行保存。
 
 
 ## 2. 卷积核剪裁原理
