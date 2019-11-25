@@ -264,8 +264,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 
 - 注意
    - 1：ResNet50_vd_v2是ResNet50_vd蒸馏版本。
-   - 2:
-<table>
+   - 2: <table>
 <tr>
     <td>Model
     </td>
@@ -306,50 +305,50 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
    该模型在训练过程中使用了指数滑动平均策略<br/>
    具体请参考<a href="https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage">[指数滑动平均]</a>
    </td>
-   <td>B0 224
+   <td>B0: 224
    </td>
    <td>256
    </td>
 </tr>
 <tr>
-   <td>B1 240
+   <td>B1: 240
    </td>
    <td>272
    </td>
 </tr>
 <tr>
-   <td>B2 260
+   <td>B2: 260
    </td>
    <td>292
    </td>
 </tr>
 <tr>
-   <td>B3 300
+   <td>B3: 300
    </td>
    <td>332
    </td>
 </tr>
 <tr>
-   <td>B4 380
+   <td>B4: 380
    </td>
    <td>412
    </td>
 </tr>
 <tr>
-   <td>B5 456
+   <td>B5: 456
    </td>
    <td>488
    </td>
 </tr>
 <tr>
-   <td>B6 528
+   <td>B6: 528
    </td>
    <td>560
    </td>
 </tr>
 <tr>
 
-   <td>B7 600
+   <td>B7: 600
    </td>
    <td>632
    </td>
@@ -363,6 +362,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
     </td>
 </tr>
 </table>
+
    - 3：调用动态链接库预测时需要将训练模型转换为二进制模型。
 
         ```bash
