@@ -107,7 +107,7 @@ pip install -r requirement.txt
     OK
     ```
 
-**说明：** 更多关于自定义OP的编译说明，请参考[自定义OP编译](./ext_op/README.md)
+**说明：** 自定义OP编译与[PointNet++](../PointNet++)下一致，更多关于自定义OP的编译说明，请参考[自定义OP编译](../PointNet++/ext_op/README.md)
 
 ### 数据准备
 
