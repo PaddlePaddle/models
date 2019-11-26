@@ -1,3 +1,17 @@
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -14,9 +28,8 @@ from models.loss_utils import sigmoid_focal_loss , get_reg_loss
 from utils.proposal_target import get_proposal_target_func
 from utils.cyops.kitti_utils import rotate_pc_along_y
 
+__all__ = ['RCNN']
 
-def create_tmp_var(name, dtype, shape):
-    return fluid.default_main_program().current_block().create_var(name=name,dtype=dtype,shape=shape)
 
 class RCNN(object):
     def __init__(self, cfg, num_classes, batch_size, mode='TRAIN', use_xyz=True, input_channels=0):
@@ -195,43 +208,42 @@ class RCNN(object):
         self.reg_out = fluid.layers.squeeze(reg_out, axes=[2,3])
 
         
-        self.ret_dict = {
+        self.outputs = {
             'rcnn_cls':self.cls_out,
             'rcnn_reg':self.reg_out,
         }
         if self.training:
-            self.ret_dict.update(self.target_dict)
+            self.outputs.update(self.target_dict)
         elif not self.training:
-            self.ret_dict['sample_id'] = inputs['sample_id']
-            self.ret_dict['pts_input'] = inputs['pts_input']
-            self.ret_dict['roi_boxes3d'] = inputs['roi_boxes3d']
-            self.ret_dict['roi_scores'] = inputs['roi_scores']
-            self.ret_dict['gt_iou'] = inputs['gt_iou'] 
-            self.ret_dict['gt_boxes3d'] = inputs['gt_boxes3d']
+            self.outputs['sample_id'] = inputs['sample_id']
+            self.outputs['pts_input'] = inputs['pts_input']
+            self.outputs['roi_boxes3d'] = inputs['roi_boxes3d']
+            self.outputs['roi_scores'] = inputs['roi_scores']
+            self.outputs['gt_iou'] = inputs['gt_iou'] 
+            self.outputs['gt_boxes3d'] = inputs['gt_boxes3d']
 
             if self.cls_out.shape[1] == 1:
                 raw_scores = fluid.layers.reshape(self.cls_out, shape=[-1])
                 norm_scores = fluid.layers.sigmoid(raw_scores)
             else:
                 norm_scores = fluid.layers.softmax(self.cls_out, axis=1)
-            self.ret_dict['norm_scores'] = norm_scores
+            self.outputs['norm_scores'] = norm_scores
             
     def get_outputs(self):
-        return self.ret_dict #, self.debug
+        return self.outputs
 
     def get_loss(self):
         assert self.inputs is not None, \
             "please call build() first"
-        rcnn_cls_label = self.ret_dict['cls_label']
-        reg_valid_mask = self.ret_dict['reg_valid_mask']
-        roi_boxes3d = self.ret_dict['roi_boxes3d']
+        rcnn_cls_label = self.outputs['cls_label']
+        reg_valid_mask = self.outputs['reg_valid_mask']
+        roi_boxes3d = self.outputs['roi_boxes3d']
         roi_size = roi_boxes3d[:, 3:6]
-        gt_boxes3d_ct = self.ret_dict['gt_of_rois']
-        pts_input = self.ret_dict['pts_input']
+        gt_boxes3d_ct = self.outputs['gt_of_rois']
+        pts_input = self.outputs['pts_input']
 
         rcnn_cls = self.cls_out
         rcnn_reg = self.reg_out
-
 
         # RCNN classification loss
         assert self.cfg.RCNN.LOSS_CLS in ["SigmoidFocalLoss", "BinaryCrossEntropy"], \

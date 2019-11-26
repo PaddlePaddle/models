@@ -11,6 +11,7 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -33,8 +34,10 @@ def sigmoid_focal_loss(logits, labels, weights, gamma=2.0, alpha=0.25):
     return modulating_factor * alpha_weight_factor * sce_loss * weights
 
 
-def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope, loc_bin_size, num_head_bin, anchor_size,
-                 get_xz_fine=True, get_y_by_bin=False, loc_y_scope=0.5, loc_y_bin_size=0.25, get_ry_fine=False):
+def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope,
+                 loc_bin_size, num_head_bin, anchor_size,
+                 get_xz_fine=True, get_y_by_bin=False, loc_y_scope=0.5,
+                 loc_y_bin_size=0.25, get_ry_fine=False):
 
     """
     Bin-based 3D bounding boxes regression loss. See https://arxiv.org/abs/1812.04244 for more details.
@@ -145,8 +148,6 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope, loc_bin_siz
         ry_label = ry_label % (2 * np.pi)  # 0 ~ 2pi
         opposite_flag = fluid.layers.logical_and(ry_label > np.pi * 0.5, ry_label < np.pi * 1.5)
         opposite_flag = fluid.layers.cast(opposite_flag, dtype=ry_label.dtype)
-        # ry_label[opposite_flag] = (ry_label[opposite_flag] + np.pi) % (2 * np.pi)  # (0 ~ pi/2, 3pi/2 ~ 2pi)
-        # ry_label = ry_label + opposite_flag * np.pi
         shift_angle = (ry_label + opposite_flag * np.pi + np.pi * 0.5) % (2 * np.pi)  # (0 ~ pi)
         shift_angle.stop_gradient = True
 

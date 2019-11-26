@@ -1,3 +1,4 @@
+# This config is based on https://github.com/sshaoshuai/PointRCNN/blob/master/tools/cfgs/default.yaml
 CLASSES: Car
 
 INCLUDE_SIMILAR_TYPE: True

@@ -11,6 +11,7 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -25,7 +26,6 @@ from utils.proposal_utils import get_proposal_func
 from models.pointnet2_msg import PointNet2MSG
 from models.pointnet2_modules import conv_bn
 from models.loss_utils import sigmoid_focal_loss, get_reg_loss
-
 
 __all__ = ["RPN"]
 
