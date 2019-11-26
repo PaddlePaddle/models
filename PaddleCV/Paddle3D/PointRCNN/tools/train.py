@@ -29,7 +29,7 @@ import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 from models.point_rcnn import PointRCNN
 from data.kitti_rcnn_reader import KittiRCNNReader
 from utils.run_utils import check_gpu, parse_outputs, Stat 
-from utils.config import cfg, load_config
+from utils.config import cfg, load_config, set_config_from_list
 from utils.optimizer import optimize
 
 logging.root.handlers = []
@@ -109,6 +109,12 @@ def parse_args():
         type=int,
         default=1,
         help='mini-batch interval to log.')
+    parser.add_argument(
+        '--set',
+        dest='set_cfgs',
+        default=None,
+        nargs=argparse.REMAINDER,
+        help='set extra config keys if needed.')
     args = parser.parse_args()
     return args
 
@@ -119,6 +125,8 @@ def train():
     check_gpu(args.use_gpu)
 
     load_config(args.cfg)
+    if args.set_cfgs is not None:
+        set_config_from_list(args.set_cfgs)
 
     if args.train_mode == 'rpn':
         cfg.RPN.ENABLED = True
