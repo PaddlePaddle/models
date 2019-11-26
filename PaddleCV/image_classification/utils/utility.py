@@ -114,6 +114,7 @@ def parse_args():
     parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
 
     # READER AND PREPROCESS
+    add_arg('use_dali',                 bool,   False,                  "Whether to use nvidia DALI for preprocessing")
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
     add_arg('upper_ratio',              float,  4./3.,                  "The value of upper_ratio in ramdom_crop")
@@ -328,14 +329,17 @@ def create_data_loader(is_train, args):
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
             capacity=64,
             use_double_buffer=True,
-            iterable=False)
+            iterable=True)
         return data_loader, [feed_image, feed_y_a, feed_y_b, feed_lam]
     else:
+        if args.use_dali:
+            return None, [feed_image, feed_label]
+
         data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_label],
             capacity=64,
             use_double_buffer=True,
-            iterable=False)
+            iterable=True)
 
         return data_loader, [feed_image, feed_label]
 
