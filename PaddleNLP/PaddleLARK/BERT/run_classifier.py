@@ -371,7 +371,7 @@ def main(args):
                     # profiler tools
                     if args.is_profiler and current_epoch == 0 and steps == args.skip_steps:
                         profiler.start_profiler("All")
-                    elif args.is_profiler and current_epoch == 0 and steps ==  args.skip_steps * 2:
+                    elif args.is_profiler and current_epoch == 0 and steps == args.skip_steps * 2:
                         profiler.stop_profiler("total", args.profiler_path)
                         return
 
@@ -407,7 +407,6 @@ def main(args):
                         evaluate(exe, test_prog, test_data_loader,
                                  [loss.name, accuracy.name, num_seqs.name],
                                  "test")
-                    
             except fluid.core.EOFException:
                 save_path = os.path.join(args.checkpoints, "step_" + str(steps))
                 fluid.io.save_persistables(exe, save_path, train_program)
