@@ -96,48 +96,6 @@ def get_test_images(infer_dir, infer_img):
     return images
 
 
-def prune_feed_vars(feeded_var_names, target_vars, prog):
-    """
-    Filter out feed variables which are not in program,
-    pruned feed variables are only used in post processing
-    on model output, which are not used in program, such
-    as im_id to identify image order, im_shape to clip bbox
-    in image.
-    """
-    exist_var_names = []
-    prog = prog.clone()
-    prog = prog._prune(feeded_var_names, targets=target_vars)
-    global_block = prog.global_block()
-    for name in feeded_var_names:
-        try:
-            v = global_block.var(name)
-            exist_var_names.append(str(v.name))
-        except Exception:
-            logger.info('save_inference_model pruned unused feed '
-                        'variables {}'.format(name))
-            pass
-    return exist_var_names
-
-
-def save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog):
-    cfg_name = os.path.basename(FLAGS.config).split('.')[0]
-    save_dir = os.path.join(FLAGS.output_dir, cfg_name)
-    feeded_var_names = [var.name for var in feed_vars.values()]
-    target_vars = list(test_fetches.values())
-    feeded_var_names = prune_feed_vars(feeded_var_names, target_vars,
-                                       infer_prog)
-    logger.info("Save inference model to {}, input: {}, output: "
-                "{}...".format(save_dir, feeded_var_names,
-                               [str(var.name) for var in target_vars]))
-    fluid.io.save_inference_model(
-        save_dir,
-        feeded_var_names=feeded_var_names,
-        target_vars=target_vars,
-        executor=exe,
-        main_program=infer_prog,
-        params_filename="__params__")
-
-
 def main():
     cfg = load_config(FLAGS.config)
 
@@ -178,18 +136,15 @@ def main():
 
     exe.run(startup_prog)
     if cfg.weights:
-        checkpoint.load_checkpoint(exe, infer_prog, cfg.weights)
-
-    if FLAGS.save_inference_model:
-        save_infer_model(FLAGS, exe, feed_vars, test_fetches, infer_prog)
+        checkpoint.load_params(exe, infer_prog, cfg.weights)
 
     # parse infer fetches
-    assert cfg.metric in ['COCO', 'VOC'], \
+    assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE'], \
             "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
-    if cfg['metric'] == 'VOC':
+    if cfg['metric'] == 'VOC' or cfg['metric'] == 'WIDERFACE':
         extra_keys = ['im_id', 'im_shape']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
@@ -198,6 +153,8 @@ def main():
         from ppdet.utils.coco_eval import bbox2out, mask2out, get_category_info
     if cfg.metric == "VOC":
         from ppdet.utils.voc_eval import bbox2out, get_category_info
+    if cfg.metric == "WIDERFACE":
+        from ppdet.utils.widerface_eval_utils import bbox2out, get_category_info
 
     anno_file = getattr(test_feed.dataset, 'annotation', None)
     with_background = getattr(test_feed, 'with_background', True)
@@ -298,11 +255,6 @@ if __name__ == '__main__':
         type=float,
         default=0.5,
         help="Threshold to reserve the result for visualization.")
-    parser.add_argument(
-        "--save_inference_model",
-        action='store_true',
-        default=False,
-        help="Save inference model in output_dir if True.")
     parser.add_argument(
         "--use_tb",
         type=bool,

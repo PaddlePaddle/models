@@ -41,7 +41,9 @@ def main():
             item_clean = item.replace('_ema_0', '')
             shutil.copyfile(os.path.join(args.ema_model_dir, item),
                             os.path.join(args.cleaned_model_dir, item_clean))
-
+        elif item.find('mean') > -1 or item.find('variance') > -1:
+            shutil.copyfile(os.path.join(args.ema_model_dir, item),
+                            os.path.join(args.cleaned_model_dir, item))
 
 if __name__ == '__main__':
     main()

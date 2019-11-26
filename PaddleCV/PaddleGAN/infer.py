@@ -27,7 +27,7 @@ import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator, reader_creator, triplex_reader_creator
-from util.utility import check_attribute_conflict, check_gpu, save_batch_image
+from util.utility import check_attribute_conflict, check_gpu, save_batch_image, check_version
 from util import utility
 import copy
 
@@ -82,12 +82,14 @@ def infer(args):
         name='image_name', shape=[args.n_samples], dtype='int32')
 
     model_name = 'net_G'
+
     if args.model_net == 'CycleGAN':
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[input, image_name],
             capacity=4,  ## batch_size * 4
             iterable=True,
             use_double_buffer=True)
+
         from network.CycleGAN_network import CycleGAN_model
         model = CycleGAN_model()
         if args.input_style == "A":
@@ -97,7 +99,7 @@ def infer(args):
         else:
             raise "Input with style [%s] is not supported." % args.input_style
     elif args.model_net == 'Pix2pix':
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[input, image_name],
             capacity=4,  ## batch_size * 4
             iterable=True,
@@ -168,12 +170,14 @@ def infer(args):
         model = DCGAN_model(args.n_samples)
         fake = model.network_G(noise, name="G")
     elif args.model_net == 'SPADE':
+        label_shape = [None, args.label_nc, args.crop_height, args.crop_width]
+        spade_data_shape = [None, 1, args.crop_height, args.crop_width]
         from network.SPADE_network import SPADE_model
         model = SPADE_model()
-        input_label = fluid.layers.data(
-            name='input_label', shape=data_shape, dtype='float32')
-        input_ins = fluid.layers.data(
-            name='input_ins', shape=data_shape, dtype='float32')
+        input_label = fluid.data(
+            name='input_label', shape=label_shape, dtype='float32')
+        input_ins = fluid.data(
+            name='input_ins', shape=spade_data_shape, dtype='float32')
         input_ = fluid.layers.concat([input_label, input_ins], 1)
         fake = model.network_G(input_, "generator", cfg=args, is_test=True)
     else:
@@ -295,11 +299,11 @@ def infer(args):
             batch_size=args.n_samples,
             mode="VAL")
         reader_test = test_reader.make_reader(args, return_name=True)
-        py_reader.decorate_batch_generator(
+        loader.set_batch_generator(
             reader_test,
             places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
         id2name = test_reader.id2name
-        for data in py_reader():
+        for data in loader():
             real_img, image_name = data[0]['input'], data[0]['image_name']
             image_name = id2name[np.array(image_name).astype('int32')[0]]
             print("read: ", image_name)
@@ -318,10 +322,12 @@ def infer(args):
             shuffle=False,
             batch_size=1,
             mode="TEST")
+        id2name = test_reader.id2name
         reader_test = test_reader.make_reader(args, return_name=True)
         for data in zip(reader_test()):
             data_A, data_B, data_C, name = data[0]
-            name = name[0]
+            name = id2name[np.array(name).astype('int32')[0]]
+            print("read: ", name)
             tensor_A = fluid.LoDTensor()
             tensor_C = fluid.LoDTensor()
             tensor_A.set(data_A, place)
@@ -382,4 +388,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print_arguments(args)
     check_gpu(args.use_gpu)
+    check_version()
     infer(args)

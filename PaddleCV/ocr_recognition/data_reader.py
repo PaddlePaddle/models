@@ -212,8 +212,7 @@ class DataGenerator(object):
                     img = img.resize((img.size[0], DATA_SHAPE[1])) # resize height
                     img = np.array(img) - 127.5
                     img = img[np.newaxis, ...]
-                    label = [int(c) for c in line.split(' ')[3].split(',')]
-                    yield img, label
+                    yield img, [[0]]
 
             if img_label_list is not None:
                 lines = []

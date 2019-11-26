@@ -1,15 +1,15 @@
-#!/usr/bin/env python
-# coding: utf-8
 from __future__ import print_function, absolute_import, division
 import os
 import random
 import sys
 import time
+from collections import OrderedDict
 
 import paddle.fluid as fluid
 
 from config import parse_args
 from network import DCN
+import utils
 """
 train DCN model
 """
@@ -21,15 +21,21 @@ def train(args):
     :param args: hyperparams of model
     :return:
     """
+    cat_feat_dims_dict = OrderedDict()
+    for line in open(args.cat_feat_num):
+        spls = line.strip().split()
+        assert len(spls) == 2
+        cat_feat_dims_dict[spls[0]] = int(spls[1])
     dcn_model = DCN(args.cross_num, args.dnn_hidden_units, args.l2_reg_cross,
-                    args.use_bn, args.clip_by_norm)
+                    args.use_bn, args.clip_by_norm, cat_feat_dims_dict,
+                    args.is_sparse)
     dcn_model.build_network()
     dcn_model.backward(args.lr)
 
     # config dataset
     dataset = fluid.DatasetFactory().create_dataset()
     dataset.set_use_var(dcn_model.data_list)
-    pipe_command = 'python reader.py'
+    pipe_command = 'python reader.py {}'.format(args.vocab_dir)
     dataset.set_pipe_command(pipe_command)
     dataset.set_batch_size(args.batch_size)
     dataset.set_thread(args.num_thread)
@@ -67,7 +73,8 @@ def train(args):
             fetch_info=['total_loss', 'avg_logloss', 'auc'],
             debug=False,
             print_period=args.print_steps)
-        model_dir = args.model_output_dir + '/epoch_' + str(epoch_id + 1)
+        model_dir = os.path.join(args.model_output_dir,
+                                 'epoch_' + str(epoch_id + 1))
         sys.stderr.write('epoch%d is finished and takes %f s\n' % (
             (epoch_id + 1), time.time() - start))
         fluid.io.save_persistables(
@@ -79,4 +86,5 @@ def train(args):
 if __name__ == '__main__':
     args = parse_args()
     print(args)
+    utils.check_version()
     train(args)

@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 network layers
 """
@@ -23,9 +36,11 @@ class EmbeddingLayer(object):
         """
         operation
         """
-        emb = fluid.layers.embedding(input=input, size=[
-            self.dict_size, self.emb_dim], is_sparse=True,
-                                     param_attr=attr.ParamAttr(name=self.name))
+        emb = fluid.embedding(
+            input=input,
+            size=[self.dict_size, self.emb_dim],
+            is_sparse=True,
+            param_attr=attr.ParamAttr(name=self.name))
         return emb
 
 
@@ -44,8 +59,7 @@ class SequencePoolLayer(object):
         """
         operation
         """
-        pool = fluid.layers.sequence_pool(
-            input=input, pool_type=self.pool_type)
+        pool = fluid.layers.sequence_pool(input=input, pool_type=self.pool_type)
         return pool
 
 
@@ -66,9 +80,12 @@ class FCLayer(object):
         """
         operation
         """
-        fc = fluid.layers.fc(input=input, size=self.fc_dim, param_attr=attr.ParamAttr(
-            name="%s.w" % self.name),
-                             bias_attr=attr.ParamAttr(name="%s.b" % self.name), act=self.act, name=self.name)
+        fc = fluid.layers.fc(input=input,
+                             size=self.fc_dim,
+                             param_attr=attr.ParamAttr(name="%s.w" % self.name),
+                             bias_attr=attr.ParamAttr(name="%s.b" % self.name),
+                             act=self.act,
+                             name=self.name)
         return fc
 
 
@@ -88,12 +105,16 @@ class DynamicGRULayer(object):
         """
         operation
         """
-        proj = fluid.layers.fc(input=input, size=self.gru_dim * 3,
-                               param_attr=attr.ParamAttr(name="%s_fc.w" % self.name),
-                               bias_attr=attr.ParamAttr(name="%s_fc.b" % self.name))
-        gru = fluid.layers.dynamic_gru(input=proj, size=self.gru_dim,
-                                       param_attr=attr.ParamAttr(name="%s.w" % self.name),
-                                       bias_attr=attr.ParamAttr(name="%s.b" % self.name))
+        proj = fluid.layers.fc(
+            input=input,
+            size=self.gru_dim * 3,
+            param_attr=attr.ParamAttr(name="%s_fc.w" % self.name),
+            bias_attr=attr.ParamAttr(name="%s_fc.b" % self.name))
+        gru = fluid.layers.dynamic_gru(
+            input=proj,
+            size=self.gru_dim,
+            param_attr=attr.ParamAttr(name="%s.w" % self.name),
+            bias_attr=attr.ParamAttr(name="%s.b" % self.name))
         return gru
 
 
@@ -113,12 +134,16 @@ class DynamicLSTMLayer(object):
         """
         operation
         """
-        proj = fluid.layers.fc(input=input, size=self.lstm_dim * 4,
-                               param_attr=attr.ParamAttr(name="%s_fc.w" % self.name),
-                               bias_attr=attr.ParamAttr(name="%s_fc.b" % self.name))
-        lstm, _ = fluid.layers.dynamic_lstm(input=proj, size=self.lstm_dim * 4,
-                                            param_attr=attr.ParamAttr(name="%s.w" % self.name),
-                                            bias_attr=attr.ParamAttr(name="%s.b" % self.name))
+        proj = fluid.layers.fc(
+            input=input,
+            size=self.lstm_dim * 4,
+            param_attr=attr.ParamAttr(name="%s_fc.w" % self.name),
+            bias_attr=attr.ParamAttr(name="%s_fc.b" % self.name))
+        lstm, _ = fluid.layers.dynamic_lstm(
+            input=proj,
+            size=self.lstm_dim * 4,
+            param_attr=attr.ParamAttr(name="%s.w" % self.name),
+            bias_attr=attr.ParamAttr(name="%s.b" % self.name))
         return lstm
 
 
@@ -161,9 +186,12 @@ class SequenceConvPoolLayer(object):
         """
         operation
         """
-        conv = fluid.nets.sequence_conv_pool(input=input, filter_size=self.filter_size,
-                                             num_filters=self.num_filters,
-                                             param_attr=attr.ParamAttr(name=self.name), act="relu")
+        conv = fluid.nets.sequence_conv_pool(
+            input=input,
+            filter_size=self.filter_size,
+            num_filters=self.num_filters,
+            param_attr=attr.ParamAttr(name=self.name),
+            act="relu")
         return conv
 
 
@@ -259,7 +287,8 @@ class SoftmaxWithCrossEntropyLayer(object):
         """
         operation
         """
-        loss = fluid.layers.softmax_with_cross_entropy(logits=input, label=label)
+        loss = fluid.layers.softmax_with_cross_entropy(
+            logits=input, label=label)
         return loss
 
 
@@ -354,8 +383,8 @@ class ConstantLayer(object):
         """
         operation
         """
-        constant = fluid.layers.fill_constant_batch_size_like(
-            input, shape, dtype, value)
+        constant = fluid.layers.fill_constant_batch_size_like(input, shape,
+                                                              dtype, value)
         return constant
 
 
@@ -396,6 +425,7 @@ class SoftsignLayer(object):
         softsign = fluid.layers.softsign(input)
         return softsign
 
+
 # class MatmulLayer(object):
 #     def __init__(self, transpose_x, transpose_y):
 #         self.transpose_x = transpose_x
@@ -404,7 +434,6 @@ class SoftsignLayer(object):
 #     def ops(self, x, y):
 #         matmul = fluid.layers.matmul(x, y, self.transpose_x, self.transpose_y)
 #         return matmul
-
 
 # class Conv2dLayer(object):
 #     def __init__(self, num_filters, filter_size, act, name):
@@ -416,7 +445,6 @@ class SoftsignLayer(object):
 #     def ops(self, input):
 #         conv = fluid.layers.conv2d(input, self.num_filters, self.filter_size, param_attr=attr.ParamAttr(name="%s.w" % self.name), bias_attr=attr.ParamAttr(name="%s.b" % self.name), act=self.act)
 #         return conv
-
 
 # class Pool2dLayer(object):
 #     def __init__(self, pool_size, pool_type):

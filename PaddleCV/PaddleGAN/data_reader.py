@@ -47,7 +47,7 @@ def RandomHorizonFlip(img):
     return img
 
 
-def get_preprocess_param(load_size, crop_size):
+def get_preprocess_param2(load_size, crop_size):
     x = np.random.randint(0, np.maximum(0, load_size - crop_size))
     y = np.random.randint(0, np.maximum(0, load_size - crop_size))
     flip = np.random.rand() > 0.5
@@ -59,7 +59,7 @@ def get_preprocess_param(load_size, crop_size):
     }
 
 
-def get_preprocess_param(load_width, load_height, crop_width, crop_height):
+def get_preprocess_param4(load_width, load_height, crop_width, crop_height):
     if crop_width == load_width:
         x = 0
         y = 0
@@ -178,8 +178,8 @@ class pair_reader_creator(reader_creator):
                 self.id2name[i] = os.path.basename(files[0])
 
                 if self.mode == "TRAIN":
-                    param = get_preprocess_param(args.image_size,
-                                                 args.crop_size)
+                    param = get_preprocess_param2(args.image_size,
+                                                  args.crop_size)
                     img1 = img1.resize((args.image_size, args.image_size),
                                        Image.BICUBIC)
                     img2 = img2.resize((args.image_size, args.image_size),
@@ -237,6 +237,9 @@ class triplex_reader_creator(reader_creator):
             batch_size=batch_size,
             mode=mode)
 
+        self.name2id = {}
+        self.id2name = {}
+
     def make_reader(self, args, return_name=False):
         print(self.image_dir, self.list_filename)
         print("files length:", len(self.lines))
@@ -248,11 +251,13 @@ class triplex_reader_creator(reader_creator):
             batch_out_name = []
             if self.shuffle:
                 np.random.shuffle(self.lines)
-            for line in self.lines:
+            for i, line in enumerate(self.lines):
                 files = line.strip('\n\r\t ').split('\t')
                 if len(files) != 3:
                     print("files is not equal to 3!")
                     sys.exit(-1)
+                self.name2id[os.path.basename(files[0])] = i
+                self.id2name[i] = os.path.basename(files[0])
                 #label image instance
                 img1 = Image.open(os.path.join(self.image_dir, files[0]))
                 img2 = Image.open(os.path.join(self.image_dir, files[
@@ -261,7 +266,7 @@ class triplex_reader_creator(reader_creator):
                     img3 = Image.open(os.path.join(self.image_dir, files[2]))
 
                 if self.mode == "TRAIN":
-                    param = get_preprocess_param(
+                    param = get_preprocess_param4(
                         args.load_width, args.load_height, args.crop_width,
                         args.crop_height)
                     img1 = img1.resize((args.load_width, args.load_height),
@@ -327,7 +332,7 @@ class triplex_reader_creator(reader_creator):
                 if not args.no_instance:
                     batch_out_3.append(img3)
                 if return_name:
-                    batch_out_name.append(os.path.basename(files[0]))
+                    batch_out_name.append(i)
                 if len(batch_out_1) == self.batch_size:
                     if return_name:
                         if not args.no_instance:
@@ -371,13 +376,18 @@ class celeba_reader_creator(reader_creator):
             self.batch_size = args.batch_size
             self.shuffle = args.shuffle
             lines = lines[2:train_end]
-        else:
+        elif self.mode == 'TEST':
             self.batch_size = args.n_samples
             self.shuffle = False
-            if self.mode == "TEST":
-                lines = lines[train_end:test_end]
-            else:
-                lines = lines[test_end:]
+            lines = lines[train_end:test_end]
+        elif self.mode == 'VAL':
+            self.batch_size = args.n_samples
+            self.shuffle = False
+            lines = lines[2:]
+        else:
+            raise NotImplementedError(
+                "Wrong Reader MODE: {}, mode must in [TRAIN|TEST|VAL]".format(
+                    self.mode))
 
         self.images = []
         attr_names = args.selected_attrs.split(',')
@@ -608,6 +618,11 @@ class data_reader(object):
                 train_list = os.path.join(dataset_dir, 'train.txt')
                 if self.cfg.train_list is not None:
                     train_list = self.cfg.train_list
+                if not os.path.exists(train_list):
+                    print(
+                        "train_list is NOT EXIST!!! Please prepare train list first"
+                    )
+                    sys.exit(1)
                 train_reader = triplex_reader_creator(
                     image_dir=dataset_dir,
                     list_filename=train_list,
@@ -619,6 +634,11 @@ class data_reader(object):
                     test_list = os.path.join(dataset_dir, "test.txt")
                     if self.cfg.test_list is not None:
                         test_list = self.cfg.test_list
+                    if not os.path.exists(test_list):
+                        print(
+                            "test_list is NOT EXIST!!! Please prepare test list first"
+                        )
+                        sys.exit(1)
                     test_reader = triplex_reader_creator(
                         image_dir=dataset_dir,
                         list_filename=test_list,

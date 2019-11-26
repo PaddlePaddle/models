@@ -150,7 +150,7 @@ def save_test_image(epoch,
                                         "input_B": B_data})
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
             input_A_temp = np.squeeze(np.array(A_data)[0]).transpose([1, 2, 0])
-            input_B_temp = np.squeeze(np.array(A_data)[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(np.array(B_data)[0]).transpose([1, 2, 0])
 
             fakeB_name = "fakeB_" + str(epoch) + "_" + A_id2name[np.array(
                 image_name).astype('int32')[0]]
@@ -172,8 +172,8 @@ def save_test_image(epoch,
             res_inputB.save(os.path.join(out_path, inputB_name))
     elif cfg.model_net == "SPADE":
         for data in A_test_reader():
-            data_A, data_B, data_C, name = data[0]['input_A'], data[0][
-                'input_B'], data[0]['input_C'], data[0]['image_name']
+            data_A, data_B, data_C, name = data[0]['input_label'], data[0][
+                'input_img'], data[0]['input_ins'], data[0]['image_name']
             fake_B_temp = exe.run(test_program,
                                   fetch_list=[g_trainer.fake_B],
                                   feed={
@@ -183,13 +183,14 @@ def save_test_image(epoch,
                                   })
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
             input_B_temp = np.squeeze(data_B[0]).transpose([1, 2, 0])
+            image_name = A_id2name[np.array(name).astype('int32')[0]]
 
             res_fakeB = Image.fromarray(((fake_B_temp + 1) * 127.5).astype(
                 np.uint8))
-            res_fakeB.save(out_path + "/fakeB_" + str(epoch) + "_" + name)
+            res_fakeB.save(out_path + "/fakeB_" + str(epoch) + "_" + image_name)
             res_real = Image.fromarray(((input_B_temp + 1) * 127.5).astype(
                 np.uint8))
-            res_real.save(out_path + "/real_" + str(epoch) + "_" + name)
+            res_real.save(out_path + "/real_" + str(epoch) + "_" + image_name)
     elif cfg.model_net == "StarGAN":
         for data in A_test_reader():
             real_img, label_org, label_trg, image_name = data[0][
@@ -408,3 +409,19 @@ def check_gpu(use_gpu):
             sys.exit(1)
     except Exception as e:
         pass
+
+
+def check_version():
+    """
+    Log error and exit when the installed version of paddlepaddle is
+    not satisfied.
+    """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        print(err)
+        sys.exit(1)

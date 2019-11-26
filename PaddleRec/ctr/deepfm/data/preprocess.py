@@ -59,7 +59,7 @@ def get_feat_dict():
             for line_idx, line in enumerate(fin):
                 if line_idx % 100000 == 0:
                     print('generating feature dict', line_idx / 45000000)
-                features = line.lstrip('\n').split('\t')
+                features = line.rstrip('\n').split('\t')
                 for idx in categorical_range_:
                     if features[idx] == '': continue
                     feat_cnt.update([features[idx]])
@@ -77,22 +77,12 @@ def get_feat_dict():
         for idx in continuous_range_:
             feat_dict[idx] = tc
             tc += 1
-        # Discrete features
-        cnt_feat_set = set()
-        with open('train.txt', 'r') as fin:
-            for line_idx, line in enumerate(fin):
-                features = line.rstrip('\n').split('\t')
-                for idx in categorical_range_:
-                    if features[idx] == '' or features[idx] not in dis_feat_set:
-                        continue
-                    if features[idx] not in cnt_feat_set:
-                        cnt_feat_set.add(features[idx])
-                        feat_dict[features[idx]] = tc
-                        tc += 1
-
+        for feat in dis_feat_set:
+            feat_dict[feat] = tc
+            tc += 1
         # Save dictionary
         with open(dir_feat_dict_, 'wb') as fout:
-            pickle.dump(feat_dict, fout)
+            pickle.dump(feat_dict, fout, protocol=2)
         print('args.num_feat ', len(feat_dict) + 1)
 
 

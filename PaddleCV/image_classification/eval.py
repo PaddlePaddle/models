@@ -48,6 +48,7 @@ parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224,
 add_arg('crop_size',        int,  224,                  "The value of crop size")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
+add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
 # yapf: enable
 
 
@@ -62,12 +63,15 @@ def eval(args):
     ), "{} doesn't exist, please load right pretrained model path for eval".format(
         args.pretrained_model)
 
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+    image = fluid.data(
+        name='image', shape=[None] + image_shape, dtype='float32')
+    label = fluid.data(name='label', shape=[None, 1], dtype='int64')
 
     # model definition
     if args.model.startswith('EfficientNet'):
-        model = models.__dict__[args.model](is_test=True, padding_type=args.padding_type)
+        model = models.__dict__[args.model](is_test=True,
+                                            padding_type=args.padding_type,
+                                            use_se=args.use_se)
     else:
         model = models.__dict__[args.model]()
 
@@ -101,9 +105,9 @@ def eval(args):
     exe.run(fluid.default_startup_program())
 
     fluid.io.load_persistables(exe, args.pretrained_model)
+    imagenet_reader = reader.ImageNetReader()
+    val_reader = imagenet_reader.val(settings=args)
 
-    val_reader = paddle.batch(
-        reader.val(settings=args), batch_size=args.batch_size)
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
 
     test_info = [[], [], []]
@@ -142,6 +146,7 @@ def main():
     args = parser.parse_args()
     print_arguments(args)
     check_gpu()
+    check_version()
     eval(args)
 
 

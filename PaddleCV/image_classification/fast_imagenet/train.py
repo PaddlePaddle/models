@@ -112,10 +112,9 @@ def build_program(args,
                             use_double_buffer=True)
                 input, label = fluid.layers.read_file(pyreader)
             else:
-                input = fluid.layers.data(
-                    name="image", shape=[3, 244, 244], dtype="uint8")
-                label = fluid.layers.data(
-                    name="label", shape=[1], dtype="int64")
+                input = fluid.data(
+                    name="image", shape=[None, 3, 244, 244], dtype="uint8")
+                label = fluid.data(name="label", shape=[None, 1], dtype="int64")
             cast_img_type = "float16" if args.fp16 else "float32"
             cast = fluid.layers.cast(input, cast_img_type)
             img_mean = fluid.layers.create_global_var(
@@ -284,7 +283,7 @@ def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
         min_scale=min_scale,
         shuffle_seed=epoch_id + 1)
     train_py_reader.decorate_paddle_reader(
-        paddle.batch(
+        fluid.io.batch(
             train_reader, batch_size=train_bs))
 
     test_reader = reader.test(
@@ -292,7 +291,7 @@ def prepare_reader(epoch_id, train_py_reader, train_bs, val_bs, trn_dir,
         bs=val_bs * DEVICE_NUM,
         sz=img_dim,
         rect_val=rect_val)
-    test_batched_reader = paddle.batch(
+    test_batched_reader = fluid.io.batch(
         test_reader, batch_size=val_bs * DEVICE_NUM)
 
     return test_batched_reader

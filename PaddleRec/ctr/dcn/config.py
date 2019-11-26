@@ -1,9 +1,13 @@
-#!/usr/bin/env python
-# coding: utf-8
 import argparse
 """
 global params
 """
+
+
+def boolean_string(s):
+    if s.lower() not in {'false', 'true'}:
+        raise ValueError('Not a valid boolean string')
+    return s.lower() == 'true'
 
 
 def parse_args():
@@ -18,6 +22,16 @@ def parse_args():
         type=str,
         default='data/test_valid',
         help='The path of test and valid data')
+    parser.add_argument(
+        '--vocab_dir',
+        type=str,
+        default='data/vocab',
+        help='The path of generated vocabs')
+    parser.add_argument(
+        '--cat_feat_num',
+        type=str,
+        default='data/cat_feature_num.txt',
+        help='The path of generated cat_feature_num.txt')
     parser.add_argument(
         '--batch_size', type=int, default=512, help="Batch size")
     parser.add_argument(
@@ -53,9 +67,15 @@ def parse_args():
         help='Cross net l2 regularizer coefficient')
     parser.add_argument(
         '--use_bn',
-        type=bool,
+        type=boolean_string,
         default=True,
         help='Whether use batch norm in dnn part')
+    parser.add_argument(
+        '--is_sparse',
+        action='store_true',
+        required=False,
+        default=False,
+        help='embedding will use sparse or not, (default: False)')
     parser.add_argument(
         '--clip_by_norm', type=float, default=100.0, help="gradient clip norm")
     parser.add_argument('--print_steps', type=int, default=100)

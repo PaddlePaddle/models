@@ -27,6 +27,7 @@ from paddle.fluid.initializer import MSRA
 from ppdet.modeling.ops import MultiClassNMS
 from ppdet.modeling.ops import ConvNorm
 from ppdet.core.workspace import register, serializable
+from ppdet.experimental import mixed_precision_global_state
 
 __all__ = ['BBoxHead', 'TwoFCHead', 'XConvNormHead']
 
@@ -120,6 +121,12 @@ class TwoFCHead(object):
 
     def __call__(self, roi_feat):
         fan = roi_feat.shape[1] * roi_feat.shape[2] * roi_feat.shape[3]
+
+        mixed_precision_enabled = mixed_precision_global_state() is not None
+
+        if mixed_precision_enabled:
+            roi_feat = fluid.layers.cast(roi_feat, 'float16')
+
         fc6 = fluid.layers.fc(input=roi_feat,
                               size=self.mlp_dim,
                               act='relu',
@@ -141,6 +148,10 @@ class TwoFCHead(object):
                                         name='fc7_b',
                                         learning_rate=2.,
                                         regularizer=L2Decay(0.)))
+
+        if mixed_precision_enabled:
+            head_feat = fluid.layers.cast(head_feat, 'float32')
+
         return head_feat
 
 
@@ -269,7 +280,12 @@ class BBoxHead(object):
         loss_bbox = fluid.layers.reduce_mean(loss_bbox)
         return {'loss_cls': loss_cls, 'loss_bbox': loss_bbox}
 
-    def get_prediction(self, roi_feat, rois, im_info, im_shape):
+    def get_prediction(self,
+                       roi_feat,
+                       rois,
+                       im_info,
+                       im_shape,
+                       return_box_score=False):
         """
         Get prediction bounding box in test stage.
 
@@ -280,7 +296,7 @@ class BBoxHead(object):
                 number of input images, each element consists of im_height,
                 im_width, im_scale.
             im_shape (Variable): Actual shape of original image with shape
-                [B, 3]. B is the number of images, each element consists of 
+                [B, 3]. B is the number of images, each element consists of
                 original_height, original_width, 1
 
         Returns:
@@ -297,5 +313,7 @@ class BBoxHead(object):
         bbox_pred = fluid.layers.reshape(bbox_pred, (-1, self.num_classes, 4))
         decoded_box = self.box_coder(prior_box=boxes, target_box=bbox_pred)
         cliped_box = fluid.layers.box_clip(input=decoded_box, im_info=im_shape)
+        if return_box_score:
+            return {'bbox': cliped_box, 'score': cls_prob}
         pred_result = self.nms(bboxes=cliped_box, scores=cls_prob)
         return {'bbox': pred_result}

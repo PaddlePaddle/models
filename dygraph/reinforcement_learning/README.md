@@ -1,6 +1,8 @@
 # 强化学习
 本页将介绍如何使用PaddlePaddle在DyGraph模式下实现典型强化学习算法，包括[安装](#installation)、[训练](#training-a-model)、[输出](#log)、[模型评估](#evaluation)。
 
+动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
+
 ---
 ## 内容
 - [安装](#installation)

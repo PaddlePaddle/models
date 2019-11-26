@@ -7,6 +7,8 @@
 
 > **演示视频**: *Bruno Mars - That’s What I Like [官方视频]*.
 
+同时推荐用户参考[IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122271)
+
 ## 环境依赖
 
 本目录下的代码均在4卡Tesla K40/P40 GPU，CentOS系统，CUDA-9.0/8.0，cuDNN-7.0环境下测试运行无误
@@ -105,8 +107,11 @@ python train.py --dataset 'mpii'
 将测试图片放入根目录下的'test'文件夹中，执行
 
 ```bash
+# 默认是MPII数据集
 python test.py --checkpoint 'checkpoints/pose-resnet-50-384x384-mpii'
 ```
+
+`python test.py --help`获取更多的用法。
 
 ## 引用
 

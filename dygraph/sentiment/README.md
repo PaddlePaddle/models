@@ -3,20 +3,26 @@
 
 情感是人类的一种高级智能行为，为了识别文本的情感倾向，需要深入的语义建模。另外，不同领域（如餐饮、体育）在情感的表达各不相同，因而需要有大规模覆盖各个领域的数据进行模型训练。为此，我们通过基于深度学习的语义模型和大规模数据挖掘解决上述两个问题。效果上，我们基于开源情感倾向分类数据集ChnSentiCorp进行评测。具体数据如下所示：
 
-| 模型 | dev | 
+| 模型 | dev |
 | :------| :------ |
 | CNN | 90.6% |
+| BOW | 90.1% |
+| GRU | 90.0% |
+| BIGRU | 89.7% |
+
+
+动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
 
 
 ## 快速开始
 
-本项目依赖于 Paddlepaddle 1.5.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+本项目依赖于 Paddlepaddle 1.5.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装。
 
-python版本依赖python 2.7或python 3.5及以上版本
+python版本依赖python 2.7或python 3.5及以上版本。
 
 #### 安装代码
 
-克隆数据集代码库到本地
+克隆数据集代码库到本地。
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
 cd models/dygraph/sentiment
@@ -32,14 +38,15 @@ tar -zxvf sentiment_classification-dataset-1.0.0.tar.gz
 
 #### 模型训练
 
-基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证
+基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证。
+model_type从bow_net，cnn_net，gru_net，bigru_net中选择。
 ```shell
-python main.py
+python main.py --model_type=bow_net
 ```
 
 #### 模型预测
 
-利用已有模型，可以运行下面命令，对未知label的数据（test.tsv）进行预测
+利用已有模型，可以运行下面命令，对未知label的数据（test.tsv）进行预测。
 ```shell
 python main.py --do_train false --do_infer true --checkpoints ./path_to_save_models
 ```
@@ -60,8 +67,8 @@ python main.py --do_train false --do_infer true --checkpoints ./path_to_save_mod
 训练、预测、评估使用的数据可以由用户根据实际的应用场景，自己组织数据。数据由两列组成，以制表符分隔，第一列是以空格分词的中文文本（分词预处理方法将在下文具体说明），文件为utf8编码；第二列是情感倾向分类的类别（0表示消极；1表示积极），注意数据文件第一行固定表示为"text_a\tlabel"
 
 ```text
-特 喜欢 这种 好看的 狗狗	              1
-这 真是 惊艳 世界 的 中国 黑科技	      1
+特 喜欢 这种 好看的 狗狗                  1
+这 真是 惊艳 世界 的 中国 黑科技          1
 环境 特别 差 ，脏兮兮 的，再也 不去 了     0
 ```
 
@@ -74,4 +81,3 @@ python main.py --do_train false --do_infer true --checkpoints ./path_to_save_mod
 ├── nets.py                 # 网络结构
 ├── utils.py                # 定义了其他常用的功能函数
 ```
-

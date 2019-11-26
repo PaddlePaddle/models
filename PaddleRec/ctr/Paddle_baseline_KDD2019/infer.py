@@ -12,8 +12,7 @@ import paddle.fluid as fluid
 import map_reader
 from network_conf import ctr_deepfm_dataset
 
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
@@ -91,15 +90,20 @@ def infer():
     place = fluid.CPUPlace()
     inference_scope = fluid.core.Scope()
 
-    filelist = ["%s/%s" % (args.data_path, x) for x in os.listdir(args.data_path)]
+    filelist = [
+        "%s/%s" % (args.data_path, x) for x in os.listdir(args.data_path)
+    ]
     from map_reader import MapDataset
     map_dataset = MapDataset()
     map_dataset.setup(args.sparse_feature_dim)
     exe = fluid.Executor(place)
 
-    whole_filelist = ["raw_data/part-%d" % x for x in range(len(os.listdir("raw_data")))]
+    whole_filelist = [
+        "raw_data/part-%d" % x for x in range(len(os.listdir("raw_data")))
+    ]
     #whole_filelist = ["./out/normed_train09",  "./out/normed_train10",  "./out/normed_train11"]
-    test_files = whole_filelist[int(0.0 * len(whole_filelist)):int(1.0 * len(whole_filelist))]
+    test_files = whole_filelist[int(0.0 * len(whole_filelist)):int(1.0 * len(
+        whole_filelist))]
 
     # file_groups = [whole_filelist[i:i+train_thread_num] for i in range(0, len(whole_filelist), train_thread_num)]
 
@@ -110,7 +114,8 @@ def infer():
 
     epochs = 2
     for i in range(epochs):
-        cur_model_path = args.model_path + "/epoch" + str(i + 1) + ".model"
+        cur_model_path = os.path.join(args.model_path,
+                                      "epoch" + str(i + 1) + ".model")
         with fluid.scope_guard(inference_scope):
             [inference_program, feed_target_names, fetch_targets] = \
                 fluid.io.load_inference_model(cur_model_path, exe)
@@ -120,9 +125,11 @@ def infer():
 
             test_reader = map_dataset.infer_reader(test_files, 1000, 100000)
             for batch_id, data in enumerate(test_reader()):
-                loss_val, auc_val, accuracy, predict, label = exe.run(inference_program,
-                                            feed=data2tensor(data, place),
-                                            fetch_list=fetch_targets, return_numpy=False)
+                loss_val, auc_val, accuracy, predict, label = exe.run(
+                    inference_program,
+                    feed=data2tensor(data, place),
+                    fetch_list=fetch_targets,
+                    return_numpy=False)
 
                 #print(np.array(predict))
                 #x = np.array(predict)

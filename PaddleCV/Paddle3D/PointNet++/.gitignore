@@ -1,0 +1,8 @@
+checkpoints*
+ext_op/src/*.o
+ext_op/src/*.so
+*.log*
+dataset/Indoor3DSemSeg/*
+!dataset/Indoor3DSemSeg/*.sh
+dataset/ModelNet40/*
+!dataset/ModelNet40/*.sh

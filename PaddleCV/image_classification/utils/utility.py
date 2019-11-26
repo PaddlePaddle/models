@@ -32,6 +32,8 @@ import paddle.fluid as fluid
 from paddle.fluid.wrapped_decorator import signature_safe_contextmanager
 from paddle.fluid.framework import Program, program_guard, name_scope, default_main_program
 from paddle.fluid import unique_name, layers
+from utils import dist_utils
+
 
 def print_arguments(args):
     """Print argparse's arguments.
@@ -138,8 +140,13 @@ def parse_args():
     add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
+    add_arg('use_se',                   bool,   True,                   "Whether to use Squeeze-and-Excitation module for EfficientNet.")
     # yapf: enable
-
+    #NOTE: args for profiler
+    add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
+    add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
+    add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
+    add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
     args = parser.parse_args()
 
     return args
@@ -165,6 +172,22 @@ def check_gpu():
         pass
 
 
+def check_version():
+    """
+    Log error and exit when the installed version of paddlepaddle is
+    not satisfied.
+    """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        print(err)
+        sys.exit(1)
+
+
 def check_args(args):
     """check arguments before running
 
@@ -181,7 +204,8 @@ def check_args(args):
 
     # check learning rate strategy
     lr_strategy_list = [
-        "piecewise_decay", "cosine_decay", "linear_decay", "cosine_decay_warmup", "exponential_decay_warmup"
+        "piecewise_decay", "cosine_decay", "linear_decay",
+        "cosine_decay_warmup", "exponential_decay_warmup"
     ]
     if args.lr_strategy not in lr_strategy_list:
         warnings.warn(
@@ -240,6 +264,7 @@ def check_args(args):
     #check gpu
 
     check_gpu()
+    check_version()
 
 
 def init_model(exe, args, program):
@@ -267,49 +292,52 @@ def save_model(args, exe, train_prog, info):
     print("Already save model in %s" % (model_path))
 
 
-def create_pyreader(is_train, args):
-    """create PyReader
+def create_data_loader(is_train, args):
+    """create data_loader
 
     Usage:
-        Using mixup process in training, it will return 5 results, include py_reader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include py_reader, image, and label.
+        Using mixup process in training, it will return 5 results, include data_loader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include data_loader, image, and label.
 
     Args: 
         is_train: mode
         args: arguments
 
     Returns:
-        py_reader and the input data of net, 
+        data_loader and the input data of net, 
     """
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
-    feed_image = fluid.layers.data(
-        name="feed_image", shape=image_shape, dtype="float32", lod_level=0)
+    feed_image = fluid.data(
+        name="feed_image",
+        shape=[None] + image_shape,
+        dtype="float32",
+        lod_level=0)
 
-    feed_label = fluid.layers.data(
-        name="feed_label", shape=[1], dtype="int64", lod_level=0)
-    feed_y_a = fluid.layers.data(
-        name="feed_y_a", shape=[1], dtype="int64", lod_level=0)
+    feed_label = fluid.data(
+        name="feed_label", shape=[None, 1], dtype="int64", lod_level=0)
+    feed_y_a = fluid.data(
+        name="feed_y_a", shape=[None, 1], dtype="int64", lod_level=0)
 
     if is_train and args.use_mixup:
-        feed_y_b = fluid.layers.data(
-            name="feed_y_b", shape=[1], dtype="int64", lod_level=0)
-        feed_lam = fluid.layers.data(
-            name="feed_lam", shape=[1], dtype="float32", lod_level=0)
+        feed_y_b = fluid.data(
+            name="feed_y_b", shape=[None, 1], dtype="int64", lod_level=0)
+        feed_lam = fluid.data(
+            name="feed_lam", shape=[None, 1], dtype="float32", lod_level=0)
 
-        py_reader = fluid.io.PyReader(
+        data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
             capacity=64,
             use_double_buffer=True,
             iterable=False)
-        return py_reader, [feed_image, feed_y_a, feed_y_b, feed_lam]
+        return data_loader, [feed_image, feed_y_a, feed_y_b, feed_lam]
     else:
-        py_reader = fluid.io.PyReader(
+        data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_label],
             capacity=64,
             use_double_buffer=True,
             iterable=False)
 
-        return py_reader, [feed_image, feed_label]
+        return data_loader, [feed_image, feed_label]
 
 
 def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
@@ -332,21 +360,21 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
                 print(
                     "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
-                           "%2.2f sec" % time_info))
+                           "%2.4f sec" % time_info))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 print(
                     "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%.5f" % lr, "%2.2f sec" % time_info))
+                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 print(
                     "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%2.2f sec" % time_info))
+                           "%.5f" % acc5, "%2.4f sec" % time_info))
             else:
                 raise Exception(
                     "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".
@@ -376,7 +404,7 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
         raise Exception("Illegal info_mode")
 
 
-def best_strategy_compiled(args, program, loss):
+def best_strategy_compiled(args, program, loss, exe):
     """make a program which wrapped by a compiled program
     """
 
@@ -391,6 +419,13 @@ def best_strategy_compiled(args, program, loss):
         exec_strategy.num_threads = fluid.core.get_cuda_device_count()
         exec_strategy.num_iteration_per_drop_scope = 10
 
+        num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+        if num_trainers > 1 and args.use_gpu:
+            dist_utils.prepare_for_multi_process(exe, build_strategy, program)
+            # NOTE: the process is fast when num_threads is 1
+            # for multi-process training.
+            exec_strategy.num_threads = 1
+
         compiled_program = fluid.CompiledProgram(program).with_data_parallel(
             loss_name=loss.name,
             build_strategy=build_strategy,
@@ -400,8 +435,11 @@ def best_strategy_compiled(args, program, loss):
 
 
 class ExponentialMovingAverage(object):
-
-    def __init__(self, decay=0.999, thres_steps=None, zero_debias=False, name=None):
+    def __init__(self,
+                 decay=0.999,
+                 thres_steps=None,
+                 zero_debias=False,
+                 name=None):
         self._decay = decay
         self._thres_steps = thres_steps
         self._name = name if name is not None else ''
@@ -421,7 +459,7 @@ class ExponentialMovingAverage(object):
         self._ema_vars = {}
         for param, tmp in self._params_tmps:
             with param.block.program._optimized_guard(
-                    [param, tmp]), name_scope('moving_average'):
+                [param, tmp]), name_scope('moving_average'):
                 self._ema_vars[param.name] = self._create_ema_vars(param)
 
         self.apply_program = Program()
@@ -491,14 +529,14 @@ class ExponentialMovingAverage(object):
         param_master_emas = []
         for param, tmp in self._params_tmps:
             with param.block.program._optimized_guard(
-                    [param, tmp]), name_scope('moving_average'):
+                [param, tmp]), name_scope('moving_average'):
                 param_ema = self._ema_vars[param.name]
                 if param.name + '.master' in self._ema_vars:
                     master_ema = self._ema_vars[param.name + '.master']
                     param_master_emas.append([param_ema, master_ema])
                 else:
                     ema_t = param_ema * self._decay_var + param * (
-                            1 - self._decay_var)
+                        1 - self._decay_var)
                     layers.assign(input=ema_t, output=param_ema)
 
         # for fp16 params

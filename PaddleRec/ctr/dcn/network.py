@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
 from __future__ import print_function, absolute_import, division
 import paddle.fluid as fluid
 from collections import OrderedDict
@@ -14,23 +12,21 @@ class DCN(object):
                  dnn_hidden_units=(128, 128),
                  l2_reg_cross=1e-5,
                  dnn_use_bn=False,
-                 clip_by_norm=None):
+                 clip_by_norm=None,
+                 cat_feat_dims_dict=None,
+                 is_sparse=False):
         self.cross_num = cross_num
         self.dnn_hidden_units = dnn_hidden_units
         self.l2_reg_cross = l2_reg_cross
         self.dnn_use_bn = dnn_use_bn
         self.clip_by_norm = clip_by_norm
-
-        self.cat_feat_dims_dict = OrderedDict()
+        self.cat_feat_dims_dict = cat_feat_dims_dict if cat_feat_dims_dict else OrderedDict(
+        )
+        self.is_sparse = is_sparse
 
         self.dense_feat_names = ['I' + str(i) for i in range(1, 14)]
         self.sparse_feat_names = ['C' + str(i) for i in range(1, 27)]
         target = ['label']
-
-        for line in open('data/cat_feature_num.txt'):
-            spls = line.strip().split()
-            assert len(spls) == 2
-            self.cat_feat_dims_dict[spls[0]] = int(spls[1])
 
         # {feat_name: dims}
         self.feat_dims_dict = OrderedDict(
@@ -42,13 +38,13 @@ class DCN(object):
 
     def build_network(self, is_test=False):
         # data input
-        self.target_input = fluid.layers.data(
-            name='label', shape=[1], dtype='float32')
+        self.target_input = fluid.data(
+            name='label', shape=[None, 1], dtype='float32')
 
         data_dict = OrderedDict()
         for feat_name in self.feat_dims_dict:
-            data_dict[feat_name] = fluid.layers.data(
-                name=feat_name, shape=[1], dtype='float32')
+            data_dict[feat_name] = fluid.data(
+                name=feat_name, shape=[None, 1], dtype='float32')
 
         self.net_input = self._create_embedding_input(data_dict)
 
@@ -66,9 +62,8 @@ class DCN(object):
         # auc
         prob_2d = fluid.layers.concat([1 - self.prob, self.prob], 1)
         label_int = fluid.layers.cast(self.target_input, 'int64')
-        auc_var, batch_auc_var, auc_states = fluid.layers.auc(input=prob_2d,
-                                                              label=label_int,
-                                                              slide_steps=0)
+        auc_var, batch_auc_var, self.auc_states = fluid.layers.auc(
+            input=prob_2d, label=label_int, slide_steps=0)
         self.auc_var = auc_var
 
         # logloss
@@ -122,16 +117,14 @@ class DCN(object):
 
     def _create_embedding_input(self, data_dict):
         # sparse embedding
-        sparse_emb_dict = OrderedDict((
-            name, fluid.layers.embedding(
-                input=fluid.layers.cast(
-                    data_dict[name], dtype='int64'),
-                size=[
-                    self.feat_dims_dict[name] + 1,
-                    6 * int(pow(self.feat_dims_dict[name], 0.25))
-                ]))
-            for name in self.sparse_feat_names
-        )
+        sparse_emb_dict = OrderedDict((name, fluid.embedding(
+            input=fluid.layers.cast(
+                data_dict[name], dtype='int64'),
+            size=[
+                self.feat_dims_dict[name] + 1,
+                6 * int(pow(self.feat_dims_dict[name], 0.25))
+            ],
+            is_sparse=self.is_sparse)) for name in self.sparse_feat_names)
 
         # combine dense and sparse_emb
         dense_input_list = [

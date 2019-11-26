@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 # The placeholder for batch_size in compile time. Must be -1 currently to be
 # consistent with some ops' infer-shape output in compile time, such as the
 # sequence_expand op used in beamsearch decoder.
@@ -65,43 +78,37 @@ input_descs = {
 # Names of word embedding table which might be reused for weight sharing.
 word_emb_param_names = (
     "src_word_emb_table",
-    "trg_word_emb_table",
-)
+    "trg_word_emb_table", )
 
 phone_emb_param_name = "phone_emb_table"
 
 # Names of position encoding table which will be initialized externally.
 pos_enc_param_names = (
     "src_pos_enc_table",
-    "trg_pos_enc_table",
-)
+    "trg_pos_enc_table", )
 # separated inputs for different usages.
 encoder_data_input_fields = (
     "src_word",
     "src_pos",
     "src_slf_attn_bias",
     "src_phone",
-    "src_phone_mask",
-)
+    "src_phone_mask", )
 decoder_data_input_fields = (
     "trg_word",
     "trg_pos",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
-    "enc_output",
-)
+    "enc_output", )
 label_data_input_fields = (
     "lbl_word",
-    "lbl_weight",
-)
+    "lbl_weight", )
 # In fast decoder, trg_pos (only containing the current time step) is generated
 # by ops and trg_slf_attn_bias is not needed.
 fast_decoder_data_input_fields = (
     "trg_word",
     "init_score",
     "init_idx",
-    "trg_src_attn_bias",
-)
+    "trg_src_attn_bias", )
 
 # Set seed for CE
 dropout_seed = None

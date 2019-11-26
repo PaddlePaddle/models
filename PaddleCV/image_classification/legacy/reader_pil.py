@@ -19,7 +19,7 @@ import functools
 import numpy as np
 from PIL import Image, ImageEnhance
 
-import paddle
+from paddle import fluid
 
 random.seed(0)
 np.random.seed(0)
@@ -190,7 +190,7 @@ def _reader_creator(file_list,
     mapper = functools.partial(
         process_batch_data, mode=mode, color_jitter=color_jitter, rotate=rotate)
 
-    return paddle.reader.xmap_readers(mapper, data_reader, THREAD, BUF_SIZE)
+    return fluid.io.xmap_readers(mapper, data_reader, THREAD, BUF_SIZE)
 
 
 def train(batch_size, data_dir=DATA_DIR, shuffle_seed=0, infinite=False):

@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #!/usr/bin/python
 #-*- coding:utf-8 -*-
 
@@ -25,9 +38,8 @@ def compute_paragraph_score(sample):
         doc['segmented_paragraphs_scores'] = []
         for p_idx, para_tokens in enumerate(doc['segmented_paragraphs']):
             if len(question) > 0:
-                related_score = metric_max_over_ground_truths(f1_score,
-                        para_tokens,
-                        [question])
+                related_score = metric_max_over_ground_truths(
+                    f1_score, para_tokens, [question])
             else:
                 related_score = 0.0
             doc['segmented_paragraphs_scores'].append(related_score)
@@ -63,7 +75,7 @@ def dup_remove(doc):
     prev_del_num = 0
     del_num = 0
     for p_idx in del_ids:
-        if p_idx < para_id: 
+        if p_idx < para_id:
             prev_del_num += 1
         del doc["segmented_paragraphs"][p_idx - del_num]
         del doc["segmented_paragraphs_scores"][p_idx - del_num]
@@ -142,7 +154,8 @@ def paragraph_selection(sample, mode):
         para_infos = []
         for p_idx, (para_tokens, para_scores) in \
                 enumerate(zip(doc['segmented_paragraphs'], doc['segmented_paragraphs_scores'])):
-            para_infos.append((para_tokens, para_scores, len(para_tokens), p_idx))
+            para_infos.append(
+                (para_tokens, para_scores, len(para_tokens), p_idx))
         para_infos.sort(key=lambda x: (-x[1], x[2]))
         topN_idx = []
         for para_info in para_infos[:topN]:
@@ -158,7 +171,7 @@ def paragraph_selection(sample, mode):
                 break
             if doc_id == d_idx and id == para_id and mode == "train":
                 continue
-            total_len += 1 + doc['paragraphs_length'][id] 
+            total_len += 1 + doc['paragraphs_length'][id]
             final_idx.append(id)
         total_segmented_content = copy.deepcopy(segmented_title)
         final_idx.sort()
@@ -168,7 +181,8 @@ def paragraph_selection(sample, mode):
                 incre_len += 1 + doc['paragraphs_length'][id]
             if doc_id == d_idx and id == para_id:
                 incre_len += 1
-            total_segmented_content += [splitter] + doc['segmented_paragraphs'][id]
+            total_segmented_content += [splitter] + doc['segmented_paragraphs'][
+                id]
         if doc_id == d_idx:
             answer_start = incre_len + sample['answer_spans'][0][0]
             answer_end = incre_len + sample['answer_spans'][0][1]
@@ -191,9 +205,9 @@ if __name__ == "__main__":
         try:
             sample = json.loads(line, encoding='utf8')
         except:
-            print >>sys.stderr, "Invalid input json format - '{}' will be ignored".format(line)
+            print >> sys.stderr, "Invalid input json format - '{}' will be ignored".format(
+                line)
             continue
         compute_paragraph_score(sample)
         paragraph_selection(sample, mode)
         print(json.dumps(sample, encoding='utf8', ensure_ascii=False))
-

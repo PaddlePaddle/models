@@ -23,11 +23,11 @@ import reader
 from get_ops_from_program import get_ops_from_program
 
 total_images = 1281167
-lr = 0.016
-num_epochs = 350
+lr = 0.1
+num_epochs = 240
 batch_size = 512
-lr_strategy = "exponential_decay_with_RMSProp"
-l2_decay = 1e-5
+lr_strategy = "cosine_decay"
+l2_decay = 4e-5
 momentum_rate = 0.9
 image_shape = [3, 224, 224]
 class_dim = 1000
@@ -41,7 +41,7 @@ NAS_KERNEL_SIZE = [3, 5]
 NAS_FILTERS_MULTIPLIER = [3, 4, 5, 6]
 NAS_SHORTCUT = [0, 1]
 NAS_SE = [0, 1]
-LATENCY_LOOKUP_TABLE_PATH = 'latency_lookup_table.txt'
+LATENCY_LOOKUP_TABLE_PATH = None
 
 
 def get_bottleneck_params_list(var):
@@ -195,6 +195,10 @@ def get_all_ops(ifshortcut=True, ifse=True, strides=[1, 2, 2, 2, 1, 2, 1]):
     # fc, converted to 1x1 conv
     op_params.append(('conv', 0, 0, 1, 1280, 1, 1, class_dim, 1, 1, 0, 1, 1))
     op_params.append(('eltwise', 2, 1, 1000, 1, 1))
+
+    op_params.append(('softmax', -1, 1, 1000, 1, 1))
+    op_params.append(('eltwise', 1, 1, 1, 1, 1))
+    op_params.append(('eltwise', 2, 1, 1, 1, 1))
     return list(set(op_params))
 
 

@@ -21,6 +21,7 @@ import sys
 import time
 import copy
 import numpy as np
+import ast
 
 
 class GTrainer():
@@ -223,7 +224,7 @@ class STGAN(object):
             default=1024,
             help="the base fc dim in discriminator")
         parser.add_argument(
-            '--use_gru', type=bool, default=True, help="whether to use GRU")
+            '--use_gru', type=ast.literal_eval, default=True, help="whether to use GRU")
         parser.add_argument(
             '--lambda_cls',
             type=float,
@@ -282,18 +283,18 @@ class STGAN(object):
         self.batch_num = batch_num
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
+        data_shape = [None, 3, self.cfg.image_size, self.cfg.image_size]
 
-        image_real = fluid.layers.data(
+        image_real = fluid.data(
             name='image_real', shape=data_shape, dtype='float32')
-        label_org = fluid.layers.data(
-            name='label_org', shape=[self.cfg.c_dim], dtype='float32')
-        label_trg = fluid.layers.data(
-            name='label_trg', shape=[self.cfg.c_dim], dtype='float32')
-        label_org_ = fluid.layers.data(
-            name='label_org_', shape=[self.cfg.c_dim], dtype='float32')
-        label_trg_ = fluid.layers.data(
-            name='label_trg_', shape=[self.cfg.c_dim], dtype='float32')
+        label_org = fluid.data(
+            name='label_org', shape=[None, self.cfg.c_dim], dtype='float32')
+        label_trg = fluid.data(
+            name='label_trg', shape=[None, self.cfg.c_dim], dtype='float32')
+        label_org_ = fluid.data(
+            name='label_org_', shape=[None, self.cfg.c_dim], dtype='float32')
+        label_trg_ = fluid.data(
+            name='label_trg_', shape=[None, self.cfg.c_dim], dtype='float32')
 
         test_gen_trainer = GTrainer(image_real, label_org, label_org_,
                                     label_trg, label_trg_, self.cfg,
@@ -378,9 +379,9 @@ class STGAN(object):
                 batch_id += 1
 
             if self.cfg.run_test:
-                image_name = fluid.layers.data(
+                image_name = fluid.data(
                     name='image_name',
-                    shape=[self.cfg.n_samples],
+                    shape=[None, self.cfg.n_samples],
                     dtype='int32')
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[image_real, label_org, label_trg, image_name],

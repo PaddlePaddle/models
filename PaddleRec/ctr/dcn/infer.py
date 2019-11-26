@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
 import logging
 import random
 
@@ -15,6 +13,8 @@ import paddle.fluid as fluid
 from config import parse_args
 from reader import CriteoDataset
 from network import DCN
+from collections import OrderedDict
+import utils
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('fluid')
@@ -28,26 +28,35 @@ def infer():
     place = fluid.CPUPlace()
     inference_scope = fluid.Scope()
 
-    test_files = [
+    test_valid_files = [
         os.path.join(args.test_valid_data_dir, fname)
         for fname in next(os.walk(args.test_valid_data_dir))[2]
     ]
-
-    test_files = random.sample(test_files, int(len(test_files) * 0.5))
+    test_files = random.sample(test_valid_files,
+                               int(len(test_valid_files) * 0.5))
+    if not test_files:
+        test_files = test_valid_files
     print('test files num {}'.format(len(test_files)))
 
     criteo_dataset = CriteoDataset()
-    criteo_dataset.setup()
+    criteo_dataset.setup(args.vocab_dir)
     test_reader = criteo_dataset.test_reader(test_files, args.batch_size, 100)
 
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
-    cur_model_path = args.model_output_dir + '/epoch_' + args.test_epoch
+    cur_model_path = os.path.join(args.model_output_dir,
+                                  'epoch_' + args.test_epoch)
 
     with fluid.scope_guard(inference_scope):
         with fluid.framework.program_guard(test_program, startup_program):
+            cat_feat_dims_dict = OrderedDict()
+            for line in open(args.cat_feat_num):
+                spls = line.strip().split()
+                assert len(spls) == 2
+                cat_feat_dims_dict[spls[0]] = int(spls[1])
             dcn_model = DCN(args.cross_num, args.dnn_hidden_units,
-                            args.l2_reg_cross, args.use_bn)
+                            args.l2_reg_cross, args.use_bn, args.clip_by_norm,
+                            cat_feat_dims_dict, args.is_sparse)
             dcn_model.build_network(is_test=True)
 
             exe = fluid.Executor(place)
@@ -58,11 +67,8 @@ def infer():
                 dirname=cur_model_path,
                 main_program=fluid.default_main_program())
 
-            auc_states_names = ['_generated_var_2', '_generated_var_3']
-            for name in auc_states_names:
-                param = inference_scope.var(name).get_tensor()
-                param_array = np.zeros(param._get_dims()).astype("int64")
-                param.set(param_array, place)
+            for var in dcn_model.auc_states:  # reset auc states
+                set_zero(var.name, scope=inference_scope, place=place)
 
             loss_all = 0
             num_ins = 0
@@ -84,5 +90,23 @@ def infer():
             )
 
 
+def set_zero(var_name,
+             scope=fluid.global_scope(),
+             place=fluid.CPUPlace(),
+             param_type="int64"):
+    """
+    Set tensor of a Variable to zero.
+    Args:
+        var_name(str): name of Variable
+        scope(Scope): Scope object, default is fluid.global_scope()
+        place(Place): Place object, default is fluid.CPUPlace()
+        param_type(str): param data type, default is int64
+    """
+    param = scope.var(var_name).get_tensor()
+    param_array = np.zeros(param._get_dims()).astype(param_type)
+    param.set(param_array, place)
+
+
 if __name__ == '__main__':
+    utils.check_version()
     infer()

@@ -70,7 +70,8 @@ def infer():
         im_shape = data[0][2]
         outputs = exe.run(fetch_list=[v.name for v in fetch_list],
                           feed=feeder.feed(data),
-                          return_numpy=False)
+                          return_numpy=False,
+                          use_program_cache=True)
         bboxes = np.array(outputs[0])
         if bboxes.shape[1] != 6:
             print("No object found in {}".format(image_name))
