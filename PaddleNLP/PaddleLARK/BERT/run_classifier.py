@@ -371,7 +371,7 @@ def main(args):
                     # profiler tools
                     if args.is_profiler and current_epoch == 0 and steps == args.skip_steps:
                         profiler.start_profiler("All")
-                    elif args.is_profiler and current_epoch == 0 and steps == args.skip_steps + 100:
+                    elif args.is_profiler and current_epoch == 0 and steps ==  args.skip_steps * 2:
                         profiler.stop_profiler("total", args.profiler_path)
                         return
 
@@ -433,13 +433,13 @@ def main(args):
 
 
     # final eval on dev set
-    if args.do_val and args.is_profiler == 0:
+    if args.do_val:
         print("Final validation result:")
         evaluate(exe, dev_prog, dev_data_loader,
                  [loss.name, accuracy.name, num_seqs.name], "dev")
 
     # final eval on test set
-    if args.do_test and args.is_profiler == 0:
+    if args.do_test:
         print("Final test result:")
         evaluate(exe, test_prog, test_data_loader,
                  [loss.name, accuracy.name, num_seqs.name], "test")
