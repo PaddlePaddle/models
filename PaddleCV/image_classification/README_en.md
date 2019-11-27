@@ -34,7 +34,7 @@ We also recommend users to take a look at the  [IPython Notebook demo](https:/
 
 ### Installation
 
-Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.6 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.6, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html) and make an update.
+Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.6 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.6, please follow the instructions in [installation document](https://www.paddlepaddle.org.cn/install/quick) and make an update.
 
 ### Data preparation
 
@@ -122,7 +122,7 @@ Solver and hyperparameters:
 * **model**: name model to use. Default: "ResNet50".
 * **total_images**: total number of images in the training set. Default: 1281167.
 * **class_dim**: the class number of the classification task. Default: 1000.
-* **image_shape**: input size of the network. Default: "3,224,224".
+* **image_shape**: input size of the network. Default: 3 224 224 .
 * **num_epochs**: the number of epochs. Default: 120.
 * **batch_size**: the batch size of all devices. Default: 8.
 * **test_batch_size**: the test batch size, Default: 16
@@ -140,7 +140,6 @@ Reader and preprocess:
 * **lower_ratio**: the lower ratio in ramdom crop. Default:3./4. .
 * **upper_ration**: the upper ratio in ramdom crop. Default:4./3. .
 * **resize_short_size**: the resize_short_size. Default: 256.
-* **crop_size**: the crop size, Default: 224.
 * **use_mixup**: whether to use mixup data processing or not. Default:False.
 * **mixup_alpha**: the mixup_alpha parameter. Default: 0.2.
 * **use_aa**: whether to use auto augment data processing or not. Default:False.
@@ -290,18 +289,118 @@ with GCC 5.4 and up.
 The image classification models currently supported by PaddlePaddle are listed in the table. It shows the top-1/top-5 accuracy on the ImageNet-2012 validation set of these models, the inference time of Paddle Fluid and Paddle TensorRT based on dynamic link library(test GPU model: Tesla P4).
 Pretrained models can be downloaded by clicking related model names.
 
-- Note
-    - 1: ResNet50_vd_v2 is the distilled version of ResNet50_vd.
-    - 2: In addition to EfficientNet, the image resolution feeded in InceptionV4 and Xception net is ```299x299```, Fix_ResNeXt101_32x48d_wsl is ```320x320```, DarkNet is ```256x256```, others are ```224x224```.In test time, the resize_short_size of the DarkNet53 and Fix_ResNeXt101_32x48d_wsl series networks is the same as the width or height of the input image resolution, the InceptionV4 and Xception network resize_short_size is 320, and the other networks resize_short_size are 256.
-    - 3: The resolutions of EfficientNetB0~B7 are ```224x224```,```240x240```,```260x260```,```300x300```,```380x380```,```456x456```,```528x528```,```600x600``` respectively, the resize_short_size in the inference phase is increased by 32 on the basis of the length or height of the resolution, for example, the resize_short_size of EfficientNetB1 is 272.In the process of training and inference phase of these series of models, the value of the resize parameter interpolation is set to 2 (cubic interpolation mode). Besides, the model uses  ExponentialMovingAverage during the training process, this trick please refer to [ExponentialMovingAverage](https://www.paddlepaddle.org.cn/documentation/docs/en/1.5/api/optimizer.html#exponentialmovingaverage).
-    - 4: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
-        ```bash
-        python infer.py\
-            --model=model_name \
-            --pretrained_model=${path_to_pretrained_model} \
-            --save_inference=True
-        ```
-    - 5: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
+#### Note
+
+- Some special settings
+
+<table>
+<tr>
+    <td><b>Model</b>
+    </td>
+    <td><b>Resolution</b>
+    </td>
+    <td><b>Parameter: resize_short_size</b>
+    </td>
+</tr>
+<tr>
+   <td>Inception, Xception
+   </td>
+   <td>299
+   </td>
+   <td>320
+   </td>
+</tr>
+<tr>
+    <td> DarkNet53
+    </td>
+    <td>256
+    </td>
+    <td>256
+    </td>
+</tr>
+<tr>
+   <td>Fix_ResNeXt101_32x48d_wsl
+   </td>
+   <td>320
+   </td>
+   <td>320
+   </td>
+</tr>
+<tr>
+   <td rowspan="8"> EfficientNet: <br/><br/>
+   In the inference phase, the resize_short_size increases 32 compared to the resolution <br/>
+   and using the 2nd interpolation(cubic interpolation mode). <br/>
+   The ExponentialMovingAverage method is also applied during the training process <br/>
+   Please refer to <a href="https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage">ExponentialMovingAverage</a>
+   </td>
+   <td>B0: 224
+   </td>
+   <td>256
+   </td>
+</tr>
+<tr>
+   <td>B1: 240
+   </td>
+   <td>272
+   </td>
+</tr>
+<tr>
+   <td>B2: 260
+   </td>
+   <td>292
+   </td>
+</tr>
+<tr>
+   <td>B3: 300
+   </td>
+   <td>332
+   </td>
+</tr>
+<tr>
+   <td>B4: 380
+   </td>
+   <td>412
+   </td>
+</tr>
+<tr>
+   <td>B5: 456
+   </td>
+   <td>488
+   </td>
+</tr>
+<tr>
+   <td>B6: 528
+   </td>
+   <td>560
+   </td>
+</tr>
+<tr>
+
+   <td>B7: 600
+   </td>
+   <td>632
+   </td>
+</tr>
+<tr>
+    <td>Other models
+    </td>
+    <td>224
+    </td>
+    <td>256
+    </td>
+</tr>
+</table>
+
+- It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
+
+    ```bash
+    python infer.py\
+        --model=model_name \
+        --pretrained_model=${path_to_pretrained_model} \
+        --save_inference=True
+    ```
+
+- The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
 ### AlexNet
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
