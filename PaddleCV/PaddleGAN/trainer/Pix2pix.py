@@ -18,6 +18,7 @@ from __future__ import print_function
 from network.Pix2pix_network import Pix2pix_model
 from util import utility
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import sys
 import time
 
@@ -255,9 +256,13 @@ class Pix2pix(object):
 
         t_time = 0
 
+        total_train_batch = 0  # used for benchmark
+
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for tensor in loader():
+                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter: # used for benchmark
+                    return
                 s_time = time.time()
 
                 tensor_A, tensor_B = tensor[0]['input_A'], tensor[0]['input_B']
@@ -294,6 +299,12 @@ class Pix2pix(object):
 
                 sys.stdout.flush()
                 batch_id += 1
+                total_train_batch += 1  # used for benchmark
+                # profiler tools
+                if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
+                    profiler.reset_profiler()
+                elif self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq + 5:
+                    return
 
             if self.cfg.run_test:
                 image_name = fluid.data(
