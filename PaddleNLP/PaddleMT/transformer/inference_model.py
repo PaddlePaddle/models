@@ -93,10 +93,11 @@ def do_save_inference_model(args):
             # define input and reader
 
             input_field_names = desc.encoder_data_input_fields + desc.fast_decoder_data_input_fields
+            input_descs = desc.get_input_descs(args.args)
             input_slots = [{
                 "name": name,
-                "shape": desc.input_descs[name][0],
-                "dtype": desc.input_descs[name][1]
+                "shape": input_descs[name][0],
+                "dtype": input_descs[name][1]
             } for name in input_field_names]
 
             input_field = InputField(input_slots)
