@@ -274,7 +274,7 @@ class ImageNetReader:
         if mode == 'test':
             batch_size = 1
         else:
-            if args.use_gpu:
+            if settings.use_gpu:
                 batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
                 )
             else:
