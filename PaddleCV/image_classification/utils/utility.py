@@ -417,7 +417,10 @@ def best_strategy_compiled(args, program, loss, exe):
         build_strategy = fluid.compiler.BuildStrategy()
 
         exec_strategy = fluid.ExecutionStrategy()
-        exec_strategy.num_threads = fluid.core.get_cuda_device_count()
+
+        if args.use_gpu:
+            exec_strategy.num_threads = fluid.core.get_cuda_device_count()
+
         exec_strategy.num_iteration_per_drop_scope = 10
 
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))

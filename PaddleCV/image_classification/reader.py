@@ -274,8 +274,12 @@ class ImageNetReader:
         if mode == 'test':
             batch_size = 1
         else:
-            batch_size = settings.batch_size / paddle.fluid.core.get_cuda_device_count(
-            )
+            if args.use_gpu:
+                batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
+                )
+            else:
+                batch_size = settings.batch_size // int(
+                    os.environ.get('CPU_NUM', 1))
 
         def reader():
             def read_file_list():

@@ -304,11 +304,11 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 
     <table>
 <tr>
-    <td>Model
+    <td><b>Model</b>
     </td>
-    <td>输入图像分辨率(image shape)
+    <td><b>输入图像分辨率</b>
     </td>
-    <td>预测时 <b>resize_short_size</b>
+    <td><b>参数 resize_short_size</b>
     </td>
 </tr>
 <tr>

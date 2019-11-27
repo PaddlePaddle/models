@@ -295,11 +295,11 @@ Pretrained models can be downloaded by clicking related model names.
 1. Some special settings
     <table>
 <tr>
-    <td>Model
+    <td><b>Model</b>
     </td>
-    <td>Resolution (image shape)
+    <td><b>Resolution</b>
     </td>
-    <td>Inference <b>resize_short_size</b>
+    <td><b>Parameter: resize_short_size</b>
     </td>
 </tr>
 <tr>
