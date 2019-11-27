@@ -338,6 +338,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.tar) | 78.26% | 93.96% | 21.816 | 11.646 |
 |[ResNet152_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_vd_pretrained.tar) | 80.59% | 95.30% | 22.041 | 11.858 |
 |[ResNet200_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet200_vd_pretrained.tar) | 80.93% | 95.33% | 28.015 | 14.896 |
+
 <a name="trans">[1]</a> 该预训练模型是在ResNet50_vd的预训练模型继续蒸馏得到的，用户可以通过ResNet50_vd的结构直接加载该预训练模型。
 
 ### Res2Net Series

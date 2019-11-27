@@ -321,6 +321,7 @@ Pretrained models can be downloaded by clicking related model names.
 |[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.tar) | 78.26% | 93.96% | 21.816 | 11.646 |
 |[ResNet152_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_vd_pretrained.tar) | 80.59% | 95.30% | 22.041 | 11.858 |
 |[ResNet200_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet200_vd_pretrained.tar) | 80.93% | 95.33% | 28.015 | 14.896 |
+
 <a name="trans">[1]</a> The pretrained model is distilled based on the pretrained model of ResNet50_vd. Users can directly load the pretrained model through the structure of ResNet50_vd.
 
 ### Res2Net Series
