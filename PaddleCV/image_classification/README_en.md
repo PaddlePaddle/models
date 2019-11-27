@@ -15,6 +15,7 @@ English | [中文](README.md)
 - [Advanced Usage](#advanced-usage)
     - [Mixup Training](#mixup-training)
     - [Using Mixed-Precision Training](#using-mixed-precision-training)
+    - [Preprocessing with Nvidia DALI](#preprocessing-with-nvidia-dali)
     - [Custom Dataset](#custom-dataset)
 - [Supported Models and Performances](#supported-models-and-performances)
 - [Reference](#reference)
@@ -238,6 +239,47 @@ Refer to [mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.
 
 Mixed-precision part is moving to PaddlePaddle/Fleet now.
 
+### Preprocessing with Nvidia DALI
+
+[Nvidia DALI](https://github.com/NVIDIA/DALI) can be used to preprocess input images, which could speed up training and achieve higher GPU utilization.
+
+At present, DALI preprocessing supports the standard ImageNet pipeline (random crop -> resize -> flip -> normalize), it supports dataset in both file list or plain folder format.
+
+DALI preprocessing can be enabled with the `--use_dali=True` command line flag.
+For example, training ShuffleNet v2 0.25x with the following command should
+reach a throughput of over 10000 images/second, and GPU utilization should be
+above 85%.
+
+``` bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export FLAGS_fraction_of_gpu_memory_to_use=0.80
+
+python -m paddle.distributed.launch train.py \
+       --model=ShuffleNetV2_x0_25 \
+       --batch_size=2048 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --lr_strategy=cosine_decay_warmup \
+       --num_epochs=240 \
+       --lr=0.5 \
+       --l2_decay=3e-5 \
+       --lower_scale=0.64 \
+       --lower_ratio=0.8 \
+       --upper_ratio=1.2 \
+       --use_dali=True
+
+```
+
+For more details please refer to [Documentation on DALI Paddle Plugin](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/plugins/paddle_tutorials.html).
+
+#### NOTES
+1. PaddlePaddle with version 1.6 or above is required, and it must be compiled
+with GCC 5.4 and up.
+2. Nvidia DALI should include this PR [#1371](https://github.com/NVIDIA/DALI/pull/1371). Please refer to [this doc](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/installation.html) and install nightly version or build from source.
+3. Since DALI utilize the GPU for preprocessing, it will take up some GPU
+   memory. Please reduce the memory used by paddle by setting the
+   `FLAGS_fraction_of_gpu_memory_to_use` environment variable to a smaller
+   number (e.g., `0.8`)
 
 ### Custom Dataset
 

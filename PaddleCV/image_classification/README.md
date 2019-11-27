@@ -14,6 +14,7 @@
 - [进阶使用](#进阶使用)
     - [Mixup训练](#mixup训练)
     - [混合精度训练](#混合精度训练)
+    - [DALI预处理](#DALI预处理)
     - [自定义数据集](#自定义数据集)
 - [已发布模型及其性能](#已发布模型及其性能)
 - [FAQ](#faq)
@@ -245,6 +246,41 @@ Mixup相关介绍参考[mixup: Beyond Empirical Risk Minimization](https://arxiv
 ### 混合精度训练
 
 FP16相关内容已经迁移至PaddlePaddle/Fleet 中
+
+### DALI预处理
+
+使用[Nvidia DALI](https://github.com/NVIDIA/DALI)预处理类库可以加速训练并提高GPU利用率。
+
+DALI预处理目前支持标准ImageNet处理步骤（ random crop -> resize -> flip -> normalize），并且支持列表文件或者文件夹方式的数据集格式。
+
+指定`--use_dali=True`即可开启DALI预处理，如下面的例子中，使用DALI训练ShuffleNet v2 0.25x，在8卡v100上，图片吞吐可以达到10000张/秒以上，GPU利用率在85%以上。
+
+``` bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export FLAGS_fraction_of_gpu_memory_to_use=0.80
+
+python -m paddle.distributed.launch train.py \
+       --model=ShuffleNetV2_x0_25 \
+       --batch_size=2048 \
+       --class_dim=1000 \
+       --image_shape=3,224,224 \
+       --lr_strategy=cosine_decay_warmup \
+       --num_epochs=240 \
+       --lr=0.5 \
+       --l2_decay=3e-5 \
+       --lower_scale=0.64 \
+       --lower_ratio=0.8 \
+       --upper_ratio=1.2 \
+       --use_dali=True
+```
+
+更多DALI相关用例请参考[DALI Paddle插件文档](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/plugins/paddle_tutorials.html)。
+
+#### 注意事项
+
+1. PaddlePaddle需使用1.6或以上的版本，并且需要使用GCC5.4以上编译器编译。
+2. Nvidia DALI需要使用[#1371](https://github.com/NVIDIA/DALI/pull/1371)以后的git版本。请参考[此文档](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/installation.html)安装nightly版本或从源码安装。
+3. 因为DALI使用GPU进行图片预处理，需要占用部分显存，请适当调整 `FLAGS_fraction_of_gpu_memory_to_use`环境变量（如`0.8`）来预留部分显存供DALI使用。
 
 ### 自定义数据集
 

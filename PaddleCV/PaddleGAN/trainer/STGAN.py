@@ -21,6 +21,7 @@ import sys
 import time
 import copy
 import numpy as np
+import ast
 
 
 class GTrainer():
@@ -223,7 +224,7 @@ class STGAN(object):
             default=1024,
             help="the base fc dim in discriminator")
         parser.add_argument(
-            '--use_gru', type=bool, default=True, help="whether to use GRU")
+            '--use_gru', type=ast.literal_eval, default=True, help="whether to use GRU")
         parser.add_argument(
             '--lambda_cls',
             type=float,

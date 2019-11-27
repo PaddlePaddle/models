@@ -21,6 +21,7 @@ import time
 import numpy as np
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 
 import utils.dist_utils as dist_utils
 from utils.input_field import InputField
@@ -250,12 +251,15 @@ def do_train(args):
     # start training
 
     step_idx = 0
+    total_batch_num = 0  # this is for benchmark
     for pass_id in range(args.epoch):
         pass_start_time = time.time()
         input_field.loader.start()
 
         batch_id = 0
         while True:
+            if args.max_iter and total_batch_num == args.max_iter: # this for benchmark
+                return
             try:
                 outs = exe.run(compiled_train_prog,
                                fetch_list=[sum_cost.name, token_num.name]
@@ -299,6 +303,14 @@ def do_train(args):
 
                 batch_id += 1
                 step_idx += 1
+                total_batch_num = total_batch_num + 1 # this is for benchmark
+
+                # profiler tools for benchmark
+                if args.is_profiler and pass_id == 0 and batch_id == args.print_step:
+                    profiler.start_profiler("All")
+                elif args.is_profiler and pass_id == 0 and batch_id == args.print_step + 5:
+                    profiler.stop_profiler("total", args.profiler_path)
+                    return
 
             except fluid.core.EOFException:
                 input_field.loader.reset()

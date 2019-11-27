@@ -27,6 +27,7 @@ import contextlib
 
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import paddle.fluid.framework as framework
 import paddle.fluid.profiler as profiler
 from paddle.fluid.executor import Executor
@@ -46,9 +47,9 @@ import pickle
 
 
 @contextlib.contextmanager
-def profile_context(profile=True):
+def profile_context(profile=True, profiler_path='./seq2seq.profile'):
     if profile:
-        with profiler.profiler('All', 'total', 'seq2seq.profile'):
+        with profiler.profiler('All', 'total', profiler_path):
             yield
     else:
         yield
@@ -213,6 +214,12 @@ def main():
                     ce_ppl.append(np.exp(total_loss / word_count))
                     total_loss = 0.0
                     word_count = 0.0
+                
+                # profiler tools
+                if args.profile and epoch_id == 0 and batch_id == 100:
+                    profiler.reset_profiler()
+                elif args.profile and epoch_id == 0 and batch_id == 105:
+                    return
 
             end_time = time.time()
             epoch_time = end_time - start_time
@@ -244,7 +251,7 @@ def main():
             print("kpis\ttrain_duration_card%s\t%s" % (card_num, _time))
             print("kpis\ttrain_ppl_card%s\t%f" % (card_num, _ppl))
 
-    with profile_context(args.profile):
+    with profile_context(args.profile, args.profiler_path):
         train()
 
 

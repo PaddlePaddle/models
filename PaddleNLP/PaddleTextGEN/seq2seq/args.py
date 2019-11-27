@@ -122,6 +122,11 @@ def parse_args():
 
     parser.add_argument(
         "--profile", action='store_true', help="Whether enable the profile.")
-
+    # NOTE: profiler args, used for benchmark
+    parser.add_argument(
+        "--profiler_path",
+        type=str,
+        default='./seq2seq.profile',
+        help="the profiler output file path. (used for benchmark)")
     args = parser.parse_args()
     return args
