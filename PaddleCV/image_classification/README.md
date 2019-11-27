@@ -399,7 +399,8 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
     <td>256
     </td>
 </tr>
-</table>
+    </table>
+
 
 2. 调用动态链接库预测时需要将训练模型转换为二进制模型。
 
