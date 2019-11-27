@@ -44,7 +44,7 @@ add_arg('reader_thread',    int,  1,                    "The number of multi thr
 add_arg('reader_buf_size',  int,  2048,                 "The buf size of multi thread reader")
 parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
 parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
-add_arg('image_shape',      int,  224,                  "The height or wdth of image")
+parser.add_argument('--image_shape', nargs='+', type=int, default=[3, 224, 224], help="the shape of image")
 add_arg('topk',             int,  1,                    "topk")
 add_arg('label_path',       str,  "./utils/tools/readable_label.txt", "readable label filepath")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
@@ -54,7 +54,7 @@ add_arg('use_se',           bool, True,                 "Whether to use Squeeze-
 
 
 def infer(args):
-    image_shape = [3, args.image_shape, args.image_shape]
+    image_shape = args.image_shape
     model_list = [m for m in dir(models) if "__" not in m]
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)

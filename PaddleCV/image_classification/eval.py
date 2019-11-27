@@ -44,7 +44,7 @@ add_arg('reader_thread',    int,  8,                    "The number of multi thr
 add_arg('reader_buf_size',  int,  2048,                 "The buf size of multi thread reader")
 parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
 parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
-add_arg('image_shape',      int,  224,                  "The height or width of image")
+parser.add_argument('--image_shape', nargs="+",  type=int, default=[3,224,224], help=" The shape of image")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
@@ -52,7 +52,7 @@ add_arg('use_se',           bool, True,                 "Whether to use Squeeze-
 
 
 def eval(args):
-    image_shape = [3, args.image_shape, args.image_shape]
+    image_shape = args.image_shape
 
     model_list = [m for m in dir(models) if "__" not in m]
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,

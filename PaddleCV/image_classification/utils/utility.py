@@ -98,7 +98,7 @@ def parse_args():
     # SOLVER AND HYPERPARAMETERS
     add_arg('model',                    str,    "ResNet50",   "The name of network.")
     add_arg('total_images',             int,    1281167,                "The number of total training images.")
-    add_arg('image_shape',              int,    224,                    "The Height or Width of image")
+    parser.add_argument('--image_shape', nargs='+', type=int, default=[3, 224, 224], help="The shape of image")
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
     add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
@@ -307,7 +307,7 @@ def create_data_loader(is_train, args):
     Returns:
         data_loader and the input data of net, 
     """
-    image_shape = [3, args.image_shape, args.image_shape]
+    image_shape = args.image_shape
     feed_image = fluid.data(
         name="feed_image",
         shape=[None] + image_shape,

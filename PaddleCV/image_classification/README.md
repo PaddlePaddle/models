@@ -298,11 +298,11 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 表格中列出了在models目录下目前支持的图像分类模型，并且给出了已完成训练的模型在ImageNet-2012验证集合上的top-1和top-5精度，以及Paddle Fluid和Paddle TensorRT基于动态链接库的预测时间（测试GPU型号为NVIDIA® Tesla® P4）。
 可以通过点击相应模型的名称下载对应的预训练模型。
 
-- 注意
+#### 注意事项
 
-- ResNet50_vd_v2是ResNet50_vd蒸馏版本。
+1. 特殊参数配置
 
-<table>
+    <table>
 <tr>
     <td>Model
     </td>
@@ -401,7 +401,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 </tr>
 </table>
 
-- 调用动态链接库预测时需要将训练模型转换为二进制模型。
+2. 调用动态链接库预测时需要将训练模型转换为二进制模型。
 
     ```bash
     python infer.py \
@@ -410,7 +410,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
            --save_inference=True
     ```
 
-- ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
+3. ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 
 
 ### AlexNet

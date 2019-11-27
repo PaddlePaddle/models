@@ -2,7 +2,7 @@
 python train.py \
        --model=Xception41_deeplab \
        --batch_size=256 \
-       --image_shape=299 \
+       --image_shape=3 299 299 \
        --lr_strategy=cosine_decay \
        --lr=0.045 \
        --num_epochs=120 \

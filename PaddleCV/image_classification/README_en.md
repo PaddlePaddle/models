@@ -290,11 +290,10 @@ with GCC 5.4 and up.
 The image classification models currently supported by PaddlePaddle are listed in the table. It shows the top-1/top-5 accuracy on the ImageNet-2012 validation set of these models, the inference time of Paddle Fluid and Paddle TensorRT based on dynamic link library(test GPU model: Tesla P4).
 Pretrained models can be downloaded by clicking related model names.
 
-- Note
+#### Note
 
-- ResNet50_vd_v2 is the distilled version of ResNet50_vd.
-
-<table>
+1. Some special settings
+    <table>
 <tr>
     <td>Model
     </td>
@@ -392,7 +391,7 @@ Pretrained models can be downloaded by clicking related model names.
 </tr>
 </table>
 
-- It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
+2. It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
 
     ```bash
     python infer.py\
@@ -401,7 +400,7 @@ Pretrained models can be downloaded by clicking related model names.
         --save_inference=True
     ```
 
-- The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
+3. The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
 ### AlexNet
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |

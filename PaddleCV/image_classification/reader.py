@@ -201,7 +201,7 @@ def process_image(sample, settings, mode, color_jitter, rotate):
 
     mean = settings.image_mean
     std = settings.image_std
-    crop_size = settings.image_shape
+    crop_size = settings.image_shape[1]
 
     img_path = sample[0]
     img = cv2.imread(img_path)
