@@ -122,7 +122,7 @@ Solver and hyperparameters:
 * **model**: name model to use. Default: "ResNet50".
 * **total_images**: total number of images in the training set. Default: 1281167.
 * **class_dim**: the class number of the classification task. Default: 1000.
-* **image_shape**: input size of the network. Default: "3,224,224".
+* **image_shape**: input size of the network. Default: 3 224 224 .
 * **num_epochs**: the number of epochs. Default: 120.
 * **batch_size**: the batch size of all devices. Default: 8.
 * **test_batch_size**: the test batch size, Default: 16
@@ -140,7 +140,6 @@ Reader and preprocess:
 * **lower_ratio**: the lower ratio in ramdom crop. Default:3./4. .
 * **upper_ration**: the upper ratio in ramdom crop. Default:4./3. .
 * **resize_short_size**: the resize_short_size. Default: 256.
-* **crop_size**: the crop size, Default: 224.
 * **use_mixup**: whether to use mixup data processing or not. Default:False.
 * **mixup_alpha**: the mixup_alpha parameter. Default: 0.2.
 * **use_aa**: whether to use auto augment data processing or not. Default:False.

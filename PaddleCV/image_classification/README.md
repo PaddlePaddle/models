@@ -129,7 +129,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 * **model**: 模型名称， 默认值: "ResNet50"
 * **total_images**: 图片数，ImageNet2012，默认值: 1281167
 * **class_dim**: 类别数，默认值: 1000
-* **image_shape**: 图片大小，默认值: "3,224,224"
+* **image_shape**: 图片大小，默认值: 3 224 224
 * **num_epochs**: 训练回合数，默认值: 120
 * **batch_size**: batch size大小(所有设备)，默认值: 8
 * **test_batch_size**: 测试batch大小，默认值：16
@@ -147,7 +147,6 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 * **lower_ratio**: 数据随机裁剪处理时的lower ratio值，默认值:3./4.
 * **upper_ratio**: 数据随机裁剪处理时的upper ratio值，默认值:4./3.
 * **resize_short_size**: 指定数据处理时改变图像大小的短边值，默认值: 256
-* **crop_size**: 指定裁剪的大小，默认值:224
 * **use_mixup**: 是否对数据进行mixup处理，默认值: False
 * **mixup_alpha**: 指定mixup处理时的alpha值，默认值: 0.2
 * **use_aa**: 是否对数据进行auto augment处理. 默认值: False.
