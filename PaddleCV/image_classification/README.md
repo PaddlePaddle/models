@@ -300,9 +300,9 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 
 #### 注意事项
 
- 1. 特殊参数配置
+- 特殊参数配置
 
-    <table>
+<table>
 <tr>
     <td><b>Model</b>
     </td>
@@ -399,10 +399,10 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
     <td>256
     </td>
 </tr>
-    </table>
+</table>
 
 
- 2. 调用动态链接库预测时需要将训练模型转换为二进制模型。
+- 调用动态链接库预测时需要将训练模型转换为二进制模型。
 
     ```bash
     python infer.py \
@@ -411,7 +411,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
            --save_inference=True
     ```
 
- 3. ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
+- ResNeXt101_wsl系列的预训练模型转自pytorch模型，详情见[ResNeXt wsl](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/)。
 
 
 ### AlexNet
