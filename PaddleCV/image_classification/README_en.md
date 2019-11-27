@@ -292,8 +292,9 @@ Pretrained models can be downloaded by clicking related model names.
 
 #### Note
 
-1. Some special settings
-    <table>
+- Some special settings
+
+<table>
 <tr>
     <td><b>Model</b>
     </td>
@@ -389,9 +390,9 @@ Pretrained models can be downloaded by clicking related model names.
     <td>256
     </td>
 </tr>
-    </table>
+</table>
 
-2. It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
+- It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
 
     ```bash
     python infer.py\
@@ -400,7 +401,7 @@ Pretrained models can be downloaded by clicking related model names.
         --save_inference=True
     ```
 
-3. The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
+- The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
 ### AlexNet
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
