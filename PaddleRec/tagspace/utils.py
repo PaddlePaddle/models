@@ -8,6 +8,11 @@ import numpy as np
 import paddle.fluid as fluid
 import paddle
 import csv
+import io
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
 
 def to_lodtensor(data, place):
     """ convert to LODtensor """
@@ -24,10 +29,27 @@ def to_lodtensor(data, place):
     res.set_lod([lod])
     return res
 
+
 def get_vocab_size(vocab_path):
-    with open(vocab_path, "r") as rf:
+    with io.open(vocab_path, "r") as rf:
         line = rf.readline()
         return int(line.strip())
+
+
+def check_version():
+    """
+     Log error and exit when the installed version of paddlepaddle is
+     not satisfied.
+     """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        logger.error(err)
+        sys.exit(1)
 
 
 def prepare_data(file_dir,
@@ -45,18 +67,24 @@ def prepare_data(file_dir,
         reader = sort_batch(
             paddle.reader.shuffle(
                 train(
-                    file_dir, vocab_tag_size, neg_size,
-                    buffer_size, data_type=DataType.SEQ),
+                    file_dir,
+                    vocab_tag_size,
+                    neg_size,
+                    buffer_size,
+                    data_type=DataType.SEQ),
                 buf_size=buffer_size),
-            batch_size, batch_size * 20)
+            batch_size,
+            batch_size * 20)
     else:
         vocab_tag_size = get_vocab_size(vocab_tag_path)
         vocab_text_size = 0
         reader = sort_batch(
             test(
                 file_dir, vocab_tag_size, buffer_size, data_type=DataType.SEQ),
-            batch_size, batch_size * 20)
+            batch_size,
+            batch_size * 20)
     return vocab_text_size, vocab_tag_size, reader
+
 
 def sort_batch(reader, batch_size, sort_group_size, drop_last=False):
     """
@@ -107,11 +135,13 @@ def sort_batch(reader, batch_size, sort_group_size, drop_last=False):
 class DataType(object):
     SEQ = 2
 
+
 def train_reader_creator(file_dir, tag_size, neg_size, n, data_type):
     def reader():
         files = os.listdir(file_dir)
         for fi in files:
-            with open(file_dir + '/' + fi, "r") as f:
+            with io.open(
+                    os.path.join(file_dir, fi), "r", encoding='utf-8') as f:
                 for l in f:
                     l = l.strip().split(",")
                     pos_index = int(l[0])
@@ -123,7 +153,7 @@ def train_reader_creator(file_dir, tag_size, neg_size, n, data_type):
                     max_iter = 100
                     now_iter = 0
                     sum_n = 0
-                    while(sum_n < neg_size) :
+                    while (sum_n < neg_size):
                         now_iter += 1
                         if now_iter > max_iter:
                             print("error : only one class")
@@ -135,13 +165,16 @@ def train_reader_creator(file_dir, tag_size, neg_size, n, data_type):
                             sum_n += 1
                     if n > 0 and len(text) > n: continue
                     yield text, pos_tag, neg_tag
+
     return reader
+
 
 def test_reader_creator(file_dir, tag_size, n, data_type):
     def reader():
         files = os.listdir(file_dir)
         for fi in files:
-            with open(file_dir + '/' + fi, "r") as f:
+            with io.open(
+                    os.path.join(file_dir, fi), "r", encoding='utf-8') as f:
                 for l in f:
                     l = l.strip().split(",")
                     pos_index = int(l[0])
@@ -153,11 +186,13 @@ def test_reader_creator(file_dir, tag_size, n, data_type):
                         tag = []
                         tag.append(ii)
                         yield text, tag, pos_tag
+
     return reader
 
 
 def train(train_dir, tag_size, neg_size, n, data_type=DataType.SEQ):
     return train_reader_creator(train_dir, tag_size, neg_size, n, data_type)
+
 
 def test(test_dir, tag_size, n, data_type=DataType.SEQ):
     return test_reader_creator(test_dir, tag_size, n, data_type)
