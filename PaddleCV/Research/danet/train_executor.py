@@ -92,20 +92,20 @@ def save_model(save_dir, exe, program=None):
         os.makedirs(save_dir)
         # fluid.io.save_persistables(exe, save_dir, program)
         fluid.io.save_params(exe, save_dir, program)
-        print('已保存: {}'.format(os.path.basename(save_dir)))
+        print('save: {}'.format(os.path.basename(save_dir)))
     else:
         os.makedirs(save_dir)
         fluid.io.save_persistables(exe, save_dir, program)
-        print('不存在，创建: {}'.format(os.path.basename(save_dir)))
+        print('create: {}'.format(os.path.basename(save_dir)))
 
 
 def load_model(save_dir, exe, program=None):
     if os.path.exists(save_dir):
         # fluid.io.load_persistables(exe, save_dir, program)
         fluid.io.load_params(exe, save_dir, program)
-        print('存在, 加载成功')
+        print('Load successful!')
     else:
-        raise Exception('请核对地址')
+        raise Exception('Please check the model path!')
 
 
 def optimizer_setting(args):
@@ -157,7 +157,7 @@ def main(args):
     num_classes = args.num_classes
     data_root = args.data_folder
     num = fluid.core.get_cuda_device_count()
-    print('GPU设备数量： {}'.format(num))
+    print('The number of GPU ： {}'.format(num))
 
     # program
     start_prog = fluid.default_startup_program()
