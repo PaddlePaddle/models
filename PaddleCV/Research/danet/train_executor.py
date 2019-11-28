@@ -292,9 +292,9 @@ def main(args):
                 train_avg_loss_manager.update(train_avg_loss_value, weight=int(batch_size * num))
                 batch_train_str = "epoch: {}, batch: {}, train_avg_loss: {:.6f}, " \
                                   "train_miou: {:.6f}.".format(epoch + 1,
-                                                                 batch_id + 1,
-                                                                 train_avg_loss_value[0],
-                                                                 train_iou_value[0])
+                                                               batch_id + 1,
+                                                               train_avg_loss_value[0],
+                                                               train_iou_value[0])
                 if batch_id % 40 == 0:
                     logging.info(batch_train_str)
                     print(batch_train_str)
