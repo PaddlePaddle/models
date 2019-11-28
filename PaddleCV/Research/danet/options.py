@@ -72,7 +72,7 @@ class Options(object):
                             metavar='N', help='step_per_epoch (default: auto)')
         parser.add_argument('--momentum', type=float, default=0.9,
                             metavar='M', help='momentum (default: 0.9)')
-        parser.add_argument('--weight_decay', type=float, default=1e-4,   # 正则化系数
+        parser.add_argument('--weight_decay', type=float, default=1e-4,   
                             metavar='M', help='w-decay (default: 1e-4)')
 
         # cuda, seed and logging
