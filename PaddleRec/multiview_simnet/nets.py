@@ -250,6 +250,7 @@ class MultiviewSimnet(object):
                                  size=self.hidden_size,
                                  param_attr='t_fc.w',
                                  bias_attr='t_fc.b')
+
         # cosine of hidden layers
         cos = fluid.layers.cos_sim(q_hid, pt_hid)
         return cos

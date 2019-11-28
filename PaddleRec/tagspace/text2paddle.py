@@ -94,6 +94,7 @@ def text2paddle(train_dir, test_dir, output_train_dir, output_test_dir,
     with io.open(output_vocab_tag, "w", encoding='utf-8') as wf:
         wf.write((str(len(vocab_tag)) + "\n").decode('utf-8'))
 
+
     print("construct word dict done\n")
     write_paddle(vocab_text, vocab_tag, train_dir, test_dir, output_train_dir,
                  output_test_dir)

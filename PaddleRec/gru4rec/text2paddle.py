@@ -76,7 +76,7 @@ def write_paddle(word_idx, train_dir, test_dir, output_train_dir,
 def text2paddle(train_dir, test_dir, output_train_dir, output_test_dir,
                 output_vocab):
     vocab = build_dict(0, train_dir, test_dir)
-    with open(output_vocab, "w") as wf:
+    with open(output_vocab, "w", encoding='utf-8') as wf:
         wf.write(str(len(vocab)) + "\n")
         #wf.write(str(vocab))
     write_paddle(vocab, train_dir, test_dir, output_train_dir, output_test_dir)
