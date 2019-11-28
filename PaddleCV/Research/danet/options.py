@@ -42,7 +42,7 @@ class Options(object):
                             help='crop image size')
 
         # training hyper params
-        parser.add_argument('--epoch_num', type=int, default=350, metavar='N',
+        parser.add_argument('--epoch_num', type=int, default=None, metavar='N',
                             help='number of epochs to train (default: auto)')
         parser.add_argument('--start_epoch', type=int, default=0,
                             metavar='N', help='start epochs (default:0)')
@@ -54,7 +54,7 @@ class Options(object):
                             testing (default: same as batch size)')
 
         # optimizer params
-        parser.add_argument('--lr', type=float, default=0.003, metavar='LR',
+        parser.add_argument('--lr', type=float, default=None, metavar='LR',
                             help='learning rate (default: auto)')
         parser.add_argument('--lr_scheduler', type=str, default='poly',
                             help='learning rate scheduler (default: poly)')
@@ -66,8 +66,8 @@ class Options(object):
                             help='warm_up (default: False)')
         parser.add_argument('--warmup_epoch', type=int, default=5,
                             help='warmup_epoch (default: 5)')
-        parser.add_argument('--total_step', type=int, default=500000,
-                            metavar='N', help='total_step (default: auto):500000)')
+        parser.add_argument('--total_step', type=int, default=None,
+                            metavar='N', help='total_step (default: auto)')
         parser.add_argument('--step_per_epoch', type=int, default=None,
                             metavar='N', help='step_per_epoch (default: auto)')
         parser.add_argument('--momentum', type=float, default=0.9,
@@ -126,21 +126,21 @@ class Options(object):
                 'pascal_aug': 180,
                 'pcontext': 180,
                 'ade20k': 180,
-                'cityscapes': 240,
+                'cityscapes': 350,
             }
             num_class_dict = {
-                'pascal_voc': None,
-                'pascal_aug': None,
-                'pcontext': None,
+                'pascal_voc': 21,
+                'pascal_aug': 21,
+                'pcontext': 21,
                 'ade20k': None,
                 'cityscapes': 19,
             }
             total_steps = {
-                'pascal_voc': 500000,
+                'pascal_voc': 200000,
                 'pascal_aug': 500000,
                 'pcontext': 500000,
                 'ade20k': 500000,
-                'cityscapes': 500000,
+                'cityscapes': 200000,
             }
             args.epoch_num = epoches[args.dataset.lower()]
             args.num_classes = num_class_dict[args.dataset.lower()]
@@ -164,7 +164,7 @@ class Options(object):
                 'pascal_aug': 0.001,
                 'pcontext': 0.001,
                 'ade20k': 0.01,
-                'cityscapes': 0.01,
+                'cityscapes': 0.003,
             }
             args.lr = lrs[args.dataset.lower()] / 8 * args.batch_size
         return args
