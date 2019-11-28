@@ -44,6 +44,8 @@ Tagspace模型学习文本及标签的embedding表示，应用于工业级的标
 
 备份数据解压后，将文本数据转为paddle数据，先将数据放到训练数据目录和测试数据目录
 ```
+mkdir raw_big_train_data
+mkdir raw_big_test_data
 mv train.csv raw_big_train_data
 mv test.csv raw_big_test_data
 ```

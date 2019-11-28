@@ -3,6 +3,7 @@ import six
 import collections
 import os
 import csv
+import io
 import re
 import sys
 if six.PY2:
@@ -31,11 +32,11 @@ def build_dict(column_num=2, min_word_freq=0, train_dir="", test_dir=""):
     word_freq = collections.defaultdict(int)
     files = os.listdir(train_dir)
     for fi in files:
-        with open(os.path.join(train_dir, fi), "r", encoding='utf-8') as f:
+        with io.open(os.path.join(train_dir, fi), "r", encoding='utf-8') as f:
             word_freq = word_count(column_num, f, word_freq)
     files = os.listdir(test_dir)
     for fi in files:
-        with open(os.path.join(test_dir, fi), "r", encoding='utf-8') as f:
+        with io.open(os.path.join(test_dir, fi), "r", encoding='utf-8') as f:
             word_freq = word_count(column_num, f, word_freq)
 
     word_freq = [x for x in six.iteritems(word_freq) if x[1] > min_word_freq]
@@ -51,10 +52,8 @@ def write_paddle(text_idx, tag_idx, train_dir, test_dir, output_train_dir,
     if not os.path.exists(output_train_dir):
         os.mkdir(output_train_dir)
     for fi in files:
-        with open(os.path.join(train_dir, fi), "r", encoding='utf-8') as f:
-            with open(
-                    os.path.join(output_train_dir, fi), "w",
-                    encoding='utf-8') as wf:
+        with open(os.path.join(train_dir, fi), "r") as f:
+            with open(os.path.join(output_train_dir, fi), "w") as wf:
                 data_file = csv.reader(f)
                 for row in data_file:
                     tag_raw = re.split(r'\W+', row[0].strip())
@@ -70,10 +69,8 @@ def write_paddle(text_idx, tag_idx, train_dir, test_dir, output_train_dir,
     if not os.path.exists(output_test_dir):
         os.mkdir(output_test_dir)
     for fi in files:
-        with open(os.path.join(test_dir, fi), "r", encoding='utf-8') as f:
-            with open(
-                    os.path.join(output_test_dir, fi), "w",
-                    encoding='utf-8') as wf:
+        with open(os.path.join(test_dir, fi), "r") as f:
+            with open(os.path.join(output_test_dir, fi), "w") as wf:
                 data_file = csv.reader(f)
                 for row in data_file:
                     tag_raw = re.split(r'\W+', row[0].strip())
@@ -90,12 +87,13 @@ def text2paddle(train_dir, test_dir, output_train_dir, output_test_dir,
                 output_vocab_text, output_vocab_tag):
     print("start constuct word dict")
     vocab_text = build_dict(2, 0, train_dir, test_dir)
-    with open(output_vocab_text, "w", encoding='utf-8') as wf:
-        wf.write(str(len(vocab_text)) + "\n")
+    with io.open(output_vocab_text, "w", encoding='utf-8') as wf:
+        wf.write((str(len(vocab_text)) + "\n").decode('utf-8'))
 
     vocab_tag = build_dict(0, 0, train_dir, test_dir)
-    with open(output_vocab_tag, "w", encoding='utf-8') as wf:
-        wf.write(str(len(vocab_tag)) + "\n")
+    with io.open(output_vocab_tag, "w", encoding='utf-8') as wf:
+        wf.write((str(len(vocab_tag)) + "\n").decode('utf-8'))
+
 
     print("construct word dict done\n")
     write_paddle(vocab_text, vocab_tag, train_dir, test_dir, output_train_dir,
