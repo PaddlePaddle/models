@@ -3,7 +3,6 @@ python train.py \
        --model=SE_ResNeXt50_vd_32x4d \
        --batch_size=256 \
        --total_images=1281167 \
-       --image_shape=3,224,224 \
        --class_dim=1000 \
        --lr_strategy=cosine_decay \
        --lr=0.1 \
