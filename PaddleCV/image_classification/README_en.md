@@ -457,14 +457,14 @@ Pretrained models can be downloaded by clicking related model names.
 |[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar) | 76.50% | 93.00% | 8.787 | 5.137 |
 |[ResNet50_vc](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vc_pretrained.tar) |78.35% | 94.03% | 9.013 | 5.285 |
 |[ResNet50_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_pretrained.tar) | 79.12% | 94.44% | 9.058 | 5.259 |
-|[ResNet50_vd_v2](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_v2_pretrained.tar)<sup>[1](#trans)</sup> | 79.84% | 94.93% | 9.058 | 5.259 |
+|[ResNet50_vd_v2](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_v2_pretrained.tar)<sup>[1](#trans1)</sup> | 79.84% | 94.93% | 9.058 | 5.259 |
 |[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.tar) | 77.56% | 93.64% | 15.447 | 8.473 |
 |[ResNet101_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_vd_pretrained.tar) | 80.17% | 94.97% | 15.685 | 8.574 |
 |[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.tar) | 78.26% | 93.96% | 21.816 | 11.646 |
 |[ResNet152_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_vd_pretrained.tar) | 80.59% | 95.30% | 22.041 | 11.858 |
 |[ResNet200_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet200_vd_pretrained.tar) | 80.93% | 95.33% | 28.015 | 14.896 |
 
-<a name="trans">[1]</a> The pretrained model is distilled based on the pretrained model of ResNet50_vd. Users can directly load the pretrained model through the structure of ResNet50_vd.
+<a name="trans1">[1]</a> The pretrained model is distilled based on the pretrained model of ResNet50_vd. Users can directly load the pretrained model through the structure of ResNet50_vd.
 
 ### Res2Net Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -555,18 +555,18 @@ Pretrained models can be downloaded by clicking related model names.
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
 |[EfficientNetB0](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_pretrained.tar) | 77.38% | 93.31% | 10.303 | 4.334 |
-|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar)<sup>[2](#trans)</sup> | 79.15% | 94.41% | 15.626 | 6.502 |
-|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar)<sup>[2](#trans)</sup> | 79.85% | 94.74% | 17.847 | 7.558 |
-|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar)<sup>[2](#trans)</sup> | 81.15% | 95.41% | 25.993 | 10.937 |
-|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar)<sup>[2](#trans)</sup> | 82.85% | 96.23% | 47.734 | 18.536 |
-|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[2](#trans)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
-|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[2](#trans)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
-|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[2](#trans)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
-|[EfficientNetB0_small](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_Small_pretrained.tar)<sup>[3](#trans)</sup> | 75.80% | 92.58% | 3.342 | 2.729 |
+|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar)<sup>[2](#trans2)</sup> | 79.15% | 94.41% | 15.626 | 6.502 |
+|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar)<sup>[2](#trans2)</sup> | 79.85% | 94.74% | 17.847 | 7.558 |
+|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar)<sup>[2](#trans2)</sup> | 81.15% | 95.41% | 25.993 | 10.937 |
+|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar)<sup>[2](#trans2)</sup> | 82.85% | 96.23% | 47.734 | 18.536 |
+|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[2](#trans2)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
+|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[2](#trans2)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
+|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[2](#trans2)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
+|[EfficientNetB0_small](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_Small_pretrained.tar)<sup>[3](#trans3)</sup> | 75.80% | 92.58% | 3.342 | 2.729 |
 
-<a name="trans">[2]</a> means the pretrained weight is converted form [original repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet).
+<a name="trans2">[2]</a> means the pretrained weight is converted form [original repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet).
 
-<a name="trans">[3]</a> means the pretrained weight is based on EfficientNetB0, removed Squeeze-and-Excitation module and use general convolution. This model speed is much faster.
+<a name="trans3">[3]</a> means the pretrained weight is based on EfficientNetB0, removed Squeeze-and-Excitation module and use general convolution. This model speed is much faster.
 
 ### HRNet Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
