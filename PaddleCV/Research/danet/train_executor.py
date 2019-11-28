@@ -156,8 +156,12 @@ def main(args):
     epoch_num = args.epoch_num
     num_classes = args.num_classes
     data_root = args.data_folder
-    num = fluid.core.get_cuda_device_count()
-    print('The number of GPU ： {}'.format(num))
+    if args.cuda:
+        num = fluid.core.get_cuda_device_count()
+        print('The number of GPU： {}'.format(num))
+    else:
+        num = int(os.environ.get('CPU_NUM'))
+        print('The number of CPU： {}'.format(num))
 
     # program
     start_prog = fluid.default_startup_program()
