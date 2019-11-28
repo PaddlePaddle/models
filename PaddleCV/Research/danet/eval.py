@@ -160,23 +160,23 @@ def eval(args):
         change_model_executor_to_dygraph(args)
     with fluid.dygraph.guard():
         num_classes = args.num_classes
-        base_size = args.base_size  # 图片最长边 2048
-        crop_size = args.crop_size  # 输入网络大小 1024
-        multi_scales = args.multi_scales  # 多尺度测试
-        flip = args.flip  # 左右翻转测试
+        base_size = args.base_size  
+        crop_size = args.crop_size  
+        multi_scales = args.multi_scales 
+        flip = args.flip  
 
         if not multi_scales:
             scales = [1.0]
         else:
             # scales = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.2]
-            scales = [0.5, 0.75, 1.0, 1.25, 1.35, 1.5, 1.75, 2.0, 2.2]  # 可能效果会更好
+            scales = [0.5, 0.75, 1.0, 1.25, 1.35, 1.5, 1.75, 2.0, 2.2]  # It might work better
 
         if len(scales) == 1:  # single scale
             # stride_rate = 2.0 / 3.0
-            stride_rate = 1.0 / 2.0  # 可能效果会更好
+            stride_rate = 1.0 / 2.0  # It might work better
         else:
             stride_rate = 1.0 / 2.0
-        stride = int(crop_size * stride_rate)  # 滑动stride
+        stride = int(crop_size * stride_rate)  # slid stride
 
         model = get_model(args)
         x = np.random.randn(1, 3, 224, 224).astype('float32')
@@ -184,7 +184,7 @@ def eval(args):
         y = model(x)
         iou = IOUMetric(num_classes)
         model_path = args.save_model
-        # 加载最优模型
+        # load_better_model
         if paddle.__version__ == '1.5.2' and args.load_better_model:
             assert os.path.exists(model_path), "your input save_model: {} ,but '{}' is not exists".format(
                 model_path, model_path)
@@ -200,7 +200,7 @@ def eval(args):
             model_param, _ = fluid.dygraph.load_dygraph(model_path)
             model.load_dict(model_param)
         else:
-            raise ValueError('Please set --load_better_model and --save_model checkpoint/xxxxxxx! (your model path)')
+            raise ValueError('Please set --load_better_model!')
             
         assert len(model_param) == len(model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
                                                             "Please check whether the model is consistent!"
@@ -221,14 +221,13 @@ def eval(args):
         logging.info(args)
         palette = pat()  
         for data in reader():
-            # print(data)
             image = data[0]
             label_path = data[1]  # val_label is a picture, test_label is a path
             label = Image.open(label_path, mode='r')  # val_label is a picture, test_label is a path
             save_png_path = label_path.replace('val', '{}_val'.format(args.backbone)).replace('test', '{}_test'.format(args.backbone))
             label_np = np.array(label)
             w, h = image.size  # h 1024, w 2048
-            scores = np.zeros(shape=[num_classes, h, w], dtype='float32')  # 得分矩阵
+            scores = np.zeros(shape=[num_classes, h, w], dtype='float32')  
             for scale in scales:
                 long_size = int(math.ceil(base_size * scale))  # long_size
                 if h > w:
@@ -241,7 +240,7 @@ def eval(args):
                     short_size = height
 
                 cur_img = resize_image(image, height, width)  
-                # 右下角pad
+                # pad
                 if long_size <= crop_size:
                     pad_img = pad_single_image(cur_img, crop_size)
                     pad_img = mapper_image(pad_img)
@@ -267,7 +266,7 @@ def eval(args):
                     pw, ph = pad_img.size
                     assert (ph >= height and pw >= width)
 
-                    # 滑动网格
+                    # slid window
                     h_grids = int(math.ceil(1.0 * (ph - crop_size) / stride)) + 1
                     w_grids = int(math.ceil(1.0 * (pw - crop_size) / stride)) + 1
                     outputs = np.zeros(shape=[1, num_classes, ph, pw], dtype='float32')
@@ -302,14 +301,14 @@ def eval(args):
                 outputs = fluid.dygraph.to_variable(outputs)
                 outputs = fluid.layers.resize_bilinear(outputs, out_shape=[h, w])
                 score = outputs.numpy()[0]
-                scores += score   # scopes 是所有尺度的和， shape: [channel, h, w]
+                scores += score   # the sum of all scales, shape: [channel, h, w]
                 pred = np.argmax(score, axis=0).astype('uint8')  
                 picture_path = '{}'.format(save_png_path).replace('.png', '_scale_{}'.format(scale))
                 save_png(pred, palette, picture_path)
             pred = np.argmax(scores, axis=0).astype('uint8') 
             picture_path = '{}'.format(save_png_path).replace('.png', '_scores')
             save_png(pred, palette, picture_path)
-            iou.add_batch(pred, label_np)   # 计算iou
+            iou.add_batch(pred, label_np)   # cal iou
         print('eval done!')
         logging.info('eval done!')
         acc, acc_cls, iu, mean_iu, fwavacc, kappa = iou.evaluate()
@@ -321,7 +320,7 @@ def eval(args):
         logging.info('iu = {}'.format(iu))
         print('mean_iou -- 255 = {}'.format(mean_iu))
         logging.info('mean_iou --255 = {}'.format(mean_iu))
-        print('mean_iou = {}'.format(np.nanmean(iu[:-1])))  # 真正的iou
+        print('mean_iou = {}'.format(np.nanmean(iu[:-1])))  # realy iou
         logging.info('mean_iou = {}'.format(np.nanmean(iu[:-1])))
         print('fwavacc = {}'.format(fwavacc))
         logging.info('fwavacc = {}'.format(fwavacc))
