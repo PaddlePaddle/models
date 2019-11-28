@@ -26,6 +26,8 @@ import numpy as np
 import paddle
 import logging
 import shutil
+import multiprocessing
+import sys
 from datetime import datetime
 from paddle.utils import Ploter
 
@@ -45,6 +47,21 @@ def get_model(args):
                   multi_grid=args.multi_grid,
                   multi_dilation=args.multi_dilation)
     return model
+
+
+def _cpu_num():
+    if "CPU_NUM" not in os.environ.keys():
+        if multiprocessing.cpu_count() > 1:
+            sys.stderr.write(
+                '!!! The CPU_NUM is not specified, you should set CPU_NUM in the environment variable list.\n'
+                'CPU_NUM indicates that how many CPUPlace are used in the current task.\n'
+                'And if this parameter are set as N (equal to the number of physical CPU core) the program may be faster.\n\n'
+                'export CPU_NUM={} # for example, set CPU_NUM as number of physical CPU core which is {}.\n\n'
+                '!!! The default number of CPU_NUM=1.\n'.format(
+                    multiprocessing.cpu_count(), multiprocessing.cpu_count()))
+        os.environ['CPU_NUM'] = str(1)
+    cpu_num = os.environ.get('CPU_NUM')
+    return int(cpu_num)
 
 
 def mean_iou(pred, label, num_classes=19):
@@ -133,7 +150,7 @@ def main(args):
         num = fluid.core.get_cuda_device_count()
         print('The number of GPU： {}'.format(num))
     else:
-        num = int(os.environ.get('CPU_NUM'))
+        num = _cpu_num()
         print('The number of CPU： {}'.format(num))
 
     # program
