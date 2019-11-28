@@ -275,8 +275,7 @@ class ImageNetReader:
             batch_size = 1
         else:
             if settings.use_gpu:
-                batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
-                )
+                batch_size = settings.batch_size // num_trainers
             else:
                 batch_size = settings.batch_size // int(
                     os.environ.get('CPU_NUM', 1))
@@ -296,7 +295,6 @@ class ImageNetReader:
                             full_lines)
                     elif shuffle:
                         np.random.shuffle(full_lines)
-
                 batch_data = []
                 for line in full_lines:
                     img_path, label = line.split()
@@ -362,10 +360,10 @@ class ImageNetReader:
 
         if settings.use_mixup == True:
             reader = create_mixup_reader(settings, reader)
+            num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
             reader = fluid.io.batch(
                 reader,
-                batch_size=int(settings.batch_size /
-                               paddle.fluid.core.get_cuda_device_count()),
+                batch_size = settings.batch_size // num_trainers,
                 drop_last=True)
         return reader
 
