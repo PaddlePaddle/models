@@ -23,10 +23,10 @@ import paddle.fluid as fluid
 def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
 
     datas = []
-    input_word = fluid.layers.data(name="input_word", shape=[1], dtype='int64')
-    true_word = fluid.layers.data(name='true_label', shape=[1], dtype='int64')
-    neg_word = fluid.layers.data(
-        name="neg_label", shape=[neg_num], dtype='int64')
+    input_word = fluid.data(name="input_word", shape=[None, 1], dtype='int64')
+    true_word = fluid.data(name='true_label', shape=[None, 1], dtype='int64')
+    neg_word = fluid.data(
+        name="neg_label", shape=[None, neg_num], dtype='int64')
 
     datas.append(input_word)
     datas.append(true_word)
@@ -37,7 +37,7 @@ def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
 
     words = fluid.layers.read_file(py_reader)
     init_width = 0.5 / embedding_size
-    input_emb = fluid.layers.embedding(
+    input_emb = fluid.embedding(
         input=words[0],
         is_sparse=is_sparse,
         size=[dict_size, embedding_size],
@@ -45,33 +45,31 @@ def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
             name='emb',
             initializer=fluid.initializer.Uniform(-init_width, init_width)))
 
-    true_emb_w = fluid.layers.embedding(
+    true_emb_w = fluid.embedding(
         input=words[1],
         is_sparse=is_sparse,
         size=[dict_size, embedding_size],
         param_attr=fluid.ParamAttr(
             name='emb_w', initializer=fluid.initializer.Constant(value=0.0)))
 
-    true_emb_b = fluid.layers.embedding(
+    true_emb_b = fluid.embedding(
         input=words[1],
         is_sparse=is_sparse,
         size=[dict_size, 1],
         param_attr=fluid.ParamAttr(
             name='emb_b', initializer=fluid.initializer.Constant(value=0.0)))
-    neg_word_reshape = fluid.layers.reshape(words[2], shape=[-1, 1])
-    neg_word_reshape.stop_gradient = True
+    input_emb = fluid.layers.squeeze(input=input_emb, axes=[1])
+    true_emb_w = fluid.layers.squeeze(input=true_emb_w, axes=[1])
+    true_emb_b = fluid.layers.squeeze(input=true_emb_b, axes=[1])
 
-    neg_emb_w = fluid.layers.embedding(
-        input=neg_word_reshape,
+    neg_emb_w = fluid.embedding(
+        input=words[2],
         is_sparse=is_sparse,
         size=[dict_size, embedding_size],
         param_attr=fluid.ParamAttr(
             name='emb_w', learning_rate=1.0))
-
-    neg_emb_w_re = fluid.layers.reshape(
-        neg_emb_w, shape=[-1, neg_num, embedding_size])
-    neg_emb_b = fluid.layers.embedding(
-        input=neg_word_reshape,
+    neg_emb_b = fluid.embedding(
+        input=words[2],
         is_sparse=is_sparse,
         size=[dict_size, 1],
         param_attr=fluid.ParamAttr(
@@ -86,8 +84,7 @@ def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
         true_emb_b)
     input_emb_re = fluid.layers.reshape(
         input_emb, shape=[-1, 1, embedding_size])
-    neg_matmul = fluid.layers.matmul(
-        input_emb_re, neg_emb_w_re, transpose_y=True)
+    neg_matmul = fluid.layers.matmul(input_emb_re, neg_emb_w, transpose_y=True)
     neg_matmul_re = fluid.layers.reshape(neg_matmul, shape=[-1, neg_num])
     neg_logits = fluid.layers.elementwise_add(neg_matmul_re, neg_emb_b_vec)
     #nce loss
@@ -111,22 +108,18 @@ def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
 
 
 def infer_network(vocab_size, emb_size):
-    analogy_a = fluid.layers.data(name="analogy_a", shape=[1], dtype='int64')
-    analogy_b = fluid.layers.data(name="analogy_b", shape=[1], dtype='int64')
-    analogy_c = fluid.layers.data(name="analogy_c", shape=[1], dtype='int64')
-    all_label = fluid.layers.data(
-        name="all_label",
-        shape=[vocab_size, 1],
-        dtype='int64',
-        append_batch_size=False)
-    emb_all_label = fluid.layers.embedding(
+    analogy_a = fluid.data(name="analogy_a", shape=[None], dtype='int64')
+    analogy_b = fluid.data(name="analogy_b", shape=[None], dtype='int64')
+    analogy_c = fluid.data(name="analogy_c", shape=[None], dtype='int64')
+    all_label = fluid.data(name="all_label", shape=[vocab_size], dtype='int64')
+    emb_all_label = fluid.embedding(
         input=all_label, size=[vocab_size, emb_size], param_attr="emb")
 
-    emb_a = fluid.layers.embedding(
+    emb_a = fluid.embedding(
         input=analogy_a, size=[vocab_size, emb_size], param_attr="emb")
-    emb_b = fluid.layers.embedding(
+    emb_b = fluid.embedding(
         input=analogy_b, size=[vocab_size, emb_size], param_attr="emb")
-    emb_c = fluid.layers.embedding(
+    emb_c = fluid.embedding(
         input=analogy_c, size=[vocab_size, emb_size], param_attr="emb")
     target = fluid.layers.elementwise_add(
         fluid.layers.elementwise_sub(emb_b, emb_a), emb_c)
