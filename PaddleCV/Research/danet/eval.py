@@ -119,7 +119,8 @@ def change_model_executor_to_dygraph(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
     model_path = args.save_model
-    assert os.path.exists(model_path), "请核对executor模型文件地址{}是否存在, 注意：executor模型文件是多个文件。".format(model_path)
+    assert os.path.exists(model_path), "Please check whether the executor model file address {} exists. " \
+                                       "Note: the executor model file is multiple files.".format(model_path)
     fluid.io.load_persistables(exe, model_path, fluid.default_main_program())
     print('load executor train model successful, start change!')
     param_list = fluid.default_main_program().block(0).all_parameters()
@@ -145,8 +146,8 @@ def change_model_executor_to_dygraph(args):
                                                    dtype='float32',
                                                    default_initializer=fluid.initializer.NumpyArrayInitializer(value))
             new_param_dict[name] = tensor
-        assert len(new_param_dict) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
-                                                               "请核对模型是否一致!"
+        assert len(new_param_dict) == len(model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                                               "Please check whether the model is consistent!"
         model.set_dict(new_param_dict)
         fluid.save_dygraph(model.state_dict(), model_path)
         del model
@@ -199,10 +200,10 @@ def eval(args):
             model_param, _ = fluid.dygraph.load_dygraph(model_path)
             model.load_dict(model_param)
         else:
-            raise ValueError('请设置--load_better_model and --save_model checkpoint/xxxxxxx!')
+            raise ValueError('Please set --load_better_model and --save_model checkpoint/xxxxxxx! (your model path)')
             
-        assert len(model_param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
-                                                            "请核对模型是否初始化/模型是否一致"
+        assert len(model_param) == len(model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                                            "Please check whether the model is consistent!"
         model.eval()
 
         prev_time = datetime.now()
@@ -318,8 +319,8 @@ def eval(args):
         logging.info('acc_cls = {}'.format(acc_cls))
         print('iu = {}'.format(iu))
         logging.info('iu = {}'.format(iu))
-        print('mean_iou(含有255) = {}'.format(mean_iu))
-        logging.info('mean_iou(include 255) = {}'.format(mean_iu))
+        print('mean_iou -- 255 = {}'.format(mean_iu))
+        logging.info('mean_iou --255 = {}'.format(mean_iu))
         print('mean_iou = {}'.format(np.nanmean(iu[:-1])))  # 真正的iou
         logging.info('mean_iou = {}'.format(np.nanmean(iu[:-1])))
         print('fwavacc = {}'.format(fwavacc))
@@ -366,7 +367,7 @@ def save_png(pred_value, palette, name):
                 os.makedirs(save_dir)
             image.save(save_path)
     else:
-        raise ValueError('暂只支持nd array')
+        raise ValueError('Only support nd-array')
 
 
 def save_png_test(path):
