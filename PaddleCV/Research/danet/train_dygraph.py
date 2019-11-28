@@ -130,7 +130,7 @@ def main(args):
     num_classes = args.num_classes
     data_root = args.data_folder
     num = fluid.core.get_cuda_device_count()
-    print('GPU设备数量： {}'.format(num))
+    print('The number of GPU： {}'.format(num))
 
     # program
     start_prog = fluid.default_startup_program()
@@ -165,26 +165,26 @@ def main(args):
         x = fluid.dygraph.to_variable(x)
         model(x)
 
-        # 加载预训练模型
+        # load_pretrained_model
         if args.load_pretrained_model:
             save_dir = args.save_model
             assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is not exists".format(
                 save_dir, save_dir + '.pdparams')
             param, _ = fluid.load_dygraph(save_dir)
             model.set_dict(param)
-            assert len(param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
-                                                          "请核对模型是否初始化/模型是否一致"
+            assert len(param) == len(model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                                          "Please check whether the model is consistent!"
             print('load pretrained model!')
 
-        # 加载最优模型
+        # load_better_model
         if args.load_better_model:
             save_dir = args.save_model
             assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is not exists".format(
                 save_dir, save_dir + '.pdparams')
             param, _ = fluid.load_dygraph(save_dir)
             model.set_dict(param)
-            assert len(param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
-                                                          "请核对模型是否初始化/模型是否一致"
+            assert len(param) == len(model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                                          "Please check whether the model is consistent!"
             print('load better model!')
 
 
