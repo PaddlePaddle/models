@@ -323,12 +323,12 @@ def main(args):
                           ignore_errors=True)
             better_miou_train = train_iou_manager.eval()[0]
             logging.warning(
-                '-----------train---------------better_train: {:.6f}, epoch: {}, -----------successful save train model!\n'.format(
+                '-----------train---------------better_train: {:.6f}, epoch: {}, -----------Train model saved successfully!\n'.format(
                     better_miou_train, epoch + 1))
             save_dir = './checkpoint/DANet_better_train_{:.4f}'.format(better_miou_train)
             save_model(save_dir, exe, program=train_prog)
         if (epoch + 1) % 5 == 0:
-            save_dir = './checkpoint/DAnet_epoch_train'
+            save_dir = './checkpoint/DANet_epoch_train'
             save_model(save_dir, exe, program=train_prog)
 
         # test
@@ -378,12 +378,12 @@ def main(args):
                           ignore_errors=True)
             better_miou_test = test_iou_manager.eval()[0]
             logging.warning(
-                '------------test-------------infer better_test: {:.6f}, epoch: {}, ----------------successful save infer model!\n'.format(
+                '------------test-------------infer better_test: {:.6f}, epoch: {}, ----------------Inference model saved successfully!\n'.format(
                     better_miou_test, epoch + 1))
             save_dir = './checkpoint/infer/DANet_better_test_{:.4f}'.format(better_miou_test)
             # save_model(save_dir, exe, program=test_prog)
             fluid.io.save_inference_model(save_dir, [image.name], [pred, pred2, pred3], exe)
-            print('successful save infer model!')
+            print('Inference model saved successfully')
 
 
 if __name__ == '__main__':
