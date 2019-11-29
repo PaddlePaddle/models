@@ -34,27 +34,31 @@
 
 **安装PointRCNN:**
 
-1. 克隆[PaddlePaddle/models](https://github.com/PaddlePaddle/models)模型库
+1. 下载[PaddlePaddle/models](https://github.com/PaddlePaddle/models)模型库
 
 `pts_utils`依赖`pybind11`编译，须下载`PaddleCV/PointRCNN`目录下包含的`pybind11`子库，使用`--recursive`命令触发子库下载。
 
 ```
-git clone --recursive https://github.com/PaddlePaddle/models
+git clone https://github.com/PaddlePaddle/models
 ```
 
-若克隆models模型库时没有加`--recursive`参数，可通过如下命令下载`pybind11`子库。
+2. 在`PaddleCV/Paddle3D/PointRCNN`目录下下载[pybind11](https://github.com/pybind/pybind11)
+
+`pts_utils`依赖`pybind11`编译，须在`PaddleCV/Paddle3D/PointRCNN`目录下下载`pybind11`子库，可使用如下命令下载：
 
 ```
-git submodule update --init --recursive
+cd PaddleCV/Paddle3D/PointRCNN
+git clone https://github.com/pybind/pybind11
 ```
 
-2. 编译安装`pts_utils`, `kitti_utils`, `roipool3d_utils`, `iou_utils` 等模块
+3. 编译安装`pts_utils`, `kitti_utils`, `roipool3d_utils`, `iou_utils` 等模块
 
+使用如下命令编译安装`pts_utils`, `kitti_utils`, `roipool3d_utils`, `iou_utils` 等模块：
 ```
 sh build_and_install.sh
 ```
 
-3. 安装python依赖库
+4. 安装python依赖库
 
 使用如下命令安装python依赖库：
 
@@ -167,11 +171,11 @@ python tools/generate_gt_database.py --class_name 'Car' --split train
 3. 训练 RPN 模型
 
 ```
-python tools/train.py --cfg=./cfgs/default.yml \
-                      --train_mode=rpn \
-                      --batch_size=16 \
-                      --epoch=200 \
-                      --save_dir=checkpoints
+python train.py --cfg=./cfgs/default.yml \
+                --train_mode=rpn \
+                --batch_size=16 \
+                --epoch=200 \
+                --save_dir=checkpoints
 ```
 
 RPN训练checkpoints默认保存在`checkpoints/rpn`目录，也可以通过`--save_dir`来指定。
@@ -189,12 +193,12 @@ python tools/generate_aug_scene.py --class_name 'Car' --split train --aug_times 
 通过`--output_dir`指定保存输出特征和ROI的路径，默认保存到`./output`目录。
 
 ```
-python tools/eval.py --cfg=cfgs/default.yml  \
-                     --eval_mode=rpn \
-                     --ckpt_dir=./checkpoints/rpn/199 \
-                     --save_rpn_feature \
-                     --output_dir=output \
-                     --set TEST.SPLIT train_aug TEST.RPN_POST_NMS_TOP_N 300 TEST.RPN_NMS_THRESH 0.85
+python eval.py --cfg=cfgs/default.yml  \
+               --eval_mode=rpn \
+               --ckpt_dir=./checkpoints/rpn/199 \
+               --save_rpn_feature \
+               --output_dir=output \
+               --set TEST.SPLIT train_aug TEST.RPN_POST_NMS_TOP_N 300 TEST.RPN_NMS_THRESH 0.85
 ```
 
 `--output_dir`下保存的数据目录结构如下：
@@ -222,13 +226,13 @@ output
 5. 离线训练RCNN，并且通过参数`--rcnn_training_roi_dir` and `--rcnn_training_feature_dir` 来指定 RPN 模型保存的输出特征和ROI路径。
 
 ```
-python tools/train.py --cfg=./cfgs/default.yml \
-                      --train_mode=rcnn_offline \
-                      --batch_size=4 \
-                      --epoch=30 \
-                      --save_dir=checkpoints \
-                      --rcnn_training_roi_dir=output/detections/data \
-                      --rcnn_training_feature_dir=output/features
+python train.py --cfg=./cfgs/default.yml \
+                --train_mode=rcnn_offline \
+                --batch_size=4 \
+                --epoch=30 \
+                --save_dir=checkpoints \
+                --rcnn_training_roi_dir=output/detections/data \
+                --rcnn_training_feature_dir=output/features
 ```
 
 RCNN模型训练权重默认保存在`checkpoints/rcnn`目录下，可通过`--save_dir`参数指定。
@@ -259,11 +263,11 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.
 通过`--output_dir`指定保存输出特征和ROI的路径，默认保存到`./output`目录。
 
 ```
-python tools/eval.py --cfg=cfgs/default.yml \
-                     --eval_mode=rpn \
-                     --ckpt_dir=./checkpoints/rpn/199 \
-                     --save_rpn_feature \
-                     --output_dir=output/val
+python eval.py --cfg=cfgs/default.yml \
+               --eval_mode=rpn \
+               --ckpt_dir=./checkpoints/rpn/199 \
+               --save_rpn_feature \
+               --output_dir=output/val
 ```
 
 保存RPN模型对评估数据的输出特征和ROI保存的目录结构与上述保存离线增强数据保存目录结构一致。
@@ -273,12 +277,12 @@ python tools/eval.py --cfg=cfgs/default.yml \
 评估离线RCNN模型命令如下:
 
 ```
-python tools/eval.py --cfg=cfgs/default.yml \
-                     --eval_mode=rcnn_offline \
-                     --ckpt_dir=./checkpoints/rcnn_offline/29 \
-                     --rcnn_eval_roi_dir=output/val/detections/data \
-                     --rcnn_eval_feature_dir=output/val/features \
-                     --save_result
+python eval.py --cfg=cfgs/default.yml \
+               --eval_mode=rcnn_offline \
+               --ckpt_dir=./checkpoints/rcnn_offline/29 \
+               --rcnn_eval_roi_dir=output/val/detections/data \
+               --rcnn_eval_feature_dir=output/val/features \
+               --save_result
 ```
 
 最终目标检测结果文件保存在`./result_dir`目录下`final_result`文件夹下，同时可通过`--save_result`开启保存`roi_output`和`refine_output`结果文件。
@@ -312,7 +316,7 @@ result_dir
 python3 kitti_map.py
 ```
 
-使用训练最终权重[RPN模型]()和[RCNN模型]()评估结果如下所示：
+使用训练最终权重[RPN模型](https://paddlemodels.bj.bcebos.com/Paddle3D/pointrcnn_rpn.tar)和[RCNN模型](https://paddlemodels.bj.bcebos.com/Paddle3D/pointrcnn_rcnn_offline.tar)评估结果如下所示：
 
 |  Car AP@ | 0.70(easy) | 0.70(moderate) | 0.70(hard) |
 | :------- | :--------: | :------------: | :--------: |

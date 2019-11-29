@@ -16,6 +16,3 @@
 [submodule "PaddleNLP/PALM"]
 	path = PaddleNLP/PALM
 	url = https://github.com/PaddlePaddle/PALM
-[submodule "PaddleCV/Paddle3D/PointRCNN/pybind11"]
-	path = PaddleCV/Paddle3D/PointRCNN/pybind11
-	url = https://github.com/pybind/pybind11
