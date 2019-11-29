@@ -197,14 +197,14 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         raise NotImplementedError("Not implement known as None currently.")
     else:
         dist, idx = three_nn(unknown, known, eps=0)
-	dist.stop_gradient = True
-	idx.stop_gradient = True
+        dist.stop_gradient = True
+        idx.stop_gradient = True
         dist = fluid.layers.sqrt(dist)
         ones = fluid.layers.fill_constant_batch_size_like(dist, dist.shape, dist.dtype, 1)
         dist_recip = ones / (dist + 1e-8); # 1.0 / dist
         norm = fluid.layers.reduce_sum(dist_recip, dim=-1, keep_dim=True)
         weight = dist_recip / norm
-	weight.stop_gradient = True
+        weight.stop_gradient = True
         interp_feats = three_interp(known_feats, weight, idx)
 
     new_features = interp_feats if unknown_feats is None else \

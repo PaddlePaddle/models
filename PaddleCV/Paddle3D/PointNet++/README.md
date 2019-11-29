@@ -213,7 +213,7 @@ sh scripts/eval_cls.sh
 | model | Top-1 | download |
 | :----- | :---: | :---: |
 | SSG(Single-Scale Group) | 87.4 | [model]() |
-| MSG(Multi-Scale Group)  | 89.2 | [model]() |
+| MSG(Multi-Scale Group)  | 89.1 | [model]() |
 
 **语义分割模型:**
 
@@ -235,7 +235,7 @@ sh scripts/eval_seg.sh
 | model | Top-1 | download |
 | :----- | :---: | :---: |
 | SSG(Single-Scale Group) | 86.1 | [model]() |
-| MSG(Multi-Scale Group)  | 86.8 | [model]() |
+| MSG(Multi-Scale Group)  | 86.6 | [model]() |
 
 ## 参考文献
 

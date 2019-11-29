@@ -32,6 +32,8 @@ FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
+np.random.seed(1024)
+
 
 def parse_args():
     parser = argparse.ArgumentParser("PointNet++ semantic segmentation train script")
