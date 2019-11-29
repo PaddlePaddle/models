@@ -117,7 +117,7 @@ sh download.sh
 
 **Indoor3DSemSeg 数据集:**
 
-PointNet++ 分类模型在 [Indoor3DSemSeg 数据集](https://shapenet.cs.stanford.edu/media/indoor3d_sem_seg_hdf5_data.zip)上进行训练，我们提供了数据集下载脚本：
+PointNet++ 分割模型在 [Indoor3DSemSeg 数据集](https://shapenet.cs.stanford.edu/media/indoor3d_sem_seg_hdf5_data.zip)上进行训练，我们提供了数据集下载脚本：
 
 ```
 cd dataset/Indoor3DSemSeg
@@ -212,8 +212,8 @@ sh scripts/eval_cls.sh
 
 | model | Top-1 | download |
 | :----- | :---: | :---: |
-| SSG(Single-Scale Group) | 87.4 | [model]() |
-| MSG(Multi-Scale Group)  | 89.1 | [model]() |
+| SSG(Single-Scale Group) | 87.4 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_ssg_cls.tar) |
+| MSG(Multi-Scale Group)  | 89.1 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_msg_cls.tar) |
 
 **语义分割模型:**
 
@@ -234,8 +234,8 @@ sh scripts/eval_seg.sh
 
 | model | Top-1 | download |
 | :----- | :---: | :---: |
-| SSG(Single-Scale Group) | 86.1 | [model]() |
-| MSG(Multi-Scale Group)  | 86.6 | [model]() |
+| SSG(Single-Scale Group) | 86.1 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_ssg_seg.tar) |
+| MSG(Multi-Scale Group)  | 86.6 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_msg_seg.tar) |
 
 ## 参考文献
 
