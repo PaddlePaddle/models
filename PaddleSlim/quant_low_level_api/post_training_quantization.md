@@ -122,7 +122,7 @@ ptq.save_quantized_model(args.save_model_path)
 ```
 4）**测试训练后量化模型精度**
 
-使用ImageNet2012测试集中100张图片做校准数据集，对'conv2d', 'depthwise_conv2d', 'mul', 'pool2d', 'elementwise_add'和'concat'进行训练后量化，然后在ImageNet2012验证集上测试。下表列出了常见分类模型训练后量化前后的精度对比。
+使用ImageNet2012测试集中100张图片做校准数据集，对`conv2d`, `depthwise_conv2d`, `mul`, `pool2d`, `elementwise_add`和`concat`进行训练后量化，然后在ImageNet2012验证集上测试。下表列出了常见分类模型训练后量化前后的精度对比。
 
 模型 | FP32 Top1 | FP32 Top5 | INT8 Top1 | INT8 Top5| Top1 Diff | Tp5 Diff
 -|:-:|:-:|:-:|:-:|:-:|:-:
