@@ -17,7 +17,6 @@ import sys
 import time
 import shutil
 import argparse
-import ast
 import logging
 import numpy as np
 import paddle
@@ -45,11 +44,6 @@ def parse_args():
         type=str,
         default='cfgs/default.yml',
         help='specify the config for training')
-    parser.add_argument(
-        '--use_gpu',
-        type=ast.literal_eval,
-        default=True,
-        help='default use gpu.')
     parser.add_argument(
         '--train_mode',
         type=str,
@@ -122,7 +116,8 @@ def parse_args():
 def train():
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
-    check_gpu(args.use_gpu)
+    # PointRCNN model can only run on GPU
+    check_gpu(True)
 
     load_config(args.cfg)
     if args.set_cfgs is not None:
@@ -158,7 +153,7 @@ def train():
     boundaries = [i * steps_per_epoch for i in cfg.TRAIN.DECAY_STEP_LIST]
     values = [cfg.TRAIN.LR * (cfg.TRAIN.LR_DECAY ** i) for i in range(len(boundaries) + 1)]
 
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
 
     # build model

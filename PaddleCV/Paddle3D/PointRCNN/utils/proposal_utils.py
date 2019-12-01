@@ -220,9 +220,6 @@ def get_proposal_func(cfg, mode='TRAIN'):
         rpn_scores = np.array(x[:, :, 0])[:, :, 0]
         roi_box3d = x[:, :, 1:4]
         pred_reg = x[:, :, 4:]
-        # np.save('rpn_scores', rpn_scores)
-        # np.save('roi_box3d', roi_box3d)
-        # np.save('pred_reg', pred_reg)
 
         proposals = decode_bbox_target(
                 np.array(roi_box3d).reshape(-1, roi_box3d.shape()[-1]), 
@@ -236,10 +233,8 @@ def get_proposal_func(cfg, mode='TRAIN'):
 	       	get_ry_fine=False)
         proposals[:, 1] += proposals[:, 3] / 2
         proposals = proposals.reshape(rpn_scores.shape[0], -1, proposals.shape[-1])
-        # np.save('proposals.npy', proposals)
 
         sorted_idxs = np.argsort(-rpn_scores, axis=-1)
-        # np.save('sorted_idxs.npy', sorted_idxs)
 
         if cfg.TEST.RPN_DISTANCE_BASED_PROPOSE:
             ret = distance_based_proposal(rpn_scores, proposals, sorted_idxs)

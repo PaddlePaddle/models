@@ -90,7 +90,6 @@ class KittiRCNNReader(KittiDataset):
         self.npoints = npoints
         self.sample_id_list = []
         self.random_select = random_select
-        # self.random_select = False # debug
 
         if split == 'train_aug':
             self.aug_label_dir = os.path.join(aug_scene_data_dir, 'training', 'aug_label')
@@ -151,7 +150,7 @@ class KittiRCNNReader(KittiDataset):
                     continue
                 self.sample_id_list.append(sample_id)
 
-            print('Done: filter %s results for rcnn training: %d / %d\n' %
+            logger.info('Done: filter %s results for rcnn training: %d / %d\n' %
                   (self.mode, len(self.sample_id_list), len(self.image_idx_list)))
 
     def preprocess_rpn_training_data(self):
@@ -335,11 +334,9 @@ class KittiRCNNReader(KittiDataset):
             ret_pts_rect = pts_rect[choice, :]
             ret_pts_intensity = pts_intensity[choice] - 0.5  # translate intensity to [-0.5, 0.5]
         else:
-            # ret_pts_rect = pts_rect
-
             ret_pts_rect = np.zeros((self.npoints, pts_rect.shape[1])).astype(pts_rect.dtype)
             num_ = min(self.npoints, pts_rect.shape[0])
-            ret_pts_rect[:num_] = pts_rect[:num_] # debug
+            ret_pts_rect[:num_] = pts_rect[:num_]
 
             ret_pts_intensity = pts_intensity - 0.5
 
@@ -616,20 +613,11 @@ class KittiRCNNReader(KittiDataset):
         roi_file = os.path.join(self.rcnn_training_roi_dir, '%06d.txt' % sample_id)
         roi_obj_list = kitti_utils.get_objects_from_label(roi_file)
         roi_boxes3d = kitti_utils.objs_to_boxes3d(roi_obj_list)
+        # roi_scores is not used currently
         # roi_scores = kitti_utils.objs_to_scores(roi_obj_list)
 
         gt_obj_list = self.filtrate_objects(self.get_label(sample_id))
         gt_boxes3d = kitti_utils.objs_to_boxes3d(gt_obj_list)
-        '''
-        sample_info = {#'sample_id': sample_id,
-                       'rpn_xyz': rpn_xyz,
-                       'rpn_features': rpn_features,
-                       'rpn_intensity': rpn_intensity,
-                       'seg_mask': seg_mask,
-                       'roi_boxes3d': roi_boxes3d,
-                       'gt_boxes3d': gt_boxes3d,
-                       'pts_depth': np.linalg.norm(rpn_xyz, ord=2, axis=1)}
-        '''
         sample_info = OrderedDict()
         sample_info["sample_id"] = sample_id
         sample_info['rpn_xyz'] = rpn_xyz
@@ -640,14 +628,6 @@ class KittiRCNNReader(KittiDataset):
         sample_info['pts_depth'] = np.linalg.norm(rpn_xyz, ord=2, axis=1)
         sample_info['gt_boxes3d'] = gt_boxes3d
 
-        '''
-        print("-----read data-----")
-        for k, v in sample_info.items():
-            if k not in ['sample_id', 'pts_input']:
-                #if k not in ['gt_boxes3d','roi_boxes3d'] :
-                #    sample_info[k] = np.expand_dims(sample_info[k], axis=0)
-                print(k, sample_info[k].shape)
-        '''
         return sample_info
 
     def sample_bg_inds(self, hard_bg_inds, easy_bg_inds, bg_rois_per_this_image):
@@ -714,7 +694,6 @@ class KittiRCNNReader(KittiDataset):
         :return:
         """
         roi_ry = roi_boxes3d[:, 6] % (2 * np.pi)  # 0 ~ 2pi
-        #print("roi_ry: ", roi_ry.shape)
         roi_center = roi_boxes3d[:, 0:3]
         # shift to center
         pts_input[:, :, [0, 1, 2]] = pts_input[:, :, [0, 1, 2]] - roi_center.reshape(-1, 1, 3)
@@ -868,7 +847,6 @@ class KittiRCNNReader(KittiDataset):
         cls_label[invalid_mask] = -1
         cls_label[valid_mask == 0] = -1
 
-        #print("canonical_transform_batch: ", pts_input.shape, rois.shape, gt_of_rois.shape)
         # canonical transform and sampling
         pts_input_ct, gt_boxes3d_ct = self.canonical_transform_batch(pts_input, rois, gt_of_rois)
 
@@ -883,12 +861,6 @@ class KittiRCNNReader(KittiDataset):
         sample_info['reg_valid_mask'] = reg_valid_mask
         sample_info['gt_boxes3d_ct'] = gt_boxes3d_ct
         sample_info['gt_of_rois'] = gt_of_rois
-        """
-        for k,v in sample_info.items():
-            if k not in ['sample_id']:
-                print(k, v.shape)
-            np.save("./debug_data/%s.npy"%k, v)
-        """
         return sample_info
 
     @staticmethod
@@ -1099,7 +1071,6 @@ class KittiRCNNReader(KittiDataset):
             max_iou = max(max_iou, batch_data[k][-2].shape[0])
             # gt_boxes3d
             max_gt = max(max_gt, batch_data[k][-1].shape[0])
-        #print("padding num: ", max_pts, max_feats, max_roi, max_iou, max_gt) 
         batch_pts_input = np.zeros((batch_size, max_pts, 512, 133), dtype=np.float32)
         batch_pts_feat = np.zeros((batch_size, max_feats, 512, 128), dtype=np.float32)
         batch_roi_boxes3d = np.zeros((batch_size, max_roi, 7), dtype=np.float32)
@@ -1113,7 +1084,6 @@ class KittiRCNNReader(KittiDataset):
             roi_num = data[3].shape[0]
             iou_num = data[-2].shape[0]
             gt_num = data[-1].shape[0]
-            #print("ori data num: ", pts_num, pts_feat_num, roi_num, iou_num, gt_num) 
             # data
             batch_pts_input[i, :pts_num, :, :] = data[1]
             batch_pts_feat[i, :pts_feat_num, :, :] = data[2]
@@ -1123,22 +1093,13 @@ class KittiRCNNReader(KittiDataset):
             
         new_batch = []
         for i, data in enumerate(batch_data):
-            #new_batch.append([np.array(batch_data[0])])
             new_batch.append(data[:1])
-            # pts_input
             new_batch[i].append(batch_pts_input[i])
-            # pts_feat 
             new_batch[i].append(batch_pts_feat[i])
-            # roi_boxes3d
             new_batch[i].append(batch_roi_boxes3d[i])
-            # roi_scores 
             new_batch[i].append(data[4])
-            # gt_iou
             new_batch[i].append(batch_gt_iou[i])
-            # gt_boxes3d
             new_batch[i].append(batch_gt_boxes3d[i])
-            #for one_d in new_batch[i]:
-            #    print(one_d.shape)
         return new_batch
 
     def get_reader(self, batch_size, fields, drop_last=False):
@@ -1161,10 +1122,12 @@ class KittiRCNNReader(KittiDataset):
                         if self.mode == 'TRAIN':
                             yield self.padding_batch(batch_out, batch_size)
                         elif self.mode == 'EVAL':
-                            #yield self.padding_batch_eval(batch_out, batch_size)
+                            # batch_size can should be 1 in rcnn_offline eval currently
+                            # if batch_size > 1, batch should be padded as follow
+                            # yield self.padding_batch_eval(batch_out, batch_size)
                             yield batch_out
                         else:
-                            print("not only support train/eval padding")
+                            logger.error("not only support train/eval padding")
                     batch_out = []
             if not drop_last:
                 if len(batch_out) > 0:

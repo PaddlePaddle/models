@@ -14,8 +14,6 @@ def get_proposal_target_func(cfg, mode='TRAIN'):
             batch_gt_of_rois: (B, N, 8)
             batch_roi_iou: (B, N)
         """
-        print("roi_boxes3d: ", roi_boxes3d.shape)
-        print("gt_boxes3d: ", gt_boxes3d.shape)
 
         batch_size = roi_boxes3d.shape[0]
         
@@ -27,26 +25,20 @@ def get_proposal_target_func(cfg, mode='TRAIN'):
         batch_roi_iou = np.zeros((batch_size, cfg.RCNN.ROI_PER_IMAGE))
         for idx in range(batch_size):
             cur_roi, cur_gt = roi_boxes3d[idx], gt_boxes3d[idx]
-            #print("cur_gt: ", cur_gt.shape)
-            #k = cur_gt.__len__() - 1
             k = cur_gt.shape[0] - 1
             while cur_gt[k].sum() == 0:
                 k -= 1
             cur_gt = cur_gt[:k + 1]
-            #print("cur_gt: ", cur_gt.shape)
             # include gt boxes in the candidate rois
             iou3d = iou3d_utils.boxes_iou3d(cur_roi, cur_gt[:, 0:7])  # (M, N)
-            #print('iou3d', np.sum(np.abs(iou3d)))
             max_overlaps = np.max(iou3d, axis=1)
             gt_assignment = np.argmax(iou3d, axis=1)
-            #print('max_overlaps', np.sum(np.abs(max_overlaps)))
             # sample fg, easy_bg, hard_bg
             fg_thresh = min(cfg.RCNN.REG_FG_THRESH, cfg.RCNN.CLS_FG_THRESH)
             fg_inds = np.where(max_overlaps >= fg_thresh)[0].reshape(-1)
 
             # TODO: this will mix the fg and bg when CLS_BG_THRESH_LO < iou < CLS_BG_THRESH
             # fg_inds = torch.cat((fg_inds, roi_assignment), dim=0)  # consider the roi which has max_iou with gt as fg
-            #print('fg_inds', np.sum(np.abs(fg_inds)))
             easy_bg_inds = np.where(max_overlaps < cfg.RCNN.CLS_BG_THRESH_LO)[0].reshape(-1)
             hard_bg_inds = np.where((max_overlaps < cfg.RCNN.CLS_BG_THRESH) & (max_overlaps >= cfg.RCNN.CLS_BG_THRESH_LO))[0].reshape(-1)
 
@@ -83,32 +75,25 @@ def get_proposal_target_func(cfg, mode='TRAIN'):
                 import pdb
                 pdb.set_trace()
                 raise NotImplementedError
-            #print('fg_inds', np.sum(np.abs(fg_inds)))
-            #print('bg_inds', np.sum(np.abs(bg_inds)))
             # augment the rois by noise
             roi_list, roi_iou_list, roi_gt_list = [], [], []
             if fg_rois_per_this_image > 0:
                 fg_rois_src = cur_roi[fg_inds]
                 gt_of_fg_rois = cur_gt[gt_assignment[fg_inds]]
                 iou3d_src = max_overlaps[fg_inds]
-                #print('fg_rois_src', np.sum(np.abs(fg_rois_src)))
                 fg_rois, fg_iou3d = aug_roi_by_noise(
                     fg_rois_src, gt_of_fg_rois, iou3d_src, aug_times=cfg.RCNN.ROI_FG_AUG_TIMES)
-                #print('fg_rois', np.sum(np.abs(fg_rois)))
                 roi_list.append(fg_rois)
                 roi_iou_list.append(fg_iou3d)
                 roi_gt_list.append(gt_of_fg_rois)
 
             if bg_rois_per_this_image > 0:
-                #print('bg_inds', np.sum(np.abs(bg_inds)))
                 bg_rois_src = cur_roi[bg_inds]
                 gt_of_bg_rois = cur_gt[gt_assignment[bg_inds]]
                 iou3d_src = max_overlaps[bg_inds]
                 aug_times = 1 if cfg.RCNN.ROI_FG_AUG_TIMES > 0 else 0
-                #print('bg_rois_src', np.sum(np.abs(bg_rois_src)))
                 bg_rois, bg_iou3d = aug_roi_by_noise(
                     bg_rois_src, gt_of_bg_rois, iou3d_src, aug_times=aug_times)
-                #print('bg_rois', np.sum(np.abs(bg_rois)))
                 roi_list.append(bg_rois)
                 roi_iou_list.append(bg_iou3d)
                 roi_gt_list.append(gt_of_bg_rois)
@@ -128,7 +113,6 @@ def get_proposal_target_func(cfg, mode='TRAIN'):
         if hard_bg_inds.shape[0] > 0 and easy_bg_inds.shape[0] > 0:
             hard_bg_rois_num = int(bg_rois_per_this_image * cfg.RCNN.HARD_BG_RATIO)
             easy_bg_rois_num = bg_rois_per_this_image - hard_bg_rois_num
-            #print("sample_bg_inds branch 1: ",bg_rois_per_this_image, hard_bg_rois_num,easy_bg_rois_num)
             # sampling hard bg
             if CLOSE_RANDOM:
                 rand_idx = list(np.arange(0,hard_bg_inds.shape[0]))*hard_bg_rois_num
@@ -136,18 +120,13 @@ def get_proposal_target_func(cfg, mode='TRAIN'):
             else:
                 rand_idx = np.random.randint(low=0, high=hard_bg_inds.shape[0], size=(hard_bg_rois_num,))
             hard_bg_inds = hard_bg_inds[rand_idx]
-            #print("hard bg inds: ",np.sum(np.abs(hard_bg_inds)))
             # sampling easy bg
             if CLOSE_RANDOM:
                 rand_idx = list(np.arange(0,easy_bg_inds.shape[0]))*easy_bg_rois_num
                 rand_idx = rand_idx[:easy_bg_rois_num]
-                #print("no random: ", rand_idx)
             else:
                 rand_idx = np.random.randint(low=0, high=easy_bg_inds.shape[0], size=(easy_bg_rois_num,))
-                #print("random: ", rand_idx)
-            #print("easy bg inds: ",np.sum(np.abs(easy_bg_inds)))
             easy_bg_inds = easy_bg_inds[rand_idx]
-            #print("easy bg inds: ",np.sum(np.abs(easy_bg_inds)))
             bg_inds = np.concatenate([hard_bg_inds, easy_bg_inds], axis=0)
         elif hard_bg_inds.shape[0] > 0 and easy_bg_inds.shape[0] == 0:
             hard_bg_rois_num = bg_rois_per_this_image
@@ -298,50 +277,30 @@ def get_proposal_target_func(cfg, mode='TRAIN'):
         pts_depth = np.array(pts_depth)
         roi_boxes3d = np.array(roi_boxes3d)
         rpn_intensity = np.array(rpn_intensity)
-        #print(seg_mask.shape, features.shape, gt_boxes3d.shape, rpn_xyz.shape, pts_depth.shape, roi_boxes3d.shape, rpn_intensity.shape)
         batch_rois, batch_gt_of_rois, batch_roi_iou = sample_rois_for_rcnn(roi_boxes3d, gt_boxes3d)
-        #print('batch_rois', np.sum(np.abs(batch_rois)))
-        #print('batch_gt_of_rois', np.sum(np.abs(batch_gt_of_rois)))
-        #print('batch_roi_iou', np.sum(np.abs(batch_roi_iou)))
         
         if cfg.RCNN.USE_INTENSITY:
             pts_extra_input_list = [np.expand_dims(rpn_intensity, axis=2),
                                     np.expand_dims(seg_mask, axis=2)]
         else:
             pts_extra_input_list = [np.expand_dims(seg_mask, axis=2)]
-        #print(np.sum(np.abs(np.expand_dims(rpn_intensity, axis=2))))
-        #print(np.sum(np.abs(np.expand_dims(seg_mask, axis=2))))
 
         if cfg.RCNN.USE_DEPTH:
             pts_depth = pts_depth / 70.0 - 0.5
             pts_extra_input_list.append(np.expand_dims(pts_depth, axis=2))
-        #print(np.sum(np.abs(np.expand_dims(pts_depth, axis=2))))
         pts_extra_input = np.concatenate(pts_extra_input_list, axis=2)
-        #print("pts_extra_input: ", np.sum(np.abs(pts_extra_input)))
         
         # point cloud pooling
         pts_feature = np.concatenate((pts_extra_input, rpn_features), axis=2)
-        #print("rpn_xyz: ", np.sum(np.abs(rpn_xyz)), rpn_xyz.dtype)
-        #print("pts_featurs: ", np.sum(np.abs(pts_feature)), pts_feature.dtype)
-        #print("batch_rois: ", np.sum(np.abs(batch_rois)), batch_rois.dtype)
-        
-        #np.save("rpn_xyz.npy", rpn_xyz)
-        #np.save("pts_features.npy", pts_feature)
-        #np.save("batch_rois.npy", batch_rois)
         
         batch_rois = batch_rois.astype(np.float32)
-        #print(type(rpn_xyz), type(pts_feature), type(batch_rois)) 
-        #cfg.RCNN.POOL_EXTRA_WIDTH,
 
         pooled_features, pooled_empty_flag = roipool3d_utils.roipool3d_gpu(
             rpn_xyz, pts_feature, batch_rois, cfg.RCNN.POOL_EXTRA_WIDTH,
             sampled_pt_num=cfg.RCNN.NUM_POINTS
         )
 
-        #print("pooled_features", np.sum(np.abs(pooled_features)))
         sampled_pts, sampled_features = pooled_features[:, :, :, 0:3], pooled_features[:, :, :, 3:]
-        #print("sampled_pts: ",np.sum(np.abs(sampled_pts)))
-        #print("sampled_features: ", np.sum(np.abs(sampled_features)))
         # data augmentation
         if cfg.AUG_DATA:
             # data augmentation
@@ -367,11 +326,9 @@ def get_proposal_target_func(cfg, mode='TRAIN'):
     
         # classification label
         batch_cls_label = (batch_roi_iou > cfg.RCNN.CLS_FG_THRESH).astype(np.int64)
-        #print("batch_cls_label: ", np.sum(np.abs(batch_cls_label)))
         invalid_mask = (batch_roi_iou > cfg.RCNN.CLS_BG_THRESH) & (batch_roi_iou < cfg.RCNN.CLS_FG_THRESH)
         batch_cls_label[valid_mask == 0] = -1
         batch_cls_label[invalid_mask > 0] = -1
-        #print("batch_cls_label: ", np.sum(np.abs(batch_cls_label)))
 
         output_dict = {'sampled_pts': sampled_pts.reshape(-1, cfg.RCNN.NUM_POINTS, 3).astype(np.float32),
                        'pts_feature': sampled_features.reshape(-1, cfg.RCNN.NUM_POINTS, sampled_features.shape[3]).astype(np.float32),
@@ -381,10 +338,6 @@ def get_proposal_target_func(cfg, mode='TRAIN'):
                        'gt_iou': batch_roi_iou.reshape(-1).astype(np.float32),
                        'roi_boxes3d': batch_rois.reshape(-1, 7).astype(np.float32)}
         
-        #for k, v in output_dict.items():
-            #print(k,v)
-            #print(k, np.sum(np.abs(v)))
-
         return output_dict.values()
 
     return generate_proposal_target
@@ -402,7 +355,7 @@ if __name__ == "__main__":
     input_dict['pts_depth'] = np.load("models/rpn_data/pts_depth.npy")
     for k, v in input_dict.items():
         print(k, v.shape, np.sum(np.abs(v)))
-        # input_dict[k] = np.expand_dims(v, axis=0)
+        input_dict[k] = np.expand_dims(v, axis=0)
 
     from utils.config import cfg
     cfg.RPN.LOC_XZ_FINE = True
@@ -410,7 +363,6 @@ if __name__ == "__main__":
     cfg.RPN.NMS_TYPE = 'rotate'
 
     proposal_target_func = get_proposal_target_func(cfg)
-    #out_dict = proposal_target_func(input_dict)
     out_dict = proposal_target_func(input_dict['seg_mask'],input_dict['rpn_features'],input_dict['gt_boxes3d'],
                                     input_dict['rpn_xyz'],input_dict['pts_depth'],input_dict['roi_boxes3d'],input_dict['rpn_intensity'])
     for key in out_dict.keys():
