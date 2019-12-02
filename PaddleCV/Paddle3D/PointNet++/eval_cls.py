@@ -25,7 +25,7 @@ import paddle.fluid as fluid
 from models import *
 from data.data_utils import *
 from data.modelnet40_reader import ModelNet40ClsReader 
-from utils import check_gpu, parse_outputs, Stat 
+from utils import *
 
 logging.root.handlers = []
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -83,6 +83,7 @@ def parse_args():
 
 def eval():
     args = parse_args()
+    print_arguments(args)
     # check whether the installed paddle is compiled with GPU
     check_gpu(args.use_gpu)
 
