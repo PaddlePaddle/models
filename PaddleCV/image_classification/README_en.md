@@ -256,8 +256,6 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.80
 python -m paddle.distributed.launch train.py \
        --model=ShuffleNetV2_x0_25 \
        --batch_size=2048 \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
        --lr_strategy=cosine_decay_warmup \
        --num_epochs=240 \
        --lr=0.5 \
