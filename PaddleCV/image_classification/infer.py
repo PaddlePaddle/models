@@ -54,14 +54,17 @@ add_arg('use_se',           bool, True,                 "Whether to use Squeeze-
 
 
 def infer(args):
-    image_shape = args.image_shape
     model_list = [m for m in dir(models) if "__" not in m]
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
     assert os.path.isdir(args.pretrained_model
                          ), "please load right pretrained model path for infer"
+
+    assert args.image_shape[
+        1] <= args.resize_short_size, "Please check the args:image_shape and args:resize_short_size, The croped size(image_shape[1]) must smaller than or equal to the resized length(resize_short_size) "
+
     image = fluid.data(
-        name='image', shape=[None] + image_shape, dtype='float32')
+        name='image', shape=[None] + args.image_shape, dtype='float32')
 
     if args.model.startswith('EfficientNet'):
         model = models.__dict__[args.model](is_test=True,

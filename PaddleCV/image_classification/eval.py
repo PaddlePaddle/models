@@ -52,8 +52,6 @@ add_arg('use_se',           bool, True,                 "Whether to use Squeeze-
 
 
 def eval(args):
-    image_shape = args.image_shape
-
     model_list = [m for m in dir(models) if "__" not in m]
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
@@ -62,8 +60,11 @@ def eval(args):
     ), "{} doesn't exist, please load right pretrained model path for eval".format(
         args.pretrained_model)
 
+    assert args.image_shape[
+        1] <= args.resize_short_size, "Please check the args:image_shape and args:resize_short_size, The croped size(image_shape[1]) must smaller than or equal to the resized length(resize_short_size) "
+
     image = fluid.data(
-        name='image', shape=[None] + image_shape, dtype='float32')
+        name='image', shape=[None] + args.image_shape, dtype='float32')
     label = fluid.data(name='label', shape=[None, 1], dtype='int64')
 
     # model definition
