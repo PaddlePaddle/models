@@ -21,3 +21,4 @@ from . import retina_head
 from .rpn_head import *
 from .yolo_head import *
 from .retina_head import *
+from .rrpn_head import *

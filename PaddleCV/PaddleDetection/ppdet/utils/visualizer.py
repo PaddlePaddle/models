@@ -31,15 +31,18 @@ def visualize_results(image,
                       catid2name,
                       threshold=0.5,
                       bbox_results=None,
-                      mask_results=None):
+                      mask_results=None,
+                      mertic="COCO"):
     """
     Visualize bbox and mask results
     """
-    if mask_results:
-        image = draw_mask(image, im_id, mask_results, threshold)
-    if bbox_results:
-        image = draw_bbox(image, im_id, catid2name, bbox_results,
-                          threshold)
+    if mertic == "ICDAR":
+        image = draw_skew_box(image, im_id, catid2name, bbox_results, threshold)
+    else:
+        if mask_results:
+            image = draw_mask(image, im_id, mask_results, threshold)
+        if bbox_results:
+            image = draw_bbox(image, im_id, catid2name, bbox_results, threshold)
     return image
 
 
@@ -102,9 +105,36 @@ def draw_bbox(image, im_id, catid2name, bboxes, threshold):
         # draw label
         text = "{} {:.2f}".format(catid2name[catid], score)
         tw, th = draw.textsize(text)
-        draw.rectangle([(xmin + 1, ymin - th), 
-                       (xmin + tw + 1, ymin)],
-                       fill=color)
+        draw.rectangle(
+            [(xmin + 1, ymin - th), (xmin + tw + 1, ymin)], fill=color)
         draw.text((xmin + 1, ymin - th), text, fill=(255, 255, 255))
 
+    return image
+
+
+def draw_skew_box(image, im_id, catid2name, bboxes, threshold):
+    draw = ImageDraw.Draw(image)
+    catid2color = {}
+    color_list = colormap(rgb=True)[:40]
+    for dt in np.array(bboxes):
+        if im_id != dt['image_id']:
+            continue
+        catid, bbox, score = dt['category_id'], dt['bbox'], dt['score']
+        if score < threshold:
+            continue
+        x1, y1, x2, y2, x3, y3, x4, y4 = bbox
+
+        if catid not in catid2color:
+            idx = np.random.randint(len(color_list))
+            catid2color[catid] = color_list[idx]
+        color = tuple(catid2color[catid])
+        draw.line(
+            [(x1, y1), (x2, y2), (x3, y3), (x4, y4), (x1, y1)],
+            width=2,
+            fill=color)
+
+        text = "{} {:.2f}".format(catid2name[catid], score)
+        tw, th = draw.textsize(text)
+        draw.rectangle([(x1 + 1, y1 - th), (x1 + tw + 1, y1)], fill=color)
+        draw.text((x1 + 1, y1 - th), text, fill=(0, 255, 255))
     return image

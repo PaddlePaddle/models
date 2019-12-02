@@ -38,8 +38,9 @@ from __future__ import absolute_import
 from .dataset import Dataset
 from .reader import Reader
 import traceback
+print(traceback.extract_stack()[0][0])
 if traceback.extract_stack()[0][
-        0] == 'ppdet/data/tools/generate_data_for_training.py':
+        0] == './ppdet/data/tools/generate_data_for_training.py':
     __all__ = ['Dataset', 'Reader']
 else:
     from .data_feed import create_reader

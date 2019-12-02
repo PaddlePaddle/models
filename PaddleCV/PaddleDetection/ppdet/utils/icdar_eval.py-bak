@@ -1,0 +1,211 @@
+import numpy as np
+import cv2
+import Polygon as plg
+#from shapely.geometry import polygon as plg
+#from shapely.geometry import Point as pt
+
+#def polygon_from_points(points):
+#    """
+#    Returns a Polygon object to use with the Polygon2 class from a list of 8 points: x1,y1,x2,y2,x3,y3,x4,y4
+#    """
+#    resBoxes = np.empty([1, 8], dtype='int32')
+#    resBoxes[0, 0] = int(points[0])
+#    resBoxes[0, 4] = int(points[1])
+#    resBoxes[0, 1] = int(points[2])
+#    resBoxes[0, 5] = int(points[3])
+#    resBoxes[0, 2] = int(points[4])
+#    resBoxes[0, 6] = int(points[5])
+#    resBoxes[0, 3] = int(points[6])
+#    resBoxes[0, 7] = int(points[7])
+#    pointMat = resBoxes[0].reshape([2, 4]).T
+#    return plg.Polygon(pointMat)
+
+
+#def get_union(pD, pG):
+#    areaA = pD.area();
+#    areaB = pG.area();
+#    return areaA + areaB - get_intersection(pD, pG);
+#
+#def get_intersection_over_union(pD, pG):
+#    #try:
+#    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+#    print("get_intersection", get_intersection(pD, pG))
+#    print("get_union", get_union(pD, pG))
+#    return get_intersection(pD, pG) / get_union(pD, pG);
+#    #except:
+#    #    return 0
+#
+#def get_intersection(pD, pG):
+#    pInt = pD & pG
+#    #if len(pInt) == 0:
+#    #    return 0
+#    return pInt.area()
+
+import numpy as np
+
+
+def polygon_from_points(points):
+    """
+    Returns a Polygon object to use with the Polygon2 class from a list of 8 points: x1,y1,x2,y2,x3,y3,x4,y4
+    """
+    resBoxes = np.empty([1, 8], dtype='int32')
+    resBoxes[0, 0] = int(points[0])
+    resBoxes[0, 4] = int(points[1])
+    resBoxes[0, 1] = int(points[2])
+    resBoxes[0, 5] = int(points[3])
+    resBoxes[0, 2] = int(points[4])
+    resBoxes[0, 6] = int(points[5])
+    resBoxes[0, 3] = int(points[6])
+    resBoxes[0, 7] = int(points[7])
+    pointMat = resBoxes[0].reshape([2, 4]).T
+    return plg.Polygon(pointMat)
+
+
+def get_union(pD, pG):
+    areaA = pD.area();
+    areaB = pG.area();
+    return areaA + areaB - get_intersection(pD, pG);
+
+def get_intersection_over_union(pD, pG):
+    try:
+        return get_intersection(pD, pG) / get_union(pD, pG);
+    except:
+        return 0
+
+#def get_intersection(pD, pG):
+#    pInt = pD & pG
+#    if len(pInt) == 0:
+#        return 0
+#    return pInt.area()
+
+def get_intersection(pD,pG):
+    pInt = pD & pG
+    if len(pInt) == 0:
+        return 0
+    return pInt.area()
+
+
+def caluclate(result, thresh):
+
+
+    matchedSum = 0
+    numGlobalCareGt = 0
+    numGlobalCareDet = 0
+    for res in result:
+        im_info = res['im_info'][0]
+        h = im_info[0][0]
+        w = im_info[0][1]
+        gt_boxes = res['gt_box'][0]
+        #gt_boxes /= im_info[0][2]
+        pred_boxes = res['bbox'][0]
+        #print(im_info.shape)
+        pred_boxes = pred_boxes[np.where(pred_boxes[:, 1] > thresh)]
+        pred_boxes = pred_boxes[:, 2:]
+        pred_boxes /= im_info[0][2]
+        #pred_boxes = pred_boxes.reshape(-1, 4, 2) 
+        #pred_boxes[np.where(pred_boxes < 0)] = 1 
+        #pred_boxes[np.where(pred_boxes[:,0] > w), 0] = w - 1
+        #pred_boxes[np.where(pred_boxes[:,1] > h), 1] = h - 1
+        #pred_boxes = pred_boxes.reshape(-1, 8)
+        #print("im_info:", im_info[0][2])
+        #print("******************", pred_boxes)
+        is_difficult = res['is_difficult'][0]
+        #matchedSum = 0
+        #numGlobalCareGt = 0
+        #numGlobalCareDet = 0
+        detMatched = 0
+
+        iouMat = np.empty([1, 1])
+
+        gtPols = []
+        detPols = []
+
+        gtPolPoints = []
+        detPolPoints = []
+
+        # Array of Ground Truth Polygons' keys marked as don't Care
+        gtDontCarePolsNum = []
+        # Array of Detected Polygons' matched with a don't Care GT
+        detDontCarePolsNum = []
+
+        pairs = []
+        detMatchedNums = []
+
+        pointsList = list(gt_boxes)
+
+        donyCare = is_difficult.reshape(-1)
+        print(donyCare)
+        for i, points in enumerate(pointsList):
+            #x = points[0]
+            #y = points[1]
+            #w = points[2]
+            #h = points[3]
+            #angle = points[4]
+            #points = cv2.boxPoints(((x, y), (w, h), angle)).reshape(8).astype('int32')
+            gtPol = polygon_from_points(list(points))
+            gtPols.append(gtPol)
+            gtPolPoints.append(list(points))
+            if donyCare[i] == 1:
+                gtDontCarePolsNum.append(len(gtPols) - 1)
+        for i, points in enumerate(pred_boxes):
+            points = list(points.reshape(8).astype(np.int32))
+            detPol = polygon_from_points(points)
+            detPols.append(detPol)
+            detPolPoints.append(points)
+            if len(gtDontCarePolsNum) > 0:
+                for dontCarePol in gtDontCarePolsNum:
+                    #print("dontCarePol", dontCarePol)
+                    #print(gtPols)
+                    dontCarePol = gtPols[dontCarePol]
+                    #print(dontCarePol)
+                    intersected_area = get_intersection(dontCarePol, detPol)
+                    pdDimensions = detPol.area()
+                    #print("pdDimensions", pdDimensions, intersected_area)
+                    precision = 0 if pdDimensions == 0 else intersected_area / pdDimensions
+                    #print("precision:", precision)
+                    if (precision > 0.5):
+                        detDontCarePolsNum.append(len(detPols) - 1)
+                        break
+                #print(detDontCarePolsNum)
+        #print("len of gtPols", len(gtPols))
+        #print("len of detPols", len(detPols))
+        if len(gtPols) > 0 and len(detPols) > 0:
+            # Calculate IoU and precision matrixs
+            outputShape = [len(gtPols), len(detPols)]
+            iouMat = np.empty(outputShape)
+            gtRectMat = np.zeros(len(gtPols), np.int8)
+            detRectMat = np.zeros(len(detPols), np.int8)
+            for gtNum in range(len(gtPols)):
+                for detNum in range(len(detPols)):
+                    #print("###############")
+                    pG = gtPols[gtNum]
+                    pD = detPols[detNum]
+                    #print("get_intersection_over_union(pD, pG)", get_intersection_over_union(pD, pG))
+                    iouMat[gtNum, detNum] = get_intersection_over_union(pD, pG)
+
+            for gtNum in range(len(gtPols)):
+                for detNum in range(len(detPols)):
+                    if gtRectMat[gtNum] == 0 and detRectMat[
+                        detNum] == 0 and gtNum not in gtDontCarePolsNum and detNum not in detDontCarePolsNum:
+                        if iouMat[gtNum, detNum] > 0.5:
+                            gtRectMat[gtNum] = 1
+                            detRectMat[detNum] = 1
+                            detMatched += 1
+                            pairs.append({'gt': gtNum, 'det': detNum})
+                            detMatchedNums.append(detNum)
+        numGtCare = (len(gtPols) - len(gtDontCarePolsNum))
+        numDetCare = (len(detPols) - len(detDontCarePolsNum))
+
+        matchedSum += detMatched
+        numGlobalCareGt += numGtCare
+        numGlobalCareDet += numDetCare
+        print("matchedSum", matchedSum)
+        print("numGlobalCareGt", numGlobalCareGt)
+        print("numGlobalCareDet", numGlobalCareDet)
+    methodRecall = 0 if numGlobalCareGt == 0 else float(matchedSum) / numGlobalCareGt
+    methodPrecision = 0 if numGlobalCareDet == 0 else float(matchedSum) / numGlobalCareDet
+    methodHmean = 0 if methodRecall + methodPrecision == 0 else 2 * methodRecall * methodPrecision / (
+                methodRecall + methodPrecision)
+    print("recall", methodRecall)
+    print("precision", methodPrecision)
+    print("f1", methodHmean)

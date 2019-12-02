@@ -28,8 +28,9 @@ from ppdet.modeling.ops import MultiClassNMS
 from ppdet.modeling.ops import ConvNorm
 from ppdet.core.workspace import register, serializable
 from ppdet.experimental import mixed_precision_global_state
+from ppdet.modeling.custom.custom_op import *
 
-__all__ = ['BBoxHead', 'TwoFCHead', 'XConvNormHead']
+__all__ = ['BBoxHead', 'RBBoxHead', 'TwoFCHead', 'XConvNormHead']
 
 
 @register
@@ -48,6 +49,20 @@ class BoxCoder(object):
         self.code_type = code_type
         self.box_normalized = box_normalized
         self.axis = axis
+
+
+@register
+@serializable
+class RRPNBoxCoder(object):
+    __op__ = rrpn_box_coder
+    __append_doc__ = True
+
+    def __init__(self,
+                 prior_box_var=[10.0, 10.0, 5.0, 5.0, 1.0],
+                 code_type='decode_center_size'):
+        super(RRPNBoxCoder, self).__init__()
+        self.prior_box_var = prior_box_var
+        self.code_type = code_type
 
 
 @register
@@ -317,3 +332,209 @@ class BBoxHead(object):
             return {'bbox': cliped_box, 'score': cls_prob}
         pred_result = self.nms(bboxes=cliped_box, scores=cls_prob)
         return {'bbox': pred_result}
+
+
+@register
+class RBBoxHead(object):
+    """
+    RCNN bbox head
+    Args:
+        head (object): the head module instance, e.g., `ResNetC5`, `TwoFCHead`
+        box_coder (object): `BoxCoder` instance
+        nms (object): `MultiClassNMS` instance
+        num_classes: number of output classes
+    """
+    __inject__ = ['head', 'box_coder', 'nms']
+    __shared__ = ['num_classes']
+
+    def __init__(self,
+                 head,
+                 box_coder=RRPNBoxCoder().__dict__,
+                 nms=MultiClassNMS().__dict__,
+                 num_classes=2):
+        super(RBBoxHead, self).__init__()
+        self.head = head
+        self.num_classes = num_classes
+        self.box_coder = box_coder
+        self.nms = nms
+        if isinstance(box_coder, dict):
+            self.box_coder = RRPNBoxCoder(**box_coder)
+        if isinstance(nms, dict):
+            self.nms = MultiClassNMS(**nms)
+        self.head_feat = None
+
+    def get_head_feat(self, input=None):
+        """
+        Get the bbox head feature map.
+        """
+
+        if input is not None:
+            feat = self.head(input)
+            if isinstance(feat, OrderedDict):
+                feat = list(feat.values())[0]
+            self.head_feat = feat
+        return self.head_feat
+
+    def _get_output(self, roi_feat):
+        """
+        Get bbox head output.
+        Args:
+            roi_feat (Variable): RoI feature from RoIExtractor.
+        Returns:
+            cls_score(Variable): Output of rpn head with shape of
+                [N, num_anchors, H, W].
+            bbox_pred(Variable): Output of rpn head with shape of
+                [N, num_anchors * 4, H, W].
+        """
+        head_feat = self.get_head_feat(roi_feat)
+        # when ResNetC5 output a single feature map
+        if not isinstance(self.head, TwoFCHead) and not isinstance(
+                self.head, XConvNormHead):
+            head_feat = fluid.layers.pool2d(
+                head_feat, pool_type='avg', global_pooling=True)
+        cls_score = fluid.layers.fc(input=head_feat,
+                                    size=self.num_classes,
+                                    act=None,
+                                    name='cls_score',
+                                    param_attr=ParamAttr(
+                                        name='cls_score_w',
+                                        initializer=Normal(
+                                            loc=0.0, scale=0.01)),
+                                    bias_attr=ParamAttr(
+                                        name='cls_score_b',
+                                        learning_rate=2.,
+                                        regularizer=L2Decay(0.)))
+        bbox_pred = fluid.layers.fc(input=head_feat,
+                                    size=5 * self.num_classes,
+                                    act=None,
+                                    name='bbox_pred',
+                                    param_attr=ParamAttr(
+                                        name='bbox_pred_w',
+                                        initializer=Normal(
+                                            loc=0.0, scale=0.001)),
+                                    bias_attr=ParamAttr(
+                                        name='bbox_pred_b',
+                                        learning_rate=2.,
+                                        regularizer=L2Decay(0.)))
+        return cls_score, bbox_pred
+
+    def get_loss(self, roi_feat, labels_int32, bbox_targets,
+                 bbox_inside_weights, bbox_outside_weights):
+        """
+        Get bbox_head loss.
+        Args:
+            roi_feat (Variable): RoI feature from RoIExtractor.
+            labels_int32(Variable): Class label of a RoI with shape [P, 1].
+                P is the number of RoI.
+            bbox_targets(Variable): Box label of a RoI with shape
+                [P, 4 * class_nums].
+            bbox_inside_weights(Variable): Indicates whether a box should
+                contribute to loss. Same shape as bbox_targets.
+            bbox_outside_weights(Variable): Indicates whether a box should
+                contribute to loss. Same shape as bbox_targets.
+        Return:
+            Type: Dict
+                loss_cls(Variable): bbox_head loss.
+                loss_bbox(Variable): bbox_head loss.
+        """
+
+        cls_score, bbox_pred = self._get_output(roi_feat)
+
+        labels_int64 = fluid.layers.cast(x=labels_int32, dtype='int64')
+        labels_int64.stop_gradient = True
+        loss_cls = fluid.layers.softmax_with_cross_entropy(
+            logits=cls_score, label=labels_int64, numeric_stable_mode=True)
+        loss_cls = fluid.layers.reduce_mean(loss_cls)
+        loss_bbox = fluid.layers.smooth_l1(
+            x=bbox_pred,
+            y=bbox_targets,
+            inside_weight=bbox_inside_weights,
+            outside_weight=bbox_outside_weights,
+            sigma=1.0)
+        loss_bbox = fluid.layers.reduce_mean(loss_bbox)
+        return {'loss_cls': loss_cls, 'loss_bbox': loss_bbox}
+
+    def get_prediction(
+            self,
+            roi_feat,
+            rois,
+            im_info,
+            #im_shape,
+            return_box_score=False):
+        """
+        Get prediction bounding box in test stage.
+        Args:
+            roi_feat (Variable): RoI feature from RoIExtractor.
+            rois (Variable): Output of generate_proposals in rpn head.
+            im_info (Variable): A 2-D LoDTensor with shape [B, 3]. B is the
+                number of input images, each element consists of im_height,
+                im_width, im_scale.
+            im_shape (Variable): Actual shape of original image with shape
+                [B, 3]. B is the number of images, each element consists of
+                original_height, original_width, 1
+        Returns:
+            pred_result(Variable): Prediction result with shape [N, 6]. Each
+                row has 6 values: [label, confidence, xmin, ymin, xmax, ymax].
+                N is the total number of prediction.
+        """
+        cls_score, bbox_pred = self._get_output(roi_feat)
+
+        results = []
+        boxes = rois
+        cls_prob = fluid.layers.softmax(cls_score, use_cudnn=False)
+        bbox_pred = fluid.layers.reshape(bbox_pred, (-1, self.num_classes, 5))
+        for i in range(self.num_classes - 1):
+            bbox_pred_slice = fluid.layers.slice(
+                bbox_pred, axes=[1], starts=[i + 1], ends=[i + 2])
+            bbox_pred_reshape = fluid.layers.reshape(bbox_pred_slice, (-1, 5))
+            decoded_box = self.box_coder(prior_box=boxes, \
+                                         target_box=bbox_pred_reshape, \
+                                         prior_box_var=[10.0, 10.0, 5.0, 5.0, 1.0])
+            score_slice = fluid.layers.slice(
+                cls_prob, axes=[1], starts=[i + 1], ends=[i + 2])
+            score_slice = fluid.layers.reshape(score_slice, shape=[-1, 1])
+            box_positive = fluid.layers.reshape(decoded_box, shape=[-1, 8])
+            box_reshape = fluid.layers.reshape(x=box_positive, shape=[1, -1, 8])
+            score_reshape = fluid.layers.reshape(
+                x=score_slice, shape=[1, 1, -1])
+            #if return_box_score:
+            #    return {'bbox': cliped_box, 'score': cls_prob}
+            pred_result = self.nms(bboxes=box_reshape, scores=score_reshape)
+            result_shape = fluid.layers.shape(pred_result)
+            res_dimension = fluid.layers.slice(
+                result_shape, axes=[0], starts=[1], ends=[2])
+            res_dimension = fluid.layers.reshape(res_dimension, shape=[1, 1])
+            dimension = fluid.layers.fill_constant(
+                shape=[1, 1], value=2, dtype='int32')
+            cond = fluid.layers.less_than(dimension, res_dimension)
+            res = fluid.layers.create_global_var(
+                shape=[1, 10], value=0.0, dtype='float32', persistable=False)
+            with fluid.layers.control_flow.Switch() as switch:
+                with switch.case(cond):
+                    coordinate = fluid.layers.fill_constant(
+                        shape=[9], value=0.0, dtype='float32')
+                    pred_class = fluid.layers.fill_constant(
+                        shape=[1], value=i + 1, dtype='float32')
+                    add_class = fluid.layers.concat(
+                        [pred_class, coordinate], axis=0)
+                    normal_result = fluid.layers.elementwise_add(pred_result,
+                                                                 add_class)
+                    fluid.layers.assign(normal_result, res)
+                with switch.default():
+                    normal_result = fluid.layers.fill_constant(
+                        shape=[1, 10], value=-1.0, dtype='float32')
+                    fluid.layers.assign(normal_result, res)
+            results.append(res)
+        if len(results) == 1:
+            return {'bbox': results[0]}
+        outs = []
+        out = fluid.layers.concat(results)
+        zero = fluid.layers.fill_constant(
+            shape=[1, 1], value=0.0, dtype='float32')
+        out_split, _ = fluid.layers.split(out, dim=1, num_or_sections=[1, 9])
+        out_bool = fluid.layers.greater_than(out_split, zero)
+        idx = fluid.layers.where(out_bool)
+        idx_split, _ = fluid.layers.split(idx, dim=1, num_or_sections=[1, 1])
+        idx = fluid.layers.reshape(idx_split, [-1, 1])
+        result_gather = fluid.layers.gather(input=out, index=idx)
+        return {'bbox': result_gather}

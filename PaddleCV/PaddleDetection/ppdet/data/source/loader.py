@@ -87,7 +87,9 @@ def load(fname,
          with_background=True,
          with_cat2id=False,
          use_default_label=None,
-         cname2cid=None):
+         cname2cid=None,
+         multi_class=True,
+         eval_mode=False):
     """ Load data records from 'fnames'
 
     Args:
@@ -99,6 +101,8 @@ def load(fname,
         with_cat2id (bool): whether return cname2cid info out
         use_default_label (bool): whether use the default mapping of label to id
         cname2cid (dict): the mapping of category name to id
+        multi_class (bool): when the dataset is the icdar format, whether
+                                deal the multiple class
 
     Returns:
         list of loaded records whose structure is:
@@ -125,14 +129,32 @@ def load(fname,
         records = widerface_loader.load(fname, samples)
         return records
     elif os.path.isfile(fname):
-        from . import voc_loader
-        if use_default_label is None or cname2cid is not None:
-            records, cname2cid = voc_loader.get_roidb(fname, samples, cname2cid,
-                                                with_background=with_background)
+        if "icdar" in fname:
+            from . import icdar_loader
+            print("use_default_label", use_default_label)
+            if multi_class and (use_default_label is None or
+                                cname2cid is not None):
+                records, cname2cid = icdar_loader.load_roidb(
+                    fname, samples, cname2cid, with_background=with_background)
+            else:
+                records, cname2cid = icdar_loader.load(
+                    fname,
+                    samples,
+                    use_default_label,
+                    multi_class,
+                    with_background=with_background,
+                    eval_mode=eval_mode)
         else:
-            records, cname2cid = voc_loader.load(fname, samples,
-                                                 use_default_label,
-                                                 with_background=with_background)
+            from . import voc_loader
+            if use_default_label is None or cname2cid is not None:
+                records, cname2cid = voc_loader.get_roidb(
+                    fname, samples, cname2cid, with_background=with_background)
+            else:
+                records, cname2cid = voc_loader.load(
+                    fname,
+                    samples,
+                    use_default_label,
+                    with_background=with_background)
     else:
         raise ValueError('invalid file type when load data from file[%s]' %
                          (fname))

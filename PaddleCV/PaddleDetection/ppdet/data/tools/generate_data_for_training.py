@@ -118,7 +118,40 @@ def dump_voc_as_pickle(args):
     roidb_fname = save_dir + "/%s.roidb" % (dsname)
     with open(roidb_fname, "wb") as fout:
         pkl.dump((roidb, cat2id), fout)
-    anno_path = os.path.join(anno_path.split('/train.txt')[0], 'label_list.txt')
+    anno_path = os.path.join(os.path.dirname(anno_path), 'label_list.txt')
+    with open(anno_path, 'w') as fw:
+        for key in cat2id.keys():
+            fw.write(key + '\n')
+    logging.info('dumped %d samples to file[%s]' % (samples, roidb_fname))
+
+
+def dump_icdar_as_pickle(args):
+    """ Load ICDAR data, and then save it as pickled file.
+
+        Notes:
+            we assume label file of ICDAR contains lines
+            each of which corresponds to a txt file
+            that contains it's label info
+    """
+    samples = args.samples
+    save_dir = args.save_dir
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    save_dir = args.save_dir
+    anno_path = os.path.expanduser(args.annotation)
+    roidb, cat2id = loader.load(
+        anno_path,
+        samples,
+        with_cat2id=True,
+        use_default_label=None,
+        multi_class=True)
+    samples = len(roidb)
+    part = anno_path.split('/')
+    dsname = part[-2]
+    roidb_fname = save_dir + "/%s.roidb" % (dsname)
+    with open(roidb_fname, "wb") as fout:
+        pkl.dump((roidb, cat2id), fout)
+    anno_path = os.path.join(os.path.dirname(anno_path), 'label_list.txt')
     with open(anno_path, 'w') as fw:
         for key in cat2id.keys():
             fw.write(key + '\n')
@@ -142,6 +175,8 @@ if __name__ == "__main__":
     # COCO data are organized in json file
     elif args.type == 'json':
         dump_coco_as_pickle(args)
+    elif args.type == 'txt':
+        dump_icdar_as_pickle(args)
     else:
         TypeError('Can\'t deal with {} type. '\
             'Only xml or json file format supported'.format(args.type))

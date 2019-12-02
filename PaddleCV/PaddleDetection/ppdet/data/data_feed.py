@@ -27,10 +27,11 @@ from ppdet.data.reader import Reader
 from ppdet.data.transform.operators import (
     DecodeImage, MixupImage, NormalizeBox, NormalizeImage, RandomDistort,
     RandomFlipImage, RandomInterpImage, ResizeImage, ExpandImage, CropImage,
-    Permute, MultiscaleTestResize)
+    Permute, MultiscaleTestResize, RandomRotation)
 from ppdet.data.transform.arrange_sample import (
     ArrangeRCNN, ArrangeEvalRCNN, ArrangeTestRCNN, ArrangeSSD, ArrangeEvalSSD,
-    ArrangeTestSSD, ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO)
+    ArrangeTestSSD, ArrangeYOLO, ArrangeEvalYOLO, ArrangeTestYOLO, ArrangeRRPN,
+    ArrangeEvalRRPN, ArrangeTestRRPN)
 
 __all__ = [
     'PadBatch', 'MultiScale', 'RandomShape', 'PadMSTest', 'DataSet',
@@ -66,6 +67,8 @@ def _prepare_data_config(feed, args_path):
         'IS_SHUFFLE': feed.shuffle,
         'SAMPLES': feed.samples,
         'WITH_BACKGROUND': feed.with_background,
+        'MULTI_CLASS': feed.multi_class,
+        'EVAL_MODE': feed.eval_mode,
         'MIXUP_EPOCH': mixup_epoch,
         'TYPE': type(feed.dataset).__source__
     }
@@ -221,12 +224,14 @@ class DataSet(object):
                  annotation,
                  image_dir=None,
                  dataset_dir=None,
-                 use_default_label=None):
+                 use_default_label=None,
+                 eval=False):
         super(DataSet, self).__init__()
         self.dataset_dir = dataset_dir
         self.annotation = annotation
         self.image_dir = image_dir
         self.use_default_label = use_default_label
+        self.eval = eval
 
 
 COCO_DATASET_DIR = 'dataset/coco'
@@ -263,6 +268,30 @@ class VocDataSet(DataSet):
                  image_dir=VOC_IMAGE_DIR,
                  use_default_label=VOC_USE_DEFAULT_LABEL):
         super(VocDataSet, self).__init__(
+            dataset_dir=dataset_dir,
+            annotation=annotation,
+            image_dir=image_dir,
+            use_default_label=use_default_label)
+
+
+ICDAR_DATASET_DIR = 'dataset/voc'
+ICDAR_TRAIN_ANNOTATION = 'train_icdar.txt'
+ICDAR_VAL_ANNOTATION = 'val_icdar.txt'
+ICDAR_IMAGE_DIR = None
+ICDAR_USE_DEFAULT_LABEL = True
+# ICDAR_MULTI_CLASS = True
+
+
+@serializable
+class IcdarDataSet(DataSet):
+    __source__ = 'ICDARSource'
+
+    def __init__(self,
+                 dataset_dir=ICDAR_DATASET_DIR,
+                 annotation=ICDAR_TRAIN_ANNOTATION,
+                 image_dir=ICDAR_IMAGE_DIR,
+                 use_default_label=ICDAR_USE_DEFAULT_LABEL):
+        super(IcdarDataSet, self).__init__(
             dataset_dir=dataset_dir,
             annotation=annotation,
             image_dir=image_dir,
@@ -324,7 +353,9 @@ class DataFeed(object):
                  use_process=False,
                  memsize=None,
                  use_padded_im_info=False,
-                 class_aware_sampling=False):
+                 class_aware_sampling=False,
+                 multi_class=True,
+                 eval_mode=False):
         super(DataFeed, self).__init__()
         self.fields = fields
         self.image_shape = image_shape
@@ -342,6 +373,8 @@ class DataFeed(object):
         self.dataset = dataset
         self.use_padded_im_info = use_padded_im_info
         self.class_aware_sampling = class_aware_sampling
+        self.multi_class = multi_class
+        self.eval_mode = eval_mode
         if isinstance(dataset, dict):
             self.dataset = DataSet(**dataset)
 
@@ -365,7 +398,8 @@ class TrainFeed(DataFeed):
                  num_workers=2,
                  bufsize=10,
                  use_process=True,
-                 memsize=None):
+                 memsize=None,
+                 multi_class=True):
         super(TrainFeed, self).__init__(
             dataset,
             fields,
@@ -380,7 +414,8 @@ class TrainFeed(DataFeed):
             num_workers=num_workers,
             bufsize=bufsize,
             use_process=use_process,
-            memsize=memsize)
+            memsize=memsize,
+            multi_class=multi_class)
 
 
 @register
@@ -398,7 +433,9 @@ class EvalFeed(DataFeed):
                  samples=-1,
                  drop_last=False,
                  with_background=True,
-                 num_workers=2):
+                 num_workers=2,
+                 multi_class=True,
+                 eval_Mode=True):
         super(EvalFeed, self).__init__(
             dataset,
             fields,
@@ -410,7 +447,9 @@ class EvalFeed(DataFeed):
             samples=samples,
             drop_last=drop_last,
             with_background=with_background,
-            num_workers=num_workers)
+            num_workers=num_workers,
+            multi_class=multi_class,
+            eval_Mode=eval_Mode)
 
 
 @register
@@ -427,7 +466,8 @@ class TestFeed(DataFeed):
                  shuffle=False,
                  drop_last=False,
                  with_background=True,
-                 num_workers=2):
+                 num_workers=2,
+                 multi_class=True):
         super(TestFeed, self).__init__(
             dataset,
             fields,
@@ -438,7 +478,8 @@ class TestFeed(DataFeed):
             shuffle=shuffle,
             drop_last=drop_last,
             with_background=with_background,
-            num_workers=num_workers)
+            num_workers=num_workers,
+            multi_class=multi_class)
 
 
 # yapf: disable
@@ -452,7 +493,7 @@ class FasterRCNNTrainFeed(DataFeed):
                      'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
                      'is_crowd'
                  ],
-                 image_shape=[None, 3, None, None],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      RandomFlipImage(prob=0.5),
@@ -504,7 +545,7 @@ class FasterRCNNEvalFeed(DataFeed):
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape', 'gt_box',
                          'gt_label', 'is_difficult'],
-                 image_shape=[None, 3, None, None],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -551,7 +592,7 @@ class FasterRCNNTestFeed(DataFeed):
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[None, 3, None, None],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -598,7 +639,7 @@ class MaskRCNNTrainFeed(DataFeed):
                      'image', 'im_info', 'im_id', 'gt_box', 'gt_label',
                      'is_crowd', 'gt_mask'
                  ],
-                 image_shape=[None, 3, None, None],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      RandomFlipImage(prob=0.5, is_mask_flip=True),
@@ -644,7 +685,7 @@ class MaskRCNNEvalFeed(DataFeed):
                  dataset=CocoDataSet(COCO_VAL_ANNOTATION,
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[None, 3, None, None],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -696,7 +737,7 @@ class MaskRCNNTestFeed(DataFeed):
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_info', 'im_id', 'im_shape'],
-                 image_shape=[None, 3, None, None],
+                 image_shape=[3, 800, 1333],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      NormalizeImage(
@@ -740,7 +781,7 @@ class SSDTrainFeed(DataFeed):
     def __init__(self,
                  dataset=VocDataSet().__dict__,
                  fields=['image', 'gt_box', 'gt_label'],
-                 image_shape=[None, 3, 300, 300],
+                 image_shape=[3, 300, 300],
                  sample_transforms=[
                      DecodeImage(to_rgb=True, with_mixup=False),
                      NormalizeBox(),
@@ -799,7 +840,7 @@ class SSDEvalFeed(DataFeed):
             dataset=VocDataSet(VOC_VAL_ANNOTATION).__dict__,
             fields=['image', 'im_shape', 'im_id', 'gt_box',
                          'gt_label', 'is_difficult'],
-            image_shape=[None, 3, 300, 300],
+            image_shape=[3, 300, 300],
             sample_transforms=[
                 DecodeImage(to_rgb=True, with_mixup=False),
                 NormalizeBox(),
@@ -844,7 +885,7 @@ class SSDTestFeed(DataFeed):
     def __init__(self,
                  dataset=SimpleDataSet(VOC_VAL_ANNOTATION).__dict__,
                  fields=['image', 'im_id', 'im_shape'],
-                 image_shape=[None, 3, 300, 300],
+                 image_shape=[3, 300, 300],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      ResizeImage(target_size=300, use_cv2=False, interp=1),
@@ -890,7 +931,7 @@ class YoloTrainFeed(DataFeed):
     def __init__(self,
                  dataset=CocoDataSet().__dict__,
                  fields=['image', 'gt_box', 'gt_label', 'gt_score'],
-                 image_shape=[None, 3, 608, 608],
+                 image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True, with_mixup=True),
                      MixupImage(alpha=1.5, beta=1.5),
@@ -962,7 +1003,7 @@ class YoloEvalFeed(DataFeed):
                                      COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_size', 'im_id', 'gt_box',
                          'gt_label', 'is_difficult'],
-                 image_shape=[None, 3, 608, 608],
+                 image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      ResizeImage(target_size=608, interp=2),
@@ -1018,7 +1059,7 @@ class YoloTestFeed(DataFeed):
                  dataset=SimpleDataSet(COCO_VAL_ANNOTATION,
                                        COCO_VAL_IMAGE_DIR).__dict__,
                  fields=['image', 'im_size', 'im_id'],
-                 image_shape=[None, 3, 608, 608],
+                 image_shape=[3, 608, 608],
                  sample_transforms=[
                      DecodeImage(to_rgb=True),
                      ResizeImage(target_size=608, interp=2),
@@ -1065,3 +1106,160 @@ class YoloTestFeed(DataFeed):
                         target_size=self.image_shape[-1],
                         interp=trans.interp)
 # yapf: enable
+
+
+@register
+class RRPNTrainFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=IcdarDataSet().__dict__,
+                 fields=[
+                     'image', 'gt_box', 'gt_label', 'is_crowd', 'im_info',
+                     'im_id'
+                 ],
+                 image_shape=[3, 800, 1333],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=True), ResizeImage(
+                         target_size=800,
+                         max_size=1333,
+                         use_cv2=False,
+                         interp=2,
+                         resize_bbox=True), RandomRotation(prob=1.0), Permute(),
+                     NormalizeImage(
+                         mean=[102.9801, 115.9465, 122.7717],
+                         std=[1, 1, 1],
+                         is_scale=False)
+                 ],
+                 batch_transforms=[],
+                 batch_size=1,
+                 shuffle=True,
+                 multi_class=True,
+                 samples=-1,
+                 drop_last=True,
+                 num_workers=8,
+                 bufsize=10,
+                 use_process=True,
+                 memsize=None):
+        sample_transforms.append(ArrangeRRPN())
+        super(RRPNTrainFeed, self).__init__(
+            dataset,
+            fields,
+            image_shape,
+            sample_transforms,
+            batch_transforms,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            samples=samples,
+            drop_last=drop_last,
+            num_workers=num_workers,
+            bufsize=bufsize,
+            multi_class=multi_class,
+            use_process=use_process,
+            memsize=None)
+        self.mode = 'TRAIN'
+
+
+@register
+class RRPNEvalFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=IcdarDataSet().__dict__,
+                 fields=[
+                     'image', 'gt_box', 'gt_label', 'is_crowd', 'im_info',
+                     'im_id', 'is_difficult'
+                 ],
+                 image_shape=[3, 800, 1333],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=False), ResizeImage(
+                         target_size=800,
+                         max_size=1333,
+                         use_cv2=False,
+                         interp=2,
+                         resize_bbox=True,
+                         eval_mode=True), Permute(to_bgr=True), NormalizeImage(
+                             mean=[102.9801, 115.9465, 122.7717],
+                             std=[1, 1, 1],
+                             is_scale=False)
+                 ],
+                 batch_transforms=[],
+                 batch_size=1,
+                 shuffle=False,
+                 multi_class=True,
+                 samples=-1,
+                 drop_last=True,
+                 num_workers=8,
+                 bufsize=10,
+                 use_process=True,
+                 memsize=None,
+                 eval_mode=True):
+        sample_transforms.append(ArrangeEvalRRPN())
+        super(RRPNEvalFeed, self).__init__(
+            dataset,
+            fields,
+            image_shape,
+            sample_transforms,
+            batch_transforms,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            samples=samples,
+            drop_last=drop_last,
+            num_workers=num_workers,
+            bufsize=bufsize,
+            multi_class=multi_class,
+            use_process=use_process,
+            memsize=None,
+            eval_mode=eval_mode)
+        self.mode = 'VAL'
+
+
+@register
+class RRPNTestFeed(DataFeed):
+    __doc__ = DataFeed.__doc__
+
+    def __init__(self,
+                 dataset=SimpleDataSet(VOC_VAL_ANNOTATION).__dict__,
+                 fields=['image', 'im_info', 'im_id'],
+                 image_shape=[3, 800, 1333],
+                 sample_transforms=[
+                     DecodeImage(to_rgb=False), ResizeImage(
+                         target_size=800,
+                         max_size=1333,
+                         use_cv2=False,
+                         interp=2,
+                         resize_bbox=False), Permute(to_bgr=True),
+                     NormalizeImage(
+                         mean=[102.9801, 115.9465, 122.7717],
+                         std=[1, 1, 1],
+                         is_scale=False)
+                 ],
+                 batch_transforms=[],
+                 batch_size=1,
+                 shuffle=False,
+                 samples=-1,
+                 drop_last=False,
+                 multi_class=True,
+                 num_workers=8,
+                 bufsize=10,
+                 use_process=False,
+                 memsize=None):
+        sample_transforms.append(ArrangeTestRRPN())
+        if isinstance(dataset, dict):
+            dataset = SimpleDataSet(**dataset)
+        super(RRPNTestFeed, self).__init__(
+            dataset,
+            fields,
+            image_shape,
+            sample_transforms,
+            batch_transforms,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            samples=samples,
+            drop_last=drop_last,
+            num_workers=num_workers,
+            bufsize=bufsize,
+            multi_class=multi_class,
+            use_process=use_process,
+            memsize=memsize)
+        self.mode = 'TEST'

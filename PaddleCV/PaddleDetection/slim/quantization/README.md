@@ -235,11 +235,8 @@ FP32模型可使用PaddleLite进行加载预测，可参见教程[Paddle-Lite如
 |---|---|---|---|---|
 |baseline|- |76.2%|- |-|
 |abs_max|abs_max|- |- |-|
-|abs_max|moving_average_abs_max|74.48%|10.99|3348.68|
+|abs_max|moving_average_abs_max|- |- |-|
 |channel_wise_abs_max|abs_max|- |- |-|
-
-> 注： lite端运行手机信息：Android手机，
-型号：BKL-AL20，运行内存RAM：4GB 6GB，CPU核心数：八核 4*A73 2.36GHz+4*A53 1.8GHz，操作系统：EMUI 8.0，CPU品牌：麒麟970
 
 
 ## FAQ

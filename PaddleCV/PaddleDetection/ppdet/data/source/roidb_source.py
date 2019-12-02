@@ -42,7 +42,9 @@ class RoiDbSource(Dataset):
                  cname2cid=None,
                  use_default_label=None,
                  mixup_epoch=-1,
-                 with_background=True):
+                 with_background=True,
+                 multi_class=True,
+                 eval_mode=True):
         """ Init
 
         Args:
@@ -56,6 +58,8 @@ class RoiDbSource(Dataset):
             mixup_epoch (int): parse mixup in first n epoch
             with_background (bool): whether load background 
                                     as a class
+            multi_class (bool): when the dataset is the icdar format, whether
+                                deal the multiple class
         """
         super(RoiDbSource, self).__init__()
         self._epoch = -1
@@ -77,6 +81,8 @@ class RoiDbSource(Dataset):
         self._with_background = with_background
         self.cname2cid = cname2cid
         self._imid2path = None
+        self._multi_class = multi_class
+        self.eval_mode = eval_mode
 
     def __str__(self):
         return 'RoiDbSource(fname:%s,epoch:%d,size:%d,pos:%d)' \
@@ -115,7 +121,8 @@ class RoiDbSource(Dataset):
         from . import loader
         records, cname2cid = loader.load(self._fname, self._samples,
                                          self._with_background, True,
-                                         self.use_default_label, self.cname2cid)
+                                         self.use_default_label, self.cname2cid,
+                                         self._multi_class, self.eval_mode)
         self.cname2cid = cname2cid
         return records
 

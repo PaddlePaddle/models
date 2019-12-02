@@ -139,13 +139,15 @@ def main():
         checkpoint.load_params(exe, infer_prog, cfg.weights)
 
     # parse infer fetches
-    assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE'], \
+    assert cfg.metric in ['COCO', 'VOC', 'WIDERFACE', 'ICDAR'], \
             "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg['metric'] == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg['metric'] == 'VOC' or cfg['metric'] == 'WIDERFACE':
         extra_keys = ['im_id', 'im_shape']
+    if cfg['metric'] == 'ICDAR':
+        extra_keys = ['im_info', 'im_id']
     keys, values, _ = parse_fetches(test_fetches, infer_prog, extra_keys)
 
     # parse dataset category
@@ -155,7 +157,8 @@ def main():
         from ppdet.utils.voc_eval import bbox2out, get_category_info
     if cfg.metric == "WIDERFACE":
         from ppdet.utils.widerface_eval_utils import bbox2out, get_category_info
-
+    if cfg.metric == 'ICDAR':
+        from ppdet.utils.icdar_utils import bbox2out, get_category_info
     anno_file = getattr(test_feed.dataset, 'annotation', None)
     with_background = getattr(test_feed, 'with_background', True)
     use_default_label = getattr(test_feed, 'use_default_label', False)
@@ -191,6 +194,7 @@ def main():
         mask_results = None
         if 'bbox' in res:
             bbox_results = bbox2out([res], clsid2catid, is_bbox_normalized)
+            #bbox_results = res['bbox'][0]
         if 'mask' in res:
             mask_results = mask2out([res], clsid2catid,
                                     model.mask_head.resolution)
@@ -200,7 +204,12 @@ def main():
         for im_id in im_ids:
             image_path = imid2path[int(im_id)]
             image = Image.open(image_path).convert('RGB')
-
+            #            print(image_path)
+            #            f = open("result/res_" + image_path.split("/")[-1].split(".")[0] + ".txt", 'a')
+            #            for i in bbox_results:
+            #                if i[1] > 0.8:
+            #                    i[2:] = i[2:] / im_info[2]
+            #                    f.write(str(int(i[2])) + "," + str(int(i[3])) + "," + str(int(i[4])) + "," + str(int(i[5])) + "," + str(int(i[6])) + "," + str(int(i[7])) + "," + str(int(i[8])) + "," + str(int(i[9])) + "\n")
             # use tb-paddle to log original image           
             if FLAGS.use_tb:
                 original_image_np = np.array(image)
@@ -213,8 +222,7 @@ def main():
             image = visualize_results(image,
                                       int(im_id), catid2name,
                                       FLAGS.draw_threshold, bbox_results,
-                                      mask_results)
-
+                                      mask_results, cfg['metric'])
             # use tb-paddle to log image with bbox
             if FLAGS.use_tb:
                 infer_image_np = np.array(image)

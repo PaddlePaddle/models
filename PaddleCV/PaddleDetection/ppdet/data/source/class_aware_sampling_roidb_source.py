@@ -44,7 +44,9 @@ class ClassAwareSamplingRoiDbSource(RoiDbSource):
                  cname2cid=None,
                  use_default_label=None,
                  mixup_epoch=-1,
-                 with_background=True):
+                 with_background=True,
+                 multi_class=True,
+                 eval_mode=False):
         """ Init
 
         Args:
@@ -58,6 +60,8 @@ class ClassAwareSamplingRoiDbSource(RoiDbSource):
             mixup_epoch (int): parse mixup in first n epoch
             with_background (bool): whether load background 
                                     as a class
+            multi_class (bool): when the dataset is the icdar format, whether
+                                deal the multiple class
         """
         super(ClassAwareSamplingRoiDbSource, self).__init__(
             anno_file=anno_file,
@@ -68,7 +72,9 @@ class ClassAwareSamplingRoiDbSource(RoiDbSource):
             cname2cid=cname2cid,
             use_default_label=use_default_label,
             mixup_epoch=mixup_epoch,
-            with_background=with_background)
+            with_background=with_background,
+            multi_class=multi_class,
+            eval_mode=eval_mode)
         self._img_weights = None
 
     def __str__(self):
