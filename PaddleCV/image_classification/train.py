@@ -29,6 +29,9 @@ from utils import *
 import models
 from build_model import create_model
 
+from paddle.fluid.incubate.fleet.collective import fleet, DistributedStrategy  # new line 1
+from paddle.fluid.incubate.fleet.base import role_maker # new line 2
+
 
 def build_program(is_train, main_prog, startup_prog, args):
     """build program, and add grad op in program accroding to different mode
@@ -62,12 +65,24 @@ def build_program(is_train, main_prog, startup_prog, args):
             # add backward op in program
             if is_train:
                 optimizer = create_optimizer(args)
-                avg_cost = loss_out[0]
-                optimizer.minimize(avg_cost)
                 #XXX: fetch learning rate now, better implement is required here. 
                 global_lr = optimizer._global_learning_rate()
                 global_lr.persistable = True
                 loss_out.append(global_lr)
+                avg_cost = loss_out[0]
+
+                #################################
+                # configure DistributedStrategy #
+                #################################
+                dist_strategy = DistributedStrategy()
+                dist_strategy.nccl_comm_num = 2
+                exec_strategy = fluid.ExecutionStrategy()
+                exec_strategy.num_threads = 3
+                exec_strategy.num_iteration_per_drop_scope = 30
+                dist_strategy.exec_strategy = exec_strategy
+                dist_strategy.fuse_all_reduce_ops = True
+                optimizer = fleet.distributed_optimizer(optimizer, strategy=dist_strategy) # new line 5
+                optimizer.minimize(avg_cost)
                 if args.use_ema:
                     global_steps = fluid.layers.learning_rate_scheduler._decay_step_counter(
                     )
@@ -120,6 +135,9 @@ def train(args):
     Args:
         args: all arguments.    
     """
+    role = role_maker.PaddleCloudRoleMaker(is_collective=True) # new line 3
+    fleet.init(role) # new line 4
+
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     test_prog = fluid.Program()
@@ -176,8 +194,7 @@ def train(args):
         train_data_loader.set_sample_list_generator(train_reader, places)
         test_data_loader.set_sample_list_generator(test_reader, place)
 
-    compiled_train_prog = best_strategy_compiled(args, train_prog,
-                                                 train_fetch_vars[0], exe)
+    compiled_train_prog = fleet.main_program # change line 1
     #NOTE: this for benchmark
     total_batch_num = 0
     for pass_id in range(args.num_epochs):
