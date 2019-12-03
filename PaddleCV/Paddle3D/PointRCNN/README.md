@@ -10,7 +10,7 @@
 
 ## 简介
 
-[PointRCNN](https://arxiv.org/abs/1812.04244) 是 Shaoshuai Shi, Xiaogang Wang, Hongsheng Li. 等人提出的，第一个仅使用原始点云作为输入的两级3D目标检测器，以自下而上的方式直接从原始点云生成精确的定位框的方案，然后基于bin，在标准坐标系中对3D BBox回归损失进行细化。PointRCNN在KITTI数据集上进行评估，并在提交时所有已发布作品中的KITTI 3D目标检测排行榜上获得最佳性能。
+[PointRCNN](https://arxiv.org/abs/1812.04244) 是 Shaoshuai Shi, Xiaogang Wang, Hongsheng Li. 等人提出的，是第一个仅使用原始点云的2-stage(两阶段)3D目标检测器，第一阶段将 Pointnet++ with MSG（Multi-scale Grouping）作为backbone，直接将原始点云数据分割为前景点和背景点，并利用前景点生成bounding box。第二阶段在标准坐标系中对生成对bounding box进一步筛选和优化。该模型还提出了基于bin的方式，把回归问题转化为分类问题，验证了在三维边界框回归中的有效性。PointRCNN在KITTI数据集上进行评估，论文发布时在KITTI 3D目标检测排行榜上获得了最佳性能。
 
 网络结构如下所示：
 
@@ -36,7 +36,7 @@
 
 1. 下载[PaddlePaddle/models](https://github.com/PaddlePaddle/models)模型库
 
-`pts_utils`依赖`pybind11`编译，须下载`PaddleCV/PointRCNN`目录下包含的`pybind11`子库，使用`--recursive`命令触发子库下载。
+通过如下命令下载Paddle models模型库：
 
 ```
 git clone https://github.com/PaddlePaddle/models
@@ -66,7 +66,7 @@ sh build_and_install.sh
 pip install -r requirement.txt
 ```
 
-**注意：** KITTI mAP评估工具只能在python 3.6及以上版本中使用，且python3环境中需要安装`scikit-image`,`Numba`,`fire`等子库，通过如下命令安装。
+**注意：** KITTI mAP评估工具只能在python 3.6及以上版本中使用，且python3环境中需要安装`scikit-image`,`Numba`,`fire`等子库。
 `requirement.txt`中的`scikit-image`,`Numba`,`fire`即为KITTI mAP评估工具所需依赖库。
 
 ### 编译自定义OP
