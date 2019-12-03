@@ -26,7 +26,7 @@ import paddle.fluid as fluid
 
 from models.point_rcnn import PointRCNN
 from data.kitti_rcnn_reader import KittiRCNNReader
-from utils.run_utils import check_gpu, parse_outputs, Stat
+from utils.run_utils import *
 from utils.config import cfg, load_config, set_config_from_list
 from utils.metric_utils import calc_iou_recall, rpn_metric, rcnn_metric
 
@@ -110,6 +110,7 @@ def parse_args():
 
 def eval():
     args = parse_args()
+    print_arguments(args)
     # check whether the installed paddle is compiled with GPU
     # PointRCNN model can only run on GPU
     check_gpu(True)

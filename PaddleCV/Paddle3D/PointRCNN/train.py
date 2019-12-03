@@ -27,7 +27,7 @@ import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 
 from models.point_rcnn import PointRCNN
 from data.kitti_rcnn_reader import KittiRCNNReader
-from utils.run_utils import check_gpu, parse_outputs, Stat 
+from utils.run_utils import *
 from utils.config import cfg, load_config, set_config_from_list
 from utils.optimizer import optimize
 
@@ -115,6 +115,7 @@ def parse_args():
 
 def train():
     args = parse_args()
+    print_arguments(args)
     # check whether the installed paddle is compiled with GPU
     # PointRCNN model can only run on GPU
     check_gpu(True)

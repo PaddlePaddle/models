@@ -20,11 +20,12 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
+import six
 import logging
 import numpy as np
 import paddle.fluid as fluid
 
-__all__ = ["chech_gpu", "parse_outputs", "Stat"]
+__all__ = ["check_gpu",  "print_arguments", "parse_outputs", "Stat"]
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,27 @@ def check_gpu(use_gpu):
             sys.exit(1)
     except Exception as e:
         pass
+
+
+def print_arguments(args):
+    """Print argparse's arguments.
+
+    Usage:
+
+    .. code-block:: python
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("name", default="Jonh", type=str, help="User name.")
+        args = parser.parse_args()
+        print_arguments(args)
+
+    :param args: Input argparse.Namespace for printing.
+    :type args: argparse.Namespace
+    """
+    logger.info("-----------  Configuration Arguments -----------")
+    for arg, value in sorted(six.iteritems(vars(args))):
+        logger.info("%s: %s" % (arg, value))
+    logger.info("------------------------------------------------")
 
 
 def parse_outputs(outputs, filter_key=None, extra_keys=None, prog=None):

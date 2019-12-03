@@ -81,7 +81,7 @@ pip install -r requirement.txt
     sh make.sh
     ```
 
-    成功编译后，`exr_op/src` 目录下将会生成 `pointnet2_lib.so` 
+    成功编译后，`ext_op/src` 目录下将会生成 `pointnet2_lib.so` 
 
     执行下列操作，确保自定义算子编译正确：
 
@@ -94,12 +94,12 @@ pip install -r requirement.txt
     export PYTHONPATH=$PYTHONPATH:`pwd`
 
     # 运行单测 
-    python test/test_farthest_point_sampling_op.py
-    python test/test_gather_point_op.py
-    python test/test_group_points_op.py
-    python test/test_query_ball_op.py
-    python test/test_three_interp_op.py
-    python test/test_three_nn_op.py
+    python tests/test_farthest_point_sampling_op.py
+    python tests/test_gather_point_op.py
+    python tests/test_group_points_op.py
+    python tests/test_query_ball_op.py
+    python tests/test_three_interp_op.py
+    python tests/test_three_nn_op.py
     ```
     单测运行成功会输出提示信息，如下所示：
 
