@@ -295,7 +295,8 @@ class ImageNetReader:
                         np.random.RandomState(self.shuffle_seed).shuffle(
                             full_lines)
                     elif shuffle:
-                        np.random.shuffle(full_lines)
+                        if not settings.enable_ce:
+                            np.random.shuffle(full_lines)
 
                 batch_data = []
                 for line in full_lines:
