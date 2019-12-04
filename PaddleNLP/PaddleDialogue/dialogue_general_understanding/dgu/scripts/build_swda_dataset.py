@@ -69,7 +69,7 @@ class SWDA(object):
                     idx += 1
                     continue
                 out = self._parser_utterence(r)
-                fw.write("%s\n" % out)
+                fw.write(u"%s\n" % out)
 
     def _clean_text(self, text): 
         """
@@ -213,7 +213,7 @@ class SWDA(object):
         """
         fw = io.open(self.map_tag, 'w', encoding='utf8')
         for elem in self.map_tag_dict: 
-            fw.write("%s\t%s\n" % (elem, self.map_tag_dict[elem]))
+            fw.write(u"%s\t%s\n" % (elem, self.map_tag_dict[elem]))
 
     def main(self): 
         """

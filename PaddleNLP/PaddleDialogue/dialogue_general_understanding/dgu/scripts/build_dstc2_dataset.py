@@ -106,8 +106,8 @@ class DSTC2(object):
                 out = "%s\t%s\1%s\t%s" % (session_id, mach, user, labels_ids)
                 user_asr = log_turn['input']['live']['asr-hyps'][0]['asr-hyp'].strip()
                 out_asr = "%s\t%s\1%s\t%s" % (session_id, mach, user_asr, labels_ids)
-                fw.write("%s\n" % out.encode('utf8'))
-                fw_asr.write("%s\n" % out_asr.encode('utf8'))
+                fw.write(u"%s\n" % out.encode('utf8'))
+                fw_asr.write(u"%s\n" % out_asr.encode('utf8'))
 
     def get_train_dataset(self): 
         """
@@ -133,7 +133,7 @@ class DSTC2(object):
         """
         fw = io.open(self.map_tag, 'w', encoding="utf8")
         for elem in self.map_tag_dict: 
-            fw.write("%s\t%s\n" % (elem, self.map_tag_dict[elem]))
+            fw.write(u"%s\t%s\n" % (elem, self.map_tag_dict[elem]))
 
     def main(self): 
         """
