@@ -12,8 +12,6 @@ import argparse
 import numpy as np
 import paddle.fluid as fluid
 from task_reader.mrqa import DataProcessor, get_answers
-from bert_model import ModelBERT
-import mrc_model
 
 ema_decay = 0.9999
 verbose = False

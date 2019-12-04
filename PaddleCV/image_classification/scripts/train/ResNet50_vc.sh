@@ -9,9 +9,6 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.98
 python train.py \
   	    --model=ResNet50_vc \
 	    --batch_size=256 \
-            --total_images=1281167 \
-            --image_shape=3,224,224 \
-            --class_dim=1000 \
             --lr_strategy=cosine_decay \
             --lr=0.1 \
             --num_epochs=200 \

@@ -17,13 +17,14 @@ import sys
 
 num_classes = 400
 replace_space_by_underliner = True  # whether to replace space by '_' in labels
-
-fn = sys.argv[1]  #'trainlist_download400.txt'
 train_dir = sys.argv[
-    2]  #'/docker_mount/data/k400/Kinetics_trimmed_processed_train'
-val_dir = sys.argv[3]  #'/docker_mount/data/k400/Kinetics_trimmed_processed_val'
-trainlist = sys.argv[4]  #'trainlist.txt'
-vallist = sys.argv[5]  #'vallist.txt'
+    1]  #e.g., '/docker_mount/data/k400/Kinetics_trimmed_processed_train'
+val_dir = sys.argv[
+    2]  #e.g., '/docker_mount/data/k400/Kinetics_trimmed_processed_val'
+fn = 'kinetics-400_train.csv'  # this should be download first from ActivityNet
+trainlist = 'trainlist.txt'
+vallist = 'vallist.txt'
+testlist = 'testlist.txt'
 
 fl = open(fn).readlines()
 fl = [line.strip() for line in fl if line.strip() != '']
@@ -74,5 +75,26 @@ def generate_file(Faction_label_dict, Ftrain_dir, Ftrainlist, Fnum_classes):
     trainlist_outfile.close()
 
 
+###### generate file list for training
 generate_file(action_label_dict, train_dir, trainlist, num_classes)
+###### generate file list for validation
 generate_file(action_label_dict, val_dir, vallist, num_classes)
+
+###### generate file list for evaluation
+sampling_times = 10
+cropping_times = 3
+
+fl = open(vallist).readlines()
+fl = [line.strip() for line in fl if line.strip() != '']
+f_test = open(testlist, 'w')
+
+for i in range(len(fl)):
+    line = fl[i].split(' ')
+    fn = line[0]
+    label = line[1]
+    for j in range(sampling_times):
+        for k in range(cropping_times):
+            test_item = fn + ' ' + str(i) + ' ' + str(j) + ' ' + str(k) + '\n'
+            f_test.write(test_item)
+
+f_test.close()

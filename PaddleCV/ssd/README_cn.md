@@ -1,3 +1,5 @@
+**该项目已被迁移至[PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), 这个项目包含了更多的检测模型。**
+
 ## SSD 目标检测
 
 ## Table of Contents
@@ -18,6 +20,7 @@ SSD 目标检测模型
 
 SSD 可以方便地插入到任何一种标准卷积网络中，比如 VGG、ResNet 或者 MobileNet，这些网络被称作检测器的基网络。在这个示例中我们使用 [MobileNet](https://arxiv.org/abs/1704.04861)。
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122276)
 
 ### 数据准备
 
@@ -26,10 +29,10 @@ SSD 可以方便地插入到任何一种标准卷积网络中，比如 VGG、Res
 
 ```
 cd data/pascalvoc
-./download.sh
+python download.py
 ```
 
-`download.sh` 命令会自动创建训练和测试用的列表文件。
+`download.py` 脚本会自动创建训练和测试用的列表文件。
 
 
 ### 模型训练
@@ -38,9 +41,11 @@ cd data/pascalvoc
 
 我们提供了两个预训练模型。第一个模型是在 COCO 数据集上预训练的 MobileNet-v1 SSD，我们将它的预测头移除了以便在 COCO 以外的数据集上进行训练。第二个模型是在 ImageNet 2012 数据集上预训练的 MobileNet-v1，我们也将最后的全连接层移除以便进行目标检测训练。下载 MobileNet-v1 SSD:
 
-    ```
-    ./pretrained/download_coco.sh
-    ```
+```bash
+sh ./pretrained/download_coco.sh
+```
+
+**注意：** Windows用户可通过`./pretrained/download_coco.sh`中的链接直接下载和解压。
 
 声明：MobileNet-v1 SSD 模型转换自[TensorFlow model](https://github.com/tensorflow/models/blob/f87a58cd96d45de73c9a8330a06b2ab56749a7fa/research/object_detection/g3doc/detection_model_zoo.md)。MobileNet-v1 模型转换自[Caffe](https://github.com/shicai/MobileNet-Caffe)。
 

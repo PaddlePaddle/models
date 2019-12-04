@@ -22,9 +22,10 @@ import os
 import random
 import math
 import contextlib
-
+from distutils.dir_util import mkpath
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import paddle.fluid.framework as framework
 import paddle.fluid.profiler as profiler
 from paddle.fluid.executor import Executor
@@ -40,7 +41,7 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 from args import *
-from models.model_check import check_cuda
+from models.model_check import check_cuda, check_version
 from models.language_model import lm_model
 from config import RNNConfig
 import logging
@@ -50,9 +51,9 @@ SEED = 123
 
 
 @contextlib.contextmanager
-def profile_context(profile=True):
+def profile_context(profile=True, profiler_path='/tmp/paddingrnn.profile'):
     if profile:
-        with profiler.profiler('All', 'total', '/tmp/paddingrnn.profile'):
+        with profiler.profiler('All', 'total', profiler_path):
             yield
     else:
         yield
@@ -88,7 +89,10 @@ def save_para_npz(train_prog, train_exe):
 def main():
     args = parse_args()
 
+    # check if set use_gpu=True in paddlepaddle cpu version
     check_cuda(args.use_gpu)
+    # check if paddlepaddle version is satisfied
+    check_version()
 
     logger = logging.getLogger("lm")
     logger.setLevel(logging.INFO)
@@ -107,6 +111,9 @@ def main():
     logger.info('Running with args : {}'.format(args))
 
     config = RNNConfig(args)
+
+    if not os.path.exists(args.save_model_dir):
+        mkpath(args.save_model_dir)
 
     # define train program
     main_program = fluid.Program()
@@ -168,6 +175,15 @@ def main():
     exe = Executor(place)
     exe.run(startup_program)
 
+    if args.init_from_pretrain_model:
+        if not os.path.exists(args.init_from_pretrain_model + '.pdparams'):
+            print(args.init_from_pretrain_model)
+            raise Warning("The pretrained params do not exist.")
+            return
+        fluid.load(main_program, args.init_from_pretrain_model)
+        print("finish initing model from pretrained params from %s" %
+              (args.init_from_pretrain_model))
+
     device_count = len(fluid.cuda_places()) if args.use_gpu else len(
         fluid.cpu_places())
 
@@ -194,11 +210,12 @@ def main():
     train_data, valid_data, test_data = ptb_data
 
     def generate_init_data():
+        batch_size = config.batch_size * device_count
         init_hidden = np.zeros(
-            (config.num_layers, config.batch_size, config.hidden_size),
+            (batch_size, config.num_layers, config.hidden_size),
             dtype='float32')
         init_cell = np.zeros(
-            (config.num_layers, config.batch_size, config.hidden_size),
+            (batch_size, config.num_layers, config.hidden_size),
             dtype='float32')
         return init_hidden, init_cell
 
@@ -232,8 +249,8 @@ def main():
 
     def eval(data):
         # when eval the batch_size set to 1
-        eval_data_iter = reader.get_data_iter(data, config.batch_size,
-                                              config.num_steps)
+        eval_data_iter = reader.get_data_iter(data, config.batch_size *
+                                              device_count, config.num_steps)
         total_loss = 0.0
         iters = 0
         init_hidden, init_cell = generate_init_data()
@@ -265,8 +282,8 @@ def main():
     def train_an_epoch(epoch_id, batch_times):
         # get train epoch size
         log_interval = get_log_interval(len(train_data))
-        train_data_iter = reader.get_data_iter(train_data, config.batch_size,
-                                               config.num_steps)
+        train_data_iter = reader.get_data_iter(train_data, config.batch_size *
+                                               device_count, config.num_steps)
 
         total_loss = 0
         iters = 0
@@ -280,7 +297,6 @@ def main():
                 epoch_id=epoch_id,
                 with_lr=True,
                 device_count=device_count)
-
             batch_start_time = time.time()
             fetch_outs = exe.run(train_program,
                                  feed=input_data_feed,
@@ -296,7 +312,6 @@ def main():
             lr = np.array(fetch_outs[1])
             init_hidden = np.array(fetch_outs[2])
             init_cell = np.array(fetch_outs[3])
-
             total_loss += cost_train
             iters += config.num_steps
             if batch_id > 0 and batch_id % log_interval == 0:
@@ -304,7 +319,12 @@ def main():
                 print(
                     "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
                     % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
-
+            
+            # profiler tools for benchmark
+            if args.profile and batch_id == log_interval:
+                profiler.reset_profiler()
+            elif args.profile and batch_id == (log_interval + 5):
+                break
         ppl = np.exp(total_loss / iters)
         return ppl
 
@@ -358,6 +378,11 @@ def main():
                         % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
 
                 batch_id += 1
+                # profiler tools for benchmark
+                if args.profile and batch_id == log_interval:
+                    profiler.reset_profiler()
+                elif args.profile and batch_id == (log_interval + 5):
+                    break
         except fluid.core.EOFException:
             dataloader.reset()
 
@@ -369,7 +394,7 @@ def main():
         if args.use_dataloader:
 
             def data_gen():
-                data_iter_size = config.batch_size // device_count
+                data_iter_size = config.batch_size
                 train_batches = reader.get_data_iter(train_data, data_iter_size,
                                                      config.num_steps)
                 for batch in train_batches:
@@ -435,11 +460,14 @@ def main():
                         len(valid_data), config.batch_size, config.num_steps))
 
             save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
-            fluid.io.save_persistables(
-                executor=exe, dirname=save_model_dir, main_program=main_program)
+            if not os.path.exists(save_model_dir):
+                mkpath(save_model_dir)
+            save_model_dir = os.path.join(save_model_dir, 'params')
+
+            fluid.save(main_program, save_model_dir)
             print("Saved model to: %s.\n" % save_model_dir)
 
-    with profile_context(args.profile):
+    with profile_context(args.profile, args.profiler_path):
         train()
 
     test_ppl = eval(test_data)

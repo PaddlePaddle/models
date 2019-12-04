@@ -1,3 +1,5 @@
+**该项目已被迁移至[PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg), 这个项目包含了更多的分割模型。**
+
 DeepLab运行本目录下的程序示例需要使用PaddlePaddle Fluid v1.3.0版本或以上。如果您的PaddlePaddle安装版本低于此要求，请按照安装文档中的说明更新PaddlePaddle安装版本，如果使用GPU，该程序需要使用cuDNN v7版本。
 
 
@@ -17,6 +19,7 @@ DeepLabv3+ 是DeepLab语义分割系列网络的最新作，其前作有 DeepLab
 
 ![](./imgs/model.png)
 
+Python Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124366)
 
 ## 数据准备
 

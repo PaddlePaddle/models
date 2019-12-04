@@ -2,9 +2,6 @@
 python train.py \
             --model=DPN98 \
             --batch_size=256 \
-            --total_images=1281167 \
-            --image_shape=3,224,224 \
-            --class_dim=1000 \
             --lr_strategy=cosine_decay \
             --lr=0.1 \
             --num_epochs=200 \

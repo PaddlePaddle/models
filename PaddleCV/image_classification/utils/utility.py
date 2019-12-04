@@ -34,6 +34,7 @@ from paddle.fluid.framework import Program, program_guard, name_scope, default_m
 from paddle.fluid import unique_name, layers
 from utils import dist_utils
 
+
 def print_arguments(args):
     """Print argparse's arguments.
 
@@ -97,9 +98,9 @@ def parse_args():
     # SOLVER AND HYPERPARAMETERS
     add_arg('model',                    str,    "ResNet50",   "The name of network.")
     add_arg('total_images',             int,    1281167,                "The number of total training images.")
+    parser.add_argument('--image_shape', nargs='+', type=int, default=[3, 224, 224], help="The shape of image")
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
-    add_arg('image_shape',              str,    "3,224,224",            "The size of Input image, order: [channels, height, weidth] ")
     add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
     add_arg('test_batch_size',          int,    16,                     "Test batch size on a deveice.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
@@ -113,11 +114,11 @@ def parse_args():
     parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
 
     # READER AND PREPROCESS
+    add_arg('use_dali',                 bool,   False,                  "Whether to use nvidia DALI for preprocessing")
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
     add_arg('upper_ratio',              float,  4./3.,                  "The value of upper_ratio in ramdom_crop")
     add_arg('resize_short_size',        int,    256,                    "The value of resize_short_size")
-    add_arg('crop_size',                int,    224,                    "The value of crop size")
     add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
@@ -139,8 +140,15 @@ def parse_args():
     add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
-    # yapf: enable
+    add_arg('use_se',                   bool,   True,                   "Whether to use Squeeze-and-Excitation module for EfficientNet.")
+    #NOTE: args for profiler
+    add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
+    add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
+    add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
+    add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
 
+
+    # yapf: enable
     args = parser.parse_args()
 
     return args
@@ -166,6 +174,22 @@ def check_gpu():
         pass
 
 
+def check_version():
+    """
+    Log error and exit when the installed version of paddlepaddle is
+    not satisfied.
+    """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        print(err)
+        sys.exit(1)
+
+
 def check_args(args):
     """check arguments before running
 
@@ -182,7 +206,8 @@ def check_args(args):
 
     # check learning rate strategy
     lr_strategy_list = [
-        "piecewise_decay", "cosine_decay", "linear_decay", "cosine_decay_warmup", "exponential_decay_warmup"
+        "piecewise_decay", "cosine_decay", "linear_decay",
+        "cosine_decay_warmup", "exponential_decay_warmup"
     ]
     if args.lr_strategy not in lr_strategy_list:
         warnings.warn(
@@ -241,6 +266,7 @@ def check_args(args):
     #check gpu
 
     check_gpu()
+    check_version()
 
 
 def init_model(exe, args, program):
@@ -268,49 +294,54 @@ def save_model(args, exe, train_prog, info):
     print("Already save model in %s" % (model_path))
 
 
-def create_pyreader(is_train, args):
-    """create PyReader
+def create_data_loader(is_train, args):
+    """create data_loader
 
     Usage:
-        Using mixup process in training, it will return 5 results, include py_reader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include py_reader, image, and label.
+        Using mixup process in training, it will return 5 results, include data_loader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include data_loader, image, and label.
 
     Args: 
         is_train: mode
         args: arguments
 
     Returns:
-        py_reader and the input data of net, 
+        data_loader and the input data of net, 
     """
-    image_shape = [int(m) for m in args.image_shape.split(",")]
+    image_shape = args.image_shape
+    feed_image = fluid.data(
+        name="feed_image",
+        shape=[None] + image_shape,
+        dtype="float32",
+        lod_level=0)
 
-    feed_image = fluid.layers.data(
-        name="feed_image", shape=image_shape, dtype="float32", lod_level=0)
-
-    feed_label = fluid.layers.data(
-        name="feed_label", shape=[1], dtype="int64", lod_level=0)
-    feed_y_a = fluid.layers.data(
-        name="feed_y_a", shape=[1], dtype="int64", lod_level=0)
+    feed_label = fluid.data(
+        name="feed_label", shape=[None, 1], dtype="int64", lod_level=0)
+    feed_y_a = fluid.data(
+        name="feed_y_a", shape=[None, 1], dtype="int64", lod_level=0)
 
     if is_train and args.use_mixup:
-        feed_y_b = fluid.layers.data(
-            name="feed_y_b", shape=[1], dtype="int64", lod_level=0)
-        feed_lam = fluid.layers.data(
-            name="feed_lam", shape=[1], dtype="float32", lod_level=0)
+        feed_y_b = fluid.data(
+            name="feed_y_b", shape=[None, 1], dtype="int64", lod_level=0)
+        feed_lam = fluid.data(
+            name="feed_lam", shape=[None, 1], dtype="float32", lod_level=0)
 
-        py_reader = fluid.io.PyReader(
+        data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
             capacity=64,
             use_double_buffer=True,
-            iterable=False)
-        return py_reader, [feed_image, feed_y_a, feed_y_b, feed_lam]
+            iterable=True)
+        return data_loader, [feed_image, feed_y_a, feed_y_b, feed_lam]
     else:
-        py_reader = fluid.io.PyReader(
+        if args.use_dali:
+            return None, [feed_image, feed_label]
+
+        data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_label],
             capacity=64,
             use_double_buffer=True,
-            iterable=False)
+            iterable=True)
 
-        return py_reader, [feed_image, feed_label]
+        return data_loader, [feed_image, feed_label]
 
 
 def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
@@ -356,7 +387,6 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
 
     elif info_mode == "epoch":
         ## TODO add time elapse
-        #if isinstance(metrics,np.ndarray):
         if len(metrics) == 5:
             train_loss, _, test_loss, test_acc1, test_acc5 = metrics
             print(
@@ -385,11 +415,12 @@ def best_strategy_compiled(args, program, loss, exe):
         return program
     else:
         build_strategy = fluid.compiler.BuildStrategy()
-        #Feature will be supported in Fluid v1.6
-        #build_strategy.enable_inplace = True
 
         exec_strategy = fluid.ExecutionStrategy()
-        exec_strategy.num_threads = fluid.core.get_cuda_device_count()
+
+        if args.use_gpu:
+            exec_strategy.num_threads = fluid.core.get_cuda_device_count()
+
         exec_strategy.num_iteration_per_drop_scope = 10
 
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
@@ -408,8 +439,11 @@ def best_strategy_compiled(args, program, loss, exe):
 
 
 class ExponentialMovingAverage(object):
-
-    def __init__(self, decay=0.999, thres_steps=None, zero_debias=False, name=None):
+    def __init__(self,
+                 decay=0.999,
+                 thres_steps=None,
+                 zero_debias=False,
+                 name=None):
         self._decay = decay
         self._thres_steps = thres_steps
         self._name = name if name is not None else ''
@@ -429,7 +463,7 @@ class ExponentialMovingAverage(object):
         self._ema_vars = {}
         for param, tmp in self._params_tmps:
             with param.block.program._optimized_guard(
-                    [param, tmp]), name_scope('moving_average'):
+                [param, tmp]), name_scope('moving_average'):
                 self._ema_vars[param.name] = self._create_ema_vars(param)
 
         self.apply_program = Program()
@@ -499,14 +533,14 @@ class ExponentialMovingAverage(object):
         param_master_emas = []
         for param, tmp in self._params_tmps:
             with param.block.program._optimized_guard(
-                    [param, tmp]), name_scope('moving_average'):
+                [param, tmp]), name_scope('moving_average'):
                 param_ema = self._ema_vars[param.name]
                 if param.name + '.master' in self._ema_vars:
                     master_ema = self._ema_vars[param.name + '.master']
                     param_master_emas.append([param_ema, master_ema])
                 else:
                     ema_t = param_ema * self._decay_var + param * (
-                            1 - self._decay_var)
+                        1 - self._decay_var)
                     layers.assign(input=ema_t, output=param_ema)
 
         # for fp16 params

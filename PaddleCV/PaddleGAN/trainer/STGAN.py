@@ -17,10 +17,12 @@ from __future__ import print_function
 from network.STGAN_network import STGAN_model
 from util import utility
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import sys
 import time
 import copy
 import numpy as np
+import ast
 
 
 class GTrainer():
@@ -223,7 +225,7 @@ class STGAN(object):
             default=1024,
             help="the base fc dim in discriminator")
         parser.add_argument(
-            '--use_gru', type=bool, default=True, help="whether to use GRU")
+            '--use_gru', type=ast.literal_eval, default=True, help="whether to use GRU")
         parser.add_argument(
             '--lambda_cls',
             type=float,
@@ -282,18 +284,18 @@ class STGAN(object):
         self.batch_num = batch_num
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
+        data_shape = [None, 3, self.cfg.image_size, self.cfg.image_size]
 
         image_real = fluid.data(
             name='image_real', shape=data_shape, dtype='float32')
         label_org = fluid.data(
-            name='label_org', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_org', shape=[None, self.cfg.c_dim], dtype='float32')
         label_trg = fluid.data(
-            name='label_trg', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_trg', shape=[None, self.cfg.c_dim], dtype='float32')
         label_org_ = fluid.data(
-            name='label_org_', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_org_', shape=[None, self.cfg.c_dim], dtype='float32')
         label_trg_ = fluid.data(
-            name='label_trg_', shape=[-1, self.cfg.c_dim], dtype='float32')
+            name='label_trg_', shape=[None, self.cfg.c_dim], dtype='float32')
 
         test_gen_trainer = GTrainer(image_real, label_org, label_org_,
                                     label_trg, label_trg_, self.cfg,
@@ -340,9 +342,13 @@ class STGAN(object):
 
         t_time = 0
 
+        total_train_batch = 0  # used for benchmark
+
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for data in py_reader():
+                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter: # used for benchmark
+                    return
                 s_time = time.time()
                 # optimize the discriminator network
                 fetches = [
@@ -376,11 +382,17 @@ class STGAN(object):
                                                      d_loss_gp[0], batch_time))
                 sys.stdout.flush()
                 batch_id += 1
+                total_train_batch += 1  # used for benchmark
+                # profiler tools
+                if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
+                    profiler.reset_profiler()
+                elif self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq + 5:
+                    return
 
             if self.cfg.run_test:
                 image_name = fluid.data(
                     name='image_name',
-                    shape=[-1, self.cfg.n_samples],
+                    shape=[None, self.cfg.n_samples],
                     dtype='int32')
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[image_real, label_org, label_trg, image_name],

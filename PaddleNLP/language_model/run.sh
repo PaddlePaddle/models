@@ -7,6 +7,7 @@ function run_train() {
         --data_path data/simple-examples/data/ \
         --model_type small \
         --use_gpu True \
+        #--init_from_pretrain_model models/0/params
 }
 
 run_train

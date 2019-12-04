@@ -55,12 +55,12 @@ def infer(args):
     test_data = reader.Data(args.test_path, False)
     place = fluid.CUDAPlace(0) if args.use_cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
-    loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size, args.step, batch_size)
+    loss, acc, py_reader, feed_datas = network.network(items_num, args.hidden_size, args.step)
     exe.run(fluid.default_startup_program())
     infer_program = fluid.default_main_program().clone(for_test=True)
 
     for epoch_num in range(args.start_index, args.last_index + 1):
-        model_path = args.model_path + "epoch_" + str(epoch_num)
+        model_path = os.path.join(args.model_path,  "epoch_" + str(epoch_num))
         try:
             if not os.path.exists(model_path):
                 raise ValueError()

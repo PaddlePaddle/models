@@ -86,10 +86,10 @@ class DCGAN(object):
         self.train_reader = train_reader
 
     def build_model(self):
-        img = fluid.data(name='img', shape=[-1, 784], dtype='float32')
+        img = fluid.data(name='img', shape=[None, 784], dtype='float32')
         noise = fluid.data(
-            name='noise', shape=[-1, self.cfg.noise_size], dtype='float32')
-        label = fluid.data(name='label', shape=[-1, 1], dtype='float32')
+            name='noise', shape=[None, self.cfg.noise_size], dtype='float32')
+        label = fluid.data(name='label', shape=[None, 1], dtype='float32')
 
         g_trainer = GTrainer(noise, label, self.cfg)
         d_trainer = DTrainer(img, label, self.cfg)

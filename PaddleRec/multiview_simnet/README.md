@@ -3,6 +3,10 @@
 ## Introduction
 In personalized recommendation scenario, a user often is provided with several items from personalized interest matching model. In real world application, a user may have multiple views of features, say user-id, age, click-history of items, search queries. A item, e.g. news, may also have multiple views of features like news title, news category, images in news and so on. Multi-view Simnet is matching a model that combine users' and items' multiple views of features into one unified model. The model can be used in many industrial product like Baidu's feed news. The model is adapted from the paper A Multi-View Deep Learning(MV-DNN) Approach for Cross Domain User Modeling in Recommendation Systems, WWW 2015. The difference between our model and the MV-DNN is that we also consider multiple feature views of users.
 
+**Now all models in PaddleRec require PaddlePaddle version 1.6 or higher, or suitable develop version.**
+
+We also recommend users to take a look at the [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122294)
+
 ## Dataset
 Currently, synthetic dataset is provided for proof of concept and we aim to add more real world dataset in this project in the future. The result is inaccurate because of synthetic dataset.
 

@@ -1,3 +1,5 @@
+**This model has been moved to [PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), which includes more detection models.**
+
 ## SSD Object Detection
 
 ## Table of Contents
@@ -18,6 +20,7 @@ The Single Shot MultiBox Detector (SSD)
 
 SSD is readily pluggable into a wide variant standard convolutional network, such as VGG, ResNet, or MobileNet, which is also called base network or backbone. In this tutorial we used [MobileNet](https://arxiv.org/abs/1704.04861).
 
+We also recommend users to take a look at the  [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122276)
 
 ### Data Preparation
 
@@ -25,10 +28,10 @@ Please download [PASCAL VOC dataset](http://host.robots.ox.ac.uk/pascal/VOC/) at
 
 ```
 cd data/pascalvoc
-./download.sh
+python download.py
 ```
 
-The command `download.sh` also will create training and testing file lists.
+The script `download.py` will also create training and testing file lists.
 
 ### Train
 
@@ -36,9 +39,11 @@ The command `download.sh` also will create training and testing file lists.
 
 We provide two pre-trained models. The one is MobileNet-v1 SSD trained on COCO dataset, but removed the convolutional predictors for COCO dataset. This model can be used to initialize the models when training other datasets, like PASCAL VOC. The other pre-trained model is MobileNet-v1 trained on ImageNet 2012 dataset but removed the last weights and bias in the Fully-Connected layer. Download MobileNet-v1 SSD:
 
-    ```
-    ./pretrained/download_coco.sh
-    ```
+```bash
+sh ./pretrained/download_coco.sh
+```
+
+**NOTE:** Windows users can download weights from link in `./pretrained/download_coco.sh`.
 
 Declaration: the MobileNet-v1 SSD model is converted by [TensorFlow model](https://github.com/tensorflow/models/blob/f87a58cd96d45de73c9a8330a06b2ab56749a7fa/research/object_detection/g3doc/detection_model_zoo.md).
 

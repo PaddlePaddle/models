@@ -36,6 +36,7 @@ set_paddle_flags(
 )
 
 from paddle import fluid
+from paddle.fluid import profiler
 
 from ppdet.experimental import mixed_precision_context
 from ppdet.core.workspace import load_config, merge_config, create
@@ -73,11 +74,9 @@ def main():
         raise ValueError("'architecture' not specified in config file.")
 
     merge_config(FLAGS.opt)
+
     if 'log_iter' not in cfg:
         cfg.log_iter = 20
-
-    ignore_params = cfg.finetune_exclude_pretrained_params \
-                 if 'finetune_exclude_pretrained_params' in cfg else []
 
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
@@ -118,6 +117,12 @@ def main():
             model = create(main_arch)
             train_pyreader, feed_vars = create_feed(train_feed)
 
+            if FLAGS.fp16:
+                assert (getattr(model.backbone, 'norm_type', None)
+                        != 'affine_channel'), \
+                    '--fp16 currently does not support affine channel, ' \
+                    ' please modify backbone settings to use batch norm'
+
             with mixed_precision_context(FLAGS.loss_scale, FLAGS.fp16) as ctx:
                 train_fetches = model.train(feed_vars)
 
@@ -152,6 +157,8 @@ def main():
             extra_keys = ['im_info', 'im_id', 'im_shape']
         if cfg.metric == 'VOC':
             extra_keys = ['gt_box', 'gt_label', 'is_difficult']
+        if cfg.metric == 'WIDERFACE':
+            extra_keys = ['im_id', 'im_shape', 'gt_box']
         eval_keys, eval_values, eval_cls = parse_fetches(fetches, eval_prog,
                                                          extra_keys)
 
@@ -184,8 +191,11 @@ def main():
         compiled_eval_prog = fluid.compiler.CompiledProgram(eval_prog)
 
     fuse_bn = getattr(model.backbone, 'norm_type', None) == 'affine_channel'
-    start_iter = 0
 
+    ignore_params = cfg.finetune_exclude_pretrained_params \
+                 if 'finetune_exclude_pretrained_params' in cfg else []
+
+    start_iter = 0
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
         start_iter = checkpoint.global_step()
@@ -215,7 +225,7 @@ def main():
 
     cfg_name = os.path.basename(FLAGS.config).split('.')[0]
     save_dir = os.path.join(cfg.save_dir, cfg_name)
-    time_stat = deque(maxlen=cfg.log_iter)
+    time_stat = deque(maxlen=cfg.log_smooth_window)
     best_box_ap_list = [0.0, 0]  #[map, iter]
 
     # use tb-paddle to log data
@@ -248,6 +258,13 @@ def main():
             strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
                 it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
+
+        # profiler tools, used for benchmark
+        if FLAGS.is_profiler and it == 5:
+            profiler.start_profiler("All")
+        elif FLAGS.is_profiler and it == 10:
+            profiler.stop_profiler("total", FLAGS.profiler_path)
+            return
 
         if (it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1) \
            and (not FLAGS.dist or trainer_id == 0):
@@ -325,5 +342,17 @@ if __name__ == '__main__':
         type=str,
         default="tb_log_dir/scalar",
         help='Tensorboard logging directory for scalar.')
+
+    #NOTE:args for profiler tools, used for benchmark
+    parser.add_argument(
+        '--is_profiler',
+        type=int,
+        default=0,
+        help='The switch of profiler tools. (used for benchmark)')
+    parser.add_argument(
+        '--profiler_path',
+        type=str,
+        default="./",
+        help='The profiler output file path. (used for benchmark)')
     FLAGS = parser.parse_args()
     main()

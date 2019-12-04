@@ -37,7 +37,6 @@ add_arg('data_dir',         str,  "./data/ILSVRC2012/", "The ImageNet datset")
 add_arg('batch_size',       int,  256,                  "Minibatch size.")
 add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                 "Class number.")
-add_arg('image_shape',      str,  "3,224,224",          "Input image size")
 parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
 add_arg('model',            str,  "ResNet50", "Set the network to use.")
 add_arg('resize_short_size', int, 256,                  "Set resize short size")
@@ -45,15 +44,14 @@ add_arg('reader_thread',    int,  8,                    "The number of multi thr
 add_arg('reader_buf_size',  int,  2048,                 "The buf size of multi thread reader")
 parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
 parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
-add_arg('crop_size',        int,  224,                  "The value of crop size")
+parser.add_argument('--image_shape', nargs="+",  type=int, default=[3,224,224], help=" The shape of image")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
+add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
 # yapf: enable
 
 
 def eval(args):
-    image_shape = [int(m) for m in args.image_shape.split(",")]
-
     model_list = [m for m in dir(models) if "__" not in m]
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
@@ -62,12 +60,18 @@ def eval(args):
     ), "{} doesn't exist, please load right pretrained model path for eval".format(
         args.pretrained_model)
 
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+    assert args.image_shape[
+        1] <= args.resize_short_size, "Please check the args:image_shape and args:resize_short_size, The croped size(image_shape[1]) must smaller than or equal to the resized length(resize_short_size) "
+
+    image = fluid.data(
+        name='image', shape=[None] + args.image_shape, dtype='float32')
+    label = fluid.data(name='label', shape=[None, 1], dtype='int64')
 
     # model definition
     if args.model.startswith('EfficientNet'):
-        model = models.__dict__[args.model](is_test=True, padding_type=args.padding_type)
+        model = models.__dict__[args.model](is_test=True,
+                                            padding_type=args.padding_type,
+                                            use_se=args.use_se)
     else:
         model = models.__dict__[args.model]()
 
@@ -142,6 +146,7 @@ def main():
     args = parser.parse_args()
     print_arguments(args)
     check_gpu()
+    check_version()
     eval(args)
 
 

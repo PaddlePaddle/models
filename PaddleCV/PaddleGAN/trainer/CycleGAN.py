@@ -229,7 +229,7 @@ class CycleGAN(object):
         self.B_id2name = B_id2name
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.crop_size, self.cfg.crop_size]
+        data_shape = [None, 3, self.cfg.crop_size, self.cfg.crop_size]
 
         input_A = fluid.data(name='input_A', shape=data_shape, dtype='float32')
         input_B = fluid.data(name='input_B', shape=data_shape, dtype='float32')
@@ -347,9 +347,9 @@ class CycleGAN(object):
 
             if self.cfg.run_test:
                 A_image_name = fluid.data(
-                    name='A_image_name', shape=[-1, 1], dtype='int32')
+                    name='A_image_name', shape=[None, 1], dtype='int32')
                 B_image_name = fluid.data(
-                    name='B_image_name', shape=[-1, 1], dtype='int32')
+                    name='B_image_name', shape=[None, 1], dtype='int32')
                 A_test_py_reader = fluid.io.PyReader(
                     feed_list=[input_A, A_image_name],
                     capacity=4,

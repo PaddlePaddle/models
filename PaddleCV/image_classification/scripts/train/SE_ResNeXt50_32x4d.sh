@@ -10,9 +10,6 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.98
 python train.py \
        --model=SE_ResNeXt50_32x4d \
        --batch_size=400 \
-       --total_images=1281167 \
-	--class_dim=1000 \
-       --image_shape=3,224,224 \
        --lr_strategy=cosine_decay \
        --model_save_dir=output/ \
        --lr=0.1 \

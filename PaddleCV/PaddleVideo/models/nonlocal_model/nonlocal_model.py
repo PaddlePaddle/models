@@ -18,7 +18,7 @@ import paddle.fluid as fluid
 
 from ..model import ModelBase
 from . import resnet_video
-from .nonlocal_utils import load_params_from_file
+from .nonlocal_utils import load_pretrain_params_from_file, load_weights_params_from_file
 
 import logging
 logger = logging.getLogger(__name__)
@@ -39,26 +39,28 @@ class NonLocal(ModelBase):
         # crop size
         self.crop_size = self.get_config_from_sec(self.mode, 'crop_size')
 
-    def build_input(self, use_pyreader=True):
-        input_shape = [3, self.video_length, self.crop_size, self.crop_size]
-        label_shape = [1]
+    def build_input(self, use_dataloader=True):
+        input_shape = [
+            None, 3, self.video_length, self.crop_size, self.crop_size
+        ]
+        label_shape = [None, 1]
 
-        data = fluid.layers.data(
+        data = fluid.data(
             name='train_data' if self.is_training else 'test_data',
             shape=input_shape,
             dtype='float32')
         if self.mode != 'infer':
-            label = fluid.layers.data(
+            label = fluid.data(
                 name='train_label' if self.is_training else 'test_label',
                 shape=label_shape,
                 dtype='int64')
         else:
             label = None
 
-        if use_pyreader:
+        if use_dataloader:
             assert self.mode != 'infer', \
-                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            self.py_reader = fluid.io.PyReader(
+                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
                 feed_list=[data, label], capacity=4, iterable=True)
 
         self.feature_input = [data]
@@ -140,20 +142,10 @@ class NonLocal(ModelBase):
         )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
-        load_params_from_file(exe, prog, pretrain, place)
+        load_pretrain_params_from_file(exe, prog, pretrain, place)
 
     def load_test_weights(self, exe, weights, prog, place):
-        super(NonLocal, self).load_test_weights(exe, weights, prog, place)
-        pred_w = fluid.global_scope().find_var('pred_w').get_tensor()
-        pred_array = np.array(pred_w)
-        pred_w_shape = pred_array.shape
-        if len(pred_w_shape) == 2:
-            logger.info('reshape for pred_w when test')
-            pred_array = np.transpose(pred_array, (1, 0))
-            pred_w_shape = pred_array.shape
-            pred_array = np.reshape(
-                pred_array, [pred_w_shape[0], pred_w_shape[1], 1, 1, 1])
-            pred_w.set(pred_array.astype('float32'), place)
+        load_weights_params_from_file(exe, prog, weights, place)
 
 
 def get_learning_rate_decay_list(base_learning_rate, lr_decay, step_lists):

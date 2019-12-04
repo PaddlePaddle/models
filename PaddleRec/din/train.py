@@ -78,7 +78,7 @@ def train():
                                                  args.num_devices)
     logger.info("reading data completes")
 
-    avg_cost, pred = network.network(item_count, cat_count)
+    avg_cost, pred = network.network(item_count, cat_count, max_len)
     fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(
         clip_norm=5.0))
     base_lr = args.base_lr
@@ -136,8 +136,8 @@ def train():
 
                 if (global_step > 400000 and global_step % PRINT_STEP == 0) or (
                         global_step <= 400000 and global_step % 50000 == 0):
-                    save_dir = args.model_dir + "/global_step_" + str(
-                        global_step)
+                    save_dir = os.path.join(args.model_dir, "global_step_" + str(
+                        global_step))
                     feed_var_name = [
                         "hist_item_seq", "hist_cat_seq", "target_item",
                         "target_cat", "label", "mask", "target_item_seq",
