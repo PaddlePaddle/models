@@ -14,8 +14,8 @@
 
 from . import indoor3d_reader
 from . import modelnet40_reader
-from indoor3d_reader import *
-from modelnet40_reader import *
+from .indoor3d_reader import *
+from .modelnet40_reader import *
 
 __all__ = indoor3d_reader.__all__
 __all__ += modelnet40_reader.__all__

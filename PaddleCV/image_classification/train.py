@@ -17,25 +17,10 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import numpy as np
 import time
 import sys
 
-
-def set_paddle_flags(flags):
-    for key, value in flags.items():
-        if os.environ.get(key, None) is None:
-            os.environ[key] = str(value)
-
-
-# NOTE(paddle-dev): All of these flags should be
-# set before `import paddle`. Otherwise, it would
-# not take any effect. 
-set_paddle_flags({
-    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
-    'FLAGS_fraction_of_gpu_memory_to_use': 0.98
-})
-
+import numpy as np
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid import profiler
@@ -48,8 +33,8 @@ from build_model import create_model
 def build_program(is_train, main_prog, startup_prog, args):
     """build program, and add grad op in program accroding to different mode
 
-    Args:
-        is_train: mode: train or test
+    Parameters:
+        is_train: indicate train mode or test mode
         main_prog: main program
         startup_prog: strartup program
         args: arguments
@@ -59,11 +44,10 @@ def build_program(is_train, main_prog, startup_prog, args):
         test mode: [Loss, data_loader]
     """
     if args.model.startswith('EfficientNet'):
-        is_test = False if is_train else True
         override_params = {"drop_connect_rate": args.drop_connect_rate}
         padding_type = args.padding_type
         use_se = args.use_se
-        model = models.__dict__[args.model](is_test=is_test,
+        model = models.__dict__[args.model](is_test=not is_train,
                                             override_params=override_params,
                                             padding_type=padding_type,
                                             use_se=use_se)
@@ -94,6 +78,7 @@ def build_program(is_train, main_prog, startup_prog, args):
             loss_out.append(data_loader)
     return loss_out
 
+
 def validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
              train_batch_metrics_record):
     test_batch_time_record = []
@@ -108,8 +93,7 @@ def validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
         test_batch_elapse = t2 - t1
         test_batch_time_record.append(test_batch_elapse)
 
-        test_batch_metrics_avg = np.mean(
-            np.array(test_batch_metrics), axis=1)
+        test_batch_metrics_avg = np.mean(np.array(test_batch_metrics), axis=1)
         test_batch_metrics_record.append(test_batch_metrics_avg)
 
         print_info(pass_id, test_batch_id, args.print_step,
@@ -194,9 +178,12 @@ def train(args):
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
                                                  train_fetch_vars[0], exe)
+    #NOTE: this for benchmark
+    total_batch_num = 0
     for pass_id in range(args.num_epochs):
         if num_trainers > 1 and not args.use_dali:
-            imagenet_reader.set_shuffle_seed(pass_id + (args.random_seed if args.random_seed else 0))
+            imagenet_reader.set_shuffle_seed(pass_id + (
+                args.random_seed if args.random_seed else 0))
         train_batch_id = 0
         train_batch_time_record = []
         train_batch_metrics_record = []
@@ -207,6 +194,9 @@ def train(args):
 
         t1 = time.time()
         for batch in train_iter:
+            #NOTE: this is for benchmark
+            if args.max_iter and total_batch_num == args.max_iter:
+                return
             train_batch_metrics = exe.run(compiled_train_prog,
                                           feed=batch,
                                           fetch_list=train_fetch_list)
@@ -222,6 +212,13 @@ def train(args):
                 sys.stdout.flush()
             train_batch_id += 1
             t1 = time.time()
+            #NOTE: this for benchmark profiler
+            total_batch_num = total_batch_num + 1
+            if args.is_profiler and pass_id == 0 and train_batch_id == args.print_step:
+                profiler.start_profiler("All")
+            elif args.is_profiler and pass_id == 0 and train_batch_id == args.print_step + 5:
+                profiler.stop_profiler("total", args.profiler_path)
+                return
 
         if args.use_dali:
             train_iter.reset()
@@ -230,16 +227,19 @@ def train(args):
             if args.use_ema:
                 print('ExponentialMovingAverage validate start...')
                 with ema.apply(exe):
-                    validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
+                    validate(args, test_iter, exe, test_prog, test_fetch_list,
+                             pass_id, train_batch_metrics_record)
                 print('ExponentialMovingAverage validate over!')
 
-            validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
+            validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
+                     train_batch_metrics_record)
             #For now, save model per epoch.
             if pass_id % args.save_step == 0:
                 save_model(args, exe, train_prog, pass_id)
 
             if args.use_dali:
                 test_iter.reset()
+
 
 def main():
     args = parse_args()

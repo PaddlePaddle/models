@@ -24,12 +24,14 @@ import paddle.fluid as fluid
 
 from models import *
 from data.indoor3d_reader import Indoor3DReader
-from utils import check_gpu, parse_outputs, Stat 
+from utils import *
 
 logging.root.handlers = []
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
 logger = logging.getLogger(__name__)
+
+np.random.seed(1024)
 
 
 def parse_args():
@@ -80,6 +82,7 @@ def parse_args():
 
 def eval():
     args = parse_args()
+    print_arguments(args)
     # check whether the installed paddle is compiled with GPU
     check_gpu(args.use_gpu)
 

@@ -98,7 +98,7 @@ class PointNet2SemSeg(object):
         self.acc1 = fluid.layers.accuracy(pred, label, k=1)
 
     def get_feeds(self):
-	return self.feed_vars
+        return self.feed_vars
 
     def get_outputs(self):
         return {"loss": self.loss, "accuracy": self.acc1}

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import paddle.fluid as fluid
-import paddle.fluid.layers.nn as nn
 import paddle.fluid.layers.tensor as tensor
 import paddle.fluid.layers.control_flow as cf
 import paddle.fluid.layers.io as io
@@ -26,7 +25,7 @@ class BowEncoder(object):
         self.param_name = ""
 
     def forward(self, emb):
-        return nn.sequence_pool(input=emb, pool_type='sum')
+        return fluid.layers.sequence_pool(input=emb, pool_type='sum')
 
 
 class CNNEncoder(object):
@@ -53,7 +52,6 @@ class CNNEncoder(object):
             pool_type=self.pool_type,
             param_attr=self.param_name + ".param",
             bias_attr=self.param_name + ".bias")
-        
 
 
 class GrnnEncoder(object):
@@ -64,19 +62,18 @@ class GrnnEncoder(object):
         self.hidden_size = hidden_size
 
     def forward(self, emb):
-        fc0 = nn.fc(
-            input=emb, 
-            size=self.hidden_size * 3, 
-            param_attr=self.param_name + "_fc.w",
-            bias_attr=False)
-        
-        gru_h = nn.dynamic_gru(
+        fc0 = fluid.layers.fc(input=emb,
+                              size=self.hidden_size * 3,
+                              param_attr=self.param_name + "_fc.w",
+                              bias_attr=False)
+
+        gru_h = fluid.layers.dynamic_gru(
             input=fc0,
             size=self.hidden_size,
             is_reverse=False,
             param_attr=self.param_name + ".param",
             bias_attr=self.param_name + ".bias")
-        return nn.sequence_pool(input=gru_h, pool_type='max')
+        return fluid.layers.sequence_pool(input=gru_h, pool_type='max')
 
 
 '''this is a very simple Encoder factory
@@ -119,40 +116,40 @@ class MultiviewSimnet(object):
 
     def get_correct(self, x, y):
         less = tensor.cast(cf.less_than(x, y), dtype='float32')
-        correct = nn.reduce_sum(less)
+        correct = fluid.layers.reduce_sum(less)
         return correct
 
     def train_net(self):
         # input fields for query, pos_title, neg_title
         q_slots = [
-            io.data(
-                name="q%d" % i, shape=[1], lod_level=1, dtype='int64')
+            fluid.data(
+                name="q%d" % i, shape=[None, 1], lod_level=1, dtype='int64')
             for i in range(len(self.query_encoders))
         ]
         pt_slots = [
-            io.data(
-                name="pt%d" % i, shape=[1], lod_level=1, dtype='int64')
+            fluid.data(
+                name="pt%d" % i, shape=[None, 1], lod_level=1, dtype='int64')
             for i in range(len(self.title_encoders))
         ]
         nt_slots = [
-            io.data(
-                name="nt%d" % i, shape=[1], lod_level=1, dtype='int64')
+            fluid.data(
+                name="nt%d" % i, shape=[None, 1], lod_level=1, dtype='int64')
             for i in range(len(self.title_encoders))
         ]
 
         # lookup embedding for each slot
         q_embs = [
-            nn.embedding(
+            fluid.embedding(
                 input=query, size=self.emb_shape, param_attr="emb")
             for query in q_slots
         ]
         pt_embs = [
-            nn.embedding(
+            fluid.embedding(
                 input=title, size=self.emb_shape, param_attr="emb")
             for title in pt_slots
         ]
         nt_embs = [
-            nn.embedding(
+            fluid.embedding(
                 input=title, size=self.emb_shape, param_attr="emb")
             for title in nt_slots
         ]
@@ -169,21 +166,30 @@ class MultiviewSimnet(object):
         ]
 
         # concat multi view for query, pos_title, neg_title
-        q_concat = nn.concat(q_encodes)
-        pt_concat = nn.concat(pt_encodes)
-        nt_concat = nn.concat(nt_encodes)
+        q_concat = fluid.layers.concat(q_encodes)
+        pt_concat = fluid.layers.concat(pt_encodes)
+        nt_concat = fluid.layers.concat(nt_encodes)
 
         # projection of hidden layer
-        q_hid = nn.fc(q_concat, size=self.hidden_size, param_attr='q_fc.w', bias_attr='q_fc.b')
-        pt_hid = nn.fc(pt_concat, size=self.hidden_size, param_attr='t_fc.w', bias_attr='t_fc.b')
-        nt_hid = nn.fc(nt_concat, size=self.hidden_size, param_attr='t_fc.w', bias_attr='t_fc.b')
+        q_hid = fluid.layers.fc(q_concat,
+                                size=self.hidden_size,
+                                param_attr='q_fc.w',
+                                bias_attr='q_fc.b')
+        pt_hid = fluid.layers.fc(pt_concat,
+                                 size=self.hidden_size,
+                                 param_attr='t_fc.w',
+                                 bias_attr='t_fc.b')
+        nt_hid = fluid.layers.fc(nt_concat,
+                                 size=self.hidden_size,
+                                 param_attr='t_fc.w',
+                                 bias_attr='t_fc.b')
 
         # cosine of hidden layers
-        cos_pos = nn.cos_sim(q_hid, pt_hid)
-        cos_neg = nn.cos_sim(q_hid, nt_hid)
+        cos_pos = fluid.layers.cos_sim(q_hid, pt_hid)
+        cos_neg = fluid.layers.cos_sim(q_hid, nt_hid)
 
         # pairwise hinge_loss
-        loss_part1 = nn.elementwise_sub(
+        loss_part1 = fluid.layers.elementwise_sub(
             tensor.fill_constant_batch_size_like(
                 input=cos_pos,
                 shape=[-1, 1],
@@ -191,37 +197,37 @@ class MultiviewSimnet(object):
                 dtype='float32'),
             cos_pos)
 
-        loss_part2 = nn.elementwise_add(loss_part1, cos_neg)
+        loss_part2 = fluid.layers.elementwise_add(loss_part1, cos_neg)
 
-        loss_part3 = nn.elementwise_max(
+        loss_part3 = fluid.layers.elementwise_max(
             tensor.fill_constant_batch_size_like(
                 input=loss_part2, shape=[-1, 1], value=0.0, dtype='float32'),
             loss_part2)
 
-        avg_cost = nn.mean(loss_part3)
+        avg_cost = fluid.layers.mean(loss_part3)
         correct = self.get_correct(cos_neg, cos_pos)
 
         return q_slots + pt_slots + nt_slots, avg_cost, correct
 
     def pred_net(self, query_fields, pos_title_fields, neg_title_fields):
         q_slots = [
-            io.data(
-                name="q%d" % i, shape=[1], lod_level=1, dtype='int64')
+            fluid.data(
+                name="q%d" % i, shape=[None, 1], lod_level=1, dtype='int64')
             for i in range(len(self.query_encoders))
         ]
         pt_slots = [
-            io.data(
-                name="pt%d" % i, shape=[1], lod_level=1, dtype='int64')
+            fluid.data(
+                name="pt%d" % i, shape=[None, 1], lod_level=1, dtype='int64')
             for i in range(len(self.title_encoders))
         ]
         # lookup embedding for each slot
         q_embs = [
-            nn.embedding(
+            fluid.embedding(
                 input=query, size=self.emb_shape, param_attr="emb")
             for query in q_slots
         ]
         pt_embs = [
-            nn.embedding(
+            fluid.embedding(
                 input=title, size=self.emb_shape, param_attr="emb")
             for title in pt_slots
         ]
@@ -233,11 +239,18 @@ class MultiviewSimnet(object):
             self.title_encoders[i].forward(emb) for i, emb in enumerate(pt_embs)
         ]
         # concat multi view for query, pos_title, neg_title
-        q_concat = nn.concat(q_encodes)
-        pt_concat = nn.concat(pt_encodes)
+        q_concat = fluid.layers.concat(q_encodes)
+        pt_concat = fluid.layers.concat(pt_encodes)
         # projection of hidden layer
-        q_hid = nn.fc(q_concat, size=self.hidden_size, param_attr='q_fc.w', bias_attr='q_fc.b')
-        pt_hid = nn.fc(pt_concat, size=self.hidden_size, param_attr='t_fc.w', bias_attr='t_fc.b')
+        q_hid = fluid.layers.fc(q_concat,
+                                size=self.hidden_size,
+                                param_attr='q_fc.w',
+                                bias_attr='q_fc.b')
+        pt_hid = fluid.layers.fc(pt_concat,
+                                 size=self.hidden_size,
+                                 param_attr='t_fc.w',
+                                 bias_attr='t_fc.b')
+
         # cosine of hidden layers
-        cos = nn.cos_sim(q_hid, pt_hid)
+        cos = fluid.layers.cos_sim(q_hid, pt_hid)
         return cos

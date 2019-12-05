@@ -10,12 +10,12 @@ def all_vocab_network(vocab_size,
     gru_lr_x = 1.0
     fc_lr_x = 1.0
     # Input data
-    src_wordseq = fluid.layers.data(
-        name="src_wordseq", shape=[1], dtype="int64", lod_level=1)
-    dst_wordseq = fluid.layers.data(
-        name="dst_wordseq", shape=[1], dtype="int64", lod_level=1)
+    src_wordseq = fluid.data(
+        name="src_wordseq", shape=[None, 1], dtype="int64", lod_level=1)
+    dst_wordseq = fluid.data(
+        name="dst_wordseq", shape=[None, 1], dtype="int64", lod_level=1)
 
-    emb = fluid.layers.embedding(
+    emb = fluid.embedding(
         input=src_wordseq,
         size=[vocab_size, hid_size],
         param_attr=fluid.ParamAttr(
@@ -56,19 +56,20 @@ def train_bpr_network(vocab_size, neg_size, hid_size, drop_out=0.2):
     gru_lr_x = 1.0
     fc_lr_x = 1.0
     # Input data
-    src = fluid.layers.data(name="src", shape=[1], dtype="int64", lod_level=1)
-    pos_label = fluid.layers.data(
-        name="pos_label", shape=[1], dtype="int64", lod_level=1)
-    label = fluid.layers.data(
-        name="label", shape=[neg_size + 1], dtype="int64", lod_level=1)
+    src = fluid.data(name="src", shape=[None, 1], dtype="int64", lod_level=1)
+    pos_label = fluid.data(
+        name="pos_label", shape=[None, 1], dtype="int64", lod_level=1)
+    label = fluid.data(
+        name="label", shape=[None, neg_size + 1], dtype="int64", lod_level=1)
 
-    emb_src = fluid.layers.embedding(
+    emb_src = fluid.embedding(
         input=src,
         size=[vocab_size, hid_size],
         param_attr=fluid.ParamAttr(
             name="emb",
             initializer=fluid.initializer.XavierInitializer(),
             learning_rate=emb_lr_x))
+    emb_src = fluid.layers.squeeze(input=emb_src, axes=[1])
 
     emb_src_drop = fluid.layers.dropout(emb_src, dropout_prob=drop_out)
 
@@ -90,7 +91,7 @@ def train_bpr_network(vocab_size, neg_size, hid_size, drop_out=0.2):
     gru_h0_drop = fluid.layers.dropout(gru_h0, dropout_prob=drop_out)
 
     label_re = fluid.layers.sequence_reshape(input=label, new_dim=1)
-    emb_label = fluid.layers.embedding(
+    emb_label1 = fluid.embedding(
         input=label_re,
         size=[vocab_size, hid_size],
         param_attr=fluid.ParamAttr(
@@ -98,6 +99,7 @@ def train_bpr_network(vocab_size, neg_size, hid_size, drop_out=0.2):
             initializer=fluid.initializer.XavierInitializer(),
             learning_rate=emb_lr_x))
 
+    emb_label = fluid.layers.squeeze(input=emb_label1, axes=[1])
     emb_label_drop = fluid.layers.dropout(emb_label, dropout_prob=drop_out)
 
     gru_exp = fluid.layers.expand(
@@ -120,19 +122,20 @@ def train_cross_entropy_network(vocab_size, neg_size, hid_size, drop_out=0.2):
     gru_lr_x = 1.0
     fc_lr_x = 1.0
     # Input data
-    src = fluid.layers.data(name="src", shape=[1], dtype="int64", lod_level=1)
-    pos_label = fluid.layers.data(
-        name="pos_label", shape=[1], dtype="int64", lod_level=1)
-    label = fluid.layers.data(
-        name="label", shape=[neg_size + 1], dtype="int64", lod_level=1)
+    src = fluid.data(name="src", shape=[None, 1], dtype="int64", lod_level=1)
+    pos_label = fluid.data(
+        name="pos_label", shape=[None, 1], dtype="int64", lod_level=1)
+    label = fluid.data(
+        name="label", shape=[None, neg_size + 1], dtype="int64", lod_level=1)
 
-    emb_src = fluid.layers.embedding(
+    emb_src = fluid.embedding(
         input=src,
         size=[vocab_size, hid_size],
         param_attr=fluid.ParamAttr(
             name="emb",
             initializer=fluid.initializer.XavierInitializer(),
             learning_rate=emb_lr_x))
+    emb_src = fluid.layers.squeeze(input=emb_src, axes=[1])
 
     emb_src_drop = fluid.layers.dropout(emb_src, dropout_prob=drop_out)
 
@@ -154,13 +157,14 @@ def train_cross_entropy_network(vocab_size, neg_size, hid_size, drop_out=0.2):
     gru_h0_drop = fluid.layers.dropout(gru_h0, dropout_prob=drop_out)
 
     label_re = fluid.layers.sequence_reshape(input=label, new_dim=1)
-    emb_label = fluid.layers.embedding(
+    emb_label1 = fluid.embedding(
         input=label_re,
         size=[vocab_size, hid_size],
         param_attr=fluid.ParamAttr(
             name="emb",
             initializer=fluid.initializer.XavierInitializer(),
             learning_rate=emb_lr_x))
+    emb_label = fluid.layers.squeeze(input=emb_label1, axes=[1])
 
     emb_label_drop = fluid.layers.dropout(emb_label, dropout_prob=drop_out)
 
@@ -180,8 +184,8 @@ def train_cross_entropy_network(vocab_size, neg_size, hid_size, drop_out=0.2):
 
 
 def infer_network(vocab_size, batch_size, hid_size, dropout=0.2):
-    src = fluid.layers.data(name="src", shape=[1], dtype="int64", lod_level=1)
-    emb_src = fluid.layers.embedding(
+    src = fluid.data(name="src", shape=[None, 1], dtype="int64", lod_level=1)
+    emb_src = fluid.embedding(
         input=src, size=[vocab_size, hid_size], param_attr="emb")
     emb_src_drop = fluid.layers.dropout(
         emb_src, dropout_prob=dropout, is_test=True)
@@ -198,20 +202,18 @@ def infer_network(vocab_size, batch_size, hid_size, dropout=0.2):
     gru_h0_drop = fluid.layers.dropout(
         gru_h0, dropout_prob=dropout, is_test=True)
 
-    all_label = fluid.layers.data(
-        name="all_label",
-        shape=[vocab_size, 1],
-        dtype="int64",
-        append_batch_size=False)
-    emb_all_label = fluid.layers.embedding(
+    all_label = fluid.data(
+        name="all_label", shape=[vocab_size, 1], dtype="int64")
+    emb_all_label = fluid.embedding(
         input=all_label, size=[vocab_size, hid_size], param_attr="emb")
+    emb_all_label = fluid.layers.squeeze(input=emb_all_label, axes=[1])
     emb_all_label_drop = fluid.layers.dropout(
         emb_all_label, dropout_prob=dropout, is_test=True)
 
     all_pre = fluid.layers.matmul(
         gru_h0_drop, emb_all_label_drop, transpose_y=True)
 
-    pos_label = fluid.layers.data(
-        name="pos_label", shape=[1], dtype="int64", lod_level=1)
+    pos_label = fluid.data(
+        name="pos_label", shape=[None, 1], dtype="int64", lod_level=1)
     acc = fluid.layers.accuracy(input=all_pre, label=pos_label, k=20)
     return acc
