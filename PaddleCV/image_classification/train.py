@@ -54,7 +54,7 @@ def build_program(is_train, main_prog, startup_prog, args):
     else:
         model = models.__dict__[args.model]()
     with fluid.program_guard(main_prog, startup_prog):
-        if args.random_seed:
+        if args.random_seed or args.enable_ce:
             main_prog.random_seed = args.random_seed
             startup_prog.random_seed = args.random_seed
         with fluid.unique_name.guard():
@@ -79,8 +79,14 @@ def build_program(is_train, main_prog, startup_prog, args):
     return loss_out
 
 
-def validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
-             train_batch_metrics_record):
+def validate(args,
+             test_iter,
+             exe,
+             test_prog,
+             test_fetch_list,
+             pass_id,
+             train_batch_metrics_record,
+             train_batch_time_record=None):
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
@@ -96,12 +102,11 @@ def validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
         test_batch_metrics_avg = np.mean(np.array(test_batch_metrics), axis=1)
         test_batch_metrics_record.append(test_batch_metrics_avg)
 
-        print_info(pass_id, test_batch_id, args.print_step,
-                   test_batch_metrics_avg, test_batch_elapse, "batch")
+        print_info("batch", test_batch_metrics_avg, test_batch_elapse, pass_id,
+                   test_batch_id, args.print_step)
         sys.stdout.flush()
         test_batch_id += 1
 
-    #train_epoch_time_avg = np.mean(np.array(train_batch_time_record))
     train_epoch_metrics_avg = np.mean(
         np.array(train_batch_metrics_record), axis=0)
 
@@ -109,9 +114,18 @@ def validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
     test_epoch_metrics_avg = np.mean(
         np.array(test_batch_metrics_record), axis=0)
 
-    print_info(pass_id, 0, 0,
-               list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
-               test_epoch_time_avg, "epoch")
+    print_info(
+        "epoch",
+        list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
+        test_epoch_time_avg,
+        pass_id=pass_id)
+    if args.enable_ce:
+        device_num = fluid.core.get_cuda_device_count() if args.use_gpu else 1
+        print_info(
+            "ce",
+            list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
+            train_batch_time_record,
+            device_num=device_num)
 
 
 def train(args):
@@ -207,8 +221,8 @@ def train(args):
                 np.array(train_batch_metrics), axis=1)
             train_batch_metrics_record.append(train_batch_metrics_avg)
             if trainer_id == 0:
-                print_info(pass_id, train_batch_id, args.print_step,
-                           train_batch_metrics_avg, train_batch_elapse, "batch")
+                print_info("batch", train_batch_metrics_avg, train_batch_elapse,
+                           pass_id, train_batch_id, args.print_step)
                 sys.stdout.flush()
             train_batch_id += 1
             t1 = time.time()
@@ -232,7 +246,7 @@ def train(args):
                 print('ExponentialMovingAverage validate over!')
 
             validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
-                     train_batch_metrics_record)
+                     train_batch_metrics_record, train_batch_time_record)
             #For now, save model per epoch.
             if pass_id % args.save_step == 0:
                 save_model(args, exe, train_prog, pass_id)
