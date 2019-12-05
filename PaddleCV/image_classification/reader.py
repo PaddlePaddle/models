@@ -287,18 +287,25 @@ class ImageNetReader:
                     full_lines = [line.strip() for line in flist]
                     if mode != "test" and len(full_lines) < settings.batch_size:
                         print(
-                            "Warning: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!"
-                            .format(len(full_lines), settings.batch_size))
+                            "Warning: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!".
+                            format(len(full_lines), settings.batch_size))
                         os._exit(1)
                     if num_trainers > 1 and mode == "train":
                         assert self.shuffle_seed is not None, "multiprocess train, shuffle seed must be set!"
                         np.random.RandomState(self.shuffle_seed).shuffle(
                             full_lines)
                     elif shuffle:
-                        if not settings.enable_ce:
+                        if not settings.enable_ce or settings.same_feed:
                             np.random.shuffle(full_lines)
 
                 batch_data = []
+                if settings.same_feed:
+                    temp_file = full_lines[0]
+                    print("Same images({},nums:{}) will feed in the net".format(
+                        str(temp_file), settings.same_feed))
+                    full_lines = []
+                    for i in range(settings.same_feed):
+                        full_lines.append(temp_file)
                 for line in full_lines:
                     img_path, label = line.split()
                     img_path = os.path.join(data_dir, img_path)

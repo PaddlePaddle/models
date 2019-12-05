@@ -138,6 +138,7 @@ def parse_args():
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
     add_arg("enable_ce",                bool,   False,                  "Whether to enable ce")
     add_arg('random_seed',              int,    None,                   "random seed")
+
     add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
@@ -147,6 +148,7 @@ def parse_args():
     add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
     add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
     add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
+    add_arg('same_feed',                int,    0,                      "whether to feed same images")
 
 
     # yapf: enable
@@ -417,6 +419,9 @@ def print_info(info_mode,
         assert len(
             metrics
         ) == 7, "Enable CE: The Metrics should contain train_loss, train_acc1, train_acc5, test_loss, test_acc1, test_acc5, and train_speed"
+        assert len(
+            time_info
+        ) > 10, "0~9th batch statistics will drop when doing benchmark or ce, because it might be mixed with startup time, so please make sure training at least 10 batches."
         print_ce(device_num, metrics, time_info)
         #raise Warning("CE code is not ready")
     else:
@@ -426,9 +431,9 @@ def print_info(info_mode,
 def print_ce(device_num, metrics, time_info):
     """ Print log for CE(for internal test).
     """
-    train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5, = metrics
+    train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
 
-    train_speed = time_info
+    train_speed = np.mean(np.array(time_info[10:]))
 
     if device_num == 1:
         print("kpis	train_cost	%s" % train_loss)

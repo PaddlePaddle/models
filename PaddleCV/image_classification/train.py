@@ -79,8 +79,14 @@ def build_program(is_train, main_prog, startup_prog, args):
     return loss_out
 
 
-def validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
-             train_batch_metrics_record):
+def validate(args,
+             test_iter,
+             exe,
+             test_prog,
+             test_fetch_list,
+             pass_id,
+             train_batch_metrics_record,
+             train_batch_time_record=None):
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
@@ -101,7 +107,6 @@ def validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
         sys.stdout.flush()
         test_batch_id += 1
 
-    #train_epoch_time_avg = np.mean(np.array(train_batch_time_record))
     train_epoch_metrics_avg = np.mean(
         np.array(train_batch_metrics_record), axis=0)
 
@@ -115,11 +120,12 @@ def validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
         test_epoch_time_avg,
         pass_id=pass_id)
     if args.enable_ce:
+        #train_epoch_time_avg = np.mean(np.array(train_batch_time_record))
         device_num = fluid.core.get_cuda_device_count() if args.use_gpu else 1
         print_info(
             "ce",
             list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
-            0,
+            train_batch_time_record,
             device_num=device_num)
 
 
@@ -241,7 +247,7 @@ def train(args):
                 print('ExponentialMovingAverage validate over!')
 
             validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
-                     train_batch_metrics_record)
+                     train_batch_metrics_record, train_batch_time_record)
             #For now, save model per epoch.
             if pass_id % args.save_step == 0:
                 save_model(args, exe, train_prog, pass_id)
