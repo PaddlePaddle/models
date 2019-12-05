@@ -435,22 +435,13 @@ def print_ce(device_num, metrics, time_info):
 
     train_speed = np.mean(np.array(time_info[10:]))
 
-    if device_num == 1:
-        print("kpis	train_cost	%s" % train_loss)
-        print("kpis	train_acc_top1	%s" % train_acc1)
-        print("kpis	train_acc_top5	%s" % train_acc5)
-        print("kpis	test_cost	%s" % test_loss)
-        print("kpis	test_acc_top1	%s" % test_acc1)
-        print("kpis	test_acc_top5	%s" % test_acc5)
-        print("kpis	train_speed	%s" % train_speed)
-    else:
-        print("kpis	train_cost_card%s	%s" % (device_num, train_loss))
-        print("kpis	train_acc_top1_card%s	%s" % (device_num, train_acc1))
-        print("kpis	train_acc_top5_card%s	%s" % (device_num, train_acc5))
-        print("kpis	test_cost_card%s	%s" % (device_num, test_loss))
-        print("kpis	test_acc_top1_card%s	%s" % (device_num, test_acc1))
-        print("kpis	test_acc_top5_card%s	%s" % (device_num, test_acc5))
-        print("kpis	train_speed_card%s	%s" % (device_num, train_speed))
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_loss))
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_acc1))
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_acc5))
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, test_loss))
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, test_acc1))
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, test_acc5))
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_speed))
 
 
 def best_strategy_compiled(args, program, loss, exe):
