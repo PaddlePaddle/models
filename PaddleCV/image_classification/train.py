@@ -120,7 +120,6 @@ def validate(args,
         test_epoch_time_avg,
         pass_id=pass_id)
     if args.enable_ce:
-        #train_epoch_time_avg = np.mean(np.array(train_batch_time_record))
         device_num = fluid.core.get_cuda_device_count() if args.use_gpu else 1
         print_info(
             "ce",
