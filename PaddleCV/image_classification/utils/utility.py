@@ -436,12 +436,12 @@ def print_ce(device_num, metrics, time_info):
     train_speed = np.mean(np.array(time_info[10:]))
 
     print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_loss))
-    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_acc1))
-    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_acc5))
-    print("kpis\ttrain_cost_card{}\t{}".format(device_num, test_loss))
-    print("kpis\ttrain_cost_card{}\t{}".format(device_num, test_acc1))
-    print("kpis\ttrain_cost_card{}\t{}".format(device_num, test_acc5))
-    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_speed))
+    print("kpis\ttrain_acc1_card{}\t{}".format(device_num, train_acc1))
+    print("kpis\ttrain_acc5_card{}\t{}".format(device_num, train_acc5))
+    print("kpis\ttest_loss_card{}\t{}".format(device_num, test_loss))
+    print("kpis\ttest_acc1_card{}\t{}".format(device_num, test_acc1))
+    print("kpis\ttest_acc5_card{}\t{}".format(device_num, test_acc5))
+    print("kpis\ttrain_speed_card{}\t{}".format(device_num, train_speed))
 
 
 def best_strategy_compiled(args, program, loss, exe):
