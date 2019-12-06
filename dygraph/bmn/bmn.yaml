@@ -6,8 +6,8 @@ MODEL:
   prop_boundary_ratio: 0.5
   num_sample: 32
   num_sample_perbin: 3
-  anno_file: "../PaddleCV/PaddleVideo/data/dataset/bmn/activitynet_1.3_annotations.json"
-  feat_path: '../PaddleCV/PaddleVideo/data/dataset/bmn/fix_feat_100'
+  anno_file: "../../PaddleCV/PaddleVideo/data/dataset/bmn/activitynet_1.3_annotations.json"
+  feat_path: '../../PaddleCV/PaddleVideo/data/dataset/bmn/fix_feat_100'
 
 TRAIN:
   subset: "train"
@@ -45,6 +45,6 @@ INFER:
   snms_alpha: 0.4
   snms_t1: 0.5
   snms_t2: 0.9
-  filelist: '../PaddleCV/PaddleVideo/data/dataset/bmn/infer.list'
+  filelist: '../../PaddleCV/PaddleVideo/data/dataset/bmn/infer.list'
   output_path: "output/INFER/BMN_results"
   result_path: "predict_results"
