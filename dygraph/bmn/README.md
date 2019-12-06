@@ -17,7 +17,7 @@
 BMN模型是百度自研，2019年ActivityNet夺冠方案，为视频动作定位问题中proposal的生成提供高效的解决方案，在PaddlePaddle上首次开源。此模型引入边界匹配(Boundary-Matching, BM)机制来评估proposal的置信度，按照proposal开始边界的位置及其长度将所有可能存在的proposal组合成一个二维的BM置信度图，图中每个点的数值代表其所对应的proposal的置信度分数。网络由三个模块组成，基础模块作为主干网络处理输入的特征序列，TEM模块预测每一个时序位置属于动作开始、动作结束的概率，PEM模块生成BM置信度图。
 
 <p align="center">
-<img src="../PaddleCV/PaddleVideo/images/BMN.png" height=300 width=500 hspace='10'/> <br />
+<img src="../../PaddleCV/PaddleVideo/images/BMN.png" height=300 width=500 hspace='10'/> <br />
 BMN Overview
 </p>
 
@@ -39,7 +39,7 @@ BMN Overview
 
 ## 数据准备
 
-BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备请参考[数据说明](../PaddleCV/PaddleVideo/data/dataset/bmn/README.md)
+BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备请参考[数据说明](../../PaddleCV/PaddleVideo/data/dataset/bmn/README.md)
 
 
 ## 模型训练
@@ -80,7 +80,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备
 
 - 进行评估时，可修改脚本中的`weights`参数指定需要评估的权重，如果不设置，将使用默认参数文件checkpoint/bmn\_paddle\_dy\_final.pdparams。
 
-- 上述程序会将运行结果保存在output/EVAL\BMN\_results文件夹下，测试结果保存在evaluate\_results/bmn\_results\_validation.json文件中。使用ActivityNet官方提供的测试脚本，即可计算AR@AN和AUC。具体计算过程请参考[指标计算](../PaddleCV/PaddleVideo/metrics/bmn_metrics/README.md)。
+- 上述程序会将运行结果保存在output/EVAL\BMN\_results文件夹下，测试结果保存在evaluate\_results/bmn\_results\_validation.json文件中。使用ActivityNet官方提供的测试脚本，即可计算AR@AN和AUC。具体计算过程请参考[指标计算](../../PaddleCV/PaddleVideo/metrics/bmn_metrics/README.md)。
 
 - 使用CPU进行评估时，请将上面的命令行`use_gpu`设置为False。
 
@@ -100,7 +100,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备
     python predict.py --weights=$PATH_TO_WEIGHTS \
                       --filelist=$FILELIST
 
-- 使用python命令行启动程序时，`--filelist`参数指定待推断的文件列表，如果不设置，默认为../PaddleCV/PaddleVideo/data/dataset/bmn/infer.list。`--weights`参数为训练好的权重参数，如果不设置，将使用默认参数文件checkpoint/bmn\_paddle\_dy\_final.pdparams。
+- 使用python命令行启动程序时，`--filelist`参数指定待推断的文件列表，如果不设置，默认为../../PaddleCV/PaddleVideo/data/dataset/bmn/infer.list。`--weights`参数为训练好的权重参数，如果不设置，将使用默认参数文件checkpoint/bmn\_paddle\_dy\_final.pdparams。
 
 - 上述程序会将运行结果保存在output/INFER/BMN\_results文件夹下，测试结果保存在predict\_results/bmn\_results\_test.json文件中。
 
