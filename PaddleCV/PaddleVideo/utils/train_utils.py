@@ -83,7 +83,6 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
         logger.error("[TRAIN] get dataloader failed.")
     epoch_periods = []
     train_loss = 0
-
     for epoch in range(epochs):
         log_lr_and_step()
 
