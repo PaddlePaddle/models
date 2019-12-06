@@ -247,7 +247,7 @@ def eval(model, data):
 
         img = to_variable(dy_x_data)
         label = to_variable(y_data)
-        label._stop_gradient = True
+        label.stop_gradient = True
 
         out = model(img)
         #loss = fluid.layers.cross_entropy(input=out, label=label)
@@ -335,7 +335,7 @@ def train_resnet():
 
                 img = to_variable(dy_x_data)
                 label = to_variable(y_data)
-                label._stop_gradient = True
+                label.stop_gradient = True
 
                 out = resnet(img)
                 loss = fluid.layers.cross_entropy(input=out, label=label)
