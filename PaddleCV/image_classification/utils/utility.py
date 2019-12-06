@@ -136,7 +136,9 @@ def parse_args():
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
+    add_arg("enable_ce",                bool,   False,                  "Whether to enable ce")
     add_arg('random_seed',              int,    None,                   "random seed")
+
     add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
@@ -146,6 +148,7 @@ def parse_args():
     add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
     add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
     add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
+    add_arg('same_feed',                int,    0,                      "whether to feed same images")
 
 
     # yapf: enable
@@ -263,6 +266,10 @@ def check_args(args):
         args.data_dir
     ), "Data doesn't exist in {}, please load right path".format(args.data_dir)
 
+    if args.enable_ce:
+        args.random_seed = 0
+        print("CE is running now!")
+
     #check gpu
 
     check_gpu()
@@ -344,7 +351,13 @@ def create_data_loader(is_train, args):
         return data_loader, [feed_image, feed_label]
 
 
-def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
+def print_info(info_mode,
+               metrics,
+               time_info,
+               pass_id=0,
+               batch_id=0,
+               print_step=1,
+               device_num=1):
     """print function
 
     Args:
@@ -355,6 +368,7 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
         time_info: time infomation
         info_mode: mode
     """
+    #XXX: Use specific name to choose pattern, not the length of metrics. 
     if info_mode == "batch":
         if batch_id % print_step == 0:
             #if isinstance(metrics,np.ndarray):
@@ -402,9 +416,32 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
                        "%.5f" % test_acc5))
         sys.stdout.flush()
     elif info_mode == "ce":
-        raise Warning("CE code is not ready")
+        assert len(
+            metrics
+        ) == 7, "Enable CE: The Metrics should contain train_loss, train_acc1, train_acc5, test_loss, test_acc1, test_acc5, and train_speed"
+        assert len(
+            time_info
+        ) > 10, "0~9th batch statistics will drop when doing benchmark or ce, because it might be mixed with startup time, so please make sure training at least 10 batches."
+        print_ce(device_num, metrics, time_info)
+        #raise Warning("CE code is not ready")
     else:
         raise Exception("Illegal info_mode")
+
+
+def print_ce(device_num, metrics, time_info):
+    """ Print log for CE(for internal test).
+    """
+    train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
+
+    train_speed = np.mean(np.array(time_info[10:]))
+
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_loss))
+    print("kpis\ttrain_acc1_card{}\t{}".format(device_num, train_acc1))
+    print("kpis\ttrain_acc5_card{}\t{}".format(device_num, train_acc5))
+    print("kpis\ttest_loss_card{}\t{}".format(device_num, test_loss))
+    print("kpis\ttest_acc1_card{}\t{}".format(device_num, test_acc1))
+    print("kpis\ttest_acc5_card{}\t{}".format(device_num, test_acc5))
+    print("kpis\ttrain_speed_card{}\t{}".format(device_num, train_speed))
 
 
 def best_strategy_compiled(args, program, loss, exe):
