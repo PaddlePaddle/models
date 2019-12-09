@@ -299,7 +299,7 @@ class ImageNetReader:
                             np.random.shuffle(full_lines)
 
                 batch_data = []
-                if settings.same_feed:
+                if mode == "train" and settings.same_feed:
                     temp_file = full_lines[0]
                     print("Same images({},nums:{}) will feed in the net".format(
                         str(temp_file), settings.same_feed))
@@ -409,7 +409,9 @@ class ImageNetReader:
             test reader
         """
         if settings.sample_path:
-            file_list = settings.sample_path
+            tmp = open(".tmp.txt", "w")
+            tmp.write(settings.sample_path + " 0")
+            file_list = ".tmp.txt"
         else:
             file_list = os.path.join(settings.data_dir, 'val_list.txt')
         assert os.path.isfile(
