@@ -55,7 +55,7 @@ add_arg('json',             str,  None,                 "Whether to save output 
 
 def out_save(info, outfile):
 
-    with open(outfile, 'w') as f:
+    with open(outfile, 'a') as f:
         json.dump(info, f)
 
 

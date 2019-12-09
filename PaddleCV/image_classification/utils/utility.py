@@ -396,16 +396,18 @@ def print_info(info_mode,
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 print(
-                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info))
+                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
+                           min(args.class_dim, 5)))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 print(
-                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, elapse {5}".
+                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%2.4f sec" % time_info))
+                           "%.5f" % acc5, "%2.4f sec" % time_info,
+                           min(args.class_dim, 5)))
             else:
                 raise Exception(
                     "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".
@@ -417,16 +419,16 @@ def print_info(info_mode,
         if len(metrics) == 5:
             train_loss, _, test_loss, test_acc1, test_acc5 = metrics
             print(
-                "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".
+                "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc{5} {4}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % test_loss, "%.5f"
-                       % test_acc1, "%.5f" % test_acc5))
+                       % test_acc1, "%.5f" % test_acc5, min(args.class_dim, 5)))
         elif len(metrics) == 7:
             train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
             print(
-                "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".
+                "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc{7} {3},test_loss {4}, test_acc1 {5}, test_acc{7} {6}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % train_acc1, "%.5f"
                        % train_acc5, "%.5f" % test_loss, "%.5f" % test_acc1,
-                       "%.5f" % test_acc5))
+                       "%.5f" % test_acc5, min(args.class_dim, 5)))
         sys.stdout.flush()
     elif info_mode == "ce":
         assert len(
