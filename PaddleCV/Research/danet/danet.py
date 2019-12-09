@@ -546,7 +546,7 @@ class DAHead(fluid.dygraph.Layer):
 
         # dropout2d
         ones = fluid.layers.ones(shape=[self.batch_size, num_channels], dtype='float32')
-        dropout1d_P = fluid.layers.dropout(ones, 0.1)
+        dropout1d_P = fluid.layers.dropout(ones, 0.1, dropout_implementation='upscale_in_train')
         out_position_drop2d = fluid.layers.elementwise_mul(position, dropout1d_P, axis=0)
         dropout1d_P.stop_gradient = True
 
@@ -556,7 +556,7 @@ class DAHead(fluid.dygraph.Layer):
 
         # dropout2d
         ones2 = fluid.layers.ones(shape=[self.batch_size, num_channels], dtype='float32')
-        dropout1d_C = fluid.layers.dropout(ones2, 0.1)
+        dropout1d_C = fluid.layers.dropout(ones2, 0.1, dropout_implementation='upscale_in_train')
         out_channel_drop2d = fluid.layers.elementwise_mul(channel, dropout1d_C, axis=0)
         dropout1d_C.stop_gradient = True
         position_out = self._pam_last_conv(out_position_drop2d)
@@ -567,7 +567,7 @@ class DAHead(fluid.dygraph.Layer):
 
         # dropout2d
         feat_sum_ones = fluid.layers.ones(shape=[self.batch_size, feat_sum_num_channels], dtype='float32')
-        dropout1d_sum = fluid.layers.dropout(feat_sum_ones, 0.1)
+        dropout1d_sum = fluid.layers.dropout(feat_sum_ones, 0.1, dropout_implementation='upscale_in_train')
         dropout2d_feat_sum = fluid.layers.elementwise_mul(feat_sum, dropout1d_sum, axis=0)
         dropout1d_sum.stop_gradient = True
         feat_sum_out = self._last_conv(dropout2d_feat_sum)
