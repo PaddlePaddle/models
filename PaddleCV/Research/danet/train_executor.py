@@ -36,6 +36,8 @@ from options import Options
 from utils.cityscapes_data import cityscapes_train
 from utils.cityscapes_data import cityscapes_val
 from utils.lr_scheduler import Lr
+import matplotlib
+matplotlib.use('Agg')
 
 
 def get_model(args):
