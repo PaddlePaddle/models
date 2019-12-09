@@ -23,6 +23,7 @@ os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.99"
 
 import paddle.fluid as fluid
 import numpy as np
+import random
 import paddle
 import logging
 import shutil
@@ -161,6 +162,8 @@ def main(args):
 
     start_prog.random_seed = args.seed
     train_prog.random_seed = args.seed
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
     logging.basicConfig(level=logging.INFO,
                         filename='DANet_{}_train_dygraph.log'.format(args.backbone),
