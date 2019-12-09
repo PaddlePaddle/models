@@ -408,7 +408,10 @@ class ImageNetReader:
         Returns:
             test reader
         """
-        file_list = os.path.join(settings.data_dir, 'val_list.txt')
+        if settings.sample_path:
+            file_list = settings.sample_path
+        else:
+            file_list = os.path.join(settings.data_dir, 'val_list.txt')
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
                 file_list)

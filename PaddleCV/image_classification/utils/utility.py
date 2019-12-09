@@ -147,7 +147,8 @@ def parse_args():
     add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
     add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
     add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
-    add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
+
+    add_arg('validate',                 int,    1,                      "whether to validate when training.")
     add_arg('same_feed',                int,    0,                      "whether to feed same images")
 
 
@@ -282,7 +283,7 @@ def init_model(exe, args, program):
         print("Finish initing model from %s" % (args.checkpoint))
 
     if args.pretrained_model:
-
+        """
         def if_exist(var):
             return os.path.exists(os.path.join(args.pretrained_model, var.name))
 
@@ -291,6 +292,18 @@ def init_model(exe, args, program):
             args.pretrained_model,
             main_program=program,
             predicate=if_exist)
+        """
+
+        def is_parameter(var):
+            return isinstance(var, fluid.framework.Parameter) and (
+                not ("fc_0" in var.name)) and os.path.exists(
+                    os.path.join(args.pretrained_model, var.name))
+
+        print("Load pretrain weights from {}, exclude fc layer.".format(
+            args.pretrained_model))
+        vars = filter(is_parameter, program.list_vars())
+        fluid.io.load_vars(
+            exe, args.pretrained_model, vars=vars, main_program=program)
 
 
 def save_model(args, exe, train_prog, info):

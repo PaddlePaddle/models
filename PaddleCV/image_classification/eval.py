@@ -48,7 +48,14 @@ parser.add_argument('--image_shape', nargs="+",  type=int, default=[3,224,224], 
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
+add_arg('json',             str,  None,                 "Whether to save output in json file.")
 # yapf: enable
+
+
+def out_save(info, outfile):
+
+    with open(outfile, 'w') as f:
+        json.dump(info, f)
 
 
 def eval(args):
@@ -127,10 +134,12 @@ def eval(args):
         test_info[2].append(acc5 * len(data))
         cnt += len(data)
         if batch_id % 10 == 0:
-            print("Testbatch {0},loss {1}, "
-                  "acc1 {2},acc5 {3},time {4}".format(batch_id, \
+            info = "Testbatch {0},loss {1}, acc1 {2},acc5 {3},time {4}".format(batch_id, \
                   "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5, \
-                  "%2.2f sec" % period))
+                  "%2.2f sec" % period)
+            print(info)
+            if args.json:
+                out_save(info, args.json)
             sys.stdout.flush()
 
     test_loss = np.sum(test_info[0]) / cnt

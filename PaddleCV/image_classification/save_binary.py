@@ -28,7 +28,6 @@ import paddle
 import paddle.fluid as fluid
 import reader
 import models
-from utils import *
 
 parser = argparse.ArgumentParser(description=__doc__)
 # yapf: disable
@@ -38,7 +37,6 @@ add_arg('use_gpu',          bool, True,                 "Whether to use GPU or n
 add_arg('class_dim',        int,  1000,                 "Class number.")
 parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
 add_arg('model',            str,  "ResNet50",            "Set the network to use.")
-add_arg('save_inference',   bool, False,                "Whether to save inference model or not")
 add_arg('resize_short_size',int,  256,                  "Set resize short size")
 add_arg('reader_thread',    int,  1,                    "The number of multi thread reader")
 add_arg('reader_buf_size',  int,  2048,                 "The buf size of multi thread reader")
@@ -50,11 +48,10 @@ add_arg('map_path',       str,  "./utils/tools/readable_label.txt", "readable la
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
-add_arg('sample_path',      str,  None,                 "single sample image path")
 # yapf: enable
 
 
-def infer(args):
+def save(args):
     model_list = [m for m in dir(models) if "__" not in m]
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
@@ -82,53 +79,20 @@ def infer(args):
 
     test_program = fluid.default_main_program().clone(for_test=True)
 
-    fetch_list = [out.name]
-
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
     fluid.io.load_persistables(exe, args.pretrained_model)
-    if args.save_inference:
-        fluid.io.save_inference_model(
-            dirname=args.model,
-            feeded_var_names=['image'],
-            main_program=test_program,
-            target_vars=out,
-            executor=exe,
-            model_filename='model',
-            params_filename='params')
-        print("model: ", args.model, " is already saved")
-        exit(0)
-
-    args.test_batch_size = 1
-    imagenet_reader = reader.ImageNetReader()
-    test_reader = imagenet_reader.test(settings=args)
-    feeder = fluid.DataFeeder(place=place, feed_list=[image])
-
-    TOPK = args.topk
-
-    assert os.path.exists(args.map_path), "Index file doesn't exist!"
-    f = open(args.map_path)
-    label_dict = {}
-    for item in f.readlines():
-        key = item.split(" ")[0]
-        value = [l.replace("\n", "") for l in item.split(" ")[1:]]
-        label_dict[key] = value
-
-    for batch_id, data in enumerate(test_reader()):
-        result = exe.run(test_program,
-                         fetch_list=fetch_list,
-                         feed=feeder.feed(data))
-        result = result[0][0]
-        pred_label = np.argsort(result)[::-1][:TOPK]
-
-        readable_pred_label = []
-        for label in pred_label:
-            readable_pred_label.append(label_dict[str(label)])
-        print("Test-{0}-score: {1}, class{2} {3}".format(batch_id, result[
-            pred_label], pred_label, readable_pred_label))
-        sys.stdout.flush()
+    fluid.io.save_inference_model(
+        dirname=args.model,
+        feeded_var_names=['image'],
+        main_program=test_program,
+        target_vars=out,
+        executor=exe,
+        model_filename='model',
+        params_filename='params')
+    print("model: ", args.model, " is already saved")
 
 
 def main():
@@ -136,7 +100,7 @@ def main():
     print_arguments(args)
     check_gpu()
     check_version()
-    infer(args)
+    save(args)
 
 
 if __name__ == '__main__':
