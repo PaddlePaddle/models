@@ -148,7 +148,7 @@ def parse_args():
     add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
     add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
 
-    add_arg('validate',                 int,    1,                      "whether to validate when training.")
+    add_arg('validate',                 bool,    True,                      "whether to validate when training.")
     add_arg('same_feed',                int,    0,                      "whether to feed same images")
 
 
@@ -283,16 +283,6 @@ def init_model(exe, args, program):
         print("Finish initing model from %s" % (args.checkpoint))
 
     if args.pretrained_model:
-        """
-        def if_exist(var):
-            return os.path.exists(os.path.join(args.pretrained_model, var.name))
-
-        fluid.io.load_vars(
-            exe,
-            args.pretrained_model,
-            main_program=program,
-            predicate=if_exist)
-        """
 
         def is_parameter(var):
             return isinstance(var, fluid.framework.Parameter) and (

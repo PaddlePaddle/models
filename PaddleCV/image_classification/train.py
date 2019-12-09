@@ -137,7 +137,8 @@ def train(args):
     """
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
-    test_prog = fluid.Program()
+    if args.validate:
+        test_prog = fluid.Program()
 
     train_out = build_program(
         is_train=True,
@@ -152,19 +153,19 @@ def train(args):
         train_fetch_vars = train_out[:-1]
 
     train_fetch_list = [var.name for var in train_fetch_vars]
+    if args.validate:
+        test_out = build_program(
+            is_train=False,
+            main_prog=test_prog,
+            startup_prog=startup_prog,
+            args=args)
+        test_data_loader = test_out[-1]
+        test_fetch_vars = test_out[:-1]
 
-    test_out = build_program(
-        is_train=False,
-        main_prog=test_prog,
-        startup_prog=startup_prog,
-        args=args)
-    test_data_loader = test_out[-1]
-    test_fetch_vars = test_out[:-1]
+        test_fetch_list = [var.name for var in test_fetch_vars]
 
-    test_fetch_list = [var.name for var in test_fetch_vars]
-
-    #Create test_prog and set layers' is_test params to True
-    test_prog = test_prog.clone(for_test=True)
+        #Create test_prog and set layers' is_test params to True
+        test_prog = test_prog.clone(for_test=True)
 
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
@@ -184,12 +185,14 @@ def train(args):
     else:
         imagenet_reader = reader.ImageNetReader(0 if num_trainers > 1 else None)
         train_reader = imagenet_reader.train(settings=args)
-        test_reader = imagenet_reader.val(settings=args)
+        if args.validate:
+            test_reader = imagenet_reader.val(settings=args)
         places = place
         if num_trainers <= 1 and args.use_gpu:
             places = fluid.framework.cuda_places()
         train_data_loader.set_sample_list_generator(train_reader, places)
-        test_data_loader.set_sample_list_generator(test_reader, place)
+        if args.validate:
+            test_data_loader.set_sample_list_generator(test_reader, place)
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
                                                  train_fetch_vars[0], exe)
@@ -205,7 +208,8 @@ def train(args):
 
         if not args.use_dali:
             train_iter = train_data_loader()
-            test_iter = test_data_loader()
+            if args.validate:
+                test_iter = test_data_loader()
 
         t1 = time.time()
         for batch in train_iter:
