@@ -1,10 +1,3 @@
-# -*- encoding: utf-8 -*-
-# Software: PyCharm
-# Time    : 2019/12/9 
-# Author  : Wang
-# File    : danet——1209.py
-
-
 # -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
