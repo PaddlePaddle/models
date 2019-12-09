@@ -140,7 +140,7 @@ class Options(object):
                 'pascal_aug': 500000,
                 'pcontext': 500000,
                 'ade20k': 500000,
-                'cityscapes': 200000,
+                'cityscapes': 150000,
             }
             args.epoch_num = epoches[args.dataset.lower()]
             args.num_classes = num_class_dict[args.dataset.lower()]
