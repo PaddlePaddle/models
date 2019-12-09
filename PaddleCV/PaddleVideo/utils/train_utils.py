@@ -18,6 +18,7 @@ import time
 import numpy as np
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import logging
 import shutil
 
@@ -76,7 +77,8 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
                         log_interval = 0, valid_interval = 0, save_dir = './', \
                         save_model_name = 'model', fix_random_seed = False, \
                         compiled_test_prog = None, test_dataloader = None, \
-                        test_fetch_list = None, test_metrics = None):
+                        test_fetch_list = None, test_metrics = None, \
+                        is_profiler = None, profiler_path = None):
     if not train_dataloader:
         logger.error("[TRAIN] get dataloader failed.")
     epoch_periods = []
@@ -98,6 +100,13 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
                 train_metrics.calculate_and_log_out(train_outs, \
                         info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
             train_iter += 1
+ 
+            # NOTE: profiler tools, used for benchmark
+            if is_profiler and epoch == 0 and train_iter == log_interval:
+                profiler.start_profiler("All")
+            elif is_profiler and epoch == 0 and train_iter == log_interval + 5:
+                profiler.stop_profiler("total", profiler_path)
+                return
 
         if len(epoch_periods) < 1:
             logger.info(
