@@ -103,7 +103,7 @@ def validate(args,
         test_batch_metrics_record.append(test_batch_metrics_avg)
 
         print_info("batch", test_batch_metrics_avg, test_batch_elapse, pass_id,
-                   test_batch_id, args.print_step)
+                   test_batch_id, args.print_step, args.class_dim)
         sys.stdout.flush()
         test_batch_id += 1
 
@@ -118,7 +118,8 @@ def validate(args,
         "epoch",
         list(train_epoch_metrics_avg) + list(test_epoch_metrics_avg),
         test_epoch_time_avg,
-        pass_id=pass_id)
+        pass_id=pass_id,
+        class_dim=args.class_dim)
     if args.enable_ce:
         device_num = fluid.core.get_cuda_device_count() if args.use_gpu else 1
         print_info(
