@@ -72,7 +72,7 @@ class Options(object):
                             metavar='N', help='step_per_epoch (default: auto)')
         parser.add_argument('--momentum', type=float, default=0.9,
                             metavar='M', help='momentum (default: 0.9)')
-        parser.add_argument('--weight_decay', type=float, default=1e-4,   
+        parser.add_argument('--weight_decay', type=float, default=1e-4,
                             metavar='M', help='w-decay (default: 1e-4)')
 
         # cuda, seed and logging
@@ -88,7 +88,7 @@ class Options(object):
         # checkpoint
         parser.add_argument("--save_model", default='checkpoint/DANet101_better_model_paddle1.6', type=str,
                             help="model path, (default: checkpoint/DANet101_better_model_paddle1.6)")
-        
+
         # change executor model params to dygraph model params
         parser.add_argument("--change_executor_to_dygraph", action='store_true', default=False,
                             help="change executor model params to dygraph model params (default:False)")
@@ -113,7 +113,7 @@ class Options(object):
                             help="multi grid dilation list, (default: None), can use --mutil_dilation 4 8 16")
         parser.add_argument('--scale', action='store_true', default=False,
                             help='choose to use random scale transform(0.75-2.0) for train, (default: False)')
-        
+
         # the parser
         self.parser = parser
 

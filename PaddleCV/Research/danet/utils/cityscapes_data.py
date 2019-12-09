@@ -36,13 +36,13 @@ def mapper_train(sample):
     image = Image.open(image_path, mode='r').convert('RGB')
     label = Image.open(label_path, mode='r')
 
-    image, label = city.sync_transform(image, label) 
+    image, label = city.sync_transform(image, label)
     image_array = np.array(image)  # HWC
     label_array = np.array(label)  # HW
 
     image_array = image_array.transpose((2, 0, 1))  # CHW
-    image_array = image_array / 255.0 
-    image_array = (image_array - data_mean) / data_std 
+    image_array = image_array / 255.0
+    image_array = (image_array - data_mean) / data_std
     image_array = image_array.astype('float32')
     label_array = label_array.astype('int64')
     return image_array, label_array
@@ -53,13 +53,13 @@ def mapper_val(sample):
     image = Image.open(image_path, mode='r').convert('RGB')
     label = Image.open(label_path, mode='r')
 
-    image, label = city.sync_val_transform(image, label)  
+    image, label = city.sync_val_transform(image, label)
     image_array = np.array(image)  # HWC
     label_array = np.array(label)  # HW
 
     image_array = image_array.transpose((2, 0, 1))  # CHW
-    image_array = image_array / 255.0 
-    image_array = (image_array - data_mean) / data_std  
+    image_array = image_array / 255.0
+    image_array = (image_array - data_mean) / data_std
     image_array = image_array.astype('float32')
     label_array = label_array.astype('int64')
     return image_array, label_array
@@ -83,7 +83,7 @@ def cityscapes_train(data_root='./dataset', base_size=1024, crop_size=768, scale
         else:
             length = len(image_path)
         for i in range(length):
-            if i == 0:  
+            if i == 0:
                 cc = list(zip(image_path, label_path))
                 random.shuffle(cc)
                 image_path[:], label_path[:] = zip(*cc)
@@ -118,7 +118,7 @@ def cityscapes_train_val(data_root='./dataset', base_size=1024, crop_size=768, s
         else:
             length = len(image_path)
         for i in range(length):
-            if i == 0:  
+            if i == 0:
                 cc = list(zip(image_path, label_path))
                 random.shuffle(cc)
                 image_path[:], label_path[:] = zip(*cc)

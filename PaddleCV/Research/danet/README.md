@@ -41,9 +41,9 @@ A经过3个reshape操作输出维度均为CN（N = H*W）的B、C、D；
 dataset
   ├── cityscapes               # Cityscapes数据集
          ├── gtFine            # 精细化标注的label
-         ├── leftImg8bit       # 训练，验证，测试图片      
+         ├── leftImg8bit       # 训练，验证，测试图片
          ├── trainLabels.txt   # 训练图片路径
-         ├── valLabels.txt     # 验证图片路径            
+         ├── valLabels.txt     # 验证图片路径
               ...               ...
 ```
 ## 训练说明
@@ -63,7 +63,7 @@ dataset
 
 #### 优化器选择
 	Momentum: 动量0.9，正则化系数1e-4
-	
+
 #### 加载预训练模型
 	设置 --load_pretrained_model（默认为False）
 	预训练文件：
@@ -77,7 +77,7 @@ dataset
 ##### 【注】
     训练时paddle版本是1.5.2，代码已转为1.6版本（兼容1.6版本），预训练参数、训练好的参数来自1.5.2版本
 
-#### 配置模型文件路径  
+#### 配置模型文件路径
 [预训练参数、最优模型参数下载](https://paddlemodels.bj.bcebos.com/DANet/DANet_models.tar)
 
 其目录结构如下：
@@ -87,7 +87,7 @@ checkpoint
     ├── DANet101_pretrained_model_paddle1.6.pdparams      # DANet101预训练模型，需要paddle >=1.6.0
     ├── DANet101_better_model_paddle1.6.pdparams          # DANet101训练最优模型，需要paddle >=1.6.0
     ├── DANet101_better_model_paddle1.5.2                 # DANet101在1.5.2版本训练的最优模型，需要paddle >= 1.5.2
-    
+
 ```
 
 ## 模型训练
@@ -103,24 +103,24 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 executor执行以下命令进行训练
 ```sh
-python train_executor.py --backbone resnet101 --base_size 1024 --crop_size 768 --epoch_num 350 --batch_size 2 --lr 0.003 --lr_scheduler poly --warm_up --warmup_epoch 2 --cuda --use_data_parallel --load_pretrained_model --save_model checkpoint/DANet101_better_model_paddle1.5.2 --multi_scales --flip --dilated --multi_grid --scale --multi_dilation 4 8 16 
+python train_executor.py --backbone resnet101 --base_size 1024 --crop_size 768 --epoch_num 350 --batch_size 2 --lr 0.003 --lr_scheduler poly --warm_up --warmup_epoch 2 --cuda --use_data_parallel --load_pretrained_model --save_model checkpoint/DANet101_better_model_paddle1.5.2 --multi_scales --flip --dilated --multi_grid --scale --multi_dilation 4 8 16
 ```
 参数含义： 使用ResNet101骨干网络，训练图片基础大小是1024，裁剪大小是768，训练轮数是350次，batch size是2
-学习率是0.003，学习率衰减策略是poly，使用学习率热身，热身轮数是2轮，使用GPU，使用数据并行， 加载预训练模型，设置加载的模型地址，使用多尺度测试， 使用图片左右翻转测试，使用空洞卷积，使用multi_grid，multi_dilation设置为4 8 16，使用多尺度训练 
+学习率是0.003，学习率衰减策略是poly，使用学习率热身，热身轮数是2轮，使用GPU，使用数据并行， 加载预训练模型，设置加载的模型地址，使用多尺度测试， 使用图片左右翻转测试，使用空洞卷积，使用multi_grid，multi_dilation设置为4 8 16，使用多尺度训练
 ##### Windows下训练需要去掉 --use_data_parallel
 #### 或者
 dygraph执行以下命令进行训练
 ```sh
-python train_dygraph.py --backbone resnet101 --base_size 1024 --crop_size 768 --epoch_num 350 --batch_size 2 --lr 0.003 --lr_scheduler poly --cuda --use_data_parallel --load_pretrained_model --save_model checkpoint/DANet101_better_model_paddle1.6 --multi_scales --flip --dilated --multi_grid --scale --multi_dilation 4 8 16 
+python train_dygraph.py --backbone resnet101 --base_size 1024 --crop_size 768 --epoch_num 350 --batch_size 2 --lr 0.003 --lr_scheduler poly --cuda --use_data_parallel --load_pretrained_model --save_model checkpoint/DANet101_better_model_paddle1.6 --multi_scales --flip --dilated --multi_grid --scale --multi_dilation 4 8 16
 ```
-参数含义： 使用ResNet101骨干网络，训练图片基础大小是1024，裁剪大小是768，训练轮数是350次，batch size是2，学习率是0.003，学习率衰减策略是poly，使用GPU， 使用数据并行，加载预训练模型，设置加载的模型地址，使用多尺度测试，使用图片左右翻转测试，使用空洞卷积，使用multi_grid，multi_dilation设置4 8 16，使用多尺度训练 
+参数含义： 使用ResNet101骨干网络，训练图片基础大小是1024，裁剪大小是768，训练轮数是350次，batch size是2，学习率是0.003，学习率衰减策略是poly，使用GPU， 使用数据并行，加载预训练模型，设置加载的模型地址，使用多尺度测试，使用图片左右翻转测试，使用空洞卷积，使用multi_grid，multi_dilation设置4 8 16，使用多尺度训练
 
 #### 【注】
 ##### train_executor.py使用executor方式训练（适合paddle >= 1.5.2），train_dygraph.py使用动态图方式训练（适合paddle >= 1.6.0），两种方式都可以
 ##### 动态图方式训练暂时不支持学习率热身
 
 #### 在训练阶段，输出的验证结果不是真实的，需要使用eval.py来获得验证的最终结果。
- 
+
  ## 模型验证
 ```sh
 # open garbage collection to save memory
@@ -142,7 +142,7 @@ python eval.py --backbone resnet101 --base_size 2048 --crop_size 1024 --cuda --u
 
 ##### 具体数值
 | 模型 | cls1 | cls2 | cls3 | cls4 | cls5 | cls6 | cls7 | cls8 | cls9 | cls10 | cls11 | cls12 | cls13 | cls14 | cls15 | cls16 |cls17 | cls18 | cls19 |
-| :---:|:---: | :---:| :---:|:---: | :---:| :---:|:---: | :---:| :---:|:---:  |:---: |:---:  |:---:  | :---: | :---: |:---:  | :---:| :---: |:---:  | 
+| :---:|:---: | :---:| :---:|:---: | :---:| :---:|:---: | :---:| :---:|:---:  |:---: |:---:  |:---:  | :---: | :---: |:---:  | :---:| :---: |:---:  |
 |DANet101-SS|0.98212|0.85372|0.92799|0.59976|0.63318|0.65819|0.72023|0.80000|0.92605|0.65788|0.94841|0.83377|0.65206|0.95566|0.87148|0.91233|0.84352|0.71948|0.78737|
 |DANet101-MS|0.98047|0.84637|0.93084|0.62699|0.64839|0.67769|0.73650|0.81343|0.92942|0.67010|0.95127|0.84466|0.66635|0.95749|0.87755|0.92370|0.85344|0.73007|0.79742|
 

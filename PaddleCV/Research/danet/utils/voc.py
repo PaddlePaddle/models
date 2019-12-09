@@ -41,7 +41,7 @@ class VOC(BaseDataSet):
             pass
         else:
             assert len(self.image_path) == len(self.label_path), "please check image_length = label_length"
-        self.print_param() 
+        self.print_param()
 
     def print_param(self): # 用于核对当前数据集的信息
         if self.label_path is None:

@@ -35,7 +35,7 @@ class CityScapes(BaseDataSet):
         assert os.path.exists(root), "please download cityscapes data_set, put in dataset(dir),or check root"
         self.image_path, self.label_path = self._get_cityscapes_pairs(root, split)
         assert len(self.image_path) == len(self.label_path), "please check image_length = label_length"
-        self.print_param()  
+        self.print_param()
 
     def print_param(self):  # 用于核对当前数据集的信息
         print('INFO: dataset_root: {}, split: {}, '

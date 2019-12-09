@@ -38,6 +38,7 @@ from utils.cityscapes_data import cityscapes_train
 from utils.cityscapes_data import cityscapes_val
 from utils.lr_scheduler import Lr
 import matplotlib
+
 matplotlib.use('Agg')
 
 
@@ -144,7 +145,6 @@ def optimizer_setting(args):
 
 
 def main(args):
-
     batch_size = args.batch_size
     num_epochs = args.epoch_num
     num_classes = args.num_classes
@@ -170,10 +170,10 @@ def main(args):
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.info('DANet')
     logging.info(args)
-    
+
     if args.cuda:
         gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
-        
+
     place = fluid.CUDAPlace(gpu_id) if args.cuda else fluid.CPUPlace()
     train_loss_title = 'Train_loss'
     test_loss_title = 'Test_loss'
@@ -198,8 +198,9 @@ def main(args):
                 save_dir, save_dir + '.pdparams')
             param, _ = fluid.load_dygraph(save_dir)
             model.set_dict(param)
-            assert len(param) == len(model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
-                                                          "Please check whether the model is consistent!"
+            assert len(param) == len(
+                model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                     "Please check whether the model is consistent!"
             print('load pretrained model!')
 
         # load_better_model
@@ -209,10 +210,10 @@ def main(args):
                 save_dir, save_dir + '.pdparams')
             param, _ = fluid.load_dygraph(save_dir)
             model.set_dict(param)
-            assert len(param) == len(model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
-                                                          "Please check whether the model is consistent!"
+            assert len(param) == len(
+                model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                     "Please check whether the model is consistent!"
             print('load better model!')
-
 
         optimizer = optimizer_setting(args)
         train_data = cityscapes_train(data_root=data_root,
@@ -262,8 +263,8 @@ def main(args):
                 train_avg_loss.backward()
                 optimizer.minimize(train_avg_loss)
                 model.clear_gradients()
-                train_iou_manager.update(miou.numpy(), weight=int(batch_size*num))
-                train_avg_loss_manager.update(train_avg_loss.numpy(), weight=int(batch_size*num))
+                train_iou_manager.update(miou.numpy(), weight=int(batch_size * num))
+                train_avg_loss_manager.update(train_avg_loss.numpy(), weight=int(batch_size * num))
                 batch_train_str = "epoch: {}, batch: {}, train_avg_loss: {:.6f}, " \
                                   "train_miou: {:.6f}.".format(epoch + 1,
                                                                batch_id + 1,
@@ -289,7 +290,8 @@ def main(args):
             fluid.dygraph.save_dygraph(model.state_dict(), 'checkpoint/DANet_epoch_new')
             # save_model
             if better_miou_train < train_iou_manager.eval()[0]:
-                shutil.rmtree('checkpoint/DANet_better_train_{:.4f}.pdparams'.format(better_miou_train), ignore_errors=True)
+                shutil.rmtree('checkpoint/DANet_better_train_{:.4f}.pdparams'.format(better_miou_train),
+                              ignore_errors=True)
                 better_miou_train = train_iou_manager.eval()[0]
                 fluid.dygraph.save_dygraph(model.state_dict(),
                                            'checkpoint/DANet_better_train_{:.4f}'.format(better_miou_train))
@@ -311,8 +313,8 @@ def main(args):
                 test_loss = loss_fn(pred, pred2, pred3, label, num_classes=num_classes)
                 test_avg_loss = fluid.layers.mean(test_loss)
                 miou, wrong, correct = mean_iou(pred, label, num_classes=num_classes)
-                test_iou_manager.update(miou.numpy(), weight=int(batch_size*num))
-                test_avg_loss_manager.update(test_avg_loss.numpy(), weight=int(batch_size*num))
+                test_iou_manager.update(miou.numpy(), weight=int(batch_size * num))
+                test_avg_loss_manager.update(test_avg_loss.numpy(), weight=int(batch_size * num))
                 batch_test_str = "epoch: {}, batch: {}, test_avg_loss: {:.6f}, " \
                                  "test_miou: {:.6f}.".format(epoch + 1, batch_id + 1,
                                                              test_avg_loss.numpy()[0],
@@ -337,7 +339,8 @@ def main(args):
             model.train()
             # save_model
             if better_miou_test < test_iou_manager.eval()[0]:
-                shutil.rmtree('checkpoint/DANet_better_test_{:.4f}.pdparams'.format(better_miou_test), ignore_errors=True)
+                shutil.rmtree('checkpoint/DANet_better_test_{:.4f}.pdparams'.format(better_miou_test),
+                              ignore_errors=True)
                 better_miou_test = test_iou_manager.eval()[0]
                 fluid.dygraph.save_dygraph(model.state_dict(),
                                            'checkpoint/DANet_better_test_{:.4f}'.format(better_miou_test))

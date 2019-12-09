@@ -21,7 +21,6 @@ import os
 os.environ['FLAGS_eager_delete_tensor_gb'] = "0.0"
 os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.99"
 
-
 import paddle.fluid as fluid
 import paddle
 import logging
@@ -40,7 +39,6 @@ from utils.cityscapes_data import cityscapes_val
 from utils.cityscapes_data import cityscapes_test
 from utils.lr_scheduler import Lr
 from iou import IOUMetric
-
 
 #  globals
 data_mean = np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
@@ -69,10 +67,10 @@ def resize_image(image, out_h, out_w, mode=Image.BILINEAR):
 
 
 def mapper_image(image):
-    image_array = np.array(image)  
-    image_array = image_array.transpose((2, 0, 1)) 
-    image_array = image_array / 255.0  
-    image_array = (image_array - data_mean) / data_std  
+    image_array = np.array(image)
+    image_array = image_array.transpose((2, 0, 1))
+    image_array = image_array / 255.0
+    image_array = (image_array - data_mean) / data_std
     image_array = image_array.astype('float32')
     image_array = image_array[np.newaxis, :]
     return image_array
@@ -100,8 +98,8 @@ def copy_model(path, new_path):
 def mean_iou(pred, label, num_classes=19):
     label = fluid.layers.elementwise_min(fluid.layers.cast(label, np.int32),
                                          fluid.layers.assign(np.array([num_classes], dtype=np.int32)))
-    label_ig = (label == num_classes).astype('int32')  
-    label_ng = (label != num_classes).astype('int32')  
+    label_ig = (label == num_classes).astype('int32')
+    label_ng = (label != num_classes).astype('int32')
     pred = fluid.layers.cast(fluid.layers.argmax(pred, axis=1), 'int32')
     pred = pred * label_ng + label_ig * num_classes
     miou, wrong, correct = fluid.layers.mean_iou(pred, label, num_classes + 1)
@@ -146,24 +144,25 @@ def change_model_executor_to_dygraph(args):
                                                    dtype='float32',
                                                    default_initializer=fluid.initializer.NumpyArrayInitializer(value))
             new_param_dict[name] = tensor
-        assert len(new_param_dict) == len(model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
-                                                               "Please check whether the model is consistent!"
+        assert len(new_param_dict) == len(
+            model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                 "Please check whether the model is consistent!"
         model.set_dict(new_param_dict)
         fluid.save_dygraph(model.state_dict(), model_path)
         del model
         del temp_dict
         print('change executor model to dygraph successful!')
-        
+
 
 def eval(args):
     if args.change_executor_to_dygraph:
         change_model_executor_to_dygraph(args)
     with fluid.dygraph.guard():
         num_classes = args.num_classes
-        base_size = args.base_size  
-        crop_size = args.crop_size  
-        multi_scales = args.multi_scales 
-        flip = args.flip  
+        base_size = args.base_size
+        crop_size = args.crop_size
+        multi_scales = args.multi_scales
+        flip = args.flip
 
         if not multi_scales:
             scales = [1.0]
@@ -201,9 +200,10 @@ def eval(args):
             model.load_dict(model_param)
         else:
             raise ValueError('Please set --load_better_model!')
-            
-        assert len(model_param) == len(model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
-                                                            "Please check whether the model is consistent!"
+
+        assert len(model_param) == len(
+            model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                 "Please check whether the model is consistent!"
         model.eval()
 
         prev_time = datetime.now()
@@ -219,15 +219,16 @@ def eval(args):
                             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         logging.info('DANet')
         logging.info(args)
-        palette = pat()  
+        palette = pat()
         for data in reader():
             image = data[0]
             label_path = data[1]  # val_label is a picture, test_label is a path
             label = Image.open(label_path, mode='r')  # val_label is a picture, test_label is a path
-            save_png_path = label_path.replace('val', '{}_val'.format(args.backbone)).replace('test', '{}_test'.format(args.backbone))
+            save_png_path = label_path.replace('val', '{}_val'.format(args.backbone)).replace('test', '{}_test'.format(
+                args.backbone))
             label_np = np.array(label)
             w, h = image.size  # h 1024, w 2048
-            scores = np.zeros(shape=[num_classes, h, w], dtype='float32')  
+            scores = np.zeros(shape=[num_classes, h, w], dtype='float32')
             for scale in scales:
                 long_size = int(math.ceil(base_size * scale))  # long_size
                 if h > w:
@@ -239,7 +240,7 @@ def eval(args):
                     height = int(1.0 * h * long_size / w + 0.5)
                     short_size = height
 
-                cur_img = resize_image(image, height, width)  
+                cur_img = resize_image(image, height, width)
                 # pad
                 if long_size <= crop_size:
                     pad_img = pad_single_image(cur_img, crop_size)
@@ -249,12 +250,12 @@ def eval(args):
                     pred1 = pred1.numpy()
                     outputs = pred1[:, :, :height, :width]
                     if flip:
-                        pad_img_filp = flip_left_right_image(cur_img)  
+                        pad_img_filp = flip_left_right_image(cur_img)
                         pad_img_filp = pad_single_image(pad_img_filp, crop_size)  # pad
                         pad_img_filp = mapper_image(pad_img_filp)
                         pad_img_filp = fluid.dygraph.to_variable(pad_img_filp)
                         pred1, pred2, pred3 = model(pad_img_filp)
-                        pred1 = fluid.layers.reverse(pred1, axis=3)  
+                        pred1 = fluid.layers.reverse(pred1, axis=3)
                         pred1 = pred1.numpy()
                         outputs += pred1[:, :, :height, :width]
                 else:
@@ -270,7 +271,7 @@ def eval(args):
                     h_grids = int(math.ceil(1.0 * (ph - crop_size) / stride)) + 1
                     w_grids = int(math.ceil(1.0 * (pw - crop_size) / stride)) + 1
                     outputs = np.zeros(shape=[1, num_classes, ph, pw], dtype='float32')
-                    count_norm = np.zeros(shape=[1, 1, ph, pw], dtype='int32')  
+                    count_norm = np.zeros(shape=[1, 1, ph, pw], dtype='int32')
                     for idh in range(h_grids):
                         for idw in range(w_grids):
                             h0 = idh * stride
@@ -283,32 +284,32 @@ def eval(args):
                             pad_crop_img = fluid.dygraph.to_variable(pad_crop_img)
                             pred1, pred2, pred3 = model(pad_crop_img)  # shape [1, num_class, h, w]
                             pred = pred1.numpy()  # channel, h, w
-                            outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  
-                            count_norm[:, :, h0:h1, w0:w1] += 1 
+                            outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]
+                            count_norm[:, :, h0:h1, w0:w1] += 1
                             if flip:
-                                pad_img_filp = flip_left_right_image(crop_img) 
+                                pad_img_filp = flip_left_right_image(crop_img)
                                 pad_img_filp = pad_single_image(pad_img_filp, crop_size)  # pad
                                 pad_img_array = mapper_image(pad_img_filp)
                                 pad_img_array = fluid.dygraph.to_variable(pad_img_array)
-                                pred1, pred2, pred3 = model(pad_img_array)  
-                                pred1 = fluid.layers.reverse(pred1, axis=3)  
+                                pred1, pred2, pred3 = model(pad_img_array)
+                                pred1 = fluid.layers.reverse(pred1, axis=3)
                                 pred = pred1.numpy()
-                                outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  
-                                count_norm[:, :, h0:h1, w0:w1] += 1    
+                                outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]
+                                count_norm[:, :, h0:h1, w0:w1] += 1
                     assert ((count_norm == 0).sum() == 0)
                     outputs = outputs / count_norm
-                    outputs = outputs[:, :, :height, :width]  
+                    outputs = outputs[:, :, :height, :width]
                 outputs = fluid.dygraph.to_variable(outputs)
                 outputs = fluid.layers.resize_bilinear(outputs, out_shape=[h, w])
                 score = outputs.numpy()[0]
-                scores += score   # the sum of all scales, shape: [channel, h, w]
-                pred = np.argmax(score, axis=0).astype('uint8')  
+                scores += score  # the sum of all scales, shape: [channel, h, w]
+                pred = np.argmax(score, axis=0).astype('uint8')
                 picture_path = '{}'.format(save_png_path).replace('.png', '_scale_{}'.format(scale))
                 save_png(pred, palette, picture_path)
-            pred = np.argmax(scores, axis=0).astype('uint8') 
+            pred = np.argmax(scores, axis=0).astype('uint8')
             picture_path = '{}'.format(save_png_path).replace('.png', '_scores')
             save_png(pred, palette, picture_path)
-            iou.add_batch(pred, label_np)   # cal iou
+            iou.add_batch(pred, label_np)  # cal iou
         print('eval done!')
         logging.info('eval done!')
         acc, acc_cls, iu, mean_iu, fwavacc, kappa = iou.evaluate()
@@ -406,4 +407,4 @@ if __name__ == '__main__':
     args = options.parse()
     options.print_args()
     eval(args)
-   
+
