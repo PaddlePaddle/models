@@ -367,7 +367,7 @@ class PositionEmbedding(dg.Layer):
 
     def set_weight(self, array):
         assert self.embed._w.shape == list(array.shape), "shape does not match"
-        self.embed._w._ivar.value().get_tensor().set(
+        self.embed._w.value().get_tensor().set(
             array, fluid.framework._current_expected_place())
 
     def forward(self, indices, speaker_position_rate=None):
