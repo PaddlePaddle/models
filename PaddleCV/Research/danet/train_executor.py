@@ -23,6 +23,7 @@ os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.99"
 
 import paddle.fluid as fluid
 import numpy as np
+import random
 import paddle
 import logging
 import shutil
@@ -37,6 +38,7 @@ from utils.cityscapes_data import cityscapes_train
 from utils.cityscapes_data import cityscapes_val
 from utils.lr_scheduler import Lr
 import matplotlib
+
 matplotlib.use('Agg')
 
 
@@ -188,8 +190,10 @@ def main(args):
 
     start_prog.random_seed = args.seed
     train_prog.random_seed = args.seed
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
-    # clone 
+    # clone
     test_prog = train_prog.clone(for_test=True)
 
     logging.basicConfig(level=logging.INFO,
@@ -248,7 +252,7 @@ def main(args):
             test_avg_loss = fluid.layers.mean(test_loss)
             # miou不是真实的
             miou, wrong, correct = mean_iou(pred, label, num_classes=num_classes)
-    
+
     place = fluid.CUDAPlace(0) if args.cuda else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(start_prog)
@@ -267,7 +271,7 @@ def main(args):
     else:
         compiled_train_prog = fluid.compiler.CompiledProgram(train_prog)
 
-   # 加载预训练模型
+    # 加载预训练模型
     if args.load_pretrained_model:
         assert os.path.exists(args.save_model), "your input save_model: {} ,but '{}' is not exists".format(
             args.save_model, args.save_model)
@@ -414,3 +418,6 @@ if __name__ == '__main__':
     args = options.parse()
     options.print_args()
     main(args)
+
+
+
