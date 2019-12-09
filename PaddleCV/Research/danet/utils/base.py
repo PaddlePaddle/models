@@ -41,7 +41,7 @@ class BaseDataSet(object):
         self.image_path = None
         self.label_path = None
 
-    def sync_transform(self, image, label):
+    def sync_transform(self, image, label, aug=True):
         crop_size = self.crop_size
         if self.scale:
             short_size = random.randint(int(self.base_size * 0.75), int(self.base_size * 2.0))
@@ -80,27 +80,28 @@ class BaseDataSet(object):
         image = image.crop((x, y, x + crop_size, y + crop_size))
         label = label.crop((x, y, x + crop_size, y + crop_size))
 
-        # # 高斯模糊，可选
-        # if random.random() > 0.7:
-        #     image = image.filter(ImageFilter.GaussianBlur(radius=random.random()))
+        if aug:
+            # 高斯模糊，可选
+            if random.random() > 0.7:
+                image = image.filter(ImageFilter.GaussianBlur(radius=random.random()))
 
-        # 可选
-        # if random.random() > 0.7:
-        #     # 随机亮度
-        #     factor = np.random.uniform(0.75, 1.25)
-        #     image = ImageEnhance.Brightness(image).enhance(factor)
-        #
-        #     # 颜色抖动
-        #     factor = np.random.uniform(0.75, 1.25)
-        #     image = ImageEnhance.Color(image).enhance(factor)
-        #
-        #     # 随机对比度
-        #     factor = np.random.uniform(0.75, 1.25)
-        #     image = ImageEnhance.Contrast(image).enhance(factor)
-        #
-        #     # 随机锐度
-        #     factor = np.random.uniform(0.75, 1.25)
-        #     image = ImageEnhance.Sharpness(image).enhance(factor)
+            # 可选
+            if random.random() > 0.7:
+                # 随机亮度
+                factor = np.random.uniform(0.75, 1.25)
+                image = ImageEnhance.Brightness(image).enhance(factor)
+
+                # 颜色抖动
+                factor = np.random.uniform(0.75, 1.25)
+                image = ImageEnhance.Color(image).enhance(factor)
+
+                # 随机对比度
+                factor = np.random.uniform(0.75, 1.25)
+                image = ImageEnhance.Contrast(image).enhance(factor)
+
+                # 随机锐度
+                factor = np.random.uniform(0.75, 1.25)
+                image = ImageEnhance.Sharpness(image).enhance(factor)
         return image, label
 
     def sync_val_transform(self, image, label):
