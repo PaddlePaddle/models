@@ -104,6 +104,8 @@ def eval(args):
         acc_top1 = fluid.layers.accuracy(input=pred, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=pred, label=label, k=5)
 
+    #startup_prog = fluid.Program()
+
     test_program = fluid.default_main_program().clone(for_test=True)
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
@@ -111,6 +113,9 @@ def eval(args):
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
+
+    compiled_program = fluid.compiler.CompiledProgram(
+        test_program).with_data_parallel()
 
     fluid.io.load_persistables(exe, args.pretrained_model)
     imagenet_reader = reader.ImageNetReader()
@@ -122,7 +127,7 @@ def eval(args):
     cnt = 0
     for batch_id, data in enumerate(val_reader()):
         t1 = time.time()
-        loss, acc1, acc5 = exe.run(test_program,
+        loss, acc1, acc5 = exe.run(compiled_program,
                                    fetch_list=fetch_list,
                                    feed=feeder.feed(data))
         t2 = time.time()
