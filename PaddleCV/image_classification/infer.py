@@ -46,11 +46,11 @@ parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456
 parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 parser.add_argument('--image_shape', nargs='+', type=int, default=[3, 224, 224], help="the shape of image")
 add_arg('topk',             int,  1,                    "topk")
-add_arg('map_path',       str,  "./utils/tools/readable_label.txt", "readable label filepath")
+add_arg('class_map_path',         str,  "./utils/tools/readable_label.txt", "readable label filepath")
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
-add_arg('sample_path',      str,  None,                 "single sample image path")
+add_arg('image_path',       str,  None,                  "single image path")
 # yapf: enable
 
 
@@ -108,8 +108,8 @@ def infer(args):
 
     TOPK = args.topk
 
-    assert os.path.exists(args.map_path), "Index file doesn't exist!"
-    f = open(args.map_path)
+    assert os.path.exists(args.class_map_path), "Index file doesn't exist!"
+    f = open(args.class_map_path)
     label_dict = {}
     for item in f.readlines():
         key = item.split(" ")[0]

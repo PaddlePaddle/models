@@ -408,9 +408,9 @@ class ImageNetReader:
         Returns:
             test reader
         """
-        if settings.sample_path:
+        if settings.image_path:
             tmp = open(".tmp.txt", "w")
-            tmp.write(settings.sample_path + " 0")
+            tmp.write(settings.image_path + " 0")
             file_list = ".tmp.txt"
         else:
             file_list = os.path.join(settings.data_dir, 'val_list.txt')

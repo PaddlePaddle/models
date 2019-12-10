@@ -148,7 +148,7 @@ def parse_args():
     add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
     add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
 
-    add_arg('validate',                 bool,    True,                      "whether to validate when training.")
+    add_arg('validate',                 bool,   True,                   "whether to validate when training.")
     add_arg('same_feed',                int,    0,                      "whether to feed same images")
 
 
@@ -271,8 +271,9 @@ def check_args(args):
         args.random_seed = 0
         print("CE is running now!")
 
-    #check gpu
+    assert args.class_dim > 1, "class_dim must greater than 1"
 
+    #check gpu
     check_gpu()
     check_version()
 
