@@ -212,8 +212,8 @@ Classification model evaluation result is shown as below:
 
 | model | Top-1 | download |
 | :----- | :---: | :---: |
-| SSG(Single-Scale Group) | 87.6 | [model]() |
-| MSG(Multi-Scale Group)  | 89.2 | [model]() |
+| SSG(Single-Scale Group) | 89.3 | [model]() |
+| MSG(Multi-Scale Group)  | 90.0 | [model]() |
 
 **Semantic Segmentation Model:**
 

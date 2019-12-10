@@ -81,7 +81,7 @@ pip install -r requirement.txt
     sh make.sh
     ```
 
-    成功编译后，`ext_op/src` 目录下将会生成 `pointnet2_lib.so` 
+    成功编译后，`ext_op/src` 目录下将会生成 `pointnet_lib.so` 
 
     执行下列操作，确保自定义算子编译正确：
 
