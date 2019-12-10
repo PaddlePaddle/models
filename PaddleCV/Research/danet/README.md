@@ -1,6 +1,6 @@
 # [Dual Attention Network for Scene Segmentation (CVPR2019)](https://arxiv.org/pdf/1809.02983.pdf)
 
-本项目是[DANet](https://arxiv.org/pdf/1809.02983.pdf)的 PaddlePaddle 实现， 包含模型训练，验证等内容。
+本项目是[DANet](https://arxiv.org/pdf/1809.02983.pdf)的 PaddlePaddle（>=1.5.2） 实现， 包含模型训练，验证等内容。
 
 ## 模型简介
 ![net](img/Network.png)
