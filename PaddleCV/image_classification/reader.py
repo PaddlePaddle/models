@@ -319,6 +319,8 @@ class ImageNetReader:
             return read_file_list
 
         data_reader = reader()
+        if mode == 'test' and settings.image_path:
+            os.remove(".tmp.txt")
         if mode == 'train' and num_trainers > 1:
             assert self.shuffle_seed is not None, \
                 "If num_trainers > 1, the shuffle_seed must be set, because " \
