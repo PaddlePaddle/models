@@ -190,7 +190,9 @@ def get_reg_loss(pred_reg, reg_label, fg_mask, point_num, loc_scope,
     size_res_norm = pred_reg[:, size_res_l:size_res_r]
     size_res_norm = fluid.layers.reshape(size_res_norm, shape=[-1, 1], inplace=True)
     size_loss = fluid.layers.smooth_l1(size_res_norm, size_res_norm_label)
-    size_loss = fluid.layers.reduce_mean(fluid.layers.reshape(size_loss, [-1, 3]) * fg_mask) * fg_scale
+    size_loss = fluid.layers.reshape(size_loss, shape=[-1, 3])
+    size_loss = fluid.layers.elementwise_mul(size_loss, fg_mask, axis=0)
+    size_loss = fluid.layers.reduce_mean(size_loss) * fg_scale
 
     # Total regression loss
     reg_loss_dict['loss_loc'] = loc_loss

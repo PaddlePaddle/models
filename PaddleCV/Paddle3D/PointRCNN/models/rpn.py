@@ -151,17 +151,20 @@ class RPN(object):
         fg_mask = fluid.layers.cast(cls_label_flat > 0, dtype=rpn_reg.dtype)
         fg_mask.stop_gradient = True
         loc_loss, angle_loss, size_loss, loss_dict = get_reg_loss(
-                                        rpn_reg * fg_mask, reg_label, fg_mask,
-                                        float(self.batch_size * self.cfg.RPN.NUM_POINTS),
-                                        loc_scope=self.cfg.RPN.LOC_SCOPE,
-                                        loc_bin_size=self.cfg.RPN.LOC_BIN_SIZE,
-                                        num_head_bin=self.cfg.RPN.NUM_HEAD_BIN,
-                                        anchor_size=self.cfg.CLS_MEAN_SIZE[0],
-                                        get_xz_fine=self.cfg.RPN.LOC_XZ_FINE,
-                                        get_y_by_bin=False,
-                                        get_ry_fine=False)
+            fluid.layers.elementwise_mul(rpn_reg, fg_mask, axis=0),
+            reg_label,
+            fg_mask,
+            float(self.batch_size * self.cfg.RPN.NUM_POINTS),
+            loc_scope=self.cfg.RPN.LOC_SCOPE,
+            loc_bin_size=self.cfg.RPN.LOC_BIN_SIZE,
+            num_head_bin=self.cfg.RPN.NUM_HEAD_BIN,
+            anchor_size=self.cfg.CLS_MEAN_SIZE[0],
+            get_xz_fine=self.cfg.RPN.LOC_XZ_FINE,
+            get_y_by_bin=False,
+            get_ry_fine=False)
         rpn_loss_reg = loc_loss + angle_loss + size_loss * 3
 
-        self.rpn_loss = rpn_loss_cls * self.cfg.RPN.LOSS_WEIGHT[0] + rpn_loss_reg * self.cfg.RPN.LOSS_WEIGHT[1]
+        self.rpn_loss = rpn_loss_cls * self.cfg.RPN.LOSS_WEIGHT[0] \
+                            + rpn_loss_reg * self.cfg.RPN.LOSS_WEIGHT[1]
         return self.rpn_loss, rpn_loss_cls, rpn_loss_reg
         
