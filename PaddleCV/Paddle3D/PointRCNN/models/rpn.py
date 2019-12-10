@@ -150,8 +150,9 @@ class RPN(object):
         reg_label = fluid.layers.reshape(rpn_reg_label, [-1, rpn_reg_label.shape[-1]])
         fg_mask = fluid.layers.cast(cls_label_flat > 0, dtype=rpn_reg.dtype)
         fg_mask.stop_gradient = True
+        masked_rpn_reg = fluid.layers.elementwise_mul(rpn_reg, fg_mask, axis=0)
         loc_loss, angle_loss, size_loss, loss_dict = get_reg_loss(
-            fluid.layers.elementwise_mul(rpn_reg, fg_mask, axis=0),
+            masked_rpn_reg,
             reg_label,
             fg_mask,
             float(self.batch_size * self.cfg.RPN.NUM_POINTS),

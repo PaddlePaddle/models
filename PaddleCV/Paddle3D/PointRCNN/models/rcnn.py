@@ -281,8 +281,9 @@ class RCNN(object):
         all_anchor_size = roi_size
         anchor_size = all_anchor_size[fg_mask] if self.cfg.RCNN.SIZE_RES_ON_ROI else self.cfg.CLS_MEAN_SIZE[0]
 
+        masked_reg_out = fluid.layers.elementwise_mul(reg_out, fg_mask, axis=0)
         loc_loss, angle_loss, size_loss, loss_dict = get_reg_loss(
-            fluid.layers.elementwise_mul(reg_out, fg_mask, axis=0),
+            masked_reg_out,
             gt_boxes3d_ct,
             fg_mask,
             point_num=float(self.batch_size*64),
