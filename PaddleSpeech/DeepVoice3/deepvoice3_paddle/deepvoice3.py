@@ -206,7 +206,7 @@ class Encoder(dg.Layer):
         Encode text sequence.
         
         Args:
-            x (Variable): Shape(B, T_enc, 1), dtype: int64. Ihe input text
+            x (Variable): Shape(B, T_enc), dtype: int64. Ihe input text
                 indices. T_enc means the timesteps of decoder input x.
             speaker_embed (Variable, optional): Shape(Batch_size, speaker_dim),
                 dtype: float32. Speaker embeddings. This arg is not None only
@@ -1228,7 +1228,7 @@ class DeepVoiceTTS(dg.Layer):
                 valid lengths for each example in text_sequences.
             mel_inputs (Variable): Shape(B, C_mel, 1, T_mel), ground truth
                 mel-spectrogram, which is used as decoder inputs when training. 
-            speaker_indices (Variable, optional): Shape(Batch_size, 1),
+            speaker_indices (Variable, optional): Shape(Batch_size),
                 dtype: int64. Speaker index for each example. This arg is not
                 None only when the model is a multispeaker model.
             text_positions (Variable): Shape(B, T_enc, 1), dtype: int64.
