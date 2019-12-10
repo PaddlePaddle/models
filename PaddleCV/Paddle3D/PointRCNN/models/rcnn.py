@@ -276,14 +276,14 @@ class RCNN(object):
         # RCNN regression loss
         reg_out = self.reg_out
         fg_mask = fluid.layers.cast(reg_valid_mask > 0, dtype=reg_out.dtype)
+        fg_mask = fluid.layers.unsqueeze(fg_mask, axes=[1])
         fg_mask.stop_gradient = True
         gt_boxes3d_ct = fluid.layers.reshape(gt_boxes3d_ct, [-1,7])
         all_anchor_size = roi_size
         anchor_size = all_anchor_size[fg_mask] if self.cfg.RCNN.SIZE_RES_ON_ROI else self.cfg.CLS_MEAN_SIZE[0]
 
-        masked_reg_out = fluid.layers.elementwise_mul(reg_out, fg_mask, axis=0)
         loc_loss, angle_loss, size_loss, loss_dict = get_reg_loss(
-            masked_reg_out,
+            reg_out * fg_mask, 
             gt_boxes3d_ct,
             fg_mask,
             point_num=float(self.batch_size*64),
