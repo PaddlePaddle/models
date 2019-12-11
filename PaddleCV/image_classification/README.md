@@ -208,7 +208,7 @@ python train.py \
 
 **参数说明**
 
-* **save_json**: 是否将eval结果保存到json文件中，默认值：None
+* **save_json_path**: 是否将eval结果保存到json文件中，默认值：None
 
 ```bash
 python eval.py \
@@ -241,6 +241,7 @@ python eval.py \
 * **topk**: 按照置信由高到低排序标签结果，返回的结果数量，默认值：1
 * **class_map_path**: 可读标签文件路径，默认值："./utils/tools/readable_label.txt"
 * **image_path**: 指定单文件进行预测，默认值：None
+* **save_json_path**: 将预测结果保存到json文件中，默认值: None
 
 ```bash
 python infer.py \

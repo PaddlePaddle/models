@@ -200,7 +200,7 @@ Evaluation is to evaluate the performance of a trained model. One can download [
 
 **parameters**
 
-* **save_json**: whether to save output, default: None
+* **save_json_path**: whether to save output, default: None
 
 ```
 python eval.py \
@@ -231,7 +231,7 @@ python eval.py \
 * **save_inference**: whether to save binary model, Default: False
 * **topk**: the number of sorted predicated labels to show, Default: 1
 * **class_map_path**: readable label filepath, Default: "/utils/tools/readable_label.txt"
-* **save_json**: whether to save output, Default: None
+* **save_json_path**: whether to save output, Default: None
 * **image_path**: whether to indicate the single image path to predict, Default: None
 
 Inference is used to get prediction score or image features based on trained models. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Run following command then obtain prediction score.
