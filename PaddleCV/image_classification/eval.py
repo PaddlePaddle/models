@@ -23,7 +23,6 @@ import math
 import numpy as np
 import argparse
 import functools
-import json
 
 import paddle
 import paddle.fluid as fluid
@@ -49,14 +48,9 @@ parser.add_argument('--image_shape', nargs="+",  type=int, default=[3,224,224], 
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
-add_arg('save_json',             str,  None,                 "Whether to save output in json file.")
+add_arg('save_json_path',   str,  None,                 "Whether to save output in json file.")
+add_arg('same_feed',        int,  0,                    "Whether to feed same images")
 # yapf: enable
-
-
-def out_save(info, outfile):
-
-    with open(outfile, 'a') as f:
-        json.dump(info, f)
 
 
 def eval(args):
@@ -109,19 +103,24 @@ def eval(args):
     test_program = fluid.default_main_program().clone(for_test=True)
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
+    gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
 
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+
     exe.run(fluid.default_startup_program())
+    if args.use_gpu:
+        places = fluid.framework.cuda_places()
 
     compiled_program = fluid.compiler.CompiledProgram(
-        test_program).with_data_parallel()
+        test_program).with_data_parallel(places=places)
 
     fluid.io.load_persistables(exe, args.pretrained_model)
     imagenet_reader = reader.ImageNetReader()
     val_reader = imagenet_reader.val(settings=args)
-
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
+
+    val_reader = feeder.decorate_reader(val_reader, multi_devices=True)
 
     test_info = [[], [], []]
     cnt = 0
@@ -129,7 +128,7 @@ def eval(args):
         t1 = time.time()
         loss, acc1, acc5 = exe.run(compiled_program,
                                    fetch_list=fetch_list,
-                                   feed=feeder.feed(data))
+                                   feed=data)
         t2 = time.time()
         period = t2 - t1
         loss = np.mean(loss)
@@ -145,7 +144,7 @@ def eval(args):
                   "%2.2f sec" % period)
             print(info)
             if args.save_json:
-                out_save(info, args.save_json)
+                save_json(info, args.save_json_path)
             sys.stdout.flush()
 
     test_loss = np.sum(test_info[0]) / cnt

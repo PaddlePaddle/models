@@ -26,6 +26,7 @@ import sys
 import os
 import warnings
 import signal
+import json
 
 import paddle
 import paddle.fluid as fluid
@@ -129,6 +130,7 @@ def parse_args():
     parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
     # SWITCH
+    add_arg('validate',                 bool,   True,                   "whether to validate when training.")
     #NOTE: (2019/08/08) FP16 is moving to PaddlePaddle/Fleet now
     #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
@@ -136,19 +138,17 @@ def parse_args():
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
-    add_arg("enable_ce",                bool,   False,                  "Whether to enable ce")
-    add_arg('random_seed',              int,    None,                   "random seed")
-
     add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     add_arg('use_se',                   bool,   True,                   "Whether to use Squeeze-and-Excitation module for EfficientNet.")
 
     #NOTE: args for profiler
+    add_arg("enable_ce",                bool,   False,                  "Whether to enable ce")
+    add_arg('random_seed',              int,    None,                   "random seed")
     add_arg('is_profiler',              bool,   False,                  "Whether to start the profiler")
-    add_arg('profiler_path',            str,    './',                   "the profiler output file path")
+    add_arg('profiler_path',            str,    './profilier_files',                   "the profiler output file path")
     add_arg('max_iter',                 int,    0,                      "the max train batch num")
-    add_arg('validate',                 bool,   True,                   "whether to validate when training.")
     add_arg('same_feed',                int,    0,                      "whether to feed same images")
 
 
@@ -279,6 +279,9 @@ def check_args(args):
 
 
 def init_model(exe, args, program):
+    """load model from checkpoint or pretrained model
+    """
+
     if args.checkpoint:
         fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
         print("Finish initing model from %s" % (args.checkpoint))
@@ -298,11 +301,21 @@ def init_model(exe, args, program):
 
 
 def save_model(args, exe, train_prog, info):
+    """save model in model_path
+    """
+
     model_path = os.path.join(args.model_save_dir, args.model, str(info))
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
     fluid.io.save_persistables(exe, model_path, main_program=train_prog)
     print("Already save model in %s" % (model_path))
+
+
+def save_json(info, path):
+    """ save eval result or infer result to file as json format.
+    """
+    with open(path, 'a') as f:
+        json.dump(info, f)
 
 
 def create_data_loader(is_train, args):

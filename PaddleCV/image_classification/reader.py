@@ -271,15 +271,12 @@ class ImageNetReader:
                         rotate=False,
                         data_dir=None):
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-        if mode == 'test':
-            batch_size = 1
+        if settings.use_gpu:
+            batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
+            )
         else:
-            if settings.use_gpu:
-                batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
-                )
-            else:
-                batch_size = settings.batch_size // int(
-                    os.environ.get('CPU_NUM', 1))
+            batch_size = settings.batch_size // int(
+                os.environ.get('CPU_NUM', 1))
 
         def reader():
             def read_file_list():
@@ -393,7 +390,6 @@ class ImageNetReader:
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
                 file_list)
-
         return self._reader_creator(
             settings,
             file_list,

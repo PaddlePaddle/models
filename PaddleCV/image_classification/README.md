@@ -267,7 +267,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 ### 性能分析
 
 注意：本部分主要为内部测试功能。
-其中包括启动CE以检测模型运行的稳定性，启动profiler以监测benchmark，启动same_feed来进行快速调试。
+其中包括启动CE以监测模型运行的稳定性，启动profiler以测试benchmark，启动same_feed来进行快速调试。
 
 启动CE会固定随机初始化，其中包括数据读取器中的shuffle和program的[random_seed](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/api_cn/fluid_cn/Program_cn.html#random_seed)
 
