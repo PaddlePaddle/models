@@ -451,7 +451,12 @@ def print_ce(device_num, metrics, time_info):
     print("kpis\ttrain_speed_card{}\t{}".format(device_num, train_speed))
 
 
-def best_strategy_compiled(args, program, loss, exe, mode="train"):
+def best_strategy_compiled(args,
+                           program,
+                           loss,
+                           exe,
+                           mode="train",
+                           share_prog=None):
     """make a program which wrapped by a compiled program
     """
 
@@ -476,6 +481,7 @@ def best_strategy_compiled(args, program, loss, exe, mode="train"):
 
         compiled_program = fluid.CompiledProgram(program).with_data_parallel(
             loss_name=loss.name if mode == "train" else loss,
+            share_vars_from=share_prog is mode == "val",
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
 

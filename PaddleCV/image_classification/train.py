@@ -86,14 +86,20 @@ def validate(args,
              test_fetch_list,
              pass_id,
              train_batch_metrics_record,
-             train_batch_time_record=None):
+             train_batch_time_record=None,
+             train_prog):
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
     compiled_program = fluid.compiler.CompiledProgram(
         test_prog).with_data_parallel()
     compiled_program = best_strategy_compiled(
-        args, test_prog, test_fetch_list[0], exe, mode="val")
+        args,
+        test_prog,
+        test_fetch_list[0],
+        exe,
+        mode="val",
+        share_prog=train_prog)
     for batch in test_iter:
         t1 = time.time()
         test_batch_metrics = exe.run(program=compiled_program,
@@ -251,11 +257,13 @@ def train(args):
                 print('ExponentialMovingAverage validate start...')
                 with ema.apply(exe):
                     validate(args, test_iter, exe, test_prog, test_fetch_list,
-                             pass_id, train_batch_metrics_record)
+                             pass_id, train_batch_metrics_record,
+                             compiled_train_prog)
                 print('ExponentialMovingAverage validate over!')
 
             validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
-                     train_batch_metrics_record, train_batch_time_record)
+                     train_batch_metrics_record, train_batch_time_record,
+                     compiled_train_prog)
             #For now, save model per epoch.
             if pass_id % args.save_step == 0:
                 save_model(args, exe, train_prog, pass_id)
