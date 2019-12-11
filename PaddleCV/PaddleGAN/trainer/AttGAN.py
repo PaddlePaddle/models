@@ -169,7 +169,7 @@ class DTrainer():
             shape = [a.shape[0]]
             alpha = fluid.layers.uniform_random_batch_size_like(
                 input=a, shape=shape, min=0.0, max=1.0)
-            inner = (b - a) * alpha + a
+            inner = fluid.layers.elementwise_mul((b-a), alpha, axis=0) + a
             return inner
 
         x = _interpolate(real, fake)
