@@ -90,9 +90,13 @@ def validate(args,
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
+    compiled_program = fluid.compiler.CompiledProgram(
+        test_prog).with_data_parallel()
+    compiled_program = best_strategy_compiled(
+        args, test_prog, test_fetch_list[0], exe, mode="val")
     for batch in test_iter:
         t1 = time.time()
-        test_batch_metrics = exe.run(program=test_prog,
+        test_batch_metrics = exe.run(program=compiled_program,
                                      feed=batch,
                                      fetch_list=test_fetch_list)
         t2 = time.time()
@@ -192,7 +196,7 @@ def train(args):
             places = fluid.framework.cuda_places()
         train_data_loader.set_sample_list_generator(train_reader, places)
         if args.validate:
-            test_data_loader.set_sample_list_generator(test_reader, place)
+            test_data_loader.set_sample_list_generator(test_reader, places)
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
                                                  train_fetch_vars[0], exe)

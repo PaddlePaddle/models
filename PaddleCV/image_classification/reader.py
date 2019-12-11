@@ -295,11 +295,11 @@ class ImageNetReader:
                         np.random.RandomState(self.shuffle_seed).shuffle(
                             full_lines)
                     elif shuffle:
-                        if not settings.enable_ce or settings.same_feed:
+                        if not settings.enable_ce or not settings.same_feed:
                             np.random.shuffle(full_lines)
 
                 batch_data = []
-                if mode == "train" and settings.same_feed:
+                if mode == "train" or mode == "val" and settings.same_feed:
                     temp_file = full_lines[0]
                     print("Same images({},nums:{}) will feed in the net".format(
                         str(temp_file), settings.same_feed))
