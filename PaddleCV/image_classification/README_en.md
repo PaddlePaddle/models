@@ -15,6 +15,7 @@ English | [中文](README.md)
 - [Advanced Usage](#advanced-usage)
     - [Mixup Training](#mixup-training)
     - [Using Mixed-Precision Training](#using-mixed-precision-training)
+    - [Profiling](#profiling)
     - [Preprocessing with Nvidia DALI](#preprocessing-with-nvidia-dali)
     - [Custom Dataset](#custom-dataset)
 - [Supported Models and Performances](#supported-models-and-performances)
@@ -152,19 +153,29 @@ Reader and preprocess:
 
 Switch:
 
+* **validate**: whether to validate when training. Default: True.
 * **use_gpu**: whether to use GPU or not. Default: True.
 * **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
 * **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.1.
-* **random_seed**: random seed for debugging, Default: 1000.
 * **padding_type**: padding type of convolution for efficientNet, Default: "SAME".
 * **use_se**: whether to use Squeeze-and-Excitation module in efficientNet, Default: True.
 * **use_ema**: whether to use ExponentialMovingAverage or not. Default: False.
 * **ema_decay**: the value of ExponentialMovingAverage decay rate. Default: 0.9999.
 
+Profiling:
+
+* **enable_ce**: whether to start CE, Default: False
+* **random_seed**: random seed, Default: None
+* **is_profiler**: whether to start profilier, Default: 0
+* **profilier_path**: path to save profilier output, Default: 'profilier_path'
+* **max_iter**: maximum training batch, Default: 0
+* **same_feed**: whether to feed same data in the net, Default: 0
+
+
 **data reader introduction:** Data reader is defined in ```reader.py```, default reader is implemented by opencv. In the [Training](#training) Stage, random crop and flipping are applied, while center crop is applied in the [Evaluation](#evaluation) and [Inference](#inference) stages. Supported data augmentation includes:
 
 * rotation
-* color jitter (haven't implemented in cv2_reader)
+* color jitter
 * random crop
 * center crop
 * resize
@@ -186,6 +197,10 @@ Note: Add and adjust other parameters accroding to specific models and tasks.
 ### Evaluation
 
 Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
+
+**parameters**
+
+* **save_json**: whether to save output, default: None
 
 ```
 python eval.py \
@@ -215,7 +230,9 @@ python eval.py \
 
 * **save_inference**: whether to save binary model, Default: False
 * **topk**: the number of sorted predicated labels to show, Default: 1
-* **label_path**: readable label filepath, Default: "/utils/tools/readable_label.txt"
+* **class_map_path**: readable label filepath, Default: "/utils/tools/readable_label.txt"
+* **save_json**: whether to save output, Default: None
+* **image_path**: whether to indicate the single image path to predict, Default: None
 
 Inference is used to get prediction score or image features based on trained models. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Run following command then obtain prediction score.
 

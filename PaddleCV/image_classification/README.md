@@ -14,6 +14,7 @@
 - [进阶使用](#进阶使用)
     - [Mixup训练](#mixup训练)
     - [混合精度训练](#混合精度训练)
+    - [性能分析](#性能分析)
     - [DALI预处理](#DALI预处理)
     - [自定义数据集](#自定义数据集)
 - [已发布模型及其性能](#已发布模型及其性能)
@@ -174,7 +175,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 * **enable_ce**: 是否开启CE，默认值: False
 * **random_seed**: 随机数种子，当设置数值后，所有随机化会被固定，默认值: None
 * **is_profiler**: 是否开启性能分析，默认值: 0
-* **profilier_path**: 分析文件保存位置，默认值: './'
+* **profilier_path**: 分析文件保存位置，默认值: 'profiler_path/'
 * **max_iter**: 最大训练batch数，默认值: 0
 * **same_feed**: 是否feed相同数据进入网络，设定具体数值来指定数据数量，默认值：0
 
