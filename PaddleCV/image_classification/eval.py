@@ -143,7 +143,7 @@ def eval(args):
                   "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5, \
                   "%2.2f sec" % period)
             print(info)
-            if args.save_json:
+            if args.save_json_path:
                 save_json(info, args.save_json_path)
             sys.stdout.flush()
 
