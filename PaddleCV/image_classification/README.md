@@ -274,7 +274,7 @@ FP16相关内容已经迁移至PaddlePaddle/Fleet 中
 
 ``` bash
 python train.py \
-    --enable_ce=True
+    --enable_ce=True \
     --data_dir=${path_to_a_smaller_dataset}
 ```
 
