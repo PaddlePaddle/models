@@ -242,7 +242,7 @@ def main():
             ce_time.append(epoch_time)
             print(
                 "\nTrain epoch:[%d]; Epoch Time: %.4f; avg_time: %.4f s/step\n"
-                % (epoch_id, epoch_time, sum(batch_times) / len(batch_times)))
+                % (epoch_id, epoch_time, sum(batch_times) / len(batch_times) / batch_size))
 
             val_nll, val_ppl = eval(valid_data)
             print("dev ppl", val_ppl)
@@ -279,6 +279,18 @@ def main():
 
         print('\nbest testing nll: %.4f, best testing ppl %.4f\n' %
               (best_nll, best_ppl))
+
+        if args.enable_ce:
+            card_num = get_cards()
+            _ppl = 0
+            _time = 0
+            try:
+                _time = ce_time[-1]
+                _ppl = ce_ppl[-1]
+            except:
+                print("ce info error")
+            print("kpis\ttrain_duration_card%s\t%s" % (card_num, _time))
+            print("kpis\ttrain_ppl_card%s\t%f" % (card_num, _ppl))
 
     with profile_context(args.profile):
         train()
