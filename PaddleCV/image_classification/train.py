@@ -65,17 +65,21 @@ def build_program(is_train, main_prog, startup_prog, args):
                 avg_cost = loss_out[0]
 
                 if args.use_fp16:
-                    params_grads = optimizer.backward(avg_cost)
-                    master_params_grads = create_master_params_grads(
-                        params_grads, main_prog, startup_prog, args.scale_loss)
-                    optimizer.apply_gradients(master_params_grads)
-                    master_param_to_train_param(master_params_grads,
-                                                params_grads, main_prog)
+                    #params_grads = optimizer.backward(avg_cost)
+                    #master_params_grads = create_master_params_grads(
+                    #    params_grads, main_prog, startup_prog, args.scale_loss)
+                    #optimizer.apply_gradients(master_params_grads)
+                    #master_param_to_train_param(master_params_grads,
+                    #                            params_grads, main_prog)
+                    optimizer = fluid.contrib.mixed_precision.decorate(
+                        optimizer, init_loss_scaling=args.scale_loss)
+                    # use_dynamic_loss_scaling=args.use_dynamic_loss_scaling)
                 optimizer.minimize(avg_cost)
                 #XXX: fetch learning rate now, better implement is required here. 
-                global_lr = optimizer._global_learning_rate()
-                global_lr.persistable = True
-                loss_out.append(global_lr)
+                if not args.use_fp16:
+                    global_lr = optimizer._global_learning_rate()
+                    global_lr.persistable = True
+                    loss_out.append(global_lr)
                 if args.use_ema:
                     global_steps = fluid.layers.learning_rate_scheduler._decay_step_counter(
                     )

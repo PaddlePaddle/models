@@ -36,9 +36,6 @@ def _basic_model(data, model, args, is_train):
     image = data[0]
     label = data[1]
 
-    if args.use_fp16:
-        image = fluid.layers.cast(image, "float16")
-
     net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
 
@@ -65,9 +62,6 @@ def _googlenet_model(data, model, args, is_train):
     image = data[0]
     label = data[1]
 
-    if args.use_fp16:
-        image = fluid.layers.cast(image, "float16")
-
     out0, out1, out2 = model.net(input=image, class_dim=args.class_dim)
     cost0 = fluid.layers.cross_entropy(input=out0, label=label)
     cost1 = fluid.layers.cross_entropy(input=out1, label=label)
@@ -91,9 +85,6 @@ def _mixup_model(data, model, args, is_train):
     y_a = data[1]
     y_b = data[2]
     lam = data[3]
-
-    if args.use_fp16:
-        image = fluid.layers.cast(image, "float16")
 
     net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)

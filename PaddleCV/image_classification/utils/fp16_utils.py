@@ -13,7 +13,6 @@
 #limitations under the License.
 
 from __future__ import print_function
-
 import paddle
 import paddle.fluid as fluid
 import paddle.fluid.core as core
@@ -83,62 +82,48 @@ def _update_role_var_grad(prog, params_grads):
             op._set_attr("op_role_var", allreduce_role_var)
 
 
+#def create_master_params_grads(params_grads, main_prog, startup_prog, scale_loss, reduce_master_grad=True):
 def create_master_params_grads(params_grads,
                                main_prog,
                                startup_prog,
                                scale_loss,
-                               reduce_master_grad=True):
+                               reduce_master_grad=False):
     master_params_grads = []  # master p, g on local device
-    params_grads_to_apply = [
-    ]  # master p, g after allreduced, if reduce_master_grad is enabled
-    tmp_role = main_prog._current_role
-    OpRole = fluid.core.op_proto_and_checker_maker.OpRole
-    main_prog._current_role = OpRole.Backward
-    for p, g in params_grads:
-        # create master parameters
-        master_param = copy_to_master_param(p, main_prog.global_block())
-        startup_master_param = startup_prog.global_block()._clone_variable(
-            master_param)
-        startup_p = startup_prog.global_block().var(p.name)
-        cast_fp16_to_fp32(startup_p, startup_master_param, startup_prog)
-        # cast fp16 gradients to fp32 before apply gradients
-        if g.name.startswith("batch_norm"):
+    #params_grads_to_apply = []    # master p, g after allreduced, if reduce_master_grad is enabled
+    #tmp_role = main_prog._current_role
+    #OpRole = fluid.core.op_proto_and_checker_maker.OpRole
+    #main_prog._current_role = OpRole.Backward
+    with main_prog._backward_role_guard():
+        for p, g in params_grads:
+            # create master parameters
+            master_param = copy_to_master_param(p, main_prog.global_block())
+            startup_master_param = startup_prog.global_block()._clone_variable(
+                master_param)
+            startup_p = startup_prog.global_block().var(p.name)
+            # fp16 -> fp32
+            cast_fp16_to_fp32(startup_p, startup_master_param, startup_prog)
+            # cast fp16 gradients to fp32 before apply gradients
+            if g.name.find("batch_norm") > -1:
+                if scale_loss > 1:
+                    scaled_g = g / scale_loss
+                else:
+                    scaled_g = g
+                master_params_grads.append([p, scaled_g])
+                continue
+
+            master_grad = fluid.layers.cast(g, "float32")
             if scale_loss > 1:
-                scaled_g = g / float(scale_loss)
-            else:
-                scaled_g = g
-            master_params_grads.append([p, scaled_g])
-            continue
+                master_grad = master_grad / scale_loss
+            master_params_grads.append([master_param, master_grad])
 
-        master_grad = fluid.layers.cast(g, "float32")
-        if scale_loss > 1:
-            master_grad = master_grad / float(scale_loss)
-        master_params_grads.append([p, master_grad])
-        if reduce_master_grad:
-            reduced_master_grad = fluid.layers.collective._allreduce(
-                master_grad)
-        else:
-            reduced_master_grad = master_grad
-        params_grads_to_apply.append([master_param, reduced_master_grad])
-
-    # update program op role var acording to master grads before allreduce.
-    _update_role_var_grad(main_prog, master_params_grads)
-    main_prog._current_role = tmp_role
-    return params_grads_to_apply
+    return master_params_grads
 
 
 def master_param_to_train_param(master_params_grads, params_grads, main_prog):
     for idx, m_p_g in enumerate(master_params_grads):
+        train_p, _ = params_grads[idx]
+        if train_p.name.find('batch_norm') > -1:
+            continue
         with main_prog._optimized_guard([m_p_g[0], m_p_g[1]]):
-            train_p_name = m_p_g[0].name.replace(".master", "")
-            if train_p_name.startswith("batch_norm"):
-                continue
-            train_p = None
-            # find fp16 param in original params_grads list
-            for p, g in params_grads:
-                if p.name == train_p_name:
-                    train_p = p
-            if not train_p:
-                print("can not find train param for: ", m_p_g[0].name)
-                continue
+            # fp32 -> fp16
             cast_fp32_to_fp16(m_p_g[0], train_p, main_prog)
