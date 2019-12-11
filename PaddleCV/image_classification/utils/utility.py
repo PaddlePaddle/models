@@ -143,11 +143,11 @@ def parse_args():
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     add_arg('use_se',                   bool,   True,                   "Whether to use Squeeze-and-Excitation module for EfficientNet.")
-    #NOTE: args for profiler
-    add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
-    add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
-    add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
 
+    #NOTE: args for profiler
+    add_arg('is_profiler',              bool,   False,                  "Whether to start the profiler")
+    add_arg('profiler_path',            str,    './',                   "the profiler output file path")
+    add_arg('max_iter',                 int,    0,                      "the max train batch num")
     add_arg('validate',                 bool,   True,                   "whether to validate when training.")
     add_arg('same_feed',                int,    0,                      "whether to feed same images")
 

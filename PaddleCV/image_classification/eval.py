@@ -49,7 +49,7 @@ parser.add_argument('--image_shape', nargs="+",  type=int, default=[3,224,224], 
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
-add_arg('json',             str,  None,                 "Whether to save output in json file.")
+add_arg('save_json',             str,  None,                 "Whether to save output in json file.")
 # yapf: enable
 
 
@@ -144,8 +144,8 @@ def eval(args):
                   "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5, \
                   "%2.2f sec" % period)
             print(info)
-            if args.json:
-                out_save(info, args.json)
+            if args.save_json:
+                out_save(info, args.save_json)
             sys.stdout.flush()
 
     test_loss = np.sum(test_info[0]) / cnt

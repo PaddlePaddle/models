@@ -129,7 +129,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 * **model**: 模型名称， 默认值: "ResNet50"
 * **total_images**: 图片数，ImageNet2012，默认值: 1281167
 * **class_dim**: 类别数，默认值: 1000
-* **image_shape**: 图片大小，默认值: 3 224 224
+* **image_shape**: 图片大小，默认值: [3,224,224]
 * **num_epochs**: 训练回合数，默认值: 120
 * **batch_size**: batch size大小(所有设备)，默认值: 8
 * **test_batch_size**: 测试batch大小，默认值：16
@@ -159,24 +159,36 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 
 一些开关：
 
+* **validate**: 是否在模型训练过程中启动模型测试，默认值: True
 * **use_gpu**: 是否在GPU上运行，默认值: True
 * **use_label_smoothing**: 是否对数据进行label smoothing处理，默认值: False
 * **label_smoothing_epsilon**: label_smoothing的epsilon， 默认值:0.1
-* **random_seed**: 随机数种子， 默认值: 1000
 * **padding_type**: efficientNet中卷积操作的padding方式, 默认值: "SAME".
 * **use_se**: efficientNet中是否使用Squeeze-and-Excitation模块, 默认值: True.
 * **use_ema**: 是否在更新模型参数时使用ExponentialMovingAverage. 默认值: False.
 * **ema_decay**: ExponentialMovingAverage的decay rate. 默认值: 0.9999.
 
+
+性能分析：
+
+* **enable_ce**: 是否开启CE，默认值: False
+* **random_seed**: 随机数种子，当设置数值后，所有随机化会被固定，默认值: None
+* **is_profiler**: 是否开启性能分析，默认值: 0
+* **profilier_path**: 分析文件保存位置，默认值: './'
+* **max_iter**: 最大训练batch数，默认值: 0
+* **same_feed**: 是否feed相同数据进入网络，设定具体数值来指定数据数量，默认值：0
+
+
 **数据读取器说明：** 数据读取器定义在```reader.py```文件中，现在默认基于cv2的数据读取器， 在[训练阶段](#模型训练)，默认采用的增广方式是随机裁剪与水平翻转， 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 
 * 旋转
-* 颜色抖动（暂未实现）
+* 颜色抖动
 * 随机裁剪
 * 中心裁剪
 * 长宽调整
 * 水平翻转
 * 自动增广
+
 
 ### 参数微调
 
@@ -192,6 +204,10 @@ python train.py \
 ### 模型评估
 
 模型评估(Eval)是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
+
+**参数说明**
+
+* **save_json**: 是否将eval结果保存到json文件中，默认值：None
 
 ```bash
 python eval.py \
@@ -220,18 +236,20 @@ python eval.py \
 
 **参数说明：**
 
-* **save_inference**: 是否保存模型，默认值：False
+* **save_inference**: 是否保存二进制模型，默认值：False
 * **topk**: 按照置信由高到低排序标签结果，返回的结果数量，默认值：1
-* **label_path**: 可读标签文件路径，默认值："./utils/tools/readable_label.txt"
+* **class_map_path**: 可读标签文件路径，默认值："./utils/tools/readable_label.txt"
+* **image_path**: 指定单文件进行预测，默认值：None
 
 ```bash
 python infer.py \
        --model=model_name \
        --pretrained_model=${path_to_pretrain_model}
+       --image_path=${path_to_single_image}
 ```
 注意：根据具体模型和任务添加并调整其他参数
 
-模型预测默认ImageNet1000类类别，标签文件存储在/utils/tools/readable_label.txt中，如果使用自定义数据，请指定--label_path参数
+模型预测默认ImageNet1000类类别，预测数值和可读标签的map文件存储在/utils/tools/readable_label.txt中，如果使用自定义数据，请指定--class_map_path参数
 
 
 ## 进阶使用
@@ -245,6 +263,34 @@ Mixup相关介绍参考[mixup: Beyond Empirical Risk Minimization](https://arxiv
 ### 混合精度训练
 
 FP16相关内容已经迁移至PaddlePaddle/Fleet 中
+
+### 性能分析
+
+注意：本部分主要为内部测试功能。
+其中包括启动CE以检测模型运行的稳定性，启动profiler以监测benchmark，启动same_feed来进行快速调试。
+
+启动CE会固定随机初始化，其中包括数据读取器中的shuffle和program的[random_seed](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/api_cn/fluid_cn/Program_cn.html#random_seed)
+
+``` bash
+python train.py \
+    --enable_ce=True
+    --data_dir=${path_to_a_smaller_dataset}
+```
+
+启动profiler进行性能分析
+
+``` bash
+python train.py \
+    --is_profiler=True
+```
+
+设置same_feed参数以进行快速调试, 相同的图片（same_feed张图片）将传入网络中
+```bash
+python train.py \
+    --same_feed=8 \
+    --batch_size=4 \
+    --print_step=1
+```
 
 ### DALI预处理
 
@@ -275,7 +321,7 @@ python -m paddle.distributed.launch train.py \
 
 #### 注意事项
 
-1. PaddlePaddle需使用1.6或以上的版本，并且需要使用GCC5.4以上编译器编译。
+1. PaddlePaddle需使用1.6或以上的版本，并且需要使用GCC5.4以上编译器[编译](https://www.paddlepaddle.org.cn/install/doc/source/ubuntu), 另外，请在编译过程中指定-DWITH_DISTRIBUTE=ON 来启动多进程训练模式。
 2. Nvidia DALI需要使用[#1371](https://github.com/NVIDIA/DALI/pull/1371)以后的git版本。请参考[此文档](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/installation.html)安装nightly版本或从源码安装。
 3. 因为DALI使用GPU进行图片预处理，需要占用部分显存，请适当调整 `FLAGS_fraction_of_gpu_memory_to_use`环境变量（如`0.8`）来预留部分显存供DALI使用。
 

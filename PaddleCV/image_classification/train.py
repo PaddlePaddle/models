@@ -87,7 +87,7 @@ def validate(args,
              pass_id,
              train_batch_metrics_record,
              train_batch_time_record=None,
-             train_prog):
+             train_prog=None):
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
