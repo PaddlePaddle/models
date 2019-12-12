@@ -494,7 +494,7 @@ def best_strategy_compiled(args,
 
         compiled_program = fluid.CompiledProgram(program).with_data_parallel(
             loss_name=loss.name if mode == "train" else loss,
-            share_vars_from=share_prog is mode == "val",
+            share_vars_from=share_prog if mode == "val" else None,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
 
