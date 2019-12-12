@@ -51,7 +51,7 @@ add_arg('interpolation',    int,  None,                 "The interpolation mode"
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
 add_arg('image_path',       str,  None,                 "single image path")
-add_arg('batch_size',       int,  8,                    "batch_size")
+add_arg('batch_size',       int,  8,                    "batch_size on all devices")
 add_arg('save_json_path',        str,  None,            "save output to a json file")
 # yapf: enable
 

@@ -264,12 +264,13 @@ def train(args):
             validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
                      train_batch_metrics_record, train_batch_time_record,
                      compiled_train_prog)
-            #For now, save model per epoch.
-            if pass_id % args.save_step == 0:
-                save_model(args, exe, train_prog, pass_id)
 
             if args.use_dali:
                 test_iter.reset()
+
+        #For now, save model per epoch.
+        if pass_id % args.save_step == 0:
+            save_model(args, exe, train_prog, pass_id)
 
 
 def main():
