@@ -82,7 +82,7 @@ def check_gpu(use_gpu):
 
 def get_device_count():
     try:
-        device_num = min(fluid.core.get_cuda_device_count(), 1)
+        device_num = max(fluid.core.get_cuda_device_count(), 1)
     except:
         device_num = 1
 
