@@ -10,11 +10,9 @@ Paddle 实现的 Deepvoice3，一个基于卷积神经网络的语音合成 (Tex
 
 ### 安装 paddlepaddle 框架
 
-为了更快的训练速度和更好的支持，我们推荐使用 paddle 1.6 及以上版本。用户也可以最新编译的开发版 whl 包，也可以选择从源码编译 Paddle。
+为了更快的训练速度和更好的支持，我们推荐使用最新的 Paddle 开发版。用户也可以最新编译的开发版 whl 包，也可以选择从源码编译 Paddle。
 
-1. 下载 1.6.1 版本的 whl 包。可以从  [**多版本 wheel 包列表-dev**](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/Tables.html#whl-release) 页面中选择合适的版本。
-
-2. 下载最新编译的开发版 whl 包。可以从  [**多版本 wheel 包列表-dev**](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/Tables.html#whl-dev) 页面中选择合适的版本。
+1. 下载最新编译的开发版 whl 包。可以从  [**多版本 wheel 包列表-dev**](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/Tables.html#whl-dev) 页面中选择合适的版本。
 
 2. 从源码编译 Paddle. 参考[**从源码编译**](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/compile/fromsource.html) 页面。注意，如果你需要使用多卡训练，那么编译前需要设置选项 `-DWITH_DISTRIBUTE=ON`。
 
