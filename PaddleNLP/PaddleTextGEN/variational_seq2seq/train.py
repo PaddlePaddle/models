@@ -203,8 +203,8 @@ def main():
             word_count = 0.0
             batch_count = 0.0
             batch_times = []
-            batch_start_time = time.time()
             for batch_id, batch in enumerate(train_data_iter):
+                batch_start_time = time.time()
                 kl_w = min(1.0, kl_w + anneal_r)
                 kl_weight = kl_w
                 input_data_feed, src_word_num, dec_word_sum = prepare_input(
@@ -242,7 +242,7 @@ def main():
             ce_time.append(epoch_time)
             print(
                 "\nTrain epoch:[%d]; Epoch Time: %.4f; avg_time: %.4f s/step\n"
-                % (epoch_id, epoch_time, sum(batch_times) / len(batch_times) / batch_size))
+                % (epoch_id, epoch_time, sum(batch_times) / len(batch_times)))
 
             val_nll, val_ppl = eval(valid_data)
             print("dev ppl", val_ppl)
