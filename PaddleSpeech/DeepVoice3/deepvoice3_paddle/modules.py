@@ -366,8 +366,9 @@ class PositionEmbedding(dg.Layer):
         self._dtype = dtype
 
     def set_weight(self, array):
-        assert self.embed._w.shape == list(array.shape), "shape does not match"
-        self.embed._w.set_value(array)
+        assert self.embed.weight.shape == list(
+            array.shape), "shape does not match"
+        self.embed.weight.set_value(array)
 
     def forward(self, indices, speaker_position_rate=None):
         """
