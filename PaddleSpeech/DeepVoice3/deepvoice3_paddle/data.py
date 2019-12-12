@@ -273,6 +273,7 @@ def create_batch(batch):
 
     x_batch = np.array(
         [_pad(x[0], max_input_len) for x in batch], dtype=np.int64)
+    x_batch = np.expand_dims(x_batch, axis=-1)
 
     mel_batch = np.array(
         [_pad_2d(

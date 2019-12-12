@@ -206,7 +206,7 @@ class Encoder(dg.Layer):
         Encode text sequence.
         
         Args:
-            x (Variable): Shape(B, T_enc), dtype: int64. Ihe input text
+            x (Variable): Shape(B, T_enc, 1), dtype: int64. Ihe input text
                 indices. T_enc means the timesteps of decoder input x.
             speaker_embed (Variable, optional): Shape(Batch_size, speaker_dim),
                 dtype: float32. Speaker embeddings. This arg is not None only
