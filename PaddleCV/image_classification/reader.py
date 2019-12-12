@@ -296,7 +296,7 @@ class ImageNetReader:
                             np.random.shuffle(full_lines)
 
                 batch_data = []
-                if mode == "train" or mode == "val" and settings.same_feed:
+                if (mode == "train" or mode == "val") and settings.same_feed:
                     temp_file = full_lines[0]
                     print("Same images({},nums:{}) will feed in the net".format(
                         str(temp_file), settings.same_feed))

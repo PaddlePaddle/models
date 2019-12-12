@@ -91,8 +91,8 @@ def validate(args,
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
-    compiled_program = fluid.compiler.CompiledProgram(
-        test_prog).with_data_parallel()
+    #compiled_program = fluid.compiler.CompiledProgram(
+    #    test_prog).with_data_parallel()
     compiled_program = best_strategy_compiled(
         args,
         test_prog,
