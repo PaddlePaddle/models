@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('data_dir',         str,  "./data/ILSVRC2012/", "The ImageNet datset")
-add_arg('batch_size',       int,  256,                  "Minibatch size.")
+add_arg('batch_size',       int,  256,                  "batch size on the all devices.")
 add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                 "Class number.")
 parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
@@ -48,6 +48,8 @@ parser.add_argument('--image_shape', nargs="+",  type=int, default=[3,224,224], 
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
+add_arg('save_json_path',   str,  None,                 "Whether to save output in json file.")
+add_arg('same_feed',        int,  0,                    "Whether to feed same images")
 # yapf: enable
 
 
@@ -96,27 +98,37 @@ def eval(args):
         acc_top1 = fluid.layers.accuracy(input=pred, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=pred, label=label, k=5)
 
+    #startup_prog = fluid.Program()
+
     test_program = fluid.default_main_program().clone(for_test=True)
 
     fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
+    gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
 
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+
     exe.run(fluid.default_startup_program())
+    if args.use_gpu:
+        places = fluid.framework.cuda_places()
+
+    compiled_program = fluid.compiler.CompiledProgram(
+        test_program).with_data_parallel(places=places)
 
     fluid.io.load_persistables(exe, args.pretrained_model)
     imagenet_reader = reader.ImageNetReader()
     val_reader = imagenet_reader.val(settings=args)
-
     feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
+
+    val_reader = feeder.decorate_reader(val_reader, multi_devices=True)
 
     test_info = [[], [], []]
     cnt = 0
     for batch_id, data in enumerate(val_reader()):
         t1 = time.time()
-        loss, acc1, acc5 = exe.run(test_program,
+        loss, acc1, acc5 = exe.run(compiled_program,
                                    fetch_list=fetch_list,
-                                   feed=feeder.feed(data))
+                                   feed=data)
         t2 = time.time()
         period = t2 - t1
         loss = np.mean(loss)
@@ -127,10 +139,12 @@ def eval(args):
         test_info[2].append(acc5 * len(data))
         cnt += len(data)
         if batch_id % 10 == 0:
-            print("Testbatch {0},loss {1}, "
-                  "acc1 {2},acc5 {3},time {4}".format(batch_id, \
+            info = "Testbatch {0},loss {1}, acc1 {2},acc5 {3},time {4}".format(batch_id, \
                   "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5, \
-                  "%2.2f sec" % period))
+                  "%2.2f sec" % period)
+            print(info)
+            if args.save_json_path:
+                save_json(info, args.save_json_path)
             sys.stdout.flush()
 
     test_loss = np.sum(test_info[0]) / cnt

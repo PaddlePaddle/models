@@ -271,15 +271,13 @@ class ImageNetReader:
                         rotate=False,
                         data_dir=None):
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-        if mode == 'test':
-            batch_size = 1
+
+        if settings.use_gpu:
+            batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
+            )
         else:
-            if settings.use_gpu:
-                batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
-                )
-            else:
-                batch_size = settings.batch_size // int(
-                    os.environ.get('CPU_NUM', 1))
+            batch_size = settings.batch_size // int(
+                os.environ.get('CPU_NUM', 1))
 
         def reader():
             def read_file_list():
@@ -295,11 +293,11 @@ class ImageNetReader:
                         np.random.RandomState(self.shuffle_seed).shuffle(
                             full_lines)
                     elif shuffle:
-                        if not settings.enable_ce or settings.same_feed:
+                        if not settings.enable_ce or not settings.same_feed:
                             np.random.shuffle(full_lines)
 
                 batch_data = []
-                if settings.same_feed:
+                if (mode == "train" or mode == "val") and settings.same_feed:
                     temp_file = full_lines[0]
                     print("Same images({},nums:{}) will feed in the net".format(
                         str(temp_file), settings.same_feed))
@@ -319,6 +317,7 @@ class ImageNetReader:
             return read_file_list
 
         data_reader = reader()
+
         if mode == 'train' and num_trainers > 1:
             assert self.shuffle_seed is not None, \
                 "If num_trainers > 1, the shuffle_seed must be set, because " \
@@ -391,7 +390,6 @@ class ImageNetReader:
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
                 file_list)
-
         return self._reader_creator(
             settings,
             file_list,
@@ -408,7 +406,13 @@ class ImageNetReader:
         Returns:
             test reader
         """
-        file_list = os.path.join(settings.data_dir, 'val_list.txt')
+        if settings.image_path:
+            tmp = open(".tmp.txt", "w")
+            tmp.write(settings.image_path + " 0")
+            file_list = ".tmp.txt"
+            settings.batch_size = 1
+        else:
+            file_list = os.path.join(settings.data_dir, 'val_list.txt')
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
                 file_list)
