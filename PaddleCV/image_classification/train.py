@@ -31,7 +31,7 @@ from build_model import create_model
 
 
 def build_program(is_train, main_prog, startup_prog, args):
-    """build program, and add grad op in program accroding to different mode
+    """build program, and add backward op in program accroding to different mode
 
     Parameters:
         is_train: indicate train mode or test mode
@@ -91,8 +91,6 @@ def validate(args,
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
-    #compiled_program = fluid.compiler.CompiledProgram(
-    #    test_prog).with_data_parallel()
     compiled_program = best_strategy_compiled(
         args,
         test_prog,
@@ -147,9 +145,6 @@ def train(args):
     """
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
-    if args.validate:
-        test_prog = fluid.Program()
-
     train_out = build_program(
         is_train=True,
         main_prog=train_prog,
@@ -163,7 +158,9 @@ def train(args):
         train_fetch_vars = train_out[:-1]
 
     train_fetch_list = [var.name for var in train_fetch_vars]
+
     if args.validate:
+        test_prog = fluid.Program()
         test_out = build_program(
             is_train=False,
             main_prog=test_prog,
@@ -195,13 +192,13 @@ def train(args):
     else:
         imagenet_reader = reader.ImageNetReader(0 if num_trainers > 1 else None)
         train_reader = imagenet_reader.train(settings=args)
-        if args.validate:
-            test_reader = imagenet_reader.val(settings=args)
         places = place
         if num_trainers <= 1 and args.use_gpu:
             places = fluid.framework.cuda_places()
         train_data_loader.set_sample_list_generator(train_reader, places)
+
         if args.validate:
+            test_reader = imagenet_reader.val(settings=args)
             test_data_loader.set_sample_list_generator(test_reader, places)
 
     compiled_train_prog = best_strategy_compiled(args, train_prog,
@@ -228,13 +225,16 @@ def train(args):
                 return
             train_batch_metrics = exe.run(compiled_train_prog,
                                           feed=batch,
-                                          fetch_list=train_fetch_list)
+                                          fetch_list=train_fetch_list
+                                          if pass_id % args.print_step == 0 else
+                                          [])
             t2 = time.time()
             train_batch_elapse = t2 - t1
             train_batch_time_record.append(train_batch_elapse)
-            train_batch_metrics_avg = np.mean(
-                np.array(train_batch_metrics), axis=1)
-            train_batch_metrics_record.append(train_batch_metrics_avg)
+            if pass_id % args.print_step == 0:
+                train_batch_metrics_avg = np.mean(
+                    np.array(train_batch_metrics), axis=1)
+                train_batch_metrics_record.append(train_batch_metrics_avg)
             if trainer_id == 0:
                 print_info("batch", train_batch_metrics_avg, train_batch_elapse,
                            pass_id, train_batch_id, args.print_step)
@@ -268,7 +268,6 @@ def train(args):
             if args.use_dali:
                 test_iter.reset()
 
-        #For now, save model per epoch.
         if pass_id % args.save_step == 0:
             save_model(args, exe, train_prog, pass_id)
 

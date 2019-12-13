@@ -70,6 +70,12 @@ def infer(args):
         assert os.path.isfile(
             args.image_path
         ), "Please check the args:image_path, it should be a path to single image."
+        if args.use_gpu:
+            assert fluid.core.get_cuda_device_count(
+            ) == 1, "please set \"export CUDA_VISIBLE_DEVICES=\" available single card"
+        else:
+            assert int(os.environ.get('CPU_NUM',
+                                      1)) == 1, "please set CPU_NUM as 1"
 
     image = fluid.data(
         name='image', shape=[None] + args.image_shape, dtype='float32')
@@ -118,30 +124,37 @@ def infer(args):
     test_reader = feeder.decorate_reader(test_reader, multi_devices=True)
 
     TOPK = args.topk
-
-    assert os.path.exists(args.class_map_path), "Index file doesn't exist!"
-    f = open(args.class_map_path)
-    label_dict = {}
-    for item in f.readlines():
-        key = item.split(" ")[0]
-        value = [l.replace("\n", "") for l in item.split(" ")[1:]]
-        label_dict[key] = value
+    if os.path.exists(args.class_map_path):
+        print("The map of readable label and numerical label has been found!")
+        f = open(args.class_map_path)
+        label_dict = {}
+        for item in f.readlines():
+            key = item.split(" ")[0]
+            value = [l.replace("\n", "") for l in item.split(" ")[1:]]
+            label_dict[key] = value
 
     for batch_id, data in enumerate(test_reader()):
         result = exe.run(compiled_program, fetch_list=fetch_list, feed=data)
         result = result[0][0]
         pred_label = np.argsort(result)[::-1][:TOPK]
 
-        readable_pred_label = []
-        for label in pred_label:
-            readable_pred_label.append(label_dict[str(label)])
-        info = "Test-{0}-score: {1}, class{2} {3}".format(
-            batch_id, result[pred_label], pred_label, readable_pred_label)
+        if os.path.exists(args.class_map_path):
+            readable_pred_label = []
+            for label in pred_label:
+                readable_pred_label.append(label_dict[str(label)])
+                print(readable_pred_label)
+            info = "Test-{0}-score: {1}, class{2} {3}".format(
+                batch_id, result[pred_label], pred_label, readable_pred_label)
+        else:
+            info = "Test-{0}-score: {1}, class{2}".format(
+                batch_id, result[pred_label], pred_label)
         print(info)
         if args.save_json_path:
             save_json(info, args.save_json_path)
 
         sys.stdout.flush()
+    if args.image_path:
+        os.remove(".tmp.txt")
 
 
 def main():

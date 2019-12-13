@@ -271,6 +271,7 @@ class ImageNetReader:
                         rotate=False,
                         data_dir=None):
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+
         if settings.use_gpu:
             batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
             )
@@ -316,8 +317,7 @@ class ImageNetReader:
             return read_file_list
 
         data_reader = reader()
-        if mode == 'test' and settings.image_path:
-            os.remove(".tmp.txt")
+
         if mode == 'train' and num_trainers > 1:
             assert self.shuffle_seed is not None, \
                 "If num_trainers > 1, the shuffle_seed must be set, because " \
@@ -410,6 +410,7 @@ class ImageNetReader:
             tmp = open(".tmp.txt", "w")
             tmp.write(settings.image_path + " 0")
             file_list = ".tmp.txt"
+            settings.batch_size = 1
         else:
             file_list = os.path.join(settings.data_dir, 'val_list.txt')
         assert os.path.isfile(
