@@ -82,17 +82,6 @@ def profile_context(profile=True):
     else:
         yield
 
-def get_max_lens(data,padding_size):
-    max_lens=0
-    for x in data:
-        lens=len(x[0])
-        if lens>max_lens:
-            max_lens=lens
-    if(max_lens)>padding_size:
-        return padding_size
-    else:
-        return max_lens
-
 if args.ce:
     print("ce mode")
     seed = 90
@@ -205,7 +194,6 @@ def train():
                         model.eval()
                         eval_steps = 0
                         gru_hidden_data = np.zeros((args.batch_size, 128), dtype='float32')
-                        #max_lens=get_max_lens(data,args.padding_size)
                         for eval_batch_id, eval_data in enumerate(
                                 eval_data_generator()):
                             eval_np_doc = np.array([
