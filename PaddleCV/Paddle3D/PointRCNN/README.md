@@ -232,7 +232,8 @@ python train.py --cfg=./cfgs/default.yml \
                 --epoch=30 \
                 --save_dir=checkpoints \
                 --rcnn_training_roi_dir=output/detections/data \
-                --rcnn_training_feature_dir=output/features
+                --rcnn_training_feature_dir=output/features \
+                --set TRAIN.SPLIT train_aug
 ```
 
 RCNN模型训练权重默认保存在`checkpoints/rcnn`目录下，可通过`--save_dir`参数指定。
