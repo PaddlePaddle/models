@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import signal
 import logging
 import multiprocessing
 import numpy as np
@@ -1181,4 +1182,12 @@ class KittiRCNNReader(KittiDataset):
                     p.join()
 
         return reader
+
+
+def _term_reader(signum, frame):
+    logger.info('pid {} terminated, terminate reader process '
+                'group {}...'.format(os.getpid(), os.getpgrp()))
+    os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
+
+signal.signal(signal.SIGINT, _term_reader)
 
