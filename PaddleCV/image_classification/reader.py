@@ -262,6 +262,23 @@ class ImageNetReader:
         assert isinstance(seed, int), "shuffle seed must be int"
         self.shuffle_seed = seed
 
+    def _get_single_card_bs(self, settings, mode, bs):
+        if settings.use_gpu:
+            if mode == "val" and settings.test_batch_size:
+                single_card_bs = settings.test_batch_size // paddle.fluid.core.get_cuda_device_count(
+                )
+            else:
+                single_card_bs = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
+                )
+        else:
+            if mode == "val" and settings.test_batch_size:
+                single_card_bs = settings.test_batch_size // int(
+                    os.environ.get('CPU_NUM', 1))
+            else:
+                single_card_bs = settings.batch_size // int(
+                    os.environ.get('CPU_NUM', 1))
+        return single_card_bs
+
     def _reader_creator(self,
                         settings,
                         file_list,
@@ -272,12 +289,13 @@ class ImageNetReader:
                         data_dir=None):
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
-        if settings.use_gpu:
-            batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
-            )
-        else:
-            batch_size = settings.batch_size // int(
-                os.environ.get('CPU_NUM', 1))
+        #if settings.use_gpu:
+        #    batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
+        #    )
+        #else:
+        #    batch_size = settings.batch_size // int(
+        #        os.environ.get('CPU_NUM', 1))
+        batch_size = self._get_single_card_bs(settings, mode)
 
         def reader():
             def read_file_list():
@@ -304,7 +322,8 @@ class ImageNetReader:
                     full_lines = []
                     for i in range(settings.same_feed):
                         full_lines.append(temp_file)
-                for line in full_lines:
+
+                for line in full_lines[0:1024]:
                     img_path, label = line.split()
                     img_path = os.path.join(data_dir, img_path)
                     batch_data.append([img_path, int(label)])
