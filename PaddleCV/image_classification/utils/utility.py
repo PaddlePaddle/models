@@ -314,7 +314,7 @@ def save_model(args, exe, train_prog, info):
 def save_json(info, path):
     """ save eval result or infer result to file as json format.
     """
-    with open(path, 'a') as f:
+    with open(path, 'w') as f:
         json.dump(info, f)
 
 

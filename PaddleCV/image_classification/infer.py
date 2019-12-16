@@ -23,6 +23,7 @@ import math
 import numpy as np
 import argparse
 import functools
+import re
 
 import paddle
 import paddle.fluid as fluid
@@ -126,13 +127,18 @@ def infer(args):
     TOPK = args.topk
     if os.path.exists(args.class_map_path):
         print("The map of readable label and numerical label has been found!")
-        f = open(args.class_map_path)
-        label_dict = {}
-        for item in f.readlines():
-            key = item.split(" ")[0]
-            value = [l.replace("\n", "") for l in item.split(" ")[1:]]
-            label_dict[key] = value
+        with open(args.class_map_path) as f:
+            label_dict = {}
+            strinfo = re.compile(r"\d+ ")
+            for item in f.readlines():
+                key = item.split(" ")[0]
+                value = [
+                    strinfo.sub("", l).replace("\n", "")
+                    for l in item.split(", ")
+                ]
+                label_dict[key] = value
 
+    info = {}
     for batch_id, data in enumerate(test_reader()):
         result = exe.run(compiled_program, fetch_list=fetch_list, feed=data)
         result = result[0][0]
@@ -142,13 +148,18 @@ def infer(args):
             readable_pred_label = []
             for label in pred_label:
                 readable_pred_label.append(label_dict[str(label)])
-                print(readable_pred_label)
-            info = "Test-{0}-score: {1}, class{2} {3}".format(
-                batch_id, result[pred_label], pred_label, readable_pred_label)
+
+            info[batch_id] = {}
+            info[batch_id]['score'], info[batch_id]['class'], info[batch_id][
+                'class_name'] = str(result[pred_label]), str(
+                    pred_label), readable_pred_label
         else:
-            info = "Test-{0}-score: {1}, class{2}".format(
-                batch_id, result[pred_label], pred_label)
-        print(info)
+            info[batch_id] = {}
+            info[batch_id]['score'], info[batch_id]['class'] = str(result[
+                pred_label]), str(pred_label)
+
+        print(info[batch_id])
+
         if args.save_json_path:
             save_json(info, args.save_json_path)
 
