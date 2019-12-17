@@ -23,6 +23,7 @@ import math
 import numpy as np
 import argparse
 import functools
+import re
 
 import paddle
 import paddle.fluid as fluid
@@ -51,7 +52,7 @@ add_arg('interpolation',    int,  None,                 "The interpolation mode"
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
 add_arg('image_path',       str,  None,                 "single image path")
-add_arg('batch_size',       int,  8,                    "batch_size on all devices")
+add_arg('batch_size',       int,  8,                    "batch_size on all the devices")
 add_arg('save_json_path',        str,  None,            "save output to a json file")
 # yapf: enable
 
@@ -101,8 +102,9 @@ def infer(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
+    places = fluid.framework.cuda_places()
     compiled_program = fluid.compiler.CompiledProgram(
-        test_program).with_data_parallel()
+        test_program).with_data_parallel(places=places)
 
     fluid.io.load_persistables(exe, args.pretrained_model)
     if args.save_inference:
@@ -119,42 +121,68 @@ def infer(args):
 
     imagenet_reader = reader.ImageNetReader()
     test_reader = imagenet_reader.test(settings=args)
-
-    feeder = fluid.DataFeeder(place=place, feed_list=[image])
-    test_reader = feeder.decorate_reader(test_reader, multi_devices=True)
+    feeder = fluid.DataFeeder(place=places, feed_list=[image])
 
     TOPK = args.topk
     if os.path.exists(args.class_map_path):
         print("The map of readable label and numerical label has been found!")
-        f = open(args.class_map_path)
-        label_dict = {}
-        for item in f.readlines():
-            key = item.split(" ")[0]
-            value = [l.replace("\n", "") for l in item.split(" ")[1:]]
-            label_dict[key] = value
+        with open(args.class_map_path) as f:
+            label_dict = {}
+            strinfo = re.compile(r"\d+ ")
+            for item in f.readlines():
+                key = item.split(" ")[0]
+                value = [
+                    strinfo.sub("", l).replace("\n", "")
+                    for l in item.split(", ")
+                ]
+                label_dict[key] = value
+
+    info = {}
+    parallel_data = []
+    parallel_id = []
+    place_num = paddle.fluid.core.get_cuda_device_count()
 
     for batch_id, data in enumerate(test_reader()):
-        result = exe.run(compiled_program, fetch_list=fetch_list, feed=data)
-        result = result[0][0]
-        pred_label = np.argsort(result)[::-1][:TOPK]
+        image_data = [[items[0]] for items in data]
+        image_id = [items[1] for items in data]
 
-        if os.path.exists(args.class_map_path):
-            readable_pred_label = []
-            for label in pred_label:
-                readable_pred_label.append(label_dict[str(label)])
-                print(readable_pred_label)
-            info = "Test-{0}-score: {1}, class{2} {3}".format(
-                batch_id, result[pred_label], pred_label, readable_pred_label)
-        else:
-            info = "Test-{0}-score: {1}, class{2}".format(
-                batch_id, result[pred_label], pred_label)
-        print(info)
-        if args.save_json_path:
-            save_json(info, args.save_json_path)
+        parallel_id.append(image_id)
+        parallel_data.append(image_data)
 
-        sys.stdout.flush()
-    if args.image_path:
-        os.remove(".tmp.txt")
+        if place_num == len(parallel_data):
+            result = exe.run(
+                compiled_program,
+                fetch_list=fetch_list,
+                feed=list(feeder.feed_parallel(parallel_data, place_num)))
+            for i, res in enumerate(result[0]):
+                pred_label = np.argsort(res)[::-1][:TOPK]
+                real_id = str(np.array(parallel_id).flatten()[i])
+                _, real_id = os.path.split(real_id)
+
+                if os.path.exists(args.class_map_path):
+                    readable_pred_label = []
+                    for label in pred_label:
+                        readable_pred_label.append(label_dict[str(label)])
+
+                    info[real_id] = {}
+                    info[real_id]['score'], info[real_id]['class'], info[
+                        real_id]['class_name'] = str(res[pred_label]), str(
+                            pred_label), readable_pred_label
+                else:
+                    info[real_id] = {}
+                    info[real_id]['score'], info[real_id]['class'] = str(res[
+                        pred_label]), str(pred_label)
+
+                print(real_id, info[real_id])
+                sys.stdout.flush()
+
+                if args.save_json_path:
+                    save_json(info, args.save_json_path)
+
+            parallel_data = []
+            parallel_id = []
+        if args.image_path:
+            os.remove(".tmp.txt")
 
 
 def main():

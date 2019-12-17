@@ -102,8 +102,8 @@ def parse_args():
     parser.add_argument('--image_shape', nargs='+', type=int, default=[3, 224, 224], help="The shape of image")
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
-    add_arg('batch_size',               int,    8,                      "Minibatch size on all devices.")
-    add_arg('test_batch_size',          int,    16,                     "Test batch size on all devices.")
+    add_arg('batch_size',               int,    8,                      "Minibatch size on all the devices.")
+    add_arg('test_batch_size',          int,    None,                   "Test batch size on all the devices.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
@@ -287,10 +287,35 @@ def init_model(exe, args, program):
         print("Finish initing model from %s" % (args.checkpoint))
 
     if args.pretrained_model:
+        # yapf: disable
+
+        #XXX: should rename all models' final fc layers name as final_fc_weights and final_fc_offset!
+        final_fc_name = [
+                         "fc8_weights","fc8_offset", #alexnet
+                         "fc_weights","fc_offset", #darknet, densenet, dpn, hrnet, mobilenet_v3, res2net, res2net_vd, resnext, resnext_vd, xception
+                         #efficient
+                         "out","out_offset", "out1","out1_offset", "out2","out2_offset", #googlenet
+                         "final_fc_weights", "final_fc_offset", #inception_v4
+                         "fc7_weights", "fc7_offset", #mobilenetv1
+                         "fc10_weights", "fc10_offset", #mobilenetv2
+                         "fc_0", #resnet, resnet_vc, resnet_vd
+                         "fc.weight", "fc.bias", #resnext101_wsl
+                         "fc6_weights", "fc6_offset", #se_resnet_vd, se_resnext, se_resnext_vd, shufflenet_v2, shufflenet_v2_swish,
+                         #squeezenet
+                         "fc8_weights", "fc8_offset", #vgg
+                         "fc_bias" #"fc_weights", xception_deeplab
+                         ]
+        # yapf: enable
 
         def is_parameter(var):
-            return isinstance(var, fluid.framework.Parameter) and (
-                not ("fc_0" in var.name)) and os.path.exists(
+            fc_exclude_flag = False
+            for item in final_fc_name:
+                if item in var.name:
+                    fc_exclude_flag = True
+
+            return isinstance(
+                var, fluid.framework.
+                Parameter) and not fc_exclude_flag and os.path.exists(
                     os.path.join(args.pretrained_model, var.name))
 
         print("Load pretrain weights from {}, exclude fc layer.".format(
@@ -314,7 +339,7 @@ def save_model(args, exe, train_prog, info):
 def save_json(info, path):
     """ save eval result or infer result to file as json format.
     """
-    with open(path, 'a') as f:
+    with open(path, 'w') as f:
         json.dump(info, f)
 
 
@@ -493,7 +518,7 @@ def best_strategy_compiled(args,
             exec_strategy.num_threads = 1
 
         compiled_program = fluid.CompiledProgram(program).with_data_parallel(
-            loss_name=loss.name if mode == "train" else loss,
+            loss_name=loss.name if mode == "train" else None,
             share_vars_from=share_prog if mode == "val" else None,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)

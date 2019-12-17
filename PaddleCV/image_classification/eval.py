@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('data_dir',         str,  "./data/ILSVRC2012/", "The ImageNet datset")
-add_arg('batch_size',       int,  256,                  "batch size on the all devices.")
+add_arg('batch_size',       int,  256,                  "batch size on all the devices.")
 add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                 "Class number.")
 parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
