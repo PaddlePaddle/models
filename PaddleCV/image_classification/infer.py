@@ -102,8 +102,9 @@ def infer(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
+    places = fluid.framework.cuda_places()
     compiled_program = fluid.compiler.CompiledProgram(
-        test_program).with_data_parallel()
+        test_program).with_data_parallel(places=places)
 
     fluid.io.load_persistables(exe, args.pretrained_model)
     if args.save_inference:
@@ -120,9 +121,7 @@ def infer(args):
 
     imagenet_reader = reader.ImageNetReader()
     test_reader = imagenet_reader.test(settings=args)
-
-    feeder = fluid.DataFeeder(place=place, feed_list=[image])
-    test_reader = feeder.decorate_reader(test_reader, multi_devices=True)
+    feeder = fluid.DataFeeder(place=places, feed_list=[image])
 
     TOPK = args.topk
     if os.path.exists(args.class_map_path):
@@ -139,33 +138,51 @@ def infer(args):
                 label_dict[key] = value
 
     info = {}
+    parallel_data = []
+    parallel_id = []
+    place_num = paddle.fluid.core.get_cuda_device_count()
+
     for batch_id, data in enumerate(test_reader()):
-        result = exe.run(compiled_program, fetch_list=fetch_list, feed=data)
-        result = result[0][0]
-        pred_label = np.argsort(result)[::-1][:TOPK]
+        image_data = [[items[0]] for items in data]
+        image_id = [items[1] for items in data]
 
-        if os.path.exists(args.class_map_path):
-            readable_pred_label = []
-            for label in pred_label:
-                readable_pred_label.append(label_dict[str(label)])
+        parallel_id.append(image_id)
+        parallel_data.append(image_data)
 
-            info[batch_id] = {}
-            info[batch_id]['score'], info[batch_id]['class'], info[batch_id][
-                'class_name'] = str(result[pred_label]), str(
-                    pred_label), readable_pred_label
-        else:
-            info[batch_id] = {}
-            info[batch_id]['score'], info[batch_id]['class'] = str(result[
-                pred_label]), str(pred_label)
+        if place_num == len(parallel_data):
+            result = exe.run(
+                compiled_program,
+                fetch_list=fetch_list,
+                feed=list(feeder.feed_parallel(parallel_data, place_num)))
+            for i, res in enumerate(result[0]):
+                pred_label = np.argsort(res)[::-1][:TOPK]
+                real_id = str(np.array(parallel_id).flatten()[i])
+                _, real_id = os.path.split(real_id)
 
-        print(info[batch_id])
+                if os.path.exists(args.class_map_path):
+                    readable_pred_label = []
+                    for label in pred_label:
+                        readable_pred_label.append(label_dict[str(label)])
 
-        if args.save_json_path:
-            save_json(info, args.save_json_path)
+                    info[real_id] = {}
+                    info[real_id]['score'], info[real_id]['class'], info[
+                        real_id]['class_name'] = str(res[pred_label]), str(
+                            pred_label), readable_pred_label
+                else:
+                    info[real_id] = {}
+                    info[real_id]['score'], info[real_id]['class'] = str(res[
+                        pred_label]), str(pred_label)
 
-        sys.stdout.flush()
-    if args.image_path:
-        os.remove(".tmp.txt")
+                print(real_id, info[real_id])
+                sys.stdout.flush()
+
+                if args.save_json_path:
+                    save_json(info, args.save_json_path)
+
+            parallel_data = []
+            parallel_id = []
+        if args.image_path:
+            os.remove(".tmp.txt")
 
 
 def main():
