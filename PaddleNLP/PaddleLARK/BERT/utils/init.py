@@ -34,7 +34,7 @@ def cast_fp32_to_fp16(exe, main_program):
             master_param_var = fluid.global_scope().find_var(param.name +
                                                              ".master")
             if master_param_var is not None:
-                master_param_var.get_tensor().set(data, exe.place)
+                master_param_var.get_tensor().set(np.float32(data), exe.place)
 
 
 def init_checkpoint(exe, init_checkpoint_path, main_program, use_fp16=False):
