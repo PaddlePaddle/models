@@ -19,6 +19,7 @@ from __future__ import print_function
 import os
 import time
 import numpy as np
+import random
 import datetime
 from collections import deque
 
@@ -62,13 +63,11 @@ def main():
     FLAGS.dist = 'PADDLE_TRAINER_ID' in env and 'PADDLE_TRAINERS_NUM' in env
     if FLAGS.dist:
         trainer_id = int(env['PADDLE_TRAINER_ID'])
-        import random
         local_seed = (99 + trainer_id)
         random.seed(local_seed)
         np.random.seed(local_seed)
     
     if FLAGS.enable_ce:
-        import random
         random.seed(0)
         np.random.seed(0)
 
