@@ -317,7 +317,7 @@ class ImageNetReader:
                     for i in range(settings.same_feed):
                         full_lines.append(temp_file)
 
-                for line in full_lines[0:64]:
+                for line in full_lines:
 
                     img_path, label = line.split()
                     img_path = os.path.join(data_dir, img_path)
