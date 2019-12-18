@@ -131,9 +131,10 @@ def parse_args():
 
     # SWITCH
     add_arg('validate',                 bool,   True,                   "whether to validate when training.")
-    #NOTE: (2019/08/08) FP16 is moving to PaddlePaddle/Fleet now
-    #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
-    #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
+    add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
+    add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
+    add_arg('use_dynamic_loss_scaling', bool,   True,                   "Whether to use dynamic loss scaling.")
+
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill

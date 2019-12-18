@@ -63,6 +63,11 @@ def build_program(is_train, main_prog, startup_prog, args):
             if is_train:
                 optimizer = create_optimizer(args)
                 avg_cost = loss_out[0]
+                if args.fp16:
+                    optimizer = fluid.contrib.mixed_precision.decorate(
+                        optimizer,
+                        init_loss_scaling=args.scale_loss,
+                        use_dynamic_loss_scaling=args.use_dynamic_loss_scaling)
                 optimizer.minimize(avg_cost)
                 #XXX: fetch learning rate now, better implement is required here. 
                 global_lr = optimizer._global_learning_rate()

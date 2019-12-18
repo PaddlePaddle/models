@@ -264,7 +264,15 @@ Mixup相关介绍参考[mixup: Beyond Empirical Risk Minimization](https://arxiv
 
 ### 混合精度训练
 
-FP16相关内容已经迁移至PaddlePaddle/Fleet 中
+通过指定--fp16=True 启动混合训练，在训练过程中会使用float16数据，并输出float32的模型参数。您可能需要同时传入--scale_loss来解决fp16训练的精度问题，通常传入--scale_loss=0.8即可。
+
+```bash
+python train.py \
+    --model=ResNet50 \
+    --fp16=True \
+    --scale_loss=0.8
+```
+具体内容也可参考[Fleet](https://github.com/PaddlePaddle/Fleet/tree/develop/benchmark/collective/resnet)
 
 ### 性能分析
 
