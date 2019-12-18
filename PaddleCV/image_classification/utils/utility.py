@@ -131,9 +131,10 @@ def parse_args():
 
     # SWITCH
     add_arg('validate',                 bool,   True,                   "whether to validate when training.")
-    #NOTE: (2019/08/08) FP16 is moving to PaddlePaddle/Fleet now
-    #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
-    #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
+    add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
+    add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
+    add_arg('use_dynamic_loss_scaling', bool,   True,                   "Whether to use dynamic loss scaling.")
+
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
@@ -272,6 +273,11 @@ def check_args(args):
         print("CE is running now!")
 
     assert args.class_dim > 1, "class_dim must greater than 1"
+
+    if args.use_dali:
+        print(
+            "DALI preprocessing is activated!!!\nWarning: 1. Please make sure paddlepaddle is compiled by GCC5.4 or later version!\n\t 2. Please make sure nightly builds DALI is installed correctly.\n----------------------------------------------------"
+        )
 
     #check gpu
     check_gpu()
