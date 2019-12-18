@@ -274,8 +274,8 @@ def train_async(args):
     # This is for continuous evaluation only
     if args.enable_ce:
         # Use the mean cost/acc for training
-        print("kpis train_cost      %s" % (avg_loss))
-        print("kpis test_recall     %s" % (recall))
+        print("kpis\ttrain_cost\t{}".format(avg_loss))
+        print("kpis\ttest_recall\t{}".format(recall))
 
 
 def initlogging():
