@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import random
 import numpy as np
@@ -25,7 +28,7 @@ rootPath = os.path.split(parentPath)[0]
 sys.path.append(rootPath)
 
 
-class BaseDataSet:
+class BaseDataSet(object):
 
     def __init__(self, root, split, base_size=1024, crop_size=768, scale=True):
         self.root = root
@@ -38,7 +41,7 @@ class BaseDataSet:
         self.image_path = None
         self.label_path = None
 
-    def sync_transform(self, image, label):
+    def sync_transform(self, image, label, aug=True):
         crop_size = self.crop_size
         if self.scale:
             short_size = random.randint(int(self.base_size * 0.75), int(self.base_size * 2.0))
@@ -77,27 +80,28 @@ class BaseDataSet:
         image = image.crop((x, y, x + crop_size, y + crop_size))
         label = label.crop((x, y, x + crop_size, y + crop_size))
 
-        # # 高斯模糊，可选
-        # if random.random() > 0.7:
-        #     image = image.filter(ImageFilter.GaussianBlur(radius=random.random()))
+        if aug:
+            # 高斯模糊，可选
+            if random.random() > 0.7:
+                image = image.filter(ImageFilter.GaussianBlur(radius=random.random()))
 
-        # 可选
-        # if random.random() > 0.7:
-        #     # 随机亮度
-        #     factor = np.random.uniform(0.75, 1.25)
-        #     image = ImageEnhance.Brightness(image).enhance(factor)
-        #
-        #     # 颜色抖动
-        #     factor = np.random.uniform(0.75, 1.25)
-        #     image = ImageEnhance.Color(image).enhance(factor)
-        #
-        #     # 随机对比度
-        #     factor = np.random.uniform(0.75, 1.25)
-        #     image = ImageEnhance.Contrast(image).enhance(factor)
-        #
-        #     # 随机锐度
-        #     factor = np.random.uniform(0.75, 1.25)
-        #     image = ImageEnhance.Sharpness(image).enhance(factor)
+            # 可选
+            if random.random() > 0.7:
+                # 随机亮度
+                factor = np.random.uniform(0.75, 1.25)
+                image = ImageEnhance.Brightness(image).enhance(factor)
+
+                # 颜色抖动
+                factor = np.random.uniform(0.75, 1.25)
+                image = ImageEnhance.Color(image).enhance(factor)
+
+                # 随机对比度
+                factor = np.random.uniform(0.75, 1.25)
+                image = ImageEnhance.Contrast(image).enhance(factor)
+
+                # 随机锐度
+                factor = np.random.uniform(0.75, 1.25)
+                image = ImageEnhance.Sharpness(image).enhance(factor)
         return image, label
 
     def sync_val_transform(self, image, label):

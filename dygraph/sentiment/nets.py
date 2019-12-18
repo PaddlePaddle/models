@@ -114,7 +114,7 @@ class CNN(fluid.dygraph.Layer):
 
     def forward(self, inputs, label=None):
         emb = self.embedding(inputs)
-        o_np_mask = (inputs.numpy() != self.dict_dim).astype('float32')
+        o_np_mask = (np.expand_dims(inputs.numpy(), -1) != self.dict_dim).astype('float32')
         mask_emb = fluid.layers.expand(
             to_variable(o_np_mask), [1, self.hid_dim])
         emb = emb * mask_emb
@@ -155,7 +155,7 @@ class BOW(fluid.dygraph.Layer):
 
     def forward(self, inputs, label=None):
         emb = self.embedding(inputs)
-        o_np_mask = (inputs.numpy() != self.dict_dim).astype('float32')
+        o_np_mask = (np.expand_dims(inputs.numpy(), -1) != self.dict_dim).astype('float32')
         mask_emb = fluid.layers.expand(
             to_variable(o_np_mask), [1, self.hid_dim])
         emb = emb * mask_emb
@@ -205,7 +205,7 @@ class GRU(fluid.dygraph.Layer):
     def forward(self, inputs, label=None):
         emb = self.embedding(inputs)
         o_np_mask = to_variable(
-            inputs.numpy() != self.dict_dim).astype('float32')
+            np.expand_dims(inputs.numpy(), -1) != self.dict_dim).astype('float32')
         mask_emb = fluid.layers.expand(
             to_variable(o_np_mask), [1, self.hid_dim])
         emb = emb * mask_emb
@@ -258,7 +258,7 @@ class BiGRU(fluid.dygraph.Layer):
     def forward(self, inputs, label=None):
         emb = self.embedding(inputs)
         o_np_mask = to_variable(
-            inputs.numpy() != self.dict_dim).astype('float32')
+            np.expand_dims(inputs.numpy(), -1) != self.dict_dim).astype('float32')
         mask_emb = fluid.layers.expand(
             to_variable(o_np_mask), [1, self.hid_dim])
         emb = emb * mask_emb

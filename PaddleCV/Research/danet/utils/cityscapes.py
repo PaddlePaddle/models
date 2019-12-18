@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,9 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 from utils.base import BaseDataSet
@@ -34,7 +35,7 @@ class CityScapes(BaseDataSet):
         assert os.path.exists(root), "please download cityscapes data_set, put in dataset(dir),or check root"
         self.image_path, self.label_path = self._get_cityscapes_pairs(root, split)
         assert len(self.image_path) == len(self.label_path), "please check image_length = label_length"
-        self.print_param()  
+        self.print_param()
 
     def print_param(self):  # 用于核对当前数据集的信息
         print('INFO: dataset_root: {}, split: {}, '

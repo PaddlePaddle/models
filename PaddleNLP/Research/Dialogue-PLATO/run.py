@@ -99,7 +99,6 @@ def main():
         test_loader = DataLoader(test_dataset, hparams.Trainer, collate_fn=collate_fn, is_test=hparams.do_infer)
 
     def to_tensor(array):
-        array = np.expand_dims(array, -1)
         return fluid.dygraph.to_variable(array)
 
     if hparams.use_data_distributed:

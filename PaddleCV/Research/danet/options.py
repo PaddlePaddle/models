@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,13 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 import argparse
 
 
-class Options:
+class Options(object):
     def __init__(self):
         parser = argparse.ArgumentParser(description='Paddle DANet Segmentation')
 
@@ -39,11 +42,7 @@ class Options:
                             help='crop image size')
 
         # training hyper params
-        parser.add_argument('--aux', default=True,
-                            help='Auxilary Loss')
-        parser.add_argument('--se_loss', default=True,
-                            help='Semantic Encoding Loss SE-loss')
-        parser.add_argument('--epoch_num', type=int, default=1200, metavar='N',
+        parser.add_argument('--epoch_num', type=int, default=None, metavar='N',
                             help='number of epochs to train (default: auto)')
         parser.add_argument('--start_epoch', type=int, default=0,
                             metavar='N', help='start epochs (default:0)')
@@ -55,7 +54,7 @@ class Options:
                             testing (default: same as batch size)')
 
         # optimizer params
-        parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
+        parser.add_argument('--lr', type=float, default=None, metavar='LR',
                             help='learning rate (default: auto)')
         parser.add_argument('--lr_scheduler', type=str, default='poly',
                             help='learning rate scheduler (default: poly)')
@@ -63,55 +62,58 @@ class Options:
                             help='learning rate scheduler (default: 0.9)')
         parser.add_argument('--lr_step', type=int, default=None,
                             help='lr step to change lr')
-        parser.add_argument('--warm_up', type=bool, default=False,
+        parser.add_argument('--warm_up', action='store_true', default=False,
                             help='warm_up (default: False)')
         parser.add_argument('--warmup_epoch', type=int, default=5,
                             help='warmup_epoch (default: 5)')
-        parser.add_argument('--total_step', type=int, default=500000,
-                            metavar='N', help='total_step (default: auto):500000)')
+        parser.add_argument('--total_step', type=int, default=None,
+                            metavar='N', help='total_step (default: auto)')
         parser.add_argument('--step_per_epoch', type=int, default=None,
                             metavar='N', help='step_per_epoch (default: auto)')
         parser.add_argument('--momentum', type=float, default=0.9,
                             metavar='M', help='momentum (default: 0.9)')
-        parser.add_argument('--weight_decay', type=float, default=1e-4,   # 正则化系数
+        parser.add_argument('--weight_decay', type=float, default=1e-4,
                             metavar='M', help='w-decay (default: 1e-4)')
 
         # cuda, seed and logging
-        parser.add_argument('--cuda', default=True, type=bool,
-                            help='use CUDA training')
-        parser.add_argument('--use_data_parallel', default=True, type=bool,
-                            help='use data_parallel training')
+        parser.add_argument('--cuda', action='store_true', default=False,
+                            help='use CUDA training, (default: False)')
+        parser.add_argument('--use_data_parallel', action='store_true', default=False,
+                            help='use data_parallel training, (default: False)')
         parser.add_argument('--seed', type=int, default=1, metavar='S',
                             help='random seed (default: 1)')
         parser.add_argument('--log_root', type=str,
                             default='./', help='set a log path folder')
 
         # checkpoint
-        parser.add_argument("--save_model", default='./checkpoint/', type=str,
-                            help="model path")
+        parser.add_argument("--save_model", default='checkpoint/DANet101_better_model_paddle1.6', type=str,
+                            help="model path, (default: checkpoint/DANet101_better_model_paddle1.6)")
+
+        # change executor model params to dygraph model params
+        parser.add_argument("--change_executor_to_dygraph", action='store_true', default=False,
+                            help="change executor model params to dygraph model params (default:False)")
 
         # finetuning pre-trained models
-        parser.add_argument("--load_pretrained_model", default=True, type=bool,
-                            help="load pretrained model (default: True)")
-
+        parser.add_argument("--load_pretrained_model", action='store_true', default=False,
+                            help="load pretrained model (default: False)")
         # load better models
-        parser.add_argument("--load_better_model", default=False, type=bool,
+        parser.add_argument("--load_better_model", action='store_true', default=False,
                             help="load better model (default: False)")
-
-        parser.add_argument('--multi-scales', type=bool, default=True,
-                            help="testing scale,default:(multi scale)")
-        parser.add_argument('--flip', type=bool, default=True,
-                            help="testing flip image,default:(True)")
+        parser.add_argument('--multi_scales', action='store_true', default=False,
+                            help="testing scale, (default: False)")
+        parser.add_argument('--flip', action='store_true', default=False,
+                            help="testing flip image, (default: False)")
 
         # multi grid dilation option
-        parser.add_argument("--dilated", default=True, type=bool,
-                            help="use dilation policy")
-        parser.add_argument("--multi_grid", default=True, type=bool,
-                            help="use multi grid dilation policy")
-        parser.add_argument('--multi_dilation', type=int, default=[4, 8, 16],
-                            help="multi grid dilation list")
-        parser.add_argument('--scale', action='store_false', default=True,
-                            help='choose to use random scale transform(0.75-2.0),default:multi scale')
+        parser.add_argument("--dilated", action='store_true', default=False,
+                            help="use dilation policy, (default: False)")
+        parser.add_argument("--multi_grid", action='store_true', default=False,
+                            help="use multi grid dilation policy, default: False")
+        parser.add_argument('--multi_dilation', nargs='+', type=int, default=None,
+                            help="multi grid dilation list, (default: None), can use --mutil_dilation 4 8 16")
+        parser.add_argument('--scale', action='store_true', default=False,
+                            help='choose to use random scale transform(0.75-2.0) for train, (default: False)')
+
         # the parser
         self.parser = parser
 
@@ -124,21 +126,21 @@ class Options:
                 'pascal_aug': 180,
                 'pcontext': 180,
                 'ade20k': 180,
-                'cityscapes': 240,
+                'cityscapes': 350,
             }
             num_class_dict = {
-                'pascal_voc': None,
-                'pascal_aug': None,
-                'pcontext': None,
+                'pascal_voc': 21,
+                'pascal_aug': 21,
+                'pcontext': 21,
                 'ade20k': None,
                 'cityscapes': 19,
             }
             total_steps = {
-                'pascal_voc': 500000,
+                'pascal_voc': 200000,
                 'pascal_aug': 500000,
                 'pcontext': 500000,
                 'ade20k': 500000,
-                'cityscapes': 500000,
+                'cityscapes': 150000,
             }
             args.epoch_num = epoches[args.dataset.lower()]
             args.num_classes = num_class_dict[args.dataset.lower()]
@@ -153,7 +155,7 @@ class Options:
                 'pascal_aug': 185,
                 'pcontext': 185,
                 'ade20k': 185,
-                'cityscapes': 185,  # 2975 // batch_size // GPU_num
+                'cityscapes': 371,  # 2975 // batch_size // GPU_num
             }
             args.step_per_epoch = step_per_epoch[args.dataset.lower()]
         if args.lr is None:
@@ -162,7 +164,7 @@ class Options:
                 'pascal_aug': 0.001,
                 'pcontext': 0.001,
                 'ade20k': 0.01,
-                'cityscapes': 0.01,
+                'cityscapes': 0.003,
             }
             args.lr = lrs[args.dataset.lower()] / 8 * args.batch_size
         return args

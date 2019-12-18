@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 
@@ -20,9 +23,12 @@ os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.99"
 
 import paddle.fluid as fluid
 import numpy as np
+import random
 import paddle
 import logging
 import shutil
+import multiprocessing
+import sys
 from datetime import datetime
 from paddle.utils import Ploter
 
@@ -31,6 +37,9 @@ from options import Options
 from utils.cityscapes_data import cityscapes_train
 from utils.cityscapes_data import cityscapes_val
 from utils.lr_scheduler import Lr
+import matplotlib
+
+matplotlib.use('Agg')
 
 
 def get_model(args):
@@ -42,6 +51,21 @@ def get_model(args):
                   multi_grid=args.multi_grid,
                   multi_dilation=args.multi_dilation)
     return model
+
+
+def _cpu_num():
+    if "CPU_NUM" not in os.environ.keys():
+        if multiprocessing.cpu_count() > 1:
+            sys.stderr.write(
+                '!!! The CPU_NUM is not specified, you should set CPU_NUM in the environment variable list.\n'
+                'CPU_NUM indicates that how many CPUPlace are used in the current task.\n'
+                'And if this parameter are set as N (equal to the number of physical CPU core) the program may be faster.\n\n'
+                'export CPU_NUM={} # for example, set CPU_NUM as number of physical CPU core which is {}.\n\n'
+                '!!! The default number of CPU_NUM=1.\n'.format(
+                    multiprocessing.cpu_count(), multiprocessing.cpu_count()))
+        os.environ['CPU_NUM'] = str(1)
+    cpu_num = os.environ.get('CPU_NUM')
+    return int(cpu_num)
 
 
 def mean_iou(pred, label, num_classes=19):
@@ -121,13 +145,16 @@ def optimizer_setting(args):
 
 
 def main(args):
-
     batch_size = args.batch_size
     num_epochs = args.epoch_num
     num_classes = args.num_classes
     data_root = args.data_folder
-    num = fluid.core.get_cuda_device_count()
-    print('GPU设备数量： {}'.format(num))
+    if args.cuda:
+        num = fluid.core.get_cuda_device_count()
+        print('The number of GPU： {}'.format(num))
+    else:
+        num = _cpu_num()
+        print('The number of CPU： {}'.format(num))
 
     # program
     start_prog = fluid.default_startup_program()
@@ -135,14 +162,19 @@ def main(args):
 
     start_prog.random_seed = args.seed
     train_prog.random_seed = args.seed
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
     logging.basicConfig(level=logging.INFO,
-                        filename='DANet_{}_train.log'.format(args.backbone),
+                        filename='DANet_{}_train_dygraph.log'.format(args.backbone),
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.info('DANet')
     logging.info(args)
 
-    place = fluid.CUDAPlace(0) if args.cuda else fluid.CPUPlace()
+    if args.cuda:
+        gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+
+    place = fluid.CUDAPlace(gpu_id) if args.cuda else fluid.CPUPlace()
     train_loss_title = 'Train_loss'
     test_loss_title = 'Test_loss'
 
@@ -159,25 +191,29 @@ def main(args):
         x = fluid.dygraph.to_variable(x)
         model(x)
 
-        # 加载预训练模型
+        # load_pretrained_model
         if args.load_pretrained_model:
-            save_dir = 'checkpoint/DANet101_pretrained_model_paddle1.6'
-            if os.path.exists(save_dir + '.pdparams'):
-                param, _ = fluid.load_dygraph(save_dir)
-                model.set_dict(param)
-                assert len(param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
-                                                              "请核对模型是否初始化/模型是否一致"
-                print('load pretrained model!')
+            save_dir = args.save_model
+            assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is not exists".format(
+                save_dir, save_dir + '.pdparams')
+            param, _ = fluid.load_dygraph(save_dir)
+            model.set_dict(param)
+            assert len(param) == len(
+                model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                     "Please check whether the model is consistent!"
+            print('load pretrained model!')
 
-        # 加载最优模型
+        # load_better_model
         if args.load_better_model:
-            save_dir = 'checkpoint/DANet101_better_model_paddle1.6'
-            if os.path.exists(save_dir + '.pdparams'):
-                param, _ = fluid.load_dygraph(save_dir)
-                model.set_dict(param)
-                assert len(param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
-                                                              "请核对模型是否初始化/模型是否一致"
-                print('load better model!')
+            save_dir = args.save_model
+            assert os.path.exists(save_dir + '.pdparams'), "your input save_model: {} ,but '{}' is not exists".format(
+                save_dir, save_dir + '.pdparams')
+            param, _ = fluid.load_dygraph(save_dir)
+            model.set_dict(param)
+            assert len(param) == len(
+                model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                     "Please check whether the model is consistent!"
+            print('load better model!')
 
         optimizer = optimizer_setting(args)
         train_data = cityscapes_train(data_root=data_root,
@@ -227,8 +263,8 @@ def main(args):
                 train_avg_loss.backward()
                 optimizer.minimize(train_avg_loss)
                 model.clear_gradients()
-                train_iou_manager.update(miou.numpy(), weight=batch_size*num)
-                train_avg_loss_manager.update(train_avg_loss.numpy(), weight=batch_size*num)
+                train_iou_manager.update(miou.numpy(), weight=int(batch_size * num))
+                train_avg_loss_manager.update(train_avg_loss.numpy(), weight=int(batch_size * num))
                 batch_train_str = "epoch: {}, batch: {}, train_avg_loss: {:.6f}, " \
                                   "train_miou: {:.6f}.".format(epoch + 1,
                                                                batch_id + 1,
@@ -248,16 +284,17 @@ def main(args):
             print(train_str + time_str + '\n')
             logging.info(train_str + time_str + '\n')
             plot_loss.append(train_loss_title, epoch, train_avg_loss_manager.eval()[0])
-            plot_loss.plot('./DANet_loss.jpg')
+            plot_loss.plot('./DANet_loss_dygraph.jpg')
             plot_iou.append(train_iou_title, epoch, train_iou_manager.eval()[0])
-            plot_iou.plot('./DANet_miou.jpg')
+            plot_iou.plot('./DANet_miou_dygraph.jpg')
             fluid.dygraph.save_dygraph(model.state_dict(), 'checkpoint/DANet_epoch_new')
             # save_model
             if better_miou_train < train_iou_manager.eval()[0]:
-                shutil.rmtree('checkpoint/DAnet_better_train_{:.4f}.pdparams'.format(better_miou_train), ignore_errors=True)
+                shutil.rmtree('checkpoint/DANet_better_train_{:.4f}.pdparams'.format(better_miou_train),
+                              ignore_errors=True)
                 better_miou_train = train_iou_manager.eval()[0]
                 fluid.dygraph.save_dygraph(model.state_dict(),
-                                           'checkpoint/DAnet_better_train_{:.4f}'.format(better_miou_train))
+                                           'checkpoint/DANet_better_train_{:.4f}'.format(better_miou_train))
 
             ########## test ############
             model.eval()
@@ -276,8 +313,8 @@ def main(args):
                 test_loss = loss_fn(pred, pred2, pred3, label, num_classes=num_classes)
                 test_avg_loss = fluid.layers.mean(test_loss)
                 miou, wrong, correct = mean_iou(pred, label, num_classes=num_classes)
-                test_iou_manager.update(miou.numpy(), weight=batch_size*num)
-                test_avg_loss_manager.update(test_avg_loss.numpy(), weight=batch_size*num)
+                test_iou_manager.update(miou.numpy(), weight=int(batch_size * num))
+                test_avg_loss_manager.update(test_avg_loss.numpy(), weight=int(batch_size * num))
                 batch_test_str = "epoch: {}, batch: {}, test_avg_loss: {:.6f}, " \
                                  "test_miou: {:.6f}.".format(epoch + 1, batch_id + 1,
                                                              test_avg_loss.numpy()[0],
@@ -296,16 +333,17 @@ def main(args):
             print(test_str + time_str + '\n')
             logging.info(test_str + time_str + '\n')
             plot_loss.append(test_loss_title, epoch, test_avg_loss_manager.eval()[0])
-            plot_loss.plot('./DANet_loss.jpg')
+            plot_loss.plot('./DANet_loss_dygraph.jpg')
             plot_iou.append(test_iou_title, epoch, test_iou_manager.eval()[0])
-            plot_iou.plot('./DANet_miou.jpg')
+            plot_iou.plot('./DANet_miou_dygraph.jpg')
             model.train()
             # save_model
             if better_miou_test < test_iou_manager.eval()[0]:
-                shutil.rmtree('checkpoint/DAnet_better_test_{:.4f}.pdparams'.format(better_miou_test), ignore_errors=True)
+                shutil.rmtree('checkpoint/DANet_better_test_{:.4f}.pdparams'.format(better_miou_test),
+                              ignore_errors=True)
                 better_miou_test = test_iou_manager.eval()[0]
                 fluid.dygraph.save_dygraph(model.state_dict(),
-                                           'checkpoint/DAnet_better_test_{:.4f}'.format(better_miou_test))
+                                           'checkpoint/DANet_better_test_{:.4f}'.format(better_miou_test))
 
 
 if __name__ == '__main__':

@@ -343,7 +343,7 @@ def train_ptb_lm():
             train_data_iter = reader.get_data_iter(data, batch_size, num_steps)
             for batch_id, batch in enumerate(train_data_iter):
                 x_data, y_data = batch
-                x_data = x_data.reshape((-1, num_steps, 1))
+                x_data = x_data.reshape((-1, num_steps))
                 y_data = y_data.reshape((-1, 1))
                 x = to_variable(x_data)
                 y = to_variable(y_data)
@@ -383,8 +383,10 @@ def train_ptb_lm():
             start_time = time.time()
             for batch_id, batch in enumerate(train_data_iter):
                 x_data, y_data = batch
+
                 x_data = x_data.reshape((-1, num_steps, 1))
                 y_data = y_data.reshape((-1, num_steps, 1))
+
                 x = to_variable(x_data)
                 y = to_variable(y_data)
 

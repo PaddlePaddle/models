@@ -240,7 +240,7 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     if mode == 'train' or mode == 'val':
         return (img, sample[1])
     elif mode == 'test':
-        return (img, )
+        return (img, sample[0])
 
 
 def process_batch_data(input_data, settings, mode, color_jitter, rotate):
@@ -262,6 +262,23 @@ class ImageNetReader:
         assert isinstance(seed, int), "shuffle seed must be int"
         self.shuffle_seed = seed
 
+    def _get_single_card_bs(self, settings, mode):
+        if settings.use_gpu:
+            if mode == "val" and settings.test_batch_size:
+                single_card_bs = settings.test_batch_size // paddle.fluid.core.get_cuda_device_count(
+                )
+            else:
+                single_card_bs = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
+                )
+        else:
+            if mode == "val" and settings.test_batch_size:
+                single_card_bs = settings.test_batch_size // int(
+                    os.environ.get('CPU_NUM', 1))
+            else:
+                single_card_bs = settings.batch_size // int(
+                    os.environ.get('CPU_NUM', 1))
+        return single_card_bs
+
     def _reader_creator(self,
                         settings,
                         file_list,
@@ -271,15 +288,8 @@ class ImageNetReader:
                         rotate=False,
                         data_dir=None):
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-        if mode == 'test':
-            batch_size = 1
-        else:
-            if settings.use_gpu:
-                batch_size = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
-                )
-            else:
-                batch_size = settings.batch_size // int(
-                    os.environ.get('CPU_NUM', 1))
+
+        batch_size = self._get_single_card_bs(settings, mode)
 
         def reader():
             def read_file_list():
@@ -287,23 +297,34 @@ class ImageNetReader:
                     full_lines = [line.strip() for line in flist]
                     if mode != "test" and len(full_lines) < settings.batch_size:
                         print(
-                            "Warning: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!"
-                            .format(len(full_lines), settings.batch_size))
+                            "Warning: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!".
+                            format(len(full_lines), settings.batch_size))
                         os._exit(1)
                     if num_trainers > 1 and mode == "train":
                         assert self.shuffle_seed is not None, "multiprocess train, shuffle seed must be set!"
                         np.random.RandomState(self.shuffle_seed).shuffle(
                             full_lines)
                     elif shuffle:
-                        np.random.shuffle(full_lines)
+                        if not settings.enable_ce or not settings.same_feed:
+                            np.random.shuffle(full_lines)
 
                 batch_data = []
+                if (mode == "train" or mode == "val") and settings.same_feed:
+                    temp_file = full_lines[0]
+                    print("Same images({},nums:{}) will feed in the net".format(
+                        str(temp_file), settings.same_feed))
+                    full_lines = []
+                    for i in range(settings.same_feed):
+                        full_lines.append(temp_file)
+
                 for line in full_lines:
+
                     img_path, label = line.split()
                     img_path = os.path.join(data_dir, img_path)
                     batch_data.append([img_path, int(label)])
                     if len(batch_data) == batch_size:
                         if mode == 'train' or mode == 'val' or mode == 'test':
+
                             yield batch_data
 
                         batch_data = []
@@ -311,6 +332,7 @@ class ImageNetReader:
             return read_file_list
 
         data_reader = reader()
+
         if mode == 'train' and num_trainers > 1:
             assert self.shuffle_seed is not None, \
                 "If num_trainers > 1, the shuffle_seed must be set, because " \
@@ -383,7 +405,6 @@ class ImageNetReader:
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
                 file_list)
-
         return self._reader_creator(
             settings,
             file_list,
@@ -400,7 +421,13 @@ class ImageNetReader:
         Returns:
             test reader
         """
-        file_list = os.path.join(settings.data_dir, 'val_list.txt')
+        if settings.image_path:
+            tmp = open(".tmp.txt", "w")
+            tmp.write(settings.image_path + " 0")
+            file_list = ".tmp.txt"
+            settings.batch_size = 1
+        else:
+            file_list = os.path.join(settings.data_dir, 'val_list.txt')
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
                 file_list)

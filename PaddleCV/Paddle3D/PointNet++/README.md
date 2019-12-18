@@ -212,8 +212,8 @@ sh scripts/eval_cls.sh
 
 | model | Top-1 | download |
 | :----- | :---: | :---: |
-| SSG(Single-Scale Group) | 87.4 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_ssg_cls.tar) |
-| MSG(Multi-Scale Group)  | 89.1 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_msg_cls.tar) |
+| SSG(Single-Scale Group) | 89.3 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_ssg_cls.tar) |
+| MSG(Multi-Scale Group)  | 90.0 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_msg_cls.tar) |
 
 **语义分割模型:**
 

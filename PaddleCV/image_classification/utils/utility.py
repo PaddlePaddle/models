@@ -26,6 +26,7 @@ import sys
 import os
 import warnings
 import signal
+import json
 
 import paddle
 import paddle.fluid as fluid
@@ -101,8 +102,8 @@ def parse_args():
     parser.add_argument('--image_shape', nargs='+', type=int, default=[3, 224, 224], help="The shape of image")
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
-    add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
-    add_arg('test_batch_size',          int,    16,                     "Test batch size on a deveice.")
+    add_arg('batch_size',               int,    8,                      "Minibatch size on all the devices.")
+    add_arg('test_batch_size',          int,    None,                   "Test batch size on all the devices.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
@@ -129,6 +130,7 @@ def parse_args():
     parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
     # SWITCH
+    add_arg('validate',                 bool,   True,                   "whether to validate when training.")
     #NOTE: (2019/08/08) FP16 is moving to PaddlePaddle/Fleet now
     #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
@@ -136,16 +138,18 @@ def parse_args():
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
-    add_arg('random_seed',              int,    None,                   "random seed")
     add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     add_arg('use_se',                   bool,   True,                   "Whether to use Squeeze-and-Excitation module for EfficientNet.")
+
     #NOTE: args for profiler
-    add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
-    add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
-    add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
-    add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
+    add_arg("enable_ce",                bool,   False,                  "Whether to enable ce")
+    add_arg('random_seed',              int,    None,                   "random seed")
+    add_arg('is_profiler',              bool,   False,                  "Whether to start the profiler")
+    add_arg('profiler_path',            str,    './profilier_files',                   "the profiler output file path")
+    add_arg('max_iter',                 int,    0,                      "the max train batch num")
+    add_arg('same_feed',                int,    0,                      "whether to feed same images")
 
 
     # yapf: enable
@@ -263,35 +267,80 @@ def check_args(args):
         args.data_dir
     ), "Data doesn't exist in {}, please load right path".format(args.data_dir)
 
-    #check gpu
+    if args.enable_ce:
+        args.random_seed = 0
+        print("CE is running now!")
 
+    assert args.class_dim > 1, "class_dim must greater than 1"
+
+    #check gpu
     check_gpu()
     check_version()
 
 
 def init_model(exe, args, program):
+    """load model from checkpoint or pretrained model
+    """
+
     if args.checkpoint:
         fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
         print("Finish initing model from %s" % (args.checkpoint))
 
     if args.pretrained_model:
+        # yapf: disable
 
-        def if_exist(var):
-            return os.path.exists(os.path.join(args.pretrained_model, var.name))
+        #XXX: should rename all models' final fc layers name as final_fc_weights and final_fc_offset!
+        final_fc_name = [
+                         "fc8_weights","fc8_offset", #alexnet
+                         "fc_weights","fc_offset", #darknet, densenet, dpn, hrnet, mobilenet_v3, res2net, res2net_vd, resnext, resnext_vd, xception
+                         #efficient
+                         "out","out_offset", "out1","out1_offset", "out2","out2_offset", #googlenet
+                         "final_fc_weights", "final_fc_offset", #inception_v4
+                         "fc7_weights", "fc7_offset", #mobilenetv1
+                         "fc10_weights", "fc10_offset", #mobilenetv2
+                         "fc_0", #resnet, resnet_vc, resnet_vd
+                         "fc.weight", "fc.bias", #resnext101_wsl
+                         "fc6_weights", "fc6_offset", #se_resnet_vd, se_resnext, se_resnext_vd, shufflenet_v2, shufflenet_v2_swish,
+                         #squeezenet
+                         "fc8_weights", "fc8_offset", #vgg
+                         "fc_bias" #"fc_weights", xception_deeplab
+                         ]
+        # yapf: enable
 
+        def is_parameter(var):
+            fc_exclude_flag = False
+            for item in final_fc_name:
+                if item in var.name:
+                    fc_exclude_flag = True
+
+            return isinstance(
+                var, fluid.framework.
+                Parameter) and not fc_exclude_flag and os.path.exists(
+                    os.path.join(args.pretrained_model, var.name))
+
+        print("Load pretrain weights from {}, exclude fc layer.".format(
+            args.pretrained_model))
+        vars = filter(is_parameter, program.list_vars())
         fluid.io.load_vars(
-            exe,
-            args.pretrained_model,
-            main_program=program,
-            predicate=if_exist)
+            exe, args.pretrained_model, vars=vars, main_program=program)
 
 
 def save_model(args, exe, train_prog, info):
+    """save model in model_path
+    """
+
     model_path = os.path.join(args.model_save_dir, args.model, str(info))
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
     fluid.io.save_persistables(exe, model_path, main_program=train_prog)
     print("Already save model in %s" % (model_path))
+
+
+def save_json(info, path):
+    """ save eval result or infer result to file as json format.
+    """
+    with open(path, 'w') as f:
+        json.dump(info, f)
 
 
 def create_data_loader(is_train, args):
@@ -344,7 +393,14 @@ def create_data_loader(is_train, args):
         return data_loader, [feed_image, feed_label]
 
 
-def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
+def print_info(info_mode,
+               metrics,
+               time_info,
+               pass_id=0,
+               batch_id=0,
+               print_step=1,
+               device_num=1,
+               class_dim=5):
     """print function
 
     Args:
@@ -355,6 +411,7 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
         time_info: time infomation
         info_mode: mode
     """
+    #XXX: Use specific name to choose pattern, not the length of metrics. 
     if info_mode == "batch":
         if batch_id % print_step == 0:
             #if isinstance(metrics,np.ndarray):
@@ -369,16 +426,18 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 print(
-                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info))
+                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
+                           min(class_dim, 5)))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 print(
-                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, elapse {5}".
+                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%2.4f sec" % time_info))
+                           "%.5f" % acc5, "%2.4f sec" % time_info,
+                           min(class_dim, 5)))
             else:
                 raise Exception(
                     "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".
@@ -390,24 +449,52 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
         if len(metrics) == 5:
             train_loss, _, test_loss, test_acc1, test_acc5 = metrics
             print(
-                "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".
+                "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc{5} {4}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % test_loss, "%.5f"
-                       % test_acc1, "%.5f" % test_acc5))
+                       % test_acc1, "%.5f" % test_acc5, min(class_dim, 5)))
         elif len(metrics) == 7:
             train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
             print(
-                "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".
+                "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc{7} {3},test_loss {4}, test_acc1 {5}, test_acc{7} {6}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % train_acc1, "%.5f"
                        % train_acc5, "%.5f" % test_loss, "%.5f" % test_acc1,
-                       "%.5f" % test_acc5))
+                       "%.5f" % test_acc5, min(class_dim, 5)))
         sys.stdout.flush()
     elif info_mode == "ce":
-        raise Warning("CE code is not ready")
+        assert len(
+            metrics
+        ) == 7, "Enable CE: The Metrics should contain train_loss, train_acc1, train_acc5, test_loss, test_acc1, test_acc5, and train_speed"
+        assert len(
+            time_info
+        ) > 10, "0~9th batch statistics will drop when doing benchmark or ce, because it might be mixed with startup time, so please make sure training at least 10 batches."
+        print_ce(device_num, metrics, time_info)
+        #raise Warning("CE code is not ready")
     else:
         raise Exception("Illegal info_mode")
 
 
-def best_strategy_compiled(args, program, loss, exe):
+def print_ce(device_num, metrics, time_info):
+    """ Print log for CE(for internal test).
+    """
+    train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
+
+    train_speed = np.mean(np.array(time_info[10:]))
+
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_loss))
+    print("kpis\ttrain_acc1_card{}\t{}".format(device_num, train_acc1))
+    print("kpis\ttrain_acc5_card{}\t{}".format(device_num, train_acc5))
+    print("kpis\ttest_loss_card{}\t{}".format(device_num, test_loss))
+    print("kpis\ttest_acc1_card{}\t{}".format(device_num, test_acc1))
+    print("kpis\ttest_acc5_card{}\t{}".format(device_num, test_acc5))
+    print("kpis\ttrain_speed_card{}\t{}".format(device_num, train_speed))
+
+
+def best_strategy_compiled(args,
+                           program,
+                           loss,
+                           exe,
+                           mode="train",
+                           share_prog=None):
     """make a program which wrapped by a compiled program
     """
 
@@ -431,7 +518,8 @@ def best_strategy_compiled(args, program, loss, exe):
             exec_strategy.num_threads = 1
 
         compiled_program = fluid.CompiledProgram(program).with_data_parallel(
-            loss_name=loss.name,
+            loss_name=loss.name if mode == "train" else None,
+            share_vars_from=share_prog if mode == "val" else None,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
 
