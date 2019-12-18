@@ -207,7 +207,10 @@ class CycleGAN(object):
             type=int,
             default=3,
             help="only used when CycleGAN discriminator is nlayers")
-
+        parser.add_argument(
+            '--enable_ce',
+            action='store_true',
+            help="if set, run the tasks with continuous evaluation logs")
         return parser
 
     def __init__(self,
@@ -237,6 +240,9 @@ class CycleGAN(object):
             name='fake_pool_A', shape=data_shape, dtype='float32')
         fake_pool_B = fluid.data(
             name='fake_pool_B', shape=data_shape, dtype='float32')
+        # used for continuous evaluation
+        if self.cfg.enable_ce:
+            fluid.default_startup_program().random_seed = 90
 
         A_py_reader = fluid.io.PyReader(
             feed_list=[input_A],
@@ -344,6 +350,9 @@ class CycleGAN(object):
 
                 sys.stdout.flush()
                 batch_id += 1
+                # used for continuous evaluation
+                if self.cfg.enable_ce and batch_id == 10:
+                    break
 
             if self.cfg.run_test:
                 A_image_name = fluid.data(
@@ -390,3 +399,26 @@ class CycleGAN(object):
                                     "net_DA")
                 utility.checkpoints(epoch_id, self.cfg, exe, d_B_trainer,
                                     "net_DB")
+
+        # used for continuous evaluation
+        if self.cfg.enable_ce:
+            device_num = fluid.core.get_cuda_device_count(
+            ) if self.cfg.use_gpu else 1
+            print("kpis\tcyclegan_g_A_loss_card{}\t{}".format(device_num,
+                                                              g_A_loss[0]))
+            print("kpis\tcyclegan_g_A_cyc_loss_card{}\t{}".format(
+                device_num, g_A_cyc_loss[0]))
+            print("kpis\tcyclegan_g_A_idt_loss_card{}\t{}".format(
+                device_num, g_A_idt_loss[0]))
+            print("kpis\tcyclegan_d_A_loss_card{}\t{}".format(device_num,
+                                                              d_A_loss[0]))
+            print("kpis\tcyclegan_g_B_loss_card{}\t{}".format(device_num,
+                                                              g_B_loss[0]))
+            print("kpis\tcyclegan_g_B_cyc_loss_card{}\t{}".format(
+                device_num, g_B_cyc_loss[0]))
+            print("kpis\tcyclegan_g_B_idt_loss_card{}\t{}".format(
+                device_num, g_B_idt_loss[0]))
+            print("kpis\tcyclegan_d_B_loss_card{}\t{}".format(device_num,
+                                                              d_B_loss[0]))
+            print("kpis\tcyclegan_Batch_time_cost_card{}\t{}".format(
+                device_num, batch_time))
