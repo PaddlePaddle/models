@@ -253,7 +253,16 @@ Refer to [mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.
 
 ### Using Mixed-Precision Training
 
-Mixed-precision part is moving to PaddlePaddle/Fleet now.
+Set --fp16=True to sart Mixed-Precision Training.
+
+```bash
+python train.py \
+    --model=ResNet50 \
+    --fp16=True \
+    --scale_loss=0.8
+```
+
+Refer to [PaddlePaddle/Fleet](https://github.com/PaddlePaddle/Fleet/tree/develop/benchmark/collective/resnet)
 
 ### Preprocessing with Nvidia DALI
 
