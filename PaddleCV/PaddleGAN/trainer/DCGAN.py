@@ -27,6 +27,7 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import paddle.fluid as fluid
+import random
 
 
 class GTrainer():
@@ -78,7 +79,10 @@ class DCGAN(object):
     def add_special_args(self, parser):
         parser.add_argument(
             '--noise_size', type=int, default=100, help="the noise dimension")
-
+        parser.add_argument(
+            '--enable_ce',
+            action='store_true',
+            help="if set, run the tasks with continuous evaluation logs")
         return parser
 
     def __init__(self, cfg=None, train_reader=None):
@@ -90,6 +94,11 @@ class DCGAN(object):
         noise = fluid.data(
             name='noise', shape=[None, self.cfg.noise_size], dtype='float32')
         label = fluid.data(name='label', shape=[None, 1], dtype='float32')
+        # used for continuous evaluation
+        if self.cfg.enable_ce:
+            fluid.default_startup_program().random_seed = 90
+            random.seed(0)
+            np.random.seed(0)
 
         g_trainer = GTrainer(noise, label, self.cfg)
         d_trainer = DTrainer(img, label, self.cfg)
@@ -200,3 +209,11 @@ class DCGAN(object):
             if self.cfg.save_checkpoints:
                 utility.checkpoints(epoch_id, self.cfg, exe, g_trainer, "net_G")
                 utility.checkpoints(epoch_id, self.cfg, exe, d_trainer, "net_D")
+        # used for continuous evaluation
+        if self.cfg.enable_ce:
+            device_num = fluid.core.get_cuda_device_count(
+            ) if self.cfg.use_gpu else 1
+            print("kpis\tdcgan_d_loss_card{}\t{}".format(device_num, d_loss[0]))
+            print("kpis\tdcgan_g_loss_card{}\t{}".format(device_num, g_loss[0]))
+            print("kpis\tdcgan_Batch_time_cost_card{}\t{}".format(device_num,
+                                                                  batch_time))
