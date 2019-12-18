@@ -331,7 +331,7 @@ python -m paddle.distributed.launch train.py \
 
 #### 注意事项
 
-1. PaddlePaddle需使用1.6或以上的版本，并且需要使用GCC5.4以上编译器[编译](https://www.paddlepaddle.org.cn/install/doc/source/ubuntu), 另外，请在编译过程中指定-DWITH_DISTRIBUTE=ON 来启动多进程训练模式。
+1. 请务必使用GCC5.4以上编译器[编译安装](https://www.paddlepaddle.org.cn/install/doc/source/ubuntu)的1.6或以上版本paddlepaddle, 另外，请在编译过程中指定-DWITH_DISTRIBUTE=ON 来启动多进程训练模式。注意：官方的paddlepaddle是GCC4.8编译的，请务必检查此项，或参考使用[已经编译好的whl包](https://github.com/NVIDIA/DALI/blob/master/qa/setup_packages.py#L38)
 2. Nvidia DALI需要使用[#1371](https://github.com/NVIDIA/DALI/pull/1371)以后的git版本。请参考[此文档](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/installation.html)安装nightly版本或从源码安装。
 3. 因为DALI使用GPU进行图片预处理，需要占用部分显存，请适当调整 `FLAGS_fraction_of_gpu_memory_to_use`环境变量（如`0.8`）来预留部分显存供DALI使用。
 

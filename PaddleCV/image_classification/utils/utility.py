@@ -274,6 +274,11 @@ def check_args(args):
 
     assert args.class_dim > 1, "class_dim must greater than 1"
 
+    if args.use_dali:
+        print(
+            "DALI preprocessing is activated!!!\nWarning: 1. Please make sure paddlepaddle is compiled by GCC5.4 or later version!\n\t 2. Please make sure nightly builds DALI is installed correctly.\n----------------------------------------------------"
+        )
+
     #check gpu
     check_gpu()
     check_version()
