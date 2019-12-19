@@ -17,8 +17,9 @@
 ```
 
 ## 介绍
-本模型使用PaddlePaddle **动态图** 复现了DeepFM模型。DeepFM模型介绍可以参阅论文[DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](https://arxiv.org/abs/1703.04247)
+本模型使用PaddlePaddle **动态图** 复现了DeepFM模型。
 
+DeepFM模型介绍可以参阅论文[DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](https://arxiv.org/abs/1703.04247)
 
 ## 环境
 - **目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本**
@@ -34,9 +35,9 @@
 cd data && python download_preprocess.py && cd ..
 ```
 
-执行完命令后将生成三个文件夹，"train_data", "test_data" and "aid_data"。
+执行完命令后将生成三个文件夹: train_data, test_data和aid_data。
 
-"train_data"包含90%数据，"test_data"包含剩下的10%数据， "aid_data"中有一个生成或下载（节约用户生成特征字典时间）的特征字典"feat_dict_10.pkl2".
+train_data包含90%数据，test_data包含剩下的10%数据，aid_data中有一个生成或下载（节约用户生成特征字典时间）的特征字典feat_dict_10.pkl2。
 
 ## 训练评估模型
 
