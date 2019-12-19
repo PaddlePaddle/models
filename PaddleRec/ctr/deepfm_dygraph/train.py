@@ -35,13 +35,14 @@ def train(args):
 
         def eval(epoch):
             deepfm.eval()
+            print("start eval model.")
             total_step = 0.0
             auc_metric_test = fluid.metrics.Auc("ROC")
             for data in test_reader():
                 total_step += 1
                 raw_feat_idx, raw_feat_value, label = zip(*data)
                 raw_feat_idx = np.array(raw_feat_idx, dtype=np.int64)
-                raw_feat_value = np.array(raw_feat_value, dtype=np.float)
+                raw_feat_value = np.array(raw_feat_value, dtype=np.float32)
                 label = np.array(label, dtype=np.int64)
                 raw_feat_idx, raw_feat_value, label = [
                     to_variable(i)

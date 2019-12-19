@@ -47,6 +47,13 @@ CUDA_VISIBLE_DEVICES=0 python -u train.py > train.log 2>&1 &
 
 每一轮数据训练结束后会测试模型效果。
 
+加载已经存在的模型并继续训练:
+
+```bash
+# 加载保存的epoch_0并继续训练
+CUDA_VISIBLE_DEVICES=0 python -u train.py --checkpoint=models/epoch_0 > train.log 2>&1 &
+```
+
 ## 效果
 ```text
 test auc of epoch 0 is 0.802877
