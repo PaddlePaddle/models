@@ -15,6 +15,7 @@
 import argparse
 import numpy as np
 import cv2
+import os
 
 from paddle import fluid
 from paddle.fluid.core import PaddleTensor
@@ -91,12 +92,13 @@ def preprocess_image(img_path):
     return img
 
 
-def main():
-    args = parse_args()
-
+def predict(args):
     # config AnalysisConfig
     config = AnalysisConfig(args.model_file, args.params_file)
-    config.enable_use_gpu(1000)
+    if args.gpu_id < 0:
+        config.disable_gpu()
+    else:
+        config.enable_use_gpu(args.gpu_mem, args.gpu_id)
 
     # create predictor
     predictor = create_paddle_predictor(config.to_native_config())
@@ -116,6 +118,18 @@ def main():
     score = output[cls]
     print("class: ", cls)
     print("score: ", score)
+    return
+
+
+def check_args(args):
+    assert os.path.exists(args.model_file), "model_file({}) not exist!".format(
+        args.model_file)
+    assert os.path.exists(
+        args.params_file), "params_file({}) not exist!".format(args.params_file)
+    assert os.path.exists(args.image_path), "image_path({}) not exist!".format(
+        args.image_path)
+    assert isinstance(args.gpu_id, int)
+    assert isinstance(args.gpu_mem, int)
 
 
 def parse_args():
@@ -124,8 +138,21 @@ def parse_args():
         "--model_file", type=str, default="", help="model filename")
     parser.add_argument(
         "--params_file", type=str, default="", help="parameter filename")
-    parser.add_argument("--image_path", type=str, default="", help="image_path")
+    parser.add_argument("--image_path", type=str, default="", help="image path")
+    parser.add_argument(
+        "--gpu_id",
+        type=int,
+        default=0,
+        help="gpu id, if less than 0, gpu is disabled")
+    parser.add_argument(
+        "--gpu_mem", type=int, default=2000, help="gpu memory, unit: MB")
     return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    check_args(args)
+    predict(args)
 
 
 if __name__ == "__main__":
