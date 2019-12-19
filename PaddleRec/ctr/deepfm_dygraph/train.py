@@ -17,7 +17,7 @@ def train(args):
     else:
         place = fluid.CPUPlace()
     with fluid.dygraph.guard(place):
-        deepfm = DeepFM("deepfm", args)
+        deepfm = DeepFM(args)
 
         train_filelist = [
             os.path.join(args.train_data_dir, x)
@@ -84,9 +84,9 @@ def train(args):
 
             for data in train_reader():
                 raw_feat_idx, raw_feat_value, label = zip(*data)
-                raw_feat_idx = np.array(raw_feat_idx, dtype=np.int)
-                raw_feat_value = np.array(raw_feat_value, dtype=np.float)
-                label = np.array(label, dtype=np.int)
+                raw_feat_idx = np.array(raw_feat_idx, dtype=np.int64)
+                raw_feat_value = np.array(raw_feat_value, dtype=np.float32)
+                label = np.array(label, dtype=np.int64)
                 raw_feat_idx, raw_feat_value, label = [
                     to_variable(i)
                     for i in [raw_feat_idx, raw_feat_value, label]

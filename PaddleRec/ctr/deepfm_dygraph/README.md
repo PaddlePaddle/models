@@ -22,7 +22,7 @@
 DeepFM模型介绍可以参阅论文[DeepFM: A Factorization-Machine based Neural Network for CTR Prediction](https://arxiv.org/abs/1703.04247)
 
 ## 环境
-- **目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本**
+- **目前本模型要求使用PaddlePaddle 1.7或最新develop版本**
 
 ## 数据下载和预处理
 

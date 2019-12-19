@@ -5,13 +5,13 @@ from paddle.fluid.dygraph.nn import FC, Embedding
 
 
 class DeepFM(fluid.dygraph.Layer):
-    def __init__(self, scope_name, args):
-        super(DeepFM, self).__init__(scope_name)
+    def __init__(self, args):
+        super(DeepFM, self).__init__()
         self.args = args
         self.init_value_ = 0.1
 
-        self.fm = FM(self.full_name(), args)
-        self.dnn = DNN(self.full_name(), args)
+        self.fm = FM(args)
+        self.dnn = DNN(args)
 
     def forward(self, raw_feat_idx, raw_feat_value, label):
         feat_idx = fluid.layers.reshape(raw_feat_idx,
@@ -30,15 +30,14 @@ class DeepFM(fluid.dygraph.Layer):
 
 
 class FM(fluid.dygraph.Layer):
-    def __init__(self, scope_name, args):
-        super(FM, self).__init__(scope_name)
+    def __init__(self, args):
+        super(FM, self).__init__()
         self.args = args
         self.init_value_ = 0.1
         self.embedding_w = Embedding(
-            self.full_name(),
+            size=[self.args.num_feat + 1, 1],
             is_sparse=self.args.is_sparse,
             dtype='float32',
-            size=[self.args.num_feat + 1, 1],
             padding_idx=0,
             param_attr=fluid.ParamAttr(
                 initializer=fluid.initializer.TruncatedNormalInitializer(
@@ -46,10 +45,9 @@ class FM(fluid.dygraph.Layer):
                 regularizer=fluid.regularizer.L1DecayRegularizer(
                     self.args.reg)))
         self.embedding = Embedding(
-            self.full_name(),
+            size=[self.args.num_feat + 1, self.args.embedding_size],
             is_sparse=self.args.is_sparse,
             dtype='float32',
-            size=[self.args.num_feat + 1, self.args.embedding_size],
             padding_idx=0,
             param_attr=fluid.ParamAttr(
                 initializer=fluid.initializer.TruncatedNormalInitializer(
@@ -63,7 +61,7 @@ class FM(fluid.dygraph.Layer):
         first_weights = fluid.layers.reshape(
             first_weights_re,
             shape=[-1, self.args.num_field, 1])  # None * num_field * 1
-        y_first_order = fluid.layers.reduce_sum((first_weights * feat_value), 1)
+        y_first_order = fluid.layers.reduce_sum(first_weights * feat_value, 1)
 
         # -------------------- second order term  --------------------
         feat_embeddings_re = self.embedding(feat_idx)
@@ -94,8 +92,8 @@ class FM(fluid.dygraph.Layer):
 
 
 class DNN(fluid.dygraph.Layer):
-    def __init__(self, scope_name, args):
-        super(DNN, self).__init__(scope_name)
+    def __init__(self, args):
+        super(DNN, self).__init__()
         self.args = args
         self.init_value_ = 0.1
         sizes = self.args.layer_sizes + [1]
