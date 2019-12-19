@@ -87,6 +87,7 @@ def preprocess_image(img_path):
     img_std = np.array(std).reshape((3, 1, 1))
     img -= img_mean
     img /= img_std
+    img = np.expand_dims(img, axis=0).copy()
     return img
 
 
@@ -101,8 +102,7 @@ def main():
     predictor = create_paddle_predictor(config.to_native_config())
 
     # input
-    inputs = preprocess_image(args.image_path).copy()
-    inputs = np.expand_dims(inputs, axis=0)
+    inputs = preprocess_image(args.image_path)
     inputs = PaddleTensor(inputs)
 
     # predict
