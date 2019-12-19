@@ -236,11 +236,18 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     img_std = np.array(std).reshape((3, 1, 1))
     img -= img_mean
     img /= img_std
-
-    if mode == 'train' or mode == 'val':
+    # doing training (train.py)
+    if mode == 'train' or (mode == 'val' and
+                           not hasattr(settings, 'save_json_path')):
         return (img, sample[1])
+    #doing testing (eval.py)
+    elif mode == 'val' and hasattr(settings, 'save_json_path'):
+        return (img, sample[1], sample[0])
+    #doing predict (infer.py)
     elif mode == 'test':
         return (img, sample[0])
+    else:
+        raise Exception("mode not implemented")
 
 
 def process_batch_data(input_data, settings, mode, color_jitter, rotate):
@@ -264,14 +271,14 @@ class ImageNetReader:
 
     def _get_single_card_bs(self, settings, mode):
         if settings.use_gpu:
-            if mode == "val" and settings.test_batch_size:
+            if mode == "val" and hasattr(settings, "test_batch_size"):
                 single_card_bs = settings.test_batch_size // paddle.fluid.core.get_cuda_device_count(
                 )
             else:
                 single_card_bs = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
                 )
         else:
-            if mode == "val" and settings.test_batch_size:
+            if mode == "val" and hasattr(settings, "test_batch_size"):
                 single_card_bs = settings.test_batch_size // int(
                     os.environ.get('CPU_NUM', 1))
             else:

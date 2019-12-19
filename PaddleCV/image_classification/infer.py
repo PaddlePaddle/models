@@ -101,8 +101,8 @@ def infer(args):
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-
-    places = fluid.framework.cuda_places()
+    if args.use_gpu:
+        places = fluid.framework.cuda_places()
     compiled_program = fluid.compiler.CompiledProgram(
         test_program).with_data_parallel(places=places)
 
