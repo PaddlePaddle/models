@@ -97,12 +97,13 @@ def infer(args):
     test_program = fluid.default_main_program().clone(for_test=True)
 
     fetch_list = [out.name]
-
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+    place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-
-    places = fluid.framework.cuda_places()
+    places = place
+    if args.use_gpu:
+        places = fluid.framework.cuda_places()
     compiled_program = fluid.compiler.CompiledProgram(
         test_program).with_data_parallel(places=places)
 
@@ -140,7 +141,7 @@ def infer(args):
     info = {}
     parallel_data = []
     parallel_id = []
-    place_num = paddle.fluid.core.get_cuda_device_count()
+    place_num = paddle.fluid.core.get_cuda_device_count() if args.use_gpu else 1
 
     for batch_id, data in enumerate(test_reader()):
         image_data = [[items[0]] for items in data]
