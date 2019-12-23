@@ -42,13 +42,12 @@ if sys.version[0] == '2':
 
 class SimpleLSTMRNN(fluid.Layer):
     def __init__(self,
-                 name_scope,
                  hidden_size,
                  num_steps,
                  num_layers=2,
                  init_scale=0.1,
                  dropout=None):
-        super(SimpleLSTMRNN, self).__init__(name_scope)
+        super(SimpleLSTMRNN, self).__init__()
         self._hidden_size = hidden_size
         self._num_layers = num_layers
         self._init_scale = init_scale
@@ -132,14 +131,13 @@ class SimpleLSTMRNN(fluid.Layer):
 
 class PtbModel(fluid.Layer):
     def __init__(self,
-                 name_scope,
                  hidden_size,
                  vocab_size,
                  num_layers=2,
                  num_steps=20,
                  init_scale=0.1,
                  dropout=None):
-        super(PtbModel, self).__init__(name_scope)
+        super(PtbModel, self).__init__()
         self.hidden_size = hidden_size
         self.vocab_size = vocab_size
         self.init_scale = init_scale
@@ -147,14 +145,12 @@ class PtbModel(fluid.Layer):
         self.num_steps = num_steps
         self.dropout = dropout
         self.simple_lstm_rnn = SimpleLSTMRNN(
-            self.full_name(),
             hidden_size,
             num_steps,
             num_layers=num_layers,
             init_scale=init_scale,
             dropout=dropout)
         self.embedding = Embedding(
-            self.full_name(),
             size=[vocab_size, hidden_size],
             dtype='float32',
             is_sparse=False,
@@ -286,7 +282,6 @@ def train_ptb_lm():
             fluid.default_main_program().random_seed = seed
             max_epoch = 1
         ptb_model = PtbModel(
-            "ptb_model",
             hidden_size=hidden_size,
             vocab_size=vocab_size,
             num_layers=num_layers,
