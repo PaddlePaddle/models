@@ -16,6 +16,7 @@ import os
 import math
 import random
 import functools
+import logging
 import numpy as np
 import cv2
 
@@ -25,6 +26,9 @@ from utils.autoaugment import ImageNetPolicy
 from PIL import Image
 
 policy = None
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 random.seed(0)
 np.random.seed(0)
@@ -257,7 +261,7 @@ def process_batch_data(input_data, settings, mode, color_jitter, rotate):
             batch_data.append(
                 process_image(sample, settings, mode, color_jitter, rotate))
         else:
-            print("File not exist : %s" % sample[0])
+            logger.info("File not exist : %s" % sample[0])
     return batch_data
 
 
@@ -272,17 +276,19 @@ class ImageNetReader:
     def _get_single_card_bs(self, settings, mode):
         if settings.use_gpu:
             if mode == "val" and hasattr(settings, "test_batch_size"):
-                single_card_bs = settings.test_batch_size // paddle.fluid.core.get_cuda_device_count(
-                )
+                single_card_bs = int(
+                    settings.test_batch_size
+                ) // paddle.fluid.core.get_cuda_device_count()
             else:
-                single_card_bs = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
-                )
+                single_card_bs = int(
+                    settings.
+                    batch_size) // paddle.fluid.core.get_cuda_device_count()
         else:
             if mode == "val" and hasattr(settings, "test_batch_size"):
-                single_card_bs = settings.test_batch_size // int(
+                single_card_bs = int(settings.test_batch_size) // int(
                     os.environ.get('CPU_NUM', 1))
             else:
-                single_card_bs = settings.batch_size // int(
+                single_card_bs = int(settings.batch_size) // int(
                     os.environ.get('CPU_NUM', 1))
         return single_card_bs
 
@@ -303,8 +309,8 @@ class ImageNetReader:
                 with open(file_list) as flist:
                     full_lines = [line.strip() for line in flist]
                     if mode != "test" and len(full_lines) < settings.batch_size:
-                        print(
-                            "Warning: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!".
+                        logger.error(
+                            "Error: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please set the batch_size to a smaller number or feed more data!".
                             format(len(full_lines), settings.batch_size))
                         os._exit(1)
                     if num_trainers > 1 and mode == "train":
@@ -318,8 +324,8 @@ class ImageNetReader:
                 batch_data = []
                 if (mode == "train" or mode == "val") and settings.same_feed:
                     temp_file = full_lines[0]
-                    print("Same images({},nums:{}) will feed in the net".format(
-                        str(temp_file), settings.same_feed))
+                    logger.info("Same images({},nums:{}) will feed in the net".
+                                format(str(temp_file), settings.same_feed))
                     full_lines = []
                     for i in range(settings.same_feed):
                         full_lines.append(temp_file)
