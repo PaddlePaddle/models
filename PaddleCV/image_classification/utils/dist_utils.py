@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 import os
 import paddle.fluid as fluid
+import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
