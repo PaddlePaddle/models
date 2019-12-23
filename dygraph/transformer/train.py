@@ -110,7 +110,7 @@ def train(args):
 
         # define model
         transformer = TransFormer(
-            'transformer', ModelHyperParams.src_vocab_size,
+            ModelHyperParams.src_vocab_size,
             ModelHyperParams.trg_vocab_size, ModelHyperParams.max_length + 1,
             ModelHyperParams.n_layer, ModelHyperParams.n_head,
             ModelHyperParams.d_key, ModelHyperParams.d_value,
