@@ -3,13 +3,12 @@
 
 情感是人类的一种高级智能行为，为了识别文本的情感倾向，需要深入的语义建模。另外，不同领域（如餐饮、体育）在情感的表达各不相同，因而需要有大规模覆盖各个领域的数据进行模型训练。为此，我们通过基于深度学习的语义模型和大规模数据挖掘解决上述两个问题。效果上，我们基于开源情感倾向分类数据集ChnSentiCorp进行评测。具体数据如下所示：
 
-| 模型 | dev |
-| :------| :------ |
-| CNN | 90.6% |
-| BOW | 90.1% |
-| GRU | 90.0% |
-| BIGRU | 89.7% |
-
+| 模型 | dev | test |
+| :------| :------ | :------ |
+| CNN | 90.6% | 89.7% |
+| BOW | 90.1% | 90.3% |
+| GRU | 90.0% | 91.1% |
+| BIGRU | 89.7% |  89.6% |
 
 动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
 
@@ -20,9 +19,11 @@
 
 python版本依赖python 2.7或python 3.5及以上版本。
 
+
 #### 安装代码
 
 克隆数据集代码库到本地。
+
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
 cd models/dygraph/sentiment
@@ -31,6 +32,7 @@ cd models/dygraph/sentiment
 #### 数据准备
 
 下载经过预处理的数据，文件解压之后，senta_data目录下会存在训练数据（train.tsv）、开发集数据（dev.tsv）、测试集数据（test.tsv）以及对应的词典（word_dict.txt）
+
 ```shell
 wget https://baidu-nlp.bj.bcebos.com/sentiment_classification-dataset-1.0.0.tar.gz
 tar -zxvf sentiment_classification-dataset-1.0.0.tar.gz
@@ -40,27 +42,41 @@ tar -zxvf sentiment_classification-dataset-1.0.0.tar.gz
 
 基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证。
 model_type从bow_net，cnn_net，gru_net，bigru_net中选择。
+
 ```shell
-python main.py --model_type=bow_net
+python main.py --model_type=bow_net --do_train=True --do_infer=True --epoch=50 --batch_size=256
 ```
 
 #### 模型预测
 
 利用已有模型，可以运行下面命令，对未知label的数据（test.tsv）进行预测。
+
 ```shell
-python main.py --do_train false --do_infer true --checkpoints ./path_to_save_models
+python main.py --model_type=bow_net --do_train=False --do_infer=True --epoch=1 --checkpoints=./path_to_save_models
 ```
+
+#### 模型参数
+
+1. batch_size, 根据模型情况和GPU占用率选择batch_size, 建议cnn/bow选择batch_size=256, gru/bigru选择batch_size=16。
+2. padding_size默认为150。
+3. epoch, training时默认设置为50，infer默认为1。
+4. learning_rate默认为0.002。
+
 
 ## 进阶使用
 
 #### 任务定义
 
 传统的情感分类主要基于词典或者特征工程的方式进行分类，这种方法需要繁琐的人工特征设计和先验知识，理解停留于浅层并且扩展泛化能力差。为了避免传统方法的局限，我们采用近年来飞速发展的深度学习技术。基于深度学习的情感分类不依赖于人工特征，它能够端到端的对输入文本进行语义理解，并基于语义表示进行情感倾向的判断。
+
 #### 模型原理介绍
 
 本项目针对情感倾向性分类问题，：
 
 + CNN（Convolutional Neural Networks），是一个基础的序列模型，能处理变长序列输入，提取局部区域之内的特征；
++ BOW（Bag Of Words）模型，是一个非序列模型，使用基本的全连接结构；
++ GRU（Gated Recurrent Unit），序列模型，能够较好地解决序列文本中长距离依赖的问题；
++ BI-GRU（Bidirectional Gated Recurrent Unit），序列模型，采用双向双层GRU结构，更好地捕获句子中的语义特征；
 
 #### 数据格式说明
 

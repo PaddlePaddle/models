@@ -201,13 +201,13 @@ def ctr_dnn_model(embedding_size, sparse_feature_dim, use_py_reader=True):
                               initializer=fluid.initializer.Normal(
                                   scale=1 / math.sqrt(fc2.shape[1]))))
     predict = fluid.layers.fc(input=fc3,
-                              size=2,
-                              act='softmax',
+                              size=1,
+                              act='sigmoid',
                               param_attr=fluid.ParamAttr(
                                   initializer=fluid.initializer.Normal(
                                       scale=1 / math.sqrt(fc3.shape[1]))))
 
-    cost = fluid.layers.cross_entropy(input=predict, label=words[-1])
+    cost = fluid.layers.log_loss(input=predict, label=fluid.layers.cast(words[-1], dtype="float32"))
     avg_cost = fluid.layers.reduce_sum(cost)
     accuracy = fluid.layers.accuracy(input=predict, label=words[-1])
     auc_var, batch_auc_var, auc_states = \

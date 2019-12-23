@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,17 +12,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import numpy as np
 
 
-class IOUMetric:
+class IOUMetric(object):
 
     def __init__(self, num_classes):
-        self.num_classes = num_classes+1
-        self.hist = np.zeros((num_classes+1, num_classes+1))
-        
+        self.num_classes = num_classes + 1
+        self.hist = np.zeros((num_classes + 1, num_classes + 1))
+
     def _fast_hist(self, label_pred, label_true):
         mask = (label_true >= 0) & (label_true < self.num_classes)
         hist = np.bincount(
@@ -36,8 +39,8 @@ class IOUMetric:
             gts_ig = (gts == 255).astype(np.int32)
             gts_nig = (gts != 255).astype(np.int32)
             # print(predictions)
-            gts[gts == 255] = self.num_classes-1  # 19
-            predictions = gts_nig * predictions + gts_ig * (self.num_classes-1)
+            gts[gts == 255] = self.num_classes - 1  # 19
+            predictions = gts_nig * predictions + gts_ig * (self.num_classes - 1)
             # print(predictions)
         for lp, lt in zip(predictions, gts):
             self.hist += self._fast_hist(lp.flatten(), lt.flatten())

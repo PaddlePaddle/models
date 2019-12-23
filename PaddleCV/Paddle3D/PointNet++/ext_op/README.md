@@ -20,7 +20,8 @@
   **说明：** 推荐使用docker编译
 
 - 安装Paddle develop[每日版本whl包](https://www.paddlepaddle.org.cn/install/doc/tables#多版本whl包列表-dev-11)
-  **说明：** Paddle develop每日版本目前采用**gcc 4.8.2**版本编译，若使用每日版本，请使用**gcc 4.8.2**版本编译自定义OP，否则可能出现兼容性问题。
+
+  **注意：** 编译自定义OP使用的gcc版本须与Paddle编译使用gcc版本一致，Paddle develop每日版本目前采用**gcc 4.8.2**版本编译，若使用每日版本，请使用**gcc 4.8.2**版本编译自定义OP，否则可能出现兼容性问题。
 
 ## 编译自定义OP
 

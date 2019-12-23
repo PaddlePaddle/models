@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('data_dir',         str,  "./data/ILSVRC2012/", "The ImageNet datset")
-add_arg('batch_size',       int,  256,                  "Minibatch size.")
+add_arg('batch_size',       int,  256,                  "batch size on all the devices.")
 add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                 "Class number.")
 parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
@@ -48,12 +48,13 @@ parser.add_argument('--image_shape', nargs="+",  type=int, default=[3,224,224], 
 add_arg('interpolation',    int,  None,                 "The interpolation mode")
 add_arg('padding_type',     str,  "SAME",               "Padding type of convolution")
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
+add_arg('save_json_path',   str,  None,                 "Whether to save output in json file.")
+add_arg('same_feed',        int,  0,                    "Whether to feed same images")
+add_arg('print_step',       int,  1,                    "the batch step to print info")
 # yapf: enable
 
 
 def eval(args):
-    image_shape = args.image_shape
-
     model_list = [m for m in dir(models) if "__" not in m]
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
@@ -62,8 +63,16 @@ def eval(args):
     ), "{} doesn't exist, please load right pretrained model path for eval".format(
         args.pretrained_model)
 
+    assert args.image_shape[
+        1] <= args.resize_short_size, "Please check the args:image_shape and args:resize_short_size, The croped size(image_shape[1]) must smaller than or equal to the resized length(resize_short_size) "
+
+    # check gpu: when using gpu, the number of visible cards should divide batch size
+    if args.use_gpu:
+        assert args.batch_size % fluid.core.get_cuda_device_count(
+        ) == 0, "please support correct batch_size({}), which can be divided by available cards({}), you can change the number of cards by indicating: export CUDA_VISIBLE_DEVICES= ".format(
+            args.batch_size, fluid.core.get_cuda_device_count())
     image = fluid.data(
-        name='image', shape=[None] + image_shape, dtype='float32')
+        name='image', shape=[None] + args.image_shape, dtype='float32')
     label = fluid.data(name='label', shape=[None, 1], dtype='int64')
 
     # model definition
@@ -97,47 +106,80 @@ def eval(args):
 
     test_program = fluid.default_main_program().clone(for_test=True)
 
-    fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name]
+    fetch_list = [avg_cost.name, acc_top1.name, acc_top5.name, pred.name]
+    gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
 
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+
     exe.run(fluid.default_startup_program())
+    if args.use_gpu:
+        places = fluid.framework.cuda_places()
+
+    compiled_program = fluid.compiler.CompiledProgram(
+        test_program).with_data_parallel(places=places)
 
     fluid.io.load_persistables(exe, args.pretrained_model)
     imagenet_reader = reader.ImageNetReader()
     val_reader = imagenet_reader.val(settings=args)
 
-    feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
+    # set places to run on the multi-card
+    feeder = fluid.DataFeeder(place=places, feed_list=[image, label])
 
     test_info = [[], [], []]
     cnt = 0
+    parallel_data = []
+    parallel_id = []
+    place_num = paddle.fluid.core.get_cuda_device_count()
+    real_iter = 0
+    info_dict = {}
+
     for batch_id, data in enumerate(val_reader()):
-        t1 = time.time()
-        loss, acc1, acc5 = exe.run(test_program,
-                                   fetch_list=fetch_list,
-                                   feed=feeder.feed(data))
-        t2 = time.time()
-        period = t2 - t1
-        loss = np.mean(loss)
-        acc1 = np.mean(acc1)
-        acc5 = np.mean(acc5)
-        test_info[0].append(loss * len(data))
-        test_info[1].append(acc1 * len(data))
-        test_info[2].append(acc5 * len(data))
-        cnt += len(data)
-        if batch_id % 10 == 0:
-            print("Testbatch {0},loss {1}, "
-                  "acc1 {2},acc5 {3},time {4}".format(batch_id, \
+        #image data and label
+        image_data = [items[0:2] for items in data]
+        image_id = [items[2] for items in data]
+        parallel_id.append(image_id)
+        parallel_data.append(image_data)
+        if place_num == len(parallel_data):
+            t1 = time.time()
+            loss_set, acc1_set, acc5_set, pred_set = exe.run(
+                compiled_program,
+                fetch_list=fetch_list,
+                feed=list(feeder.feed_parallel(parallel_data, place_num)))
+            t2 = time.time()
+            period = t2 - t1
+            loss = np.mean(loss_set)
+            acc1 = np.mean(acc1_set)
+            acc5 = np.mean(acc5_set)
+            test_info[0].append(loss * len(data))
+            test_info[1].append(acc1 * len(data))
+            test_info[2].append(acc5 * len(data))
+            cnt += len(data)
+            if batch_id % args.print_step == 0:
+                info = "Testbatch {0},loss {1}, acc1 {2},acc5 {3},time {4}".format(real_iter, \
                   "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5, \
-                  "%2.2f sec" % period))
-            sys.stdout.flush()
+                  "%2.2f sec" % period)
+                print(info)
+                sys.stdout.flush()
+
+            parallel_id = []
+            parallel_data = []
+            real_iter += 1
 
     test_loss = np.sum(test_info[0]) / cnt
     test_acc1 = np.sum(test_info[1]) / cnt
     test_acc5 = np.sum(test_info[2]) / cnt
 
-    print("Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
-        "%.5f" % test_loss, "%.5f" % test_acc1, "%.5f" % test_acc5))
+    info = "Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
+        "%.5f" % test_loss, "%.5f" % test_acc1, "%.5f" % test_acc5)
+    if args.save_json_path:
+        info_dict = {
+            "Test_loss": test_loss,
+            "test_acc1": test_acc1,
+            "test_acc5": test_acc5
+        }
+        save_json(info_dict, args.save_json_path)
+    print(info)
     sys.stdout.flush()
 
 

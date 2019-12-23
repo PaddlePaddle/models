@@ -28,8 +28,8 @@ model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("checkpoints", str, "checkpoints", "Path to save checkpoints")
 
 train_g = ArgumentGroup(parser, "training", "training options.")
-train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
-train_g.add_arg("save_steps", int, 1000,
+train_g.add_arg("epoch", int, 50, "Number of epoches for training.")
+train_g.add_arg("save_steps", int, 200,
                 "The steps interval to save checkpoints.")
 train_g.add_arg("validation_steps", int, 200,
                 "The steps interval to evaluate model performance.")
@@ -47,7 +47,7 @@ data_g.add_arg("data_dir", str, "./senta_data/", "Path to training data.")
 data_g.add_arg("vocab_path", str, "./senta_data/word_dict.txt",
                "Vocabulary path.")
 data_g.add_arg("vocab_size", int, 33256, "Vocabulary path.")
-data_g.add_arg("batch_size", int, 16,
+data_g.add_arg("batch_size", int, 256,
                "Total examples' number in batch for training.")
 data_g.add_arg("random_seed", int, 0, "Random seed.")
 
@@ -56,7 +56,7 @@ run_type_g.add_arg("use_cuda", bool, True, "If set, use GPU for training.")
 run_type_g.add_arg("do_train", bool, True, "Whether to perform training.")
 run_type_g.add_arg("do_val", bool, True, "Whether to perform evaluation.")
 run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
-run_type_g.add_arg("profile_steps", int, 15000,
+run_type_g.add_arg("profile_steps", int, 60000,
                    "The steps interval to record the performance.")
 train_g.add_arg("model_type", str, "bow_net", "Model type of training.")
 parser.add_argument("--ce", action="store_true", help="run ce")
@@ -81,7 +81,6 @@ def profile_context(profile=True):
             yield
     else:
         yield
-
 
 if args.ce:
     print("ce mode")
@@ -144,10 +143,11 @@ def train():
                              args.padding_size)
         elif args.model_type == 'bigru_net':
             model = nets.BiGRU("bigru_net", args.vocab_size, args.batch_size,
-                               args.padding_size)
+                             args.padding_size)
         sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.lr)
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
+        gru_hidden_data = np.zeros((args.batch_size, 128), dtype='float32')
         for eop in range(args.epoch):
             time_begin = time.time()
             for batch_id, data in enumerate(train_data_generator()):
@@ -176,7 +176,7 @@ def train():
                     total_cost.append(avg_cost.numpy() * word_num)
                     total_acc.append(acc.numpy() * word_num)
                     total_num_seqs.append(word_num)
-
+ 
                     if steps % args.skip_steps == 0:
                         time_end = time.time()
                         used_time = time_end - time_begin
@@ -193,6 +193,7 @@ def train():
                         total_eval_cost, total_eval_acc, total_eval_num_seqs = [], [], []
                         model.eval()
                         eval_steps = 0
+                        gru_hidden_data = np.zeros((args.batch_size, 128), dtype='float32')
                         for eval_batch_id, eval_data in enumerate(
                                 eval_data_generator()):
                             eval_np_doc = np.array([
@@ -239,7 +240,7 @@ def train():
                                    np.sum(total_eval_num_seqs)))
 
                     if steps % args.save_steps == 0:
-                        save_path = "save_dir_" + str(steps)
+                        save_path = args.checkpoints+"/"+"save_dir_" + str(steps)
                         print('save model to: ' + save_path)
                         fluid.dygraph.save_dygraph(model.state_dict(),
                                                    save_path)
@@ -270,25 +271,25 @@ def infer():
             model_infer = nets.GRU("gru_net", args.vocab_size, args.batch_size,
                                    args.padding_size)
         elif args.model_type == 'bigru_net':
-            model_infer = nets.BiGRU("bigru_net", args.vocab_size,
-                                     args.batch_size, args.padding_size)
+            model_infer = nets.BiGRU("bigru_net", args.vocab_size, args.batch_size,
+                                   args.padding_size)
         print('Do inferring ...... ')
-        total_acc, total_num_seqs = [], []
         restore, _ = fluid.load_dygraph(args.checkpoints)
-        cnn_net_infer.set_dict(restore)
-        cnn_net_infer.eval()
-
+        model_infer.set_dict(restore)
+        model_infer.eval()
+        total_acc, total_num_seqs = [], []
         steps = 0
         time_begin = time.time()
         for batch_id, data in enumerate(infer_data_generator()):
             steps += 1
-            np_doc = np.array([
-                np.pad(x[0][0:args.padding_size],
-                       (0, args.padding_size - len(x[0][0:args.padding_size])),
-                       'constant',
-                       constant_values=(args.vocab_size)) for x in data
+            np_doc = np.array([np.pad(x[0][0:args.padding_size],
+                                       (0, args.padding_size -
+                                        len(x[0][0:args.padding_size])),
+                                       'constant',
+                                       constant_values=(args.vocab_size))
+                                for x in data
             ]).astype('int64').reshape(-1, 1)
-            doc = to_variable(np_doc)
+            doc = to_variable(np_doc.reshape(-1, 1))
             label = to_variable(
                 np.array([x[1] for x in data]).astype('int64').reshape(
                     args.batch_size, 1))
@@ -297,10 +298,8 @@ def infer():
             word_num = np.sum(mask)
             total_acc.append(acc.numpy() * word_num)
             total_num_seqs.append(word_num)
-
         time_end = time.time()
-        used_time = time_end - time_begin
-
+        used_time = time_end - time_begin       
         print("Final infer result: ave acc: %f, speed: %f steps/s" %
               (np.sum(total_acc) / np.sum(total_num_seqs), steps / used_time))
 

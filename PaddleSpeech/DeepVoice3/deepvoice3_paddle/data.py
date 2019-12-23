@@ -273,7 +273,6 @@ def create_batch(batch):
 
     x_batch = np.array(
         [_pad(x[0], max_input_len) for x in batch], dtype=np.int64)
-    x_batch = np.expand_dims(x_batch, axis=-1)
 
     mel_batch = np.array(
         [_pad_2d(
@@ -295,7 +294,6 @@ def create_batch(batch):
     text_positions = np.array(
         [_pad(np.arange(1, len(x[0]) + 1), max_input_len) for x in batch],
         dtype=np.int64)
-    text_positions = np.expand_dims(text_positions, axis=-1)
 
     max_decoder_target_len = max_target_len // r // downsample_step
 
@@ -305,7 +303,6 @@ def create_batch(batch):
         np.expand_dims(
             np.arange(
                 s, e, dtype=np.int64), axis=0), (len(batch), 1))
-    frame_positions = np.expand_dims(frame_positions, axis=-1)
 
     # done flags
     done = np.array([
@@ -318,7 +315,7 @@ def create_batch(batch):
     done = np.expand_dims(np.expand_dims(done, axis=1), axis=1)
 
     if multi_speaker:
-        speaker_ids = np.expand_dims(np.array([x[3] for x in batch]), axis=-1)
+        speaker_ids = np.array([x[3] for x in batch])
         return (x_batch, input_lengths, mel_batch, y_batch, text_positions,
                 frame_positions, done, target_lengths, speaker_ids)
     else:

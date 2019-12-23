@@ -31,7 +31,7 @@ class Conv1D(dg.Layer):
 
     def __init__(self,
                  name_scope,
-                 in_cahnnels,
+                 in_channels,
                  num_filters,
                  filter_size=3,
                  dilation=1,
@@ -49,7 +49,7 @@ class Conv1D(dg.Layer):
         else:
             padding = (dilation * (filter_size - 1)) // 2
 
-        self.in_channels = in_cahnnels
+        self.in_channels = in_channels
         self.num_filters = num_filters
         self.filter_size = filter_size
         self.dilation = dilation
