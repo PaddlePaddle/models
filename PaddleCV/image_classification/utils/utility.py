@@ -92,6 +92,7 @@ def parse_args():
     add_arg('model_save_dir',           str,    "./output",        "The directory path to save model.")
     add_arg('data_dir',                 str,    "./data/ILSVRC2012/",   "The ImageNet dataset root directory.")
     add_arg('pretrained_model',         str,    None,                   "Whether to load pretrained model.")
+    add_arg('finetune_exclude_pretrained_params', str, None,            "Ignore params when doing finetune")
     add_arg('checkpoint',               str,    None,                   "Whether to resume checkpoint.")
     add_arg('print_step',               int,    10,                     "The steps interval to print logs")
     add_arg('save_step',                int,    1,                      "The steps interval to save checkpoints")
@@ -103,7 +104,7 @@ def parse_args():
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
     add_arg('batch_size',               int,    8,                      "Minibatch size on all the devices.")
-    add_arg('test_batch_size',          int,    None,                   "Test batch size on all the devices.")
+    add_arg('test_batch_size',          int,    48,                   "Test batch size on all the devices.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
@@ -293,9 +294,9 @@ def init_model(exe, args, program):
         print("Finish initing model from %s" % (args.checkpoint))
 
     if args.pretrained_model:
+        """
         # yapf: disable
-
-        #XXX: should rename all models' final fc layers name as final_fc_weights and final_fc_offset!
+        # This is a dict of fc layers in all the classification models.
         final_fc_name = [
                          "fc8_weights","fc8_offset", #alexnet
                          "fc_weights","fc_offset", #darknet, densenet, dpn, hrnet, mobilenet_v3, res2net, res2net_vd, resnext, resnext_vd, xception
@@ -312,6 +313,13 @@ def init_model(exe, args, program):
                          "fc_bias" #"fc_weights", xception_deeplab
                          ]
         # yapf: enable
+        """
+        final_fc_name = []
+        if args.finetune_exclude_pretrained_params:
+            final_fc_name = [
+                str(s)
+                for s in args.finetune_exclude_pretrained_params.split(",")
+            ]
 
         def is_parameter(var):
             fc_exclude_flag = False
@@ -324,8 +332,8 @@ def init_model(exe, args, program):
                 Parameter) and not fc_exclude_flag and os.path.exists(
                     os.path.join(args.pretrained_model, var.name))
 
-        print("Load pretrain weights from {}, exclude fc layer.".format(
-            args.pretrained_model))
+        print("Load pretrain weights from {}, exclude params {}.".format(
+            args.pretrained_model, final_fc_name))
         vars = filter(is_parameter, program.list_vars())
         fluid.io.load_vars(
             exe, args.pretrained_model, vars=vars, main_program=program)
@@ -474,7 +482,6 @@ def print_info(info_mode,
             time_info
         ) > 10, "0~9th batch statistics will drop when doing benchmark or ce, because it might be mixed with startup time, so please make sure training at least 10 batches."
         print_ce(device_num, metrics, time_info)
-        #raise Warning("CE code is not ready")
     else:
         raise Exception("Illegal info_mode")
 

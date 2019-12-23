@@ -29,6 +29,7 @@ import paddle
 import paddle.fluid as fluid
 import reader
 import models
+import json
 from utils import *
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -53,7 +54,7 @@ add_arg('padding_type',     str,  "SAME",               "Padding type of convolu
 add_arg('use_se',           bool, True,                 "Whether to use Squeeze-and-Excitation module for EfficientNet.")
 add_arg('image_path',       str,  None,                 "single image path")
 add_arg('batch_size',       int,  8,                    "batch_size on all the devices")
-add_arg('save_json_path',        str,  None,            "save output to a json file")
+add_arg('save_json_path',        str,  "test_res.json",            "save output to a json file")
 # yapf: enable
 
 
@@ -97,12 +98,13 @@ def infer(args):
     test_program = fluid.default_main_program().clone(for_test=True)
 
     fetch_list = [out.name]
-
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
+    gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+    place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-
-    places = fluid.framework.cuda_places()
+    places = place
+    if args.use_gpu:
+        places = fluid.framework.cuda_places()
     compiled_program = fluid.compiler.CompiledProgram(
         test_program).with_data_parallel(places=places)
 
@@ -140,49 +142,48 @@ def infer(args):
     info = {}
     parallel_data = []
     parallel_id = []
-    place_num = paddle.fluid.core.get_cuda_device_count()
+    place_num = paddle.fluid.core.get_cuda_device_count() if args.use_gpu else 1
+    with open(args.save_json_path, "wb") as fout:
+        for batch_id, data in enumerate(test_reader()):
+            image_data = [[items[0]] for items in data]
+            image_id = [items[1] for items in data]
 
-    for batch_id, data in enumerate(test_reader()):
-        image_data = [[items[0]] for items in data]
-        image_id = [items[1] for items in data]
+            parallel_id.append(image_id)
+            parallel_data.append(image_data)
 
-        parallel_id.append(image_id)
-        parallel_data.append(image_data)
+            if place_num == len(parallel_data):
+                result = exe.run(
+                    compiled_program,
+                    fetch_list=fetch_list,
+                    feed=list(feeder.feed_parallel(parallel_data, place_num)))
+                for i, res in enumerate(result[0]):
+                    pred_label = np.argsort(res)[::-1][:TOPK]
+                    real_id = str(np.array(parallel_id).flatten()[i])
+                    _, real_id = os.path.split(real_id)
 
-        if place_num == len(parallel_data):
-            result = exe.run(
-                compiled_program,
-                fetch_list=fetch_list,
-                feed=list(feeder.feed_parallel(parallel_data, place_num)))
-            for i, res in enumerate(result[0]):
-                pred_label = np.argsort(res)[::-1][:TOPK]
-                real_id = str(np.array(parallel_id).flatten()[i])
-                _, real_id = os.path.split(real_id)
+                    if os.path.exists(args.class_map_path):
+                        readable_pred_label = []
+                        for label in pred_label:
+                            readable_pred_label.append(label_dict[str(label)])
 
-                if os.path.exists(args.class_map_path):
-                    readable_pred_label = []
-                    for label in pred_label:
-                        readable_pred_label.append(label_dict[str(label)])
+                        info[real_id] = {}
+                        info[real_id]['score'], info[real_id]['class'], info[
+                            real_id]['class_name'] = str(res[pred_label]), str(
+                                pred_label), readable_pred_label
+                    else:
+                        info[real_id] = {}
+                        info[real_id]['score'], info[real_id]['class'] = str(
+                            res[pred_label]), str(pred_label)
 
-                    info[real_id] = {}
-                    info[real_id]['score'], info[real_id]['class'], info[
-                        real_id]['class_name'] = str(res[pred_label]), str(
-                            pred_label), readable_pred_label
-                else:
-                    info[real_id] = {}
-                    info[real_id]['score'], info[real_id]['class'] = str(res[
-                        pred_label]), str(pred_label)
+                    print(real_id, info[real_id])
+                    sys.stdout.flush()
+                    fout.write(real_id + "\t" + json.dumps(info[real_id]) +
+                               "\n")
 
-                print(real_id, info[real_id])
-                sys.stdout.flush()
+                parallel_data = []
+                parallel_id = []
 
-                if args.save_json_path:
-                    save_json(info, args.save_json_path)
-
-            parallel_data = []
-            parallel_id = []
-        if args.image_path:
-            os.remove(".tmp.txt")
+    os.remove(".tmp.txt")
 
 
 def main():
