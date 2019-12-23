@@ -14,7 +14,7 @@ cd correlation_op
 sh make.sh
 ```
 # Datasets
-1.Please download the `FlyingChairs dataset` and `FlyingChairs_train_val.txt` from https://lmb.informatik.uni-freiburg.de/resources/datasets
+Please download the `FlyingChairs dataset` and `FlyingChairs_train_val.txt` from https://lmb.informatik.uni-freiburg.de/resources/datasets
 
 Or you can use `./data/download.sh` to download datasets.
 
