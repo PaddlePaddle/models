@@ -75,5 +75,7 @@ def parse_args():
         required=False,
         default=False,
         help='embedding will use sparse or not, (default: False)')
+    parser.add_argument(
+        '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
     return parser.parse_args()
