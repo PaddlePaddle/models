@@ -332,7 +332,7 @@ def init_model(exe, args, program):
                 Parameter) and not fc_exclude_flag and os.path.exists(
                     os.path.join(args.pretrained_model, var.name))
 
-        print("Load pretrain weights from {}, exclude params {}.".format(
+        logger.info("Load pretrain weights from {}, exclude params {}.".format(
             args.pretrained_model, final_fc_name))
         vars = filter(is_parameter, program.list_vars())
         fluid.io.load_vars(

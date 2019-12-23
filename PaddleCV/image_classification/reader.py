@@ -280,17 +280,19 @@ class ImageNetReader:
     def _get_single_card_bs(self, settings, mode):
         if settings.use_gpu:
             if mode == "val" and hasattr(settings, "test_batch_size"):
-                single_card_bs = settings.test_batch_size // paddle.fluid.core.get_cuda_device_count(
-                )
+                single_card_bs = single_card_bs = int(
+                    settings.test_batch_size
+                ) // paddle.fluid.core.get_cuda_device_count()
             else:
-                single_card_bs = settings.batch_size // paddle.fluid.core.get_cuda_device_count(
-                )
+                single_card_bs = int(
+                    settings.
+                    batch_size) // paddle.fluid.core.get_cuda_device_count()
         else:
             if mode == "val" and hasattr(settings, "test_batch_size"):
-                single_card_bs = settings.test_batch_size // int(
+                single_card_bs = int(settings.test_batch_size) // int(
                     os.environ.get('CPU_NUM', 1))
             else:
-                single_card_bs = settings.batch_size // int(
+                single_card_bs = int(settings.test_batch_size) // int(
                     os.environ.get('CPU_NUM', 1))
         return single_card_bs
 
