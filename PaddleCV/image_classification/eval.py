@@ -53,6 +53,9 @@ add_arg('same_feed',        int,  0,                    "Whether to feed same im
 add_arg('print_step',       int,  1,                    "the batch step to print info")
 # yapf: enable
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def eval(args):
     model_list = [m for m in dir(models) if "__" not in m]
@@ -170,8 +173,16 @@ def eval(args):
     test_acc1 = np.sum(test_info[1]) / cnt
     test_acc5 = np.sum(test_info[2]) / cnt
 
-    print("Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
-        "%.5f" % test_loss, "%.5f" % test_acc1, "%.5f" % test_acc5))
+    info = "Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
+        "%.5f" % test_loss, "%.5f" % test_acc1, "%.5f" % test_acc5)
+    if args.save_json_path:
+        info_dict = {
+            "Test_loss": test_loss,
+            "test_acc1": test_acc1,
+            "test_acc5": test_acc5
+        }
+        save_json(info_dict, args.save_json_path)
+    logger.info(info)
     sys.stdout.flush()
     if args.save_json_path:
         info_dict = {
