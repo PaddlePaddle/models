@@ -11,7 +11,7 @@ def read_txt_to_index(file):
 
 
 def main():
-    file = '/ssd2/zhenghe/DATA/FlyingChairs_release/FlyingChairs_train_val.txt'
+    file = 'data_dir/FlyingChairs_release/FlyingChairs_train_val.txt'
     data = read_txt_to_index(file)
     data = list(map(int, data))
     print(data)
