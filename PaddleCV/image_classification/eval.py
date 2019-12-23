@@ -162,16 +162,6 @@ def eval(args):
                 print(info)
                 sys.stdout.flush()
 
-            if args.save_json_path:
-                for i, res in enumerate(pred_set):
-                    pred_label = np.argsort(res)[::-1][:1]
-                    real_id = str(np.array(parallel_id).flatten()[i])
-                    _, real_id = os.path.split(real_id)
-                    info_dict[real_id] = {}
-                    info_dict[real_id]['score'], info_dict[real_id][
-                        'class'] = str(res[pred_label]), str(pred_label)
-                    save_json(info_dict, args.save_json_path)
-
             parallel_id = []
             parallel_data = []
             real_iter += 1
@@ -180,8 +170,16 @@ def eval(args):
     test_acc1 = np.sum(test_info[1]) / cnt
     test_acc5 = np.sum(test_info[2]) / cnt
 
-    print("Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
-        "%.5f" % test_loss, "%.5f" % test_acc1, "%.5f" % test_acc5))
+    info = "Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
+        "%.5f" % test_loss, "%.5f" % test_acc1, "%.5f" % test_acc5)
+    if args.save_json_path:
+        info_dict = {
+            "Test_loss": test_loss,
+            "test_acc1": test_acc1,
+            "test_acc5": test_acc5
+        }
+        save_json(info_dict, args.save_json_path)
+    print(info)
     sys.stdout.flush()
 
 
