@@ -177,7 +177,6 @@ def check_gpu():
                 "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
                 "\t2. Set use_gpu as false in config file to run " \
                 "model on CPU"
-    logger = logging.getLogger(__name__)
     try:
         if args.use_gpu and not fluid.is_compiled_with_cuda():
             logger.error(err)
