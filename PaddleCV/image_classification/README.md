@@ -302,6 +302,7 @@ export CUDA_VISIBLE_DEVICES=0
 python infer.py \
         --model=ResNet50_vd \
         --pretrained_model=./ResNet50_vd_pretrained/ \
+        --class_map_path=./utils/tools/readable_label.txt \
         --image_path=./data/ILSVRC2012/ILSVRC2012_val_00000001.JPEG \
         --save_json_path=./test_res.json
 ```
@@ -314,6 +315,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 python infer.py \
         --model=ResNet50_vd \
         --pretrained_model=./ResNet50_vd_pretrained/ \
+        --class_map_path=./utils/tools/readable_label.txt \
         --data_dir=./data/ILSVRC2012/ \
         --save_json_path=./test_res.json
 ```
