@@ -23,7 +23,7 @@ import numpy as np
 
 import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
-from paddle.fluid.initializer import Constant
+from paddle.fluid.initializer import Constant, Normal
 from ext_op import *
 
 __all__ = ["conv_bn", "pointnet_sa_module", "pointnet_fp_module", "MLP"]
@@ -76,7 +76,13 @@ def group_all(xyz, features=None, use_xyz=True):
 
 
 def conv_bn(input, out_channels, bn=True, bn_momentum=0.95, act='relu', name=None):
-    param_attr = ParamAttr(name='{}_conv_weight'.format(name),)
+    def _get_kaiming_init():
+        fan_in = input.shape[1]
+        std = (1.0 / fan_in / 3.0) ** 0.5
+        return Normal(0., std, 0.)
+
+    param_attr = ParamAttr(name='{}_conv_weight'.format(name),
+                           initializer=_get_kaiming_init())
     bias_attr = ParamAttr(name='{}_conv_bias'.format(name)) \
                                   if not bn else False
     out = fluid.layers.conv2d(input,
