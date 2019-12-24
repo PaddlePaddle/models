@@ -219,7 +219,7 @@ def check_args(args):
     # check learning rate strategy
     lr_strategy_list = [l for l in dir(Optimizer) if not l.startswith('__')]
     if args.lr_strategy not in lr_strategy_list:
-        logger.info(
+        logger.warning(
             "\n{} is not in lists: {}, \nUse default learning strategy now!".
             format(args.lr_strategy, lr_strategy_list))
         args.lr_strategy = "default_decay"
@@ -271,14 +271,14 @@ def check_args(args):
     # check CE
     if args.enable_ce:
         args.random_seed = 0
-        print("CE is running now! already set random seed to 0")
+        logger.warning("CE is running now! already set random seed to 0")
 
     # check class_dim
     assert args.class_dim > 1, "class_dim must greater than 1"
 
     # check dali preprocess
     if args.use_dali:
-        logger.info(
+        logger.warning(
             "DALI preprocessing is activated!!!\nWarning: 1. Please make sure paddlepaddle is compiled by GCC5.4 or later version!\n\t 2. Please make sure nightly builds DALI is installed correctly.\n----------------------------------------------------"
         )
 
@@ -497,13 +497,13 @@ def print_ce(device_num, metrics, time_info):
 
     train_speed = np.mean(np.array(time_info[10:]))
 
-    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_loss))
-    print("kpis\ttrain_acc1_card{}\t{}".format(device_num, train_acc1))
-    print("kpis\ttrain_acc5_card{}\t{}".format(device_num, train_acc5))
-    print("kpis\ttest_cost_card{}\t{}".format(device_num, test_loss))
-    print("kpis\ttest_acc1_card{}\t{}".format(device_num, test_acc1))
-    print("kpis\ttest_acc5_card{}\t{}".format(device_num, test_acc5))
-    print("kpis\ttrain_speed_card{}\t{}".format(device_num, train_speed))
+    logger.info("kpis\ttrain_cost_card{}\t{}".format(device_num, train_loss))
+    logger.info("kpis\ttrain_acc1_card{}\t{}".format(device_num, train_acc1))
+    logger.info("kpis\ttrain_acc5_card{}\t{}".format(device_num, train_acc5))
+    logger.info("kpis\ttest_cost_card{}\t{}".format(device_num, test_loss))
+    logger.info("kpis\ttest_acc1_card{}\t{}".format(device_num, test_acc1))
+    logger.info("kpis\ttest_acc5_card{}\t{}".format(device_num, test_acc5))
+    logger.info("kpis\ttrain_speed_card{}\t{}".format(device_num, train_speed))
 
 
 def best_strategy_compiled(args,

@@ -212,7 +212,7 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     img = cv2.imread(img_path)
 
     if img is None:
-        logger.warn("img({0}) is None, pass it.".format(img_path))
+        logger.warning("img({0}) is None, pass it.".format(img_path))
         return None
 
     if mode == 'train':
@@ -317,8 +317,8 @@ class ImageNetReader:
                 with open(file_list) as flist:
                     full_lines = [line.strip() for line in flist]
                     if mode != "test" and len(full_lines) < settings.batch_size:
-                        logger.info(
-                            "Warning: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!".
+                        logger.error(
+                            "Error: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!".
                             format(len(full_lines), settings.batch_size))
                         os._exit(1)
                     if num_trainers > 1 and mode == "train":
