@@ -212,6 +212,7 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     img = cv2.imread(img_path)
 
     if img is None:
+        logger.warn("img({0}) is None, pass it.".format(img_path))
         return None
 
     if mode == 'train':

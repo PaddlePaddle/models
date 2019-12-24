@@ -85,7 +85,7 @@ python train.py \
         --data_dir=./data/ILSVRC2012/ \
         --total_images=1281167 \
         --class_dim=1000 \
-        --validate=1 \
+        --validate=True \
         --model=ResNet50_vd \
         --batch_size=256 \
         --lr_strategy=cosine_decay \
@@ -218,7 +218,7 @@ python train.py \
         --data_dir=./data/ILSVRC2012/ \
         --total_images=1281167 \
         --class_dim=1000 \
-        --validate=1 \
+        --validate=True \
         --model=ResNet50_vd \
         --batch_size=256 \  
         --lr=0.1 \
@@ -267,7 +267,7 @@ python ema_clean.py \
        --cleaned_model_dir=your_cleaned_model_dir
 
 python eval.py \
-       --model=model_name \
+       --model=ResNet50_vd \
        --pretrained_model=your_cleaned_model_dir
 ```
 
@@ -307,7 +307,7 @@ python infer.py \
         --pretrained_model=${path_to_pretrain_model} \
         --class_map_path=./utils/tools/readable_label.txt \
         --data_dir=./data/ILSVRC2012/ \
-        --save_json_path=${save_json_path}
+        --save_json_path=${test_res_json_path}
 ```
 
 注意：
@@ -545,7 +545,7 @@ python -m paddle.distributed.launch train.py \
 
     ```bash
     python infer.py \
-           --model=model_name \
+           --model=ResNet50_vd \
            --pretrained_model=${path_to_pretrain_model} \
            --save_inference=True
     ```
