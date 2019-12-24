@@ -18,7 +18,7 @@ import random
 import functools
 import numpy as np
 import cv2
-
+import logging
 import imghdr
 
 import paddle
@@ -27,6 +27,9 @@ from utils.autoaugment import ImageNetPolicy
 from PIL import Image
 
 policy = None
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 random.seed(0)
 np.random.seed(0)
@@ -265,7 +268,7 @@ def process_batch_data(input_data, settings, mode, color_jitter, rotate):
                 continue
             batch_data.append(tmp_data)
         else:
-            print("File not exist : {0}".format(sample[0]))
+            logger.info("File not exist : {0}".format(sample[0]))
     return batch_data
 
 
@@ -313,7 +316,7 @@ class ImageNetReader:
                 with open(file_list) as flist:
                     full_lines = [line.strip() for line in flist]
                     if mode != "test" and len(full_lines) < settings.batch_size:
-                        print(
+                        logger.info(
                             "Warning: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!".
                             format(len(full_lines), settings.batch_size))
                         os._exit(1)
@@ -328,8 +331,8 @@ class ImageNetReader:
                 batch_data = []
                 if (mode == "train" or mode == "val") and settings.same_feed:
                     temp_file = full_lines[0]
-                    print("Same images({},nums:{}) will feed in the net".format(
-                        str(temp_file), settings.same_feed))
+                    logger.info("Same images({},nums:{}) will feed in the net".
+                                format(str(temp_file), settings.same_feed))
                     full_lines = []
                     for i in range(settings.same_feed):
                         full_lines.append(temp_file)

@@ -24,6 +24,7 @@ import numpy as np
 import argparse
 import functools
 import re
+import logging
 
 import paddle
 import paddle.fluid as fluid
@@ -56,6 +57,9 @@ add_arg('image_path',       str,  None,                 "single image path")
 add_arg('batch_size',       int,  8,                    "batch_size on all the devices")
 add_arg('save_json_path',        str,  "test_res.json",            "save output to a json file")
 # yapf: enable
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def infer(args):
@@ -118,7 +122,7 @@ def infer(args):
             executor=exe,
             model_filename='model',
             params_filename='params')
-        print("model: {0} is already saved".format(args.model))
+        logger.info("model: {0} is already saved".format(args.model))
         exit(0)
 
     imagenet_reader = reader.ImageNetReader()
@@ -127,7 +131,8 @@ def infer(args):
 
     TOPK = args.topk
     if os.path.exists(args.class_map_path):
-        print("The map of readable label and numerical label has been found!")
+        logger.info(
+            "The map of readable label and numerical label has been found!")
         with open(args.class_map_path) as f:
             label_dict = {}
             strinfo = re.compile(r"\d+ ")
@@ -175,7 +180,7 @@ def infer(args):
                         info[real_id]['score'], info[real_id]['class'] = str(
                             res[pred_label]), str(pred_label)
 
-                    print(real_id, info[real_id])
+                    logger.info(real_id, info[real_id])
                     sys.stdout.flush()
                     fout.write(real_id + "\t" + json.dumps(info[real_id]) +
                                "\n")

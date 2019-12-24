@@ -16,7 +16,6 @@
     - [混合精度训练](#混合精度训练)
     - [性能分析](#性能分析)
     - [DALI预处理](#DALI预处理)
-    - [自定义数据集](#自定义数据集)
 - [已发布模型及其性能](#已发布模型及其性能)
 - [FAQ](#faq)
 - [参考文献](#参考文献)
@@ -80,8 +79,6 @@ val/ILSVRC2012_val_00000001.jpeg 65
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3
-export FLAGS_fast_eager_deletion_mode=1
-export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 python train.py \
@@ -106,7 +103,6 @@ python train.py \
 - 当添加如step_epochs这种列表型参数，需要去掉"="，如：--step_epochs 10 20 30
 - 如果需要训练自己的数据集，则需要修改根据自己的数据集修改`data_dir`, `total_images`, `class_dim`参数；如果因为GPU显存不够而需要调整`batch_size`，则参数`lr`也需要根据`batch_size`进行线性调整。
 - 如果需要使用其他模型进行训练，则需要修改`model`参数，也可以在`scripts/train/`文件夹中根据对应模型的默认运行脚本进行修改并训练。
-- 如果不希望在训练中评测模型，则可以设置参数`validate=0`。
 
 
 或通过run.sh 启动训练
@@ -212,12 +208,10 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 
 ### 参数微调
 
-参数微调(Finetune)是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```pretrained_model```为模型所在路径，微调一个模型可以采用如下的命令：
+参数微调(Finetune)是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3
-export FLAGS_fast_eager_deletion_mode=1
-export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 python train.py \
@@ -226,33 +220,28 @@ python train.py \
         --class_dim=1000 \
         --validate=1 \
         --model=ResNet50_vd \
-        --batch_size=256 \
-        --lr_strategy=cosine_decay \
+        --batch_size=256 \  
         --lr=0.1 \
         --num_epochs=200 \
         --model_save_dir=output/ \
         --l2_decay=7e-5 \
-        --use_mixup=True \
-        --use_label_smoothing=True \
-        --label_smoothing_epsilon=0.1 \
-        --pretrained_model=./ResNet50_vd_pretrained/ \
+        --pretrained_model=${path_to_pretrain_model} \
         --finetune_exclude_pretrained_params=fc_0.w_0,fc_0.b_0
 ```
 
 注意：
-- 在自己的数据集上进行微调时，则需要修改根据自己的数据集修改`data_dir`, `total_images`, `class_dim`参数；如果因为GPU显存不够而需要调整`batch_size`，则参数`lr`也需要根据`batch_size`进行线性调整。
+- 在自己的数据集上进行微调时，则需要修改根据自己的数据集修改`data_dir`, `total_images`, `class_dim`参数。
 - 加载的参数是ImageNet1000的预训练模型参数，对于相同模型，最后的类别数或者含义可能不同，因此在加载预训练模型参数时，需要过滤掉最后的FC层，否则可能会因为**维度不匹配**而报错。
-
 
 
 ### 模型评估
 
-模型评估(Eval)是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```pretrained_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
+模型评估(Eval)是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，```json_path```为保存指标的路径。运行如下的命令，可以获得模型top-1/top-5精度。
 
 **参数说明**
 
 * **save_json_path**: 是否将eval结果保存到json文件中，默认值：None
-* `model`: 模型名称，与训练时需保持一致。
+* `model`: 模型名称，与预训练模型需保持一致。
 * `batch_size`: 每个minibatch评测的图片个数。
 * `data_dir`: 数据路径。注意：该路径下需要同时包括待评估的**图片文件**以及图片和对应类别标注的**映射文本文件**，文本文件名称需为`val.txt`。
 
@@ -262,9 +251,9 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 python eval.py \
        --model=ResNet50_vd \
-       --pretrained_model=./ResNet50_vd_pretrained/ \
+       --pretrained_model=${path_to_pretrain_model} \
        --data_dir=./data/ILSVRC2012/ \
-       --save_json_path=./acc.json \
+       --save_json_path=${json_path} \
        --batch_size=256
 ```
 
@@ -284,7 +273,7 @@ python eval.py \
 
 ### 模型fluid预测
 
-模型预测(Infer)可以获取一个模型的预测分数或者图像的特征，可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```pretrained_model```为模型所在路径。
+模型预测(Infer)可以获取一个模型的预测分数或者图像的特征，可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，```test_res_json_path```为模型预测结果保存的文本路径，```image_path```为模型预测的图片路径或者图片列表所在的文件夹路径。
 
 **参数说明：**
 
@@ -301,24 +290,26 @@ export CUDA_VISIBLE_DEVICES=0
 
 python infer.py \
         --model=ResNet50_vd \
-        --pretrained_model=./ResNet50_vd_pretrained/ \
+        --pretrained_model=${path_to_pretrain_model} \
         --class_map_path=./utils/tools/readable_label.txt \
-        --image_path=./data/ILSVRC2012/ILSVRC2012_val_00000001.JPEG \
-        --save_json_path=./test_res.json
+        --image_path=${image_path} \
+        --save_json_path=${test_res_json_path}
 ```
 
-#### 文件夹预测
+#### 图片列表预测
+* 该种情况下，需要指定```data_dir```路径。
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 python infer.py \
         --model=ResNet50_vd \
-        --pretrained_model=./ResNet50_vd_pretrained/ \
+        --pretrained_model=${path_to_pretrain_model} \
         --class_map_path=./utils/tools/readable_label.txt \
         --data_dir=./data/ILSVRC2012/ \
-        --save_json_path=./test_res.json
+        --save_json_path=${save_json_path}
 ```
+
 注意：
 - 模型名称需要与该模型训练时保持一致。
 - 模型预测默认ImageNet1000类类别，预测数值和可读标签的map文件存储在`./utils/tools/readable_label.txt`中，如果使用自定义数据，请指定`--class_map_path`参数。
@@ -329,12 +320,12 @@ python infer.py \
 * 使用Python预测API进行模型预测的步骤有模型转换和模型预测，详细介绍如下。
 
 #### 模型转换
-* 首先将保存的fluid模型转换为二进制模型，转换方法如下。
+* 首先将保存的fluid模型转换为二进制模型，转换方法如下，其中```path_to_pretrain_model```表示预训练模型的路径。
 
 ```bash
 python infer.py \
         --model=ResNet50_vd \
-        --pretrained_model=./ResNet50_vd_pretrained/ \
+        --pretrained_model=${path_to_pretrain_model} \
         --save_inference=True
 ```
 
@@ -345,12 +336,13 @@ python infer.py \
 
 #### 模型预测
 
-根据转换的模型二进制文件，基于Python API的预测方法如下。
+根据转换的模型二进制文件，基于Python API的预测方法如下，其中```model_path```表示model文件的路径，```params_path```表示params文件的路径，```image_path```表示图片文件的路径。
+
 ```bash
 python predict.py \
         --model_file=./ResNet50_vd/model \
         --params_file=./ResNet50_vd/params \
-        --image_path=./data/ILSVRC2012/ILSVRC2012_val_00000001.JPEG \
+        --image_path=${image_path} \
         --gpu_id=0 \
         --gpu_mem=1024
 ```
@@ -439,17 +431,6 @@ python -m paddle.distributed.launch train.py \
 1. 请务必使用GCC5.4以上编译器[编译安装](https://www.paddlepaddle.org.cn/install/doc/source/ubuntu)的1.6或以上版本paddlepaddle, 另外，请在编译过程中指定-DWITH_DISTRIBUTE=ON 来启动多进程训练模式。注意：官方的paddlepaddle是GCC4.8编译的，请务必检查此项，或参考使用[已经编译好的whl包](https://github.com/NVIDIA/DALI/blob/master/qa/setup_packages.py#L38)
 2. Nvidia DALI需要使用[#1371](https://github.com/NVIDIA/DALI/pull/1371)以后的git版本。请参考[此文档](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/installation.html)安装nightly版本或从源码安装。
 3. 因为DALI使用GPU进行图片预处理，需要占用部分显存，请适当调整 `FLAGS_fraction_of_gpu_memory_to_use`环境变量（如`0.8`）来预留部分显存供DALI使用。
-
-### 自定义数据集
-
-PaddlePaddle/Models ImageClassification 支持自定义数据
-
-1. 组织自定义数据，调整数据读取器以正确的传入数据
-2. 注意更改训练脚本中
---data_dim 类别数为自定义数据类别数
---total_image 图片数量
-3. 当进行finetune时，
-指定--pretrained_model 加载预训练模型，注意：本模型库提供的是基于ImageNet 1000类数据的预训练模型，当使用不同类别数的数据时，请删除预训练模型中fc_weight 和fc_offset参数
 
 
 ## 已发布模型及其性能

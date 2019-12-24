@@ -21,6 +21,7 @@ import argparse
 import functools
 import sys
 import os
+import logging
 import warnings
 import signal
 import json
@@ -36,6 +37,9 @@ import distutils.util
 from utils import dist_utils
 
 from utils.optimizer import Optimizer
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def print_arguments(args):
@@ -54,10 +58,10 @@ def print_arguments(args):
     :type args: argparse.Namespace
     """
 
-    print("-------------  Configuration Arguments -------------")
+    logger.info("-------------  Configuration Arguments -------------")
     for arg, value in sorted(six.iteritems(vars(args))):
-        print("%25s : %s" % (arg, value))
-    print("----------------------------------------------------")
+        logger.info("%25s : %s" % (arg, value))
+    logger.info("----------------------------------------------------")
 
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
@@ -173,10 +177,10 @@ def check_gpu():
                 "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
                 "\t2. Set use_gpu as false in config file to run " \
                 "model on CPU"
-
+    logger = logging.getLogger(__name__)
     try:
         if args.use_gpu and not fluid.is_compiled_with_cuda():
-            print(err)
+            logger.error(err)
             sys.exit(1)
     except Exception as e:
         pass
@@ -194,7 +198,7 @@ def check_version():
     try:
         fluid.require_version('1.6.0')
     except Exception as e:
-        print(err)
+        logger.error(err)
         sys.exit(1)
 
 
@@ -215,8 +219,9 @@ def check_args(args):
     # check learning rate strategy
     lr_strategy_list = [l for l in dir(Optimizer) if not l.startswith('__')]
     if args.lr_strategy not in lr_strategy_list:
-        print("\n{} is not in lists: {}, \nUse default learning strategy now!".
-              format(args.lr_strategy, lr_strategy_list))
+        logger.info(
+            "\n{} is not in lists: {}, \nUse default learning strategy now!".
+            format(args.lr_strategy, lr_strategy_list))
         args.lr_strategy = "default_decay"
 
     # check confict of GoogLeNet and mixup
@@ -273,7 +278,7 @@ def check_args(args):
 
     # check dali preprocess
     if args.use_dali:
-        print(
+        logger.info(
             "DALI preprocessing is activated!!!\nWarning: 1. Please make sure paddlepaddle is compiled by GCC5.4 or later version!\n\t 2. Please make sure nightly builds DALI is installed correctly.\n----------------------------------------------------"
         )
 
@@ -288,7 +293,7 @@ def init_model(exe, args, program):
 
     if args.checkpoint:
         fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
-        print("Finish initing model from %s" % (args.checkpoint))
+        logger.info("Finish initing model from %s" % (args.checkpoint))
 
     if args.pretrained_model:
         """
@@ -329,7 +334,7 @@ def init_model(exe, args, program):
                 Parameter) and not fc_exclude_flag and os.path.exists(
                     os.path.join(args.pretrained_model, var.name))
 
-        print("Load pretrain weights from {}, exclude params {}.".format(
+        logger.info("Load pretrain weights from {}, exclude params {}.".format(
             args.pretrained_model, final_fc_name))
         vars = filter(is_parameter, program.list_vars())
         fluid.io.load_vars(
@@ -344,7 +349,7 @@ def save_model(args, exe, train_prog, info):
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
     fluid.io.save_persistables(exe, model_path, main_program=train_prog)
-    print("Already save model in %s" % (model_path))
+    logger.info("Already save model in %s" % (model_path))
 
 
 def save_json(info, path):
@@ -431,14 +436,14 @@ def print_info(info_mode,
             # train and mixup output
             if len(metrics) == 2:
                 loss, lr = metrics
-                print(
+                logger.info(
                     "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
                            "%2.4f sec" % time_info))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
-                print(
+                logger.info(
                     "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
@@ -446,7 +451,7 @@ def print_info(info_mode,
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
-                print(
+                logger.info(
                     "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%2.4f sec" % time_info,
@@ -461,13 +466,13 @@ def print_info(info_mode,
         ## TODO add time elapse
         if len(metrics) == 5:
             train_loss, _, test_loss, test_acc1, test_acc5 = metrics
-            print(
+            logger.info(
                 "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc{5} {4}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % test_loss, "%.5f"
                        % test_acc1, "%.5f" % test_acc5, min(class_dim, 5)))
         elif len(metrics) == 7:
             train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
-            print(
+            logger.info(
                 "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc{7} {3},test_loss {4}, test_acc1 {5}, test_acc{7} {6}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % train_acc1, "%.5f"
                        % train_acc5, "%.5f" % test_loss, "%.5f" % test_acc1,
