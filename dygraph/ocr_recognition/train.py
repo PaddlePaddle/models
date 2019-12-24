@@ -57,6 +57,8 @@ class Config(object):
     '''
     config for training
     '''
+    # encoder rnn hidden_size
+    encoder_size = 200
     # decoder size for decoder stage
     decoder_size = 128
     # size for word embedding
@@ -84,7 +86,6 @@ class Config(object):
 
 class ConvBNPool(fluid.dygraph.Layer):
     def __init__(self,
-                 num_channels,
                  group,
                  out_ch,
                  channels,
@@ -106,7 +107,7 @@ class ConvBNPool(fluid.dygraph.Layer):
             initializer=fluid.initializer.Normal(0.0, conv_std_1))
 
         self.conv_0_layer = Conv2D(
-            num_channels,
+            channels[0],
             out_ch[0],
             3,
             padding=1,
@@ -152,19 +153,19 @@ class OCRConv(fluid.dygraph.Layer):
     def __init__(self,  is_test=False, use_cudnn=True):
         super(OCRConv, self).__init__()
         self.conv_bn_pool_1 = ConvBNPool(
-            1, 2, [16, 16], [1, 16],
+            2, [16, 16], [1, 16],
             is_test=is_test,
             use_cudnn=use_cudnn)
         self.conv_bn_pool_2 = ConvBNPool(
-            16, 2, [32, 32], [16, 32],
+            2, [32, 32], [16, 32],
             is_test=is_test,
             use_cudnn=use_cudnn)
         self.conv_bn_pool_3 = ConvBNPool(
-            32, 2, [64, 64], [32, 64],
+            2, [64, 64], [32, 64],
             is_test=is_test,
             use_cudnn=use_cudnn)
         self.conv_bn_pool_4 = ConvBNPool(
-            64, 2, [128, 128], [64, 128],
+            2, [128, 128], [64, 128],
             is_test=is_test,
             pool=False,
             use_cudnn=use_cudnn)
@@ -175,7 +176,6 @@ class OCRConv(fluid.dygraph.Layer):
         inputs_3 = self.conv_bn_pool_3(inputs_2)
         inputs_4 = self.conv_bn_pool_4(inputs_3)
 
-        #print( inputs_4.numpy() )
         return inputs_4
 
 
@@ -231,7 +231,7 @@ class DynamicGRU(fluid.dygraph.Layer):
 
 class EncoderNet(fluid.dygraph.Layer):
     def __init__(self,
-                 rnn_hidden_size=200,
+                 rnn_hidden_size=Config.encoder_size,
                  is_test=False,
                  use_cudnn=True):
         super(EncoderNet, self).__init__()
@@ -303,14 +303,14 @@ class EncoderNet(fluid.dygraph.Layer):
 
 
 class SimpleAttention(fluid.dygraph.Layer):
-    def __init__(self, input_size, decoder_size):
+    def __init__(self, decoder_size):
         super(SimpleAttention, self).__init__()
 
-        self.fc_1 = Linear( input_size,
+        self.fc_1 = Linear( decoder_size,
                        decoder_size,
                        act=None,
                        bias_attr=False)
-        self.fc_2 = Linear( input_size,
+        self.fc_2 = Linear( decoder_size,
                        1,
                        act=None,
                        bias_attr=False)
@@ -342,9 +342,9 @@ class SimpleAttention(fluid.dygraph.Layer):
 class GRUDecoderWithAttention(fluid.dygraph.Layer):
     def __init__(self,  decoder_size, num_classes):
         super(GRUDecoderWithAttention, self).__init__()
-        self.simple_attention = SimpleAttention( decoder_size, decoder_size)
+        self.simple_attention = SimpleAttention(decoder_size)
 
-        self.fc_1_layer = Linear( input_dim = 400,
+        self.fc_1_layer = Linear( input_dim = Config.encoder_size * 2,
                              output_dim=decoder_size * 3,
                              bias_attr=False)
         self.fc_2_layer = Linear( input_dim = decoder_size,
@@ -398,7 +398,7 @@ class OCRAttention(fluid.dygraph.Layer):
     def __init__(self):
         super(OCRAttention, self).__init__()
         self.encoder_net = EncoderNet()
-        self.fc = Linear( input_dim = 200,
+        self.fc = Linear( input_dim = Config.encoder_size,
                      output_dim =Config.decoder_size,
                      bias_attr=False,
                      act='relu')
@@ -443,7 +443,7 @@ def train(args):
                 [50000], [Config.LR, Config.LR * 0.01])
         else:
             learning_rate = Config.LR
-        optimizer = fluid.optimizer.Adam(learning_rate=0.001)
+        optimizer = fluid.optimizer.Adam(learning_rate=0.001, parameter_list=ocr_attention.parameters())
         dy_param_init_value = {}
 
         grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(5.0 )
