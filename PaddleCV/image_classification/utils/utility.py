@@ -19,7 +19,6 @@ from __future__ import print_function
 import six
 import argparse
 import functools
-import logging
 import sys
 import os
 import warnings
@@ -38,9 +37,6 @@ from utils import dist_utils
 
 from utils.optimizer import Optimizer
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 
 def print_arguments(args):
     """Print argparse's arguments.
@@ -58,10 +54,10 @@ def print_arguments(args):
     :type args: argparse.Namespace
     """
 
-    logger.info("-------------  Configuration Arguments -------------")
+    print("-------------  Configuration Arguments -------------")
     for arg, value in sorted(six.iteritems(vars(args))):
-        logger.info("%25s : %s" % (arg, value))
-    logger.info("----------------------------------------------------")
+        print("%25s : %s" % (arg, value))
+    print("----------------------------------------------------")
 
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
@@ -172,7 +168,6 @@ def check_gpu():
     Log error and exit when set use_gpu=true in paddlepaddle
     cpu ver sion.
     """
-    logger = logging.getLogger(__name__)
     err = "Config use_gpu cannot be set as true while you are " \
                 "using paddlepaddle cpu version ! \nPlease try: \n" \
                 "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
@@ -181,7 +176,7 @@ def check_gpu():
 
     try:
         if args.use_gpu and not fluid.is_compiled_with_cuda():
-            logger.error(err)
+            print(err)
             sys.exit(1)
     except Exception as e:
         pass
@@ -199,7 +194,7 @@ def check_version():
     try:
         fluid.require_version('1.6.0')
     except Exception as e:
-        logger.error(err)
+        print(err)
         sys.exit(1)
 
 
@@ -209,8 +204,6 @@ def check_args(args):
     Args:
         all arguments
     """
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
 
     # check models name
     sys.path.append("..")
@@ -222,9 +215,8 @@ def check_args(args):
     # check learning rate strategy
     lr_strategy_list = [l for l in dir(Optimizer) if not l.startswith('__')]
     if args.lr_strategy not in lr_strategy_list:
-        logger.warning(
-            "\n{} is not in lists: {}, \nUse default learning strategy now!".
-            format(args.lr_strategy, lr_strategy_list))
+        print("\n{} is not in lists: {}, \nUse default learning strategy now!".
+              format(args.lr_strategy, lr_strategy_list))
         args.lr_strategy = "default_decay"
 
     # check confict of GoogLeNet and mixup
@@ -274,14 +266,14 @@ def check_args(args):
     # check CE
     if args.enable_ce:
         args.random_seed = 0
-        logger.warning("CE is running now! already set random seed to 0")
+        print("CE is running now! already set random seed to 0")
 
     # check class_dim
     assert args.class_dim > 1, "class_dim must greater than 1"
 
     # check dali preprocess
     if args.use_dali:
-        logger.warning(
+        print(
             "DALI preprocessing is activated!!!\nWarning: 1. Please make sure paddlepaddle is compiled by GCC5.4 or later version!\n\t 2. Please make sure nightly builds DALI is installed correctly.\n----------------------------------------------------"
         )
 
@@ -296,7 +288,7 @@ def init_model(exe, args, program):
 
     if args.checkpoint:
         fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
-        logger.info("Finish initing model from %s" % (args.checkpoint))
+        print("Finish initing model from %s" % (args.checkpoint))
 
     if args.pretrained_model:
         """
@@ -337,7 +329,7 @@ def init_model(exe, args, program):
                 Parameter) and not fc_exclude_flag and os.path.exists(
                     os.path.join(args.pretrained_model, var.name))
 
-        logger.info("Load pretrain weights from {}, exclude params {}.".format(
+        print("Load pretrain weights from {}, exclude params {}.".format(
             args.pretrained_model, final_fc_name))
         vars = filter(is_parameter, program.list_vars())
         fluid.io.load_vars(
@@ -352,7 +344,7 @@ def save_model(args, exe, train_prog, info):
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
     fluid.io.save_persistables(exe, model_path, main_program=train_prog)
-    logger.info("Already save model in %s" % (model_path))
+    print("Already save model in %s" % (model_path))
 
 
 def save_json(info, path):
@@ -439,14 +431,14 @@ def print_info(info_mode,
             # train and mixup output
             if len(metrics) == 2:
                 loss, lr = metrics
-                logger.info(
+                print(
                     "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
                            "%2.4f sec" % time_info))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
-                logger.info(
+                print(
                     "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
@@ -454,7 +446,7 @@ def print_info(info_mode,
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
-                logger.info(
+                print(
                     "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%2.4f sec" % time_info,
@@ -469,13 +461,13 @@ def print_info(info_mode,
         ## TODO add time elapse
         if len(metrics) == 5:
             train_loss, _, test_loss, test_acc1, test_acc5 = metrics
-            logger.info(
+            print(
                 "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc{5} {4}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % test_loss, "%.5f"
                        % test_acc1, "%.5f" % test_acc5, min(class_dim, 5)))
         elif len(metrics) == 7:
             train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
-            logger.info(
+            print(
                 "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc{7} {3},test_loss {4}, test_acc1 {5}, test_acc{7} {6}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % train_acc1, "%.5f"
                        % train_acc5, "%.5f" % test_loss, "%.5f" % test_acc1,
@@ -500,13 +492,13 @@ def print_ce(device_num, metrics, time_info):
 
     train_speed = np.mean(np.array(time_info[10:]))
 
-    logger.info("kpis\ttrain_cost_card{}\t{}".format(device_num, train_loss))
-    logger.info("kpis\ttrain_acc1_card{}\t{}".format(device_num, train_acc1))
-    logger.info("kpis\ttrain_acc5_card{}\t{}".format(device_num, train_acc5))
-    logger.info("kpis\ttest_cost_card{}\t{}".format(device_num, test_loss))
-    logger.info("kpis\ttest_acc1_card{}\t{}".format(device_num, test_acc1))
-    logger.info("kpis\ttest_acc5_card{}\t{}".format(device_num, test_acc5))
-    logger.info("kpis\ttrain_speed_card{}\t{}".format(device_num, train_speed))
+    print("kpis\ttrain_cost_card{}\t{}".format(device_num, train_loss))
+    print("kpis\ttrain_acc1_card{}\t{}".format(device_num, train_acc1))
+    print("kpis\ttrain_acc5_card{}\t{}".format(device_num, train_acc5))
+    print("kpis\ttest_cost_card{}\t{}".format(device_num, test_loss))
+    print("kpis\ttest_acc1_card{}\t{}".format(device_num, test_acc1))
+    print("kpis\ttest_acc5_card{}\t{}".format(device_num, test_acc5))
+    print("kpis\ttrain_speed_card{}\t{}".format(device_num, train_speed))
 
 
 def best_strategy_compiled(args,

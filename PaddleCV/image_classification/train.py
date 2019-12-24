@@ -19,7 +19,6 @@ from __future__ import print_function
 import os
 import time
 import sys
-import logging
 
 import numpy as np
 import paddle
@@ -29,9 +28,6 @@ import reader
 from utils import *
 import models
 from build_model import create_model
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def build_program(is_train, main_prog, startup_prog, args):
@@ -263,12 +259,12 @@ def train(args):
 
         if trainer_id == 0 and args.validate:
             if args.use_ema:
-                logger.info('ExponentialMovingAverage validate start...')
+                print('ExponentialMovingAverage validate start...')
                 with ema.apply(exe):
                     validate(args, test_iter, exe, test_prog, test_fetch_list,
                              pass_id, train_batch_metrics_record,
                              compiled_train_prog)
-                logger.info('ExponentialMovingAverage validate over!')
+                print('ExponentialMovingAverage validate over!')
 
             validate(args, test_iter, exe, test_prog, test_fetch_list, pass_id,
                      train_batch_metrics_record, train_batch_time_record,

@@ -24,7 +24,6 @@ import numpy as np
 import argparse
 import functools
 import re
-import logging
 
 import paddle
 import paddle.fluid as fluid
@@ -57,9 +56,6 @@ add_arg('image_path',       str,  None,                 "single image path")
 add_arg('batch_size',       int,  8,                    "batch_size on all the devices")
 add_arg('save_json_path',        str,  "test_res.json",            "save output to a json file")
 # yapf: enable
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def infer(args):
@@ -122,7 +118,7 @@ def infer(args):
             executor=exe,
             model_filename='model',
             params_filename='params')
-        logger.info("model: ", args.model, " is already saved")
+        print("model: {0} is already saved".format(args.model))
         exit(0)
 
     imagenet_reader = reader.ImageNetReader()
@@ -131,8 +127,7 @@ def infer(args):
 
     TOPK = args.topk
     if os.path.exists(args.class_map_path):
-        logger.info(
-            "The map of readable label and numerical label has been found!")
+        print("The map of readable label and numerical label has been found!")
         with open(args.class_map_path) as f:
             label_dict = {}
             strinfo = re.compile(r"\d+ ")
@@ -148,7 +143,7 @@ def infer(args):
     parallel_data = []
     parallel_id = []
     place_num = paddle.fluid.core.get_cuda_device_count() if args.use_gpu else 1
-    with open(args.save_json_path, "wb") as fout:
+    with open(args.save_json_path, "w") as fout:
         for batch_id, data in enumerate(test_reader()):
             image_data = [[items[0]] for items in data]
             image_id = [items[1] for items in data]

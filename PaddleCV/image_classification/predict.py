@@ -16,15 +16,11 @@ import argparse
 import numpy as np
 import cv2
 import os
-import logging
 
 from paddle import fluid
 from paddle.fluid.core import PaddleTensor
 from paddle.fluid.core import AnalysisConfig
 from paddle.fluid.core import create_paddle_predictor
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def resize_short(img, target_size, interpolation=None):
@@ -120,8 +116,8 @@ def predict(args):
 
     cls = np.argmax(output)
     score = output[cls]
-    logger.info("class: ", cls)
-    logger.info("score: ", score)
+    print("class: {0}".format(cls))
+    print("score: {0}".format(score))
     return
 
 
