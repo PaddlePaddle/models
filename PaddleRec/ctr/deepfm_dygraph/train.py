@@ -114,9 +114,8 @@ def train(args):
 
                 if batch_id > 0 and batch_id % 100 == 0:
                     print("epoch: {}, batch_id: {}, loss: {:.6f}, auc: {:.6f}".
-                          format(epoch, batch_id,
-                                 total_loss / args.batch_size / 100),
-                          auc_metric.eval())
+                          format(epoch, batch_id, total_loss / args.batch_size /
+                                 100, auc_metric.eval()))
 
                     total_loss = 0.0
 
