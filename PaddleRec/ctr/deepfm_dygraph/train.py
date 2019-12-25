@@ -101,7 +101,7 @@ def train(args):
                         label, dtype="float32"))
                 batch_loss = fluid.layers.reduce_sum(loss)
 
-                total_loss += batch_loss.numpy()
+                total_loss += batch_loss.numpy().item()
 
                 batch_loss.backward()
                 optimizer.minimize(batch_loss)
@@ -113,10 +113,10 @@ def train(args):
                     preds=predict_2d.numpy(), labels=label.numpy())
 
                 if batch_id > 0 and batch_id % 100 == 0:
-                    print("epoch: {}, batch_id: {}, loss {}".format(
-                        epoch, batch_id, total_loss / args.batch_size / 100))
-                    print("auc for iteration %d is %.6f" %
-                          (batch_id, auc_metric.eval()))
+                    print("epoch: {}, batch_id: {}, loss: {:.6f}, auc: {:.6f}".
+                          format(epoch, batch_id,
+                                 total_loss / args.batch_size / 100),
+                          auc_metric.eval())
 
                     total_loss = 0.0
 

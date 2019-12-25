@@ -7,6 +7,7 @@
 .
 ├── README.md                       # 文档
 ├── train.py                        # 本地训练脚本
+├── infer.py                        # 本地预测脚本
 ├── network.py                      # 网络结构
 ├── data_reader.py                  # 读取数据相关的函数
 ├── utility.py                      # 参数设置和通用函数
@@ -39,7 +40,7 @@ cd data && python download_preprocess.py && cd ..
 
 train_data包含90%数据，test_data包含剩下的10%数据，aid_data中有一个生成或下载（节约用户生成特征字典时间）的特征字典feat_dict_10.pkl2。
 
-## 训练评估模型
+## 训练模型
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python -u train.py > train.log 2>&1 &
@@ -54,9 +55,19 @@ CUDA_VISIBLE_DEVICES=0 python -u train.py > train.log 2>&1 &
 CUDA_VISIBLE_DEVICES=0 python -u train.py --checkpoint=models/epoch_0 > train.log 2>&1 &
 ```
 
+## 预测模型
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python infer.py --checkpoint=models/epoch_0
+```
+
+加载models/epoch_0的模型，对test_data中数据进行预测，评估模型效果。注意：最后一行才是整个test数据集的auc。
+
 ## 效果
 ```text
 test auc of epoch 0 is 0.802877
 ```
 
-第一轮数据训练结束后，test auc为0.802877。继续训练模型易出现过拟合现象。
+第一轮数据训练结束后，test auc为0.802877。
+
+继续训练模型易出现过拟合现象，可以通过评估模型选择效果最好的模型作为最终训练结果。
