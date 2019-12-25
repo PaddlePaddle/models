@@ -243,7 +243,13 @@ def train_mnist(args):
             args.use_data_parallel and
             fluid.dygraph.parallel.Env().local_rank == 0)
         if save_parameters:
-            fluid.save_dygraph(mnist.state_dict(), "save_temp")
+            if args.use_data_parallel:
+                if fluid.dygraph.parallel.Env().dev_id == 0:
+                    fluid.save_dygraph(mnist.state_dict(), "save_temp")
+            else:
+                fluid.save_dygraph(mnist.state_dict(), "save_temp")
+
+
             print("checkpoint saved")
 
         inference_mnist()
