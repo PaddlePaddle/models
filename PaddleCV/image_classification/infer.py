@@ -36,7 +36,7 @@ from utils import *
 parser = argparse.ArgumentParser(description=__doc__)
 # yapf: disable
 add_arg = functools.partial(add_arguments, argparser=parser)
-add_arg('data_dir',         str,  "./data/ILSVRC2012/", "The ImageNet data")
+add_arg('data_dir',         str,  "./data/ILSVRC2012/val/", "The ImageNet data")
 add_arg('use_gpu',          bool, True,                 "Whether to use GPU or not.")
 add_arg('class_dim',        int,  1000,                 "Class number.")
 parser.add_argument("--pretrained_model", default=None, required=True, type=str, help="The path to load pretrained model")
@@ -148,6 +148,9 @@ def infer(args):
     parallel_data = []
     parallel_id = []
     place_num = paddle.fluid.core.get_cuda_device_count() if args.use_gpu else 1
+    if os.path.exists(args.save_json_path):
+        logger.warning("path: {} Already exists! will recover it\n".format(
+            args.save_json_path))
     with open(args.save_json_path, "w") as fout:
         for batch_id, data in enumerate(test_reader()):
             image_data = [[items[0]] for items in data]
@@ -180,7 +183,7 @@ def infer(args):
                         info[real_id]['score'], info[real_id]['class'] = str(
                             res[pred_label]), str(pred_label)
 
-                    logger.info(real_id, info[real_id])
+                    logger.info("{}, {}".format(real_id, info[real_id]))
                     sys.stdout.flush()
                     fout.write(real_id + "\t" + json.dumps(info[real_id]) +
                                "\n")
