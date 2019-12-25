@@ -277,6 +277,7 @@ python eval.py \
 
 **参数说明：**
 
+* **data_dir**: 数据存储位置，默认值：`/data/ILSVRC2012/val/`
 * **save_inference**: 是否保存二进制模型，默认值：`False`
 * **topk**: 按照置信由高到低排序标签结果，返回的结果数量，默认值：1
 * **class_map_path**: 可读标签文件路径，默认值：`./utils/tools/readable_label.txt`
