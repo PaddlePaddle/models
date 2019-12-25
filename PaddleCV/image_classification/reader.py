@@ -16,9 +16,10 @@ import os
 import math
 import random
 import functools
-import logging
 import numpy as np
 import cv2
+import logging
+import imghdr
 
 import paddle
 from paddle import fluid
@@ -210,6 +211,10 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     img_path = sample[0]
     img = cv2.imread(img_path)
 
+    if img is None:
+        logger.warning("img({0}) is None, pass it.".format(img_path))
+        return None
+
     if mode == 'train':
         if rotate:
             img = rotate_image(img)
@@ -258,10 +263,13 @@ def process_batch_data(input_data, settings, mode, color_jitter, rotate):
     batch_data = []
     for sample in input_data:
         if os.path.isfile(sample[0]):
-            batch_data.append(
-                process_image(sample, settings, mode, color_jitter, rotate))
+            tmp_data = process_image(sample, settings, mode, color_jitter,
+                                     rotate)
+            if tmp_data is None:
+                continue
+            batch_data.append(tmp_data)
         else:
-            logger.info("File not exist : %s" % sample[0])
+            logger.info("File not exist : {0}".format(sample[0]))
     return batch_data
 
 
@@ -310,7 +318,7 @@ class ImageNetReader:
                     full_lines = [line.strip() for line in flist]
                     if mode != "test" and len(full_lines) < settings.batch_size:
                         logger.error(
-                            "Error: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please set the batch_size to a smaller number or feed more data!".
+                            "Error: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!".
                             format(len(full_lines), settings.batch_size))
                         os._exit(1)
                     if num_trainers > 1 and mode == "train":
@@ -331,15 +339,12 @@ class ImageNetReader:
                         full_lines.append(temp_file)
 
                 for line in full_lines:
-
                     img_path, label = line.split()
                     img_path = os.path.join(data_dir, img_path)
                     batch_data.append([img_path, int(label)])
                     if len(batch_data) == batch_size:
                         if mode == 'train' or mode == 'val' or mode == 'test':
-
                             yield batch_data
-
                         batch_data = []
 
             return read_file_list
@@ -434,16 +439,20 @@ class ImageNetReader:
         Returns:
             test reader
         """
-        if settings.image_path:
-            tmp = open(".tmp.txt", "w")
-            tmp.write(settings.image_path + " 0")
-            file_list = ".tmp.txt"
-            settings.batch_size = 1
-        else:
-            file_list = os.path.join(settings.data_dir, 'val_list.txt')
-        assert os.path.isfile(
-            file_list), "{} doesn't exist, please check data list path".format(
-                file_list)
+        file_list = ".tmp.txt"
+        imgType_list = {'jpg', 'bmp', 'png', 'jpeg', 'rgb', 'tif', 'tiff'}
+        with open(file_list, "w") as fout:
+            if settings.image_path:
+                fout.write(settings.image_path + " 0" + "\n")
+                settings.batch_size = 1
+                settings.data_dir = ""
+            else:
+                tmp_file_list = os.listdir(settings.data_dir)
+                for file_name in tmp_file_list:
+                    file_path = os.path.join(settings.data_dir, file_name)
+                    if imghdr.what(file_path) not in imgType_list:
+                        continue
+                    fout.write(file_name + " 0" + "\n")
         return self._reader_creator(
             settings,
             file_list,
