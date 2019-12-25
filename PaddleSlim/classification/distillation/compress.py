@@ -34,12 +34,20 @@ add_arg('pretrained_model', str,  None,                "Whether to use pretraine
 add_arg('teacher_model',    str,  None,          "Set the teacher network to use.")
 add_arg('teacher_pretrained_model', str,  None,                "Whether to use pretrained model.")
 add_arg('compress_config',  str,  None,                 "The config file for compression with yaml format.")
+add_arg('enable_ce',        bool, False,                "If set, run the task with continuous evaluation logs.")
+
 # yapf: enable
 
 model_list = [m for m in dir(models) if "__" not in m]
 
 
 def compress(args):
+    # add ce
+    if args.enable_ce:
+        SEED = 1
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
+
     image_shape = [int(m) for m in args.image_shape.split(",")]
 
     assert args.model in model_list, "{} is not in lists: {}".format(args.model,
