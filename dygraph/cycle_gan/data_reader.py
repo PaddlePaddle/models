@@ -19,11 +19,12 @@ import os
 from PIL import Image, ImageOps
 import numpy as np
 
-A_LIST_FILE = "./data/cityscapes/trainA.txt"
-B_LIST_FILE = "./data/cityscapes/trainB.txt"
-A_TEST_LIST_FILE = "./data/cityscapes/testA.txt"
-B_TEST_LIST_FILE = "./data/cityscapes/testB.txt"
-IMAGES_ROOT = "./data/cityscapes/"
+DATASET = "cityscapes"
+A_LIST_FILE = "./data/"+DATASET+"/trainA.txt"
+B_LIST_FILE = "./data/"+DATASET+"/trainB.txt"
+A_TEST_LIST_FILE = "./data/"+DATASET+"/testA.txt"
+B_TEST_LIST_FILE = "./data/"+DATASET+"/testB.txt"
+IMAGES_ROOT = "./data/"+DATASET+"/"
 
 def image_shape():
     return [3, 256, 256]
