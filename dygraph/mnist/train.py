@@ -251,8 +251,11 @@ def train_mnist(args):
 
 
             print("checkpoint saved")
-
-        inference_mnist()
+        if args.use_data_parallel:
+            if fluid.dygraph.parallel.Env().dev_id == 0:
+               inference_mnist()
+        else:
+            inference_mnist()
 
 
 if __name__ == '__main__':
