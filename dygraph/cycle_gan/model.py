@@ -50,11 +50,11 @@ class build_resnet_block(fluid.dygraph.Layer):
 
 
 class build_generator_resnet_9blocks(fluid.dygraph.Layer):
-    def __init__ (self):
+    def __init__ (self, input_channel):
         super(build_generator_resnet_9blocks, self).__init__()
 
         self.conv0 = conv2d(
-            num_channels=3,
+            num_channels=input_channel,
             num_filters=32,
             filter_size=7,
             stride=1,
@@ -100,7 +100,7 @@ class build_generator_resnet_9blocks(fluid.dygraph.Layer):
             outpadding=[0, 1, 0, 1])
         self.conv3 = conv2d(
             num_channels=32,
-            num_filters=3,
+            num_filters=input_channel,
             filter_size=7,
             stride=1,
             stddev=0.02,
@@ -125,11 +125,11 @@ class build_generator_resnet_9blocks(fluid.dygraph.Layer):
 
 
 class build_gen_discriminator(fluid.dygraph.Layer):
-    def __init__(self):
+    def __init__(self, input_channel):
         super(build_gen_discriminator, self).__init__()
         
         self.conv0 = conv2d(
-            num_channels=3,
+            num_channels=input_channel,
             num_filters=64,
             filter_size=4,
             stride=2,

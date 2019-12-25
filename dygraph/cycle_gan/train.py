@@ -84,7 +84,7 @@ def train(args):
         A_test_reader = data_reader.a_test_reader()
         B_test_reader = data_reader.b_test_reader()
 
-        cycle_gan = Cycle_Gan(istrain=True)
+        cycle_gan = Cycle_Gan(input_channel=data_shape[1], istrain=True)
 
         losses = [[], []]
         t_time = 0
