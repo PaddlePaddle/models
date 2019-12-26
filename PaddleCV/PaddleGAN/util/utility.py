@@ -425,3 +425,12 @@ def check_version():
     except Exception as e:
         print(err)
         sys.exit(1)
+
+def get_device_num(args):
+    if args.use_gpu:
+        gpus = os.environ.get("CUDA_VISIBLE_DEVICES", 1)
+        gpu_num = len(gpus.split(','))
+        return gpu_num
+    else:
+        cpu_num = os.environ.get("CPU_NUM", 1)
+        return int(cpu_num)
