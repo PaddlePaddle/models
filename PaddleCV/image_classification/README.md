@@ -291,6 +291,7 @@ export CUDA_VISIBLE_DEVICES=0
 
 python infer.py \
         --model=ResNet50_vd \
+        --class_dim=1000  \
         --pretrained_model=${path_to_pretrain_model} \
         --class_map_path=./utils/tools/readable_label.txt \
         --image_path=${image_path} \
@@ -298,17 +299,19 @@ python infer.py \
 ```
 
 #### 图片列表预测
-* 该种情况下，需要指定```data_dir```路径。
+* 该种情况下，需要指定```data_dir```路径和```batch_size```。
 
 ```bash
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 python infer.py \
         --model=ResNet50_vd \
+        --class_dim=1000  \
         --pretrained_model=${path_to_pretrain_model} \
         --class_map_path=./utils/tools/readable_label.txt \
-        --data_dir=./data/ILSVRC2012/ \
-        --save_json_path=${test_res_json_path}
+        --data_dir=${data_dir} \
+        --save_json_path=${test_res_json_path} \
+        --batch_size=${batch_size}
 ```
 
 注意：
