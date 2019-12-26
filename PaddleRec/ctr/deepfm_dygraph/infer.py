@@ -5,10 +5,16 @@ import os
 import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.dygraph.base import to_variable
+import logging
+import time
 
 import data_reader
 import utility as utils
 from network import DeepFM
+
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def infer(args):
@@ -32,16 +38,17 @@ def infer(args):
             model_dict, optimizer_dict = fluid.dygraph.load_dygraph(
                 args.checkpoint)
             deepfm.set_dict(model_dict)
-            print("load model {} finished.".format(args.checkpoint))
+            logger.info("load model {} finished.".format(args.checkpoint))
         else:
-            print("no model to load!")
-            print("please set model to load in --checkpoint first.")
+            logger.error("no model to load!")
+            logger.error("please set model to load in --checkpoint first.")
             exit(1)
 
         def eval():
             deepfm.eval()
-            print("start eval model.")
+            logger.info("start eval model.")
             total_step = 0
+            batch_begin = time.time()
             auc_metric_test = fluid.metrics.Auc("ROC")
             for data in test_reader():
                 total_step += 1
@@ -61,13 +68,19 @@ def infer(args):
                 auc_metric_test.update(
                     preds=predict_2d.numpy(), labels=label.numpy())
 
-                if total_step % 100 == 0:
-                    print("TEST --> batch: {} auc: {:.6f}".format(
-                        total_step, auc_metric_test.eval()))
+                if total_step > 0 and total_step % 100 == 0:
+                    logger.info(
+                        "TEST --> batch: {} auc: {:.6f} speed: {:.2f} ins/s".
+                        format(total_step,
+                               auc_metric_test.eval(), 100 * args.batch_size / (
+                                   time.time() - batch_begin)))
+                    batch_begin = time.time()
 
-            print("test auc is %.6f" % auc_metric_test.eval())
+            logger.info("test auc is %.6f" % auc_metric_test.eval())
 
+        begin = time.time()
         eval()
+        logger.info("test finished, cost %f s" % (time.time() - begin))
 
 
 if __name__ == '__main__':

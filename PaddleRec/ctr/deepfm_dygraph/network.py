@@ -36,7 +36,6 @@ class FM(fluid.dygraph.Layer):
         self.init_value_ = 0.1
         self.embedding_w = Embedding(
             size=[self.args.num_feat + 1, 1],
-            is_sparse=self.args.is_sparse,
             dtype='float32',
             padding_idx=0,
             param_attr=fluid.ParamAttr(
@@ -46,7 +45,6 @@ class FM(fluid.dygraph.Layer):
                     self.args.reg)))
         self.embedding = Embedding(
             size=[self.args.num_feat + 1, self.args.embedding_size],
-            is_sparse=self.args.is_sparse,
             dtype='float32',
             padding_idx=0,
             param_attr=fluid.ParamAttr(

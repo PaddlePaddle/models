@@ -17,7 +17,7 @@ def get_raw_data(intput_file, raw_data, ins_per_file):
             fout.close()
             cur_part_idx = int(line_idx / ins_per_file)
             fout = open(
-                os.path.join(raw_data, 'part-') + str(cur_part_idx), 'w')
+                os.path.join(raw_data, 'part-' + str(cur_part_idx)), 'w')
         fout.write(line)
     fout.close()
     fin.close()

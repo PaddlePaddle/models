@@ -4,11 +4,17 @@ import os
 
 import numpy as np
 import paddle.fluid as fluid
+import time
 from paddle.fluid.dygraph.base import to_variable
+import logging
 
 import data_reader
 import utility as utils
 from network import DeepFM
+
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def train(args):
@@ -35,7 +41,7 @@ def train(args):
 
         def eval(epoch):
             deepfm.eval()
-            print("start eval model.")
+            logger.info("start eval model.")
             total_step = 0.0
             auc_metric_test = fluid.metrics.Auc("ROC")
             for data in test_reader():
@@ -56,12 +62,9 @@ def train(args):
                 auc_metric_test.update(
                     preds=predict_2d.numpy(), labels=label.numpy())
 
-            print("test auc of epoch %d is %.6f" %
-                  (epoch, auc_metric_test.eval()))
+            logger.info("test auc of epoch %d is %.6f" %
+                        (epoch, auc_metric_test.eval()))
 
-        #optimizer = fluid.optimizer.SGD(
-        #     learning_rate=args.lr,
-        #     regularization=fluid.regularizer.L2DecayRegularizer(args.reg))
         optimizer = fluid.optimizer.Adam(
             regularization=fluid.regularizer.L2DecayRegularizer(args.reg))
 
@@ -75,13 +78,15 @@ def train(args):
             start_epoch = int(
                 os.path.basename(args.checkpoint).split("_")[
                     -1]) + 1  # get next train epoch
-            print("load model {} finished.".format(args.checkpoint))
+            logger.info("load model {} finished.".format(args.checkpoint))
 
         for epoch in range(start_epoch, args.num_epoch):
+            begin = time.time()
+            batch_begin = time.time()
             batch_id = 0
             total_loss = 0.0
             auc_metric = fluid.metrics.Auc("ROC")
-            print("training epoch {} start.".format(epoch))
+            logger.info("training epoch {} start.".format(epoch))
 
             for data in train_reader():
                 raw_feat_idx, raw_feat_value, label = zip(*data)
@@ -113,15 +118,21 @@ def train(args):
                     preds=predict_2d.numpy(), labels=label.numpy())
 
                 if batch_id > 0 and batch_id % 100 == 0:
-                    print("epoch: {}, batch_id: {}, loss: {:.6f}, auc: {:.6f}".
-                          format(epoch, batch_id, total_loss / args.batch_size /
-                                 100, auc_metric.eval()))
-
+                    logger.info(
+                        "epoch: {}, batch_id: {}, loss: {:.6f}, auc: {:.6f}, speed: {:.2f} ins/s".
+                        format(epoch, batch_id, total_loss / args.batch_size /
+                               100,
+                               auc_metric.eval(), 100 * args.batch_size / (
+                                   time.time() - batch_begin)))
+                    batch_begin = time.time()
                     total_loss = 0.0
 
                 batch_id += 1
+            logger.info("epoch %d is finished and takes %f s" %
+                        (epoch, time.time() - begin))
             # save model and optimizer
-            print("going to save epoch {} model and optimizer.".format(epoch))
+            logger.info("going to save epoch {} model and optimizer.".format(
+                epoch))
             fluid.dygraph.save_dygraph(
                 deepfm.state_dict(),
                 model_path=os.path.join(args.model_output_dir,
@@ -130,7 +141,7 @@ def train(args):
                 optimizer.state_dict(),
                 model_path=os.path.join(args.model_output_dir,
                                         "epoch_" + str(epoch)))
-            print("save epoch {} finished.".format(epoch))
+            logger.info("save epoch {} finished.".format(epoch))
             # eval model
             deepfm.eval()
             eval(epoch)
