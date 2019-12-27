@@ -187,7 +187,7 @@ def train_mnist(args):
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
         mnist = MNIST()
-        adam = AdamOptimizer(learning_rate=0.001)
+        adam = AdamOptimizer(learning_rate=0.001, parameter_list=mnist.parameters())
         if args.use_data_parallel:
             mnist = fluid.dygraph.parallel.DataParallel(mnist, strategy)
 
