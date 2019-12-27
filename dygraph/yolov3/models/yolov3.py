@@ -113,9 +113,9 @@ class Upsample(fluid.dygraph.Layer):
             input=inputs, scale=self.scale, actual_shape=out_shape)
         return out
 
-class Yolov3(fluid.dygraph.Layer):
+class YOLOv3(fluid.dygraph.Layer):
     def __init__(self,ch_in,is_train=True, use_random=False):
-        super(Yolov3,self).__init__()
+        super(YOLOv3,self).__init__()
 
         self.is_train = is_train
         self.use_random = use_random

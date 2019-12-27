@@ -92,7 +92,7 @@ dataset/coco/
 
 **开始训练：** 数据准备完毕后，可以通过如下的方式启动训练：
 
-    python train_dy.py \
+    python train.py \
        --model_save_dir=output/ \
        --pretrain=${path_to_pretrain_model} \
        --data_dir=${path_to_data} \
@@ -108,14 +108,15 @@ dataset/coco/
 执行训练开始时，会得到类似如下输出，每次迭代打印的log数与指定卡数一致：
 
 ```
-Iter 0, loss 4754.930664, time 104.66020
-Iter 0, loss 4872.500000, time 108.11873
-Iter 0, loss 6561.949707, time 98.08920
-Iter 0, loss 10159.562500, time 111.02826
-Iter 1, loss 7538.894043, time 8.89545
-Iter 1, loss 7853.537109, time 7.02231
-Iter 1, loss 10502.829346, time 19.90573
-Iter 1, loss 8121.074707, time 13.60313
+Iter 2, loss 9056.620443, time 3.21156
+Iter 2, loss 7337.974447, time 4.67529
+Iter 2, loss 9817.243164, time 5.34627
+Iter 2, loss 11796.317546, time 4.87376
+Iter 3, loss 7720.641968, time 1.63363
+Iter 3, loss 9582.492432, time 3.37129
+Iter 3, loss 10822.709961, time 4.89235
+Iter 3, loss 11046.479614, time 4.93214
+
 ```
 
 **注意：** YOLOv3模型总batch size为64，这里使用8 GPUs每GPU上batch size为8来训练
@@ -129,9 +130,7 @@ Iter 1, loss 8121.074707, time 13.60313
 
 *  采用momentum优化算法训练YOLOv3，momentum=0.9。
 *  学习率采用warmup算法，前4000轮学习率从0.0线性增加至0.001。在400000，450000轮时使用0.1,0.01乘子进行学习率衰减，最大训练500000轮。
-*  通过设置`--syncbn=True`可以开启Synchronized batch normalization，该模式下精度会提高
 
-**注意：** Synchronized batch normalization只能用于多GPU训练，不能用于CPU训练和单GPU训练。
 
 下图为模型训练结果：
 <p align="center">
@@ -145,9 +144,9 @@ Train Loss
 
     sh ./weights/download.sh
 
-`eval_dy.py`是评估模块的主要执行程序，调用示例如下：
+`eval.py`是评估模块的主要执行程序，调用示例如下：
 
-    python eval_dy.py \
+    python eval.py \
         --dataset=coco2017 \
         --weights=${path_to_weights} \
         --class_num=${category_num}
@@ -155,7 +154,7 @@ Train Loss
 - 通过设置`export CUDA_VISIBLE_DEVICES=0`指定单卡GPU评估。
 
 
-若训练时指定`--syncbn=True`, 模型评估精度如下:
+模型评估精度如下:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |

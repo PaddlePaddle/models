@@ -23,7 +23,7 @@ import paddle
 import paddle.fluid as fluid
 from paddle.fluid.dygraph.base import to_variable
 import reader
-from models.yolov3_dy import Yolov3
+from models.yolov3 import YOLOv3
 from utility import print_arguments, parse_args, check_gpu
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval, Params

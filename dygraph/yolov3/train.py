@@ -42,7 +42,7 @@ from utility import (parse_args, print_arguments,
 import paddle
 import paddle.fluid as fluid
 import reader
-from models.yolov3_dy import Yolov3
+from models.yolov3 import YOLOv3
 from config import cfg
 import dist_utils
 from paddle.fluid.dygraph.base import to_variable
@@ -79,7 +79,7 @@ def train():
     with fluid.dygraph.guard(place):
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
-        model = Yolov3(3, is_train=True)
+        model = YOLOv3(3, is_train=True)
         if args.use_data_parallel:
             model = fluid.dygraph.parallel.DataParallel(model, strategy)
 
