@@ -1,5 +1,3 @@
-**该项目已被迁移至[PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), 这个项目包含了更多的检测模型。**
-
 # YOLOv3 目标检测
 
 ---
@@ -18,11 +16,11 @@
 
 [YOLOv3](https://arxiv.org/abs/1804.02767) 是由 [Joseph Redmon](https://arxiv.org/search/cs?searchtype=author&query=Redmon%2C+J) 和 [Ali Farhadi](https://arxiv.org/search/cs?searchtype=author&query=Farhadi%2C+A) 提出的单阶段检测器, 该检测器与达到同样精度的传统目标检测方法相比，推断速度能达到接近两倍.
 
-在我们的实现版本中使用了 [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) 中提出的图像增强和label smooth等优化方法，精度优于darknet框架的实现版本，在COCO-2017数据集上，我们达到`mAP(0.50:0.95)= 38.9`的精度，比darknet实现版本的精度(33.0)要高5.9.
+paddle_yolov3[]中使用了 [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) 中提出的图像增强和label smooth等优化方法，精度优于darknet框架的实现版本，在COCO-2017数据集上，达到`mAP(0.50:0.95)= 38.9`的精度，比darknet实现版本的精度(33.0)要高5.9.
 
 同时，在推断速度方面，基于Paddle预测库的加速方法，推断速度比darknet高30%.
 
-同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122277)
+本模型是paddle_yolov3的动态图版本.
 
 ## 快速开始
 
@@ -44,7 +42,7 @@
 
 **安装[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)：**
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.5或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://paddlepaddle.org/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.7或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 
 ### 数据准备
 
@@ -83,7 +81,7 @@ dataset/coco/
 
 ### 模型训练
 
-**下载预训练模型：** 本示例提供DarkNet-53预训练[模型](https://paddlemodels.bj.bcebos.com/yolo/darknet53.tar.gz)，该模型转换自作者提供的预训练权重[pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74)，采用如下命令下载预训练模型：
+**下载预训练模型：** 本示例提供DarkNet-53预训练[模型]()，该模型转换自作者提供的预训练权重[pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74)，采用如下命令下载预训练模型：
 
     sh ./weights/download.sh
 
@@ -94,18 +92,31 @@ dataset/coco/
 
 **开始训练：** 数据准备完毕后，可以通过如下的方式启动训练：
 
-    python train.py \
+    python train_dy.py \
        --model_save_dir=output/ \
        --pretrain=${path_to_pretrain_model} \
        --data_dir=${path_to_data} \
        --class_num=${category_num}
 
-- 通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
-- 若在Windows环境下训练模型，建议设置`--use_multiprocess_reader=False`。
-- 通过`--worker_num=`设置多进程数据读取器进程数，默认进程数为8，若训练机器CPU核数较少，建议设小该值。
-- 可选参数见：
+**多卡训练：**
+动态图支持多进程多卡进行模型训练，启动方式：
 
-    python train.py --help
+首先通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
+
+`python -m paddle.distributed.launch --selected_gpus=0,1,2,3,4,5,6,7 --started_port=9999 --use_data_parallel 1`
+
+执行训练开始时，会得到类似如下输出，每次迭代打印的log数与指定卡数一致：
+
+```
+Iter 0, loss 4754.930664, time 104.66020
+Iter 0, loss 4872.500000, time 108.11873
+Iter 0, loss 6561.949707, time 98.08920
+Iter 0, loss 10159.562500, time 111.02826
+Iter 1, loss 7538.894043, time 8.89545
+Iter 1, loss 7853.537109, time 7.02231
+Iter 1, loss 10502.829346, time 19.90573
+Iter 1, loss 8121.074707, time 13.60313
+```
 
 **注意：** YOLOv3模型总batch size为64，这里使用8 GPUs每GPU上batch size为8来训练
 
@@ -130,86 +141,30 @@ Train Loss
 
 ### 模型评估
 
-模型评估是指对训练完毕的模型评估各类性能指标。本示例采用[COCO官方评估](http://cocodataset.org/#detections-eval), 用户可通过如下方式下载Paddle发布的YOLOv3[模型](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz)
+模型评估是指对训练完毕的模型评估各类性能指标。本示例采用[COCO官方评估](http://cocodataset.org/#detections-eval), 用户可通过如下方式下载Paddle发布的YOLOv3[模型]()
 
     sh ./weights/download.sh
 
-`eval.py`是评估模块的主要执行程序，调用示例如下：
+`eval_dy.py`是评估模块的主要执行程序，调用示例如下：
 
-    python eval.py \
+    python eval_dy.py \
         --dataset=coco2017 \
         --weights=${path_to_weights} \
         --class_num=${category_num}
 
 - 通过设置`export CUDA_VISIBLE_DEVICES=0`指定单卡GPU评估。
 
-若训练时指定`--syncbn=False`, 模型评估精度如下:
-
-|   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
-| :------: | :------: | :------: | :------: |
-| 608x608 | 37.7 | 59.8 | 40.8 |
-| 416x416 | 36.5 | 58.2 | 39.1 |
-| 320x320 | 34.1 | 55.4 | 36.3 |
 
 若训练时指定`--syncbn=True`, 模型评估精度如下:
 
 |   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
 | :------: | :------: | :------: | :------: |
-| 608x608 | 38.9 | 61.1 | 42.0 |
-| 416x416 | 37.5 | 59.6 | 40.2 |
-| 320x320 | 34.8 | 56.4 | 36.9 |
+| 608x608 |  |  |  |
+| 416x416 |  |  |  |
+| 320x320 |  |  |  |
 
 - **注意：** 评估结果基于`pycocotools`评估器，没有滤除`score < 0.05`的预测框，其他框架有此滤除操作会导致精度下降。
 
-### 模型推断及可视化
-
-模型推断可以获取图像中的物体及其对应的类别，`infer.py`是主要执行程序，调用示例如下：
-
-    python infer.py \
-       --dataset=coco2017 \
-        --weights=${path_to_weights}  \
-        --class_num=${category_num} \
-        --image_path=data/COCO17/val2017/  \
-        --image_name=000000000139.jpg \
-        --draw_thresh=0.5
-
-- 通过设置`export CUDA_VISIBLE_DEVICES=0`指定单卡GPU预测。
-- 推断结果显示如下，并会在`./output`目录下保存带预测框的图像
-
-```
-Image person.jpg detect:
-   person          at [190, 101, 273, 372]      score: 0.98832
-   dog             at [63, 263, 200, 346]       score: 0.97049
-   horse           at [404, 137, 598, 366]      score: 0.97305
-Detect result save at ./output/person.png
-```
-
-下图为模型可视化预测结果：
-<p align="center">
-<img src="image/000000000139.png" height=300 width=400 hspace='10'/>
-<img src="image/000000127517.png" height=300 width=400 hspace='10'/>
-<img src="image/000000203864.png" height=300 width=400 hspace='10'/>
-<img src="image/000000515077.png" height=300 width=400 hspace='10'/> <br />
-YOLOv3 预测可视化
-</p>
-
-### Benchmark
-
-模型训练benchmark:
-
-| 数据集 | GPU | CUDA | cuDNN | batch size | 训练速度(1 GPU) | 训练速度(8 GPU) | 显存占用(1 GPU) | 显存占用(8 GPU) |
-| :-----: | :-: | :--: | :---: | :--------: | :-----------------: | :-----------------: | :------------: | :------------: |
-| COCO | Tesla P40 | 8.0 | 7.1 | 8 (per GPU) | 30.2 images/s | 59.3 images/s | 10642 MB/GPU | 10782 MB/GPU |
-
-模型单卡推断速度：
-
-| GPU | CUDA | cuDNN | batch size | infer speed(608x608) | infer speed(416x416) | infer speed(320x320) |
-| :-: | :--: | :---: | :--------: | :-----: | :-----: | :-----: |
-| Tesla P40 | 8.0 | 7.1 | 1 | 48 ms/frame | 29 ms/frame |24 ms/frame |
-
-### 服务部署
-
-进行YOLOv3的服务部署，用户可以在[eval.py](./eval.py#L54)或[infer.py](./infer.py#L47)中保存可部署的推断模型，该模型可以用Paddle预测库加载和部署，参考[Paddle预测库](http://paddlepaddle.org/documentation/docs/zh/1.4/advanced_usage/deploy/index_cn.html)
 
 ## 进阶使用
 
@@ -243,62 +198,6 @@ YOLOv3 的网络结构由基础特征提取网络、multi-scale特征融合层�
 
 3. 输出层。同样使用了全卷积结构，其中最后一个卷积层的卷积核个数是255：3\*(80+4+1)=255，3表示一个grid cell包含3个bounding box，4表示框的4个坐标信息，1表示Confidence Score，80表示COCO数据集中80个类别的概率。
 
-### 模型fine-tune
-
-对YOLOv3进行fine-tune，用户可用`--pretrain`指定下载好的Paddle发布的YOLOv3[模型](https://paddlemodels.bj.bcebos.com/yolo/yolov3.tar.gz)，并把`--class_num`设置为用户数据集的类别数。
-
-在fine-tune时，若用户自定义数据集的类别数不等于COCO数据集的80类，则加载权重时不应加载`yolo_output`层的权重，可通过在[train.py](./train.py#L76)使用如下方式加载非`yolo_output`层的权重：
-
-```python
-if cfg.pretrain:
-    if not os.path.exists(cfg.pretrain):
-        print("Pretrain weights not found: {}".format(cfg.pretrain))
-
-    def if_exist(var):
-        return os.path.exists(os.path.join(cfg.pretrain, var.name)) \
-               and var.name.find('yolo_output') < 0
-
-    fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
-
-```
-
-若用户自定义数据集的类别是COCO数据集类别的子集，`yolo_output`层的权重可以进行裁剪后导入。例如用户数据集有6类分别对应COCO数据集80类中的第`[3, 19, 25, 41, 58, 73]`类，可通过如下方式裁剪`yolo_output`层权重：
-
-```python
-if cfg.pretrain:
-    if not os.path.exists(cfg.pretrain):
-        print("Pretrain weights not found: {}".format(cfg.pretrain))
-
-    def if_exist(var):
-        return os.path.exists(os.path.join(cfg.pretrain, var.name))
-
-    fluid.io.load_vars(exe, cfg.pretrain, predicate=if_exist)
-
-    cat_idxs = [3, 19, 25, 41, 58, 73]
-    # the first 5 channels is x, y, w, h, objectness,
-    # the following 80 channel is for 80 categories
-    channel_idxs = np.array(range(5) + [idx + 5 for idx in cat_idxs])
-    # we have 3 yolo_output layers
-    for i in range(3):
-        # crop conv weights
-        weights_tensor = fluid.global_scope().find_var(
-                          "yolo_output.{}.conv.weights".format(i)).get_tensor()
-        weights = np.array(weights_tensor)
-        # each yolo_output layer has 3 anchors, 85 channels of each anchor
-        weights = np.concatenate(weights[channel_idxs],
-                                 weights[85 + channel_idxs],
-                                 weights[170 + channel_idxs])
-        weights_tensor.set(weights.astype('float32'), place)
-        # crop conv bias
-        bias_tensor = fluid.global_scope().find_var(
-                        "yolo_output.{}.conv.bias".format(i)).get_tensor()
-        bias = np.array(bias_tensor)
-        bias = np.concatenate(bias[channel_idxs],
-                              bias[85 + channel_idxs],
-                              bias[150 + channel_idxs])
-        bias_tensor.set(bias.astype('float32'), place)
-
-```
 
 ## FAQ
 
@@ -319,8 +218,8 @@ if cfg.pretrain:
 
 ## 版本更新
 
-- 1/2019, 新增YOLOv3模型。
-- 4/2019, 新增YOLOv3模型Synchronized batch normalization模式。
+- 12/2019, 新增YOLOv3动态图模型
+
 
 ## 如何贡献代码
 
