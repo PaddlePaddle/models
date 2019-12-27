@@ -140,7 +140,7 @@ class DarkNet53_conv_body(fluid.dygraph.Layer):
     def __init__(self,
                  ch_in=3,
                  is_test=True):
-        super(DarkNet53_conv_body, self).__init__(name_scope)
+        super(DarkNet53_conv_body, self).__init__()
         self.stages = DarkNet_cfg[53]
         self.stages = self.stages[0:5]
 
@@ -187,4 +187,5 @@ class DarkNet53_conv_body(fluid.dygraph.Layer):
             if i < len(self.stages) - 1:
                 out = self.downsample_list[i](out)
         return blocks[-1:-4:-1]
+
 

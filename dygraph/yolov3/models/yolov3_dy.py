@@ -114,7 +114,7 @@ class Upsample(fluid.dygraph.Layer):
         return out
 
 class Yolov3(fluid.dygraph.Layer):
-    def __init__(self, ch_in, is_train=True, use_random=False):
+    def __init__(self,ch_in,is_train=True, use_random=False):
         super(Yolov3,self).__init__()
 
         self.is_train = is_train
@@ -223,7 +223,7 @@ class Yolov3(fluid.dygraph.Layer):
 
 
         if not self.is_train:
-            # get pred
+        # get pred
             yolo_boxes = fluid.layers.concat(self.boxes, axis=1)
             yolo_scores = fluid.layers.concat(self.scores, axis=2)
 

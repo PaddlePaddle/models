@@ -77,9 +77,10 @@ def train():
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) if cfg.use_data_parallel else fluid.CUDAPlace(0)
 
     with fluid.dygraph.guard(place):
-        model = Yolov3(3, is_train=True)
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
+        model = Yolov3(3, is_train=True)
+        if args.use_data_parallel:
             model = fluid.dygraph.parallel.DataParallel(model, strategy)
 
         if cfg.pretrain:
@@ -107,7 +108,7 @@ def train():
             learning_rate=lr,
             regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
             momentum=cfg.momentum,
-            parameter_list=model.parameters()
+            #parameter_list=model.parameters()
         )
 
         start_time = time.time()
@@ -162,10 +163,10 @@ def train():
             snapshot_time += start_time - prev_start_time
             total_sample += 1
 
-
-            print("Iter {:d}, loss {:.6f}".format(
+            print("Iter {:d}, loss {:.6f}, time {:.5f}".format(
                 iter_id,
-                smoothed_loss.get_mean_value()))
+                smoothed_loss.get_mean_value(),
+                start_time-prev_start_time))
 
             if args.use_data_parallel:
                 loss = model.scale_loss(loss)
