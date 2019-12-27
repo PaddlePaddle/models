@@ -104,8 +104,10 @@ def predict(args):
     else:
         config.enable_use_gpu(args.gpu_mem, args.gpu_id)
 
-    # create predictor
-    predictor = create_paddle_predictor(config.to_native_config())
+    # you can enable tensorrt engine if paddle is installed with tensorrt
+    # config.enable_tensorrt_engine() 
+
+    predictor = create_paddle_predictor(config)
 
     # input
     inputs = preprocess_image(args.image_path)
@@ -120,8 +122,8 @@ def predict(args):
 
     cls = np.argmax(output)
     score = output[cls]
-    logger.info("class: ", cls)
-    logger.info("score: ", score)
+    logger.info("class: {0}".format(cls))
+    logger.info("score: {0}".format(score))
     return
 
 

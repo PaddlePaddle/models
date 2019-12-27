@@ -84,7 +84,7 @@ def train(args):
         A_test_reader = data_reader.a_test_reader()
         B_test_reader = data_reader.b_test_reader()
 
-        cycle_gan = Cycle_Gan("cycle_gan", istrain=True)
+        cycle_gan = Cycle_Gan(input_channel=data_shape[1], istrain=True)
 
         losses = [[], []]
         t_time = 0
@@ -114,11 +114,7 @@ def train(args):
                 g_loss_out = g_loss.numpy()
 
                 g_loss.backward()
-                vars_G = []
-                for param in cycle_gan.parameters():
-                    if param.name[:
-                                  52] == "cycle_gan/Cycle_Gan_0/build_generator_resnet_9blocks":
-                        vars_G.append(param)
+                vars_G = cycle_gan.build_generator_resnet_9blocks_a.parameters() + cycle_gan.build_generator_resnet_9blocks_b.parameters()
 
                 optimizer1.minimize(g_loss, parameter_list=vars_G)
                 cycle_gan.clear_gradients()
@@ -141,11 +137,7 @@ def train(args):
                 d_loss_A = fluid.layers.reduce_mean(d_loss_A)
 
                 d_loss_A.backward()
-                vars_da = []
-                for param in cycle_gan.parameters():
-                    if param.name[:
-                                  47] == "cycle_gan/Cycle_Gan_0/build_gen_discriminator_0":
-                        vars_da.append(param)
+                vars_da = cycle_gan.build_gen_discriminator_a.parameters()
                 optimizer2.minimize(d_loss_A, parameter_list=vars_da)
                 cycle_gan.clear_gradients()
 
@@ -158,11 +150,7 @@ def train(args):
                 d_loss_B = fluid.layers.reduce_mean(d_loss_B)
 
                 d_loss_B.backward()
-                vars_db = []
-                for param in cycle_gan.parameters():
-                    if param.name[:
-                                  47] == "cycle_gan/Cycle_Gan_0/build_gen_discriminator_1":
-                        vars_db.append(param)
+                vars_db = cycle_gan.build_gen_discriminator_b.parameters()
                 optimizer3.minimize(d_loss_B, parameter_list=vars_db)
 
                 cycle_gan.clear_gradients()
