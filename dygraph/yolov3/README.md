@@ -1,6 +1,8 @@
 # YOLOv3 目标检测
-
 ---
+
+本模型是[paddle_yolov3](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/yolov3)的动态图版本
+
 ## 内容
 
 - [简介](#简介)
@@ -16,11 +18,9 @@
 
 [YOLOv3](https://arxiv.org/abs/1804.02767) 是由 [Joseph Redmon](https://arxiv.org/search/cs?searchtype=author&query=Redmon%2C+J) 和 [Ali Farhadi](https://arxiv.org/search/cs?searchtype=author&query=Farhadi%2C+A) 提出的单阶段检测器, 该检测器与达到同样精度的传统目标检测方法相比，推断速度能达到接近两倍.
 
-paddle_yolov3[]中使用了 [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) 中提出的图像增强和label smooth等优化方法，精度优于darknet框架的实现版本，在COCO-2017数据集上，达到`mAP(0.50:0.95)= 38.9`的精度，比darknet实现版本的精度(33.0)要高5.9.
+在我们的实现版本中使用了 [Bag of Freebies for Training Object Detection Neural Networks](https://arxiv.org/abs/1902.04103v3) 中提出的图像增强和label smooth等优化方法，精度优于darknet框架的实现版本，在COCO-2017数据集上，达到`mAP(0.50:0.95)= 38.9`的精度，比darknet实现版本的精度(33.0)要高5.9.
 
 同时，在推断速度方面，基于Paddle预测库的加速方法，推断速度比darknet高30%.
-
-本模型是paddle_yolov3的动态图版本.
 
 ## 快速开始
 
