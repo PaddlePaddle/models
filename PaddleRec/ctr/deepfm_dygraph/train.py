@@ -66,6 +66,7 @@ def train(args):
                         (epoch, auc_metric_test.eval()))
 
         optimizer = fluid.optimizer.Adam(
+            parameter_list=deepfm.parameters(),
             regularization=fluid.regularizer.L2DecayRegularizer(args.reg))
 
         # load model if exists
