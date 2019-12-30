@@ -1,7 +1,7 @@
 import math
 
 import paddle.fluid as fluid
-from paddle.fluid.dygraph.nn import FC, Embedding
+from paddle.fluid.dygraph.nn import Linear, Embedding
 
 
 class DeepFM(fluid.dygraph.Layer):
@@ -94,18 +94,18 @@ class DNN(fluid.dygraph.Layer):
         super(DNN, self).__init__()
         self.args = args
         self.init_value_ = 0.1
-        sizes = self.args.layer_sizes + [1]
+        sizes = [self.args.num_field * self.args.embedding_size] + self.args.layer_sizes + [1]
         acts = [self.args.act
                 for _ in range(len(self.args.layer_sizes))] + [None]
         w_scales = [
             self.init_value_ / math.sqrt(float(10))
             for _ in range(len(self.args.layer_sizes))
         ] + [self.init_value_]
-        self.fcs = []
+        self.linears = []
         for i in range(len(self.args.layer_sizes) + 1):
-            fc = FC(
-                self.full_name(),
-                size=sizes[i],
+            linear = Linear(
+                sizes[i],
+                sizes[i + 1],
                 act=acts[i],
                 param_attr=fluid.ParamAttr(
                     initializer=fluid.initializer.TruncatedNormalInitializer(
@@ -113,13 +113,13 @@ class DNN(fluid.dygraph.Layer):
                 bias_attr=fluid.ParamAttr(
                     initializer=fluid.initializer.TruncatedNormalInitializer(
                         loc=0.0, scale=self.init_value_)))
-            self.add_sublayer('fc_%d' % i, fc)
-            self.fcs.append(fc)
+            self.add_sublayer('linear_%d' % i, linear)
+            self.linears.append(linear)
 
     def forward(self, feat_embeddings):
         y_dnn = fluid.layers.reshape(
             feat_embeddings,
             [-1, self.args.num_field * self.args.embedding_size])
-        for fc in self.fcs:
-            y_dnn = fc(y_dnn)
+        for linear in self.linears:
+            y_dnn = linear(y_dnn)
         return y_dnn
