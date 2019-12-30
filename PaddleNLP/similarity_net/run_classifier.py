@@ -239,6 +239,7 @@ def train(conf_dict, args):
             global_step += 1
             fetch_list = [avg_cost.name]
             avg_loss = train_exe.run(program=train_program, fetch_list = fetch_list)
+            losses.append(np.mean(avg_loss[0]))
             if args.do_valid and global_step % args.validation_steps == 0:
                 get_valid_examples = simnet_process.get_reader("valid")
                 valid_result = valid_and_test(test_prog,test_pyreader,get_valid_examples,simnet_process,"valid",exe,[pred.name])
@@ -271,7 +272,6 @@ def train(conf_dict, args):
                                             target_vars, exe,
                                             test_prog)
                 logging.info("saving infer model in %s" % model_path)
-            losses.append(np.mean(avg_loss[0]))
         
         except fluid.core.EOFException:
             train_pyreader.reset()
