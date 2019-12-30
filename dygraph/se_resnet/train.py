@@ -59,7 +59,7 @@ momentum_rate = 0.9
 l2_decay = 1.2e-4
 
 
-def optimizer_setting(params, parameter_list=None):
+def optimizer_setting(params, parameter_list):
     ls = params["learning_strategy"]
     if "total_images" not in params:
         total_images = 6149
@@ -71,19 +71,12 @@ def optimizer_setting(params, parameter_list=None):
     bd = [step * e for e in ls["epochs"]]
     lr = params["lr"]
     num_epochs = params["num_epochs"]
-    if fluid.in_dygraph_mode():
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=fluid.layers.cosine_decay(
-                learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
-            momentum=momentum_rate,
-            regularization=fluid.regularizer.L2Decay(l2_decay),
-            parameter_list=parameter_list)
-    else:
-        optimizer = fluid.optimizer.Momentum(
-            learning_rate=fluid.layers.cosine_decay(
-                learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
-            momentum=momentum_rate,
-            regularization=fluid.regularizer.L2Decay(l2_decay))
+    optimizer = fluid.optimizer.Momentum(
+        learning_rate=fluid.layers.cosine_decay(
+            learning_rate=lr, step_each_epoch=step, epochs=num_epochs),
+        momentum=momentum_rate,
+        regularization=fluid.regularizer.L2Decay(l2_decay),
+        parameter_list=parameter_list)
 
     return optimizer
 
@@ -125,7 +118,7 @@ class SqueezeExcitation(fluid.dygraph.Layer):
         self._num_channels = num_channels
         self._pool = Pool2D(pool_size=0, pool_type='avg', global_pooling=True)
         stdv = 1.0 / math.sqrt(num_channels * 1.0)
-        self._squeeze = Linear(
+        self._fc = Linear(
             num_channels,
             num_channels // reduction_ratio,
             param_attr=fluid.ParamAttr(
@@ -142,7 +135,7 @@ class SqueezeExcitation(fluid.dygraph.Layer):
     def forward(self, input):
         y = self._pool(input)
         y = fluid.layers.reshape(y, shape=[-1, self._num_channels])
-        y = self._squeeze(y)
+        y = self._fc(y)
         y = self._excitation(y)
         y = fluid.layers.elementwise_mul(x=input, y=y, axis=0)
         return y
@@ -392,7 +385,7 @@ def train():
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
         se_resnext = SeResNeXt()
-        optimizer = optimizer_setting(train_parameters, parameter_list=se_resnext.parameters())
+        optimizer = optimizer_setting(train_parameters, se_resnext.parameters())
         if args.use_data_parallel:
             se_resnext = fluid.dygraph.parallel.DataParallel(se_resnext,
                                                              strategy)
