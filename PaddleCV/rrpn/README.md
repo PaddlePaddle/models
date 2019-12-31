@@ -34,7 +34,7 @@ RRPN为两阶段目标检测器，可用于文字检测和旋转物体检测。�
     cd ext_op/src
     sh make.sh
     '''
-    成功编译后，`ext_op/src` 目录下将会生成 `pointnet_lib.so` 
+    成功编译后，`ext_op/src` 目录下将会生成 `rrpn_lib.so` 
     
 ## 数据准备
 
