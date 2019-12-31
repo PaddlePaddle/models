@@ -68,7 +68,6 @@ def draw_bounding_box_on_image(image_path,
     for dt in np.array(nms_out):
         num_id, score = dt.tolist()[:2]
         x1, y1, x2, y2, x3, y3, x4, y4 = dt.tolist()[2:] / im_scale
-        #num_id, score, x1, y1, x2, y2, x3, y3, x4, y4 = dt.tolist()
         if score < draw_threshold:
             continue
         draw.line(
@@ -136,7 +135,6 @@ def get_intersection(det, gt):
 
 
 def parse_gt(result, im_id):
-    #   objects = []
     for res in result:
         if res['im_id'] == im_id:
             gt_boxes = list(res['gt_box'])
@@ -290,13 +288,11 @@ def icdar_box_eval(result, thresh):
     num_global_care_gt = 0
     num_global_care_det = 0
     for res in result:
-        #print(res['im_info'])
         im_info = res['im_info']
         h = im_info[1]
         w = im_info[2]
         gt_boxes = res['gt_box']
         pred_boxes = res['bbox']
-        #print(pred_boxes)
         pred_boxes = pred_boxes[np.where(pred_boxes[:, 1] > thresh)]
         pred_boxes = pred_boxes[:, 2:]
         pred_boxes = clip_box(pred_boxes, im_info)

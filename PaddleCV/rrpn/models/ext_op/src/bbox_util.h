@@ -52,12 +52,13 @@ struct RangeInitFunctor {
 };
 
 
+// get trangle area after  decompose intersecting polygons into triangles
 template <typename T>
 inline T trangle_area(T* a, T* b, T* c) {
   return ((a[0] - c[0]) * (b[1] - c[1]) - (a[1] - c[1]) * (b[0] - c[0])) / 2.0;
 }
 
-
+// get area of intersecting
 template <typename T>
 inline T get_area(T* int_pts, int num_of_inter) {
   T area = 0.0;
@@ -68,13 +69,11 @@ inline T get_area(T* int_pts, int num_of_inter) {
   return area;
 }
 
+// sort points to decompose intersecting polygons into triangles
 template <typename T>
 inline void reorder_pts(T* int_pts, int num_of_inter) {
   if (num_of_inter > 0) {
     T center[2] = {0.0, 0.0};
-
-    // center[0] = 0.0;
-    // center[1] = 0.0;
 
     for (int i = 0; i < num_of_inter; i++) {
       center[0] += int_pts[2 * i];
@@ -120,6 +119,7 @@ inline void reorder_pts(T* int_pts, int num_of_inter) {
   }
 }
 
+// determine if points intersect
 template <typename T>
 inline bool inter2line(T* pts1, T* pts2, int i, int j, T* temp_pts) {
   T a[2] = {pts1[2 * i], pts1[2 * i + 1]};
@@ -128,18 +128,6 @@ inline bool inter2line(T* pts1, T* pts2, int i, int j, T* temp_pts) {
   T d[2] = {pts2[2 * ((j + 1) % 4)], pts2[2 * ((j + 1) % 4) + 1]};
 
   T area_abc, area_abd, area_cda, area_cdb;
-
-  //  a[0] = pts1[2 * i];
-  //  a[1] = pts1[2 * i + 1];
-  //
-  //  b[0] = pts1[2 * ((i + 1) % 4)];
-  //  b[1] = pts1[2 * ((i + 1) % 4) + 1];
-  //
-  //  c[0] = pts2[2 * j];
-  //  c[1] = pts2[2 * j + 1];
-  //
-  //  d[0] = pts2[2 * ((j + 1) % 4)];
-  //  d[1] = pts2[2 * ((j + 1) % 4) + 1];
 
   area_abc = trangle_area<T>(a, b, c);
   area_abd = trangle_area<T>(a, b, d);
@@ -170,20 +158,6 @@ inline bool inrect(T pt_x, T pt_y, T* pts) {
   T ad[2] = {pts[6] - pts[0], pts[7] - pts[1]};
   T ap[2] = {pt_x - pts[0], pt_y - pts[1]};
 
-  // double abab;
-  // double abap;
-  // double adad;
-  // double adap;
-
-  //  ab[0] = pts[2] - pts[0];
-  //  ab[1] = pts[3] - pts[1];
-  //
-  //  ad[0] = pts[6] - pts[0];
-  //  ad[1] = pts[7] - pts[1];
-  //
-  //  ap[0] = pt_x - pts[0];
-  //  ap[1] = pt_y - pts[1];
-
   T abab = ab[0] * ab[0] + ab[1] * ab[1];
   T abap = ab[0] * ap[0] + ab[1] * ap[1];
   T adad = ad[0] * ad[0] + ad[1] * ad[1];
@@ -193,7 +167,7 @@ inline bool inrect(T pt_x, T pt_y, T* pts) {
   return result;
 }
 
-
+// calculate the number of intersection points
 template <typename T>
 inline int inter_pts(T* pts1, T* pts2, T* int_pts) {
   int num_of_inter = 0;
@@ -228,6 +202,7 @@ inline int inter_pts(T* pts1, T* pts2, T* int_pts) {
   return num_of_inter;
 }
 
+// convert x,y,w,h,angle to x1,y1,x2,y2,x3,y3,x4,y4
 template <typename T>
 inline void convert_region(T* pts,
                            const framework::Tensor& _region,
@@ -246,16 +221,6 @@ inline void convert_region(T* pts,
   T pts_x[4] = {-w / 2, -w / 2, w / 2, w / 2};
   T pts_y[4] = {-h / 2, h / 2, h / 2, -h / 2};
 
-  //  pts_x[0] = -w / 2;
-  //  pts_x[1] = -w / 2;
-  //  pts_x[2] = w / 2;
-  //  pts_x[3] = w / 2;
-  //
-  //  pts_y[0] = -h / 2;
-  //  pts_y[1] = h / 2;
-  //  pts_y[2] = h / 2;
-  //  pts_y[3] = -h / 2;
-
   for (int i = 0; i < 4; i++) {
     pts[2 * i] = a_cos * pts_x[i] - a_sin * pts_y[i] + ctr_x;
     pts[2 * i + 1] = a_sin * pts_x[i] + a_cos * pts_y[i] + ctr_y;
@@ -263,6 +228,7 @@ inline void convert_region(T* pts,
 }
 
 
+// Calculate the area of intersection
 template <typename T>
 inline float inter(const framework::Tensor& _region1,
                    const framework::Tensor& _region2,
