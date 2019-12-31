@@ -126,21 +126,20 @@ def parse_args():
     add_arg = functools.partial(add_arguments, argparser=parser)
     # yapf: disable
     # ENV
-    add_arg('parallel',         bool,   False,       "Whether use parallel.")
     add_arg('use_gpu',          bool,  True,      "Whether use GPU.")
     add_arg('model_save_dir',   str,    'output',     "The path to save model.")
     add_arg('pretrained_model', str,    'ResNet50_cos_pretrained', "The init model path.")
     add_arg('dataset',          str,   'icdar2015',  "icdar2015, icdar2017.")
     add_arg('class_num',        int,   2,          "Class number.")
     add_arg('data_dir',         str,   'dataset/icdar2015',        "The data root path.")
-    add_arg('use_pyreader',     bool,   True,           "Use pyreader.")
+    add_arg('use_pyreader',     bool,   False,           "Use pyreader.")
     add_arg('use_profile',         bool,   False,       "Whether use profiler.")
     add_arg('padding_minibatch',bool,   False,
         "If False, only resize image and not pad, image shape is different between"
         " GPUs in one mini-batch. If True, image shape is the same in one mini-batch.")
     #SOLVER
     add_arg('learning_rate',    float,  0.02,     "Learning rate.")
-    add_arg('max_iter',         int,    30000,   "Iter number.")
+    add_arg('max_iter',         int,    17500,   "Iter number.")
     add_arg('log_window',       int,    20,        "Log smooth window, set 1 for debug, set 20 for train.")
     # RCNN
     # RPN
@@ -156,7 +155,7 @@ def parse_args():
     add_arg('pixel_means',     float,   [0.485, 0.456, 0.406], "pixel mean")
     add_arg('nms_thresh',    float, 0.3,    "NMS threshold.")
     add_arg('score_thresh',    float, 0.01,    "score threshold for NMS.")
-    add_arg('snapshot_stride',  int,    10000,    "save model every snapshot stride.")
+    add_arg('snapshot_stride',  int,    5000,    "save model every snapshot stride.")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
     add_arg('image_path',       str,   'ICDAR2015/tmp/',  "The image path used to inference and visualize.")

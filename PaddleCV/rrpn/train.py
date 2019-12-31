@@ -171,21 +171,18 @@ def train():
                         np.mean(outs[-1]), logs, start_time - prev_start_time)
                     print(strs)
                 sys.stdout.flush()
-                if (iter_id) % cfg.TRAIN.snapshot_iter == 0:
+                if (iter_id) % cfg.TRAIN.snapshot_iter == 0 and iter_id != 0:
                     save_name = "{}".format(iter_id)
                     checkpoint.save(exe, train_prog,
                                     os.path.join(cfg.model_save_dir, save_name))
-                    #save_model("model_iter{}".format(iter_id))
+                if (iter_id) == cfg.max_iter:
+                    checkpoint.save(
+                        exe, train_prog,
+                        os.path.join(cfg.model_save_dir, "model_final"))
+                    break
             end_time = time.time()
             total_time = end_time - start_time
             last_loss = np.array(outs[0]).mean()
-            if cfg.enable_ce:
-                gpu_num = devices_num
-                epoch_idx = iter_id + 1
-                loss = last_loss
-                print("kpis\teach_pass_duration_card%s\t%s" %
-                      (gpu_num, total_time / epoch_idx))
-                print("kpis\ttrain_loss_card%s\t%s" % (gpu_num, loss))
         except (StopIteration, fluid.core.EOFException):
             py_reader.reset()
 
@@ -200,8 +197,9 @@ def train():
             if data[0][1].shape[0] == 0:
                 continue
 
-            outs = train_exe.run(fetch_list=[v.name for v in fetch_list],
-                                 feed=feeder.feed(data))
+            outs = exe.run(compiled_train_prog,
+                           fetch_list=[v.name for v in fetch_list],
+                           feed=feeder.feed(data))
             stats = {k: np.array(v).mean() for k, v in zip(keys, outs[:-1])}
             train_stats.update(stats)
             logs = train_stats.log()
@@ -211,10 +209,15 @@ def train():
                     np.mean(outs[-1]), logs, start_time - prev_start_time)
                 print(strs)
             sys.stdout.flush()
-            if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0:
-                save_model("{}".format(iter_id))
+            if (iter_id + 1) % cfg.TRAIN.snapshot_iter == 0 and iter_id != 0:
+                save_name = "{}".format(iter_id + 1)
+                checkpoint.save(exe, train_prog,
+                                os.path.join(cfg.model_save_dir, save_name))
             if (iter_id + 1) == cfg.max_iter:
+                checkpoint.save(exe, train_prog,
+                                os.path.join(cfg.model_save_dir, "model_final"))
                 break
+
         end_time = time.time()
         total_time = end_time - start_time
         last_loss = np.array(outs[0]).mean()
@@ -223,7 +226,6 @@ def train():
         train_loop_pyreader()
     else:
         train_loop()
-    save_model('model_final')
 
 
 if __name__ == '__main__':

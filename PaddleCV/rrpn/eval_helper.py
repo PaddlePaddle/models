@@ -154,7 +154,7 @@ def parse_gt(result, im_id):
             return objects
 
 
-def caluc_ap(rec, prec):
+def calculate_ap(rec, prec):
     # 11 point metric
     ap = 0.
     for t in np.arange(0., 1.1, 0.1):
@@ -269,7 +269,7 @@ def icdar_map(result, class_name, ovthresh):
 
     rec = tp / float(npos)
     prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
-    ap = caluc_ap(rec, prec)
+    ap = calculate_ap(rec, prec)
     return rec, prec, ap
 
 
