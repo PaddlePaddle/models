@@ -145,12 +145,6 @@ def train():
             batch_size=total_batch_size, shuffle=shuffle)
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
-    def save_model(postfix):
-        model_path = os.path.join(cfg.model_save_dir, postfix)
-        if os.path.isdir(model_path):
-            shutil.rmtree(model_path)
-        fluid.io.save_persistables(exe, model_path)
-
     def train_loop_pyreader():
         py_reader.start()
         train_stats = TrainingStats(cfg.log_window, keys)

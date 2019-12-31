@@ -82,7 +82,6 @@ def get_image_blob(roidb, mode):
         img -= mean
         img /= std
         img = img.transpose((2, 0, 1))
-        np.save("./l_img,npy", img)
         return img, im_scale, need_gt_boxes, need_gt_label
 
 
