@@ -66,7 +66,7 @@ def main():
         local_seed = (99 + trainer_id)
         random.seed(local_seed)
         np.random.seed(local_seed)
-
+    
     if FLAGS.enable_ce:
         random.seed(0)
         np.random.seed(0)
@@ -265,11 +265,10 @@ def main():
             strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
                 it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
-
+        
         #only for continuous evaluation
         if FLAGS.enable_ce and it == cfg.max_iters - 1:
-            print("kpis\t{}_train_loss\t{}".format(cfg.architecture, stats[
-                'loss']))
+            print("kpis\t{}_train_loss\t{}".format(cfg.architecture, stats['loss']))
             print("kpis\t{}_train_time\t{}".format(cfg.architecture, time_cost))
 
         # profiler tools, used for benchmark
