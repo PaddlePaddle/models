@@ -153,7 +153,7 @@ RRPN
 ```
 python infer.py \
     --pretrained_model=${path_to_trained_model}  \
-    --image_path=dataset/coco/val2017/ \
+    --image_path=dataset/icdar2015 \
     --draw_threshold=0.6
 ```
 
