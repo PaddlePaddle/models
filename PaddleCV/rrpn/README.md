@@ -38,7 +38,7 @@ RRPN是在Faster RCNN基础上拓展出的两阶段目标检测器，可用于�
     
 ## 数据准备
 ### 公开数据集
-在[ICDAR2015数据集](https://rrc.cvc.uab.es/?ch=4&com=downloads)上进行训练，需进行注册下载。
+在[ICDAR2015数据集](https://rrc.cvc.uab.es/?ch=4&com=downloads)上进行训练，数据集需进入官网进行注册后方可下载。
 
 数据目录结构如下：
 
