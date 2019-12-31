@@ -25,7 +25,7 @@ import paddle.fluid as fluid
 
 from ppdet.utils.voc_eval import bbox_eval as voc_bbox_eval
 from ppdet.utils.post_process import mstest_box_post_process, mstest_mask_post_process, box_flip
-from ppdet.utils.icdar_eval import icdar_eval
+
 __all__ = ['parse_fetches', 'eval_run', 'eval_results', 'json_eval_results']
 
 logger = logging.getLogger(__name__)
@@ -45,6 +45,7 @@ def parse_fetches(fetches, prog=None, extra_keys=None):
             values.append(v.name)
         else:
             cls.append(v)
+
     if prog is not None and extra_keys is not None:
         for k in extra_keys:
             try:
@@ -118,6 +119,7 @@ def eval_run(exe,
     images_num = 0
     start_time = time.time()
     has_bbox = 'bbox' in keys
+
     try:
         pyreader.start()
         while True:
@@ -154,14 +156,7 @@ def eval_run(exe,
             if iter_id % 100 == 0:
                 logger.info('Test iter {}'.format(iter_id))
             iter_id += 1
-            #images_num = 1
-            #print(res['bbox'])
-            #print(res)
-            #print(res['bbox'][0].shape)
-            try:
-                images_num += len(res['bbox'][1][0]) if has_bbox else 1
-            except:
-                images_num += res['bbox'][0].shape[0] if has_bbox else 1
+            images_num += len(res['bbox'][1][0]) if has_bbox else 1
     except (StopIteration, fluid.core.EOFException):
         pyreader.reset()
     logger.info('Test finish iter {}'.format(iter_id))
@@ -214,7 +209,7 @@ def eval_results(results,
             if output_directory:
                 output = os.path.join(output_directory, 'mask.json')
             mask_eval(results, anno_file, output, resolution)
-    elif metric == "VOC":
+    else:
         if 'accum_map' in results[-1]:
             res = np.mean(results[-1]['accum_map'][0])
             logger.info('mAP: {:.2f}'.format(res * 100.))
@@ -226,8 +221,6 @@ def eval_results(results,
                 is_bbox_normalized=is_bbox_normalized,
                 map_type=map_type)
             box_ap_stats.append(box_ap)
-    else:
-        icdar_eval(results, num_classes)
     return box_ap_stats
 
 

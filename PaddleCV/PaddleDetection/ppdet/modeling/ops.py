@@ -18,14 +18,11 @@ from paddle import fluid
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.regularizer import L2Decay
 from ppdet.core.workspace import register, serializable
-from ppdet.modeling.custom.custom_op import *
 
 __all__ = [
-    'AnchorGenerator', 'RotatedAnchorGenerator', 'RPNTargetAssign',
-    'RRPNTargetAssign', 'GenerateProposals', 'RotatedGenerateProposals',
-    'MultiClassNMS', 'BBoxAssigner', 'RBBoxAssigner', 'MaskAssigner',
-    'RRoIAlign', 'RoIAlign', 'RoIPool', 'MultiBoxHead', 'SSDOutputDecoder',
-    'RetinaTargetAssign', 'RetinaOutputDecoder', 'ConvNorm'
+    'AnchorGenerator', 'RPNTargetAssign', 'GenerateProposals', 'MultiClassNMS',
+    'BBoxAssigner', 'MaskAssigner', 'RoIAlign', 'RoIPool', 'MultiBoxHead',
+    'SSDOutputDecoder', 'RetinaTargetAssign', 'RetinaOutputDecoder', 'ConvNorm'
 ]
 
 
@@ -133,27 +130,6 @@ class AnchorGenerator(object):
 
 @register
 @serializable
-class RotatedAnchorGenerator(object):
-    __op__ = rotated_anchor_generator
-    __append_doc__ = True
-
-    def __init__(self,
-                 stride=[16.0, 16.0],
-                 anchor_sizes=[128, 256, 512],
-                 aspect_ratios=[0.2, 0.5, 1.],
-                 angles=[-30.0, 0.0, 30.0, 60.0, 90.0, 120.0],
-                 variance=[1., 1., 1., 1., 1.],
-                 offset=0.5):
-        super(RotatedAnchorGenerator, self).__init__()
-        self.anchor_sizes = anchor_sizes
-        self.aspect_ratios = aspect_ratios
-        self.variance = variance
-        self.stride = stride
-        self.angles = angles
-
-
-@register
-@serializable
 class RPNTargetAssign(object):
     __op__ = fluid.layers.rpn_target_assign
     __append_doc__ = True
@@ -166,28 +142,6 @@ class RPNTargetAssign(object):
                  rpn_negative_overlap=0.3,
                  use_random=True):
         super(RPNTargetAssign, self).__init__()
-        self.rpn_batch_size_per_im = rpn_batch_size_per_im
-        self.rpn_straddle_thresh = rpn_straddle_thresh
-        self.rpn_fg_fraction = rpn_fg_fraction
-        self.rpn_positive_overlap = rpn_positive_overlap
-        self.rpn_negative_overlap = rpn_negative_overlap
-        self.use_random = use_random
-
-
-@register
-@serializable
-class RRPNTargetAssign(object):
-    __op__ = rrpn_target_assign
-    __append_doc__ = True
-
-    def __init__(self,
-                 rpn_batch_size_per_im=256,
-                 rpn_straddle_thresh=-1.,
-                 rpn_fg_fraction=0.5,
-                 rpn_positive_overlap=0.7,
-                 rpn_negative_overlap=0.3,
-                 use_random=True):
-        super(RRPNTargetAssign, self).__init__()
         self.rpn_batch_size_per_im = rpn_batch_size_per_im
         self.rpn_straddle_thresh = rpn_straddle_thresh
         self.rpn_fg_fraction = rpn_fg_fraction
@@ -214,26 +168,6 @@ class GenerateProposals(object):
         self.nms_thresh = nms_thresh
         self.min_size = min_size
         self.eta = eta
-
-
-@register
-@serializable
-class RotatedGenerateProposals(object):
-    __op__ = rotated_generate_proposals
-    __append_doc__ = True
-
-    def __init__(self,
-                 pre_nms_top_n=6000,
-                 post_nms_top_n=1000,
-                 nms_thresh=.7,
-                 min_size=0.):  #,
-        #eta=1.):
-        super(RotatedGenerateProposals, self).__init__()
-        self.pre_nms_top_n = pre_nms_top_n
-        self.post_nms_top_n = post_nms_top_n
-        self.nms_thresh = nms_thresh
-        self.min_size = min_size
-        #self.eta = eta
 
 
 @register
@@ -299,32 +233,6 @@ class BBoxAssigner(object):
 
 
 @register
-class RBBoxAssigner(object):
-    __op__ = rotated_generate_proposal_labels
-    __append_doc__ = True
-    __shared__ = ['num_classes']
-
-    def __init__(self,
-                 batch_size_per_im=256,
-                 fg_fraction=.25,
-                 fg_thresh=.5,
-                 bg_thresh_hi=.5,
-                 bg_thresh_lo=0.,
-                 bbox_reg_weights=[10.0, 10.0, 5.0, 5.0, 1.0],
-                 num_classes=2,
-                 shuffle_before_sample=True):
-        super(RBBoxAssigner, self).__init__()
-        self.batch_size_per_im = batch_size_per_im
-        self.fg_fraction = fg_fraction
-        self.fg_thresh = fg_thresh
-        self.bg_thresh_hi = bg_thresh_hi
-        self.bg_thresh_lo = bg_thresh_lo
-        self.bbox_reg_weights = bbox_reg_weights
-        self.class_nums = num_classes
-        self.use_random = shuffle_before_sample
-
-
-@register
 class RoIAlign(object):
     __op__ = fluid.layers.roi_align
     __append_doc__ = True
@@ -337,21 +245,6 @@ class RoIAlign(object):
         self.pooled_width = resolution[1]
         self.spatial_scale = spatial_scale
         self.sampling_ratio = sampling_ratio
-
-
-@register
-class RRoIAlign(object):
-    __op__ = rotated_roi_align
-    __append_doc__ = True
-
-    def __init__(self, resolution=7, spatial_scale=1. / 16, sampling_ratio=0):
-        super(RRoIAlign, self).__init__()
-        if isinstance(resolution, Integral):
-            resolution = [resolution, resolution]
-        self.pooled_height = resolution[0]
-        self.pooled_width = resolution[1]
-        self.spatial_scale = spatial_scale
-        #self.sampling_ratio = sampling_ratio
 
 
 @register

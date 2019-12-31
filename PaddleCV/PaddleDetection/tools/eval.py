@@ -107,15 +107,14 @@ def main():
     if 'weights' in cfg:
         checkpoint.load_params(exe, eval_prog, cfg.weights)
 
-    assert cfg.metric in ['COCO', 'VOC', 'ICDAR'], \
+    assert cfg.metric in ['COCO', 'VOC'], \
             "unknown metric type {}".format(cfg.metric)
     extra_keys = []
     if cfg.metric == 'COCO':
         extra_keys = ['im_info', 'im_id', 'im_shape']
     if cfg.metric == 'VOC':
-        extra_keys = ['gt_box', 'gt_label', 'is_difficult', 'im_info', 'im_id']
-    if cfg.metric == 'ICDAR':
-        extra_keys = ['gt_box', 'gt_label', 'is_difficult', 'im_info', 'im_id']
+        extra_keys = ['gt_box', 'gt_label', 'is_difficult']
+
     keys, values, cls = parse_fetches(fetches, eval_prog, extra_keys)
 
     # whether output bbox is normalized in model output layer
@@ -150,6 +149,7 @@ def main():
 
     results = eval_run(exe, compile_program, pyreader, keys, values, cls, cfg,
                        sub_eval_prog, sub_keys, sub_values)
+
     # evaluation
     resolution = None
     if 'mask' in results[0]:

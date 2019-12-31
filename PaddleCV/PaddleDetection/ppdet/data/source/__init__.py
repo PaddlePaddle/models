@@ -48,13 +48,12 @@ def build_source(config):
         data_cf = config
 
     data_cf = {k.lower(): v for k, v in data_cf.items()}
+
     args = copy.deepcopy(data_cf)
     # defaut type is 'RoiDbSource'
     source_type = 'RoiDbSource'
     if 'type' in data_cf:
-        if data_cf['type'] in [
-                'VOCSource', 'COCOSource', 'ICDARSource', 'RoiDbSource'
-        ]:
+        if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource']:
             if 'class_aware_sampling' in args and args['class_aware_sampling']:
                 source_type = 'ClassAwareSamplingRoiDbSource'
             else:

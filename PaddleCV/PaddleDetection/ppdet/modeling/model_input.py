@@ -118,6 +118,7 @@ def create_feed(feed, use_pyreader=True, sub_prog_feed=False):
         shape=feed_var_map[key]['shape'],
         dtype=feed_var_map[key]['dtype'],
         lod_level=feed_var_map[key]['lod_level'])) for key in feed.fields])
+
     pyreader = None
     if use_pyreader:
         pyreader = fluid.io.PyReader(

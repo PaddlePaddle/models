@@ -26,12 +26,12 @@ except Exception:
 
     def doc_parse(*args):
         if not doc_parse.__warning_sent__:
-            #from ppdet.utils.cli import ColorTTY
-            #color_tty = ColorTTY()
+            from ppdet.utils.cli import ColorTTY
+            color_tty = ColorTTY()
             message = "docstring_parser is not installed, " \
                 + "argument description is not available"
-            #print(color_tty.yellow(message))
-            #doc_parse.__warning_sent__ = True
+            print(color_tty.yellow(message))
+            doc_parse.__warning_sent__ = True
 
     doc_parse.__warning_sent__ = False
 
@@ -41,12 +41,12 @@ except Exception:
 
     def check_type(*args):
         if not check_type.__warning_sent__:
-            #from ppdet.utils.cli import ColorTTY
-            #color_tty = ColorTTY()
+            from ppdet.utils.cli import ColorTTY
+            color_tty = ColorTTY()
             message = "typeguard is not installed," \
                 + "type checking is not available"
-            #print(color_tty.yellow(message))
-            #check_type.__warning_sent__ = True
+            print(color_tty.yellow(message))
+            check_type.__warning_sent__ = True
 
     check_type.__warning_sent__ = False
 

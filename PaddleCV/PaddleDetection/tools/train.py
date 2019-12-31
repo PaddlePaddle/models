@@ -37,6 +37,7 @@ set_paddle_flags(
 )
 
 from paddle import fluid
+from paddle.fluid import profiler
 
 from ppdet.experimental import mixed_precision_context
 from ppdet.core.workspace import load_config, merge_config, create
@@ -65,7 +66,7 @@ def main():
         local_seed = (99 + trainer_id)
         random.seed(local_seed)
         np.random.seed(local_seed)
-    
+
     if FLAGS.enable_ce:
         random.seed(0)
         np.random.seed(0)
@@ -200,7 +201,7 @@ def main():
 
     ignore_params = cfg.finetune_exclude_pretrained_params \
                  if 'finetune_exclude_pretrained_params' in cfg else []
-    #fuse_bn = False
+
     start_iter = 0
     if FLAGS.resume_checkpoint:
         checkpoint.load_checkpoint(exe, train_prog, FLAGS.resume_checkpoint)
@@ -264,11 +265,19 @@ def main():
             strs = 'iter: {}, lr: {:.6f}, {}, time: {:.3f}, eta: {}'.format(
                 it, np.mean(outs[-1]), logs, time_cost, eta)
             logger.info(strs)
-        
+
         #only for continuous evaluation
         if FLAGS.enable_ce and it == cfg.max_iters - 1:
-            print("kpis\t{}_train_loss\t{}".format(cfg.architecture, stats['loss']))
+            print("kpis\t{}_train_loss\t{}".format(cfg.architecture, stats[
+                'loss']))
             print("kpis\t{}_train_time\t{}".format(cfg.architecture, time_cost))
+
+        # profiler tools, used for benchmark
+        if FLAGS.is_profiler and it == 5:
+            profiler.start_profiler("All")
+        elif FLAGS.is_profiler and it == 10:
+            profiler.stop_profiler("total", FLAGS.profiler_path)
+            return
 
         if (it > 0 and it % cfg.snapshot_iter == 0 or it == cfg.max_iters - 1) \
            and (not FLAGS.dist or trainer_id == 0):

@@ -33,4 +33,3 @@ from .ssd import *
 from .retinanet import *
 from .blazeface import *
 from .faceboxes import *
-from .rrpn import *

@@ -79,7 +79,7 @@ class BaseOperator(object):
 
 @register_op
 class DecodeImage(BaseOperator):
-    def __init__(self, to_rgb=True, with_mixup=False, use_pillow=True):
+    def __init__(self, to_rgb=True, with_mixup=False):
         """ Transform the image data to numpy format.
 
         Args:
@@ -90,7 +90,6 @@ class DecodeImage(BaseOperator):
         super(DecodeImage, self).__init__()
         self.to_rgb = to_rgb
         self.with_mixup = with_mixup
-        self.use_pillow = use_pillow
         if not isinstance(self.to_rgb, bool):
             raise TypeError("{}: input type is invalid.".format(self))
         if not isinstance(self.with_mixup, bool):
@@ -98,18 +97,15 @@ class DecodeImage(BaseOperator):
 
     def __call__(self, sample, context=None):
         """ load image if 'im_file' field is not empty but 'image' is"""
-        if self.use_pillow:
-            im = Image.open(sample['im_file']).convert('RGB')
-            im = np.asarray(im)
-        #if 'image' not in sample:
-        #    with open(sample['im_file'], 'rb') as f:
-        #        sample['image'] = f.read()
+        if 'image' not in sample:
+            with open(sample['im_file'], 'rb') as f:
+                sample['image'] = f.read()
 
-        #im = sample['image']
-        #data = np.frombuffer(im, dtype='uint8')
-        #im = cv2.imdecode(data, 1)  # BGR mode, but need RGB mode
-        #if self.to_rgb:
-        #    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        im = sample['image']
+        data = np.frombuffer(im, dtype='uint8')
+        im = cv2.imdecode(data, 1)  # BGR mode, but need RGB mode
+        if self.to_rgb:
+            im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         sample['image'] = im
 
         if 'h' not in sample:
@@ -230,9 +226,7 @@ class ResizeImage(BaseOperator):
                  target_size=0,
                  max_size=0,
                  interp=cv2.INTER_LINEAR,
-                 use_cv2=True,
-                 resize_bbox=False,
-                 eval_mode=False):
+                 use_cv2=True):
         """
         Rescale image to the specified target size, and capped at max_size
         if max_size != 0.
@@ -246,14 +240,11 @@ class ResizeImage(BaseOperator):
             interp (int): the interpolation method
             use_cv2 (bool): use the cv2 interpolation method or use PIL 
                 interpolation method
-            resize_bbox (bool): whether resize the ground truth bounding box
         """
         super(ResizeImage, self).__init__()
         self.max_size = int(max_size)
         self.interp = int(interp)
         self.use_cv2 = use_cv2
-        self.resize_bbox = resize_bbox
-        self.eval_mode = eval_mode
         if not (isinstance(target_size, int) or isinstance(target_size, list)):
             raise TypeError(
                 "Type of target_size is invalid. Must be Integer or List, now is {}".
@@ -289,8 +280,8 @@ class ResizeImage(BaseOperator):
             im_scale_x = im_scale
             im_scale_y = im_scale
 
-            resize_w = int(np.round(im_scale_x * float(im_shape[1])))
-            resize_h = int(np.round(im_scale_y * float(im_shape[0])))
+            resize_w = np.round(im_scale_x * float(im_shape[1]))
+            resize_h = np.round(im_scale_y * float(im_shape[0]))
             im_info = [resize_h, resize_w, im_scale]
             if 'im_info' in sample and sample['im_info'][2] != 1.:
                 sample['im_info'] = np.append(
@@ -316,117 +307,8 @@ class ResizeImage(BaseOperator):
             im = Image.fromarray(im)
             im = im.resize((resize_w, resize_h), self.interp)
             im = np.array(im)
-        # resize bbox
-        if self.resize_bbox:
-            gt_bbox = sample['gt_bbox']
-            new_gt_bbox = gt_bbox.copy()
-            if self.eval_mode:
-                #new_gt_bbox *= im_scale_x
-                pass
-            else:
-                #print(new_gt_bbox.shape)
-                #print(new_gt_bbox)
-                new_gt_bbox[:, :4] *= im_scale_x
-            sample['gt_bbox'] = new_gt_bbox
-            #print("new_gt_bbox", new_gt_bbox)
+
         sample['image'] = im
-        return sample
-
-
-@register_op
-class RandomRotation(BaseOperator):
-    def __init__(self,
-                 prob=0.5,
-                 rotate_range=360,
-                 rotate_shift=0,
-                 gt_margin=1.4,
-                 fixed_angle=-1):
-        """
-        Randomly rotation the image and bounding box.
-
-        Args:
-            prob (float): the probability of rotate image and bounding box.
-            rotate_range (int): the range of ratation angle.
-            rotate_shift (int): the shift of ratation angle.
-            gt_margin (float): the margin multiple of bounding box after rotating.
-            fixed_angle (int): the default fixed angle
-        """
-        super(RandomRotation, self).__init__()
-        self.prob = prob
-        self.rotate_range = rotate_range
-        self.rotate_shift = rotate_shift
-        self.gt_margin = gt_margin
-        self.fixed_angle = fixed_angle
-        if not (isinstance(self.prob, float) and isinstance(
-                self.rotate_range, int) and isinstance(self.rotate_shift, int)
-                and isinstance(self.fixed_angle, int) and
-                isinstance(self.gt_margin, float)):
-            raise TypeError("{}: input type is invalid.".format(self))
-
-    def __call__(self, sample, context=None):
-        """ Resize the image numpy.
-        """
-        angle = np.array([np.max([0, self.fixed_angle])])
-        if np.random.rand() <= self.prob:
-            #angle = np.array(np.array([1]) * self.rotate_range - self.rotate_shift, dtype=np.int16)
-            angle = np.array(
-                np.random.rand(1) * self.rotate_range - self.rotate_shift,
-                dtype=np.int16)
-        im = sample['image']
-        gt_bbox = sample['gt_bbox']
-        gt_label = sample['gt_class']
-        if not isinstance(im, np.ndarray):
-            raise TypeError("{}: image type is not numpy.".format(self))
-        if len(im.shape) != 3:
-            raise ImageError('{}: image is not 3-dimensional.'.format(self))
-        (im_h, im_w) = im.shape[:2]
-        # rotate image
-        scale = 1.0
-        center = (im_w / 2, im_h / 2)
-        M = cv2.getRotationMatrix2D(center, angle, scale)
-        im = cv2.warpAffine(im, M, (im_w, im_h))
-        sample['image'] = im
-        # rotate bounding boxes
-        origin_gt_bbox = gt_bbox.copy()
-        rotated_gt_bbox = np.empty((len(origin_gt_bbox), 5), dtype=np.float32)
-        cos_cita = np.cos(np.pi / 180 * angle)
-        sin_cita = np.sin(np.pi / 180 * angle)
-        rotation_matrix = np.array(
-            [[cos_cita, sin_cita], [-sin_cita, cos_cita]])
-        pts_ctr = origin_gt_bbox[:, 0:2]
-        pts_ctr = pts_ctr - np.tile((im_w / 2, im_h / 2), (gt_bbox.shape[0], 1))
-        pts_ctr = np.array(np.dot(pts_ctr, rotation_matrix), dtype=np.int16)
-        pts_ctr = np.squeeze(
-            pts_ctr, axis=-1) + np.tile((im_w / 2, im_h / 2),
-                                        (gt_bbox.shape[0], 1))
-        origin_gt_bbox[:, 0:2] = pts_ctr
-        len_of_gt = len(origin_gt_bbox)
-        for idx in range(len_of_gt):
-            ori_angle = origin_gt_bbox[idx, 4]
-            height = origin_gt_bbox[idx, 3]
-            width = origin_gt_bbox[idx, 2]
-            # step 1: normalize gt (-45,135)
-            if width < height:
-                ori_angle += 90
-                width, height = height, width
-            # step 2: rotate (-45,495)
-            rotated_angle = ori_angle + angle
-            # step 3: normalize rotated_angle (-45,135)
-            while rotated_angle > 135:
-                rotated_angle = rotated_angle - 180
-            rotated_gt_bbox[idx, 0] = origin_gt_bbox[idx, 0]
-            rotated_gt_bbox[idx, 1] = origin_gt_bbox[idx, 1]
-            rotated_gt_bbox[idx, 3] = height * self.gt_margin
-            rotated_gt_bbox[idx, 2] = width * self.gt_margin
-            rotated_gt_bbox[idx, 4] = rotated_angle
-        x_inbound = np.logical_and(rotated_gt_bbox[:, 0] >= 0,
-                                   rotated_gt_bbox[:, 0] < im_w)
-        y_inbound = np.logical_and(rotated_gt_bbox[:, 1] >= 0,
-                                   rotated_gt_bbox[:, 1] < im_h)
-        inbound = np.logical_and(x_inbound, y_inbound)
-        sample['gt_bbox'] = rotated_gt_bbox[inbound]
-        origin_gt_label = gt_label.copy()
-        sample['gt_class'] = origin_gt_label[inbound]
         return sample
 
 
