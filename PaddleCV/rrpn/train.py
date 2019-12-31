@@ -35,18 +35,16 @@ import sys
 import numpy as np
 import time
 import shutil
-from utility import parse_args, print_arguments, SmoothedValue, TrainingStats, now_time, check_gpu
 import collections
-
 import paddle
 import paddle.fluid as fluid
 import reader
 import models.model_builder as model_builder
-#import models.resnet as resnet
 import models.resnet as resnet
+import checkpoint as checkpoint
 from learning_rate import exponential_with_warmup_decay
 from config import cfg
-import checkpoint as checkpoint
+from utility import parse_args, print_arguments, SmoothedValue, TrainingStats, now_time, check_gpu
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
 

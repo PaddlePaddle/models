@@ -11,26 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import os
 import cv2
 import time
 import numpy as np
 import pickle
-from eval_helper import *
 import paddle
 import paddle.fluid as fluid
 import reader
-from utility import print_arguments, parse_args, check_gpu
 import models.model_builder as model_builder
 import models.resnet as resnet
+import checkpoint as checkpoint
 from config import cfg
 from data_utils2 import DatasetPath
-import checkpoint as checkpoint
-from eval_helper import clip_box
+from eval_helper import *
+from utility import print_arguments, parse_args, check_gpu
 
 
 def infer():
-
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     image_shape = [3, cfg.TEST.max_size, cfg.TEST.max_size]
@@ -40,7 +39,6 @@ def infer():
         add_roi_box_head_func=resnet.ResNetC5(),
         use_pyreader=False,
         mode='infer')
-
     startup_prog = fluid.Program()
     infer_prog = fluid.Program()
     with fluid.program_guard(infer_prog, startup_prog):
@@ -74,7 +72,6 @@ def infer():
         outs = np.array(nmsed_out)
         draw_bounding_box_on_image(cfg.image_path, imgs[i], outs, im_scale,
                                    cfg.draw_threshold)
-
 
 if __name__ == '__main__':
     args = parse_args()

@@ -135,9 +135,6 @@ class RRPN(object):
             box_reshape = fluid.layers.reshape(x=box_positive, shape=[1, -1, 8])
             score_reshape = fluid.layers.reshape(
                 x=score_slice, shape=[1, 1, -1])
-            print("cfg.TEST.score_thresh", cfg.TEST.score_thresh)
-            print("cfg.TEST.nms_thresh", cfg.TEST.nms_thresh)
-            print("cfg.TEST.detections_per_im", cfg.TEST.detections_per_im)
             pred_result = fluid.layers.multiclass_nms(
                 bboxes=box_reshape,
                 scores=score_reshape,
@@ -202,11 +199,6 @@ class RRPN(object):
                     loc=0., scale=0.01)),
             bias_attr=ParamAttr(
                 name="conv_rpn_b", learning_rate=2., regularizer=L2Decay(0.)))
-        print("anchor_sizes", cfg.anchor_sizes)
-        print("aspect_ratios", cfg.aspect_ratios)
-        print("cfg.anchor_angle", cfg.anchor_angle)
-        print("cfg.variance", cfg.variance)
-        print("cfg.rpn_stride", cfg.rpn_stride)
         self.anchor, self.var = rotated_anchor_generator(
             input=rpn_conv,
             anchor_sizes=cfg.anchor_sizes,
@@ -256,11 +248,6 @@ class RRPN(object):
         post_nms_top_n = param_obj.rpn_post_nms_top_n
         nms_thresh = param_obj.rpn_nms_thresh
         min_size = param_obj.rpn_min_size
-        eta = param_obj.rpn_eta
-        print("pre_nms_top_n", pre_nms_top_n)
-        print("post_nms_top_n", post_nms_top_n)
-        print("param_obj.rpn_nms_thresh", param_obj.rpn_nms_thresh)
-        print("param_obj.rpn_min_size", param_obj.rpn_min_size)
         self.rpn_rois, self.rpn_roi_probs = rotated_generate_proposals(
             scores=rpn_cls_score_prob,
             bbox_deltas=self.rpn_bbox_pred,
@@ -272,12 +259,6 @@ class RRPN(object):
             nms_thresh=param_obj.rpn_nms_thresh,
             min_size=param_obj.rpn_min_size)
         if self.mode == 'train':
-            print("cfg.TRAIN.batch_size_per_im", cfg.TRAIN.batch_size_per_im)
-            print("cfg.TRAIN.fg_fractrion", cfg.TRAIN.fg_fractrion)
-            print("cfg.TRAIN.fg_thresh", cfg.TRAIN.fg_thresh)
-            print("cfg.TRAIN.bg_thresh_hi", cfg.TRAIN.bg_thresh_hi)
-            print("cfg.TRAIN.bg_thresh_lo", cfg.TRAIN.bg_thresh_lo)
-            print("cfg.bbox_reg_weights", cfg.bbox_reg_weights)
             outs = rotated_generate_proposal_labels(
                 rpn_rois=self.rpn_rois,
                 gt_classes=self.gt_label,

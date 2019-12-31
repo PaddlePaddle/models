@@ -16,17 +16,16 @@ import cv2
 import time
 import numpy as np
 import pickle
-from eval_helper import *
 import paddle
 import paddle.fluid as fluid
 import reader
-from utility import print_arguments, parse_args, check_gpu
 import models.model_builder as model_builder
 import models.resnet as resnet
-from config import cfg
-from data_utils2 import DatasetPath
 import checkpoint as checkpoint
-#from train import *
+from config import cfg
+from utility import print_arguments, parse_args, check_gpu
+from data_utils2 import DatasetPath
+from eval_helper import *
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)

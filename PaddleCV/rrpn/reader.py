@@ -180,7 +180,6 @@ def infer(file_path):
         imgs = os.listdir(file_path)
         imgs.sort()
         for image in imgs:
-            print(image + "in reader***********************8")
             if not os.path.exists(file_path):
                 raise ValueError("Image path [%s] does not exist." %
                                  (file_path))
@@ -189,9 +188,7 @@ def infer(file_path):
             data = np.frombuffer(data, dtype='uint8')
             img = cv2.imdecode(data, 1)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            #h = img.shape[0]
-            #w = img.shape[1]
-            img, im_scale = _resize(img, target_size=1000, max_size=2000)
+            img, im_scale = _resize(img, target_size=1000, max_size=1778)
             img = img.astype(np.float32, copy=False)
             img = img / 255.0
             mean = np.array(cfg.pixel_means)[np.newaxis, np.newaxis, :]
@@ -202,7 +199,6 @@ def infer(file_path):
             h = img.shape[1]
             w = img.shape[2]
             im_info = np.array([h, w, im_scale], dtype=np.float32)
-            #exit()
             yield [(img, im_info)]
 
     return reader
