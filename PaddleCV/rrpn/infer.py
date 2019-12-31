@@ -24,7 +24,7 @@ import models.model_builder as model_builder
 import models.resnet as resnet
 import checkpoint as checkpoint
 from config import cfg
-from data_utils2 import DatasetPath
+from data_utils import DatasetPath
 from eval_helper import *
 from utility import print_arguments, parse_args, check_gpu
 
@@ -72,6 +72,7 @@ def infer():
         outs = np.array(nmsed_out)
         draw_bounding_box_on_image(cfg.image_path, imgs[i], outs, im_scale,
                                    cfg.draw_threshold)
+
 
 if __name__ == '__main__':
     args = parse_args()

@@ -36,7 +36,7 @@ import matplotlib
 import cv2
 #import segm_utils
 from config import cfg
-from data_utils2 import DatasetPath
+from data_utils import DatasetPath
 logger = logging.getLogger(__name__)
 
 

@@ -24,19 +24,17 @@ import math
 import paddle
 from collections import deque
 
-from roidbs2 import ICDAR2015Dataset, ICDAR2017Dataset
-import data_utils2
+import data_utils
+from roidbs import ICDAR2015Dataset, ICDAR2017Dataset
 from config import cfg
 from PIL import Image
-from data_utils2 import _resize
-#import segm_utils
+from data_utils import _resize
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 np.random.seed(10)
 
 
 def roidb_reader(roidb, mode):
-    im, im_scales, gt_boxes, gt_classes = data_utils2.get_image_blob(roidb,
-                                                                     mode)
+    im, im_scales, gt_boxes, gt_classes = data_utils.get_image_blob(roidb, mode)
     im_id = roidb['im_id']
     is_crowd = roidb['is_crowd']
     im_height = np.round(roidb['height'] * im_scales)

@@ -19,17 +19,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import sys
+import paddle.fluid as fluid
 import distutils.util
 import numpy as np
 import six
-import collections
-from collections import deque
-import datetime
-from paddle.fluid import core
 import argparse
 import functools
+import collections
+import datetime
+from collections import deque
+from paddle.fluid import core
+from collections import deque
 from config import *
-import paddle.fluid as fluid
 
 
 def print_arguments(args):

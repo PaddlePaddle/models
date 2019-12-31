@@ -24,7 +24,7 @@ import models.resnet as resnet
 import checkpoint as checkpoint
 from config import cfg
 from utility import print_arguments, parse_args, check_gpu
-from data_utils2 import DatasetPath
+from data_utils import DatasetPath
 from eval_helper import *
 import logging
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
