@@ -157,9 +157,3 @@ python infer.py \
 <img src="image/000000127517.jpg" height=300 width=400 hspace='10'/> <br />
 Faster RCNN 预测可视化
 </p>
-
-<p align="center">
-<img src="image/000000000139_mask.jpg" height=300 width=400 hspace='10'/>
-<img src="image/000000127517_mask.jpg" height=300 width=400 hspace='10'/> <br />
-Mask RCNN 预测可视化
-</p>
