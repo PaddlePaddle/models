@@ -37,7 +37,7 @@ RRPN是在Faster RCNN基础上拓展出的两阶段目标检测器，可用于�
     成功编译后，`ext_op/src` 目录下将会生成 `rrpn_lib.so` 
     
 ## 数据准备
-
+### 公开数据集
 在[ICDAR2015数据集](https://rrc.cvc.uab.es/?ch=4&com=downloads)上进行训练，需进行注册下载。
 
 数据目录结构如下：
@@ -61,7 +61,7 @@ dataset/icdar2015/
 │   ├── img_112.jpg
 |   ...
 ```
-## 自定义数据
+### 自定义数据
 原始的RRPN只提供了二分类，若要使用自己数据进行训练多分类，需在utility.py中将dataset改为icdar2017，然后将class_num改为需求类别数。
 
 训练自定义数据时，数据目录结构和ICDAR2015一致，标注数据格式如下：
