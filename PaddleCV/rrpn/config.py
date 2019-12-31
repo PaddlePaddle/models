@@ -150,12 +150,6 @@ _C.variances = [1., 1., 1., 1., 1.]
 # stride of feature map
 _C.rpn_stride = [16.0, 16.0]
 
-# Use roi pool or roi align, 'RoIPool' or 'RoIAlign'
-_C.roi_func = 'RoIAlign'
-
-# sampling ratio for roi align
-_C.sampling_ratio = 0
-
 # pooled width and pooled height 
 _C.roi_resolution = 14
 
@@ -164,12 +158,6 @@ _C.spatial_scale = 1. / 16.
 
 # resolution to represent mask labels
 _C.resolution = 14
-
-# Number of channels in the mask head
-_C.dim_reduced = 256
-
-# Threshold for converting soft masks to hard masks
-_C.mrcnn_thresh_binarize = 0.5
 
 #
 # SOLVER options

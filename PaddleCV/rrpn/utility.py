@@ -152,7 +152,6 @@ def parse_args():
     add_arg('rpn_nms_thresh',    float,   0.7,          "NMS threshold used on RPN proposals")
     # TRAIN VAL INFER
     add_arg('im_per_batch',       int,   1,        "Minibatch size.")
-    add_arg('max_size',         int,   1333,    "The resized image height.")
     add_arg('pixel_means',     float,   [0.485, 0.456, 0.406], "pixel mean")
     add_arg('nms_thresh',    float, 0.3,    "NMS threshold.")
     add_arg('score_thresh',    float, 0.01,    "score threshold for NMS.")
