@@ -127,14 +127,14 @@ data/icdar2015/
 
 下表为模型评估结果：
 
-Faster RCNN
+RRPN
 
-| 模型                   |   RoI处理方式  | 批量大小   | 迭代次数   | mAP  |
-| :--------------- | :--------: | :------------:    | :------------------:    |------: |
-| [Fluid RoIPool minibatch padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) | RoIPool | 8   |    180000        | 0.316 |
-| [Fluid RoIPool no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_no_padding.tar.gz)  | RoIPool | 8   |    180000        | 0.318 |
-| [Fluid RoIAlign no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding.tar.gz)  | RoIAlign | 8   |    180000        | 0.348 |
-| [Fluid RoIAlign no padding 2x](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding_2x.tar.gz)  | RoIAlign | 8   |    360000        | 0.367 |
+| 模型                   | 批量大小   | 迭代次数   | F1  |
+| :--------------- | :------------:    | :------------------:    |------: |
+| [RRPN](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) |8   |    17500       | 0.7967 |
+
+
+
 
 
 
