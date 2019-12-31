@@ -16,12 +16,12 @@
 
 
 ## 简介
-RRPN为两阶段目标检测器，可用于文字检测和旋转物体检测。通过对图像生成候选区域，提取特征，判别特征类别并修正候选框位置。
+RRPN是在Faster RCNN基础上拓展出的两阶段目标检测器，可用于文字检测和旋转物体检测。通过对图像生成候选区域，提取特征，判别特征类别并修正候选框位置。
 
 [RRPN](https://arxiv.org/abs/1703.01086) 整体网络可以分为4个主要内容：
 
 1. 基础卷积层。作为一种卷积神经网络目标检测方法，RRPN首先使用一组基础的卷积网络提取图像的特征图。特征图被后续RPN层和全连接层共享。本示例采用[ResNet-50](https://arxiv.org/abs/1512.03385)作为基础卷积层。
-2. 区域生成网络(RPN)。RPN网络用于生成候选区域(proposals)。该层通过一组固定的尺寸和比例得到一组带方向锚点(anchors), 通过softmax判断旋转的锚点属于前景或者背景，再利用区域回归修正锚点从而获得精确的候选区域。
+2. 区域生成网络(RPN)。RPN网络用于生成候选区域(proposals)。该层通过一组固定的尺寸、比例和角度得到一组带方向锚点(anchors), 通过softmax判断旋转的锚点属于前景或者背景，再利用区域回归修正锚点从而获得精确的候选区域。
 3. Rotated RoI Align。该层收集输入的特征图和带方向的候选区域，将带方向的候选区域映射到特征图中进行并池化为统一大小的区域特征图，送入全连接层判定目标类别。
 4. 检测层。利用区域特征图计算候选区域的类别，同时再次通过区域回归获得检测框最终的精确位置。
 
@@ -52,11 +52,11 @@ data/icdar2015/
 │   ├── gt_img_143.txt
 │   ├── gt_img_144.txt
 |   ...
-├── test_image
+├── ch4_test_images
 │   ├── img_111.jpg
 │   ├── img_112.jpg
 |   ...
-├── test_gt
+├── ch4_test_localization_transcription_gt
 │   ├── img_111.jpg
 │   ├── img_112.jpg
 |   ...
@@ -127,14 +127,14 @@ data/icdar2015/
 
 下表为模型评估结果：
 
-Faster RCNN
+RRPN
 
-| 模型                   |   RoI处理方式  | 批量大小   | 迭代次数   | mAP  |
-| :--------------- | :--------: | :------------:    | :------------------:    |------: |
-| [Fluid RoIPool minibatch padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) | RoIPool | 8   |    180000        | 0.316 |
-| [Fluid RoIPool no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_no_padding.tar.gz)  | RoIPool | 8   |    180000        | 0.318 |
-| [Fluid RoIAlign no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding.tar.gz)  | RoIAlign | 8   |    180000        | 0.348 |
-| [Fluid RoIAlign no padding 2x](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding_2x.tar.gz)  | RoIAlign | 8   |    360000        | 0.367 |
+| 模型                   | 批量大小   | 迭代次数   | F1  |
+| :--------------- | :------------:    | :------------------:    |------: |
+| [RRPN](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) |8   |    17500       | 0.7967 |
+
+
+
 
 
 
@@ -156,10 +156,4 @@ python infer.py \
 <img src="image/000000000139.jpg" height=300 width=400 hspace='10'/>
 <img src="image/000000127517.jpg" height=300 width=400 hspace='10'/> <br />
 Faster RCNN 预测可视化
-</p>
-
-<p align="center">
-<img src="image/000000000139_mask.jpg" height=300 width=400 hspace='10'/>
-<img src="image/000000127517_mask.jpg" height=300 width=400 hspace='10'/> <br />
-Mask RCNN 预测可视化
 </p>
