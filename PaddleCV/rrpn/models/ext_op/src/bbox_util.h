@@ -185,14 +185,14 @@ inline int inter_pts(T* pts1, T* pts2, T* int_pts) {
     }
   }
 
-  T temp_pts[2];
+  T out_pts[2];
 
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
-      bool has_pts = inter2line<T>(pts1, pts2, i, j, temp_pts);
+      bool has_pts = inter2line<T>(pts1, pts2, i, j, out_pts);
       if (has_pts) {
-        int_pts[num_of_inter * 2] = temp_pts[0];
-        int_pts[num_of_inter * 2 + 1] = temp_pts[1];
+        int_pts[num_of_inter * 2] = out_pts[0];
+        int_pts[num_of_inter * 2 + 1] = out_pts[1];
         num_of_inter++;
       }
     }
