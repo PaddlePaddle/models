@@ -47,7 +47,7 @@ lambda_identity = 0.5
 tep_per_epoch = 2974
 
 
-def optimizer_setting():
+def optimizer_setting(parameters):
     lr = 0.0002
     optimizer = fluid.optimizer.Adam(
         learning_rate=fluid.layers.piecewise_decay(
@@ -56,6 +56,7 @@ def optimizer_setting():
                 140 * step_per_epoch, 160 * step_per_epoch, 180 * step_per_epoch
             ],
             values=[lr, lr * 0.8, lr * 0.6, lr * 0.4, lr * 0.2, lr * 0.1]),
+        parameter_list=parameters,
         beta1=0.5)
     return optimizer
 
@@ -88,9 +89,14 @@ def train(args):
 
         losses = [[], []]
         t_time = 0
-        optimizer1 = optimizer_setting()
-        optimizer2 = optimizer_setting()
-        optimizer3 = optimizer_setting()
+
+        vars_G = cycle_gan.build_generator_resnet_9blocks_a.parameters() + cycle_gan.build_generator_resnet_9blocks_b.parameters()
+        vars_da = cycle_gan.build_gen_discriminator_a.parameters()
+        vars_db = cycle_gan.build_gen_discriminator_b.parameters()
+
+        optimizer1 = optimizer_setting(vars_G)
+        optimizer2 = optimizer_setting(vars_da)
+        optimizer3 = optimizer_setting(vars_db)
 
         for epoch in range(args.epoch):
             batch_id = 0
@@ -114,9 +120,8 @@ def train(args):
                 g_loss_out = g_loss.numpy()
 
                 g_loss.backward()
-                vars_G = cycle_gan.build_generator_resnet_9blocks_a.parameters() + cycle_gan.build_generator_resnet_9blocks_b.parameters()
 
-                optimizer1.minimize(g_loss, parameter_list=vars_G)
+                optimizer1.minimize(g_loss)
                 cycle_gan.clear_gradients()
 
                 fake_pool_B = B_pool.pool_image(fake_B).numpy()
@@ -137,8 +142,7 @@ def train(args):
                 d_loss_A = fluid.layers.reduce_mean(d_loss_A)
 
                 d_loss_A.backward()
-                vars_da = cycle_gan.build_gen_discriminator_a.parameters()
-                optimizer2.minimize(d_loss_A, parameter_list=vars_da)
+                optimizer2.minimize(d_loss_A)
                 cycle_gan.clear_gradients()
 
                 # optimize the d_B network
@@ -150,8 +154,7 @@ def train(args):
                 d_loss_B = fluid.layers.reduce_mean(d_loss_B)
 
                 d_loss_B.backward()
-                vars_db = cycle_gan.build_gen_discriminator_b.parameters()
-                optimizer3.minimize(d_loss_B, parameter_list=vars_db)
+                optimizer3.minimize(d_loss_B)
 
                 cycle_gan.clear_gradients()
 
