@@ -1,4 +1,4 @@
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved.
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ def eval():
         pred_boxes_v = result[0]
         nmsed_out = pred_boxes_v
         outs = np.array(nmsed_out)
-        res = get_dict(outs, data[0], keys)
+        res = get_key_dict(outs, data[0], keys)
         res_list.append(res)
         if i % 50 == 0:
             logger.info('test_iter {}'.format(i))

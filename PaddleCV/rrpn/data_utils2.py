@@ -1,4 +1,4 @@
-# Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserved
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,14 +41,15 @@ class DatasetPath(object):
         if self.mode == 'train':
             return os.path.join(self.data_dir, 'ch4_training_images')
         elif self.mode == 'val':
-            return os.path.join(self.data_dir, 'test_image')
+            return os.path.join(self.data_dir, 'ch4_test_images')
 
     def get_file_list(self):
         if self.mode == 'train':
             return os.path.join(self.data_dir,
                                 'ch4_training_localization_transcription_gt')
         elif self.mode == 'val':
-            return os.path.join(self.data_dir, 'test_gt')
+            return os.path.join(self.data_dir,
+                                'ch4_test_localization_transcription_gt')
 
 
 def get_image_blob(roidb, mode):
@@ -56,7 +57,6 @@ def get_image_blob(roidb, mode):
     scales.
     """
     if mode == 'train' or mode == 'val':
-        #img = Image.open(roidb['image']).convert("RGB")
         with open(roidb['image'], 'rb') as f:
             data = f.read()
         data = np.frombuffer(data, dtype='uint8')
@@ -137,13 +137,6 @@ def _resize(im, target_size=800, max_size=1333):
         resize_w = selected_size
         resize_h = selected_size
 
-#        im = cv2.resize(
-#            im,
-#            None,
-#            None,
-#            fx=im_scale_x,
-#            fy=im_scale_y,
-#            interpolation=2)
     im = Image.fromarray(im)
     im = im.resize((int(resize_w), int(resize_h)), 2)
     im = np.array(im)
@@ -163,7 +156,6 @@ def _rotation(image,
     if np.random.rand() <= prob:
         angle = np.array(
             np.random.rand(1) * rotate_range - shift, dtype=np.int16)
-        #angle = np.array(np.array([1]) * rotate_range - shift, dtype=np.int16)
     '''
     rotate image
     '''

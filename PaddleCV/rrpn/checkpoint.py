@@ -30,54 +30,7 @@ import paddle.fluid as fluid
 import logging
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    #    'load_checkpoint',
-    'load_and_fusebn',
-    #    'load_params',
-    #    'save',
-]
 
-
-#def is_url(path):
-#    """
-#    Whether path is URL.
-#    Args:
-#        path (string): URL string or not.
-#    """
-#    return path.startswith('http://') or path.startswith('https://')
-#
-#
-#def _get_weight_path(path):
-#    env = os.environ
-#    if 'PADDLE_TRAINERS_NUM' in env and 'PADDLE_TRAINER_ID' in env:
-#        trainer_id = int(env['PADDLE_TRAINER_ID'])
-#        num_trainers = int(env['PADDLE_TRAINERS_NUM'])
-#        if num_trainers <= 1:
-#            path = get_weights_path(path)
-#        else:
-#            from ppdet.utils.download import map_path, WEIGHTS_HOME
-#            weight_path = map_path(path, WEIGHTS_HOME)
-#            lock_path = weight_path + '.lock'
-#            if not os.path.exists(weight_path):
-#                try:
-#                    os.makedirs(os.path.dirname(weight_path))
-#                except OSError as e:
-#                    if e.errno != errno.EEXIST:
-#                        raise
-#                with open(lock_path, 'w'):  # touch    
-#                    os.utime(lock_path, None)
-#                if trainer_id == 0:
-#                    get_weights_path(path)
-#                    os.remove(lock_path)
-#                else:
-#                    while os.path.exists(lock_path):
-#                        time.sleep(1)
-#            path = weight_path
-#    else:
-#        path = get_weights_path(path)
-#    return path
-#
-#
 def load_params(exe, prog, path, ignore_params=[]):
     """
     Load model from the given path.
@@ -89,9 +42,6 @@ def load_params(exe, prog, path, ignore_params=[]):
             It can be specified by finetune_exclude_pretrained_params 
             and the usage can refer to docs/TRANSFER_LEARNING.md
     """
-
-    #if is_url(path):
-    #    path = _get_weight_path(path)
 
     if not os.path.exists(path):
         raise ValueError("Model pretrain path {} does not "
@@ -118,44 +68,6 @@ def load_params(exe, prog, path, ignore_params=[]):
     fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
 
 
-#
-#
-#def load_checkpoint(exe, prog, path):
-#    """
-#    Load model from the given path.
-#    Args:
-#        exe (fluid.Executor): The fluid.Executor object.
-#        prog (fluid.Program): load weight to which Program object.
-#        path (string): URL string or loca model path.
-#    """
-#    if is_url(path):
-#        path = _get_weight_path(path)
-#
-#    if not os.path.exists(path):
-#        raise ValueError("Model checkpoint path {} does not "
-#                         "exists.".format(path))
-#
-#    logger.info('Loading checkpoint from {}...'.format(path))
-#    fluid.io.load_persistables(exe, path, prog)
-#
-#
-#def global_step(scope=None):
-#    """
-#    Load global step in scope.
-#    Args:
-#        scope (fluid.Scope): load global step from which scope. If None,
-#            from default global_scope().
-#
-#    Returns:
-#        global step: int.
-#    """
-#    if scope is None:
-#        scope = fluid.global_scope()
-#    v = scope.find_var('@LR_DECAY_COUNTER@')
-#    step = np.array(v.get_tensor())[0] if v else 0
-#    return step
-#
-#
 def save(exe, prog, path):
     """
     Load model from the given path.
@@ -173,7 +85,6 @@ def save(exe, prog, path):
 def load_and_fusebn(exe, prog, path):
     """
     Fuse params of batch norm to scale and bias.
-
     Args:
         exe (fluid.Executor): The fluid.Executor object.
         prog (fluid.Program): save weight from which Program object.
@@ -181,9 +92,6 @@ def load_and_fusebn(exe, prog, path):
     """
     logger.info('Load model and fuse batch norm if have from {}...'.format(
         path))
-
-    #if is_url(path):
-    #    path = _get_weight_path(path)
 
     if not os.path.exists(path):
         raise ValueError("Model path {} does not exists.".format(path))

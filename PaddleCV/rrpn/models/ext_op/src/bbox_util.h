@@ -10,7 +10,28 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License. */
+limitations under the License.
+
+Based on
+--------------------------------------------------------
+@misc{ma2019rrpn,
+    author = {Jianqi Ma},
+    title = {{RRPN in pytorch}},
+    year = {2019},
+    howpublished = {\url{https://github.com/mjq11302010044/RRPN_pytorch}},
+}
+@article{Jianqi17RRPN,
+    Author = {Jianqi Ma and Weiyuan Shao and Hao Ye and Li Wang and Hong Wang
+and Yingbin Zheng and Xiangyang Xue},
+    Title = {Arbitrary-Oriented Scene Text Detection via Rotation Proposals},
+    journal = {IEEE Transactions on Multimedia},
+    volume={20},
+    number={11},
+    pages={3111-3122},
+    year={2018}
+}
+--------------------------------------------------------
+*/
 
 #pragma once
 #include <algorithm>

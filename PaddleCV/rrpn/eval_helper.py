@@ -1,4 +1,4 @@
-#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import six
 import cv2
 
 
-def get_dict(out, data, key):
+def get_key_dict(out, data, key):
     res = {}
     for i in range(len(key)):
         if i == 0:
