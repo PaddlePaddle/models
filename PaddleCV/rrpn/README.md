@@ -52,11 +52,11 @@ data/icdar2015/
 │   ├── gt_img_143.txt
 │   ├── gt_img_144.txt
 |   ...
-├── test_image
+├── ch4_test_images
 │   ├── img_111.jpg
 │   ├── img_112.jpg
 |   ...
-├── test_gt
+├── ch4_test_localization_transcription_gt
 │   ├── img_111.jpg
 │   ├── img_112.jpg
 |   ...
