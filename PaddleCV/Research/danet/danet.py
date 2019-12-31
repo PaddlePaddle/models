@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import shutil
 import paddle.fluid as fluid
@@ -150,9 +153,9 @@ class BottleneckBlock(fluid.dygraph.Layer):
                                 act=None)
 
     def forward(self, inputs):
-        x = self._conv0(inputs) 
-        x = self._conv1(x)  
-        x = self._conv2(x) 
+        x = self._conv0(inputs)
+        x = self._conv1(x)
+        x = self._conv2(x)
         if self.same:
             skip = inputs
         else:
@@ -341,7 +344,7 @@ class ResNet(fluid.dygraph.Layer):
             x = self._avgpool(x)
             x = self.fc(x)
             return x
-        else:  
+        else:
             return c1, c2, c3, c4
 
 
@@ -367,23 +370,23 @@ class CAM(fluid.dygraph.Layer):
 
     def forward(self, inputs):
         batch_size, c, h, w = inputs.shape
-        out_b = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])  
-        out_c = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])  
-        out_c_t = fluid.layers.transpose(out_c, perm=[0, 2, 1])  
-        mul_bc = fluid.layers.matmul(out_b, out_c_t)  
+        out_b = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])
+        out_c = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])
+        out_c_t = fluid.layers.transpose(out_c, perm=[0, 2, 1])
+        mul_bc = fluid.layers.matmul(out_b, out_c_t)
 
         mul_bc_max = fluid.layers.reduce_max(mul_bc, dim=-1, keep_dim=True)
         mul_bc_max = fluid.layers.expand(mul_bc_max, expand_times=[1, 1, c])
-        x = fluid.layers.elementwise_sub(mul_bc_max, mul_bc)  
+        x = fluid.layers.elementwise_sub(mul_bc_max, mul_bc)
 
-        attention = fluid.layers.softmax(x, use_cudnn=True, axis=-1)  
+        attention = fluid.layers.softmax(x, use_cudnn=True, axis=-1)
 
-        out_d = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])  
-        attention_mul = fluid.layers.matmul(attention, out_d)  
+        out_d = fluid.layers.reshape(inputs, shape=[batch_size, self.in_channels, h * w])
+        attention_mul = fluid.layers.matmul(attention, out_d)
 
-        attention_reshape = fluid.layers.reshape(attention_mul, shape=[batch_size, self.in_channels, h, w])  
-        gamma_attention = fluid.layers.elementwise_mul(attention_reshape, self.gamma)  
-        out = fluid.layers.elementwise_add(gamma_attention, inputs)  
+        attention_reshape = fluid.layers.reshape(attention_mul, shape=[batch_size, self.in_channels, h, w])
+        gamma_attention = fluid.layers.elementwise_mul(attention_reshape, self.gamma)
+        out = fluid.layers.elementwise_add(gamma_attention, inputs)
         return out
 
 
@@ -440,22 +443,22 @@ class PAM(fluid.dygraph.Layer):
 
     def forward(self, inputs):
         batch_size, c, h, w = inputs.shape
-        out_b = self._convB(inputs)  
-        out_b_reshape = fluid.layers.reshape(out_b, shape=[batch_size, self.channel_in, h * w])  
-        out_b_reshape_t = fluid.layers.transpose(out_b_reshape, perm=[0, 2, 1])  
-        out_c = self._convC(inputs)  
-        out_c_reshape = fluid.layers.reshape(out_c, shape=[batch_size, self.channel_in, h * w])  
+        out_b = self._convB(inputs)
+        out_b_reshape = fluid.layers.reshape(out_b, shape=[batch_size, self.channel_in, h * w])
+        out_b_reshape_t = fluid.layers.transpose(out_b_reshape, perm=[0, 2, 1])
+        out_c = self._convC(inputs)
+        out_c_reshape = fluid.layers.reshape(out_c, shape=[batch_size, self.channel_in, h * w])
 
-        mul_bc = fluid.layers.matmul(out_b_reshape_t, out_c_reshape)  
-        soft_max_bc = fluid.layers.softmax(mul_bc, use_cudnn=True, axis=-1)  
+        mul_bc = fluid.layers.matmul(out_b_reshape_t, out_c_reshape)
+        soft_max_bc = fluid.layers.softmax(mul_bc, use_cudnn=True, axis=-1)
 
-        out_d = self._convD(inputs)  
-        out_d_reshape = fluid.layers.reshape(out_d, shape=[batch_size, self.channel_in * 8, h * w])  
+        out_d = self._convD(inputs)
+        out_d_reshape = fluid.layers.reshape(out_d, shape=[batch_size, self.channel_in * 8, h * w])
         attention = fluid.layers.matmul(out_d_reshape, fluid.layers.transpose(soft_max_bc, perm=[0, 2, 1]))
-        attention = fluid.layers.reshape(attention, shape=[batch_size, self.channel_in * 8, h, w])  
+        attention = fluid.layers.reshape(attention, shape=[batch_size, self.channel_in * 8, h, w])
 
-        gamma_attention = fluid.layers.elementwise_mul(attention, self.gamma)  
-        out = fluid.layers.elementwise_add(gamma_attention, inputs)  
+        gamma_attention = fluid.layers.elementwise_mul(attention, self.gamma)
+        out = fluid.layers.elementwise_add(gamma_attention, inputs)
         return out
 
 
@@ -543,7 +546,7 @@ class DAHead(fluid.dygraph.Layer):
 
         # dropout2d
         ones = fluid.layers.ones(shape=[self.batch_size, num_channels], dtype='float32')
-        dropout1d_P = fluid.layers.dropout(ones, 0.1)
+        dropout1d_P = fluid.layers.dropout(ones, 0.1, dropout_implementation='upscale_in_train')
         out_position_drop2d = fluid.layers.elementwise_mul(position, dropout1d_P, axis=0)
         dropout1d_P.stop_gradient = True
 
@@ -553,18 +556,18 @@ class DAHead(fluid.dygraph.Layer):
 
         # dropout2d
         ones2 = fluid.layers.ones(shape=[self.batch_size, num_channels], dtype='float32')
-        dropout1d_C = fluid.layers.dropout(ones2, 0.1)
+        dropout1d_C = fluid.layers.dropout(ones2, 0.1, dropout_implementation='upscale_in_train')
         out_channel_drop2d = fluid.layers.elementwise_mul(channel, dropout1d_C, axis=0)
         dropout1d_C.stop_gradient = True
         position_out = self._pam_last_conv(out_position_drop2d)
         channel_out = self._cam_last_conv(out_channel_drop2d)
 
         feat_sum = fluid.layers.elementwise_add(position, channel, axis=1)
-        feat_sum_batch_size, feat_sum_num_channels = feat_sum.shape[:2]  
+        feat_sum_batch_size, feat_sum_num_channels = feat_sum.shape[:2]
 
         # dropout2d
         feat_sum_ones = fluid.layers.ones(shape=[self.batch_size, feat_sum_num_channels], dtype='float32')
-        dropout1d_sum = fluid.layers.dropout(feat_sum_ones, 0.1)
+        dropout1d_sum = fluid.layers.dropout(feat_sum_ones, 0.1, dropout_implementation='upscale_in_train')
         dropout2d_feat_sum = fluid.layers.elementwise_mul(feat_sum, dropout1d_sum, axis=0)
         dropout1d_sum.stop_gradient = True
         feat_sum_out = self._last_conv(dropout2d_feat_sum)

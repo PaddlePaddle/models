@@ -125,7 +125,6 @@ def main():
             res_vars = lm_model.lm_model(
                 config.hidden_size,
                 config.vocab_size,
-                config.batch_size,
                 num_layers=config.num_layers,
                 num_steps=config.num_steps,
                 init_scale=config.init_scale,
@@ -160,7 +159,6 @@ def main():
             lm_model.lm_model(
                 config.hidden_size,
                 config.vocab_size,
-                config.batch_size,
                 num_layers=config.num_layers,
                 num_steps=config.num_steps,
                 init_scale=config.init_scale,
@@ -319,7 +317,7 @@ def main():
                 print(
                     "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
                     % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
-            
+
             # profiler tools for benchmark
             if args.profile and batch_id == log_interval:
                 profiler.reset_profiler()

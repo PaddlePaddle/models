@@ -70,7 +70,7 @@ if __name__ == "__main__":
     if cfg.profile:
         if cfg.use_gpu:
             with fluid.profiler.profiler('All', 'total',
-                                         '/tmp/profile') as prof:
+                                         cfg.profiler_path) as prof:
                 train(cfg)
         else:
             with fluid.profiler.profiler("CPU", sorted_key='total') as cpuprof:

@@ -267,11 +267,12 @@ class UnifiedTransformer(ModelBase):
         Create attention mask.
 
         @param : input_mask
-        @type : Variable(shape: [batch_size, max_seq_len, 1])
+        @type : Variable(shape: [batch_size, max_seq_len])
 
         @param : auto_regressive
         @type : bool
         """
+        input_mask = fluid.layers.unsqueeze(input=input_mask, axes=[2])
         seq_len = input_mask.shape[1]
 
         input_mask = layers.cast(input_mask, self._dtype)

@@ -16,23 +16,30 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import distutils.util
-import numpy as np
 import six
 import argparse
 import functools
-import logging
 import sys
 import os
+import logging
 import warnings
 import signal
+import json
 
+import numpy as np
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.wrapped_decorator import signature_safe_contextmanager
 from paddle.fluid.framework import Program, program_guard, name_scope, default_main_program
 from paddle.fluid import unique_name, layers
+
+import distutils.util
 from utils import dist_utils
+
+from utils.optimizer import Optimizer
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def print_arguments(args):
@@ -50,10 +57,11 @@ def print_arguments(args):
     :param args: Input argparse.Namespace for printing.
     :type args: argparse.Namespace
     """
-    print("-------------  Configuration Arguments -------------")
+
+    logger.info("-------------  Configuration Arguments -------------")
     for arg, value in sorted(six.iteritems(vars(args))):
-        print("%25s : %s" % (arg, value))
-    print("----------------------------------------------------")
+        logger.info("%25s : %s" % (arg, value))
+    logger.info("----------------------------------------------------")
 
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
@@ -91,6 +99,7 @@ def parse_args():
     add_arg('model_save_dir',           str,    "./output",        "The directory path to save model.")
     add_arg('data_dir',                 str,    "./data/ILSVRC2012/",   "The ImageNet dataset root directory.")
     add_arg('pretrained_model',         str,    None,                   "Whether to load pretrained model.")
+    add_arg('finetune_exclude_pretrained_params', str, None,            "Ignore params when doing finetune")
     add_arg('checkpoint',               str,    None,                   "Whether to resume checkpoint.")
     add_arg('print_step',               int,    10,                     "The steps interval to print logs")
     add_arg('save_step',                int,    1,                      "The steps interval to save checkpoints")
@@ -98,11 +107,11 @@ def parse_args():
     # SOLVER AND HYPERPARAMETERS
     add_arg('model',                    str,    "ResNet50",   "The name of network.")
     add_arg('total_images',             int,    1281167,                "The number of total training images.")
+    parser.add_argument('--image_shape', nargs='+', type=int, default=[3, 224, 224], help="The shape of image")
     add_arg('num_epochs',               int,    120,                    "The number of total epochs.")
     add_arg('class_dim',                int,    1000,                   "The number of total classes.")
-    add_arg('image_shape',              str,    "3,224,224",            "The size of Input image, order: [channels, height, weidth] ")
-    add_arg('batch_size',               int,    8,                      "Minibatch size on a device.")
-    add_arg('test_batch_size',          int,    16,                     "Test batch size on a deveice.")
+    add_arg('batch_size',               int,    8,                      "Minibatch size on all the devices.")
+    add_arg('test_batch_size',          int,    8,                   "Test batch size on all the devices.")
     add_arg('lr',                       float,  0.1,                    "The learning rate.")
     add_arg('lr_strategy',              str,    "piecewise_decay",      "The learning rate decay strategy.")
     add_arg('l2_decay',                 float,  1e-4,                   "The l2_decay parameter.")
@@ -119,7 +128,6 @@ def parse_args():
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
     add_arg('upper_ratio',              float,  4./3.,                  "The value of upper_ratio in ramdom_crop")
     add_arg('resize_short_size',        int,    256,                    "The value of resize_short_size")
-    add_arg('crop_size',                int,    224,                    "The value of crop size")
     add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
@@ -130,24 +138,30 @@ def parse_args():
     parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
     # SWITCH
-    #NOTE: (2019/08/08) FP16 is moving to PaddlePaddle/Fleet now
-    #add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
-    #add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
+    add_arg('validate',                 bool,   True,                   "whether to validate when training.")
+    add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
+    add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
+    add_arg('use_dynamic_loss_scaling', bool,   True,                   "Whether to use dynamic loss scaling.")
+
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
-    add_arg('random_seed',              int,    None,                   "random seed")
     add_arg('use_ema',                  bool,   False,                  "Whether to use ExponentialMovingAverage.")
     add_arg('ema_decay',                float,  0.9999,                 "The value of ema decay rate")
     add_arg('padding_type',             str,    "SAME",                 "Padding type of convolution")
     add_arg('use_se',                   bool,   True,                   "Whether to use Squeeze-and-Excitation module for EfficientNet.")
-    # yapf: enable
+
     #NOTE: args for profiler
-    add_arg('is_profiler',              int,    0,                      "the profiler switch.(used for benchmark)")
-    add_arg('profiler_path',            str,    './',                   "the profiler output file path.(used for benchmark)")
-    add_arg('max_iter',                 int,    0,                    "the max train batch num.(used for benchmark)")
-    add_arg('validate',                 int,    1,                      "whether validate.(used for benchmark)")
+    add_arg("enable_ce",                bool,   False,                  "Whether to enable ce")
+    add_arg('random_seed',              int,    None,                   "random seed")
+    add_arg('is_profiler',              bool,   False,                  "Whether to start the profiler")
+    add_arg('profiler_path',            str,    './profilier_files',                   "the profiler output file path")
+    add_arg('max_iter',                 int,    0,                      "the max train batch num")
+    add_arg('same_feed',                int,    0,                      "whether to feed same images")
+
+
+    # yapf: enable
     args = parser.parse_args()
 
     return args
@@ -158,16 +172,14 @@ def check_gpu():
     Log error and exit when set use_gpu=true in paddlepaddle
     cpu ver sion.
     """
-    logger = logging.getLogger(__name__)
     err = "Config use_gpu cannot be set as true while you are " \
                 "using paddlepaddle cpu version ! \nPlease try: \n" \
                 "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
                 "\t2. Set use_gpu as false in config file to run " \
                 "model on CPU"
-
     try:
         if args.use_gpu and not fluid.is_compiled_with_cuda():
-            print(err)
+            logger.error(err)
             sys.exit(1)
     except Exception as e:
         pass
@@ -185,7 +197,7 @@ def check_version():
     try:
         fluid.require_version('1.6.0')
     except Exception as e:
-        print(err)
+        logger.error(err)
         sys.exit(1)
 
 
@@ -204,29 +216,30 @@ def check_args(args):
         args.model, model_list)
 
     # check learning rate strategy
-    lr_strategy_list = [
-        "piecewise_decay", "cosine_decay", "linear_decay",
-        "cosine_decay_warmup", "exponential_decay_warmup"
-    ]
+    lr_strategy_list = [l for l in dir(Optimizer) if not l.startswith('__')]
     if args.lr_strategy not in lr_strategy_list:
-        warnings.warn(
-            "\n{} is not in lists: {}, \nUse default learning strategy now.".
+        logger.warning(
+            "\n{} is not in lists: {}, \nUse default learning strategy now!".
             format(args.lr_strategy, lr_strategy_list))
         args.lr_strategy = "default_decay"
+
     # check confict of GoogLeNet and mixup
     if args.model == "GoogLeNet":
         assert args.use_mixup == False, "Cannot use mixup processing in GoogLeNet, please set use_mixup = False."
 
+    # check interpolation of reader settings
     if args.interpolation:
         assert args.interpolation in [
             0, 1, 2, 3, 4
         ], "Wrong interpolation, please set:\n0: cv2.INTER_NEAREST\n1: cv2.INTER_LINEAR\n2: cv2.INTER_CUBIC\n3: cv2.INTER_AREA\n4: cv2.INTER_LANCZOS4"
 
+    # check padding type
     if args.padding_type:
         assert args.padding_type in [
             "SAME", "VALID", "DYNAMIC"
         ], "Wrong padding_type, please set:\nSAME\nVALID\nDYNAMIC"
 
+    # check checkpint and pretrained_model
     assert args.checkpoint is None or args.pretrained_model is None, "Do not init model by checkpoint and pretrained_model both."
 
     # check pretrained_model path for loading
@@ -243,14 +256,6 @@ def check_args(args):
             args.checkpoint
         ), "please support available checkpoint path for initing model."
 
-    # check params for loading
-    """
-    if args.save_params:
-        assert isinstance(args.save_params, str)
-        assert os.path.isdir(
-            args.save_params), "please support available save_params path."
-    """
-
     # check gpu: when using gpu, the number of visible cards should divide batch size
     if args.use_gpu:
         assert args.batch_size % fluid.core.get_cuda_device_count(
@@ -262,35 +267,95 @@ def check_args(args):
         args.data_dir
     ), "Data doesn't exist in {}, please load right path".format(args.data_dir)
 
-    #check gpu
+    # check CE
+    if args.enable_ce:
+        args.random_seed = 0
+        logger.warning("CE is running now! already set random seed to 0")
 
+    # check class_dim
+    assert args.class_dim > 1, "class_dim must greater than 1"
+
+    # check dali preprocess
+    if args.use_dali:
+        logger.warning(
+            "DALI preprocessing is activated!!!\nWarning: 1. Please make sure paddlepaddle is compiled by GCC5.4 or later version!\n\t 2. Please make sure nightly builds DALI is installed correctly.\n----------------------------------------------------"
+        )
+
+    #check gpu
     check_gpu()
     check_version()
 
 
 def init_model(exe, args, program):
+    """load model from checkpoint or pretrained model
+    """
+
     if args.checkpoint:
         fluid.io.load_persistables(exe, args.checkpoint, main_program=program)
-        print("Finish initing model from %s" % (args.checkpoint))
+        logger.info("Finish initing model from %s" % (args.checkpoint))
 
     if args.pretrained_model:
+        """
+        # yapf: disable
+        # This is a dict of fc layers in all the classification models.
+        final_fc_name = [
+                         "fc8_weights","fc8_offset", #alexnet
+                         "fc_weights","fc_offset", #darknet, densenet, dpn, hrnet, mobilenet_v3, res2net, res2net_vd, resnext, resnext_vd, xception
+                         #efficient
+                         "out","out_offset", "out1","out1_offset", "out2","out2_offset", #googlenet
+                         "final_fc_weights", "final_fc_offset", #inception_v4
+                         "fc7_weights", "fc7_offset", #mobilenetv1
+                         "fc10_weights", "fc10_offset", #mobilenetv2
+                         "fc_0", #resnet, resnet_vc, resnet_vd
+                         "fc.weight", "fc.bias", #resnext101_wsl
+                         "fc6_weights", "fc6_offset", #se_resnet_vd, se_resnext, se_resnext_vd, shufflenet_v2, shufflenet_v2_swish,
+                         #squeezenet
+                         "fc8_weights", "fc8_offset", #vgg
+                         "fc_bias" #"fc_weights", xception_deeplab
+                         ]
+        # yapf: enable
+        """
+        final_fc_name = []
+        if args.finetune_exclude_pretrained_params:
+            final_fc_name = [
+                str(s)
+                for s in args.finetune_exclude_pretrained_params.split(",")
+            ]
 
-        def if_exist(var):
-            return os.path.exists(os.path.join(args.pretrained_model, var.name))
+        def is_parameter(var):
+            fc_exclude_flag = False
+            for item in final_fc_name:
+                if item in var.name:
+                    fc_exclude_flag = True
 
+            return isinstance(
+                var, fluid.framework.
+                Parameter) and not fc_exclude_flag and os.path.exists(
+                    os.path.join(args.pretrained_model, var.name))
+
+        logger.info("Load pretrain weights from {}, exclude params {}.".format(
+            args.pretrained_model, final_fc_name))
+        vars = filter(is_parameter, program.list_vars())
         fluid.io.load_vars(
-            exe,
-            args.pretrained_model,
-            main_program=program,
-            predicate=if_exist)
+            exe, args.pretrained_model, vars=vars, main_program=program)
 
 
 def save_model(args, exe, train_prog, info):
+    """save model in model_path
+    """
+
     model_path = os.path.join(args.model_save_dir, args.model, str(info))
     if not os.path.isdir(model_path):
         os.makedirs(model_path)
     fluid.io.save_persistables(exe, model_path, main_program=train_prog)
-    print("Already save model in %s" % (model_path))
+    logger.info("Already save model in %s" % (model_path))
+
+
+def save_json(info, path):
+    """ save eval result or infer result to file as json format.
+    """
+    with open(path, 'w') as f:
+        json.dump(info, f)
 
 
 def create_data_loader(is_train, args):
@@ -306,8 +371,7 @@ def create_data_loader(is_train, args):
     Returns:
         data_loader and the input data of net, 
     """
-    image_shape = [int(m) for m in args.image_shape.split(",")]
-
+    image_shape = args.image_shape
     feed_image = fluid.data(
         name="feed_image",
         shape=[None] + image_shape,
@@ -319,6 +383,8 @@ def create_data_loader(is_train, args):
     feed_y_a = fluid.data(
         name="feed_y_a", shape=[None, 1], dtype="int64", lod_level=0)
 
+    capacity = 64 if int(os.environ.get('PADDLE_TRAINERS_NUM', 1)) <= 1 else 8
+
     if is_train and args.use_mixup:
         feed_y_b = fluid.data(
             name="feed_y_b", shape=[None, 1], dtype="int64", lod_level=0)
@@ -327,7 +393,7 @@ def create_data_loader(is_train, args):
 
         data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
-            capacity=64,
+            capacity=capacity,
             use_double_buffer=True,
             iterable=True)
         return data_loader, [feed_image, feed_y_a, feed_y_b, feed_lam]
@@ -337,14 +403,21 @@ def create_data_loader(is_train, args):
 
         data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_label],
-            capacity=64,
+            capacity=capacity,
             use_double_buffer=True,
             iterable=True)
 
         return data_loader, [feed_image, feed_label]
 
 
-def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
+def print_info(info_mode,
+               metrics,
+               time_info,
+               pass_id=0,
+               batch_id=0,
+               print_step=1,
+               device_num=1,
+               class_dim=5):
     """print function
 
     Args:
@@ -355,30 +428,33 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
         time_info: time infomation
         info_mode: mode
     """
+    #XXX: Use specific name to choose pattern, not the length of metrics. 
     if info_mode == "batch":
         if batch_id % print_step == 0:
             #if isinstance(metrics,np.ndarray):
             # train and mixup output
             if len(metrics) == 2:
                 loss, lr = metrics
-                print(
+                logger.info(
                     "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
                            "%2.4f sec" % time_info))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
-                print(
-                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, lr {5}, elapse {6}".
+                logger.info(
+                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info))
+                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
+                           min(class_dim, 5)))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
-                print(
-                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc5 {4}, elapse {5}".
+                logger.info(
+                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%2.4f sec" % time_info))
+                           "%.5f" % acc5, "%2.4f sec" % time_info,
+                           min(class_dim, 5)))
             else:
                 raise Exception(
                     "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".
@@ -387,28 +463,54 @@ def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
 
     elif info_mode == "epoch":
         ## TODO add time elapse
-        #if isinstance(metrics,np.ndarray):
         if len(metrics) == 5:
             train_loss, _, test_loss, test_acc1, test_acc5 = metrics
-            print(
-                "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc5 {4}".
+            logger.info(
+                "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc{5} {4}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % test_loss, "%.5f"
-                       % test_acc1, "%.5f" % test_acc5))
+                       % test_acc1, "%.5f" % test_acc5, min(class_dim, 5)))
         elif len(metrics) == 7:
             train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
-            print(
-                "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc5 {3},test_loss {4}, test_acc1 {5}, test_acc5 {6}".
+            logger.info(
+                "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc{7} {3},test_loss {4}, test_acc1 {5}, test_acc{7} {6}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % train_acc1, "%.5f"
                        % train_acc5, "%.5f" % test_loss, "%.5f" % test_acc1,
-                       "%.5f" % test_acc5))
+                       "%.5f" % test_acc5, min(class_dim, 5)))
         sys.stdout.flush()
     elif info_mode == "ce":
-        raise Warning("CE code is not ready")
+        assert len(
+            metrics
+        ) == 7, "Enable CE: The Metrics should contain train_loss, train_acc1, train_acc5, test_loss, test_acc1, test_acc5, and train_speed"
+        assert len(
+            time_info
+        ) > 10, "0~9th batch statistics will drop when doing benchmark or ce, because it might be mixed with startup time, so please make sure training at least 10 batches."
+        print_ce(device_num, metrics, time_info)
     else:
         raise Exception("Illegal info_mode")
 
 
-def best_strategy_compiled(args, program, loss, exe):
+def print_ce(device_num, metrics, time_info):
+    """ Print log for CE(for internal test).
+    """
+    train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
+
+    train_speed = np.mean(np.array(time_info[10:]))
+
+    logger.info("kpis\ttrain_cost_card{}\t{}".format(device_num, train_loss))
+    logger.info("kpis\ttrain_acc1_card{}\t{}".format(device_num, train_acc1))
+    logger.info("kpis\ttrain_acc5_card{}\t{}".format(device_num, train_acc5))
+    logger.info("kpis\ttest_cost_card{}\t{}".format(device_num, test_loss))
+    logger.info("kpis\ttest_acc1_card{}\t{}".format(device_num, test_acc1))
+    logger.info("kpis\ttest_acc5_card{}\t{}".format(device_num, test_acc5))
+    logger.info("kpis\ttrain_speed_card{}\t{}".format(device_num, train_speed))
+
+
+def best_strategy_compiled(args,
+                           program,
+                           loss,
+                           exe,
+                           mode="train",
+                           share_prog=None):
     """make a program which wrapped by a compiled program
     """
 
@@ -416,11 +518,12 @@ def best_strategy_compiled(args, program, loss, exe):
         return program
     else:
         build_strategy = fluid.compiler.BuildStrategy()
-        #Feature will be supported in Fluid v1.6
-        #build_strategy.enable_inplace = True
 
         exec_strategy = fluid.ExecutionStrategy()
-        exec_strategy.num_threads = fluid.core.get_cuda_device_count()
+
+        if args.use_gpu:
+            exec_strategy.num_threads = fluid.core.get_cuda_device_count()
+
         exec_strategy.num_iteration_per_drop_scope = 10
 
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
@@ -431,7 +534,8 @@ def best_strategy_compiled(args, program, loss, exe):
             exec_strategy.num_threads = 1
 
         compiled_program = fluid.CompiledProgram(program).with_data_parallel(
-            loss_name=loss.name,
+            loss_name=loss.name if mode == "train" else None,
+            share_vars_from=share_prog if mode == "val" else None,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
 

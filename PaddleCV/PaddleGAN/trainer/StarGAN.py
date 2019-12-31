@@ -17,6 +17,7 @@ from __future__ import print_function
 from network.StarGAN_network import StarGAN_model
 from util import utility
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import sys
 import time
 import copy
@@ -161,7 +162,7 @@ class DTrainer():
             alpha = fluid.layers.uniform_random_batch_size_like(
                 input=a, shape=shape, min=0.0, max=1.0)
 
-            inner = b * (1.0 - alpha) + a * alpha
+            inner = fluid.layers.elementwise_mul(b, (1.0-alpha), axis=0) + fluid.layers.elementwise_mul(a, alpha, axis=0)
             return inner
 
         x = _interpolate(real, fake)
@@ -305,10 +306,12 @@ class StarGAN(object):
                 build_strategy=build_strategy)
 
         t_time = 0
-
+        total_train_batch = 0  # used for benchmark
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for data in py_reader():
+                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter: # used for benchmark
+                    return
                 s_time = time.time()
                 d_loss_real, d_loss_fake, d_loss, d_loss_cls, d_loss_gp = exe.run(
                     dis_trainer_program,
@@ -344,6 +347,12 @@ class StarGAN(object):
 
                 sys.stdout.flush()
                 batch_id += 1
+                total_train_batch += 1  # used for benchmark
+                # profiler tools
+                if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
+                    profiler.reset_profiler()
+                elif self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq + 5:
+                    return
 
             if self.cfg.run_test:
                 image_name = fluid.data(

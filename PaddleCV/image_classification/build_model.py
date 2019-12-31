@@ -48,7 +48,8 @@ def _basic_model(data, model, args, is_train):
 
     avg_cost = fluid.layers.mean(cost)
     acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
-    acc_top5 = fluid.layers.accuracy(input=softmax_out, label=label, k=5)
+    acc_top5 = fluid.layers.accuracy(
+        input=softmax_out, label=label, k=min(5, args.class_dim))
     return [avg_cost, acc_top1, acc_top5]
 
 
@@ -73,7 +74,8 @@ def _googlenet_model(data, model, args, is_train):
 
     avg_cost = avg_cost0 + 0.3 * avg_cost1 + 0.3 * avg_cost2
     acc_top1 = fluid.layers.accuracy(input=out0, label=label, k=1)
-    acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
+    acc_top5 = fluid.layers.accuracy(
+        input=out0, label=label, k=min(5, args.class_dim))
 
     return [avg_cost, acc_top1, acc_top5]
 

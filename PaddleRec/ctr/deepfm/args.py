@@ -67,5 +67,7 @@ def parse_args():
         '--reg', type=float, default=1e-4, help=' (default: 1e-4)')
     parser.add_argument('--num_field', type=int, default=39)
     parser.add_argument('--num_feat', type=int, default=1086460)  # 2090493
+    parser.add_argument(
+        '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
     return parser.parse_args()

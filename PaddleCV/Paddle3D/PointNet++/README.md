@@ -56,7 +56,7 @@
     sh make.sh
     ```
 
-    成功编译后，`exr_op/src` 目录下将会生成 `pointnet2_lib.so` 
+    成功编译后，`ext_op/src` 目录下将会生成 `pointnet2_lib.so` 
 
     执行下列操作，确保自定义算子编译正确：
 
@@ -69,12 +69,12 @@
     export PYTHONPATH=$PYTHONPATH:`pwd`
 
     # 运行单测 
-    python test/test_farthest_point_sampling_op.py
-    python test/test_gather_point_op.py
-    python test/test_group_points_op.py
-    python test/test_query_ball_op.py
-    python test/test_three_interp_op.py
-    python test/test_three_nn_op.py
+    python tests/test_farthest_point_sampling_op.py
+    python tests/test_gather_point_op.py
+    python tests/test_group_points_op.py
+    python tests/test_query_ball_op.py
+    python tests/test_three_interp_op.py
+    python tests/test_three_nn_op.py
     ```
     单测运行成功会输出提示信息，如下所示：
 
@@ -117,7 +117,7 @@ sh download.sh
 
 **Indoor3DSemSeg 数据集:**
 
-PointNet++ 分类模型在 [Indoor3DSemSeg 数据集](https://shapenet.cs.stanford.edu/media/indoor3d_sem_seg_hdf5_data.zip)上进行训练，我们提供了数据集下载脚本：
+PointNet++ 分割模型在 [Indoor3DSemSeg 数据集](https://shapenet.cs.stanford.edu/media/indoor3d_sem_seg_hdf5_data.zip)上进行训练，我们提供了数据集下载脚本：
 
 ```
 cd dataset/Indoor3DSemSeg
@@ -212,8 +212,8 @@ sh scripts/eval_cls.sh
 
 | model | Top-1 | download |
 | :----- | :---: | :---: |
-| SSG(Single-Scale Group) | 87.4 | [model]() |
-| MSG(Multi-Scale Group)  | 89.2 | [model]() |
+| SSG(Single-Scale Group) | 89.3 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_ssg_cls.tar) |
+| MSG(Multi-Scale Group)  | 90.0 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_msg_cls.tar) |
 
 **语义分割模型:**
 
@@ -234,8 +234,8 @@ sh scripts/eval_seg.sh
 
 | model | Top-1 | download |
 | :----- | :---: | :---: |
-| SSG(Single-Scale Group) | 86.1 | [model]() |
-| MSG(Multi-Scale Group)  | 86.8 | [model]() |
+| SSG(Single-Scale Group) | 86.1 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_ssg_seg.tar) |
+| MSG(Multi-Scale Group)  | 86.6 | [model](https://paddlemodels.bj.bcebos.com/Paddle3D/pointnet2_msg_seg.tar) |
 
 ## 参考文献
 

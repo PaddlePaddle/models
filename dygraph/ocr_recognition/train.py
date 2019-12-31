@@ -433,7 +433,7 @@ class OCRAttention(fluid.dygraph.Layer):
 
         decoder_boot = self.fc(backward_first)
 
-        label_in = fluid.layers.reshape(label_in, [-1, 1], inplace=False)
+        label_in = fluid.layers.reshape(label_in, [-1], inplace=False)
         trg_embedding = self.embedding(label_in)
 
         trg_embedding = fluid.layers.reshape(
@@ -486,8 +486,7 @@ def train(args):
                 label_in = to_variable(data_dict["label_in"])
                 label_out = to_variable(data_dict["label_out"])
 
-                label_out._stop_gradient = True
-                label_out.trainable = False
+                label_out.stop_gradient = True
 
                 img = to_variable(data_dict["pixel"])
 
@@ -528,8 +527,7 @@ def train(args):
                 label_in = to_variable(data_dict["label_in"])
                 label_out = to_variable(data_dict["label_out"])
 
-                label_out._stop_gradient = True
-                label_out.trainable = False
+                label_out.stop_gradient = True
 
                 img = to_variable(data_dict["pixel"])
 
@@ -548,8 +546,6 @@ def train(args):
                 avg_loss.backward()
                 optimizer.minimize(avg_loss, grad_clip=grad_clip)
                 ocr_attention.clear_gradients()
-
-                framework._dygraph_tracer()._clear_ops()
 
                 if batch_id > 0 and batch_id % 1000 == 0:
                     print("epoch: {}, batch_id: {}, loss {}".format(epoch, batch_id, total_loss / args.batch_size / 1000))

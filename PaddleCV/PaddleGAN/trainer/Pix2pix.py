@@ -18,6 +18,7 @@ from __future__ import print_function
 from network.Pix2pix_network import Pix2pix_model
 from util import utility
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import sys
 import time
 
@@ -195,7 +196,10 @@ class Pix2pix(object):
             type=int,
             default=3,
             help="only used when Pix2pix discriminator is nlayers")
-
+        parser.add_argument(
+            '--enable_ce',
+            action='store_true',
+            help="if set, run the tasks with continuous evaluation logs")
         return parser
 
     def __init__(self,
@@ -217,6 +221,9 @@ class Pix2pix(object):
         input_B = fluid.data(name='input_B', shape=data_shape, dtype='float32')
         input_fake = fluid.data(
             name='input_fake', shape=data_shape, dtype='float32')
+        # used for continuous evaluation        
+        if self.cfg.enable_ce:
+            fluid.default_startup_program().random_seed = 90
 
         loader = fluid.io.DataLoader.from_generator(
             feed_list=[input_A, input_B],
@@ -255,9 +262,13 @@ class Pix2pix(object):
 
         t_time = 0
 
+        total_train_batch = 0  # used for benchmark
+
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for tensor in loader():
+                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter:  # used for benchmark
+                    return
                 s_time = time.time()
 
                 tensor_A, tensor_B = tensor[0]['input_A'], tensor[0]['input_B']
@@ -294,6 +305,12 @@ class Pix2pix(object):
 
                 sys.stdout.flush()
                 batch_id += 1
+                total_train_batch += 1  # used for benchmark
+                # profiler tools
+                if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
+                    profiler.reset_profiler()
+                elif self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq + 5:
+                    return
 
             if self.cfg.run_test:
                 image_name = fluid.data(
@@ -325,3 +342,16 @@ class Pix2pix(object):
                                     "net_G")
                 utility.checkpoints(epoch_id, self.cfg, exe, dis_trainer,
                                     "net_D")
+        if self.cfg.enable_ce:
+            device_num = fluid.core.get_cuda_device_count(
+            ) if self.cfg.use_gpu else 1
+            print("kpis\tpix2pix_g_loss_gan_card{}\t{}".format(device_num,
+                                                               g_loss_gan[0]))
+            print("kpis\tpix2pix_g_loss_l1_card{}\t{}".format(device_num,
+                                                              g_loss_l1[0]))
+            print("kpis\tpix2pix_d_loss_real_card{}\t{}".format(device_num,
+                                                                d_loss_real[0]))
+            print("kpis\tpix2pix_d_loss_fake_card{}\t{}".format(device_num,
+                                                                d_loss_fake[0]))
+            print("kpis\tpix2pix_Batch_time_cost_card{}\t{}".format(device_num,
+                                                                    batch_time))

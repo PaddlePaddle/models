@@ -18,6 +18,8 @@ import random
 import functools
 import numpy as np
 import cv2
+import logging
+import imghdr
 
 import paddle
 from paddle import fluid
@@ -25,6 +27,9 @@ from utils.autoaugment import ImageNetPolicy
 from PIL import Image
 
 policy = None
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 random.seed(0)
 np.random.seed(0)
@@ -195,21 +200,27 @@ def create_mixup_reader(settings, rd):
 
     return mixup_reader
 
+
 def process_image(sample, settings, mode, color_jitter, rotate):
     """ process_image """
 
     mean = settings.image_mean
     std = settings.image_std
-    crop_size = settings.crop_size
+    crop_size = settings.image_shape[1]
 
     img_path = sample[0]
     img = cv2.imread(img_path)
+
+    if img is None:
+        logger.warning("img({0}) is None, pass it.".format(img_path))
+        return None
 
     if mode == 'train':
         if rotate:
             img = rotate_image(img)
         if crop_size > 0:
-            img = random_crop(img, crop_size, settings, interpolation=settings.interpolation)
+            img = random_crop(
+                img, crop_size, settings, interpolation=settings.interpolation)
         if color_jitter:
             img = distort_color(img)
         if np.random.randint(0, 2) == 1:
@@ -217,7 +228,8 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     else:
         if crop_size > 0:
             target_size = settings.resize_short_size
-            img = resize_short(img, target_size, interpolation=settings.interpolation)
+            img = resize_short(
+                img, target_size, interpolation=settings.interpolation)
             img = crop_image(img, target_size=crop_size, center=True)
 
     img = img[:, :, ::-1]
@@ -233,21 +245,33 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     img_std = np.array(std).reshape((3, 1, 1))
     img -= img_mean
     img /= img_std
-
-    if mode == 'train' or mode == 'val':
+    # doing training (train.py)
+    if mode == 'train' or (mode == 'val' and
+                           not hasattr(settings, 'save_json_path')):
         return (img, sample[1])
+    #doing testing (eval.py)
+    elif mode == 'val' and hasattr(settings, 'save_json_path'):
+        return (img, sample[1], sample[0])
+    #doing predict (infer.py)
     elif mode == 'test':
-        return (img, )
+        return (img, sample[0])
+    else:
+        raise Exception("mode not implemented")
+
 
 def process_batch_data(input_data, settings, mode, color_jitter, rotate):
     batch_data = []
     for sample in input_data:
         if os.path.isfile(sample[0]):
-            batch_data.append(
-                process_image(sample, settings, mode, color_jitter, rotate))
+            tmp_data = process_image(sample, settings, mode, color_jitter,
+                                     rotate)
+            if tmp_data is None:
+                continue
+            batch_data.append(tmp_data)
         else:
-            print("File not exist : %s" % sample[0])
+            logger.info("File not exist : {0}".format(sample[0]))
     return batch_data
+
 
 class ImageNetReader:
     def __init__(self, seed=None):
@@ -257,7 +281,27 @@ class ImageNetReader:
         assert isinstance(seed, int), "shuffle seed must be int"
         self.shuffle_seed = seed
 
-    def _reader_creator(self, settings,
+    def _get_single_card_bs(self, settings, mode):
+        if settings.use_gpu:
+            if mode == "val" and hasattr(settings, "test_batch_size"):
+                single_card_bs = int(
+                    settings.test_batch_size
+                ) // paddle.fluid.core.get_cuda_device_count()
+            else:
+                single_card_bs = int(
+                    settings.
+                    batch_size) // paddle.fluid.core.get_cuda_device_count()
+        else:
+            if mode == "val" and hasattr(settings, "test_batch_size"):
+                single_card_bs = int(settings.test_batch_size) // int(
+                    os.environ.get('CPU_NUM', 1))
+            else:
+                single_card_bs = int(settings.batch_size) // int(
+                    os.environ.get('CPU_NUM', 1))
+        return single_card_bs
+
+    def _reader_creator(self,
+                        settings,
                         file_list,
                         mode,
                         shuffle=False,
@@ -265,26 +309,35 @@ class ImageNetReader:
                         rotate=False,
                         data_dir=None):
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-        if mode == 'test':
-            batch_size = 1
-        else:
-            batch_size = settings.batch_size / paddle.fluid.core.get_cuda_device_count()
+
+        batch_size = self._get_single_card_bs(settings, mode)
+
         def reader():
             def read_file_list():
                 with open(file_list) as flist:
                     full_lines = [line.strip() for line in flist]
                     if mode != "test" and len(full_lines) < settings.batch_size:
-                        print(
-                            "Warning: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!"
-                            .format(len(full_lines), settings.batch_size))
+                        logger.error(
+                            "Error: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!".
+                            format(len(full_lines), settings.batch_size))
                         os._exit(1)
                     if num_trainers > 1 and mode == "train":
                         assert self.shuffle_seed is not None, "multiprocess train, shuffle seed must be set!"
-                        np.random.RandomState(self.shuffle_seed).shuffle(full_lines)
+                        np.random.RandomState(self.shuffle_seed).shuffle(
+                            full_lines)
                     elif shuffle:
-                        np.random.shuffle(full_lines)
+                        if not settings.enable_ce or not settings.same_feed:
+                            np.random.shuffle(full_lines)
 
                 batch_data = []
+                if (mode == "train" or mode == "val") and settings.same_feed:
+                    temp_file = full_lines[0]
+                    logger.info("Same images({},nums:{}) will feed in the net".
+                                format(str(temp_file), settings.same_feed))
+                    full_lines = []
+                    for i in range(settings.same_feed):
+                        full_lines.append(temp_file)
+
                 for line in full_lines:
                     img_path, label = line.split()
                     img_path = os.path.join(data_dir, img_path)
@@ -292,18 +345,19 @@ class ImageNetReader:
                     if len(batch_data) == batch_size:
                         if mode == 'train' or mode == 'val' or mode == 'test':
                             yield batch_data
-
                         batch_data = []
 
             return read_file_list
 
         data_reader = reader()
+
         if mode == 'train' and num_trainers > 1:
             assert self.shuffle_seed is not None, \
                 "If num_trainers > 1, the shuffle_seed must be set, because " \
                 "the order of batch data generated by reader " \
                 "must be the same in the respective processes."
-            data_reader = paddle.fluid.contrib.reader.distributed_batch_reader(data_reader)
+            data_reader = paddle.fluid.contrib.reader.distributed_batch_reader(
+                data_reader)
 
         mapper = functools.partial(
             process_batch_data,
@@ -318,7 +372,6 @@ class ImageNetReader:
             settings.reader_thread,
             settings.reader_buf_size,
             order=False)
-
 
     def train(self, settings):
         """Create a reader for trainning
@@ -351,10 +404,10 @@ class ImageNetReader:
             reader = create_mixup_reader(settings, reader)
             reader = fluid.io.batch(
                 reader,
-                batch_size=int(settings.batch_size / paddle.fluid.core.get_cuda_device_count()),
+                batch_size=int(settings.batch_size /
+                               paddle.fluid.core.get_cuda_device_count()),
                 drop_last=True)
         return reader
-
 
     def val(self, settings):
         """Create a reader for eval
@@ -370,10 +423,12 @@ class ImageNetReader:
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
                 file_list)
-
         return self._reader_creator(
-            settings, file_list, 'val', shuffle=False, data_dir=settings.data_dir)
-
+            settings,
+            file_list,
+            'val',
+            shuffle=False,
+            data_dir=settings.data_dir)
 
     def test(self, settings):
         """Create a reader for testing
@@ -384,9 +439,23 @@ class ImageNetReader:
         Returns:
             test reader
         """
-        file_list = os.path.join(settings.data_dir, 'val_list.txt')
-        assert os.path.isfile(
-            file_list), "{} doesn't exist, please check data list path".format(
-                file_list)
+        file_list = ".tmp.txt"
+        imgType_list = {'jpg', 'bmp', 'png', 'jpeg', 'rgb', 'tif', 'tiff'}
+        with open(file_list, "w") as fout:
+            if settings.image_path:
+                fout.write(settings.image_path + " 0" + "\n")
+                settings.batch_size = 1
+                settings.data_dir = ""
+            else:
+                tmp_file_list = os.listdir(settings.data_dir)
+                for file_name in tmp_file_list:
+                    file_path = os.path.join(settings.data_dir, file_name)
+                    if imghdr.what(file_path) not in imgType_list:
+                        continue
+                    fout.write(file_name + " 0" + "\n")
         return self._reader_creator(
-            settings, file_list, 'test', shuffle=False, data_dir=settings.data_dir)
+            settings,
+            file_list,
+            'test',
+            shuffle=False,
+            data_dir=settings.data_dir)

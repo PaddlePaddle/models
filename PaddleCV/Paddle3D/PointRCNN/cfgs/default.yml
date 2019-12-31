@@ -1,0 +1,167 @@
+# This config is based on https://github.com/sshaoshuai/PointRCNN/blob/master/tools/cfgs/default.yaml
+CLASSES: Car
+
+INCLUDE_SIMILAR_TYPE: True
+
+# config of augmentation
+AUG_DATA: True
+AUG_METHOD_LIST: ['rotation', 'scaling', 'flip']
+AUG_METHOD_PROB: [1.0, 1.0, 0.5]
+AUG_ROT_RANGE: 18
+
+GT_AUG_ENABLED: True
+GT_EXTRA_NUM: 15
+GT_AUG_RAND_NUM: True
+GT_AUG_APPLY_PROB: 1.0
+GT_AUG_HARD_RATIO: 0.6
+
+PC_REDUCE_BY_RANGE: True
+PC_AREA_SCOPE: [[-40, 40], [-1,   3], [0, 70.4]]  # x, y, z scope in rect camera coords
+CLS_MEAN_SIZE: [[1.52563191462, 1.62856739989, 3.88311640418]]
+
+
+# 1. config of rpn network
+RPN:
+    ENABLED: True
+    FIXED: False
+
+    # config of input
+    USE_INTENSITY: False
+
+    # config of bin-based loss
+    LOC_XZ_FINE: True
+    LOC_SCOPE: 3.0
+    LOC_BIN_SIZE: 0.5
+    NUM_HEAD_BIN: 12
+
+    # config of network structure
+    BACKBONE: pointnet2_msg
+    USE_BN: True
+    NUM_POINTS: 16384
+
+    SA_CONFIG:
+        NPOINTS: [4096, 1024, 256, 64]
+        RADIUS: [[0.1, 0.5], [0.5, 1.0], [1.0, 2.0], [2.0, 4.0]]
+        NSAMPLE: [[16, 32], [16, 32], [16, 32], [16, 32]]
+        MLPS: [[[16, 16, 32], [32, 32, 64]],
+              [[64, 64, 128], [64, 96, 128]],
+              [[128, 196, 256], [128, 196, 256]],
+              [[256, 256, 512], [256, 384, 512]]]
+    FP_MLPS: [[128, 128], [256, 256], [512, 512], [512, 512]]
+    CLS_FC: [128]
+    REG_FC: [128]
+    DP_RATIO: 0.5
+
+    # config of training
+    LOSS_CLS: SigmoidFocalLoss
+    FG_WEIGHT: 15
+    FOCAL_ALPHA: [0.25, 0.75]
+    FOCAL_GAMMA: 2.0
+    REG_LOSS_WEIGHT: [1.0, 1.0, 1.0, 1.0]
+    LOSS_WEIGHT: [1.0, 1.0]
+    NMS_TYPE: normal
+
+    # config of testing
+    SCORE_THRESH: 0.3
+
+# 2. config of rcnn network
+RCNN:
+    ENABLED: True
+
+    # config of input
+    ROI_SAMPLE_JIT: False 
+    REG_AUG_METHOD: multiple  # multiple, single, normal
+    ROI_FG_AUG_TIMES: 10
+
+    USE_RPN_FEATURES: True
+    USE_MASK: True
+    MASK_TYPE: seg
+    USE_INTENSITY: False
+    USE_DEPTH: True
+    USE_SEG_SCORE: False
+
+    POOL_EXTRA_WIDTH: 1.0
+
+    # config of bin-based loss
+    LOC_SCOPE: 1.5
+    LOC_BIN_SIZE: 0.5
+    NUM_HEAD_BIN: 9
+    LOC_Y_BY_BIN: False
+    LOC_Y_SCOPE: 0.5
+    LOC_Y_BIN_SIZE: 0.25
+    SIZE_RES_ON_ROI: False
+
+    # config of network structure
+    USE_BN: False
+    DP_RATIO: 0.0
+
+    BACKBONE: pointnet  # pointnet
+    XYZ_UP_LAYER: [128, 128]
+
+    NUM_POINTS: 512
+    SA_CONFIG:
+        NPOINTS: [128, 32, -1]
+        RADIUS: [0.2, 0.4, 100]
+        NSAMPLE: [64, 64, 64]
+        MLPS: [[128, 128, 128],
+               [128, 128, 256],
+               [256, 256, 512]]
+    CLS_FC: [256, 256]
+    REG_FC: [256, 256]
+
+    # config of training
+    LOSS_CLS: BinaryCrossEntropy
+    FOCAL_ALPHA: [0.25, 0.75]
+    FOCAL_GAMMA: 2.0
+    CLS_WEIGHT: [1.0, 1.0, 1.0]
+    CLS_FG_THRESH: 0.6
+    CLS_BG_THRESH: 0.45
+    CLS_BG_THRESH_LO: 0.05
+    REG_FG_THRESH: 0.55
+    FG_RATIO: 0.5
+    ROI_PER_IMAGE: 64
+    HARD_BG_RATIO: 0.8
+
+    # config of testing
+    SCORE_THRESH: 0.3
+    NMS_THRESH: 0.1
+
+# general training config
+TRAIN:
+    SPLIT: train
+    VAL_SPLIT: smallval
+
+    LR: 0.002
+    LR_CLIP: 0.00001
+    LR_DECAY: 0.5
+    DECAY_STEP_LIST: [100, 150, 180, 200]
+    LR_WARMUP: True
+    WARMUP_MIN: 0.0002
+    WARMUP_EPOCH: 1
+
+    BN_MOMENTUM: 0.1
+    BN_DECAY: 0.5
+    BNM_CLIP: 0.01
+    BN_DECAY_STEP_LIST: [1000]
+
+    OPTIMIZER: adam # adam, adam_onecycle
+    WEIGHT_DECAY: 0.001  # L2 regularization
+    MOMENTUM: 0.9
+
+    MOMS: [0.95, 0.85]
+    DIV_FACTOR: 10.0
+    PCT_START: 0.4
+
+    GRAD_NORM_CLIP: 1.0
+
+    RPN_PRE_NMS_TOP_N: 9000
+    RPN_POST_NMS_TOP_N: 512
+    RPN_NMS_THRESH: 0.85
+    RPN_DISTANCE_BASED_PROPOSE: True
+
+TEST:
+    SPLIT: val
+    RPN_PRE_NMS_TOP_N: 9000
+    RPN_POST_NMS_TOP_N: 100
+    RPN_NMS_THRESH: 0.8
+    RPN_DISTANCE_BASED_PROPOSE: True

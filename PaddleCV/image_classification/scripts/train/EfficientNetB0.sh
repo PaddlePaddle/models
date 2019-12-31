@@ -8,9 +8,6 @@ python -u train.py \
        --model=EfficientNet \
        --batch_size=512 \
        --test_batch_size=128 \
-       --total_images=1281167 \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
        --resize_short_size=256 \
        --model_save_dir=output/ \
        --lr_strategy=exponential_decay_warmup \

@@ -67,10 +67,10 @@ def main():
     place = fluid.CPUPlace()
     with fluid.dygraph.guard(place):
         model = Embedder("Embedder", 10, 20, 20, 20, 20)
-        token_inp = fluid.dygraph.to_variable(np.random.randint(0, 19, [10, 10, 1]).astype("int64"))
-        pos_inp = fluid.dygraph.to_variable(np.random.randint(0, 19, [10, 10, 1]).astype("int64"))
-        type_inp = fluid.dygraph.to_variable(np.random.randint(0, 19, [10, 10, 1]).astype("int64"))
-        turn_inp = fluid.dygraph.to_variable(np.random.randint(0, 19, [10, 10, 1]).astype("int64"))
+        token_inp = fluid.dygraph.to_variable(np.random.randint(0, 19, [10, 10]).astype("int64"))
+        pos_inp = fluid.dygraph.to_variable(np.random.randint(0, 19, [10, 10]).astype("int64"))
+        type_inp = fluid.dygraph.to_variable(np.random.randint(0, 19, [10, 10]).astype("int64"))
+        turn_inp = fluid.dygraph.to_variable(np.random.randint(0, 19, [10, 10]).astype("int64"))
         out = model(token_inp, pos_inp, type_inp, turn_inp)
         print(out)
 

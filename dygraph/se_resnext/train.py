@@ -336,7 +336,7 @@ def eval(model, data):
 
         img = to_variable(dy_x_data)
         label = to_variable(y_data)
-        label._stop_gradient = True
+        label.stop_gradient = True
         out = model(img)
 
         softmax_out = fluid.layers.softmax(out, use_cudnn=False)

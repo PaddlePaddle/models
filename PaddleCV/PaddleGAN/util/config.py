@@ -85,6 +85,11 @@ def base_parse_args(parser):
     add_arg('run_test', bool, True, "Whether to run test.")
     add_arg('use_gpu', bool, True, "Whether to use GPU to train.")
     add_arg('profile', bool, False, "Whether to profile.")
+
+    # NOTE: add args for profiler, used for benchmark
+    add_arg('profiler_path', str, '/tmp/profile', "the  profiler output files. (used for benchmark)")
+    add_arg('max_iter', int, 0, "the max iter to train. (used for benchmark)")
+
     add_arg('dropout', bool, False, "Whether to use drouput.")
     add_arg('drop_last', bool, False,
             "Whether to drop the last images that cannot form a batch")

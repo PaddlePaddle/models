@@ -12,6 +12,12 @@ import six
 import reader
 from net import skip_gram_word2vec
 
+import utils
+import sys
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
@@ -224,5 +230,6 @@ def train(args):
 
 
 if __name__ == '__main__':
+    utils.check_version()
     args = parse_args()
     train(args)

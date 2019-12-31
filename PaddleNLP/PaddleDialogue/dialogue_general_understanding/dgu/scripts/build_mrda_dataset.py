@@ -121,7 +121,7 @@ class MRDA(object):
             caller = elem.split('_')[0].split('-')[-1]
             conv_no = elem.split('_')[0].split('-')[0]
             out = "%s\t%s\t%s\t%s" % (conv_no, self.map_tag_dict[tag], caller, v_trans[0])
-            fw.write("%s\n" % out)
+            fw.write(u"%s\n" % out)
 
     def get_train_dataset(self): 
         """
@@ -147,7 +147,7 @@ class MRDA(object):
         """
         fw = io.open(self.map_tag, 'w', encoding="utf8")
         for elem in self.map_tag_dict: 
-            fw.write("%s\t%s\n" % (elem, self.map_tag_dict[elem]))
+            fw.write(u"%s\t%s\n" % (elem, self.map_tag_dict[elem]))
 
     def main(self): 
         """

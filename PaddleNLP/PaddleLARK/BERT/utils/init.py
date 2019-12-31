@@ -34,7 +34,7 @@ def cast_fp32_to_fp16(exe, main_program):
             master_param_var = fluid.global_scope().find_var(param.name +
                                                              ".master")
             if master_param_var is not None:
-                master_param_var.get_tensor().set(data, exe.place)
+                master_param_var.get_tensor().set(np.float32(data), exe.place)
 
 
 def init_checkpoint(exe, init_checkpoint_path, main_program, use_fp16=False):
@@ -44,7 +44,9 @@ def init_checkpoint(exe, init_checkpoint_path, main_program, use_fp16=False):
     def existed_persitables(var):
         if not fluid.io.is_persistable(var):
             return False
-        return os.path.exists(os.path.join(init_checkpoint_path, var.name))
+        if os.path.exists(os.path.join(init_checkpoint_path, var.name)):
+            print("INIT {}".format(var.name))
+            return True
 
     fluid.io.load_vars(
         exe,
@@ -67,7 +69,12 @@ def init_pretraining_params(exe,
     def existed_params(var):
         if not isinstance(var, fluid.framework.Parameter):
             return False
-        return os.path.exists(os.path.join(pretraining_params_path, var.name))
+        if os.path.exists(os.path.join(pretraining_params_path, var.name)):
+            print("INIT {}".format(var.name))
+            return True
+        else:
+            print("SKIP {}".format(var.name))
+            return False
 
     fluid.io.load_vars(
         exe,

@@ -48,7 +48,7 @@ def dry_run(model):
     mel_dim = hparams.num_mels
 
     x = np.random.randint(
-        low=0, high=n_vocab, size=(batch_size, enc_length, 1), dtype="int64")
+        low=0, high=n_vocab, size=(batch_size, enc_length), dtype="int64")
     input_lengths = np.arange(
         enc_length - batch_size + 1, enc_length + 1, dtype="int64")
     mel = np.random.randn(batch_size, mel_dim, 1, mel_length).astype("float32")
@@ -60,18 +60,16 @@ def dry_run(model):
             0, enc_length, dtype="int64"), (batch_size, 1))
     text_mask = text_positions > np.expand_dims(input_lengths, 1)
     text_positions[text_mask] = 0
-    text_positions = np.expand_dims(text_positions, axis=-1)
 
     frame_positions = np.tile(
         np.arange(
             1, decoder_length + 1, dtype="int64"), (batch_size, 1))
-    frame_positions = np.expand_dims(frame_positions, axis=-1)
 
     done = np.zeros(shape=(batch_size, 1, 1, decoder_length), dtype="float32")
     target_lengths = np.array([snd_sample_length] * batch_size).astype("int64")
 
     speaker_ids = np.random.randint(
-        low=0, high=n_speakers, size=(batch_size, 1),
+        low=0, high=n_speakers, size=(batch_size),
         dtype="int64") if n_speakers > 1 else None
 
     ismultispeaker = speaker_ids is not None

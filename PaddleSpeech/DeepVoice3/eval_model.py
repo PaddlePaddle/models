@@ -67,9 +67,9 @@ def tts(model, text, p=0., speaker_id=None):
     model.eval()
 
     sequence = np.array(_frontend.text_to_sequence(text, p=p)).astype("int64")
-    sequence = np.reshape(sequence, (1, -1, 1))
+    sequence = np.reshape(sequence, (1, -1))
     text_positions = np.arange(1, sequence.shape[1] + 1, dtype="int64")
-    text_positions = np.reshape(text_positions, (1, -1, 1))
+    text_positions = np.reshape(text_positions, (1, -1))
 
     sequence = dg.to_variable(sequence)
     text_positions = dg.to_variable(text_positions)
@@ -191,8 +191,8 @@ def eval_model(global_step, writer, model, checkpoint_dir, ismultispeaker):
 
             # Mel
             writer.add_image(
-                "(Eval) Predicted mel spectrogram text{}_{}".format(
-                    idx, speaker_str),
+                "Eval_Predicted_mel_spectrogram_text{}_{}".format(idx,
+                                                                  speaker_str),
                 prepare_spec_image(mel),
                 global_step,
                 dataformats='HWC')
@@ -205,8 +205,8 @@ def eval_model(global_step, writer, model, checkpoint_dir, ismultispeaker):
 
             try:
                 writer.add_audio(
-                    "(Eval) Predicted audio signal {}_{}".format(idx,
-                                                                 speaker_str),
+                    "Eval_Predicted_audio_signal_{}_{}".format(idx,
+                                                               speaker_str),
                     signal,
                     global_step,
                     sample_rate=hparams.sample_rate)
@@ -273,7 +273,7 @@ def save_states(global_step,
         mel_output = mel_outputs[idx].numpy().squeeze().T
         mel_output = prepare_spec_image(audio._denormalize(mel_output))
         writer.add_image(
-            "Predicted mel spectrogram",
+            "Predicted_mel_spectrogram",
             mel_output,
             global_step,
             dataformats="HWC")
@@ -282,7 +282,7 @@ def save_states(global_step,
         linear_output = linear_outputs[idx].numpy().squeeze().T
         spectrogram = prepare_spec_image(audio._denormalize(linear_output))
         writer.add_image(
-            "Predicted linear spectrogram",
+            "Predicted_linear_spectrogram",
             spectrogram,
             global_step,
             dataformats="HWC")
@@ -293,7 +293,7 @@ def save_states(global_step,
                     "step{:09d}_predicted.wav".format(global_step))
         try:
             writer.add_audio(
-                "Predicted audio signal",
+                "Predicted_audio_signal",
                 signal,
                 global_step,
                 sample_rate=hparams.sample_rate)
@@ -306,7 +306,7 @@ def save_states(global_step,
         mel_output = mel[idx].numpy().squeeze().T
         mel_output = prepare_spec_image(audio._denormalize(mel_output))
         writer.add_image(
-            "Target mel spectrogram",
+            "Target_mel_spectrogram",
             mel_output,
             global_step,
             dataformats="HWC")
@@ -315,7 +315,7 @@ def save_states(global_step,
         linear_output = y[idx].numpy().squeeze().T
         spectrogram = prepare_spec_image(audio._denormalize(linear_output))
         writer.add_image(
-            "Target linear spectrogram",
+            "Target_linear_spectrogram",
             spectrogram,
             global_step,
             dataformats="HWC")

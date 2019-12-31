@@ -68,9 +68,9 @@ def get_cards(args):
 
 def train(args):
     if args.enable_ce:
-       SEED = 102
-       fluid.default_startup_program().random_seed = SEED 
-       fluid.default_main_program().random_seed = SEED 
+        SEED = 102
+        fluid.default_startup_program().random_seed = SEED
+        fluid.default_main_program().random_seed = SEED
     use_cuda = True if args.use_cuda else False
     parallel = True if args.parallel else False
     print("use_cuda:", use_cuda, "parallel:", parallel)
@@ -136,17 +136,16 @@ def train(args):
         if args.use_cuda:
             gpu_num = device[1]
             print("kpis\teach_pass_duration_gpu%s\t%s" %
-                (gpu_num, total_time / epoch_idx))
-            print("kpis\ttrain_acc_gpu%s\t%s" %
-                (gpu_num, ce_acc))
+                  (gpu_num, total_time / epoch_idx))
+            print("kpis\ttrain_acc_gpu%s\t%s" % (gpu_num, ce_acc))
         else:
             cpu_num = device[1]
             threads_num = device[2]
             print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, total_time / epoch_idx))
+                  (cpu_num, threads_num, total_time / epoch_idx))
             print("kpis\ttrain_acc_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, ce_acc))
-        
+                  (cpu_num, threads_num, ce_acc))
+
 
 def get_device(args):
     if args.use_cuda:
@@ -157,7 +156,7 @@ def get_device(args):
         threads_num = os.environ.get('NUM_THREADS', 1)
         cpu_num = os.environ.get('CPU_NUM', 1)
         return "cpu", int(cpu_num), int(threads_num)
-        
+
 
 def main():
     args = parse_args()
@@ -165,4 +164,5 @@ def main():
 
 
 if __name__ == "__main__":
+    utils.check_version()
     main()
