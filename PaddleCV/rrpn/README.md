@@ -161,7 +161,7 @@ python infer.py \
 
 下图为模型可视化预测结果：
 <p align="center">
-<img src="image/img_120.jpg" height=720 width=1280 hspace='10'/>
-<img src="image/img_119.jpg" height=720 width=1280 hspace='10'/> <br />
-Faster RCNN 预测可视化
+<img src="image/img_120.jpg" height=576 width=1024 hspace='10'/>
+<img src="image/img_119.jpg" height=576 width=1024 hspace='10'/> <br />
+RRPN 预测可视化
 </p>
