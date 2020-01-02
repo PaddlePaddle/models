@@ -77,8 +77,8 @@ def train():
     loss = model.loss()
     loss.persistable = True
 
-    devices_num = get_device_num()
-    print("Found {} CUDA devices.".format(devices_num))
+    devices_num = get_device_num() if cfg.use_gpu else 1
+    print("Found {} CUDA/CPU devices.".format(devices_num))
 
     learning_rate = cfg.learning_rate
     boundaries = cfg.lr_steps

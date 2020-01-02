@@ -51,14 +51,7 @@ cd PaddleCV/Paddle3D/PointRCNN
 git clone https://github.com/pybind/pybind11
 ```
 
-3. 编译安装`pts_utils`, `kitti_utils`, `roipool3d_utils`, `iou_utils` 等模块
-
-使用如下命令编译安装`pts_utils`, `kitti_utils`, `roipool3d_utils`, `iou_utils` 等模块：
-```
-sh build_and_install.sh
-```
-
-4. 安装python依赖库
+3. 安装python依赖库
 
 使用如下命令安装python依赖库：
 
@@ -68,6 +61,13 @@ pip install -r requirement.txt
 
 **注意：** KITTI mAP评估工具只能在python 3.6及以上版本中使用，且python3环境中需要安装`scikit-image`,`Numba`,`fire`等子库。
 `requirement.txt`中的`scikit-image`,`Numba`,`fire`即为KITTI mAP评估工具所需依赖库。
+
+4. 编译安装`pts_utils`, `kitti_utils`, `roipool3d_utils`, `iou_utils` 等模块
+
+使用如下命令编译安装`pts_utils`, `kitti_utils`, `roipool3d_utils`, `iou_utils` 等模块：
+```
+sh build_and_install.sh
+```
 
 ### 编译自定义OP
 
@@ -314,7 +314,7 @@ result_dir
 由于KITTI mAP仅支持python 3.6及以上版本，须使用对应python版本通过如下命令进行评估：
 
 ```
-python3 kitti_map.py
+python3 tools/kitti_eval.py
 ```
 
 使用训练最终权重[RPN模型](https://paddlemodels.bj.bcebos.com/Paddle3D/pointrcnn_rpn.tar)和[RCNN模型](https://paddlemodels.bj.bcebos.com/Paddle3D/pointrcnn_rcnn_offline.tar)评估结果如下所示：

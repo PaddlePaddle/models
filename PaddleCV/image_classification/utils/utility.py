@@ -19,9 +19,9 @@ from __future__ import print_function
 import six
 import argparse
 import functools
-import logging
 import sys
 import os
+import logging
 import warnings
 import signal
 import json
@@ -172,13 +172,11 @@ def check_gpu():
     Log error and exit when set use_gpu=true in paddlepaddle
     cpu ver sion.
     """
-    logger = logging.getLogger(__name__)
     err = "Config use_gpu cannot be set as true while you are " \
                 "using paddlepaddle cpu version ! \nPlease try: \n" \
                 "\t1. Install paddlepaddle-gpu to run model on GPU \n" \
                 "\t2. Set use_gpu as false in config file to run " \
                 "model on CPU"
-
     try:
         if args.use_gpu and not fluid.is_compiled_with_cuda():
             logger.error(err)
@@ -209,8 +207,6 @@ def check_args(args):
     Args:
         all arguments
     """
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
 
     # check models name
     sys.path.append("..")

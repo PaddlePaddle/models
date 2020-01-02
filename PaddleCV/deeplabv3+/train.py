@@ -145,12 +145,6 @@ deeplabv3p = models.deeplabv3p
 sp = fluid.Program()
 tp = fluid.Program()
 
-# only for ce
-if args.enable_ce:
-    SEED = 102
-    sp.random_seed = SEED
-    tp.random_seed = SEED
-
 crop_size = args.train_crop_size
 batch_size = args.batch_size
 image_shape = [crop_size, crop_size]
@@ -161,6 +155,13 @@ weight_decay = 0.00004
 
 base_lr = args.base_lr
 total_step = args.total_step
+
+# only for ce
+if args.enable_ce:
+    SEED = 102
+    sp.random_seed = SEED
+    tp.random_seed = SEED
+    reader.default_config['shuffle'] = False
 
 with fluid.program_guard(tp, sp):
     if args.use_py_reader:
@@ -255,7 +256,7 @@ with profile_context(args.profile):
         train_loss = np.mean(train_loss)
         end_time = time.time()
         total_time += end_time - begin_time
-        
+
         if i % 100 == 0:
             print("Model is saved to", args.save_weights_path)
             save_model()

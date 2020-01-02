@@ -23,6 +23,7 @@ import math
 import numpy as np
 import argparse
 import functools
+import logging
 
 import paddle
 import paddle.fluid as fluid

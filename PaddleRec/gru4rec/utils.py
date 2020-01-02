@@ -100,7 +100,7 @@ def prepare_data(file_dir,
                  is_train=True):
     """ prepare the English Pann Treebank (PTB) data """
     print("start constuct word dict")
-    if is_train:
+    if is_train and 'ce_mode' not in os.environ:
         vocab_size = get_vocab_size(vocab_path)
         reader = sort_batch(
             paddle.reader.shuffle(

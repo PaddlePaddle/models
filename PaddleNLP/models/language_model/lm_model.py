@@ -26,7 +26,6 @@ from paddle.fluid.contrib.layers import basic_lstm
 
 def lm_model(hidden_size,
              vocab_size,
-             batch_size,
              num_layers=2,
              num_steps=20,
              init_scale=0.1,
@@ -253,7 +252,6 @@ def lm_model(hidden_size,
 
         return real_res, last_hidden, last_cell
 
-    batch_size_each = batch_size // fluid.core.get_cuda_device_count()
     x = fluid.data(name="x", shape=[None, num_steps, 1], dtype='int64')
     y = fluid.data(name="y", shape=[None, 1], dtype='int64')
 
