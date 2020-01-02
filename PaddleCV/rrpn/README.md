@@ -32,8 +32,9 @@ RRPN是在Faster RCNN基础上拓展出的两阶段目标检测器，可用于�
     进入 `ext_op/src` 目录，执行编译脚本
     ```
     cd ext_op/src
-    sh make.sh
+    sh make.sh  cuda_path cudnn_path nccl_path
     '''
+    其中cuda_path、cudnn_path和nccl_path分别为cuda、cudnn、nccl的安装路径，需通过命令行进行指定
     成功编译后，`ext_op/src` 目录下将会生成 `rrpn_lib.so` 
     
 ## 数据准备
@@ -109,9 +110,9 @@ x1, y1, x2, y2, x3, y3, x4, y4, class_name
 
 
 **训练策略：**
-
+*  默认配置采用8卡，每卡batch size=1
 *  采用momentum优化算法训练，momentum=0.9。
-*  权重衰减系数为0.0001，前500轮学习率从0.00333线性增加至0.01。在6250，1250轮时使用0.1,0.01乘子进行学习率衰减，最大训练18000轮。训练最大轮数和学习率策略可以在config.py中对max_iter和lr_steps进行设置。
+*  权重衰减系数为0.02，前500轮学习率从0.00333线性增加至0.01。在6250，12500轮时使用0.1,0.01乘子进行学习率衰减，最大训练17500轮。训练最大轮数和学习率策略可以在config.py中对max_iter和lr_steps进行设置。
 *  非基础卷积层卷积bias学习率为整体学习率2倍。
 *  基础卷积层中，affine_layers参数不更新，res2层参数不更新。
 
@@ -139,7 +140,7 @@ RRPN
 
 | 模型                   | 批量大小   | 迭代次数   | F1  |
 | :--------------- | :------------:    | :------------------:    |------: |
-| [RRPN](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) |8   |    17500       | 0.7967 |
+| RRPN |8   |    17500       | 0.7967 |
 
 
 
