@@ -92,7 +92,7 @@ x1, y1, x2, y2, x3, y3, x4, y4, class_name
 
 
 
-    - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
+    - 通过设置export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
 
     - 可选参数见：
 
