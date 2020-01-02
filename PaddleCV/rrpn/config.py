@@ -52,7 +52,7 @@ _C.TRAIN.bg_thresh_lo = 0.0
 _C.TRAIN.padding_minibatch = False
 
 # Snapshot period
-_C.TRAIN.snapshot_iter = 5000
+_C.TRAIN.snapshot_iter = 1000
 
 # number of RPN proposals to keep before NMS
 _C.TRAIN.rpn_pre_nms_top_n = 12000
