@@ -114,7 +114,6 @@ class ResNet(object):
                    act=None,
                    name=None):
         _name = self.prefix_name + name if self.prefix_name != '' else name
-        #        if not dcn_v2:
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -126,36 +125,6 @@ class ResNet(object):
             param_attr=ParamAttr(name=_name + "_weights"),
             bias_attr=False,
             name=_name + '.conv2d.output.1')
-        #        else:
-        #            # select deformable conv"
-        #            offset_mask = self._conv_offset(
-        #                input=input,
-        #                filter_size=filter_size,
-        #                stride=stride,
-        #                padding=(filter_size - 1) // 2,
-        #                act=None,
-        #                name=_name + "_conv_offset")
-        #            offset_channel = filter_size**2 * 2
-        #            mask_channel = filter_size**2
-        #            offset, mask = fluid.layers.split(
-        #                input=offset_mask,
-        #                num_or_sections=[offset_channel, mask_channel],
-        #                dim=1)
-        #            mask = fluid.layers.sigmoid(mask)
-        #            conv = fluid.layers.deformable_conv(
-        #                input=input,
-        #                offset=offset,
-        #                mask=mask,
-        #                num_filters=num_filters,
-        #                filter_size=filter_size,
-        #                stride=stride,
-        #                padding=(filter_size - 1) // 2,
-        #                groups=groups,
-        #                deformable_groups=1,
-        #                im2col_step=1,
-        #                param_attr=ParamAttr(name=_name + "_weights"),
-        #                bias_attr=False,
-        #                name=_name + ".conv2d.output.1")
 
         bn_name = self.na.fix_conv_norm_name(name)
         bn_name = self.prefix_name + bn_name if self.prefix_name != '' else bn_name
@@ -227,8 +196,7 @@ class ResNet(object):
         else:
             return input
 
-    def bottleneck(self, input, num_filters, stride, is_first, name):  #,
-        #dcn_v2=False):
+    def bottleneck(self, input, num_filters, stride, is_first, name):
         if self.variant == 'a':
             stride1, stride2 = stride, 1
         else:
@@ -248,13 +216,6 @@ class ResNet(object):
         conv_name1, conv_name2, conv_name3, \
             shortcut_name = self.na.fix_bottleneck_name(name)
         std_senet = getattr(self, 'std_senet', False)
-        #        if std_senet:
-        #            conv_def = [
-        #                [int(num_filters / 2), 1, stride1, 'relu', 1, conv_name1],
-        #                [num_filters, 3, stride2, 'relu', groups, conv_name2],
-        #                [num_filters * expand, 1, 1, None, 1, conv_name3]
-        #            ]
-        #        else:
         conv_def = [[num_filters, 1, stride1, 'relu', 1, conv_name1],
                     [num_filters, 3, stride2, 'relu', groups, conv_name2],
                     [num_filters * expand, 1, 1, None, 1, conv_name3]]
@@ -275,16 +236,10 @@ class ResNet(object):
             stride,
             is_first=is_first,
             name=shortcut_name)
-        # Squeeze-and-Excitation
-        #if callable(getattr(self, '_squeeze_excitation', None)):
-        #    residual = self._squeeze_excitation(
-        #        input=residual, num_channels=num_filters, name='fc' + name)
         return fluid.layers.elementwise_add(
             x=short, y=residual, act='relu', name=name + ".add.output.5")
 
     def basicblock(self, input, num_filters, stride, is_first, name):  #,
-        #dcn_v2=False):
-        #assert dcn_v2 is False, "Not implemented yet."
         conv0 = self._conv_norm(
             input=input,
             num_filters=num_filters,
@@ -317,7 +272,6 @@ class ResNet(object):
 
         ch_out = self.stage_filters[stage_num - 2]
         is_first = False if stage_num != 2 else True
-        #dcn_v2 = True if stage_num in self.dcn_v2_stages else False
         # Make the layer name and parameter name consistent
         # with ImageNet pre-trained model
         conv = input
@@ -384,9 +338,6 @@ class ResNet(object):
                 res_endpoints.append(res)
             if self.freeze_at >= i:
                 res.stop_gradient = True
-            #fluid.layers.Print(res)
-            #return OrderedDict([('res{}_sum'.format(self.feature_maps[idx]), feat)
-            #                    for idx, feat in enumerate(res_endpoints)])
         return res
 
 
