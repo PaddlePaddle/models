@@ -16,12 +16,17 @@ import os
 import numpy as np
 import paddle.fluid as fluid
 import math
+from config import cfg
+import six
+import numpy as np
+import cv2
+import Polygon as plg
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 from config import cfg
-import six
-import cv2
+import logging
+logger = logging.getLogger(__name__)
 
 
 def get_key_dict(out, data, key):
@@ -32,13 +37,6 @@ def get_key_dict(out, data, key):
         else:
             res[key[i]] = data[i]
     return res
-
-
-import numpy as np
-import cv2
-import Polygon as plg
-import logging
-logger = logging.getLogger(__name__)
 
 
 def get_labels_maps():
