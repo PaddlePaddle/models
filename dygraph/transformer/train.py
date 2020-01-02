@@ -123,6 +123,7 @@ def train(args):
         optimizer = fluid.optimizer.Adam(learning_rate=NoamDecay(
             ModelHyperParams.d_model, TrainTaskConfig.warmup_steps,
             TrainTaskConfig.learning_rate),
+            parameter_list = transformer.parameters(),
                                          beta1=TrainTaskConfig.beta1,
                                          beta2=TrainTaskConfig.beta2,
                                          epsilon=TrainTaskConfig.eps)
