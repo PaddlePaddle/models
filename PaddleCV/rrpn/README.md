@@ -140,7 +140,7 @@ RRPN
 
 | 模型                   | 批量大小   | 迭代次数   | F1  |
 | :--------------- | :------------:    | :------------------:    |------: |
-| [RRPN](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) |8   |    17500       | 0.7967 |
+| [RRPN] |8   |    17500       | 0.7967 |
 
 
 
