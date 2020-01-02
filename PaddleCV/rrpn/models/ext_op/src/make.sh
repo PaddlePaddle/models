@@ -1,30 +1,27 @@
 include_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_include())' )
 lib_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_lib())' )
 
-echo $include_dir
-echo $lib_dir
-
 CUDA=$1
 CUDNN=$2
 NCCL=$3
 
 if [ ! -d "$CUDA" ]; then
-echo "path of cuda not exist"
+echo "Usage: sh make.sh \$CUDA_PATH \$CUDNN_PATH \$NCCL_PATH"
 exit
 fi
 
 if [ ! -d "$CUDNN" ]; then
-echo "path of cudnn not exist"
+echo "Usage: sh make.sh \${CUDA_PATH} \${CUDNN_PATH} \${NCCL_PATH}"
 exit
 fi
 
 if [ ! -d "$NCCL" ]; then
-echo "path of nccl not exist"
+echo "Usage: sh make.sh \${CUDA_PATH} \${CUDNN_PATH} \${NCCL_PATH}"
 exit
 fi
 
 git clone https://github.com/NVlabs/cub.git
-wget https://paddleseg.bj.bcebos.com/deploy/temp/mkldnn.zip
+wget https://paddleseg.bj.bcebos.com/deploy/temp/mkldnn.zip --no-check-certificate
 unzip mkldnn.zip
 
 nvcc rrpn_generate_proposals_op.cu -c -o rrpn_generate_proposals_op.cu.o -ccbin cc -DPADDLE_WITH_MKLDNN -DPADDLE_WITH_CUDA -DEIGEN_USE_GPU -DPADDLE_USE_DSO -Xcompiler -fPIC -std=c++11 -Xcompiler -fPIC -w --expt-relaxed-constexpr -O3 -DNVCC \
