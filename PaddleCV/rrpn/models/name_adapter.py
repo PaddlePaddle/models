@@ -65,9 +65,7 @@ class NameAdapter(object):
                 conv_name = name + "b" + str(i)
         else:
             conv_name = name + chr(ord("a") + i)
-        if self.model_type == 'SEResNeXt':
-            conv_name = str(stage_num + 2) + '_' + str(i + 1)
         return conv_name
 
     def fix_c1_stage_name(self):
-        return "res_conv1" if self.model_type == 'ResNeXt' else "conv1"
+        return "conv1"

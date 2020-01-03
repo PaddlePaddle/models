@@ -126,20 +126,6 @@ def train(batch_size,
           num_workers=20,
           shuffle=True,
           shuffle_seed=None):
-    #    icdar2015_dataset = ICDAR2015Dataset('train')
-    #    roidbs = icdar2015_dataset.get_roidb()
-    #    num_img = len(roidbs)
-    #    n = int(math.ceil(len(roidbs) // num_workers))
-    #    roidbs_list = [roidbs[i:i + n] for i in range(0, num_img, n)]
-    #    readers = []
-    #    for l in roidbs_list:
-    #        readers.append(RRPNData('train',
-    #                         batch_size,
-    #                         total_batch_size,
-    #                         padding_total,
-    #                         shuffle=shuffle,
-    #                         shuffle_seed=shuffle_seed,
-    #                         roidbs=l))
     return RRPNData(
         'train',
         batch_size,
@@ -149,28 +135,8 @@ def train(batch_size,
         shuffle_seed=shuffle_seed)
 
 
-#    return paddle.reader.multiprocess_reader(readers, False)
-
-
 def test(batch_size, total_batch_size=None, padding_total=False):
     return RRPNData('val', batch_size, total_batch_size, shuffle=False)
-
-
-#def infer(file_path):
-#    def reader():
-#        if not os.path.exists(file_path):
-#            raise ValueError("Image path [%s] does not exist." % (file_path))
-#        im = cv2.imread(file_path)
-#        im = cv2.resize(im, (750, 1333))
-#        im = im.astype(np.float32, copy=False)
-#        im -= cfg.pixel_means
-#        im_height, im_width, channel = im.shape
-#        channel_swap = (2, 0, 1)  #(channel, height, width)
-#        im = im.transpose(channel_swap)
-#        im_info = np.array([im_height, im_width, 1.0], dtype=np.float32)
-#        yield [(im, im_info)]
-#
-#    return reader
 
 
 def infer(file_path):
