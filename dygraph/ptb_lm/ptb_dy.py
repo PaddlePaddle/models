@@ -323,7 +323,7 @@ def train_ptb_lm():
             lr_arr.append(new_lr)
 
         sgd = SGDOptimizer(learning_rate=fluid.layers.piecewise_decay(
-            boundaries=bd, values=lr_arr))
+            boundaries=bd, values=lr_arr), parameter_list=ptb_model.parameters())
 
         def eval(model, data):
             print("begion to eval")
