@@ -168,7 +168,15 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.
 python tools/generate_gt_database.py --class_name 'Car' --split train
 ```
 
-3. 训练 RPN 模型
+3. 生成增强离线场景数据
+
+生成增强的离线场景数据命令如下：
+
+```
+python tools/generate_aug_scene.py --class_name 'Car' --split train --aug_times 4
+```
+
+4. 训练 RPN 模型
 
 ```
 python train.py --cfg=./cfgs/default.yml \
@@ -176,17 +184,12 @@ python train.py --cfg=./cfgs/default.yml \
                 --batch_size=16 \
                 --epoch=200 \
                 --save_dir=checkpoints
+                --set TRAIN.SPLIT train_aug
 ```
+
+5. 保存RPN模型的输出特征和ROI，用于离线训练 RCNN 模型
 
 RPN训练checkpoints默认保存在`checkpoints/rpn`目录，也可以通过`--save_dir`来指定。
-
-4. 生成增强离线场景数据并保存RPN模型的输出特征和ROI，用于离线训练 RCNN 模型
-
-生成增强的离线场景数据命令如下：
-
-```
-python tools/generate_aug_scene.py --class_name 'Car' --split train --aug_times 4
-```
 
 保存RPN模型对离线增强数据的输出特征和ROI，可以通过参数`--ckpt_dir`来指定RPN训练最终权重保存路径，RPN权重默认保存在`checkpoints/rpn`目录。
 保存输出特征和ROI时须指定`TEST.SPLIT`为`train_aug`，指定`TEST.RPN_POST_NMS_TOP_N`为`300`, `TEST.RPN_NMS_THRESH`为`0.85`。
@@ -223,7 +226,7 @@ output
 │   ├── ...
 ```
 
-5. 离线训练RCNN，并且通过参数`--rcnn_training_roi_dir` and `--rcnn_training_feature_dir` 来指定 RPN 模型保存的输出特征和ROI路径。
+6. 离线训练RCNN，并且通过参数`--rcnn_training_roi_dir` and `--rcnn_training_feature_dir` 来指定 RPN 模型保存的输出特征和ROI路径。
 
 ```
 python train.py --cfg=./cfgs/default.yml \
@@ -321,10 +324,10 @@ python3 tools/kitti_eval.py
 
 |  Car AP@ | 0.70(easy) | 0.70(moderate) | 0.70(hard) |
 | :------- | :--------: | :------------: | :--------: |
-| bbox AP: |   90.20    |     88.85      |   88.59    |
-| bev  AP: |   89.50    |     86.97      |   85.58    |
-| 3d   AP: |   86.66    |     76.65      |   75.90    |
-| aos  AP: |   90.10    |     88.64      |   88.26    |
+| bbox AP: |   96.73    |     89.13      |   88.76    |
+| bev  AP: |   89.58    |     87.24      |   85.85    |
+| 3d   AP: |   87.34    |     77.65      |   76.99    |
+| aos  AP: |   96.71    |     89.02      |   88.51    |
 
 
 ## 参考文献
