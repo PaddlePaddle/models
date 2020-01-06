@@ -110,7 +110,6 @@ def main():
         im_all[_i] = np.transpose(im_all[_i], (2, 0, 1))
     im_all = np.concatenate((im_all[0], im_all[1]), axis=0).astype(np.float32)
     im_all = im_all[np.newaxis, :, :, :]
-    print('Shape of input: ', im_all.shape)
 
     with fluid.dygraph.guard(place=fluid.CUDAPlace(0)):
         im_all = fluid.dygraph.to_variable(im_all)
@@ -123,7 +122,6 @@ def main():
         model.set_dict(pd_pretrain)
         start = time.time()
         flo = model(im_all)
-        print('Shape of flow: ', flo.shape)
         end = time.time()
         print('Time of PWCNet model for one infer step: ', end - start)
         flo = flo[0].numpy() * 20.0
