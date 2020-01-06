@@ -63,7 +63,7 @@ dataset/icdar2015/
 |   ...
 ```
 ### 自定义数据
-原始的RRPN只提供了二分类，若要使用自己数据进行训练多分类，需在utility.py中将dataset改为icdar2017，然后将class_num改为需求类别数。
+原始的RRPN只提供了二分类，若要使用自己数据进行训练多分类，需在utility.py中将dataset改为icdar2017，然后将class_num改为需求类别数，其中0为背景类。
 
 训练自定义数据时，数据目录结构和ICDAR2015一致，标注数据格式如下：
 ```
