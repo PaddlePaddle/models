@@ -81,15 +81,9 @@ def train():
             gamma = cfg.lr_gamma
             step_num = len(cfg.lr_steps)
             values = [learning_rate * (gamma**i) for i in range(step_num + 1)]
-
+            lr = fluid.layers.piecewise_decay(boundaries, values)
             lr = fluid.layers.linear_lr_warmup(learning_rate, cfg.warm_up_iter,
-                                               0, 0.02)
-            #lr = exponential_with_warmup_decay(
-            #    learning_rate=learning_rate,
-            #    boundaries=boundaries,
-            #    values=values,
-            #    warmup_iter=cfg.warm_up_iter,
-            #    warmup_factor=cfg.warm_up_factor)
+                                               1. / 150, learning_rate)
             optimizer = fluid.optimizer.Momentum(
                 learning_rate=lr,
                 regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
