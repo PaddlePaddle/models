@@ -17,7 +17,7 @@ import numpy as np
 import cv2
 from math import ceil
 import paddle.fluid as fluid
-from models.dy_model import PWCDCNet
+from models.model import PWCDCNet
 from scipy.ndimage import imread
 from scipy.misc import imsave
 from src import flow_vis
