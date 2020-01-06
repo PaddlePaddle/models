@@ -21,6 +21,7 @@ import paddle.fluid as fluid
 from paddle.fluid import profiler
 import sys
 import time
+import numpy as np
 
 
 class GTrainer():
@@ -271,7 +272,6 @@ class Pix2pix(object):
                     return
                 s_time = time.time()
 
-                tensor_A, tensor_B = tensor[0]['input_A'], tensor[0]['input_B']
                 # optimize the generator network
                 g_loss_gan, g_loss_l1, fake_B_tmp = exe.run(
                     gen_trainer_program,
@@ -281,17 +281,18 @@ class Pix2pix(object):
                     ],
                     feed=tensor)
 
+                devices_num = utility.get_device_num(self.cfg)
+                fake_per_device = int(len(fake_B_tmp) / devices_num)
+                for dev in range(devices_num):
+                    tensor[dev]['input_fake'] = fake_B_tmp[dev * fake_per_device : (dev+1) * fake_per_device]
+
                 # optimize the discriminator network
                 d_loss_real, d_loss_fake = exe.run(dis_trainer_program,
                                                    fetch_list=[
                                                        dis_trainer.d_loss_real,
                                                        dis_trainer.d_loss_fake
                                                    ],
-                                                   feed={
-                                                       "input_A": tensor_A,
-                                                       "input_B": tensor_B,
-                                                       "input_fake": fake_B_tmp
-                                                   })
+                                                   feed=tensor)
 
                 batch_time = time.time() - s_time
                 t_time += batch_time

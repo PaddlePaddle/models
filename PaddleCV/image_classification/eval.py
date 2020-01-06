@@ -23,6 +23,7 @@ import math
 import numpy as np
 import argparse
 import functools
+import logging
 
 import paddle
 import paddle.fluid as fluid
@@ -52,6 +53,9 @@ add_arg('save_json_path',   str,  None,                 "Whether to save output 
 add_arg('same_feed',        int,  0,                    "Whether to feed same images")
 add_arg('print_step',       int,  1,                    "the batch step to print info")
 # yapf: enable
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def eval(args):
@@ -159,7 +163,7 @@ def eval(args):
                 info = "Testbatch {0},loss {1}, acc1 {2},acc5 {3},time {4}".format(real_iter, \
                   "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5, \
                   "%2.2f sec" % period)
-                print(info)
+                logger.info(info)
                 sys.stdout.flush()
 
             parallel_id = []
@@ -179,7 +183,7 @@ def eval(args):
             "test_acc5": test_acc5
         }
         save_json(info_dict, args.save_json_path)
-    print(info)
+    logger.info(info)
     sys.stdout.flush()
 
 
