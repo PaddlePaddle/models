@@ -244,9 +244,10 @@ def train_mnist(args):
             fluid.dygraph.parallel.Env().local_rank == 0)
         if save_parameters:
             fluid.save_dygraph(mnist.state_dict(), "save_temp")
+            
             print("checkpoint saved")
 
-        inference_mnist()
+            inference_mnist()
 
 
 if __name__ == '__main__':
