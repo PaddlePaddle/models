@@ -506,7 +506,7 @@ def StemConv1(input, C_out):
     return bn_a
 
 class NetworkImageNet(object):
-    def __init__(self, arch='AutoDL_6M'):
+    def __init__(self, arch='DARTS_6M'):
         self.params = train_parameters
         self.class_num = 1000
         self.init_channel = 48
