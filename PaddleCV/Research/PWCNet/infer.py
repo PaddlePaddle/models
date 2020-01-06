@@ -13,16 +13,17 @@
 # limitations under the License.
 """Infer for PWCNet."""
 import sys
-import numpy as np
-import cv2
-from math import ceil
-import paddle.fluid as fluid
-from models.model import PWCDCNet
-from scipy.ndimage import imread
-from scipy.misc import imsave
-from src import flow_vis
 import pickle
 import time
+import cv2
+import numpy as np
+from math import ceil
+from scipy.ndimage import imread
+from scipy.misc import imsave
+import paddle.fluid as fluid
+from models.model import PWCDCNet
+from src import flow_vis
+
 
 
 def writeFlowFile(filename, uv):
@@ -81,7 +82,6 @@ def main():
     im1_fn = 'data/frame_0010.png'
     im2_fn = 'data/frame_0011.png'
     flow_fn = './tmp/frame_0010_pd.flo'
-    # flow_fn = './tmp/frame_0010_pd_chairs.flo'
     if len(sys.argv) > 1:
         im1_fn = sys.argv[1]
     if len(sys.argv) > 2:
@@ -110,7 +110,7 @@ def main():
         im_all[_i] = np.transpose(im_all[_i], (2, 0, 1))
     im_all = np.concatenate((im_all[0], im_all[1]), axis=0).astype(np.float32)
     im_all = im_all[np.newaxis, :, :, :]
-    print(im_all.shape)
+    print('Shape of input: ', im_all.shape)
 
     with fluid.dygraph.guard(place=fluid.CUDAPlace(0)):
         im_all = fluid.dygraph.to_variable(im_all)
@@ -120,13 +120,12 @@ def main():
         model = PWCDCNet("pwcnet")
         model.eval()
         pd_pretrain, _ = fluid.dygraph.load_dygraph("paddle_model/pwc_net_paddle")
-        # pd_pretrain, _ = fluid.dygraph.load_dygraph("paddle_model/pwc_net_chairs_paddle")
         model.set_dict(pd_pretrain)
         start = time.time()
         flo = model(im_all)
-        print(flo.shape)
+        print('Shape of flow: ', flo.shape)
         end = time.time()
-        print(end - start)
+        print('Time of PWCNet model for one infer step: ', end - start)
         flo = flo[0].numpy() * 20.0
         # scale the flow back to the input size
         flo = np.swapaxes(np.swapaxes(flo, 0, 1), 1, 2)
@@ -141,7 +140,6 @@ def main():
         # # Apply the coloring (for OpenCV, set convert_to_bgr=True)
         flow_color = flow_vis.flow_to_color(flo, convert_to_bgr=False)
         imsave('./tmp/hsv_pd.png', flow_color)
-        # imsave('./tmp/hsv_pd_chairs.png', flow_color)
 
         writeFlowFile(flow_fn, flo)
 
