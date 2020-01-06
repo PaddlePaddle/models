@@ -28,16 +28,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def load_params(exe, prog, path, ignore_params=[]):
+def load_params(exe, prog, path):
     """
     Load model from the given path.
     Args:
         exe (fluid.Executor): The fluid.Executor object.
         prog (fluid.Program): load weight to which Program object.
         path (string): URL string or loca model path.
-        ignore_params (bool): ignore variable to load when finetuning.
-            It can be specified by finetune_exclude_pretrained_params 
-            and the usage can refer to docs/TRANSFER_LEARNING.md
     """
 
     if not os.path.exists(path):
@@ -47,17 +44,8 @@ def load_params(exe, prog, path, ignore_params=[]):
     logger.info('Loading parameters from {}...'.format(path))
 
     def _if_exist(var):
-        do_ignore = False
         param_exist = os.path.exists(os.path.join(path, var.name))
-        if len(ignore_params) > 0:
-            # Parameter related to num_classes will be ignored in finetuning
-            do_ignore_list = [
-                bool(re.match(name, var.name)) for name in ignore_params
-            ]
-            do_ignore = any(do_ignore_list)
-            if do_ignore and param_exist:
-                logger.info('In load_params, ignore {}'.format(var.name))
-        do_load = param_exist and not do_ignore
+        do_load = param_exist
         if do_load:
             logger.debug('load weight {}'.format(var.name))
         return do_load
