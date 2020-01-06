@@ -16,15 +16,15 @@ import sys
 import os
 os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.99999"
 os.environ["FLAGS_eager_delete_tensor_gb"] = "0"
-import numpy as np
-import cv2
-import paddle
-import paddle.fluid as fluid
-from models.model import PWCDCNet
-from scipy.misc import imsave
-from src import flow_vis
 import pickle
 import time
+import cv2
+import numpy as np
+import paddle
+import paddle.fluid as fluid
+from scipy.misc import imsave
+from src import flow_vis
+from models.model import PWCDCNet
 from data.datasets import FlyingChairs, reader_flyingchairs
 from src.multiscaleloss import multiscaleEPE, realEPE
 from AverageMeter import *
@@ -87,8 +87,6 @@ def val(model, batch_reader, epoch, batch_num):
     model.eval()
     loss_cnt = AverageMeter()
     for batch_id, data in enumerate(batch_reader()):
-        # if batch_id > 2:
-        #     break
         start = time.time()
         im1_data = np.array(
             [x[0] for x in data]).astype('float32')
@@ -127,8 +125,6 @@ def train(model, train_batch_reader, adam, epoch, batch_num, args):
     loss_type = args.loss
     model.train()
     for batch_id, data in enumerate(train_batch_reader()):
-        # if batch_id > 2:
-        #     break
         start = time.time()
         im1_data = np.array(
             [x[0] for x in data]).astype('float32')
