@@ -20,7 +20,7 @@ import numpy as np
 import cv2
 import paddle
 import paddle.fluid as fluid
-from models.dy_model import PWCDCNet
+from models.model import PWCDCNet
 from scipy.misc import imsave
 from src import flow_vis
 import pickle
