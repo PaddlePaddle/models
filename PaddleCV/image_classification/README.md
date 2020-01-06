@@ -602,6 +602,12 @@ python -m paddle.distributed.launch train.py \
 |[ShuffleNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x2_0_pretrained.tar) | 73.15% | 91.20% | 6.430 | 3.954 |
 |[ShuffleNetV2_swish](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_swish_pretrained.tar) | 70.03% | 89.17% | 6.078 | 4.976 |
 
+### AutoDL Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[DARTS_4M]() | 75.23% | 92.15% |  |  |
+|[DARTS_6M]() | 76.03% | 92.79% |  |  |
+
 ### ResNet Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
