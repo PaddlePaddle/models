@@ -67,7 +67,7 @@ with fluid.dygraph.guard():
     policy = Policy()
 
     eps = np.finfo(np.float32).eps.item()
-    optimizer = fluid.optimizer.AdamOptimizer(learning_rate=1e-2)
+    optimizer = fluid.optimizer.AdamOptimizer(learning_rate=1e-2, parameter_list=policy.parameters())
 
     def get_mean_and_std(values=[]):
         n = 0.

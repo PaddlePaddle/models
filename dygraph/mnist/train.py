@@ -187,7 +187,7 @@ def train_mnist(args):
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
         mnist = MNIST()
-        adam = AdamOptimizer(learning_rate=0.001)
+        adam = AdamOptimizer(learning_rate=0.001, parameter_list=mnist.parameters())
         if args.use_data_parallel:
             mnist = fluid.dygraph.parallel.DataParallel(mnist, strategy)
 
@@ -244,9 +244,10 @@ def train_mnist(args):
             fluid.dygraph.parallel.Env().local_rank == 0)
         if save_parameters:
             fluid.save_dygraph(mnist.state_dict(), "save_temp")
+            
             print("checkpoint saved")
 
-        inference_mnist()
+            inference_mnist()
 
 
 if __name__ == '__main__':
