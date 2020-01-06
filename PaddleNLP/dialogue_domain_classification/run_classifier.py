@@ -399,8 +399,8 @@ def main(args):
         place = fluid.cuda_places()
         DEV_COUNT = fluid.core.get_cuda_device_count()
     else:
-        place = fluid.cpu_places()
         os.environ['CPU_NUM'] = str(args.cpu_num)
+        place = fluid.cpu_places()
         DEV_COUNT = args.cpu_num
     logger.info("Dev Num is %s" % str(DEV_COUNT))
     exe = fluid.Executor(place[0])
