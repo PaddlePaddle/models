@@ -401,7 +401,7 @@ class SPADE(object):
                                   0], batch_time))
 
                 sys.stdout.flush()
-
+                batch_id += 1
             if self.cfg.run_test:
                 test_program = gen_trainer.infer_program
                 image_name = fluid.data(
