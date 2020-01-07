@@ -12,7 +12,9 @@ MAL整体框架
 这个repo包含了PaddlePaddle版本的MAL实现，框架在论文的基础上做了一些修改，在WMT英德2014测试集上BLEU达到30.04，超过了论文中的结果，在不改变模型结构的基础上，刷新了SOTA。
 
 ### 实验结果
+
 ####WMT 英德
+
 |  Models  | En-De |
 | :------------- | :---------: |
 | [ConvS2S](https://pdfs.semanticscholar.org/bb3e/bc09b65728d6eced04929df72a006fb5210b.pdf) | 25.20 | 
