@@ -1,4 +1,4 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -555,7 +555,7 @@ class NetworkImageNet(object):
                                       bias_attr=ParamAttr(
                                           initializer=Constant(0.),
                                           name='classifier.bias'))
-        return self.logits#, self.logits_aux
+        return self.logits
 
 def DARTS_6M():
     return NetworkImageNet(arch = 'DARTS_6M')
