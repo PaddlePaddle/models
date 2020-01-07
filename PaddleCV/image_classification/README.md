@@ -605,8 +605,8 @@ python -m paddle.distributed.launch train.py \
 ### AutoDL Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
-|[DARTS_4M](https://paddle-imagenet-models-name.bj.bcebos.com/DARTS_GS_4M_pretrained.tar) | 75.23% | 92.15% |  |  |
-|[DARTS_6M](https://paddle-imagenet-models-name.bj.bcebos.com/DARTS_GS_6M_pretrained.tar) | 76.03% | 92.79% |  |  |
+|[DARTS_4M](https://paddle-imagenet-models-name.bj.bcebos.com/DARTS_GS_4M_pretrained.tar) | 75.23% | 92.15% | 13.572 | 6.335 |
+|[DARTS_6M](https://paddle-imagenet-models-name.bj.bcebos.com/DARTS_GS_6M_pretrained.tar) | 76.03% | 92.79% | 16.406 | 6.864 |
 - AutoDL基于可微结构搜索思路DARTS改进，引入Local Rademacher Complexity控制过拟合，并通过Resource Constraining灵活调整模型大小。
 
 ### ResNet Series
