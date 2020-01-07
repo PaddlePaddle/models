@@ -1,16 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-# Copyright (c) 2018 Baidu.com, Inc. All Rights Reserved
-#
-
-"""
-File: tokenizer.py
-Author: xionghao(xionghao05@baidu.com)
-Date: 2018/7/6 下午5:17
-"""
-# coding=utf-8
-# Copyright 2018 The Tensor2Tensor Authors.
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
