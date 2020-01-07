@@ -341,7 +341,6 @@ def FactorizedReduce(input, C_out, name='', affine=True):
 class Cell():
     def __init__(self, genotype, C_prev_prev, C_prev, C, reduction,
                  reduction_prev):
-        print(C_prev_prev, C_prev, C)
 
         if reduction_prev:
             self.preprocess0 = functools.partial(FactorizedReduce, C_out=C)
@@ -511,7 +510,7 @@ class NetworkImageNet(object):
         self.class_num = 1000
         self.init_channel = 48
         self._layers = 14
-        self._auxiliary = False #auxiliary
+        self._auxiliary = False
         self.drop_path_prob = 0
         genotype = arch_dict[arch]
         
