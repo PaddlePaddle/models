@@ -42,7 +42,6 @@ import reader
 import models.model_builder as model_builder
 import models.resnet as resnet
 import checkpoint as checkpoint
-from learning_rate import exponential_with_warmup_decay
 from config import cfg
 from utility import parse_args, print_arguments, SmoothedValue, TrainingStats, now_time, check_gpu
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
@@ -82,8 +81,8 @@ def train():
             step_num = len(cfg.lr_steps)
             values = [learning_rate * (gamma**i) for i in range(step_num + 1)]
             lr = fluid.layers.piecewise_decay(boundaries, values)
-            lr = fluid.layers.linear_lr_warmup(learning_rate, cfg.warm_up_iter,
-                                               1. / 150, learning_rate)
+            lr = fluid.layers.linear_lr_warmup(lr, cfg.warm_up_iter, 1. / 150,
+                                               learning_rate)
             optimizer = fluid.optimizer.Momentum(
                 learning_rate=lr,
                 regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
@@ -93,7 +92,6 @@ def train():
 
             for var in fetch_list:
                 var.persistable = True
-    #train_prog = fluid.default_main_program()
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(gpu_id) if cfg.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
