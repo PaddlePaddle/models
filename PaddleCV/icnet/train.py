@@ -26,7 +26,6 @@ import paddle.fluid as fluid
 import numpy as np
 from utils import add_arguments, print_arguments, get_feeder_data, check_gpu
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
-from paddle.fluid.initializer import init_on_cpu
 
 if 'ce_mode' in os.environ:
     np.random.seed(10)
@@ -71,9 +70,8 @@ def create_loss(predict, label, mask, num_classes):
 
 def poly_decay():
     global_step = _decay_step_counter()
-    with init_on_cpu():
-        decayed_lr = LEARNING_RATE * (fluid.layers.pow(
-            (1 - global_step / TOTAL_STEP), POWER))
+    decayed_lr = LEARNING_RATE * (fluid.layers.pow(
+        (1 - global_step / TOTAL_STEP), POWER))
     return decayed_lr
 
 
