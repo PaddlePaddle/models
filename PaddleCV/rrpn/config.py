@@ -168,7 +168,7 @@ _C.max_iter = 140000
 
 # warm up to learning rate 
 _C.warm_up_iter = 500
-_C.warm_up_factor = 1. / 3.
+_C.start_factor = 1. / 3
 
 # lr steps_with_decay
 _C.lr_steps = [6250, 12500]
