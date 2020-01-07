@@ -22,7 +22,7 @@ import numpy as np
 from paddle.fluid import ParamAttr
 from paddle.fluid.dygraph.base import to_variable
 from paddle.fluid.dygraph.nn import Embedding, FC
-from paddle.fluid.contrib.layers import BasicLSTMUnit
+from rnn import BasicLSTMUnit
 import numpy as np
 
 INF = 1. * 1e5
@@ -32,7 +32,6 @@ zero_constant = fluid.initializer.Constant(0.0)
 
 class AttentionModel(fluid.dygraph.Layer):
     def __init__(self,
-                 name_scope,
                  hidden_size,
                  src_vocab_size,
                  tar_vocab_size,
@@ -45,7 +44,7 @@ class AttentionModel(fluid.dygraph.Layer):
                  beam_end_token=2,
                  beam_max_step_num=100,
                  mode='train'):
-        super(AttentionModel, self).__init__(name_scope)
+        super(AttentionModel, self).__init__()
         self.hidden_size = hidden_size
         self.src_vocab_size = src_vocab_size
         self.tar_vocab_size = tar_vocab_size
@@ -65,14 +64,12 @@ class AttentionModel(fluid.dygraph.Layer):
         forget_bias = 1.0
 
         self.src_embeder = Embedding(
-            name_scope='source_embedding',
             size=[self.src_vocab_size, self.hidden_size],
             param_attr=fluid.ParamAttr(
                 name='source_embedding',
                 initializer=uniform_initializer(init_scale)))
 
         self.tar_embeder = Embedding(
-            name_scope='target_embedding',
             size=[self.tar_vocab_size, self.hidden_size],
             is_sparse=False,
             param_attr=fluid.ParamAttr(
@@ -84,47 +81,45 @@ class AttentionModel(fluid.dygraph.Layer):
             self.enc_units.append(
                 self.add_sublayer("enc_units_%d" % i,
                     BasicLSTMUnit(
-                    name_scope="enc_cell_{}".format(i), 
                     hidden_size=self.hidden_size, 
+                    input_size=self.hidden_size,
                     param_attr=param_attr, 
                     bias_attr=bias_attr, 
                     forget_bias=forget_bias)))
 
         self.dec_units = []
         for i in range(num_layers):
-            self.dec_units.append(
-                self.add_sublayer("dec_units_%d" % i,
+            if i == 0:
+                self.dec_units.append(
+                    self.add_sublayer("dec_units_%d" % i,
+                        BasicLSTMUnit(
+                        hidden_size=self.hidden_size, 
+                        input_size=self.hidden_size * 2,
+                        param_attr=param_attr, 
+                        bias_attr=bias_attr, 
+                        forget_bias=forget_bias)))
+            else:
+                self.dec_units.append(
+                    self.add_sublayer("dec_units_%d" % i,
                     BasicLSTMUnit(
-                    name_scope="dec_cell_{}".format(i), 
                     hidden_size=self.hidden_size, 
+                    input_size=self.hidden_size,
                     param_attr=param_attr, 
                     bias_attr=bias_attr, 
                     forget_bias=forget_bias)))
         
-        self.fc = fluid.dygraph.nn.FC(
-                name_scope="dec_fc", 
-                size=self.tar_vocab_size, 
-                num_flatten_dims=2,
+        self.fc = fluid.dygraph.nn.Linear(self.hidden_size,
+                self.tar_vocab_size, 
                 param_attr=param_attr,
                 bias_attr=False)
         
-        self.attn_fc = fluid.dygraph.nn.FC(
-                name_scope="attn_fc", 
-                size=self.hidden_size, 
-                num_flatten_dims=2,
+        self.attn_fc = fluid.dygraph.nn.Linear(self.hidden_size, 
+                self.hidden_size, 
                 param_attr=param_attr,
                 bias_attr=False)
         
-        self.concat_fc = fluid.dygraph.nn.FC(
-                name_scope="concat_fc", 
-                size=self.hidden_size, 
-                param_attr=param_attr,
-                bias_attr=False)
-
-        self.beam_fc = fluid.dygraph.nn.FC(
-                name_scope="beam_fc", 
-                size=self.tar_vocab_size, 
-                num_flatten_dims=2,
+        self.concat_fc = fluid.dygraph.nn.Linear(2 * self.hidden_size, 
+                self.hidden_size, 
                 param_attr=param_attr,
                 bias_attr=False)
 
@@ -184,8 +179,6 @@ class AttentionModel(fluid.dygraph.Layer):
         return weight_memory
 
     def forward(self, inputs):
-        inputs[0] = np.expand_dims(inputs[0], axis=-1)
-        inputs[1] = np.expand_dims(inputs[1], axis=-1)
         inputs = [fluid.dygraph.to_variable(np_inp) for np_inp in inputs]
         src, tar, label, src_sequence_length, tar_sequence_length = inputs
         if src.shape[0] < self.batch_size:
@@ -324,7 +317,6 @@ class AttentionModel(fluid.dygraph.Layer):
                 out = self.concat_fc(concat_att_out)
                 input_feed = out
                 cell_outputs = self._split_batch_beams(out)
-                #cell_outputs = self.beam_fc(cell_outputs)
                 cell_outputs = self.fc(cell_outputs)
                 step_log_probs = fluid.layers.log(fluid.layers.softmax(cell_outputs))
                 noend_array = [-self.kinf] * self.tar_vocab_size

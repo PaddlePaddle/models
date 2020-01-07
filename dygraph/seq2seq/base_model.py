@@ -21,8 +21,8 @@ import paddle.fluid as fluid
 import numpy as np
 from paddle.fluid import ParamAttr
 from paddle.fluid.dygraph import to_variable
-from paddle.fluid.dygraph.nn import Embedding, FC
-from paddle.fluid.contrib.layers import BasicLSTMUnit
+from paddle.fluid.dygraph.nn import Embedding, Linear
+from rnn import BasicLSTMUnit
 import numpy as np
 
 INF = 1. * 1e5
@@ -32,7 +32,6 @@ zero_constant = fluid.initializer.Constant(0.0)
 
 class BaseModel(fluid.dygraph.Layer):
     def __init__(self,
-                 name_scope,
                  hidden_size,
                  src_vocab_size,
                  tar_vocab_size,
@@ -45,7 +44,7 @@ class BaseModel(fluid.dygraph.Layer):
                  beam_end_token=2,
                  beam_max_step_num=100,
                  mode='train'):
-        super(BaseModel, self).__init__(name_scope)
+        super(BaseModel, self).__init__()
         self.hidden_size = hidden_size
         self.src_vocab_size = src_vocab_size
         self.tar_vocab_size = tar_vocab_size
@@ -65,18 +64,14 @@ class BaseModel(fluid.dygraph.Layer):
         forget_bias = 1.0
 
         self.src_embeder = Embedding(
-            name_scope='source_embedding',
             size=[self.src_vocab_size, self.hidden_size],
             param_attr=fluid.ParamAttr(
-                name='source_embedding',
                 initializer=uniform_initializer(init_scale)))
 
         self.tar_embeder = Embedding(
-            name_scope='target_embedding',
             size=[self.tar_vocab_size, self.hidden_size],
             is_sparse=False,
             param_attr=fluid.ParamAttr(
-                name='target_embedding',
                 initializer=uniform_initializer(init_scale)))
 
         self.enc_units = []
@@ -84,8 +79,8 @@ class BaseModel(fluid.dygraph.Layer):
             self.enc_units.append(
                 self.add_sublayer("enc_units_%d" % i,
                     BasicLSTMUnit(
-                    name_scope="enc_cell_{}".format(i), 
                     hidden_size=self.hidden_size, 
+                    input_size=self.hidden_size,
                     param_attr=param_attr, 
                     bias_attr=bias_attr, 
                     forget_bias=forget_bias)))
@@ -95,16 +90,14 @@ class BaseModel(fluid.dygraph.Layer):
             self.dec_units.append(
                 self.add_sublayer("dec_units_%d" % i,
                     BasicLSTMUnit(
-                    name_scope="dec_cell_{}".format(i), 
                     hidden_size=self.hidden_size, 
+                    input_size=self.hidden_size,
                     param_attr=param_attr, 
                     bias_attr=bias_attr, 
                     forget_bias=forget_bias)))
         
-        self.fc = fluid.dygraph.nn.FC(
-                name_scope="dec_fc", 
-                size=self.tar_vocab_size, 
-                num_flatten_dims=2,
+        self.fc = fluid.dygraph.nn.Linear(self.hidden_size,
+                self.tar_vocab_size,
                 param_attr=param_attr,
                 bias_attr=False)
 
@@ -134,8 +127,8 @@ class BaseModel(fluid.dygraph.Layer):
         return fluid.layers.gather_nd(x, topk_coordinates)
 
     def forward(self, inputs):
-        inputs[0] = np.expand_dims(inputs[0], axis=-1)
-        inputs[1] = np.expand_dims(inputs[1], axis=-1)
+        #inputs[0] = np.expand_dims(inputs[0], axis=-1)
+        #inputs[1] = np.expand_dims(inputs[1], axis=-1)
         inputs = [fluid.dygraph.to_variable(np_inp) for np_inp in inputs]
         src, tar, label, src_sequence_length, tar_sequence_length = inputs
         if src.shape[0] < self.batch_size:
@@ -207,9 +200,9 @@ class BaseModel(fluid.dygraph.Layer):
             return loss
         elif self.mode in ['beam_search']:
             batch_beam_shape = (self.batch_size, self.beam_size)
-            batch_beam_shape_1 = (self.batch_size, self.beam_size, 1)
+            #batch_beam_shape_1 = (self.batch_size, self.beam_size, 1)
             vocab_size_tensor = to_variable(np.full((1), self.tar_vocab_size))
-            start_token_tensor = to_variable(np.full(batch_beam_shape_1, self.beam_start_token, dtype='int64')) # remove last dim 1 in v1.7
+            start_token_tensor = to_variable(np.full(batch_beam_shape, self.beam_start_token, dtype='int64')) # remove last dim 1 in v1.7
             end_token_tensor = to_variable(np.full(batch_beam_shape, self.beam_end_token, dtype='int64'))
             step_input = self.tar_embeder(start_token_tensor)
             beam_finished = to_variable(np.full(batch_beam_shape, 0, dtype='float32'))

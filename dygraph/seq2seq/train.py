@@ -68,7 +68,6 @@ def main():
 
         if args.attention:
             model = AttentionModel(
-                "attention_model",
                 hidden_size,
                 src_vocab_size,
                 tar_vocab_size,
@@ -78,7 +77,6 @@ def main():
                 dropout=dropout)
         else:
             model = BaseModel(
-                "base_model",
                 hidden_size,
                 src_vocab_size,
                 tar_vocab_size,
@@ -90,9 +88,9 @@ def main():
         lr = args.learning_rate
         opt_type = args.optimizer
         if opt_type == "sgd":
-            optimizer = fluid.optimizer.SGD(lr)
+            optimizer = fluid.optimizer.SGD(lr, parameter_list=model.parameters())
         elif opt_type == "adam":
-            optimizer = fluid.optimizer.Adam(lr)
+            optimizer = fluid.optimizer.Adam(lr, parameter_list=model.parameters())
         else:
             print("only support [sgd|adam]")
             raise Exception("opt type not support")
