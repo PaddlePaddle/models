@@ -533,10 +533,12 @@ negative do not contribute to the training objective.
 
 namespace ops = paddle::operators;
 
-REGISTER_OPERATOR(rrpn_target_assign,
-                  ops::RRpnTargetAssignOp,
-                  ops::RRpnTargetAssignOpMaker,
-                  paddle::framework::EmptyGradOpMaker);
+REGISTER_OPERATOR(
+    rrpn_target_assign,
+    ops::RRpnTargetAssignOp,
+    ops::RRpnTargetAssignOpMaker,
+    paddle::framework::EmptyGradOpMaker<paddle::framework::OpDesc>,
+    paddle::framework::EmptyGradOpMaker<paddle::imperative::OpBase>);
 REGISTER_OP_CPU_KERNEL(rrpn_target_assign,
                        ops::RRpnTargetAssignKernel<float>,
                        ops::RRpnTargetAssignKernel<double>);

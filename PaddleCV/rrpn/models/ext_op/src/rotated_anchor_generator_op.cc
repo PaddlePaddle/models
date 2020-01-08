@@ -160,10 +160,12 @@ https://arxiv.org/abs/1703.01086.
 }  // namespace paddle
 
 namespace ops = paddle::operators;
-REGISTER_OPERATOR(rotated_anchor_generator,
-                  ops::RotatedAnchorGeneratorOp,
-                  ops::RotatedAnchorGeneratorOpMaker,
-                  paddle::framework::EmptyGradOpMaker);
+REGISTER_OPERATOR(
+    rotated_anchor_generator,
+    ops::RotatedAnchorGeneratorOp,
+    ops::RotatedAnchorGeneratorOpMaker,
+    paddle::framework::EmptyGradOpMaker<paddle::framework::OpDesc>,
+    paddle::framework::EmptyGradOpMaker<paddle::imperative::OpBase>);
 
 REGISTER_OP_CPU_KERNEL(rotated_anchor_generator,
                        ops::RotatedAnchorGeneratorOpKernel<float>,

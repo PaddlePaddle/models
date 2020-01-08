@@ -159,22 +159,22 @@ Thus avoid the misaligned problem.
   }
 };
 
-class RRPNRotatedROIAlignGradDescMaker
-    : public framework::SingleGradOpDescMaker {
+template <typename T>
+class RRPNRotatedROIAlignGradMaker : public framework::SingleGradOpMaker<T> {
 public:
-  using framework::SingleGradOpDescMaker::SingleGradOpDescMaker;
+  using framework::SingleGradOpMaker<T>::SingleGradOpMaker;
 
 protected:
-  std::unique_ptr<framework::OpDesc> Apply() const override {
-    std::unique_ptr<framework::OpDesc> op(new framework::OpDesc());
+  std::unique_ptr<T> Apply() const override {
+    std::unique_ptr<T> op(new T);
     op->SetType("rrpn_rotated_roi_align_grad");
-    op->SetInput("X", Input("X"));
-    op->SetInput("ROIs", Input("ROIs"));
-    op->SetInput("ConIdX", Output("ConIdX"));
-    op->SetInput("ConIdY", Output("ConIdY"));
-    op->SetInput(framework::GradVarName("Out"), OutputGrad("Out"));
-    op->SetOutput(framework::GradVarName("X"), InputGrad("X"));
-    op->SetAttrMap(Attrs());
+    op->SetInput("X", this->Input("X"));
+    op->SetInput("ROIs", this->Input("ROIs"));
+    op->SetInput("ConIdX", this->Output("ConIdX"));
+    op->SetInput("ConIdY", this->Output("ConIdY"));
+    op->SetInput(framework::GradVarName("Out"), this->OutputGrad("Out"));
+    op->SetOutput(framework::GradVarName("X"), this->InputGrad("X"));
+    op->SetAttrMap(this->Attrs());
     return op;
   }
 };
@@ -186,10 +186,12 @@ DECLARE_NO_NEED_BUFFER_VARS_INFERENCE(
 }  // namespace paddle
 
 namespace ops = paddle::operators;
-REGISTER_OPERATOR(rrpn_rotated_roi_align,
-                  ops::RRPNRotatedROIAlignOp,
-                  ops::RRPNRotatedROIAlignOpMaker,
-                  ops::RRPNRotatedROIAlignGradDescMaker);
+REGISTER_OPERATOR(
+    rrpn_rotated_roi_align,
+    ops::RRPNRotatedROIAlignOp,
+    ops::RRPNRotatedROIAlignOpMaker,
+    ops::RRPNRotatedROIAlignGradMaker<paddle::framework::OpDesc>,
+    ops::RRPNRotatedROIAlignGradMaker<paddle::imperative::OpBase>);
 REGISTER_OPERATOR(rrpn_rotated_roi_align_grad,
                   ops::RRPNRotatedROIAlignGradOp,
                   ops::RRPNRotatedRoiAlignGradNoNeedBufVarsInferer);

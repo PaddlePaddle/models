@@ -120,7 +120,9 @@ denote the encoded/decoded coordinates, width and height.
 }  // namespace paddle
 
 namespace ops = paddle::operators;
-REGISTER_OPERATOR(rrpn_box_coder,
-                  ops::RRPNBoxCoderOp,
-                  ops::RRPNBoxCoderOpMaker,
-                  paddle::framework::EmptyGradOpMaker);
+REGISTER_OPERATOR(
+    rrpn_box_coder,
+    ops::RRPNBoxCoderOp,
+    ops::RRPNBoxCoderOpMaker,
+    paddle::framework::EmptyGradOpMaker<paddle::framework::OpDesc>,
+    paddle::framework::EmptyGradOpMaker<paddle::imperative::OpBase>);

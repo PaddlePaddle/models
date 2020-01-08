@@ -635,10 +635,10 @@ public:
     auto *im_info = context.Input<Tensor>("ImInfo");
     auto anchors = detail::Ref(context.Input<Tensor>("Anchors"),
                                "Cannot find input Anchors(%s) in scope",
-                               context.Inputs("Anchors")[0]);
+                               context.InputNames("Anchors")[0]);
     auto variances = detail::Ref(context.Input<Tensor>("Variances"),
                                  "Cannot find input Variances(%s) in scope",
-                                 context.Inputs("Variances")[0]);
+                                 context.InputNames("Variances")[0]);
 
     auto *rpn_rois = context.Output<LoDTensor>("RpnRois");
     auto *rpn_roi_probs = context.Output<LoDTensor>("RpnRoiProbs");
@@ -647,8 +647,6 @@ public:
     int post_nms_top_n = context.Attr<int>("post_nms_topN");
     float nms_thresh = context.Attr<float>("nms_thresh");
     float min_size = context.Attr<float>("min_size");
-    // float eta = context.Attr<float>("eta");
-    // PADDLE_ENFORCE_GE(eta, 1., "Not support adaptive NMS.");
 
     auto &dev_ctx = context.template device_context<DeviceContext>();
 
