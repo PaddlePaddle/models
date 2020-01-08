@@ -140,7 +140,7 @@ RRPN
 
 | 模型                   | 批量大小   | 迭代次数   | F1  |
 | :--------------- | :------------:    | :------------------:    |------: |
-| [RRPN](https://paddleseg.bj.bcebos.com/deploy/temp/rrpn_model_final.tar) |8   |    17500       | 0.7967 |
+| [RRPN](https://paddleseg.bj.bcebos.com/deploy/temp/model_final.tar) |8   |    17500       | 0.7967 |
 
 
 
