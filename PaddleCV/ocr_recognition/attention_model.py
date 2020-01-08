@@ -254,7 +254,7 @@ def attention_infer(images, num_classes, use_cudnn=True):
     init_state = decoder_boot
     array_len = fluid.layers.fill_constant(
         shape=[1], dtype='int64', value=max_length)
-    counter = fluid.layers.zeros(shape=[1], dtype='int64', force_cpu=True)
+    counter = fluid.layers.zeros(shape=[1], dtype='int64')
 
     # fill the first element with init_state
     state_array = fluid.layers.create_array('float32')
@@ -272,9 +272,12 @@ def attention_infer(images, num_classes, use_cudnn=True):
     fluid.layers.array_write(init_ids, array=ids_array, i=counter)
     fluid.layers.array_write(init_scores, array=scores_array, i=counter)
 
-    cond = fluid.layers.less_than(x=counter, y=array_len)
-    while_op = fluid.layers.While(cond=cond)
-    with while_op.block():
+    finish_cond = fluid.layers.fill_constant(shape=[1], dtype='bool', value=True)
+    def cond(counter, finish_cond):
+        length_cond = fluid.layers.less_than(x=counter, y=array_len)
+        return fluid.layers.logical_and(x=length_cond, y=finish_cond)
+
+    def body(counter, finish_cond):
         pre_ids = fluid.layers.array_read(array=ids_array, i=counter)
         pre_state = fluid.layers.array_read(array=state_array, i=counter)
         pre_score = fluid.layers.array_read(array=scores_array, i=counter)
@@ -326,11 +329,10 @@ def attention_infer(images, num_classes, use_cudnn=True):
             accu_scores,
             beam_size,
             eos,  # end_id
-            #level=0
+            # level=0
         )
 
         fluid.layers.increment(x=counter, value=1, in_place=True)
-
         # update the memories
         fluid.layers.array_write(current_state, array=state_array, i=counter)
         fluid.layers.array_write(selected_ids, array=ids_array, i=counter)
@@ -338,15 +340,15 @@ def attention_infer(images, num_classes, use_cudnn=True):
 
         # update the break condition: up to the max length or all candidates of
         # source sentences have ended.
-        length_cond = fluid.layers.less_than(x=counter, y=array_len)
         finish_cond = fluid.layers.logical_not(
             fluid.layers.is_empty(x=selected_ids))
-        fluid.layers.logical_and(x=length_cond, y=finish_cond, out=cond)
+        return [counter, finish_cond]
+
+    _ = fluid.layers.while_loop(cond, body, [counter, finish_cond])
 
     ids, scores = fluid.layers.beam_search_decode(ids_array, scores_array,
                                                   beam_size, eos)
     return ids
-
 
 def attention_eval(data_shape, num_classes, use_cudnn=True):
     images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
