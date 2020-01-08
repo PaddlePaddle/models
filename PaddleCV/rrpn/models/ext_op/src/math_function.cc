@@ -64,6 +64,23 @@ struct TensorSetConstantCPU {
   float value_;
 };
 
+template <typename DeviceContext, typename T, int Rank>
+void Transpose<DeviceContext, T, Rank>::operator()(
+    const DeviceContext& context,
+    const framework::Tensor& in,
+    framework::Tensor* out,
+    const std::vector<int>& axis) {
+  Eigen::array<int, Rank> permute;
+  for (int i = 0; i < Rank; i++) {
+    permute[i] = axis[i];
+  }
+  auto eigen_in = framework::EigenTensor<T, Rank>::From(in);
+  auto eigen_out = framework::EigenTensor<T, Rank>::From(*out);
+  auto* dev = context.eigen_device();
+  eigen_out.device(*dev) = eigen_in.shuffle(permute);
+}
+
+
 }  // namespace math
 }  // namespace operators
 }  // namespace paddle

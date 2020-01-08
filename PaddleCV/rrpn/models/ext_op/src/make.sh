@@ -2,6 +2,7 @@ include_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_include())' 
 lib_dir=$( python -c 'import paddle; print(paddle.sysconfig.get_lib())' )
 
 echo $include_dir
+echo $lib_dir
 
 CUDA=$1
 CUDNN=$2

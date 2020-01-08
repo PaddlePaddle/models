@@ -34,13 +34,6 @@ struct Transpose {
                   const std::vector<int>& axis);
 };
 
-template <typename DeviceContext, typename T>
-struct SetConstant {
-  void operator()(const DeviceContext& context,
-                  framework::Tensor* tensor,
-                  T num);
-};
-
 void set_constant(const platform::DeviceContext& context,
                   framework::Tensor* tensor,
                   float value);
