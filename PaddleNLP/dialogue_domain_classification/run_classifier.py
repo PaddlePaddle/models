@@ -122,7 +122,7 @@ def get_score(pred_result, label, eval_phase):
                 recall, f1, acc))
 
 
-def train(args, train_exe, compiled_prog, build_res, place):
+def train(args, train_exe, build_res, place):
     """[train the net]
     
     Arguments:
@@ -133,6 +133,7 @@ def train(args, train_exe, compiled_prog, build_res, place):
         place {[type]} -- [description]
     """
     global DEV_COUNT
+    compiled_prog = build_res["compiled_prog"]
     cost = build_res["cost"]
     prediction = build_res["prediction"]
     pred_label = build_res["pred_label"]
@@ -164,9 +165,9 @@ def train(args, train_exe, compiled_prog, build_res, place):
                     logger.info("[save]step %d : save at %s" % (steps, save_path))
                 if steps % args.validation_steps == 0:
                     if args.do_eval:
-                        evaluate(args, test_exe, build_res["eval_prog"], build_res, place, "eval")
+                        evaluate(args, test_exe, build_res, place, "eval")
                     if args.do_test:
-                        evaluate(args, test_exe, build_res["test_prog"], build_res, place, "test")
+                        evaluate(args, test_exe, build_res, place, "test")
         except Exception as e:
             logger.exception(str(e))
             logger.error("Train error : %s" % str(e))
@@ -176,7 +177,7 @@ def train(args, train_exe, compiled_prog, build_res, place):
     logger.info("[save]step %d : save at %s" % (steps, save_path))
 
 
-def evaluate(args, test_exe, test_prog, build_res, place, eval_phase, save_result=False, id2intent=None):
+def evaluate(args, test_exe, build_res, place, eval_phase, save_result=False, id2intent=None):
     """[evaluate on dev/test dataset]
     
     Arguments:
@@ -200,8 +201,10 @@ def evaluate(args, test_exe, test_prog, build_res, place, eval_phase, save_resul
     fetch_list = [cost.name, prediction.name, pred_label.name, label.name]
     total_cost, total_acc, pred_prob_list, pred_label_list, label_list = [], [], [], [], []
     if eval_phase == "eval":
+        test_prog = build_res["eval_compiled_prog"]
         test_pyreader = build_res["eval_pyreader"]
     elif eval_phase == "test":
+        test_prog = build_res["test_compiled_prog"]
         test_pyreader = build_res["test_pyreader"]
     else:
         exit(1)
@@ -429,27 +432,49 @@ def main(args):
         except Exception as e:
             logger.exception(str(e))
             logger.error("Faild load model from %s [%s]" % (args.init_checkpoint, str(e)))
-    
+    build_strategy = fluid.compiler.BuildStrategy()
+    build_strategy.fuse_all_reduce_ops = False
+    exec_strategy = fluid.ExecutionStrategy()
+    exec_strategy.num_threads = 1
+    # add compiled prog
     if args.do_train:
-        build_strategy = fluid.compiler.BuildStrategy()
-        build_strategy.fuse_all_reduce_ops = False
-        exec_strategy = fluid.ExecutionStrategy()
-        exec_strategy.num_threads = 1
         compiled_prog = fluid.compiler.CompiledProgram(build_res["train_prog"]).with_data_parallel( \
-                                        loss_name=build_res["cost"].name, build_strategy=build_strategy,
-                                        exec_strategy=exec_strategy)
+                                                                    loss_name=build_res["cost"].name, \
+                                                                    build_strategy=build_strategy, \
+                                                                    exec_strategy=exec_strategy)
+        if args.do_test:
+            test_compiled_prog = fluid.compiler.CompiledProgram(build_res["test_prog"]).with_data_parallel( \
+                                                                                share_vars_from=compiled_prog)
+        if args.do_eval:
+            eval_compiled_prog = fluid.compiler.CompiledProgram(build_res["eval_prog"]).with_data_parallel( \
+                                                                                share_vars_from=compiled_prog)
+    else:
+        if args.do_test:
+            test_compiled_prog = fluid.compiler.CompiledProgram(build_res["test_prog"]).with_data_parallel( \
+                                                                            loss_name=build_res["cost"].name, \
+                                                                            build_strategy=build_strategy, \
+                                                                            exec_strategy=exec_strategy)
+        if args.do_eval:
+            eval_compiled_prog = fluid.compiler.CompiledProgram(build_res["eval_prog"]).with_data_parallel( \
+                                                                            loss_name=build_res["cost"].name, \
+                                                                            build_strategy=build_strategy, \
+                                                                            exec_strategy=exec_strategy)
+    if args.do_train:
         build_res["compiled_prog"] = compiled_prog
-        train(args, exe, compiled_prog, build_res, place)
     if args.do_eval:
-  
-        evaluate(args, exe, build_res["eval_prog"], build_res, place, "eval", \
+        build_res["eval_compiled_prog"] = eval_compiled_prog
+    if args.do_test:
+        build_res["test_compiled_prog"] = test_compiled_prog
+
+    if args.do_train:
+       train(args, exe, build_res, place)
+    if args.do_eval:
+       evaluate(args, exe, build_res, place, "eval", \
                 save_result=True, id2intent=id2intent)
     if args.do_test:
-
-        evaluate(args, exe, build_res["test_prog"], build_res, place, "test",\
+       evaluate(args, exe, build_res, place, "test",\
                  save_result=True, id2intent=id2intent)
 
-        
         
 
 if __name__ == "__main__":
