@@ -384,7 +384,7 @@ class PositionEmbedding(dg.Layer):
             out (Variable): Shape(B, C_pos), position embedding, where C_pos 
                 means position embedding size.
         """
-        rad = fluid.layers.transpose(self.embed._w, perm=[1, 0])
+        rad = fluid.layers.transpose(self.embed.weight, perm=[1, 0])
         batch_size = indices.shape[0]
 
         if speaker_position_rate is None:

@@ -640,7 +640,7 @@ class WrapDecoderLayer(Layer):
 
         if self._weight_sharing:
             predict = layers.matmul(x=dec_output_reshape,
-                                    y=self._prepare_decoder_layer._input_emb._w,
+                                    y=self._prepare_decoder_layer._input_emb.weight,
                                     transpose_y=True)
         else:
             predict = self._fc(dec_output_reshape)
@@ -693,7 +693,7 @@ class TransFormer(Layer):
             weight_sharing)
 
         if weight_sharing:
-            self._wrap_decoder_layer._prepare_decoder_layer._input_emb._w = self._wrap_encoder_layer._prepare_encoder_layer._input_emb._w
+            self._wrap_decoder_layer._prepare_decoder_layer._input_emb.weight = self._wrap_encoder_layer._prepare_encoder_layer._input_emb.weight
 
         self.n_layer = n_layer
         self.n_head = n_head
