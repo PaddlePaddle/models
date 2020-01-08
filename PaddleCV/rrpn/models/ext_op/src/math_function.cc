@@ -51,19 +51,6 @@ DEFINE_CPU_TRANS(4);
 DEFINE_CPU_TRANS(5);
 DEFINE_CPU_TRANS(6);
 
-struct TensorSetConstantCPU {
-  TensorSetConstantCPU(framework::Tensor* tensor, float value)
-      : tensor_(tensor), value_(value) {}
-  template <typename T>
-  void apply() const {
-    auto cpu = platform::CPUPlace();
-    auto* begin = tensor_->mutable_data<T>(cpu);
-    std::fill(begin, begin + tensor_->numel(), static_cast<T>(value_));
-  }
-  framework::Tensor* tensor_;
-  float value_;
-};
-
 template <typename DeviceContext, typename T, int Rank>
 void Transpose<DeviceContext, T, Rank>::operator()(
     const DeviceContext& context,

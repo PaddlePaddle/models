@@ -29,19 +29,9 @@ and Yingbin Zheng and Xiangyang Xue},
 
 #include <algorithm>
 #include <limits>
-//#include "math_function.h"
 #include "paddle/fluid/framework/op_registry.h"
 #include "paddle/fluid/memory/memory.h"
 #include "paddle/fluid/platform/cuda_primitives.h"
-
-//#include "set_constant.h"
-//#include "paddle/fluid/framework/eigen.h"
-//#include "paddle/fluid/framework/operator.h"
-//#include "paddle/fluid/framework/tensor.h"
-//#include "paddle/fluid/framework/tensor_util.h"
-//#include "paddle/fluid/platform/device_context.h"
-//#include "paddle/fluid/platform/enforce.h"
-//#include "paddle/fluid/framework/data_type.h"
 
 #define CUDA_1D_KERNEL_LOOP(i, n)                            \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < n; \
@@ -62,43 +52,6 @@ static inline int NumBlocks(const int N) {
                   kNumMaxinumNumBlocks);
 }
 
-// template <typename DeviceContext, typename T>
-// struct SetConstant {
-//  void operator()(const DeviceContext& context,
-//                  framework::Tensor* tensor,
-//                  T num) {
-//   auto t = framework::EigenVector<T>::Flatten(*tensor);
-//   t.device(*context.eigen_device()) = t.constant(static_cast<T>(num));
-//
-//}
-//};
-//
-// struct TensorSetConstantGPU {
-//  TensorSetConstantGPU(const platform::DeviceContext& context,
-//                       framework::Tensor* tensor,
-//                       float value)
-//      : context_(context), tensor_(tensor), value_(value) {}
-//
-//  template <typename T>
-//  void apply() const {
-//    SetConstant<platform::CUDADeviceContext, T> functor;
-//    functor(reinterpret_cast<const platform::CUDADeviceContext&>(context_),
-//            tensor_,
-//            static_cast<T>(value_));
-//  }
-//
-//  const platform::DeviceContext& context_;
-//  framework::Tensor* tensor_;
-//  float value_;
-//};
-
-// template <typename DeviceContext, typename T>
-// void SetConstant<DeviceContext, T>::operator()(const DeviceContext& context,
-//                                               framework::Tensor* tensor,
-//                                               T num) {
-//  auto t = framework::EigenVector<T>::Flatten(*tensor);
-//  t.device(*context.eigen_device()) = t.constant(static_cast<T>(num));
-//}
 
 template <typename T>
 __global__ void Zero(T* x, int num) {
@@ -375,9 +328,6 @@ public:
                                                                     idx_y_num);
     Zero<<<(out_num + 512 - 1) / 512, 512, 0, dev_ctx.stream()>>>(out_,
                                                                   out_num);
-    // set_zero(dev_ctx, con_idx_x, static_cast<T>(0));
-    // set_zero(dev_ctx, con_idx_y, static_cast<T>(0));
-    // set_zero(dev_ctx, out, static_cast<T>(0));
 
     RROIAlignForward<T><<<blocks, threads, 0, dev_ctx.stream()>>>(
         output_size,
@@ -393,9 +343,6 @@ public:
         out_,
         con_idx_x_,
         con_idx_y_);
-    // out->mutable_data<T>(ctx.GetPlace()),
-    // con_idx_x->mutable_data<float>(ctx.GetPlace()),
-    // con_idx_y->mutable_data<float>(ctx.GetPlace()));
   }
 };
 
