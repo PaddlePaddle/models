@@ -314,7 +314,6 @@ public:
                  bytes,
                  dev_ctx.stream());
 
-    // TensorSetConstantGPU set_zero;
     T* out_ = out->mutable_data<T>(ctx.GetPlace());
     T* con_idx_x_ = con_idx_x->mutable_data<T>(ctx.GetPlace());
     T* con_idx_y_ = con_idx_y->mutable_data<T>(ctx.GetPlace());
@@ -393,9 +392,7 @@ public:
                  bytes,
                  dev_ctx.stream());
     T* in_grad_ = in_grad->mutable_data<T>(ctx.GetPlace());
-    // TensorSetConstantGPU set_zero;
     int in_grad_num = in_grad->numel();
-    // set_zero(dev_ctx, in_grad, static_cast<T>(0));
     Zero<<<(in_grad_num + 512 - 1) / 512, 512, 0, dev_ctx.stream()>>>(
         in_grad_, in_grad_num);
     int output_grad_size = out_grad->numel();

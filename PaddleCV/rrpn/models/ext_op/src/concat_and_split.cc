@@ -66,9 +66,8 @@ public:
   }
 };
 
-#define DEFINE_FUNCTOR(type)                                      \
-  template class ConcatFunctor<platform::CPUDeviceContext, type>; \
-//  template class SplitFunctor<platform::CPUDeviceContext, type>;
+#define DEFINE_FUNCTOR(type) \
+  template class ConcatFunctor<platform::CPUDeviceContext, type>;
 
 FOR_ALL_TYPES(DEFINE_FUNCTOR);
 

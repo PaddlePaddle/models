@@ -29,16 +29,6 @@ inline T& Ref(T* ptr, ARGS&&... args) {
   return *ptr;
 }
 
-// template <typename T, typename... ARGS>
-// inline std::vector<std::reference_wrapper<T>> VectorRef(
-//     const std::vector<T*>& vec, ARGS&&... args) {
-//   std::vector<std::reference_wrapper<T>> result;
-//   result.reserve(vec.size());
-//   for (auto* ptr : vec) {
-//     result.emplace_back(Ref(ptr, args...));
-//   }
-//   return result;
-// }
 
 }  // namespace detail
 }  // namespace operators
