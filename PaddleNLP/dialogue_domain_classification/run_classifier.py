@@ -165,9 +165,9 @@ def train(args, train_exe, build_res, place):
                     logger.info("[save]step %d : save at %s" % (steps, save_path))
                 if steps % args.validation_steps == 0:
                     if args.do_eval:
-                        evaluate(args, test_exe, build_res, place, "eval")
+                        evaluate(args, test_exe, build_res, "eval")
                     if args.do_test:
-                        evaluate(args, test_exe, build_res, place, "test")
+                        evaluate(args, test_exe, build_res, "test")
         except Exception as e:
             logger.exception(str(e))
             logger.error("Train error : %s" % str(e))
@@ -177,7 +177,7 @@ def train(args, train_exe, build_res, place):
     logger.info("[save]step %d : save at %s" % (steps, save_path))
 
 
-def evaluate(args, test_exe, build_res, place, eval_phase, save_result=False, id2intent=None):
+def evaluate(args, test_exe, build_res, eval_phase, save_result=False, id2intent=None):
     """[evaluate on dev/test dataset]
     
     Arguments:
@@ -193,6 +193,7 @@ def evaluate(args, test_exe, build_res, place, eval_phase, save_result=False, id
         save_result {bool} -- [description] (default: {False})
         id2intent {[type]} -- [description] (default: {None})
     """
+    place = build_res["test_place"] 
     threshold = args.threshold
     cost = build_res["cost"]
     prediction = build_res["prediction"]
@@ -331,7 +332,7 @@ def build_data_reader(args, char_dict, intent_dict):
     return reader_res
 
 
-def build_graph(args, model_config, num_labels, dict_dim, place, reader_res):
+def build_graph(args, model_config, num_labels, dict_dim, place, test_place, reader_res):
     """[build paddle graph]
     
     Arguments:
@@ -368,15 +369,15 @@ def build_graph(args, model_config, num_labels, dict_dim, place, reader_res):
         with fluid.program_guard(eval_prog, startup_prog):
             with fluid.unique_name.guard():
                 eval_pyreader, cost, prediction, pred_label, label = create_net(args, model_config, num_labels, \
-                                                             dict_dim, place, model_name="textcnn_net")
-                eval_pyreader.decorate_sample_list_generator(reader_res['eval_data_generator'], places=place)
+                                                             dict_dim, test_place, model_name="textcnn_net")
+                eval_pyreader.decorate_sample_list_generator(reader_res['eval_data_generator'], places=test_place)
                 res["eval_pyreader"] = eval_pyreader
     if args.do_test:
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
                 test_pyreader, cost, prediction, pred_label, label = create_net(args, model_config, num_labels, \
-                                                            dict_dim, place, model_name="textcnn_net")
-                test_pyreader.decorate_sample_list_generator(reader_res['test_data_generator'], places=place)
+                                                            dict_dim, test_place, model_name="textcnn_net")
+                test_pyreader.decorate_sample_list_generator(reader_res['test_data_generator'], places=test_place)
                 res["test_pyreader"] = test_pyreader
     res["cost"] = cost
     res["prediction"] = prediction
@@ -399,9 +400,11 @@ def main(args):
     random.seed(args.random_seed)
     model_config = ConfigReader.read_conf(args.config_path)
     if args.use_cuda:
+        test_place = fluid.cuda_places(0)
         place = fluid.cuda_places()
         DEV_COUNT = fluid.core.get_cuda_device_count()
     else:
+        test_place = fluid.cpu_places(1)
         os.environ['CPU_NUM'] = str(args.cpu_num)
         place = fluid.cpu_places()
         DEV_COUNT = args.cpu_num
@@ -419,7 +422,9 @@ def main(args):
     num_labels = len(intent_dict)
     # build model
     reader_res = build_data_reader(args, char_dict, intent_dict)
-    build_res = build_graph(args, model_config, num_labels, dict_dim, place, reader_res)
+    build_res = build_graph(args, model_config, num_labels, dict_dim, place, test_place, reader_res)
+    build_res["place"] = place
+    build_res["test_place"] = test_place
     if not (args.do_train or args.do_eval or args.do_test):
         raise ValueError("For args `do_train`, `do_eval` and `do_test`, at "
                          "least one of them must be True.")
@@ -442,37 +447,21 @@ def main(args):
                                                                     loss_name=build_res["cost"].name, \
                                                                     build_strategy=build_strategy, \
                                                                     exec_strategy=exec_strategy)
-        if args.do_test:
-            test_compiled_prog = fluid.compiler.CompiledProgram(build_res["test_prog"]).with_data_parallel( \
-                                                                                share_vars_from=compiled_prog)
-        if args.do_eval:
-            eval_compiled_prog = fluid.compiler.CompiledProgram(build_res["eval_prog"]).with_data_parallel( \
-                                                                                share_vars_from=compiled_prog)
-    else:
-        if args.do_test:
-            test_compiled_prog = fluid.compiler.CompiledProgram(build_res["test_prog"]).with_data_parallel( \
-                                                                            loss_name=build_res["cost"].name, \
-                                                                            build_strategy=build_strategy, \
-                                                                            exec_strategy=exec_strategy)
-        if args.do_eval:
-            eval_compiled_prog = fluid.compiler.CompiledProgram(build_res["eval_prog"]).with_data_parallel( \
-                                                                            loss_name=build_res["cost"].name, \
-                                                                            build_strategy=build_strategy, \
-                                                                            exec_strategy=exec_strategy)
-    if args.do_train:
         build_res["compiled_prog"] = compiled_prog
-    if args.do_eval:
-        build_res["eval_compiled_prog"] = eval_compiled_prog
     if args.do_test:
+        test_compiled_prog = fluid.compiler.CompiledProgram(build_res["test_prog"])
         build_res["test_compiled_prog"] = test_compiled_prog
+    if args.do_eval:
+        eval_compiled_prog = fluid.compiler.CompiledProgram(build_res["eval_prog"])
+        build_res["eval_compiled_prog"] = eval_compiled_prog
 
     if args.do_train:
        train(args, exe, build_res, place)
     if args.do_eval:
-       evaluate(args, exe, build_res, place, "eval", \
+       evaluate(args, exe, build_res, "eval", \
                 save_result=True, id2intent=id2intent)
     if args.do_test:
-       evaluate(args, exe, build_res, place, "test",\
+       evaluate(args, exe, build_res, "test",\
                  save_result=True, id2intent=id2intent)
 
         
