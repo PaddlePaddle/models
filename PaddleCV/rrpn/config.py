@@ -141,6 +141,9 @@ _C.anchor_sizes = [128, 256, 512]
 # RPN anchor ratio
 _C.aspect_ratio = [0.2, 0.5, 1.0]
 
+# RPN anchor angle
+_C.anchor_angle = [-30.0, 0.0, 30.0, 60.0, 90.0, 120.0]
+
 # variance of anchors
 _C.variances = [1., 1., 1., 1., 1.]
 

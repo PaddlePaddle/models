@@ -42,27 +42,6 @@ public:
                   framework::Tensor* output);
 };
 
-/*
- * \brief Split the input tensors along the dimension axis into outputs.
- *  TODO(zcd): maybe it needs to be more detailed.
- *  Examples:
- *     Input = [[1,2],
- *              [3,4],
- *              [5,6]]
- *     axis = 0
- *
- *     Output[0] = [[1,2],[3,4]]
- *     Output[1] = [[5,6]]
- */
-template <typename DeviceContext, typename T>
-class SplitFunctor {
-public:
-  void operator()(const DeviceContext& context,
-                  const framework::Tensor& input,
-                  const std::vector<const framework::Tensor*>& ref_inputs,
-                  int axis,
-                  std::vector<framework::Tensor*>* outputs);
-};
 
 }  // namespace math
 }  // namespace operators

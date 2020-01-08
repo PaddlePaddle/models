@@ -34,6 +34,14 @@ and Yingbin Zheng and Xiangyang Xue},
 #include "paddle/fluid/memory/memory.h"
 #include "paddle/fluid/platform/cuda_primitives.h"
 
+//#include "set_constant.h"
+//#include "paddle/fluid/framework/eigen.h"
+//#include "paddle/fluid/framework/operator.h"
+//#include "paddle/fluid/framework/tensor.h"
+//#include "paddle/fluid/framework/tensor_util.h"
+//#include "paddle/fluid/platform/device_context.h"
+//#include "paddle/fluid/platform/enforce.h"
+
 #define CUDA_1D_KERNEL_LOOP(i, n)                            \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < n; \
        i += blockDim.x * gridDim.x)
@@ -52,6 +60,14 @@ static inline int NumBlocks(const int N) {
   return std::min((N + kNumCUDAThreads - 1) / kNumCUDAThreads,
                   kNumMaxinumNumBlocks);
 }
+
+// template <typename DeviceContext, typename T>
+// struct SetConstant {
+//  void operator()(const DeviceContext& context,
+//                  framework::Tensor* tensor,
+//                  T num);
+//};
+
 
 template <typename T>
 __global__ void RROIAlignForward(const int nthreads,

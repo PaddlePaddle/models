@@ -41,43 +41,9 @@ struct SetConstant {
                   T num);
 };
 
-template <typename Place>
-void set_constant_with_place(const platform::DeviceContext& context,
-                             framework::Tensor* tensor,
-                             float value);
-
 void set_constant(const platform::DeviceContext& context,
                   framework::Tensor* tensor,
                   float value);
-
-template <typename DeviceContext, typename T>
-struct RowwiseAdd {
-  void operator()(const DeviceContext& context,
-                  const framework::Tensor& input,
-                  const framework::Tensor& vec,
-                  framework::Tensor* output);
-};
-
-template <typename DeviceContext, typename T>
-struct ColwiseSum {
-  void operator()(const DeviceContext& context,
-                  const framework::Tensor& input,
-                  framework::Tensor* vec);
-};
-
-template <typename DeviceContext, typename T>
-struct RowwiseSum {
-  void operator()(const DeviceContext& context,
-                  const framework::Tensor& input,
-                  framework::Tensor* vec);
-};
-
-template <typename DeviceContext, typename T>
-struct RowwiseMean {
-  void operator()(const DeviceContext& context,
-                  const framework::Tensor& input,
-                  framework::Tensor* vec);
-};
 
 }  // namespace math
 }  // namespace operators
