@@ -101,6 +101,7 @@ def soft_nms(df, alpha, t1, t2):
 def video_process(video_list,
                   video_dict,
                   output_path,
+                  result_dict,
                   snms_alpha=0.4,
                   snms_t1=0.55,
                   snms_t2=0.9):
@@ -136,15 +137,13 @@ def bmn_post_processing(video_dict, subset, output_path, result_path):
                                     num_videos_per_thread]
         p = mp.Process(
             target=video_process,
-            args=(
-                tmp_video_list,
-                video_dict,
-                output_path, ))
+            args=(tmp_video_list, video_dict, output_path, result_dict))
         p.start()
         processes.append(p)
     tmp_video_list = video_list[(pp_num - 1) * num_videos_per_thread:]
     p = mp.Process(
-        target=video_process, args=(tmp_video_list, video_dict, output_path))
+        target=video_process,
+        args=(tmp_video_list, video_dict, output_path, result_dict))
     p.start()
     processes.append(p)
     for p in processes:

@@ -21,10 +21,10 @@ import os
 import ast
 import json
 
-from train import BMN
+from model import BMN
 from eval import gen_props
 from reader import BMNReader
-from utils import bmn_post_processing
+from bmn_utils import bmn_post_processing
 from config_utils import *
 
 DATATYPE = 'float32'
@@ -95,7 +95,7 @@ def infer_bmn(args):
         os.makedirs(infer_config.INFER.result_path)
     place = fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
-        bmn = BMN("bmn", infer_config)
+        bmn = BMN(infer_config)
         # load checkpoint
         if args.weights:
             assert os.path.exists(args.weights + ".pdparams"

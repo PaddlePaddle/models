@@ -24,8 +24,8 @@ import json
 import logging
 
 from reader import BMNReader
-from train import BMN, bmn_loss_func
-from utils import boundary_choose, bmn_post_processing
+from model import BMN, bmn_loss_func
+from bmn_utils import boundary_choose, bmn_post_processing
 from config_utils import *
 
 DATATYPE = 'float32'
@@ -137,7 +137,7 @@ def test_bmn(args):
         os.makedirs(test_config.TEST.result_path)
     place = fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
-        bmn = BMN("bmn", test_config)
+        bmn = BMN(test_config)
 
         # load checkpoint
         if args.weights:

@@ -24,7 +24,7 @@ import os
 
 logger = logging.getLogger(__name__)
 
-from utils import iou_with_anchors, ioa_with_anchors
+from bmn_utils import iou_with_anchors, ioa_with_anchors
 
 
 class BMNReader():
