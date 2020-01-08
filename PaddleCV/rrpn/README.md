@@ -12,7 +12,7 @@
 
 ## 安装
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.6.1或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的develop或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/)中的说明来更新PaddlePaddle。
 
 
 ## 简介
