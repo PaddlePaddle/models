@@ -150,6 +150,7 @@ def train(args, config, train_params, train_file_list):
 
     #only for ce
     if args.enable_ce:
+        is_shuffle = False
         SEED = 102
         startup_prog.random_seed = SEED
         train_prog.random_seed = SEED
