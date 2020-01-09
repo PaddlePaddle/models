@@ -188,4 +188,3 @@ class DarkNet53_conv_body(fluid.dygraph.Layer):
                 out = self.downsample_list[i](out)
         return blocks[-1:-4:-1]
 
-

@@ -45,7 +45,7 @@ def eval():
 
     place = fluid.CUDAPlace(0) if cfg.use_gpu else fluid.CPUPlace()
     with fluid.dygraph.guard(place):
-        model = Yolov3(3,is_train=False)
+        model = YOLOv3(3,is_train=False)
         # yapf: disable
         if cfg.weights:
             restore, _ = fluid.load_dygraph(cfg.weights)
@@ -93,7 +93,7 @@ def eval():
             nmsed_boxes = batch_outputs.numpy()
             if nmsed_boxes.shape[1] != 6:
                 continue
-            for i in range(nmsed_boxes.shape[0]):
+            for i in range(1):
                 im_id = data[0][1]
                 nmsed_box=nmsed_boxes
                 labels = nmsed_box[:, 0]

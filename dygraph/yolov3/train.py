@@ -88,15 +88,18 @@ def train():
             state_dict = model.state_dict()
             for k,v in a.items():
                 state_dict[k]=a[k]
+            model.set_dict(state_dict)
+            model.train()
         boundaries = cfg.lr_steps
         gamma = cfg.lr_gamma
         step_num = len(cfg.lr_steps)
         learning_rate = cfg.learning_rate
         values = [learning_rate * (gamma ** i) for i in range(step_num + 1)]
 
-        lr = fluid.layers.piecewise_decay(
+        lr = fluid.dygraph.PiecewiseDecay(
             boundaries=boundaries,
-            values=values)
+            values=values,
+            begin=args.start_iter)
 
         lr = fluid.layers.linear_lr_warmup(
                 learning_rate=lr,

@@ -103,7 +103,7 @@ dataset/coco/
 
 首先通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
 
-`python -m paddle.distributed.launch --selected_gpus=0,1,2,3,4,5,6,7 --started_port=9999 --use_data_parallel 1`
+`python -m paddle.distributed.launch --selected_gpus=0,1,2,3,4,5,6,7 --started_port=9999 train.py --use_data_parallel=1`
 
 执行训练开始时，会得到类似如下输出，每次迭代打印的log数与指定卡数一致：
 

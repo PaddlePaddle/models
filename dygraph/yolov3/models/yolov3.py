@@ -24,8 +24,8 @@ from paddle.fluid.regularizer import L2Decay
 from config import cfg
 
 from paddle.fluid.dygraph.nn import Conv2D, BatchNorm
-from darknet_dy import DarkNet53_conv_body
-from darknet_dy import ConvBNLayer
+from darknet import DarkNet53_conv_body
+from darknet import ConvBNLayer
 
 from paddle.fluid.dygraph.base import to_variable
 
