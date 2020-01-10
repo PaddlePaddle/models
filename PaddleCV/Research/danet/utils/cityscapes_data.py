@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import random
 import paddle
@@ -33,13 +36,13 @@ def mapper_train(sample):
     image = Image.open(image_path, mode='r').convert('RGB')
     label = Image.open(label_path, mode='r')
 
-    image, label = city.sync_transform(image, label) 
+    image, label = city.sync_transform(image, label)
     image_array = np.array(image)  # HWC
     label_array = np.array(label)  # HW
 
     image_array = image_array.transpose((2, 0, 1))  # CHW
-    image_array = image_array / 255.0 
-    image_array = (image_array - data_mean) / data_std 
+    image_array = image_array / 255.0
+    image_array = (image_array - data_mean) / data_std
     image_array = image_array.astype('float32')
     label_array = label_array.astype('int64')
     return image_array, label_array
@@ -50,13 +53,13 @@ def mapper_val(sample):
     image = Image.open(image_path, mode='r').convert('RGB')
     label = Image.open(label_path, mode='r')
 
-    image, label = city.sync_val_transform(image, label)  
+    image, label = city.sync_val_transform(image, label)
     image_array = np.array(image)  # HWC
     label_array = np.array(label)  # HW
 
     image_array = image_array.transpose((2, 0, 1))  # CHW
-    image_array = image_array / 255.0 
-    image_array = (image_array - data_mean) / data_std  
+    image_array = image_array / 255.0
+    image_array = (image_array - data_mean) / data_std
     image_array = image_array.astype('float32')
     label_array = label_array.astype('int64')
     return image_array, label_array
@@ -79,8 +82,8 @@ def cityscapes_train(data_root='./dataset', base_size=1024, crop_size=768, scale
             length = (len(image_path) // (batch_size * gpu_num)) * (batch_size * gpu_num)
         else:
             length = len(image_path)
-        for i in range(2):
-            if i == 0:  
+        for i in range(length):
+            if i == 0:
                 cc = list(zip(image_path, label_path))
                 random.shuffle(cc)
                 image_path[:], label_path[:] = zip(*cc)
@@ -96,7 +99,7 @@ def cityscapes_val(data_root='./dataset', base_size=1024, crop_size=768, scale=T
     image_path, label_path = city.get_path_pairs()
 
     def reader():
-        for i in range(len(image_path[:2])):
+        for i in range(len(image_path)):
             yield image_path[i], label_path[i], city
 
     if xmap:
@@ -115,7 +118,7 @@ def cityscapes_train_val(data_root='./dataset', base_size=1024, crop_size=768, s
         else:
             length = len(image_path)
         for i in range(length):
-            if i == 0:  
+            if i == 0:
                 cc = list(zip(image_path, label_path))
                 random.shuffle(cc)
                 image_path[:], label_path[:] = zip(*cc)

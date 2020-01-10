@@ -31,10 +31,11 @@ add_arg('pretrained_model',  str,   "",         "pretrained_model.")
 add_arg('test_images',       str,   None,       "The directory of images to be used for test.")
 add_arg('test_list',         str,   None,       "The list file of images to be used for training.")
 # model hyper paramters
+add_arg('encoder_size',      int,   200,     "Encoder size.")
 add_arg('decoder_size',      int,   128,     "Decoder size.")
-add_arg('word_vector_dim',   int,   128,     "Decoder size.")
-add_arg('num_classes',       int,   95,     "Decoder size.")
-add_arg('gradient_clip',     float, 5.0,     "Decoder size.")
+add_arg('word_vector_dim',   int,   128,     "Word vector dim.")
+add_arg('num_classes',       int,   95,     "Number classes.")
+add_arg('gradient_clip',     float, 5.0,     "Gradient clip value.")
 
 
 def evaluate(model, test_reader, batch_size):
@@ -48,8 +49,7 @@ def evaluate(model, test_reader, batch_size):
         label_in = to_variable(data_dict["label_in"])
         label_out = to_variable(data_dict["label_out"])
 
-        label_out._stop_gradient = True
-        label_out.trainable = False
+        label_out.stop_gradient = True
 
         img = to_variable(data_dict["pixel"])
 
@@ -81,9 +81,9 @@ def evaluate(model, test_reader, batch_size):
 
 def eval(args):
     with fluid.dygraph.guard():
-        ocr_attention = OCRAttention("ocr_attention", batch_size=args.batch_size,
-                                     decoder_size=args.decoder_size, num_classes=args.num_classes,
-                                     word_vector_dim=args.word_vector_dim)
+        ocr_attention = OCRAttention(batch_size=args.batch_size,
+                                     encoder_size=args.encoder_size, decoder_size=args.decoder_size,
+                                     num_classes=args.num_classes, word_vector_dim=args.word_vector_dim)
         restore, _ = fluid.load_dygraph(args.pretrained_model)
         ocr_attention.set_dict(restore)
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,13 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 
 os.environ['FLAGS_eager_delete_tensor_gb'] = "0.0"
 os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.99"
-
 
 import paddle.fluid as fluid
 import paddle
@@ -37,7 +39,6 @@ from utils.cityscapes_data import cityscapes_val
 from utils.cityscapes_data import cityscapes_test
 from utils.lr_scheduler import Lr
 from iou import IOUMetric
-
 
 #  globals
 data_mean = np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
@@ -66,10 +67,10 @@ def resize_image(image, out_h, out_w, mode=Image.BILINEAR):
 
 
 def mapper_image(image):
-    image_array = np.array(image)  # HWC
-    image_array = image_array.transpose((2, 0, 1))  # CHW
-    image_array = image_array / 255.0  
-    image_array = (image_array - data_mean) / data_std  
+    image_array = np.array(image)
+    image_array = image_array.transpose((2, 0, 1))
+    image_array = image_array / 255.0
+    image_array = (image_array - data_mean) / data_std
     image_array = image_array.astype('float32')
     image_array = image_array[np.newaxis, :]
     return image_array
@@ -97,8 +98,8 @@ def copy_model(path, new_path):
 def mean_iou(pred, label, num_classes=19):
     label = fluid.layers.elementwise_min(fluid.layers.cast(label, np.int32),
                                          fluid.layers.assign(np.array([num_classes], dtype=np.int32)))
-    label_ig = (label == num_classes).astype('int32')  
-    label_ng = (label != num_classes).astype('int32')  
+    label_ig = (label == num_classes).astype('int32')
+    label_ng = (label != num_classes).astype('int32')
     pred = fluid.layers.cast(fluid.layers.argmax(pred, axis=1), 'int32')
     pred = pred * label_ng + label_ig * num_classes
     miou, wrong, correct = fluid.layers.mean_iou(pred, label, num_classes + 1)
@@ -106,50 +107,103 @@ def mean_iou(pred, label, num_classes=19):
     return miou, wrong, correct
 
 
-def eval(args, model_path):
+def change_model_executor_to_dygraph(args):
+    temp_image = fluid.layers.data(name='temp_image', shape=[3, 224, 224], dtype='float32')
+    model = get_model(args)
+    y = model(temp_image)
+    if args.cuda:
+        gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
+    place = fluid.CUDAPlace(gpu_id) if args.cuda else fluid.CPUPlace()
+    exe = fluid.Executor(place)
+    exe.run(fluid.default_startup_program())
+    model_path = args.save_model
+    assert os.path.exists(model_path), "Please check whether the executor model file address {} exists. " \
+                                       "Note: the executor model file is multiple files.".format(model_path)
+    fluid.io.load_persistables(exe, model_path, fluid.default_main_program())
+    print('load executor train model successful, start change!')
+    param_list = fluid.default_main_program().block(0).all_parameters()
+    param_name_list = [p.name for p in param_list]
+    temp_dict = {}
+    for name in param_name_list:
+        tensor = fluid.global_scope().find_var(name).get_tensor()
+        npt = np.asarray(tensor)
+        temp_dict[name] = npt
+    del model
+    with fluid.dygraph.guard():
+        x = np.random.randn(1, 3, 224, 224).astype('float32')
+        x = fluid.dygraph.to_variable(x)
+        model = get_model(args)
+        y = model(x)
+        new_param_dict = {}
+        for k, v in temp_dict.items():
+            value = v
+            value_shape = value.shape
+            name = k
+            tensor = fluid.layers.create_parameter(shape=value_shape,
+                                                   name=name,
+                                                   dtype='float32',
+                                                   default_initializer=fluid.initializer.NumpyArrayInitializer(value))
+            new_param_dict[name] = tensor
+        assert len(new_param_dict) == len(
+            model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                 "Please check whether the model is consistent!"
+        model.set_dict(new_param_dict)
+        fluid.save_dygraph(model.state_dict(), model_path)
+        del model
+        del temp_dict
+        print('change executor model to dygraph successful!')
 
+
+def eval(args):
+    if args.change_executor_to_dygraph:
+        change_model_executor_to_dygraph(args)
     with fluid.dygraph.guard():
         num_classes = args.num_classes
-        base_size = args.base_size  # 图片最长边 2048
-        crop_size = args.crop_size  # 输入网络大小 1024
-        multi_scales = args.multi_scales  # 多尺度测试
-        flip = args.flip  # 左右翻转测试
+        base_size = args.base_size
+        crop_size = args.crop_size
+        multi_scales = args.multi_scales
+        flip = args.flip
 
         if not multi_scales:
             scales = [1.0]
         else:
             # scales = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.2]
-            scales = [0.5, 0.75, 1.0, 1.25, 1.35, 1.5, 1.75, 2.0, 2.2]  # 可能效果会更好
+            scales = [0.5, 0.75, 1.0, 1.25, 1.35, 1.5, 1.75, 2.0, 2.2]  # It might work better
 
         if len(scales) == 1:  # single scale
             # stride_rate = 2.0 / 3.0
-            stride_rate = 1.0 / 2.0  # 可能效果会更好
+            stride_rate = 1.0 / 2.0  # It might work better
         else:
             stride_rate = 1.0 / 2.0
-        stride = int(crop_size * stride_rate)  # 滑动stride
+        stride = int(crop_size * stride_rate)  # slid stride
 
         model = get_model(args)
         x = np.random.randn(1, 3, 224, 224).astype('float32')
         x = fluid.dygraph.to_variable(x)
         y = model(x)
         iou = IOUMetric(num_classes)
-        # 加载最优模型
-        if args.load_better_model and paddle.__version__ == '1.5.2':
-            assert os.path.exists(model_path), "请核对模型文件地址是否存在"
+        model_path = args.save_model
+        # load_better_model
+        if paddle.__version__ == '1.5.2' and args.load_better_model:
+            assert os.path.exists(model_path), "your input save_model: {} ,but '{}' is not exists".format(
+                model_path, model_path)
             print('better model exist!')
             new_model_path = 'dygraph/' + model_path
             copy_model(model_path, new_model_path)
             model_param, _ = fluid.dygraph.load_persistables(new_model_path)
             model.load_dict(model_param)
-        elif args.load_better_model and paddle.__version__ == '1.6.0':
-            assert os.path.exists(model_path + '.pdparams'), "请核对模型文件地址是否存在, 1.6版本只能加载一个独立文件"
+        elif args.load_better_model:
+            assert os.path.exists(model_path + '.pdparams'), "your input save_model: {} ,but '{}' is not exists".format(
+                model_path, model_path + '.pdparams')
             print('better model exist!')
             model_param, _ = fluid.dygraph.load_dygraph(model_path)
             model.load_dict(model_param)
         else:
-            raise ValueError('请设置load_better_model = True!')
-        assert len(model_param) == len(model.state_dict()), "参数量不一致，加载参数失败，" \
-                                                            "请核对模型是否初始化/模型是否一致"
+            raise ValueError('Please set --load_better_model!')
+
+        assert len(model_param) == len(
+            model.state_dict()), "The number of parameters is not equal. Loading parameters failed, " \
+                                 "Please check whether the model is consistent!"
         model.eval()
 
         prev_time = datetime.now()
@@ -160,16 +214,21 @@ def eval(args, model_path):
               format(base_size, crop_size))
         print('scales: {}'.format(scales))
         print('val ing...')
-        palette = pat()  
+        logging.basicConfig(level=logging.INFO,
+                            filename='DANet_{}_eval_dygraph.log'.format(args.backbone),
+                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        logging.info('DANet')
+        logging.info(args)
+        palette = pat()
         for data in reader():
-            # print(data)
             image = data[0]
             label_path = data[1]  # val_label is a picture, test_label is a path
             label = Image.open(label_path, mode='r')  # val_label is a picture, test_label is a path
-            save_png_path = label_path.replace('val', '{}_val'.format(args.backbone)).replace('test', '{}_test'.format(args.backbone))
+            save_png_path = label_path.replace('val', '{}_val'.format(args.backbone)).replace('test', '{}_test'.format(
+                args.backbone))
             label_np = np.array(label)
             w, h = image.size  # h 1024, w 2048
-            scores = np.zeros(shape=[num_classes, h, w], dtype='float32')  # 得分矩阵
+            scores = np.zeros(shape=[num_classes, h, w], dtype='float32')
             for scale in scales:
                 long_size = int(math.ceil(base_size * scale))  # long_size
                 if h > w:
@@ -181,8 +240,8 @@ def eval(args, model_path):
                     height = int(1.0 * h * long_size / w + 0.5)
                     short_size = height
 
-                cur_img = resize_image(image, height, width)  
-                # 右下角pad
+                cur_img = resize_image(image, height, width)
+                # pad
                 if long_size <= crop_size:
                     pad_img = pad_single_image(cur_img, crop_size)
                     pad_img = mapper_image(pad_img)
@@ -191,12 +250,12 @@ def eval(args, model_path):
                     pred1 = pred1.numpy()
                     outputs = pred1[:, :, :height, :width]
                     if flip:
-                        pad_img_filp = flip_left_right_image(cur_img)  
+                        pad_img_filp = flip_left_right_image(cur_img)
                         pad_img_filp = pad_single_image(pad_img_filp, crop_size)  # pad
                         pad_img_filp = mapper_image(pad_img_filp)
                         pad_img_filp = fluid.dygraph.to_variable(pad_img_filp)
                         pred1, pred2, pred3 = model(pad_img_filp)
-                        pred1 = fluid.layers.reverse(pred1, axis=3)  
+                        pred1 = fluid.layers.reverse(pred1, axis=3)
                         pred1 = pred1.numpy()
                         outputs += pred1[:, :, :height, :width]
                 else:
@@ -208,11 +267,11 @@ def eval(args, model_path):
                     pw, ph = pad_img.size
                     assert (ph >= height and pw >= width)
 
-                    # 滑动网格
+                    # slid window
                     h_grids = int(math.ceil(1.0 * (ph - crop_size) / stride)) + 1
                     w_grids = int(math.ceil(1.0 * (pw - crop_size) / stride)) + 1
                     outputs = np.zeros(shape=[1, num_classes, ph, pw], dtype='float32')
-                    count_norm = np.zeros(shape=[1, 1, ph, pw], dtype='int32')  
+                    count_norm = np.zeros(shape=[1, 1, ph, pw], dtype='int32')
                     for idh in range(h_grids):
                         for idw in range(w_grids):
                             h0 = idh * stride
@@ -225,46 +284,55 @@ def eval(args, model_path):
                             pad_crop_img = fluid.dygraph.to_variable(pad_crop_img)
                             pred1, pred2, pred3 = model(pad_crop_img)  # shape [1, num_class, h, w]
                             pred = pred1.numpy()  # channel, h, w
-                            outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  
-                            count_norm[:, :, h0:h1, w0:w1] += 1 
+                            outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]
+                            count_norm[:, :, h0:h1, w0:w1] += 1
                             if flip:
-                                pad_img_filp = flip_left_right_image(crop_img) 
+                                pad_img_filp = flip_left_right_image(crop_img)
                                 pad_img_filp = pad_single_image(pad_img_filp, crop_size)  # pad
                                 pad_img_array = mapper_image(pad_img_filp)
                                 pad_img_array = fluid.dygraph.to_variable(pad_img_array)
-                                pred1, pred2, pred3 = model(pad_img_array)  
-                                pred1 = fluid.layers.reverse(pred1, axis=3)  
+                                pred1, pred2, pred3 = model(pad_img_array)
+                                pred1 = fluid.layers.reverse(pred1, axis=3)
                                 pred = pred1.numpy()
-                                outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]  
-                                count_norm[:, :, h0:h1, w0:w1] += 1    
+                                outputs[:, :, h0:h1, w0:w1] += pred[:, :, 0:h1 - h0, 0:w1 - w0]
+                                count_norm[:, :, h0:h1, w0:w1] += 1
                     assert ((count_norm == 0).sum() == 0)
                     outputs = outputs / count_norm
-                    outputs = outputs[:, :, :height, :width]  
+                    outputs = outputs[:, :, :height, :width]
                 outputs = fluid.dygraph.to_variable(outputs)
                 outputs = fluid.layers.resize_bilinear(outputs, out_shape=[h, w])
                 score = outputs.numpy()[0]
-                scores += score   # scopes 是所有尺度的和， shape: [channel, h, w]
-                pred = np.argmax(score, axis=0).astype('uint8')  
+                scores += score  # the sum of all scales, shape: [channel, h, w]
+                pred = np.argmax(score, axis=0).astype('uint8')
                 picture_path = '{}'.format(save_png_path).replace('.png', '_scale_{}'.format(scale))
                 save_png(pred, palette, picture_path)
-            pred = np.argmax(scores, axis=0).astype('uint8') 
+            pred = np.argmax(scores, axis=0).astype('uint8')
             picture_path = '{}'.format(save_png_path).replace('.png', '_scores')
             save_png(pred, palette, picture_path)
-            iou.add_batch(pred, label_np)   # 计算iou
+            iou.add_batch(pred, label_np)  # cal iou
         print('eval done!')
+        logging.info('eval done!')
         acc, acc_cls, iu, mean_iu, fwavacc, kappa = iou.evaluate()
         print('acc = {}'.format(acc))
+        logging.info('acc = {}'.format(acc))
         print('acc_cls = {}'.format(acc_cls))
+        logging.info('acc_cls = {}'.format(acc_cls))
         print('iu = {}'.format(iu))
-        print('mean_iou(含有255) = {}'.format(mean_iu))
-        print('mean_iou = {}'.format(np.nanmean(iu[:-1])))  # 真正的iou
+        logging.info('iu = {}'.format(iu))
+        print('mean_iou -- 255 = {}'.format(mean_iu))
+        logging.info('mean_iou --255 = {}'.format(mean_iu))
+        print('mean_iou = {}'.format(np.nanmean(iu[:-1])))  # realy iou
+        logging.info('mean_iou = {}'.format(np.nanmean(iu[:-1])))
         print('fwavacc = {}'.format(fwavacc))
+        logging.info('fwavacc = {}'.format(fwavacc))
         print('kappa = {}'.format(kappa))
+        logging.info('kappa = {}'.format(kappa))
         cur_time = datetime.now()
         h, remainder = divmod((cur_time - prev_time).seconds, 3600)
         m, s = divmod(remainder, 60)
         time_str = "Time %02d:%02d:%02d" % (h, m, s)
         print('val ' + time_str)
+        logging.info('val ' + time_str)
 
 
 def save_png(pred_value, palette, name):
@@ -299,7 +367,7 @@ def save_png(pred_value, palette, name):
                 os.makedirs(save_dir)
             image.save(save_path)
     else:
-        raise ValueError('暂只支持nd array')
+        raise ValueError('Only support nd-array')
 
 
 def save_png_test(path):
@@ -338,7 +406,5 @@ if __name__ == '__main__':
     options = Options()
     args = options.parse()
     options.print_args()
-    # model_path = 'checkpoint/DANet101_better_model_paddle1.5.2'
-    model_path = 'checkpoint/DANet101_better_model_paddle1.6'
-    eval(args, model_path)
-   
+    eval(args)
+

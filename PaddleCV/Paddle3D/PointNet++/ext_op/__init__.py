@@ -13,6 +13,6 @@
 #limitations under the License.
 
 from . import pointnet_lib
-from pointnet_lib import *
+from .pointnet_lib import *
 
 __all__ = pointnet_lib.__all__

@@ -267,11 +267,12 @@ class UnifiedTransformer(ModelBase):
         Create attention mask.
 
         @param : input_mask
-        @type : Variable(shape: [batch_size, max_seq_len, 1])
+        @type : Variable(shape: [batch_size, max_seq_len])
 
         @param : auto_regressive
         @type : bool
         """
+        input_mask = fluid.layers.unsqueeze(input=input_mask, axes=[2])
         seq_len = input_mask.shape[1]
 
         input_mask = layers.cast(input_mask, self._dtype)
@@ -404,7 +405,7 @@ class UnifiedTransformer(ModelBase):
         if self.two_layer_predictor:
             dec_embed = self.pre_predictor(dec_embed)
         if self.weight_sharing:
-            token_embedding = self.embedder.token_embedding._w
+            token_embedding = self.embedder.token_embedding.weight
             dec_logits = layers.matmul(
                 x=dec_embed,
                 y=token_embedding,
@@ -647,7 +648,7 @@ class UnifiedTransformer(ModelBase):
         if self.two_layer_predictor:
             pred_embed = self.pre_predictor(pred_embed)
         if self.weight_sharing:
-            token_embedding = self.embedder.token_embedding._w
+            token_embedding = self.embedder.token_embedding.weight
             pred_logits = layers.matmul(
                 x=pred_embed,
                 y=token_embedding,

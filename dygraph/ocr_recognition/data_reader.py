@@ -2,12 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import os
-import cv2
 import tarfile
 import numpy as np
 from PIL import Image
 from os import path
-from paddle.dataset.image import load_image
 import paddle
 import random
 
@@ -54,26 +52,6 @@ class DataGenerator(object):
 
         img_label_lines = []
         to_file = "tmp.txt"
-        # if not shuffle:
-        #     cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' > " + to_file
-        # elif batchsize == 1:
-        #     cmd = "cat " + img_label_list + " | awk '{print $1,$2,$3,$4;}' | shuf > " + to_file
-        # else:
-        #     #cmd1: partial shuffle
-        #     cmd = "cat " + img_label_list + " | awk '{printf(\"%04d%.4f %s\\n\", $1, rand(), $0)}' | sort | sed 1,$((1 + RANDOM % 100))d | "
-        #     #cmd2: batch merge and shuffle
-        #     cmd += "awk '{printf $2\" \"$3\" \"$4\" \"$5\" \"; if(NR % " + str(
-        #         batchsize) + " == 0) print \"\";}' | shuf | "
-        #     #cmd3: batch split
-        #     cmd += "awk '{if(NF == " + str(
-        #         batchsize
-        #     ) + " * 4) {for(i = 0; i < " + str(
-        #         batchsize
-        #     ) + "; i++) print $(4*i+1)\" \"$(4*i+2)\" \"$(4*i+3)\" \"$(4*i+4);}}' > " + to_file
-        #
-        # print('cmd:', cmd)
-        # os.system(cmd)
-        # print("finish batch shuffle")
 
         def _shuffle_data(input_file_path, output_file_path, shuffle,
                           batchsize):
@@ -145,7 +123,7 @@ class DataGenerator(object):
 
                         mask = np.zeros((max_len)).astype('float32')
                         mask[:len(label) + 1] = 1.0
-                        #mask[ j, :len(label) + 1] = 1.0
+
                         if max_len > len(label) + 1:
                             extend_label = [EOS] * (max_len - len(label) - 1)
                             label.extend(extend_label)

@@ -1,19 +1,18 @@
 import numpy as np
 import paddle.fluid as fluid
-from paddle.fluid.dygraph.nn import Conv2D, Pool2D, FC, BatchNorm, Embedding, GRUUnit
+from paddle.fluid.dygraph.nn import Conv2D, Pool2D, Linear, BatchNorm, Embedding, GRUUnit
 from paddle.fluid.dygraph.base import to_variable
 
 
 class ConvBNPool(fluid.dygraph.Layer):
     def __init__(self,
-                 name_scope,
                  out_ch,
                  channels,
                  act="relu",
                  is_test=False,
                  pool=True,
                  use_cudnn=True):
-        super(ConvBNPool, self).__init__(name_scope)
+        super(ConvBNPool, self).__init__()
         self.pool = pool
 
         filter_size = 3
@@ -26,7 +25,7 @@ class ConvBNPool(fluid.dygraph.Layer):
             initializer=fluid.initializer.Normal(0.0, conv_std_1))
 
         self.conv_0_layer = Conv2D(
-            self.full_name(),
+            channels[0],
             out_ch[0],
             3,
             padding=1,
@@ -35,9 +34,9 @@ class ConvBNPool(fluid.dygraph.Layer):
             act=None,
             use_cudnn=use_cudnn)
         self.bn_0_layer = BatchNorm(
-            self.full_name(), out_ch[0], act=act, is_test=is_test)
+            out_ch[0], act=act, is_test=is_test)
         self.conv_1_layer = Conv2D(
-            self.full_name(),
+            out_ch[0],
             num_filters=out_ch[1],
             filter_size=3,
             padding=1,
@@ -46,11 +45,10 @@ class ConvBNPool(fluid.dygraph.Layer):
             act=None,
             use_cudnn=use_cudnn)
         self.bn_1_layer = BatchNorm(
-            self.full_name(), out_ch[1], act=act, is_test=is_test)
+            out_ch[1], act=act, is_test=is_test)
 
         if self.pool:
             self.pool_layer = Pool2D(
-                self.full_name(),
                 pool_size=2,
                 pool_type='max',
                 pool_stride=2,
@@ -70,25 +68,21 @@ class ConvBNPool(fluid.dygraph.Layer):
 
 
 class OCRConv(fluid.dygraph.Layer):
-    def __init__(self, name_scope, is_test=False, use_cudnn=True):
-        super(OCRConv, self).__init__(name_scope)
+    def __init__(self,  is_test=False, use_cudnn=True):
+        super(OCRConv, self).__init__()
         self.conv_bn_pool_1 = ConvBNPool(
-            self.full_name(),
             [16, 16], [1, 16],
             is_test=is_test,
             use_cudnn=use_cudnn)
         self.conv_bn_pool_2 = ConvBNPool(
-            self.full_name(),
             [32, 32], [16, 32],
             is_test=is_test,
             use_cudnn=use_cudnn)
         self.conv_bn_pool_3 = ConvBNPool(
-            self.full_name(),
             [64, 64], [32, 64],
             is_test=is_test,
             use_cudnn=use_cudnn)
         self.conv_bn_pool_4 = ConvBNPool(
-            self.full_name(),
             [128, 128], [64, 128],
             is_test=is_test,
             pool=False,
@@ -105,7 +99,6 @@ class OCRConv(fluid.dygraph.Layer):
 
 class DynamicGRU(fluid.dygraph.Layer):
     def __init__(self,
-                 scope_name,
                  size,
                  param_attr=None,
                  bias_attr=None,
@@ -115,10 +108,9 @@ class DynamicGRU(fluid.dygraph.Layer):
                  h_0=None,
                  origin_mode=False,
                  init_size = None):
-        super(DynamicGRU, self).__init__(scope_name)
+        super(DynamicGRU, self).__init__()
 
         self.gru_unit = GRUUnit(
-            self.full_name(),
             size * 3,
             param_attr=param_attr,
             bias_attr=bias_attr,
@@ -140,7 +132,7 @@ class DynamicGRU(fluid.dygraph.Layer):
             if self.is_reverse:
                 i = inputs.shape[1] - 1 - i
 
-            input_ = inputs[ :, i:i+1, :]
+            input_ = inputs[:, i: i + 1, :]
 
             input_ = fluid.layers.reshape(input_, [-1, input_.shape[2]], inplace=False)
             hidden, reset, gate = self.gru_unit(input_, hidden)
@@ -157,13 +149,12 @@ class DynamicGRU(fluid.dygraph.Layer):
 
 class EncoderNet(fluid.dygraph.Layer):
     def __init__(self,
-                 scope_name,
                  batch_size,
                  decoder_size,
                  rnn_hidden_size=200,
                  is_test=False,
                  use_cudnn=True):
-        super(EncoderNet, self).__init__(scope_name)
+        super(EncoderNet, self).__init__()
         self.rnn_hidden_size = rnn_hidden_size
         para_attr = fluid.ParamAttr(initializer=fluid.initializer.Normal(0.0,
                                                                          0.02))
@@ -179,27 +170,23 @@ class EncoderNet(fluid.dygraph.Layer):
                 dtype='float32',
                 value=0)
         self.ocr_convs = OCRConv(
-            self.full_name(), is_test=is_test, use_cudnn=use_cudnn)
+            is_test=is_test, use_cudnn=use_cudnn)
 
-        self.fc_1_layer = FC(self.full_name(),
+        self.fc_1_layer = Linear(768,
                              rnn_hidden_size * 3,
                              param_attr=para_attr,
-                             bias_attr=False,
-                             num_flatten_dims=2)
-        self.fc_2_layer = FC(self.full_name(),
+                             bias_attr=False)
+        self.fc_2_layer = Linear(768,
                              rnn_hidden_size * 3,
                              param_attr=para_attr,
-                             bias_attr=False,
-                             num_flatten_dims=2)
+                             bias_attr=False)
         self.gru_forward_layer = DynamicGRU(
-            self.full_name(),
             size=rnn_hidden_size,
             h_0=h_0,
             param_attr=para_attr,
             bias_attr=bias_attr,
             candidate_activation='relu')
         self.gru_backward_layer = DynamicGRU(
-            self.full_name(),
             size=rnn_hidden_size,
             h_0=h_0,
             param_attr=para_attr,
@@ -207,27 +194,24 @@ class EncoderNet(fluid.dygraph.Layer):
             candidate_activation='relu',
             is_reverse=True)
 
-        self.encoded_proj_fc = FC(self.full_name(),
+        self.encoded_proj_fc = Linear(rnn_hidden_size * 2,
                                   decoder_size,
-                                  bias_attr=False,
-                                  num_flatten_dims=2)
+                                  bias_attr=False)
 
     def forward(self, inputs):
         conv_features = self.ocr_convs(inputs)
-        # print('conv_features:', conv_features.shape)
         transpose_conv_features = fluid.layers.transpose(conv_features, perm=[0,3,1,2])
 
         sliced_feature = fluid.layers.reshape(
             transpose_conv_features, [-1, transpose_conv_features.shape[1] , transpose_conv_features.shape[2]*transpose_conv_features.shape[3]], inplace=False)
 
         fc_1 = self.fc_1_layer(sliced_feature)
-        # print('fc_1 shape:', fc_1.shape)
+
         fc_2 = self.fc_2_layer(sliced_feature)
-        # print('fc_2 shape:', fc_2.shape)
+
         gru_forward = self.gru_forward_layer(fc_1)
-        # print('gru_forward shape', gru_forward.shape)
+
         gru_backward = self.gru_backward_layer(fc_2)
-        # print('gru_backward shape', gru_backward.shape)
 
         encoded_vector = fluid.layers.concat(
             input=[gru_forward, gru_backward], axis=2)
@@ -238,16 +222,15 @@ class EncoderNet(fluid.dygraph.Layer):
 
 
 class SimpleAttention(fluid.dygraph.Layer):
-    def __init__(self, scope_name, decoder_size):
-        super(SimpleAttention, self).__init__(scope_name)
+    def __init__(self, decoder_size):
+        super(SimpleAttention, self).__init__()
 
-        self.fc_1 = FC(self.full_name(),
+        self.fc_1 = Linear( decoder_size,
                        decoder_size,
                        act=None,
                        bias_attr=False)
-        self.fc_2 = FC(self.full_name(),
+        self.fc_2 = Linear( decoder_size,
                        1,
-                       num_flatten_dims = 2,
                        act=None,
                        bias_attr=False)
 
@@ -264,9 +247,9 @@ class SimpleAttention(fluid.dygraph.Layer):
         concated = fluid.layers.tanh(x=concated)
         attention_weight = self.fc_2(concated)
         weights_reshape = fluid.layers.reshape(
-            x=attention_weight, shape=[concated.shape[0], -1], inplace=False)
+            x=attention_weight, shape=[ concated.shape[0], -1], inplace=False)
 
-        weights_reshape = fluid.layers.softmax(weights_reshape)
+        weights_reshape = fluid.layers.softmax( weights_reshape )
         scaled = fluid.layers.elementwise_mul(
             x=encoder_vec, y=weights_reshape, axis=0)
 
@@ -276,28 +259,26 @@ class SimpleAttention(fluid.dygraph.Layer):
 
 
 class GRUDecoderWithAttention(fluid.dygraph.Layer):
-    def __init__(self, scope_name, decoder_size, num_classes):
-        super(GRUDecoderWithAttention, self).__init__(scope_name)
-        self.simple_attention = SimpleAttention(self.full_name(), decoder_size)
+    def __init__(self,  encoder_size, decoder_size, num_classes):
+        super(GRUDecoderWithAttention, self).__init__()
+        self.simple_attention = SimpleAttention(decoder_size)
 
-        self.fc_1_layer = FC(self.full_name(),
-                             size=decoder_size * 3,
-                             bias_attr=False)
-        self.fc_2_layer = FC(self.full_name(),
-                             size=decoder_size * 3,
-                             bias_attr=False)
+        self.fc_1_layer = Linear(input_dim=encoder_size * 2,
+                                 output_dim=decoder_size * 3,
+                                 bias_attr=False)
+        self.fc_2_layer = Linear(input_dim=decoder_size,
+                                 output_dim=decoder_size * 3,
+                                 bias_attr=False)
         self.gru_unit = GRUUnit(
-            self.full_name(),
             size=decoder_size * 3,
             param_attr=None,
             bias_attr=None)
-        self.out_layer = FC(self.full_name(),
-                            size=num_classes + 2,
-                            bias_attr=None,
-                            act='softmax')
+        self.out_layer = Linear(input_dim=decoder_size,
+                                output_dim =num_classes + 2,
+                                bias_attr=None,
+                                act='softmax')
 
         self.decoder_size = decoder_size
-
 
     def forward(self, current_word, encoder_vec, encoder_proj,
                 decoder_boot, inference=False):
@@ -311,26 +292,26 @@ class GRUDecoderWithAttention(fluid.dygraph.Layer):
         decoder_inputs = fluid.layers.elementwise_add(x=fc_1, y=fc_2)
 
         h, _, _ = self.gru_unit(decoder_inputs, decoder_boot)
-        # hidden_mem = h
         out = self.out_layer(h)
 
         return out, h
 
 
 class OCRAttention(fluid.dygraph.Layer):
-    def __init__(self, scope_name, batch_size, num_classes, decoder_size, word_vector_dim):
-        super(OCRAttention, self).__init__(scope_name)
-        self.encoder_net = EncoderNet(self.full_name(), batch_size=batch_size, decoder_size=decoder_size)
-        self.fc = FC(self.full_name(),
-                     size=decoder_size,
-                     bias_attr=False,
-                     act='relu')
+    def __init__(self, batch_size, num_classes, encoder_size, decoder_size, word_vector_dim):
+        super(OCRAttention, self).__init__()
+        self.encoder_net = EncoderNet(batch_size, decoder_size)
+        self.fc = Linear(input_dim=encoder_size,
+                         output_dim=decoder_size,
+                         bias_attr=False,
+                         act='relu')
         self.embedding = Embedding(
-            self.full_name(), [num_classes + 2, word_vector_dim],
+            [num_classes + 2, word_vector_dim],
             dtype='float32')
-        self.gru_decoder_with_attention = GRUDecoderWithAttention(
-            self.full_name(), decoder_size, num_classes)
+        self.gru_decoder_with_attention = GRUDecoderWithAttention(encoder_size, decoder_size,
+                                                                  num_classes)
         self.batch_size = batch_size
+
 
     def forward(self, inputs, label_in):
         gru_backward, encoded_vector, encoded_proj = self.encoder_net(inputs)
@@ -341,12 +322,13 @@ class OCRAttention(fluid.dygraph.Layer):
 
         decoder_boot = self.fc(backward_first)
 
-        label_in = fluid.layers.reshape(label_in, [-1, 1], inplace=False)
+        label_in = fluid.layers.reshape(label_in, [-1], inplace=False)
         trg_embedding = self.embedding(label_in)
 
         trg_embedding = fluid.layers.reshape(
             trg_embedding, [self.batch_size, -1, trg_embedding.shape[1]],
             inplace=False)
+
         pred_temp = []
         for i in range(trg_embedding.shape[1]):
             current_word = fluid.layers.slice(

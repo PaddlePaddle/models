@@ -14,14 +14,12 @@
 from __future__ import print_function
 
 import os
-import sys
 
-import numpy as np
 import paddle.fluid.profiler as profiler
 import paddle.fluid as fluid
-import paddle.fluid.layers as layers
+
 import data_reader
-from paddle.fluid.dygraph.nn import Conv2D
+
 from paddle.fluid.dygraph.base import to_variable
 import argparse
 import functools
@@ -36,7 +34,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size',        int,   32,         "Minibatch size.")
 add_arg('epoch_num',         int,   30,         "Epoch number.")
 add_arg('lr',                float, 0.001,         "Learning rate.")
-add_arg('lr_decay_strategy', str,   "piecewise_decay", "Learning rate decay strategy.")
+add_arg('lr_decay_strategy', str,   "", "Learning rate decay strategy.")
 add_arg('log_period',        int,   200,       "Log period.")
 add_arg('save_model_period', int,   2000,      "Save model period. '-1' means never saving the model.")
 add_arg('eval_period',       int,   2000,      "Evaluate period. '-1' means never evaluating the model.")
@@ -52,11 +50,11 @@ add_arg('profile',           bool,  False,      "Whether to use profiling.")
 add_arg('skip_batch_num',    int,   0,          "The number of first minibatches to skip as warm-up for better performance test.")
 add_arg('skip_test',         bool,  False,      "Whether to skip test phase.")
 # model hyper paramters
+add_arg('encoder_size',      int,   200,     "Encoder size.")
 add_arg('decoder_size',      int,   128,     "Decoder size.")
-add_arg('word_vector_dim',   int,   128,     "word vector dim.")
+add_arg('word_vector_dim',   int,   128,     "Word vector dim.")
 add_arg('num_classes',       int,   95,     "Number classes.")
 add_arg('gradient_clip',     float, 5.0,     "Gradient clip value.")
-
 
 
 def train(args):
@@ -64,19 +62,18 @@ def train(args):
     with fluid.dygraph.guard():
         backward_strategy = fluid.dygraph.BackwardStrategy()
         backward_strategy.sort_sum_gradient = True
-        ocr_attention = OCRAttention("ocr_attention", batch_size=args.batch_size,
-                                     decoder_size=args.decoder_size, num_classes=args.num_classes,
-                                     word_vector_dim=args.word_vector_dim)
 
-        # optimizer = fluid.optimizer.Adam(learning_rate=args.lr)
+        ocr_attention = OCRAttention(batch_size=args.batch_size,
+                                     encoder_size=args.encoder_size, decoder_size=args.decoder_size,
+                                     num_classes=args.num_classes, word_vector_dim=args.word_vector_dim)
+
         LR = args.lr
         if args.lr_decay_strategy == "piecewise_decay":
             learning_rate = fluid.layers.piecewise_decay([200000, 250000], [LR, LR * 0.1, LR * 0.01])
         else:
             learning_rate = LR
 
-        optimizer = fluid.optimizer.Adadelta(
-            learning_rate=learning_rate, epsilon=1.0e-6, rho=0.9)
+        optimizer = fluid.optimizer.Adam(learning_rate=learning_rate, parameter_list=ocr_attention.parameters())
         grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(args.gradient_clip)
 
         train_reader = data_reader.data_reader(
@@ -92,6 +89,8 @@ def train(args):
                 list_file=args.test_list,
                 data_type="test")
 
+        if not os.path.exists(args.save_model_dir):
+            os.makedirs(args.save_model_dir)
         total_step = 0
         epoch_num = args.epoch_num
         for epoch in range(epoch_num):
@@ -105,6 +104,7 @@ def train(args):
 
                 label_in = to_variable(data_dict["label_in"])
                 label_out = to_variable(data_dict["label_out"])
+
                 label_out.stop_gradient = True
 
                 img = to_variable(data_dict["pixel"])
@@ -127,8 +127,9 @@ def train(args):
 
                 if batch_id > 0 and batch_id % args.log_period == 0:
                     print("epoch: {}, batch_id: {}, lr: {}, loss {}".format(epoch, batch_id,
-                                                                            optimizer._global_learning_rate().numpy(),
-                                                                            total_loss / args.batch_size / 1000))
+                                                                        optimizer._global_learning_rate().numpy(),
+                                                                        total_loss / args.batch_size / args.log_period))
+
                     total_loss = 0.0
 
                 if total_step > 0 and total_step % args.save_model_period == 0:

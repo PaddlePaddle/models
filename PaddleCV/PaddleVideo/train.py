@@ -104,6 +104,17 @@ def parse_args():
         type=ast.literal_eval,
         default=False,
         help='If set True, enable continuous evaluation job.')
+    # NOTE: args for profiler, used for benchmark
+    parser.add_argument(
+        '--profiler_path',
+        type=str,
+        default='./',
+        help='the path to store profiler output file. used for benchmark.')
+    parser.add_argument(
+        '--is_profiler',
+        type=int,
+        default=0,
+        help='the switch profiler. used for benchmark.')
     args = parser.parse_args()
     return args
 
@@ -236,7 +247,9 @@ def train(args):
         compiled_test_prog=compiled_valid_prog,  #test_exe=valid_exe,
         test_dataloader=valid_dataloader,
         test_fetch_list=valid_fetch_list,
-        test_metrics=valid_metrics)
+        test_metrics=valid_metrics,
+        is_profiler=args.is_profiler,
+        profiler_path=args.profiler_path)
 
 
 if __name__ == "__main__":

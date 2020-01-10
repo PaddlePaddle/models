@@ -14,8 +14,8 @@
 - [进阶使用](#进阶使用)
     - [Mixup训练](#mixup训练)
     - [混合精度训练](#混合精度训练)
+    - [性能分析](#性能分析)
     - [DALI预处理](#DALI预处理)
-    - [自定义数据集](#自定义数据集)
 - [已发布模型及其性能](#已发布模型及其性能)
 - [FAQ](#faq)
 - [参考文献](#参考文献)
@@ -76,19 +76,34 @@ val/ILSVRC2012_val_00000001.jpeg 65
 ### 模型训练
 
 数据准备完毕后，可以通过如下的方式启动训练：
-```
+
+```bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+export FLAGS_fraction_of_gpu_memory_to_use=0.98
+
 python train.py \
-       --model=ResNet50 \
-       --batch_size=256 \
-       --total_images=1281167 \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
-       --model_save_dir=output/ \
-       --lr_strategy=piecewise_decay \
-       --lr=0.1
+        --data_dir=./data/ILSVRC2012/ \
+        --total_images=1281167 \
+        --class_dim=1000 \
+        --validate=True \
+        --model=ResNet50_vd \
+        --batch_size=256 \
+        --lr_strategy=cosine_decay \
+        --lr=0.1 \
+        --num_epochs=200 \
+        --model_save_dir=output/ \
+        --l2_decay=7e-5 \
+        --use_mixup=True \
+        --use_label_smoothing=True \
+        --label_smoothing_epsilon=0.1
 ```
 
-注意: 当添加如step_epochs这种列表型参数，需要去掉"="，如：--step_epochs 10 20 30
+
+注意:
+- 当添加如step_epochs这种列表型参数，需要去掉"="，如：--step_epochs 10 20 30
+- 如果需要训练自己的数据集，则需要修改根据自己的数据集修改`data_dir`, `total_images`, `class_dim`参数；如果因为GPU显存不够而需要调整`batch_size`，则参数`lr`也需要根据`batch_size`进行线性调整。
+- 如果需要使用其他模型进行训练，则需要修改`model`参数，也可以在`scripts/train/`文件夹中根据对应模型的默认运行脚本进行修改并训练。
+
 
 或通过run.sh 启动训练
 
@@ -99,13 +114,14 @@ bash run.sh train 模型名
 **多进程模型训练：**
 
 如果你有多张GPU卡的话，我们强烈建议你使用多进程模式来训练模型，这会极大的提升训练速度。启动方式如下：
-```
+
+```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
        --model=ResNet50 \
        --batch_size=256 \
        --total_images=1281167 \
        --class_dim=1000 \
-       --image_shape=3,224,224 \
+       --image_shape 3 224 224 \
        --model_save_dir=output/ \
        --lr_strategy=piecewise_decay \
        --reader_thread=4 \
@@ -129,7 +145,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 * **model**: 模型名称， 默认值: "ResNet50"
 * **total_images**: 图片数，ImageNet2012，默认值: 1281167
 * **class_dim**: 类别数，默认值: 1000
-* **image_shape**: 图片大小，默认值: 3 224 224
+* **image_shape**: 图片大小，默认值: [3,224,224]
 * **num_epochs**: 训练回合数，默认值: 120
 * **batch_size**: batch size大小(所有设备)，默认值: 8
 * **test_batch_size**: 测试batch大小，默认值：16
@@ -159,46 +175,87 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python -m paddle.distributed.launch train.py \
 
 一些开关：
 
+* **validate**: 是否在模型训练过程中启动模型测试，默认值: True
 * **use_gpu**: 是否在GPU上运行，默认值: True
 * **use_label_smoothing**: 是否对数据进行label smoothing处理，默认值: False
 * **label_smoothing_epsilon**: label_smoothing的epsilon， 默认值:0.1
-* **random_seed**: 随机数种子， 默认值: 1000
 * **padding_type**: efficientNet中卷积操作的padding方式, 默认值: "SAME".
 * **use_se**: efficientNet中是否使用Squeeze-and-Excitation模块, 默认值: True.
 * **use_ema**: 是否在更新模型参数时使用ExponentialMovingAverage. 默认值: False.
 * **ema_decay**: ExponentialMovingAverage的decay rate. 默认值: 0.9999.
 
+
+性能分析：
+
+* **enable_ce**: 是否开启CE，默认值: False
+* **random_seed**: 随机数种子，当设置数值后，所有随机化会被固定，默认值: None
+* **is_profiler**: 是否开启性能分析，默认值: 0
+* **profilier_path**: 分析文件保存位置，默认值: 'profiler_path/'
+* **max_iter**: 最大训练batch数，默认值: 0
+* **same_feed**: 是否feed相同数据进入网络，设定具体数值来指定数据数量，默认值：0
+
+
 **数据读取器说明：** 数据读取器定义在```reader.py```文件中，现在默认基于cv2的数据读取器， 在[训练阶段](#模型训练)，默认采用的增广方式是随机裁剪与水平翻转， 而在[模型评估](#模型评估)与[模型预测](#模型预测)阶段用的默认方式是中心裁剪。当前支持的数据增广方式有：
 
 * 旋转
-* 颜色抖动（暂未实现）
+* 颜色抖动
 * 随机裁剪
 * 中心裁剪
 * 长宽调整
 * 水平翻转
 * 自动增广
 
+
 ### 参数微调
 
 参数微调(Finetune)是指在特定任务上微调已训练模型的参数。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，微调一个模型可以采用如下的命令：
 
 ```bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+export FLAGS_fraction_of_gpu_memory_to_use=0.98
+
 python train.py \
-       --model=model_name \
-       --pretrained_model=${path_to_pretrain_model}
+        --data_dir=./data/ILSVRC2012/ \
+        --total_images=1281167 \
+        --class_dim=1000 \
+        --validate=True \
+        --model=ResNet50_vd \
+        --batch_size=256 \  
+        --lr=0.1 \
+        --num_epochs=200 \
+        --model_save_dir=output/ \
+        --l2_decay=7e-5 \
+        --pretrained_model=${path_to_pretrain_model} \
+        --finetune_exclude_pretrained_params=fc_0.w_0,fc_0.b_0
 ```
-注意：根据具体模型和任务添加并调整其他参数
+
+注意：
+- 在自己的数据集上进行微调时，则需要修改根据自己的数据集修改`data_dir`, `total_images`, `class_dim`参数。
+- 加载的参数是ImageNet1000的预训练模型参数，对于相同模型，最后的类别数或者含义可能不同，因此在加载预训练模型参数时，需要过滤掉最后的FC层，否则可能会因为**维度不匹配**而报错。
+
 
 ### 模型评估
 
-模型评估(Eval)是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令，可以获得模型top-1/top-5精度:
+模型评估(Eval)是指对训练完毕的模型评估各类性能指标。可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，```json_path```为保存指标的路径。运行如下的命令，可以获得模型top-1/top-5精度。
+
+**参数说明**
+
+* **save_json_path**: 是否将eval结果保存到json文件中，默认值：None
+* `model`: 模型名称，与预训练模型需保持一致。
+* `batch_size`: 每个minibatch评测的图片个数。
+* `data_dir`: 数据路径。注意：该路径下需要同时包括待评估的**图片文件**以及图片和对应类别标注的**映射文本文件**，文本文件名称需为`val.txt`。
 
 ```bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+export FLAGS_fraction_of_gpu_memory_to_use=0.98
+
 python eval.py \
-       --model=model_name \
-       --pretrained_model=${path_to_pretrain_model}
+       --model=ResNet50_vd \
+       --pretrained_model=${path_to_pretrain_model} \
+       --data_dir=./data/ILSVRC2012/ \
+       --save_json_path=${json_path} \
+       --batch_size=256
 ```
-注意：根据具体模型和任务添加并调整其他参数
 
 ### 指数滑动平均的模型评估
 
@@ -210,29 +267,93 @@ python ema_clean.py \
        --cleaned_model_dir=your_cleaned_model_dir
 
 python eval.py \
-       --model=model_name \
+       --model=ResNet50_vd \
        --pretrained_model=your_cleaned_model_dir
 ```
 
-### 模型预测
+### 模型fluid预测
 
-模型预测(Infer)可以获取一个模型的预测分数或者图像的特征，可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径。运行如下的命令获得预测结果：
+模型预测(Infer)可以获取一个模型的预测分数或者图像的特征，可以下载[已发布模型及其性能](#已发布模型及其性能)并且设置```path_to_pretrain_model```为模型所在路径，```test_res_json_path```为模型预测结果保存的文本路径，```image_path```为模型预测的图片路径或者图片列表所在的文件夹路径。
 
 **参数说明：**
 
-* **save_inference**: 是否保存模型，默认值：False
+* **data_dir**: 数据存储位置，默认值：`/data/ILSVRC2012/val/`
+* **save_inference**: 是否保存二进制模型，默认值：`False`
 * **topk**: 按照置信由高到低排序标签结果，返回的结果数量，默认值：1
-* **label_path**: 可读标签文件路径，默认值："./utils/tools/readable_label.txt"
+* **class_map_path**: 可读标签文件路径，默认值：`./utils/tools/readable_label.txt`
+* **image_path**: 指定单文件进行预测，默认值：`None`
+* **save_json_path**: 将预测结果保存到json文件中，默认值: `test_res.json`
+
+#### 单张图片预测
+
+```bash
+export CUDA_VISIBLE_DEVICES=0
+
+python infer.py \
+        --model=ResNet50_vd \
+        --class_dim=1000  \
+        --pretrained_model=${path_to_pretrain_model} \
+        --class_map_path=./utils/tools/readable_label.txt \
+        --image_path=${image_path} \
+        --save_json_path=${test_res_json_path}
+```
+
+#### 图片列表预测
+* 该种情况下，需要指定```data_dir```路径和```batch_size```。
+
+```bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+
+python infer.py \
+        --model=ResNet50_vd \
+        --class_dim=1000  \
+        --pretrained_model=${path_to_pretrain_model} \
+        --class_map_path=./utils/tools/readable_label.txt \
+        --data_dir=${data_dir} \
+        --save_json_path=${test_res_json_path} \
+        --batch_size=${batch_size}
+```
+
+注意：
+- 模型名称需要与该模型训练时保持一致。
+- 模型预测默认ImageNet1000类类别，预测数值和可读标签的map文件存储在`./utils/tools/readable_label.txt`中，如果使用自定义数据，请指定`--class_map_path`参数。
+
+
+### Python预测API
+* Fluid提供了高度优化的C++预测库，为了方便使用，Paddle也提供了C++预测库对应的Python接口，更加具体的Python预测API介绍可以参考这里：[https://www.paddlepaddle.org.cn/documentation/docs/zh/advanced_usage/deploy/inference/python_infer_cn.html](https://www.paddlepaddle.org.cn/documentation/docs/zh/advanced_usage/deploy/inference/python_infer_cn.html)
+* 使用Python预测API进行模型预测的步骤有模型转换和模型预测，详细介绍如下。
+
+#### 模型转换
+* 首先将保存的fluid模型转换为二进制模型，转换方法如下，其中```path_to_pretrain_model```表示预训练模型的路径。
 
 ```bash
 python infer.py \
-       --model=model_name \
-       --pretrained_model=${path_to_pretrain_model}
+        --model=ResNet50_vd \
+        --pretrained_model=${path_to_pretrain_model} \
+        --save_inference=True
 ```
-注意：根据具体模型和任务添加并调整其他参数
 
-模型预测默认ImageNet1000类类别，标签文件存储在/utils/tools/readable_label.txt中，如果使用自定义数据，请指定--label_path参数
+注意：
+- 预训练模型和模型名称需要保持一致。
+- 在转换模型时，使用`save_inference_model`函数进行模型转换，参数`feeded_var_names`表示模型预测时所需提供数据的所有变量名称；参数`target_vars`表示模型的所有输出变量，通过这些输出变量即可得到模型的预测结果。
+- 转换完成后，会在`ResNet50_vd`文件下生成`model`和`params`文件。
 
+#### 模型预测
+
+根据转换的模型二进制文件，基于Python API的预测方法如下，其中```model_path```表示model文件的路径，```params_path```表示params文件的路径，```image_path```表示图片文件的路径。
+
+```bash
+python predict.py \
+        --model_file=./ResNet50_vd/model \
+        --params_file=./ResNet50_vd/params \
+        --image_path=${image_path} \
+        --gpu_id=0 \
+        --gpu_mem=1024
+```
+
+注意：
+- 这里只提供了预测单张图片的脚本，如果需要预测文件夹内的多张图片，需要自己修改预测文件`predict.py`。
+- 参数`gpu_id`指定了当前使用的GPU ID号，参数`gpu_mem`指定了初始化的GPU显存。
 
 ## 进阶使用
 
@@ -244,7 +365,43 @@ Mixup相关介绍参考[mixup: Beyond Empirical Risk Minimization](https://arxiv
 
 ### 混合精度训练
 
-FP16相关内容已经迁移至PaddlePaddle/Fleet 中
+通过指定--fp16=True 启动混合训练，在训练过程中会使用float16数据，并输出float32的模型参数。您可能需要同时传入--scale_loss来解决fp16训练的精度问题，通常传入--scale_loss=0.8即可。
+
+```bash
+python train.py \
+    --model=ResNet50 \
+    --fp16=True \
+    --scale_loss=0.8
+```
+具体内容也可参考[Fleet](https://github.com/PaddlePaddle/Fleet/tree/develop/benchmark/collective/resnet)
+
+### 性能分析
+
+注意：本部分主要为内部测试功能。
+其中包括启动CE以监测模型运行的稳定性，启动profiler以测试benchmark，启动same_feed来进行快速调试。
+
+启动CE会固定随机初始化，其中包括数据读取器中的shuffle和program的[random_seed](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/api_cn/fluid_cn/Program_cn.html#random_seed)
+
+``` bash
+python train.py \
+    --enable_ce=True \
+    --data_dir=${path_to_a_smaller_dataset}
+```
+
+启动profiler进行性能分析
+
+``` bash
+python train.py \
+    --is_profiler=True
+```
+
+设置same_feed参数以进行快速调试, 相同的图片（same_feed张图片）将传入网络中
+```bash
+python train.py \
+    --same_feed=8 \
+    --batch_size=4 \
+    --print_step=1
+```
 
 ### DALI预处理
 
@@ -261,8 +418,6 @@ export FLAGS_fraction_of_gpu_memory_to_use=0.80
 python -m paddle.distributed.launch train.py \
        --model=ShuffleNetV2_x0_25 \
        --batch_size=2048 \
-       --class_dim=1000 \
-       --image_shape=3,224,224 \
        --lr_strategy=cosine_decay_warmup \
        --num_epochs=240 \
        --lr=0.5 \
@@ -277,20 +432,9 @@ python -m paddle.distributed.launch train.py \
 
 #### 注意事项
 
-1. PaddlePaddle需使用1.6或以上的版本，并且需要使用GCC5.4以上编译器编译。
+1. 请务必使用GCC5.4以上编译器[编译安装](https://www.paddlepaddle.org.cn/install/doc/source/ubuntu)的1.6或以上版本paddlepaddle, 另外，请在编译过程中指定-DWITH_DISTRIBUTE=ON 来启动多进程训练模式。注意：官方的paddlepaddle是GCC4.8编译的，请务必检查此项，或参考使用[已经编译好的whl包](https://github.com/NVIDIA/DALI/blob/master/qa/setup_packages.py#L38)
 2. Nvidia DALI需要使用[#1371](https://github.com/NVIDIA/DALI/pull/1371)以后的git版本。请参考[此文档](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/installation.html)安装nightly版本或从源码安装。
 3. 因为DALI使用GPU进行图片预处理，需要占用部分显存，请适当调整 `FLAGS_fraction_of_gpu_memory_to_use`环境变量（如`0.8`）来预留部分显存供DALI使用。
-
-### 自定义数据集
-
-PaddlePaddle/Models ImageClassification 支持自定义数据
-
-1. 组织自定义数据，调整数据读取器以正确的传入数据
-2. 注意更改训练脚本中
---data_dim 类别数为自定义数据类别数
---total_image 图片数量
-3. 当进行finetune时，
-指定--pretrained_model 加载预训练模型，注意：本模型库提供的是基于ImageNet 1000类数据的预训练模型，当使用不同类别数的数据时，请删除预训练模型中fc_weight 和fc_offset参数
 
 
 ## 已发布模型及其性能
@@ -405,7 +549,7 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 
     ```bash
     python infer.py \
-           --model=model_name \
+           --model=ResNet50_vd \
            --pretrained_model=${path_to_pretrain_model} \
            --save_inference=True
     ```
@@ -458,6 +602,13 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |[ShuffleNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x2_0_pretrained.tar) | 73.15% | 91.20% | 6.430 | 3.954 |
 |[ShuffleNetV2_swish](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_swish_pretrained.tar) | 70.03% | 89.17% | 6.078 | 4.976 |
 
+### AutoDL Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[DARTS_4M](https://paddle-imagenet-models-name.bj.bcebos.com/DARTS_GS_4M_pretrained.tar) | 75.23% | 92.15% | 13.572 | 6.335 |
+|[DARTS_6M](https://paddle-imagenet-models-name.bj.bcebos.com/DARTS_GS_6M_pretrained.tar) | 76.03% | 92.79% | 16.406 | 6.864 |
+- AutoDL基于可微结构搜索思路DARTS改进，引入Local Rademacher Complexity控制过拟合，并通过Resource Constraining灵活调整模型大小。
+
 ### ResNet Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
@@ -468,12 +619,21 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar) | 76.50% | 93.00% | 8.787 | 5.137 |
 |[ResNet50_vc](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vc_pretrained.tar) |78.35% | 94.03% | 9.013 | 5.285 |
 |[ResNet50_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_pretrained.tar) | 79.12% | 94.44% | 9.058 | 5.259 |
-|[ResNet50_vd_v2](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_v2_pretrained.tar) | 79.84% | 94.93% | 9.058 | 5.259 |
+|[ResNet50_vd_v2](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_v2_pretrained.tar)<sup>[1](#trans1)</sup> | 79.84% | 94.93% | 9.058 | 5.259 |
 |[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.tar) | 77.56% | 93.64% | 15.447 | 8.473 |
 |[ResNet101_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_vd_pretrained.tar) | 80.17% | 94.97% | 15.685 | 8.574 |
 |[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.tar) | 78.26% | 93.96% | 21.816 | 11.646 |
 |[ResNet152_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_vd_pretrained.tar) | 80.59% | 95.30% | 22.041 | 11.858 |
 |[ResNet200_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet200_vd_pretrained.tar) | 80.93% | 95.33% | 28.015 | 14.896 |
+
+<a name="trans1">[1]</a> 该预训练模型是在ResNet50_vd的预训练模型继续蒸馏得到的，用户可以通过ResNet50_vd的结构直接加载该预训练模型。
+
+### Res2Net Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[Res2Net50_26w_4s](https://paddle-imagenet-models-name.bj.bcebos.com/Res2Net50_26w_4s_pretrained.tar) | 79.33% | 94.57% | 10.731 | 8.274 |
+|[Res2Net50_vd_26w_4s](https://paddle-imagenet-models-name.bj.bcebos.com/Res2Net50_vd_26w_4s_pretrained.tar) | 79.75% | 94.91% | 11.012 | 8.493 |
+|[Res2Net50_14w_8s](https://paddle-imagenet-models-name.bj.bcebos.com/Res2Net50_14w_8s_pretrained.tar) | 79.46% | 94.70% | 16.937 | 10.205 |
 
 ### ResNeXt Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -484,9 +644,10 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |[ResNeXt50_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_vd_64x4d_pretrained.tar) | 80.12% | 94.86% | 20.888 | 15.938 |
 |[ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x4d_pretrained.tar) | 78.65% | 94.19% | 24.154 | 17.661 |
 |[ResNeXt101_vd_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_32x4d_pretrained.tar) | 80.33% | 95.12% | 24.701 | 17.249 |
-|[ResNeXt101_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_64x4d_pretrained.tar) | 78.43% | 94.13% | 41.073 | 31.288 |
+|[ResNeXt101_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_64x4d_pretrained.tar) | 78.35% | 94.52% | 41.073 | 31.288 |
 |[ResNeXt101_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_64x4d_pretrained.tar) | 80.78% | 95.20% | 42.277 | 32.620 |
 |[ResNeXt152_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_32x4d_pretrained.tar) | 78.98% | 94.33% | 37.007 | 26.981 |
+|[ResNeXt152_vd_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_vd_32x4d_pretrained.tar) | 80.72% | 95.20% | 35.783 | 26.081 |
 |[ResNeXt152_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_64x4d_pretrained.tar) | 79.51% | 94.71% | 58.966 | 47.915 |
 |[ResNeXt152_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_vd_64x4d_pretrained.tar) | 81.08% | 95.34% | 60.947 | 47.406 |
 
@@ -511,8 +672,11 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 ### SENet Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
+|[SE_ResNet18_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNet18_vd_pretrained.tar) | 73.33% | 91.38% | 4.715 | 3.061 |
+|[SE_ResNet34_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNet34_vd_pretrained.tar) | 76.51% | 93.20% | 7.475 | 4.299 |
 |[SE_ResNet50_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNet50_vd_pretrained.tar) | 79.52% | 94.75% | 10.345 | 7.631 |
 |[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_32x4d_pretrained.tar) | 78.44% | 93.96% | 14.916 | 12.305 |
+|[SE_ResNeXt50_vd_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_vd_32x4d_pretrained.tar) | 80.24% | 94.89% | 15.155 | 12.687 |
 |[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.tar) | 79.12% | 94.20% | 30.085 | 23.218 |
 |[SENet154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SENet154_vd_pretrained.tar) | 81.40% | 95.48% | 71.892 | 53.131 |
 
@@ -545,18 +709,29 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
 |[EfficientNetB0](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_pretrained.tar) | 77.38% | 93.31% | 10.303 | 4.334 |
-|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar)<sup>[1](#trans)</sup> | 79.15% | 94.41% | 15.626 | 6.502 |
-|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar)<sup>[1](#trans)</sup> | 79.85% | 94.74% | 17.847 | 7.558 |
-|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar)<sup>[1](#trans)</sup> | 81.15% | 95.41% | 25.993 | 10.937 |
-|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar)<sup>[1](#trans)</sup> | 82.85% | 96.23% | 47.734 | 18.536 |
-|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[1](#trans)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
-|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[1](#trans)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
-|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[1](#trans)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
-|[EfficientNetB0_small](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_Small_pretrained.tar)<sup>[2](#trans)</sup> | 75.80% | 92.58% | 3.342 | 2.729 |
+|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar)<sup>[2](#trans2)</sup> | 79.15% | 94.41% | 15.626 | 6.502 |
+|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar)<sup>[2](#trans2)</sup> | 79.85% | 94.74% | 17.847 | 7.558 |
+|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar)<sup>[2](#trans2)</sup> | 81.15% | 95.41% | 25.993 | 10.937 |
+|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar)<sup>[2](#trans2)</sup> | 82.85% | 96.23% | 47.734 | 18.536 |
+|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[2](#trans2)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
+|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[2](#trans2)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
+|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[2](#trans2)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
+|[EfficientNetB0_small](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_Small_pretrained.tar)<sup>[3](#trans3)</sup> | 75.80% | 92.58% | 3.342 | 2.729 |
 
-<a name="trans">[1]</a> 表示该预训练权重是由[官方的代码仓库](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)转换来的。
+<a name="trans2">[2]</a> 表示该预训练权重是由[官方的代码仓库](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet)转换来的。
 
-<a name="trans">[2]</a> 表示该预训练权重是在EfficientNetB0的基础上去除se模块，并使用通用的卷积训练的，精度稍稍下降，但是速度大幅提升。
+<a name="trans3">[3]</a> 表示该预训练权重是在EfficientNetB0的基础上去除se模块，并使用通用的卷积训练的，精度稍稍下降，但是速度大幅提升。
+
+### HRNet Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[HRNet_W18_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W18_C_pretrained.tar) | 76.92% | 93.39% | 23.013 | 11.601 |
+|[HRNet_W30_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W30_C_pretrained.tar) | 78.04% | 94.02% | 25.793 | 14.367 |
+|[HRNet_W32_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W32_C_pretrained.tar) | 78.28% | 94.24% | 29.564 | 14.328 |
+|[HRNet_W40_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W40_C_pretrained.tar) | 78.77% | 94.47% | 33.880 | 17.616 |
+|[HRNet_W44_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W44_C_pretrained.tar) | 79.00% | 94.51% | 36.021 | 18.990 |
+|[HRNet_W48_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W48_C_pretrained.tar) | 78.95% | 94.42% | 30.064 | 19.963 |
+|[HRNet_W64_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W64_C_pretrained.tar) | 79.30% | 94.61% | 38.921 | 24.742 |
 
 ## FAQ
 
@@ -597,6 +772,9 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 - ResNeXt101_wsl: [Exploring the Limits of Weakly Supervised Pretraining](https://arxiv.org/abs/1805.00932), Dhruv Mahajan, Ross Girshick, Vignesh Ramanathan, Kaiming He, Manohar Paluri, Yixuan Li, Ashwin Bharambe, Laurens van der Maaten
 - Fix_ResNeXt101_wsl: [Fixing the train-test resolution discrepancy](https://arxiv.org/abs/1906.06423), Hugo Touvron, Andrea Vedaldi, Matthijs Douze, Herve ́ Je ́gou
 - EfficientNet: [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946), Mingxing Tan, Quoc V. Le
+- Res2Net: [Res2Net: A New Multi-scale Backbone Architecture](https://arxiv.org/abs/1904.01169), Shang-Hua Gao, Ming-Ming Cheng, Kai Zhao, Xin-Yu Zhang, Ming-Hsuan Yang, Philip Torr
+- HRNet: [Deep High-Resolution Representation Learning for Visual Recognition](https://arxiv.org/abs/1908.07919), Jingdong Wang, Ke Sun, Tianheng Cheng, Borui Jiang, Chaorui Deng, Yang Zhao, Dong Liu, Yadong Mu, Mingkui Tan, Xinggang Wang, Wenyu Liu, Bin Xiao
+- DARTS: [DARTS: Differentiable Architecture Search](https://arxiv.org/pdf/1806.09055.pdf), Hanxiao Liu, Karen Simonyan, Yiming Yang
 
 ## 版本更新
 - 2018/12/03 **Stage1**: 更新AlexNet，ResNet50，ResNet101，MobileNetV1
@@ -610,6 +788,8 @@ PaddlePaddle/Models ImageClassification 支持自定义数据
 - 2019/08/01 **Stage7**: 更新DarkNet53，DenseNet121，Densenet161，DenseNet169，DenseNet201，DenseNet264，SqueezeNet1_0，SqueezeNet1_1，ResNeXt50_vd_32x4d，ResNeXt152_64x4d，ResNeXt101_32x8d_wsl，ResNeXt101_32x16d_wsl，ResNeXt101_32x32d_wsl，ResNeXt101_32x48d_wsl，Fix_ResNeXt101_32x48d_wsl
 - 2019/09/11 **Stage8**: 更新ResNet18_vd，ResNet34_vd，MobileNetV1_x0_25，MobileNetV1_x0_5，MobileNetV1_x0_75，MobileNetV2_x0_75，MobilenNetV3_small_x1_0，DPN68，DPN92，DPN98，DPN107，DPN131，ResNeXt101_vd_32x4d，ResNeXt152_vd_64x4d，Xception65，Xception71，Xception41_deeplab，Xception65_deeplab，SE_ResNet50_vd
 - 2019/09/20 更新EfficientNet
+- 2019/11/28 **Stage9**: 更新SE_ResNet18_vd，SE_ResNet34_vd，SE_ResNeXt50_vd_32x4d，ResNeXt152_vd_32x4d，Res2Net50_26w_4s，Res2Net50_14w_8s，Res2Net50_vd_26w_4s，HRNet_W18_C，HRNet_W30_C，HRNet_W32_C，HRNet_W40_C，HRNet_W44_C，HRNet_W48_C，HRNet_W64_C
+- 2020/1/7 **Stage10**: 添加AutoDL Series
 
 ## 如何贡献代码
 

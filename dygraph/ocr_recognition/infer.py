@@ -17,13 +17,11 @@ import os
 import numpy as np
 
 import paddle.fluid as fluid
-import paddle.fluid.layers as layers
-
-from paddle.fluid.dygraph.nn import Conv2D
 from paddle.fluid.dygraph.base import to_variable
+
 import argparse
 import functools
-from utility import add_arguments, print_arguments, get_attention_feeder_data
+from utility import add_arguments, print_arguments
 from PIL import Image
 from nets import OCRAttention
 
@@ -33,34 +31,37 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 # yapf: disable
 add_arg('image_path',        str,   "",         "image path")
 add_arg('pretrained_model',  str,   "",         "pretrained_model.")
+add_arg('max_length',        int,   100,     "Max predict length.")
+add_arg('encoder_size',      int,   200,     "Encoder size.")
 add_arg('decoder_size',      int,   128,     "Decoder size.")
-add_arg('word_vector_dim',   int,   128,     "Decoder size.")
-add_arg('num_classes',       int,   95,     "Decoder size.")
-add_arg('max_length',        int,   30,     "Decoder size.")
+add_arg('word_vector_dim',   int,   128,     "Word vector dim.")
+add_arg('num_classes',       int,   95,     "Number classes.")
+add_arg('gradient_clip',     float, 5.0,     "Gradient clip value.")
 
 
 def inference(args):
     img = Image.open(os.path.join(args.image_path)).convert('L')
     with fluid.dygraph.guard():
-        ocr_attention = OCRAttention("ocr_attention", batch_size=1, decoder_size=args.decoder_size,
+        ocr_attention = OCRAttention(batch_size=1,
+                                     encoder_size=args.encoder_size, decoder_size=args.decoder_size,
                                      num_classes=args.num_classes, word_vector_dim=args.word_vector_dim)
         restore, _ = fluid.load_dygraph(args.pretrained_model)
         ocr_attention.set_dict(restore)
         ocr_attention.eval()
-        # todo
-        # img = img.resize((sz[0], sz[1]))
+        print(img.size)
+        img = img.resize((img.size[0], 48), Image.BILINEAR)
         img = np.array(img).astype('float32') - 127.5
         img = img[np.newaxis, np.newaxis, ...]
         img = to_variable(img)
 
-        gru_backward, encoded_vector, encoded_proj =ocr_attention.encoder_net(img)
+        gru_backward, encoded_vector, encoded_proj = ocr_attention.encoder_net(img)
         backward_first = fluid.layers.slice(
             gru_backward, axes=[1], starts=[0], ends=[1])
         backward_first = fluid.layers.reshape(
             backward_first, [-1, backward_first.shape[2]], inplace=False)
 
         decoder_boot = ocr_attention.fc(backward_first)
-        label_in = fluid.layers.zeros([1,1], dtype='int64') #+ 82
+        label_in = fluid.layers.zeros([1], dtype='int64')
         result = ''
         for i in range(args.max_length):
             trg_embedding = ocr_attention.embedding(label_in)
@@ -78,7 +79,7 @@ def inference(args):
                 print('met end character, predict finish!')
                 break
 
-            label_in = fluid.layers.reshape(idx, [1, 1])
+            label_in = fluid.layers.reshape(idx, [1])
             result += chr(int(idx_np + 33))
         print('predict result:', result)
 

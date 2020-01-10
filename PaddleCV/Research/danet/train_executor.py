@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 
@@ -20,9 +23,12 @@ os.environ['FLAGS_fraction_of_gpu_memory_to_use'] = "0.99"
 
 import paddle.fluid as fluid
 import numpy as np
+import random
 import paddle
 import logging
 import shutil
+import multiprocessing
+import sys
 from datetime import datetime
 from paddle.utils import Ploter
 
@@ -31,6 +37,9 @@ from options import Options
 from utils.cityscapes_data import cityscapes_train
 from utils.cityscapes_data import cityscapes_val
 from utils.lr_scheduler import Lr
+import matplotlib
+
+matplotlib.use('Agg')
 
 
 def get_model(args):
@@ -42,6 +51,21 @@ def get_model(args):
                   multi_grid=args.multi_grid,
                   multi_dilation=args.multi_dilation)
     return model
+
+
+def _cpu_num():
+    if "CPU_NUM" not in os.environ.keys():
+        if multiprocessing.cpu_count() > 1:
+            sys.stderr.write(
+                '!!! The CPU_NUM is not specified, you should set CPU_NUM in the environment variable list.\n'
+                'CPU_NUM indicates that how many CPUPlace are used in the current task.\n'
+                'And if this parameter are set as N (equal to the number of physical CPU core) the program may be faster.\n\n'
+                'export CPU_NUM={} # for example, set CPU_NUM as number of physical CPU core which is {}.\n\n'
+                '!!! The default number of CPU_NUM=1.\n'.format(
+                    multiprocessing.cpu_count(), multiprocessing.cpu_count()))
+        os.environ['CPU_NUM'] = str(1)
+    cpu_num = os.environ.get('CPU_NUM')
+    return int(cpu_num)
 
 
 def mean_iou(pred, label, num_classes=19):
@@ -87,20 +111,22 @@ def save_model(save_dir, exe, program=None):
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir, ignore_errors=True)
         os.makedirs(save_dir)
-        fluid.io.save_persistables(exe, save_dir, program)
-        print('已保存: {}'.format(os.path.basename(save_dir)))
+        # fluid.io.save_persistables(exe, save_dir, program)
+        fluid.io.save_params(exe, save_dir, program)
+        print('save: {}'.format(os.path.basename(save_dir)))
     else:
         os.makedirs(save_dir)
         fluid.io.save_persistables(exe, save_dir, program)
-        print('不存在，创建: {}'.format(os.path.basename(save_dir)))
+        print('create: {}'.format(os.path.basename(save_dir)))
 
 
 def load_model(save_dir, exe, program=None):
     if os.path.exists(save_dir):
-        fluid.io.load_persistables(exe, save_dir, program)
-        print('存在, 加载成功')
+        # fluid.io.load_persistables(exe, save_dir, program)
+        fluid.io.load_params(exe, save_dir, program)
+        print('Load successful!')
     else:
-        raise Exception('请核对地址')
+        raise Exception('Please check the model path!')
 
 
 def optimizer_setting(args):
@@ -151,8 +177,12 @@ def main(args):
     epoch_num = args.epoch_num
     num_classes = args.num_classes
     data_root = args.data_folder
-    num = fluid.core.get_cuda_device_count()
-    print('GPU设备数量： {}'.format(num))
+    if args.cuda:
+        num = fluid.core.get_cuda_device_count()
+        print('The number of GPU： {}'.format(num))
+    else:
+        num = _cpu_num()
+        print('The number of CPU： {}'.format(num))
 
     # program
     start_prog = fluid.default_startup_program()
@@ -160,12 +190,14 @@ def main(args):
 
     start_prog.random_seed = args.seed
     train_prog.random_seed = args.seed
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
-    # clone 
+    # clone
     test_prog = train_prog.clone(for_test=True)
 
     logging.basicConfig(level=logging.INFO,
-                        filename='DANet_{}_train.log'.format(args.backbone),
+                        filename='DANet_{}_train_executor.log'.format(args.backbone),
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logging.info('DANet')
     logging.info(args)
@@ -225,7 +257,7 @@ def main(args):
     exe = fluid.Executor(place)
     exe.run(start_prog)
 
-    if args.use_data_parallel:
+    if args.use_data_parallel and args.cuda:
         exec_strategy = fluid.ExecutionStrategy()
         exec_strategy.num_threads = fluid.core.get_cuda_device_count()
         exec_strategy.num_iteration_per_drop_scope = 100
@@ -241,17 +273,17 @@ def main(args):
 
     # 加载预训练模型
     if args.load_pretrained_model:
-        save_dir = 'checkpoint/DANet101_better_model_paddle1.5.2'
-        if os.path.exists(save_dir):
-            load_model(save_dir, exe, program=train_prog)
-            print('load pretrained model!')
+        assert os.path.exists(args.save_model), "your input save_model: {} ,but '{}' is not exists".format(
+            args.save_model, args.save_model)
+        load_model(args.save_model, exe, program=train_prog)
+        print('load pretrained model!')
 
     # 加载最优模型
     if args.load_better_model:
-        save_dir = 'checkpoint/DANet101_better_model_paddle1.5.2'
-        if os.path.exists(save_dir):
-            load_model(save_dir, exe, program=train_prog)
-            print('load better model!')
+        assert os.path.exists(args.save_model), "your input save_model: {} ,but '{}' is not exists".format(
+            args.save_model, args.save_model)
+        load_model(args.save_model, exe, program=train_prog)
+        print('load better model!')
 
     train_iou_manager = fluid.metrics.Accuracy()
     train_avg_loss_manager = fluid.metrics.Accuracy()
@@ -283,15 +315,13 @@ def main(args):
                     program=compiled_train_prog,
                     fetch_list=train_fetch_list)
 
-                train_iou_manager.update(train_iou_value, weight=batch_size * num)
-                train_avg_loss_manager.update(train_avg_loss_value, weight=batch_size * num)
+                train_iou_manager.update(train_iou_value, weight=int(batch_size * num))
+                train_avg_loss_manager.update(train_avg_loss_value, weight=int(batch_size * num))
                 batch_train_str = "epoch: {}, batch: {}, train_avg_loss: {:.6f}, " \
                                   "train_miou: {:.6f}.".format(epoch + 1,
-                                                                 batch_id + 1,
-                                                                 train_avg_loss_value[0],
-                                                                 train_iou_value[0])
-                save_dir = './checkpoint/DAnet_better_train_{:.4f}'.format(22.5)
-                save_model(save_dir, exe, program=train_prog)
+                                                               batch_id + 1,
+                                                               train_avg_loss_value[0],
+                                                               train_iou_value[0])
                 if batch_id % 40 == 0:
                     logging.info(batch_train_str)
                     print(batch_train_str)
@@ -310,22 +340,22 @@ def main(args):
         print(train_str + time_str + '\n')
         logging.info(train_str + time_str)
         plot_loss.append(train_loss_title, epoch, train_avg_loss_manager.eval()[0])
-        plot_loss.plot('./DANet_loss.jpg')
+        plot_loss.plot('./DANet_loss_executor.jpg')
         plot_iou.append(train_iou_title, epoch, train_iou_manager.eval()[0])
-        plot_iou.plot('./DANet_miou.jpg')
+        plot_iou.plot('./DANet_miou_executor.jpg')
 
         # save_model
         if better_miou_train < train_iou_manager.eval()[0]:
-            shutil.rmtree('./checkpoint/DAnet_better_train_{:.4f}'.format(better_miou_train),
+            shutil.rmtree('./checkpoint/DANet_better_train_{:.4f}'.format(better_miou_train),
                           ignore_errors=True)
             better_miou_train = train_iou_manager.eval()[0]
             logging.warning(
-                '-----------train---------------better_train: {:.6f}, epoch: {}, -----------successful save train model!\n'.format(
+                '-----------train---------------better_train: {:.6f}, epoch: {}, -----------Train model saved successfully!\n'.format(
                     better_miou_train, epoch + 1))
-            save_dir = './checkpoint/DAnet_better_train_{:.4f}'.format(better_miou_train)
+            save_dir = './checkpoint/DANet_better_train_{:.4f}'.format(better_miou_train)
             save_model(save_dir, exe, program=train_prog)
         if (epoch + 1) % 5 == 0:
-            save_dir = './checkpoint/DAnet_epoch_train'
+            save_dir = './checkpoint/DANet_epoch_train'
             save_model(save_dir, exe, program=train_prog)
 
         # test
@@ -339,9 +369,9 @@ def main(args):
             try:
                 test_fetch_list = [test_avg_loss, miou, wrong, correct]
                 test_avg_loss_value, test_iou_value, _, _ = exe.run(program=test_prog,
-                                                                                                fetch_list=test_fetch_list)
-                test_iou_manager.update(test_iou_value, weight=batch_size * num)
-                test_avg_loss_manager.update(test_avg_loss_value, weight=batch_size * num)
+                                                                    fetch_list=test_fetch_list)
+                test_iou_manager.update(test_iou_value, weight=int(batch_size * num))
+                test_avg_loss_manager.update(test_avg_loss_value, weight=int(batch_size * num))
                 batch_test_str = "epoch: {}, batch: {}, test_avg_loss: {:.6f}, " \
                                  "test_miou: {:.6f}. ".format(epoch + 1,
                                                               batch_id + 1,
@@ -365,22 +395,22 @@ def main(args):
         print(test_str + time_str + '\n')
         logging.info(test_str + time_str)
         plot_loss.append(test_loss_title, epoch, test_avg_loss_manager.eval()[0])
-        plot_loss.plot('./DANet_loss.jpg')
+        plot_loss.plot('./DANet_loss_executor.jpg')
         plot_iou.append(test_iou_title, epoch, test_iou_manager.eval()[0])
-        plot_iou.plot('./DANet_miou.jpg')
+        plot_iou.plot('./DANet_miou_executor.jpg')
 
         # save_model_infer
         if better_miou_test < test_iou_manager.eval()[0]:
-            shutil.rmtree('./checkpoint/infer/DAnet_better_test_{:.4f}'.format(better_miou_test),
+            shutil.rmtree('./checkpoint/infer/DANet_better_test_{:.4f}'.format(better_miou_test),
                           ignore_errors=True)
             better_miou_test = test_iou_manager.eval()[0]
             logging.warning(
-                '------------test-------------infer better_test: {:.6f}, epoch: {}, ----------------successful save infer model!\n'.format(
+                '------------test-------------infer better_test: {:.6f}, epoch: {}, ----------------Inference model saved successfully!\n'.format(
                     better_miou_test, epoch + 1))
-            save_dir = './checkpoint/infer/DAnet_better_test_{:.4f}'.format(better_miou_test)
+            save_dir = './checkpoint/infer/DANet_better_test_{:.4f}'.format(better_miou_test)
             # save_model(save_dir, exe, program=test_prog)
             fluid.io.save_inference_model(save_dir, [image.name], [pred, pred2, pred3], exe)
-            print('successful save infer model!')
+            print('Inference model saved successfully')
 
 
 if __name__ == '__main__':
@@ -388,3 +418,6 @@ if __name__ == '__main__':
     args = options.parse()
     options.print_args()
     main(args)
+
+
+

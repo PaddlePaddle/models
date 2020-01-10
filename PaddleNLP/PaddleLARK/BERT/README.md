@@ -416,6 +416,4 @@ for (size_t i = 0; i < output.front().data.length() / sizeof(float); i += 3) {
 }
 ```
 
-## Contributors
 
-本项目由百度自然语言处理部语义计算团队([@nbcc](https://github.com/nbcc) [@tianxin1860](https://github.com/tianxin1860))和深度学习技术平台部 PaddlePaddle 团队([@kuke](https://github.com/kuke) [@gongweibao](https://github.com/gongweibao) [@fc500110](https://github.com/fc500110) [@iclementine](https://github.com/iclementine))合作完成。

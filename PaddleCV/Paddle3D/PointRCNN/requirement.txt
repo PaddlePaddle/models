@@ -1,0 +1,6 @@
+Cython
+opencv-python
+shapely
+scikit-image
+Numba
+fire
