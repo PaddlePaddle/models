@@ -157,7 +157,7 @@ def main():
                     batch, epoch_id=epoch_id)
                 word_count += word_num
                 loss = model(input_data_feed)
-                print(loss.numpy()[0])
+                # print(loss.numpy()[0])
                 loss.backward()
                 optimizer.minimize(loss, grad_clip = gloabl_norm_clip)
                 model.clear_gradients()
