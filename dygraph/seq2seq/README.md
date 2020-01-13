@@ -24,7 +24,7 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 本目录包含Seq2Seq的一个经典样例：机器翻译，实现了一个base model（不带attention机制），一个带attention机制的翻译模型。Seq2Seq翻译模型，模拟了人类在进行翻译类任务时的行为：先解析源语言，理解其含义，再根据该含义来写出目标语言的语句。更多关于机器翻译的具体原理和数学表达式，我们推荐参考[深度学习101](http://paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/basics/machine_translation/index.html)。
 
-**本目录旨在展示如何用Paddle Fluid 1.7的动态图接口实现一个标准的Seq2Seq模型** ，相同网络结构的静态图实现可以参照 [RNN Search](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleTextGEN/seq2seq)。
+**本目录旨在展示如何用Paddle Fluid 1.7的动态图接口实现一个标准的Seq2Seq模型** ，相同网络结构的静态图实现可以参照 [Seq2Seq](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleTextGEN/seq2seq)。
 
 ## 模型概览
 
