@@ -83,9 +83,9 @@ def random_crop(img, size, settings, scale=None, ratio=None,
     target_size = math.sqrt(target_area)
     w = int(target_size * w)
     h = int(target_size * h)
+
     i = np.random.randint(0, img.shape[0] - h + 1)
     j = np.random.randint(0, img.shape[1] - w + 1)
-
     img = img[i:i + h, j:j + w, :]
 
     if interpolation:
@@ -292,7 +292,10 @@ class ImageNetReader:
                         np.random.RandomState(self.shuffle_seed).shuffle(
                             full_lines)
                     elif shuffle:
-                        np.random.shuffle(full_lines)
+                        assert self.shuffle_seed is not None, "multiprocess train, shuffle seed must be set!"
+                        np.random.RandomState(self.shuffle_seed).shuffle(
+                            full_lines)
+                        #np.random.shuffle(full_lines)
 
                 batch_data = []
                 for line in full_lines:
@@ -377,7 +380,7 @@ class ImageNetReader:
         Returns:
             eval reader
         """
-        file_list = os.path.join(settings.data_dir, 'val_list.txt')
+        file_list = os.path.join(settings.data_dir, 'train_list.txt')
 
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
@@ -399,7 +402,7 @@ class ImageNetReader:
         Returns:
             test reader
         """
-        file_list = os.path.join(settings.data_dir, 'val_list.txt')
+        file_list = os.path.join(settings.data_dir, 'train_list.txt')
 
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(

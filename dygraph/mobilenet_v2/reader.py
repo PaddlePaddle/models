@@ -25,10 +25,6 @@ from paddle import fluid
 from utils.autoaugment import ImageNetPolicy
 from PIL import Image
 
-#mod = 2: 1persent of all data -> dataset_100
-#mod = 1: 8 lines
-#mod = 0: all data
-chajchaj_data_mod = 0
 policy = None
 
 random.seed(0)
@@ -348,12 +344,7 @@ class ImageNetReader:
         Returns:
             train reader
         """
-        if chajchaj_data_mod == 1:
-            file_list = os.path.join(settings.data_dir, 'train_list.txt.mini')
-        elif chajchaj_data_mod == 2:
-            file_list = os.path.join(settings.data_dir, 'train.list')
-        else:
-            file_list = os.path.join(settings.data_dir, 'train_list.txt')
+        file_list = os.path.join(settings.data_dir, 'train_list.txt')
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
                 file_list)
@@ -389,12 +380,7 @@ class ImageNetReader:
         Returns:
             eval reader
         """
-        if chajchaj_data_mod == 1:
-            file_list = os.path.join(settings.data_dir, 'train_list.txt.mini')
-        elif chajchaj_data_mod == 2:
-            file_list = os.path.join(settings.data_dir, 'val.list')
-        else:
-            file_list = os.path.join(settings.data_dir, 'train_list.txt')
+        file_list = os.path.join(settings.data_dir, 'train_list.txt')
 
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
@@ -416,12 +402,7 @@ class ImageNetReader:
         Returns:
             test reader
         """
-        if chajchaj_data_mod == 1:
-            file_list = os.path.join(settings.data_dir, 'train_list.txt.mini')
-        elif chajchaj_data_mod == 2:
-            file_list = os.path.join(settings.data_dir, 'val.list')
-        else:
-            file_list = os.path.join(settings.data_dir, 'train_list.txt')
+        file_list = os.path.join(settings.data_dir, 'train_list.txt')
 
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
