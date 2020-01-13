@@ -28,34 +28,17 @@ import tarfile
 import requests
 
 FILE_INFO = {
-    'BASE_URL': 'https://baidu-nlp.bj.bcebos.com/',
     'DATA': {
         'name': 'lexical_analysis-dataset-2.0.0.tar.gz',
         'md5': '71e4a9a36d0f0177929a1bccedca7dba'
     },
-    'LAC_MODEL': {
-        'name': 'lexical_analysis-2.0.0.tar.gz',
-        'md5': "fc1daef00de9564083c7dc7b600504ca"
-    },
-    'ERNIE_MODEL': {
-        'name': 'ERNIE_stable-1.0.1.tar.gz',
-        'md5': "bab876a874b5374a78d7af93384d3bfa"
-    },
-    'FINETURN_MODEL': {
-        'name': 'lexical_analysis_finetuned-1.0.0.tar.gz',
-        'md5': "ee2c7614b06dcfd89561fbbdaac34342"
-    }
 }
 
 
 def usage():
     desc = ("\nDownload datasets and pretrained models for LAC.\n"
             "Usage:\n"
-            "   1. python download.py all\n"
-            "   2. python download.py dataset\n"
-            "   3. python download.py lac\n"
-            "   4. python download.py finetuned\n"
-            "   5. python download.py ernie\n")
+            "   1. python download.py dataset\n"
     print(desc)
 
 
@@ -142,25 +125,9 @@ if __name__ == '__main__':
         usage()
         sys.exit(1)
     pwd = os.path.join(os.path.dirname(__file__), './')
-    ernie_dir = os.path.join(os.path.dirname(__file__), './pretrained')
-
-    if sys.argv[1] == 'all':
-        download('DATA', pwd)
-        download('LAC_MODEL', pwd)
-        download('FINETURN_MODEL', pwd)
-        download('ERNIE_MODEL', ernie_dir)
 
     if sys.argv[1] == "dataset":
         download('DATA', pwd)
-
-    elif sys.argv[1] == "lac":
-        download('LAC_MODEL', pwd)
-
-    elif sys.argv[1] == "finetuned":
-        download('FINETURN_MODEL', pwd)
-
-    elif sys.argv[1] == "ernie":
-        download('ERNIE_MODEL', ernie_dir)
 
     else:
         usage()
