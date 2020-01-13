@@ -34,7 +34,7 @@ python infer.py \
     --vocab_prefix data/en-vi/vocab \
     --infer_file data/en-vi/tst2013.en \
     --reload_model base_models/epoch_10 \
-    --infer_output_file attention_infer_output/infer_output.txt \
+    --infer_output_file base_infer_output/infer_output.txt \
     --beam_size 10 \
     --use_gpu True
 
