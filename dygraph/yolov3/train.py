@@ -84,10 +84,10 @@ def train():
             model = fluid.dygraph.parallel.DataParallel(model, strategy)
 
         if cfg.pretrain:
-            a = np.load("weights/final_pretrain.npz")
+            restore, _ = fluid.load_dygraph(cfg.pretrain) 
             state_dict = model.state_dict()
-            for k,v in a.items():
-                state_dict[k]=a[k]
+            for k,v in restore.items():
+                state_dict[k]=restore[k]
             model.set_dict(state_dict)
             model.train()
         boundaries = cfg.lr_steps
@@ -111,7 +111,6 @@ def train():
             learning_rate=lr,
             regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
             momentum=cfg.momentum,
-            parameter_list=model.parameters()
         )
 
         start_time = time.time()

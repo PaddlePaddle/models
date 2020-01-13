@@ -103,8 +103,10 @@ dataset/coco/
 
 首先通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
 
-`python -m paddle.distributed.launch --selected_gpus=0,1,2,3,4,5,6,7 --started_port=9999 train.py --use_data_parallel=1`
+`python -m paddle.distributed.launch --selected_gpus=0,1,2,3 --started_port=9999 train.py --use_data_parallel=1`
 
+您也可以直接运行快速开始脚本`start_parall.sh`进行训练，默认使用4卡进行训练，每张卡的batch size为16
+ 
 执行训练开始时，会得到类似如下输出，每次迭代打印的log数与指定卡数一致：
 
 ```
@@ -119,7 +121,7 @@ Iter 3, loss 11046.479614, time 4.93214
 
 ```
 
-**注意：** YOLOv3模型总batch size为64，这里使用8 GPUs每GPU上batch size为8来训练
+**注意：** YOLOv3模型总batch size为64，这里使用4 GPUs每GPU上batch size为16来训练
 
 **模型设置：**
 
