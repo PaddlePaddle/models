@@ -70,7 +70,6 @@ def infer():
         # So we can set dropout to 0
         if args.attention:
             model = AttentionModel(
-                "attention_model",
                 hidden_size,
                 src_vocab_size,
                 tar_vocab_size,
@@ -82,7 +81,6 @@ def infer():
                 mode='beam_search')
         else:
             model = BaseModel(
-                "base_model",
                 hidden_size,
                 src_vocab_size,
                 tar_vocab_size,
@@ -134,11 +132,11 @@ def infer():
 
             for batch_id, batch in enumerate(train_data_iter):
                 input_data_feed, word_num = prepare_input(batch, epoch_id=0)
+                # import ipdb; ipdb.set_trace()
                 outputs = model(input_data_feed)
-         
                 for i in range(outputs.shape[0]):
-                    ins = fluid.Variable.numpy(outputs[i])
-                    res = [tar_id2vocab[e] for e in ins[:, 0].reshape(-1)]
+                    ins = outputs[i].numpy()
+                    res = [tar_id2vocab[int(e)] for e in ins[:, 0].reshape(-1)]
                     new_res = []
                     for ele in res:
                         if ele == "</s>":
