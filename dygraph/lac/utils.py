@@ -88,70 +88,9 @@ def to_str(string, encoding="utf-8"):
                 return string.encode(encoding)
     return string
 
-
-def to_lodtensor(data, place):
-    """
-    Convert data in list into lodtensor.
-    """
-    seq_lens = [len(seq) for seq in data]
-    cur_len = 0
-    lod = [cur_len]
-    for l in seq_lens:
-        cur_len += l
-        lod.append(cur_len)
-    flattened_data = np.concatenate(data, axis=0).astype("int64")
-    flattened_data = flattened_data.reshape([len(flattened_data), 1])
-    res = fluid.Tensor()
-    res.set(flattened_data, place)
-    res.set_lod([lod])
-    return res
-
-
-def parse_result(words, crf_decode, dataset):
-    """ parse result """
-    offset_list = (crf_decode.lod())[0]
-    words = np.array(words)
-    crf_decode = np.array(crf_decode)
-    batch_size = len(offset_list) - 1
-
-    batch_out = []
-    for sent_index in range(batch_size):
-        begin, end = offset_list[sent_index], offset_list[sent_index + 1]
-        sent = [dataset.id2word_dict[str(id[0])] for id in words[begin:end]]
-        tags = [
-            dataset.id2label_dict[str(id[0])] for id in crf_decode[begin:end]
-        ]
-
-        sent_out = []
-        tags_out = []
-        parital_word = ""
-        for ind, tag in enumerate(tags):
-            # for the first word
-            if parital_word == "":
-                parital_word = sent[ind]
-                tags_out.append(tag.split('-')[0])
-                continue
-
-            # for the beginning of word
-            if tag.endswith("-B") or (tag == "O" and tags[ind - 1] != "O"):
-                sent_out.append(parital_word)
-                tags_out.append(tag.split('-')[0])
-                parital_word = sent[ind]
-                continue
-
-            parital_word += sent[ind]
-
-        # append the last word, except for len(tags)=0
-        if len(sent_out) < len(tags_out):
-            sent_out.append(parital_word)
-
-        batch_out.append([sent_out, tags_out])
-    return batch_out
-
-
 def parse_padding_result(words, crf_decode, seq_lens, dataset):
     """ parse padding result """
-    words = np.squeeze(words)
+    # words = np.squeeze(words)
     batch_size = len(seq_lens)
 
     batch_out = []

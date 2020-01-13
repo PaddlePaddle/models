@@ -121,7 +121,7 @@ class Dataset(object):
                             words_len = len(word_ids)
                             # expand to max_seq_len
                             word_ids += [0 for _ in range(max_seq_len-words_len)]
-                            new_batch.append(word_ids,words_len)
+                            new_batch.append((word_ids,words_len))
                         yield new_batch
                         batch, init_lens = [], []
                 if len(batch) > 0:
@@ -169,7 +169,7 @@ class Dataset(object):
                         label_ids = label_ids[0:max_seq_len]
                         label_ids += [0 for _ in range(max_seq_len-words_len)]
                         assert len(word_ids) == len(label_ids)
-                        new_batch.append(word_ids, label_ids, words_len)
+                        new_batch.append((word_ids, label_ids, words_len))
                     yield new_batch
             fread.close()
 
