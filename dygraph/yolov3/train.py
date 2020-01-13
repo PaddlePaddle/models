@@ -61,8 +61,8 @@ def train():
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
 
-    devices_num = get_device_num()
-    print("Found {} CUDA devices.".format(devices_num))
+    devices_num = get_device_num() if cfg.use_gpu else 1
+    print("Found {} CUDA/CPU devices.".format(devices_num))
 
     if cfg.debug or args.enable_ce:
         fluid.default_startup_program().random_seed = 1000
@@ -111,7 +111,7 @@ def train():
             learning_rate=lr,
             regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
             momentum=cfg.momentum,
-            #parameter_list=model.parameters()
+            parameter_list=model.parameters()
         )
 
         start_time = time.time()
