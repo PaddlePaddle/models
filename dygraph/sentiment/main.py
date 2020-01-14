@@ -162,7 +162,7 @@ def train():
                                    'constant',
                                    constant_values=(args.vocab_size))
                             for x in data
-                        ]).astype('int64').reshape(-1, 1))
+                        ]).astype('int64').reshape(-1))
                     label = to_variable(
                         np.array([x[1] for x in data]).astype('int64').reshape(
                             args.batch_size, 1))
@@ -203,11 +203,11 @@ def train():
                                        'constant',
                                        constant_values=(args.vocab_size))
                                 for x in eval_data
-                            ]).astype('int64').reshape(1, -1)
+                            ]).astype('int64').reshape(-1)
                             eval_label = to_variable(
                                 np.array([x[1] for x in eval_data]).astype(
                                     'int64').reshape(args.batch_size, 1))
-                            eval_doc = to_variable(eval_np_doc.reshape(-1, 1))
+                            eval_doc = to_variable(eval_np_doc)
                             eval_avg_cost, eval_prediction, eval_acc = model(
                                 eval_doc, eval_label)
                             eval_np_mask = (
@@ -288,8 +288,8 @@ def infer():
                                        'constant',
                                        constant_values=(args.vocab_size))
                                 for x in data
-            ]).astype('int64').reshape(-1, 1)
-            doc = to_variable(np_doc.reshape(-1, 1))
+            ]).astype('int64').reshape(-1)
+            doc = to_variable(np_doc)
             label = to_variable(
                 np.array([x[1] for x in data]).astype('int64').reshape(
                     args.batch_size, 1))
