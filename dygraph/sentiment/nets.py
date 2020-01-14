@@ -179,12 +179,12 @@ class GRU(fluid.dygraph.Layer):
             is_sparse=False)
         h_0 = np.zeros((self.batch_size, self.hid_dim), dtype="float32")
         h_0 = to_variable(h_0)
-        self._fc1 = Linear(input_dim = self.hid_dim, output_dim=self.hid_dim*3, num_flatten_dims=2)
+        self._fc1 = Linear(input_dim = self.hid_dim, output_dim=self.hid_dim*3)
         self._fc2 = Linear(input_dim=self.hid_dim*3, output_dim=self.fc_hid_dim, act="tanh")
-        self._fc_prediction = Linear(self.full_name(),
-                                 size=self.class_dim,
+        self._fc_prediction = Linear(input_dim=self.fc_hid_dim,
+                                 output_dim=self.class_dim,
                                  act="softmax")
-        self._gru = DynamicGRU(self.full_name(), size= self.hid_dim, h_0=h_0)
+        self._gru = DynamicGRU( size= self.hid_dim, h_0=h_0)
     def forward(self, inputs, label=None):
         emb = self.embedding(inputs)
         o_np_mask =to_variable(inputs.numpy().reshape(-1,1) != self.dict_dim).astype('float32')
