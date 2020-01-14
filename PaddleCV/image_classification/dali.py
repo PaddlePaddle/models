@@ -148,6 +148,8 @@ def build(settings, mode='train'):
 
     file_root = settings.data_dir
     bs = settings.batch_size
+    if mode != 'train' and hasattr(settings, 'test_batch_size'):
+        bs = settings.test_batch_size
     assert bs % paddle.fluid.core.get_cuda_device_count() == 0, \
         "batch size must be multiple of number of devices"
     batch_size = bs // paddle.fluid.core.get_cuda_device_count()
@@ -170,69 +172,13 @@ def build(settings, mode='train'):
     assert interp in interp_map, "interpolation method not supported by DALI"
     interp = interp_map[interp]
 
-    if mode != 'train':
-        p = fluid.framework.cuda_places()[0]
-        place = fluid.core.Place()
-        place.set_place(p)
-        device_id = place.gpu_device_id()
-        file_list = os.path.join(file_root, 'val_list.txt')
-        if not os.path.exists(file_list):
-            file_list = None
-            file_root = os.path.join(file_root, 'val')
-        pipe = HybridValPipe(
-            file_root,
-            file_list,
-            batch_size,
-            resize_shorter,
-            crop,
-            interp,
-            mean,
-            std,
-            device_id=device_id)
-        pipe.build()
-        return DALIGenericIterator(
-            pipe, ['feed_image', 'feed_label'],
-            size=len(pipe),
-            dynamic_shape=True,
-            fill_last_batch=False,
-            last_batch_padded=True)
-
-    file_list = os.path.join(file_root, 'train_list.txt')
+    file_list = os.path.join(file_root, '{}_list.txt'.format(mode))
     if not os.path.exists(file_list):
         file_list = None
-        file_root = os.path.join(file_root, 'train')
+        file_root = os.path.join(file_root, mode)
 
-    if 'PADDLE_TRAINER_ID' in env and 'PADDLE_TRAINERS_NUM' in env:
-        shard_id = int(env['PADDLE_TRAINER_ID'])
-        num_shards = int(env['PADDLE_TRAINERS_NUM'])
-        device_id = int(env['FLAGS_selected_gpus'])
-        pipe = HybridTrainPipe(
-            file_root,
-            file_list,
-            batch_size,
-            resize_shorter,
-            crop,
-            min_area,
-            lower,
-            upper,
-            interp,
-            mean,
-            std,
-            device_id,
-            shard_id,
-            num_shards,
-            seed=42 + shard_id)
-        pipe.build()
-        pipelines = [pipe]
-        sample_per_shard = len(pipe) // num_shards
-    else:
-        pipelines = []
-        places = fluid.framework.cuda_places()
-        num_shards = len(places)
-        for idx, p in enumerate(places):
-            place = fluid.core.Place()
-            place.set_place(p)
-            device_id = place.gpu_device_id()
+    def build_pipe(device_id, num_shards=1, shard_id=0, seed=42):
+        if mode == 'train':
             pipe = HybridTrainPipe(
                 file_root,
                 file_list,
@@ -245,16 +191,63 @@ def build(settings, mode='train'):
                 interp,
                 mean,
                 std,
-                device_id,
-                idx,
-                num_shards,
+                device_id=device_id,
+                shard_id=shard_id,
+                num_shards=num_shards,
+                seed=seed)
+        else:
+            pipe = HybridValPipe(
+                file_root,
+                file_list,
+                batch_size,
+                resize_shorter,
+                crop,
+                interp,
+                mean,
+                std,
+                device_id=device_id,
+                shard_id=shard_id,
+                num_shards=num_shards)
+        pipe.build()
+        return pipe
+
+    shard_id = 0
+    num_shards = 1
+    device_id = 0
+    if 'PADDLE_TRAINER_ID' in env and 'PADDLE_TRAINERS_NUM' in env:
+        if mode == 'train':
+            shard_id = int(env['PADDLE_TRAINER_ID'])
+            num_shards = int(env['PADDLE_TRAINERS_NUM'])
+            device_id = int(env['FLAGS_selected_gpus'])
+        pipe = build_pipe(
+            device_id=device_id,
+            shard_id=shard_id,
+            num_shards=num_shards,
+            seed=42 + shard_id)
+        pipelines = [pipe]
+        sample_per_shard = len(pipe) // num_shards
+    else:
+        pipelines = []
+        places = fluid.framework.cuda_places()
+        num_shards = len(places)
+        for idx, p in enumerate(places):
+            place = fluid.core.Place()
+            place.set_place(p)
+            device_id = place.gpu_device_id()
+            pipe = build_pipe(
+                device_id=device_id,
+                shard_id=shard_id,
+                num_shards=num_shards,
                 seed=42 + idx)
-            pipe.build()
             pipelines.append(pipe)
         sample_per_shard = len(pipelines[0])
 
     return DALIGenericIterator(
-        pipelines, ['feed_image', 'feed_label'], size=sample_per_shard)
+        pipelines, ['feed_image', 'feed_label'],
+        size=sample_per_shard,
+        fill_last_batch=mode == 'train',
+        dynamic_shape=mode != 'train',
+        last_batch_padded=mode != 'train')
 
 
 def train(settings):
