@@ -202,7 +202,7 @@ class BaseModel(fluid.dygraph.Layer):
             batch_beam_shape = (self.batch_size, self.beam_size)
             #batch_beam_shape_1 = (self.batch_size, self.beam_size, 1)
             vocab_size_tensor = to_variable(np.full((1), self.tar_vocab_size))
-            start_token_tensor = to_variable(np.full(batch_beam_shape, self.beam_start_token, dtype='int64')) # remove last dim 1 in v1.7
+            start_token_tensor = to_variable(np.full(batch_beam_shape, self.beam_start_token, dtype='int64')) 
             end_token_tensor = to_variable(np.full(batch_beam_shape, self.beam_end_token, dtype='int64'))
             step_input = self.tar_embeder(start_token_tensor)
             beam_finished = to_variable(np.full(batch_beam_shape, 0, dtype='float32'))
@@ -271,7 +271,7 @@ class BaseModel(fluid.dygraph.Layer):
                 dec_hidden, dec_cell = new_dec_hidden, new_dec_cell
                 beam_finished = next_finished
                 beam_state_log_probs = next_log_probs
-                step_input = self.tar_embeder(fluid.layers.unsqueeze(token_indices, 2)) # remove unsqueeze in v1.7
+                step_input = self.tar_embeder(token_indices) # remove unsqueeze in v1.7
                 predicted_ids.append(token_indices)
                 parent_ids.append(beam_indices)
 
