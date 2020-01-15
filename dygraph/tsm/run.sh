@@ -16,7 +16,6 @@ resume="" # set pretrain model path if needed
 save_dir="./data/checkpoints"
 save_inference_dir="./data/inference_model"
 use_gpu=True
-fix_random_seed=False
 log_interval=1
 valid_interval=1
 
@@ -36,8 +35,7 @@ if [ "$mode"x == "train"x ]; then
                         --log_interval=$log_interval \
                         --valid_interval=$valid_interval \
                         --use_gpu=$use_gpu \
-                        --save_dir=$save_dir \
-                        --fix_random_seed=$fix_random_seed
+                        --save_dir=$save_dir
     elif [ "$pretrain"x != ""x ]; then
         python train.py --model_name=$name \
                         --config=$configs \
@@ -45,17 +43,14 @@ if [ "$mode"x == "train"x ]; then
                         --log_interval=$log_interval \
                         --valid_interval=$valid_interval \
                         --use_gpu=$use_gpu \
-                        --save_dir=$save_dir \
-                        --fix_random_seed=$fix_random_seed
+                        --save_dir=$save_dir
     else
-         nohup python train.py --model_name=$name \
+         python train.py --model_name=$name \
                         --config=$configs \
                         --log_interval=$log_interval \
                         --valid_interval=$valid_interval \
                         --use_gpu=$use_gpu \
-                        --save_dir=$save_dir \
-                        --fix_random_seed=$fix_random_seed \
-			>dy_debug.log 2>&1 &
+                        --save_dir=$save_dir
     fi
 elif [ "$mode"x == "eval"x ]; then
     echo $mode $name $configs $weights

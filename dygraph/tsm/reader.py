@@ -53,19 +53,19 @@ class KineticsReader():
     """
 
     def __init__(self, name, mode, cfg):
-        super(KineticsReader, self).__init__(name, mode, cfg)
-        self.format = cfg.MODEL.format
-        self.num_classes = self.get_config_from_sec('model', 'num_classes')
-        self.seg_num = self.get_config_from_sec('model', 'seg_num')
-        self.seglen = self.get_config_from_sec('model', 'seglen')
 
-        self.seg_num = self.get_config_from_sec(mode, 'seg_num', self.seg_num)
-        self.short_size = self.get_config_from_sec(mode, 'short_size')
-        self.target_size = self.get_config_from_sec(mode, 'target_size')
-        self.num_reader_threads = self.get_config_from_sec(mode,
-                                                           'num_reader_threads')
-        self.buf_size = self.get_config_from_sec(mode, 'buf_size')
-        self.fix_random_seed = self.get_config_from_sec(mode, 'fix_random_seed')
+        self.mode = mode
+        self.name = name
+        self.format = cfg.MODEL.format
+        self.num_classes = cfg.MODEL.num_classes
+        self.seg_num = cfg.MODEL.seg_num
+        self.seglen = cfg.MODEL.seglen
+
+        # self.seg_num = cfg[mode.upper()]['seg_num']
+        self.short_size = cfg[mode.upper()]['short_size']
+        self.target_size = cfg[mode.upper()]['target_size']
+        self.num_reader_threads = cfg[mode.upper()]['num_reader_threads']
+        self.buf_size = cfg[mode.upper()]['buf_size']
 
         self.img_mean = np.array(cfg.MODEL.image_mean).reshape(
             [3, 1, 1]).astype(np.float32)
@@ -78,10 +78,6 @@ class KineticsReader():
             self.video_path = cfg[mode.upper()]['video_path']
         else:
             self.video_path = ''
-        if self.fix_random_seed:
-            random.seed(0)
-            np.random.seed(0)
-            self.num_reader_threads = 1
 
     def create_reader(self):
         # if set video_path for inference mode, just load this single video
@@ -317,7 +313,6 @@ def group_multi_scale_crop(img_group, target_size, scales=None, \
                 ret.append((3 * w_step, 3 * h_step))  # lower righ quarter
 
             w_offset, h_offset = random.choice(ret)
-
 
         return crop_pair[0], crop_pair[1], w_offset, h_offset
 

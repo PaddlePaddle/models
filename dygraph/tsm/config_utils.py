@@ -1,4 +1,4 @@
-#  Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
 #limitations under the License.
 
 import yaml
-from .utility import AttrDict
 import logging
 logger = logging.getLogger(__name__)
 
@@ -23,6 +22,17 @@ CONFIG_SECS = [
     'test',
     'infer',
 ]
+
+
+class AttrDict(dict):
+    def __getattr__(self, key):
+        return self[key]
+
+    def __setattr__(self, key, value):
+        if key in self.__dict__:
+            self.__dict__[key] = value
+        else:
+            self[key] = value
 
 
 def parse_config(cfg_file):
