@@ -18,19 +18,23 @@
 请参考：https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification
 
 **模型训练**
-数据准备完成后，可通过如下两种方式启动训练：
-默认使用4卡训练，启动方式如下:
-bash run_mul_v1.sh
-bash run_mul_v2.sh
+
+若使用4卡训练，启动方式如下:
+
+    bash run_mul_v1.sh
+    bash run_mul_v2.sh
 若使用单卡训练，启动方式如下:
-bash run_sing_v1.sh
-bash run_sing_v2.sh
+
+    bash run_sing_v1.sh
+    bash run_sing_v2.sh
 
 **模型精度**
+
 Model    Top-1    Top-5
 MobileNetV1    0.706     0.894
 MobileNetV2    0.626    0.845
 
 **参考论文**
+
 MobileNetV1: MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications, Andrew G. Howard, Menglong Zhu, Bo Chen, Dmitry Kalenichenko, Weijun Wang, Tobias Weyand, Marco Andreetto, Hartwig Adam
 MobileNetV2: MobileNetV2: Inverted Residuals and Linear Bottlenecks, Mark Sandler, Andrew Howard, Menglong Zhu, Andrey Zhmoginov, Liang-Chieh Chen
