@@ -4,10 +4,10 @@
 
 **代码结构**
 
-    ├── run_mul_v1.sh      #多卡训练启动脚本_v1
-    ├── run_mul_v2.sh      #多卡训练启动脚本_v2
-    ├── run_sing_v1.sh     #单卡训练启动脚本_v1
-    ├── run_sing_v2.sh     #单卡训练启动脚本_v2
+    ├── run_mul_v1.sh      # 多卡训练启动脚本_v1
+    ├── run_mul_v2.sh      # 多卡训练启动脚本_v2
+    ├── run_sing_v1.sh     # 单卡训练启动脚本_v1
+    ├── run_sing_v2.sh     # 单卡训练启动脚本_v2
     ├── train.py           # 训练入口
     ├── mobilenet_v1.py    # 网络结构v1
     ├── mobilenet_v2.py    # 网络结构v2
@@ -15,6 +15,7 @@
     ├── utils              # 基础工具目录
 
 **数据准备**
+
 请参考：https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification
 
 **模型训练**
