@@ -35,11 +35,13 @@ Cycle GAN 是一种image to image 的图像生成网络，实现了非对称图�
 
 ## 数据准备
 
-本教程使用 cityscapes 数据集 来进行模型的训练测试工作，可以通过指定 `python download.py --dataset cityscapes` 下载得到。
+CycleGAN 支持的数据集可以参考download.py中的`cycle_pix_dataset`，可以通过指定`python download.py --dataset xxx` 下载得到。
 
-cityscapes 训练集包含2975张街景实拍图片，2975张对应真实街景的语义分割图片。测试集包含499张实拍图片和499张语义分割图片。
+由于版权问题，cityscapes 数据集无法通过脚本直接获得，需要从[官方](https://www.cityscapes-dataset.com/)下载数据，
+下载完之后执行`python prepare_cityscapes_dataset.py --gtFine_dir ./gtFine/ --leftImg8bit_dir ./leftImg8bit --output_dir ./data/cityscapes/`处理，
+将数据存放在`data/cityscapes`。
 
-数据下载处理完毕后，并组织为以下路径结构：
+数据下载处理完毕后，需要您自行生成txt脚本，并组织为以下路径结构：
 
 ```
 data
