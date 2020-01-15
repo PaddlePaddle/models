@@ -58,15 +58,17 @@ class DynamicGRU(fluid.dygraph.Layer):
 
 class SimpleConvPool(fluid.dygraph.Layer):
     def __init__(self,
+                 num_channels,
                  num_filters,
                  filter_size,
                  use_cudnn=False,
                  batch_size=None):
         super(SimpleConvPool, self).__init__()
         self.batch_size = batch_size
-        self._conv2d = Conv2D(1,
+        self._conv2d = Conv2D(num_channels = num_channels,
             num_filters=num_filters,
             filter_size=filter_size,
+            padding=[1, 1],                 
             use_cudnn=use_cudnn,
             act='tanh')
 
@@ -85,6 +87,7 @@ class CNN(fluid.dygraph.Layer):
         self.hid_dim = 128
         self.fc_hid_dim = 96
         self.class_dim = 2
+        self.channels = 1
         self.win_size = [3, self.hid_dim]
         self.batch_size = batch_size
         self.seq_len = seq_len
@@ -93,6 +96,7 @@ class CNN(fluid.dygraph.Layer):
             dtype='float32',
             is_sparse=False)
         self._simple_conv_pool_1 = SimpleConvPool(
+            self.channels,
             self.hid_dim,
             self.win_size,
             batch_size=self.batch_size)
@@ -107,7 +111,7 @@ class CNN(fluid.dygraph.Layer):
             to_variable(o_np_mask), [1, self.hid_dim])
         emb = emb * mask_emb
         emb = fluid.layers.reshape(
-            emb, shape=[-1, 1, self.seq_len, self.hid_dim])
+            emb, shape=[-1, self.channels , self.seq_len, self.hid_dim])
         conv_3 = self._simple_conv_pool_1(emb)
         fc_1 = self._fc1(conv_3)
         prediction = self._fc_prediction(fc_1)
