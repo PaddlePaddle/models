@@ -1,6 +1,6 @@
 # SemSegPaddle: A Paddle-based Framework for Deep Learning in Semantic Segmentation
 
-This is a Paddle implementation of semantic segmentation models on muiltiple datasest, including Cityscapes, Pascal Context, and ADE20K.
+This is a Paddle implementation of semantic segmentation models on multiple datasets, including Cityscapes, Pascal Context, and ADE20K.
 
 ## Updates
 
