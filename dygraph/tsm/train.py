@@ -39,7 +39,7 @@ def parse_args():
     parser.add_argument(
         '--config',
         type=str,
-        default='configs/attention_cluster.txt',
+        default='tsm.yaml',
         help='path to config file of model')
     parser.add_argument(
         '--batch_size',
@@ -167,7 +167,7 @@ def train(args):
         if use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
 
-        video_model = TSM_ResNet("", train_config)
+        video_model = TSM_ResNet("TSM", train_config)
         optimizer = create_optimizer(train_config.TRAIN)
         if use_data_parallel:
             video_model = fluid.dygraph.parallel.DataParallel(video_model,

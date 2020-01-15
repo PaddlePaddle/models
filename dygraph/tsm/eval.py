@@ -22,15 +22,9 @@ import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.dygraph.base import to_variable
 
-from utils.train_utils import train_with_pyreader
-#import models.TSM.TSM_ResNet as TSM_ResNet
-#from models import TSM as TSM
-from tsm_res_model import TSM_ResNet 
-#import TSM
-from utils.config_utils import *
-from reader import get_reader
-from metrics import get_metrics
-from utils.utility import check_cuda
+from model import TSM_ResNet
+from config_utils import *
+from reader import KineticsReader
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -39,16 +33,13 @@ logger = logging.getLogger(__name__)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("Paddle Video train script")
+    parser = argparse.ArgumentParser("Paddle Video test script")
     parser.add_argument(
-        '--model_name',
-        type=str,
-        default='AttentionCluster',
-        help='name of model to train.')
+        '--model_name', type=str, default='TSM', help='name of model to train.')
     parser.add_argument(
         '--config',
         type=str,
-        default='configs/attention_cluster.txt',
+        default='tsm.yaml',
         help='path to config file of model')
     parser.add_argument(
         '--batch_size',
@@ -61,10 +52,7 @@ def parse_args():
         default=True,
         help='default use gpu.')
     parser.add_argument(
-        '--weights',
-        type=str,
-        default="./final",
-        help="weight path")
+        '--weights', type=str, default="./final", help="weight path")
     parser.add_argument(
         '--log_interval',
         type=int,
@@ -83,15 +71,13 @@ def test(args):
     place = fluid.CUDAPlace(0)
 
     with fluid.dygraph.guard(place):
-        video_model = TSM_ResNet('TSM', layers=test_config.MODEL.num_layers,
-                              class_dim=test_config.MODEL.num_classes,
-                              seg_num=test_config.MODEL.seg_num)
-
+        video_model = TSM_ResNet("TSM", test_config)
 
         model_dict, _ = fluid.load_dygraph(args.weights)
         video_model.set_dict(model_dict)
 
-        test_reader = get_reader(args.model_name.upper(), 'test', test_config) 
+        test_reader = KineticsReader(name="tsm", mode='test', cfg=test_config)
+        test_reader = test_reader.create_reader()
 
         video_model.eval()
         total_loss = 0.0
@@ -102,12 +88,13 @@ def test(args):
         for batch_id, data in enumerate(test_reader()):
             x_data = np.array([item[0] for item in data])
             y_data = np.array([item[1] for item in data]).reshape([-1, 1])
-                
+
             imgs = to_variable(x_data)
             labels = to_variable(y_data)
             labels.stop_gradient = True
             outputs = video_model(imgs)
-            loss = fluid.layers.cross_entropy(input=outputs, label=labels, ignore_index=-1)
+            loss = fluid.layers.cross_entropy(
+                input=outputs, label=labels, ignore_index=-1)
 
             avg_loss = fluid.layers.mean(loss)
 
@@ -117,13 +104,15 @@ def test(args):
             total_acc1 += acc_top1.numpy()
             total_acc5 += acc_top5.numpy()
             total_sample += 1
-            print('TEST iter {}, loss = {}, acc1 {}, acc5 {}'.format(batch_id, avg_loss.numpy(), acc_top1.numpy(), acc_top5.numpy()))
-        print('Finish loss {}, acc1 {}, acc5 {}'.format(total_loss/ total_sample, total_acc1 / total_sample, total_acc5 / total_sample))
-         
+            print('TEST iter {}, loss = {}, acc1 {}, acc5 {}'.format(
+                batch_id, avg_loss.numpy(), acc_top1.numpy(), acc_top5.numpy()))
+        print('Finish loss {}, acc1 {}, acc5 {}'.format(
+            total_loss / total_sample, total_acc1 / total_sample, total_acc5 /
+            total_sample))
+
 
 if __name__ == "__main__":
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
-    check_cuda(args.use_gpu)
     logger.info(args)
     test(args)
