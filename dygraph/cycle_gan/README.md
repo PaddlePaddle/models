@@ -41,8 +41,18 @@ CycleGAN 支持的数据集可以参考download.py中的`cycle_pix_dataset`，�
 下载完之后执行`python prepare_cityscapes_dataset.py --gtFine_dir ./gtFine/ --leftImg8bit_dir ./leftImg8bit --output_dir ./data/cityscapes/`处理，
 将数据存放在`data/cityscapes`。
 
-数据下载处理完毕后，需要您自行生成txt脚本，并组织为以下路径结构：
+数据下载处理完毕后，需要您将数据组织为以下路径结构：
+```
+data
+|-- cityscapes
+|   |-- testA
+|   |-- testB
+|   |-- trainA
+|   |-- trainB
 
+```
+
+然后运行txt生成脚本：`python generate_txt.py`，最终数据组织如下所示:
 ```
 data
 |-- cityscapes

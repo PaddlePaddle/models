@@ -19,11 +19,11 @@ def propress_cityscapes(gtFine_dir, leftImg8bit_dir, output_dir, phase):
         print("{} makedirs".format(e))
         pass
     try:
-        os.makedirs(os.path.join(save_dir, 'A'))
+        os.makedirs(save_dir + 'A')
     except Exception as e:
         print("{} makedirs".format(e))
     try:
-        os.makedirs(os.path.join(save_dir, 'B'))
+        os.makedirs(save_dir + 'B')
     except Exception as e:
         print("{} makedirs".format(e))
 
@@ -42,9 +42,9 @@ def propress_cityscapes(gtFine_dir, leftImg8bit_dir, output_dir, phase):
         seg_image = load_image(seg_path)
         photo_image = load_image(photo_path)
         # save image
-        save_path = os.path.join(save_dir, 'A', "%d_A.jpg" % i)
+        save_path = os.path.join(save_dir+'A', "%d_A.jpg" % i)
         photo_image.save(save_path, format='JPEG', subsampling=0, quality=100)
-        save_path = os.path.join(save_dir, 'B', "%d_B.jpg" % i)
+        save_path = os.path.join(save_dir+'B', "%d_B.jpg" % i)
         seg_image.save(save_path, format='JPEG', subsampling=0, quality=100)
 
         if i % 10 == 0:
