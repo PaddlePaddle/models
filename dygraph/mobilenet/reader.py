@@ -295,7 +295,6 @@ class ImageNetReader:
                         assert self.shuffle_seed is not None, "multiprocess train, shuffle seed must be set!"
                         np.random.RandomState(self.shuffle_seed).shuffle(
                             full_lines)
-                        #np.random.shuffle(full_lines)
 
                 batch_data = []
                 for line in full_lines:
@@ -380,7 +379,7 @@ class ImageNetReader:
         Returns:
             eval reader
         """
-        file_list = os.path.join(settings.data_dir, 'train_list.txt')
+        file_list = os.path.join(settings.data_dir, 'val_list.txt')
 
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
@@ -402,7 +401,7 @@ class ImageNetReader:
         Returns:
             test reader
         """
-        file_list = os.path.join(settings.data_dir, 'train_list.txt')
+        file_list = os.path.join(settings.data_dir, 'val_list.txt')
 
         assert os.path.isfile(
             file_list), "{} doesn't exist, please check data list path".format(
