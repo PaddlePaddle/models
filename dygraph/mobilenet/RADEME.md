@@ -31,9 +31,11 @@
 
 **模型精度**
 
-Model    Top-1    Top-5
-MobileNetV1    0.706     0.894
-MobileNetV2    0.626    0.845
+    Model         Top-1      Top-5
+    
+    MobileNetV1    0.707     0.895
+    
+    MobileNetV2    0.626     0.845
 
 **参考论文**
 
