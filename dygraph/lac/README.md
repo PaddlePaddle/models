@@ -23,7 +23,7 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 克隆工具集代码库到本地
 ```bash
  git clone https://github.com/PaddlePaddle/models.git
- cd models/PaddleNLP/lexical_analysis
+ cd https://github.com/PaddlePaddle/models/tree/develop/dygraph/lac
 ```
 
 #### 3. 环境依赖
