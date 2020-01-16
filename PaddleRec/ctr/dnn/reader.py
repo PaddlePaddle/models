@@ -1,3 +1,6 @@
+import mmh3
+
+
 class Dataset:
     def __init__(self):
         pass
@@ -43,7 +46,8 @@ class CriteoDataset(Dataset):
                                                      self.cont_diff_[idx - 1])
                         for idx in self.categorical_range_:
                             sparse_feature.append([
-                                hash(str(idx) + features[idx]) % self.hash_dim_
+                                mmh3.hash(str(idx) + features[idx]) %
+                                self.hash_dim_
                             ])
 
                         label = [int(features[0])]

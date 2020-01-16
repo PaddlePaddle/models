@@ -110,7 +110,7 @@ def train(args):
 
         # define model
         transformer = TransFormer(
-            'transformer', ModelHyperParams.src_vocab_size,
+            ModelHyperParams.src_vocab_size,
             ModelHyperParams.trg_vocab_size, ModelHyperParams.max_length + 1,
             ModelHyperParams.n_layer, ModelHyperParams.n_head,
             ModelHyperParams.d_key, ModelHyperParams.d_value,
@@ -123,6 +123,7 @@ def train(args):
         optimizer = fluid.optimizer.Adam(learning_rate=NoamDecay(
             ModelHyperParams.d_model, TrainTaskConfig.warmup_steps,
             TrainTaskConfig.learning_rate),
+            parameter_list = transformer.parameters(),
                                          beta1=TrainTaskConfig.beta1,
                                          beta2=TrainTaskConfig.beta2,
                                          epsilon=TrainTaskConfig.eps)

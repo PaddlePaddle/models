@@ -84,6 +84,9 @@ def parse_args():
         required=False,
         default=False,
         help='print speed or not , (default: False)')
+    parser.add_argument(
+        '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+
     return parser.parse_args()
 
 
@@ -195,6 +198,11 @@ def GetFileList(data_path):
 
 
 def train(args):
+    # add ce
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
 
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)

@@ -405,7 +405,7 @@ class UnifiedTransformer(ModelBase):
         if self.two_layer_predictor:
             dec_embed = self.pre_predictor(dec_embed)
         if self.weight_sharing:
-            token_embedding = self.embedder.token_embedding._w
+            token_embedding = self.embedder.token_embedding.weight
             dec_logits = layers.matmul(
                 x=dec_embed,
                 y=token_embedding,
@@ -648,7 +648,7 @@ class UnifiedTransformer(ModelBase):
         if self.two_layer_predictor:
             pred_embed = self.pre_predictor(pred_embed)
         if self.weight_sharing:
-            token_embedding = self.embedder.token_embedding._w
+            token_embedding = self.embedder.token_embedding.weight
             pred_logits = layers.matmul(
                 x=pred_embed,
                 y=token_embedding,

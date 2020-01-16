@@ -119,7 +119,7 @@ def data_reader(file_path, word_dict, num_examples, phrase, epoch, max_seq_len):
         Reader function
         """
         for idx in range(epoch):
-            if phrase == "train":
+            if phrase == "train" and 'ce_mode' not in os.environ:
                 random.shuffle(all_data)
             for wids, label, seq_len in all_data:
                 yield wids, label, seq_len

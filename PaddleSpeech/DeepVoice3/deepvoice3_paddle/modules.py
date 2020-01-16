@@ -366,14 +366,14 @@ class PositionEmbedding(dg.Layer):
         self._dtype = dtype
 
     def set_weight(self, array):
-        assert self.embed._w.shape == list(array.shape), "shape does not match"
-        self.embed._w.value().get_tensor().set(
-            array, fluid.framework._current_expected_place())
+        assert self.embed.weight.shape == list(
+            array.shape), "shape does not match"
+        self.embed.weight.set_value(array)
 
     def forward(self, indices, speaker_position_rate=None):
         """
         Args:
-            indices (Variable): Shape (B, T, 1), dtype: int64, position
+            indices (Variable): Shape (B, T), dtype: int64, position
                 indices, where B means the batch size, T means the time steps.
             speaker_position_rate (Variable | float, optional), position
                 rate. It can be a float point number or a Variable with 
@@ -384,14 +384,14 @@ class PositionEmbedding(dg.Layer):
             out (Variable): Shape(B, C_pos), position embedding, where C_pos 
                 means position embedding size.
         """
-        rad = fluid.layers.transpose(self.embed._w, perm=[1, 0])
+        rad = fluid.layers.transpose(self.embed.weight, perm=[1, 0])
         batch_size = indices.shape[0]
 
         if speaker_position_rate is None:
             weight = compute_position_embedding(rad)
             out = self._helper.create_variable_for_type_inference(self._dtype)
             self._helper.append_op(
-                type="lookup_table",
+                type="lookup_table_v2",
                 inputs={"Ids": indices,
                         "W": weight},
                 outputs={"Out": out},
@@ -417,7 +417,7 @@ class PositionEmbedding(dg.Layer):
             weight = compute_position_embedding(scaled_rad)
             out = self._helper.create_variable_for_type_inference(self._dtype)
             self._helper.append_op(
-                type="lookup_table",
+                type="lookup_table_v2",
                 inputs={"Ids": indices,
                         "W": weight},
                 outputs={"Out": out},
@@ -441,7 +441,7 @@ class PositionEmbedding(dg.Layer):
                     self._dtype)
                 sequence = indices[i]
                 self._helper.append_op(
-                    type="lookup_table",
+                    type="lookup_table_v2",
                     inputs={"Ids": sequence,
                             "W": weight},
                     outputs={"Out": out},

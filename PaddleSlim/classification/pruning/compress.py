@@ -33,6 +33,7 @@ add_arg('num_epochs',       int,  120,               "The number of total epochs
 add_arg('total_images',     int,  1281167,               "The number of total training images.")
 parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
 add_arg('config_file',      str, None,                 "The config file for compression with yaml format.")
+add_arg('enable_ce', bool, False, "If set, run the task with continuous evaluation logs.")
 # yapf: enable
 
 
@@ -68,6 +69,12 @@ def create_optimizer(args):
         return cosine_decay(args)
 
 def compress(args):
+    # add ce
+    if args.enable_ce:
+        SEED = 1
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
+
     class_dim=1000
     image_shape="3,224,224"
     image_shape = [int(m) for m in image_shape.split(",")]

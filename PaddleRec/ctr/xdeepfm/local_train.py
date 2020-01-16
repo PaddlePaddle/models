@@ -9,6 +9,12 @@ import utils
 
 def train():
     args = parse_args()
+    # add ce
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
+
     print(args)
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)

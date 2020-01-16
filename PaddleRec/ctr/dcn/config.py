@@ -79,5 +79,7 @@ def parse_args():
     parser.add_argument(
         '--clip_by_norm', type=float, default=100.0, help="gradient clip norm")
     parser.add_argument('--print_steps', type=int, default=100)
+    parser.add_argument(
+        '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
     return parser.parse_args()
