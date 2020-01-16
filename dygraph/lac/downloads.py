@@ -28,6 +28,7 @@ import tarfile
 import requests
 
 FILE_INFO = {
+    'BASE_URL': 'https://baidu-nlp.bj.bcebos.com/',
     'DATA': {
         'name': 'lexical_analysis-dataset-2.0.0.tar.gz',
         'md5': '71e4a9a36d0f0177929a1bccedca7dba'
@@ -38,7 +39,7 @@ FILE_INFO = {
 def usage():
     desc = ("\nDownload datasets and pretrained models for LAC.\n"
             "Usage:\n"
-            "   1. python download.py dataset\n"
+            "   1. python download.py dataset\n")
     print(desc)
 
 
