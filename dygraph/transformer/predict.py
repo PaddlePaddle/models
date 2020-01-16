@@ -12,72 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-import argparse
-import ast
+import logging
+import os
+import six
+import sys
+import time
 
 import numpy as np
 import paddle
 import paddle.fluid as fluid
-import paddle.dataset.wmt16 as wmt16
 
-from model import TransFormer
-from config import *
-from data_util import *
+from utils.configure import PDConfig
+from utils.check import check_gpu, check_version
 
-
-def parse_args():
-    parser = argparse.ArgumentParser("Arguments for Inference")
-    parser.add_argument(
-        "--use_data_parallel",
-        type=ast.literal_eval,
-        default=False,
-        help="The flag indicating whether to shuffle instances in each pass.")
-    parser.add_argument(
-        "--model_file",
-        type=str,
-        default="transformer_params",
-        help="Load model from the file named `model_file.pdparams`.")
-    parser.add_argument(
-        "--output_file",
-        type=str,
-        default="predict.txt",
-        help="The file to output the translation results of predict_file to.")
-    parser.add_argument('opts',
-                        help='See config.py for all options',
-                        default=None,
-                        nargs=argparse.REMAINDER)
-    args = parser.parse_args()
-    merge_cfg_from_list(args.opts, [InferTaskConfig, ModelHyperParams])
-    return args
-
-
-def prepare_infer_input(insts, src_pad_idx, bos_idx, n_head):
-    """
-    inputs for inferencs
-    """
-    src_word, src_pos, src_slf_attn_bias, src_max_len = pad_batch_data(
-        [inst[0] for inst in insts], src_pad_idx, n_head, is_target=False)
-    # start tokens
-    trg_word = np.asarray([[bos_idx]] * len(insts), dtype="int64")
-    trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
-                                [1, 1, 1, 1]).astype("float32")
-    trg_word = trg_word.reshape(-1, 1, 1 )
-    src_word = src_word.reshape(-1, src_max_len, 1 )
-    src_pos = src_pos.reshape(-1, src_max_len,1  )
-
-    data_inputs = [
-        src_word, src_pos, src_slf_attn_bias, trg_word, trg_src_attn_bias
-    ]
-
-    var_inputs = []
-    for i, field in enumerate(encoder_data_input_fields +
-                              fast_decoder_data_input_fields):
-        var_inputs.append(to_variable(data_inputs[i], name=field))
-
-    enc_inputs = var_inputs[0:len(encoder_data_input_fields)]
-    dec_inputs = var_inputs[len(encoder_data_input_fields):]
-    return enc_inputs, dec_inputs
+# include task-specific libs
+import reader
+from model import Transformer, position_encoding_init
 
 
 def post_process_seq(seq, bos_idx, eos_idx, output_bos=False, output_eos=False):
@@ -96,60 +46,98 @@ def post_process_seq(seq, bos_idx, eos_idx, output_bos=False, output_eos=False):
     return seq
 
 
-def infer(args):
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+def do_predict(args):
+    if args.use_cuda:
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CPUPlace()
+
+    # define the data generator
+    processor = reader.DataProcessor(fpattern=args.predict_file,
+                                     src_vocab_fpath=args.src_vocab_fpath,
+                                     trg_vocab_fpath=args.trg_vocab_fpath,
+                                     token_delimiter=args.token_delimiter,
+                                     use_token_batch=False,
+                                     batch_size=args.batch_size,
+                                     device_count=1,
+                                     pool_size=args.pool_size,
+                                     sort_type=reader.SortType.NONE,
+                                     shuffle=False,
+                                     shuffle_batch=False,
+                                     start_mark=args.special_token[0],
+                                     end_mark=args.special_token[1],
+                                     unk_mark=args.special_token[2],
+                                     max_length=args.max_length,
+                                     n_head=args.n_head)
+    batch_generator = processor.data_generator(phase="predict", place=place)
+    args.src_vocab_size, args.trg_vocab_size, args.bos_idx, args.eos_idx, \
+        args.unk_idx = processor.get_vocab_summary()
+    trg_idx2word = reader.DataProcessor.load_dict(
+        dict_path=args.trg_vocab_fpath, reverse=True)
+
+    args.src_vocab_size, args.trg_vocab_size, args.bos_idx, args.eos_idx, \
+        args.unk_idx = processor.get_vocab_summary()
+
     with fluid.dygraph.guard(place):
-        transformer = TransFormer(
-            ModelHyperParams.src_vocab_size,
-            ModelHyperParams.trg_vocab_size, ModelHyperParams.max_length + 1,
-            ModelHyperParams.n_layer, ModelHyperParams.n_head,
-            ModelHyperParams.d_key, ModelHyperParams.d_value,
-            ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
-            ModelHyperParams.prepostprocess_dropout,
-            ModelHyperParams.attention_dropout, ModelHyperParams.relu_dropout,
-            ModelHyperParams.preprocess_cmd, ModelHyperParams.postprocess_cmd,
-            ModelHyperParams.weight_sharing)
-        # load checkpoint
-        model_dict, _ = fluid.load_dygraph(args.model_file)
+        # define data loader
+        test_loader = fluid.io.DataLoader.from_generator(capacity=10)
+        test_loader.set_batch_generator(batch_generator, places=place)
+
+        # define model
+        transformer = Transformer(
+            args.src_vocab_size, args.trg_vocab_size, args.max_length + 1,
+            args.n_layer, args.n_head, args.d_key, args.d_value, args.d_model,
+            args.d_inner_hid, args.prepostprocess_dropout,
+            args.attention_dropout, args.relu_dropout, args.preprocess_cmd,
+            args.postprocess_cmd, args.weight_sharing, args.bos_idx,
+            args.eos_idx)
+
+        # load the trained model
+        assert args.init_from_params, (
+            "Please set init_from_params to load the infer model.")
+        model_dict, _ = fluid.load_dygraph(
+            os.path.join(args.init_from_params, "transformer"))
+        # to avoid a longer length than training, reset the size of position
+        # encoding to max_length
+        model_dict["encoder.pos_encoder.weight"] = position_encoding_init(
+            args.max_length + 1, args.d_model)
+        model_dict["decoder.pos_encoder.weight"] = position_encoding_init(
+            args.max_length + 1, args.d_model)
         transformer.load_dict(model_dict)
-        print("checkpoint loaded")
-        # start evaluate mode
+
+        # set evaluate mode
         transformer.eval()
 
-        reader = paddle.batch(wmt16.test(ModelHyperParams.src_vocab_size,
-                                         ModelHyperParams.trg_vocab_size),
-                              batch_size=InferTaskConfig.batch_size)
-        id2word = wmt16.get_dict("de",
-                                 ModelHyperParams.trg_vocab_size,
-                                 reverse=True)
-
         f = open(args.output_file, "wb")
-        for batch in reader():
-            enc_inputs, dec_inputs = prepare_infer_input(
-                batch, ModelHyperParams.eos_idx, ModelHyperParams.bos_idx,
-                ModelHyperParams.n_head)
-            
-            print( "enc inputs", enc_inputs[0].shape )
+        for input_data in test_loader():
+            (src_word, src_pos, src_slf_attn_bias, trg_word,
+             trg_src_attn_bias) = input_data
             finished_seq, finished_scores = transformer.beam_search(
-                enc_inputs,
-                dec_inputs,
-                bos_id=ModelHyperParams.bos_idx,
-                eos_id=ModelHyperParams.eos_idx,
-                max_len=InferTaskConfig.max_out_len,
-                alpha=InferTaskConfig.alpha)
+                src_word,
+                src_pos,
+                src_slf_attn_bias,
+                trg_word,
+                trg_src_attn_bias,
+                bos_id=args.bos_idx,
+                eos_id=args.eos_idx,
+                beam_size=args.beam_size,
+                max_len=args.max_out_len)
             finished_seq = finished_seq.numpy()
             finished_scores = finished_scores.numpy()
             for ins in finished_seq:
-                for beam in ins:
-                    id_list = post_process_seq(beam, ModelHyperParams.bos_idx,
-                                                ModelHyperParams.eos_idx)
-                    word_list = [id2word[id] for id in id_list]
-                    sequence = " ".join(word_list) + "\n"
-                    f.write(sequence.encode("utf8"))
-                    break  # only print the best
+                for beam_idx, beam in enumerate(ins):
+                    if beam_idx >= args.n_best: break
+                    id_list = post_process_seq(beam, args.bos_idx, args.eos_idx)
+                    word_list = [trg_idx2word[id] for id in id_list]
+                    sequence = b" ".join(word_list) + b"\n"
+                    f.write(sequence)
 
 
-if __name__ == '__main__':
-    args = parse_args()
-    infer(args)
+if __name__ == "__main__":
+    args = PDConfig(yaml_file="./transformer.yaml")
+    args.build()
+    args.Print()
+    check_gpu(args.use_cuda)
+    check_version()
+
+    do_predict(args)
