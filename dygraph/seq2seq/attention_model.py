@@ -21,7 +21,7 @@ import paddle.fluid as fluid
 import numpy as np
 from paddle.fluid import ParamAttr
 from paddle.fluid.dygraph.base import to_variable
-from paddle.fluid.dygraph.nn import Embedding, FC
+from paddle.fluid.dygraph.nn import Embedding
 from rnn import BasicLSTMUnit
 import numpy as np
 
