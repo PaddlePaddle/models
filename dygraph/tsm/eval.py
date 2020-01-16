@@ -1,4 +1,4 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -35,8 +35,6 @@ logger = logging.getLogger(__name__)
 def parse_args():
     parser = argparse.ArgumentParser("Paddle Video test script")
     parser.add_argument(
-        '--model_name', type=str, default='TSM', help='name of model to train.')
-    parser.add_argument(
         '--config',
         type=str,
         default='tsm.yaml',
@@ -53,11 +51,6 @@ def parse_args():
         help='default use gpu.')
     parser.add_argument(
         '--weights', type=str, default="./final", help="weight path")
-    parser.add_argument(
-        '--log_interval',
-        type=int,
-        default=10,
-        help='mini-batch interval to log.')
     args = parser.parse_args()
     return args
 
@@ -67,7 +60,6 @@ def test(args):
     config = parse_config(args.config)
     test_config = merge_configs(config, 'test', vars(args))
     print_configs(test_config, 'Test')
-    #train_model = models.get_model(args.model_name, test_config, mode='test')
     place = fluid.CUDAPlace(0)
 
     with fluid.dygraph.guard(place):
@@ -76,7 +68,7 @@ def test(args):
         model_dict, _ = fluid.load_dygraph(args.weights)
         video_model.set_dict(model_dict)
 
-        test_reader = KineticsReader(name="tsm", mode='test', cfg=test_config)
+        test_reader = KineticsReader(mode='test', cfg=test_config)
         test_reader = test_reader.create_reader()
 
         video_model.eval()

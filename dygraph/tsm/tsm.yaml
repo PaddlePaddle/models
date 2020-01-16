@@ -15,9 +15,9 @@ TRAIN:
     target_size: 224
     num_reader_threads: 12
     buf_size: 1024
-    batch_size: 16 #64 #128
+    batch_size: 16 #128
     use_gpu: True
-    num_gpus: 1 #4 #8
+    num_gpus: 1 #8
     filelist: "./data/dataset/kinetics/train.list"
     learning_rate: 0.01
     learning_rate_decay: 0.1
@@ -31,7 +31,7 @@ VALID:
     target_size: 224
     num_reader_threads: 12
     buf_size: 1024
-    batch_size: 32 #64 #128
+    batch_size: 32 #128
     filelist: "./data/dataset/kinetics/val.list"
 
 TEST:
@@ -41,13 +41,3 @@ TEST:
     buf_size: 1024
     batch_size: 64
     filelist: "./data/dataset/kinetics/test.list"
-
-INFER:
-    short_size: 256
-    target_size: 224
-    num_reader_threads: 12
-    buf_size: 1024
-    batch_size: 1
-    filelist: "./data/dataset/kinetics/infer.list"
-    video_path: ""
-    kinetics_labels: "./data/dataset/kinetics_labels.json"

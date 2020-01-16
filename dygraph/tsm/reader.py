@@ -52,10 +52,9 @@ class KineticsReader():
                   list
     """
 
-    def __init__(self, name, mode, cfg):
+    def __init__(self, mode, cfg):
 
         self.mode = mode
-        self.name = name
         self.format = cfg.MODEL.format
         self.num_classes = cfg.MODEL.num_classes
         self.seg_num = cfg.MODEL.seg_num
@@ -165,7 +164,7 @@ class KineticsReader():
                 return None, None
 
             return imgs_transform(imgs, mode, seg_num, seglen, \
-                         short_size, target_size, img_mean, img_std, name = self.name), label
+                         short_size, target_size, img_mean, img_std ), label
 
         def decode_pickle(sample, mode, seg_num, seglen, short_size,
                           target_size, img_mean, img_std):
@@ -193,7 +192,7 @@ class KineticsReader():
 
             imgs = video_loader(frames, seg_num, seglen, mode)
             return imgs_transform(imgs, mode, seg_num, seglen, \
-                         short_size, target_size, img_mean, img_std, name = self.name), ret_label
+                         short_size, target_size, img_mean, img_std), ret_label
 
         def reader():
             with open(pickle_list) as flist:
@@ -224,20 +223,13 @@ class KineticsReader():
         return paddle.reader.xmap_readers(mapper, reader, num_threads, buf_size)
 
 
-def imgs_transform(imgs,
-                   mode,
-                   seg_num,
-                   seglen,
-                   short_size,
-                   target_size,
-                   img_mean,
-                   img_std,
-                   name=''):
+def imgs_transform(imgs, mode, seg_num, seglen, short_size, target_size,
+                   img_mean, img_std):
     imgs = group_scale(imgs, short_size)
 
     if mode == 'train':
-        if name == "TSM":
-            imgs = group_multi_scale_crop(imgs, short_size)
+        #if name == "TSM":
+        imgs = group_multi_scale_crop(imgs, short_size)
         imgs = group_random_crop(imgs, target_size)
         imgs = group_random_flip(imgs)
     else:

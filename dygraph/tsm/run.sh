@@ -8,16 +8,11 @@
 # configs should be ./configs/xxx.yaml
 
 mode=$1
-name=$2
-configs=$3
-
+configs="./tsm.yaml"
 pretrain="" # set pretrain model path if needed
 resume="" # set pretrain model path if needed
 save_dir="./data/checkpoints"
-save_inference_dir="./data/inference_model"
 use_gpu=True
-log_interval=1
-valid_interval=1
 
 weights="" #set the path of weights to enable eval and predicut, just ignore this when training
 
@@ -27,76 +22,29 @@ export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 if [ "$mode"x == "train"x ]; then
-    echo $mode $name $configs $resume $pretrain
+    echo $mode "TSM" $configs  $resume $pretrain
     if [ "$resume"x != ""x ]; then
-        python train.py --model_name=$name \
-                        --config=$configs \
+        python train.py --config=$configs \
                         --resume=$resume \
-                        --log_interval=$log_interval \
-                        --valid_interval=$valid_interval \
-                        --use_gpu=$use_gpu \
-                        --save_dir=$save_dir
+                        --use_gpu=$use_gpu 
     elif [ "$pretrain"x != ""x ]; then
-        python train.py --model_name=$name \
-                        --config=$configs \
+        python train.py --config=$configs \
                         --pretrain=$pretrain \
-                        --log_interval=$log_interval \
-                        --valid_interval=$valid_interval \
-                        --use_gpu=$use_gpu \
-                        --save_dir=$save_dir
+                        --use_gpu=$use_gpu 
     else
-         python train.py --model_name=$name \
-                        --config=$configs \
-                        --log_interval=$log_interval \
-                        --valid_interval=$valid_interval \
-                        --use_gpu=$use_gpu \
-                        --save_dir=$save_dir
+        python train.py --config=$configs \
+                        --use_gpu=$use_gpu
     fi
 elif [ "$mode"x == "eval"x ]; then
     echo $mode $name $configs $weights
     if [ "$weights"x != ""x ]; then
-        python eval.py --model_name=$name \
-                       --config=$configs \
-                       --log_interval=$log_interval \
+        python eval.py --config=$configs \
                        --weights=$weights \
                        --use_gpu=$use_gpu
     else
-        python eval.py --model_name=$name \
-                       --config=$configs \
-                       --log_interval=$log_interval \
+        python eval.py --config=$configs \
                        --use_gpu=$use_gpu
-    fi
-elif [ "$mode"x == "predict"x ]; then
-    echo $mode $name $configs $weights
-    if [ "$weights"x != ""x ]; then
-        python predict.py --model_name=$name \
-                          --config=$configs \
-                          --log_interval=$log_interval \
-                          --weights=$weights \
-                          --video_path='' \
-                          --use_gpu=$use_gpu
-    else
-        python predict.py --model_name=$name \
-                          --config=$configs \
-                          --log_interval=$log_interval \
-                          --use_gpu=$use_gpu \
-                          --video_path=''
-    fi
-elif [ "$mode"x == "inference"x ]; then
-    echo $mode $name $configs $weights
-    if [ "$weights"x != ""x ]; then
-        python inference_model.py --model_name=$name \
-                                  --config=$configs \
-                                  --weights=$weights \
-                                  --use_gpu=$use_gpu \
-                                  --save_dir=$save_inference_dir
-    else
-        python inference_model.py --model_name=$name \
-                                  --config=$configs \
-                                  --use_gpu=$use_gpu \
-                                  --save_dir=$save_inference_dir
     fi
 else
     echo "Not implemented mode " $mode
 fi
-

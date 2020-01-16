@@ -35,8 +35,6 @@ logger = logging.getLogger(__name__)
 def parse_args():
     parser = argparse.ArgumentParser("Paddle Video train script")
     parser.add_argument(
-        '--model_name', type=str, default='TSM', help='name of model to train.')
-    parser.add_argument(
         '--config',
         type=str,
         default='tsm.yaml',
@@ -46,11 +44,6 @@ def parse_args():
         type=int,
         default=None,
         help='training batch size. None to use config file setting.')
-    parser.add_argument(
-        '--learning_rate',
-        type=float,
-        default=None,
-        help='learning rate use for training. None to use config file setting.')
     parser.add_argument(
         '--pretrain',
         type=str,
@@ -73,32 +66,13 @@ def parse_args():
         type=int,
         default=None,
         help='epoch number, 0 for read from config file')
-    parser.add_argument(
-        '--valid_interval',
-        type=int,
-        default=0,
-        help='validation epoch interval, 0 for no validation.')
-    parser.add_argument(
-        '--save_dir',
-        type=str,
-        default=os.path.join('data', 'checkpoints'),
-        help='directory name to save train snapshoot')
-    parser.add_argument(
-        '--log_interval',
-        type=int,
-        default=10,
-        help='mini-batch interval to log.')
-    parser.add_argument(
-        '--fix_random_seed',
-        type=ast.literal_eval,
-        default=False,
-        help='If set True, enable continuous evaluation job.')
     args = parser.parse_args()
     return args
 
 
 def val(epoch, model, cfg, args):
-    reader = KineticsReader(name="tsm", mode="valid", cfg=cfg)
+    reader = KineticsReader(mode="valid", cfg=cfg)
+    reader = reader.create_reader()
     total_loss = 0.0
     total_acc1 = 0.0
     total_acc5 = 0.0
@@ -142,6 +116,7 @@ def create_optimizer(cfg):
     lr = [base_lr, base_lr * lr_decay, base_lr * lr_decay * lr_decay]
     l2_weight_decay = cfg.l2_weight_decay
     momentum = cfg.momentum
+
     optimizer = fluid.optimizer.Momentum(
         learning_rate=fluid.layers.piecewise_decay(
             boundaries=bd, values=lr),
@@ -156,7 +131,6 @@ def train(args):
     train_config = merge_configs(config, 'train', vars(args))
     valid_config = merge_configs(config, 'valid', vars(args))
     print_configs(train_config, 'Train')
-    #train_model = models.get_model(args.model_name, train_config, mode='train')
 
     use_data_parallel = False
     trainer_count = fluid.dygraph.parallel.Env().nranks
@@ -192,19 +166,19 @@ def train(args):
         train_config.TRAIN.batch_size = int(train_config.TRAIN.batch_size /
                                             bs_denominator)
 
-        train_reader = KineticsReader(
-            name="tsm", mode="train", cfg=train_config)
-        valid_reader = KineticsReader(
-            name="tsm", mode="valid", cfg=valid_config)
+        train_reader = KineticsReader(mode="train", cfg=train_config)
 
         train_reader = train_reader.create_reader()
-        valid_reader = valid_reader.create_reader()
         if use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
 
         for epoch in range(train_config.TRAIN.epoch):
             video_model.train()
+            total_loss = 0.0
+            total_acc1 = 0.0
+            total_acc5 = 0.0
+            total_sample = 0
             for batch_id, data in enumerate(train_reader()):
                 x_data = np.array([item[0] for item in data])
                 y_data = np.array([item[1] for item in data]).reshape([-1, 1])
@@ -222,7 +196,6 @@ def train(args):
                 acc_top5 = fluid.layers.accuracy(
                     input=outputs, label=labels, k=5)
 
-                loss_array = avg_loss.numpy()
                 if use_data_parallel:
                     avg_loss = video_model.scale_loss(avg_loss)
                     avg_loss.backward()
@@ -232,15 +205,24 @@ def train(args):
                 optimizer.minimize(avg_loss)
                 video_model.clear_gradients()
 
+                total_loss += avg_loss.numpy()[0]
+                total_acc1 += acc_top1.numpy()[0]
+                total_acc5 += acc_top5.numpy()[0]
+                total_sample += 1
+
                 print('TRAIN Epoch {}, iter {}, loss = {}, acc1 {}, acc5 {}'.
-                      format(epoch, batch_id, loss_array[0],
+                      format(epoch, batch_id,
+                             avg_loss.numpy()[0],
                              acc_top1.numpy()[0], acc_top5.numpy()[0]))
 
+            print(
+                'TRAIN End, Epoch {}, avg_loss= {}, avg_acc1= {}, avg_acc5= {}'.
+                format(epoch, total_loss / total_sample, total_acc1 /
+                       total_sample, total_acc5 / total_sample))
             video_model.eval()
             val(epoch, video_model, valid_config, args)
 
         if fluid.dygraph.parallel.Env().local_rank == 0:
-            save_model_name = os.path.join("final")
             fluid.dygraph.save_dygraph(video_model.state_dict(), "final")
         logger.info('[TRAIN] training finished')
 
@@ -248,8 +230,4 @@ def train(args):
 if __name__ == "__main__":
     args = parse_args()
     logger.info(args)
-
-    if not os.path.exists(args.save_dir):
-        os.makedirs(args.save_dir)
-
     train(args)
