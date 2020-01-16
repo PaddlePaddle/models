@@ -105,6 +105,5 @@ def test(args):
 
 if __name__ == "__main__":
     args = parse_args()
-    # check whether the installed paddle is compiled with GPU
     logger.info(args)
     test(args)

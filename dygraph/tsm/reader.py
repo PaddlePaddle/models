@@ -1,4 +1,4 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -60,7 +60,6 @@ class KineticsReader():
         self.seg_num = cfg.MODEL.seg_num
         self.seglen = cfg.MODEL.seglen
 
-        # self.seg_num = cfg[mode.upper()]['seg_num']
         self.short_size = cfg[mode.upper()]['short_size']
         self.target_size = cfg[mode.upper()]['target_size']
         self.num_reader_threads = cfg[mode.upper()]['num_reader_threads']
