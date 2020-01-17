@@ -49,7 +49,7 @@ def parse_args():
     return args
 
 
-def prepare_train_input(insts, src_pad_idx, trg_pad_idx, n_head):
+def prepare_train_input_array(insts, src_pad_idx, trg_pad_idx, n_head):
     """
     inputs for training
     """
@@ -75,17 +75,21 @@ def prepare_train_input(insts, src_pad_idx, trg_pad_idx, n_head):
         return_max_len=False,
         return_num_token=True)
 
-    data_inputs = [
-        src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
+    return src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos, \
         trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
-    ]
 
-    var_inputs = []
-    for i, field in enumerate(encoder_data_input_fields +
-                              decoder_data_input_fields[:-1] +
-                              label_data_input_fields):
-        var_inputs.append(to_variable(data_inputs[i], name=field))
+def input_data_array_reader(reader, src_pad_idx, trg_pad_idx, n_head):
+    def __reader__():
+        r = reader()
+        for data in r:
+            src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos, \
+                trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight = \
+                    prepare_train_input_array(data, src_pad_idx, trg_pad_idx, n_head)
+            yield src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos, \
+                trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
+    return __reader__
 
+def group_inputs(var_inputs):
     enc_inputs = var_inputs[0:len(encoder_data_input_fields)]
     dec_inputs = var_inputs[len(encoder_data_input_fields
                                 ):len(encoder_data_input_fields) +
@@ -94,7 +98,6 @@ def prepare_train_input(insts, src_pad_idx, trg_pad_idx, n_head):
     weights = var_inputs[-1]
 
     return enc_inputs, dec_inputs, label, weights
-
 
 def train(args):
     """
@@ -134,15 +137,35 @@ def train(args):
                 transformer, strategy)
 
         # define data generator for training and validation
-        train_reader = paddle.batch(wmt16.train(
-            ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size),
-                                    batch_size=TrainTaskConfig.batch_size)
+        train_reader = input_data_array_reader(
+            paddle.batch(
+                wmt16.train(
+                    ModelHyperParams.src_vocab_size, 
+                    ModelHyperParams.trg_vocab_size),
+                    batch_size=TrainTaskConfig.batch_size),
+                ModelHyperParams.eos_idx, 
+                ModelHyperParams.eos_idx,
+                ModelHyperParams.n_head)
+
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
-        val_reader = paddle.batch(wmt16.test(ModelHyperParams.src_vocab_size,
-                                             ModelHyperParams.trg_vocab_size),
-                                  batch_size=TrainTaskConfig.batch_size)
+
+        val_reader = input_data_array_reader(
+            paddle.batch(
+                wmt16.test(
+                    ModelHyperParams.src_vocab_size, 
+                    ModelHyperParams.trg_vocab_size),
+                    batch_size=TrainTaskConfig.batch_size),
+                ModelHyperParams.eos_idx, 
+                ModelHyperParams.eos_idx,
+                ModelHyperParams.n_head)
+
+        train_loader = fluid.io.DataLoader.from_generator(capacity=200)
+        train_loader.set_batch_generator(train_reader, places=place)
+
+        val_loader = fluid.io.DataLoader.from_generator(capacity=200)
+        val_loader.set_batch_generator(val_reader, places=place)
 
         # loop for training iterations
         total_train_time = 0
@@ -151,10 +174,13 @@ def train(args):
             sum_cost = 0
             transformer.train()
             stime = time.time()
-            for batch in train_reader():
-                enc_inputs, dec_inputs, label, weights = prepare_train_input(
-                    batch, ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
-                    ModelHyperParams.n_head)
+            for batch in train_loader():
+                src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos, \
+                    trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight = batch
+
+                enc_inputs, dec_inputs, label, weights = \
+                    group_inputs([src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
+                        trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight])
 
                 dy_sum_cost, dy_avg_cost, dy_predict, dy_token_num = transformer(
                     enc_inputs, dec_inputs, label, weights)
@@ -179,10 +205,13 @@ def train(args):
             transformer.eval()
             sum_cost = 0
             token_num = 0
-            for batch in val_reader():
-                enc_inputs, dec_inputs, label, weights = prepare_train_input(
-                    batch, ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
-                    ModelHyperParams.n_head)
+            for batch in val_loader():
+                src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos, \
+                    trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight = batch
+
+                enc_inputs, dec_inputs, label, weights = \
+                    group_inputs([src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
+                        trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight])
 
                 dy_sum_cost, dy_avg_cost, dy_predict, dy_token_num = transformer(
                     enc_inputs, dec_inputs, label, weights)
