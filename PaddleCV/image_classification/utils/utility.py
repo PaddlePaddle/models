@@ -65,7 +65,7 @@ def print_arguments(args):
 
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
-    """Add argparse's argument. 
+    """Add argparse's argument.
 
     Usage:
 
@@ -87,7 +87,7 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
 def parse_args():
     """Add arguments
 
-    Returns: 
+    Returns:
         all training args
     """
     parser = argparse.ArgumentParser(description=__doc__)
@@ -142,6 +142,9 @@ def parse_args():
     add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
     add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_dynamic_loss_scaling', bool,   True,                   "Whether to use dynamic loss scaling.")
+    add_arg('data_format',              str,    "NCHW",                 "Tensor data format when training.")
+    add_arg('fuse_elewise_add_act_ops', bool,   False,                  "Whether to use elementwise_act fusion.")
+    add_arg('fuse_bn_act_ops',          bool,   False,                  "Whether to use batch_norm and act fusion.")
 
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
@@ -168,7 +171,7 @@ def parse_args():
 
 
 def check_gpu():
-    """   
+    """
     Log error and exit when set use_gpu=true in paddlepaddle
     cpu ver sion.
     """
@@ -364,12 +367,12 @@ def create_data_loader(is_train, args):
     Usage:
         Using mixup process in training, it will return 5 results, include data_loader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include data_loader, image, and label.
 
-    Args: 
+    Args:
         is_train: mode
         args: arguments
 
     Returns:
-        data_loader and the input data of net, 
+        data_loader and the input data of net,
     """
     image_shape = args.image_shape
     feed_image = fluid.data(
@@ -428,7 +431,7 @@ def print_info(info_mode,
         time_info: time infomation
         info_mode: mode
     """
-    #XXX: Use specific name to choose pattern, not the length of metrics. 
+    #XXX: Use specific name to choose pattern, not the length of metrics.
     if info_mode == "batch":
         if batch_id % print_step == 0:
             #if isinstance(metrics,np.ndarray):
@@ -518,6 +521,8 @@ def best_strategy_compiled(args,
         return program
     else:
         build_strategy = fluid.compiler.BuildStrategy()
+        build_strategy.fuse_bn_act_ops = args.fuse_bn_act_ops
+        build_strategy.fuse_elewise_add_act_ops = args.fuse_elewise_add_act_ops
 
         exec_strategy = fluid.ExecutionStrategy()
 

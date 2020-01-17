@@ -365,15 +365,31 @@ Mixup相关介绍参考[mixup: Beyond Empirical Risk Minimization](https://arxiv
 
 ### 混合精度训练
 
-通过指定--fp16=True 启动混合训练，在训练过程中会使用float16数据，并输出float32的模型参数。您可能需要同时传入--scale_loss来解决fp16训练的精度问题，通常传入--scale_loss=0.8即可。
+通过指定--use_fp16=True 启动混合精度训练，在训练过程中会使用float16数据类型，并输出float32的模型参数。您可能需要同时传入--scale_loss来解决fp16训练的精度问题，如传入--scale_loss=128.0。
 
-```bash
-python train.py \
-    --model=ResNet50 \
-    --fp16=True \
-    --scale_loss=0.8
-```
-具体内容也可参考[Fleet](https://github.com/PaddlePaddle/Fleet/tree/develop/benchmark/collective/resnet)
+在配置好数据集路径后（修改[scripts/train/ResNet50_fp16.sh](scripts/train/ResNet50_fp16.sh)文件中`DATA_DIR`的值），对ResNet50模型进行混合精度训练可通过运行`bash run.sh train ResNet50_fp16`命令完成。
+
+多机多卡ResNet50模型的混合精度训练请参考[PaddlePaddle/Fleet](https://github.com/PaddlePaddle/Fleet/tree/develop/benchmark/collective/resnet)。
+
+使用Tesla V100单机8卡、2机器16卡、4机器32卡，对ResNet50模型进行混合精度训练的结果如下（开启DALI）：
+
+* BatchSize = 256
+
+节点数*卡数|吞吐|加速比|test\_acc1|test\_acc5
+---|---|---|---|---
+1*1|1035 ins/s|1|0.75333|0.92702 
+1*8|7840 ins/s|7.57|0.75603|0.92771
+2*8|14277 ins/s|13.79|0.75872|0.92793
+4*8|28594 ins/s|27.63|0.75253|0.92713
+
+* BatchSize = 128
+
+节点数*卡数|吞吐|加速比|test\_acc1|test\_acc5
+---|---|---|---|---
+1*1|936  ins/s|1|0.75280|0.92531
+1*8|7108 ins/s|7.59|0.75832|0.92771
+2*8|12343 ins/s|13.18|0.75766|0.92723
+4*8|24407 ins/s|26.07|0.75859|0.92871
 
 ### 性能分析
 
