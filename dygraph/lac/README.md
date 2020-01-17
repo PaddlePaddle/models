@@ -23,7 +23,7 @@ Lexical Analysis of Chinese，简称 LAC，是一个联合的词法分析模型�
 克隆工具集代码库到本地
 ```bash
  git clone https://github.com/PaddlePaddle/models.git
- cd https://github.com/PaddlePaddle/models/tree/develop/dygraph/lac
+ cd models/dygraph/lac
 ```
 
 #### 3. 环境依赖
@@ -88,7 +88,7 @@ sh predict.sh
 上面介绍的模型原理如下图所示：<br />
 
 
-![GRU-CRF-MODEL](./gru-crf-model.png)
+![GRU-CRF-MODEL](https://github.com/PaddlePaddle/models/blob/develop/PaddleNLP/lexical_analysis/gru-crf-model.png)
 
 ### 数据格式
 训练使用的数据可以由用户根据实际的应用场景，自己组织数据。除了第一行是 `text_a\tlabel` 固定的开头，后面的每行数据都是由两列组成，以制表符分隔，第一列是 utf-8 编码的中文文本，以 `\002` 分割，第二列是对应每个字的标注，以 `\002` 分隔。我们采用 IOB2 标注体系，即以 X-B 作为类型为 X 的词的开始，以 X-I 作为类型为 X 的词的持续，以 O 表示不关注的字（实际上，在词性、专名联合标注中，不存在 O ）。示例如下：
