@@ -253,16 +253,31 @@ Refer to [mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.
 
 ### Using Mixed-Precision Training
 
-Set --fp16=True to sart Mixed-Precision Training.
+Set --use_fp16=True to sart Automatic Mixed Precision (AMP) Training. During the training process, the float16 data type will be used to speed up the training performance. You may need to use the --scale_loss parameter to avoid the accuracy dropping, such as setting --scale_loss=128.0.
 
-```bash
-python train.py \
-    --model=ResNet50 \
-    --fp16=True \
-    --scale_loss=0.8
-```
+After configuring the data path (modify the value of `DATA_DIR` in [scripts/train/ResNet50_fp16.sh](scripts/train/ResNet50_fp16.sh)), you can enable ResNet50 to start AMP Training by executing the command of `bash run.sh train ResNet50_fp16`.
 
-Refer to [PaddlePaddle/Fleet](https://github.com/PaddlePaddle/Fleet/tree/develop/benchmark/collective/resnet)
+Refer to [PaddlePaddle/Fleet](https://github.com/PaddlePaddle/Fleet/tree/develop/benchmark/collective/resnet) for the multi-machine and multi-card training.
+
+Performing on Tesla V100 single machine with 8 cards, two machines with 16 cards and four machines with 32 cards, the performance of ResNet50 AMP training is shown as below (enable DALI).
+
+* BatchSize = 256
+
+nodes*crads|throughput|speedup|test\_acc1|test\_acc5
+---|---|---|---|---
+1*1|1035 ins/s|1|0.75333|0.92702 
+1*8|7840 ins/s|7.57|0.75603|0.92771
+2*8|14277 ins/s|13.79|0.75872|0.92793
+4*8|28594 ins/s|27.63|0.75253|0.92713
+
+* BatchSize = 128
+
+nodes*crads|throughput|speedup|test\_acc1|test\_acc5
+---|---|---|---|---
+1*1|936  ins/s|1|0.75280|0.92531
+1*8|7108 ins/s|7.59|0.75832|0.92771
+2*8|12343 ins/s|13.18|0.75766|0.92723
+4*8|24407 ins/s|26.07|0.75859|0.92871
 
 ### Preprocessing with Nvidia DALI
 

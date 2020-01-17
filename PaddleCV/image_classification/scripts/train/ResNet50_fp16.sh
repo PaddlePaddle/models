@@ -17,7 +17,7 @@ fi
 python train.py \
        --model=ResNet50 \
        --data_dir=${DATA_DIR} \
-       --batch_size=128 \
+       --batch_size=256 \
        --total_images=1281167 \
        --image_shape 3 224 224 \
        --class_dim=1000 \
