@@ -1,74 +1,77 @@
-# RCNN Objective Detection
+# RCNN 系列目标检测
 
 ---
-## Table of Contents
+## 内容
 
-- [Installation](#installation)
-- [Introduction](#introduction)
-- [Data preparation](#data-preparation)
-- [Training](#training)
-- [Evaluation](#evaluation)
-- [Inference and Visualization](#inference-and-visualization)
+- [安装](#安装)
+- [简介](#简介)
+- [数据准备](#数据准备)
+- [模型训练](#模型训练)
+- [模型评估](#模型评估)
+- [模型推断及可视化](#模型推断及可视化)
 
-## Installation
+## 安装
 
-Running sample code in this directory requires PaddelPaddle Fluid v.1.3.0 and later. If the PaddlePaddle on your device is lower than this version, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/en/1.3/beginners_guide/install/index_en.html) and make an update.
+1.在当前目录下运行样例代码需要编译安装分支(https://github.com/FDInSky/Paddle/tree/dyg_detf)
 
-## Introduction
+2.通过pip安装必要Python库，包括numba。
 
-Region Convolutional Neural Network (RCNN) models are two stages detector. According to proposals and feature extraction, obtain class and more precise proposals.
-Now RCNN model contains two typical models: Faster RCNN and Mask RCNN.
+## 简介
+区域卷积神经网络（RCNN）系列模型为两阶段目标检测器。通过对图像生成候选区域，提取特征，判别特征类别并修正候选框位置。
+RCNN系列目前包含两个代表模型：Faster RCNN，Mask RCNN
 
-[Faster RCNN](https://arxiv.org/abs/1506.01497), The total framework of network can be divided into four parts:
+[Faster RCNN](https://arxiv.org/abs/1506.01497) 整体网络可以分为4个主要内容：
 
-1. Base conv layer. As a CNN objective dection, Faster RCNN extract feature maps using a basic convolutional network. The feature maps then can be shared by RPN and fc layers. This sampel uses [ResNet-50](https://arxiv.org/abs/1512.03385) as base conv layer.
-2. Region Proposal Network (RPN). RPN generates proposals for detection。This block generates anchors by a set of size and ratio and classifies anchors into fore-ground and back-ground by softmax. Then refine anchors to obtain more precise proposals using box regression.
-3. RoI Align. This layer takes feature maps and proposals as input. The proposals are mapped to feature maps and pooled to the same size. The output are sent to fc layers for classification and regression. RoIPool and RoIAlign are used separately to this layer and it can be set in roi\_func in config.py.
-4. Detection layer. Using the output of roi pooling to compute the class and locatoin of each proposal in two fc layers.
+1. 基础卷积层。作为一种卷积神经网络目标检测方法，Faster RCNN首先使用一组基础的卷积网络提取图像的特征图。特征图被后续RPN层和全连接层共享。本示例采用[ResNet-50](https://arxiv.org/abs/1512.03385)作为基础卷积层。
+2. 区域生成网络(RPN)。RPN网络用于生成候选区域(proposals)。该层通过一组固定的尺寸和比例得到一组锚点(anchors), 通过softmax判断锚点属于前景或者背景，再利用区域回归修正锚点从而获得精确的候选区域。
+3. RoI Align。该层收集输入的特征图和候选区域，将候选区域映射到特征图中并池化为统一大小的区域特征图，送入全连接层判定目标类别, 该层可选用RoIPool和RoIAlign两种方式，在config.py中设置roi\_func。
+4. 检测层。利用区域特征图计算候选区域的类别，同时再次通过区域回归获得检测框最终的精确位置。
 
-[Mask RCNN](https://arxiv.org/abs/1703.06870) is a classical instance segmentation model and an extension of Faster RCNN
+[Mask RCNN](https://arxiv.org/abs/1703.06870) 扩展自Faster RCNN，是经典的实例分割模型。
 
-Mask RCNN is a two stage model as well. At the first stage, it generates proposals from input images. At the second stage, it obtains class result, bbox and mask which is the result from segmentation branch on original Faster RCNN model. It decouples the relation between mask and classification.  
+Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；第二阶段根据候选框得到分类结果，边界框，同时在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
 
-## Data preparation
 
-Train the model on [MS-COCO dataset](http://cocodataset.org/#download), download dataset as below:
+## 数据准备
+
+在[MS-COCO数据集](http://cocodataset.org/#download)上进行训练，通过如下方式下载数据集。
 
     cd dataset/coco
     ./download.sh
 
-The data catalog structure is as follows:
+数据目录结构如下：
 
-  ```
-  data/coco/
-  ├── annotations
-  │   ├── instances_train2014.json
-  │   ├── instances_train2017.json
-  │   ├── instances_val2014.json
-  │   ├── instances_val2017.json
-  |   ...
-  ├── train2017
-  │   ├── 000000000009.jpg
-  │   ├── 000000580008.jpg
-  |   ...
-  ├── val2017
-  │   ├── 000000000139.jpg
-  │   ├── 000000000285.jpg
-  |   ...
-  ```
+```
+data/coco/
+├── annotations
+│   ├── instances_train2014.json
+│   ├── instances_train2017.json
+│   ├── instances_val2014.json
+│   ├── instances_val2017.json
+|   ...
+├── train2017
+│   ├── 000000000009.jpg
+│   ├── 000000580008.jpg
+|   ...
+├── val2017
+│   ├── 000000000139.jpg
+│   ├── 000000000285.jpg
+|   ...
 
-## Training
+```
 
-**download the pre-trained model:** This sample provides Resnet-50 pre-trained model which is converted from Caffe. The model fuses the parameters in batch normalization layer. One can download pre-trained model as:
+## 模型训练
+
+**下载预训练模型：** 本示例提供Resnet-50预训练模型，该模性转换自Caffe，并对批标准化层(Batch Normalization Layer)进行参数融合。采用如下命令下载预训练模型：
 
     sh ./pretrained/download.sh
 
-Set `pretrained_model` to load pre-trained model. In addition, this parameter is used to load trained model when finetuning as well.
-Please make sure that pretrained_model is downloaded and loaded correctly, otherwise, the loss may be NAN during training.
+通过初始化`pretrained_model` 加载预训练模型。同时在参数微调时也采用该设置加载已训练模型。
+请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。
 
-**Install the [cocoapi](https://github.com/cocodataset/cocoapi):**
+**安装[cocoapi](https://github.com/cocodataset/cocoapi)：**
 
-To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed. Install the cocoapi:
+训练前需要首先下载[cocoapi](https://github.com/cocodataset/cocoapi)：
 
     git clone https://github.com/cocodataset/cocoapi.git
     cd cocoapi/PythonAPI
@@ -80,62 +83,57 @@ To train the model, [cocoapi](https://github.com/cocodataset/cocoapi) is needed.
     # not to install the COCO API into global site-packages
     python2 setup.py install --user
 
-After data preparation, one can start the training step by:
+数据准备完毕后，可以通过如下的方式启动训练：
 
 - Faster RCNN
 
     ```
-    python train.py \
+    python -m paddle.distributed.launch --selected_gpus=0,1,2,3,4,5,6,7  --log_dir ./mylog train_dyg.py \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model} \
-       --data_dir=${path_to_data} \
-       --MASK_ON=False
+       --data_dir=${path_to_data}
     ```
 
 - Mask RCNN
 
     ```
-    python train.py \
+    python -m paddle.distributed.launch --selected_gpus=0,1,2,3,4,5,6,7  --log_dir ./mylog train_dyg.py \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model} \
        --data_dir=${path_to_data} \
-       --MASK_ON=True
+       --MASK_ON=True\
+       --roi_func=RoIAlign
     ```
 
-    - Set ```export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7``` to specifiy 8 GPU to train.
-    - Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
-    - Set ```parallel``` to False to replace [fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor) to [fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor) when running the program in the Windows & GPU environment.
-    - For more help on arguments:
+    - 通过设置export CUDA\_VISIBLE\_DEVICES=0,1,2,3,4,5,6,7指定8卡GPU训练。
+    - 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
+    - 使用Windows GPU环境的用户，需要设置```parallel```为False，将[fluid.ParallelExecutor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#parallelexecutor)替换为[fluid.Executor](http://paddlepaddle.org/documentation/docs/zh/1.4/api_cn/fluid_cn.html#executor)。
+    - 可选参数见：
 
-        python train.py --help
+        python train_dyg.py --help
 
-**data reader introduction:**
+**数据读取器说明：** 数据读取器定义在reader.py中。所有图像将短边等比例缩放至`scales`，若长边大于`max_size`, 则再次将长边等比例缩放至`max_size`。在训练阶段，对图像采用水平翻转。支持将同一个batch内的图像padding为相同尺寸。
 
-* Data reader is defined in `reader.py`.
-* Scaling the short side of all images to `scales`. If the long side is larger than `max_size`, then scaling the long side to `max_size`.
-* In training stage, images are horizontally flipped.
-* Images in the same batch can be padding to the same size.
+**模型设置：**
 
-**model configuration:**
+* 分别使用RoIAlign和RoIPool两种方法。
+* 训练过程pre\_nms=12000, post\_nms=2000，测试过程pre\_nms=6000, post\_nms=1000。nms阈值为0.7。
+* RPN网络得到labels的过程中，fg\_fraction=0.25，fg\_thresh=0.5，bg\_thresh_hi=0.5，bg\_thresh\_lo=0.0
+* RPN选择anchor时，rpn\_fg\_fraction=0.5，rpn\_positive\_overlap=0.7，rpn\_negative\_overlap=0.3
 
-* Use RoIAlign and RoIPool separately.
-* NMS threshold=0.7. During training, pre\_nms=12000, post\_nms=2000; during test, pre\_nms=6000, post\_nms=1000.
-* In generating proposal lables, fg\_fraction=0.25, fg\_thresh=0.5, bg\_thresh_hi=0.5, bg\_thresh\_lo=0.0.
-* In rpn target assignment, rpn\_fg\_fraction=0.5, rpn\_positive\_overlap=0.7, rpn\_negative\_overlap=0.3.
 
-**training strategy:**
+**训练策略：**
 
-*  Use momentum optimizer with momentum=0.9.
-*  Weight decay is 0.0001.
-*  In first 500 iteration, the learning rate increases linearly from 0.00333 to 0.01. Then lr is decayed at 120000, 160000 iteration with multiplier 0.1, 0.01. The maximum iteration is 180000. Also, we released a 2x model which has 360000 iterations and lr is decayed at 240000, 320000. These configuration can be set by max_iter and lr_steps in config.py.
-*  Set the learning rate of bias to two times as global lr in non basic convolutional layers.
-*  In basic convolutional layers, parameters of affine layers and res body do not update.
+*  采用momentum优化算法训练，momentum=0.9。
+*  权重衰减系数为0.0001，前500轮学习率从0.00333线性增加至0.01。在120000，160000轮时使用0.1,0.01乘子进行学习率衰减，最大训练180000轮。同时我们也提供了2x模型，该模型采用更多的迭代轮数进行训练，训练360000轮，学习率在240000，320000轮衰减，其他参数不变，训练最大轮数和学习率策略可以在config.py中对max_iter和lr_steps进行设置。
+*  非基础卷积层卷积bias学习率为整体学习率2倍。
+*  基础卷积层中，affine_layers参数不更新，res2层参数不更新。
 
-## Evaluation
+## 模型评估
 
-Evaluation is to evaluate the performance of a trained model. This sample provides `eval_coco_map.py` which uses a COCO-specific mAP metric defined by [COCO committee](http://cocodataset.org/#detections-eval).
+模型评估是指对训练完毕的模型评估各类性能指标。本示例采用[COCO官方评估](http://cocodataset.org/#detections-eval)
 
-`eval_coco_map.py` is the main executor for evalution, one can start evalution step by:
+`eval_coco_map.py`是评估模块的主要执行程序，调用示例如下：
 
 - Faster RCNN
 
@@ -151,41 +149,44 @@ Evaluation is to evaluate the performance of a trained model. This sample provid
     ```
     python eval_coco_map.py \
         --dataset=coco2017 \
-        --pretrained_model=${path_to_trainde_model} \
-        --MASK_ON=True
+        --pretrained_model=${path_to_trained_model} \
+        --MASK_ON=True \
+        --roi_func=RoIAlign
     ```
 
-    - Set ```--pretrained_model=${path_to_trained_model}``` to specifiy the trained model, not the initialized model.
-    - Set ```export CUDA_VISIBLE_DEVICES=0``` to specifiy one GPU to eval.
-    - Set ```MASK_ON``` to choose Faster RCNN or Mask RCNN model.
+    - 通过设置`--pretrained_model=${path_to_trained_model}`指定训练好的模型，注意只写前缀，不包括扩展名。
+    - 通过设置`export CUDA\_VISIBLE\_DEVICES=0`指定单卡GPU评估。
+    - 通过设置```MASK_ON```选择Faster RCNN和Mask RCNN模型。
 
-Evalutaion result is shown as below:
+下表为模型评估结果：
 
-Faster RCNN:
+Faster RCNN
 
-| Model              | RoI function    | Batch size     | Max iteration    | mAP  |
+| 模型                   |   RoI处理方式  | 批量大小   | 迭代次数   | mAP  |
 | :--------------- | :--------: | :------------:    | :------------------:    |------: |
 | [Fluid RoIPool minibatch padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_minibatch_padding.tar.gz) | RoIPool | 8   |    180000        | 0.316 |
 | [Fluid RoIPool no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_pool_no_padding.tar.gz)  | RoIPool | 8   |    180000        | 0.318 |
 | [Fluid RoIAlign no padding](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding.tar.gz)  | RoIAlign | 8   |    180000        | 0.348 |
 | [Fluid RoIAlign no padding 2x](http://paddlemodels.bj.bcebos.com/faster_rcnn/model_align_no_padding_2x.tar.gz)  | RoIAlign | 8   |    360000        | 0.367 |
 
-* Fluid RoIPool minibatch padding: Use RoIPool. Images in one batch padding to the same size. This method is same as detectron.
-* Fluid RoIPool no padding: Images without padding.
-* Fluid RoIAlign no padding: Images without padding.
-* Fluid RoIAlign no padding 2x: Images without padding, train for 360000 iterations, learning rate is decayed at 240000, 320000.
+
+
+* Fluid RoIPool minibatch padding: 使用RoIPool，同一个batch内的图像填充为相同尺寸。该方法与detectron处理相同。
+* Fluid RoIPool no padding: 使用RoIPool，不对图像做填充处理。
+* Fluid RoIAlign no padding: 使用RoIAlign，不对图像做填充处理。
+* Fluid RoIAlign no padding 2x: 使用RoIAlign，不对图像做填充处理。训练360000轮，学习率在240000，320000轮衰减。
 
 Mask RCNN:
 
-| Model              | Batch size     | Max iteration | box mAP | mask mAP |
+| 模型                   | 批量大小   | 迭代次数   | box mAP  | mask mAP |
 | :--------------- | :--------: | :------------:    | :--------:    |------: |
-| [Fluid mask no padding](https://paddlemodels.bj.bcebos.com/faster_rcnn/Fluid_mask_no_padding.tar.gz) | 8 | 180000 | 0.359 | 0.314 |
+| [Fluid mask no padding](https://paddlemodels.bj.bcebos.com/faster_rcnn/Fluid_mask_no_padding.tar.gz) | 8 | 180000 | 0.359 | 0.314 |  
 
-* Fluid mask no padding: Use RoIAlign. Images without padding.
+* Fluid mask no padding: 使用RoIAlign，不对图像做填充处理
 
-## Inference and Visualization
+## 模型推断及可视化
 
-Inference is used to get prediction score or image features based on trained models. `infer.py`  is the main executor for inference, one can start infer step by:
+模型推断可以获取图像中的物体及其对应的类别，`infer.py`是主要执行程序，调用示例如下：
 
 ```
 python infer.py \
@@ -194,17 +195,17 @@ python infer.py \
     --draw_threshold=0.6
 ```
 
-Please set the model path and image path correctly. GPU device is used by default, you can set `--use_gpu=False` to switch to CPU device. And you can set `draw_threshold` to tune score threshold to control the number of output detection boxes.
+注意，请正确设置模型路径`${path_to_trained_model}`和预测图片路径。默认使用GPU设备，也可通过设置`--use_gpu=False`使用CPU设备。可通过设置`draw_threshold`调节得分阈值控制检测框的个数。
 
-Visualization of infer result is shown as below:
+下图为模型可视化预测结果：
 <p align="center">
 <img src="image/000000000139.jpg" height=300 width=400 hspace='10'/>
 <img src="image/000000127517.jpg" height=300 width=400 hspace='10'/> <br />
-Faster RCNN Visualization Examples
+Faster RCNN 预测可视化
 </p>
 
 <p align="center">
 <img src="image/000000000139_mask.jpg" height=300 width=400 hspace='10'/>
 <img src="image/000000127517_mask.jpg" height=300 width=400 hspace='10'/> <br />
-Mask RCNN Visualization Examples
+Mask RCNN 预测可视化
 </p>
