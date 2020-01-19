@@ -59,20 +59,25 @@ def cosine_decay_with_warmup(learning_rate, step_each_epoch, epochs=120):
             fluid.layers.tensor.assign(input=decayed_lr, output=lr)
         with switch.default():
             decayed_lr = learning_rate * \
-                (ops.cos((global_step - warmup_epoch * step_each_epoch) * (math.pi / (epochs * step_each_epoch))) + 1)/2
+                (ops.cos((global_step - warmup_epoch * step_each_epoch) * (math.pi / ((epochs-warmup_epoch) * step_each_epoch))) + 1)/2
             fluid.layers.tensor.assign(input=decayed_lr, output=lr)
     return lr
 
-def exponential_decay_with_warmup(learning_rate, step_each_epoch, decay_epochs, decay_rate=0.97, warm_up_epoch=5.0):
+
+def exponential_decay_with_warmup(learning_rate,
+                                  step_each_epoch,
+                                  decay_epochs,
+                                  decay_rate=0.97,
+                                  warm_up_epoch=5.0):
     """Applies exponential decay to the learning rate.
     """
     global_step = _decay_step_counter()
     lr = fluid.layers.tensor.create_global_var(
-    shape=[1],
-    value=0.0,
-    dtype='float32',
-    persistable=True,
-    name="learning_rate")
+        shape=[1],
+        value=0.0,
+        dtype='float32',
+        persistable=True,
+        name="learning_rate")
 
     warmup_epoch = fluid.layers.fill_constant(
         shape=[1], dtype='float32', value=float(warm_up_epoch), force_cpu=True)
@@ -80,15 +85,18 @@ def exponential_decay_with_warmup(learning_rate, step_each_epoch, decay_epochs, 
     epoch = ops.floor(global_step / step_each_epoch)
     with fluid.layers.control_flow.Switch() as switch:
         with switch.case(epoch < warmup_epoch):
-            decayed_lr = learning_rate * (global_step / (step_each_epoch * warmup_epoch))
+            decayed_lr = learning_rate * (global_step /
+                                          (step_each_epoch * warmup_epoch))
             fluid.layers.assign(input=decayed_lr, output=lr)
         with switch.default():
-            div_res = (global_step - warmup_epoch * step_each_epoch) / decay_epochs
+            div_res = (
+                global_step - warmup_epoch * step_each_epoch) / decay_epochs
             div_res = ops.floor(div_res)
-            decayed_lr = learning_rate * (decay_rate ** div_res)
+            decayed_lr = learning_rate * (decay_rate**div_res)
             fluid.layers.assign(input=decayed_lr, output=lr)
 
     return lr
+
 
 def lr_warmup(learning_rate, warmup_steps, start_lr, end_lr):
     """ Applies linear learning rate warmup for distributed training
@@ -218,8 +226,7 @@ class Optimizer(object):
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
             momentum=self.momentum_rate,
             rho=0.9,
-            epsilon=0.001
-        )
+            epsilon=0.001)
         return optimizer
 
     def linear_decay(self):
