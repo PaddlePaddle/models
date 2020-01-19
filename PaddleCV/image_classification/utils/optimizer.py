@@ -35,7 +35,10 @@ def cosine_decay(learning_rate, step_each_epoch, epochs=120):
     return decayed_lr
 
 
-def cosine_decay_with_warmup(learning_rate, step_each_epoch, epochs=120):
+def cosine_decay_with_warmup(learning_rate,
+                             step_each_epoch,
+                             epochs=120,
+                             warm_up_epoch=5.0):
     """Applies cosine decay to the learning rate.
     lr = 0.05 * (math.cos(epoch * (math.pi / 120)) + 1)
     decrease lr for every mini-batch and start with warmup.
@@ -49,7 +52,7 @@ def cosine_decay_with_warmup(learning_rate, step_each_epoch, epochs=120):
         name="learning_rate")
 
     warmup_epoch = fluid.layers.fill_constant(
-        shape=[1], dtype='float32', value=float(5), force_cpu=True)
+        shape=[1], dtype='float32', value=float(warm_up_epoch), force_cpu=True)
 
     epoch = ops.floor(global_step / step_each_epoch)
     with fluid.layers.control_flow.Switch() as switch:
@@ -201,7 +204,8 @@ class Optimizer(object):
         learning_rate = cosine_decay_with_warmup(
             learning_rate=self.lr,
             step_each_epoch=self.step,
-            epochs=self.num_epochs)
+            epochs=self.num_epochs,
+            warm_up_epoch=self.warm_up_epochs)
         optimizer = fluid.optimizer.Momentum(
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
