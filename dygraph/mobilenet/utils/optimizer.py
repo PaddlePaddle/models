@@ -148,7 +148,8 @@ class Optimizer(object):
         
     """
 
-    def __init__(self, args):
+    def __init__(self, args, parameter_list):
+        self.parameter_list = parameter_list
         self.batch_size = args.batch_size
         self.lr = args.lr
         self.lr_strategy = args.lr_strategy
@@ -175,7 +176,8 @@ class Optimizer(object):
         optimizer = fluid.optimizer.Momentum(
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
-            regularization=fluid.regularizer.L2Decay(self.l2_decay))
+            regularization=fluid.regularizer.L2Decay(self.l2_decay),
+            parameter_list=self.parameter_list)
         return optimizer
 
     def cosine_decay(self):
@@ -192,7 +194,8 @@ class Optimizer(object):
         optimizer = fluid.optimizer.Momentum(
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
-            regularization=fluid.regularizer.L2Decay(self.l2_decay))
+            regularization=fluid.regularizer.L2Decay(self.l2_decay),
+            parameter_list=self.parameter_list)
         return optimizer
 
     def cosine_decay_warmup(self):
@@ -209,7 +212,8 @@ class Optimizer(object):
         optimizer = fluid.optimizer.Momentum(
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
-            regularization=fluid.regularizer.L2Decay(self.l2_decay))
+            regularization=fluid.regularizer.L2Decay(self.l2_decay),
+            parameter_list=self.parameter_list)
         return optimizer
 
     def exponential_decay_warmup(self):
@@ -230,7 +234,8 @@ class Optimizer(object):
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
             momentum=self.momentum_rate,
             rho=0.9,
-            epsilon=0.001)
+            epsilon=0.001,
+            parameter_list=self.parameter_list)
         return optimizer
 
     def linear_decay(self):
@@ -246,7 +251,8 @@ class Optimizer(object):
         optimizer = fluid.optimizer.Momentum(
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
-            regularization=fluid.regularizer.L2Decay(self.l2_decay))
+            regularization=fluid.regularizer.L2Decay(self.l2_decay),
+            parameter_list=self.parameter_list)
 
         return optimizer
 
@@ -257,7 +263,8 @@ class Optimizer(object):
             an adam_decay optimizer
         """
 
-        return fluid.optimizer.Adam(learning_rate=self.lr)
+        return fluid.optimizer.Adam(
+            learning_rate=self.lr, parameter_list=self.parameter_list)
 
     def cosine_decay_RMSProp(self):
         """cosine decay with RMSProp optimizer
@@ -275,7 +282,8 @@ class Optimizer(object):
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
             # Apply epsilon=1 on ImageNet dataset.
-            epsilon=1)
+            epsilon=1,
+            parameter_list=self.parameter_list)
         return optimizer
 
     def default_decay(self):
@@ -288,12 +296,13 @@ class Optimizer(object):
         optimizer = fluid.optimizer.Momentum(
             learning_rate=self.lr,
             momentum=self.momentum_rate,
-            regularization=fluid.regularizer.L2Decay(self.l2_decay))
+            regularization=fluid.regularizer.L2Decay(self.l2_decay),
+            parameter_list=self.parameter_list)
         return optimizer
 
 
-def create_optimizer(args):
-    Opt = Optimizer(args)
+def create_optimizer(args, parameter_list):
+    Opt = Optimizer(args, parameter_list)
     optimizer = getattr(Opt, args.lr_strategy)()
 
     return optimizer

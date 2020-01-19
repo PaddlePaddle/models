@@ -27,7 +27,7 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.layer_helper import LayerHelper
-from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, FC
+#from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, FC
 from paddle.fluid.dygraph.base import to_variable
 
 from paddle.fluid import framework
@@ -95,11 +95,10 @@ def train_mobilenet():
 
         net = None
         if args.model == "MobileNetV1":
-            net = MobileNetV1("mobilenet_v1", class_dim=args.class_dim)
+            net = MobileNetV1(class_dim=args.class_dim)
             para_name = 'mobilenet_v1_params'
         elif args.model == "MobileNetV2":
-            net = MobileNetV2(
-                name="mobilenet_v2", class_dim=args.class_dim, scale=1.0)
+            net = MobileNetV2(class_dim=args.class_dim, scale=1.0)
             para_name = 'mobilenet_v2_params'
         else:
             print(
@@ -107,7 +106,7 @@ def train_mobilenet():
             )
             exit()
 
-        optimizer = create_optimizer(args)
+        optimizer = create_optimizer(args=args, parameter_list=net.parameters())
         if args.use_data_parallel:
             net = fluid.dygraph.parallel.DataParallel(net, strategy)
         train_data_loader, train_data = utility.create_data_loader(

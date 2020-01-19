@@ -23,7 +23,7 @@ import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
 from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.layer_helper import LayerHelper
-from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, FC
+from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, Linear
 from paddle.fluid.dygraph.base import to_variable
 from paddle.fluid import framework
 import math
@@ -32,7 +32,7 @@ import sys
 
 class ConvBNLayer(fluid.dygraph.Layer):
     def __init__(self,
-                 name_scope,
+                 num_channels,
                  filter_size,
                  num_filters,
                  stride,
@@ -42,10 +42,10 @@ class ConvBNLayer(fluid.dygraph.Layer):
                  act='relu',
                  use_cudnn=True,
                  name=None):
-        super(ConvBNLayer, self).__init__(name_scope)
+        super(ConvBNLayer, self).__init__()
 
         self._conv = Conv2D(
-            self.full_name(),
+            num_channels=num_channels,
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
@@ -58,13 +58,12 @@ class ConvBNLayer(fluid.dygraph.Layer):
             bias_attr=False)
 
         self._batch_norm = BatchNorm(
-            self.full_name(),
             num_filters,
             act=act,
-            param_attr=ParamAttr(name="_bn" + "_scale"),
-            bias_attr=ParamAttr(name="_bn" + "_offset"),
-            moving_mean_name="_bn" + '_mean',
-            moving_variance_name="_bn" + '_variance')
+            param_attr=ParamAttr(name=self.full_name() + "_bn" + "_scale"),
+            bias_attr=ParamAttr(name=self.full_name() + "_bn" + "_offset"),
+            moving_mean_name=self.full_name() + "_bn" + '_mean',
+            moving_variance_name=self.full_name() + "_bn" + '_variance')
 
     def forward(self, inputs):
         y = self._conv(inputs)
@@ -74,17 +73,17 @@ class ConvBNLayer(fluid.dygraph.Layer):
 
 class DepthwiseSeparable(fluid.dygraph.Layer):
     def __init__(self,
-                 name_scope,
+                 num_channels,
                  num_filters1,
                  num_filters2,
                  num_groups,
                  stride,
                  scale,
                  name=None):
-        super(DepthwiseSeparable, self).__init__(name_scope)
+        super(DepthwiseSeparable, self).__init__()
 
         self._depthwise_conv = ConvBNLayer(
-            name_scope="dw",
+            num_channels=num_channels,
             num_filters=int(num_filters1 * scale),
             filter_size=3,
             stride=stride,
@@ -93,7 +92,7 @@ class DepthwiseSeparable(fluid.dygraph.Layer):
             use_cudnn=False)
 
         self._pointwise_conv = ConvBNLayer(
-            name_scope="sep",
+            num_channels=int(num_filters1 * scale),
             filter_size=1,
             num_filters=int(num_filters2 * scale),
             stride=1,
@@ -106,13 +105,13 @@ class DepthwiseSeparable(fluid.dygraph.Layer):
 
 
 class MobileNetV1(fluid.dygraph.Layer):
-    def __init__(self, name_scope, scale=1.0, class_dim=102):
-        super(MobileNetV1, self).__init__(name_scope)
+    def __init__(self, scale=1.0, class_dim=1000):
+        super(MobileNetV1, self).__init__()
         self.scale = scale
         self.dwsl = []
 
         self.conv1 = ConvBNLayer(
-            name_scope="conv1",
+            num_channels=3,
             filter_size=3,
             channels=3,
             num_filters=int(32 * scale),
@@ -121,7 +120,7 @@ class MobileNetV1(fluid.dygraph.Layer):
 
         dws21 = self.add_sublayer(
             sublayer=DepthwiseSeparable(
-                name_scope="conv2_1",
+                num_channels=int(32 * scale),
                 num_filters1=32,
                 num_filters2=64,
                 num_groups=32,
@@ -132,7 +131,7 @@ class MobileNetV1(fluid.dygraph.Layer):
 
         dws22 = self.add_sublayer(
             sublayer=DepthwiseSeparable(
-                name_scope="conv2_2",
+                num_channels=int(64 * scale),
                 num_filters1=64,
                 num_filters2=128,
                 num_groups=64,
@@ -143,7 +142,7 @@ class MobileNetV1(fluid.dygraph.Layer):
 
         dws31 = self.add_sublayer(
             sublayer=DepthwiseSeparable(
-                name_scope="conv3_1",
+                num_channels=int(128 * scale),
                 num_filters1=128,
                 num_filters2=128,
                 num_groups=128,
@@ -154,7 +153,7 @@ class MobileNetV1(fluid.dygraph.Layer):
 
         dws32 = self.add_sublayer(
             sublayer=DepthwiseSeparable(
-                name_scope="conv3_2",
+                num_channels=int(128 * scale),
                 num_filters1=128,
                 num_filters2=256,
                 num_groups=128,
@@ -165,7 +164,7 @@ class MobileNetV1(fluid.dygraph.Layer):
 
         dws41 = self.add_sublayer(
             sublayer=DepthwiseSeparable(
-                name_scope="conv4_1",
+                num_channels=int(256 * scale),
                 num_filters1=256,
                 num_filters2=256,
                 num_groups=256,
@@ -176,7 +175,7 @@ class MobileNetV1(fluid.dygraph.Layer):
 
         dws42 = self.add_sublayer(
             sublayer=DepthwiseSeparable(
-                name_scope="conv4_2",
+                num_channels=int(256 * scale),
                 num_filters1=256,
                 num_filters2=512,
                 num_groups=256,
@@ -188,7 +187,7 @@ class MobileNetV1(fluid.dygraph.Layer):
         for i in range(5):
             tmp = self.add_sublayer(
                 sublayer=DepthwiseSeparable(
-                    name_scope="conv5_" + str(i + 1),
+                    num_channels=int(512 * scale),
                     num_filters1=512,
                     num_filters2=512,
                     num_groups=512,
@@ -199,7 +198,7 @@ class MobileNetV1(fluid.dygraph.Layer):
 
         dws56 = self.add_sublayer(
             sublayer=DepthwiseSeparable(
-                name_scope="conv5_6",
+                num_channels=int(512 * scale),
                 num_filters1=512,
                 num_filters2=1024,
                 num_groups=512,
@@ -210,7 +209,7 @@ class MobileNetV1(fluid.dygraph.Layer):
 
         dws6 = self.add_sublayer(
             sublayer=DepthwiseSeparable(
-                name_scope="conv6",
+                num_channels=int(1024 * scale),
                 num_filters1=1024,
                 num_filters2=1024,
                 num_groups=1024,
@@ -219,21 +218,20 @@ class MobileNetV1(fluid.dygraph.Layer):
             name="conv6")
         self.dwsl.append(dws6)
 
-        self.pool2d_avg = Pool2D(
-            name_scope="pool", pool_type='avg', global_pooling=True)
+        self.pool2d_avg = Pool2D(pool_type='avg', global_pooling=True)
 
-        self.out = FC(name_scope="fc",
-                      size=class_dim,
-                      param_attr=ParamAttr(
-                          initializer=MSRA(),
-                          name=self.full_name() + "fc7_weights"),
-                      bias_attr=ParamAttr(name="fc7_offset"))
+        self.out = Linear(
+            int(1024 * scale),
+            class_dim,
+            param_attr=ParamAttr(
+                initializer=MSRA(), name=self.full_name() + "fc7_weights"),
+            bias_attr=ParamAttr(name="fc7_offset"))
 
     def forward(self, inputs):
         y = self.conv1(inputs)
-        idx = 0
         for dws in self.dwsl:
             y = dws(y)
         y = self.pool2d_avg(y)
+        y = fluid.layers.reshape(y, shape=[-1, 1024])
         y = self.out(y)
         return y
