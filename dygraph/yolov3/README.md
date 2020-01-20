@@ -81,7 +81,7 @@ dataset/coco/
 
 ### 模型训练
 
-**下载预训练模型：** 本示例提供DarkNet-53预训练[模型]()，该模型转换自作者提供的预训练权重[pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74)，采用如下命令下载预训练模型：
+**下载预训练模型：** 本示例提供DarkNet-53预训练[模型](https://paddlemodels.bj.bcebos.com/yolo/darknet53.pdparams )，该模型转换自作者提供的预训练权重[pjreddie/darknet](https://pjreddie.com/media/files/darknet53.conv.74)，采用如下命令下载预训练模型：
 
     sh ./weights/download.sh
 
@@ -103,7 +103,7 @@ dataset/coco/
 
 首先通过设置`export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7`指定8卡GPU训练。
 
-`python -m paddle.distributed.launch --selected_gpus=0,1,2,3 --started_port=9999 train.py --use_data_parallel=1`
+`python -m paddle.distributed.launch --selected_gpus=0,1,2,3 --started_port=9999 train.py --batch_size=16 --use_data_parallel=1`
 
 您也可以直接运行快速开始脚本`start_parall.sh`进行训练，默认使用4卡进行训练，每张卡的batch size为16
  
@@ -111,13 +111,8 @@ dataset/coco/
 
 ```
 Iter 2, loss 9056.620443, time 3.21156
-Iter 2, loss 7337.974447, time 4.67529
-Iter 2, loss 9817.243164, time 5.34627
-Iter 2, loss 11796.317546, time 4.87376
 Iter 3, loss 7720.641968, time 1.63363
-Iter 3, loss 9582.492432, time 3.37129
-Iter 3, loss 10822.709961, time 4.89235
-Iter 3, loss 11046.479614, time 4.93214
+Iter 4, loss 6736.150391, time 2.70573
 
 ```
 
@@ -154,17 +149,6 @@ Train Loss
         --class_num=${category_num}
 
 - 通过设置`export CUDA_VISIBLE_DEVICES=0`指定单卡GPU评估。
-
-
-模型评估精度如下:
-
-|   input size  | mAP(IoU=0.50:0.95) | mAP(IoU=0.50) | mAP(IoU=0.75) |
-| :------: | :------: | :------: | :------: |
-| 608x608 |  |  |  |
-| 416x416 |  |  |  |
-| 320x320 |  |  |  |
-
-- **注意：** 评估结果基于`pycocotools`评估器，没有滤除`score < 0.05`的预测框，其他框架有此滤除操作会导致精度下降。
 
 
 ## 进阶使用
