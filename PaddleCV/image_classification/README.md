@@ -377,7 +377,7 @@ Mixup相关介绍参考[mixup: Beyond Empirical Risk Minimization](https://arxiv
 
 节点数*卡数|吞吐|加速比|test\_acc1|test\_acc5
 ---|---|---|---|---
-1*1|1035 ins/s|1|0.75333|0.92702 
+1*1|1035 ins/s|1|0.75333|0.92702
 1*8|7840 ins/s|7.57|0.75603|0.92771
 2*8|14277 ins/s|13.79|0.75872|0.92793
 4*8|28594 ins/s|27.63|0.75253|0.92713
@@ -750,6 +750,15 @@ python -m paddle.distributed.launch train.py \
 |[HRNet_W44_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W44_C_pretrained.tar) | 79.00% | 94.51% | 36.021 | 18.990 |
 |[HRNet_W48_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W48_C_pretrained.tar) | 78.95% | 94.42% | 30.064 | 19.963 |
 |[HRNet_W64_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W64_C_pretrained.tar) | 79.30% | 94.61% | 38.921 | 24.742 |
+
+
+### ResNet_ACMet Series
+|Model | deploy mode | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: | :-: |:-: |:-: |:-: |
+|[ResNet50ACNet]() | False | 76.71% | 93.24% | 13.205 | 8.804 |
+|[ResNet50ACNet]() | True | 76.71% | 93.24% | 7.418 | 5.950 |
+
+* 注：`deploy mode=True`表示首先将模型训练结果结果进行转换，再使用转换后的模型进行预测。
 
 ## FAQ
 
