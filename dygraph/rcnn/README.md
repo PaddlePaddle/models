@@ -29,7 +29,7 @@ RCNN系列目前包含两个代表模型：Faster RCNN，Mask RCNN
 
 [Mask RCNN](https://arxiv.org/abs/1703.06870) 扩展自Faster RCNN，是经典的实例分割模型。
 
-Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；第二阶段根据候选框得到分类结果，边界框，同时在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
+Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；第二阶段根据候选框得到分类结果，边界框，同时在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解耦。
 
 
 ## 数据准备
@@ -62,7 +62,7 @@ data/coco/
 
 ## 模型训练
 
-**下载预训练模型：** 本示例提供Resnet-50预训练模型，该模性转换自Caffe，并对批标准化层(Batch Normalization Layer)进行参数融合。采用如下命令下载预训练模型：
+**下载预训练模型：** 本示例提供Resnet-50预训练模型，该模型转换自Caffe，并对批标准化层(Batch Normalization Layer)进行参数融合。采用如下命令下载预训练模型：
 
     sh ./pretrained/download.sh
 

@@ -99,77 +99,73 @@ def eval():
         train_reader = fluid.contrib.reader.distributed_batch_reader(
             train_reader)
 
-    def eval_loop():
-        eval_start = time.time()
-        dts_res = []
-        segms_res = []
-        for iter_id, data in enumerate(test_reader()):
-            start = time.time()
+    eval_start = time.time()
+    dts_res = []
+    segms_res = []
+    for iter_id, data in enumerate(test_reader()):
+        start = time.time()
 
-            image_data = np.array([x[0] for x in data]).astype('float32')
-            image_info_data = np.array([x[1] for x in data]).astype('float32')
-            image_id_data = np.array([x[2] for x in data]).astype('int32')
+        image_data = np.array([x[0] for x in data]).astype('float32')
+        image_info_data = np.array([x[1] for x in data]).astype('float32')
+        image_id_data = np.array([x[2] for x in data]).astype('int32')
 
-            if cfg.enable_ce:
-                print("image_data: ", np.abs(image_data).mean(),
-                      image_data.shape)
-                print("im_info_dta: ", np.abs(image_info_data).mean(),
-                      image_info_data.shape, image_info_data)
-                print("img_id: ", image_id_data, image_id_data.shape)
+        if cfg.enable_ce:
+            print("image_data: ", np.abs(image_data).mean(), image_data.shape)
+            print("im_info_dta: ", np.abs(image_info_data).mean(),
+                  image_info_data.shape, image_info_data)
+            print("img_id: ", image_id_data, image_id_data.shape)
 
-            # forward
-            outputs = model(image_data, image_info_data, image_id_data)
+        # forward
+        outputs = model(image_data, image_info_data, image_id_data)
 
-            pred_boxes_v = outputs[1].numpy()
-            if cfg.MASK_ON:
-                masks_v = outputs[2].numpy()
+        pred_boxes_v = outputs[1].numpy()
+        if cfg.MASK_ON:
+            masks_v = outputs[2].numpy()
 
-            new_lod = list(outputs[0].numpy())
-            #new_lod = [[0, pred_boxes_v.shape[0]]] #pred_boxes_v.lod()
-            nmsed_out = pred_boxes_v
+        new_lod = list(outputs[0].numpy())
+        #new_lod = [[0, pred_boxes_v.shape[0]]] #pred_boxes_v.lod()
+        nmsed_out = pred_boxes_v
 
-            dts_res += get_dt_res(total_batch_size, new_lod, nmsed_out, data,
-                                  num_id_to_cat_id_map)
+        dts_res += get_dt_res(total_batch_size, new_lod, nmsed_out, data,
+                              num_id_to_cat_id_map)
 
-            if cfg.MASK_ON and np.array(masks_v).shape != (1, 1):
-                segms_out = segm_results(nmsed_out, masks_v, image_info_data)
-                segms_res += get_segms_res(total_batch_size, new_lod, segms_out,
-                                           data, num_id_to_cat_id_map)
+        if cfg.MASK_ON and np.array(masks_v).shape != (1, 1):
+            segms_out = segm_results(nmsed_out, masks_v, image_info_data)
+            segms_res += get_segms_res(total_batch_size, new_lod, segms_out,
+                                       data, num_id_to_cat_id_map)
 
-            end = time.time()
-            print('batch id: {}, time: {}'.format(iter_id, end - start))
-        eval_end = time.time()
-        total_time = eval_end - eval_start
-        print('average time of eval is: {}'.format(total_time / (iter_id + 1)))
-        assert len(dts_res) > 0, "The number of valid bbox detected is zero.\n \
+        end = time.time()
+        print('batch id: {}, time: {}'.format(iter_id, end - start))
+    eval_end = time.time()
+    total_time = eval_end - eval_start
+    print('average time of eval is: {}'.format(total_time / (iter_id + 1)))
+    assert len(dts_res) > 0, "The number of valid bbox detected is zero.\n \
+        Please use reasonable model and check input data."
+
+    if cfg.MASK_ON:
+        assert len(
+            segms_res) > 0, "The number of valid mask detected is zero.\n \
             Please use reasonable model and check input data."
 
-        if cfg.MASK_ON:
-            assert len(
-                segms_res) > 0, "The number of valid mask detected is zero.\n \
-                Please use reasonable model and check input data."
+    with io.open("detection_bbox_result.json", 'w') as outfile:
+        encode_func = unicode if six.PY2 else str
+        outfile.write(encode_func(json.dumps(dts_res)))
+    print("start evaluate bbox using coco api")
+    cocoDt = cocoGt.loadRes("detection_bbox_result.json")
+    cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
+    cocoEval.evaluate()
+    cocoEval.accumulate()
+    cocoEval.summarize()
 
-        with io.open("detection_bbox_result.json", 'w') as outfile:
+    if cfg.MASK_ON:
+        with io.open("detection_segms_result.json", 'w') as outfile:
             encode_func = unicode if six.PY2 else str
-            outfile.write(encode_func(json.dumps(dts_res)))
-        print("start evaluate bbox using coco api")
-        cocoDt = cocoGt.loadRes("detection_bbox_result.json")
-        cocoEval = COCOeval(cocoGt, cocoDt, 'bbox')
+            outfile.write(encode_func(json.dumps(segms_res)))
+        print("start evaluate mask using coco api")
+        cocoDt = cocoGt.loadRes("detection_segms_result.json")
+        cocoEval = COCOeval(cocoGt, cocoDt, 'segm')
         cocoEval.evaluate()
         cocoEval.accumulate()
-        cocoEval.summarize()
-
-        if cfg.MASK_ON:
-            with io.open("detection_segms_result.json", 'w') as outfile:
-                encode_func = unicode if six.PY2 else str
-                outfile.write(encode_func(json.dumps(segms_res)))
-            print("start evaluate mask using coco api")
-            cocoDt = cocoGt.loadRes("detection_segms_result.json")
-            cocoEval = COCOeval(cocoGt, cocoDt, 'segm')
-            cocoEval.evaluate()
-            cocoEval.accumulate()
-
-    eval_loop()
 
 
 if __name__ == '__main__':
