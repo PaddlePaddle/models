@@ -21,7 +21,7 @@ import __future__
 import io
 import glob
 import paddle.fluid as fluid
-
+import numpy as np
 
 def load_kv_dict(dict_path,
                  reverse=False,
@@ -56,10 +56,10 @@ class Dataset(object):
     def __init__(self, args, mode="train"):
         # read dict
         self.word2id_dict = load_kv_dict(
-            args.word_dict_path, reverse=True, value_func=int)
+            args.word_dict_path, reverse=True, value_func=np.int64)
         self.id2word_dict = load_kv_dict(args.word_dict_path)
         self.label2id_dict = load_kv_dict(
-            args.label_dict_path, reverse=True, value_func=int)
+            args.label_dict_path, reverse=True, value_func=np.int64)
         self.id2label_dict = load_kv_dict(args.label_dict_path)
         self.word_replace_dict = load_kv_dict(args.word_rep_dict_path)
 
@@ -150,7 +150,7 @@ class Dataset(object):
                         new_batch = []
                         for words_len, (word_ids, label_ids) in zip(init_lens, batch):
                             word_ids = word_ids[0:max_seq_len]
-                            words_len = len(word_ids)
+                            words_len = np.int64(len(word_ids))
                             word_ids += [0 for _ in range(max_seq_len-words_len)]
                             label_ids = label_ids[0:max_seq_len]
                             label_ids += [0 for _ in range(max_seq_len-words_len)]
@@ -164,7 +164,7 @@ class Dataset(object):
                     for words_len, (word_ids, label_ids) in zip(init_lens, batch):
                         max_seq_len = min(max(init_lens), max_seq_len)
                         word_ids = words[0:max_seq_len]
-                        words_len = len(word_ids)
+                        words_len = np.int64(len(word_ids))
                         word_ids += [0 for _ in range(max_seq_len-words_len)]
                         label_ids = label_ids[0:max_seq_len]
                         label_ids += [0 for _ in range(max_seq_len-words_len)]
