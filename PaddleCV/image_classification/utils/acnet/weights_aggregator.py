@@ -1,9 +1,16 @@
-# -*- coding: UTF-8 -*-
-################################################################################
+#copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
 #
-# Copyright (c) 2019 Baidu.com, Inc. All Rights Reserved
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
 #
-################################################################################
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
 import sys
 import os
 import shutil
@@ -86,10 +93,8 @@ def kernel_fusion(kernels, gammas, betas, means, var):
     return square, b
 
 
-def convert_main(model_name, input_path, output_path):
+def convert_main(model_name, input_path, output_path, class_num=1000):
     model = models.__dict__[model_name]()
-
-    class_num = 1000
 
     main_prog = fluid.Program()
     acnet_prog = fluid.Program()
@@ -103,7 +108,7 @@ def convert_main(model_name, input_path, output_path):
                 dtype="float32",
                 lod_level=0)
             model_train = models.__dict__[model_name](deploy=False)
-            _ = model_train.net(image, class_dim=1000)
+            model_train.net(image, class_dim=1000)
 
     with fluid.program_guard(main_prog, startup_prog):
         with fluid.unique_name.guard():
@@ -113,7 +118,7 @@ def convert_main(model_name, input_path, output_path):
                 dtype="float32",
                 lod_level=0)
             model_infer = models.__dict__[model_name](deploy=True)
-            _ = model_infer.net(image, class_dim=1000)
+            model_infer.net(image, class_dim=1000)
 
     acnet_prog = acnet_prog.clone(for_test=True)
     main_prog = main_prog.clone(for_test=True)
@@ -181,11 +186,13 @@ def convert_main(model_name, input_path, output_path):
 if __name__ == "__main__":
     assert len(
         sys.argv
-    ) == 4, "input format: python weights_aggregator.py $model_name $input_path $output_path"
+    ) == 5, "input format: python weights_aggregator.py $model_name $input_path $output_path $class_num"
     model_name = sys.argv[1]
     input_path = sys.argv[2]
     output_path = sys.argv[3]
+    class_num = int(sys.argv[4])
     logger.info("model_name: {}".format(model_name))
     logger.info("input_path: {}".format(input_path))
     logger.info("output_path: {}".format(output_path))
-    convert_main(model_name, input_path, output_path)
+    logger.info("class_num: {}".format(class_num))
+    convert_main(model_name, input_path, output_path, class_num)

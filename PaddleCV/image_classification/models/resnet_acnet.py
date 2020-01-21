@@ -23,31 +23,16 @@ import paddle.fluid as fluid
 from paddle.fluid.param_attr import ParamAttr
 
 __all__ = [
-    "ResNetACNet", "ResNet18ACNet", "ResNet34ACNet", "ResNet50ACNet",
-    "ResNet101ACNet", "ResNet152ACNet"
+    "ResNet_ACNet", "ResNet18_ACNet", "ResNet34_ACNet", "ResNet50_ACNet",
+    "ResNet101_ACNet", "ResNet152_ACNet"
 ]
-
-train_parameters = {
-    "input_size": [3, 256, 256],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
 
 
 class ResNetACNet(object):
-    """
-        ACNet
-    """
+    """ ACNet """
 
     def __init__(self, layers=50, deploy=False):
         """init"""
-        self.params = train_parameters
         self.layers = layers
         self.deploy = deploy
 
@@ -175,9 +160,6 @@ class ResNetACNet(object):
                          act=None,
                          name=None):
         """ ACNet conv bn """
-        assert isinstance(
-            filter_size,
-            int), "filter_size is a int, but got {}".format(filter_size)
         padding = (filter_size - 1) // 2
 
         square_conv = fluid.layers.conv2d(
@@ -320,31 +302,31 @@ class ResNetACNet(object):
         return fluid.layers.elementwise_add(x=short, y=conv1, act='relu')
 
 
-def ResNet18ACNet(deploy=False):
+def ResNet18_ACNet(deploy=False):
     """ResNet18 + ACNet"""
-    model = ResNetACNet(layers=18, deploy=deploy)
+    model = ResNet_ACNet(layers=18, deploy=deploy)
     return model
 
 
-def ResNet34ACNet(deploy=False):
+def ResNet34_ACNet(deploy=False):
     """ResNet34 + ACNet"""
     model = ResNetACNet(layers=34, deploy=deploy)
     return model
 
 
-def ResNet50ACNet(deploy=True):
+def ResNet50_ACNet(deploy=False):
     """ResNet50 + ACNet"""
     model = ResNetACNet(layers=50, deploy=deploy)
     return model
 
 
-def ResNet101ACNet(deploy=False):
+def ResNet101_ACNet(deploy=False):
     """ResNet101 + ACNet"""
     model = ResNetACNet(layers=101, deploy=deploy)
     return model
 
 
-def ResNet152ACNet(deploy=False):
+def ResNet152_ACNet(deploy=False):
     """ResNet152 + ACNet"""
     model = ResNetACNet(layers=152, deploy=deploy)
     return model

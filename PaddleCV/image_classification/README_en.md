@@ -627,13 +627,17 @@ Pretrained models can be downloaded by clicking related model names.
 |[HRNet_W48_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W48_C_pretrained.tar) | 78.95% | 94.42% | 30.064 | 19.963 |
 |[HRNet_W64_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W64_C_pretrained.tar) | 79.30% | 94.61% | 38.921 | 24.742 |
 
-### ResNet_ACMet Series
-|Model | deploy mode | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
-|- |:-: | :-: |:-: |:-: |:-: |
-|[ResNet50ACNet]() | False | 76.71% | 93.24% | 13.205 | 8.804 |
-|[ResNet50ACNet]() | True | 76.71% | 93.24% | 7.418 | 5.950 |
+### ResNet_ACNet Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[ResNet50_ACNet]()<sub>1</sub> | 76.71% | 93.24% | 13.205 | 8.804 |
+|[ResNet50_ACNet]()<sub>2</sub> | 76.71% | 93.24% | 7.418 | 5.950 |
 
-* Note: `deploy mode=True` means the trained model is firstly transformed using `./utils/acnet/weights_aggregator.py` and then tested with deploy mode.
+* Note:
+    * `1`. deploy mode is set as False to eval.
+    * `2`. Use `sh ./utils/acnet/convert_model.sh` to convert to trained model, and set deploy mode as True to eval.
+    * `./utils/acnet/convert_model.sh` contains 4 parmeters, which are model name, input model directory, output model directory and class number.
+
 
 ## FAQ
 
@@ -669,9 +673,11 @@ Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:100
 - EfficientNet: [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946), Mingxing Tan, Quoc V. Le
 - Res2Net: [Res2Net: A New Multi-scale Backbone Architecture](https://arxiv.org/abs/1904.01169), Shang-Hua Gao, Ming-Ming Cheng, Kai Zhao, Xin-Yu Zhang, Ming-Hsuan Yang, Philip Torr
 - HRNet: [Deep High-Resolution Representation Learning for Visual Recognition](https://arxiv.org/abs/1908.07919), Jingdong Wang, Ke Sun, Tianheng Cheng, Borui Jiang, Chaorui Deng, Yang Zhao, Dong Liu, Yadong Mu, Mingkui Tan, Xinggang Wang, Wenyu Liu, Bin Xiao
+- DARTS: [DARTS: Differentiable Architecture Search](https://arxiv.org/pdf/1806.09055.pdf), Hanxiao Liu, Karen Simonyan, Yiming Yang
+- ACNet: [ACNet: Attention Based Network to Exploit Complementary Features for RGBD Semantic Segmentation](https://arxiv.org/abs/1905.10089), Xinxin Hu, Kailun Yang, Lei Fei, Kaiwei Wang
+
 
 ## Update
-
 - 2018/12/03 **Stage1**: Update AlexNet, ResNet50, ResNet101, MobileNetV1
 - 2018/12/23 **Stage2**: Update VGG Series, SeResNeXt50_32x4d, SeResNeXt101_32x4d, ResNet152
 - 2019/01/31 Update MobileNetV2_x1_0
