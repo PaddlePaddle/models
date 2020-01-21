@@ -423,7 +423,8 @@ def train_ptb_lm():
             fluid.save_dygraph(ptb_model.state_dict(), save_model_dir)
             print("Saved model to: %s.\n" % save_model_dir)
 
-        eval(ptb_model, test_data)
+            eval(ptb_model, valid_data)
 
+        eval(ptb_model, test_data)
 
 train_ptb_lm()
