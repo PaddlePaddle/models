@@ -417,6 +417,6 @@ def train_ptb_lm():
 
             eval(ptb_model, valid_data)
 
-        eval(test_data)
+        eval(ptb_model, test_data)
 
 train_ptb_lm()

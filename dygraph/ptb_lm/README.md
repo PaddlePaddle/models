@@ -55,7 +55,12 @@ cd data; sh download_data.sh
 ```
 sh debug.sh
 ```
-需要指定数据的目录，模型的大小(默认为small，用户可以选择medium， 或者large)。
+可以通过`-d`指定数据的目录，`-t`指定模型的大小(默认为small，用户可以选择medium， 或者large)。
+
+例如：
+```
+sh debug.sh -t medium
+```
 
 # 进阶使用
 ## 1. 任务定义与建模
