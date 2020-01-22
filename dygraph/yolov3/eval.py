@@ -53,6 +53,7 @@ def eval():
             model.eval()
 
         input_size = cfg.input_size
+        # batch_size for test must be 1
         test_reader = reader.test(input_size, 1)
         label_names, label_ids = reader.get_label_infos()
         if cfg.debug:
@@ -93,13 +94,14 @@ def eval():
             nmsed_boxes = batch_outputs.numpy()
             if nmsed_boxes.shape[1] != 6:
                 continue
-            for i in range(1):
-                im_id = data[0][1]
-                nmsed_box=nmsed_boxes
-                labels = nmsed_box[:, 0]
-                scores = nmsed_box[:, 1]
-                boxes = nmsed_box[:, 2:6]
-                dts_res += get_pred_result(boxes, scores, labels, im_id)
+
+            im_id = data[0][1]
+            nmsed_box=nmsed_boxes
+            labels = nmsed_box[:, 0]
+            scores = nmsed_box[:, 1]
+            boxes = nmsed_box[:, 2:6]
+            dts_res += get_pred_result(boxes, scores, labels, im_id)
+
             end_time = time.time()
             print("batch id: {}, time: {}".format(iter_id, end_time - start_time))
             total_time += end_time - start_time

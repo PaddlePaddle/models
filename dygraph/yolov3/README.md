@@ -38,7 +38,7 @@
     make install
     # Alternatively, if you do not have permissions or prefer
     # not to install the COCO API into global site-packages
-    python2 setup.py install --user
+    python setup.py install --user
 
 **安装[PaddlePaddle](https://github.com/PaddlePaddle/Paddle)：**
 
@@ -126,7 +126,7 @@ Iter 4, loss 6736.150391, time 2.70573
 **训练策略：**
 
 *  采用momentum优化算法训练YOLOv3，momentum=0.9。
-*  学习率采用warmup算法，前4000轮学习率从0.0线性增加至0.001。在400000，450000轮时使用0.1,0.01乘子进行学习率衰减，最大训练500000轮。
+*  学习率采用warmup算法，前4000个Iter学习率从0.0线性增加至0.001。在400000，450000个Iter时使用0.1,0.01乘子进行学习率衰减，最大训练500000个Iter。
 
 
 下图为模型训练结果：
@@ -137,7 +137,7 @@ Train Loss
 
 ### 模型评估
 
-模型评估是指对训练完毕的模型评估各类性能指标。本示例采用[COCO官方评估](http://cocodataset.org/#detections-eval), 用户可通过如下方式下载Paddle发布的YOLOv3[模型]()
+模型评估是指对训练完毕的模型评估各类性能指标。本示例采用[COCO官方评估](http://cocodataset.org/#detections-eval)
 
     sh ./weights/download.sh
 
@@ -155,7 +155,7 @@ Train Loss
 
 ### 背景介绍
 
-传统目标检测方法通过两阶段检测，第一阶段生成预选框，第二阶段对预选框进行分类得到类别，而YOLO将目标检测看做是对框位置和类别概率的一个单阶段回归问题，使得YOLO能达到近两倍的检测速度。而YOLOv3在YOLO的基础上引入的多尺度预测，使得YOLOv3网络对于小物体的检测精度大幅提高。
+传统目标检测方法通过两阶段检测，第一阶段生成预选框，第二阶段对预选框进行分类和位置坐标的调整，而YOLO将目标检测看做是对框位置和类别概率的一个单阶段回归问题，使得YOLO能达到近两倍的检测速度。而YOLOv3在YOLO的基础上引入的多尺度预测，使得YOLOv3网络对于小物体的检测精度大幅提高。
 
 ### 模型概览
 
