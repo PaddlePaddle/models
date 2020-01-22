@@ -84,12 +84,13 @@ def train():
             model = fluid.dygraph.parallel.DataParallel(model, strategy)
 
         if cfg.pretrain:
-            restore, _ = fluid.load_dygraph(cfg.pretrain) 
-            state_dict = model.state_dict()
-            for k,v in restore.items():
-                state_dict[k]=restore[k]
-            model.set_dict(state_dict)
-            model.train()
+            restore, _ = fluid.load_dygraph(cfg.pretrain)
+            model.blocks.set_dict(restore)
+
+        if cfg.finetune:
+            restore, _ = fluid.load_dygraph(cfg.finetune)
+            model.set_dict(restore)
+
         boundaries = cfg.lr_steps
         gamma = cfg.lr_gamma
         step_num = len(cfg.lr_steps)
@@ -105,12 +106,14 @@ def train():
                 learning_rate=lr,
                 warmup_steps=cfg.warm_up_iter,
                 start_lr=0.0,
-                end_lr=cfg.learning_rate)
+                end_lr=cfg.learning_rate,
+        )
 
         optimizer = fluid.optimizer.Momentum(
             learning_rate=lr,
             regularization=fluid.regularizer.L2Decay(cfg.weight_decay),
             momentum=cfg.momentum,
+            parameter_list=model.parameters()
         )
 
         start_time = time.time()

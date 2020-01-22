@@ -116,6 +116,7 @@ def parse_args():
     add_arg('use_gpu',          bool,   True,      "Whether use GPU.")
     add_arg('model_save_dir',   str,    'checkpoints',     "The path to save model.")
     add_arg('pretrain',         str,    'weights/darknet53', "The pretrain model path.")
+    add_arg('finetune',         str,    False, "The finetune model path.")
     add_arg('weights',          str,    'weights/yolov3', "The weights path.")
     add_arg('dataset',          str,    'coco2017',  "Dataset: coco2014, coco2017.")
     add_arg('class_num',        int,    80,          "Class number.")
