@@ -38,14 +38,12 @@ TSM的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 
     bash run.sh eval
 
-在从Kinetics400选取的8k大小的训练数据下（在全量验证数据集下进行验证）：
-
-|Top-1|Top-5|
-|:-:|:-:|
-|12.03%|29.93%|
-
 在从Kinetics400选取的十类的数据集下：
 
 |Top-1|Top-5|
 |:-:|:-:|
 |76.56%|98.1%|
+
+全量数据集精度
+Top-1 0.70
+请参考：[静态图](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleVideo)
