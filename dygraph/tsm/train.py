@@ -21,7 +21,6 @@ import logging
 import numpy as np
 import paddle.fluid as fluid
 from paddle.fluid.dygraph.base import to_variable
-
 from model import TSM_ResNet
 from config_utils import *
 from reader import KineticsReader
@@ -107,7 +106,7 @@ def val(epoch, model, cfg, args):
         total_sample))
 
 
-def create_optimizer(cfg):
+def create_optimizer(cfg, params):
     total_videos = cfg.total_videos
     step = int(total_videos / cfg.batch_size + 1)
     bd = [e * step for e in cfg.decay_epochs]
@@ -121,7 +120,8 @@ def create_optimizer(cfg):
         learning_rate=fluid.layers.piecewise_decay(
             boundaries=bd, values=lr),
         momentum=momentum,
-        regularization=fluid.regularizer.L2Decay(l2_weight_decay))
+        regularization=fluid.regularizer.L2Decay(l2_weight_decay),
+        parameter_list=params)
 
     return optimizer
 
@@ -142,7 +142,9 @@ def train(args):
             strategy = fluid.dygraph.parallel.prepare_context()
 
         video_model = TSM_ResNet("TSM", train_config)
-        optimizer = create_optimizer(train_config.TRAIN)
+
+        optimizer = create_optimizer(train_config.TRAIN,
+                                     video_model.parameters())
         if use_data_parallel:
             video_model = fluid.dygraph.parallel.DataParallel(video_model,
                                                               strategy)

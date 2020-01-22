@@ -17,24 +17,22 @@ import time
 import sys
 import paddle.fluid as fluid
 from paddle.fluid.layer_helper import LayerHelper
-from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, FC
+from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, Linear
 import math
 
 
 class ConvBNLayer(fluid.dygraph.Layer):
     def __init__(self,
-                 name_scope,
                  num_channels,
                  num_filters,
                  filter_size,
                  stride=1,
                  groups=1,
                  act=None):
-        super(ConvBNLayer, self).__init__(name_scope)
+        super(ConvBNLayer, self).__init__()
 
         self._conv = Conv2D(
-            self.full_name(),
-            # num_channels = num_channels,
+            num_channels=num_channels,
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
@@ -45,7 +43,6 @@ class ConvBNLayer(fluid.dygraph.Layer):
             bias_attr=False)
 
         self._batch_norm = BatchNorm(
-            self.full_name(),
             num_filters,
             act=act,
             param_attr=fluid.param_attr.ParamAttr(),
@@ -60,29 +57,25 @@ class ConvBNLayer(fluid.dygraph.Layer):
 
 class BottleneckBlock(fluid.dygraph.Layer):
     def __init__(self,
-                 name_scope,
                  num_channels,
                  num_filters,
                  stride,
                  shortcut=True,
                  seg_num=8):
-        super(BottleneckBlock, self).__init__(name_scope)
+        super(BottleneckBlock, self).__init__()
 
         self.conv0 = ConvBNLayer(
-            self.full_name(),
             num_channels=num_channels,
             num_filters=num_filters,
             filter_size=1,
             act='relu')
         self.conv1 = ConvBNLayer(
-            self.full_name(),
             num_channels=num_filters,
             num_filters=num_filters,
             filter_size=3,
             stride=stride,
             act='relu')
         self.conv2 = ConvBNLayer(
-            self.full_name(),
             num_channels=num_filters,
             num_filters=num_filters * 4,
             filter_size=1,
@@ -90,7 +83,6 @@ class BottleneckBlock(fluid.dygraph.Layer):
 
         if not shortcut:
             self.short = ConvBNLayer(
-                self.full_name(),
                 num_channels=num_channels,
                 num_filters=num_filters * 4,
                 filter_size=1,
@@ -127,18 +119,9 @@ class TSM_ResNet(fluid.dygraph.Layer):
         num_filters = [64, 128, 256, 512]
 
         self.conv = ConvBNLayer(
-            self.full_name(),
-            num_channels=3,
-            num_filters=64,
-            filter_size=7,
-            stride=2,
-            act='relu')
+            num_channels=3, num_filters=64, filter_size=7, stride=2, act='relu')
         self.pool2d_max = Pool2D(
-            self.full_name(),
-            pool_size=3,
-            pool_stride=2,
-            pool_padding=1,
-            pool_type='max')
+            pool_size=3, pool_stride=2, pool_padding=1, pool_type='max')
 
         self.bottleneck_block_list = []
         num_channels = 64
@@ -149,7 +132,6 @@ class TSM_ResNet(fluid.dygraph.Layer):
                 bottleneck_block = self.add_sublayer(
                     'bb_%d_%d' % (block, i),
                     BottleneckBlock(
-                        self.full_name(),
                         num_channels=num_channels,
                         num_filters=num_filters[block],
                         stride=2 if i == 0 and block != 0 else 1,
@@ -159,32 +141,31 @@ class TSM_ResNet(fluid.dygraph.Layer):
                 self.bottleneck_block_list.append(bottleneck_block)
                 shortcut = True
         self.pool2d_avg = Pool2D(
-            self.full_name(), pool_size=7, pool_type='avg', global_pooling=True)
+            pool_size=7, pool_type='avg', global_pooling=True)
 
         import math
         stdv = 1.0 / math.sqrt(2048 * 1.0)
 
-        self.out = FC(self.full_name(),
-                      size=self.class_dim,
-                      act='softmax',
-                      param_attr=fluid.param_attr.ParamAttr(
-                          initializer=fluid.initializer.Uniform(-stdv, stdv)),
-                      bias_attr=fluid.param_attr.ParamAttr(
-                          learning_rate=2.0,
-                          regularizer=fluid.regularizer.L2Decay(0.)))
+        self.out = Linear(
+            2048,
+            self.class_dim,
+            act="softmax",
+            param_attr=fluid.param_attr.ParamAttr(
+                initializer=fluid.initializer.Uniform(-stdv, stdv)),
+            bias_attr=fluid.param_attr.ParamAttr(
+                learning_rate=2.0, regularizer=fluid.regularizer.L2Decay(0.)))
 
     def forward(self, inputs):
         y = fluid.layers.reshape(
             inputs, [-1, inputs.shape[2], inputs.shape[3], inputs.shape[4]])
         y = self.conv(y)
         y = self.pool2d_max(y)
-
         for bottleneck_block in self.bottleneck_block_list:
             y = bottleneck_block(y)
-
         y = self.pool2d_avg(y)
         y = fluid.layers.dropout(y, dropout_prob=0.5)
         y = fluid.layers.reshape(y, [-1, self.seg_num, y.shape[1]])
         y = fluid.layers.reduce_mean(y, dim=1)
+        y = fluid.layers.reshape(y, shape=[-1, 2048])
         y = self.out(y)
         return y
