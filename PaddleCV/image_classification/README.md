@@ -755,8 +755,8 @@ python -m paddle.distributed.launch train.py \
 ### ResNet_ACNet Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
-|[ResNet50_ACNet]()<sub>1</sub> | 76.71% | 93.24% | 13.205 | 8.804 |
-|[ResNet50_ACNet]()<sub>2</sub> | 76.71% | 93.24% | 7.418 | 5.950 |
+|[ResNet50_ACNet](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_ACNet_pretrained.tar)<sub>1</sub> | 76.71% | 93.24% | 13.205 | 8.804 |
+|[ResNet50_ACNet](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_ACNet_deploy_pretrained.tar)<sub>2</sub> | 76.71% | 93.24% | 7.418 | 5.950 |
 
 * 注:
     * `1`. 不对训练模型结果进行参数转换，进行评估。
