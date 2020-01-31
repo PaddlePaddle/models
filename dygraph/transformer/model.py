@@ -18,7 +18,6 @@ import numpy as np
 
 import paddle.fluid as fluid
 import paddle.fluid.layers as layers
-from paddle.fluid.layers.utils import map_structure
 from paddle.fluid.dygraph import Embedding, LayerNorm, Linear, Layer, to_variable
 from paddle.fluid.dygraph.learning_rate_scheduler import LearningRateDecay
 
@@ -128,28 +127,45 @@ class MultiHeadAttention(Layer):
                               output_dim=d_model,
                               bias_attr=False)
 
-    def forward(self, queries, keys, values, attn_bias, cache=None):
-        # compute q ,k ,v
-        keys = queries if keys is None else keys
-        values = keys if values is None else values
+    def _prepare_qkv(self, queries, keys, values, cache=None):
+        if keys is None:  # self-attention
+            keys, values = queries, queries
+            static_kv = False
+        else:  # cross-attention
+            static_kv = True
 
         q = self.q_fc(queries)
-        k = self.k_fc(keys)
-        v = self.v_fc(values)
-
-        # split head
         q = layers.reshape(x=q, shape=[0, 0, self.n_head, self.d_key])
         q = layers.transpose(x=q, perm=[0, 2, 1, 3])
-        k = layers.reshape(x=k, shape=[0, 0, self.n_head, self.d_key])
-        k = layers.transpose(x=k, perm=[0, 2, 1, 3])
-        v = layers.reshape(x=v, shape=[0, 0, self.n_head, self.d_value])
-        v = layers.transpose(x=v, perm=[0, 2, 1, 3])
+
+        if cache is not None and static_kv and cache.has_key("static_k"):
+            # for encoder-decoder attention in inference and has cached
+            k = cache["static_k"]
+            v = cache["static_v"]
+        else:
+            k = self.k_fc(keys)
+            v = self.v_fc(values)
+            k = layers.reshape(x=k, shape=[0, 0, self.n_head, self.d_key])
+            k = layers.transpose(x=k, perm=[0, 2, 1, 3])
+            v = layers.reshape(x=v, shape=[0, 0, self.n_head, self.d_value])
+            v = layers.transpose(x=v, perm=[0, 2, 1, 3])
 
         if cache is not None:
-            cache_k, cache_v = cache["k"], cache["v"]
-            k = layers.concat([cache_k, k], axis=2)
-            v = layers.concat([cache_v, v], axis=2)
-            cache["k"], cache["v"] = k, v
+            if static_kv and not cache.has_key("static_k"):
+                # for encoder-decoder attention in inference and has not cached
+                cache["static_k"], cache["static_v"] = k, v
+            elif not static_kv:
+                # for decoder self-attention in inference
+                cache_k, cache_v = cache["k"], cache["v"]
+                k = layers.concat([cache_k, k], axis=2)
+                v = layers.concat([cache_v, v], axis=2)
+                cache["k"], cache["v"] = k, v
+
+        return q, k, v
+
+    def forward(self, queries, keys, values, attn_bias, cache=None):
+        # compute q ,k ,v
+        q, k, v = self._prepare_qkv(queries, keys, values, cache)
 
         # scale dot product attention
         product = layers.matmul(x=q,
@@ -381,7 +397,7 @@ class DecoderLayer(Layer):
 
         cross_attn_output = self.cross_attn(
             self.preprocesser2(self_attn_output), enc_output, enc_output,
-            cross_attn_bias)
+            cross_attn_bias, cache)
         cross_attn_output = self.postprocesser2(cross_attn_output,
                                                 self_attn_output)
 
@@ -801,15 +817,45 @@ class Transformer(Layer):
         return finished_seq, finished_scores
 
     def beam_search(self,
-                    src_word,
-                    src_pos,
-                    src_slf_attn_bias,
-                    trg_word,
-                    trg_src_attn_bias,
-                    bos_id=0,
-                    eos_id=1,
-                    beam_size=4,
-                    max_len=256):
+                     src_word,
+                     src_pos,
+                     src_slf_attn_bias,
+                     trg_word,
+                     trg_src_attn_bias,
+                     bos_id=0,
+                     eos_id=1,
+                     beam_size=4,
+                     max_len=256):
+        if beam_size == 1:
+            return self._greedy_search(src_word,
+                                       src_pos,
+                                       src_slf_attn_bias,
+                                       trg_word,
+                                       trg_src_attn_bias,
+                                       bos_id=bos_id,
+                                       eos_id=eos_id,
+                                       max_len=max_len)
+        else:
+            return self._beam_search(src_word,
+                                     src_pos,
+                                     src_slf_attn_bias,
+                                     trg_word,
+                                     trg_src_attn_bias,
+                                     bos_id=bos_id,
+                                     eos_id=eos_id,
+                                     beam_size=beam_size,
+                                     max_len=max_len)
+
+    def _beam_search(self,
+                     src_word,
+                     src_pos,
+                     src_slf_attn_bias,
+                     trg_word,
+                     trg_src_attn_bias,
+                     bos_id=0,
+                     eos_id=1,
+                     beam_size=4,
+                     max_len=256):
         def expand_to_beam_size(tensor, beam_size):
             tensor = layers.reshape(tensor,
                                     [tensor.shape[0], 1] + tensor.shape[1:])
@@ -822,21 +868,29 @@ class Transformer(Layer):
                                   tensor.shape[2:])
 
         def split_batch_beams(tensor):
-            return fluid.layers.reshape(tensor,
-                                        shape=[-1, beam_size] +
-                                        list(tensor.shape[1:]))
+            return layers.reshape(tensor,
+                                  shape=[-1, beam_size] +
+                                  list(tensor.shape[1:]))
 
         def mask_probs(probs, finished, noend_mask_tensor):
             # TODO: use where_op
             finished = layers.cast(finished, dtype=probs.dtype)
-            probs = layers.elementwise_mul(
-                layers.expand(layers.unsqueeze(finished, [2]), [1, 1, self.trg_vocab_size]),
-                noend_mask_tensor, axis=-1) - layers.elementwise_mul(probs, (finished - 1), axis=0)
+            probs = layers.elementwise_mul(layers.expand(
+                layers.unsqueeze(finished, [2]), [1, 1, self.trg_vocab_size]),
+                                           noend_mask_tensor,
+                                           axis=-1) - layers.elementwise_mul(
+                                               probs, (finished - 1), axis=0)
             return probs
 
         def gather(x, indices, batch_pos):
-            topk_coordinates = fluid.layers.stack([batch_pos, indices], axis=2)
+            topk_coordinates = layers.stack([batch_pos, indices], axis=2)
             return layers.gather_nd(x, topk_coordinates)
+
+        def update_states(func, caches):
+            for cache in caches:  # no need to update static_kv
+                cache["k"] = func(cache["k"])
+                cache["v"] = func(cache["v"])
+            return caches
 
         # run encoder
         enc_output = self.encoder(src_word, src_pos, src_slf_attn_bias)
@@ -893,30 +947,29 @@ class Transformer(Layer):
             trg_pos = layers.fill_constant(shape=trg_word.shape,
                                            dtype="int64",
                                            value=i)
-            caches = map_structure(  # can not be reshaped since the 0 size
+            caches = update_states(  # can not be reshaped since the 0 size
                 lambda x: x if i == 0 else merge_batch_beams(x), caches)
             logits = self.decoder(trg_word, trg_pos, None, trg_src_attn_bias,
                                   enc_output, caches)
-            caches = map_structure(split_batch_beams, caches)
+            caches = update_states(split_batch_beams, caches)
             step_log_probs = split_batch_beams(
-                fluid.layers.log(fluid.layers.softmax(logits)))
+                layers.log(layers.softmax(logits)))
             step_log_probs = mask_probs(step_log_probs, finished,
                                         noend_mask_tensor)
             log_probs = layers.elementwise_add(x=step_log_probs,
-                                                    y=log_probs,
-                                                    axis=0)
+                                               y=log_probs,
+                                               axis=0)
             log_probs = layers.reshape(log_probs,
                                        [-1, beam_size * self.trg_vocab_size])
             scores = log_probs
-            topk_scores, topk_indices = fluid.layers.topk(input=scores,
-                                                          k=beam_size)
-            beam_indices = fluid.layers.elementwise_floordiv(
+            topk_scores, topk_indices = layers.topk(input=scores, k=beam_size)
+            beam_indices = layers.elementwise_floordiv(
                 topk_indices, vocab_size_tensor)
-            token_indices = fluid.layers.elementwise_mod(
+            token_indices = layers.elementwise_mod(
                 topk_indices, vocab_size_tensor)
 
             # update states
-            caches = map_structure(lambda x: gather(x, beam_indices, batch_pos),
+            caches = update_states(lambda x: gather(x, beam_indices, batch_pos),
                                    caches)
             log_probs = gather(log_probs, topk_indices, batch_pos)
             finished = gather(finished, beam_indices, batch_pos)
@@ -934,6 +987,75 @@ class Transformer(Layer):
         parent_ids = layers.stack(parent_ids, axis=0)
         finished_seq = layers.transpose(
             layers.gather_tree(predict_ids, parent_ids), [1, 2, 0])
+        finished_scores = topk_scores
+
+        return finished_seq, finished_scores
+
+    def _greedy_search(self,
+                       src_word,
+                       src_pos,
+                       src_slf_attn_bias,
+                       trg_word,
+                       trg_src_attn_bias,
+                       bos_id=0,
+                       eos_id=1,
+                       max_len=256):
+        # run encoder
+        enc_output = self.encoder(src_word, src_pos, src_slf_attn_bias)
+
+        # constant number
+        batch_size = enc_output.shape[0]
+        max_len = (enc_output.shape[1] + 20) if max_len is None else max_len
+        end_token_tensor = layers.fill_constant(shape=[batch_size, 1],
+                                                dtype="int64",
+                                                value=eos_id)
+
+        predict_ids = []
+        log_probs = layers.fill_constant(shape=[batch_size, 1],
+                                         dtype="float32",
+                                         value=0)
+        trg_word = layers.fill_constant(shape=[batch_size, 1],
+                                        dtype="int64",
+                                        value=bos_id)
+
+        ## init states (caches) for transformer
+        caches = [{
+            "k":
+            layers.fill_constant(
+                shape=[batch_size, self.n_head, 0, self.d_key],
+                dtype=enc_output.dtype,
+                value=0),
+            "v":
+            layers.fill_constant(
+                shape=[batch_size, self.n_head, 0, self.d_value],
+                dtype=enc_output.dtype,
+                value=0),
+        } for i in range(self.n_layer)]
+
+        for i in range(max_len):
+            trg_pos = layers.fill_constant(shape=trg_word.shape,
+                                           dtype="int64",
+                                           value=i)
+            logits = self.decoder(trg_word, trg_pos, None, trg_src_attn_bias,
+                                  enc_output, caches)
+            step_log_probs = layers.log(layers.softmax(logits))
+            log_probs = layers.elementwise_add(x=step_log_probs,
+                                               y=log_probs,
+                                               axis=0)
+            scores = log_probs
+            topk_scores, topk_indices = layers.topk(input=scores, k=1)
+
+            finished = layers.equal(topk_indices, end_token_tensor)
+            trg_word = topk_indices
+            log_probs = topk_scores
+
+            predict_ids.append(topk_indices)
+
+            if layers.reduce_all(finished).numpy():
+                break
+
+        predict_ids = layers.stack(predict_ids, axis=0)
+        finished_seq = layers.transpose(predict_ids, [1, 2, 0])
         finished_scores = topk_scores
 
         return finished_seq, finished_scores
