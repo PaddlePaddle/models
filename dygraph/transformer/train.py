@@ -145,7 +145,6 @@ def do_train(args):
         # train loop
         for pass_id in range(args.epoch):
             pass_start_time = time.time()
-            avg_batch_time = time.time()
             batch_id = 0
             for input_data in train_loader():
                 (src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
@@ -178,6 +177,7 @@ def do_train(args):
                             (step_idx, pass_id, batch_id, total_avg_cost,
                             total_avg_cost - loss_normalizer,
                             np.exp([min(total_avg_cost, 100)])))
+                        avg_batch_time = time.time()
                     else:
                         logging.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
@@ -186,6 +186,7 @@ def do_train(args):
                             total_avg_cost - loss_normalizer,
                             np.exp([min(total_avg_cost, 100)]),
                             args.print_step / (time.time() - avg_batch_time)))
+                        avg_batch_time = time.time()
 
 
                 if step_idx % args.save_step == 0 and step_idx != 0:
@@ -228,7 +229,6 @@ def do_train(args):
                             optimizer.state_dict(),
                             os.path.join(model_dir, "transformer"))
 
-                avg_batch_time = time.time()
                 batch_id += 1
                 step_idx += 1
 
