@@ -36,7 +36,7 @@ def parse_args():
         "--data_path", type=str, help="all the data for train,valid,test")
     parser.add_argument('--para_init', action='store_true')
     parser.add_argument(
-        '--use_gpu', type=bool, default=False, help='whether using gpu')
+        '--use_gpu', type=bool, default=True, help='whether using gpu')
     parser.add_argument(
         '--log_path',
         help='path of the log file. If not set, logs are printed to console')
