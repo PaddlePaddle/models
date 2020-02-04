@@ -29,7 +29,7 @@ We have conducted extensive experiments with the large-scale urban data of sever
 
 1. paddle安装
 
-    本项目依赖于Paddle Fluid 1.5.1 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
+    本项目依赖于Paddle Fluid 1.6.1 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
 
 2. 下载代码
 
