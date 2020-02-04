@@ -521,7 +521,12 @@ def best_strategy_compiled(args,
         return program
     else:
         build_strategy = fluid.compiler.BuildStrategy()
-        build_strategy.fuse_bn_act_ops = args.fuse_bn_act_ops
+        try:
+            fluid.require_version(min_version='1.7.0')
+            build_strategy.fuse_bn_act_ops = args.fuse_bn_act_ops
+        except Exception as e:
+            logger.info("PaddlePaddle version 1.7.0 or higher is "
+            "required when you want to fuse batch_norm and activation_op.")
         build_strategy.fuse_elewise_add_act_ops = args.fuse_elewise_add_act_ops
 
         exec_strategy = fluid.ExecutionStrategy()
