@@ -74,9 +74,9 @@ We have conducted extensive experiments with the large-scale urban data of sever
 
 Please feel free to review our paper :)
 
-链接: https://pan.baidu.com/s/1mYT3gpqurOpMJ8seLJogDg 提取码: qm1b 
+链接(link): [https://dl.acm.org/citation.cfm?id=3357810] (https://dl.acm.org/citation.cfm?id=3357810)
 
-[ACM DL](https://dl.acm.org/citation.cfm?id=3357810)
+
 
 
 ## 引用格式(Paper Citation)
