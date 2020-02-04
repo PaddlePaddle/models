@@ -3,63 +3,70 @@ sample_seed: 1234
 # The value in `DEFAULT` section will be referenced by other sections.
 # For convinence, we will put the variables which changes frequently here and 
 # let other section refer them
-
-# Input settings
-dataset_name: HousePrice
-max_house_num: 100
-max_public_num: 100
-
-batch_shuffle: False
-CUDA_VISIBLE_DEVICES: 0
-FLAGS_fraction_of_gpu_memory_to_use: 0.8
-# Input settings
+debug_mode: False
 #reader: dataset |  pyreader | async | datafeed | sync
-#data_reader: pyreader
-data_reader: datafeed
+#data_reader: dataset
 dataset_mode: Memory
-#local-cpu | local-gpu 
+#data_reader: datafeed
+data_reader: pyreader
+py_reader_iterable: False
+
+#model_type: lstm_net 
+model_type: cnn_net 
+vocab_size: 93896 
+#emb_dim: 200
+emb_dim: 128
+time_size: 28
+tag_size: 371
+fc_dim: 64
+
+emb_lr: 1.0
+base_lr: 0.001
+margin: 0.35
+window_size: 3
+pooling_type: max 
+#activate: sigmoid
+activate: None
+use_attention: True
+use_personal: True
+max_seq_len: 128
+prefix_word_id: True
+#print_period: 200
+#TODO personal_resident_drive + neg_only_sample
+#query cityid trendency, poi tag/alias
+#local-cpu | local-gpu | pserver-cpu | pserver-gpu | nccl2
 platform: local-gpu
-#platform: local-cpu
-dis_radius: 1.0
-avg_eval: False
-with_car_dis: False
-with_house_attr: False
+# Input settings
+dataset_name: PoiQacPersonalized
 
-bj_batch_size: 5256
-#bj_batch_size: 7573
-#bj_batch_size: 423
-sh_batch_size: 8126
-#sh_batch_size: 11604
-#sh_batch_size: 822
-gz_batch_size: 4560
-#gz_batch_size: 6508
-#gz_batch_size: 367
-sz_batch_size: 2693
-#sz_batch_size: 3849
-#sz_batch_size: 192
+CUDA_VISIBLE_DEVICES: 0,1,2,3
+#CUDA_VISIBLE_DEVICES: <pred_gpu>
 
-city_name: <c>
-num_samples_train: ${DEFAULT:<c>_batch_size}
-train_batch_size: ${DEFAULT:<c>_batch_size}
+train_batch_size: 128
 #train_batch_size: 2
-num_samples_eval: 10
-eval_batch_size: 10
-
+eval_batch_size: 2
+#file_list: ../tmp/data/poi/qac/train_data/part-00000
+dataset_dir: ../tmp/data/poi/qac/train_data
+#init_train_params: ../tmp/data/poi/qac/tencent_pretrain.words
+tag_dict_path: None 
+qac_dict_path: None 
 kv_path: None
+#qac_dict_path: ./datasets/poi_qac_personalized/qac_term.dict
+#tag_dict_path: ./datasets/poi_qac_personalized/poi_tag.dict
+#kv_path: ../tmp/data/poi/qac/kv
 
 # Model settings
-model_name: HousePrice
+model_name: PoiQacPersonalized
 preprocessing_name: None 
+#file_pattern: %s-part-*
 file_pattern: part-
 num_in_dimension: 3
-num_out_dimension: 1
+num_out_dimension: 4
 
 # Learning options
-max_number_of_steps: None
-init_learning_rate: 0.2
-emb_lr: ${DEFAULT:init_learning_rate}
-fc_lr: ${DEFAULT:init_learning_rate}
-base_lr: ${DEFAULT:init_learning_rate}
+num_samples_train: 100
+num_samples_eval: 10
+max_number_of_steps: 155000
 
 [Convert]
 # The name of the dataset to convert
@@ -81,6 +88,8 @@ num_in_dimension: ${DEFAULT:num_in_dimension}
 # The output file name pattern with two placeholders ("%s" and "%d"), 
 # it must correspond to the glob `file_pattern' in Train and Evaluate
 # config sections
+#file_pattern: %s-part-%05d
+file_pattern: part-
 
 
 [Train]
@@ -93,10 +102,16 @@ dataset_name: ${DEFAULT:dataset_name}
 # The directory where the dataset files are stored
 dataset_dir:  ${DEFAULT:dataset_dir}
 
-file_list: ../tmp/data/poi/raw/<c>/poi_sample.train
-
 # dataset_split_name
 dataset_split_name: train
+
+batch_shuffle_size: 128
+#log_exp or hinge
+#loss_func: hinge
+loss_func: log_exp
+neg_sample_num: 5
+reader_batch: True
+drop_last_batch: False
 
 # The glob pattern for data path, `file_pattern' must contain only one "%s" 
 # which is the placeholder for split name (such as 'train', 'validation')
@@ -115,22 +130,24 @@ num_samples: ${DEFAULT:num_samples_train}
 num_readers: 2
 
 # The number of threads used to create the batches
-num_preprocessing_threads: 4
+num_preprocessing_threads: 2
 
 # Number of epochs from dataset source
-num_epochs_input: 200
+num_epochs_input: 10
 
 ###########################
 #  Basic Train Configure  #
 ###########################
 # Directory where checkpoints and event logs are written to.
-train_dir: ../tmp/model/house_price/save_model/${DEFAULT:city_name}
-
+train_dir: ../tmp/model/poi/qac/save_model
 # The max number of ckpt files to store variables
 save_max_to_keep: 40
 
+# The frequency with which the model is saved, in seconds.
+save_model_secs: None
+
 # The frequency with which the model is saved, in steps.
-save_model_steps: 5
+save_model_steps: 5000
 
 # The name of the architecture to train
 model_name: ${DEFAULT:model_name}
@@ -159,8 +176,6 @@ weight_decay: None
 moving_average_decay: None
 
 # ***************** learning rate options ***************** #
-# Initial learning rate
-init_learning_rate: ${DEFAULT:init_learning_rate}
 
 # Specifies how the learning rate is decayed. One of "fixed", "exponential" or "polynomial"
 learning_rate_decay_type: fixed 
@@ -168,7 +183,12 @@ learning_rate_decay_type: fixed
 # Learning rate decay factor
 learning_rate_decay_factor: 0.1
 
-num_learning_rate_warmup_epochs: None
+# Proportion of training steps to perform linear learning rate warmup for
+learning_rate_warmup_proportion: 0.1
+
+init_learning_rate: 0
+
+learning_rate_warmup_steps: 10000
 
 # The minimal end learning rate used by a polynomial decay learning rate
 end_learning_rate: 0.0001
@@ -186,7 +206,7 @@ learning_rate_polynomial_decay_cycle: False
 optimizer: adam
 #optimizer: sgd
 # Epsilon term for the optimizer, used for adadelta, adam, rmsprop
-opt_epsilon: 1e-6
+opt_epsilon: 1e-8
 
 # conf for adadelta
 # The decay rate for adadelta
@@ -198,11 +218,10 @@ adagrad_initial_accumulator_value: 0.1
 # The exponential decay rate for the 1st moment estimates
 adam_beta1: 0.9
 # The exponential decay rate for the 2nd moment estimates
-adam_beta2: 0.999
+adam_beta2: 0.997
 
 adam_weight_decay: 0.01
 #adam_exclude_from_weight_decay: LayerNorm,layer_norm,bias
-
 # conf for ftrl
 # The learning rate power
 ftrl_learning_rate_power: -0.1
@@ -221,14 +240,68 @@ momentum: 0.9
 # Decay term for RMSProp
 rmsprop_decay: 0.9
 
+
 # Number of model clones to deploy
-num_gpus: 1
+num_gpus: 3
+
+#############################
+#  Log and Trace Configure  #
+#############################
+# The frequency with which logs are print
+log_every_n_steps: 100
 
 # The frequency with which logs are trace.
-trace_every_n_steps: 5
+trace_every_n_steps: 1
 
 
 [Evaluate]
+# process mode: pred, eval or export
+#proc_name: eval
+proc_name: pred
+
+#data_reader: datafeed
+py_reader_iterable: True
+#platform: hadoop
+platform: local-gpu
+qac_dict_path: ./datasets/poi_qac_personalized/qac_term.dict
+tag_dict_path: ./datasets/poi_qac_personalized/poi_tag.dict
+#kv_path: ../tmp/data/poi/qac/kv
+# The directory where the dataset files are stored
+#file_list: ../tmp/x.bug
+file_list: ../tmp/data/poi/qac/recall_data/<mode>/part-0<pred_gpu>
+#file_list: ../tmp/data/poi/qac/ltr_data/<mode>/part-0<pred_gpu>
+#dataset_dir: stream_record
+# The directory where the model was written to or an absolute path to a checkpoint file
+init_pretrain_model: ../tmp/model/poi/qac/save_model_logexp/checkpoint_125000
+#init_pretrain_model: ../tmp/model/poi/qac/save_model_personal_logexp/checkpoint_125000
+#init_pretrain_model: ../tmp/model/poi/qac/save_model_wordid_logexp/checkpoint_125000
+#init_pretrain_model: ../tmp/model/poi/qac/save_model_personal_wordid_logexp/checkpoint_125000
+#init_pretrain_model: ../tmp/model/poi/qac/save_model_attention_logexp/checkpoint_125000
+#init_pretrain_model: ../tmp/model/poi/qac/save_model_attention_personal_logexp/checkpoint_125000
+#init_pretrain_model: ../tmp/model/poi/qac/save_model_attention_wordid_logexp/checkpoint_125000
+#init_pretrain_model: ../tmp/model/poi/qac/save_model_attention_personal_wordid_logexp/checkpoint_125000
+model_type: cnn_net 
+fc_dim: 64
+use_attention: False
+use_personal: False
+prefix_word_id: False
+
+#dump_vec: query
+#dump_vec: <mode>
+dump_vec: eval
+# The number of samples in each batch
+#batch_size: ${DEFAULT:eval_batch_size}
+batch_size: 1
+
+# The file type text or record
+#file_type: record
+file_type: text
+
+reader_batch: False
+
+# only exectute evaluation once
+eval_once: True
+
 #######################
 #  Dataset Configure  #
 #######################
@@ -236,26 +309,11 @@ trace_every_n_steps: 5
 dataset_name: ${DEFAULT:dataset_name}
 
 # The name of the train/test split
-#dataset_split_name: validation
-dataset_split_name: train
+dataset_split_name: validation
 
 # The glob pattern for data path, `file_pattern' must contain only one "%s" 
 # which is the placeholder for split name (such as 'train', 'validation')
 file_pattern: ${DEFAULT:file_pattern}
-
-#reader: dataset |  pyreader | async | datafeed | sync
-data_reader: datafeed
-
-#local-cpu | local-gpu 
-platform: local-cpu
-
-file_list: ../tmp/data/poi/raw/<c>/poi_sample.test
-
-# The file type or record
-file_type: text
-
-# kv path, used in image_sim
-kv_path: ${DEFAULT:kv_path}
 
 # The number of input sample for evaluation
 num_samples: ${DEFAULT:num_samples_eval}
@@ -264,7 +322,7 @@ num_samples: ${DEFAULT:num_samples_eval}
 num_readers: 2
 
 # The number of threads used to create the batches
-num_preprocessing_threads: 2
+num_preprocessing_threads: 1
 
 # Number of epochs from dataset source
 num_epochs_input: 1
@@ -282,5 +340,3 @@ num_out_dimension: ${DEFAULT:num_out_dimension}
 # Directory where the results are saved to
 eval_dir: ${Train:train_dir}/checkpoint_1
 
-# The number of samples in each batch
-batch_size: ${DEFAULT:eval_batch_size}
