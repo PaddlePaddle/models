@@ -215,6 +215,11 @@ def train_ptb_lm():
 
     # check if set use_gpu=True in paddlepaddle cpu version
     model_check.check_cuda(args.use_gpu)
+
+    place = core.CPUPlace()
+    if args.use_gpu == True:
+        place = core.CUDAPlace(0)
+
     # check if paddlepaddle version is satisfied
     model_check.check_version()
 
@@ -273,7 +278,7 @@ def train_ptb_lm():
         print("model type not support")
         return
 
-    with fluid.dygraph.guard(core.CUDAPlace(0)):
+    with fluid.dygraph.guard(place):
         if args.ce:
             print("ce mode")
             seed = 33
