@@ -1,3 +1,7 @@
+# PaddleSlim新版本已经发布，项目已被迁移到： https://github.com/PaddlePaddle/PaddleSlim
+
+
+
 
 <div align="center">
   <h3>
