@@ -32,7 +32,6 @@ CUDA_VISIBLE_DEVICES=0 python train.py
 
 ## 测试ocr recognition
 
-在GPU单卡上训练ocr recognition:
 
 ```
 CUDA_VISIBLE_DEVICES=0 python eval.py --pretrained_model your_trained_model_path
@@ -40,7 +39,6 @@ CUDA_VISIBLE_DEVICES=0 python eval.py --pretrained_model your_trained_model_path
 
 ## 预测
 
-在GPU单卡上训练ocr recognition:
 
 ```
 CUDA_VISIBLE_DEVICES=0 python -u infer.py --pretrained_model your_trained_model_path --image_path your_img_path
