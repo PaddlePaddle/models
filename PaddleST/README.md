@@ -10,7 +10,9 @@ The full list of frontier research:
 
 |研究课题|论文全文|开源地址|
 |----|----|----|
-|MONOPOLY: Learning to Price Public Facilities for Revaluing Private Properties with Large-scale Urban Data|链接: https://pan.baidu.com/s/1mYT3gpqurOpMJ8seLJogDg 提取码: qm1b |https://github.com/PaddlePaddle/models/tree/develop/PaddleST/Research/CIKM2019-MONOPOLY|
+|MONOPOLY: Learning to Price Public Facilities for Revaluing Private Properties with Large-scale Urban Data|
+https://dl.acm.org/doi/10.1145/3357384.3357810
+|https://github.com/PaddlePaddle/models/tree/develop/PaddleST/Research/CIKM2019-MONOPOLY|
 
 ### 前沿应用项目列表如下：
 
