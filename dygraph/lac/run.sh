@@ -4,7 +4,7 @@ export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fast_eager_deletion_mode=1
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
-python -m paddle.distributed.launch --selected_gpus=0,1,2,3 train.py \
+python -m paddle.distributed.launch --started_port 8899 --selected_gpus=0,1,2,3 train.py \
         --train_data ./data/train.tsv \
         --test_data ./data/test.tsv \
         --model_save_dir ./padding_models \

@@ -330,7 +330,7 @@ class lex_net(fluid.dygraph.Layer):
         
         self.linear_chain_crf = Linear_chain_crf(
                 param_attr=fluid.ParamAttr(
-                    name='crfw', learning_rate=self.crf_lr),
+                    name='linear_chain_crfw', learning_rate=self.crf_lr),
                 size=self.num_labels)
 
         self.crf_decoding = Crf_decoding(
