@@ -59,11 +59,10 @@ def init_pretraining_params(exe,
                             pretraining_params_path,
                             main_program,
                             use_fp16=False):
-    assert os.path.exists(pretraining_params_path + ".params"
-                          ), "[%s] cann't be found." % (pretraining_params_path + ".params" )
+    assert os.path.exists(pretraining_params_path
+                          ), "[%s] cann't be found." % pretraining_params_path
 
-    program_state = fluid.load_program_state( pretraining_params_path )
-    fluid.set_program_state( main_program, program_state)
+    fluid.load( main_program, pretraining_params_path, exe)
 
     print("Load pretraining parameters from {}.".format(
         pretraining_params_path))
