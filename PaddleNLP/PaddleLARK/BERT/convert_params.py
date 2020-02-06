@@ -183,7 +183,8 @@ def convert(args):
             param]).get_tensor().set(value, place)
         print(param, ' --> ', tf_fluid_param_name_map[param], '  ', value.shape)
 
-    fluid.io.save_params(exe, args.fluid_params_dir, main_program=program)
+    save_path = os.join( args.fluid_params_dir, "checkpoint")
+    fluid.save( program, save_path)
 
 
 if __name__ == '__main__':

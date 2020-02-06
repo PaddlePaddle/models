@@ -47,12 +47,8 @@ def init_checkpoint(exe, init_checkpoint_path, main_program, use_fp16=False):
         if os.path.exists(os.path.join(init_checkpoint_path, var.name)):
             print("INIT {}".format(var.name))
             return True
-
-    fluid.io.load_vars(
-        exe,
-        init_checkpoint_path,
-        main_program=main_program,
-        predicate=existed_persitables)
+    
+    fluid.load( main_program, init_checkpoint_path, exe)
     print("Load model from {}".format(init_checkpoint_path))
 
     if use_fp16:
@@ -63,24 +59,12 @@ def init_pretraining_params(exe,
                             pretraining_params_path,
                             main_program,
                             use_fp16=False):
-    assert os.path.exists(pretraining_params_path
-                          ), "[%s] cann't be found." % pretraining_params_path
+    assert os.path.exists(pretraining_params_path + ".params"
+                          ), "[%s] cann't be found." % (pretraining_params_path + ".params" )
 
-    def existed_params(var):
-        if not isinstance(var, fluid.framework.Parameter):
-            return False
-        if os.path.exists(os.path.join(pretraining_params_path, var.name)):
-            print("INIT {}".format(var.name))
-            return True
-        else:
-            print("SKIP {}".format(var.name))
-            return False
+    program_state = fluid.load_program_state( pretraining_params_path )
+    fluid.set_program_state( main_program, program_state)
 
-    fluid.io.load_vars(
-        exe,
-        pretraining_params_path,
-        main_program=main_program,
-        predicate=existed_params)
     print("Load pretraining parameters from {}.".format(
         pretraining_params_path))
 
