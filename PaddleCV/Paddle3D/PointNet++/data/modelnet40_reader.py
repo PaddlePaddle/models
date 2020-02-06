@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 
 import os
 import os.path as osp
+import signal
 import numpy as np
 import h5py
 import random
@@ -103,4 +104,13 @@ class ModelNet40ClsReader(object):
                     yield batch_out
                     batch_out = []
         return reader
+
+
+def _term_reader(signum, frame):
+    logger.info('pid {} terminated, terminate reader process '
+                'group {}...'.format(os.getpid(), os.getpgrp()))
+    os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
+
+signal.signal(signal.SIGINT, _term_reader)
+signal.signal(signal.SIGTERM, _term_reader)
 

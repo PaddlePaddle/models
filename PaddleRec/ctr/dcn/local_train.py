@@ -21,6 +21,12 @@ def train(args):
     :param args: hyperparams of model
     :return:
     """
+    # ce
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
+
     cat_feat_dims_dict = OrderedDict()
     for line in open(args.cat_feat_num):
         spls = line.strip().split()

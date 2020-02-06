@@ -23,6 +23,7 @@ import math
 import numpy as np
 import argparse
 import functools
+import logging
 
 import paddle
 import paddle.fluid as fluid
@@ -51,7 +52,11 @@ add_arg('use_se',           bool, True,                 "Whether to use Squeeze-
 add_arg('save_json_path',   str,  None,                 "Whether to save output in json file.")
 add_arg('same_feed',        int,  0,                    "Whether to feed same images")
 add_arg('print_step',       int,  1,                    "the batch step to print info")
+add_arg('deploy',                bool,    False,                      "deploy mode, currently used in ACNet")
 # yapf: enable
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def eval(args):
@@ -80,6 +85,8 @@ def eval(args):
         model = models.__dict__[args.model](is_test=True,
                                             padding_type=args.padding_type,
                                             use_se=args.use_se)
+    elif "ACNet" in args.model:
+        model = models.__dict__[args.model](deploy=args.deploy)
     else:
         model = models.__dict__[args.model]()
 
@@ -159,18 +166,8 @@ def eval(args):
                 info = "Testbatch {0},loss {1}, acc1 {2},acc5 {3},time {4}".format(real_iter, \
                   "%.5f"%loss,"%.5f"%acc1, "%.5f"%acc5, \
                   "%2.2f sec" % period)
-                print(info)
+                logger.info(info)
                 sys.stdout.flush()
-
-            if args.save_json_path:
-                for i, res in enumerate(pred_set):
-                    pred_label = np.argsort(res)[::-1][:1]
-                    real_id = str(np.array(parallel_id).flatten()[i])
-                    _, real_id = os.path.split(real_id)
-                    info_dict[real_id] = {}
-                    info_dict[real_id]['score'], info_dict[real_id][
-                        'class'] = str(res[pred_label]), str(pred_label)
-                    save_json(info_dict, args.save_json_path)
 
             parallel_id = []
             parallel_data = []
@@ -180,8 +177,16 @@ def eval(args):
     test_acc1 = np.sum(test_info[1]) / cnt
     test_acc5 = np.sum(test_info[2]) / cnt
 
-    print("Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
-        "%.5f" % test_loss, "%.5f" % test_acc1, "%.5f" % test_acc5))
+    info = "Test_loss {0}, test_acc1 {1}, test_acc5 {2}".format(
+        "%.5f" % test_loss, "%.5f" % test_acc1, "%.5f" % test_acc5)
+    if args.save_json_path:
+        info_dict = {
+            "Test_loss": test_loss,
+            "test_acc1": test_acc1,
+            "test_acc5": test_acc5
+        }
+        save_json(info_dict, args.save_json_path)
+    logger.info(info)
     sys.stdout.flush()
 
 

@@ -92,5 +92,3 @@ word_embedding=fluid.layers.concat(input=[elmo_embedding, word_embedding], axis=
 [Deep contextualized word representations](https://arxiv.org/abs/1802.05365)
 
 
-### Contributors
-本项目由百度深度学习技术平台部 PaddlePaddle 团队([@xuezhong](https://github.com/xuezhong) [@JesseyXujin](https://github.com/JesseyXujin))和百度自然语言处理部语义计算团队([@nbcc](https://github.com/nbcc) [@tianxin1860](https://github.com/tianxin1860))合作完成。

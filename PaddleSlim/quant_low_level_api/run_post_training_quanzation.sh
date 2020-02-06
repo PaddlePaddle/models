@@ -17,7 +17,7 @@ python post_training_quantization.py \
     --data_path=${samples} \
     --save_model_path="mobilenetv1_int8_model" \
     --algo="KL" \
-    --is_full_quantize=True \
+    --is_full_quantize=False \
     --batch_size=10 \
     --batch_nums=10 \
     --use_gpu=True \

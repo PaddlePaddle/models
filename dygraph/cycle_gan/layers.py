@@ -24,8 +24,8 @@ use_cudnn = False
 
 class conv2d(fluid.dygraph.Layer):
     """docstring for Conv2D"""
-    def __init__(self, 
-                name_scope,
+    def __init__(self,
+                num_channels,
                 num_filters=64,
                 filter_size=7,
                 stride=1,
@@ -35,32 +35,29 @@ class conv2d(fluid.dygraph.Layer):
                 relu=True,
                 relufactor=0.0,
                 use_bias=False):
-        super(conv2d, self).__init__(name_scope)
+        super(conv2d, self).__init__()
 
         if use_bias == False:
             con_bias_attr = False
         else:
-            con_bias_attr = fluid.ParamAttr(name="conv_bias",initializer=fluid.initializer.Constant(0.0))
+            con_bias_attr = fluid.ParamAttr(initializer=fluid.initializer.Constant(0.0))
 
         self.conv = Conv2D(
-            self.full_name(),
+            num_channels=num_channels,
             num_filters=num_filters,
             filter_size=filter_size,
             stride=stride,
             padding=padding,
             use_cudnn=use_cudnn,
             param_attr=fluid.ParamAttr(
-                name="conv2d_weights",
                 initializer=fluid.initializer.NormalInitializer(loc=0.0,scale=stddev)),
             bias_attr=con_bias_attr)
         if norm:
-            self.bn = BatchNorm(self.full_name(),
+            self.bn = BatchNorm(
                 num_channels=num_filters,
                 param_attr=fluid.ParamAttr(
-                    name="scale",
                     initializer=fluid.initializer.NormalInitializer(1.0,0.02)),
                 bias_attr=fluid.ParamAttr(
-                    name="bias",
                     initializer=fluid.initializer.Constant(0.0)),
                 trainable_statistics=True
                 )
@@ -82,7 +79,7 @@ class conv2d(fluid.dygraph.Layer):
 
 class DeConv2D(fluid.dygraph.Layer):
     def __init__(self,
-            name_scope,
+            num_channels,
             num_filters=64,
             filter_size=7,
             stride=1,
@@ -94,32 +91,30 @@ class DeConv2D(fluid.dygraph.Layer):
             relufactor=0.0,
             use_bias=False
             ):
-        super(DeConv2D,self).__init__(name_scope)
+        super(DeConv2D,self).__init__()
 
         if use_bias == False:
             de_bias_attr = False
         else:
-            de_bias_attr = fluid.ParamAttr(name="de_bias",initializer=fluid.initializer.Constant(0.0))
+            de_bias_attr = fluid.ParamAttr(initializer=fluid.initializer.Constant(0.0))
 
-        self._deconv = Conv2DTranspose(self.full_name(),
-                                        num_filters,
-                                        filter_size=filter_size,
-                                        stride=stride,
-                                        padding=padding,
-                                        param_attr=fluid.ParamAttr(
-                                            name="this_is_deconv_weights",
-                                            initializer=fluid.initializer.NormalInitializer(loc=0.0, scale=stddev)),
-                                        bias_attr=de_bias_attr)
+        self._deconv = Conv2DTranspose(num_channels,
+                                       num_filters,
+                                       filter_size=filter_size,
+                                       stride=stride,
+                                       padding=padding,
+                                       param_attr=fluid.ParamAttr(
+                                           initializer=fluid.initializer.NormalInitializer(loc=0.0, scale=stddev)),
+                                       bias_attr=de_bias_attr)
 
 
 
         if norm:
-            self.bn = BatchNorm(self.full_name(),
+            self.bn = BatchNorm(
                 num_channels=num_filters,
                 param_attr=fluid.ParamAttr(
-                    name="de_wights",
                     initializer=fluid.initializer.NormalInitializer(1.0, 0.02)),
-                bias_attr=fluid.ParamAttr(name="de_bn_bias",initializer=fluid.initializer.Constant(0.0)),
+                bias_attr=fluid.ParamAttr(initializer=fluid.initializer.Constant(0.0)),
                 trainable_statistics=True)        
         self.outpadding = outpadding
         self.relufactor = relufactor

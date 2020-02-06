@@ -15,7 +15,7 @@
 
 ## 快速开始
 
-本项目依赖于 Paddlepaddle 1.5.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装。
+本项目依赖于 Paddlepaddle 1.7.0 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装。
 
 python版本依赖python 2.7或python 3.5及以上版本。
 
@@ -40,7 +40,7 @@ tar -zxvf sentiment_classification-dataset-1.0.0.tar.gz
 
 #### 模型训练
 
-基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证。
+基于示例的数据集，可以运行下面的命令，在训练集（train.tsv）上进行模型训练，并在开发集（dev.tsv）验证。训练阶段需手动创建模型需要保存的文件夹，并且通过checkpoints设置保存文件路径。
 model_type从bow_net，cnn_net，gru_net，bigru_net中选择。
 
 ```shell

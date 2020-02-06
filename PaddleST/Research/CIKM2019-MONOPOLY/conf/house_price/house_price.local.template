@@ -280,7 +280,7 @@ num_in_dimension: ${DEFAULT:num_in_dimension}
 num_out_dimension: ${DEFAULT:num_out_dimension}
 
 # Directory where the results are saved to
-eval_dir: ${Train:train_dir}/epoch<s>
+eval_dir: ${Train:train_dir}/checkpoint_1
 
 # The number of samples in each batch
 batch_size: ${DEFAULT:eval_batch_size}

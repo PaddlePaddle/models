@@ -29,7 +29,7 @@ We have conducted extensive experiments with the large-scale urban data of sever
 
 1. paddle安装
 
-    本项目依赖于Paddle Fluid 1.5.1 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
+    本项目依赖于Paddle Fluid 1.6.1 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
 
 2. 下载代码
 
@@ -74,9 +74,9 @@ We have conducted extensive experiments with the large-scale urban data of sever
 
 Please feel free to review our paper :)
 
-链接: https://pan.baidu.com/s/1mYT3gpqurOpMJ8seLJogDg 提取码: qm1b 
+链接(link): [https://dl.acm.org/citation.cfm?id=3357810] (https://dl.acm.org/citation.cfm?id=3357810)
 
-[ACM DL](https://dl.acm.org/citation.cfm?id=3357810)
+
 
 
 ## 引用格式(Paper Citation)

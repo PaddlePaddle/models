@@ -30,7 +30,7 @@
 
 1）**准备模型和校准数据**
 
-首先，需要准备已经训练好的FP32预测模型，即 `save_inference_model()` 保存的模型。训练后量化读取校准数据进行前向计算，所以需要准备校准数据集。校准数据集应为测试集（或训练集）中具有代表性的一部分，如随机取出的部分数据，这样可以计算得到更加准确的量化比例因子。样本数据的数量可以是100~500，当然样本数据越多，计算的的量化比例因子越准确。
+首先，需要准备已经训练好的FP32预测模型，即 `save_inference_model()` 保存的模型。训练后量化读取校准数据进行前向计算，所以需要准备校准数据集。校准数据集应为测试集（或训练集）中具有代表性的一部分，如随机取出的部分数据，这样可以计算得到更加准确的量化比例因子。建议样本数据的数量为100~500。
 
 2）**配置校准数据生成器**
 
@@ -38,7 +38,7 @@
 
 3）**调用训练后量化**
 
-机器上安装PaddlePaddle，然后调用PostTrainingQuantization实现训练后量化，以下对api接口进行详细介绍。
+机器上安装PaddlePaddle develop分支编译的whl包，然后调用PostTrainingQuantization实现训练后量化，以下对api接口进行详细介绍。
 
 ``` python
 class PostTrainingQuantization(
@@ -52,7 +52,9 @@ class PostTrainingQuantization(
     scope=None,
     algo="KL",
     quantizable_op_type=["conv2d", "depthwise_conv2d", "mul"],
-    is_full_quantize=False)
+    is_full_quantize=False,
+    is_use_cache_file=False,
+    cache_dir="./temp_post_training")
 ```
 调用上述api，传入训练后量化必要的参数。参数说明：
 * executor：执行模型的executor，可以在cpu或者gpu上执行。
@@ -66,6 +68,8 @@ class PostTrainingQuantization(
 * algo：计算待量化激活Tensor的量化比例因子的方法。设置为`KL`，则使用KL散度方法，设置为`direct`，则使用abs max方法。默认为`KL`。
 * quantizable_op_type: 需要量化的op类型，默认是`["conv2d", "depthwise_conv2d", "mul"]`，列表中的值可以是任意支持量化的op类型。
 * is_full_quantize：是否进行全量化。设置为True，则对模型中所有支持量化的op进行量化；设置为False，则只对`quantizable_op_type` 中op类型进行量化。目前，支持的量化类型如下：'conv2d', 'depthwise_conv2d', 'mul', "pool2d", "elementwise_add", "concat", "softmax", "argmax", "transpose", "equal", "gather", "greater_equal", "greater_than", "less_equal", "less_than", "mean", "not_equal", "reshape", "reshape2", "bilinear_interp", "nearest_interp", "trilinear_interp", "slice", "squeeze", "elementwise_sub"。
+* is_use_cache_file：是否使用缓存文件。如果设置为True，训练后量化过程中的采样数据会保存到磁盘文件中；如果设置为False，所有采样数据会保存到内存中。当待量化的模型很大或者校准数据数量很大，建议设置is_use_cache_file为True。默认为False。
+* cache_dir：当is_use_cache_file等于True，会将采样数据保存到该文件中。量化完成后，该文件中的临时文件会自动删除。
 
 ```
 PostTrainingQuantization.quantize()
@@ -77,6 +81,14 @@ PostTrainingQuantization.save_quantized_model(save_model_path)
 ```
 调用上述接口保存训练后量化模型，其中save_model_path为保存的路径。
 
+**训练后量化支持部分量化功能**
+* 方法1：设置quantizable_op_type，则只会对quantizable_op_type中的Op类型进行量化，模型中其他Op类型保持不量化。
+* 方法2：构建网络的时候，将不需要量化的特定Op定义在 `skip_quant` 的name_scope中，则可以跳过特定Op的量化，示例如下。
+```python
+with fluid.name_scope('skip_quant'):
+    pool = fluid.layers.pool2d(input=hidden, pool_size=2, pool_type='avg', pool_stride=2)
+    # 不对pool2d进行量化
+```
 
 ## 2. 训练后量化使用示例
 

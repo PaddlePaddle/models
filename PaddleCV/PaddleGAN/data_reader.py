@@ -630,6 +630,7 @@ class data_reader(object):
                     batch_size=self.cfg.batch_size,
                     mode="TRAIN")
                 reader_test = None
+                id2name = None
                 if self.cfg.run_test:
                     test_list = os.path.join(dataset_dir, "test.txt")
                     if self.cfg.test_list is not None:

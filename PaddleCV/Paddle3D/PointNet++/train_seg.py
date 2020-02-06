@@ -21,6 +21,7 @@ import ast
 import logging
 import numpy as np
 import paddle.fluid as fluid
+import paddle.fluid.framework as framework
 
 from models import *
 from data.indoor3d_reader import Indoor3DReader
@@ -110,6 +111,11 @@ def parse_args():
         type=int,
         default=1,
         help='mini-batch interval for logging.')
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='The flag indicating whether to run the task '
+        'for continuous evaluation.')
     args = parser.parse_args()
     return args
 
@@ -127,6 +133,11 @@ def train():
             "--model can only be 'MSG' or 'SSG'"
 
     # build model
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_main_program().random_seed = SEED
+        framework.default_startup_program().random_seed = SEED
+
     startup = fluid.Program()
     train_prog = fluid.Program()
     with fluid.program_guard(train_prog, startup):
@@ -199,6 +210,10 @@ def train():
 
     train_stat = Stat()
     test_stat = Stat()
+
+    ce_time = 0
+    ce_loss = []
+
     for epoch_id in range(args.epoch):
         try:
             train_pyreader.start()
@@ -214,41 +229,64 @@ def train():
                     log_str = ""
                     for name, values in zip(train_keys + ['learning_rate'], train_outs):
                         log_str += "{}: {:.5f}, ".format(name, np.mean(values))
+                        if name == 'loss':
+                            ce_loss.append(np.mean(values))
                     logger.info("[TRAIN] Epoch {}, batch {}: {}time: {:.2f}".format(epoch_id, train_iter, log_str, period))
                 train_iter += 1
         except fluid.core.EOFException:
             logger.info("[TRAIN] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, train_stat.get_mean_log(), np.mean(train_periods[1:])))
+            ce_time = np.mean(train_periods[1:])
             save_model(exe, train_prog, os.path.join(args.save_dir, str(epoch_id)))
             
             # evaluation
-            try:
-                test_pyreader.start()
-                test_iter = 0
-                test_periods = []
-                while True:
-                    cur_time = time.time()
-                    test_outs = exe.run(test_compile_prog, fetch_list=test_values)
-                    period = time.time() - cur_time
-                    test_periods.append(period)
-                    test_stat.update(test_keys, test_outs)
-                    if test_iter % args.log_interval == 0:
-                        log_str = ""
-                        for name, value in zip(test_keys, test_outs):
-                            log_str += "{}: {:.4f}, ".format(name, np.mean(value))
-                        logger.info("[TEST] Epoch {}, batch {}: {}time: {:.2f}".format(epoch_id, test_iter, log_str, period))
-                    test_iter += 1
-            except fluid.core.EOFException:
-                logger.info("[TEST] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, test_stat.get_mean_log(), np.mean(test_periods[1:])))
-            finally:
-                test_pyreader.reset()
-                test_stat.reset()
-                test_periods = []
+            if not args.enable_ce:
+                try:
+                    test_pyreader.start()
+                    test_iter = 0
+                    test_periods = []
+                    while True:
+                        cur_time = time.time()
+                        test_outs = exe.run(test_compile_prog, fetch_list=test_values)
+                        period = time.time() - cur_time
+                        test_periods.append(period)
+                        test_stat.update(test_keys, test_outs)
+                        if test_iter % args.log_interval == 0:
+                            log_str = ""
+                            for name, value in zip(test_keys, test_outs):
+                                log_str += "{}: {:.4f}, ".format(name, np.mean(value))
+                            logger.info("[TEST] Epoch {}, batch {}: {}time: {:.2f}".format(epoch_id, test_iter, log_str, period))
+                        test_iter += 1
+                except fluid.core.EOFException:
+                    logger.info("[TEST] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, test_stat.get_mean_log(), np.mean(test_periods[1:])))
+                finally:
+                    test_pyreader.reset()
+                    test_stat.reset()
+                    test_periods = []
 
         finally:
             train_pyreader.reset()
             train_stat.reset()
             train_periods = []
 
+    # only for ce
+    if args.enable_ce:
+        card_num = get_cards()
+        _loss = 0
+        _time = 0
+        try:
+            _time = ce_time
+            _loss = np.mean(ce_loss[1:])
+        except:
+            print("ce info error")
+        print("kpis\ttrain_seg_%s_duration_card%s\t%s" % (args.model, card_num, _time))
+        print("kpis\ttrain_seg_%s_loss_card%s\t%f" % (args.model, card_num, _loss))
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    if cards != '':
+        num = len(cards.split(","))
+    return num
 
 if __name__ == "__main__":
     train()
