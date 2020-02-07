@@ -203,9 +203,17 @@ def train(args):
     else:
         imagenet_reader = reader.ImageNetReader(0 if num_trainers > 1 else None)
         train_reader = imagenet_reader.train(settings=args)
-        places = place
-        if num_trainers <= 1 and args.use_gpu:
-            places = fluid.framework.cuda_places()
+        if args.use_gpu:
+            if num_trainers <= 1:
+                places = fluid.framework.cuda_places()
+            else:
+                places = place
+        else:
+            if num_trainers <= 1:
+                places = fluid.framework.cpu_places()
+            else:
+                places = place
+
         train_data_loader.set_sample_list_generator(train_reader, places)
 
         if args.validate:
