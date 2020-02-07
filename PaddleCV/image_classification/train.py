@@ -102,13 +102,16 @@ def validate(args,
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
-    compiled_program = best_strategy_compiled(
-        args,
-        test_prog,
-        test_fetch_list[0],
-        exe,
-        mode="val",
-        share_prog=train_prog)
+    if int(os.environ.get('PADDLE_TRAINERS_NUM', 1)) > 1:
+        compiled_program = test_prog
+    else:
+        compiled_program = best_strategy_compiled(
+            args,
+            test_prog,
+            test_fetch_list[0],
+            exe,
+            mode="val",
+            share_prog=train_prog)
     for batch in test_iter:
         t1 = time.time()
         test_batch_metrics = exe.run(program=compiled_program,
