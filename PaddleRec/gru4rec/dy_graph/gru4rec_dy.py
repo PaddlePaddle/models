@@ -21,6 +21,7 @@ import paddle.fluid.core as core
 from paddle.fluid.dygraph.nn import Embedding
 import paddle.fluid.framework as framework
 from paddle.fluid.optimizer import SGDOptimizer
+from paddle.fluid.optimizer import AdagradOptimizer
 from paddle.fluid.dygraph.base import to_variable
 import numpy as np
 import six
@@ -67,7 +68,7 @@ class SimpleGRURNN(fluid.Layer):
                 dtype="float32",
                 default_initializer=fluid.initializer.UniformInitializer(
                     low=-self._init_scale, high=self._init_scale))
-            self.weight_1_arr.append(self.add_parameter('w_%d' % i, weight_1))
+            self.weight_1_arr.append(self.add_parameter('w1_%d' % i, weight_1))
             weight_2 = self.create_parameter(
                 attr=fluid.ParamAttr(
                     initializer=fluid.initializer.UniformInitializer(
@@ -76,7 +77,7 @@ class SimpleGRURNN(fluid.Layer):
                 dtype="float32",
                 default_initializer=fluid.initializer.UniformInitializer(
                     low=-self._init_scale, high=self._init_scale))
-            self.weight_2_arr.append(self.add_parameter('w_%d' % i, weight_2))
+            self.weight_2_arr.append(self.add_parameter('w2_%d' % i, weight_2))
             weight_3 = self.create_parameter(
                 attr=fluid.ParamAttr(
                     initializer=fluid.initializer.UniformInitializer(
@@ -85,7 +86,7 @@ class SimpleGRURNN(fluid.Layer):
                 dtype="float32",
                 default_initializer=fluid.initializer.UniformInitializer(
                     low=-self._init_scale, high=self._init_scale))
-            self.weight_3_arr.append(self.add_parameter('w_%d' % i, weight_3))
+            self.weight_3_arr.append(self.add_parameter('w3_%d' % i, weight_3))
             bias_1 = self.create_parameter(
                 attr=fluid.ParamAttr(
                     initializer=fluid.initializer.UniformInitializer(
@@ -93,7 +94,7 @@ class SimpleGRURNN(fluid.Layer):
                 shape=[self._hidden_size * 2],
                 dtype="float32",
                 default_initializer=fluid.initializer.Constant(0.0))
-            self.bias_1_arr.append(self.add_parameter('b_%d' % i, bias_1))
+            self.bias_1_arr.append(self.add_parameter('b1_%d' % i, bias_1))
             bias_2 = self.create_parameter(
                 attr=fluid.ParamAttr(
                     initializer=fluid.initializer.UniformInitializer(
@@ -101,7 +102,7 @@ class SimpleGRURNN(fluid.Layer):
                 shape=[self._hidden_size * 1],
                 dtype="float32",
                 default_initializer=fluid.initializer.Constant(0.0))
-            self.bias_2_arr.append(self.add_parameter('b_%d' % i, bias_2))
+            self.bias_2_arr.append(self.add_parameter('b2_%d' % i, bias_2))
 
     def forward(self, input_embedding, init_hidden=None):
         hidden_array = []
@@ -278,10 +279,10 @@ def train_ptb_lm():
         init_scale = 0.1
         max_grad_norm = 5.0
         epoch_start_decay = 10
-        max_epoch = 3
+        max_epoch = 5
         dropout = 0.0
         lr_decay = 0.5
-        base_learning_rate = 1.0
+        base_learning_rate = 0.05
     elif model_type == "medium":
         num_layers = 2
         batch_size = 20
@@ -353,15 +354,22 @@ def train_ptb_lm():
         log_interval = total_batch_size // 20
 
         bd = []
-        lr_arr = [1.0]
+        lr_arr = [base_learning_rate]
         for i in range(1, max_epoch):
             bd.append(total_batch_size * i)
             new_lr = base_learning_rate * (lr_decay**
                                            max(i + 1 - epoch_start_decay, 0.0))
             lr_arr.append(new_lr)
 
-        sgd = SGDOptimizer(learning_rate=fluid.layers.piecewise_decay(
-            boundaries=bd, values=lr_arr))
+        sgd = AdagradOptimizer(
+            parameter_list=ptb_model.parameters(),
+            learning_rate=fluid.layers.piecewise_decay(
+                boundaries=bd, values=lr_arr))
+
+        print("parameters:--------------------------------")
+        for para in ptb_model.parameters():
+            print(para.name)
+        print("parameters:--------------------------------")
 
         def eval(model, data):
             print("begion to eval")
@@ -450,7 +458,7 @@ def train_ptb_lm():
             print("Saved model to: %s.\n" % save_model_dir)
             eval(ptb_model, test_data)
 
-        eval(ptb_model, test_data)
+        #eval(ptb_model, test_data)
 
 
 train_ptb_lm()
