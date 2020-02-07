@@ -1,8 +1,7 @@
 import paddle.fluid as fluid
 import numpy as np
-
-dict_dim = 1000
-emb_dim = 64
+import time
+from args import *
 
 
 def fc_layers(input, layers, acts, prefix):
@@ -59,7 +58,7 @@ def mmoe_layer(inputs, expert_num=8, gate_num=3):
     return outs
 
 
-def model():
+def model(dict_dim, emb_dim):
     label_like = fluid.layers.data(
         name="label_like",
         shape=[-1, 1],
@@ -116,13 +115,18 @@ def model():
     return cost, [a_data, label_like, label_comment, label_share]
 
 
-batch_size = 5
+args = parse_args()
+batch_size = args.batch_size
+dict_dim = args.dict_dim
+emb_dim = args.emb_dim
 
-loss, data_list = model()
-sgd = fluid.optimizer.SGD(learning_rate=0.001)
+print("batch_size:[%d], dict_dim:[%d], emb_dim:[%d], learning_rate:[%.4f]" %
+      (batch_size, dict_dim, emb_dim, args.base_lr))
+
+loss, data_list = model(dict_dim, emb_dim)
+sgd = fluid.optimizer.SGD(learning_rate=args.base_lr)
 sgd.minimize(loss)
-use_cuda = True
-place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
+place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
 feeder = fluid.DataFeeder(feed_list=data_list, place=place)
 exe = fluid.Executor(place)
 exe.run(fluid.default_startup_program())
@@ -131,6 +135,7 @@ for batch_id in range(100):
         np.random.randint(
             2, size=(batch_size, 1)).astype('int64') for i in range(4)
     ]
+    begin = time.time()
     loss_data, = exe.run(fluid.default_main_program(),
                          feed={
                              "a": data[0],
@@ -139,4 +144,6 @@ for batch_id in range(100):
                              "label_share": data[3]
                          },
                          fetch_list=[loss.name])
-    print(batch_id, " loss:", float(np.array(loss_data)))
+    end = time.time()
+    print("batch_id:[%d], loss:[%.5f], batch_time:[%.5f s]" %
+          (batch_id, float(np.array(loss_data)), end - begin))
