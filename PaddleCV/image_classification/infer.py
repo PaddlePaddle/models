@@ -162,7 +162,6 @@ def infer(args):
             parallel_data.append(image_data)
 
             if place_num == len(parallel_data):
-                print("&&&&&", place_num)
                 result = exe.run(
                     compiled_program,
                     fetch_list=fetch_list,
