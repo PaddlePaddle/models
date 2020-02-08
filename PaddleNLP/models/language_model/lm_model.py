@@ -190,38 +190,9 @@ def lm_model(hidden_size,
                 gate_input = layers.elementwise_add(gate_input, bias)
                 i, j, f, o = layers.split(gate_input, num_or_sections=4, dim=-1)
 
-                try:
-                    from paddle.fluid.contrib.layers import fused_elemwise_activation
-                    # fluid.contrib.layers.fused_elemwise_activation can do a fused
-                    # operation, like:
-                    # 1) x + sigmoid(y); x + tanh(y)
-                    # 2) tanh(x + y)
-                    # Now the unary operation supported in this fused op is limit, and
-                    # we will extent this operation to support more unary operations and
-                    # do this kind of fusion automitically in future version of paddle.fluid.
-                    # layers.sigmoid(i) * layers.tanh(j)
-                    tmp0 = fused_elemwise_activation(
-                        x=layers.tanh(j),
-                        y=i,
-                        functor_list=['elementwise_mul', 'sigmoid'],
-                        save_intermediate_out=False)
-                    # pre_cell * layers.sigmoid(f)
-                    tmp1 = fused_elemwise_activation(
-                        x=pre_cell,
-                        y=f,
-                        functor_list=['elementwise_mul', 'sigmoid'],
-                        save_intermediate_out=False)
-                    c = tmp0 + tmp1
-                    # layers.tanh(c) * layers.sigmoid(o)
-                    m = fused_elemwise_activation(
-                        x=layers.tanh(c),
-                        y=o,
-                        functor_list=['elementwise_mul', 'sigmoid'],
-                        save_intermediate_out=False)
-                except ImportError:
-                    c = pre_cell * layers.sigmoid(f) + layers.sigmoid(
-                        i) * layers.tanh(j)
-                    m = layers.tanh(c) * layers.sigmoid(o)
+                c = pre_cell * layers.sigmoid(f) + layers.sigmoid(
+                    i) * layers.tanh(j)
+                m = layers.tanh(c) * layers.sigmoid(o)
 
                 hidden_array[k] = m
                 cell_array[k] = c
