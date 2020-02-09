@@ -323,6 +323,10 @@ class CycleGAN(object):
                 fake_pool_B = B_pool.pool_image(fake_B_tmp)
                 fake_pool_A = A_pool.pool_image(fake_A_tmp)
 
+                if self.cfg.enable_ce:
+                    fake_pool_B = fake_B_tmp
+                    fake_pool_A = fake_A_tmp
+
                 # optimize the d_A network
                 d_A_loss = exe.run(
                     d_A_trainer_program,
