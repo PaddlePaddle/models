@@ -88,9 +88,9 @@ class PrePostProcessLayer(Layer):
                             bias_attr=fluid.ParamAttr(
                                 initializer=fluid.initializer.Constant(0.)))))
             elif cmd == "d":  # add dropout
-                if dropout_rate:
-                    self.functors.append(lambda x: layers.dropout(
-                        x, dropout_prob=dropout_rate, is_test=False))
+                self.functors.append(lambda x: layers.dropout(
+                    x, dropout_prob=dropout_rate, is_test=False)
+                                     if dropout_rate else x)
 
     def forward(self, x, residual=None):
         for i, cmd in enumerate(self.process_cmd):
