@@ -122,7 +122,8 @@ def eval(args):
     exe.run(fluid.default_startup_program())
     if args.use_gpu:
         places = fluid.framework.cuda_places()
-
+    else:
+        places = fluid.framework.cpu_places()
     compiled_program = fluid.compiler.CompiledProgram(
         test_program).with_data_parallel(places=places)
 
@@ -137,7 +138,8 @@ def eval(args):
     cnt = 0
     parallel_data = []
     parallel_id = []
-    place_num = paddle.fluid.core.get_cuda_device_count()
+    place_num = paddle.fluid.core.get_cuda_device_count(
+    ) if args.use_gpu else int(os.environ.get('CPU_NUM', 1))
     real_iter = 0
     info_dict = {}
 
