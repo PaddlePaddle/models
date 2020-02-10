@@ -4,17 +4,21 @@
 
 **代码结构**
 
-    ├── run_mul_v1.sh      # 多卡训练启动脚本_v1
-    ├── run_mul_v2.sh      # 多卡训练启动脚本_v2
-    ├── run_sing_v1.sh     # 单卡训练启动脚本_v1
-    ├── run_sing_v2.sh     # 单卡训练启动脚本_v2
-    ├── run_cpu_v1.sh      # CPU训练启动脚本_v1
-    ├── run_cpu_v2.sh      # CPU训练启动脚本_v2
-    ├── train.py           # 训练入口
-    ├── mobilenet_v1.py    # 网络结构v1
-    ├── mobilenet_v2.py    # 网络结构v2
-    ├── reader.py          # 数据reader
-    ├── utils              # 基础工具目录
+    ├── run_mul_v1.sh                 # 多卡训练启动脚本_v1
+    ├── run_mul_v1_checkpoint.sh      # 加载checkpoint多卡训练启动脚本_v1
+    ├── run_mul_v2.sh                 # 多卡训练启动脚本_v2
+    ├── run_mul_v2_checkpoint.sh      # 加载checkpoint多卡训练启动脚本_v2
+    ├── run_sing_v1.sh                # 单卡训练启动脚本_v1
+    ├── run_sing_v1_checkpoint.sh     # 加载checkpoint单卡训练启动脚本_v1
+    ├── run_sing_v2.sh                # 单卡训练启动脚本_v2
+    ├── run_sing_v2_checkpoint.sh     # 加载checkpoint单卡训练启动脚本_v2
+    ├── run_cpu_v1.sh                 # CPU训练启动脚本_v1
+    ├── run_cpu_v2.sh                 # CPU训练启动脚本_v2
+    ├── train.py                      # 训练入口
+    ├── mobilenet_v1.py               # 网络结构v1
+    ├── mobilenet_v2.py               # 网络结构v2
+    ├── reader.py                     # 数据reader
+    ├── utils                         # 基础工具目录
 
 **数据准备**
 
@@ -26,6 +30,7 @@
 
     bash run_mul_v1.sh
     bash run_mul_v2.sh
+
 若使用单卡训练，启动方式如下:
 
     bash run_sing_v1.sh
@@ -36,6 +41,16 @@
     bash run_cpu_v1.sh
     bash run_cpu_v2.sh
 
+训练过程中,checkpoint会保存在参数model_save_dir指定的文件夹中,我们支持加载checkpoint继续训练.
+加载checkpoint使用4卡训练，启动方式如下:
+
+    bash run_mul_v1_checkpoint.sh
+    bash run_mul_v2_checkpoint.sh
+
+加载checkpoint使用单卡训练，启动方式如下:
+
+    bash run_sing_v1_checkpoint.sh
+    bash run_sing_v2_checkpoint.sh
 
 **模型性能**
 

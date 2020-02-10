@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#order: standard library, third party, local library 
 import os
-import numpy as np
 import time
-import sys
+import math
 import sys
 import numpy as np
 import argparse
-import ast
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.initializer import MSRA
@@ -27,11 +26,8 @@ from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.layer_helper import LayerHelper
 from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, Linear
 from paddle.fluid.dygraph.base import to_variable
-
 from paddle.fluid import framework
 
-import math
-import sys
 
 
 class ConvBNLayer(fluid.dygraph.Layer):
