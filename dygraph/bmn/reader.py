@@ -47,6 +47,8 @@ class BMNReader():
             self.num_threads = 1  # set num_threads as 1 for test and infer
 
     def get_dataset_dict(self):
+        assert (os.path.exists(self.feat_path)), "Input feature path not exists"
+        assert (os.listdir(self.feat_path)), "Input feature file not exists"
         self.video_dict = {}
         if self.mode == "infer":
             annos = json.load(open(self.file_list))
@@ -265,7 +267,8 @@ class BMNReader():
                     tmp_list = video_list[i * file_num:]
                 reader_lists[i] = tmp_list
 
-            queue = multiprocessing.Queue(queue_size)
+            manager = multiprocessing.Manager()
+            queue = manager.Queue(queue_size)
             p_list = [None] * len(reader_lists)
             for i in range(len(reader_lists)):
                 reader_list = reader_lists[i]
