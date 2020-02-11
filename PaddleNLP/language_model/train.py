@@ -191,6 +191,12 @@ def main():
 
     build_strategy = fluid.BuildStrategy()
     build_strategy.fuse_all_optimizer_ops = True
+    try:
+        fluid.require_version(min_version='1.7.0')
+        build_strategy.enable_auto_fusion = args.enable_auto_fusion
+    except Exception as e:
+        logger.info("PaddlePaddle version 1.7.0 or higher is "
+                    "required when you want to enable fusion_group.")
 
     if args.parallel:
         train_program = fluid.compiler.CompiledProgram(
@@ -438,32 +444,35 @@ def main():
                 print("ptblm\tlstm_language_model_%s_loss_card%d\t%s" %
                       (args.rnn_model, device_count, train_ppl[0]))
 
-            # NOTE(zjl): sometimes we have not enough data for eval if batch_size is large, i.e., 2100
-            # Just skip to avoid error
-            def is_valid_data(data, batch_size, num_steps):
-                data_len = len(data)
-                batch_len = data_len // batch_size
-                epoch_size = (batch_len - 1) // num_steps
-                return epoch_size >= 1
+            if not args.profile:
+                # NOTE(zjl): sometimes we have not enough data for eval if batch_size is large, i.e., 2100
+                # Just skip to avoid error
+                def is_valid_data(data, batch_size, num_steps):
+                    data_len = len(data)
+                    batch_len = data_len // batch_size
+                    epoch_size = (batch_len - 1) // num_steps
+                    return epoch_size >= 1
 
-            valid_data_valid = is_valid_data(valid_data, config.batch_size,
-                                             config.num_steps)
-            if valid_data_valid:
-                valid_ppl = eval(valid_data)
-                print("Valid ppl: %.5f" % valid_ppl[0])
-            else:
-                print(
-                    'WARNING: length of valid_data is {}, which is not enough for batch_size {} and num_steps {}'.
-                    format(
-                        len(valid_data), config.batch_size, config.num_steps))
+                valid_data_valid = is_valid_data(valid_data, config.batch_size,
+                                                 config.num_steps)
+                if valid_data_valid:
+                    valid_ppl = eval(valid_data)
+                    print("Valid ppl: %.5f" % valid_ppl[0])
+                else:
+                    print(
+                        'WARNING: length of valid_data is {}, which is not enough for batch_size {} and num_steps {}'.
+                        format(
+                            len(valid_data), config.batch_size,
+                            config.num_steps))
 
-            save_model_dir = os.path.join(args.save_model_dir, str(epoch_id))
-            if not os.path.exists(save_model_dir):
-                mkpath(save_model_dir)
-            save_model_dir = os.path.join(save_model_dir, 'params')
+                save_model_dir = os.path.join(args.save_model_dir,
+                                              str(epoch_id))
+                if not os.path.exists(save_model_dir):
+                    mkpath(save_model_dir)
+                save_model_dir = os.path.join(save_model_dir, 'params')
 
-            fluid.save(main_program, save_model_dir)
-            print("Saved model to: %s.\n" % save_model_dir)
+                fluid.save(main_program, save_model_dir)
+                print("Saved model to: %s.\n" % save_model_dir)
 
     with profile_context(args.profile, args.profiler_path):
         train()
