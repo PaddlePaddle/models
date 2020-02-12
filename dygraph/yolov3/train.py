@@ -87,7 +87,7 @@ def train():
 
         if cfg.finetune:
             restore, _ = fluid.load_dygraph(cfg.finetune)
-            model.set_dict(restore)
+            model.set_dict(restore, use_structured_name=True)
 
         if args.use_data_parallel:
             model = fluid.dygraph.parallel.DataParallel(model, strategy)
