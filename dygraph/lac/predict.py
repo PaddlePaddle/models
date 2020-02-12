@@ -50,7 +50,7 @@ def do_infer(args):
         load_path = args.init_checkpoint
         state_dict, _ = fluid.dygraph.load_dygraph(load_path)
         #import ipdb; ipdb.set_trace()
-        state_dict["crf_decoding_0.crfw"]=state_dict["linear_chain_crf_0.crfw"]
+        state_dict["linear_chain_crf.weight"]=state_dict["crf_decoding.weight"]
         model.set_dict(state_dict)
         model.eval()
         chunk_eval = Chunk_eval(int(math.ceil((dataset.num_labels - 1) / 2.0)), "IOB")

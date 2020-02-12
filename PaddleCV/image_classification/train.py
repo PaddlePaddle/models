@@ -102,13 +102,16 @@ def validate(args,
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
-    compiled_program = best_strategy_compiled(
-        args,
-        test_prog,
-        test_fetch_list[0],
-        exe,
-        mode="val",
-        share_prog=train_prog)
+    if int(os.environ.get('PADDLE_TRAINERS_NUM', 1)) > 1:
+        compiled_program = test_prog
+    else:
+        compiled_program = best_strategy_compiled(
+            args,
+            test_prog,
+            test_fetch_list[0],
+            exe,
+            mode="val",
+            share_prog=train_prog)
     for batch in test_iter:
         t1 = time.time()
         test_batch_metrics = exe.run(program=compiled_program,
@@ -203,9 +206,17 @@ def train(args):
     else:
         imagenet_reader = reader.ImageNetReader(0 if num_trainers > 1 else None)
         train_reader = imagenet_reader.train(settings=args)
-        places = place
-        if num_trainers <= 1 and args.use_gpu:
-            places = fluid.framework.cuda_places()
+        if args.use_gpu:
+            if num_trainers <= 1:
+                places = fluid.framework.cuda_places()
+            else:
+                places = place
+        else:
+            if num_trainers <= 1:
+                places = fluid.framework.cpu_places()
+            else:
+                places = place
+
         train_data_loader.set_sample_list_generator(train_reader, places)
 
         if args.validate:

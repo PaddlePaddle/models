@@ -106,9 +106,10 @@ def infer(args):
     place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    places = place
     if args.use_gpu:
         places = fluid.framework.cuda_places()
+    else:
+        places = fluid.framework.cpu_places()
     compiled_program = fluid.compiler.CompiledProgram(
         test_program).with_data_parallel(places=places)
 
@@ -147,7 +148,8 @@ def infer(args):
     info = {}
     parallel_data = []
     parallel_id = []
-    place_num = paddle.fluid.core.get_cuda_device_count() if args.use_gpu else 1
+    place_num = paddle.fluid.core.get_cuda_device_count(
+    ) if args.use_gpu else int(os.environ.get('CPU_NUM', 1))
     if os.path.exists(args.save_json_path):
         logger.warning("path: {} Already exists! will recover it\n".format(
             args.save_json_path))

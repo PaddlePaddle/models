@@ -305,16 +305,22 @@ def infer(args):
         id2name = test_reader.id2name
         for data in loader():
             real_img, image_name = data[0]['input'], data[0]['image_name']
-            image_name = id2name[np.array(image_name).astype('int32')[0]]
-            print("read: ", image_name)
+            image_names = []
+            for name in image_name:
+                image_names.append(id2name[np.array(name).astype('int32')[0]])
+            print("read: ", image_names)
             fake_temp = exe.run(fetch_list=[fake.name],
                                 feed={"input": real_img})
-            fake_temp = np.squeeze(fake_temp[0]).transpose([1, 2, 0])
-            input_temp = np.squeeze(np.array(real_img)[0]).transpose([1, 2, 0])
+            fake_temp = save_batch_image(fake_temp[0])
+            input_temp = save_batch_image(np.array(real_img))
 
-            imageio.imwrite(
-                os.path.join(args.output, "fake_" + image_name), (
-                    (fake_temp + 1) * 127.5).astype(np.uint8))
+            for i, name in enumerate(image_names):
+                imageio.imwrite(
+                    os.path.join(args.output, "fake_" + name), (
+                        (fake_temp[i] + 1) * 127.5).astype(np.uint8))
+                imageio.imwrite(
+                    os.path.join(args.output, "input_" + name), (
+                        (input_temp[i] + 1) * 127.5).astype(np.uint8))
     elif args.model_net == 'SPADE':
         test_reader = triplex_reader_creator(
             image_dir=args.dataset_dir,
