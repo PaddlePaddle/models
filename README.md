@@ -75,9 +75,12 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集    | 评估指标        |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | --------- | --------------- |
-| [ICNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/icnet) | 主要用于图像实时语义分割，能够兼顾速度和准确性，易于线上部署 | Cityscape | Mean IoU=67.0%  |
-| [DeepLab   V3+](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/deeplabv3%2B) | 通过 encoder-decoder 进行多尺度信息的融合，同时保留了原来的空洞卷积和 ASSP 层，   其骨干网络使用了 Xception 模型，提高了语义分割的健壮性和运行速率 | Cityscape | Mean IoU=78.81% |
-
+| [ICNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/icnet) | 主要用于图像实时语义分割，能够兼顾速度和准确性，易于线上部署 | Cityscapes | Mean IoU=67.0%  |
+| [DeepLab   V3+](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/deeplabv3%2B) | 通过 encoder-decoder 进行多尺度信息的融合，同时保留了原来的空洞卷积和 ASSP 层，   其骨干网络使用了 Xception 模型，提高了语义分割的健壮性和运行速率 | Cityscapes | Mean IoU=78.81% |
+| [PSPNet (res101)](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/Research/SemSegPaddle) | 通过利用不同子区域和全局的上下文信息来增强语义分割质量，同时提出deeply supervised 的辅助loss去改善模型的优化 | Cityscapes | Mean IoU = 78.1 |
+| [GloRe (res101)](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/Research/SemSegPaddle)| 提出一个轻量级的、可端到端训练的全局推理单元GloRe来高效推理image regions之间的关系，增强了模型上下文建模能力| Cityscapes | Mean IoU = 78.4 |
+| [PSPNet (res101)](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/Research/SemSegPaddle) | -| PASCAL Context | Mean IoU = 48.9  |
+| [GloRe (res101)](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/Research/SemSegPaddle)| -| PASCAL Context | Mean IoU = 48.4 |
 ### 关键点检测
 
 人体骨骼关键点检测 (Pose Estimation) 主要检测人体的一些关键点，如关节，五官等，通过关键点描述人体骨骼信息。人体骨骼关键点检测对于描述人体姿态，预测人体行为至关重要。是诸多计算机视觉任务的基础，例如动作分类，异常行为检测，以及自动驾驶等等。
@@ -271,6 +274,7 @@ PaddleSlim 模型压缩工具库的实验结果和模型库见 [详细实验结�
 
 | 版本号        | tar包                                                         | zip包                                                         |
 | ------------- | ------------------------------------------------------------- | ------------------------------------------------------------- |
+| models 1.6    | https://paddlepaddle-modles.bj.bcebos.com/models-1.6.tar.gz   | https://paddlepaddle-modles.bj.bcebos.com/models-1.6.zip   |
 | models 1.5.1  | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.tar.gz | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.1.zip |
 | models 1.5    | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.tar.gz   | https://paddlepaddle-modles.bj.bcebos.com/models-1.5.zip   |
 | models 1.4    | https://paddlepaddle-modles.bj.bcebos.com/models-1.4.tar.gz   | https://paddlepaddle-modles.bj.bcebos.com/models-1.4.zip   |

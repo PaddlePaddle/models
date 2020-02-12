@@ -1,0 +1,14 @@
+*log*
+checkpoints*
+build
+output
+result_dir
+pp_pointrcnn*
+data/gt_database
+utils/pts_utils/dist
+utils/pts_utils/build
+utils/pts_utils/pts_utils.egg-info
+utils/cyops/*.c
+utils/cyops/*.so
+ext_op/src/*.o
+ext_op/src/*.so

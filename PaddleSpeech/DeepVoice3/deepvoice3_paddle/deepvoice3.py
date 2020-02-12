@@ -206,7 +206,7 @@ class Encoder(dg.Layer):
         Encode text sequence.
         
         Args:
-            x (Variable): Shape(B, T_enc, 1), dtype: int64. Ihe input text
+            x (Variable): Shape(B, T_enc), dtype: int64. Ihe input text
                 indices. T_enc means the timesteps of decoder input x.
             speaker_embed (Variable, optional): Shape(Batch_size, speaker_dim),
                 dtype: float32. Speaker embeddings. This arg is not None only
@@ -591,10 +591,10 @@ class Decoder(dg.Layer):
                 of text inputs for each example.
             inputs (Variable): Shape(B, C_mel, 1, T_mel), ground truth
                 mel-spectrogram, which is used as decoder inputs when training.
-            text_positions (Variable): Shape(B, T_enc, 1), dtype: int64.
+            text_positions (Variable): Shape(B, T_enc), dtype: int64.
                 Positions indices for text inputs for the encoder, where 
                 T_enc means the encoder timesteps.
-            frame_positions (Variable): Shape(B, T_dec // r, 1), dtype: 
+            frame_positions (Variable): Shape(B, T_dec // r), dtype: 
                 int64. Positions indices for each decoder time steps.
             speaker_embed: shape(batch_size, speaker_dim), speaker embedding, 
                 only used for multispeaker model.
@@ -717,7 +717,7 @@ class Decoder(dg.Layer):
                 values (Variable): shape(B, C_emb, 1, T_enc), the value
                     representation from an encoder, where C_emb means
                     text embedding size.
-            text_positions (Variable): Shape(B, T_enc, 1), dtype: int64.
+            text_positions (Variable): Shape(B, T_enc), dtype: int64.
                 Positions indices for text inputs for the encoder, where 
                 T_enc means the encoder timesteps.
                
@@ -789,7 +789,7 @@ class Decoder(dg.Layer):
 
         while True:
             frame_pos = fluid.layers.fill_constant(
-                shape=[B, 1, 1], value=t + 1, dtype="int64")
+                shape=[B, 1], value=t + 1, dtype="int64")
             w = self.query_position_rate
             if self.n_speakers > 1:
                 w = w * fluid.layers.reshape(
@@ -1222,19 +1222,19 @@ class DeepVoiceTTS(dg.Layer):
         Encode text sequence and decode with ground truth mel spectrogram.
                 
         Args:
-            text_sequences (Variable): Shape(B, T_enc, 1), dtype: int64. Ihe
+            text_sequences (Variable): Shape(B, T_enc), dtype: int64. Ihe
                 input text indices. T_enc means the timesteps of text_sequences.
             valid_lengths (Variable): shape(batch_size,), dtype: int64,
                 valid lengths for each example in text_sequences.
             mel_inputs (Variable): Shape(B, C_mel, 1, T_mel), ground truth
                 mel-spectrogram, which is used as decoder inputs when training. 
-            speaker_indices (Variable, optional): Shape(Batch_size, 1),
+            speaker_indices (Variable, optional): Shape(Batch_size),
                 dtype: int64. Speaker index for each example. This arg is not
                 None only when the model is a multispeaker model.
-            text_positions (Variable): Shape(B, T_enc, 1), dtype: int64.
+            text_positions (Variable): Shape(B, T_enc), dtype: int64.
                 Positions indices for text inputs for the encoder, where 
                 T_enc means the encoder timesteps.
-            frame_positions (Variable): Shape(B, T_dec // r, 1), dtype: 
+            frame_positions (Variable): Shape(B, T_dec // r), dtype: 
                 int64. Positions indices for each decoder time steps.
 
         Returns:
@@ -1295,12 +1295,12 @@ class DeepVoiceTTS(dg.Layer):
         Encode text sequence and decode without ground truth mel spectrogram.
         
         Args:
-            text_sequences (Variable): Shape(B, T_enc, 1), dtype: int64. Ihe
+            text_sequences (Variable): Shape(B, T_enc), dtype: int64. Ihe
                 input text indices. T_enc means the timesteps of text_sequences.
-            text_positions (Variable): Shape(B, T_enc, 1), dtype: int64.
+            text_positions (Variable): Shape(B, T_enc), dtype: int64.
                 Positions indices for text inputs for the encoder, where 
                 T_enc means the encoder timesteps.
-            speaker_indices (Variable, optional): Shape(Batch_size, 1),
+            speaker_indices (Variable, optional): Shape(Batch_size),
                 dtype: int64. Speaker index for each example. This arg is not
                 None only when the model is a multispeaker model.
 
@@ -1423,7 +1423,7 @@ class ConvS2S(dg.Layer):
         Encode text sequence and decode with ground truth mel spectrogram.
 
         Args:
-            text_sequences (Variable): Shape(B, T_enc, 1), dtype: int64. Ihe
+            text_sequences (Variable): Shape(B, T_enc), dtype: int64. Ihe
                 input text indices. T_enc means the timesteps of text_sequences.
             valid_lengths (Variable): shape(batch_size,), dtype: int64,
                 valid lengths for each example in text_sequences.
@@ -1432,10 +1432,10 @@ class ConvS2S(dg.Layer):
             speaker_embed (Variable, optional): Shape(Batch_size, speaker_dim),
                 dtype: float32. Speaker embeddings. This arg is not None only
                 when the model is a multispeaker model.
-            text_positions (Variable): Shape(B, T_enc, 1), dtype: int64.
+            text_positions (Variable): Shape(B, T_enc), dtype: int64.
                 Positions indices for text inputs for the encoder, where 
                 T_enc means the encoder timesteps.
-            frame_positions (Variable): Shape(B, T_dec // r, 1), dtype: 
+            frame_positions (Variable): Shape(B, T_dec // r), dtype: 
                 int64. Positions indices for each decoder time steps.
 
         Returns:
@@ -1466,9 +1466,9 @@ class ConvS2S(dg.Layer):
         Encode text sequence and decode without ground truth mel spectrogram.
         
         Args:
-            text_sequences (Variable): Shape(B, T_enc, 1), dtype: int64. Ihe
+            text_sequences (Variable): Shape(B, T_enc), dtype: int64. Ihe
                 input text indices. T_enc means the timesteps of text_sequences.
-            text_positions (Variable): Shape(B, T_enc, 1), dtype: int64.
+            text_positions (Variable): Shape(B, T_enc), dtype: int64.
                 Positions indices for text inputs for the encoder, where 
                 T_enc means the encoder timesteps.
             speaker_embed (Variable, optional): Shape(Batch_size, speaker_dim),

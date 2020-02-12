@@ -28,7 +28,7 @@ class SimNetProcessor(object):
         self.valid_label = np.array([])
         self.test_label = np.array([])
 
-    def get_reader(self, mode):
+    def get_reader(self, mode, epoch=0):
         """
         Get Reader
         """
@@ -85,34 +85,35 @@ class SimNetProcessor(object):
                             title = [0]
                         yield [query, title]
             else:
-                with io.open(self.args.train_data_dir, "r",
-                                 encoding="utf8") as file:
-                    for line in file:
-                        query, pos_title, neg_title = line.strip().split("\t")
-                        if len(query) == 0 or len(pos_title) == 0 or len(
-                                neg_title) == 0:
-                            logging.warning(
-                                "line not match format in test file")
-                            continue
-                        query = [
-                            self.vocab[word] for word in query.split(" ")
-                            if word in self.vocab
-                        ]
-                        pos_title = [
-                            self.vocab[word] for word in pos_title.split(" ")
-                            if word in self.vocab
-                        ]
-                        neg_title = [
-                            self.vocab[word] for word in neg_title.split(" ")
-                            if word in self.vocab
-                        ]
-                        if len(query) == 0:
-                            query = [0]
-                        if len(pos_title) == 0:
-                            pos_title = [0]
-                        if len(neg_title) == 0:
-                            neg_title = [0]
-                        yield [query, pos_title, neg_title]
+                for idx in range(epoch):
+                    with io.open(self.args.train_data_dir, "r",
+                                    encoding="utf8") as file:
+                        for line in file:
+                            query, pos_title, neg_title = line.strip().split("\t")
+                            if len(query) == 0 or len(pos_title) == 0 or len(
+                                    neg_title) == 0:
+                                logging.warning(
+                                    "line not match format in test file")
+                                continue
+                            query = [
+                                self.vocab[word] for word in query.split(" ")
+                                if word in self.vocab
+                            ]
+                            pos_title = [
+                                self.vocab[word] for word in pos_title.split(" ")
+                                if word in self.vocab
+                            ]
+                            neg_title = [
+                                self.vocab[word] for word in neg_title.split(" ")
+                                if word in self.vocab
+                            ]
+                            if len(query) == 0:
+                                query = [0]
+                            if len(pos_title) == 0: 
+                                pos_title = [0]
+                            if len(neg_title) == 0:
+                                neg_title = [0]
+                            yield [query, pos_title, neg_title]
 
         def reader_with_pointwise():
             """
@@ -166,30 +167,31 @@ class SimNetProcessor(object):
                             title = [0]
                         yield [query, title]
             else:
-                with io.open(self.args.train_data_dir, "r",
-                                encoding="utf8") as file:
-                    for line in file:
-                        query, title, label = line.strip().split("\t")
-                        if len(query) == 0 or len(title) == 0 or len(
-                                label) == 0 or not label.isdigit() or int(
-                                    label) not in [0, 1]:
-                            logging.warning(
-                                "line not match format in test file")
-                            continue
-                        query = [
-                            self.vocab[word] for word in query.split(" ")
-                            if word in self.vocab
-                        ]
-                        title = [
-                            self.vocab[word] for word in title.split(" ")
-                            if word in self.vocab
-                        ]
-                        label = int(label)
-                        if len(query) == 0:
-                            query = [0]
-                        if len(title) == 0:
-                            title = [0]
-                        yield [query, title, label]
+                for idx in range(epoch):
+                    with io.open(self.args.train_data_dir, "r",
+                                    encoding="utf8") as file:
+                        for line in file:
+                            query, title, label = line.strip().split("\t")
+                            if len(query) == 0 or len(title) == 0 or len(
+                                    label) == 0 or not label.isdigit() or int(
+                                        label) not in [0, 1]:
+                                logging.warning(
+                                    "line not match format in test file")
+                                continue
+                            query = [
+                                self.vocab[word] for word in query.split(" ")
+                                if word in self.vocab
+                            ]
+                            title = [
+                                self.vocab[word] for word in title.split(" ")
+                                if word in self.vocab
+                            ]
+                            label = int(label)
+                            if len(query) == 0:
+                                query = [0]
+                            if len(title) == 0:
+                                title = [0]
+                            yield [query, title, label]
 
         if self.args.task_mode == "pairwise":
             return reader_with_pairwise

@@ -12,7 +12,6 @@
 - [FAQ](#faq)
 - [参考论文](#参考论文)
 - [版本更新](#版本更新)
-- [作者](#作者)
 
 ## 模型简介
 
@@ -311,10 +310,6 @@ SPADE整体的网络结构[10]
 ## 版本更新
 
 - 6/2019 新增CGAN, DCGAN, Pix2Pix, CycleGAN,StarGAN, AttGAN, STGAN
-
-## 作者
-- [ceci3](https://github.com/ceci3)
-- [zhumanyu](https://github.com/zhumanyu)
 
 ## 如何贡献代码
 如果你可以修复某个issue或者增加一个新功能，欢迎给我们提交PR。如果对应的PR被接受了，我们将根据贡献的质量和难度进行打分（0-5分，越高越好）。如果你累计获得了10分，可以联系我们获得面试机会或者为你写推荐信。

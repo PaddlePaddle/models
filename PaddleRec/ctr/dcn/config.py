@@ -1,9 +1,13 @@
-#!/usr/bin/env python
-# coding: utf-8
 import argparse
 """
 global params
 """
+
+
+def boolean_string(s):
+    if s.lower() not in {'false', 'true'}:
+        raise ValueError('Not a valid boolean string')
+    return s.lower() == 'true'
 
 
 def parse_args():
@@ -63,7 +67,7 @@ def parse_args():
         help='Cross net l2 regularizer coefficient')
     parser.add_argument(
         '--use_bn',
-        type=bool,
+        type=boolean_string,
         default=True,
         help='Whether use batch norm in dnn part')
     parser.add_argument(
@@ -75,5 +79,7 @@ def parse_args():
     parser.add_argument(
         '--clip_by_norm', type=float, default=100.0, help="gradient clip norm")
     parser.add_argument('--print_steps', type=int, default=100)
+    parser.add_argument(
+        '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
 
     return parser.parse_args()

@@ -15,6 +15,8 @@ English | [中文](README.md)
 - [Advanced Usage](#advanced-usage)
     - [Mixup Training](#mixup-training)
     - [Using Mixed-Precision Training](#using-mixed-precision-training)
+    - [Profiling](#profiling)
+    - [Preprocessing with Nvidia DALI](#preprocessing-with-nvidia-dali)
     - [Custom Dataset](#custom-dataset)
 - [Supported Models and Performances](#supported-models-and-performances)
 - [Reference](#reference)
@@ -33,7 +35,7 @@ We also recommend users to take a look at the  [IPython Notebook demo](https:/
 
 ### Installation
 
-Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.6 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.6, please follow the instructions in [installation document](http://paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html) and make an update.
+Running samples in this directory requires Python 2.7 and later, CUDA 8.0 and later, CUDNN 7.0 and later, python package: numpy and opencv-python, PaddelPaddle Fluid v1.6 and later, the latest release version is recommended, If the PaddlePaddle on your device is lower than v1.6, please follow the instructions in [installation document](https://www.paddlepaddle.org.cn/install/quick) and make an update.
 
 ### Data preparation
 
@@ -121,7 +123,7 @@ Solver and hyperparameters:
 * **model**: name model to use. Default: "ResNet50".
 * **total_images**: total number of images in the training set. Default: 1281167.
 * **class_dim**: the class number of the classification task. Default: 1000.
-* **image_shape**: input size of the network. Default: "3,224,224".
+* **image_shape**: input size of the network. Default: 3 224 224 .
 * **num_epochs**: the number of epochs. Default: 120.
 * **batch_size**: the batch size of all devices. Default: 8.
 * **test_batch_size**: the test batch size, Default: 16
@@ -139,7 +141,6 @@ Reader and preprocess:
 * **lower_ratio**: the lower ratio in ramdom crop. Default:3./4. .
 * **upper_ration**: the upper ratio in ramdom crop. Default:4./3. .
 * **resize_short_size**: the resize_short_size. Default: 256.
-* **crop_size**: the crop size, Default: 224.
 * **use_mixup**: whether to use mixup data processing or not. Default:False.
 * **mixup_alpha**: the mixup_alpha parameter. Default: 0.2.
 * **use_aa**: whether to use auto augment data processing or not. Default:False.
@@ -152,19 +153,29 @@ Reader and preprocess:
 
 Switch:
 
+* **validate**: whether to validate when training. Default: True.
 * **use_gpu**: whether to use GPU or not. Default: True.
 * **use_label_smoothing**: whether to use label_smoothing or not. Default:False.
 * **label_smoothing_epsilon**: the label_smoothing_epsilon. Default:0.1.
-* **random_seed**: random seed for debugging, Default: 1000.
 * **padding_type**: padding type of convolution for efficientNet, Default: "SAME".
 * **use_se**: whether to use Squeeze-and-Excitation module in efficientNet, Default: True.
 * **use_ema**: whether to use ExponentialMovingAverage or not. Default: False.
 * **ema_decay**: the value of ExponentialMovingAverage decay rate. Default: 0.9999.
 
+Profiling:
+
+* **enable_ce**: whether to start CE, Default: False
+* **random_seed**: random seed, Default: None
+* **is_profiler**: whether to start profilier, Default: 0
+* **profilier_path**: path to save profilier output, Default: 'profilier_path'
+* **max_iter**: maximum training batch, Default: 0
+* **same_feed**: whether to feed same data in the net, Default: 0
+
+
 **data reader introduction:** Data reader is defined in ```reader.py```, default reader is implemented by opencv. In the [Training](#training) Stage, random crop and flipping are applied, while center crop is applied in the [Evaluation](#evaluation) and [Inference](#inference) stages. Supported data augmentation includes:
 
 * rotation
-* color jitter (haven't implemented in cv2_reader)
+* color jitter
 * random crop
 * center crop
 * resize
@@ -186,6 +197,10 @@ Note: Add and adjust other parameters accroding to specific models and tasks.
 ### Evaluation
 
 Evaluation is to evaluate the performance of a trained model. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Then top1/top5 accuracy can be obtained by running the following command:
+
+**parameters**
+
+* **save_json_path**: whether to save output, default: None
 
 ```
 python eval.py \
@@ -215,7 +230,9 @@ python eval.py \
 
 * **save_inference**: whether to save binary model, Default: False
 * **topk**: the number of sorted predicated labels to show, Default: 1
-* **label_path**: readable label filepath, Default: "/utils/tools/readable_label.txt"
+* **class_map_path**: readable label filepath, Default: "/utils/tools/readable_label.txt"
+* **save_json_path**: whether to save output, Default: None
+* **image_path**: whether to indicate the single image path to predict, Default: None
 
 Inference is used to get prediction score or image features based on trained models. One can download [pretrained models](#supported-models-and-performances) and set its path to ```path_to_pretrain_model```. Run following command then obtain prediction score.
 
@@ -236,8 +253,71 @@ Refer to [mixup: Beyond Empirical Risk Minimization](https://arxiv.org/abs/1710.
 
 ### Using Mixed-Precision Training
 
-Mixed-precision part is moving to PaddlePaddle/Fleet now.
+Set --use_fp16=True to sart Automatic Mixed Precision (AMP) Training. During the training process, the float16 data type will be used to speed up the training performance. You may need to use the --scale_loss parameter to avoid the accuracy dropping, such as setting --scale_loss=128.0.
 
+After configuring the data path (modify the value of `DATA_DIR` in [scripts/train/ResNet50_fp16.sh](scripts/train/ResNet50_fp16.sh)), you can enable ResNet50 to start AMP Training by executing the command of `bash run.sh train ResNet50_fp16`.
+
+Refer to [PaddlePaddle/Fleet](https://github.com/PaddlePaddle/Fleet/tree/develop/benchmark/collective/resnet) for the multi-machine and multi-card training.
+
+Performing on Tesla V100 single machine with 8 cards, two machines with 16 cards and four machines with 32 cards, the performance of ResNet50 AMP training is shown as below (enable DALI).
+
+* BatchSize = 256
+
+nodes*crads|throughput|speedup|test\_acc1|test\_acc5
+---|---|---|---|---
+1*1|1035 ins/s|1|0.75333|0.92702
+1*8|7840 ins/s|7.57|0.75603|0.92771
+2*8|14277 ins/s|13.79|0.75872|0.92793
+4*8|28594 ins/s|27.63|0.75253|0.92713
+
+* BatchSize = 128
+
+nodes*crads|throughput|speedup|test\_acc1|test\_acc5
+---|---|---|---|---
+1*1|936  ins/s|1|0.75280|0.92531
+1*8|7108 ins/s|7.59|0.75832|0.92771
+2*8|12343 ins/s|13.18|0.75766|0.92723
+4*8|24407 ins/s|26.07|0.75859|0.92871
+
+### Preprocessing with Nvidia DALI
+
+[Nvidia DALI](https://github.com/NVIDIA/DALI) can be used to preprocess input images, which could speed up training and achieve higher GPU utilization.
+
+At present, DALI preprocessing supports the standard ImageNet pipeline (random crop -> resize -> flip -> normalize), it supports dataset in both file list or plain folder format.
+
+DALI preprocessing can be enabled with the `--use_dali=True` command line flag.
+For example, training ShuffleNet v2 0.25x with the following command should
+reach a throughput of over 10000 images/second, and GPU utilization should be
+above 85%.
+
+``` bash
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+export FLAGS_fraction_of_gpu_memory_to_use=0.80
+
+python -m paddle.distributed.launch train.py \
+       --model=ShuffleNetV2_x0_25 \
+       --batch_size=2048 \
+       --lr_strategy=cosine_decay_warmup \
+       --num_epochs=240 \
+       --lr=0.5 \
+       --l2_decay=3e-5 \
+       --lower_scale=0.64 \
+       --lower_ratio=0.8 \
+       --upper_ratio=1.2 \
+       --use_dali=True
+
+```
+
+For more details please refer to [Documentation on DALI Paddle Plugin](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/plugins/paddle_tutorials.html).
+
+#### NOTES
+1. PaddlePaddle with version 1.6 or above is required, and it must be compiled
+with GCC 5.4 and up.
+2. Nvidia DALI should include this PR [#1371](https://github.com/NVIDIA/DALI/pull/1371). Please refer to [this doc](https://docs.nvidia.com/deeplearning/sdk/dali-master-branch-user-guide/docs/installation.html) and install nightly version or build from source.
+3. Since DALI utilize the GPU for preprocessing, it will take up some GPU
+   memory. Please reduce the memory used by paddle by setting the
+   `FLAGS_fraction_of_gpu_memory_to_use` environment variable to a smaller
+   number (e.g., `0.8`)
 
 ### Custom Dataset
 
@@ -248,18 +328,118 @@ Mixed-precision part is moving to PaddlePaddle/Fleet now.
 The image classification models currently supported by PaddlePaddle are listed in the table. It shows the top-1/top-5 accuracy on the ImageNet-2012 validation set of these models, the inference time of Paddle Fluid and Paddle TensorRT based on dynamic link library(test GPU model: Tesla P4).
 Pretrained models can be downloaded by clicking related model names.
 
-- Note
-    - 1: ResNet50_vd_v2 is the distilled version of ResNet50_vd.
-    - 2: In addition to EfficientNet, the image resolution feeded in InceptionV4 and Xception net is ```299x299```, Fix_ResNeXt101_32x48d_wsl is ```320x320```, DarkNet is ```256x256```, others are ```224x224```.In test time, the resize_short_size of the DarkNet53 and Fix_ResNeXt101_32x48d_wsl series networks is the same as the width or height of the input image resolution, the InceptionV4 and Xception network resize_short_size is 320, and the other networks resize_short_size are 256.
-    - 3: The resolutions of EfficientNetB0~B7 are ```224x224```,```240x240```,```260x260```,```300x300```,```380x380```,```456x456```,```528x528```,```600x600``` respectively, the resize_short_size in the inference phase is increased by 32 on the basis of the length or height of the resolution, for example, the resize_short_size of EfficientNetB1 is 272.In the process of training and inference phase of these series of models, the value of the resize parameter interpolation is set to 2 (cubic interpolation mode). Besides, the model uses  ExponentialMovingAverage during the training process, this trick please refer to [ExponentialMovingAverage](https://www.paddlepaddle.org.cn/documentation/docs/en/1.5/api/optimizer.html#exponentialmovingaverage).
-    - 4: It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
-        ```bash
-        python infer.py\
-            --model=model_name \
-            --pretrained_model=${path_to_pretrained_model} \
-            --save_inference=True
-        ```
-    - 5: The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
+#### Note
+
+- Some special settings
+
+<table>
+<tr>
+    <td><b>Model</b>
+    </td>
+    <td><b>Resolution</b>
+    </td>
+    <td><b>Parameter: resize_short_size</b>
+    </td>
+</tr>
+<tr>
+   <td>Inception, Xception
+   </td>
+   <td>299
+   </td>
+   <td>320
+   </td>
+</tr>
+<tr>
+    <td> DarkNet53
+    </td>
+    <td>256
+    </td>
+    <td>256
+    </td>
+</tr>
+<tr>
+   <td>Fix_ResNeXt101_32x48d_wsl
+   </td>
+   <td>320
+   </td>
+   <td>320
+   </td>
+</tr>
+<tr>
+   <td rowspan="8"> EfficientNet: <br/><br/>
+   In the inference phase, the resize_short_size increases 32 compared to the resolution <br/>
+   and using the 2nd interpolation(cubic interpolation mode). <br/>
+   The ExponentialMovingAverage method is also applied during the training process <br/>
+   Please refer to <a href="https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/api_cn/optimizer_cn.html#exponentialmovingaverage">ExponentialMovingAverage</a>
+   </td>
+   <td>B0: 224
+   </td>
+   <td>256
+   </td>
+</tr>
+<tr>
+   <td>B1: 240
+   </td>
+   <td>272
+   </td>
+</tr>
+<tr>
+   <td>B2: 260
+   </td>
+   <td>292
+   </td>
+</tr>
+<tr>
+   <td>B3: 300
+   </td>
+   <td>332
+   </td>
+</tr>
+<tr>
+   <td>B4: 380
+   </td>
+   <td>412
+   </td>
+</tr>
+<tr>
+   <td>B5: 456
+   </td>
+   <td>488
+   </td>
+</tr>
+<tr>
+   <td>B6: 528
+   </td>
+   <td>560
+   </td>
+</tr>
+<tr>
+
+   <td>B7: 600
+   </td>
+   <td>632
+   </td>
+</tr>
+<tr>
+    <td>Other models
+    </td>
+    <td>224
+    </td>
+    <td>256
+    </td>
+</tr>
+</table>
+
+- It's necessary to convert the train model to a binary model when appling dynamic link library to infer, One can do it by running following command:
+
+    ```bash
+    python infer.py\
+        --model=model_name \
+        --pretrained_model=${path_to_pretrained_model} \
+        --save_inference=True
+    ```
+
+- The pretrained model of the ResNeXt101_wsl series network is converted from the pytorch model. Please refer to [RESNEXT WSL](https://pytorch.org/hub/facebookresearch_WSL-Images_resnext/) for details.
 
 ### AlexNet
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -306,6 +486,13 @@ Pretrained models can be downloaded by clicking related model names.
 |[ShuffleNetV2_x2_0](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_x2_0_pretrained.tar) | 73.15% | 91.20% | 6.430 | 3.954 |
 |[ShuffleNetV2_swish](https://paddle-imagenet-models-name.bj.bcebos.com/ShuffleNetV2_swish_pretrained.tar) | 70.03% | 89.17% | 6.078 | 4.976 |
 
+### AutoDL Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[DARTS_4M](https://paddle-imagenet-models-name.bj.bcebos.com/DARTS_GS_4M_pretrained.tar) | 75.23% | 92.15% | 13.572 | 6.335 |
+|[DARTS_6M](https://paddle-imagenet-models-name.bj.bcebos.com/DARTS_GS_6M_pretrained.tar) | 76.03% | 92.79% | 16.406 | 6.864 |
+- AutoDL is improved based on DARTS, Local Rademacher Complexity is introduced to control overfitting, and model size is flexibly adjusted through Resource Constraining.
+
 ### ResNet Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
@@ -316,12 +503,23 @@ Pretrained models can be downloaded by clicking related model names.
 |[ResNet50](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar) | 76.50% | 93.00% | 8.787 | 5.137 |
 |[ResNet50_vc](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vc_pretrained.tar) |78.35% | 94.03% | 9.013 | 5.285 |
 |[ResNet50_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_pretrained.tar) | 79.12% | 94.44% | 9.058 | 5.259 |
-|[ResNet50_vd_v2](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_v2_pretrained.tar) | 79.84% | 94.93% | 9.058 | 5.259 |
+|[ResNet50_vd_v2](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_vd_v2_pretrained.tar)<sup>[1](#trans1)</sup> | 79.84% | 94.93% | 9.058 | 5.259 |
 |[ResNet101](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.tar) | 77.56% | 93.64% | 15.447 | 8.473 |
 |[ResNet101_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_vd_pretrained.tar) | 80.17% | 94.97% | 15.685 | 8.574 |
 |[ResNet152](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_pretrained.tar) | 78.26% | 93.96% | 21.816 | 11.646 |
 |[ResNet152_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet152_vd_pretrained.tar) | 80.59% | 95.30% | 22.041 | 11.858 |
 |[ResNet200_vd](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet200_vd_pretrained.tar) | 80.93% | 95.33% | 28.015 | 14.896 |
+
+<a name="trans1">[1]</a> The pretrained model is distilled based on the pretrained model of ResNet50_vd. Users can directly load the pretrained model through the structure of ResNet50_vd.
+
+### Res2Net Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[Res2Net50_26w_4s](https://paddle-imagenet-models-name.bj.bcebos.com/Res2Net50_26w_4s_pretrained.tar) | 79.33% | 94.57% | 10.731 | 8.274 |
+|[Res2Net50_vd_26w_4s](https://paddle-imagenet-models-name.bj.bcebos.com/Res2Net50_vd_26w_4s_pretrained.tar) | 79.75% | 94.91% | 11.012 | 8.493 |
+|[Res2Net50_14w_8s](https://paddle-imagenet-models-name.bj.bcebos.com/Res2Net50_14w_8s_pretrained.tar) | 79.46% | 94.70% | 16.937 | 10.205 |
+|[Res2Net101_vd_26w_4s](https://paddle-imagenet-models-name.bj.bcebos.com/Res2Net101_vd_26w_4s_pretrained.tar) | 80.64% | 95.22% | 19.612 | 14.651 |
+|[Res2Net200_vd_26w_4s](https://paddle-imagenet-models-name.bj.bcebos.com/Res2Net200_vd_26w_4s_pretrained.tar) | 81.21% | 95.71% | 35.809 | 26.479 |
 
 ### ResNeXt Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -332,9 +530,10 @@ Pretrained models can be downloaded by clicking related model names.
 |[ResNeXt50_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_vd_64x4d_pretrained.tar) | 80.12% | 94.86% | 20.888 | 15.938 |
 |[ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_32x4d_pretrained.tar) | 78.65% | 94.19% | 24.154 | 17.661 |
 |[ResNeXt101_vd_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_32x4d_pretrained.tar) | 80.33% | 95.12% | 24.701 | 17.249 |
-|[ResNeXt101_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_64x4d_pretrained.tar) | 78.43% | 94.13% | 41.073 | 31.288 |
+|[ResNeXt101_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt50_64x4d_pretrained.tar) | 79.35% | 94.52% | 41.073 | 31.288 |
 |[ResNeXt101_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt101_vd_64x4d_pretrained.tar) | 80.78% | 95.20% | 42.277 | 32.620 |
 |[ResNeXt152_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_32x4d_pretrained.tar) | 78.98% | 94.33% | 37.007 | 26.981 |
+|[ResNeXt152_vd_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_vd_32x4d_pretrained.tar) | 80.72% | 95.20% | 35.783 | 26.081 |
 |[ResNeXt152_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_64x4d_pretrained.tar) | 79.51% | 94.71% | 58.966 | 47.915 |
 |[ResNeXt152_vd_64x4d](https://paddle-imagenet-models-name.bj.bcebos.com/ResNeXt152_vd_64x4d_pretrained.tar) | 81.08% | 95.34% | 60.947 | 47.406 |
 
@@ -355,6 +554,17 @@ Pretrained models can be downloaded by clicking related model names.
 |[DPN98](https://paddle-imagenet-models-name.bj.bcebos.com/DPN98_pretrained.tar) | 80.59% | 95.10% | 29.421 | 13.411 |
 |[DPN107](https://paddle-imagenet-models-name.bj.bcebos.com/DPN107_pretrained.tar) | 80.89% | 95.32% | 41.071 | 18.885 |
 |[DPN131](https://paddle-imagenet-models-name.bj.bcebos.com/DPN131_pretrained.tar) | 80.70% | 95.14% | 41.179 | 18.246 |
+
+### SENet Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[SE_ResNet18_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNet18_vd_pretrained.tar) | 73.33% | 91.38% | 4.715 | 3.061 |
+|[SE_ResNet34_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNet34_vd_pretrained.tar) | 76.51% | 93.20% | 7.475 | 4.299 |
+|[SE_ResNet50_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNet50_vd_pretrained.tar) | 79.52% | 94.75% | 10.345 | 7.631 |
+|[SE_ResNeXt50_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_32x4d_pretrained.tar) | 78.44% | 93.96% | 14.916 | 12.305 |
+|[SE_ResNeXt50_vd_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt50_vd_32x4d_pretrained.tar) | 80.24% | 94.89% | 15.155 | 12.687 |
+|[SE_ResNeXt101_32x4d](https://paddle-imagenet-models-name.bj.bcebos.com/SE_ResNeXt101_32x4d_pretrained.tar) | 79.12% | 94.20% | 30.085 | 23.218 |
+|[SENet154_vd](https://paddle-imagenet-models-name.bj.bcebos.com/SENet154_vd_pretrained.tar) | 81.40% | 95.48% | 71.892 | 53.131 |
 
 ### SENet Series
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
@@ -393,18 +603,41 @@ Pretrained models can be downloaded by clicking related model names.
 |Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
 |- |:-: |:-: |:-: |:-: |
 |[EfficientNetB0](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_pretrained.tar) | 77.38% | 93.31% | 10.303 | 4.334 |
-|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar)<sup>[1](#trans)</sup> | 79.15% | 94.41% | 15.626 | 6.502 |
-|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar)<sup>[1](#trans)</sup> | 79.85% | 94.74% | 17.847 | 7.558 |
-|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar)<sup>[1](#trans)</sup> | 81.15% | 95.41% | 25.993 | 10.937 |
-|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar)<sup>[1](#trans)</sup> | 82.85% | 96.23% | 47.734 | 18.536 |
-|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[1](#trans)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
-|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[1](#trans)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
-|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[1](#trans)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
-|[EfficientNetB0_small](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_Small_pretrained.tar)<sup>[2](#trans)</sup> | 75.80% | 92.58% | 3.342 | 2.729 |
+|[EfficientNetB1](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB1_pretrained.tar)<sup>[2](#trans2)</sup> | 79.15% | 94.41% | 15.626 | 6.502 |
+|[EfficientNetB2](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB2_pretrained.tar)<sup>[2](#trans2)</sup> | 79.85% | 94.74% | 17.847 | 7.558 |
+|[EfficientNetB3](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB3_pretrained.tar)<sup>[2](#trans2)</sup> | 81.15% | 95.41% | 25.993 | 10.937 |
+|[EfficientNetB4](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB4_pretrained.tar)<sup>[2](#trans2)</sup> | 82.85% | 96.23% | 47.734 | 18.536 |
+|[EfficientNetB5](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB5_pretrained.tar)<sup>[2](#trans2)</sup> | 83.62% | 96.72% | 88.578 | 32.102 |
+|[EfficientNetB6](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB6_pretrained.tar)<sup>[2](#trans2)</sup> | 84.00% | 96.88% | 138.670 | 51.059 |
+|[EfficientNetB7](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB7_pretrained.tar)<sup>[2](#trans2)</sup> | 84.30% | 96.89% | 234.364 | 82.107 |
+|[EfficientNetB0_small](https://paddle-imagenet-models-name.bj.bcebos.com/EfficientNetB0_Small_pretrained.tar)<sup>[3](#trans3)</sup> | 75.80% | 92.58% | 3.342 | 2.729 |
 
-<a name="trans">[1]</a> means the pretrained weight is converted form [original repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet).
+<a name="trans2">[2]</a> means the pretrained weight is converted form [original repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet).
 
-<a name="trans">[2]</a> means the pretrained weight is based on EfficientNetB0, removed Squeeze-and-Excitation module and use general convolution. This model speed is much faster.
+<a name="trans3">[3]</a> means the pretrained weight is based on EfficientNetB0, removed Squeeze-and-Excitation module and use general convolution. This model speed is much faster.
+
+### HRNet Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[HRNet_W18_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W18_C_pretrained.tar) | 76.92% | 93.39% | 23.013 | 11.601 |
+|[HRNet_W30_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W30_C_pretrained.tar) | 78.04% | 94.02% | 25.793 | 14.367 |
+|[HRNet_W32_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W32_C_pretrained.tar) | 78.28% | 94.24% | 29.564 | 14.328 |
+|[HRNet_W40_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W40_C_pretrained.tar) | 78.77% | 94.47% | 33.880 | 17.616 |
+|[HRNet_W44_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W44_C_pretrained.tar) | 79.00% | 94.51% | 36.021 | 18.990 |
+|[HRNet_W48_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W48_C_pretrained.tar) | 78.95% | 94.42% | 30.064 | 19.963 |
+|[HRNet_W64_C](https://paddle-imagenet-models-name.bj.bcebos.com/HRNet_W64_C_pretrained.tar) | 79.30% | 94.61% | 38.921 | 24.742 |
+
+### ResNet_ACNet Series
+|Model | Top-1 | Top-5 | Paddle Fluid inference time(ms) | Paddle TensorRT inference time(ms) |
+|- |:-: |:-: |:-: |:-: |
+|[ResNet50_ACNet](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_ACNet_pretrained.tar)<sub>1</sub> | 76.71% | 93.24% | 13.205 | 8.804 |
+|[ResNet50_ACNet](https://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_ACNet_deploy_pretrained.tar)<sub>2</sub> | 76.71% | 93.24% | 7.418 | 5.950 |
+
+* Note:
+    * `1`. deploy mode is set as False to eval.
+    * `2`. Use `sh ./utils/acnet/convert_model.sh` to convert to trained model, and set deploy mode as True to eval.
+    * `./utils/acnet/convert_model.sh` contains 4 parmeters, which are model name, input model directory, output model directory and class number.
+
 
 ## FAQ
 
@@ -438,9 +671,14 @@ Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:100
 - ResNeXt101_wsl: [Exploring the Limits of Weakly Supervised Pretraining](https://arxiv.org/abs/1805.00932), Dhruv Mahajan, Ross Girshick, Vignesh Ramanathan, Kaiming He, Manohar Paluri, Yixuan Li, Ashwin Bharambe, Laurens van der Maaten
 - Fix_ResNeXt101_wsl: [Fixing the train-test resolution discrepancy](https://arxiv.org/abs/1906.06423), Hugo Touvron, Andrea Vedaldi, Matthijs Douze, Herve ́ Je ́gou
 - EfficientNet: [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](https://arxiv.org/abs/1905.11946), Mingxing Tan, Quoc V. Le
+- Res2Net: [Res2Net: A New Multi-scale Backbone Architecture](https://arxiv.org/abs/1904.01169), Shang-Hua Gao, Ming-Ming Cheng, Kai Zhao, Xin-Yu Zhang, Ming-Hsuan Yang, Philip Torr
+- HRNet: [Deep High-Resolution Representation Learning for Visual Recognition](https://arxiv.org/abs/1908.07919), Jingdong Wang, Ke Sun, Tianheng Cheng, Borui Jiang, Chaorui Deng, Yang Zhao, Dong Liu, Yadong Mu, Mingkui Tan, Xinggang Wang, Wenyu Liu, Bin Xiao
+- DARTS: [DARTS: Differentiable Architecture Search](https://arxiv.org/pdf/1806.09055.pdf), Hanxiao Liu, Karen Simonyan, Yiming Yang
+- ACNet: [ACNet: Strengthening the Kernel Skeletons for Powerful CNN via Asymmetric Convolution Blocks](https://arxiv.org/abs/1908.03930), Xiaohan Ding, Yuchen Guo, Guiguang Ding, Jungong Han
+
+
 
 ## Update
-
 - 2018/12/03 **Stage1**: Update AlexNet, ResNet50, ResNet101, MobileNetV1
 - 2018/12/23 **Stage2**: Update VGG Series, SeResNeXt50_32x4d, SeResNeXt101_32x4d, ResNet152
 - 2019/01/31 Update MobileNetV2_x1_0
@@ -452,6 +690,9 @@ Enforce failed. Expected x_dims[1] == labels_dims[1], but received x_dims[1]:100
 - 2019/08/01 **Stage7**: Update DarkNet53, DenseNet121. Densenet161, DenseNet169, DenseNet201, DenseNet264, SqueezeNet1_0, SqueezeNet1_1, ResNeXt50_vd_32x4d, ResNeXt152_64x4d, ResNeXt101_32x8d_wsl, ResNeXt101_32x16d_wsl, ResNeXt101_32x32d_wsl, ResNeXt101_32x48d_wsl, Fix_ResNeXt101_32x48d_wsl
 - 2019/09/11 **Stage8**: Update ResNet18_vd，ResNet34_vd，MobileNetV1_x0_25，MobileNetV1_x0_5，MobileNetV1_x0_75，MobileNetV2_x0_75，MobilenNetV3_small_x1_0，DPN68，DPN92，DPN98，DPN107，DPN131，ResNeXt101_vd_32x4d，ResNeXt152_vd_64x4d，Xception65，Xception71，Xception41_deeplab，Xception65_deeplab，SE_ResNet50_vd
 - 2019/09/20 Update EfficientNet
+- 2019/11/28 **Stage9**: Update SE_ResNet18_vd，SE_ResNet34_vd，SE_ResNeXt50_vd_32x4d，ResNeXt152_vd_32x4d，Res2Net50_26w_4s，Res2Net50_14w_8s，Res2Net50_vd_26w_4s，HRNet_W18_C，HRNet_W30_C，HRNet_W32_C，HRNet_W40_C，HRNet_W44_C，HRNet_W48_C，HRNet_W64_C
+- 2020/01/07 **Stage10**: Update AutoDL Series
+- 2020/01/09 **Stage11**: Update Res2Net101_vd_26w_4s, Res2Net200_vd_26w_4s
 
 ## Contribute
 

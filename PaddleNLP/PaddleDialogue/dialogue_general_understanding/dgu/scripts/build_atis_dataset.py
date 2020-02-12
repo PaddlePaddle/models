@@ -73,11 +73,11 @@ class ATIS(object):
             if example[1] not in self.intent_dict: 
                 self.intent_dict[example[1]] = self.intent_id
                 self.intent_id += 1
-            fw.write("%s\t%s\n" % (self.intent_dict[example[1]], example[0].lower()))
+            fw.write(u"%s\t%s\n" % (self.intent_dict[example[1]], example[0].lower()))
 
         fw = io.open(self.map_tag_intent, 'w', encoding="utf8")
         for tag in self.intent_dict: 
-            fw.write("%s\t%s\n" % (tag, self.intent_dict[tag]))
+            fw.write(u"%s\t%s\n" % (tag, self.intent_dict[tag]))
 
     def _parser_slot_data(self, examples, data_type): 
         """
@@ -119,11 +119,11 @@ class ATIS(object):
             if entities[-1]['end'] < len(text): 
                 suffix_num = len(text[entities[-1]['end']:].strip().split())
                 tags.extend([str(self.slot_dict['O'])] * suffix_num)
-            fw.write("%s\t%s\n" % (text.encode('utf8'), " ".join(tags).encode('utf8')))
+            fw.write(u"%s\t%s\n" % (text.encode('utf8'), " ".join(tags).encode('utf8')))
         
         fw = io.open(self.map_tag_slot, 'w', encoding="utf8")
         for slot in self.slot_dict: 
-            fw.write("%s\t%s\n" % (slot, self.slot_dict[slot]))
+            fw.write(u"%s\t%s\n" % (slot, self.slot_dict[slot]))
 
     def get_train_dataset(self): 
         """

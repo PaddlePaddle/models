@@ -60,6 +60,12 @@ def parse_args():
         default=False,
         help='Whether profiling the trainning [True|False]')
     parser.add_argument(
+        '--enable_auto_fusion',
+        type=str2bool,
+        default=False,
+        help='Whether enable fusion_group [True|False]. It is a experimental feature.'
+    )
+    parser.add_argument(
         '--use_dataloader',
         type=str2bool,
         default=False,
@@ -80,5 +86,12 @@ def parse_args():
     parser.add_argument('--enable_ce', action='store_true')
     parser.add_argument('--batch_size', type=int, default=0, help='batch size')
     parser.add_argument('--max_epoch', type=int, default=0, help='max epoch')
+
+    # NOTE: args for profiler, used for benchmark
+    parser.add_argument(
+        '--profiler_path',
+        type=str,
+        default='/tmp/paddingrnn.profile',
+        help='the profiler output file path. used for benchmark')
     args = parser.parse_args()
     return args

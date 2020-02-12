@@ -308,7 +308,7 @@ class triplex_reader_creator(reader_creator):
                 input_label = np.zeros(
                     (args.label_nc, index.shape[1], index.shape[2]))
                 np.put_along_axis(input_label, index, 1.0, 0)
-                img1 = input_label
+                img1 = input_label.astype('float32')
                 img2 = (np.array(img2).astype('float32') / 255.0 - 0.5) / 0.5
                 img2 = img2.transpose([2, 0, 1])
                 if not args.no_instance:
@@ -630,6 +630,7 @@ class data_reader(object):
                     batch_size=self.cfg.batch_size,
                     mode="TRAIN")
                 reader_test = None
+                id2name = None
                 if self.cfg.run_test:
                     test_list = os.path.join(dataset_dir, "test.txt")
                     if self.cfg.test_list is not None:

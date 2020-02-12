@@ -17,6 +17,6 @@ strategies:
 #        pruned_params: '.*expand_weights'
 compressor:
     epoch: 241
-    checkpoint_path: './checkpoints/'
+    checkpoint_path: './checkpoints/mobilenet_v2'
     strategies:
         - uniform_pruning_strategy

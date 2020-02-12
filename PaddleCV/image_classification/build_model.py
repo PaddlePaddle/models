@@ -35,8 +35,11 @@ def _calc_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
 def _basic_model(data, model, args, is_train):
     image = data[0]
     label = data[1]
-
-    net_out = model.net(input=image, class_dim=args.class_dim)
+    if args.model == "ResNet50":
+        image_in = fluid.layers.transpose(image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
+        net_out = model.net(input=image_in, class_dim=args.class_dim, data_format=args.data_format)
+    else:
+        net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
 
     if is_train and args.use_label_smoothing:
@@ -48,7 +51,8 @@ def _basic_model(data, model, args, is_train):
 
     avg_cost = fluid.layers.mean(cost)
     acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
-    acc_top5 = fluid.layers.accuracy(input=softmax_out, label=label, k=5)
+    acc_top5 = fluid.layers.accuracy(
+        input=softmax_out, label=label, k=min(5, args.class_dim))
     return [avg_cost, acc_top1, acc_top5]
 
 
@@ -73,7 +77,8 @@ def _googlenet_model(data, model, args, is_train):
 
     avg_cost = avg_cost0 + 0.3 * avg_cost1 + 0.3 * avg_cost2
     acc_top1 = fluid.layers.accuracy(input=out0, label=label, k=1)
-    acc_top5 = fluid.layers.accuracy(input=out0, label=label, k=5)
+    acc_top5 = fluid.layers.accuracy(
+        input=out0, label=label, k=min(5, args.class_dim))
 
     return [avg_cost, acc_top1, acc_top5]
 
@@ -86,7 +91,11 @@ def _mixup_model(data, model, args, is_train):
     y_b = data[2]
     lam = data[3]
 
-    net_out = model.net(input=image, class_dim=args.class_dim)
+    if args.model == "ResNet50":
+        image_in = fluid.layers.transpose(image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
+        net_out = model.net(input=image_in, class_dim=args.class_dim, data_format=args.data_format)
+    else:
+        net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
     if not args.use_label_smoothing:
         loss_a = fluid.layers.cross_entropy(input=softmax_out, label=y_a)

@@ -12,184 +12,195 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-import argparse
-import ast
+import logging
+import os
+import six
+import sys
+import time
 
 import numpy as np
 import paddle
 import paddle.fluid as fluid
-import paddle.dataset.wmt16 as wmt16
 
-from model import TransFormer, NoamDecay
-from config import *
-from data_util import *
+from utils.configure import PDConfig
+from utils.check import check_gpu, check_version
 
-
-def parse_args():
-    parser = argparse.ArgumentParser("Arguments for Training")
-    parser.add_argument(
-        "--use_data_parallel",
-        type=ast.literal_eval,
-        default=False,
-        help="The flag indicating whether to use multi-GPU.")
-    parser.add_argument(
-        "--model_file",
-        type=str,
-        default="transformer_params",
-        help="Save the model as a file named `model_file.pdparams`.")
-    parser.add_argument(
-        'opts',
-        help='See config.py for all options',
-        default=None,
-        nargs=argparse.REMAINDER)
-    args = parser.parse_args()
-    merge_cfg_from_list(args.opts, [TrainTaskConfig, ModelHyperParams])
-    return args
+# include task-specific libs
+import reader
+from model import Transformer, CrossEntropyCriterion, NoamDecay
 
 
-def prepare_train_input(insts, src_pad_idx, trg_pad_idx, n_head):
-    """
-    inputs for training
-    """
-    src_word, src_pos, src_slf_attn_bias, src_max_len = pad_batch_data(
-        [inst[0] for inst in insts], src_pad_idx, n_head, is_target=False)
-    src_word = src_word.reshape(-1, src_max_len, 1)
-    src_pos = src_pos.reshape(-1, src_max_len, 1)
-    trg_word, trg_pos, trg_slf_attn_bias, trg_max_len = pad_batch_data(
-        [inst[1] for inst in insts], trg_pad_idx, n_head, is_target=True)
-    trg_word = trg_word.reshape(-1, trg_max_len, 1)
-    trg_pos = trg_pos.reshape(-1, trg_max_len, 1)
+def do_train(args):
+    if args.use_cuda:
+        trainer_count = fluid.dygraph.parallel.Env().nranks
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id
+                                ) if trainer_count > 1 else fluid.CUDAPlace(0)
+    else:
+        trainer_count = 1
+        place = fluid.CPUPlace()
 
-    trg_src_attn_bias = np.tile(src_slf_attn_bias[:, :, ::src_max_len, :],
-                                [1, 1, trg_max_len, 1]).astype("float32")
+    # define the data generator
+    processor = reader.DataProcessor(fpattern=args.training_file,
+                                     src_vocab_fpath=args.src_vocab_fpath,
+                                     trg_vocab_fpath=args.trg_vocab_fpath,
+                                     token_delimiter=args.token_delimiter,
+                                     use_token_batch=args.use_token_batch,
+                                     batch_size=args.batch_size,
+                                     device_count=trainer_count,
+                                     pool_size=args.pool_size,
+                                     sort_type=args.sort_type,
+                                     shuffle=args.shuffle,
+                                     shuffle_batch=args.shuffle_batch,
+                                     start_mark=args.special_token[0],
+                                     end_mark=args.special_token[1],
+                                     unk_mark=args.special_token[2],
+                                     max_length=args.max_length,
+                                     n_head=args.n_head)
+    batch_generator = processor.data_generator(phase="train")
+    if trainer_count > 1:  # for multi-process gpu training
+        batch_generator = fluid.contrib.reader.distributed_batch_reader(
+            batch_generator)
+    args.src_vocab_size, args.trg_vocab_size, args.bos_idx, args.eos_idx, \
+        args.unk_idx = processor.get_vocab_summary()
 
-    lbl_word, lbl_weight, num_token = pad_batch_data(
-        [inst[2] for inst in insts],
-        trg_pad_idx,
-        n_head,
-        is_target=False,
-        is_label=True,
-        return_attn_bias=False,
-        return_max_len=False,
-        return_num_token=True)
-
-    data_inputs = [
-        src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
-        trg_slf_attn_bias, trg_src_attn_bias, lbl_word, lbl_weight
-    ]
-
-    var_inputs = []
-    for i, field in enumerate(encoder_data_input_fields +
-                              decoder_data_input_fields[:-1] +
-                              label_data_input_fields):
-        var_inputs.append(to_variable(data_inputs[i], name=field))
-
-    enc_inputs = var_inputs[0:len(encoder_data_input_fields)]
-    dec_inputs = var_inputs[len(encoder_data_input_fields
-                                ):len(encoder_data_input_fields) +
-                            len(decoder_data_input_fields[:-1])]
-    label = var_inputs[-2]
-    weights = var_inputs[-1]
-
-    return enc_inputs, dec_inputs, label, weights
-
-
-def train(args):
-    """
-    train models
-    :return:
-    """
-
-    trainer_count = fluid.dygraph.parallel.Env().nranks
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
     with fluid.dygraph.guard(place):
-        if args.use_data_parallel:
-            strategy = fluid.dygraph.parallel.prepare_context()
+        # set seed for CE
+        random_seed = eval(str(args.random_seed))
+        if random_seed is not None:
+            fluid.default_main_program().random_seed = random_seed
+            fluid.default_startup_program().random_seed = random_seed
+
+        # define data loader
+        train_loader = fluid.io.DataLoader.from_generator(capacity=10)
+        train_loader.set_batch_generator(batch_generator, places=place)
 
         # define model
-        transformer = TransFormer(
-            'transformer', ModelHyperParams.src_vocab_size,
-            ModelHyperParams.trg_vocab_size, ModelHyperParams.max_length + 1,
-            ModelHyperParams.n_layer, ModelHyperParams.n_head,
-            ModelHyperParams.d_key, ModelHyperParams.d_value,
-            ModelHyperParams.d_model, ModelHyperParams.d_inner_hid,
-            ModelHyperParams.prepostprocess_dropout,
-            ModelHyperParams.attention_dropout, ModelHyperParams.relu_dropout,
-            ModelHyperParams.preprocess_cmd, ModelHyperParams.postprocess_cmd,
-            ModelHyperParams.weight_sharing, TrainTaskConfig.label_smooth_eps)
+        transformer = Transformer(
+            args.src_vocab_size, args.trg_vocab_size, args.max_length + 1,
+            args.n_layer, args.n_head, args.d_key, args.d_value, args.d_model,
+            args.d_inner_hid, args.prepostprocess_dropout,
+            args.attention_dropout, args.relu_dropout, args.preprocess_cmd,
+            args.postprocess_cmd, args.weight_sharing, args.bos_idx,
+            args.eos_idx)
+
+        # define loss
+        criterion = CrossEntropyCriterion(args.label_smooth_eps)
+
         # define optimizer
-        optimizer = fluid.optimizer.Adam(learning_rate=NoamDecay(
-            ModelHyperParams.d_model, TrainTaskConfig.warmup_steps,
-            TrainTaskConfig.learning_rate),
-                                         beta1=TrainTaskConfig.beta1,
-                                         beta2=TrainTaskConfig.beta2,
-                                         epsilon=TrainTaskConfig.eps)
-        #
-        if args.use_data_parallel:
+        optimizer = fluid.optimizer.Adam(
+            learning_rate=NoamDecay(args.d_model, args.warmup_steps,
+                                    args.learning_rate),
+            beta1=args.beta1,
+            beta2=args.beta2,
+            epsilon=float(args.eps),
+            parameter_list=transformer.parameters())
+
+        ## init from some checkpoint, to resume the previous training
+        if args.init_from_checkpoint:
+            model_dict, opt_dict = fluid.load_dygraph(
+                os.path.join(args.init_from_checkpoint, "transformer"))
+            transformer.load_dict(model_dict)
+            optimizer.set_dict(opt_dict)
+        ## init from some pretrain models, to better solve the current task
+        if args.init_from_pretrain_model:
+            model_dict, _ = fluid.load_dygraph(
+                os.path.join(args.init_from_pretrain_model, "transformer"))
+            transformer.load_dict(model_dict)
+
+        if trainer_count > 1:
+            strategy = fluid.dygraph.parallel.prepare_context()
             transformer = fluid.dygraph.parallel.DataParallel(
                 transformer, strategy)
 
-        # define data generator for training and validation
-        train_reader = paddle.batch(wmt16.train(
-            ModelHyperParams.src_vocab_size, ModelHyperParams.trg_vocab_size),
-                                    batch_size=TrainTaskConfig.batch_size)
-        if args.use_data_parallel:
-            train_reader = fluid.contrib.reader.distributed_batch_reader(
-                train_reader)
-        val_reader = paddle.batch(wmt16.test(ModelHyperParams.src_vocab_size,
-                                             ModelHyperParams.trg_vocab_size),
-                                  batch_size=TrainTaskConfig.batch_size)
+        # the best cross-entropy value with label smoothing
+        loss_normalizer = -(
+            (1. - args.label_smooth_eps) * np.log(
+                (1. - args.label_smooth_eps)) +
+            args.label_smooth_eps * np.log(args.label_smooth_eps /
+                                           (args.trg_vocab_size - 1) + 1e-20))
 
-        # loop for training iterations
-        for i in range(TrainTaskConfig.pass_num):
-            dy_step = 0
-            sum_cost = 0
-            transformer.train()
-            for batch in train_reader():
-                enc_inputs, dec_inputs, label, weights = prepare_train_input(
-                    batch, ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
-                    ModelHyperParams.n_head)
+        step_idx = 0
+        # train loop
+        for pass_id in range(args.epoch):
+            pass_start_time = time.time()
+            batch_id = 0
+            for input_data in train_loader():
+                (src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
+                 trg_slf_attn_bias, trg_src_attn_bias, lbl_word,
+                 lbl_weight) = input_data
+                logits = transformer(src_word, src_pos, src_slf_attn_bias,
+                                     trg_word, trg_pos, trg_slf_attn_bias,
+                                     trg_src_attn_bias)
 
-                dy_sum_cost, dy_avg_cost, dy_predict, dy_token_num = transformer(
-                    enc_inputs, dec_inputs, label, weights)
+                sum_cost, avg_cost, token_num = criterion(
+                    logits, lbl_word, lbl_weight)
 
-                if args.use_data_parallel:
-                    dy_avg_cost = transformer.scale_loss(dy_avg_cost)
-                    dy_avg_cost.backward()
+                if trainer_count > 1:
+                    avg_cost = transformer.scale_loss(avg_cost)
+                    avg_cost.backward()
                     transformer.apply_collective_grads()
                 else:
-                    dy_avg_cost.backward()
-                optimizer.minimize(dy_avg_cost)
+                    avg_cost.backward()
+
+                optimizer.minimize(avg_cost)
                 transformer.clear_gradients()
 
-                dy_step = dy_step + 1
-                if dy_step % 10 == 0:
-                    print("pass num : {}, batch_id: {}, dy_graph avg loss: {}".
-                          format(i, dy_step,
-                                 dy_avg_cost.numpy() * trainer_count))
+                if step_idx % args.print_step == 0:
+                    total_avg_cost = avg_cost.numpy() * trainer_count
 
-            # switch to evaluation mode
-            transformer.eval()
-            sum_cost = 0
-            token_num = 0
-            for batch in val_reader():
-                enc_inputs, dec_inputs, label, weights = prepare_train_input(
-                    batch, ModelHyperParams.eos_idx, ModelHyperParams.eos_idx,
-                    ModelHyperParams.n_head)
+                    if step_idx == 0:
+                        logging.info(
+                            "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
+                            "normalized loss: %f, ppl: %f" %
+                            (step_idx, pass_id, batch_id, total_avg_cost,
+                            total_avg_cost - loss_normalizer,
+                            np.exp([min(total_avg_cost, 100)])))
+                        avg_batch_time = time.time()
+                    else:
+                        logging.info(
+                            "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
+                            "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
+                            (step_idx, pass_id, batch_id, total_avg_cost,
+                            total_avg_cost - loss_normalizer,
+                            np.exp([min(total_avg_cost, 100)]),
+                            args.print_step / (time.time() - avg_batch_time)))
+                        avg_batch_time = time.time()
 
-                dy_sum_cost, dy_avg_cost, dy_predict, dy_token_num = transformer(
-                    enc_inputs, dec_inputs, label, weights)
-                sum_cost += dy_sum_cost.numpy()
-                token_num += dy_token_num.numpy()
-            print("pass : {} finished, validation avg loss: {}".format(
-                i, sum_cost / token_num))
+                if step_idx % args.save_step == 0 and step_idx != 0 and (
+                        trainer_count == 1
+                        or fluid.dygraph.parallel.Env().dev_id == 0):
+                    if args.save_model:
+                        model_dir = os.path.join(args.save_model,
+                                                 "step_" + str(step_idx))
+                        if not os.path.exists(model_dir):
+                            os.makedirs(model_dir)
+                        fluid.save_dygraph(
+                            transformer.state_dict(),
+                            os.path.join(model_dir, "transformer"))
+                        fluid.save_dygraph(
+                            optimizer.state_dict(),
+                            os.path.join(model_dir, "transformer"))
 
-        if fluid.dygraph.parallel.Env().dev_id == 0:
-            fluid.save_dygraph(transformer.state_dict(), args.model_file)
+                batch_id += 1
+                step_idx += 1
+
+        time_consumed = time.time() - pass_start_time
+
+        if args.save_model:
+            model_dir = os.path.join(args.save_model, "step_final")
+            if not os.path.exists(model_dir):
+                os.makedirs(model_dir)
+            fluid.save_dygraph(transformer.state_dict(),
+                               os.path.join(model_dir, "transformer"))
+            fluid.save_dygraph(optimizer.state_dict(),
+                               os.path.join(model_dir, "transformer"))
 
 
-if __name__ == '__main__':
-    args = parse_args()
-    train(args)
+if __name__ == "__main__":
+    args = PDConfig(yaml_file="./transformer.yaml")
+    args.build()
+    args.Print()
+    check_gpu(args.use_cuda)
+    check_version()
+
+    do_train(args)

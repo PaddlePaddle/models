@@ -17,10 +17,12 @@ from __future__ import print_function
 from network.STGAN_network import STGAN_model
 from util import utility
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import sys
 import time
 import copy
 import numpy as np
+import ast
 
 
 class GTrainer():
@@ -162,8 +164,13 @@ class DTrainer():
     def gradient_penalty(self, f, real, fake=None, cfg=None, name=None):
         def _interpolate(a, b=None):
             if b is None:
-                beta = fluid.layers.uniform_random_batch_size_like(
-                    input=a, shape=a.shape, min=0.0, max=1.0)
+                if cfg.enable_ce:
+                   beta = fluid.layers.uniform_random_batch_size_like(
+                       input=a, shape=a.shape, min=0.0, max=1.0, seed=1)
+                else:
+                   beta = fluid.layers.uniform_random_batch_size_like(
+                       input=a, shape=a.shape, min=0.0, max=1.0)
+                   
                 mean = fluid.layers.reduce_mean(
                     a, dim=list(range(len(a.shape))), keep_dim=True)
                 input_sub_mean = fluid.layers.elementwise_sub(a, mean, axis=0)
@@ -173,9 +180,14 @@ class DTrainer():
                     keep_dim=True)
                 b = beta * fluid.layers.sqrt(var) * 0.5 + a
             shape = [a.shape[0]]
-            alpha = fluid.layers.uniform_random_batch_size_like(
-                input=a, shape=shape, min=0.0, max=1.0)
-            inner = (b - a) * alpha + a
+            if cfg.enable_ce:
+                alpha = fluid.layers.uniform_random_batch_size_like(
+                    input=a, shape=shape, min=0.0, max=1.0, seed=1)
+            else:    
+                alpha = fluid.layers.uniform_random_batch_size_like(
+                    input=a, shape=shape, min=0.0, max=1.0)
+
+            inner = fluid.layers.elementwise_mul((b-a), alpha, axis=0) + a
             return inner
 
         x = _interpolate(real, fake)
@@ -223,7 +235,7 @@ class STGAN(object):
             default=1024,
             help="the base fc dim in discriminator")
         parser.add_argument(
-            '--use_gru', type=bool, default=True, help="whether to use GRU")
+            '--use_gru', type=ast.literal_eval, default=True, help="whether to use GRU")
         parser.add_argument(
             '--lambda_cls',
             type=float,
@@ -267,7 +279,10 @@ class STGAN(object):
             default=None,
             help="the normalization in discriminator, choose in [None, instance_norm]"
         )
-
+        parser.add_argument(
+            '--enable_ce',
+            action='store_true',
+            help="if set, run the tasks with continuous evaluation logs")
         return parser
 
     def __init__(self,
@@ -294,6 +309,9 @@ class STGAN(object):
             name='label_org_', shape=[None, self.cfg.c_dim], dtype='float32')
         label_trg_ = fluid.data(
             name='label_trg_', shape=[None, self.cfg.c_dim], dtype='float32')
+        # used for continuous evaluation        
+        if self.cfg.enable_ce:
+            fluid.default_startup_program().random_seed = 90
 
         test_gen_trainer = GTrainer(image_real, label_org, label_org_,
                                     label_trg, label_trg_, self.cfg,
@@ -337,12 +355,20 @@ class STGAN(object):
             dis_trainer.program).with_data_parallel(
                 loss_name=dis_trainer.d_loss.name,
                 build_strategy=build_strategy)
-
+        # used for continuous evaluation        
+        if self.cfg.enable_ce:
+            gen_trainer_program.random_seed = 90
+            dis_trainer_program.random_seed = 90
+ 
         t_time = 0
+
+        total_train_batch = 0  # used for benchmark
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for data in py_reader():
+                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter: # used for benchmark
+                    return
                 s_time = time.time()
                 # optimize the discriminator network
                 fetches = [
@@ -376,6 +402,15 @@ class STGAN(object):
                                                      d_loss_gp[0], batch_time))
                 sys.stdout.flush()
                 batch_id += 1
+                if self.cfg.enable_ce and batch_id == 100:
+                   break
+
+                total_train_batch += 1  # used for benchmark
+                # profiler tools
+                if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
+                    profiler.reset_profiler()
+                elif self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq + 5:
+                    return
 
             if self.cfg.run_test:
                 image_name = fluid.data(
@@ -401,3 +436,15 @@ class STGAN(object):
                                     "net_G")
                 utility.checkpoints(epoch_id, self.cfg, exe, dis_trainer,
                                     "net_D")
+            # used for continuous evaluation
+            if self.cfg.enable_ce:
+                device_num = fluid.core.get_cuda_device_count() if self.cfg.use_gpu else 1
+                print("kpis\tstgan_g_loss_fake_card{}\t{}".format(device_num, g_loss_fake[0]))
+                print("kpis\tstgan_g_loss_rec_card{}\t{}".format(device_num, g_loss_rec[0]))
+                print("kpis\tstgan_g_loss_cls_card{}\t{}".format(device_num, g_loss_cls[0]))
+                print("kpis\tstgan_d_loss_card{}\t{}".format(device_num, d_loss[0]))
+                print("kpis\tstgan_d_loss_real_card{}\t{}".format(device_num, d_loss_real[0]))
+                print("kpis\tstgan_d_loss_fake_card{}\t{}".format(device_num,d_loss_fake[0]))
+                print("kpis\tstgan_d_loss_cls_card{}\t{}".format(device_num, d_loss_cls[0]))
+                print("kpis\tstgan_d_loss_gp_card{}\t{}".format(device_num,d_loss_gp[0]))
+                print("kpis\tstgan_Batch_time_cost_card{}\t{}".format(device_num,batch_time))

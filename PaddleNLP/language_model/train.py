@@ -22,9 +22,10 @@ import os
 import random
 import math
 import contextlib
-
+from distutils.dir_util import mkpath
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import paddle.fluid.framework as framework
 import paddle.fluid.profiler as profiler
 from paddle.fluid.executor import Executor
@@ -50,9 +51,9 @@ SEED = 123
 
 
 @contextlib.contextmanager
-def profile_context(profile=True):
+def profile_context(profile=True, profiler_path='/tmp/paddingrnn.profile'):
     if profile:
-        with profiler.profiler('All', 'total', '/tmp/paddingrnn.profile'):
+        with profiler.profiler('All', 'total', profiler_path):
             yield
     else:
         yield
@@ -111,6 +112,9 @@ def main():
 
     config = RNNConfig(args)
 
+    if not os.path.exists(args.save_model_dir):
+        mkpath(args.save_model_dir)
+
     # define train program
     main_program = fluid.Program()
     startup_program = fluid.Program()
@@ -121,7 +125,6 @@ def main():
             res_vars = lm_model.lm_model(
                 config.hidden_size,
                 config.vocab_size,
-                config.batch_size,
                 num_layers=config.num_layers,
                 num_steps=config.num_steps,
                 init_scale=config.init_scale,
@@ -156,7 +159,6 @@ def main():
             lm_model.lm_model(
                 config.hidden_size,
                 config.vocab_size,
-                config.batch_size,
                 num_layers=config.num_layers,
                 num_steps=config.num_steps,
                 init_scale=config.init_scale,
@@ -189,6 +191,12 @@ def main():
 
     build_strategy = fluid.BuildStrategy()
     build_strategy.fuse_all_optimizer_ops = True
+    try:
+        fluid.require_version(min_version='1.7.0')
+        build_strategy.enable_auto_fusion = args.enable_auto_fusion
+    except Exception as e:
+        logger.info("PaddlePaddle version 1.7.0 or higher is "
+                    "required when you want to enable fusion_group.")
 
     if args.parallel:
         train_program = fluid.compiler.CompiledProgram(
@@ -206,11 +214,12 @@ def main():
     train_data, valid_data, test_data = ptb_data
 
     def generate_init_data():
+        batch_size = config.batch_size * device_count
         init_hidden = np.zeros(
-            (config.num_layers, config.batch_size, config.hidden_size),
+            (batch_size, config.num_layers, config.hidden_size),
             dtype='float32')
         init_cell = np.zeros(
-            (config.num_layers, config.batch_size, config.hidden_size),
+            (batch_size, config.num_layers, config.hidden_size),
             dtype='float32')
         return init_hidden, init_cell
 
@@ -244,8 +253,8 @@ def main():
 
     def eval(data):
         # when eval the batch_size set to 1
-        eval_data_iter = reader.get_data_iter(data, config.batch_size,
-                                              config.num_steps)
+        eval_data_iter = reader.get_data_iter(data, config.batch_size *
+                                              device_count, config.num_steps)
         total_loss = 0.0
         iters = 0
         init_hidden, init_cell = generate_init_data()
@@ -277,8 +286,8 @@ def main():
     def train_an_epoch(epoch_id, batch_times):
         # get train epoch size
         log_interval = get_log_interval(len(train_data))
-        train_data_iter = reader.get_data_iter(train_data, config.batch_size,
-                                               config.num_steps)
+        train_data_iter = reader.get_data_iter(train_data, config.batch_size *
+                                               device_count, config.num_steps)
 
         total_loss = 0
         iters = 0
@@ -307,7 +316,6 @@ def main():
             lr = np.array(fetch_outs[1])
             init_hidden = np.array(fetch_outs[2])
             init_cell = np.array(fetch_outs[3])
-
             total_loss += cost_train
             iters += config.num_steps
             if batch_id > 0 and batch_id % log_interval == 0:
@@ -315,6 +323,12 @@ def main():
                 print(
                     "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
                     % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
+
+            # profiler tools for benchmark
+            if args.profile and batch_id == log_interval:
+                profiler.reset_profiler()
+            elif args.profile and batch_id == (log_interval + 5):
+                break
         ppl = np.exp(total_loss / iters)
         return ppl
 
@@ -368,6 +382,11 @@ def main():
                         % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
 
                 batch_id += 1
+                # profiler tools for benchmark
+                if args.profile and batch_id == log_interval:
+                    profiler.reset_profiler()
+                elif args.profile and batch_id == (log_interval + 5):
+                    break
         except fluid.core.EOFException:
             dataloader.reset()
 
@@ -379,7 +398,7 @@ def main():
         if args.use_dataloader:
 
             def data_gen():
-                data_iter_size = config.batch_size // device_count
+                data_iter_size = config.batch_size
                 train_batches = reader.get_data_iter(train_data, data_iter_size,
                                                      config.num_steps)
                 for batch in train_batches:
@@ -425,31 +444,37 @@ def main():
                 print("ptblm\tlstm_language_model_%s_loss_card%d\t%s" %
                       (args.rnn_model, device_count, train_ppl[0]))
 
-            # NOTE(zjl): sometimes we have not enough data for eval if batch_size is large, i.e., 2100
-            # Just skip to avoid error
-            def is_valid_data(data, batch_size, num_steps):
-                data_len = len(data)
-                batch_len = data_len // batch_size
-                epoch_size = (batch_len - 1) // num_steps
-                return epoch_size >= 1
+            if not args.profile:
+                # NOTE(zjl): sometimes we have not enough data for eval if batch_size is large, i.e., 2100
+                # Just skip to avoid error
+                def is_valid_data(data, batch_size, num_steps):
+                    data_len = len(data)
+                    batch_len = data_len // batch_size
+                    epoch_size = (batch_len - 1) // num_steps
+                    return epoch_size >= 1
 
-            valid_data_valid = is_valid_data(valid_data, config.batch_size,
-                                             config.num_steps)
-            if valid_data_valid:
-                valid_ppl = eval(valid_data)
-                print("Valid ppl: %.5f" % valid_ppl[0])
-            else:
-                print(
-                    'WARNING: length of valid_data is {}, which is not enough for batch_size {} and num_steps {}'.
-                    format(
-                        len(valid_data), config.batch_size, config.num_steps))
+                valid_data_valid = is_valid_data(valid_data, config.batch_size,
+                                                 config.num_steps)
+                if valid_data_valid:
+                    valid_ppl = eval(valid_data)
+                    print("Valid ppl: %.5f" % valid_ppl[0])
+                else:
+                    print(
+                        'WARNING: length of valid_data is {}, which is not enough for batch_size {} and num_steps {}'.
+                        format(
+                            len(valid_data), config.batch_size,
+                            config.num_steps))
 
-            save_model_dir = os.path.join(args.save_model_dir,
-                                          str(epoch_id), "params")
-            fluid.save(main_program, save_model_dir)
-            print("Saved model to: %s.\n" % save_model_dir)
+                save_model_dir = os.path.join(args.save_model_dir,
+                                              str(epoch_id))
+                if not os.path.exists(save_model_dir):
+                    mkpath(save_model_dir)
+                save_model_dir = os.path.join(save_model_dir, 'params')
 
-    with profile_context(args.profile):
+                fluid.save(main_program, save_model_dir)
+                print("Saved model to: %s.\n" % save_model_dir)
+
+    with profile_context(args.profile, args.profiler_path):
         train()
 
     test_ppl = eval(test_data)

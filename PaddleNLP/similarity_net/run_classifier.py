@@ -92,11 +92,6 @@ def train(conf_dict, args):
     """
     train processic
     """
-    if args.enable_ce:
-        SEED = 102
-        fluid.default_startup_program().random_seed = SEED
-        fluid.default_main_program().random_seed = SEED
-
     # loading vocabulary
     vocab = utils.load_vocab(args.vocab_path)
     # get vocab size
@@ -124,6 +119,12 @@ def train(conf_dict, args):
     startup_prog = fluid.Program()
     train_program = fluid.Program()
 
+    # used for continuous evaluation 
+    if args.enable_ce:
+        SEED = 102
+        startup_prog.random_seed = SEED
+        train_program.random_seed = SEED
+
     simnet_process = reader.SimNetProcessor(args, vocab)
     if args.task_mode == "pairwise":
         # Build network
@@ -140,7 +141,7 @@ def train(conf_dict, args):
                 optimizer.ops(avg_cost)
                 
         # Get Reader
-        get_train_examples = simnet_process.get_reader("train")
+        get_train_examples = simnet_process.get_reader("train",epoch=args.epoch)
         if args.do_valid:
             test_prog = fluid.Program()
             with fluid.program_guard(test_prog, startup_prog):
@@ -164,7 +165,7 @@ def train(conf_dict, args):
                 optimizer.ops(avg_cost)
 
         # Get Feeder and Reader
-        get_train_examples = simnet_process.get_reader("train")
+        get_train_examples = simnet_process.get_reader("train",epoch=args.epoch)
         if args.do_valid:
             test_prog = fluid.Program()
             with fluid.program_guard(test_prog, startup_prog):
@@ -218,63 +219,67 @@ def train(conf_dict, args):
     global_step = 0
     ce_info = []
     train_exe = exe
-    for epoch_id in range(args.epoch):
+    #for epoch_id in range(args.epoch):
+    # used for continuous evaluation
+    if args.enable_ce:
+        train_batch_data = fluid.io.batch(get_train_examples, args.batch_size, drop_last=False)
+    else:
         train_batch_data = fluid.io.batch(
             fluid.io.shuffle(
-                get_train_examples, buf_size=10000),
+               get_train_examples, buf_size=10000),
             args.batch_size,
             drop_last=False)
-        train_pyreader.decorate_paddle_reader(train_batch_data)
-        train_pyreader.start()
-        exe.run(startup_prog)
-        losses = []
-        start_time = time.time()
-        while True:
-            try:
-                global_step += 1
-                fetch_list = [avg_cost.name]
-                avg_loss = train_exe.run(program=train_program, fetch_list = fetch_list)
-                if args.do_valid and global_step % args.validation_steps == 0:
-                    get_valid_examples = simnet_process.get_reader("valid")
-                    valid_result = valid_and_test(test_prog,test_pyreader,get_valid_examples,simnet_process,"valid",exe,[pred.name])
-                    if args.compute_accuracy:
-                        valid_auc, valid_acc = valid_result
-                        logging.info(
-                            "global_steps: %d, valid_auc: %f, valid_acc: %f" %
-                            (global_step, valid_auc, valid_acc))
-                    else:
-                        valid_auc = valid_result
-                        logging.info("global_steps: %d, valid_auc: %f" %
-                                    (global_step, valid_auc))
-                if global_step % args.save_steps == 0:
-                    model_save_dir = os.path.join(args.output_dir,
-                                                  conf_dict["model_path"])
-                    model_path = os.path.join(model_save_dir, str(global_step))
-                        
-                    if not os.path.exists(model_save_dir):
-                        os.makedirs(model_save_dir)
-                    if args.task_mode == "pairwise":
-                        feed_var_names = [left.name, pos_right.name]
-                        target_vars = [left_feat, pos_score]
-                    else:
-                        feed_var_names = [
-                            left.name,
-                            right.name,
-                        ]
-                        target_vars = [left_feat, pred]
-                    fluid.io.save_inference_model(model_path, feed_var_names,
-                                                  target_vars, exe,
-                                                  test_prog)
-                    logging.info("saving infer model in %s" % model_path)
-                losses.append(np.mean(avg_loss[0]))
-            
-            except fluid.core.EOFException:
-                train_pyreader.reset()
-                break
-        end_time = time.time()
-        logging.info("epoch: %d, loss: %f, used time: %d sec" %
-                     (epoch_id, np.mean(losses), end_time - start_time))
-        ce_info.append([np.mean(losses), end_time - start_time])
+    train_pyreader.decorate_paddle_reader(train_batch_data)
+    train_pyreader.start()
+    exe.run(startup_prog)
+    losses = []
+    start_time = time.time()
+    while True:
+        try:
+            global_step += 1
+            fetch_list = [avg_cost.name]
+            avg_loss = train_exe.run(program=train_program, fetch_list = fetch_list)
+            losses.append(np.mean(avg_loss[0]))
+            if args.do_valid and global_step % args.validation_steps == 0:
+                get_valid_examples = simnet_process.get_reader("valid")
+                valid_result = valid_and_test(test_prog,test_pyreader,get_valid_examples,simnet_process,"valid",exe,[pred.name])
+                if args.compute_accuracy:
+                    valid_auc, valid_acc = valid_result
+                    logging.info(
+                        "global_steps: %d, valid_auc: %f, valid_acc: %f, valid_loss: %f" %
+                        (global_step, valid_auc, valid_acc, np.mean(losses)))
+                else:
+                    valid_auc = valid_result
+                    logging.info("global_steps: %d, valid_auc: %f, valid_loss: %f" %
+                                (global_step, valid_auc, np.mean(losses)))
+            if global_step % args.save_steps == 0:
+                model_save_dir = os.path.join(args.output_dir,
+                                            conf_dict["model_path"])
+                model_path = os.path.join(model_save_dir, str(global_step))
+                    
+                if not os.path.exists(model_save_dir):
+                    os.makedirs(model_save_dir)
+                if args.task_mode == "pairwise":
+                    feed_var_names = [left.name, pos_right.name]
+                    target_vars = [left_feat, pos_score]
+                else:
+                    feed_var_names = [
+                        left.name,
+                        right.name,
+                    ]
+                    target_vars = [left_feat, pred]
+                fluid.io.save_inference_model(model_path, feed_var_names,
+                                            target_vars, exe,
+                                            test_prog)
+                logging.info("saving infer model in %s" % model_path)
+        
+        except fluid.core.EOFException:
+            train_pyreader.reset()
+            break
+    end_time = time.time()
+    #logging.info("epoch: %d, loss: %f, used time: %d sec" %
+                #(epoch_id, np.mean(losses), end_time - start_time))
+    ce_info.append([np.mean(losses), end_time - start_time])
     #final save
     logging.info("the final step is %s" % global_step)    
     model_save_dir = os.path.join(args.output_dir,
@@ -295,14 +300,14 @@ def train(conf_dict, args):
                                 target_vars, exe,
                                 test_prog)
     logging.info("saving infer model in %s" % model_path)
-
+    # used for continuous evaluation
     if args.enable_ce:
         card_num = get_cards()
         ce_loss = 0
         ce_time = 0
         try:
-            ce_loss = ce_info[-2][0]
-            ce_time = ce_info[-2][1]
+            ce_loss = ce_info[-1][0]
+            ce_time = ce_info[-1][1]
         except:
             logging.info("ce info err!")
         print("kpis\teach_step_duration_%s_card%s\t%s" %
