@@ -80,16 +80,17 @@ def train():
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
         model = YOLOv3(3, is_train=True)
-        if args.use_data_parallel:
-            model = fluid.dygraph.parallel.DataParallel(model, strategy)
 
         if cfg.pretrain:
             restore, _ = fluid.load_dygraph(cfg.pretrain)
-            model.blocks.set_dict(restore)
+            model.block.set_dict(restore)
 
         if cfg.finetune:
             restore, _ = fluid.load_dygraph(cfg.finetune)
-            model.set_dict(restore)
+            model.set_dict(restore, use_structured_name=True)
+
+        if args.use_data_parallel:
+            model = fluid.dygraph.parallel.DataParallel(model, strategy)
 
         boundaries = cfg.lr_steps
         gamma = cfg.lr_gamma
