@@ -1,0 +1,8 @@
+#Python3
+numpy==1.14.5
+six==1.11.0
+paddlepaddle-gpu==1.5.2.post107
+
+#Python2
+zipfile
+ConfigParser
