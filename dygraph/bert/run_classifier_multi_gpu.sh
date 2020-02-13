@@ -4,7 +4,7 @@ BERT_BASE_PATH="./data/pretrained_models/uncased_L-12_H-768_A-12/"
 TASK_NAME='MNLI'
 DATA_PATH="./data/glue_data/MNLI/"
 CKPT_PATH="./data/saved_model/mnli_models"
-GPU_TO_USE="0,1,2,3"
+GPU_TO_USE=0,1,2,3
 
 export CUDA_VISIBLE_DEVICES=$GPU_TO_USE
 
