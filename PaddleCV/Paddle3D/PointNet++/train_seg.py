@@ -156,9 +156,13 @@ def train():
                     decay_rate=args.lr_decay,
                     staircase=True)
             lr = fluid.layers.clip(lr, 1e-5, args.lr)
+            params = []
+            for var in train_prog.list_vars():
+                if fluid.io.is_parameter(var):
+                    params.append(var.name)
             optimizer = fluid.optimizer.Adam(learning_rate=lr,
                     regularization=fluid.regularizer.L2Decay(args.weight_decay))
-            optimizer.minimize(train_loss)
+            optimizer.minimize(train_loss, parameter_list=params)
     train_keys, train_values = parse_outputs(train_outputs)
 
     test_prog = fluid.Program()
@@ -179,12 +183,13 @@ def train():
     exe.run(startup)
 
     if args.resume:
-        assert os.path.exists(args.resume), \
-                "Given resume weight dir {} not exist.".format(args.resume)
-        def if_exist(var):
-            return os.path.exists(os.path.join(args.resume, var.name))
-        fluid.io.load_vars(
-            exe, args.resume, predicate=if_exist, main_program=train_prog)
+        assert os.path.exists("{}.pdparams".format(args.resume)), \
+                "Given resume weight {}.pdparams not exist.".format(args.resume)
+        assert os.path.exists("{}.pdopt".format(args.resume)), \
+                "Given resume optimizer state {}.pdopt not exist.".format(args.resume)
+        assert os.path.exists("{}.pdmodel".format(args.resume)), \
+                "Given resume model parameter list {}.pdmodel not exist.".format(args.resume)
+        fluid.load(train_prog, args.resume, exe)
 
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
@@ -199,14 +204,14 @@ def train():
         if os.path.isdir(path):
             shutil.rmtree(path)
         logger.info("Save model to {}".format(path))
-        fluid.io.save_persistables(exe, path, prog)
+        fluid.save(prog, path)
 
     # get reader
     indoor_reader = Indoor3DReader(args.data_dir)
     train_reader = indoor_reader.get_reader(args.batch_size, args.num_points, mode='train')
     test_reader = indoor_reader.get_reader(args.batch_size, args.num_points, mode='test')
-    train_pyreader.decorate_sample_list_generator(train_reader, place)
-    test_pyreader.decorate_sample_list_generator(test_reader, place)
+    train_pyreader.set_sample_list_generator(train_reader, place)
+    test_pyreader.set_sample_list_generator(test_reader, place)
 
     train_stat = Stat()
     test_stat = Stat()
@@ -236,7 +241,7 @@ def train():
         except fluid.core.EOFException:
             logger.info("[TRAIN] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, train_stat.get_mean_log(), np.mean(train_periods[1:])))
             ce_time = np.mean(train_periods[1:])
-            save_model(exe, train_prog, os.path.join(args.save_dir, str(epoch_id)))
+            save_model(exe, train_prog, os.path.join(args.save_dir, str(epoch_id), "pointnet2_{}_seg".format(args.model)))
             
             # evaluation
             if not args.enable_ce:

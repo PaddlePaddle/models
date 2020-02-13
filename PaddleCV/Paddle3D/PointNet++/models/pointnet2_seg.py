@@ -44,10 +44,19 @@ class PointNet2SemSeg(object):
         self.FP_confs = []
 
     def build_input(self):
-        self.xyz = fluid.layers.data(name='xyz', shape=[self.num_points, 3], dtype='float32', lod_level=0)
-        self.feature = fluid.layers.data(name='feature', shape=[self.num_points, 6], dtype='float32', lod_level=0)
-        self.label = fluid.layers.data(name='label', shape=[self.num_points, 1], dtype='int64', lod_level=0)
-        self.pyreader = fluid.io.PyReader(
+        self.xyz = fluid.data(name='xyz',
+                              shape=[None, self.num_points, 3],
+                              dtype='float32',
+                              lod_level=0)
+        self.feature = fluid.data(name='feature',
+                                  shape=[None, self.num_points, 6],
+                                  dtype='float32',
+                                  lod_level=0)
+        self.label = fluid.data(name='label',
+                                shape=[None, self.num_points, 1],
+                                dtype='int64',
+                                lod_level=0)
+        self.pyreader = fluid.io.DataLoader.from_generator(
                 feed_list=[self.xyz, self.feature, self.label],
                 capacity=64,
                 use_double_buffer=True,

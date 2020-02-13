@@ -42,9 +42,15 @@ class PointNet2Cls(object):
         self.SA_confs = []
 
     def build_input(self):
-        self.xyz = fluid.layers.data(name='xyz', shape=[self.num_points, 3], dtype='float32', lod_level=0)
-        self.label = fluid.layers.data(name='label', shape=[1], dtype='int64', lod_level=0)
-        self.pyreader = fluid.io.PyReader(
+        self.xyz = fluid.data(name='xyz',
+                              shape=[None, self.num_points, 3],
+                              dtype='float32',
+                              lod_level=0)
+        self.label = fluid.data(name='label',
+                                shape=[None, 1],
+                                dtype='int64',
+                                lod_level=0)
+        self.pyreader = fluid.io.DataLoader.from_generator(
                 feed_list=[self.xyz, self.label],
                 capacity=64,
                 use_double_buffer=True,
@@ -65,11 +71,11 @@ class PointNet2Cls(object):
                     **SA_conf)
 
         out = fluid.layers.squeeze(feature, axes=[-1])
-        out = fc_bn(out,out_channels=512, bn=True, bn_momentum=bn_momentum, name="fc_1")
+        out = fc_bn(out, out_channels=512, bn=True, bn_momentum=bn_momentum, name="fc_1")
         out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
-        out = fc_bn(out,out_channels=256, bn=True, bn_momentum=bn_momentum, name="fc_2")
+        out = fc_bn(out, out_channels=256, bn=True, bn_momentum=bn_momentum, name="fc_2")
         out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
-        out = fc_bn(out,out_channels=self.num_classes, act=None, name="fc_3")
+        out = fc_bn(out, out_channels=self.num_classes, act=None, name="fc_3")
         pred = fluid.layers.softmax(out)
 
         # calc loss

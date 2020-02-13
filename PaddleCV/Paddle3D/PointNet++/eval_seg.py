@@ -108,17 +108,16 @@ def eval():
     exe = fluid.Executor(place)
     exe.run(startup)
 
-    assert os.path.exists(args.weights), "weights {} not exists.".format(args.weights)
-    def if_exist(var):
-        return os.path.exists(os.path.join(args.weights, var.name))
-    fluid.io.load_vars(exe, args.weights, eval_prog, predicate=if_exist)
+    assert os.path.exists("{}.pdparams".format(args.weights)), \
+            "Given resume weight {}.pdparams not exist.".format(args.weights)
+    fluid.load(eval_prog, args.weights, exe)
 
     eval_compile_prog = fluid.compiler.CompiledProgram(eval_prog)
     
     # get reader
     indoor_reader = Indoor3DReader(args.data_dir)
     eval_reader = indoor_reader.get_reader(args.batch_size, args.num_points, mode='test')
-    eval_pyreader.decorate_sample_list_generator(eval_reader, place)
+    eval_pyreader.set_sample_list_generator(eval_reader, place)
 
     eval_stat = Stat()
     try:
