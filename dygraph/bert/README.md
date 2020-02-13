@@ -7,13 +7,12 @@
 
 ### 发布要点
 
-1) 动态图BERT模型
 
-2）目前仅支持fine-tuning任务，后续会开展对pre-training任务的支持
+1）动态图BERT模型，目前仅支持fine-tuning任务，后续会开展对pre-training任务的支持
 
-3）数据集目前验证了glue上的部分任务，squad上的任务后续会进行验证
+2）数据集目前验证了glue上的部分任务，squad上的任务后续会进行验证
 
-4）目前暂不支持FP16/FP32混合精度训练。
+3）目前暂不支持FP16/FP32混合精度训练。
 
 | Model | Layers | Hidden size | Heads |Parameters |
 | :------| :------: | :------: |:------: |:------: |
