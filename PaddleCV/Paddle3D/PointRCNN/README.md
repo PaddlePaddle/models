@@ -188,14 +188,14 @@ RPN训练checkpoints默认保存在`checkpoints/rpn`目录，也可以通过`--s
 python tools/generate_aug_scene.py --class_name 'Car' --split train --aug_times 4
 ```
 
-保存RPN模型对离线增强数据的输出特征和ROI，可以通过参数`--ckpt_dir`来指定RPN训练最终权重保存路径，RPN权重默认保存在`checkpoints/rpn`目录。
+保存RPN模型对离线增强数据的输出特征和ROI，可以通过参数`--weights`来指定RPN训练最终权重保存路径，RPN权重默认保存在`checkpoints/rpn`目录。
 保存输出特征和ROI时须指定`TEST.SPLIT`为`train_aug`，指定`TEST.RPN_POST_NMS_TOP_N`为`300`, `TEST.RPN_NMS_THRESH`为`0.85`。
 通过`--output_dir`指定保存输出特征和ROI的路径，默认保存到`./output`目录。
 
 ```
 python eval.py --cfg=cfgs/default.yml  \
                --eval_mode=rpn \
-               --ckpt_dir=./checkpoints/rpn/199 \
+               --weights=./checkpoints/rpn/199 \
                --save_rpn_feature \
                --output_dir=output \
                --set TEST.SPLIT train_aug TEST.RPN_POST_NMS_TOP_N 300 TEST.RPN_NMS_THRESH 0.85
@@ -260,13 +260,13 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`python -c 'import paddle; print(paddle.
 
 2. 保存RPN模型对评估数据的输出特征和ROI
 
-保存RPN模型对评估数据的输出特征和ROI命令如下，可以通过参数`--ckpt_dir`来指定RPN训练最终权重保存路径，RPN权重默认保存在`checkpoints/rpn`目录。
+保存RPN模型对评估数据的输出特征和ROI命令如下，可以通过参数`--weights`来指定RPN训练最终权重保存路径，RPN权重默认保存在`checkpoints/rpn`目录。
 通过`--output_dir`指定保存输出特征和ROI的路径，默认保存到`./output`目录。
 
 ```
 python eval.py --cfg=cfgs/default.yml \
                --eval_mode=rpn \
-               --ckpt_dir=./checkpoints/rpn/199 \
+               --weights=./checkpoints/rpn/199 \
                --save_rpn_feature \
                --output_dir=output/val
 ```
@@ -280,7 +280,7 @@ python eval.py --cfg=cfgs/default.yml \
 ```
 python eval.py --cfg=cfgs/default.yml \
                --eval_mode=rcnn_offline \
-               --ckpt_dir=./checkpoints/rcnn_offline/29 \
+               --weights=./checkpoints/rcnn_offline/29 \
                --rcnn_eval_roi_dir=output/val/detections/data \
                --rcnn_eval_feature_dir=output/val/features \
                --save_result

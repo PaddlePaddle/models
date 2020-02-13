@@ -59,10 +59,10 @@ def parse_args():
         default=1,
         help='evaluation batch size, default 1')
     parser.add_argument(
-        '--ckpt_dir',
+        '--weights',
         type=str,
         default='checkpoints/199',
-        help='specify a ckpt directory to be evaluated if needed')
+        help='specify weights to be evaluated if needed')
     parser.add_argument(
         '--data_dir',
         type=str,
@@ -146,7 +146,7 @@ def eval():
         with fluid.unique_name.guard():
             eval_model = PointRCNN(cfg, args.batch_size, True, 'TEST')
             eval_model.build()
-            eval_pyreader = eval_model.get_pyreader()
+            eval_loader = eval_model.get_loader()
             eval_feeds = eval_model.get_feeds()
             eval_outputs = eval_model.get_outputs()
     eval_prog = eval_prog.clone(True)
@@ -164,13 +164,10 @@ def eval():
 
     exe.run(startup)
 
-    # load checkpoint
-    assert os.path.isdir(
-        args.ckpt_dir), "ckpt_dir {} not a directory".format(args.ckpt_dir)
-
-    def if_exist(var):
-        return os.path.exists(os.path.join(args.ckpt_dir, var.name))
-    fluid.io.load_vars(exe, args.ckpt_dir, eval_prog, predicate=if_exist)
+    # load weights 
+    assert os.path.exists("{}.pdparams".format(args.weights)), \
+            "Given resume weight {}.pdparams not exist.".format(args.weights)
+    fluid.load(eval_prog, args.weights)
 
     kitti_feature_dir = os.path.join(args.output_dir, 'features')
     kitti_output_dir = os.path.join(args.output_dir, 'detections', 'data')
@@ -207,7 +204,7 @@ def eval():
                                         rcnn_eval_roi_dir=args.rcnn_eval_roi_dir,
                                         rcnn_eval_feature_dir=args.rcnn_eval_feature_dir)
     eval_reader = kitti_rcnn_reader.get_multiprocess_reader(args.batch_size, eval_feeds)
-    eval_pyreader.decorate_sample_list_generator(eval_reader, place)
+    eval_loader.set_sample_list_generator(eval_reader, place)
 
     thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
     queue = multiprocessing.Queue(128)
@@ -249,7 +246,7 @@ def eval():
             p_list[-1].start()
 
     try:
-        eval_pyreader.start()
+        eval_loader.start()
         eval_iter = 0
         start_time = time.time()
         
@@ -336,7 +333,7 @@ def eval():
                             "run 'python3 tools/kitti_eval.py' to evaluate KITTI mAP.")
 
     finally:
-        eval_pyreader.reset()
+        eval_loader.reset()
 
 
 if __name__ == "__main__":

@@ -35,16 +35,22 @@ class PointNet2Cls(object):
         self.num_points = num_points
         self.use_xyz = use_xyz
         self.out_feature = None
-        self.pyreader = None
+        self.loader = None
         self.model_config()
 
     def model_config(self):
         self.SA_confs = []
 
     def build_input(self):
-        self.xyz = fluid.layers.data(name='xyz', shape=[self.num_points, 3], dtype='float32', lod_level=0)
-        self.label = fluid.layers.data(name='label', shape=[1], dtype='int64', lod_level=0)
-        self.pyreader = fluid.io.PyReader(
+        self.xyz = fluid.data(name='xyz',
+                              shape=[None, self.num_points, 3],
+                              dtype='float32',
+                              lod_level=0)
+        self.label = fluid.data(name='label',
+                                shape=[None, 1],
+                                dtype='int64',
+                                lod_level=0)
+        self.loader = fluid.io.DataLoader.from_generator(
                 feed_list=[self.xyz, self.label],
                 capacity=64,
                 use_double_buffer=True,
@@ -65,11 +71,11 @@ class PointNet2Cls(object):
                     **SA_conf)
 
         out = fluid.layers.squeeze(feature, axes=[-1])
-        out = fc_bn(out,out_channels=512, bn=True, bn_momentum=bn_momentum, name="fc_1")
+        out = fc_bn(out, out_channels=512, bn=True, bn_momentum=bn_momentum, name="fc_1")
         out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
-        out = fc_bn(out,out_channels=256, bn=True, bn_momentum=bn_momentum, name="fc_2")
+        out = fc_bn(out, out_channels=256, bn=True, bn_momentum=bn_momentum, name="fc_2")
         out = fluid.layers.dropout(out, 0.5, dropout_implementation="upscale_in_train")
-        out = fc_bn(out,out_channels=self.num_classes, act=None, name="fc_3")
+        out = fc_bn(out, out_channels=self.num_classes, act=None, name="fc_3")
         pred = fluid.layers.softmax(out)
 
         # calc loss
@@ -87,8 +93,8 @@ class PointNet2Cls(object):
     def get_outputs(self):
         return {"loss": self.loss, "accuracy": self.acc1}
 
-    def get_pyreader(self):
-        return self.pyreader
+    def get_loader(self):
+        return self.loader
 
 
 class PointNet2ClsSSG(PointNet2Cls):
