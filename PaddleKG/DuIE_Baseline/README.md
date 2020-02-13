@@ -7,7 +7,7 @@ InfoExtractor 2.0 is built upon a SOTA pre-trained language model [ERNIE](https:
 We design a structured **tagging strategy** to directly fine-tune ERNIE, through which multiple, overlapped SPOs can be extracted in **a single pass**.
 The InfoExtractor 2.0 system is simple yet effective, achieving 0.554 F1 on the DuIE 2.0 demo data and 0.848 F1 on DuIE 1.0.
 The hyperparameters are simply set to: BATCH_SIZE=16, LEARNING_RATE=2e-5, and EPOCH=10 (without tuning).
-- - -
+
 ### Tagging Strategy  
 Our tagging strategy is designed to discover multiple, overlapped SPOs in the DuIE 2.0 task.
 Based on the classic 'BIO' tagging scheme, we assign tags (also known as labels) to each token to indicate its position in an entity span.
@@ -23,7 +23,6 @@ Below is a visual illustration of our tagging strategy:
 For **complex relations** in the DuIE 2.0 task, we simply treat affiliated objects as independent instances (SPOs) which share the same subject.
 Anything else besides the tagging strategy is implemented in the most straightforward way. The model input is:
  <CLS> *input text* <SEP>, and the final hidden states are directly projected into classification probabilities.
-- - -
 
 ### Environments  
 Python3 + Paddle Fluid 1.5 for training/evaluation/prediction (please confirm your Python path in scripts).  
