@@ -1,6 +1,7 @@
 set -eux
 
 export TASK_DATA_PATH=./data/
+export DEV_FILE=dev.json
 export MODEL_PATH=./pretrained_model/
 export CHECKPOINT=./checkpoints/step_60000/
 export TEST_SAVE=./data/
@@ -17,8 +18,8 @@ CUDA_VISIBLE_DEVICES=7 python -u ./ernie/run_duie.py \
                    --num_labels 112 \
                    --label_map_config ${TASK_DATA_PATH}relation2label.json \
                    --spo_label_map_config ${TASK_DATA_PATH}label2relation.json \
-                   --test_set ${TASK_DATA_PATH}dev_demo.json \
-                   --test_save ${TEST_SAVE}predict_test.json \
+                   --test_set ${TASK_DATA_PATH}${DEV_FILE} \
+                   --test_save ${TEST_SAVE}predict_dev.json \
                    --vocab_path ${MODEL_PATH}vocab.txt \
                    --ernie_config_path ${MODEL_PATH}ernie_config.json \
                    --use_fp16 false \

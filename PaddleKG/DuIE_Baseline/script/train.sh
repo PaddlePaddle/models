@@ -8,6 +8,8 @@ export SAVE_STEPS=5000
 export SAVE_PATH=./
 export TASK_DATA_PATH=./data/
 export MODEL_PATH=./pretrained_model/
+export TRAIN_FILE=train.json
+export DEV_FILE=dev.json
 
 export FLAGS_sync_nccl_allreduce=1
 export PYTHONPATH=./ernie:${PYTHONPATH:-}
@@ -23,8 +25,8 @@ CUDA_VISIBLE_DEVICES=7 python -u ./ernie/run_duie.py \
                    --chunk_scheme "IOB" \
                    --label_map_config ${TASK_DATA_PATH}relation2label.json \
                    --spo_label_map_config ${TASK_DATA_PATH}label2relation.json \
-                   --train_set ${TASK_DATA_PATH}train_demo.json \
-                   --dev_set ${TASK_DATA_PATH}dev_demo.json \
+                   --train_set ${TASK_DATA_PATH}${TRAIN_FILE} \
+                   --dev_set ${TASK_DATA_PATH}${DEV_FILE} \
                    --vocab_path ${MODEL_PATH}vocab.txt \
                    --ernie_config_path ${MODEL_PATH}ernie_config.json \
                    --checkpoints ${SAVE_PATH}checkpoints \
