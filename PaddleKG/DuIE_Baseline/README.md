@@ -2,11 +2,9 @@
 ### Abstract  
 InfoExtractor 2.0 is a relation extraction baseline system developed for DuIE 2.0.
 Different from [DuIE 1.0](http://lic2019.ccf.org.cn/kg), the new 2.0 task is more inclined to colloquial language, and further introduces **complex relations** which entails multiple objects in one single SPO.
-For detailed information about the dataset, please refer to the official website of our [competition](http://bjyz-ai.epc.baidu.com/aistudio/competition/detail/34?isFromCcf=true).  
+For detailed information about the dataset, please refer to the official website of our competition.  
 InfoExtractor 2.0 is built upon a SOTA pre-trained language model [ERNIE](https://arxiv.org/abs/1904.09223) using PaddlePaddle.
-We design a structured **tagging strategy** to directly fine-tune ERNIE, through which multiple, overlapped SPOs can be extracted in **a single pass**.
-The InfoExtractor 2.0 system is simple yet effective, achieving 0.554 F1 on the DuIE 2.0 demo data and 0.848 F1 on DuIE 1.0.
-The hyperparameters are simply set to: BATCH_SIZE=16, LEARNING_RATE=2e-5, and EPOCH=10 (without tuning).
+We design a structured **tagging strategy** to directly fine-tune ERNIE, through which multiple, overlapped SPOs can be extracted in **a single pass**.  
 
 ### Tagging Strategy  
 Our tagging strategy is designed to discover multiple, overlapped SPOs in the DuIE 2.0 task.
@@ -31,7 +29,7 @@ Dependencies are listed in `./requirements.txt`.
 The code is tested on a single P40 GPU, with CUDA version=10.1, GPU Driver Version = 418.39.
 
 ### Download Dataset
-Please download the training data, development data from [the competition website](http://bjyz-ai.epc.baidu.com/aistudio/competition/detail/34?isFromCcf=true), then unzip files into `./data/` and rename them to `train.json`, `dev.json`.
+Please download the training data, development data from the competition website, then unzip files into `./data/` and rename them to `train.json`, `dev.json`.
 
 ### Download pre-trained ERNIE model  
 Download ERNIE1.0 Base（max-len-512）model and extract it into `./pretrained_model/`  
@@ -62,7 +60,7 @@ This will write the predictions into a json file with the same format as the ori
 ### Official Evaluation  
 Zip your prediction json file and then run official evaluation:
 ```
-zip ./data/predict_test.json.zip ./data/predict_test.json
-python2 ./script/re_official_evaluation.py --golden_file=./data/dev_demo.json  --predict_file=./data/predict_test.json.zip [--alias_file alias_dict]
+zip ./data/predict_dev.json.zip ./data/predict_dev.json
+python2 ./script/re_official_evaluation.py --golden_file=./data/dev.json  --predict_file=./data/predict_dev.json.zip [--alias_file alias_dict]
 ```
 Precision, Recall and F1 scores are used as the official evaluation metrics to measure the performance of participating systems. Alias file lists entities with more than one correct mentions. It is not provided due to security reasons.
