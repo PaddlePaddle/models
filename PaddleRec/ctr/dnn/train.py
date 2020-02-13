@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding=utf-8 -*-
 # Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -179,8 +180,11 @@ def local_train(args):
                     ((epoch), end_time - start_time))
 
         if args.save_model:
-            model_path = (str(args.model_path) + "/" + "epoch_" + str(epoch))
-            fluid.io.save_persistables(executor=exe, dirname=model_path)
+            model_path = (str(args.model_path) + "/" +
+                          "epoch_" + str(epoch) + "/")
+            if not os.path.isdir(model_path):
+                os.mkdir(model_path)
+            fluid.save(fluid.default_main_program(), model_path + "checkpoint")
 
     logger.info("Train Success!")
 
@@ -250,13 +254,13 @@ def distribute_train(args):
 def train():
     args = parse_args()
 
-    if not os.path.isdir(args.model_output_dir):
-        os.mkdir(args.model_output_dir)
+    if not os.path.isdir(args.model_path):
+        os.mkdir(args.model_path)
 
-    if args.cloud_train:
+    if args.is_cloud:
         logger.info("run cloud training")
         distribute_train(args)
-    elif args.local_train:
+    elif args.is_local:
         logger.info("run local training")
         local_train(args)
 

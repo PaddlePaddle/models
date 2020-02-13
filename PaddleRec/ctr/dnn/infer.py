@@ -20,8 +20,8 @@ import logging
 import argparse
 import paddle
 import paddle.fluid as fluid
-from network import CTR
-import py_reader_generator as py_reader
+from network_conf import CTR
+import feed_generator as generator
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
@@ -113,7 +113,7 @@ def parse_args():
 
 def run_infer(args, model_path):
     place = fluid.CPUPlace()
-    train_generator = py_reader.CriteoDataset(args.sparse_feature_dim)
+    train_generator = generator.CriteoDataset(args.sparse_feature_dim)
     file_list = [
         str(args.test_files_path) + "/%s" % x
         for x in os.listdir(args.test_files_path)
@@ -124,10 +124,16 @@ def run_infer(args, model_path):
     test_program = fluid.framework.Program()
     ctr_model = CTR()
 
-    def set_zero(var_name):
-        param = fluid.global_scope().var(var_name).get_tensor()
-        param_array = np.zeros(param._get_dims()).astype("int64")
-        param.set(param_array, place)
+    def set_zero():
+        auc_states_names = [
+            '_generated_var_0', '_generated_var_1', '_generated_var_2',
+            '_generated_var_3'
+        ]
+        for name in auc_states_names:
+            param = fluid.global_scope().var(name).get_tensor()
+            if param:
+                param_array = np.zeros(param._get_dims()).astype("int64")
+                param.set(param_array, place)
 
     with fluid.framework.program_guard(test_program, startup_program):
         with fluid.unique_name.guard():
@@ -137,17 +143,15 @@ def run_infer(args, model_path):
             exe = fluid.Executor(place)
             feeder = fluid.DataFeeder(feed_list=inputs, place=place)
 
-            fluid.io.load_persistables(
-                executor=exe,
-                dirname=model_path,
-                main_program=fluid.default_main_program())
-
-            auc_states_names = [
-                '_generated_var_0', '_generated_var_1', '_generated_var_2',
-                '_generated_var_3'
-            ]
-            for name in auc_states_names:
-                set_zero(name)
+            if args.is_cloud:
+                fluid.io.load_persistables(
+                    executor=exe,
+                    dirname=model_path,
+                    main_program=fluid.default_main_program())
+            elif args.is_local:
+                fluid.load(fluid.default_main_program(),
+                           model_path + "/checkpoint", exe)
+            set_zero()
 
             run_index = 0
             infer_auc = 0

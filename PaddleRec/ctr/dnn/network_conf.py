@@ -23,18 +23,18 @@ class CTR(object):
     """
 
     def input_data(self, args):
-        dense_input = fluid.layers.data(name="dense_input",
-                                        shape=[args.dense_feature_dim],
-                                        dtype="float32")
+        dense_input = fluid.data(name="dense_input",
+                                 shape=[-1, args.dense_feature_dim],
+                                 dtype="float32")
 
         sparse_input_ids = [
-            fluid.layers.data(name="C" + str(i),
-                              shape=[1],
-                              lod_level=1,
-                              dtype="int64") for i in range(1, 27)
+            fluid.data(name="C" + str(i),
+                       shape=[-1, 1],
+                       lod_level=1,
+                       dtype="int64") for i in range(1, 27)
         ]
 
-        label = fluid.layers.data(name="label", shape=[1], dtype="int64")
+        label = fluid.data(name="label", shape=[-1, 1], dtype="int64")
 
         inputs = [dense_input] + sparse_input_ids + [label]
         return inputs
