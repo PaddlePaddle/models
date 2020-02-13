@@ -30,6 +30,9 @@ Python2 for official evaluation script.
 Dependencies are listed in `./requirements.txt`.  
 The code is tested on a single P40 GPU, with CUDA version=10.1, GPU Driver Version = 418.39.
 
+### Download Dataset
+Please download the training data, development data from [the competition website](http://bjyz-ai.epc.baidu.com/aistudio/competition/detail/34?isFromCcf=true), then unzip files into `./data/` and rename them to `train.json`, `dev.json`.
+
 ### Download pre-trained ERNIE model  
 Download ERNIE1.0 Base（max-len-512）model and extract it into `./pretrained_model/`  
 ```
