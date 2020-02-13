@@ -35,7 +35,7 @@ class PointNet2Cls(object):
         self.num_points = num_points
         self.use_xyz = use_xyz
         self.out_feature = None
-        self.pyreader = None
+        self.loader = None
         self.model_config()
 
     def model_config(self):
@@ -50,7 +50,7 @@ class PointNet2Cls(object):
                                 shape=[None, 1],
                                 dtype='int64',
                                 lod_level=0)
-        self.pyreader = fluid.io.DataLoader.from_generator(
+        self.loader = fluid.io.DataLoader.from_generator(
                 feed_list=[self.xyz, self.label],
                 capacity=64,
                 use_double_buffer=True,
@@ -93,8 +93,8 @@ class PointNet2Cls(object):
     def get_outputs(self):
         return {"loss": self.loss, "accuracy": self.acc1}
 
-    def get_pyreader(self):
-        return self.pyreader
+    def get_loader(self):
+        return self.loader
 
 
 class PointNet2ClsSSG(PointNet2Cls):

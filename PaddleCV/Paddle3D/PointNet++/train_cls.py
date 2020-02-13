@@ -148,7 +148,7 @@ def train():
                           PointNet2ClsSSG(args.num_classes, args.num_points)
             train_model.build_model(bn_momentum=args.bn_momentum)
             train_feeds = train_model.get_feeds()
-            train_pyreader = train_model.get_pyreader()
+            train_loader = train_model.get_loader()
             train_outputs = train_model.get_outputs()
             train_loss = train_outputs['loss']
             lr = fluid.layers.exponential_decay(
@@ -175,7 +175,7 @@ def train():
             test_model.build_model()
             test_feeds = test_model.get_feeds()
             test_outputs = test_model.get_outputs()
-            test_pyreader = test_model.get_pyreader()
+            test_loader = test_model.get_loader()
     test_prog = test_prog.clone(True)
     test_keys, test_values = parse_outputs(test_outputs)
 
@@ -218,10 +218,10 @@ def train():
     ]
     modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='train', transforms=trans_list)
     train_reader = modelnet_reader.get_reader(args.batch_size, args.num_points)
-    train_pyreader.set_sample_list_generator(train_reader, place)
+    train_loader.set_sample_list_generator(train_reader, place)
     modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='test', transforms=None)
     test_reader = modelnet_reader.get_reader(args.batch_size, args.num_points)
-    test_pyreader.set_sample_list_generator(test_reader, place)
+    test_loader.set_sample_list_generator(test_reader, place)
 
     train_stat = Stat()
     test_stat = Stat()
@@ -231,7 +231,7 @@ def train():
 
     for epoch_id in range(args.epoch):
         try:
-            train_pyreader.start()
+            train_loader.start()
             train_iter = 0
             train_periods = []
             while True:
@@ -256,7 +256,7 @@ def train():
             # evaluation
             if not args.enable_ce:
                 try:
-                    test_pyreader.start()
+                    test_loader.start()
                     test_iter = 0
                     test_periods = []
                     while True:
@@ -274,12 +274,12 @@ def train():
                 except fluid.core.EOFException:
                     logger.info("[TEST] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, test_stat.get_mean_log(), np.mean(test_periods[1:])))
                 finally:
-                    test_pyreader.reset()
+                    test_loader.reset()
                     test_stat.reset()
                     test_periods = []
 
         finally:
-            train_pyreader.reset()
+            train_loader.reset()
             train_stat.reset()
             train_periods = []
 
