@@ -16,7 +16,7 @@
 
 | Model | Layers | Hidden size | Heads |Parameters |
 | :------| :------: | :------: |:------: |:------: |
-| [BERT-Base, Uncased](https://baidu-nlp.bj.bcebos.com/DYGRAPH_models%2FBERT%2Fdata.tar.gz) | 12 | 768 |12 |110M |
+| [BERT-Base, Uncased](https://baidu-nlp.bj.bcebos.com/DYGRAPH_models/BERT/data.tar.gz) | 12 | 768 |12 |110M |
 
 每个压缩包都包含了模型配置文件 `bert_config.json`、参数文件夹 `params`、动态图参数文件夹`dygraph_params` 和词汇表 `vocab.txt`；
 
