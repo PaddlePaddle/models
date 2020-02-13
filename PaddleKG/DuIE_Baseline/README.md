@@ -19,10 +19,12 @@ Below is a visual illustration of our tagging strategy:
 <div  align="center">  
 <img src="./tagging_strategy.png" width = "550" height = "420" alt="Tagging Strategy" align=center />
 </div>
+
 For **complex relations** in the DuIE 2.0 task, we simply treat affiliated objects as independent instances (SPOs) which share the same subject.
 Anything else besides the tagging strategy is implemented in the most straightforward way. The model input is:
- \<CLS\> *input text* \<SEP\>, and the final hidden states are directly projected into classification probabilities.
+ <CLS> *input text* <SEP>, and the final hidden states are directly projected into classification probabilities.
 - - -
+
 ### Environments  
 Python3 + Paddle Fluid 1.5 for training/evaluation/prediction (please confirm your Python path in scripts).  
 Python2 for official evaluation script.  
