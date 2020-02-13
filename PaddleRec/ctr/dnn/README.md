@@ -2,7 +2,7 @@
 # 基于DNN模型的点击率预估模型
 
 ## 介绍
-本模型实现了下述论文中提出的DNN模型：
+`CTR(Click Through Rate)`，即点击率，是“推荐系统/计算广告”等领域的重要指标，对其进行预估是商品推送/广告投放等决策的基础。简单来说，CTR预估对每次广告的点击情况做出预测，预测用户是点击还是不点击。CTR预估模型综合考虑各种因素、特征，在大量历史数据上训练，最终对商业决策提供帮助。本模型实现了下述论文中提出的DNN模型：
 
 ```text
 @inproceedings{guo2017deepfm,
@@ -14,13 +14,55 @@
 }
 ```
 #
+## 目录
+* [运行环境](#运行环境)
+* [数据准备](#数据准备)
+    * [数据来源](#数据来源)
+    * [数据预处理](#数据预处理)
+    * [一键下载训练及测试数据](#一键下载训练及测试数据)
+* [模型组网](#模型组网)
+    * [数据输入声明](#数据输入声明)
+    * [CTR-DNN模型组网](#ctr-dnn模型组网)
+      * [Embedding层](#embedding层)
+      * [FC层](#fc层)
+      * [Loss及Auc计算](#loss及auc计算)
+* [dataset数据读取](#dataset数据读取)
+    * [引入dataset](#引入dataset)
+    * [如何指定数据读取规则](#如何指定数据读取规则)
+    * [快速调试Dataset](#快速调试dataset)
+* [单机训练 VS 分布式训练](#单机训练-vs-分布式训练)
+    * [区别一：数据需要分配到各个训练节点上](#区别一数据需要分配到各个训练节点上)
+    * [区别二：每个节点需要扮演不同的角色](#区别二每个节点需要扮演不同的角色)
+      * [共有的环境变量](#共有的环境变量)
+      * [Pserver特有的环境变量](#pserver特有的环境变量)
+      * [Trainer特有的环境变量](#trainer特有的环境变量)
+    * [区别三 分布式需要指定训练策略](#区别三-分布式需要指定训练策略)
+    * [区别四 分布式训练需要分别运行Pserver与Trainer](#区别四-分布式训练需要分别运行pserver与trainer)
+    * [区别五 启动训练](#区别五-启动训练)
+      * [运行单机训练](#运行单机训练)
+      * [运行分布式训练（本地模拟分布式）](#运行分布式训练本地模拟分布式)
+    * [区别六 保存模型](#区别六-保存模型)
+      * [单机训练中模型的保存](#单机训练中模型的保存)
+      * [分布式训练中模型的保存](#分布式训练中模型的保存)
+    * [区别七 增量训练](#区别七-增量训练)
+      * [单机增量训练](#单机增量训练)
+      * [分布式增量训练](#分布式增量训练)
+* [单机离线预测](#单机离线预测)
+    * [构建预测网络及加载模型参数](#构建预测网络及加载模型参数)
+    * [测试数据的读取](#测试数据的读取)
+    * [AUC的清零步骤](#auc的清零步骤)
+    * [运行Infer](#运行infer)
+    * [benchmark](#benchmark)
+
+#
 ## 运行环境
-**要求使用PaddlePaddle 1.6.1及以上版本或适当的develop版本。**
-
-**示例代码仅支持在Linux环境下运行**
-
+**示例训练代码仅支持在Linux环境下运行**
 - Win/Mac 暂不支持dataset数据读取方式
-- Win/Mac 可以使用其他数据读取方式改写本示例代码并运行
+- Win/Mac 可以使用其他数据读取方式改写本示例代码并运行(参照`infer.py`)
+- 请确保您的运行环境基于Linux，示例代码支持`unbuntu`及`CentOS`
+- 运行环境中python版本高于`2.7`
+- 请确保您的paddle版本高于`1.6.1`，可以利用pip升级您的paddle版本
+- 请确保您的本地模拟分布式运行环境中没有设置`http/https`代理，可以在终端键入`env`查看环境变量
 
 #
 ## 数据准备
@@ -39,7 +81,7 @@
 
 ### 一键下载训练及测试数据
 ```bash
-sh get_data.sh
+sh download_data.sh
 ```
 执行该脚本，会从国内源的服务器上下载Criteo数据集，并解压到指定文件夹。全量训练数据放置于`./train_data_full/`，全量测试数据放置于`./test_data_full/`，用于快速验证的训练数据与测试数据放置于`./train_data/`与`./test_data/`。
 
@@ -76,26 +118,26 @@ Rapid Verification test data stored in ./test_data
 ### 数据输入声明
 正如数据准备章节所介绍，Criteo数据集中，分为连续数据与离散（稀疏）数据，所以整体而言，CTR-DNN模型的数据输入层包括三个，分别是：`dense_input`用于输入连续数据，维度由超参数`dense_feature_dim`指定，数据类型是归一化后的浮点型数据。`sparse_input_ids`用于记录离散数据，在Criteo数据集中，共有26个slot，所以我们创建了名为`C1~C26`的26个稀疏参数输入，并设置`lod_level=1`，代表其为变长数据，数据类型为整数；最后是每条样本的`label`，代表了是否被点击，数据类型是整数，0代表负样例，1代表正样例。
 
-在Paddle中数据输入的声明使用`paddle.fluid.layers.data()`，会创建指定类型的占位符，数据IO会依据此定义进行数据的输入。
+在Paddle中数据输入的声明使用`paddle.fluid.data()`，会创建指定类型的占位符，数据IO会依据此定义进行数据的输入。
 ```python
-dense_input = fluid.layers.data(name="dense_input",
-                                shape=[args.dense_feature_dim],
-                                dtype="float32")
+dense_input = fluid.data(name="dense_input",
+                                 shape=[-1, args.dense_feature_dim],
+                                 dtype="float32")
 
 sparse_input_ids = [
-   fluid.layers.data(name="C" + str(i),
-                     shape=[1],
-                     lod_level=1,
-                     dtype="int64") for i in range(1, 27)
+    fluid.data(name="C" + str(i),
+                shape=[-1, 1],
+                lod_level=1,
+                dtype="int64") for i in range(1, 27)
 ]
 
-label = fluid.layers.data(name="label", shape=[1], dtype="int64")
+label = fluid.data(name="label", shape=[-1, 1], dtype="int64")
 inputs = [dense_input] + sparse_input_ids + [label]
 ```
 
 ### CTR-DNN模型组网
 
-CTR-DNN模型的组网比较直观，本质是一个二分类任务，代码参考`network.py`。模型主要组成是一个`Embedding`层，三个`FC`层，以及相应的分类任务的loss计算和auc计算。
+CTR-DNN模型的组网比较直观，本质是一个二分类任务，代码参考`network_conf.py`。模型主要组成是一个`Embedding`层，三个`FC`层，以及相应的分类任务的loss计算和auc计算。
 
 #### Embedding层
 首先介绍Embedding层的搭建方式：`Embedding`层的输入是`sparse_input`，shape由超参的`sparse_feature_dim`和`embedding_size`定义。需要特别解释的是`is_sparse`参数，当我们指定`is_sprase=True`后，计算图会将该参数视为稀疏参数，反向更新以及分布式通信时，都以稀疏的方式进行，会极大的提升运行效率，同时保证效果一致。
@@ -197,9 +239,8 @@ def get_dataset(inputs, args)
         str(args.train_files_path) + "/%s" % x
         for x in os.listdir(args.train_files_path)
     ]
-    dataset.set_filelist(file_list)
     logger.info("file list: {}".format(file_list))
-    return dataset
+    return dataset, file_list
 ```
 
 ### 如何指定数据读取规则
@@ -278,8 +319,10 @@ cat train_data/part-0 | python dataset_generator.py
 
 #
 ## 单机训练 VS 分布式训练
+PaddlePaddle在release/1.5.0之后新增了高级分布式API-`Fleet`，只需数行代码便可将单机模型转换为分布式模型。异步模式分布式训练代码见`train.py`，我们通过以下对比，来同时介绍单机CTR与分布式CTR的训练。
+
 ### 区别一：数据需要分配到各个训练节点上
-单机训练中，我们没有对数据做过多的处理。但在分布式训练中，我们要确保每个节点都能拿到数据，并且希望每个节点的数据同时满足：
+单机训练中，我们没有对数据做过多的处理。但在CPU分布式训练中，我们要确保每个节点都能拿到数据，并且希望每个节点的数据同时满足：
 1. 各个节点数据无重复。
 2. 各个节点数据数量均匀。
 
@@ -425,9 +468,9 @@ elif fleet.is_worker():
 #### 运行单机训练
 为了快速验证效果，我们可以用小样本数据快速运行起来，只取前两个part的数据进行训练。在代码目录下，通过键入以下命令启动单机训练。
 ```bash
-python -u train.py --is_local=1 --save_model=1 --cpu_num=10 &> train.log &
+python -u train.py --is_local=1 --save_model=1 --cpu_num=10 &> local_train.log &
 ```
-训练过程的日志保存在`./train.log`文件中。使用两个part快速验证，运行的理想输出为：
+训练过程的日志保存在`./local_train.log`文件中。使用两个part快速验证，运行的理想输出为：
 ```bash
 2019-11-26 07:11:34,977 - INFO - file list: ['train_data/part-1', 'train_data/part-0']
 2019-11-26 07:11:34,978 - INFO - Training Begin
@@ -453,17 +496,16 @@ Epoch 0 auc     auc_0.tmp_0             lod: {}
 运行`local_cluster.sh`脚本可以一键启动本地模拟分布式训练。
 ```bash
 # 根据自己的运行环境，选择sh或bash
-# 启动命令选择异步模式async
-sh local_cluster.sh async
+sh local_cluster.sh
 ```
-便可以开启分布式模拟训练，默认启用2x2的训练模式。Trainer与Pserver的运行日志，存放于`./log/`文件夹，保存的模型位于`./model/`，使用默认配置运行后，理想输出为：
-> pserver.0.log
+便可以开启分布式模拟训练，默认启用2x2的训练模式。Trainer与Pserver的运行日志，存放于`./log/`文件夹，保存的模型位于`./models/`，使用默认配置运行后，理想输出为：
+- pserver.0.log
 ```bash
 get_pserver_program() is deprecated, call get_pserver_programs() to get pserver main and startup in a single call.
 I1126 07:37:49.952580 15056 grpc_server.cc:477] Server listening on 127.0.0.1:36011 successful, selected port: 36011
 ```
 
-> trainer.0.log
+- trainer.0.log
 ```bash
 I1126 07:37:52.812678 14715 communicator_py.cc:43] using communicator
 I1126 07:37:52.814765 14715 communicator.cc:77] communicator_independent_recv_thread: 1
@@ -502,7 +544,7 @@ I1126 07:38:28.947571 14715 communicator.cc:363] Communicator stop done
 ### 区别六 保存模型
 
 #### 单机训练中模型的保存
-单机训练，使用`fluid.io.save_inference_model()`或其他接口保存模型，各个接口的联系与区别，可以参考API文档：[模型/变量的保存、载入与增量训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/training/save_load_variables.html)
+单机训练，使用`fluid.save()`或其他接口保存模型，各个接口的联系与区别，可以参考API文档：[模型/变量的保存、载入与增量训练](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/training/save_load_variables.html)
 
 
 #### 分布式训练中模型的保存
@@ -523,7 +565,7 @@ I1126 07:38:28.947571 14715 communicator.cc:363] Communicator stop done
 
 ### 区别七 增量训练
 #### 单机增量训练
-单机训练的基本顺序是：构建网络->初始化参数->加载数据A->开始训练。而增量训练的基本顺序是：构建网络->加载已有参数->加载数据B->开始训练。因此需要增加加载参数的逻辑，在示例代码`infer.py`中有相关操作：
+单机训练的基本顺序是：`构建网络->初始化参数->加载数据A->开始训练`。而增量训练的基本顺序是：`构建网络->加载已有参数->加载数据B->开始训练`。因此需要增加加载参数的逻辑，在示例代码`infer.py`中有相关操作：
 ```python
 # 构建网络
 inputs = ctr_model.input_data(params)
@@ -531,12 +573,8 @@ loss, auc_var = ctr_model.net(inputs, params)
 
 exe = fluid.Executor(fluid.CPUPlace())
 # 不使用 exe.run(fluid.defalut_startup_program())
-# 加载已有参数到内存中，使用load_persistables接口（因为本示例使用save_persistable保存模型）
-fluid.io.load_persistables(
-    executor=exe,
-    dirname=model_path,
-    main_program=fluid.default_main_program())
-
+# 加载已有参数到内存中，使用fluid.load接口（因为本示例使用fluid.save保存模型）
+fluid.load(fluid.default_main_program(), model_path + "/checkpoint", exe)
 ```
 
 #### 分布式增量训练
@@ -558,7 +596,7 @@ elif fleet.is_worker():
 在我们训练完成后，必然需要在测试集上进行验证模型的泛化性能。单机训练得到的模型必然是可以进行单机预测的，那多机训练得到的模型可以在单机上进行预测吗？答案是肯定的。参考示例代码中的`infer.py`实现CTR-DNN的infer流程，得到离线预测的结果。
 
 ### 构建预测网络及加载模型参数
-在CTR-DNN的应用中，预测网络与训练网络一致，无需更改，我们使用相同的方式构建`inputs`、`loss`、`auc`。加载参数使用`fluid.io.load_persistables()`接口，从保存好的模型文件夹中加载同名参数。
+在CTR-DNN的应用中，预测网络与训练网络一致，无需更改，我们使用相同的方式构建`inputs`、`loss`、`auc`。加载参数分别使用`fluid.load`与`fluid.io.load_persistables()`接口，从保存好的模型文件夹中加载同名参数。
 ```python
 with fluid.framework.program_guard(test_program, startup_program):
     with fluid.unique_name.guard():
@@ -568,10 +606,15 @@ with fluid.framework.program_guard(test_program, startup_program):
         exe = fluid.Executor(place)
         feeder = fluid.DataFeeder(feed_list=inputs, place=place)
 
-        fluid.io.load_persistables(
-            executor=exe,
-            dirname=model_path,
-            main_program=fluid.default_main_program())
+        if args.is_cloud:
+            fluid.io.load_persistables(
+                executor=exe,
+                dirname=model_path,
+                main_program=fluid.default_main_program())
+        elif args.is_local:
+            fluid.load(fluid.default_main_program(),
+                        model_path + "/checkpoint", exe)
+        set_zero()
 ```
 在进行上述流程时，有一些需要关注的细节：
 - 传入的program既不是`default_main_program()`，也不是`fleet.main_program`，而是新建的空的program:
@@ -586,30 +629,35 @@ with fluid.framework.program_guard(test_program, startup_program):
 
 ### 测试数据的读取
 
-测试数据的读取我们使用同步模式中使用过的`pyreader`方法。
+测试数据的读取我们使用feed数据的方法。
 
 ### AUC的清零步骤
 在训练过程中，为了获得全局auc，我们将auc保存为模型参数，参与长期更新，并在保存模型(save_persistables)的过程中被一并保存了下来。在预测时，paddle为了计算预测的全局auc，使用相同的规则创建了同名的auc参数。而我们又在加载模型参数的时候，将训练中的auc加载了进来，如果不在预测前将该值清零，会影响我们的预测值的计算。
 
 以下是将auc中间变量置零操作，`_generated_var_0~3`即为paddle自动创建的auc全局参数。
 ```python
-def set_zero(var_name):
-    param = fluid.global_scope().var(var_name).get_tensor()
-    param_array = np.zeros(param._get_dims()).astype("int64")
-    param.set(param_array, place)
-
-auc_states_names = [
-    '_generated_var_0', '_generated_var_1', '_generated_var_2',
-    '_generated_var_3'
-]
-for name in auc_states_names:
-    set_zero(name)
+def set_zero():
+    auc_states_names = [
+        '_generated_var_0', '_generated_var_1', '_generated_var_2',
+        '_generated_var_3'
+    ]
+    for name in auc_states_names:
+        param = fluid.global_scope().var(name).get_tensor()
+        if param:
+            param_array = np.zeros(param._get_dims()).astype("int64")
+            param.set(param_array, place)
 ```
 
 ### 运行Infer
 为了快速验证，我们仅取用测试数据集的一个part文件，进行测试。在代码目录下，键入以下命令，进行预测：
+- 对单机训练的模型进行预测
 ```python
-python -u infer.py &> test.log &
+python -u infer.py --is_local=1 &> test.log &
+```
+
+- 对分布式训练的模型进行预测
+```python
+python -u infer.py --is_cloud=1 &> test.log &
 ```
 测试结果的日志位于`test.log`，仅训练一个epoch后，在`part-220`上的的理想测试结果为：
 ```bash
@@ -624,6 +672,6 @@ open file success
 因为快速验证的训练数据与测试数据极少，同时只训练了一轮，所以远远没有达到收敛，且初始化带有随机性，在您的环境下出现测试结果与示例输出不一致是正常情况。
 
 ### benchmark
-在全量数据中训练三轮后，加载epoch_2的模型，预期测试AUC可以达到0.794。
+全量数据的训练与预测，请修改对应`train.py`与`infer.py`中对应的`train_files_path`与`test_files_path`超参数，分别修改为`./train_data_full`与`./test_data_full`。在全量数据中训练三轮后，加载epoch_2的模型，预期测试AUC可以达到0.794。
 
 分布式benchmark相关代码及复现方式见[Fleet Repo](https://github.com/PaddlePaddle/Fleet.git)，路径为Fleet/benchmark/ps/distribute_ctr/paddle/。

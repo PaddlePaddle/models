@@ -111,10 +111,6 @@ def parse_args():
         default=0,
         help='Save training model or not')
     parser.add_argument(
-        '--enable_ce',
-        action='store_true',
-        help='If set, run the task with continuous evaluation logs.')
-    parser.add_argument(
         '--cpu_num',
         type=int,
         default=2,

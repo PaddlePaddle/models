@@ -1,8 +1,8 @@
 #!/bin/bash
 echo "WARNING: This script only for run Paddle Paddle CTR distribute training locally"
 
-if [ ! -d "./model" ]; then
-  mkdir ./model
+if [ ! -d "./models" ]; then
+  mkdir ./models
   echo "Create model folder for store infer model"
 fi
 
@@ -23,7 +23,6 @@ ps -ef|grep python|awk '{print $2}'|xargs kill -9
 export PADDLE_TRAINER_ID=0
 
 export PADDLE_TRAINERS_NUM=2
-export CPU_NUM=2
 export OUTPUT_PATH="output"
 
 export FLAGS_communicator_thread_pool_size=5
@@ -49,7 +48,7 @@ do
     echo "PADDLE WILL START PSERVER "$cur_port
     export PADDLE_PORT=${cur_port}
     export POD_IP=127.0.0.1
-    python -u ${train_mode}_train.py --save_model=True --is_cloud=1 &> ./log/pserver.$i.log &
+    python -u train.py --save_model=1 --is_cloud=1 --cpu_num=10 &> ./log/pserver.$i.log &
 done
 
 export TRAINING_ROLE=TRAINER
@@ -60,7 +59,7 @@ for((i=0;i<$PADDLE_TRAINERS;i++))
 do
     echo "PADDLE WILL START Trainer "$i
     PADDLE_TRAINER_ID=$i
-    python -u ${train_mode}_train.py --save_model=True --is_cloud=1 &> ./log/trainer.$i.log &
+    python -u train.py --save_model=1 --is_cloud=1 --cpu_num=10 &> ./log/trainer.$i.log &
 done
 
 echo "Training log stored in ./log/"
