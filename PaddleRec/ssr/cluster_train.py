@@ -121,7 +121,7 @@ def train_loop(main_program, avg_cost, acc, train_input_data, place, args,
         print("epoch:%d num_steps:%d time_cost(s):%f" %
               (epoch_idx, i, total_time / epoch_idx))
         save_dir = "%s/epoch_%d" % (args.model_dir, epoch_idx)
-        fluid.io.save_params(executor=exe, dirname=save_dir)
+        fluid.save(fluid.default_main_program(), save_dir)
         print("model saved in %s" % save_dir)
 
     # only for ce
