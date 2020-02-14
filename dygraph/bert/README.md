@@ -101,8 +101,6 @@ DATA_PATH="./data/glue_data/MNLI/"
 CKPT_PATH="./data/saved_model/mnli_models"
 GPU_TO_USE=0,1,2,3
 
-export CUDA_VISIBLE_DEVICES=$GPU_TO_USE
-
 # start fine-tuning
 python -m paddle.distributed.launch --selected_gpus=$GPU_TO_USE --log_dir ./cls_log run_classifier.py \
     --task_name ${TASK_NAME} \
