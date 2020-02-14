@@ -56,7 +56,7 @@ def get_device_num():
 
 def train():
     learning_rate = cfg.learning_rate
-    image_shape = [3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
+    #image_shape = [-1, 3, cfg.TRAIN.max_size, cfg.TRAIN.max_size]
 
     devices_num = get_device_num()
     total_batch_size = devices_num * cfg.TRAIN.im_per_batch
@@ -71,7 +71,7 @@ def train():
                 add_roi_box_head_func=resnet.ResNetC5(),
                 use_pyreader=cfg.use_pyreader,
                 use_random=use_random)
-            model.build_model(image_shape)
+            model.build_model()
             losses, keys, rpn_rois = model.loss()
             loss = losses[0]
             fetch_list = losses
@@ -132,8 +132,8 @@ def train():
             if num_trainers > 1:
                 train_reader = fluid.contrib.reader.distributed_batch_reader(
                     train_reader)
-        py_reader = model.py_reader
-        py_reader.decorate_paddle_reader(train_reader)
+        data_loader = model.data_loader
+        data_loader.set_sample_list_generator(train_reader, places=place)
     else:
         if num_trainers > 1: shuffle = False
         train_reader = reader.train(
@@ -141,7 +141,7 @@ def train():
         feeder = fluid.DataFeeder(place=place, feed_list=model.feeds())
 
     def train_loop_pyreader():
-        py_reader.start()
+        data_loader.start()
         train_stats = TrainingStats(cfg.log_window, keys)
         try:
             start_time = time.time()
@@ -173,7 +173,7 @@ def train():
             total_time = end_time - start_time
             last_loss = np.array(outs[0]).mean()
         except (StopIteration, fluid.core.EOFException):
-            py_reader.reset()
+            data_loader.reset()
 
     def train_loop():
         start_time = time.time()
