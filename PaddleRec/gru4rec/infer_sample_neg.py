@@ -47,8 +47,7 @@ def infer(args, vocab_size, test_reader, use_cuda):
             for epoch in range(start_index, last_index + 1):
                 copy_program = main_program.clone()
                 model_path = model_dir + "/epoch_" + str(epoch)
-                fluid.io.load_params(
-                    executor=exe, dirname=model_path, main_program=copy_program)
+                fluid.load(copy_program, model_path, exe)
                 accum_num_recall = 0.0
                 accum_num_sum = 0.0
                 t0 = time.time()

@@ -54,7 +54,7 @@ def parse_args():
     parser.add_argument(
         '--num_points',
         type=int,
-        default=4096,
+        default=2048,
         help='number of points in a sample, default: 4096')
     parser.add_argument(
         '--num_classes',
@@ -148,7 +148,7 @@ def train():
                           PointNet2ClsSSG(args.num_classes, args.num_points)
             train_model.build_model(bn_momentum=args.bn_momentum)
             train_feeds = train_model.get_feeds()
-            train_pyreader = train_model.get_pyreader()
+            train_loader = train_model.get_loader()
             train_outputs = train_model.get_outputs()
             train_loss = train_outputs['loss']
             lr = fluid.layers.exponential_decay(
@@ -157,9 +157,13 @@ def train():
                     decay_rate=args.lr_decay,
                     staircase=True)
             lr = fluid.layers.clip(lr, 1e-5, args.lr)
+            params = []
+            for var in train_prog.list_vars():
+                if fluid.io.is_parameter(var):
+                    params.append(var.name)
             optimizer = fluid.optimizer.Adam(learning_rate=lr,
                     regularization=fluid.regularizer.L2Decay(args.weight_decay))
-            optimizer.minimize(train_loss)
+            optimizer.minimize(train_loss, parameter_list=params)
     train_keys, train_values = parse_outputs(train_outputs)
 
     test_prog = fluid.Program()
@@ -171,7 +175,7 @@ def train():
             test_model.build_model()
             test_feeds = test_model.get_feeds()
             test_outputs = test_model.get_outputs()
-            test_pyreader = test_model.get_pyreader()
+            test_loader = test_model.get_loader()
     test_prog = test_prog.clone(True)
     test_keys, test_values = parse_outputs(test_outputs)
 
@@ -180,12 +184,13 @@ def train():
     exe.run(startup)
 
     if args.resume:
-        assert os.path.exists(args.resume), \
-                "Given resume weight dir {} not exist.".format(args.resume)
-        def if_exist(var):
-            return os.path.exists(os.path.join(args.resume, var.name))
-        fluid.io.load_vars(
-            exe, args.resume, predicate=if_exist, main_program=train_prog)
+        assert os.path.exists("{}.pdparams".format(args.resume)), \
+                "Given resume weight {}.pdparams not exist.".format(args.resume)
+        assert os.path.exists("{}.pdopt".format(args.resume)), \
+                "Given resume optimizer state {}.pdopt not exist.".format(args.resume)
+        assert os.path.exists("{}.pdmodel".format(args.resume)), \
+                "Given resume model parameter list {}.pdmodel not exist.".format(args.resume)
+        fluid.load(train_prog, args.resume, exe)
 
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
@@ -200,7 +205,7 @@ def train():
         if os.path.isdir(path):
             shutil.rmtree(path)
         logger.info("Save model to {}".format(path))
-        fluid.io.save_persistables(exe, path, prog)
+        fluid.save(prog, path)
 
     # get reader
     trans_list = [
@@ -213,10 +218,10 @@ def train():
     ]
     modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='train', transforms=trans_list)
     train_reader = modelnet_reader.get_reader(args.batch_size, args.num_points)
-    train_pyreader.decorate_sample_list_generator(train_reader, place)
+    train_loader.set_sample_list_generator(train_reader, place)
     modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='test', transforms=None)
     test_reader = modelnet_reader.get_reader(args.batch_size, args.num_points)
-    test_pyreader.decorate_sample_list_generator(test_reader, place)
+    test_loader.set_sample_list_generator(test_reader, place)
 
     train_stat = Stat()
     test_stat = Stat()
@@ -226,7 +231,7 @@ def train():
 
     for epoch_id in range(args.epoch):
         try:
-            train_pyreader.start()
+            train_loader.start()
             train_iter = 0
             train_periods = []
             while True:
@@ -251,7 +256,7 @@ def train():
             # evaluation
             if not args.enable_ce:
                 try:
-                    test_pyreader.start()
+                    test_loader.start()
                     test_iter = 0
                     test_periods = []
                     while True:
@@ -269,12 +274,12 @@ def train():
                 except fluid.core.EOFException:
                     logger.info("[TEST] Epoch {} finished, {}average time: {:.2f}".format(epoch_id, test_stat.get_mean_log(), np.mean(test_periods[1:])))
                 finally:
-                    test_pyreader.reset()
+                    test_loader.reset()
                     test_stat.reset()
                     test_periods = []
 
         finally:
-            train_pyreader.reset()
+            train_loader.reset()
             train_stat.reset()
             train_periods = []
 

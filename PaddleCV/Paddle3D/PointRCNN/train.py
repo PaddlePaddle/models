@@ -22,7 +22,6 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.layers import control_flow
-from paddle.fluid.contrib.extend_optimizer import extend_with_decoupled_weight_decay
 import paddle.fluid.layers.learning_rate_scheduler as lr_scheduler
 
 from models.point_rcnn import PointRCNN
@@ -169,7 +168,7 @@ def train():
         with fluid.unique_name.guard():
             train_model = PointRCNN(cfg, args.batch_size, True, 'TRAIN')
             train_model.build()
-            train_pyreader = train_model.get_pyreader()
+            train_loader = train_model.get_loader()
             train_feeds = train_model.get_feeds()
             train_outputs = train_model.get_outputs()
             train_loss = train_outputs['loss']
@@ -179,7 +178,7 @@ def train():
                           decay_factor=1e-5,
                           total_step=steps_per_epoch * args.epoch,
                           warmup_pct=cfg.TRAIN.PCT_START,
-                          train_program=train_prog,
+                          train_prog=train_prog,
                           startup_prog=startup,
                           weight_decay=cfg.TRAIN.WEIGHT_DECAY,
                           clip_norm=cfg.TRAIN.GRAD_NORM_CLIP)
@@ -188,13 +187,13 @@ def train():
     exe.run(startup)
 
     if args.resume:
-        assert os.path.exists(args.resume), \
-                "Given resume weight dir {} not exist.".format(args.resume)
-        def if_exist(var):
-            logger.debug("{}: {}".format(var.name, os.path.exists(os.path.join(args.resume, var.name))))
-            return os.path.exists(os.path.join(args.resume, var.name))
-        fluid.io.load_vars(
-            exe, args.resume, predicate=if_exist, main_program=train_prog)
+        assert os.path.exists("{}.pdparams".format(args.resume)), \
+                "Given resume weight {}.pdparams not exist.".format(args.resume)
+        assert os.path.exists("{}.pdopt".format(args.resume)), \
+                "Given resume optimizer state {}.pdopt not exist.".format(args.resume)
+        assert os.path.exists("{}.pdmodel".format(args.resume)), \
+                "Given resume model parameter list {}.pdmodel not exist.".format(args.resume)
+        fluid.load(train_prog, args.resume, exe)
 
     build_strategy = fluid.BuildStrategy()
     build_strategy.memory_optimize = False
@@ -208,19 +207,19 @@ def train():
         if os.path.isdir(path):
             shutil.rmtree(path)
         logger.info("Save model to {}".format(path))
-        fluid.io.save_persistables(exe, path, prog)
+        fluid.save(prog, path)
 
     # get reader
     train_reader = kitti_rcnn_reader.get_multiprocess_reader(args.batch_size,
                                                              train_feeds,
                                                              proc_num=args.worker_num,
                                                              drop_last=True)
-    train_pyreader.decorate_sample_list_generator(train_reader, place)
+    train_loader.set_sample_list_generator(train_reader, place)
 
     train_stat = Stat()
     for epoch_id in range(args.resume_epoch, args.epoch):
         try:
-            train_pyreader.start()
+            train_loader.start()
             train_iter = 0
             train_periods = []
             while True:
@@ -241,7 +240,7 @@ def train():
             train_stat.reset()
             train_periods = []
         finally:
-            train_pyreader.reset()
+            train_loader.reset()
 
 
 if __name__ == "__main__":
