@@ -59,27 +59,14 @@ def mmoe_layer(inputs, expert_num=8, gate_num=3):
 
 
 def model(dict_dim, emb_dim):
-    label_like = fluid.layers.data(
-        name="label_like",
-        shape=[-1, 1],
-        dtype="int64",
-        lod_level=0,
-        append_batch_size=False)
-    label_comment = fluid.layers.data(
-        name="label_comment",
-        shape=[-1, 1],
-        dtype="int64",
-        lod_level=0,
-        append_batch_size=False)
-    label_share = fluid.layers.data(
-        name="label_share",
-        shape=[-1, 1],
-        dtype="int64",
-        lod_level=0,
-        append_batch_size=False)
+    label_like = fluid.data(
+        name="label_like", shape=[-1, 1], dtype="int64", lod_level=0)
+    label_comment = fluid.data(
+        name="label_comment", shape=[-1, 1], dtype="int64", lod_level=0)
+    label_share = fluid.data(
+        name="label_share", shape=[-1, 1], dtype="int64", lod_level=0)
 
-    a_data = fluid.layers.data(
-        name="a", shape=[-1, 1], dtype="int64", append_batch_size=False)
+    a_data = fluid.data(name="a", shape=[-1, 1], dtype="int64")
     emb = fluid.layers.embedding(input=a_data, size=[dict_dim, emb_dim])
 
     outs = mmoe_layer(emb, expert_num=8, gate_num=3)
