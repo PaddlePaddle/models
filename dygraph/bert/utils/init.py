@@ -83,7 +83,13 @@ def init_pretraining_params(exe,
 
 def init_from_static_model(dir_path, cls_model, bert_config):
     def load_numpy_weight(file_name):
-        res = np.load(os.path.join(dir_path, file_name), allow_pickle=True)
+        if six.PY2:
+            res = np.load(os.path.join(dir_path, file_name), allow_pickle=True)
+        else:
+            res = np.load(
+                os.path.join(dir_path, file_name),
+                allow_pickle=True,
+                encoding='latin1')
         assert res is not None
         return res
 

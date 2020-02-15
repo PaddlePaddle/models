@@ -7,17 +7,16 @@
 
 ### 发布要点
 
-1) 动态图BERT模型
 
-2）目前仅支持fine-tuning任务，后续会开展对pre-training任务的支持
+1）动态图BERT模型，目前仅支持fine-tuning任务，后续会开展对pre-training任务的支持
 
-3）数据集目前验证了glue上的部分任务，squad上的任务后续会进行验证
+2）数据集目前验证了glue上的部分任务，squad上的任务后续会进行验证
 
-4）目前暂不支持FP16/FP32混合精度训练。
+3）目前暂不支持FP16/FP32混合精度训练。
 
 | Model | Layers | Hidden size | Heads |Parameters |
 | :------| :------: | :------: |:------: |:------: |
-| [BERT-Base, Uncased](https://baidu-nlp.bj.bcebos.com/DYGRAPH_models%2FBERT%2Fdata.tar.gz) | 12 | 768 |12 |110M |
+| [BERT-Base, Uncased](https://baidu-nlp.bj.bcebos.com/DYGRAPH_models/BERT/data.tar.gz) | 12 | 768 |12 |110M |
 
 每个压缩包都包含了模型配置文件 `bert_config.json`、参数文件夹 `params`、动态图参数文件夹`dygraph_params` 和词汇表 `vocab.txt`；
 
@@ -51,7 +50,7 @@
 
 ### 语句和句对分类任务
 
-对于 [GLUE 数据](https://gluebenchmark.com/tasks)，请下载[文件](https://baidu-nlp.bj.bcebos.com/DYGRAPH_models%2FBERT%2Fdata.tar.gz)，并解压到同一个目录。以 GLUE/MNLI 任务为例，启动 Fine-tuning 的方式如下（也可以直接运行run_classifier_single_gpu.sh）：
+对于 [GLUE 数据](https://gluebenchmark.com/tasks)，请下载[文件](https://baidu-nlp.bj.bcebos.com/DYGRAPH_models/BERT/data.tar.gz)，并解压到同一个目录。以 GLUE/MNLI 任务为例，启动 Fine-tuning 的方式如下（也可以直接运行run_classifier_single_gpu.sh）：
 
 ```shell
 #!/bin/bash
@@ -100,9 +99,7 @@ BERT_BASE_PATH="./data/pretrained_models/uncased_L-12_H-768_A-12/"
 TASK_NAME='MNLI'
 DATA_PATH="./data/glue_data/MNLI/"
 CKPT_PATH="./data/saved_model/mnli_models"
-GPU_TO_USE="0,1,2,3"
-
-export CUDA_VISIBLE_DEVICES=$GPU_TO_USE
+GPU_TO_USE=0,1,2,3
 
 # start fine-tuning
 python -m paddle.distributed.launch --selected_gpus=$GPU_TO_USE --log_dir ./cls_log run_classifier.py \

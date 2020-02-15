@@ -79,7 +79,7 @@ def optimize(loss,
              decay_factor,
              total_step,
              warmup_pct,
-             train_program,
+             train_prog,
              startup_prog,
              weight_decay,
              clip_norm,
@@ -105,11 +105,15 @@ def optimize(loss,
     param_list = dict()
 
     if weight_decay > 0:
-        for param in train_program.global_block().all_parameters():
+        for param in train_prog.all_parameters():
             param_list[param.name] = param * 1.0
             param_list[param.name].stop_gradient = True
 
-    _, param_grads = optimizer.minimize(loss)
+    opt_param_list = []
+    for var in train_prog.list_vars():
+        if fluid.io.is_parameter(var):
+            opt_param_list.append(var.name)
+    _, param_grads = optimizer.minimize(loss, parameter_list=opt_param_list)
 
     if weight_decay > 0:
         for param, grad in param_grads:

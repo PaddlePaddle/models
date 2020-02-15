@@ -200,7 +200,7 @@ def infer(args):
     for var in fluid.default_main_program().all_parameters():
         print(var.name)
     print(args.init_model + '/' + model_name)
-    fluid.load(fluid.default_startup_program(), os.path.join(args.init_model, model_name))
+    fluid.load(fluid.default_main_program(), os.path.join(args.init_model, model_name))
     print('load params done')
     if not os.path.exists(args.output):
         os.makedirs(args.output)

@@ -36,7 +36,7 @@ class PointNet2SemSeg(object):
         self.use_xyz = use_xyz
         self.feed_vars = []
         self.out_feature = None
-        self.pyreader = None
+        self.loader = None
         self.model_config()
 
     def model_config(self):
@@ -44,10 +44,19 @@ class PointNet2SemSeg(object):
         self.FP_confs = []
 
     def build_input(self):
-        self.xyz = fluid.layers.data(name='xyz', shape=[self.num_points, 3], dtype='float32', lod_level=0)
-        self.feature = fluid.layers.data(name='feature', shape=[self.num_points, 6], dtype='float32', lod_level=0)
-        self.label = fluid.layers.data(name='label', shape=[self.num_points, 1], dtype='int64', lod_level=0)
-        self.pyreader = fluid.io.PyReader(
+        self.xyz = fluid.data(name='xyz',
+                              shape=[None, self.num_points, 3],
+                              dtype='float32',
+                              lod_level=0)
+        self.feature = fluid.data(name='feature',
+                                  shape=[None, self.num_points, 6],
+                                  dtype='float32',
+                                  lod_level=0)
+        self.label = fluid.data(name='label',
+                                shape=[None, self.num_points, 1],
+                                dtype='int64',
+                                lod_level=0)
+        self.loader = fluid.io.DataLoader.from_generator(
                 feed_list=[self.xyz, self.feature, self.label],
                 capacity=64,
                 use_double_buffer=True,
@@ -103,8 +112,8 @@ class PointNet2SemSeg(object):
     def get_outputs(self):
         return {"loss": self.loss, "accuracy": self.acc1}
 
-    def get_pyreader(self):
-        return self.pyreader
+    def get_loader(self):
+        return self.loader
 
 
 class PointNet2SemSegSSG(PointNet2SemSeg):
