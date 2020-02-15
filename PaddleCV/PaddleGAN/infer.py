@@ -23,7 +23,6 @@ from PIL import Image
 import paddle.fluid as fluid
 import paddle
 import numpy as np
-import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator, reader_creator, triplex_reader_creator
@@ -251,9 +250,8 @@ def infer(args):
             images_concat = np.concatenate(images, 1)
             if len(np.array(label_org)) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(
-                os.path.join(args.output, "fake_img_" + image_name_save), (
-                    (images_concat + 1) * 127.5).astype(np.uint8))
+            fake_image = Image.fromarray(((images_concat + 1) * 127.5).astype(np.uint8))
+            fake_image.save(os.path.join(args.output, "fake_image_" + image_name_save))
     elif args.model_net == 'StarGAN':
         test_reader = celeba_reader_creator(
             image_dir=args.dataset_dir,
@@ -287,9 +285,8 @@ def infer(args):
             images_concat = np.concatenate(images, 1)
             if len(np.array(label_org)) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(
-                os.path.join(args.output, "fake_img_" + image_name_save), (
-                    (images_concat + 1) * 127.5).astype(np.uint8))
+            fake_image = Image.fromarray(((images_concat + 1) * 127.5).astype(np.uint8))
+            fake_image.save(os.path.join(args.output, "fake_image_" + image_name_save))
 
     elif args.model_net == 'Pix2pix' or args.model_net == 'CycleGAN':
         test_reader = reader_creator(
@@ -315,12 +312,10 @@ def infer(args):
             input_temp = save_batch_image(np.array(real_img))
 
             for i, name in enumerate(image_names):
-                imageio.imwrite(
-                    os.path.join(args.output, "fake_" + name), (
-                        (fake_temp[i] + 1) * 127.5).astype(np.uint8))
-                imageio.imwrite(
-                    os.path.join(args.output, "input_" + name), (
-                        (input_temp[i] + 1) * 127.5).astype(np.uint8))
+                fake_image = Image.fromarray(((fake_temp[i] + 1) * 127.5).astype(np.uint8))
+                fake_image.save(os.path.join(args.output, "fake_" + name))
+                input_image = Image.fromarray(((input_temp[i] + 1) * 127.5).astype(np.uint8))
+                input_image.save(os.path.join(args.output, "input_" + name))
     elif args.model_net == 'SPADE':
         test_reader = triplex_reader_creator(
             image_dir=args.dataset_dir,
@@ -345,10 +340,10 @@ def infer(args):
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
             input_B_temp = np.squeeze(data_B[0]).transpose([1, 2, 0])
 
-            imageio.imwrite(args.output + "/fakeB_" + "_" + name, (
-                (fake_B_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(args.output + "/real_" + "_" + name, (
-                (input_B_temp + 1) * 127.5).astype(np.uint8))
+            fakeB_image = Image.fromarray(((fake_B_temp + 1) * 127.5).astype(np.uint8))
+            fakeB_image.save(os.path.join(args.output, "fakeB_" + name))
+            real_image = Image.fromarray(((input_B_temp + 1) * 127.5).astype(np.uint8))
+            real_image.save(os.path.join(args.output, "real_" + name))
 
     elif args.model_net == 'CGAN':
         noise_data = np.random.uniform(

@@ -324,7 +324,6 @@ def check_attribute_conflict(label_batch, attr, attrs):
 
 
 def save_batch_image(img):
-    #if img.shape[0] == 1:
     if len(img) == 1:
         res_img = np.squeeze(img).transpose([1, 2, 0])
     else:
