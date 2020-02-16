@@ -1,16 +1,27 @@
-import argparse
-import logging
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-import numpy as np
-# disable gpu training for this example 
+from __future__ import print_function
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+import time
+import numpy as np
+import logging
+import argparse
 import paddle
 import paddle.fluid as fluid
-
-import reader
-from network_conf import ctr_dnn_model
-import utils
+from network_conf import CTR
+import feed_generator as generator
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
@@ -18,17 +29,43 @@ logger.setLevel(logging.INFO)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="PaddlePaddle DeepFM example")
+    parser = argparse.ArgumentParser(
+        description="PaddlePaddle CTR-DNN example")
+    # -------------Data & Model Path-------------
+    parser.add_argument(
+        '--train_files_path',
+        type=str,
+        default='./train_data',
+        help="The path of training dataset")
+    parser.add_argument(
+        '--test_files_path',
+        type=str,
+        default='./test_data',
+        help="The path of testing dataset")
     parser.add_argument(
         '--model_path',
         type=str,
-        required=True,
-        help="The path of model parameters gz file")
+        default='models',
+        help='The path for model to store (default: models)')
+
+    # -------------Training parameter-------------
     parser.add_argument(
-        '--data_path',
-        type=str,
-        required=True,
-        help="The path of the dataset to infer")
+        '--learning_rate',
+        type=float,
+        default=1e-4,
+        help="Initial learning rate for training")
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=1000,
+        help="The size of mini-batch (default:1000)")
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=1,
+        help="Number of epochs for training.")
+
+    # -------------Network parameter-------------
     parser.add_argument(
         '--embedding_size',
         type=int,
@@ -38,59 +75,118 @@ def parse_args():
         '--sparse_feature_dim',
         type=int,
         default=1000001,
-        help="The size for embedding layer (default:1000001)")
+        help='sparse feature hashing space for index processing')
     parser.add_argument(
-        '--batch_size',
+        '--dense_feature_dim',
         type=int,
-        default=1000,
-        help="The size of mini-batch (default:1000)")
+        default=13,
+        help='dense feature shape')
+
+    # -------------device parameter-------------
+    parser.add_argument(
+        '--is_local',
+        type=int,
+        default=0,
+        help='Local train or distributed train (default: 1)')
+    parser.add_argument(
+        '--is_cloud',
+        type=int,
+        default=0,
+        help='Local train or distributed train on paddlecloud (default: 0)')
+    parser.add_argument(
+        '--save_model',
+        type=int,
+        default=0,
+        help='Save training model or not')
+    parser.add_argument(
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
+    parser.add_argument(
+        '--cpu_num',
+        type=int,
+        default=2,
+        help='threads for ctr training')
 
     return parser.parse_args()
 
 
-def infer():
-    args = parse_args()
-
+def run_infer(args, model_path):
     place = fluid.CPUPlace()
-    inference_scope = fluid.Scope()
-
-    dataset = reader.CriteoDataset(args.sparse_feature_dim)
-    test_reader = paddle.batch(
-        dataset.test([args.data_path]), batch_size=args.batch_size)
-
+    train_generator = generator.CriteoDataset(args.sparse_feature_dim)
+    file_list = [
+        str(args.test_files_path) + "/%s" % x
+        for x in os.listdir(args.test_files_path)
+    ]
+    test_reader = paddle.batch(train_generator.test(file_list),
+                               batch_size=args.batch_size)
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
-    with fluid.scope_guard(inference_scope):
-        with fluid.framework.program_guard(test_program, startup_program):
-            loss, auc_var, batch_auc_var, _, data_list, auc_states = ctr_dnn_model(
-                args.embedding_size, args.sparse_feature_dim, False)
+    ctr_model = CTR()
 
-            exe = fluid.Executor(place)
-
-            feeder = fluid.DataFeeder(feed_list=data_list, place=place)
-
-            fluid.io.load_persistables(
-                executor=exe,
-                dirname=args.model_path,
-                main_program=fluid.default_main_program())
-
-            def set_zero(var_name):
-                param = inference_scope.var(var_name).get_tensor()
+    def set_zero():
+        auc_states_names = [
+            '_generated_var_0', '_generated_var_1', '_generated_var_2',
+            '_generated_var_3'
+        ]
+        for name in auc_states_names:
+            param = fluid.global_scope().var(name).get_tensor()
+            if param:
                 param_array = np.zeros(param._get_dims()).astype("int64")
                 param.set(param_array, place)
 
-            for var in auc_states:
-                set_zero(var.name)
+    with fluid.framework.program_guard(test_program, startup_program):
+        with fluid.unique_name.guard():
+            inputs = ctr_model.input_data(args)
+            loss, auc_var = ctr_model.net(inputs, args)
 
+            exe = fluid.Executor(place)
+            feeder = fluid.DataFeeder(feed_list=inputs, place=place)
+
+            if args.is_cloud:
+                fluid.io.load_persistables(
+                    executor=exe,
+                    dirname=model_path,
+                    main_program=fluid.default_main_program())
+            elif args.is_local:
+                fluid.load(fluid.default_main_program(),
+                           model_path + "/checkpoint", exe)
+            set_zero()
+
+            run_index = 0
+            infer_auc = 0
+            L = []
             for batch_id, data in enumerate(test_reader()):
                 loss_val, auc_val = exe.run(test_program,
                                             feed=feeder.feed(data),
                                             fetch_list=[loss, auc_var])
+                run_index += 1
+                infer_auc = auc_val
+                L.append(loss_val / args.batch_size)
                 if batch_id % 100 == 0:
                     logger.info("TEST --> batch: {} loss: {} auc: {}".format(
                         batch_id, loss_val / args.batch_size, auc_val))
 
+            infer_loss = np.mean(L)
+            infer_result = {}
+            infer_result['loss'] = infer_loss
+            infer_result['auc'] = infer_auc
+            log_path = model_path + '/infer_result.log'
+            logger.info(str(infer_result))
+            with open(log_path, 'w+') as f:
+                f.write(str(infer_result))
+            logger.info("Inference complete")
+    return infer_result
 
-if __name__ == '__main__':
-    utils.check_version()
-    infer()
+
+if __name__ == "__main__":
+    args = parse_args()
+    model_list = []
+    for _, dir, _ in os.walk(args.model_path):
+        for model in dir:
+            if "epoch" in model:
+                path = "/".join([args.model_path, model])
+                model_list.append(path)
+    for model in model_list:
+        logger.info("Test model {}".format(model))
+        run_infer(args, model)

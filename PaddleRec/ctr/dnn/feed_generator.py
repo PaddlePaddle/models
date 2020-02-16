@@ -1,12 +1,25 @@
-import mmh3
+#!/usr/bin/python
+# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# There are 13 integer features and 26 categorical features
+continous_features = range(1, 14)
+categorial_features = range(14, 40)
+continous_clip = [20, 600, 100, 50, 64000, 500, 100, 50, 500, 10, 10, 10, 50]
 
 
-class Dataset:
-    def __init__(self):
-        pass
-
-
-class CriteoDataset(Dataset):
+class CriteoDataset(object):
     def __init__(self, sparse_feature_dim):
         self.cont_min_ = [0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.cont_max_ = [
@@ -28,12 +41,6 @@ class CriteoDataset(Dataset):
                     line_idx = 0
                     for line in f:
                         line_idx += 1
-                        if is_train and line_idx > self.train_idx_:
-                            break
-                        elif not is_train and line_idx <= self.train_idx_:
-                            continue
-                        if line_idx % trainer_num != trainer_id:
-                            continue
                         features = line.rstrip('\n').split('\t')
                         dense_feature = []
                         sparse_feature = []
@@ -41,13 +48,13 @@ class CriteoDataset(Dataset):
                             if features[idx] == '':
                                 dense_feature.append(0.0)
                             else:
-                                dense_feature.append((float(features[idx]) -
-                                                      self.cont_min_[idx - 1]) /
-                                                     self.cont_diff_[idx - 1])
+                                dense_feature.append(
+                                    (float(features[idx]) -
+                                     self.cont_min_[idx - 1]) /
+                                    self.cont_diff_[idx - 1])
                         for idx in self.categorical_range_:
                             sparse_feature.append([
-                                mmh3.hash(str(idx) + features[idx]) %
-                                self.hash_dim_
+                                hash(str(idx) + features[idx]) % self.hash_dim_
                             ])
 
                         label = [int(features[0])]
@@ -59,7 +66,4 @@ class CriteoDataset(Dataset):
         return self._reader_creator(file_list, True, trainer_num, trainer_id)
 
     def test(self, file_list):
-        return self._reader_creator(file_list, False, 1, 0)
-
-    def infer(self, file_list):
         return self._reader_creator(file_list, False, 1, 0)
