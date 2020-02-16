@@ -149,7 +149,7 @@ def train_loop(args, train_program, reader, data_loader, loss, trainer_id,
     train_exe = exe
 
     for pass_id in range(args.num_passes):
-        py_reader.start()
+        data_loader.start()
         time.sleep(10)
         epoch_start = time.time()
         batch_id = 0
@@ -183,7 +183,7 @@ def train_loop(args, train_program, reader, data_loader, loss, trainer_id,
                 batch_id += 1
 
         except fluid.core.EOFException:
-            py_reader.reset()
+            data_loader.reset()
             epoch_end = time.time()
             logger.info("Epoch: {0}, Train total expend: {1} ".format(
                 pass_id, epoch_end - epoch_start))
