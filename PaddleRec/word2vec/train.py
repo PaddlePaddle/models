@@ -178,7 +178,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                     model_dir = args.model_output_dir + '/pass-' + str(
                         pass_id) + ('/batch-' + str(batch_id))
                     if trainer_id == 0:
-                        fluid.io.save_params(executor=exe, dirname=model_dir)
+                        fluid.save(fluid.default_main_program(), model_path=model_dir)
                         print("model saved in %s" % model_dir)
                 batch_id += 1
 
@@ -189,7 +189,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                 pass_id, epoch_end - epoch_start))
             model_dir = args.model_output_dir + '/pass-' + str(pass_id)
             if trainer_id == 0:
-                fluid.io.save_params(executor=exe, dirname=model_dir)
+                fluid.save(fluid.default_main_program(), model_path=model_dir)
                 print("model saved in %s" % model_dir)
 
 
