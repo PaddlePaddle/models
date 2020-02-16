@@ -55,6 +55,9 @@ class GTrainer():
                     fluid.layers.square(
                         fluid.layers.elementwise_sub(
                             x=self.pred_fake, y=ones)))
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
 
             self.g_loss_cls = fluid.layers.mean(
                 fluid.layers.sigmoid_cross_entropy_with_logits(self.cls_fake,
@@ -126,6 +129,9 @@ class DTrainer():
                     cfg=cfg,
                     name="discriminator")
                 self.d_loss = self.d_loss_real + self.d_loss_fake + 1.0 * self.d_loss_cls + cfg.lambda_gp * self.d_loss_gp
+            else:
+                raise NotImplementedError("gan_mode {} is not support!".format(
+                    cfg.gan_mode))
 
             self.d_loss_real.persistable = True
             self.d_loss_fake.persistable = True
@@ -150,20 +156,30 @@ class DTrainer():
     def gradient_penalty(self, f, real, fake=None, cfg=None, name=None):
         def _interpolate(a, b=None):
             if b is None:
-                beta = fluid.layers.uniform_random_batch_size_like(
-                    input=a, shape=a.shape, min=0.0, max=1.0)
+                if cfg.enable_ce:
+                    beta = fluid.layers.uniform_random_batch_size_like(
+                       input=a, shape=a.shape, min=0.0, max=1.0, seed=1)
+                else:
+                    beta = fluid.layers.uniform_random_batch_size_like(
+                       input=a, shape=a.shape, min=0.0, max=1.0)
+
                 mean = fluid.layers.reduce_mean(
-                    a, range(len(a.shape)), keep_dim=True)
+                    a, dim=list(range(len(a.shape))), keep_dim=True)
                 input_sub_mean = fluid.layers.elementwise_sub(a, mean, axis=0)
                 var = fluid.layers.reduce_mean(
                     fluid.layers.square(input_sub_mean),
-                    range(len(a.shape)),
+                    dim=list(range(len(a.shape))),
                     keep_dim=True)
                 b = beta * fluid.layers.sqrt(var) * 0.5 + a
             shape = [a.shape[0]]
-            alpha = fluid.layers.uniform_random_batch_size_like(
-                input=a, shape=shape, min=0.0, max=1.0)
-            inner = (b - a) * alpha + a
+            if cfg.enable_ce:
+               alpha = fluid.layers.uniform_random_batch_size_like(
+                 input=a, shape=shape, min=0.0, max=1.0, seed=1)
+            else:
+               alpha = fluid.layers.uniform_random_batch_size_like(
+                 input=a, shape=shape, min=0.0, max=1.0)
+
+            inner = fluid.layers.elementwise_mul((b-a), alpha, axis=0) + a
             return inner
 
         x = _interpolate(real, fake)
@@ -248,6 +264,10 @@ class AttGAN(object):
             default=None,
             help="the normalization in discriminator, choose in [None, instance_norm]"
         )
+        parser.add_argument(
+            '--enable_ce',
+            action='store_true',
+            help="if set, run the tasks with continuous evaluation logs")
 
         return parser
 
@@ -264,18 +284,21 @@ class AttGAN(object):
         self.id2name = id2name
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
+        data_shape = [None, 3, self.cfg.image_size, self.cfg.image_size]
 
-        image_real = fluid.layers.data(
+        image_real = fluid.data(
             name='image_real', shape=data_shape, dtype='float32')
-        label_org = fluid.layers.data(
-            name='label_org', shape=[self.cfg.c_dim], dtype='float32')
-        label_trg = fluid.layers.data(
-            name='label_trg', shape=[self.cfg.c_dim], dtype='float32')
-        label_org_ = fluid.layers.data(
-            name='label_org_', shape=[self.cfg.c_dim], dtype='float32')
-        label_trg_ = fluid.layers.data(
-            name='label_trg_', shape=[self.cfg.c_dim], dtype='float32')
+        label_org = fluid.data(
+            name='label_org', shape=[None, self.cfg.c_dim], dtype='float32')
+        label_trg = fluid.data(
+            name='label_trg', shape=[None, self.cfg.c_dim], dtype='float32')
+        label_org_ = fluid.data(
+            name='label_org_', shape=[None, self.cfg.c_dim], dtype='float32')
+        label_trg_ = fluid.data(
+            name='label_trg_', shape=[None, self.cfg.c_dim], dtype='float32')
+        # used for continuous evaluation        
+        if self.cfg.enable_ce:
+            fluid.default_startup_program().random_seed = 90
 
         py_reader = fluid.io.PyReader(
             feed_list=[image_real, label_org, label_trg],
@@ -297,7 +320,10 @@ class AttGAN(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
-        py_reader.decorate_batch_generator(self.train_reader, places=place)
+        py_reader.decorate_batch_generator(
+            self.train_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -307,7 +333,6 @@ class AttGAN(object):
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
@@ -317,7 +342,11 @@ class AttGAN(object):
             dis_trainer.program).with_data_parallel(
                 loss_name=dis_trainer.d_loss.name,
                 build_strategy=build_strategy)
-
+        # used for continuous evaluation        
+        if self.cfg.enable_ce:
+            gen_trainer_program.random_seed = 90
+            dis_trainer_program.random_seed = 90
+        
         t_time = 0
 
         for epoch_id in range(self.cfg.epoch):
@@ -359,11 +388,13 @@ class AttGAN(object):
                                                      d_loss_gp[0], batch_time))
                 sys.stdout.flush()
                 batch_id += 1
+                if self.cfg.enable_ce and batch_id == 100:
+                   break
 
             if self.cfg.run_test:
-                image_name = fluid.layers.data(
+                image_name = fluid.data(
                     name='image_name',
-                    shape=[self.cfg.n_samples],
+                    shape=[None, self.cfg.n_samples],
                     dtype='int32')
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[image_real, label_org, label_trg, image_name],
@@ -371,7 +402,9 @@ class AttGAN(object):
                     iterable=True,
                     use_double_buffer=True)
                 test_py_reader.decorate_batch_generator(
-                    self.test_reader, places=place)
+                    self.test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
 
                 test_program = test_gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
@@ -383,3 +416,13 @@ class AttGAN(object):
                                     "net_G")
                 utility.checkpoints(epoch_id, self.cfg, exe, dis_trainer,
                                     "net_D")
+            # used for continuous evaluation
+            if self.cfg.enable_ce:
+                device_num = fluid.core.get_cuda_device_count() if self.cfg.use_gpu else 1
+                print("kpis\tattgan_g_loss_fake_card{}\t{}".format(device_num, g_loss_fake[0]))
+                print("kpis\tattgan_g_loss_rec_card{}\t{}".format(device_num, g_loss_rec[0]))
+                print("kpis\tattgan_g_loss_cls_card{}\t{}".format(device_num, g_loss_cls[0]))
+                print("kpis\tattgan_d_loss_real_card{}\t{}".format(device_num, d_loss_real[0]))
+                print("kpis\tattgan_d_loss_fake_card{}\t{}".format(device_num,d_loss_fake[0]))
+                print("kpis\tattgan_d_loss_gp_card{}\t{}".format(device_num,d_loss_gp[0]))
+                print("kpis\tattgan_Batch_time_cost_card{}\t{}".format(device_num,batch_time)) 

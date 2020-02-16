@@ -10,7 +10,8 @@ The full list of frontier research:
 
 |研究课题|论文全文|开源地址|
 |----|----|----|
-|MONOPOLY: Learning to Price Public Facilities for Revaluing Private Properties with Large-scale Urban Data|||
+|MONOPOLY: Learning to Price Public Facilities for Revaluing Private Properties with Large-scale Urban Data|https://dl.acm.org/doi/10.1145/3357384.3357810|https://github.com/PaddlePaddle/models/tree/develop/PaddleST/Research/CIKM2019-MONOPOLY|
+|||
 
 ### 前沿应用项目列表如下：
 
@@ -19,3 +20,4 @@ The full list of frontier industrial projects:
 |应用项目|项目简介|开源地址|
 |----|----|----|
 ||||
+

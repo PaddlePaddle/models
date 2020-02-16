@@ -24,6 +24,7 @@ weights="" #set the path of weights to enable eval and predicut, just ignore thi
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 #export CUDA_VISIBLE_DEVICES=0,1,2,3
+#export CUDA_VISIBLE_DEVICES=0
 export FLAGS_fast_eager_deletion_mode=1
 export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
@@ -74,7 +75,7 @@ elif [ "$mode"x == "eval"x ]; then
 elif [ "$mode"x == "predict"x ]; then
     echo $mode $name $configs $weights
     if [ "$weights"x != ""x ]; then
-        python -i predict.py --model_name=$name \
+        python predict.py --model_name=$name \
                           --config=$configs \
                           --log_interval=$log_interval \
                           --weights=$weights \

@@ -89,5 +89,5 @@ class DCGAN_model(object):
             norm=self.norm,
             activation_fn='leaky_relu',
             name=name + '_l1')
-        out = linear(o_l1, 1, activation_fn='sigmoid', name=name + '_l2')
+        out = linear(o_l1, 1, activation_fn=None, name=name + '_l2')
         return out

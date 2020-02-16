@@ -80,7 +80,7 @@ def save_inference_model(args):
     infer_config = merge_configs(config, 'infer', vars(args))
     print_configs(infer_config, "Infer")
     infer_model = models.get_model(args.model_name, infer_config, mode='infer')
-    infer_model.build_input(use_pyreader=False)
+    infer_model.build_input(use_dataloader=False)
     infer_model.build_model()
     infer_feeds = infer_model.feeds()
     infer_outputs = infer_model.outputs()

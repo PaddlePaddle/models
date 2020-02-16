@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 util tools
 """
@@ -6,6 +19,8 @@ import os
 import sys
 import numpy as np
 import paddle.fluid as fluid
+import yaml
+import io
 
 
 def str2bool(v):
@@ -19,6 +34,7 @@ class ArgumentGroup(object):
     """
     Put arguments to one group
     """
+
     def __init__(self, parser, title, des):
         """none"""
         self._group = parser.add_argument_group(title=title, description=des)
@@ -32,6 +48,23 @@ class ArgumentGroup(object):
             type=type,
             help=help + ' Default: %(default)s.',
             **kwargs)
+
+
+def load_yaml(parser, file_name, **kwargs):
+    with io.open(file_name, 'r', encoding='utf8') as f:
+        args = yaml.load(f)
+        for title in args:
+            group = parser.add_argument_group(title=title, description='')
+            for name in args[title]:
+                _type = type(args[title][name]['val'])
+                _type = str2bool if _type == bool else _type
+                group.add_argument(
+                    "--" + name,
+                    default=args[title][name]['val'],
+                    type=_type,
+                    help=args[title][name]['meaning'] +
+                    ' Default: %(default)s.',
+                    **kwargs)
 
 
 def print_arguments(args):
@@ -68,7 +101,7 @@ def to_lodtensor(data, place):
         lod.append(cur_len)
     flattened_data = np.concatenate(data, axis=0).astype("int64")
     flattened_data = flattened_data.reshape([len(flattened_data), 1])
-    res = fluid.LoDTensor()
+    res = fluid.Tensor()
     res.set(flattened_data, place)
     res.set_lod([lod])
     return res
@@ -80,34 +113,84 @@ def parse_result(words, crf_decode, dataset):
     words = np.array(words)
     crf_decode = np.array(crf_decode)
     batch_size = len(offset_list) - 1
-    batch_out_str = []
+
+    batch_out = []
     for sent_index in range(batch_size):
-        sent_out_str = ""
-        sent_len = offset_list[sent_index + 1] - offset_list[sent_index]
-        last_word = ""
-        last_tag = ""
-        for tag_index in range(sent_len): # iterate every word in sent
-            index = tag_index + offset_list[sent_index]
-            cur_word_id = str(words[index][0])
-            cur_tag_id = str(crf_decode[index][0])
-            cur_word = dataset.id2word_dict[cur_word_id]
-            cur_tag = dataset.id2label_dict[cur_tag_id]
-            if last_word == "":
-                last_word = cur_word
-                last_tag = cur_tag[:-2]
-            elif cur_tag.endswith("-B") or cur_tag == "O":
-                sent_out_str += last_word + u"/" + last_tag + u" "
-                last_word = cur_word
-                last_tag = cur_tag[:-2]
-            elif cur_tag.endswith("-I"):
-                last_word += cur_word
-            else:
-                raise ValueError("invalid tag: %s" % (cur_tag))
-        if cur_word != "":
-            sent_out_str += last_word + u"/" + last_tag + u" "
-        sent_out_str = to_str(sent_out_str.strip())
-        batch_out_str.append(sent_out_str)
-    return batch_out_str
+        begin, end = offset_list[sent_index], offset_list[sent_index + 1]
+        sent = [dataset.id2word_dict[str(id[0])] for id in words[begin:end]]
+        tags = [
+            dataset.id2label_dict[str(id[0])] for id in crf_decode[begin:end]
+        ]
+
+        sent_out = []
+        tags_out = []
+        parital_word = ""
+        for ind, tag in enumerate(tags):
+            # for the first word
+            if parital_word == "":
+                parital_word = sent[ind]
+                tags_out.append(tag.split('-')[0])
+                continue
+
+            # for the beginning of word
+            if tag.endswith("-B") or (tag == "O" and tags[ind - 1] != "O"):
+                sent_out.append(parital_word)
+                tags_out.append(tag.split('-')[0])
+                parital_word = sent[ind]
+                continue
+
+            parital_word += sent[ind]
+
+        # append the last word, except for len(tags)=0
+        if len(sent_out) < len(tags_out):
+            sent_out.append(parital_word)
+
+        batch_out.append([sent_out, tags_out])
+    return batch_out
+
+
+def parse_padding_result(words, crf_decode, seq_lens, dataset):
+    """ parse padding result """
+    words = np.squeeze(words)
+    batch_size = len(seq_lens)
+
+    batch_out = []
+    for sent_index in range(batch_size):
+
+        sent = [
+            dataset.id2word_dict[str(id)]
+            for id in words[sent_index][1:seq_lens[sent_index] - 1]
+        ]
+        tags = [
+            dataset.id2label_dict[str(id)]
+            for id in crf_decode[sent_index][1:seq_lens[sent_index] - 1]
+        ]
+
+        sent_out = []
+        tags_out = []
+        parital_word = ""
+        for ind, tag in enumerate(tags):
+            # for the first word
+            if parital_word == "":
+                parital_word = sent[ind]
+                tags_out.append(tag.split('-')[0])
+                continue
+
+            # for the beginning of word
+            if tag.endswith("-B") or (tag == "O" and tags[ind - 1] != "O"):
+                sent_out.append(parital_word)
+                tags_out.append(tag.split('-')[0])
+                parital_word = sent[ind]
+                continue
+
+            parital_word += sent[ind]
+
+        # append the last word, except for len(tags)=0
+        if len(sent_out) < len(tags_out):
+            sent_out.append(parital_word)
+
+        batch_out.append([sent_out, tags_out])
+    return batch_out
 
 
 def init_checkpoint(exe, init_checkpoint_path, main_program):

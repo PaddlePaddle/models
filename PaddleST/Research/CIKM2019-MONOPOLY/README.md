@@ -29,7 +29,7 @@ We have conducted extensive experiments with the large-scale urban data of sever
 
 1. paddle安装
 
-    本项目依赖于Paddle Fluid 1.5.1 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
+    本项目依赖于Paddle Fluid 1.6.1 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装
 
 2. 下载代码
 
@@ -74,14 +74,14 @@ We have conducted extensive experiments with the large-scale urban data of sever
 
 Please feel free to review our paper :)
 
-[Full Text](TODO)
+链接(link): [https://dl.acm.org/citation.cfm?id=3357810] (https://dl.acm.org/citation.cfm?id=3357810)
 
-[ACM DL](TODO)
+
 
 
 ## 引用格式(Paper Citation)
 
-[Miao Fan](https://sites.google.com/view/miao-fan/home), [Jizhou Huang](http://ir.hit.edu.cn/~huangjizhou/), An Zhuo, Ying Li, Ping Li, Haifeng Wang. MONOPOLY: Learning to Price Public Facilities for Revaluing Private Properties with Large-scale Urban Data, The 28th International Conference on Information and Knowledge Management (CIKM'19), pp. XXX-XXX. [bib](xxx)
+[Miao Fan](https://sites.google.com/view/miao-fan/home), [Jizhou Huang](http://ir.hit.edu.cn/~huangjizhou/), An Zhuo, Ying Li, Ping Li, Haifeng Wang. MONOPOLY: Learning to Price Public Facilities for Revaluing Private Properties with Large-scale Urban Data, The 28th International Conference on Information and Knowledge Management (CIKM'19), pp. 2655-2663. [bib](https://www.google.com/url?q=https%3A%2F%2Fdl.acm.org%2Fdownformats.cfm%3Fid%3D3357810%26parent_id%3D3357384%26expformat%3Dbibtex&sa=D&sntz=1&usg=AFQjCNHOdOf-kL5u6Wugkt2KpcWR_t41Ow)
 
 
 

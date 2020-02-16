@@ -77,8 +77,7 @@ class HousePrice(BaseNet):
             act=act)
         return _fc
  
-    
-    def pred_format(self, result):
+    def pred_format(self, result, **kwargs):
         """
             format pred output
         """
@@ -118,7 +117,7 @@ class HousePrice(BaseNet):
 
         max_house_num = FLAGS.max_house_num
         max_public_num = FLAGS.max_public_num
-       
+        pred_keys = inputs.keys() 
         #step1. get house self feature
         if FLAGS.with_house_attr:
             def _get_house_attr(name, attr_vec_size):
@@ -136,6 +135,10 @@ class HousePrice(BaseNet):
         else:
             #no house attr
             house_vec = fluid.layers.reshape(inputs["house_business"], [-1, self.city_info.business_num])
+            pred_keys.remove('house_wuye')
+            pred_keys.remove('house_kfs')
+            pred_keys.remove('house_age')
+            pred_keys.remove('house_lou')
 
         house_self = self.fc_fn(house_vec, 1, act='sigmoid', layer_name='house_self', FLAGS=FLAGS)
         house_self = fluid.layers.reshape(house_self, [-1, 1])
@@ -192,8 +195,8 @@ class HousePrice(BaseNet):
         net_output = {"debug_output": debug_output, 
                       "model_output": model_output}
 
-        model_output['feeded_var_names'] = inputs.keys()
-        model_output['target_vars'] = [label, pred]
+        model_output['feeded_var_names'] = pred_keys   
+        model_output['fetch_targets'] = [label, pred]
         model_output['loss'] = avg_cost
 
         #debug_output['pred'] = pred 

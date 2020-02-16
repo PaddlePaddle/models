@@ -1,0 +1,67 @@
+MODEL:
+  name: "TALL"
+  visual_feature_dim : 12288
+  sentence_embedding_size : 4800
+  semantic_size : 1024
+  hidden_size : 1000
+  output_size : 3
+
+TRAIN:
+  epoch : 25
+  use_gpu : True
+  num_gpus : 1
+  batch_size : 56
+
+  off_size: 2
+  clip_norm: 5.0
+  learning_rate: 1e-3
+
+  semantic_size : 1024
+  feats_dimen : 4096
+  context_num : 1
+  context_size : 128
+  sent_vec_dim : 4800
+  sliding_clip_path : "./data/dataset/tall/Interval64_128_256_512_overlap0.8_c3d_fc6/"
+  clip_sentvec : "./data/dataset/tall/train_clip-sentvec.pkl"
+  movie_length_info : "./data/dataset/tall/video_allframes_info.pkl"
+
+VALID:
+  use_gpu : True
+  num_gpus : 1
+  batch_size : 56
+
+  off_size: 2
+  clip_norm: 5.0
+  learning_rate: 1e-3
+
+  semantic_size : 1024
+  feats_dimen : 4096
+  context_num : 1
+  context_size : 128
+  sent_vec_dim : 4800
+  sliding_clip_path : "./data/dataset/tall/Interval64_128_256_512_overlap0.8_c3d_fc6/"
+  clip_sentvec : "./data/dataset/tall/train_clip-sentvec.pkl"
+  movie_length_info : "./data/dataset/tall/video_allframes_info.pkl"
+
+TEST:
+  batch_size : 1
+
+  feats_dimen : 4096
+  context_num : 1
+  context_size : 128
+  sent_vec_dim : 4800
+  semantic_size : 4800
+  sliding_clip_path : "./data/dataset/tall/Interval128_256_overlap0.8_c3d_fc6/"
+  clip_sentvec : "./data/dataset/tall/test_clip-sentvec.pkl"
+
+INFER:
+  batch_size: 1
+  feats_dimen: 4096
+  context_num: 1
+  context_size: 128
+  sent_vec_dim: 4800
+  semantic_size: 4800
+
+  filelist: "./data/dataset/tall/infer"
+  sliding_clip_path : "./data/dataset/tall/infer/infer_feat"
+  clip_sentvec : "./data/dataset/tall/infer/infer_clip-sen.pkl"

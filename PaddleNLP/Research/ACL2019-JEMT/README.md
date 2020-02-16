@@ -81,7 +81,6 @@ beta代表发音信息的权重。这表明，即使将绝大部分权重放在�
   --sort_type pool \
   --pool_size 200000 \
   --use_py_reader False \
-  --use_mem_opt False \
   --enable_ce False \
   --fetch_steps 1 \
   pass_num 100 \

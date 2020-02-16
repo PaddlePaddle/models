@@ -1,3 +1,5 @@
+**该项目已被迁移至[PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection), 这个项目包含了更多的检测模型。**
+
 # RCNN 系列目标检测
 
 ---
@@ -13,6 +15,10 @@
 ## 安装
 
 在当前目录下运行样例代码需要PadddlePaddle Fluid的v.1.3.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/)中的说明来更新PaddlePaddle。
+
+同时推荐用户参考:
+[MaskRCNN](https://aistudio.baidu.com/aistudio/projectDetail/122273)
+[Faster RCNN](https://aistudio.baidu.com/aistudio/projectDetail/122275)
 
 ## 简介
 区域卷积神经网络（RCNN）系列模型为两阶段目标检测器。通过对图像生成候选区域，提取特征，判别特征类别并修正候选框位置。
@@ -34,8 +40,9 @@ Mask RCNN同样为两阶段框架，第一阶段扫描图像生成候选框；�
 
 在[MS-COCO数据集](http://cocodataset.org/#download)上进行训练，通过如下方式下载数据集。
 
-    cd dataset/coco
-    ./download.sh
+```bash
+python dataset/coco/download.py
+```
 
 数据目录结构如下：
 
@@ -63,6 +70,8 @@ data/coco/
 **下载预训练模型：** 本示例提供Resnet-50预训练模型，该模性转换自Caffe，并对批标准化层(Batch Normalization Layer)进行参数融合。采用如下命令下载预训练模型：
 
     sh ./pretrained/download.sh
+
+**注意:** Windows用户可通过`./pretrained/download.sh`中的链接直接下载和解压。
 
 通过初始化`pretrained_model` 加载预训练模型。同时在参数微调时也采用该设置加载已训练模型。
 请在训练前确认预训练模型下载与加载正确，否则训练过程中损失可能会出现NAN。

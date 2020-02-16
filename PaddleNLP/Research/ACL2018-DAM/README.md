@@ -16,6 +16,8 @@ Overview of Deep Attention Matching Network
 <img src="images/Figure2.png"/> <br />
 </p>
 
+同时推荐用户参考[IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122287)
+
 ## 快速开始
 ### 安装说明
 1. paddle安装

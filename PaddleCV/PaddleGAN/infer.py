@@ -26,8 +26,8 @@ import numpy as np
 import imageio
 import glob
 from util.config import add_arguments, print_arguments
-from data_reader import celeba_reader_creator, reader_creator
-from util.utility import check_attribute_conflict, check_gpu, save_batch_image
+from data_reader import celeba_reader_creator, reader_creator, triplex_reader_creator
+from util.utility import check_attribute_conflict, check_gpu, save_batch_image, check_version
 from util import utility
 import copy
 
@@ -44,13 +44,19 @@ add_arg('init_model',        str,   None,              "The init model file of d
 add_arg('output',            str,   "./infer_result",  "The directory the infer result to be saved to.")
 add_arg('input_style',       str,   "A",               "The style of the input, A or B")
 add_arg('norm_type',         str,   "batch_norm",      "Which normalization to used")
+add_arg('crop_type',         str,   None,      "Which crop type to use")
 add_arg('use_gpu',           bool,  True,              "Whether to use GPU to train.")
 add_arg('dropout',           bool,  False,             "Whether to use dropout")
 add_arg('g_base_dims',       int,   64,                "Base channels in CycleGAN generator")
+add_arg('ngf',       int,   64,                "Base channels in SPADE generator")
 add_arg('c_dim',             int,   13,                "the size of attrs")
 add_arg('use_gru',           bool,  False,             "Whether to use GRU")
 add_arg('crop_size',         int,   178,               "crop size")
 add_arg('image_size',        int,   128,               "image size")
+add_arg('load_height',        int,   128,               "image size")
+add_arg('load_width',        int,   128,               "image size")
+add_arg('crop_height',        int,   128,               "height of crop size")
+add_arg('crop_width',        int,   128,               "width of crop size")
 add_arg('selected_attrs',    str,
     "Bald,Bangs,Black_Hair,Blond_Hair,Brown_Hair,Bushy_Eyebrows,Eyeglasses,Male,Mouth_Slightly_Open,Mustache,No_Beard,Pale_Skin,Young",
 "the attributes we selected to change")
@@ -60,6 +66,8 @@ add_arg('dataset_dir',       str,   "./data/celeba/",                "the datase
 add_arg('n_layers',          int,   5,                 "default layers in generotor")
 add_arg('gru_n_layers',      int,   4,                 "default layers of GRU in generotor")
 add_arg('noise_size',        int,   100,               "the noise dimension")
+add_arg('label_nc',        int,   36,               "label numbers of SPADE")
+add_arg('no_instance', type=bool, default=False, help="Whether to use instance label.")
 # yapf: enable
 
 
@@ -74,12 +82,14 @@ def infer(args):
         name='image_name', shape=[args.n_samples], dtype='int32')
 
     model_name = 'net_G'
+
     if args.model_net == 'CycleGAN':
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[input, image_name],
             capacity=4,  ## batch_size * 4
             iterable=True,
             use_double_buffer=True)
+
         from network.CycleGAN_network import CycleGAN_model
         model = CycleGAN_model()
         if args.input_style == "A":
@@ -89,7 +99,7 @@ def infer(args):
         else:
             raise "Input with style [%s] is not supported." % args.input_style
     elif args.model_net == 'Pix2pix':
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[input, image_name],
             capacity=4,  ## batch_size * 4
             iterable=True,
@@ -159,6 +169,17 @@ def infer(args):
         from network.DCGAN_network import DCGAN_model
         model = DCGAN_model(args.n_samples)
         fake = model.network_G(noise, name="G")
+    elif args.model_net == 'SPADE':
+        label_shape = [None, args.label_nc, args.crop_height, args.crop_width]
+        spade_data_shape = [None, 1, args.crop_height, args.crop_width]
+        from network.SPADE_network import SPADE_model
+        model = SPADE_model()
+        input_label = fluid.data(
+            name='input_label', shape=label_shape, dtype='float32')
+        input_ins = fluid.data(
+            name='input_ins', shape=spade_data_shape, dtype='float32')
+        input_ = fluid.layers.concat([input_label, input_ins], 1)
+        fake = model.network_G(input_, "generator", cfg=args, is_test=True)
     else:
         raise NotImplementedError("model_net {} is not support".format(
             args.model_net))
@@ -278,22 +299,56 @@ def infer(args):
             batch_size=args.n_samples,
             mode="VAL")
         reader_test = test_reader.make_reader(args, return_name=True)
-        py_reader.decorate_batch_generator(
+        loader.set_batch_generator(
             reader_test,
             places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
         id2name = test_reader.id2name
-        for data in py_reader():
+        for data in loader():
             real_img, image_name = data[0]['input'], data[0]['image_name']
-            image_name = id2name[np.array(image_name).astype('int32')[0]]
-            print("read: ", image_name)
+            image_names = []
+            for name in image_name:
+                image_names.append(id2name[np.array(name).astype('int32')[0]])
+            print("read: ", image_names)
             fake_temp = exe.run(fetch_list=[fake.name],
                                 feed={"input": real_img})
-            fake_temp = np.squeeze(fake_temp[0]).transpose([1, 2, 0])
-            input_temp = np.squeeze(np.array(real_img)[0]).transpose([1, 2, 0])
+            fake_temp = save_batch_image(fake_temp[0])
+            input_temp = save_batch_image(np.array(real_img))
 
-            imageio.imwrite(
-                os.path.join(args.output, "fake_" + image_name), (
-                    (fake_temp + 1) * 127.5).astype(np.uint8))
+            for i, name in enumerate(image_names):
+                imageio.imwrite(
+                    os.path.join(args.output, "fake_" + name), (
+                        (fake_temp[i] + 1) * 127.5).astype(np.uint8))
+                imageio.imwrite(
+                    os.path.join(args.output, "input_" + name), (
+                        (input_temp[i] + 1) * 127.5).astype(np.uint8))
+    elif args.model_net == 'SPADE':
+        test_reader = triplex_reader_creator(
+            image_dir=args.dataset_dir,
+            list_filename=args.test_list,
+            shuffle=False,
+            batch_size=1,
+            mode="TEST")
+        id2name = test_reader.id2name
+        reader_test = test_reader.make_reader(args, return_name=True)
+        for data in zip(reader_test()):
+            data_A, data_B, data_C, name = data[0]
+            name = id2name[np.array(name).astype('int32')[0]]
+            print("read: ", name)
+            tensor_A = fluid.LoDTensor()
+            tensor_C = fluid.LoDTensor()
+            tensor_A.set(data_A, place)
+            tensor_C.set(data_C, place)
+            fake_B_temp = exe.run(
+                fetch_list=[fake.name],
+                feed={"input_label": tensor_A,
+                      "input_ins": tensor_C})
+            fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
+            input_B_temp = np.squeeze(data_B[0]).transpose([1, 2, 0])
+
+            imageio.imwrite(args.output + "/fakeB_" + "_" + name, (
+                (fake_B_temp + 1) * 127.5).astype(np.uint8))
+            imageio.imwrite(args.output + "/real_" + "_" + name, (
+                (input_B_temp + 1) * 127.5).astype(np.uint8))
 
     elif args.model_net == 'CGAN':
         noise_data = np.random.uniform(
@@ -339,4 +394,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print_arguments(args)
     check_gpu(args.use_gpu)
+    check_version()
     infer(args)

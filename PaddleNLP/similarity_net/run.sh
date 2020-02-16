@@ -19,9 +19,9 @@ INIT_CHECKPOINT=./model_files/simnet_bow_pairwise_pretrained_model/
 
 # run_train
 train() {
-	python run_classifier.py \
+    python run_classifier.py \
 		--task_name ${TASK_NAME} \
-		--use_cuda false \
+		--use_cuda False \
 		--do_train True \
 		--do_valid True \
 		--do_test True \
@@ -34,12 +34,13 @@ train() {
 		--output_dir ${CKPT_PATH} \
 		--config_path ${CONFIG_PATH} \
 		--vocab_path ${VOCAB_PATH} \
-		--epoch 10 \
-		--save_steps 1000 \
-		--validation_steps 100 \
+		--epoch 40 \
+		--save_steps 2000 \
+		--validation_steps 200 \
 		--compute_accuracy False \
 		--lamda 0.958 \
-		--task_mode ${TASK_MODE}
+		--task_mode ${TASK_MODE}\
+		--init_checkpoint ""
 }
 #run_evaluate
 evaluate() {

@@ -207,7 +207,10 @@ class CycleGAN(object):
             type=int,
             default=3,
             help="only used when CycleGAN discriminator is nlayers")
-
+        parser.add_argument(
+            '--enable_ce',
+            action='store_true',
+            help="if set, run the tasks with continuous evaluation logs")
         return parser
 
     def __init__(self,
@@ -229,16 +232,17 @@ class CycleGAN(object):
         self.B_id2name = B_id2name
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.crop_size, self.cfg.crop_size]
+        data_shape = [None, 3, self.cfg.crop_size, self.cfg.crop_size]
 
-        input_A = fluid.layers.data(
-            name='input_A', shape=data_shape, dtype='float32')
-        input_B = fluid.layers.data(
-            name='input_B', shape=data_shape, dtype='float32')
-        fake_pool_A = fluid.layers.data(
+        input_A = fluid.data(name='input_A', shape=data_shape, dtype='float32')
+        input_B = fluid.data(name='input_B', shape=data_shape, dtype='float32')
+        fake_pool_A = fluid.data(
             name='fake_pool_A', shape=data_shape, dtype='float32')
-        fake_pool_B = fluid.layers.data(
+        fake_pool_B = fluid.data(
             name='fake_pool_B', shape=data_shape, dtype='float32')
+        # used for continuous evaluation
+        if self.cfg.enable_ce:
+            fluid.default_startup_program().random_seed = 90
 
         A_py_reader = fluid.io.PyReader(
             feed_list=[input_A],
@@ -259,8 +263,14 @@ class CycleGAN(object):
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
 
-        A_py_reader.decorate_batch_generator(self.A_reader, places=place)
-        B_py_reader.decorate_batch_generator(self.B_reader, places=place)
+        A_py_reader.decorate_batch_generator(
+            self.A_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
+        B_py_reader.decorate_batch_generator(
+            self.B_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
 
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
@@ -313,6 +323,10 @@ class CycleGAN(object):
                 fake_pool_B = B_pool.pool_image(fake_B_tmp)
                 fake_pool_A = A_pool.pool_image(fake_A_tmp)
 
+                if self.cfg.enable_ce:
+                    fake_pool_B = fake_B_tmp
+                    fake_pool_A = fake_A_tmp
+
                 # optimize the d_A network
                 d_A_loss = exe.run(
                     d_A_trainer_program,
@@ -340,12 +354,15 @@ class CycleGAN(object):
 
                 sys.stdout.flush()
                 batch_id += 1
+                # used for continuous evaluation
+                if self.cfg.enable_ce and batch_id == 10:
+                    break
 
             if self.cfg.run_test:
-                A_image_name = fluid.layers.data(
-                    name='A_image_name', shape=[1], dtype='int32')
-                B_image_name = fluid.layers.data(
-                    name='B_image_name', shape=[1], dtype='int32')
+                A_image_name = fluid.data(
+                    name='A_image_name', shape=[None, 1], dtype='int32')
+                B_image_name = fluid.data(
+                    name='B_image_name', shape=[None, 1], dtype='int32')
                 A_test_py_reader = fluid.io.PyReader(
                     feed_list=[input_A, A_image_name],
                     capacity=4,
@@ -359,9 +376,13 @@ class CycleGAN(object):
                     use_double_buffer=True)
 
                 A_test_py_reader.decorate_batch_generator(
-                    self.A_test_reader, places=place)
+                    self.A_test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 B_test_py_reader.decorate_batch_generator(
-                    self.B_test_reader, places=place)
+                    self.B_test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
                 utility.save_test_image(
                     epoch_id,
@@ -382,3 +403,26 @@ class CycleGAN(object):
                                     "net_DA")
                 utility.checkpoints(epoch_id, self.cfg, exe, d_B_trainer,
                                     "net_DB")
+
+        # used for continuous evaluation
+        if self.cfg.enable_ce:
+            device_num = fluid.core.get_cuda_device_count(
+            ) if self.cfg.use_gpu else 1
+            print("kpis\tcyclegan_g_A_loss_card{}\t{}".format(device_num,
+                                                              g_A_loss[0]))
+            print("kpis\tcyclegan_g_A_cyc_loss_card{}\t{}".format(
+                device_num, g_A_cyc_loss[0]))
+            print("kpis\tcyclegan_g_A_idt_loss_card{}\t{}".format(
+                device_num, g_A_idt_loss[0]))
+            print("kpis\tcyclegan_d_A_loss_card{}\t{}".format(device_num,
+                                                              d_A_loss[0]))
+            print("kpis\tcyclegan_g_B_loss_card{}\t{}".format(device_num,
+                                                              g_B_loss[0]))
+            print("kpis\tcyclegan_g_B_cyc_loss_card{}\t{}".format(
+                device_num, g_B_cyc_loss[0]))
+            print("kpis\tcyclegan_g_B_idt_loss_card{}\t{}".format(
+                device_num, g_B_idt_loss[0]))
+            print("kpis\tcyclegan_d_B_loss_card{}\t{}".format(device_num,
+                                                              d_B_loss[0]))
+            print("kpis\tcyclegan_Batch_time_cost_card{}\t{}".format(
+                device_num, batch_time))

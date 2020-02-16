@@ -26,7 +26,7 @@ class BowEncoder(object):
         self.param_name = ""
 
     def forward(self, emb):
-        return nn.sequence_pool(input=emb, pool_type='sum')
+        return fluid.layers.sequence_pool(input=emb, pool_type='sum')
 
 
 class GrnnEncoder(object):
@@ -37,18 +37,18 @@ class GrnnEncoder(object):
         self.hidden_size = hidden_size
 
     def forward(self, emb):
-        fc0 = nn.fc(input=emb,
-                    size=self.hidden_size * 3,
-                    param_attr=self.param_name + "_fc.w",
-                    bias_attr=False)
+        fc0 = fluid.layers.fc(input=emb,
+                              size=self.hidden_size * 3,
+                              param_attr=self.param_name + "_fc.w",
+                              bias_attr=False)
 
-        gru_h = nn.dynamic_gru(
+        gru_h = fluid.layers.dynamic_gru(
             input=fc0,
             size=self.hidden_size,
             is_reverse=False,
             param_attr=self.param_name + ".param",
             bias_attr=self.param_name + ".bias")
-        return nn.sequence_pool(input=gru_h, pool_type='max')
+        return fluid.layers.sequence_pool(input=gru_h, pool_type='max')
 
 
 class PairwiseHingeLoss(object):
@@ -56,12 +56,12 @@ class PairwiseHingeLoss(object):
         self.margin = margin
 
     def forward(self, pos, neg):
-        loss_part1 = nn.elementwise_sub(
+        loss_part1 = fluid.layers.elementwise_sub(
             tensor.fill_constant_batch_size_like(
                 input=pos, shape=[-1, 1], value=self.margin, dtype='float32'),
             pos)
-        loss_part2 = nn.elementwise_add(loss_part1, neg)
-        loss_part3 = nn.elementwise_max(
+        loss_part2 = fluid.layers.elementwise_add(loss_part1, neg)
+        loss_part3 = fluid.layers.elementwise_max(
             tensor.fill_constant_batch_size_like(
                 input=loss_part2, shape=[-1, 1], value=0.0, dtype='float32'),
             loss_part2)
@@ -82,40 +82,41 @@ class SequenceSemanticRetrieval(object):
 
     def get_correct(self, x, y):
         less = tensor.cast(cf.less_than(x, y), dtype='float32')
-        correct = nn.reduce_sum(less)
+        correct = fluid.layers.reduce_sum(less)
         return correct
 
     def train(self):
-        user_data = io.data(name="user", shape=[1], dtype="int64", lod_level=1)
-        pos_item_data = io.data(
-            name="p_item", shape=[1], dtype="int64", lod_level=1)
-        neg_item_data = io.data(
-            name="n_item", shape=[1], dtype="int64", lod_level=1)
-        user_emb = nn.embedding(
+        user_data = fluid.data(
+            name="user", shape=[None, 1], dtype="int64", lod_level=1)
+        pos_item_data = fluid.data(
+            name="p_item", shape=[None, 1], dtype="int64", lod_level=1)
+        neg_item_data = fluid.data(
+            name="n_item", shape=[None, 1], dtype="int64", lod_level=1)
+        user_emb = fluid.embedding(
             input=user_data, size=self.emb_shape, param_attr="emb.item")
-        pos_item_emb = nn.embedding(
+        pos_item_emb = fluid.embedding(
             input=pos_item_data, size=self.emb_shape, param_attr="emb.item")
-        neg_item_emb = nn.embedding(
+        neg_item_emb = fluid.embedding(
             input=neg_item_data, size=self.emb_shape, param_attr="emb.item")
         user_enc = self.user_encoder.forward(user_emb)
         pos_item_enc = self.item_encoder.forward(pos_item_emb)
         neg_item_enc = self.item_encoder.forward(neg_item_emb)
-        user_hid = nn.fc(input=user_enc,
-                         size=self.hidden_size,
-                         param_attr='user.w',
-                         bias_attr="user.b")
-        pos_item_hid = nn.fc(input=pos_item_enc,
-                             size=self.hidden_size,
-                             param_attr='item.w',
-                             bias_attr="item.b")
-        neg_item_hid = nn.fc(input=neg_item_enc,
-                             size=self.hidden_size,
-                             param_attr='item.w',
-                             bias_attr="item.b")
-        cos_pos = nn.cos_sim(user_hid, pos_item_hid)
-        cos_neg = nn.cos_sim(user_hid, neg_item_hid)
+        user_hid = fluid.layers.fc(input=user_enc,
+                                   size=self.hidden_size,
+                                   param_attr='user.w',
+                                   bias_attr="user.b")
+        pos_item_hid = fluid.layers.fc(input=pos_item_enc,
+                                       size=self.hidden_size,
+                                       param_attr='item.w',
+                                       bias_attr="item.b")
+        neg_item_hid = fluid.layers.fc(input=neg_item_enc,
+                                       size=self.hidden_size,
+                                       param_attr='item.w',
+                                       bias_attr="item.b")
+        cos_pos = fluid.layers.cos_sim(user_hid, pos_item_hid)
+        cos_neg = fluid.layers.cos_sim(user_hid, neg_item_hid)
         hinge_loss = self.pairwise_hinge_loss.forward(cos_pos, cos_neg)
-        avg_cost = nn.mean(hinge_loss)
+        avg_cost = fluid.layers.mean(hinge_loss)
         correct = self.get_correct(cos_neg, cos_pos)
 
         return [user_data, pos_item_data,
