@@ -99,11 +99,7 @@ def train(args):
     # load init model
     if args.init_model is not None:
         model_dir = args.init_model
-        model_file_name = None
-        if not os.path.isdir(args.init_model):
-            model_dir = os.path.dirname(args.init_model)
-            model_file_name = os.path.basename(args.init_model)
-        fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
+        fluid.load(fluid.default_main_program(), model_dir)
         print("Init model from: %s." % args.init_model)
 
     train_exe = exe
@@ -140,8 +136,8 @@ def train(args):
 
     def save_model(args, exe, iter_num):
         filename = "model_%05d" % iter_num
-        fluid.io.save_params(
-            exe, dirname=args.save_model_dir, filename=filename)
+        fluid.save(fluid.default_main_program(),
+                   os.path.join(args.save_model_dir, filename))
         print("Saved model to: %s/%s." % (args.save_model_dir, filename))
 
     iter_num = 0

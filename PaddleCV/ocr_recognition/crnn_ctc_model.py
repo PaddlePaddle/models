@@ -189,10 +189,11 @@ def ctc_train_net(args, data_shape, num_classes):
     MOMENTUM = 0.9
     learning_rate_decay = None
     regularizer = fluid.regularizer.L2Decay(L2_RATE)
-
-    images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
-    label = fluid.layers.data(
-        name='label', shape=[1], dtype='int32', lod_level=1)
+    if len(list(data_shape))==3:
+        data_shape = [None] + list(data_shape)
+    images = fluid.data(name='pixel', shape=data_shape, dtype='float32')
+    label = fluid.data(
+        name='label', shape=[None, 1], dtype='int32', lod_level=1)
     fc_out = encoder_net(
         images,
         num_classes,
@@ -232,9 +233,11 @@ def ctc_infer(images, num_classes, use_cudnn=True):
 
 
 def ctc_eval(data_shape, num_classes, use_cudnn=True):
-    images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
-    label = fluid.layers.data(
-        name='label', shape=[1], dtype='int32', lod_level=1)
+    if len(list(data_shape))==3:
+        data_shape = [None] + list(data_shape)
+    images = fluid.data(name='pixel', shape=data_shape, dtype='float32')
+    label = fluid.data(
+        name='label', shape=[None, 1], dtype='int32', lod_level=1)
     fc_out = encoder_net(images, num_classes, is_test=True, use_cudnn=use_cudnn)
     decoded_out = fluid.layers.ctc_greedy_decoder(
         input=fc_out, blank=num_classes)
