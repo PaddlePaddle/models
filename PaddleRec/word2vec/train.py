@@ -121,10 +121,9 @@ def convert_python_to_tensor(weight, batch_size, sample_reader):
     return __reader__
 
 
-def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
+def train_loop(args, train_program, reader, data_loader, loss, trainer_id,
                weight):
-
-    py_reader.decorate_tensor_provider(
+    data_loader.set_batch_generator(
         convert_python_to_tensor(weight, args.batch_size, reader.train()))
 
     place = fluid.CPUPlace()
@@ -149,7 +148,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
         exec_strategy=exec_strategy)
 
     for pass_id in range(args.num_passes):
-        py_reader.start()
+        data_loader.start()
         time.sleep(10)
         epoch_start = time.time()
         batch_id = 0
@@ -164,7 +163,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                     logger.info(
                         "TRAIN --> pass: {} batch: {} loss: {} reader queue:{}".
                         format(pass_id, batch_id,
-                               loss_val.mean(), py_reader.queue.size()))
+                               loss_val.mean(), data_loader.queue.size()))
                 if args.with_speed:
                     if batch_id % 500 == 0 and batch_id != 0:
                         elapsed = (time.time() - start)
@@ -183,7 +182,7 @@ def train_loop(args, train_program, reader, py_reader, loss, trainer_id,
                 batch_id += 1
 
         except fluid.core.EOFException:
-            py_reader.reset()
+            data_loader.reset()
             epoch_end = time.time()
             logger.info("Epoch: {0}, Train total expend: {1} ".format(
                 pass_id, epoch_end - epoch_start))
@@ -215,7 +214,7 @@ def train(args):
     np_power = np.power(np.array(word2vec_reader.id_frequencys), 0.75)
     id_frequencys_pow = np_power / np_power.sum()
 
-    loss, py_reader = skip_gram_word2vec(
+    loss, data_loader = skip_gram_word2vec(
         word2vec_reader.dict_size,
         args.embedding_size,
         is_sparse=args.is_sparse,
@@ -233,7 +232,7 @@ def train(args):
     # do local training 
     logger.info("run local training")
     main_program = fluid.default_main_program()
-    train_loop(args, main_program, word2vec_reader, py_reader, loss, 0,
+    train_loop(args, main_program, word2vec_reader, data_loader, loss, 0,
                id_frequencys_pow)
 
 
