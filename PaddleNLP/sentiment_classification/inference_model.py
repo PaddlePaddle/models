@@ -107,7 +107,7 @@ def test_inference_model(args):
         params_filename="params.pdparams")
 
     infer_data_generator = processor.data_generator(
-        batch_size=args.batch_size/device_count,
+        batch_size=args.batch_size/dev_count,
         phase="infer",
         epoch=1,
         shuffle=False)

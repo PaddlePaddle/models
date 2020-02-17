@@ -129,7 +129,7 @@ def test_inference_model(args):
     assert (args.inference_model_dir)
     infer_data_generator = reader.data_generator(
         input_file=args.test_set,
-        batch_size=args.batch_size/device_count,
+        batch_size=args.batch_size/dev_count,
         phase="infer",
         epoch=1,
         shuffle=False)
