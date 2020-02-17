@@ -35,9 +35,9 @@ def create_model(args, vocab_size, num_labels, mode='train'):
     """create lac model"""
 
     # model's input data
-    words = fluid.data(name='words', shape=[-1, 1], dtype='int64', lod_level=1)
+    words = fluid.data(name='words', shape=[None, 1], dtype='int64', lod_level=1)
     targets = fluid.data(
-        name='targets', shape=[-1, 1], dtype='int64', lod_level=1)
+        name='targets', shape=[None, 1], dtype='int64', lod_level=1)
 
     # for inference process
     if mode == 'infer':
@@ -88,6 +88,7 @@ def create_pyreader(args,
                     return_reader=False,
                     mode='train'):
     # init reader
+    device_count = len(fluid.cuda_places()) if args.use_cuda else len(fluid.cpu_places())
 
     if model == 'lac':
         pyreader = fluid.io.PyReader(
@@ -101,19 +102,19 @@ def create_pyreader(args,
 
         # create lac pyreader
         if mode == 'train':
-            pyreader.decorate_sample_list_generator(
+            pyreader.set_sample_list_generator(
                 fluid.io.batch(
                     fluid.io.shuffle(
                         reader.file_reader(file_name),
                         buf_size=args.traindata_shuffle_buffer),
-                    batch_size=args.batch_size),
+                    batch_size=args.batch_size/device_count),
                 places=place)
         else:
-            pyreader.decorate_sample_list_generator(
+            pyreader.set_sample_list_generator(
                 fluid.io.batch(
                     reader.file_reader(
                         file_name, mode=mode),
-                    batch_size=args.batch_size),
+                    batch_size=args.batch_size/device_count),
                 places=place)
 
     elif model == 'ernie':
@@ -162,19 +163,19 @@ def create_ernie_model(args, ernie_config):
     # ERNIE's input data
 
     src_ids = fluid.data(
-        name='src_ids', shape=[-1, args.max_seq_len, 1], dtype='int64')
+        name='src_ids', shape=[None, args.max_seq_len, 1], dtype='int64')
     sent_ids = fluid.data(
-        name='sent_ids', shape=[-1, args.max_seq_len, 1], dtype='int64')
+        name='sent_ids', shape=[None, args.max_seq_len, 1], dtype='int64')
     pos_ids = fluid.data(
-        name='pos_ids', shape=[-1, args.max_seq_len, 1], dtype='int64')
+        name='pos_ids', shape=[None, args.max_seq_len, 1], dtype='int64')
     input_mask = fluid.data(
-        name='input_mask', shape=[-1, args.max_seq_len, 1], dtype='float32')
+        name='input_mask', shape=[None, args.max_seq_len, 1], dtype='float32')
 
     padded_labels = fluid.data(
-        name='padded_labels', shape=[-1, args.max_seq_len, 1], dtype='int64')
+        name='padded_labels', shape=[None, args.max_seq_len, 1], dtype='int64')
 
     seq_lens = fluid.data(
-        name='seq_lens', shape=[-1], dtype='int64', lod_level=0)
+        name='seq_lens', shape=[None], dtype='int64', lod_level=0)
 
     squeeze_labels = fluid.layers.squeeze(padded_labels, axes=[-1])
 

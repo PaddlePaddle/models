@@ -107,12 +107,12 @@ def test_inference_model(args):
         params_filename="params.pdparams")
 
     infer_data_generator = processor.data_generator(
-        batch_size=args.batch_size,
+        batch_size=args.batch_size/device_count,
         phase="infer",
         epoch=1,
         shuffle=False)
     
-    infer_pyreader.decorate_sample_list_generator(infer_data_generator)
+    infer_pyreader.set_sample_list_generator(infer_data_generator)
     inference(exe, test_prog, infer_pyreader,
         [probs.name], "infer")
 

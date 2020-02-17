@@ -39,14 +39,14 @@ def create_model(args,
     Create Model for sentiment classification
     """
     
-    data = fluid.layers.data(
-            name="src_ids", shape=[-1, args.max_seq_len], dtype='int64')
-    label = fluid.layers.data(
-            name="label", shape=[-1, 1], dtype="int64")
-    seq_len = fluid.layers.data(
-            name="seq_len", shape=[-1], dtype="int64")
+    data = fluid.data(
+            name="src_ids", shape=[None, args.max_seq_len], dtype='int64')
+    label = fluid.data(
+            name="label", shape=[None, 1], dtype="int64")
+    seq_len = fluid.data(
+            name="seq_len", shape=[None], dtype="int64")
     
-    data_reader = fluid.io.PyReader(feed_list=[data, label, seq_len], 
+    data_reader = fluid.io.DataLoader.from_generator(feed_list=[data, label, seq_len], 
         capacity=4, iterable=False)
 
     if args.model_type == "bilstm_net":
@@ -151,7 +151,7 @@ def main(args):
 
     if args.do_train:
         train_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
+            batch_size=args.batch_size/device_count,
             phase='train',
             epoch=args.epoch,
             shuffle=True)
@@ -187,7 +187,7 @@ def main(args):
 
     if args.do_val:
         test_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
+            batch_size=args.batch_size/device_count,
             phase='dev',
             epoch=1,
             shuffle=False)
@@ -204,7 +204,7 @@ def main(args):
 
     if args.do_infer:
         infer_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
+            batch_size=args.batch_size/device_count,
             phase='infer',
             epoch=1,
             shuffle=False)
@@ -238,15 +238,15 @@ def main(args):
 
     if args.do_train:
         train_exe = exe
-        train_reader.decorate_sample_list_generator(train_data_generator)
+        train_reader.set_sample_list_generator(train_data_generator)
     else:
         train_exe = None
     if args.do_val:
         test_exe = exe
-        test_reader.decorate_sample_list_generator(test_data_generator)
+        test_reader.set_sample_list_generator(test_data_generator)
     if args.do_infer:
         test_exe = exe
-        infer_reader.decorate_sample_list_generator(infer_data_generator)
+        infer_reader.set_sample_list_generator(infer_data_generator)
 
     if args.do_train:
         train_reader.start()
