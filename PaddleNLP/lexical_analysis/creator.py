@@ -91,7 +91,7 @@ def create_pyreader(args,
     device_count = len(fluid.cuda_places()) if args.use_cuda else len(fluid.cpu_places())
 
     if model == 'lac':
-        pyreader = fluid.io.PyReader(
+        pyreader = fluid.io.DataLoader.from_generator(
             feed_list=feed_list,
             capacity=50,
             use_double_buffer=True,
