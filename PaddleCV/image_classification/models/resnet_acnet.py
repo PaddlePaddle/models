@@ -172,7 +172,7 @@ class ResNetACNet(object):
             act=act if self.deploy else None,
             param_attr=ParamAttr(name=name + "_acsquare_weights"),
             bias_attr=ParamAttr(name=name + "_acsquare_bias")
-            if self.deploy else None,
+            if self.deploy else False,
             name=name + '.acsquare.conv2d.output.1')
 
         if self.deploy:
