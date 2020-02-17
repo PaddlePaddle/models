@@ -142,7 +142,6 @@ def train():
             mixup_iter=mixup_iter * devices_num,
             random_sizes=random_sizes,
             use_multiprocess_reader=cfg.use_multiprocess_reader,
-            num_workers=cfg.worker_num,
             use_gpu=cfg.use_gpu)
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(train_reader)
