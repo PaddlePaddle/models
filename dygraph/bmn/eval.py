@@ -44,10 +44,7 @@ def parse_args():
         default='bmn.yaml',
         help='path to config file of model')
     parser.add_argument(
-        '--batch_size',
-        type=int,
-        default=None,
-        help='training batch size. None to use config file setting.')
+        '--batch_size', type=int, default=1, help='eval batch size.')
     parser.add_argument(
         '--use_gpu',
         type=ast.literal_eval,
@@ -59,11 +56,6 @@ def parse_args():
         default="checkpoint/bmn_paddle_dy_final",
         help='weight path, None to automatically download weights provided by Paddle.'
     )
-    parser.add_argument(
-        '--save_dir',
-        type=str,
-        default="evaluate_results/",
-        help='output dir path, default to use ./evaluate_results/')
     parser.add_argument(
         '--log_interval',
         type=int,
@@ -135,7 +127,12 @@ def test_bmn(args):
         os.makedirs(test_config.TEST.output_path)
     if not os.path.isdir(test_config.TEST.result_path):
         os.makedirs(test_config.TEST.result_path)
-    place = fluid.CUDAPlace(0)
+
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+    else:
+        place = fluid.CUDAPlace(0)
+
     with fluid.dygraph.guard(place):
         bmn = BMN(test_config)
 
@@ -189,7 +186,10 @@ def test_bmn(args):
             aggr_pem_cls_loss += np.mean(pem_cls_loss.numpy())
             aggr_batch_size += 1
 
-            logger.info("Processing................ batch {}".format(batch_id))
+            if batch_id % args.log_interval == 0:
+                logger.info("Processing................ batch {}".format(
+                    batch_id))
+
             gen_props(
                 pred_bm,
                 pred_start,

@@ -39,47 +39,47 @@ class PointRCNN(object):
         self.num_points = self.cfg.RPN.NUM_POINTS
         self.prog = prog
         self.inputs = None
-        self.pyreader = None
+        self.loader = None
 
     def build_inputs(self):
         self.inputs = OrderedDict()
 
         if self.cfg.RPN.ENABLED:
-            self.inputs['sample_id'] = fluid.layers.data(name='sample_id', shape=[1], dtype='int32')
-            self.inputs['pts_input'] = fluid.layers.data(name='pts_input', shape=[self.num_points, 3], dtype='float32')
-            self.inputs['pts_rect'] = fluid.layers.data(name='pts_rect', shape=[self.num_points, 3], dtype='float32')
-            self.inputs['pts_features'] = fluid.layers.data(name='pts_features', shape=[self.num_points, 1], dtype='float32')
-            self.inputs['rpn_cls_label'] = fluid.layers.data(name='rpn_cls_label', shape=[self.num_points], dtype='int32')
-            self.inputs['rpn_reg_label'] = fluid.layers.data(name='rpn_reg_label', shape=[self.num_points, 7], dtype='float32')
-            self.inputs['gt_boxes3d'] = fluid.layers.data(name='gt_boxes3d', shape=[7], lod_level=1, dtype='float32')
+            self.inputs['sample_id'] = fluid.data(name='sample_id', shape=[None, 1], dtype='int32')
+            self.inputs['pts_input'] = fluid.data(name='pts_input', shape=[None, self.num_points, 3], dtype='float32')
+            self.inputs['pts_rect'] = fluid.data(name='pts_rect', shape=[None, self.num_points, 3], dtype='float32')
+            self.inputs['pts_features'] = fluid.data(name='pts_features', shape=[None, self.num_points, 1], dtype='float32')
+            self.inputs['rpn_cls_label'] = fluid.data(name='rpn_cls_label', shape=[None, self.num_points], dtype='int32')
+            self.inputs['rpn_reg_label'] = fluid.data(name='rpn_reg_label', shape=[None, self.num_points, 7], dtype='float32')
+            self.inputs['gt_boxes3d'] = fluid.data(name='gt_boxes3d', shape=[None, 7], lod_level=1, dtype='float32')
 
         if self.cfg.RCNN.ENABLED:
             if self.cfg.RCNN.ROI_SAMPLE_JIT:
-                self.inputs['sample_id'] = fluid.layers.data(name='sample_id', shape=[1], dtype='int32', append_batch_size=False)
-                self.inputs['rpn_xyz'] = fluid.layers.data(name='rpn_xyz', shape=[self.num_points, 3], dtype='float32', append_batch_size=False)
-                self.inputs['rpn_features'] = fluid.layers.data(name='rpn_features', shape=[self.num_points,128], dtype='float32', append_batch_size=False)
-                self.inputs['rpn_intensity'] = fluid.layers.data(name='rpn_intensity', shape=[self.num_points], dtype='float32', append_batch_size=False)
-                self.inputs['seg_mask'] = fluid.layers.data(name='seg_mask', shape=[self.num_points], dtype='float32', append_batch_size=False)
-                self.inputs['roi_boxes3d'] = fluid.layers.data(name='roi_boxes3d', shape=[-1, -1, 7], dtype='float32', append_batch_size=False, lod_level=0)
-                self.inputs['pts_depth'] = fluid.layers.data(name='pts_depth', shape=[self.num_points], dtype='float32', append_batch_size=False)
-                self.inputs['gt_boxes3d'] = fluid.layers.data(name='gt_boxes3d', shape=[-1, -1, 7], dtype='float32', append_batch_size=False, lod_level=0)
+                self.inputs['sample_id'] = fluid.data(name='sample_id', shape=[1], dtype='int32')
+                self.inputs['rpn_xyz'] = fluid.data(name='rpn_xyz', shape=[self.num_points, 3], dtype='float32')
+                self.inputs['rpn_features'] = fluid.data(name='rpn_features', shape=[self.num_points, 128], dtype='float32')
+                self.inputs['rpn_intensity'] = fluid.data(name='rpn_intensity', shape=[self.num_points], dtype='float32')
+                self.inputs['seg_mask'] = fluid.data(name='seg_mask', shape=[self.num_points], dtype='float32')
+                self.inputs['roi_boxes3d'] = fluid.data(name='roi_boxes3d', shape=[None, None, 7], dtype='float32', lod_level=0)
+                self.inputs['pts_depth'] = fluid.data(name='pts_depth', shape=[self.num_points], dtype='float32')
+                self.inputs['gt_boxes3d'] = fluid.data(name='gt_boxes3d', shape=[None, None, 7], dtype='float32', lod_level=0)
             else:
-                self.inputs['sample_id'] = fluid.layers.data(name='sample_id', shape=[-1], dtype='int32', append_batch_size=False)
-                self.inputs['pts_input'] = fluid.layers.data(name='pts_input', shape=[-1,512,133], dtype='float32', append_batch_size=False)
-                self.inputs['pts_feature'] = fluid.layers.data(name='pts_feature', shape=[-1,512,128], dtype='float32', append_batch_size=False)
-                self.inputs['roi_boxes3d'] = fluid.layers.data(name='roi_boxes3d', shape=[-1,7], dtype='float32', append_batch_size=False)
+                self.inputs['sample_id'] = fluid.data(name='sample_id', shape=[None], dtype='int32')
+                self.inputs['pts_input'] = fluid.data(name='pts_input', shape=[None, 512, 133], dtype='float32')
+                self.inputs['pts_feature'] = fluid.data(name='pts_feature', shape=[None, 512, 128], dtype='float32')
+                self.inputs['roi_boxes3d'] = fluid.data(name='roi_boxes3d', shape=[None,7], dtype='float32')
                 if self.is_train:
-                    self.inputs['cls_label'] = fluid.layers.data(name='cls_label', shape=[-1], dtype='float32', append_batch_size=False)
-                    self.inputs['reg_valid_mask'] = fluid.layers.data(name='reg_valid_mask', shape=[-1], dtype='float32', append_batch_size=False)
-                    self.inputs['gt_boxes3d_ct'] = fluid.layers.data(name='gt_boxes3d_ct', shape=[-1,7], dtype='float32', append_batch_size=False)
-                    self.inputs['gt_of_rois'] = fluid.layers.data(name='gt_of_rois', shape=[-1,7], dtype='float32', append_batch_size=False)
+                    self.inputs['cls_label'] = fluid.data(name='cls_label', shape=[None], dtype='float32')
+                    self.inputs['reg_valid_mask'] = fluid.data(name='reg_valid_mask', shape=[None], dtype='float32')
+                    self.inputs['gt_boxes3d_ct'] = fluid.data(name='gt_boxes3d_ct', shape=[None, 7], dtype='float32')
+                    self.inputs['gt_of_rois'] = fluid.data(name='gt_of_rois', shape=[None, 7], dtype='float32')
                 else:
-                    self.inputs['roi_scores'] = fluid.layers.data(name='roi_scores', shape=[-1,], dtype='float32', append_batch_size=False)
-                    self.inputs['gt_iou'] = fluid.layers.data(name='gt_iou', shape=[-1], dtype='float32', append_batch_size=False)
-                    self.inputs['gt_boxes3d'] = fluid.layers.data(name='gt_boxes3d', shape=[-1,-1,7], dtype='float32', append_batch_size=False, lod_level=0)
+                    self.inputs['roi_scores'] = fluid.data(name='roi_scores', shape=[None], dtype='float32')
+                    self.inputs['gt_iou'] = fluid.data(name='gt_iou', shape=[None], dtype='float32')
+                    self.inputs['gt_boxes3d'] = fluid.data(name='gt_boxes3d', shape=[None, None, 7], dtype='float32', lod_level=0)
                 
 
-        self.pyreader = fluid.io.PyReader(
+        self.loader = fluid.io.DataLoader.from_generator(
                 feed_list=list(self.inputs.values()),
                 capacity=64,
                 use_double_buffer=True,
@@ -120,6 +120,6 @@ class PointRCNN(object):
         rcnn_loss, _, _ = self.rcnn.get_loss()
         return rpn_loss + rcnn_loss
 
-    def get_pyreader(self):
-        return self.pyreader
+    def get_loader(self):
+        return self.loader
         

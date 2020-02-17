@@ -55,7 +55,7 @@ def parse_args():
     parser.add_argument(
         '--num_points',
         type=int,
-        default=4096,
+        default=2048,
         help='number of points in a sample, default: 4096')
     parser.add_argument(
         '--num_classes',
@@ -101,7 +101,7 @@ def eval():
             eval_model.build_model()
             eval_feeds = eval_model.get_feeds()
             eval_outputs = eval_model.get_outputs()
-            eval_pyreader = eval_model.get_pyreader()
+            eval_loader = eval_model.get_loader()
     eval_prog = eval_prog.clone(True)
     eval_keys, eval_values = parse_outputs(eval_outputs)
 
@@ -109,21 +109,20 @@ def eval():
     exe = fluid.Executor(place)
     exe.run(startup)
 
-    assert os.path.exists(args.weights), "weights {} not exists.".format(args.weights)
-    def if_exist(var):
-        return os.path.exists(os.path.join(args.weights, var.name))
-    fluid.io.load_vars(exe, args.weights, eval_prog, predicate=if_exist)
+    assert os.path.exists("{}.pdparams".format(args.weights)), \
+            "Given resume weight {}.pdparams not exist.".format(args.weights)
+    fluid.load(eval_prog, args.weights, exe)
 
     eval_compile_prog = fluid.compiler.CompiledProgram(eval_prog)
     
     # get reader
     modelnet_reader = ModelNet40ClsReader(args.data_dir, mode='test')
     eval_reader = modelnet_reader.get_reader(args.batch_size, args.num_points)
-    eval_pyreader.decorate_sample_list_generator(eval_reader, place)
+    eval_loader.set_sample_list_generator(eval_reader, place)
 
     eval_stat = Stat()
     try:
-        eval_pyreader.start()
+        eval_loader.start()
         eval_iter = 0
         eval_periods = []
         while True:
@@ -141,7 +140,7 @@ def eval():
     except fluid.core.EOFException:
         logger.info("[EVAL] Eval finished, {}average time: {:.2f}".format(eval_stat.get_mean_log(), np.mean(eval_periods[1:])))
     finally:
-        eval_pyreader.reset()
+        eval_loader.reset()
 
 
 if __name__ == "__main__":
