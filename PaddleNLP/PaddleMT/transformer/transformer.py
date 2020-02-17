@@ -765,7 +765,7 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
                 "static_k":  # for encoder-decoder attention
                 fluid.data(shape=[None, n_head, 0, d_key], dtype=enc_output.dtype, name=("static_k_%d"%i)),
                 "static_v":  # for encoder-decoder attention
-                fluid.data(shape=[None, n_head, 0, d_key], dtype=enc_output.dtype, name=("static_v_%d"%i)),
+                fluid.data(shape=[None, n_head, 0, d_value], dtype=enc_output.dtype, name=("static_v_%d"%i)),
             } for i in range(n_layer)
         ]
 
