@@ -84,6 +84,11 @@ def do_save_inference_model(args):
         dev_count = int(os.environ.get('CPU_NUM', 1))
         place = fluid.CPUPlace()
 
+    src_vocab = reader.DataProcessor.load_dict(args.src_vocab_fpath)
+    trg_vocab = reader.DataProcessor.load_dict(args.trg_vocab_fpath)
+    args.src_vocab_size = len(src_vocab)
+    args.trg_vocab_size = len(trg_vocab)
+
     test_prog = fluid.default_main_program()
     startup_prog = fluid.default_startup_program()
 

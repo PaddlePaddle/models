@@ -39,91 +39,6 @@ if os.environ.get('FLAGS_eager_delete_tensor_gb', None) is None:
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
 
-def init_from_pretrain_model(args, exe, program):
-
-    assert isinstance(args.init_from_pretrain_model, str)
-
-    if not os.path.exists(args.init_from_pretrain_model):
-        raise Warning("The pretrained params do not exist.")
-        return False
-
-    def existed_params(var):
-        if not isinstance(var, fluid.framework.Parameter):
-            return False
-        return os.path.exists(
-            os.path.join(args.init_from_pretrain_model, var.name))
-
-    fluid.io.load_vars(
-        exe,
-        args.init_from_pretrain_model,
-        main_program=program,
-        predicate=existed_params)
-
-    print("finish initing model from pretrained params from %s" %
-          (args.init_from_pretrain_model))
-
-    return True
-
-
-def init_from_checkpoint(args, exe, program):
-
-    assert isinstance(args.init_from_checkpoint, str)
-
-    if not os.path.exists(args.init_from_checkpoint):
-        raise Warning("the checkpoint path does not exist.")
-        return False
-
-    fluid.io.load_persistables(
-        executor=exe,
-        dirname=args.init_from_checkpoint,
-        main_program=program,
-        filename="checkpoint.pdckpt")
-
-    print("finish initing model from checkpoint from %s" %
-          (args.init_from_checkpoint))
-
-    return True
-
-
-def save_checkpoint(args, exe, program, dirname):
-
-    assert isinstance(args.save_model_path, str)
-
-    checkpoint_dir = os.path.join(args.save_model_path, args.save_checkpoint)
-
-    if not os.path.exists(checkpoint_dir):
-        os.mkdir(checkpoint_dir)
-
-    fluid.io.save_persistables(
-        exe,
-        os.path.join(checkpoint_dir, dirname),
-        main_program=program,
-        filename="checkpoint.pdparams")
-
-    print("save checkpoint at %s" % (os.path.join(checkpoint_dir, dirname)))
-
-    return True
-
-
-def save_param(args, exe, program, dirname):
-
-    assert isinstance(args.save_model_path, str)
-
-    param_dir = os.path.join(args.save_model_path, args.save_param)
-
-    if not os.path.exists(param_dir):
-        os.mkdir(param_dir)
-
-    fluid.io.save_params(
-        exe,
-        os.path.join(param_dir, dirname),
-        main_program=program,
-        filename="params.pdparams")
-    print("save parameters at %s" % (os.path.join(param_dir, dirname)))
-
-    return True
-
-
 def do_train(args):
     if args.use_cuda:
         if num_trainers > 1:  # for multi-process gpu training
@@ -226,11 +141,15 @@ def do_train(args):
 
     ## init from some checkpoint, to resume the previous training
     if args.init_from_checkpoint:
-        init_from_checkpoint(args, exe, train_prog)
+        fluid.load(train_prog, args.init_from_checkpoint, exe)
+        print("finish initing model from checkpoint from %s" %
+              (args.init_from_checkpoint))
 
     ## init from some pretrain models, to better solve the current task
     if args.init_from_pretrain_model:
-        init_from_pretrain_model(args, exe, train_prog)
+        fluid.load(train_prog, args.init_from_pretrain_model, exe)
+        print("finish initing model from pretrained params from %s" %
+              (args.init_from_pretrain_model))
 
     build_strategy = fluid.compiler.BuildStrategy()
     build_strategy.enable_inplace = True
@@ -293,14 +212,12 @@ def do_train(args):
                         avg_batch_time = time.time()
 
                 if step_idx % args.save_step == 0 and step_idx != 0:
+                    if args.save_model_path:
+                        model_path = os.path.join(args.save_model_path,
+                                                  "step_" + str(step_idx),
+                                                  "transformer")
+                        fluid.save(train_prog, model_path)
 
-                    if args.save_checkpoint:
-                        save_checkpoint(args, exe, train_prog,
-                                        "step_" + str(step_idx))
-
-                    if args.save_param:
-                        save_param(args, exe, train_prog,
-                                   "step_" + str(step_idx))
 
                 batch_id += 1
                 step_idx += 1
@@ -319,11 +236,10 @@ def do_train(args):
 
         time_consumed = time.time() - pass_start_time
 
-    if args.save_checkpoint:
-        save_checkpoint(args, exe, train_prog, "step_final")
-
-    if args.save_param:
-        save_param(args, exe, train_prog, "step_final")
+    if args.save_model_path:
+        model_path = os.path.join(args.save_model_path, "step_final",
+                                  "transformer")
+        fluid.save(train_prog, model_path)
 
     if args.enable_ce:  # For CE
         print("kpis\ttrain_cost_card%d\t%f" % (dev_count, total_avg_cost))
