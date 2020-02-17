@@ -64,19 +64,19 @@ class Data():
             adj_out.append(np.divide(adj.transpose(), u_deg_out).transpose())
 
             seq_index.append(
-                [np.where(node == i)[0][0] + id * max_uniq_len for i in e[0]])
+                [[id, np.where(node == i)[0][0]] for i in e[0]])
             last_index.append(
-                np.where(node == e[0][last_id[id]])[0][0] + id * max_uniq_len)
+                [id, np.where(node == e[0][last_id[id]])[0][0]])
             label.append(e[1] - 1)
             mask.append([[1] * (last_id[id] + 1) + [0] *
                          (max_seq_len - last_id[id] - 1)])
             id += 1
 
-        items = np.array(items).astype("int64").reshape((batch_size, -1, 1))
+        items = np.array(items).astype("int64").reshape((batch_size, -1))
         seq_index = np.array(seq_index).astype("int32").reshape(
-            (batch_size, -1))
+            (batch_size, -1, 2))
         last_index = np.array(last_index).astype("int32").reshape(
-            (batch_size))
+            (batch_size, 2))
         adj_in = np.array(adj_in).astype("float32").reshape(
             (batch_size, max_uniq_len, max_uniq_len))
         adj_out = np.array(adj_out).astype("float32").reshape(
@@ -110,8 +110,10 @@ class Data():
                     cur_batch = remain_data[i:i + batch_size]
                     yield self.make_data(cur_batch, batch_size)
                 else:
-                    cur_batch = remain_data[i:]
-                    yield self.make_data(cur_batch, group_remain % batch_size)
+                    # Due to fixed batch_size, discard the remaining ins
+                    return
+                    #cur_batch = remain_data[i:]
+                    #yield self.make_data(cur_batch, group_remain % batch_size)
         return _reader
 
 
