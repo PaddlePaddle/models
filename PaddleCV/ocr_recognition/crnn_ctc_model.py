@@ -188,7 +188,7 @@ def ctc_train_net(args, data_shape, num_classes):
     MOMENTUM = args.momentum
     learning_rate_decay = None
     regularizer = fluid.regularizer.L2Decay(L2_RATE)
-    if len(list(data_shape))==3:
+    if len(list(data_shape)) == 3:
         data_shape = [None] + list(data_shape)
     images = fluid.data(name='pixel', shape=data_shape, dtype='float32')
     label = fluid.data(
@@ -232,7 +232,7 @@ def ctc_infer(images, num_classes, use_cudnn=True):
 
 
 def ctc_eval(data_shape, num_classes, use_cudnn=True):
-    if len(list(data_shape))==3:
+    if len(list(data_shape)) == 3:
         data_shape = [None] + list(data_shape)
     images = fluid.data(name='pixel', shape=data_shape, dtype='float32')
     label = fluid.data(

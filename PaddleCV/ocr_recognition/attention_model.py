@@ -24,6 +24,7 @@ sos = 0
 eos = 1
 beam_size = 1
 
+
 def conv_bn_pool(input,
                  group,
                  out_ch,
@@ -164,7 +165,7 @@ def gru_decoder_with_attention(target_embedding, encoder_vec, encoder_proj,
 
 
 def attention_train_net(args, data_shape, num_classes):
-    if len(list(data_shape))==3:
+    if len(list(data_shape)) == 3:
         data_shape = [None] + list(data_shape)
     images = fluid.data(name='pixel', shape=data_shape, dtype='float32')
     label_in = fluid.data(
@@ -189,7 +190,8 @@ def attention_train_net(args, data_shape, num_classes):
     prediction = gru_decoder_with_attention(trg_embedding, encoded_vector,
                                             encoded_proj, decoder_boot,
                                             decoder_size, num_classes)
-    fluid.clip.set_gradient_clip(fluid.clip.GradientClipByGlobalNorm(args.gradient_clip))
+    fluid.clip.set_gradient_clip(
+        fluid.clip.GradientClipByGlobalNorm(args.gradient_clip))
     label_out = fluid.layers.cast(x=label_out, dtype='int64')
 
     _, maxid = fluid.layers.topk(input=prediction, k=1)
@@ -350,7 +352,7 @@ def attention_infer(images, num_classes, use_cudnn=True):
 
 
 def attention_eval(data_shape, num_classes, use_cudnn=True):
-    if len(list(data_shape))==3:
+    if len(list(data_shape)) == 3:
         data_shape = [None] + data_shape
     images = fluid.data(name='pixel', shape=data_shape, dtype='float32')
     label_in = fluid.data(
