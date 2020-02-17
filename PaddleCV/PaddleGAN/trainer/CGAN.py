@@ -35,7 +35,6 @@ class GTrainer():
         with fluid.program_guard(self.program):
             model = CGAN_model(cfg.batch_size)
             self.fake = model.network_G(input, conditions, name="G")
-            self.fake.persistable = True
             self.infer_program = self.program.clone(for_test=True)
             d_fake = model.network_D(self.fake, conditions, name="D")
             fake_labels = fluid.layers.fill_constant_batch_size_like(
@@ -43,7 +42,6 @@ class GTrainer():
             self.g_loss = fluid.layers.reduce_mean(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     x=d_fake, label=fake_labels))
-            self.g_loss.persistable = True
 
             vars = []
             for var in self.program.list_vars():
@@ -64,7 +62,6 @@ class DTrainer():
             self.d_loss = fluid.layers.reduce_mean(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     x=d_logit, label=labels))
-            self.d_loss.persistable = True
             vars = []
             for var in self.program.list_vars():
                 if fluid.io.is_parameter(var) and (var.name.startswith("D")):
@@ -108,8 +105,8 @@ class CGAN(object):
             size=[self.cfg.batch_size, self.cfg.noise_size]).astype('float32')
 
         if self.cfg.init_model:
-            utility.init_checkpoints(self.cfg, exe, g_trainer, "net_G")
-            utility.init_checkpoints(self.cfg, exe, d_trainer, "net_D")
+            utility.init_checkpoints(self.cfg, g_trainer, "net_G")
+            utility.init_checkpoints(self.cfg, d_trainer, "net_D")
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
@@ -205,5 +202,5 @@ class CGAN(object):
                     plt.close(fig)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, exe, g_trainer, "net_G")
-                utility.checkpoints(epoch_id, self.cfg, exe, d_trainer, "net_D")
+                utility.checkpoints(epoch_id, self.cfg, g_trainer, "net_G")
+                utility.checkpoints(epoch_id, self.cfg, d_trainer, "net_D")

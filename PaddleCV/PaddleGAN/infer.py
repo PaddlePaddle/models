@@ -23,7 +23,6 @@ from PIL import Image
 import paddle.fluid as fluid
 import paddle
 import numpy as np
-import imageio
 import glob
 from util.config import add_arguments, print_arguments
 from data_reader import celeba_reader_creator, reader_creator, triplex_reader_creator
@@ -72,14 +71,14 @@ add_arg('no_instance', type=bool, default=False, help="Whether to use instance l
 
 
 def infer(args):
-    data_shape = [-1, 3, args.image_size, args.image_size]
-    input = fluid.layers.data(name='input', shape=data_shape, dtype='float32')
-    label_org_ = fluid.layers.data(
-        name='label_org_', shape=[args.c_dim], dtype='float32')
-    label_trg_ = fluid.layers.data(
-        name='label_trg_', shape=[args.c_dim], dtype='float32')
-    image_name = fluid.layers.data(
-        name='image_name', shape=[args.n_samples], dtype='int32')
+    data_shape = [None, 3, args.image_size, args.image_size]
+    input = fluid.data(name='input', shape=data_shape, dtype='float32')
+    label_org_ = fluid.data(
+        name='label_org_', shape=[None, args.c_dim], dtype='float32')
+    label_trg_ = fluid.data(
+        name='label_trg_', shape=[None, args.c_dim], dtype='float32')
+    image_name = fluid.data(
+        name='image_name', shape=[None, args.n_samples], dtype='int32')
 
     model_name = 'net_G'
 
@@ -110,7 +109,7 @@ def infer(args):
         fake = model.network_G(input, "generator", cfg=args)
     elif args.model_net == 'StarGAN':
 
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[input, label_org_, label_trg_, image_name],
             capacity=32,
             iterable=True,
@@ -122,7 +121,7 @@ def infer(args):
     elif args.model_net == 'STGAN':
         from network.STGAN_network import STGAN_model
 
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[input, label_org_, label_trg_, image_name],
             capacity=32,
             iterable=True,
@@ -139,7 +138,7 @@ def infer(args):
     elif args.model_net == 'AttGAN':
         from network.AttGAN_network import AttGAN_model
 
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[input, label_org_, label_trg_, image_name],
             capacity=32,
             iterable=True,
@@ -154,17 +153,17 @@ def infer(args):
             name='generator',
             is_test=True)
     elif args.model_net == 'CGAN':
-        noise = fluid.layers.data(
-            name='noise', shape=[args.noise_size], dtype='float32')
-        conditions = fluid.layers.data(
-            name='conditions', shape=[1], dtype='float32')
+        noise = fluid.data(
+            name='noise', shape=[None, args.noise_size], dtype='float32')
+        conditions = fluid.data(
+            name='conditions', shape=[None, 1], dtype='float32')
 
         from network.CGAN_network import CGAN_model
         model = CGAN_model(args.n_samples)
         fake = model.network_G(noise, conditions, name="G")
     elif args.model_net == 'DCGAN':
-        noise = fluid.layers.data(
-            name='noise', shape=[args.noise_size], dtype='float32')
+        noise = fluid.data(
+            name='noise', shape=[None, args.noise_size], dtype='float32')
 
         from network.DCGAN_network import DCGAN_model
         model = DCGAN_model(args.n_samples)
@@ -197,10 +196,10 @@ def infer(args):
         place = fluid.CUDAPlace(0)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    for var in fluid.default_main_program().global_block().all_parameters():
+    for var in fluid.default_main_program().all_parameters():
         print(var.name)
     print(args.init_model + '/' + model_name)
-    fluid.io.load_persistables(exe, os.path.join(args.init_model, model_name))
+    fluid.load(fluid.default_main_program(), os.path.join(args.init_model, model_name))
     print('load params done')
     if not os.path.exists(args.output):
         os.makedirs(args.output)
@@ -214,10 +213,10 @@ def infer(args):
             args=args,
             mode="VAL")
         reader_test = test_reader.make_reader(return_name=True)
-        py_reader.decorate_batch_generator(
+        loader.set_batch_generator(
             reader_test,
             places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
-        for data in py_reader():
+        for data in loader():
             real_img, label_org, label_trg, image_name = data[0]['input'], data[
                 0]['label_org_'], data[0]['label_trg_'], data[0]['image_name']
             image_name_save = _compute_start_end(image_name)
@@ -251,9 +250,8 @@ def infer(args):
             images_concat = np.concatenate(images, 1)
             if len(np.array(label_org)) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(
-                os.path.join(args.output, "fake_img_" + image_name_save), (
-                    (images_concat + 1) * 127.5).astype(np.uint8))
+            fake_image = Image.fromarray(((images_concat + 1) * 127.5).astype(np.uint8))
+            fake_image.save(os.path.join(args.output, "fake_image_" + image_name_save))
     elif args.model_net == 'StarGAN':
         test_reader = celeba_reader_creator(
             image_dir=args.dataset_dir,
@@ -261,10 +259,10 @@ def infer(args):
             args=args,
             mode="VAL")
         reader_test = test_reader.make_reader(return_name=True)
-        py_reader.decorate_batch_generator(
+        loader.set_batch_generator(
             reader_test,
             places=fluid.cuda_places() if args.use_gpu else fluid.cpu_places())
-        for data in py_reader():
+        for data in loader():
             real_img, label_org, label_trg, image_name = data[0]['input'], data[
                 0]['label_org_'], data[0]['label_trg_'], data[0]['image_name']
             image_name_save = _compute_start_end(image_name)
@@ -287,9 +285,8 @@ def infer(args):
             images_concat = np.concatenate(images, 1)
             if len(np.array(label_org)) > 1:
                 images_concat = np.concatenate(images_concat, 1)
-            imageio.imwrite(
-                os.path.join(args.output, "fake_img_" + image_name_save), (
-                    (images_concat + 1) * 127.5).astype(np.uint8))
+            fake_image = Image.fromarray(((images_concat + 1) * 127.5).astype(np.uint8))
+            fake_image.save(os.path.join(args.output, "fake_image_" + image_name_save))
 
     elif args.model_net == 'Pix2pix' or args.model_net == 'CycleGAN':
         test_reader = reader_creator(
@@ -315,12 +312,10 @@ def infer(args):
             input_temp = save_batch_image(np.array(real_img))
 
             for i, name in enumerate(image_names):
-                imageio.imwrite(
-                    os.path.join(args.output, "fake_" + name), (
-                        (fake_temp[i] + 1) * 127.5).astype(np.uint8))
-                imageio.imwrite(
-                    os.path.join(args.output, "input_" + name), (
-                        (input_temp[i] + 1) * 127.5).astype(np.uint8))
+                fake_image = Image.fromarray(((fake_temp[i] + 1) * 127.5).astype(np.uint8))
+                fake_image.save(os.path.join(args.output, "fake_" + name))
+                input_image = Image.fromarray(((input_temp[i] + 1) * 127.5).astype(np.uint8))
+                input_image.save(os.path.join(args.output, "input_" + name))
     elif args.model_net == 'SPADE':
         test_reader = triplex_reader_creator(
             image_dir=args.dataset_dir,
@@ -345,10 +340,10 @@ def infer(args):
             fake_B_temp = np.squeeze(fake_B_temp[0]).transpose([1, 2, 0])
             input_B_temp = np.squeeze(data_B[0]).transpose([1, 2, 0])
 
-            imageio.imwrite(args.output + "/fakeB_" + "_" + name, (
-                (fake_B_temp + 1) * 127.5).astype(np.uint8))
-            imageio.imwrite(args.output + "/real_" + "_" + name, (
-                (input_B_temp + 1) * 127.5).astype(np.uint8))
+            fakeB_image = Image.fromarray(((fake_B_temp + 1) * 127.5).astype(np.uint8))
+            fakeB_image.save(os.path.join(args.output, "fakeB_" + name))
+            real_image = Image.fromarray(((input_B_temp + 1) * 127.5).astype(np.uint8))
+            real_image.save(os.path.join(args.output, "real_" + name))
 
     elif args.model_net == 'CGAN':
         noise_data = np.random.uniform(
