@@ -123,7 +123,6 @@ def parse_args():
     add_arg('data_dir',         str,    'dataset/coco',        "The data root path.")
     add_arg('start_iter',       int,    0,      "Start iteration.")
     add_arg('use_multiprocess_reader', bool,   True,   "whether use multiprocess reader.")
-    add_arg('worker_num',       int,   8,   "worker number for multiprocess reader.")
     add_arg('use_data_parallel', ast.literal_eval, False, "the flag indicating whether to use data parallel model to train the model")
     #SOLVER
     add_arg('batch_size',       int,    8,      "Mini-batch size per device.")

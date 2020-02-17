@@ -75,7 +75,8 @@ def train():
 
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) if cfg.use_data_parallel else fluid.CUDAPlace(0)
-
+    if not cfg.use_gpu:
+        palce = fluid.CPUPlace()
     with fluid.dygraph.guard(place):
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
@@ -141,8 +142,7 @@ def train():
             mixup_iter=mixup_iter * devices_num,
             random_sizes=random_sizes,
             use_multiprocess_reader=cfg.use_multiprocess_reader,
-            num_workers=cfg.worker_num)
-
+            use_gpu=cfg.use_gpu)
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(train_reader)
         smoothed_loss = SmoothedValue()
@@ -150,7 +150,6 @@ def train():
         for iter_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
-
             img = np.array([x[0] for x in data]).astype('float32')
             img = to_variable(img)
 
