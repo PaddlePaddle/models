@@ -55,17 +55,6 @@ def n2p(x, dtype=None):
     return dygraph.to_variable(x)
 
 
-def n2t(x, dtype=None):
-    import torch
-    if dtype is not None:
-        return torch.from_numpy(np.array(x, dtype))
-    return torch.from_numpy(np.array(x))
-
-
-def t2n(x):
-    return x.detach().cpu().numpy()
-
-
 def p2n(x):
     return x.numpy()
 

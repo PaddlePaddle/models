@@ -168,6 +168,5 @@ class ImagenetVID(BaseDataset):
                                     'start_frame': tracklet_start, 'anno': tracklet_anno,
                                     'target_visible': target_visible, 'image_size': image_size}
                     all_sequences.append(new_sequence)
-                    #print('num seq: {}'.format(len(all_sequences)))
 
         return all_sequences

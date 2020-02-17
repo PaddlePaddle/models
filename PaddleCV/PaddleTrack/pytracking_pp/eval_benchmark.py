@@ -13,13 +13,12 @@ from glob import glob
 
 import cv2 as cv
 import numpy as np
-from bilib import mkdir_p
 from tqdm import tqdm
 
 CURRENT_DIR = osp.dirname(__file__)
 sys.path.append(osp.join(CURRENT_DIR, '..'))
 
-from pytracking_pp.pysot_toolkit.environment import env_settings
+from pytracking_pp.admin.environment import env_settings
 from pytracking_pp.pysot_toolkit.datasets import DatasetFactory
 from pytracking_pp.pysot_toolkit.evaluation import EAOBenchmark, AccuracyRobustnessBenchmark, OPEBenchmark
 from pytracking_pp.pysot_toolkit.utils.region import vot_overlap
@@ -42,7 +41,6 @@ def read_image(x):
     else:
         img = x
     return cv.cvtColor(img, cv.COLOR_BGR2RGB)
-
 
 def get_tracker_params(param_module, params):
     tracker_params = param_module.parameters()
@@ -148,7 +146,7 @@ def run_one_sequence(video, params, tracker=None):
 
     if 'VOT' in params['dataset_name']:
         save_sub_dir = osp.join(save_dir, 'baseline', video.name)
-        mkdir_p(save_sub_dir)
+        os.makedirs(save_sub_dir, exist_ok=True)
         num_repeat = params.get('num_repeat', 1)
         for repeat_idx in range(1, num_repeat + 1):
             save_path = osp.join(save_sub_dir, video.name + '_{:03d}.txt'.format(repeat_idx))
@@ -165,7 +163,7 @@ def run_one_sequence(video, params, tracker=None):
                         outputs.append('{},{},{},{}'.format(res[0], res[1], res[2], res[3]))
                 f.write('\n'.join(outputs))
     else:
-        mkdir_p(save_dir)
+        os.makedirs(save_dir, exist_ok=True)
         save_path = osp.join(save_dir, video.name + '.txt')
         if osp.exists(save_path): return
         pred_bboxes = run_tracker(tracker, video, reset=False)
