@@ -151,7 +151,7 @@ def main(args):
 
     if args.do_train:
         train_data_generator = processor.data_generator(
-            batch_size=args.batch_size/device_count,
+            batch_size=args.batch_size/dev_count,
             phase='train',
             epoch=args.epoch,
             shuffle=True)
@@ -187,7 +187,7 @@ def main(args):
 
     if args.do_val:
         test_data_generator = processor.data_generator(
-            batch_size=args.batch_size/device_count,
+            batch_size=args.batch_size/dev_count,
             phase='dev',
             epoch=1,
             shuffle=False)
@@ -204,7 +204,7 @@ def main(args):
 
     if args.do_infer:
         infer_data_generator = processor.data_generator(
-            batch_size=args.batch_size/device_count,
+            batch_size=args.batch_size/dev_count,
             phase='infer',
             epoch=1,
             shuffle=False)
