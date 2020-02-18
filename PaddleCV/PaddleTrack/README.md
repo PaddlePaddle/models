@@ -1,14 +1,15 @@
 ﻿# PaddleTrack 单目标跟踪框架
-##目标跟踪介绍
+
+## 目标跟踪介绍
+
 PaddleTrack是基于百度深度学习框架Paddle研发的视频单目标跟踪（Visual Object Tracking）库。涵盖当前目标跟踪的主流模型，包括SiamFC, SiamRPN, SiamMask, ATOM。PaddleTrack旨在给开发者提供一系列基于PaddlePaddle的便捷、高效的目标跟踪深度学习算法，后续会不断的扩展模型的丰富度。
 
 
-##开始使用
-
+## 开始使用
 
 ### 数据准备
 
-目标跟踪的训练集和测试集是不同的，目前最好的模型往往是使用多个训练集进行训练。为了方便使用，我们提供了一系列的数据集下载链接。
+目标跟踪的训练集和测试集是不同的，目前最好的模型往往是使用多个训练集进行训练。常用的数据集如下:
 
 
 主流的训练数据集有：
@@ -25,7 +26,7 @@ PaddleTrack是基于百度深度学习框架Paddle研发的视频单目标跟踪
 数据评估将主要在VOT上完成，我们提供了OTB和VOT的数据下载链接。
 
 
-##快速开始
+## 快速开始
 
 ### 训练准备，安装第三方库
 
@@ -90,6 +91,7 @@ python setup.py build_ext --inplace
 
 
 ### 预训练 backbone 下载
+
 在开始训练前，先准备SiamRPN、SiamMask、ATOM模型的Backbone预训练模型。
 
 我们提供 ATOM ResNet18 和 ResNet50 的 backbone模型。可从[这里](https://paddlemodels.bj.bcebos.com/paddle_track/vot/pretrained_models.tar)下载所有预训练模型的压缩包。下载压缩包后，解压后backbone文件夹下的模型为ResNet18和ResNet50模型的预训练模型。
@@ -111,6 +113,7 @@ pretrained_models
 
 
 ### 设置训练环境
+
 ```bash
 # 到代码库根目录
 cd PaddleTrack
@@ -134,6 +137,7 @@ python -c "from ltr_pp.admin.environment import create_default_local_file; creat
 
 
 ### 开始训练
+
 ```bash
 # 到训练代码目录
 cd ltr_pp
@@ -153,10 +157,8 @@ python run_training.py siamfc siamfc_alexnet_vid
 
 接下来开始设置评估环境：
 ```bash
-cd PaddleTrack
-
 # 生成 local.py 文件
-python -c "from pytracking_pp.pysot_toolkit.environment import create_default_local_file; create_default_local_file()"
+python -c "from pytracking_pp.admin.environment import create_default_local_file; create_default_local_file()"
 
 # 用你常用的编辑器编辑 pytracking_pp/pysot_toolkit/local.py
 # 比方说，vim pytracking_pp/pysot_toolkit/local.py
@@ -164,7 +166,7 @@ python -c "from pytracking_pp.pysot_toolkit.environment import create_default_lo
 ```
 
 
-将自己训练的模型拷贝到 `NETWORK_PATH`。或者建立软链接，如
+将自己训练的模型拷贝到 `NETWORK_PATH`,或者建立软链接，如
 ```bash
 ln -s PaddleTrack/ltr_pp/Logs/checkpoints/ltr_pp/bbreg/atom_res18_vid_lasot_coco $NETWORK_PATH/bbreg
 ```
@@ -200,6 +202,7 @@ python eval_siamfc_vot.py --checkpoint "/checkpoints/ltr_pp/siamfc/siamfc_alexne
 
 
 ## 跟踪结果可视化
+
 在数据集上评测完后，可以通过可视化跟踪器的结果来定位问题。我们提供下面的方法来可视化跟踪结果：
 ```bash
 cd pytracking_pp
@@ -214,6 +217,7 @@ jupyter notebook --ip 0.0.0.0 --port 8888
 打开网页之后，打开 `visualize_results_on_benchmark.ipynb` 来可视化结果。
 
 ## 指标结果
+
 | 数据集 | 模型 | Backbone | 论文结果 | 训练结果 | 模型|
 | :-------: | :-------: | :---: | :---: | :---------: |:---------: |
 |OTB2013| SiamFC | Alexnet |  AUC（OPE）：60.8  | 61.8 | [model]() |
