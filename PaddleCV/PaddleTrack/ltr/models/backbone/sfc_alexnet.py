@@ -13,45 +13,83 @@ class SFC_AlexNet(fluid.dygraph.Layer):
 
     def layer_init(self):
         # for conv1
-        self.conv1 = nn.Conv2D(num_channels=3, num_filters=96, filter_size=11, stride=2, padding=0, groups=1,
-                               param_attr=self.weight_init(),
-                               bias_attr=self.bias_init())
-        self.bn1 = nn.BatchNorm(num_channels=96, is_test=self.is_test,
-                                param_attr=self.norm_weight_init(),
-                                bias_attr=self.bias_init())
-        self.pool1 = nn.Pool2D(pool_size=3, pool_type="max",
-                               pool_stride=2, pool_padding=0)
+        self.conv1 = nn.Conv2D(
+            num_channels=3,
+            num_filters=96,
+            filter_size=11,
+            stride=2,
+            padding=0,
+            groups=1,
+            param_attr=self.weight_init(),
+            bias_attr=self.bias_init())
+        self.bn1 = nn.BatchNorm(
+            num_channels=96,
+            is_test=self.is_test,
+            param_attr=self.norm_weight_init(),
+            bias_attr=self.bias_init(),
+            use_global_stats=self.is_test)
+        self.pool1 = nn.Pool2D(
+            pool_size=3, pool_type="max", pool_stride=2, pool_padding=0)
         # for conv2
-        self.conv2 = nn.Conv2D(num_channels=96, num_filters=256, filter_size=5,
-                               stride=1, padding=0, groups=2,
-                               param_attr=self.weight_init(),
-                               bias_attr=self.bias_init())
-        self.bn2 = nn.BatchNorm(num_channels=256, is_test=self.is_test,
-                                param_attr=self.norm_weight_init(),
-                                bias_attr=self.bias_init())
-        self.pool2 = nn.Pool2D(pool_size=3, pool_type="max",
-                               pool_stride=2, pool_padding=0)
+        self.conv2 = nn.Conv2D(
+            num_channels=96,
+            num_filters=256,
+            filter_size=5,
+            stride=1,
+            padding=0,
+            groups=2,
+            param_attr=self.weight_init(),
+            bias_attr=self.bias_init())
+        self.bn2 = nn.BatchNorm(
+            num_channels=256,
+            is_test=self.is_test,
+            param_attr=self.norm_weight_init(),
+            bias_attr=self.bias_init(),
+            use_global_stats=self.is_test)
+        self.pool2 = nn.Pool2D(
+            pool_size=3, pool_type="max", pool_stride=2, pool_padding=0)
         # for conv3
-        self.conv3 = nn.Conv2D(num_channels=256, num_filters=384, filter_size=3,
-                               stride=1, padding=0, groups=1,
-                               param_attr=self.weight_init(),
-                               bias_attr=self.bias_init())
-        self.bn3 = nn.BatchNorm(num_channels=384, is_test=self.is_test,
-                                param_attr=self.norm_weight_init(),
-                                bias_attr=self.bias_init())
+        self.conv3 = nn.Conv2D(
+            num_channels=256,
+            num_filters=384,
+            filter_size=3,
+            stride=1,
+            padding=0,
+            groups=1,
+            param_attr=self.weight_init(),
+            bias_attr=self.bias_init())
+        self.bn3 = nn.BatchNorm(
+            num_channels=384,
+            is_test=self.is_test,
+            param_attr=self.norm_weight_init(),
+            bias_attr=self.bias_init(),
+            use_global_stats=self.is_test)
         # for conv4
-        self.conv4 = nn.Conv2D(num_channels=384, num_filters=384, filter_size=3,
-                               stride=1, padding=0, groups=2,
-                               param_attr=self.weight_init(),
-                               bias_attr=self.bias_init())
-        self.bn4 = nn.BatchNorm(num_channels=384, is_test=self.is_test,
-                                param_attr=self.norm_weight_init(),
-                                bias_attr=self.bias_init())
+        self.conv4 = nn.Conv2D(
+            num_channels=384,
+            num_filters=384,
+            filter_size=3,
+            stride=1,
+            padding=0,
+            groups=2,
+            param_attr=self.weight_init(),
+            bias_attr=self.bias_init())
+        self.bn4 = nn.BatchNorm(
+            num_channels=384,
+            is_test=self.is_test,
+            param_attr=self.norm_weight_init(),
+            bias_attr=self.bias_init(),
+            use_global_stats=self.is_test)
         # for conv5
-        self.conv5 = nn.Conv2D(num_channels=384, num_filters=256, filter_size=3,
-                               stride=1, padding=0, groups=2,
-                               param_attr=self.weight_init(),
-                               bias_attr=self.bias_init())
+        self.conv5 = nn.Conv2D(
+            num_channels=384,
+            num_filters=256,
+            filter_size=3,
+            stride=1,
+            padding=0,
+            groups=2,
+            param_attr=self.weight_init(),
+            bias_attr=self.bias_init())
 
     def _add_output_and_check(self, name, x, outputs, output_layers):
         if name in output_layers:
