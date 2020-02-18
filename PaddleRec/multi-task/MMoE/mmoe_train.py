@@ -114,7 +114,6 @@ loss, data_list = model(dict_dim, emb_dim)
 sgd = fluid.optimizer.SGD(learning_rate=args.base_lr)
 sgd.minimize(loss)
 place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
-feeder = fluid.DataFeeder(feed_list=data_list, place=place)
 exe = fluid.Executor(place)
 exe.run(fluid.default_startup_program())
 for batch_id in range(100):
