@@ -17,6 +17,7 @@ from __future__ import print_function
 from network.StarGAN_network import StarGAN_model
 from util import utility
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import sys
 import time
 import copy
@@ -42,6 +43,10 @@ class GTrainer():
                         x=image_real, y=self.rec_img)))
             self.pred_fake, self.cls_fake = model.network_D(
                 self.fake_img, cfg, name="d_main")
+            if cfg.gan_mode != 'wgan':
+                raise NotImplementedError(
+                    "gan_mode {} is not support! only support wgan".format(
+                        cfg.gan_mode))
             #wgan
             self.g_loss_fake = -1 * fluid.layers.mean(self.pred_fake)
 
@@ -104,6 +109,10 @@ class DTrainer():
             self.d_loss_cls = fluid.layers.reduce_sum(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     self.cls_real, label_org)) / cfg.batch_size
+            if cfg.gan_mode != 'wgan':
+                raise NotImplementedError(
+                    "gan_mode {} is not support! only support wgan".format(
+                        cfg.gan_mode))
             #wgan
             self.d_loss_fake = fluid.layers.mean(self.pred_fake)
             self.d_loss_real = -1 * fluid.layers.mean(self.pred_real)
@@ -150,10 +159,14 @@ class DTrainer():
     def gradient_penalty(self, f, real, fake, cfg=None, name=None):
         def _interpolate(a, b):
             shape = [a.shape[0]]
-            alpha = fluid.layers.uniform_random_batch_size_like(
-                input=a, shape=shape, min=0.0, max=1.0)
+            if cfg.enable_ce:
+                  alpha = fluid.layers.uniform_random_batch_size_like(
+                    input=a, shape=shape, min=0.0, max=1.0, seed=1)
+            else:      
+                  alpha = fluid.layers.uniform_random_batch_size_like(
+                    input=a, shape=shape, min=0.0, max=1.0)
 
-            inner = b * (1.0 - alpha) + a * alpha
+            inner = fluid.layers.elementwise_mul(b, (1.0-alpha), axis=0) + fluid.layers.elementwise_mul(a, alpha, axis=0)
             return inner
 
         x = _interpolate(real, fake)
@@ -236,6 +249,10 @@ class StarGAN(object):
             help="the attributes we selected to change")
         parser.add_argument(
             '--n_samples', type=int, default=1, help="batch size when testing")
+        parser.add_argument(
+            '--enable_ce',
+            action='store_true',
+            help="if set, run the tasks with continuous evaluation logs")
 
         return parser
 
@@ -251,14 +268,17 @@ class StarGAN(object):
         self.batch_num = batch_num
 
     def build_model(self):
-        data_shape = [-1, 3, self.cfg.image_size, self.cfg.image_size]
+        data_shape = [None, 3, self.cfg.image_size, self.cfg.image_size]
 
-        image_real = fluid.layers.data(
+        image_real = fluid.data(
             name='image_real', shape=data_shape, dtype='float32')
-        label_org = fluid.layers.data(
-            name='label_org', shape=[self.cfg.c_dim], dtype='float32')
-        label_trg = fluid.layers.data(
-            name='label_trg', shape=[self.cfg.c_dim], dtype='float32')
+        label_org = fluid.data(
+            name='label_org', shape=[None, self.cfg.c_dim], dtype='float32')
+        label_trg = fluid.data(
+            name='label_trg', shape=[None, self.cfg.c_dim], dtype='float32')
+        # used for continuous evaluation        
+        if self.cfg.enable_ce:
+            fluid.default_startup_program().random_seed = 90
 
         py_reader = fluid.io.PyReader(
             feed_list=[image_real, label_org, label_trg],
@@ -273,7 +293,10 @@ class StarGAN(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
-        py_reader.decorate_batch_generator(self.train_reader, places=place)
+        py_reader.decorate_batch_generator(
+            self.train_reader,
+            places=fluid.cuda_places()
+            if self.cfg.use_gpu else fluid.cpu_places())
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
 
@@ -283,7 +306,6 @@ class StarGAN(object):
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
-        build_strategy.enable_inplace = False
 
         gen_trainer_program = fluid.CompiledProgram(
             gen_trainer.program).with_data_parallel(
@@ -293,12 +315,18 @@ class StarGAN(object):
             dis_trainer.program).with_data_parallel(
                 loss_name=dis_trainer.d_loss.name,
                 build_strategy=build_strategy)
+        # used for continuous evaluation        
+        if self.cfg.enable_ce:
+            gen_trainer_program.random_seed = 90
+            dis_trainer_program.random_seed = 90
 
         t_time = 0
-
+        total_train_batch = 0  # used for benchmark
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for data in py_reader():
+                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter: # used for benchmark
+                    return
                 s_time = time.time()
                 d_loss_real, d_loss_fake, d_loss, d_loss_cls, d_loss_gp = exe.run(
                     dis_trainer_program,
@@ -334,11 +362,21 @@ class StarGAN(object):
 
                 sys.stdout.flush()
                 batch_id += 1
+                # used for ce
+                if self.cfg.enable_ce and batch_id == 100:
+                   break
+
+                total_train_batch += 1  # used for benchmark
+                # profiler tools
+                if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
+                    profiler.reset_profiler()
+                elif self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq + 5:
+                    return
 
             if self.cfg.run_test:
-                image_name = fluid.layers.data(
+                image_name = fluid.data(
                     name='image_name',
-                    shape=[self.cfg.n_samples],
+                    shape=[None, self.cfg.n_samples],
                     dtype='int32')
                 test_py_reader = fluid.io.PyReader(
                     feed_list=[image_real, label_org, label_trg, image_name],
@@ -346,7 +384,9 @@ class StarGAN(object):
                     iterable=True,
                     use_double_buffer=True)
                 test_py_reader.decorate_batch_generator(
-                    self.test_reader, places=place)
+                    self.test_reader,
+                    places=fluid.cuda_places()
+                    if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
                                         test_program, gen_trainer,
@@ -357,3 +397,14 @@ class StarGAN(object):
                                     "net_G")
                 utility.checkpoints(epoch_id, self.cfg, exe, dis_trainer,
                                     "net_D")
+            # used for continuous evaluation
+            if self.cfg.enable_ce:
+                device_num = fluid.core.get_cuda_device_count() if self.cfg.use_gpu else 1
+                print("kpis\tstargan_g_loss_fake_card{}\t{}".format(device_num, g_loss_fake[0]))
+                print("kpis\tstargan_g_loss_rec_card{}\t{}".format(device_num, g_loss_rec[0]))
+                print("kpis\tstargan_g_loss_cls_card{}\t{}".format(device_num, g_loss_cls[0]))
+                print("kpis\tstargan_d_loss_real_card{}\t{}".format(device_num, d_loss_real[0]))
+                print("kpis\tstargan_d_loss_fake_card{}\t{}".format(device_num,d_loss_fake[0]))
+                print("kpis\tstargan_d_loss_cls_card{}\t{}".format(device_num, d_loss_cls[0]))
+                print("kpis\tstargan_d_loss_gp_card{}\t{}".format(device_num,d_loss_gp[0]))
+                print("kpis\tstargan_Batch_time_cost_card{}\t{}".format(device_num,batch_time))

@@ -18,6 +18,7 @@ import time
 import numpy as np
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import logging
 import shutil
 
@@ -47,19 +48,19 @@ def log_lr_and_step():
         logger.warn("Unable to get learning_rate and LR_DECAY_COUNTER.")
 
 
-def test_with_pyreader(exe,
-                       compiled_test_prog,
-                       test_pyreader,
-                       test_fetch_list,
-                       test_metrics,
-                       log_interval=0,
-                       save_model_name=''):
-    if not test_pyreader:
-        logger.error("[TEST] get pyreader failed.")
+def test_with_dataloader(exe,
+                         compiled_test_prog,
+                         test_dataloader,
+                         test_fetch_list,
+                         test_metrics,
+                         log_interval=0,
+                         save_model_name=''):
+    if not test_dataloader:
+        logger.error("[TEST] get dataloader failed.")
     test_metrics.reset()
     test_iter = 0
 
-    for data in test_pyreader():
+    for data in test_dataloader():
         test_outs = exe.run(compiled_test_prog,
                             fetch_list=test_fetch_list,
                             feed=data)
@@ -71,14 +72,15 @@ def test_with_pyreader(exe,
     test_metrics.finalize_and_log_out("[TEST] Finish")
 
 
-def train_with_pyreader(exe, train_prog, compiled_train_prog, train_pyreader, \
+def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader, \
                         train_fetch_list, train_metrics, epochs = 10, \
                         log_interval = 0, valid_interval = 0, save_dir = './', \
                         save_model_name = 'model', fix_random_seed = False, \
-                        compiled_test_prog = None, test_pyreader = None, \
-                        test_fetch_list = None, test_metrics = None):
-    if not train_pyreader:
-        logger.error("[TRAIN] get pyreader failed.")
+                        compiled_test_prog = None, test_dataloader = None, \
+                        test_fetch_list = None, test_metrics = None, \
+                        is_profiler = None, profiler_path = None):
+    if not train_dataloader:
+        logger.error("[TRAIN] get dataloader failed.")
     epoch_periods = []
     train_loss = 0
     for epoch in range(epochs):
@@ -87,7 +89,7 @@ def train_with_pyreader(exe, train_prog, compiled_train_prog, train_pyreader, \
         train_iter = 0
         epoch_periods = []
 
-        for data in train_pyreader():
+        for data in train_dataloader():
             cur_time = time.time()
             train_outs = exe.run(compiled_train_prog,
                                  fetch_list=train_fetch_list,
@@ -98,6 +100,13 @@ def train_with_pyreader(exe, train_prog, compiled_train_prog, train_pyreader, \
                 train_metrics.calculate_and_log_out(train_outs, \
                         info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
             train_iter += 1
+ 
+            # NOTE: profiler tools, used for benchmark
+            if is_profiler and epoch == 0 and train_iter == log_interval:
+                profiler.start_profiler("All")
+            elif is_profiler and epoch == 0 and train_iter == log_interval + 5:
+                profiler.stop_profiler("total", profiler_path)
+                return
 
         if len(epoch_periods) < 1:
             logger.info(
@@ -122,9 +131,9 @@ def train_with_pyreader(exe, train_prog, compiled_train_prog, train_pyreader, \
             save_type='.pdparams')
         if compiled_test_prog and valid_interval > 0 and (
                 epoch + 1) % valid_interval == 0:
-            test_with_pyreader(exe, compiled_test_prog, test_pyreader,
-                               test_fetch_list, test_metrics, log_interval,
-                               save_model_name)
+            test_with_dataloader(exe, compiled_test_prog, test_dataloader,
+                                 test_fetch_list, test_metrics, log_interval,
+                                 save_model_name)
 
     save_model(
         exe,

@@ -28,6 +28,10 @@ default_config = {
     "crop_size": 769,
 }
 
+# used for ce
+if 'ce_mode' in os.environ:
+    np.random.seed(0)
+
 
 def slice_with_pad(a, s, value=0):
     pads = []

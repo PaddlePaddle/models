@@ -8,8 +8,10 @@ max_iters: 28000
 snapshot_iter: 2000
 log_smooth_window: 1
 metric: VOC
+map_type: 11point
 save_dir: output
 weights: output/ssd_mobilenet_v1_voc/model_final/
+# 20(label_class) + 1(background)
 num_classes: 21
 
 SSD:
@@ -59,8 +61,7 @@ SSDTrainFeed:
   use_process: true
   dataset:
     dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/train.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
+    annotation: trainval.txt
     use_default_label: true
 
 SSDEvalFeed:
@@ -68,8 +69,7 @@ SSDEvalFeed:
   use_process: true
   dataset:
     dataset_dir: dataset/voc
-    annotation: VOCdevkit/VOC_all/ImageSets/Main/val.txt
-    image_dir: VOCdevkit/VOC_all/JPEGImages
+    annotation: test.txt
     use_default_label: true
   drop_last: false
 

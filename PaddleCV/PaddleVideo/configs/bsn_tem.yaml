@@ -1,0 +1,57 @@
+MODEL:
+    name: "BSNTEM"
+    tscale: 100
+    feat_dim: 400
+    hidden_dim: 256
+    gt_boundary_ratio: 0.1
+    prop_boundary_ratio: 0.5
+    num_sample: 32
+    num_sample_perbin: 3
+    anno_file: "data/dataset/bmn/activitynet_1.3_annotations.json"
+    feat_path: 'data/dataset/bmn/fix_feat_100'
+    pgm_top_K_train: 500
+    pgm_top_K: 1000
+    pgm_threshold: 0.5
+    bsp_boundary_ratio: 0.25
+    num_sample_start: 8
+    num_sample_end: 8
+    num_sample_action: 16
+    num_sample_perbin: 3
+    pgm_thread: 12
+
+TRAIN:
+    subset: "train"
+    epoch: 9
+    batch_size: 16
+    num_threads: 8
+    use_gpu: True
+    num_gpus: 1 
+    learning_rate: 0.001
+    learning_rate_decay: 0.1
+    lr_decay_iter: 4200
+    l2_weight_decay: 1e-4
+
+VALID:
+    subset: "validation"
+    batch_size: 16
+    num_threads: 8
+    use_gpu: True
+    num_gpus: 1
+
+TEST:
+    subset: "train_val"
+    batch_size: 1
+    num_threads: 1
+    score_thresh: 0.001
+    output_path_tem: "data/output/EVAL/TEM_results"
+    output_path_pgm_proposal: "data/output/EVAL/PGM_proposals"
+    output_path_pgm_feature: "data/output/EVAL/PGM_feature"
+
+INFER:
+    subset: "test"
+    filelist: 'data/dataset/bmn/infer.list'
+    batch_size: 1
+    num_threads: 1
+    output_path_tem: "data/output/INFER/TEM_results"
+    output_path_pgm_proposal: "data/output/INFER/PGM_proposals"
+    output_path_pgm_feature: "data/output/INFER/PGM_feature"

@@ -1,3 +1,17 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 Emotion Detection Task, based on ERNIE
 """
@@ -21,27 +35,27 @@ from preprocess.ernie import task_reader
 from models.representation import ernie
 from models.model_check import check_cuda
 import utils
+import config
 
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
-model_g = utils.ArgumentGroup(parser, "model", "model configuration and paths.")
+model_g = config.ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("ernie_config_path", str, None, "Path to the json file for ernie model config.")
-model_g.add_arg("senta_config_path", str, None, "Path to the json file for senta model config.")
 model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
-model_g.add_arg("output_dir", str, "checkpoints", "Path to save checkpoints")
+model_g.add_arg("save_checkpoint_dir", str, "checkpoints", "Path to save checkpoints")
 model_g.add_arg("use_paddle_hub", bool, False, "Whether to load ERNIE using PaddleHub")
 
-train_g = utils.ArgumentGroup(parser, "training", "training options.")
+train_g = config.ArgumentGroup(parser, "training", "training options.")
 train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
 train_g.add_arg("save_steps", int, 10000, "The steps interval to save checkpoints.")
 train_g.add_arg("validation_steps", int, 1000, "The steps interval to evaluate model performance.")
 train_g.add_arg("lr", float, 0.002, "The Learning rate value for training.")
 
-log_g = utils.ArgumentGroup(parser, "logging", "logging related")
+log_g = config.ArgumentGroup(parser, "logging", "logging related")
 log_g.add_arg("skip_steps", int, 10, "The steps interval to print loss.")
 log_g.add_arg("verbose", bool, False, "Whether to output verbose log")
 
-data_g = utils.ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
+data_g = config.ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
 data_g.add_arg("data_dir", str, None, "Directory path to training data.")
 data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
 data_g.add_arg("batch_size", int, 256, "Total examples' number in batch for training.")
@@ -56,7 +70,7 @@ data_g.add_arg("label_map_config", str, None, "label_map_path.")
 data_g.add_arg("do_lower_case", bool, True,
                "Whether to lower case the input text. Should be True for uncased models and False for cased models.")
 
-run_type_g = utils.ArgumentGroup(parser, "run_type", "running type options.")
+run_type_g = config.ArgumentGroup(parser, "run_type", "running type options.")
 run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
 run_type_g.add_arg("task_name", str, None, "The name of task to perform sentiment classification.")
 run_type_g.add_arg("do_train", bool, False, "Whether to perform training.")
@@ -291,7 +305,7 @@ def main(args):
 
     if args.do_train:
         train_exe = exe
-        train_pyreader.decorate_tensor_provider(train_data_generator)
+        train_pyreader.set_batch_generator(train_data_generator)
     else:
         train_exe = None
     if args.do_val or args.do_infer:
@@ -335,13 +349,13 @@ def main(args):
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
-                    save_path = os.path.join(args.output_dir, "step_" + str(steps))
+                    save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
                     fluid.io.save_persistables(exe, save_path, train_program)
 
                 if steps % args.validation_steps == 0:
                     # evaluate dev set
                     if args.do_val:
-                        test_pyreader.decorate_tensor_provider(
+                        test_pyreader.set_batch_generator(
                             reader.data_generator(
                                 input_file=args.dev_set,
                                 batch_size=args.batch_size,
@@ -354,14 +368,14 @@ def main(args):
                                 "dev")
 
             except fluid.core.EOFException:
-                save_path = os.path.join(args.output_dir, "step_" + str(steps))
+                save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
                 fluid.io.save_persistables(exe, save_path, train_program)
                 train_pyreader.reset()
                 break
 
     # eval on test set
     if not args.do_train and args.do_val:
-        test_pyreader.decorate_tensor_provider(
+        test_pyreader.set_batch_generator(
             reader.data_generator(
                 input_file=args.test_set,
                 batch_size=args.batch_size, phase='test', epoch=1,
@@ -372,7 +386,7 @@ def main(args):
 
     # infer on infer set
     if args.do_infer:
-        infer_pyreader.decorate_tensor_provider(
+        infer_pyreader.set_batch_generator(
             reader.data_generator(
                 input_file=args.infer_set,
                 batch_size=args.batch_size,

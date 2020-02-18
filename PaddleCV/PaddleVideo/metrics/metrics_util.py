@@ -25,6 +25,11 @@ from metrics.youtube8m import eval_util as youtube8m_metrics
 from metrics.kinetics import accuracy_metrics as kinetics_metrics
 from metrics.multicrop_test import multicrop_test_metrics as multicrop_test_metrics
 from metrics.detections import detection_metrics as detection_metrics
+from metrics.bmn_metrics import bmn_proposal_metrics as bmn_proposal_metrics
+from metrics.bsn_metrics import bsn_tem_metrics as bsn_tem_metrics
+from metrics.bsn_metrics import bsn_pem_metrics as bsn_pem_metrics
+from metrics.ets_metrics import ets_metrics as ets_metrics
+from metrics.tall_metrics import tall_metrics as tall_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -301,6 +306,202 @@ class DetectionMetrics(Metrics):
         self.calculator.reset()
 
 
+class BmnMetrics(Metrics):
+    def __init__(self, name, mode, cfg):
+        self.name = name
+        self.mode = mode
+        self.calculator = bmn_proposal_metrics.MetricsCalculator(
+            cfg=cfg, name=self.name, mode=self.mode)
+
+    def calculate_and_log_out(self, fetch_list, info=''):
+        total_loss = np.array(fetch_list[0])
+        tem_loss = np.array(fetch_list[1])
+        pem_reg_loss = np.array(fetch_list[2])
+        pem_cls_loss = np.array(fetch_list[3])
+        logger.info(
+            info + '\tLoss = {}, \ttem_loss = {}, \tpem_reg_loss = {}, \tpem_cls_loss = {}'.format(
+                '%.04f' % np.mean(total_loss), '%.04f' % np.mean(tem_loss), \
+                '%.04f' % np.mean(pem_reg_loss), '%.04f' % np.mean(pem_cls_loss)))
+
+    def accumulate(self, fetch_list):
+        if self.mode == 'infer':
+            self.calculator.accumulate_infer_results(fetch_list)
+        else:
+            self.calculator.accumulate(fetch_list)
+
+    def finalize_and_log_out(self, info='', savedir='./'):
+        if self.mode == 'infer':
+            self.calculator.finalize_infer_metrics()
+        else:
+            self.calculator.finalize_metrics()
+            metrics_dict = self.calculator.get_computed_metrics()
+            loss = metrics_dict['avg_loss']
+            tem_loss = metrics_dict['avg_tem_loss']
+            pem_reg_loss = metrics_dict['avg_pem_reg_loss']
+            pem_cls_loss = metrics_dict['avg_pem_cls_loss']
+            logger.info(
+                info +
+                '\tLoss = {}, \ttem_loss = {}, \tpem_reg_loss = {}, \tpem_cls_loss = {}'.
+                format('%.04f' % loss, '%.04f' % tem_loss, '%.04f' %
+                       pem_reg_loss, '%.04f' % pem_cls_loss))
+
+    def reset(self):
+        self.calculator.reset()
+
+
+class BsnTemMetrics(Metrics):
+    def __init__(self, name, mode, cfg):
+        self.name = name
+        self.mode = mode
+        self.calculator = bsn_tem_metrics.MetricsCalculator(
+            cfg=cfg, name=self.name, mode=self.mode)
+
+    def calculate_and_log_out(self, fetch_list, info=''):
+        total_loss = np.array(fetch_list[0])
+        start_loss = np.array(fetch_list[1])
+        end_loss = np.array(fetch_list[2])
+        action_loss = np.array(fetch_list[3])
+        logger.info(
+            info +
+            '\tLoss = {}, \tstart_loss = {}, \tend_loss = {}, \taction_loss = {}'.
+            format('%.04f' % np.mean(total_loss), '%.04f' % np.mean(start_loss),
+                   '%.04f' % np.mean(end_loss), '%.04f' % np.mean(action_loss)))
+
+    def accumulate(self, fetch_list):
+        if self.mode == 'infer':
+            self.calculator.accumulate_infer_results(fetch_list)
+        else:
+            self.calculator.accumulate(fetch_list)
+
+    def finalize_and_log_out(self, info='', savedir='./'):
+        if self.mode == 'infer':
+            self.calculator.finalize_infer_metrics()
+        else:
+            self.calculator.finalize_metrics()
+            metrics_dict = self.calculator.get_computed_metrics()
+            loss = metrics_dict['avg_loss']
+            start_loss = metrics_dict['avg_start_loss']
+            end_loss = metrics_dict['avg_end_loss']
+            action_loss = metrics_dict['avg_action_loss']
+            logger.info(
+                info +
+                '\tLoss = {}, \tstart_loss = {}, \tend_loss = {}, \taction_loss = {}'.
+                format('%.04f' % loss, '%.04f' % start_loss, '%.04f' % end_loss,
+                       '%.04f' % action_loss))
+
+    def reset(self):
+        self.calculator.reset()
+
+
+class BsnPemMetrics(Metrics):
+    def __init__(self, name, mode, cfg):
+        self.name = name
+        self.mode = mode
+        self.calculator = bsn_pem_metrics.MetricsCalculator(
+            cfg=cfg, name=self.name, mode=self.mode)
+
+    def calculate_and_log_out(self, fetch_list, info=''):
+        total_loss = np.array(fetch_list[0])
+        logger.info(info + '\tLoss = {}'.format('%.04f' % np.mean(total_loss)))
+
+    def accumulate(self, fetch_list):
+        if self.mode == 'infer':
+            self.calculator.accumulate_infer_results(fetch_list)
+        else:
+            self.calculator.accumulate(fetch_list)
+
+    def finalize_and_log_out(self, info='', savedir='./'):
+        if self.mode == 'infer':
+            self.calculator.finalize_infer_metrics()
+        else:
+            self.calculator.finalize_metrics()
+            metrics_dict = self.calculator.get_computed_metrics()
+            loss = metrics_dict['avg_loss']
+            logger.info(info + '\tLoss = {}'.format('%.04f' % loss))
+
+    def reset(self):
+        self.calculator.reset()
+
+
+class ETSMetrics(Metrics):
+    def __init__(self, name, mode, cfg):
+        self.name = name
+        self.mode = mode
+        args = {}
+        args['dict_file'] = cfg.MODEL.dict_file
+        args['mode'] = mode
+        args['name'] = name
+        self.calculator = ets_metrics.MetricsCalculator(**args)
+
+    def calculate_and_log_out(self, fetch_list, info=''):
+        if (self.mode == 'train') or (self.mode == 'valid'):
+            loss = np.array(fetch_list[0])
+            logger.info(info + '\tLoss = {}'.format('%.08f' % np.mean(loss)))
+        elif self.mode == "test":
+            translation_ids = np.array(fetch_list[0])
+            translation_scores = np.array(fetch_list[1])
+            logger.info(
+                info + '\ttranslation_ids = {}, \ttranslation_scores = {}'.
+                format('%.01f' % np.mean(translation_ids), '%.04f' % np.mean(
+                    translation_scores)))
+
+    def accumulate(self, fetch_list):
+        self.calculator.accumulate(fetch_list)
+
+    def finalize_and_log_out(self, info='', savedir='./'):
+        if self.mode == 'valid':
+            logger.info(info)
+        else:  #test or infer
+            self.calculator.finalize_metrics(savedir)
+            if self.mode == 'test':
+                logger.info(
+                    info +
+                    'please refer to metrics/ets_metrics/README.md to get accuracy'
+                )
+
+    def reset(self):
+        self.calculator.reset()
+
+
+class TALLMetrics(Metrics):
+    def __init__(self, name, mode, cfg):
+        self.name = name
+        self.mode = mode
+        args = {}
+        args['mode'] = mode
+        args['name'] = name
+        self.calculator = tall_metrics.MetricsCalculator(**args)
+
+    def calculate_and_log_out(self, fetch_list, info=''):
+        if (self.mode == 'train') or (self.mode == 'valid'):
+            loss = np.array(fetch_list[0])
+            logger.info(info + '\tLoss = {}'.format('%.04f' % np.mean(loss)))
+        elif self.mode == "test":
+            sim_score_mat = np.array(fetch_list[0])
+            logger.info(info + '\tsim_score_mat = {}'.format('%.01f' % np.mean(
+                sim_score_mat)))
+
+    def accumulate(self, fetch_list):
+        self.calculator.accumulate(fetch_list)
+
+    def finalize_and_log_out(self, info='', savedir='./'):
+        if self.mode == 'valid':
+            logger.info(info)
+        elif self.mode == 'infer':
+            self.calculator.finalize_infer_metrics(savedir)
+        else:
+            self.calculator.finalize_metrics(savedir)
+            metrics_dict = self.calculator.get_computed_metrics()
+            R1_IOU5 = metrics_dict['best_R1_IOU5']
+            R5_IOU5 = metrics_dict['best_R5_IOU5']
+
+            logger.info("best_R1_IOU5: {}\n".format(" %0.3f" % R1_IOU5))
+            logger.info("best_R5_IOU5: {}\n".format(" %0.3f" % R5_IOU5))
+
+    def reset(self):
+        self.calculator.reset()
+
+
 class MetricsZoo(object):
     def __init__(self):
         self.metrics_zoo = {}
@@ -338,3 +539,8 @@ regist_metrics("TSM", Kinetics400Metrics)
 regist_metrics("TSN", Kinetics400Metrics)
 regist_metrics("STNET", Kinetics400Metrics)
 regist_metrics("CTCN", DetectionMetrics)
+regist_metrics("BMN", BmnMetrics)
+regist_metrics("BSNTEM", BsnTemMetrics)
+regist_metrics("BSNPEM", BsnPemMetrics)
+regist_metrics("ETS", ETSMetrics)
+regist_metrics("TALL", TALLMetrics)

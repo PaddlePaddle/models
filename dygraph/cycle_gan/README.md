@@ -20,6 +20,7 @@ Cycle GAN 是一种image to image 的图像生成网络，实现了非对称图�
 图1.网络结构
 </p>
 
+动态图文档请见[Dygraph](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/user_guides/howto/dygraph/DyGraph.html)
 
 ## 代码结构
 ```
@@ -34,12 +35,24 @@ Cycle GAN 是一种image to image 的图像生成网络，实现了非对称图�
 
 ## 数据准备
 
-本教程使用 cityscapes 数据集 来进行模型的训练测试工作，可以通过指定 `python download.py --dataset cityscapes` 下载得到。
+CycleGAN 支持的数据集可以参考download.py中的`cycle_pix_dataset`，可以通过指定`python download.py --dataset xxx` 下载得到。
 
-cityscapes 训练集包含2975张街景实拍图片，2975张对应真实街景的语义分割图片。测试集包含499张实拍图片和499张语义分割图片。
+由于版权问题，cityscapes 数据集无法通过脚本直接获得，需要从[官方](https://www.cityscapes-dataset.com/)下载数据，
+下载完之后执行`python prepare_cityscapes_dataset.py --gtFine_dir ./gtFine/ --leftImg8bit_dir ./leftImg8bit --output_dir ./data/cityscapes/`处理，
+将数据存放在`data/cityscapes`。
 
-数据下载处理完毕后，并组织为以下路径结构：
+数据下载处理完毕后，需要您将数据组织为以下路径结构：
+```
+data
+|-- cityscapes
+|   |-- testA
+|   |-- testB
+|   |-- trainA
+|   |-- trainB
 
+```
+
+然后运行txt生成脚本：`python generate_txt.py`，最终数据组织如下所示:
 ```
 data
 |-- cityscapes
@@ -100,7 +113,7 @@ env CUDA_VISIBLE_DEVICES=0 python test.py --epoch=200
 ```
 env CUDA_VISIBLE_DEVICES=0 python infer.py \
     --init_model="./output_0/checkpoints/199" --input="./image/testA/123_A.jpg" \
-    --input_style=A 
+    --input_style=A
 ```
 
 分割图像生成真实街景：
@@ -108,7 +121,7 @@ env CUDA_VISIBLE_DEVICES=0 python infer.py \
 ```
 env CUDA_VISIBLE_DEVICES=0 python infer.py \
     --init_model="./output_0/checkpoints/199" --input="./image/testB/78_B.jpg" \
-    --input_style=B 
+    --input_style=B
 ```
 生成结果在 `output_0/single`中
 

@@ -19,6 +19,7 @@ from .Pix2pix import Pix2pix
 from .STGAN import STGAN
 from .StarGAN import StarGAN
 from .AttGAN import AttGAN
+from .SPADE import SPADE
 
 import importlib
 

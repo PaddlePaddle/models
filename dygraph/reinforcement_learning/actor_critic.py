@@ -9,7 +9,7 @@ import paddle.fluid as fluid
 import paddle.fluid.dygraph.nn as nn
 import paddle.fluid.framework as framework
 
-parser = argparse.ArgumentParser(description='PyTorch REINFORCE example')
+parser = argparse.ArgumentParser()
 parser.add_argument(
     '--gamma',
     type=float,
@@ -40,12 +40,12 @@ SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 
 
 class Policy(fluid.dygraph.Layer):
-    def __init__(self, name_scope):
-        super(Policy, self).__init__(name_scope)
+    def __init__(self):
+        super(Policy, self).__init__()
 
-        self.affine1 = nn.FC(self.full_name(), size=128)
-        self.action_head = nn.FC(self.full_name(), size=2)
-        self.value_head = nn.FC(self.full_name(), size=1)
+        self.affine1 = nn.Linear(4, 128)
+        self.action_head = nn.Linear(128, 2)
+        self.value_head = nn.Linear(128, 1)
 
         self.saved_actions = []
         self.rewards = []
@@ -65,10 +65,10 @@ with fluid.dygraph.guard():
     fluid.default_startup_program().random_seed = args.seed
     fluid.default_main_program().random_seed = args.seed
     np.random.seed(args.seed)
-    policy = Policy("PolicyModel")
+    policy = Policy()
 
     eps = np.finfo(np.float32).eps.item()
-    optimizer = fluid.optimizer.AdamOptimizer(learning_rate=3e-2)
+    optimizer = fluid.optimizer.AdamOptimizer(learning_rate=3e-2, parameter_list=policy.parameters())
 
     def get_mean_and_std(values=[]):
         n = 0.
@@ -200,5 +200,5 @@ with fluid.dygraph.guard():
             print("Solved! Running reward is now {} and "
                   "the last episode runs to {} time steps!".format(
                       running_reward, t))
-            fluid.dygraph.save_persistables(policy.state_dict(), args.save_dir)
+            fluid.save_dygraph(policy.state_dict(), args.save_dir)
             break

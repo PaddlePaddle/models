@@ -22,6 +22,20 @@ import argparse
 import functools
 from PIL import Image
 
+
+def set_paddle_flags(**kwargs):
+    for key, value in kwargs.items():
+        if os.environ.get(key, None) is None:
+            os.environ[key] = str(value)
+
+
+# NOTE(paddle-dev): All of these flags should be
+# set before `import paddle`. Otherwise, it would
+# not take any effect.
+set_paddle_flags(
+    FLAGS_eager_delete_tensor_gb=0,  # enable GC to save memory
+)
+
 import paddle.fluid as fluid
 import reader
 from pyramidbox import PyramidBox
@@ -302,6 +316,8 @@ def get_shrink(height, width):
         max_shrink = max_shrink - 0.4
     elif max_shrink >= 5:
         max_shrink = max_shrink - 0.5
+    elif max_shrink <= 0.1:
+        max_shrink = 0.1
 
     shrink = max_shrink if max_shrink < 1 else 1
     return shrink, max_shrink
@@ -324,6 +340,7 @@ if __name__ == '__main__':
             is_infer=True)
         infer_program, nmsed_out = network.infer(main_program)
         fetches = [nmsed_out]
+        exe.run(startup_program)
         fluid.io.load_persistables(
             exe, args.model_dir, main_program=infer_program)
         # save model and program

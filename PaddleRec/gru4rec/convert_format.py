@@ -2,8 +2,8 @@ import sys
 
 
 def convert_format(input, output):
-    with open(input) as rf:
-        with open(output, "w") as wf:
+    with open(input, "r", encoding='utf-8') as rf:
+        with open(output, "w", encoding='utf-8') as wf:
             last_sess = -1
             sign = 1
             i = 0

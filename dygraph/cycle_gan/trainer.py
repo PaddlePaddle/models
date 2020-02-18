@@ -25,14 +25,14 @@ lambda_identity = 0.5
 
 
 class Cycle_Gan(fluid.dygraph.Layer):
-    def __init__(self, name_scope,istrain=True):
-        super (Cycle_Gan, self).__init__(name_scope)
+    def __init__(self, input_channel, istrain=True):
+        super (Cycle_Gan, self).__init__()
 
-        self.build_generator_resnet_9blocks_a = build_generator_resnet_9blocks(self.full_name())
-        self.build_generator_resnet_9blocks_b = build_generator_resnet_9blocks(self.full_name())
+        self.build_generator_resnet_9blocks_a = build_generator_resnet_9blocks(input_channel)
+        self.build_generator_resnet_9blocks_b = build_generator_resnet_9blocks(input_channel)
         if istrain:
-            self.build_gen_discriminator_a = build_gen_discriminator(self.full_name())
-            self.build_gen_discriminator_b = build_gen_discriminator(self.full_name())
+            self.build_gen_discriminator_a = build_gen_discriminator(input_channel)
+            self.build_gen_discriminator_b = build_gen_discriminator(input_channel)
 
     def forward(self,input_A,input_B,is_G,is_DA,is_DB):
 

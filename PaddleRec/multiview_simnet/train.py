@@ -88,6 +88,22 @@ def parse_args():
     return parser.parse_args()
 
 
+def check_version():
+    """
+     Log error and exit when the installed version of paddlepaddle is
+     not satisfied.
+     """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        logger.error(err)
+        sys.exit(1)
+
+
 def start_train(args):
     if args.enable_ce:
         SEED = 102
@@ -120,17 +136,19 @@ def start_train(args):
     startup_program = fluid.default_startup_program()
     loop_program = fluid.default_main_program()
 
-    feeder = fluid.DataFeeder(feed_list=all_slots, place=place)
     exe = fluid.Executor(place)
     exe.run(startup_program)
+    loader = fluid.io.DataLoader.from_generator(
+        feed_list=all_slots, capacity=10000, iterable=True)
+    loader.set_sample_list_generator(train_reader, places=place)
 
     total_time = 0
     ce_info = []
     for pass_id in range(args.epochs):
         start_time = time.time()
-        for batch_id, data in enumerate(train_reader()):
+        for batch_id, data in enumerate(loader()):
             loss_val, correct_val = exe.run(loop_program,
-                                            feed=feeder.feed(data),
+                                            feed=data,
                                             fetch_list=[avg_cost, correct])
             logger.info("TRAIN --> pass: {} batch_id: {} avg_cost: {}, acc: {}"
                         .format(pass_id, batch_id, loss_val,
@@ -145,7 +163,7 @@ def start_train(args):
     # only for ce
     if args.enable_ce:
         threads_num, cpu_num = get_cards(args)
-        epoch_idx = args.epochs 
+        epoch_idx = args.epochs
         ce_loss = 0
         try:
             ce_loss = ce_info[-2]
@@ -153,9 +171,9 @@ def start_train(args):
             logger.error("ce info error")
 
         print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, total_time / epoch_idx))
+              (cpu_num, threads_num, total_time / epoch_idx))
         print("kpis\ttrain_loss_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, ce_loss))
+              (cpu_num, threads_num, ce_loss))
 
 
 def get_cards(args):
@@ -170,4 +188,5 @@ def main():
 
 
 if __name__ == "__main__":
+    check_version()
     main()

@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
 This module provides ErnieModel and ErnieConfig
 """
@@ -17,18 +30,18 @@ from models.transformer_encoder import encoder, pre_process_layer
 
 def ernie_pyreader(args, pyreader_name):
     """define standard ernie pyreader"""
-    pyreader = fluid.layers.py_reader(
-        capacity=50,
-        shapes=[[-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1],
-                [-1, args.max_seq_len, 1], [-1, args.max_seq_len, 1], [-1, 1],
-                [-1, 1]],
-        dtypes=['int64', 'int64', 'int64', 'float32', 'int64', 'int64'],
-        lod_levels=[0, 0, 0, 0, 0, 0],
-        name=pyreader_name,
-        use_double_buffer=True)
+    src_ids = fluid.data(name='1', shape=[-1, args.max_seq_len, 1], dtype='int64')
+    sent_ids = fluid.data(name='2', shape=[-1, args.max_seq_len, 1], dtype='int64')
+    pos_ids = fluid.data(name='3', shape=[-1, args.max_seq_len, 1], dtype='int64')
+    input_mask = fluid.data(name='4', shape=[-1, args.max_seq_len, 1], dtype='float32')
+    labels = fluid.data(name='5', shape=[-1, 1], dtype='int64')
+    seq_lens = fluid.data(name='6', shape=[-1], dtype='int64')
 
-    (src_ids, sent_ids, pos_ids, input_mask, labels,
-     seq_lens) = fluid.layers.read_file(pyreader)
+    pyreader = fluid.io.DataLoader.from_generator(
+        feed_list=[src_ids, sent_ids, pos_ids, input_mask, labels, seq_lens],
+        capacity=50,
+        iterable=False,
+        use_double_buffer=True)
 
     ernie_inputs = {
         "src_ids": src_ids,
@@ -67,6 +80,7 @@ def ernie_encoder_with_paddle_hub(ernie_inputs, max_seq_len):
     embeddings = {
         "sentence_embeddings": cls_feats,
         "token_embeddings": unpad_enc_out,
+        "padded_token_embeddings": enc_out
     }
 
     for k, v in embeddings.items():
@@ -93,6 +107,7 @@ def ernie_encoder(ernie_inputs, ernie_config):
     embeddings = {
         "sentence_embeddings": cls_feats,
         "token_embeddings": unpad_enc_out,
+        "padded_token_embeddings": enc_out
     }
 
     for k, v in embeddings.items():

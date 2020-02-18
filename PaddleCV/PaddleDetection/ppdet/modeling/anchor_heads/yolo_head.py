@@ -41,7 +41,7 @@ class YOLOv3Head(object):
         nms (object): an instance of `MultiClassNMS`
     """
     __inject__ = ['nms']
-    __shared__ = ['num_classes']
+    __shared__ = ['num_classes', 'weight_prefix_name']
 
     def __init__(self,
                  norm_decay=0.,
@@ -56,7 +56,8 @@ class YOLOv3Head(object):
                      nms_top_k=1000,
                      keep_top_k=100,
                      nms_threshold=0.45,
-                     background_label=-1).__dict__):
+                     background_label=-1).__dict__,
+                 weight_prefix_name=''):
         self.norm_decay = norm_decay
         self.num_classes = num_classes
         self.ignore_thresh = ignore_thresh
@@ -64,6 +65,7 @@ class YOLOv3Head(object):
         self.anchor_masks = anchor_masks
         self._parse_anchors(anchors)
         self.nms = nms
+        self.prefix_name = weight_prefix_name
         if isinstance(nms, dict):
             self.nms = MultiClassNMS(**nms)
 
@@ -146,18 +148,8 @@ class YOLOv3Head(object):
         return route, tip
 
     def _upsample(self, input, scale=2, name=None):
-        # get dynamic upsample output shape
-        shape_nchw = fluid.layers.shape(input)
-        shape_hw = fluid.layers.slice(
-            shape_nchw, axes=[0], starts=[2], ends=[4])
-        shape_hw.stop_gradient = True
-        in_shape = fluid.layers.cast(shape_hw, dtype='int32')
-        out_shape = in_shape * scale
-        out_shape.stop_gradient = True
-
-        # reisze by actual_shape
         out = fluid.layers.resize_nearest(
-            input=input, scale=scale, actual_shape=out_shape, name=name)
+            input=input, scale=float(scale), name=name)
         return out
 
     def _parse_anchors(self, anchors):
@@ -208,7 +200,7 @@ class YOLOv3Head(object):
                 block,
                 channel=512 // (2**i),
                 is_test=(not is_train),
-                name="yolo_block.{}".format(i))
+                name=self.prefix_name + "yolo_block.{}".format(i))
 
             # out channel number = mask_num * (5 + class_num)
             num_filters = len(self.anchor_masks[i]) * (self.num_classes + 5)
@@ -219,11 +211,12 @@ class YOLOv3Head(object):
                 stride=1,
                 padding=0,
                 act=None,
-                param_attr=ParamAttr(
-                    name="yolo_output.{}.conv.weights".format(i)),
+                param_attr=ParamAttr(name=self.prefix_name +
+                                     "yolo_output.{}.conv.weights".format(i)),
                 bias_attr=ParamAttr(
                     regularizer=L2Decay(0.),
-                    name="yolo_output.{}.conv.bias".format(i)))
+                    name=self.prefix_name +
+                    "yolo_output.{}.conv.bias".format(i)))
             outputs.append(block_out)
 
             if i < len(blocks) - 1:
@@ -235,7 +228,7 @@ class YOLOv3Head(object):
                     stride=1,
                     padding=0,
                     is_test=(not is_train),
-                    name="yolo_transition.{}".format(i))
+                    name=self.prefix_name + "yolo_transition.{}".format(i))
                 # upsample
                 route = self._upsample(route)
 
@@ -272,7 +265,7 @@ class YOLOv3Head(object):
                 ignore_thresh=self.ignore_thresh,
                 downsample_ratio=downsample,
                 use_label_smooth=self.label_smooth,
-                name="yolo_loss" + str(i))
+                name=self.prefix_name + "yolo_loss" + str(i))
             losses.append(fluid.layers.reduce_mean(loss))
             downsample //= 2
 
@@ -304,7 +297,7 @@ class YOLOv3Head(object):
                 class_num=self.num_classes,
                 conf_thresh=self.nms.score_threshold,
                 downsample_ratio=downsample,
-                name="yolo_box" + str(i))
+                name=self.prefix_name + "yolo_box" + str(i))
             boxes.append(box)
             scores.append(fluid.layers.transpose(score, perm=[0, 2, 1]))
 

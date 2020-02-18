@@ -88,12 +88,12 @@ class CGAN(object):
 
     def build_model(self):
 
-        img = fluid.layers.data(name='img', shape=[784], dtype='float32')
-        condition = fluid.layers.data(
-            name='condition', shape=[1], dtype='float32')
-        noise = fluid.layers.data(
-            name='noise', shape=[self.cfg.noise_size], dtype='float32')
-        label = fluid.layers.data(name='label', shape=[1], dtype='float32')
+        img = fluid.data(name='img', shape=[None, 784], dtype='float32')
+        condition = fluid.data(
+            name='condition', shape=[None, 1], dtype='float32')
+        noise = fluid.data(
+            name='noise', shape=[None, self.cfg.noise_size], dtype='float32')
+        label = fluid.data(name='label', shape=[None, 1], dtype='float32')
 
         g_trainer = GTrainer(noise, condition, self.cfg)
         d_trainer = DTrainer(img, condition, label, self.cfg)
@@ -122,8 +122,11 @@ class CGAN(object):
             d_trainer.program).with_data_parallel(
                 loss_name=d_trainer.d_loss.name, build_strategy=build_strategy)
 
+        if self.cfg.run_test:
+            image_path = os.path.join(self.cfg.output, 'test')
+            if not os.path.exists(image_path):
+                os.makedirs(image_path)
         t_time = 0
-        losses = [[], []]
         for epoch_id in range(self.cfg.epoch):
             for batch_id, data in enumerate(self.train_reader()):
                 if len(data) != self.cfg.batch_size:
@@ -159,13 +162,12 @@ class CGAN(object):
                                       fetch_list=[d_trainer.d_loss])[0]
                 d_fake_loss = exe.run(d_trainer_program,
                                       feed={
-                                          'img': generate_image,
+                                          'img': generate_image[0],
                                           'condition': condition_data,
                                           'label': fake_label
                                       },
                                       fetch_list=[d_trainer.d_loss])[0]
                 d_loss = d_real_loss + d_fake_loss
-                losses[1].append(d_loss)
 
                 for _ in six.moves.xrange(self.cfg.num_generator_time):
                     g_loss = exe.run(g_trainer_program,
@@ -174,15 +176,16 @@ class CGAN(object):
                                          'condition': condition_data
                                      },
                                      fetch_list=[g_trainer.g_loss])[0]
-                    losses[0].append(g_loss)
 
                 batch_time = time.time() - s_time
+                if batch_id % self.cfg.print_freq == 0:
+                    print(
+                        'Epoch ID: {} Batch ID: {} D_loss: {} G_loss: {} Batch_time_cost: {}'.
+                        format(epoch_id, batch_id, d_loss[0], g_loss[0],
+                               batch_time))
                 t_time += batch_time
 
-                if batch_id % self.cfg.print_freq == 0:
-                    image_path = os.path.join(self.cfg.output, 'images')
-                    if not os.path.exists(image_path):
-                        os.makedirs(image_path)
+                if self.cfg.run_test:
                     generate_const_image = exe.run(
                         g_trainer.infer_program,
                         feed={'noise': const_n,
@@ -194,10 +197,6 @@ class CGAN(object):
                     total_images = np.concatenate(
                         [real_image, generate_image_reshape])
                     fig = utility.plot(total_images)
-                    print(
-                        'Epoch ID: {} Batch ID: {} D_loss: {} G_loss: {} Batch_time_cost: {}'.
-                        format(epoch_id, batch_id, d_loss[0], g_loss[0],
-                               batch_time))
                     plt.title('Epoch ID={}, Batch ID={}'.format(epoch_id,
                                                                 batch_id))
                     img_name = '{:04d}_{:04d}.png'.format(epoch_id, batch_id)

@@ -12,6 +12,12 @@ import six
 import reader
 from net import skip_gram_word2vec
 
+import utils
+import sys
+if six.PY2:
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
@@ -78,6 +84,9 @@ def parse_args():
         required=False,
         default=False,
         help='print speed or not , (default: False)')
+    parser.add_argument(
+        '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
+
     return parser.parse_args()
 
 
@@ -189,6 +198,11 @@ def GetFileList(data_path):
 
 
 def train(args):
+    # add ce
+    if args.enable_ce:
+        SEED = 102
+        fluid.default_main_program().random_seed = SEED
+        fluid.default_startup_program().random_seed = SEED
 
     if not os.path.isdir(args.model_output_dir):
         os.mkdir(args.model_output_dir)
@@ -224,5 +238,6 @@ def train(args):
 
 
 if __name__ == '__main__':
+    utils.check_version()
     args = parse_args()
     train(args)

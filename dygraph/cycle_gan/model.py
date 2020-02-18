@@ -18,18 +18,19 @@ import paddle.fluid as fluid
 
 class build_resnet_block(fluid.dygraph.Layer):
     def __init__(self,
-        name_scope,
         dim,
         use_bias=False):
-        super(build_resnet_block,self).__init__(name_scope)
+        super(build_resnet_block,self).__init__()
 
-        self.conv0 = conv2d(self.full_name(),
+        self.conv0 = conv2d(
+            num_channels=dim,
             num_filters=dim,
             filter_size=3,
             stride=1,
             stddev=0.02,
             use_bias=False)
-        self.conv1 = conv2d(self.full_name(),
+        self.conv1 = conv2d(
+            num_channels=dim,
             num_filters=dim,
             filter_size=3,
             stride=1,
@@ -47,38 +48,41 @@ class build_resnet_block(fluid.dygraph.Layer):
         out_res = self.conv1(out_res)
         return out_res + inputs
 
-class build_generator_resnet_9blocks(fluid.dygraph.Layer):
-    def __init__ (self,
-            name_scope):
-        super(build_generator_resnet_9blocks,self).__init__(name_scope)
 
-        self.conv0 = conv2d(self.full_name(),
+class build_generator_resnet_9blocks(fluid.dygraph.Layer):
+    def __init__ (self, input_channel):
+        super(build_generator_resnet_9blocks, self).__init__()
+
+        self.conv0 = conv2d(
+            num_channels=input_channel,
             num_filters=32,
             filter_size=7,
             stride=1,
             padding=0,
             stddev=0.02)
-        self.conv1 = conv2d(self.full_name(),
+        self.conv1 = conv2d(
+            num_channels=32,
             num_filters=64,
             filter_size=3,
             stride=2,
             padding=1,
             stddev=0.02)
-        self.conv2 = conv2d(self.full_name(),
+        self.conv2 = conv2d(
+            num_channels=64,
             num_filters=128,
             filter_size=3,
             stride=2,
             padding=1,
             stddev=0.02)
         self.build_resnet_block_list=[]
-        dim = 32*4
+        dim = 128
         for i in range(9):
             Build_Resnet_Block = self.add_sublayer(
                 "generator_%d" % (i+1),
-                build_resnet_block(self.full_name(),
-                                    128))
+                build_resnet_block(dim))
             self.build_resnet_block_list.append(Build_Resnet_Block)
-        self.deconv0 = DeConv2D(self.full_name(),
+        self.deconv0 = DeConv2D(
+            num_channels=dim,
             num_filters=32*2,
             filter_size=3,
             stride=2,
@@ -86,15 +90,17 @@ class build_generator_resnet_9blocks(fluid.dygraph.Layer):
             padding=[1, 1],
             outpadding=[0, 1, 0, 1],
             )
-        self.deconv1 = DeConv2D(self.full_name(),
+        self.deconv1 = DeConv2D(
+            num_channels=32*2,
             num_filters=32,
             filter_size=3,
             stride=2,
             stddev=0.02,
             padding=[1, 1],
             outpadding=[0, 1, 0, 1])
-        self.conv3 = conv2d(self.full_name(),
-            num_filters=3,
+        self.conv3 = conv2d(
+            num_channels=32,
+            num_filters=input_channel,
             filter_size=7,
             stride=1,
             stddev=0.02,
@@ -102,6 +108,7 @@ class build_generator_resnet_9blocks(fluid.dygraph.Layer):
             relu=False,
             norm=False,
             use_bias=True)
+
     def forward(self,inputs):
         pad_input = fluid.layers.pad2d(inputs, [3, 3, 3, 3], mode="reflect")
         y = self.conv0(pad_input)
@@ -116,11 +123,13 @@ class build_generator_resnet_9blocks(fluid.dygraph.Layer):
         y = fluid.layers.tanh(y)
         return y
 
+
 class build_gen_discriminator(fluid.dygraph.Layer):
-    def __init__(self,name_scope):
-        super(build_gen_discriminator,self).__init__(name_scope)
+    def __init__(self, input_channel):
+        super(build_gen_discriminator, self).__init__()
         
-        self.conv0 = conv2d(self.full_name(),
+        self.conv0 = conv2d(
+            num_channels=input_channel,
             num_filters=64,
             filter_size=4,
             stride=2,
@@ -129,28 +138,32 @@ class build_gen_discriminator(fluid.dygraph.Layer):
             norm=False,
             use_bias=True,
             relufactor=0.2)
-        self.conv1 = conv2d(self.full_name(),
+        self.conv1 = conv2d(
+            num_channels=64,
             num_filters=128,
             filter_size=4,
             stride=2,
             stddev=0.02,
             padding=1,
             relufactor=0.2)
-        self.conv2 = conv2d(self.full_name(),
+        self.conv2 = conv2d(
+            num_channels=128,
             num_filters=256,
             filter_size=4,
             stride=2,
             stddev=0.02,
             padding=1,
             relufactor=0.2)
-        self.conv3 = conv2d(self.full_name(),
+        self.conv3 = conv2d(
+            num_channels=256,
             num_filters=512,
             filter_size=4,
             stride=1,
             stddev=0.02,
             padding=1,
             relufactor=0.2)
-        self.conv4 = conv2d(self.full_name(),
+        self.conv4 = conv2d(
+            num_channels=512,
             num_filters=1,
             filter_size=4,
             stride=1,
@@ -159,6 +172,7 @@ class build_gen_discriminator(fluid.dygraph.Layer):
             norm=False,
             relu=False,
             use_bias=True)
+
     def forward(self,inputs):
         y = self.conv0(inputs)
         y = self.conv1(y)

@@ -16,7 +16,6 @@ from __future__ import division
 from __future__ import print_function
 import paddle.fluid as fluid
 from paddle.fluid.layers.learning_rate_scheduler import _decay_step_counter
-from paddle.fluid.initializer import init_on_cpu
 import math
 import six
 
@@ -184,9 +183,9 @@ def encoder_net(images,
 
 
 def ctc_train_net(args, data_shape, num_classes):
-    L2_RATE = 0.0004
-    LR = 1.0e-3
-    MOMENTUM = 0.9
+    L2_RATE = args.l2decay
+    LR = args.lr
+    MOMENTUM = args.momentum
     learning_rate_decay = None
     regularizer = fluid.regularizer.L2Decay(L2_RATE)
 

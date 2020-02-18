@@ -1,7 +1,7 @@
 #!/bin/bash
 export FLAGS_sync_nccl_allreduce=1
-export CUDA_VISIBLE_DEVICES=2
-MODEL_PATH=./models/ernie_finetune
+export CUDA_VISIBLE_DEVICES=0
+MODEL_PATH=./pretrain_models/ernie
 TASK_DATA_PATH=./data
 CKPT_PATH=./save_models/ernie
 
@@ -18,7 +18,7 @@ train() {
         --train_set ${TASK_DATA_PATH}/train.tsv \
         --dev_set ${TASK_DATA_PATH}/dev.tsv \
         --vocab_path ${MODEL_PATH}/vocab.txt \
-        --output_dir ${CKPT_PATH} \
+        --save_checkpoint_dir ${CKPT_PATH} \
         --save_steps 500 \
         --validation_steps 50 \
         --epoch 3 \
@@ -38,7 +38,7 @@ evaluate() {
         --do_val true \
         --use_paddle_hub false \
         --batch_size 32 \
-        --init_checkpoint ${MODEL_PATH}/params \
+        --init_checkpoint ${CKPT_PATH}/step_907 \
         --test_set ${TASK_DATA_PATH}/test.tsv \
         --vocab_path ${MODEL_PATH}/vocab.txt \
         --max_seq_len 64 \
@@ -54,7 +54,7 @@ infer() {
         --do_infer true \
         --use_paddle_hub false \
         --batch_size 32 \
-        --init_checkpoint ${MODEL_PATH}/params \
+        --init_checkpoint ${CKPT_PATH}/step_907 \
         --infer_set ${TASK_DATA_PATH}/infer.tsv \
         --vocab_path ${MODEL_PATH}/vocab.txt \
         --max_seq_len 64 \

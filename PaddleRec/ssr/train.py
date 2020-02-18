@@ -68,9 +68,9 @@ def get_cards(args):
 
 def train(args):
     if args.enable_ce:
-       SEED = 102
-       fluid.default_startup_program().random_seed = SEED 
-       fluid.default_main_program().random_seed = SEED 
+        SEED = 102
+        fluid.default_startup_program().random_seed = SEED
+        fluid.default_main_program().random_seed = SEED
     use_cuda = True if args.use_cuda else False
     parallel = True if args.parallel else False
     print("use_cuda:", use_cuda, "parallel:", parallel)
@@ -87,9 +87,12 @@ def train(args):
     optimizer.minimize(avg_cost)
 
     data_list = [var.name for var in train_input_data]
-    feeder = fluid.DataFeeder(feed_list=data_list, place=place)
+    print(data_list)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
+    loader = fluid.io.DataLoader.from_generator(
+        feed_list=train_input_data, capacity=10000, iterable=True)
+    loader.set_sample_list_generator(train_reader, places=place)
     if parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=use_cuda, loss_name=avg_cost.name)
@@ -103,10 +106,10 @@ def train(args):
         print("epoch_%d start" % epoch_idx)
         t0 = time.time()
         i = 0
-        for batch_id, data in enumerate(train_reader()):
+        for batch_id, data in enumerate(loader()):
             i += 1
             loss_val, correct_val = train_exe.run(
-                feed=feeder.feed(data), fetch_list=[avg_cost.name, acc.name])
+                feed=data, fetch_list=[avg_cost.name, acc.name])
             ce_info.append(float(np.mean(correct_val)) / args.batch_size)
             if i % args.print_batch == 0:
                 logger.info(
@@ -121,7 +124,7 @@ def train(args):
         print("epoch:%d num_steps:%d time_cost(s):%f" %
               (epoch_idx, i, total_time / epoch_idx))
         save_dir = "%s/epoch_%d" % (args.model_dir, epoch_idx)
-        fluid.io.save_params(executor=exe, dirname=save_dir)
+        fluid.save(fluid.default_main_program(), model_path=save_dir)
         print("model saved in %s" % save_dir)
 
     # only for ce
@@ -136,17 +139,16 @@ def train(args):
         if args.use_cuda:
             gpu_num = device[1]
             print("kpis\teach_pass_duration_gpu%s\t%s" %
-                (gpu_num, total_time / epoch_idx))
-            print("kpis\ttrain_acc_gpu%s\t%s" %
-                (gpu_num, ce_acc))
+                  (gpu_num, total_time / epoch_idx))
+            print("kpis\ttrain_acc_gpu%s\t%s" % (gpu_num, ce_acc))
         else:
             cpu_num = device[1]
             threads_num = device[2]
             print("kpis\teach_pass_duration_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, total_time / epoch_idx))
+                  (cpu_num, threads_num, total_time / epoch_idx))
             print("kpis\ttrain_acc_cpu%s_thread%s\t%s" %
-                (cpu_num, threads_num, ce_acc))
-        
+                  (cpu_num, threads_num, ce_acc))
+
 
 def get_device(args):
     if args.use_cuda:
@@ -157,7 +159,7 @@ def get_device(args):
         threads_num = os.environ.get('NUM_THREADS', 1)
         cpu_num = os.environ.get('CPU_NUM', 1)
         return "cpu", int(cpu_num), int(threads_num)
-        
+
 
 def main():
     args = parse_args()
@@ -165,4 +167,5 @@ def main():
 
 
 if __name__ == "__main__":
+    utils.check_version()
     main()

@@ -1,3 +1,4 @@
+**该项目已被迁移至[PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg), 这个项目包含了更多的分割模型。**
 
 ## 代码结构
 ```
@@ -21,6 +22,7 @@ ICNet的主要思想是将输入图像变换为不同的分辨率，然后用不
 <strong>图 1</strong>
 </p>
 
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124368)
 
 ## 数据准备
 
