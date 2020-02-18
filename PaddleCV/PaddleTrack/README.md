@@ -14,19 +14,13 @@ PaddleTrack是基于百度深度学习框架Paddle研发的视频单目标跟踪
 主流的训练数据集有：
 - [VID](http://bvisionweb1.cs.unc.edu/ilsvrc2015/ILSVRC2015_VID.tar.gz)
 - [Microsoft COCO 2014](http://cocodataset.org/#download)
-- [Youtube BoundingBox](https://research.google.com/youtube-bb/download.html)
 - [LaSOT](https://drive.google.com/file/d/1O2DLxPP8M4Pn4-XCttCJUW3A29tDIeNa/view)
-- ...
 
 主流跟踪评估数据集有：
 - [OTB](https://paddlemodels.bj.bcebos.com/paddle_track/vot/OTB100.tar)
 - [VOT](https://paddlemodels.bj.bcebos.com/paddle_track/vot/VOT2015.tar)
-- [NFS](http://ci2cv.net/nfs/index.html)
-- [UAV](https://goo.gl/iQf0Y7)
-- TrackingNet
 - [LaSOT](https://drive.google.com/file/d/1O2DLxPP8M4Pn4-XCttCJUW3A29tDIeNa/view)
 - [GOT-10K](http://got-10k.aitestunion.com/downloads)
-- ...
 
 数据评估将主要在VOT上完成，我们提供了OTB和VOT的数据下载链接。
 
