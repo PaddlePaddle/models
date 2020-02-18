@@ -131,7 +131,7 @@ def do_save_inference_model(args):
 
     fluid.io.save_inference_model(
         args.inference_model_dir,
-        feeded_var_names=input_field_names,
+        feeded_var_names=list(input_field_names),
         target_vars=[out_ids, out_scores],
         executor=exe,
         main_program=test_prog,
