@@ -28,6 +28,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _load_state(path):
+    if os.path.exists(path + '.pdopt'):
+        # XXX another hack to ignore the optimizer state
+        tmp = tempfile.mkdtemp()
+        dst = os.path.join(tmp, os.path.basename(os.path.normpath(path)))
+        shutil.copy(path + '.pdparams', dst + '.pdparams')
+        state = fluid.io.load_program_state(dst)
+        shutil.rmtree(tmp)
+    else:
+        state = fluid.io.load_program_state(path)
+    return state
+
+
 def load_params(exe, prog, path):
     """
     Load model from the given path.
@@ -77,7 +90,6 @@ def load_and_fusebn(exe, prog, path):
     """
     logger.info('Load model and fuse batch norm if have from {}...'.format(
         path))
-
 
     if not os.path.exists(path):
         raise ValueError("Model path {} does not exists.".format(path))
