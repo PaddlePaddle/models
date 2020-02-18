@@ -57,7 +57,7 @@ class Compose:
 class Normalize(object):
     """Normalize an tensor image with mean and standard deviation.
     Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, this transform
-    will normalize each channel of the input ``torch.*Tensor`` i.e.
+    will normalize each channel of the input i.e.
     ``input[channel] = (input[channel] - mean[channel]) / std[channel]``
 
     Args:
@@ -143,25 +143,3 @@ class RandomHorizontalFlip(Transform):
                 return layers.reverse(img, 2)
             return np.fliplr(img).copy()
         return img
-
-
-class Blur(Transform):
-    """ Blur the image by applying a gaussian kernel with given sigma"""
-
-    def __init__(self, sigma):
-        if isinstance(sigma, (float, int)):
-            sigma = (sigma, sigma)
-        self.sigma = sigma
-        self.filter_size = [math.ceil(2 * s) for s in self.sigma]
-        x_coord = [torch.arange(-sz, sz + 1, dtype=torch.float32) for sz in self.filter_size]
-        self.filter = [torch.exp(-(x ** 2) / (2 * s ** 2)) for x, s in zip(x_coord, self.sigma)]
-        self.filter[0] = self.filter[0].view(1, 1, -1, 1) / self.filter[0].sum()
-        self.filter[1] = self.filter[1].view(1, 1, 1, -1) / self.filter[1].sum()
-
-    def transform(self, img):
-        if isinstance(img, torch.Tensor):
-            sz = img.shape[2:]
-            im1 = F.conv2d(img.view(-1, 1, sz[0], sz[1]), self.filter[0], padding=(self.filter_size[0], 0))
-            return F.conv2d(im1, self.filter[1], padding=(0, self.filter_size[1])).view(-1, sz[0], sz[1])
-        else:
-            raise NotImplementedError

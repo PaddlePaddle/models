@@ -162,7 +162,7 @@ python run_training.py siamfc siamfc_alexnet_vid
 cd PaddleTrack
 
 # 生成 local.py 文件
-python -c "from pytracking_pp.pysot_toolkit.environment import create_default_local_file; create_default_local_file()"
+python -c "from pytracking_pp.admin.environment import create_default_local_file; create_default_local_file()"
 
 # 用你常用的编辑器编辑 pytracking_pp/pysot_toolkit/local.py
 # 比方说，vim pytracking_pp/pysot_toolkit/local.py
