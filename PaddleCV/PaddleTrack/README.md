@@ -4,6 +4,30 @@
 
 PaddleTrack是基于百度深度学习框架Paddle研发的视频单目标跟踪（Visual Object Tracking）库。涵盖当前目标跟踪的主流模型，包括SiamFC, SiamRPN, SiamMask, ATOM。PaddleTrack旨在给开发者提供一系列基于PaddlePaddle的便捷、高效的目标跟踪深度学习算法，后续会不断的扩展模型的丰富度。
 
+## 目标跟踪库的代码目录结构
+
+```
+ltr 包含模型训练代码
+  └─ actors             输入数据，输出优化目标  
+  └─ admin              管理数据路径等
+  └─ data               多线程数据读取和预处理
+  └─ dataset            训练数据集读取
+  └─ models             模型定义
+  └─ train_settings     训练配置
+  └─ trainers           模型训练器
+  └─ run_training.py    模型训练入口程序
+
+pytracking  包含跟踪代码
+  └─ admin              管理数据路径，模型位置等
+  └─ features           特征提取
+  └─ libs               跟踪常用操作
+  └─ parameter          跟踪器参数设置
+  └─ tracker            跟踪器
+  └─ utils              画图等
+  └─ pysot-toolkit      评估数据集载入和指标计算
+  └─ eval_benchmark.py  评估跟踪器入口程序
+  └─ visualize_results_on_benchmark.ipynb  可视化跟踪结果
+```
 
 ## 开始使用
 
@@ -36,12 +60,12 @@ PaddleTrack的工作环境：
 ### 安装依赖
 
 1. 安装paddle，需要安装1.7版本的Paddle，如低于这个版本，请升级到Paddle 1.7.
-```bash 
+```bash
 pip install paddlepaddle==1.7.0
 ```
 
 2. 安装第三方库，建议使用anaconda
-```bash 
+```bash
 # (可选) 0. 强烈建议新建一个 conda 环境，在安装 anaconda 后执行
 #      conda create -n paddle1.7-py3.6 python=3.6
 #      conda activate paddle1.7-py3.6
@@ -174,10 +198,10 @@ ln -s PaddleTrack/ltr/Logs/checkpoints/ltr/bbreg/atom_res18_vid_lasot_coco $NETW
 # 在VOT2018上评测ATOM模型
 # -d VOT2018  表示使用VOT2018数据集进行评测
 # -tr bbreg.atom_res18_vid_lasot_coco 表示要评测的模型，和训练保持一致
-# -te atom.default_vot 表示加载定义超参数的文件pytracking_pp/parameter/atom/default_vot.py 
+# -te atom.default_vot 表示加载定义超参数的文件pytracking_pp/parameter/atom/default_vot.py
 # -e 40 表示使用第40个epoch的模型进行评测
 
-python eval_benchmark.py -d VOT2018 -tr bbreg.atom_res18_vid_lasot_coco -te atom.default_vot -e 40 
+python eval_benchmark.py -d VOT2018 -tr bbreg.atom_res18_vid_lasot_coco -te atom.default_vot -e 40
 ```
 
 
@@ -222,12 +246,6 @@ jupyter notebook --ip 0.0.0.0 --port 8888
 
 ##参考
 
-1. ATOM [[Paper]](https://arxiv.org/pdf/1811.07628.pdf)  [[Raw results]](https://drive.google.com/drive/folders/1MdJtsgr34iJesAgL7Y_VelP8RvQm_IG_) [[Models]](https://drive.google.com/open?id=1EsNSQr25qfXHYLqjZaVZElbGdUg-nyzd) 
+1. ATOM [[Paper]](https://arxiv.org/pdf/1811.07628.pdf)  [[Raw results]](https://drive.google.com/drive/folders/1MdJtsgr34iJesAgL7Y_VelP8RvQm_IG_) [[Models]](https://drive.google.com/open?id=1EsNSQr25qfXHYLqjZaVZElbGdUg-nyzd)
 2. [SiamFC](https://www.robots.ox.ac.uk/~luca/siamese-fc.html)
 2. [pytracking](https://github.com/visionml/pytracking)
-
-  
-
-
-
-
