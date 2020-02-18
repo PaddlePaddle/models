@@ -2,11 +2,10 @@ import os
 
 import numpy as np
 from paddle import fluid
-from paddle.fluid import dygraph
 
 from ltr_pp.models.bbreg.atom import atom_resnet50, atom_resnet18
 from ltr_pp.models.siamese.siam import siamfc_alexnet
-from pytracking_pp.pysot_toolkit.environment import env_settings
+from pytracking_pp.admin.environment import env_settings
 from pytracking_pp.features.featurebase import MultiFeatureBase
 from pytracking_pp.libs import TensorList
 from pytracking_pp.libs.paddle_utils import n2p

@@ -587,113 +587,6 @@ class GaussNewtonCG(ConjugateGradientBase):
             print('Paddle Loss: {}'.format(loss))
 
 
-class NewtonCG(ConjugateGradientBase):
-    """Newton with Conjugate Gradient. Handels general minimization problems."""
-
-    def __init__(self, problem: MinimizationProblem, variable: TensorList, init_hessian_reg=0.0, hessian_reg_factor=1.0,
-                 cg_eps=0.0, fletcher_reeves=True, standard_alpha=True, direction_forget_factor=0,
-                 debug=False, analyze=False, plotting=False, fig_num=(10, 11, 12)):
-        super().__init__(fletcher_reeves, standard_alpha, direction_forget_factor, debug or analyze or plotting)
-
-        self.problem = problem
-        self.x = variable
-
-        self.analyze_convergence = analyze
-        self.plotting = plotting
-        self.fig_num = fig_num
-
-        self.hessian_reg = init_hessian_reg
-        self.hessian_reg_factor = hessian_reg_factor
-        self.cg_eps = cg_eps
-        self.f0 = None
-        self.g = None
-
-        self.residuals = np.zeros(0)
-        self.losses = np.zeros(0)
-        self.gradient_mags = np.zeros(0)
-
-    def clear_temp(self):
-        self.f0 = None
-        self.g = None
-
-    def run(self, num_cg_iter, num_newton_iter=None):
-
-        if isinstance(num_cg_iter, int):
-            if num_cg_iter == 0:
-                return
-            if num_newton_iter is None:
-                num_newton_iter = 1
-            num_cg_iter = [num_cg_iter] * num_newton_iter
-
-        num_newton_iter = len(num_cg_iter)
-        if num_newton_iter == 0:
-            return
-
-        if self.analyze_convergence:
-            self.evaluate_CG_iteration(0)
-
-        for cg_iter in num_cg_iter:
-            self.run_newton_iter(cg_iter)
-            self.hessian_reg *= self.hessian_reg_factor
-
-        self.x.detach_()
-        self.clear_temp()
-
-        return self.losses, self.residuals
-
-    def run_newton_iter(self, num_cg_iter):
-
-        self.x.requires_grad_(True)
-
-        # Evaluate function at current estimate
-        self.f0 = self.problem(self.x)
-
-        if self.debug and not self.analyze_convergence:
-            self.losses = torch.cat((self.losses, self.f0.detach().cpu().view(-1)))
-
-        # Gradient of loss
-        self.g = TensorList(torch.autograd.grad(self.f0, self.x, create_graph=True))
-
-        # Get the right hand side
-        self.b = - self.g.detach()
-
-        # Run CG
-        delta_x, res = self.run_CG(num_cg_iter, eps=self.cg_eps)
-
-        self.x.detach_()
-        self.x += delta_x
-
-        if self.debug:
-            self.residuals = torch.cat((self.residuals, res))
-
-    def A(self, x):
-        return TensorList(torch.autograd.grad(self.g, self.x, x, retain_graph=True)) + self.hessian_reg * x
-
-    def ip(self, a, b):
-        # Implements the inner product
-        return self.problem.ip_input(a, b)
-
-    def M1(self, x):
-        return self.problem.M1(x)
-
-    def M2(self, x):
-        return self.problem.M2(x)
-
-    def evaluate_CG_iteration(self, delta_x):
-        if self.analyze_convergence:
-            x = (self.x + delta_x).detach()
-            x.requires_grad_(True)
-
-            # compute loss and gradient
-            loss = self.problem(x)
-            grad = TensorList(torch.autograd.grad(loss, x))
-
-            # store in the vectors
-            self.losses = torch.cat((self.losses, loss.detach().cpu().view(-1)))
-            self.gradient_mags = torch.cat(
-                (self.gradient_mags, sum(grad.view(-1) @ grad.view(-1)).cpu().sqrt().detach().view(-1)))
-
-
 class GradientDescentL2:
     """Gradient descent with momentum for L2 problems."""
 
@@ -833,19 +726,6 @@ class GradientDescent:
                 lossvec[i] = loss.numpy()
                 grad_mags[i] = self.problem.ip_input(grad, grad).apply(layers.sqrt).numpy()
 
-        # if self.debug:
-        #     self.x.requires_grad_(True)
-        #     loss = self.problem(self.x)
-        #     grad = TensorList(torch.autograd.grad(loss, self.x))
-        #     lossvec[-1] = loss.item()
-        #     grad_mags[-1] = sum(grad.view(-1) @ grad.view(-1)).cpu().sqrt().item()
-        #     self.losses = torch.cat((self.losses, lossvec))
-        #     self.gradient_mags = torch.cat((self.gradient_mags, grad_mags))
-        #     if self.plotting:
-        #         plot_graph(self.losses, self.fig_num[0], title='Loss')
-        #         plot_graph(self.gradient_mags, self.fig_num[1], title='Gradient magnitude')
-
-        # self.x.detach_()
         self.problem.training_samples_stack = None
 
         self.x = self.x.detach()

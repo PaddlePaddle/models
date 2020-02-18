@@ -155,11 +155,6 @@ class Blur(Transform):
         self.sigma = sigma
         self.filter_size = [math.ceil(2 * s) for s in self.sigma]
 
-        # x_coord = [np.arange(-sz, sz + 1, 1, dtype='float32') for sz in self.filter_size]
-        # self.filter = [np.exp(0 - (x * x) / (2 * s ** 2)) for x, s in zip(x_coord, self.sigma)]
-        # self.filter[0] = np.reshape(self.filter[0], [1, 1, -1, 1]) / np.sum(self.filter[0])
-        # self.filter[1] = np.reshape(self.filter[1], [1, 1, 1, -1]) / np.sum(self.filter[1])
-
         x_coord = [np.arange(-sz, sz + 1, 1, dtype='float32') for sz in self.filter_size]
         self.filter_np = [np.exp(0 - (x * x) / (2 * s ** 2)) for x, s in zip(x_coord, self.sigma)]
         self.filter_np[0] = np.reshape(self.filter_np[0], [1, 1, -1, 1]) / np.sum(self.filter_np[0])

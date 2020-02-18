@@ -65,10 +65,6 @@ def sample_target(im, target_bb, search_area_factor, output_sz=None,
     elif border_type == 'meanpad':
         avg_chans = np.array([np.mean(im[:, :, 0]), np.mean(im[:, :, 1]), np.mean(im[:, :, 2])])
         im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_CONSTANT, value=avg_chans)
-        # avg_chans = np.array([[[np.mean(im[:, :, 0]), np.mean(im[:, :, 1]), np.mean(im[:, :, 2])]]])
-        # im_crop = im_crop - avg_chans
-        # im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_CONSTANT)
-        # im_crop_padded = im_crop_padded + avg_chans
     else:
         raise NotImplementedError
 

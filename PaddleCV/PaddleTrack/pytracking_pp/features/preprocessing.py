@@ -23,7 +23,6 @@ def sample_patch(im: np.ndarray, pos: np.ndarray, sample_sz: np.ndarray, output_
     """
 
     # copy and convert
-    # posl = np.round(pos).astype('long')  # TODO: maybe we should use round
     posl = pos.astype('long')
 
     # Compute pre-downsampling factor
