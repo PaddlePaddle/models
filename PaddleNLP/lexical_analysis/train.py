@@ -151,8 +151,9 @@ def do_train(args):
             # save checkpoints
             if step % args.save_steps == 0 and step != 0:
                 save_path = os.path.join(args.model_save_dir,
-                                         "step_" + str(step))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                                         "step_" + str(step),
+                                         "checkpoint")
+                fluid.save(train_program, save_path)
             step += 1
 
     if args.enable_ce:

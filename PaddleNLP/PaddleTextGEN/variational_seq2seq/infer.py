@@ -88,7 +88,8 @@ def infer():
 
     dir_name = args.reload_model
     print("dir name", dir_name)
-    fluid.io.load_params(exe, dir_name)
+    dir_name = os.path.join(dir_name, "checkpoint")
+    fluid.load(main_program, dir_name, exe)
     vocab, tar_id2vocab = get_vocab(args.dataset_prefix)
     infer_output = np.ones((batch_size, 1), dtype='int64') * BOS_ID
 
