@@ -1,6 +1,5 @@
 import os
 import glob
-from ltr.admin import loading
 from paddle import fluid
 from paddle.fluid import dygraph
 import pickle
