@@ -1,8 +1,9 @@
 ﻿# PaddleTrack 单目标跟踪框架
 
 ## 目标跟踪介绍
+PaddleTrack 是基于百度深度学习框架Paddle研发的视频单目标跟踪（Visual Object Tracking, VOT）库, 整体框架参考 [pytracking](https://github.com/visionml/pytracking)，其优秀的设计使得我们能够方便地将其他跟踪器如SiamFC，SiamRPN，SiamMask等融合到一个框架中，方便后续统一的实验和比较。
 
-PaddleTrack是基于百度深度学习框架Paddle研发的视频单目标跟踪（Visual Object Tracking）库。涵盖当前目标跟踪的主流模型，包括SiamFC, SiamRPN, SiamMask, ATOM。PaddleTrack旨在给开发者提供一系列基于PaddlePaddle的便捷、高效的目标跟踪深度学习算法，后续会不断的扩展模型的丰富度。
+当前PaddleTrack涵盖当前目标跟踪的主流模型，包括SiamFC, SiamRPN, SiamMask, ATOM。PaddleTrack旨在给开发者提供一系列基于PaddlePaddle的便捷、高效的目标跟踪深度学习算法，后续会不断的扩展模型的丰富度。
 
 ## 目标跟踪库的代码目录结构
 
@@ -94,10 +95,6 @@ pip install python-prctl
     └─ atom
         └─ atom_resnet18.pdparams
         └─ atom_resnet50.pdparams
-        ...
-    └─ atom-torch
-        └─ atom_default.pth
-        ...
     └─ backbone
         └─ ResNet18.pdparams
         └─ ResNet50.pdparams
@@ -141,10 +138,10 @@ python -c "from ltr_pp.admin.environment import create_default_local_file; creat
     self.coco_dir = '/Datasets/train2014/'
     self.imagenet_dir = '/Datasets/ILSVRC2015/'
 ```
-另外，训练ATOM时，需要准备got10k和lasot的数据集划分文件，方式如下：
+另外，训练ATOM时，需要准备got10k和lasot的数据集划分文件, ，方式如下：
 ```bash
 cd ltr/data_specs/
-wget ***/got10k_lasot_split.tar
+wget https://paddlemodels.cdn.bcebos.com/paddle_track/vot/got10k_lasot_split.tar
 tar xvf got10k_lasot_split.tar
 ```
 
@@ -244,8 +241,46 @@ jupyter notebook --ip 0.0.0.0 --port 8888
 |VOT2015| SiamFC | Alexnet |  ACC & Failure：0.5335 & 84  | 0.5415 & 84 | [model]() |
 |VOT2018| ATOM | Res18 |  EAO: 0.401 | 0.399 | [model]() |
 
-##参考
+##引用与参考
+----------------
 
-1. ATOM [[Paper]](https://arxiv.org/pdf/1811.07628.pdf)  [[Raw results]](https://drive.google.com/drive/folders/1MdJtsgr34iJesAgL7Y_VelP8RvQm_IG_) [[Models]](https://drive.google.com/open?id=1EsNSQr25qfXHYLqjZaVZElbGdUg-nyzd)
-2. [SiamFC](https://www.robots.ox.ac.uk/~luca/siamese-fc.html)
-2. [pytracking](https://github.com/visionml/pytracking)
+SiamFC **[[Paper]](https://arxiv.org/pdf/1811.07628.pdf) [[Code]](https://www.robots.ox.ac.uk/~luca/siamese-fc.html)**
+
+    @inproceedings{bertinetto2016fully,
+      title={Fully-convolutional siamese networks for object tracking},
+      author={Bertinetto, Luca and Valmadre, Jack and Henriques, Joao F and Vedaldi, Andrea and Torr, Philip HS},
+      booktitle={European conference on computer vision},
+      pages={850--865},
+      year={2016},
+      organization={Springer}
+    }
+
+ATOM **[[Paper]](https://arxiv.org/pdf/1811.07628.pdf)  [[Raw results]](https://drive.google.com/drive/folders/1MdJtsgr34iJesAgL7Y_VelP8RvQm_IG_) [[Models]](https://drive.google.com/open?id=1EsNSQr25qfXHYLqjZaVZElbGdUg-nyzd)  [[Training Code]](https://github.com/visionml/pytracking/blob/master/ltr/README.md#ATOM)  [[Tracker Code]](https://github.com/visionml/pytracking/blob/master/pytracking/README.md#ATOM)**  
+
+    @inproceedings{danelljan2019atom,
+      title={Atom: Accurate tracking by overlap maximization},
+      author={Danelljan, Martin and Bhat, Goutam and Khan, Fahad Shahbaz and Felsberg, Michael},
+      booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+      pages={4660--4669},
+      year={2019}
+    }
+
+DiMP **[[Paper]](https://arxiv.org/pdf/1904.07220v1.pdf)  [[Raw results]](https://drive.google.com/drive/folders/15mpUAJmzxemnOC6gmvMTCDJ-0v6hxJ7y) [[Models]](https://drive.google.com/open?id=1YEJySjhFokyQ6zgQg6vFAnzEFi1Onq7G)  [[Training Code]](https://github.com/visionml/pytracking/blob/master/ltr/README.md#DiMP)  [[Tracker Code]](https://github.com/visionml/pytracking/blob/master/pytracking/README.md#DiMP)**  
+
+    @inproceedings{bhat2019learning,
+      title={Learning discriminative model prediction for tracking},
+      author={Bhat, Goutam and Danelljan, Martin and Gool, Luc Van and Timofte, Radu},
+      booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+      pages={6182--6191},
+      year={2019}
+    }
+
+ECO **[[Paper]](https://arxiv.org/pdf/1611.09224.pdf)  [[Models]](https://drive.google.com/open?id=1aWC4waLv_te-BULoy0k-n_zS-ONms21S)  [[Tracker Code]](https://github.com/visionml/pytracking/blob/master/pytracking/README.md#ECO)**  
+
+    @inproceedings{danelljan2017eco,
+      title={Eco: Efficient convolution operators for tracking},
+      author={Danelljan, Martin and Bhat, Goutam and Shahbaz Khan, Fahad and Felsberg, Michael},
+      booktitle={Proceedings of the IEEE conference on computer vision and pattern recognition},
+      pages={6638--6646},
+      year={2017}
+    }
