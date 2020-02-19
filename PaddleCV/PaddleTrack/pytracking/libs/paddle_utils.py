@@ -10,7 +10,8 @@ PTensor = Variable
 def broadcast_op(a, b, op='mul'):
     a_expand_factors = []
     b_expand_factors = []
-    assert len(a.shape) == len(b.shape), 'a.shape = {} while b.shape = {}'.format(a.shape, b.shape)
+    assert len(a.shape) == len(
+        b.shape), 'a.shape = {} while b.shape = {}'.format(a.shape, b.shape)
     for a_s, b_s in zip(a.shape, b.shape):
         if a_s != b_s:
             if a_s == 1:
@@ -34,7 +35,8 @@ def broadcast_op(a, b, op='mul'):
         op = layers.elementwise_div
     else:
         raise NotImplementedError
-    return op(layers.expand(a, a_expand_factors), layers.expand(b, b_expand_factors))
+    return op(
+        layers.expand(a, a_expand_factors), layers.expand(b, b_expand_factors))
 
 
 def paddle_prod(x):
@@ -112,7 +114,7 @@ def crop(x, crops):
     return x[tuple(slices)]
 
 
-def pad_like_torch(x, pads, mode='constant'):
+def _padding(x, pads, mode='constant'):
     return_tensor = False
     if isinstance(x, PTensor):
         x = x.numpy()
@@ -121,7 +123,7 @@ def pad_like_torch(x, pads, mode='constant'):
     assert len(pads) % 2 == 0
     pads = list(pads) + [0] * (len(x.shape) * 2 - len(pads))
 
-    # convert pytorch pad format to numpy pad format
+    # convert to numpy pad format
     pads_np, pad_per_dim = [], []
     for i, p in enumerate(pads):
         if i % 2 == 0:
@@ -149,7 +151,8 @@ def pad_like_torch(x, pads, mode='constant'):
 
     # padding
     # if x is an image
-    if len(x.shape) == 3 and pads_np_pos[-1][0] == 0 and pads_np_pos[-1][1] == 0:
+    if len(x.shape) == 3 and pads_np_pos[-1][0] == 0 and pads_np_pos[-1][
+            1] == 0:
         if mode == 'replicate':
             pad_mode = cv.BORDER_REPLICATE
         else:
@@ -208,7 +211,8 @@ def dropout2d(input, prob, is_train=False):
         return input
     channels = input.shape[1]
     keep_prob = 1.0 - prob
-    random_tensor = keep_prob + layers.uniform_random_batch_size_like(input, [-1, channels, 1, 1], min=0., max=1.)
+    random_tensor = keep_prob + layers.uniform_random_batch_size_like(
+        input, [-1, channels, 1, 1], min=0., max=1.)
     binary_tensor = layers.floor(random_tensor)
     output = input / keep_prob * binary_tensor
     return output

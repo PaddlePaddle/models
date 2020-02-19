@@ -10,7 +10,10 @@ class BaseProcessing:
      through the network. For example, it can be used to crop a search region around the object, apply various data
      augmentations, etc."""
 
-    def __init__(self, transform=transforms.ToArray(), train_transform=None, test_transform=None,
+    def __init__(self,
+                 transform=transforms.ToArray(),
+                 train_transform=None,
+                 test_transform=None,
                  joint_transform=None):
         """
         args:
@@ -23,17 +26,27 @@ class BaseProcessing:
             joint_transform - The set of transformations to be applied 'jointly' on the train and test images.  For
                                 example, it can be used to convert both test and train images to grayscale.
         """
-        self.transform = {'train': transform if train_transform is None else train_transform,
-                          'test': transform if test_transform is None else test_transform,
-                          'joint': joint_transform}
+        self.transform = {
+            'train': transform if train_transform is None else train_transform,
+            'test': transform if test_transform is None else test_transform,
+            'joint': joint_transform
+        }
 
     def __call__(self, data: TensorDict):
         raise NotImplementedError
 
 
 class SiamFCProcessing(BaseProcessing):
-    def __init__(self, search_area_factor, output_sz, center_jitter_factor, scale_jitter_factor,
-                 mode='pair', scale_type='context', border_type='meanpad', *args, **kwargs):
+    def __init__(self,
+                 search_area_factor,
+                 output_sz,
+                 center_jitter_factor,
+                 scale_jitter_factor,
+                 mode='pair',
+                 scale_type='context',
+                 border_type='meanpad',
+                 *args,
+                 **kwargs):
         super().__init__(*args, **kwargs)
         self.search_area_factor = search_area_factor
         self.output_sz = output_sz
@@ -44,11 +57,15 @@ class SiamFCProcessing(BaseProcessing):
         self.border_type = border_type
 
     def _get_jittered_box(self, box, mode, rng):
-        jittered_size = box[2:4] * np.exp(rng.randn(2) * self.scale_jitter_factor[mode])
-        max_offset = (np.sqrt(jittered_size.prod()) * self.center_jitter_factor[mode])
-        jittered_center = box[0:2] + 0.5 * box[2:4] + max_offset * (rng.rand(2) - 0.5)
+        jittered_size = box[2:4] * np.exp(
+            rng.randn(2) * self.scale_jitter_factor[mode])
+        max_offset = (np.sqrt(jittered_size.prod()) *
+                      self.center_jitter_factor[mode])
+        jittered_center = box[0:2] + 0.5 * box[2:4] + max_offset * (rng.rand(2)
+                                                                    - 0.5)
 
-        return np.concatenate((jittered_center - 0.5 * jittered_size, jittered_size), axis=0)
+        return np.concatenate(
+            (jittered_center - 0.5 * jittered_size, jittered_size), axis=0)
 
     def __call__(self, data: TensorDict, rng=None):
         # Apply joint transforms
@@ -65,17 +82,20 @@ class SiamFCProcessing(BaseProcessing):
                 "In pair mode, num train/test frames must be 1"
 
             # Add a uniform noise to the center pos
-            jittered_anno = [self._get_jittered_box(a, s, rng) for a in data[s + '_anno']]
+            jittered_anno = [
+                self._get_jittered_box(a, s, rng) for a in data[s + '_anno']
+            ]
 
             # Crop image region centered at jittered_anno box
             try:
-                crops, boxes = prutils.jittered_center_crop(data[s + '_images'],
-                                                            jittered_anno,
-                                                            data[s + '_anno'],
-                                                            self.search_area_factor[s],
-                                                            self.output_sz[s],
-                                                            scale_type=self.scale_type,
-                                                            border_type=self.border_type)
+                crops, boxes = prutils.jittered_center_crop(
+                    data[s + '_images'],
+                    jittered_anno,
+                    data[s + '_anno'],
+                    self.search_area_factor[s],
+                    self.output_sz[s],
+                    scale_type=self.scale_type,
+                    border_type=self.border_type)
             except Exception as e:
                 print('{}, anno: {}'.format(data['dataset'], data[s + '_anno']))
                 raise e
@@ -103,8 +123,15 @@ class ATOMProcessing(BaseProcessing):
 
     """
 
-    def __init__(self, search_area_factor, output_sz, center_jitter_factor, scale_jitter_factor, proposal_params,
-                 mode='pair', *args, **kwargs):
+    def __init__(self,
+                 search_area_factor,
+                 output_sz,
+                 center_jitter_factor,
+                 scale_jitter_factor,
+                 proposal_params,
+                 mode='pair',
+                 *args,
+                 **kwargs):
         """
         args:
             search_area_factor - The size of the search region  relative to the target size.
@@ -132,14 +159,18 @@ class ATOMProcessing(BaseProcessing):
             mode - string 'train' or 'test' indicating train or test data
 
         returns:
-            torch.Tensor - jittered box
+            Variable - jittered box
         """
 
-        jittered_size = box[2:4] * np.exp(rng.randn(2) * self.scale_jitter_factor[mode])
-        max_offset = (np.sqrt(jittered_size.prod()) * self.center_jitter_factor[mode])
-        jittered_center = box[0:2] + 0.5 * box[2:4] + max_offset * (rng.rand(2) - 0.5)
+        jittered_size = box[2:4] * np.exp(
+            rng.randn(2) * self.scale_jitter_factor[mode])
+        max_offset = (np.sqrt(jittered_size.prod()) *
+                      self.center_jitter_factor[mode])
+        jittered_center = box[0:2] + 0.5 * box[2:4] + max_offset * (rng.rand(2)
+                                                                    - 0.5)
 
-        return np.concatenate((jittered_center - 0.5 * jittered_size, jittered_size), axis=0)
+        return np.concatenate(
+            (jittered_center - 0.5 * jittered_size, jittered_size), axis=0)
 
     def _generate_proposals(self, box, rng):
         """ Generates proposals by adding noise to the input box
@@ -147,8 +178,8 @@ class ATOMProcessing(BaseProcessing):
             box - input box
 
         returns:
-            torch.Tensor - Array of shape (num_proposals, 4) containing proposals
-            torch.Tensor - Array of shape (num_proposals,) containing IoU overlap of each proposal with the input box. The
+            array - Array of shape (num_proposals, 4) containing proposals
+            array - Array of shape (num_proposals,) containing IoU overlap of each proposal with the input box. The
                         IoU is mapped to [-1, 1]
         """
         # Generate proposals
@@ -157,10 +188,11 @@ class ATOMProcessing(BaseProcessing):
         gt_iou = np.zeros(num_proposals)
 
         for i in range(num_proposals):
-            proposals[i, :], gt_iou[i] = prutils.perturb_box(box,
-                                                             min_iou=self.proposal_params['min_iou'],
-                                                             sigma_factor=self.proposal_params['sigma_factor'],
-                                                             rng=rng)
+            proposals[i, :], gt_iou[i] = prutils.perturb_box(
+                box,
+                min_iou=self.proposal_params['min_iou'],
+                sigma_factor=self.proposal_params['sigma_factor'],
+                rng=rng)
 
         # Map to [-1, 1]
         gt_iou = gt_iou * 2 - 1
@@ -198,14 +230,15 @@ class ATOMProcessing(BaseProcessing):
                 "In pair mode, num train/test frames must be 1"
 
             # Add a uniform noise to the center pos
-            jittered_anno = [self._get_jittered_box(a, s, rng) for a in data[s + '_anno']]
+            jittered_anno = [
+                self._get_jittered_box(a, s, rng) for a in data[s + '_anno']
+            ]
 
             # Crop image region centered at jittered_anno box
             try:
-                crops, boxes = prutils.jittered_center_crop(data[s + '_images'],
-                                                            jittered_anno,
-                                                            data[s + '_anno'],
-                                                            self.search_area_factor, self.output_sz)
+                crops, boxes = prutils.jittered_center_crop(
+                    data[s + '_images'], jittered_anno, data[s + '_anno'],
+                    self.search_area_factor, self.output_sz)
             except Exception as e:
                 print('{}, anno: {}'.format(data['dataset'], data[s + '_anno']))
                 raise e
@@ -214,7 +247,8 @@ class ATOMProcessing(BaseProcessing):
             data[s + '_anno'] = boxes
 
         # Generate proposals
-        frame2_proposals, gt_iou = zip(*[self._generate_proposals(a, rng) for a in data['test_anno']])
+        frame2_proposals, gt_iou = zip(
+            * [self._generate_proposals(a, rng) for a in data['test_anno']])
 
         data['test_proposals'] = list(frame2_proposals)
         data['proposal_iou'] = list(gt_iou)

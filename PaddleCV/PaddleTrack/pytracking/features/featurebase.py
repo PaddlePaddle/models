@@ -17,7 +17,12 @@ class FeatureBase:
         use_for_gray: Use this feature for grayscale images.
     """
 
-    def __init__(self, fparams=None, pool_stride=None, output_size=None, normalize_power=None, use_for_color=True,
+    def __init__(self,
+                 fparams=None,
+                 pool_stride=None,
+                 output_size=None,
+                 normalize_power=None,
+                 use_for_color=True,
                  use_for_gray=True):
         self.fparams = fparams
         self.pool_stride = 1 if pool_stride is None else pool_stride
@@ -50,7 +55,7 @@ class FeatureBase:
     def get_feature(self, im: np.ndarray):
         """Get the feature. Generally, call this function.
         args:
-            im: image patch as a torch.Tensor.
+            im: image patch
         """
 
         # Return empty tensor if it should not be used
@@ -68,14 +73,23 @@ class FeatureBase:
             if self.output_size is not None:
                 feat = layers.adaptive_pool2d(feat, self.output_size, 'avg')
             elif self.pool_stride != 1:
-                feat = layers.pool2d(feat, self.pool_stride, pool_stride=self.pool_stride, pool_type='avg')
+                feat = layers.pool2d(
+                    feat,
+                    self.pool_stride,
+                    pool_stride=self.pool_stride,
+                    pool_type='avg')
 
             # Normalize
             if self.normalize_power is not None:
-                feat /= (layers.reduce_sum(
-                    layers.reshape(layers.abs(feat), [feat.shape[0], 1, 1, -1]) ** self.normalize_power, dim=3,
-                    keep_dim=True) /
-                         (feat.shape[1] * feat.shape[2] * feat.shape[3]) + 1e-10) ** (1 / self.normalize_power)
+                feat /= (
+                    layers.reduce_sum(
+                        layers.reshape(
+                            layers.abs(feat), [feat.shape[0], 1, 1, -1])**
+                        self.normalize_power,
+                        dim=3,
+                        keep_dim=True) /
+                    (feat.shape[1] * feat.shape[2] * feat.shape[3]) + 1e-10)**(
+                        1 / self.normalize_power)
 
             feat = feat.numpy()
         return feat
@@ -90,13 +104,15 @@ class MultiFeatureBase(FeatureBase):
         if self.output_size is None:
             return TensorList([floordiv(im_sz, s) for s in self.stride()])
         if isinstance(im_sz, PTensor):
-            return TensorList([floordiv(im_sz, s) if sz is None else np.array([sz[0], sz[1]]) for sz, s in
-                               zip(self.output_size, self.stride())])
+            return TensorList([
+                floordiv(im_sz, s) if sz is None else np.array([sz[0], sz[1]])
+                for sz, s in zip(self.output_size, self.stride())
+            ])
 
     def get_feature(self, im: np.ndarray):
         """Get the feature. Generally, call this function.
         args:
-            im: image patch as a torch.Tensor.
+            im: image patch
         """
 
         # Return empty tensor if it should not be used
@@ -106,7 +122,8 @@ class MultiFeatureBase(FeatureBase):
 
         feat_list = self.extract(im)
 
-        output_sz = [None] * len(feat_list) if self.output_size is None else self.output_size
+        output_sz = [None] * len(
+            feat_list) if self.output_size is None else self.output_size
 
         # Pool/downsample
         with fluid.dygraph.guard():
@@ -114,18 +131,24 @@ class MultiFeatureBase(FeatureBase):
 
             for i, (sz, s) in enumerate(zip(output_sz, self.pool_stride)):
                 if sz is not None:
-                    feat_list[i] = layers.adaptive_pool2d(feat_list[i], sz, pool_type='avg')
+                    feat_list[i] = layers.adaptive_pool2d(
+                        feat_list[i], sz, pool_type='avg')
                 elif s != 1:
-                    feat_list[i] = layers.pool2d(feat_list[i], s, pool_stride=s, pool_type='avg')
+                    feat_list[i] = layers.pool2d(
+                        feat_list[i], s, pool_stride=s, pool_type='avg')
 
             # Normalize
             if self.normalize_power is not None:
                 new_feat_list = []
                 for feat in feat_list:
                     norm = (layers.reduce_sum(
-                        layers.reshape(layers.abs(feat), [feat.shape[0], 1, 1, -1]) ** self.normalize_power, dim=3,
+                        layers.reshape(
+                            layers.abs(feat), [feat.shape[0], 1, 1, -1])**
+                        self.normalize_power,
+                        dim=3,
                         keep_dim=True) /
-                             (feat.shape[1] * feat.shape[2] * feat.shape[3]) + 1e-10) ** (1 / self.normalize_power)
+                            (feat.shape[1] * feat.shape[2] * feat.shape[3]
+                             ) + 1e-10)**(1 / self.normalize_power)
                     feat = broadcast_op(feat, norm, 'div')
                     new_feat_list.append(feat)
                 feat_list = new_feat_list

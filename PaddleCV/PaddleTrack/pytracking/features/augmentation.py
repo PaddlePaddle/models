@@ -7,7 +7,7 @@ import cv2 as cv
 
 from pytracking.features.preprocessing import numpy_to_paddle, paddle_to_numpy
 from pytracking.libs.Fconv2d import Fconv2d
-from pytracking.libs.paddle_utils import PTensor, pad_like_torch, n2p
+from pytracking.libs.paddle_utils import PTensor, _padding, n2p
 
 
 class Transform:
@@ -40,9 +40,14 @@ class Transform:
         pad_bottom = math.ceil(pad_h) - shift[0]
 
         if isinstance(image, PTensor):
-            return pad_like_torch(image, (pad_left, pad_right, pad_top, pad_bottom), mode='replicate')
+            return _padding(
+                image, (pad_left, pad_right, pad_top, pad_bottom),
+                mode='replicate')
         else:
-            return pad_like_torch(image, (0, 0, pad_left, pad_right, pad_top, pad_bottom), mode='replicate')
+            return _padding(
+                image, (0, 0, pad_left, pad_right, pad_top, pad_bottom),
+                mode='replicate')
+
 
 class Identity(Transform):
     """Identity transformation."""
@@ -76,7 +81,8 @@ class Translation(Transform):
 
     def __init__(self, translation, output_sz=None, shift=None):
         super().__init__(output_sz, shift)
-        self.shift = (self.shift[0] + translation[0], self.shift[1] + translation[1])
+        self.shift = (self.shift[0] + translation[0],
+                      self.shift[1] + translation[1])
 
     def __call__(self, image):
         return self.crop_to_output(image)
@@ -102,10 +108,13 @@ class Scale(Transform):
         w_new += (w_new - w_orig) % 2
 
         if isinstance(image, PTensor):
-            image_resized = layers.resize_bilinear(image, [h_new, w_new], align_corners=False)
+            image_resized = layers.resize_bilinear(
+                image, [h_new, w_new], align_corners=False)
         else:
-            image_resized = cv.resize(image, (w_new, h_new), interpolation=cv.INTER_LINEAR)
+            image_resized = cv.resize(
+                image, (w_new, h_new), interpolation=cv.INTER_LINEAR)
         return self.crop_to_output(image_resized)
+
 
 class Affine(Transform):
     """Affine transformation."""
@@ -116,13 +125,20 @@ class Affine(Transform):
 
     def __call__(self, image, crop=True):
         if isinstance(image, PTensor):
-            return self.crop_to_output(numpy_to_paddle(self(paddle_to_numpy(image), crop=False)))
+            return self.crop_to_output(
+                numpy_to_paddle(self(
+                    paddle_to_numpy(image), crop=False)))
         else:
-            warp = cv.warpAffine(image, self.transform_matrix, image.shape[1::-1], borderMode=cv.BORDER_REPLICATE)
+            warp = cv.warpAffine(
+                image,
+                self.transform_matrix,
+                image.shape[1::-1],
+                borderMode=cv.BORDER_REPLICATE)
             if crop:
                 return self.crop_to_output(warp)
             else:
                 return warp
+
 
 class Rotate(Transform):
     """Rotate with given angle."""
@@ -133,17 +149,21 @@ class Rotate(Transform):
 
     def __call__(self, image, crop=True):
         if isinstance(image, PTensor):
-            return self.crop_to_output(numpy_to_paddle(self(paddle_to_numpy(image), crop=False)))
+            return self.crop_to_output(
+                numpy_to_paddle(self(
+                    paddle_to_numpy(image), crop=False)))
         else:
             c = (np.expand_dims(np.array(image.shape[:2]), 1) - 1) / 2
             R = np.array([[math.cos(self.angle), math.sin(self.angle)],
                           [-math.sin(self.angle), math.cos(self.angle)]])
-            H = np.concatenate([R, c - R @ c], 1)
-            warp = cv.warpAffine(image, H, image.shape[1::-1], borderMode=cv.BORDER_REPLICATE)
+            H = np.concatenate([R, c - R @c], 1)
+            warp = cv.warpAffine(
+                image, H, image.shape[1::-1], borderMode=cv.BORDER_REPLICATE)
             if crop:
                 return self.crop_to_output(warp)
             else:
                 return warp
+
 
 class Blur(Transform):
     """Blur with given sigma (can be axis dependent)."""
@@ -155,18 +175,31 @@ class Blur(Transform):
         self.sigma = sigma
         self.filter_size = [math.ceil(2 * s) for s in self.sigma]
 
-        x_coord = [np.arange(-sz, sz + 1, 1, dtype='float32') for sz in self.filter_size]
-        self.filter_np = [np.exp(0 - (x * x) / (2 * s ** 2)) for x, s in zip(x_coord, self.sigma)]
-        self.filter_np[0] = np.reshape(self.filter_np[0], [1, 1, -1, 1]) / np.sum(self.filter_np[0])
-        self.filter_np[1] = np.reshape(self.filter_np[1], [1, 1, 1, -1]) / np.sum(self.filter_np[1])
+        x_coord = [
+            np.arange(
+                -sz, sz + 1, 1, dtype='float32') for sz in self.filter_size
+        ]
+        self.filter_np = [
+            np.exp(0 - (x * x) / (2 * s**2))
+            for x, s in zip(x_coord, self.sigma)
+        ]
+        self.filter_np[0] = np.reshape(
+            self.filter_np[0], [1, 1, -1, 1]) / np.sum(self.filter_np[0])
+        self.filter_np[1] = np.reshape(
+            self.filter_np[1], [1, 1, 1, -1]) / np.sum(self.filter_np[1])
 
     def __call__(self, image):
         if isinstance(image, PTensor):
             sz = image.shape[2:]
             filter = [n2p(f) for f in self.filter_np]
-            im1 = Fconv2d(layers.reshape(image, [-1, 1, sz[0], sz[1]]), filter[0],
-                          padding=(self.filter_size[0], 0))
+            im1 = Fconv2d(
+                layers.reshape(image, [-1, 1, sz[0], sz[1]]),
+                filter[0],
+                padding=(self.filter_size[0], 0))
             return self.crop_to_output(
-                layers.reshape(Fconv2d(im1, filter[1], padding=(0, self.filter_size[1])), [1, -1, sz[0], sz[1]]))
+                layers.reshape(
+                    Fconv2d(
+                        im1, filter[1], padding=(0, self.filter_size[1])),
+                    [1, -1, sz[0], sz[1]]))
         else:
             return paddle_to_numpy(self(numpy_to_paddle(image)))

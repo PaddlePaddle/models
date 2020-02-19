@@ -2,7 +2,7 @@ import numpy as np
 
 from pytracking.libs import complex, TensorList
 from pytracking.libs.tensorlist import tensor_operation
-from pytracking.libs.paddle_utils import pad_like_torch
+from pytracking.libs.paddle_utils import _padding
 
 
 @tensor_operation
@@ -24,6 +24,7 @@ def cfft2(a):
     out = rfftshift2(np.fft.rfft2(a))
     return np.stack([out.real, out.imag], axis=-1)
 
+
 @tensor_operation
 def cifft2(a, signal_sizes=None):
     """Do inverse FFT corresponding to cfft2."""
@@ -32,7 +33,7 @@ def cifft2(a, signal_sizes=None):
 
 
 @tensor_operation
-def sample_fs(a: np.array, grid_sz: np.array = None, rescale=True):
+def sample_fs(a: np.array, grid_sz: np.array=None, rescale=True):
     """Samples the Fourier series."""
 
     # Size of the fourier series
@@ -45,7 +46,9 @@ def sample_fs(a: np.array, grid_sz: np.array = None, rescale=True):
         return cifft2(a)
 
     if sz[0] > grid_sz[0] or sz[1] > grid_sz[1]:
-        raise ValueError("Only grid sizes that are smaller than the Fourier series size are supported.")
+        raise ValueError(
+            "Only grid sizes that are smaller than the Fourier series size are supported."
+        )
 
     tot_pad = (grid_sz - sz).tolist()
     is_even = [s % 2 == 0 for s in sz]
@@ -56,17 +59,25 @@ def sample_fs(a: np.array, grid_sz: np.array = None, rescale=True):
     pad_right = int((tot_pad[1] + 1) / 2)
 
     if rescale:
-        return np.prod(grid_sz) * cifft2(pad_like_torch(a, (0, 0, 0, pad_right, pad_top, pad_bottom)),
-                                              signal_sizes=grid_sz.astype('long').tolist())
+        return np.prod(grid_sz) * cifft2(
+            _padding(a, (0, 0, 0, pad_right, pad_top, pad_bottom)),
+            signal_sizes=grid_sz.astype('long').tolist())
     else:
-        return cifft2(pad_like_torch(a, (0, 0, 0, pad_right, pad_top, pad_bottom)), signal_sizes=grid_sz.astype('long').tolist())
+        return cifft2(
+            _padding(a, (0, 0, 0, pad_right, pad_top, pad_bottom)),
+            signal_sizes=grid_sz.astype('long').tolist())
 
 
 def get_frequency_coord(sz, add_complex_dim=False, device='cpu'):
     """Frequency coordinates."""
 
-    ky = np.reshape(np.arange(-int((sz[0] - 1) / 2), int(sz[0] / 2 + 1), dtype='float32'), (1, 1, -1, 1))
-    kx = np.reshape(np.arange(0, int(sz[1] / 2 + 1), dtype='float32'), (1, 1, 1, -1))
+    ky = np.reshape(
+        np.arange(
+            -int((sz[0] - 1) / 2), int(sz[0] / 2 + 1), dtype='float32'),
+        (1, 1, -1, 1))
+    kx = np.reshape(
+        np.arange(
+            0, int(sz[1] / 2 + 1), dtype='float32'), (1, 1, 1, -1))
 
     if add_complex_dim:
         ky = np.expand_dims(ky, -1)
@@ -83,14 +94,17 @@ def shift_fs(a: np.array, shift: np.array):
         shift : The shift to be performed normalized to the range [-pi, pi]."""
 
     if a.ndim != 5:
-        raise ValueError('a must be the Fourier coefficients, a 5-dimensional tensor.')
+        raise ValueError(
+            'a must be the Fourier coefficients, a 5-dimensional tensor.')
 
     if shift[0] == 0 and shift[1] == 0:
         return a
 
     ky, kx = get_frequency_coord((a.shape[2], 2 * a.shape[3] - 1))
 
-    return complex.mult(complex.mult(a, complex.exp_imag(shift[0] * ky)), complex.exp_imag(shift[1] * kx))
+    return complex.mult(
+        complex.mult(a, complex.exp_imag(shift[0] * ky)),
+        complex.exp_imag(shift[1] * kx))
 
 
 def sum_fs(a: TensorList) -> np.array:
@@ -140,8 +154,10 @@ def sum_fs12(a: TensorList) -> np.array:
 @tensor_operation
 def inner_prod_fs(a: np.array, b: np.array):
     if complex.is_complex(a) and complex.is_complex(b):
-        return 2 * (a.flatten() @ b.flatten()) - a[:, :, :, 0, :].flatten() @ b[:, :, :, 0, :].flatten()
+        return 2 * (a.flatten() @b.flatten()
+                    ) - a[:, :, :, 0, :].flatten() @b[:, :, :, 0, :].flatten()
     elif complex.is_real(a) and complex.is_real(b):
-        return 2 * (a.flatten() @ b.flatten()) - a[:, :, :, 0].flatten() @ b[:, :, :, 0].flatten()
+        return 2 * (a.flatten() @b.flatten()
+                    ) - a[:, :, :, 0].flatten() @b[:, :, :, 0].flatten()
     else:
         raise NotImplementedError('Not implemented for mixed real and complex.')

@@ -15,11 +15,11 @@ class L2Problem:
 
     def ip_input(self, a, b):
         """Inner product of the input space."""
-        return sum(a.view(-1) @ b.view(-1))
+        return sum(a.view(-1) @b.view(-1))
 
     def ip_output(self, a, b):
         """Inner product of the output space."""
-        return sum(a.view(-1) @ b.view(-1))
+        return sum(a.view(-1) @b.view(-1))
 
     def M1(self, x):
         """M1 preconditioner."""
@@ -42,7 +42,7 @@ class MinimizationProblem:
 
     def ip_input(self, a, b):
         """Inner product of the input space."""
-        return sum(a.view(-1) @ b.view(-1))
+        return sum(a.view(-1) @b.view(-1))
 
     def M1(self, x):
         return x
@@ -57,7 +57,11 @@ class MinimizationProblem:
 class ConjugateGradientBase:
     """Conjugate Gradient optimizer base class. Implements the CG loop."""
 
-    def __init__(self, fletcher_reeves=True, standard_alpha=True, direction_forget_factor=0, debug=False):
+    def __init__(self,
+                 fletcher_reeves=True,
+                 standard_alpha=True,
+                 direction_forget_factor=0,
+                 debug=False):
         self.fletcher_reeves = fletcher_reeves
         self.standard_alpha = standard_alpha
         self.direction_forget_factor = direction_forget_factor
@@ -65,7 +69,7 @@ class ConjugateGradientBase:
 
         # State
         self.p = None
-        self.rho = np.ones((1,), 'float32')
+        self.rho = np.ones((1, ), 'float32')
         self.r_prev = None
 
         # Right hand side
@@ -73,7 +77,7 @@ class ConjugateGradientBase:
 
     def reset_state(self):
         self.p = None
-        self.rho = np.ones((1,), 'float32')
+        self.rho = np.ones((1, ), 'float32')
         self.r_prev = None
 
     def run_CG(self, num_iter, x=None, eps=0.0):
@@ -172,7 +176,7 @@ class ConjugateGradientBase:
 
     def ip(self, a, b):
         # Implements the inner product
-        return a.view(-1) @ b.view(-1)
+        return a.view(-1) @b.view(-1)
 
     def residual_norm(self, r):
         res = self.ip(r, r).sum()
@@ -201,10 +205,19 @@ class ConjugateGradientBase:
 class ConjugateGradient(ConjugateGradientBase):
     """Conjugate Gradient optimizer, performing single linearization of the residuals in the start."""
 
-    def __init__(self, problem: L2Problem, variable: TensorList, cg_eps=0.0, fletcher_reeves=True,
-                 standard_alpha=True, direction_forget_factor=0, debug=False, analyze=False, plotting=False,
+    def __init__(self,
+                 problem: L2Problem,
+                 variable: TensorList,
+                 cg_eps=0.0,
+                 fletcher_reeves=True,
+                 standard_alpha=True,
+                 direction_forget_factor=0,
+                 debug=False,
+                 analyze=False,
+                 plotting=False,
                  fig_num=(10, 11)):
-        super().__init__(fletcher_reeves, standard_alpha, direction_forget_factor, debug or plotting)
+        super().__init__(fletcher_reeves, standard_alpha,
+                         direction_forget_factor, debug or plotting)
 
         self.problem = problem
         self.x = variable
@@ -230,16 +243,20 @@ class ConjugateGradient(ConjugateGradientBase):
         start_program = fluid.Program()
         with fluid.program_guard(train_program, start_program):
             scope = 'first/'
-            self.x_ph = TensorList(
-                [fluid.layers.data('{}x_{}'.format(scope, idx), v.shape,
-                                   append_batch_size=False,
-                                   stop_gradient=False)
-                 for idx, v in enumerate(self.x)])
-            self.p_ph = TensorList(
-                [fluid.layers.data('{}p_{}'.format(scope, idx), v.shape,
-                                   append_batch_size=False,
-                                   stop_gradient=False)
-                 for idx, v in enumerate(self.x)])
+            self.x_ph = TensorList([
+                fluid.layers.data(
+                    '{}x_{}'.format(scope, idx),
+                    v.shape,
+                    append_batch_size=False,
+                    stop_gradient=False) for idx, v in enumerate(self.x)
+            ])
+            self.p_ph = TensorList([
+                fluid.layers.data(
+                    '{}p_{}'.format(scope, idx),
+                    v.shape,
+                    append_batch_size=False,
+                    stop_gradient=False) for idx, v in enumerate(self.x)
+            ])
 
             # problem forward
             self.f0 = self.problem(self.x_ph, scope)
@@ -248,7 +265,8 @@ class ConjugateGradient(ConjugateGradientBase):
             # self.g = self.f0
 
             # Get df/dx^t @ f0
-            self.dfdxt_g = TensorList(fluid.gradients(self.f0, self.x_ph, self.g))
+            self.dfdxt_g = TensorList(
+                fluid.gradients(self.f0, self.x_ph, self.g))
 
             # For computing A
             tmp = [a * b for a, b in zip(self.dfdxt_g, self.p_ph)]
@@ -259,19 +277,24 @@ class ConjugateGradient(ConjugateGradientBase):
         start_program2 = fluid.Program()
         with fluid.program_guard(train_program2, start_program2):
             scope = 'second/'
-            self.x_ph_2 = TensorList(
-                [fluid.layers.data('{}x_{}'.format(scope, idx), v.shape,
-                                   append_batch_size=False,
-                                   stop_gradient=False)
-                 for idx, v in enumerate(self.x)])
-            self.dfdx_x_ph = TensorList(
-                [fluid.layers.data('{}dfdx_x_{}'.format(scope, idx), v.shape,
-                                   append_batch_size=False,
-                                   stop_gradient=False)
-                 for idx, v in enumerate(self.g)])
+            self.x_ph_2 = TensorList([
+                fluid.layers.data(
+                    '{}x_{}'.format(scope, idx),
+                    v.shape,
+                    append_batch_size=False,
+                    stop_gradient=False) for idx, v in enumerate(self.x)
+            ])
+            self.dfdx_x_ph = TensorList([
+                fluid.layers.data(
+                    '{}dfdx_x_{}'.format(scope, idx),
+                    v.shape,
+                    append_batch_size=False,
+                    stop_gradient=False) for idx, v in enumerate(self.g)
+            ])
 
             self.f0_2 = self.problem(self.x_ph_2, scope)
-            self.dfdx_dfdx = TensorList(fluid.gradients(self.f0_2 * self.dfdx_x_ph, self.x_ph_2))
+            self.dfdx_dfdx = TensorList(
+                fluid.gradients(self.f0_2 * self.dfdx_x_ph, self.x_ph_2))
 
         place = fluid.CUDAPlace(0)
         self.exe = fluid.Executor(place)
@@ -291,7 +314,9 @@ class ConjugateGradient(ConjugateGradientBase):
             feed_dict['{}x_{}'.format(scope, idx)] = v
         for idx, v in enumerate(self.x):
             feed_dict['{}p_{}'.format(scope, idx)] = v
-        res = self.exe.run(self.compiled_prog, feed=feed_dict, fetch_list=[v.name for v in self.dfdxt_g])
+        res = self.exe.run(self.compiled_prog,
+                           feed=feed_dict,
+                           fetch_list=[v.name for v in self.dfdxt_g])
         return TensorList(res)
 
     def run(self, num_cg_iter):
@@ -301,7 +326,7 @@ class ConjugateGradient(ConjugateGradientBase):
             return
 
         # Get the right hand side
-        self.b = - self.get_dfdxt_g()
+        self.b = -self.get_dfdxt_g()
 
         self.evaluate_CG_iteration(0)
 
@@ -312,7 +337,6 @@ class ConjugateGradient(ConjugateGradientBase):
 
         # reset problem training samples
         self.problem.training_samples_stack = None
-
 
     def A(self, x):
         # First pass
@@ -325,9 +349,10 @@ class ConjugateGradient(ConjugateGradientBase):
         for idx, v in enumerate(x):
             feed_dict['{}p_{}'.format(scope, idx)] = v
 
-        dfdx_x = TensorList(self.exe.run(self.compiled_prog,
-                                         feed=feed_dict,
-                                         fetch_list=[v.name for v in self.dfdx_x]))
+        dfdx_x = TensorList(
+            self.exe.run(self.compiled_prog,
+                         feed=feed_dict,
+                         fetch_list=[v.name for v in self.dfdx_x]))
 
         # Second pass
         scope = 'second/'
@@ -339,9 +364,10 @@ class ConjugateGradient(ConjugateGradientBase):
         for idx, v in enumerate(dfdx_x):
             feed_dict['{}dfdx_x_{}'.format(scope, idx)] = v
 
-        res = TensorList(self.exe2.run(self.compiled_prog2,
-                                       feed=feed_dict,
-                                       fetch_list=[v.name for v in self.dfdx_dfdx]))
+        res = TensorList(
+            self.exe2.run(self.compiled_prog2,
+                          feed=feed_dict,
+                          fetch_list=[v.name for v in self.dfdx_dfdx]))
 
         return res
 
@@ -374,10 +400,19 @@ class ConjugateGradient(ConjugateGradientBase):
 class GaussNewtonCG(ConjugateGradientBase):
     """Gauss-Newton with Conjugate Gradient optimizer."""
 
-    def __init__(self, problem: L2Problem, variable: TensorList, cg_eps=0.0, fletcher_reeves=True,
-                 standard_alpha=True, direction_forget_factor=0, debug=False, analyze=False, plotting=False,
+    def __init__(self,
+                 problem: L2Problem,
+                 variable: TensorList,
+                 cg_eps=0.0,
+                 fletcher_reeves=True,
+                 standard_alpha=True,
+                 direction_forget_factor=0,
+                 debug=False,
+                 analyze=False,
+                 plotting=False,
                  fig_num=(10, 11, 12)):
-        super().__init__(fletcher_reeves, standard_alpha, direction_forget_factor, debug or analyze or plotting)
+        super().__init__(fletcher_reeves, standard_alpha,
+                         direction_forget_factor, debug or analyze or plotting)
 
         self.problem = problem
         self.x = variable
@@ -409,16 +444,20 @@ class GaussNewtonCG(ConjugateGradientBase):
         start_program = fluid.Program()
         with fluid.program_guard(train_program, start_program):
             scope = 'first/'
-            self.x_ph = TensorList(
-                [fluid.layers.data('{}x_{}'.format(scope, idx), v.shape,
-                                   append_batch_size=False,
-                                   stop_gradient=False)
-                 for idx, v in enumerate(self.x)])
-            self.p_ph = TensorList(
-                [fluid.layers.data('{}p_{}'.format(scope, idx), v.shape,
-                                   append_batch_size=False,
-                                   stop_gradient=False)
-                 for idx, v in enumerate(self.x)])
+            self.x_ph = TensorList([
+                fluid.layers.data(
+                    '{}x_{}'.format(scope, idx),
+                    v.shape,
+                    append_batch_size=False,
+                    stop_gradient=False) for idx, v in enumerate(self.x)
+            ])
+            self.p_ph = TensorList([
+                fluid.layers.data(
+                    '{}p_{}'.format(scope, idx),
+                    v.shape,
+                    append_batch_size=False,
+                    stop_gradient=False) for idx, v in enumerate(self.x)
+            ])
 
             # problem forward
             self.f0 = self.problem(self.x_ph, scope)
@@ -426,7 +465,8 @@ class GaussNewtonCG(ConjugateGradientBase):
             self.g = self.f0.apply(static_clone)
 
             # Get df/dx^t @ f0
-            self.dfdxt_g = TensorList(fluid.gradients(self.f0, self.x_ph, self.g))
+            self.dfdxt_g = TensorList(
+                fluid.gradients(self.f0, self.x_ph, self.g))
 
             # For computing A
             tmp = [a * b for a, b in zip(self.dfdxt_g, self.p_ph)]
@@ -437,19 +477,24 @@ class GaussNewtonCG(ConjugateGradientBase):
         start_program2 = fluid.Program()
         with fluid.program_guard(train_program2, start_program2):
             scope = 'second/'
-            self.x_ph_2 = TensorList(
-                [fluid.layers.data('{}x_{}'.format(scope, idx), v.shape,
-                                   append_batch_size=False,
-                                   stop_gradient=False)
-                 for idx, v in enumerate(self.x)])
-            self.dfdx_x_ph = TensorList(
-                [fluid.layers.data('{}dfdx_x_{}'.format(scope, idx), v.shape,
-                                   append_batch_size=False,
-                                   stop_gradient=False)
-                 for idx, v in enumerate(self.g)])
+            self.x_ph_2 = TensorList([
+                fluid.layers.data(
+                    '{}x_{}'.format(scope, idx),
+                    v.shape,
+                    append_batch_size=False,
+                    stop_gradient=False) for idx, v in enumerate(self.x)
+            ])
+            self.dfdx_x_ph = TensorList([
+                fluid.layers.data(
+                    '{}dfdx_x_{}'.format(scope, idx),
+                    v.shape,
+                    append_batch_size=False,
+                    stop_gradient=False) for idx, v in enumerate(self.g)
+            ])
 
             self.f0_2 = self.problem(self.x_ph_2, scope)
-            self.dfdx_dfdx = TensorList(fluid.gradients(self.f0_2 * self.dfdx_x_ph, self.x_ph_2))
+            self.dfdx_dfdx = TensorList(
+                fluid.gradients(self.f0_2 * self.dfdx_x_ph, self.x_ph_2))
 
         place = fluid.CUDAPlace(0)
         self.exe = fluid.Executor(place)
@@ -469,7 +514,9 @@ class GaussNewtonCG(ConjugateGradientBase):
             feed_dict['{}x_{}'.format(scope, idx)] = v
         for idx, v in enumerate(self.x):
             feed_dict['{}p_{}'.format(scope, idx)] = v
-        res = self.exe.run(self.compiled_prog, feed=feed_dict, fetch_list=[v.name for v in self.dfdxt_g])
+        res = self.exe.run(self.compiled_prog,
+                           feed=feed_dict,
+                           fetch_list=[v.name for v in self.dfdxt_g])
         return TensorList(res)
 
     def run(self, num_cg_iter, num_gn_iter=None):
@@ -482,7 +529,8 @@ class GaussNewtonCG(ConjugateGradientBase):
 
         if isinstance(num_cg_iter, int):
             if num_gn_iter is None:
-                raise ValueError('Must specify number of GN iter if CG iter is constant')
+                raise ValueError(
+                    'Must specify number of GN iter if CG iter is constant')
             num_cg_iter = [num_cg_iter] * num_gn_iter
 
         num_gn_iter = len(num_cg_iter)
@@ -498,37 +546,17 @@ class GaussNewtonCG(ConjugateGradientBase):
 
         # reset problem training samples
         self.problem.training_samples_stack = None
-
-        # if self.debug:
-        #     if not self.analyze_convergence:
-        #         self.f0 = self.problem(self.x)
-        #         loss = self.problem.ip_output(self.f0, self.f0)
-        #         self.losses = torch.cat((self.losses, loss.detach().cpu().view(-1)))
-        #
-        #     if self.plotting:
-        #         plot_graph(self.losses, self.fig_num[0], title='Loss')
-        #         plot_graph(self.residuals, self.fig_num[1], title='CG residuals')
-        #         if self.analyze_convergence:
-        #             plot_graph(self.gradient_mags, self.fig_num[2], 'Gradient magnitude')
-
         return self.losses, self.residuals
 
     def run_GN_iter(self, num_cg_iter):
         """Runs a single GN iteration."""
 
-        # if self.debug and not self.analyze_convergence:
-        #     loss = self.problem.ip_output(self.g, self.g)
-        #     self.losses = torch.cat((self.losses, loss.detach().cpu().view(-1)))
-
-        self.b = - self.get_dfdxt_g()
+        self.b = -self.get_dfdxt_g()
 
         # Run CG
         if num_cg_iter > 0:
             delta_x, res = self.run_CG(num_cg_iter, eps=self.cg_eps)
             self.x += delta_x
-
-        # if self.debug:
-        #     self.residuals = torch.cat((self.residuals, res))
 
     def A(self, x):
         # First pass
@@ -541,9 +569,10 @@ class GaussNewtonCG(ConjugateGradientBase):
         for idx, v in enumerate(x):
             feed_dict['{}p_{}'.format(scope, idx)] = v
 
-        dfdx_x = TensorList(self.exe.run(self.compiled_prog,
-                                         feed=feed_dict,
-                                         fetch_list=[v.name for v in self.dfdx_x]))
+        dfdx_x = TensorList(
+            self.exe.run(self.compiled_prog,
+                         feed=feed_dict,
+                         fetch_list=[v.name for v in self.dfdx_x]))
 
         # Second pass
         scope = 'second/'
@@ -555,9 +584,10 @@ class GaussNewtonCG(ConjugateGradientBase):
         for idx, v in enumerate(dfdx_x):
             feed_dict['{}dfdx_x_{}'.format(scope, idx)] = v
 
-        res = TensorList(self.exe2.run(self.compiled_prog2,
-                                       feed=feed_dict,
-                                       fetch_list=[v.name for v in self.dfdx_dfdx]))
+        res = TensorList(
+            self.exe2.run(self.compiled_prog2,
+                          feed=feed_dict,
+                          fetch_list=[v.name for v in self.dfdx_dfdx]))
 
         return res
 
@@ -590,9 +620,14 @@ class GaussNewtonCG(ConjugateGradientBase):
 class GradientDescentL2:
     """Gradient descent with momentum for L2 problems."""
 
-    def __init__(self, problem: L2Problem, variable: TensorList,
-                 step_length: float, momentum: float = 0.0, debug=False,
-                 plotting=False, fig_num=(10, 11)):
+    def __init__(self,
+                 problem: L2Problem,
+                 variable: TensorList,
+                 step_length: float,
+                 momentum: float=0.0,
+                 debug=False,
+                 plotting=False,
+                 fig_num=(10, 11)):
 
         self.problem = problem
         self.x = variable  # Numpy arrays
@@ -619,9 +654,13 @@ class GradientDescentL2:
         train_program = fluid.Program()
         start_program = fluid.Program()
         with fluid.program_guard(train_program, start_program):
-            self.x_ph = TensorList(
-                [fluid.layers.data('x_{}'.format(idx), v.shape, append_batch_size=False, stop_gradient=False)
-                 for idx, v in enumerate(self.x)])
+            self.x_ph = TensorList([
+                fluid.layers.data(
+                    'x_{}'.format(idx),
+                    v.shape,
+                    append_batch_size=False,
+                    stop_gradient=False) for idx, v in enumerate(self.x)
+            ])
 
             # problem forward
             self.f0 = self.problem(self.x_ph)
@@ -670,8 +709,14 @@ class GradientDescentL2:
 class GradientDescent:
     """Gradient descent for general minimization problems."""
 
-    def __init__(self, problem: MinimizationProblem, variable: TensorList, step_length: float, momentum: float = 0.0,
-                 debug=False, plotting=False, fig_num=(10, 11)):
+    def __init__(self,
+                 problem: MinimizationProblem,
+                 variable: TensorList,
+                 step_length: float,
+                 momentum: float=0.0,
+                 debug=False,
+                 plotting=False,
+                 fig_num=(10, 11)):
 
         self.problem = problem
         self.x = variable
@@ -683,8 +728,8 @@ class GradientDescent:
         self.plotting = plotting
         self.fig_num = fig_num
 
-        self.losses = layers.zeros((0,), 'float32')
-        self.gradient_mags = layers.zeros((0,), 'float32')
+        self.losses = layers.zeros((0, ), 'float32')
+        self.gradient_mags = layers.zeros((0, ), 'float32')
         self.residuals = None
 
         self.clear_temp()
@@ -699,8 +744,8 @@ class GradientDescent:
 
         lossvec = None
         if self.debug:
-            lossvec = np.zeros((num_iter + 1,))
-            grad_mags = np.zeros((num_iter + 1,))
+            lossvec = np.zeros((num_iter + 1, ))
+            grad_mags = np.zeros((num_iter + 1, ))
 
         for i in range(num_iter):
             self.x.stop_gradient = False
@@ -724,7 +769,8 @@ class GradientDescent:
 
             if self.debug:
                 lossvec[i] = loss.numpy()
-                grad_mags[i] = self.problem.ip_input(grad, grad).apply(layers.sqrt).numpy()
+                grad_mags[i] = self.problem.ip_input(
+                    grad, grad).apply(layers.sqrt).numpy()
 
         self.problem.training_samples_stack = None
 

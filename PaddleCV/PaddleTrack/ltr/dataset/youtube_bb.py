@@ -29,7 +29,13 @@ class YoutubeBB(BaseDataset):
 
     Download the dataset from http://image-net.org/
     """
-    def __init__(self, root=None, filter=None, image_loader=default_image_loader, min_length=0, max_target_area=1):
+
+    def __init__(self,
+                 root=None,
+                 filter=None,
+                 image_loader=default_image_loader,
+                 min_length=0,
+                 max_target_area=1):
         """
         args:
             root - path to the imagenet vid dataset.
@@ -72,19 +78,17 @@ class YoutubeBB(BaseDataset):
 
     def get_sequence_info(self, seq_id):
         anno = np.array(self.sequence_list[seq_id]['anno'])
-        # target_visible = torch.ByteTensor(self.sequence_list[seq_id]['target_visible'])
-        target_visible = (anno[:,2]>0) & (anno[:,3]>0)
+        target_visible = (anno[:, 2] > 0) & (anno[:, 3] > 0)
         if self.filter is not None:
             target_large = (anno[:, 2] * anno[:, 3] > 30 * 30)
             target_resonable = (anno[:, 2] * anno[:, 3] < 500 * 500)
             ratio = anno[:, 2] / anno[:, 3]
-            target_reasonable_ratio = (10 > ratio) & (ratio> 0.1)
+            target_reasonable_ratio = (10 > ratio) & (ratio > 0.1)
             target_visible = target_visible & target_reasonable_ratio & target_large & target_resonable
         return anno, target_visible
 
     def _get_frame(self, sequence, frame_id):
-        frame_path = os.path.join(self.root,
-                                  sequence['video_name'],
+        frame_path = os.path.join(self.root, sequence['video_name'],
                                   sequence['img_paths'][frame_id] + '.jpg')
         return self.image_loader(frame_path)
 
@@ -99,11 +103,12 @@ class YoutubeBB(BaseDataset):
         anno_frames = [anno[f_id, :] for f_id in frame_ids]
 
         # added the class info to the meta info
-        object_meta = OrderedDict({'object_class': None,
-                                   'motion_class': None,
-                                   'major_class': None,
-                                   'root_class': None,
-                                   'motion_adverb': None})
+        object_meta = OrderedDict({
+            'object_class': None,
+            'motion_class': None,
+            'major_class': None,
+            'root_class': None,
+            'motion_adverb': None
+        })
 
         return frame_list, anno_frames, object_meta
-

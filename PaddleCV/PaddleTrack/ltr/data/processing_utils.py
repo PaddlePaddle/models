@@ -2,14 +2,19 @@ import math
 import numpy as np
 import cv2 as cv
 
+
 def stack_tensors(x):
     if isinstance(x, list) and isinstance(x[0], np.ndarray):
         return np.stack(x)
     return x
 
 
-def sample_target(im, target_bb, search_area_factor, output_sz=None,
-                  scale_type='original', border_type='replicate'):
+def sample_target(im,
+                  target_bb,
+                  search_area_factor,
+                  output_sz=None,
+                  scale_type='original',
+                  border_type='replicate'):
     """ Extracts a square crop centered at target_bb box, of area search_area_factor^2 times target_bb area
 
     args:
@@ -34,7 +39,8 @@ def sample_target(im, target_bb, search_area_factor, output_sz=None,
         # when search_factor = 1, output_size = 127
         # when search_factor = 2, output_size = 255
         context = (w + h) / 2
-        base_size = math.sqrt((w + context) * (h + context))  # corresponds to 127 in crop
+        base_size = math.sqrt(
+            (w + context) * (h + context))  # corresponds to 127 in crop
         crop_sz = math.ceil(search_area_factor * base_size)
     else:
         raise NotImplementedError
@@ -59,12 +65,22 @@ def sample_target(im, target_bb, search_area_factor, output_sz=None,
 
     # Pad
     if border_type == 'replicate':
-        im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_REPLICATE)
+        im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad,
+                                           x2_pad, cv.BORDER_REPLICATE)
     elif border_type == 'zeropad':
-        im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_CONSTANT)
+        im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad,
+                                           x2_pad, cv.BORDER_CONSTANT)
     elif border_type == 'meanpad':
-        avg_chans = np.array([np.mean(im[:, :, 0]), np.mean(im[:, :, 1]), np.mean(im[:, :, 2])])
-        im_crop_padded = cv.copyMakeBorder(im_crop, y1_pad, y2_pad, x1_pad, x2_pad, cv.BORDER_CONSTANT, value=avg_chans)
+        avg_chans = np.array(
+            [np.mean(im[:, :, 0]), np.mean(im[:, :, 1]), np.mean(im[:, :, 2])])
+        im_crop_padded = cv.copyMakeBorder(
+            im_crop,
+            y1_pad,
+            y2_pad,
+            x1_pad,
+            x2_pad,
+            cv.BORDER_CONSTANT,
+            value=avg_chans)
     else:
         raise NotImplementedError
 
@@ -75,7 +91,9 @@ def sample_target(im, target_bb, search_area_factor, output_sz=None,
         return im_crop_padded, 1.0
 
 
-def transform_image_to_crop(box_in: np.ndarray, box_extract: np.ndarray, resize_factor: float,
+def transform_image_to_crop(box_in: np.ndarray,
+                            box_extract: np.ndarray,
+                            resize_factor: float,
                             crop_sz: np.ndarray) -> np.ndarray:
     """ Transform the box co-ordinates from the original image co-ordinates to the co-ordinates of the cropped image
     args:
@@ -85,13 +103,14 @@ def transform_image_to_crop(box_in: np.ndarray, box_extract: np.ndarray, resize_
         crop_sz - size of the cropped image
 
     returns:
-        torch.Tensor - transformed co-ordinates of box_in
+        array - transformed co-ordinates of box_in
     """
     box_extract_center = box_extract[0:2] + 0.5 * box_extract[2:4]
 
     box_in_center = box_in[0:2] + 0.5 * box_in[2:4]
 
-    box_out_center = (crop_sz - 1) / 2 + (box_in_center - box_extract_center) * resize_factor
+    box_out_center = (crop_sz - 1) / 2 + (box_in_center - box_extract_center
+                                          ) * resize_factor
     box_out_wh = box_in[2:4] * resize_factor
 
     box_out = np.concatenate((box_out_center - 0.5 * box_out_wh, box_out_wh))
@@ -99,22 +118,31 @@ def transform_image_to_crop(box_in: np.ndarray, box_extract: np.ndarray, resize_
 
 
 def centered_crop(frames, anno, area_factor, output_sz):
-    crops_resize_factors = [sample_target(f, a, area_factor, output_sz)
-                            for f, a in zip(frames, anno)]
+    crops_resize_factors = [
+        sample_target(f, a, area_factor, output_sz)
+        for f, a in zip(frames, anno)
+    ]
 
     frames_crop, resize_factors = zip(*crops_resize_factors)
 
     crop_sz = np.array([output_sz, output_sz], 'int')
 
     # find the bb location in the crop
-    anno_crop = [transform_image_to_crop(a, a, rf, crop_sz)
-                 for a, rf in zip(anno, resize_factors)]
+    anno_crop = [
+        transform_image_to_crop(a, a, rf, crop_sz)
+        for a, rf in zip(anno, resize_factors)
+    ]
 
     return frames_crop, anno_crop
 
 
-def jittered_center_crop(frames, box_extract, box_gt, search_area_factor, output_sz,
-                         scale_type='original', border_type='replicate'):
+def jittered_center_crop(frames,
+                         box_extract,
+                         box_gt,
+                         search_area_factor,
+                         output_sz,
+                         scale_type='original',
+                         border_type='replicate'):
     """ For each frame in frames, extracts a square crop centered at box_extract, of area search_area_factor^2
     times box_extract area. The extracted crops are then resized to output_sz. Further, the co-ordinates of the box
     box_gt are transformed to the image crop co-ordinates
@@ -131,17 +159,25 @@ def jittered_center_crop(frames, box_extract, box_gt, search_area_factor, output
         list - list of image crops
         list - box_gt location in the crop co-ordinates
         """
-    crops_resize_factors = [sample_target(f, a, search_area_factor, output_sz,
-                                          scale_type=scale_type, border_type=border_type)
-                            for f, a in zip(frames, box_extract)]
+    crops_resize_factors = [
+        sample_target(
+            f,
+            a,
+            search_area_factor,
+            output_sz,
+            scale_type=scale_type,
+            border_type=border_type) for f, a in zip(frames, box_extract)
+    ]
 
     frames_crop, resize_factors = zip(*crops_resize_factors)
 
     crop_sz = np.array([output_sz, output_sz], 'int')
 
     # find the bb location in the crop
-    box_crop = [transform_image_to_crop(a_gt, a_ex, rf, crop_sz)
-                for a_gt, a_ex, rf in zip(box_gt, box_extract, resize_factors)]
+    box_crop = [
+        transform_image_to_crop(a_gt, a_ex, rf, crop_sz)
+        for a_gt, a_ex, rf in zip(box_gt, box_extract, resize_factors)
+    ]
 
     return frames_crop, box_crop
 
@@ -154,17 +190,20 @@ def iou(reference, proposals):
         proposals - Tensor of shape (num_proposals, 4)
 
     returns:
-        torch.Tensor - Tensor of shape (num_proposals,) containing IoU of reference box with each proposal box.
+        array - shape (num_proposals,) containing IoU of reference box with each proposal box.
     """
 
     # Intersection box
     tl = np.maximum(reference[:, :2], proposals[:, :2])
-    br = np.minimum(reference[:, :2] + reference[:, 2:], proposals[:, :2] + proposals[:, 2:])
+    br = np.minimum(reference[:, :2] + reference[:, 2:],
+                    proposals[:, :2] + proposals[:, 2:])
     sz = np.clip(br - tl, 0, np.inf)
 
     # Area
     intersection = np.prod(sz, axis=1)
-    union = np.prod(reference[:, 2:], axis=1) + np.prod(proposals[:, 2:], axis=1) - intersection
+    union = np.prod(
+        reference[:, 2:], axis=1) + np.prod(
+            proposals[:, 2:], axis=1) - intersection
 
     return intersection / union
 
@@ -177,7 +216,7 @@ def rand_uniform(a, b, rng=None, shape=1):
         shape - shape of the output tensor
 
     returns:
-        torch.Tensor - tensor of shape=shape
+        array
     """
     rand = np.random.rand if rng is None else rng.rand
     return (b - a) * rand(shape) + a
@@ -195,7 +234,7 @@ def perturb_box(box, min_iou=0.5, sigma_factor=0.1, rng=None):
                         of shape (4,) specifying the sigma_factor per co-ordinate
 
     returns:
-        torch.Tensor - the perturbed box
+        array - the perturbed box
     """
     if rng is None:
         rng = np.random
@@ -227,7 +266,9 @@ def perturb_box(box, min_iou=0.5, sigma_factor=0.1, rng=None):
         if h_per <= 1:
             h_per = box[3] * rand_uniform(0.15, 0.5, rng)[0]
 
-        box_per = np.round(np.array([c_x_per - 0.5 * w_per, c_y_per - 0.5 * h_per, w_per, h_per]))
+        box_per = np.round(
+            np.array(
+                [c_x_per - 0.5 * w_per, c_y_per - 0.5 * h_per, w_per, h_per]))
 
         if box_per[2] <= 1:
             box_per[2] = box[2] * rand_uniform(0.15, 0.5, rng)
