@@ -1,15 +1,12 @@
 ﻿# tracking 单目标跟踪框架
-----------------
 
 ## 目标跟踪介绍
----------------
 
 tracking 是基于百度深度学习框架Paddle研发的视频单目标跟踪（Visual Object Tracking, VOT）库, 整体框架参考 [pytracking](https://github.com/visionml/pytracking)，其优秀的设计使得我们能够方便地将其他跟踪器如SiamFC，SiamRPN，SiamMask等融合到一个框架中，方便后续统一的实验和比较。
 
 当前tracking涵盖当前目标跟踪的主流模型，包括SiamFC, SiamRPN, SiamMask, ATOM。tracking旨在给开发者提供一系列基于PaddlePaddle的便捷、高效的目标跟踪深度学习算法，后续会不断的扩展模型的丰富度。
 
 ## 目标跟踪库的代码目录结构
------------------
 
 
 ```
@@ -36,7 +33,6 @@ pytracking  包含跟踪代码
 ```
 
 ## 开始使用
--------------------
 
 ### 数据准备
 
@@ -59,7 +55,6 @@ pytracking  包含跟踪代码
 
 
 ## 快速开始
----------------
 
 tracking的工作环境：
 - python3
@@ -120,7 +115,7 @@ pip install python-prctl
 cd tracking
 
 # 生成 local.py 文件，再次训练时不需要重新生成
-python -c "from ltr_pp.admin.environment import create_default_local_file; create_default_local_file()"
+python -c "from ltr.admin.environment import create_default_local_file; create_default_local_file()"
 ```
 其次，设置训练模型文件保存路径：workspace_dir，backbone模型路径：backbone_dir，数据集路径等等，对于没有用到的数据集，可以不用设置其路径。
 ```
@@ -202,7 +197,7 @@ ln -s tracking/ltr/Logs/checkpoints/ltr/bbreg/atom_res18_vid_lasot_coco $NETWORK
 # 在VOT2018上评测ATOM模型
 # -d VOT2018  表示使用VOT2018数据集进行评测
 # -tr bbreg.atom_res18_vid_lasot_coco 表示要评测的模型，和训练保持一致
-# -te atom.default_vot 表示加载定义超参数的文件pytracking_pp/parameter/atom/default_vot.py
+# -te atom.default_vot 表示加载定义超参数的文件pytracking/parameter/atom/default_vot.py
 # -e 40 表示使用第40个epoch的模型进行评测
 
 python eval_benchmark.py -d VOT2018 -tr bbreg.atom_res18_vid_lasot_coco -te atom.default_vot -e 40
@@ -217,16 +212,15 @@ cd pytracking/tracker/siamfc
 python eval_siamfc_otb.py --checkpoint "your trained params path" --dataset_dir "your test dataset path" --dataset_name "test dataset name" --start_epoch 1 --end_epoch 50
 
 # 例如，在OTB2013上测试SiamFC
-python eval_siamfc_otb.py --checkpoint "/checkpoints/ltr_pp/siamfc/siamfc_alexnet_vid/" --dataset_dir "/Datasets/OTB100/" --dataset_name 'CVPR13' --start_epoch 12 --end_epoch 50
+python eval_siamfc_otb.py --checkpoint "/checkpoints/ltr/siamfc/siamfc_alexnet_vid/" --dataset_dir "/Datasets/OTB100/" --dataset_name 'CVPR13' --start_epoch 12 --end_epoch 50
 
 # 例如，在VOT15上测试SiamFC
-python eval_siamfc_vot.py --checkpoint "/checkpoints/ltr_pp/siamfc/siamfc_alexnet_vid/" --dataset_dir "/Datasets/VOT2015/" --dataset_name 'VOT2015' --start_epoch 12 --end_epoch 50
+python eval_siamfc_vot.py --checkpoint "/checkpoints/ltr/siamfc/siamfc_alexnet_vid/" --dataset_dir "/Datasets/VOT2015/" --dataset_name 'VOT2015' --start_epoch 12 --end_epoch 50
 ```
 
 
 
 ## 跟踪结果可视化
---------------------
 
 
 在数据集上评测完后，可以通过可视化跟踪器的结果来定位问题。我们提供下面的方法来可视化跟踪结果：
@@ -243,7 +237,6 @@ jupyter notebook --ip 0.0.0.0 --port 8888
 打开网页之后，打开 `visualize_results_on_benchmark.ipynb` 来可视化结果。
 
 ## 指标结果
-------------------
 
 | 数据集 | 模型 | Backbone | 论文结果 | 训练结果 | 模型|
 | :-------: | :-------: | :---: | :---: | :---------: |:---------: |
@@ -252,7 +245,6 @@ jupyter notebook --ip 0.0.0.0 --port 8888
 |VOT2018| ATOM | Res18 |  EAO: 0.401 | 0.399 | [model]() |
 
 ## 引用与参考
-----------------
 
 SiamFC **[[Paper]](https://arxiv.org/pdf/1811.07628.pdf) [[Code]](https://www.robots.ox.ac.uk/~luca/siamese-fc.html)**
 
