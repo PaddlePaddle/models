@@ -53,7 +53,7 @@ class SiamNet(dygraph.layers.Layer):
 def siamfc_alexnet(backbone_pretrained=False,
                    backbone_is_test=False,
                    estimator_is_test=False):
-    from ltr_pp.models.backbone.sfc_alexnet import SFC_AlexNet
+    from ltr.models.backbone.sfc_alexnet import SFC_AlexNet
     backbone_net = SFC_AlexNet('AlexNet', is_test=backbone_is_test)
     target_estimator = tgt_estimator.SiamFCEstimator('CenterEstimator')
     model = SiamNet(

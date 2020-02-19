@@ -27,13 +27,13 @@ def run_training(train_module, train_name):
     settings = ws_settings.Settings()
 
     if settings.env.workspace_dir == '':
-        raise Exception('Setup your workspace_dir in "ltr_pp/admin/local.py".')
+        raise Exception('Setup your workspace_dir in "ltr/admin/local.py".')
 
     settings.module_name = train_module
     settings.script_name = train_name
-    settings.project_path = 'ltr_pp/{}/{}'.format(train_module, train_name)
+    settings.project_path = 'ltr/{}/{}'.format(train_module, train_name)
 
-    expr_module = importlib.import_module('ltr_pp.train_settings.{}.{}'.format(
+    expr_module = importlib.import_module('ltr.train_settings.{}.{}'.format(
         train_module, train_name))
     expr_func = getattr(expr_module, 'run')
 

@@ -58,10 +58,10 @@ def get_tracker_params(param_module, params):
 def create_tracker(params):
     base_param = params['tracking_base_param']
     base_tracker = base_param.split('.')[0]
-    param_module = importlib.import_module('pytracking_pp.parameter.{}'.format(
+    param_module = importlib.import_module('pytracking.parameter.{}'.format(
         base_param))
     tracker_params = get_tracker_params(param_module, params)
-    tracker_module = importlib.import_module('pytracking_pp.tracker.{}'.format(
+    tracker_module = importlib.import_module('pytracking.tracker.{}'.format(
         base_tracker))
     tracker_class = tracker_module.get_tracker_class()
     return tracker_class(tracker_params)

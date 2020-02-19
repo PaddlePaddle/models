@@ -40,7 +40,7 @@ def create_default_local_file():
 
 
 def env_settings():
-    env_module_name = 'ltr_pp.admin.local'
+    env_module_name = 'ltr.admin.local'
     try:
         env_module = importlib.import_module(env_module_name)
         return env_module.EnvironmentSettings()
