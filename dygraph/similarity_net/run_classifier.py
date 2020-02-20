@@ -96,6 +96,7 @@ def train(conf_dict, args):
         vocab = utils.load_vocab(args.vocab_path)
         # get vocab size
         conf_dict['dict_size'] = len(vocab)
+        conf_dict['seq_len'] = args.seq_len
         # Load network structure dynamically
         net = utils.import_class("./nets",
                                 conf_dict["net"]["module_name"],
@@ -302,6 +303,7 @@ def test(conf_dict, args):
     else:
         place = fluid.CPUPlace()
     with fluid.dygraph.guard(place):
+
         vocab = utils.load_vocab(args.vocab_path)
         simnet_process = reader.SimNetProcessor(args, vocab)
         test_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=False)
@@ -310,7 +312,8 @@ def test(conf_dict, args):
                 paddle.batch(get_test_examples, batch_size=args.batch_size),
                 place)
      
-        conf_dict['dict_size'] = len(vocab)
+        conf_dict['dict_size'] = len(vocab)         
+        conf_dict['seq_len'] = args.seq_len
 
         net = utils.import_class("./nets",
                                 conf_dict["net"]["module_name"],
@@ -329,18 +332,18 @@ def test(conf_dict, args):
                     left_feat, pos_score = net(left, pos_right)
                     pred = pos_score
                     # pred_list += list(pred.numpy())
-                    pred_list += list(map(lambda item: float(item[0]), pred.numpy()[0]))
+                    pred_list += list(map(lambda item: float(item[0]), pred.numpy()))
                     predictions_file.write(u"\n".join(
-                            map(lambda item: str((item[0] + 1) / 2), pred.numpy()[0])) + "\n")
+                            map(lambda item: str((item[0] + 1) / 2), pred.numpy())) + "\n")
             else:
                 for left, right in test_pyreader():
                     left = fluid.layers.reshape(left, shape=[-1, 1])
                     right = fluid.layers.reshape(right, shape=[-1, 1])
                     left_feat, pred = net(left, right)
                     # pred_list += list(pred.numpy())
-                    pred_list += list(map(lambda item: float(item[0]), pred.numpy()[0]))
+                    pred_list += list(map(lambda item: float(item[0]), pred.numpy()))
                     predictions_file.write(u"\n".join(
-                            map(lambda item: str(np.argmax(item)), pred.numpy()[0])) + "\n")
+                            map(lambda item: str(np.argmax(item)), pred.numpy())) + "\n")
 
             if args.task_mode == "pairwise":
                 pred_list = np.array(pred_list).reshape((-1, 1))
@@ -376,46 +379,48 @@ def infer(conf_dict, args):
     else:
         place = fluid.CPUPlace()
    
-
-    vocab = utils.load_vocab(args.vocab_path)
-    simnet_process = reader.SimNetProcessor(args, vocab)
-    get_infer_examples = simnet_process.get_infer_reader
-    infer_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=False)
-    infer_pyreader.decorate_sample_list_generator(
-                paddle.batch(get_infer_examples, batch_size=args.batch_size),
-                place) 
-    
-    conf_dict['dict_size'] = len(vocab)
-
-    net = utils.import_class("./nets",
-                             conf_dict["net"]["module_name"],
-                             conf_dict["net"]["class_name"])(conf_dict)
-    model, _ = fluid.dygraph.load_dygraph(args.init_checkpoint)
-    net.set_dict(model)
-    pred_list = []
-    if args.task_mode == "pairwise":
-        for left, pos_right in infer_pyreader():
-            left = fluid.layers.reshape(left, shape=[-1, 1])
-            pos_right = fluid.layers.reshape(pos_right, shape=[-1, 1])
-               
-            left_feat, pos_score = net(left, pos_right)
-            pred = pos_score
-            preds_list += list(
-                        map(lambda item: str((item[0] + 1) / 2), pred.numpy()[0]))
+    with fluid.dygraph.guard(place):
+        vocab = utils.load_vocab(args.vocab_path)
+        simnet_process = reader.SimNetProcessor(args, vocab)
+        get_infer_examples = simnet_process.get_infer_reader
+        infer_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=False)
+        infer_pyreader.decorate_sample_list_generator(
+                    paddle.batch(get_infer_examples, batch_size=args.batch_size),
+                    place) 
         
-    else:
-        for left, right in infer_pyreader():
-            left = fluid.layers.reshape(left, shape=[-1, 1])
-            pos_right = fluid.layers.reshape(right, shape=[-1, 1])
-            left_feat, pred = net(left, right)
-            preds_list += map(lambda item: str(np.argmax(item)), pred.numpy()[0])
-      
-   
-    with io.open(args.infer_result_path, "w", encoding="utf8") as infer_file:
-        for _data, _pred in zip(simnet_process.get_infer_data(), preds_list):
-            infer_file.write(_data + "\t" + _pred + "\n")
-    logging.info("infer result saved in %s" %
-                 os.path.join(os.getcwd(), args.infer_result_path))
+        conf_dict['dict_size'] = len(vocab) 
+        conf_dict['seq_len'] = args.seq_len
+
+        net = utils.import_class("./nets",
+                                conf_dict["net"]["module_name"],
+                                conf_dict["net"]["class_name"])(conf_dict)
+        model, _ = fluid.dygraph.load_dygraph(args.init_checkpoint)
+        net.set_dict(model)
+        
+        pred_list = []
+        if args.task_mode == "pairwise":
+            for left, pos_right in infer_pyreader():
+                left = fluid.layers.reshape(left, shape=[-1, 1])
+                pos_right = fluid.layers.reshape(pos_right, shape=[-1, 1])
+                
+                left_feat, pos_score = net(left, pos_right)
+                pred = pos_score
+                pred_list += list(
+                            map(lambda item: str((item[0] + 1) / 2), pred.numpy()))
+            
+        else:
+            for left, right in infer_pyreader():
+                left = fluid.layers.reshape(left, shape=[-1, 1])
+                pos_right = fluid.layers.reshape(right, shape=[-1, 1])
+                left_feat, pred = net(left, right)
+                pred_list += map(lambda item: str(np.argmax(item)), pred.numpy())
+        
+    
+        with io.open(args.infer_result_path, "w", encoding="utf8") as infer_file:
+            for _data, _pred in zip(simnet_process.get_infer_data(), pred_list):
+                infer_file.write(_data + "\t" + _pred + "\n")
+        logging.info("infer result saved in %s" %
+                    os.path.join(os.getcwd(), args.infer_result_path))
 
 
 def get_cards():

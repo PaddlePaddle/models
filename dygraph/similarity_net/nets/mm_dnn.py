@@ -42,10 +42,11 @@ class MMDNN(Layer):
         self.dpool_size1 = int(config['net']['dpool_size_left'])
         self.dpool_size2 = int(config['net']['dpool_size_right'])
         self.hidden_size = int(config['net']['hidden_size'])
-    
-        self.seq_len1 = 5
+        self.seq_len = int(conf_dict["seq_len"])
+        self.seq_len1 = self.seq_len
         #int(config['max_len_left'])
-        self.seq_len2 = 5 #int(config['max_len_right'])
+        self.seq_len2 = self.seq_len 
+        #int(config['max_len_right'])
         self.task_mode = config['task_mode']
         self.zero_pad = True
         self.scale = False
@@ -112,8 +113,8 @@ class MMDNN(Layer):
         left_emb = self.emb_layer(left)
         right_emb = self.emb_layer(right)
         if self.scale:
-            left_emb = left_emb * (self.emb_size**0.5)
-            right_emb = right_emb * (self.emb_size**0.5)
+            left_emb = left_emb * (self.emb_size**5)
+            right_emb = right_emb * (self.emb_size**5)
 
         # bi_listm
         left_proj = self.fw_in_proj(left_emb)
@@ -130,14 +131,13 @@ class MMDNN(Layer):
         right_seq_encoder = fluid.layers.concat([right_lstm, right_reverse], axis=1)
   
         pad_value = fluid.layers.assign(input=np.array([0]).astype("float32"))
- 
-        left_seq_encoder = fluid.layers.reshape(left_seq_encoder, shape=[left_seq_encoder.shape[0]/5,5,-1])
-        right_seq_encoder = fluid.layers.reshape(right_seq_encoder, shape=[right_seq_encoder.shape[0]/5,5,-1])
+        left_seq_encoder = fluid.layers.reshape(left_seq_encoder, shape=[int(left_seq_encoder.shape[0]/self.seq_len),self.seq_len,-1])
+        right_seq_encoder = fluid.layers.reshape(right_seq_encoder, shape=[int(right_seq_encoder.shape[0]/self.seq_len),self.seq_len,-1])
         cross = fluid.layers.matmul(
             left_seq_encoder, right_seq_encoder, transpose_y=True)
   
-        left_lens=to_variable(np.array([5]))
-        right_lens=to_variable(np.array([5]))
+        left_lens=to_variable(np.array([self.seq_len]))
+        right_lens=to_variable(np.array([self.seq_len]))
 
         if self.match_mask:
             mask1 = fluid.layers.sequence_mask(
@@ -157,7 +157,7 @@ class MMDNN(Layer):
         if mask is not None:
             cross_mask = fluid.layers.stack(x=[mask] * self.kernel_size, axis=0)
             cross_mask = fluid.layers.stack(x=[cross] * conv.shape[1], axis=1)
-            conv = cross_mask * conv + (1 - cross_mask) * (-2**5 + 1)
+            conv = cross_mask * conv + (1 - cross_mask) * (-2**self.seq_len + 1)
         pool = self.pool_layer(conv)
         conv_pool_relu = fluid.layers.relu(pool)
 

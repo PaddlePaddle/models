@@ -27,6 +27,14 @@ class SimNetProcessor(object):
         self.vocab = vocab
         self.valid_label = np.array([])
         self.test_label = np.array([])
+        self.seq_len = args.seq_len
+    
+    def padding_text(self, x):
+        if len(x) < self.seq_len:
+            x += [0]*(self.seq_len-len(x))
+        if len(x) > self.seq_len:
+            x = x[0:self.seq_len] 
+        return x
 
     def get_reader(self, mode, epoch=0):
         """
@@ -60,6 +68,8 @@ class SimNetProcessor(object):
                             query = [0]
                         if len(title) == 0:
                             title = [0]
+                        query = self.padding_text(query)
+                        title = self.padding_text(title)
                         yield [query, title]
             elif mode == "test":
                 with io.open(self.args.test_data_dir, "r", encoding="utf8") as file:
@@ -83,8 +93,8 @@ class SimNetProcessor(object):
                             query = [0]
                         if len(title) == 0:
                             title = [0]
-                        # query = np.array([x.reshape(-1,1) for x in query]).astype('int64')
-                        # title = np.array([x.reshape(-1,1) for x in title]).astype('int64')
+                        query = self.padding_text(query)
+                        title = self.padding_text(title)
                         yield [query, title]
             else:
                 for idx in range(epoch):
@@ -115,7 +125,9 @@ class SimNetProcessor(object):
                                 pos_title = [0]
                             if len(neg_title) == 0:
                                 neg_title = [0]
-                            
+                            query = self.padding_text(query)
+                            pos_title = self.padding_text(pos_title)
+                            neg_title = self.padding_text(neg_title)
                             yield [query, pos_title, neg_title]
 
         def reader_with_pointwise():
@@ -145,6 +157,8 @@ class SimNetProcessor(object):
                             query = [0]
                         if len(title) == 0:
                             title = [0]
+                        query = self.padding_text(query)
+                        title = self.padding_text(title)
                         yield [query, title]
             elif mode == "test":
                 with io.open(self.args.test_data_dir, "r", encoding="utf8") as file:
@@ -168,6 +182,8 @@ class SimNetProcessor(object):
                             query = [0]
                         if len(title) == 0:
                             title = [0]
+                        query = self.padding_text(query)
+                        title = self.padding_text(title)
                         yield [query, title]
             else:
                 for idx in range(epoch):
@@ -194,6 +210,8 @@ class SimNetProcessor(object):
                                 query = [0]
                             if len(title) == 0:
                                 title = [0]
+                            query = self.padding_text(query)
+                            title = self.padding_text(title)
                             yield [query, title, label]
 
         if self.args.task_mode == "pairwise":
@@ -223,6 +241,8 @@ class SimNetProcessor(object):
                     query = [0]
                 if len(title) == 0:
                     title = [0]
+                query = self.padding_text(query)
+                title = self.padding_text(title)
                 yield [query, title]
 
     def get_infer_data(self):

@@ -10,7 +10,7 @@ CKPT_PATH=./model_files
 TEST_RESULT_PATH=./evaluate/zhidao_test_result
 TASK_MODE='pairwise'
 CONFIG_PATH=./config/bow_pairwise.json
-INIT_CHECKPOINT=./model_files/simnet_bow_pairwise_pretrained_model/
+INIT_CHECKPOINT=./model_files/simnet_bow_pairwise_pretrained_model/bow_pairwise
 cd ..
 
 python ./run_classifier.py \
