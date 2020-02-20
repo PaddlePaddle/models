@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Emotion Detection Task
 """
@@ -38,9 +37,7 @@ import reader
 import utils
 
 
-def create_model(args,
-                 num_labels,
-                 is_prediction=False):
+def create_model(args, num_labels, is_prediction=False):
     """
     Create Model for Emotion Detection
     """
@@ -77,10 +74,17 @@ def create_model(args,
         raise ValueError("Unknown network type!")
 
     if is_prediction:
-        probs = network(data, seq_len, None, args.vocab_size, class_dim=num_labels, is_prediction=True)
+        probs = network(
+            data,
+            seq_len,
+            None,
+            args.vocab_size,
+            class_dim=num_labels,
+            is_prediction=True)
         return loader, probs, [data.name, seq_len.name]
 
-    avg_loss, probs = network(data, seq_len, label, args.vocab_size, class_dim=num_labels)
+    avg_loss, probs = network(
+        data, seq_len, label, args.vocab_size, class_dim=num_labels)
     num_seqs = fluid.layers.create_tensor(dtype='int64')
     accuracy = fluid.layers.accuracy(input=probs, label=label, total=num_seqs)
     return loader, avg_loss, accuracy, num_seqs
@@ -142,9 +146,10 @@ def main(args):
     exe = fluid.Executor(place)
 
     task_name = args.task_name.lower()
-    processor = reader.EmoTectProcessor(data_dir=args.data_dir,
-                                      vocab_path=args.vocab_path,
-                                      random_seed=args.random_seed)
+    processor = reader.EmoTectProcessor(
+        data_dir=args.data_dir,
+        vocab_path=args.vocab_path,
+        random_seed=args.random_seed)
     #num_labels = len(processor.get_labels())
     num_labels = args.num_labels
 
@@ -173,9 +178,7 @@ def main(args):
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
                 train_loader, loss, accuracy, num_seqs = create_model(
-                    args,
-                    num_labels=num_labels,
-                    is_prediction=False)
+                    args, num_labels=num_labels, is_prediction=False)
 
                 sgd_optimizer = fluid.optimizer.Adagrad(learning_rate=args.lr)
                 sgd_optimizer.minimize(loss)
@@ -189,37 +192,27 @@ def main(args):
     if args.do_val:
         if args.do_train:
             test_data_generator = processor.data_generator(
-                batch_size=args.batch_size,
-                phase='dev',
-                epoch=1)
+                batch_size=args.batch_size, phase='dev', epoch=1)
         else:
             test_data_generator = processor.data_generator(
-                batch_size=args.batch_size,
-                phase='test',
-                epoch=1)
+                batch_size=args.batch_size, phase='test', epoch=1)
 
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
                 test_loader, loss, accuracy, num_seqs = create_model(
-                    args,
-                    num_labels=num_labels,
-                    is_prediction=False)
+                    args, num_labels=num_labels, is_prediction=False)
         test_prog = test_prog.clone(for_test=True)
 
     if args.do_infer:
         infer_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
-            phase='infer',
-            epoch=1)
+            batch_size=args.batch_size, phase='infer', epoch=1)
 
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
                 infer_loader, probs, _ = create_model(
-                    args,
-                    num_labels=num_labels,
-                    is_prediction=True)
+                    args, num_labels=num_labels, is_prediction=True)
         test_prog = test_prog.clone(for_test=True)
 
     exe.run(startup_prog)
@@ -292,8 +285,9 @@ def main(args):
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
-                    save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
-                    fluid.io.save_persistables(exe, save_path, train_program)
+                    save_path = os.path.join(args.save_checkpoint_dir,
+                                             "step_" + str(steps))
+                    fluid.save(train_program, save_path)
 
                 if steps % args.validation_steps == 0:
                     # evaluate on dev set
@@ -306,11 +300,11 @@ def main(args):
                 print("final step: %d " % steps)
                 if args.do_val:
                     evaluate(test_exe, test_prog, test_loader,
-                        [loss.name, accuracy.name, num_seqs.name],
-                        "dev")
+                             [loss.name, accuracy.name, num_seqs.name], "dev")
 
-                save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                save_path = os.path.join(args.save_checkpoint_dir,
+                                         "step_" + str(steps))
+                fluid.save(train_program, save_path)
                 train_loader.reset()
                 break
 
@@ -334,15 +328,12 @@ def main(args):
     if not args.do_train and args.do_val:
         print("Final test result:")
         evaluate(test_exe, test_prog, test_loader,
-                 [loss.name, accuracy.name, num_seqs.name],
-                 "test")
+                 [loss.name, accuracy.name, num_seqs.name], "test")
 
     # infer
     if args.do_infer:
         print("Final infer result:")
-        infer(test_exe, test_prog, infer_loader,
-             [probs.name],
-             "infer")
+        infer(test_exe, test_prog, infer_loader, [probs.name], "infer")
 
 
 def get_cards():

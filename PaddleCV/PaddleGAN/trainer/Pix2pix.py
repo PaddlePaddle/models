@@ -30,7 +30,6 @@ class GTrainer():
         with fluid.program_guard(self.program):
             model = Pix2pix_model()
             self.fake_B = model.network_G(input_A, "generator", cfg=cfg)
-            self.fake_B.persistable = True
             self.infer_program = self.program.clone()
             AB = fluid.layers.concat([input_A, self.fake_B], 1)
             self.pred = model.network_D(AB, "discriminator", cfg)
@@ -246,8 +245,8 @@ class Pix2pix(object):
         exe.run(fluid.default_startup_program())
 
         if self.cfg.init_model:
-            utility.init_checkpoints(self.cfg, exe, gen_trainer, "net_G")
-            utility.init_checkpoints(self.cfg, exe, dis_trainer, "net_D")
+            utility.init_checkpoints(self.cfg, gen_trainer, "net_G")
+            utility.init_checkpoints(self.cfg, dis_trainer, "net_D")
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
@@ -339,9 +338,9 @@ class Pix2pix(object):
                     A_id2name=self.id2name)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
                                     "net_G")
-                utility.checkpoints(epoch_id, self.cfg, exe, dis_trainer,
+                utility.checkpoints(epoch_id, self.cfg, dis_trainer,
                                     "net_D")
         if self.cfg.enable_ce:
             device_num = fluid.core.get_cuda_device_count(

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 EmoTect utilities.
 """
@@ -29,27 +28,13 @@ import paddle
 import paddle.fluid as fluid
 import numpy as np
 
+
 def init_checkpoint(exe, init_checkpoint_path, main_program):
     """
     Init CheckPoint
     """
-    assert os.path.exists(
-        init_checkpoint_path), "[%s] cann't be found." % init_checkpoint_path
 
-    def existed_persitables(var):
-        """
-        If existed presitabels
-        """
-        if not fluid.io.is_persistable(var):
-            return False
-        return os.path.exists(os.path.join(init_checkpoint_path, var.name))
-
-    fluid.io.load_vars(
-        exe,
-        init_checkpoint_path,
-        main_program=main_program,
-        predicate=existed_persitables)
-    print("Load model from {}".format(init_checkpoint_path))
+    fluid.load(main_program, init_checkpoint_path, exe)
 
 
 def word2id(word_dict, query):
@@ -57,8 +42,10 @@ def word2id(word_dict, query):
     Convert word sequence into id list
     """
     unk_id = len(word_dict)
-    wids = [word_dict[w] if w in word_dict else unk_id
-            for w in query.strip().split(" ")]
+    wids = [
+        word_dict[w] if w in word_dict else unk_id
+        for w in query.strip().split(" ")
+    ]
     return wids
 
 
