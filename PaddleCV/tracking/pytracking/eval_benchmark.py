@@ -210,12 +210,12 @@ def compute_evaluation_metrics(dataset, params):
         ar_benchmark = AccuracyRobustnessBenchmark(dataset)
         ar_result = {}
         ar_result.update(ar_benchmark.eval(trackers))
-        ar_benchmark.show_result(ar_result)
 
         eao_benchmark = EAOBenchmark(dataset)
         eao_result = {}
         eao_result.update(eao_benchmark.eval(trackers))
-        eao_benchmark.show_result(eao_result)
+
+        ar_benchmark.show_result(ar_result, eao_result)
         metrics = {'ar': ar_result, 'eao': eao_result}
     else:
         benchmark = OPEBenchmark(dataset)
