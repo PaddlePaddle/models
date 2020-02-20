@@ -41,7 +41,7 @@ def parameters():
         fparams=deep_fparams)
     params.features = MultiResolutionExtractor([deep_feat])
 
-    params.net_path = ""
+    params.net_path = None
     params.response_up = 16
     params.response_sz = 17
     params.context = 0.5

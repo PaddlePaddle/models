@@ -165,27 +165,41 @@ python run_training.py siamfc siamfc_alexnet_vid
 ```
 
 
-### 模型评估
+## 模型评估
+
 评估训练后的模型使用[pysot-toolkit](https://github.com/StrangerZhang/pysot-toolkit)工具包，其提供了多个单目标跟踪数据集的评估API。测试数据集建议从pysot-toolkit 提供的链接中下载。
 
-准备好测试数据后，使用如下命令，克隆跟踪评估pysot-toolkit的代码模块
+准备好测试数据后，使用如下命令，克隆跟踪评估pysot-toolkit的代码模块，运行如下命令：
 
 ```bash
-git submodule update --init  
+cd pytracking
+git clone https://github.com/StrangerZhang/pysot-toolkit.git
+mv pysot-toolkit pysot_toolkit
+cd pysot_toolkit
+pip install -r requirements.txt
+cd pysot/utils/
+python setup.py build_ext --inplace
 ```
 
+### 测试数据集准备dd
+按照pysot-toolkit的方式准备数据集VOT2018，放到/Datasets 文件夹下。
+
+### 设置模型评估环境
 接下来开始设置评估环境：
 ```bash
-# 生成 local.py 文件
+# 生成 local.py 文件，在local.py文件中设置测试数据集、待测试模型、以及测试结果的保存路径
 python -c "from pytracking.admin.environment import create_default_local_file; create_default_local_file()"
 
 # 用你常用的编辑器编辑 pytracking/pysot_toolkit/local.py
 # 比方说，vim pytracking/pysot_toolkit/local.py
-# 其中 dataset_path 和 network_path 设置为上述的 DATASET_PATH 和 NETWORK_PATH
+# 其中 settings.dataset_path 和 settings.network_path 分别设置为测试集的路径和模型训练参数的路径
 ```
 
+### 准备测试数据和模型
+按照pysot-toolkit的方式准备数据集VOT2018，放到settings.dataset_path指定文件夹中，或者自行设置settings.dataset_path指向测试数据集。
 
-将自己训练的模型拷贝到 `NETWORK_PATH`,或者建立软链接，如
+
+将自己训练的模型拷贝到 `NETWORK_PATH`，或者建立软链接，如
 ```bash
 ln -s tracking/ltr/Logs/checkpoints/ltr/bbreg/atom_res18_vid_lasot_coco $NETWORK_PATH/bbreg
 ```
@@ -198,24 +212,15 @@ ln -s tracking/ltr/Logs/checkpoints/ltr/bbreg/atom_res18_vid_lasot_coco $NETWORK
 # -d VOT2018  表示使用VOT2018数据集进行评测
 # -tr bbreg.atom_res18_vid_lasot_coco 表示要评测的模型，和训练保持一致
 # -te atom.default_vot 表示加载定义超参数的文件pytracking/parameter/atom/default_vot.py
-# -e 40 表示使用第40个epoch的模型进行评测
+# -e 40 表示使用第40个epoch的模型进行评测，也可以设置为'range(1, 50, 1)' 表示测试从第1个epoch到第50个epoch模型
 
 python eval_benchmark.py -d VOT2018 -tr bbreg.atom_res18_vid_lasot_coco -te atom.default_vot -e 40
 ```
 
-
 测试SiamFC
 ```
-
-# 在 OTB2013 上评测 SiamFC
-cd pytracking/tracker/siamfc
-python eval_siamfc_otb.py --checkpoint "your trained params path" --dataset_dir "your test dataset path" --dataset_name "test dataset name" --start_epoch 1 --end_epoch 50
-
-# 例如，在OTB2013上测试SiamFC
-python eval_siamfc_otb.py --checkpoint "/checkpoints/ltr/siamfc/siamfc_alexnet_vid/" --dataset_dir "/Datasets/OTB100/" --dataset_name 'CVPR13' --start_epoch 12 --end_epoch 50
-
-# 例如，在VOT15上测试SiamFC
-python eval_siamfc_vot.py --checkpoint "/checkpoints/ltr/siamfc/siamfc_alexnet_vid/" --dataset_dir "/Datasets/VOT2015/" --dataset_name 'VOT2015' --start_epoch 12 --end_epoch 50
+# 例如，在VOT2018上测试SiamFC
+python eval_benchmark.py -d VOT2018 -tr siamfc.siamfc_alexnet_vid -te siamfc.default -e 'range(1, 50, 1)'
 ```
 
 
@@ -240,9 +245,8 @@ jupyter notebook --ip 0.0.0.0 --port 8888
 
 | 数据集 | 模型 | Backbone | 论文结果 | 训练结果 | 模型|
 | :-------: | :-------: | :---: | :---: | :---------: |:---------: |
-|OTB2013| SiamFC | Alexnet |  AUC（OPE）：60.8  | 61.8 | [model]() |
-|VOT2015| SiamFC | Alexnet |  ACC & Failure：0.5335 & 84  | 0.5415 & 84 | [model]() |
 |VOT2018| ATOM | Res18 |  EAO: 0.401 | 0.399 | [model]() |
+|VOT2018| ATOM | AlexNet |  EAO: 0.188 | 0.211 | [model]() |
 
 ## 引用与参考
 

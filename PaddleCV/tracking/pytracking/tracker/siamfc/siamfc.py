@@ -27,6 +27,8 @@ class SiamFC(BaseTracker):
     def model_initializer(self):
         import os
         net_path = self.params.net_path
+        if net_path is None:
+            net_path = self.params.features.features[0].net_path
         if not os.path.exists(net_path):
             raise Exception("not found {}".format(net_path))
         with dygraph.guard():
