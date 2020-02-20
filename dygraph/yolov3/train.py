@@ -50,18 +50,11 @@ from paddle.fluid.dygraph.base import to_variable
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
 
-def get_device_num():
-    # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1:
-        return 1
-    return fluid.core.get_cuda_device_count()
-
-
 def train():
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
 
-    devices_num = get_device_num() if cfg.use_gpu else 1
+    devices_num  = int(os.environ.get('PADDLE_TRAINERS_NUM', 1)) if cfg.use_gpu else 1
     print("Found {} CUDA/CPU devices.".format(devices_num))
 
     if cfg.debug or args.enable_ce:
@@ -132,7 +125,6 @@ def train():
         random_sizes = [cfg.input_size]
         if cfg.random_shape:
             random_sizes = [32 * i for i in range(10,20)]
-
         train_reader = reader.train(
             input_size,
             batch_size=cfg.batch_size,
