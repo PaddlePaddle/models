@@ -107,7 +107,7 @@ python convert_format.py
 
 根据训练和测试文件生成字典和对应的paddle输入文件
 
-需要将训练文件放到目录raw_train_data下，测试文件放到目录raw_test_data下，并生成对应的train_data，test_data和vocab.txt文件
+需要将训练文件rsc15_train_tr_paddle.txt放到目录raw_train_data下，测试文件rsc15_test_paddle.txt 放到目录raw_test_data下，并生成对应的train_data，test_data和vocab.txt文件
 ```
 python text2paddle.py raw_train_data/ raw_test_data/ train_data test_data vocab.txt
 ```

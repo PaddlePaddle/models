@@ -32,14 +32,13 @@ try:
 except ImportError:
     import ConfigParser as cp
 
-
 random_seed = 7
 logger = logging.getLogger()
 format = "%(asctime)s - %(name)s - %(levelname)s -%(filename)s-%(lineno)4d -%(message)s"
 # format = "%(levelname)8s: %(asctime)s: %(filename)s:%(lineno)4d %(message)s"
 logging.basicConfig(format=format)
 logger.setLevel(logging.INFO)
-logger = logging.getLogger('Paddle-DDC') 
+logger = logging.getLogger('Paddle-DDC')
 
 
 def str2bool(v):
@@ -77,6 +76,7 @@ class ArgumentGroup(object):
     Arguments:
         object {[type]} -- [description]
     """
+
     def __init__(self, parser, title, des):
         self._group = parser.add_argument_group(title=title, description=des)
 
@@ -107,6 +107,7 @@ class DataReader(object):
     Returns:
         [type] -- [description]
     """
+
     def __init__(self, char_vocab, intent_dict, max_len):
         self._char_vocab = char_vocab
         self._intent_dict = intent_dict
@@ -115,10 +116,10 @@ class DataReader(object):
         self.all_data = []
         self.max_len = max_len
         self.padding_id = 0
-    
+
     def _get_num_examples(self):
         return len(self.all_data)
-    
+
     def prepare_data(self, data_path, batch_size, mode):
         """
         prepare data
@@ -128,12 +129,17 @@ class DataReader(object):
         #     word_dict_path), "The given word dictionary dose not exist."
         assert os.path.exists(data_path), "The given data file does not exist."
         if mode == "train":
-            train_reader = fluid.io.batch(paddle.reader.shuffle(self.data_reader(data_path, self.max_len, shuffle=True),
-                                        buf_size=batch_size * 100), batch_size)
+            train_reader = fluid.io.batch(
+                paddle.reader.shuffle(
+                    self.data_reader(
+                        data_path, self.max_len, shuffle=True),
+                    buf_size=batch_size * 100),
+                batch_size)
             # train_reader = fluid.io.batch(self.data_reader(data_path), batch_size)                   
             return train_reader
         else:
-            test_reader = fluid.io.batch(self.data_reader(data_path, self.max_len), batch_size)
+            test_reader = fluid.io.batch(
+                self.data_reader(data_path, self.max_len), batch_size)
             return test_reader
 
     def data_reader(self, file_path, max_len, shuffle=False):
@@ -141,7 +147,7 @@ class DataReader(object):
         Convert query into id list
         use fixed voc
         """
-        
+
         for line in codecs.open(file_path, "r", encoding="utf8"):
             line = line.strip()
             if isinstance(line, six.binary_type):
@@ -150,7 +156,8 @@ class DataReader(object):
             char_id_list = list(map(lambda x: 0 if x not in self._char_vocab else int(self._char_vocab[x]), \
                             list(query)))
             if len(char_id_list) < max_len:
-                char_id_list.extend([self.padding_id] * (max_len - len(char_id_list)))
+                char_id_list.extend([self.padding_id] *
+                                    (max_len - len(char_id_list)))
             char_id_list = char_id_list[:max_len]
             intent_id_list = [self.padding_id] * self.intent_size
             for item in intent.split('\2'):
@@ -159,6 +166,7 @@ class DataReader(object):
         if shuffle:
             random.seed(random_seed)
             random.shuffle(self.all_data)
+
         def reader():
             """
             reader
@@ -166,6 +174,7 @@ class DataReader(object):
             for char_id_list, intent_id_list in self.all_data:
                 # print char_id_list, intent_id
                 yield char_id_list, intent_id_list
+
         return reader
 
 
@@ -178,6 +187,7 @@ class DataProcesser(object):
     Returns:
         [type] -- [description]
     """
+
     @staticmethod
     def read_dict(filename):
         """
@@ -211,7 +221,7 @@ class DataProcesser(object):
         char_dict = {}
         intent_dict = {}
         # readfile
-        for line in codecs.open(filename): 
+        for line in codecs.open(filename):
             line = line.strip()
             if isinstance(line, six.binary_type):
                 line = line.strip().decode("utf8", errors="ignore")
@@ -227,7 +237,8 @@ class DataProcesser(object):
                     intent_dict[intent] = 0
                 intent_dict[intent] += 1
         #   save char dict
-        with codecs.open("%s/char.dict" % save_dir, "w", encoding="utf8") as f_out:
+        with codecs.open(
+                "%s/char.dict" % save_dir, "w", encoding="utf8") as f_out:
             f_out.write("PAD\0020\n")
             f_out.write("OOV\0021\n")
             char_id = 2
@@ -238,7 +249,8 @@ class DataProcesser(object):
                     f_out.write("%s\002%d\n" % (key, char_id))
                     char_id += 1
         #   save intent dict
-        with codecs.open("%s/domain.dict" % save_dir, "w", encoding="utf8") as f_out:
+        with codecs.open(
+                "%s/domain.dict" % save_dir, "w", encoding="utf8") as f_out:
             f_out.write("SYS_OTHER\0020\n")
             intent_id = 1
             for key, value in intent_dict.items():
@@ -247,7 +259,6 @@ class DataProcesser(object):
                         key = key.encode("utf8")
                     f_out.write("%s\002%d\n" % (key, intent_id))
                     intent_id += 1
-        
 
 
 class ConfigReader(object):
@@ -282,49 +293,13 @@ class ConfigReader(object):
         return flow_data
 
 
-def init_pretraining_params(exe,
-                            pretraining_params_path,
-                            main_program,
-                            use_fp16=False):
-    """load params of pretrained model, NOT including moment, learning_rate"""
-    assert os.path.exists(pretraining_params_path
-                          ), "[%s] cann't be found." % pretraining_params_path
-
-    def _existed_params(var):
-        if not isinstance(var, fluid.framework.Parameter):
-            return False
-        return os.path.exists(os.path.join(pretraining_params_path, var.name))
-
-    fluid.io.load_vars(
-        exe,
-        pretraining_params_path,
-        main_program=main_program,
-        predicate=_existed_params)
-    print("Load pretraining parameters from {}.".format(
-        pretraining_params_path))
-
-
 def init_checkpoint(exe, init_checkpoint_path, main_program):
     """
     Init CheckPoint
     """
-    assert os.path.exists(
-        init_checkpoint_path), "[%s] cann't be found." % init_checkpoint_path
+    fluid.load(main_program, init_checkpoint_path, exe)
+    print("Load model from {}".format(init_checkpoint_path))
 
-    def existed_persitables(var):
-        """
-        If existed presitabels
-        """
-        if not fluid.io.is_persistable(var):
-            return False
-        return os.path.exists(os.path.join(init_checkpoint_path, var.name))
-
-    fluid.io.load_vars(
-        exe,
-        init_checkpoint_path,
-        main_program=main_program,
-        predicate=existed_persitables)
-    print ("Load model from {}".format(init_checkpoint_path))
 
 def print_arguments(args):
     """
@@ -350,5 +325,3 @@ def check_version(version='1.6.0'):
     except Exception as e:
         logger.error(err)
         sys.exit(1)
-
-

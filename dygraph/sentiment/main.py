@@ -22,6 +22,7 @@ from paddle.fluid.dygraph.base import to_variable
 import nets
 import reader
 from utils import ArgumentGroup
+from utils import get_cards
 
 parser = argparse.ArgumentParser(__doc__)
 model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
@@ -148,6 +149,7 @@ def train():
         steps = 0
         total_cost, total_acc, total_num_seqs = [], [], []
         gru_hidden_data = np.zeros((args.batch_size, 128), dtype='float32')
+        ce_time, ce_infor = [], []
         for eop in range(args.epoch):
             time_begin = time.time()
             for batch_id, data in enumerate(train_data_generator()):
@@ -186,6 +188,8 @@ def train():
                                np.sum(total_cost) / np.sum(total_num_seqs),
                                np.sum(total_acc) / np.sum(total_num_seqs),
                                args.skip_steps / used_time))
+                        ce_time.append(used_time)
+                        ce_infor.append(np.sum(total_acc) / np.sum(total_num_seqs))
                         total_cost, total_acc, total_num_seqs = [], [], []
                         time_begin = time.time()
 
@@ -247,6 +251,17 @@ def train():
                 if enable_profile:
                     print('save profile result into /tmp/profile_file')
                     return
+        if args.ce:
+            card_num = get_cards()
+            _acc = 0
+            _time = 0
+            try:
+                _time = ce_time[-1]
+                _acc = ce_infor[-1]
+            except:
+                print("ce info error")
+            print("kpis\ttrain_duration_card%s\t%s" % (card_num, _time))
+            print("kpis\ttrain_acc_card%s\t%f" % (card_num, _acc))
 
 
 def infer():

@@ -129,7 +129,7 @@ def test_inference_model(args):
     assert (args.inference_model_dir)
     infer_data_generator = reader.data_generator(
         input_file=args.test_set,
-        batch_size=args.batch_size,
+        batch_size=args.batch_size/dev_count,
         phase="infer",
         epoch=1,
         shuffle=False)
@@ -140,7 +140,7 @@ def test_inference_model(args):
         model_filename="model.pdmodel",
         params_filename="params.pdparams")
 
-    infer_pyreader.decorate_batch_generator(infer_data_generator)
+    infer_pyreader.set_batch_generator(infer_data_generator)
     inference(exe, test_prog, infer_pyreader,
         [probs.name], "infer")
 

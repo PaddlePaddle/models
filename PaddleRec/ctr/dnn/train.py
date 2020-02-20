@@ -18,6 +18,7 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import six
 import time
 import random
 import numpy as np
@@ -119,6 +120,16 @@ def parse_args():
     return parser.parse_args()
 
 
+def print_arguments(args):
+    """
+    print arguments
+    """
+    logger.info('-----------  Configuration Arguments -----------')
+    for arg, value in sorted(six.iteritems(vars(args))):
+        logger.info('%s: %s' % (arg, value))
+    logger.info('------------------------------------------------')
+
+
 def get_dataset(inputs, args):
     dataset = fluid.DatasetFactory().create_dataset()
     dataset.set_use_var(inputs)
@@ -127,8 +138,7 @@ def get_dataset(inputs, args):
     thread_num = int(args.cpu_num)
     dataset.set_thread(thread_num)
     file_list = [
-        str(args.train_files_path) + "/%s" % x
-        for x in os.listdir(args.train_files_path)
+        os.path.join(args.train_files_path, x) for x in os.listdir(args.train_files_path)
     ]
     # 请确保每一个训练节点都持有不同的训练文件
     # 当我们用本地多进程模拟分布式时，每个进程需要拿到不同的文件
@@ -176,11 +186,12 @@ def local_train(args):
                     ((epoch), end_time - start_time))
 
         if args.save_model:
-            model_path = (str(args.model_path) + "/" +
-                          "epoch_" + str(epoch) + "/")
+            model_path = os.path.join(
+                str(args.model_path), "epoch_" + str(epoch))
             if not os.path.isdir(model_path):
                 os.mkdir(model_path)
-            fluid.save(fluid.default_main_program(), model_path + "checkpoint")
+            fluid.save(fluid.default_main_program(),
+                       os.path.join(model_path, "checkpoint"))
 
     logger.info("Train Success!")
 
@@ -239,8 +250,8 @@ def distribute_train(args):
 
             # 默认使用0号节点保存模型
             if args.save_model and fleet.is_first_worker():
-                model_path = (str(args.model_path) + "/" + "epoch_" +
-                              str(epoch))
+                model_path = os.path.join(str(args.model_path), "epoch_" +
+                                          str(epoch))
                 fleet.save_persistables(executor=exe, dirname=model_path)
 
         fleet.stop_worker()
@@ -252,7 +263,7 @@ def train():
 
     if not os.path.isdir(args.model_path):
         os.mkdir(args.model_path)
-
+    print_arguments(args)
     if args.is_cloud:
         logger.info("run cloud training")
         distribute_train(args)
