@@ -200,8 +200,11 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
     assert os.path.exists(
         init_checkpoint_path), "[%s] cann't be found." % init_checkpoint_path
     
-    init_checkpoint_path = os.path.join(init_checkpoint_path, "checkpoint")
-    fluid.load(main_program, init_checkpoint_path, exe)
+    try:
+        checkpoint_path = os.path.join(init_checkpoint_path, "checkpoint")
+        fluid.load(main_program, checkpoint_path, exe)
+    except:
+        fluid.load(main_program, init_checkpoint_path, exe)
     print("Load model from {}".format(init_checkpoint_path))
 
 def init_pretraining_params(exe,
