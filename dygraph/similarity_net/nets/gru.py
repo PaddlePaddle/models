@@ -43,7 +43,7 @@ class GRU(Layer):
         self.fc_layer = layers.FCLayer(self.hidden_dim, None, "fc").ops()
         self.proj_layer = Linear(input_dim = self.hidden_dim, output_dim=self.gru_dim*3)
         self.softmax_layer = layers.FCLayer(2, "softmax", "cos_sim").ops()
-        self.seq_len=5
+        self.seq_len=conf_dict["seq_len"]
 
     def forward(self, left, right):
         """
