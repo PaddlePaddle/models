@@ -17,11 +17,13 @@ import numpy as np
 
 import paddle.fluid as fluid
 import paddle.fluid.layers as layers
+from paddle.fluid.layers.utils import map_structure
 
 from desc import *
 
 # Set seed for CE or debug
 dropout_seed = None
+
 
 
 def wrap_layer_with_block(layer, block_idx):
@@ -90,7 +92,6 @@ def multi_head_attention(queries,
                          n_head=1,
                          dropout_rate=0.,
                          cache=None,
-                         gather_idx=None,
                          static_kv=False):
     """
     Multi-Head Attention. Note that attn_bias is added to the logit before
@@ -161,30 +162,28 @@ def multi_head_attention(queries,
         v = transpose_layer(x=reshaped_v, perm=[0, 2, 1, 3])
 
         if cache is not None:  # only for faster inference
+            cache_, i = cache
             if static_kv:  # For encoder-decoder attention in inference
-                cache_k, cache_v = cache["static_k"], cache["static_v"]
-                # To init the static_k and static_v in cache.
-                # Maybe we can use condition_op(if_else) to do these at the first
-                # step in while loop to replace these, however it might be less
-                # efficient.
+                cache_k, cache_v = cache_["static_k"], cache_["static_v"]
+                # To init the static_k and static_v in global block.
                 static_cache_init = wrap_layer_with_block(
                     layers.assign,
                     fluid.default_main_program().current_block().parent_idx)
-                static_cache_init(k, cache_k)
-                static_cache_init(v, cache_v)
+                static_cache_init(
+                    k,
+                    fluid.default_main_program().global_block().var(
+                        "static_k_%d" % i))
+                static_cache_init(
+                    v,
+                    fluid.default_main_program().global_block().var(
+                        "static_v_%d" % i))
+                k, v = cache_k, cache_v
             else:  # For decoder self-attention in inference
-                cache_k, cache_v = cache["k"], cache["v"]
-            # gather cell states corresponding to selected parent
-            select_k = layers.gather(cache_k, index=gather_idx)
-            select_v = layers.gather(cache_v, index=gather_idx)
-            if not static_kv:
-                # For self attention in inference, use cache and concat time steps.
-                select_k = layers.concat([select_k, k], axis=2)
-                select_v = layers.concat([select_v, v], axis=2)
-            # update cell states(caches) cached in global block
-            layers.assign(select_k, cache_k)
-            layers.assign(select_v, cache_v)
-            return q, select_k, select_v
+                # use cache and concat time steps.
+                cache_k, cache_v = cache_["k"], cache_["v"]
+                k = layers.concat([cache_k, k], axis=2)
+                v = layers.concat([cache_v, v], axis=2)
+                cache_["k"], cache_["v"] = (k, v)
         return q, k, v
 
     def __combine_heads(x):
@@ -405,8 +404,7 @@ def decoder_layer(dec_input,
                   relu_dropout,
                   preprocess_cmd,
                   postprocess_cmd,
-                  cache=None,
-                  gather_idx=None):
+                  cache=None):
     """ The layer to be stacked in decoder part.
     The structure of this module is similar to that in the encoder part except
     a multi-head attention is added to implement encoder-decoder attention.
@@ -421,8 +419,7 @@ def decoder_layer(dec_input,
         d_model,
         n_head,
         attention_dropout,
-        cache=cache,
-        gather_idx=gather_idx)
+        cache=cache)
     slf_attn_output = post_process_layer(
         dec_input,
         slf_attn_output,
@@ -440,7 +437,6 @@ def decoder_layer(dec_input,
         n_head,
         attention_dropout,
         cache=cache,
-        gather_idx=gather_idx,
         static_kv=True)
     enc_attn_output = post_process_layer(
         slf_attn_output,
@@ -476,29 +472,27 @@ def decoder(dec_input,
             relu_dropout,
             preprocess_cmd,
             postprocess_cmd,
-            caches=None,
-            gather_idx=None):
+            caches=None):
     """
     The decoder is composed of a stack of identical decoder_layer layers.
     """
     for i in range(n_layer):
-        dec_output = decoder_layer(
-            dec_input,
-            enc_output,
-            dec_slf_attn_bias,
-            dec_enc_attn_bias,
-            n_head,
-            d_key,
-            d_value,
-            d_model,
-            d_inner_hid,
-            prepostprocess_dropout,
-            attention_dropout,
-            relu_dropout,
-            preprocess_cmd,
-            postprocess_cmd,
-            cache=None if caches is None else caches[i],
-            gather_idx=gather_idx)
+        dec_output = decoder_layer(dec_input,
+                                   enc_output,
+                                   dec_slf_attn_bias,
+                                   dec_enc_attn_bias,
+                                   n_head,
+                                   d_key,
+                                   d_value,
+                                   d_model,
+                                   d_inner_hid,
+                                   prepostprocess_dropout,
+                                   attention_dropout,
+                                   relu_dropout,
+                                   preprocess_cmd,
+                                   postprocess_cmd,
+                                   cache=None if caches is None else
+                                   (caches[i], i))
         dec_input = dec_output
     dec_output = pre_process_layer(dec_output, preprocess_cmd,
                                    prepostprocess_dropout)
@@ -654,7 +648,6 @@ def wrap_decoder(dec_inputs,
                  weight_sharing,
                  enc_output=None,
                  caches=None,
-                 gather_idx=None,
                  bos_idx=0):
     """
     The wrapper assembles together all needed layers for the decoder.
@@ -687,8 +680,7 @@ def wrap_decoder(dec_inputs,
         relu_dropout,
         preprocess_cmd,
         postprocess_cmd,
-        caches=caches,
-        gather_idx=gather_idx)
+        caches=caches)
     # Reshape to 2D tensor to use GEMM instead of BatchedGEMM
     dec_output = layers.reshape(
         dec_output, shape=[-1, dec_output.shape[-1]], inplace=True)
@@ -748,8 +740,6 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
             force_cpu=True)
         step_idx = layers.fill_constant(
             shape=[1], dtype=start_tokens.dtype, value=0, force_cpu=True)
-        cond = layers.less_than(x=step_idx, y=max_len)  # default force_cpu=True
-        while_op = layers.While(cond)
         # array states will be stored for each step.
         ids = layers.array_write(
             layers.reshape(start_tokens, (-1, 1)), step_idx)
@@ -773,21 +763,25 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
                     dtype=enc_output.dtype,
                     value=0),
                 "static_k":  # for encoder-decoder attention
-                layers.create_tensor(dtype=enc_output.dtype),
+                fluid.data(shape=[None, n_head, 0, d_key], dtype=enc_output.dtype, name=("static_k_%d"%i)),
                 "static_v":  # for encoder-decoder attention
-                layers.create_tensor(dtype=enc_output.dtype)
+                fluid.data(shape=[None, n_head, 0, d_value], dtype=enc_output.dtype, name=("static_v_%d"%i)),
             } for i in range(n_layer)
         ]
 
-        with while_op.block():
-            pre_ids = layers.array_read(array=ids, i=step_idx)
-            # Since beam_search_op dosen't enforce pre_ids' shape, we can do
-            # inplace reshape here which actually change the shape of pre_ids.
-            # pre_ids = layers.reshape(pre_ids, (-1, 1, 1), inplace=True)
-            pre_scores = layers.array_read(array=scores, i=step_idx)
+        def cond_func(step_idx, selected_ids, selected_scores, gather_idx,
+                      caches, trg_src_attn_bias):
+            length_cond = layers.less_than(x=step_idx, y=max_len)
+            finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
+            return layers.logical_and(x=length_cond, y=finish_cond)
+
+        def body_func(step_idx, pre_ids, pre_scores, gather_idx, caches,
+                      trg_src_attn_bias):
             # gather cell states corresponding to selected parent
-            pre_src_attn_bias = layers.gather(
-                trg_src_attn_bias, index=parent_idx)
+            pre_caches = map_structure(
+                lambda x: layers.gather(x, index=gather_idx), caches)
+            pre_src_attn_bias = layers.gather(trg_src_attn_bias,
+                                              index=gather_idx)
             pre_pos = layers.elementwise_mul(
                 x=layers.fill_constant_batch_size_like(
                     input=pre_src_attn_bias,  # cann't use lod tensor here
@@ -812,14 +806,14 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
                                   postprocess_cmd,
                                   weight_sharing,
                                   enc_output=enc_output,
-                                  caches=caches,
-                                  gather_idx=parent_idx,
+                                  caches=pre_caches,
                                   bos_idx=bos_idx)
             # intra-beam topK
             topk_scores, topk_indices = layers.topk(
                 input=layers.softmax(logits), k=beam_size)
-            accu_scores = layers.elementwise_add(
-                x=layers.log(topk_scores), y=pre_scores, axis=0)
+            accu_scores = layers.elementwise_add(x=layers.log(topk_scores),
+                                                 y=pre_scores,
+                                                 axis=0)
             # beam_search op uses lod to differentiate branches.
             accu_scores = layers.lod_reset(accu_scores, pre_ids)
             # topK reduction across beams, also contain special handle of
@@ -832,16 +826,19 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
                 beam_size=beam_size,
                 end_id=eos_idx,
                 return_parent_idx=True)
-            layers.increment(x=step_idx, value=1.0, in_place=True)
-            # cell states(caches) have been updated in wrap_decoder,
-            # only need to update beam search states here.
+            step_idx = layers.increment(x=step_idx, value=1.0, in_place=False)
             layers.array_write(selected_ids, i=step_idx, array=ids)
             layers.array_write(selected_scores, i=step_idx, array=scores)
-            layers.assign(gather_idx, parent_idx)
-            layers.assign(pre_src_attn_bias, trg_src_attn_bias)
-            length_cond = layers.less_than(x=step_idx, y=max_len)
-            finish_cond = layers.logical_not(layers.is_empty(x=selected_ids))
-            layers.logical_and(x=length_cond, y=finish_cond, out=cond)
+            return (step_idx, selected_ids, selected_scores, gather_idx,
+                    pre_caches, pre_src_attn_bias)
+
+        _ = layers.while_loop(cond=cond_func,
+                              body=body_func,
+                              loop_vars=[
+                                  step_idx, start_tokens, init_scores,
+                                  parent_idx, caches, trg_src_attn_bias
+                              ],
+                              is_test=True)
 
         finished_ids, finished_scores = layers.beam_search_decode(
             ids, scores, beam_size=beam_size, end_id=eos_idx)

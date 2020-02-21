@@ -11,10 +11,11 @@ init_from_checkpoint: ""
 init_from_pretrain_model: ""
 # path of trained parameter, to make prediction
 init_from_params: "trained_params/step_100000"
-save_model_path: ""
-# the directory for saving checkpoints.
+# the directory for saving models.
+save_model_path: "saved_models"
+# deprecated, the directory for saving checkpoints.
 save_checkpoint: "trained_ckpts"
-# the directory for saving trained parameters.
+# deprecated, the directory for saving trained parameters.
 save_param: "trained_params"
 # the directory for saving inference model.
 inference_model_dir: "infer_model"
