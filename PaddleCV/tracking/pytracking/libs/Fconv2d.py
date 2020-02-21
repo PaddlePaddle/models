@@ -22,7 +22,8 @@ from paddle.fluid import core
 
 from paddle.fluid.initializer import Normal, Constant, NumpyArrayInitializer
 
-from paddle.fluid import dygraph_utils
+from paddle.fluid.dygraph import dygraph_utils
+
 from paddle.fluid.framework import Variable, OpProtoHolder, in_dygraph_mode
 from paddle.fluid.layers import utils
 

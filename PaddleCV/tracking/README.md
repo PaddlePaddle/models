@@ -140,7 +140,7 @@ python -c "from ltr.admin.environment import create_default_local_file; create_d
     self.coco_dir = '/Datasets/train2014/'
     self.imagenet_dir = '/Datasets/ILSVRC2015/'
 ```
-另外，训练ATOM时，需要准备got10k和lasot的数据集划分文件, ，方式如下：
+另外，训练ATOM时，需要准备got10k和lasot的数据集划分文件，方式如下：
 ```bash
 cd ltr/data_specs/
 wget https://paddlemodels.cdn.bcebos.com/paddle_track/vot/got10k_lasot_split.tar
@@ -181,7 +181,7 @@ cd pysot/utils/
 python setup.py build_ext --inplace
 ```
 
-### 测试数据集准备dd
+### 测试数据集准备
 按照pysot-toolkit的方式准备数据集VOT2018，放到/Datasets 文件夹下。
 
 ### 设置模型评估环境
@@ -219,7 +219,7 @@ python eval_benchmark.py -d VOT2018 -tr bbreg.atom_res18_vid_lasot_coco -te atom
 
 测试SiamFC
 ```
-# 例如，在VOT2018上测试SiamFC
+# 在VOT2018上测试SiamFC
 python eval_benchmark.py -d VOT2018 -tr siamfc.siamfc_alexnet_vid -te siamfc.default -e 'range(1, 50, 1)'
 ```
 
