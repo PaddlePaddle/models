@@ -24,6 +24,7 @@ import paddle.fluid as fluid
 
 from utils.input_field import InputField
 from utils.configure import PDConfig
+from utils.load import load
 
 # include task-specific libs
 import desc
@@ -81,20 +82,18 @@ def do_save_inference_model(args):
     exe.run(startup_prog)
     assert (
         args.init_from_params), "must set init_from_params to load parameters"
-    fluid.load(test_prog, os.path.join(args.init_from_params, "transformer"),
-               exe)
+    load(test_prog, os.path.join(args.init_from_params, "transformer"), exe)
     print("finish initing model from params from %s" % (args.init_from_params))
 
     # saving inference model
 
-    fluid.io.save_inference_model(
-        args.inference_model_dir,
-        feeded_var_names=input_field_names,
-        target_vars=[out_ids, out_scores],
-        executor=exe,
-        main_program=test_prog,
-        model_filename="model.pdmodel",
-        params_filename="params.pdparams")
+    fluid.io.save_inference_model(args.inference_model_dir,
+                                  feeded_var_names=list(input_field_names),
+                                  target_vars=[out_ids, out_scores],
+                                  executor=exe,
+                                  main_program=test_prog,
+                                  model_filename="model.pdmodel",
+                                  params_filename="params.pdparams")
 
     print("save inference model at %s" % (args.inference_model_dir))
 

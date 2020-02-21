@@ -25,6 +25,7 @@ import paddle.fluid as fluid
 from utils.input_field import InputField
 from utils.configure import PDConfig
 from utils.check import check_gpu, check_version
+from utils.load import load
 
 # include task-specific libs
 import desc
@@ -117,8 +118,7 @@ def do_predict(args):
     exe.run(startup_prog)
     assert (
         args.init_from_params), "must set init_from_params to load parameters"
-    fluid.load(test_prog, os.path.join(args.init_from_params, "transformer"),
-               exe)
+    load(test_prog, os.path.join(args.init_from_params, "transformer"), exe)
     print("finish initing model from params from %s" % (args.init_from_params))
 
     # to avoid a longer length than training, reset the size of position encoding to max_length

@@ -27,6 +27,7 @@ import utils.dist_utils as dist_utils
 from utils.input_field import InputField
 from utils.configure import PDConfig
 from utils.check import check_gpu, check_version
+from utils.load import load
 
 # include task-specific libs
 import desc
@@ -141,13 +142,15 @@ def do_train(args):
 
     ## init from some checkpoint, to resume the previous training
     if args.init_from_checkpoint:
-        fluid.load(train_prog, args.init_from_checkpoint, exe)
+        load(train_prog, os.path.join(args.init_from_checkpoint, "transformer"),
+             exe)
         print("finish initing model from checkpoint from %s" %
               (args.init_from_checkpoint))
 
     ## init from some pretrain models, to better solve the current task
     if args.init_from_pretrain_model:
-        fluid.load(train_prog, args.init_from_pretrain_model, exe)
+        load(train_prog,
+             os.path.join(args.init_from_pretrain_model, "transformer"), exe)
         print("finish initing model from pretrained params from %s" %
               (args.init_from_pretrain_model))
 
