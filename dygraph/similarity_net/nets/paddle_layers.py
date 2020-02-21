@@ -1046,3 +1046,4 @@ class BasicGRUUnit(Layer):
         new_hidden = u * pre_hidden + (1 - u) * c
 
         return new_hidden
+

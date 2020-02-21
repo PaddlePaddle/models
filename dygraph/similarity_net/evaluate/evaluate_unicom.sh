@@ -12,6 +12,7 @@ TASK_MODE='pairwise'
 CONFIG_PATH=./config/bow_pairwise.json
 INIT_CHECKPOINT=./model_files/simnet_bow_pairwise_pretrained_model/bow_pairwise
 
+
 python unicom_split.py
 cd ..
 python ./run_classifier.py \

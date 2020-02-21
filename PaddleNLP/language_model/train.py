@@ -60,7 +60,7 @@ def profile_context(profile=True, profiler_path='/tmp/paddingrnn.profile'):
 
 
 def get_current_model_para(train_prog, train_exe):
-    param_list = train_prog.block(0).all_parameters()
+    param_list = train_prog.all_parameters()
     param_name_list = [p.name for p in param_list]
 
     vals = {}
@@ -73,7 +73,7 @@ def get_current_model_para(train_prog, train_exe):
 
 def save_para_npz(train_prog, train_exe):
     print("begin to save model to model_base")
-    param_list = train_prog.block(0).all_parameters()
+    param_list = train_prog.all_parameters()
     param_name_list = [p.name for p in param_list]
 
     vals = {}

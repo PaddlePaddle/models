@@ -21,6 +21,7 @@ from paddle.fluid.dygraph.base import to_variable
 from paddle.fluid.dygraph import Layer, Embedding, Linear
 import paddle.fluid.param_attr as attr
 uniform_initializer = lambda x: fluid.initializer.UniformInitializer(low=-x, high=x)
+
 class BOW(Layer):
     """
     BOW

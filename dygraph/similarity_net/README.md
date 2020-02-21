@@ -6,10 +6,12 @@
 ### 效果说明
 基于百度海量搜索数据，我们训练了一个SimNet-BOW-Pairwise语义匹配模型，在一些真实的FAQ问答场景中，该模型效果比基于字面的相似度方法AUC提升5%以上，我们基于百度自建测试集（包含聊天、客服等数据集）和进行评测，效果如下表所示。
 
+
 | 模型       | 百度知道         | ECOM        |QQSIM | UNICOM |
 |:-----------:|:-------------:|:-------------:|:-------------:|:-------------:|
 |   | AUC  | AUC | AUC|正逆序比|
 |BOW_Pairwise|0.6815|0.7331|0.7638|1.5566|
+
 #### 测试集说明
 | 数据集       | 来源         | 垂类        |
 |:-----------:|:-------------:|:-------------:|
@@ -19,17 +21,21 @@
 |UNICOM|联通客服|客服|
 ## 快速开始
 #### 版本依赖
+
 本项目依赖于 Paddlepaddle Fluid 1.7，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
+
 
 python版本依赖python 2.7
 #### 安装代码
 克隆工具集代码库到本地
 ```shell
 git clone https://github.com/PaddlePaddle/models.git
+
 cd models/dygraph/similarity_net
 ```
 #### 数据准备
 下载经过预处理的数据，运行命令后，data目录下会存在训练集数据示例、测试集数据示例，以及对应词索引字典（term2id.dict）。
+
 ```shell
 sh download_data.sh
 ```
@@ -43,7 +49,8 @@ python download.py dataset
 sh download_pretrained_model.sh
 ```
 或者
-``
+
+```
 python download.py model
 ```
 

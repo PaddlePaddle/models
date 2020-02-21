@@ -97,6 +97,7 @@ def train(conf_dict, args):
         # get vocab size
         conf_dict['dict_size'] = len(vocab)
         conf_dict['seq_len'] = args.seq_len
+
         # Load network structure dynamically
         net = utils.import_class("./nets",
                                 conf_dict["net"]["module_name"],
@@ -312,6 +313,7 @@ def test(conf_dict, args):
                 paddle.batch(get_test_examples, batch_size=args.batch_size),
                 place)
      
+
         conf_dict['dict_size'] = len(vocab)         
         conf_dict['seq_len'] = args.seq_len
 
@@ -332,18 +334,22 @@ def test(conf_dict, args):
                     left_feat, pos_score = net(left, pos_right)
                     pred = pos_score
                     # pred_list += list(pred.numpy())
+
                     pred_list += list(map(lambda item: float(item[0]), pred.numpy()))
                     predictions_file.write(u"\n".join(
                             map(lambda item: str((item[0] + 1) / 2), pred.numpy())) + "\n")
+
             else:
                 for left, right in test_pyreader():
                     left = fluid.layers.reshape(left, shape=[-1, 1])
                     right = fluid.layers.reshape(right, shape=[-1, 1])
                     left_feat, pred = net(left, right)
                     # pred_list += list(pred.numpy())
+
                     pred_list += list(map(lambda item: float(item[0]), pred.numpy()))
                     predictions_file.write(u"\n".join(
                             map(lambda item: str(np.argmax(item)), pred.numpy())) + "\n")
+
 
             if args.task_mode == "pairwise":
                 pred_list = np.array(pred_list).reshape((-1, 1))
@@ -379,6 +385,7 @@ def infer(conf_dict, args):
     else:
         place = fluid.CPUPlace()
    
+
     with fluid.dygraph.guard(place):
         vocab = utils.load_vocab(args.vocab_path)
         simnet_process = reader.SimNetProcessor(args, vocab)

@@ -33,8 +33,6 @@ class GTrainer():
             model = STGAN_model()
             self.fake_img, self.rec_img = model.network_G(
                 image_real, label_org_, label_trg_, cfg, name="generator")
-            self.fake_img.persistable = True
-            self.rec_img.persistable = True
             self.infer_program = self.program.clone(for_test=True)
             self.g_loss_rec = fluid.layers.mean(
                 fluid.layers.abs(
@@ -64,9 +62,6 @@ class GTrainer():
                 fluid.layers.sigmoid_cross_entropy_with_logits(self.cls_fake,
                                                                label_trg))
             self.g_loss = self.g_loss_fake + cfg.lambda_rec * self.g_loss_rec + cfg.lambda_cls * self.g_loss_cls
-            self.g_loss_fake.persistable = True
-            self.g_loss_rec.persistable = True
-            self.g_loss_cls.persistable = True
             lr = cfg.g_lr
             vars = []
             for var in self.program.list_vars():
@@ -95,8 +90,6 @@ class DTrainer():
                 image_real, label_org_, label_trg_, cfg, name="generator")
             self.pred_real, self.cls_real = model.network_D(
                 image_real, cfg, name="discriminator")
-            self.pred_real.persistable = True
-            self.cls_real.persistable = True
             self.pred_fake, _ = model.network_D(
                 self.fake_img, cfg, name="discriminator")
             self.d_loss_cls = fluid.layers.mean(
@@ -137,11 +130,6 @@ class DTrainer():
                 raise NotImplementedError("gan_mode {} is not support!".format(
                     cfg.gan_mode))
 
-            self.d_loss_real.persistable = True
-            self.d_loss_fake.persistable = True
-            self.d_loss.persistable = True
-            self.d_loss_cls.persistable = True
-            self.d_loss_gp.persistable = True
             vars = []
             for var in self.program.list_vars():
                 if fluid.io.is_parameter(var) and (
@@ -158,8 +146,6 @@ class DTrainer():
                 name="net_D")
 
             optimizer.minimize(self.d_loss, parameter_list=vars)
-            f = open('G_program.txt', 'w')
-            print(self.program, file=f)
 
     def gradient_penalty(self, f, real, fake=None, cfg=None, name=None):
         def _interpolate(a, b=None):
@@ -317,7 +303,7 @@ class STGAN(object):
                                     label_trg, label_trg_, self.cfg,
                                     self.batch_num)
 
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[image_real, label_org, label_trg],
             capacity=64,
             iterable=True,
@@ -332,7 +318,7 @@ class STGAN(object):
 
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
-        py_reader.decorate_batch_generator(
+        loader.set_batch_generator(
             self.train_reader,
             places=fluid.cuda_places()
             if self.cfg.use_gpu else fluid.cpu_places())
@@ -341,8 +327,8 @@ class STGAN(object):
         exe.run(fluid.default_startup_program())
 
         if self.cfg.init_model:
-            utility.init_checkpoints(self.cfg, exe, gen_trainer, "net_G")
-            utility.init_checkpoints(self.cfg, exe, dis_trainer, "net_D")
+            utility.init_checkpoints(self.cfg, gen_trainer, "net_G")
+            utility.init_checkpoints(self.cfg, dis_trainer, "net_D")
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
@@ -366,7 +352,7 @@ class STGAN(object):
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            for data in py_reader():
+            for data in loader():
                 if self.cfg.max_iter and total_train_batch == self.cfg.max_iter: # used for benchmark
                     return
                 s_time = time.time()
@@ -417,24 +403,24 @@ class STGAN(object):
                     name='image_name',
                     shape=[None, self.cfg.n_samples],
                     dtype='int32')
-                test_py_reader = fluid.io.PyReader(
+                test_loader = fluid.io.DataLoader.from_generator(
                     feed_list=[image_real, label_org, label_trg, image_name],
                     capacity=32,
                     iterable=True,
                     use_double_buffer=True)
-                test_py_reader.decorate_batch_generator(
+                test_loader.set_batch_generator(
                     self.test_reader,
                     places=fluid.cuda_places()
                     if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = test_gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
                                         test_program, test_gen_trainer,
-                                        test_py_reader)
+                                        test_loader)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
                                     "net_G")
-                utility.checkpoints(epoch_id, self.cfg, exe, dis_trainer,
+                utility.checkpoints(epoch_id, self.cfg, dis_trainer,
                                     "net_D")
             # used for continuous evaluation
             if self.cfg.enable_ce:

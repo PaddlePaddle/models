@@ -50,18 +50,11 @@ from paddle.fluid.dygraph.base import to_variable
 num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
 
-def get_device_num():
-    # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1:
-        return 1
-    return fluid.core.get_cuda_device_count()
-
-
 def train():
     # check if set use_gpu=True in paddlepaddle cpu version
     check_gpu(cfg.use_gpu)
 
-    devices_num = get_device_num() if cfg.use_gpu else 1
+    devices_num  = int(os.environ.get('PADDLE_TRAINERS_NUM', 1)) if cfg.use_gpu else 1
     print("Found {} CUDA/CPU devices.".format(devices_num))
 
     if cfg.debug or args.enable_ce:
@@ -75,7 +68,8 @@ def train():
 
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) if cfg.use_data_parallel else fluid.CUDAPlace(0)
-
+    if not cfg.use_gpu:
+        palce = fluid.CPUPlace()
     with fluid.dygraph.guard(place):
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
@@ -131,7 +125,6 @@ def train():
         random_sizes = [cfg.input_size]
         if cfg.random_shape:
             random_sizes = [32 * i for i in range(10,20)]
-
         train_reader = reader.train(
             input_size,
             batch_size=cfg.batch_size,
@@ -141,8 +134,7 @@ def train():
             mixup_iter=mixup_iter * devices_num,
             random_sizes=random_sizes,
             use_multiprocess_reader=cfg.use_multiprocess_reader,
-            num_workers=cfg.worker_num)
-
+            use_gpu=cfg.use_gpu)
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(train_reader)
         smoothed_loss = SmoothedValue()
@@ -150,7 +142,6 @@ def train():
         for iter_id, data in enumerate(train_reader()):
             prev_start_time = start_time
             start_time = time.time()
-
             img = np.array([x[0] for x in data]).astype('float32')
             img = to_variable(img)
 

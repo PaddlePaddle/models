@@ -174,7 +174,7 @@ class ArgConfig(object):
         model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
         model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
         model_g.add_arg("task_mode", str, None, "task mode: pairwise or pointwise")
-        
+
 
         train_g = ArgumentGroup(parser, "training", "training options.")
         train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
@@ -195,6 +195,7 @@ class ArgConfig(object):
         data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
         data_g.add_arg("batch_size", int, 32, "Total examples' number in batch for training.")
         data_g.add_arg("seq_len", int, 32, "The length of each sentence.")
+
 
         run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
         run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")

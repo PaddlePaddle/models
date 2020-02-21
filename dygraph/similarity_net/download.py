@@ -67,7 +67,7 @@ def download(url, filename, md5sum):
     retry = 0
     retry_limit = 3
     chunk_size = 4096
-    
+
     while not (os.path.exists(filename) and md5file(filename) == md5sum):
         if retry < retry_limit:
             retry += 1

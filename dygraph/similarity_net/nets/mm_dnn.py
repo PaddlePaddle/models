@@ -113,8 +113,8 @@ class MMDNN(Layer):
         left_emb = self.emb_layer(left)
         right_emb = self.emb_layer(right)
         if self.scale:
-            left_emb = left_emb * (self.emb_size**5)
-            right_emb = right_emb * (self.emb_size**5)
+            left_emb = left_emb * (self.emb_size**0.5)
+            right_emb = right_emb * (self.emb_size**0.5)
 
         # bi_listm
         left_proj = self.fw_in_proj(left_emb)
@@ -139,6 +139,7 @@ class MMDNN(Layer):
         left_lens=to_variable(np.array([self.seq_len]))
         right_lens=to_variable(np.array([self.seq_len]))
 
+
         if self.match_mask:
             mask1 = fluid.layers.sequence_mask(
                 x=left_lens, dtype='float32', maxlen=self.seq_len1 + 1)
@@ -158,6 +159,7 @@ class MMDNN(Layer):
             cross_mask = fluid.layers.stack(x=[mask] * self.kernel_size, axis=0)
             cross_mask = fluid.layers.stack(x=[cross] * conv.shape[1], axis=1)
             conv = cross_mask * conv + (1 - cross_mask) * (-2**self.seq_len + 1)
+
         pool = self.pool_layer(conv)
         conv_pool_relu = fluid.layers.relu(pool)
 

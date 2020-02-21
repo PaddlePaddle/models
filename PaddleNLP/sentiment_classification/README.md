@@ -29,7 +29,7 @@
 
 1. PaddlePaddle 安装
 
-   本项目依赖于 PaddlePaddle Fluid 1.6 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle Fluid 1.7 及以上版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
 
 2. 代码安装
 

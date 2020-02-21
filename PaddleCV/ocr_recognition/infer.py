@@ -54,7 +54,9 @@ def inference(args):
     num_classes = data_reader.num_classes()
     data_shape = data_reader.data_shape()
     # define network
-    images = fluid.layers.data(name='pixel', shape=data_shape, dtype='float32')
+    if len(list(data_shape)) == 3:
+        data_shape = [None] + list(data_shape)
+    images = fluid.data(name='pixel', shape=data_shape, dtype='float32')
     ids = infer(images, num_classes, use_cudnn=True if args.use_gpu else False)
     # data reader
     infer_reader = data_reader.inference(
@@ -82,11 +84,10 @@ def inference(args):
 
     # load init model
     model_dir = args.model_path
-    model_file_name = None
-    if not os.path.isdir(args.model_path):
-        model_dir = os.path.dirname(args.model_path)
-        model_file_name = os.path.basename(args.model_path)
-    fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
+    fluid.load(
+        program=fluid.default_main_program(),
+        model_path=model_dir,
+        executor=exe)
     print("Init model from: %s." % args.model_path)
 
     batch_times = []

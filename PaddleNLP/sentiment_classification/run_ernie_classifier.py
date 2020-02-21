@@ -37,18 +37,18 @@ from config import PDConfig
 from utils import init_checkpoint
 
 def ernie_pyreader(args, pyreader_name):
-    src_ids = fluid.layers.data(
-        name="src_ids", shape=[-1, args.max_seq_len, 1], dtype="int64")
-    sent_ids = fluid.layers.data(
-        name="sent_ids", shape=[-1, args.max_seq_len, 1], dtype="int64")
-    pos_ids = fluid.layers.data(
-        name="pos_ids", shape=[-1, args.max_seq_len, 1], dtype="int64")
-    input_mask = fluid.layers.data(
-        name="input_mask", shape=[-1, args.max_seq_len, 1], dtype="float32")
-    labels = fluid.layers.data(
-        name="labels", shape=[-1, 1], dtype="int64")
-    seq_lens = fluid.layers.data(
-        name="seq_lens", shape=[-1], dtype="int64")
+    src_ids = fluid.data(
+        name="src_ids", shape=[None, args.max_seq_len, 1], dtype="int64")
+    sent_ids = fluid.data(
+        name="sent_ids", shape=[None, args.max_seq_len, 1], dtype="int64")
+    pos_ids = fluid.data(
+        name="pos_ids", shape=[None, args.max_seq_len, 1], dtype="int64")
+    input_mask = fluid.data(
+        name="input_mask", shape=[None, args.max_seq_len, 1], dtype="float32")
+    labels = fluid.data(
+        name="labels", shape=[None, 1], dtype="int64")
+    seq_lens = fluid.data(
+        name="seq_lens", shape=[None], dtype="int64")
     
     pyreader = fluid.io.DataLoader.from_generator(
         feed_list=[src_ids, sent_ids, pos_ids, input_mask, labels, seq_lens],
