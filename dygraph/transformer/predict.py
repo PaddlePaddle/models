@@ -24,6 +24,7 @@ import paddle.fluid as fluid
 
 from utils.configure import PDConfig
 from utils.check import check_gpu, check_version
+from utils.load import load_dygraph
 
 # include task-specific libs
 import reader
@@ -95,7 +96,7 @@ def do_predict(args):
         # load the trained model
         assert args.init_from_params, (
             "Please set init_from_params to load the infer model.")
-        model_dict, _ = fluid.load_dygraph(
+        model_dict, _ = load_dygraph(
             os.path.join(args.init_from_params, "transformer"))
         # to avoid a longer length than training, reset the size of position
         # encoding to max_length
