@@ -38,7 +38,7 @@ from optimization import optimization
 from utils.args import ArgumentGroup, print_arguments, check_cuda
 from utils.init import init_checkpoint, init_pretraining_params
 
-# yapf: disable
+ yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
 model_g.add_arg("bert_config_path",      str,  "./config/bert_config.json",  "Path to the json file for bert model config.")
@@ -412,7 +412,8 @@ def train(args):
 
             if steps % args.save_steps == 0:
                 save_path = os.path.join(args.checkpoints, "step_" + str(steps))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                #fluid.io.save_persistables(exe, save_path, train_program)
+                fluid.save( train_program, save_path )
 
             if args.validation_set_dir and steps % args.validation_steps == 0:
                 vali_cost, vali_lm_cost, vali_acc, vali_steps, vali_speed = predict(
