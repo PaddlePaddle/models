@@ -95,6 +95,7 @@ def compress(args):
     exe.run(fluid.default_startup_program())
 
     if args.pretrained_model:
+        assert os.path.exists(args.pretrained_model), "pretrained_model is not exist!!!"
         def if_exist(var):
             return os.path.exists(os.path.join(args.pretrained_model, var.name))
         fluid.io.load_vars(exe, args.pretrained_model, predicate=if_exist)
