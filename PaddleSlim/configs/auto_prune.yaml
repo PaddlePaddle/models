@@ -23,6 +23,7 @@ strategies:
         max_ratio: 0.50
         min_ratio: 0.48
         uniform_range: 0.4
+        init_tokens: [32,32,32,32,32,32,32,32,32,32,32,32,32]
         pruned_params: '.*_sep_weights'
         metric_name: 'acc_top1'
 compressor:
