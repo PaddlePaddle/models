@@ -17,6 +17,7 @@ from paddle.fluid import ParamAttr
 
 from ..model import ModelBase
 from .tsn_res_model import TSN_ResNet
+from .tsn_SeResNeXt_model import TSN_SeResNeXt
 
 import logging
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ class TSN(ModelBase):
         self.get_config()
 
     def get_config(self):
+        self.backbone = self.get_config_from_sec('model', 'backbone')
         self.num_classes = self.get_config_from_sec('model', 'num_classes')
         self.seg_num = self.get_config_from_sec('model', 'seg_num')
         self.seglen = self.get_config_from_sec('model', 'seglen')
@@ -75,6 +77,7 @@ class TSN(ModelBase):
 
     def create_model_args(self):
         cfg = {}
+        cfg['backbone'] = self.backbone
         cfg['layers'] = self.num_layers
         cfg['class_dim'] = self.num_classes
         cfg['seg_num'] = self.seg_num
@@ -82,10 +85,16 @@ class TSN(ModelBase):
 
     def build_model(self):
         cfg = self.create_model_args()
-        videomodel = TSN_ResNet(
-            layers=cfg['layers'],
-            seg_num=cfg['seg_num'],
-            is_training=(self.mode == 'train'))
+        if cfg['backbone'] == "ResNet":
+            videomodel = TSN_ResNet(
+                layers=cfg['layers'],
+                seg_num=cfg['seg_num'],
+                is_training=(self.mode == 'train'))
+        elif cfg['backbone'] == "SeResNeXt":
+            videomodel = TSN_SeResNeXt(
+                layers=cfg['layers'],
+                seg_num=cfg['seg_num'],
+                is_training=(self.mode == 'train'))
         out = videomodel.net(input=self.feature_input[0],
                              class_dim=cfg['class_dim'])
         self.network_outputs = [out]
@@ -140,21 +149,43 @@ class TSN(ModelBase):
         return fetch_list
 
     def pretrain_info(self):
-        return (
-            'ResNet50_pretrained',
-            'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz'
-        )
+        if self.backbone == 'ResNet':
+            return (
+                'ResNet50_pretrained',
+                'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz'
+            )
+        elif self.backbone == "SeResNeXt":
+            return (
+                'SeResNeXt_pretrained',
+                'https://paddlemodels.bj.bcebos.com/video_classification/SeResNeXt152_pretrained.tar.gz'
+            )
+        else:
+            pass
 
     def weights_info(self):
-        return (
-            'TSN_final.pdparams',
-            'https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams'
-        )
+        if self.backbone == 'ResNet':
+            return (
+                'TSN_final.pdparams',
+                'https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams'
+            )
+        elif self.backbone == "SeResNeXt":
+            return (
+                'TSN_SeResNeXt_final.pdparams',
+                'https://paddlemodels.bj.bcebos.com/video_classification/TSN_SeResNeXt_final.pdparams'
+            )
+        else:
+            pass
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
         def is_parameter(var):
-            return isinstance(var, fluid.framework.Parameter) and (
-                not ("fc_0" in var.name))
+            if self.backbone == "ResNet":
+
+                return isinstance(var, fluid.framework.Parameter) and (
+                    not ("fc_0" in var.name))
+            elif self.backbone == "SeResNeXt":
+                return isinstance(var, fluid.framework.Parameter) and (
+                    not ("fc_weights" in var.name)) and (
+                        not ("fc_offset" in var.name))
 
         logger.info("Load pretrain weights from {}, exclude fc layer.".format(
             pretrain))
