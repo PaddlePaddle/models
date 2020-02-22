@@ -80,6 +80,7 @@ fc10_weights (1280L, 1000L)
 
 您可以通过运行脚本`run.sh`运行改示例，请确保已正确下载[pretrained model](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification#%E5%B7%B2%E5%8F%91%E5%B8%83%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%85%B6%E6%80%A7%E8%83%BD)。
 
+>注意：在执行`compress.py`脚本时指定的`epochs`不会影响训练轮数，只会影响`learning rate decay`，需要需要修改训练轮数，请修改配置文件中的`epoch`选项。
 
 ### 保存断点（checkpoint）
 
