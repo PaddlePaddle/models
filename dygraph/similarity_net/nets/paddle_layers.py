@@ -20,7 +20,7 @@ import inspect
 import six
 import sys
 from functools import partial
-
+from functools import reduce
 import numpy as np
 import paddle
 import paddle.fluid as fluid
@@ -1046,38 +1046,4 @@ class BasicGRUUnit(Layer):
         new_hidden = u * pre_hidden + (1 - u) * c
 
         return new_hidden
-
-
-######  DELETE
-
-# @contextlib.contextmanager
-# def eager_guard(is_eager):
-#     if is_eager:
-#         with fluid.dygraph.guard():
-#             yield
-#     else:
-#         yield
-
-# # print(flatten(np.random.rand(2,8,8)))
-# random_seed = 123
-# np.random.seed(random_seed)
-# # print np.random.rand(2, 8)
-# batch_size = 2
-# seq_len = 8
-# hidden_size = 8
-# vocab_size, embed_dim, num_layers, hidden_size = 100, 8, 2, 8
-# import torch
-
-
-# with eager_guard(False):
-#     fluid.default_main_program().random_seed = random_seed
-#     fluid.default_startup_program().random_seed = random_seed
-#     lstm_cell = BasicLSTMUnit(hidden_size=8, input_size=8)
-#     lstm = RNN(cell=lstm_cell, time_major=True)
-#     #print lstm(inputs=to_variable(np.random.rand(2, 8, 8).astype("float32")))[0].numpy()
-#     executor.run(fluid.default_startup_program())
-#     x = fluid.data(name="x", shape=[None, None, 8], dtype="float32")
-#     out, _ = lstm(x)
-#     out = executor.run(feed={"x": np.random.rand(2, 8, 8).astype("float32")}, fetch_list=[out.name])[0]
-#     print np.array(out)
 

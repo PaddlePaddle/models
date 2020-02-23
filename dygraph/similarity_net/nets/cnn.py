@@ -35,7 +35,7 @@ class CNN(Layer):
         self.filter_size = conf_dict["net"]["filter_size"]
         self.num_filters = conf_dict["net"]["num_filters"]
         self.hidden_dim = conf_dict["net"]["hidden_dim"]
-        self.seq_len = 5
+        self.seq_len = conf_dict["seq_len"]
         self.channels = 1
         
         # layers

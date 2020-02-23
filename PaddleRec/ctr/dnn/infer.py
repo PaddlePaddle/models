@@ -15,6 +15,7 @@
 from __future__ import print_function
 import os
 import time
+import six
 import numpy as np
 import logging
 import argparse
@@ -33,11 +34,6 @@ def parse_args():
         description="PaddlePaddle CTR-DNN example")
     # -------------Data & Model Path-------------
     parser.add_argument(
-        '--train_files_path',
-        type=str,
-        default='./train_data',
-        help="The path of training dataset")
-    parser.add_argument(
         '--test_files_path',
         type=str,
         default='./test_data',
@@ -48,23 +44,18 @@ def parse_args():
         default='models',
         help='The path for model to store (default: models)')
 
-    # -------------Training parameter-------------
-    parser.add_argument(
-        '--learning_rate',
-        type=float,
-        default=1e-4,
-        help="Initial learning rate for training")
+    # -------------Running parameter-------------
     parser.add_argument(
         '--batch_size',
         type=int,
         default=1000,
         help="The size of mini-batch (default:1000)")
     parser.add_argument(
-        "--epochs",
+        '--infer_epoch',
         type=int,
-        default=1,
-        help="Number of epochs for training.")
-
+        default=0,
+        help='Specify which epoch to run infer'
+    )
     # -------------Network parameter-------------
     parser.add_argument(
         '--embedding_size',
@@ -93,30 +84,25 @@ def parse_args():
         type=int,
         default=0,
         help='Local train or distributed train on paddlecloud (default: 0)')
-    parser.add_argument(
-        '--save_model',
-        type=int,
-        default=0,
-        help='Save training model or not')
-    parser.add_argument(
-        '--enable_ce',
-        action='store_true',
-        help='If set, run the task with continuous evaluation logs.')
-    parser.add_argument(
-        '--cpu_num',
-        type=int,
-        default=2,
-        help='threads for ctr training')
 
     return parser.parse_args()
+
+
+def print_arguments(args):
+    """
+    print arguments
+    """
+    logger.info('-----------  Configuration Arguments -----------')
+    for arg, value in sorted(six.iteritems(vars(args))):
+        logger.info('%s: %s' % (arg, value))
+    logger.info('------------------------------------------------')
 
 
 def run_infer(args, model_path):
     place = fluid.CPUPlace()
     train_generator = generator.CriteoDataset(args.sparse_feature_dim)
     file_list = [
-        str(args.test_files_path) + "/%s" % x
-        for x in os.listdir(args.test_files_path)
+        os.path.join(args.test_files_path, x) for x in os.listdir(args.test_files_path)
     ]
     test_reader = paddle.batch(train_generator.test(file_list),
                                batch_size=args.batch_size)
@@ -150,7 +136,7 @@ def run_infer(args, model_path):
                     main_program=fluid.default_main_program())
             elif args.is_local:
                 fluid.load(fluid.default_main_program(),
-                           model_path + "/checkpoint", exe)
+                           os.path.join(model_path, "checkpoint"), exe)
             set_zero()
 
             run_index = 0
@@ -171,7 +157,7 @@ def run_infer(args, model_path):
             infer_result = {}
             infer_result['loss'] = infer_loss
             infer_result['auc'] = infer_auc
-            log_path = model_path + '/infer_result.log'
+            log_path = os.path.join(model_path, 'infer_result.log')
             logger.info(str(infer_result))
             with open(log_path, 'w+') as f:
                 f.write(str(infer_result))
@@ -181,12 +167,18 @@ def run_infer(args, model_path):
 
 if __name__ == "__main__":
     args = parse_args()
+    print_arguments(args)
     model_list = []
     for _, dir, _ in os.walk(args.model_path):
         for model in dir:
-            if "epoch" in model:
-                path = "/".join([args.model_path, model])
+            if "epoch" in model and args.infer_epoch == int(model.split('_')[-1]):
+                path = os.path.join(args.model_path, model)
                 model_list.append(path)
+
+    if len(model_list) == 0:
+        logger.info("There is no satisfactory model {} at path {}, please check your start command & env. ".format(
+            str("epoch_")+str(args.infer_epoch), args.model_path))
+
     for model in model_list:
         logger.info("Test model {}".format(model))
         run_infer(args, model)
