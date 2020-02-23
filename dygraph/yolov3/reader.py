@@ -197,6 +197,7 @@ class DataSetReader(object):
                                             gt_scores, mixup_im, mixup_gt_boxes,
                                             mixup_gt_labels, mixup_gt_scores)
 
+
             im, gt_boxes, gt_labels, gt_scores = \
                 image_utils.image_augment(im, gt_boxes, gt_labels,
                                           gt_scores, size, mean)
@@ -325,10 +326,11 @@ def train(size=416,
             place = fluid.CPUPlace()
         data_loader.set_sample_list_generator(infinite_reader,places=place)
         generator_out = []
-        for data in data_loader():            
-            for i in data:
-                generator_out.append(i.numpy()[0])              
-            yield [generator_out]
+        for data in data_loader(): 
+            im, gt_boxes, gt_labels, gt_scores = data[0].numpy(),data[1].numpy(),data[2].numpy(),data[3].numpy()
+            for i in range(batch_size):
+                generator_out.append([im[i],gt_boxes[i],gt_labels[i],gt_scores[i]])
+            yield generator_out
             generator_out = []
             cnt += 1
             if cnt >= total_iter:
