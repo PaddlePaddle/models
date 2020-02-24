@@ -26,6 +26,9 @@ import logging
 import logging.handlers
 import paddle.fluid as fluid
 import io
+import pickle
+import warnings
+from functools import partial
 """
 ******functions for file processing******
 """
@@ -365,3 +368,22 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
         predicate=existed_persitables)
     print("Load model from {}".format(init_checkpoint_path))
 
+
+def load_dygraph(model_path, keep_name_table=False):
+    """
+    To load python2 saved models in python3.
+    """
+    try:
+        para_dict, opti_dict = fluid.load_dygraph(model_path, keep_name_table)
+        return para_dict, opti_dict
+    except UnicodeDecodeError:
+        warnings.warn(
+            "An UnicodeDecodeError is catched, which might be caused by loading "
+            "a python2 saved model. Encoding of pickle.load would be set and "
+            "load again automatically.")
+        if six.PY3:
+            load_bak = pickle.load
+            pickle.load = partial(load_bak, encoding="latin1")
+            para_dict, opti_dict = fluid.load_dygraph(model_path, keep_name_table)
+            pickle.load = load_bak
+            return para_dict, opti_dict
