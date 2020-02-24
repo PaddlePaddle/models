@@ -220,6 +220,8 @@ def train_ptb_lm():
     if args.use_gpu == True:
         place = core.CUDAPlace(0)
 
+    dev_count = fluid.core.get_cuda_device_count()
+
     # check if paddlepaddle version is satisfied
     model_check.check_version()
 
@@ -363,9 +365,9 @@ def train_ptb_lm():
             print("eval finished")
             ppl = np.exp(total_loss / iters)
             print("ppl ", batch_id, ppl[0])
-            if args.ce:
-                print("kpis\ttest_ppl\t%0.3f" % ppl[0])
 
+        ce_time = []
+        ce_ppl = []
         grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(max_grad_norm)
         for epoch_id in range(max_epoch):
             ptb_model.train()
@@ -412,6 +414,8 @@ def train_ptb_lm():
             print("one epoch finished", epoch_id)
             print("time cost ", time.time() - start_time)
             ppl = np.exp(total_loss / iters)
+            ce_time.append(time.time() - start_time)
+            ce_ppl.append(ppl[0])
             print("-- Epoch:[%d]; ppl: %.5f" % (epoch_id, ppl[0]))
 
             if batch_size <= 20 and epoch_id == 0 and ppl[0] > 1000:
@@ -421,14 +425,23 @@ def train_ptb_lm():
                 print("Abort this training process and please start again.")
                 return 
 
-            if args.ce:
-                print("kpis\ttrain_ppl\t%0.3f" % ppl[0])
             save_model_dir = os.path.join(args.save_model_dir,
                                           str(epoch_id), 'params')
             fluid.save_dygraph(ptb_model.state_dict(), save_model_dir)
             print("Saved model to: %s.\n" % save_model_dir)
 
             eval(ptb_model, valid_data)
+
+        if args.ce:
+            _ppl = 0
+            _time = 0
+            try:
+                _time = ce_time[-1]
+                _ppl = ce_ppl[-1]
+            except:
+                print("ce info error")
+            print("kpis\ttrain_duration_card%s\t%s" % (dev_count, _time))
+            print("kpis\ttrain_ppl_card%s\t%f" % (dev_count, _ppl))
 
         eval(ptb_model, test_data)
 

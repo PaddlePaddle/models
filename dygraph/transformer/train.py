@@ -24,6 +24,7 @@ import paddle.fluid as fluid
 
 from utils.configure import PDConfig
 from utils.check import check_gpu, check_version
+from utils.load import load_dygraph
 
 # include task-specific libs
 import reader
@@ -97,13 +98,13 @@ def do_train(args):
 
         ## init from some checkpoint, to resume the previous training
         if args.init_from_checkpoint:
-            model_dict, opt_dict = fluid.load_dygraph(
+            model_dict, opt_dict = load_dygraph(
                 os.path.join(args.init_from_checkpoint, "transformer"))
             transformer.load_dict(model_dict)
             optimizer.set_dict(opt_dict)
         ## init from some pretrain models, to better solve the current task
         if args.init_from_pretrain_model:
-            model_dict, _ = fluid.load_dygraph(
+            model_dict, _ = load_dygraph(
                 os.path.join(args.init_from_pretrain_model, "transformer"))
             transformer.load_dict(model_dict)
 
