@@ -127,7 +127,8 @@ def infer():
 
     dir_name = args.reload_model
     print("dir name", dir_name)
-    fluid.io.load_params(exe, dir_name)
+    dir_name = os.path.join(dir_name, "checkpoint")
+    fluid.load(main_program, dir_name, exe)
 
     train_data_iter = reader.get_data_iter(infer_data, 1, mode='eval')
 
