@@ -7,9 +7,10 @@ tracking 是基于百度深度学习框架Paddle研发的视频单目标跟踪�
 当前tracking涵盖当前目标跟踪的主流模型，包括SiamFC, SiamRPN, SiamMask, ATOM。tracking旨在给开发者提供一系列基于PaddlePaddle的便捷、高效的目标跟踪深度学习算法，后续会不断的扩展模型的丰富度。
 
 ATOM 跟踪效果展示：
+
 ![ball](./imgs/ball1.gif)
 
-图中，蓝色框为标注的bbox，红色框为ATOM跟踪的bbox。
+图中，绿色框为标注的bbox，红色框为ATOM跟踪的bbox。
 
 ## 代码目录结构
 
