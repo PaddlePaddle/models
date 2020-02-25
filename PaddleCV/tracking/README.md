@@ -230,7 +230,7 @@ ln -s tracking/ltr/Logs/checkpoints/ltr/bbreg/ $NETWORK_PATH/bbreg
 # -tr bbreg.atom_res18_vid_lasot_coco 表示要评测的模型，和训练保持一致
 # -te atom.default_vot 表示加载定义超参数的文件pytracking/parameter/atom/default_vot.py
 # -e 40 表示使用第40个epoch的模型进行评测，也可以设置为'range(1, 50, 1)' 表示测试从第1个epoch到第50个epoch模型
-# -n 15 表示测试15次去平均结果，默认值是1
+# -n 15 表示测试15次取平均结果，默认值是1
 python eval_benchmark.py -d VOT2018 -tr bbreg.atom_res18_vid_lasot_coco -te atom.default_vot -e 40 -n 15
 ```
 
