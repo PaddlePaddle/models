@@ -39,6 +39,7 @@ class BOW(Layer):
         self.seq_len = conf_dict["seq_len"]
         self.emb_layer = layers.EmbeddingLayer(self.dict_size, self.emb_dim, "emb").ops()
         self.bow_layer = Linear(self.bow_dim, self.bow_dim)
+        self.bow_layer_po = layers.FCLayer(self.bow_dim, None, "fc").ops()
         self.softmax_layer = layers.FCLayer(2, "softmax", "cos_sim").ops()
     
 
@@ -71,6 +72,6 @@ class BOW(Layer):
         else:
             concat_layer = layers.ConcatLayer(1)
             concat = concat_layer.ops([left_soft, right_soft])
-            concat_fc = self.bow_layer(concat)
+            concat_fc = self.bow_layer_po(concat)
             pred = self.softmax_layer(concat_fc)
             return left_soft, pred
