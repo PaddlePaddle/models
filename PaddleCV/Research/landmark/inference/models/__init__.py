@@ -1,6 +1,0 @@
-from .inceptionv4_embedding import InceptionV4_embedding
-from .resnet_vd import ResNet50_vd, ResNet101_vd, ResNet152_vd, ResNet200_vd
-from .resnet_vd_embedding import ResNet50_vd_embedding, ResNet101_vd_embedding, ResNet152_vd_embedding, ResNet200_vd_embedding
-from .resnet_vd_fc import ResNet50_vd_fc, ResNet101_vd_fc, ResNet152_vd_fc
-from .resnet_vd_v0_embedding import ResNet50_vd_v0_embedding, ResNet101_vd_v0_embedding, ResNet152_vd_v0_embedding
-from .se_resnext_vd_embedding import SE_ResNeXt50_32x4d_vd_embedding, SE_ResNeXt101_32x4d_vd_embedding, SE_ResNeXt152_64x4d_vd_embedding
