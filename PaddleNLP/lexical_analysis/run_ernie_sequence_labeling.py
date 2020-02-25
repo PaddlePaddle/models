@@ -187,17 +187,17 @@ def do_train(args):
                      end_time - start_time, train_pyreader.queue.size()))
 
             if steps % args.save_steps == 0:
-                save_path = os.path.join(args.model_save_dir,
-                                         "step_" + str(steps))
+                save_path = os.path.join(args.model_save_dir, "step_" + str(steps),
+                                         "checkpoint")
                 print("\tsaving model as %s" % (save_path))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                fluid.save(train_program, save_path)
 
             if steps % args.validation_steps == 0:
                 evaluate(exe, test_program, test_pyreader, train_ret)
 
-    save_path = os.path.join(args.model_save_dir, "step_" + str(steps))
-    fluid.io.save_persistables(exe, save_path, train_program)
-
+    save_path = os.path.join(args.model_save_dir, "step_" + str(steps),
+                                         "checkpoint")
+    fluid.save(train_program, save_path)
 
 def do_eval(args):
     # init executor
