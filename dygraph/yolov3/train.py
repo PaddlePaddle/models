@@ -67,7 +67,7 @@ def train():
         os.makedirs(cfg.model_save_dir)
 
     gpu_id = int(os.environ.get('FLAGS_selected_gpus', 0))
-    if use_gpu:
+    if cfg.use_gpu:
         place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) if cfg.use_data_parallel else fluid.CUDAPlace(0)
     else:
         place = fluid.CPUPlace()
