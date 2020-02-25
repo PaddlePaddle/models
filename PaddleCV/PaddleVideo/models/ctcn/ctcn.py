@@ -182,6 +182,5 @@ class CTCN(ModelBase):
 
     def weights_info(self):
         return (
-            'CTCN_final.pdparams',
-            'https://paddlemodels.bj.bcebos.com/video_detection/CTCN_final.pdparams'
-        )
+            'CTCN.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_detection/CTCN.pdparams')

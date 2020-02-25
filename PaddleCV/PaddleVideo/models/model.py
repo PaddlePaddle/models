@@ -28,6 +28,10 @@ WEIGHT_DIR = os.path.join(os.path.expanduser('~'), '.paddle', 'weights')
 logger = logging.getLogger(__name__)
 
 
+def is_parameter(var):
+    return isinstance(var, fluid.framework.Parameter)
+
+
 class NotImplementError(Exception):
     "Error: model function not implement"
 
@@ -146,10 +150,12 @@ class ModelBase(object):
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
         logger.info("Load pretrain weights from {}".format(pretrain))
-        fluid.io.load_params(exe, pretrain, main_program=prog)
+        state_dict = fluid.load_program_state(pretrain)
+        fluid.set_program_state(prog, state_dict)
 
     def load_test_weights(self, exe, weights, prog, place):
-        fluid.io.load_params(exe, '', main_program=prog, filename=weights)
+        params_list = list(filter(is_parameter, prog.list_vars()))
+        fluid.load(prog, weights, executor=exe, var_list=params_list)
 
     def get_config_from_sec(self, sec, item, default=None):
         if sec.upper() not in self.cfg:

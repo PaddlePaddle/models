@@ -100,7 +100,7 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
                 train_metrics.calculate_and_log_out(train_outs, \
                         info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
             train_iter += 1
- 
+
             # NOTE: profiler tools, used for benchmark
             if is_profiler and epoch == 0 and train_iter == log_interval:
                 profiler.start_profiler("All")
@@ -115,40 +115,15 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
 
         logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
                     format(epoch, np.mean(epoch_periods[1:])))
-        save_model(
-            exe,
-            train_prog,
-            save_dir,
-            save_model_name,
-            "_epoch{}".format(epoch),
-            save_type='.pdckpt')
-        save_model(
-            exe,
-            train_prog,
-            save_dir,
-            save_model_name,
-            "_epoch{}".format(epoch),
-            save_type='.pdparams')
+        save_model(exe, train_prog, save_dir, save_model_name,
+                   "_epoch{}".format(epoch))
         if compiled_test_prog and valid_interval > 0 and (
                 epoch + 1) % valid_interval == 0:
             test_with_dataloader(exe, compiled_test_prog, test_dataloader,
                                  test_fetch_list, test_metrics, log_interval,
                                  save_model_name)
 
-    save_model(
-        exe,
-        train_prog,
-        save_dir,
-        save_model_name,
-        '_final',
-        save_type='.pdckpt')
-    save_model(
-        exe,
-        train_prog,
-        save_dir,
-        save_model_name,
-        '_final',
-        save_type='.pdparams')
+    save_model(exe, train_prog, save_dir, save_model_name, '_final')
     #when fix_random seed for debug
     if fix_random_seed:
         cards = os.environ.get('CUDA_VISIBLE_DEVICES')
@@ -158,28 +133,12 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
                                                     np.mean(epoch_periods)))
 
 
-def save_model(exe,
-               program,
-               save_dir,
-               model_name,
-               postfix=None,
-               save_type='.pdckpt'):
-    """
-    save_type: '.pdckpt' or '.pdparams', '.pdckpt' for all persistable variables, 
-               '.pdparams' for parameters only
-    """
+def save_model(exe, program, save_dir, model_name, postfix=None):
+    """save paramters and optimizer related varaibles"""
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
-    saved_model_name = model_name + postfix + save_type
+    saved_model_name = model_name + postfix
 
-    if save_type == '.pdckpt':
-        fluid.io.save_persistables(
-            exe, save_dir, main_program=program, filename=saved_model_name)
-    elif save_type == '.pdparams':
-        fluid.io.save_params(
-            exe, save_dir, main_program=program, filename=saved_model_name)
-    else:
-        raise NotImplementedError(
-            'save_type {} not implemented, it should be either {} or {}'
-            .format(save_type, '.pdckpt', '.pdparams'))
+    fluid.save(program, os.path.join(save_dir, saved_model_name))
+
     return
