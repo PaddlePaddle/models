@@ -1,6 +1,6 @@
 import numpy as np
 
-from pytracking.features.deep import ResNet50, ResNet18
+from pytracking.features.deep import ResNet18, ResNet50
 from pytracking.features.extractor import MultiResolutionExtractor
 from pytracking.utils import TrackerParams, FeatureParams
 
@@ -105,10 +105,7 @@ def parameters():
     # Setup the feature extractor (which includes the IoUNet)
     deep_fparams = FeatureParams(feature_params=[deep_params])
     deep_feat = ResNet18(
-        net_path='/home/vis/bily/code/baidu/personal-code/libi-13/paddle_ATOMnet-ep0040',
-        output_layers=['block2'],
-        fparams=deep_fparams,
-        normalize_power=2)
+        output_layers=['block2'], fparams=deep_fparams, normalize_power=2)
     params.features = MultiResolutionExtractor([deep_feat])
 
     params.vot_anno_conversion_type = 'preserve_area'
