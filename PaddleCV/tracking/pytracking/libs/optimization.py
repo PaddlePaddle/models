@@ -394,7 +394,7 @@ class ConjugateGradient(ConjugateGradientBase):
                                fetch_list=[v.name for v in self.f0])
             res = TensorList(res)
             loss = self.problem.ip_output(res, res)
-            print('Paddle Loss: {}'.format(loss))
+            #print('Paddle Loss: {}'.format(loss))
 
 
 class GaussNewtonCG(ConjugateGradientBase):
@@ -614,7 +614,7 @@ class GaussNewtonCG(ConjugateGradientBase):
                                fetch_list=[v.name for v in self.f0])
             res = TensorList(res)
             loss = self.problem.ip_output(res, res)
-            print('Paddle Loss: {}'.format(loss))
+            #print('Paddle Loss: {}'.format(loss))
 
 
 class GradientDescentL2:
@@ -691,7 +691,7 @@ class GradientDescentL2:
                                fetch_list=[self.loss.name] + grad_names)
             if self.debug:
                 loss = res[0]
-                print('Paddle Loss: {}'.format(loss))
+                #print('Paddle Loss: {}'.format(loss))
 
             grad = TensorList(res[1:])
 

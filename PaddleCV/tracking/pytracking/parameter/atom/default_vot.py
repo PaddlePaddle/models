@@ -1,6 +1,6 @@
 import numpy as np
 
-from pytracking.features.deep import ResNet50
+from pytracking.features.deep import ResNet18, ResNet50
 from pytracking.features.extractor import MultiResolutionExtractor
 from pytracking.utils import TrackerParams, FeatureParams
 
@@ -42,7 +42,9 @@ def parameters():
     params.train_skipping = 10  # How often to run training (every n-th frame)
 
     # Online model parameters
-    deep_params.kernel_size = (4, 4)  # Kernel size of filter
+    # deep_params.kernel_size = (4, 4) # when slice double grad is support,
+    # else, deep_params.kernel_size = (5, 5)
+    deep_params.kernel_size = (5, 5)  # Kernel size of filter
     deep_params.compressed_dim = 64  # Dimension output of projection matrix
     deep_params.filter_reg = 1e-1  # Filter regularization factor
     deep_params.projection_reg = 1e-4  # Projection regularization factor
@@ -104,11 +106,8 @@ def parameters():
 
     # Setup the feature extractor (which includes the IoUNet)
     deep_fparams = FeatureParams(feature_params=[deep_params])
-    deep_feat = ResNet50(
-        net_path='/home/vis/bily/code/baidu/personal-code/libi-13/paddle_ATOMnet-ep0040',
-        output_layers=['block2'],
-        fparams=deep_fparams,
-        normalize_power=2)
+    deep_feat = ResNet18(
+        output_layers=['block2'], fparams=deep_fparams, normalize_power=2)
     params.features = MultiResolutionExtractor([deep_feat])
 
     params.vot_anno_conversion_type = 'preserve_area'
