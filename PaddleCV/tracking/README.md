@@ -6,10 +6,16 @@ tracking 是基于百度深度学习框架Paddle研发的视频单目标跟踪�
 
 当前tracking涵盖当前目标跟踪的主流模型，包括SiamFC, SiamRPN, SiamMask, ATOM。tracking旨在给开发者提供一系列基于PaddlePaddle的便捷、高效的目标跟踪深度学习算法，后续会不断的扩展模型的丰富度。
 
+ATOM 跟踪效果展示：
+![ball](./imgs/ball1.gif)
+
+图中，蓝色框为标注的bbox，红色框为ATOM跟踪的bbox。
+
 ## 代码目录结构
 
 
 ```
+imgs 包含跟踪结果的图像
 ltr 包含模型训练代码
   └─ actors             输入数据，输出优化目标  
   └─ admin              管理数据路径等
@@ -48,9 +54,12 @@ pytracking  包含跟踪代码
 /Datasets/
     └─ ILSVRC2015_VID/
     └─ train2014/
+    └─ GOT-10K/
     └─ LaSOTBenchmark/
 
 ```
+Datasets是数据集保存的路径。
+
 注：数据集较大，请预留足够的磁盘空间。训练Siamfc时，只需要下载VID数据集，训练ATOM需要全部下载上述三个数据集。
 
 
@@ -116,8 +125,6 @@ pip install python-prctl
 # 到代码库根目录
 cd tracking
 
-# 生成 local.py 文件，再次训练时不需要重新生成
-python -c "from ltr.admin.environment import create_default_local_file; create_default_local_file()"
 ```
 其次，设置训练模型文件保存路径：workspace_dir，backbone模型路径：backbone_dir，数据集路径等等，对于没有用到的数据集，可以不用设置其路径。
 ```
@@ -128,6 +135,9 @@ python -c "from ltr.admin.environment import create_default_local_file; create_d
 #       backbone_dir = Your BACKBONE_PATH # 训练SiamFC时不需要设置
 #       并依次设定需要使用的训练数据集如 VID, LaSOT, COCO 等，比如：
 #       imagenet_dir = '/Datasets/ILSVRC2015/'  # 设置训练集VID的路径
+
+# 如果 ltr/admin/local.py 不存在，请使用代码生成
+python -c "from ltr.admin.environment import create_default_local_file; create_default_local_file()"
 ```
 
 训练SiamFC时需要只需要配置 workspace_dir和 imagenet_dir即可，如下：
@@ -135,11 +145,12 @@ python -c "from ltr.admin.environment import create_default_local_file; create_d
     self.workspace_dir = './checkpoints'
     self.imagenet_dir = '/Datasets/ILSVRC2015/'
 ```
-训练ATOM时，除了 workspace_dir和 imagenet_dir外，还需要指定coco和lasot的数据集路径，参考如下：
+训练ATOM时，除了 workspace_dir和 imagenet_dir外，还需要指定coco, lasot, got10k的数据集路径，参考如下：
 ```bash
     self.workspace_dir = './checkpoints'
     self.lasot_dir = '/Datasets/LaSOTBenchmark/'
     self.coco_dir = '/Datasets/train2014/'
+    self.got10k_dir = '/Datasets/GOT-10k/train'
     self.imagenet_dir = '/Datasets/ILSVRC2015/'
 ```
 另外，训练ATOM时，需要准备got10k和lasot的数据集划分文件，方式如下：
@@ -189,12 +200,13 @@ python setup.py build_ext --inplace
 ### 设置模型评估环境
 接下来开始设置评估环境：
 ```bash
-# 生成 local.py 文件，在local.py文件中设置测试数据集、待测试模型、以及测试结果的保存路径
-python -c "from pytracking.admin.environment import create_default_local_file; create_default_local_file()"
-
-# 用你常用的编辑器编辑 pytracking/pysot_toolkit/local.py
-# 比方说，vim pytracking/pysot_toolkit/local.py
+# 在pytracking/admin/local.py文件中设置测试数据集、待测试模型、以及测试结果的保存路径
+# 用你常用的编辑器编辑 pytracking/admin/local.py
+# 比方说，vim pytracking/admin/local.py
 # 其中 settings.dataset_path 和 settings.network_path 分别设置为测试集的路径和模型训练参数的路径
+
+# 如果不存在 pytracking/admin/local.py，可以使用代码生成
+python -c "from pytracking.admin.environment import create_default_local_file; create_default_local_file()"
 ```
 
 ### 准备测试数据和模型
@@ -203,7 +215,7 @@ python -c "from pytracking.admin.environment import create_default_local_file; c
 
 将自己训练的模型拷贝到 `NETWORK_PATH`，或者建立软链接，如
 ```bash
-ln -s tracking/ltr/Logs/checkpoints/ltr/bbreg/atom_res18_vid_lasot_coco $NETWORK_PATH/bbreg
+ln -s tracking/ltr/Logs/checkpoints/ltr/bbreg/ $NETWORK_PATH/bbreg
 ```
 
 ### 开始测试：
@@ -215,8 +227,8 @@ ln -s tracking/ltr/Logs/checkpoints/ltr/bbreg/atom_res18_vid_lasot_coco $NETWORK
 # -tr bbreg.atom_res18_vid_lasot_coco 表示要评测的模型，和训练保持一致
 # -te atom.default_vot 表示加载定义超参数的文件pytracking/parameter/atom/default_vot.py
 # -e 40 表示使用第40个epoch的模型进行评测，也可以设置为'range(1, 50, 1)' 表示测试从第1个epoch到第50个epoch模型
-
-python eval_benchmark.py -d VOT2018 -tr bbreg.atom_res18_vid_lasot_coco -te atom.default_vot -e 40
+# -n 15 表示测试15次去平均结果，默认值是1
+python eval_benchmark.py -d VOT2018 -tr bbreg.atom_res18_vid_lasot_coco -te atom.default_vot -e 40 -n 15
 ```
 
 测试SiamFC
