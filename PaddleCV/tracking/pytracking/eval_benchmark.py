@@ -19,9 +19,9 @@ CURRENT_DIR = osp.dirname(__file__)
 sys.path.append(osp.join(CURRENT_DIR, '..'))
 
 from pytracking.admin.environment import env_settings
-from pytracking.pysot_toolkit.datasets import DatasetFactory
-from pytracking.pysot_toolkit.evaluation import EAOBenchmark, AccuracyRobustnessBenchmark, OPEBenchmark
-from pytracking.pysot_toolkit.utils.region import vot_overlap
+from pytracking.pysot_toolkit.pysot.datasets import DatasetFactory
+from pytracking.pysot_toolkit.pysot.evaluation import EAOBenchmark, AccuracyRobustnessBenchmark, OPEBenchmark
+from pytracking.pysot_toolkit.pysot.utils.region import vot_overlap
 
 parser = argparse.ArgumentParser(description='tracking evaluation')
 
