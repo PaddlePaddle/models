@@ -43,6 +43,7 @@ import io
 import logging
 
 from utils import ArgConfig
+from utils import load_dygraph
 from model_check import check_version
 from model_check import check_cuda
 
@@ -103,7 +104,7 @@ def train(conf_dict, args):
                                 conf_dict["net"]["module_name"],
                                 conf_dict["net"]["class_name"])(conf_dict)
         if args.init_checkpoint is not "":
-            model, _ = fluid.dygraph.load_dygraph(args.init_checkpoint)
+            model, _ = load_dygraph(args.init_checkpoint)
             net.set_dict(model)
         # Load loss function dynamically
         loss = utils.import_class("./nets/losses",
@@ -135,13 +136,13 @@ def train(conf_dict, args):
         losses = []
         start_time = time.time()
 
-        train_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=False)
+        train_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=True)
         get_train_examples = simnet_process.get_reader("train",epoch=args.epoch)
         train_pyreader.decorate_sample_list_generator(
                 paddle.batch(get_train_examples, batch_size=args.batch_size),
                 place)
         if args.do_valid:
-            valid_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=False)
+            valid_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=True)
             get_valid_examples = simnet_process.get_reader("valid")  
             valid_pyreader.decorate_sample_list_generator(
                 paddle.batch(get_valid_examples, batch_size=args.batch_size),
@@ -269,7 +270,7 @@ def train(conf_dict, args):
 
         if args.do_test:
             # Get Feeder and Reader
-            test_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=False)
+            test_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=True)
             get_test_examples = simnet_process.get_reader("test")
             test_pyreader.decorate_sample_list_generator(
                 paddle.batch(get_test_examples, batch_size=args.batch_size),
@@ -307,7 +308,7 @@ def test(conf_dict, args):
 
         vocab = utils.load_vocab(args.vocab_path)
         simnet_process = reader.SimNetProcessor(args, vocab)
-        test_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=False)
+        test_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=True)
         get_test_examples = simnet_process.get_reader("test")
         test_pyreader.decorate_sample_list_generator(
                 paddle.batch(get_test_examples, batch_size=args.batch_size),
@@ -321,7 +322,7 @@ def test(conf_dict, args):
                                 conf_dict["net"]["module_name"],
                                 conf_dict["net"]["class_name"])(conf_dict)
        
-        model, _ = fluid.dygraph.load_dygraph(args.init_checkpoint)
+        model, _ = load_dygraph(args.init_checkpoint)
         net.set_dict(model)
         metric = fluid.metrics.Auc(name="auc")
         pred_list = []
@@ -390,7 +391,7 @@ def infer(conf_dict, args):
         vocab = utils.load_vocab(args.vocab_path)
         simnet_process = reader.SimNetProcessor(args, vocab)
         get_infer_examples = simnet_process.get_infer_reader
-        infer_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=False)
+        infer_pyreader = fluid.io.PyReader(capacity=16, return_list=True, use_double_buffer=True)
         infer_pyreader.decorate_sample_list_generator(
                     paddle.batch(get_infer_examples, batch_size=args.batch_size),
                     place) 
@@ -401,7 +402,7 @@ def infer(conf_dict, args):
         net = utils.import_class("./nets",
                                 conf_dict["net"]["module_name"],
                                 conf_dict["net"]["class_name"])(conf_dict)
-        model, _ = fluid.dygraph.load_dygraph(args.init_checkpoint)
+        model, _ = load_dygraph(args.init_checkpoint)
         net.set_dict(model)
         
         pred_list = []
