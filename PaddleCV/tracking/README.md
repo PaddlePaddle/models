@@ -78,7 +78,7 @@ tracking的工作环境：
 
 1. 安装paddle，需要安装1.7版本的Paddle，如低于这个版本，请升级到Paddle 1.7.
 ```bash
-pip install paddlepaddle==1.7.0
+pip install paddlepaddle-gpu==1.7.0
 ```
 
 2. 安装第三方库，建议使用anaconda
