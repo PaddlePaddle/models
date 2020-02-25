@@ -17,6 +17,7 @@ ATOM 跟踪效果展示：
 
 ```
 imgs 包含跟踪结果的图像
+
 ltr 包含模型训练代码
   └─ actors             输入数据，输出优化目标  
   └─ admin              管理数据路径等
@@ -49,7 +50,7 @@ pytracking  包含跟踪代码
 - [VID](http://bvisionweb1.cs.unc.edu/ilsvrc2015/ILSVRC2015_VID.tar.gz)
 - [Microsoft COCO 2014](http://cocodataset.org/#download)
 - [LaSOT](https://drive.google.com/file/d/1O2DLxPP8M4Pn4-XCttCJUW3A29tDIeNa/view)
-
+- [GOT-10K](http://got-10k.aitestunion.com/downloads_dataset/full_data)
 下载并解压后的数据集的组织方式为：
 ```
 /Datasets/
