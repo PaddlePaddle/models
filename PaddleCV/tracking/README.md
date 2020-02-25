@@ -1,12 +1,12 @@
 ﻿# tracking 单目标跟踪框架
 
-## 目标跟踪介绍
+## 介绍
 
 tracking 是基于百度深度学习框架Paddle研发的视频单目标跟踪（Visual Object Tracking, VOT）库, 整体框架参考 [pytracking](https://github.com/visionml/pytracking)，其优秀的设计使得我们能够方便地将其他跟踪器如SiamFC，SiamRPN，SiamMask等融合到一个框架中，方便后续统一的实验和比较。
 
 当前tracking涵盖当前目标跟踪的主流模型，包括SiamFC, SiamRPN, SiamMask, ATOM。tracking旨在给开发者提供一系列基于PaddlePaddle的便捷、高效的目标跟踪深度学习算法，后续会不断的扩展模型的丰富度。
 
-## 目标跟踪库的代码目录结构
+## 代码目录结构
 
 
 ```
@@ -36,7 +36,7 @@ pytracking  包含跟踪代码
 
 ### 数据准备
 
-目标跟踪的训练集和测试集是不同的，目前最好的模型往往是使用多个训练集进行训练。常用的数据集如下:
+目标跟踪的训练集和测试集是不同的，目前最好的模型往往是使用多个训练集进行训练。
 
 主流的训练数据集有：
 - [VID](http://bvisionweb1.cs.unc.edu/ilsvrc2015/ILSVRC2015_VID.tar.gz)
@@ -59,6 +59,8 @@ pytracking  包含跟踪代码
 tracking的工作环境：
 - python3
 - PaddlePaddle1.7
+
+> 注意：如果遇到cmath无法import的问题，建议切换Python版本，建议使用python3.6.8, python3.7.0
 
 ### 安装依赖
 
