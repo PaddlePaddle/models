@@ -8,6 +8,26 @@ from ltr.dataset import ImagenetVID, MSCOCOSeq, Lasot, Got10k
 from ltr.models.bbreg.atom import atom_resnet50, atom_resnet18
 from ltr.trainers import LTRTrainer
 
+import os
+import sys
+import signal
+
+
+#  handle terminate reader process, do not print stack frame
+def _reader_quit(signum, frame):
+    print("Reader process exit.")
+    sys.exit()
+
+
+def _term_group(sig_num, frame):
+    print('pid {} terminated, terminate group '
+          '{}...'.format(os.getpid(), os.getpgrp()))
+    os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
+
+
+signal.signal(signal.SIGTERM, _reader_quit)
+signal.signal(signal.SIGINT, _term_group)
+
 
 def run(settings):
     # Most common settings are assigned in the settings struct
