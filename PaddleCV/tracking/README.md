@@ -69,10 +69,12 @@ Datasets是数据集保存的路径。
 ## 快速开始
 
 tracking的工作环境：
+- Linux
 - python3
 - PaddlePaddle1.7
 
 > 注意：如果遇到cmath无法import的问题，建议切换Python版本，建议使用python3.6.8, python3.7.0
+> tracking暂不支持在window上运行，如果开发者有需求在window上运行tracking，请在issue中提出需求。
 
 ### 安装依赖
 
