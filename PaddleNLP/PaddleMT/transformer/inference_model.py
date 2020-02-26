@@ -24,56 +24,12 @@ import paddle.fluid as fluid
 
 from utils.input_field import InputField
 from utils.configure import PDConfig
+from utils.load import load
 
 # include task-specific libs
 import desc
 import reader
 from transformer import create_net
-
-
-def init_from_pretrain_model(args, exe, program):
-
-    assert isinstance(args.init_from_pretrain_model, str)
-
-    if not os.path.exists(args.init_from_pretrain_model):
-        raise Warning("The pretrained params do not exist.")
-        return False
-
-    def existed_params(var):
-        if not isinstance(var, fluid.framework.Parameter):
-            return False
-        return os.path.exists(
-            os.path.join(args.init_from_pretrain_model, var.name))
-
-    fluid.io.load_vars(
-        exe,
-        args.init_from_pretrain_model,
-        main_program=program,
-        predicate=existed_params)
-
-    print("finish initing model from pretrained params from %s" %
-          (args.init_from_pretrain_model))
-
-    return True
-
-
-def init_from_params(args, exe, program):
-
-    assert isinstance(args.init_from_params, str)
-
-    if not os.path.exists(args.init_from_params):
-        raise Warning("the params path does not exist.")
-        return False
-
-    fluid.io.load_params(
-        executor=exe,
-        dirname=args.init_from_params,
-        main_program=program,
-        filename="params.pdparams")
-
-    print("finish init model from params from %s" % (args.init_from_params))
-
-    return True
 
 
 def do_save_inference_model(args):
@@ -83,6 +39,11 @@ def do_save_inference_model(args):
     else:
         dev_count = int(os.environ.get('CPU_NUM', 1))
         place = fluid.CPUPlace()
+
+    src_vocab = reader.DataProcessor.load_dict(args.src_vocab_fpath)
+    trg_vocab = reader.DataProcessor.load_dict(args.trg_vocab_fpath)
+    args.src_vocab_size = len(src_vocab)
+    args.trg_vocab_size = len(trg_vocab)
 
     test_prog = fluid.default_main_program()
     startup_prog = fluid.default_startup_program()
@@ -119,24 +80,20 @@ def do_save_inference_model(args):
     exe = fluid.Executor(place)
 
     exe.run(startup_prog)
-    assert (args.init_from_params) or (args.init_from_pretrain_model)
-
-    if args.init_from_params:
-        init_from_params(args, exe, test_prog)
-
-    elif args.init_from_pretrain_model:
-        init_from_pretrain_model(args, exe, test_prog)
+    assert (
+        args.init_from_params), "must set init_from_params to load parameters"
+    load(test_prog, os.path.join(args.init_from_params, "transformer"), exe)
+    print("finish initing model from params from %s" % (args.init_from_params))
 
     # saving inference model
 
-    fluid.io.save_inference_model(
-        args.inference_model_dir,
-        feeded_var_names=input_field_names,
-        target_vars=[out_ids, out_scores],
-        executor=exe,
-        main_program=test_prog,
-        model_filename="model.pdmodel",
-        params_filename="params.pdparams")
+    fluid.io.save_inference_model(args.inference_model_dir,
+                                  feeded_var_names=list(input_field_names),
+                                  target_vars=[out_ids, out_scores],
+                                  executor=exe,
+                                  main_program=test_prog,
+                                  model_filename="model.pdmodel",
+                                  params_filename="params.pdparams")
 
     print("save inference model at %s" % (args.inference_model_dir))
 

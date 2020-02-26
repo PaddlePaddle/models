@@ -26,6 +26,9 @@ import logging
 import logging.handlers
 import paddle.fluid as fluid
 import io
+import pickle
+import warnings
+from functools import partial
 """
 ******functions for file processing******
 """
@@ -175,6 +178,7 @@ class ArgConfig(object):
         model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
         model_g.add_arg("task_mode", str, None, "task mode: pairwise or pointwise")
 
+
         train_g = ArgumentGroup(parser, "training", "training options.")
         train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
         train_g.add_arg("save_steps", int, 200, "The steps interval to save checkpoints.")
@@ -193,6 +197,8 @@ class ArgConfig(object):
         data_g.add_arg("infer_data_dir", str, None, "Directory path to infer data.")
         data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
         data_g.add_arg("batch_size", int, 32, "Total examples' number in batch for training.")
+        data_g.add_arg("seq_len", int, 32, "The length of each sentence.")
+
 
         run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
         run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
@@ -362,3 +368,22 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
         predicate=existed_persitables)
     print("Load model from {}".format(init_checkpoint_path))
 
+
+def load_dygraph(model_path, keep_name_table=False):
+    """
+    To load python2 saved models in python3.
+    """
+    try:
+        para_dict, opti_dict = fluid.load_dygraph(model_path, keep_name_table)
+        return para_dict, opti_dict
+    except UnicodeDecodeError:
+        warnings.warn(
+            "An UnicodeDecodeError is catched, which might be caused by loading "
+            "a python2 saved model. Encoding of pickle.load would be set and "
+            "load again automatically.")
+        if six.PY3:
+            load_bak = pickle.load
+            pickle.load = partial(load_bak, encoding="latin1")
+            para_dict, opti_dict = fluid.load_dygraph(model_path, keep_name_table)
+            pickle.load = load_bak
+            return para_dict, opti_dict

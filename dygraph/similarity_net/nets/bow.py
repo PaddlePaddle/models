@@ -18,9 +18,10 @@ bow class
 import paddle_layers as layers
 from paddle import fluid
 from paddle.fluid.dygraph.base import to_variable
-from paddle.fluid.dygraph import Layer, Embedding
+from paddle.fluid.dygraph import Layer, Embedding, Linear
 import paddle.fluid.param_attr as attr
 uniform_initializer = lambda x: fluid.initializer.UniformInitializer(low=-x, high=x)
+
 class BOW(Layer):
     """
     BOW
@@ -35,10 +36,12 @@ class BOW(Layer):
         self.task_mode = conf_dict["task_mode"]
         self.emb_dim = conf_dict["net"]["emb_dim"]
         self.bow_dim = conf_dict["net"]["bow_dim"]
-        self.seq_len = 5
+        self.seq_len = conf_dict["seq_len"]
         self.emb_layer = layers.EmbeddingLayer(self.dict_size, self.emb_dim, "emb").ops()
-        self.bow_layer = layers.FCLayer(self.bow_dim, None, "fc").ops()
+        self.bow_layer = Linear(self.bow_dim, self.bow_dim)
+        self.bow_layer_po = layers.FCLayer(self.bow_dim, None, "fc").ops()
         self.softmax_layer = layers.FCLayer(2, "softmax", "cos_sim").ops()
+    
 
     def forward(self, left, right):
         """
@@ -46,7 +49,6 @@ class BOW(Layer):
         """
         
         # embedding layer
-
         left_emb = self.emb_layer(left)
         right_emb = self.emb_layer(right)
         left_emb = fluid.layers.reshape(
@@ -70,6 +72,6 @@ class BOW(Layer):
         else:
             concat_layer = layers.ConcatLayer(1)
             concat = concat_layer.ops([left_soft, right_soft])
-            concat_fc = self.bow_layer(concat)
+            concat_fc = self.bow_layer_po(concat)
             pred = self.softmax_layer(concat_fc)
             return left_soft, pred

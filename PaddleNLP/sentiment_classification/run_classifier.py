@@ -289,8 +289,9 @@ def main(args):
 
                 if steps % args.save_steps == 0:
                     save_path = os.path.join(args.checkpoints,
-                                         "step_" + str(steps))
-                    fluid.io.save_persistables(exe, save_path, train_program)
+                                         "step_" + str(steps),
+                                         "checkpoint")
+                    fluid.save(train_program, save_path)
 
                 if steps % args.validation_steps == 0:
                     # evaluate dev set
@@ -301,8 +302,9 @@ def main(args):
                                 "dev")
 
             except fluid.core.EOFException:
-                save_path = os.path.join(args.checkpoints, "step_" + str(steps))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                save_path = os.path.join(args.checkpoints, "step_" + str(steps),
+                                         "checkpoint")
+                fluid.save(train_program, save_path)
                 train_reader.reset()
                 break
 

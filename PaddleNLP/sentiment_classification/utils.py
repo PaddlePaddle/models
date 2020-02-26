@@ -63,20 +63,11 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
     """
     assert os.path.exists(
         init_checkpoint_path), "[%s] cann't be found." % init_checkpoint_path
-
-    def existed_persitables(var):
-        """
-        If existed presitabels
-        """
-        if not fluid.io.is_persistable(var):
-            return False
-        return os.path.exists(os.path.join(init_checkpoint_path, var.name))
-
-    fluid.io.load_vars(
-        exe,
-        init_checkpoint_path,
-        main_program=main_program,
-        predicate=existed_persitables)
+    try:
+        checkpoint_path = os.path.join(init_checkpoint_path, "checkpoint")
+        fluid.load(main_program, checkpoint_path, exe)
+    except:
+        fluid.load(main_program, init_checkpoint_path, exe)
     print("Load model from {}".format(init_checkpoint_path))
 
     
@@ -144,15 +135,6 @@ def init_pretraining_params(exe,
     assert os.path.exists(pretraining_params_path
                           ), "[%s] cann't be found." % pretraining_params_path
 
-    def _existed_params(var):
-        if not isinstance(var, fluid.framework.Parameter):
-            return False
-        return os.path.exists(os.path.join(pretraining_params_path, var.name))
-
-    fluid.io.load_vars(
-        exe,
-        pretraining_params_path,
-        main_program=main_program,
-        predicate=_existed_params)
+    fluid.load(main_program, pretraining_params_path, exe)
     print("Load pretraining parameters from {}.".format(
         pretraining_params_path))

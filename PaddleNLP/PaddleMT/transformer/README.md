@@ -106,7 +106,7 @@ python -u main.py \
   --prepostprocess_dropout 0.3
 ```
 
-训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。也可以只使用 CPU 训练(通过参数 `--use_cuda False` 设置)，训练速度相对较慢。在执行训练时若提供了 `save_param` 和 `save_checkpoint`（默认为 trained_params 和 trained_ckpts），则每隔一定 iteration 后(通过参数 `save_step` 设置，默认为10000)将分别保存当前训练的参数值和 checkpoint 到相应目录，每隔一定数目的 iteration (通过参数 `print_step` 设置，默认为100)将打印如下的日志到标准输出：
+训练时默认使用所有 GPU，可以通过 `CUDA_VISIBLE_DEVICES` 环境变量来设置使用的 GPU 数目。也可以只使用 CPU 训练(通过参数 `--use_cuda False` 设置)，训练速度相对较慢。在执行训练时若提供了 `save_model_path`（默认为 saved_models），则每隔一定 iteration 后(通过参数 `save_step` 设置，默认为10000)将保存当前训练的 checkpoint 到相应目录（会保存分别记录了模型参数和优化器状态的 `transformer.pdparams` 和 `transformer.pdopt` 两个文件），每隔一定数目的 iteration (通过参数 `print_step` 设置，默认为100)将打印如下的日志到标准输出：
 
 ```txt
 [2019-08-02 15:30:51,656 INFO train.py:262] step_idx: 150100, epoch: 32, batch: 1364, avg loss: 2.880427, normalized loss: 1.504687, ppl: 17.821888, speed: 3.34 step/s
@@ -195,7 +195,7 @@ BLEU = 26.35, 57.7/32.1/20.0/13.0 (BP=1.000, ratio=1.013, hyp_len=63903, ref_len
 
 ### 预训练模型
 
-我们这里提供了对应有以上 BLEU 值的 [base model](https://transformer-res.bj.bcebos.com/base_model_params.tar.gz) 和 [big model](https://transformer-res.bj.bcebos.com/big_model_params.tar.gz) 的模型参数提供下载使用（注意，模型使用了提供下载的数据进行训练和测试）。
+我们这里提供了对应有以上 BLEU 值的 [base model](https://transformer-res.bj.bcebos.com/base_model_graph.tar.gz) 和 [big model](https://transformer-res.bj.bcebos.com/big_model_graph.tar.gz) 的模型参数提供下载使用（注意，模型使用了提供下载的数据进行训练和测试）。
 
 ## 进阶使用
 

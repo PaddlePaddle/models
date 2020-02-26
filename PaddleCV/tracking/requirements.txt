@@ -1,0 +1,11 @@
+git+https://github.com/tensorpack/dataflow.git
+cython
+pycocotools
+lmdb
+pandas
+jpeg4py
+opencv-python
+tensorboardX
+videofig
+jupyter
+tqdm

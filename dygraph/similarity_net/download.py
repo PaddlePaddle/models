@@ -67,6 +67,7 @@ def download(url, filename, md5sum):
     retry = 0
     retry_limit = 3
     chunk_size = 4096
+
     while not (os.path.exists(filename) and md5file(filename) == md5sum):
         if retry < retry_limit:
             retry += 1
@@ -115,8 +116,8 @@ def download_dataset(dir_path):
 def download_model(dir_path):
     MODELS = {}
     BASE_URL = "https://baidu-nlp.bj.bcebos.com/"
-    CNN_NAME = "simnet_bow-pairwise-1.0.0.tar.gz"
-    CNN_MD5 = "199a3f3af31558edcc71c3b54ea5e129"
+    CNN_NAME = "simnet_bow_pairwise_dygraph.tar.gz"
+    CNN_MD5 = "30012af0ca8cdf0c613d8f56884f0f48"
     MODELS[CNN_NAME] = CNN_MD5
 
     if not os.path.exists(dir_path):
