@@ -25,7 +25,7 @@ import paddle.fluid as fluid
 
 def cast_fp32_to_fp16(exe, main_program):
     print("Cast parameters to float16 data format.")
-    for param in main_program.global_block().all_parameters():
+    for param in main_program.all_parameters():
         if not param.name.endswith(".master"):
             param_t = fluid.global_scope().find_var(param.name).get_tensor()
             data = np.array(param_t)
@@ -38,21 +38,9 @@ def cast_fp32_to_fp16(exe, main_program):
 
 
 def init_checkpoint(exe, init_checkpoint_path, main_program, use_fp16=False):
-    assert os.path.exists(
-        init_checkpoint_path), "[%s] cann't be found." % init_checkpoint_path
+    fluid.load(
+        program=main_program, model_path=init_checkpoint_path, executor=exe)
 
-    def existed_persitables(var):
-        if not fluid.io.is_persistable(var):
-            return False
-        if os.path.exists(os.path.join(init_checkpoint_path, var.name)):
-            print("INIT {}".format(var.name))
-            return True
-
-    fluid.io.load_vars(
-        exe,
-        init_checkpoint_path,
-        main_program=main_program,
-        predicate=existed_persitables)
     print("Load model from {}".format(init_checkpoint_path))
 
     if use_fp16:
@@ -63,24 +51,8 @@ def init_pretraining_params(exe,
                             pretraining_params_path,
                             main_program,
                             use_fp16=False):
-    assert os.path.exists(pretraining_params_path
-                          ), "[%s] cann't be found." % pretraining_params_path
-
-    def existed_params(var):
-        if not isinstance(var, fluid.framework.Parameter):
-            return False
-        if os.path.exists(os.path.join(pretraining_params_path, var.name)):
-            print("INIT {}".format(var.name))
-            return True
-        else:
-            print("SKIP {}".format(var.name))
-            return False
-
-    fluid.io.load_vars(
-        exe,
-        pretraining_params_path,
-        main_program=main_program,
-        predicate=existed_params)
+    fluid.load(
+        program=main_program, model_path=pretraining_params_path, executor=exe)
     print("Load pretraining parameters from {}.".format(
         pretraining_params_path))
 

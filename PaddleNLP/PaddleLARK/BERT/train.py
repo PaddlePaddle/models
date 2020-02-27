@@ -412,7 +412,7 @@ def train(args):
 
             if steps % args.save_steps == 0:
                 save_path = os.path.join(args.checkpoints, "step_" + str(steps))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                fluid.save(program=train_program, model_path=save_path)
 
             if args.validation_set_dir and steps % args.validation_steps == 0:
                 vali_cost, vali_lm_cost, vali_acc, vali_steps, vali_speed = predict(

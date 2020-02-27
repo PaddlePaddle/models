@@ -392,7 +392,7 @@ def main(args):
                 if steps % args.save_steps == 0:
                     save_path = os.path.join(args.checkpoints,
                                              "step_" + str(steps))
-                    fluid.io.save_persistables(exe, save_path, train_program)
+                    fluid.save(program=train_program, model_path=save_path)
 
                 if steps % args.validation_steps == 0:
                     print("Average throughtput: %s" % (np.average(throughput)))
@@ -409,7 +409,7 @@ def main(args):
                                  "test")
             except fluid.core.EOFException:
                 save_path = os.path.join(args.checkpoints, "step_" + str(steps))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                fluid.save(program=train_program, model_path=save_path)
                 train_data_loader.reset()
                 break
         if args.enable_ce:

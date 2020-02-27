@@ -46,11 +46,8 @@ def infer():
 
             exe = fluid.Executor(place)
             feeder = fluid.DataFeeder(feed_list=data_list, place=place)
-            fluid.io.load_persistables(
-                executor=exe,
-                dirname=cur_model_path,
-                main_program=fluid.default_main_program())
-
+            main_program = fluid.default_main_program()
+            fluid.load(main_program, cur_model_path, exe)
             for var in auc_states:  # reset auc states
                 set_zero(var.name, scope=inference_scope, place=place)
 

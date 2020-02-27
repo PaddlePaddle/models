@@ -33,9 +33,7 @@ class GTrainer():
         with fluid.program_guard(self.program):
             model = CycleGAN_model()
             self.fake_B = model.network_G(input_A, name="GA", cfg=cfg)
-            self.fake_B.persistable = True
             self.fake_A = model.network_G(input_B, name="GB", cfg=cfg)
-            self.fake_A.persistable = True
             self.cyc_A = model.network_G(self.fake_B, name="GB", cfg=cfg)
             self.cyc_B = model.network_G(self.fake_A, name="GA", cfg=cfg)
 
@@ -48,20 +46,16 @@ class GTrainer():
                 fluid.layers.elementwise_sub(
                     x=input_B, y=self.cyc_B))
             self.cyc_A_loss = fluid.layers.reduce_mean(diff_A) * lambda_A
-            self.cyc_A_loss.persistable = True
             self.cyc_B_loss = fluid.layers.reduce_mean(diff_B) * lambda_B
-            self.cyc_B_loss.persistable = True
             self.cyc_loss = self.cyc_A_loss + self.cyc_B_loss
             # GAN Loss D_A(G_A(A))
             self.fake_rec_A = model.network_D(self.fake_B, name="DA", cfg=cfg)
             self.G_A = fluid.layers.reduce_mean(
                 fluid.layers.square(self.fake_rec_A - 1))
-            self.G_A.persistable = True
             # GAN Loss D_B(G_B(B))
             self.fake_rec_B = model.network_D(self.fake_A, name="DB", cfg=cfg)
             self.G_B = fluid.layers.reduce_mean(
                 fluid.layers.square(self.fake_rec_B - 1))
-            self.G_B.persistable = True
             self.G = self.G_A + self.G_B
             # Identity Loss G_A
             self.idt_A = model.network_G(input_B, name="GA", cfg=cfg)
@@ -69,14 +63,12 @@ class GTrainer():
                 fluid.layers.abs(
                     fluid.layers.elementwise_sub(
                         x=input_B, y=self.idt_A))) * lambda_B * lambda_identity
-            self.idt_loss_A.persistable = True
             # Identity Loss G_B
             self.idt_B = model.network_G(input_A, name="GB", cfg=cfg)
             self.idt_loss_B = fluid.layers.reduce_mean(
                 fluid.layers.abs(
                     fluid.layers.elementwise_sub(
                         x=input_A, y=self.idt_B))) * lambda_A * lambda_identity
-            self.idt_loss_B.persistable = True
 
             self.idt_loss = fluid.layers.elementwise_add(self.idt_loss_A,
                                                          self.idt_loss_B)
@@ -120,7 +112,6 @@ class DATrainer():
             self.d_loss_A = (fluid.layers.square(self.fake_pool_rec_B) +
                              fluid.layers.square(self.rec_B - 1)) / 2.0
             self.d_loss_A = fluid.layers.reduce_mean(self.d_loss_A)
-            self.d_loss_A.persistable = True
 
             vars = []
             for var in self.program.list_vars():
@@ -161,7 +152,6 @@ class DBTrainer():
             self.d_loss_B = (fluid.layers.square(self.fake_pool_rec_A) +
                              fluid.layers.square(self.rec_A - 1)) / 2.0
             self.d_loss_B = fluid.layers.reduce_mean(self.d_loss_B)
-            self.d_loss_B.persistable = True
             vars = []
             for var in self.program.list_vars():
                 if fluid.io.is_parameter(var) and var.name.startswith("DB"):
@@ -244,13 +234,13 @@ class CycleGAN(object):
         if self.cfg.enable_ce:
             fluid.default_startup_program().random_seed = 90
 
-        A_py_reader = fluid.io.PyReader(
+        A_loader = fluid.io.DataLoader.from_generator(
             feed_list=[input_A],
             capacity=4,
             iterable=True,
             use_double_buffer=True)
 
-        B_py_reader = fluid.io.PyReader(
+        B_loader = fluid.io.DataLoader.from_generator(
             feed_list=[input_B],
             capacity=4,
             iterable=True,
@@ -263,11 +253,11 @@ class CycleGAN(object):
         # prepare environment
         place = fluid.CUDAPlace(0) if self.cfg.use_gpu else fluid.CPUPlace()
 
-        A_py_reader.decorate_batch_generator(
+        A_loader.set_batch_generator(
             self.A_reader,
             places=fluid.cuda_places()
             if self.cfg.use_gpu else fluid.cpu_places())
-        B_py_reader.decorate_batch_generator(
+        B_loader.set_batch_generator(
             self.B_reader,
             places=fluid.cuda_places()
             if self.cfg.use_gpu else fluid.cpu_places())
@@ -279,9 +269,9 @@ class CycleGAN(object):
         B_pool = utility.ImagePool()
 
         if self.cfg.init_model:
-            utility.init_checkpoints(self.cfg, exe, gen_trainer, "net_G")
-            utility.init_checkpoints(self.cfg, exe, d_A_trainer, "net_DA")
-            utility.init_checkpoints(self.cfg, exe, d_B_trainer, "net_DB")
+            utility.init_checkpoints(self.cfg, gen_trainer, "net_G")
+            utility.init_checkpoints(self.cfg, d_A_trainer, "net_DA")
+            utility.init_checkpoints(self.cfg, d_B_trainer, "net_DB")
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
@@ -304,7 +294,7 @@ class CycleGAN(object):
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            for data_A, data_B in zip(A_py_reader(), B_py_reader()):
+            for data_A, data_B in zip(A_loader(), B_loader()):
                 s_time = time.time()
                 tensor_A, tensor_B = data_A[0]['input_A'], data_B[0]['input_B']
                 ## optimize the g_A network
@@ -363,23 +353,23 @@ class CycleGAN(object):
                     name='A_image_name', shape=[None, 1], dtype='int32')
                 B_image_name = fluid.data(
                     name='B_image_name', shape=[None, 1], dtype='int32')
-                A_test_py_reader = fluid.io.PyReader(
+                A_test_loader = fluid.io.DataLoader.from_generator(
                     feed_list=[input_A, A_image_name],
                     capacity=4,
                     iterable=True,
                     use_double_buffer=True)
 
-                B_test_py_reader = fluid.io.PyReader(
+                B_test_loader = fluid.io.DataLoader.from_generator(
                     feed_list=[input_B, B_image_name],
                     capacity=4,
                     iterable=True,
                     use_double_buffer=True)
 
-                A_test_py_reader.decorate_batch_generator(
+                A_test_loader.set_batch_generator(
                     self.A_test_reader,
                     places=fluid.cuda_places()
                     if self.cfg.use_gpu else fluid.cpu_places())
-                B_test_py_reader.decorate_batch_generator(
+                B_test_loader.set_batch_generator(
                     self.B_test_reader,
                     places=fluid.cuda_places()
                     if self.cfg.use_gpu else fluid.cpu_places())
@@ -391,17 +381,17 @@ class CycleGAN(object):
                     place,
                     test_program,
                     gen_trainer,
-                    A_test_py_reader,
-                    B_test_py_reader,
+                    A_test_loader,
+                    B_test_loader,
                     A_id2name=self.A_id2name,
                     B_id2name=self.B_id2name)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
                                     "net_G")
-                utility.checkpoints(epoch_id, self.cfg, exe, d_A_trainer,
+                utility.checkpoints(epoch_id, self.cfg, d_A_trainer,
                                     "net_DA")
-                utility.checkpoints(epoch_id, self.cfg, exe, d_B_trainer,
+                utility.checkpoints(epoch_id, self.cfg, d_B_trainer,
                                     "net_DB")
 
         # used for continuous evaluation

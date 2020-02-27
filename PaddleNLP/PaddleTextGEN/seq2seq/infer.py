@@ -93,7 +93,7 @@ def infer():
     # clone from default main program and use it as the validation program
     main_program = fluid.default_main_program()
     main_program = main_program.clone(for_test=True)
-    print([param.name for param in main_program.blocks[0].all_parameters()])
+    print([param.name for param in main_program.all_parameters()])
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = Executor(place)
@@ -127,7 +127,8 @@ def infer():
 
     dir_name = args.reload_model
     print("dir name", dir_name)
-    fluid.io.load_params(exe, dir_name)
+    dir_name = os.path.join(dir_name, "checkpoint")
+    fluid.load(main_program, dir_name, exe)
 
     train_data_iter = reader.get_data_iter(infer_data, 1, mode='eval')
 

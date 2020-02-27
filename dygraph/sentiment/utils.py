@@ -16,6 +16,7 @@ from __future__ import division
 from __future__ import print_function
 
 import io
+import os
 import sys
 import random
 
@@ -80,3 +81,10 @@ def load_vocab(file_path):
                 wid += 1
     vocab["<unk>"] = len(vocab)
     return vocab
+
+def get_cards():
+    num = 0
+    cards = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    if cards != '':
+        num = len(cards.split(","))
+    return num

@@ -25,56 +25,12 @@ import paddle.fluid as fluid
 from utils.input_field import InputField
 from utils.configure import PDConfig
 from utils.check import check_gpu, check_version
+from utils.load import load
 
 # include task-specific libs
 import desc
 import reader
 from transformer import create_net, position_encoding_init
-
-
-def init_from_pretrain_model(args, exe, program):
-
-    assert isinstance(args.init_from_pretrain_model, str)
-
-    if not os.path.exists(args.init_from_pretrain_model):
-        raise Warning("The pretrained params do not exist.")
-        return False
-
-    def existed_params(var):
-        if not isinstance(var, fluid.framework.Parameter):
-            return False
-        return os.path.exists(
-            os.path.join(args.init_from_pretrain_model, var.name))
-
-    fluid.io.load_vars(
-        exe,
-        args.init_from_pretrain_model,
-        main_program=program,
-        predicate=existed_params)
-
-    print("finish initing model from pretrained params from %s" %
-          (args.init_from_pretrain_model))
-
-    return True
-
-
-def init_from_params(args, exe, program):
-
-    assert isinstance(args.init_from_params, str)
-
-    if not os.path.exists(args.init_from_params):
-        raise Warning("the params path does not exist.")
-        return False
-
-    fluid.io.load_params(
-        executor=exe,
-        dirname=args.init_from_params,
-        main_program=program,
-        filename="params.pdparams")
-
-    print("finish init model from params from %s" % (args.init_from_params))
-
-    return True
 
 
 def post_process_seq(seq, bos_idx, eos_idx, output_bos=False, output_eos=False):
@@ -160,13 +116,10 @@ def do_predict(args):
     exe = fluid.Executor(place)
 
     exe.run(startup_prog)
-    assert (args.init_from_params) or (args.init_from_pretrain_model)
-
-    if args.init_from_params:
-        init_from_params(args, exe, test_prog)
-
-    elif args.init_from_pretrain_model:
-        init_from_pretrain_model(args, exe, test_prog)
+    assert (
+        args.init_from_params), "must set init_from_params to load parameters"
+    load(test_prog, os.path.join(args.init_from_params, "transformer"), exe)
+    print("finish initing model from params from %s" % (args.init_from_params))
 
     # to avoid a longer length than training, reset the size of position encoding to max_length
     for pos_enc_param_name in desc.pos_enc_param_names:
