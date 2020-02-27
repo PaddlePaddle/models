@@ -10,6 +10,25 @@ import paddle.fluid.dygraph as dygraph
 import time
 import numpy as np
 
+import sys
+import signal
+
+
+# handle terminate reader process, do not print stack frame
+def _reader_quit(signum, frame):
+    print("Reader process exit.")
+    sys.exit()
+
+
+def _term_group(sig_num, frame):
+    print('pid {} terminated, terminate group '
+          '{}...'.format(os.getpid(), os.getpgrp()))
+    os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
+
+
+signal.signal(signal.SIGTERM, _reader_quit)
+signal.signal(signal.SIGINT, _term_group)
+
 
 class LTRTrainer(BaseTrainer):
     def __init__(self, actor, loaders, optimizer, settings, lr_scheduler=None):
