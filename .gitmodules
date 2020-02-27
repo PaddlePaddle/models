@@ -13,6 +13,9 @@
 [submodule "PaddleSpeech/DeepSpeech"]
 	path = PaddleSpeech/DeepSpeech
 	url = https://github.com/PaddlePaddle/DeepSpeech.git
-[submodule "PaddleNLP/PALM"]
-	path = PaddleNLP/PALM
-	url = https://github.com/PaddlePaddle/PALM
+[submodule "PaddleNLP/enterprise/lac"]
+	path = PaddleNLP/enterprise/lac
+	url = git@github.com:baidu/lac.git
+[submodule "PaddleNLP/enterprise/Senta"]
+	path = PaddleNLP/enterprise/Senta
+	url = git@github.com:baidu/Senta.git
