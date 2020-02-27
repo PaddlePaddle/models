@@ -16,3 +16,7 @@
 [submodule "PaddleNLP/PALM"]
 	path = PaddleNLP/PALM
 	url = https://github.com/PaddlePaddle/PALM
+[submodule "PaddleCV/PaddleDetection"]
+	path = PaddleCV/PaddleDetection
+	url = https://github.com/PaddlePaddle/PaddleDetection.git
+	branch = release/0.2
