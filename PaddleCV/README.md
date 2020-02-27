@@ -6,23 +6,23 @@ PaddleCV
 
 图像分类是根据图像的语义信息对不同类别图像进行区分，是计算机视觉中重要的基础问题，是物体检测、图像分割、物体跟踪、行为分析、人脸识别等其他高层视觉任务的基础，在许多领域都有着广泛的应用。如：安防领域的人脸识别和智能视频分析等，交通领域的交通场景识别，互联网领域基于内容的图像检索和相册自动归类，医学领域的图像识别等。
 
-在深度学习时代，图像分类的准确率大幅度提升，在图像分类任务中，我们向大家介绍了如何在经典的数据集ImageNet上，训练常用的模型，包括AlexNet、VGG系列、ResNet系列、ResNeXt系列、Inception系列、MobileNet系列、SENet系列、DarkNet、SqueezeNet、ShuffleNet系列等模型，也开源了[训练的模型](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/README.md#已有模型及其性能) 方便用户下载使用。同时提供了能够将Caffe模型转换为PaddlePaddle
+在深度学习时代，图像分类的准确率大幅度提升，在图像分类任务中，我们向大家介绍了如何在经典的数据集ImageNet上，训练常用的模型，包括AlexNet、VGG系列、ResNet系列、ResNeXt系列、Inception系列、MobileNet系列、SENet系列、DarkNet、SqueezeNet、ShuffleNet系列等模型，也开源了[训练的模型](https://github.com/PaddlePaddle/models/blob/release/1.7/PaddleCV/image_classification/README.md#已有模型及其性能) 方便用户下载使用。同时提供了能够将Caffe模型转换为PaddlePaddle
 Fluid模型配置和参数文件的工具。
 
--  [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [SqueezeNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [VGG Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [GoogleNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [ResNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [ResNeXt Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [ShuffleNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [DenseNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [Inception Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [MobileNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [SENet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [DarkNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [ResNeXt101_wsl Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
--  [Caffe模型转换为Paddle Fluid配置和模型文件工具](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/caffe2fluid)
+-  [AlexNet](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [SqueezeNet](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [VGG Series](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [GoogleNet](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [ResNet Series](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [ResNeXt Series](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [ShuffleNet Series](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [DenseNet Series](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [Inception Series](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [MobileNet Series](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [SENet Series](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [DarkNet](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [ResNeXt101_wsl Series](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification/models)
+-  [Caffe模型转换为Paddle Fluid配置和模型文件工具](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/caffe2fluid)
 
 目标检测
 --------
@@ -37,10 +37,10 @@ Faster RCNN模型是典型的两阶段目标检测器，相较于传统提取区
 
 Mask RCNN模型是基于Faster RCNN模型的经典实例分割模型，在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
 
--  [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/ssd/README_cn.md)
--  [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/face_detection/README_cn.md)
--  [Faster RCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/rcnn/README_cn.md)
--  [Mask RCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/rcnn/README_cn.md)
+-  [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/PaddleDetection)
+-  [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/face_detection/README_cn.md)
+-  [Faster RCNN](https://github.com/PaddlePaddle/PaddleDetection)
+-  [Mask RCNN](https://github.com/PaddlePaddle/PaddleDetection)
 
 图像语义分割
 ------------
@@ -50,7 +50,7 @@ Mask RCNN模型是基于Faster RCNN模型的经典实例分割模型，在原有
 在图像语义分割任务中，我们介绍如何基于图像级联网络(Image Cascade
 Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准确率和速度。
 
--  [ICNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/icnet)
+-  [ICNet](https://github.com/PaddlePaddle/PaddleSeg)
 
 图像生成
 -----------
@@ -60,8 +60,8 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 在图像生成任务中，我们介绍了如何使用DCGAN和ConditioanlGAN来进行手写数字的生成，另外还介绍了用于风格迁移的CycleGAN.
 
-- [DCGAN & ConditionalGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN/c_gan)
-- [CycleGAN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/PaddleGAN/cycle_gan)
+- [DCGAN & ConditionalGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan/c_gan)
+- [CycleGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan/cycle_gan)
 
 场景文字识别
 ------------
@@ -70,8 +70,8 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 在场景文字识别任务中，我们介绍如何将基于CNN的图像特征提取和基于RNN的序列翻译技术结合，免除人工定义特征，避免字符分割，使用自动学习到的图像特征，完成字符识别。当前，介绍了CRNN-CTC模型和基于注意力机制的序列到序列模型。
 
--  [CRNN-CTC模型](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition)
--  [Attention模型](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/ocr_recognition)
+-  [CRNN-CTC模型](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/ocr_recognition)
+-  [Attention模型](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/ocr_recognition)
 
 
 度量学习
@@ -80,7 +80,7 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 度量学习也称作距离度量学习、相似度学习，通过学习对象之间的距离，度量学习能够用于分析对象时间的关联、比较关系，在实际问题中应用较为广泛，可应用于辅助分类、聚类问题，也广泛用于图像检索、人脸识别等领域。以往，针对不同的任务，需要选择合适的特征并手动构建距离函数，而度量学习可根据不同的任务来自主学习出针对特定任务的度量距离函数。度量学习和深度学习的结合，在人脸识别/验证、行人再识别(human Re-ID)、图像检索等领域均取得较好的性能，在这个任务中我们主要介绍了基于Fluid的深度度量学习模型，包含了三元组、四元组等损失函数。
 
-- [Metric Learning](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/metric_learning)
+- [Metric Learning](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/metric_learning)
 
 
 视频分类
@@ -89,4 +89,4 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 视频分类是视频理解任务的基础，与图像分类不同的是，分类的对象不再是静止的图像，而是一个由多帧图像构成的、包含语音数据、包含运动信息等的视频对象，因此理解视频需要获得更多的上下文信息，不仅要理解每帧图像是什么、包含什么，还需要结合不同帧，知道上下文的关联信息。视频分类方法主要包含基于卷积神经网络、基于循环神经网络、或将这两者结合的方法。该任务中我们介绍基于Fluid的视频分类模型，目前包含Temporal Segment Network(TSN)模型，后续会持续增加更多模型。
 
 
-- [TSN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/video_classification)
+- [TSN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video)
