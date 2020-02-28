@@ -23,7 +23,7 @@ import os
 import time
 import multiprocessing
 import sys
-sys.path.append("../")
+sys.path.append("../shared_modules/")
 
 import paddle
 import paddle.fluid as fluid

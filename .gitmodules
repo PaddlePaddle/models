@@ -13,6 +13,3 @@
 [submodule "PaddleSpeech/DeepSpeech"]
 	path = PaddleSpeech/DeepSpeech
 	url = https://github.com/PaddlePaddle/DeepSpeech.git
-[submodule "PaddleNLP/PALM"]
-	path = PaddleNLP/PALM
-	url = https://github.com/PaddlePaddle/PALM

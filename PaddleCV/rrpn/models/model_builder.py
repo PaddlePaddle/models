@@ -35,8 +35,8 @@ class RRPN(object):
         self.use_pyreader = use_pyreader
         self.use_random = use_random
 
-    def build_model(self, image_shape):
-        self.build_input(image_shape)
+    def build_model(self):
+        self.build_input()
         body_conv = self.add_conv_body_func(self.image)
         # RPN
         self.rpn_heads(body_conv)
@@ -61,56 +61,42 @@ class RRPN(object):
     def eval_bbox_out(self):
         return self.pred_result
 
-    def build_input(self, image_shape):
-        if self.use_pyreader:
-            in_shapes = [[-1] + image_shape, [-1, 5], [-1, 1], [-1, 1],
-                         [-1, 3], [-1, 1]]
-            lod_levels = [0, 1, 1, 1, 0, 0]
-            dtypes = [
-                'float32', 'float32', 'int32', 'int32', 'float32', 'int64'
-            ]
-            self.py_reader = fluid.layers.py_reader(
-                capacity=64,
-                shapes=in_shapes,
-                lod_levels=lod_levels,
-                dtypes=dtypes,
-                use_double_buffer=True)
-            ins = fluid.layers.read_file(self.py_reader)
-            self.image = ins[0]
-            self.gt_box = ins[1]
-            self.gt_label = ins[2]
-            self.is_crowd = ins[3]
-            self.im_info = ins[4]
-            self.im_id = ins[5]
+    def build_input(self):
+        self.image = fluid.data(
+            name='image', shape=[None, 3, None, None], dtype='float32')
+        if self.mode == 'train':
+            self.gt_box = fluid.data(
+                name='gt_box', shape=[None, 5], dtype='float32', lod_level=1)
         else:
-            self.image = fluid.layers.data(
-                name='image', shape=image_shape, dtype='float32')
-            self.gt_box = fluid.layers.data(
-                name='gt_box', shape=[4], dtype='float32', lod_level=1)
-            self.gt_label = fluid.layers.data(
-                name='gt_label', shape=[1], dtype='int32', lod_level=1)
-            self.is_crowd = fluid.layers.data(
-                name='is_crowd', shape=[1], dtype='int32', lod_level=1)
-            self.im_info = fluid.layers.data(
-                name='im_info', shape=[3], dtype='float32')
-            self.im_id = fluid.layers.data(
-                name='im_id', shape=[1], dtype='int64')
-
-            self.difficult = fluid.layers.data(
-                name='difficult', shape=[1], dtype='float32', lod_level=1)
-
-    def feeds(self):
-        if self.mode == 'infer':
-            return [self.image, self.im_info]
-        if self.mode == 'val':
-            return [
+            self.gt_box = fluid.data(
+                name='gt_box', shape=[None, 8], dtype='float32', lod_level=1)
+        self.gt_label = fluid.data(
+            name='gt_class', shape=[None, 1], dtype='int32', lod_level=1)
+        self.is_crowd = fluid.data(
+            name='is_crowed', shape=[None, 1], dtype='int32', lod_level=1)
+        self.im_info = fluid.data(
+            name='im_info', shape=[None, 3], dtype='float32')
+        self.im_id = fluid.data(name='im_id', shape=[None, 1], dtype='int64')
+        self.difficult = fluid.data(
+            name='is_difficult', shape=[None, -1], dtype='float32', lod_level=1)
+        if self.mode == 'train':
+            feed_data = [
+                self.image, self.gt_box, self.gt_label, self.is_crowd,
+                self.im_info, self.im_id
+            ]
+        elif self.mode == 'infer':
+            feed_data = [self.image, self.im_info]
+        else:
+            feed_data = [
                 self.image, self.gt_box, self.gt_label, self.is_crowd,
                 self.im_info, self.im_id, self.difficult
             ]
-        return [
-            self.image, self.gt_box, self.gt_label, self.is_crowd, self.im_info,
-            self.im_id
-        ]
+        if self.mode == 'train':
+            self.data_loader = fluid.io.DataLoader.from_generator(
+                feed_list=feed_data, capacity=64, iterable=False)
+        else:
+            self.data_loader = fluid.io.DataLoader.from_generator(
+                feed_list=feed_data, capacity=64, iterable=True)
 
     def eval_bbox(self):
         self.im_scale = fluid.layers.slice(
@@ -151,23 +137,37 @@ class RRPN(object):
             dimension = fluid.layers.fill_constant(
                 shape=[1, 1], value=2, dtype='int32')
             cond = fluid.layers.less_than(dimension, res_dimension)
-            res = fluid.layers.create_global_var(
-                shape=[1, 10], value=0.0, dtype='float32', persistable=False)
-            with fluid.layers.control_flow.Switch() as switch:
-                with switch.case(cond):
-                    coordinate = fluid.layers.fill_constant(
-                        shape=[9], value=0.0, dtype='float32')
-                    pred_class = fluid.layers.fill_constant(
-                        shape=[1], value=i + 1, dtype='float32')
-                    add_class = fluid.layers.concat(
-                        [pred_class, coordinate], axis=0)
-                    normal_result = fluid.layers.elementwise_add(pred_result,
-                                                                 add_class)
-                    fluid.layers.assign(normal_result, res)
-                with switch.default():
-                    normal_result = fluid.layers.fill_constant(
-                        shape=[1, 10], value=-1.0, dtype='float32')
-                    fluid.layers.assign(normal_result, res)
+
+            def case1():
+                res = fluid.layers.create_global_var(
+                    shape=[1, 10],
+                    value=0.0,
+                    dtype='float32',
+                    persistable=False)
+                coordinate = fluid.layers.fill_constant(
+                    shape=[9], value=0.0, dtype='float32')
+                pred_class = fluid.layers.fill_constant(
+                    shape=[1], value=i + 1, dtype='float32')
+                add_class = fluid.layers.concat(
+                    [pred_class, coordinate], axis=0)
+                normal_result = fluid.layers.elementwise_add(pred_result,
+                                                             add_class)
+                fluid.layers.assign(normal_result, res)
+                return res
+
+            def case2():
+                res = fluid.layers.create_global_var(
+                    shape=[1, 10],
+                    value=0.0,
+                    dtype='float32',
+                    persistable=False)
+                normal_result = fluid.layers.fill_constant(
+                    shape=[1, 10], value=-1.0, dtype='float32')
+                fluid.layers.assign(normal_result, res)
+                return res
+
+            res = fluid.layers.case(
+                pred_fn_pairs=[(cond, case1)], default=case2)
             results.append(res)
         if len(results) == 1:
             self.pred_result = results[0]

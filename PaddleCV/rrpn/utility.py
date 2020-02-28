@@ -133,7 +133,6 @@ def parse_args():
     add_arg('dataset',          str,   'icdar2015',  "icdar2015, icdar2017.")
     add_arg('class_num',        int,   2,          "Class number.")
     add_arg('data_dir',         str,   'dataset/icdar2015',        "The data root path.")
-    add_arg('use_pyreader',     bool,   False,           "Use pyreader.")
     add_arg('use_profile',         bool,   False,       "Whether use profiler.")
     add_arg('padding_minibatch',bool,   False,
         "If False, only resize image and not pad, image shape is different between"

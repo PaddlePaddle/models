@@ -137,8 +137,8 @@ class NonLocal(ModelBase):
 
     def weights_info(self):
         return (
-            'NONLOCAL_final.pdparams',
-            'https://paddlemodels.bj.bcebos.com/video_classification/NONLOCAL_final.pdparams'
+            'NONLOCAL.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/NONLOCAL.pdparams'
         )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):

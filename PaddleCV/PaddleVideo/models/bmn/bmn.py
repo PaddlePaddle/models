@@ -192,6 +192,5 @@ class BMN(ModelBase):
 
     def weights_info(self):
         return (
-            'BMN_final.pdparams',
-            'https://paddlemodels.bj.bcebos.com/video_detection/BMN_final.pdparams'
-        )
+            'BMN.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_detection/BMN.pdparams')
