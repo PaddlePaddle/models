@@ -26,7 +26,7 @@ from paddle.fluid.initializer import NormalInitializer
 from reader import Dataset
 from ernie_reader import SequenceLabelReader
 
-sys.path.append("..")
+sys.path.append("../shared_modules/")
 from models.sequence_labeling import nets
 from models.representation.ernie import ernie_encoder, ernie_pyreader
 
@@ -35,7 +35,8 @@ def create_model(args, vocab_size, num_labels, mode='train'):
     """create lac model"""
 
     # model's input data
-    words = fluid.data(name='words', shape=[None, 1], dtype='int64', lod_level=1)
+    words = fluid.data(
+        name='words', shape=[None, 1], dtype='int64', lod_level=1)
     targets = fluid.data(
         name='targets', shape=[None, 1], dtype='int64', lod_level=1)
 
@@ -88,7 +89,8 @@ def create_pyreader(args,
                     return_reader=False,
                     mode='train'):
     # init reader
-    device_count = len(fluid.cuda_places()) if args.use_cuda else len(fluid.cpu_places())
+    device_count = len(fluid.cuda_places()) if args.use_cuda else len(
+        fluid.cpu_places())
 
     if model == 'lac':
         pyreader = fluid.io.DataLoader.from_generator(
@@ -107,14 +109,14 @@ def create_pyreader(args,
                     fluid.io.shuffle(
                         reader.file_reader(file_name),
                         buf_size=args.traindata_shuffle_buffer),
-                    batch_size=args.batch_size/device_count),
+                    batch_size=args.batch_size / device_count),
                 places=place)
         else:
             pyreader.set_sample_list_generator(
                 fluid.io.batch(
                     reader.file_reader(
                         file_name, mode=mode),
-                    batch_size=args.batch_size/device_count),
+                    batch_size=args.batch_size / device_count),
                 places=place)
 
     elif model == 'ernie':

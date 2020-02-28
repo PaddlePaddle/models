@@ -19,8 +19,7 @@ from __future__ import print_function
 
 import os
 import sys
-sys.path.append("../")
-
+sys.path.append("../shared_modules/")
 import paddle
 import paddle.fluid as fluid
 import numpy as np
