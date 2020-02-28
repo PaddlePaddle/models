@@ -123,7 +123,7 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
                                  test_fetch_list, test_metrics, log_interval,
                                  save_model_name)
 
-    save_model(exe, train_prog, save_dir, save_model_name, '_final')
+    save_model(exe, train_prog, save_dir, save_model_name)
     #when fix_random seed for debug
     if fix_random_seed:
         cards = os.environ.get('CUDA_VISIBLE_DEVICES')
@@ -133,7 +133,7 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
                                                     np.mean(epoch_periods)))
 
 
-def save_model(exe, program, save_dir, model_name, postfix=None):
+def save_model(exe, program, save_dir, model_name, postfix=''):
     """save paramters and optimizer related varaibles"""
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
