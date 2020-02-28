@@ -162,8 +162,7 @@ def train():
                 (epoch_id + 1), time.time() - start))
             if args.trainer_id == 0:  # only trainer 0 save model
                 print("save model in {}".format(model_dir))
-                fluid.io.save_persistables(
-                    executor=exe, dirname=model_dir, main_program=main_program)
+                fluid.save(main_program, model_dir)
 
         print("train time cost {:.4f}".format(time.time() - start_time))
         print("finish training")

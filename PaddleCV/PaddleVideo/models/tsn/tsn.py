@@ -147,8 +147,8 @@ class TSN(ModelBase):
 
     def weights_info(self):
         return (
-            'TSN_final.pdparams',
-            'https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams'
+            'TSN.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/TSN.pdparams'
         )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
@@ -158,5 +158,12 @@ class TSN(ModelBase):
 
         logger.info("Load pretrain weights from {}, exclude fc layer.".format(
             pretrain))
-        vars = filter(is_parameter, prog.list_vars())
-        fluid.io.load_vars(exe, pretrain, vars=vars, main_program=prog)
+
+        state_dict = fluid.load_program_state(pretrain)
+        dict_keys = list(state_dict.keys())
+        for name in dict_keys:
+            if "fc_0" in name:
+                del state_dict[name]
+                print('Delete {} from pretrained parameters. Do not load it'.
+                      format(name))
+        fluid.set_program_state(prog, state_dict)

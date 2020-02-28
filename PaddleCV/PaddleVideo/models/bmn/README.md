@@ -69,7 +69,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BMN_final.pdparams)进行评估。
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BMN.pdparams)进行评估。
 
 - 上述程序会将运行结果保存在data/output/EVAL\BMN\_results文件夹下，测试结果保存在data/evaluate\_results/bmn\_results\_validation.json文件中。使用ActivityNet官方提供的测试脚本，即可计算AR@AN和AUC。具体计算过程请参考[指标计算](../../metrics/bmn_metrics/README.md)。
 
@@ -101,7 +101,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，数据下载及准备
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要用到的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BMN_final.pdparams)进行推断。
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BMN.pdparams)进行推断。
 
 - 上述程序会将运行结果保存在data/output/INFER/BMN\_results文件夹下，测试结果保存在data/predict\_results/bmn\_results\_test.json文件中。
 

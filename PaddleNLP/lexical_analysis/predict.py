@@ -24,7 +24,7 @@ import paddle
 import utils
 import reader
 import creator
-sys.path.append('../models/')
+sys.path.append('../shared_modules/models/')
 from model_check import check_cuda
 from model_check import check_version
 

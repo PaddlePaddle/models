@@ -163,6 +163,5 @@ class TALL(ModelBase):
 
     def weights_info(self):
         return (
-            'TALL_final.pdparams',
-            'https://paddlemodels.bj.bcebos.com/video_grounding/TALL_final.pdparams'
-        )
+            'TALL.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_grounding/TALL.pdparams')

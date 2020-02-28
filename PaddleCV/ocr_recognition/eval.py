@@ -64,11 +64,11 @@ def evaluate(args):
 
     # load init model
     model_dir = args.model_path
-    model_file_name = None
-    if not os.path.isdir(args.model_path):
-        model_dir = os.path.dirname(args.model_path)
-        model_file_name = os.path.basename(args.model_path)
-    fluid.io.load_params(exe, dirname=model_dir, filename=model_file_name)
+    if os.path.isdir(args.model_path):
+        raise Exception("{} should not be a directory".format(args.model_path))
+    fluid.load(program=fluid.default_main_program(),
+               model_path=model_dir,
+               executor=exe)
     print("Init model from: %s." % args.model_path)
 
     evaluator.reset(exe)

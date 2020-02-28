@@ -78,20 +78,21 @@ def infer():
     [inference_program, feed_target_names,
      fetch_targets] = fluid.io.load_inference_model(model_path, exe)
 
-    feeder = fluid.DataFeeder(
-        feed_list=feed_target_names, place=place, program=inference_program)
+    loader = fluid.io.DataLoader.from_generator(
+        feed_list=[inference_program.block(0).var(e) for e in feed_target_names], capacity=10000, iterable=True)
+    loader.set_sample_list_generator(data_reader, places=fluid.cuda_places())
 
     loss_sum = 0.0
     score = []
     count = 0
-    for data in data_reader():
+    for data in loader():
         res = exe.run(inference_program,
-                      feed=feeder.feed(data),
+                      feed=data,
                       fetch_list=fetch_targets)
         loss_sum += res[0]
-
-        for i in range(len(data)):
-            if data[i][4] > 0.5:
+        label_data = list(np.array(data[0]["label"]))
+        for i in range(len(label_data)):
+            if label_data[i] > 0.5:
                 score.append([0, 1, res[1][i]])
             else:
                 score.append([1, 0, res[1][i]])

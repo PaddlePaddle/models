@@ -36,7 +36,6 @@ class GTrainer():
             if not cfg.no_instance:
                 input = fluid.layers.concat([input_label, input_ins], 1)
             self.fake_B = model.network_G(input, "generator", cfg=cfg)
-            self.fake_B.persistable = True
             self.infer_program = self.program.clone()
             fake_concat = fluid.layers.concat([input, self.fake_B], 1)
             real_concat = fluid.layers.concat([input, input_img], 1)
@@ -65,7 +64,6 @@ class GTrainer():
                 self.gan_loss /= len(self.pred_fake)
             else:
                 self.gan_loss = -1 * fluid.layers.reduce_mean(self.pred_fake)
-            self.gan_loss.persistable = True
             #####GAN Feat loss
             num_D = len(self.pred_fake)
             self.gan_feat_loss = 0.0
@@ -77,7 +75,6 @@ class GTrainer():
                             fluid.layers.elementwise_sub(
                                 x=self.pred_fake[i][j], y=self.pred_real[i][
                                     j]))) * cfg.lambda_feat / num_D
-            self.gan_feat_loss.persistable = True
             ########VGG Feat loss
             weights = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
             self.vgg = vgg.VGG19()
@@ -89,7 +86,6 @@ class GTrainer():
                     fluid.layers.abs(
                         fluid.layers.elementwise_sub(
                             x=fake_vgg[i], y=real_vgg[i])))
-            self.vgg_loss.persistable = True
             self.g_loss = (
                 self.gan_loss + self.gan_feat_loss + self.vgg_loss) / 3
             lr = cfg.learning_rate
@@ -173,8 +169,6 @@ class DTrainer():
                 loss_i = -1 * fluid.layers.reduce_mean(minval)
                 self.gan_loss_real += loss_i
             self.gan_loss_real /= len(self.pred_real)
-            self.gan_loss_real.persistable = True
-            self.gan_loss_fake.persistable = True
 
             self.d_loss = 0.5 * (self.gan_loss_real + self.gan_loss_fake)
             vars = []
@@ -310,12 +304,12 @@ class SPADE(object):
                                self.batch_num)
         dis_trainer = DTrainer(input_A, input_B, input_C, input_fake, self.cfg,
                                self.batch_num)
-        py_reader = fluid.io.PyReader(
+        loader = fluid.io.DataLoader.from_generator(
             feed_list=[input_A, input_B, input_C],
             capacity=4,  ## batch_size * 4
             iterable=True,
             use_double_buffer=True)
-        py_reader.decorate_batch_generator(
+        loader.set_batch_generator(
             self.train_reader,
             places=fluid.cuda_places()
             if self.cfg.use_gpu else fluid.cpu_places())
@@ -334,8 +328,8 @@ class SPADE(object):
                                   self.cfg.vgg19_pretrain)
 
         if self.cfg.init_model:
-            utility.init_checkpoints(self.cfg, exe, gen_trainer, "net_G")
-            utility.init_checkpoints(self.cfg, exe, dis_trainer, "net_D")
+            utility.init_checkpoints(self.cfg, gen_trainer, "net_G")
+            utility.init_checkpoints(self.cfg, dis_trainer, "net_D")
 
         ### memory optim
         build_strategy = fluid.BuildStrategy()
@@ -359,7 +353,7 @@ class SPADE(object):
 
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
-            for tensor in py_reader():
+            for tensor in loader():
                 data_A, data_B, data_C = tensor[0]['input_label'], tensor[0][
                     'input_img'], tensor[0]['input_ins']
                 s_time = time.time()
@@ -408,12 +402,12 @@ class SPADE(object):
                     name='image_name',
                     shape=[None, self.cfg.batch_size],
                     dtype="int32")
-                test_py_reader = fluid.io.PyReader(
+                test_loader = fluid.io.DataLoader.from_generator(
                     feed_list=[input_A, input_B, input_C, image_name],
                     capacity=4,  ## batch_size * 4
                     iterable=True,
                     use_double_buffer=True)
-                test_py_reader.decorate_batch_generator(
+                test_loader.set_batch_generator(
                     self.test_reader,
                     places=fluid.cuda_places()
                     if self.cfg.use_gpu else fluid.cpu_places())
@@ -424,13 +418,13 @@ class SPADE(object):
                     place,
                     test_program,
                     gen_trainer,
-                    test_py_reader,
+                    test_loader,
                     A_id2name=self.id2name)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, exe, gen_trainer,
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
                                     "net_G")
-                utility.checkpoints(epoch_id, self.cfg, exe, dis_trainer,
+                utility.checkpoints(epoch_id, self.cfg, dis_trainer,
                                     "net_D")
             # used for continuous evaluation
             if self.cfg.enable_ce:
