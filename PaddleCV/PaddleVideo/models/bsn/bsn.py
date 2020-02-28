@@ -181,8 +181,8 @@ class BsnTem(ModelBase):
 
     def weights_info(self):
         return (
-            'BsnTem_final.pdparams',
-            'https://paddlemodels.bj.bcebos.com/video_detection/BsnTem_final.pdparams'
+            'BsnTem.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_detection/BsnTem.pdparams'
         )
 
 
@@ -330,6 +330,6 @@ class BsnPem(ModelBase):
 
     def weights_info(self):
         return (
-            'BsnPem_final.pdparams',
-            'https://paddlemodels.bj.bcebos.com/video_detection/BsnPem_final.pdparams'
+            'BsnPem.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_detection/BsnPem.pdparams'
         )

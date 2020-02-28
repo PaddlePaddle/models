@@ -10,7 +10,7 @@ import paddle.fluid as fluid
 import creator
 import reader
 import utils
-sys.path.append('../models/')
+sys.path.append('../shared_modules/models/')
 from model_check import check_cuda
 from model_check import check_version
 

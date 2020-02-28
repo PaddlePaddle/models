@@ -42,7 +42,7 @@ ETS的训练数据采用ActivityNet Captions提供的数据集，数据下载及
 
 - 从头开始训练，使用上述启动命令行或者脚本程序即可启动训练，不需要用到预训练模型
 
-- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_caption/ETS_final.pdparams)通过`--resume`指定权重存放路径进行finetune等开发
+- 可下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_caption/ETS.pdparams)通过`--resume`指定权重存放路径进行finetune等开发
 
 
 **训练策略：**
@@ -65,7 +65,7 @@ ETS的训练数据采用ActivityNet Captions提供的数据集，数据下载及
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_caption/ETS_final.pdparams)进行评估
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_caption/ETS.pdparams)进行评估
 
 - 运行上述程序会将测试结果保存在json文件中，默认存储在data/evaluate\_results目录下。使用ActivityNet Captions官方提供的测试脚本，即可计算METEOR。具体计算过程请参考[指标计算](../../metrics/ets_metrics/README.md)
 
@@ -96,7 +96,7 @@ ETS的训练数据采用ActivityNet Captions提供的数据集，数据下载及
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要用到的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_caption/ETS_final.pdparams)进行推断
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_caption/ETS.pdparams)进行推断
 
 - 模型推断结果存储于json文件中，默认存储在`data/dataset/predict_results`目录下
 

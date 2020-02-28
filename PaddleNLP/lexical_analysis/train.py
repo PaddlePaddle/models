@@ -29,7 +29,7 @@ import reader
 import utils
 import creator
 from eval import test_process
-sys.path.append('../models/')
+sys.path.append('../shared_modules/models/')
 from model_check import check_cuda
 from model_check import check_version
 
@@ -151,8 +151,7 @@ def do_train(args):
             # save checkpoints
             if step % args.save_steps == 0 and step != 0:
                 save_path = os.path.join(args.model_save_dir,
-                                         "step_" + str(step),
-                                         "checkpoint")
+                                         "step_" + str(step), "checkpoint")
                 fluid.save(train_program, save_path)
             step += 1
 

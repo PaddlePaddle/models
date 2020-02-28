@@ -163,38 +163,38 @@ run.sh
 
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | GAP | 下载链接 |
 | :-------: | :---: | :---------: | :-----: | :----: | :----------: |
-| Attention Cluster | 2048 | 8卡P40 | 7.1 | 0.84 | [model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionCluster_final.pdparams) |
-| Attention LSTM | 1024 | 8卡P40 | 7.1 | 0.86 | [model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionLSTM_final.pdparams) |
-| NeXtVLAD | 160 | 4卡P40 | 7.1 | 0.87 | [model](https://paddlemodels.bj.bcebos.com/video_classification/NEXTVLAD_final.pdparams) |
+| Attention Cluster | 2048 | 8卡P40 | 7.1 | 0.84 | [model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionCluster.pdparams) |
+| Attention LSTM | 1024 | 8卡P40 | 7.1 | 0.86 | [model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionLSTM.pdparams) |
+| NeXtVLAD | 160 | 4卡P40 | 7.1 | 0.87 | [model](https://paddlemodels.bj.bcebos.com/video_classification/NEXTVLAD.pdparams) |
 
 - 基于Kinetics数据集模型：
 
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | Top-1 | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
-| StNet | 128 | 8卡P40 | 7.1 | 0.69 | [model](https://paddlemodels.bj.bcebos.com/video_classification/STNET_final.pdparams) |
-| TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSN_final.pdparams) |
-| TSM | 128 | 8卡P40 | 7.1 | 0.70 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSM_final.pdparams) |
-| Non-local | 64 | 8卡P40 | 7.1 | 0.74 | [model](https://paddlemodels.bj.bcebos.com/video_classification/NONLOCAL_final.pdparams) |
+| StNet | 128 | 8卡P40 | 7.1 | 0.69 | [model](https://paddlemodels.bj.bcebos.com/video_classification/STNET.pdparams) |
+| TSN | 256 | 8卡P40 | 7.1 | 0.67 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSN.pdparams) |
+| TSM | 128 | 8卡P40 | 7.1 | 0.70 | [model](https://paddlemodels.bj.bcebos.com/video_classification/TSM.pdparams) |
+| Non-local | 64 | 8卡P40 | 7.1 | 0.74 | [model](https://paddlemodels.bj.bcebos.com/video_classification/NONLOCAL.pdparams) |
 
 - 基于ActivityNet的动作定位模型：
 
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | 精度 | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
-| C-TCN | 16 | 8卡P40 | 7.1 | 0.31 (MAP) | [model](https://paddlemodels.bj.bcebos.com/video_detection/CTCN_final.pdparams) |
-| BSN | 16 | 1卡K40 | 7.0 | 66.64% (AUC) | [model-tem](https://paddlemodels.bj.bcebos.com/video_detection/BsnTem_final.pdparams), [model-pem](https://paddlemodels.bj.bcebos.com/video_detection/BsnPem_final.pdparams) |
-| BMN | 16 | 4卡K40 | 7.0 | 67.19% (AUC) | [model](https://paddlemodels.bj.bcebos.com/video_detection/BMN_final.pdparams) |
+| C-TCN | 16 | 8卡P40 | 7.1 | 0.31 (MAP) | [model](https://paddlemodels.bj.bcebos.com/video_detection/CTCN.pdparams) |
+| BSN | 16 | 1卡K40 | 7.0 | 66.64% (AUC) | [model-tem](https://paddlemodels.bj.bcebos.com/video_detection/BsnTem.pdparams), [model-pem](https://paddlemodels.bj.bcebos.com/video_detection/BsnPem.pdparams) |
+| BMN | 16 | 4卡K40 | 7.0 | 67.19% (AUC) | [model](https://paddlemodels.bj.bcebos.com/video_detection/BMN.pdparams) |
 
 - 基于ActivityNet Captions的视频描述模型:
 
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | METEOR | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----------: |
-| ETS | 256 | 4卡P40 | 7.0 | 9.8 | [model](https://paddlemodels.bj.bcebos.com/video_caption/ETS_final.pdparams) |
+| ETS | 256 | 4卡P40 | 7.0 | 9.8 | [model](https://paddlemodels.bj.bcebos.com/video_caption/ETS.pdparams) |
 
 - 基于TACoS的视频查找模型:
 
 | 模型 | Batch Size | 环境配置 | cuDNN版本 | R1@IOU5 | R5@IOU5 | 下载链接 |
 | :-------: | :---: | :---------: | :----: | :----: | :----: | :----------: |
-| TALL | 56 | 1卡P40 | 7.2 | 0.13 | 0.24 | [model](https://paddlemodels.bj.bcebos.com/video_grounding/TALL_final.pdparams) |
+| TALL | 56 | 1卡P40 | 7.2 | 0.13 | 0.24 | [model](https://paddlemodels.bj.bcebos.com/video_grounding/TALL.pdparams) |
 
 
 

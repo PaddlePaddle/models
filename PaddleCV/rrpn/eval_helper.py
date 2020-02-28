@@ -31,11 +31,11 @@ logger = logging.getLogger(__name__)
 
 def get_key_dict(out, data, key):
     res = {}
-    for i in range(len(key)):
-        if i == 0:
-            res[key[i]] = out
+    for name in key:
+        if name == 'bbox':
+            res[name] = np.array(out)
         else:
-            res[key[i]] = data[i]
+            res[name] = np.array(data[name])
     return res
 
 
@@ -167,7 +167,7 @@ def calculate_ap(rec, prec):
 def icdar_map(result, class_name, ovthresh):
     im_ids = []
     for res in result:
-        im_ids.append(res['im_id'])
+        im_ids.append(res['im_id'][0][0])
     recs = {}
 
     for i, im_id in enumerate(im_ids):
@@ -185,11 +185,11 @@ def icdar_map(result, class_name, ovthresh):
     confidence = []
     bbox = []
     for res in result:
-        im_info = res['im_info']
+        im_info = res['im_info'][0]
         pred_boxes = res['bbox']
         for box in pred_boxes:
             if box[0] == class_name:
-                image_ids.append(res['im_id'])
+                image_ids.append(res['im_id'][0][0])
                 confidence.append(box[1])
                 clipd_box = clip_box(box[2:].reshape(-1, 8), im_info)
                 bbox.append(clipd_box[0])
@@ -286,7 +286,7 @@ def icdar_box_eval(result, thresh):
     num_global_care_gt = 0
     num_global_care_det = 0
     for res in result:
-        im_info = res['im_info']
+        im_info = res['im_info'][0]
         h = im_info[1]
         w = im_info[2]
         gt_boxes = res['gt_box']

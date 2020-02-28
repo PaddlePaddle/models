@@ -40,7 +40,7 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 - AttentionLSTM模型使用8卡Nvidia Tesla P40来训练的，总的batch size数是1024。
 
 ### 使用预训练模型做finetune
-请先将提供的[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionLSTM_final.pdparams)下载到本地，并在上述脚本文件中添加`--resume`为所保存的预训练模型存放路径。
+请先将提供的[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionLSTM.pdparams)下载到本地，并在上述脚本文件中添加`--resume`为所保存的预训练模型存放路径。
 
 ## 模型评估
 可通过如下两种方式进行模型评估:
@@ -56,7 +56,7 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
 
-- 若未指定`weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionLSTM_final.pdparams)进行评估
+- 若未指定`weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionLSTM.pdparams)进行评估
 
 - 评估结果以log的形式直接打印输出GAP、Hit@1等精度指标
 
@@ -99,7 +99,7 @@ AttentionLSTM模型使用2nd-Youtube-8M数据集，关于数据部分请参考[�
 
 - 使用`run.sh`进行评估时，请修改脚本中的`weights`参数指定需要用到的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionLSTM_final.pdparams)进行推断
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/AttentionLSTM.pdparams)进行推断
 
 - 模型推断结果以log的形式直接打印输出，可以看到每个测试样本的分类预测概率。
 

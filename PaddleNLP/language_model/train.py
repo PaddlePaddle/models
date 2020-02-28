@@ -36,7 +36,7 @@ import sys
 if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding("utf-8")
-sys.path.append('../')
+sys.path.append('../shared_modules/')
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
