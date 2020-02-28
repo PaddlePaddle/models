@@ -367,5 +367,4 @@ class BMN_NET(object):
         tem_loss = self.tem_loss_func(pred_start, pred_end, gt_start, gt_end)
 
         loss = tem_loss + 10 * pem_reg_loss + pem_cls_loss
-        loss.persistable = True
         return loss, tem_loss, pem_reg_loss, pem_cls_loss

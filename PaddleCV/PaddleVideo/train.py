@@ -142,8 +142,6 @@ def train(args):
             train_feeds = train_model.feeds()
             train_fetch_list = train_model.fetches()
             train_loss = train_fetch_list[0]
-            for item in train_fetch_list:
-                item.persistable = True
             optimizer = train_model.optimizer()
             optimizer.minimize(train_loss)
             train_dataloader = train_model.dataloader()
@@ -156,8 +154,6 @@ def train(args):
             valid_feeds = valid_model.feeds()
             valid_fetch_list = valid_model.fetches()
             valid_dataloader = valid_model.dataloader()
-            for item in valid_fetch_list:
-                item.persistable = True
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
@@ -165,11 +161,9 @@ def train(args):
 
     if args.resume:
         # if resume weights is given, load resume weights directly
-        assert os.path.exists(args.resume), \
-                "Given resume weight dir {} not exist.".format(args.resume)
-
-        fluid.io.load_persistables(
-            exe, '', main_program=train_prog, filename=args.resume)
+        assert os.path.exists(args.resume + '.pdparams'), \
+                "Given resume weight dir {}.pdparams not exist.".format(args.resume)
+        fluid.load(train_prog, model_path=args.resume, executor=exe)
     else:
         # if not in resume mode, load pretrain weights
         if args.pretrain:
@@ -234,7 +228,7 @@ def train(args):
     train_with_dataloader(
         exe,
         train_prog,
-        compiled_train_prog,  #train_exe,
+        compiled_train_prog,
         train_dataloader,
         train_fetch_list,
         train_metrics,
@@ -244,7 +238,7 @@ def train(args):
         save_dir=args.save_dir,
         save_model_name=args.model_name,
         fix_random_seed=args.fix_random_seed,
-        compiled_test_prog=compiled_valid_prog,  #test_exe=valid_exe,
+        compiled_test_prog=compiled_valid_prog,
         test_dataloader=valid_dataloader,
         test_fetch_list=valid_fetch_list,
         test_metrics=valid_metrics,

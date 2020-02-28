@@ -101,7 +101,7 @@ TEM模块可通过如下两种方式进行模型评估:
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnTem_final.pdparams)进行评估
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnTem.pdparams)进行评估
 
 - 上述程序会将运行结果保存在data/output/EVAL/TEM\_results文件夹下，同时调用PGM模块生成proposal和BSP特征，分别保存在data/output/EVAL/PGM\_proposals和data/output/EVAL/PGM\_feature路径下。
 
@@ -119,7 +119,7 @@ TEM评估模块完成后，PEM模块可通过如下两种方式进行模型评�
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnPem_final.pdparams)进行评估。
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnPem.pdparams)进行评估。
 
 - 上述程序会将运行结果保存在data/output/EVAL/PEM\_results文件夹下，测试结果保存在data/evaluate\_results/bsn\_results\_validation.json文件中。使用ActivityNet官方提供的测试脚本，即可计算AR@AN、AUC。具体计算过程请参考[指标计算](../../metrics/bmn_metrics/README.md)
 
@@ -149,7 +149,7 @@ TEM模块可通过如下两种方式启动模型推断：
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要用到的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnTem_final.pdparams)进行推断。
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnTem.pdparams)进行推断。
 
 - 上述程序会将运行结果保存在data/output/INFER的子目录TEM\_results、PGM\_proposals、PGM\_feature中。
 
@@ -170,7 +170,7 @@ PEM模块可通过如下两种方式启动模型推断：
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要用到的权重。
 
-- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnPem_final.pdparams)进行推断。
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_detection/BsnPem.pdparams)进行推断。
 
 - 上述程序会将运行结果保存在data/output/INFER/PEM\_results文件夹下，测试结果保存在data/predict\_results/bsn\_results\_test.json文件中。
 
