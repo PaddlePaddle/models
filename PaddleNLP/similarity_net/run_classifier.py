@@ -54,7 +54,7 @@ def create_model(args, pyreader_name, is_inference = False, is_pointwise = False
     if is_inference:
         inf_pyreader = fluid.layers.py_reader(
         capacity=16,
-        shapes=([-1,1], [-1,1]),
+        shapes=([-1], [-1]),
         dtypes=('int64', 'int64'),
         lod_levels=(1, 1),
         name=pyreader_name,
@@ -67,7 +67,7 @@ def create_model(args, pyreader_name, is_inference = False, is_pointwise = False
         if is_pointwise:
             pointwise_pyreader = fluid.layers.py_reader(
             capacity=16,
-            shapes=([-1,1], [-1,1], [-1,1]),
+            shapes=([-1], [-1], [-1]),
             dtypes=('int64', 'int64', 'int64'),
             lod_levels=(1, 1, 0),
             name=pyreader_name,
@@ -79,7 +79,7 @@ def create_model(args, pyreader_name, is_inference = False, is_pointwise = False
         else:
             pairwise_pyreader = fluid.layers.py_reader(
             capacity=16,
-            shapes=([-1,1], [-1,1], [-1,1]),
+            shapes=([-1], [-1], [-1]),
             dtypes=('int64', 'int64', 'int64'),
             lod_levels=(1, 1, 1),
             name=pyreader_name,
