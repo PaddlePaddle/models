@@ -20,7 +20,7 @@ import sys
 from collections import namedtuple
 import numpy as np
 
-sys.path.append("..")
+sys.path.append("../shared_modules/")
 from preprocess.ernie.task_reader import BaseReader, tokenization
 
 
