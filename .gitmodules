@@ -13,3 +13,7 @@
 [submodule "PaddleSpeech/DeepSpeech"]
 	path = PaddleSpeech/DeepSpeech
 	url = https://github.com/PaddlePaddle/DeepSpeech.git
+[submodule "PaddleCV/PaddleDetection"]
+	path = PaddleCV/PaddleDetection
+	url = https://github.com/PaddlePaddle/PaddleDetection.git
+	branch = release/0.2

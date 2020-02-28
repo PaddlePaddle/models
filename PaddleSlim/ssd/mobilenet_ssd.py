@@ -1,1 +1,0 @@
-../../PaddleCV/ssd/mobilenet_ssd.py
