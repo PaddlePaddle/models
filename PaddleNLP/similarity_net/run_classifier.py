@@ -53,12 +53,12 @@ def create_model(args, pyreader_name, is_inference=False, is_pointwise=False):
     """
     if is_inference:
         inf_pyreader = fluid.layers.py_reader(
-            capacity=16,
-            shapes=([-1, 1], [-1, 1]),
-            dtypes=('int64', 'int64'),
-            lod_levels=(1, 1),
-            name=pyreader_name,
-            use_double_buffer=False)
+        capacity=16,
+        shapes=([-1], [-1]),
+        dtypes=('int64', 'int64'),
+        lod_levels=(1, 1),
+        name=pyreader_name,
+        use_double_buffer=False)
 
         left, pos_right = fluid.layers.read_file(inf_pyreader)
         return inf_pyreader, left, pos_right
@@ -66,27 +66,26 @@ def create_model(args, pyreader_name, is_inference=False, is_pointwise=False):
     else:
         if is_pointwise:
             pointwise_pyreader = fluid.layers.py_reader(
-                capacity=16,
-                shapes=([-1, 1], [-1, 1], [-1, 1]),
-                dtypes=('int64', 'int64', 'int64'),
-                lod_levels=(1, 1, 0),
-                name=pyreader_name,
-                use_double_buffer=False)
+            capacity=16,
+            shapes=([-1], [-1], [-1]),
+            dtypes=('int64', 'int64', 'int64'),
+            lod_levels=(1, 1, 0),
+            name=pyreader_name,
+            use_double_buffer=False)
 
             left, right, label = fluid.layers.read_file(pointwise_pyreader)
             return pointwise_pyreader, left, right, label
 
         else:
             pairwise_pyreader = fluid.layers.py_reader(
-                capacity=16,
-                shapes=([-1, 1], [-1, 1], [-1, 1]),
-                dtypes=('int64', 'int64', 'int64'),
-                lod_levels=(1, 1, 1),
-                name=pyreader_name,
-                use_double_buffer=False)
+            capacity=16,
+            shapes=([-1], [-1], [-1]),
+            dtypes=('int64', 'int64', 'int64'),
+            lod_levels=(1, 1, 1),
+            name=pyreader_name,
+            use_double_buffer=False)
 
-            left, pos_right, neg_right = fluid.layers.read_file(
-                pairwise_pyreader)
+            left, pos_right, neg_right = fluid.layers.read_file(pairwise_pyreader)
             return pairwise_pyreader, left, pos_right, neg_right
 
 
