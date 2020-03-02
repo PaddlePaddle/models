@@ -80,6 +80,19 @@ class Normalize(object):
         return (tensor - self.mean) / self.std
 
 
+class Transpose(Transform):
+    """ Transpose image."""
+
+    def __call__(self, img):
+        if len(img.shape) == 3:
+            img = img.transpose((2, 0, 1))
+        elif len(img.shape) == 2:
+            img = np.expand_dims(img, axis=0)
+        else:
+            raise NotImplementedError
+        return img.astype('float32')
+
+
 class ToArray(Transform):
     """ Transpose image and jitter brightness"""
 
@@ -145,4 +158,30 @@ class RandomHorizontalFlip(Transform):
             if isinstance(img, PTensor):
                 return layers.reverse(img, 2)
             return np.fliplr(img).copy()
+        return img
+
+
+class Blur(Transform):
+    """ Blur the image by applying a random kernel."""
+
+    def __init__(self, probability=0.5):
+        self.probability = probability
+
+    def roll(self):
+        return random.random() < self.probability
+
+    def transform(self, img, do_blur):
+        def rand_kernel():
+            sizes = np.arange(5, 46, 2)
+            size = np.random.choice(sizes)
+            kernel = np.zeros((size, size))
+            c = int(size/2)
+            wx = np.random.random()
+            kernel[:, c] += 1. / size * wx
+            kernel[c, :] += 1. / size * (1-wx)
+            return kernel
+
+        if do_blur:
+            kernel = rand_kernel()
+            img = cv.filter2D(img, -1, kernel)
         return img
