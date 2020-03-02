@@ -85,12 +85,19 @@ class MSCOCOSeq(BaseDataset):
         anno = self.coco_set.anns[self.sequence_list[seq_id]]['bbox']
         return np.reshape(np.array(anno), (1, 4))
 
-    def _get_frames(self, seq_id):
+    def _get_frames(self, seq_id, mask=False):
         path = self.coco_set.loadImgs(
             [self.coco_set.anns[self.sequence_list[seq_id]]['image_id']])[0][
                 'file_name']
         img = self.image_loader(os.path.join(self.img_pth, path))
-        return img
+
+        if mask:
+            ann = self.coco_set.anns[self.sequence_list[seq_id]]
+            im_mask = (self.coco_set.annToMask(ann).astype(np.float32) > 0.5).astype(np.float32)
+            im_mask = np.expand_dims(im_mask, axis=2)
+            return img, im_mask
+        else:
+            return img
 
     def get_meta_info(self, seq_id):
         try:
@@ -128,3 +135,21 @@ class MSCOCOSeq(BaseDataset):
         object_meta = self.get_meta_info(seq_id)
 
         return frame_list, anno_frames, object_meta
+
+    def get_frames_mask(self, seq_id=None, frame_ids=None, anno=None):
+        # COCO is an image dataset. Thus we replicate the image denoted by seq_id len(frame_ids) times, and return a
+        # list containing these replicated images.
+        frame, mask = self._get_frames(seq_id, mask=True)
+
+        frame_list = [frame.copy() for _ in frame_ids]
+
+        mask_list = [mask.copy() for _ in frame_ids]
+
+        if anno is None:
+            anno = self._get_anno(seq_id)
+
+        anno_frames = [anno.copy()[0, :] for _ in frame_ids]
+
+        object_meta = self.get_meta_info(seq_id)
+
+        return frame_list, anno_frames, mask_list, object_meta
