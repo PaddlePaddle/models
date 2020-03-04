@@ -94,8 +94,9 @@ def train(args):
         feed_list=train_input_data, capacity=10000, iterable=True)
     loader.set_sample_list_generator(train_reader, places=place)
     if parallel:
-        train_exe = fluid.ParallelExecutor(
-            use_cuda=use_cuda, loss_name=avg_cost.name)
+        train_exe = exe
+        #train_exe = fluid.ParallelExecutor(
+        #    use_cuda=use_cuda, loss_name=avg_cost.name)
     else:
         train_exe = exe
 
