@@ -203,17 +203,18 @@ def train_mnist(args):
 
         total_train_time = 0
         for epoch in range(epoch_num):
-            stime = time.time()
-            for batch_id, data in enumerate(train_reader()):
-                dy_x_data = np.array([x[0].reshape(1, 28, 28)
+            generator = train_reader().__iter__()
+            data = generator.__next__()
+            dy_x_data = np.array([x[0].reshape(1, 28, 28)
                                       for x in data]).astype('float32')
-                y_data = np.array(
-                    [x[1] for x in data]).astype('int64').reshape(-1, 1)
-
-                img = to_variable(dy_x_data)
-                label = to_variable(y_data)
-                label.stop_gradient = True
-
+            y_data = np.array(
+                [x[1] for x in data]).astype('int64').reshape(-1, 1)
+            img = to_variable(dy_x_data)
+            label = to_variable(y_data)
+            label.stop_gradient = True
+            stime = time.time()
+            for batch_id in range(0, 937):  
+                
                 cost, acc = mnist(img, label)
 
                 loss = fluid.layers.cross_entropy(cost, label)
@@ -240,8 +241,8 @@ def train_mnist(args):
             if args.ce:
                 print("kpis\ttest_acc\t%s" % test_acc)
                 print("kpis\ttest_cost\t%s" % test_cost)
-            print("Loss at epoch {} , Test avg_loss is: {}, acc is: {}".format(
-                epoch, test_cost, test_acc))
+            print("Loss at epoch {} step {}, Test avg_loss is: {}, acc is: {}".format(
+                epoch, batch_id, test_cost, test_acc))
 
         save_parameters = (not args.use_data_parallel) or (
             args.use_data_parallel and

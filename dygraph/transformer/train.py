@@ -71,7 +71,10 @@ def do_train(args):
             fluid.default_startup_program().random_seed = random_seed
 
         # define data loader
-        train_loader = fluid.io.DataLoader.from_generator(capacity=10)
+        if args.use_multiprocess:
+            train_loader = fluid.io.DataLoader.from_generator(capacity=200, use_multiprocess=True)
+        else:
+            train_loader = fluid.io.DataLoader.from_generator(capacity=200)
         train_loader.set_batch_generator(batch_generator, places=place)
 
         # define model
@@ -124,7 +127,9 @@ def do_train(args):
         for pass_id in range(args.epoch):
             pass_start_time = time.time()
             batch_id = 0
+            t_last = time.time()
             for input_data in train_loader():
+                t_start = time.time()
                 (src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
                  trg_slf_attn_bias, trg_src_attn_bias, lbl_word,
                  lbl_weight) = input_data
@@ -159,11 +164,11 @@ def do_train(args):
                     else:
                         logging.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                            "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
+                            "normalized loss: %f, ppl: %f, speed: %.2f step/s, read_t: %f s" %
                             (step_idx, pass_id, batch_id, total_avg_cost,
                             total_avg_cost - loss_normalizer,
                             np.exp([min(total_avg_cost, 100)]),
-                            args.print_step / (time.time() - avg_batch_time)))
+                            args.print_step / (time.time() - avg_batch_time), t_start - t_last))
                         avg_batch_time = time.time()
 
                 if step_idx % args.save_step == 0 and step_idx != 0 and (
@@ -183,6 +188,10 @@ def do_train(args):
 
                 batch_id += 1
                 step_idx += 1
+                t_last = time.time()
+
+            print("total train time: {} s".format(time.time() - pass_start_time))
+            break
 
         time_consumed = time.time() - pass_start_time
 

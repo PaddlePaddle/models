@@ -126,9 +126,10 @@ def parse_args():
     add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
-    add_arg('reader_buf_size',          int,    16,                   "The buf size of multi thread reader")
+    add_arg('reader_buf_size',          int,    64,                     "The buf size of multi thread reader")
     add_arg('interpolation',            int,    None,                   "The interpolation mode")
     add_arg('use_aa',                   bool,   False,                  "Whether to use auto augment")
+    add_arg('use_multiprocess',         bool,   False,                  "Whether to use multiprocess data loader")
     parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
     parser.add_argument('--image_std', nargs='+', type=float, default=[0.229, 0.224, 0.225], help="The std of input image data")
 
@@ -305,40 +306,38 @@ def create_data_loader(is_train, args):
     Returns:
         data_loader and the input data of net, 
     """
-    image_shape = [int(m) for m in args.image_shape.split(",")]
-
-    feed_image = fluid.data(
-        name="feed_image",
-        shape=[None] + image_shape,
-        dtype="float32",
-        lod_level=0)
-
-    feed_label = fluid.data(
-        name="feed_label", shape=[None, 1], dtype="int64", lod_level=0)
-    feed_y_a = fluid.data(
-        name="feed_y_a", shape=[None, 1], dtype="int64", lod_level=0)
-
     if is_train and args.use_mixup:
-        feed_y_b = fluid.data(
-            name="feed_y_b", shape=[None, 1], dtype="int64", lod_level=0)
-        feed_lam = fluid.data(
-            name="feed_lam", shape=[None, 1], dtype="float32", lod_level=0)
+        if args.use_multiprocess:
+            data_loader = fluid.io.DataLoader.from_generator(
+                capacity=50,
+                use_double_buffer=True,
+                iterable=True,
+                return_list=True,
+                use_multiprocess=True)
+        else:
+            data_loader = fluid.io.DataLoader.from_generator(
+                capacity=50,
+                use_double_buffer=True,
+                iterable=True,
+                return_list=True)
 
-        data_loader = fluid.io.DataLoader.from_generator(
-            capacity=64,
-            use_double_buffer=True,
-            iterable=True,
-            return_list=True)
-
-        return data_loader, [feed_image, feed_y_a, feed_y_b, feed_lam]
+        return data_loader
     else:
-        data_loader = fluid.io.DataLoader.from_generator(
-            capacity=64,
-            use_double_buffer=True,
-            iterable=True,
-            return_list=True)
+        if args.use_multiprocess:
+            data_loader = fluid.io.DataLoader.from_generator(
+                capacity=20,
+                use_double_buffer=True,
+                iterable=True,
+                return_list=True,
+                use_multiprocess=True)
+        else:
+            data_loader = fluid.io.DataLoader.from_generator(
+                capacity=20,
+                use_double_buffer=True,
+                iterable=True,
+                return_list=True)
 
-        return data_loader, [feed_image, feed_label]
+        return data_loader
 
 
 def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):

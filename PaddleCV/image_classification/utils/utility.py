@@ -131,7 +131,7 @@ def parse_args():
     add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
-    add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
+    add_arg('reader_buf_size',          int,    64,                     "The buf size of multi thread reader")
     add_arg('interpolation',            int,    None,                   "The interpolation mode")
     add_arg('use_aa',                   bool,   False,                  "Whether to use auto augment")
     parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")
@@ -420,7 +420,8 @@ def print_info(info_mode,
                batch_id=0,
                print_step=1,
                device_num=1,
-               class_dim=5):
+               class_dim=5,
+               read_time=None):
     """print function
 
     Args:
@@ -439,17 +440,17 @@ def print_info(info_mode,
             if len(metrics) == 2:
                 loss, lr = metrics
                 logger.info(
-                    "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}, read_t {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
-                           "%2.4f sec" % time_info))
+                           "%2.4f sec" % time_info, "%2.6f" % read_time))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 logger.info(
-                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}, read_t {8}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
-                           min(class_dim, 5)))
+                           min(class_dim, 5), "%2.6f" % read_time))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics

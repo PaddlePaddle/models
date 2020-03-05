@@ -32,6 +32,8 @@ special_token: ["<s>", "<e>", "<unk>"]
 
 # whether to use cuda
 use_cuda: True
+# whether to multiprocess data loader
+use_multiprocess: False
 
 # args for reader, see reader.py for details
 token_delimiter: " "

@@ -325,6 +325,14 @@ def train_ptb_lm():
         sgd = SGDOptimizer(learning_rate=fluid.layers.piecewise_decay(
             boundaries=bd, values=lr_arr), parameter_list=ptb_model.parameters())
 
+        def reader_decorator(reader):
+            def __reader__():
+                for item in reader:
+                    x_data = item[0].reshape((-1, num_steps, 1))
+                    y_data = item[1].reshape((-1, num_steps, 1))
+                    yield x_data, y_data
+            return __reader__
+
         def eval(model, data):
             print("begion to eval")
             total_loss = 0.0
@@ -335,13 +343,14 @@ def train_ptb_lm():
                 (num_layers, batch_size, hidden_size), dtype='float32')
 
             model.eval()
-            train_data_iter = reader.get_data_iter(data, batch_size, num_steps)
-            for batch_id, batch in enumerate(train_data_iter):
-                x_data, y_data = batch
-                x_data = x_data.reshape((-1, num_steps, 1))
-                y_data = y_data.reshape((-1, num_steps, 1))
-                x = to_variable(x_data)
-                y = to_variable(y_data)
+            train_data_iter = reader_decorator(
+                reader.get_data_iter(data, batch_size, num_steps))
+
+            eval_data_loader = fluid.io.DataLoader.from_generator(capacity=200, use_multiprocess=True)
+            eval_data_loader.set_batch_generator(train_data_iter, places=core.CUDAPlace(0))
+            
+            for batch_id, batch in enumerate(eval_data_loader):
+                x, y = batch
                 init_hidden = to_variable(init_hidden_data)
                 init_cell = to_variable(init_cell_data)
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
@@ -371,20 +380,17 @@ def train_ptb_lm():
             init_cell_data = np.zeros(
                 (num_layers, batch_size, hidden_size), dtype='float32')
 
-            train_data_iter = reader.get_data_iter(train_data, batch_size,
-                                                   num_steps)
+            train_data_iter = reader_decorator(
+                reader.get_data_iter(train_data, batch_size, num_steps))
+
+            train_data_loader = fluid.io.DataLoader.from_generator(capacity=200, use_multiprocess=True)
+            train_data_loader.set_batch_generator(train_data_iter, places=core.CUDAPlace(0))
+
             init_hidden = to_variable(init_hidden_data)
             init_cell = to_variable(init_cell_data)
             start_time = time.time()
-            for batch_id, batch in enumerate(train_data_iter):
-                x_data, y_data = batch
-
-                x_data = x_data.reshape((-1, num_steps, 1))
-                y_data = y_data.reshape((-1, num_steps, 1))
-
-                x = to_variable(x_data)
-                y = to_variable(y_data)
-
+            for batch_id, batch in enumerate(train_data_loader):
+                x, y = batch
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
                                                             init_cell)
                 init_hidden = last_hidden
@@ -422,4 +428,3 @@ def train_ptb_lm():
 
 
 train_ptb_lm()
-

@@ -326,20 +326,23 @@ def train_resnet():
 
             print("load finished")
 
+            generator = train_reader().__iter__()
+            data = generator.__next__()
+            dy_x_data = np.array(
+                [x[0].reshape(3, 224, 224) for x in data]).astype('float32')
+            if len(np.array([x[1]
+                                for x in data]).astype('int64')) != batch_size:
+                continue
+            y_data = np.array([x[1] for x in data]).astype('int64').reshape(
+                -1, 1)
+
+            img = to_variable(dy_x_data)
+            label = to_variable(y_data)
+            label.stop_gradient = True
+
             stime = time.time()
-            for batch_id, data in enumerate(train_reader()):
-                dy_x_data = np.array(
-                    [x[0].reshape(3, 224, 224) for x in data]).astype('float32')
-                if len(np.array([x[1]
-                                 for x in data]).astype('int64')) != batch_size:
-                    continue
-                y_data = np.array([x[1] for x in data]).astype('int64').reshape(
-                    -1, 1)
-
-                img = to_variable(dy_x_data)
-                label = to_variable(y_data)
-                label.stop_gradient = True
-
+            for batch_id in range(0, 192):
+                
                 out = resnet(img)
                 loss = fluid.layers.cross_entropy(input=out, label=label)
                 avg_loss = fluid.layers.mean(x=loss)

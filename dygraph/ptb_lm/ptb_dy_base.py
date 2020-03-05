@@ -375,15 +375,18 @@ def train_ptb_lm():
                                                    num_steps)
             init_hidden = to_variable(init_hidden_data)
             init_cell = to_variable(init_cell_data)
+
+            generator = train_data_iter.__iter__()
+            batch = generator.__next__()
+            x_data, y_data = batch
+
+            x_data = x_data.reshape((-1, num_steps, 1))
+            y_data = y_data.reshape((-1, num_steps, 1))
+
+            x = to_variable(x_data)
+            y = to_variable(y_data)
             start_time = time.time()
-            for batch_id, batch in enumerate(train_data_iter):
-                x_data, y_data = batch
-
-                x_data = x_data.reshape((-1, num_steps, 1))
-                y_data = y_data.reshape((-1, num_steps, 1))
-
-                x = to_variable(x_data)
-                y = to_variable(y_data)
+            for batch_id in range(0, 2323):
 
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
                                                             init_cell)
