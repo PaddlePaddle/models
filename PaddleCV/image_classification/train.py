@@ -241,7 +241,10 @@ def train(args):
                 test_iter = test_data_loader()
 
         t1 = time.time()
+        stime = time.time()
+        t_last = time.time()
         for batch in train_iter:
+            read_t = time.time() - t_last
             #NOTE: this is for benchmark
             if args.max_iter and total_batch_num == args.max_iter:
                 return
@@ -257,7 +260,7 @@ def train(args):
             train_batch_metrics_record.append(train_batch_metrics_avg)
             if trainer_id == 0:
                 print_info("batch", train_batch_metrics_avg, train_batch_elapse,
-                           pass_id, train_batch_id, args.print_step)
+                           pass_id, train_batch_id, args.print_step, read_time=read_t)
                 sys.stdout.flush()
             train_batch_id += 1
             t1 = time.time()
@@ -268,6 +271,10 @@ def train(args):
             elif args.is_profiler and pass_id == 0 and train_batch_id == args.print_step + 5:
                 profiler.stop_profiler("total", args.profiler_path)
                 return
+            t_last = time.time()
+
+        print("total train time: {} s".format(time.time() - stime))
+        break
 
         if args.use_dali:
             train_iter.reset()

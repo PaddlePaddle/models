@@ -318,6 +318,13 @@ class SeResNeXt(fluid.dygraph.Layer):
         y = self.out(y)
         return y
 
+def reader_decorator(reader):
+    def __reader__():
+        for item in reader():
+            img = np.array(item[0]).astype('float32').reshape(3, 224, 224)
+            label = np.array(item[1]).astype('int64').reshape(1)
+            yield img, label
+    return __reader__
 
 def eval(model, data):
 
@@ -328,15 +335,7 @@ def eval(model, data):
     total_acc5 = 0.0
     total_sample = 0
     for batch_id, data in enumerate(data()):
-        dy_x_data = np.array(
-            [x[0].reshape(3, 224, 224) for x in data]).astype('float32')
-        if len(np.array([x[1] for x in data]).astype('int64')) != batch_size:
-            continue
-        y_data = np.array([x[1] for x in data]).astype('int64').reshape(
-            batch_size, 1)
-
-        img = to_variable(dy_x_data)
-        label = to_variable(y_data)
+        img, label = data
         label.stop_gradient = True
         out = model(img)
 
@@ -390,14 +389,23 @@ def train():
             se_resnext = fluid.dygraph.parallel.DataParallel(se_resnext,
                                                              strategy)
         train_reader = paddle.batch(
-            paddle.dataset.flowers.train(use_xmap=False),
-            batch_size=batch_size,
-            drop_last=True)
+            reader_decorator(
+                paddle.dataset.flowers.train(use_xmap=False)), 
+                batch_size=batch_size,
+                drop_last=True)
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
         test_reader = paddle.batch(
-            paddle.dataset.flowers.test(use_xmap=False), batch_size=32)
+            reader_decorator(
+                paddle.dataset.flowers.test(use_xmap=False)), 
+                batch_size=32)
+
+        train_loader = fluid.io.DataLoader.from_generator(capacity=100, use_multiprocess=True)
+        train_loader.set_sample_list_generator(train_reader, places=place)
+
+        test_loader = fluid.io.DataLoader.from_generator(capacity=10, use_multiprocess=True)
+        test_loader.set_sample_list_generator(test_reader, places=place)
 
         total_train_time = 0
         for epoch_id in range(epoch_num):
@@ -406,15 +414,8 @@ def train():
             total_acc5 = 0.0
             total_sample = 0
             stime = time.time()
-            for batch_id, data in enumerate(train_reader()):
-
-                dy_x_data = np.array([x[0].reshape(3, 224, 224)
-                                      for x in data]).astype('float32')
-                y_data = np.array([x[1] for x in data]).astype('int64').reshape(
-                    batch_size, 1)
-
-                img = to_variable(dy_x_data)
-                label = to_variable(y_data)
+            for batch_id, data in enumerate(train_loader()):
+                img, label = data
                 label.stop_gradient = True
 
                 out = se_resnext(img)
@@ -458,7 +459,7 @@ def train():
                   (epoch_id, batch_id, total_loss / total_sample, \
                    total_acc1 / total_sample, total_acc5 / total_sample))
             se_resnext.eval()
-            eval(se_resnext, test_reader)
+            eval(se_resnext, test_loader)
             se_resnext.train()
 
         print("total train time: {} s".format(total_train_time))

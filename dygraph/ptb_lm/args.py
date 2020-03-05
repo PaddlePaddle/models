@@ -40,7 +40,7 @@ def parse_args():
         default="static",
         help="model_type [static|padding|cudnn]")
     parser.add_argument(
-        "--data_path", type=str, help="all the data for train,valid,test")
+        "--data_path", type=str, default="/work/models/dygraph/ptb_lm/data/simple-examples/data", help="all the data for train,valid,test")
     parser.add_argument('--para_init', action='store_true')
     parser.add_argument(
         '--use_gpu', type=str2bool, default=True, help='whether using gpu')

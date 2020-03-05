@@ -113,9 +113,9 @@ def train_mobilenet():
             optimizer.set_dict(opti_dict)
 
         # 3. reader
-        train_data_loader, train_data = utility.create_data_loader(
+        train_data_loader = utility.create_data_loader(
             is_train=True, args=args)
-        test_data_loader, test_data = utility.create_data_loader(
+        test_data_loader = utility.create_data_loader(
             is_train=False, args=args)
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
         imagenet_reader = reader.ImageNetReader(0)
@@ -137,11 +137,12 @@ def train_mobilenet():
             batch_id = 0
             t_last = 0
             # 4.1 for each batch, call net() , backward(), and minimize()
+            stime = time.time()
             for img, label in train_data_loader():
                 t1 = time.time()
-                label = to_variable(label.numpy().astype('int64').reshape(
-                    int(args.batch_size //
-                        paddle.fluid.core.get_cuda_device_count()), 1))
+                # label = to_variable(label.numpy().astype('int64').reshape(
+                #     int(args.batch_size //
+                #         paddle.fluid.core.get_cuda_device_count()), 1))
                 t_start = time.time()
 
                 # 4.1.1 call net()
@@ -173,7 +174,7 @@ def train_mobilenet():
                 t2 = time.time()
                 train_batch_elapse = t2 - t1
                 if batch_id % args.print_step == 0:
-                    print( "epoch id: %d, batch step: %d,  avg_loss %0.5f acc_top1 %0.5f acc_top5 %0.5f %2.4f sec net_t:%2.4f back_t:%2.4f read_t:%2.4f" % \
+                    print( "epoch id: %d, batch step: %d,  avg_loss %0.5f acc_top1 %0.5f acc_top5 %0.5f %2.4f sec net_t:%2.4f back_t:%2.4f read_t:%2.6f" % \
                             (eop, batch_id, avg_loss.numpy(), acc_top1.numpy(), acc_top5.numpy(), train_batch_elapse,
                               t_end - t_start, t_end_back - t_start_back,  t1 - t_last))
                     sys.stdout.flush()
@@ -183,6 +184,10 @@ def train_mobilenet():
                 total_sample += 1
                 batch_id += 1
                 t_last = time.time()
+
+            print("total train time: {} s".format(time.time() - stime))
+            break
+
             if args.ce:
                 print("kpis\ttrain_acc1\t%0.3f" % (total_acc1 / total_sample))
                 print("kpis\ttrain_acc5\t%0.3f" % (total_acc5 / total_sample))

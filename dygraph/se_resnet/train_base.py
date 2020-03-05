@@ -405,17 +405,18 @@ def train():
             total_acc1 = 0.0
             total_acc5 = 0.0
             total_sample = 0
+            generator = train_reader().__iter__()
+            data = generator.__next__()
+            dy_x_data = np.array([x[0].reshape(3, 224, 224)
+                                    for x in data]).astype('float32')
+            y_data = np.array([x[1] for x in data]).astype('int64').reshape(
+                batch_size, 1)
+
+            img = to_variable(dy_x_data)
+            label = to_variable(y_data)
+            label.stop_gradient = True
             stime = time.time()
-            for batch_id, data in enumerate(train_reader()):
-
-                dy_x_data = np.array([x[0].reshape(3, 224, 224)
-                                      for x in data]).astype('float32')
-                y_data = np.array([x[1] for x in data]).astype('int64').reshape(
-                    batch_size, 1)
-
-                img = to_variable(dy_x_data)
-                label = to_variable(y_data)
-                label.stop_gradient = True
+            for batch_id in range(0, 96):
 
                 out = se_resnext(img)
                 softmax_out = fluid.layers.softmax(out, use_cudnn=False)
