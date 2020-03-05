@@ -53,11 +53,13 @@ def clip_relative_box_in_image(x, y, w, h):
     x2 = min(x + w / 2, 1.)
     y1 = min(y - h / 2, 0.)
     y2 = max(y + h / 2, 1.)
+
     x = (x1 + x2) / 2
     y = (y1 + y2) / 2
     w = x2 - x1
     h = y2 - y1
 
+    return x, y, w, h
 
 def box_xywh_to_xyxy(box):
     shape = box.shape
