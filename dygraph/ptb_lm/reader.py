@@ -133,7 +133,7 @@ def get_reader(data_type, batch_size, num_steps, data_path, vocab_dict):
             data_reader,
             8,
             64,
-            order=False)
+            order=True)
     return ret
 
 
