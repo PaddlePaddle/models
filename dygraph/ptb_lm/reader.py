@@ -128,12 +128,6 @@ def get_reader(data_type, batch_size, num_steps, data_path, vocab_dict):
 
     data_reader = get_data_reader()
     
-    ret = fluid.io.xmap_readers(
-            mapper,
-            data_reader,
-            8,
-            64,
-            order=True)
-    return ret
+    return data_reader
 
 
