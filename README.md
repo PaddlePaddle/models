@@ -241,13 +241,13 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 ## PaddleSpeech
 
-[PaddleSpeech](https://github.com/PaddlePaddle/models/tree/develop/PaddleSpeech) 包含语音识别和语音合成相关的模型。
+[PaddleSpeech](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleSpeech) 包含语音识别和语音合成相关的模型。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [DeepASR](https://github.com/PaddlePaddle/models/blob/develop/PaddleSpeech/DeepASR/README_cn.md) | 利用 PaddlePaddle 框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器。 |
+| [DeepASR](https://github.com/PaddlePaddle/models/blob/release/1.7/PaddleSpeech/DeepASR/README_cn.md) | 利用 PaddlePaddle 框架完成语音识别中声学模型的配置和训练，并集成 Kaldi 的解码器。 |
 | [DeepSpeech2](https://github.com/PaddlePaddle/DeepSpeech)    | 一个采用 PaddlePaddle 平台的端到端自动语音识别（ASR）引擎的开源项目，具体原理请参考论文 [Deep Speech 2: End-to-End Speech Recognition in English and Mandarin](https://arxiv.org/abs/1512.02595)。 |
-| [DeepVoice3](https://github.com/PaddlePaddle/models/tree/develop/PaddleSpeech/DeepVoice3) | 百度研发的基于卷积神经网络的端到端语音合成模型，对应论文 [Deep Voice 3: Scaling Text-to-Speech with Convolutional Sequence Learning](https://arxiv.org/abs/1710.07654)， 基于 PaddlePaddle 动态图实现。 |
+| [Parakeet](https://github.com/PaddlePaddle/Parakeet) |定位于灵活、高效的语音合成工具集，支持多个前沿的语音合成模型，包括 WaveFlow、ClariNet、WaveNet、Deep Voice 3、Transformer TTS、FastSpeech 等。 |
 
 ## PaddleSlim
 
