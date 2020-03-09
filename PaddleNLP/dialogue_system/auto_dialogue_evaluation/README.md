@@ -30,7 +30,7 @@
 - cuda >= 9.0
 - cudnn >= 7.0
 - pandas >= 0.20.1
-- PaddlePaddle >= 1.6.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 本模块使用bert作为pretrain model进行模型的finetuning训练，训练速度较慢，建议安装GPU版本的PaddlePaddle
+- PaddlePaddle >= 1.7.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 本模块使用bert作为pretrain model进行模型的finetuning训练，训练速度较慢，建议安装GPU版本的PaddlePaddle
 
 #### &ensp;&ensp;b、下载代码
 
@@ -38,7 +38,7 @@
 
 ```
 git clone https://github.com/PaddlePaddle/models.git
-cd models/PaddleNLP/PaddleDialogue/auto_dialogue_evaluation
+cd models/PaddleNLP/dialogue_system/auto_dialogue_evaluation
 ```
 
 ### 任务简介
