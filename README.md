@@ -149,7 +149,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 [**PaddleNLP**](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP) 是基于 PaddlePaddle 深度学习框架开发的自然语言处理 (NLP) 工具，算法，模型和数据的开源项目。百度在 NLP 领域十几年的深厚积淀为 PaddleNLP 提供了强大的核心动力。使用 PaddleNLP，您可以得到：
 
 - **丰富而全面的 NLP 任务支持：**
-  - PaddleNLP 为您提供了多粒度，多场景的应用支持。涵盖了从[分词](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis)，[词性标注](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis)，[命名实体识别](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis)等 NLP 基础技术，到[文本分类](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/sentiment_classification)，[文本相似度计算](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/similarity_net)，[语义表示](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK)，[文本生成](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleTextGEN)等 NLP 核心技术。同时，PaddleNLP 还提供了针对常见 NLP 大型应用系统（如[阅读理解](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleMRC)，[对话系统](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue)，[机器翻译系统](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleMT)等）的特定核心技术和工具组件，模型和预训练参数等，让您在 NLP 领域畅通无阻。
+  - PaddleNLP 为您提供了多粒度，多场景的应用支持。涵盖了从[分词](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis)，[词性标注](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis)，[命名实体识别](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/lexical_analysis)等 NLP 基础技术，到[文本分类](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/sentiment_classification)，[文本相似度计算](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/similarity_net)，[语义表示](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/pretrain_langauge_models)，[文本生成](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/seq2seq)等 NLP 核心技术。同时，PaddleNLP 还提供了针对常见 NLP 大型应用系统（如[阅读理解](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/machine_reading_comprehension)，[对话系统](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_system)，[机器翻译系统](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/machine_translation)等）的特定核心技术和工具组件，模型和预训练参数等，让您在 NLP 领域畅通无阻。
 - **稳定可靠的 NLP 模型和强大的预训练参数：**
   - PaddleNLP集成了百度内部广泛使用的 NLP 工具模型，为您提供了稳定可靠的 NLP 算法解决方案。基于百亿级数据的预训练参数和丰富的预训练模型，助您轻松提高模型效果，为您的 NLP 业务注入强大动力。
 - **持续改进和技术支持，零基础搭建 NLP 应用：**
@@ -167,14 +167,14 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 语义表示
 
-[PaddleLARK](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK) (Paddle LAngauge Representation ToolKit) 是传统语言模型的进一步发展，通过在大规模语料上训练得到的通用的语义表示模型，可以助益其他自然语言处理任务，是通用预训练 + 特定任务精调范式的体现。PaddleLARK 集成了 ELMO，BERT，ERNIE 1.0，ERNIE 2.0，XLNet 等热门中英文预训练模型。
+[pretrain_langauge_models](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/pretrain_langauge_models) (Paddle LAngauge Representation ToolKit) 是传统语言模型的进一步发展，通过在大规模语料上训练得到的通用的语义表示模型，可以助益其他自然语言处理任务，是通用预训练 + 特定任务精调范式的体现。pretrain_langauge_models 集成了 ELMO，BERT，ERNIE 1.0，ERNIE 2.0，XLNet 等热门中英文预训练模型。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [ERNIE](https://github.com/PaddlePaddle/ERNIE)(Enhanced Representation from kNowledge IntEgration) | 百度自研的语义表示模型，通过建模海量数据中的词、实体及实体关系，学习真实世界的语义知识。相较于 BERT 学习原始语言信号，ERNIE 直接对先验语义知识单元进行建模，增强了模型语义表示能力。 |
-| [BERT](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK/BERT)(Bidirectional Encoder Representation from Transformers) | 一个迁移能力很强的通用语义表示模型， 以 Transformer 为网络基本组件，以双向 Masked Language Model和 Next Sentence Prediction 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。 |
-| [XLNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK/XLNet)(XLNet: Generalized Autoregressive Pretraining for Language Understanding) | 重要的语义表示模型之一，引入 Transformer-XL 为骨架，以 Permutation Language Modeling 为优化目标，在若干下游任务上优于 BERT 的性能。 |
-| [ELMo](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleLARK/ELMo)(Embeddings from Language Models) | 重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。 |
+| [BERT](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/pretrain_langauge_models/BERT)(Bidirectional Encoder Representation from Transformers) | 一个迁移能力很强的通用语义表示模型， 以 Transformer 为网络基本组件，以双向 Masked Language Model和 Next Sentence Prediction 为训练目标，通过预训练得到通用语义表示，再结合简单的输出层，应用到下游的 NLP 任务，在多个任务上取得了 SOTA 的结果。 |
+| [XLNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/pretrain_langauge_models/XLNet)(XLNet: Generalized Autoregressive Pretraining for Language Understanding) | 重要的语义表示模型之一，引入 Transformer-XL 为骨架，以 Permutation Language Modeling 为优化目标，在若干下游任务上优于 BERT 的性能。 |
+| [ELMo](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/pretrain_langauge_models/ELMo)(Embeddings from Language Models) | 重要的通用语义表示模型之一，以双向 LSTM 为网路基本组件，以 Language Model 为训练目标，通过预训练得到通用的语义表示，将通用的语义表示作为 Feature 迁移到下游 NLP 任务中，会显著提升下游任务的模型性能。 |
 
 #### 文本相似度计算
 
@@ -182,7 +182,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 文本生成
 
-[PaddleTextGEN](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleTextGEN) (Paddle Text Generation) ,一个基于 PaddlePaddle 的文本生成框架，提供了一些列经典文本生成模型案例，如 vanilla seq2seq，seq2seq with attention，variational seq2seq 模型等。
+[seq2seq](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/seq2seq) (Paddle Text Generation) ,一个基于 PaddlePaddle 的文本生成框架，提供了一些列经典文本生成模型案例，如 vanilla seq2seq，seq2seq with attention，variational seq2seq 模型等。
 
 ### NLP 系统应用
 
@@ -195,7 +195,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 阅读理解
 
-[PaddleMRC](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleMRC) (Paddle Machine Reading Comprehension)，集合了百度在阅读理解领域相关的模型，工具，开源数据集等一系列工作。
+[machine_reading_comprehension](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/machine_reading_comprehension) (Paddle Machine Reading Comprehension)，集合了百度在阅读理解领域相关的模型，工具，开源数据集等一系列工作。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -205,16 +205,16 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 #### 机器翻译
 
-[PaddleMT](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleMT) ，全称为Paddle Machine Translation，基于Transformer的经典机器翻译模型，基于论文 [Attention Is All You Need](https://arxiv.org/abs/1706.03762)。
+[machine_translation](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/machine_translation) ，全称为Paddle Machine Translation，基于Transformer的经典机器翻译模型，基于论文 [Attention Is All You Need](https://arxiv.org/abs/1706.03762)。
 
 #### 对话系统
 
-[PaddleDialogue](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue) 包含对话系统方向的模型、数据集和工具。
+[dialogue_system](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_system) 包含对话系统方向的模型、数据集和工具。
 
 | 模型                                                         | 简介                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [DGU](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue/dialogue_general_understanding) (Dialogue General Understanding，通用对话理解模型) | 覆盖了包括**检索式聊天系统**中 context-response matching 任务和**任务完成型对话系统**中**意图识别**，**槽位解析**，**状态追踪**等常见对话系统任务，在 6 项国际公开数据集中都获得了最佳效果。 |
-| [ADEM](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleDialogue/auto_dialogue_evaluation) (Auto Dialogue Evaluation Model) | 评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。 |
+| [DGU](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_system/dialogue_general_understanding) (Dialogue General Understanding，通用对话理解模型) | 覆盖了包括**检索式聊天系统**中 context-response matching 任务和**任务完成型对话系统**中**意图识别**，**槽位解析**，**状态追踪**等常见对话系统任务，在 6 项国际公开数据集中都获得了最佳效果。 |
+| [ADEM](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/dialogue_system/auto_dialogue_evaluation) (Auto Dialogue Evaluation Model) | 评估开放领域对话系统的回复质量，能够帮助企业或个人快速评估对话系统的回复质量，减少人工评估成本。 |
 | [Proactive Conversation](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2019-DuConv) | 包含百度开源的知识驱动的开放领域对话数据集 [DuConv](https://ai.baidu.com/broad/subordinate?dataset=duconv)，以及基线模型。对应论文 [Proactive Human-Machine Conversation with Explicit Conversation Goals](https://arxiv.org/abs/1906.05572) 发表于 ACL2019。 |
 | [DAM](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/Research/ACL2018-DAM)（Deep Attention Matching Network，深度注意力机制模型） | 开放领域多轮对话匹配模型，对应论文 [Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network](https://aclweb.org/anthology/P18-1103/) 发表于 ACL2018。 |
 

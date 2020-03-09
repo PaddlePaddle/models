@@ -30,7 +30,7 @@ if sys.getdefaultencoding() != defaultencoding:
     reload(sys)
     sys.setdefaultencoding(defaultencoding)
 
-sys.path.append("..")
+sys.path.append("../shared_modules/")
 
 import paddle
 import paddle.fluid as fluid
@@ -47,18 +47,18 @@ from models.model_check import check_version
 from models.model_check import check_cuda
 
 
-def create_model(args, pyreader_name, is_inference = False, is_pointwise = False):
+def create_model(args, pyreader_name, is_inference=False, is_pointwise=False):
     """
     Create Model for simnet
     """
     if is_inference:
         inf_pyreader = fluid.layers.py_reader(
-        capacity=16,
-        shapes=([-1,1], [-1,1]),
-        dtypes=('int64', 'int64'),
-        lod_levels=(1, 1),
-        name=pyreader_name,
-        use_double_buffer=False)
+            capacity=16,
+            shapes=([-1], [-1]),
+            dtypes=('int64', 'int64'),
+            lod_levels=(1, 1),
+            name=pyreader_name,
+            use_double_buffer=False)
 
         left, pos_right = fluid.layers.read_file(inf_pyreader)
         return inf_pyreader, left, pos_right
@@ -66,28 +66,30 @@ def create_model(args, pyreader_name, is_inference = False, is_pointwise = False
     else:
         if is_pointwise:
             pointwise_pyreader = fluid.layers.py_reader(
-            capacity=16,
-            shapes=([-1,1], [-1,1], [-1,1]),
-            dtypes=('int64', 'int64', 'int64'),
-            lod_levels=(1, 1, 0),
-            name=pyreader_name,
-            use_double_buffer=False)
+                capacity=16,
+                shapes=([-1], [-1], [-1]),
+                dtypes=('int64', 'int64', 'int64'),
+                lod_levels=(1, 1, 0),
+                name=pyreader_name,
+                use_double_buffer=False)
 
             left, right, label = fluid.layers.read_file(pointwise_pyreader)
             return pointwise_pyreader, left, right, label
 
         else:
             pairwise_pyreader = fluid.layers.py_reader(
-            capacity=16,
-            shapes=([-1,1], [-1,1], [-1,1]),
-            dtypes=('int64', 'int64', 'int64'),
-            lod_levels=(1, 1, 1),
-            name=pyreader_name,
-            use_double_buffer=False)
+                capacity=16,
+                shapes=([-1], [-1], [-1]),
+                dtypes=('int64', 'int64', 'int64'),
+                lod_levels=(1, 1, 1),
+                name=pyreader_name,
+                use_double_buffer=False)
 
-            left, pos_right, neg_right = fluid.layers.read_file(pairwise_pyreader)
+            left, pos_right, neg_right = fluid.layers.read_file(
+                pairwise_pyreader)
             return pairwise_pyreader, left, pos_right, neg_right
-        
+
+
 def train(conf_dict, args):
     """
     train processic
@@ -97,16 +99,16 @@ def train(conf_dict, args):
     # get vocab size
     conf_dict['dict_size'] = len(vocab)
     # Load network structure dynamically
-    net = utils.import_class("../models/matching",
+    net = utils.import_class("../shared_modules/models/matching",
                              conf_dict["net"]["module_name"],
                              conf_dict["net"]["class_name"])(conf_dict)
     # Load loss function dynamically
-    loss = utils.import_class("../models/matching/losses",
+    loss = utils.import_class("../shared_modules/models/matching/losses",
                               conf_dict["loss"]["module_name"],
                               conf_dict["loss"]["class_name"])(conf_dict)
     # Load Optimization method
     optimizer = utils.import_class(
-        "../models/matching/optimizers", "paddle_optimizers",
+        "../shared_modules/models/matching/optimizers", "paddle_optimizers",
         conf_dict["optimizer"]["class_name"])(conf_dict)
     # load auc method
     metric = fluid.metrics.Auc(name="auc")
@@ -131,22 +133,23 @@ def train(conf_dict, args):
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
                 train_pyreader, left, pos_right, neg_right = create_model(
-                    args, 
-                    pyreader_name='train_reader')
+                    args, pyreader_name='train_reader')
                 left_feat, pos_score = net.predict(left, pos_right)
                 pred = pos_score
                 _, neg_score = net.predict(left, neg_right)
                 avg_cost = loss.compute(pos_score, neg_score)
                 avg_cost.persistable = True
                 optimizer.ops(avg_cost)
-                
+
         # Get Reader
-        get_train_examples = simnet_process.get_reader("train",epoch=args.epoch)
+        get_train_examples = simnet_process.get_reader(
+            "train", epoch=args.epoch)
         if args.do_valid:
             test_prog = fluid.Program()
             with fluid.program_guard(test_prog, startup_prog):
                 with fluid.unique_name.guard():
-                    test_pyreader, left, pos_right= create_model(args, pyreader_name = 'test_reader',is_inference=True)
+                    test_pyreader, left, pos_right = create_model(
+                        args, pyreader_name='test_reader', is_inference=True)
                     left_feat, pos_score = net.predict(left, pos_right)
                     pred = pos_score
             test_prog = test_prog.clone(for_test=True)
@@ -156,40 +159,41 @@ def train(conf_dict, args):
         with fluid.program_guard(train_program, startup_prog):
             with fluid.unique_name.guard():
                 train_pyreader, left, right, label = create_model(
-                    args, 
-                    pyreader_name='train_reader',
-                    is_pointwise=True)
+                    args, pyreader_name='train_reader', is_pointwise=True)
                 left_feat, pred = net.predict(left, right)
                 avg_cost = loss.compute(pred, label)
                 avg_cost.persistable = True
                 optimizer.ops(avg_cost)
 
         # Get Feeder and Reader
-        get_train_examples = simnet_process.get_reader("train",epoch=args.epoch)
+        get_train_examples = simnet_process.get_reader(
+            "train", epoch=args.epoch)
         if args.do_valid:
             test_prog = fluid.Program()
             with fluid.program_guard(test_prog, startup_prog):
                 with fluid.unique_name.guard():
-                    test_pyreader, left, right= create_model(args, pyreader_name = 'test_reader',is_inference=True)
+                    test_pyreader, left, right = create_model(
+                        args, pyreader_name='test_reader', is_inference=True)
                     left_feat, pred = net.predict(left, right)
             test_prog = test_prog.clone(for_test=True)
 
     if args.init_checkpoint is not "":
-        utils.init_checkpoint(exe, args.init_checkpoint, 
-                              startup_prog)
+        utils.init_checkpoint(exe, args.init_checkpoint, startup_prog)
 
-    def valid_and_test(test_program, test_pyreader, get_valid_examples, process, mode, exe, fetch_list):
+    def valid_and_test(test_program, test_pyreader, get_valid_examples, process,
+                       mode, exe, fetch_list):
         """
         return auc and acc
         """
         # Get Batch Data
-        batch_data = fluid.io.batch(get_valid_examples, args.batch_size, drop_last=False)
+        batch_data = fluid.io.batch(
+            get_valid_examples, args.batch_size, drop_last=False)
         test_pyreader.decorate_paddle_reader(batch_data)
         test_pyreader.start()
         pred_list = []
         while True:
             try:
-                _pred = exe.run(program=test_program,fetch_list=[pred.name])
+                _pred = exe.run(program=test_program, fetch_list=[pred.name])
                 pred_list += list(_pred)
             except fluid.core.EOFException:
                 test_pyreader.reset()
@@ -222,11 +226,12 @@ def train(conf_dict, args):
     #for epoch_id in range(args.epoch):
     # used for continuous evaluation
     if args.enable_ce:
-        train_batch_data = fluid.io.batch(get_train_examples, args.batch_size, drop_last=False)
+        train_batch_data = fluid.io.batch(
+            get_train_examples, args.batch_size, drop_last=False)
     else:
         train_batch_data = fluid.io.batch(
             fluid.io.shuffle(
-               get_train_examples, buf_size=10000),
+                get_train_examples, buf_size=10000),
             args.batch_size,
             drop_last=False)
     train_pyreader.decorate_paddle_reader(train_batch_data)
@@ -238,25 +243,29 @@ def train(conf_dict, args):
         try:
             global_step += 1
             fetch_list = [avg_cost.name]
-            avg_loss = train_exe.run(program=train_program, fetch_list = fetch_list)
+            avg_loss = train_exe.run(program=train_program,
+                                     fetch_list=fetch_list)
             losses.append(np.mean(avg_loss[0]))
             if args.do_valid and global_step % args.validation_steps == 0:
                 get_valid_examples = simnet_process.get_reader("valid")
-                valid_result = valid_and_test(test_prog,test_pyreader,get_valid_examples,simnet_process,"valid",exe,[pred.name])
+                valid_result = valid_and_test(
+                    test_prog, test_pyreader, get_valid_examples,
+                    simnet_process, "valid", exe, [pred.name])
                 if args.compute_accuracy:
                     valid_auc, valid_acc = valid_result
                     logging.info(
-                        "global_steps: %d, valid_auc: %f, valid_acc: %f, valid_loss: %f" %
-                        (global_step, valid_auc, valid_acc, np.mean(losses)))
+                        "global_steps: %d, valid_auc: %f, valid_acc: %f, valid_loss: %f"
+                        % (global_step, valid_auc, valid_acc, np.mean(losses)))
                 else:
                     valid_auc = valid_result
-                    logging.info("global_steps: %d, valid_auc: %f, valid_loss: %f" %
-                                (global_step, valid_auc, np.mean(losses)))
+                    logging.info(
+                        "global_steps: %d, valid_auc: %f, valid_loss: %f" %
+                        (global_step, valid_auc, np.mean(losses)))
             if global_step % args.save_steps == 0:
                 model_save_dir = os.path.join(args.output_dir,
-                                            conf_dict["model_path"])
+                                              conf_dict["model_path"])
                 model_path = os.path.join(model_save_dir, str(global_step))
-                    
+
                 if not os.path.exists(model_save_dir):
                     os.makedirs(model_save_dir)
                 if args.task_mode == "pairwise":
@@ -269,21 +278,19 @@ def train(conf_dict, args):
                     ]
                     target_vars = [left_feat, pred]
                 fluid.io.save_inference_model(model_path, feed_var_names,
-                                            target_vars, exe,
-                                            test_prog)
+                                              target_vars, exe, test_prog)
                 logging.info("saving infer model in %s" % model_path)
-        
+
         except fluid.core.EOFException:
             train_pyreader.reset()
             break
     end_time = time.time()
     #logging.info("epoch: %d, loss: %f, used time: %d sec" %
-                #(epoch_id, np.mean(losses), end_time - start_time))
+    #(epoch_id, np.mean(losses), end_time - start_time))
     ce_info.append([np.mean(losses), end_time - start_time])
     #final save
-    logging.info("the final step is %s" % global_step)    
-    model_save_dir = os.path.join(args.output_dir,
-                                conf_dict["model_path"])
+    logging.info("the final step is %s" % global_step)
+    model_save_dir = os.path.join(args.output_dir, conf_dict["model_path"])
     model_path = os.path.join(model_save_dir, str(global_step))
     if not os.path.exists(model_save_dir):
         os.makedirs(model_save_dir)
@@ -296,9 +303,8 @@ def train(conf_dict, args):
             right.name,
         ]
         target_vars = [left_feat, pred]
-    fluid.io.save_inference_model(model_path, feed_var_names,
-                                target_vars, exe,
-                                test_prog)
+    fluid.io.save_inference_model(model_path, feed_var_names, target_vars, exe,
+                                  test_prog)
     logging.info("saving infer model in %s" % model_path)
     # used for continuous evaluation
     if args.enable_ce:
@@ -322,7 +328,9 @@ def train(conf_dict, args):
         else:
             # Get Feeder and Reader
             get_test_examples = simnet_process.get_reader("test")
-        test_result = valid_and_test(test_prog,test_pyreader,get_test_examples,simnet_process,"test",exe,[pred.name])
+        test_result = valid_and_test(test_prog, test_pyreader,
+                                     get_test_examples, simnet_process, "test",
+                                     exe, [pred.name])
         if args.compute_accuracy:
             test_auc, test_acc = test_result
             logging.info("AUC of test is %f, Accuracy of test is %f" %
@@ -344,16 +352,17 @@ def test(conf_dict, args):
 
     vocab = utils.load_vocab(args.vocab_path)
     simnet_process = reader.SimNetProcessor(args, vocab)
-    
+
     startup_prog = fluid.Program()
 
     get_test_examples = simnet_process.get_reader("test")
-    batch_data = fluid.io.batch(get_test_examples, args.batch_size, drop_last=False)
+    batch_data = fluid.io.batch(
+        get_test_examples, args.batch_size, drop_last=False)
     test_prog = fluid.Program()
 
     conf_dict['dict_size'] = len(vocab)
 
-    net = utils.import_class("../models/matching",
+    net = utils.import_class("../shared_modules/models/matching",
                              conf_dict["net"]["module_name"],
                              conf_dict["net"]["class_name"])(conf_dict)
 
@@ -364,9 +373,7 @@ def test(conf_dict, args):
             with fluid.program_guard(test_prog, startup_prog):
                 with fluid.unique_name.guard():
                     test_pyreader, left, pos_right = create_model(
-                        args,
-                        pyreader_name = 'test_reader',
-                        is_inference=True)
+                        args, pyreader_name='test_reader', is_inference=True)
                     left_feat, pos_score = net.predict(left, pos_right)
                     pred = pos_score
             test_prog = test_prog.clone(for_test=True)
@@ -375,19 +382,14 @@ def test(conf_dict, args):
             with fluid.program_guard(test_prog, startup_prog):
                 with fluid.unique_name.guard():
                     test_pyreader, left, right = create_model(
-                        args,
-                        pyreader_name = 'test_reader',
-                        is_inference=True)
+                        args, pyreader_name='test_reader', is_inference=True)
                     left_feat, pred = net.predict(left, right)
             test_prog = test_prog.clone(for_test=True)
 
         exe.run(startup_prog)
 
-        utils.init_checkpoint(
-            exe,
-            args.init_checkpoint,
-            main_program=test_prog)
-        
+        utils.init_checkpoint(exe, args.init_checkpoint, main_program=test_prog)
+
         test_exe = exe
         test_pyreader.decorate_paddle_reader(batch_data)
 
@@ -398,15 +400,18 @@ def test(conf_dict, args):
         output = []
         while True:
             try:
-                output = test_exe.run(program=test_prog,fetch_list=fetch_list)
+                output = test_exe.run(program=test_prog, fetch_list=fetch_list)
                 if args.task_mode == "pairwise":
-                    pred_list += list(map(lambda item: float(item[0]), output[0]))
+                    pred_list += list(
+                        map(lambda item: float(item[0]), output[0]))
                     predictions_file.write(u"\n".join(
-                        map(lambda item: str((item[0] + 1) / 2), output[0])) + "\n")
+                        map(lambda item: str((item[0] + 1) / 2), output[0])) +
+                                           "\n")
                 else:
                     pred_list += map(lambda item: item, output[0])
                     predictions_file.write(u"\n".join(
-                        map(lambda item: str(np.argmax(item)), output[0])) + "\n")
+                        map(lambda item: str(np.argmax(item)), output[0])) +
+                                           "\n")
             except fluid.core.EOFException:
                 test_pyreader.reset()
                 break
@@ -450,37 +455,37 @@ def infer(conf_dict, args):
     startup_prog = fluid.Program()
 
     get_infer_examples = simnet_process.get_infer_reader
-    batch_data = fluid.io.batch(get_infer_examples, args.batch_size, drop_last=False)
+    batch_data = fluid.io.batch(
+        get_infer_examples, args.batch_size, drop_last=False)
 
     test_prog = fluid.Program()
 
     conf_dict['dict_size'] = len(vocab)
 
-    net = utils.import_class("../models/matching",
+    net = utils.import_class("../shared_modules/models/matching",
                              conf_dict["net"]["module_name"],
                              conf_dict["net"]["class_name"])(conf_dict)
 
     if args.task_mode == "pairwise":
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
-                infer_pyreader, left, pos_right = create_model(args, pyreader_name = 'infer_reader', is_inference = True)
+                infer_pyreader, left, pos_right = create_model(
+                    args, pyreader_name='infer_reader', is_inference=True)
                 left_feat, pos_score = net.predict(left, pos_right)
                 pred = pos_score
         test_prog = test_prog.clone(for_test=True)
     else:
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
-                infer_pyreader, left, right = create_model(args, pyreader_name = 'infer_reader', is_inference = True)
+                infer_pyreader, left, right = create_model(
+                    args, pyreader_name='infer_reader', is_inference=True)
                 left_feat, pred = net.predict(left, right)
         test_prog = test_prog.clone(for_test=True)
 
     exe.run(startup_prog)
 
-    utils.init_checkpoint(
-        exe,
-        args.init_checkpoint,
-        main_program=test_prog)
-    
+    utils.init_checkpoint(exe, args.init_checkpoint, main_program=test_prog)
+
     test_exe = exe
     infer_pyreader.decorate_sample_list_generator(batch_data)
 
@@ -490,16 +495,16 @@ def infer(conf_dict, args):
     output = []
     infer_pyreader.start()
     while True:
-            try:
-                output = test_exe.run(program=test_prog,fetch_list=fetch_list)
-                if args.task_mode == "pairwise":
-                    preds_list += list(
-                        map(lambda item: str((item[0] + 1) / 2), output[0]))
-                else:
-                    preds_list += map(lambda item: str(np.argmax(item)), output[0])
-            except fluid.core.EOFException:
-                infer_pyreader.reset()
-                break
+        try:
+            output = test_exe.run(program=test_prog, fetch_list=fetch_list)
+            if args.task_mode == "pairwise":
+                preds_list += list(
+                    map(lambda item: str((item[0] + 1) / 2), output[0]))
+            else:
+                preds_list += map(lambda item: str(np.argmax(item)), output[0])
+        except fluid.core.EOFException:
+            infer_pyreader.reset()
+            break
     with io.open(args.infer_result_path, "w", encoding="utf8") as infer_file:
         for _data, _pred in zip(simnet_process.get_infer_data(), preds_list):
             infer_file.write(_data + "\t" + _pred + "\n")
@@ -513,6 +518,7 @@ def get_cards():
     if cards != '':
         num = len(cards.split(","))
     return num
+
 
 if __name__ == "__main__":
 
