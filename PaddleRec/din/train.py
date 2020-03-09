@@ -96,7 +96,7 @@ def train():
 
     loader = fluid.io.DataLoader.from_generator(
         feed_list=feed_list, capacity=10000, iterable=True)
-    loader.set_sample_list_generator(data_reader, places=fluid.cuda_places())
+    loader.set_sample_list_generator(data_reader, places=place)
     if use_parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=use_cuda, loss_name=avg_cost.name)
