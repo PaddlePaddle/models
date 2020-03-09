@@ -23,7 +23,7 @@
 - Python >= 2.7
 - cuda >= 9.0
 - cudnn >= 7.0
-- PaddlePaddle >= 1.6.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 由于模块内模型基于bert做finetuning, 训练速度较慢, 建议用户安装GPU版本PaddlePaddle进行训练。
+- PaddlePaddle >= 1.7.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 由于模块内模型基于bert做finetuning, 训练速度较慢, 建议用户安装GPU版本PaddlePaddle进行训练。
 
 #### &ensp;&ensp;b、下载代码
 
@@ -31,7 +31,7 @@
 
 ```
 git clone https://github.com/PaddlePaddle/models.git
-cd models/PaddleNLP/PaddleDialogue/dialogue_general_understanding
+cd models/PaddleNLP/dialogue_system/dialogue_general_understanding
 ```
 
 ### 任务简介
