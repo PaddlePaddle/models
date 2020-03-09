@@ -22,6 +22,8 @@
 | :------| :------: | :------: |:------: |:------: |
 | [BERT-Large, Uncased (Whole Word Masking)](https://bert-models.bj.bcebos.com/wwm_uncased_L-24_H-1024_A-16.tar.gz)| 24 | 1024 | 16 | 340M |
 | [BERT-Large, Cased (Whole Word Masking)](https://bert-models.bj.bcebos.com/wwm_cased_L-24_H-1024_A-16.tar.gz)| 24 | 1024 | 16 | 340M |
+| [RoBERTa-Base, Chinese](https://bert-models.bj.bcebos.com/chinese_roberta_wwm_ext_L-12_H-768_A-12.tar.gz) | 12 | 768 |12 |110M |
+| [RoBERTa-Large, Chinese](https://bert-models.bj.bcebos.com/chinese_roberta_wwm_large_ext_L-24_H-1024_A-16.tar.gz) | 24 | 1024 |16 |340M |
 | [BERT-Base, Uncased](https://bert-models.bj.bcebos.com/uncased_L-12_H-768_A-12.tar.gz) | 12 | 768 |12 |110M |
 | [BERT-Large, Uncased](https://bert-models.bj.bcebos.com/uncased_L-24_H-1024_A-16.tar.gz) | 24 | 1024 |16 |340M |
 |[BERT-Base, Cased](https://bert-models.bj.bcebos.com/cased_L-12_H-768_A-12.tar.gz)|12|768|12|110M|
