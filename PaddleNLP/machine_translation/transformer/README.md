@@ -39,7 +39,7 @@
     克隆代码库到本地
     ```shell
     git clone https://github.com/PaddlePaddle/models.git
-    cd models/PaddleNLP/PaddleMT/transformer
+    cd models/PaddleNLP/machine_translation/transformer
     ```
 
 3. 环境依赖
