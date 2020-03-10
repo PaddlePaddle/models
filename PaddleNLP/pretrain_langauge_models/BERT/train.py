@@ -35,7 +35,7 @@ import paddle.fluid as fluid
 from reader.pretraining import DataReader
 from model.bert import BertModel, BertConfig
 from optimization import optimization
-from utils.args import ArgumentGroup, print_arguments, check_cuda
+from utils.args import ArgumentGroup, print_arguments, check_cuda, check_version
 from utils.init import init_checkpoint, init_pretraining_params
 
 # yapf: disable
@@ -433,6 +433,7 @@ def train(args):
 if __name__ == '__main__':
     print_arguments(args)
     check_cuda(args.use_cuda)
+    check_version()
     if args.do_test:
         test(args)
     else:
