@@ -102,6 +102,7 @@ OPENBLAS_NUM_THREADS=1 CPU_NUM=5 python train.py --train_data_dir data/convert_t
 ```bash
 sh cluster_train.sh
 ```
+若需要开启shuffle_batch功能，需在命令中加入`--with_shuffle_batch`。单机模拟分布式多机训练，需更改`cluster_train.sh`文件，在各个节点的启动命令中加入`--with_shuffle_batch`。
 
 ## 预测
 测试集下载命令如下
