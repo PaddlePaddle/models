@@ -20,7 +20,7 @@
 ## 介绍
 本例实现了skip-gram模式的word2vector模型。
 
-**目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
+**目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。若要使用shuffle_batch功能，则需使用PaddlePaddle 1.7及以上版本。**
 
 同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124377)
 
