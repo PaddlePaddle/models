@@ -38,7 +38,7 @@ import reader.cls as reader
 from model.bert import BertConfig
 from model.classifier import create_model
 from optimization import optimization
-from utils.args import ArgumentGroup, print_arguments, check_cuda
+from utils.args import ArgumentGroup, print_arguments, check_cuda, check_version
 from utils.init import init_pretraining_params, init_checkpoint
 from utils.cards import get_cards
 import dist_utils
@@ -447,4 +447,5 @@ def main(args):
 if __name__ == '__main__':
     print_arguments(args)
     check_cuda(args.use_cuda)
+    check_version()
     main(args)
