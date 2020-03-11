@@ -20,7 +20,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
   * [NLP 系统应用](#NLP-系统应用)
 * [智能推荐(PaddleRec)](#PaddleRec)
 * [智能语音(PaddleSpeech)](#PaddleSpeech)
-* [模型压缩(PaddleSlim)](#PaddleSlim)
 * [其他模型](#其他模型)
 * [快速下载模型库](#快速下载模型库)
 
@@ -249,11 +248,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [DeepSpeech2](https://github.com/PaddlePaddle/DeepSpeech)    | 一个采用 PaddlePaddle 平台的端到端自动语音识别（ASR）引擎的开源项目，具体原理请参考论文 [Deep Speech 2: End-to-End Speech Recognition in English and Mandarin](https://arxiv.org/abs/1512.02595)。 |
 | [Parakeet](https://github.com/PaddlePaddle/Parakeet) |定位于灵活、高效的语音合成工具集，支持多个前沿的语音合成模型，包括 WaveFlow、ClariNet、WaveNet、Deep Voice 3、Transformer TTS、FastSpeech 等。 |
 
-## PaddleSlim
-
-[PaddleSlim](https://github.com/PaddlePaddle/models/tree/develop/PaddleSlim) 是 PaddlePaddle 框架的一个子模块，主要用于压缩图像领域模型。在 PaddleSlim 中，不仅实现了目前主流的网络剪枝、量化、蒸馏三种压缩策略，还实现了超参数搜索和小模型网络结构搜索功能。在后续版本中，会添加更多的压缩策略，以及完善对 NLP 领域模型的支持。
-
-PaddleSlim 模型压缩工具库的实验结果和模型库见 [详细实验结果与ModelZoo](https://github.com/PaddlePaddle/models/blob/develop/PaddleSlim/docs/model_zoo.md)。
 
 ## 基于动态图实现的模型
 
