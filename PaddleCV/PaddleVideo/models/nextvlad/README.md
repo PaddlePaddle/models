@@ -18,18 +18,30 @@ NeXtVLAD模型是第二届Youtube-8M视频理解竞赛中效果最好的单模�
 
 ## 数据准备
 
-NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数据说明](../../dataset/README.md)
+NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数据说明](../../data/dataset/README.md)
 
 ## 模型训练
 
 ### 随机初始化开始训练
-在video目录下运行如下脚本即可
 
-    bash ./scripts/train/train_nextvlad.sh
+在video目录下可以通过如下两种方式启动训练：
+
+    export CUDA_VISIBLE_DEVICES=0,1,2,3
+    python train.py --model_name=NEXTVLAD \
+                    --config=./configs/nextvlad.yaml \
+                    --log_interval=10 \
+                    --valid_interval=1 \
+                    --use_gpu=True \
+                    --save_dir=./data/checkpoints \
+                    --fix_random_seed=False
+
+    bash run.sh train NEXTVLAD ./configs/nextvlad.yaml
+
+- 在训练NeXtVLAD模型时使用的是4卡，请修改run.sh中的CUDA\_VISIBLE\_DEVICES=0,1,2,3
 
 ### 使用预训练模型做finetune
 
-请先将提供的预训练模型[model](https://paddlemodels.bj.bcebos.com/video_classification/nextvlad_youtube8m.tar.gz)下载到本地，并在上述脚本文件中添加--resume为所保存的预模型存放路径。
+请先将提供的预训练模型[model](https://paddlemodels.bj.bcebos.com/video_classification/NEXTVLAD_final.pdparams)下载到本地，并在上述脚本文件中添加--resume为所保存的模型参数存放路径。
 
 使用4卡Nvidia Tesla P40，总的batch size数是160。
 
@@ -41,10 +53,23 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 
 ## 模型评估
 
-用户可以下载的预训练模型参数，或者使用自己训练好的模型参数，请在./scripts/test/test\_nextvald.sh
-文件中修改--weights参数为保存模型参数的目录。运行
+可通过如下两种方式进行模型评估:
 
-    bash ./scripts/test/test_nextvlad.sh
+    python eval.py --model_name=NEXTVLAD \
+                   --config=./configs/nextvlad.yaml \
+                   --log_interval=1 \
+                   --weights=$PATH_TO_WEIGHTS \
+                   --use_gpu=True
+
+    bash run.sh eval NEXTVLAD ./configs/nextvlad.yaml
+
+- 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重。
+
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/NEXTVLAD_final.pdparams)进行评估
+
+- 评估结果以log的形式直接打印输出GAP、Hit@1等精度指标
+
+- 使用CPU进行评估时，请将`use_gpu`设置为False
 
 由于youtube-8m提供的数据中test数据集是没有ground truth标签的，所以这里使用validation数据集来做测试。
 
@@ -69,12 +94,28 @@ NeXtVLAD模型使用2nd-Youtube-8M数据集, 数据下载及准备请参考[数�
 
 ## 模型推断
 
-用户可以下载的预训练模型参数，或者使用自己训练好的模型参数，请在./scripts/infer/infer\_nextvald.sh
-文件中修改--weights参数为保存模型参数的目录，运行如下脚本
+可通过如下两种方式启动模型推断：
 
-    bash ./scripts/infer/infer_nextvald.sh
+    python predict.py --model_name=NEXTVLAD \
+                      --config=configs/nextvlad.yaml \
+                      --log_interval=1 \
+                      --weights=$PATH_TO_WEIGHTS \
+                      --filelist=$FILELIST \
+                      --use_gpu=True
 
-推断结果会保存在NEXTVLAD\_infer\_result文件中，通过pickle格式存储。
+    bash run.sh predict NEXTVLAD ./configs/nextvlad.yaml
+
+- 使用python命令行启动程序时，`--filelist`参数指定待推断的文件列表，如果不设置，默认为data/dataset/youtube8m/infer.list。`--weights`参数为训练好的权重参数，如果不设置，程序会自动下载已训练好的权重。这两个参数如果不设置，请不要写在命令行，将会自动使用默
+认值。
+
+- 使用`run.sh`进行评估时，请修改脚本中的`weights`参数指定需要用到的权重。
+
+- 若未指定`--weights`参数，脚本会下载已发布模型[model](https://paddlemodels.bj.bcebos.com/video_classification/NEXTVLAD_final.pdparams)进行推断
+
+- 模型推断结果以log的形式直接打印输出，可以看到每个测试样本的分类预测概率。
+
+- 使用CPU进行预测时，请将`use_gpu`设置为False
+
 
 ## 参考论文
 

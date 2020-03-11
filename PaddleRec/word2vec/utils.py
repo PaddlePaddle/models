@@ -7,12 +7,13 @@ import paddle.fluid as fluid
 import paddle
 import os
 import preprocess
+import io
 
 
 def BuildWord_IdMap(dict_path):
     word_to_id = dict()
     id_to_word = dict()
-    with open(dict_path, 'r') as f:
+    with io.open(dict_path, 'r', encoding='utf-8') as f:
         for line in f:
             word_to_id[line.split(' ')[0]] = int(line.split(' ')[1])
             id_to_word[int(line.split(' ')[1])] = line.split(' ')[0]
@@ -22,8 +23,24 @@ def BuildWord_IdMap(dict_path):
 def prepare_data(file_dir, dict_path, batch_size):
     w2i, i2w = BuildWord_IdMap(dict_path)
     vocab_size = len(i2w)
-    reader = paddle.batch(test(file_dir, w2i), batch_size)
+    reader = fluid.io.batch(test(file_dir, w2i), batch_size)
     return vocab_size, reader, i2w
+
+
+def check_version():
+    """
+     Log error and exit when the installed version of paddlepaddle is
+     not satisfied.
+     """
+    err = "PaddlePaddle version 1.6 or higher is required, " \
+          "or a suitable develop version is satisfied as well. \n" \
+          "Please make sure the version is good with your code." \
+
+    try:
+        fluid.require_version('1.6.0')
+    except Exception as e:
+        logger.error(err)
+        sys.exit(1)
 
 
 def native_to_unicode(s):
@@ -75,7 +92,8 @@ def reader_creator(file_dir, word_to_id):
     def reader():
         files = os.listdir(file_dir)
         for fi in files:
-            with open(file_dir + '/' + fi, "r") as f:
+            with io.open(
+                    os.path.join(file_dir, fi), "r", encoding='utf-8') as f:
                 for line in f:
                     if ':' in line:
                         pass

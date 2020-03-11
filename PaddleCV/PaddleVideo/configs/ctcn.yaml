@@ -1,0 +1,53 @@
+MODEL:
+    name: "CTCN"
+    num_classes: 201
+    img_size: 512
+    concept_size: 402
+    num_anchors: 7
+    total_num_anchors: 1785
+    snippet_length: 1
+    root: './data/dataset/ctcn/feats'
+
+TRAIN:
+    epoch: 35
+    filelist: './data/dataset/ctcn/Activity1.3_train_rgb.listformat'
+    rgb: 'senet152-201cls-rgb-70.3-5seg-331data_331img_train'
+    flow: 'senet152-201cls-flow-60.9-5seg-331data_train'
+    batch_size: 16
+    num_threads: 8
+    use_gpu: True
+    num_gpus: 8
+    learning_rate: 0.0005
+    learning_rate_decay: 0.1
+    lr_decay_iter: 9000
+    l2_weight_decay: 1e-4
+    momentum: 0.9
+
+VALID:
+    filelist: './data/dataset/ctcn/Activity1.3_val_rgb.listformat'
+    rgb: 'senet152-201cls-rgb-70.3-5seg-331data_331img_val'
+    flow: 'senet152-201cls-flow-60.9-5seg-331data_val'
+    batch_size: 16
+    num_threads: 8
+    use_gpu: True
+    num_gpus: 8
+
+TEST:
+    filelist: './data/dataset/ctcn/Activity1.3_val_rgb.listformat'
+    rgb: 'senet152-201cls-rgb-70.3-5seg-331data_331img_val'
+    flow: 'senet152-201cls-flow-60.9-5seg-331data_val'
+    class_label_file: './data/dataset/ctcn/labels.txt'
+    video_duration_file: './data/dataset/ctcn/val_duration_frame.list'
+    batch_size: 1
+    num_threads: 1
+    score_thresh: 0.001
+    nms_thresh: 0.8
+    sigma_thresh: 0.9
+    soft_thresh: 0.004
+
+INFER:
+    filelist: './data/dataset/ctcn/infer.list'
+    rgb: 'senet152-201cls-rgb-70.3-5seg-331data_331img_val'
+    flow: 'senet152-201cls-flow-60.9-5seg-331data_val'
+    batch_size: 1
+    num_threads: 1

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##############################################################################
-
 """Data reader for COCO dataset."""
 
 from __future__ import absolute_import
@@ -60,6 +59,7 @@ from pycocotools.coco import COCO
 #   [7,9],[8,10],[9,11],[2,3],[1,2],[1,3],[2,4],[3,5],[4,6],[5,7]
 # ]
 
+
 class Config:
     """Configurations for COCO dataset.
     """
@@ -68,13 +68,14 @@ class Config:
 
     # For reader
     BUF_SIZE = 102400
-    THREAD = 1 if DEBUG else 8 # have to be larger than 0
+    THREAD = 1 if DEBUG else 8  # have to be larger than 0
 
     # Fixed infos of dataset
     DATAROOT = 'data/coco'
     IMAGEDIR = 'images'
     NUM_JOINTS = 17
-    FLIP_PAIRS = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16]]
+    FLIP_PAIRS = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14],
+                  [15, 16]]
     PARENT_IDS = None
 
     # CFGS
@@ -90,11 +91,14 @@ class Config:
     STD = [0.229, 0.224, 0.225]
     PIXEL_STD = 200
 
+
 cfg = Config()
+
 
 def _box2cs(box):
     x, y, w, h = box[:4]
     return _xywh2cs(x, y, w, h)
+
 
 def _xywh2cs(x, y, w, h):
     center = np.zeros((2), dtype=np.float32)
@@ -106,12 +110,12 @@ def _xywh2cs(x, y, w, h):
     elif w < cfg.ASPECT_RATIO * h:
         w = h * cfg.ASPECT_RATIO
     scale = np.array(
-        [w * 1.0 / cfg.PIXEL_STD, h * 1.0 / cfg.PIXEL_STD],
-        dtype=np.float32)
+        [w * 1.0 / cfg.PIXEL_STD, h * 1.0 / cfg.PIXEL_STD], dtype=np.float32)
     if center[0] != -1:
         scale = scale * 1.25
 
     return center, scale
+
 
 def _select_data(db):
     db_selected = []
@@ -119,8 +123,7 @@ def _select_data(db):
         num_vis = 0
         joints_x = 0.0
         joints_y = 0.0
-        for joint, joint_vis in zip(
-                rec['joints_3d'], rec['joints_3d_vis']):
+        for joint, joint_vis in zip(rec['joints_3d'], rec['joints_3d_vis']):
             if joint_vis[0] <= 0:
                 continue
             num_vis += 1
@@ -135,8 +138,8 @@ def _select_data(db):
         area = rec['scale'][0] * rec['scale'][1] * (cfg.PIXEL_STD**2)
         joints_center = np.array([joints_x, joints_y])
         bbox_center = np.array(rec['center'])
-        diff_norm2 = np.linalg.norm((joints_center-bbox_center), 2)
-        ks = np.exp(-1.0*(diff_norm2**2) / ((0.2)**2*2.0*area))
+        diff_norm2 = np.linalg.norm((joints_center - bbox_center), 2)
+        ks = np.exp(-1.0 * (diff_norm2**2) / ((0.2)**2 * 2.0 * area))
 
         metric = (0.2 / 16) * num_vis + 0.45 - 0.2 / 16
         if ks > metric:
@@ -146,7 +149,9 @@ def _select_data(db):
     print('=> num selected db: {}'.format(len(db_selected)))
     return db_selected
 
-def _load_coco_keypoint_annotation(image_set_index, coco, _coco_ind_to_class_ind, image_set):
+
+def _load_coco_keypoint_annotation(image_set_index, coco,
+                                   _coco_ind_to_class_ind, image_set):
     """Ground truth bbox and keypoints.
     """
     print('generating coco gt_db...')
@@ -168,7 +173,7 @@ def _load_coco_keypoint_annotation(image_set_index, coco, _coco_ind_to_class_ind
             x2 = np.min((width - 1, x1 + np.max((0, w - 1))))
             y2 = np.min((height - 1, y1 + np.max((0, h - 1))))
             if obj['area'] > 0 and x2 >= x1 and y2 >= y1:
-                obj['clean_bbox'] = [x1, y1, x2-x1, y2-y1]
+                obj['clean_bbox'] = [x1, y1, x2 - x1, y2 - y1]
                 valid_objs.append(obj)
         objs = valid_objs
 
@@ -197,7 +202,8 @@ def _load_coco_keypoint_annotation(image_set_index, coco, _coco_ind_to_class_ind
 
             center, scale = _box2cs(obj['clean_bbox'][:4])
             rec.append({
-                'image': os.path.join(cfg.DATAROOT, cfg.IMAGEDIR, image_set+'2017', '%012d.jpg' % index),
+                'image': os.path.join(cfg.DATAROOT, cfg.IMAGEDIR,
+                                      image_set + '2017', '%012d.jpg' % index),
                 'center': center,
                 'scale': scale,
                 'joints_3d': joints_3d,
@@ -208,6 +214,7 @@ def _load_coco_keypoint_annotation(image_set_index, coco, _coco_ind_to_class_ind
 
         gt_db.extend(rec)
     return gt_db
+
 
 def data_augmentation(sample, is_train):
     image_file = sample['image']
@@ -220,28 +227,32 @@ def data_augmentation(sample, is_train):
     # imgnum = sample['imgnum'] if 'imgnum' in sample else ''
     r = 0
 
-    data_numpy = cv2.imread(
-        image_file, cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
+    # used for ce
+    if 'ce_mode' in os.environ:
+        random.seed(0)
+        np.random.seed(0)
+
+    data_numpy = cv2.imread(image_file, cv2.IMREAD_COLOR |
+                            cv2.IMREAD_IGNORE_ORIENTATION)
 
     if is_train:
         sf = cfg.SCALE_FACTOR
         rf = cfg.ROT_FACTOR
-        s = s * np.clip(np.random.randn()*sf + 1, 1 - sf, 1 + sf)
+        s = s * np.clip(np.random.randn() * sf + 1, 1 - sf, 1 + sf)
         r = np.clip(np.random.randn()*rf, -rf*2, rf*2) \
                 if random.random() <= 0.6 else 0
 
         if cfg.FLIP and random.random() <= 0.5:
             data_numpy = data_numpy[:, ::-1, :]
             joints, joints_vis = fliplr_joints(
-                    joints, joints_vis, data_numpy.shape[1], cfg.FLIP_PAIRS)
+                joints, joints_vis, data_numpy.shape[1], cfg.FLIP_PAIRS)
             c[0] = data_numpy.shape[1] - c[0] - 1
 
     trans = get_affine_transform(c, s, r, cfg.IMAGE_SIZE)
     input = cv2.warpAffine(
-            data_numpy,
-            trans,
-            (int(cfg.IMAGE_SIZE[0]), int(cfg.IMAGE_SIZE[1])),
-            flags=cv2.INTER_LINEAR)
+        data_numpy,
+        trans, (int(cfg.IMAGE_SIZE[0]), int(cfg.IMAGE_SIZE[1])),
+        flags=cv2.INTER_LINEAR)
 
     for i in range(cfg.NUM_JOINTS):
         if joints_vis[i, 0] > 0.0:
@@ -263,23 +274,30 @@ def data_augmentation(sample, is_train):
     else:
         return input, target, target_weight, c, s, score, image_file
 
-# Create a reader
-def _reader_creator(root, image_set, shuffle=False, is_train=False, use_gt_bbox=False):
 
+# Create a reader
+def _reader_creator(root,
+                    image_set,
+                    shuffle=False,
+                    is_train=False,
+                    use_gt_bbox=False):
     def reader():
         if image_set in ['train', 'val']:
-            file_name = os.path.join(root, 'annotations', 'person_keypoints_'+image_set+'2017.json')
+            file_name = os.path.join(
+                root, 'annotations',
+                'person_keypoints_' + image_set + '2017.json')
         elif image_set in ['test', 'test-dev']:
-            file_name = os.path.join(root, 'annotations', 'image_info_'+image_set+'2017.json')
+            file_name = os.path.join(root, 'annotations',
+                                     'image_info_' + image_set + '2017.json')
         else:
-            raise ValueError("The dataset '{}' is not supported".format(image_set))
+            raise ValueError("The dataset '{}' is not supported".format(
+                image_set))
 
         # Load annotations
         coco = COCO(file_name)
 
         # Deal with class names
-        cats = [cat['name']
-                for cat in coco.loadCats(coco.getCatIds())]
+        cats = [cat['name'] for cat in coco.loadCats(coco.getCatIds())]
         classes = ['__background__'] + cats
         print('=> classes: {}'.format(classes))
         num_classes = len(classes)
@@ -287,7 +305,7 @@ def _reader_creator(root, image_set, shuffle=False, is_train=False, use_gt_bbox=
         _class_to_coco_ind = dict(zip(cats, coco.getCatIds()))
         _coco_ind_to_class_ind = dict([(_class_to_coco_ind[cls],
                                         _class_to_ind[cls])
-                                        for cls in classes[1:]])
+                                       for cls in classes[1:]])
 
         # Load image file names
         image_set_index = coco.getImgIds()
@@ -296,7 +314,7 @@ def _reader_creator(root, image_set, shuffle=False, is_train=False, use_gt_bbox=
 
         if is_train or use_gt_bbox:
             gt_db = _load_coco_keypoint_annotation(
-                    image_set_index, coco, _coco_ind_to_class_ind, image_set)
+                image_set_index, coco, _coco_ind_to_class_ind, image_set)
             gt_db = _select_data(gt_db)
 
         if shuffle:
@@ -308,23 +326,40 @@ def _reader_creator(root, image_set, shuffle=False, is_train=False, use_gt_bbox=
     mapper = functools.partial(data_augmentation, is_train=is_train)
     return reader, mapper
 
+
 def train():
-    reader, mapper = _reader_creator(cfg.DATAROOT, 'train', shuffle=True, is_train=True)
+    reader, mapper = _reader_creator(
+        cfg.DATAROOT, 'train', shuffle=True, is_train=True)
+
+    # used for ce
+    if 'ce_mode' in os.environ:
+        reader, mapper = _reader_creator(
+            cfg.DATAROOT, 'train', shuffle=False, is_train=True)
+
     def pop():
         for i, x in enumerate(reader()):
             yield mapper(x)
+
     return pop
+
 
 def valid():
-    reader, mapper = _reader_creator(cfg.DATAROOT, 'val', shuffle=False, is_train=False, use_gt_bbox=True)
+    reader, mapper = _reader_creator(
+        cfg.DATAROOT, 'val', shuffle=False, is_train=False, use_gt_bbox=True)
+
     def pop():
         for i, x in enumerate(reader()):
             yield mapper(x)
+
     return pop
 
+
 def test():
-    reader, mapper = _reader_creator(cfg.DATAROOT, 'test', shuffle=False, is_train=False, use_gt_bbox=True)
+    reader, mapper = _reader_creator(
+        cfg.DATAROOT, 'test', shuffle=False, is_train=False, use_gt_bbox=True)
+
     def pop():
         for i, x in enumerate(reader()):
             yield mapper(x)
+
     return pop

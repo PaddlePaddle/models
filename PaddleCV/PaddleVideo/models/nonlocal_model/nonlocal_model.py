@@ -18,7 +18,7 @@ import paddle.fluid as fluid
 
 from ..model import ModelBase
 from . import resnet_video
-from .nonlocal_utils import load_params_from_file
+from .nonlocal_utils import load_pretrain_params_from_file, load_weights_params_from_file
 
 import logging
 logger = logging.getLogger(__name__)
@@ -39,34 +39,30 @@ class NonLocal(ModelBase):
         # crop size
         self.crop_size = self.get_config_from_sec(self.mode, 'crop_size')
 
-    def build_input(self, use_pyreader=True):
-        input_shape = [3, self.video_length, self.crop_size, self.crop_size]
-        label_shape = [1]
-        py_reader = None
-        if use_pyreader:
-            assert self.mode != 'infer', \
-                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            py_reader = fluid.layers.py_reader(
-                capacity=20,
-                shapes=[[-1] + input_shape, [-1] + label_shape],
-                dtypes=['float32', 'int64'],
-                name='train_py_reader'
-                if self.is_training else 'test_py_reader',
-                use_double_buffer=True)
-            data, label = fluid.layers.read_file(py_reader)
-            self.py_reader = py_reader
+    def build_input(self, use_dataloader=True):
+        input_shape = [
+            None, 3, self.video_length, self.crop_size, self.crop_size
+        ]
+        label_shape = [None, 1]
+
+        data = fluid.data(
+            name='train_data' if self.is_training else 'test_data',
+            shape=input_shape,
+            dtype='float32')
+        if self.mode != 'infer':
+            label = fluid.data(
+                name='train_label' if self.is_training else 'test_label',
+                shape=label_shape,
+                dtype='int64')
         else:
-            data = fluid.layers.data(
-                name='train_data' if self.is_training else 'test_data',
-                shape=input_shape,
-                dtype='float32')
-            if self.mode != 'infer':
-                label = fluid.layers.data(
-                    name='train_label' if self.is_training else 'test_label',
-                    shape=label_shape,
-                    dtype='int64')
-            else:
-                label = None
+            label = None
+
+        if use_dataloader:
+            assert self.mode != 'infer', \
+                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
+                feed_list=[data, label], capacity=4, iterable=True)
+
         self.feature_input = [data]
         self.label_input = label
 
@@ -119,6 +115,20 @@ class NonLocal(ModelBase):
         return self.feature_input if self.mode == 'infer' else \
                      self.feature_input + [self.label_input]
 
+    def fetches(self):
+        if self.mode == 'train' or self.mode == 'valid':
+            losses = self.loss()
+            fetch_list = [losses, self.network_outputs[0], self.label_input]
+        elif self.mode == 'test':
+            fetch_list = [self.network_outputs[0], self.label_input]
+        elif self.mode == 'infer':
+            fetch_list = self.network_outputs
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+        return fetch_list
+
     def pretrain_info(self):
         return (
             'Nonlocal_ResNet50_pretrained',
@@ -126,23 +136,16 @@ class NonLocal(ModelBase):
         )
 
     def weights_info(self):
-        pass
+        return (
+            'NONLOCAL_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_classification/NONLOCAL_final.pdparams'
+        )
 
     def load_pretrain_params(self, exe, pretrain, prog, place):
-        load_params_from_file(exe, prog, pretrain, place)
+        load_pretrain_params_from_file(exe, prog, pretrain, place)
 
     def load_test_weights(self, exe, weights, prog, place):
-        super(NonLocal, self).load_test_weights(exe, weights, prog, place)
-        pred_w = fluid.global_scope().find_var('pred_w').get_tensor()
-        pred_array = np.array(pred_w)
-        pred_w_shape = pred_array.shape
-        if len(pred_w_shape) == 2:
-            logger.info('reshape for pred_w when test')
-            pred_array = np.transpose(pred_array, (1, 0))
-            pred_w_shape = pred_array.shape
-            pred_array = np.reshape(
-                pred_array, [pred_w_shape[0], pred_w_shape[1], 1, 1, 1])
-            pred_w.set(pred_array.astype('float32'), place)
+        load_weights_params_from_file(exe, prog, weights, place)
 
 
 def get_learning_rate_decay_list(base_learning_rate, lr_decay, step_lists):

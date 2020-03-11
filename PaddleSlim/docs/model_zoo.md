@@ -30,12 +30,13 @@
 
 评估实验所使用数据集为ImageNet 1000类数据, 量化训练前后模型top-5/top-1准确率对比如下：
 
-| Model | FP32| int8(X:abs_max, W:abs_max) | int8, (X:moving_average_abs_max, W:abs_max) |int8, (X:abs_max, W:channel_wise_abs_max) |
+| Model | FP32| int8(A:abs_max, W:abs_max) | int8, (A:moving_average_abs_max, W:abs_max) |int8, (A:abs_max, W:channel_wise_abs_max) |
 |:---|:---:|:---:|:---:|:---:|
-|MobileNetV1|[89.54% / 70.91%]()|[89.64% / 71.01%]()|[89.58% / 70.86%]()|[89.75% / 71.13%]()|
-|ResNet50|[92.80% / 76.35%]()|[93.12% / 76.77%]()|[93.07% / 76.65%]()|[93.15% / 76.80%]()|
+|MobileNetV1|[89.68% / 70.99%](http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar)|[89.55% / 70.74%](https://paddle-slim-models.bj.bcebos.com/quantization%2Fmobilenetv1_w_abs_a_abs_7074_8955.tar.gz)|[89.67% / 70.89%](https://paddle-slim-models.bj.bcebos.com/quantization%2Fmobilenetv1_w_abs_a_move_7089_8967.tar.gz)|[89.65%  / 70.93%](https://paddle-slim-models.bj.bcebos.com/quantization%2Fmobilenetv1_w_chan_a_abs_7093_8965.tar.gz)|
+|ResNet50|[93.00% / 76.50%](http://paddle-imagenet-models-name.bj.bcebos.com/ResNet50_pretrained.tar)|[93.10% / 76.71%](https://paddle-slim-models.bj.bcebos.com/quantization%2Fresnet50_w_abs_a_abs_7670_9310.tar.gz)|[93.12% / 76.65%](https://paddle-slim-models.bj.bcebos.com/quantization%2Fresnet50_w_abs_a_move_7665_9312.tar.gz)|[93.05% / 76.56%](https://paddle-slim-models.bj.bcebos.com/quantization%2Fresnet50_w_chan_a_abs_7656_9304.tar.gz)|
 
 点击表中超链接即可下载预训练模型。
+
 
 量化训练前后，模型大小的变化对比如下：
 
@@ -45,7 +46,7 @@
 | ResNet50    | 99M   | 26M(-73.74%)                | 27M(-72.73%)                                 | 27M(-72.73%)                               |
 
 注：abs_max为动态量化，moving_average_abs_max为静态量化, channel_wise_abs_max是对卷积权重进行分channel量化。
-
+> 'A' 代表activation， ‘W' 代表weight
 
 ## 2. 剪切实验
 
@@ -157,7 +158,7 @@ optimizer = fluid.optimizer.Momentum(
 
 | FLOPS |model size|精度（top5/top1） |模型下载 |
 |---|---|---|---|
-| -50%|-47.0%(9.0M) | 89.13% / 69.83%|[点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.5_model.tar.gz)|
+| -50%|-47.0%(9.0M) | 88.92% / 69.66%|[点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.5_model.tar.gz)|
 | -60%|-55.9%(7.5M)|88.22% / 68.24%| [点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.6_model.tar.gz)|
 | -70%|-65.3%(5.9M)|86.99% / 66.57%| [点击下载](https://paddle-slim-models.bj.bcebos.com/uniform_filter_pruning_0.7_model.tar.gz)|
 

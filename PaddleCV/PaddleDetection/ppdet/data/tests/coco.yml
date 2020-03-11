@@ -23,13 +23,17 @@ TRANSFORM:
             - OP: ResizeImage
               TARGET_SIZE: 800
               MAX_SIZE: 1333
-            - OP: Rgb2Bgr
+            - OP: Permute
               TO_BGR: False
             - OP: ArrangeRCNN
         BATCH_SIZE: 1
         IS_PADDING: True
         DROP_LAST: False
-        
+        WORKER_CONF:
+            BUFSIZE: 100
+            WORKER_NUM: 4
+            USE_PROCESS: True
+            MEMSIZE: 2G
     VAL:
         OPS:
             - OP: DecodeImage
@@ -38,7 +42,7 @@ TRANSFORM:
               TARGET_SIZE: 224
             - OP: ArrangeSSD
         BATCH_SIZE: 1
-    WORKER_CONF:
-        BUFSIZE: 200
-        WORKER_NUM: 8
-        USE_PROCESS: False
+        WORKER_CONF:
+            BUFSIZE: 100
+            WORKER_NUM: 4
+            USE_PROCESS: True

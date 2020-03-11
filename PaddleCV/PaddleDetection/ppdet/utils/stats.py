@@ -55,14 +55,11 @@ class TrainingStats(object):
             for k, v in extras.items():
                 stats[k] = v
         for k, v in self.smoothed_losses_and_metrics.items():
-            stats[k] = round(v.get_median_value(), 6)
+            stats[k] = format(v.get_median_value(), '.6f')
 
         return stats
 
     def log(self, extras=None):
         d = self.get(extras)
-        strs = ', '.join(
-            str(dict({
-                x.encode('utf-8'): y
-            })).strip('{}') for x, y in d.items())
+        strs = ', '.join(str(dict({x: y})).strip('{}') for x, y in d.items())
         return strs

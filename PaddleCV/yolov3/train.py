@@ -41,6 +41,7 @@ from utility import (parse_args, print_arguments,
 
 import paddle
 import paddle.fluid as fluid
+from paddle.fluid import profiler
 import reader
 from models.yolov3 import YOLOv3
 from learning_rate import exponential_with_warmup_decay
@@ -51,14 +52,9 @@ num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
 
 def get_device_num():
     # NOTE(zcd): for multi-processe training, each process use one GPU card.
-    if num_trainers > 1: return 1
-    visible_device = os.environ.get('CUDA_VISIBLE_DEVICES', None)
-    if visible_device:
-        device_num = len(visible_device.split(','))
-    else:
-        device_num = subprocess.check_output(
-            ['nvidia-smi', '-L']).decode().count('\n')
-    return device_num
+    if num_trainers > 1:
+        return 1
+    return fluid.core.get_cuda_device_count()
 
 
 def train():
@@ -81,8 +77,8 @@ def train():
     loss = model.loss()
     loss.persistable = True
 
-    devices_num = get_device_num()
-    print("Found {} CUDA devices.".format(devices_num))
+    devices_num = get_device_num() if cfg.use_gpu else 1
+    print("Found {} CUDA/CPU devices.".format(devices_num))
 
     learning_rate = cfg.learning_rate
     boundaries = cfg.lr_steps
@@ -157,7 +153,8 @@ def train():
         total_iter=total_iter * devices_num,
         mixup_iter=mixup_iter * devices_num,
         random_sizes=random_sizes,
-        use_multiprocess_reader=cfg.use_multiprocess_reader)
+        use_multiprocess_reader=cfg.use_multiprocess_reader,
+        num_workers=cfg.worker_num)
     py_reader = model.py_reader
     py_reader.decorate_paddle_reader(train_reader)
 
@@ -190,6 +187,13 @@ def train():
                 iter_id, lr[0],
                 smoothed_loss.get_mean_value(), start_time - prev_start_time))
             sys.stdout.flush()
+            #add profiler tools
+            if args.is_profiler and iter_id == 5:
+                profiler.start_profiler("All")
+            elif args.is_profiler and iter_id == 10:
+                profiler.stop_profiler("total", args.profiler_path)
+                return
+
             if (iter_id + 1) % cfg.snapshot_iter == 0:
                 save_model("model_iter{}".format(iter_id))
                 print("Snapshot {} saved, average loss: {}, \

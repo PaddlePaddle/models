@@ -97,7 +97,10 @@ def preprocess(img, bbox_labels, mode, settings, image_path):
 
         # sampling
         batch_sampler = []
-
+        # used for continuous evaluation
+        if 'ce_mode' in os.environ:
+           random.seed(0)
+           np.random.seed(0)
         prob = np.random.uniform(0., 1.)
         if prob > settings.data_anchor_sampling_prob:
             scale_array = np.array([16, 32, 64, 128, 256, 512])
@@ -229,7 +232,7 @@ def expand_bboxes(bboxes,
 
 def train_generator(settings, file_list, batch_size, shuffle=True):
     def reader():
-        if shuffle:
+        if shuffle and 'ce_mode' not in os.environ:
             np.random.shuffle(file_list)
         batch_out = []
         for item in file_list:

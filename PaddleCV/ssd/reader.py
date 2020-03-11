@@ -71,7 +71,7 @@ class Settings(object):
         return self._ap_version
 
     @property
-    def apply_distort(self):
+    def apply_expand(self):
         return self._apply_expand
 
     @property

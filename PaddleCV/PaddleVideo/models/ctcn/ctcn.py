@@ -51,66 +51,52 @@ class CTCN(ModelBase):
         self.momentum = self.get_config_from_sec('train', 'momentum')
         self.lr_decay_iter = self.get_config_from_sec('train', 'lr_decay_iter')
 
-    def build_input(self, use_pyreader=True):
-        image_shape = [1, self.img_size, self.concept_size]
-        loc_shape = [self.total_num_anchors, 2]
-        cls_shape = [self.total_num_anchors]
-        fileid_shape = [1]
-        self.use_pyreader = use_pyreader
+    def build_input(self, use_dataloader=True):
+        image_shape = [None, 1, self.img_size, self.concept_size]
+        loc_shape = [None, self.total_num_anchors, 2]
+        cls_shape = [None, self.total_num_anchors]
+        fileid_shape = [None, 1]
+        self.use_dataloader = use_dataloader
         # set init data to None
-        py_reader = None
         image = None
         loc_targets = None
         cls_targets = None
         fileid = None
-        if use_pyreader:
-            assert self.mode != 'infer', \
-                        'pyreader is not recommendated when infer, please set use_pyreader to be false.'
-            if (self.mode == 'train') or (self.mode == 'valid'):
-                py_reader = fluid.layers.py_reader(
-                    capacity=100,
-                    shapes=[[-1] + image_shape, [-1] + loc_shape,
-                            [-1] + cls_shape],
-                    dtypes=['float32', 'float32', 'int64'],
-                    name='train_py_reader'
-                    if self.is_training else 'test_py_reader',
-                    use_double_buffer=True)
-                image, loc_targets, cls_targets = fluid.layers.read_file(
-                    py_reader)
-            elif self.mode == 'test':
-                py_reader = fluid.layers.py_reader(
-                    capacity=100,
-                    shapes=[[-1] + image_shape, [-1] + loc_shape, [-1] +
-                            cls_shape] + [-1, 1],
-                    dtypes=['float32', 'float32', 'int64', 'int64'],
-                    use_double_buffer=True)
-                image, loc_targets, cls_targets, fileid = fluid.layers.read_file(
-                    pyreader)
-            else:
-                raise NotImplementedError('mode {} not implemented'.format(
-                    self.mode))
-            self.py_reader = py_reader
+
+        image = fluid.data(name='image', shape=image_shape, dtype='float32')
+
+        feed_list = []
+        feed_list.append(image)
+        if (self.mode == 'train') or (self.mode == 'valid'):
+            loc_targets = fluid.data(
+                name='loc_targets', shape=loc_shape, dtype='float32')
+            cls_targets = fluid.data(
+                name='cls_targets', shape=cls_shape, dtype='int64')
+            feed_list.append(loc_targets)
+            feed_list.append(cls_targets)
+        elif self.mode == 'test':
+            loc_targets = fluid.data(
+                name='loc_targets', shape=loc_shape, dtype='float32')
+            cls_targets = fluid.data(
+                name='cls_targets', shape=cls_shape, dtype='int64')
+            fileid = fluid.data(
+                name='fileid', shape=fileid_shape, dtype='int64')
+            feed_list.append(loc_targets)
+            feed_list.append(cls_targets)
+            feed_list.append(fileid)
+        elif self.mode == 'infer':
+            # only image feature input when inference
+            pass
         else:
-            image = fluid.layers.data(
-                name='image', shape=image_shape, dtype='float32')
-            if (self.mode == 'train') or (self.mode == 'valid'):
-                loc_targets = fluid.layers.data(
-                    name='loc_targets', shape=loc_shape, dtype='float32')
-                cls_targets = fluid.layers.data(
-                    name='cls_targets', shape=cls_shape, dtype='int64')
-            elif self.mode == 'test':
-                loc_targets = fluid.layers.data(
-                    name='loc_targets', shape=loc_shape, dtype='float32')
-                cls_targets = fluid.layers.data(
-                    name='cls_targets', shape=cls_shape, dtype='int64')
-                fileid = fluid.layers.data(
-                    name='fileid', shape=fileid_shape, dtype='int64')
-            elif self.mode == 'infer':
-                # only image feature input when inference
-                pass
-            else:
-                raise NotImplementedError('mode {} not implemented'.format(
-                    self.mode))
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+        if use_dataloader:
+            assert self.mode != 'infer', \
+                        'dataloader is not recommendated when infer, please set use_dataloader to be false.'
+            self.dataloader = fluid.io.DataLoader.from_generator(
+                feed_list=feed_list, capacity=4, iterable=True)
+
         self.feature_input = [image]
         self.cls_targets = cls_targets
         self.loc_targets = loc_targets
@@ -170,10 +156,32 @@ class CTCN(ModelBase):
         elif self.mode == 'infer':
             return self.feature_input
         else:
-            raise NotImplemented
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
+    def fetches(self):
+        if (self.mode == 'train') or (self.mode == 'valid'):
+            losses = self.loss()
+            fetch_list = [item for item in losses]
+        elif self.mode == 'test':
+            losses = self.loss()
+            preds = self.outputs()
+            fetch_list = [item for item in losses] + \
+                         [item for item in preds] + \
+                         [self.fileid]
+        elif self.mode == 'infer':
+            preds = self.outputs()
+            fetch_list = [item for item in preds]
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+        return fetch_list
 
     def pretrain_info(self):
         return (None, None)
 
     def weights_info(self):
-        return (None, None)
+        return (
+            'CTCN_final.pdparams',
+            'https://paddlemodels.bj.bcebos.com/video_detection/CTCN_final.pdparams'
+        )

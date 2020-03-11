@@ -120,7 +120,8 @@ def parse_args():
     add_arg('class_num',        int,    80,          "Class number.")
     add_arg('data_dir',         str,    'dataset/coco',        "The data root path.")
     add_arg('start_iter',       int,    0,      "Start iteration.")
-    add_arg('use_multiprocess_reader', bool,   True,   "add multiprocess.")
+    add_arg('use_multiprocess_reader', bool,   True,   "whether use multiprocess reader.")
+    add_arg('worker_num',       int,   8,   "worker number for multiprocess reader.")
     #SOLVER
     add_arg('batch_size',       int,    8,      "Mini-batch size per device.")
     add_arg('learning_rate',    float,  0.001,  "Learning rate.")
@@ -145,6 +146,9 @@ def parse_args():
     add_arg('draw_thresh',      float,  0.5,
             "Confidence score threshold to draw prediction box in image in debug mode")
     add_arg('enable_ce',        bool,  False,                "If set True, enable continuous evaluation job.")
+    # args for profiler tools
+    add_arg('is_profiler',        int,  0,                "the switch of profiler")
+    add_arg('profiler_path',        str,  './',                "the path to save profiler output files")
     # yapf: enable
     args = parser.parse_args()
     file_name = sys.argv[0]

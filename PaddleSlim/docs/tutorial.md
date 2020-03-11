@@ -1,4 +1,6 @@
-﻿<div align="center">
+﻿>本文包含大量行内公式，将公式转为图片会导致各种排版问题，建议您使用浏览器插件[MathJax Plugin for Github](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima)渲染该页公式。后续我们会将该文档迁移至[PaddlePaddle官网](https://www.paddlepaddle.org)。
+
+<div align="center">
   <h3>
     <a href="usage.md">
       使用文档
@@ -42,7 +44,7 @@
 <strong>表2：模型量化前后精度对比</strong>
 </p>
 
-目前，学术界主要将量化分为两大类：`Post Training Quantization`和`Quantization Aware Training`。`Post Training Quantization`是指使用KL散度、滑动平均等方法确定量化参数且不需要重新训练的定点量化方法。`Quantization Aware Training`是在训练过程中对量化进行建模以确定量化参数，它与`Post Training Quantization`模式相比可以提供更高的预测精度。本文主要针对`Quantization Aware Training`量化模式进行阐述说明。
+目前，学术界主要将量化分为两大类：`Post Training Quantization`和`Quantization Aware Training`。`Post Training Quantization`是指使用KL散度、滑动平均等方法确定量化参数且不需要重新训练的定点量化方法。`Quantization Aware Training`是在训练过程中对量化进行建模以确定量化参数，它与`Post Training Quantization`模式相比可以提供更高的预测精度。
 
 ### 1.2 量化原理
 
@@ -57,7 +59,7 @@ $$ M = max(abs(x)) $$ $$ q = \left \lfloor \frac{x}{M} * (n - 1) \right \rceil $
 $q = scale * r + b$
 其中`min-max`和`max-abs`被称为量化参数或者量化比例或者量化范围。
 
-#### 1.2.2 量化训练框架
+#### 1.2.2 量化训练
 ##### 1.2.2.1 前向传播
 前向传播过程采用模拟量化的方式，具体描述如下：
 
@@ -74,11 +76,11 @@ $q = scale * r + b$
 对于通用矩阵乘法(`GEMM`)，输入$X$和权重$W$的量化操作可被表述为如下过程：
 $$ X_q = \left \lfloor \frac{X}{X_m} * (n - 1) \right \rceil $$ $$ W_q = \left \lfloor \frac{W}{W_m} * (n - 1) \right \rceil $$
 执行通用矩阵乘法：
-$$ Y = X_q * W_q $$
-反量化$Y$:
+$$ Y_q = X_q * W_q $$
+对量化乘积结果$Yq$进行反量化:
 $$
 \begin{align}
-Y_{dq} = \frac{Y}{(n - 1) * (n - 1)} * X_m * W_m \
+Y_{dq} = \frac{Y_q}{(n - 1) * (n - 1)} * X_m * W_m \
 =\frac{X_q * W_q}{(n - 1) * (n - 1)} * X_m * W_m \
 =(\frac{X_q}{n - 1} * X_m) * (\frac{W_q}{n - 1} * W_m) \
 \end{align}
@@ -102,7 +104,7 @@ $$
 
 因此，量化Pass也会改变相应反向算子的某些输入。
 
-#### 1.2.3 确定量化参数
+##### 1.2.2.3 确定量化比例系数
 存在着两种策略可以计算求取量化比例系数，即动态策略和静态策略。动态策略会在每次迭代过程中计算量化比例系数的值。静态策略则对不同的输入采用相同的量化比例系数。
 对于权重而言，在训练过程中采用动态策略。换句话说，在每次迭代过程中量化比例系数均会被重新计算得到直至训练过程结束。
 对于激活而言，可以选择动态策略也可以选择静态策略。若选择使用静态策略，则量化比例系数会在训练过程中被评估求得，且在推断过程中被使用(不同的输入均保持不变)。静态策略中的量化比例系数可于训练过程中通过如下三种方式进行评估：
@@ -117,7 +119,18 @@ $$ Vt = (1 - k) * V + k * V_{t-1} $$
 
 式中，$V$ 是当前batch的最大绝对值， $Vt$是滑动平均值。$k$是一个因子，例如其值可取为0.9。
 
+#### 1.2.4 训练后量化
 
+训练后量化是基于采样数据，采用KL散度等方法计算量化比例因子的方法。相比量化训练，训练后量化不需要重新训练，可以快速得到量化模型。
+
+训练后量化的目标是求取量化比例因子，主要有两种方法：非饱和量化方法 ( No Saturation) 和饱和量化方法 (Saturation)。非饱和量化方法计算FP32类型Tensor中绝对值的最大值`abs_max`，将其映射为127，则量化比例因子等于`abs_max/127`。饱和量化方法使用KL散度计算一个合适的阈值`T` (`0<T<mab_max`)，将其映射为127，则量化比例因子等于`T/127`。一般而言，对于待量化op的权重Tensor，采用非饱和量化方法，对于待量化op的激活Tensor（包括输入和输出），采用饱和量化方法 。
+
+训练后量化的实现步骤如下：
+* 加载预训练的FP32模型，配置`DataLoader`；
+* 读取样本数据，执行模型的前向推理，保存待量化op激活Tensor的数值；
+* 基于激活Tensor的采样数据，使用饱和量化方法计算它的量化比例因子；
+* 模型权重Tensor数据一直保持不变，使用非饱和方法计算它每个通道的绝对值最大值，作为每个通道的量化比例因子；
+* 将FP32模型转成INT8模型，进行保存。
 
 
 ## 2. 卷积核剪裁原理
@@ -267,6 +280,23 @@ e^{\frac{(r_k-r)}{T_k}} & r_k < r\\
 <img src="images/tutorial/light-nas-block.png" height=300 width=600 hspace='10'/> <br />
 <strong>图10</strong>
 </p>
+
+
+### 4.3 模型延时评估
+
+搜索过程支持 FLOPS 约束和模型延时约束。而基于 Android/iOS 移动端、开发板等硬件平台，迭代搜索过程中不断测试模型的延时不仅消耗时间而且非常不方便，因此我们开发了模型延时评估器来评估搜索得到模型的延时。通过延时评估器评估得到的延时与模型实际测试的延时波动偏差小于 10%。
+
+延时评估器分为配置硬件延时评估器和评估模型延时两个阶段，配置硬件延时评估器只需要执行一次，而评估模型延时则在搜索过程中不断评估搜索得到的模型延时。
+
+- 配置硬件延时评估器
+
+    1. 获取搜索空间中所有不重复的 op 及其参数
+    2. 获取每组 op 及其参数的延时
+
+- 评估模型延时
+
+    1. 获取给定模型的所有 op 及其参数
+    2. 根据给定模型的所有 op 及参数，利用延时评估器去估计模型的延时
 
 
 ## 5. 参考文献

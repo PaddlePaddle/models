@@ -20,6 +20,9 @@ from . import darknet
 from . import mobilenet
 from . import senet
 from . import fpn
+from . import vgg
+from . import blazenet
+from . import faceboxnet
 
 from .resnet import *
 from .resnext import *
@@ -27,3 +30,6 @@ from .darknet import *
 from .mobilenet import *
 from .senet import *
 from .fpn import *
+from .vgg import *
+from .blazenet import *
+from .faceboxnet import *

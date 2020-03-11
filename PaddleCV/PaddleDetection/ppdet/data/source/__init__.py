@@ -20,6 +20,8 @@ import copy
 
 from .roidb_source import RoiDbSource
 from .simple_source import SimpleSource
+from .iterator_source import IteratorSource
+from .class_aware_sampling_roidb_source import ClassAwareSamplingRoiDbSource
 
 
 def build_source(config):
@@ -40,17 +42,24 @@ def build_source(config):
         }
     """
     if 'data_cf' in config:
-        data_cf = {k.lower(): v for k, v in config['data_cf'].items()}
+        data_cf = config['data_cf']
         data_cf['cname2cid'] = config['cname2cid']
     else:
         data_cf = config
+
+    data_cf = {k.lower(): v for k, v in data_cf.items()}
 
     args = copy.deepcopy(data_cf)
     # defaut type is 'RoiDbSource'
     source_type = 'RoiDbSource'
     if 'type' in data_cf:
         if data_cf['type'] in ['VOCSource', 'COCOSource', 'RoiDbSource']:
-            source_type = 'RoiDbSource'
+            if 'class_aware_sampling' in args and args['class_aware_sampling']:
+                source_type = 'ClassAwareSamplingRoiDbSource'
+            else:
+                source_type = 'RoiDbSource'
+            if 'class_aware_sampling' in args:
+                del args['class_aware_sampling']
         else:
             source_type = data_cf['type']
         del args['type']
@@ -58,5 +67,7 @@ def build_source(config):
         return RoiDbSource(**args)
     elif source_type == 'SimpleSource':
         return SimpleSource(**args)
+    elif source_type == 'ClassAwareSamplingRoiDbSource':
+        return ClassAwareSamplingRoiDbSource(**args)
     else:
         raise ValueError('source type not supported: ' + source_type)

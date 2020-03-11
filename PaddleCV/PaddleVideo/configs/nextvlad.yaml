@@ -1,0 +1,39 @@
+MODEL:
+    name: "NEXTVLAD"
+    num_classes: 3862
+    topk: 20
+    video_feature_size: 1024
+    audio_feature_size: 128
+    cluster_size: 128
+    hidden_size: 2048
+    groups: 8
+    expansion: 2
+    drop_rate: 0.5
+    gating_reduction: 8
+    eigen_file: "./data/dataset/youtube8m/yt8m_pca/eigenvals.npy"
+
+TRAIN:
+    epoch: 6
+    learning_rate: 0.0002
+    lr_boundary_examples: 2000000
+    max_iter: 700000
+    learning_rate_decay: 0.8
+    l2_penalty: 1e-5
+    gradient_clip_norm: 1.0
+    use_gpu: True
+    num_gpus: 4
+    batch_size: 160
+    filelist: "./data/dataset/youtube8m/train.list"
+
+VALID:
+    batch_size: 160
+    filelist: "./data/dataset/youtube8m/val.list"
+
+TEST:
+    batch_size: 40
+    filelist: "./data/dataset/youtube8m/test.list"
+
+INFER:
+    batch_size: 1
+    filelist: "./data/dataset/youtube8m/infer.list"
+

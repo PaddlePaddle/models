@@ -20,6 +20,9 @@
 ## 介绍
 本例实现了skip-gram模式的word2vector模型。
 
+**目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
+
+同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124377)
 
 ## 数据下载
 全量数据集使用的是来自1 Billion Word Language Model Benchmark的(http://www.statmt.org/lm-benchmark) 的数据集.
@@ -35,7 +38,7 @@ mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tok
 
 ```bash
 mkdir data
-wget https://paddlerec.bj.bcebos.com/word2vec/1-billion-word-language-modeling-benchmark-r13output.tar
+wget --no-check-certificate https://paddlerec.bj.bcebos.com/word2vec/1-billion-word-language-modeling-benchmark-r13output.tar
 tar xvf 1-billion-word-language-modeling-benchmark-r13output.tar
 mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tokenized.shuffled/ data/
 ```
@@ -44,7 +47,7 @@ mv 1-billion-word-language-modeling-benchmark-r13output/training-monolingual.tok
 
 ```bash
 mkdir data
-wget https://paddlerec.bj.bcebos.com/word2vec/text.tar
+wget --no-check-certificate https://paddlerec.bj.bcebos.com/word2vec/text.tar
 tar xvf text.tar
 mv text data/
 ```
@@ -94,7 +97,7 @@ python train.py -h
 OPENBLAS_NUM_THREADS=1 CPU_NUM=5 python train.py --train_data_dir data/convert_text8 --dict_path data/test_build_dict --num_passes 10 --batch_size 100 --model_output_dir v1_cpu5_b100_lr1dir --base_lr 1.0 --print_batch 1000 --with_speed --is_sparse
 ```
 
-本地单机模拟多机训练
+本地单机模拟多机训练, 目前暂不支持windows。
 
 ```bash
 sh cluster_train.sh
@@ -105,9 +108,9 @@ sh cluster_train.sh
 
 ```bash
 #全量数据集测试集
-wget https://paddlerec.bj.bcebos.com/word2vec/test_dir.tar
+wget --no-check-certificate https://paddlerec.bj.bcebos.com/word2vec/test_dir.tar
 #样本数据集测试集
-wget https://paddlerec.bj.bcebos.com/word2vec/test_mid_dir.tar
+wget --no-check-certificate https://paddlerec.bj.bcebos.com/word2vec/test_mid_dir.tar
 ```
 
 预测命令，注意词典名称需要加后缀"_word_to_id_", 此文件是预处理阶段生成的。

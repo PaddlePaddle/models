@@ -8,7 +8,7 @@ import paddle.fluid as fluid
 import paddle.fluid.dygraph.nn as nn
 import paddle.fluid.framework as framework
 
-parser = argparse.ArgumentParser(description='PyTorch REINFORCE example')
+parser = argparse.ArgumentParser()
 parser.add_argument(
     '--gamma',
     type=float,
@@ -37,11 +37,11 @@ env.seed(args.seed)
 
 
 class Policy(fluid.dygraph.Layer):
-    def __init__(self, name_scope):
-        super(Policy, self).__init__(name_scope)
+    def __init__(self):
+        super(Policy, self).__init__()
 
-        self.affine1 = nn.FC(self.full_name(), size=128)
-        self.affine2 = nn.FC(self.full_name(), size=2)
+        self.affine1 = nn.Linear(4, 128)
+        self.affine2 = nn.Linear(128, 2)
         self.dropout_ratio = 0.6
 
         self.saved_log_probs = []
@@ -64,10 +64,10 @@ with fluid.dygraph.guard():
     fluid.default_main_program().random_seed = args.seed
     np.random.seed(args.seed)
 
-    policy = Policy("PolicyModel")
+    policy = Policy()
 
     eps = np.finfo(np.float32).eps.item()
-    optimizer = fluid.optimizer.AdamOptimizer(learning_rate=1e-2)
+    optimizer = fluid.optimizer.AdamOptimizer(learning_rate=1e-2, parameter_list=policy.parameters())
 
     def get_mean_and_std(values=[]):
         n = 0.
@@ -161,8 +161,8 @@ with fluid.dygraph.guard():
 
     running_reward = 10
     state, ep_reward = env.reset(), 0
-    model_dict, _ = fluid.dygraph.load_persistables(args.save_dir)
-    policy.load_dict(model_dict)
+    model_dict, _ = fluid.load_dygraph(args.save_dir)
+    policy.set_dict(model_dict)
 
     for t in range(1, 10000):  # Don't infinite loop while learning
         state = np.array(state).astype("float32")

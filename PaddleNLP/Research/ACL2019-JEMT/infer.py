@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import argparse
 import ast
 import multiprocessing
@@ -66,11 +79,6 @@ def parse_args():
         help="The delimiter used to split tokens in source or target sentences. "
         "For EN-DE BPE data we provided, use spaces as token delimiter. ")
     parser.add_argument(
-        "--use_mem_opt",
-        type=ast.literal_eval,
-        default=True,
-        help="The flag indicating whether to use memory optimization.")
-    parser.add_argument(
         "--use_py_reader",
         type=ast.literal_eval,
         default=True,
@@ -91,10 +99,8 @@ def parse_args():
     trg_dict = reader.DataReader.load_dict(args.trg_vocab_fpath)
     phone_dict = reader.DataReader.load_dict(args.phoneme_vocab_fpath)
     dict_args = [
-        "src_vocab_size",
-        str(len(src_dict)), "trg_vocab_size",
-        str(len(trg_dict)), "phone_vocab_size",
-        str(len(phone_dict)), "bos_idx",
+        "src_vocab_size", str(len(src_dict)), "trg_vocab_size",
+        str(len(trg_dict)), "phone_vocab_size", str(len(phone_dict)), "bos_idx",
         str(src_dict[args.special_token[0]]), "eos_idx",
         str(src_dict[args.special_token[1]]), "unk_idx",
         str(src_dict[args.special_token[2]])
@@ -152,10 +158,10 @@ def prepare_batch_input(insts, data_input_names, src_pad_idx, phone_pad_idx,
 
     # beamsearch_op must use tensors with lod
     init_score = to_lodtensor(
-        np.zeros_like(trg_word, dtype="float32").reshape(-1, 1), place,
-        [range(trg_word.shape[0] + 1)] * 2)
-    trg_word = to_lodtensor(trg_word, place,
-                            [range(trg_word.shape[0] + 1)] * 2)
+        np.zeros_like(
+            trg_word, dtype="float32").reshape(-1, 1),
+        place, [range(trg_word.shape[0] + 1)] * 2)
+    trg_word = to_lodtensor(trg_word, place, [range(trg_word.shape[0] + 1)] * 2)
     init_idx = np.asarray(range(len(insts)), dtype="int32")
 
     data_input_dict = dict(
@@ -230,9 +236,6 @@ def fast_infer(args):
 
     # This is used here to set dropout to the test mode.
     infer_program = fluid.default_main_program().clone(for_test=True)
-
-    if args.use_mem_opt:
-        fluid.memory_optimize(infer_program)
 
     if InferTaskConfig.use_gpu:
         place = fluid.CUDAPlace(0)
@@ -323,7 +326,8 @@ def fast_infer(args):
                         sub_start = seq_ids.lod()[1][start + j]
                         sub_end = seq_ids.lod()[1][start + j + 1]
                         hyps[i].append(" ".join([
-                            trg_idx2word[idx] for idx in post_process_seq(
+                            trg_idx2word[idx]
+                            for idx in post_process_seq(
                                 np.array(seq_ids)[sub_start:sub_end])
                         ]))
                         scores[i].append(np.array(seq_scores)[sub_end - 1])

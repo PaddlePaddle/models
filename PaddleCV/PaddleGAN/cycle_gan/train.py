@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -8,6 +21,7 @@ def set_paddle_flags(flags):
     for key, value in flags.items():
         if os.environ.get(key, None) is None:
             os.environ[key] = str(value)
+
 
 use_cudnn_deterministic = os.environ.get('FLAGS_cudnn_deterministic', None)
 
@@ -22,7 +36,7 @@ else:
 set_paddle_flags({
     'FLAGS_cudnn_exhaustive_search': use_cudnn_exhaustive_search,
     'FLAGS_conv_workspace_size_limit': 256,
-    'FLAGS_eager_delete_tensor_gb': 0, # enable gc 
+    'FLAGS_eager_delete_tensor_gb': 0,  # enable gc 
     # You can omit the following settings, because the default
     # value of FLAGS_memory_fraction_of_eager_deletion is 1,
     # and default value of FLAGS_fast_eager_deletion_mode is 1 
@@ -55,6 +69,11 @@ add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints.")
 add_arg('run_test',          bool,  True,       "Whether to run test.")
 add_arg('use_gpu',           bool,  True,       "Whether to use GPU to train.")
 add_arg('profile',           bool,  False,       "Whether to profile.")
+
+# NOTE: args for profiler, used for benchmark
+add_arg('profiler_path',     str,  './profiler_cyclegan',       "the path of profiler output files. used for benchmark")
+add_arg('max_iter',          int,  0,       "the max batch nums to train. used for benchmark")
+
 add_arg('run_ce',            bool,  False,       "Whether to run for model ce.")
 # yapf: enable
 
@@ -175,8 +194,6 @@ def train(args):
     losses = [[], []]
     t_time = 0
     build_strategy = fluid.BuildStrategy()
-    build_strategy.enable_inplace = False
-    build_strategy.memory_optimize = False
 
     exec_strategy = fluid.ExecutionStrategy()
     exec_strategy.num_threads = 1
@@ -202,9 +219,14 @@ def train(args):
             loss_name=d_A_trainer.d_loss_A.name,
             build_strategy=build_strategy,
             exec_strategy=exec_strategy)
+
+    total_batch_num = 0  # this is for benchmark
+
     for epoch in range(args.epoch):
         batch_id = 0
         for i in range(max_images_num):
+            if args.max_iter and total_batch_num == args.max_iter:  # this for benchmark
+                return
             data_A = next(A_reader)
             data_B = next(B_reader)
             tensor_A = fluid.LoDTensor()
@@ -247,12 +269,18 @@ def train(args):
             t_time += batch_time
             print(
                 "epoch{}; batch{}; g_A_loss: {}; d_B_loss: {}; g_B_loss: {}; d_A_loss: {}; "
-                "Batch_time_cost: {:.2f}".format(epoch, batch_id, g_A_loss[
+                "Batch_time_cost: {}".format(epoch, batch_id, g_A_loss[
                     0], d_B_loss[0], g_B_loss[0], d_A_loss[0], batch_time))
             losses[0].append(g_A_loss[0])
             losses[1].append(d_A_loss[0])
             sys.stdout.flush()
             batch_id += 1
+            total_batch_num = total_batch_num + 1  # this is for benchmark
+            # profiler tools for benchmark
+            if args.profile and epoch == 0 and batch_id == 10:
+                profiler.reset_profiler()
+            elif args.profile and epoch == 0 and batch_id == 15:
+                return
 
         if args.run_test and not args.run_ce:
             test(epoch)
@@ -269,7 +297,7 @@ if __name__ == "__main__":
     print_arguments(args)
     if args.profile:
         if args.use_gpu:
-            with profiler.cuda_profiler("cuda_profiler.txt", 'csv') as nvprof:
+            with profiler.profiler('All', 'total', args.profiler_path) as prof:
                 train(args)
         else:
             with profiler.profiler("CPU", sorted_key='total') as cpuprof:

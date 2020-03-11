@@ -38,11 +38,13 @@ Pyramidbox 人脸检测性能展示
 
 WIDER FACE数据集包含32,203张图片，其中包含393,703个人脸，数据集的人脸在尺度、姿态、遮挡方面有较大的差异性。另外WIDER FACE数据集是基于61个场景归类的，然后针对每个场景，随机的挑选40%作为训练集，10%作为验证集，50%作为测试集。
 
-首先，从官网训练集和验证集，放在`data`目录，官网提供了谷歌云和百度云下载地址，请依据情况自行下载。并下载训练集和验证集的标注信息:
+首先，从官网训练集和验证集，放在`data`目录，官网提供了谷歌云和百度云下载地址，请依据情况自行下载。Linux用户可通过下面脚本下载训练集和验证集的标注信息:
 
 ```bash
 ./data/download.sh
 ```
+
+Windows用户请自行到[WIDER FACE 官网](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/)下载数据和标注信息。
 
 准备好数据之后，`data`目录如下：
 
@@ -109,6 +111,7 @@ python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 **注意**：
   - 本次开源模型中CPM模块与论文中有些许不同，相比论文中CPM模块训练和测试速度更快。
   - Pyramid Anchors模块的body部分可以针对不同情况，进行相应的长宽设置来调参。同时face、head、body部分的loss对应的系数也可以通过调参优化。
+  - 针对GPU资源有限时，可采取显存优化策略，`train.py` 与 `derface_eval.py` 已经加入部分显存优化FLAGS，详情更多内容请参考[API文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/flags/memory_cn.html#flags-fraction-of-gpu-memory-to-use)
 
 
 ### 模型评估

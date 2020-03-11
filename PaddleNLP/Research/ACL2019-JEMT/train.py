@@ -1,3 +1,16 @@
+#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import argparse
 import ast
 import copy
@@ -125,11 +138,6 @@ def parse_args():
         help="The flag indicating whether to run the task "
         "for continuous evaluation.")
     parser.add_argument(
-        "--use_mem_opt",
-        type=ast.literal_eval,
-        default=True,
-        help="The flag indicating whether to use memory optimization.")
-    parser.add_argument(
         "--use_py_reader",
         type=ast.literal_eval,
         default=True,
@@ -146,10 +154,8 @@ def parse_args():
     trg_dict = reader.DataReader.load_dict(args.trg_vocab_fpath)
     phone_dict = reader.DataReader.load_dict(args.phoneme_vocab_fpath)
     dict_args = [
-        "src_vocab_size",
-        str(len(src_dict)), "trg_vocab_size",
-        str(len(trg_dict)), "phone_vocab_size",
-        str(len(phone_dict)), "bos_idx",
+        "src_vocab_size", str(len(src_dict)), "trg_vocab_size",
+        str(len(trg_dict)), "phone_vocab_size", str(len(phone_dict)), "bos_idx",
         str(src_dict[args.special_token[0]]), "eos_idx",
         str(src_dict[args.special_token[1]]), "unk_idx",
         str(src_dict[args.special_token[2]])
@@ -162,8 +168,8 @@ def parse_args():
 
 def append_nccl2_prepare(startup_prog, trainer_id, worker_endpoints,
                          current_endpoint):
-    assert (trainer_id >= 0 and len(worker_endpoints) > 1
-            and current_endpoint in worker_endpoints)
+    assert (trainer_id >= 0 and len(worker_endpoints) > 1 and
+            current_endpoint in worker_endpoints)
     eps = copy.deepcopy(worker_endpoints)
     eps.remove(current_endpoint)
     nccl_id_var = startup_prog.global_block().create_var(
@@ -194,8 +200,8 @@ def pad_phoneme_data(phoneme_seqs, pad_idx, max_seq_len):
     batch_size = len(phoneme_seqs)
     phoneme_data = pad_idx * np.ones(
         (batch_size, max_seq_len, max_ph_seq_len), dtype=np.int64)
-    phoneme_mask = np.zeros((batch_size, max_seq_len, max_ph_seq_len),
-                            dtype=np.int64)
+    phoneme_mask = np.zeros(
+        (batch_size, max_seq_len, max_ph_seq_len), dtype=np.int64)
 
     for i in range(batch_size):
         cur_ph_seq = phoneme_seqs[i]
@@ -242,17 +248,16 @@ def pad_batch_data(insts,
         if is_target:
             # This is used to avoid attention on paddings and subsequent
             # words.
-            slf_attn_bias_data = np.ones((inst_data.shape[0], max_len,
-                                          max_len))
+            slf_attn_bias_data = np.ones((inst_data.shape[0], max_len, max_len))
             slf_attn_bias_data = np.triu(slf_attn_bias_data,
                                          1).reshape([-1, 1, max_len, max_len])
             slf_attn_bias_data = np.tile(slf_attn_bias_data,
                                          [1, n_head, 1, 1]) * [-1e9]
         else:
             # This is used to avoid attention on paddings.
-            slf_attn_bias_data = np.array(
-                [[0] * len(inst) + [-1e9] * (max_len - len(inst))
-                 for inst in insts])
+            slf_attn_bias_data = np.array([[0] * len(inst) + [-1e9] *
+                                           (max_len - len(inst))
+                                           for inst in insts])
             slf_attn_bias_data = np.tile(
                 slf_attn_bias_data.reshape([-1, 1, 1, max_len]),
                 [1, n_head, max_len, 1])
@@ -364,8 +369,8 @@ def prepare_data_generator(args,
             for item in data_reader():
                 inst_num_per_part = len(item) // count
                 for i in range(count):
-                    yield item[inst_num_per_part * i:inst_num_per_part *
-                               (i + 1)]
+                    yield item[inst_num_per_part * i:inst_num_per_part * (i + 1
+                                                                          )]
 
         return __impl__
 
@@ -406,8 +411,8 @@ def prepare_feed_dict_list(data_generator, init_flag, count):
                 feed_dict_list.append(pos_enc_tables)
             else:
                 feed_dict_list[idx] = dict(
-                    list(pos_enc_tables.items()) +
-                    list(feed_dict_list[idx].items()))
+                    list(pos_enc_tables.items()) + list(feed_dict_list[idx]
+                                                        .items()))
     return feed_dict_list if len(feed_dict_list) == count else None
 
 
@@ -492,11 +497,10 @@ def test_context(exe, train_exe, dev_count):
             data_generator = test_data()
         while True:
             try:
-                feed_dict_list = prepare_feed_dict_list(
-                    data_generator, False, dev_count)
-                outs = test_exe.run(
-                    fetch_list=[sum_cost.name, token_num.name],
-                    feed=feed_dict_list)
+                feed_dict_list = prepare_feed_dict_list(data_generator, False,
+                                                        dev_count)
+                outs = test_exe.run(fetch_list=[sum_cost.name, token_num.name],
+                                    feed=feed_dict_list)
             except (StopIteration, fluid.core.EOFException):
                 # The current pass is over.
                 if args.use_py_reader:
@@ -567,10 +571,10 @@ def train_loop(exe,
 
     # the best cross-entropy value with label smoothing
     loss_normalizer = -((1. - TrainTaskConfig.label_smooth_eps) * np.log(
-        (1. - TrainTaskConfig.label_smooth_eps)) +
-                        TrainTaskConfig.label_smooth_eps *
-                        np.log(TrainTaskConfig.label_smooth_eps /
-                               (ModelHyperParams.trg_vocab_size - 1) + 1e-20))
+        (1. - TrainTaskConfig.label_smooth_eps
+         )) + TrainTaskConfig.label_smooth_eps *
+                        np.log(TrainTaskConfig.label_smooth_eps / (
+                            ModelHyperParams.trg_vocab_size - 1) + 1e-20))
 
     step_idx = 0
     init_flag = True
@@ -588,8 +592,8 @@ def train_loop(exe,
         batch_id = 0
         while True:
             try:
-                feed_dict_list = prepare_feed_dict_list(
-                    data_generator, init_flag, dev_count)
+                feed_dict_list = prepare_feed_dict_list(data_generator,
+                                                        init_flag, dev_count)
                 outs = train_exe.run(
                     fetch_list=[sum_cost.name, token_num.name]
                     if step_idx % args.fetch_steps == 0 else [],
@@ -614,12 +618,11 @@ def train_loop(exe,
                     else:
                         logging.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                            "normalized loss: %f, ppl: %f, speed: %.2f step/s"
-                            % (step_idx, pass_id, batch_id, total_avg_cost,
-                               total_avg_cost - loss_normalizer,
-                               np.exp([min(total_avg_cost, 100)
-                                       ]), args.fetch_steps /
-                               (time.time() - avg_batch_time)))
+                            "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
+                            (step_idx, pass_id, batch_id, total_avg_cost,
+                             total_avg_cost - loss_normalizer, np.exp(
+                                 [min(total_avg_cost, 100)]),
+                             args.fetch_steps / (time.time() - avg_batch_time)))
                         avg_batch_time = time.time()
 
                 if step_idx % TrainTaskConfig.save_freq == 0 and step_idx > 0:
@@ -648,8 +651,9 @@ def train_loop(exe,
             val_avg_cost, val_ppl = test()
             logging.info(
                 "epoch: %d, val avg loss: %f, val normalized loss: %f, val ppl: %f,"
-                " consumed %fs" % (pass_id, val_avg_cost, val_avg_cost -
-                                   loss_normalizer, val_ppl, time_consumed))
+                " consumed %fs" % (pass_id, val_avg_cost,
+                                   val_avg_cost - loss_normalizer, val_ppl,
+                                   time_consumed))
         else:
             logging.info("epoch: %d, consumed %fs" % (pass_id, time_consumed))
         if not args.enable_ce:
@@ -737,13 +741,10 @@ def train(args):
                 optimizer = fluid.optimizer.SGD(0.003)
             optimizer.minimize(avg_cost)
 
-    if args.use_mem_opt:
-        fluid.memory_optimize(train_prog)
-
     if args.local:
         logging.info("local start_up:")
-        train_loop(exe, train_prog, startup_prog, dev_count, sum_cost,
-                   avg_cost, token_num, predict, pyreader)
+        train_loop(exe, train_prog, startup_prog, dev_count, sum_cost, avg_cost,
+                   token_num, predict, pyreader)
     else:
         if args.update_method == "nccl2":
             trainer_id = int(os.getenv("PADDLE_TRAINER_ID", "0"))

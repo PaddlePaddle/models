@@ -10,6 +10,7 @@ snapshot_iter: 2000
 metric: COCO
 pretrain_weights: http://paddle-imagenet-models-name.bj.bcebos.com/MobileNetV1_pretrained.tar
 weights: output/yolov3_mobilenet_v1/model_final
+num_classes: 80
 
 YOLOv3:
   backbone: MobileNet
@@ -36,7 +37,6 @@ YOLOv3Head:
     nms_top_k: 1000
     normalized: false
     score_threshold: 0.01
-  num_classes: 80
 
 LearningRate:
   base_lr: 0.001
@@ -70,6 +70,7 @@ YoloTrainFeed:
 
 YoloEvalFeed:
   batch_size: 8
+  image_shape: [3, 608, 608]
   dataset:
     dataset_dir: dataset/coco
     annotation: annotations/instances_val2017.json
@@ -77,5 +78,6 @@ YoloEvalFeed:
 
 YoloTestFeed:
   batch_size: 1
+  image_shape: [3, 608, 608]
   dataset:
-    annotation: annotations/instances_val2017.json
+    annotation: dataset/coco/annotations/instances_val2017.json

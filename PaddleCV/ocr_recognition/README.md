@@ -1,3 +1,4 @@
+
 ## 代码结构
 ```
 ├── data_reader.py  # 下载、读取、处理数据。
@@ -6,7 +7,9 @@
 ├── train.py   # 用于模型的训练。
 ├── infer.py   # 加载训练好的模型文件，对新数据进行预测。
 ├── eval.py     # 评估模型在指定数据集上的效果。
-└── utils.py    # 定义通用的函数。
+├─ utils.py    # 定义通用的函数。
+├── run_crnn_ctc.sh     # 执行crnn_ctc模型训练任务
+└── run_attention.sh    # 执行attention模型训练任务
 ```
 
 
@@ -75,15 +78,17 @@
 
 在训练时，我们通过选项`--train_images` 和 `--train_list` 分别设置准备好的`train_images` 和`train_list`。
 
+在`data_reader.py`中，会按照用户设置的`DATA_SHAPE`调整训练数据的高度。用户可以根据自己准备的训练数据，设置合适的`DATA_SHAPE`。如果使用默认的示例数据，则使用默认的`DATA_SHAPE`即可。
 
->**注：** 如果`--train_images` 和 `--train_list`都未设置或设置为None， reader.py会自动下载使用[示例数据](http://paddle-ocr-data.bj.bcebos.com/data.tar.gz)，并将其缓存到`$HOME/.cache/paddle/dataset/ctc_data/data/` 路径下。
-
+>**注：** 如果`--train_images` 和 `--train_list`都未设置或设置为None， data_reader.py会自动下载使用[示例数据](http://paddle-ocr-data.bj.bcebos.com/data.tar.gz)，并将其缓存到`$HOME/.cache/paddle/dataset/ctc_data/data/` 路径下。
 
 **B. 测试集和评估集**
 
 测试集、评估集的准备方式与训练集相同。
 在训练阶段，测试集的路径通过train.py的选项`--test_images` 和 `--test_list` 来设置。
 在评估时，评估集的路径通过eval.py的选项`--input_images_dir` 和`--input_images_list` 来设置。
+
+在`data_reader.py`中，会按照用户设置的`DATA_SHAPE`调整测试图像的高度，所以测试图像可以有不同高度。但是，`DATA_SHAPE`需要和训练模型时保持严格一致。
 
 **C. 待预测数据集**
 
@@ -107,6 +112,8 @@ data/test_images/00003.jpg
 ```
 
 第三种：从stdin读入一张图片的path，然后进行一次inference.
+
+在`data_reader.py`中，会按照用户设置的`DATA_SHAPE`调整预测图像的高度，所以预测图像可以有不同高度。但是，`DATA_SHAPE`需要和训练模型时保持严格一致。
 
 ## 模型训练与预测
 
@@ -132,14 +139,14 @@ env CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --parallel=True
 
 执行`python train.py --help`可查看更多使用方式和参数详细说明。
 
-图2为使用默认参数在默认数据集上训练`CTC model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为22.0%.
+图2为执行脚本`run_crnn_ctc.sh`在默认数据集上训练`CTC model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为22.0%.
 
 <p align="center">
 <img src="images/train.jpg" width="400" hspace='10'/> <br/>
 <strong>图 2</strong>
 </p>
 
-图3为使用默认参数在默认数据集上训练`attention model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为16.25%.
+图3为执行脚本`run_attention.sh`在默认数据集上训练`attention model`的收敛曲线，其中横坐标轴为训练迭代次数，纵轴为样本级错误率。其中，蓝线为训练集上的样本错误率，红线为测试集上的样本错误率。测试集上最低错误率为16.25%.
 
 <p align="center">
 <img src="images/train_attention.jpg" width="400" hspace='10'/> <br/>

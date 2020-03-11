@@ -21,22 +21,9 @@ import paddle.fluid as fluid
 
 __all__ = ["VGGNet", "VGG11", "VGG13", "VGG16", "VGG19"]
 
-train_parameters = {
-    "input_size": [3, 224, 224],
-    "input_mean": [0.485, 0.456, 0.406],
-    "input_std": [0.229, 0.224, 0.225],
-    "learning_strategy": {
-        "name": "piecewise_decay",
-        "batch_size": 256,
-        "epochs": [30, 60, 90],
-        "steps": [0.1, 0.01, 0.001, 0.0001]
-    }
-}
-
 
 class VGGNet():
     def __init__(self, layers=16):
-        self.params = train_parameters
         self.layers = layers
 
     def net(self, input, class_dim=1000):
@@ -93,8 +80,7 @@ class VGGNet():
                 act='relu',
                 param_attr=fluid.param_attr.ParamAttr(
                     name=name + str(i + 1) + "_weights"),
-                bias_attr=fluid.param_attr.ParamAttr(
-                    name=name + str(i + 1) + "_offset"))
+                bias_attr=False)
         return fluid.layers.pool2d(
             input=conv, pool_size=2, pool_type='max', pool_stride=2)
 

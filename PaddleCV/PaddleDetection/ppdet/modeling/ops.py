@@ -15,13 +15,99 @@
 from numbers import Integral
 
 from paddle import fluid
+from paddle.fluid.param_attr import ParamAttr
+from paddle.fluid.regularizer import L2Decay
 from ppdet.core.workspace import register, serializable
 
 __all__ = [
     'AnchorGenerator', 'RPNTargetAssign', 'GenerateProposals', 'MultiClassNMS',
     'BBoxAssigner', 'MaskAssigner', 'RoIAlign', 'RoIPool', 'MultiBoxHead',
-    'SSDOutputDecoder', 'SSDMetric', 'RetinaTargetAssign', 'RetinaOutputDecoder'
+    'SSDOutputDecoder', 'RetinaTargetAssign', 'RetinaOutputDecoder', 'ConvNorm'
 ]
+
+
+def ConvNorm(input,
+             num_filters,
+             filter_size,
+             stride=1,
+             groups=1,
+             norm_decay=0.,
+             norm_type='affine_channel',
+             norm_groups=32,
+             dilation=1,
+             lr_scale=1,
+             freeze_norm=False,
+             act=None,
+             norm_name=None,
+             initializer=None,
+             name=None):
+    fan = num_filters
+    conv = fluid.layers.conv2d(
+        input=input,
+        num_filters=num_filters,
+        filter_size=filter_size,
+        stride=stride,
+        padding=((filter_size - 1) // 2) * dilation,
+        dilation=dilation,
+        groups=groups,
+        act=None,
+        param_attr=ParamAttr(
+            name=name + "_weights",
+            initializer=initializer,
+            learning_rate=lr_scale),
+        bias_attr=False,
+        name=name + '.conv2d.output.1')
+
+    norm_lr = 0. if freeze_norm else 1.
+    pattr = ParamAttr(
+        name=norm_name + '_scale',
+        learning_rate=norm_lr * lr_scale,
+        regularizer=L2Decay(norm_decay))
+    battr = ParamAttr(
+        name=norm_name + '_offset',
+        learning_rate=norm_lr * lr_scale,
+        regularizer=L2Decay(norm_decay))
+
+    if norm_type in ['bn', 'sync_bn']:
+        global_stats = True if freeze_norm else False
+        out = fluid.layers.batch_norm(
+            input=conv,
+            act=act,
+            name=norm_name + '.output.1',
+            param_attr=pattr,
+            bias_attr=battr,
+            moving_mean_name=norm_name + '_mean',
+            moving_variance_name=norm_name + '_variance',
+            use_global_stats=global_stats)
+        scale = fluid.framework._get_var(pattr.name)
+        bias = fluid.framework._get_var(battr.name)
+    elif norm_type == 'gn':
+        out = fluid.layers.group_norm(
+            input=conv,
+            act=act,
+            name=norm_name + '.output.1',
+            groups=norm_groups,
+            param_attr=pattr,
+            bias_attr=battr)
+        scale = fluid.framework._get_var(pattr.name)
+        bias = fluid.framework._get_var(battr.name)
+    elif norm_type == 'affine_channel':
+        scale = fluid.layers.create_parameter(
+            shape=[conv.shape[1]],
+            dtype=conv.dtype,
+            attr=pattr,
+            default_initializer=fluid.initializer.Constant(1.))
+        bias = fluid.layers.create_parameter(
+            shape=[conv.shape[1]],
+            dtype=conv.dtype,
+            attr=battr,
+            default_initializer=fluid.initializer.Constant(0.))
+        out = fluid.layers.affine_channel(
+            x=conv, scale=scale, bias=bias, act=act)
+    if freeze_norm:
+        scale.stop_gradient = True
+        bias.stop_gradient = True
+    return out
 
 
 @register
@@ -183,22 +269,30 @@ class MultiBoxHead(object):
     def __init__(self,
                  min_ratio=20,
                  max_ratio=90,
+                 base_size=300,
                  min_sizes=[60.0, 105.0, 150.0, 195.0, 240.0, 285.0],
                  max_sizes=[[], 150.0, 195.0, 240.0, 285.0, 300.0],
                  aspect_ratios=[[2.], [2., 3.], [2., 3.], [2., 3.], [2., 3.],
                                 [2., 3.]],
-                 base_size=300,
+                 steps=None,
                  offset=0.5,
-                 flip=True):
+                 flip=True,
+                 min_max_aspect_ratios_order=False,
+                 kernel_size=1,
+                 pad=0):
         super(MultiBoxHead, self).__init__()
         self.min_ratio = min_ratio
         self.max_ratio = max_ratio
+        self.base_size = base_size
         self.min_sizes = min_sizes
         self.max_sizes = max_sizes
         self.aspect_ratios = aspect_ratios
-        self.base_size = base_size
+        self.steps = steps
         self.offset = offset
         self.flip = flip
+        self.min_max_aspect_ratios_order = min_max_aspect_ratios_order
+        self.kernel_size = kernel_size
+        self.pad = pad
 
 
 @register
@@ -221,22 +315,6 @@ class SSDOutputDecoder(object):
         self.keep_top_k = keep_top_k
         self.score_threshold = score_threshold
         self.nms_eta = nms_eta
-
-
-@register
-@serializable
-class SSDMetric(object):
-    __op__ = fluid.metrics.DetectionMAP
-    __append_doc__ = True
-
-    def __init__(self,
-                 overlap_threshold=0.5,
-                 evaluate_difficult=False,
-                 ap_version='integral'):
-        super(SSDMetric, self).__init__()
-        self.overlap_threshold = overlap_threshold
-        self.evaluate_difficult = evaluate_difficult
-        self.ap_version = ap_version
 
 
 @register
