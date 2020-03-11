@@ -310,12 +310,11 @@ def train_ptb_lm():
         last_cell = None
 
         data_path = args.data_path
-        print("begin to load data")
-        ptb_data = reader.get_ptb_data(data_path)
-        print("finished load data")
-        train_data, valid_data, test_data = ptb_data
+        print("begin to load vocab dict")
+        vocab_dict = reader.get_ptb_vocab_dict(data_path)
+        print("finished load vocab dict")
 
-        batch_len = len(train_data) // batch_size
+        batch_len = reader.get_size_of_ptb_train_data(vocab_dict, data_path) // batch_size
         total_batch_size = (batch_len - 1) // num_steps
         log_interval = 200
 
@@ -330,7 +329,7 @@ def train_ptb_lm():
         sgd = SGDOptimizer(learning_rate=fluid.layers.piecewise_decay(
             boundaries=bd, values=lr_arr), parameter_list=ptb_model.parameters())
 
-        def eval(model, data):
+        def eval(model, data_iter):
             print("begin to eval")
             total_loss = 0.0
             iters = 0.0
@@ -340,13 +339,8 @@ def train_ptb_lm():
                 (num_layers, batch_size, hidden_size), dtype='float32')
 
             model.eval()
-            train_data_iter = reader.get_data_iter(data, batch_size, num_steps)
-            for batch_id, batch in enumerate(train_data_iter):
-                x_data, y_data = batch
-                x_data = x_data.reshape((-1, num_steps, 1))
-                y_data = y_data.reshape((-1, num_steps, 1))
-                x = to_variable(x_data)
-                y = to_variable(y_data)
+            for batch_id, batch in enumerate(data_iter):
+                x, y = batch
                 init_hidden = to_variable(init_hidden_data)
                 init_cell = to_variable(init_cell_data)
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
@@ -367,6 +361,20 @@ def train_ptb_lm():
                 print("kpis\ttest_ppl\t%0.3f" % ppl[0])
 
         grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(max_grad_norm)
+
+        train_data_iter = fluid.io.DataLoader.from_generator(capacity=32, use_double_buffer=True, iterable=True, return_list=True, use_multiprocess=True)
+        valid_data_iter = fluid.io.DataLoader.from_generator(capacity=32, use_double_buffer=True, iterable=True, return_list=True, use_multiprocess=True)
+        test_data_iter = fluid.io.DataLoader.from_generator(capacity=32, use_double_buffer=True, iterable=True, return_list=True, use_multiprocess=True)
+
+        train_reader = reader.get_reader("train", batch_size, num_steps, data_path, vocab_dict)
+        train_data_iter.set_batch_generator(train_reader, place)
+
+        valid_reader = reader.get_reader("valid", batch_size, num_steps, data_path, vocab_dict)
+        valid_data_iter.set_batch_generator(valid_reader, place)
+
+        test_reader = reader.get_reader("test", batch_size, num_steps, data_path, vocab_dict)
+        test_data_iter.set_batch_generator(test_reader, place)
+
         for epoch_id in range(max_epoch):
             ptb_model.train()
             total_loss = 0.0
@@ -376,19 +384,11 @@ def train_ptb_lm():
             init_cell_data = np.zeros(
                 (num_layers, batch_size, hidden_size), dtype='float32')
 
-            train_data_iter = reader.get_data_iter(train_data, batch_size,
-                                                   num_steps)
             init_hidden = to_variable(init_hidden_data)
             init_cell = to_variable(init_cell_data)
             start_time = time.time()
             for batch_id, batch in enumerate(train_data_iter):
-                x_data, y_data = batch
-
-                x_data = x_data.reshape((-1, num_steps, 1))
-                y_data = y_data.reshape((-1, num_steps, 1))
-
-                x = to_variable(x_data)
-                y = to_variable(y_data)
+                x, y = batch
 
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
                                                             init_cell)
@@ -428,8 +428,8 @@ def train_ptb_lm():
             fluid.save_dygraph(ptb_model.state_dict(), save_model_dir)
             print("Saved model to: %s.\n" % save_model_dir)
 
-            eval(ptb_model, valid_data)
+            eval(ptb_model, valid_data_iter)
 
-        eval(ptb_model, test_data)
+        eval(ptb_model, test_data_iter)
 
 train_ptb_lm()

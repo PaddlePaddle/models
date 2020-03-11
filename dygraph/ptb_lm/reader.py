@@ -19,6 +19,7 @@ import collections
 import os
 import sys
 import numpy as np
+import paddle.fluid as fluid
 
 EOS = "</eos>"
 
@@ -67,19 +68,66 @@ def get_ptb_data(data_path=None):
 
     return train_ids, valid_ids, test_ids
 
+def get_ptb_vocab_dict(data_path=None):
+    train_file = os.path.join(data_path, "ptb.train.txt")
+    vocab_dict = build_vocab(train_file)
+    return vocab_dict
 
-def get_data_iter(raw_data, batch_size, num_steps):
-    data_len = len(raw_data)
-    raw_data = np.asarray(raw_data, dtype="int64")
+def get_size_of_ptb_train_data(vocab_dict, data_path=None):
+    train_file = os.path.join(data_path, "ptb.train.txt")
+    train_ids = file_to_ids(train_file, vocab_dict)
+    return len(train_ids) 
 
-    batch_len = data_len // batch_size
+def get_ptb_train_data(vocab_dict, data_path=None):
+    train_file = os.path.join(data_path, "ptb.train.txt")
+    train_ids = file_to_ids(train_file, vocab_dict)
+    return train_ids
 
-    data = raw_data[0:batch_size * batch_len].reshape((batch_size, batch_len))
+def get_ptb_valid_data(vocab_dict, data_path=None):
+    valid_file = os.path.join(data_path, "ptb.valid.txt")
+    valid_ids = file_to_ids(valid_file, vocab_dict)
+    return valid_ids
 
-    epoch_size = (batch_len - 1) // num_steps
-    for i in range(epoch_size):
-        start = i * num_steps
-        x = np.copy(data[:, i * num_steps:(i + 1) * num_steps])
-        y = np.copy(data[:, i * num_steps + 1:(i + 1) * num_steps + 1])
+def get_ptb_test_data(vocab_dict, data_path=None):
+    test_file = os.path.join(data_path, "ptb.test.txt")
+    test_ids = file_to_ids(test_file, vocab_dict)
+    return test_ids    
 
-        yield (x, y)
+def mapper(sample):
+    return sample
+
+def get_reader(data_type, batch_size, num_steps, data_path, vocab_dict):
+    def get_data_reader():
+        def get_data_iter():
+            if data_type == "train":
+                raw_data = get_ptb_train_data(vocab_dict, data_path)
+            elif data_type == "valid":
+                raw_data = get_ptb_valid_data(vocab_dict, data_path)
+            else:
+                raw_data = get_ptb_test_data(vocab_dict, data_path)
+
+            data_len = len(raw_data)
+            raw_data = np.asarray(raw_data, dtype="int64")
+
+            batch_len = data_len // batch_size
+
+            data = raw_data[0:batch_size * batch_len].reshape((batch_size, batch_len))
+
+            epoch_size = (batch_len - 1) // num_steps
+            for i in range(epoch_size):
+                start = i * num_steps
+                x = np.copy(data[:, i * num_steps:(i + 1) * num_steps])
+                y = np.copy(data[:, i * num_steps + 1:(i + 1) * num_steps + 1])
+
+                x = x.reshape((-1, num_steps, 1))
+                y = y.reshape((-1, num_steps, 1))
+
+                yield (x, y)
+
+        return get_data_iter
+
+    data_reader = get_data_reader()
+    
+    return data_reader
+
+
