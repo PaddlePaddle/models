@@ -13,6 +13,7 @@ python download.py
 
 ## 环境
 - **要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
+- **目前训练脚本为dataset模式读取数据暂不支持Windows**
 
 ## 单机训练
 ```bash

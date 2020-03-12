@@ -16,6 +16,7 @@ This model implementation reproduces the result of the paper "DeepFM: A Factoriz
 
 ## Environment
 - **Now all models in PaddleRec require PaddlePaddle version 1.6 or higher, or suitable develop version.**
+- **目前训练脚本为dataset模式读取数据暂不支持Windows**
 
 ## Download and preprocess data
 
