@@ -184,12 +184,11 @@ def train():
     exe.run(startup)
 
     if args.resume:
-        assert os.path.exists("{}.pdparams".format(args.resume)), \
-                "Given resume weight {}.pdparams not exist.".format(args.resume)
-        assert os.path.exists("{}.pdopt".format(args.resume)), \
-                "Given resume optimizer state {}.pdopt not exist.".format(args.resume)
-        assert os.path.exists("{}.pdmodel".format(args.resume)), \
-                "Given resume model parameter list {}.pdmodel not exist.".format(args.resume)
+        if not os.path.isdir(args.resume):
+            assert os.path.exists("{}.pdparams".format(args.resume)), \
+                    "Given resume weight {}.pdparams not exist.".format(args.resume)
+            assert os.path.exists("{}.pdopt".format(args.resume)), \
+                    "Given resume optimizer state {}.pdopt not exist.".format(args.resume)
         fluid.load(train_prog, args.resume, exe)
 
     build_strategy = fluid.BuildStrategy()

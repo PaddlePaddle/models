@@ -165,9 +165,10 @@ def eval():
     exe.run(startup)
 
     # load weights 
-    assert os.path.exists("{}.pdparams".format(args.weights)), \
-            "Given resume weight {}.pdparams not exist.".format(args.weights)
-    fluid.load(eval_prog, args.weights)
+    if not os.path.isdir(args.weights):
+        assert os.path.exists("{}.pdparams".format(args.weights)), \
+                "Given resume weight {}.pdparams not exist.".format(args.weights)
+    fluid.load(eval_prog, args.weights, exe)
 
     kitti_feature_dir = os.path.join(args.output_dir, 'features')
     kitti_output_dir = os.path.join(args.output_dir, 'detections', 'data')
