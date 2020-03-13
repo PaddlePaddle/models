@@ -92,8 +92,8 @@ tar -xf vgg_ilsvrc_16_fc_reduced.tar.gz && rm -f vgg_ilsvrc_16_fc_reduced.tar.gz
 ```bash
 python -u train.py --batch_size=16 --pretrained_model=vgg_ilsvrc_16_fc_reduced
 ```
-  - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量，`batch_size`默认设置为12或16。
-  - **注意**: 在**Windows**机器上训练，需要设置 `--use_multiprocess=False`，因为在Windows上使用Python多进程加速训练时有错误。
+  - 可以通过设置 `export CUDA_VISIBLE_DEVICES=0,1,2,3` 指定想要使用的GPU数量，`batch_size`默认设置为12或16，如果GPU显存较小，请适当调低`batch_size`。
+  - **注意**: 在**Windows**机器上训练或者训练环境内存较小时，需要设置 `--use_multiprocess=False`，因为在Windows上使用Python多进程加速训练时有错误，内存不足时程序会崩溃。
   - 更多的可选参数见:
     ```bash
     python train.py --help

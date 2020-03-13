@@ -67,7 +67,7 @@ def infer(args, config):
         image_path = args.image_path
         image = Image.open(image_path)
         if image.mode == 'L':
-            image = img.convert('RGB')
+            image = image.convert('RGB')
         shrink, max_shrink = get_shrink(image.size[1], image.size[0])
 
         det0 = detect_face(image, shrink)
