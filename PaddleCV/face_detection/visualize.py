@@ -28,7 +28,7 @@ def draw_bbox(image, bbox):
         bbox (np.array|list|tuple): (xmin, ymin, xmax, ymax).
     """
     draw = ImageDraw.Draw(image)
-    xmin, ymin, xmax, ymax = box
+    xmin, ymin, xmax, ymax = bbox
     (left, right, top, bottom) = (xmin, xmax, ymin, ymax)
     draw.line(
         [(left, top), (left, bottom), (right, bottom), (right, top),
