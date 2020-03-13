@@ -131,7 +131,7 @@ def parse_args():
     add_arg('use_mixup',                bool,   False,                  "Whether to use mixup")
     add_arg('mixup_alpha',              float,  0.2,                    "The value of mixup_alpha")
     add_arg('reader_thread',            int,    8,                      "The number of multi thread reader")
-    add_arg('reader_buf_size',          int,    2048,                   "The buf size of multi thread reader")
+    add_arg('reader_buf_size',          int,    8,                      "The buf size of multi thread reader")
     add_arg('interpolation',            int,    None,                   "The interpolation mode")
     add_arg('use_aa',                   bool,   False,                  "Whether to use auto augment")
     parser.add_argument('--image_mean', nargs='+', type=float, default=[0.485, 0.456, 0.406], help="The mean of input image data")

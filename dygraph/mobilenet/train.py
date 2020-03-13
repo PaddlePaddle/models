@@ -42,10 +42,11 @@ def eval(net, test_data_loader, eop):
     total_acc5 = 0.0
     total_sample = 0
     t_last = 0
+    place_num = paddle.fluid.core.get_cuda_device_count() if args.use_gpu else int(os.environ.get('CPU_NUM', 1))
     for img, label in test_data_loader():
         t1 = time.time()
         label = to_variable(label.numpy().astype('int64').reshape(
-            int(args.batch_size // paddle.fluid.core.get_cuda_device_count()),
+            int(args.batch_size // place_num),
             1))
         out = net(img)
         softmax_out = fluid.layers.softmax(out, use_cudnn=False)
@@ -77,6 +78,7 @@ def train_mobilenet():
         place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
     with fluid.dygraph.guard(place):
         # 1. init net and optimizer
+        place_num = paddle.fluid.core.get_cuda_device_count() if args.use_gpu else int(os.environ.get('CPU_NUM', 1))
         if args.ce:
             print("ce mode")
             seed = 33
@@ -118,7 +120,7 @@ def train_mobilenet():
         test_data_loader, test_data = utility.create_data_loader(
             is_train=False, args=args)
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
-        imagenet_reader = reader.ImageNetReader(0)
+        imagenet_reader = reader.ImageNetReader(seed=0,place_num=place_num)
         train_reader = imagenet_reader.train(settings=args)
         test_reader = imagenet_reader.val(settings=args)
         train_data_loader.set_sample_list_generator(train_reader, place)
@@ -140,8 +142,8 @@ def train_mobilenet():
             for img, label in train_data_loader():
                 t1 = time.time()
                 label = to_variable(label.numpy().astype('int64').reshape(
-                    int(args.batch_size //
-                        paddle.fluid.core.get_cuda_device_count()), 1))
+                    int(args.batch_size // place_num), 
+                    1))
                 t_start = time.time()
 
                 # 4.1.1 call net()
