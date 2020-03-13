@@ -108,8 +108,9 @@ def eval():
     exe = fluid.Executor(place)
     exe.run(startup)
 
-    assert os.path.exists("{}.pdparams".format(args.weights)), \
-            "Given resume weight {}.pdparams not exist.".format(args.weights)
+    if not os.path.isdir(args.weights):
+        assert os.path.exists("{}.pdparams".format(args.weights)), \
+                "Given resume weight {}.pdparams not exist.".format(args.weights)
     fluid.load(eval_prog, args.weights, exe)
 
     eval_compile_prog = fluid.compiler.CompiledProgram(eval_prog)
