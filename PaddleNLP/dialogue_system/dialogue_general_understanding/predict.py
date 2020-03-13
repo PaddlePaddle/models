@@ -71,7 +71,7 @@ def do_predict(args):
                 name='sent_ids', shape=[-1, args.max_seq_len], dtype='int64')
             input_mask = fluid.data(
                 name='input_mask',
-                shape=[-1, args.max_seq_len],
+                shape=[-1, args.max_seq_len, 1],
                 dtype='float32')
             if args.task_name == 'atis_slot':
                 labels = fluid.data(
