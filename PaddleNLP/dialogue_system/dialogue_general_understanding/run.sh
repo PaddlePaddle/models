@@ -3,7 +3,7 @@
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 if  [ ! "$CUDA_VISIBLE_DEVICES" ]
 then
     export CPU_NUM=1
@@ -21,7 +21,7 @@ SAVE_MODEL_PATH="./data/saved_models/${TASK_NAME}"
 TRAIN_MODEL_PATH="./data/saved_models/trained_models"
 OUTPUT_PATH="./data/output"
 INFERENCE_MODEL="data/inference_models"
-PYTHON_PATH="python"
+PYTHON_PATH="python3"
 
 if [ -f ${SAVE_MODEL_PATH} ]; then
     rm ${SAVE_MODEL_PATH}
@@ -37,8 +37,7 @@ then
   save_steps=1000
   max_seq_len=210
   print_steps=1000
-  batch_size=6720
-  in_tokens=true
+  batch_size=32
   epoch=2
   learning_rate=2e-5
 elif [ "${TASK_NAME}" = "swda" ]
@@ -46,8 +45,7 @@ then
   save_steps=500
   max_seq_len=128
   print_steps=200
-  batch_size=6720
-  in_tokens=true
+  batch_size=32
   epoch=3
   learning_rate=2e-5
 elif [ "${TASK_NAME}" = "mrda" ]
@@ -55,8 +53,7 @@ then
   save_steps=500
   max_seq_len=128
   print_steps=200
-  batch_size=4096
-  in_tokens=true
+  batch_size=32
   epoch=7
   learning_rate=2e-5
 elif [ "${TASK_NAME}" = "atis_intent" ]
@@ -64,8 +61,7 @@ then
   save_steps=100
   max_seq_len=128
   print_steps=10
-  batch_size=4096
-  in_tokens=true
+  batch_size=32
   epoch=20
   learning_rate=2e-5
   INPUT_PATH="./data/input/data/atis/${TASK_NAME}"
@@ -75,7 +71,6 @@ then
   max_seq_len=128
   print_steps=10
   batch_size=32
-  in_tokens=False
   epoch=50
   learning_rate=2e-5
   INPUT_PATH="./data/input/data/atis/${TASK_NAME}"
@@ -83,21 +78,22 @@ elif [ "${TASK_NAME}" = "dstc2" ]
 then
   save_steps=400
   print_steps=20
-  batch_size=8192
-  in_tokens=true
   epoch=40
   learning_rate=5e-5
   INPUT_PATH="./data/input/data/dstc2/${TASK_NAME}"
   if [ "${TASK_TYPE}" = "train" ]
   then
     max_seq_len=256
+    batch_size=32
   else
     max_seq_len=512
+    batch_size=16
   fi
 else
   echo "not support ${TASK_NAME} dataset.."
   exit 255
 fi
+
 
 #training
 function train()
@@ -106,7 +102,6 @@ function train()
        --task_name=${TASK_NAME} \
        --use_cuda=$1 \
        --do_train=true \
-       --in_tokens=${in_tokens} \
        --epoch=${epoch} \
        --batch_size=${batch_size} \
        --do_lower_case=true \
@@ -130,7 +125,6 @@ function predict()
        --task_name=${TASK_NAME} \
        --use_cuda=$1 \
        --do_predict=true \
-       --in_tokens=${in_tokens} \
        --batch_size=${batch_size} \
        --data_dir=${INPUT_PATH} \
        --do_lower_case=true \

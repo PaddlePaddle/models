@@ -67,7 +67,7 @@ def do_train(args):
                 name='sent_ids', shape=[-1, args.max_seq_len], dtype='int64')
             input_mask = fluid.data(
                 name='input_mask',
-                shape=[-1, args.max_seq_len],
+                shape=[-1, args.max_seq_len, 1],
                 dtype='float32')
             if args.task_name == 'atis_slot':
                 labels = fluid.data(
@@ -80,8 +80,9 @@ def do_train(args):
 
             input_inst = [src_ids, pos_ids, sent_ids, input_mask, labels]
             input_field = InputField(input_inst)
-            data_reader = fluid.io.PyReader(
-                feed_list=input_inst, capacity=4, iterable=False)
+            
+            data_reader = fluid.io.DataLoader.from_generator(feed_list=input_inst, capacity=4, iterable=False)
+
             processor = processors[task_name](data_dir=args.data_dir,
                                               vocab_path=args.vocab_path,
                                               max_seq_len=args.max_seq_len,
@@ -108,10 +109,8 @@ def do_train(args):
                 accuracy.persistable = True
             num_seqs.persistable = True
 
-            if args.use_cuda:
-                dev_count = fluid.core.get_cuda_device_count()
-            else:
-                dev_count = int(os.environ.get('CPU_NUM', 1))
+            places = fluid.cuda_places() if args.use_cuda else fluid.cpu_places()
+            dev_count = len(places)
 
             batch_generator = processor.data_generator(
                 batch_size=args.batch_size, phase='train', shuffle=True)
@@ -140,7 +139,7 @@ def do_train(args):
                 use_fp16=False,
                 loss_scaling=args.loss_scaling)
 
-    data_reader.decorate_batch_generator(batch_generator)
+    data_reader.set_batch_generator(batch_generator, places=places)
 
     if args.use_cuda:
         place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
