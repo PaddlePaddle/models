@@ -1,5 +1,0 @@
-train_file: "data/am4mrqa/train.txt"
-mix_ratio: 0.8
-batch_size: 4
-in_tokens: False
-generate_neg_sample: False
