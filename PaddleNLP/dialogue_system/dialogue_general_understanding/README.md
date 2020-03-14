@@ -145,7 +145,7 @@ batch_size: 一个batch内输入的样本个数
 do_lower_case: 是否进行大小写转换
 random_seed: 随机种子设置
 use_cuda: 是否使用cuda, 如果是gpu训练时，设置成true
-in_tokens: 是否采用in_tokens模式来计算batch_siz数量, 如果in_tokens为false, 则batch_size等于真实设置的batch_size大小, 如果in_tokens为true, 则batch_size=batch_size*max_seq_len，即按照token计数
+in_tokens: false
 do_save_inference_model: 是否保存inference model
 encable_ce: 是否开启ce
 ```
@@ -213,9 +213,8 @@ python -u main.py \
        --task_name=${TASK_NAME} \
        --use_cuda=${use_cuda} \
        --do_train=true \
-       --in_tokens=true \
        --epoch=20 \
-       --batch_size=4096 \
+       --batch_size=32 \
        --do_lower_case=true \
        --data_dir="./data/input/data/atis/${TASK_NAME}" \
        --bert_config_path="${BERT_BASE_PATH}/bert_config.json" \
@@ -236,7 +235,7 @@ python -u main.py \
 
 #### windows环境下
 ```
-python -u main.py --task_name=atis_intent --use_cuda=false --do_train=true --in_tokens=true --epoch=20 --batch_size=4096 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --init_from_pretrain_model=data\pretrain_model\uncased_L-12_H-768_A-12\params --save_model_path=data\saved_models\atis_intent --save_param=params --save_steps=100 --learning_rate=2e-5 --weight_decay=0.01 --max_seq_len=128 --print_steps=10
+python -u main.py --task_name=atis_intent --use_cuda=false --do_train=true --epoch=20 --batch_size=32 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --init_from_pretrain_model=data\pretrain_model\uncased_L-12_H-768_A-12\params --save_model_path=data\saved_models\atis_intent --save_param=params --save_steps=100 --learning_rate=2e-5 --weight_decay=0.01 --max_seq_len=128 --print_steps=10
 ```
 
 ### 模型预测
@@ -292,8 +291,7 @@ python -u main.py \
        --task_name=${TASK_NAME} \
        --use_cuda=${use_cuda} \
        --do_predict=true \
-       --in_tokens=true \
-       --batch_size=4096 \
+       --batch_size=32 \
        --do_lower_case=true \
        --data_dir="./data/input/data/atis/${TASK_NAME}" \
        --init_from_params="./data/saved_models/trained_models/${TASK_NAME}/params" \
@@ -307,7 +305,7 @@ python -u main.py \
 
 #### windows环境下
 ```
-python -u main.py --task_name=atis_intent --use_cuda=false --do_predict=true --in_tokens=true --batch_size=4096 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --init_from_params=data\saved_models\trained_models\atis_intent\params --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --output_prediction_file=data\output\pred_atis_intent --max_seq_len=128
+python -u main.py --task_name=atis_intent --use_cuda=false --do_predict=true --batch_size=32 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --init_from_params=data\saved_models\trained_models\atis_intent\params --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --output_prediction_file=data\output\pred_atis_intent --max_seq_len=128
 ```
 
 ### 模型评估
