@@ -392,8 +392,8 @@ def train_ptb_lm():
 
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
                                                             init_cell)
-                init_hidden = last_hidden
-                init_cell = last_cell
+                init_hidden = last_hidden.detach()
+                init_cell = last_cell.detach()
                 out_loss = dy_loss.numpy()
 
                 dy_loss.backward()
