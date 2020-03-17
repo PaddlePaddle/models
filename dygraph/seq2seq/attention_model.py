@@ -169,7 +169,7 @@ class AttentionModel(fluid.dygraph.Layer):
         memory = self.attn_fc(enc_output)
         attn = fluid.layers.matmul(query, memory, transpose_y=True)
 
-        if mask:
+        if mask is not None:
             attn = fluid.layers.transpose(attn, [1, 0, 2])
             attn = fluid.layers.elementwise_add(attn, mask * 1000000000, -1)
             attn = fluid.layers.transpose(attn, [1, 0, 2])
