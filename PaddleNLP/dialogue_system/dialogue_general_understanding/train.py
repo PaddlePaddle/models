@@ -141,12 +141,7 @@ def do_train(args):
 
     data_reader.set_batch_generator(batch_generator, places=places)
 
-    if args.use_cuda:
-        place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
-    else:
-        place = fluid.CPUPlace()
-
-    exe = fluid.Executor(place)
+    exe = fluid.Executor(places[0])
     exe.run(startup_prog)
 
     assert (args.init_from_checkpoint == "") or (

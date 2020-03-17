@@ -61,9 +61,9 @@ def do_save_inference_model(args):
             logits = create_net(
                 is_training=False, model_input=input_field, args=args)
 
-    if args.use_cuda:
-        place = fluid.CUDAPlace(0)
-    else:
+    if args.use_cuda: 
+        place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
+    else: 
         place = fluid.CPUPlace()
 
     exe = fluid.Executor(place)
