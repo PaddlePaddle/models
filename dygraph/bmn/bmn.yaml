@@ -6,7 +6,7 @@ MODEL:
   prop_boundary_ratio: 0.5
   num_sample: 32
   num_sample_perbin: 3
-  anno_file: "../../PaddleCV/PaddleVideo/data/dataset/bmn/activitynet_1.3_annotations.json"
+  anno_file: "../../PaddleCV/video/data/dataset/bmn/activitynet_1.3_annotations.json"
   feat_path: './fix_feat_100'
 
 TRAIN:

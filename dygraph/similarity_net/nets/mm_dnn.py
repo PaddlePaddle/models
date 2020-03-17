@@ -42,7 +42,7 @@ class MMDNN(Layer):
         self.dpool_size1 = int(config['net']['dpool_size_left'])
         self.dpool_size2 = int(config['net']['dpool_size_right'])
         self.hidden_size = int(config['net']['hidden_size'])
-        self.seq_len = int(conf_dict["seq_len"])
+        self.seq_len = int(config["seq_len"])
         self.seq_len1 = self.seq_len
         #int(config['max_len_left'])
         self.seq_len2 = self.seq_len 
@@ -157,7 +157,7 @@ class MMDNN(Layer):
         conv = self.conv(emb_expand)
         if mask is not None:
             cross_mask = fluid.layers.stack(x=[mask] * self.kernel_size, axis=0)
-            cross_mask = fluid.layers.stack(x=[cross] * conv.shape[1], axis=1)
+            cross_mask = fluid.layers.stack(x=[cross_mask] * conv.shape[0], axis=0)
             conv = cross_mask * conv + (1 - cross_mask) * (-2**self.seq_len + 1)
 
         pool = self.pool_layer(conv)

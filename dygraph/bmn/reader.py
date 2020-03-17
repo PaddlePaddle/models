@@ -48,7 +48,7 @@ class BMNReader():
 
     def get_dataset_dict(self):
         assert (os.path.exists(self.feat_path)), "Input feature path not exists"
-        assert (os.listdir(self.feat_path)), "Input feature file not exists"
+        assert (os.listdir(self.feat_path)), "No feature file  in feature path"
         self.video_dict = {}
         if self.mode == "infer":
             annos = json.load(open(self.file_list))
@@ -64,6 +64,10 @@ class BMNReader():
         self.video_list.sort()
         print("%s subset video numbers: %d" %
               (self.subset, len(self.video_list)))
+        video_name_set = set(
+            [video_name + '.npy' for video_name in self.video_list])
+        assert (video_name_set.intersection(set(os.listdir(self.feat_path))) ==
+                video_name_set), "Input feature not exists in feature path"
 
     def get_match_map(self):
         match_map = []
