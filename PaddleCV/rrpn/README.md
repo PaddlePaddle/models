@@ -31,7 +31,7 @@ RRPN是在Faster RCNN基础上拓展出的两阶段目标检测器，可用于�
 
     进入 `models/ext_op/src` 目录，执行编译脚本
     ```
-    cd ext_op/src
+    cd models/ext_op/src
     sh make.sh  ${cuda_path} ${cudnn_path} ${nccl_path}
     '''
     其中${cuda_path}、$cudnn_path}和{nccl_path}分别为cuda、cudnn、nccl的安装路径，需通过命令行进行指定
