@@ -29,7 +29,7 @@ RRPN是在Faster RCNN基础上拓展出的两阶段目标检测器，可用于�
 
 自定义OP编译方式如下：
 
-    进入 `ext_op/src` 目录，执行编译脚本
+    进入 `models/ext_op/src` 目录，执行编译脚本
     ```
     cd ext_op/src
     sh make.sh  ${cuda_path} ${cudnn_path} ${nccl_path}
