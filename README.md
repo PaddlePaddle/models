@@ -125,24 +125,34 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [ResNet50使用eml微调](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/metric_learning) | 在 arcmargin loss 基础上，使用 eml loss 微调的特征模型       | Stanford   Online Product(SOP) | 80.11%                                      |
 | [ResNet50使用npairs微调](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/metric_learning) | 在 arcmargin loss基础上，使用npairs loss 微调的特征模型      | Stanford   Online Product(SOP) | 79.81%                                      |
 
-### 视频分类和动作定位
 
-视频分类和动作定位是视频理解任务的基础。视频数据包含语音、图像等多种信息，因此理解视频任务不仅需要处理语音和图像，还需要提取视频帧时间序列中的上下文信息。视频分类模型提供了提取全局时序特征的方法，主要方式有卷积神经网络 (C3D, I3D, C2D等)，神经网络和传统图像算法结合 (VLAD 等)，循环神经网络等建模方法。视频动作定位模型需要同时识别视频动作的类别和起止时间点，通常采用类似于图像目标检测中的算法在时间维度上进行建模。
+视频
+-------
+
+PaddleCV全面开源了视频分类、动作定位 和 目标跟踪等视频任务的领先实用算法。视频数据包含语音、图像等多种信息，因此理解视频任务不仅需要处理语音和图像，还需要提取视频帧时间序列中的上下文信息。
+视频分类模型提供了提取全局时序特征的方法，主要方式有卷积神经网络 (C3D, I3D, C2D等)，神经网络和传统图像算法结合 (VLAD 等)，循环神经网络等建模方法。
+视频动作定位模型需要同时识别视频动作的类别和起止时间点，通常采用类似于图像目标检测中的算法在时间维度上进行建模。
+视频摘要生成模型是对视频画面信息进行提取，并产生一段文字描述。视频查找模型则是基于一段文字描述，查找到视频中对应场景片段的起止时间点。这两类模型需要同时对视频图像和文本信息进行建模。
+目标跟踪任务是在给定某视频序列中找到目标物体，并将不同帧中的物体一一对应，然后给出不同物体的运动轨迹，目标跟踪的主要应用在视频监控、人机交互等系统中。跟踪又分为单目标跟踪和多目标跟踪，当前在飞桨模型库中增加了单目标跟踪的算法。主要包括Siam系列算法和ATOM算法。
 
 | 模型名称                                                     | 模型简介                                                     | 数据集                     | 评估指标    |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | ----------- |
-| [TSN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | ECCV'16 提出的基于 2D-CNN 经典解决方案 | Kinetics-400               | Top-1 = 67% |
-| [Non-Local](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | 视频非局部关联建模模型 | Kinetics-400               | Top-1 = 74% |
-| [StNet](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | AAAI'19 提出的视频联合时空建模方法 | Kinetics-400               | Top-1 = 69% |
-| [TSM](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | 基于时序移位的简单高效视频时空建模方法 | Kinetics-400               | Top-1 = 70% |
-| [Attention   LSTM](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | 常用模型，速度快精度高 | Youtube-8M                 | GAP   = 86% |
-| [Attention   Cluster](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | CVPR'18 提出的视频多模态特征注意力聚簇融合方法 | Youtube-8M                 | GAP   = 84% |
-| [NeXtVlad](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | 2nd-Youtube-8M 比赛第 3 名的模型 | Youtube-8M                 | GAP   = 87% |
-| [C-TCN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | 2018 年 ActivityNet 夺冠方案 | ActivityNet1.3 | MAP=31%    |
-| [BSN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | 为视频动作定位问题提供高效的 proposal 生成方法 | ActivityNet1.3 | AUC=66.64%    |
-| [BMN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video) | 2019 年 ActivityNet 夺冠方案 | ActivityNet1.3 | AUC=67.19%    |
-| [ETS](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video/models/ets) | 视频摘要生成领域的基准模型 | ActivityNet Captions | METEOR：10.0 |
-| [TALL](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/video/models/tall) | 视频Grounding方向的BaseLine模型 | TACoS | R1@IOU5=0.13 |
+| [TSN](./PaddleCV/video) | ECCV'16 提出的基于 2D-CNN 经典解决方案 | Kinetics-400               | Top-1 = 67% |
+| [Non-Local](./PaddleCV/video) | 视频非局部关联建模模型 | Kinetics-400               | Top-1 = 74% |
+| [StNet](./PaddleCV/video) | AAAI'19 提出的视频联合时空建模方法 | Kinetics-400               | Top-1 = 69% |
+| [TSM](./PaddleCV/video) | 基于时序移位的简单高效视频时空建模方法 | Kinetics-400               | Top-1 = 70% |
+| [Attention   LSTM](./PaddleCV/video) | 常用模型，速度快精度高 | Youtube-8M                 | GAP   = 86% |
+| [Attention   Cluster](./PaddleCV/video) | CVPR'18 提出的视频多模态特征注意力聚簇融合方法 | Youtube-8M                 | GAP   = 84% |
+| [NeXtVlad](./PaddleCV/video) | 2nd-Youtube-8M 比赛第 3 名的模型 | Youtube-8M                 | GAP   = 87% |
+| [C-TCN](./PaddleCV/video) | 2018 年 ActivityNet 夺冠方案 | ActivityNet1.3 | MAP=31%    |
+| [BSN](./PaddleCV/video) | 为视频动作定位问题提供高效的 proposal 生成方法 | ActivityNet1.3 | AUC=66.64%    |
+| [BMN](./PaddleCV/video) | 2019 年 ActivityNet 夺冠方案 | ActivityNet1.3 | AUC=67.19%    |
+| [ETS](./PaddleCV/video) | 视频摘要生成领域的基准模型 | ActivityNet Captions | METEOR：10.0 |
+| [TALL](./PaddleCV/video) | 视频Grounding方向的BaseLine模型 | TACoS | R1@IOU5=0.13 |
+| [SiamFC](./PaddleCV/tracking) | ECCV’16提出的全卷积神经网络视频跟踪模型 | VOT2018 | EAO = 0.211 |
+| [ATOM](./PaddleCV/tracking) | CVPR’19提出的两阶段目标跟踪模型 | VOT2018 | EAO = 0.399 |
+
+
 
 ### 3D视觉
 
