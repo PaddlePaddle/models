@@ -146,12 +146,12 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 ### 3D视觉
 
-计算机3D视觉技术是解决包含高度、宽度、深度三个方向信息的三维立体图像的分类、分割、检测、识别等任务的计算机技术，广泛地应用于如机器人、无人车、AR等领域。3D点云是3D图像数据的主要表达形式之一，基于3D点云的形状分类、语义分割、目标检测模型是3D视觉方向的基础任务。
+计算机3D视觉技术是解决包含高度、宽度、深度三个方向信息的三维立体图像的分类、分割、检测、识别等任务的计算机技术，广泛地应用于如机器人、无人车、AR等领域。3D点云是3D图像数据的主要表达形式之一，基于3D点云的形状分类、语义分割、目标检测模型是3D视觉方向的基础任务。当前飞桨模型库开源了基于3D点云数据的用于分类、分割的PointNet++模型和用于检测的PointRCNN模型。
 
 | 模型名称                                                     | 模型简介                                                     | 数据集                     | 评估指标    |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | ----------- |
-| [PointNet++](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/3d_vision/PointNet++) | 改进的PointNet网络，加入局部特征提取提高模型泛化能力 | ModelNet40(分类) / Indoor3D(分割) | 分类：Top-1 = 90% / 分割：Top-1 = 86% |
-| [PointRCNN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/3d_vision/PointRCNN) | 自下而上的3D检测框生成方法 | KITTI(Car) | 3D AP@70(easy/median/hard) = 86.66/76.65/75.90 |
+| [PointNet++](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/3d_vision/PointNet++) | 改进的PointNet网络，加入局部特征提取提高模型泛化能力 | ModelNet40(分类) / Indoor3D(分割) | 分类：Top-1 = 90% / 分割：Top-1 = 86% |
+| [PointRCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/3d_vision/PointRCNN) | 自下而上的3D检测框生成方法 | KITTI(Car) | 3D AP@70(easy/median/hard) = 86.66/76.65/75.90 |
 
 ## PaddleNLP
 
