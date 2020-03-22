@@ -117,8 +117,7 @@ public:
   using framework::SingleGradOpMaker<T>::SingleGradOpMaker;
 
 protected:
-  std::unique_ptr<T> Apply() const override {
-    auto* op = new T();
+  void Apply(GradOpPtr<T> op) const override {
     op->SetType("three_interp_grad");
     op->SetInput("X", this->Input("X"));
     op->SetInput("Weight", this->Input("Weight"));
@@ -126,7 +125,6 @@ protected:
     op->SetInput(framework::GradVarName("Out"), this->OutputGrad("Out"));
     op->SetOutput(framework::GradVarName("X"), this->InputGrad("X"));
     op->SetAttrMap(this->Attrs());
-    return std::unique_ptr<T>(op);
   }
 };
 

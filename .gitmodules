@@ -16,3 +16,6 @@
 [submodule "PaddleSpeech/Parakeet"]
 	path = PaddleSpeech/Parakeet
 	url = https://github.com/PaddlePaddle/Parakeet
+[submodule "PaddleCV/PaddleDetection"]
+	path = PaddleCV/PaddleDetection
+	url = https://github.com/PaddlePaddle/PaddleDetection.git
