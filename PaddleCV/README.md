@@ -6,7 +6,7 @@ PaddleCV
 
 图像分类是根据图像的语义信息对不同类别图像进行区分，是计算机视觉中重要的基础问题，是物体检测、图像分割、物体跟踪、行为分析、人脸识别等其他高层视觉任务的基础，在许多领域都有着广泛的应用。如：安防领域的人脸识别和智能视频分析等，交通领域的交通场景识别，互联网领域基于内容的图像检索和相册自动归类，医学领域的图像识别等。
 
-在深度学习时代，图像分类的准确率大幅度提升，在图像分类任务中，我们向大家介绍了如何在经典的数据集ImageNet上，训练常用的模型，包括AlexNet、VGG、ResNet、ResNeXt、Inception、MobileNet、SENet、DarkNet、SqueezeNet、ShuffleNet、Res2Net、DenseNet、DPN、EfficientNet、HRNet、ResNet-ACNet等系列模型，也开源了共105个[预训练模型](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/README.md#已发布模型及其性能)方便用户下载使用。
+在深度学习时代，图像分类的准确率大幅度提升，在图像分类任务中，我们向大家介绍了如何在经典的数据集ImageNet上，训练常用的模型，包括AlexNet、VGG、ResNet、ResNeXt、Inception、MobileNet、SENet、DarkNet、SqueezeNet、ShuffleNet、Res2Net、DenseNet、DPN、EfficientNet、HRNet、AutoDL、ResNet-ACNet等系列模型，也开源了共105个[预训练模型](https://github.com/PaddlePaddle/models/blob/develop/PaddleCV/image_classification/README.md#已发布模型及其性能)方便用户下载使用。
 
 -  [AlexNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
 -  [SqueezeNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
@@ -21,12 +21,13 @@ PaddleCV
 -  [SENet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
 -  [DarkNet](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
 -  [ResNeXt101_wsl Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
-- [Res2Net Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
-- [DenseNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
-- [DPN Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
-- [EfficientNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
-- [HRNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
-- [ResNet-ACNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [Res2Net Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [DenseNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [DPN Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [EfficientNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [HRNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [AutoDL Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
+-  [ResNet-ACNet Series](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/image_classification/models)
 
 
 目标检测
