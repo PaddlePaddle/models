@@ -27,30 +27,30 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 ### 图像分类
 
-[图像分类](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) 是根据图像的语义信息对不同类别图像进行区分，是计算机视觉中重要的基础问题，是物体检测、图像分割、物体跟踪、行为分析、人脸识别等其他高层视觉任务的基础，在许多领域都有着广泛的应用。如：安防领域的人脸识别和智能视频分析等，交通领域的交通场景识别，互联网领域基于内容的图像检索和相册自动归类，医学领域的图像识别等。
+[图像分类](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) 是根据图像的语义信息对不同类别图像进行区分，是计算机视觉中重要的基础问题，是物体检测、图像分割、物体跟踪、行为分析、人脸识别等其他高层视觉任务的基础，在许多领域都有着广泛的应用。如：安防领域的人脸识别和智能视频分析等，交通领域的交通场景识别，互联网领域基于内容的图像检索和相册自动归类，医学领域的图像识别等。
 
 | **模型名称** | **模型简介** | **数据集** | **评估指标 top-1/top-5 accuracy** |
 | - | - | - | - |
-| [AlexNet](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 首次在 CNN 中成功的应用了 ReLU, Dropout 和 LRN，并使用 GPU 进行运算加速 | ImageNet-2012验证集 | 56.72%/79.17% |
-| [VGG19](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 在 AlexNet 的基础上使用 3*3 小卷积核，增加网络深度，具有很好的泛化能力 | ImageNet-2012验证集 | 72.56%/90.93% |
-| [GoogLeNet](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 在不增加计算负载的前提下增加了网络的深度和宽度，性能更加优越 | ImageNet-2012验证集 | 70.70%/89.66% |
-| [ResNet50](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | Residual Network，引入了新的残差结构，解决了随着网络加深，准确率下降的问题 | ImageNet-2012验证集 | 76.50%/93.00% |
-| [ResNet200_vd](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 融合多种对 ResNet 改进策略，ResNet200_vd 的 top1 准确率达到 80.93% | ImageNet-2012验证集 | 80.93%/95.33% |
-| [Inceptionv4](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 将 Inception 模块与 Residual Connection 进行结合，通过ResNet的结构极大地加速训练并获得性能的提升 | ImageNet-2012验证集 | 80.77%/95.26% |
-| [MobileNetV1](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 将传统的卷积结构改造成两层卷积结构的网络，在基本不影响准确率的前提下大大减少计算时间，更适合移动端和嵌入式视觉应用 | ImageNet-2012验证集 | 70.99%/89.68% |
-| [MobileNetV2](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | MobileNet结构的微调，直接在 thinner 的 bottleneck层上进行 skip learning 连接以及对 bottleneck layer 不进行 ReLu 非线性处理可取得更好的结果 | ImageNet-2012验证集 | 72.15%/90.65% |
-| [SENet154_vd](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 在ResNeXt 基础、上加入了 SE(Sequeeze-and-Excitation) 模块，提高了识别准确率，在 ILSVRC 2017 的分类项目中取得了第一名 | ImageNet-2012验证集 | 81.40%/95.48% |
-| [ShuffleNetV2](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | ECCV2018，轻量级 CNN 网络，在速度和准确度之间做了很好地平衡。在同等复杂度下，比 ShuffleNet 和 MobileNetv2 更准确，更适合移动端以及无人车领域 | ImageNet-2012验证集 | 70.03%/89.17% |
-| [efficientNet](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 同时对模型的分辨率，通道数和深度。进行缩放，用极少的参数就可以达到SOTA的精度。 | ImageNet-2012验证集 | 77.38%/93.31% |
-| [xception71](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 对inception-v3的改进，用深度可分离卷积代替普通卷积，降低参数量的同时提高了精度。 | ImageNet-2012验证集 | 81.11%/95.45% |
-| [dpn107](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 融合了densenet和resnext的特点。 | ImageNet-2012验证集 | 80.89%/95.32% |
-| [mobilenetV3_small_x1_0](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 在v2的基础上增加了se模块，并且使用hard-swish激活函数。在分类、检测、分割等视觉任务上都有不错表现。 | ImageNet-2012验证集 | 67.46%/87.12% |
-| [DarkNet53](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 检测框架yolov3使用的backbone，在分类和检测任务上都有不错表现。 | ImageNet-2012验证集 | 78.04%/94.05% |
-| [DenseNet161](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 提出了密集连接的网络结构，更加有利于信息流的传递。 | ImageNet-2012验证集 | 78.57%/94.14% |
-| [ResNeXt152_vd_64x4d](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 提出了cardinatity的概念，用于作为模型复杂度的另外一个度量，并依据该概念有效地提升了模型精度。 | ImageNet-2012验证集 | 81.08%/95.34% |
-| [SqueezeNet1_1](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification) | 提出了新的网络架构Fire Module，通过减少参数来进行模型压缩。 | ImageNet-2012验证集 | 60.08%/81.85% |
+| [AlexNet](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 首次在 CNN 中成功的应用了 ReLU, Dropout 和 LRN，并使用 GPU 进行运算加速 | ImageNet-2012验证集 | 56.72%/79.17% |
+| [VGG19](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 在 AlexNet 的基础上使用 3*3 小卷积核，增加网络深度，具有很好的泛化能力 | ImageNet-2012验证集 | 72.56%/90.93% |
+| [GoogLeNet](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 在不增加计算负载的前提下增加了网络的深度和宽度，性能更加优越 | ImageNet-2012验证集 | 70.70%/89.66% |
+| [ResNet50](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | Residual Network，引入了新的残差结构，解决了随着网络加深，准确率下降的问题 | ImageNet-2012验证集 | 76.50%/93.00% |
+| [ResNet200_vd](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 融合多种对 ResNet 改进策略，ResNet200_vd 的 top1 准确率达到 80.93% | ImageNet-2012验证集 | 80.93%/95.33% |
+| [Inceptionv4](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 将 Inception 模块与 Residual Connection 进行结合，通过ResNet的结构极大地加速训练并获得性能的提升 | ImageNet-2012验证集 | 80.77%/95.26% |
+| [MobileNetV1](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 将传统的卷积结构改造成两层卷积结构的网络，在基本不影响准确率的前提下大大减少计算时间，更适合移动端和嵌入式视觉应用 | ImageNet-2012验证集 | 70.99%/89.68% |
+| [MobileNetV2](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | MobileNet结构的微调，直接在 thinner 的 bottleneck层上进行 skip learning 连接以及对 bottleneck layer 不进行 ReLu 非线性处理可取得更好的结果 | ImageNet-2012验证集 | 72.15%/90.65% |
+| [SENet154_vd](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 在ResNeXt 基础、上加入了 SE(Sequeeze-and-Excitation) 模块，提高了识别准确率，在 ILSVRC 2017 的分类项目中取得了第一名 | ImageNet-2012验证集 | 81.40%/95.48% |
+| [ShuffleNetV2](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | ECCV2018，轻量级 CNN 网络，在速度和准确度之间做了很好地平衡。在同等复杂度下，比 ShuffleNet 和 MobileNetv2 更准确，更适合移动端以及无人车领域 | ImageNet-2012验证集 | 70.03%/89.17% |
+| [efficientNet](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 同时对模型的分辨率，通道数和深度。进行缩放，用极少的参数就可以达到SOTA的精度。 | ImageNet-2012验证集 | 77.38%/93.31% |
+| [xception71](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 对inception-v3的改进，用深度可分离卷积代替普通卷积，降低参数量的同时提高了精度。 | ImageNet-2012验证集 | 81.11%/95.45% |
+| [dpn107](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 融合了densenet和resnext的特点。 | ImageNet-2012验证集 | 80.89%/95.32% |
+| [mobilenetV3_small_x1_0](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 在v2的基础上增加了se模块，并且使用hard-swish激活函数。在分类、检测、分割等视觉任务上都有不错表现。 | ImageNet-2012验证集 | 67.46%/87.12% |
+| [DarkNet53](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 检测框架yolov3使用的backbone，在分类和检测任务上都有不错表现。 | ImageNet-2012验证集 | 78.04%/94.05% |
+| [DenseNet161](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 提出了密集连接的网络结构，更加有利于信息流的传递。 | ImageNet-2012验证集 | 78.57%/94.14% |
+| [ResNeXt152_vd_64x4d](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 提出了cardinatity的概念，用于作为模型复杂度的另外一个度量，并依据该概念有效地提升了模型精度。 | ImageNet-2012验证集 | 81.08%/95.34% |
+| [SqueezeNet1_1](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification) | 提出了新的网络架构Fire Module，通过减少参数来进行模型压缩。 | ImageNet-2012验证集 | 60.08%/81.85% |
 
-更多图像分类模型请参考 [Image Classification](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/image_classification)。
+更多图像分类模型请参考 [Image Classification](https://github.com/PaddlePaddle/models/tree/release/1.7/image_classification)。
 
 ### 目标检测
 
@@ -63,7 +63,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [Mask-RCNN](https://github.com/PaddlePaddle/PaddleDetection) | 经典的两阶段框架，在 Faster R-CNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕，可得到像素级别的检测结果。 | MS-COCO    | 基于ResNet 50   Mask mAP（0.50: 0.95） = 31.4%          |
 | [RetinaNet](https://github.com/PaddlePaddle/PaddleDetection) | 经典的一阶段框架，由主干网络、FPN结构、和两个分别用于回归物体位置和预测物体类别的子网络组成。在训练过程中使用 Focal Loss，解决了传统一阶段检测器存在前景背景类别不平衡的问题，进一步提高了一阶段检测器的精度。 | MS-COCO    | 基于ResNet 50 mAP (0.50: 0.95) = 36%                    |
 | [YOLOv3](https://github.com/PaddlePaddle/PaddleDetection) | 速度和精度均衡的目标检测网络，相比于原作者 darknet 中的 YOLO v3 实现，PaddlePaddle 实现参考了论文 [Bag of Tricks for Image Classification with Convolutional Neural Networks](https://arxiv.org/pdf/1812.01187.pdf) 增加了 mixup，label_smooth 等处理，精度 (mAP(0.50: 0.95)) 相比于原作者提高了 4.7 个绝对百分点，在此基础上加入 synchronize batch normalization, 最终精度相比原作者提高 5.9 个绝对百分点。 | MS-COCO    | 基于DarkNet   mAP(0.50: 0.95)=   38.9%                  |
-| [PyramidBox](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/face_detection) | **PyramidBox** **模型是百度自主研发的人脸检测模型**，利用上下文信息解决困难人脸的检测问题，网络表达能力高，鲁棒性强。于18年3月份在 WIDER Face 数据集上取得第一名 | WIDER FACE | mAP   （Easy/Medium/Hard   set）=   96.0%/ 94.8%/ 88.8% |
+| [PyramidBox](https://github.com/PaddlePaddle/models/tree/release/1.7/face_detection) | **PyramidBox** **模型是百度自主研发的人脸检测模型**，利用上下文信息解决困难人脸的检测问题，网络表达能力高，鲁棒性强。于18年3月份在 WIDER Face 数据集上取得第一名 | WIDER FACE | mAP   （Easy/Medium/Hard   set）=   96.0%/ 94.8%/ 88.8% |
 | [Cascade RCNN](https://github.com/PaddlePaddle/PaddleDetection) | Cascade R-CNN 在 Faster R-CNN 框架下，通过级联多个检测器，在训练过程中选取不同的 IoU 阈值，逐步提高目标定位的精度，从而获取优异的检测性能。 | MS-COCO    | 基于ResNet 50 mAP (0.50: 0.95) = 40.9%                  |
 | [Faceboxes](https://github.com/PaddlePaddle/PaddleDetection) | 经典的人脸检测网络，被称为“高精度 CPU 实时人脸检测器”。网络中使用率 CReLU、density_prior_bo x等组件，使得模型的精度和速度得到平衡与提升。相比于 PyramidBox，预测与计算更快，模型更小，精度也保持高水平。 | WIDER FACE | mAP (Easy/Medium/Hard Set) = 0.898/0.872/0.752          |
 | [BlazeFace](https://github.com/PaddlePaddle/PaddleDetection) | 高速的人脸检测网络，由5个单的和6个双 BlazeBlocks、和 SSD 的架构构成。它轻巧但性能良好，并且专为移动 GPU 推理量身定制。 | WIDER FACE | mAP Easy/Medium/Hard Set = 0.915/0.892/0.797            |
@@ -71,15 +71,21 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 ### 图像分割
 
 图像语义分割顾名思义是将图像像素按照表达的语义含义的不同进行分组/分割，图像语义是指对图像内容的理解，例如，能够描绘出什么物体在哪里做了什么事情等，分割是指对图片中的每个像素点进行标注，标注属于哪一类别。近年来用在无人车驾驶技术中分割街景来避让行人和车辆、医疗影像分析中辅助诊断等。
+图像语义分割模型请参考语义分割库[PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg)
 
 | 模型名称                                                     | 模型简介                                                     | 数据集    | 评估指标        |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | --------- | --------------- |
-| [ICNet](https://github.com/PaddlePaddle/PaddleSeg) | 主要用于图像实时语义分割，能够兼顾速度和准确性，易于线上部署 | Cityscapes | Mean IoU=67.0%  |
-| [DeepLab V3+](https://github.com/PaddlePaddle/PaddleSeg) | 通过 encoder-decoder 进行多尺度信息的融合，同时保留了原来的空洞卷积和 ASSP 层，   其骨干网络使用了 Xception 模型，提高了语义分割的健壮性和运行速率 | Cityscapes | Mean IoU=78.81% |
-| [PSPNet (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | 通过利用不同子区域和全局的上下文信息来增强语义分割质量，同时提出deeply supervised 的辅助loss去改善模型的优化 | Cityscapes | Mean IoU = 78.1 |
-| [GloRe (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | 提出一个轻量级的、可端到端训练的全局推理单元GloRe来高效推理image regions之间的关系，增强了模型上下文建模能力| Cityscapes | Mean IoU = 78.4 |
-| [PSPNet (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | -| PASCAL Context | Mean IoU = 48.9  |
-| [GloRe (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | -| PASCAL Context | Mean IoU = 48.4 |
+| [U-Net](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_unet.md) |起源于医疗图像分割，整个网络是标准的encoder-decoder网络，特点是参数少，计算快，应用性强，对于一般场景适应度很高。U-Net最早于2015年提出，并在ISBI 2015 Cell Tracking Challenge取得了第一。经过发展，目前有多个变形和应用。| -- | -- |
+| [ICNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_icnet.md) | 主要用于图像实时语义分割，能够兼顾速度和准确性，易于线上部署。 | Cityscapes | Mean IoU=68.31%  |
+| [PSPNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_pspnet.md) | 起源于场景解析(Scene Parsing)领域。通过特殊设计的全局均值池化操作（global average pooling）和特征融合构造金字塔池化模块 (Pyramid Pooling Module)，来融合图像中不同区域的上下文信息。 | Cityscapes | Mean IoU=77.34% |
+| [DeepLabv3+](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_deeplabv3plus.md) | 通过 encoder-decoder 进行多尺度信息的融合，同时保留了原来的空洞卷积和 ASSP 层，其骨干网络使用了 Xception 模型，提高了语义分割的健壮性和运行速率。 | Cityscapes | Mean IoU=79.30% |
+| [HRNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_hrnet.md) | 在整个训练过程中始终维持高分辨率表示。 通过两个特性学习到更丰富的语义信息和细节信息：（1）从高分辨率到低分辨率并行连接各子网络，（2）反复交换跨分辨率子网络信息。 在人体姿态估计、语义分割和目标检测领域都取得了显著的性能提升。 | Cityscapes | Mean IoU=79.36% |
+| [Fast-SCNN](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_fast_scnn.md) | 一个面向实时的语义分割网络。在双分支的结构基础上，大量使用了深度可分离卷积和逆残差（inverted-residual）模块，并且使用特征融合构造金字塔池化模块 (Pyramid Pooling Module)来融合上下文信息。这使得Fast-SCNN在保持高效的情况下能学习到丰富的细节信息。 | Cityscapes | Mean IoU=69.64% |
+| [LaneNet](https://github.com/PaddlePaddle/PaddleSeg/tree/release/v0.4.0/contrib/LaneNet) | 一种将语义分割和对像素进行向量表示结合起来的多任务模型，最后利用聚类完成对车道线的实例分割 | - | - |
+| [PSPNet (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | 通过利用不同子区域和全局的上下文信息来增强语义分割质量，同时提出deeply supervised 的辅助loss去改善模型的优化 | Cityscapes | Mean IoU=78.1% |
+| [GloRe (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | 提出一个轻量级的、可端到端训练的全局推理单元GloRe来高效推理image regions之间的关系，增强了模型上下文建模能力| Cityscapes | Mean IoU=78.4% |
+| [PSPNet (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | -| PASCAL Context | Mean IoU=48.9  |
+| [GloRe (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | -| PASCAL Context | Mean IoU=48.4 |
 
 ### 关键点检测
 
@@ -87,22 +93,22 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集       | 评估指标     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------ | ------------ |
-| [Simple   Baselines](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/human_pose_estimation) | coco2018 关键点检测项目亚军方案，网络结构非常简单，效果达到 state of the art | COCO val2017 | AP =   72.7% |
+| [Simple   Baselines](https://github.com/PaddlePaddle/models/tree/release/1.7/human_pose_estimation) | coco2018 关键点检测项目亚军方案，网络结构非常简单，效果达到 state of the art | COCO val2017 | AP =   72.7% |
 
 ### 图像生成
 
-图像生成是指根据输入向量，生成目标图像。这里的输入向量可以是随机的噪声或用户指定的条件向量。具体的应用场景有：手写体生成、人脸合成、风格迁移、图像修复等。[gan](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan) 包含和图像生成相关的多个模型。
+图像生成是指根据输入向量，生成目标图像。这里的输入向量可以是随机的噪声或用户指定的条件向量。具体的应用场景有：手写体生成、人脸合成、风格迁移、图像修复等。[gan](https://github.com/PaddlePaddle/models/tree/release/1.7/gan) 包含和图像生成相关的多个模型。
 
 | 模型名称                                                     | 模型简介                                                     | 数据集     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------- |
-| [CGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan) | 条件生成对抗网络，一种带条件约束的 GAN，使用额外信息对模型增加条件，可以指导数据生成过程 | Mnist      |
-| [DCGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan) | 深度卷积生成对抗网络，将 GAN 和卷积网络结合起来，以解决 GAN 训练不稳定的问题 | Mnist      |
-| [Pix2Pix](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan) | 图像翻译，通过成对图片将某一类图片转换成另外一类图片，可用于风格迁移 | Cityscapes |
-| [CycleGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan) | 图像翻译，可以通过非成对的图片将某一类图片转换成另外一类图片，可用于风格迁移 | Cityscapes |
-| [StarGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan) | 多领域属性迁移，引入辅助分类帮助单个判别器判断多个属性，可用于人脸属性转换 | Celeba     |
-| [AttGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan) | 利用分类损失和重构损失来保证改变特定的属性，可用于人脸特定属性转换 | Celeba     |
-| [STGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan) | 人脸特定属性转换，只输入有变化的标签，引入 GRU 结构，更好的选择变化的属性 | Celeba     |
-| [SPADE](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan) | 提出一种考虑空间语义信息的归一化方法，从而更好的保留语义信息，生成更为逼真的图像，可用于图像翻译。 | Cityscapes |
+| [CGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/gan) | 条件生成对抗网络，一种带条件约束的 GAN，使用额外信息对模型增加条件，可以指导数据生成过程 | Mnist      |
+| [DCGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/gan) | 深度卷积生成对抗网络，将 GAN 和卷积网络结合起来，以解决 GAN 训练不稳定的问题 | Mnist      |
+| [Pix2Pix](https://github.com/PaddlePaddle/models/tree/release/1.7/gan) | 图像翻译，通过成对图片将某一类图片转换成另外一类图片，可用于风格迁移 | Cityscapes |
+| [CycleGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/gan) | 图像翻译，可以通过非成对的图片将某一类图片转换成另外一类图片，可用于风格迁移 | Cityscapes |
+| [StarGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/gan) | 多领域属性迁移，引入辅助分类帮助单个判别器判断多个属性，可用于人脸属性转换 | Celeba     |
+| [AttGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/gan) | 利用分类损失和重构损失来保证改变特定的属性，可用于人脸特定属性转换 | Celeba     |
+| [STGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/gan) | 人脸特定属性转换，只输入有变化的标签，引入 GRU 结构，更好的选择变化的属性 | Celeba     |
+| [SPADE](https://github.com/PaddlePaddle/models/tree/release/1.7/gan) | 提出一种考虑空间语义信息的归一化方法，从而更好的保留语义信息，生成更为逼真的图像，可用于图像翻译。 | Cityscapes |
 
 ### 场景文字识别
 
@@ -110,8 +116,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集                     | 评估指标       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | -------------- |
-| [CRNN-CTC](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/ocr_recognition) | 使用 CTC model 识别图片中单行英文字符，用于端到端的文本行图片识别方法 | 单行不定长的英文字符串图片 | 错误率= 22.3%  |
-| [OCR   Attention](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/ocr_recognition) | 使用 attention 识别图片中单行英文字符，用于端到端的自然场景文本识别 | 单行不定长的英文字符串图片 | 错误率 = 15.8% |
+| [CRNN-CTC](https://github.com/PaddlePaddle/models/tree/release/1.7/ocr_recognition) | 使用 CTC model 识别图片中单行英文字符，用于端到端的文本行图片识别方法 | 单行不定长的英文字符串图片 | 错误率= 22.3%  |
+| [OCR   Attention](https://github.com/PaddlePaddle/models/tree/release/1.7/ocr_recognition) | 使用 attention 识别图片中单行英文字符，用于端到端的自然场景文本识别 | 单行不定长的英文字符串图片 | 错误率 = 15.8% |
 
 ### 度量学习
 
@@ -119,10 +125,10 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集                         | 评估指标 Recall@Rank-1（使用arcmargin训练） |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------ | ------------------------------------------- |
-| [ResNet50未微调](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/metric_learning) | 使用 arcmargin loss 训练的特征模型                           | Stanford   Online Product(SOP) | 78.11%                                      |
-| [ResNet50使用triplet微调](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/metric_learning) | 在 arcmargin loss 基础上，使用 triplet loss 微调的特征模型   | Stanford   Online Product(SOP) | 79.21%                                      |
-| [ResNet50使用quadruplet微调](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/metric_learning) | 在 arcmargin loss 基础上，使用 quadruplet loss 微调的特征模型 | Stanford   Online Product(SOP) | 79.59%                                      |
-| [ResNet50使用eml微调](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/metric_learning) | 在 arcmargin loss 基础上，使用 eml loss 微调的特征模型       | Stanford   Online Product(SOP) | 80.11%                                      |
+| [ResNet50未微调](https://github.com/PaddlePaddle/models/tree/release/1.7/metric_learning) | 使用 arcmargin loss 训练的特征模型                           | Stanford   Online Product(SOP) | 78.11%                                      |
+| [ResNet50使用triplet微调](https://github.com/PaddlePaddle/models/tree/release/1.7/metric_learning) | 在 arcmargin loss 基础上，使用 triplet loss 微调的特征模型   | Stanford   Online Product(SOP) | 79.21%                                      |
+| [ResNet50使用quadruplet微调](https://github.com/PaddlePaddle/models/tree/release/1.7/metric_learning) | 在 arcmargin loss 基础上，使用 quadruplet loss 微调的特征模型 | Stanford   Online Product(SOP) | 79.59%                                      |
+| [ResNet50使用eml微调](https://github.com/PaddlePaddle/models/tree/release/1.7/metric_learning) | 在 arcmargin loss 基础上，使用 eml loss 微调的特征模型       | Stanford   Online Product(SOP) | 80.11%                                      |
 | [ResNet50使用npairs微调](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/metric_learning) | 在 arcmargin loss基础上，使用npairs loss 微调的特征模型      | Stanford   Online Product(SOP) | 79.81%                                      |
 
 
