@@ -35,18 +35,27 @@ PaddleCV
 
 目标检测任务的目标是给定一张图像或是一个视频帧，让计算机找出其中所有目标的位置，并给出每个目标的具体类别。对于人类来说，目标检测是一个非常简单的任务。然而，计算机能够“看到”的是图像被编码之后的数字，很难解图像或是视频帧中出现了人或是物体这样的高层语义概念，也就更加难以定位目标出现在图像中哪个区域。与此同时，由于目标会出现在图像或是视频帧中的任何位置，目标的形态千变万化，图像或是视频帧的背景千差万别，诸多因素都使得目标检测对计算机来说是一个具有挑战性的问题。
 
-在目标检测任务中，我们介绍了如何基于[PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) 、[MS COCO](http://cocodataset.org/#home) 数据训练通用物体检测模型，当前介绍了SSD算法，SSD全称Single Shot MultiBox Detector，是目标检测领域较新且效果较好的检测算法之一，具有检测速度快且检测精度高的特点。
+在目标检测任务中，我们介绍了如何基于[PASCAL VOC](http://host.robots.ox.ac.uk/pascal/VOC/) 、[MS COCO](http://cocodataset.org/#home)、[Objects365](http://www.objects365.org/overview.html)、[Open Images](https://storage.googleapis.com/openimages/web/index.html)数据训练通用物体检测模型。包含的算法有SSD (Single Shot MultiBox Detector)、YOLOv3、RetinaNet、Faster-RCNN、Mask-RCNN、CascadeRCNN、Libra-RCNN、CBNet、GCNet、Open Image V5比赛的最佳单模型CascadeClsAware RCNN等。以及基于G-IoU、D-IoU、C-IoU损失函数的模型。
 
-开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于 [WIDER FACE](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace) 数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得 [第一名](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html)。
+除了通用物体检测，还包括人脸检测。开放环境中的检测人脸，尤其是小的、模糊的和部分遮挡的人脸也是一个具有挑战的任务。我们也介绍了如何基于 [WIDER FACE](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace) 数据训练百度自研的人脸检测PyramidBox模型，该算法于2018年3月份在WIDER FACE的多项评测中均获得 [第一名](http://mmlab.ie.cuhk.edu.hk/projects/WIDERFace/WiderFace_Results.html)。同时还包括，轻量级的人脸检测模型Faceboxes和BlazeFace。
 
-Faster RCNN模型是典型的两阶段目标检测器，相较于传统提取区域的方法，通过RPN网络共享卷积层参数大幅提高提取区域的效率，并提出高质量的候选区域。
-
-Mask RCNN模型是基于Faster RCNN模型的经典实例分割模型，在原有Faster RCNN模型基础上添加分割分支，得到掩码结果，实现了掩码和类别预测关系的解藕。
-
+#### 通用目标检测
 -  [Single Shot MultiBox Detector](https://github.com/PaddlePaddle/PaddleDetection)
--  [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/face_detection/README_cn.md)
+-  [YOLOv3](https://github.com/PaddlePaddle/PaddleDetection)
+-  [RetinaNet](https://github.com/PaddlePaddle/PaddleDetection)
 -  [Faster RCNN](https://github.com/PaddlePaddle/PaddleDetection)
 -  [Mask RCNN](https://github.com/PaddlePaddle/PaddleDetection)
+-  [Two-stage FPN](https://github.com/PaddlePaddle/PaddleDetection)
+-  [Cascade-RCNN](https://github.com/PaddlePaddle/PaddleDetection)
+-  [Libra-RCNN](https://github.com/PaddlePaddle/PaddleDetection)
+-  [CascadeClsAware RCNN](https://github.com/PaddlePaddle/PaddleDetection/blob/release/0.2/docs/featured_model/OIDV5_BASELINE_MODEL.md)
+
+#### 人脸检测
+-  [Face Detector: PyramidBox](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/face_detection/README_cn.md)
+-  [Faceboxes](https://github.com/PaddlePaddle/PaddleDetection)
+-  [BalzeFace](https://github.com/PaddlePaddle/PaddleDetection)
+
+在目标检测中，除了模型训练外，还增加目标检测的模型压缩、C++预测部署环节，更全详细的可以参考[PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection)。
 
 图像语义分割
 ------------
@@ -64,10 +73,15 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 图像生成是指根据输入向量，生成目标图像。这里的输入向量可以是随机的噪声或用户指定的条件向量。具体的应用场景有：手写体生成、人脸合成、风格迁移、图像修复等。当前的图像生成任务主要是借助生成对抗网络（GAN）来实现。
 生成对抗网络（GAN）由两种子网络组成：生成器和识别器。生成器的输入是随机噪声或条件向量，输出是目标图像。识别器是一个分类器，输入是一张图像，输出是该图像是否是真实的图像。在训练过程中，生成器和识别器通过不断的相互博弈提升自己的能力。
 
-在图像生成任务中，我们介绍了如何使用DCGAN和ConditioanlGAN来进行手写数字的生成，另外还介绍了用于风格迁移的CycleGAN.
+在图像生成任务中，我们介绍了如何使用DCGAN和ConditioanlGAN来进行手写数字的生成，用于风格迁移的CycleGAN、Pix2Pix，用于属性变化的StarGAN、AttGAN、STGAN，以及图像翻译的SPADE。
 
 - [DCGAN & ConditionalGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan/c_gan)
-- [CycleGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan/cycle_gan)
+- [CycleGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan)
+- [Pix2Pix](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan)
+- [StarGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan)
+- [AttGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan)
+- [STGAN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/gan)
+
 
 场景文字识别
 ------------
