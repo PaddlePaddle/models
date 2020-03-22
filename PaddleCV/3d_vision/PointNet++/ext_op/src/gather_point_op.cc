@@ -94,15 +94,13 @@ public:
   using framework::SingleGradOpMaker<T>::SingleGradOpMaker;
 
 protected:
-  std::unique_ptr<T> Apply() const override {
-    auto* op = new T();
+  void Apply(GradOpPtr<T> op) const override {
     op->SetType("gather_point_grad");
     op->SetInput("X", this->Input("X"));
     op->SetInput("Index", this->Input("Index"));
     op->SetInput(framework::GradVarName("Output"), this->OutputGrad("Output"));
     op->SetOutput(framework::GradVarName("X"), this->InputGrad("X"));
     op->SetAttrMap(this->Attrs());
-    return std::unique_ptr<T>(op);
   }
 };
 

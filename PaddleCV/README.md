@@ -108,9 +108,7 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 视频分类是视频理解任务的基础，与图像分类不同的是，分类的对象不再是静止的图像，而是一个由多帧图像构成的、包含语音数据、包含运动信息等的视频对象，因此理解视频需要获得更多的上下文信息，不仅要理解每帧图像是什么、包含什么，还需要结合不同帧，知道上下文的关联信息。视频分类方法主要包含基于卷积神经网络、基于循环神经网络、或将这两者结合的方法。该任务中我们介绍基于Fluid的视频分类模型，目前包含Temporal Segment Network(TSN)模型，后续会持续增加更多模型。
 
-
 - [TSN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/video)
-
 
 
 目标跟踪
@@ -120,3 +118,12 @@ Network,ICNet)进行语义分割，相比其他分割算法，ICNet兼顾了准�
 
 - [SiamFC](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/tracking)
 - [ATOM](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/tracking)
+
+
+3D视觉
+-------
+
+计算机3D视觉技术是解决包含高度、宽度、深度信息的三维立体图像的分类、分割、检测、识别等任务的计算机技术，广泛地应用于如机器人、无人车、AR等领域。3D点云是3D图像数据的主要表达形式之一，基于3D点云的形状分类、语义分割、目标检测模型是3D视觉方向的基础任务。当前飞桨模型库开源了基于3D点云数据的用于分类、分割的PointNet++模型和用于检测的PointRCNN模型。
+
+[PointNet++](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/3d_vision/PointNet++)
+[PointRCNN](https://github.com/PaddlePaddle/models/tree/develop/PaddleCV/3d_vision/PointRCNN)
