@@ -13,7 +13,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
   * [图像生成](#图像生成)
   * [场景文字识别](#场景文字识别)
   * [度量学习](#度量学习)
-  * [视频分类和动作定位](#视频分类和动作定位)
+  * [视频](#视频)
 * [智能文本处理(PaddleNLP)](#PaddleNLP)
   * [NLP 基础技术](#NLP-基础技术)
   * [NLP 核心技术](#NLP-核心技术)
@@ -126,8 +126,7 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [ResNet50使用npairs微调](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/metric_learning) | 在 arcmargin loss基础上，使用npairs loss 微调的特征模型      | Stanford   Online Product(SOP) | 79.81%                                      |
 
 
-视频
--------
+### 视频
 
 PaddleCV全面开源了视频分类、动作定位 和 目标跟踪等视频任务的领先实用算法。视频数据包含语音、图像等多种信息，因此理解视频任务不仅需要处理语音和图像，还需要提取视频帧时间序列中的上下文信息。
 视频分类模型提供了提取全局时序特征的方法，主要方式有卷积神经网络 (C3D, I3D, C2D等)，神经网络和传统图像算法结合 (VLAD 等)，循环神经网络等建模方法。
