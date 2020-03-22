@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Emotion Detection Task, based on ERNIE
 """
@@ -25,7 +24,7 @@ import time
 import argparse
 import multiprocessing
 import sys
-sys.path.append("../")
+sys.path.append("../shared_modules/")
 
 import paddle
 import paddle.fluid as fluid
@@ -350,7 +349,7 @@ def main(args):
 
                 if steps % args.save_steps == 0:
                     save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
-                    fluid.io.save_persistables(exe, save_path, train_program)
+                    fluid.save(train_program, save_path)
 
                 if steps % args.validation_steps == 0:
                     # evaluate dev set
@@ -369,7 +368,7 @@ def main(args):
 
             except fluid.core.EOFException:
                 save_path = os.path.join(args.save_checkpoint_dir, "step_" + str(steps))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                fluid.save(train_program, save_path)
                 train_pyreader.reset()
                 break
 

@@ -12,8 +12,8 @@ import argparse
 import numpy as np
 import multiprocessing
 import sys
-sys.path.append("../models/classification/")
-sys.path.append("../")
+sys.path.append("../shared_modules/models/classification/")
+sys.path.append("../shared_modules/")
 
 from nets import bow_net
 from nets import lstm_net
@@ -30,24 +30,19 @@ import paddle.fluid as fluid
 import reader
 from utils import init_checkpoint
 
-def create_model(args,
-                 pyreader_name,
-                 num_labels,
-                 is_prediction=False):
 
+def create_model(args, pyreader_name, num_labels, is_prediction=False):
     """
     Create Model for sentiment classification
     """
-    
-    data = fluid.layers.data(
-            name="src_ids", shape=[-1, args.max_seq_len], dtype='int64')
-    label = fluid.layers.data(
-            name="label", shape=[-1, 1], dtype="int64")
-    seq_len = fluid.layers.data(
-            name="seq_len", shape=[-1], dtype="int64")
-    
-    data_reader = fluid.io.PyReader(feed_list=[data, label, seq_len], 
-        capacity=4, iterable=False)
+
+    data = fluid.data(
+        name="src_ids", shape=[None, args.max_seq_len], dtype='int64')
+    label = fluid.data(name="label", shape=[None, 1], dtype="int64")
+    seq_len = fluid.data(name="seq_len", shape=[None], dtype="int64")
+
+    data_reader = fluid.io.DataLoader.from_generator(
+        feed_list=[data, label, seq_len], capacity=4, iterable=False)
 
     if args.model_type == "bilstm_net":
         network = bilstm_net
@@ -63,16 +58,17 @@ def create_model(args,
         raise ValueError("Unknown network type!")
 
     if is_prediction:
-        probs = network(data, seq_len, None, args.vocab_size, is_prediction=is_prediction)
+        probs = network(
+            data, seq_len, None, args.vocab_size, is_prediction=is_prediction)
         print("create inference model...")
         return data_reader, probs, [data.name, seq_len.name]
 
-    ce_loss, probs = network(data, seq_len, label, args.vocab_size, is_prediction=is_prediction)
+    ce_loss, probs = network(
+        data, seq_len, label, args.vocab_size, is_prediction=is_prediction)
     loss = fluid.layers.mean(x=ce_loss)
     num_seqs = fluid.layers.create_tensor(dtype='int64')
     accuracy = fluid.layers.accuracy(input=probs, label=label, total=num_seqs)
     return data_reader, loss, accuracy, num_seqs
-
 
 
 def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
@@ -99,8 +95,8 @@ def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
             break
     time_end = time.time()
     print("[%s evaluation] ave loss: %f, ave acc: %f, elapsed time: %f s" %
-        (eval_phase, np.sum(total_cost) / np.sum(total_num_seqs),
-        np.sum(total_acc) / np.sum(total_num_seqs), time_end - time_begin))
+          (eval_phase, np.sum(total_cost) / np.sum(total_num_seqs),
+           np.sum(total_acc) / np.sum(total_num_seqs), time_end - time_begin))
 
 
 def inference(exe, test_program, test_pyreader, fetch_list, infer_phrase):
@@ -111,8 +107,9 @@ def inference(exe, test_program, test_pyreader, fetch_list, infer_phrase):
     time_begin = time.time()
     while True:
         try:
-            np_props = exe.run(program=test_program, fetch_list=fetch_list,
-                                return_numpy=True)
+            np_props = exe.run(program=test_program,
+                               fetch_list=fetch_list,
+                               return_numpy=True)
             for probs in np_props[0]:
                 print("%d\t%f\t%f" % (np.argmax(probs), probs[0], probs[1]))
         except fluid.core.EOFException:
@@ -135,10 +132,11 @@ def main(args):
     exe = fluid.Executor(place)
 
     task_name = args.task_name.lower()
-    processor = reader.SentaProcessor(data_dir=args.data_dir,
-                                      vocab_path=args.vocab_path,
-                                      random_seed=args.random_seed,
-                                      max_seq_len=args.max_seq_len)
+    processor = reader.SentaProcessor(
+        data_dir=args.data_dir,
+        vocab_path=args.vocab_path,
+        random_seed=args.random_seed,
+        max_seq_len=args.max_seq_len)
     num_labels = len(processor.get_labels())
 
     if not (args.do_train or args.do_val or args.do_infer):
@@ -151,7 +149,7 @@ def main(args):
 
     if args.do_train:
         train_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
+            batch_size=args.batch_size / dev_count,
             phase='train',
             epoch=args.epoch,
             shuffle=True)
@@ -183,11 +181,11 @@ def main(args):
             lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
                 program=train_program, batch_size=args.batch_size)
             print("Theoretical memory usage in training: %.3f - %.3f %s" %
-                (lower_mem, upper_mem, unit))
+                  (lower_mem, upper_mem, unit))
 
     if args.do_val:
         test_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
+            batch_size=args.batch_size / dev_count,
             phase='dev',
             epoch=1,
             shuffle=False)
@@ -204,7 +202,7 @@ def main(args):
 
     if args.do_infer:
         infer_data_generator = processor.data_generator(
-            batch_size=args.batch_size,
+            batch_size=args.batch_size / dev_count,
             phase='infer',
             epoch=1,
             shuffle=False)
@@ -223,30 +221,25 @@ def main(args):
     if args.do_train:
         if args.init_checkpoint:
             init_checkpoint(
-                exe,
-                args.init_checkpoint,
-                main_program=startup_prog)
+                exe, args.init_checkpoint, main_program=startup_prog)
 
     elif args.do_val or args.do_infer:
         if not args.init_checkpoint:
             raise ValueError("args 'init_checkpoint' should be set if"
                              "only doing validation or testing!")
-        init_checkpoint(
-            exe,
-            args.init_checkpoint,
-            main_program=startup_prog)
+        init_checkpoint(exe, args.init_checkpoint, main_program=startup_prog)
 
     if args.do_train:
         train_exe = exe
-        train_reader.decorate_sample_list_generator(train_data_generator)
+        train_reader.set_sample_list_generator(train_data_generator)
     else:
         train_exe = None
     if args.do_val:
         test_exe = exe
-        test_reader.decorate_sample_list_generator(test_data_generator)
+        test_reader.set_sample_list_generator(test_data_generator)
     if args.do_infer:
         test_exe = exe
-        infer_reader.decorate_sample_list_generator(infer_data_generator)
+        infer_reader.set_sample_list_generator(infer_data_generator)
 
     if args.do_train:
         train_reader.start()
@@ -262,7 +255,9 @@ def main(args):
                 else:
                     fetch_list = []
 
-                outputs = train_exe.run(program=train_program, fetch_list=fetch_list, return_numpy=False)
+                outputs = train_exe.run(program=train_program,
+                                        fetch_list=fetch_list,
+                                        return_numpy=False)
                 #print("finished one step")
                 if steps % args.skip_steps == 0:
                     np_loss, np_acc, np_num_seqs = outputs
@@ -274,35 +269,37 @@ def main(args):
                     total_num_seqs.extend(np_num_seqs)
 
                     if args.verbose:
-                        verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size()
+                        verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size(
+                        )
                         print(verbose)
 
                     time_end = time.time()
                     used_time = time_end - time_begin
                     print("step: %d, ave loss: %f, "
-                        "ave acc: %f, speed: %f steps/s" %
-                        (steps, np.sum(total_cost) / np.sum(total_num_seqs),
-                        np.sum(total_acc) / np.sum(total_num_seqs),
-                        args.skip_steps / used_time))
+                          "ave acc: %f, speed: %f steps/s" %
+                          (steps, np.sum(total_cost) / np.sum(total_num_seqs),
+                           np.sum(total_acc) / np.sum(total_num_seqs),
+                           args.skip_steps / used_time))
                     total_cost, total_acc, total_num_seqs = [], [], []
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
                     save_path = os.path.join(args.checkpoints,
-                                         "step_" + str(steps))
-                    fluid.io.save_persistables(exe, save_path, train_program)
+                                             "step_" + str(steps), "checkpoint")
+                    fluid.save(train_program, save_path)
 
                 if steps % args.validation_steps == 0:
                     # evaluate dev set
                     if args.do_val:
                         print("do evalatation")
                         evaluate(exe, test_prog, test_reader,
-                                [loss.name, accuracy.name, num_seqs.name],
-                                "dev")
+                                 [loss.name, accuracy.name, num_seqs.name],
+                                 "dev")
 
             except fluid.core.EOFException:
-                save_path = os.path.join(args.checkpoints, "step_" + str(steps))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                save_path = os.path.join(args.checkpoints, "step_" + str(steps),
+                                         "checkpoint")
+                fluid.save(train_program, save_path)
                 train_reader.reset()
                 break
 
@@ -310,13 +307,12 @@ def main(args):
     if args.do_val:
         print("Final validation result:")
         evaluate(exe, test_prog, test_reader,
-            [loss.name, accuracy.name, num_seqs.name], "dev")
+                 [loss.name, accuracy.name, num_seqs.name], "dev")
 
     # final eval on test set
     if args.do_infer:
         print("Final test result:")
-        inference(exe, infer_prog, infer_reader,
-            [prop.name], "infer")
+        inference(exe, infer_prog, infer_reader, [prop.name], "infer")
 
 
 if __name__ == "__main__":

@@ -123,7 +123,6 @@ def parse_args():
     add_arg('data_dir',         str,    'dataset/coco',        "The data root path.")
     add_arg('start_iter',       int,    0,      "Start iteration.")
     add_arg('use_multiprocess_reader', bool,   True,   "whether use multiprocess reader.")
-    add_arg('worker_num',       int,   8,   "worker number for multiprocess reader.")
     add_arg('use_data_parallel', ast.literal_eval, False, "the flag indicating whether to use data parallel model to train the model")
     #SOLVER
     add_arg('batch_size',       int,    8,      "Mini-batch size per device.")
@@ -134,7 +133,6 @@ def parse_args():
     add_arg('no_mixup_iter',    int,    40000,  "Disable mixup in last N iter.")
     # TRAIN TEST INFER
     add_arg('input_size',       int,    608,    "Image input size of YOLOv3.")
-    add_arg('syncbn',           bool,   True,   "Whether to use synchronized batch normalization.")
     add_arg('random_shape',     bool,   True,   "Resize to random shape for train reader.")
     add_arg('valid_thresh',     float,  0.005,  "Valid confidence score for NMS.")
     add_arg('nms_thresh',       float,  0.45,   "NMS threshold.")

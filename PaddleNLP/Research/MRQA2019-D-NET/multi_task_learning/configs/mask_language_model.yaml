@@ -1,5 +1,0 @@
-train_file: "data/mlm4mrqa"
-mix_ratio: 2.0
-batch_size: 4
-in_tokens: False
-generate_neg_sample: False

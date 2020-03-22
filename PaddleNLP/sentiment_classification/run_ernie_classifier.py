@@ -16,8 +16,8 @@ import sys
 import paddle
 import paddle.fluid as fluid
 
-sys.path.append("../models/classification/")
-sys.path.append("..")
+sys.path.append("../shared_modules/models/classification/")
+sys.path.append("../shared_modules/")
 print(sys.path)
 
 from nets import bow_net
@@ -36,40 +36,37 @@ from config import PDConfig
 
 from utils import init_checkpoint
 
+
 def ernie_pyreader(args, pyreader_name):
-    src_ids = fluid.layers.data(
-        name="src_ids", shape=[-1, args.max_seq_len, 1], dtype="int64")
-    sent_ids = fluid.layers.data(
-        name="sent_ids", shape=[-1, args.max_seq_len, 1], dtype="int64")
-    pos_ids = fluid.layers.data(
-        name="pos_ids", shape=[-1, args.max_seq_len, 1], dtype="int64")
-    input_mask = fluid.layers.data(
-        name="input_mask", shape=[-1, args.max_seq_len, 1], dtype="float32")
-    labels = fluid.layers.data(
-        name="labels", shape=[-1, 1], dtype="int64")
-    seq_lens = fluid.layers.data(
-        name="seq_lens", shape=[-1], dtype="int64")
-    
+    src_ids = fluid.data(
+        name="src_ids", shape=[None, args.max_seq_len, 1], dtype="int64")
+    sent_ids = fluid.data(
+        name="sent_ids", shape=[None, args.max_seq_len, 1], dtype="int64")
+    pos_ids = fluid.data(
+        name="pos_ids", shape=[None, args.max_seq_len, 1], dtype="int64")
+    input_mask = fluid.data(
+        name="input_mask", shape=[None, args.max_seq_len, 1], dtype="float32")
+    labels = fluid.data(name="labels", shape=[None, 1], dtype="int64")
+    seq_lens = fluid.data(name="seq_lens", shape=[None], dtype="int64")
+
     pyreader = fluid.io.DataLoader.from_generator(
         feed_list=[src_ids, sent_ids, pos_ids, input_mask, labels, seq_lens],
         capacity=50,
         iterable=False,
         use_double_buffer=True)
-    
+
     ernie_inputs = {
         "src_ids": src_ids,
         "sent_ids": sent_ids,
         "pos_ids": pos_ids,
         "input_mask": input_mask,
-        "seq_lens": seq_lens}
-    
+        "seq_lens": seq_lens
+    }
+
     return pyreader, ernie_inputs, labels
 
-def create_model(args,
-                 embeddings,
-                 labels,
-                 is_prediction=False):
 
+def create_model(args, embeddings, labels, is_prediction=False):
     """
     Create Model for sentiment classification based on ERNIE encoder
     """
@@ -78,11 +75,11 @@ def create_model(args,
 
     if args.model_type == "ernie_base":
         ce_loss, probs = ernie_base_net(sentence_embeddings, labels,
-            args.num_labels)
+                                        args.num_labels)
 
     elif args.model_type == "ernie_bilstm":
         ce_loss, probs = ernie_bilstm_net(token_embeddings, labels,
-            args.num_labels)
+                                          args.num_labels)
 
     else:
         raise ValueError("Unknown network type!")
@@ -120,8 +117,8 @@ def evaluate(exe, test_program, test_pyreader, fetch_list, eval_phase):
             break
     time_end = time.time()
     print("[%s evaluation] ave loss: %f, ave acc: %f, elapsed time: %f s" %
-        (eval_phase, np.sum(total_cost) / np.sum(total_num_seqs),
-        np.sum(total_acc) / np.sum(total_num_seqs), time_end - time_begin))
+          (eval_phase, np.sum(total_cost) / np.sum(total_num_seqs),
+           np.sum(total_acc) / np.sum(total_num_seqs), time_end - time_begin))
 
 
 def infer(exe, infer_program, infer_pyreader, fetch_list, infer_phase):
@@ -132,8 +129,9 @@ def infer(exe, infer_program, infer_pyreader, fetch_list, infer_phase):
     time_begin = time.time()
     while True:
         try:
-            batch_probs = exe.run(program=infer_program, fetch_list=fetch_list,
-                                return_numpy=True)
+            batch_probs = exe.run(program=infer_program,
+                                  fetch_list=fetch_list,
+                                  return_numpy=True)
             for probs in batch_probs[0]:
                 print("%d\t%f\t%f" % (np.argmax(probs), probs[0], probs[1]))
         except fluid.core.EOFException:
@@ -195,21 +193,19 @@ def main(args):
             with fluid.unique_name.guard():
                 # create ernie_pyreader
                 train_pyreader, ernie_inputs, labels = ernie_pyreader(
-                    args,
-                    pyreader_name='train_pyreader')
+                    args, pyreader_name='train_pyreader')
 
                 # get ernie_embeddings
                 if args.use_paddle_hub:
-                    embeddings = ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                    embeddings = ernie_encoder_with_paddle_hub(ernie_inputs,
+                                                               args.max_seq_len)
                 else:
-                    embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                    embeddings = ernie_encoder(
+                        ernie_inputs, ernie_config=ernie_config)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
-                args,
-                embeddings,
-                labels=labels,
-                is_prediction=False)
+                    args, embeddings, labels=labels, is_prediction=False)
 
                 optimizer = fluid.optimizer.Adam(learning_rate=args.lr)
                 optimizer.minimize(loss)
@@ -218,62 +214,59 @@ def main(args):
             lower_mem, upper_mem, unit = fluid.contrib.memory_usage(
                 program=train_program, batch_size=args.batch_size)
             print("Theoretical memory usage in training: %.3f - %.3f %s" %
-                (lower_mem, upper_mem, unit))
+                  (lower_mem, upper_mem, unit))
 
     if args.do_val:
         test_data_generator = reader.data_generator(
-                input_file=args.dev_set,
-                batch_size=args.batch_size,
-                phase='dev',
-                epoch=1,
-                shuffle=False)
+            input_file=args.dev_set,
+            batch_size=args.batch_size,
+            phase='dev',
+            epoch=1,
+            shuffle=False)
         test_prog = fluid.Program()
         with fluid.program_guard(test_prog, startup_prog):
             with fluid.unique_name.guard():
                 # create ernie_pyreader
                 test_pyreader, ernie_inputs, labels = ernie_pyreader(
-                    args,
-                    pyreader_name='eval_reader')
+                    args, pyreader_name='eval_reader')
 
                 # get ernie_embeddings
                 if args.use_paddle_hub:
-                    embeddings = ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                    embeddings = ernie_encoder_with_paddle_hub(ernie_inputs,
+                                                               args.max_seq_len)
                 else:
-                    embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                    embeddings = ernie_encoder(
+                        ernie_inputs, ernie_config=ernie_config)
 
                 # user defined model based on ernie embeddings
                 loss, accuracy, num_seqs = create_model(
-                args,
-                embeddings,
-                labels=labels,
-                is_prediction=False)
+                    args, embeddings, labels=labels, is_prediction=False)
 
         test_prog = test_prog.clone(for_test=True)
 
     if args.do_infer:
         infer_data_generator = reader.data_generator(
-                input_file=args.test_set,
-                batch_size=args.batch_size,
-                phase='infer',
-                epoch=1,
-                shuffle=False)
+            input_file=args.test_set,
+            batch_size=args.batch_size,
+            phase='infer',
+            epoch=1,
+            shuffle=False)
         infer_prog = fluid.Program()
         with fluid.program_guard(infer_prog, startup_prog):
             with fluid.unique_name.guard():
                 infer_pyreader, ernie_inputs, labels = ernie_pyreader(
-                    args,
-                    pyreader_name="infer_pyreader")
+                    args, pyreader_name="infer_pyreader")
 
                 # get ernie_embeddings
                 if args.use_paddle_hub:
-                    embeddings = ernie_encoder_with_paddle_hub(ernie_inputs, args.max_seq_len)
+                    embeddings = ernie_encoder_with_paddle_hub(ernie_inputs,
+                                                               args.max_seq_len)
                 else:
-                    embeddings = ernie_encoder(ernie_inputs, ernie_config=ernie_config)
+                    embeddings = ernie_encoder(
+                        ernie_inputs, ernie_config=ernie_config)
 
-                probs = create_model(args,
-                                    embeddings,
-                                    labels=labels,
-                                    is_prediction=True)
+                probs = create_model(
+                    args, embeddings, labels=labels, is_prediction=True)
 
         infer_prog = infer_prog.clone(for_test=True)
 
@@ -282,25 +275,17 @@ def main(args):
     if args.do_train:
         if args.init_checkpoint:
             init_checkpoint(
-                exe,
-                args.init_checkpoint,
-                main_program=train_program)
+                exe, args.init_checkpoint, main_program=train_program)
     elif args.do_val:
         if not args.init_checkpoint:
             raise ValueError("args 'init_checkpoint' should be set if"
                              "only doing validation or testing!")
-        init_checkpoint(
-            exe,
-            args.init_checkpoint,
-            main_program=test_prog)
+        init_checkpoint(exe, args.init_checkpoint, main_program=test_prog)
     elif args.do_infer:
         if not args.init_checkpoint:
             raise ValueError("args 'init_checkpoint' should be set if"
                              "only doing validation or testing!")
-        init_checkpoint(
-            exe,
-            args.init_checkpoint,
-            main_program=infer_prog)
+        init_checkpoint(exe, args.init_checkpoint, main_program=infer_prog)
 
     if args.do_train:
         train_exe = exe
@@ -327,7 +312,9 @@ def main(args):
                 else:
                     fetch_list = []
 
-                outputs = train_exe.run(program=train_program, fetch_list=fetch_list, return_numpy=False)
+                outputs = train_exe.run(program=train_program,
+                                        fetch_list=fetch_list,
+                                        return_numpy=False)
                 if steps % args.skip_steps == 0:
                     np_loss, np_acc, np_num_seqs = outputs
                     np_loss = np.array(np_loss)
@@ -338,34 +325,36 @@ def main(args):
                     total_num_seqs.extend(np_num_seqs)
 
                     if args.verbose:
-                        verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size()
+                        verbose = "train pyreader queue size: %d, " % train_pyreader.queue.size(
+                        )
                         print(verbose)
 
                     time_end = time.time()
                     used_time = time_end - time_begin
                     print("step: %d, ave loss: %f, "
-                        "ave acc: %f, speed: %f steps/s" %
-                        (steps, np.sum(total_cost) / np.sum(total_num_seqs),
-                        np.sum(total_acc) / np.sum(total_num_seqs),
-                        args.skip_steps / used_time))
+                          "ave acc: %f, speed: %f steps/s" %
+                          (steps, np.sum(total_cost) / np.sum(total_num_seqs),
+                           np.sum(total_acc) / np.sum(total_num_seqs),
+                           args.skip_steps / used_time))
                     total_cost, total_acc, total_num_seqs = [], [], []
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
                     save_path = os.path.join(args.checkpoints,
-                                         "step_" + str(steps))
-                    fluid.io.save_persistables(exe, save_path, train_program)
+                                             "step_" + str(steps), "checkpoint")
+                    fluid.save(train_program, save_path)
 
                 if steps % args.validation_steps == 0:
                     # evaluate dev set
                     if args.do_val:
                         evaluate(exe, test_prog, test_pyreader,
-                                [loss.name, accuracy.name, num_seqs.name],
-                                "dev")
+                                 [loss.name, accuracy.name, num_seqs.name],
+                                 "dev")
 
             except fluid.core.EOFException:
-                save_path = os.path.join(args.checkpoints, "step_" + str(steps))
-                fluid.io.save_persistables(exe, save_path, train_program)
+                save_path = os.path.join(args.checkpoints, "step_" + str(steps),
+                                         "checkpoint")
+                fluid.save(train_program, save_path)
                 train_pyreader.reset()
                 break
 
@@ -373,13 +362,13 @@ def main(args):
     if args.do_val:
         print("Final validation result:")
         evaluate(exe, test_prog, test_pyreader,
-            [loss.name, accuracy.name, num_seqs.name], "dev")
+                 [loss.name, accuracy.name, num_seqs.name], "dev")
 
     # final eval on test set
     if args.do_infer:
         print("Final test result:")
-        infer(exe, infer_prog, infer_pyreader,
-            [probs.name], "infer")
+        infer(exe, infer_prog, infer_pyreader, [probs.name], "infer")
+
 
 if __name__ == "__main__":
     args = PDConfig()

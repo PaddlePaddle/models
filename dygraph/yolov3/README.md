@@ -139,7 +139,6 @@ Train Loss
 
 模型评估是指对训练完毕的模型评估各类性能指标。本示例采用[COCO官方评估](http://cocodataset.org/#detections-eval)
 
-    sh ./weights/download.sh
 
 `eval.py`是评估模块的主要执行程序，调用示例如下：
 
@@ -149,6 +148,8 @@ Train Loss
         --class_num=${category_num}
 
 - 通过设置`export CUDA_VISIBLE_DEVICES=0`指定单卡GPU评估。
+
+
 
 
 ## 进阶使用

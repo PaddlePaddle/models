@@ -24,6 +24,7 @@ import paddle.fluid as fluid
 
 from utils.configure import PDConfig
 from utils.check import check_gpu, check_version
+from utils.load import load_dygraph
 
 # include task-specific libs
 import reader
@@ -97,13 +98,13 @@ def do_train(args):
 
         ## init from some checkpoint, to resume the previous training
         if args.init_from_checkpoint:
-            model_dict, opt_dict = fluid.load_dygraph(
+            model_dict, opt_dict = load_dygraph(
                 os.path.join(args.init_from_checkpoint, "transformer"))
             transformer.load_dict(model_dict)
             optimizer.set_dict(opt_dict)
         ## init from some pretrain models, to better solve the current task
         if args.init_from_pretrain_model:
-            model_dict, _ = fluid.load_dygraph(
+            model_dict, _ = load_dygraph(
                 os.path.join(args.init_from_pretrain_model, "transformer"))
             transformer.load_dict(model_dict)
 
@@ -119,6 +120,8 @@ def do_train(args):
             args.label_smooth_eps * np.log(args.label_smooth_eps /
                                            (args.trg_vocab_size - 1) + 1e-20))
 
+        ce_time = []
+        ce_ppl = []
         step_idx = 0
         # train loop
         for pass_id in range(args.epoch):
@@ -164,6 +167,7 @@ def do_train(args):
                             total_avg_cost - loss_normalizer,
                             np.exp([min(total_avg_cost, 100)]),
                             args.print_step / (time.time() - avg_batch_time)))
+                        ce_ppl.append(np.exp([min(total_avg_cost, 100)]))
                         avg_batch_time = time.time()
 
                 if step_idx % args.save_step == 0 and step_idx != 0 and (
@@ -184,7 +188,8 @@ def do_train(args):
                 batch_id += 1
                 step_idx += 1
 
-        time_consumed = time.time() - pass_start_time
+            time_consumed = time.time() - pass_start_time
+            ce_time.append(time_consumed)
 
         if args.save_model:
             model_dir = os.path.join(args.save_model, "step_final")
@@ -194,6 +199,17 @@ def do_train(args):
                                os.path.join(model_dir, "transformer"))
             fluid.save_dygraph(optimizer.state_dict(),
                                os.path.join(model_dir, "transformer"))
+
+        if args.enable_ce:
+            _ppl = 0
+            _time = 0
+            try:
+                _time = ce_time[-1]
+                _ppl = ce_ppl[-1]
+            except:
+                print("ce info error")
+            print("kpis\ttrain_duration_card%s\t%s" % (trainer_count, _time))
+            print("kpis\ttrain_ppl_card%s\t%f" % (trainer_count, _ppl))
 
 
 if __name__ == "__main__":

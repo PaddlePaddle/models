@@ -78,7 +78,7 @@ def train():
                                                  args.num_devices)
     logger.info("reading data completes")
 
-    avg_cost, pred = network.network(item_count, cat_count, max_len)
+    avg_cost, pred, feed_list = network.network(item_count, cat_count)
     fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(
         clip_norm=5.0))
     base_lr = args.base_lr
@@ -94,12 +94,9 @@ def train():
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    feeder = fluid.DataFeeder(
-        feed_list=[
-            "hist_item_seq", "hist_cat_seq", "target_item", "target_cat",
-            "label", "mask", "target_item_seq", "target_cat_seq"
-        ],
-        place=place)
+    loader = fluid.io.DataLoader.from_generator(
+        feed_list=feed_list, capacity=10000, iterable=True)
+    loader.set_sample_list_generator(data_reader, places=place)
     if use_parallel:
         train_exe = fluid.ParallelExecutor(
             use_cuda=use_cuda, loss_name=avg_cost.name)
@@ -117,9 +114,9 @@ def train():
     loss_sum = 0.0
     for id in range(epoch_num):
         epoch = id + 1
-        for data in data_reader():
+        for data in loader():
             global_step += 1
-            results = train_exe.run(feed=feeder.feed(data),
+            results = train_exe.run(feed=data,
                                     fetch_list=[avg_cost.name, pred.name],
                                     return_numpy=True)
             loss_sum += results[0].mean()
