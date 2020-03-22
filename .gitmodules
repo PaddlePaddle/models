@@ -3,8 +3,7 @@
 	url = https://github.com/PaddlePaddle/PARL
 [submodule "PaddleCV/PaddleSeg"]
 	path = PaddleCV/PaddleSeg
-	url = https://github.com/PaddlePaddle/PaddleSeg
-	branch = release/v0.4.0
+	url = https://github.com/PaddlePaddle/PaddleSeg.git
 [submodule "AutoDL"]
 	path = AutoDL
 	url = https://github.com/PaddlePaddle/AutoDL.git

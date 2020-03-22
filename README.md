@@ -83,8 +83,8 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
 | [Fast-SCNN](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_fast_scnn.md) | 一个面向实时的语义分割网络。在双分支的结构基础上，大量使用了深度可分离卷积和逆残差（inverted-residual）模块，并且使用特征融合构造金字塔池化模块 (Pyramid Pooling Module)来融合上下文信息。这使得Fast-SCNN在保持高效的情况下能学习到丰富的细节信息。 | Cityscapes | Mean IoU=69.64% |
 | [PSPNet (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | 通过利用不同子区域和全局的上下文信息来增强语义分割质量，同时提出deeply supervised 的辅助loss去改善模型的优化 | Cityscapes | Mean IoU=78.1% |
 | [GloRe (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | 提出一个轻量级的、可端到端训练的全局推理单元GloRe来高效推理image regions之间的关系，增强了模型上下文建模能力| Cityscapes | Mean IoU=78.4% |
-| [PSPNet (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | -| PASCAL Context | Mean IoU = 48.9  |
-| [GloRe (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | -| PASCAL Context | Mean IoU = 48.4 |
+| [PSPNet (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | -| PASCAL Context | Mean IoU=48.9  |
+| [GloRe (res101)](https://github.com/PaddlePaddle/Research/tree/master/CV/SemSegPaddle) | -| PASCAL Context | Mean IoU=48.4 |
 
 ### 关键点检测
 
