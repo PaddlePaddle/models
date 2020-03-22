@@ -1,6 +1,6 @@
 PaddleCV
 ========
-PaddleCV 是基于 PaddlePaddle 深度学习框架开发的智能视觉工具，算法，模型和数据的开源项目。百度在 CV 领域多年的深厚积淀为 PaddleCV 提供了强大的核心动力。PaddleCV集成了丰富的CV模型，涵盖图像分类，目标检测，图像分割，视频分类，动作定位，目标跟踪，图像生成，文字识别，度量学习，关键点检测，3D视觉等 CV 技术。同时，PaddleCV 还提供了实用的工具，PLSC支持超大规模分类，PaddleSlim和PaddleLite支持工业级部署，以及 PaddleDetection、PaddleSeg面向产业的端到端开发套件，打通了模型开发、压缩、部署全流程。
+PaddleCV 是基于 PaddlePaddle 深度学习框架开发的智能视觉工具，算法，模型和数据的开源项目。百度在 CV 领域多年的深厚积淀为 PaddleCV 提供了强大的核心动力。PaddleCV集成了丰富的CV模型，涵盖图像分类，目标检测，图像分割，视频分类，动作定位，目标跟踪，图像生成，文字识别，度量学习，关键点检测，3D视觉等 CV 技术。同时，PaddleCV 还提供了实用的工具，[PLSC](https://github.com/paddlepaddle/plsc)支持超大规模分类，[PaddleSlim](https://github.com/PaddlePaddle/PaddleSlim)和[PaddleLite](https://github.com/PaddlePaddle/Paddle-Lite)支持工业级部署，以及 [PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection)、[PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg)面向产业的端到端开发套件，打通了模型开发、压缩、部署全流程。
 
 PaddleCV全景图：
 
