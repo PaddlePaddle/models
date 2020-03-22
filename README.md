@@ -159,8 +159,8 @@ PaddleCV全面开源了视频分类、动作定位 和 目标跟踪等视频任�
 
 | 模型名称                                                     | 模型简介                                                     | 数据集                     | 评估指标    |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------- | ----------- |
-| [PointNet++](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV//3d_vision/PointNet++) | 改进的PointNet网络，加入局部特征提取提高模型泛化能力 | ModelNet40(分类) / Indoor3D(分割) | 分类：Top-1 = 90% / 分割：Top-1 = 86% |
-| [PointRCNN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV//3d_vision/PointRCNN) | 自下而上的3D检测框生成方法 | KITTI(Car) | 3D AP@70(easy/median/hard) = 86.66/76.65/75.90 |
+| [PointNet++](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/3d_vision/PointNet++) | 改进的PointNet网络，加入局部特征提取提高模型泛化能力 | ModelNet40(分类) / Indoor3D(分割) | 分类：Top-1 = 90% / 分割：Top-1 = 86% |
+| [PointRCNN](https://github.com/PaddlePaddle/models/tree/release/1.7/PaddleCV/3d_vision/PointRCNN) | 自下而上的3D检测框生成方法 | KITTI(Car) | 3D AP@70(easy/median/hard) = 86.66/76.65/75.90 |
 
 ## PaddleNLP
 
