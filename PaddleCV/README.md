@@ -47,7 +47,7 @@ Mask RCNN模型是基于Faster RCNN模型的经典实例分割模型，在原有
 
 图像语义分割顾名思义是将图像像素按照表达的语义含义的不同进行分组/分割，图像语义是指对图像内容的理解，例如，能够描绘出什么物体在哪里做了什么事情等，分割是指对图片中的每个像素点进行标注，标注属于哪一类别。近年来用在无人车驾驶技术中分割街景来避让行人和车辆、医疗影像分析中辅助诊断等。
 
-在图像语义分割任务中，我们以眼底医疗分割任务为例，介绍了如何应用DeepLabv3+, U-Net, ICNet, PSPNet, HRNet, Fast-SCNN等主流分割模型。通过统一的配置，帮助大家更便捷地完成从训练到部署的全流程图像分割应用。
+在图像语义分割任务中，我们以眼底医疗分割任务为例，介绍了如何应用DeepLabv3+, U-Net, ICNet, PSPNet, HRNet, Fast-SCNN等主流分割模型，我们也使用LaneNet模型进行车道线检测，演示语义分割在无人驾驶中的应用。通过统一的配置，帮助大家更便捷地完成从训练到部署的全流程图像分割应用。
 
 - [U-Net](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_unet.md)
 - [ICNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_icnet.md)
@@ -55,6 +55,7 @@ Mask RCNN模型是基于Faster RCNN模型的经典实例分割模型，在原有
 - [DeepLabv3+](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_deeplabv3plus.md) 
 - [HRNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_hrnet.md) 
 - [Fast-SCNN](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_fast_scnn.md) 
+- [LaneNet](https://github.com/PaddlePaddle/PaddleSeg/tree/release/v0.4.0/contrib/LaneNet)
 
 图像生成
 -----------
