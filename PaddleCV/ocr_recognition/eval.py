@@ -66,9 +66,11 @@ def evaluate(args):
     model_dir = args.model_path
     if os.path.isdir(args.model_path):
         raise Exception("{} should not be a directory".format(args.model_path))
-    fluid.load(program=fluid.default_main_program(),
-               model_path=model_dir,
-               executor=exe)
+    fluid.load(
+        program=fluid.default_main_program(),
+        model_path=model_dir,
+        executor=exe,
+        var_list=fluid.io.get_program_parameter(fluid.default_main_program()))
     print("Init model from: %s." % args.model_path)
 
     evaluator.reset(exe)

@@ -87,7 +87,8 @@ def inference(args):
     fluid.load(
         program=fluid.default_main_program(),
         model_path=model_dir,
-        executor=exe)
+        executor=exe,
+        var_list=fluid.io.get_program_parameter(fluid.default_main_program()))
     print("Init model from: %s." % args.model_path)
 
     batch_times = []
