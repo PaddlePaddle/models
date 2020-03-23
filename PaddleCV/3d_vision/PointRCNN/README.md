@@ -71,6 +71,8 @@ sh build_and_install.sh
 
 ### 编译自定义OP
 
+**注意：** 请使用4.8及以上版本的`gcc`进行自定义OP的编译，否则可能引入兼容性问题。
+
 请确认Paddle版本为PaddelPaddle Fluid develop每日版本或基于Paddle develop分支源码编译安装，**推荐使用源码编译安装的方式**。
 
 自定义OP编译方式如下：
