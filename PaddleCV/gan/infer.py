@@ -204,6 +204,7 @@ def infer(args):
     if not os.path.exists(args.output):
         os.makedirs(args.output)
 
+
     attr_names = args.selected_attrs.split(',')
 
     if args.model_net == 'AttGAN' or args.model_net == 'STGAN':
@@ -311,6 +312,9 @@ def infer(args):
             fake_temp = save_batch_image(fake_temp[0])
             input_temp = save_batch_image(np.array(real_img))
 
+            if len(image_names) == 1:
+                fake_temp = np.expand_dims(fake_temp, axis=0)
+                input_temp = np.expand_dims(input_temp, axis=0)
             for i, name in enumerate(image_names):
                 fake_image = Image.fromarray(((fake_temp[i] + 1) * 127.5).astype(np.uint8))
                 fake_image.save(os.path.join(args.output, "fake_" + name))
