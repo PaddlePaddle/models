@@ -42,14 +42,14 @@ def norm_layer(input,
     if norm_type == 'batch_norm':
         if affine == True:
             param_attr = fluid.ParamAttr(
-                name=name + '_w', initializer=fluid.initializer.Constant(1.0))
+                name=name + '_w', initializer=fluid.initializer.Normal(loc=1.0, scale=0.02))
             bias_attr = fluid.ParamAttr(
                 name=name + '_b',
                 initializer=fluid.initializer.Constant(value=0.0))
         else:
             param_attr = fluid.ParamAttr(
                 name=name + '_w',
-                initializer=fluid.initializer.Constant(1.0),
+                initializer=fluid.initializer.Normal(loc=1.0, scale=0.02),
                 trainable=False)
             bias_attr = fluid.ParamAttr(
                 name=name + '_b',
