@@ -27,7 +27,7 @@ import paddle.fluid as fluid
 from paddle.fluid import layers
 import paddle.fluid.param_attr as attr
 import paddle.fluid.layers.utils as utils
-from paddle.fluid.dygraph import Embedding, Pool2D, Linear, Conv2D, GRUUnit, Layer, to_variable
+from paddle.fluid.dygraph import Embedding, Conv2D, GRUUnit, Layer, to_variable
 from paddle.fluid.layers.utils import map_structure, flatten, pack_sequence_as
 
 class EmbeddingLayer(object):
@@ -48,7 +48,6 @@ class EmbeddingLayer(object):
         """
         operation
         """
-        # name = self.name
         emb = Embedding(
             size=[self.dict_size, self.emb_dim],
             is_sparse=True,
@@ -99,7 +98,6 @@ class DynamicGRULayer(object):
         """
         operation
         """
-
         gru = DynamicGRU(
             size=self.gru_dim,
             param_attr=attr.ParamAttr(name="%s.w" % self.name),
@@ -201,7 +199,7 @@ class CrossEntropyLayer(object):
         """
         operation
         """
-        loss = fluid.layers.cross_entropy(input=input, label=label)   # no need
+        loss = fluid.layers.cross_entropy(input=input, label=label)
         return loss
 
 
@@ -220,7 +218,7 @@ class SoftmaxWithCrossEntropyLayer(object):
         """
         operation
         """
-        loss = fluid.layers.softmax_with_cross_entropy(   # no need
+        loss = fluid.layers.softmax_with_cross_entropy(
             logits=input, label=label)
         return loss
 
@@ -359,9 +357,7 @@ class SoftsignLayer(object):
         return softsign
 
 
-
-# dygraph 
-class SimpleConvPool(fluid.dygraph.Layer):
+class SimpleConvPool(Layer):
     def __init__(self,
                  num_channels,
                  num_filters,
@@ -573,6 +569,7 @@ class FC(Layer):
             pre_activation = pre_bias
         # Currently, we don't support inplace in dygraph mode
         return self._helper.append_activation(pre_activation, act=self._act)
+
 
 class DynamicGRU(Layer):
     def __init__(self,
@@ -916,10 +913,6 @@ class RNN(Layer):
         return final_outputs, final_states
 
 
-from paddle.fluid.dygraph import Embedding, LayerNorm, Linear, Layer, to_variable
-place = fluid.CPUPlace()
-executor = fluid.Executor(place)
-
 class EncoderCell(RNNUnit):
     def __init__(self, num_layers, input_size, hidden_size, dropout_prob=0.):
         super(EncoderCell, self).__init__()
@@ -946,6 +939,7 @@ class EncoderCell(RNNUnit):
     @property
     def state_shape(self):
         return [cell.state_shape for cell in self.lstm_cells]
+
 
 class BasicGRUUnit(Layer):
     """
