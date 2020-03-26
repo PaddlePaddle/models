@@ -3,14 +3,14 @@
  以下是本例的简要目录结构及说明： 
 
 ```
-├── README.md            # 文档
-├── share_bottom.py      # mmoe模型脚本
-├── utils                # 通用函数
-├── args                 # 参数脚本
-├── create_data.sh       # 生成训练数据脚本
-├── data_preparation.py  # 数据预处理脚本
-├── train_gpu.sh		 # gpu训练脚本
-├── train_cpu.sh		 # cpu训练脚本
+├── README.md # 文档
+├── share_bottom.py # mmoe模型脚本
+├── utils # 通用函数
+├── args # 参数脚本
+├── create_data.sh # 生成训练数据脚本
+├── data_preparation.py # 数据预处理脚本
+├── train_gpu.sh # gpu训练脚本
+├── train_cpu.sh # cpu训练脚本
 ```
 
 ## 简介
@@ -27,7 +27,7 @@ share_bottom是多任务学习的基本框架，其特点是对于不同的任�
 
 数据解压后， 在create_data.sh脚本文件中添加文件的路径，并运行脚本。
 
-```
+```sh
 mkdir data/data24913/train_data 		#新建训练数据目录
 mkdir data/data24913/test_data			#新建测试数据目录
 mkdir data/data24913/validation_data 	#新建验证数据目录
@@ -58,11 +58,11 @@ GPU环境
 在train_gpu.sh脚本文件中设置好数据路径、参数。
 
 ```sh
-python share_bottom.py  --use_gpu True\								#使用cpu训练
-                        --train_path data/data24913/train_data/\	#训练数据路径
-                        --test_path data/data24913/test_data/\		#测试数据路径
-                        --batch_size 32\							#设置batch_size大小
-                        --epochs 400								#设置epoch轮次
+python share_bottom.py  --use_gpu True\	#使用cpu训练
+                        --train_path data/data24913/train_data/\ #训练数据路径
+                        --test_path data/data24913/test_data/\ #测试数据路径
+                        --batch_size 32\ #设置batch_size大小
+                        --epochs 400 #设置epoch轮次
 ```
 
 修改脚本的可执行权限并运行
@@ -76,11 +76,11 @@ CPU环境
 在train_cpu.sh脚本文件中设置好数据路径、参数。
 
 ```sh
-python share_bottom.py  --use_gpu False\							#使用cpu训练
-                        --train_path data/data24913/train_data/\	#训练数据路径
-                        --test_path data/data24913/test_data/\		#测试数据路径
-                        --batch_size 32\							#设置batch_size大小
-                        --epochs 400\								#设置epoch轮次
+python share_bottom.py  --use_gpu False\ #使用cpu训练
+                        --train_path data/data24913/train_data/\ #训练数据路径
+                        --test_path data/data24913/test_data/\ #测试数据路径
+                        --batch_size 32\ #设置batch_size大小
+                        --epochs 400 #设置epoch轮次
 ```
 
 修改脚本的可执行权限并运行
