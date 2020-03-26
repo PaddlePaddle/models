@@ -49,7 +49,7 @@ def norm_layer(input,
         else:
             param_attr = fluid.ParamAttr(
                 name=name + '_w',
-                initializer=fluid.initializer.Normal(loc=1.0, scale=0.02),
+                initializer=fluid.initializer.Constant(1.0),
                 trainable=False)
             bias_attr = fluid.ParamAttr(
                 name=name + '_b',
