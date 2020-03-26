@@ -254,7 +254,6 @@ def train(conf_dict, args):
         logging.info("saving infer model in %s" % model_path)
         # used for continuous evaluation
         if args.enable_ce:
-        # if True:
             card_num = get_cards()
             ce_loss = 0
             ce_time = 0
@@ -334,7 +333,6 @@ def test(conf_dict, args):
                 
                     left_feat, pos_score = net(left, pos_right)
                     pred = pos_score
-                    # pred_list += list(pred.numpy())
 
                     pred_list += list(map(lambda item: float(item[0]), pred.numpy()))
                     predictions_file.write(u"\n".join(
@@ -345,7 +343,6 @@ def test(conf_dict, args):
                     left = fluid.layers.reshape(left, shape=[-1, 1])
                     right = fluid.layers.reshape(right, shape=[-1, 1])
                     left_feat, pred = net(left, right)
-                    # pred_list += list(pred.numpy())
 
                     pred_list += list(map(lambda item: float(item[0]), pred.numpy()))
                     predictions_file.write(u"\n".join(
