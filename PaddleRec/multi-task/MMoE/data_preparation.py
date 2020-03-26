@@ -72,7 +72,7 @@ def data_preparation(train_path, test_path, train_data_path, test_data_path,
     # Filling the missing column in the other set
     transformed_other[
         'det_hh_fam_stat_ Grandchild <18 ever marr not in subfamily'] = 0
-    #归一化
+    # get label
     transformed_train['income_50k'] = transformed_train['income_50k'].apply(
         lambda x: fun1(x))
     transformed_train['marital_stat'] = transformed_train['marital_stat'].apply(
