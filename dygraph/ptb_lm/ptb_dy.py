@@ -24,6 +24,7 @@ from paddle.fluid.optimizer import SGDOptimizer
 from paddle.fluid.dygraph.base import to_variable
 import numpy as np
 import six
+import multiprocessing
 
 import reader
 import model_check
@@ -217,7 +218,7 @@ def train_ptb_lm():
     model_check.check_cuda(args.use_gpu)
 
     place = core.CPUPlace()
-    if args.use_cuda:
+    if args.use_gpu:
         place = fluid.CUDAPlace(0)
         dev_count = fluid.core.get_cuda_device_count()
     else:
