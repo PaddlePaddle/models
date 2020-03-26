@@ -217,11 +217,13 @@ def train_ptb_lm():
     model_check.check_cuda(args.use_gpu)
 
     place = core.CPUPlace()
-    if args.use_gpu == True:
-        place = core.CUDAPlace(0)
-
-    dev_count = fluid.core.get_cuda_device_count()
-
+    if args.use_cuda:
+        place = fluid.CUDAPlace(0)
+        dev_count = fluid.core.get_cuda_device_count()
+    else:
+        place = fluid.CPUPlace()
+        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+    
     # check if paddlepaddle version is satisfied
     model_check.check_version()
 
