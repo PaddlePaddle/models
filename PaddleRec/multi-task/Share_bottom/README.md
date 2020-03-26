@@ -58,10 +58,10 @@ GPU环境
 在train_gpu.sh脚本文件中设置好数据路径、参数。
 
 ```
-python share_bottom.py  --use_gpu True								#使用cpu训练
-					    --train_path data/data24913/train_data/		#训练数据路径
-					    --test_path data/data24913/test_data/		#测试数据路径
-					    --batch_size 32								#设置batch_size大小
+python share_bottom.py  --use_gpu True\								#使用cpu训练
+					    --train_path data/data24913/train_data/\	#训练数据路径
+					    --test_path data/data24913/test_data/\		#测试数据路径
+					    --batch_size 32\							#设置batch_size大小
 					    --epochs 400								#设置epoch轮次
 ```
 
@@ -75,12 +75,12 @@ CPU环境
 
 在train_cpu.sh脚本文件中设置好数据路径、参数。
 
-```
-python share_bottom.py  --use_gpu False								#使用cpu训练
-					    --train_path data/data24913/train_data/		#训练数据路径
-					    --test_path data/data24913/test_data/		#测试数据路径
-					    --batch_size 32								#设置batch_size大小
-					    --epochs 400								#设置epoch轮次
+```text
+python share_bottom.py  --use_gpu False\							#使用cpu训练
+					    --train_path data/data24913/train_data/\	#训练数据路径
+					    --test_path data/data24913/test_data/\		#测试数据路径
+					    --batch_size 32\							#设置batch_size大小
+					    --epochs 400\								#设置epoch轮次
 ```
 
 修改脚本的可执行权限并运行
@@ -99,5 +99,5 @@ python share_bottom.py  --use_gpu False								#使用cpu训练
 
 epoch设置为100的训练和测试效果如下：
 
-![image-20200326122512504](C:\Users\overlord\AppData\Roaming\Typora\typora-user-images\image-20200326122512504.png)
+![](./image/share_bottom.png)
 
