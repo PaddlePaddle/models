@@ -76,6 +76,7 @@ python -u train.py \
   --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
   --training_file gen_data/wmt16_ende_data_bpe/train.tok.clean.bpe.32000.en-de \
+  --validation_file gen_data/wmt16_ende_data_bpe/newstest2014.tok.bpe.32000.en-de \
   --batch_size 4096
 ```
 
@@ -91,6 +92,7 @@ python -u train.py \
   --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
   --training_file gen_data/wmt16_ende_data_bpe/train.tok.clean.bpe.32000.en-de \
+  --validation_file gen_data/wmt16_ende_data_bpe/newstest2014.tok.bpe.32000.en-de \
   --batch_size 4096 \
   --n_head 16 \
   --d_model 1024 \
@@ -121,10 +123,11 @@ Paddle动态图支持多进程多卡进行模型训练，启动训练的方式�
 ```sh
 python -m paddle.distributed.launch --started_port 8999 --selected_gpus=0,1,2,3,4,5,6,7 --log_dir ./mylog train.py \
   --epoch 30 \
-  --src_vocab_fpath wmt16_ende_data_bpe/vocab_all.bpe.32000 \
-  --trg_vocab_fpath wmt16_ende_data_bpe/vocab_all.bpe.32000 \
+  --src_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
+  --trg_vocab_fpath gen_data/wmt16_ende_data_bpe/vocab_all.bpe.32000 \
   --special_token '<s>' '<e>' '<unk>' \
-  --training_file wmt16_ende_data_bpe/train.tok.clean.bpe.32000.en-de \
+  --training_file gen_data/wmt16_ende_data_bpe/train.tok.clean.bpe.32000.en-de \
+  --validation_file gen_data/wmt16_ende_data_bpe/newstest2014.tok.bpe.32000.en-de \
   --batch_size 4096 \
   --print_step 100 \
   --use_cuda True \
