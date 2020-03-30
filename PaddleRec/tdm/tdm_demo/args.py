@@ -125,7 +125,7 @@ def parse_args():
                     "whether load model(paddle persistables model)")
     model_g.add_arg("save_init_model", bool, False,
                     "whether save init model(paddle persistables model)")
-    model_g.add_arg("init_model_files_path", str, "./models/epoch_0",
+    model_g.add_arg("init_model_files_path", str, "./models/init_model",
                     "init model params by paddle model files for training")
 
     args = parser.parse_args()

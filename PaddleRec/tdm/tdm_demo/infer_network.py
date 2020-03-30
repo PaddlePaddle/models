@@ -19,6 +19,7 @@ import math
 import argparse
 import numpy as np
 import paddle.fluid as fluid
+import paddle.tensor as tensor
 from utils import tdm_sampler_prepare, tdm_child_prepare, tdm_warm_start_prepare, tdm_item_rerank, trace_var
 from train_network import DnnLayerClassifierNet
 
@@ -35,16 +36,6 @@ class TdmInferNet(object):
         self.child_nums = args.child_nums
 
         self.layer_list = self.get_layer_list(args)
-        self.infer_topk_list = []
-        for layer_idx in range(self.max_layers):
-            layer_topk_node = self.topK
-            current_layer_max_node = len(self.layer_list[layer_idx])
-            if current_layer_max_node < self.topK or \
-                    (self.topK == 1 and layer_idx == 0):
-                layer_topk_node = current_layer_max_node
-            self.infer_topk_list.append(layer_topk_node)
-        args.neg_sampling_list = self.infer_topk_list
-
         self.first_layer_idx = 0
         self.first_layer_node = self.create_first_layer()
         self.layer_classifier = DnnLayerClassifierNet(args)
@@ -113,17 +104,7 @@ class TdmInferNet(object):
         )
 
         for layer_idx in range(self.first_layer_idx, self.max_layers):
-            # (None, father * child)
-            if layer_idx == 0:
-                node_num = self.infer_topk_list[layer_idx]
-            else:
-                node_num = self.infer_topk_list[layer_idx -
-                                                1] * self.child_nums
-
-            current_layer_node = fluid.layers.reshape(
-                current_layer_node, [-1, node_num])  # int64
-            current_layer_child_mask = fluid.layers.reshape(
-                current_layer_child_mask, [-1, node_num])  # int64
+            current_layer_node_num = current_layer_node.shape[1]
 
             node_emb = fluid.embedding(
                 input=current_layer_node,
@@ -146,36 +127,31 @@ class TdmInferNet(object):
             positive_prob = fluid.layers.slice(
                 prob, axes=[2], starts=[1], ends=[2])
             prob_re = fluid.layers.reshape(
-                positive_prob, [self.batch_size, node_num])
+                positive_prob, [self.batch_size, current_layer_node_num])
 
             k = self.topK
-            if node_num < self.topK:
-                k = node_num
+            if current_layer_node_num < self.topK:
+                k = current_layer_node_num
             _, topk_i = fluid.layers.topk(prob_re, k)  # (None, K)
 
-            top_node = fluid.layers.find_by_index(
-                current_layer_node, topk_i, dtype='int64')
+            top_node = tensor.index_sample(current_layer_node, topk_i)
             prob_re_mask = prob_re * current_layer_child_mask
-            topk_value = fluid.layers.find_by_index(
-                prob_re_mask, topk_i, dtype='float32')
+            topk_value = tensor.index_sample(prob_re_mask, topk_i)
             node_score.append(topk_value)
             node_list.append(top_node)
 
             if layer_idx < self.max_layers - 1:
                 current_layer_node, current_layer_child_mask = \
-                    fluid.layers.tdm_child(top_node,
-                                           size=[self.node_nums,
-                                                 3 + self.child_nums],
-                                           ancestor_nums=self.infer_topk_list[layer_idx],
-                                           child_nums=self.child_nums,
-                                           param_attr=fluid.ParamAttr(name="TDM_Tree_Info"), dtype='int64')
+                    fluid.contribs.layers.tdm_child(x=top_node,
+                                                    node_nums=self.node_nums,
+                                                    child_nums=self.child_nums,
+                                                    param_attr=fluid.ParamAttr(name="TDM_Tree_Info"), dtype='int64')
 
         total_node_score = fluid.layers.concat(node_score, axis=1)
         total_node = fluid.layers.concat(node_list, axis=1)
 
         _, res_i = fluid.layers.topk(total_node_score, self.topK)
-        res_layer_node = fluid.layers.find_by_index(
-            total_node, res_i, dtype='int64')  # (None,topk)
+        res_layer_node = tensor.index_sample(total_node, res_i)
         res_node = fluid.layers.reshape(res_layer_node, [-1, self.topK, 1])
 
         tree_info = fluid.default_main_program().global_block().var("TDM_Tree_Info")
