@@ -19,7 +19,7 @@ import math
 import argparse
 import numpy as np
 import paddle.fluid as fluid
-from utils import tdm_sampler_prepare, tdm_child_prepare, tdm_warm_start_prepare, tdm_item_rerank, trace_var
+from utils import tdm_sampler_prepare, tdm_child_prepare, trace_var
 
 
 class TdmTrainNet(object):

@@ -25,7 +25,7 @@ import paddle
 import paddle.fluid as fluid
 
 from args import print_arguments, parse_args
-from utils import tdm_sampler_prepare, tdm_child_prepare, save_item_emb, gen_tree_main
+from utils import tdm_sampler_prepare, tdm_child_prepare
 from train_network import TdmTrainNet
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
