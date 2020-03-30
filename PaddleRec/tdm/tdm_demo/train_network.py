@@ -196,7 +196,7 @@ class DnnLayerClassifierNet(object):
         self.is_test = args.is_test
         self.child_nums = args.child_nums
 
-    def _expand_layer(self, input_layer, node, layer_idx, is_test=0):
+    def _expand_layer(self, input_layer, node, layer_idx):
         input_layer_unsequeeze = fluid.layers.unsqueeze(
             input=input_layer, axes=[1])
         input_layer_expand = fluid.layers.expand(
@@ -206,7 +206,7 @@ class DnnLayerClassifierNet(object):
     def classifier_layer(self, input, node):
 
         input_expand = [
-            self._expand_layer(input[i], node, i, self.is_test) for i in range(self.max_layers)
+            self._expand_layer(input[i], node, i) for i in range(self.max_layers)
         ]
 
         input_node_concat = [
@@ -229,7 +229,7 @@ class DnnLayerClassifierNet(object):
         return hidden_states_concat
 
     def classifier_layer_infer(self, input, node, layer_idx):
-        input_expand = self._expand_layer(input, layer_idx, self.is_test)
+        input_expand = self._expand_layer(input, node, layer_idx)
 
         input_node_concat = fluid.layers.concat(
             input=[input_expand, node], axis=2)
