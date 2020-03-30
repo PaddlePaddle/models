@@ -17,7 +17,21 @@
 
 多任务模型通过学习不同任务的联系和差异，可提高每个任务的学习效率和质量。多任务学习的的框架广泛采用shared-bottom的结构，不同任务间共用底部的隐层。这种结构本质上可以减少过拟合的风险，但是效果上可能受到任务差异和数据分布带来的影响。  论文[《Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts》]( https://www.kdd.org/kdd2018/accepted-papers/view/modeling-task-relationships-in-multi-task-learning-with-multi-gate-mixture- )中提出了一个Multi-gate Mixture-of-Experts(MMOE)的多任务学习结构。MMOE模型刻画了任务相关性，基于共享表示来学习特定任务的函数，避免了明显增加参数的缺点。 
 
-我们在Paddlepaddle定义MMOE的网络结构，在开源数据集Census-income Data上验证模型效果。本项目支持GPU和CPU两种单机训练环境。
+我们在Paddlepaddle定义MMOE的网络结构，在开源数据集Census-income Data上验证模型效果，两个任务的auc分别为：
+
+1.income
+
+> best：0.94856
+>
+> mean：0.944105
+
+2.marital
+
+> best：0.99403
+>
+> mean：0.99324
+
+本项目支持GPU和CPU两种单机训练环境。
 
 
 

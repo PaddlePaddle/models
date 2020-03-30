@@ -17,7 +17,21 @@
 
 share_bottom是多任务学习的基本框架，其特点是对于不同的任务，底层的参数和网络结构是共享的，这种结构的优点是极大地减少网络的参数数量的情况下也能很好地对多任务进行学习，但缺点也很明显，由于底层的参数和网络结构是完全共享的，因此对于相关性不高的两个任务会导致优化冲突，从而影响模型最终的结果。后续很多Neural-based的多任务模型都是基于share_bottom发展而来的，如MMOE等模型可以改进share_bottom在多任务之间相关性低导致模型效果差的缺点。
 
-我们在Paddlepaddle实现share_bottom网络结构，并在开源数据集Census-income Data上验证模型效果。本项目支持GPU和CPU两种单机训练环境。
+我们在Paddlepaddle实现share_bottom网络结构，并在开源数据集Census-income Data上验证模型效果。两个任务的auc分别为：
+
+1.income
+
+>best：0.94899
+>
+>mean：0.94402
+
+2.marital
+
+> best：0.99394
+>
+> mean：0.99311
+
+本项目支持GPU和CPU两种单机训练环境。
 
 
 
