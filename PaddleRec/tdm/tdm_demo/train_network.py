@@ -199,8 +199,12 @@ class DnnLayerClassifierNet(object):
     def _expand_layer(self, input_layer, node, layer_idx):
         input_layer_unsequeeze = fluid.layers.unsqueeze(
             input=input_layer, axes=[1])
-        input_layer_expand = fluid.layers.expand(
-            input_layer_unsequeeze, expand_times=[1, node[layer_idx].shape[1], 1])
+        if self.is_test:
+            input_layer_expand = fluid.layers.expand(
+                input_layer_unsequeeze, expand_times=[1, node.shape[1], 1])
+        else:
+            input_layer_expand = fluid.layers.expand(
+                input_layer_unsequeeze, expand_times=[1, node[layer_idx].shape[1], 1])
         return input_layer_expand
 
     def classifier_layer(self, input, node):
