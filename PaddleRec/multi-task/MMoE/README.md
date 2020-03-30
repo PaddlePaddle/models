@@ -111,4 +111,4 @@ epoch设置为100的训练和测试效果如下：
 
 ![](./image/mmoe.png)
 
-![](I:\baidu\models\PaddleRec\multi-task\MMoE\image\mmoe2.png)
+![](./image/mmoe2.png)
