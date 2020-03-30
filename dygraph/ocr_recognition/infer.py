@@ -48,18 +48,15 @@ def inference(args):
         restore, _ = fluid.load_dygraph(args.pretrained_model)
         ocr_attention.set_dict(restore)
         ocr_attention.eval()
-        print(img.size)
+        
         img = img.resize((img.size[0], 48), Image.BILINEAR)
         img = np.array(img).astype('float32') - 127.5
         img = img[np.newaxis, np.newaxis, ...]
         img = to_variable(img)
 
         gru_backward, encoded_vector, encoded_proj = ocr_attention.encoder_net(img)
-        backward_first = fluid.layers.slice(
-            gru_backward, axes=[1], starts=[0], ends=[1])
-        backward_first = fluid.layers.reshape(
-            backward_first, [-1, backward_first.shape[2]], inplace=False)
-
+        
+        backward_first = gru_backward[:, 0]
         decoder_boot = ocr_attention.fc(backward_first)
         label_in = fluid.layers.zeros([1], dtype='int64')
         result = ''

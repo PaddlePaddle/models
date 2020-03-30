@@ -132,9 +132,8 @@ class DynamicGRU(fluid.dygraph.Layer):
             if self.is_reverse:
                 i = inputs.shape[1] - 1 - i
 
-            input_ = inputs[:, i: i + 1, :]
+            input_ = inputs[:, i]
 
-            input_ = fluid.layers.reshape(input_, [-1, input_.shape[2]], inplace=False)
             hidden, reset, gate = self.gru_unit(input_, hidden)
 
             hidden_ = fluid.layers.reshape(hidden, [-1, 1, hidden.shape[1]], inplace=False)
