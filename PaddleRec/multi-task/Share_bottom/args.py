@@ -22,6 +22,10 @@ import distutils.util
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--feature_size", type=int, default=499, help="feature_size")
+    parser.add_argument("--bottom_size", type=int, default=117, help="bottom_size")
+    parser.add_argument("--tower_nums", type=int, default=2, help="tower_nums")
+    parser.add_argument("--tower_size", type=int, default=8, help="tower_size")
     parser.add_argument("--epochs", type=int, default=400, help="epochs")
     parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
     parser.add_argument('--use_gpu', type=bool, default=False, help='whether using gpu')

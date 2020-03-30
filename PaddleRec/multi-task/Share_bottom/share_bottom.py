@@ -27,17 +27,17 @@ def set_zero(var_name,scope=fluid.global_scope(),place=fluid.CPUPlace(),param_ty
     param_array = np.zeros(param._get_dims()).astype(param_type)
     param.set(param_array, place)
     
-def share_bottom():
-    a_data = fluid.data(name="a", shape=[-1, 499], dtype="float32")
+def share_bottom(feature_size=499,bottom_size=117,tower_nums=2,tower_size=8):
+    a_data = fluid.data(name="a", shape=[-1, feature_size], dtype="float32")
     label_income = fluid.data(name="label_income", shape=[-1, 2], dtype="float32", lod_level=0)
     label_marital = fluid.data(name="label_marital", shape=[-1, 2], dtype="float32", lod_level=0)
     
-    #499*8*4 + 2*(4*8 + 8*2) = 16064 
-    #16064 / (499 + 2*(8 + 8*2)) = 29
+    #499*8*16 + 2*(16*8 + 8*2) = 64160 
+    #64160 / (499 + 2*(8 + 8*2)) = 117
     
 
     bottom_output = fluid.layers.fc(input=a_data,
-                                       size=29,
+                                       size=bottom_size,
                                        act='relu',
                                        bias_attr=fluid.ParamAttr(learning_rate=1.0),
                                        name='bottom_output')
@@ -45,9 +45,9 @@ def share_bottom():
    
     # Build tower layer from bottom layer
     output_layers = []
-    for index in range(2):    
+    for index in range(tower_nums):    
         tower_layer = fluid.layers.fc(input=bottom_output,
-                                   size=8,
+                                   size=tower_size,
                                    act='relu',
                                    name='task_layer_' + str(index))
         output_layer = fluid.layers.fc(input=tower_layer,
@@ -79,14 +79,18 @@ args = parse_args()
 train_path = args.train_data_path
 test_path = args.test_data_path
 batch_size = args.batch_size
+feature_size = args.feature_size
+bottom_size = args.bottom_size
+tower_nums = args.tower_nums
+tower_size = args.tower_size
 epochs = args.epochs
 
-print("batch_size:[%d]epochs:[%d]"%(batch_size,epochs))
+print("batch_size:[%d],epochs:[%d],feature_size:[%d],bottom_size:[%d],tower_nums:[%d],tower_size:[%d]"%(batch_size,epochs,feature_size,bottom_size,tower_nums,tower_size))
 
 train_reader = utils.prepare_reader(train_path,batch_size)
 test_reader = utils.prepare_reader(test_path,batch_size)
   
-data_list,loss,out_1,out_2,label_1,label_2,auc_income,auc_marital,auc_states_1,auc_states_2 = share_bottom()   
+data_list,loss,out_1,out_2,label_1,label_2,auc_income,auc_marital,auc_states_1,auc_states_2 = share_bottom(feature_size,bottom_size,tower_nums,tower_size)     
 
 
 Adam = fluid.optimizer.AdamOptimizer()
@@ -104,8 +108,7 @@ test_loader = fluid.io.DataLoader.from_generator(feed_list=data_list, capacity=b
 test_loader.set_sample_list_generator(test_reader, places=place)
 mean_auc_income = []
 mean_auc_marital = []
-inference_scope = fluid.Scope()
-f = open (r'res_share_bottom.txt','a+')
+
 for epoch in range(epochs):
     begin = time.time()
     for var in auc_states_1:  # reset auc states
@@ -140,8 +143,8 @@ for epoch in range(epochs):
     mean_auc_marital.append(test_auc_2_p)
     end = time.time()
     print("epoch_id:[%d],epoch_time:[%.5f s],loss:[%.5f],train_auc_income:[%.5f],train_auc_marital:[%.5f],test_auc_income:[%.5f],test_auc_marital:[%.5f]"%
-    (epoch,end - begin,loss_data,auc_1_p,auc_2_p,test_auc_1_p,test_auc_2_p),file = f)
-print("mean_auc_income:[%.5f],mean_auc_marital[%.5f]"%(np.mean(mean_auc_income),np.mean(mean_auc_marital)),file = f)    
+    (epoch,end - begin,loss_data,auc_1_p,auc_2_p,test_auc_1_p,test_auc_2_p))
+print("mean_auc_income:[%.5f],mean_auc_marital[%.5f]"%(np.mean(mean_auc_income),np.mean(mean_auc_marital)))    
         
         
         

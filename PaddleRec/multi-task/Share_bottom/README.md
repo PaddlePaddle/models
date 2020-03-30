@@ -58,11 +58,15 @@ GPU环境
 在train_gpu.sh脚本文件中设置好数据路径、参数。
 
 ```sh
-python share_bottom.py  --use_gpu True\	#使用cpu训练
-                        --train_path data/data24913/train_data/\ #训练数据路径
-                        --test_path data/data24913/test_data/\ #测试数据路径
-                        --batch_size 32\ #设置batch_size大小
-                        --epochs 400 #设置epoch轮次
+python share_bottom.py  --use_gpu True\  #使用gpu训练
+					    --train_path data/data24913/train_data/\  #训练数据路径
+					    --test_path data/data24913/test_data/\  #测试数据路径
+					    --batch_size 32\  #设置batch_size大小
+						--feature_size 499\  #设置特征维度
+						--bottom_size 117\  #设置bottom网络大小
+						--tower_nums 2\  #设置tower数量
+						--tower_size 8\  #设置tower网络大小
+					    --epochs 400  #设置epoch轮次
 ```
 
 修改脚本的可执行权限并运行
@@ -76,11 +80,15 @@ CPU环境
 在train_cpu.sh脚本文件中设置好数据路径、参数。
 
 ```sh
-python share_bottom.py  --use_gpu False\ #使用cpu训练
-                        --train_path data/data24913/train_data/\ #训练数据路径
-                        --test_path data/data24913/test_data/\ #测试数据路径
-                        --batch_size 32\ #设置batch_size大小
-                        --epochs 400 #设置epoch轮次
+python share_bottom.py  --use_gpu False\  #使用cpu训练
+					    --train_path data/data24913/train_data/\  #训练数据路径
+					    --test_path data/data24913/test_data/\  #测试数据路径
+					    --batch_size 32\  #设置batch_size大小
+						--feature_size 499\  #设置特征维度
+						--bottom_size 117\  #设置bottom网络大小
+						--tower_nums 2\  #设置tower数量
+						--tower_size 8\  #设置tower网络大小
+					    --epochs 400  #设置epoch轮次
 ```
 
 修改脚本的可执行权限并运行
@@ -101,3 +109,4 @@ epoch设置为100的训练和测试效果如下：
 
 ![](./image/share_bottom.png)
 
+![](I:\baidu\models\PaddleRec\multi-task\Share_bottom\image\mmoe2.png)
