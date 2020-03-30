@@ -32,12 +32,22 @@ class TdmTrainNet(object):
         self.max_layers = args.layer_size
         self.neg_sampling_list = args.neg_sampling_list
         self.output_positive = True
-        self.travel_list, self.travel_array, self.layer_list, self.layer_array = tdm_sampler_prepare(
-            args)
-        self.info_list, self.info_array = tdm_child_prepare(args)
-
         self.need_trace = args.need_trace
         self.need_detail = args.need_detail
+
+        if not args.load_model:
+            self.tdm_sampler_prepare_dict = tdm_sampler_prepare(args)
+            print("--Layer node num list--: {}".format(
+                self.tdm_sampler_prepare_dict['layer_node_num_list']))
+            self.layer_node_num_list = self.tdm_sampler_prepare_dict['layer_node_num_list']
+
+            print("--leaf node num--: {}".format(
+                self.tdm_sampler_prepare_dict['leaf_node_num']))
+            self.leaf_node_num = self.tdm_sampler_prepare_dict['leaf_node_num']
+            self.info_array = tdm_child_prepare(args)
+        else:
+            self.layer_node_num_list = args.layer_node_num_list
+            self.leaf_node_num = args.leaf_node_num
 
         self.get_tree_info(args)
         self.input_trans_layer = InputTransNet(args)
@@ -76,19 +86,19 @@ class TdmTrainNet(object):
         trace_var(item_label, "[TDM][inputs]",
                   "item_label", self.need_trace, self.need_detail)
 
-        sample_nodes, sample_label, sample_mask = fluid.layers.tdm_sampler(
-            input=item_label,
+        sample_nodes, sample_label, sample_mask = fluid.contrib.layers.tdm_sampler(
+            x=item_label,
             neg_samples_num_list=self.neg_sampling_list,
-            tree_travel_list=self.travel_list,
-            tree_layer_list=self.layer_list,
+            layer_node_num_list=self.layer_node_num_list,
+            leaf_node_num=self.leaf_node_num,
             tree_travel_attr=fluid.ParamAttr(name="TDM_Tree_Travel"),
             tree_layer_attr=fluid.ParamAttr(name="TDM_Tree_Layer"),
-            output_labels=True,
             output_positive=self.output_positive,
             output_list=True,
             seed=0,
-            dtype='int64'
+            dtype='int32'
         )
+
         trace_var(sample_nodes, "[TDM][tdm_sample]",
                   "sample_nodes", self.need_trace, self.need_detail)
         trace_var(sample_label, "[TDM][tdm_sample]",

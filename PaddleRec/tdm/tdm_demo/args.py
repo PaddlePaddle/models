@@ -73,7 +73,7 @@ def parse_args():
                    "whether to perform local training")
     main_g.add_arg("is_cloud", bool, False, "")
     main_g.add_arg("is_test", bool, False, "")
-    main_g.add_arg("sync_mode", str, "async","distributed traing mode")
+    main_g.add_arg("sync_mode", str, "async", "distributed traing mode")
     main_g.add_arg("need_trace", bool, False, "")
     main_g.add_arg("need_detail", bool, False, "")
 
@@ -89,7 +89,13 @@ def parse_args():
     model_g.add_arg("node_nums", int, 26, "tree node nums")
     model_g.add_arg("node_emb_size", int, 64, "node embedding size")
     model_g.add_arg("query_emb_size", int, 768, "input query embedding size")
-    model_g.add_arg("neg_sampling_list", list, [1, 2, 3, 4], "nce sample nums at every layer")
+    model_g.add_arg("neg_sampling_list", list, [
+                    1, 2, 3, 4], "nce sample nums at every layer")
+    model_g.add_arg("layer_node_num_list", list, [
+                    2, 4, 7, 12], "node nums at every layer")
+    model_g.add_arg("leaf_node_num", int, 13, "leaf node nums")
+
+    # for infer
     model_g.add_arg("child_nums", int, 2, "child node of ancestor node")
     model_g.add_arg("topK", int, 2, "best recall result nums")
 
@@ -99,10 +105,9 @@ def parse_args():
     model_g.add_arg("test_files_path", str, "./data/test", "test data path")
     model_g.add_arg("model_files_path", str, "./models", "model data path")
 
-
     # build tree and warm up
     model_g.add_arg("build_tree_init_path", str,
-                    "./data/gen_tree/demo_fake_input.txt", "build tree embedding path") 
+                    "./data/gen_tree/demo_fake_input.txt", "build tree embedding path")
     model_g.add_arg("warm-up", bool, False,
                     "warm up, builing new tree.")
     model_g.add_arg("rebuild_tree_per_epochs", int, -1,
@@ -135,4 +140,3 @@ def print_arguments(args):
     for arg, value in sorted(six.iteritems(vars(args))):
         print('%s: %s' % (arg, value))
     print('------------------------------------------------')
-

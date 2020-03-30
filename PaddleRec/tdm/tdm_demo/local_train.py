@@ -71,15 +71,6 @@ def run_train(args):
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
 
-    # Set TDM_Tree Parameter
-    Numpy_model = {}
-    Numpy_model['TDM_Tree_Travel'] = tdm_model.travel_array
-    Numpy_model['TDM_Tree_Layer'] = tdm_model.layer_array
-    Numpy_model['TDM_Tree_Info'] = tdm_model.info_array
-    for param_name in Numpy_model:
-        param_t = fluid.global_scope().find_var(param_name).get_tensor()
-        param_t.set(Numpy_model[str(param_name)].astype('int32'), place)
-
     if args.load_model:
         path = args.init_model_files_path
         fluid.io.load_persistables(
@@ -89,8 +80,17 @@ def run_train(args):
         lr = fluid.global_scope().find_var("learning_rate_0").get_tensor()
         lr.set(np.array(args.learning_rate).astype('float32'), place)
         logger.info("Load persistables from \"{}\"".format(path))
+    else:
+        # Set TDM_Tree Parameter
+        Numpy_model = {}
+        Numpy_model['TDM_Tree_Travel'] = tdm_model.tdm_sampler_prepare_dict['travel_array']
+        Numpy_model['TDM_Tree_Layer'] = tdm_model.tdm_sampler_prepare_dict['layer_array']
+        Numpy_model['TDM_Tree_Info'] = tdm_model.info_array
+        for param_name in Numpy_model:
+            param_t = fluid.global_scope().find_var(param_name).get_tensor()
+            param_t.set(Numpy_model[str(param_name)].astype('int32'), place)
 
-    if args.save_init_model:
+    if args.save_init_model or not args.load_model:
         logger.info("Begin Save Init model.")
         model_path = os.path.join(args.model_files_path, "init_model")
         fluid.io.save_persistables(executor=exe, dirname=model_path)

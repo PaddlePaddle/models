@@ -59,18 +59,32 @@ def read_layer_list(path):
 
 def tdm_sampler_prepare(args):
     """load tdm tree param from list file"""
+    prepare_dict = {}
     travel_list = read_list(args.tree_travel_init_path)
+
     travel_array = np.array(travel_list)
+    prepare_dict['travel_array'] = travel_array
+
+    leaf_num = len(travel_list)
+    prepare_dict['leaf_node_num'] = leaf_num
 
     layer_list, layer_array = read_layer_list(args.tree_layer_init_path)
-    return [travel_list, travel_array, layer_list, layer_array]
+    prepare_dict['layer_array'] = layer_array
+
+    layer_node_num_list = [len(i) for i in layer_list]
+    prepare_dict['layer_node_num_list'] = layer_node_num_list
+
+    node_num = int(np.sum(layer_node_num_list))
+    prepare_dict['node_num'] = node_num
+
+    return prepare_dict
 
 
 def tdm_child_prepare(args):
     """load tdm tree param from list file"""
     info_list = read_list(args.tree_info_init_path)
     info_array = np.array(info_list)
-    return info_list, info_array
+    return info_array
 
 
 def trace_var(var, msg_prefix, var_name, need_trace=False, need_detail=False):
