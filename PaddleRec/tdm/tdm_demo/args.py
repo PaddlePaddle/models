@@ -97,7 +97,7 @@ def parse_args():
 
     # for infer
     model_g.add_arg("child_nums", int, 2, "child node of ancestor node")
-    model_g.add_arg("topK", int, 2, "best recall result nums")
+    model_g.add_arg("topK", int, 1, "best recall result nums")
 
     model_g = ArgumentGroup(
         parser, "path", "files path of data & model.")
