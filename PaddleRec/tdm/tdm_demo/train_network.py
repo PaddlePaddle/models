@@ -96,7 +96,7 @@ class TdmTrainNet(object):
             output_positive=self.output_positive,
             output_list=True,
             seed=0,
-            dtype='int32'
+            dtype='int64'
         )
 
         trace_var(sample_nodes, "[TDM][tdm_sample]",
