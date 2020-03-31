@@ -10,7 +10,7 @@
 
 为防止概念混淆，让我们明确tdm中名词的概念：
 
-![Demo-Tree](https://github.com/MrChengmo/models/raw/tdm_dev/PaddleRec/tdm/tdm_demo/img/demo_tree.png?raw=true))
+![Demo-Tree](https://github.com/MrChengmo/models/blob/tdm_dev/PaddleRec/tdm/tdm_demo/img/demo_tree.png?raw=true))
 
 - **item**：具有实际物理含义，是我们希望通过tdm检索最后得到的结果，如一个商品，一篇文章，一个关键词等等，在tdm模型中，item位于树的叶子节点。item有其自身的ID，我们姑且称之为 `item_id`。
 - **节点(node)**：tdm树的任意节点。我们完成聚类后，会生成一颗树，树的叶子节点对应着item。而非叶子节点，则是一种类别上的概括，从大方向的兴趣，不断细分到小方向的兴趣。我们希望这棵树的结构满足最大堆树的性质。同样，节点也有其自身的ID，我们称之为node_id。如上图，最左下方的节点，它的node_id是14，而对应的item_id是0.
@@ -84,7 +84,7 @@
 ## TDM网络设计
 假设输入数据是 Emb + item_id，下面让我们开始介绍一个最简单的网络设计。
 
-![Demo-Network](https://github.com/MrChengmo/models/raw/tdm_dev/PaddleRec/tdm/tdm_demo/img/demo_network.png?raw=true)
+![Demo-Network](https://github.com/MrChengmo/models/blob/tdm_dev/PaddleRec/tdm/tdm_demo/img/demo_network.png?raw=true)
 
 上图给出了一个非常简单的TDM示例网络，没有添加任何复杂的逻辑，纯用DNN实现。
 TDM的组网，宏观上，可以概括为三个部分
