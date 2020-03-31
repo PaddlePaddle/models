@@ -12,6 +12,8 @@ warnings.filterwarnings("ignore")
 #显示所有列
 pd.set_option('display.max_columns', None)
 
+
+
 def set_zero(var_name,scope=fluid.global_scope(),place=fluid.CPUPlace(),param_type="int64"):
     """
     Set tensor of a Variable to zero.
@@ -25,46 +27,34 @@ def set_zero(var_name,scope=fluid.global_scope(),place=fluid.CPUPlace(),param_ty
     param_array = np.zeros(param._get_dims()).astype(param_type)
     param.set(param_array, place)
     
-def MMOE(feature_size=499,expert_num=8, gate_num=2, expert_size=16, tower_size=8):
+def share_bottom(feature_size=499,bottom_size=117,tower_nums=2,tower_size=8):
     a_data = fluid.data(name="a", shape=[-1, feature_size], dtype="float32")
     label_income = fluid.data(name="label_income", shape=[-1, 2], dtype="float32", lod_level=0)
     label_marital = fluid.data(name="label_marital", shape=[-1, 2], dtype="float32", lod_level=0)
     
-    # f_{i}(x) = activation(W_{i} * x + b), where activation is ReLU according to the paper
-    expert_outputs = []
-    for i in range(0, expert_num):
-        expert_output = fluid.layers.fc(input=a_data,
-                                       size=expert_size,
+    #499*8*16 + 2*(16*8 + 8*2) = 64160 
+    #64160 / (499 + 2*(8 + 8*2)) = 117
+    
+
+    bottom_output = fluid.layers.fc(input=a_data,
+                                       size=bottom_size,
                                        act='relu',
                                        bias_attr=fluid.ParamAttr(learning_rate=1.0),
-                                       name='expert_' + str(i))
-        expert_outputs.append(expert_output)
-    expert_concat = fluid.layers.concat(expert_outputs, axis=1)
-    expert_concat = fluid.layers.reshape(expert_concat,[-1, expert_num, expert_size])
-    
-    
-    # g^{k}(x) = activation(W_{gk} * x + b), where activation is softmax according to the paper
+                                       name='bottom_output')
+  
+   
+    # Build tower layer from bottom layer
     output_layers = []
-    for i in range(0, gate_num):
-        cur_gate = fluid.layers.fc(input=a_data,
-                                   size=expert_num,
+    for index in range(tower_nums):    
+        tower_layer = fluid.layers.fc(input=bottom_output,
+                                   size=tower_size,
+                                   act='relu',
+                                   name='task_layer_' + str(index))
+        output_layer = fluid.layers.fc(input=tower_layer,
+                                   size=2,
                                    act='softmax',
-                                   bias_attr=fluid.ParamAttr(learning_rate=1.0),
-                                   name='gate_' + str(i))
-        # f^{k}(x) = sum_{i=1}^{n}(g^{k}(x)_{i} * f_{i}(x))
-        cur_gate_expert = fluid.layers.elementwise_mul(expert_concat, cur_gate, axis=0)  
-        cur_gate_expert = fluid.layers.reduce_sum(cur_gate_expert, dim=1)
-        # Build tower layer
-        cur_tower =  fluid.layers.fc(input=cur_gate_expert,
-                                  size=tower_size,
-                                  act='relu',
-                                  name='task_layer_' + str(i))  
-        out =  fluid.layers.fc(input=cur_tower,
-                               size=2,
-                               act='softmax',
-                               name='out_' + str(i))
-            
-        output_layers.append(out)
+                                   name='output_layer_' + str(index))
+        output_layers.append(output_layer)
 
     cost_income = paddle.fluid.layers.cross_entropy(input=output_layers[0], label=label_income,soft_label = True)
     cost_marital = paddle.fluid.layers.cross_entropy(input=output_layers[1], label=label_marital,soft_label = True)
@@ -90,19 +80,17 @@ train_path = args.train_data_path
 test_path = args.test_data_path
 batch_size = args.batch_size
 feature_size = args.feature_size
-expert_size = args.expert_size
+bottom_size = args.bottom_size
+tower_nums = args.tower_nums
 tower_size = args.tower_size
-expert_num = args.expert_num
 epochs = args.epochs
-gate_num = args.gate_num
 
-print("batch_size:[%d],feature_size:[%d],expert_num:[%d],gate_num[%d],expert_size[%d],tower_size[%d],epochs:[%d]"%(batch_size,feature_size,expert_num,
-                                                                                                        gate_num,expert_size,tower_size,epochs))
+print("batch_size:[%d],epochs:[%d],feature_size:[%d],bottom_size:[%d],tower_nums:[%d],tower_size:[%d]"%(batch_size,epochs,feature_size,bottom_size,tower_nums,tower_size))
 
 train_reader = utils.prepare_reader(train_path,batch_size)
 test_reader = utils.prepare_reader(test_path,batch_size)
-
-data_list,loss,out_1,out_2,label_1,label_2,auc_income,auc_marital,auc_states_1,auc_states_2 = MMOE(feature_size,expert_num,gate_num,expert_size,tower_size)   
+  
+data_list,loss,out_1,out_2,label_1,label_2,auc_income,auc_marital,auc_states_1,auc_states_2 = share_bottom(feature_size,bottom_size,tower_nums,tower_size)     
 
 
 Adam = fluid.optimizer.AdamOptimizer()
@@ -122,6 +110,7 @@ mean_auc_income = []
 mean_auc_marital = []
 
 for epoch in range(epochs):
+    begin = time.time()
     for var in auc_states_1:  # reset auc states
         set_zero(var.name,place=place)
     for var in auc_states_2:  # reset auc states
@@ -156,7 +145,7 @@ for epoch in range(epochs):
     print("epoch_id:[%d],epoch_time:[%.5f s],loss:[%.5f],train_auc_income:[%.5f],train_auc_marital:[%.5f],test_auc_income:[%.5f],test_auc_marital:[%.5f]"%
     (epoch,end - begin,loss_data,auc_1_p,auc_2_p,test_auc_1_p,test_auc_2_p))
 print("mean_auc_income:[%.5f],mean_auc_marital[%.5f]"%(np.mean(mean_auc_income),np.mean(mean_auc_marital)))    
-   
+        
         
         
         
