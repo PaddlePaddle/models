@@ -19,7 +19,6 @@ from __future__ import print_function
 import argparse
 import distutils.util
 
-
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--feature_size", type=int, default=499, help="feature_size")
