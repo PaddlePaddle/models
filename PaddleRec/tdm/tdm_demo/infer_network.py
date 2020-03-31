@@ -104,7 +104,7 @@ class TdmInferNet(object):
         )
 
         for layer_idx in range(self.first_layer_idx, self.max_layers):
-            if layer_idx == 0:
+            if layer_idx == self.first_layer_idx:
                 current_layer_node_num = len(self.first_layer_node)
             else:
                 current_layer_node_num = current_layer_node.shape[1] * \
