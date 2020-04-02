@@ -241,8 +241,6 @@ def lm_model(hidden_size,
         name="init_cell",
         shape=[None, num_layers, hidden_size],
         dtype='float32')
-    init_cell.persistable = True
-    init_hidden.persistable = True
 
     init_hidden = layers.transpose(init_hidden, perm=[1, 0, 2])
     init_cell = layers.transpose(init_cell, perm=[1, 0, 2])
@@ -334,8 +332,6 @@ def lm_model(hidden_size,
     loss = layers.reduce_sum(loss)
 
     loss.persistable = True
-    last_cell.persistable = True
-    last_hidden.persistable = True
 
     # This will feed last_hidden, last_cell to init_hidden, init_cell, which
     # can be used directly in next batch. This can avoid the fetching of
