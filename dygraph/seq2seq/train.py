@@ -84,7 +84,7 @@ def main():
                 num_layers=num_layers,
                 init_scale=init_scale,
                 dropout=dropout)
-        gloabl_norm_clip = GradClipByGlobalNorm(max_grad_norm)
+        gloabl_norm_clip = GradientClipByGlobalNorm(max_grad_norm)
         lr = args.learning_rate
         opt_type = args.optimizer
         if opt_type == "sgd":
