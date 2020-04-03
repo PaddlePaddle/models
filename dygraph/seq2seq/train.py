@@ -27,7 +27,7 @@ import contextlib
 
 import paddle
 import paddle.fluid as fluid
-from paddle.fluid.dygraph_grad_clip import GradClipByGlobalNorm
+from paddle.fluid.clip import GradientClipByGlobalNorm
 
 import reader
 
@@ -84,7 +84,7 @@ def main():
                 num_layers=num_layers,
                 init_scale=init_scale,
                 dropout=dropout)
-        gloabl_norm_clip = GradClipByGlobalNorm(max_grad_norm)
+        gloabl_norm_clip = GradientClipByGlobalNorm(max_grad_norm)
         lr = args.learning_rate
         opt_type = args.optimizer
         if opt_type == "sgd":

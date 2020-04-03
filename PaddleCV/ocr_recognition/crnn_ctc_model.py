@@ -114,7 +114,6 @@ def encoder_net(images,
                 num_classes,
                 rnn_hidden_size=200,
                 regularizer=None,
-                gradient_clip=None,
                 is_test=False,
                 use_cudnn=False):
     conv_features = ocr_convs(
@@ -130,16 +129,13 @@ def encoder_net(images,
 
     para_attr = fluid.ParamAttr(
         regularizer=regularizer,
-        gradient_clip=gradient_clip,
         initializer=fluid.initializer.Normal(0.0, 0.02))
     bias_attr = fluid.ParamAttr(
         regularizer=regularizer,
-        gradient_clip=gradient_clip,
         initializer=fluid.initializer.Normal(0.0, 0.02),
         learning_rate=2.0)
     bias_attr_nobias = fluid.ParamAttr(
         regularizer=regularizer,
-        gradient_clip=gradient_clip,
         initializer=fluid.initializer.Normal(0.0, 0.02))
 
     fc_1 = fluid.layers.fc(input=sliced_feature,
