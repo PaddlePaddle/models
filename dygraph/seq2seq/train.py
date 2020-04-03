@@ -27,7 +27,7 @@ import contextlib
 
 import paddle
 import paddle.fluid as fluid
-from paddle.fluid.dygraph_grad_clip import GradClipByGlobalNorm
+from paddle.fluid.clip import GradientClipByGlobalNorm
 
 import reader
 

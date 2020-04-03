@@ -74,7 +74,7 @@ def train(args):
             learning_rate = LR
 
         optimizer = fluid.optimizer.Adam(learning_rate=learning_rate, parameter_list=ocr_attention.parameters())
-        grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(args.gradient_clip)
+        grad_clip = fluid.clip.GradientClipByGlobalNorm(args.gradient_clip)
 
         train_reader = data_reader.data_reader(
             args.batch_size,

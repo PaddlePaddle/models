@@ -408,7 +408,7 @@ def train_ptb_lm():
             if args.ce:
                 print("kpis\ttest_ppl\t%0.3f" % ppl[0])
 
-        grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(max_grad_norm)
+        grad_clip = fluid.clip.GradientClipByGlobalNorm(max_grad_norm)
         for epoch_id in range(max_epoch):
             ptb_model.train()
             total_loss = 0.0
