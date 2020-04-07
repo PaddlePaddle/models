@@ -89,12 +89,8 @@ def do_save_inference_model(args):
                 args=args)
             probs = results.get("probs", None)
 
-    if args.use_cuda:
-        place = fluid.CUDAPlace(0)
-    else:
-        place = fluid.CPUPlace()
-
-    exe = fluid.Executor(place)
+    places = fluid.cuda_places() if args.use_cuda else fluid.cpu_places()
+    exe = fluid.Executor(places[0])
     exe.run(startup_prog)
 
     assert (args.init_from_params) or (args.init_from_pretrain_model)

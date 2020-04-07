@@ -84,8 +84,8 @@ def do_predict(args):
 
             input_inst = [src_ids, pos_ids, sent_ids, input_mask, labels]
             input_field = InputField(input_inst)
-            data_reader = fluid.io.PyReader(
-                feed_list=input_inst, capacity=4, iterable=False)
+
+            data_reader = fluid.io.DataLoader.from_generator(feed_list=input_inst, capacity=4, iterable=False)
 
             results = create_net(
                 is_training=False,
@@ -103,12 +103,9 @@ def do_predict(args):
     #for_test is True if change the is_test attribute of operators to True
     test_prog = test_prog.clone(for_test=True)
 
-    if args.use_cuda:
-        place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
-    else:
-        place = fluid.CPUPlace()
+    places = fluid.cuda_places() if args.use_cuda else fluid.cpu_places()
 
-    exe = fluid.Executor(place)
+    exe = fluid.Executor(places[0])
     exe.run(startup_prog)
 
     assert (args.init_from_params) or (args.init_from_pretrain_model)
@@ -130,7 +127,7 @@ def do_predict(args):
     batch_generator = processor.data_generator(
         batch_size=args.batch_size, phase='test', shuffle=False)
 
-    data_reader.decorate_batch_generator(batch_generator)
+    data_reader.set_batch_generator(batch_generator, places=places)
     data_reader.start()
 
     all_results = []

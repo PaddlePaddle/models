@@ -3,7 +3,7 @@
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1.0
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 if [ $# -ne 2 ]
 then
@@ -35,7 +35,7 @@ INPUT_PATH="data/input/data"
 OUTPUT_PATH="data/output"
 SAVED_MODELS="data/saved_models"
 INFERENCE_MODEL="data/inference_models"
-PYTHON_PATH="python"
+PYTHON_PATH="python3"
 
 #train pretrain model
 if  [ ! "$CUDA_VISIBLE_DEVICES" ]

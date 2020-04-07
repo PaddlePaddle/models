@@ -62,33 +62,34 @@ def do_train(args):
 
             input_inst = [context_wordseq, response_wordseq, labels]
             input_field = InputField(input_inst)
-            data_reader = fluid.io.PyReader(
-                feed_list=input_inst, capacity=4, iterable=False)
-
+            
+            data_reader = fluid.io.DataLoader.from_generator(feed_list=input_inst, capacity=4, iterable=False)
+            
             loss = create_net(
                 is_training=True, model_input=input_field, args=args)
             loss.persistable = True
+            
             # gradient clipping
             fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
                 max=1.0, min=-1.0))
             optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
             optimizer.minimize(loss)
 
-            if args.use_cuda:
+            if args.use_cuda: 
                 dev_count = fluid.core.get_cuda_device_count()
-                place = fluid.CUDAPlace(
+                places = fluid.CUDAPlace(
                     int(os.getenv('FLAGS_selected_gpus', '0')))
-            else:
+            else: 
                 dev_count = int(os.environ.get('CPU_NUM', 1))
-                place = fluid.CPUPlace()
-
+                places = fluid.CPUPlace()
+            
             processor = reader.DataProcessor(
                 data_path=args.training_file,
                 max_seq_length=args.max_seq_len,
                 batch_size=args.batch_size)
 
             batch_generator = processor.data_generator(
-                place=place,
+                place=places,
                 phase="train",
                 shuffle=True,
                 sample_pro=args.sample_pro)
@@ -99,9 +100,9 @@ def do_train(args):
             print("Num train examples: %d" % num_train_examples)
             print("Max train steps: %d" % max_train_steps)
 
-    data_reader.decorate_batch_generator(batch_generator)
+    data_reader.set_batch_generator(batch_generator, places=places)
 
-    exe = fluid.Executor(place)
+    exe = fluid.Executor(places)
     exe.run(startup_prog)
 
     assert (args.init_from_checkpoint == "") or (

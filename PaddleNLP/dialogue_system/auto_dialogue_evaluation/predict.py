@@ -59,8 +59,8 @@ def do_predict(args):
 
             input_inst = [context_wordseq, response_wordseq, labels]
             input_field = InputField(input_inst)
-            data_reader = fluid.io.PyReader(
-                feed_list=input_inst, capacity=4, iterable=False)
+            
+            data_reader = fluid.io.DataLoader.from_generator(feed_list=input_inst, capacity=4, iterable=False)
 
             logits = create_net(
                 is_training=False, model_input=input_field, args=args)
@@ -69,9 +69,11 @@ def do_predict(args):
             fetch_list = [logits.name]
     #for_test is True if change the is_test attribute of operators to True
     test_prog = test_prog.clone(for_test=True)
-    if args.use_cuda:
-        place = fluid.CUDAPlace(int(os.getenv('FLAGS_selected_gpus', '0')))
-    else:
+
+    if args.use_cuda: 
+        place = fluid.CUDAPlace(
+            int(os.getenv('FLAGS_selected_gpus', '0')))
+    else: 
         place = fluid.CPUPlace()
 
     exe = fluid.Executor(place)
@@ -94,7 +96,7 @@ def do_predict(args):
         place=place, phase="test", shuffle=False, sample_pro=1)
     num_test_examples = processor.get_num_examples(phase='test')
 
-    data_reader.decorate_batch_generator(batch_generator)
+    data_reader.set_batch_generator(batch_generator, places=place)
     data_reader.start()
 
     scores = []
