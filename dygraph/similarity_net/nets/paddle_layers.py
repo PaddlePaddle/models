@@ -556,7 +556,7 @@ class FC(Layer):
                 outputs={"Out": pre_bias},
                 attrs={"use_mkldnn": False})
 
-        if self._b:
+        if self._b is not None:
             pre_activation = self._helper.create_variable_for_type_inference(
                 dtype=self._dtype)
             self._helper.append_op(
@@ -863,7 +863,7 @@ class RNN(Layer):
                     lambda x: fluid.layers.transpose(x, [1, 0] + list(
                         range(2, len(x.shape)))), inputs)
 
-            if sequence_length:
+            if sequence_length is not None:
                 mask = fluid.layers.sequence_mask(
                     sequence_length,
                     maxlen=time_steps,
@@ -872,14 +872,14 @@ class RNN(Layer):
 
             if self.is_reverse:
                 inputs = map_structure(lambda x: fluid.layers.reverse(x, axis=[0]), inputs)
-                mask = fluid.layers.reverse(mask, axis=[0]) if sequence_length else None
+                mask = fluid.layers.reverse(mask, axis=[0]) if sequence_length is not None else None
 
             states = initial_states
             outputs = []
             for i in range(time_steps):
                 step_inputs = map_structure(lambda x:x[i], inputs)
                 step_outputs, new_states = self.cell(step_inputs, states, **kwargs)
-                if sequence_length:
+                if sequence_length is not None:
                     new_states = map_structure(
                         partial(_maybe_copy, step_mask=mask[i]), states,
                         new_states)
