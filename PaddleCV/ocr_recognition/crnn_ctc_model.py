@@ -60,20 +60,16 @@ def conv_bn_pool(input,
 
 def ocr_convs(input,
               regularizer=None,
-              gradient_clip=None,
               is_test=False,
               use_cudnn=False):
     b = fluid.ParamAttr(
         regularizer=regularizer,
-        gradient_clip=gradient_clip,
         initializer=fluid.initializer.Normal(0.0, 0.0))
     w0 = fluid.ParamAttr(
         regularizer=regularizer,
-        gradient_clip=gradient_clip,
         initializer=fluid.initializer.Normal(0.0, 0.0005))
     w1 = fluid.ParamAttr(
         regularizer=regularizer,
-        gradient_clip=gradient_clip,
         initializer=fluid.initializer.Normal(0.0, 0.01))
     tmp = input
     tmp = conv_bn_pool(
@@ -119,7 +115,6 @@ def encoder_net(images,
     conv_features = ocr_convs(
         images,
         regularizer=regularizer,
-        gradient_clip=gradient_clip,
         is_test=is_test,
         use_cudnn=use_cudnn)
     sliced_feature = fluid.layers.im2sequence(
@@ -163,11 +158,9 @@ def encoder_net(images,
 
     w_attr = fluid.ParamAttr(
         regularizer=regularizer,
-        gradient_clip=gradient_clip,
         initializer=fluid.initializer.Normal(0.0, 0.02))
     b_attr = fluid.ParamAttr(
         regularizer=regularizer,
-        gradient_clip=gradient_clip,
         initializer=fluid.initializer.Normal(0.0, 0.0))
 
     fc_out = fluid.layers.fc(input=[gru_forward, gru_backward],
