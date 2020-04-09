@@ -1,6 +1,6 @@
 python train_mmoe.py  --use_gpu True \  #使用gpu训练
-					  --train_path data/data24913/train_data/\  #训练数据路径
-					  --test_path data/data24913/test_data/\  #测试数据路径
+					  --train_data_path data/data24913/train_data/\  #训练数据路径
+					  --test_data_path data/data24913/test_data/\  #测试数据路径
 					  --feature_size 499\  #设置特征的维度
 					  --batch_size 32\  #设置batch_size大小
 					  --expert_num 8\  #设置expert数量
