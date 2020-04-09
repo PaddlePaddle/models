@@ -32,8 +32,8 @@ import time
 
 from args import *
 
-#import fluid.dygraph_grad_clip as dygraph_clip
-#from fluid.dygraph_grad_clip  import *
+#import fluid.clip as clip
+#from fluid.clip  import *
 
 import sys
 if sys.version[0] == '2':
@@ -371,7 +371,7 @@ def train_ptb_lm():
 
         ce_time = []
         ce_ppl = []
-        grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(max_grad_norm)
+        grad_clip = fluid.clip.GradientClipByGlobalNorm(max_grad_norm)
         for epoch_id in range(max_epoch):
             ptb_model.train()
             total_loss = 0.0

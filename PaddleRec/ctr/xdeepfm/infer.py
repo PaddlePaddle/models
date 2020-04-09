@@ -50,7 +50,7 @@ def infer():
             feeder = fluid.DataFeeder(feed_list=data_list, place=place)
 
             exe.run(startup_program)
-            fluid.io.load(fluid.default_main_program(), cur_model_path)
+            fluid.load(fluid.default_main_program(), cur_model_path)
 
             for var in auc_states:  # reset auc states
                 set_zero(var.name, scope=inference_scope, place=place)

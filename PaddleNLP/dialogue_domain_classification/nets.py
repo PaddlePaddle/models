@@ -33,26 +33,21 @@ def textcnn_net_multi_label(data,
     """
     init_bound = 0.1
     initializer = fluid.initializer.Uniform(low=-init_bound, high=init_bound)
-    #gradient_clip = fluid.clip.GradientClipByNorm(10.0)
-    gradient_clip = None
     regularizer = fluid.regularizer.L2DecayRegularizer(
                                         regularization_coeff=1e-4)
     seg_param_attrs = fluid.ParamAttr(name="seg_weight",
                                   learning_rate=640.0,
                                   initializer=initializer,
-                                  gradient_clip=gradient_clip,
                                   trainable=True)
     fc_param_attrs_1 = fluid.ParamAttr(name="fc_weight_1",
                                                learning_rate=1.0,
                                                regularizer=regularizer,
                                                initializer=initializer,
-                                               gradient_clip=gradient_clip,
                                                trainable=True)
     fc_param_attrs_2 = fluid.ParamAttr(name="fc_weight_2",
                                                learning_rate=1.0,
                                                regularizer=regularizer,
                                                initializer=initializer,
-                                               gradient_clip=gradient_clip,
                                                trainable=True)
 
     if win_sizes is None:
