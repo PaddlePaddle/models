@@ -102,9 +102,15 @@ class Siamnet(dygraph.layers.Layer):
         return self.refine_head(self.xf, self.mask_corr_feature, pos, test=True)
 
 
-def SiamRPN_AlexNet(backbone_pretrained=True, is_test=False, scale_loss=None):
+def SiamRPN_AlexNet(backbone_pretrained=True,
+                    backbone_is_test=True,
+                    is_test=False,
+                    scale_loss=None):
     backbone = AlexNet(
-        'AlexNet', is_test=is_test, output_layers=['conv5'], pretrained=backbone_pretrained)
+        'AlexNet',
+        is_test=backbone_is_test,
+        output_layers=['conv5'],
+        pretrained=backbone_pretrained)
 
     rpn_head = DepthwiseRPN(anchor_num=5, in_channels=256, out_channels=256, is_test=is_test)
 
@@ -115,9 +121,15 @@ def SiamRPN_AlexNet(backbone_pretrained=True, is_test=False, scale_loss=None):
     return model
 
 
-def SiamRPN_ResNet50(backbone_pretrained=True, is_test=False, scale_loss=None):
+def SiamRPN_ResNet50(backbone_pretrained=True,
+                     backbone_is_test=True,
+                     is_test=False,
+                     scale_loss=None):
     backbone = resnet50(
-        'ResNet50', pretrained=backbone_pretrained, output_layers=[2])
+        'ResNet50',
+        pretrained=backbone_pretrained,
+        output_layers=[2],
+        is_test=backbone_is_test)
 
     neck = AdjustAllLayer(in_channels=[1024], out_channels=[256], is_test=is_test)
     
@@ -131,9 +143,15 @@ def SiamRPN_ResNet50(backbone_pretrained=True, is_test=False, scale_loss=None):
     return model
 
 
-def SiamMask_ResNet50_base(backbone_pretrained=True, is_test=False, scale_loss=None):
+def SiamMask_ResNet50_base(backbone_pretrained=True,
+                           backbone_is_test=True,
+                           is_test=False,
+                           scale_loss=None):
     backbone = resnet50(
-        'ResNet50', pretrained=backbone_pretrained, output_layers=[0,1,2])
+        'ResNet50',
+        pretrained=backbone_pretrained,
+        output_layers=[0,1,2],
+        is_test=backbone_is_test)
     
     neck = AdjustAllLayer(in_channels=[1024], out_channels=[256], is_test=is_test)
     
@@ -150,9 +168,15 @@ def SiamMask_ResNet50_base(backbone_pretrained=True, is_test=False, scale_loss=N
     return model
 
 
-def SiamMask_ResNet50_sharp(backbone_pretrained=False, is_test=False, scale_loss=None):
+def SiamMask_ResNet50_sharp(backbone_pretrained=False,
+                            backbone_is_test=True,
+                            is_test=False,
+                            scale_loss=None):
     backbone = resnet50(
-        'ResNet50', pretrained=backbone_pretrained, output_layers=[0,1,2])
+        'ResNet50',
+        pretrained=backbone_pretrained,
+        output_layers=[0,1,2],
+        is_test=backbone_is_test)
     
     neck = AdjustAllLayer(in_channels=[1024], out_channels=[256], is_test=True)
     

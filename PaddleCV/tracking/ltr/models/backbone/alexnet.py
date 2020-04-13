@@ -115,6 +115,7 @@ class alexnet(fluid.dygraph.Layer):
         out1 = self.bn1(out1)
         out1 = fluid.layers.relu(out1)
         if self._add_output_and_check('conv1', out1, outputs):
+            outputs[-1].stop_gradient = True if self.is_test else False
             return outputs[0] if len(outputs) == 1 else outputs
 
         out1 = self.pool1(out1)
@@ -123,6 +124,7 @@ class alexnet(fluid.dygraph.Layer):
         out2 = self.bn2(out2)
         out2 = fluid.layers.relu(out2)
         if self._add_output_and_check('conv2', out2, outputs):
+            outputs[-1].stop_gradient = True if self.is_test else False
             return outputs[0] if len(outputs) == 1 else outputs
 
         out2 = self.pool2(out2)
@@ -131,19 +133,23 @@ class alexnet(fluid.dygraph.Layer):
         out3 = self.bn3(out3)
         out3 = fluid.layers.relu(out3)
         if self._add_output_and_check('conv3', out3, outputs):
+            outputs[-1].stop_gradient = True if self.is_test else False
             return outputs[0] if len(outputs) == 1 else outputs
 
         out4 = self.conv4(out3)
         out4 = self.bn4(out4)
         out4 = fluid.layers.relu(out4)
         if self._add_output_and_check('conv4', out4, outputs):
+            outputs[-1].stop_gradient = True if self.is_test else False
             return outputs[0] if len(outputs) == 1 else outputs
 
         out5 = self.conv5(out4)
         out5 = self.bn5(out5)
         if self._add_output_and_check('conv5', out5, outputs):
+            outputs[-1].stop_gradient = True if self.is_test else False
             return outputs[0] if len(outputs) == 1 else outputs
 
+        outputs[-1].stop_gradient = True if self.is_test else False
         return outputs[0] if len(outputs) == 1 else outputs
 
     def norm_weight_init(self):

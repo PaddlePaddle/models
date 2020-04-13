@@ -12,7 +12,7 @@ def default_image_loader(path):
         im = jpeg4py_loader(path)
         if im is None:
             default_image_loader.use_jpeg4py = False
-            print('Using opencv_loader instead.')
+            print('Jpeg4py is not available. Using OpenCV instead.')
         else:
             default_image_loader.use_jpeg4py = True
             return im
@@ -29,9 +29,9 @@ def jpeg4py_loader(path):
     try:
         return jpeg4py.JPEG(path).decode()
     except Exception as e:
-        print('ERROR: Could not read image "{}"'.format(path))
+        print('ERROR: Jpeg4py could not read image "{}". Using OpenCV instead.'.format(path))
         print(e)
-        return None
+        return opencv_loader(path)
 
 
 def opencv_loader(path):
@@ -41,7 +41,7 @@ def opencv_loader(path):
         # convert to rgb and return
         return cv.cvtColor(im, cv.COLOR_BGR2RGB)
     except Exception as e:
-        print('ERROR: Could not read image "{}"'.format(path))
+        print('ERROR: OpenCV could not read image "{}"'.format(path))
         print(e)
         return None
 
@@ -55,7 +55,7 @@ def lmdb_loader(path, lmdb_path=None):
         img_buffer = np.frombuffer(img_buffer, np.uint8)
         return cv.imdecode(img_buffer, cv.IMREAD_COLOR)
     except Exception as e:
-        print('ERROR: Could not read image "{}"'.format(path))
+        print('ERROR: Lmdb could not read image "{}"'.format(path))
         print(e)
         return None
 

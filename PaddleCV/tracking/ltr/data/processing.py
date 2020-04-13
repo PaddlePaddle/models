@@ -233,7 +233,7 @@ class SiamProcessing(BaseProcessing):
         if self.label_params is not None:
             assert data['test_anno'].shape[0] == 1
             gt_box = data['test_anno'][0]
-            gt_box[2:] += gt_box[:2] - 1
+            gt_box[2:] += gt_box[:2]
             cls, delta, delta_weight, overlap = self._get_label(gt_box, neg)
 
             mask = data['test_masks'][0]
@@ -248,6 +248,10 @@ class SiamProcessing(BaseProcessing):
             data['label_loc_weight'] = delta_weight
             data['label_mask'] = mask
             data['label_mask_weight'] = mask_weight
+            data.pop('train_anno')
+            data.pop('test_anno')
+            data.pop('train_masks')
+            data.pop('test_masks')
 
         return data
 

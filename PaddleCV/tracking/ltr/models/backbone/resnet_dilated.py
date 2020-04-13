@@ -181,7 +181,7 @@ class Bottleneck(fluid.dygraph.Layer):
 
 
 class ResNet(fluid.dygraph.Layer):
-    def __init__(self, name, Block, layers, output_layers):
+    def __init__(self, name, Block, layers, output_layers, is_test=False):
         """
 
         :param name: str, namescope
@@ -196,6 +196,7 @@ class ResNet(fluid.dygraph.Layer):
         self.layers = layers
         self.feat_layers = ['block{}'.format(i) for i in output_layers]
         output_depth = max(output_layers) + 1
+        self.is_test = is_test
 
         if layers == 18:
             depths = [2, 2, 2, 2]
@@ -296,11 +297,13 @@ class ResNet(fluid.dygraph.Layer):
             if name in self.feat_layers:
                 out.append(res)
                 if (len(out) - 1) == len(self.feat_layers):
+                    out[-1].stop_gradient = True if self.is_test else False
                     if len(out) == 1:
                       return out[0]
                     else:
                       return out
 
+        out[-1].stop_gradient = True if self.is_test else False
         return out
 
 

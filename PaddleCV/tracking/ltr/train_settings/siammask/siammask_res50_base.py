@@ -4,7 +4,7 @@ import paddle.fluid.dygraph as dygraph
 import ltr.actors as actors
 import ltr.data.transforms as dltransforms
 from ltr.data import processing, sampler, loader
-from ltr.dataset import ImagenetVID, ImagenetDET, MSCOCOSeq, YoutubeVOS
+from ltr.dataset import ImagenetVID, ImagenetDET, MSCOCOSeq, YoutubeVOS, Lasot, Got10k
 from ltr.models.siam.siam import SiamMask_ResNet50_base
 from ltr.models.loss import select_softmax_with_cross_entropy_loss, weight_l1_loss, select_mask_logistic_loss 
 from ltr.trainers import LTRTrainer
@@ -17,9 +17,9 @@ def run(settings):
     # Most common settings are assigned in the settings struct
     settings.description = 'SiamMask_base with ResNet-50 backbone.'
     settings.print_interval = 100  # How often to print loss and other info
-    settings.batch_size = 64  # Batch size
-    settings.samples_per_epoch = 600000  # Number of training pairs per epoch
-    settings.num_workers = 8  # Number of workers for image loading
+    settings.batch_size = 32  # Batch size
+    settings.samples_per_epoch = 100000  # Number of training pairs per epoch
+    settings.num_workers = 4  # Number of workers for image loading
     settings.search_area_factor = {'train': 1.0, 'test': 2.0}
     settings.output_sz = {'train': 127, 'test': 255}
     settings.scale_type = 'context'
@@ -48,6 +48,8 @@ def run(settings):
     vid_train = ImagenetVID()
     coco_train = MSCOCOSeq()
     det_train = ImagenetDET()
+    lasot_train = Lasot(split='train')
+    got10k_train = Got10k(split='train')
 
     # Validation datasets
     vid_val = ImagenetVID()
@@ -96,8 +98,8 @@ def run(settings):
     nums_per_epoch = settings.samples_per_epoch // settings.batch_size
     # The sampler for training
     dataset_train = sampler.MaskSampler(
-        [vid_train, coco_train, det_train, vos_train],
-        [2, 1, 1, 2],
+        [vid_train, coco_train, det_train, vos_train, lasot_train, got10k_train],
+        [2, 1, 1, 2, 1, 1],
         samples_per_epoch=nums_per_epoch * settings.batch_size,
         max_gap=100,
         processing=data_processing_train,
@@ -158,6 +160,7 @@ def run(settings):
             decay_steps=nums_per_epoch,
             decay_rate=0.9659,
             staircase=True)
+
         optimizer = fluid.optimizer.Adam(
             parameter_list=net.rpn_head.parameters()
                            + net.neck.parameters()
@@ -165,4 +168,4 @@ def run(settings):
             learning_rate=lr_scheduler)
 
         trainer = LTRTrainer(actor, [train_loader, val_loader], optimizer, settings, lr_scheduler)
-        trainer.train(20, load_latest=False, fail_safe=False)
+        trainer.train(40, load_latest=False, fail_safe=False)

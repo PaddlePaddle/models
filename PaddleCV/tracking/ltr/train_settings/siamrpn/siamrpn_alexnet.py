@@ -4,7 +4,7 @@ import paddle.fluid.dygraph as dygraph
 import ltr.actors as actors
 import ltr.data.transforms as dltransforms
 from ltr.data import processing, sampler, loader
-from ltr.dataset import ImagenetVID, ImagenetDET, MSCOCOSeq, YoutubeVOS
+from ltr.dataset import ImagenetVID, ImagenetDET, MSCOCOSeq, YoutubeVOS, Lasot, Got10k
 from ltr.models.siam.siam import SiamRPN_AlexNet
 from ltr.models.loss import select_softmax_with_cross_entropy_loss, weight_l1_loss
 from ltr.trainers import LTRTrainer
@@ -18,7 +18,7 @@ def run(settings):
     settings.description = 'SiamRPN with AlexNet backbone.'
     settings.print_interval = 100  # How often to print loss and other info
     settings.batch_size = 128  # Batch size
-    settings.samples_per_epoch = 600000 # Number of training pairs per epoch
+    settings.samples_per_epoch = 100000 # Number of training pairs per epoch
     settings.num_workers = 4  # Number of workers for image loading
     settings.search_area_factor = {'train': 1.0, 'test': 2.0}
     settings.output_sz = {'train': 127, 'test': 255}
@@ -48,6 +48,8 @@ def run(settings):
     vid_train = ImagenetVID()
     coco_train = MSCOCOSeq()
     det_train = ImagenetDET()
+    lasot_train = Lasot(split='train')
+    got10k_train = Got10k(split='train')
 
     # Validation datasets
     vid_val = ImagenetVID()
@@ -147,9 +149,6 @@ def run(settings):
 
         # Create actor, which wraps network and objective
         actor = actors.SiamActor(net=net, objective=objective)
-
-        # Set to training mode
-        actor.train()
 
         # Define optimizer and learning rate
         lr_scheduler = fluid.layers.exponential_decay(

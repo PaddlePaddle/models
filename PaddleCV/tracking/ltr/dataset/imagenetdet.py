@@ -133,6 +133,8 @@ class ImagenetDET(BaseDataset):
                     y2 = int(bndbox.find('ymax').text)
                     object_anno = [x1, y1, x2 - x1, y2 - y1]
                     class_name = None
+                    if x2 <= x1 or y2 <= y1:
+                        continue
 
                     new_sequence = {'set_id': set_id, 'folder': folder, 'filename': filename,
                                     'class_name': class_name, 'anno': object_anno, 'image_size': image_size}
