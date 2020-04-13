@@ -18,7 +18,7 @@ def run(settings):
     settings.description = 'SiamRPN with AlexNet backbone.'
     settings.print_interval = 100  # How often to print loss and other info
     settings.batch_size = 128  # Batch size
-    settings.samples_per_epoch = 100000 # Number of training pairs per epoch
+    settings.samples_per_epoch = 300000 # Number of training pairs per epoch
     settings.num_workers = 4  # Number of workers for image loading
     settings.search_area_factor = {'train': 1.0, 'test': 2.0}
     settings.output_sz = {'train': 127, 'test': 255}
