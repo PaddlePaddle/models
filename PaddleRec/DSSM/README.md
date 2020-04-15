@@ -97,6 +97,7 @@ python infer.py --use_gpu 0 \  #是否使用GPU
 
 通过在一个batch中随机构造4个负样本进行训练，可见loss达到收敛状态。
 
+```txt
 epoch:1,loss:24.72577
 epoch:1,loss:25.79667
 epoch:3,loss:22.20090
@@ -114,3 +115,5 @@ epoch:12,loss:17.28584
 epoch:12,loss:17.33557
 epoch:12,loss:16.36964
 epoch:12,loss:17.78778
+```
+
