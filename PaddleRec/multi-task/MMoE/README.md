@@ -37,26 +37,27 @@
 
 ## 数据下载及预处理
 
-数据地址： [Census-income Data](https://archive.ics.uci.edu/ml/datasets/Census-Income+(KDD) )
+数据地址： [Census-income Data](https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census.tar.gz )
 
 数据解压后， 在create_data.sh脚本文件中添加文件的路径，并运行脚本。
 
 ```sh
-mkdir data/data24913/train_data 		#新建训练数据目录
-mkdir data/data24913/test_data			#新建测试数据目录
-mkdir data/data24913/validation_data 	#新建验证数据目录
+mkdir train_data
+mkdir test_data
+mkdir data
+train_path="data/census-income.data"
+test_path="data/census-income.test"
+train_data_path="train_data/"
+test_data_path="test_data/"
 
-train_path="data/data24913/census-income.data" 			#原始训练数据路径
-test_path="data/data24913/census-income.test" 			#原始测试数据路径
-train_data_path="data/data24913/train_data/" 			#处理后训练数据路径
-test_data_path="data/data24913/test_data/"				#处理后测试数据路径
-validation_data_path="data/data24913/validation_data/"	#处理后验证数据路径
+wget -P data/ https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census.tar.gz
+tar -zxvf data/census.tar.gz -C data/
 
 python data_preparation.py --train_path ${train_path} \
                            --test_path ${test_path} \
                            --train_data_path ${train_data_path}\
-                           --test_data_path ${test_data_path}\
-                           --validation_data_path ${validation_data_path}
+                           --test_data_path ${test_data_path}
+
 ```
 
 ## 环境
@@ -72,7 +73,7 @@ GPU环境
 在train_gpu.sh脚本文件中设置好数据路径、参数。
 
 ```sh
-python train_mmoe.py  --use_gpu True \  #使用gpu训练
+CUDA_VISIBLE_DEVICES=0 python train_mmoe.py  --use_gpu 1 \  #使用gpu训练
                       --train_path data/data24913/train_data/\  #训练数据路径
                       --test_path data/data24913/test_data/\  #测试数据路径
                       --feature_size 499\  #设置特征的维度
@@ -95,7 +96,7 @@ CPU环境
 在train_cpu.sh脚本文件中设置好数据路径、参数。
 
 ```sh
-python train_mmoe.py  --use_gpu False \  #使用cpu训练
+python train_mmoe.py  --use_gpu 0 \  #使用cpu训练
                       --train_path data/data24913/train_data/\  #训练数据路径
                       --test_path data/data24913/test_data/\  #测试数据路径
                       --feature_size 499\  #设置特征的维度

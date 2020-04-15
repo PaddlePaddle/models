@@ -99,8 +99,6 @@ def data_preparation(train_path, test_path, train_data_path, test_data_path,
           validation_data.shape, test_data.shape)
     transformed_train.to_csv(train_data_path + 'train_data.csv', index=False)
     test_data.to_csv(test_data_path + 'test_data.csv', index=False)
-    validation_data.to_csv(
-        validation_data_path + 'validation_data.csv', index=False)
 
 
 args = data_preparation_args()
