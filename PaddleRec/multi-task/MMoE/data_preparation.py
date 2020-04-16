@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import paddle.fluid as fluid
-from sklearn.preprocessing import MinMaxScaler
 from args import *
 
 

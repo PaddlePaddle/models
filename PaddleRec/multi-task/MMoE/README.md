@@ -4,6 +4,7 @@
 
 ```
 ├── README.md            # 文档
+├── requirements.txt     # 需要的安装包
 ├── mmoe_train.py        # mmoe模型脚本
 ├── utils                # 通用函数
 ├── args                 # 参数脚本
@@ -21,15 +22,15 @@
 
 1.income
 
-> best：0.94856
+> max_mmoe_test_auc_income：0.94937
 >
-> mean：0.944105
+> mean_mmoe_test_auc_income：0.94465
 
 2.marital
 
-> best：0.99403
+> max_mmoe_test_auc_marital：0.99419
 >
-> mean：0.99324
+> mean_mmoe_test_auc_marital：0.99324
 
 本项目支持GPU和CPU两种单机训练环境。
 
@@ -49,7 +50,11 @@ train_path="data/census-income.data"
 test_path="data/census-income.test"
 train_data_path="train_data/"
 test_data_path="test_data/"
+<<<<<<< HEAD
+pip install -r requirements.txt
+=======
 
+>>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
 wget -P data/ https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census.tar.gz
 tar -zxvf data/census.tar.gz -C data/
 
@@ -74,6 +79,18 @@ GPU环境
 
 ```sh
 CUDA_VISIBLE_DEVICES=0 python train_mmoe.py  --use_gpu 1 \  #使用gpu训练
+<<<<<<< HEAD
+                                    --train_data_path 'train_data'\  #训练数据路径
+                                    --test_data_path 'test_data'\  #测试数据路径
+                                    --model_dir 'model_dir'\  #模型保存地址
+                                    --feature_size 499\  #设置特征的维度
+                                    --batch_size 32\  #设置batch_size大小
+                                    --expert_num 8\  #设置expert数量
+                                    --gate_num 2\  #设置gate数量
+                                    --expert_size 16\  #设置expert网络大小
+                                    --tower_size 8\  #设置tower网络大小
+                                    --epochs 400 #设置epoch轮次
+=======
                       --train_path data/data24913/train_data/\  #训练数据路径
                       --test_path data/data24913/test_data/\  #测试数据路径
                       --feature_size 499\  #设置特征的维度
@@ -83,6 +100,7 @@ CUDA_VISIBLE_DEVICES=0 python train_mmoe.py  --use_gpu 1 \  #使用gpu训练
                       --expert_size 16\  #设置expert网络大小
                       --tower_size 8\  #设置tower网络大小
                       --epochs 400 #设置epoch轮次
+>>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
 ```
 
 修改脚本的可执行权限并运行
@@ -97,6 +115,18 @@ CPU环境
 
 ```sh
 python train_mmoe.py  --use_gpu 0 \  #使用cpu训练
+<<<<<<< HEAD
+                    --train_data_path 'train_data'\  #训练数据路径
+                    --test_data_path 'test_data'\  #测试数据路径
+                    --model_dir 'model_dir'\  #模型保存地址
+                    --feature_size 499\  #设置特征的维度
+                    --batch_size 32\  #设置batch_size大小
+                    --expert_num 8\  #设置expert数量
+                    --gate_num 2\  #设置gate数量
+                    --expert_size 16\  #设置expert网络大小
+                    --tower_size 8\  #设置tower网络大小
+                    --epochs 400 #设置epoch轮次
+=======
                       --train_path data/data24913/train_data/\  #训练数据路径
                       --test_path data/data24913/test_data/\  #测试数据路径
                       --feature_size 499\  #设置特征的维度
@@ -106,6 +136,7 @@ python train_mmoe.py  --use_gpu 0 \  #使用cpu训练
                       --expert_size 16\  #设置expert网络大小
                       --tower_size 8\  #设置tower网络大小
                       --epochs 400 #设置epoch轮次
+>>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
 ```
 
 修改脚本的可执行权限并运行
@@ -124,6 +155,13 @@ python train_mmoe.py  --use_gpu 0 \  #使用cpu训练
 
 epoch设置为100的训练和测试效果如下：
 
-![](./image/mmoe.png)
-
-![](./image/mmoe2.png)
+```text
+batch_size:[32],feature_size:[499],expert_num:[8],gate_num[2],expert_size[16],tower_size[8],epochs:[100]
+2020-04-16 11:28:06,- INFO - epoch_id: 0,epoch_time: 129.17434 s,loss: 0.62215,train_auc_income: 0.86302,train_auc_marital: 0.92316,test_auc_income: 0.84525,test_auc_marital: 0.98269
+2020-04-16 11:30:36,- INFO - epoch_id: 1,epoch_time: 149.79017 s,loss: 0.42484,train_auc_income: 0.90634,train_auc_marital: 0.98418,test_auc_income: 
+......
+2020-04-16 15:31:23,- INFO - epoch_id: 97,epoch_time: 147.07304 s,loss: 0.30267,train_auc_income: 0.94743,train_auc_marital: 0.99430,test_auc_income: 0.94905,test_auc_marital: 0.99414
+2020-04-16 15:33:51,- INFO - epoch_id: 98,epoch_time: 148.34412 s,loss: 0.29688,train_auc_income: 0.94736,train_auc_marital: 0.99433,test_auc_income: 0.94846,test_auc_marital: 0.99409
+2020-04-16 15:36:21,- INFO - epoch_id: 99,epoch_time: 149.91047 s,loss: 0.31330,train_auc_income: 0.94732,train_auc_marital: 0.99403,test_auc_income: 0.94881,test_auc_marital: 0.99386
+2020-04-16 15:36:21,- INFO - mean_mmoe_test_auc_income: 0.94465,mean_mmoe_test_auc_marital 0.99324,max_mmoe_test_auc_income: 0.94937,max_mmoe_test_auc_marital 0.99419
+```

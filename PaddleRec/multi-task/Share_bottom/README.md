@@ -4,6 +4,7 @@
 
 ```
 ├── README.md # 文档
+├── requirements.txt   # 需要的安装包
 ├── share_bottom.py # mmoe模型脚本
 ├── utils # 通用函数
 ├── args # 参数脚本
@@ -21,15 +22,15 @@ share_bottom是多任务学习的基本框架，其特点是对于不同的任�
 
 1.income
 
->best：0.94899
+>max_sb_test_auc_income：0.94993
 >
->mean：0.94402
+>mean_sb_test_auc_income： 0.93120
 
 2.marital
 
-> best：0.99394
+> max_sb_test_auc_marital：0.99384
 >
-> mean：0.99311
+> mean_sb_test_auc_marital：0.99256
 
 本项目支持GPU和CPU两种单机训练环境。
 
@@ -49,7 +50,11 @@ train_path="data/census-income.data"
 test_path="data/census-income.test"
 train_data_path="train_data/"
 test_data_path="test_data/"
+<<<<<<< HEAD
+pip install -r requirements.txt
+=======
 
+>>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
 wget -P data/ https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census.tar.gz
 tar -zxvf data/census.tar.gz -C data/
 
@@ -74,8 +79,14 @@ GPU环境
 
 ```sh
 python share_bottom.py  --use_gpu 1\  #使用gpu训练
+<<<<<<< HEAD
+                        --train_path 'train_data'\  #训练数据路径
+                        --test_path 'test_data'\  #测试数据路径
+                        --model_dir 'model_dir'\ #模型保存地址
+=======
                         --train_path data/data24913/train_data/\  #训练数据路径
                         --test_path data/data24913/test_data/\  #测试数据路径
+>>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
                         --batch_size 32\  #设置batch_size大小
                         --feature_size 499\  #设置特征维度
                         --bottom_size 117\  #设置bottom网络大小
@@ -96,8 +107,14 @@ CPU环境
 
 ```sh
 python share_bottom.py  --use_gpu 0\  #使用cpu训练
+<<<<<<< HEAD
+                        --train_path 'train_data'\  #训练数据路径
+                        --test_path 'test_data'\  #测试数据路径
+                        --model_dir 'model_dir'\ #模型保存地址
+=======
                         --train_path data/data24913/train_data/\  #训练数据路径
                         --test_path data/data24913/test_data/\  #测试数据路径
+>>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
                         --batch_size 32\  #设置batch_size大小
                         --feature_size 499\  #设置特征维度
                         --bottom_size 117\  #设置bottom网络大小
@@ -122,6 +139,14 @@ python share_bottom.py  --use_gpu 0\  #使用cpu训练
 
 epoch设置为100的训练和测试效果如下：
 
-![](./image/share_bottom.png)
+```text
+batch_size:[32],epochs:[100],feature_size:[499],bottom_size:[117],tower_nums:[2],tower_size:[8]
+2020-04-16 16:01:04,- INFO - epoch_id: 0,epoch_time: 77.17624 s,loss: 0.62643,train_auc_income: 0.49442,train_auc_marital: 0.93509,test_auc_income: 0.50000,test_auc_marital: 0.93920
+2020-04-16 16:02:23,- INFO - epoch_id: 1,epoch_time: 78.84795 s,loss: 0.47955,train_auc_income: 0.49721,train_auc_marital: 0.98118,test_auc_income: 0.50000,test_auc_marital: 0.98804
+2020-04-16 16:03:43,- INFO - epoch_id: 2,epoch_time: 79.67485 s,loss: 
+......
+2020-04-16 18:22:36,- INFO - epoch_id: 98,epoch_time: 85.56907 s,loss: 0.30696,train_auc_income: 0.94701,train_auc_marital: 0.99425,test_auc_income: 0.94919,test_auc_marital: 0.99376
+2020-04-16 18:24:02,- INFO - epoch_id: 99,epoch_time: 86.08858 s,loss: 0.29395,train_auc_income: 0.94736,train_auc_marital: 0.99422,test_auc_income: 0.94908,test_auc_marital: 0.99383
+2020-04-16 18:24:02,- INFO - mean_sb_test_auc_income: 0.93120,mean_sb_test_auc_marital 0.99256,max_sb_test_auc_income: 0.94993,max_sb_test_auc_marital 0.99384
+```
 
-![](./image/share_bottom2.png)
