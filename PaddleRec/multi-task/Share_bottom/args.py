@@ -29,16 +29,9 @@ def parse_args():
     parser.add_argument("--epochs", type=int, default=400, help="epochs")
     parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
     parser.add_argument('--use_gpu', type=int, default=0, help='whether using gpu')
-    parser.add_argument(
-        '--train_data_path',
-        type=str,
-        default=' ',
-        help="train_data_path")
-    parser.add_argument(
-        '--test_data_path',
-        type=str,
-        default=' ',
-        help="test_data_path")
+    parser.add_argument('--train_data_path',type=str,default='train_data',help="train_data_path")
+    parser.add_argument('--test_data_path',type=str,default='test_data',help="test_data_path")
+    parser.add_argument('--model_dir',type=str, default='model_dir', help="model_dir")
     args = parser.parse_args()
     return args
 
@@ -49,9 +42,9 @@ def data_preparation_args():
     parser.add_argument("--test_path", type=str, default='', help="test_path")
 
     parser.add_argument(
-        '--train_data_path', type=str, default='', help="train_data_path")
+        '--train_data_path', type=str, default='train_data', help="train_data_path")
     parser.add_argument(
-        '--test_data_path', type=str, default='', help="test_data_path")
+        '--test_data_path', type=str, default='test_data', help="test_data_path")
     parser.add_argument(
         '--validation_data_path',
         type=str,
