@@ -50,11 +50,7 @@ train_path="data/census-income.data"
 test_path="data/census-income.test"
 train_data_path="train_data/"
 test_data_path="test_data/"
-<<<<<<< HEAD
-pip install -r requirements.txt
-=======
 
->>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
 wget -P data/ https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census.tar.gz
 tar -zxvf data/census.tar.gz -C data/
 
@@ -79,7 +75,6 @@ GPU环境
 
 ```sh
 CUDA_VISIBLE_DEVICES=0 python train_mmoe.py  --use_gpu 1 \  #使用gpu训练
-<<<<<<< HEAD
                                     --train_data_path 'train_data'\  #训练数据路径
                                     --test_data_path 'test_data'\  #测试数据路径
                                     --model_dir 'model_dir'\  #模型保存地址
@@ -90,17 +85,6 @@ CUDA_VISIBLE_DEVICES=0 python train_mmoe.py  --use_gpu 1 \  #使用gpu训练
                                     --expert_size 16\  #设置expert网络大小
                                     --tower_size 8\  #设置tower网络大小
                                     --epochs 400 #设置epoch轮次
-=======
-                      --train_path data/data24913/train_data/\  #训练数据路径
-                      --test_path data/data24913/test_data/\  #测试数据路径
-                      --feature_size 499\  #设置特征的维度
-                      --batch_size 32\  #设置batch_size大小
-                      --expert_num 8\  #设置expert数量
-                      --gate_num 2\  #设置gate数量
-                      --expert_size 16\  #设置expert网络大小
-                      --tower_size 8\  #设置tower网络大小
-                      --epochs 400 #设置epoch轮次
->>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
 ```
 
 修改脚本的可执行权限并运行
@@ -115,7 +99,6 @@ CPU环境
 
 ```sh
 python train_mmoe.py  --use_gpu 0 \  #使用cpu训练
-<<<<<<< HEAD
                     --train_data_path 'train_data'\  #训练数据路径
                     --test_data_path 'test_data'\  #测试数据路径
                     --model_dir 'model_dir'\  #模型保存地址
@@ -126,17 +109,6 @@ python train_mmoe.py  --use_gpu 0 \  #使用cpu训练
                     --expert_size 16\  #设置expert网络大小
                     --tower_size 8\  #设置tower网络大小
                     --epochs 400 #设置epoch轮次
-=======
-                      --train_path data/data24913/train_data/\  #训练数据路径
-                      --test_path data/data24913/test_data/\  #测试数据路径
-                      --feature_size 499\  #设置特征的维度
-                      --batch_size 32\  #设置batch_size大小
-                      --expert_num 8\  #设置expert数量
-                      --gate_num 2\  #设置gate数量
-                      --expert_size 16\  #设置expert网络大小
-                      --tower_size 8\  #设置tower网络大小
-                      --epochs 400 #设置epoch轮次
->>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
 ```
 
 修改脚本的可执行权限并运行

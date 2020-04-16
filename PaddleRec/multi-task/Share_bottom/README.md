@@ -50,11 +50,7 @@ train_path="data/census-income.data"
 test_path="data/census-income.test"
 train_data_path="train_data/"
 test_data_path="test_data/"
-<<<<<<< HEAD
-pip install -r requirements.txt
-=======
 
->>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
 wget -P data/ https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census.tar.gz
 tar -zxvf data/census.tar.gz -C data/
 
@@ -79,14 +75,9 @@ GPU环境
 
 ```sh
 python share_bottom.py  --use_gpu 1\  #使用gpu训练
-<<<<<<< HEAD
                         --train_path 'train_data'\  #训练数据路径
                         --test_path 'test_data'\  #测试数据路径
                         --model_dir 'model_dir'\ #模型保存地址
-=======
-                        --train_path data/data24913/train_data/\  #训练数据路径
-                        --test_path data/data24913/test_data/\  #测试数据路径
->>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
                         --batch_size 32\  #设置batch_size大小
                         --feature_size 499\  #设置特征维度
                         --bottom_size 117\  #设置bottom网络大小
@@ -107,14 +98,9 @@ CPU环境
 
 ```sh
 python share_bottom.py  --use_gpu 0\  #使用cpu训练
-<<<<<<< HEAD
                         --train_path 'train_data'\  #训练数据路径
                         --test_path 'test_data'\  #测试数据路径
                         --model_dir 'model_dir'\ #模型保存地址
-=======
-                        --train_path data/data24913/train_data/\  #训练数据路径
-                        --test_path data/data24913/test_data/\  #测试数据路径
->>>>>>> 282e48904fbd6168835966b4e0c7851c82d46e23
                         --batch_size 32\  #设置batch_size大小
                         --feature_size 499\  #设置特征维度
                         --bottom_size 117\  #设置bottom网络大小
