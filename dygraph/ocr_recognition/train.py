@@ -73,8 +73,10 @@ def train(args):
         else:
             learning_rate = LR
 
-        optimizer = fluid.optimizer.Adam(learning_rate=learning_rate, parameter_list=ocr_attention.parameters())
         grad_clip = fluid.clip.GradientClipByGlobalNorm(args.gradient_clip)
+        optimizer = fluid.optimizer.Adam(
+            learning_rate=learning_rate, parameter_list=ocr_attention.parameters(), grad_clip=grad_clip)
+
 
         train_reader = data_reader.data_reader(
             args.batch_size,
@@ -122,7 +124,7 @@ def train(args):
 
                 total_loss += avg_loss.numpy()
                 avg_loss.backward()
-                optimizer.minimize(avg_loss, grad_clip=grad_clip)
+                optimizer.minimize(avg_loss)
                 ocr_attention.clear_gradients()
 
                 if batch_id > 0 and batch_id % args.log_period == 0:
