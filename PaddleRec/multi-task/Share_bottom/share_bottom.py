@@ -1,18 +1,11 @@
 import paddle.fluid as fluid
-import pandas as pd
 import numpy as np
 import paddle
+import os
 import time
+import datetime
 import utils
-from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import MinMaxScaler
 from args import *
-import warnings
-warnings.filterwarnings("ignore")
-#显示所有列
-pd.set_option('display.max_columns', None)
-
-
 
 def set_zero(var_name,scope=fluid.global_scope(),place=fluid.CPUPlace(),param_type="int64"):
     """
@@ -106,8 +99,8 @@ loader.set_sample_list_generator(train_reader, places=place)
 
 test_loader = fluid.io.DataLoader.from_generator(feed_list=data_list, capacity=batch_size, iterable=True)
 test_loader.set_sample_list_generator(test_reader, places=place)
-mean_auc_income = []
-mean_auc_marital = []
+auc_income_list = []
+auc_marital_list = []
 
 for epoch in range(epochs):
     begin = time.time()
@@ -139,13 +132,20 @@ for epoch in range(epochs):
                   feed=test_data,
                   fetch_list=[out_1,out_2,label_1,label_2,auc_income,auc_marital],
                   return_numpy=True) 
-    mean_auc_income.append(test_auc_1_p)
-    mean_auc_marital.append(test_auc_2_p)
+    model_dir = os.path.join(args.model_dir,'epoch_' + str(epoch + 1), "checkpoint")
+    main_program = fluid.default_main_program()
+    fluid.io.save(main_program,model_dir)
+    
+    auc_income_list.append(test_auc_1_p)
+    auc_marital_list.append(test_auc_2_p)
     end = time.time()
-    print("epoch_id:[%d],epoch_time:[%.5f s],loss:[%.5f],train_auc_income:[%.5f],train_auc_marital:[%.5f],test_auc_income:[%.5f],test_auc_marital:[%.5f]"%
-    (epoch,end - begin,loss_data,auc_1_p,auc_2_p,test_auc_1_p,test_auc_2_p))
-print("mean_auc_income:[%.5f],mean_auc_marital[%.5f]"%(np.mean(mean_auc_income),np.mean(mean_auc_marital)))    
-        
+    time_stamp = datetime.datetime.now()
+    print("%s,- INFO - epoch_id: %d,epoch_time: %.5f s,loss: %.5f,train_auc_income: %.5f,train_auc_marital: %.5f,test_auc_income: %.5f,test_auc_marital: %.5f"%
+    (time_stamp.strftime('%Y-%m-%d %H:%M:%S'),epoch,end - begin,loss_data,auc_1_p,auc_2_p,test_auc_1_p,test_auc_2_p))
+    
+time_stamp = datetime.datetime.now()
+print("%s,- INFO - mean_sb_test_auc_income: %.5f,mean_sb_test_auc_marital %.5f,max_sb_test_auc_income: %.5f,max_sb_test_auc_marital %.5f"%(
+    time_stamp.strftime('%Y-%m-%d %H:%M:%S'),np.mean(auc_income_list),np.mean(auc_marital_list),np.max(auc_income_list),np.max(auc_marital_list)))    
         
         
         

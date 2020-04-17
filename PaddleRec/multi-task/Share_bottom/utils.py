@@ -5,18 +5,14 @@ import os
 import paddle.fluid as fluid
 import io
 from itertools import islice
-from sklearn.preprocessing import MinMaxScaler
-import warnings
 
-
-##按行读取文件
 def reader_creator(file_dir):
     def reader():
         files = os.listdir(file_dir)
         for fi in files:
             with io.open(
                     os.path.join(file_dir, fi), "r", encoding='utf-8') as f:
-                for l in islice(f, 1, None):  ##忽略第一行
+                for l in islice(f, 1, None):  
                     l = l.strip().split(',')
                     l = list(map(float, l))
                     label_income = []
@@ -36,8 +32,6 @@ def reader_creator(file_dir):
 
     return reader
 
-
-##读取一个batch
 def batch_reader(reader, batch_size):
     def batch_reader():
         r = reader()
@@ -49,9 +43,6 @@ def batch_reader(reader, batch_size):
                 b = []
     return batch_reader
 
-
-##准备数据          
 def prepare_reader(data_path, batch_size):
     data_set = reader_creator(data_path)
-    #random.shuffle(data_set)
     return batch_reader(data_set, batch_size)
