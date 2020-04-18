@@ -23,8 +23,8 @@ import paddle.fluid as fluid
 from paddle.fluid.core import PaddleTensor
 from paddle.fluid.core import AnalysisConfig
 from paddle.fluid.core import create_paddle_predictor
-from dataset_generator import BidWordDataset
-from infer_network import TDMinfer
+from dataset_generator import TDMDataset
+from infer_network import TdmInferNet
 from args import print_arguments, parse_args
 import logging
 
@@ -72,7 +72,7 @@ def main():
     config.set_cpu_math_library_num_threads(args.cpu_num)
 
     predictor = create_paddle_predictor(config)
-    tdm_model = TDMinfer(args)
+    tdm_model = TdmInferNet(args)
     first_layer_node = tdm_model.first_layer_node
     first_layer_nums = len(first_layer_node)
     first_layer_node = np.array(first_layer_node)
@@ -85,7 +85,7 @@ def main():
         str(args.test_files_path) + "/%s" % x
         for x in os.listdir(args.test_files_path)
     ]
-    test_reader = BidWordDataset().infer_reader(file_list, args.batch_size)
+    test_reader = TDMDataset().infer_reader(file_list, args.batch_size)
 
     for batch_id, data in enumerate(test_reader()):
         input_emb = data2tensor(data)

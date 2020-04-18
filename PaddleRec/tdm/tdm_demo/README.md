@@ -2,6 +2,35 @@
 
 本代码仅作tdm组网示例，使用fake数据集，用于快速调研paddle-tdm。
 
+* [运行环境要求](#运行环境要求)
+* [树结构的准备](#树结构的准备)
+   * [名词概念](#名词概念)
+   * [树的准备流程](#树的准备流程)
+      * [Layer_list](#layer_list)
+      * [Travel_list](#travel_list)
+      * [Tree_Info](#tree_info)
+      * [Tree_Embedding](#tree_embedding)
+* [数据准备](#数据准备)
+* [TDM网络设计](#tdm网络设计)
+* [TDM组网细节](#tdm组网细节)
+   * [训练组网](#训练组网)
+      * [输入的定义](#输入的定义)
+      * [输入侧的组网](#输入侧的组网)
+      * [node的负采样组网](#node的负采样组网)
+      * [input与node的交互网络](#input与node的交互网络)
+      * [判别及loss计算组网](#判别及loss计算组网)
+   * [预测组网](#预测组网)
+      * [网络输入](#网络输入)
+      * [通过各层分类器的流程](#通过各层分类器的流程)
+* [TDM-Demo运行细节](#tdm-demo运行细节)
+   * [运行流程](#运行流程)
+   * [模型的加载与保存](#模型的加载与保存)
+   * [demo的训练运行方法](#demo的训练运行方法)
+   * [demo的预测运行方法](#demo的预测运行方法)
+   * [demo分布式运行方法](#demo分布式运行方法)
+   * [demo的部署及推理](#demo的部署及推理)
+
+
 ## 运行环境要求
 - 目前仅支持Linux，如：`unbuntu`及`CentOS`
 - 目前仅支持python版本`2.7`
@@ -14,7 +43,7 @@
 为防止概念混淆，让我们明确tdm中名词的概念：
 
 <p align="center">
-<img align="center" src="img/demo_tree.png" height="300px" width="940px">
+<img align="center" src="img/demo_tree.png">
 <p>
 
 - **item**：具有实际物理含义，是我们希望通过tdm检索最后得到的结果，如一个商品，一篇文章，一个关键词等等，在tdm模型中，item位于树的叶子节点。item有其自身的ID，我们姑且称之为 `item_id`。
@@ -37,7 +66,9 @@
 - 问题五：是每个用户都有一棵树，还是所有用户共享一颗树？答：只有一棵树，通过每一层的模型牵引节点的emb，使其尽量满足最大堆性质。
 
 完成以上步骤，我们已经得到了树的结构，与每个节点的全部信息，现在让我们将其转换为Paddle-TDM训练所需的格式。我们需要产出四个数据：
-#### Layer_list：记录了每一层都有哪些节点。训练用
+#### Layer_list
+
+记录了每一层都有哪些节点。训练用
 ```bash
 # Layer list
 1,2
@@ -45,7 +76,9 @@
 7,8,9,10,11,12,13
 14,15,16,17,18,19,20,21,22,23,24,25
 ```
-#### Travel_list：记录每个叶子节点的Travel路径。训练用
+#### Travel_list
+
+记录每个叶子节点的Travel路径。训练用
 ```bash
 # Travel list
 1,3,7,14
@@ -56,7 +89,9 @@
 2,6,13,0
 ```
 
-#### Tree_Info：记录了每个节点的信息，主要为：是否是item/item_id，所在层级，父节点，子节点。检索用
+#### Tree_Info
+
+记录了每个节点的信息，主要为：是否是item/item_id，所在层级，父节点，子节点。检索用
 ```bash
 # Tree info
 0,0,0,1,2
@@ -68,7 +103,9 @@
 11,4,12,0,0
 ```
 
-#### Tree_Embedding：记录所有节点的Embedding表，格式如正常表。训练及检索用
+#### Tree_Embedding
+
+记录所有节点的Embedding表，格式如正常表。训练及检索用
 
 以上数据设计的初衷是为了高效，在paddle网络中以Tensor的形式参与训练，运行时，不再需要进行频繁的树的结构的遍历，直接根据已有信息进行快速查找与训练。以上数据可以明文保存，但最终都需要转成ndarray，参与网络的初始化。
 结合示例树，数据可以组织如右，下面介绍一些细节：
@@ -91,7 +128,7 @@
 假设输入数据是 Emb + item_id，下面让我们开始介绍一个最简单的网络设计。
 
 <p align="center">
-<img align="center" src="img/demo_network.png" height="420px" width="940px">
+<img align="center" src="img/demo_network.png">
 <p>
 
 上图给出了一个非常简单的TDM示例网络，没有添加任何复杂的逻辑，纯用DNN实现。
@@ -152,7 +189,7 @@ def input_data(self):
 > 二、`layer_fc`，主要功能是将input_emb映射到不同的兴趣层空间，和当层的node学习兴趣关系。有多少层，就添加多少个fc。
 
 <p align="center">
-<img align="center" src="img/input-net.png" height="410px" width="470px">
+<img align="center" src="img/input-net.png">
 <p>
 
 在paddle组网中，我们这样快速实现输入侧组网：
@@ -256,7 +293,7 @@ sample_nodes_emb = [
 > 二、input_emb与node_emb进行`concat`，过FC，计算兴趣上的匹配关系
 
 <p align="center">
-<img align="center" src="img/dnn-net.png" height="410px" width="470px">
+<img align="center" src="img/dnn-net.png">
 <p>
 
 在paddle的组网中，我们这样实现这一部分的逻辑：
@@ -642,8 +679,31 @@ if args.save_init_model or not args.load_model:
 
 ### demo的预测运行方法
 - 运行脚本为run_infer.sh
-
     ```bash
     sh run_infer.sh
     ```
 - 运行前，需仔细检查：`thirdparty_path`, `test_data_path`,以及模型启动地址是否正确
+
+### demo分布式运行方法
+
+- demo代码中给出了本地模拟分布式的运行方式：
+    ```bash
+    sh local_cluster.sh
+    ```
+
+- 首先需要运行本地训练，产出paddle的二进制模型文件`init_model`，使参数服务器可以加载该模型
+- 分布式运行的超参在`async_train.sh`中调整
+- paddle的参数服务器运行原理可以参考文档：[PaddlePaddle Fluid CPU分布式训练(Transplier)](https://github.com/PaddlePaddle/Fleet/tree/develop/markdown_doc/transpiler)
+- 单机运行流程与分布式运行流程的区别，及入门使用文档：[基于DNN模型的点击率预估模型](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/ctr/dnn)
+
+### demo的部署及推理
+
+Demo代码中给出了基于paddle预测库加载tdm模型，输入emb产出item的端到端的推理示例，参考此示例，可以在服务器端快速部署tdm服务。
+
+- 运行方式如下
+    ```bash
+    sh run_predict.sh
+    ```
+- 首先需要运行`run_infer.sh`，打开`save_init_model`开关，使用`save_inference_model`产出paddle的推理模型，`predict.py`会加载`infer_model`，进行高速推理。
+- 欲想进一步高速推理，需使用含预测库的paddle预测库，可以使用`mkl`及`mkl_dnn`等计算库加速op的计算。相关文档可以参考：[服务器端部署](https://www.paddlepaddle.org.cn/documentation/docs/zh/advanced_guide/inference_deployment/inference/index_cn.html)
+- tdm相关op目前仅支持在cpu设备上运行，后续会支持GPU，欢迎关注。
