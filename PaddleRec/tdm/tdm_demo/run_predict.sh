@@ -13,7 +13,7 @@ tree_info_init_path="${thirdparty_path}/tree_info.txt"
 export GLOG_v=0
 
 function main() {
-    cmd="python local_infer.py \
+    cmd="python predict.py \
         --is_local=1 \
         --cpu_num=1 \
         --batch_size=1 \

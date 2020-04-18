@@ -78,12 +78,20 @@ def run_infer(args, model_path):
 
     logger.info("Load persistables from \"{}\"".format(path))
 
+    if args.save_init_model:
+        logger.info("Begin Save infer model.")
+        model_path = (str(args.model_files_path) + "/" + "infer_model")
+        fluid.io.save_inference_model(executor=exe, dirname=model_path,
+                                      feeded_var_names=[
+                                          'input_emb', 'first_layer_node', 'first_layer_node_mask'],
+                                      target_vars=[res_item])
+        logger.info("End Save Init model.")
+
     first_layer_node = tdm_model.first_layer_node
     first_layer_nums = len(first_layer_node)
     first_layer_node = np.array(first_layer_node)
     first_layer_node = first_layer_node.reshape((1, -1)).astype('int64')
     first_layer_node = first_layer_node.repeat(args.batch_size, axis=0)
-
     # 在demo中，假设infer起始层的节点都不是叶子节点，mask=0
     # 若真实的起始层含有叶子节点，则对应位置的 mask=1
     first_layer_mask = (

@@ -31,7 +31,7 @@ from paddle.fluid.incubate.fleet.parameter_server.distribute_transpiler.distribu
 from args import print_arguments, parse_args
 from utils import tdm_sampler_prepare, tdm_child_prepare, tdm_emb_prepare
 
-from network import TdmTrainNet
+from train_network import TdmTrainNet
 
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
