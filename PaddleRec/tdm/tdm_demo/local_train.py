@@ -80,7 +80,7 @@ def run_train(args):
             dirname=path,
             main_program=fluid.default_main_program())
         lr = fluid.global_scope().find_var("learning_rate_0").get_tensor()
-        lr.set(np.array(args.learning_rate).a    stype('float32'), place)
+        lr.set(np.array(args.learning_rate).astype('float32'), place)
         logger.info("Load persistables from \"{}\"".format(path))
     else:
         # 将明文树结构及数据，set到组网中的Variale中
@@ -114,7 +114,7 @@ def run_train(args):
             fetch_list=[acc, avg_cost],
             fetch_info=["Epoch {} acc".format(
                 epoch), "Epoch {} loss".format(epoch)],
-            print_period=10,
+            print_period=1,
             debug=False,
         )
         end_time = time.time()

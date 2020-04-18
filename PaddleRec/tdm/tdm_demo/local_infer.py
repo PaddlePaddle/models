@@ -82,9 +82,12 @@ def run_infer(args, model_path):
     first_layer_nums = len(first_layer_node)
     first_layer_node = np.array(first_layer_node)
     first_layer_node = first_layer_node.reshape((1, -1)).astype('int64')
+    first_layer_node = first_layer_node.repeat(args.batch_size, axis=0)
+
     # 在demo中，假设infer起始层的节点都不是叶子节点，mask=0
     # 若真实的起始层含有叶子节点，则对应位置的 mask=1
-    first_layer_mask = (np.zeros((1, first_layer_nums))).astype('int64')
+    first_layer_mask = (
+        np.zeros((args.batch_size, first_layer_nums))).astype('int64')
 
     for batch_id, data in enumerate(test_reader()):
         input_emb = data2tensor(data, place)

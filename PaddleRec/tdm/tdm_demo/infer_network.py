@@ -19,7 +19,6 @@ import math
 import argparse
 import numpy as np
 import paddle.fluid as fluid
-import paddle.tensor as tensor
 from utils import tdm_sampler_prepare, tdm_child_prepare, trace_var
 from train_network import DnnLayerClassifierNet, InputTransNet
 
@@ -37,7 +36,7 @@ class TdmInferNet(object):
 
         self.layer_list = self.get_layer_list(args)
         self.first_layer_idx = 0
-        self.first_layer_node = self.create_first_layer()
+        self.first_layer_node = self.create_first_layer(args)
         self.layer_classifier = DnnLayerClassifierNet(args)
         self.input_trans_net = InputTransNet(args)
 
@@ -82,7 +81,7 @@ class TdmInferNet(object):
     def create_first_layer(self, args):
         """decide which layer to start infer"""
         first_layer_id = 0
-        for idx, layer_node in enumate(args.layer_node_num_list):
+        for idx, layer_node in enumerate(args.layer_node_num_list):
             if layer_node >= self.topK:
                 first_layer_id = idx
                 break
@@ -124,13 +123,13 @@ class TdmInferNet(object):
             node_emb = fluid.embedding(
                 input=current_layer_node,
                 size=[self.node_nums, self.node_embed_size],
-                param_attr=fluid.ParamAttr(name="tdm.node_emb.weight"))
+                param_attr=fluid.ParamAttr(name="TDM_Tree_Emb"))
 
             input_fc_out = self.input_trans_net.layer_fc_infer(
                 input_trans_emb, layer_idx)
 
             # 过每一层的分类器
-            layer_classifier_res = self.layer_classifier.classifier_layer_infer(input_trans_emb,
+            layer_classifier_res = self.layer_classifier.classifier_layer_infer(input_fc_out,
                                                                                 node_emb,
                                                                                 layer_idx)
 

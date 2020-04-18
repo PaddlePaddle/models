@@ -23,9 +23,7 @@ function main() {
         --batch_size=32 \
         --learning_rate=3e-4 \
         --train_files_path=${train_files_path} \
-        --test_files_path=${test_files_path} \
         --model_files_path=${model_files_path} \
-        --init_model_files_path=${init_model_files_path} \
         --tree_travel_init_path=${tree_travel_init_path} \
         --tree_info_init_path=${tree_info_init_path} \
         --tree_layer_init_path=${tree_layer_init_path} " 

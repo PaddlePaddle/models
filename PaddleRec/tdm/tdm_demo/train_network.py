@@ -197,6 +197,7 @@ class TdmTrainNet(object):
         # 若想对各个层次的loss辅以不同的权重，则在此处无需concat
         # 支持各个层次分别计算loss，再乘相应的权重
         sample_label = fluid.layers.concat(sample_label, axis=1)
+        sample_label.stop_gradient = True
         labels_reshape = fluid.layers.reshape(sample_label, [-1, 1])
 
         # 计算整体的loss并得到softmax的输出
@@ -205,7 +206,9 @@ class TdmTrainNet(object):
 
         # 通过mask过滤掉虚拟节点的loss
         sample_mask = fluid.layers.concat(sample_mask, axis=1)
+        sample_mask.stop_gradient = True
         mask_reshape = fluid.layers.reshape(sample_mask, [-1, 1])
+
         mask_index = fluid.layers.where(mask_reshape != 0)
         mask_cost = fluid.layers.gather_nd(cost, mask_index)
 

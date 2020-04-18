@@ -327,6 +327,7 @@ tdm_fc_re = fluid.layers.reshape(tdm_fc, [-1, 2])
 # 若想对各个层次的loss辅以不同的权重，则在此处无需concat
 # 支持各个层次分别计算loss，再乘相应的权重
 sample_label = fluid.layers.concat(sample_label, axis=1)
+sample_label.stop_gradient = True
 labels_reshape = fluid.layers.reshape(sample_label, [-1, 1])
 
 # 计算整体的loss并得到softmax的输出
@@ -335,7 +336,9 @@ cost, softmax_prob = fluid.layers.softmax_with_cross_entropy(
 
 # 通过mask过滤掉虚拟节点的loss
 sample_mask = fluid.layers.concat(sample_mask, axis=1)
+sample_mask.stop_gradient = True
 mask_reshape = fluid.layers.reshape(sample_mask, [-1, 1])
+
 mask_index = fluid.layers.where(mask_reshape != 0)
 mask_cost = fluid.layers.gather_nd(cost, mask_index)
 
@@ -439,13 +442,13 @@ tdm的检索逻辑类似beamsearch，简单来说：在每一层计算打分，�
         node_emb = fluid.embedding(
             input=current_layer_node,
             size=[self.node_nums, self.node_embed_size],
-            param_attr=fluid.ParamAttr(name="tdm.node_emb.weight"))
+            param_attr=fluid.ParamAttr(name="TDM_Tree_Emb"))
 
         input_fc_out = self.input_trans_net.layer_fc_infer(
             input_trans_emb, layer_idx)
 
         # 过每一层的分类器
-        layer_classifier_res = self.layer_classifier.classifier_layer_infer(input_trans_emb, node_emb, layer_idx)
+        layer_classifier_res = self.layer_classifier.classifier_layer_infer(input_fc_out, node_emb, layer_idx)
 
         # 过最终的判别分类器
         tdm_fc = fluid.layers.fc(input=layer_classifier_res,
