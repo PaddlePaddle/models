@@ -85,7 +85,7 @@ def run_infer(args, model_path):
                                       feeded_var_names=[
                                           'input_emb', 'first_layer_node', 'first_layer_node_mask'],
                                       target_vars=[res_item])
-        logger.info("End Save Init model.")
+        logger.info("End Save infer model.")
 
     first_layer_node = tdm_model.first_layer_node
     first_layer_nums = len(first_layer_node)
