@@ -126,7 +126,6 @@ def train(args):
     elif fleet.is_worker():
         logger.info("TDM Run worker ...")
         # 初始化工作节点
-        # check_all_trainers_ready(0)
         fleet.init_worker()
         place = fluid.CPUPlace()
         exe = fluid.Executor(place)
@@ -145,10 +144,12 @@ def train(args):
         logger.info("TDM Begin load parameter.")
         # Set TDM_Tree_Info
         # 树结构相关的变量不参与网络更新，不存储于参数服务器，因此需要在本地手动Set
+        tdm_param_prepare_dict = tdm_sampler_prepare(args)
+        tdm_param_prepare_dict['info_array'] = tdm_child_prepare(args)
         Numpy_model = {}
-        Numpy_model['TDM_Tree_Travel'] = tdm_model.travel_array
-        Numpy_model['TDM_Tree_Layer'] = tdm_model.layer_array
-        Numpy_model['TDM_Tree_Info'] = tdm_model.info_array
+        Numpy_model['TDM_Tree_Travel'] = tdm_param_prepare_dict['travel_array']
+        Numpy_model['TDM_Tree_Layer'] = tdm_param_prepare_dict['layer_array']
+        Numpy_model['TDM_Tree_Info'] = tdm_param_prepare_dict['info_array']
         # Numpy_model['TDM_Tree_Emb'] = tdm_emb_prepare(args)
         # 分布式训练中，Emb存储与参数服务器，无需在本地set
         for param_name in Numpy_model:
