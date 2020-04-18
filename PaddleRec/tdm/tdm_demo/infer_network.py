@@ -116,9 +116,9 @@ class TdmInferNet(object):
                     current_layer_node.shape[2]
 
             current_layer_node = fluid.layers.reshape(
-                current_layer_node, [self.batch_size, current_layer_node_num])
+                current_layer_node, [-1, current_layer_node_num])
             current_layer_child_mask = fluid.layers.reshape(
-                current_layer_child_mask, [self.batch_size, current_layer_node_num])
+                current_layer_child_mask, [-1, current_layer_node_num])
 
             node_emb = fluid.embedding(
                 input=current_layer_node,
@@ -146,7 +146,7 @@ class TdmInferNet(object):
             positive_prob = fluid.layers.slice(
                 prob, axes=[2], starts=[1], ends=[2])
             prob_re = fluid.layers.reshape(
-                positive_prob, [self.batch_size, current_layer_node_num])
+                positive_prob, [-1, current_layer_node_num])
 
             # 过滤掉padding产生的无效节点（node_id=0）
             node_zero_mask = fluid.layers.cast(current_layer_node, 'bool')
