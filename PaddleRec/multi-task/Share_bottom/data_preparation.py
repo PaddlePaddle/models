@@ -18,8 +18,7 @@ def fun2(x):
         return 0
 
 
-def data_preparation(train_path, test_path, train_data_path, test_data_path,
-                     validation_data_path):
+def data_preparation(train_path, test_path, train_data_path, test_data_path):
     # The column names are from
     # https://www2.1010data.com/documentationcenter/prod/Tutorials/MachineLearningExamples/CensusIncomeDataSet.html
     column_names = [
@@ -101,5 +100,4 @@ def data_preparation(train_path, test_path, train_data_path, test_data_path,
 
 
 args = data_preparation_args()
-data_preparation(args.train_path, args.test_path, args.train_data_path,
-                 args.test_data_path, args.validation_data_path)
+data_preparation(args.train_path, args.test_path, args.train_data_path,args.test_data_path)

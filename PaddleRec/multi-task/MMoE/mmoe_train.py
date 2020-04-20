@@ -69,8 +69,11 @@ def MMOE(feature_size=499,expert_num=8, gate_num=2, expert_size=16, tower_size=8
     label_income_1 = fluid.layers.slice(label_income, axes=[1], starts=[1], ends=[2])
     label_marital_1 = fluid.layers.slice(label_marital, axes=[1], starts=[1], ends=[2])
     
-    auc_income, batch_auc_1, auc_states_1  = fluid.layers.auc(input=output_layers[0], label=fluid.layers.cast(x=label_income_1, dtype='int64'))
-    auc_marital, batch_auc_2, auc_states_2 = fluid.layers.auc(input=output_layers[1], label=fluid.layers.cast(x=label_marital_1, dtype='int64'))
+    pred_income = fluid.layers.clip(output_layers[0], min=1e-10, max=1.0 - 1e-10)
+    pred_marital = fluid.layers.clip(output_layers[1], min=1e-10, max=1.0 - 1e-10)
+    
+    auc_income, batch_auc_1, auc_states_1  = fluid.layers.auc(input=pred_income, label=fluid.layers.cast(x=label_income_1, dtype='int64'))
+    auc_marital, batch_auc_2, auc_states_2 = fluid.layers.auc(input=pred_marital, label=fluid.layers.cast(x=label_marital_1, dtype='int64'))
     
     avg_cost_income = fluid.layers.mean(x=cost_income)
     avg_cost_marital = fluid.layers.mean(x=cost_marital)
@@ -116,7 +119,6 @@ test_loader = fluid.io.DataLoader.from_generator(feed_list=data_list, capacity=b
 test_loader.set_sample_list_generator(test_reader, places=place)
 auc_income_list = []
 auc_marital_list = []
-mmoe_res_file = open('mmoe_res.txt', 'w',encoding='utf-8')
 for epoch in range(epochs):
     for var in auc_states_1:  # reset auc states
         set_zero(var.name,place=place)

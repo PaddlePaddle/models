@@ -40,15 +40,7 @@ def data_preparation_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--train_path", type=str, default='', help="train_path")
     parser.add_argument("--test_path", type=str, default='', help="test_path")
-
-    parser.add_argument(
-        '--train_data_path', type=str, default='train_data', help="train_data_path")
-    parser.add_argument(
-        '--test_data_path', type=str, default='test_data', help="test_data_path")
-    parser.add_argument(
-        '--validation_data_path',
-        type=str,
-        default='',
-        help="validation_data_path")
+    parser.add_argument('--train_data_path', type=str, default='train_data', help="train_data_path")
+    parser.add_argument('--test_data_path', type=str, default='test_data', help="test_data_path")
     args = parser.parse_args()
     return args
