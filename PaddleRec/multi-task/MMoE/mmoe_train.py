@@ -7,6 +7,11 @@ import datetime
 import os
 import utils
 from args import *
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("fluid")
+logger.setLevel(logging.INFO)
 
 def set_zero(var_name,scope=fluid.global_scope(),place=fluid.CPUPlace(),param_type="int64"):
     """
@@ -62,15 +67,15 @@ def MMOE(feature_size=499,expert_num=8, gate_num=2, expert_size=16, tower_size=8
             
         output_layers.append(out)
 
-    cost_income = paddle.fluid.layers.cross_entropy(input=output_layers[0], label=label_income,soft_label = True)
-    cost_marital = paddle.fluid.layers.cross_entropy(input=output_layers[1], label=label_marital,soft_label = True)
+    pred_income = fluid.layers.clip(output_layers[0], min=1e-15, max=1.0 - 1e-15)
+    pred_marital = fluid.layers.clip(output_layers[1], min=1e-15, max=1.0 - 1e-15)
+
+    cost_income = paddle.fluid.layers.cross_entropy(input=pred_income, label=label_income,soft_label = True)
+    cost_marital = paddle.fluid.layers.cross_entropy(input=pred_marital, label=label_marital,soft_label = True)
     
 
     label_income_1 = fluid.layers.slice(label_income, axes=[1], starts=[1], ends=[2])
     label_marital_1 = fluid.layers.slice(label_marital, axes=[1], starts=[1], ends=[2])
-    
-    pred_income = fluid.layers.clip(output_layers[0], min=1e-10, max=1.0 - 1e-10)
-    pred_marital = fluid.layers.clip(output_layers[1], min=1e-10, max=1.0 - 1e-10)
     
     auc_income, batch_auc_1, auc_states_1  = fluid.layers.auc(input=pred_income, label=fluid.layers.cast(x=label_income_1, dtype='int64'))
     auc_marital, batch_auc_2, auc_states_2 = fluid.layers.auc(input=pred_marital, label=fluid.layers.cast(x=label_marital_1, dtype='int64'))
@@ -95,8 +100,8 @@ expert_num = args.expert_num
 epochs = args.epochs
 gate_num = args.gate_num
 
-print("batch_size:[%d],feature_size:[%d],expert_num:[%d],gate_num[%d],expert_size[%d],tower_size[%d],epochs:[%d]"%(batch_size,feature_size,expert_num,
-                                                                                                        gate_num,expert_size,tower_size,epochs))
+logger.info("batch_size:{} ,feature_size:{} ,expert_num:{} ,gate_num:{} ,expert_size:{} ,tower_size:{} ,epochs:{} ".format(
+    batch_size,feature_size,expert_num,gate_num,expert_size,tower_size,epochs))
 
 train_reader = utils.prepare_reader(train_path,batch_size)
 test_reader = utils.prepare_reader(test_path,batch_size)
@@ -156,14 +161,12 @@ for epoch in range(epochs):
     auc_income_list.append(test_auc_1_p)
     auc_marital_list.append(test_auc_2_p)
     end = time.time()
-    time_stamp = datetime.datetime.now()
-    print("%s,- INFO - epoch_id: %d,epoch_time: %.5f s,loss: %.5f,train_auc_income: %.5f,train_auc_marital: %.5f,test_auc_income: %.5f,test_auc_marital: %.5f"%
-    (time_stamp.strftime('%Y-%m-%d %H:%M:%S'),epoch,end - begin,loss_data,auc_1_p,auc_2_p,test_auc_1_p,test_auc_2_p))
-    
-time_stamp = datetime.datetime.now()
-print("%s,- INFO - mean_mmoe_test_auc_income: %.5f,mean_mmoe_test_auc_marital %.5f,max_mmoe_test_auc_income: %.5f,max_mmoe_test_auc_marital %.5f"%(
-    time_stamp.strftime('%Y-%m-%d %H:%M:%S'),np.mean(auc_income_list),np.mean(auc_marital_list),np.max(auc_income_list),np.max(auc_marital_list)))    
-   
+
+    logger.info("epoch_id:{},epoch_time:{} s,loss:{},train_auc_income:{},train_auc_marital:{},test_auc_income:{},test_auc_marital:{}".format(
+        epoch,end - begin,loss_data,auc_1_p,auc_2_p,test_auc_1_p,test_auc_2_p))
+        
+logger.info("mean_sb_test_auc_income:{},mean_sb_test_auc_marital:{},max_sb_test_auc_income:{},max_sb_test_auc_marital:{}".format(
+        np.mean(auc_income_list),np.mean(auc_marital_list),np.max(auc_income_list),np.max(auc_marital_list)))  
         
         
         

@@ -119,14 +119,14 @@ python share_bottom.py  --use_gpu 0\  #使用cpu训练
 
 ## 预测
 
-本模型训练和预测交替进行，运行share_bottom.py即可得到预测结果
+本模型训练和预测交替进行，训练的同时可得到预测结果。
 
 ## 模型效果
 
 epoch设置为100的训练和测试效果如下：
 
 ```text
-batch_size:[32],epochs:[100],feature_size:[499],bottom_size:[117],tower_nums:[2],tower_size:[8]
+2020-04-16 16:01:04,-INFO: batch_size:[32],epochs:[100],feature_size:[499],bottom_size:[117],tower_nums:[2],tower_size:[8]
 2020-04-16 16:01:04,- INFO - epoch_id: 0,epoch_time: 77.17624 s,loss: 0.62643,train_auc_income: 0.49442,train_auc_marital: 0.93509,test_auc_income: 0.50000,test_auc_marital: 0.93920
 2020-04-16 16:02:23,- INFO - epoch_id: 1,epoch_time: 78.84795 s,loss: 0.47955,train_auc_income: 0.49721,train_auc_marital: 0.98118,test_auc_income: 0.50000,test_auc_marital: 0.98804
 2020-04-16 16:03:43,- INFO - epoch_id: 2,epoch_time: 79.67485 s,loss: 

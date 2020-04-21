@@ -121,19 +121,19 @@ python train_mmoe.py  --use_gpu 0 \  #使用cpu训练
 
 ## 预测
 
-本模型训练和预测交替进行，运行train_mmoe.py 即可得到预测结果
+本模型训练和预测交替进行，训练的同时可得到预测结果
 
 ## 模型效果
 
 epoch设置为100的训练和测试效果如下：
 
 ```text
-batch_size:[32],feature_size:[499],expert_num:[8],gate_num[2],expert_size[16],tower_size[8],epochs:[100]
-2020-04-16 11:28:06,- INFO - epoch_id: 0,epoch_time: 129.17434 s,loss: 0.62215,train_auc_income: 0.86302,train_auc_marital: 0.92316,test_auc_income: 0.84525,test_auc_marital: 0.98269
-2020-04-16 11:30:36,- INFO - epoch_id: 1,epoch_time: 149.79017 s,loss: 0.42484,train_auc_income: 0.90634,train_auc_marital: 0.98418,test_auc_income: 
+2020-04-21 12:39:08,-INFO: batch_size:32,feature_size:499,expert_num:8,gate_num:2,expert_size:16,tower_size:8,epochs:2
+2020-04-16 11:28:06,-INFO: epoch_id: 0,epoch_time: 129.17434 s,loss: 0.62215,train_auc_income: 0.86302,train_auc_marital: 0.92316,test_auc_income: 0.84525,test_auc_marital: 0.98269
+2020-04-16 11:30:36,-INFO: epoch_id: 1,epoch_time: 149.79017 s,loss: 0.42484,train_auc_income: 0.90634,train_auc_marital: 0.98418,test_auc_income: 
 ......
-2020-04-16 15:31:23,- INFO - epoch_id: 97,epoch_time: 147.07304 s,loss: 0.30267,train_auc_income: 0.94743,train_auc_marital: 0.99430,test_auc_income: 0.94905,test_auc_marital: 0.99414
-2020-04-16 15:33:51,- INFO - epoch_id: 98,epoch_time: 148.34412 s,loss: 0.29688,train_auc_income: 0.94736,train_auc_marital: 0.99433,test_auc_income: 0.94846,test_auc_marital: 0.99409
-2020-04-16 15:36:21,- INFO - epoch_id: 99,epoch_time: 149.91047 s,loss: 0.31330,train_auc_income: 0.94732,train_auc_marital: 0.99403,test_auc_income: 0.94881,test_auc_marital: 0.99386
-2020-04-16 15:36:21,- INFO - mean_mmoe_test_auc_income: 0.94465,mean_mmoe_test_auc_marital 0.99324,max_mmoe_test_auc_income: 0.94937,max_mmoe_test_auc_marital 0.99419
+2020-04-16 15:31:23,-INFO: epoch_id: 97,epoch_time: 147.07304 s,loss: 0.30267,train_auc_income: 0.94743,train_auc_marital: 0.99430,test_auc_income: 0.94905,test_auc_marital: 0.99414
+2020-04-16 15:33:51,-INFO: epoch_id: 98,epoch_time: 148.34412 s,loss: 0.29688,train_auc_income: 0.94736,train_auc_marital: 0.99433,test_auc_income: 0.94846,test_auc_marital: 0.99409
+2020-04-16 15:36:21,-INFO: epoch_id: 99,epoch_time: 149.91047 s,loss: 0.31330,train_auc_income: 0.94732,train_auc_marital: 0.99403,test_auc_income: 0.94881,test_auc_marital: 0.99386
+2020-04-16 15:36:21,-INFO: mean_mmoe_test_auc_income: 0.94465,mean_mmoe_test_auc_marital 0.99324,max_mmoe_test_auc_income: 0.94937,max_mmoe_test_auc_marital 0.99419
 ```
