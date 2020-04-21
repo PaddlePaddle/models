@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument("--tower_size", type=int, default=8, help="tower_size")
     parser.add_argument("--expert_num", type=int, default=8, help="expert_num")
     parser.add_argument("--gate_num", type=int, default=2, help="gate_num")
-    parser.add_argument("--epochs", type=int, default=400, help="epochs")
+    parser.add_argument("--epochs", type=int, default=100, help="epochs")
     parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
     parser.add_argument('--use_gpu', type=int, default=0, help='whether using gpu')
     parser.add_argument('--model_dir',type=str, default='model_dir', help="model_dir")
@@ -38,10 +38,9 @@ def parse_args():
     
 def data_preparation_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--train_path", type=str, default='', help="train_path")
-    parser.add_argument("--test_path", type=str, default='', help="test_path")
-
-    parser.add_argument('--train_data_path',type=str, default='', help="train_data_path")
-    parser.add_argument('--test_data_path',type=str, default='', help="test_data_path")
+    parser.add_argument("--train_path", type=str, default='data/census-income.data', help="train_path")
+    parser.add_argument("--test_path", type=str, default='data/census-income.test', help="test_path")
+    parser.add_argument('--train_data_path',type=str, default='train_data/', help="train_data_path")
+    parser.add_argument('--test_data_path',type=str, default='test_data/', help="test_data_path")
     args = parser.parse_args()
     return args

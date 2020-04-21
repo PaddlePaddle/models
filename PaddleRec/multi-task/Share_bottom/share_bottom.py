@@ -5,7 +5,12 @@ import os
 import time
 import datetime
 import utils
+import logging
 from args import *
+
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("fluid")
+logger.setLevel(logging.INFO)
 
 def set_zero(var_name,scope=fluid.global_scope(),place=fluid.CPUPlace(),param_type="int64"):
     """
@@ -49,25 +54,25 @@ def share_bottom(feature_size=499,bottom_size=117,tower_nums=2,tower_size=8):
                                    name='output_layer_' + str(index))
         output_layers.append(output_layer)
 
-    cost_income = paddle.fluid.layers.cross_entropy(input=output_layers[0], label=label_income,soft_label = True)
-    cost_marital = paddle.fluid.layers.cross_entropy(input=output_layers[1], label=label_marital,soft_label = True)
+
+    pred_income = fluid.layers.clip(output_layers[0], min=1e-15, max=1.0 - 1e-15)
+    pred_marital = fluid.layers.clip(output_layers[1], min=1e-15, max=1.0 - 1e-15)
+
+    cost_income = paddle.fluid.layers.cross_entropy(input=pred_income, label=label_income,soft_label = True)
+    cost_marital = paddle.fluid.layers.cross_entropy(input=pred_marital, label=label_marital,soft_label = True)
     
 
     label_income_1 = fluid.layers.slice(label_income, axes=[1], starts=[1], ends=[2])
     label_marital_1 = fluid.layers.slice(label_marital, axes=[1], starts=[1], ends=[2])
     
-    pred_income = fluid.layers.clip(output_layers[0], min=1e-10, max=1.0 - 1e-10)
-    pred_marital = fluid.layers.clip(output_layers[1], min=1e-10, max=1.0 - 1e-10)
-    
     auc_income, batch_auc_1, auc_states_1  = fluid.layers.auc(input=pred_income, label=fluid.layers.cast(x=label_income_1, dtype='int64'))
     auc_marital, batch_auc_2, auc_states_2 = fluid.layers.auc(input=pred_marital, label=fluid.layers.cast(x=label_marital_1, dtype='int64'))
+
+    cost = fluid.layers.elementwise_add(cost_income, cost_marital, axis=1)
     
-    avg_cost_income = fluid.layers.mean(x=cost_income)
-    avg_cost_marital = fluid.layers.mean(x=cost_marital)
+    avg_cost =  fluid.layers.mean(x=cost)
     
-    cost =  avg_cost_income + avg_cost_marital
-    
-    return [a_data,label_income,label_marital],cost,output_layers[0],output_layers[1],label_income,label_marital,auc_income,auc_marital,auc_states_1,auc_states_2
+    return [a_data,label_income,label_marital],avg_cost,output_layers[0],output_layers[1],label_income,label_marital,auc_income,auc_marital,auc_states_1,auc_states_2
 
 
 
@@ -81,7 +86,8 @@ tower_nums = args.tower_nums
 tower_size = args.tower_size
 epochs = args.epochs
 
-print("batch_size:[%d],epochs:[%d],feature_size:[%d],bottom_size:[%d],tower_nums:[%d],tower_size:[%d]"%(batch_size,epochs,feature_size,bottom_size,tower_nums,tower_size))
+logger.info("batch_size:{} ,epochs:{} ,feature_size:{} ,bottom_size:{} ,tower_nums:{} ,tower_size:{} ".format(
+    batch_size,epochs,feature_size,bottom_size,tower_nums,tower_size))
 
 train_reader = utils.prepare_reader(train_path,batch_size)
 test_reader = utils.prepare_reader(test_path,batch_size)
@@ -142,14 +148,12 @@ for epoch in range(epochs):
     auc_income_list.append(test_auc_1_p)
     auc_marital_list.append(test_auc_2_p)
     end = time.time()
-    time_stamp = datetime.datetime.now()
-    print("%s,- INFO - epoch_id: %d,epoch_time: %.5f s,loss: %.5f,train_auc_income: %.5f,train_auc_marital: %.5f,test_auc_income: %.5f,test_auc_marital: %.5f"%
-    (time_stamp.strftime('%Y-%m-%d %H:%M:%S'),epoch,end - begin,loss_data,auc_1_p,auc_2_p,test_auc_1_p,test_auc_2_p))
-    
-time_stamp = datetime.datetime.now()
-print("%s,- INFO - mean_sb_test_auc_income: %.5f,mean_sb_test_auc_marital %.5f,max_sb_test_auc_income: %.5f,max_sb_test_auc_marital %.5f"%(
-    time_stamp.strftime('%Y-%m-%d %H:%M:%S'),np.mean(auc_income_list),np.mean(auc_marital_list),np.max(auc_income_list),np.max(auc_marital_list)))    
+
+    logger.info("epoch_id:{},epoch_time:{} s,loss:{},train_auc_income:{},train_auc_marital:{},test_auc_income:{},test_auc_marital:{}".format(
+        epoch,end - begin,loss_data,auc_1_p,auc_2_p,test_auc_1_p,test_auc_2_p))
         
+logger.info("mean_sb_test_auc_income:{},mean_sb_test_auc_marital:{},max_sb_test_auc_income:{},max_sb_test_auc_marital:{}".format(
+        np.mean(auc_income_list),np.mean(auc_marital_list),np.max(auc_income_list),np.max(auc_marital_list)))        
         
         
         
