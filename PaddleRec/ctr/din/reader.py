@@ -18,6 +18,7 @@ import numpy as np
 import paddle
 import pickle
 
+
 def pad_batch_data(input, max_len):
     res = np.array([x + [0] * (max_len - len(x)) for x in input])
     res = res.astype("int64").reshape([-1, max_len])
@@ -33,11 +34,9 @@ def make_data(b):
         [[0] * x + [-1e9] * (max_len - x) for x in len_array]).reshape(
             [-1, max_len, 1])
     target_item_seq = np.array(
-        [[x[2]] * max_len for x in b]).astype("int64").reshape(
-            [-1, max_len])
+        [[x[2]] * max_len for x in b]).astype("int64").reshape([-1, max_len])
     target_cat_seq = np.array(
-        [[x[3]] * max_len for x in b]).astype("int64").reshape(
-            [-1, max_len])
+        [[x[3]] * max_len for x in b]).astype("int64").reshape([-1, max_len])
     res = []
     for i in range(len(b)):
         res.append([

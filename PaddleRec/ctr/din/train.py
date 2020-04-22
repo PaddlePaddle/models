@@ -33,11 +33,20 @@ logger.setLevel(logging.INFO)
 def parse_args():
     parser = argparse.ArgumentParser("din")
     parser.add_argument(
-        '--config_path', type=str, default='data/config.txt', help='dir of config')
+        '--config_path',
+        type=str,
+        default='data/config.txt',
+        help='dir of config')
     parser.add_argument(
-        '--train_dir', type=str, default='data/paddle_train.txt', help='dir of train file')
+        '--train_dir',
+        type=str,
+        default='data/paddle_train.txt',
+        help='dir of train file')
     parser.add_argument(
-        '--model_dir', type=str, default='din_amazon', help='dir of saved model')
+        '--model_dir',
+        type=str,
+        default='din_amazon',
+        help='dir of saved model')
     parser.add_argument(
         '--batch_size', type=int, default=16, help='number of batch size')
     parser.add_argument(
@@ -45,15 +54,19 @@ def parse_args():
     parser.add_argument(
         '--use_cuda', type=int, default=0, help='whether to use gpu')
     parser.add_argument(
-        '--parallel', type=int, default=0, help='whether to use parallel executor')
+        '--parallel',
+        type=int,
+        default=0,
+        help='whether to use parallel executor')
     parser.add_argument(
         '--base_lr', type=float, default=0.85, help='based learning rate')
     parser.add_argument(
         '--num_devices', type=int, default=1, help='Number of GPU devices')
     parser.add_argument(
-        '--enable_ce', action='store_true', help='If set, run the task with continuous evaluation logs.')
-    parser.add_argument(
-        '--batch_num', type=int, help="batch num for ce")
+        '--enable_ce',
+        action='store_true',
+        help='If set, run the task with continuous evaluation logs.')
+    parser.add_argument('--batch_num', type=int, help="batch num for ce")
     args = parser.parse_args()
     return args
 
@@ -133,8 +146,8 @@ def train():
 
                 if (global_step > 400000 and global_step % PRINT_STEP == 0) or (
                         global_step <= 400000 and global_step % 50000 == 0):
-                    save_dir = os.path.join(args.model_dir, "global_step_" + str(
-                        global_step))
+                    save_dir = os.path.join(args.model_dir,
+                                            "global_step_" + str(global_step))
                     feed_var_name = [
                         "hist_item_seq", "hist_cat_seq", "target_item",
                         "target_cat", "label", "mask", "target_item_seq",
@@ -156,10 +169,8 @@ def train():
             ce_time = total_time[-1]
         except:
             print("ce info error")
-        print("kpis\teach_pass_duration_card%s\t%s" %
-                    (gpu_num, ce_time))
-        print("kpis\ttrain_loss_card%s\t%s" %
-                    (gpu_num, ce_loss))
+        print("kpis\teach_pass_duration_card%s\t%s" % (gpu_num, ce_time))
+        print("kpis\ttrain_loss_card%s\t%s" % (gpu_num, ce_loss))
 
 
 def get_cards(args):

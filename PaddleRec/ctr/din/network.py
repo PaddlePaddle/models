@@ -14,6 +14,7 @@
 
 import paddle.fluid as fluid
 
+
 def din_attention(hist, target_expand, mask):
     """activation weight"""
 
@@ -61,14 +62,10 @@ def network(item_count, cat_count):
         name="hist_item_seq", shape=[None, seq_len], dtype="int64")
     hist_cat_seq = fluid.data(
         name="hist_cat_seq", shape=[None, seq_len], dtype="int64")
-    target_item = fluid.data(
-        name="target_item", shape=[None], dtype="int64")
-    target_cat = fluid.data(
-        name="target_cat", shape=[None], dtype="int64")
-    label = fluid.data(
-        name="label", shape=[None, 1], dtype="float32")
-    mask = fluid.data(
-        name="mask", shape=[None, seq_len, 1], dtype="float32")
+    target_item = fluid.data(name="target_item", shape=[None], dtype="int64")
+    target_cat = fluid.data(name="target_cat", shape=[None], dtype="int64")
+    label = fluid.data(name="label", shape=[None, 1], dtype="float32")
+    mask = fluid.data(name="mask", shape=[None, seq_len, 1], dtype="float32")
     target_item_seq = fluid.data(
         name="target_item_seq", shape=[None, seq_len], dtype="int64")
     target_cat_seq = fluid.data(
