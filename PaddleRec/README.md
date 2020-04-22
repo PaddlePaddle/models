@@ -14,9 +14,9 @@ PaddleRec全景图：
 
 
 
-| 任务场景          |                        模型                        |                             简介                             |
-| :---------------: | :------------------------------------------------: | :----------------------------------------------------------: |
-| 内容理解          | [TagSpace](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/tagspace) |Tagspace模型学习文本及标签的embedding表示，应用于工业级的标签推荐，具体应用场景有feed新闻标签推荐。|
+| 任务场景              |                        模型                        |                             简介                             |
+| :--------------------:| :------------------------------------------------: | :----------------------------------------------------------: |
+| 内容理解              | [TagSpace](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/tagspace) |Tagspace模型学习文本及标签的embedding表示，应用于工业级的标签推荐，具体应用场景有feed新闻标签推荐。|
 | 内容理解          | [TextClassification](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/text_classification) |文本分类，具体应用场景有feed新闻标签分类。|
 | 召回              | [Word2Vec](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/word2vec) |训练得到词的向量表示、广泛应用于NLP、推荐等任务场景。 |
 | 召回              | [GraphNeuralNetwork](https://github.com/PaddlePaddle/models/tree/develop/PaddleRec/gnn) |SR-GNN，全称为Session-based Recommendations with Graph Neural Network（GNN）。使用GNN进行会话序列建模。 |
