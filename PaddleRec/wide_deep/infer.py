@@ -29,19 +29,19 @@ def run_infer(args,test_data_path):
     wide_deep_model = wide_deep()
 
     test_data_generator = utils.CriteoDataset()
-    test_reader = paddle.batch(test_data_generator.test(test_data_path),batch_size=args.batch_size)
+    test_reader = paddle.batch(test_data_generator.test(test_data_path), batch_size=args.batch_size)
     
     inference_scope = fluid.Scope()
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
     
-    cur_model_path = os.path.join(args.model_dir,'epoch_' + str(args.test_epoch), "checkpoint")
+    cur_model_path = os.path.join(args.model_dir, 'epoch_' + str(args.test_epoch), "checkpoint")
 
     with fluid.scope_guard(inference_scope):
         with fluid.framework.program_guard(test_program, startup_program):
             inputs = wide_deep_model.input_data()
             place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
-            loss, acc, auc, batch_auc, auc_states = wide_deep_model.model(inputs,args.hidden1_units, args.hidden2_units, args.hidden3_units)
+            loss, acc, auc, batch_auc, auc_states = wide_deep_model.model(inputs, args.hidden1_units, args.hidden2_units, args.hidden3_units)
             exe = fluid.Executor(place)
             exe.run(startup_program)
 
@@ -56,32 +56,20 @@ def run_infer(args,test_data_path):
             for batch_id, data in enumerate(test_reader()):
                 begin = time.time()
                 acc_val,auc_val = exe.run(program=test_program,
-                                feed=feeder.feed(data),
-                                fetch_list=[acc.name,auc.name],
-                                return_numpy=True
-                                )
+                                        feed=feeder.feed(data),
+                                        fetch_list=[acc.name, auc.name],
+                                        return_numpy=True
+                                        )
                 mean_acc.append(np.array(acc_val)[0])
                 mean_auc.append(np.array(auc_val)[0])
                 end = time.time()
-                logger.info("batch_id: {},batch_time: {:.5f}s,acc: {:.5f},auc: {:.5f}".format(batch_id,end-begin,np.array(acc_val)[0],np.array(auc_val)[0]))
-            logger.info("mean_acc:{:.5f},mean_auc:{:.5f}".format(np.mean(mean_acc),np.mean(mean_auc)))
-                
+                logger.info("batch_id: {}, batch_time: {:.5f}s, acc: {:.5f}, auc: {:.5f}".format(
+                            batch_id, end-begin, np.array(acc_val)[0], np.array(auc_val)[0]))
+                            
+            logger.info("mean_acc:{:.5f}, mean_auc:{:.5f}".format(np.mean(mean_acc), np.mean(mean_auc)))
                 
 if __name__ == "__main__":
   
     args = args.parse_args()
-    run_infer(args,args.test_data_path)
-                         
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
+    run_infer(args, args.test_data_path)
+              

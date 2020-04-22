@@ -22,6 +22,7 @@ import sys
 
 
 def parse_args():
+    
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--epochs", type=int, default=40, help="epochs")
     parser.add_argument("--batch_size", type=int, default=40, help="batch_size")
@@ -37,7 +38,5 @@ def parse_args():
     parser.add_argument('--hidden3_units', type=int, default=25, help='hidden3_units')
 
     args = parser.parse_args()
-    return args
     
-
-
+    return args

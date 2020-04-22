@@ -167,20 +167,23 @@ python infer.py --batch_size 40 \ #batch大小
 在测试集的效果如下：
 
 ```
-W0422 10:45:12.497740  1218 device_context.cc:237] Please NOTE: device: 0, CUDA Capability: 70, Driver API Version: 9.2, Runtime API Version: 9.0
-W0422 10:45:12.501889  1218 device_context.cc:245] device: 0, cuDNN Version: 7.3.
-2020-04-22 10:45:13,804-INFO: batch_id: 0,batch_time: 0.00625s,acc: 0.72500,auc: 0.92790
-2020-04-22 10:45:13,809-INFO: batch_id: 1,batch_time: 0.00468s,acc: 0.80000,auc: 0.92321
-2020-04-22 10:45:13,814-INFO: batch_id: 2,batch_time: 0.00442s,acc: 0.82500,auc: 0.93003
-2020-04-22 10:45:13,819-INFO: batch_id: 3,batch_time: 0.00434s,acc: 0.75000,auc: 0.94108
-2020-04-22 10:45:13,824-INFO: batch_id: 4,batch_time: 0.00438s,acc: 0.67500,auc: 0.93013
-2020-04-22 10:45:13,829-INFO: batch_id: 5,batch_time: 0.00438s,acc: 0.80000,auc: 0.92201
+W0422 11:44:50.891095  1573 device_context.cc:237] Please NOTE: device: 0, CUDA Capability: 70, Driver API Version: 9.2, Runtime API Version: 9.0
+W0422 11:44:50.895593  1573 device_context.cc:245] device: 0, cuDNN Version: 7.3.
+2020-04-22 11:44:52,236-INFO: batch_id: 0, batch_time: 0.00613s, acc: 0.72500, auc: 0.92790
+2020-04-22 11:44:52,242-INFO: batch_id: 1, batch_time: 0.00467s, acc: 0.80000, auc: 0.93356
+2020-04-22 11:44:52,247-INFO: batch_id: 2, batch_time: 0.00462s, acc: 0.82500, auc: 0.93372
+2020-04-22 11:44:52,252-INFO: batch_id: 3, batch_time: 0.00445s, acc: 0.75000, auc: 0.94198
+2020-04-22 11:44:52,257-INFO: batch_id: 4, batch_time: 0.00449s, acc: 0.67500, auc: 0.93222
+2020-04-22 11:44:52,262-INFO: batch_id: 5, batch_time: 0.00444s, acc: 0.80000, auc: 0.92254
 ......
-2020-04-22 10:45:15,914-INFO: batch_id: 403,batch_time: 0.00487s,acc: 0.80000,auc: 0.90454
-2020-04-22 10:45:15,920-INFO: batch_id: 404,batch_time: 0.00505s,acc: 0.72500,auc: 0.90427
-2020-04-22 10:45:15,925-INFO: batch_id: 405,batch_time: 0.00460s,acc: 0.77500,auc: 0.90405
-2020-04-22 10:45:15,931-INFO: batch_id: 406,batch_time: 0.00517s,acc: 0.77500,auc: 0.90412
-2020-04-22 10:45:15,936-INFO: batch_id: 407,batch_time: 0.00457s,acc: 0.00000,auc: 0.90415
-2020-04-22 10:45:15,936-INFO: mean_acc:0.76195,mean_auc:0.90335
+2020-04-22 11:44:54,439-INFO: batch_id: 400, batch_time: 0.00507s, acc: 0.80000, auc: 0.90650
+2020-04-22 11:44:54,445-INFO: batch_id: 401, batch_time: 0.00512s, acc: 0.67500, auc: 0.90658
+2020-04-22 11:44:54,452-INFO: batch_id: 402, batch_time: 0.00591s, acc: 0.72500, auc: 0.90638
+2020-04-22 11:44:54,458-INFO: batch_id: 403, batch_time: 0.00518s, acc: 0.80000, auc: 0.90634
+2020-04-22 11:44:54,464-INFO: batch_id: 404, batch_time: 0.00513s, acc: 0.72500, auc: 0.90619
+2020-04-22 11:44:54,470-INFO: batch_id: 405, batch_time: 0.00497s, acc: 0.77500, auc: 0.90597
+2020-04-22 11:44:54,476-INFO: batch_id: 406, batch_time: 0.00554s, acc: 0.77500, auc: 0.90606
+2020-04-22 11:44:54,481-INFO: batch_id: 407, batch_time: 0.00471s, acc: 0.00000, auc: 0.90608
+2020-04-22 11:44:54,481-INFO: mean_acc:0.76195, mean_auc:0.90577
 ```
 

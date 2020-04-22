@@ -12,13 +12,13 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
-def train(args,train_data_path):
+def train(args, train_data_path):
     wide_deep_model = wide_deep()
     inputs = wide_deep_model.input_data()
     train_data_generator = utils.CriteoDataset()
-    train_reader = paddle.batch(train_data_generator.train(train_data_path),batch_size=args.batch_size)
+    train_reader = paddle.batch(train_data_generator.train(train_data_path), batch_size=args.batch_size)
     
-    loss,acc,auc, batch_auc, auc_states  = wide_deep_model.model(inputs,args.hidden1_units, args.hidden2_units, args.hidden3_units)
+    loss, acc, auc, batch_auc, auc_states  = wide_deep_model.model(inputs, args.hidden1_units, args.hidden2_units, args.hidden3_units)
     optimizer = fluid.optimizer.AdagradOptimizer(learning_rate=0.01)
     optimizer.minimize(loss)
     
@@ -30,24 +30,18 @@ def train(args,train_data_path):
     for epoch in range(args.epochs):
         for batch_id, data in enumerate(train_reader()):
             begin = time.time()
-            loss_val,acc_val,auc_val = exe.run(program=fluid.default_main_program(),
+            loss_val, acc_val, auc_val = exe.run(program=fluid.default_main_program(),
                     feed=feeder.feed(data),
-                    fetch_list=[loss.name,acc.name,auc.name],
+                    fetch_list=[loss.name, acc.name, auc.name],
                     return_numpy=True)
             end = time.time()
-            logger.info("epoch:{},batch_time:{:.5f}s,loss:{:.5f},acc:{:.5f},auc:{:.5f}".format(epoch,end-begin,np.array(loss_val)[0],np.array(acc_val)[0],np.array(auc_val)[0]))
+            logger.info("epoch:{}, batch_time:{:.5f}s, loss:{:.5f}, acc:{:.5f}, auc:{:.5f}".format(epoch, end-begin, np.array(loss_val)[0], 
+                    np.array(acc_val)[0], np.array(auc_val)[0]))
 
-        model_dir = os.path.join(args.model_dir,'epoch_' + str(epoch + 1), "checkpoint")
+        model_dir = os.path.join(args.model_dir, 'epoch_' + str(epoch + 1), "checkpoint")
         main_program = fluid.default_main_program()
         fluid.io.save(main_program,model_dir)
-        
-
-        
-
-    
+  
 if __name__ == "__main__":
     args = args.parse_args()
-    train(args,args.train_data_path)
-
-
-
+    train(args, args.train_data_path)
