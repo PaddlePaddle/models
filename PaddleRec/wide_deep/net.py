@@ -5,7 +5,6 @@ import paddle.fluid as fluid
 
 class wide_deep(object):
     def wide_part(self, data):
-
         out = fluid.layers.fc(input=data,
                             size=1, 
                             param_attr=fluid.ParamAttr(initializer=fluid.initializer.TruncatedNormal(loc=0.0, scale=1.0 / math.sqrt(data.shape[1])),
@@ -15,7 +14,6 @@ class wide_deep(object):
         return out
         
     def fc(self, data, hidden_units, active, tag):
-        
         output = fluid.layers.fc(input=data,
                             size=hidden_units, 
                             param_attr=fluid.ParamAttr(initializer=fluid.initializer.TruncatedNormal(loc=0.0, scale=1.0 / math.sqrt(data.shape[1]))),
@@ -25,7 +23,6 @@ class wide_deep(object):
         return output
         
     def deep_part(self, data, hidden1_units, hidden2_units, hidden3_units):
-        
         l1 = self.fc(data, hidden1_units, 'relu', 'l1')
         l2 = self.fc(l1, hidden2_units, 'relu', 'l2')
         l3 = self.fc(l2, hidden3_units, 'relu', 'l3')
@@ -41,7 +38,6 @@ class wide_deep(object):
         return inputs
         
     def model(self, inputs, hidden1_units, hidden2_units, hidden3_units):
-
         wide_output = self.wide_part(inputs[0])
         deep_output = self.deep_part(inputs[1], hidden1_units, hidden2_units, hidden3_units)
         
