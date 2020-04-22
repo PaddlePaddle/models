@@ -79,16 +79,18 @@ def infer():
      fetch_targets] = fluid.io.load_inference_model(model_path, exe)
 
     loader = fluid.io.DataLoader.from_generator(
-        feed_list=[inference_program.block(0).var(e) for e in feed_target_names], capacity=10000, iterable=True)
+        feed_list=[
+            inference_program.block(0).var(e) for e in feed_target_names
+        ],
+        capacity=10000,
+        iterable=True)
     loader.set_sample_list_generator(data_reader, places=place)
 
     loss_sum = 0.0
     score = []
     count = 0
     for data in loader():
-        res = exe.run(inference_program,
-                      feed=data,
-                      fetch_list=fetch_targets)
+        res = exe.run(inference_program, feed=data, fetch_list=fetch_targets)
         loss_sum += res[0]
         label_data = list(np.array(data[0]["label"]))
         for i in range(len(label_data)):
