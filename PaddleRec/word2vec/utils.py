@@ -27,7 +27,7 @@ def prepare_data(file_dir, dict_path, batch_size):
     return vocab_size, reader, i2w
 
 
-def check_version():
+def check_version(with_shuffle_batch=False):
     """
      Log error and exit when the installed version of paddlepaddle is
      not satisfied.
@@ -37,7 +37,10 @@ def check_version():
           "Please make sure the version is good with your code." \
 
     try:
-        fluid.require_version('1.6.0')
+        if with_shuffle_batch:
+            fluid.require_version('1.7.0')
+        else:
+            fluid.require_version('1.6.0') 
     except Exception as e:
         logger.error(err)
         sys.exit(1)
