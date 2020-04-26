@@ -23,7 +23,7 @@
 3. PaddlePaddle1.5.1及之前的版本不支持在AttGAN和STGAN模型里的判别器加上的instance norm。如果要在判别器中加上instance norm，请源码编译develop分支并安装。
 4. 中间效果图保存在${output_dir}/test文件夹中。对于Pix2Pix来说，inputA 和inputB 代表输入的两种风格的图片，fakeB表示生成图片；对于CycleGAN来说，inputA表示输入图片，fakeB表示inputA根据生成的图片，cycA表示fakeB经过生成器重构出来的对应于inputA的重构图片；对于StarGAN，AttGAN和STGAN来说，第一行表示原图，之后的每一行都代表一种属性变换。
 5. infer过程使用的test_list文件和训练过程中使用的train_list具有相同格式，第一行为样本数量，第二行为属性，之后的行中第一个表示图片名称，之后的-1和1表示该图片是否拥有该属性(1为有该属性，-1为没有该属性)。
-6. metric中的fid评价指标需要先下载inceptionV3模型参数，模型参数下载链接：[inceptionV3]()
+6. metric中的fid评价指标需要先下载inceptionV3模型参数，模型参数下载链接：[inceptionV3](https://paddle-gan-models.bj.bcebos.com/params_inceptionV3.tar.gz)
 
 图像生成模型库库的目录结构如下：
 ```

@@ -13,7 +13,7 @@ def tqdm(x): return x
 """
 
 """
-inceptionV3 pretrain model is convert from pytorch, pretrain_model url is 
+inceptionV3 pretrain model is convert from pytorch, pretrain_model url is https://paddle-gan-models.bj.bcebos.com/params_inceptionV3.tar.gz
 """
 
 def _calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
