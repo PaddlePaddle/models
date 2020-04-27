@@ -4,8 +4,6 @@ English | [中文](README.md)
 
 > Note: The image classification library is migrated to new github repository: [https://github.com/PaddlePaddle/PaddleClas](https://github.com/PaddlePaddle/PaddleClas). More details about model zoo, high-end applications and many other new features can be seen in the new repository.
 
-该图像分类库已经被迁移至新的github地址：[https://github.com/PaddlePaddle/PaddleClas](https://github.com/PaddlePaddle/PaddleClas)，欢迎大家去新的代码仓库中，查看与阅读更多关于图像分类的详细介绍以及新功能。
-
 ## Table of Contents
 
 - [Introduction](#introduction)
