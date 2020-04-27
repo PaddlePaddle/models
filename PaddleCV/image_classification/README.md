@@ -2,6 +2,9 @@
 
 # 图像分类以及模型库
 
+
+> 注意：该图像分类库已迁移至新的github地址：[https://github.com/PaddlePaddle/PaddleClas](https://github.com/PaddlePaddle/PaddleClas)，欢迎大家去新的代码仓库中，查看与阅读更多关于图像分类的详细介绍以及新功能。
+
 ## 内容
 - [简介](#简介)
 - [快速开始](#快速开始)
