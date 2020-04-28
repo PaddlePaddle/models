@@ -12,30 +12,23 @@ PaddleCV全景图：
 图像分类
 --------
 
+> 注意：图像分类内容已迁移至新的github地址：[https://github.com/PaddlePaddle/PaddleClas](https://github.com/PaddlePaddle/PaddleClas)，欢迎大家去新的代码仓库中，查看与阅读更多关于图像分类的详细介绍以及新功能。
+
 图像分类是根据图像的语义信息对不同类别图像进行区分，是计算机视觉中重要的基础问题，是物体检测、图像分割、物体跟踪、行为分析、人脸识别等其他高层视觉任务的基础，在许多领域都有着广泛的应用。如：安防领域的人脸识别和智能视频分析等，交通领域的交通场景识别，互联网领域基于内容的图像检索和相册自动归类，医学领域的图像识别等。
 
-在深度学习时代，图像分类的准确率大幅度提升，在图像分类任务中，我们向大家介绍了如何在经典的数据集ImageNet上，训练常用的模型，包括AlexNet、VGG、ResNet、ResNeXt、Inception、MobileNet、SENet、DarkNet、SqueezeNet、ShuffleNet、Res2Net、DenseNet、DPN、EfficientNet、HRNet、AutoDL、ResNet-ACNet等系列模型，也开源了共105个[预训练模型](./image_classification/README.md#已发布模型及其性能)方便用户下载使用。
+在深度学习时代，图像分类的准确率大幅度提升，在图像分类任务中，我们向大家介绍了如何在经典的数据集ImageNet上，训练常用的模型，包括AlexNet、VGG、ResNet、ResNeXt、Inception、MobileNet、SENet、DarkNet、SqueezeNet、ShuffleNet、Res2Net、DenseNet、DPN、EfficientNet、HRNet、AutoDL、ResNet-ACNet等系列模型，也开源了共117个[预训练模型](https://paddleclas.readthedocs.io/zh_CN/latest/models/index.html)方便用户下载使用。
 
--  [AlexNet](./image_classification/models)
--  [SqueezeNet](./image_classification/models)
--  [VGG Series](./image_classification/models)
--  [GoogleNet](./image_classification/models)
--  [ResNet Series](./image_classification/models)
--  [ResNeXt Series](./image_classification/models)
--  [ShuffleNet Series](./image_classification/models)
--  [DenseNet Series](./image_classification/models)
--  [Inception Series](./image_classification/models)
--  [MobileNet Series](./image_classification/models)
--  [SENet Series](./image_classification/models)
--  [DarkNet](./image_classification/models)
--  [ResNeXt101_wsl Series](./image_classification/models)
--  [Res2Net Series](./image_classification/models)
--  [DenseNet Series](./image_classification/models)
--  [DPN Series](./image_classification/models)
--  [EfficientNet Series](./image_classification/models)
--  [HRNet Series](./image_classification/models)
--  [AutoDL Series](./image_classification/models)
--  [ResNet-ACNet Series](./image_classification/models)
+
+- [ResNet及其Vd系列](https://paddleclas.readthedocs.io/zh_CN/latest/models/ResNet_and_vd.html)
+- [SEResNeXt与Res2Net系列](https://paddleclas.readthedocs.io/zh_CN/latest/models/SEResNext_and_Res2Net.html)
+- [Inception系列](https://paddleclas.readthedocs.io/zh_CN/latest/models/Inception.html)
+- [HRNet系列](https://paddleclas.readthedocs.io/zh_CN/latest/models/HRNet.html)
+- [DPN与DenseNet系列](https://paddleclas.readthedocs.io/zh_CN/latest/models/DPN_DenseNet.html)
+- [EfficientNet与ResNeXt101_wsl系列](https://paddleclas.readthedocs.io/zh_CN/latest/models/EfficientNet_and_ResNeXt101_wsl.html)
+- [移动端模型](https://paddleclas.readthedocs.io/zh_CN/latest/models/Mobile.html)
+- [其他模型](https://paddleclas.readthedocs.io/zh_CN/latest/models/Others.html)
+
+更多分类模型训练技巧和图像增广、知识蒸馏等高阶使用内容可以参考PaddleClas的github地址([https://github.com/PaddlePaddle/PaddleClas](https://github.com/PaddlePaddle/PaddleClas))与文档([https://paddleclas.readthedocs.io/zh_CN/latest/index.html](https://paddleclas.readthedocs.io/zh_CN/latest/index.html))。
 
 
 目标检测
@@ -74,10 +67,10 @@ PaddleCV全景图：
 
 - [U-Net](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_unet.md)
 - [ICNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_icnet.md)
-- [PSPNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_pspnet.md) 
-- [DeepLabv3+](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_deeplabv3plus.md) 
-- [HRNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_hrnet.md) 
-- [Fast-SCNN](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_fast_scnn.md) 
+- [PSPNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_pspnet.md)
+- [DeepLabv3+](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_deeplabv3plus.md)
+- [HRNet](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_hrnet.md)
+- [Fast-SCNN](https://github.com/PaddlePaddle/PaddleSeg/blob/release/v0.4.0/turtorial/finetune_fast_scnn.md)
 
 图像生成
 -----------
