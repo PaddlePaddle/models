@@ -31,6 +31,23 @@
 
  python3.7 
 
+## 数据下载及预处理
+
+[Data.zip](https://paddlerec.bj.bcebos.com/ncf/Data.zip)
+
+在create_data.sh脚本文件中添加文件的路径，并运行脚本。
+
+```sh
+mkdir Data
+pip install -r requirements.txt  #安装必需包
+wget -P Data https://paddlerec.bj.bcebos.com/ncf/Data.zip #下载数据集
+unzip Data/Data.zip -d Data/
+python get_train_data.py --num_neg 4 \ #负采样个数
+                --train_data_path "Data/train_data.csv"  #生成训练数据
+```
+
+
+
 ## 单机训练
 
 GPU环境
