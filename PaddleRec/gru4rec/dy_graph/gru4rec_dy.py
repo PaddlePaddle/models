@@ -317,8 +317,8 @@ def train_ptb_lm():
         sgd = AdagradOptimizer(
             parameter_list=ptb_model.parameters(),
             learning_rate=fluid.layers.piecewise_decay(
-                boundaries=bd, values=lr_arr))
-        #    grad_clip=grad_clip)
+                boundaries=bd, values=lr_arr),
+            grad_clip=grad_clip)
 
         print("parameters:--------------------------------")
         for para in ptb_model.parameters():
@@ -385,7 +385,7 @@ def train_ptb_lm():
                 out_loss = dy_loss.numpy()
                 acc_ = acc.numpy()[0]
 
-                init_hidden = last_hidden
+                init_hidden = last_hidden.detach()
                 dy_loss.backward()
                 sgd.minimize(dy_loss)
                 ptb_model.clear_gradients()
