@@ -31,7 +31,7 @@ import models
 from build_model import create_model
 sys.path.append('/cv/workspace/PaddleSlim')
 from paddleslim.quant import quant_aware, convert
-from dsq import pact
+from dsq import pact, dsq, get_optimizer
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 import math
@@ -68,11 +68,9 @@ def build_program(is_train, main_prog, startup_prog, args):
             data_loader, loss_out = create_model(model, args, is_train)
             # add backward op in program
             if is_train:
-
                 optimizer = create_optimizer(args)
                 avg_cost = loss_out[0]
                 #XXX: fetch learning rate now, better implement is required here. 
-
                 global_lr = optimizer._global_learning_rate()
                 global_lr.persistable = True
                 loss_out.append(global_lr)
@@ -92,8 +90,6 @@ def build_program(is_train, main_prog, startup_prog, args):
                     ema.update()
                     loss_out.append(ema)
             loss_out.append(data_loader)
-    if is_train:
-        return loss_out, optimizer, avg_cost
     return loss_out
 
 
@@ -161,9 +157,9 @@ def train(args):
     Args:
         args: all arguments.    
     """
-    startup_prog = fluid.default_startup_program()
+    startup_prog = fluid.Program()
     train_prog = fluid.Program()
-    train_out, optimizer, avg_cost = build_program(
+    train_out = build_program(
         is_train=True,
         main_prog=train_prog,
         startup_prog=startup_prog,
@@ -200,7 +196,7 @@ def train(args):
     trainer_id = int(os.getenv("PADDLE_TRAINER_ID", 0))
 
     #init model by checkpoint or pretrianed model.
-    init_model(exe, args, train_prog)
+    #init_model(exe, args, train_prog)
     num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
     if args.use_dali:
         import dali
@@ -227,8 +223,6 @@ def train(args):
         'weight_bits': 8,
         'activation_bits': 8
     }
-    param_list = train_prog.block(0).all_parameters()
-    param_list.append('pact')
 
     import paddle.fluid.transpiler.details.program_utils as pu
     #pu.program_to_code(train_prog, skip_op_callstack=True)
@@ -238,59 +232,26 @@ def train(args):
         config,
         for_test=False,
         act_preprocess_func=pact,
-        optimizer=None,
+        weight_quantize_func=None,
+        act_quantize_func=None,
+        optimizer_func=get_optimizer,
         exe=exe)
     test_prog = quant_aware(
         test_prog,
         place,
         config,
         for_test=True,
-        act_preprocess_func=None,
+        act_preprocess_func=pact,
+        act_quantize_func=None,
+        weight_quantize_func=None,
         exe=exe)
+    #quant_train_prog = train_prog
     #pu.program_to_code(test_prog, skip_op_callstack=True)
     #fluid.framework.switch_main_program(test_prog)
-    for var in test_prog.list_vars():
-        if var.name == avg_cost.name:
-            quant_cost = var
-    """
-    with fluid.unique_name.guard('optim'):
-        #optimizer.minimize(avg_cost)
-        #optimizer = create_optimizer(args)
-        step = int(math.ceil(float(args.total_images) / args.batch_size))
-
-        bd = [step * e for e in args.step_epochs]
-        lr = [args.lr * (0.1**i) for i in range(len(bd) + 1)]
-        learning_rate = fluid.layers.piecewise_decay(boundaries=bd, values=lr)
-        optimizer = fluid.optimizer.Momentum(
-                learning_rate=learning_rate,
-                momentum=args.momentum_rate,
-                regularization=fluid.regularizer.L2Decay(args.l2_decay),
-                parameter_list=param_list)
-
-            #XXX: fetch learning rate now, better implement is required here. 
-                
-        global_lr = optimizer._global_learning_rate()
-        global_lr.persistable = True
-        train_out.append(global_lr)
-        optimizer.minimize(avg_cost, parameter_list=param_list)
-    """
-
-    exe.run(startup_prog)
-    for var in test_prog.list_vars():
-        if var.persistable:
-            #print(var)
-            pass
-    #with fluid.unique_name.guard('optim'):
-    #    #avg_cost.block.program = test_prog
-    #    optimizer.minimize(avg_cost, parameter_list=param_list)
-    #init_model(exe, args, test_prog)
+    fluid.io.load_persistables(
+        executor=exe, dirname=args.pretrained_model, main_program=test_prog)
+    #exe.run(startup_prog)
     #fluid.io.load_persistables(exe, args.pretrained_model, main_program=test_prog)
-    fluid.io.save_inference_model(
-        './test_moving_average_abs_max',
-        feeded_var_names=['feed_image', 'feed_label'],
-        target_vars=test_fetch_vars,
-        executor=exe,
-        main_program=test_prog)
     compiled_train_prog = best_strategy_compiled(args, quant_train_prog,
                                                  train_fetch_vars[0], exe)
     #NOTE: this for benchmark
@@ -336,7 +297,7 @@ def train(args):
             elif args.is_profiler and pass_id == 0 and train_batch_id == args.print_step + 5:
                 profiler.stop_profiler("total", args.profiler_path)
                 return
-            if train_batch_id % 50 == 0:
+            if train_batch_id % 1000 == 0:
                 threshold = {}
                 for var in test_prog.list_vars():
                     if 'pact' in var.name:

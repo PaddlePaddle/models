@@ -20,6 +20,7 @@ def dsq(x, bit=8, name=None):
         return x
 
     def phi_function(x, mi, alpha, delta):
+        alpha = fluid.layers.clip(alpha, min=0.0, max=2.0)
         s = 1 / (1 - alpha)
         k = fluid.layers.log(2 / alpha - 1) * (1 / delta)
         res = (fluid.layers.tanh((x - mi) * k)) * s
@@ -36,12 +37,15 @@ def dsq(x, bit=8, name=None):
     bit_range = 2**bit - 1
 
     u_param_attr = fluid.ParamAttr(
+        name=x.name + '_upper',
         initializer=fluid.initializer.ConstantInitializer(value=(2**31 - 1)))
     l_param_attr = fluid.ParamAttr(
+        name=x.name + '_lower',
         initializer=fluid.initializer.ConstantInitializer(value=(-1) *
                                                           (2**31 - 1)))
 
     alpha_param_attr = fluid.ParamAttr(
+        name=x.name + '_alpha',
         initializer=fluid.initializer.ConstantInitializer(value=0.2))
     u_param = helper.create_parameter(attr=u_param_attr, shape=[1], dtype=dtype)
     l_param = helper.create_parameter(attr=l_param_attr, shape=[1], dtype=dtype)
@@ -71,8 +75,12 @@ def dsq(x, bit=8, name=None):
         backward_func=dsq_round_back,
         skip_vars_in_backward_input=[phi_x, out_var])
     x = dequantize(out_var, cur_min, delta, interval)
+    #x.persistable = True
+    return x
 
-    return x, delta, x
+
+def get_optimizer():
+    return fluid.optimizer.MomentumOptimizer(0.005, 0.9)
 
 
 def pact(x, name=None):
@@ -80,10 +88,12 @@ def pact(x, name=None):
     dtype = 'float32'
     u_param_attr = fluid.ParamAttr(
         name=x.name + '_pact',
-        initializer=fluid.initializer.ConstantInitializer(value=15),
-        regularizer=fluid.regularizer.L2Decay(0.1),
-        learning_rate=100)
+        initializer=fluid.initializer.ConstantInitializer(value=9),
+        regularizer=fluid.regularizer.L2Decay(0.0001),
+        learning_rate=1)
     u_param = helper.create_parameter(attr=u_param_attr, shape=[1], dtype=dtype)
     x = x - fluid.layers.relu(x - u_param)
-    #x = fluid.layers.relu(x)
+    x = x + fluid.layers.relu(-u_param - x)
+
+    #x = fluid.layers.relu6(x)
     return x
