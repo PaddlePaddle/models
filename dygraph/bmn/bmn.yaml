@@ -23,7 +23,7 @@ TRAIN:
 
 VALID:
   subset: "validation"
-  batch_size: 16
+  batch_size: 4
   num_threads: 8
   use_gpu: True
   num_gpus: 4
