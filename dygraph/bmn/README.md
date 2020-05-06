@@ -55,7 +55,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，我们提供了处理
 
     bash run.sh
 
-若使用单卡训练，启动方式如下:
+若使用单卡训练，请将配置文件bmn.yaml中的batch\_size调整为16，启动方式如下:
 
     export CUDA_VISIBLE_DEVICES=0
     python train.py

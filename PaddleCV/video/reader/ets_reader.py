@@ -154,8 +154,8 @@ class ETSReader(DataReader):
 
             mapper = functools.partial(process_data)
 
-            return paddle.reader.xmap_readers(mapper, reader, self.num_threads,
-                                              self.buffer_size)
+            return paddle.io.xmap_readers(mapper, reader, self.num_threads,
+                                          self.buffer_size)
 
         def batch_reader():
             batch_out = []

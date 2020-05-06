@@ -214,8 +214,8 @@ class BSNVideoReader(DataReader):
         mapper = functools.partial(process_data, mode=self.mode)
 
         def batch_reader():
-            xreader = paddle.reader.xmap_readers(mapper, reader,
-                                                 self.num_threads, 1024)
+            xreader = paddle.io.xmap_readers(mapper, reader, self.num_threads,
+                                             1024)
             batch = []
             for item in xreader():
                 batch.append(item)
@@ -444,8 +444,8 @@ class BSNProposalReader(DataReader):
         mapper = functools.partial(process_data, mode=self.mode)
 
         def batch_reader():
-            xreader = paddle.reader.xmap_readers(mapper, reader,
-                                                 self.num_threads, 1024)
+            xreader = paddle.io.xmap_readers(mapper, reader, self.num_threads,
+                                             1024)
             batch = []
             for item in xreader():
                 batch.append(item)
