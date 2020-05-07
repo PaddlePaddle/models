@@ -2,6 +2,8 @@ English | [中文](README.md)
 
 # Image Classification and Model Zoo
 
+> Note: The image classification library is migrated to new github repository: [https://github.com/PaddlePaddle/PaddleClas](https://github.com/PaddlePaddle/PaddleClas). More details about model zoo, high-end applications and many other new features can be seen in the new repository.
+
 ## Table of Contents
 
 - [Introduction](#introduction)

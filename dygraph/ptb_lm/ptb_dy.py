@@ -24,6 +24,7 @@ from paddle.fluid.optimizer import SGDOptimizer
 from paddle.fluid.dygraph.base import to_variable
 import numpy as np
 import six
+import multiprocessing
 
 import reader
 import model_check
@@ -31,8 +32,8 @@ import time
 
 from args import *
 
-#import fluid.dygraph_grad_clip as dygraph_clip
-#from fluid.dygraph_grad_clip  import *
+#import fluid.clip as clip
+#from fluid.clip  import *
 
 import sys
 if sys.version[0] == '2':
@@ -217,11 +218,13 @@ def train_ptb_lm():
     model_check.check_cuda(args.use_gpu)
 
     place = core.CPUPlace()
-    if args.use_gpu == True:
-        place = core.CUDAPlace(0)
-
-    dev_count = fluid.core.get_cuda_device_count()
-
+    if args.use_gpu:
+        place = fluid.CUDAPlace(0)
+        dev_count = fluid.core.get_cuda_device_count()
+    else:
+        place = fluid.CPUPlace()
+        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
+    
     # check if paddlepaddle version is satisfied
     model_check.check_version()
 
@@ -329,8 +332,11 @@ def train_ptb_lm():
                                            max(i + 1 - epoch_start_decay, 0.0))
             lr_arr.append(new_lr)
 
-        sgd = SGDOptimizer(learning_rate=fluid.layers.piecewise_decay(
-            boundaries=bd, values=lr_arr), parameter_list=ptb_model.parameters())
+        grad_clip = fluid.clip.GradientClipByGlobalNorm(max_grad_norm)
+        sgd = SGDOptimizer(
+            learning_rate=fluid.layers.piecewise_decay(boundaries=bd, values=lr_arr), 
+            parameter_list=ptb_model.parameters(), 
+            grad_clip=grad_clip)
 
         def eval(model, data):
             print("begin to eval")
@@ -368,7 +374,6 @@ def train_ptb_lm():
 
         ce_time = []
         ce_ppl = []
-        grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(max_grad_norm)
         for epoch_id in range(max_epoch):
             ptb_model.train()
             total_loss = 0.0
@@ -399,7 +404,7 @@ def train_ptb_lm():
                 out_loss = dy_loss.numpy()
 
                 dy_loss.backward()
-                sgd.minimize(dy_loss, grad_clip=grad_clip)
+                sgd.minimize(dy_loss)
 
                 ptb_model.clear_gradients()
                 total_loss += out_loss
