@@ -29,7 +29,6 @@ from ade_net import create_net
 from ade.utils.configure import PDConfig
 from ade.utils.input_field import InputField
 from ade.utils.model_check import check_cuda
-import ade.utils.save_load_io as save_load_io
 
 
 def do_predict(args):
@@ -59,12 +58,11 @@ def do_predict(args):
 
             input_inst = [context_wordseq, response_wordseq, labels]
             input_field = InputField(input_inst)
-            data_reader = fluid.io.PyReader(
+            data_reader = fluid.io.DataLoader.from_generator(
                 feed_list=input_inst, capacity=4, iterable=False)
 
             logits = create_net(
                 is_training=False, model_input=input_field, args=args)
-            logits.persistable = True
 
             fetch_list = [logits.name]
     #for_test is True if change the is_test attribute of operators to True
@@ -79,9 +77,9 @@ def do_predict(args):
 
     assert (args.init_from_params) or (args.init_from_pretrain_model)
     if args.init_from_params:
-        save_load_io.init_from_params(args, exe, test_prog)
+        fluid.load(test_prog, args.init_from_params, executor=exe)
     if args.init_from_pretrain_model:
-        save_load_io.init_from_pretrain_model(args, exe, test_prog)
+        fluid.load(test_prog, args.init_from_pretrain_model, executor=exe)
 
     compiled_test_prog = fluid.CompiledProgram(test_prog)
 
@@ -94,7 +92,7 @@ def do_predict(args):
         place=place, phase="test", shuffle=False, sample_pro=1)
     num_test_examples = processor.get_num_examples(phase='test')
 
-    data_reader.decorate_batch_generator(batch_generator)
+    data_reader.set_batch_generator(batch_generator, places=place)
     data_reader.start()
 
     scores = []
@@ -110,7 +108,7 @@ def do_predict(args):
     print("Write the predicted results into the output_prediction_file")
     fw = io.open(args.output_prediction_file, 'w', encoding="utf8")
     for index, score in enumerate(scores):
-        fw.write("%s\t%s\n" % (index, score))
+        fw.write(u"%s\t%s\n" % (index, score[0]))
     print("finish........................................")
 
 
