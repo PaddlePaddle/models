@@ -91,7 +91,7 @@ class SimpleLSTMRNN(fluid.Layer):
 
         res = []
         for index in range(self._num_steps):
-            step_input = input_embedding[:,index,:]
+            step_input = input_embedding[:, index, :]
             for k in range(self._num_layers):
                 pre_hidden = hidden_array[k]
                 pre_cell = cell_array[k]
@@ -118,7 +118,8 @@ class SimpleLSTMRNN(fluid.Layer):
                         dropout_implementation='upscale_in_train')
             res.append(step_input)
         real_res = fluid.layers.concat(res, 1)
-        real_res = fluid.layers.reshape(real_res, [ -1, self._num_steps, self._hidden_size])
+        real_res = fluid.layers.reshape(
+            real_res, [-1, self._num_steps, self._hidden_size])
         last_hidden = fluid.layers.concat(hidden_array, 1)
         last_hidden = fluid.layers.reshape(
             last_hidden, shape=[-1, self._num_layers, self._hidden_size])
@@ -224,7 +225,7 @@ def train_ptb_lm():
     else:
         place = fluid.CPUPlace()
         dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
-    
+
     # check if paddlepaddle version is satisfied
     model_check.check_version()
 
@@ -334,9 +335,19 @@ def train_ptb_lm():
 
         grad_clip = fluid.clip.GradientClipByGlobalNorm(max_grad_norm)
         sgd = SGDOptimizer(
-            learning_rate=fluid.layers.piecewise_decay(boundaries=bd, values=lr_arr), 
-            parameter_list=ptb_model.parameters(), 
+            learning_rate=fluid.layers.piecewise_decay(
+                boundaries=bd, values=lr_arr),
+            parameter_list=ptb_model.parameters(),
             grad_clip=grad_clip)
+
+        def reader_decorator(reader):
+            def __reader__():
+                for item in reader:
+                    x_data = item[0].reshape((-1, num_steps, 1))
+                    y_data = item[1].reshape((-1, num_steps, 1))
+                    yield x_data, y_data
+
+            return __reader__
 
         def eval(model, data):
             print("begin to eval")
@@ -348,13 +359,14 @@ def train_ptb_lm():
                 (num_layers, batch_size, hidden_size), dtype='float32')
 
             model.eval()
-            train_data_iter = reader.get_data_iter(data, batch_size, num_steps)
-            for batch_id, batch in enumerate(train_data_iter):
-                x_data, y_data = batch
-                x_data = x_data.reshape((-1, num_steps, 1))
-                y_data = y_data.reshape((-1, num_steps, 1))
-                x = to_variable(x_data)
-                y = to_variable(y_data)
+            train_data_iter = reader_decorator(
+                reader.get_data_iter(data, batch_size, num_steps))
+
+            eval_data_loader = fluid.io.DataLoader.from_generator(capacity=200)
+            eval_data_loader.set_batch_generator(train_data_iter, places=place)
+
+            for batch_id, batch in enumerate(eval_data_loader):
+                x, y = batch
                 init_hidden = to_variable(init_hidden_data)
                 init_cell = to_variable(init_cell_data)
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
@@ -383,20 +395,17 @@ def train_ptb_lm():
             init_cell_data = np.zeros(
                 (num_layers, batch_size, hidden_size), dtype='float32')
 
-            train_data_iter = reader.get_data_iter(train_data, batch_size,
-                                                   num_steps)
+            train_data_iter = reader_decorator(
+                reader.get_data_iter(train_data, batch_size, num_steps))
+
+            train_data_loader = fluid.io.DataLoader.from_generator(capacity=200)
+            train_data_loader.set_batch_generator(train_data_iter, places=place)
+
             init_hidden = to_variable(init_hidden_data)
             init_cell = to_variable(init_cell_data)
             start_time = time.time()
-            for batch_id, batch in enumerate(train_data_iter):
-                x_data, y_data = batch
-
-                x_data = x_data.reshape((-1, num_steps, 1))
-                y_data = y_data.reshape((-1, num_steps, 1))
-
-                x = to_variable(x_data)
-                y = to_variable(y_data)
-
+            for batch_id, batch in enumerate(train_data_loader):
+                x, y = batch
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
                                                             init_cell)
                 init_hidden = last_hidden.detach()
@@ -412,8 +421,9 @@ def train_ptb_lm():
 
                 if batch_id > 0 and batch_id % log_interval == 0:
                     ppl = np.exp(total_loss / iters)
-                    print("-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f" %
-                          (epoch_id, batch_id, ppl[0],
+                    print(
+                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f"
+                        % (epoch_id, batch_id, ppl[0],
                            sgd._global_learning_rate().numpy(), out_loss))
 
             print("one epoch finished", epoch_id)
@@ -426,9 +436,11 @@ def train_ptb_lm():
             if batch_size <= 20 and epoch_id == 0 and ppl[0] > 1000:
                 # for bad init, after first epoch, the loss is over 1000
                 # no more need to continue
-                print("Parameters are randomly initialized and not good this time because the loss is over 1000 after the first epoch.")
+                print(
+                    "Parameters are randomly initialized and not good this time because the loss is over 1000 after the first epoch."
+                )
                 print("Abort this training process and please start again.")
-                return 
+                return
 
             save_model_dir = os.path.join(args.save_model_dir,
                                           str(epoch_id), 'params')
@@ -449,5 +461,6 @@ def train_ptb_lm():
             print("kpis\ttrain_ppl_card%s\t%f" % (dev_count, _ppl))
 
         eval(ptb_model, test_data)
+
 
 train_ptb_lm()

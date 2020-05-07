@@ -305,32 +305,14 @@ def create_data_loader(is_train, args):
     Returns:
         data_loader and the input data of net, 
     """
-    image_shape = [int(m) for m in args.image_shape.split(",")]
-
-    feed_image = fluid.data(
-        name="feed_image",
-        shape=[None] + image_shape,
-        dtype="float32",
-        lod_level=0)
-
-    feed_label = fluid.data(
-        name="feed_label", shape=[None, 1], dtype="int64", lod_level=0)
-    feed_y_a = fluid.data(
-        name="feed_y_a", shape=[None, 1], dtype="int64", lod_level=0)
-
     if is_train and args.use_mixup:
-        feed_y_b = fluid.data(
-            name="feed_y_b", shape=[None, 1], dtype="int64", lod_level=0)
-        feed_lam = fluid.data(
-            name="feed_lam", shape=[None, 1], dtype="float32", lod_level=0)
-
         data_loader = fluid.io.DataLoader.from_generator(
             capacity=64,
             use_double_buffer=True,
             iterable=True,
             return_list=True)
 
-        return data_loader, [feed_image, feed_y_a, feed_y_b, feed_lam]
+        return data_loader
     else:
         data_loader = fluid.io.DataLoader.from_generator(
             capacity=64,
@@ -338,7 +320,7 @@ def create_data_loader(is_train, args):
             iterable=True,
             return_list=True)
 
-        return data_loader, [feed_image, feed_label]
+        return data_loader
 
 
 def print_info(pass_id, batch_id, print_step, metrics, time_info, info_mode):
