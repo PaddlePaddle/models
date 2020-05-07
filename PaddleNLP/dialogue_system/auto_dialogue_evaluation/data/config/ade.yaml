@@ -14,13 +14,10 @@ emb_size: 256
 vocab_size: 484016
 sample_pro: 1.0
 output_prediction_file: ""
-init_from_checkpoint: ""
 init_from_params: ""
 init_from_pretrain_model: ""
 inference_model_dir: ""
 save_model_path: ""
-save_checkpoint: ""
-save_param: ""
 evaluation_file: ""
 vocab_path: ""
 max_seq_len: 128

@@ -60,6 +60,12 @@ def optimization(loss,
                  scheduler='linear_warmup_decay',
                  use_fp16=False,
                  loss_scaling=1.0):
+    clip_norm_thres = 1.0
+    # When using mixed precision training, scale the gradient clip threshold
+    # by loss_scaling
+    if use_fp16 and loss_scaling > 1.0:
+        clip_norm_thres *= loss_scaling
+
     if warmup_steps > 0:
         if scheduler == 'noam_decay':
             scheduled_lr = fluid.layers.learning_rate_scheduler\
@@ -71,18 +77,16 @@ def optimization(loss,
         else:
             raise ValueError("Unkown learning rate scheduler, should be "
                              "'noam_decay' or 'linear_warmup_decay'")
-        optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr)
+        optimizer = fluid.optimizer.AdamOptimizer(
+            learning_rate=scheduled_lr,
+            grad_clip=fluid.clip.GradientClipByGlobalNorm(
+                clip_norm=clip_norm_thres))
     else:
-        optimizer = fluid.optimizer.Adam(learning_rate=learning_rate)
+        optimizer = fluid.optimizer.AdamOptimizer(
+            learning_rate=learning_rate,
+            grad_clip=fluid.clip.GradientClipByGlobalNorm(
+                clip_norm=clip_norm_thres))
         scheduled_lr = learning_rate
-
-    clip_norm_thres = 1.0
-    # When using mixed precision training, scale the gradient clip threshold
-    # by loss_scaling
-    if use_fp16 and loss_scaling > 1.0:
-        clip_norm_thres *= loss_scaling
-    fluid.clip.set_gradient_clip(
-        clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=clip_norm_thres))
 
     def exclude_from_weight_decay(name):
         if name.find("layer_norm") > -1:

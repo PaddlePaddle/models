@@ -130,12 +130,11 @@ class DataReader(object):
         assert os.path.exists(data_path), "The given data file does not exist."
         if mode == "train":
             train_reader = fluid.io.batch(
-                paddle.reader.shuffle(
+                fluid.io.shuffle(
                     self.data_reader(
                         data_path, self.max_len, shuffle=True),
                     buf_size=batch_size * 100),
                 batch_size)
-            # train_reader = fluid.io.batch(self.data_reader(data_path), batch_size)                   
             return train_reader
         else:
             test_reader = fluid.io.batch(
