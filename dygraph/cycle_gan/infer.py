@@ -50,7 +50,7 @@ def infer():
         out_path = args.output + "/single"
         if not os.path.exists(out_path):
             os.makedirs(out_path)
-        cycle_gan = Cycle_Gan("cycle_gan")
+        cycle_gan = Cycle_Gan(3)
         save_dir = args.init_model 
         restore, _ = fluid.load_dygraph(save_dir)
         cycle_gan.set_dict(restore)

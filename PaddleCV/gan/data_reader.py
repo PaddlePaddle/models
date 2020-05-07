@@ -99,16 +99,24 @@ class reader_creator(object):
 
     def make_reader(self, args, return_name=False):
         print(self.image_dir, self.list_filename)
+        self.with_label = False
 
         def reader():
             batch_out = []
+            batch_out_label = []
             batch_out_name = []
 
             if self.shuffle:
                 np.random.shuffle(self.lines)
 
-            for i, file in enumerate(self.lines):
-                file = file.strip('\n\r\t ')
+            for i, line in enumerate(self.lines):
+                line = line.strip('\n\r\t').split(' ')
+                if len(line) > 1:
+                    self.with_label = True
+                    batch_out_label.append(line[1])
+                    file = line[0]
+                else:
+                    file = line[0]
                 self.name2id[os.path.basename(file)] = i
                 self.id2name[i] = os.path.basename(file)
                 img = Image.open(os.path.join(self.image_dir, file)).convert(
@@ -133,10 +141,18 @@ class reader_creator(object):
                     batch_out.append(img)
                 if len(batch_out) == self.batch_size:
                     if return_name:
-                        yield batch_out, batch_out_name
+                        if self.with_label:
+                            yield [[batch_out, batch_out_label, batch_out_name]]
+                            batch_out_label = []
+                        else:
+                            yield batch_out, batch_out_name
                         batch_out_name = []
                     else:
-                        yield [batch_out]
+                        if self.with_label:
+                            yield [[batch_out, batch_out_label]]
+                            batch_out_label = []
+                        else:
+                            yield [batch_out]
                     batch_out = []
 
         return reader
@@ -667,8 +683,9 @@ class data_reader(object):
                         image_dir=dataset_dir,
                         list_filename=test_list,
                         batch_size=self.cfg.n_samples)
-                    reader_test = test_reader.get_test_reader(
+                    reader_test = test_reader.make_reader(
                         self.cfg, shuffle=False, return_name=True)
                     id2name = test_reader.id2name
                 batch_num = train_reader.len()
-                return train_reader, reader_test, batch_num, id2name
+                reader = train_reader.make_reader(self.cfg)
+                return reader, reader_test, batch_num, id2name
