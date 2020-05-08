@@ -59,8 +59,8 @@ def optimization(loss,
                  weight_decay,
                  scheduler='linear_warmup_decay',
                  use_fp16=False,
-                 loss_scaling=1.0):
-    clip_norm_thres = 1.0
+                 loss_scaling=1.0,
+                 clip_norm_thres=1.0):
     # When using mixed precision training, scale the gradient clip threshold
     # by loss_scaling
     if use_fp16 and loss_scaling > 1.0:

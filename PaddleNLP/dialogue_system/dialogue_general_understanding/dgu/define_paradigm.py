@@ -48,9 +48,9 @@ class Paradigm(object):
                 initializer=fluid.initializer.TruncatedNormal(scale=0.02)),
             bias_attr=fluid.ParamAttr(
                 name="cls_out_b", initializer=fluid.initializer.Constant(0.)))
-        probs = fluid.layers.softmax(logits)
-        if not params['is_training']:
-            #probs = fluid.layers.softmax(logits)
+        
+        if not params['is_training']: 
+            probs = fluid.layers.softmax(logits)
             results = {"probs": probs}
             return results
 

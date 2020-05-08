@@ -98,7 +98,7 @@ function finetuning_train()
       --use_cuda=${1} \
       --loss_type="L2" \
       --max_seq_len=50 \
-      --init_from_params="${SAVED_MODELS}/matching_pretrained/step_final" \
+      --init_from_pretrain_model="${SAVED_MODELS}/matching_pretrained/step_final" \
       --save_model_path=${save_model_path} \
       --training_file="${INPUT_PATH}/label_data/${2}/train.ids" \
       --epoch=50 \
