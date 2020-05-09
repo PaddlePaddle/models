@@ -82,9 +82,14 @@ class STGAN_model(object):
 
     def concat(self, z, a):
         """Concatenate attribute vector on feature map axis."""
-        ones = fluid.layers.fill_constant_batch_size_like(
-            z, [-1, a.shape[1], z.shape[2], z.shape[3]], "float32", 1.0)
-        return fluid.layers.concat([z, fluid.layers.elementwise_mul(ones, a, axis=0)], axis=1)
+        batch = fluid.layers.shape(z)[0]
+        ones = fluid.layers.fill_constant(
+            shape=[batch, a.shape[1], z.shape[2], z.shape[3]],
+            dtype="float32",
+            value=1.0)
+        return fluid.layers.concat(
+            [z, fluid.layers.elementwise_mul(
+                ones, a, axis=0)], axis=1)
 
     def Genc(self, input, dim=64, n_layers=5, name='G_enc_', is_test=False):
         z = input

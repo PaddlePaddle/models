@@ -504,7 +504,7 @@ class data_reader(object):
             train_labels = os.path.join(self.cfg.data_dir, self.cfg.dataset,
                                         "train-labels-idx1-ubyte.gz")
 
-            train_reader = paddle.batch(
+            train_reader = fluid.io.batch(
                 paddle.reader.shuffle(
                     mnist_reader_creator(train_images, train_labels, 100),
                     buf_size=60000),
