@@ -27,7 +27,7 @@ import contextlib
 
 import paddle
 import paddle.fluid as fluid
-from paddle.fluid.dygraph_grad_clip import GradClipByGlobalNorm
+from paddle.fluid.clip import GradientClipByGlobalNorm
 
 import reader
 
@@ -84,13 +84,13 @@ def main():
                 num_layers=num_layers,
                 init_scale=init_scale,
                 dropout=dropout)
-        gloabl_norm_clip = GradClipByGlobalNorm(max_grad_norm)
+        gloabl_norm_clip = GradientClipByGlobalNorm(max_grad_norm)
         lr = args.learning_rate
         opt_type = args.optimizer
         if opt_type == "sgd":
-            optimizer = fluid.optimizer.SGD(lr, parameter_list=model.parameters())
+            optimizer = fluid.optimizer.SGD(lr, parameter_list=model.parameters(), grad_clip = gloabl_norm_clip)
         elif opt_type == "adam":
-            optimizer = fluid.optimizer.Adam(lr, parameter_list=model.parameters())
+            optimizer = fluid.optimizer.Adam(lr, parameter_list=model.parameters(), grad_clip = gloabl_norm_clip)
         else:
             print("only support [sgd|adam]")
             raise Exception("opt type not support")
@@ -161,7 +161,7 @@ def main():
                 loss = model(input_data_feed)
                 # print(loss.numpy()[0])
                 loss.backward()
-                optimizer.minimize(loss, grad_clip = gloabl_norm_clip)
+                optimizer.minimize(loss)
                 model.clear_gradients()
                 total_loss += loss * batch_size
                 batch_end_time = time.time()

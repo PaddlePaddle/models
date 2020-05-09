@@ -178,7 +178,7 @@ def main():
             print(args.init_from_pretrain_model)
             raise Warning("The pretrained params do not exist.")
             return
-        fluid.load(main_program, args.init_from_pretrain_model)
+        fluid.load(main_program, args.init_from_pretrain_model, exe)
         print("finish initing model from pretrained params from %s" %
               (args.init_from_pretrain_model))
 

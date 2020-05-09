@@ -37,7 +37,7 @@ class PrePostProcessLayer(Layer):
 
         for cmd in self.process_cmd:
             if cmd == "a":  # add residual connection
-                self.functors.append(lambda x, y: x + y if y else x)
+                self.functors.append(lambda x, y: x + y if y is not None else x)
                 self.exec_order += "a"
             elif cmd == "n":  # add layer normalization
                 self.functors.append(
@@ -215,7 +215,7 @@ class MultiHeadAttentionLayer(Layer):
             y=transpose_k,
             transpose_y=True)
         #alpha=self._d_model**-0.5)
-        if attn_bias:
+        if attn_bias is not None:
             product += attn_bias
         weights = fluid.layers.softmax(product)
         if self._dropout_rate:

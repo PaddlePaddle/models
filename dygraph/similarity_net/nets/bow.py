@@ -18,9 +18,8 @@ bow class
 import paddle_layers as layers
 from paddle import fluid
 from paddle.fluid.dygraph.base import to_variable
-from paddle.fluid.dygraph import Layer, Embedding, Linear
+from paddle.fluid.dygraph import Layer, Linear
 import paddle.fluid.param_attr as attr
-uniform_initializer = lambda x: fluid.initializer.UniformInitializer(low=-x, high=x)
 
 class BOW(Layer):
     """

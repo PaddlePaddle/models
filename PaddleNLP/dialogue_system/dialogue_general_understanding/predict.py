@@ -19,7 +19,6 @@ import sys
 import numpy as np
 import argparse
 import collections
-import paddle
 import paddle.fluid as fluid
 
 import dgu.reader as reader
@@ -30,7 +29,6 @@ import dgu.define_predict_pack as define_predict_pack
 from dgu.utils.configure import PDConfig
 from dgu.utils.input_field import InputField
 from dgu.utils.model_check import check_cuda
-import dgu.utils.save_load_io as save_load_io
 from dgu.utils.py23 import tab_tok, rt_tok
 
 
@@ -84,7 +82,7 @@ def do_predict(args):
 
             input_inst = [src_ids, pos_ids, sent_ids, input_mask, labels]
             input_field = InputField(input_inst)
-            data_reader = fluid.io.PyReader(
+            data_reader = fluid.io.DataLoader.from_generator(
                 feed_list=input_inst, capacity=4, iterable=False)
 
             results = create_net(
@@ -95,9 +93,6 @@ def do_predict(args):
                 args=args)
 
             probs = results.get("probs", None)
-
-            probs.persistable = True
-
             fetch_list = [probs.name]
 
     #for_test is True if change the is_test attribute of operators to True
@@ -111,12 +106,10 @@ def do_predict(args):
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
-    assert (args.init_from_params) or (args.init_from_pretrain_model)
+    assert (args.init_from_params)
 
     if args.init_from_params:
-        save_load_io.init_from_params(args, exe, test_prog)
-    if args.init_from_pretrain_model:
-        save_load_io.init_from_pretrain_model(args, exe, test_prog)
+        fluid.load(test_prog, args.init_from_params)
 
     compiled_test_prog = fluid.CompiledProgram(test_prog)
 
@@ -130,7 +123,7 @@ def do_predict(args):
     batch_generator = processor.data_generator(
         batch_size=args.batch_size, phase='test', shuffle=False)
 
-    data_reader.decorate_batch_generator(batch_generator)
+    data_reader.set_batch_generator(batch_generator, places=place)
     data_reader.start()
 
     all_results = []

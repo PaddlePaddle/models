@@ -164,7 +164,7 @@ class Linear_chain_crf(fluid.dygraph.Layer):
             "Transition": self._transition,
             "Label": [label]
         }
-        if length:
+        if length is not None:
             this_inputs['Length'] = [length]
         self._helper.append_op(
                         type='linear_chain_crf',
@@ -212,7 +212,7 @@ class Crf_decoding(fluid.dygraph.Layer):
         viterbi_path = self._helper.create_variable_for_type_inference(
                         dtype=self._dtype)
         this_inputs = {"Emission": [input], "Transition": self._transition, "Label": label}
-        if length:
+        if length is not None:
             this_inputs['Length'] = [length]
         self._helper.append_op(
                         type='crf_decoding',
@@ -245,7 +245,7 @@ class Chunk_eval(fluid.dygraph.Layer):
         num_correct_chunks = self._helper.create_variable_for_type_inference(dtype="int64")
 
         this_input = {"Inference": [input], "Label": [label]}
-        if seq_length:
+        if seq_length is not None:
             this_input["SeqLength"] = [seq_length]
 
         self._helper.append_op(
