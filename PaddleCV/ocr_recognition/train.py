@@ -106,7 +106,7 @@ def train(args):
     # load init model
     if args.init_model is not None:
         model_dir = args.init_model
-        fluid.load(fluid.default_main_program(), model_dir)
+        fluid.load(fluid.default_main_program(), model_dir, exe)
         print("Init model from: %s." % args.init_model)
 
     train_exe = exe
