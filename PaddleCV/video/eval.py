@@ -81,6 +81,7 @@ def test(args):
     config = parse_config(args.config)
     test_config = merge_configs(config, 'test', vars(args))
     print_configs(test_config, "Test")
+    use_dali = test_config['TEST'].get('use_dali', False)
 
     # build model
     test_model = models.get_model(args.model_name, test_config, mode='test')
@@ -127,6 +128,10 @@ def test(args):
                                 feed=test_feeder.feed(feat_data),
                                 return_numpy=True)
             test_outs += [vinfo]
+        elif args.model_name == 'TSN' and use_dali:
+            test_outs = exe.run(fetch_list=test_fetch_list,
+                                feed={'image': data[0],
+                                      'label': data[1]})
         else:
             test_outs = exe.run(fetch_list=test_fetch_list,
                                 feed=test_feeder.feed(data))

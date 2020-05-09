@@ -99,12 +99,19 @@ python train.py --model_name=STNET \
 bash run.sh train STNET ./configs/stnet.yaml
 ```
 
+多卡分布式训练 + GPU视频解码和预处理（仅限TSN模型）
+
+``` bash
+bash run_dist.sh train TSN ./configs/tsn_dist_and_dali.yaml
+```
+
 - 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中的`num_gpus`和`batch_size`配置。
 
 - 使用CPU训练时请在run.sh中设置use\_gpu=False，使用GPU训练时则设置use\_gpu=True
 
 - 上述启动脚本run.sh运行时需要指定任务类型、模型名、配置文件。训练、评估和预测对应的任务类型分别是train，eval和predict。模型名称则是[AttentionCluster, AttentionLSTM, NEXTVLAD, NONLOCAL, STNET, TSN, TSM, CTCN]中的任何一个。配置文件全部在PaddleVideo/configs目录下，根据模型名称选择对应的配置文件即可。具体使用请参见各模型的说明文档。
 
+- 目前针对TSN模型，做了GPU解码和数据预处理的优化，能明显提升训练速度，具体请参考[TSN](./models/tsn/README.md)
 
 ## 模型库结构
 
