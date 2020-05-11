@@ -29,7 +29,6 @@ from ade_net import create_net, set_word_embedding
 from ade.utils.configure import PDConfig
 from ade.utils.input_field import InputField
 from ade.utils.model_check import check_cuda
-import ade.utils.save_load_io as save_load_io
 
 try:
     import cPickle as pickle  #python 2
@@ -62,24 +61,27 @@ def do_train(args):
 
             input_inst = [context_wordseq, response_wordseq, labels]
             input_field = InputField(input_inst)
-            data_reader = fluid.io.PyReader(
+            data_reader = fluid.io.DataLoader.from_generator(
                 feed_list=input_inst, capacity=4, iterable=False)
 
             loss = create_net(
                 is_training=True, model_input=input_field, args=args)
-            loss.persistable = True
+
             # gradient clipping
-            fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByValue(
-                max=1.0, min=-1.0))
-            optimizer = fluid.optimizer.Adam(learning_rate=args.learning_rate)
+            optimizer = fluid.optimizer.AdamOptimizer(
+                learning_rate=args.learning_rate,
+                grad_clip=fluid.clip.GradientClipByValue(
+                    max=1.0, min=-1.0))
             optimizer.minimize(loss)
 
             if args.use_cuda:
-                dev_count = fluid.core.get_cuda_device_count()
+                places = fluid.cuda_places()
+                dev_count = len(places)
                 place = fluid.CUDAPlace(
                     int(os.getenv('FLAGS_selected_gpus', '0')))
             else:
-                dev_count = int(os.environ.get('CPU_NUM', 1))
+                places = fluid.cpu_places()
+                dev_count = len(places)
                 place = fluid.CPUPlace()
 
             processor = reader.DataProcessor(
@@ -99,20 +101,20 @@ def do_train(args):
             print("Num train examples: %d" % num_train_examples)
             print("Max train steps: %d" % max_train_steps)
 
-    data_reader.decorate_batch_generator(batch_generator)
+    data_reader.set_batch_generator(batch_generator, places=place)
 
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
-    assert (args.init_from_checkpoint == "") or (
+    assert (args.init_from_params == "") or (
         args.init_from_pretrain_model == "")
 
     #init from some checkpoint, to resume the previous training
-    if args.init_from_checkpoint:
-        save_load_io.init_from_checkpoint(args, exe, train_prog)
+    if args.init_from_params:
+        fluid.load(train_prog, args.init_from_params, exe)
     #init from some pretrain models, to better solve the current task
     if args.init_from_pretrain_model:
-        save_load_io.init_from_pretrain_model(args, exe, train_prog)
+        fluid.load(train_prog, args.init_from_pretrain_model, exe)
 
     if args.word_emb_init:
         print("start loading word embedding init ...")
@@ -163,21 +165,17 @@ def do_train(args):
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
-                    if args.save_checkpoint:
-                        save_load_io.save_checkpoint(args, exe, train_prog,
-                                                     "step_" + str(steps))
-                    if args.save_param:
-                        save_load_io.save_param(args, exe, train_prog,
-                                                "step_" + str(steps))
+                    model_path = os.path.join(args.save_model_path,
+                                              "step_" + str(steps))
+                    fluid.save(train_prog, model_path)
+
                 steps += 1
             except fluid.core.EOFException:
                 data_reader.reset()
                 break
 
-    if args.save_checkpoint:
-        save_load_io.save_checkpoint(args, exe, train_prog, "step_final")
-    if args.save_param:
-        save_load_io.save_param(args, exe, train_prog, "step_final")
+    model_path = os.path.join(args.save_model_path, "step_final")
+    fluid.save(train_prog, model_path)
 
     def get_cards():
         num = 0
