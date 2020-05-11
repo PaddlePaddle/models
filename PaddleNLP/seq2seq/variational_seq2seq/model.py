@@ -240,7 +240,7 @@ class VAE(object):
         if mode == 'train':
             latent_z = self._sampling(z_mean, z_log_var)
         else:
-            epsilon = layers.gaussian_random_batch_size_like(
+            latent_z = layers.gaussian_random_batch_size_like(
             self.tar, shape=[-1, self.latent_size])
         dec_first_hidden_cell = layers.fc(latent_z,
                                           2 * self.hidden_size *
