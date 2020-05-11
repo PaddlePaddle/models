@@ -54,6 +54,18 @@ TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。
 *  权重衰减系数为1e-4
 *  学习率在训练的总epoch数的1/3和2/3时分别做0.1的衰减
 
+**训练速度优化：**
+
+*  使用GPU解码优化视频源文件读取和预处理速度，需要预先安装NVIDIA/DALI
+*  DALI的安装方式请参考NVIDIA/DALI[官方文档](https://docs.nvidia.com/deeplearning/sdk/dali-developer-guide/docs/compilation.html#)。由于NVIDIA/DALI提供的VideoReader OP不支持TSN模型的采样方式，请使用[SunGaofeng/DALI](https://github.com/SunGaofeng/DALI)提供的源码，提供了时间维度的稀疏采样方式
+*  使用分布式训练的方式提升多卡加速比
+
+启动脚本为：
+
+``` bash
+bash run_dist.sh train TSN ./configs/tsn_dist_and_dali.yaml
+```
+
 ## 模型评估
 
 可通过如下两种方式进行模型评估:
