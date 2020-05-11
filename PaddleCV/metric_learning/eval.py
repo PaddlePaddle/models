@@ -52,8 +52,8 @@ def eval(args):
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
 
-    image = fluid.layers.data(name='image', shape=[-1] + image_shape, dtype='float32')
-    label = fluid.layers.data(name='label', shape=[-1, 1], dtype='int64')
+    image = fluid.layers.data(name='image', shape=[None] + image_shape, dtype='float32')
+    label = fluid.layers.data(name='label', shape=[None, 1], dtype='int64')
     test_loader = fluid.io.DataLoader.from_generator(
                 feed_list=[image, label],
                 capacity=64,

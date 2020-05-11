@@ -51,7 +51,7 @@ def infer(args):
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
 
-    image = fluid.layers.data(name='image', shape=[-1] + image_shape, dtype='float32')
+    image = fluid.layers.data(name='image', shape=[None] + image_shape, dtype='float32')
 
     infer_loader = fluid.io.DataLoader.from_generator(
                 feed_list=[image],

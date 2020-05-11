@@ -109,9 +109,9 @@ def build_program(is_train, main_prog, startup_prog, args):
     with fluid.program_guard(main_prog, startup_prog):
         queue_capacity = 64
         image = fluid.layers.data(
-                name='image', shape=[-1] + image_shape, dtype='float32')
+                name='image', shape=[None] + image_shape, dtype='float32')
         label = fluid.layers.data(
-                name='label', shape=[-1, 1], dtype='int64')
+                name='label', shape=[None, 1], dtype='int64')
         loader = fluid.io.DataLoader.from_generator(
                 feed_list=[image, label],
                 capacity=queue_capacity,
