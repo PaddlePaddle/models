@@ -57,6 +57,12 @@ def parse_args():
         type=str,
         default=None,
         help='dir to init model.')
+    # NOTE: used for benchmark
+    parser.add_argument(
+        '--max_iter',
+        type=int,
+        default=0,
+        help='the max iters for train, used for benchmark.')
     parser.add_argument('--ce', action='store_true', help="run ce")
     args = parser.parse_args()
     return args
