@@ -47,7 +47,7 @@ def parse_args():
     parser.add_argument(
         '--config',
         type=str,
-        default='configs/attention_cluster.txt',
+        default='configs/tsn_dist_and_dali.yaml',
         help='path to config file of model')
     parser.add_argument(
         '--batch_size',

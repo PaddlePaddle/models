@@ -24,8 +24,8 @@ TRAIN:
     l2_weight_decay: 1e-4
     momentum: 0.9
     total_videos: 224684
-    num_trainers: 1 
-    trainer_id: 0
+    num_trainers: 1  # this will be determined by fleet implicitly, no need to set
+    trainer_id: 0    # this will be determined by fleet implicitly, no need to set
     use_dali: True
 
 VALID:
