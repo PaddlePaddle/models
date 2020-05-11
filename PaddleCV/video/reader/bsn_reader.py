@@ -22,6 +22,7 @@ import json
 import logging
 import functools
 import paddle
+import paddle.fluid as fluid
 logger = logging.getLogger(__name__)
 
 from .reader_utils import DataReader
@@ -214,8 +215,8 @@ class BSNVideoReader(DataReader):
         mapper = functools.partial(process_data, mode=self.mode)
 
         def batch_reader():
-            xreader = paddle.io.xmap_readers(mapper, reader, self.num_threads,
-                                             1024)
+            xreader = fluid.io.xmap_readers(mapper, reader, self.num_threads,
+                                            1024)
             batch = []
             for item in xreader():
                 batch.append(item)
@@ -444,8 +445,8 @@ class BSNProposalReader(DataReader):
         mapper = functools.partial(process_data, mode=self.mode)
 
         def batch_reader():
-            xreader = paddle.io.xmap_readers(mapper, reader, self.num_threads,
-                                             1024)
+            xreader = fluid.io.xmap_readers(mapper, reader, self.num_threads,
+                                            1024)
             batch = []
             for item in xreader():
                 batch.append(item)

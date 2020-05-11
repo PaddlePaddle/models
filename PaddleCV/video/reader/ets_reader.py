@@ -18,6 +18,7 @@ import sys
 import numpy as np
 import functools
 import paddle
+import paddle.fluid as fluid
 
 import logging
 logger = logging.getLogger(__name__)
@@ -154,8 +155,8 @@ class ETSReader(DataReader):
 
             mapper = functools.partial(process_data)
 
-            return paddle.io.xmap_readers(mapper, reader, self.num_threads,
-                                          self.buffer_size)
+            return fluid.io.xmap_readers(mapper, reader, self.num_threads,
+                                         self.buffer_size)
 
         def batch_reader():
             batch_out = []
