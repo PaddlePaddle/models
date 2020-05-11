@@ -72,7 +72,7 @@
 ```
 
 ## 安装
-本项目依赖于 Paddle Fluid **1.7.1** 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。如果需要进行 TensorFlow 模型到 Paddle Fluid 参数的转换，则需要同时安装 TensorFlow 1.12。
+本项目依赖于 Paddle Fluid **1.8.0** 及以上版本，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。如果需要进行 TensorFlow 模型到 Paddle Fluid 参数的转换，则需要同时安装 TensorFlow 1.12。
 
 ## 预训练
 
