@@ -61,7 +61,8 @@ class ArcMarginLoss():
         else:
             phi = self.paddle_where_more_than(cosine, th, phi, cosine-mm)
 
-        one_hot = fluid.layers.one_hot(input=label, depth=out_dim)
+        one_hot = fluid.one_hot(input=label, depth=out_dim)
+        one_hot = fluid.layers.squeeze(input=one_hot, axes=[1])
         output = fluid.layers.elementwise_mul(one_hot, phi) + fluid.layers.elementwise_mul((1.0 - one_hot), cosine)
         output = output * s
         return output
