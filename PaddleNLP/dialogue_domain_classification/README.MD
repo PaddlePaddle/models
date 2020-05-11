@@ -10,11 +10,11 @@
 
 
 ## 快速开始
-**目前模型要求使用PaddlePaddle 1.6及以上版本或适当的develop版本运行。**
+**目前模型要求使用PaddlePaddle 1.8及以上版本或适当的develop版本运行。**
 
 ### 1. Paddle版本安装
 
-本项目训练模块兼容Python2.7.x以及Python3.7.x， 依赖PaddlePaddle 1.6版本以及CentOS系统环境， 安装请参考官网 [快速安装](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/index_cn.html)。
+本项目训练模块兼容Python2.7.x以及Python3.7.x， 依赖PaddlePaddle 1.8版本以及CentOS系统环境， 安装请参考官网 [快速安装](https://www.paddlepaddle.org.cn/documentation/docs/zh/beginners_guide/install/index_cn.html)。
 
 注意：该模型同时支持cpu和gpu训练和预测，用户可以根据自身需求，选择安装对应的paddlepaddle-gpu或paddlepaddle版本。
 

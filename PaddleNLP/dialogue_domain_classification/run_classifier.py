@@ -452,7 +452,7 @@ def main(args):
     if args.use_cuda:
         test_place = fluid.cuda_places(0)
         place = fluid.cuda_places()
-        DEV_COUNT = fluid.core.get_cuda_device_count()
+        DEV_COUNT = len(place)
     else:
         test_place = fluid.cpu_places(1)
         os.environ['CPU_NUM'] = str(args.cpu_num)

@@ -1,13 +1,10 @@
 task_name: ""
 data_dir: ""
 bert_config_path: ""
-init_from_checkpoint: ""
 init_from_params: ""
 init_from_pretrain_model: ""
 inference_model_dir: ""
 save_model_path: ""
-save_checkpoint: ""
-save_param: ""
 lr_scheduler: "linear_warmup_decay"
 weight_decay: 0.01
 warmup_proportion: 0.1

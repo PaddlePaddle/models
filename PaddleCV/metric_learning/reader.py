@@ -22,6 +22,7 @@ import functools
 import numpy as np
 import paddle
 from imgtool import process_image
+import paddle.fluid as fluid
 
 random.seed(0)
 
@@ -187,7 +188,7 @@ def createreader(settings, mode):
     keep_order = False if mode != 'train' or settings.loss_name in ['softmax', 'arcmargin'] else True
     image_mapper = functools.partial(process_image,
             mode=mode, color_jitter=False, rotate=False, crop_size=image_size)
-    reader = paddle.reader.xmap_readers(
+    reader = fluid.io.xmap_readers(
             image_mapper, metric_reader, 8, 1000, order=keep_order)
     return reader
 

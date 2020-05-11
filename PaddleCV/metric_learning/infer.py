@@ -51,7 +51,13 @@ def infer(args):
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
 
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
+    image = fluid.layers.data(name='image', shape=[None] + image_shape, dtype='float32')
+
+    infer_loader = fluid.io.DataLoader.from_generator(
+                feed_list=[image],
+                capacity=64,
+                use_double_buffer=True,
+                iterable=True)
 
     # model definition
     model = models.__dict__[model_name]()
@@ -70,13 +76,16 @@ def infer(args):
 
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    infer_reader = paddle.batch(reader.infer(args), batch_size=args.batch_size, drop_last=False)
-    feeder = fluid.DataFeeder(place=place, feed_list=[image])
+    infer_loader.set_sample_generator(
+        reader.test(args),
+        batch_size=args.batch_size,
+        drop_last=False,
+        places=place)
 
     fetch_list = [out.name]
 
-    for batch_id, data in enumerate(infer_reader()):
-        result = exe.run(test_program, fetch_list=fetch_list, feed=feeder.feed(data))
+    for batch_id, data in enumerate(infer_loader()):
+        result = exe.run(test_program, fetch_list=fetch_list, feed=data)
         result = result[0][0].reshape(-1)
         print("Test-{0}-feature: {1}".format(batch_id, result[:5]))
         sys.stdout.flush()

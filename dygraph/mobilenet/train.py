@@ -126,6 +126,7 @@ def train_mobilenet():
         test_data_loader.set_sample_list_generator(test_reader, place)
 
         # 4. train loop
+        total_batch_num = 0  #this is for benchmark
         for eop in range(args.num_epochs):
             if num_trainers > 1:
                 imagenet_reader.set_shuffle_seed(eop + (
@@ -140,6 +141,8 @@ def train_mobilenet():
             # 4.1 for each batch, call net() , backward(), and minimize()
             for img, label in train_data_loader():
                 t1 = time.time()
+                if args.max_iter and total_batch_num == args.max_iter:
+                    return
                 t_start = time.time()
 
                 # 4.1.1 call net()
@@ -181,6 +184,10 @@ def train_mobilenet():
                 total_sample += 1
                 batch_id += 1
                 t_last = time.time()
+               
+                # NOTE: used for benchmark
+                total_batch_num = total_batch_num + 1
+
             if args.ce:
                 print("kpis\ttrain_acc1\t%0.3f" % (total_acc1 / total_sample))
                 print("kpis\ttrain_acc5\t%0.3f" % (total_acc5 / total_sample))
