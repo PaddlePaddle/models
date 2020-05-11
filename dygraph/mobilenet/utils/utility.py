@@ -117,6 +117,10 @@ def parse_args():
     add_arg('drop_connect_rate',        float,  0.2,                    "The value of drop connect rate")
     parser.add_argument('--step_epochs', nargs='+', type=int, default=[30, 60, 90], help="piecewise decay step")
 
+    # NOTE: used for benchmark
+    add_arg('max_iter',                 int,    0,                      "The number of total train max_iters.")
+
+
     # READER AND PREPROCESS
     add_arg('lower_scale',              float,  0.08,                   "The value of lower_scale in ramdom_crop")
     add_arg('lower_ratio',              float,  3./4.,                  "The value of lower_ratio in ramdom_crop")
