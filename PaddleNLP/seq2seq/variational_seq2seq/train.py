@@ -89,9 +89,8 @@ def main():
             inference_program = fluid.default_main_program().clone(
                 for_test=True)
 
-            fluid.clip.set_gradient_clip(
-                clip=fluid.clip.GradientClipByGlobalNorm(
-                    clip_norm=max_grad_norm))
+            clip=fluid.clip.GradientClipByGlobalNorm(
+                    clip_norm=max_grad_norm)
 
             learning_rate = fluid.layers.create_global_var(
                 name="learning_rate",
@@ -102,9 +101,9 @@ def main():
 
             opt_type = args.optimizer
             if opt_type == "sgd":
-                optimizer = fluid.optimizer.SGD(learning_rate)
+                optimizer = fluid.optimizer.SGD(learning_rate, grad_clip=clip)
             elif opt_type == "adam":
-                optimizer = fluid.optimizer.Adam(learning_rate)
+                optimizer = fluid.optimizer.Adam(learning_rate, grad_clip=clip)
             else:
                 print("only support [sgd|adam]")
                 raise Exception("opt type not support")
@@ -272,7 +271,7 @@ def main():
                           (old_lr, new_lr))
 
                     dir_name = args.model_path + "/epoch_" + str(best_epoch_id)
-                    fluid.io.load_params(exe, dir_name)
+                    fluid.io.load(main_program, dir_name, exe)
 
                     decay_cnt += 1
                     if decay_cnt == max_decay:

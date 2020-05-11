@@ -229,7 +229,7 @@ class VAE(object):
 
         # `sample_output_layer` samples an id from the logits distribution instead of argmax(logits)
         # it will be used within BeamSearchDecoder
-        sample_output_layer = lambda x: layers.unsqueeze(layers.one_hot(
+        sample_output_layer = lambda x: layers.unsqueeze(fluid.one_hot(
             layers.unsqueeze(
             layers.sampling_id(
                 layers.softmax(
@@ -240,8 +240,8 @@ class VAE(object):
         if mode == 'train':
             latent_z = self._sampling(z_mean, z_log_var)
         else:
-            latent_z = layers.gaussian_random_batch_size_like(
-                self.tar, shape=[-1, self.latent_size])
+            epsilon = layers.gaussian_random_batch_size_like(
+            self.tar, shape=[-1, self.latent_size])
         dec_first_hidden_cell = layers.fc(latent_z,
                                           2 * self.hidden_size *
                                           self.num_layers,
