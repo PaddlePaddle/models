@@ -241,7 +241,7 @@ class VAE(object):
             latent_z = self._sampling(z_mean, z_log_var)
         else:
             latent_z = layers.gaussian_random_batch_size_like(
-            self.tar, shape=[-1, self.latent_size])
+                self.tar, shape=[-1, self.latent_size])
         dec_first_hidden_cell = layers.fc(latent_z,
                                           2 * self.hidden_size *
                                           self.num_layers,

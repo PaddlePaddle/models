@@ -271,7 +271,7 @@ def main():
                           (old_lr, new_lr))
 
                     dir_name = args.model_path + "/epoch_" + str(best_epoch_id)
-                    fluid.io.load(main_program, dir_name, exe)
+                    fluid.load(main_program, dir_name, exe)
 
                     decay_cnt += 1
                     if decay_cnt == max_decay:
