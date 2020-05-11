@@ -114,19 +114,16 @@ def build_program(is_train, main_prog, startup_prog, args):
     image_shape = [int(m) for m in args.image_shape.split(",")]
     model = models.__dict__[args.model]()
     with fluid.program_guard(main_prog, startup_prog):
-        if is_train:
-            queue_capacity = 64
-            py_reader = fluid.layers.py_reader(
+        queue_capacity = 64
+        image = fluid.layers.data(
+                name='image', shape=[-1] + image_shape, dtype='float32')
+        label = fluid.layers.data(
+                name='label', shape=[-1, 1], dtype='int64')
+        loader = fluid.io.DataLoader.from_generator(
+                feed_list=[image, label],
                 capacity=queue_capacity,
-                shapes=[[-1] + image_shape, [-1, 1]],
-                lod_levels=[0, 0],
-                dtypes=["float32", "int64"],
-                use_double_buffer=True)
-            image, label = fluid.layers.read_file(py_reader)
-        else:
-            image = fluid.layers.data(
-                name='image', shape=image_shape, dtype='float32')
-            label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+                use_double_buffer=True,
+                iterable=True)
 
         with fluid.unique_name.guard():
             avg_cost, out = net_config(image, label, model, args, is_train)
@@ -143,9 +140,9 @@ def build_program(is_train, main_prog, startup_prog, args):
         main_prog = main_prog.clone(for_test=True)
     """
     if is_train:
-        return py_reader, avg_cost, global_lr, out, label
+        return loader, avg_cost, global_lr, out, label
     else:
-        return out, image, label
+        return loader, out
 
 
 def train_async(args):
@@ -161,12 +158,12 @@ def train_async(args):
     train_prog = fluid.Program()
     tmp_prog = fluid.Program()
 
-    train_py_reader, train_cost, global_lr, train_feas, train_label = build_program(
+    train_loader, train_cost, global_lr, train_feas, train_label = build_program(
         is_train=True,
         main_prog=train_prog,
         startup_prog=startup_prog,
         args=args)
-    test_feas, image, label = build_program(
+    test_loader, test_feas = build_program(
         is_train=False,
         main_prog=tmp_prog,
         startup_prog=startup_prog,
@@ -180,6 +177,11 @@ def train_async(args):
 
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
+    num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
+    if num_trainers <= 1 and args.use_gpu:
+        places = fluid.framework.cuda_places()
+    else:
+        places = place
 
     exe.run(startup_prog)
 
@@ -204,12 +206,17 @@ def train_async(args):
     train_batch_size = args.train_batch_size / devicenum
     test_batch_size = args.test_batch_size
 
-    train_reader = paddle.batch(
-        reader.train(args), batch_size=train_batch_size, drop_last=True)
-    test_reader = paddle.batch(
-        reader.test(args), batch_size=test_batch_size, drop_last=False)
-    test_feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
-    train_py_reader.decorate_paddle_reader(train_reader)
+    train_loader.set_sample_generator(
+        reader.train(args), 
+        batch_size=train_batch_size,
+        drop_last=True,
+        places=places)
+
+    test_loader.set_sample_generator(
+        reader.test(args),
+        batch_size=test_batch_size,
+        drop_last=False,
+        places=place)
 
     train_exe = fluid.ParallelExecutor(
         main_program=train_prog,
@@ -217,64 +224,68 @@ def train_async(args):
         loss_name=train_cost.name)
 
     totalruntime = 0
-    train_py_reader.start()
     iter_no = 0
     train_info = [0, 0, 0]
     while iter_no <= args.total_iter_num:
-        t1 = time.time()
-        lr, loss, feas, label = train_exe.run(fetch_list=train_fetch_list)
-        t2 = time.time()
-        period = t2 - t1
-        lr = np.mean(np.array(lr))
-        train_info[0] += np.mean(np.array(loss))
-        train_info[1] += recall_topk(feas, label, k=1)
-        train_info[2] += 1
-        if iter_no % args.display_iter_step == 0:
-            avgruntime = totalruntime / args.display_iter_step
-            avg_loss = train_info[0] / train_info[2]
-            avg_recall = train_info[1] / train_info[2]
-            print("[%s] trainbatch %d, lr %.6f, loss %.6f, "\
+        for train_batch in train_loader():
+            t1 = time.time()
+            lr, loss, feas, label = train_exe.run(
+                                        feed=train_batch,
+                                        fetch_list=train_fetch_list)
+            t2 = time.time()
+            period = t2 - t1
+            lr = np.mean(np.array(lr))
+            train_info[0] += np.mean(np.array(loss))
+            train_info[1] += recall_topk(feas, label, k=1)
+            train_info[2] += 1
+            if iter_no % args.display_iter_step == 0:
+                avgruntime = totalruntime / args.display_iter_step
+                avg_loss = train_info[0] / train_info[2]
+                avg_recall = train_info[1] / train_info[2]
+                print("[%s] trainbatch %d, lr %.6f, loss %.6f, "\
                     "recall %.4f, time %2.2f sec" % \
                     (fmt_time(), iter_no, lr, avg_loss, avg_recall, avgruntime))
-            sys.stdout.flush()
-            totalruntime = 0
-        if iter_no % 1000 == 0:
-            train_info = [0, 0, 0]
+                sys.stdout.flush()
+                totalruntime = 0
+            if iter_no % 1000 == 0:
+                train_info = [0, 0, 0]
 
-        totalruntime += period
+            totalruntime += period
 
-        if iter_no % args.test_iter_step == 0 and iter_no != 0:
-            f, l = [], []
-            for batch_id, data in enumerate(test_reader()):
-                t1 = time.time()
-                [feas] = exe.run(test_prog,
-                                 fetch_list=test_fetch_list,
-                                 feed=test_feeder.feed(data))
-                label = np.asarray([x[1] for x in data])
-                f.append(feas)
-                l.append(label)
+            if iter_no % args.test_iter_step == 0 and iter_no != 0:
+                f, l = [], []
+                for batch_id, test_batch in enumerate(test_loader()):
+                    t1 = time.time()
+                    [feas] = exe.run(test_prog,
+                                 feed=test_batch,
+                                 fetch_list=test_fetch_list)
 
-                t2 = time.time()
-                period = t2 - t1
-                if batch_id % 20 == 0:
-                    print("[%s] testbatch %d, time %2.2f sec" % \
+                    label = np.asarray(test_batch[0]['label'])
+                    label = np.squeeze(label)
+                    f.append(feas)
+                    l.append(label)
+
+                    t2 = time.time()
+                    period = t2 - t1
+                    if batch_id % 20 == 0:
+                        print("[%s] testbatch %d, time %2.2f sec" % \
                             (fmt_time(), batch_id, period))
 
-            f = np.vstack(f)
-            l = np.hstack(l)
-            recall = recall_topk(f, l, k=1)
-            print("[%s] test_img_num %d, trainbatch %d, test_recall %.5f" % \
+                f = np.vstack(f)
+                l = np.hstack(l)
+                recall = recall_topk(f, l, k=1)
+                print("[%s] test_img_num %d, trainbatch %d, test_recall %.5f" % \
                     (fmt_time(), len(f), iter_no, recall))
-            sys.stdout.flush()
+                sys.stdout.flush()
 
-        if iter_no % args.save_iter_step == 0 and iter_no != 0:
-            model_path = os.path.join(model_save_dir + '/' + model_name,
+            if iter_no % args.save_iter_step == 0 and iter_no != 0:
+                model_path = os.path.join(model_save_dir + '/' + model_name,
                                       str(iter_no))
-            if not os.path.isdir(model_path):
-                os.makedirs(model_path)
-            fluid.io.save_persistables(exe, model_path, main_program=train_prog)
+                if not os.path.isdir(model_path):
+                    os.makedirs(model_path)
+                fluid.io.save_persistables(exe, model_path, main_program=train_prog)
 
-        iter_no += 1
+            iter_no += 1
 
 
 def initlogging():

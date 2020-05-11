@@ -52,8 +52,13 @@ def eval(args):
     assert model_name in model_list, "{} is not in lists: {}".format(args.model,
                                                                      model_list)
 
-    image = fluid.layers.data(name='image', shape=image_shape, dtype='float32')
-    label = fluid.layers.data(name='label', shape=[1], dtype='int64')
+    image = fluid.layers.data(name='image', shape=[-1] + image_shape, dtype='float32')
+    label = fluid.layers.data(name='label', shape=[-1, 1], dtype='int64')
+    test_loader = fluid.io.DataLoader.from_generator(
+                feed_list=[image, label],
+                capacity=64,
+                use_double_buffer=True,
+                iterable=True)
 
     # model definition
     model = models.__dict__[model_name]()
@@ -72,16 +77,21 @@ def eval(args):
 
         fluid.io.load_vars(exe, pretrained_model, predicate=if_exist)
 
-    test_reader = paddle.batch(reader.test(args), batch_size=args.batch_size, drop_last=False)
-    feeder = fluid.DataFeeder(place=place, feed_list=[image, label])
+    test_loader.set_sample_generator(
+        reader.test(args),
+        batch_size=args.batch_size,
+        drop_last=False,
+        places=place)
 
     fetch_list = [out.name]
 
     f, l = [], []
-    for batch_id, data in enumerate(test_reader()):
+    for batch_id, data in enumerate(test_loader()):
         t1 = time.time()
-        [feas] = exe.run(test_program, fetch_list=fetch_list, feed=feeder.feed(data))
-        label = np.asarray([x[1] for x in data])
+        [feas] = exe.run(test_program, fetch_list=fetch_list, feed=data)
+        label = np.asarray(data[0]['label'])
+        label = np.squeeze(label)
+ 
         f.append(feas)
         l.append(label)
 
