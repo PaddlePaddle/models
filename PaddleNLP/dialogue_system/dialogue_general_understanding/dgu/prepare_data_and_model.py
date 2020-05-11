@@ -29,7 +29,7 @@ DATA_MODEL_PATH = {
     "DATA_PATH": "https://baidu-nlp.bj.bcebos.com/dmtk_data_1.0.0.tar.gz",
     "PRETRAIN_MODEL":
     "https://bert-models.bj.bcebos.com/uncased_L-12_H-768_A-12.tar.gz",
-    "TRAINED_MODEL": "https://baidu-nlp.bj.bcebos.com/dgu_models_2.0.0.tar.gz"
+    "TRAINED_MODEL": "https://baidu-nlp.bj.bcebos.com/dgu_models_3.0.0.tar.gz"
 }
 
 PATH_MAP = {

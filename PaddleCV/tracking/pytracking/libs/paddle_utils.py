@@ -211,8 +211,8 @@ def dropout2d(input, prob, is_train=False):
         return input
     channels = input.shape[1]
     keep_prob = 1.0 - prob
-    random_tensor = keep_prob + layers.uniform_random_batch_size_like(
-        input, [-1, channels, 1, 1], min=0., max=1.)
+    random_tensor = np.random.uniform(0, 1, [input.shape[0], channels, 1, 1]).astype(np.float32)
+    random_tensor = keep_prob + dygraph.to_variable(random_tensor)
     binary_tensor = layers.floor(random_tensor)
     output = input / keep_prob * binary_tensor
     return output

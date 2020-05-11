@@ -30,7 +30,7 @@
 - cuda >= 9.0
 - cudnn >= 7.0
 - pandas >= 0.20.1
-- PaddlePaddle >= 1.7.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 本模块使用bert作为pretrain model进行模型的finetuning训练，训练速度较慢，建议安装GPU版本的PaddlePaddle
+- PaddlePaddle >= 1.8.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 本模块使用bert作为pretrain model进行模型的finetuning训练，训练速度较慢，建议安装GPU版本的PaddlePaddle
 
 #### &ensp;&ensp;b、下载代码
 
@@ -119,13 +119,10 @@ emb_size: embedding层大小
 vocab_size: 词表大小
 sample_pro: 采样比率
 output_prediction_file: 输出的预测文件
-init_from_checkpoint: 加载断点模型
 init_from_params: 训练好的模型参数文件，一般用于预测
 init_from_pretrain_model: 预训练模型路径，如bert的模型参数
 inference_model_dir: inference model的保存路径
 save_model_path: 训练产出模型的输出路径
-save_checkpoint: 调用paddle的io接口save_persistables(把传入的层中所有参数以及优化器进行保存)来保存模型参数
-save_param: 调用paddle的io接口save_params(从main_program中取出所有参数然后保存到文件中)来保存模型参数
 evaluation_file: 参与评估的inference 文件
 vocab_path: 词表路径
 max_seq_len: 输入最大序列长度
@@ -199,7 +196,6 @@ python -u main.py \
       --loss_type="CLS" \
       --max_seq_len=50 \
       --save_model_path="data/saved_models/matching_pretrained" \
-      --save_param="params" \
       --training_file="data/input/data/unlabel_data/train.ids" \
       --epoch=20 \
       --print_step=1 \
@@ -217,7 +213,7 @@ python -u main.py \
 #### windows环境下：
 训练：
 ```
-python -u main.py --do_train=true --use_cuda=false --loss_type=CLS --max_seq_len=50 --save_model_path=data\saved_models\matching_pretrained  --save_param=params  --training_file=data\input\data\unlabel_data\train.ids --epoch=20 --print_step=1 --save_step=400 --batch_size=256 --hidden_size=256 --emb_size=256 --vocab_size=484016 --learning_rate=0.001 --sample_pro=0.1
+python -u main.py --do_train=true --use_cuda=false --loss_type=CLS --max_seq_len=50 --save_model_path=data\saved_models\matching_pretrained --training_file=data\input\data\unlabel_data\train.ids --epoch=20 --print_step=1 --save_step=400 --batch_size=256 --hidden_size=256 --emb_size=256 --vocab_size=484016 --learning_rate=0.001 --sample_pro=0.1
 ```
 
 #### 2、第二阶段finetuning模型的训练：
@@ -271,9 +267,8 @@ python -u main.py \
       --use_cuda=${use_cuda} \
       --loss_type="L2" \
       --max_seq_len=50 \
-      --init_from_pretrain_model="data/saved_models/trained_models/matching_pretrained/params" \
+      --init_from_pretrain_model="data/saved_models/trained_models/matching_pretrained/params/params" \
       --save_model_path="data/saved_models/human_finetuned" \
-      --save_param="params" \
       --training_file="data/input/data/label_data/human/train.ids" \
       --epoch=50 \
       --print_step=1 \
@@ -288,7 +283,7 @@ python -u main.py \
 
 #### windows环境下：
 ```
-python -u main.py --do_train=true --use_cuda=false --loss_type=L2 --max_seq_len=50 --save_model_path=data\saved_models\human_finetuned  --save_param=params  --training_file=data\input\data\label_data\human\train.ids --epoch=50 --print_step=1 --save_step=400 --batch_size=256 --hidden_size=256 --emb_size=256 --vocab_size=484016 --learning_rate=0.001 --sample_pro=0.1
+python -u main.py --do_train=true --use_cuda=false --loss_type=L2 --max_seq_len=50 --save_model_path=data\saved_models\human_finetuned --training_file=data\input\data\label_data\human\train.ids --epoch=50 --print_step=1 --save_step=400 --batch_size=256 --hidden_size=256 --emb_size=256 --vocab_size=484016 --learning_rate=0.001 --sample_pro=0.1
 ```
 
 ### 模型预测
