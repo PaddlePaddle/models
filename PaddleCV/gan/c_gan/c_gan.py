@@ -101,7 +101,7 @@ def train(args):
             paddle.dataset.mnist.train(), batch_size=args.batch_size)
     else:
         train_reader = fluid.io.batch(
-            paddle.reader.shuffle(
+            fluid.io.shuffle(
                 paddle.dataset.mnist.train(), buf_size=60000),
             batch_size=args.batch_size)
 
