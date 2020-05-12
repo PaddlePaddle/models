@@ -22,7 +22,6 @@ import sys
 import time
 import numpy as np
 
-import paddle
 import paddle.fluid as fluid
 
 from dgu_net import create_net
@@ -32,7 +31,6 @@ import dgu.define_paradigm as define_paradigm
 from dgu.utils.configure import PDConfig
 from dgu.utils.input_field import InputField
 from dgu.utils.model_check import check_cuda
-import dgu.utils.save_load_io as save_load_io
 
 
 def do_train(args):
@@ -80,8 +78,9 @@ def do_train(args):
 
             input_inst = [src_ids, pos_ids, sent_ids, input_mask, labels]
             input_field = InputField(input_inst)
-            
-            data_reader = fluid.io.DataLoader.from_generator(feed_list=input_inst, capacity=4, iterable=False)
+
+            data_reader = fluid.io.DataLoader.from_generator(
+                feed_list=input_inst, capacity=4, iterable=False)
 
             processor = processors[task_name](data_dir=args.data_dir,
                                               vocab_path=args.vocab_path,
@@ -103,13 +102,8 @@ def do_train(args):
             accuracy = results.get("accuracy", None)
             num_seqs = results.get("num_seqs", None)
 
-            loss.persistable = True
-            probs.persistable = True
-            if accuracy:
-                accuracy.persistable = True
-            num_seqs.persistable = True
-
-            places = fluid.cuda_places() if args.use_cuda else fluid.cpu_places()
+            places = fluid.cuda_places() if args.use_cuda else fluid.cpu_places(
+            )
             dev_count = len(places)
 
             batch_generator = processor.data_generator(
@@ -149,16 +143,13 @@ def do_train(args):
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
-    assert (args.init_from_checkpoint == "") or (
-        args.init_from_pretrain_model == "")
+    assert args.init_from_params or args.init_from_pretrain_model
 
     # init from some checkpoint, to resume the previous training
-    if args.init_from_checkpoint:
-        save_load_io.init_from_checkpoint(args, exe, train_prog)
-
-    # init from some pretrain models, to better solve the current task
+    if args.init_from_params:
+        fluid.load(train_prog, args.init_from_params, exe)
     if args.init_from_pretrain_model:
-        save_load_io.init_from_pretrain_model(args, exe, train_prog)
+        fluid.load(train_prog, args.init_from_pretrain_model, exe)
 
     build_strategy = fluid.compiler.BuildStrategy()
     build_strategy.enable_inplace = True
@@ -234,21 +225,16 @@ def do_train(args):
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
-                    save_path = "step_" + str(steps)
-                    if args.save_checkpoint:
-                        save_load_io.save_checkpoint(args, exe, train_prog,
-                                                     save_path)
-                    if args.save_param:
-                        save_load_io.save_param(args, exe, train_prog,
-                                                save_path)
+                    model_path = os.path.join(args.save_model_path,
+                                              "step_" + str(steps))
+                    fluid.save(train_prog, model_path)
 
             except fluid.core.EOFException:
                 data_reader.reset()
                 break
-    if args.save_checkpoint:
-        save_load_io.save_checkpoint(args, exe, train_prog, "step_final")
-    if args.save_param:
-        save_load_io.save_param(args, exe, train_prog, "step_final")
+
+    model_path = os.path.join(args.save_model_path, "step_final")
+    fluid.save(train_prog, model_path)
 
     def get_cards():
         num = 0

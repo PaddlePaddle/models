@@ -16,7 +16,6 @@ import os
 import sys
 import numpy as np
 
-import paddle
 import paddle.fluid as fluid
 
 from eval import do_eval

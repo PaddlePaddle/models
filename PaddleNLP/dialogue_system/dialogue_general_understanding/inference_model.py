@@ -25,7 +25,6 @@ import paddle.fluid as fluid
 from dgu.utils.configure import PDConfig
 from dgu.utils.input_field import InputField
 from dgu.utils.model_check import check_cuda
-import dgu.utils.save_load_io as save_load_io
 
 import dgu.reader as reader
 from dgu_net import create_net
@@ -97,12 +96,10 @@ def do_save_inference_model(args):
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
-    assert (args.init_from_params) or (args.init_from_pretrain_model)
+    assert (args.init_from_params)
 
     if args.init_from_params:
-        save_load_io.init_from_params(args, exe, test_prog)
-    elif args.init_from_pretrain_model:
-        save_load_io.init_from_pretrain_model(args, exe, test_prog)
+        fluid.load(test_prog, args.init_from_params)
 
     # saving inference model
     fluid.io.save_inference_model(
