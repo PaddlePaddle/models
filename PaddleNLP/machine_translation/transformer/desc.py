@@ -69,12 +69,12 @@ def get_input_descs(args):
         # [batch_size, max_src_len_in_batch, d_model]
         "enc_output": [(batch_size, seq_len, d_model), "float32"],
         # The actual data shape of label_word is:
-        # [batch_size * max_trg_len_in_batch, 1]
-        "lbl_word": [(None, 1), "int64"],
+        # [batch_size * max_trg_len_in_batch]
+        "lbl_word": [(None, ), "int64"],
         # This input is used to mask out the loss of paddding tokens.
         # The actual data shape of label_weight is:
-        # [batch_size * max_trg_len_in_batch, 1]
-        "lbl_weight": [(None, 1), "float32"],
+        # [batch_size * max_trg_len_in_batch]
+        "lbl_weight": [(None, ), "float32"],
         # This input is used in beam-search decoder.
         "init_score": [(batch_size, 1), "float32", 2],
         # This input is used in beam-search decoder for the first gather

@@ -42,10 +42,9 @@ class InferTaskConfig(object):
     batch_size = 4
     # the parameters for beam search.
     beam_size = 4
-    alpha=0.6
+    alpha = 0.6
     # max decoded length, should be less than ModelHyperParams.max_length
     max_out_len = 30
-
 
 
 class ModelHyperParams(object):
@@ -140,12 +139,12 @@ input_descs = {
     # [batch_size, max_src_len_in_batch, d_model]
     "enc_output": [(batch_size, seq_len, ModelHyperParams.d_model), "float32"],
     # The actual data shape of label_word is:
-    # [batch_size * max_trg_len_in_batch, 1]
-    "lbl_word": [(batch_size * seq_len, 1), "int64"],
+    # [batch_size * max_trg_len_in_batch]
+    "lbl_word": [(batch_size * seq_len, ), "int64"],
     # This input is used to mask out the loss of paddding tokens.
     # The actual data shape of label_weight is:
-    # [batch_size * max_trg_len_in_batch, 1]
-    "lbl_weight": [(batch_size * seq_len, 1), "float32"],
+    # [batch_size * max_trg_len_in_batch]
+    "lbl_weight": [(batch_size * seq_len, ), "float32"],
     # This input is used in beam-search decoder.
     "init_score": [(batch_size, 1), "float32", 2],
     # This input is used in beam-search decoder for the first gather
@@ -156,38 +155,32 @@ input_descs = {
 # Names of word embedding table which might be reused for weight sharing.
 word_emb_param_names = (
     "src_word_emb_table",
-    "trg_word_emb_table",
-)
+    "trg_word_emb_table", )
 # Names of position encoding table which will be initialized externally.
 pos_enc_param_names = (
     "src_pos_enc_table",
-    "trg_pos_enc_table",
-)
+    "trg_pos_enc_table", )
 # separated inputs for different usages.
 encoder_data_input_fields = (
     "src_word",
     "src_pos",
-    "src_slf_attn_bias",
-)
+    "src_slf_attn_bias", )
 decoder_data_input_fields = (
     "trg_word",
     "trg_pos",
     "trg_slf_attn_bias",
     "trg_src_attn_bias",
-    "enc_output",
-)
+    "enc_output", )
 label_data_input_fields = (
     "lbl_word",
-    "lbl_weight",
-)
+    "lbl_weight", )
 # In fast decoder, trg_pos (only containing the current time step) is generated
 # by ops and trg_slf_attn_bias is not needed.
 fast_decoder_data_input_fields = (
     "trg_word",
     # "init_score",
     # "init_idx",
-    "trg_src_attn_bias",
-)
+    "trg_src_attn_bias", )
 
 
 def merge_cfg_from_list(cfg_list, g_cfgs):

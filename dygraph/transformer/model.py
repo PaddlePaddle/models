@@ -34,10 +34,10 @@ def position_encoding_init(n_position, d_pos_vec):
     num_timescales = channels // 2
     log_timescale_increment = (np.log(float(1e4) / float(1)) /
                                (num_timescales - 1))
-    inv_timescales = np.exp(
-        np.arange(num_timescales)) * -log_timescale_increment
-    scaled_time = np.expand_dims(position, 1) * np.expand_dims(
-        inv_timescales, 0)
+    inv_timescales = np.exp(np.arange(
+        num_timescales)) * -log_timescale_increment
+    scaled_time = np.expand_dims(position, 1) * np.expand_dims(inv_timescales,
+                                                               0)
     signal = np.concatenate([np.sin(scaled_time), np.cos(scaled_time)], axis=1)
     signal = np.pad(signal, [[0, 0], [0, np.mod(channels, 2)]], 'constant')
     position_enc = signal
@@ -48,6 +48,7 @@ class NoamDecay(LearningRateDecay):
     """
     learning rate scheduler
     """
+
     def __init__(self,
                  d_model,
                  warmup_steps,
@@ -72,6 +73,7 @@ class PrePostProcessLayer(Layer):
     """
     PrePostProcessLayer
     """
+
     def __init__(self, process_cmd, d_model, dropout_rate):
         super(PrePostProcessLayer, self).__init__()
         self.process_cmd = process_cmd
@@ -82,8 +84,8 @@ class PrePostProcessLayer(Layer):
             elif cmd == "n":  # add layer normalization
                 self.functors.append(
                     self.add_sublayer(
-                        "layer_norm_%d" %
-                        len(self.sublayers(include_sublayers=False)),
+                        "layer_norm_%d" % len(
+                            self.sublayers(include_sublayers=False)),
                         LayerNorm(
                             normalized_shape=d_model,
                             param_attr=fluid.ParamAttr(
@@ -108,6 +110,7 @@ class MultiHeadAttention(Layer):
     """
     Multi-Head Attention
     """
+
     def __init__(self, d_key, d_value, d_model, n_head=1, dropout_rate=0.):
         super(MultiHeadAttention, self).__init__()
         self.n_head = n_head
@@ -115,18 +118,14 @@ class MultiHeadAttention(Layer):
         self.d_value = d_value
         self.d_model = d_model
         self.dropout_rate = dropout_rate
-        self.q_fc = Linear(input_dim=d_model,
-                           output_dim=d_key * n_head,
-                           bias_attr=False)
-        self.k_fc = Linear(input_dim=d_model,
-                           output_dim=d_key * n_head,
-                           bias_attr=False)
-        self.v_fc = Linear(input_dim=d_model,
-                           output_dim=d_value * n_head,
-                           bias_attr=False)
-        self.proj_fc = Linear(input_dim=d_value * n_head,
-                              output_dim=d_model,
-                              bias_attr=False)
+        self.q_fc = Linear(
+            input_dim=d_model, output_dim=d_key * n_head, bias_attr=False)
+        self.k_fc = Linear(
+            input_dim=d_model, output_dim=d_key * n_head, bias_attr=False)
+        self.v_fc = Linear(
+            input_dim=d_model, output_dim=d_value * n_head, bias_attr=False)
+        self.proj_fc = Linear(
+            input_dim=d_value * n_head, output_dim=d_model, bias_attr=False)
 
     def forward(self, queries, keys, values, attn_bias, cache=None):
         # compute q ,k ,v
@@ -152,17 +151,14 @@ class MultiHeadAttention(Layer):
             cache["k"], cache["v"] = k, v
 
         # scale dot product attention
-        product = layers.matmul(x=q,
-                                y=k,
-                                transpose_y=True,
-                                alpha=self.d_model**-0.5)
+        product = layers.matmul(
+            x=q, y=k, transpose_y=True, alpha=self.d_model**-0.5)
         if attn_bias is not None:
             product += attn_bias
         weights = layers.softmax(product)
         if self.dropout_rate:
-            weights = layers.dropout(weights,
-                                     dropout_prob=self.dropout_rate,
-                                     is_test=False)
+            weights = layers.dropout(
+                weights, dropout_prob=self.dropout_rate, is_test=False)
 
             out = layers.matmul(weights, v)
 
@@ -179,6 +175,7 @@ class FFN(Layer):
     """
     Feed-Forward Network
     """
+
     def __init__(self, d_inner_hid, d_model, dropout_rate):
         super(FFN, self).__init__()
         self.dropout_rate = dropout_rate
@@ -188,9 +185,8 @@ class FFN(Layer):
     def forward(self, x):
         hidden = self.fc1(x)
         if self.dropout_rate:
-            hidden = layers.dropout(hidden,
-                                    dropout_prob=self.dropout_rate,
-                                    is_test=False)
+            hidden = layers.dropout(
+                hidden, dropout_prob=self.dropout_rate, is_test=False)
         out = self.fc2(hidden)
         return out
 
@@ -199,6 +195,7 @@ class EncoderLayer(Layer):
     """
     EncoderLayer
     """
+
     def __init__(self,
                  n_head,
                  d_key,
@@ -227,8 +224,8 @@ class EncoderLayer(Layer):
                                                   prepostprocess_dropout)
 
     def forward(self, enc_input, attn_bias):
-        attn_output = self.self_attn(self.preprocesser1(enc_input), None, None,
-                                     attn_bias)
+        attn_output = self.self_attn(
+            self.preprocesser1(enc_input), None, None, attn_bias)
         attn_output = self.postprocesser1(attn_output, enc_input)
 
         ffn_output = self.ffn(self.preprocesser2(attn_output))
@@ -240,6 +237,7 @@ class Encoder(Layer):
     """
     encoder
     """
+
     def __init__(self,
                  n_layer,
                  n_head,
@@ -279,6 +277,7 @@ class Embedder(Layer):
     """
     Word Embedding + Position Encoding
     """
+
     def __init__(self, vocab_size, emb_dim, bos_idx=0):
         super(Embedder, self).__init__()
 
@@ -297,6 +296,7 @@ class WrapEncoder(Layer):
     """
     embedder + encoder
     """
+
     def __init__(self, src_vocab_size, max_length, n_layer, n_head, d_key,
                  d_value, d_model, d_inner_hid, prepostprocess_dropout,
                  attention_dropout, relu_dropout, preprocess_cmd,
@@ -324,9 +324,9 @@ class WrapEncoder(Layer):
         pos_enc = self.pos_encoder(src_pos)
         pos_enc.stop_gradient = True
         emb = word_emb + pos_enc
-        enc_input = layers.dropout(emb,
-                                   dropout_prob=self.emb_dropout,
-                                   is_test=False) if self.emb_dropout else emb
+        enc_input = layers.dropout(
+            emb, dropout_prob=self.emb_dropout,
+            is_test=False) if self.emb_dropout else emb
 
         enc_output = self.encoder(enc_input, src_slf_attn_bias)
         return enc_output
@@ -336,6 +336,7 @@ class DecoderLayer(Layer):
     """
     decoder
     """
+
     def __init__(self,
                  n_head,
                  d_key,
@@ -375,8 +376,8 @@ class DecoderLayer(Layer):
                 self_attn_bias,
                 cross_attn_bias,
                 cache=None):
-        self_attn_output = self.self_attn(self.preprocesser1(dec_input), None,
-                                          None, self_attn_bias, cache)
+        self_attn_output = self.self_attn(
+            self.preprocesser1(dec_input), None, None, self_attn_bias, cache)
         self_attn_output = self.postprocesser1(self_attn_output, dec_input)
 
         cross_attn_output = self.cross_attn(
@@ -395,6 +396,7 @@ class Decoder(Layer):
     """
     decoder
     """
+
     def __init__(self, n_layer, n_head, d_key, d_value, d_model, d_inner_hid,
                  prepostprocess_dropout, attention_dropout, relu_dropout,
                  preprocess_cmd, postprocess_cmd):
@@ -420,8 +422,8 @@ class Decoder(Layer):
                 caches=None):
         for i, decoder_layer in enumerate(self.decoder_layers):
             dec_output = decoder_layer(dec_input, enc_output, self_attn_bias,
-                                       cross_attn_bias,
-                                       None if caches is None else caches[i])
+                                       cross_attn_bias, None
+                                       if caches is None else caches[i])
             dec_input = dec_output
 
         return self.processer(dec_output)
@@ -431,6 +433,7 @@ class WrapDecoder(Layer):
     """
     embedder + decoder
     """
+
     def __init__(self, trg_vocab_size, max_length, n_layer, n_head, d_key,
                  d_value, d_model, d_inner_hid, prepostprocess_dropout,
                  attention_dropout, relu_dropout, preprocess_cmd,
@@ -458,9 +461,8 @@ class WrapDecoder(Layer):
                                                   word_embedder.weight,
                                                   transpose_y=True)
         else:
-            self.linear = Linear(input_dim=d_model,
-                                 output_dim=trg_vocab_size,
-                                 bias_attr=False)
+            self.linear = Linear(
+                input_dim=d_model, output_dim=trg_vocab_size, bias_attr=False)
 
     def forward(self,
                 trg_word,
@@ -474,15 +476,14 @@ class WrapDecoder(Layer):
         pos_enc = self.pos_encoder(trg_pos)
         pos_enc.stop_gradient = True
         emb = word_emb + pos_enc
-        dec_input = layers.dropout(emb,
-                                   dropout_prob=self.emb_dropout,
-                                   is_test=False) if self.emb_dropout else emb
+        dec_input = layers.dropout(
+            emb, dropout_prob=self.emb_dropout,
+            is_test=False) if self.emb_dropout else emb
         dec_output = self.decoder(dec_input, enc_output, trg_slf_attn_bias,
                                   trg_src_attn_bias, caches)
         dec_output = layers.reshape(
             dec_output,
-            shape=[-1, dec_output.shape[-1]],
-        )
+            shape=[-1, dec_output.shape[-1]], )
         logits = self.linear(dec_output)
         return logits
 
@@ -493,15 +494,16 @@ class CrossEntropyCriterion(object):
 
     def __call__(self, predict, label, weights):
         if self.label_smooth_eps:
-            label_out = layers.label_smooth(label=layers.one_hot(
-                input=label, depth=predict.shape[-1]),
-                                            epsilon=self.label_smooth_eps)
+            label_out = layers.label_smooth(
+                label=fluid.one_hot(
+                    input=label, depth=predict.shape[-1]),
+                epsilon=self.label_smooth_eps)
 
         cost = layers.softmax_with_cross_entropy(
             logits=predict,
             label=label_out,
             soft_label=True if self.label_smooth_eps else False)
-        weighted_cost = cost * weights
+        weighted_cost = layers.elementwise_mul(cost, weights, axis=0)
         sum_cost = layers.reduce_sum(weighted_cost)
         token_num = layers.reduce_sum(weights)
         token_num.stop_gradient = True
@@ -513,6 +515,7 @@ class Transformer(Layer):
     """
     model
     """
+
     def __init__(self,
                  src_vocab_size,
                  trg_vocab_size,
@@ -532,29 +535,25 @@ class Transformer(Layer):
                  bos_id=0,
                  eos_id=1):
         super(Transformer, self).__init__()
-        src_word_embedder = Embedder(vocab_size=src_vocab_size,
-                                     emb_dim=d_model,
-                                     bos_idx=bos_id)
-        self.encoder = WrapEncoder(src_vocab_size, max_length, n_layer, n_head,
-                                   d_key, d_value, d_model, d_inner_hid,
-                                   prepostprocess_dropout, attention_dropout,
-                                   relu_dropout, preprocess_cmd,
-                                   postprocess_cmd, src_word_embedder)
+        src_word_embedder = Embedder(
+            vocab_size=src_vocab_size, emb_dim=d_model, bos_idx=bos_id)
+        self.encoder = WrapEncoder(
+            src_vocab_size, max_length, n_layer, n_head, d_key, d_value,
+            d_model, d_inner_hid, prepostprocess_dropout, attention_dropout,
+            relu_dropout, preprocess_cmd, postprocess_cmd, src_word_embedder)
         if weight_sharing:
             assert src_vocab_size == trg_vocab_size, (
                 "Vocabularies in source and target should be same for weight sharing."
             )
             trg_word_embedder = src_word_embedder
         else:
-            trg_word_embedder = Embedder(vocab_size=trg_vocab_size,
-                                         emb_dim=d_model,
-                                         bos_idx=bos_id)
-        self.decoder = WrapDecoder(trg_vocab_size, max_length, n_layer, n_head,
-                                   d_key, d_value, d_model, d_inner_hid,
-                                   prepostprocess_dropout, attention_dropout,
-                                   relu_dropout, preprocess_cmd,
-                                   postprocess_cmd, weight_sharing,
-                                   trg_word_embedder)
+            trg_word_embedder = Embedder(
+                vocab_size=trg_vocab_size, emb_dim=d_model, bos_idx=bos_id)
+        self.decoder = WrapDecoder(
+            trg_vocab_size, max_length, n_layer, n_head, d_key, d_value,
+            d_model, d_inner_hid, prepostprocess_dropout, attention_dropout,
+            relu_dropout, preprocess_cmd, postprocess_cmd, weight_sharing,
+            trg_word_embedder)
 
         self.trg_vocab_size = trg_vocab_size
         self.n_layer = n_layer
@@ -595,6 +594,7 @@ class Transformer(Layer):
         and newly added finished candidates from `grow_topk`, and selects the top
         `beam_size` finished candidates.
         """
+
         def expand_to_beam_size(tensor, beam_size):
             tensor = layers.reshape(tensor,
                                     [tensor.shape[0], 1] + tensor.shape[1:])
@@ -616,19 +616,23 @@ class Transformer(Layer):
         ### initialize states of beam search ###
         ## init for the alive ##
         initial_log_probs = to_variable(
-            np.array([[0.] + [-inf] * (beam_size - 1)], dtype="float32"))
+            np.array(
+                [[0.] + [-inf] * (beam_size - 1)], dtype="float32"))
         alive_log_probs = layers.expand(initial_log_probs, [batch_size, 1])
         alive_seq = to_variable(
-            np.tile(np.array([[[bos_id]]], dtype="int64"),
-                    (batch_size, beam_size, 1)))
+            np.tile(
+                np.array(
+                    [[[bos_id]]], dtype="int64"), (batch_size, beam_size, 1)))
 
         ## init for the finished ##
         finished_scores = to_variable(
-            np.array([[-inf] * beam_size], dtype="float32"))
+            np.array(
+                [[-inf] * beam_size], dtype="float32"))
         finished_scores = layers.expand(finished_scores, [batch_size, 1])
         finished_seq = to_variable(
-            np.tile(np.array([[[bos_id]]], dtype="int64"),
-                    (batch_size, beam_size, 1)))
+            np.tile(
+                np.array(
+                    [[[bos_id]]], dtype="int64"), (batch_size, beam_size, 1)))
         finished_flags = layers.zeros_like(finished_scores)
 
         ### initialize inputs and states of transformer decoder ###
@@ -640,13 +644,11 @@ class Transformer(Layer):
         enc_output = merge_beam_dim(expand_to_beam_size(enc_output, beam_size))
         ## init states (caches) for transformer, need to be updated according to selected beam
         caches = [{
-            "k":
-            layers.fill_constant(
+            "k": layers.fill_constant(
                 shape=[batch_size * beam_size, self.n_head, 0, self.d_key],
                 dtype=enc_output.dtype,
                 value=0),
-            "v":
-            layers.fill_constant(
+            "v": layers.fill_constant(
                 shape=[batch_size * beam_size, self.n_head, 0, self.d_value],
                 dtype=enc_output.dtype,
                 value=0),
@@ -665,11 +667,11 @@ class Transformer(Layer):
                                 beam_size,
                                 batch_size,
                                 need_flat=True):
-            batch_idx = layers.range(0, batch_size, 1,
-                                     dtype="int64") * beam_size
+            batch_idx = layers.range(
+                0, batch_size, 1, dtype="int64") * beam_size
             flat_tensor = merge_beam_dim(tensor_nd) if need_flat else tensor_nd
-            idx = layers.reshape(layers.elementwise_add(beam_idx, batch_idx, 0),
-                                 [-1])
+            idx = layers.reshape(
+                layers.elementwise_add(beam_idx, batch_idx, 0), [-1])
             new_flat_tensor = layers.gather(flat_tensor, idx)
             new_tensor_nd = layers.reshape(
                 new_flat_tensor,
@@ -681,7 +683,8 @@ class Transformer(Layer):
                          finished_in_finished):
             max_length_penalty = np.power(((5. + max_len) / 6.), alpha)
             # The best possible score of the most likely alive sequence
-            lower_bound_alive_scores = alive_log_probs[:, 0] / max_length_penalty
+            lower_bound_alive_scores = alive_log_probs[:,
+                                                       0] / max_length_penalty
 
             # Now to compute the lowest score of a finished sequence in finished
             # If the sequence isn't finished, we multiply it's score by 0. since
@@ -711,8 +714,8 @@ class Transformer(Layer):
             curr_scores = log_probs / length_penalty
             flat_curr_scores = layers.reshape(curr_scores, [batch_size, -1])
 
-            topk_scores, topk_ids = layers.topk(flat_curr_scores,
-                                                k=beam_size * 2)
+            topk_scores, topk_ids = layers.topk(
+                flat_curr_scores, k=beam_size * 2)
 
             topk_log_probs = topk_scores * length_penalty
 
@@ -723,13 +726,11 @@ class Transformer(Layer):
             topk_seq = gather_2d_by_gather(alive_seq, topk_beam_index,
                                            beam_size, batch_size)
             topk_seq = layers.concat(
-                [topk_seq,
-                 layers.reshape(topk_ids, topk_ids.shape + [1])],
+                [topk_seq, layers.reshape(topk_ids, topk_ids.shape + [1])],
                 axis=2)
             states = update_states(states, topk_beam_index, beam_size)
-            eos = layers.fill_constant(shape=topk_ids.shape,
-                                       dtype="int64",
-                                       value=eos_id)
+            eos = layers.fill_constant(
+                shape=topk_ids.shape, dtype="int64", value=eos_id)
             topk_finished = layers.cast(layers.equal(topk_ids, eos), "float32")
 
             #topk_seq: [batch_size, 2*beam_size, i+1]
@@ -751,37 +752,35 @@ class Transformer(Layer):
         def grow_finished(finished_seq, finished_scores, finished_flags,
                           curr_seq, curr_scores, curr_finished):
             # finished scores
-            finished_seq = layers.concat([
-                finished_seq,
-                layers.fill_constant(shape=[batch_size, beam_size, 1],
-                                     dtype="int64",
-                                     value=eos_id)
-            ],
-                                         axis=2)
+            finished_seq = layers.concat(
+                [
+                    finished_seq, layers.fill_constant(
+                        shape=[batch_size, beam_size, 1],
+                        dtype="int64",
+                        value=eos_id)
+                ],
+                axis=2)
             # Set the scores of the unfinished seq in curr_seq to large negative
             # values
             curr_scores += (1. - curr_finished) * -inf
             # concatenating the sequences and scores along beam axis
             curr_finished_seq = layers.concat([finished_seq, curr_seq], axis=1)
-            curr_finished_scores = layers.concat([finished_scores, curr_scores],
-                                                 axis=1)
-            curr_finished_flags = layers.concat([finished_flags, curr_finished],
-                                                axis=1)
+            curr_finished_scores = layers.concat(
+                [finished_scores, curr_scores], axis=1)
+            curr_finished_flags = layers.concat(
+                [finished_flags, curr_finished], axis=1)
             _, topk_indexes = layers.topk(curr_finished_scores, k=beam_size)
             finished_seq = gather_2d_by_gather(curr_finished_seq, topk_indexes,
                                                beam_size * 3, batch_size)
-            finished_scores = gather_2d_by_gather(curr_finished_scores,
-                                                  topk_indexes, beam_size * 3,
-                                                  batch_size)
-            finished_flags = gather_2d_by_gather(curr_finished_flags,
-                                                 topk_indexes, beam_size * 3,
-                                                 batch_size)
+            finished_scores = gather_2d_by_gather(
+                curr_finished_scores, topk_indexes, beam_size * 3, batch_size)
+            finished_flags = gather_2d_by_gather(
+                curr_finished_flags, topk_indexes, beam_size * 3, batch_size)
             return finished_seq, finished_scores, finished_flags
 
         for i in range(max_len):
-            trg_pos = layers.fill_constant(shape=trg_word.shape,
-                                           dtype="int64",
-                                           value=i)
+            trg_pos = layers.fill_constant(
+                shape=trg_word.shape, dtype="int64", value=i)
             logits = self.decoder(trg_word, trg_pos, None, trg_src_attn_bias,
                                   enc_output, caches)
             topk_seq, topk_log_probs, topk_scores, topk_finished, states = grow_topk(
@@ -818,20 +817,23 @@ class Transformer(Layer):
             return layers.expand(tensor, tile_dims)
 
         def merge_batch_beams(tensor):
-            return layers.reshape(tensor, [tensor.shape[0] * tensor.shape[1]] +
-                                  tensor.shape[2:])
+            return layers.reshape(
+                tensor, [tensor.shape[0] * tensor.shape[1]] + tensor.shape[2:])
 
         def split_batch_beams(tensor):
-            return fluid.layers.reshape(tensor,
-                                        shape=[-1, beam_size] +
-                                        list(tensor.shape[1:]))
+            return fluid.layers.reshape(
+                tensor, shape=[-1, beam_size] + list(tensor.shape[1:]))
 
         def mask_probs(probs, finished, noend_mask_tensor):
             # TODO: use where_op
             finished = layers.cast(finished, dtype=probs.dtype)
             probs = layers.elementwise_mul(
-                layers.expand(layers.unsqueeze(finished, [2]), [1, 1, self.trg_vocab_size]),
-                noend_mask_tensor, axis=-1) - layers.elementwise_mul(probs, (finished - 1), axis=0)
+                layers.expand(
+                    layers.unsqueeze(finished, [2]),
+                    [1, 1, self.trg_vocab_size]),
+                noend_mask_tensor,
+                axis=-1) - layers.elementwise_mul(
+                    probs, (finished - 1), axis=0)
             return probs
 
         def gather(x, indices, batch_pos):
@@ -845,54 +847,53 @@ class Transformer(Layer):
         inf = float(1. * 1e7)
         batch_size = enc_output.shape[0]
         max_len = (enc_output.shape[1] + 20) if max_len is None else max_len
-        vocab_size_tensor = layers.fill_constant(shape=[1],
-                                                 dtype="int64",
-                                                 value=self.trg_vocab_size)
+        vocab_size_tensor = layers.fill_constant(
+            shape=[1], dtype="int64", value=self.trg_vocab_size)
         end_token_tensor = to_variable(
-            np.full([batch_size, beam_size], eos_id, dtype="int64"))
+            np.full(
+                [batch_size, beam_size], eos_id, dtype="int64"))
         noend_array = [-inf] * self.trg_vocab_size
         noend_array[eos_id] = 0
-        noend_mask_tensor = to_variable(np.array(noend_array,dtype="float32"))
+        noend_mask_tensor = to_variable(np.array(noend_array, dtype="float32"))
         batch_pos = layers.expand(
             layers.unsqueeze(
-                to_variable(np.arange(0, batch_size, 1, dtype="int64")), [1]),
-            [1, beam_size])
+                to_variable(np.arange(
+                    0, batch_size, 1, dtype="int64")), [1]), [1, beam_size])
 
         predict_ids = []
         parent_ids = []
         ### initialize states of beam search ###
         log_probs = to_variable(
-            np.array([[0.] + [-inf] * (beam_size - 1)] * batch_size,
-                     dtype="float32"))
-        finished = to_variable(np.full([batch_size, beam_size], 0,
-                                       dtype="bool"))
+            np.array(
+                [[0.] + [-inf] * (beam_size - 1)] * batch_size,
+                dtype="float32"))
+        finished = to_variable(
+            np.full(
+                [batch_size, beam_size], 0, dtype="bool"))
         ### initialize inputs and states of transformer decoder ###
         ## init inputs for decoder, shaped `[batch_size*beam_size, ...]`
-        trg_word = layers.fill_constant(shape=[batch_size * beam_size, 1],
-                                        dtype="int64",
-                                        value=bos_id)
+        trg_word = layers.fill_constant(
+            shape=[batch_size * beam_size, 1], dtype="int64", value=bos_id)
         trg_pos = layers.zeros_like(trg_word)
         trg_src_attn_bias = merge_batch_beams(
             expand_to_beam_size(trg_src_attn_bias, beam_size))
-        enc_output = merge_batch_beams(expand_to_beam_size(enc_output, beam_size))
+        enc_output = merge_batch_beams(
+            expand_to_beam_size(enc_output, beam_size))
         ## init states (caches) for transformer, need to be updated according to selected beam
         caches = [{
-            "k":
-            layers.fill_constant(
+            "k": layers.fill_constant(
                 shape=[batch_size * beam_size, self.n_head, 0, self.d_key],
                 dtype=enc_output.dtype,
                 value=0),
-            "v":
-            layers.fill_constant(
+            "v": layers.fill_constant(
                 shape=[batch_size * beam_size, self.n_head, 0, self.d_value],
                 dtype=enc_output.dtype,
                 value=0),
         } for i in range(self.n_layer)]
 
         for i in range(max_len):
-            trg_pos = layers.fill_constant(shape=trg_word.shape,
-                                           dtype="int64",
-                                           value=i)
+            trg_pos = layers.fill_constant(
+                shape=trg_word.shape, dtype="int64", value=i)
             caches = map_structure(  # can not be reshaped since the 0 size
                 lambda x: x if i == 0 else merge_batch_beams(x), caches)
             logits = self.decoder(trg_word, trg_pos, None, trg_src_attn_bias,
@@ -902,18 +903,17 @@ class Transformer(Layer):
                 fluid.layers.log(fluid.layers.softmax(logits)))
             step_log_probs = mask_probs(step_log_probs, finished,
                                         noend_mask_tensor)
-            log_probs = layers.elementwise_add(x=step_log_probs,
-                                                    y=log_probs,
-                                                    axis=0)
+            log_probs = layers.elementwise_add(
+                x=step_log_probs, y=log_probs, axis=0)
             log_probs = layers.reshape(log_probs,
                                        [-1, beam_size * self.trg_vocab_size])
             scores = log_probs
-            topk_scores, topk_indices = fluid.layers.topk(input=scores,
-                                                          k=beam_size)
-            beam_indices = fluid.layers.elementwise_floordiv(
-                topk_indices, vocab_size_tensor)
-            token_indices = fluid.layers.elementwise_mod(
-                topk_indices, vocab_size_tensor)
+            topk_scores, topk_indices = fluid.layers.topk(
+                input=scores, k=beam_size)
+            beam_indices = fluid.layers.elementwise_floordiv(topk_indices,
+                                                             vocab_size_tensor)
+            token_indices = fluid.layers.elementwise_mod(topk_indices,
+                                                         vocab_size_tensor)
 
             # update states
             caches = map_structure(lambda x: gather(x, beam_indices, batch_pos),

@@ -40,7 +40,7 @@ pool_size: 200000
 sort_type: "pool"
 shuffle: True
 shuffle_batch: True
-batch_size: 4096
+batch_size: 1 #4096
 
 # Hyparams for training:
 # the number of epoches for training
