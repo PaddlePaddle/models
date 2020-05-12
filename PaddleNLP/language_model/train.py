@@ -137,9 +137,8 @@ def main():
                 res_vars = res_vars[:-1]
             loss, last_hidden, last_cell, feed_order = res_vars
 
-            fluid.clip.set_gradient_clip(
-                clip=fluid.clip.GradientClipByGlobalNorm(
-                    clip_norm=config.max_grad_norm))
+            clip1 = fluid.clip.GradientClipByGlobalNorm(
+                clip_norm=config.max_grad_norm)
 
             learning_rate = fluid.layers.create_global_var(
                 name="learning_rate",
@@ -148,7 +147,8 @@ def main():
                 dtype='float32',
                 persistable=True)
 
-            optimizer = fluid.optimizer.SGD(learning_rate=learning_rate)
+            optimizer = fluid.optimizer.SGD(learning_rate=learning_rate,
+                                            grad_clip=clip1)
             optimizer.minimize(loss)
 
     # define inference program
@@ -471,7 +471,7 @@ def main():
                     mkpath(save_model_dir)
                 save_model_dir = os.path.join(save_model_dir, 'params')
 
-                fluid.save(main_program, save_model_dir)
+                fluid.save(program=main_program, model_path=save_model_dir)
                 print("Saved model to: %s.\n" % save_model_dir)
 
     with profile_context(args.profile, args.profiler_path):
