@@ -42,7 +42,9 @@ def norm_layer(input,
     if norm_type == 'batch_norm':
         if affine == True:
             param_attr = fluid.ParamAttr(
-                name=name + '_w', initializer=fluid.initializer.Normal(loc=1.0, scale=0.02))
+                name=name + '_w',
+                initializer=fluid.initializer.Normal(
+                    loc=1.0, scale=0.02))
             bias_attr = fluid.ParamAttr(
                 name=name + '_b',
                 initializer=fluid.initializer.Constant(value=0.0))
@@ -366,8 +368,11 @@ def linear(input,
 
 
 def conv_cond_concat(x, y):
-    ones = fluid.layers.fill_constant_batch_size_like(
-        x, [-1, y.shape[1], x.shape[2], x.shape[3]], "float32", 1.0)
+    batch = fluid.layers.shape(x)[0]
+    ones = fluid.layers.fill_constant(
+        shape=[ones, y.shape[1], x.shape[2], x.shape[3]],
+        dtype="float32",
+        value=1.0)
     out = fluid.layers.concat([x, ones * y], 1)
     return out
 
