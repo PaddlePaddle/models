@@ -14,7 +14,6 @@ import paddle
 import args
 import utils
 import time
-#from numba import jit, autojit
 
 # Global variables that are shared across processes
 _model = None
