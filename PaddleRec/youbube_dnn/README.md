@@ -26,6 +26,8 @@
 
 本项目在paddlepaddle上完成YouTube dnn的召回部分Candidate Generation Model，分别获得用户和物品的向量表示，从而后续可以通过其他方法（如用户和物品的余弦相似度）给用户推荐物品。
 
+由于原论文没有开源数据集，本项目随机构造数据验证网络的正确性。
+
 ## 环境
 
  PaddlePaddle 1.7.0 
