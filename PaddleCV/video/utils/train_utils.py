@@ -75,6 +75,7 @@ def test_with_dataloader(exe,
 def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader, \
                         train_fetch_list, train_metrics, epochs = 10, \
                         log_interval = 0, valid_interval = 0, save_dir = './', \
+                        num_trainers = 1, trainer_id = 0, \
                         save_model_name = 'model', fix_random_seed = False, \
                         compiled_test_prog = None, test_dataloader = None, \
                         test_fetch_list = None, test_metrics = None, \
@@ -89,17 +90,21 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
         train_iter = 0
         epoch_periods = []
 
+        cur_time = time.time()
         for data in train_dataloader():
-            cur_time = time.time()
             train_outs = exe.run(compiled_train_prog,
                                  fetch_list=train_fetch_list,
                                  feed=data)
             period = time.time() - cur_time
             epoch_periods.append(period)
+            timeStamp = time.time()
+            localTime = time.localtime(timeStamp)
+            strTime = time.strftime("%Y-%m-%d %H:%M:%S", localTime)
             if log_interval > 0 and (train_iter % log_interval == 0):
                 train_metrics.calculate_and_log_out(train_outs, \
-                        info = '[TRAIN] Epoch {}, iter {} '.format(epoch, train_iter))
+                        info = '[TRAIN {}] Epoch {}, iter {}, time {}, '.format(strTime, epoch, train_iter, period))
             train_iter += 1
+            cur_time = time.time()
 
             # NOTE: profiler tools, used for benchmark
             if is_profiler and epoch == 0 and train_iter == log_interval:
@@ -115,15 +120,18 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
 
         logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
                     format(epoch, np.mean(epoch_periods[1:])))
-        save_model(exe, train_prog, save_dir, save_model_name,
-                   "_epoch{}".format(epoch))
+
+        if trainer_id == 0:
+            save_model(exe, train_prog, save_dir, save_model_name,
+                       "_epoch{}".format(epoch))
         if compiled_test_prog and valid_interval > 0 and (
                 epoch + 1) % valid_interval == 0:
             test_with_dataloader(exe, compiled_test_prog, test_dataloader,
                                  test_fetch_list, test_metrics, log_interval,
                                  save_model_name)
 
-    save_model(exe, train_prog, save_dir, save_model_name)
+    if trainer_id == 0:
+        save_model(exe, train_prog, save_dir, save_model_name)
     #when fix_random seed for debug
     if fix_random_seed:
         cards = os.environ.get('CUDA_VISIBLE_DEVICES')

@@ -17,7 +17,6 @@ import re
 import sys
 import numpy as np
 
-import paddle
 import paddle.fluid as fluid
 
 

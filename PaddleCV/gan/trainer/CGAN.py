@@ -37,8 +37,9 @@ class GTrainer():
             self.fake = model.network_G(input, conditions, name="G")
             self.infer_program = self.program.clone(for_test=True)
             d_fake = model.network_D(self.fake, conditions, name="D")
-            fake_labels = fluid.layers.fill_constant_batch_size_like(
-                input=input, dtype='float32', shape=[-1, 1], value=1.0)
+            batch = fluid.layers.shape(input)[0]
+            fake_labels = fluid.layers.fill_constant(
+                dtype='float32', shape=[batch, 1], value=1.0)
             self.g_loss = fluid.layers.reduce_mean(
                 fluid.layers.sigmoid_cross_entropy_with_logits(
                     x=d_fake, label=fake_labels))
