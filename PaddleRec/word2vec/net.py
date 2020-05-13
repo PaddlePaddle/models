@@ -20,7 +20,10 @@ import numpy as np
 import paddle.fluid as fluid
 
 
-def skip_gram_word2vec_shuffle_batch(dict_size, embedding_size, is_sparse=False, neg_num=5):
+def skip_gram_word2vec_shuffle_batch(dict_size,
+                                     embedding_size,
+                                     is_sparse=False,
+                                     neg_num=5):
 
     words = []
     input_word = fluid.data(name="input_word", shape=[None, 1], dtype='int64')
@@ -61,7 +64,8 @@ def skip_gram_word2vec_shuffle_batch(dict_size, embedding_size, is_sparse=False,
     # add shuffle_batch after embedding. 
     neg_emb_w_list = []
     for i in range(neg_num):
-        neg_emb_w_list.append(fluid.contrib.layers.shuffle_batch(true_emb_w))  # shuffle true_word
+        neg_emb_w_list.append(
+            fluid.contrib.layers.shuffle_batch(true_emb_w))  # shuffle true_word
     neg_emb_w = fluid.layers.concat(neg_emb_w_list, axis=0)
 
     neg_emb_w_re = fluid.layers.reshape(
@@ -69,7 +73,8 @@ def skip_gram_word2vec_shuffle_batch(dict_size, embedding_size, is_sparse=False,
 
     neg_emb_b_list = []
     for i in range(neg_num):
-        neg_emb_b_list.append(fluid.contrib.layers.shuffle_batch(true_emb_b))  # shuffle true_word
+        neg_emb_b_list.append(
+            fluid.contrib.layers.shuffle_batch(true_emb_b))  # shuffle true_word
     neg_emb_b = fluid.layers.concat(neg_emb_b_list, axis=0)
     neg_emb_b_vec = fluid.layers.reshape(neg_emb_b, shape=[-1, neg_num])
 
@@ -81,15 +86,20 @@ def skip_gram_word2vec_shuffle_batch(dict_size, embedding_size, is_sparse=False,
         true_emb_b)
     input_emb_re = fluid.layers.reshape(
         input_emb, shape=[-1, 1, embedding_size])
-    neg_matmul = fluid.layers.matmul(input_emb_re, neg_emb_w_re, transpose_y=True)
+    neg_matmul = fluid.layers.matmul(
+        input_emb_re, neg_emb_w_re, transpose_y=True)
     neg_matmul_re = fluid.layers.reshape(neg_matmul, shape=[-1, neg_num])
     neg_logits = fluid.layers.elementwise_add(neg_matmul_re, neg_emb_b_vec)
     #nce loss
 
-    label_ones = fluid.layers.fill_constant_batch_size_like(
-        true_logits, shape=[-1, 1], value=1.0, dtype='float32')
-    label_zeros = fluid.layers.fill_constant_batch_size_like(
-        true_logits, shape=[-1, neg_num], value=0.0, dtype='float32')
+    label_ones = fluid.layers.fill_constant(
+        shape=[fluid.layers.shape(true_logits)[0], 1],
+        value=1.0,
+        dtype='float32')
+    label_zeros = fluid.layers.fill_constant(
+        shape=[fluid.layers.shape(true_logits)[0], neg_num],
+        value=0.0,
+        dtype='float32')
 
     true_xent = fluid.layers.sigmoid_cross_entropy_with_logits(true_logits,
                                                                label_ones)
@@ -102,6 +112,7 @@ def skip_gram_word2vec_shuffle_batch(dict_size, embedding_size, is_sparse=False,
             neg_xent, dim=1))
     avg_cost = fluid.layers.reduce_mean(cost)
     return avg_cost, data_loader
+
 
 def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
 
@@ -171,10 +182,14 @@ def skip_gram_word2vec(dict_size, embedding_size, is_sparse=False, neg_num=5):
     neg_logits = fluid.layers.elementwise_add(neg_matmul_re, neg_emb_b_vec)
     #nce loss
 
-    label_ones = fluid.layers.fill_constant_batch_size_like(
-        true_logits, shape=[-1, 1], value=1.0, dtype='float32')
-    label_zeros = fluid.layers.fill_constant_batch_size_like(
-        true_logits, shape=[-1, neg_num], value=0.0, dtype='float32')
+    label_ones = fluid.layers.fill_constant(
+        shape=[fluid.layers.shape(true_logits)[0], 1],
+        value=1.0,
+        dtype='float32')
+    label_zeros = fluid.layers.fill_constant(
+        shape=[fluid.layers.shape(true_logits)[0], neg_num],
+        value=0.0,
+        dtype='float32')
 
     true_xent = fluid.layers.sigmoid_cross_entropy_with_logits(true_logits,
                                                                label_ones)
