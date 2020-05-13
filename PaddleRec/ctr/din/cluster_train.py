@@ -86,7 +86,6 @@ def train():
     logger.info("reading data completes")
 
     avg_cost, pred = network.network(item_count, cat_count, 433)
-    #fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=5.0))
     base_lr = args.base_lr
     boundaries = [410000]
     values = [base_lr, 0.2]
@@ -101,12 +100,13 @@ def train():
         place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()
         exe = fluid.Executor(place)
         exe.run(fluid.default_startup_program())
-        feeder = fluid.DataFeeder(
-            feed_list=[
-                "hist_item_seq", "hist_cat_seq", "target_item", "target_cat",
-                "label", "mask", "target_item_seq", "target_cat_seq"
-            ],
-            place=place)
+        feed_list = [
+            "hist_item_seq", "hist_cat_seq", "target_item", "target_cat",
+            "label", "mask", "target_item_seq", "target_cat_seq"
+        ]
+        loader = fluid.io.DataLoader.from_generator(
+            feed_list=feed_list, capacity=10000, iterable=True)
+        loader.set_sample_list_generator(data_reader, places=place)
         if use_parallel:
             train_exe = fluid.ParallelExecutor(
                 use_cuda=use_cuda,
@@ -122,10 +122,10 @@ def train():
         loss_sum = 0.0
         for id in range(epoch_num):
             epoch = id + 1
-            for data in data_reader():
+            for data in loader():
                 global_step += 1
                 results = train_exe.run(main_program,
-                                        feed=feeder.feed(data),
+                                        feed=data,
                                         fetch_list=[avg_cost.name, pred.name],
                                         return_numpy=True)
                 loss_sum += results[0].mean()
