@@ -27,6 +27,16 @@ except ImportError:
 import numpy as np
 import paddle
 import paddle.fluid as fluid
+try:
+    from nvidia.dali.pipeline import Pipeline
+    import nvidia.dali.ops as ops
+    import nvidia.dali.types as types
+    import tempfile
+    from nvidia.dali.plugin.paddle import DALIGenericIterator
+except:
+    Pipeline = object
+    print("DALI is not installed, you can improve performance if use DALI")
+
 from PIL import Image, ImageEnhance
 import logging
 
@@ -77,6 +87,13 @@ class KineticsReader(DataReader):
         # set batch size and file list
         self.batch_size = cfg[mode.upper()]['batch_size']
         self.filelist = cfg[mode.upper()]['filelist']
+        # set num_trainers and trainer_id when distributed training is implemented
+        self.num_trainers = self.get_config_from_sec(mode, 'num_trainers', 1)
+        self.trainer_id = self.get_config_from_sec(mode, 'trainer_id', 0)
+        self.use_dali = self.get_config_from_sec(mode, 'use_dali', False)
+        self.dali_mean = cfg.MODEL.image_mean * (self.seg_num * self.seglen)
+        self.dali_std = cfg.MODEL.image_std * (self.seg_num * self.seglen)
+
         if self.mode == 'infer':
             self.video_path = cfg[mode.upper()]['video_path']
         else:
@@ -87,6 +104,10 @@ class KineticsReader(DataReader):
             self.num_reader_threads = 1
 
     def create_reader(self):
+        # if use_dali to improve performance
+        if self.use_dali:
+            return self.build_dali_reader()
+
         # if set video_path for inference mode, just load this single video
         if (self.mode == 'infer') and (self.video_path != ''):
             # load video from file stored at video_path
@@ -202,11 +223,35 @@ class KineticsReader(DataReader):
             return imgs_transform(imgs, mode, seg_num, seglen, \
                          short_size, target_size, img_mean, img_std, name = self.name), ret_label
 
-        def reader():
+        def reader_():
             with open(pickle_list) as flist:
-                lines = [line.strip() for line in flist]
-                if shuffle:
-                    random.shuffle(lines)
+                full_lines = [line.strip() for line in flist]
+                if self.mode == 'train':
+                    if (not hasattr(reader_, 'seed')):
+                        reader_.seed = 0
+                    random.Random(reader_.seed).shuffle(full_lines)
+                    print("reader shuffle seed", reader_.seed)
+                    if reader_.seed is not None:
+                        reader_.seed += 1
+
+                per_node_lines = int(
+                    math.ceil(len(full_lines) * 1.0 / self.num_trainers))
+                total_lines = per_node_lines * self.num_trainers
+
+                # aligned full_lines so that it can evenly divisible
+                full_lines += full_lines[:(total_lines - len(full_lines))]
+                assert len(full_lines) == total_lines
+
+                # trainer get own sample
+                lines = full_lines[self.trainer_id:total_lines:
+                                   self.num_trainers]
+                logger.info("trainerid %d, trainer_count %d" %
+                            (self.trainer_id, self.num_trainers))
+                logger.info(
+                    "read images from %d, length: %d, lines length: %d, total: %d"
+                    % (self.trainer_id * per_node_lines, per_node_lines,
+                       len(lines), len(full_lines)))
+                assert len(lines) == per_node_lines
                 for line in lines:
                     pickle_path = line.strip()
                     yield [pickle_path]
@@ -229,6 +274,249 @@ class KineticsReader(DataReader):
             img_std=img_std)
 
         return fluid.io.xmap_readers(mapper, reader, num_threads, buf_size)
+
+    def build_dali_reader(self):
+        """
+        build dali training reader
+        """
+
+        def reader_():
+            with open(self.filelist) as flist:
+                full_lines = [line for line in flist]
+                if self.mode == 'train':
+                    if (not hasattr(reader_, 'seed')):
+                        reader_.seed = 0
+                    random.Random(reader_.seed).shuffle(full_lines)
+                    print("reader shuffle seed", reader_.seed)
+                    if reader_.seed is not None:
+                        reader_.seed += 1
+
+                per_node_lines = int(
+                    math.ceil(len(full_lines) * 1.0 / self.num_trainers))
+                total_lines = per_node_lines * self.num_trainers
+
+                # aligned full_lines so that it can evenly divisible
+                full_lines += full_lines[:(total_lines - len(full_lines))]
+                assert len(full_lines) == total_lines
+
+                # trainer get own sample
+                lines = full_lines[self.trainer_id:total_lines:
+                                   self.num_trainers]
+                assert len(lines) == per_node_lines
+
+                logger.info("trainerid %d, trainer_count %d" %
+                            (self.trainer_id, self.num_trainers))
+                logger.info(
+                    "read images from %d, length: %d, lines length: %d, total: %d"
+                    % (self.trainer_id * per_node_lines, per_node_lines,
+                       len(lines), len(full_lines)))
+
+            video_files = ''
+            for item in lines:
+                video_files += item
+            tf = tempfile.NamedTemporaryFile()
+            tf.write(str.encode(video_files))
+            tf.flush()
+            video_files = tf.name
+
+            device_id = int(os.getenv('FLAGS_selected_gpus', 0))
+            print('---------- device id -----------', device_id)
+
+            if self.mode == 'train':
+                pipe = VideoPipe(
+                    batch_size=self.batch_size,
+                    num_threads=1,
+                    device_id=device_id,
+                    file_list=video_files,
+                    sequence_length=self.seg_num * self.seglen,
+                    seg_num=self.seg_num,
+                    seg_length=self.seglen,
+                    resize_shorter_scale=self.short_size,
+                    crop_target_size=self.target_size,
+                    is_training=(self.mode == 'train'),
+                    dali_mean=self.dali_mean,
+                    dali_std=self.dali_std)
+            else:
+                pipe = VideoTestPipe(
+                    batch_size=self.batch_size,
+                    num_threads=1,
+                    device_id=device_id,
+                    file_list=video_files,
+                    sequence_length=self.seg_num * self.seglen,
+                    seg_num=self.seg_num,
+                    seg_length=self.seglen,
+                    resize_shorter_scale=self.short_size,
+                    crop_target_size=self.target_size,
+                    is_training=(self.mode == 'train'),
+                    dali_mean=self.dali_mean,
+                    dali_std=self.dali_std)
+            logger.info(
+                'initializing dataset, it will take several minutes if it is too large .... '
+            )
+            video_loader = DALIGenericIterator(
+                [pipe], ['image', 'label'],
+                len(lines),
+                dynamic_shape=True,
+                auto_reset=True)
+
+            return video_loader
+
+        dali_reader = reader_()
+
+        def ret_reader():
+            for data in dali_reader:
+                yield data[0]['image'], data[0]['label']
+
+        return ret_reader
+
+
+class VideoPipe(Pipeline):
+    def __init__(self,
+                 batch_size,
+                 num_threads,
+                 device_id,
+                 file_list,
+                 sequence_length,
+                 seg_num,
+                 seg_length,
+                 resize_shorter_scale,
+                 crop_target_size,
+                 is_training=False,
+                 initial_prefetch_size=10,
+                 num_shards=1,
+                 shard_id=0,
+                 dali_mean=0.,
+                 dali_std=1.0):
+        super(VideoPipe, self).__init__(batch_size, num_threads, device_id)
+        self.input = ops.VideoReader(
+            device="gpu",
+            file_list=file_list,
+            sequence_length=sequence_length,
+            seg_num=seg_num,
+            seg_length=seg_length,
+            is_training=is_training,
+            num_shards=num_shards,
+            shard_id=shard_id,
+            random_shuffle=is_training,
+            initial_fill=initial_prefetch_size)
+        # the sequece data read by ops.VideoReader is of shape [F, H, W, C]
+        # Because the ops.Resize does not support sequence data, 
+        # it will be transposed into [H, W, F, C], 
+        # then reshaped to [H, W, FC], and then resized like a 2-D image.
+        self.transpose = ops.Transpose(device="gpu", perm=[1, 2, 0, 3])
+        self.reshape = ops.Reshape(
+            device="gpu", rel_shape=[1.0, 1.0, -1], layout='HWC')
+        self.resize = ops.Resize(
+            device="gpu", resize_shorter=resize_shorter_scale)
+        # crops and mirror are applied by ops.CropMirrorNormalize.
+        # Normalization will be implemented in paddle due to the difficulty of dimension broadcast,
+        # It is not sure whether dimension broadcast can be implemented correctly by dali, just take the Paddle Op instead.
+        self.pos_rng_x = ops.Uniform(range=(0.0, 1.0))
+        self.pos_rng_y = ops.Uniform(range=(0.0, 1.0))
+        self.mirror_generator = ops.Uniform(range=(0.0, 1.0))
+        self.cast_mirror = ops.Cast(dtype=types.DALIDataType.INT32)
+        self.crop_mirror_norm = ops.CropMirrorNormalize(
+            device="gpu",
+            crop=[crop_target_size, crop_target_size],
+            mean=dali_mean,
+            std=dali_std)
+        self.reshape_back = ops.Reshape(
+            device="gpu",
+            shape=[
+                seg_num, seg_length * 3, crop_target_size, crop_target_size
+            ],
+            layout='FCHW')
+        self.cast_label = ops.Cast(device="gpu", dtype=types.DALIDataType.INT64)
+
+    def define_graph(self):
+        output, label = self.input(name="Reader")
+        output = self.transpose(output)
+        output = self.reshape(output)
+
+        output = self.resize(output)
+        output = output / 255.
+        pos_x = self.pos_rng_x()
+        pos_y = self.pos_rng_y()
+        mirror_flag = self.mirror_generator()
+        mirror_flag = (mirror_flag > 0.5)
+        mirror_flag = self.cast_mirror(mirror_flag)
+        #output = self.crop(output, crop_pos_x=pos_x, crop_pos_y=pos_y)
+        output = self.crop_mirror_norm(
+            output, crop_pos_x=pos_x, crop_pos_y=pos_y, mirror=mirror_flag)
+        output = self.reshape_back(output)
+        label = self.cast_label(label)
+        return output, label
+
+
+class VideoTestPipe(Pipeline):
+    def __init__(self,
+                 batch_size,
+                 num_threads,
+                 device_id,
+                 file_list,
+                 sequence_length,
+                 seg_num,
+                 seg_length,
+                 resize_shorter_scale,
+                 crop_target_size,
+                 is_training=False,
+                 initial_prefetch_size=10,
+                 num_shards=1,
+                 shard_id=0,
+                 dali_mean=0.,
+                 dali_std=1.0):
+        super(VideoTestPipe, self).__init__(batch_size, num_threads, device_id)
+        self.input = ops.VideoReader(
+            device="gpu",
+            file_list=file_list,
+            sequence_length=sequence_length,
+            seg_num=seg_num,
+            seg_length=seg_length,
+            is_training=is_training,
+            num_shards=num_shards,
+            shard_id=shard_id,
+            random_shuffle=is_training,
+            initial_fill=initial_prefetch_size)
+        # the sequece data read by ops.VideoReader is of shape [F, H, W, C]
+        # Because the ops.Resize does not support sequence data, 
+        # it will be transposed into [H, W, F, C], 
+        # then reshaped to [H, W, FC], and then resized like a 2-D image.
+        self.transpose = ops.Transpose(device="gpu", perm=[1, 2, 0, 3])
+        self.reshape = ops.Reshape(
+            device="gpu", rel_shape=[1.0, 1.0, -1], layout='HWC')
+        self.resize = ops.Resize(
+            device="gpu", resize_shorter=resize_shorter_scale)
+        # crops and mirror are applied by ops.CropMirrorNormalize.
+        # Normalization will be implemented in paddle due to the difficulty of dimension broadcast,
+        # It is not sure whether dimension broadcast can be implemented correctly by dali, just take the Paddle Op instead.
+        self.crop_mirror_norm = ops.CropMirrorNormalize(
+            device="gpu",
+            crop=[crop_target_size, crop_target_size],
+            crop_pos_x=0.5,
+            crop_pos_y=0.5,
+            mirror=0,
+            mean=dali_mean,
+            std=dali_std)
+        self.reshape_back = ops.Reshape(
+            device="gpu",
+            shape=[
+                seg_num, seg_length * 3, crop_target_size, crop_target_size
+            ],
+            layout='FCHW')
+        self.cast_label = ops.Cast(device="gpu", dtype=types.DALIDataType.INT64)
+
+    def define_graph(self):
+        output, label = self.input(name="Reader")
+        output = self.transpose(output)
+        output = self.reshape(output)
+
+        output = self.resize(output)
+        output = output / 255.
+        #output = self.crop(output, crop_pos_x=pos_x, crop_pos_y=pos_y)
+        output = self.crop_mirror_norm(output)
+        output = self.reshape_back(output)
+        label = self.cast_label(label)
+        return output, label
 
 
 def imgs_transform(imgs,

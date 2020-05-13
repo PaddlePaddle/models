@@ -15,8 +15,6 @@ class CriteoDataset(dg.MultiSlotStringDataGenerator):
         
         def reader():
             features = line.strip().split(',')
-            #ctr = list(map(int, features[1]))
-            #cvr = list(map(int, features[2]))
             ctr = features[1]
             cvr = features[2]
             
@@ -28,8 +26,7 @@ class CriteoDataset(dg.MultiSlotStringDataGenerator):
                 if field_id not in all_field_id_dict:
                     continue
                 all_field_id_dict[field_id][0] = True
-                index = all_field_id_dict[field_id][1]
-                #feat_id = list(map(int, feat_id))    
+                index = all_field_id_dict[field_id][1]   
                 output[index][1].append(feat_id) 
                 
             for field_id in all_field_id_dict:

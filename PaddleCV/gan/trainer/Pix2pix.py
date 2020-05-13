@@ -33,10 +33,10 @@ class GTrainer():
             self.infer_program = self.program.clone()
             AB = fluid.layers.concat([input_A, self.fake_B], 1)
             self.pred = model.network_D(AB, "discriminator", cfg)
+            batch = fluid.layers.shape(self.pred)[0]
             if cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred,
-                    shape=self.pred.shape,
+                ones = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred.shape[1:]),
                     value=1,
                     dtype='float32')
                 self.g_loss_gan = fluid.layers.reduce_mean(
@@ -49,9 +49,8 @@ class GTrainer():
                     self.pred,
                     [-1, pred_shape[1] * pred_shape[2] * pred_shape[3]],
                     inplace=True)
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred,
-                    shape=self.pred.shape,
+                ones = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred.shape[1:]),
                     value=1,
                     dtype='float32')
                 self.g_loss_gan = fluid.layers.mean(
@@ -106,10 +105,10 @@ class DTrainer():
                 self.real_AB, "discriminator", cfg=cfg)
             self.pred_fake = model.network_D(
                 self.fake_AB, "discriminator", cfg=cfg)
+            batch = fluid.layers.shape(input_A)[0]
             if cfg.gan_mode == "lsgan":
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_real,
-                    shape=self.pred_real.shape,
+                ones = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred_real.shape[1:]),
                     value=1,
                     dtype='float32')
                 self.d_loss_real = fluid.layers.reduce_mean(
@@ -128,14 +127,12 @@ class DTrainer():
                     self.pred_fake,
                     [-1, pred_shape[1] * pred_shape[2] * pred_shape[3]],
                     inplace=True)
-                zeros = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_fake,
-                    shape=self.pred_fake.shape,
+                zeros = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred_fake.shape[1:]),
                     value=0,
                     dtype='float32')
-                ones = fluid.layers.fill_constant_batch_size_like(
-                    input=self.pred_real,
-                    shape=self.pred_real.shape,
+                ones = fluid.layers.fill_constant(
+                    shape=[batch] + list(self.pred_real.shape[1:]),
                     value=1,
                     dtype='float32')
                 self.d_loss_real = fluid.layers.mean(
@@ -283,7 +280,8 @@ class Pix2pix(object):
                 devices_num = utility.get_device_num(self.cfg)
                 fake_per_device = int(len(fake_B_tmp) / devices_num)
                 for dev in range(devices_num):
-                    tensor[dev]['input_fake'] = fake_B_tmp[dev * fake_per_device : (dev+1) * fake_per_device]
+                    tensor[dev]['input_fake'] = fake_B_tmp[
+                        dev * fake_per_device:(dev + 1) * fake_per_device]
 
                 # optimize the discriminator network
                 d_loss_real, d_loss_fake = exe.run(dis_trainer_program,
@@ -338,10 +336,8 @@ class Pix2pix(object):
                     A_id2name=self.id2name)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
-                                    "net_G")
-                utility.checkpoints(epoch_id, self.cfg, dis_trainer,
-                                    "net_D")
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer, "net_G")
+                utility.checkpoints(epoch_id, self.cfg, dis_trainer, "net_D")
         if self.cfg.enable_ce:
             device_num = fluid.core.get_cuda_device_count(
             ) if self.cfg.use_gpu else 1

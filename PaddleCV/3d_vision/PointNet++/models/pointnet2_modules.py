@@ -200,8 +200,7 @@ def pointnet_fp_module(unknown, known, unknown_feats, known_feats, mlp, bn=True,
         dist.stop_gradient = True
         idx.stop_gradient = True
         dist = fluid.layers.sqrt(dist)
-        ones = fluid.layers.fill_constant_batch_size_like(dist, dist.shape, dist.dtype, 1)
-        dist_recip = ones / (dist + 1e-8); # 1.0 / dist
+        dist_recip = 1.0 / (dist + 1e-8); # 1.0 / dist
         norm = fluid.layers.reduce_sum(dist_recip, dim=-1, keep_dim=True)
         weight = dist_recip / norm
         weight.stop_gradient = True

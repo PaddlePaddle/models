@@ -91,9 +91,11 @@ def get_cards(args):
 def train_loop(main_program, avg_cost, acc, train_input_data, place, args,
                train_reader):
     data_list = [var.name for var in train_input_data]
-    feeder = fluid.DataFeeder(feed_list=data_list, place=place)
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
+    loader = fluid.io.DataLoader.from_generator(
+        feed_list=train_input_data, capacity=10000, iterable=True)
+    loader.set_sample_list_generator(train_reader, places=place)
     train_exe = exe
 
     total_time = 0.0
@@ -103,10 +105,10 @@ def train_loop(main_program, avg_cost, acc, train_input_data, place, args,
         print("epoch_%d start" % epoch_idx)
         t0 = time.time()
         i = 0
-        for batch_id, data in enumerate(train_reader()):
+        for batch_id, data in enumerate(loader()):
             i += 1
             loss_val, correct_val = train_exe.run(
-                feed=feeder.feed(data), fetch_list=[avg_cost.name, acc.name])
+                feed=data, fetch_list=[avg_cost.name, acc.name])
             ce_info.append(float(np.mean(correct_val)) / args.batch_size)
             if i % args.print_batch == 0:
                 logger.info(

@@ -54,21 +54,31 @@ def cosine_warmup_decay(learning_rate, betas, warmup_factor, decay_factor,
     warmup_step_var = fluid.layers.fill_constant(
         shape=[1], dtype='float32', value=float(warmup_step), force_cpu=True)
 
-    with control_flow.Switch() as switch:
-        with switch.case(global_step < warmup_step_var):
-            cur_lr = annealing_cos(warmup_start_lr, learning_rate,
-                                   global_step / warmup_step_var)
-            fluid.layers.assign(cur_lr, lr)
-            cur_beta1 = annealing_cos(betas[0], betas[1],
-                                   global_step / warmup_step_var)
-            fluid.layers.assign(cur_beta1, beta1)
-        with switch.case(global_step >= warmup_step_var):
-            cur_lr = annealing_cos(learning_rate, decay_end_lr,
-                                   (global_step - warmup_step_var) / (total_step - warmup_step))
-            fluid.layers.assign(cur_lr, lr)
-            cur_beta1 = annealing_cos(betas[1], betas[0],
-                                   (global_step - warmup_step_var) / (total_step - warmup_step))
-            fluid.layers.assign(cur_beta1, beta1)
+    warmup_pred = global_step < warmup_step_var
+    decay_pred = global_step >= warmup_step_var
+
+    # learning rate warmup and decay
+    def warmup_lr():
+        return annealing_cos(warmup_start_lr, learning_rate,
+                             global_step / warmup_step_var)
+    def decay_lr():
+        return annealing_cos(learning_rate, decay_end_lr,
+                (global_step - warmup_step_var) / (total_step - warmup_step))
+
+    lr = fluid.layers.case(pred_fn_pairs=[(warmup_pred, warmup_lr),
+                                          (decay_pred, decay_lr)])
+
+    # Adam beta1 warmup and decay
+    def warmup_beta1():
+        return annealing_cos(betas[0], betas[1],
+                             global_step / warmup_step_var)
+
+    def decay_beta1():
+        return annealing_cos(betas[0], betas[1],
+                             global_step / warmup_step_var)
+
+    beta1 = fluid.layers.case(pred_fn_pairs=[(warmup_pred, warmup_beta1),
+                                          (decay_pred, decay_beta1)])
 
     return lr, beta1
 
@@ -96,11 +106,11 @@ def optimize(loss,
         raise ValueError("Unkown learning rate scheduler, should be "
                          "'cosine_warmup_decay'")
 
+    grad_clip = fluid.clip.GradientClipByGlobalNorm(clip_norm=clip_norm)
     optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr,
                                      beta1=scheduled_beta1,
-                                     beta2=beta2)
-    fluid.clip.set_gradient_clip(
-        clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=clip_norm))
+                                     beta2=beta2,
+                                     grad_clip=grad_clip)
 
     param_list = dict()
 

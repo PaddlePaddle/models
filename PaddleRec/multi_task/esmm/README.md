@@ -108,7 +108,7 @@ python infer.py --use_gpu True\  #是否使用gpu
 
 CPU环境
 
-在cpu_train.sh脚本文件中设置好数据路径、参数。
+在cpu_infer.sh脚本文件中设置好数据路径、参数。
 
 ```shell
 python infer.py --use_gpu False\  #是否使用gpu
@@ -117,6 +117,14 @@ python infer.py --use_gpu False\  #是否使用gpu
                 --test_data_path ./test_data \  #训练数据路径
                 --vocab_path ./vocab/vocab_size.txt #embedding词汇表大小路径
 ```
+
+修改脚本的可执行权限并运行
+
+```
+./cpu_infer.sh
+```
+
+
 
 ## 模型效果
 
