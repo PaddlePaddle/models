@@ -23,26 +23,10 @@ if __name__ == "__main__":
     topK = 10
    
     begin = time.time()
-    model_path = args.model_dir + "/epoch_" + str(args.epochs - 1)
+    model_path = args.model_dir + "/epoch_" + str(12)
     (hits, ndcgs) = evaluate_model(args, testRatings, testNegatives, topK, model_path)
     hr, ndcg = np.array(hits).mean(), np.array(ndcgs).mean()
     end = time.time()
     
     logger.info("epoch: {}, epoch_time: {:.5f}s, HR: {:.5f}, NDCG: {:.5f}".format(args.epochs, end - begin, hr, ndcg))
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-
-              

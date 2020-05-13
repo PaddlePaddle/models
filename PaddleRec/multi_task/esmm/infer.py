@@ -25,11 +25,6 @@ def run_infer(args,model_path,test_data_path,vocab_size):
     place = fluid.CPUPlace()
     esmm_model = ESMM()
     
-    
-    test_data_generator = utils.CriteoDataset()
-    test_reader = paddle.batch(test_data_generator.test(test_data_path),batch_size=args.batch_size)
-    
-    
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
 
@@ -41,7 +36,6 @@ def run_infer(args,model_path,test_data_path,vocab_size):
             dataset, file_list = utils.get_dataset(inputs, test_data_path,args.batch_size,args.cpu_num)
             
             exe = fluid.Executor(place)
-            #加载模型
             fluid.load(fluid.default_main_program(),os.path.join(model_path, "checkpoint"), exe)
             
             set_zero(place)
@@ -70,14 +64,4 @@ if __name__ == "__main__":
         logger.info("Test model {}".format(model))
         run_infer(args, model,args.test_data_path)
                 
-                
-                
-                
-                
-                
-                
-                
-                
-                
-
-    
+             

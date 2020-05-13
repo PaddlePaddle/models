@@ -7,7 +7,7 @@ import os
 def join_data(file1,file2,write_file,sample_size):
     sample_list = []
     common_logs = defaultdict(lambda: '')
-    file = open(write_file, 'w',encoding='utf-8')  
+    file = open(write_file, 'w')  
     
     print("begin push sample_list!")
     with open(file1,'r') as f:
@@ -45,7 +45,7 @@ def join_data(file1,file2,write_file,sample_size):
 
 
 def read_data(file_name,write_file):
-    file = open(write_file, 'w',encoding='utf-8')  
+    file = open(write_file, 'w')  
     print("begin to write!")
     with open(file_name,'r') as f:
         for i, line in enumerate(f):
@@ -65,7 +65,7 @@ def read_data(file_name,write_file):
                 
                 #sample_id|y|z|common_feature_index|feat_num|feat_list
                 elif(feat_len == 6):
-                    # y=0 & z=1过滤
+                    # y=0 & z=1 filter
                     if(line[1] == '0' and line[2] == '1'):
                         continue
                     feat_strs = line[5]
@@ -80,15 +80,13 @@ def read_data(file_name,write_file):
            
     file.close()
 
-
-##重新编码
 def recode(file_path,writh_file,vocab_path):
     all_feat_id_dict = defaultdict(int)
-    file1 = open(writh_file[0], 'w',encoding='utf-8') 
-    file2 = open(writh_file[1], 'w',encoding='utf-8')
-    vocab_file = open(vocab_path, 'w',encoding='utf-8') 
+    file1 = open(writh_file[0], 'w') 
+    file2 = open(writh_file[1], 'w')
+    vocab_file = open(vocab_path, 'w') 
     id = 0
-    with open(file_path[0], "r", encoding='utf-8') as f:
+    with open(file_path[0], "r") as f:
         for i, line in enumerate(f):
             line = line.strip().split(',')
             feat_lists = []
@@ -100,7 +98,7 @@ def recode(file_path,writh_file,vocab_path):
                 feat_lists.append('%s:%s' % (field_id,all_feat_id_dict[feat_id]))
             sample = "{0},{1},{2},{3}".format(line[0], line[1], line[2], ','.join(feat_lists)) + "\n"
             file1.write(sample)
-    with open(file_path[1], "r", encoding='utf-8') as f:
+    with open(file_path[1], "r") as f:
         for i, line in enumerate(f):
             line = line.strip().split(',')
             feat_lists = []
@@ -131,7 +129,7 @@ if __name__ == "__main__":
     
     write_file = args.train_data_path + '/train_data.csv'
     join_data(skeleton_train_path,features_train_path,write_file,args.train_sample_size)
-    ##删除产生的中间文件
+
     os.system('rm -rf ' + skeleton_train_path)
     os.system('rm -rf ' + features_train_path)
     
@@ -146,7 +144,7 @@ if __name__ == "__main__":
     
     write_file = args.test_data_path + '/test_data.csv'
     join_data(skeleton_test_path,features_test_path,write_file,args.test_sample_size)
-    ##删除产生的中间文件
+
     os.system('rm -rf ' + skeleton_test_path)
     os.system('rm -rf ' + features_test_path)
     
@@ -154,13 +152,6 @@ if __name__ == "__main__":
     file_path = [args.train_data_path + '/train_data.csv', args.test_data_path + '/test_data.csv']
     write_file = [args.train_data_path + '/traindata.csv',args.test_data_path + '/testdata.csv']
     recode(file_path,write_file,args.vocab_path)
-    ##删除产生的中间文件
+
     for file in file_path:
         os.system('rm -rf ' + file_path)
-
-
-
-
-
-
-
