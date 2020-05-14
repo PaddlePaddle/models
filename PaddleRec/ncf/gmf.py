@@ -29,22 +29,3 @@ class GMF(object):
         return avg_cost, prediction
 
         
-   
-    
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          

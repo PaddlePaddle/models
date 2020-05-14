@@ -210,7 +210,7 @@ class DataLayer(object):
         """
         operation
         """
-        data = fluid.layers.data(
+        data = fluid.data(
             name=name, shape=shape, dtype=dtype, lod_level=lod_level)
         return data
 
@@ -383,8 +383,10 @@ class ConstantLayer(object):
         """
         operation
         """
-        constant = fluid.layers.fill_constant_batch_size_like(input, shape,
-                                                              dtype, value)
+        shape = list(shape)
+        input_shape = fluid.layers.shape(input)
+        shape[0] = input_shape[0]
+        constant = fluid.layers.fill_constant(shape, dtype, value)
         return constant
 
 

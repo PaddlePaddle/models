@@ -30,8 +30,7 @@ logger.setLevel(logging.INFO)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="PaddlePaddle CTR-DNN example")
+    parser = argparse.ArgumentParser(description="PaddlePaddle CTR-DNN example")
     # -------------Data & Model Path-------------
     parser.add_argument(
         '--test_files_path',
@@ -54,8 +53,7 @@ def parse_args():
         '--infer_epoch',
         type=int,
         default=0,
-        help='Specify which epoch to run infer'
-    )
+        help='Specify which epoch to run infer')
     # -------------Network parameter-------------
     parser.add_argument(
         '--embedding_size',
@@ -68,10 +66,7 @@ def parse_args():
         default=1000001,
         help='sparse feature hashing space for index processing')
     parser.add_argument(
-        '--dense_feature_dim',
-        type=int,
-        default=13,
-        help='dense feature shape')
+        '--dense_feature_dim', type=int, default=13, help='dense feature shape')
 
     # -------------device parameter-------------
     parser.add_argument(
@@ -102,10 +97,11 @@ def run_infer(args, model_path):
     place = fluid.CPUPlace()
     train_generator = generator.CriteoDataset(args.sparse_feature_dim)
     file_list = [
-        os.path.join(args.test_files_path, x) for x in os.listdir(args.test_files_path)
+        os.path.join(args.test_files_path, x)
+        for x in os.listdir(args.test_files_path)
     ]
-    test_reader = paddle.batch(train_generator.test(file_list),
-                               batch_size=args.batch_size)
+    test_reader = fluid.io.batch(
+        train_generator.test(file_list), batch_size=args.batch_size)
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
     ctr_model = CTR()
@@ -171,13 +167,15 @@ if __name__ == "__main__":
     model_list = []
     for _, dir, _ in os.walk(args.model_path):
         for model in dir:
-            if "epoch" in model and args.infer_epoch == int(model.split('_')[-1]):
+            if "epoch" in model and args.infer_epoch == int(
+                    model.split('_')[-1]):
                 path = os.path.join(args.model_path, model)
                 model_list.append(path)
 
     if len(model_list) == 0:
-        logger.info("There is no satisfactory model {} at path {}, please check your start command & env. ".format(
-            str("epoch_")+str(args.infer_epoch), args.model_path))
+        logger.info(
+            "There is no satisfactory model {} at path {}, please check your start command & env. ".
+            format(str("epoch_") + str(args.infer_epoch), args.model_path))
 
     for model in model_list:
         logger.info("Test model {}".format(model))

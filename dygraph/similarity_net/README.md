@@ -23,7 +23,7 @@
 ## 快速开始
 #### 版本依赖
 
-本项目依赖于 Paddlepaddle Fluid 1.7，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装。
+本项目依赖于 Paddlepaddle Fluid 1.8，请参考[安装指南](https://www.paddlepaddle.org.cn/install/quick)进行安装。
 
 
 #### 安装代码

@@ -42,12 +42,12 @@ class TestThreeInterpOp(unittest.TestCase):
         weight_shape = [8, 37, 3]
         weight_type = 'float32'
 
-        x = fluid.layers.data(
-            name='x', shape=input_shape, dtype=input_type, append_batch_size=False)
-        weight = fluid.layers.data(
-            name='weight', shape=weight_shape, dtype=weight_type, append_batch_size=False)
-        idx = fluid.layers.data(
-            name='idx', shape=weight_shape, dtype="int32", append_batch_size=False)
+        x = fluid.data(
+            name='x', shape=input_shape, dtype=input_type)
+        weight = fluid.data(
+            name='weight', shape=weight_shape, dtype=weight_type)
+        idx = fluid.data(
+            name='idx', shape=weight_shape, dtype="int32")
         y = pointnet_lib.three_interp(x, weight, idx)
 
         x_np = np.random.random(input_shape).astype(input_type)

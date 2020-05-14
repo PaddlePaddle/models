@@ -35,6 +35,7 @@ class TDMDataset(dg.MultiSlotStringDataGenerator):
         """
             Read test_data line by line & yield batch
             """
+
         def local_iter():
             """Read file line by line"""
             for fname in infer_file_list:
@@ -46,13 +47,14 @@ class TDMDataset(dg.MultiSlotStringDataGenerator):
                         yield [input_emb]
 
         import paddle
-        batch_iter = paddle.batch(local_iter, batch)
+        batch_iter = fluid.io.batch(local_iter, batch)
         return batch_iter
 
     def generate_sample(self, line):
         """
         Read the data line by line and process it as a dictionary
         """
+
         def iterator():
             """
             This function needs to be implemented by the user, based on data format

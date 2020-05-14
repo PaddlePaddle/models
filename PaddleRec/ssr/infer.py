@@ -37,16 +37,16 @@ def parse_args():
 
 
 def model(vocab_size, emb_size, hidden_size):
-    user_data = fluid.layers.data(
-        name="user", shape=[1], dtype="int64", lod_level=1)
-    all_item_data = fluid.layers.data(
-        name="all_item", shape=[vocab_size, 1], dtype="int64")
+    user_data = fluid.data(
+        name="user", shape=[None, 1], dtype="int64", lod_level=1)
+    all_item_data = fluid.data(
+        name="all_item", shape=[None, vocab_size, 1], dtype="int64")
 
-    user_emb = fluid.layers.embedding(
+    user_emb = fluid.embedding(
         input=user_data, size=[vocab_size, emb_size], param_attr="emb.item")
-    all_item_emb = fluid.layers.embedding(
+    all_item_emb = fluid.embedding(
         input=all_item_data, size=[vocab_size, emb_size], param_attr="emb.item")
-    all_item_emb_re = fluid.layers.reshape(x=all_item_emb, shape=[-1, emb_size])
+    all_item_emb_re = all_item_emb
 
     user_encoder = net.GrnnEncoder(hidden_size=hidden_size)
     user_enc = user_encoder.forward(user_emb)
@@ -63,7 +63,7 @@ def model(vocab_size, emb_size, hidden_size):
                                    bias_attr="item.b")
     cos_item = fluid.layers.cos_sim(X=all_item_hid, Y=user_re)
     all_pre_ = fluid.layers.reshape(x=cos_item, shape=[-1, vocab_size])
-    pos_label = fluid.layers.data(name="pos_label", shape=[1], dtype="int64")
+    pos_label = fluid.data(name="pos_label", shape=[None, 1], dtype="int64")
     acc = fluid.layers.accuracy(input=all_pre_, label=pos_label, k=20)
     return acc
 

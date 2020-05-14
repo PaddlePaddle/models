@@ -30,7 +30,6 @@ class MLP(object):
                                        name='layer_' + str(i))
                                        
         # Final prediction layer
-        
         prediction = fluid.layers.fc(input=vector,
                                     size=1,
                                     act='sigmoid',
@@ -42,23 +41,4 @@ class MLP(object):
         
         return avg_cost, prediction
 
-        
-   
-    
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
+                
