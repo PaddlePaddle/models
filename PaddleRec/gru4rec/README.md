@@ -11,8 +11,6 @@
 ├── infer_sample_neg.py  # 预测脚本 sample负例
 ├── net.py               # 网络结构
 ├── text2paddle.py       # 文本数据转paddle数据
-├── cluster_train.py     # 多机训练
-├── cluster_train.sh     # 多机训练脚本
 ├── utils                # 通用函数
 ├── convert_format.py    # 转换数据格式
 ├── vocab.txt            # 小样本字典
@@ -168,7 +166,7 @@ CUDA_VISIBLE_DEVICES=0 python train_sample_neg.py --loss ce --use_cuda 1
 
 可在[net.py](./net.py) `network` 函数中调整网络结构，当前的网络结构如下：
 ```python
-emb = fluid.layers.embedding(
+emb = fluid.embedding(
     input=src,
     size=[vocab_size, hid_size],
     param_attr=fluid.ParamAttr(
@@ -278,12 +276,3 @@ model:model_r@20/epoch_10 recall@20:0.681 time_cost(s):12.2
 
 ## 多机训练
 厂内用户可以参考[wiki](http://wiki.baidu.com/pages/viewpage.action?pageId=628300529)利用paddlecloud 配置多机环境
-
-可参考cluster_train.py 配置其他多机环境
-
-运行命令本地模拟多机场景, 暂不支持windows
-```
-sh cluster_train.sh
-```
-
-注意本地模拟需要关闭代理

@@ -103,7 +103,7 @@ def prepare_data(file_dir,
     if is_train and 'ce_mode' not in os.environ:
         vocab_size = get_vocab_size(vocab_path)
         reader = sort_batch(
-            paddle.reader.shuffle(
+            fluid.io.shuffle(
                 train(
                     file_dir, buffer_size, data_type=DataType.SEQ),
                 buf_size=buffer_size),
