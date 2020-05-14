@@ -35,10 +35,10 @@ class TestGatherPointOp(unittest.TestCase):
         idx_shape = (1, 32)
         idx_type = 'int32'
 
-        x = fluid.layers.data(
-            name='x', shape=x_shape, dtype=x_type, append_batch_size=False)
-        idx = fluid.layers.data(
-            name='idx', shape=idx_shape, dtype=idx_type, append_batch_size=False)
+        x = fluid.data(
+            name='x', shape=x_shape, dtype=x_type)
+        idx = fluid.data(
+            name='idx', shape=idx_shape, dtype=idx_type)
         y = pointnet_lib.gather_point(x, idx)
 
         x_np = np.random.uniform(-10, 10, x_shape).astype(x_type)
