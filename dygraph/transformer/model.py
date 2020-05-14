@@ -503,7 +503,7 @@ class CrossEntropyCriterion(object):
             logits=predict,
             label=label_out,
             soft_label=True if self.label_smooth_eps else False)
-        weighted_cost = layers.elementwise_mul(cost, weights, axis=0)
+        weighted_cost = cost * weights
         sum_cost = layers.reduce_sum(weighted_cost)
         token_num = layers.reduce_sum(weights)
         token_num.stop_gradient = True
