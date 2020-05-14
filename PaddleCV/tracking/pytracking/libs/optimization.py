@@ -3,7 +3,7 @@ from paddle.fluid import layers
 from paddle import fluid
 from pytracking.libs.tensorlist import TensorList
 from pytracking.utils.plotting import plot_graph
-from pytracking.libs.paddle_utils import n2p, clone, static_clone
+from pytracking.libs.paddle_utils import n2p, clone, static_clone, create_var_list
 
 
 class L2Problem:
@@ -243,20 +243,9 @@ class ConjugateGradient(ConjugateGradientBase):
         start_program = fluid.Program()
         with fluid.program_guard(train_program, start_program):
             scope = 'first/'
-            self.x_ph = TensorList([
-                fluid.layers.data(
-                    '{}x_{}'.format(scope, idx),
-                    v.shape,
-                    append_batch_size=False,
-                    stop_gradient=False) for idx, v in enumerate(self.x)
-            ])
-            self.p_ph = TensorList([
-                fluid.layers.data(
-                    '{}p_{}'.format(scope, idx),
-                    v.shape,
-                    append_batch_size=False,
-                    stop_gradient=False) for idx, v in enumerate(self.x)
-            ])
+            self.x_ph = TensorList(create_var_list(scope+"x", self.x, None))
+
+            self.p_ph = TensorList(create_var_list(scope+"p", self.x, None))
 
             # problem forward
             self.f0 = self.problem(self.x_ph, scope)
@@ -277,20 +266,10 @@ class ConjugateGradient(ConjugateGradientBase):
         start_program2 = fluid.Program()
         with fluid.program_guard(train_program2, start_program2):
             scope = 'second/'
-            self.x_ph_2 = TensorList([
-                fluid.layers.data(
-                    '{}x_{}'.format(scope, idx),
-                    v.shape,
-                    append_batch_size=False,
-                    stop_gradient=False) for idx, v in enumerate(self.x)
-            ])
-            self.dfdx_x_ph = TensorList([
-                fluid.layers.data(
-                    '{}dfdx_x_{}'.format(scope, idx),
-                    v.shape,
-                    append_batch_size=False,
-                    stop_gradient=False) for idx, v in enumerate(self.g)
-            ])
+
+            self.x_ph_2 = TensorList(create_var_list(scope+"x", self.x, None))
+
+            self.dfdx_x_ph = TensorList(create_var_list(scope+"dfdx_x", self.g, None))
 
             self.f0_2 = self.problem(self.x_ph_2, scope)
             self.dfdx_dfdx = TensorList(
@@ -444,20 +423,9 @@ class GaussNewtonCG(ConjugateGradientBase):
         start_program = fluid.Program()
         with fluid.program_guard(train_program, start_program):
             scope = 'first/'
-            self.x_ph = TensorList([
-                fluid.layers.data(
-                    '{}x_{}'.format(scope, idx),
-                    v.shape,
-                    append_batch_size=False,
-                    stop_gradient=False) for idx, v in enumerate(self.x)
-            ])
-            self.p_ph = TensorList([
-                fluid.layers.data(
-                    '{}p_{}'.format(scope, idx),
-                    v.shape,
-                    append_batch_size=False,
-                    stop_gradient=False) for idx, v in enumerate(self.x)
-            ])
+            self.x_ph = TensorList(create_var_list(scope+"x", self.x, None))
+
+            self.p_ph = TensorList(create_var_list(scope+"p", self.x, None))
 
             # problem forward
             self.f0 = self.problem(self.x_ph, scope)
@@ -477,20 +445,9 @@ class GaussNewtonCG(ConjugateGradientBase):
         start_program2 = fluid.Program()
         with fluid.program_guard(train_program2, start_program2):
             scope = 'second/'
-            self.x_ph_2 = TensorList([
-                fluid.layers.data(
-                    '{}x_{}'.format(scope, idx),
-                    v.shape,
-                    append_batch_size=False,
-                    stop_gradient=False) for idx, v in enumerate(self.x)
-            ])
-            self.dfdx_x_ph = TensorList([
-                fluid.layers.data(
-                    '{}dfdx_x_{}'.format(scope, idx),
-                    v.shape,
-                    append_batch_size=False,
-                    stop_gradient=False) for idx, v in enumerate(self.g)
-            ])
+            self.x_ph_2 = TensorList(create_var_list(scope+"x", self.x, None))
+
+            self.dfdx_x_ph = TensorList(create_var_list(scope+"dfdx_x", self.g, None))
 
             self.f0_2 = self.problem(self.x_ph_2, scope)
             self.dfdx_dfdx = TensorList(
@@ -654,13 +611,7 @@ class GradientDescentL2:
         train_program = fluid.Program()
         start_program = fluid.Program()
         with fluid.program_guard(train_program, start_program):
-            self.x_ph = TensorList([
-                fluid.layers.data(
-                    'x_{}'.format(idx),
-                    v.shape,
-                    append_batch_size=False,
-                    stop_gradient=False) for idx, v in enumerate(self.x)
-            ])
+            self.x_ph = TensorList(create_var_list("x", self.x, None))
 
             # problem forward
             self.f0 = self.problem(self.x_ph)
