@@ -103,8 +103,8 @@ def prepare_train_input(insts, src_pad_idx, trg_pad_idx, n_head):
         return_attn_bias=False,
         return_max_len=False,
         return_num_token=True)
-    lbl_word = lbl_word.reshape(-1)
-    lbl_weight = lbl_weight.reshape(-1)
+    lbl_word = lbl_word.reshape(-1, 1)
+    lbl_weight = lbl_weight.reshape(-1, 1)
 
     data_inputs = [
         src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,

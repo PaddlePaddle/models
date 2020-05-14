@@ -569,8 +569,10 @@ def transformer(model_input,
     # Padding index do not contribute to the total loss. The weights is used to
     # cancel padding index in calculating the loss.
     if label_smooth_eps:
+        # TODO: use fluid.input.one_hot after softmax_with_cross_entropy removing
+        # the enforcement that the last dimension of label must be 1.
         label = layers.label_smooth(
-            label=fluid.one_hot(
+            label=layers.one_hot(
                 input=label, depth=trg_vocab_size),
             epsilon=label_smooth_eps)
 
@@ -750,17 +752,17 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
         # caches contains states of history steps in decoder self-attention
         # and static encoder output projections in encoder-decoder attention
         # to reduce redundant computation.
-        token_shape = layers.shape(start_tokens)
+        batch_size = layers.shape(start_tokens)[0]
         caches = [
             {
                 "k":  # for self attention
                 layers.fill_constant(
-                    shape=[token_shape[0], n_head, 0, d_key],
+                    shape=[batch_size, n_head, 0, d_key],
                     dtype=enc_output.dtype,
                     value=0),
                 "v":  # for self attention
                 layers.fill_constant(
-                    shape=[token_shape[0], n_head, 0, d_value],
+                    shape=[batch_size, n_head, 0, d_value],
                     dtype=enc_output.dtype,
                     value=0),
                 "static_k":  # for encoder-decoder attention
@@ -789,10 +791,10 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
                 lambda x: layers.gather(x, index=gather_idx), caches)
             pre_src_attn_bias = layers.gather(
                 trg_src_attn_bias, index=gather_idx)
-            bias_shape = layers.shape(pre_src_attn_bias)
+            bias_batch_size = layers.shape(pre_src_attn_bias)[0]
             pre_pos = layers.elementwise_mul(
                 x=layers.fill_constant(
-                    value=1, shape=[bias_shape[0], 1], dtype=pre_ids.dtype),
+                    value=1, shape=[bias_batch_size, 1], dtype=pre_ids.dtype),
                 y=step_idx,
                 axis=0)
             logits = wrap_decoder(
