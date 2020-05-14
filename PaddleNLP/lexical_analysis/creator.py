@@ -105,15 +105,15 @@ def create_pyreader(args,
         # create lac pyreader
         if mode == 'train':
             pyreader.set_sample_list_generator(
-                paddle.batch(
-                    paddle.reader.shuffle(
+                fluid.io.batch(
+                    fluid.io.shuffle(
                         reader.file_reader(file_name),
                         buf_size=args.traindata_shuffle_buffer),
                     batch_size=args.batch_size / device_count),
                 places=place)
         else:
             pyreader.set_sample_list_generator(
-                paddle.batch(
+                fluid.io.batch(
                     reader.file_reader(
                         file_name, mode=mode),
                     batch_size=args.batch_size / device_count),
