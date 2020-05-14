@@ -31,14 +31,12 @@ class NeuMF(object):
         mf_user_latent = fluid.layers.flatten(x=MF_Embedding_User, axis=1)
         mf_item_latent = fluid.layers.flatten(x=MF_Embedding_Item, axis=1)
         mf_vector = fluid.layers.elementwise_mul(mf_user_latent, mf_item_latent)
-        #fluid.layers.Print(mf_vector, message="mf_vector")
         
         # MLP part 
         # The 0-th layer is the concatenation of embedding layers
         mlp_user_latent = fluid.layers.flatten(x=MLP_Embedding_User, axis=1)
         mlp_item_latent = fluid.layers.flatten(x=MLP_Embedding_Item, axis=1)
         mlp_vector = fluid.layers.concat(input=[mlp_user_latent, mlp_item_latent], axis=-1)
-        #fluid.layers.Print(mlp_vector, message="mlp_vector")
         
         for i in range(1, num_layer):
             mlp_vector = fluid.layers.fc(input=mlp_vector,
@@ -62,24 +60,5 @@ class NeuMF(object):
         avg_cost = fluid.layers.mean(cost)
         
         return avg_cost, prediction
-
         
-   
-    
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
           

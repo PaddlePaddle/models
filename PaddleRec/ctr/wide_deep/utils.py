@@ -2,7 +2,7 @@ import numpy as np
 import os
 import paddle.fluid as fluid
 
-class CriteoDataset(object):
+class Dataset(object):
 
     def _reader_creator(self, file):
         def reader():
