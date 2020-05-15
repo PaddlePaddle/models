@@ -79,6 +79,8 @@ def build_program(is_train, main_prog, startup_prog, args):
                         use_dynamic_loss_scaling=args.use_dynamic_loss_scaling)
 
                 optimizer.minimize(avg_cost)
+                # print(main_prog)
+                # return
                 if args.use_ema:
                     global_steps = fluid.layers.learning_rate_scheduler._decay_step_counter(
                     )
@@ -151,6 +153,14 @@ def validate(args,
             device_num=device_num)
 
 
+def reader_decorator(reader):
+    def __reader__():
+        for item in reader():
+            img = np.array(item[0]).astype('float32').reshape(3, 224, 224)
+            label = np.array(item[1]).astype('int64').reshape(1)
+            yield img, label
+    return __reader__
+
 def train(args):
     """Train model
     
@@ -206,6 +216,12 @@ def train(args):
     else:
         imagenet_reader = reader.ImageNetReader(0 if num_trainers > 1 else None)
         train_reader = imagenet_reader.train(settings=args)
+        train_reader = paddle.batch(
+            reader_decorator(
+                paddle.dataset.flowers.train(use_xmap=True)), 
+                batch_size=args.batch_size,
+                drop_last=True)
+
         if args.use_gpu:
             if num_trainers <= 1:
                 places = fluid.framework.cuda_places()
@@ -261,6 +277,7 @@ def train(args):
                 sys.stdout.flush()
             train_batch_id += 1
             t1 = time.time()
+            
             #NOTE: this for benchmark profiler
             total_batch_num = total_batch_num + 1
             if args.is_profiler and pass_id == 0 and train_batch_id == args.print_step:
@@ -290,6 +307,7 @@ def train(args):
 
         if trainer_id == 0 and pass_id % args.save_step == 0:
             save_model(args, exe, train_prog, pass_id)
+        
 
 
 def main():

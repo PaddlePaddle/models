@@ -6,9 +6,9 @@ export FLAGS_eager_delete_tensor_gb=0.0
 export FLAGS_fraction_of_gpu_memory_to_use=0.98
 
 #ResNet101:
-python train.py \
+python3 train.py \
        --model=ResNet101 \
-       --batch_size=256 \
+       --batch_size=1024 \
        --model_save_dir=output/ \
        --lr_strategy=piecewise_decay \
        --num_epochs=120 \
