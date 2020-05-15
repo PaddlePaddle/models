@@ -2,7 +2,7 @@ import numpy as np
 import os
 import paddle.fluid as fluid
 
-class CriteoDataset(object):
+class Dataset(object):
 
     def _reader_creator(self, file, is_train):
         def reader():
@@ -35,5 +35,5 @@ def input_data(is_train):
         inputs = [user_input] + [item_input] + [label]
     else:
         inputs = [user_input] + [item_input]
-    
+
     return inputs

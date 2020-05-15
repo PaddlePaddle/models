@@ -54,6 +54,7 @@ def eval(args):
 
     image = fluid.data(name='image', shape=[None] + image_shape, dtype='float32')
     label = fluid.data(name='label', shape=[None, 1], dtype='int64')
+
     test_loader = fluid.io.DataLoader.from_generator(
                 feed_list=[image, label],
                 capacity=64,
@@ -75,7 +76,7 @@ def eval(args):
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
 
-        fluid.load(program=test_program, model_path=pretrained_model)
+        fluid.load(program=test_program, model_path=pretrained_model, executor=exe)
 
     test_loader.set_sample_generator(
         reader.test(args),

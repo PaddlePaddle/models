@@ -190,9 +190,8 @@ class MultiviewSimnet(object):
 
         # pairwise hinge_loss
         loss_part1 = fluid.layers.elementwise_sub(
-            tensor.fill_constant_batch_size_like(
-                input=cos_pos,
-                shape=[-1, 1],
+            fluid.layers.fill_constant(
+                shape=[fluid.layers.shape(cos_pos)[0], 1],
                 value=self.margin,
                 dtype='float32'),
             cos_pos)
@@ -200,8 +199,10 @@ class MultiviewSimnet(object):
         loss_part2 = fluid.layers.elementwise_add(loss_part1, cos_neg)
 
         loss_part3 = fluid.layers.elementwise_max(
-            tensor.fill_constant_batch_size_like(
-                input=loss_part2, shape=[-1, 1], value=0.0, dtype='float32'),
+            fluid.layers.fill_constant(
+                shape=[fluid.layers.shape(loss_part2)[0], 1],
+                value=0.0,
+                dtype='float32'),
             loss_part2)
 
         avg_cost = fluid.layers.mean(loss_part3)

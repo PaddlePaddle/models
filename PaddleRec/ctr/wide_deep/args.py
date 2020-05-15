@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument("--epochs", type=int, default=40, help="epochs")
     parser.add_argument("--batch_size", type=int, default=40, help="batch_size")
     parser.add_argument('--use_gpu', type=int, default=0, help='whether using gpu')
-    parser.add_argument('--test_epoch', type=str, default='1',help='test_epoch')
+    parser.add_argument('--test_epoch', type=str, default='39',help='test_epoch')
     parser.add_argument('--train_path', type=str, default='data/adult.data', help='train_path')
     parser.add_argument('--test_path', type=str, default='data/adult.test', help='test_path')
     parser.add_argument('--train_data_path', type=str, default='train_data/train_data.csv', help='train_data_path')

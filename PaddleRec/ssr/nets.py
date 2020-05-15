@@ -57,13 +57,17 @@ class PairwiseHingeLoss(object):
 
     def forward(self, pos, neg):
         loss_part1 = fluid.layers.elementwise_sub(
-            tensor.fill_constant_batch_size_like(
-                input=pos, shape=[-1, 1], value=self.margin, dtype='float32'),
+            fluid.layers.fill_constant(
+                shape=[fluid.layers.shape(pos)[0], 1],
+                value=self.margin,
+                dtype='float32'),
             pos)
         loss_part2 = fluid.layers.elementwise_add(loss_part1, neg)
         loss_part3 = fluid.layers.elementwise_max(
-            tensor.fill_constant_batch_size_like(
-                input=loss_part2, shape=[-1, 1], value=0.0, dtype='float32'),
+            fluid.layers.fill_constant(
+                shape=[fluid.layers.shape(loss_part2)[0], 1],
+                value=0.0,
+                dtype='float32'),
             loss_part2)
         return loss_part3
 
