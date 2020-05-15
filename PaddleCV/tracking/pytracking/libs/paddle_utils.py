@@ -231,12 +231,3 @@ def create_var_list(scope, var_lists, shape):
         vars.append(var)
     return vars
 
-
-def create_var_list_v2(scope, var_lists):
-    vars = []
-    for idx, v in enumerate(var_lists):
-        name = "{}_{}".format(scope, idx)
-        var = fluid.data(name, shape=v.shape)
-        var.stop_gradient = False
-        vars.append(var)
-    return vars
