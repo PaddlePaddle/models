@@ -60,14 +60,14 @@ def train(args):
     dg_program = fluid.Program()
 
     with fluid.program_guard(d_program):
-        img = fluid.layers.data(name='img', shape=[784], dtype='float32')
-        label = fluid.layers.data(name='label', shape=[1], dtype='float32')
+        img = fluid.data(name='img', shape=[None, 784], dtype='float32')
+        label = fluid.data(name='label', shape=[None, 1], dtype='float32')
         d_logit = D(img)
         d_loss = loss(d_logit, label)
 
     with fluid.program_guard(dg_program):
-        noise = fluid.layers.data(
-            name='noise', shape=[NOISE_SIZE], dtype='float32')
+        noise = fluid.data(
+            name='noise', shape=[None, NOISE_SIZE], dtype='float32')
         g_img = G(x=noise)
 
         g_program = dg_program.clone()
