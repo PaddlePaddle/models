@@ -273,7 +273,7 @@ class KineticsReader(DataReader):
             img_mean=img_mean,
             img_std=img_std)
 
-        return fluid.io.xmap_readers(mapper, reader, num_threads, buf_size)
+        return fluid.io.xmap_readers(mapper, reader_, num_threads, buf_size)
 
     def build_dali_reader(self):
         """
