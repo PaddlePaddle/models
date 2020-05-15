@@ -72,9 +72,9 @@ def Fconv2d(
                     groups mismatch.
     Examples:
         .. code-block:: python
-          data = fluid.layers.data(name='data', shape=[3, 32, 32], \
+          data = fluid.data(name='data', shape=[3, 32, 32], \
                                   dtype='float32')
-          filter = fluid.layers.data(name='filter',shape=[10,3,3,3], \
+          filter = fluid.data(name='filter',shape=[10,3,3,3], \
                                     dtype='float32',append_batch_size=False)
           conv2d = fluid.layers.conv2d(input=data,
                                        filter=filter,

@@ -62,10 +62,9 @@ def infer(args):
     for epoch_num in range(args.start_index, args.last_index + 1):
         model_path = os.path.join(args.model_path,  "epoch_" + str(epoch_num))
         try:
-            if not os.path.exists(model_path):
+            if not os.path.exists(model_path + ".pdmodel"):
                 raise ValueError()
-            fluid.io.load_persistables(executor=exe, dirname=model_path,
-                    main_program=infer_program)
+            fluid.io.load(infer_program, model_path+".pdmodel", exe)
 
             loss_sum = 0.0
             acc_sum = 0.0
