@@ -26,7 +26,7 @@ except ImportError:
     from io import BytesIO
 import numpy as np
 import paddle
-
+import paddle.fluid as fluid
 try:
     from nvidia.dali.pipeline import Pipeline
     import nvidia.dali.ops as ops
@@ -34,6 +34,7 @@ try:
     import tempfile
     from nvidia.dali.plugin.paddle import DALIGenericIterator
 except:
+    Pipeline = object
     print("DALI is not installed, you can improve performance if use DALI")
 
 from PIL import Image, ImageEnhance
@@ -272,8 +273,7 @@ class KineticsReader(DataReader):
             img_mean=img_mean,
             img_std=img_std)
 
-        return paddle.reader.xmap_readers(mapper, reader_, num_threads,
-                                          buf_size)
+        return fluid.io.xmap_readers(mapper, reader_, num_threads, buf_size)
 
     def build_dali_reader(self):
         """

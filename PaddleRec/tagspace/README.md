@@ -9,8 +9,6 @@
 ├── infer.py             # 预测脚本
 ├── net.py               # 网络结构
 ├── text2paddle.py       # 文本数据转paddle数据
-├── cluster_train.py     # 多机训练
-├── cluster_train.sh     # 多机训练脚本
 ├── utils                # 通用函数
 ├── vocab_text.txt       # 小样本文本字典
 ├── vocab_tag.txt        # 小样本类别字典
@@ -88,10 +86,4 @@ python infer.py
 全量数据预测
 ```
 python infer.py --model_dir big_model --vocab_tag_path big_vocab_tag.txt --test_dir test_big_data/
-```
-
-## 本地模拟多机
-运行命令
-```
-sh cluster_train.py
 ```
