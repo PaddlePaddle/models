@@ -51,7 +51,7 @@
 - **Node-Embedding**：注意，此处的Embedding，并非我们已有的item-embedding，而是构建完成的树的节点对应的Embedding，由item-embedding通过规则生成，是我们的网络主要训练的目标。ID范围为所有0->节点数-1。我们同时也需准备一个映射表，来告诉模型，item_id到node_id的映射关系。
 - **Travel**：是指叶子节点从root开始直到其自身的遍历路径，如上图，14号节点的Travel：0->1->3->7->14
 - **Layer**：指树的层，如上图，共有4层。
-  
+
 > Paddle-TDM在训练时，不会改动树的结构，只会改动Node-Embedding。
 
 
@@ -156,7 +156,7 @@ TDM的组网，宏观上，可以概括为三个部分
 
 **demo模型，假设输入为两个元素：**
 > 一、user/query的emb表示，该emb应该来源于特征的组合在某个空间的映射（比如若干特征取emb后concat到一起），或其他预训练模型的处理结果（比如将明文query通过nlp预处理得到emb表示）
-    
+
 > 二、item的正样本，是发生了实际点击/购买/浏览等行为的item_id，与输入的user/query emb强相关，是我们之后通过预测想得到的结果。
 
 在paddle组网中，我们这样定义上面两个变量：
@@ -233,9 +233,9 @@ tdm_sampler的运行逻辑如下：
     - 在item遍历路径上的node视为正样本，`positive_node_id`由`travel_list[item_id][i]`给出，其他同层的兄弟节点视为负样本，该层节点列表由`layer_list[i]`给出，如果`positive_node_id`不在`layer_list[i]`中，会提示错误。
 
     - 在兄弟节点中进行随机采样，采样N个node，N由`neg_sampling_list[i]`的值决定，如果该值大于兄弟节点的数量，会提示错误。 采样结果不会重复，且不会采样到正样本。
-    
+
     - 如果`output_positive=True`，则会同时输出正负样本，否则只输出负采样的结果
-    
+
     - 生成该层`label`，shape与采样结果一致，正样本对应的label=1，负样本的label=0
 
     - 生成该层`mask`，如果树是不平衡的，则有些item不会位于树的最后一层，所以遍历路径的实际长度会比其他item少，为了tensor维度一致，travel_list中padding了0。当遇到了padding的0时，tdm_sampler也会输出正常维度的采样结果，采样结果与label都为0。为了区分这部分虚拟的采样结果与真实采样结果，会给虚拟采样结果额外设置mask=0，如果是真实采样结果mask=1
@@ -403,23 +403,23 @@ acc = fluid.layers.accuracy(input=softmax_prob, label=labels_reshape)
 在demo网络中，我们设置为从某一层的所有节点开始进行检索。paddle组网对输入定义的实现如下：
 ```python
 def input_data(self):
-    input_emb = fluid.layers.data(
+    input_emb = fluid.data(
         name="input_emb",
-        shape=[self.input_embed_size],
+        shape=[None, self.input_embed_size],
         dtype="float32",
     )
 
     # first_layer 与 first_layer_mask 对应着infer起始的节点
-    first_layer = fluid.layers.data(
+    first_layer = fluid.data(
         name="first_layer_node",
-        shape=[1],
+        shape=[None, 1],
         dtype="int64",
         lod_level=1, #支持变长
     )
 
-    first_layer_mask = fluid.layers.data(
+    first_layer_mask = fluid.data(
         name="first_layer_node_mask",
-        shape=[1],
+        shape=[None, 1],
         dtype="int64",
         lod_level=1,
     )
@@ -447,7 +447,7 @@ def create_first_layer(self, args):
 tdm的检索逻辑类似beamsearch，简单来说：在每一层计算打分，得到topK的节点，将这些节点的孩子节点作为下一层的输入，如此循环，得到最终的topK。但仍然有一些需要注意的细节，下面将详细介绍。
 
 - 问题一：怎么处理`input_emb`？
-  
+
   - input_emb过`input_fc`，检索中，只需过一次即可:
   ```python
   nput_trans_emb = self.input_trans_net.input_fc_infer(input_emb)
@@ -663,7 +663,7 @@ if args.save_init_model or not args.load_model:
 ```
 
 > 为什么每次加载模型手动Set `learning rate`？
-> 
+>
 > 学习率在paddle的组网中，是以一个`persistable=Ture`的长期变量储存在模型的Variable scope里的。每次使用load_persistables加载模型时，也会使用加载的模型的学习率覆盖本地模型的默认学习率，换言之，加载init_model以后，学习率也是保存init_model时的学习率。对模型的调试会产生不必要的影响，为了保证网络训练如预期，需要这样的手动set步骤。
 
 ### demo的训练运行方法

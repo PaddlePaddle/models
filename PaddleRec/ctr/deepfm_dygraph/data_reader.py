@@ -6,6 +6,7 @@ import pickle
 import random
 
 import paddle
+import paddle.fluid as fluid
 
 
 class DataGenerator(object):
@@ -58,7 +59,7 @@ class DataGenerator(object):
                 if not cycle:
                     break
 
-        return paddle.batch(_reader, batch_size=batch_size)
+        return fluid.io.batch(_reader, batch_size=batch_size)
 
 
 def data_reader(batch_size,
