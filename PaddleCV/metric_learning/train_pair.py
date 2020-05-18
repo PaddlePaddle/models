@@ -115,9 +115,9 @@ def build_program(is_train, main_prog, startup_prog, args):
     model = models.__dict__[args.model]()
     with fluid.program_guard(main_prog, startup_prog):
         queue_capacity = 64
-        image = fluid.layers.data(
+        image = fluid.data(
                 name='image', shape=[None] + image_shape, dtype='float32')
-        label = fluid.layers.data(
+        label = fluid.data(
                 name='label', shape=[None, 1], dtype='int64')
         loader = fluid.io.DataLoader.from_generator(
                 feed_list=[image, label],
@@ -188,15 +188,15 @@ def train_async(args):
     logging.debug('after run startup program')
 
     if checkpoint is not None:
-        fluid.io.load_persistables(exe, checkpoint, main_program=train_prog)
+        fluid.load(program=train_prog, model_path=checkpoint, executor=exe)
 
     if pretrained_model:
 
         def if_exist(var):
             return os.path.exists(os.path.join(pretrained_model, var.name))
 
-        fluid.io.load_vars(
-            exe, pretrained_model, main_program=train_prog, predicate=if_exist)
+        fluid.load(program=train_prog, model_path=pretrained_model, executor=exe)
+
 
     if args.use_gpu:
         devicenum = get_gpu_num()
@@ -283,7 +283,7 @@ def train_async(args):
                                       str(iter_no))
                 if not os.path.isdir(model_path):
                     os.makedirs(model_path)
-                fluid.io.save_persistables(exe, model_path, main_program=train_prog)
+                fluid.save(program=train_prog, model_path=model_path)
 
             iter_no += 1
 
