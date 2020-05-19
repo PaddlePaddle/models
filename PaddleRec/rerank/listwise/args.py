@@ -24,7 +24,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--epochs", type=int, default=20, help="epochs")
     parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
-    parser.add_argument("--test_epoch", type=int, default=19, help="test_epoch")
+    parser.add_argument("--test_epoch", type=int, default=1, help="test_epoch")
     parser.add_argument('--use_gpu', type=int, default=0, help='whether using gpu')
     parser.add_argument('--model_dir', type=str, default='./model_dir', help='model_dir')
     parser.add_argument('--embd_dim', type=int, default=16, help='embd_dim')

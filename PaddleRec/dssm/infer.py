@@ -14,7 +14,6 @@ def infer(args):
     with fluid.scope_guard(fluid.Scope()):
         infer_program, feed_target_names, fetch_vars = fluid.io.load_inference_model(args.model_dir, exe)
         
-        #构造测试数据
         sample_size = 100
         l_Qs = []
         pos_l_Ds = []

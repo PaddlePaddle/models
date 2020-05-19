@@ -7,7 +7,6 @@
 ├── net.py				 # ESMM网络结构
 ├── train.py			 # ESMM模型训练脚本
 ├── infer.py			 # ESMM模型预测脚本
-├── reader.py			 # 数据预处理文件
 ├── utils.py			 # 通用函数
 ├── args.py				 # 参数脚本
 ├── get_data.sh			 # 生成训练数据脚本
@@ -16,6 +15,7 @@
 ├── cpu_train.sh		 # cpu训练shell脚本
 ├── gpu_infer.sh		 # gpu预测shell脚本
 ├── cpu_infer.sh		 # cpu预测shell脚本
+├── vocab_size.txt       #词汇表文件
 ```
 
 ## 简介
@@ -50,14 +50,14 @@ GPU环境
 在gpu_train.sh脚本文件中设置好数据路径、参数。
 
 ```shell
-CUDA_VISIBLE_DEVICES=0 python train.py	--use_gpu True\  #是否使用gpu
+CUDA_VISIBLE_DEVICES=0 python train.py	--use_gpu 1\  #是否使用gpu
                                         --epochs 100\  #训练轮次
                                         --batch_size 64\  #batch_size大小
                                         --embed_size 12\  #每个featsigns的embedding维度
                                         --cpu_num 2\  #cpu数量
                                         --model_dir ./model_dir \  #模型保存路径
                                         --train_data_path ./train_data \  #训练数据路径
-                                        --vocab_path ./vocab/vocab_size.txt #embedding词汇表大小路径
+                                        --vocab_path ./vocab_size.txt #embedding词汇表大小路径
 ```
 
 修改脚本的可执行权限并运行
@@ -71,14 +71,14 @@ CPU环境
 在cpu_train.sh脚本文件中设置好数据路径、参数。
 
 ```shell
-python train.py --use_gpu False\  #是否使用gpu
+python train.py --use_gpu 0\  #是否使用gpu
                 --epochs 100\  #训练轮次
                 --batch_size 64\  #batch_size大小
                 --embed_size 12\  #每个featsigns的embedding维度
                 --cpu_num 2\  #cpu数量
                 --model_dir ./model_dir \  #模型保存路径
                 --train_data_path ./train_data \  #训练数据路径
-                --vocab_path ./vocab/vocab_size.txt #embedding词汇表大小路径
+                --vocab_path ./vocab_size.txt #embedding词汇表大小路径
 ```
 
 修改脚本的可执行权限并运行
@@ -94,10 +94,10 @@ GPU环境
 在gpu_infer.sh脚本文件中设置好数据路径、参数。
 
 ```sh
-python infer.py --use_gpu True\  #是否使用gpu
+python infer.py --use_gpu 1\  #是否使用gpu
                 --batch_size 64\  #batch_size大小
                 --test_data_path ./test_data \  #训练数据路径
-                --vocab_path ./vocab/vocab_size.txt #embedding词汇表大小路径
+                --vocab_path ./vocab_size.txt #embedding词汇表大小路径
 ```
 
 修改脚本的可执行权限并运行
@@ -111,11 +111,11 @@ CPU环境
 在cpu_infer.sh脚本文件中设置好数据路径、参数。
 
 ```shell
-python infer.py --use_gpu False\  #是否使用gpu
+python infer.py --use_gpu 0\  #是否使用gpu
                 --batch_size 64\  #batch_size大小
                 --cpu_num 2\  #cpu数量
                 --test_data_path ./test_data \  #训练数据路径
-                --vocab_path ./vocab/vocab_size.txt #embedding词汇表大小路径
+                --vocab_path ./vocab_size.txt #embedding词汇表大小路径
 ```
 
 修改脚本的可执行权限并运行

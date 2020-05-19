@@ -7,7 +7,7 @@ import args
 
 class ESMM(object):
  
-    def fc(self,tag, data, out_dim, active='prelu'):
+    def fc(self, tag, data, out_dim, active='prelu'):
         
         init_stddev = 1.0
         scales = 1.0  / np.sqrt(data.shape[1])
@@ -35,7 +35,7 @@ class ESMM(object):
         
         return inputs
     
-    def net(self,inputs,vocab_size,embed_size):
+    def net(self, inputs, vocab_size, embed_size):
         
         emb = []
         for data in inputs[0:-2]:
@@ -47,7 +47,7 @@ class ESMM(object):
                                                             ),
                                 is_sparse=True)
 
-            field_emb = fluid.layers.sequence_pool(input=feat_emb,pool_type='sum')
+            field_emb = fluid.layers.sequence_pool(input=feat_emb, pool_type='sum')
             emb.append(field_emb)
         concat_emb = fluid.layers.concat(emb, axis=1)
          
@@ -60,7 +60,7 @@ class ESMM(object):
         # cvr
         cvr_fc1 = self.fc('cvr_fc1', concat_emb, 200, active)
         cvr_fc2 = self.fc('cvr_fc2', cvr_fc1, 80, active)
-        cvr_out = self.fc('cvr_out', cvr_fc2, 2,'softmax')
+        cvr_out = self.fc('cvr_out', cvr_fc2, 2, 'softmax')
     
         ctr_clk = inputs[-2]
         ctcvr_buy = inputs[-1]
@@ -69,10 +69,10 @@ class ESMM(object):
         cvr_prop_one = fluid.layers.slice(cvr_out, axes=[1], starts=[1], ends=[2])
         
         ctcvr_prop_one = fluid.layers.elementwise_mul(ctr_prop_one, cvr_prop_one)
-        ctcvr_prop = fluid.layers.concat(input=[1-ctcvr_prop_one,ctcvr_prop_one], axis = 1)
+        ctcvr_prop = fluid.layers.concat(input=[1 - ctcvr_prop_one, ctcvr_prop_one], axis = 1)
     
-        loss_ctr = paddle.fluid.layers.cross_entropy(input=ctr_out, label=ctr_clk)
-        loss_ctcvr = paddle.fluid.layers.cross_entropy(input=ctcvr_prop, label=ctcvr_buy)
+        loss_ctr = fluid.layers.cross_entropy(input=ctr_out, label=ctr_clk)
+        loss_ctcvr = fluid.layers.cross_entropy(input=ctcvr_prop, label=ctcvr_buy)
         cost = loss_ctr + loss_ctcvr
         avg_cost = fluid.layers.mean(cost)
 

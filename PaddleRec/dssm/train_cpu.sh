@@ -6,4 +6,4 @@ python dssm.py --use_gpu 0 \
                --L3_N 128 \
                --Neg 4 \
                --base_lr 0.01 \
-               --model_dir 'model_dir'
+               --model_dir ./model_dir

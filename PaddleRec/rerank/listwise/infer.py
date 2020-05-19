@@ -11,6 +11,30 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
+user_id = 0
+class Dataset(object):
+    def _reader_creator(self):
+        def reader():
+            global user_id
+            user_slot_name = []
+            for j in range(args.batch_size):
+                user_slot_name.append([user_id])
+                user_id += 1
+            
+            item_slot_name = np.random.randint(args.item_vocab, size=(args.batch_size, args.item_len)).tolist()
+            lenght = [args.item_len]*args.batch_size
+            label = np.random.randint(2, size=(args.batch_size, args.item_len)).tolist()
+            output = []
+            output.append(user_slot_name)
+            output.append(item_slot_name)
+            output.append(lenght)
+            output.append(label)
+
+            yield output
+        return reader
+    def get_test_data(self):
+        return self._reader_creator()
+
 def set_zero(var_name, scope=fluid.global_scope(), place=fluid.CPUPlace(), param_type="int64"):
     """
     Set tensor of a Variable to zero.
@@ -41,42 +65,23 @@ def run_infer(args):
             for var in auc_states:  # reset auc states
                 set_zero(var.name, scope=inference_scope, place=place)
 
-            # Build a random data set.
-            user_slot_names = []
-            item_slot_names = []
-            lens = []
-            labels = []
-            user_id = 0
-            for i in range(args.sample_size):
-                user_slot_name = []
-                for j in range(args.batch_size):
-                    user_slot_name.append(user_id)
-                    user_id += 1
-                user_slot_names.append(user_slot_name)
-
-                item_slot_name = np.random.randint(args.item_vocab, size=(args.batch_size, args.item_len))
-                item_slot_names.append(item_slot_name)
-                lenght = np.array([args.item_len]*args.batch_size)
-                lens.append(lenght)
-                label = np.random.randint(2, size=(args.batch_size, args.item_len))
-                labels.append(label)
+            test_data_generator = Dataset()
+            test_reader = fluid.io.batch(test_data_generator.get_test_data(), batch_size=args.batch_size)
+            loader = fluid.io.DataLoader.from_generator(feed_list=inputs, capacity=args.batch_size, iterable=True)
+            loader.set_sample_list_generator(test_reader, places=place)
 
             for i in range(args.sample_size):
-                begin = time.time()
-                loss_val, auc = exe.run(test_program,
-                                    feed={
-                                        "user_slot_names": np.array(user_slot_names[i]).reshape(args.batch_size, 1),
-                                        "item_slot_names": item_slot_names[i].astype('int64'),
-                                        "lens": lens[i].astype('int64'),
-                                        "labels": labels[i].astype('int64')
-                                    },
-                                    return_numpy=True,
-                                    fetch_list=[loss.name, auc_val])
-                end = time.time()
-                logger.info("batch_time: {:.5f}s, loss: {:.5f}, auc: {:.5f}".format(
-                    end-begin, float(np.array(loss_val)), float(np.array(auc))))
+                for batch_id, data in enumerate(loader()):
+                    begin = time.time()
+                    loss_val, auc = exe.run(program=fluid.default_main_program(),
+                            feed=data,
+                            fetch_list=[loss.name, auc_val],
+                            return_numpy=True)
+                    end = time.time()
+                    logger.info("batch_id: {}, batch_time: {:.5f}s, loss: {:.5f}, auc: {:.5f}".format(
+                        batch_id, end-begin, float(np.array(loss_val)), float(np.array(auc))))
 
 if __name__ == "__main__":
-  
     args = args.parse_args()
+    logger.info("use_gpu: {}, model_dir: {}, test_epoch: {}".format(args.use_gpu, args.model_dir, args.test_epoch))
     run_infer(args)

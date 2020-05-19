@@ -6,4 +6,4 @@ CUDA_VISIBLE_DEVICES=0 python dssm.py --use_gpu 1 \
                                    --L3_N 128 \
                                    --Neg 4 \
                                    --base_lr 0.01 \
-                                   --model_dir 'model_dir'
+                                   --model_dir ./model_dir

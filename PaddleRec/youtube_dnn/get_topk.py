@@ -12,7 +12,7 @@ def cos_sim(vector_a, vector_b):
     sim = 0.5 + 0.5 * cos
     return sim
 
-def get_topK(args, K):
+def get_topK(args):
     video_vec = pd.read_csv(args.video_vec_path, header=None)
     user_vec = pd.read_csv(args.user_vec_path, header=None)
 
@@ -24,11 +24,11 @@ def get_topK(args, K):
 
         tmp_list=copy.deepcopy(user_video_sim_list)
         tmp_list.sort()
-        max_sim_index=[user_video_sim_list.index(one) for one in tmp_list[::-1][:K]]
+        max_sim_index=[user_video_sim_list.index(one) for one in tmp_list[::-1][:args.topk]]
 
         print("user:{0}, top K videos:{1}".format(i, max_sim_index))
         user_video_sim_list = []
 
 if __name__ == "__main__":
     args = args.parse_args()
-    get_topK(args, 5)
+    get_topK(args)

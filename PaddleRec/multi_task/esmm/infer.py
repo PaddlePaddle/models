@@ -21,7 +21,7 @@ def set_zero(place):
             param_array = np.zeros(param._get_dims()).astype("int64")
             param.set(param_array, place)
 
-def run_infer(args,model_path,test_data_path,vocab_size):
+def run_infer(args, model_path, test_data_path, vocab_size):
     place = fluid.CPUPlace()
     esmm_model = ESMM()
     
@@ -33,10 +33,10 @@ def run_infer(args,model_path,test_data_path,vocab_size):
             inputs = esmm_model.input_data()
             avg_cost,auc_ctr,auc_ctcvr= esmm_model.net(inputs, vocab_size, args.embed_size)
             
-            dataset, file_list = utils.get_dataset(inputs, test_data_path,args.batch_size,args.cpu_num)
+            dataset, file_list = utils.get_dataset(inputs, test_data_path, args.batch_size,args.cpu_num)
             
             exe = fluid.Executor(place)
-            fluid.load(fluid.default_main_program(),os.path.join(model_path, "checkpoint"), exe)
+            fluid.load(fluid.default_main_program(), os.path.join(model_path, "checkpoint"), exe)
             
             set_zero(place)
             
