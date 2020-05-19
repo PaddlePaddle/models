@@ -149,15 +149,17 @@ class DTrainer():
 
     def gradient_penalty(self, f, real, fake, cfg=None, name=None):
         def _interpolate(a, b):
-            shape = [a.shape[0]]
+            a_shape = fluid.layers.shape(a)
             if cfg.enable_ce:
-                  alpha = fluid.layers.uniform_random_batch_size_like(
-                    input=a, shape=shape, min=0.0, max=1.0, seed=1)
-            else:      
-                  alpha = fluid.layers.uniform_random_batch_size_like(
-                    input=a, shape=shape, min=0.0, max=1.0)
+                alpha = fluid.layers.uniform_random(
+                    shape=[a_shape[0]], min=0.0, max=1.0, seed=1)
+            else:
+                alpha = fluid.layers.uniform_random(
+                    shape=[a_shape[0]], min=0.0, max=1.0)
 
-            inner = fluid.layers.elementwise_mul(b, (1.0-alpha), axis=0) + fluid.layers.elementwise_mul(a, alpha, axis=0)
+            inner = fluid.layers.elementwise_mul(
+                b, (1.0 - alpha), axis=0) + fluid.layers.elementwise_mul(
+                    a, alpha, axis=0)
             return inner
 
         x = _interpolate(real, fake)
@@ -316,7 +318,7 @@ class StarGAN(object):
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
             for data in loader():
-                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter: # used for benchmark
+                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter:  # used for benchmark
                     return
                 s_time = time.time()
                 d_loss_real, d_loss_fake, d_loss, d_loss_cls, d_loss_gp = exe.run(
@@ -355,7 +357,7 @@ class StarGAN(object):
                 batch_id += 1
                 # used for ce
                 if self.cfg.enable_ce and batch_id == 100:
-                   break
+                    break
 
                 total_train_batch += 1  # used for benchmark
                 # profiler tools
@@ -380,22 +382,28 @@ class StarGAN(object):
                     if self.cfg.use_gpu else fluid.cpu_places())
                 test_program = gen_trainer.infer_program
                 utility.save_test_image(epoch_id, self.cfg, exe, place,
-                                        test_program, gen_trainer,
-                                        test_loader)
+                                        test_program, gen_trainer, test_loader)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
-                                    "net_G")
-                utility.checkpoints(epoch_id, self.cfg, dis_trainer,
-                                    "net_D")
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer, "net_G")
+                utility.checkpoints(epoch_id, self.cfg, dis_trainer, "net_D")
             # used for continuous evaluation
             if self.cfg.enable_ce:
-                device_num = fluid.core.get_cuda_device_count() if self.cfg.use_gpu else 1
-                print("kpis\tstargan_g_loss_fake_card{}\t{}".format(device_num, g_loss_fake[0]))
-                print("kpis\tstargan_g_loss_rec_card{}\t{}".format(device_num, g_loss_rec[0]))
-                print("kpis\tstargan_g_loss_cls_card{}\t{}".format(device_num, g_loss_cls[0]))
-                print("kpis\tstargan_d_loss_real_card{}\t{}".format(device_num, d_loss_real[0]))
-                print("kpis\tstargan_d_loss_fake_card{}\t{}".format(device_num,d_loss_fake[0]))
-                print("kpis\tstargan_d_loss_cls_card{}\t{}".format(device_num, d_loss_cls[0]))
-                print("kpis\tstargan_d_loss_gp_card{}\t{}".format(device_num,d_loss_gp[0]))
-                print("kpis\tstargan_Batch_time_cost_card{}\t{}".format(device_num,batch_time))
+                device_num = fluid.core.get_cuda_device_count(
+                ) if self.cfg.use_gpu else 1
+                print("kpis\tstargan_g_loss_fake_card{}\t{}".format(
+                    device_num, g_loss_fake[0]))
+                print("kpis\tstargan_g_loss_rec_card{}\t{}".format(
+                    device_num, g_loss_rec[0]))
+                print("kpis\tstargan_g_loss_cls_card{}\t{}".format(
+                    device_num, g_loss_cls[0]))
+                print("kpis\tstargan_d_loss_real_card{}\t{}".format(
+                    device_num, d_loss_real[0]))
+                print("kpis\tstargan_d_loss_fake_card{}\t{}".format(
+                    device_num, d_loss_fake[0]))
+                print("kpis\tstargan_d_loss_cls_card{}\t{}".format(
+                    device_num, d_loss_cls[0]))
+                print("kpis\tstargan_d_loss_gp_card{}\t{}".format(device_num,
+                                                                  d_loss_gp[0]))
+                print("kpis\tstargan_Batch_time_cost_card{}\t{}".format(
+                    device_num, batch_time))

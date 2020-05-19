@@ -25,6 +25,13 @@
 
 - 提供了适合视频分类和动作定位任务的通用骨架代码，用户可一键式高效配置模型完成训练和评测。
 
+### 推荐用法
+
+- 视频分类共开源7个模型，可分为：端到端模型、序列模型。端到端模型：TSN推荐在时序不敏感视频场景（比如互联网视频场景）使用；TSM、StNet推荐在时序敏感视频场景（比如Kinetics数据集）使用；Non-local模型计算量较大，在科研场景推荐。序列模型：Attention LSTM，Attention Cluster和NeXtVLAD 整体性能接近，但是网络结构不同，推荐集成多个模型使用。
+
+- 视频动作定位共开源3个模型，视频动作定位推荐使用CTCN模型，时序提名生成推荐使用BMN模型。
+
+
 ## 安装
 
 在当前模型库运行样例代码需要PaddlePaddle Fluid v.1.6.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
@@ -99,12 +106,19 @@ python train.py --model_name=STNET \
 bash run.sh train STNET ./configs/stnet.yaml
 ```
 
+多卡分布式训练 + GPU视频解码和预处理（仅限TSN模型）
+
+``` bash
+bash run_dist.sh train TSN ./configs/tsn_dist_and_dali.yaml
+```
+
 - 请根据`CUDA_VISIBLE_DEVICES`指定卡数修改`config`文件中的`num_gpus`和`batch_size`配置。
 
 - 使用CPU训练时请在run.sh中设置use\_gpu=False，使用GPU训练时则设置use\_gpu=True
 
 - 上述启动脚本run.sh运行时需要指定任务类型、模型名、配置文件。训练、评估和预测对应的任务类型分别是train，eval和predict。模型名称则是[AttentionCluster, AttentionLSTM, NEXTVLAD, NONLOCAL, STNET, TSN, TSM, CTCN]中的任何一个。配置文件全部在PaddleVideo/configs目录下，根据模型名称选择对应的配置文件即可。具体使用请参见各模型的说明文档。
 
+- 目前针对TSN模型，做了GPU解码和数据预处理的优化，能明显提升训练速度，具体请参考[TSN](./models/tsn/README.md)
 
 ## 模型库结构
 

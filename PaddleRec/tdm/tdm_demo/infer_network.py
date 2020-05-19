@@ -41,26 +41,23 @@ class TdmInferNet(object):
         self.input_trans_net = InputTransNet(args)
 
     def input_data(self):
-        input_emb = fluid.layers.data(
+        input_emb = fluid.data(
             name="input_emb",
-            shape=[self.input_embed_size],
-            dtype="float32",
-        )
+            shape=[None, self.input_embed_size],
+            dtype="float32", )
 
         # first_layer 与 first_layer_mask 对应着infer起始层的节点
-        first_layer = fluid.layers.data(
+        first_layer = fluid.data(
             name="first_layer_node",
-            shape=[1],
+            shape=[None, 1],
             dtype="int64",
-            lod_level=1,
-        )
+            lod_level=1, )
 
-        first_layer_mask = fluid.layers.data(
+        first_layer_mask = fluid.data(
             name="first_layer_node_mask",
-            shape=[1],
+            shape=[None, 1],
             dtype="int64",
-            lod_level=1,
-        )
+            lod_level=1, )
 
         inputs = [input_emb] + [first_layer] + [first_layer_mask]
         return inputs
@@ -125,28 +122,27 @@ class TdmInferNet(object):
                 size=[self.node_nums, self.node_embed_size],
                 param_attr=fluid.ParamAttr(name="TDM_Tree_Emb"))
 
-            input_fc_out = self.input_trans_net.layer_fc_infer(
-                input_trans_emb, layer_idx)
+            input_fc_out = self.input_trans_net.layer_fc_infer(input_trans_emb,
+                                                               layer_idx)
 
             # 过每一层的分类器
-            layer_classifier_res = self.layer_classifier.classifier_layer_infer(input_fc_out,
-                                                                                node_emb,
-                                                                                layer_idx)
+            layer_classifier_res = self.layer_classifier.classifier_layer_infer(
+                input_fc_out, node_emb, layer_idx)
 
             # 过最终的判别分类器
-            tdm_fc = fluid.layers.fc(input=layer_classifier_res,
-                                     size=self.label_nums,
-                                     act=None,
-                                     num_flatten_dims=2,
-                                     param_attr=fluid.ParamAttr(
-                                         name="tdm.cls_fc.weight"),
-                                     bias_attr=fluid.ParamAttr(name="tdm.cls_fc.bias"))
+            tdm_fc = fluid.layers.fc(
+                input=layer_classifier_res,
+                size=self.label_nums,
+                act=None,
+                num_flatten_dims=2,
+                param_attr=fluid.ParamAttr(name="tdm.cls_fc.weight"),
+                bias_attr=fluid.ParamAttr(name="tdm.cls_fc.bias"))
 
             prob = fluid.layers.softmax(tdm_fc)
             positive_prob = fluid.layers.slice(
                 prob, axes=[2], starts=[1], ends=[2])
-            prob_re = fluid.layers.reshape(
-                positive_prob, [-1, current_layer_node_num])
+            prob_re = fluid.layers.reshape(positive_prob,
+                                           [-1, current_layer_node_num])
 
             # 过滤掉padding产生的无效节点（node_id=0）
             node_zero_mask = fluid.layers.cast(current_layer_node, 'bool')
@@ -161,11 +157,10 @@ class TdmInferNet(object):
 
             # index_sample op根据下标索引tensor对应位置的值
             # 若paddle版本>2.0，调用方式为paddle.index_sample
-            top_node = fluid.contrib.layers.index_sample(
-                current_layer_node, topk_i)
+            top_node = fluid.contrib.layers.index_sample(current_layer_node,
+                                                         topk_i)
             prob_re_mask = prob_re * current_layer_child_mask  # 过滤掉非叶子节点
-            topk_value = fluid.contrib.layers.index_sample(
-                prob_re_mask, topk_i)
+            topk_value = fluid.contrib.layers.index_sample(prob_re_mask, topk_i)
             node_score.append(topk_value)
             node_list.append(top_node)
 
@@ -190,7 +185,8 @@ class TdmInferNet(object):
         res_node = fluid.layers.reshape(res_layer_node, [-1, self.topK, 1])
 
         # 利用Tree_info信息，将node_id转换为item_id
-        tree_info = fluid.default_main_program().global_block().var("TDM_Tree_Info")
+        tree_info = fluid.default_main_program().global_block().var(
+            "TDM_Tree_Info")
         res_node_emb = fluid.layers.gather_nd(tree_info, res_node)
 
         res_item = fluid.layers.slice(

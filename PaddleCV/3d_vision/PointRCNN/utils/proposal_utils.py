@@ -257,7 +257,7 @@ if __name__ == "__main__":
     # cfg.RPN.NMS_TYPE = 'rotate'
     proposal_func = get_proposal_func(cfg)
 
-    x = fluid.layers.data(name="x", shape=[256, 84], dtype='float32')
+    x = fluid.data(name="x", shape=[None, 256, 84], dtype='float32')
     proposal = fluid.default_main_program().current_block().create_var(
                     name="proposal", dtype='float32', shape=[256, 7])
     fluid.layers.py_func(proposal_func, x, proposal)

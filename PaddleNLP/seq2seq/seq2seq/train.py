@@ -97,14 +97,14 @@ def main():
                 dropout=dropout)
         loss = model.build_graph()
         inference_program = train_program.clone(for_test=True)
-        fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(
-            clip_norm=max_grad_norm))
+        clip=fluid.clip.GradientClipByGlobalNorm(
+            clip_norm=max_grad_norm)
         lr = args.learning_rate
         opt_type = args.optimizer
         if opt_type == "sgd":
-            optimizer = fluid.optimizer.SGD(lr)
+            optimizer = fluid.optimizer.SGD(lr, grad_clip=clip)
         elif opt_type == "adam":
-            optimizer = fluid.optimizer.Adam(lr)
+            optimizer = fluid.optimizer.Adam(lr, grad_clip=clip)
         else:
             print("only support [sgd|adam]")
             raise Exception("opt type not support")
