@@ -35,9 +35,8 @@ GPU环境
 
 ```sh
 CUDA_VISIBLE_DEVICES=0 python train.py --use_gpu 1\ #使用gpu
-                                    --epochs 3\ 
                                     --batch_size 32\
-                                    --model_dir './model_dir'\ #模型保存路径
+                                    --model_dir ./model_dir\ #模型保存路径
                                     --embd_dim 16\  #embedding维度
                                     --hidden_size 128\ #biRNN隐层大小
                                     --item_vocab 200\ #item词典大小
@@ -60,9 +59,8 @@ CPU环境
 
 ```sh
 python train.py --use_gpu 0\ #使用cpu
-                --epochs 3\ 
                 --batch_size 32\
-                --model_dir './model_dir'\ #模型保存路径
+                --model_dir ./model_dir\ #模型保存路径
                 --embd_dim 16\  #embedding维度
                 --hidden_size 128\ #biRNN隐层大小
                 --item_vocab 200\ #item词典大小
@@ -87,8 +85,8 @@ GPU环境
 
 ```sh
 CUDA_VISIBLE_DEVICES=0 python infer.py --use_gpu 1 \ #使用gpu
-                                        --model_dir './model_dir'\
-                                        --test_epoch 19 #选择哪一轮的模型参数
+                                        --model_dir ./model_dir\
+                                        --test_epoch 1 #选择哪一轮的模型参数
 
 ```
 

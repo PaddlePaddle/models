@@ -108,12 +108,3 @@ for i in range(sample_size):
 feed_var_names = ["query", "doc_pos"]
 fetch_vars = [R_Q_D_p]
 fluid.io.save_inference_model(args.model_dir, feed_var_names, fetch_vars, exe)
-
-
-
-
-
-
-
-
-

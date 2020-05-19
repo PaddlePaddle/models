@@ -10,9 +10,9 @@ def train(args, vocab_size, train_data_path):
     esmm_model = ESMM()
     inputs = esmm_model.input_data()
 
-    dataset, file_list = utils.get_dataset(inputs, train_data_path,args.batch_size,args.cpu_num)
+    dataset, file_list = utils.get_dataset(inputs, train_data_path, args.batch_size,args.cpu_num)
     
-    avg_cost,auc_ctr,auc_ctcvr= esmm_model.net(inputs, vocab_size, args.embed_size)
+    avg_cost, auc_ctr, auc_ctcvr = esmm_model.net(inputs, vocab_size, args.embed_size)
     optimizer = fluid.optimizer.Adam()
     optimizer.minimize(avg_cost)
     
@@ -29,11 +29,11 @@ def train(args, vocab_size, train_data_path):
         dataset.set_filelist(file_list)
         exe.train_from_dataset(program=fluid.default_main_program(),
                                    dataset=dataset,
-                                   fetch_list=[avg_cost,auc_ctr,auc_ctcvr],
-                                   fetch_info=['epoch %d batch loss' % (epoch), "auc_ctr","auc_ctcvr"],
+                                   fetch_list=[avg_cost, auc_ctr, auc_ctcvr],
+                                   fetch_info=['epoch %d batch loss' % (epoch), "auc_ctr", "auc_ctcvr"],
                                    print_period=20,
                                    debug=False)
-        model_dir = os.path.join(args.model_dir,'epoch_' + str(epoch + 1), "checkpoint")
+        model_dir = os.path.join(args.model_dir, 'epoch_' + str(epoch + 1), "checkpoint")
         main_program = fluid.default_main_program()
         fluid.io.save(main_program,model_dir)
 

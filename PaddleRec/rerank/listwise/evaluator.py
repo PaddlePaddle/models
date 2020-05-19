@@ -16,9 +16,6 @@ class BiRNN(object):
     def default_normal_initializer(self, nf=128):
         return fluid.initializer.TruncatedNormal(loc=0.0, scale=np.sqrt(1.0/nf))
 
-    def default_param_clip(self):
-        return fluid.clip.GradientClipByValue(1.0)
-
     def default_regularizer(self):
         return None
 
@@ -27,22 +24,18 @@ class BiRNN(object):
                             size=size,
                             num_flatten_dims=num_flatten_dims,
                             param_attr=fluid.ParamAttr(initializer=self.default_normal_initializer(size),
-                                                    gradient_clip=self.default_param_clip(),
                                                     regularizer=self.default_regularizer()),
                             bias_attr=fluid.ParamAttr(initializer=fluid.initializer.Constant(value=0.0),
-                                                    gradient_clip=self.default_param_clip(),
                                                     regularizer=self.default_regularizer()),
                             act=act,
                             name=name)
 
     def default_embedding(self, data, vocab_size, embed_size):
-        gradient_clip = self.default_param_clip()
         reg = fluid.regularizer.L2Decay(1e-5)   # IMPORTANT, to prevent overfitting.
         embed = fluid.embedding(input=data,
                                 size=[vocab_size, embed_size],
                                 param_attr=fluid.ParamAttr(initializer=fluid.initializer.Xavier(),
-                                                    gradient_clip=gradient_clip,
-                                                    regularizer=reg),
+                                regularizer=reg),
                                 is_sparse=True)
 
         return embed
@@ -51,10 +44,8 @@ class BiRNN(object):
         return fluid.layers.dynamic_gru(input=data,
                                         size=nf,
                                         param_attr=fluid.ParamAttr(initializer=self.default_normal_initializer(nf),
-                                                            gradient_clip=self.default_param_clip(),
                                                             regularizer=self.default_regularizer()),
                                         bias_attr=fluid.ParamAttr(initializer=fluid.initializer.Constant(value=0.0),
-                                                            gradient_clip=self.default_param_clip(),
                                                             regularizer=self.default_regularizer()),
                                         is_reverse=is_reverse,
                                         h_0=h_0)
