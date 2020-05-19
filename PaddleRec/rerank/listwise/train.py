@@ -63,7 +63,7 @@ def train(args):
         #save model
         model_dir = os.path.join(args.model_dir, 'epoch_' + str(epoch + 1), "checkpoint")
         main_program = fluid.default_main_program()
-        fluid.io.save(main_program, model_dir)
+        fluid.save(main_program, model_dir)
 
 if __name__ == "__main__":
     args = args.parse_args()

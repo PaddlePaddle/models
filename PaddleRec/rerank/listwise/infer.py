@@ -11,7 +11,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
-def set_zero(var_name,scope=fluid.global_scope(), place=fluid.CPUPlace(),param_type="int64"):
+def set_zero(var_name, scope=fluid.global_scope(), place=fluid.CPUPlace(), param_type="int64"):
     """
     Set tensor of a Variable to zero.
     Args:

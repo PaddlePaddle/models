@@ -17,7 +17,7 @@
 
 ## 简介
 
-[《Sequential Evaluation and Generation Framework for Combinatorial Recommender System》]( https://arxiv.org/pdf/1902.00245.pdf)是百度2019年发布的推荐系统融合模型，用于优化推荐序列的整体性能（如总点击），该模型由Generator和Evaluator两部分组成，Generator负责生成若干个候选序列，Evaluator负责冲候选序列中筛选出最好的序列推荐给用户，达到最大化序列整体性能的目的。
+[《Sequential Evaluation and Generation Framework for Combinatorial Recommender System》]( https://arxiv.org/pdf/1902.00245.pdf)是百度2019年发布的推荐系统融合模型，用于优化推荐序列的整体性能（如总点击），该模型由Generator和Evaluator两部分组成，Generator负责生成若干个候选序列，Evaluator负责从候选序列中筛选出最好的序列推荐给用户，达到最大化序列整体性能的目的。
 
 本项目在paddlepaddle上实现该融合模型的Evaluator部分，构造数据集验证模型的正确性。
 
