@@ -20,7 +20,6 @@ PaddlePaddle 提供了丰富的计算单元，使得用户可以采用模块化�
   * [NLP 系统应用](#NLP-系统应用)
 * [智能推荐(PaddleRec)](#PaddleRec)
 * [智能语音(PaddleSpeech)](#PaddleSpeech)
-* [其他模型](#其他模型)
 * [快速下载模型库](#快速下载模型库)
 
 ## PaddleCV
@@ -275,15 +274,6 @@ PaddleCV全面开源了视频分类、动作定位 和 目标跟踪等视频任�
 ## 基于动态图实现的模型
 
 自 PaddlePaddle fluid 1.5 版本正式支持动态图模式以来，模型库新增若干基于动态图实现的模型，请参考 [dygraph](https://github.com/PaddlePaddle/models/blob/develop/dygraph/)，这些模型可以作为了解和使用 PaddlePaddle 动态图模式的示例。目前 PaddlePaddle 的动态图功能正在活跃开发中，API 可能发生变动，欢迎用户试用并给我们反馈。
-
-## 其他模型
-
-| 模型名称                                                     | 模型简介                                                     |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [DQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | value-based 强化学习算法，第一个成功地将深度学习和强化学习结合起来的模型 |
-| [DoubleDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 将 Double Q 的想法应用在 DQN 上，解决过优化问题              |
-| [DuelingDQN](https://github.com/PaddlePaddle/models/blob/develop/legacy/PaddleRL/DeepQNetwork/README_cn.md) | 改进了 DQN 模型，提高了模型的性能                            |
-| [CIKM2019-MONOPOLY](https://github.com/PaddlePaddle/models/tree/develop/PaddleST/Research/CIKM2019-MONOPOLY) | Monopoly 是一个实用的 POI 商业智能算法，能够利用少量的房产价格，对大量其他的固定资产进行价值估计。 该算法全面适配 MapReduce 的分布式计算框架，能够快速用于工业部署。 |
 
 
 ## 快速下载模型库
