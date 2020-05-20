@@ -1,6 +1,9 @@
 PaddleRec
 =========
 
+models/PaddleRec只是提供了经典推荐算法的Paddle实现，我们已经开源了功能更强大的工具组件[PaddlePaddle/PaddleRec](https://github.com/PaddlePaddle/PaddleRec) 打通了推荐算法+分布式训练全流程，并提供了高级API，在单机和分布式间可以实现无缝切换。后续我们将在[PaddlePaddle/PaddleRec](https://github.com/PaddlePaddle/PaddleRec) Repo中发布新的模型和功能，models/PaddleRec不再更新维护。
+
+
 个性化推荐
 -------
 
@@ -9,7 +12,7 @@ PaddleRec
 在工业可用的推荐系统中，推荐策略一般会被划分为多个模块串联执行。以新闻推荐系统为例，存在多个可以使用深度学习技术的环节，例如新闻的内容理解--标签标注，个性化新闻召回，个性化匹配与排序，融合等。PaddlePaddle对推荐算法的训练提供了完整的支持，并提供了多种模型配置供用户选择。
 
 
-models/PaddleRec只是提供了经典推荐算法的Paddle实现，我们已经开源了功能更强大的工具组件[PaddlePaddle/PaddleRec](https://github.com/PaddlePaddle/PaddleRec), 打通了推荐算法+分布式训练全流程，并提供了高级API，在单机和分布式间可以实现无缝切换。后续我们将在PaddlePaddle/PaddleRec Repo中发布新的模型和功能，models/PaddleRec不再更新维护。
+
 
 PaddleRec全景图：
 
