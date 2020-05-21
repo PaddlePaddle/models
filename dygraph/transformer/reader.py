@@ -306,6 +306,7 @@ class DataProcessor(object):
     :param seed: The seed for random.
     :type seed: int
     """
+
     def __init__(self,
                  src_vocab_fpath,
                  trg_vocab_fpath,
@@ -360,21 +361,23 @@ class DataProcessor(object):
 
     def load_src_trg_ids(self, fpattern, tar_fname):
         converters = [
-            Converter(vocab=self._src_vocab,
-                      beg=self._bos_idx,
-                      end=self._eos_idx,
-                      unk=self._unk_idx,
-                      delimiter=self._token_delimiter,
-                      add_beg=False)
+            Converter(
+                vocab=self._src_vocab,
+                beg=self._bos_idx,
+                end=self._eos_idx,
+                unk=self._unk_idx,
+                delimiter=self._token_delimiter,
+                add_beg=False)
         ]
         if not self._only_src:
             converters.append(
-                Converter(vocab=self._trg_vocab,
-                          beg=self._bos_idx,
-                          end=self._eos_idx,
-                          unk=self._unk_idx,
-                          delimiter=self._token_delimiter,
-                          add_beg=True))
+                Converter(
+                    vocab=self._trg_vocab,
+                    beg=self._bos_idx,
+                    end=self._eos_idx,
+                    unk=self._unk_idx,
+                    delimiter=self._token_delimiter,
+                    add_beg=True))
 
         converters = ComposedConverter(converters)
 
@@ -402,9 +405,8 @@ class DataProcessor(object):
             f = tarfile.open(fpaths[0], "rb")
             for line in f.extractfile(tar_fname):
                 fields = line.strip(b"\n").split(self._field_delimiter)
-                if (not self._only_src
-                        and len(fields) == 2) or (self._only_src
-                                                  and len(fields) == 1):
+                if (not self._only_src and len(fields) == 2) or (
+                        self._only_src and len(fields) == 1):
                     yield fields
         else:
             for fpath in fpaths:
@@ -414,9 +416,8 @@ class DataProcessor(object):
                 with open(fpath, "rb") as f:
                     for line in f:
                         fields = line.strip(b"\n").split(self._field_delimiter)
-                        if (not self._only_src
-                                and len(fields) == 2) or (self._only_src
-                                                          and len(fields) == 1):
+                        if (not self._only_src and len(fields) == 2) or (
+                                self._only_src and len(fields) == 1):
                             yield fields
 
     @staticmethod
@@ -512,8 +513,8 @@ class DataProcessor(object):
             for item in data_reader():
                 inst_num_per_part = len(item) // count
                 for i in range(count):
-                    yield item[inst_num_per_part * i:inst_num_per_part *
-                               (i + 1)]
+                    yield item[inst_num_per_part * i:inst_num_per_part * (i + 1
+                                                                          )]
 
         return __impl__
 

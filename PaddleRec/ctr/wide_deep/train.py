@@ -15,8 +15,8 @@ logger.setLevel(logging.INFO)
 def train(args, train_data_path):
     wide_deep_model = wide_deep()
     inputs = wide_deep_model.input_data()
-    train_data_generator = utils.CriteoDataset()
-    train_reader = paddle.batch(train_data_generator.train(train_data_path), batch_size=args.batch_size)
+    train_data_generator = utils.Dataset()
+    train_reader = fluid.io.batch(train_data_generator.train(train_data_path), batch_size=args.batch_size)
     
     loss, acc, auc, batch_auc, auc_states  = wide_deep_model.model(inputs, args.hidden1_units, args.hidden2_units, args.hidden3_units)
     optimizer = fluid.optimizer.AdagradOptimizer(learning_rate=0.01)
@@ -25,13 +25,16 @@ def train(args, train_data_path):
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    feeder = fluid.DataFeeder(feed_list=inputs, place=place)
+
+    loader = fluid.io.DataLoader.from_generator(
+        feed_list=inputs, capacity=args.batch_size, iterable=True)
+    loader.set_sample_list_generator(train_reader, places=place)
     
     for epoch in range(args.epochs):
-        for batch_id, data in enumerate(train_reader()):
+        for batch_id, data in enumerate(loader()):
             begin = time.time()
             loss_val, acc_val, auc_val = exe.run(program=fluid.default_main_program(),
-                    feed=feeder.feed(data),
+                    feed=data,
                     fetch_list=[loss.name, acc.name, auc.name],
                     return_numpy=True)
             end = time.time()

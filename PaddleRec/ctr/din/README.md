@@ -8,8 +8,6 @@
 ├── train.py             # 训练脚本
 ├── infer.py             # 预测脚本
 ├── network.py           # 网络结构
-├── cluster_train.py     # 多机训练
-├── cluster_train.sh     # 多机训练脚本
 ├── reader.py            # 和读取数据相关的函数
 ├── data/
     ├── build_dataset.py    # 文本数据转化为paddle数据
@@ -128,13 +126,4 @@ CUDA_VISIBLE_DEVICES=3 python infer.py --model_path 'din_amazon/global_step_4000
 ## 预测结果示例
 ```text
 2019-02-22 11:22:58,804 - INFO - TEST --> loss: [0.47005194] auc:0.863794952818
-```
-
-
-## 多机训练
-可参考cluster_train.py 配置多机环境
-
-运行命令本地模拟多机场景
-```
-sh cluster_train.sh
 ```

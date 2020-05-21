@@ -194,7 +194,7 @@ def build(settings, mode='train'):
             pipe, ['feed_image', 'feed_label'],
             size=len(pipe),
             dynamic_shape=True,
-            fill_last_batch=False,
+            fill_last_batch=True,
             last_batch_padded=True)
 
     file_list = os.path.join(file_root, 'train_list.txt')

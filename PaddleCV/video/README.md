@@ -25,6 +25,13 @@
 
 - 提供了适合视频分类和动作定位任务的通用骨架代码，用户可一键式高效配置模型完成训练和评测。
 
+### 推荐用法
+
+- 视频分类共开源7个模型，可分为：端到端模型、序列模型。端到端模型：TSN推荐在时序不敏感视频场景（比如互联网视频场景）使用；TSM、StNet推荐在时序敏感视频场景（比如Kinetics数据集）使用；Non-local模型计算量较大，在科研场景推荐。序列模型：Attention LSTM，Attention Cluster和NeXtVLAD 整体性能接近，但是网络结构不同，推荐集成多个模型使用。
+
+- 视频动作定位共开源3个模型，视频动作定位推荐使用CTCN模型，时序提名生成推荐使用BMN模型。
+
+
 ## 安装
 
 在当前模型库运行样例代码需要PaddlePaddle Fluid v.1.6.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。

@@ -221,7 +221,7 @@ def train(args):
             args.embedding_size,
             is_sparse=args.is_sparse,
             neg_num=args.nce_num)
-	data_loader.set_sample_generator(word2vec_reader.train(), batch_size=args.batch_size, drop_last=True)
+        data_loader.set_sample_generator(word2vec_reader.train(), batch_size=args.batch_size, drop_last=True)
     else:
         np_power = np.power(np.array(word2vec_reader.id_frequencys), 0.75)
         id_frequencys_pow = np_power / np_power.sum()

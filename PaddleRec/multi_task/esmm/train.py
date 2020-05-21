@@ -6,9 +6,6 @@ import paddle
 import utils
 import args
 
-
-
-
 def train(args, vocab_size, train_data_path):
     esmm_model = ESMM()
     inputs = esmm_model.input_data()
@@ -16,8 +13,6 @@ def train(args, vocab_size, train_data_path):
     dataset, file_list = utils.get_dataset(inputs, train_data_path,args.batch_size,args.cpu_num)
     
     avg_cost,auc_ctr,auc_ctcvr= esmm_model.net(inputs, vocab_size, args.embed_size)
-    
-    # 选择反向更新优化策略
     optimizer = fluid.optimizer.Adam()
     optimizer.minimize(avg_cost)
     
@@ -42,12 +37,7 @@ def train(args, vocab_size, train_data_path):
         main_program = fluid.default_main_program()
         fluid.io.save(main_program,model_dir)
 
-
-    
 if __name__ == "__main__":
     args = args.parse_args()
     vocab_size =utils.get_vocab_size(args.vocab_path)
     train(args, vocab_size, args.train_data_path)
-
-
-
