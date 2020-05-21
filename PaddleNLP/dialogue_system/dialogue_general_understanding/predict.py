@@ -109,7 +109,7 @@ def do_predict(args):
     assert (args.init_from_params)
 
     if args.init_from_params:
-        fluid.load(test_prog, args.init_from_params)
+        fluid.load(test_prog, args.init_from_params, executor=exe)
 
     compiled_test_prog = fluid.CompiledProgram(test_prog)
 
