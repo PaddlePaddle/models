@@ -370,7 +370,7 @@ def linear(input,
 def conv_cond_concat(x, y):
     batch = fluid.layers.shape(x)[0]
     ones = fluid.layers.fill_constant(
-        shape=[ones, y.shape[1], x.shape[2], x.shape[3]],
+        shape=[batch, y.shape[1], x.shape[2], x.shape[3]],
         dtype="float32",
         value=1.0)
     out = fluid.layers.concat([x, ones * y], 1)
