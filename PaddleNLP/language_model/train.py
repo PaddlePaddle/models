@@ -137,7 +137,7 @@ def main():
                 res_vars = res_vars[:-1]
             loss, last_hidden, last_cell, feed_order = res_vars
 
-            clip1 = fluid.clip.GradientClipByGlobalNorm(
+            clip = fluid.clip.GradientClipByGlobalNorm(
                 clip_norm=config.max_grad_norm)
 
             learning_rate = fluid.layers.create_global_var(
@@ -148,7 +148,7 @@ def main():
                 persistable=True)
 
             optimizer = fluid.optimizer.SGD(learning_rate=learning_rate,
-                                            grad_clip=clip1)
+                                            grad_clip=clip)
             optimizer.minimize(loss)
 
     # define inference program
