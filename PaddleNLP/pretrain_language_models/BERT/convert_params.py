@@ -183,7 +183,7 @@ def convert(args):
             param]).get_tensor().set(value, place)
         print(param, ' --> ', tf_fluid_param_name_map[param], '  ', value.shape)
 
-    fluid.save(model_path=args.fluid_params_dir, program=program)
+    fluid.save(program=program, model_path=args.fluid_params_dir)
 
 
 if __name__ == '__main__':

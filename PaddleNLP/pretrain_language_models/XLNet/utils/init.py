@@ -55,7 +55,7 @@ def init_checkpoint(exe, init_checkpoint_path, main_program, use_fp16=False):
             return False
 
     fluid.load(
-        model_path=init_checkpoint_path, program=main_program, executor=exe)
+        program=main_program, model_path=init_checkpoint_path, executor=exe)
 
     if use_fp16:
         cast_fp32_to_fp16(exe, main_program)

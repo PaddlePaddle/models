@@ -583,11 +583,11 @@ def train(args):
                 if steps % args.save_steps == 0 or steps == args.train_steps:
                     save_path = os.path.join(args.checkpoints,
                                              "step_" + str(steps))
-                    fluid.save(model_path=save_path, program=train_program)
+                    fluid.save(program=train_program, model_path=save_path)
             except fluid.core.EOFException:
                 save_path = os.path.join(args.checkpoints,
                                          "step_" + str(steps) + "_final")
-                fluid.save(model_path=save_path, program=train_program)
+                fluid.save(program=train_program, model_path=save_path)
                 train_data_loader.reset()
                 break
         print("Finish model training ...")
