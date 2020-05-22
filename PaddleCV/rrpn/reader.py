@@ -96,7 +96,6 @@ def RRPNData(mode,
                     continue
                 batch_out.append(datas)
                 end = time.time()
-                #print('reader time:', end - start)
                 if len(batch_out) == batch_size:
                     yield batch_out
                     count += 1
