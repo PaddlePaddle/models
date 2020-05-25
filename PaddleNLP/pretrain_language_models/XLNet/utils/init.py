@@ -81,7 +81,7 @@ def init_pretraining_params(exe,
             return False
 
     fluid.io.load(
-        model_path=pretraining_params_path, program=main_program, executor=exe)
+        program=main_program, model_path=pretraining_params_path, executor=exe)
 
     if use_fp16:
         cast_fp32_to_fp16(exe, main_program)
