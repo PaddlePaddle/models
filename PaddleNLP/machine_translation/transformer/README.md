@@ -32,7 +32,7 @@
 
 1. paddle安装
 
-   本项目依赖于 PaddlePaddle 1.6及以上版本或适当的develop版本，请参考 [安装指南](http://www.paddlepaddle.org/#quick-start) 进行安装
+   本项目依赖于 PaddlePaddle 1.8及以上版本或适当的develop版本，请参考 [安装指南](https://www.paddlepaddle.org.cn/install/quick) 进行安装
 
 2. 下载代码
 
@@ -44,7 +44,7 @@
 
 3. 环境依赖
 
-   请参考PaddlePaddle[安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/beginners_guide/install/index_cn.html)部分的内容
+   请参考PaddlePaddle[安装说明](https://www.paddlepaddle.org.cn/documentation/docs/zh/install/index_cn.html)部分的内容
 
 
 ### 数据准备

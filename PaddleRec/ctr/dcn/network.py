@@ -76,11 +76,10 @@ class DCN(object):
 
     def backward(self, lr):
         p_g_clip = fluid.backward.append_backward(loss=self.loss)
-        fluid.clip.set_gradient_clip(
-            fluid.clip.GradientClipByGlobalNorm(clip_norm=self.clip_by_norm))
+        clip = fluid.clip.GradientClipByGlobalNorm(clip_norm=self.clip_by_norm)
         p_g_clip = fluid.clip.append_gradient_clip_ops(p_g_clip)
 
-        optimizer = fluid.optimizer.Adam(learning_rate=lr)
+        optimizer = fluid.optimizer.Adam(learning_rate=lr, grad_clip=clip)
         # params_grads = optimizer.backward(self.loss)
         optimizer.apply_gradients(p_g_clip)
 

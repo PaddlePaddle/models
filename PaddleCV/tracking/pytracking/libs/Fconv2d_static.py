@@ -60,9 +60,9 @@ def Fconv2d(input,
                     groups mismatch.
     Examples:
         .. code-block:: python
-          data = fluid.layers.data(name='data', shape=[3, 32, 32], \
+          data = fluid.data(name='data', shape=[3, 32, 32], \
                                   dtype='float32')
-          filter = fluid.layers.data(name='filter',shape=[10,3,3,3], \
+          filter = fluid.data(name='filter',shape=[10,3,3,3], \
                                     dtype='float32',append_batch_size=False)
           conv2d = fluid.layers.conv2d(input=data,
                                        filter=filter,
@@ -112,62 +112,4 @@ def Fconv2d(input,
     return pre_bias
 
 
-def test_conv2d_with_filter():
-    exemplar = np.random.random((8, 4, 6, 6)).astype(np.float32)
-    instance = np.random.random((8, 4, 22, 22)).astype(np.float32)
 
-    # fluid.layers.data(append_batch_size=)
-    use_gpu = False
-    place = fluid.CUDAPlace(0) if use_gpu else fluid.CPUPlace()
-
-    train_program = fluid.Program()
-    start_program = fluid.Program()
-
-    with fluid.program_guard(train_program, start_program):
-        x = fluid.layers.data(
-            name="inst", shape=[8, 4, 22, 22], append_batch_size=False)
-        y = fluid.layers.data(
-            name="exem", shape=[8, 4, 6, 6], append_batch_size=False)
-        bias_att = fluid.ParamAttr(
-            name="bias_", initializer=fluid.initializer.ConstantInitializer(1.))
-        out = conv2d_with_filter(x, y, groups=1)
-        weight_att = fluid.ParamAttr(
-            name='weight',
-            initializer=fluid.initializer.NumpyArrayInitializer(exemplar))
-        bias_att = fluid.ParamAttr(
-            name="bias", initializer=fluid.initializer.ConstantInitializer(0.))
-        res = fluid.layers.conv2d(
-            x,
-            8,
-            6,
-            param_attr=weight_att,
-            bias_attr=bias_att,
-            stride=1,
-            padding=0,
-            dilation=1)
-
-        exe = fluid.Executor(place)
-        exe.run(program=fluid.default_startup_program())
-    print(out.shape)
-
-    compiled_prog = fluid.compiler.CompiledProgram(train_program)
-    out, res = exe.run(compiled_prog,
-                       feed={"inst": instance,
-                             "exem": exemplar},
-                       fetch_list=[out.name, res.name])
-
-    print(np.sum(out - res))
-    np.testing.assert_allclose(out, res, rtol=1e-5, atol=0)
-
-    with fluid.dygraph.guard():
-        exem = fluid.dygraph.to_variable(exemplar)
-        inst = fluid.dygraph.to_variable(instance)
-
-        out = conv2d_with_filter(inst, exem, groups=1)
-
-    print(np.sum(out.numpy() - res))
-    np.testing.assert_allclose(out.numpy(), res, rtol=1e-5, atol=0)
-
-
-if __name__ == '__main__':
-    test_conv2d_with_filter()

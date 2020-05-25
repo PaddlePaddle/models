@@ -27,10 +27,8 @@ def set_zero(var_name,scope=fluid.global_scope(), place=fluid.CPUPlace(),param_t
 
 def run_infer(args,test_data_path):
     wide_deep_model = wide_deep()
-
-    test_data_generator = utils.CriteoDataset()
-    test_reader = paddle.batch(test_data_generator.test(test_data_path), batch_size=args.batch_size)
-    
+    test_data_generator = utils.Dataset()
+    test_reader = fluid.io.batch(test_data_generator.test(test_data_path), batch_size=args.batch_size)
     inference_scope = fluid.Scope()
     startup_program = fluid.framework.Program()
     test_program = fluid.framework.Program()
@@ -43,20 +41,20 @@ def run_infer(args,test_data_path):
             place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
             loss, acc, auc, batch_auc, auc_states = wide_deep_model.model(inputs, args.hidden1_units, args.hidden2_units, args.hidden3_units)
             exe = fluid.Executor(place)
-            exe.run(startup_program)
 
             fluid.load(fluid.default_main_program(), cur_model_path,exe)
-            feeder = fluid.DataFeeder(feed_list=inputs, place=place)
+            loader = fluid.io.DataLoader.from_generator(feed_list=inputs, capacity=args.batch_size, iterable=True)
+            loader.set_sample_list_generator(test_reader, places=place)
             
             for var in auc_states:  # reset auc states
                 set_zero(var.name, scope=inference_scope, place=place)
 
             mean_acc = []
             mean_auc = []
-            for batch_id, data in enumerate(test_reader()):
+            for batch_id, data in enumerate(loader()):
                 begin = time.time()
                 acc_val,auc_val = exe.run(program=test_program,
-                                        feed=feeder.feed(data),
+                                        feed=data,
                                         fetch_list=[acc.name, auc.name],
                                         return_numpy=True
                                         )

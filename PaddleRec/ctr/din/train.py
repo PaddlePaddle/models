@@ -92,14 +92,15 @@ def train():
     logger.info("reading data completes")
 
     avg_cost, pred, feed_list = network.network(item_count, cat_count)
-    fluid.clip.set_gradient_clip(clip=fluid.clip.GradientClipByGlobalNorm(
-        clip_norm=5.0))
+
+    clip = fluid.clip.GradientClipByGlobalNorm(clip_norm=5.0)
     base_lr = args.base_lr
     boundaries = [410000]
     values = [base_lr, 0.2]
     sgd_optimizer = fluid.optimizer.SGD(
         learning_rate=fluid.layers.piecewise_decay(
-            boundaries=boundaries, values=values))
+            boundaries=boundaries, values=values),
+        grad_clip=clip)
     sgd_optimizer.minimize(avg_cost)
 
     place = fluid.CUDAPlace(0) if use_cuda else fluid.CPUPlace()

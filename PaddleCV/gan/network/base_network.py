@@ -370,7 +370,7 @@ def linear(input,
 def conv_cond_concat(x, y):
     batch = fluid.layers.shape(x)[0]
     ones = fluid.layers.fill_constant(
-        shape=[ones, y.shape[1], x.shape[2], x.shape[3]],
+        shape=[batch, y.shape[1], x.shape[2], x.shape[3]],
         dtype="float32",
         value=1.0)
     out = fluid.layers.concat([x, ones * y], 1)
@@ -508,9 +508,9 @@ def conv2d_with_filter(input,
                     groups mismatch.
     Examples:
         .. code-block:: python
-          data = fluid.layers.data(name='data', shape=[3, 32, 32], \
+          data = fluid.data(name='data', shape=[None, 3, 32, 32], \
                                   dtype='float32')
-          filter = fluid.layers.data(name='filter',shape=[10,3,3,3], \
+          filter = fluid.data(name='filter',shape=[None, 10, 3, 3, 3], \
                                     dtype='float32',append_batch_size=False)
           conv2d = fluid.layers.conv2d(input=data, 
                                        filter=filter,
