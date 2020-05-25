@@ -20,8 +20,9 @@ import paddle.fluid as fluid
 from paddle.fluid.layer_helper import LayerHelper
 from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, Linear
 from paddle.fluid.dygraph.base import to_variable
-
+from paddle.fluid.contrib.slim.quantization import DygraphQuantAware
 from paddle.fluid import framework
+from paddle.fluid.dygraph import declarative
 
 import math
 import sys
@@ -46,7 +47,7 @@ def parse_args():
     parser.add_argument(
         "-b", "--batch_size", default=32, type=int, help="set epoch")
     parser.add_argument("--ce", action="store_true", help="run ce")
-   
+
     # NOTE:used in benchmark
     parser.add_argument("--max_iter", default=0, type=int, help="the max iters to train, used in benchmark")
     args = parser.parse_args()
@@ -81,7 +82,7 @@ def optimizer_setting(parameter_list=None):
                 boundaries=bd, values=lr),
             momentum=momentum_rate,
             regularization=fluid.regularizer.L2Decay(l2_decay))
-        
+
 
     return optimizer
 
@@ -226,6 +227,7 @@ class ResNet(fluid.dygraph.Layer):
                       param_attr=fluid.param_attr.ParamAttr(
                           initializer=fluid.initializer.Uniform(-stdv, stdv)))
 
+    @declarative
     def forward(self, inputs):
         y = self.conv(inputs)
         y = self.pool2d_max(y)
@@ -285,6 +287,10 @@ def train_resnet():
     epoch = args.epoch
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
         if args.use_data_parallel else fluid.CUDAPlace(0)
+
+    dyquant_qat = DygraphQuantAware()
+    dyquant_qat.prepare()
+
     with fluid.dygraph.guard(place):
         if args.ce:
             print("ce mode")
@@ -313,8 +319,14 @@ def train_resnet():
 
         #file_name = './model/epoch_0.npz'
         #model_data = np.load( file_name )
+        print("begin to load state ...")
+        file_name = './state/resnet_params'
+        model_state, _ = fluid.load_dygraph(file_name)
+        resnet.set_dict(model_state)
+        print("load finished.")
+        dyquant_qat.quantize(resnet)
 
-        #NOTE: used in benchmark 
+        #NOTE: used in benchmark
         total_batch_num = 0
 
         for eop in range(epoch):
@@ -324,12 +336,6 @@ def train_resnet():
             total_acc1 = 0.0
             total_acc5 = 0.0
             total_sample = 0
-
-            #dict_state = resnet.state_dict()
-
-            #resnet.load_dict( model_data )
-
-            print("load finished")
 
             for batch_id, data in enumerate(train_reader()):
 
@@ -399,6 +405,14 @@ def train_resnet():
                 fluid.save_dygraph(resnet.state_dict(),
                                                 'resnet_params')
 
+    # save inference quantized model
+    dyquant_qat.save_infer_quant_model(
+                    dirname="./resnet_infer_model",
+                    model=resnet,
+                    input_shape=(3, 224, 224),
+                    input_dtype='float32',
+                    feed=[0],
+                    fetch=[0])
 
 if __name__ == '__main__':
 
