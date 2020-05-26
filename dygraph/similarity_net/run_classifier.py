@@ -161,10 +161,6 @@ def train(conf_dict, args):
         if args.task_mode == "pairwise":
 
             for left, pos_right, neg_right in train_loader():
-
-                left = fluid.layers.reshape(left, shape=[-1, 1])
-                pos_right = fluid.layers.reshape(pos_right, shape=[-1, 1])
-                neg_right = fluid.layers.reshape(neg_right, shape=[-1, 1])
                 net.train()
                 global_step += 1
                 left_feat, pos_score = net(left, pos_right)
@@ -178,9 +174,6 @@ def train(conf_dict, args):
 
                 if args.do_valid and global_step % args.validation_steps == 0:
                     for left, pos_right in valid_loader():
-                        left = fluid.layers.reshape(left, shape=[-1, 1])
-                        pos_right = fluid.layers.reshape(
-                            pos_right, shape=[-1, 1])
                         net.eval()
                         left_feat, pos_score = net(left, pos_right)
                         pred = pos_score
@@ -212,9 +205,6 @@ def train(conf_dict, args):
                     logging.info("saving infer model in %s" % model_path)
         else:
             for left, right, label in train_loader():
-                left = fluid.layers.reshape(left, shape=[-1, 1])
-                right = fluid.layers.reshape(right, shape=[-1, 1])
-                label = fluid.layers.reshape(label, shape=[-1, 1])
                 net.train()
                 global_step += 1
                 left_feat, pred = net(left, right)
@@ -226,8 +216,6 @@ def train(conf_dict, args):
 
                 if args.do_valid and global_step % args.validation_steps == 0:
                     for left, right in valid_loader():
-                        left = fluid.layers.reshape(left, shape=[-1, 1])
-                        right = fluid.layers.reshape(right, shape=[-1, 1])
                         net.eval()
                         left_feat, pred = net(left, right)
                         pred_list += list(pred.numpy())
@@ -296,11 +284,7 @@ def train(conf_dict, args):
                 place)
             pred_list = []
             for left, pos_right in test_loader():
-                left = fluid.layers.reshape(left, shape=[-1, 1])
-                pos_right = fluid.layers.reshape(pos_right, shape=[-1, 1])
                 net.eval()
-                left = fluid.layers.reshape(left, shape=[-1, 1])
-                pos_right = fluid.layers.reshape(pos_right, shape=[-1, 1])
                 left_feat, pos_score = net(left, pos_right)
                 pred = pos_score
                 pred_list += list(pred.numpy())
@@ -351,9 +335,6 @@ def test(conf_dict, args):
                 "predictions.txt", "w", encoding="utf8") as predictions_file:
             if args.task_mode == "pairwise":
                 for left, pos_right in test_loader():
-                    left = fluid.layers.reshape(left, shape=[-1, 1])
-                    pos_right = fluid.layers.reshape(pos_right, shape=[-1, 1])
-
                     left_feat, pos_score = net(left, pos_right)
                     pred = pos_score
 
@@ -365,8 +346,6 @@ def test(conf_dict, args):
 
             else:
                 for left, right in test_loader():
-                    left = fluid.layers.reshape(left, shape=[-1, 1])
-                    right = fluid.layers.reshape(right, shape=[-1, 1])
                     left_feat, pred = net(left, right)
 
                     pred_list += list(
@@ -433,8 +412,6 @@ def infer(conf_dict, args):
         pred_list = []
         if args.task_mode == "pairwise":
             for left, pos_right in infer_loader():
-                left = fluid.layers.reshape(left, shape=[-1, 1])
-                pos_right = fluid.layers.reshape(pos_right, shape=[-1, 1])
 
                 left_feat, pos_score = net(left, pos_right)
                 pred = pos_score
@@ -443,8 +420,6 @@ def infer(conf_dict, args):
 
         else:
             for left, right in infer_loader():
-                left = fluid.layers.reshape(left, shape=[-1, 1])
-                pos_right = fluid.layers.reshape(right, shape=[-1, 1])
                 left_feat, pred = net(left, right)
                 pred_list += map(lambda item: str(np.argmax(item)),
                                  pred.numpy())

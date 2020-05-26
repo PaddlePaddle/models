@@ -17,6 +17,8 @@ lstm class
 import paddle_layers as layers
 from paddle.fluid.dygraph import Layer, Linear
 from paddle import fluid
+from utils import seq_length
+
 
 class LSTM(Layer):
     """
@@ -27,19 +29,21 @@ class LSTM(Layer):
         """
         initialize
         """
-        super(LSTM,self).__init__()
+        super(LSTM, self).__init__()
         self.dict_size = conf_dict["dict_size"]
         self.task_mode = conf_dict["task_mode"]
         self.emb_dim = conf_dict["net"]["emb_dim"]
         self.lstm_dim = conf_dict["net"]["lstm_dim"]
         self.hidden_dim = conf_dict["net"]["hidden_dim"]
-        self.emb_layer = layers.EmbeddingLayer(self.dict_size, self.emb_dim, "emb").ops()
+        self.emb_layer = layers.EmbeddingLayer(self.dict_size, self.emb_dim,
+                                               "emb").ops()
         self.lstm_layer = layers.DynamicLSTMLayer(self.lstm_dim, "lstm").ops()
         self.fc_layer = layers.FCLayer(self.hidden_dim, None, "fc").ops()
         self.softmax_layer = layers.FCLayer(2, "softmax", "cos_sim").ops()
-        self.proj_layer = Linear(input_dim = self.hidden_dim, output_dim=self.lstm_dim*4)
+        self.proj_layer = Linear(
+            input_dim=self.hidden_dim, output_dim=self.lstm_dim * 4)
+        self.last_layer = layers.ExtractLastLayer()
         self.seq_len = conf_dict["seq_len"]
-
 
     def forward(self, left, right):
         """
@@ -53,20 +57,15 @@ class LSTM(Layer):
         right_proj = self.proj_layer(right_emb)
         left_lstm, _ = self.lstm_layer(left_proj)
         right_lstm, _ = self.lstm_layer(right_proj)
-      
-        left_emb = fluid.layers.reduce_max(left_lstm, dim=1)
-        right_emb = fluid.layers.reduce_max(right_lstm, dim=1)
-        left_emb = fluid.layers.reshape(
-            left_emb, shape=[-1, self.seq_len, self.hidden_dim])
-        right_emb = fluid.layers.reshape(
-            right_emb, shape=[-1, self.seq_len, self.hidden_dim])
-        left_emb = fluid.layers.reduce_sum(left_emb, dim=1)
-        right_emb = fluid.layers.reduce_sum(right_emb, dim=1)
+        # Get sequence length before padding
+        left_len = seq_length(left)
+        left_len.stop_gradient = True
+        right_len = seq_length(right)
+        right_len.stop_gradient = True
+        # Extract last step
+        left_last = self.last_layer.ops(left_lstm, left_len)
+        right_last = self.last_layer.ops(right_lstm, right_len)
 
-        left_last = fluid.layers.tanh(left_emb)
-        right_last = fluid.layers.tanh(right_emb)
-
-    
         # matching layer
         if self.task_mode == "pairwise":
             left_fc = self.fc_layer(left_last)

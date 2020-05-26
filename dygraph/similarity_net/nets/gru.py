@@ -21,6 +21,8 @@ from paddle.fluid.dygraph.nn import Linear
 from paddle.fluid.dygraph import Layer
 from paddle import fluid
 import numpy as np
+from utils import seq_length
+
 
 class GRU(Layer):
     """
@@ -37,13 +39,16 @@ class GRU(Layer):
         self.emb_dim = conf_dict["net"]["emb_dim"]
         self.gru_dim = conf_dict["net"]["gru_dim"]
         self.hidden_dim = conf_dict["net"]["hidden_dim"]
-        self.emb_layer = layers.EmbeddingLayer(self.dict_size, self.emb_dim, "emb").ops()
-       
+        self.emb_layer = layers.EmbeddingLayer(self.dict_size, self.emb_dim,
+                                               "emb").ops()
+
         self.gru_layer = layers.DynamicGRULayer(self.gru_dim, "gru").ops()
         self.fc_layer = layers.FCLayer(self.hidden_dim, None, "fc").ops()
-        self.proj_layer = Linear(input_dim = self.hidden_dim, output_dim=self.gru_dim*3)
+        self.proj_layer = Linear(
+            input_dim=self.hidden_dim, output_dim=self.gru_dim * 3)
         self.softmax_layer = layers.FCLayer(2, "softmax", "cos_sim").ops()
-        self.seq_len=conf_dict["seq_len"]
+        self.last_layer = layers.ExtractLastLayer()
+        self.seq_len = conf_dict["seq_len"]
 
     def forward(self, left, right):
         """
@@ -60,18 +65,15 @@ class GRU(Layer):
         h_0 = to_variable(h_0)
         left_gru = self.gru_layer(left_emb, h_0=h_0)
         right_gru = self.gru_layer(right_emb, h_0=h_0)
-        left_emb = fluid.layers.reduce_max(left_gru, dim=1)
-        right_emb = fluid.layers.reduce_max(right_gru, dim=1)
-        left_emb = fluid.layers.reshape(
-            left_emb, shape=[-1, self.seq_len, self.hidden_dim])
-        right_emb = fluid.layers.reshape(
-            right_emb, shape=[-1, self.seq_len, self.hidden_dim])
-        left_emb = fluid.layers.reduce_sum(left_emb, dim=1)
-        right_emb = fluid.layers.reduce_sum(right_emb, dim=1)
+        # Get sequence length before padding
+        left_len = seq_length(left)
+        left_len.stop_gradient = True
+        right_len = seq_length(right)
+        right_len.stop_gradient = True
+        # Extract last step
+        left_last = self.last_layer.ops(left_gru, left_len)
+        right_last = self.last_layer.ops(right_gru, right_len)
 
-        left_last = fluid.layers.tanh(left_emb)
-        right_last = fluid.layers.tanh(right_emb)
-        
         if self.task_mode == "pairwise":
             left_fc = self.fc_layer(left_last)
             right_fc = self.fc_layer(right_last)

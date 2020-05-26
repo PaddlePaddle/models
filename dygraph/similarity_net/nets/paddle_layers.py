@@ -1051,3 +1051,33 @@ class BasicGRUUnit(Layer):
         new_hidden = u * pre_hidden + (1 - u) * c
 
         return new_hidden
+
+
+class ExtractLastLayer(object):
+    """
+    a layer class: get the last step layer
+    """
+
+    def __init__(self):
+        """
+        init function
+        """
+        pass
+
+    def ops(self, input_hidden, seq_length=None):
+        """
+        operation
+        """
+        if seq_length is not None:
+            output = input_hidden
+            output_shape = output.shape
+            batch_size = output_shape[0]
+            max_length = output_shape[1]
+            emb_size = output_shape[2]
+            index = fluid.layers.range(0, batch_size, 1,
+                                       'int32') * max_length + (seq_length - 1)
+            flat = fluid.layers.reshape(output, [-1, emb_size])
+            return fluid.layers.gather(flat, index)
+        else:
+            output = fluid.layers.transpose(input_hidden, [1, 0, 2])
+            return fluid.layers.gather(output, output.shape[0] - 1)

@@ -29,14 +29,13 @@ class SimNetProcessor(object):
         self.test_label = np.array([])
 
         self.seq_len = args.seq_len
-    
+
     def padding_text(self, x):
         if len(x) < self.seq_len:
-            x += [0]*(self.seq_len-len(x))
+            x += [0] * (self.seq_len - len(x))
         if len(x) > self.seq_len:
-            x = x[0:self.seq_len] 
+            x = x[0:self.seq_len]
         return x
-
 
     def get_reader(self, mode, epoch=0):
         """
@@ -48,8 +47,8 @@ class SimNetProcessor(object):
                 Reader with Pairwise
             """
             if mode == "valid":
-                with io.open(self.args.valid_data_dir, "r",
-                                 encoding="utf8") as file:
+                with io.open(
+                        self.args.valid_data_dir, "r", encoding="utf8") as file:
                     for line in file:
                         query, title, label = line.strip().split("\t")
                         if len(query) == 0 or len(title) == 0 or len(
@@ -76,7 +75,8 @@ class SimNetProcessor(object):
 
                         yield [query, title]
             elif mode == "test":
-                with io.open(self.args.test_data_dir, "r", encoding="utf8") as file:
+                with io.open(
+                        self.args.test_data_dir, "r", encoding="utf8") as file:
                     for line in file:
                         query, title, label = line.strip().split("\t")
                         if len(query) == 0 or len(title) == 0 or len(
@@ -104,34 +104,38 @@ class SimNetProcessor(object):
                         yield [query, title]
             else:
                 for idx in range(epoch):
-                    with io.open(self.args.train_data_dir, "r",
-                                    encoding="utf8") as file:
+                    with io.open(
+                            self.args.train_data_dir, "r",
+                            encoding="utf8") as file:
                         for line in file:
-                            query, pos_title, neg_title = line.strip().split("\t")
+                            query, pos_title, neg_title = line.strip().split(
+                                "\t")
                             if len(query) == 0 or len(pos_title) == 0 or len(
                                     neg_title) == 0:
                                 logging.warning(
-                                    "line not match format in test file")
+                                    "line not match format in train file")
                                 continue
                             query = [
                                 self.vocab[word] for word in query.split(" ")
                                 if word in self.vocab
                             ]
                             pos_title = [
-                                self.vocab[word] for word in pos_title.split(" ")
+                                self.vocab[word]
+                                for word in pos_title.split(" ")
                                 if word in self.vocab
                             ]
                             neg_title = [
-                                self.vocab[word] for word in neg_title.split(" ")
+                                self.vocab[word]
+                                for word in neg_title.split(" ")
                                 if word in self.vocab
                             ]
                             if len(query) == 0:
                                 query = [0]
-                            if len(pos_title) == 0: 
+                            if len(pos_title) == 0:
                                 pos_title = [0]
                             if len(neg_title) == 0:
                                 neg_title = [0]
-                                
+
                             query = self.padding_text(query)
                             pos_title = self.padding_text(pos_title)
                             neg_title = self.padding_text(neg_title)
@@ -143,8 +147,8 @@ class SimNetProcessor(object):
             Reader with Pointwise
             """
             if mode == "valid":
-                with io.open(self.args.valid_data_dir, "r",
-                                 encoding="utf8") as file:
+                with io.open(
+                        self.args.valid_data_dir, "r", encoding="utf8") as file:
                     for line in file:
                         query, title, label = line.strip().split("\t")
                         if len(query) == 0 or len(title) == 0 or len(
@@ -165,13 +169,14 @@ class SimNetProcessor(object):
                             query = [0]
                         if len(title) == 0:
                             title = [0]
-                            
+
                         query = self.padding_text(query)
                         title = self.padding_text(title)
 
                         yield [query, title]
             elif mode == "test":
-                with io.open(self.args.test_data_dir, "r", encoding="utf8") as file:
+                with io.open(
+                        self.args.test_data_dir, "r", encoding="utf8") as file:
                     for line in file:
                         query, title, label = line.strip().split("\t")
                         if len(query) == 0 or len(title) == 0 or len(
@@ -199,8 +204,9 @@ class SimNetProcessor(object):
                         yield [query, title]
             else:
                 for idx in range(epoch):
-                    with io.open(self.args.train_data_dir, "r",
-                                    encoding="utf8") as file:
+                    with io.open(
+                            self.args.train_data_dir, "r",
+                            encoding="utf8") as file:
                         for line in file:
                             query, title, label = line.strip().split("\t")
                             if len(query) == 0 or len(title) == 0 or len(
