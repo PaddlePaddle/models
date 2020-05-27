@@ -72,7 +72,15 @@ video_tag
 
 - 通过--predictor\_weights可指定预测器参数的存储路径，默认为video\_tag/weights/attention\_lstm；
 
-- 通过--save\_dir可指定预测结果存储路径，默认为video\_tag/data/results；
+- 通过--save\_dir可指定预测结果存储路径，默认为video\_tag/data/results，结果保存在json文件中，其格式为：
+
+```
+    [file_path,
+     {"class_name": class_name1, "probability": probability1, "class_id": class_id1},]
+     {"class_name": class_name2, "probability": probability2, "class_id": class_id2},
+     ...
+    ]
+```
 
 - 通过--label\_file可指定标签文件存储路径，默认为video\_tag/label\_3396.txt；
 
