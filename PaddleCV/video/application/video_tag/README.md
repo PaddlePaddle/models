@@ -76,7 +76,7 @@ video_tag
 
 ```
     [file_path,
-     {"class_name": class_name1, "probability": probability1, "class_id": class_id1},]
+     {"class_name": class_name1, "probability": probability1, "class_id": class_id1},
      {"class_name": class_name2, "probability": probability2, "class_id": class_id2},
      ...
     ]

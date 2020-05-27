@@ -98,7 +98,7 @@ def main():
     videotag_extractor_prdictor (as videotag_TSN_AttentionLSTM)
     two stages in our model:
         1. extract feature from input video(mp4 format) using extractor
-        2. predict classification results from extracted feature  using prdictor
+        2. predict classification results from extracted feature  using predictor
     we implement this using two name scopes, ie. extractor_scope and predictor_scope.
     """
 
