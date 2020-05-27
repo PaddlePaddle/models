@@ -81,9 +81,9 @@ video_tag
 
 ## 模型微调
 
-- VideoTag中的TSN模型只输出视频特征，无需输出最终分类结果，fine-tune请参考PaddleCV视频库[TSN视频分类模型](../../../models/tsn/README.md)请对应修改模型文件。
+- VideoTag中的TSN模型只输出视频特征，无需输出最终分类结果，fine-tune请参考PaddleCV视频库[TSN视频分类模型](../../models/tsn/README.md)请对应修改模型文件。
 
-- VideoTag中的attention\_lstm模型只需要输入视频特征，无需音频特征输入，fine-tune请参考PaddleCV视频库[AttentionLSTM视频分类模型](../../../models/attention_lstm/README.md)对应修改模型文件。
+- VideoTag中的attention\_lstm模型只需要输入视频特征，无需音频特征输入，fine-tune请参考PaddleCV视频库[AttentionLSTM视频分类模型](../../models/attention_lstm/README.md)对应修改模型文件。
 
 ## 参考论文
 
