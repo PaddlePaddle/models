@@ -6,6 +6,7 @@
 - [模型简介](#模型简介)
 - [数据准备](#数据准备)
 - [模型推断](#模型推断)
+- [模型微调](#模型微调)
 - [参考论文](#参考论文)
 
 
@@ -14,7 +15,7 @@
 飞桨大规模视频分类模型VideoTag基于百度短视频业务千万级数据，支持3000个源于产业实践的实用标签，具有良好的泛化能力，非常适用于国内大规模（千万/亿/十亿级别）短视频分类场景的应用。VideoTag采用两阶段建模方式，即图像建模和序列学习。第一阶段，使用少量视频样本（十万级别）训练大规模视频特征提取模型(Extractor)；第二阶段，使用千万级数据训练预测器(Predictor)，最终实现在超大规模（千万/亿/十亿级别）短视频上产业应用，其原理示意如下图所示。
 
 <p align="center">
-<img src="video_tag.png" height=200 width=800 hspace='10'/> <br />
+<img src="video_tag.png" height=220 width=800 hspace='10'/> <br />
 Temporal shift module
 </p>
 
@@ -52,6 +53,11 @@ video_tag
       └── 2.mp4
 ```
 
+- 目前支持的视频文件输入格式为：mp4、mkv和webm格式；
+
+- 模型会从输入的视频文件中均匀抽取300帧用于预测。对于较长的视频文件，建议先截取有效部分输入模型以提高预测速度。
+
+
 ## 模型推断
 
 模型推断的启动方式如下：
@@ -60,18 +66,24 @@ video_tag
 
 - 可修改video\_tag/data/tsn.list文件内容，指定待推断的文件路径列表；
 
-- 通过--filelist可指定输入list文件路径；
+- 通过--filelist可指定输入list文件路径，默认为video\_tag/data/tsn.list；
 
-- 通过--extractor\_weights可指定特征提取器参数的存储路径；
+- 通过--extractor\_weights可指定特征提取器参数的存储路径，默认为video\_tag/weights/tsn；
 
-- 通过--predictor\_weights可指定预测器参数的存储路径；
+- 通过--predictor\_weights可指定预测器参数的存储路径，默认为video\_tag/weights/attention\_lstm；
 
-- 通过--save\_dir可指定预测结果存储路径，默认保存在video\_tag/data/results；
+- 通过--save\_dir可指定预测结果存储路径，默认为video\_tag/data/results；
 
 - 通过--label\_file可指定标签文件存储路径，默认为video\_tag/label\_3396.txt；
 
 - 模型相关配置写在video\_tag/configs目录下的yaml文件中。
 
+
+## 模型微调
+
+- VideoTag中的TSN模型只输出视频特征，无需输出最终分类结果，fine-tune请参考PaddleCV视频库[TSN视频分类模型](../../../models/tsn/README.md)请对应修改模型文件。
+
+- VideoTag中的attention\_lstm模型只需要输入视频特征，无需音频特征输入，fine-tune请参考PaddleCV视频库[AttentionLSTM视频分类模型](../../../models/attention_lstm/README.md)对应修改模型文件。
 
 ## 参考论文
 
