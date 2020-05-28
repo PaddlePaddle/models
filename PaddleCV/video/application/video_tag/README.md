@@ -4,7 +4,7 @@
 ## 内容
 
 - [模型简介](#模型简介)
-- [安装](#安装)
+- [安装说明](#安装说明)
 - [数据准备](#数据准备)
 - [模型推断](#模型推断)
 - [模型微调](#模型微调)
@@ -29,7 +29,7 @@ Temporal shift module
 - 预测结果：融合多个模型结果实现视频分类，进一步提高分类准确率。
 
 
-## 安装
+## 安装说明
 
 运行样例代码需要PaddlePaddle版本>= 1.7.0，请参考[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.7/install/index_cn.html)安装PaddlePaddle。
 
@@ -38,7 +38,7 @@ Temporal shift module
 ```
     CUDA >= 9.0
     cudnn >= 7.5
-    OpenCV: pip install opencv-python
+    OpenCV >= 4.1.0 : pip install opencv-python
 ```
 
 ## 数据准备
@@ -84,6 +84,8 @@ video_tag
 - 通过--extractor\_weights可指定特征提取器参数的存储路径，默认为video\_tag/weights/tsn；
 
 - 通过--predictor\_weights可指定预测器参数的存储路径，默认为video\_tag/weights/attention\_lstm；
+
+- 通过--use\_gpu参数可指定是否使用gpu进行推断，默认使用gpu。对于10s左右的短视频文件，gpu推断时间约为4s；
 
 - 通过--save\_dir可指定预测结果存储路径，默认为video\_tag/data/results，结果保存在json文件中，其格式为：
 
