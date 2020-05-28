@@ -116,10 +116,8 @@ def train_mobilenet():
             optimizer.set_dict(opti_dict)
 
         # 3. reader
-        train_data_loader, train_data = utility.create_data_loader(
-            is_train=True, args=args)
-        test_data_loader, test_data = utility.create_data_loader(
-            is_train=False, args=args)
+        train_data_loader = utility.create_data_loader(is_train=True, args=args)
+        test_data_loader = utility.create_data_loader(is_train=False, args=args)
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
         imagenet_reader = reader.ImageNetReader(seed=0, place_num=place_num)
         train_reader = imagenet_reader.train(settings=args)
@@ -145,8 +143,6 @@ def train_mobilenet():
                 t1 = time.time()
                 if args.max_iter and total_batch_num == args.max_iter:
                     return
-                label = to_variable(label.numpy().astype('int64').reshape(
-                    int(args.batch_size // place_num), 1))
                 t_start = time.time()
 
                 # 4.1.1 call net()
