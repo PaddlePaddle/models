@@ -69,7 +69,7 @@ init_g.add_arg("init_std",   str, 0.02,    "Initialization std when init is norm
 init_g.add_arg("init_range", str, 0.1,   "Initialization std when init is uniform.")
 
 train_g = ArgumentGroup(parser, "training", "training options.")
-train_g.add_arg("epoch",             int,    3,    "Number of epoches for fine-tuning.")
+train_g.add_arg("epoch",             int,    1000,    "Number of epoches for fine-tuning.")
 train_g.add_arg("learning_rate",     float,  5e-5,    "Learning rate used to train with warmup.")
 train_g.add_arg("lr_scheduler",      str,    "linear_warmup_decay",
                 "scheduler of learning rate.", choices=['linear_warmup_decay', 'noam_decay'])
