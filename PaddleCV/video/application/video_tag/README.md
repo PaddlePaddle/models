@@ -4,6 +4,7 @@
 ## 内容
 
 - [模型简介](#模型简介)
+- [安装](#安装)
 - [数据准备](#数据准备)
 - [模型推断](#模型推断)
 - [模型微调](#模型微调)
@@ -27,6 +28,18 @@ Temporal shift module
 
 - 预测结果：融合多个模型结果实现视频分类，进一步提高分类准确率。
 
+
+## 安装
+
+运行样例代码需要PaddlePaddle版本>= 1.7.0，请参考[安装文档](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.7/install/index_cn.html)安装PaddlePaddle。
+
+- 环境依赖：
+
+```
+    CUDA >= 9.0
+    cudnn >= 7.5
+    OpenCV: pip install opencv-python
+```
 
 ## 数据准备
 
