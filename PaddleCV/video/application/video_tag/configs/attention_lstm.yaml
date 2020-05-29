@@ -1,0 +1,15 @@
+MODEL:
+    name: "AttentionLSTM"
+    dataset: None 
+    bone_nework: None
+    drop_rate: 0.5
+    feature_num: 2
+    feature_names: ['rgb'] 
+    feature_dims: [2048] 
+    embedding_size: 1024 
+    lstm_size: 512 
+    num_classes: 3396 
+    topk: 20
+
+INFER:
+    batch_size: 1
