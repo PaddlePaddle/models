@@ -81,11 +81,11 @@ def build_model_columns(train_data_path, test_data_path):
     train_df['label'] = train_df['income_bracket'].apply(lambda x : 1 if x == '>50K' else 0)
     test_df['label'] = test_df['income_bracket'].apply(lambda x : 1 if x == '>50K' else 0)
     
-    with io.open('train_data/columns.txt','w') as f:
+    with open('train_data/columns.txt','w') as f:
         write_str = str(len(wide_columns)) + '\n' + str(len(deep_columns)) + '\n'
         f.write(write_str)
         f.close()
-    with io.open('test_data/columns.txt','w') as f:
+    with open('test_data/columns.txt','w') as f:
         write_str = str(len(wide_columns)) + '\n' + str(len(deep_columns)) + '\n'
         f.write(write_str)
         f.close()

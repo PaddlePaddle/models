@@ -23,6 +23,16 @@ DSSM[《Learning Deep Structured Semantic Models for Web Search using Clickthrou
 
  python3.7 
 
+## 数据集说明
+
+由于论文没有公开数据集，本项目构造数据验证网络的正确性，其说明如下：
+
+query：随机构造的query向量表示
+
+doc_pos：随机构造doc正例向量表示
+
+doc_neg_0~3为四个doc负例向量表示
+
 ## 单机训练
 
 GPU环境

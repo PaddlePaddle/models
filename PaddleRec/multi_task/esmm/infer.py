@@ -33,7 +33,7 @@ def run_infer(args, model_path, test_data_path, vocab_size):
             inputs = esmm_model.input_data()
             avg_cost,auc_ctr,auc_ctcvr= esmm_model.net(inputs, vocab_size, args.embed_size)
             
-            dataset, file_list = utils.get_dataset(inputs, test_data_path, args.batch_size,args.cpu_num)
+            dataset, file_list = utils.get_dataset(inputs, test_data_path, args.batch_size, args.cpu_num)
             
             exe = fluid.Executor(place)
             fluid.load(fluid.default_main_program(), os.path.join(model_path, "checkpoint"), exe)
@@ -51,6 +51,9 @@ def run_infer(args, model_path, test_data_path, vocab_size):
 if __name__ == "__main__":
   
     args = args.parse_args()
+    
+    logger.info("use_gpu: {}, epochs: {}, batch_size: {}, cpu_num: {}, model_dir: {}, test_data_path: {}, vocab_path: {}".format(args.use_gpu, args.epochs, 
+        args.batch_size, args.cpu_num, args.model_dir, args.test_data_path, args.vocab_path))
     model_list = []
     for _, dir, _ in os.walk(args.model_dir):
         for model in dir:
@@ -58,10 +61,10 @@ if __name__ == "__main__":
                 path = os.path.join(args.model_dir, model)
                 model_list.append(path)
                 
-    vocab_size =utils.get_vocab_size(args.vocab_path)  
+    vocab_size = utils.get_vocab_size(args.vocab_path)  
     
     for model in model_list:
         logger.info("Test model {}".format(model))
-        run_infer(args, model,args.test_data_path)
+        run_infer(args, model,args.test_data_path, vocab_size)
                 
              

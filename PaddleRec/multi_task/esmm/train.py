@@ -5,6 +5,11 @@ from net import ESMM
 import paddle
 import utils
 import args
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("fluid")
+logger.setLevel(logging.INFO)
 
 def train(args, vocab_size, train_data_path):
     esmm_model = ESMM()
@@ -39,5 +44,8 @@ def train(args, vocab_size, train_data_path):
 
 if __name__ == "__main__":
     args = args.parse_args()
+    logger.info("use_gpu: {}, epochs: {}, batch_size: {}, embed_size: {}, cpu_num: {}, model_dir: {}, train_data_path: {}, vocab_path: {}".format(args.use_gpu, args.epochs, 
+        args.batch_size, args.embed_size, args.cpu_num, args.model_dir, args.train_data_path, args.vocab_path))
+    
     vocab_size =utils.get_vocab_size(args.vocab_path)
     train(args, vocab_size, args.train_data_path)

@@ -9,7 +9,7 @@ all_field_id_dict = defaultdict(int)
 for i,field_id in enumerate(all_field_id):
     all_field_id_dict[field_id] = [False,i]
 
-class CriteoDataset(dg.MultiSlotStringDataGenerator):
+class Dataset(dg.MultiSlotStringDataGenerator):
    
     def generate_sample(self, line):
         
@@ -40,5 +40,5 @@ class CriteoDataset(dg.MultiSlotStringDataGenerator):
             yield output
         return reader
 
-d = CriteoDataset()
+d = Dataset()
 d.run_from_stdin()
