@@ -34,6 +34,16 @@
 
  python3.7 
 
+## 数据集说明
+
+由于原论文没有开源数据集，本项目随机构造数据，其字段如下：
+
+watch_vecs：随机构造用户历史观看视频的embedding表示
+
+search_vec：随机构造用户搜索历史的embedding表示
+
+other_feat：随机构造其他特征的tembedding表示
+
 ## 单机训练
 
 GPU环境

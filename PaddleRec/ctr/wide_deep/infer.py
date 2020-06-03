@@ -69,5 +69,7 @@ def run_infer(args,test_data_path):
 if __name__ == "__main__":
   
     args = args.parse_args()
+    logger.info("batch_size: {}, use_gpu: {}, test_epoch: {}, test_data_path: {}, model_dir:{}, hidden1_units: {}, hidden2_units: {}, hidden3_units: {}".format(
+        args.batch_size, args.use_gpu, args.test_epoch, args.test_data_path, args.model_dir, args.hidden1_units, args.hidden2_units, args.hidden3_units))
     run_infer(args, args.test_data_path)
               

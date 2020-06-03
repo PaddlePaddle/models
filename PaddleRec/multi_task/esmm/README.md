@@ -96,6 +96,8 @@ GPU环境
 ```sh
 python infer.py --use_gpu 1\  #是否使用gpu
                 --batch_size 64\  #batch_size大小
+                --cpu_num 2\  #cpu数量
+                --model_dir ./model_dir \ #模型保存路径
                 --test_data_path ./test_data \  #训练数据路径
                 --vocab_path ./vocab_size.txt #embedding词汇表大小路径
 ```
@@ -114,6 +116,7 @@ CPU环境
 python infer.py --use_gpu 0\  #是否使用gpu
                 --batch_size 64\  #batch_size大小
                 --cpu_num 2\  #cpu数量
+                --model_dir ./model_dir \ #模型保存路径
                 --test_data_path ./test_data \  #训练数据路径
                 --vocab_path ./vocab_size.txt #embedding词汇表大小路径
 ```

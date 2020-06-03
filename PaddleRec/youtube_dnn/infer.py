@@ -48,6 +48,9 @@ def infer(args):
 
 if __name__ == "__main__":
     args = args.parse_args()
+    logger.info("use_gpu: {}, test_epoch: {}, model_dir: {}, user_vec_path: {}".format(
+        args.use_gpu, args.test_epoch, args.model_dir, args.user_vec_path))
+    
     if(os.path.exists(args.user_vec_path)):
         os.system("rm " + args.user_vec_path)
     infer(args)

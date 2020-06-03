@@ -14,7 +14,7 @@ all_field_id_dict = defaultdict(int)
 for i,field_id in enumerate(all_field_id):
     all_field_id_dict[field_id] = [False,i]
 
-def get_dataset(inputs,files,batch_size,cpu_num):
+def get_dataset(inputs, files,batch_size, cpu_num):
     dataset = fluid.DatasetFactory().create_dataset()
     dataset.set_use_var(inputs)
     dataset.set_pipe_command("python dataset_generator.py")

@@ -25,7 +25,7 @@ _model_path = None
 
 
 def run_infer(args, model_path, test_data_path):
-    test_data_generator = utils.CriteoDataset()
+    test_data_generator = utils.Dataset()
 
     with fluid.scope_guard(fluid.Scope()):
         test_reader = fluid.io.batch(

@@ -57,7 +57,10 @@ def model(TRIGRAM_D = 1000, L1_N = 300, L2_N = 300, L3_N = 128, Neg = 4):
     return avg_loss, R_Q_D_p, [query] + [doc_pos] + doc_negs
     
 args = args.parse_args()
-loss,R_Q_D_p, data_list = model(args.TRIGRAM_D,args.L1_N,args.L2_N,args.L3_N,args.Neg)
+logger.info("use_gpu: {}, batch_size: {}, TRIGRAM_D: {}, L1_N:{}, L2_N: {}, L3_N: {}, Neg: {}, base_lr: {}, model_dir: {}".format(
+    args.use_gpu, args.batch_size, args.TRIGRAM_D, args.L1_N, args.L2_N, args.L3_N, args.Neg, args.base_lr, args.model_dir))
+    
+loss,R_Q_D_p, data_list = model(args.TRIGRAM_D, args.L1_N, args.L2_N, args.L3_N, args.Neg)
 
 sgd = fluid.optimizer.SGD(learning_rate=args.base_lr)
 sgd.minimize(loss)
