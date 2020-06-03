@@ -580,7 +580,7 @@ python -u main.py \
 ```
 
 ### 服务部署
-&ensp;&ensp;&ensp;&ensp;模块内提供已训练好的5个inference_model模型，用户可根据自身业务情况进行下载使用。
+&ensp;&ensp;&ensp;&ensp;模块内提供已训练好的5个训练模型，用户可通过执行inference model脚本转换成可以部署的模型。
 
 #### 服务器部署
 &ensp;&ensp;&ensp;&ensp;请参考PaddlePaddle官方提供的[服务器端部署](https://www.paddlepaddle.org.cn/documentation/docs/zh/1.5/advanced_usage/deploy/inference/index_cn.html)文档进行部署上线。

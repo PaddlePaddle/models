@@ -9,15 +9,19 @@ TASK_NAME='senta'
 DATA_PATH=./senta_data/
 CKPT_PATH=./save_models
 MODEL_PATH=./save_models/step_1800/
+MODEL_TYPE=${MODEL_TYPE:-bilstm_net}
+USE_CUDA=${USE_CUDA:-true}
+
 
 # run_train on train.tsv and do_val on test.tsv
 train() {
     python -u run_classifier.py \
         --task_name ${TASK_NAME} \
-        --use_cuda true \
+        --use_cuda $USE_CUDA \
         --do_train true \
         --do_val false \
         --do_infer false \
+        --model_type $MODEL_TYPE \
         --batch_size 8 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${DATA_PATH}/word_dict.txt \
@@ -33,10 +37,11 @@ train() {
 evaluate() {
     python -u run_classifier.py \
         --task_name ${TASK_NAME} \
-        --use_cuda true \
+        --use_cuda $USE_CUDA \
         --do_train false \
         --do_val true \
         --do_infer false \
+        --model_type $MODEL_TYPE \
         --batch_size 10 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${DATA_PATH}/word_dict.txt \
@@ -48,10 +53,11 @@ evaluate() {
 infer() {
     python -u run_classifier.py \
         --task_name ${TASK_NAME} \
-        --use_cuda true \
+        --use_cuda $USE_CUDA \
         --do_train false \
         --do_val false \
         --do_infer true \
+        --model_type $MODEL_TYPE \
         --batch_size 10 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${DATA_PATH}/word_dict.txt \

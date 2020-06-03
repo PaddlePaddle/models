@@ -99,7 +99,7 @@ def do_save_inference_model(args):
     assert (args.init_from_params)
 
     if args.init_from_params:
-        fluid.load(test_prog, args.init_from_params)
+        fluid.load(test_prog, args.init_from_params, executor=exe)
 
     # saving inference model
     fluid.io.save_inference_model(
