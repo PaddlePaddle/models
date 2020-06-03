@@ -21,7 +21,7 @@ train() {
         --do_train true \
         --do_val false \
         --do_infer false \
-        --model_type ${MODEL_TYPE} \            
+        --model_type $MODEL_TYPE \
         --batch_size 8 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${DATA_PATH}/word_dict.txt \
@@ -41,7 +41,7 @@ evaluate() {
         --do_train false \
         --do_val true \
         --do_infer false \
-        --model_type ${MODEL_TYPE} \            
+        --model_type $MODEL_TYPE \
         --batch_size 10 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${DATA_PATH}/word_dict.txt \
@@ -57,7 +57,7 @@ infer() {
         --do_train false \
         --do_val false \
         --do_infer true \
-        --model_type ${MODEL_TYPE} \            
+        --model_type $MODEL_TYPE \
         --batch_size 10 \
         --data_dir ${DATA_PATH} \
         --vocab_path ${DATA_PATH}/word_dict.txt \
