@@ -31,6 +31,9 @@ from utils import *
 from mobilenet_v1 import *
 from mobilenet_v2 import *
 
+from imagenet_dataset import ImageNetDataset
+from paddle.io import DataLoader
+
 args = parse_args()
 if int(os.getenv("PADDLE_TRAINER_ID", 0)) == 0:
     print_arguments(args)
@@ -116,14 +119,36 @@ def train_mobilenet():
             optimizer.set_dict(opti_dict)
 
         # 3. reader
-        train_data_loader = utility.create_data_loader(is_train=True, args=args)
+        #train_data_loader = utility.create_data_loader(is_train=True, args=args)
         test_data_loader = utility.create_data_loader(is_train=False, args=args)
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
         imagenet_reader = reader.ImageNetReader(seed=0, place_num=place_num)
-        train_reader = imagenet_reader.train(settings=args)
-        test_reader = imagenet_reader.val(settings=args)
-        train_data_loader.set_sample_list_generator(train_reader, place)
-        test_data_loader.set_sample_list_generator(test_reader, place)
+        #train_reader = imagenet_reader.train(settings=args)
+        #test_reader = imagenet_reader.val(settings=args)
+        #train_data_loader.set_sample_list_generator(train_reader, place)
+        #test_data_loader.set_sample_list_generator(test_reader, place)
+
+        train_dataset = ImageNetDataset(
+            os.path.join(args.data_dir, "train"), mode='train')
+
+        train_data_loader = DataLoader(
+            train_dataset,
+            batch_size=args.batch_size,
+            places=place,
+            shuffle=True,
+            drop_last=True,
+            num_workers=10)
+
+        test_dataset = ImageNetDataset(
+            os.path.join(args.data_dir, "val"), mode='val')
+
+        test_data_loader = DataLoader(
+            test_dataset,
+            batch_size=args.batch_size,
+            places=place,
+            shuffle=True,
+            drop_last=True,
+            num_workers=1)
 
         # 4. train loop
         total_batch_num = 0  #this is for benchmark
@@ -184,7 +209,7 @@ def train_mobilenet():
                 total_sample += 1
                 batch_id += 1
                 t_last = time.time()
-               
+
                 # NOTE: used for benchmark
                 total_batch_num = total_batch_num + 1
 
