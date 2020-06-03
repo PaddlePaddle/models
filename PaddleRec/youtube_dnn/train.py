@@ -70,6 +70,9 @@ def train(args):
 
 if __name__ == "__main__":
     args = args.parse_args()
+    logger.info("use_gpu: {}, batch_size: {}, epochs: {}, watch_vec_size: {}, search_vec_size: {}, other_feat_size: {}, output_size: {}, model_dir: {}, test_epoch: {}, base_lr: {}, video_vec_path: {}".format(
+        args.use_gpu, args.batch_size, args.epochs, args.watch_vec_size, args.search_vec_size, args.other_feat_size, args.output_size, args.model_dir, args.test_epoch, args.base_lr, args.video_vec_path))
+    
     if(os.path.exists(args.video_vec_path)):
         os.system("rm " + args.video_vec_path)
     train(args)

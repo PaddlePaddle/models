@@ -27,6 +27,20 @@
 
  python3.7 
 
+## 数据集说明
+
+本项目构造数据集验证模型的正确性，字段说明如下：
+
+user_slot_name：用户端特征群id
+
+item_slot_name：item段特征群id
+
+lenght：item的长度
+
+label：用户对给定的是否点击item的list
+
+注意：由于构造数据集的限制，本项目只用一个epoch，如果多个epoch，则多个epoch的数据是变化的，没有意义，因此只采用一个epoch。
+
 ## 单机训练
 
 GPU环境

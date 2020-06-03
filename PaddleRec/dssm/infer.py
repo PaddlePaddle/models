@@ -37,4 +37,6 @@ def infer(args):
 
 if __name__ == "__main__":
     args = args.parse_args()
+    logger.info("use_gpu: {}, model_dir: {}".format(args.use_gpu, args.model_dir))
+    
     infer(args)
