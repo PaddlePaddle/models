@@ -17,6 +17,7 @@ def infer(args):
     exe = fluid.Executor(place)
     cur_model_path = os.path.join(args.model_dir, 'epoch_' + str(args.test_epoch), "checkpoint")
 
+
     with fluid.scope_guard(fluid.Scope()):
         infer_program, feed_target_names, fetch_vars = fluid.io.load_inference_model(cur_model_path, exe)
         # Build a random data set.

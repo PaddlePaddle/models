@@ -99,11 +99,13 @@ class MNIST(fluid.dygraph.Layer):
         self.pool_2_shape = 50 * 4 * 4
         SIZE = 10
         scale = (2.0 / (self.pool_2_shape**2 * SIZE))**0.5
-        self._fc = Linear(self.pool_2_shape, 10,
-                      param_attr=fluid.param_attr.ParamAttr(
-                          initializer=fluid.initializer.NormalInitializer(
-                              loc=0.0, scale=scale)),
-                      act="softmax")
+        self._fc = Linear(
+            self.pool_2_shape,
+            10,
+            param_attr=fluid.param_attr.ParamAttr(
+                initializer=fluid.initializer.NormalInitializer(
+                    loc=0.0, scale=scale)),
+            act="softmax")
 
     def forward(self, inputs, label=None):
         x = self._simple_img_conv_pool_1(inputs)
@@ -117,17 +119,21 @@ class MNIST(fluid.dygraph.Layer):
             return x
 
 
+def reader_decorator(reader):
+    def __reader__():
+        for item in reader():
+            img = np.array(item[0]).astype('float32').reshape(1, 28, 28)
+            label = np.array(item[1]).astype('int64').reshape(1)
+            yield img, label
+
+    return __reader__
+
+
 def test_mnist(reader, model, batch_size):
     acc_set = []
     avg_loss_set = []
     for batch_id, data in enumerate(reader()):
-        dy_x_data = np.array([x[0].reshape(1, 28, 28)
-                              for x in data]).astype('float32')
-        y_data = np.array(
-            [x[1] for x in data]).astype('int64').reshape(batch_size, 1)
-
-        img = to_variable(dy_x_data)
-        label = to_variable(y_data)
+        img, label = data
         label.stop_gradient = True
         prediction, acc = model(img, label)
         loss = fluid.layers.cross_entropy(input=prediction, label=label)
@@ -187,28 +193,33 @@ def train_mnist(args):
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
         mnist = MNIST()
-        adam = AdamOptimizer(learning_rate=0.001, parameter_list=mnist.parameters())
+        adam = AdamOptimizer(
+            learning_rate=0.001, parameter_list=mnist.parameters())
         if args.use_data_parallel:
             mnist = fluid.dygraph.parallel.DataParallel(mnist, strategy)
 
         train_reader = paddle.batch(
-            paddle.dataset.mnist.train(), batch_size=BATCH_SIZE, drop_last=True)
+            reader_decorator(paddle.dataset.mnist.train()),
+            batch_size=BATCH_SIZE,
+            drop_last=True)
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
 
         test_reader = paddle.batch(
-            paddle.dataset.mnist.test(), batch_size=BATCH_SIZE, drop_last=True)
+            reader_decorator(paddle.dataset.mnist.test()),
+            batch_size=BATCH_SIZE,
+            drop_last=True)
+
+        train_loader = fluid.io.DataLoader.from_generator(capacity=10)
+        train_loader.set_sample_list_generator(train_reader, places=place)
+
+        test_loader = fluid.io.DataLoader.from_generator(capacity=10)
+        test_loader.set_sample_list_generator(test_reader, places=place)
 
         for epoch in range(epoch_num):
-            for batch_id, data in enumerate(train_reader()):
-                dy_x_data = np.array([x[0].reshape(1, 28, 28)
-                                      for x in data]).astype('float32')
-                y_data = np.array(
-                    [x[1] for x in data]).astype('int64').reshape(-1, 1)
-
-                img = to_variable(dy_x_data)
-                label = to_variable(y_data)
+            for batch_id, data in enumerate(train_loader()):
+                img, label = data
                 label.stop_gradient = True
 
                 cost, acc = mnist(img, label)
@@ -231,7 +242,7 @@ def train_mnist(args):
                         epoch, batch_id, avg_loss.numpy()))
 
             mnist.eval()
-            test_cost, test_acc = test_mnist(test_reader, mnist, BATCH_SIZE)
+            test_cost, test_acc = test_mnist(test_loader, mnist, BATCH_SIZE)
             mnist.train()
             if args.ce:
                 print("kpis\ttest_acc\t%s" % test_acc)
@@ -244,7 +255,7 @@ def train_mnist(args):
             fluid.dygraph.parallel.Env().local_rank == 0)
         if save_parameters:
             fluid.save_dygraph(mnist.state_dict(), "save_temp")
-            
+
             print("checkpoint saved")
 
             inference_mnist()
