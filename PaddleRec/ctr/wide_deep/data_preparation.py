@@ -102,8 +102,3 @@ if __name__ == '__main__':
     args = args.parse_args()
     clean_file(args.train_path, args.test_path, args.train_data_path, args.test_data_path)  
     build_model_columns(args.train_data_path, args.test_data_path)
-    
-    
-    
-    
-        

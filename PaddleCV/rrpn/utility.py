@@ -154,7 +154,7 @@ def parse_args():
     add_arg('pixel_means',     float,   [0.485, 0.456, 0.406], "pixel mean")
     add_arg('nms_thresh',    float, 0.3,    "NMS threshold.")
     add_arg('score_thresh',    float, 0.01,    "score threshold for NMS.")
-    add_arg('snapshot_stride',  int,    1000,    "save model every snapshot stride.")
+    add_arg('snapshot_iter',  int,    1000,    "save model every snapshot iter.")
     # SINGLE EVAL AND DRAW
     add_arg('draw_threshold',  float, 0.8,    "Confidence threshold to draw bbox.")
     add_arg('image_path',       str,   'ICDAR2015/tmp/',  "The image path used to inference and visualize.")
