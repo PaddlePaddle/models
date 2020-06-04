@@ -41,6 +41,13 @@ def _load_state(path):
     return state
 
 
+def _strip_postfix(path):
+    path, ext = os.path.splitext(path)
+    assert ext in ['', '.pdparams', '.pdopt', '.pdmodel'], \
+            "Unknown postfix {} from weights".format(ext)
+    return path
+
+
 def load_params(exe, prog, path):
     """
     Load model from the given path.
@@ -50,20 +57,33 @@ def load_params(exe, prog, path):
         path (string): URL string or loca model path.
     """
 
-    if not os.path.exists(path):
+    path = _strip_postfix(path)
+    if not (os.path.isdir(path) or os.path.exists(path + '.pdparams')):
         raise ValueError("Model pretrain path {} does not "
                          "exists.".format(path))
 
     logger.info('Loading parameters from {}...'.format(path))
 
-    def _if_exist(var):
-        param_exist = os.path.exists(os.path.join(path, var.name))
-        do_load = param_exist
-        if do_load:
-            logger.debug('load weight {}'.format(var.name))
-        return do_load
+    ignore_set = set()
+    state = _load_state(path)
 
-    fluid.io.load_vars(exe, path, prog, predicate=_if_exist)
+    # ignore the parameter which mismatch the shape 
+    # between the model and pretrain weight.
+    all_var_shape = {}
+    for block in prog.blocks:
+        for param in block.all_parameters():
+            all_var_shape[param.name] = param.shape
+    ignore_set.update([
+        name for name, shape in all_var_shape.items()
+        if name in state and shape != state[name].shape
+    ])
+
+    if len(ignore_set) > 0:
+        for k in ignore_set:
+            if k in state:
+                logger.warning('variable {} not used'.format(k))
+                del state[k]
+    fluid.io.set_program_state(prog, state)
 
 
 def save(exe, prog, path):
@@ -83,6 +103,7 @@ def save(exe, prog, path):
 def load_and_fusebn(exe, prog, path):
     """
     Fuse params of batch norm to scale and bias.
+
     Args:
         exe (fluid.Executor): The fluid.Executor object.
         prog (fluid.Program): save weight from which Program object.
@@ -104,19 +125,12 @@ def load_and_fusebn(exe, prog, path):
     #  x is any prefix
     mean_variances = set()
     bn_vars = []
-
-    state = None
-    if os.path.exists(path + '.pdparams'):
-        state = _load_state(path)
+    state = _load_state(path)
 
     def check_mean_and_bias(prefix):
         m = prefix + 'mean'
         v = prefix + 'variance'
-        if state:
-            return v in state and m in state
-        else:
-            return (os.path.exists(os.path.join(path, m)) and
-                    os.path.exists(os.path.join(path, v)))
+        return v in state and m in state
 
     has_mean_bias = True
 
@@ -156,16 +170,14 @@ def load_and_fusebn(exe, prog, path):
                     bn_vars.append(
                         [scale_name, bias_name, mean_name, variance_name])
 
-    if state:
-        fluid.io.set_program_state(prog, state)
-    else:
-        load_params(exe, prog, path)
     if not has_mean_bias:
+        fluid.io.set_program_state(prog, state)
         logger.warning(
             "There is no paramters of batch norm in model {}. "
             "Skip to fuse batch norm. And load paramters done.".format(path))
         return
 
+    fluid.load(prog, path, exe)
     eps = 1e-5
     for names in bn_vars:
         scale_name, bias_name, mean_name, var_name = names

@@ -101,7 +101,6 @@ class ICDAR2015Dataset(object):
                     elif edge2 >= edge1:
                         width = edge2
                         height = edge1
-                        # print pt2[0], pt3[0]
                         if pt2[0] - pt3[0] != 0:
                             angle = -np.arctan(
                                 float(pt2[1] - pt3[1]) /
@@ -160,7 +159,6 @@ class ICDAR2015Dataset(object):
                     else:
                         hard_boxes.append([x_ctr, y_ctr, width, height, angle])
 
-            #print(easy_boxes)
             if self.mode == 'train':
                 boxes.extend(easy_boxes)
                 # hard box only get 1/3 for train
@@ -173,8 +171,6 @@ class ICDAR2015Dataset(object):
                 is_difficult = [0] * len(easy_boxes)
                 is_difficult.extend([1] * int(len(hard_boxes)))
             len_of_bboxes = len(boxes)
-            #is_difficult = [0] * len(easy_boxes)
-            #is_difficult.extend([1] * int(len(hard_boxes)))
             is_difficult = np.array(is_difficult).reshape(
                 1, len_of_bboxes).astype(np.int32)
             if self.mode == 'train':
@@ -221,11 +217,9 @@ class ICDAR2017Dataset(object):
     def __init__(self, mode):
         print('Creating: {}'.format(cfg.dataset))
         self.name = cfg.data_dir
-        #print('**************', self.name)
         self.mode = mode
         data_path = DatasetPath(mode, self.name)
         data_dir = data_path.get_data_dir()
-        #print("&**************", data_dir)
         file_list = data_path.get_file_list()
         self.image_dir = data_dir
         self.gt_dir = file_list
@@ -245,15 +239,12 @@ class ICDAR2017Dataset(object):
             labels_map = get_labels_maps()
         for image in image_list:
             prefix = image[:-4]
-            #print(image)
 
             if image.split('.')[-1] not in post_fix:
                 continue
             img_name = os.path.join(self.image_dir, image)
             gt_name = os.path.join(self.gt_dir, 'gt_' + prefix + '.txt')
             gt_classes = []
-            #boxes = []
-            #hard_boxes = []
             boxes = []
             gt_obj = open(gt_name, 'r', encoding='UTF-8-sig')
             gt_txt = gt_obj.read()
@@ -293,7 +284,6 @@ class ICDAR2017Dataset(object):
                     elif edge2 >= edge1:
                         width = edge2
                         height = edge1
-                        # print pt2[0], pt3[0]
                         if pt2[0] - pt3[0] != 0:
                             angle = -np.arctan(
                                 float(pt2[1] - pt3[1]) /
@@ -312,7 +302,6 @@ class ICDAR2017Dataset(object):
                     else:
                         boxes.append([x_ctr, y_ctr, width, height, angle])
             len_of_bboxes = len(boxes)
-            #print(len_of_bboxes)
             is_difficult = np.zeros((len_of_bboxes, 1), dtype=np.int32)
             if self.mode == 'train':
                 gt_boxes = np.zeros((len_of_bboxes, 5), dtype=np.int32)
@@ -332,7 +321,6 @@ class ICDAR2017Dataset(object):
                         boxes[idx][3], boxes[idx][4], boxes[idx][5],
                         boxes[idx][6], boxes[idx][7]
                     ]
-                #gt_classes[idx] = 1
             if gt_boxes.shape[0] <= 0:
                 continue
             gt_boxes = gt_boxes.astype(np.float64)
