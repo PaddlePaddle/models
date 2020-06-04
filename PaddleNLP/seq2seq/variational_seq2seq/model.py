@@ -233,7 +233,7 @@ class VAE(object):
             layers.sampling_id(
                 layers.softmax(
                     layers.squeeze(output_layer(x),[1])
-                ),dtype='int'),
+                    ),dtype='int'),
                 depth=self.tar_vocab_size), [1])
 
         if mode == 'train':
