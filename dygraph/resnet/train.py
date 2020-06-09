@@ -26,6 +26,7 @@ from paddle.fluid import framework
 import math
 import sys
 import time
+import reader
 
 IMAGENET1000 = 1281167
 base_lr = 0.1
@@ -46,9 +47,90 @@ def parse_args():
     parser.add_argument(
         "-b", "--batch_size", default=32, type=int, help="set epoch")
     parser.add_argument("--ce", action="store_true", help="run ce")
-   
+
     # NOTE:used in benchmark
-    parser.add_argument("--max_iter", default=0, type=int, help="the max iters to train, used in benchmark")
+    parser.add_argument(
+        "--max_iter",
+        default=0,
+        type=int,
+        help="the max iters to train, used in benchmark")
+    parser.add_argument(
+        "--class_dim",
+        default=102,
+        type=int,
+        help="the class number of flowers dataset")
+    parser.add_argument(
+        "--use_imagenet_data",
+        action="store_true",
+        help="Use imagenet dataset instead of the flowers dataset(small dataset)"
+    )
+    parser.add_argument(
+        '--data_dir',
+        default="./data/ILSVRC2012",
+        type=str,
+        help="The ImageNet dataset root directory.")
+    parser.add_argument(
+        '--lower_scale',
+        default=0.08,
+        type=float,
+        help="The value of lower_scale in ramdom_crop")
+    parser.add_argument(
+        '--lower_ratio',
+        default=3. / 4.,
+        type=float,
+        help="The value of lower_ratio in ramdom_crop")
+    parser.add_argument(
+        '--upper_ratio',
+        default=4. / 3.,
+        type=float,
+        help="The value of upper_ratio in ramdom_crop")
+    parser.add_argument(
+        '--resize_short_size',
+        default=256,
+        type=int,
+        help="The value of resize_short_size")
+    parser.add_argument(
+        '--crop_size', default=224, type=int, help="The value of crop size")
+    parser.add_argument(
+        '--use_mixup', default=False, type=bool, help="Whether to use mixup")
+    parser.add_argument(
+        '--mixup_alpha',
+        default=0.2,
+        type=float,
+        help="The value of mixup_alpha")
+    parser.add_argument(
+        '--reader_thread',
+        default=8,
+        type=int,
+        help="The number of multi thread reader")
+    parser.add_argument(
+        '--reader_buf_size',
+        default=16,
+        type=int,
+        help="The buf size of multi thread reader")
+    parser.add_argument(
+        '--interpolation',
+        default=None,
+        type=int,
+        help="The interpolation mode")
+    parser.add_argument(
+        '--use_aa',
+        default=False,
+        type=bool,
+        help="Whether to use auto augment")
+    parser.add_argument(
+        '--image_mean',
+        nargs='+',
+        type=float,
+        default=[0.485, 0.456, 0.406],
+        help="The mean of input image data")
+    parser.add_argument(
+        '--image_std',
+        nargs='+',
+        type=float,
+        default=[0.229, 0.224, 0.225],
+        help="The std of input image data")
+
     args = parser.parse_args()
     return args
 
@@ -288,30 +370,47 @@ def train_resnet():
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
 
-        resnet = ResNet()
+        resnet = ResNet(class_dim=args.class_dim)
         optimizer = optimizer_setting(parameter_list=resnet.parameters())
 
         if args.use_data_parallel:
             resnet = fluid.dygraph.parallel.DataParallel(resnet, strategy)
 
-        train_reader = paddle.batch(
-            reader_decorator(paddle.dataset.flowers.train(use_xmap=True)),
-            batch_size=batch_size,
-            drop_last=True)
+        if args.use_imagenet_data:
+            imagenet_reader = reader.ImageNetReader(0)
+            train_reader = imagenet_reader.train(settings=args)
+        else:
+            train_reader = paddle.batch(
+                reader_decorator(paddle.dataset.flowers.train(use_xmap=True)),
+                batch_size=batch_size,
+                drop_last=True)
 
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
 
-        test_reader = paddle.batch(
-            reader_decorator(paddle.dataset.flowers.test(use_xmap=True)),
-            batch_size=batch_size,
-            drop_last=True)
+        if args.use_imagenet_data:
+            test_reader = imagenet_reader.val(settings=args)
+        else:
+            test_reader = paddle.batch(
+                reader_decorator(paddle.dataset.flowers.test(use_xmap=True)),
+                batch_size=batch_size,
+                drop_last=True)
 
-        train_loader = fluid.io.DataLoader.from_generator(capacity=10)
+        train_loader = fluid.io.DataLoader.from_generator(
+            capacity=32,
+            use_double_buffer=True,
+            iterable=True,
+            return_list=True,
+            use_multiprocess=True)
         train_loader.set_sample_list_generator(train_reader, places=place)
 
-        test_loader = fluid.io.DataLoader.from_generator(capacity=10)
+        test_loader = fluid.io.DataLoader.from_generator(
+            capacity=64,
+            use_double_buffer=True,
+            iterable=True,
+            return_list=True,
+            use_multiprocess=True)
         test_loader.set_sample_list_generator(test_reader, places=place)
 
         #file_name = './model/epoch_0.npz'
@@ -368,7 +467,7 @@ def train_resnet():
                 total_acc1 += acc_top1.numpy()
                 total_acc5 += acc_top5.numpy()
                 total_sample += 1
-                total_batch_num = total_batch_num + 1 #this is for benchmark
+                total_batch_num = total_batch_num + 1  #this is for benchmark
                 #print("epoch id: %d, batch step: %d, loss: %f" % (eop, batch_id, dy_out))
                 if batch_id % 10 == 0:
                     print( "epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f, batch cost: %.5f" % \
