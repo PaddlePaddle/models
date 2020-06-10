@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python train.py --use_gpu 1 --train_files_path ./train_data_full --model_dir ./model_dir --learning_rate 0.001 --batch_size 1000 --epochs 10 --reduction_ratio 3 --dropout_rate 0.5 --embedding_size 10
