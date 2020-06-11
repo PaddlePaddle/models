@@ -47,8 +47,11 @@ def eval(net, test_data_loader, eop):
     t_last = 0
     place_num = paddle.fluid.core.get_cuda_device_count(
     ) if args.use_gpu else int(os.environ.get('CPU_NUM', 1))
+
+    batch_start = time.time()
     for img, label in test_data_loader():
-        t1 = time.time()
+        batch_reader_end = time.time()
+
         label = to_variable(label.numpy().astype('int64').reshape(
             int(args.batch_size // place_num), 1))
         out = net(img)
@@ -57,15 +60,19 @@ def eval(net, test_data_loader, eop):
         avg_loss = fluid.layers.mean(x=loss)
         acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
-        t2 = time.time()
-        print( "test | epoch id: %d, avg_loss %0.5f acc_top1 %0.5f acc_top5 %0.5f %2.4f sec read_t:%2.4f" % \
-                (eop, avg_loss.numpy(), acc_top1.numpy(), acc_top5.numpy(), t2 - t1 , t1 - t_last))
-        sys.stdout.flush()
         total_loss += avg_loss.numpy()
         total_acc1 += acc_top1.numpy()
         total_acc5 += acc_top5.numpy()
+
+        test_batch_cost = time.time() - batch_start
         total_sample += 1
-        t_last = time.time()
+        print(
+            "test | epoch %d, avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec"
+            % (eop, avg_loss.numpy(), acc_top1.numpy(), acc_top5.numpy(),
+               test_batch_cost, batch_reader_end - batch_start))
+        sys.stdout.flush()
+        batch_start = time.time()
+
     print("final eval loss %0.3f acc1 %0.3f acc5 %0.3f" % \
           (total_loss / total_sample, \
            total_acc1 / total_sample, total_acc5 / total_sample))
@@ -148,9 +155,12 @@ def train_mobilenet():
         # 4. train loop
         total_batch_num = 0  #this is for benchmark
         for eop in range(args.num_epochs):
+            epoch_start = time.time()
+
             if num_trainers > 1:
                 imagenet_reader.set_shuffle_seed(eop + (
                     args.random_seed if args.random_seed else 0))
+
             net.train()
             total_loss = 0.0
             total_acc1 = 0.0
@@ -158,24 +168,23 @@ def train_mobilenet():
             total_sample = 0
             batch_id = 0
             t_last = 0
+
             # 4.1 for each batch, call net() , backward(), and minimize()
+            batch_start = time.time()
             for img, label in train_data_loader():
-                t1 = time.time()
                 if args.max_iter and total_batch_num == args.max_iter:
                     return
-                t_start = time.time()
+                batch_reader_end = time.time()
 
                 # 4.1.1 call net()
                 out = net(img)
-
-                t_end = time.time()
                 softmax_out = fluid.layers.softmax(out, use_cudnn=False)
                 loss = fluid.layers.cross_entropy(
                     input=softmax_out, label=label)
                 avg_loss = fluid.layers.mean(x=loss)
                 acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
                 acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
-                t_start_back = time.time()
+                batch_net_end = time.time()
 
                 # 4.1.2 call backward()
                 if args.use_data_parallel:
@@ -184,37 +193,43 @@ def train_mobilenet():
                     net.apply_collective_grads()
                 else:
                     avg_loss.backward()
-
-                t_end_back = time.time()
+                batch_backward_end = time.time()
 
                 # 4.1.3 call minimize()
                 optimizer.minimize(avg_loss)
 
                 net.clear_gradients()
                 t2 = time.time()
-                train_batch_elapse = t2 - t1
-                if batch_id % args.print_step == 0:
-                    print( "epoch id: %d, batch step: %d,  avg_loss %0.5f acc_top1 %0.5f acc_top5 %0.5f %2.4f sec net_t:%2.4f back_t:%2.4f read_t:%2.4f" % \
-                            (eop, batch_id, avg_loss.numpy(), acc_top1.numpy(), acc_top5.numpy(), train_batch_elapse,
-                              t_end - t_start, t_end_back - t_start_back,  t1 - t_last))
-                    sys.stdout.flush()
                 total_loss += avg_loss.numpy()
                 total_acc1 += acc_top1.numpy()
                 total_acc5 += acc_top5.numpy()
                 total_sample += 1
                 batch_id += 1
-                t_last = time.time()
 
                 # NOTE: used for benchmark
+                train_batch_cost = time.time() - batch_start
                 total_batch_num = total_batch_num + 1
+                if batch_id % args.print_step == 0:
+                    print(
+                        "[Epoch %d, batch %d], avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f sec, net_t: %.5f sec, backward_t: %.5f sec, reader_t: %.5f sec"
+                        % (eop, batch_id, avg_loss.numpy(), acc_top1.numpy(),
+                           acc_top5.numpy(), train_batch_cost,
+                           batch_net_end - batch_reader_end,
+                           batch_backward_end - batch_net_end,
+                           batch_reader_end - batch_start))
+                    sys.stdout.flush()
+                batch_start = time.time()
 
             if args.ce:
                 print("kpis\ttrain_acc1\t%0.3f" % (total_acc1 / total_sample))
                 print("kpis\ttrain_acc5\t%0.3f" % (total_acc5 / total_sample))
                 print("kpis\ttrain_loss\t%0.3f" % (total_loss / total_sample))
-            print("epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f %2.4f sec" % \
-                  (eop, batch_id, total_loss / total_sample, \
-                   total_acc1 / total_sample, total_acc5 / total_sample, train_batch_elapse))
+
+            train_epoch_cost = time.time() - epoch_start
+            print(
+                "[Epoch %d], loss %.5f, acc1 %.5f, acc5 %.5f, epoch_cost: %.5f sec"
+                % (eop, total_loss / total_sample, total_acc1 / total_sample,
+                   total_acc5 / total_sample, train_epoch_cost))
 
             # 4.2 save checkpoint
             save_parameters = (not args.use_data_parallel) or (

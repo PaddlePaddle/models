@@ -331,8 +331,6 @@ def eval(model, data):
         label.stop_gradient = True
 
         out = model(img)
-        #loss = fluid.layers.cross_entropy(input=out, label=label)
-        #avg_loss = fluid.layers.mean(x=loss)
 
         acc_top1 = fluid.layers.accuracy(input=out, label=label, k=1)
         acc_top5 = fluid.layers.accuracy(input=out, label=label, k=5)
@@ -344,7 +342,6 @@ def eval(model, data):
         total_acc5 += acc_top5.numpy()
         total_sample += 1
 
-        # print("epoch id: %d, batch step: %d, loss: %f" % (eop, batch_id, dy_out))
         if batch_id % 10 == 0:
             print("test | batch step %d, acc1 %0.3f acc5 %0.3f" % \
                   ( batch_id, total_acc1 / total_sample, total_acc5 / total_sample))
@@ -413,13 +410,11 @@ def train_resnet():
             use_multiprocess=True)
         test_loader.set_sample_list_generator(test_reader, places=place)
 
-        #file_name = './model/epoch_0.npz'
-        #model_data = np.load( file_name )
-
         #NOTE: used in benchmark 
         total_batch_num = 0
 
         for eop in range(epoch):
+            epoch_start = time.time()
 
             resnet.train()
             total_loss = 0.0
@@ -427,17 +422,13 @@ def train_resnet():
             total_acc5 = 0.0
             total_sample = 0
 
-            #dict_state = resnet.state_dict()
-
-            #resnet.load_dict( model_data )
-
-            print("load finished")
-
+            batch_start = time.time()
             for batch_id, data in enumerate(train_loader()):
                 #NOTE: used in benchmark
                 if args.max_iter and total_batch_num == args.max_iter:
                     return
-                batch_start = time.time()
+
+                train_reader_cost = time.time() - batch_start
 
                 img, label = data
                 label.stop_gradient = True
@@ -461,26 +452,32 @@ def train_resnet():
                 optimizer.minimize(avg_loss)
                 resnet.clear_gradients()
 
-                batch_end = time.time()
-                train_batch_cost = batch_end - batch_start
                 total_loss += dy_out
                 total_acc1 += acc_top1.numpy()
                 total_acc5 += acc_top5.numpy()
                 total_sample += 1
+
+                train_batch_cost = time.time() - batch_start
                 total_batch_num = total_batch_num + 1  #this is for benchmark
-                #print("epoch id: %d, batch step: %d, loss: %f" % (eop, batch_id, dy_out))
                 if batch_id % 10 == 0:
-                    print( "epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f, batch cost: %.5f" % \
-                           ( eop, batch_id, total_loss / total_sample, \
-                             total_acc1 / total_sample, total_acc5 / total_sample, train_batch_cost))
+                    print(
+                        "[Epoch %d, batch %d] loss %.5f, acc1 %.5f, acc5 %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec"
+                        % (eop, batch_id, total_loss / total_sample,
+                           total_acc1 / total_sample, total_acc5 / total_sample,
+                           train_batch_cost, train_reader_cost))
+                batch_start = time.time()
 
             if args.ce:
                 print("kpis\ttrain_acc1\t%0.3f" % (total_acc1 / total_sample))
                 print("kpis\ttrain_acc5\t%0.3f" % (total_acc5 / total_sample))
                 print("kpis\ttrain_loss\t%0.3f" % (total_loss / total_sample))
-            print("epoch %d | batch step %d, loss %0.3f acc1 %0.3f acc5 %0.3f" % \
-                  (eop, batch_id, total_loss / total_sample, \
-                   total_acc1 / total_sample, total_acc5 / total_sample))
+
+            train_epoch_cost = time.time() - epoch_start
+            print(
+                "[Epoch %d], loss %.5f, acc1 %.5f, acc5 %.5f, epoch_cost: %.5f sec"
+                % (eop, total_loss / total_sample, total_acc1 / total_sample,
+                   total_acc5 / total_sample, train_epoch_cost))
+
             resnet.eval()
             eval(resnet, test_loader)
 
