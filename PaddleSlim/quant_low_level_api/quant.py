@@ -158,7 +158,13 @@ def build_program(is_train, main_prog, startup_prog, args):
             dtypes=["float32", "int64"],
             use_double_buffer=True)
         with fluid.unique_name.guard():
-            image, label = fluid.layers.read_file(py_reader)
+            image = fluid.data(name="image", shape=[-1] + image_shape, dtype='float32')
+            label = fluid.data(name="label", shape=[-1, 1], dtype="int64")
+            # if is_train:
+            #     image = fluid.data(name="image", shape=[-1] + image_shape, dtype='float32')
+            #     label = fluid.data(name="label", shape=[-1, 1], dtype="int64")
+            # else:
+            #     image, label = fluid.layers.read_file(py_reader)
             out, avg_cost, acc_top1, acc_top5 = net_config(image, label, model, args)
             avg_cost.persistable = True
             acc_top1.persistable = True
@@ -171,11 +177,13 @@ def build_program(is_train, main_prog, startup_prog, args):
                 params["learning_strategy"]["batch_size"] = args.batch_size
                 params["learning_strategy"]["name"] = args.lr_strategy
 
-                optimizer = optimizer_setting(params)
+                # optimizer = optimizer_setting(params)
+                optimizer = fluid.optimizer.SGD(
+                                        learning_rate=0.1)
                 optimizer.minimize(avg_cost)
                 global_lr = optimizer._global_learning_rate()
     if is_train:
-        return image, out, py_reader, avg_cost, acc_top1, acc_top5, global_lr
+        return image, label, out, py_reader, avg_cost, acc_top1, acc_top5, global_lr
     else:
         return image, out, py_reader, avg_cost, acc_top1, acc_top5
 
@@ -195,12 +203,12 @@ def train(args):
     train_prog = fluid.Program()
     test_prog = fluid.Program()
 
-    _, _, train_py_reader, train_cost, train_acc1, train_acc5, global_lr = build_program(
+    image, label, out, train_py_reader, train_cost, train_acc1, train_acc5, global_lr = build_program(
         is_train=True,
         main_prog=train_prog,
         startup_prog=startup_prog,
         args=args)
-    image, out, test_py_reader, test_cost, test_acc1, test_acc5 = build_program(
+    _, _, test_py_reader, test_cost, test_acc1, test_acc5 = build_program(
         is_train=False,
         main_prog=test_prog,
         startup_prog=startup_prog,
@@ -233,12 +241,13 @@ def train(args):
     test_batch_size = 1 if activation_quant_type == 'abs_max' else 8
     train_reader = paddle.batch(
         reader.train(data_dir=data_dir), batch_size=train_batch_size, drop_last=True)
-    test_reader = paddle.batch(reader.val(data_dir=data_dir), batch_size=test_batch_size)
+    test_reader = paddle.batch(reader.val(data_dir=data_dir), batch_size=128)
 
-    train_py_reader.decorate_paddle_reader(train_reader)
+    # train_py_reader.decorate_paddle_reader(train_reader)
+    feeder_train = fluid.DataFeeder(
+        feed_list=[image, label], place=place)
     test_py_reader.decorate_paddle_reader(test_reader)
 
-    train_fetch_list = [train_cost.name, train_acc1.name, train_acc5.name, global_lr.name]
     test_fetch_list = [test_cost.name, test_acc1.name, test_acc5.name]
 
     # 1. Make some quantization transforms in the graph before training and testing.
@@ -261,77 +270,122 @@ def train(args):
         loss_name=train_cost.name, build_strategy=build_strategy)
     test_prog = test_graph.to_program()
     params = models.__dict__[args.model]().params
+    fetch_var_name = 'conv1_weights'
+    train_fetch_list = [fetch_var_name, train_cost.name, train_acc1.name, train_acc5.name, global_lr.name]
     for pass_id in range(params["num_epochs"]):
-
-        train_py_reader.start()
-
         train_info = [[], [], []]
         test_info = [[], [], []]
         train_time = []
         batch_id = 0
-        try:
-            while True:
-                t1 = time.time()
-                loss, acc1, acc5, lr = exe.run(binary, fetch_list=train_fetch_list)
-                t2 = time.time()
-                period = t2 - t1
-                loss = np.mean(np.array(loss))
-                acc1 = np.mean(np.array(acc1))
-                acc5 = np.mean(np.array(acc5))
-                train_info[0].append(loss)
-                train_info[1].append(acc1)
-                train_info[2].append(acc5)
-                lr = np.mean(np.array(lr))
-                train_time.append(period)
-                if batch_id % 10 == 0:
-                    print("Pass {0}, trainbatch {1}, loss {2}, \
-                        acc1 {3}, acc5 {4}, lr {5}, time {6}"
-                          .format(pass_id, batch_id, loss, acc1, acc5, "%.6f" %
-                                  lr, "%2.2f sec" % period))
-                    sys.stdout.flush()
-                batch_id += 1
-        except fluid.core.EOFException:
-            train_py_reader.reset()
+
+        for batch_id, data in enumerate(test_reader()):
+            t1 = time.time()
+            # print(np.array(data)[0][0][0][0][:10])
+            x_data = np.array(
+                [x[0].reshape(3, 224, 224) for x in data]).astype('float32')
+            # x_data = np.ones_like(np.array(x_data)) * batch_id
+            # print(x_data[0][0][0][:10])
+            y_data = np.array([x[1] for x in data]).astype('int64').reshape(-1, 1)
+            w_v = np.array(fluid.global_scope().find_var('conv1_weights').get_tensor())
+            # print("weight check----------------", w_v[0][0][0][:10])
+            # img_data, loss, acc1, acc5, lr = exe.run(binary, feed=feeder_train.feed(data), fetch_list=train_fetch_list)
+            target_var, loss, acc1, acc5, lr = exe.run(binary, feed={image.name: x_data, label.name: y_data}, fetch_list=train_fetch_list)
+            # print("var check(name: {})----------------".format(fetch_var_name), np.array(target_var)[0][0][0][:10])
+            t2 = time.time()
+            period = t2 - t1
+            loss = np.mean(np.array(loss))
+            acc1 = np.mean(np.array(acc1))
+            acc5 = np.mean(np.array(acc5))
+            train_info[0].append(loss)
+            train_info[1].append(acc1)
+            train_info[2].append(acc5)
+            lr = np.mean(np.array(lr))
+            train_time.append(period)
+            if batch_id % 1 == 0:
+                print("Pass {0}, trainbatch {1}, loss {2}, \
+                    acc1 {3}, acc5 {4}, lr {5}, time {6}"
+                      .format(pass_id, batch_id, loss, acc1, acc5, "%.6f" %
+                              lr, "%2.2f sec" % period))
+                sys.stdout.flush()
+            batch_id += 1
 
         train_loss = np.array(train_info[0]).mean()
         train_acc1 = np.array(train_info[1]).mean()
         train_acc5 = np.array(train_info[2]).mean()
 
-        test_py_reader.start()
 
-        test_batch_id = 0
-        try:
-            while True:
-                t1 = time.time()
-                loss, acc1, acc5 = exe.run(program=test_prog,
-                                           fetch_list=test_fetch_list)
-                t2 = time.time()
-                period = t2 - t1
-                loss = np.mean(loss)
-                acc1 = np.mean(acc1)
-                acc5 = np.mean(acc5)
-                test_info[0].append(loss)
-                test_info[1].append(acc1)
-                test_info[2].append(acc5)
-                if test_batch_id % 10 == 0:
-                    print("Pass {0},testbatch {1},loss {2}, \
-                        acc1 {3},acc5 {4},time {5}"
-                          .format(pass_id, test_batch_id, loss, acc1, acc5,
-                                  "%2.2f sec" % period))
-                    sys.stdout.flush()
-                test_batch_id += 1
-        except fluid.core.EOFException:
-            test_py_reader.reset()
+    # for pass_id in range(params["num_epochs"]):
 
-        test_loss = np.array(test_info[0]).mean()
-        test_acc1 = np.array(test_info[1]).mean()
-        test_acc5 = np.array(test_info[2]).mean()
+    #     train_py_reader.start()
 
-        print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3}, "
-              "test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(
-                  pass_id, train_loss, train_acc1, train_acc5, test_loss,
-                  test_acc1, test_acc5))
-        sys.stdout.flush()
+    #     train_info = [[], [], []]
+    #     test_info = [[], [], []]
+    #     train_time = []
+    #     batch_id = 0
+    #     try:
+    #         while True:
+    #             t1 = time.time()
+    #             img_data, loss, acc1, acc5, lr = exe.run(binary, fetch_list=train_fetch_list)
+    #             print(np.array(img_data)[0][0][0][:10])
+    #             t2 = time.time()
+    #             period = t2 - t1
+    #             loss = np.mean(np.array(loss))
+    #             acc1 = np.mean(np.array(acc1))
+    #             acc5 = np.mean(np.array(acc5))
+    #             train_info[0].append(loss)
+    #             train_info[1].append(acc1)
+    #             train_info[2].append(acc5)
+    #             lr = np.mean(np.array(lr))
+    #             train_time.append(period)
+    #             if batch_id % 10 == 0:
+    #                 print("Pass {0}, trainbatch {1}, loss {2}, \
+    #                     acc1 {3}, acc5 {4}, lr {5}, time {6}"
+    #                       .format(pass_id, batch_id, loss, acc1, acc5, "%.6f" %
+    #                               lr, "%2.2f sec" % period))
+    #                 sys.stdout.flush()
+    #             batch_id += 1
+    #     except fluid.core.EOFException:
+    #         train_py_reader.reset()
+
+    #     train_loss = np.array(train_info[0]).mean()
+    #     train_acc1 = np.array(train_info[1]).mean()
+    #     train_acc5 = np.array(train_info[2]).mean()
+
+        # test_py_reader.start()
+
+        # test_batch_id = 0
+        # try:
+        #     while True:
+        #         t1 = time.time()
+        #         loss, acc1, acc5 = exe.run(program=test_prog,
+        #                                    fetch_list=test_fetch_list)
+        #         t2 = time.time()
+        #         period = t2 - t1
+        #         loss = np.mean(loss)
+        #         acc1 = np.mean(acc1)
+        #         acc5 = np.mean(acc5)
+        #         test_info[0].append(loss)
+        #         test_info[1].append(acc1)
+        #         test_info[2].append(acc5)
+        #         if test_batch_id % 10 == 0:
+        #             print("Pass {0},testbatch {1},loss {2}, \
+        #                 acc1 {3},acc5 {4},time {5}"
+        #                   .format(pass_id, test_batch_id, loss, acc1, acc5,
+        #                           "%2.2f sec" % period))
+        #             sys.stdout.flush()
+        #         test_batch_id += 1
+        # except fluid.core.EOFException:
+        #     test_py_reader.reset()
+
+        # test_loss = np.array(test_info[0]).mean()
+        # test_acc1 = np.array(test_info[1]).mean()
+        # test_acc5 = np.array(test_info[2]).mean()
+
+        # print("End pass {0}, train_loss {1}, train_acc1 {2}, train_acc5 {3}, "
+        #       "test_loss {4}, test_acc1 {5}, test_acc5 {6}".format(
+        #           pass_id, train_loss, train_acc1, train_acc5, test_loss,
+        #           test_acc1, test_acc5))
+        # sys.stdout.flush()
 
         save_checkpoint_path = os.path.join(model_save_dir,  model_name, str(pass_id))
         if not os.path.isdir(save_checkpoint_path):
@@ -347,39 +401,39 @@ def train(args):
 
     # 2. Freeze the graph after training by adjusting the quantize
     # operators' order for the inference.
-    freeze_pass = QuantizationFreezePass(
-        scope=fluid.global_scope(),
-        place=place,
-        weight_quantize_type=weight_quant_type)
-    freeze_pass.apply(test_graph)
-    server_program = test_graph.to_program()
-    fluid.io.save_inference_model(
-        dirname=float_path,
-        feeded_var_names=[image.name],
-        target_vars=[out], executor=exe,
-        main_program=server_program)
+    # freeze_pass = QuantizationFreezePass(
+    #     scope=fluid.global_scope(),
+    #     place=place,
+    #     weight_quantize_type=weight_quant_type)
+    # freeze_pass.apply(test_graph)
+    # server_program = test_graph.to_program()
+    # fluid.io.save_inference_model(
+    #     dirname=float_path,
+    #     feeded_var_names=[image.name],
+    #     target_vars=[out], executor=exe,
+    #     main_program=server_program)
 
     # 3. Convert the weights into int8_t type.
     # (This step is optional.)
-    convert_int8_pass = ConvertToInt8Pass(scope=fluid.global_scope(), place=place)
-    convert_int8_pass.apply(test_graph)
-    server_int8_program = test_graph.to_program()
-    fluid.io.save_inference_model(
-        dirname=int8_path,
-        feeded_var_names=[image.name],
-        target_vars=[out], executor=exe,
-        main_program=server_int8_program)
+    # convert_int8_pass = ConvertToInt8Pass(scope=fluid.global_scope(), place=place)
+    # convert_int8_pass.apply(test_graph)
+    # server_int8_program = test_graph.to_program()
+    # fluid.io.save_inference_model(
+    #     dirname=int8_path,
+    #     feeded_var_names=[image.name],
+    #     target_vars=[out], executor=exe,
+    #     main_program=server_int8_program)
 
     # 4. Convert the freezed graph for paddle-mobile execution.
     # (This step is optional.)
-    mobile_pass = TransformForMobilePass()
-    mobile_pass.apply(test_graph)
-    mobile_program = test_graph.to_program()
+    # mobile_pass = TransformForMobilePass()
+    # mobile_pass.apply(test_graph)
+    # mobile_program = test_graph.to_program()
     fluid.io.save_inference_model(
-        dirname=mobile_path,
+        dirname="quant_infer",
         feeded_var_names=[image.name],
         target_vars=[out], executor=exe,
-        main_program=mobile_program)
+        main_program=test_graph.to_program())
 
 def main():
     args = parser.parse_args()
