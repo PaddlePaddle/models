@@ -5,7 +5,7 @@ root_url="https://paddle-inference-dist.bj.bcebos.com/int8/pretrain"
 MobileNetV1="MobileNetV1_pretrained.zip"
 ResNet50="ResNet50_pretrained.zip"
 GoogleNet="GoogleNet_pretrained.tar"
-data_dir='Your image dataset path, e.g. ILSVRC2012'
+data_dir='/work/datasets/ILSVRC2012/'
 pretrain_dir='../pretrain'
 
 if [ ! -d ${pretrain_dir} ]; then
@@ -32,15 +32,16 @@ fi
 cd -
 
 
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export CUDA_VISIBLE_DEVICES=1
+export FLAGS_cudnn_deterministic=1
 
 #MobileNet v1:
-python quant.py \
+python -u quant.py \
        --model=MobileNet \
        --pretrained_fp32_model=${pretrain_dir}/MobileNetV1_pretrained \
        --use_gpu=True \
        --data_dir=${data_dir} \
-       --batch_size=256 \
+       --batch_size=128 \
        --total_images=1281167 \
        --class_dim=1000 \
        --image_shape=3,224,224 \
@@ -48,7 +49,7 @@ python quant.py \
        --lr_strategy=piecewise_decay \
        --num_epochs=20 \
        --lr=0.0001 \
-       --act_quant_type=abs_max \
+       --act_quant_type=moving_average_abs_max \
        --wt_quant_type=abs_max
 
 
