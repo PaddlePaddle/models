@@ -51,17 +51,17 @@ def train(args):
     train_reader = fluid.io.batch(train_data_generator.get_train_data(), batch_size=args.batch_size)
     loader = fluid.io.DataLoader.from_generator(feed_list=inputs, capacity=args.batch_size, iterable=True)
     loader.set_sample_list_generator(train_reader, places=place)
-    for epoch in range(args.epochs):
-        for i in range(args.sample_size):
-            for batch_id, data in enumerate(loader()):
-                begin = time.time()
-                loss_val, auc = exe.run(program=fluid.default_main_program(),
-                        feed=data,
-                        fetch_list=[loss.name, auc_val],
-                        return_numpy=True)
-                end = time.time()
-                logger.info("epoch: {}, batch_id: {}, batch_time: {:.5f}s, loss: {:.5f}, auc: {:.5f}".format(
-                    epoch, batch_id, end-begin, float(np.array(loss_val)), float(np.array(auc))))
+
+    for i in range(args.sample_size):
+        for batch_id, data in enumerate(loader()):
+            begin = time.time()
+            loss_val, auc = exe.run(program=fluid.default_main_program(),
+                    feed=data,
+                    fetch_list=[loss.name, auc_val],
+                    return_numpy=True)
+            end = time.time()
+            logger.info("batch_id: {}, batch_time: {:.5f}s, loss: {:.5f}, auc: {:.5f}".format(
+                batch_id, end-begin, float(np.array(loss_val)), float(np.array(auc))))
         
     #save model
     model_dir = os.path.join(args.model_dir, 'epoch_' + str(1), "checkpoint")

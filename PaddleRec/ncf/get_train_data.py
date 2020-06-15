@@ -32,7 +32,7 @@ def get_train_data(filename, write_file, num_negatives):
         file = open(write_file, 'w') 
         print("writing " + write_file)
         
-        for (u, i) in mat:
+        for (u, i) in mat.keys():
             # positive instance
             user_input = str(u)
             item_input = str(i)
