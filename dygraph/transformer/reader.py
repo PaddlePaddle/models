@@ -396,7 +396,9 @@ class DataProcessor(object):
 
     def _load_lines(self, fpattern, tar_fname):
         fpaths = glob.glob(fpattern)
-        assert len(fpaths) > 0, "no matching file to the provided data path"
+        assert len(
+            fpaths
+        ) > 0, "No matching file to the provided data path, for pattern %s." % fpattern
 
         if len(fpaths) == 1 and tarfile.is_tarfile(fpaths[0]):
             if tar_fname is None:

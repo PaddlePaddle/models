@@ -33,29 +33,30 @@ from model import Transformer, CrossEntropyCriterion, NoamDecay
 def do_train(args):
     if args.use_cuda:
         trainer_count = fluid.dygraph.parallel.Env().nranks
-        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id
-                                ) if trainer_count > 1 else fluid.CUDAPlace(0)
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env(
+        ).dev_id) if trainer_count > 1 else fluid.CUDAPlace(0)
     else:
         trainer_count = 1
         place = fluid.CPUPlace()
 
     # define the data generator
-    processor = reader.DataProcessor(fpattern=args.training_file,
-                                     src_vocab_fpath=args.src_vocab_fpath,
-                                     trg_vocab_fpath=args.trg_vocab_fpath,
-                                     token_delimiter=args.token_delimiter,
-                                     use_token_batch=args.use_token_batch,
-                                     batch_size=args.batch_size,
-                                     device_count=trainer_count,
-                                     pool_size=args.pool_size,
-                                     sort_type=args.sort_type,
-                                     shuffle=args.shuffle,
-                                     shuffle_batch=args.shuffle_batch,
-                                     start_mark=args.special_token[0],
-                                     end_mark=args.special_token[1],
-                                     unk_mark=args.special_token[2],
-                                     max_length=args.max_length,
-                                     n_head=args.n_head)
+    processor = reader.DataProcessor(
+        fpattern=args.training_file,
+        src_vocab_fpath=args.src_vocab_fpath,
+        trg_vocab_fpath=args.trg_vocab_fpath,
+        token_delimiter=args.token_delimiter,
+        use_token_batch=args.use_token_batch,
+        batch_size=args.batch_size,
+        device_count=trainer_count,
+        pool_size=args.pool_size,
+        sort_type=args.sort_type,
+        shuffle=args.shuffle,
+        shuffle_batch=args.shuffle_batch,
+        start_mark=args.special_token[0],
+        end_mark=args.special_token[1],
+        unk_mark=args.special_token[2],
+        max_length=args.max_length,
+        n_head=args.n_head)
     batch_generator = processor.data_generator(phase="train")
     if args.validation_file:
         val_processor = reader.DataProcessor(
@@ -131,31 +132,30 @@ def do_train(args):
 
         if trainer_count > 1:
             strategy = fluid.dygraph.parallel.prepare_context()
-            transformer = fluid.dygraph.parallel.DataParallel(
-                transformer, strategy)
+            transformer = fluid.dygraph.parallel.DataParallel(transformer,
+                                                              strategy)
 
         # the best cross-entropy value with label smoothing
         loss_normalizer = -(
             (1. - args.label_smooth_eps) * np.log(
-                (1. - args.label_smooth_eps)) +
-            args.label_smooth_eps * np.log(args.label_smooth_eps /
-                                           (args.trg_vocab_size - 1) + 1e-20))
+                (1. - args.label_smooth_eps)) + args.label_smooth_eps *
+            np.log(args.label_smooth_eps / (args.trg_vocab_size - 1) + 1e-20))
 
         ce_time = []
         ce_ppl = []
         step_idx = 0
 
-        #NOTE: used for benchmark
-        total_batch_num = 0
-
         # train loop
         for pass_id in range(args.epoch):
-            pass_start_time = time.time()
+            epoch_start = time.time()
+
             batch_id = 0
+            batch_start = time.time()
             for input_data in train_loader():
-                if args.max_iter and total_batch_num == args.max_iter: #NOTE: used for benchmark
+                if args.max_iter and step_idx == args.max_iter:  #NOTE: used for benchmark
                     return
-                batch_start = time.time()
+                batch_reader_end = time.time()
+
                 (src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
                  trg_slf_attn_bias, trg_src_attn_bias, lbl_word,
                  lbl_weight) = input_data
@@ -163,8 +163,8 @@ def do_train(args):
                                      trg_word, trg_pos, trg_slf_attn_bias,
                                      trg_src_attn_bias)
 
-                sum_cost, avg_cost, token_num = criterion(
-                    logits, lbl_word, lbl_weight)
+                sum_cost, avg_cost, token_num = criterion(logits, lbl_word,
+                                                          lbl_weight)
 
                 if trainer_count > 1:
                     avg_cost = transformer.scale_loss(avg_cost)
@@ -184,19 +184,19 @@ def do_train(args):
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
                             "normalized loss: %f, ppl: %f" %
                             (step_idx, pass_id, batch_id, total_avg_cost,
-                            total_avg_cost - loss_normalizer,
-                            np.exp([min(total_avg_cost, 100)])))
-                        avg_batch_time = time.time()
+                             total_avg_cost - loss_normalizer,
+                             np.exp([min(total_avg_cost, 100)])))
                     else:
+                        train_avg_batch_cost = args.print_step / (
+                            time.time() - batch_start)
                         logging.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                            "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
-                            (step_idx, pass_id, batch_id, total_avg_cost,
-                            total_avg_cost - loss_normalizer,
-                            np.exp([min(total_avg_cost, 100)]),
-                            args.print_step / (time.time() - avg_batch_time)))
-                        avg_batch_time = time.time()
-
+                            "normalized loss: %f, ppl: %f, avg_speed: %.2f step/s"
+                            % (step_idx, pass_id, batch_id, total_avg_cost,
+                               total_avg_cost - loss_normalizer,
+                               np.exp([min(total_avg_cost, 100)]),
+                               train_avg_batch_cost))
+                    batch_start = time.time()
 
                 if step_idx % args.save_step == 0 and step_idx != 0:
                     # validation
@@ -208,10 +208,9 @@ def do_train(args):
                             (src_word, src_pos, src_slf_attn_bias, trg_word,
                              trg_pos, trg_slf_attn_bias, trg_src_attn_bias,
                              lbl_word, lbl_weight) = input_data
-                            logits = transformer(src_word, src_pos,
-                                                 src_slf_attn_bias, trg_word,
-                                                 trg_pos, trg_slf_attn_bias,
-                                                 trg_src_attn_bias)
+                            logits = transformer(
+                                src_word, src_pos, src_slf_attn_bias, trg_word,
+                                trg_pos, trg_slf_attn_bias, trg_src_attn_bias)
                             sum_cost, avg_cost, token_num = criterion(
                                 logits, lbl_word, lbl_weight)
                             total_sum_cost += sum_cost.numpy()
@@ -225,8 +224,8 @@ def do_train(args):
                         transformer.train()
 
                     if args.save_model and (
-                            trainer_count == 1
-                            or fluid.dygraph.parallel.Env().dev_id == 0):
+                            trainer_count == 1 or
+                            fluid.dygraph.parallel.Env().dev_id == 0):
                         model_dir = os.path.join(args.save_model,
                                                  "step_" + str(step_idx))
                         if not os.path.exists(model_dir):
@@ -239,11 +238,12 @@ def do_train(args):
                             os.path.join(model_dir, "transformer"))
 
                 batch_id += 1
-                total_batch_num = total_batch_num + 1
                 step_idx += 1
 
-            time_consumed = time.time() - pass_start_time
-            ce_time.append(time_consumed)
+            train_epoch_cost = time.time() - epoch_start
+            ce_time.append(train_epoch_cost)
+            logging.info("train epoch: %d, epoch_cost: %.5f s" %
+                         (pass_id, train_epoch_cost))
 
         if args.save_model:
             model_dir = os.path.join(args.save_model, "step_final")

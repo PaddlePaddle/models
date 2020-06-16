@@ -190,7 +190,10 @@ class ImageNetReader:
                     full_lines = [line.strip() for line in flist]
                     if mode != "test" and len(full_lines) < settings.batch_size:
                         print(
-                            "Warning: The number of the whole data ({}) is smaller than the batch_size ({}), and drop_last is turnning on, so nothing  will feed in program, Terminated now. Please reset batch_size to a smaller number or feed more data!"
+                            "Warning: The number of the whole data ({}) is smaller "
+                            "than the batch_size ({}), and drop_last is turnning on, "
+                            "so nothing  will feed in program, Terminated now. Please "
+                            "reset batch_size to a smaller number or feed more data!"
                             .format(len(full_lines), settings.batch_size))
                         os._exit(1)
                     if shuffle:

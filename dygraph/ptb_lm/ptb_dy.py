@@ -32,9 +32,6 @@ import time
 
 from args import *
 
-#import fluid.clip as clip
-#from fluid.clip  import *
-
 import sys
 if sys.version[0] == '2':
     reload(sys)
@@ -386,9 +383,11 @@ def train_ptb_lm():
 
         ce_time = []
         ce_ppl = []
-        
+
         total_batch_num = 0  #this is for benchmark
         for epoch_id in range(max_epoch):
+            epoch_start = time.time()
+
             ptb_model.train()
             total_loss = 0.0
             iters = 0.0
@@ -405,11 +404,11 @@ def train_ptb_lm():
 
             init_hidden = to_variable(init_hidden_data)
             init_cell = to_variable(init_cell_data)
-            start_time = time.time()
+
+            batch_start = time.time()
             for batch_id, batch in enumerate(train_data_loader):
                 if args.max_iter and total_batch_num == args.max_iter:
                     return
-                batch_start = time.time()
                 x, y = batch
 
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
@@ -423,23 +422,26 @@ def train_ptb_lm():
 
                 ptb_model.clear_gradients()
                 total_loss += out_loss
-                batch_end = time.time()
-                train_batch_cost = batch_end - batch_start
                 iters += num_steps
-                total_batch_num = total_batch_num + 1 #this is for benchmark
+                total_batch_num = total_batch_num + 1  #this is for benchmark
 
+                train_batch_cost = time.time() - batch_start
                 if batch_id > 0 and batch_id % log_interval == 0:
                     ppl = np.exp(total_loss / iters)
-                    print("-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f, batch cost: %.5f" %
-                          (epoch_id, batch_id, ppl[0],
-                           sgd._global_learning_rate().numpy(), out_loss, train_batch_cost))
+                    print(
+                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f, batch_cost: %.5f s"
+                        % (epoch_id, batch_id, ppl[0],
+                           sgd._global_learning_rate().numpy(), out_loss,
+                           train_batch_cost))
+                batch_start = time.time()
 
-            print("one epoch finished", epoch_id)
-            print("time cost ", time.time() - start_time)
             ppl = np.exp(total_loss / iters)
-            ce_time.append(time.time() - start_time)
+            train_epoch_cost = time.time() - epoch_start
+            print("-- Epoch:[%d]; ppl: %.5f, epoch_cost: %.5f s" %
+                  (epoch_id, ppl[0], train_epoch_cost))
+
+            ce_time.append(train_epoch_cost)
             ce_ppl.append(ppl[0])
-            print("-- Epoch:[%d]; ppl: %.5f" % (epoch_id, ppl[0]))
 
             if batch_size <= 20 and epoch_id == 0 and ppl[0] > 1000:
                 # for bad init, after first epoch, the loss is over 1000
