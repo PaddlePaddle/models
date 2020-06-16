@@ -57,10 +57,10 @@ class TestThreeNNOp(unittest.TestCase):
         input_type = 'float32'
         eps = 1e-10
 
-        x = fluid.layers.data(
-            name='x', shape=input_shape, dtype=input_type, append_batch_size=False)
-        known = fluid.layers.data(
-            name='known', shape=known_shape, dtype=input_type, append_batch_size=False)
+        x = fluid.data(
+            name='x', shape=input_shape, dtype=input_type)
+        known = fluid.data(
+            name='known', shape=known_shape, dtype=input_type)
         dist, idx = pointnet_lib.three_nn(x, known, eps)
 
         x_np = np.random.random(input_shape).astype(input_type)

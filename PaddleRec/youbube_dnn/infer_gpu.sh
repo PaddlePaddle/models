@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python infer.py --use_gpu 1 --test_epoch 19 --model_dir './model_dir' --user_vec_path './user_vec.csv'

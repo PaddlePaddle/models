@@ -22,8 +22,8 @@ def train(args, train_data_path):
     dataset = Dataset(args.path + args.dataset)
     testRatings, testNegatives = dataset.testRatings, dataset.testNegatives
 
-    train_data_generator = utils.CriteoDataset()
-    train_reader = paddle.batch(train_data_generator.train(train_data_path, True), batch_size=args.batch_size)
+    train_data_generator = utils.Dataset()
+    train_reader = fluid.io.batch(train_data_generator.train(train_data_path, True), batch_size=args.batch_size)
     
     inputs = utils.input_data(True)
     if args.GMF:
@@ -42,14 +42,17 @@ def train(args, train_data_path):
     place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(fluid.default_startup_program())
-    feeder = fluid.DataFeeder(feed_list=inputs, place=place)
+
+    loader = fluid.io.DataLoader.from_generator(
+        feed_list=inputs, capacity=args.batch_size, iterable=True)
+    loader.set_sample_list_generator(train_reader, places=place)
     
     for epoch in range(args.epochs):
 
-        for batch_id, data in enumerate(train_reader()):
+        for batch_id, data in enumerate(loader()):
             begin = time.time()
             loss_val = exe.run(program=fluid.default_main_program(),
-                    feed=feeder.feed(data),
+                    feed=data,
                     fetch_list=[loss.name],
                     return_numpy=True)
             end = time.time()
@@ -59,9 +62,7 @@ def train(args, train_data_path):
         feed_var_names = ["user_input", "item_input"]
         fetch_vars = [pred]
         fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
-
-            
-  
+ 
 if __name__ == "__main__":
     args = args.parse_args()
     train(args, args.train_data_path)
