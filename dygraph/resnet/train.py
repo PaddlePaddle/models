@@ -461,7 +461,7 @@ def train_resnet():
                 total_batch_num = total_batch_num + 1  #this is for benchmark
                 if batch_id % 10 == 0:
                     print(
-                        "[Epoch %d, batch %d] loss %.5f, acc1 %.5f, acc5 %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec"
+                        "[Epoch %d, batch %d] loss %.5f, acc1 %.5f, acc5 %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
                         % (eop, batch_id, total_loss / total_sample,
                            total_acc1 / total_sample, total_acc5 / total_sample,
                            train_batch_cost, train_reader_cost))
@@ -474,7 +474,7 @@ def train_resnet():
 
             train_epoch_cost = time.time() - epoch_start
             print(
-                "[Epoch %d], loss %.5f, acc1 %.5f, acc5 %.5f, epoch_cost: %.5f sec"
+                "[Epoch %d], loss %.5f, acc1 %.5f, acc5 %.5f, epoch_cost: %.5f s"
                 % (eop, total_loss / total_sample, total_acc1 / total_sample,
                    total_acc5 / total_sample, train_epoch_cost))
 

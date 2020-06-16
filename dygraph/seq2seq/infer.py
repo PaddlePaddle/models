@@ -74,7 +74,7 @@ def infer():
                 src_vocab_size,
                 tar_vocab_size,
                 batch_size,
-                beam_size = args.beam_size,
+                beam_size=args.beam_size,
                 num_layers=num_layers,
                 init_scale=init_scale,
                 dropout=0.0,
@@ -85,7 +85,7 @@ def infer():
                 src_vocab_size,
                 tar_vocab_size,
                 batch_size,
-                beam_size = args.beam_size,
+                beam_size=args.beam_size,
                 num_layers=num_layers,
                 init_scale=init_scale,
                 dropout=0.0,
@@ -97,17 +97,17 @@ def infer():
         infer_data = reader.raw_mono_data(source_vocab_file, infer_file)
 
         def prepare_input(batch, epoch_id=0):
-                src_ids, src_mask, tar_ids, tar_mask = batch
-                res = {}
-                src_ids = src_ids.reshape((src_ids.shape[0], src_ids.shape[1]))
-                in_tar = tar_ids[:, :-1]
-                label_tar = tar_ids[:, 1:]
+            src_ids, src_mask, tar_ids, tar_mask = batch
+            res = {}
+            src_ids = src_ids.reshape((src_ids.shape[0], src_ids.shape[1]))
+            in_tar = tar_ids[:, :-1]
+            label_tar = tar_ids[:, 1:]
 
-                in_tar = in_tar.reshape((in_tar.shape[0], in_tar.shape[1]))
-                label_tar = label_tar.reshape(
-                    (label_tar.shape[0], label_tar.shape[1], 1))
-                inputs = [src_ids, in_tar, label_tar, src_mask, tar_mask]
-                return inputs, np.sum(tar_mask)
+            in_tar = in_tar.reshape((in_tar.shape[0], in_tar.shape[1]))
+            label_tar = label_tar.reshape(
+                (label_tar.shape[0], label_tar.shape[1], 1))
+            inputs = [src_ids, in_tar, label_tar, src_mask, tar_mask]
+            return inputs, np.sum(tar_mask)
 
         dir_name = args.reload_model
         print("dir name", dir_name)
@@ -115,7 +115,8 @@ def infer():
         model.set_dict(state_dict)
         model.eval()
 
-        train_data_iter = reader.get_data_iter(infer_data, batch_size, mode='infer')
+        train_data_iter = reader.get_data_iter(
+            infer_data, batch_size, mode='infer')
 
         tar_id2vocab = []
         tar_vocab_file = args.vocab_prefix + "." + args.tar_lang

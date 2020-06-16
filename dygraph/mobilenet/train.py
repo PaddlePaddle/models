@@ -67,7 +67,7 @@ def eval(net, test_data_loader, eop):
         test_batch_cost = time.time() - batch_start
         total_sample += 1
         print(
-            "test | epoch %d, avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec"
+            "test | epoch %d, avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
             % (eop, avg_loss.numpy(), acc_top1.numpy(), acc_top5.numpy(),
                test_batch_cost, batch_reader_end - batch_start))
         sys.stdout.flush()
@@ -211,7 +211,7 @@ def train_mobilenet():
                 total_batch_num = total_batch_num + 1
                 if batch_id % args.print_step == 0:
                     print(
-                        "[Epoch %d, batch %d], avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f sec, net_t: %.5f sec, backward_t: %.5f sec, reader_t: %.5f sec"
+                        "[Epoch %d, batch %d], avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f s, net_t: %.5f s, backward_t: %.5f s, reader_t: %.5f s"
                         % (eop, batch_id, avg_loss.numpy(), acc_top1.numpy(),
                            acc_top5.numpy(), train_batch_cost,
                            batch_net_end - batch_reader_end,
@@ -227,7 +227,7 @@ def train_mobilenet():
 
             train_epoch_cost = time.time() - epoch_start
             print(
-                "[Epoch %d], loss %.5f, acc1 %.5f, acc5 %.5f, epoch_cost: %.5f sec"
+                "[Epoch %d], loss %.5f, acc1 %.5f, acc5 %.5f, epoch_cost: %.5f s"
                 % (eop, total_loss / total_sample, total_acc1 / total_sample,
                    total_acc5 / total_sample, train_epoch_cost))
 
