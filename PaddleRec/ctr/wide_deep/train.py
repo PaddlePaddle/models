@@ -48,5 +48,5 @@ def train(args, train_data_path):
 if __name__ == "__main__":
     args = args.parse_args()
     logger.info("epoch:{}, batch_size: {}, use_gpu: {}, train_data_path: {}, model_dir: {}, hidden1_units: {}, hidden2_units: {}, hidden3_units: {}".format(
-        args.epoch, args.batch_size, args.use_gpu, args.train_data_path, args.model_dir, args.hidden1_units, args.hidden2_units, args.hidden3_units))
+        args.epochs, args.batch_size, args.use_gpu, args.train_data_path, args.model_dir, args.hidden1_units, args.hidden2_units, args.hidden3_units))
     train(args, args.train_data_path)

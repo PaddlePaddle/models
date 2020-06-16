@@ -6,6 +6,7 @@ def parse_args():
     parser.add_argument('--dataset', nargs='?', default='ml-1m', help='Choose a dataset.')
     parser.add_argument('--epochs', type=int, default=20, help='Number of epochs.')
     parser.add_argument('--batch_size', type=int, default=256, help='Batch size.')
+    parser.add_argument('--test_epoch', type=str, default='19',help='test_epoch')
     parser.add_argument('--test_batch_size', type=int, default=100, help='Batch size.')
     parser.add_argument('--num_factors', type=int, default=8, help='Embedding size.')
     parser.add_argument('--num_users', type=int, default=6040, help='num_users')
