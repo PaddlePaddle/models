@@ -230,26 +230,25 @@ class PretrainModelLayer(Layer):
 
         enc_output, next_sent_feat = self.bert_layer(src_ids, position_ids,
                                                      sentence_ids, input_mask)
+
         reshaped_emb_out = fluid.layers.reshape(
             x=enc_output, shape=[-1, self._emb_size])
 
         mask_feat = fluid.layers.gather(input=reshaped_emb_out, index=mask_pos)
-
         mask_trans_feat = self.pooled_fc(mask_feat)
-        mask_trans_feat = self.pre_process_layer(None, mask_trans_feat, "n",
-                                                 self._prepostprocess_dropout)
+        mask_trans_feat = self.pre_process_layer(mask_trans_feat)
 
         if self._weight_sharing:
             fc_out = fluid.layers.matmul(
                 x=mask_trans_feat,
-                y=self.bert_layer._src_emb._w,
+                y=self.bert_layer._src_emb.weight,
                 transpose_y=True)
             fc_out += self.fc_create_params
         else:
             fc_out = self.out_fc(mask_trans_feat)
 
-        mask_lm_loss = fluid.layers.softmax_with_cross_entropy(
-            logits=fc_out, label=mask_label)
+        mask_lm_loss, mask_lm_softmax = fluid.layers.softmax_with_cross_entropy(
+            logits=fc_out, label=mask_label, return_softmax=True)
         mean_mask_lm_loss = fluid.layers.mean(mask_lm_loss)
 
         next_sent_fc_out = self.next_sent_fc(next_sent_feat)
@@ -257,10 +256,11 @@ class PretrainModelLayer(Layer):
         next_sent_loss, next_sent_softmax = fluid.layers.softmax_with_cross_entropy(
             logits=next_sent_fc_out, label=labels, return_softmax=True)
 
+        lm_acc = fluid.layers.accuracy(input=mask_lm_softmax, label=mask_label)
+
         next_sent_acc = fluid.layers.accuracy(
             input=next_sent_softmax, label=labels)
-
         mean_next_sent_loss = fluid.layers.mean(next_sent_loss)
 
         loss = mean_next_sent_loss + mean_mask_lm_loss
-        return next_sent_acc, mean_mask_lm_loss, loss
+        return lm_acc, next_sent_acc, mean_mask_lm_loss, loss
