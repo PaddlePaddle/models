@@ -96,6 +96,8 @@ def select_mask_logistic_loss(pred_mask, label_mask, loss_weight, out_size=63, g
 
     label_mask_uf = fluid.layers.gather(label_mask_uf, pos)
     loss = soft_margin_loss(pred_mask, label_mask_uf)
+    if np.isnan(loss.numpy()):
+        return fluid.layers.reduce_sum(pred_mask) * 0, fluid.layers.reduce_sum(pred_mask) * 0, fluid.layers.reduce_sum(pred_mask) * 0, fluid.layers.reduce_sum(pred_mask) * 0
     iou_m, iou_5, iou_7 = iou_measure(pred_mask, label_mask_uf)
     return loss, iou_m, iou_5, iou_7
 

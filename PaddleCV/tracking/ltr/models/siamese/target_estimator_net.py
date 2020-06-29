@@ -3,6 +3,7 @@ from paddle.fluid import dygraph
 from paddle.fluid.dygraph import nn
 
 from pytracking.libs.Fconv2d import Conv2D
+from pytracking.libs.Fconv2d import FConv2D
 
 
 class SiamFCEstimator(dygraph.layers.Layer):
@@ -40,8 +41,7 @@ class SiamFCEstimator(dygraph.layers.Layer):
         instance = fluid.layers.reshape(
             instance, shape=[1, -1, shape[2], shape[3]])
 
-        cross_conv = Conv2D(stride=1, padding=0, dilation=1, groups=shape[0])
-        score_map = cross_conv(instance, exemplar)
+        score_map = FConv2D(instance, exemplar, stride=1, padding=0, dilation=1, groups=shape[0])
         score_map = fluid.layers.transpose(score_map, [1, 0, 2, 3])
         score_map = self.adjust_conv(score_map)
         return score_map

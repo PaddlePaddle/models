@@ -268,7 +268,7 @@ python eval_benchmark.py -d VOT2018 -tr siamfc.siamfc_alexnet_vid -te siamfc.def
 
 测试SiamRPN
 ```
-python eval_benchmark.py -d VOT2018 -tr siamrpn.siamrpn_alexnet -te siamrpn.default -e 'range(1, 40, 1)'
+python eval_benchmark.py -d OTB100 -tr siamrpn.siamrpn_alexnet -te siamrpn.default -e 'range(1, 40, 1)'
 ```
 
 测试SiamMask
@@ -276,7 +276,7 @@ python eval_benchmark.py -d VOT2018 -tr siamrpn.siamrpn_alexnet -te siamrpn.defa
 # 在VOT2018上测试SiamMask-Base
 python eval_benchmark.py -d VOT2018 -tr siammask.siammask_res50_base -te siammask.base_default -e 'range(1, 20, 1)'
 # 在VOT2018上测试SiamMask-Sharp
-python eval_benchmark.py -d VOT2018 -tr siammask.siammask_res50_sharp -te siammask.sharp_default -e 'range(1, 20, 1)'
+python eval_benchmark.py -d VOT2018 -tr siammask.siammask_res50_sharp -te siammask.sharp_default_vot -e 'range(1, 20, 1)'
 ```
 
 
@@ -302,9 +302,9 @@ jupyter notebook --ip 0.0.0.0 --port 8888
 | 数据集 | 模型 | Backbone | 论文结果 | 训练结果 | 模型|
 | :-------: | :-------: | :---: | :---: | :---------: |:---------: |
 |VOT2018| ATOM | Res18 |  EAO: 0.401 | 0.399 | [model]() |
-|VOT2018| SiamMask | Res50 |  EAO: 0.380 | 0.368 | [model]() |
-|VOT2018| SiamRPN | AlexNet |  EAO: 0.352 | 0.347 | [model]() |
+|VOT2018| SiamMask | Res50 |  EAO: 0.380 | 0.374 | [model]() |
 |VOT2018| SiamFC | AlexNet |  EAO: 0.188 | 0.211 | [model]() |
+|OTB100| SiamRPN | AlexNet |  Succ: 0.637, Prcn: 0.851 | Succ: 0.634, Prcn: 0.838 | [model]() |
 
 ## 引用与参考
 

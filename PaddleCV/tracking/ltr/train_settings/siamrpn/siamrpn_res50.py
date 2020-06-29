@@ -97,7 +97,9 @@ def run(settings):
 
     # The loader for training
     train_loader = loader.LTRLoader(
-        'train', dataset_train,
+        'train',
+        dataset_train,
+        training=True,
         batch_size=settings.batch_size,
         num_workers=settings.num_workers,
         stack_dim=0)
@@ -114,6 +116,7 @@ def run(settings):
     val_loader = loader.LTRLoader(
         'val',
         dataset_val,
+        training=False,
         batch_size=settings.batch_size,
         num_workers=settings.num_workers,
         stack_dim=0)

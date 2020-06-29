@@ -1,7 +1,7 @@
 import paddle.fluid as fluid
 import paddle.fluid.dygraph.nn as nn
 
-from pytracking.libs.Fconv2d import Conv2D
+from pytracking.libs.Fconv2d import FConv2D
 
 
 def xcorr(x, kernel):
@@ -10,9 +10,9 @@ def xcorr(x, kernel):
     batch = kernel.shape[0]
     px = fluid.layers.reshape(x, [1, -1, x.shape[2], x.shape[3]])
     pk = fluid.layers.reshape(kernel, [-1, x.shape[1], kernel.shape[2], kernel.shape[3]])
-    cross_conv = Conv2D(stride=1, padding=0, dilation=1, groups=batch)
-    scores_map = cross_conv(px, pk)
-    scores_map = fluid.layers.reshape(scores_map, [batch, -1, scores_map.shape[2], scores_map.shape[3]])
+    scores_map = FConv2D(px, pk, stride=1, padding=0, dilation=1, groups=batch)
+    scores_map = fluid.layers.reshape(
+        scores_map, [batch, -1, scores_map.shape[2], scores_map.shape[3]])
     return scores_map
 
 
@@ -23,8 +23,7 @@ def xcorr_depthwise(x, kernel):
     channel = kernel.shape[1]
     px = fluid.layers.reshape(x, [1, -1, x.shape[2], x.shape[3]])
     pk = fluid.layers.reshape(kernel, [-1, 1, kernel.shape[2], kernel.shape[3]])
-    cross_conv = Conv2D(stride=1, padding=0, dilation=1, groups=batch*channel)
-    scores_map = cross_conv(px, pk)
-    scores_map = fluid.layers.reshape(scores_map,
-                                      [batch, -1, scores_map.shape[2], scores_map.shape[3]])
+    scores_map = FConv2D(px, pk, stride=1, padding=0, dilation=1, groups=batch*channel)
+    scores_map = fluid.layers.reshape(
+        scores_map,[batch, -1, scores_map.shape[2], scores_map.shape[3]])
     return scores_map

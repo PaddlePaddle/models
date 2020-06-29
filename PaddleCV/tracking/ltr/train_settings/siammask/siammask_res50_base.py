@@ -17,8 +17,8 @@ def run(settings):
     # Most common settings are assigned in the settings struct
     settings.description = 'SiamMask_base with ResNet-50 backbone.'
     settings.print_interval = 100  # How often to print loss and other info
-    settings.batch_size = 32  # Batch size
-    settings.samples_per_epoch = 300000  # Number of training pairs per epoch
+    settings.batch_size = 64  # Batch size
+    settings.samples_per_epoch = 600000  # Number of training pairs per epoch
     settings.num_workers = 4  # Number of workers for image loading
     settings.search_area_factor = {'train': 1.0, 'test': 2.0}
     settings.output_sz = {'train': 127, 'test': 255}
@@ -109,6 +109,7 @@ def run(settings):
     train_loader = loader.LTRLoader(
         'train',
         dataset_train,
+        training=True,
         batch_size=settings.batch_size,
         num_workers=settings.num_workers,
         stack_dim=0)
@@ -125,6 +126,7 @@ def run(settings):
     val_loader = loader.LTRLoader(
         'val',
         dataset_val,
+        training=False,
         batch_size=settings.batch_size,
         num_workers=settings.num_workers,
         stack_dim=0)
@@ -155,11 +157,16 @@ def run(settings):
         actor.train()
 
         # Define optimizer and learning rate
-        lr_scheduler = fluid.layers.exponential_decay(
+        decayed_lr = fluid.layers.exponential_decay(
             learning_rate=0.005,
             decay_steps=nums_per_epoch,
-            decay_rate=0.9659,
+            decay_rate=0.9642,
             staircase=True)
+        lr_scheduler = fluid.layers.linear_lr_warmup(
+            learning_rate=decayed_lr,
+            warmup_steps=5*nums_per_epoch,
+            start_lr=0.001,
+            end_lr=0.005)
 
         optimizer = fluid.optimizer.Adam(
             parameter_list=net.rpn_head.parameters()
@@ -168,4 +175,4 @@ def run(settings):
             learning_rate=lr_scheduler)
 
         trainer = LTRTrainer(actor, [train_loader, val_loader], optimizer, settings, lr_scheduler)
-        trainer.train(40, load_latest=False, fail_safe=False)
+        trainer.train(20, load_latest=False, fail_safe=False)

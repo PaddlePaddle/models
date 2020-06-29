@@ -282,6 +282,7 @@ class ResNet(fluid.dygraph.Layer):
 
         self.block_collect = block_collect
 
+    @fluid.dygraph.no_grad
     def forward(self, inputs):
         out = []
         res = self.conv_bn_init(inputs)

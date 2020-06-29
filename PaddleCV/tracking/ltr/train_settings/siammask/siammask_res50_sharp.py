@@ -41,7 +41,7 @@ def run(settings):
         'thr_high': 0.6,
         'thr_low': 0.3
     }
-    settings.loss_weights = {'cls': 0., 'loc': 0., 'mask':36}
+    settings.loss_weights = {'cls': 0., 'loc': 0., 'mask':1}
     settings.neg = 0
 
     # Train datasets
@@ -106,6 +106,7 @@ def run(settings):
     train_loader = loader.LTRLoader(
         'train',
         dataset_train,
+        training=True,
         batch_size=settings.batch_size,
         num_workers=settings.num_workers,
         stack_dim=0)
@@ -122,6 +123,7 @@ def run(settings):
     val_loader = loader.LTRLoader(
         'val',
         dataset_val,
+        training=False,
         batch_size=settings.batch_size,
         num_workers=settings.num_workers,
         stack_dim=0)
@@ -166,11 +168,17 @@ def run(settings):
         actor.train()
 
         # Define optimizer and learning rate
-        lr_scheduler = fluid.layers.exponential_decay(
-            learning_rate=0.01,
+        decayed_lr = fluid.layers.exponential_decay(
+            learning_rate=0.0005,
             decay_steps=nums_per_epoch,
-            decay_rate=0.933,
+            decay_rate=0.9,
             staircase=True)
+        lr_scheduler = fluid.layers.linear_lr_warmup(
+            learning_rate=decayed_lr,
+            warmup_steps=5*nums_per_epoch,
+            start_lr=0.0001,
+            end_lr=0.0005)
+
         optimizer = fluid.optimizer.Adam(
             parameter_list=net.mask_head.parameters()
                            + net.refine_head.parameters(),

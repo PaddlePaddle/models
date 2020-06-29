@@ -31,10 +31,10 @@ def parameters():
     params.anchor_scales = [8]
 
     # Tracking parameters
-    params.penalty_k = 0.04
-    params.window_influence = 0.42
-    params.lr = 0.25
-    params.mask_threshold = 0.30
+    params.penalty_k = 0.10
+    params.window_influence = 0.41
+    params.lr = 0.32
+    params.mask_threshold = 0.15
     
     # output polygon result
     params.polygon = True

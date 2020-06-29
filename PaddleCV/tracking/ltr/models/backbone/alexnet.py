@@ -106,8 +106,7 @@ class alexnet(fluid.dygraph.Layer):
             outputs.append(x)
         return len(self.output_layers) == len(outputs)
 
-    #def param_groups
-
+    @fluid.dygraph.no_grad
     def forward(self, inputs):
         outputs = []
 
