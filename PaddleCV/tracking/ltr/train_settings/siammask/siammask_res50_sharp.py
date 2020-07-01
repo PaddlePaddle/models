@@ -8,6 +8,7 @@ from ltr.dataset import ImagenetVID, ImagenetDET, MSCOCOSeq, YoutubeVOS
 from ltr.models.siam.siam import SiamMask_ResNet50_sharp
 from ltr.models.loss import select_softmax_with_cross_entropy_loss, weight_l1_loss, select_mask_logistic_loss 
 from ltr.trainers import LTRTrainer
+from ltr.trainers.learning_rate_scheduler import LinearLrWarmup
 import numpy as np
 import cv2 as cv
 from PIL import Image, ImageEnhance
@@ -173,7 +174,7 @@ def run(settings):
             decay_steps=nums_per_epoch,
             decay_rate=0.9,
             staircase=True)
-        lr_scheduler = fluid.layers.linear_lr_warmup(
+        lr_scheduler = LinearLrWarmup(
             learning_rate=decayed_lr,
             warmup_steps=5*nums_per_epoch,
             start_lr=0.0001,
