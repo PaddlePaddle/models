@@ -139,7 +139,7 @@ class SiamMask(BaseTracker):
 
         # processing mask
         pos = np.unravel_index(best_idx, (5, self.score_size, self.score_size))
-        delta_x, delta_y = pos[2], pos[1]
+        delta_x, delta_y = int(pos[2]), int(pos[1])
         with dygraph.guard():
             mask = self.params.features.features[0].net.mask_refine((delta_y, delta_x))
             mask = fluid.layers.sigmoid(mask)
