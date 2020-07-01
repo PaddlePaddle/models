@@ -6,7 +6,7 @@ from paddle.fluid import layers
 import cv2 as cv
 
 from pytracking.features.preprocessing import numpy_to_paddle, paddle_to_numpy
-from pytracking.libs.Fconv2d import FConv2d
+from pytracking.libs.Fconv2d import FConv2D
 from pytracking.libs.paddle_utils import PTensor, _padding, n2p
 
 
@@ -192,13 +192,13 @@ class Blur(Transform):
         if isinstance(image, PTensor):
             sz = image.shape[2:]
             filter = [n2p(f) for f in self.filter_np]
-            im1 = FConv2d(
+            im1 = FConv2D(
                 layers.reshape(image, [-1, 1, sz[0], sz[1]]),
                 filter[0],
                 padding=(self.filter_size[0], 0))
             return self.crop_to_output(
                 layers.reshape(
-                    FConv2d(
+                    FConv2D(
                         im1, filter[1], padding=(0, self.filter_size[1])),
                     [1, -1, sz[0], sz[1]]))
         else:
