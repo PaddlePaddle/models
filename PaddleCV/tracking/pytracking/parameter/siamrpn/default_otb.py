@@ -20,10 +20,9 @@ def parameters():
 
     # Patch sampling parameters
     params.exemplar_size = 127
-    params.instance_size = 255
-    params.base_size = 8
+    params.instance_size = 287
+    params.base_size = 0
     params.context_amount = 0.5
-    params.mask_output_size = 127
     
     # Anchor parameters
     params.anchor_stride = 8
@@ -31,17 +30,13 @@ def parameters():
     params.anchor_scales = [8]
 
     # Tracking parameters
-    params.penalty_k = 0.20
+    params.penalty_k = 0.18
     params.window_influence = 0.41
-    params.lr = 0.30
-    params.mask_threshold = 0.15
-    
-    # output polygon result
-    params.polygon = True
+    params.lr = 0.05
 
     # Setup the feature extractor
     deep_fparams = FeatureParams(feature_params=[deep_params])
-    deep_feat = deep.SMaskResNet50_sharp(fparams=deep_fparams)
+    deep_feat = deep.SRPNAlexNet(fparams=deep_fparams)
     params.features = MultiResolutionExtractor([deep_feat])
 
     return params

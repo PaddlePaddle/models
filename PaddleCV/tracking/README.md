@@ -76,16 +76,16 @@ Datasets是数据集保存的路径。
 tracking的工作环境：
 - Linux
 - python3
-- PaddlePaddle1.7
+- PaddlePaddle1.8
 
 > 注意：如果遇到cmath无法import的问题，建议切换Python版本，建议使用python3.6.8, python3.7.0 。另外，
 > tracking暂不支持在window上运行，如果开发者有需求在window上运行tracking，请在issue中提出需求。
 
 ### 安装依赖
 
-1. 安装paddle，需要安装1.7版本的Paddle，如低于这个版本，请升级到Paddle 1.7.
+1. 安装paddle，需要安装1.8版本的Paddle，如低于这个版本，请升级到Paddle 1.8.
 ```bash
-pip install paddlepaddle-gpu==1.7.0
+pip install paddlepaddle-gpu==1.8.0
 ```
 
 2. 安装第三方库，建议使用anaconda
@@ -171,13 +171,15 @@ cd ltr/data_specs/
 wget https://paddlemodels.cdn.bcebos.com/paddle_track/vot/got10k_lasot_split.tar
 tar xvf got10k_lasot_split.tar
 ```
-训练SiamRPN、SiamMask时，需要配置 workspace_dir，以及imagenet、coco、imagenetdet、youtubevos的数据集路径，如下：
+训练SiamRPN、SiamMask时，需要配置 workspace_dir，以及imagenet、coco、imagenetdet、youtubevos、lasot、got10k的数据集路径，如下：
 ```bash
     self.workspace_dir = './checkpoints'
     self.imagenet_dir = '/Datasets/ILSVRC2015/'
     self.coco_dir = '/Datasets/COCO/'
     self.imagenetdet_dir = '/Datasets/ILSVRC2015_DET/'
     self.youtubevos_dir = '/Datasets/YoutubeVOS/'
+    self.lasot_dir = '/Datasets/LaSOTBenchmark/'
+    self.got10k_dir = '/Datasets/GOT-10k/train'
 ```
 
 
@@ -268,7 +270,7 @@ python eval_benchmark.py -d VOT2018 -tr siamfc.siamfc_alexnet_vid -te siamfc.def
 
 测试SiamRPN
 ```
-python eval_benchmark.py -d OTB100 -tr siamrpn.siamrpn_alexnet -te siamrpn.default -e 'range(1, 40, 1)'
+python eval_benchmark.py -d OTB100 -tr siamrpn.siamrpn_alexnet -te siamrpn.default_otb -e 'range(1, 40, 1)'
 ```
 
 测试SiamMask
@@ -302,9 +304,9 @@ jupyter notebook --ip 0.0.0.0 --port 8888
 | 数据集 | 模型 | Backbone | 论文结果 | 训练结果 | 模型|
 | :-------: | :-------: | :---: | :---: | :---------: |:---------: |
 |VOT2018| ATOM | Res18 |  EAO: 0.401 | 0.399 | [model]() |
-|VOT2018| SiamMask | Res50 |  EAO: 0.380 | 0.374 | [model]() |
+|VOT2018| SiamMask | Res50 |  EAO: 0.380 | 0.379 | [model]() |
 |VOT2018| SiamFC | AlexNet |  EAO: 0.188 | 0.211 | [model]() |
-|OTB100| SiamRPN | AlexNet |  Succ: 0.637, Prcn: 0.851 | Succ: 0.634, Prcn: 0.838 | [model]() |
+|OTB100| SiamRPN | AlexNet |  Succ: 0.637, Prcn: 0.851 | Succ: 0.643, Prcn: 0.847 | [model]() |
 
 ## 引用与参考
 
