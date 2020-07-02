@@ -2,7 +2,6 @@ from paddle import fluid
 from paddle.fluid import dygraph
 from paddle.fluid.dygraph import nn
 
-from pytracking.libs.Fconv2d import Conv2D
 from pytracking.libs.Fconv2d import FConv2D
 
 

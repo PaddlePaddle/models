@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import paddle.fluid
 import argparse
 import importlib
 import os
@@ -172,8 +173,12 @@ def run_one_sequence(video, params, tracker=None):
                     if isinstance(res, int):
                         outputs.append('{}'.format(res))
                     else:
-                        outputs.append('{},{},{},{}'.format(res[0], res[1], res[
-                            2], res[3]))
+                        if len(res) is 8:
+                            outputs.append('{},{},{},{},{},{},{},{}'.format(
+                                res[0], res[1], res[2], res[3], res[4], res[5], res[6], res[7]))
+                        else:
+                            outputs.append('{},{},{},{}'.format(
+                                res[0], res[1], res[2], res[3]))
                 f.write('\n'.join(outputs))
     else:
         os.makedirs(save_dir, exist_ok=True)

@@ -162,6 +162,8 @@ class LTRTrainer(BaseTrainer):
                     print_str += '%s: %.5f  ,  ' % (name, val.avg)
             print_str += '%s: %.5f  ,  ' % ("time", batch_size / batch_fps *
                                             self.settings.print_interval)
+            if loader.training:
+                print_str += '%s: %f  ,  ' % ("lr", self.optimizer.current_step_lr())
             print(print_str[:-5])
 
     def _stats_new_epoch(self):
