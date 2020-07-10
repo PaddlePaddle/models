@@ -4,13 +4,21 @@ export FLAGS_sync_nccl_allreduce=1
 export CUDA_VISIBLE_DEVICES=3
 export FLAGS_fraction_of_gpu_memory_to_use=0.95
 TASK_NAME='simnet'
-TEST_DATA_PATH=./data/ecom
 VOCAB_PATH=./data/term2id.dict
 CKPT_PATH=./model_files
 TEST_RESULT_PATH=./evaluate/ecom_test_result
 TASK_MODE='pairwise'
 CONFIG_PATH=./config/bow_pairwise.json
 INIT_CHECKPOINT=./model_files/simnet_bow_pairwise_pretrained_model/
+
+# use JiebaTokenizer to evaluate
+TOKENIZER="JiebaTokenizer"
+TEST_DATA_PATH=./data/ecom_raw
+
+# use tokenized data by WordSeg to evaluate
+#TOKENIZER=""
+#TEST_DATA_PATH=./data/ecom
+
 cd ..
 
 python ./run_classifier.py \
@@ -23,5 +31,6 @@ python ./run_classifier.py \
     --test_result_path ${TEST_RESULT_PATH} \
     --config_path ${CONFIG_PATH} \
     --vocab_path ${VOCAB_PATH} \
+    --tokenizer ${TOKENIZER:-""} \
     --task_mode ${TASK_MODE} \
     --init_checkpoint ${INIT_CHECKPOINT}
