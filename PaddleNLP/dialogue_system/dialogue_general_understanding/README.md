@@ -23,7 +23,7 @@
 - Python >= 2.7
 - cuda >= 9.0
 - cudnn >= 7.0
-- PaddlePaddle >= 1.7.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 由于模块内模型基于bert做finetuning, 训练速度较慢, 建议用户安装GPU版本PaddlePaddle进行训练。
+- PaddlePaddle >= 1.8.0，请参考[安装指南](http://www.paddlepaddle.org/#quick-start)进行安装, 由于模块内模型基于bert做finetuning, 训练速度较慢, 建议用户安装GPU版本PaddlePaddle进行训练。
 
 #### &ensp;&ensp;b、下载代码
 
@@ -123,13 +123,10 @@ format：conversation_content \t question \1 answer \t state1 state2 state3.....
 task_name: 任务名称，可选udc、swda、mrda、atis_intent、atis_slot、dstc2
 data_dir: 数据路径，如./data/input/data/udc
 bert_config_path: 预训练模型bert的网络配置./data/pretrain_model/uncased_L-12_H-768_A-12/bert_config.json
-init_from_checkpoint: 加载断点模型
 init_from_params: 训练好的模型参数文件，一般用于预测
 init_from_pretrain_model: 预训练模型路径，如bert的模型参数
 inference_model_dir: inference model的保存路径
 save_model_path: 训练产出模型的输出路径
-save_checkpoint: 调用paddle的io接口save_persistables(把传入的层中所有参数以及优化器进行保存)来保存模型参数
-save_param: 调用paddle的io接口save_params(从main_program中取出所有参数然后保存到文件中)来保存模型参数
 lr_scheduler: learning rate scheduler
 weight_decay: learning rate 权重衰减因子
 warmup_proportion: warmup比率
@@ -221,7 +218,6 @@ python -u main.py \
        --vocab_path="${BERT_BASE_PATH}/vocab.txt" \
        --init_from_pretrain_model="${BERT_BASE_PATH}/params" \
        --save_model_path="./data/saved_models/${TASK_NAME}" \
-       --save_param="params" \
        --save_steps=100 \
        --learning_rate=2e-5 \
        --weight_decay=0.01 \
@@ -235,7 +231,7 @@ python -u main.py \
 
 #### windows环境下
 ```
-python -u main.py --task_name=atis_intent --use_cuda=false --do_train=true --epoch=20 --batch_size=32 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --init_from_pretrain_model=data\pretrain_model\uncased_L-12_H-768_A-12\params --save_model_path=data\saved_models\atis_intent --save_param=params --save_steps=100 --learning_rate=2e-5 --weight_decay=0.01 --max_seq_len=128 --print_steps=10
+python -u main.py --task_name=atis_intent --use_cuda=false --do_train=true --epoch=20 --batch_size=32 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --init_from_pretrain_model=data\pretrain_model\uncased_L-12_H-768_A-12\params --save_model_path=data\saved_models\atis_intent --save_steps=100 --learning_rate=2e-5 --weight_decay=0.01 --max_seq_len=128 --print_steps=10
 ```
 
 ### 模型预测
@@ -294,7 +290,7 @@ python -u main.py \
        --batch_size=32 \
        --do_lower_case=true \
        --data_dir="./data/input/data/atis/${TASK_NAME}" \
-       --init_from_params="./data/saved_models/trained_models/${TASK_NAME}/params" \
+       --init_from_params="./data/saved_models/trained_models/${TASK_NAME}/params/params" \
        --bert_config_path="${BERT_BASE_PATH}/bert_config.json" \
        --vocab_path="${BERT_BASE_PATH}/vocab.txt" \
        --output_prediction_file="./data/output/pred_${TASK_NAME}" \
@@ -305,7 +301,7 @@ python -u main.py \
 
 #### windows环境下
 ```
-python -u main.py --task_name=atis_intent --use_cuda=false --do_predict=true --batch_size=32 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --init_from_params=data\saved_models\trained_models\atis_intent\params --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --output_prediction_file=data\output\pred_atis_intent --max_seq_len=128
+python -u main.py --task_name=atis_intent --use_cuda=false --do_predict=true --batch_size=32 --do_lower_case=true --data_dir=data\input\data\atis\atis_intent --init_from_params=data\saved_models\trained_models\atis_intent\params\params --bert_config_path=data\pretrain_model\uncased_L-12_H-768_A-12\bert_config.json --vocab_path=data\pretrain_model\uncased_L-12_H-768_A-12\vocab.txt --output_prediction_file=data\output\pred_atis_intent --max_seq_len=128
 ```
 
 ### 模型评估

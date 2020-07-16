@@ -2,6 +2,7 @@ import numpy as np
 
 from ltr.data import transforms
 import ltr.data.processing_utils as prutils
+from ltr.data.anchor import AnchorTarget
 from pytracking.libs import TensorDict
 
 
@@ -109,6 +110,148 @@ class SiamFCProcessing(BaseProcessing):
             data = data.apply(prutils.stack_tensors)
         else:
             data = data.apply(lambda x: x[0] if isinstance(x, list) else x)
+
+        return data
+
+
+class SiamProcessing(BaseProcessing):
+    def __init__(self,
+                 search_area_factor,
+                 output_sz,
+                 center_jitter_factor,
+                 scale_jitter_factor,
+                 label_params,
+                 mode='pair',
+                 scale_type='context',
+                 border_type='meanpad',
+                 *args,
+                 **kwargs):
+        self._init_transform(*args, **kwargs)
+        self.search_area_factor = search_area_factor
+        self.output_sz = output_sz
+        self.center_jitter_factor = center_jitter_factor
+        self.scale_jitter_factor = scale_jitter_factor
+        self.mode = mode
+        self.scale_type = scale_type
+        self.border_type = border_type
+        self.label_params = label_params
+        self.anchor_target = AnchorTarget(
+            label_params['search_size'],
+            label_params['output_size'],
+            label_params['anchor_stride'],
+            label_params['anchor_ratios'],
+            label_params['anchor_scales'],
+            label_params['num_pos'],
+            label_params['num_neg'],
+            label_params['num_total'],
+            label_params['thr_high'],
+            label_params['thr_low'])
+
+    def _init_transform(self,
+                        transform=transforms.ToArray(),
+                        train_transform=None,
+                        test_transform=None,
+                        train_mask_transform=None,
+                        test_mask_transform=None,
+                        joint_transform=None):
+        self.transform = {'train': transform if train_transform is None else train_transform,
+                          'test': transform if test_transform is None else test_transform,
+                          'joint': joint_transform}
+        super().__init__(
+            transform=transform,
+            train_transform=train_transform,
+            test_transform=test_transform,
+            joint_transform=joint_transform)
+        self.transform['train_mask'] = self.transform['train'] if train_mask_transform is None \
+            else train_mask_transform
+        self.transform['test_mask'] = self.transform['test'] if test_mask_transform is None \
+            else test_mask_transform
+
+    def _get_jittered_box(self, box, mode, rng):
+        jittered_size = box[2:4] * (1 + (2 * rng.rand(2) - 1) * self.scale_jitter_factor[mode])
+        max_offset = (np.sqrt(jittered_size.prod()) * self.center_jitter_factor[mode])
+        jittered_center = box[0:2] + 0.5 * box[2:4] + max_offset * (rng.rand(2) - 0.5)
+
+        return np.concatenate((jittered_center - 0.5 * jittered_size, jittered_size), axis=0)
+
+    def _get_label(self, target_bb, neg):
+        return self.anchor_target(target_bb, self.label_params['output_size'], neg)
+
+    def __call__(self, data: TensorDict, rng=None):
+        neg = data['neg']
+
+        # Apply joint transforms
+        if self.transform['joint'] is not None:
+            num_train_images = len(data['train_images'])
+            all_images = data['train_images'] + data['test_images']
+            all_images_trans = self.transform['joint'](*all_images)
+
+            data['train_images'] = all_images_trans[:num_train_images]
+            data['test_images'] = all_images_trans[num_train_images:]
+
+        for s in ['train', 'test']:
+            assert self.mode == 'sequence' or len(data[s + '_images']) == 1, \
+                "In pair mode, num train/test frames must be 1"
+
+            # Add a uniform noise to the center pos
+            jittered_anno = [self._get_jittered_box(a, s, rng) for a in data[s + '_anno']]
+
+            # Crop image region centered at jittered_anno box
+            try:
+                crops, boxes = prutils.jittered_center_crop(
+                    data[s + '_images'],
+                    jittered_anno,
+                    data[s + '_anno'],
+                    self.search_area_factor[s],
+                    self.output_sz[s],
+                    scale_type=self.scale_type,
+                    border_type=self.border_type)
+                mask_crops, _ = prutils.jittered_center_crop(
+                    data[s + '_masks'],
+                    jittered_anno,
+                    data[s + '_anno'],
+                    self.search_area_factor[s],
+                    self.output_sz[s],
+                    scale_type=self.scale_type,
+                    border_type='zeropad')
+            except Exception as e:
+                print('{}, anno: {}'.format(data['dataset'], data[s + '_anno']))
+                raise e
+
+            # Apply transforms
+            data[s + '_images'] = [self.transform[s](x) for x in crops]
+            data[s + '_anno'] = boxes
+            data[s + '_masks'] = [self.transform[s + '_mask'](x) for x in mask_crops]
+
+        # Prepare output
+        if self.mode == 'sequence':
+            data = data.apply(prutils.stack_tensors)
+        else:
+            data = data.apply(lambda x: x[0] if isinstance(x, list) else x)
+
+        # Get labels
+        if self.label_params is not None:
+            assert data['test_anno'].shape[0] == 1
+            gt_box = data['test_anno'][0]
+            gt_box[2:] += gt_box[:2]
+            cls, delta, delta_weight, overlap = self._get_label(gt_box, neg)
+
+            mask = data['test_masks'][0]
+            if np.sum(mask) > 0:
+                mask_weight = cls.max(axis=0, keepdims=True)
+            else:
+                mask_weight = np.zeros([1, cls.shape[1], cls.shape[2]], dtype=np.float32)
+            mask = (mask > 0.5) * 2. - 1.
+
+            data['label_cls'] = cls
+            data['label_loc'] = delta
+            data['label_loc_weight'] = delta_weight
+            data['label_mask'] = mask
+            data['label_mask_weight'] = mask_weight
+            data.pop('train_anno')
+            data.pop('test_anno')
+            data.pop('train_masks')
+            data.pop('test_masks')
 
         return data
 

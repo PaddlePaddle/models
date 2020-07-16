@@ -9,9 +9,9 @@ python -m paddle.distributed.launch  --selected_gpus=0,1,2,3 train.py \
         --test_data ./data/test.tsv \
         --model_save_dir ./padding_models \
         --validation_steps 1000 \
-        --save_steps 10000 \
-        --print_steps 200 \
-        --batch_size 400 \
+        --save_steps 1 \
+        --print_steps 1 \
+        --batch_size 32 \
         --epoch 10 \
         --traindata_shuffle_buffer 20000 \
         --word_emb_dim 128 \

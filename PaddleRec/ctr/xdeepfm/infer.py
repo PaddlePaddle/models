@@ -30,7 +30,7 @@ def infer():
         for x in os.listdir(args.test_data_dir)
     ]
     criteo_dataset = CriteoDataset()
-    test_reader = paddle.batch(
+    test_reader = fluid.io.batch(
         criteo_dataset.test(test_files), batch_size=args.batch_size)
 
     startup_program = fluid.framework.Program()
@@ -50,7 +50,7 @@ def infer():
             feeder = fluid.DataFeeder(feed_list=data_list, place=place)
 
             exe.run(startup_program)
-            fluid.io.load(fluid.default_main_program(), cur_model_path)
+            fluid.load(fluid.default_main_program(), cur_model_path)
 
             for var in auc_states:  # reset auc states
                 set_zero(var.name, scope=inference_scope, place=place)

@@ -67,7 +67,6 @@ function pretrain_train()
       --loss_type="CLS" \
       --max_seq_len=50 \
       --save_model_path=${pretrain_model_path} \
-      --save_param="params" \
       --training_file="${INPUT_PATH}/unlabel_data/train.ids" \
       --epoch=20 \
       --print_step=1 \
@@ -99,9 +98,8 @@ function finetuning_train()
       --use_cuda=${1} \
       --loss_type="L2" \
       --max_seq_len=50 \
-      --init_from_pretrain_model="${SAVED_MODELS}/matching_pretrained/params/step_final" \
+      --init_from_pretrain_model="${SAVED_MODELS}/matching_pretrained/step_final" \
       --save_model_path=${save_model_path} \
-      --save_param="params" \
       --training_file="${INPUT_PATH}/label_data/${2}/train.ids" \
       --epoch=50 \
       --print_step=1 \
@@ -121,7 +119,7 @@ function pretrain_predict()
       --do_predict=true \
       --use_cuda=${1} \
       --predict_file="${INPUT_PATH}/unlabel_data/test.ids" \
-      --init_from_params="${SAVED_MODELS}/trained_models/matching_pretrained/params" \
+      --init_from_params="${SAVED_MODELS}/trained_models/matching_pretrained/params/params" \
       --loss_type="CLS" \
       --output_prediction_file="${OUTPUT_PATH}/pretrain_matching_predict" \
       --max_seq_len=50 \
@@ -137,7 +135,7 @@ function finetuning_predict()
       --do_predict=true \
       --use_cuda=${1} \
       --predict_file="${INPUT_PATH}/label_data/${2}/test.ids" \
-      --init_from_params=${SAVED_MODELS}/trained_models/${2}_finetuned/params \
+      --init_from_params="${SAVED_MODELS}/trained_models/${2}_finetuned/params/params" \
       --loss_type="L2" \
       --output_prediction_file="${OUTPUT_PATH}/finetuning_${2}_predict" \
       --max_seq_len=50 \

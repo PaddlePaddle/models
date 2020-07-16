@@ -30,6 +30,7 @@ alpha = 0.6
 uniform_initializer = lambda x: fluid.initializer.UniformInitializer(low=-x, high=x)
 zero_constant = fluid.initializer.Constant(0.0)
 
+
 class BaseModel(fluid.dygraph.Layer):
     def __init__(self,
                  hidden_size,
@@ -77,35 +78,38 @@ class BaseModel(fluid.dygraph.Layer):
         self.enc_units = []
         for i in range(num_layers):
             self.enc_units.append(
-                self.add_sublayer("enc_units_%d" % i,
+                self.add_sublayer(
+                    "enc_units_%d" % i,
                     BasicLSTMUnit(
-                    hidden_size=self.hidden_size, 
-                    input_size=self.hidden_size,
-                    param_attr=param_attr, 
-                    bias_attr=bias_attr, 
-                    forget_bias=forget_bias)))
+                        hidden_size=self.hidden_size,
+                        input_size=self.hidden_size,
+                        param_attr=param_attr,
+                        bias_attr=bias_attr,
+                        forget_bias=forget_bias)))
 
         self.dec_units = []
         for i in range(num_layers):
             self.dec_units.append(
-                self.add_sublayer("dec_units_%d" % i,
+                self.add_sublayer(
+                    "dec_units_%d" % i,
                     BasicLSTMUnit(
-                    hidden_size=self.hidden_size, 
-                    input_size=self.hidden_size,
-                    param_attr=param_attr, 
-                    bias_attr=bias_attr, 
-                    forget_bias=forget_bias)))
-        
-        self.fc = fluid.dygraph.nn.Linear(self.hidden_size,
-                self.tar_vocab_size,
-                param_attr=param_attr,
-                bias_attr=False)
+                        hidden_size=self.hidden_size,
+                        input_size=self.hidden_size,
+                        param_attr=param_attr,
+                        bias_attr=bias_attr,
+                        forget_bias=forget_bias)))
+
+        self.fc = fluid.dygraph.nn.Linear(
+            self.hidden_size,
+            self.tar_vocab_size,
+            param_attr=param_attr,
+            bias_attr=False)
 
     def _transpose_batch_time(self, x):
         return fluid.layers.transpose(x, [1, 0] + list(range(2, len(x.shape))))
 
     def _merge_batch_beams(self, x):
-        return fluid.layers.reshape(x, shape=(-1,x.shape[2]))
+        return fluid.layers.reshape(x, shape=(-1, x.shape[2]))
 
     def _split_batch_beams(self, x):
         return fluid.layers.reshape(x, shape=(-1, self.beam_size, x.shape[1]))
@@ -135,11 +139,18 @@ class BaseModel(fluid.dygraph.Layer):
             self.batch_size = src.shape[0]
         src_emb = self.src_embeder(self._transpose_batch_time(src))
 
-        enc_hidden = to_variable(np.zeros((self.num_layers, self.batch_size, self.hidden_size), dtype='float32'))
-        enc_cell = to_variable(np.zeros((self.num_layers, self.batch_size, self.hidden_size), dtype='float32'))
+        enc_hidden = to_variable(
+            np.zeros(
+                (self.num_layers, self.batch_size, self.hidden_size),
+                dtype='float32'))
+        enc_cell = to_variable(
+            np.zeros(
+                (self.num_layers, self.batch_size, self.hidden_size),
+                dtype='float32'))
 
         max_seq_len = src_emb.shape[0]
-        enc_len_mask = fluid.layers.sequence_mask(src_sequence_length, maxlen=max_seq_len, dtype="float32")
+        enc_len_mask = fluid.layers.sequence_mask(
+            src_sequence_length, maxlen=max_seq_len, dtype="float32")
         enc_len_mask = fluid.layers.transpose(enc_len_mask, [1, 0])
         enc_states = [[enc_hidden, enc_cell]]
         for l in range(max_seq_len):
@@ -148,7 +159,8 @@ class BaseModel(fluid.dygraph.Layer):
             enc_hidden, enc_cell = enc_states[l]
             new_enc_hidden, new_enc_cell = [], []
             for i in range(self.num_layers):
-                new_hidden, new_cell = self.enc_units[i](step_input, enc_hidden[i], enc_cell[i])
+                new_hidden, new_cell = self.enc_units[i](
+                    step_input, enc_hidden[i], enc_cell[i])
                 new_enc_hidden.append(new_hidden)
                 new_enc_cell.append(new_cell)
                 if self.dropout != None and self.dropout > 0.0:
@@ -158,10 +170,16 @@ class BaseModel(fluid.dygraph.Layer):
                         dropout_implementation='upscale_in_train')
                 else:
                     step_input = new_hidden
-            new_enc_hidden = [self._real_state(enc_hidden[i], new_enc_hidden[i], step_mask) for i in range(self.num_layers)]
-            new_enc_cell = [self._real_state(enc_cell[i], new_enc_cell[i], step_mask) for i in range(self.num_layers)]
+            new_enc_hidden = [
+                self._real_state(enc_hidden[i], new_enc_hidden[i], step_mask)
+                for i in range(self.num_layers)
+            ]
+            new_enc_cell = [
+                self._real_state(enc_cell[i], new_enc_cell[i], step_mask)
+                for i in range(self.num_layers)
+            ]
             enc_states.append([new_enc_hidden, new_enc_cell])
-        
+
         if self.mode in ['train', 'eval']:
             dec_hidden, dec_cell = enc_states[-1]
             tar_emb = self.tar_embeder(self._transpose_batch_time(tar))
@@ -172,7 +190,8 @@ class BaseModel(fluid.dygraph.Layer):
                 step_input = tar_emb[step_idx]
                 new_dec_hidden, new_dec_cell = [], []
                 for i in range(self.num_layers):
-                    new_hidden, new_cell = self.dec_units[i](step_input, dec_hidden[i], dec_cell[i])
+                    new_hidden, new_cell = self.dec_units[i](
+                        step_input, dec_hidden[i], dec_cell[i])
                     new_dec_hidden.append(new_hidden)
                     new_dec_cell.append(new_cell)
                     if self.dropout != None and self.dropout > 0.0:
@@ -187,9 +206,9 @@ class BaseModel(fluid.dygraph.Layer):
 
             dec_output = fluid.layers.stack(dec_output)
             dec_output = self.fc(self._transpose_batch_time(dec_output))
-        
+
             loss = fluid.layers.softmax_with_cross_entropy(
-            logits=dec_output, label=label, soft_label=False)
+                logits=dec_output, label=label, soft_label=False)
             loss = fluid.layers.squeeze(loss, axes=[2])
             max_tar_seq_len = fluid.layers.shape(tar)[1]
             tar_mask = fluid.layers.sequence_mask(
@@ -202,19 +221,34 @@ class BaseModel(fluid.dygraph.Layer):
             batch_beam_shape = (self.batch_size, self.beam_size)
             #batch_beam_shape_1 = (self.batch_size, self.beam_size, 1)
             vocab_size_tensor = to_variable(np.full((1), self.tar_vocab_size))
-            start_token_tensor = to_variable(np.full(batch_beam_shape, self.beam_start_token, dtype='int64')) 
-            end_token_tensor = to_variable(np.full(batch_beam_shape, self.beam_end_token, dtype='int64'))
+            start_token_tensor = to_variable(
+                np.full(
+                    batch_beam_shape, self.beam_start_token, dtype='int64'))
+            end_token_tensor = to_variable(
+                np.full(
+                    batch_beam_shape, self.beam_end_token, dtype='int64'))
             step_input = self.tar_embeder(start_token_tensor)
-            beam_finished = to_variable(np.full(batch_beam_shape, 0, dtype='float32'))
-            beam_state_log_probs = to_variable(np.array([[0.] + [-self.kinf] * (self.beam_size - 1)], dtype="float32"))
-            beam_state_log_probs = fluid.layers.expand(beam_state_log_probs, [self.batch_size, 1])
-            
+            beam_finished = to_variable(
+                np.full(
+                    batch_beam_shape, 0, dtype='float32'))
+            beam_state_log_probs = to_variable(
+                np.array(
+                    [[0.] + [-self.kinf] * (self.beam_size - 1)],
+                    dtype="float32"))
+            beam_state_log_probs = fluid.layers.expand(beam_state_log_probs,
+                                                       [self.batch_size, 1])
+
             dec_hidden, dec_cell = enc_states[-1]
-            dec_hidden = [self._expand_to_beam_size(state) for state in dec_hidden]
+            dec_hidden = [
+                self._expand_to_beam_size(state) for state in dec_hidden
+            ]
             dec_cell = [self._expand_to_beam_size(state) for state in dec_cell]
-            
+
             batch_pos = fluid.layers.expand(
-                fluid.layers.unsqueeze(to_variable(np.arange(0, self.batch_size, 1, dtype="int64")), [1]),
+                fluid.layers.unsqueeze(
+                    to_variable(
+                        np.arange(
+                            0, self.batch_size, 1, dtype="int64")), [1]),
                 [1, self.beam_size])
             predicted_ids = []
             parent_ids = []
@@ -224,11 +258,16 @@ class BaseModel(fluid.dygraph.Layer):
                     break
                 step_input = self._merge_batch_beams(step_input)
                 new_dec_hidden, new_dec_cell = [], []
-                dec_hidden = [self._merge_batch_beams(state) for state in dec_hidden]
-                dec_cell = [self._merge_batch_beams(state) for state in dec_cell]
+                dec_hidden = [
+                    self._merge_batch_beams(state) for state in dec_hidden
+                ]
+                dec_cell = [
+                    self._merge_batch_beams(state) for state in dec_cell
+                ]
 
                 for i in range(self.num_layers):
-                    new_hidden, new_cell = self.dec_units[i](step_input, dec_hidden[i], dec_cell[i])
+                    new_hidden, new_cell = self.dec_units[i](
+                        step_input, dec_hidden[i], dec_cell[i])
                     new_dec_hidden.append(new_hidden)
                     new_dec_cell.append(new_cell)
                     if self.dropout != None and self.dropout > 0.0:
@@ -239,12 +278,17 @@ class BaseModel(fluid.dygraph.Layer):
                     else:
                         step_input = new_hidden
                 cell_outputs = self._split_batch_beams(step_input)
-                cell_outputs = self.fc(cell_outputs) 
+                cell_outputs = self.fc(cell_outputs)
                 # Beam_search_step:
-                step_log_probs = fluid.layers.log(fluid.layers.softmax(cell_outputs))
+                step_log_probs = fluid.layers.log(
+                    fluid.layers.softmax(cell_outputs))
                 noend_array = [-self.kinf] * self.tar_vocab_size
-                noend_array[self.beam_end_token] = 0 # [-kinf, -kinf, ..., 0, -kinf, ...]
-                noend_mask_tensor = to_variable(np.array(noend_array,dtype='float32'))
+                noend_array[
+                    self.
+                    beam_end_token] = 0  # [-kinf, -kinf, ..., 0, -kinf, ...]
+                noend_mask_tensor = to_variable(
+                    np.array(
+                        noend_array, dtype='float32'))
                 # set finished position to one-hot probability of <eos>
                 step_log_probs = fluid.layers.elementwise_mul(
                         fluid.layers.expand(fluid.layers.unsqueeze(beam_finished, [2]), [1, 1, self.tar_vocab_size]),
@@ -252,26 +296,45 @@ class BaseModel(fluid.dygraph.Layer):
                     fluid.layers.elementwise_mul(step_log_probs, (beam_finished - 1), axis=0)
                 log_probs = fluid.layers.elementwise_add(
                     x=step_log_probs, y=beam_state_log_probs, axis=0)
-                scores = fluid.layers.reshape(log_probs, [-1, self.beam_size * self.tar_vocab_size])
-                topk_scores, topk_indices = fluid.layers.topk(input=scores, k=self.beam_size)
-                beam_indices = fluid.layers.elementwise_floordiv(topk_indices, vocab_size_tensor) # in which beam
-                token_indices = fluid.layers.elementwise_mod(topk_indices, vocab_size_tensor) # position in beam
-                next_log_probs = self._gather(scores, topk_indices, batch_pos) # 
+                scores = fluid.layers.reshape(
+                    log_probs, [-1, self.beam_size * self.tar_vocab_size])
+                topk_scores, topk_indices = fluid.layers.topk(
+                    input=scores, k=self.beam_size)
+                beam_indices = fluid.layers.elementwise_floordiv(
+                    topk_indices, vocab_size_tensor)  # in which beam
+                token_indices = fluid.layers.elementwise_mod(
+                    topk_indices, vocab_size_tensor)  # position in beam
+                next_log_probs = self._gather(scores, topk_indices,
+                                              batch_pos)  # 
 
-                new_dec_hidden = [self._split_batch_beams(state) for state in new_dec_hidden]
-                new_dec_cell = [self._split_batch_beams(state) for state in new_dec_cell]
-                new_dec_hidden = [self._gather(x, beam_indices, batch_pos) for x in new_dec_hidden]
-                new_dec_cell = [self._gather(x, beam_indices, batch_pos) for x in new_dec_cell]
-                
-                next_finished = self._gather(beam_finished, beam_indices, batch_pos)              
+                new_dec_hidden = [
+                    self._split_batch_beams(state) for state in new_dec_hidden
+                ]
+                new_dec_cell = [
+                    self._split_batch_beams(state) for state in new_dec_cell
+                ]
+                new_dec_hidden = [
+                    self._gather(x, beam_indices, batch_pos)
+                    for x in new_dec_hidden
+                ]
+                new_dec_cell = [
+                    self._gather(x, beam_indices, batch_pos)
+                    for x in new_dec_cell
+                ]
+
+                next_finished = self._gather(beam_finished, beam_indices,
+                                             batch_pos)
                 next_finished = fluid.layers.cast(next_finished, "bool")
-                next_finished = fluid.layers.logical_or(next_finished, fluid.layers.equal(token_indices, end_token_tensor))
+                next_finished = fluid.layers.logical_or(
+                    next_finished,
+                    fluid.layers.equal(token_indices, end_token_tensor))
                 next_finished = fluid.layers.cast(next_finished, "float32")
                 # prepare for next step
                 dec_hidden, dec_cell = new_dec_hidden, new_dec_cell
                 beam_finished = next_finished
                 beam_state_log_probs = next_log_probs
-                step_input = self.tar_embeder(token_indices) # remove unsqueeze in v1.7
+                step_input = self.tar_embeder(
+                    token_indices)  # remove unsqueeze in v1.7
                 predicted_ids.append(token_indices)
                 parent_ids.append(beam_indices)
 

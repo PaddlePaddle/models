@@ -53,6 +53,11 @@
     * [AUC的清零步骤](#auc的清零步骤)
     * [运行Infer](#运行infer)
     * [benchmark](#benchmark)
+* [启动分布式训练](#启动分布式训练)
+    * [训练代码准备](#训练代码准备)
+    * [运行环境准备](#运行环境准备)
+    * [启动server](#启动server)
+    * [启动worker](#启动worker)
 
 #
 ## 运行环境
@@ -87,7 +92,7 @@ sh download_data.sh
 
 执行该脚本的理想输出为：
 ```bash
-> sh get_data.sh
+> sh download_data.sh
 --2019-11-26 06:31:33--  https://fleet.bj.bcebos.com/ctr_data.tar.gz
 Resolving fleet.bj.bcebos.com... 10.180.112.31
 Connecting to fleet.bj.bcebos.com|10.180.112.31|:443... connected.
@@ -149,7 +154,7 @@ def embedding_layer(input):
    return fluid.layers.embedding(
             input=input,
             is_sparse=True,
-            size=[args.sparse_feature_dim, 
+            size=[args.sparse_feature_dim,
                   args.embedding_size],
             param_attr=fluid.ParamAttr(
             name="SparseFeatFactors",
@@ -163,7 +168,7 @@ sparse_embed_seq = list(map(embedding_layer, inputs[1:-1])) # [C1~C26]
 将离散数据通过embedding查表得到的值，与连续数据的输入进行`concat`操作，合为一个整体输入，作为全链接层的原始输入。我们共设计了3层FC，每层FC的输出维度都为400，每层FC都后接一个`relu`激活函数，每层FC的初始化方式为符合正态分布的随机初始化，标准差与上一层的输出维度的平方根成反比。
 ```python
 concated = fluid.layers.concat(sparse_embed_seq + inputs[0:1], axis=1)
-        
+
 fc1 = fluid.layers.fc(
    input=concated,
    size=400,
@@ -266,9 +271,9 @@ continuous_range_ = range(1, 14)
 categorical_range_ = range(14, 40)
 
 class CriteoDataset(dg.MultiSlotDataGenerator):
-   
+
     def generate_sample(self, line):
-        
+
         def reader():
             features = line.rstrip('\n').split('\t')
             dense_feature = []
@@ -358,12 +363,12 @@ fleet.init(role) #必不可少的步骤，初始化节点！
 
 
 > PaddleCloudRoleMaker()是怎样判断当前节点所扮演的角色的？
-> 
+>
 > Paddle参数服务器模式中，使用各个节点机器的环境变量来确定当前节点的角色。为了能准确无误的分配角色，在每个节点上，我们都需要指定如下环境变量：
 > #### 共有的环境变量
 > - export PADDLE_TRAINERS_NUM=2 # 训练节点数
 > - export PADDLE_PSERVERS_IP_PORT_LIST="127.0.0.1:36011,127.0.0.1:36012" # 各个pserver的ip:port 组合构成的字符串
-> 
+>
 > #### Pserver特有的环境变量
 > - export TRAINING_ROLE=PSERVER # 当前节点的角色是PSERVER
 > - export PADDLE_PORT=36011 # 当前PSERVER的通信端口
@@ -371,7 +376,7 @@ fleet.init(role) #必不可少的步骤，初始化节点！
 > #### Trainer特有的环境变量
 > - export TRAINING_ROLE=TRAINER # 当前节点的角色是TRAINER
 > - export PADDLE_TRAINER_ID=0 # 当前Trainer节点的编号,范围为[0，PADDLE_TRAINERS_NUM)
-> 
+>
 > 完成上述环境变量指定后，`PaddleCloudRoleMaker()`便可以正常的运行，决定当前节点的角色。
 
 
@@ -383,7 +388,7 @@ Paddle的`参数服务器`模式分布式训练有很多种类型，根据通信
 ctr_model = CTR()
 inputs = ctr_model.input_data(args)
 avg_cost, auc_var, batch_auc_var = ctr_model.net(inputs,args)
-    
+
 # 选择反向更新优化策略
 optimizer = fluid.optimizer.Adam(args.learning_rate)
 optimizer.minimize(avg_cost)
@@ -426,7 +431,7 @@ if fleet.is_server():
     fleet.run_server()
 ```
 - 启动Worker
- 
+
 启动训练节点，训练节点首先调用`init_worker()`来完成节点初始化，然后执行`fleet.startup_program`，从服务器端同步参数的初始化值。接着，和本地训练完全一致，通过执行`fleet.main_program`来完成整个训练过程，并保存模型。最后调用`fleet.stop_worker()`关闭训练节点。
 ```python
 elif fleet.is_worker():
@@ -436,7 +441,7 @@ elif fleet.is_worker():
 
     # 初始化含有分布式流程的fleet.startup_program
     exe.run(fleet.startup_program))
-    
+
     # 引入数据读取dataset
     dataset = get_dataset(inputs,params)
 
@@ -453,10 +458,10 @@ elif fleet.is_worker():
         # 默认使用0号节点保存模型
         if params.test and fleet.is_first_worker():
             model_path = (str(params.model_path) + "/"+"epoch_" + str(epoch))
-            fluid.io.save_persistables(executor=exe, dirname=model_path)
-    
+            fleet.save_persistables(executor=exe, dirname=model_path)
+
     # 训练结束，调用stop_worker()通知pserver
-    fleet.stop_worker() 
+    fleet.stop_worker()
     logger.info("Distribute Train Success!")
     return train_result
 ```
@@ -499,7 +504,7 @@ sh local_cluster.sh
 便可以开启分布式模拟训练，默认启用2x2的训练模式。Trainer与Pserver的运行日志，存放于`./log/`文件夹，保存的模型位于`./models/`，使用默认配置运行后，理想输出为：
 - pserver.0.log
 ```bash
-get_pserver_program() is deprecated, call get_pserver_programs() to get pserver main and startup in a single call.
+
 I1126 07:37:49.952580 15056 grpc_server.cc:477] Server listening on 127.0.0.1:36011 successful, selected port: 36011
 ```
 
@@ -553,9 +558,9 @@ I1126 07:38:28.947571 14715 communicator.cc:363] Communicator stop done
 2. 在很多应用场景中，分布式训练出的模型与实际上线的模型不一致，仅使用分布式训练出的参数值，参与其他网络的预测，在这样的场景中，就更无必要保存模型结构了。
 
 > 什么是长期变量？
-> 
+>
 > 在Paddle Fluid中，模型变量可以分为以下几种类型：
-> 
+>
 > 1. 模型参数：是深度学习模型中被训练和学习的量。由`fluid.framwork.Parameter()`产生，是`fluid.framework.Variable()`的派生类。
 > 2. 长期变量 ：是在整个训练过程中持续存在，不会因为一个迭代结束而销毁的变量，所有的模型参数都是长期变量，但并非所有的长期变量都是模型参数。长期变量通过将`fluid.framework.Varibale()`中的`psersistable`属性设置为`True`来声明。长期变量是模型的核心参数。
 > 3. 临时变量：不属于上述两种类别的所有变量都是临时变量，只在一个训练迭代中存在，在每一个迭代结束后，所有的临时变量都会被销毁，然后在下一个迭代开始时，创建新的临时变量。例如输入的训练数据，中间层layer的输出等等。
@@ -627,7 +632,7 @@ with fluid.framework.program_guard(test_program, startup_program):
    ```
    这是容易理解的，因为在测试时，我们要从零开始，保证预测program的干净，没有其他的影响因素。
 -  在创建预测网络时，我们加入了`with fluid.unique_name.guard():`，它的作用是让所有新建的参数的自动编号再次从零开始。Paddle的参数`Variable`以变量名作为区分手段，保证变量名相同，就可以从保存的模型中找到对应参数。
-  
+
     paddle创建的临时变量，编号会自动顺延，如果没有指定变量名，可以观察到这一现象，比如：`fc_1.w_0`->`fc_2.w_0`，想要共享相同的参数，必需要保证编号可以对应。
 
 ### 测试数据的读取
@@ -678,3 +683,105 @@ open file success
 全量数据的训练与预测，请修改对应`train.py`与`infer.py`中对应的`train_files_path`与`test_files_path`超参数，分别修改为`./train_data_full`与`./test_data_full`。在全量数据中训练三轮后，加载epoch_2的模型，`auc=0.79395`。
 
 分布式benchmark相关代码及复现方式见[Fleet Repo](https://github.com/PaddlePaddle/Fleet.git)，路径为Fleet/benchmark/ps/distribute_ctr/paddle/。
+
+
+## 启动分布式训练
+
+在`本地模拟分布式`小节，我们简要介绍了运行的方法，下面，将更详细地介绍启动参数服务器进行分布式训练的方法。
+
+### 训练代码准备
+参数服务器架构，有两个重要的组成部分：Server与Worker。为了启动训练，我们是否要准备两套代码分别运行呢？答案是不需要的。Paddle Fleet API将两者运行的逻辑进行了很好的统一，用户只需使用`fleet.init(role)`就可以判断当前启动的程序扮演server还是worker。使用如下的编程范式，只需10行，便可将单机代码转变为分布式代码：
+``` python
+role = role_maker.PaddleCloudRoleMaker()
+fleet.init(role)
+
+# Define your network, choose your optimizer(SGD/Adam/Adagrad etc.)
+strategy = StrategyFactory.create_sync_strategy()
+optimizer = fleet.distributed_optimizer(optimizer, strategy)
+
+if fleet.is_server():
+    fleet.init_server()
+    fleet.run_server()
+if fleet.is_worker():
+    fleet.init_worker()
+    # run training
+    fleet.stop_worker()
+```
+
+### 运行环境准备
+- Paddle参数服务器模式的训练，目前只支持在`Liunx`环境下运行，推荐使用`ubuntu`或`CentOS`
+- Paddle参数服务器模式的前端代码支持`python 2.7`及`python 3.5+`，若使用`Dataset`模式的高性能IO，需使用`python 2.7`
+- 使用多台机器进行分布式训练，请确保各自之间可以通过`ip:port`的方式访问`rpc`服务，使用`http/https`代理会导致通信失败
+- 各个机器之间的通信耗费应尽量少
+
+假设我们有两台机器，想要在每台机器上分别启动一个`server`进程以及一个`worker`进程，完成2x2（2个参数服务器，2个训练节点）的参数服务器模式分布式训练，按照如下步骤操作。
+
+### 启动server
+机器A，IP地址是`10.89.176.11`，通信端口是`36000`，配置如下环境变量后，运行训练的入口程序：
+```bash
+export PADDLE_PSERVERS_IP_PORT_LIST="10.89.176.11:36000,10.89.176.12:36000"
+export TRAINING_ROLE=PSERVER
+export POD_IP=10.89.176.11 # node A：10.89.176.11
+export PADDLE_PORT=36000
+export PADDLE_TRAINERS_NUM=2
+python -u train.py --is_cloud=1
+```
+应能在日志中看到如下输出：
+
+> I0318 21:47:01.298220 188592128 grpc_server.cc:470] Server listening on 127.0.0.1:36000 selected port: 36000
+
+查看系统进程
+> 8624 | ttys000 | 0:02.31 | python -u train.py --is_cloud=1
+
+查看系统进程及端口占用：
+
+> python3.7 | 8624 | paddle | 8u | IPv6 | 0xe149b87d093872e5 | 0t0 | TCP |  localhost:36000 (LISTEN)
+
+也可以看到我们的`server`进程8624的确在`36000`端口开始了监听，等待`worker`的通信。
+
+机器B，IP地址是`10.89.176.12`，通信端口是`36000`，配置如下环境变量后，运行训练的入口程序：
+```bash
+export PADDLE_PSERVERS_IP_PORT_LIST="10.89.176.11:36000,10.89.176.12:36000"
+export TRAINING_ROLE=PSERVER
+export POD_IP=10.89.176.12 # node B: 10.89.176.12
+export PADDLE_PORT=36000
+export PADDLE_TRAINERS_NUM=2
+python -u train.py --is_cloud=1
+```
+也可以看到相似的日志输出与进程状况。（进行验证时，请务必确保IP与端口的正确性）
+
+### 启动worker
+
+接下来我们分别在机器A与B上开启训练进程。配置如下环境变量并开启训练进程：
+
+机器A：
+```bash
+export PADDLE_PSERVERS_IP_PORT_LIST="10.89.176.11:36000,10.89.176.12:36000"
+export TRAINING_ROLE=TRAINER
+export PADDLE_TRAINERS_NUM=2
+export PADDLE_TRAINER_ID=0 # node A：trainer_id = 0
+python -u train.py --is_cloud=1
+```
+
+机器B：
+```bash
+export PADDLE_PSERVERS_IP_PORT_LIST="10.89.176.11:36000,10.89.176.12:36000"
+export TRAINING_ROLE=TRAINER
+export PADDLE_TRAINERS_NUM=2
+export PADDLE_TRAINER_ID=1 # node B: trainer_id = 1
+python -u train.py --is_cloud=1
+```
+
+运行该命令时，若pserver还未就绪，可在日志输出中看到如下信息：
+> server not ready, wait 3 sec to retry...
+>
+> not ready endpoints:['10.89.176.11:36000', '10.89.176.12:36000']
+
+worker进程将持续等待，直到server开始监听，或等待超时。
+
+当pserver都准备就绪后，可以在日志输出看到如下信息：
+> I0317 11:38:48.099179 16719 communicator.cc:271] Communicator start
+>
+> I0317 11:38:49.838711 16719 rpc_client.h:107] init rpc client with trainer_id 0
+
+至此，分布式训练启动完毕，将开始训练，祝您好运。

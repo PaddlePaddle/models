@@ -58,7 +58,7 @@ def train():
                                  'epoch_' + str(epoch_id + 1), "checkpoint")
         sys.stderr.write('epoch%d is finished and takes %f s\n' % (
             (epoch_id + 1), time.time() - start))
-        fluid.io.save_persistables(fluid.default_main_program(), model_dir)
+        fluid.save(fluid.default_main_program(), model_dir)
 
 
 if __name__ == '__main__':

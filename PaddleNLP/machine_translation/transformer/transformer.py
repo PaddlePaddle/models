@@ -752,18 +752,17 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
         # caches contains states of history steps in decoder self-attention
         # and static encoder output projections in encoder-decoder attention
         # to reduce redundant computation.
+        batch_size = layers.shape(start_tokens)[0]
         caches = [
             {
                 "k":  # for self attention
-                layers.fill_constant_batch_size_like(
-                    input=start_tokens,
-                    shape=[-1, n_head, 0, d_key],
+                layers.fill_constant(
+                    shape=[batch_size, n_head, 0, d_key],
                     dtype=enc_output.dtype,
                     value=0),
                 "v":  # for self attention
-                layers.fill_constant_batch_size_like(
-                    input=start_tokens,
-                    shape=[-1, n_head, 0, d_value],
+                layers.fill_constant(
+                    shape=[batch_size, n_head, 0, d_value],
                     dtype=enc_output.dtype,
                     value=0),
                 "static_k":  # for encoder-decoder attention
@@ -792,12 +791,10 @@ def fast_decode(model_input, src_vocab_size, trg_vocab_size, max_in_len,
                 lambda x: layers.gather(x, index=gather_idx), caches)
             pre_src_attn_bias = layers.gather(
                 trg_src_attn_bias, index=gather_idx)
+            bias_batch_size = layers.shape(pre_src_attn_bias)[0]
             pre_pos = layers.elementwise_mul(
-                x=layers.fill_constant_batch_size_like(
-                    input=pre_src_attn_bias,  # cann't use lod tensor here
-                    value=1,
-                    shape=[-1, 1],
-                    dtype=pre_ids.dtype),
+                x=layers.fill_constant(
+                    value=1, shape=[bias_batch_size, 1], dtype=pre_ids.dtype),
                 y=step_idx,
                 axis=0)
             logits = wrap_decoder(

@@ -4,8 +4,6 @@
 
 ```text
 .
-├── cluster_train.py    # 分布式训练函数
-├── cluster_train.sh    # 本地模拟多机脚本
 ├── train.py            # 训练函数
 ├── infer.py            # 预测脚本
 ├── net.py              # 网络结构
@@ -20,7 +18,7 @@
 ## 介绍
 本例实现了skip-gram模式的word2vector模型。
 
-**目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。**
+**目前模型库下模型均要求使用PaddlePaddle 1.6及以上版本或适当的develop版本。若要使用shuffle_batch功能，则需使用PaddlePaddle 1.7及以上版本。**
 
 同时推荐用户参考[ IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/124377)
 
@@ -97,11 +95,7 @@ python train.py -h
 OPENBLAS_NUM_THREADS=1 CPU_NUM=5 python train.py --train_data_dir data/convert_text8 --dict_path data/test_build_dict --num_passes 10 --batch_size 100 --model_output_dir v1_cpu5_b100_lr1dir --base_lr 1.0 --print_batch 1000 --with_speed --is_sparse
 ```
 
-本地单机模拟多机训练, 目前暂不支持windows。
-
-```bash
-sh cluster_train.sh
-```
+若需要开启shuffle_batch功能，需在命令中加入`--with_shuffle_batch`。单机模拟分布式多机训练，需更改`cluster_train.sh`文件，在各个节点的启动命令中加入`--with_shuffle_batch`。
 
 ## 预测
 测试集下载命令如下

@@ -123,7 +123,7 @@ class BaseTrainer:
                                                 self.settings.project_path,
                                                 net_type)))
             if checkpoint_list:
-                checkpoint_path = checkpoint_list[-1].split('.')[0]
+                checkpoint_path = os.path.splitext(checkpoint_list[-1])[0]
             else:
                 print('No matching checkpoint file found')
                 return
@@ -144,13 +144,13 @@ class BaseTrainer:
         self.optimizer.set_dict(opt_params)
 
         # paddle load state
-        state_path = '{}/{}/custom_state.pickle'.format(
-            self._checkpoint_dir, self.settings.project_path)
         current_state = pickle.load(
-            open(os.path.join(state_path, 'custom_state.pickle'), 'rb'))
+            open(os.path.join(checkpoint_path, '_custom_state.pickle'), 'rb'))
 
         print("\nload checkpoint done !! Current states are as follows:")
-        for key, value in enumerate(current_state):
+        for key, value in current_state.items():
             print(key, value)
+        self.epoch = current_state['epoch']
+        self.stats = current_state['stats']
 
         return True

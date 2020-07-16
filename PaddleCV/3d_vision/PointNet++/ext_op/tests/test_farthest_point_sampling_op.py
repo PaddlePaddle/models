@@ -44,8 +44,8 @@ class TestFarthestPointSamplingOp(unittest.TestCase):
         x_type = 'float32'
         sampled_point_num = 256
 
-        x = fluid.layers.data(
-            name='x', shape=x_shape, dtype=x_type, append_batch_size=False)
+        x = fluid.data(
+            name='x', shape=x_shape, dtype=x_type)
         y = pointnet_lib.farthest_point_sampling(x, sampled_point_num)
 
         x_np = np.random.randint(1, 100, (x_shape[0] * x_shape[1] *

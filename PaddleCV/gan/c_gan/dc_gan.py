@@ -60,24 +60,25 @@ def train(args):
     dg_program = fluid.Program()
 
     with fluid.program_guard(d_program):
-        img = fluid.layers.data(name='img', shape=[784], dtype='float32')
-        label = fluid.layers.data(name='label', shape=[1], dtype='float32')
+        img = fluid.data(name='img', shape=[None, 784], dtype='float32')
+        label = fluid.data(name='label', shape=[None, 1], dtype='float32')
         d_logit = D(img)
         d_loss = loss(d_logit, label)
 
     with fluid.program_guard(dg_program):
-        noise = fluid.layers.data(
-            name='noise', shape=[NOISE_SIZE], dtype='float32')
+        noise = fluid.data(
+            name='noise', shape=[None, NOISE_SIZE], dtype='float32')
         g_img = G(x=noise)
 
         g_program = dg_program.clone()
         g_program_test = dg_program.clone(for_test=True)
 
         dg_logit = D(g_img)
+        dg_logit_shape = fluid.layers.shape(dg_logit)
         dg_loss = loss(
             dg_logit,
-            fluid.layers.fill_constant_batch_size_like(
-                input=noise, dtype='float32', shape=[-1, 1], value=1.0))
+            fluid.layers.fill_constant(
+                shape=[dg_logit_shape[0], 1], dtype='float32', value=1.0))
 
     opt = fluid.optimizer.Adam(learning_rate=LEARNING_RATE)
 
@@ -92,11 +93,11 @@ def train(args):
     exe.run(fluid.default_startup_program())
 
     if args.run_ce:
-        train_reader = paddle.batch(
+        train_reader = fluid.io.batch(
             paddle.dataset.mnist.train(), batch_size=args.batch_size)
     else:
-        train_reader = paddle.batch(
-            paddle.reader.shuffle(
+        train_reader = fluid.io.batch(
+            fluid.io.shuffle(
                 paddle.dataset.mnist.train(), buf_size=60000),
             batch_size=args.batch_size)
 

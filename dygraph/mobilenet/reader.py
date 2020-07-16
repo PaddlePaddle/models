@@ -239,7 +239,7 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     img /= img_std
 
     if mode == 'train' or mode == 'val':
-        return (img, sample[1])
+        return (img, [sample[1]])
     elif mode == 'test':
         return (img, )
 
