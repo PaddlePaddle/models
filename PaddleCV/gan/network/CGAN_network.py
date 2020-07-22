@@ -42,7 +42,7 @@ class CGAN_model(object):
 
     def network_G(self, input, label, name="generator"):
         # concat noise and label
-        y = fluid.layers.reshape(label, shape=[-1, self.y_dim, 1, 1])
+        y = fluid.layers.reshape(label, shape=[-1, self.y_dim])
         xy = fluid.layers.concat([input, y], 1)
         o_l1 = linear(
             input=xy,
@@ -89,6 +89,7 @@ class CGAN_model(object):
         # concat image and label
         x = fluid.layers.reshape(input, shape=[-1, 1, self.img_w, self.img_h])
         y = fluid.layers.reshape(label, shape=[-1, self.y_dim, 1, 1])
+        yb = fluid.layers.reshape(label, shape=[-1, self.y_dim])
         xy = conv_cond_concat(x, y)
         o_l1 = conv2d(
             input=xy,
@@ -107,13 +108,13 @@ class CGAN_model(object):
             norm='batch_norm',
             activation_fn='leaky_relu')
         o_f1 = fluid.layers.flatten(o_l2, axis=1)
-        o_c2 = fluid.layers.concat([o_f1, y], 1)
+        o_c2 = fluid.layers.concat([o_f1, yb], 1)
         o_l3 = linear(
             input=o_c2,
             output_size=self.df_dim * 16,
             norm=self.norm,
             activation_fn='leaky_relu',
             name=name + '_l3')
-        o_c3 = fluid.layers.concat([o_l3, y], 1)
+        o_c3 = fluid.layers.concat([o_l3, yb], 1)
         o_logit = linear(o_c3, 1, activation_fn='sigmoid', name=name + '_l4')
         return o_logit

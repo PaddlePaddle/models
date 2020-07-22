@@ -30,6 +30,7 @@ import io
 ******functions for file processing******
 """
 
+
 def load_vocab(file_path):
     """
     load the given vocabulary
@@ -56,8 +57,11 @@ def get_result_file(args):
 
     """
     with io.open(args.test_data_dir, "r", encoding="utf8") as test_file:
-        with io.open("predictions.txt", "r", encoding="utf8") as predictions_file:
-            with io.open(args.test_result_path, "w", encoding="utf8") as test_result_file:
+        with io.open(
+                "predictions.txt", "r", encoding="utf8") as predictions_file:
+            with io.open(
+                    args.test_result_path, "w",
+                    encoding="utf8") as test_result_file:
                 test_datas = [line.strip("\n") for line in test_file]
                 predictions = [line.strip("\n") for line in predictions_file]
                 for test_data, prediction in zip(test_datas, predictions):
@@ -165,49 +169,82 @@ class ArgumentGroup(object):
             help=help + ' Default: %(default)s.',
             **kwargs)
 
+
 class ArgConfig(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
 
-        model_g = ArgumentGroup(parser, "model", "model configuration and paths.")
-        model_g.add_arg("config_path", str, None, "Path to the json file for EmoTect model config.")
-        model_g.add_arg("init_checkpoint", str, None, "Init checkpoint to resume training from.")
-        model_g.add_arg("output_dir", str, None, "Directory path to save checkpoints")
-        model_g.add_arg("task_mode", str, None, "task mode: pairwise or pointwise")
+        model_g = ArgumentGroup(parser, "model",
+                                "model configuration and paths.")
+        model_g.add_arg("config_path", str, None,
+                        "Path to the json file for EmoTect model config.")
+        model_g.add_arg("init_checkpoint", str, None,
+                        "Init checkpoint to resume training from.")
+        model_g.add_arg("output_dir", str, None,
+                        "Directory path to save checkpoints")
+        model_g.add_arg("task_mode", str, None,
+                        "task mode: pairwise or pointwise")
 
         train_g = ArgumentGroup(parser, "training", "training options.")
         train_g.add_arg("epoch", int, 10, "Number of epoches for training.")
-        train_g.add_arg("save_steps", int, 200, "The steps interval to save checkpoints.")
-        train_g.add_arg("validation_steps", int, 100, "The steps interval to evaluate model performance.")
+        train_g.add_arg("save_steps", int, 200,
+                        "The steps interval to save checkpoints.")
+        train_g.add_arg("validation_steps", int, 100,
+                        "The steps interval to evaluate model performance.")
 
         log_g = ArgumentGroup(parser, "logging", "logging related")
-        log_g.add_arg("skip_steps", int, 10, "The steps interval to print loss.")
-        log_g.add_arg("verbose_result", bool, True, "Whether to output verbose result.")
-        log_g.add_arg("test_result_path", str, "test_result", "Directory path to test result.")
-        log_g.add_arg("infer_result_path", str, "infer_result", "Directory path to infer result.")
+        log_g.add_arg("skip_steps", int, 10,
+                      "The steps interval to print loss.")
+        log_g.add_arg("verbose_result", bool, True,
+                      "Whether to output verbose result.")
+        log_g.add_arg("test_result_path", str, "test_result",
+                      "Directory path to test result.")
+        log_g.add_arg("infer_result_path", str, "infer_result",
+                      "Directory path to infer result.")
 
-        data_g = ArgumentGroup(parser, "data", "Data paths, vocab paths and data processing options")
-        data_g.add_arg("train_data_dir", str, None, "Directory path to training data.")
-        data_g.add_arg("valid_data_dir", str, None, "Directory path to valid data.")
-        data_g.add_arg("test_data_dir", str, None, "Directory path to testing data.")
-        data_g.add_arg("infer_data_dir", str, None, "Directory path to infer data.")
+        data_g = ArgumentGroup(
+            parser, "data",
+            "Data paths, vocab paths and data processing options")
+        data_g.add_arg("train_data_dir", str, None,
+                       "Directory path to training data.")
+        data_g.add_arg("valid_data_dir", str, None,
+                       "Directory path to valid data.")
+        data_g.add_arg("test_data_dir", str, None,
+                       "Directory path to testing data.")
+        data_g.add_arg("infer_data_dir", str, None,
+                       "Directory path to infer data.")
         data_g.add_arg("vocab_path", str, None, "Vocabulary path.")
-        data_g.add_arg("batch_size", int, 32, "Total examples' number in batch for training.")
+        data_g.add_arg("tokenizer", str, None, "Whether or not use user defined tokenizer")
+        data_g.add_arg("batch_size", int, 32,
+                       "Total examples' number in batch for training.")
 
         run_type_g = ArgumentGroup(parser, "run_type", "running type options.")
-        run_type_g.add_arg("use_cuda", bool, False, "If set, use GPU for training.")
-        run_type_g.add_arg("task_name", str, None, "The name of task to perform sentiment classification.")
-        run_type_g.add_arg("do_train", bool, False, "Whether to perform training.")
+        run_type_g.add_arg("use_cuda", bool, False,
+                           "If set, use GPU for training.")
+        run_type_g.add_arg(
+            "task_name", str, None,
+            "The name of task to perform sentiment classification.")
+        run_type_g.add_arg("do_train", bool, False,
+                           "Whether to perform training.")
         run_type_g.add_arg("do_valid", bool, False, "Whether to perform dev.")
-        run_type_g.add_arg("do_test", bool, False, "Whether to perform testing.")
-        run_type_g.add_arg("do_infer", bool, False, "Whether to perform inference.")
-        run_type_g.add_arg("compute_accuracy", bool, False, "Whether to compute accuracy.")
-        run_type_g.add_arg("lamda", float, 0.91, "When task_mode is pairwise, lamda is the threshold for calculating the accuracy.")
+        run_type_g.add_arg("do_test", bool, False,
+                           "Whether to perform testing.")
+        run_type_g.add_arg("do_infer", bool, False,
+                           "Whether to perform inference.")
+        run_type_g.add_arg("compute_accuracy", bool, False,
+                           "Whether to compute accuracy.")
+        run_type_g.add_arg(
+            "lamda", float, 0.91,
+            "When task_mode is pairwise, lamda is the threshold for calculating the accuracy."
+        )
 
         custom_g = ArgumentGroup(parser, "customize", "customized options.")
         self.custom_g = custom_g
 
-        parser.add_argument('--enable_ce',action='store_true',help='If set, run the task with continuous evaluation logs.')
+        parser.add_argument(
+            '--enable_ce',
+            action='store_true',
+            help='If set, run the task with continuous evaluation logs.')
 
         self.parser = parser
 
@@ -349,16 +386,15 @@ def init_checkpoint(exe, init_checkpoint_path, main_program):
     """
     assert os.path.exists(
         init_checkpoint_path), "[%s] cann't be found." % init_checkpoint_path
-    
+
     def existed_persitables(var):
         if not fluid.io.is_persistable(var):
             return False
         return os.path.exists(os.path.join(init_checkpoint_path, var.name))
 
-    fluid.io.load_vars(
-        exe,
-        init_checkpoint_path,
-        main_program=main_program,
-        predicate=existed_persitables)
+    var_list = []
+    for var in main_program.list_vars():
+        if fluid.io.is_persistable(var) and existed_persitables(var):
+            var_list.append(var)
+    fluid.load(main_program, init_checkpoint_path, exe, var_list=var_list)
     print("Load model from {}".format(init_checkpoint_path))
-

@@ -156,7 +156,7 @@ class BOW(fluid.dygraph.Layer):
         fc_1 = self._fc1(bow_1)
         fc_2 = self._fc2(fc_1)
         prediction = self._fc_prediction(fc_2)
-        if label:
+        if label is not None:
             cost = fluid.layers.cross_entropy(input=prediction, label=label)
             avg_cost = fluid.layers.mean(x=cost)
             acc = fluid.layers.accuracy(input=prediction, label=label)

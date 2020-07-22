@@ -134,7 +134,7 @@ class Optimizer(object):
         param_list = dict()
 
         clip_norm_thres = 1.0
-        #grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(clip_norm_thres)
+        #grad_clip = fluid.clip.GradientClipByGlobalNorm(clip_norm_thres)
 
         if use_data_parallel:
             loss = model.scale_loss(loss)

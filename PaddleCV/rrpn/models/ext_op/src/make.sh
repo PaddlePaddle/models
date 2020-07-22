@@ -27,7 +27,7 @@ git clone https://github.com/NVlabs/cub.git
 
 nvcc rrpn_generate_proposals_op.cu -c -o rrpn_generate_proposals_op.cu.o -ccbin cc -DPADDLE_WITH_MKLDNN -DPADDLE_WITH_CUDA -DEIGEN_USE_GPU -DPADDLE_USE_DSO -Xcompiler -fPIC -std=c++11 -Xcompiler -fPIC -w --expt-relaxed-constexpr -O3 -DNVCC \
     -I ${include_dir} \
-   -I ${include_dir}/third_party \
+    -I ${include_dir}/third_party \
     -I ${CUDA}/include \
     -I ${CUDNN}/include \
     -I ${NCCL}/include \

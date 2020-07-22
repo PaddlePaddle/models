@@ -32,8 +32,7 @@ class ShiftingAttentionModel(object):
         x_shape.stop_gradient = True
         flat_x = fluid.layers.reshape(x, shape=(-1, self.seg_num))
         flat_softmax = fluid.layers.softmax(flat_x)
-        return fluid.layers.reshape(
-            flat_softmax, shape=x.shape, actual_shape=x_shape)
+        return fluid.layers.reshape(flat_softmax, shape=x_shape)
 
     def glorot(self, n):
         return np.sqrt(1.0 / np.sqrt(n))

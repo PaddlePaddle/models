@@ -12,7 +12,7 @@
 
 ## 安装
 
-在当前目录下运行样例代码需要PadddlePaddle Fluid的develop或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/)中的说明来更新PaddlePaddle。
+在当前目录下运行样例代码需要PadddlePaddle Fluid的1.8.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/)中的说明来更新PaddlePaddle。
 
 
 ## 简介
@@ -27,16 +27,23 @@ RRPN是在Faster RCNN基础上拓展出的两阶段目标检测器，可用于�
 
 ### 编译自定义OP
 
+**注意：** 通过pip方式安装的PaddlePaddle由GCC 4.8编译得到，由于GCC 4.8和GCC 5以上C++11 ABI不兼容，您编写的自定义OP，需要通过GCC 4.8编译。若是GCC 5及以上的环境上使用自定义OP，推荐使用Docker安装PaddlePaddle，使得编Paddle和编译自定义OP的GCC版本相同。
+
 自定义OP编译方式如下：
 
     进入 `models/ext_op/src` 目录，执行编译脚本
     ```
     cd models/ext_op/src
     sh make.sh  ${cuda_path} ${cudnn_path} ${nccl_path}
-    '''
+    ```
     其中${cuda_path}、$cudnn_path}和{nccl_path}分别为cuda、cudnn、nccl的安装路径，需通过命令行进行指定
-    成功编译后，`ext_op/src` 目录下将会生成 `rrpn_lib.so` 
-    
+    成功编译后，`ext_op/src` 目录下将会生成 `rrpn_lib.so`。
+    需要将`rrpn_lib.so`所在路径以及libpaddle_framework.so路径(即paddle.sysconfig.get_lib()得到路径)设置到环境变量LD_LIBRARY_PATH中:
+    ```
+    # 假如rrpn_lib.so路径是：`rrpn/models/ext_op/src/`，对于Linux环境设置:
+    export LD_LIBRARY_PATH=rrpn/models/ext_op/src/:$( python -c 'import paddle; print(paddle.sysconfig.get_lib())'):$LD_LIBRARY_PATH
+    ```
+
 ## 数据准备
 ### 公开数据集
 在[ICDAR2015数据集](https://rrc.cvc.uab.es/?ch=4&com=downloads)上进行训练，数据集需进入官网进行注册后方可下载。
@@ -58,8 +65,8 @@ dataset/icdar2015/
 │   ├── img_112.jpg
 |   ...
 ├── ch4_test_localization_transcription_gt
-│   ├── img_111.jpg
-│   ├── img_112.jpg
+│   ├── img_111.txt
+│   ├── img_112.txt
 |   ...
 ```
 ### 自定义数据
@@ -88,7 +95,7 @@ x1, y1, x2, y2, x3, y3, x4, y4, class_name
     python train.py \
        --model_save_dir=output/ \
        --pretrained_model=${path_to_pretrain_model} \
-       --data_dir=${path_to_data} \
+       --data_dir=${path_to_icdar2015} \
     ```
 
 
@@ -126,7 +133,7 @@ x1, y1, x2, y2, x3, y3, x4, y4, class_name
 
     ```
     python eval.py \
-        --dataset=icdar2015 \
+        --data_dir=${path_to_icdar2015} \
         --pretrained_model=${path_to_trained_model}
     ```
 
@@ -141,10 +148,6 @@ RRPN
 | 模型                   | 批量大小   | 迭代次数   | F1  |
 | :--------------- | :------------:    | :------------------:    |------: |
 | [RRPN](https://paddleseg.bj.bcebos.com/deploy/temp/model_final.tar) |8   |    17500       | 0.8048 |
-
-
-
-
 
 
 ## 模型推断及可视化

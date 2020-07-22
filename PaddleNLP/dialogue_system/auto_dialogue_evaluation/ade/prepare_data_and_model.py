@@ -29,7 +29,7 @@ DATA_MODEL_PATH = {
     "DATA_PATH":
     "https://baidu-nlp.bj.bcebos.com/auto_dialogue_evaluation_dataset-1.0.0.tar.gz",
     "TRAINED_MODEL":
-    "https://baidu-nlp.bj.bcebos.com/auto_dialogue_evaluation_models.2.0.0.tar.gz"
+    "https://baidu-nlp.bj.bcebos.com/auto_dialogue_evaluation_models.3.0.0.tar.gz"
 }
 
 PATH_MAP = {'DATA_PATH': "./data/input", 'TRAINED_MODEL': './data/saved_models'}

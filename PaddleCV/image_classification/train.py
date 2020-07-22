@@ -288,7 +288,7 @@ def train(args):
             if args.use_dali:
                 test_iter.reset()
 
-        if pass_id % args.save_step == 0:
+        if trainer_id == 0 and pass_id % args.save_step == 0:
             save_model(args, exe, train_prog, pass_id)
 
 

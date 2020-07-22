@@ -3,7 +3,7 @@
 export FLAGS_sync_nccl_allreduce=0
 export FLAGS_eager_delete_tensor_gb=1
 
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=
 if  [ ! "$CUDA_VISIBLE_DEVICES" ]
 then
     export CPU_NUM=1
@@ -21,7 +21,7 @@ SAVE_MODEL_PATH="./data/saved_models/${TASK_NAME}"
 TRAIN_MODEL_PATH="./data/saved_models/trained_models"
 OUTPUT_PATH="./data/output"
 INFERENCE_MODEL="data/inference_models"
-PYTHON_PATH="python3"
+PYTHON_PATH="python"
 
 if [ -f ${SAVE_MODEL_PATH} ]; then
     rm ${SAVE_MODEL_PATH}
@@ -94,7 +94,6 @@ else
   exit 255
 fi
 
-
 #training
 function train()
 {
@@ -110,7 +109,6 @@ function train()
        --vocab_path=${BERT_BASE_PATH}/vocab.txt \
        --init_from_pretrain_model=${BERT_BASE_PATH}/params \
        --save_model_path=${SAVE_MODEL_PATH} \
-       --save_param="params" \
        --save_steps=${save_steps} \
        --learning_rate=${learning_rate} \
        --weight_decay=0.01 \
@@ -128,7 +126,7 @@ function predict()
        --batch_size=${batch_size} \
        --data_dir=${INPUT_PATH} \
        --do_lower_case=true \
-       --init_from_params=${TRAIN_MODEL_PATH}/${TASK_NAME}/params \
+       --init_from_params=${TRAIN_MODEL_PATH}/${TASK_NAME}/params/params \
        --bert_config_path=${BERT_BASE_PATH}/bert_config.json \
        --vocab_path=${BERT_BASE_PATH}/vocab.txt \
        --output_prediction_file=${OUTPUT_PATH}/pred_${TASK_NAME} \

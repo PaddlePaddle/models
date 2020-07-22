@@ -24,15 +24,13 @@ from paddle.fluid.optimizer import SGDOptimizer
 from paddle.fluid.dygraph.base import to_variable
 import numpy as np
 import six
+import multiprocessing
 
 import reader
 import model_check
 import time
 
 from args import *
-
-#import fluid.dygraph_grad_clip as dygraph_clip
-#from fluid.dygraph_grad_clip  import *
 
 import sys
 if sys.version[0] == '2':
@@ -90,7 +88,7 @@ class SimpleLSTMRNN(fluid.Layer):
 
         res = []
         for index in range(self._num_steps):
-            step_input = input_embedding[:,index,:]
+            step_input = input_embedding[:, index, :]
             for k in range(self._num_layers):
                 pre_hidden = hidden_array[k]
                 pre_cell = cell_array[k]
@@ -117,7 +115,8 @@ class SimpleLSTMRNN(fluid.Layer):
                         dropout_implementation='upscale_in_train')
             res.append(step_input)
         real_res = fluid.layers.concat(res, 1)
-        real_res = fluid.layers.reshape(real_res, [ -1, self._num_steps, self._hidden_size])
+        real_res = fluid.layers.reshape(
+            real_res, [-1, self._num_steps, self._hidden_size])
         last_hidden = fluid.layers.concat(hidden_array, 1)
         last_hidden = fluid.layers.reshape(
             last_hidden, shape=[-1, self._num_layers, self._hidden_size])
@@ -217,10 +216,12 @@ def train_ptb_lm():
     model_check.check_cuda(args.use_gpu)
 
     place = core.CPUPlace()
-    if args.use_gpu == True:
-        place = core.CUDAPlace(0)
-
-    dev_count = fluid.core.get_cuda_device_count()
+    if args.use_gpu:
+        place = fluid.CUDAPlace(0)
+        dev_count = fluid.core.get_cuda_device_count()
+    else:
+        place = fluid.CPUPlace()
+        dev_count = int(os.environ.get('CPU_NUM', multiprocessing.cpu_count()))
 
     # check if paddlepaddle version is satisfied
     model_check.check_version()
@@ -329,8 +330,21 @@ def train_ptb_lm():
                                            max(i + 1 - epoch_start_decay, 0.0))
             lr_arr.append(new_lr)
 
-        sgd = SGDOptimizer(learning_rate=fluid.layers.piecewise_decay(
-            boundaries=bd, values=lr_arr), parameter_list=ptb_model.parameters())
+        grad_clip = fluid.clip.GradientClipByGlobalNorm(max_grad_norm)
+        sgd = SGDOptimizer(
+            learning_rate=fluid.layers.piecewise_decay(
+                boundaries=bd, values=lr_arr),
+            parameter_list=ptb_model.parameters(),
+            grad_clip=grad_clip)
+
+        def reader_decorator(reader):
+            def __reader__():
+                for item in reader:
+                    x_data = item[0].reshape((-1, num_steps, 1))
+                    y_data = item[1].reshape((-1, num_steps, 1))
+                    yield x_data, y_data
+
+            return __reader__
 
         def eval(model, data):
             print("begin to eval")
@@ -342,13 +356,14 @@ def train_ptb_lm():
                 (num_layers, batch_size, hidden_size), dtype='float32')
 
             model.eval()
-            train_data_iter = reader.get_data_iter(data, batch_size, num_steps)
-            for batch_id, batch in enumerate(train_data_iter):
-                x_data, y_data = batch
-                x_data = x_data.reshape((-1, num_steps, 1))
-                y_data = y_data.reshape((-1, num_steps, 1))
-                x = to_variable(x_data)
-                y = to_variable(y_data)
+            train_data_iter = reader_decorator(
+                reader.get_data_iter(data, batch_size, num_steps))
+
+            eval_data_loader = fluid.io.DataLoader.from_generator(capacity=200)
+            eval_data_loader.set_batch_generator(train_data_iter, places=place)
+
+            for batch_id, batch in enumerate(eval_data_loader):
+                x, y = batch
                 init_hidden = to_variable(init_hidden_data)
                 init_cell = to_variable(init_cell_data)
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
@@ -368,8 +383,11 @@ def train_ptb_lm():
 
         ce_time = []
         ce_ppl = []
-        grad_clip = fluid.dygraph_grad_clip.GradClipByGlobalNorm(max_grad_norm)
+
+        total_batch_num = 0  #this is for benchmark
         for epoch_id in range(max_epoch):
+            epoch_start = time.time()
+
             ptb_model.train()
             total_loss = 0.0
             iters = 0.0
@@ -378,19 +396,20 @@ def train_ptb_lm():
             init_cell_data = np.zeros(
                 (num_layers, batch_size, hidden_size), dtype='float32')
 
-            train_data_iter = reader.get_data_iter(train_data, batch_size,
-                                                   num_steps)
+            train_data_iter = reader_decorator(
+                reader.get_data_iter(train_data, batch_size, num_steps))
+
+            train_data_loader = fluid.io.DataLoader.from_generator(capacity=200)
+            train_data_loader.set_batch_generator(train_data_iter, places=place)
+
             init_hidden = to_variable(init_hidden_data)
             init_cell = to_variable(init_cell_data)
-            start_time = time.time()
-            for batch_id, batch in enumerate(train_data_iter):
-                x_data, y_data = batch
 
-                x_data = x_data.reshape((-1, num_steps, 1))
-                y_data = y_data.reshape((-1, num_steps, 1))
-
-                x = to_variable(x_data)
-                y = to_variable(y_data)
+            batch_start = time.time()
+            for batch_id, batch in enumerate(train_data_loader):
+                if args.max_iter and total_batch_num == args.max_iter:
+                    return
+                x, y = batch
 
                 dy_loss, last_hidden, last_cell = ptb_model(x, y, init_hidden,
                                                             init_cell)
@@ -399,31 +418,39 @@ def train_ptb_lm():
                 out_loss = dy_loss.numpy()
 
                 dy_loss.backward()
-                sgd.minimize(dy_loss, grad_clip=grad_clip)
+                sgd.minimize(dy_loss)
 
                 ptb_model.clear_gradients()
                 total_loss += out_loss
                 iters += num_steps
+                total_batch_num = total_batch_num + 1  #this is for benchmark
 
+                train_batch_cost = time.time() - batch_start
                 if batch_id > 0 and batch_id % log_interval == 0:
                     ppl = np.exp(total_loss / iters)
-                    print("-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f" %
-                          (epoch_id, batch_id, ppl[0],
-                           sgd._global_learning_rate().numpy(), out_loss))
+                    print(
+                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f, batch_cost: %.5f s"
+                        % (epoch_id, batch_id, ppl[0],
+                           sgd._global_learning_rate().numpy(), out_loss,
+                           train_batch_cost))
+                batch_start = time.time()
 
-            print("one epoch finished", epoch_id)
-            print("time cost ", time.time() - start_time)
             ppl = np.exp(total_loss / iters)
-            ce_time.append(time.time() - start_time)
+            train_epoch_cost = time.time() - epoch_start
+            print("-- Epoch:[%d]; ppl: %.5f, epoch_cost: %.5f s" %
+                  (epoch_id, ppl[0], train_epoch_cost))
+
+            ce_time.append(train_epoch_cost)
             ce_ppl.append(ppl[0])
-            print("-- Epoch:[%d]; ppl: %.5f" % (epoch_id, ppl[0]))
 
             if batch_size <= 20 and epoch_id == 0 and ppl[0] > 1000:
                 # for bad init, after first epoch, the loss is over 1000
                 # no more need to continue
-                print("Parameters are randomly initialized and not good this time because the loss is over 1000 after the first epoch.")
+                print(
+                    "Parameters are randomly initialized and not good this time because the loss is over 1000 after the first epoch."
+                )
                 print("Abort this training process and please start again.")
-                return 
+                return
 
             save_model_dir = os.path.join(args.save_model_dir,
                                           str(epoch_id), 'params')
@@ -444,5 +471,6 @@ def train_ptb_lm():
             print("kpis\ttrain_ppl_card%s\t%f" % (dev_count, _ppl))
 
         eval(ptb_model, test_data)
+
 
 train_ptb_lm()

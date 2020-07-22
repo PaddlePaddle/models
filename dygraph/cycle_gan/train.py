@@ -44,7 +44,7 @@ add_arg('save_checkpoints',  bool,  True,       "Whether to save checkpoints.")
 lambda_A = 10.0
 lambda_B = 10.0
 lambda_identity = 0.5
-tep_per_epoch = 2974
+step_per_epoch = 2974
 
 
 def optimizer_setting(parameters):
@@ -90,7 +90,8 @@ def train(args):
         losses = [[], []]
         t_time = 0
 
-        vars_G = cycle_gan.build_generator_resnet_9blocks_a.parameters() + cycle_gan.build_generator_resnet_9blocks_b.parameters()
+        vars_G = cycle_gan.build_generator_resnet_9blocks_a.parameters(
+        ) + cycle_gan.build_generator_resnet_9blocks_b.parameters()
         vars_da = cycle_gan.build_gen_discriminator_a.parameters()
         vars_db = cycle_gan.build_gen_discriminator_b.parameters()
 

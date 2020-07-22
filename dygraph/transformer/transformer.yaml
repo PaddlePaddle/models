@@ -19,6 +19,8 @@ inference_model_dir: "infer_model"
 random_seed: None
 # The pattern to match training data files.
 training_file: "wmt16_ende_data_bpe/train.tok.clean.bpe.32000.en-de"
+# The pattern to match validation data files.
+validation_file: "wmt16_ende_data_bpe/newstest2014.tok.bpe.32000.en-de"
 # The pattern to match test data files.
 predict_file: "wmt16_ende_data_bpe/newstest2016.tok.bpe.32000.en-de"
 # The file to output the translation results of predict_file to.

@@ -53,8 +53,8 @@ def three_nn(input, known, eps=1e-10, name=None):
         .. code-block:: python
 
             import paddle.fluid as fluid
-            x = fluid.layers.data(name='x', shape=[16, 3], dtype='float32')
-            known = fluid.layers.data(name='known', shape=[32, 3], dtype='float32')
+            x = fluid.data(name='x', shape=[None, 16, 3], dtype='float32')
+            known = fluid.data(name='known', shape=[None, 32, 3], dtype='float32')
             distance, idx = fluid.layers.three_nn(input, known)
     """
     helper = LayerHelper('three_nn', **locals())
@@ -97,9 +97,9 @@ def three_interp(input, weight, idx, name=None):
         .. code-block:: python
 
             import paddle.fluid as fluid
-            x = fluid.layers.data(name='x', shape=[16, 3], dtype='float32')
-            weight = fluid.layers.data(name='weight', shape=[32, 3], dtype='float32')
-            index = fluid.layers.data(name='index', shape=[32, 3], dtype='int32')
+            x = fluid.data(name='x', shape=[None, 16, 3], dtype='float32')
+            weight = fluid.data(name='weight', shape=[None, 32, 3], dtype='float32')
+            index = fluid.data(name='index', shape=[None, 32, 3], dtype='int32')
             out = fluid.layers.three_interp(x, weight, index)
     """
     helper = LayerHelper('three_interp', **locals())
@@ -132,8 +132,8 @@ def query_ball(input, new_points, radius, n_sample):
         .. code-block::python
 
             import paddle.fluid as fluid
-            x = fluid.layers.data(name='points',shape=[-1,5,3],dtype='float32')
-            new_points = fluid.layers.data(name='new_points', shape=[-1,2,3], dtype='float32')
+            x = fluid.data(name='points',shape=[None,5,3],dtype='float32')
+            new_points = fluid.data(name='new_points', shape=[None,2,3], dtype='float32')
             output = fluid.layers.query_ball(x,new_points,radius=4.0,n_sample=5)
 
 
@@ -167,7 +167,7 @@ def farthest_point_sampling(input, sampled_point_num):
 
     Examples:
         .. code-block:: python
-        x = fluid.layers.data(name='data', shape=(2,100,3), dtype='float32')
+        x = fluid.data(name='data', shape=(None ,100, 3), dtype='float32')
         sampled_points = fluid.layers.farthest_point_sampling(
             x, 50
         )
@@ -210,8 +210,8 @@ def gather_point(input, index):
     Examples:
         .. code-block:: python
             import paddle.fluid as fluid
-            x = fluid.layers.data(name='x', shape=[-1, 5, 3], dtype='float32')
-            index = fluid.layers.data(name='index', shape=[-1, 1], dtype='int32')
+            x = fluid.data(name='x', shape=[None, 5, 3], dtype='float32')
+            index = fluid.data(name='index', shape=[None, 1], dtype='int32')
             output = fluid.layers.gather_point(x, index)
     """
 
@@ -249,8 +249,8 @@ def group_points(input, idx, name=None):
         .. code-block:: python
 
             import paddle.fluid as fluid
-            x = fluid.layers.data(name='x', shape=[16, 3], dtype='float32')
-            index = fluid.layers.data(name='index', shape=[32, 3], dtype='int32')
+            x = fluid.data(name='x', shape=[None, 16, 3], dtype='float32')
+            index = fluid.data(name='index', shape=[None, 32, 3], dtype='int32')
             out  = fluid.layers.group_points(x, index)
     """
     helper = LayerHelper('group_points', **locals())
