@@ -67,7 +67,7 @@ def eval(net, test_data_loader, eop):
         test_batch_cost = time.time() - batch_start
         total_sample += 1
         print(
-            "test | epoch %d, avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
+            "test | epoch %d, avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost_time: %.5f s, reader_cost: %.5f s"
             % (eop, avg_loss.numpy(), acc_top1.numpy(), acc_top5.numpy(),
                test_batch_cost, batch_reader_end - batch_start))
         sys.stdout.flush()
