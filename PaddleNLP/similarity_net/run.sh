@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 export FLAGS_enable_parallel_graph=1
 export FLAGS_sync_nccl_allreduce=1
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=3
 export FLAGS_fraction_of_gpu_memory_to_use=0.95
 TASK_NAME='simnet'
 TRAIN_DATA_PATH=./data/train_pairwise_data
