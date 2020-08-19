@@ -24,6 +24,8 @@ from paddle.fluid.optimizer import AdamOptimizer
 from paddle.fluid.dygraph.nn import Conv2D, Pool2D, Linear
 from paddle.fluid.dygraph.base import to_variable
 
+from paddle.distributed import fleet
+from paddle.distributed.fleet.base import role_maker
 
 def parse_args():
     parser = argparse.ArgumentParser("Training for Mnist.")
@@ -174,8 +176,12 @@ def train_mnist(args):
     epoch_num = args.epoch
     BATCH_SIZE = 64
 
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+    if args.use_data_parallel:
+        place_idx = int(os.environ['FLAGS_selected_gpus'])
+        place = fluid.CUDAPlace(place_idx)
+    else:
+        place = fluid.CUDAPlace(0)
+
     with fluid.dygraph.guard(place):
         if args.ce:
             print("ce mode")
@@ -185,11 +191,16 @@ def train_mnist(args):
             fluid.default_main_program().random_seed = seed
 
         if args.use_data_parallel:
-            strategy = fluid.dygraph.parallel.prepare_context()
+            role = role_maker.PaddleCloudRoleMaker(is_collective=True)
+            fleet.init(role)
         mnist = MNIST()
         adam = AdamOptimizer(learning_rate=0.001, parameter_list=mnist.parameters())
+
         if args.use_data_parallel:
-            mnist = fluid.dygraph.parallel.DataParallel(mnist, strategy)
+            dist_strategy = fleet.DistributedStrategy()
+            adam = fleet.distributed_optimizer(adam, dist_strategy)
+            # call after distributed_optimizer so as to apply dist_strategy
+            mnist = fleet.build_distributed_model(mnist)
 
         train_reader = paddle.batch(
             paddle.dataset.mnist.train(), batch_size=BATCH_SIZE, drop_last=True)
@@ -241,7 +252,7 @@ def train_mnist(args):
 
         save_parameters = (not args.use_data_parallel) or (
             args.use_data_parallel and
-            fluid.dygraph.parallel.Env().local_rank == 0)
+            fleet.worker_index() == 0)
         if save_parameters:
             fluid.save_dygraph(mnist.state_dict(), "save_temp")
             
