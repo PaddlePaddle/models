@@ -25,7 +25,6 @@ from paddle.fluid.dygraph.nn import Conv2D, Pool2D, Linear
 from paddle.fluid.dygraph.base import to_variable
 
 from paddle.distributed import fleet
-from paddle.distributed.fleet.base import role_maker
 
 def parse_args():
     parser = argparse.ArgumentParser("Training for Mnist.")
@@ -191,8 +190,7 @@ def train_mnist(args):
             fluid.default_main_program().random_seed = seed
 
         if args.use_data_parallel:
-            role = role_maker.PaddleCloudRoleMaker(is_collective=True)
-            fleet.init(role)
+            fleet.init()
         mnist = MNIST()
         adam = AdamOptimizer(learning_rate=0.001, parameter_list=mnist.parameters())
 
