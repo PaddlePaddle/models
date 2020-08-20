@@ -23,6 +23,8 @@ import paddle.fluid as fluid
 from paddle.fluid.optimizer import AdamOptimizer
 from paddle.fluid.dygraph.nn import Conv2D, Pool2D, Linear
 from paddle.fluid.dygraph.base import to_variable
+import paddle.distributed.fleet as fleet
+import paddle.distributed.fleet.base.role_maker as role_maker
 
 
 def parse_args():
@@ -188,6 +190,11 @@ def train_mnist(args):
             strategy = fluid.dygraph.parallel.prepare_context()
         mnist = MNIST()
         adam = AdamOptimizer(learning_rate=0.001, parameter_list=mnist.parameters())
+	# fleet init
+        role = role_maker.PaddleCloudRoleMaker(is_collective=True)
+        fleet.init(role)
+	adam = fleet.distributed_optimizer(adam)
+        # paddle distributed training code here
         if args.use_data_parallel:
             mnist = fluid.dygraph.parallel.DataParallel(mnist, strategy)
 
