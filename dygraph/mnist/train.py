@@ -193,7 +193,7 @@ def train_mnist(args):
 	# fleet init
         role = role_maker.PaddleCloudRoleMaker(is_collective=True)
         fleet.init(role)
-	adam = fleet.distributed_optimizer(adam)
+        adam = fleet.distributed_optimizer(adam)
         # paddle distributed training code here
         if args.use_data_parallel:
             mnist = fluid.dygraph.parallel.DataParallel(mnist, strategy)
