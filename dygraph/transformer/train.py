@@ -22,7 +22,6 @@ import numpy as np
 import paddle
 import paddle.fluid as fluid
 from paddle.distributed import fleet
-from paddle.distributed.fleet.base import role_maker
 
 from utils.configure import PDConfig
 from utils.check import check_gpu, check_version
@@ -132,8 +131,7 @@ def do_train(args):
             transformer.load_dict(model_dict)
 
         if trainer_count > 1:
-            role = role_maker.PaddleCloudRoleMaker(is_collective=True)
-            fleet.init(role)
+            fleet.init(is_collective=True)
             dist_strategy = fleet.DistributedStrategy()
             optimizer = fleet.distributed_optimizer(optimizer, dist_strategy)
             # call after distributed_optimizer so as to apply dist_strategy

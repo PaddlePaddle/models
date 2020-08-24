@@ -25,7 +25,6 @@ from paddle.fluid.dygraph.base import to_variable
 from paddle.fluid import framework
 
 from paddle.distributed import fleet
-from paddle.distributed.fleet.base import role_maker
 import math
 import sys
 import time
@@ -303,8 +302,7 @@ def train_resnet():
         optimizer = optimizer_setting(parameter_list=resnet.parameters())
 
         if args.use_data_parallel:
-            role = role_maker.PaddleCloudRoleMaker(is_collective=True)
-            fleet.init(role)
+            fleet.init(is_collective=True)
             dist_strategy = fleet.DistributedStrategy()
             optimizer = fleet.distributed_optimizer(optimizer, dist_strategy)
             # call after distributed_optimizer so as to apply dist_strategy
