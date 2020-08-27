@@ -16,6 +16,7 @@ import os
 import time
 import sys
 import paddle.fluid as fluid
+from paddle.fluid.param_attr import ParamAttr
 from paddle.fluid.layer_helper import LayerHelper
 from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, Linear
 import math
@@ -28,7 +29,8 @@ class ConvBNLayer(fluid.dygraph.Layer):
                  filter_size,
                  stride=1,
                  groups=1,
-                 act=None):
+                 act=None,
+                 name=None):
         super(ConvBNLayer, self).__init__()
 
         self._conv = Conv2D(
@@ -39,14 +41,22 @@ class ConvBNLayer(fluid.dygraph.Layer):
             padding=(filter_size - 1) // 2,
             groups=None,
             act=None,
-            param_attr=fluid.param_attr.ParamAttr(),
+            param_attr=fluid.param_attr.ParamAttr(name=name + "_weights"),
             bias_attr=False)
+        if name == "conv1":
+            bn_name = "bn_" + name
+        else:
+            bn_name = "bn" + name[3:]
 
         self._batch_norm = BatchNorm(
             num_filters,
             act=act,
-            param_attr=fluid.param_attr.ParamAttr(),
-            bias_attr=fluid.param_attr.ParamAttr())
+            param_attr=ParamAttr(
+                name=bn_name + "_scale"),  #fluid.param_attr.ParamAttr(),
+            bias_attr=ParamAttr(bn_name +
+                                "_offset"),  #fluid.param_attr.ParamAttr())
+            moving_mean_name=bn_name + "_mean",
+            moving_variance_name=bn_name + "_variance")
 
     def forward(self, inputs):
         y = self._conv(inputs)
@@ -61,32 +71,36 @@ class BottleneckBlock(fluid.dygraph.Layer):
                  num_filters,
                  stride,
                  shortcut=True,
-                 seg_num=8):
+                 seg_num=8,
+                 name=None):
         super(BottleneckBlock, self).__init__()
-
         self.conv0 = ConvBNLayer(
             num_channels=num_channels,
             num_filters=num_filters,
             filter_size=1,
-            act='relu')
+            act='relu',
+            name=name + "_branch2a")
         self.conv1 = ConvBNLayer(
             num_channels=num_filters,
             num_filters=num_filters,
             filter_size=3,
             stride=stride,
-            act='relu')
+            act='relu',
+            name=name + "_branch2b")
         self.conv2 = ConvBNLayer(
             num_channels=num_filters,
             num_filters=num_filters * 4,
             filter_size=1,
-            act=None)
+            act=None,
+            name=name + "_branch2c")
 
         if not shortcut:
             self.short = ConvBNLayer(
                 num_channels=num_channels,
                 num_filters=num_filters * 4,
                 filter_size=1,
-                stride=stride)
+                stride=stride,
+                name=name + "_branch1")
         self.shortcut = shortcut
         self.seg_num = seg_num
         self._num_channels_out = int(num_filters * 4)
@@ -119,7 +133,12 @@ class TSM_ResNet(fluid.dygraph.Layer):
         num_filters = [64, 128, 256, 512]
 
         self.conv = ConvBNLayer(
-            num_channels=3, num_filters=64, filter_size=7, stride=2, act='relu')
+            num_channels=3,
+            num_filters=64,
+            filter_size=7,
+            stride=2,
+            act='relu',
+            name="conv1")
         self.pool2d_max = Pool2D(
             pool_size=3, pool_stride=2, pool_padding=1, pool_type='max')
 
@@ -129,14 +148,26 @@ class TSM_ResNet(fluid.dygraph.Layer):
         for block in range(len(depth)):
             shortcut = False
             for i in range(depth[block]):
+                if self.layers in [101, 152] and block == 2:
+                    if i == 0:
+                        conv_name = "res" + str(block + 2) + "a"
+                    else:
+                        conv_name = "res" + str(block + 2) + "b" + str(i)
+                else:
+                    conv_name = "res" + str(block + 2) + chr(97 + i)
+                    print("*************************************** {}".format(
+                        conv_name))
+
                 bottleneck_block = self.add_sublayer(
-                    'bb_%d_%d' % (block, i),
+                    #'bb_%d_%d' % (block, i),
+                    conv_name,
                     BottleneckBlock(
                         num_channels=num_channels,
                         num_filters=num_filters[block],
                         stride=2 if i == 0 and block != 0 else 1,
                         shortcut=shortcut,
-                        seg_num=self.seg_num))
+                        seg_num=self.seg_num,
+                        name=conv_name))
                 num_channels = int(bottleneck_block._num_channels_out)
                 self.bottleneck_block_list.append(bottleneck_block)
                 shortcut = True
@@ -151,9 +182,12 @@ class TSM_ResNet(fluid.dygraph.Layer):
             self.class_dim,
             act="softmax",
             param_attr=fluid.param_attr.ParamAttr(
-                initializer=fluid.initializer.Uniform(-stdv, stdv)),
+                initializer=fluid.initializer.Uniform(-stdv, stdv),
+                name="fc_0.w_0"),
             bias_attr=fluid.param_attr.ParamAttr(
-                learning_rate=2.0, regularizer=fluid.regularizer.L2Decay(0.)))
+                learning_rate=2.0,
+                regularizer=fluid.regularizer.L2Decay(0.),
+                name="fc_0.b_0"))
 
     def forward(self, inputs):
         y = fluid.layers.reshape(
