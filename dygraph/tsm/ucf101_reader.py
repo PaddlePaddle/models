@@ -44,6 +44,7 @@ from reader_utils import DataReader
 
 logger = logging.getLogger(__name__)
 python_ver = sys.version_info
+ucf101_root = "/ssd4/chaj/ucf101/"
 
 
 class VideoRecord(object):
@@ -60,7 +61,7 @@ class VideoRecord(object):
 
     @property
     def path(self):
-        return "/ssd2/liuchao_temp/ucf101/rawframes/" + self._data[0]
+        return ucf101_root + "/rawframes/" + self._data[0]
 
     @property
     def num_frames(self):
@@ -74,9 +75,10 @@ class VideoRecord(object):
 class UCF101Reader(DataReader):
     """
     Data reader for kinetics dataset of two format mp4 and pkl.
-    1. mp4, the original format of kinetics400
-    2. pkl, the mp4 was decoded previously and stored as pkl
-    In both case, load the data, and then get the frame data in the form of numpy and label as an integer.
+    1. mp4 or avi, the original format of kinetics400
+    2. pkl, the mp4 or avi was decoded previously and stored as pkl
+    3. frames, the mp4 or avi was decoded previously and stored as frames
+    In all cases, load the data, and then get the frame data in the form of numpy and label as an integer.
      dataset cfg: format
                   num_classes
                   seg_num
@@ -212,7 +214,7 @@ class UCF101Reader(DataReader):
         def decode_mp4(sample, mode, seg_num, seglen, short_size, target_size,
                        img_mean, img_std):
             sample = sample[0].split(' ')
-            mp4_path = "/ssd2/liuchao_temp/ucf101/videos/" + sample[0] + ".avi"
+            mp4_path = ucf101_root + "/videos/" + sample[0] + ".avi"
 
             # when infer, we store vid as label
             label = int(sample[1]) - 1
