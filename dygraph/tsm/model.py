@@ -155,11 +155,8 @@ class TSM_ResNet(fluid.dygraph.Layer):
                         conv_name = "res" + str(block + 2) + "b" + str(i)
                 else:
                     conv_name = "res" + str(block + 2) + chr(97 + i)
-                    print("*************************************** {}".format(
-                        conv_name))
 
                 bottleneck_block = self.add_sublayer(
-                    #'bb_%d_%d' % (block, i),
                     conv_name,
                     BottleneckBlock(
                         num_channels=num_channels,
