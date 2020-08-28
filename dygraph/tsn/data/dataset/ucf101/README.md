@@ -24,7 +24,7 @@ bash download_annotations.sh
 
 直接输入如下命令，即可提取ucf101视频文件的frames
 ``` python
-python extract_rawframes_opencv.py ./videos/ ./rawframes/ --level 2 --ext avi
+python extract_rawframes.py ./videos/ ./rawframes/ --level 2 --ext avi
 ```
 
 ---
@@ -32,11 +32,11 @@ python extract_rawframes_opencv.py ./videos/ ./rawframes/ --level 2 --ext avi
 生成视频文件的路径list，输入如下命令
 
 ```python
- python build_file_list.py videos/ --level 2 --format videos --out_list_path ./ --shuffle
+ python build_ucf101_file_list.py videos/ --level 2 --format videos --out_list_path ./ --shuffle
 ```
 生成frames文件的路径list，输入如下命令：
 ```python
- python build_file_list.py rawframes/ --level 2 --format rawframes --out_list_path ./ --shuffle
+ python build_ucf101_file_list.py rawframes/ --level 2 --format rawframes --out_list_path ./ --shuffle
 ```
 
 **参数说明**

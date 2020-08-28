@@ -24,7 +24,7 @@ from paddle.fluid.dygraph.base import to_variable
 
 from model import TSN_ResNet
 from utils.config_utils import *
-from ucf101_reader import UCF101Reader
+from reader.ucf101_reader import UCF101Reader
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -50,7 +50,7 @@ def parse_args():
         default=True,
         help='default use gpu.')
     parser.add_argument(
-        '--weights', type=str, default="./final", help="weight path")
+        '--weights', type=str, default="./weights/final", help="weight path")
     args = parser.parse_args()
     return args
 

@@ -1,5 +1,5 @@
 # TSN 视频分类模型
-本目录下为基于PaddlePaddle 动态图实现的 TSM视频分类模型
+本目录下为基于PaddlePaddle 动态图实现的 TSN视频分类模型
 
 ---
 ## 内容
@@ -19,34 +19,35 @@ Temporal Segment Network (TSN) 是视频分类领域经典的基于2D-CNN的解�
 
 ## 数据准备
 
-TSN的训练数据采用由DeepMind公布的Kinetics-400动作识别数据集。数据下载及准备请参考[数据说明](./data/dataset/ucf101/README.md)
+TSN的训练数据采用UCF101动作识别数据集。数据下载及准备请参考[数据说明](./data/dataset/ucf101/README.md)
 
 ## 模型训练
 
 数据准备完毕后，可以通过如下两种方式启动训练
 
 1. 多卡训练
-```python
-bash multi-gpus-run.sh train ./configs/tsn.yaml
+```bash
+bash multi-gpus-run.sh ./configs/tsn.yaml
 ```
 多卡训练所使用的gpu可以通过如下方式设置：
-- 首先，修改./configs/tsn.yaml 中的 num_gpus （默认为4，表示使用4个gpu进行训练）
-- 其次，修改 multi-gpus-run.sh 中 export CUDA_VISIBLE_DEVICES=0,1,2,3 和 --selected_gpus=0,1,2,3 （默认为0,1,2,3表示使用0，1，2，3卡号的gpu进行训练）
+- 首先，修改`./configs/tsn.yaml` 中的 num_gpus （默认为4，表示使用4个gpu进行训练）
+- 其次，修改`multi-gpus-run.sh` 中 `export CUDA_VISIBLE_DEVICES=0,1,2,3`（默认为0,1,2,3表示使用0，1，2，3卡号的gpu进行训练）
+- 注意：若修改了batchsize则学习率也要做相应的修改。例如，默认batchsize=128，lr=0.001，若batchsize=64，lr=0.0005
 
 
 2. 单卡训练
-```python
-bash run.sh train ./configs/tsn.yaml
+```bash
+bash run.sh ./configs/tsn.yaml
 ```
 单卡训练所使用的gpu可以通过如下方式设置：
-- 首先，修改./configs/tsn.yaml 中的 num_gpus=1 (表示使用单卡进行训练)
-- 首先，修改run.sh 中的 export CUDA_VISIBLE_DEVICES=0 （表示使用gpu 0 进行模型训练）
-
+- 首先，修改`./configs/tsn.yaml` 中的 `num_gpus=1` (表示使用单卡进行训练)
+- 其次，修改 `run.sh` 中的 `export CUDA_VISIBLE_DEVICES=0` （表示使用gpu 0 进行模型训练）
+- 注意，若修改了batchsize则学习率也要做相应的修改。例如，默认batchsize=128，lr=0.001，若batchsize=64，lr=0.0005
 ## 模型评估
 
-可通过如下两种方式进行模型评估:
-```python
-bash run.sh eval ./configs/tsn-test.yaml ./weights/final.pdparams
+可通过如下方式进行模型评估:
+```bash
+bash run-eval.sh ./configs/tsn-test.yaml ./weights/final.pdparams
 ```
 
 - 使用`run.sh`进行评估时，需要修改脚本中的`weights`参数指定需要评估的权重
@@ -57,7 +58,7 @@ bash run.sh eval ./configs/tsn-test.yaml ./weights/final.pdparams
 
 
 
-当取如下参数时，在UCF101数据的validation数据集下评估精度如下:
+实验结果，采用四卡训练，默认配置参数时，在UCF101数据的validation数据集下评估精度如下:
 
 |  | seg\_num | Top-1 | Top-5 |
 | :------: | :----------: | :----: | :----: |

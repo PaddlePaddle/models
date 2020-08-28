@@ -313,14 +313,11 @@ def train(args):
                 total_acc5 += acc_top5.numpy()[0]
                 total_sample += 1
                 train_batch_cost = time.time() - batch_start
-
-                if fluid.dygraph.parallel.Env().local_rank == 0:
-                    print(
-                        'TRAIN Epoch: {}, iter: {}, batch_cost: {:.5f}s, reader_cost: {:.5f}s loss = {:.6f}, acc1 {:.6f}, acc5 {:.6f}'.
-                        format(epoch, batch_id, train_batch_cost,
-                               train_reader_cost,
-                               avg_loss.numpy()[0],
-                               acc_top1.numpy()[0], acc_top5.numpy()[0]))
+                print(
+                    'TRAIN Epoch: {}, iter: {}, batch_cost: {: .5f}s, reader_cost: {: .5f}s loss={: .6f}, acc1 {: .6f}, acc5 {: .6f} \t'.
+                    format(epoch, batch_id, train_batch_cost, train_reader_cost,
+                           avg_loss.numpy()[0],
+                           acc_top1.numpy()[0], acc_top5.numpy()[0]))
                 batch_start = time.time()
 
             print(
