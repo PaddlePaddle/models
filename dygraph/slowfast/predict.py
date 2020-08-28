@@ -87,8 +87,12 @@ def infer_slowfast(args):
     if not os.path.isdir(infer_config.INFER.save_path):
         os.makedirs(infer_config.INFER.save_path)
 
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+    elif not args.use_data_parallel:
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
 
     _nranks = ParallelEnv().nranks  # num gpu
     bs_single = int(infer_config.INFER.batch_size /

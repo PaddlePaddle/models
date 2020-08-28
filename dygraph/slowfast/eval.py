@@ -78,8 +78,12 @@ def test_slowfast(args):
     test_config = merge_configs(config, 'test', vars(args))
     print_configs(test_config, "Test")
 
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+    elif not args.use_data_parallel:
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
 
     _nranks = ParallelEnv().nranks  # num gpu
     bs_single = int(test_config.TEST.batch_size /

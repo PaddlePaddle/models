@@ -260,20 +260,23 @@ def train(args):
                 "visualdl is not installed, please install visualdl if you want to use"
             )
 
-    use_data_parallel = args.use_data_parallel
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if use_data_parallel else fluid.CUDAPlace(0)
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+    elif not args.use_data_parallel:
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
 
     random.seed(0)
     np.random.seed(0)
     paddle.framework.manual_seed(0)
     with fluid.dygraph.guard(place):
         # 1. init net
-        if use_data_parallel:
+        if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
 
         video_model = SlowFast(cfg=train_config, num_classes=400)
-        if use_data_parallel:
+        if args.use_data_parallel:
             video_model = fluid.dygraph.parallel.DataParallel(video_model,
                                                               strategy)
 
@@ -374,7 +377,7 @@ def train(args):
                 acc_top5 = fluid.layers.accuracy(input=preds, label=labels, k=5)
 
                 # 4.1.2 call backward()
-                if use_data_parallel:
+                if args.use_data_parallel:
                     avg_loss = video_model.scale_loss(avg_loss)
                     avg_loss.backward()
                     video_model.apply_collective_grads()
