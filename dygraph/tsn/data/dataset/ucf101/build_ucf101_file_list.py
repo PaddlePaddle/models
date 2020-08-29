@@ -50,7 +50,6 @@ def build_split_list(split, frame_info, shuffle=False):
         rgb_list = list()
         for item in set_list:
             if item[0] not in frame_info:
-                # print("item:", item)
                 continue
             elif frame_info[item[0]][1] > 0:
                 rgb_cnt = frame_info[item[0]][1]
@@ -97,9 +96,6 @@ def parse_args():
         'frame_path', type=str, help='root directory for the frames')
     parser.add_argument('--rgb_prefix', type=str, default='img_')
     parser.add_argument('--num_split', type=int, default=3)
-    parser.add_argument(
-        '--subset', type=str, default='train',
-        choices=['train', 'val', 'test'])
     parser.add_argument('--level', type=int, default=2, choices=[1, 2])
     parser.add_argument(
         '--format',
@@ -145,29 +141,16 @@ def main():
     assert len(split_tp) == args.num_split
 
     out_path = args.out_list_path
-    if len(split_tp) > 1:
-        for i, split in enumerate(split_tp):
-            lists = build_split_list(
-                split_tp[i], frame_info, shuffle=args.shuffle)
-            filename = 'ucf101_train_split_{}_{}.txt'.format(i + 1, args.format)
 
-            with open(os.path.join(out_path, filename), 'w') as f:
-                f.writelines(lists[0])
-            filename = 'ucf101_val_split_{}_{}.txt'.format(i + 1, args.format)
-            with open(os.path.join(out_path, filename), 'w') as f:
-                f.writelines(lists[1])
-    else:
-        lists = build_split_list(split_tp[0], frame_info, shuffle=args.shuffle)
-        filename = '{}_{}_list_{}.txt'.format(args.dataset, args.subset,
-                                              args.format)
-        if args.subset == 'train':
-            ind = 0
-        elif args.subset == 'val':
-            ind = 1
-        elif args.subset == 'test':
-            ind = 2
+    for i, split in enumerate(split_tp):
+        lists = build_split_list(split_tp[i], frame_info, shuffle=args.shuffle)
+        filename = 'ucf101_train_split_{}_{}.txt'.format(i + 1, args.format)
+
         with open(os.path.join(out_path, filename), 'w') as f:
-            f.writelines(lists[0][ind])
+            f.writelines(lists[0])
+        filename = 'ucf101_val_split_{}_{}.txt'.format(i + 1, args.format)
+        with open(os.path.join(out_path, filename), 'w') as f:
+            f.writelines(lists[1])
 
 
 if __name__ == "__main__":

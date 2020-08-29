@@ -25,8 +25,6 @@ from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, Linear, Dropout
 
 import math
 
-__all__ = ["ResNet18", "ResNet34", "ResNet50", "ResNet101", "ResNet152"]
-
 
 class ConvBNLayer(fluid.dygraph.Layer):
     def __init__(self,
@@ -118,9 +116,6 @@ class BottleneckBlock(fluid.dygraph.Layer):
 
         y = fluid.layers.elementwise_add(x=short, y=conv2)
         return fluid.layers.relu(y)
-
-        # layer_helper = LayerHelper(self.full_name(), act="relu")
-        # return layer_helper.append_activation(y)
 
 
 class BasicBlock(fluid.dygraph.Layer):

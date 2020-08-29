@@ -1,6 +1,6 @@
 MODEL:
     name: "TSN"
-    format: "frames"
+    format: "frames" # support for "frames" or "videos"
     num_classes: 101
     seg_num: 3
     seglen: 1
@@ -15,9 +15,8 @@ TRAIN:
     target_size: 224
     num_reader_threads: 12
     buf_size: 1024
-    batch_size: 128
+    batch_size: 256
     use_gpu: True
-    num_gpus: 4 #8
     filelist: "./data/dataset/ucf101/ucf101_train_split_1_rawframes.txt"
     learning_rate: 0.001
     learning_rate_decay: 0.1

@@ -1,4 +1,4 @@
-configs="tsn-test.yaml"
+configs="tsn_test.yaml"
 use_gpu=True
 use_data_parallel=False
 

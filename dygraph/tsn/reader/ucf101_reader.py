@@ -1,4 +1,4 @@
-# copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+# copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,24 +18,9 @@ import cv2
 import math
 import random
 import functools
-try:
-    import cPickle as pickle
-    from cStringIO import StringIO
-except ImportError:
-    import pickle
-    from io import BytesIO
 import numpy as np
 import paddle
 import paddle.fluid as fluid
-try:
-    from nvidia.dali.pipeline import Pipeline
-    import nvidia.dali.ops as ops
-    import nvidia.dali.types as types
-    import tempfile
-    from nvidia.dali.plugin.paddle import DALIGenericIterator
-except:
-    Pipeline = object
-    print("DALI is not installed, you can improve performance if use DALI")
 
 from PIL import Image, ImageEnhance
 import logging
@@ -115,9 +100,6 @@ class UCF101Reader(DataReader):
         # set num_trainers and trainer_id when distributed training is implemented
         self.num_trainers = self.get_config_from_sec(mode, 'num_trainers', 1)
         self.trainer_id = self.get_config_from_sec(mode, 'trainer_id', 0)
-        self.use_dali = self.get_config_from_sec(mode, 'use_dali', False)
-        self.dali_mean = cfg.MODEL.image_mean * (self.seg_num * self.seglen)
-        self.dali_std = cfg.MODEL.image_std * (self.seg_num * self.seglen)
 
         if self.mode == 'infer':
             self.video_path = cfg[mode.upper()]['video_path']
@@ -129,9 +111,6 @@ class UCF101Reader(DataReader):
             self.num_reader_threads = 1
 
     def create_reader(self):
-        # if use_dali to improve performance
-        if self.use_dali:
-            return self.build_dali_reader()
 
         # if set video_path for inference mode, just load this single video
         if (self.mode == 'infer') and (self.video_path != ''):
@@ -237,42 +216,6 @@ class UCF101Reader(DataReader):
                 img_std,
                 name=self.name), label
 
-        def decode_pickle(sample, mode, seg_num, seglen, short_size,
-                          target_size, img_mean, img_std):
-            pickle_path = sample[0]
-            try:
-                if python_ver < (3, 0):
-                    data_loaded = pickle.load(open(pickle_path, 'rb'))
-                else:
-                    data_loaded = pickle.load(
-                        open(pickle_path, 'rb'), encoding='bytes')
-
-                vid, label, frames = data_loaded
-                if len(frames) < 1:
-                    logger.error('{} frame length {} less than 1.'.format(
-                        pickle_path, len(frames)))
-                    return None, None
-            except:
-                logger.info('Error when loading {}'.format(pickle_path))
-                return None, None
-
-            if mode == 'train' or mode == 'valid' or mode == 'test':
-                ret_label = label
-            elif mode == 'infer':
-                ret_label = vid
-
-            imgs = video_loader(frames, seg_num, seglen, mode)
-            return imgs_transform(
-                imgs,
-                mode,
-                seg_num,
-                seglen,
-                short_size,
-                target_size,
-                img_mean,
-                img_std,
-                name=self.name), ret_label
-
         def decode_frames(sample, mode, seg_num, seglen, short_size,
                           target_size, img_mean, img_std):
             recode = VideoRecord(sample[0].split(' '))
@@ -334,11 +277,9 @@ class UCF101Reader(DataReader):
                     pickle_path = line.strip()
                     yield [pickle_path]
 
-        if format == 'pkl':
-            decode_func = decode_pickle
         if format == 'frames':
             decode_func = decode_frames
-        elif format == 'mp4' or 'avi':
+        elif format == 'videos':
             decode_func = decode_mp4
         else:
             raise "Not implemented format {}".format(format)
@@ -355,249 +296,6 @@ class UCF101Reader(DataReader):
 
         return fluid.io.xmap_readers(mapper, reader_, num_threads, buf_size)
 
-    def build_dali_reader(self):
-        """
-        build dali training reader
-        """
-
-        def reader_():
-            with open(self.filelist) as flist:
-                full_lines = [line for line in flist]
-                if self.mode == 'train':
-                    if (not hasattr(reader_, 'seed')):
-                        reader_.seed = 0
-                    random.Random(reader_.seed).shuffle(full_lines)
-                    print("reader shuffle seed", reader_.seed)
-                    if reader_.seed is not None:
-                        reader_.seed += 1
-
-                per_node_lines = int(
-                    math.ceil(len(full_lines) * 1.0 / self.num_trainers))
-                total_lines = per_node_lines * self.num_trainers
-
-                # aligned full_lines so that it can evenly divisible
-                full_lines += full_lines[:(total_lines - len(full_lines))]
-                assert len(full_lines) == total_lines
-
-                # trainer get own sample
-                lines = full_lines[self.trainer_id:total_lines:
-                                   self.num_trainers]
-                assert len(lines) == per_node_lines
-
-                logger.info("trainerid %d, trainer_count %d" %
-                            (self.trainer_id, self.num_trainers))
-                logger.info(
-                    "read images from %d, length: %d, lines length: %d, total: %d"
-                    % (self.trainer_id * per_node_lines, per_node_lines,
-                       len(lines), len(full_lines)))
-
-            video_files = ''
-            for item in lines:
-                video_files += item
-            tf = tempfile.NamedTemporaryFile()
-            tf.write(str.encode(video_files))
-            tf.flush()
-            video_files = tf.name
-
-            device_id = int(os.getenv('FLAGS_selected_gpus', 0))
-            print('---------- device id -----------', device_id)
-
-            if self.mode == 'train':
-                pipe = VideoPipe(
-                    batch_size=self.batch_size,
-                    num_threads=1,
-                    device_id=device_id,
-                    file_list=video_files,
-                    sequence_length=self.seg_num * self.seglen,
-                    seg_num=self.seg_num,
-                    seg_length=self.seglen,
-                    resize_shorter_scale=self.short_size,
-                    crop_target_size=self.target_size,
-                    is_training=(self.mode == 'train'),
-                    dali_mean=self.dali_mean,
-                    dali_std=self.dali_std)
-            else:
-                pipe = VideoTestPipe(
-                    batch_size=self.batch_size,
-                    num_threads=1,
-                    device_id=device_id,
-                    file_list=video_files,
-                    sequence_length=self.seg_num * self.seglen,
-                    seg_num=self.seg_num,
-                    seg_length=self.seglen,
-                    resize_shorter_scale=self.short_size,
-                    crop_target_size=self.target_size,
-                    is_training=(self.mode == 'train'),
-                    dali_mean=self.dali_mean,
-                    dali_std=self.dali_std)
-            logger.info(
-                'initializing dataset, it will take several minutes if it is too large .... '
-            )
-            video_loader = DALIGenericIterator(
-                [pipe], ['image', 'label'],
-                len(lines),
-                dynamic_shape=True,
-                auto_reset=True)
-
-            return video_loader
-
-        dali_reader = reader_()
-
-        def ret_reader():
-            for data in dali_reader:
-                yield data[0]['image'], data[0]['label']
-
-        return ret_reader
-
-
-class VideoPipe(Pipeline):
-    def __init__(self,
-                 batch_size,
-                 num_threads,
-                 device_id,
-                 file_list,
-                 sequence_length,
-                 seg_num,
-                 seg_length,
-                 resize_shorter_scale,
-                 crop_target_size,
-                 is_training=False,
-                 initial_prefetch_size=10,
-                 num_shards=1,
-                 shard_id=0,
-                 dali_mean=0.,
-                 dali_std=1.0):
-        super(VideoPipe, self).__init__(batch_size, num_threads, device_id)
-        self.input = ops.VideoReader(
-            device="gpu",
-            file_list=file_list,
-            sequence_length=sequence_length,
-            seg_num=seg_num,
-            seg_length=seg_length,
-            is_training=is_training,
-            num_shards=num_shards,
-            shard_id=shard_id,
-            random_shuffle=is_training,
-            initial_fill=initial_prefetch_size)
-        # the sequece data read by ops.VideoReader is of shape [F, H, W, C]
-        # Because the ops.Resize does not support sequence data,
-        # it will be transposed into [H, W, F, C],
-        # then reshaped to [H, W, FC], and then resized like a 2-D image.
-        self.transpose = ops.Transpose(device="gpu", perm=[1, 2, 0, 3])
-        self.reshape = ops.Reshape(
-            device="gpu", rel_shape=[1.0, 1.0, -1], layout='HWC')
-        self.resize = ops.Resize(
-            device="gpu", resize_shorter=resize_shorter_scale)
-        # crops and mirror are applied by ops.CropMirrorNormalize.
-        # Normalization will be implemented in paddle due to the difficulty of dimension broadcast,
-        # It is not sure whether dimension broadcast can be implemented correctly by dali, just take the Paddle Op instead.
-        self.pos_rng_x = ops.Uniform(range=(0.0, 1.0))
-        self.pos_rng_y = ops.Uniform(range=(0.0, 1.0))
-        self.mirror_generator = ops.Uniform(range=(0.0, 1.0))
-        self.cast_mirror = ops.Cast(dtype=types.DALIDataType.INT32)
-        self.crop_mirror_norm = ops.CropMirrorNormalize(
-            device="gpu",
-            crop=[crop_target_size, crop_target_size],
-            mean=dali_mean,
-            std=dali_std)
-        self.reshape_back = ops.Reshape(
-            device="gpu",
-            shape=[
-                seg_num, seg_length * 3, crop_target_size, crop_target_size
-            ],
-            layout='FCHW')
-        self.cast_label = ops.Cast(device="gpu", dtype=types.DALIDataType.INT64)
-
-    def define_graph(self):
-        output, label = self.input(name="Reader")
-        output = self.transpose(output)
-        output = self.reshape(output)
-
-        output = self.resize(output)
-        output = output / 255.
-        pos_x = self.pos_rng_x()
-        pos_y = self.pos_rng_y()
-        mirror_flag = self.mirror_generator()
-        mirror_flag = (mirror_flag > 0.5)
-        mirror_flag = self.cast_mirror(mirror_flag)
-        #output = self.crop(output, crop_pos_x=pos_x, crop_pos_y=pos_y)
-        output = self.crop_mirror_norm(
-            output, crop_pos_x=pos_x, crop_pos_y=pos_y, mirror=mirror_flag)
-        output = self.reshape_back(output)
-        label = self.cast_label(label)
-        return output, label
-
-
-class VideoTestPipe(Pipeline):
-    def __init__(self,
-                 batch_size,
-                 num_threads,
-                 device_id,
-                 file_list,
-                 sequence_length,
-                 seg_num,
-                 seg_length,
-                 resize_shorter_scale,
-                 crop_target_size,
-                 is_training=False,
-                 initial_prefetch_size=10,
-                 num_shards=1,
-                 shard_id=0,
-                 dali_mean=0.,
-                 dali_std=1.0):
-        super(VideoTestPipe, self).__init__(batch_size, num_threads, device_id)
-        self.input = ops.VideoReader(
-            device="gpu",
-            file_list=file_list,
-            sequence_length=sequence_length,
-            seg_num=seg_num,
-            seg_length=seg_length,
-            is_training=is_training,
-            num_shards=num_shards,
-            shard_id=shard_id,
-            random_shuffle=is_training,
-            initial_fill=initial_prefetch_size)
-        # the sequece data read by ops.VideoReader is of shape [F, H, W, C]
-        # Because the ops.Resize does not support sequence data,
-        # it will be transposed into [H, W, F, C],
-        # then reshaped to [H, W, FC], and then resized like a 2-D image.
-        self.transpose = ops.Transpose(device="gpu", perm=[1, 2, 0, 3])
-        self.reshape = ops.Reshape(
-            device="gpu", rel_shape=[1.0, 1.0, -1], layout='HWC')
-        self.resize = ops.Resize(
-            device="gpu", resize_shorter=resize_shorter_scale)
-        # crops and mirror are applied by ops.CropMirrorNormalize.
-        # Normalization will be implemented in paddle due to the difficulty of dimension broadcast,
-        # It is not sure whether dimension broadcast can be implemented correctly by dali, just take the Paddle Op instead.
-        self.crop_mirror_norm = ops.CropMirrorNormalize(
-            device="gpu",
-            crop=[crop_target_size, crop_target_size],
-            crop_pos_x=0.5,
-            crop_pos_y=0.5,
-            mirror=0,
-            mean=dali_mean,
-            std=dali_std)
-        self.reshape_back = ops.Reshape(
-            device="gpu",
-            shape=[
-                seg_num, seg_length * 3, crop_target_size, crop_target_size
-            ],
-            layout='FCHW')
-        self.cast_label = ops.Cast(device="gpu", dtype=types.DALIDataType.INT64)
-
-    def define_graph(self):
-        output, label = self.input(name="Reader")
-        output = self.transpose(output)
-        output = self.reshape(output)
-
-        output = self.resize(output)
-        output = output / 255.
-        #output = self.crop(output, crop_pos_x=pos_x, crop_pos_y=pos_y)
-        output = self.crop_mirror_norm(output)
-        output = self.reshape_back(output)
-        label = self.cast_label(label)
-        return output, label
-
 
 def imgs_transform(imgs,
                    mode,
@@ -611,8 +309,7 @@ def imgs_transform(imgs,
     imgs = group_scale(imgs, short_size)
 
     if mode == 'train':
-        if name == "TSM":
-            imgs = group_multi_scale_crop(imgs, short_size)
+
         imgs = group_random_crop(imgs, target_size)
         imgs = group_random_flip(imgs)
     else:
@@ -777,47 +474,6 @@ def group_scale(imgs, target_size):
     return resized_imgs
 
 
-def imageloader(buf):
-    if isinstance(buf, str):
-        img = Image.open(StringIO(buf))
-    else:
-        img = Image.open(BytesIO(buf))
-
-    return img.convert('RGB')
-
-
-def video_loader(frames, nsample, seglen, mode):
-    videolen = len(frames)
-    average_dur = int(videolen / nsample)
-
-    imgs = []
-    for i in range(nsample):
-        idx = 0
-        if mode == 'train':
-            if average_dur >= seglen:
-                idx = random.randint(0, average_dur - seglen)
-                idx += i * average_dur
-            elif average_dur >= 1:
-                idx += i * average_dur
-            else:
-                idx = i
-        else:
-            if average_dur >= seglen:
-                idx = (average_dur - seglen) // 2
-                idx += i * average_dur
-            elif average_dur >= 1:
-                idx += i * average_dur
-            else:
-                idx = i
-
-        for jj in range(idx, idx + seglen):
-            imgbuf = frames[int(jj % videolen)]
-            img = imageloader(imgbuf)
-            imgs.append(img)
-
-    return imgs
-
-
 def mp4_loader(filepath, nsample, seglen, mode):
     cap = cv2.VideoCapture(filepath)
     videolen = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -858,20 +514,9 @@ def mp4_loader(filepath, nsample, seglen, mode):
     return imgs
 
 
-# the additional function which used to load the frames
-
-# loading images by PIL
-# def load_image(directory, idx):
-#     return Image.open(os.path.join(
-#         directory, 'img_{:05d}.jpg'.format(idx))).convert('RGB')
-
-# loading images by opencv
-
-
 def load_image(directory, idx):
-    img = cv2.imread(os.path.join(directory, 'img_{:05d}.jpg'.format(idx)))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    return img
+    return Image.open(os.path.join(directory, 'img_{:05d}.jpg'.format(
+        idx))).convert('RGB')
 
 
 def frames_loader(recode, nsample, seglen, mode):
@@ -899,7 +544,5 @@ def frames_loader(recode, nsample, seglen, mode):
 
         for jj in range(idx, idx + seglen):
             img = load_image(imgpath, jj + 1)
-            img = Image.fromarray(img, mode='RGB')
-            # print("the readed image shape {}".format(img.shape))
             imgs.append(img)
     return imgs

@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument(
         '--config',
         type=str,
-        default='./tsn-test.yaml',
+        default='./tsn_test.yaml',
         help='path to config file of model')
     parser.add_argument(
         '--batch_size',
@@ -69,7 +69,6 @@ def test(args):
         video_model.set_dict(model_dict)
 
         test_reader = UCF101Reader(name="TSN", mode="test", cfg=test_config)
-        #test_reader = KineticsReader(mode='test', cfg=test_config)
         test_reader = test_reader.create_reader()
 
         video_model.eval()

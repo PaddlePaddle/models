@@ -23,9 +23,10 @@ def dump_frames(vid_item):
         if ret == False:
             continue
         img = frame[:, :, ::-1]
-        # covert the BGR img into RGB img
+        # covert the BGR img
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         if img is not None:
+            # cv2.imwrite will write BGR into RGB images
             cv2.imwrite('{}/img_{:05d}.jpg'.format(out_full_path, i + 1), img)
         else:
             print('[Warning] length inconsistent!'
@@ -37,27 +38,18 @@ def dump_frames(vid_item):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='extract optical flows')
+    parser = argparse.ArgumentParser(description='extract frames')
     parser.add_argument('src_dir', type=str)
     parser.add_argument('out_dir', type=str)
     parser.add_argument('--level', type=int, choices=[1, 2], default=2)
     parser.add_argument('--num_worker', type=int, default=8)
-    parser.add_argument(
-        "--out_format",
-        type=str,
-        default='dir',
-        choices=['dir', 'zip'],
-        help='output format')
     parser.add_argument(
         "--ext",
         type=str,
         default='avi',
         choices=['avi', 'mp4'],
         help='video file extensions')
-    parser.add_argument(
-        "--new_width", type=int, default=0, help='resize image width')
-    parser.add_argument(
-        "--new_height", type=int, default=0, help='resize image height')
+
     parser.add_argument(
         "--resume",
         action='store_true',

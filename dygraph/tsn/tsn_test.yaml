@@ -14,14 +14,14 @@ VALID:
     short_size: 256
     target_size: 224
     num_reader_threads: 12
-    buf_size: 1
-    batch_size: 128
+    buf_size: 4
+    batch_size: 32
     filelist: "./data/dataset/ucf101/ucf101_val_split_1_rawframes.txt"
 
 TEST:
     short_size: 256
     target_size: 224
     num_reader_threads: 12
-    buf_size: 1024
-    batch_size: 1
+    buf_size: 4
+    batch_size: 32
     filelist: "./data/dataset/ucf101/ucf101_val_split_1_rawframes.txt"

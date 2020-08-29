@@ -84,6 +84,12 @@ def parse_args():
         default="./weights",
         help='path to save the final optimized model.'
         'default path is "./weights".')
+    parser.add_argument(
+        '--validate',
+        type=str,
+        default=False,
+        help='whether to validating in training phase.'
+        'default value is True.')
     args = parser.parse_args()
     return args
 
@@ -187,6 +193,7 @@ def val(epoch, model, cfg, args):
     print('Finish loss {} , acc1 {} , acc5 {}'.format(
         total_loss / total_sample, total_acc1 / total_sample, total_acc5 /
         total_sample))
+    return total_acc1 / total_sample
 
 
 def create_optimizer(cfg, params):
@@ -248,13 +255,7 @@ def train(args):
             else:
                 gpus = gpus.split(",")
                 num_gpus = len(gpus)
-                assert num_gpus == train_config.TRAIN.num_gpus, \
-                    "num_gpus({}) set by CUDA_VISIBLE_DEVICES" \
-                    "shoud be the same as that" \
-                    "set in {}({})".format(
-                        num_gpus, args.config, train_config.TRAIN.num_gpus)
-            bs_denominator = train_config.TRAIN.num_gpus
-
+            bs_denominator = num_gpus
         train_config.TRAIN.batch_size = int(train_config.TRAIN.batch_size /
                                             bs_denominator)
 
@@ -314,7 +315,7 @@ def train(args):
                 total_sample += 1
                 train_batch_cost = time.time() - batch_start
                 print(
-                    'TRAIN Epoch: {}, iter: {}, batch_cost: {: .5f}s, reader_cost: {: .5f}s loss={: .6f}, acc1 {: .6f}, acc5 {: .6f} \t'.
+                    'TRAIN Epoch: {}, iter: {}, batch_cost: {: .5f} s, reader_cost: {: .5f} s loss={: .6f}, acc1 {: .6f}, acc5 {: .6f} \t'.
                     format(epoch, batch_id, train_batch_cost, train_reader_cost,
                            avg_loss.numpy()[0],
                            acc_top1.numpy()[0], acc_top5.numpy()[0]))
@@ -339,14 +340,27 @@ def train(args):
                 fluid.dygraph.save_dygraph(video_model.state_dict(), model_path)
                 fluid.dygraph.save_dygraph(optimizer.state_dict(), model_path)
 
-            video_model.eval()
-            val(epoch, video_model, valid_config, args)
+            if args.validate:
+                video_model.eval()
+                val_acc = val(epoch, video_model, valid_config, args)
+                # save the best parameters in trainging stage
+                if epoch == 1:
+                    best_acc = val_acc
+                else:
+                    if val_acc > best_acc:
+                        best_acc = val_acc
+                    if fluid.dygraph.parallel.Env().local_rank == 0:
+                        if not os.path.isdir(args.weights):
+                            os.makedirs(args.weights)
+                        fluid.dygraph.save_dygraph(video_model.state_dict(),
+                                                   args.weights + "/final")
+            else:
+                if fluid.dygraph.parallel.Env().local_rank == 0:
+                    if not os.path.isdir(args.weights):
+                        os.makedirs(args.weights)
+                    fluid.dygraph.save_dygraph(video_model.state_dict(),
+                                               args.weights + "/final")
 
-        if fluid.dygraph.parallel.Env().local_rank == 0:
-            if not os.path.isdir(args.weights):
-                os.makedirs(args.weights)
-            fluid.dygraph.save_dygraph(video_model.state_dict(),
-                                       args.weights + "/final")
         logger.info('[TRAIN] training finished')
 
 

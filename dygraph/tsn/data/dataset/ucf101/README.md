@@ -14,29 +14,30 @@ bash download_annotations.sh
 ### 下载UCF101的视频文件
 同样需要确保在`./data/dataset/ucf101/`目录下，输入下述命令下载视频文件
 ```shell
-bash download_annotations.sh
+bash download_videos.sh
 ```
-下载完成后视频文件会存储在`./data/dataset/ucf101/videos/`文件夹下
+下载完成后视频文件会存储在`./data/dataset/ucf101/videos/`文件夹下，视频文件大小为6.8G。
 
 ---
 ## 2. 提取视频文件的frames
-为了加速网络的训练过程，我们首先对视频文件（ucf101视频文件为avi格式）提取帧 (frames)。通过读取frames的方式替换原始的直接读取视频文件，能够极大的减小巡训练的时间开销。
+为了加速网络的训练过程，我们首先对视频文件（ucf101视频文件为avi格式）提取帧 (frames)。相对于直接通过视频文件进行网络训练的方式，frames的方式能够加快网络训练的速度。
 
 直接输入如下命令，即可提取ucf101视频文件的frames
 ``` python
 python extract_rawframes.py ./videos/ ./rawframes/ --level 2 --ext avi
 ```
+视频文件frames提取完成后，会存储在`./rawframes`文件夹下，大小为56G。
 
 ---
 ## 3. 生成frames文件和视频文件的路径list
 生成视频文件的路径list，输入如下命令
 
 ```python
- python build_ucf101_file_list.py videos/ --level 2 --format videos --out_list_path ./ --shuffle
+ python build_ucf101_file_list.py videos/ --level 2 --format videos --out_list_path ./
 ```
 生成frames文件的路径list，输入如下命令：
 ```python
- python build_ucf101_file_list.py rawframes/ --level 2 --format rawframes --out_list_path ./ --shuffle
+ python build_ucf101_file_list.py rawframes/ --level 2 --format rawframes --out_list_path ./
 ```
 
 **参数说明**
@@ -48,8 +49,6 @@ python extract_rawframes.py ./videos/ ./rawframes/ --level 2 --ext avi
 `--format`： 表示是针对视频还是frames生成路径list
 
 `--out_list_path `： 表示生的路径list文件存储位置
-
-`--shuffle`： 表示对路径list中的文件顺序进行shuffle
 
 
 # 以上步骤完成后，文件组织形式如下所示
