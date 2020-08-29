@@ -87,7 +87,7 @@ def parse_args():
     parser.add_argument(
         '--validate',
         type=str,
-        default=False,
+        default=True,
         help='whether to validating in training phase.'
         'default value is True.')
     args = parser.parse_args()
