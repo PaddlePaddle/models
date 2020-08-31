@@ -35,6 +35,12 @@ def parse_args():
     )
     parser.add_argument("-e", "--epoch", default=5, type=int, help="set epoch")
     parser.add_argument("--ce", action="store_true", help="run ce")
+    parser.add_argument(
+        '--use_gpu',
+        type=ast.literal_eval,
+        default=True,
+        help='default use gpu.')
+
     args = parser.parse_args()
     return args
 
@@ -149,8 +155,13 @@ def test_mnist(reader, model, batch_size):
 
 
 def inference_mnist():
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+    elif not args.use_data_parallel:
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
+
     with fluid.dygraph.guard(place):
         mnist_infer = MNIST()
         # load checkpoint
@@ -180,8 +191,13 @@ def train_mnist(args):
     epoch_num = args.epoch
     BATCH_SIZE = 64
 
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+    elif not args.use_data_parallel:
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
+
     with fluid.dygraph.guard(place):
         if args.ce:
             print("ce mode")
