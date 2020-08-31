@@ -1,4 +1,4 @@
-configs="tsn.yaml"
+configs="single_tsn.yaml"
 pretrain="" # set pretrain model path if needed
 resume="" # set checkpoints model path if u want to resume training
 save_dir=""

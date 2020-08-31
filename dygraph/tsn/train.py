@@ -181,14 +181,17 @@ def val(epoch, model, cfg, args):
         acc_top1 = fluid.layers.accuracy(input=outputs, label=labels, k=1)
         acc_top5 = fluid.layers.accuracy(input=outputs, label=labels, k=5)
 
-        total_loss += avg_loss.numpy()[0]
+        dy_out = avg_loss.numpy()[0]
+        total_loss += dy_out
         total_acc1 += acc_top1.numpy()[0]
         total_acc5 += acc_top5.numpy()[0]
         total_sample += 1
 
-        print('TEST Epoch {}, iter {}, loss = {}, acc1 {}, acc5 {}'.format(
-            epoch, batch_id,
-            avg_loss.numpy()[0], acc_top1.numpy()[0], acc_top5.numpy()[0]))
+        if batch_id % 5 == 0:
+            print(
+                "TEST Epoch {}, iter {}, loss={:.5f}, acc1 {:.5f}, acc5 {:.5f}".
+                format(epoch, batch_id, total_loss / total_sample, total_acc1 /
+                       total_sample, total_acc5 / total_sample))
 
     print('Finish loss {} , acc1 {} , acc5 {}'.format(
         total_loss / total_sample, total_acc1 / total_sample, total_acc5 /
@@ -297,6 +300,7 @@ def train(args):
                     input=outputs, label=labels, k=1)
                 acc_top5 = fluid.layers.accuracy(
                     input=outputs, label=labels, k=5)
+                dy_out = avg_loss.numpy()[0]
 
                 if use_data_parallel:
                     # (data_parallel step5/6)
@@ -309,16 +313,16 @@ def train(args):
                 optimizer.minimize(avg_loss)
                 video_model.clear_gradients()
 
-                total_loss += avg_loss.numpy()[0]
+                total_loss += dy_out
                 total_acc1 += acc_top1.numpy()[0]
                 total_acc5 += acc_top5.numpy()[0]
                 total_sample += 1
                 train_batch_cost = time.time() - batch_start
                 print(
-                    'TRAIN Epoch: {}, iter: {}, batch_cost: {: .5f} s, reader_cost: {: .5f} s loss={: .6f}, acc1 {: .6f}, acc5 {: .6f} \t'.
+                    'TRAIN Epoch: {}, iter: {}, batch_cost: {:.5f} s, reader_cost: {:.5f} s, loss={:.6f}, acc1 {:.6f}, acc5 {:.6f}  '.
                     format(epoch, batch_id, train_batch_cost, train_reader_cost,
-                           avg_loss.numpy()[0],
-                           acc_top1.numpy()[0], acc_top5.numpy()[0]))
+                           total_loss / total_sample, total_acc1 / total_sample,
+                           total_acc5 / total_sample))
                 batch_start = time.time()
 
             print(
@@ -349,11 +353,11 @@ def train(args):
                 else:
                     if val_acc > best_acc:
                         best_acc = val_acc
-                    if fluid.dygraph.parallel.Env().local_rank == 0:
-                        if not os.path.isdir(args.weights):
-                            os.makedirs(args.weights)
-                        fluid.dygraph.save_dygraph(video_model.state_dict(),
-                                                   args.weights + "/final")
+                        if fluid.dygraph.parallel.Env().local_rank == 0:
+                            if not os.path.isdir(args.weights):
+                                os.makedirs(args.weights)
+                            fluid.dygraph.save_dygraph(video_model.state_dict(),
+                                                       args.weights + "/final")
             else:
                 if fluid.dygraph.parallel.Env().local_rank == 0:
                     if not os.path.isdir(args.weights):

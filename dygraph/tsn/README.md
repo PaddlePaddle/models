@@ -57,20 +57,20 @@ TSN的训练数据采用UCF101动作识别数据集。数据下载及准备请�
 
 1. 多卡训练
 ```bash
-bash multi_gpus_run.sh ./configs/tsn.yaml
+bash multi_gpus_run.sh
 ```
 多卡训练所使用的gpu可以通过如下方式设置：
 - 修改`multi_gpus_run.sh` 中 `export CUDA_VISIBLE_DEVICES=0,1,2,3`（默认为0,1,2,3表示使用0，1，2，3卡号的gpu进行训练）
-- 注意：若修改了batchsize则学习率也要做相应的修改，规则为大batchsize用大lr，即同倍数增长缩小关系。例如，默认batchsize=128，lr=0.001，若batchsize=64，lr=0.0005
+- 注意：多卡训练的参数配置文件为`multi_tsn.yaml`。若修改了batchsize则学习率也要做相应的修改，规则为大batchsize用大lr，即同倍数增长缩小关系。例如，默认四卡batchsize=128，lr=0.001，若batchsize=64，lr=0.0005。
 
 
 2. 单卡训练
 ```bash
-bash single_gpu_run.sh ./configs/tsn.yaml
+bash single_gpu_run.sh
 ```
 单卡训练所使用的gpu可以通过如下方式设置：
-- 修改 `run.sh` 中的 `export CUDA_VISIBLE_DEVICES=0` （表示使用gpu 0 进行模型训练）
-- 注意：若修改了batchsize则学习率也要做相应的修改，规则为大batchsize用大lr，即同倍数增长缩小关系。例如，默认batchsize=128，lr=0.001，若batchsize=64，lr=0.0005
+- 修改 `single_gpu_run.sh` 中的 `export CUDA_VISIBLE_DEVICES=0` （表示使用gpu 0 进行模型训练）
+- 注意：单卡训练的参数配置文件为`single_gpu_run.sh`。若修改了batchsize则学习率也要做相应的修改，规则为大batchsize用大lr，即同倍数增长缩小关系。默认单卡batchsize=64，lr=0.0005；若batchsize=32，lr=0.00025
 ## 模型评估
 
 可通过如下方式进行模型评估:
