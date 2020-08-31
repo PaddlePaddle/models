@@ -40,6 +40,7 @@ TEST:
     target_size: 256
     batch_size: 64 
     filelist: "./data/val.csv"
+    weights: "checkpoints/slowfast_epoch195"
     num_ensemble_views: 10
     num_spatial_crops: 3
 
@@ -47,6 +48,7 @@ INFER:
     target_size: 256
     batch_size: 32 
     filelist: "./data/infer.csv"
+    weights: "checkpoints/slowfast_epoch195"
     num_ensemble_views: 10
     num_spatial_crops: 3
     save_path: "./data/results"

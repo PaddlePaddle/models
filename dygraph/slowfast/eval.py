@@ -60,9 +60,8 @@ def parse_args():
     parser.add_argument(
         '--weights',
         type=str,
-        default="checkpoints/slowfast_epoch195",
-        help='weight path, None to automatically download weights provided by Paddle.'
-    )
+        default=None,
+        help='Weight path, None to use config setting.')
     parser.add_argument(
         '--log_interval',
         type=int,
