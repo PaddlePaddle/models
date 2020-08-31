@@ -110,6 +110,8 @@ ActivityNet官方提供了Kinetics的下载工具，具体参考其[官方repo](
 
 - 从头开始训练，使用上述启动命令行或者脚本程序即可启动训练，不需要用到预训练模型。
 
+- Visual DL可以用来对训练过程进行可视化，具体使用方法请参考[VisualDL](https://github.com/PaddlePaddle/VisualDL)
+
 **训练资源要求：**
 
 *  8卡V100，总batch\_size=64，单卡batch\_size=8，单卡显存占用约9G。
