@@ -40,8 +40,6 @@ import math
 from lib.loss.rpn_3d import *
 import time
 
-
-
 logging.root.handlers = []
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT, stream=sys.stdout)
@@ -52,7 +50,7 @@ def parse_args():
     """parse"""
     parser = argparse.ArgumentParser("M3D-RPN train script")
     parser.add_argument(
-        "--use_data_parallel", # TODO
+        "--use_data_parallel",  # TODO
         type=ast.literal_eval,
         default=False,
         help="The flag indicating whether to use data parallel mode to train the model."
@@ -63,20 +61,14 @@ def parse_args():
         default='DenseNet121',
         help='backbone model to train, default DenseNet121')
     parser.add_argument(
-        '--conf',
-        type=str,
-        default='kitti_3d_multi_main',
-        help='config')
+        '--conf', type=str, default='kitti_3d_multi_main', help='config')
     parser.add_argument(
         '--use_gpu',
         type=ast.literal_eval,
         default=True,
         help='default use gpu.')
     parser.add_argument(
-        '--data_dir',
-        type=str,
-        default='dataset',
-        help='dataset directory')
+        '--data_dir', type=str, default='dataset', help='dataset directory')
     parser.add_argument(
         '--save_dir',
         type=str,
@@ -105,7 +97,7 @@ def parse_args():
 def train():
     """main train"""
     args = parse_args()
-    
+
     #print_arguments(args)
     # check whether the installed paddle is compiled with GPU
     #check_gpu(args.use_gpu)
@@ -113,7 +105,7 @@ def train():
     if not os.path.isdir(args.save_dir):
         os.makedirs(args.save_dir)
 
-    assert args.backbone in ['DenseNet121'], "--backbone unsupported" 
+    assert args.backbone in ['DenseNet121'], "--backbone unsupported"
 
     # conf init
     conf = core.init_config(args.conf)
@@ -124,7 +116,7 @@ def train():
 
     # get reader and anchor
     m3drpn_reader = M3drpnReader(conf, args.data_dir)
-    epoch = (conf.max_iter / (m3drpn_reader.len/conf.batch_size)) + 1
+    epoch = (conf.max_iter / (m3drpn_reader.len / conf.batch_size)) + 1
     train_reader = m3drpn_reader.get_reader(conf.batch_size, mode='train')
     generate_anchors(conf, m3drpn_reader.data['train'], paths.output)
     compute_bbox_stats(conf, m3drpn_reader.data['train'], paths.output)
@@ -144,61 +136,60 @@ def train():
 
         if args.use_data_parallel:
             strategy = fluid.dygraph.parallel.prepare_context()
-        
+
         # -----------------------------------------
         # network and loss
         # -----------------------------------------
 
         # training network
-        train_model, optimizer = core.init_training_model(conf, args.backbone, paths.output)
-        
+        train_model, optimizer = core.init_training_model(conf, args.backbone,
+                                                          paths.output)
+
         # setup loss
         criterion_det = RPN_3D_loss(conf)
-        
+
         if args.use_data_parallel:
-            train_model = fluid.dygraph.parallel.DataParallel(train_model, strategy)
-        
+            train_model = fluid.dygraph.parallel.DataParallel(train_model,
+                                                              strategy)
+
         if args.use_data_parallel:
             train_reader = fluid.contrib.reader.distributed_batch_reader(
                 train_reader)
-        
-        
+
         total_batch_num = 0
 
         for epo in range(int(epoch)):
-            
+
             total_loss = 0.0
             total_acc1 = 0.0
-            
+
             total_sample = 0
-            
+
             for batch_id, data in enumerate(train_reader()):
 
                 #NOTE: used in benchmark
                 # if args.max_iter and total_batch_num == args.max_iter:
                 #     return
                 batch_start = time.time()
-                
-                images = np.array(
-                    [x[0].reshape(3, 512, 1760) for x in data]).astype('float32')
+
+                images = np.array([x[0].reshape(3, 512, 1760)
+                                   for x in data]).astype('float32')
                 imobjs = np.array([x[1] for x in data])
-                
-                
+
                 if len(np.array([x[1] for x in data])) != conf.batch_size:
                     continue
-                
+
                 img = to_variable(images)
-                
-                
+
                 cls, prob, bbox_2d, bbox_3d, feat_size = train_model(img)
-                
+
                 # # loss
-                det_loss, det_stats = criterion_det(cls, prob, bbox_2d, bbox_3d, imobjs, feat_size)
-        
+                det_loss, det_stats = criterion_det(cls, prob, bbox_2d, bbox_3d,
+                                                    imobjs, feat_size)
+
                 total_loss = det_loss
                 stats = det_stats
-                
-                
+
                 # backprop
                 if total_loss > 0:
                     if args.use_data_parallel:
@@ -209,10 +200,11 @@ def train():
                         total_loss.backward()
 
                     # batch skip, simulates larger batches by skipping gradient step
-                    if (not 'batch_skip' in conf) or ((batch_id + 1) % conf.batch_skip) == 0:
+                    if (not 'batch_skip' in conf) or (
+                        (batch_id + 1) % conf.batch_skip) == 0:
                         optimizer.minimize(total_loss)
                         optimizer.clear_gradients()
-                        
+
                 batch_end = time.time()
                 train_batch_cost = batch_end - batch_start
 
@@ -222,44 +214,47 @@ def train():
                 # -----------------------------------------
                 # display
                 # -----------------------------------------
-                iteration = epo * (m3drpn_reader.len/conf.batch_size) + batch_id
-                
+                iteration = epo * (m3drpn_reader.len / conf.batch_size
+                                   ) + batch_id
+
                 if iteration % conf.display == 0 and iteration > start_iter:
                     # log results
-                    log_stats(tracker, iteration, start_time, start_iter, conf.max_iter)
+                    log_stats(tracker, iteration, start_time, start_iter,
+                              conf.max_iter)
                     print( "epoch %d | batch step %d | iter %d, batch cost: %.5f, loss %0.3f" % \
                            (epo, batch_id, iteration, train_batch_cost, total_loss.numpy()))
-                    
+
                     # reset tracker
                     tracker = edict()
-                    
-                    
+
                 # snapshot, do_test 
-                
+
                 if iteration % conf.snapshot_iter == 0 and iteration > start_iter:
-                    fluid.save_dygraph(train_model.state_dict(),
-                                       '{}/iter{}_params'.format(paths.weights, iteration))
-                    fluid.save_dygraph(optimizer.state_dict(),
-                                       '{}/iter{}_opt'.format(paths.weights, iteration))
+                    fluid.save_dygraph(
+                        train_model.state_dict(),
+                        '{}/iter{}_params'.format(paths.weights, iteration))
+                    fluid.save_dygraph(
+                        optimizer.state_dict(),
+                        '{}/iter{}_opt'.format(paths.weights, iteration))
 
                     #do test
                     if conf.do_test:
-                        train_model.phase=  "eval"
+                        train_model.phase = "eval"
                         train_model.eval()
-                        results_path = os.path.join(paths.results, 'results_{}'.format((epo)))
+                        results_path = os.path.join(paths.results,
+                                                    'results_{}'.format((epo)))
                     if conf.test_protocol.lower() == 'kitti':
                         results_path = os.path.join(results_path, 'data')
                         mkdir_if_missing(results_path, delete_if_exist=True)
-                        test_kitti_3d(conf.dataset_test, train_model, conf, results_path, paths.data)
+                        test_kitti_3d(conf.dataset_test, train_model, conf,
+                                      results_path, paths.data)
                     train_model.phase = "train"
                     train_model.train()
-            
 
 
 if __name__ == '__main__':
 
     train()
-
     """
     
     if args.resume:

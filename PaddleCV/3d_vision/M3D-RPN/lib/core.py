@@ -51,26 +51,29 @@ def init_config(conf_name):
     conf = importlib.import_module('config.' + conf_name).Config()
 
     return conf
+
+
 import paddle.fluid as fluid
 
+
 class MyPolynomialDecay(fluid.dygraph.PolynomialDecay):
-    
     def step(self):
         tmp_step_num = self.step_num
         tmp_decay_steps = self.decay_steps
-        tmp_step_num = self.create_lr_var(tmp_step_num
-                                          if tmp_step_num < self.decay_steps
-                                          else self.decay_steps)
-        
-        scale = float(tmp_decay_steps) / (1 - float(self.end_learning_rate / self.learning_rate) ** (1 / self.power))
-        
-        decay_lr = self.learning_rate * ((1 - float(tmp_step_num) / scale) ** self.power)
-        
+        tmp_step_num = self.create_lr_var(tmp_step_num if tmp_step_num < self.
+                                          decay_steps else self.decay_steps)
+
+        scale = float(tmp_decay_steps) / (
+            1 - float(self.end_learning_rate / self.learning_rate)**
+            (1 / self.power))
+
+        decay_lr = self.learning_rate * ((1 - float(tmp_step_num) / scale)
+                                         **self.power)
+
         return decay_lr
 
 
-def adjust_lr(conf): 
-    
+def adjust_lr(conf):
 
     #if 'batch_skip' in conf and ((iter + 1) % conf.batch_skip) > 0: return
 
@@ -81,24 +84,22 @@ def adjust_lr(conf):
         max_iter = conf.max_iter
         lr_policy = conf.lr_policy
         lr_target = conf.lr_target
-        
+
         # perform the exact number of steps needed to get to lr_target
         # if lr_policy.lower() == 'step':
         #     scale = (lr_target / lr) ** (1 / total_steps)
         #     lr *= scale ** step_count
-            
+
         # compute the scale needed to go from lr --> lr_target
         # using a polynomial function instead.
         if lr_policy.lower() == 'poly':
 
             lr = MyPolynomialDecay(lr, max_iter, lr_target, power=0.9)
-                
+
         else:
             raise ValueError('{} lr_policy not understood'.format(lr_policy))
 
-
-    return lr            
-
+    return lr
 
 
 def init_training_model(conf, backbone, cache_folder):
@@ -129,27 +130,34 @@ def init_training_model(conf, backbone, cache_folder):
         mo = conf.momentum
         wd = conf.weight_decay
         lr = adjust_lr(conf)
-        
-        optimizer = fluid.optimizer.MomentumOptimizer(learning_rate=lr, momentum=mo, regularization=fluid.regularizer.L2Decay(wd), parameter_list=network.parameters())
-       
+
+        optimizer = fluid.optimizer.MomentumOptimizer(
+            learning_rate=lr,
+            momentum=mo,
+            regularization=fluid.regularizer.L2Decay(wd),
+            parameter_list=network.parameters())
+
     # load adam
     elif conf.solver_type.lower() == 'adam':
 
         lr = conf.lr
         wd = conf.weight_decay
-        optimizer = fluid.optimizer.Adam(learning_rate=lr, regularization=fluid.regularizer.L2Decay(wd), parameter_list=network.parameters())
-        
+        optimizer = fluid.optimizer.Adam(
+            learning_rate=lr,
+            regularization=fluid.regularizer.L2Decay(wd),
+            parameter_list=network.parameters())
+
     # load adamax
     elif conf.solver_type.lower() == 'adamax':
 
         lr = conf.lr
         wd = conf.weight_decay
-        optimizer = fluid.optimizer.Adamax(learning_rate=lr, regularization=fluid.regularizer.L2Decay(wd), parameter_list=network.parameters())
-        
+        optimizer = fluid.optimizer.Adamax(
+            learning_rate=lr,
+            regularization=fluid.regularizer.L2Decay(wd),
+            parameter_list=network.parameters())
 
-    return network, optimizer#, lr
-
-
+    return network, optimizer  #, lr
 
 
 def intersect(box_a, box_b, mode='combinations', data_type=None):
@@ -173,8 +181,12 @@ def intersect(box_a, box_b, mode='combinations', data_type=None):
 
         # np.ndarray
         if data_type == np.ndarray:
-            max_xy = np.minimum(box_a[:, 2:4], np.expand_dims(box_b[:, 2:4], axis=1))
-            min_xy = np.maximum(box_a[:, 0:2], np.expand_dims(box_b[:, 0:2], axis=1))
+            max_xy = np.minimum(
+                box_a[:, 2:4], np.expand_dims(
+                    box_b[:, 2:4], axis=1))
+            min_xy = np.maximum(
+                box_a[:, 0:2], np.expand_dims(
+                    box_b[:, 0:2], axis=1))
             inter = np.clip((max_xy - min_xy), a_min=0, a_max=None)
 
         # unknown type
@@ -260,10 +272,8 @@ def iou(box_a, box_b, mode='combinations', data_type=None):
     if mode == 'combinations':
 
         inter = intersect(box_a, box_b, data_type=data_type)
-        area_a = ((box_a[:, 2] - box_a[:, 0]) *
-                  (box_a[:, 3] - box_a[:, 1]))
-        area_b = ((box_b[:, 2] - box_b[:, 0]) *
-                  (box_b[:, 3] - box_b[:, 1]))
+        area_a = ((box_a[:, 2] - box_a[:, 0]) * (box_a[:, 3] - box_a[:, 1]))
+        area_b = ((box_b[:, 2] - box_b[:, 0]) * (box_b[:, 3] - box_b[:, 1]))
         union = np.expand_dims(area_a, 0) + np.expand_dims(area_b, 1) - inter
 
         # torch.Tensor
@@ -277,7 +287,6 @@ def iou(box_a, box_b, mode='combinations', data_type=None):
         # unknown type
         else:
             raise ValueError('unknown data type {}'.format(data_type))
-
 
     # this mode compares every box in box_a with target in box_b
     # i.e., box_a = M x 4 and box_b = M x 4 then output is M x 1
@@ -315,11 +324,10 @@ def iou_ign(box_a, box_b, mode='combinations', data_type=None):
     if mode == 'combinations':
 
         inter = intersect(box_a, box_b, data_type=data_type)
-        area_a = ((box_a[:, 2] - box_a[:, 0]) *
-                  (box_a[:, 3] - box_a[:, 1]))
-        area_b = ((box_b[:, 2] - box_b[:, 0]) *
-                  (box_b[:, 3] - box_b[:, 1]))
-        union = np.expand_dims(area_a, 0) + np.expand_dims(area_b, 1) * 0 - inter * 0
+        area_a = ((box_a[:, 2] - box_a[:, 0]) * (box_a[:, 3] - box_a[:, 1]))
+        area_b = ((box_b[:, 2] - box_b[:, 0]) * (box_b[:, 3] - box_b[:, 1]))
+        union = np.expand_dims(area_a, 0) + np.expand_dims(area_b,
+                                                           1) * 0 - inter * 0
 
         # torch and numpy have different calls for transpose
         if data_type == np.ndarray:
@@ -365,8 +373,10 @@ def iou_ign(box_a, box_b, mode='combinations', data_type=None):
 #                 if isinstance(module, torch.nn.BatchNorm2d):
 #                     module.eval()
 
+
 def to_int(string, dest="I"):
     return struct.unpack(dest, string)[0]
+
 
 def parse_shape_from_file(filename):
     with open(filename, "rb") as file:
@@ -381,6 +391,7 @@ def parse_shape_from_file(filename):
         tensor_desc.ParseFromString(file.read(tensor_desc_size))
     return tuple(tensor_desc.dims)
 
+
 def load_vars(train_prog, path):
     """
     loads a paddle models vars from a given path.
@@ -389,20 +400,16 @@ def load_vars(train_prog, path):
     load_fail_vars = []
 
     def var_shape_matched(var, shape):
-        var_exist = os.path.exists(
-            os.path.join(path, var.name))
+        var_exist = os.path.exists(os.path.join(path, var.name))
         if var_exist:
-            var_shape = parse_shape_from_file(
-                os.path.join(path, var.name))
+            var_shape = parse_shape_from_file(os.path.join(path, var.name))
             return var_shape == shape
         return False
-    
-    
-        
+
     for x in train_prog.list_vars():
         if isinstance(x, fluid.framework.Parameter):
-            shape = tuple(fluid.global_scope().find_var(
-                x.name).get_tensor().shape())
+            shape = tuple(fluid.global_scope().find_var(x.name).get_tensor()
+                          .shape())
             if var_shape_matched(x, shape):
                 load_vars.append(x)
             else:
@@ -430,10 +437,11 @@ def log_stats(tracker, iteration, start_time, start_iter, max_iter, skip=1):
                   a float with 2 decimal places.
     """
 
-    display_str = 'iter: {}'.format((int((iteration)/skip)))
+    display_str = 'iter: {}'.format((int((iteration) / skip)))
 
     # compute eta
-    time_str, dt = compute_eta(start_time, iteration - start_iter, max_iter - start_iter)
+    time_str, dt = compute_eta(start_time, iteration - start_iter,
+                               max_iter - start_iter)
 
     # cycle through all tracks
     last_group = ''
@@ -453,10 +461,12 @@ def log_stats(tracker, iteration, start_time, start_iter, max_iter, skip=1):
             # basically roughly this format:
             #   iter: {}, group_1 (name: val, name: val), group_2 (name: val), dt: val, eta: val
             if last_group != group and last_group == '':
-                display_str += (', {} ({}: ' + format).format(group, name, meanval)
+                display_str += (', {} ({}: ' + format).format(group, name,
+                                                              meanval)
 
             elif last_group != group:
-                display_str += ('), {} ({}: ' + format).format(group, name, meanval)
+                display_str += ('), {} ({}: ' + format).format(group, name,
+                                                               meanval)
 
             else:
                 display_str += (', {}: ' + format).format(name, meanval)
@@ -470,7 +480,15 @@ def log_stats(tracker, iteration, start_time, start_iter, max_iter, skip=1):
     logging.info(display_str)
 
 
-def display_stats(vis, tracker, iteration, start_time, start_iter, max_iter, conf_name, conf_pretty, skip=1):
+def display_stats(vis,
+                  tracker,
+                  iteration,
+                  start_time,
+                  start_iter,
+                  max_iter,
+                  conf_name,
+                  conf_pretty,
+                  skip=1):
     """
     This function plots the statistics using visdom package, similar to the log_stats function.
     Also, computes the estimated time arrival (eta) for completion and (dt) delta time per iteration.
@@ -493,10 +511,12 @@ def display_stats(vis, tracker, iteration, start_time, start_iter, max_iter, con
     """
 
     # compute eta
-    time_str, dt = compute_eta(start_time, iteration - start_iter, max_iter - start_iter)
+    time_str, dt = compute_eta(start_time, iteration - start_iter,
+                               max_iter - start_iter)
 
     # general info
-    info = 'Experiment: <b>{}</b>, Eta: <b>{}</b>, Time/it: {:0.2f}s\n'.format(conf_name, time_str, dt)
+    info = 'Experiment: <b>{}</b>, Eta: <b>{}</b>, Time/it: {:0.2f}s\n'.format(
+        conf_name, time_str, dt)
     info += conf_pretty
 
     # replace all newlines and spaces with line break <br> and non-breaking spaces &nbsp
@@ -507,7 +527,10 @@ def display_stats(vis, tracker, iteration, start_time, start_iter, max_iter, con
     info = '<pre>' + info + '</pre'
 
     # update the info window
-    vis.text(info, win='info', opts={'title': 'info', 'width': 500, 'height': 350})
+    vis.text(
+        info, win='info', opts={'title': 'info',
+                                'width': 500,
+                                'height': 350})
 
     # draw graphs for each track
     for key in sorted(tracker.keys()):
@@ -518,9 +541,19 @@ def display_stats(vis, tracker, iteration, start_time, start_iter, max_iter, con
             name = tracker[key + '_obj'].name
 
             # new data point
-            vis.line(X=np.array([(iteration + 1)]), Y=np.array([meanval]), win=group, name=name, update='append',
-                     opts={'showlegend': True, 'title': group, 'width': 500, 'height': 350,
-                           'xlabel': 'iteration'})
+            vis.line(
+                X=np.array([(iteration + 1)]),
+                Y=np.array([meanval]),
+                win=group,
+                name=name,
+                update='append',
+                opts={
+                    'showlegend': True,
+                    'title': group,
+                    'width': 500,
+                    'height': 350,
+                    'xlabel': 'iteration'
+                })
 
 
 def compute_stats(tracker, stats):
@@ -616,8 +649,11 @@ def init_training_paths(conf_name, use_tmp_folder=None):
     paths.weights = os.path.join(paths.output, 'weights')
     paths.logs = os.path.join(paths.output, 'log')
 
-    if use_tmp_folder: paths.results = os.path.join(paths.base, '.tmp_results', conf_name, 'results')
-    else: paths.results = os.path.join(paths.output, 'results')
+    if use_tmp_folder:
+        paths.results = os.path.join(paths.base, '.tmp_results', conf_name,
+                                     'results')
+    else:
+        paths.results = os.path.join(paths.output, 'results')
 
     # make directories
     mkdir_if_missing(paths.output)
@@ -650,7 +686,6 @@ def init_training_paths(conf_name, use_tmp_folder=None):
 #     torch.backends.cudnn.deterministic = True
 #     torch.backends.cudnn.benchmark = False
 
-
 # def init_visdom(conf_name, visdom_port):
 #     """
 #     Simply initializes a visdom session (if possible) then closes all windows within it.
@@ -668,7 +703,6 @@ def init_training_paths(conf_name, use_tmp_folder=None):
 #     except:
 #         return None
 
-
 # def check_tensors():
 #     """
 #     Checks on tensors currently loaded within PyTorch
@@ -681,7 +715,6 @@ def init_training_paths(conf_name, use_tmp_folder=None):
 #         except:
 #             pass
 
-
 # def resume_checkpoint(optim, model, weights_dir, iteration):
 #     """
 #     Loads the optimizer and model pair given the current iteration
@@ -692,7 +725,6 @@ def init_training_paths(conf_name, use_tmp_folder=None):
 
 #     optim.load_state_dict(torch.load(optimpath))
 #     model.load_state_dict(torch.load(modelpath))
-
 
 # def save_checkpoint(optim, model, weights_dir, iteration):
 #     """
@@ -707,7 +739,6 @@ def init_training_paths(conf_name, use_tmp_folder=None):
 
 #     return modelpath, optimpath
 
-
 # def checkpoint_names(weights_dir, iteration):
 #     """
 #     Single function to determine the saving format for
@@ -718,7 +749,6 @@ def init_training_paths(conf_name, use_tmp_folder=None):
 #     modelpath = os.path.join(weights_dir, 'model_{}_pkl'.format(iteration))
 
 #     return optimpath, modelpath
-
 
 # def print_weights(model):
 #     """
@@ -741,4 +771,3 @@ def init_training_paths(conf_name, use_tmp_folder=None):
 
 #         logging.info(('{0:' + str(max_len) + '} {1:6} {2:6}')
 #                      .format(name, 'mean={:.4f}'.format(mdata), '    grad={}'.format(param.requires_grad)))
-

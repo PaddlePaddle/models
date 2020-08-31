@@ -24,6 +24,7 @@ class Compose(object):
     """
     Composes a set of functions which take in an image and an object, into a single transform
     """
+
     def __init__(self, transforms):
         self.transforms = transforms
 
@@ -37,6 +38,7 @@ class ConvertToFloat(object):
     """
     Converts image data type to float.
     """
+
     def __call__(self, image, imobj=None):
         return image.astype(np.float32), imobj
 
@@ -45,6 +47,7 @@ class Normalize(object):
     """
     Normalize the image
     """
+
     def __init__(self, mean, stds):
         self.mean = np.array(mean, dtype=np.float32)
         self.stds = np.array(stds, dtype=np.float32)
@@ -52,8 +55,8 @@ class Normalize(object):
     def __call__(self, image, imobj=None):
         image = image.astype(np.float32)
         image /= 255.0
-        image -= np.tile(self.mean, int(image.shape[2]/self.mean.shape[0]))
-        image /= np.tile(self.stds, int(image.shape[2]/self.stds.shape[0]))
+        image -= np.tile(self.mean, int(image.shape[2] / self.mean.shape[0]))
+        image /= np.tile(self.stds, int(image.shape[2] / self.stds.shape[0]))
         return image.astype(np.float32), imobj
 
 
@@ -65,6 +68,7 @@ class Resize(object):
 
     If the object has ground truths we also scale the (known) box coordinates.
     """
+
     def __init__(self, size):
         self.size = size
 
@@ -138,6 +142,7 @@ class RandomSaturation(object):
 
     This function assumes the image is in HSV!!
     """
+
     def __init__(self, distort_prob, lower=0.5, upper=1.5):
 
         self.distort_prob = distort_prob
@@ -161,6 +166,7 @@ class RandomHue(object):
 
     This function assumes the image is in HSV!!
     """
+
     def __init__(self, distort_prob, delta=18.0):
         assert delta >= 0.0 and delta <= 360.0
         self.delta = delta
@@ -178,6 +184,7 @@ class ConvertColor(object):
     """
     Converts color spaces to/from HSV and BGR
     """
+
     def __init__(self, current='BGR', transform='HSV'):
         self.transform = transform
         self.current = current
@@ -203,6 +210,7 @@ class RandomContrast(object):
     Randomly adjust contrast of an image given lower and upper bound,
     and a distortion probability.
     """
+
     def __init__(self, distort_prob, lower=0.5, upper=1.5):
 
         self.lower = lower
@@ -225,6 +233,7 @@ class RandomMirror(object):
 
     Also, adjust all box cordinates accordingly.
     """
+
     def __init__(self, mirror_prob):
         self.mirror_prob = mirror_prob
 
@@ -241,31 +250,36 @@ class RandomMirror(object):
             for gtind, gt in enumerate(imobj.gts):
 
                 if 'bbox_full' in imobj.gts[gtind]:
-                    imobj.gts[gtind].bbox_full[0] = image.shape[1] - gt.bbox_full[0] - gt.bbox_full[2]
+                    imobj.gts[gtind].bbox_full[0] = image.shape[
+                        1] - gt.bbox_full[0] - gt.bbox_full[2]
 
                 if 'bbox_vis' in imobj.gts[gtind]:
-                    imobj.gts[gtind].bbox_vis[0] = image.shape[1] - gt.bbox_vis[0] - gt.bbox_vis[2]
+                    imobj.gts[gtind].bbox_vis[0] = image.shape[1] - gt.bbox_vis[
+                        0] - gt.bbox_vis[2]
 
                 if 'bbox_3d' in imobj.gts[gtind]:
-                    imobj.gts[gtind].bbox_3d[0] = image.shape[1] - gt.bbox_3d[0] - 1
+                    imobj.gts[gtind].bbox_3d[0] = image.shape[1] - gt.bbox_3d[
+                        0] - 1
                     rotY = gt.bbox_3d[10]
 
                     rotY = (-math.pi - rotY) if rotY < 0 else (math.pi - rotY)
 
-                    while rotY > math.pi: rotY -= math.pi * 2
-                    while rotY < (-math.pi): rotY += math.pi * 2
+                    while rotY > math.pi:
+                        rotY -= math.pi * 2
+                    while rotY < (-math.pi):
+                        rotY += math.pi * 2
 
                     cx2d = gt.bbox_3d[0]
                     cy2d = gt.bbox_3d[1]
                     cz2d = gt.bbox_3d[2]
 
-                    coord3d = imobj.p2_inv.dot(np.array([cx2d * cz2d, cy2d * cz2d, cz2d, 1]))
+                    coord3d = imobj.p2_inv.dot(
+                        np.array([cx2d * cz2d, cy2d * cz2d, cz2d, 1]))
 
                     alpha = util.convertRot2Alpha(rotY, coord3d[2], coord3d[0])
 
                     imobj.gts[gtind].bbox_3d[10] = rotY
                     imobj.gts[gtind].bbox_3d[6] = alpha
-
 
         return image, imobj
 
@@ -275,6 +289,7 @@ class RandomBrightness(object):
     Randomly adjust the brightness of an image given given a +- delta range,
     and a distortion probability.
     """
+
     def __init__(self, distort_prob, delta=32):
         assert delta >= 0.0
         assert delta <= 255.0
@@ -292,6 +307,7 @@ class PhotometricDistort(object):
     """
     Packages all photometric distortions into a single transform.
     """
+
     def __init__(self, distort_prob):
 
         self.distort_prob = distort_prob
@@ -299,12 +315,10 @@ class PhotometricDistort(object):
         # contrast is duplicated because it may happen before or after
         # the other transforms with equal probability.
         self.transforms = [
-            RandomContrast(distort_prob),
-            ConvertColor(transform='HSV'),
-            RandomSaturation(distort_prob),
-            RandomHue(distort_prob),
-            ConvertColor(current='HSV', transform='BGR'),
-            RandomContrast(distort_prob)
+            RandomContrast(distort_prob), ConvertColor(transform='HSV'),
+            RandomSaturation(distort_prob), RandomHue(distort_prob),
+            ConvertColor(
+                current='HSV', transform='BGR'), RandomContrast(distort_prob)
         ]
 
         self.rand_brightness = RandomBrightness(distort_prob)
@@ -317,7 +331,7 @@ class PhotometricDistort(object):
 
         # do contrast last
         else:
-            distortion = self.transforms[1: ]
+            distortion = self.transforms[1:]
 
         # add random brightness
         distortion.insert(0, self.rand_brightness)
@@ -334,6 +348,7 @@ class Augmentation(object):
     and all data augmentation transformations (mirror and photometric distort)
     into a single transform.
     """
+
     def __init__(self, conf):
 
         self.mean = conf.image_means
@@ -344,17 +359,13 @@ class Augmentation(object):
 
         if conf.distort_prob <= 0:
             self.augment = Compose([
-                ConvertToFloat(),
-                RandomMirror(self.mirror_prob),
-                Resize(self.size),
-                Normalize(self.mean, self.stds)
+                ConvertToFloat(), RandomMirror(self.mirror_prob),
+                Resize(self.size), Normalize(self.mean, self.stds)
             ])
         else:
             self.augment = Compose([
-                ConvertToFloat(),
-                PhotometricDistort(self.distort_prob),
-                RandomMirror(self.mirror_prob),
-                Resize(self.size),
+                ConvertToFloat(), PhotometricDistort(self.distort_prob),
+                RandomMirror(self.mirror_prob), Resize(self.size),
                 Normalize(self.mean, self.stds)
             ])
 
@@ -367,6 +378,7 @@ class Preprocess(object):
     Preprocess function which ONLY does the basic pre-processing of an image,
     meant to be used during the testing/eval stages.
     """
+
     def __init__(self, size, mean, stds):
 
         self.mean = mean
@@ -374,19 +386,18 @@ class Preprocess(object):
         self.size = size
 
         self.preprocess = Compose([
-            ConvertToFloat(),
-            Resize(self.size),
-            Normalize(self.mean, self.stds)
+            ConvertToFloat(), Resize(self.size), Normalize(self.mean, self.stds)
         ])
 
     def __call__(self, img):
 
         img = self.preprocess(img)[0]
 
-        for i in range(int(img.shape[2]/3)):
+        for i in range(int(img.shape[2] / 3)):
 
             # convert to RGB then permute to be [B C H W]
-            img[:, :, (i * 3): (i * 3) + 3] = img[:, :, (i * 3 + 2, i * 3 + 1, i * 3)]
+            img[:, :, (i * 3):(i * 3) + 3] = img[:, :, (i * 3 + 2, i * 3 + 1, i
+                                                        * 3)]
 
         img = np.transpose(img, [2, 0, 1])
 

@@ -81,6 +81,7 @@ def parse_outputs(outputs):
 
 class Stat(object):
     """Stat"""
+
     def __init__(self):
         self.stats = {}
 

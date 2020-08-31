@@ -52,7 +52,8 @@ class M3drpnReader(object):
         self.data_dir = data_dir
         self.conf = conf
         self.video_det = False if not ('video_det' in conf) else conf.video_det
-        self.video_count = 1 if not ('video_count' in conf) else conf.video_count
+        self.video_count = 1 if not (
+            'video_count' in conf) else conf.video_count
         self.use_3d_for_2d = ('use_3d_for_2d' in conf) and conf.use_3d_for_2d
         self.load_data()
         self.transform = augmentations.Augmentation(conf)
@@ -69,23 +70,27 @@ class M3drpnReader(object):
         # read all_files.txt
 
         for dbind, db in enumerate(self.conf.datasets_train):
-            
+
             logging.info('Loading imgs_label {}'.format(db['name']))
 
             # single imdb
             imdb_single_db = []
             # kitti formatting
             if db['anno_fmt'].lower() == 'kitti_det':
-                train_folder = os.path.join(self.data_dir, db['name'], 'training')
-                ann_folder = os.path.join(train_folder, 'label_2', '')  # dataset/kitti_split1/training/image_2/
+                train_folder = os.path.join(self.data_dir, db['name'],
+                                            'training')
+                ann_folder = os.path.join(
+                    train_folder, 'label_2',
+                    '')  # dataset/kitti_split1/training/image_2/
                 cal_folder = os.path.join(train_folder, 'calib', '')
                 im_folder = os.path.join(train_folder, 'image_2', '')
                 # get sorted filepaths
                 annlist = sorted(glob(ann_folder + '*.txt'))  # 3712
 
                 imdb_start = time()
-            
-                self.affine_size = None if not ('affine_size' in self.conf) else self.conf.affine_size
+
+                self.affine_size = None if not (
+                    'affine_size' in self.conf) else self.conf.affine_size
 
                 for annind, annpath in enumerate(annlist):
                     # get file parts
@@ -94,9 +99,12 @@ class M3drpnReader(object):
 
                     calpath = os.path.join(cal_folder, id + '.txt')
                     impath = os.path.join(im_folder, id + db['im_ext'])
-                    impath_pre = os.path.join(train_folder, 'prev_2', id + '_01' + db['im_ext'])
-                    impath_pre2 = os.path.join(train_folder, 'prev_2', id + '_02' + db['im_ext'])
-                    impath_pre3 = os.path.join(train_folder, 'prev_2', id + '_03' + db['im_ext'])
+                    impath_pre = os.path.join(train_folder, 'prev_2',
+                                              id + '_01' + db['im_ext'])
+                    impath_pre2 = os.path.join(train_folder, 'prev_2',
+                                               id + '_02' + db['im_ext'])
+                    impath_pre3 = os.path.join(train_folder, 'prev_2',
+                                               id + '_03' + db['im_ext'])
 
                     # read gts
                     p2 = read_kitti_cal(calpath)
@@ -129,7 +137,7 @@ class M3drpnReader(object):
                     # obj['gts'] = gts
                     # obj['p2'] = p2
                     # obj['p2_inv'] = p2_inv
-                    obj.affine_gt = None# did not compute transformer
+                    obj.affine_gt = None  # did not compute transformer
                     # # im properties
                     # im = Image.open(impath)
                     # obj['path'] = impath
@@ -143,13 +151,14 @@ class M3drpnReader(object):
 
                     # store
                     imdb_single_db.append(obj)
-                    
+
                     if (annind % 1000) == 0 and annind > 0:
-                        time_str, dt = util.compute_eta(imdb_start, annind, len(annlist))
-                        logging.info('{}/{}, dt: {:0.4f}, eta: {}'.format(annind, len(annlist), dt, time_str))
+                        time_str, dt = util.compute_eta(imdb_start, annind,
+                                                        len(annlist))
+                        logging.info('{}/{}, dt: {:0.4f}, eta: {}'.format(
+                            annind, len(annlist), dt, time_str))
 
             # concatenate single imdb into full imdb
-            
             '''
             imdb += imdb_single_db
 
@@ -167,8 +176,6 @@ class M3drpnReader(object):
         self.data['test'] = {}
         self.len = len(imdb_single_db)
         self.sampled_weights = balance_samples(self.conf, imdb_single_db)
-        
-
 
     def _augmented_single(self, index):
         """
@@ -178,7 +185,7 @@ class M3drpnReader(object):
           - applies data augmentation to (im, imobj)
           - converts image to RGB and [B C W H]
         """
-        
+
         if not self.video_det:
             # read image
             im = cv2.imread(self.data['train'][index].path)
@@ -222,12 +229,12 @@ class M3drpnReader(object):
         # transform / data augmentation
         im, imobj = self.transform(im, copy.deepcopy(self.data['train'][index]))
 
-
         for i in range(int(im.shape[2] / 3)):
             # convert to RGB then permute to be [B C H W]
-            im[:, :, (i * 3):(i * 3) + 3] = im[:, :, (i * 3 + 2, i * 3 + 1, i * 3)]
+            im[:, :, (i * 3):(i * 3) + 3] = im[:, :, (i * 3 + 2, i * 3 + 1, i *
+                                                      3)]
         im = np.transpose(im, [2, 0, 1])
-        return im, imobj 
+        return im, imobj
 
     def get_reader(self, batch_size, mode='train', shuffle=True):
         """
@@ -240,13 +247,9 @@ class M3drpnReader(object):
 
         idxs = np.arange(len(imgs))
 
-        
         idxs = np.random.choice(
-                self.len,
-                self.len,
-                replace=True,
-                p=self.sampled_weights)
-            
+            self.len, self.len, replace=True, p=self.sampled_weights)
+
         if mode == 'train' and shuffle:
             np.random.shuffle(idxs)
 
@@ -258,8 +261,8 @@ class M3drpnReader(object):
 
             # imgs_idxs = np.arange(imgs)
             for ind in idxs:
-                augmented_img, im_obj = self._augmented_single(ind) 
-                batch_out.append([augmented_img, im_obj]) 
+                augmented_img, im_obj = self._augmented_single(ind)
+                batch_out.append([augmented_img, im_obj])
                 if len(batch_out) == batch_size:
                     yield batch_out
                     batch_out = []
@@ -277,8 +280,10 @@ def read_kitti_cal(calfile):
 
     text_file = open(calfile, 'r')
 
-    p2pat = re.compile(('(P2:)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)' +
-                        '\s+(fpat)\s+(fpat)\s+(fpat)\s*\n').replace('fpat', '[-+]?[\d]+\.?[\d]*[Ee](?:[-+]?[\d]+)?'))
+    p2pat = re.compile((
+        '(P2:)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)'
+        + '\s+(fpat)\s+(fpat)\s+(fpat)\s*\n').replace(
+            'fpat', '[-+]?[\d]+\.?[\d]*[Ee](?:[-+]?[\d]+)?'))
 
     for line in text_file:
 
@@ -308,7 +313,6 @@ def read_kitti_cal(calfile):
     return p2
 
 
-
 def balance_samples(conf, imdb):
     """
     Balances the samples in an image dataset according to the given configuration.
@@ -331,8 +335,9 @@ def balance_samples(conf, imdb):
             valid = 0
 
             scale = conf.test_scale / imobj.imH
-            igns, rmvs = determine_ignores(imobj.gts, conf.lbls, conf.ilbls, conf.min_gt_vis,
-                                           conf.min_gt_h, conf.max_gt_h, scale)
+            igns, rmvs = determine_ignores(imobj.gts, conf.lbls, conf.ilbls,
+                                           conf.min_gt_vis, conf.min_gt_h,
+                                           conf.max_gt_h, scale)
 
             for gtind, gt in enumerate(imobj.gts):
 
@@ -341,7 +346,7 @@ def balance_samples(conf, imdb):
 
             sample_weights[imind] = valid
 
-            if valid>0:
+            if valid > 0:
                 valid_inds.append(imind)
             else:
                 empty_inds.append(imind)
@@ -354,14 +359,15 @@ def balance_samples(conf, imdb):
             sample_weights[valid_inds] = fg_weight
             sample_weights[empty_inds] = bg_weight
 
-            logging.info('weighted respectively as {:.2f} and {:.2f}'.format(fg_weight, bg_weight))
+            logging.info('weighted respectively as {:.2f} and {:.2f}'.format(
+                fg_weight, bg_weight))
 
-        logging.info('Found {} foreground and {} empty images'.format(np.sum(sample_weights > 0), np.sum(sample_weights <= 0)))
+        logging.info('Found {} foreground and {} empty images'.format(
+            np.sum(sample_weights > 0), np.sum(sample_weights <= 0)))
 
     # force sampling weights to sum to 1
     sample_weights /= np.sum(sample_weights)
     return sample_weights
-    
 
 
 def read_kitti_poses(posefile):
@@ -370,11 +376,15 @@ def read_kitti_poses(posefile):
     """
     text_file = open(posefile, 'r')
 
-    ppat1 = re.compile(('(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)' +
-                        '\s+(fpat)\s+(fpat)\s+(fpat)\s*\n').replace('fpat', '[-+]?[\d]+\.?[\d]*[Ee](?:[-+]?[\d]+)?'))
+    ppat1 = re.compile((
+        '(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)'
+        + '\s+(fpat)\s+(fpat)\s+(fpat)\s*\n').replace(
+            'fpat', '[-+]?[\d]+\.?[\d]*[Ee](?:[-+]?[\d]+)?'))
 
-    ppat2 = re.compile(('(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)' +
-                        '\s+(fpat)\s+(fpat)\s+(fpat)\s*\n').replace('fpat', '[-+]?[\d]+\.?[\d]*'));
+    ppat2 = re.compile((
+        '(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)'
+        + '\s+(fpat)\s+(fpat)\s+(fpat)\s*\n').replace('fpat',
+                                                      '[-+]?[\d]+\.?[\d]*'))
 
     ps = []
 
@@ -437,7 +447,6 @@ def read_kitti_label(file, p2, use_3d_for_2d=False):
     gts = []
 
     text_file = open(file, 'r')
-
     '''
      Values    Name      Description
     ----------------------------------------------------------------------------
@@ -459,9 +468,11 @@ def read_kitti_label(file, p2, use_3d_for_2d=False):
                          detection, needed for p/r curves, higher is better.
     '''
 
-    pattern = re.compile(('([a-zA-Z\-\?\_]+)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+'
-                          + '(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s*((fpat)?)\n')
-                         .replace('fpat', '[-+]?\d*\.\d+|[-+]?\d+'))
+    pattern = re.compile((
+        '([a-zA-Z\-\?\_]+)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+'
+        +
+        '(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s+(fpat)\s*((fpat)?)\n'
+    ).replace('fpat', '[-+]?\d*\.\d+|[-+]?\d+'))
 
     for line in text_file:
 
@@ -505,7 +516,8 @@ def read_kitti_label(file, p2, use_3d_for_2d=False):
             if use_3d_for_2d and h3d > 0 and w3d > 0 and l3d > 0:
 
                 # re-compute the 2D box using 3D (finally, avoids clipped boxes)
-                verts3d, corners_3d = project_3d(p2, cx3d, cy3d, cz3d, w3d, h3d, l3d, rotY, return_3d=True)
+                verts3d, corners_3d = project_3d(
+                    p2, cx3d, cy3d, cz3d, w3d, h3d, l3d, rotY, return_3d=True)
 
                 # any boxes behind camera plane?
                 if np.any(corners_3d[2, :] <= 0):
@@ -543,8 +555,10 @@ def read_kitti_label(file, p2, use_3d_for_2d=False):
             else:
                 vis = 0.0
 
-            while rotY > math.pi: rotY -= math.pi * 2
-            while rotY < (-math.pi): rotY += math.pi * 2
+            while rotY > math.pi:
+                rotY -= math.pi * 2
+            while rotY < (-math.pi):
+                rotY += math.pi * 2
 
             # recompute alpha
             alpha = util.convertRot2Alpha(rotY, cz3d, cx3d)
@@ -559,10 +573,13 @@ def read_kitti_label(file, p2, use_3d_for_2d=False):
             obj.rotY = rotY
 
             # is there an extra field? (assume to be track)
-            if len(parsed.groups()) >= 16 and parsed.group(16).isdigit(): obj.track = int(parsed.group(16))
+            if len(parsed.groups()) >= 16 and parsed.group(16).isdigit():
+                obj.track = int(parsed.group(16))
 
             obj.bbox_full = np.array([x, y, width, height])
-            obj.bbox_3d = [cx, cy, cz3d_2d, w3d, h3d, l3d, alpha, cx3d, cy3d, cz3d, rotY]
+            obj.bbox_3d = [
+                cx, cy, cz3d_2d, w3d, h3d, l3d, alpha, cx3d, cy3d, cz3d, rotY
+            ]
             obj.center_3d = [cx3d, cy3d, cz3d]
 
             gts.append(obj)
@@ -570,7 +587,6 @@ def read_kitti_label(file, p2, use_3d_for_2d=False):
     text_file.close()
 
     return gts
-
 
 
 def _term_reader(signum, frame):

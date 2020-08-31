@@ -11,7 +11,6 @@
 #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #See the License for the specific language governing permissions and
 #limitations under the License.
-
 """test"""
 
 import os
@@ -30,11 +29,9 @@ import lib.core as core
 from lib.util import *
 import pdb
 
-
 import paddle
 from paddle.fluid.dygraph.base import to_variable
 from paddle.fluid import framework
-
 
 logging.root.handlers = []
 FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
@@ -45,17 +42,9 @@ logger = logging.getLogger(__name__)
 def parse_args():
     """parse"""
     parser = argparse.ArgumentParser("M3D-RPN train script")
+    parser.add_argument("--conf_path", type=str, default='', help="config.pkl")
     parser.add_argument(
-        "--conf_path",
-        type=str,
-        default='',
-        help="config.pkl"
-    )
-    parser.add_argument(
-        '--weights_path',
-        type=str,
-        default='',
-        help='weights save path')
+        '--weights_path', type=str, default='', help='weights save path')
 
     parser.add_argument(
         '--backbone',
@@ -64,10 +53,7 @@ def parse_args():
         help='backbone model to train, default DenseNet121')
 
     parser.add_argument(
-        '--data_dir',
-        type=str,
-        default='dataset',
-        help='dataset directory')
+        '--data_dir', type=str, default='dataset', help='dataset directory')
 
     args = parser.parse_args()
     return args
@@ -96,13 +82,12 @@ def test():
         train_model.phase = "eval"
         Already_trained, _ = fluid.load_dygraph(args.weights_path)
         print("loaded model from ", args.weights_path)
-        train_model.set_dict(Already_trained)#, use_structured_name=True)
+        train_model.set_dict(Already_trained)  #, use_structured_name=True)
         print("start evaluation...")
-        test_kitti_3d(conf.dataset_test, train_model, conf, results_path, args.data_dir)
+        test_kitti_3d(conf.dataset_test, train_model, conf, results_path,
+                      args.data_dir)
     print("Evaluation Finished!")
 
 
 if __name__ == '__main__':
     test()
-
-   

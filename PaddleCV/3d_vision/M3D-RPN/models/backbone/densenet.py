@@ -3,10 +3,8 @@ from __future__ import print_function
 
 import paddle.fluid as fluid
 
-
 from paddle.fluid.dygraph.container import Sequential
 from paddle.fluid.dygraph.nn import Conv2D, Pool2D, BatchNorm, Linear
-
 
 
 def _bn_function_factory(norm, conv):
@@ -17,18 +15,37 @@ def _bn_function_factory(norm, conv):
 
     return bn_function
 
+
 class _DenseLayer_rpn(fluid.dygraph.Layer):
-    def __init__(self, num_input_features, growth_rate, bn_size, drop_rate, memory_efficient=False):
+    def __init__(self,
+                 num_input_features,
+                 growth_rate,
+                 bn_size,
+                 drop_rate,
+                 memory_efficient=False):
         super(_DenseLayer_rpn, self).__init__()
         self.add_sublayer('norm1', BatchNorm(num_input_features, act='relu'))
-        self.add_sublayer('conv1', Conv2D(num_input_features, bn_size * growth_rate,
-                                             filter_size=1, stride=1, bias_attr=False))
+        self.add_sublayer(
+            'conv1',
+            Conv2D(
+                num_input_features,
+                bn_size * growth_rate,
+                filter_size=1,
+                stride=1,
+                bias_attr=False))
         self.add_sublayer('norm2', BatchNorm(bn_size * growth_rate, act='relu'))
-        self.add_sublayer('conv2', Conv2D(bn_size * growth_rate, growth_rate,
-                                             filter_size=3, dilation=2, stride=1, padding=2, bias_attr=False)) # for m3d-rpn
+        self.add_sublayer(
+            'conv2',
+            Conv2D(
+                bn_size * growth_rate,
+                growth_rate,
+                filter_size=3,
+                dilation=2,
+                stride=1,
+                padding=2,
+                bias_attr=False))  # for m3d-rpn
         self.drop_rate = float(drop_rate)
         self.memory_efficient = memory_efficient
-        
 
     def forward(self, *prev_features):
         bn_function = _bn_function_factory(self.norm1, self.conv1)
@@ -40,7 +57,13 @@ class _DenseLayer_rpn(fluid.dygraph.Layer):
 
 
 class _DenseBlock_rpn(fluid.dygraph.Layer):
-    def __init__(self, num_layers, num_input_features, bn_size, growth_rate, drop_rate, memory_efficient=False):
+    def __init__(self,
+                 num_layers,
+                 num_input_features,
+                 bn_size,
+                 growth_rate,
+                 drop_rate,
+                 memory_efficient=False):
         super(_DenseBlock_rpn, self).__init__()
         self.res_out_list = []
         for i in range(num_layers):
@@ -49,8 +72,7 @@ class _DenseBlock_rpn(fluid.dygraph.Layer):
                 growth_rate=growth_rate,
                 bn_size=bn_size,
                 drop_rate=drop_rate,
-                memory_efficient=memory_efficient,
-            )
+                memory_efficient=memory_efficient, )
             res_out = self.add_sublayer('denselayer%d' % (i + 1), layer)
             self.res_out_list.append(res_out)
 
@@ -62,19 +84,35 @@ class _DenseBlock_rpn(fluid.dygraph.Layer):
         return fluid.layers.concat(features, axis=1)
 
 
-    
 class _DenseLayer(fluid.dygraph.Layer):
-    def __init__(self, num_input_features, growth_rate, bn_size, drop_rate, memory_efficient=False):
+    def __init__(self,
+                 num_input_features,
+                 growth_rate,
+                 bn_size,
+                 drop_rate,
+                 memory_efficient=False):
         super(_DenseLayer, self).__init__()
         self.add_sublayer('norm1', BatchNorm(num_input_features, act='relu'))
-        self.add_sublayer('conv1', Conv2D(num_input_features, bn_size * growth_rate,
-                                             filter_size=1, stride=1, bias_attr=False))
+        self.add_sublayer(
+            'conv1',
+            Conv2D(
+                num_input_features,
+                bn_size * growth_rate,
+                filter_size=1,
+                stride=1,
+                bias_attr=False))
         self.add_sublayer('norm2', BatchNorm(bn_size * growth_rate, act='relu'))
-        self.add_sublayer('conv2', Conv2D(bn_size * growth_rate, growth_rate,
-                                             filter_size=3, stride=1, padding=1, bias_attr=False))
+        self.add_sublayer(
+            'conv2',
+            Conv2D(
+                bn_size * growth_rate,
+                growth_rate,
+                filter_size=3,
+                stride=1,
+                padding=1,
+                bias_attr=False))
         self.drop_rate = float(drop_rate)
         self.memory_efficient = memory_efficient
-        
 
     def forward(self, *prev_features):
         bn_function = _bn_function_factory(self.norm1, self.conv1)
@@ -86,7 +124,13 @@ class _DenseLayer(fluid.dygraph.Layer):
 
 
 class _DenseBlock(fluid.dygraph.Layer):
-    def __init__(self, num_layers, num_input_features, bn_size, growth_rate, drop_rate, memory_efficient=False):
+    def __init__(self,
+                 num_layers,
+                 num_input_features,
+                 bn_size,
+                 growth_rate,
+                 drop_rate,
+                 memory_efficient=False):
         super(_DenseBlock, self).__init__()
         self.res_out_list = []
         for i in range(num_layers):
@@ -95,8 +139,7 @@ class _DenseBlock(fluid.dygraph.Layer):
                 growth_rate=growth_rate,
                 bn_size=bn_size,
                 drop_rate=drop_rate,
-                memory_efficient=memory_efficient,
-            )
+                memory_efficient=memory_efficient, )
             res_out = self.add_sublayer('denselayer%d' % (i + 1), layer)
             self.res_out_list.append(res_out)
 
@@ -112,8 +155,17 @@ class _Transition(Sequential):
     def __init__(self, num_input_features, num_output_features):
         super(_Transition, self).__init__()
         self.add_sublayer('norm', BatchNorm(num_input_features, act='relu'))
-        self.add_sublayer('conv', Conv2D(num_input_features, num_output_features, filter_size=1, stride=1, bias_attr=False))
-        self.add_sublayer('pool', Pool2D(pool_size=2, pool_stride=2, pool_type='avg'))
+        self.add_sublayer(
+            'conv',
+            Conv2D(
+                num_input_features,
+                num_output_features,
+                filter_size=1,
+                stride=1,
+                bias_attr=False))
+        self.add_sublayer(
+            'pool', Pool2D(
+                pool_size=2, pool_stride=2, pool_type='avg'))
 
 
 class DenseNet(fluid.dygraph.Layer):
@@ -121,15 +173,29 @@ class DenseNet(fluid.dygraph.Layer):
 
     """
 
-    def __init__(self, growth_rate=32, block_config=(6, 12, 24, 16),
-                 num_init_features=64, bn_size=4, drop_rate=0, num_classes=1000, memory_efficient=False):
+    def __init__(self,
+                 growth_rate=32,
+                 block_config=(6, 12, 24, 16),
+                 num_init_features=64,
+                 bn_size=4,
+                 drop_rate=0,
+                 num_classes=1000,
+                 memory_efficient=False):
         super(DenseNet, self).__init__()
 
         self.features = Sequential(
-            ('conv0', Conv2D(3, num_init_features, filter_size=7, stride=2, padding=3, bias_attr=False)),
-            ('norm0', BatchNorm(num_init_features, act='relu')),
-            ('pool0', Pool2D(pool_size=3, pool_stride=2, pool_padding=1, pool_type='max'))
-        )
+            ('conv0', Conv2D(
+                3,
+                num_init_features,
+                filter_size=7,
+                stride=2,
+                padding=3,
+                bias_attr=False)), ('norm0', BatchNorm(
+                    num_init_features, act='relu')), ('pool0', Pool2D(
+                        pool_size=3,
+                        pool_stride=2,
+                        pool_padding=1,
+                        pool_type='max')))
 
         # Each denseblock
         num_features = num_init_features
@@ -141,8 +207,7 @@ class DenseNet(fluid.dygraph.Layer):
                     bn_size=bn_size,
                     growth_rate=growth_rate,
                     drop_rate=drop_rate,
-                    memory_efficient=memory_efficient
-                )
+                    memory_efficient=memory_efficient)
 
                 self.features.add_sublayer('denseblock%d' % (i + 1), block)
                 num_features = num_features + num_layers * growth_rate
@@ -153,14 +218,14 @@ class DenseNet(fluid.dygraph.Layer):
                     bn_size=bn_size,
                     growth_rate=growth_rate,
                     drop_rate=drop_rate,
-                    memory_efficient=memory_efficient
-                )
-                
+                    memory_efficient=memory_efficient)
+
                 self.features.add_sublayer('denseblock%d' % (i + 1), block)
                 num_features = num_features + num_layers * growth_rate
             if i != len(block_config) - 1:
-                trans = _Transition(num_input_features=num_features,
-                                    num_output_features=num_features // 2)
+                trans = _Transition(
+                    num_input_features=num_features,
+                    num_output_features=num_features // 2)
                 self.features.add_sublayer('transition%d' % (i + 1), trans)
                 num_features = num_features // 2
 
@@ -177,15 +242,13 @@ class DenseNet(fluid.dygraph.Layer):
         features = self.features(x)
         out = fluid.layers.relu(features)
         out = fluid.layers.adaptive_pool2d(
-                  input=out,
-                  pool_size=[1, 1],
-                  pool_type='avg')
+            input=out, pool_size=[1, 1], pool_type='avg')
         out = fluid.layers.flatten(out, 1)
         out = self.classifier(out)
         return out
 
 
-def _densenet(arch, growth_rate, block_config, num_init_features,  **kwargs):
+def _densenet(arch, growth_rate, block_config, num_init_features, **kwargs):
     model = DenseNet(growth_rate, block_config, num_init_features, **kwargs)
     return model
 
@@ -204,8 +267,3 @@ def densenet169(**kwargs):
 
 def densenet201(**kwargs):
     return _densenet('densenet201', 32, (6, 12, 48, 32), 64, **kwargs)
-
-
-
-
-

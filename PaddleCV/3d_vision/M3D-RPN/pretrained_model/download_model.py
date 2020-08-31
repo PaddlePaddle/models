@@ -24,6 +24,7 @@ lasttime = time.time()
 LOCAL_PATH = os.path.dirname(os.path.abspath(__file__))
 FLUSH_INTERVAL = 0.1
 
+
 def progress(str, end=False):
     global lasttime
     if end:
@@ -34,7 +35,7 @@ def progress(str, end=False):
         lasttime = time.time()
         sys.stdout.flush()
 
-        
+
 def _download_file(url, savepath, print_progress):
     r = requests.get(url, stream=True)
     total_length = r.headers.get('content-length')
@@ -59,6 +60,7 @@ def _download_file(url, savepath, print_progress):
         if print_progress:
             progress("[%-50s] %.2f%%" % ('=' * 50, 100), end=True)
 
+
 def _uncompress_file(filepath, extrapath, delete_file, print_progress):
     if print_progress:
         print("Uncompress %s" % os.path.basename(filepath))
@@ -73,8 +75,8 @@ def _uncompress_file(filepath, extrapath, delete_file, print_progress):
     for total_num, index, rootpath in handler(filepath, extrapath):
         if print_progress:
             done = int(50 * float(index) / total_num)
-            progress(
-                "[%-50s] %.2f%%" % ('=' * done, float(100 * index) / total_num))
+            progress("[%-50s] %.2f%%" %
+                     ('=' * done, float(100 * index) / total_num))
     if print_progress:
         progress("[%-50s] %.2f%%" % ('=' * 50, 100), end=True)
 
@@ -82,6 +84,7 @@ def _uncompress_file(filepath, extrapath, delete_file, print_progress):
         os.remove(filepath)
 
     return rootpath
+
 
 def _uncompress_file_zip(filepath, extrapath):
     files = zipfile.ZipFile(filepath, 'r')
@@ -94,6 +97,7 @@ def _uncompress_file_zip(filepath, extrapath):
     files.close()
     yield total_num, index, rootpath
 
+
 def _uncompress_file_tar(filepath, extrapath, mode="r:gz"):
     files = tarfile.open(filepath, mode)
     filelist = files.getnames()
@@ -104,6 +108,7 @@ def _uncompress_file_tar(filepath, extrapath, mode="r:gz"):
         yield total_num, index, rootpath
     files.close()
     yield total_num, index, rootpath
+
 
 def download_file_and_uncompress(url,
                                  savepath=None,
@@ -122,8 +127,8 @@ def download_file_and_uncompress(url,
     savepath = os.path.join(savepath, savename)
     savename = ".".join(savename.split(".")[:-1])
     savename = os.path.join(extrapath, savename)
-    extraname = savename if extraname is None else os.path.join(
-        extrapath, extraname)
+    extraname = savename if extraname is None else os.path.join(extrapath,
+                                                                extraname)
 
     if cover:
         if os.path.exists(savepath):
@@ -142,11 +147,12 @@ def download_file_and_uncompress(url,
             savename = os.path.join(extrapath, savename)
         shutil.move(savename, extraname)
 
+
 model_urls = {
     "densenet121":
     "https://paddle-imagenet-models-name.bj.bcebos.com/DenseNet121_pretrained.tar",
     "resnet101":
-    "http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.tar",   
+    "http://paddle-imagenet-models-name.bj.bcebos.com/ResNet101_pretrained.tar",
 }
 
 if __name__ == "__main__":
