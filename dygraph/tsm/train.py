@@ -88,11 +88,11 @@ def parse_args():
         default='tsm',
         help='default model path pre is tsm.')
     parser.add_argument(
-        '--resnet50_dir',
+        '--weights',
         type=str,
         default='./ResNet50_pretrained/',
-        help='default resnet50 dir is ./ResNet50_pretrained/.')
-
+        help='default weights is ./ResNet50_pretrained/.')
+ 
     args = parser.parse_args()
     return args
 
@@ -160,6 +160,8 @@ def train(args):
     valid_config = merge_configs(config, 'valid', vars(args))
     print_configs(train_config, 'Train')
 
+    local_rank = fluid.dygraph.parallel.Env().local_rank
+
     use_data_parallel = args.use_data_parallel
     trainer_count = fluid.dygraph.parallel.Env().nranks
     if not args.use_gpu:
@@ -170,16 +172,16 @@ def train(args):
         #(data_parallel step1/6)
         place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
 
-    #load resnet50 pretrain
-    pre_state_dict = fluid.load_program_state(args.resnet50_dir)
-    for key in pre_state_dict.keys():
-        print('pre_state_dict.key: {}'.format(key))
+    #load pretrain
+    pre_state_dict = fluid.load_program_state(args.weights)
+    #for key in pre_state_dict.keys():
+    #    print('pre_state_dict.key: {}'.format(key))
 
     with fluid.dygraph.guard(place):
         #1. init model
         video_model = TSM_ResNet("TSM", train_config)
 
-        #2. set resnet50 backbone weights
+        #2. set weights
         param_state_dict = {}
         model_dict = video_model.state_dict()
         for key in model_dict.keys():
@@ -305,11 +307,7 @@ def train(args):
                        current_step_lr))
 
             # 6.2 save checkpoint 
-            save_parameters = (not use_data_parallel) or (
-                use_data_parallel and
-                fluid.dygraph.parallel.Env().local_rank == 0
-            )  #(data_parallel step6/6)
-            if save_parameters:
+            if local_rank == 0:
                 if not os.path.isdir(args.model_save_dir):
                     os.makedirs(args.model_save_dir)
                 model_path = os.path.join(
@@ -325,10 +323,7 @@ def train(args):
             val(epoch, video_model, valid_config, args)
 
         # 7. save final model
-        save_parameters = (not args.use_data_parallel) or (
-            args.use_data_parallel and
-            fluid.dygraph.parallel.Env().local_rank == 0)
-        if save_parameters:
+        if local_rank == 0:
             model_path = os.path.join(args.model_save_dir,
                                       args.model_path_pre + "_final")
             fluid.dygraph.save_dygraph(video_model.state_dict(), model_path)
