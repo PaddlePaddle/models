@@ -62,6 +62,5 @@ sh run_ucf101.sh
 |Top-1|Top-5|pretrain|
 |:-:|:-:|:-:|
 |84.37%|95.68%|ImageNet|
-|:-:|:-:|:-:|
 |94.54%|98.96%|Kinetics-400|
 
