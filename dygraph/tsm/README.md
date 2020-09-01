@@ -44,6 +44,9 @@ ucf101_reader.py文件中的ucf101_root设置为ucf101数据集目录，其中�
 数据准备完毕后，可以通过如下方式启动训练.  
 
 - 从头开始训练
+sh run_ucf101.sh
+
+- 基于imagenet pretrain的resnet backbone参数进行训练:
 
 1. 需要加载在ImageNet上训练的ResNet50权重作为初始化参数，wget https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz, 并解压
 2. 通过--weights=./ResNet50_pretrained/启动训练: sh run_ucf101_imagenet.sh
