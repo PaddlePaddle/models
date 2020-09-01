@@ -6,16 +6,16 @@
 ## 内容
 
 - [模型简介](#模型简介)
+- [安装说明](#安装说明)
 - [数据准备](#数据准备)
 - [模型训练](#模型训练)
-- [模型评估](#模型评估)
 
 
 ## 模型简介
 
 Temporal Shift Module是由MIT和IBM Watson AI Lab的Ji Lin，Chuang Gan和Song Han等人提出的通过时间位移来提高网络视频理解能力的模块, 详细内容请参考论文[Temporal Shift Module for Efficient Video Understanding](https://arxiv.org/abs/1811.08383v1)
 
-## 安装
+## 安装说明
 
 1. 在当前模型库运行样例代码需要PaddlePaddle v.2.0.0或以上的版本。如果你的运行环境中的PaddlePaddle低于此版本，请根据[安装文档](http://www.paddlepaddle.org/documentation/docs/zh/1.6/beginners_guide/install/index_cn.html)中的说明来更新PaddlePaddle。
 2. 下载模型repo: git clone https://github.com/PaddlePaddle/models 
