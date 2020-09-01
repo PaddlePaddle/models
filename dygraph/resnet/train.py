@@ -130,6 +130,11 @@ def parse_args():
         type=float,
         default=[0.229, 0.224, 0.225],
         help="The std of input image data")
+    parser.add_argument(
+        '--use_gpu',
+        type=ast.literal_eval,
+        default=True,
+        help='default use gpu.')
 
     args = parser.parse_args()
     return args
@@ -354,8 +359,14 @@ def eval(model, data):
 
 def train_resnet():
     epoch = args.epoch
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+    elif not args.use_data_parallel:
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
+
     with fluid.dygraph.guard(place):
         if args.ce:
             print("ce mode")
