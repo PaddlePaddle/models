@@ -173,6 +173,8 @@ def train(args):
         place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
 
     #load pretrain
+    assert os.path.exists(args.weights), \
+        "Given dir {} not exist.".format(args.weights)
     pre_state_dict = fluid.load_program_state(args.weights)
     #for key in pre_state_dict.keys():
     #    print('pre_state_dict.key: {}'.format(key))

@@ -34,9 +34,9 @@ Temporal Shift Module是由MIT和IBM Watson AI Lab的Ji Lin，Chuang Gan和Song 
 TSM的训练数据采用UCF101行为识别数据集,包含101个行为类别。
 ucf101_reader.py文件中的ucf101_root设置为ucf101数据集目录，其中的videos、rawframes分别为视频格式和帧图格式，大小分别为6.8G、56G。
 准备数据步骤：
-1. 下载官方ucf101数据: wget https://www.crcv.ucf.edu/data/UCF101/UCF101.rar
-2. 提取视频frames文件(TODO)
-3. 生成video文件路径list文件(TODO)
+1. 下载官方ucf101数据: wget https://www.crcv.ucf.edu/data/UCF101/UCF101.rar, 解压存放到$ucf101_root/videos
+2. 提取视频frames文件(TODO),存放到$ucf101_root/frames
+3. 生成video文件路径list文件(步骤TODO),存放到./data/dataset/ucf101/
 
 
 ## 模型训练
