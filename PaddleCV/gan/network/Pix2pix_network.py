@@ -335,7 +335,7 @@ def Unet_block(inputunet,
             use_bias=use_bias)
 
         if use_dropout:
-            upnorm = fluid.layers.dropout(upnorm, dropout_prob=0.5)
+            updeconv = fluid.layers.dropout(updeconv, dropout_prob=0.5)
         return fluid.layers.concat([inputunet, updeconv], 1)
 
 
