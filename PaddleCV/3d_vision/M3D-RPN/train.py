@@ -1,4 +1,4 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -98,10 +98,6 @@ def train():
     """main train"""
     args = parse_args()
 
-    #print_arguments(args)
-    # check whether the installed paddle is compiled with GPU
-    #check_gpu(args.use_gpu)
-
     if not os.path.isdir(args.save_dir):
         os.makedirs(args.save_dir)
 
@@ -167,9 +163,6 @@ def train():
 
             for batch_id, data in enumerate(train_reader()):
 
-                #NOTE: used in benchmark
-                # if args.max_iter and total_batch_num == args.max_iter:
-                #     return
                 batch_start = time.time()
 
                 images = np.array([x[0].reshape(3, 512, 1760)
@@ -228,7 +221,6 @@ def train():
                     tracker = edict()
 
                 # snapshot, do_test 
-
                 if iteration % conf.snapshot_iter == 0 and iteration > start_iter:
                     fluid.save_dygraph(
                         train_model.state_dict(),

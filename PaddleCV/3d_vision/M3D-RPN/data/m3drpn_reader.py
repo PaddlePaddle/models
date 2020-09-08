@@ -112,7 +112,6 @@ class M3drpnReader(object):
 
                     gts = read_kitti_label(annpath, p2, self.use_3d_for_2d)
 
-                    # obj = {}#每个object
                     obj = edict()
                     # store gts
                     obj.id = id
@@ -132,22 +131,7 @@ class M3drpnReader(object):
                     obj.dbname = db.name
                     obj.scale = db.scale
                     obj.dbind = dbind
-
-                    # obj['id'] = id
-                    # obj['gts'] = gts
-                    # obj['p2'] = p2
-                    # obj['p2_inv'] = p2_inv
                     obj.affine_gt = None  # did not compute transformer
-                    # # im properties
-                    # im = Image.open(impath)
-                    # obj['path'] = impath
-                    # obj['path_pre'] = impath_pre
-                    # obj['path_pre2'] = impath_pre2
-                    # obj['path_pre3'] = impath_pre3
-                    # obj['imW'], obj['imH'] = im.size
-                    # obj['dbname'] = db.name
-                    # obj['scale'] = db.scale
-                    # obj['dbind'] = dbind
 
                     # store
                     imdb_single_db.append(obj)
@@ -157,20 +141,6 @@ class M3drpnReader(object):
                                                         len(annlist))
                         logging.info('{}/{}, dt: {:0.4f}, eta: {}'.format(
                             annind, len(annlist), dt, time_str))
-
-            # concatenate single imdb into full imdb
-            '''
-            imdb += imdb_single_db
-
-        self.data = {}
-        self.data['train'] = {}
-        self.data['train']['imgs'] = points[train_idxs, ...]
-        self.data['train']['labels'] = labels[train_idxs, ...]
-        self.data['test'] = {}
-        self.data['test']['points'] = points[test_idxs, ...]
-        self.data['test']['labels'] = labels[test_idxs, ...]
-        logger.info("Load data finished")
-        '''
         self.data = {}
         self.data['train'] = imdb_single_db
         self.data['test'] = {}
@@ -243,7 +213,6 @@ class M3drpnReader(object):
         assert mode in ['train', 'test'], \
             "mode can only be 'train' or 'test'"
         imgs = self.data[mode]
-        # labels = data['labels']
 
         idxs = np.arange(len(imgs))
 
@@ -253,13 +222,10 @@ class M3drpnReader(object):
         if mode == 'train' and shuffle:
             np.random.shuffle(idxs)
 
-        # imgs = imgs[idxs]
-
         def reader():
             """reader"""
             batch_out = []
 
-            # imgs_idxs = np.arange(imgs)
             for ind in idxs:
                 augmented_img, im_obj = self._augmented_single(ind)
                 batch_out.append([augmented_img, im_obj])
@@ -354,8 +320,6 @@ def balance_samples(conf, imdb):
         if not (conf.fg_image_ratio == 2):
             fg_weight = 1
             bg_weight = 0
-            # fg_weight = len(imdb) * conf.fg_image_ratio / len(valid_inds)
-            # bg_weight = len(imdb) * (1 - conf.fg_image_ratio) / len(empty_inds)
             sample_weights[valid_inds] = fg_weight
             sample_weights[empty_inds] = bg_weight
 

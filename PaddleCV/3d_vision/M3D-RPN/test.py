@@ -1,4 +1,4 @@
-#  Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#  Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 #Licensed under the Apache License, Version 2.0 (the "License");
 #you may not use this file except in compliance with the License.
@@ -69,9 +69,6 @@ def test():
     results_path = os.path.join('output', 'tmp_results', 'data')
     # make directory
     mkdir_if_missing(results_path, delete_if_exist=True)
-
-    #print_arguments(args)
-    #print(pretty_print('conf', conf))
 
     with fluid.dygraph.guard(fluid.CUDAPlace(0)):
         # training network

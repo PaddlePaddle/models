@@ -1,7 +1,20 @@
+#  Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+"""loss"""
 import sys
 from functools import reduce
 
-# stop python from writing so much bytecode
 sys.dont_write_bytecode = True
 
 # -----------------------------------------
@@ -82,9 +95,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
         bbox_x3d_proj = np.zeros(bbox_x3d.shape)
         bbox_y3d_proj = np.zeros(bbox_x3d.shape)
         bbox_z3d_proj = np.zeros(bbox_x3d.shape)
-        #bbox_x3d_proj = to_variable(bbox_x3d_proj)
-        #bbox_y3d_proj = to_variable(bbox_y3d_proj)
-        #bbox_z3d_proj = to_variable(bbox_z3d_proj)
 
         labels = np.zeros(cls.shape[0:2])
         labels_weight = np.zeros(cls.shape[0:2])
@@ -111,13 +121,9 @@ class RPN_3D_loss(fluid.dygraph.Layer):
         bbox_weights = np.zeros(cls.shape[0:2])
 
         ious_2d = np.zeros(cls.shape[0:2])
-        #ious_2d = to_variable(ious_2d)
         ious_3d = np.zeros(cls.shape[0:2])
-        #ious_3d = to_variable(ious_3d) 
         coords_abs_z = np.zeros(cls.shape[0:2])
-        #coords_abs_z = to_variable(coords_abs_z)
         coords_abs_ry = np.zeros(cls.shape[0:2])
-        #coords_abs_ry = to_variable(coords_abs_ry)
 
         # get all rois
         # rois' type now is nparray
@@ -211,8 +217,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
                 [clsName2Ind(self.lbls, cls) for cls in box_lbls])
 
             if gts_val.shape[0] > 0 or gts_ign.shape[0] > 0:
-
-                #rois = rois.cpu()
 
                 # bbox regression
                 transforms, ols, raw_gt = compute_targets(
@@ -352,7 +356,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
                     means = self.bbox_means[0, :]
                     stds = self.bbox_stds[0, :]
 
-                    #rois = rois.cuda()
                     #variable
                     coords_2d = bbox_transform_inv(
                         rois, deltas_2d, means=means, stds=stds)
@@ -360,8 +363,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
                         rois, deltas_2d_tar, means=means, stds=stds)
 
                     #vaiable
-                    #coords_2d_fg = fluid.layers.gather(coords_2d, to_variable(fg_inds))
-                    #coords_2d_tar_fg = fluid.layers.gather(coords_2d_tar, to_variable(fg_inds))
                     ious_2d_var = iou(coords_2d, coords_2d_tar, mode='list')
                     ious_2d_var_shape = ious_2d_var.shape
                     ious_2d_fg_mask = np.zeros(ious_2d_var_shape).astype(
@@ -411,9 +412,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
                     bbox_x3d_proj[bind, fg_inds] = coords_3d[0, :].numpy()
                     bbox_y3d_proj[bind, fg_inds] = coords_3d[1, :].numpy()
                     bbox_z3d_proj[bind, fg_inds] = coords_3d[2, :].numpy()
-                    #bbox_x3d_proj = to_variable(bbox_x3d_proj)
-                    #bbox_y3d_proj = to_variable(bbox_y3d_proj)
-                    #bbox_z3d_proj = to_variable(bbox_z3d_proj)
 
                     # absolute targets
                     bbox_z3d_dn_tar = bbox_z3d_tar[
@@ -591,8 +589,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
         if self.cls_2d_lambda:
 
             # cls loss
-            # active = labels_weight > 0
-
             if np.any(active):
                 labels_active = fluid.layers.reshape(
                     labels_active, shape=[-1, 1])
@@ -625,8 +621,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
 
         if np.sum(bbox_weights) > 0:
 
-            #bbox_weights = fluid.layers.reshape(bbox_weights, shape=[1,-1])
-            #bbox_weights.stop_gradient = True
             bbox_total_nums = np.product(bbox_weights.shape)
             bbox_weights = bbox_weights.view().astype('float32')
             bbox_weights.shape = bbox_total_nums
@@ -668,7 +662,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
                 bbox_h_tar_active = to_variable(bbox_h_tar_active)
                 bbox_h_tar_active.stop_gradient = True
 
-                #bbox_x = fluid.layers.unsqueeze(bbox_x[:,:], axis=2) 
                 bbox_x = fluid.layers.reshape(bbox_x, shape=[-1])
                 bbox_x_active = fluid.layers.gather(bbox_x, active_index_var)
                 bbox_x_active = fluid.layers.unsqueeze(bbox_x_active, axes=0)
@@ -705,7 +698,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
                 bbox_2d_loss = (
                     loss_bbox_x + loss_bbox_y + loss_bbox_w + loss_bbox_h
                 ) / active_len
-                #bbox_2d_loss = fluid.layers.mean(bbox_2d_loss)
                 bbox_2d_loss *= self.bbox_2d_lambda
 
                 loss += bbox_2d_loss
@@ -836,7 +828,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
                 bbox_3d_loss += (loss_bbox_w3d + loss_bbox_h3d + loss_bbox_l3d +
                                  loss_bbox_ry3d)
                 bbox_3d_loss = bbox_3d_loss / active_len
-                #bbox_3d_loss = fluid.layers.mean(bbox_3d_loss)
 
                 bbox_3d_loss *= self.bbox_3d_lambda
                 bbox_3d_loss = bbox_3d_loss
@@ -903,7 +894,6 @@ class RPN_3D_loss(fluid.dygraph.Layer):
                     loss_bbox_x3d_proj + loss_bbox_y3d_proj + loss_bbox_z3d_proj
                 )
                 bbox_3d_proj_loss = bbox_3d_proj_loss / active_len
-                #bbox_3d_proj_loss = fluid.layers.mean(bbox_3d_proj_loss)
 
                 bbox_3d_proj_loss *= self.bbox_3d_proj_lambda
 
@@ -944,10 +934,7 @@ class RPN_3D_loss(fluid.dygraph.Layer):
 
             ious_2d = fluid.layers.concat(ious_2d_var_list, axis=0)
             ious_2d = fluid.layers.reshape(ious_2d, shape=[-1])
-            #ious_2d = ious_2d.view().astype('float32')
-            #ious_2d.shape = np.product(ious_2d.shape)
-            #ious_2d_active = ious_2d[active]
-            #ious_2d_active = to_variable(ious_2d_active)
+
             ious_2d_active = fluid.layers.gather(ious_2d, active_index_var)
             ious_2d_mean = fluid.layers.mean(ious_2d_active)
             stats.append({

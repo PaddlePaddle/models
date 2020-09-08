@@ -1,4 +1,6 @@
 """
+This code is based on https://github.com/garrickbrazil/M3D-RPN/blob/master/lib/util.py
+
 This file is meant to contain generic utility functions
 which can be easily re-used in any project, and are not
 specific to any project or framework (except python!).
@@ -19,9 +21,7 @@ import shutil
 import math
 import copy
 import cv2
-# from scipy.spatial.transform import Rotation as scipy_R
 from mpl_toolkits.mplot3d import Axes3D
-# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from PIL import Image
 
 
@@ -71,7 +71,6 @@ def pretty_print(name, input, val_width=40, key_width=0):
         val_str = str(val)
         if len(val_str) > val_width:
             val_str = pprint.pformat(val, width=val_width)
-            # val_str = pprint.pformat(val, width=val_width, compact=True)#Orig Version
             val_str = val_str.replace('\n', '\n{tab}')
             tab = ('{0:' + str(4 + key_width) + '}').format('')
             val_str = val_str.replace('{tab}', tab)
@@ -648,7 +647,6 @@ def convertAlpha2Rot(alpha, z3d, x3d):
 	"""
 
     ry3d = alpha + math.atan2(-z3d, x3d) + 0.5 * math.pi
-    # ry3d = alpha + math.atan2(x3d, z3d)# + 0.5 * math.pi
 
     while ry3d > math.pi:
         ry3d -= math.pi * 2
@@ -664,7 +662,6 @@ def convertRot2Alpha(ry3d, z3d, x3d):
 	"""
 
     alpha = ry3d - math.atan2(-z3d, x3d) - 0.5 * math.pi
-    # alpha = ry3d - math.atan2(x3d, z3d)# - 0.5 * math.pi
 
     while alpha > math.pi:
         alpha -= math.pi * 2

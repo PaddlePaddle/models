@@ -1,5 +1,7 @@
 """
-This file contains all PyTroch data augmentation functions.
+This code is based on https://github.com/garrickbrazil/M3D-RPN/blob/master/lib/augmentations.py
+
+This file contains all data augmentation functions.
 
 Every transform should have a __call__ function which takes in (self, image, imobj)
 where imobj is an arbitary dict containing relevant information to the image.
@@ -16,7 +18,6 @@ import cv2
 import math
 import os
 import sys
-#import util
 import lib.util as util
 
 

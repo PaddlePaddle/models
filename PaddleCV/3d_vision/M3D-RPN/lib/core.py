@@ -1,4 +1,5 @@
 """
+This code is based on https://github.com/garrickbrazil/M3D-RPN/blob/master/lib/core.py
 This file is meant to contain all functions of the detective framework
 which are "specific" to the framework but generic among experiments.
 
@@ -221,37 +222,6 @@ def intersect(box_a, box_b, mode='combinations', data_type=None):
         raise ValueError('unknown mode {}'.format(mode))
 
 
-# def iou3d(corners_3d_b1, corners_3d_b2, vol):
-
-#     corners_3d_b1 = copy.copy(corners_3d_b1)
-#     corners_3d_b2 = copy.copy(corners_3d_b2)
-
-#     corners_3d_b1 = corners_3d_b1.T
-#     corners_3d_b2 = corners_3d_b2.T
-
-#     y_min_b1 = np.min(corners_3d_b1[:, 1])
-#     y_max_b1 = np.max(corners_3d_b1[:, 1])
-#     y_min_b2 = np.min(corners_3d_b2[:, 1])
-#     y_max_b2 = np.max(corners_3d_b2[:, 1])
-#     y_intersect = np.max([0, np.min([y_max_b1, y_max_b2]) - np.max([y_min_b1, y_min_b2])])
-
-#     # set Z as Y
-#     corners_3d_b1[:, 1] = corners_3d_b1[:, 2]
-#     corners_3d_b2[:, 1] = corners_3d_b2[:, 2]
-
-#     polygon_order = [7, 2, 3, 6, 7]
-#     box_b1_bev = Polygon([list(corners_3d_b1[i][0:2]) for i in polygon_order])
-#     box_b2_bev = Polygon([list(corners_3d_b2[i][0:2]) for i in polygon_order])
-
-#     intersect_bev = box_b2_bev.intersection(box_b1_bev).area
-#     intersect_3d = y_intersect * intersect_bev
-
-#     iou_bev = intersect_bev / (box_b2_bev.area + box_b1_bev.area - intersect_bev)
-#     iou_3d = intersect_3d / (vol - intersect_3d)
-
-#     return iou_bev, iou_3d
-
-
 def iou(box_a, box_b, mode='combinations', data_type=None):
     """
     Computes the amount of Intersection over Union (IoU) between two different sets of boxes.
@@ -275,10 +245,6 @@ def iou(box_a, box_b, mode='combinations', data_type=None):
         area_a = ((box_a[:, 2] - box_a[:, 0]) * (box_a[:, 3] - box_a[:, 1]))
         area_b = ((box_b[:, 2] - box_b[:, 0]) * (box_b[:, 3] - box_b[:, 1]))
         union = np.expand_dims(area_a, 0) + np.expand_dims(area_b, 1) - inter
-
-        # torch.Tensor
-        # if data_type == torch.Tensor:
-        #     return (inter / union).permute(1, 0)
 
         # np.ndarray
         if data_type == np.ndarray:
@@ -339,39 +305,6 @@ def iou_ign(box_a, box_b, mode='combinations', data_type=None):
 
     else:
         raise ValueError('unknown mode {}'.format(mode))
-
-
-# def freeze_layers(network, blacklist=None, whitelist=None, verbose=False):
-
-#     if blacklist is not None:
-
-#         for name, param in network.named_parameters():
-
-#             if not any([allowed in name for allowed in blacklist]):
-#                 if verbose:
-#                     logging.info('freezing {}'.format(name))
-#                 param.requires_grad = False
-
-#         for name, module in network.named_modules():
-#             if not any([allowed in name for allowed in blacklist]):
-#                 if isinstance(module, torch.nn.BatchNorm2d):
-#                     module.eval()
-
-#     if whitelist is not None:
-
-#         for name, param in network.named_parameters():
-
-#             if any([banned in name for banned in whitelist]):
-#                 if verbose:
-#                     logging.info('freezing {}'.format(name))
-#                 param.requires_grad = False
-#             #else:
-#             #    logging.info('NOT freezing {}'.format(name))
-
-#         for name, module in network.named_modules():
-#             if any([banned in name for banned in whitelist]):
-#                 if isinstance(module, torch.nn.BatchNorm2d):
-#                     module.eval()
 
 
 def to_int(string, dest="I"):
@@ -601,30 +534,6 @@ def compute_stats(tracker, stats):
             tracker[id + '_obj'] = stat
 
 
-# def next_iteration(loader, iterator):
-#     """
-#     Loads the next iteration of 'iterator' OR makes a new epoch using 'loader'.
-
-#     Args:
-#         loader (object): PyTorch DataLoader object
-#         iterator (object): python in-built iter(loader) object
-#     """
-
-#     # create if none
-#     if iterator == None: iterator = iter(loader)
-
-#     # next batch
-#     try:
-#         images, imobjs = next(iterator)
-
-#     # new epoch / shuffle
-#     except StopIteration:
-#         iterator = iter(loader)
-#         images, imobjs = next(iterator)
-
-#     return iterator, images, imobjs
-
-
 def init_training_paths(conf_name, use_tmp_folder=None):
     """
     Simple function to store and create the relevant paths for the project,
@@ -662,112 +571,3 @@ def init_training_paths(conf_name, use_tmp_folder=None):
     mkdir_if_missing(paths.results)
 
     return paths
-
-
-# def init_torch(rng_seed, cuda_seed):
-#     """
-#     Initializes the seeds for ALL potential randomness, including torch, numpy, and random packages.
-
-#     Args:
-#         rng_seed (int): the shared random seed to use for numpy and random
-#         cuda_seed (int): the random seed to use for pytorch's torch.cuda.manual_seed_all function
-#     """
-
-#     # default tensor
-#     torch.set_default_tensor_type('torch.cuda.FloatTensor')
-
-#     # seed everything
-#     torch.manual_seed(rng_seed)
-#     np.random.seed(rng_seed)
-#     random.seed(rng_seed)
-#     torch.cuda.manual_seed_all(cuda_seed)
-
-#     # make the code deterministic
-#     torch.backends.cudnn.deterministic = True
-#     torch.backends.cudnn.benchmark = False
-
-# def init_visdom(conf_name, visdom_port):
-#     """
-#     Simply initializes a visdom session (if possible) then closes all windows within it.
-#     If there is no visdom server running (externally), then function will return 'None'.
-#     """
-#     try:
-#         vis = visdom.Visdom(port=visdom_port, env=conf_name)
-#         vis.close(env=conf_name, win=None)
-
-#         if vis.socket_alive:
-#             return vis
-#         else:
-#             return None
-
-#     except:
-#         return None
-
-# def check_tensors():
-#     """
-#     Checks on tensors currently loaded within PyTorch
-#     for debugging purposes only (esp memory leaks).
-#     """
-#     for obj in gc.get_objects():
-#         try:
-#             if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-#                 print(type(obj), obj.size(), obj.device, obj.shape)
-#         except:
-#             pass
-
-# def resume_checkpoint(optim, model, weights_dir, iteration):
-#     """
-#     Loads the optimizer and model pair given the current iteration
-#     and the weights storage directory.
-#     """
-
-#     optimpath, modelpath = checkpoint_names(weights_dir, iteration)
-
-#     optim.load_state_dict(torch.load(optimpath))
-#     model.load_state_dict(torch.load(modelpath))
-
-# def save_checkpoint(optim, model, weights_dir, iteration):
-#     """
-#     Saves the optimizer and model pair given the current iteration
-#     and the weights storage directory.
-#     """
-
-#     optimpath, modelpath = checkpoint_names(weights_dir, iteration)
-
-#     torch.save(optim.state_dict(), optimpath)
-#     torch.save(model.state_dict(), modelpath)
-
-#     return modelpath, optimpath
-
-# def checkpoint_names(weights_dir, iteration):
-#     """
-#     Single function to determine the saving format for
-#     resuming and saving models/optim.
-#     """
-
-#     optimpath = os.path.join(weights_dir, 'optim_{}_pkl'.format(iteration))
-#     modelpath = os.path.join(weights_dir, 'model_{}_pkl'.format(iteration))
-
-#     return optimpath, modelpath
-
-# def print_weights(model):
-#     """
-#     Simply prints the weights for the model using the mean weight.
-#     This helps keep track of frozen weights, and to make sure
-#     they initialize as non-zero, although there are edge cases to
-#     be weary of.
-#     """
-
-#     # find max length
-#     max_len = 0
-#     for name, param in model.named_parameters():
-#         name = str(name).replace('module.', '')
-#         if (len(name) + 4) > max_len: max_len = (len(name) + 4)
-
-#     # print formatted mean weights
-#     for name, param in model.named_parameters():
-#         mdata = np.abs(torch.mean(param.data).item())
-#         name = str(name).replace('module.', '')
-
-#         logging.info(('{0:' + str(max_len) + '} {1:6} {2:6}')
-#                      .format(name, 'mean={:.4f}'.format(mdata), '    grad={}'.format(param.requires_grad)))

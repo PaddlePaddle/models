@@ -1,4 +1,5 @@
 """
+This code is based on https://github.com/garrickbrazil/M3D-RPN/blob/master/lib/rpn_util.py
 This file is meant to contain functions which are
 specific to region proposal networks.
 """
