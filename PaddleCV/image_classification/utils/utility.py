@@ -162,6 +162,8 @@ def parse_args():
     add_arg('profiler_path',            str,    './profilier_files',                   "the profiler output file path")
     add_arg('max_iter',                 int,    0,                      "the max train batch num")
     add_arg('same_feed',                int,    0,                      "whether to feed same images")
+    add_arg('enable_addto',             bool,   False,                  "whether to enable the addto strategy for gradient accumulation")
+    add_arg('fuse_all_optimizer_ops',   bool,   False,                  "whether to fuse all optimizer operators")
 
 
     # yapf: enable
@@ -524,6 +526,8 @@ def best_strategy_compiled(args,
         try:
             fluid.require_version(min_version='1.7.0')
             build_strategy.fuse_bn_act_ops = args.fuse_bn_act_ops
+            build_strategy.fuse_all_optimizer_ops = args.fuse_all_optimizer_ops
+            build_strategy.enable_addto = args.enable_addto
         except Exception as e:
             logger.info("PaddlePaddle version 1.7.0 or higher is "
             "required when you want to fuse batch_norm and activation_op.")
