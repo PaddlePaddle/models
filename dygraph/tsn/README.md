@@ -1,5 +1,5 @@
 # TSN 视频分类模型
-本目录下为基于PaddlePaddle 动态图实现的TSN视频分类模型。模型支持PaddlePaddle Fluid 1.8, GPU, Linux。
+本目录下为基于PaddlePaddle 动态图实现的TSN视频分类模型。模型支持PaddlePaddle Fluid 2.0, GPU, Linux。
 
 ---
 ## 内容
@@ -50,7 +50,7 @@ Temporal Segment Network (TSN) 是视频分类领域经典的基于2D-CNN的解�
 
 ## 数据准备
 
-TSN的训练数据采用UCF101动作识别数据集。数据下载及处理请参考[数据说明](./data/dataset/ucf101/README.md)。数据处理完成后，会在`./data/dataset/ucf101/`目录下，生成一下文件：
+TSN的训练数据采用UCF101动作识别数据集。数据下载及处理请参考[数据说明](./data/dataset/ucf101/README.md)。数据处理完成后，会在`./data/dataset/ucf101/`目录下，生成以下文件：
 - `videos/` ： 用于存放UCF101数据的视频文件。
 - `rawframes/` ： 用于存放UCF101视频文件的frame数据。
 - `annotations/` ： 用于存储UCF101数据集的标注文件。
@@ -60,8 +60,12 @@ TSN的训练数据采用UCF101动作识别数据集。数据下载及处理请�
 
 
 ## 模型训练
+TSN模型训练，需要加载基于imagenet pretrain的ResNet50参数。可通过输入如下命令下载（默认权重文件会存放在当前目前下`./ResNet50_pretrained/`）：
+```bash
+bash download_pretrain.sh
+```
 
-TSN模型支持输入数据为video和frame格式。数据准备完毕后，可以通过如下方式启动不同格式的训练。
+TSN模型支持输入数据为video和frame格式。数据以及预训练参数准备完毕后，可以通过如下方式启动不同格式的训练。
 
 1. 多卡训练（输入为frame格式）
 ```bash
@@ -69,7 +73,8 @@ bash multi_gpus_run.sh ./multi_tsn_frame.yaml
 ```
 多卡训练所使用的gpu可以通过如下方式设置：
 - 修改`multi_gpus_run.sh` 中 `export CUDA_VISIBLE_DEVICES=0,1,2,3`（默认为0,1,2,3表示使用0，1，2，3卡号的gpu进行训练）
-- 注意：多卡、frame格式的训练参数配置文件为`multi_tsn_frame.yaml`。若修改了batchsize则学习率也要做相应的修改，规则为大batchsize用大lr，即同倍数增长缩小关系。例如，默认四卡batchsize=128，lr=0.001，若batchsize=64，lr=0.0005。
+- 若需要修改预训练权重文件的加载路径，可在`multi_gpus_run.sh`中修改`pretrain`参数（默认`pretrain="./ResNet50_pretrained/"`）
+- 注意：多卡、frame格式的训练参数配置文件为`multi_tsn_frame.yaml`。若修改了batchsize则学习率也要做相应的修改，规则为大batchsize用大lr，即同倍数增大缩小关系。例如，默认四卡batchsize=128，lr=0.001，若batchsize=64，lr=0.0005。
 
 2. 多卡训练（输入为video格式）
 ```bash
@@ -85,7 +90,8 @@ bash single_gpu_run.sh ./single_tsn_frame.yaml
 ```
 单卡训练所使用的gpu可以通过如下方式设置：
 - 修改 `single_gpu_run.sh` 中的 `export CUDA_VISIBLE_DEVICES=0` （表示使用gpu 0 进行模型训练）
-- 注意：单卡、frame格式的训练参数配置文件为`single_tsn_frame.yaml`。若修改了batchsize则学习率也要做相应的修改，规则为大batchsize用大lr，即同倍数增长缩小关系。默认单卡batchsize=64，lr=0.0005；若batchsize=32，lr=0.00025。
+- 若需要修改预训练权重文件的加载路径，可在`single_gpu_run.sh`中修改`pretrain`参数（默认`pretrain="./ResNet50_pretrained/"`）
+- 注意：单卡、frame格式的训练参数配置文件为`single_tsn_frame.yaml`。若修改了batchsize则学习率也要做相应的修改，规则为大batchsize用大lr，即同倍数增长缩小关系。默认单卡batchsize=32，lr=0.00025；若batchsize=64，lr=0.0005。
 
 4. 单卡训练（输入为video格式）
 ```bash

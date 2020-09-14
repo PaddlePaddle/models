@@ -13,12 +13,12 @@ TRAIN:
     epoch: 80
     short_size: 256
     target_size: 224
-    num_reader_threads: 12
-    buf_size: 1024
-    batch_size: 64
+    num_reader_threads: 8
+    buf_size: 64
+    batch_size: 32
     use_gpu: True
     filelist: "./data/dataset/ucf101/ucf101_train_split_1_rawframes.txt"
-    learning_rate: 0.0005
+    learning_rate: 0.00025
     learning_rate_decay: 0.1
     decay_epochs: [30, 60]
     l2_weight_decay: 1e-4
@@ -28,15 +28,15 @@ TRAIN:
 VALID:
     short_size: 256
     target_size: 224
-    num_reader_threads: 12
-    buf_size: 1024
-    batch_size: 128
+    num_reader_threads: 8
+    buf_size: 64
+    batch_size: 32
     filelist: "./data/dataset/ucf101/ucf101_val_split_1_rawframes.txt"
 
 TEST:
     short_size: 256
     target_size: 224
-    num_reader_threads: 12
-    buf_size: 1024
-    batch_size: 64
+    num_reader_threads: 8
+    buf_size: 64
+    batch_size: 32
     filelist: "./data/dataset/ucf101/ucf101_val_split_1_rawframes.txt"

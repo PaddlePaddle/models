@@ -95,53 +95,6 @@ def parse_args():
     return args
 
 
-def decompress(path):
-    t = tarfile.open(path)
-    print("path[0] {}".format(os.path.split(path)[0]))
-    t.extractall(path=os.path.split(path)[0])
-    t.close()
-
-
-def download(url, path):
-    weight_dir = os.path.split(path)[0]
-    if not os.path.exists(weight_dir):
-        os.makedirs(weight_dir)
-
-    path = path + ".tar.gz"
-    print("path {}".format(path))
-    wget.download(url, path)
-    decompress(path)
-
-
-def pretrain_info():
-    return (
-        'ResNet50_pretrained',
-        'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz'
-    )
-
-
-def download_pretrained(pretrained):
-    if pretrained is not None:
-        WEIGHT_DIR = pretrained
-    else:
-        WEIGHT_DIR = os.path.join(os.path.expanduser('~'), '.paddle', 'weights')
-
-    path, url = pretrain_info()
-    if not path:
-        return None
-
-    path = os.path.join(WEIGHT_DIR, path)
-    if not os.path.isdir(WEIGHT_DIR):
-        logger.info('{} not exists, will be created automatically.'.format(
-            WEIGHT_DIR))
-        os.makedirs(WEIGHT_DIR)
-    if os.path.exists(path):
-        return path
-    logger.info("Download pretrain weights of ResNet50 from {}".format(url))
-    download(url, path)
-    return path
-
-
 def init_model(model, pre_state_dict):
     param_state_dict = {}
     model_dict = model.state_dict()
@@ -224,17 +177,14 @@ def train(args):
     train_config = merge_configs(config, 'train', vars(args))
     valid_config = merge_configs(config, 'valid', vars(args))
     print_configs(train_config, 'Train')
-
-    # get the pretrained weights
-    pretrained_path = download_pretrained(args.pretrain)
-
     use_data_parallel = args.use_data_parallel
+
     trainer_count = fluid.dygraph.parallel.Env().nranks
 
     # (data_parallel step1/6)
     place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
         if use_data_parallel else fluid.CUDAPlace(0)
-    pre_state_dict = fluid.load_program_state(pretrained_path)
+    pre_state_dict = fluid.load_program_state(args.pretrain)
 
     with fluid.dygraph.guard(place):
         if use_data_parallel:
@@ -342,7 +292,8 @@ def train(args):
                 model_path = os.path.join(
                     args.checkpoint,
                     "_" + model_path_pre + "_epoch{}".format(epoch))
-                fluid.dygraph.save_dygraph(video_model.state_dict(), model_path)
+                fluid.dygraph.save_dygraph(
+                    video_model.state_dict(), model_path)
                 fluid.dygraph.save_dygraph(optimizer.state_dict(), model_path)
 
             if args.validate:

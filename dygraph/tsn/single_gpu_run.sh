@@ -1,5 +1,5 @@
 configs=$1
-pretrain="" # set pretrain model path if needed
+pretrain="./ResNet50_pretrained/" # set pretrain model path if needed
 resume="" # set checkpoints model path if u want to resume training
 save_dir=""
 use_gpu=True
