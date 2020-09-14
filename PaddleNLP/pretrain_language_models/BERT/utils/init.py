@@ -30,7 +30,7 @@ def cast_fp32_to_fp16(exe, main_program):
             param_t = fluid.global_scope().find_var(param.name).get_tensor()
             data = np.array(param_t)
             if param.name.find("layer_norm") == -1:
-                param_t.set(np.float16(data).view(np.uint16), exe.place)
+                param_t.set(np.float16(data), exe.place)
             master_param_var = fluid.global_scope().find_var(param.name +
                                                              ".master")
             if master_param_var is not None:
