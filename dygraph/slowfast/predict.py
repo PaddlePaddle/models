@@ -21,8 +21,8 @@ import numpy as np
 import json
 import paddle.fluid as fluid
 from paddle.fluid.dygraph.base import to_variable
-from paddle.io import DataLoader, Dataset
-from paddle.incubate.hapi.distributed import DistributedBatchSampler, _all_gather
+from paddle.io import DataLoader, Dataset, DistributedBatchSampler
+from paddle.hapi.model import _all_gather
 from paddle.fluid.dygraph.parallel import ParallelEnv
 
 from model import *

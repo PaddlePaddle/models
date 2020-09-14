@@ -24,8 +24,7 @@ import random
 import paddle
 import paddle.fluid as fluid
 from paddle.fluid.dygraph.base import to_variable
-from paddle.io import DataLoader, Dataset
-from paddle.incubate.hapi.distributed import DistributedBatchSampler
+from paddle.io import DataLoader, Dataset, DistributedBatchSampler
 
 from model import *
 from config_utils import *
