@@ -1,11 +1,11 @@
 configs=$1
-pretrain="" # set pretrain model path if needed
+pretrain="./ResNet50_pretrained/" # set pretrain model path if needed
 resume="" # set checkpoints model path if u want to resume training
 save_dir=""
 use_gpu=True
 use_data_parallel=True
 
-export CUDA_VISIBLE_DEVICES=4,5,6,7
+export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 
 echo $mode "TSN" $configs  $resume $pretrain
