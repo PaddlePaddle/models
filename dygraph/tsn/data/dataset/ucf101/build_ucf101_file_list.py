@@ -103,7 +103,7 @@ def parse_args():
         default='rawframes',
         choices=['rawframes', 'videos'])
     parser.add_argument('--out_list_path', type=str, default='./')
-    parser.add_argument('--shuffle', action='store_true', default=True)
+    parser.add_argument('--shuffle', action='store_true', default=False)
     args = parser.parse_args()
 
     return args
@@ -146,11 +146,12 @@ def main():
         lists = build_split_list(split_tp[i], frame_info, shuffle=args.shuffle)
         filename = 'ucf101_train_split_{}_{}.txt'.format(i + 1, args.format)
 
+        PATH = os.path.abspath(args.frame_path)
         with open(os.path.join(out_path, filename), 'w') as f:
-            f.writelines(lists[0])
+            f.writelines([os.path.join(PATH, item) for item in lists[0]])
         filename = 'ucf101_val_split_{}_{}.txt'.format(i + 1, args.format)
         with open(os.path.join(out_path, filename), 'w') as f:
-            f.writelines(lists[1])
+            f.writelines([os.path.join(PATH, item) for item in lists[1]])
 
 
 if __name__ == "__main__":
