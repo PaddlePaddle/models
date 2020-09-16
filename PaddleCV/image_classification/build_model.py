@@ -14,7 +14,7 @@
 import paddle
 import paddle.fluid as fluid
 import utils.utility as utility
-
+from paddle.fluid.contrib.mixed_precision.fp16_utils import cast_net_to_fp16
 
 def _calc_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
     """Calculate label smoothing loss
@@ -44,7 +44,12 @@ def _basic_model(data, model, args, is_train):
                             data_format=args.data_format)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
-    softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
+    if args.use_pure_fp16:
+        cast_net_to_fp16(fluid.default_main_program())
+        net_out_fp32 = fluid.layers.cast(x=net_out, dtype="float32")
+        softmax_out = fluid.layers.softmax(net_out_fp32, use_cudnn=False)
+    else:
+        softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
 
     if is_train and args.use_label_smoothing:
         cost = _calc_label_smoothing_loss(softmax_out, label, args.class_dim,
@@ -104,7 +109,12 @@ def _mixup_model(data, model, args, is_train):
                             data_format=args.data_format)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
-    softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
+    if args.use_pure_fp16:
+        cast_net_to_fp16(fluid.default_main_program())
+        net_out_fp32 = fluid.layers.cast(x=net_out, dtype="float32")
+        softmax_out = fluid.layers.softmax(net_out_fp32, use_cudnn=False)
+    else:
+        softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
     if not args.use_label_smoothing:
         loss_a = fluid.layers.cross_entropy(input=softmax_out, label=y_a)
         loss_b = fluid.layers.cross_entropy(input=softmax_out, label=y_b)

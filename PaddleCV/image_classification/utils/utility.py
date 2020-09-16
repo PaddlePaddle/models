@@ -139,7 +139,8 @@ def parse_args():
 
     # SWITCH
     add_arg('validate',                 bool,   True,                   "whether to validate when training.")
-    add_arg('use_fp16',                 bool,   False,                  "Whether to enable half precision training with fp16." )
+    add_arg('use_amp',                  bool,   False,                   "Whether to enable mixed precision training with fp16." )
+    add_arg('use_pure_fp16',            bool,   False,                  "Whether to enable all half precision training with fp16." )
     add_arg('scale_loss',               float,  1.0,                    "The value of scale_loss for fp16." )
     add_arg('use_dynamic_loss_scaling', bool,   True,                   "Whether to use dynamic loss scaling.")
     add_arg('data_format',              str,    "NCHW",                 "Tensor data format when training.")

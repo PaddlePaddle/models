@@ -8,7 +8,8 @@ export FLAGS_cudnn_batchnorm_spatial_persistent=1
 DATA_DIR="Your image dataset path, e.g. /work/datasets/ILSVRC2012/"
 
 DATA_FORMAT="NHWC"
-USE_FP16=true #whether to use float16
+USE_AMP=true #whether to use amp
+USE_PURE_FP16=false
 USE_DALI=true
 USE_ADDTO=true
 
@@ -30,7 +31,8 @@ python train.py \
        --print_step=10 \
        --model_save_dir=output/ \
        --lr_strategy=piecewise_decay \
-       --use_fp16=${USE_FP16} \
+       --use_amp=${USE_AMP} \
+       --use_pure_fp16=${USE_PURE_FP16} \
        --scale_loss=128.0 \
        --use_dynamic_loss_scaling=true \
        --data_format=${DATA_FORMAT} \

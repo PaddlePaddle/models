@@ -29,6 +29,7 @@ import reader
 from utils import *
 import models
 from build_model import create_model
+from paddle.fluid.contrib.mixed_precision.fp16_utils import cast_parameters_to_fp16
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ def build_program(is_train, main_prog, startup_prog, args):
                 global_lr.persistable = True
                 loss_out.append(global_lr)
 
-                if args.use_fp16:
+                if args.use_amp:
                     optimizer = fluid.contrib.mixed_precision.decorate(
                         optimizer,
                         init_loss_scaling=args.scale_loss,
@@ -211,6 +212,8 @@ def train(args):
     place = fluid.CUDAPlace(gpu_id) if args.use_gpu else fluid.CPUPlace()
     exe = fluid.Executor(place)
     exe.run(startup_prog)
+    if args.use_pure_fp16:
+        cast_parameters_to_fp16(exe, train_prog)
 
     trainer_id = int(os.getenv("PADDLE_TRAINER_ID", 0))
 
