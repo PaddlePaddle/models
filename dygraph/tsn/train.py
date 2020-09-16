@@ -27,6 +27,9 @@ from paddle.fluid.dygraph.base import to_variable
 from model import TSN_ResNet
 from utils.config_utils import *
 from reader.ucf101_reader import UCF101Reader
+import paddle
+from paddle.io import DataLoader, DistributedBatchSampler
+from compose import TSN_UCF101_Dataset
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -111,19 +114,15 @@ def init_model(model, pre_state_dict):
     return model
 
 
-def val(epoch, model, cfg, args):
-    reader = UCF101Reader(name="TSN", mode="valid", cfg=cfg)
-    reader = reader.create_reader()
+def val(epoch, model, val_loader, cfg, args):
     total_loss = 0.0
     total_acc1 = 0.0
     total_acc5 = 0.0
     total_sample = 0
 
-    for batch_id, data in enumerate(reader()):
-        x_data = np.array([item[0] for item in data])
-        y_data = np.array([item[1] for item in data]).reshape([-1, 1])
-        imgs = to_variable(x_data)
-        labels = to_variable(y_data)
+    for batch_id, data in enumerate(val_loader):
+        imgs = paddle.to_tensor(data[0])
+        labels = paddle.to_tensor(data[1])
         labels.stop_gradient = True
 
         outputs = model(imgs)
@@ -210,11 +209,30 @@ def train(args):
                 gpus = gpus.split(",")
                 num_gpus = len(gpus)
             bs_denominator = num_gpus
-        train_config.TRAIN.batch_size = int(train_config.TRAIN.batch_size /
-                                            bs_denominator)
+        bs_train_single = int(train_config.TRAIN.batch_size / bs_denominator)
+        bs_val_single = int(valid_config.VALID.batch_size / bs_denominator)
 
-        train_reader = UCF101Reader(name="TSN", mode="train", cfg=train_config)
-        train_reader = train_reader.create_reader()
+        train_dataset = TSN_UCF101_Dataset(train_config, 'train')
+        val_dataset = TSN_UCF101_Dataset(valid_config, 'valid')
+        train_sampler = DistributedBatchSampler(
+            train_dataset,
+            batch_size=bs_train_single,
+            shuffle=train_config.TRAIN.use_shuffle,
+            drop_last=True)
+        train_loader = DataLoader(
+            train_dataset,
+            batch_sampler=train_sampler,
+            places=place,
+            num_workers=train_config.TRAIN.num_workers,
+            return_list=True)
+        val_sampler = DistributedBatchSampler(
+            val_dataset, batch_size=bs_val_single)
+        val_loader = DataLoader(
+            val_dataset,
+            batch_sampler=val_sampler,
+            places=place,
+            num_workers=valid_config.VALID.num_workers,
+            return_list=True)
 
         if use_data_parallel:
             # (data_parallel step4/6)
@@ -234,12 +252,10 @@ def train(args):
             total_acc5 = 0.0
             total_sample = 0
             batch_start = time.time()
-            for batch_id, data in enumerate(train_reader()):
+            for batch_id, data in enumerate(train_loader):
                 train_reader_cost = time.time() - batch_start
-                x_data = np.array([item[0] for item in data]).astype("float32")
-                y_data = np.array([item[1] for item in data]).reshape([-1, 1])
-                imgs = to_variable(x_data)
-                labels = to_variable(y_data)
+                imgs = paddle.to_tensor(data[0])
+                labels = paddle.to_tensor(data[1])
                 labels.stop_gradient = True
                 outputs = video_model(imgs)
 
@@ -292,13 +308,13 @@ def train(args):
                 model_path = os.path.join(
                     args.checkpoint,
                     "_" + model_path_pre + "_epoch{}".format(epoch))
-                fluid.dygraph.save_dygraph(
-                    video_model.state_dict(), model_path)
+                fluid.dygraph.save_dygraph(video_model.state_dict(), model_path)
                 fluid.dygraph.save_dygraph(optimizer.state_dict(), model_path)
 
             if args.validate:
                 video_model.eval()
-                val_acc = val(epoch, video_model, valid_config, args)
+                val_acc = val(epoch, video_model, val_loader, valid_config,
+                              args)
                 # save the best parameters in trainging stage
                 if epoch == 1:
                     best_acc = val_acc

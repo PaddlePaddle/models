@@ -13,8 +13,6 @@ TRAIN:
     epoch: 80
     short_size: 256
     target_size: 224
-    num_reader_threads: 16
-    buf_size: 256
     batch_size: 128
     use_gpu: True
     filelist: "./data/dataset/ucf101/ucf101_train_split_1_videos.txt"
@@ -24,19 +22,19 @@ TRAIN:
     l2_weight_decay: 1e-4
     momentum: 0.9
     total_videos: 9738 
+    num_workers: 4
+    use_shuffle: True
 
 VALID:
     short_size: 256
     target_size: 224
-    num_reader_threads: 16
-    buf_size: 256
     batch_size: 128
     filelist: "./data/dataset/ucf101/ucf101_val_split_1_videos.txt"
+    num_workers: 4
 
 TEST:
     short_size: 256
     target_size: 224
-    num_reader_threads: 16
-    buf_size: 256
-    batch_size: 128
+    batch_size: 128 
     filelist: "./data/dataset/ucf101/ucf101_val_split_1_videos.txt"
+    num_workers: 4
