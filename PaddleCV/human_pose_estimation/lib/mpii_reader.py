@@ -183,7 +183,7 @@ def _reader_creator(root, image_set, shuffle=False, is_train=False):
                         test_mode=False,
                         imagenum=0)
         else:
-            fold = 'test'
+            fold = os.path.join(cfg.DATAROOT, cfg.IMAGEDIR, 'test')
             for img_name in os.listdir(fold):
                 yield dict(image=os.path.join(fold, img_name),
                            filename=img_name)
