@@ -41,7 +41,8 @@ def _basic_model(data, model, args, is_train):
         image_in.stop_gradient = image.stop_gradient
         net_out = model.net(input=image_in,
                             class_dim=args.class_dim,
-                            data_format=args.data_format)
+                            data_format=args.data_format,
+                            fuse_bn_add_act=args.fuse_bn_add_act_ops)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
