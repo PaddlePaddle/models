@@ -361,6 +361,7 @@ def main():
 
         total_loss = 0
         iters = 0
+        batch_cost_avg = TimeCostAverage()
 
         dataloader.start()
         batch_id = 0
@@ -374,6 +375,7 @@ def main():
                     batch_time = time.time() - batch_start_time
                     batch_times.append(batch_time)
                     batch_start_time = time.time()
+                    batch_cost_avg.record(batch_time)
 
                 new_lr = generate_new_lr(epoch_id, device_count)
                 data_feeds['learning_rate'] = new_lr
@@ -400,7 +402,8 @@ def main():
                     ppl = np.exp(total_loss / iters)
                     print(
                         "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
-                        % (epoch_id, batch_id, batch_time, ppl[0], lr[0]))
+                        % (epoch_id, batch_id, batch_cost_avg.get_average(), ppl[0], lr[0]))
+                    batch_cost_avg.reset()
 
                 batch_id += 1
                 # profiler tools for benchmark
