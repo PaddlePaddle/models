@@ -242,6 +242,8 @@ def train(args):
     batch_cost_avg = TimeCostAverage()
 
     #NOTE: this for benchmark
+
+    
     total_batch_num = 0
     for pass_id in range(args.num_epochs):
         if num_trainers > 1 and not args.use_dali:
