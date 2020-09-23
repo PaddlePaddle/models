@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 from network.Pix2pix_network import Pix2pix_model
 from util import utility
+from util import timer
 import paddle.fluid as fluid
 from paddle.fluid import profiler
 import sys
@@ -257,16 +258,16 @@ class Pix2pix(object):
                 loss_name=dis_trainer.d_loss.name,
                 build_strategy=build_strategy)
 
-        t_time = 0
-
         total_train_batch = 0  # used for benchmark
-
+        reader_cost_averager = timer.TimeAverager()
+        batch_cost_averager = timer.TimeAverager()
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
+            batch_start = time.time()
             for tensor in loader():
                 if self.cfg.max_iter and total_train_batch == self.cfg.max_iter:  # used for benchmark
                     return
-                s_time = time.time()
+                reader_cost_averager.record(time.time() - batch_start)
 
                 # optimize the generator network
                 g_loss_gan, g_loss_l1, fake_B_tmp = exe.run(
@@ -291,19 +292,24 @@ class Pix2pix(object):
                                                    ],
                                                    feed=tensor)
 
-                batch_time = time.time() - s_time
-                t_time += batch_time
+                batch_cost_averager.record(time.time() - batch_start)
                 if batch_id % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}: \n\
                          g_loss_gan: {}; g_loss_l1: {}; \n\
                          d_loss_real: {}; d_loss_fake: {}; \n\
-                         Batch_time_cost: {}"
+                         reader_cost: {}, Batch_time_cost: {}"
                           .format(epoch_id, batch_id, g_loss_gan[0], g_loss_l1[
-                              0], d_loss_real[0], d_loss_fake[0], batch_time))
+                              0], d_loss_real[0], d_loss_fake[0],
+                                  reader_cost_averager.get_average(),
+                                  batch_cost_averager.get_average()))
+                    reader_cost_averager.reset()
+                    batch_cost_averager.reset()
 
                 sys.stdout.flush()
                 batch_id += 1
                 total_train_batch += 1  # used for benchmark
+                batch_start = time.time()
+
                 # profiler tools
                 if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
                     profiler.reset_profiler()

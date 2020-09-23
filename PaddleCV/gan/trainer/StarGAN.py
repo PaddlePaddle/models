@@ -11,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from network.StarGAN_network import StarGAN_model
 from util import utility
+from util import timer
 import paddle.fluid as fluid
 from paddle.fluid import profiler
 import sys
@@ -313,14 +315,17 @@ class StarGAN(object):
             gen_trainer_program.random_seed = 90
             dis_trainer_program.random_seed = 90
 
-        t_time = 0
         total_train_batch = 0  # used for benchmark
+        reader_cost_averager = timer.TimeAverager()
+        batch_cost_averager = timer.TimeAverager()
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
+            batch_start = time.time()
             for data in loader():
                 if self.cfg.max_iter and total_train_batch == self.cfg.max_iter:  # used for benchmark
                     return
-                s_time = time.time()
+                reader_cost_averager.record(time.time() - batch_start)
+
                 d_loss_real, d_loss_fake, d_loss, d_loss_cls, d_loss_gp = exe.run(
                     dis_trainer_program,
                     fetch_list=[
@@ -344,22 +349,27 @@ class StarGAN(object):
                           .format(epoch_id, batch_id, g_loss_fake[0],
                                   g_loss_rec[0], g_loss_cls[0]))
 
-                batch_time = time.time() - s_time
-                t_time += batch_time
+                batch_cost_averager.record(time.time() - batch_start)
                 if (batch_id + 1) % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}: \n\
                          d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
-                         Batch_time_cost: {}".format(
-                        epoch_id, batch_id, d_loss_real[0], d_loss_fake[
-                            0], d_loss_cls[0], d_loss_gp[0], batch_time))
+                         reader_cost: {}, Batch_time_cost: {}"
+                          .format(epoch_id, batch_id, d_loss_real[0],
+                                  d_loss_fake[0], d_loss_cls[0], d_loss_gp[0],
+                                  reader_cost_averager.get_average(),
+                                  batch_cost_averager.get_average()))
+                    reader_cost_averager.reset()
+                    batch_cost_averager.reset()
 
                 sys.stdout.flush()
                 batch_id += 1
+                total_train_batch += 1  # used for benchmark
+                batch_start = time.time()
+
                 # used for ce
                 if self.cfg.enable_ce and batch_id == 100:
                     break
 
-                total_train_batch += 1  # used for benchmark
                 # profiler tools
                 if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
                     profiler.reset_profiler()
