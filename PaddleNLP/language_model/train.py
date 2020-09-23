@@ -49,19 +49,24 @@ import pickle
 
 SEED = 123
 
+
 class TimeCostAverage(object):
     def __init__(self):
         self.reset()
+
     def reset(self):
         self.cnt = 0
         self.total_time = 0
+
     def record(self, usetime):
         self.cnt += 1
         self.total_time += usetime
+
     def get_average(self):
         if self.cnt == 0:
             return 0
         return self.total_time / self.cnt
+
 
 @contextlib.contextmanager
 def profile_context(profile=True, profiler_path='/tmp/paddingrnn.profile'):
@@ -339,7 +344,8 @@ def main():
                 ppl = np.exp(total_loss / iters)
                 print(
                     "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
-                    % (epoch_id, batch_id, batch_cost_avg.get_average(), ppl[0], lr[0]))
+                    % (epoch_id, batch_id, batch_cost_avg.get_average(), ppl[0],
+                       lr[0]))
                 batch_cost_avg.reset()
 
             # profiler tools for benchmark
@@ -402,7 +408,8 @@ def main():
                     ppl = np.exp(total_loss / iters)
                     print(
                         "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
-                        % (epoch_id, batch_id, batch_cost_avg.get_average(), ppl[0], lr[0]))
+                        % (epoch_id, batch_id, batch_cost_avg.get_average(),
+                           ppl[0], lr[0]))
                     batch_cost_avg.reset()
 
                 batch_id += 1
@@ -507,4 +514,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
