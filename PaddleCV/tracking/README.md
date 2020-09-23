@@ -48,15 +48,20 @@ pytracking  包含跟踪代码
 
 主流的训练数据集有：
 - [VID](http://bvisionweb1.cs.unc.edu/ilsvrc2015/ILSVRC2015_VID.tar.gz)
+- [DET](http://image-net.org/challenges/LSVRC/2015/)
 - [Microsoft COCO 2014](http://cocodataset.org/#download)
+- [Microsoft COCO 2017](http://cocodataset.org/#download)
+- [Youtube-VOS](https://youtube-vos.org/)
 - [LaSOT](https://drive.google.com/file/d/1O2DLxPP8M4Pn4-XCttCJUW3A29tDIeNa/view)
 - [GOT-10K](http://got-10k.aitestunion.com/downloads_dataset/full_data)
 
 下载并解压后的数据集的组织方式为：
 ```
 /Datasets/
-    └─ ILSVRC2015_VID/
-    └─ train2014/
+    └─ ILSVRC2015/
+    └─ ILSVRC2015_DET/
+    └─ COCO/
+    └─ YoutubeVOS/
     └─ GOT-10K/
     └─ LaSOTBenchmark/
 
@@ -71,16 +76,16 @@ Datasets是数据集保存的路径。
 tracking的工作环境：
 - Linux
 - python3
-- PaddlePaddle1.7
+- PaddlePaddle1.8
 
 > 注意：如果遇到cmath无法import的问题，建议切换Python版本，建议使用python3.6.8, python3.7.0 。另外，
 > tracking暂不支持在window上运行，如果开发者有需求在window上运行tracking，请在issue中提出需求。
 
 ### 安装依赖
 
-1. 安装paddle，需要安装1.7版本的Paddle，如低于这个版本，请升级到Paddle 1.7.
+1. 安装paddle，需要安装1.8版本的Paddle，如低于这个版本，请升级到Paddle 1.8.
 ```bash
-pip install paddlepaddle-gpu==1.7.0
+pip install paddlepaddle-gpu==1.8.0
 ```
 
 2. 安装第三方库，建议使用anaconda
@@ -114,10 +119,12 @@ pip install python-prctl
         └─ atom_resnet18.pdparams
         └─ atom_resnet50.pdparams
     └─ backbone
+        └─ AlexNet.pdparams
         └─ ResNet18.pdparams
         └─ ResNet50.pdparams
+        └─ ResNet50_dilated.pdparams
 ```
-其中/pretrained_models/backbone/文件夹包含，ResNet18、ResNet50在Imagenet上的预训练模型。
+其中/pretrained_models/backbone/文件夹包含，AlexNet、ResNet18、ResNet50在Imagenet上的预训练模型。
 
 
 ### 设置训练参数
@@ -154,7 +161,7 @@ python -c "from ltr.admin.environment import create_default_local_file; create_d
 ```bash
     self.workspace_dir = './checkpoints'
     self.lasot_dir = '/Datasets/LaSOTBenchmark/'
-    self.coco_dir = '/Datasets/train2014/'
+    self.coco_dir = '/Datasets/COCO/'
     self.got10k_dir = '/Datasets/GOT-10k/train'
     self.imagenet_dir = '/Datasets/ILSVRC2015/'
 ```
@@ -163,6 +170,16 @@ python -c "from ltr.admin.environment import create_default_local_file; create_d
 cd ltr/data_specs/
 wget https://paddlemodels.cdn.bcebos.com/paddle_track/vot/got10k_lasot_split.tar
 tar xvf got10k_lasot_split.tar
+```
+训练SiamRPN、SiamMask时，需要配置 workspace_dir，以及imagenet、coco、imagenetdet、youtubevos、lasot、got10k的数据集路径，如下：
+```bash
+    self.workspace_dir = './checkpoints'
+    self.imagenet_dir = '/Datasets/ILSVRC2015/'
+    self.coco_dir = '/Datasets/COCO/'
+    self.imagenetdet_dir = '/Datasets/ILSVRC2015_DET/'
+    self.youtubevos_dir = '/Datasets/YoutubeVOS/'
+    self.lasot_dir = '/Datasets/LaSOTBenchmark/'
+    self.got10k_dir = '/Datasets/GOT-10k/train'
 ```
 
 
@@ -180,6 +197,15 @@ python run_training.py bbreg atom_res50_vid_lasot_coco
 
 # 训练 SiamFC
 python run_training.py siamfc siamfc_alexnet_vid
+
+# 训练 SiamRPN AlexNet
+python run_training.py siamrpn siamrpn_alexnet
+
+# 训练 SiamMask-Base ResNet50
+python run_training.py siammask siammask_res50_base
+
+# 训练 SiamMask-Refine ResNet50，需要配置settings.base_model为最优的SiamMask-Base模型
+python run_training.py siammask siammask_res50_sharp
 ```
 
 
@@ -242,6 +268,19 @@ python eval_benchmark.py -d VOT2018 -tr bbreg.atom_res18_vid_lasot_coco -te atom
 python eval_benchmark.py -d VOT2018 -tr siamfc.siamfc_alexnet_vid -te siamfc.default -e 'range(1, 50, 1)'
 ```
 
+测试SiamRPN
+```
+python eval_benchmark.py -d OTB100 -tr siamrpn.siamrpn_alexnet -te siamrpn.default_otb -e 'range(1, 40, 1)'
+```
+
+测试SiamMask
+```bash
+# 在VOT2018上测试SiamMask-Base
+python eval_benchmark.py -d VOT2018 -tr siammask.siammask_res50_base -te siammask.base_default -e 'range(1, 20, 1)'
+# 在VOT2018上测试SiamMask-Sharp
+python eval_benchmark.py -d VOT2018 -tr siammask.siammask_res50_sharp -te siammask.sharp_default_vot -e 'range(1, 20, 1)'
+```
+
 
 
 ## 跟踪结果可视化
@@ -265,7 +304,9 @@ jupyter notebook --ip 0.0.0.0 --port 8888
 | 数据集 | 模型 | Backbone | 论文结果 | 训练结果 | 模型|
 | :-------: | :-------: | :---: | :---: | :---------: |:---------: |
 |VOT2018| ATOM | Res18 |  EAO: 0.401 | 0.399 | [model](https://paddlemodels.cdn.bcebos.com/paddle_track/vot/ATOM.tar) |
+|VOT2018| SiamMask | Res50 |  EAO: 0.380 | 0.379 | [model](https://paddlemodels.cdn.bcebos.com/paddle_track/vot/SiamMask.tar) |
 |VOT2018| SiamFC | AlexNet |  EAO: 0.188 | 0.211 | [model](https://paddlemodels.cdn.bcebos.com/paddle_track/vot/SiamFC.tar) |
+|OTB100| SiamRPN | AlexNet |  Succ: 0.637, Prcn: 0.851 | Succ: 0.644, Prcn: 0.848 | [model](https://paddlemodels.cdn.bcebos.com/paddle_track/vot/SiamRPN.tar) |
 
 ## 引用与参考
 
@@ -279,6 +320,26 @@ SiamFC **[[Paper]](https://arxiv.org/pdf/1811.07628.pdf) [[Code]](https://www.ro
       year={2016},
       organization={Springer}
     }
+
+SiamRPN **[[Paper]](http://openaccess.thecvf.com/content_cvpr_2018/papers/Li_High_Performance_Visual_CVPR_2018_paper.pdf) [[Code]](https://github.com/STVIR/pysot)**
+
+    @inproceedings{li2018high,
+      title={High performance visual tracking with siamese region proposal network},
+      author={Li, Bo and Yan, Junjie and Wu, Wei and Zhu, Zheng and Hu, Xiaolin},
+      booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+      pages={8971--8980},
+      year={2018}
+    }
+
+SiamMask **[[Paper]](https://arxiv.org/pdf/1812.05050.pdf) [[Code]](https://github.com/foolwood/SiamMask)**
+
+	@inproceedings{wang2019fast,
+	  title={Fast online object tracking and segmentation: A unifying approach},
+	  author={Wang, Qiang and Zhang, Li and Bertinetto, Luca and Hu, Weiming and Torr, Philip HS},
+	  booktitle={Proceedings of the IEEE conference on computer vision and pattern recognition},
+	  pages={1328--1338},
+	  year={2019}
+	}
 
 ATOM **[[Paper]](https://arxiv.org/pdf/1811.07628.pdf)  [[Raw results]](https://drive.google.com/drive/folders/1MdJtsgr34iJesAgL7Y_VelP8RvQm_IG_) [[Models]](https://drive.google.com/open?id=1EsNSQr25qfXHYLqjZaVZElbGdUg-nyzd)  [[Training Code]](https://github.com/visionml/pytracking/blob/master/ltr/README.md#ATOM)  [[Tracker Code]](https://github.com/visionml/pytracking/blob/master/pytracking/README.md#ATOM)**  
 

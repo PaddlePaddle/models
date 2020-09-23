@@ -12,7 +12,8 @@
 | 模型       | 百度知道         | ECOM        |QQSIM | UNICOM |
 |:-----------:|:-------------:|:-------------:|:-------------:|:-------------:|
 |   | AUC  | AUC | AUC|正逆序比|
-|BOW_Pairwise|0.6767|0.7329|0.7650|1.5630|
+|BOW_Pairwise(WordSeg)|0.6767|0.7329|0.7650|1.5630|
+|BOW_Pairwise(Jieba)|0.6658|0.7351|0.8431|1.5331|
 #### 测试集说明
 | 数据集       | 来源         | 垂类        |
 |:-----------:|:-------------:|:-------------:|
@@ -51,7 +52,10 @@ python download.py model
 ```
 
 #### 评估
-我们公开了自建的测试集，包括百度知道、ECOM、QQSIM、UNICOM四个数据集，基于上面的预训练模型，用户可以进入evaluate目录下依次执行下列命令获取测试集评估结果。
+我们公开了自建的测试集，包括百度知道、ECOM、QQSIM、UNICOM 四个数据集，基于上面的预训练模型，用户可以进入 evaluate 目录下依次执行下列命令获取测试集评估结果。
+
+我们在以下评估脚本中以 Jieba 切词作为示例，如果您需要自定义切词模块，只需要在 [`tokenization.py`](tokenization.py) 中参考 `JiebaTokenizer` 实现自定义的切词类, 并且在 `evaluate_*.sh` 评估脚本中配置环境变量 `TOKENIZER=${YOUR_TOKENIZER_NAME}` 即可, 如果 `TOKENIZER` 环境变量为空, 则默认输入数据是切词后的数据(示例给出的数据是百度切词工具 WordSeg 切词后的数据)
+
 ```shell
 sh evaluate_ecom.sh  
 sh evaluate_qqsim.sh  

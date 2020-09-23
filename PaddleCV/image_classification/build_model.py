@@ -36,8 +36,12 @@ def _basic_model(data, model, args, is_train):
     image = data[0]
     label = data[1]
     if args.model == "ResNet50":
-        image_in = fluid.layers.transpose(image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
-        net_out = model.net(input=image_in, class_dim=args.class_dim, data_format=args.data_format)
+        image_in = fluid.layers.transpose(
+            image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
+        image_in.stop_gradient = image.stop_gradient
+        net_out = model.net(input=image_in,
+                            class_dim=args.class_dim,
+                            data_format=args.data_format)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
@@ -92,8 +96,12 @@ def _mixup_model(data, model, args, is_train):
     lam = data[3]
 
     if args.model == "ResNet50":
-        image_in = fluid.layers.transpose(image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
-        net_out = model.net(input=image_in, class_dim=args.class_dim, data_format=args.data_format)
+        image_in = fluid.layers.transpose(
+            image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
+        image_in.stop_gradient = image.stop_gradient
+        net_out = model.net(input=image_in,
+                            class_dim=args.class_dim,
+                            data_format=args.data_format)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)

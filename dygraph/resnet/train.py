@@ -130,6 +130,11 @@ def parse_args():
         type=float,
         default=[0.229, 0.224, 0.225],
         help="The std of input image data")
+    parser.add_argument(
+        '--use_gpu',
+        type=ast.literal_eval,
+        default=True,
+        help='default use gpu.')
 
     args = parser.parse_args()
     return args
@@ -137,6 +142,24 @@ def parse_args():
 
 args = parse_args()
 batch_size = args.batch_size
+
+
+class TimeCostAverage(object):
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.cnt = 0
+        self.total_time = 0
+
+    def record(self, usetime):
+        self.cnt += 1
+        self.total_time += usetime
+
+    def get_average(self):
+        if self.cnt == 0:
+            return 0
+        return self.total_time / self.cnt
 
 
 def optimizer_setting(parameter_list=None):
@@ -354,8 +377,14 @@ def eval(model, data):
 
 def train_resnet():
     epoch = args.epoch
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if args.use_data_parallel else fluid.CUDAPlace(0)
+
+    if not args.use_gpu:
+        place = fluid.CPUPlace()
+    elif not args.use_data_parallel:
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
+
     with fluid.dygraph.guard(place):
         if args.ce:
             print("ce mode")
@@ -422,6 +451,8 @@ def train_resnet():
             total_acc5 = 0.0
             total_sample = 0
 
+            train_batch_cost_avg = TimeCostAverage()
+            train_reader_cost_avg = TimeCostAverage()
             batch_start = time.time()
             for batch_id, data in enumerate(train_loader()):
                 #NOTE: used in benchmark
@@ -458,13 +489,19 @@ def train_resnet():
                 total_sample += 1
 
                 train_batch_cost = time.time() - batch_start
+                train_batch_cost_avg.record(train_batch_cost)
+                train_reader_cost_avg.record(train_reader_cost)
+
                 total_batch_num = total_batch_num + 1  #this is for benchmark
                 if batch_id % 10 == 0:
                     print(
                         "[Epoch %d, batch %d] loss %.5f, acc1 %.5f, acc5 %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
                         % (eop, batch_id, total_loss / total_sample,
                            total_acc1 / total_sample, total_acc5 / total_sample,
-                           train_batch_cost, train_reader_cost))
+                           train_batch_cost_avg.get_average(),
+                           train_reader_cost_avg.get_average()))
+                    train_batch_cost_avg.reset()
+                    train_reader_cost_avg.reset()
                 batch_start = time.time()
 
             if args.ce:

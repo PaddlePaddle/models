@@ -116,14 +116,13 @@ def build_program(is_train, main_prog, startup_prog, args):
     with fluid.program_guard(main_prog, startup_prog):
         queue_capacity = 64
         image = fluid.data(
-                name='image', shape=[None] + image_shape, dtype='float32')
-        label = fluid.data(
-                name='label', shape=[None, 1], dtype='int64')
+            name='image', shape=[None] + image_shape, dtype='float32')
+        label = fluid.data(name='label', shape=[None, 1], dtype='int64')
         loader = fluid.io.DataLoader.from_generator(
-                feed_list=[image, label],
-                capacity=queue_capacity,
-                use_double_buffer=True,
-                iterable=True)
+            feed_list=[image, label],
+            capacity=queue_capacity,
+            use_double_buffer=True,
+            iterable=True)
 
         with fluid.unique_name.guard():
             avg_cost, out = net_config(image, label, model, args, is_train)
@@ -185,18 +184,12 @@ def train_async(args):
 
     exe.run(startup_prog)
 
-    logging.debug('after run startup program')
-
     if checkpoint is not None:
         fluid.load(program=train_prog, model_path=checkpoint, executor=exe)
 
     if pretrained_model:
-
-        def if_exist(var):
-            return os.path.exists(os.path.join(pretrained_model, var.name))
-
-        fluid.load(program=train_prog, model_path=pretrained_model, executor=exe)
-
+        fluid.load(
+            program=train_prog, model_path=pretrained_model, executor=exe)
 
     if args.use_gpu:
         devicenum = get_gpu_num()
@@ -207,7 +200,7 @@ def train_async(args):
     test_batch_size = args.test_batch_size
 
     train_loader.set_sample_generator(
-        reader.train(args), 
+        reader.train(args),
         batch_size=train_batch_size,
         drop_last=True,
         places=places)
@@ -229,9 +222,8 @@ def train_async(args):
     while iter_no <= args.total_iter_num:
         for train_batch in train_loader():
             t1 = time.time()
-            lr, loss, feas, label = train_exe.run(
-                                        feed=train_batch,
-                                        fetch_list=train_fetch_list)
+            lr, loss, feas, label = train_exe.run(feed=train_batch,
+                                                  fetch_list=train_fetch_list)
             t2 = time.time()
             period = t2 - t1
             lr = np.mean(np.array(lr))
@@ -257,8 +249,8 @@ def train_async(args):
                 for batch_id, test_batch in enumerate(test_loader()):
                     t1 = time.time()
                     [feas] = exe.run(test_prog,
-                                 feed=test_batch,
-                                 fetch_list=test_fetch_list)
+                                     feed=test_batch,
+                                     fetch_list=test_fetch_list)
 
                     label = np.asarray(test_batch[0]['label'])
                     label = np.squeeze(label)
@@ -280,7 +272,7 @@ def train_async(args):
 
             if iter_no % args.save_iter_step == 0 and iter_no != 0:
                 model_path = os.path.join(model_save_dir + '/' + model_name,
-                                      str(iter_no))
+                                          str(iter_no))
                 if not os.path.isdir(model_path):
                     os.makedirs(model_path)
                 fluid.save(program=train_prog, model_path=model_path)

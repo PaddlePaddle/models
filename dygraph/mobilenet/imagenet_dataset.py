@@ -18,8 +18,8 @@ import math
 import random
 import numpy as np
 
-from paddle.incubate.hapi.datasets import DatasetFolder
-from paddle.incubate.hapi.vision.transforms import transforms
+from paddle.vision.datasets import DatasetFolder
+from paddle.vision.transforms import transforms
 from paddle import fluid
 
 

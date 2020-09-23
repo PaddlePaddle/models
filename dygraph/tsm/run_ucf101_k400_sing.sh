@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=1 python3.7 -m paddle.distributed.launch --started_port 38989 --log_dir ./mylog.ucf101.frames.k400.sing  train.py --config=./tsm_ucf101_sing.yaml --use_gpu=True --use_data_parallel=False --weights=k400_wei/TSM.pdparams 

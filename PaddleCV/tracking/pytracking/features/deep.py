@@ -5,6 +5,7 @@ from paddle import fluid
 
 from ltr.models.bbreg.atom import atom_resnet50, atom_resnet18
 from ltr.models.siamese.siam import siamfc_alexnet
+from ltr.models.siam.siam import SiamRPN_AlexNet, SiamMask_ResNet50_sharp, SiamMask_ResNet50_base
 from pytracking.admin.environment import env_settings
 from pytracking.features.featurebase import MultiFeatureBase
 from pytracking.libs import TensorList
@@ -346,4 +347,148 @@ class SFCAlexnet(MultiFeatureBase):
             output = TensorList([
                 output_features[layer].numpy() for layer in self.output_layers
             ])
+            return output
+
+
+class SRPNAlexNet(MultiFeatureBase):
+    """Alexnet feature.
+    args:
+        output_layers: List of layers to output.
+        net_path: Relative or absolute net path (default should be fine).
+        use_gpu: Use GPU or CPU.
+    """
+
+    def __init__(self,
+                 net_path='estimator',
+                 use_gpu=True,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.use_gpu = use_gpu
+        self.net_path = net_path
+
+    def initialize(self):
+        with fluid.dygraph.guard():
+            if os.path.isabs(self.net_path):
+                net_path_full = self.net_path
+            else:
+                net_path_full = os.path.join(env_settings().network_path, self.net_path)
+
+            self.net = SiamRPN_AlexNet(backbone_pretrained=False, is_test=True)
+
+            state_dict, _ = fluid.load_dygraph(net_path_full)
+            self.net.load_dict(state_dict)
+            self.net.eval()
+
+    def free_memory(self):
+        if hasattr(self, 'net'):
+            del self.net
+
+    def extract(self, im: np.ndarray, debug_save_name=None):
+        with fluid.dygraph.guard():
+            if debug_save_name is not None:
+                np.savez(debug_save_name, im)
+
+            im = n2p(im)
+
+            output_features = self.net.extract_backbone_features(im)
+
+            # Store the raw backbone features which are input to estimator
+            output = TensorList([layer.numpy() for layer in output_features])
+            return output
+
+
+class SMaskResNet50_base(MultiFeatureBase):
+    """Resnet50-dilated feature.
+    args:
+        output_layers: List of layers to output.
+        net_path: Relative or absolute net path (default should be fine).
+        use_gpu: Use GPU or CPU.
+    """
+
+    def __init__(self,
+                 net_path='estimator',
+                 use_gpu=True,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.use_gpu = use_gpu
+        self.net_path = net_path
+
+    def initialize(self):
+        with fluid.dygraph.guard():
+            if os.path.isabs(self.net_path):
+                net_path_full = self.net_path
+            else:
+                net_path_full = os.path.join(env_settings().network_path, self.net_path)
+
+            self.net = SiamMask_ResNet50_base(backbone_pretrained=False, is_test=True)
+
+            state_dict, _ = fluid.load_dygraph(net_path_full)
+            self.net.load_dict(state_dict)
+            self.net.eval()
+
+    def free_memory(self):
+        if hasattr(self, 'net'):
+            del self.net
+
+    def extract(self, im: np.ndarray, debug_save_name=None):
+        with fluid.dygraph.guard():
+            if debug_save_name is not None:
+                np.savez(debug_save_name, im)
+
+            im = n2p(im)
+
+            output_features = self.net.extract_backbone_features(im)
+
+            # Store the raw backbone features which are input to estimator
+            output = TensorList([layer.numpy() for layer in output_features])
+            return output
+
+
+class SMaskResNet50_sharp(MultiFeatureBase):
+    """Resnet50-dilated feature.
+    args:
+        output_layers: List of layers to output.
+        net_path: Relative or absolute net path (default should be fine).
+        use_gpu: Use GPU or CPU.
+    """
+
+    def __init__(self,
+                 net_path='estimator',
+                 use_gpu=True,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.use_gpu = use_gpu
+        self.net_path = net_path
+
+    def initialize(self):
+        with fluid.dygraph.guard():
+            if os.path.isabs(self.net_path):
+                net_path_full = self.net_path
+            else:
+                net_path_full = os.path.join(env_settings().network_path, self.net_path)
+
+            self.net = SiamMask_ResNet50_sharp(backbone_pretrained=False, is_test=True)
+
+            state_dict, _ = fluid.load_dygraph(net_path_full)
+            self.net.load_dict(state_dict)
+            self.net.eval()
+
+    def free_memory(self):
+        if hasattr(self, 'net'):
+            del self.net
+
+    def extract(self, im: np.ndarray, debug_save_name=None):
+        with fluid.dygraph.guard():
+            if debug_save_name is not None:
+                np.savez(debug_save_name, im)
+
+            im = n2p(im)
+
+            output_features = self.net.extract_backbone_features(im)
+
+            # Store the raw backbone features which are input to estimator
+            output = TensorList([layer.numpy() for layer in output_features])
             return output

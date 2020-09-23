@@ -1,0 +1,40 @@
+MODEL:
+    name: "TSN"
+    format: "frames" # support for "frames" or "videos"
+    num_classes: 101
+    seg_num: 3
+    seglen: 1
+    image_mean: [0.485, 0.456, 0.406]
+    image_std: [0.229, 0.224, 0.225]
+    num_layers: 50
+    topk: 5
+
+TRAIN:
+    epoch: 80
+    short_size: 256
+    target_size: 224
+    batch_size: 32
+    use_gpu: True
+    filelist: "./data/dataset/ucf101/ucf101_train_split_1_rawframes.txt"
+    learning_rate: 0.00025
+    learning_rate_decay: 0.1
+    decay_epochs: [30, 60]
+    l2_weight_decay: 1e-4
+    momentum: 0.9
+    total_videos: 9738 
+    num_workers: 4
+    use_shuffle: True
+
+VALID:
+    short_size: 256
+    target_size: 224
+    batch_size: 32
+    filelist: "./data/dataset/ucf101/ucf101_val_split_1_rawframes.txt"
+    num_workers: 4
+
+TEST:
+    short_size: 256
+    target_size: 224
+    batch_size: 32
+    filelist: "./data/dataset/ucf101/ucf101_val_split_1_rawframes.txt"
+    num_workers: 4
