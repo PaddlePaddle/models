@@ -143,19 +143,24 @@ def parse_args():
 args = parse_args()
 batch_size = args.batch_size
 
+
 class TimeCostAverage(object):
     def __init__(self):
         self.reset()
+
     def reset(self):
         self.cnt = 0
         self.total_time = 0
+
     def record(self, usetime):
         self.cnt += 1
         self.total_time += usetime
+
     def get_average(self):
         if self.cnt == 0:
             return 0
         return self.total_time / self.cnt
+
 
 def optimizer_setting(parameter_list=None):
 
@@ -493,7 +498,8 @@ def train_resnet():
                         "[Epoch %d, batch %d] loss %.5f, acc1 %.5f, acc5 %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
                         % (eop, batch_id, total_loss / total_sample,
                            total_acc1 / total_sample, total_acc5 / total_sample,
-                           train_batch_cost_avg.get_average(), train_reader_cost_avg.get_average()))
+                           train_batch_cost_avg.get_average(),
+                           train_reader_cost_avg.get_average()))
                     train_batch_cost_avg.reset()
                     train_reader_cost_avg.reset()
                 batch_start = time.time()
