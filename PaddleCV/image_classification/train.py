@@ -283,7 +283,8 @@ def train(args):
                            batch_cost_avg.get_average(), pass_id,
                            train_batch_id, args.print_step)
                 sys.stdout.flush()
-                batch_cost_avg.reset()
+                if train_batch_id % args.print_step == 0:
+                    batch_cost_avg.reset()
             train_batch_id += 1
             t1 = time.time()
             #NOTE: this for benchmark profiler
