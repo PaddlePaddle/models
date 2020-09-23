@@ -1,32 +1,6 @@
-# Multi-view Simnet for Personalized recommendation
+# 个性化推荐中的多视角Simnet模型
 
-## Introduction
-In personalized recommendation scenario, a user often is provided with several items from personalized interest matching model. In real world application, a user may have multiple views of features, say user-id, age, click-history of items, search queries. A item, e.g. news, may also have multiple views of features like news title, news category, images in news and so on. Multi-view Simnet is matching a model that combine users' and items' multiple views of features into one unified model. The model can be used in many industrial product like Baidu's feed news. The model is adapted from the paper A Multi-View Deep Learning(MV-DNN) Approach for Cross Domain User Modeling in Recommendation Systems, WWW 2015. The difference between our model and the MV-DNN is that we also consider multiple feature views of users.
+models/PaddleRec只是提供了经典推荐算法的Paddle实现，我们已经开源了功能更强大的工具组件[PaddlePaddle/PaddleRec](https://github.com/PaddlePaddle/PaddleRec) 打通了推荐算法+分布式训练全流程，并提供了高级API，在单机和分布式间可以实现无缝切换。后续我们将在[PaddlePaddle/PaddleRec](https://github.com/PaddlePaddle/PaddleRec) Repo中发布新的模型和功能，models/PaddleRec不再更新维护。
 
-**Now all models in PaddleRec require PaddlePaddle version 1.6 or higher, or suitable develop version.**
-
-We also recommend users to take a look at the [IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122294)
-
-## Dataset
-Currently, synthetic dataset is provided for proof of concept and we aim to add more real world dataset in this project in the future. The result is inaccurate because of synthetic dataset.
-
-
-## Model
-This project aims to provide practical usage of Paddle in personalized matching scenario. The model provides several encoder modules for different views of features. Currently, Bag-of-Embedding encoder, Temporal-Convolutional encoder, Gated-Recurrent-Unit encoder are provided. We will add more practical encoder for sparse features commonly used in recommender systems. Training algorithms used in this model is pairwise ranking in that a negative item with multiple views will be sampled given a pair of positive user-item pair.
-
-## Train
-The command line options for training can be listed by `python train.py -h`
-```bash
-python train.py
-```
-
-## Infer
-The command line options for inference can be listed by `python infer.py -h`
-```bash
-python infer.py
-```
-
-## Future work
-- Multiple types of pairwise loss will be added in this project. For different views of features between a user and an item, multiple losses will be supported. The model will be verified in real world dataset.
-- Parallel Executor will be added in this project
-- Distributed Training will be added
+## 介绍
+在个性化推荐场景中，推荐系统给用户提供的项目（Item）列表通常是通过个性化的匹配模型计算出来的。在现实世界中，一个用户可能有很多个视角的特征，比如用户Id，年龄，项目的点击历史等。一个项目，举例来说，新闻资讯，也会有多种视角的特征比如新闻标题，新闻类别等。多视角Simnet模型是可以融合用户以及推荐项目的多个视角的特征并进行个性化匹配学习的一体化模型。这类模型在很多工业化的场景中都会被使用到，比如百度的Feed产品中。
