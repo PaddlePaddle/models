@@ -188,16 +188,14 @@ def do_train(args):
                 outs = exe.run(compiled_train_prog,
                                fetch_list=[sum_cost.name, token_num.name])
 
-                
-                total_batch_token_num += np.asarray( outs[1] ).sum()
+                total_batch_token_num += np.asarray(outs[1]).sum()
                 if step_idx % args.print_step == 0:
-                    sum_cost_val, token_num_val = np.array(outs[0]), np.array(
-                        outs[1])
+                    sum_cost_val, token_num_val = np.asarray(outs[
+                        0]), np.asarray(outs[1])
                     # sum the cost from multi-devices
                     total_sum_cost = sum_cost_val.sum()
                     total_token_num = token_num_val.sum()
                     total_avg_cost = total_sum_cost / total_token_num
-
 
                     if step_idx == 0:
                         logging.info(
@@ -210,12 +208,13 @@ def do_train(args):
                     else:
                         logging.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                            "normalized loss: %f, ppl: %f, batch speed: %.2f steps/s, token speed: %.2f words/sec" %
-                            (step_idx, pass_id, batch_id, total_avg_cost,
-                             total_avg_cost - loss_normalizer,
-                             np.exp([min(total_avg_cost, 100)]),
-                             args.print_step / (time.time() - avg_batch_time),
-                             total_batch_token_num / (time.time() - avg_batch_time)))
+                            "normalized loss: %f, ppl: %f, batch speed: %.2f steps/s, token speed: %.2f words/sec"
+                            % (step_idx, pass_id, batch_id, total_avg_cost,
+                               total_avg_cost - loss_normalizer,
+                               np.exp([min(total_avg_cost, 100)]),
+                               args.print_step / (time.time() - avg_batch_time),
+                               total_batch_token_num /
+                               (time.time() - avg_batch_time)))
                         avg_batch_time = time.time()
 
                     total_batch_token_num = 0
