@@ -494,12 +494,14 @@ def train_resnet():
 
                 total_batch_num = total_batch_num + 1  #this is for benchmark
                 if batch_id % 10 == 0:
+                    ips = float(
+                        args.batch_size) / train_batch_cost_avg.get_average()
                     print(
-                        "[Epoch %d, batch %d] loss %.5f, acc1 %.5f, acc5 %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
+                        "[Epoch %d, batch %d] loss %.5f, acc1 %.5f, acc5 %.5f, batch_cost: %.5f s, reader_cost: %.5f s, ips: %.5f images/sec"
                         % (eop, batch_id, total_loss / total_sample,
                            total_acc1 / total_sample, total_acc5 / total_sample,
                            train_batch_cost_avg.get_average(),
-                           train_reader_cost_avg.get_average()))
+                           train_reader_cost_avg.get_average(), ips))
                     train_batch_cost_avg.reset()
                     train_reader_cost_avg.reset()
                 batch_start = time.time()
