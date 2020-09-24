@@ -155,6 +155,7 @@ def do_train(args):
 
             batch_id = 0
             batch_start = time.time()
+            interval_word_num = 0.0
             for input_data in train_loader():
                 if args.max_iter and step_idx == args.max_iter:  #NOTE: used for benchmark
                     return
@@ -163,6 +164,7 @@ def do_train(args):
                 (src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
                  trg_slf_attn_bias, trg_src_attn_bias, lbl_word,
                  lbl_weight) = input_data
+
                 logits = transformer(src_word, src_pos, src_slf_attn_bias,
                                      trg_word, trg_pos, trg_slf_attn_bias,
                                      trg_src_attn_bias)
@@ -180,6 +182,7 @@ def do_train(args):
                 optimizer.minimize(avg_cost)
                 transformer.clear_gradients()
 
+                interval_word_num += np.prod(src_word.shape)
                 if step_idx % args.print_step == 0:
                     total_avg_cost = avg_cost.numpy() * trainer_count
 
@@ -193,14 +196,18 @@ def do_train(args):
                     else:
                         train_avg_batch_cost = args.print_step / (
                             time.time() - batch_start)
+                        word_speed = interval_word_num / (
+                            time.time() - batch_start)
                         logger.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                            "normalized loss: %f, ppl: %f, avg_speed: %.2f step/s"
-                            % (step_idx, pass_id, batch_id, total_avg_cost,
-                               total_avg_cost - loss_normalizer,
-                               np.exp([min(total_avg_cost, 100)]),
-                               train_avg_batch_cost))
+                            "normalized loss: %f, ppl: %f, avg_speed: %.2f step/s, "
+                            "words speed: %0.2f works/s" %
+                            (step_idx, pass_id, batch_id, total_avg_cost,
+                             total_avg_cost - loss_normalizer,
+                             np.exp([min(total_avg_cost, 100)]),
+                             train_avg_batch_cost, word_speed))
                     batch_start = time.time()
+                    interval_word_num = 0.0
 
                 if step_idx % args.save_step == 0 and step_idx != 0:
                     # validation
