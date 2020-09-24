@@ -392,6 +392,8 @@ def batch_data_to_lod_tensors(args, batch_data, place):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     print_arguments(args)
 

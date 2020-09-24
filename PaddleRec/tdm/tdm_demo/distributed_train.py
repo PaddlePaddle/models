@@ -242,6 +242,8 @@ def get_example_num(file_list):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     print(os.getcwd())
     args = parse_args()
     print_arguments(args)

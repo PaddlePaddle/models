@@ -431,6 +431,8 @@ def train(args):
             break
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     print_arguments(args)
     check_cuda(args.use_cuda)
     check_version()

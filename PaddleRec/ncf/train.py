@@ -64,5 +64,7 @@ def train(args, train_data_path):
         fluid.io.save_inference_model(save_dir, feed_var_names, fetch_vars, exe)
  
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = args.parse_args()
     train(args, args.train_data_path)

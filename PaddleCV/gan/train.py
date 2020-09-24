@@ -63,6 +63,8 @@ def train(cfg):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     cfg = config.parse_args()
     config.print_arguments(cfg)
     utility.check_gpu(cfg.use_gpu)

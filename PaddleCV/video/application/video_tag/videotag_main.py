@@ -224,6 +224,8 @@ def main():
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     start_time = time.time()
     args = parse_args()
     print(args)

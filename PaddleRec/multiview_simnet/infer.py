@@ -132,5 +132,7 @@ def main():
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     check_version()
     main()

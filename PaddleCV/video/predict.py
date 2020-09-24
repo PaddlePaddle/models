@@ -191,6 +191,8 @@ def infer(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
     check_cuda(args.use_gpu)

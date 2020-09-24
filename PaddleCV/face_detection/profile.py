@@ -177,6 +177,8 @@ def train(args, config, train_file_list, optimizer_method):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parser.parse_args()
     print_arguments(args)
 

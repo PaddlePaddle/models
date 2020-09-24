@@ -56,5 +56,7 @@ def main():
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     multiprocessing.set_start_method('spawn', force=True)
     main()
