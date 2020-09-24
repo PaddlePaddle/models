@@ -262,4 +262,4 @@ def train_bmn(args):
 
 if __name__ == "__main__":
     args = parse_args()
-    dist.spawn(train_bmn, args=(args, ), nprocs=4)
+    dist.spawn(train_bmn, args=(args, ), nprocs=4)  #nprocs=1 when single card

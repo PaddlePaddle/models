@@ -55,7 +55,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，我们提供了处理
 
     bash run.sh
 
-若使用单卡训练，请将配置文件bmn.yaml中`TRAIN`和`VALID`对应的num\_gpus调整为1，启动方式如下:
+若使用单卡训练，请将配置文件bmn.yaml中`TRAIN`和`VALID`对应的num\_gpus调整为1，并将train.py文件最后一行的`nprocs`参数值设为1，启动方式如下:
 
     export CUDA_VISIBLE_DEVICES=0
     python train.py
