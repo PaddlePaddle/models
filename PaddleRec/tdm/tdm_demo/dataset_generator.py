@@ -70,5 +70,7 @@ class TDMDataset(dg.MultiSlotStringDataGenerator):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     d = TDMDataset()
     d.run_from_stdin()

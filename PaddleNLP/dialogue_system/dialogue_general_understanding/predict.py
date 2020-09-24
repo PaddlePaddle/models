@@ -150,6 +150,8 @@ def do_predict(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
 
     args = PDConfig(yaml_file="./data/config/dgu.yaml")
     args.build()
