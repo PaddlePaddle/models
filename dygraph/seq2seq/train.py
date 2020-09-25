@@ -158,6 +158,7 @@ def main():
             total_loss = 0
             word_count = 0.0
             batch_times = []
+            interval_time_start = time.time()
 
             batch_start = time.time()
             for batch_id, batch in enumerate(train_data_iter):
@@ -177,13 +178,15 @@ def main():
                 batch_times.append(train_batch_cost)
                 if batch_id > 0 and batch_id % 100 == 0:
                     print(
-                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
+                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, batch_cost: %.5f s, reader_cost: %.5f s, speed: %.5f words/s"
                         % (epoch_id, batch_id, np.exp(total_loss.numpy() /
                                                       word_count),
-                           train_batch_cost, batch_reader_end - batch_start))
+                           train_batch_cost, batch_reader_end - batch_start,
+                           word_count / (time.time() - interval_time_start)))
                     ce_ppl.append(np.exp(total_loss.numpy() / word_count))
                     total_loss = 0.0
                     word_count = 0.0
+                    interval_time_start = time.time()
                 batch_start = time.time()
 
             train_epoch_cost = time.time() - epoch_start
