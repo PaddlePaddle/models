@@ -301,6 +301,8 @@ def do_infer(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     parser = argparse.ArgumentParser(__doc__)
     utils.load_yaml(parser, './conf/ernie_args.yaml')
     args = parser.parse_args()

@@ -186,6 +186,8 @@ def get_cards():
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     # 参数控制可以根据需求使用argparse，yaml或者json
     # 对NLP任务推荐使用PALM下定义的configure，可以统一argparse，yaml或者json格式的配置文件。
 

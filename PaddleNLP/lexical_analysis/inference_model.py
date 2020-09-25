@@ -99,6 +99,8 @@ def test_inference_model(model_dir, text_list, dataset):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     parser = argparse.ArgumentParser(__doc__)
     utils.load_yaml(parser, 'conf/args.yaml')
     args = parser.parse_args()

@@ -67,6 +67,8 @@ def run_infer(args,test_data_path):
             logger.info("mean_acc:{:.5f}, mean_auc:{:.5f}".format(np.mean(mean_acc), np.mean(mean_auc)))
                 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
   
     args = args.parse_args()
     run_infer(args, args.test_data_path)

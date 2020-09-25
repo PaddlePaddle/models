@@ -345,6 +345,8 @@ def get_cards():
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = PDConfig('config.json')
     args.build()
     args.print_arguments()

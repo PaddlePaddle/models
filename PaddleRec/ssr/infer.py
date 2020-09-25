@@ -119,6 +119,8 @@ def infer(args, vocab_size, test_reader):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     utils.check_version()
     args = parse_args()
     start_index = args.start_index

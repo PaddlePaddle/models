@@ -121,6 +121,8 @@ def test_process(exe, program, reader, test_ret):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parser.parse_args()
     check_cuda(args.use_cuda)
     check_version()

@@ -167,5 +167,7 @@ def get_device(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     utils.check_version()
     train()

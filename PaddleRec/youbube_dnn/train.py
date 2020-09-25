@@ -69,6 +69,8 @@ def train(args):
     video_vec.to_csv(args.video_vec_path, mode="a", index=False, header=0)
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = args.parse_args()
     if(os.path.exists(args.video_vec_path)):
         os.system("rm " + args.video_vec_path)

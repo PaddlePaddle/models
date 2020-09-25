@@ -1,4 +1,4 @@
-# Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserved. 
+# copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,29 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""evaluation"""
 
-import os
-import sys
-
-from dgu.evaluation import evaluate
-from dgu.utils.configure import PDConfig
+import time
 
 
-def do_eval(args):
+class TimeAverager(object):
+    def __init__(self):
+        self.reset()
 
-    task_name = args.task_name.lower()
-    reference = args.evaluation_file
-    predicitions = args.output_prediction_file
+    def reset(self):
+        self._cnt = 0
+        self._total_time = 0
 
-    evaluate(task_name, predicitions, reference)
+    def record(self, usetime):
+        self._cnt += 1
+        self._total_time += usetime
 
-
-if __name__ == "__main__":
-    import paddle
-    paddle.enable_static()
-
-    args = PDConfig(yaml_file="./data/config/dgu.yaml")
-    args.build()
-
-    do_eval(args)
+    def get_average(self):
+        if self._cnt == 0:
+            return 0
+        return self._total_time / self._cnt

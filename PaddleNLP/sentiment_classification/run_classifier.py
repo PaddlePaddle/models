@@ -316,6 +316,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = PDConfig('senta_config.json')
     args.build()
     args.print_arguments()

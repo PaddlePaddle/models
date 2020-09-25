@@ -16,6 +16,8 @@ logger = logging.getLogger("fluid")
 logger.setLevel(logging.INFO)
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
   
     args = args.parse_args()
     dataset = Dataset(args.path + args.dataset)

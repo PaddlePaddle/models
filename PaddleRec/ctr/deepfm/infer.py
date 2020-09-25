@@ -85,5 +85,7 @@ def set_zero(var_name,
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     utils.check_version()
     infer()
