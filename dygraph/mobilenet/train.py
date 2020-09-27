@@ -239,7 +239,7 @@ def train_mobilenet():
                 if batch_id % args.print_step == 0:
                     ips = float(args.batch_size) / batch_cost_avg.get_average()
                     print(
-                        "[Epoch %d, batch %d], avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f sec, net_t: %.5f sec, backward_t: %.5f sec, reader_t: %.5f sec, ips: %.5f images/sec"
+                        "[Epoch %d, batch %d], avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f sec, net_cost: %.5f sec, backward_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f images/sec"
                         % (eop, batch_id, avg_loss.numpy(), acc_top1.numpy(),
                            acc_top5.numpy(), batch_cost_avg.get_average(),
                            batch_net_avg.get_average(),

@@ -497,7 +497,7 @@ def train_resnet():
                     ips = float(
                         args.batch_size) / train_batch_cost_avg.get_average()
                     print(
-                        "[Epoch %d, batch %d] loss %.5f, acc1 %.5f, acc5 %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f images/sec"
+                        "[Epoch %d, batch %d] loss: %.5f, acc1: %.5f, acc5: %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f images/sec"
                         % (eop, batch_id, total_loss / total_sample,
                            total_acc1 / total_sample, total_acc5 / total_sample,
                            train_batch_cost_avg.get_average(),
