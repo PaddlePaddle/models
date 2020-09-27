@@ -380,7 +380,7 @@ def create_data_loader(is_train, args):
         shape=[None] + image_shape,
         dtype="float32",
         lod_level=0)
-
+    feed_image.stop_gradient = False
     feed_label = fluid.data(
         name="feed_label", shape=[None, 1], dtype="int64", lod_level=0)
     feed_y_a = fluid.data(
@@ -438,14 +438,14 @@ def print_info(info_mode,
             # train and mixup output
             if len(metrics) == 2:
                 loss, lr = metrics
-                logger.info(
+                print(
                     "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
                            "%2.4f sec" % time_info))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
-                logger.info(
+                print(
                     "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
@@ -453,7 +453,7 @@ def print_info(info_mode,
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
-                logger.info(
+                print(
                     "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, elapse {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%2.4f sec" % time_info,
@@ -468,13 +468,13 @@ def print_info(info_mode,
         ## TODO add time elapse
         if len(metrics) == 5:
             train_loss, _, test_loss, test_acc1, test_acc5 = metrics
-            logger.info(
+            print(
                 "[End pass {0}]\ttrain_loss {1}, test_loss {2}, test_acc1 {3}, test_acc{5} {4}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % test_loss, "%.5f"
                        % test_acc1, "%.5f" % test_acc5, min(class_dim, 5)))
         elif len(metrics) == 7:
             train_loss, train_acc1, train_acc5, _, test_loss, test_acc1, test_acc5 = metrics
-            logger.info(
+            print(
                 "[End pass {0}]\ttrain_loss {1}, train_acc1 {2}, train_acc{7} {3},test_loss {4}, test_acc1 {5}, test_acc{7} {6}".
                 format(pass_id, "%.5f" % train_loss, "%.5f" % train_acc1, "%.5f"
                        % train_acc5, "%.5f" % test_loss, "%.5f" % test_acc1,
@@ -523,11 +523,13 @@ def best_strategy_compiled(args,
         build_strategy = fluid.compiler.BuildStrategy()
         try:
             fluid.require_version(min_version='1.7.0')
-            build_strategy.fuse_bn_act_ops = args.fuse_bn_act_ops
+            build_strategy.fuse_bn_act_ops = False
         except Exception as e:
-            logger.info("PaddlePaddle version 1.7.0 or higher is "
-            "required when you want to fuse batch_norm and activation_op.")
-        build_strategy.fuse_elewise_add_act_ops = args.fuse_elewise_add_act_ops
+            logger.info(
+                "PaddlePaddle version 1.7.0 or higher is "
+                "required when you want to fuse batch_norm and activation_op.")
+        build_strategy.fuse_elewise_add_act_ops = False
+        build_strategy.fuse_all_reduce_ops = False
 
         exec_strategy = fluid.ExecutionStrategy()
 
@@ -542,8 +544,11 @@ def best_strategy_compiled(args,
             # NOTE: the process is fast when num_threads is 1
             # for multi-process training.
             exec_strategy.num_threads = 1
-
-        compiled_program = fluid.CompiledProgram(program).with_data_parallel(
+        if isinstance(program, fluid.CompiledProgram):
+            program = program
+        else:
+            program = fluid.CompiledProgram(program)
+        compiled_program = program.with_data_parallel(
             loss_name=loss.name if mode == "train" else None,
             share_vars_from=share_prog if mode == "val" else None,
             build_strategy=build_strategy,
