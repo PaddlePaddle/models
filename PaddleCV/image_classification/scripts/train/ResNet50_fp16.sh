@@ -10,6 +10,7 @@ DATA_DIR="Your image dataset path, e.g. /work/datasets/ILSVRC2012/"
 DATA_FORMAT="NHWC"
 USE_AMP=true #whether to use amp
 USE_PURE_FP16=false
+MULTI_PRECISION=${USE_PURE_FP16}
 USE_DALI=true
 USE_ADDTO=true
 
@@ -33,6 +34,7 @@ python train.py \
        --lr_strategy=piecewise_decay \
        --use_amp=${USE_AMP} \
        --use_pure_fp16=${USE_PURE_FP16} \
+       --multi_precision=${MULTI_PRECISION} \
        --scale_loss=128.0 \
        --use_dynamic_loss_scaling=true \
        --data_format=${DATA_FORMAT} \
