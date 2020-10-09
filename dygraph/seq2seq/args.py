@@ -35,12 +35,6 @@ def parse_args():
     parser.add_argument("--tar_lang", type=str, help="target language suffix")
 
     parser.add_argument(
-        "--attention",
-        type=eval,
-        default=False,
-        help="Whether use attention model")
-
-    parser.add_argument(
         "--optimizer",
         type=str,
         default='adam',
@@ -57,11 +51,13 @@ def parse_args():
         type=int,
         default=1,
         help="layers number of encoder and decoder")
+
     parser.add_argument(
         "--hidden_size",
         type=int,
         default=100,
         help="hidden size of encoder and decoder")
+
     parser.add_argument("--src_vocab_size", type=int, help="source vocab size")
     parser.add_argument("--tar_vocab_size", type=int, help="target vocab size")
 
@@ -115,6 +111,12 @@ def parse_args():
         help='Whether using gpu [True|False]')
 
     parser.add_argument(
+        "--dtype",
+        type=str,
+        default='float32',
+        help="data type of tensor in network")
+
+    parser.add_argument(
         "--enable_ce",
         action='store_true',
         help="The flag indicating whether to run the task "
@@ -128,5 +130,6 @@ def parse_args():
         type=str,
         default='./seq2seq.profile',
         help="the profiler output file path. (used for benchmark)")
+
     args = parser.parse_args()
     return args

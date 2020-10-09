@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#   Copyright (c) 2019 PaddlePaddle Authors. All Rights Reserve.
+#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Utilities for parsing PTB text files."""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,7 +21,10 @@ import collections
 import os
 import io
 import sys
+
 import numpy as np
+import paddle
+from paddle.io import Dataset
 
 Py3 = sys.version_info[0] == 3
 
@@ -45,17 +48,20 @@ def read_all_line(filenam):
 
 
 def _build_vocab(filename):
-
+    pad_id = 0
     vocab_dict = {}
     ids = 0
     with io.open(filename, "r", encoding='utf-8') as f:
         for line in f.readlines():
-            vocab_dict[line.strip()] = ids
+            word = line.strip()
+            vocab_dict[word] = ids
+            if word == '</s>':
+                pad_id = ids
             ids += 1
 
     print("vocab word num", ids)
 
-    return vocab_dict
+    return vocab_dict, pad_id
 
 
 def _para_file_to_ids(src_file, tar_file, src_vocab, tar_vocab):
@@ -66,7 +72,6 @@ def _para_file_to_ids(src_file, tar_file, src_vocab, tar_vocab):
             arra = line.strip().split()
             ids = [src_vocab[w] if w in src_vocab else UNK_ID for w in arra]
             ids = ids
-
             src_data.append(ids)
 
     tar_data = []
@@ -74,9 +79,7 @@ def _para_file_to_ids(src_file, tar_file, src_vocab, tar_vocab):
         for line in f_tar.readlines():
             arra = line.strip().split()
             ids = [tar_vocab[w] if w in tar_vocab else UNK_ID for w in arra]
-
             ids = [1] + ids + [2]
-
             tar_data.append(ids)
 
     return src_data, tar_data
@@ -118,8 +121,8 @@ def raw_data(src_lang,
     src_test_file = test_prefix + "." + src_lang
     tar_test_file = test_prefix + "." + tar_lang
 
-    src_vocab = _build_vocab(src_vocab_file)
-    tar_vocab = _build_vocab(tar_vocab_file)
+    src_vocab, src_pad_id = _build_vocab(src_vocab_file)
+    tar_vocab, tar_pad_id = _build_vocab(tar_vocab_file)
 
     train_src, train_tar = _para_file_to_ids( src_train_file, tar_train_file, \
                                               src_vocab, tar_vocab )
@@ -131,89 +134,84 @@ def raw_data(src_lang,
     test_src, test_tar = _para_file_to_ids( src_test_file, tar_test_file, \
                                               src_vocab, tar_vocab )
 
-    return ( train_src, train_tar), (eval_src, eval_tar), (test_src, test_tar),\
-            (src_vocab, tar_vocab)
+    return (train_src, train_tar), (eval_src, eval_tar), (test_src, test_tar),\
+            (src_vocab, tar_vocab), (src_pad_id, tar_pad_id)
 
 
 def raw_mono_data(vocab_file, file_path):
-
     src_vocab = _build_vocab(vocab_file)
-
     test_src, test_tar = _para_file_to_ids( file_path, file_path, \
                                               src_vocab, src_vocab )
 
     return (test_src, test_tar)
 
 
-def get_data_iter(raw_data,
-                  batch_size,
-                  mode='train',
-                  enable_ce=False,
-                  cache_num=20):
+class IWSLTDataset(Dataset):
+    def __init__(self, raw_data):
+        super(IWSLTDataset, self).__init__()
+        self.raw_data = raw_data
+        self.src_data, self.tar_data = self.sort_data(raw_data)
+        self.num_samples = len(self.src_data)
 
-    src_data, tar_data = raw_data
+    def sort_data(self, raw_data):
+        src_data, trg_data = raw_data
+        data_pair = []
+        for src, trg in zip(src_data, trg_data):
+            if len(src) > 0:
+                data_pair.append([src, trg])
+        sorted_data_pair = sorted(data_pair, key=lambda k: len(k[0]))
 
-    data_len = len(src_data)
+        src_data = [data_pair[0] for data_pair in sorted_data_pair]
+        trg_data = [data_pair[1] for data_pair in sorted_data_pair]
 
-    index = np.arange(data_len)
-    if mode == "train" and not enable_ce:
-        np.random.shuffle(index)
+        return src_data, trg_data
 
-    def to_pad_np(data, source=False):
-        max_len = 0
-        bs = min(batch_size, len(data))
-        for ele in data:
-            if len(ele) > max_len:
-                max_len = len(ele)
+    def __getitem__(self, idx):
+        src_ids, tar_ids = np.asarray(self.src_data[idx]), np.asarray(
+            self.tar_data[idx])
+        src_mask, tar_mask = len(src_ids), len(tar_ids)
+        return src_ids, tar_ids, src_mask, tar_mask
 
-        ids = np.ones((bs, max_len), dtype='int64') * 2
-        mask = np.zeros((bs), dtype='int32')
+    def __len__(self):
+        return self.num_samples
+
+
+class DataCollector():
+    def __init__(self, pad_ids=(0, 0)):
+        super(DataCollector, self).__init__()
+        self.pad_ids = pad_ids
+
+    def __call__(self, samples):
+        batch_size = len(samples)
+
+        src_ids_np = np.asarray([sample[0] for sample in samples])
+        tar_ids_np = np.asarray([sample[1] for sample in samples])
+        src_len = np.asarray([sample[2] for sample in samples])
+        trg_len = np.asarray([sample[3] for sample in samples])
+
+        max_source_len = max(max(src_len), 1)
+        max_tar_len = max(max(trg_len), 1)
+
+        src_ids_pad_np = self.pad(src_ids_np, max_source_len, source=True)
+        tar_ids_pad_np = self.pad(tar_ids_np, max_tar_len)
+
+        in_tar = tar_ids_pad_np[:, :-1]
+        label_tar = tar_ids_pad_np[:, 1:]
+        label_tar = label_tar.reshape(
+            (label_tar.shape[0], label_tar.shape[1], 1))
+
+        input_data_feed = src_ids_pad_np, in_tar, label_tar, src_len, trg_len
+        return input_data_feed
+
+    def pad(self, data, max_len, source=False):
+        if source:
+            pad_id = self.pad_ids[0]
+        else:
+            pad_id = self.pad_ids[1]
+        bs = len(data)
+        ids = np.ones((bs, max_len), dtype='int64') * pad_id
 
         for i, ele in enumerate(data):
             ids[i, :len(ele)] = ele
-            if not source:
-                mask[i] = len(ele) - 1
-            else:
-                mask[i] = len(ele)
 
-        return ids, mask
-
-    b_src = []
-
-    if mode != "train":
-        cache_num = 1
-    for j in range(data_len):
-        if len(b_src) == batch_size * cache_num:
-            # build batch size
-
-            # sort
-            if mode == 'infer':
-                new_cache = b_src
-            else:
-                new_cache = sorted(b_src, key=lambda k: len(k[0]))
-
-            for i in range(cache_num):
-                batch_data = new_cache[i * batch_size:(i + 1) * batch_size]
-                src_cache = [w[0] for w in batch_data]
-                tar_cache = [w[1] for w in batch_data]
-                src_ids, src_mask = to_pad_np(src_cache, source=True)
-                tar_ids, tar_mask = to_pad_np(tar_cache)
-                yield (src_ids, src_mask, tar_ids, tar_mask)
-
-            b_src = []
-
-        b_src.append((src_data[index[j]], tar_data[index[j]]))
-    if len(b_src) == batch_size * cache_num or mode == 'infer':
-        if mode == 'infer':
-            new_cache = b_src
-        else:
-            new_cache = sorted(b_src, key=lambda k: len(k[0]))
-
-        for i in range(cache_num):
-            batch_end = min(len(new_cache), (i + 1) * batch_size)
-            batch_data = new_cache[i * batch_size:batch_end]
-            src_cache = [w[0] for w in batch_data]
-            tar_cache = [w[1] for w in batch_data]
-            src_ids, src_mask = to_pad_np(src_cache, source=True)
-            tar_ids, tar_mask = to_pad_np(tar_cache)
-            yield (src_ids, src_mask, tar_ids, tar_mask)
+        return ids

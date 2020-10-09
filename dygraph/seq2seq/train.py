@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#   Copyright (c) 2018 PaddlePaddle Authors. All Rights Reserve.
+#   Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserve.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,10 +26,9 @@ import math
 import contextlib
 
 import paddle
-import paddle.fluid as fluid
-from paddle.fluid.clip import GradientClipByGlobalNorm
-
+from paddle.io import DataLoader, DistributedBatchSampler
 import reader
+from reader import IWSLTDataset, DataCollector
 
 import sys
 if sys.version[0] == '2':
@@ -37,185 +36,154 @@ if sys.version[0] == '2':
     sys.setdefaultencoding("utf-8")
 
 from args import *
-from base_model import BaseModel
 from attention_model import AttentionModel
 import logging
 import pickle
 
+SEED = 102
+paddle.manual_seed(SEED)
+
+args = parse_args()
+paddle.set_default_dtype(args.dtype)
+if args.enable_ce:
+    np.random.seed(102)
+    random.seed(102)
+
+
+def create_model(args, pad_ids):
+    model = AttentionModel(
+        args.hidden_size,
+        args.src_vocab_size,
+        args.tar_vocab_size,
+        num_layers=args.num_layers,
+        init_scale=args.init_scale,
+        pad_ids=pad_ids,
+        dropout=args.dropout)
+    return model
+
+
+def create_data_loader(args, place, shuffle=True):
+    print("begin to load data")
+    raw_data = reader.raw_data(args.src_lang, args.tar_lang, args.vocab_prefix,
+                               args.train_data_prefix, args.eval_data_prefix,
+                               args.test_data_prefix, args.max_len)
+
+    train_data, val_data, test_data, _, pad_ids = raw_data
+    batch_fn = DataCollector(pad_ids)
+
+    def _create_data_loader(data, batch_fn):
+        dataset = IWSLTDataset(data)
+        loader = DataLoader(
+            dataset,
+            places=place,
+            return_list=True,
+            batch_size=args.batch_size,
+            shuffle=shuffle,
+            collate_fn=batch_fn,
+            drop_last=False)
+        return loader
+
+    train_loader = _create_data_loader(train_data, batch_fn)
+    val_loader = _create_data_loader(val_data, batch_fn)
+    test_loader = _create_data_loader(test_data, batch_fn)
+    return train_loader, val_loader, test_loader, pad_ids
+
 
 def main():
-    args = parse_args()
     print(args)
-    num_layers = args.num_layers
-    src_vocab_size = args.src_vocab_size
-    tar_vocab_size = args.tar_vocab_size
-    batch_size = args.batch_size
-    dropout = args.dropout
-    init_scale = args.init_scale
-    max_grad_norm = args.max_grad_norm
-    hidden_size = args.hidden_size
+    place = paddle.set_device('gpu') if args.use_gpu else paddle.set_device(
+        "cpu")
+    paddle.disable_static()
+    if args.enable_ce:
+        np.random.seed(102)
+        random.seed(102)
 
-    place = fluid.CUDAPlace(0) if args.use_gpu else fluid.CPUPlace()
-    with fluid.dygraph.guard(place):
-        #args.enable_ce = True
-        if args.enable_ce:
-            fluid.default_startup_program().random_seed = 102
-            fluid.default_main_program().random_seed = 102
-            np.random.seed(102)
-            random.seed(102)
+    train_loader, val_loader, test_loader, pad_ids = create_data_loader(
+        args, place, shuffle=False)
+    model = create_model(args, pad_ids)
 
-        # Training process
+    gloabl_norm_clip = paddle.nn.GradientClipByGlobalNorm(args.max_grad_norm)
+    lr = args.learning_rate
+    opt_type = args.optimizer
 
-        if args.attention:
-            model = AttentionModel(
-                hidden_size,
-                src_vocab_size,
-                tar_vocab_size,
-                batch_size,
-                num_layers=num_layers,
-                init_scale=init_scale,
-                dropout=dropout)
-        else:
-            model = BaseModel(
-                hidden_size,
-                src_vocab_size,
-                tar_vocab_size,
-                batch_size,
-                num_layers=num_layers,
-                init_scale=init_scale,
-                dropout=dropout)
-        gloabl_norm_clip = GradientClipByGlobalNorm(max_grad_norm)
-        lr = args.learning_rate
-        opt_type = args.optimizer
-        if opt_type == "sgd":
-            optimizer = fluid.optimizer.SGD(lr,
-                                            parameter_list=model.parameters(),
-                                            grad_clip=gloabl_norm_clip)
-        elif opt_type == "adam":
-            optimizer = fluid.optimizer.Adam(
-                lr,
-                parameter_list=model.parameters(),
-                grad_clip=gloabl_norm_clip)
-        else:
-            print("only support [sgd|adam]")
-            raise Exception("opt type not support")
+    if opt_type == "sgd":
+        optimizer = paddle.optimizer.SGD(lr,
+                                         parameters=model.parameters(),
+                                         grad_clip=gloabl_norm_clip)
+    elif opt_type == "adam":
+        optimizer = paddle.optimizer.Adam(
+            lr, parameters=model.parameters(), grad_clip=gloabl_norm_clip)
+    else:
+        print("only support [sgd|adam]")
+        raise Exception("opt type not support")
 
-        train_data_prefix = args.train_data_prefix
-        eval_data_prefix = args.eval_data_prefix
-        test_data_prefix = args.test_data_prefix
-        vocab_prefix = args.vocab_prefix
-        src_lang = args.src_lang
-        tar_lang = args.tar_lang
-        print("begin to load data")
-        raw_data = reader.raw_data(src_lang, tar_lang, vocab_prefix,
-                                   train_data_prefix, eval_data_prefix,
-                                   test_data_prefix, args.max_len)
-        print("finished load data")
-        train_data, valid_data, test_data, _ = raw_data
+    ce_time = []
+    ce_ppl = []
+    max_epoch = args.max_epoch
+    for epoch_id in range(max_epoch):
+        epoch_start = time.time()
+        model.train()
+        total_loss = 0
+        word_count = 0.0
+        batch_times, epoch_times, reader_times = [], [], []
+        batch_start = time.time()
+        for batch_id, input_data_feed in enumerate(train_loader):
+            batch_reader_end = time.time()
+            loss = model(input_data_feed)
+            # print(loss.numpy()[0])
+            optimizer.clear_grad()
+            loss.backward()
+            optimizer.step()
 
-        def prepare_input(batch, epoch_id=0):
-            src_ids, src_mask, tar_ids, tar_mask = batch
-            res = {}
-            src_ids = src_ids.reshape((src_ids.shape[0], src_ids.shape[1]))
-            in_tar = tar_ids[:, :-1]
-            label_tar = tar_ids[:, 1:]
+            train_batch_cost = time.time() - batch_start
+            batch_times.append(train_batch_cost)
+            epoch_times.append(train_batch_cost)
+            reader_times.append(batch_reader_end - batch_start)
+            batch_size = input_data_feed[4].shape[0]
+            total_loss += loss * batch_size
+            word_num = paddle.sum(input_data_feed[4])
+            word_count += word_num.numpy()
 
-            in_tar = in_tar.reshape((in_tar.shape[0], in_tar.shape[1]))
-            label_tar = label_tar.reshape(
-                (label_tar.shape[0], label_tar.shape[1], 1))
-            inputs = [src_ids, in_tar, label_tar, src_mask, tar_mask]
-            return inputs, np.sum(tar_mask)
-
-        # get train epoch size
-        def eval(data, epoch_id=0):
-            model.eval()
-            eval_data_iter = reader.get_data_iter(data, batch_size, mode='eval')
-            total_loss = 0.0
-            word_count = 0.0
-            for batch_id, batch in enumerate(eval_data_iter):
-                input_data_feed, word_num = prepare_input(batch, epoch_id)
-                loss = model(input_data_feed)
-
-                total_loss += loss * batch_size
-                word_count += word_num
-            ppl = np.exp(total_loss.numpy() / word_count)
-            model.train()
-            return ppl
-
-        ce_time = []
-        ce_ppl = []
-        max_epoch = args.max_epoch
-        for epoch_id in range(max_epoch):
-            epoch_start = time.time()
-
-            model.train()
-            if args.enable_ce:
-                train_data_iter = reader.get_data_iter(
-                    train_data, batch_size, enable_ce=True)
-            else:
-                train_data_iter = reader.get_data_iter(train_data, batch_size)
-
-            total_loss = 0
-            word_count = 0.0
-            batch_times = []
-            interval_time_start = time.time()
-
+            if batch_id > 0 and batch_id % 100 == 0:
+                print(
+                    "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, avg_batch_cost: %.5f s, avg_reader_cost: %.5f s"
+                    % (epoch_id, batch_id, np.exp(
+                        total_loss.numpy() / word_count), sum(batch_times) /
+                       len(batch_times), sum(reader_times) / len(reader_times)))
+                ce_ppl.append(np.exp(total_loss.numpy() / word_count))
+                total_loss = 0.0
+                word_count = 0.0
+            batch_times, reader_times = [], []
             batch_start = time.time()
-            for batch_id, batch in enumerate(train_data_iter):
-                batch_reader_end = time.time()
 
-                input_data_feed, word_num = prepare_input(
-                    batch, epoch_id=epoch_id)
-                word_count += word_num
-                loss = model(input_data_feed)
-                # print(loss.numpy()[0])
-                loss.backward()
-                optimizer.minimize(loss)
-                model.clear_gradients()
-                total_loss += loss * batch_size
+        train_epoch_cost = time.time() - epoch_start
+        print(
+            "\nTrain epoch:[%d]; epoch_cost: %.5f s; avg_batch_cost: %.5f s/step\n"
+            % (epoch_id, train_epoch_cost, sum(epoch_times) / len(epoch_times)))
+        ce_time.append(train_epoch_cost)
 
-                train_batch_cost = time.time() - batch_start
-                batch_times.append(train_batch_cost)
-                if batch_id > 0 and batch_id % 100 == 0:
-                    print(
-                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, batch_cost: %.5f s, reader_cost: %.5f s, speed: %.5f words/s"
-                        % (epoch_id, batch_id, np.exp(total_loss.numpy() /
-                                                      word_count),
-                           train_batch_cost, batch_reader_end - batch_start,
-                           word_count / (time.time() - interval_time_start)))
-                    ce_ppl.append(np.exp(total_loss.numpy() / word_count))
-                    total_loss = 0.0
-                    word_count = 0.0
-                    interval_time_start = time.time()
-                batch_start = time.time()
+        path_name = os.path.join(args.model_path, "epoch_" + str(epoch_id))
 
-            train_epoch_cost = time.time() - epoch_start
-            print(
-                "\nTrain epoch:[%d]; epoch_cost: %.5f s; avg_batch_cost: %.5f s/step\n"
-                % (epoch_id, train_epoch_cost,
-                   sum(batch_times) / len(batch_times)))
-            ce_time.append(train_epoch_cost)
+        print("begin to save", path_name)
+        paddle.save(model.state_dict(), path_name)
+        print("save finished")
+        dev_ppl = eval(model, val_loader)
+        print("dev ppl", dev_ppl)
+        test_ppl = eval(model, test_loader)
+        print("test ppl", test_ppl)
+        epoch_times = []
 
-            dir_name = os.path.join(args.model_path, "epoch_" + str(epoch_id))
-            print("begin to save", dir_name)
-            paddle.fluid.save_dygraph(model.state_dict(), dir_name)
-            print("save finished")
-            dev_ppl = eval(valid_data)
-            print("dev ppl", dev_ppl)
-            test_ppl = eval(test_data)
-            print("test ppl", test_ppl)
-
-        if args.enable_ce:
-            card_num = get_cards()
-            _ppl = 0
-            _time = 0
-            try:
-                _time = ce_time[-1]
-                _ppl = ce_ppl[-1]
-            except:
-                print("ce info error")
-            print("kpis\ttrain_duration_card%s\t%s" % (card_num, _time))
-            print("kpis\ttrain_ppl_card%s\t%f" % (card_num, _ppl))
+    if args.enable_ce:
+        card_num = get_cards()
+        _ppl = 0
+        _time = 0
+        try:
+            _time = ce_time[-1]
+            _ppl = ce_ppl[-1]
+        except:
+            print("ce info error")
+        print("kpis\ttrain_duration_card%s\t%s" % (card_num, _time))
+        print("kpis\ttrain_ppl_card%s\t%f" % (card_num, _ppl))
 
 
 def get_cards():
@@ -226,22 +194,24 @@ def get_cards():
     return num
 
 
-def check_version():
-    """
-    Log error and exit when the installed version of paddlepaddle is
-    not satisfied.
-    """
-    err = "PaddlePaddle version 1.6 or higher is required, " \
-          "or a suitable develop version is satisfied as well. \n" \
-          "Please make sure the version is good with your code." \
+def eval(model, data_loader, epoch_id=0):
+    model.eval()
+    total_loss = 0.0
+    word_count = 0.0
+    for batch_id, input_data_feed in enumerate(data_loader):
+        word_num = paddle.sum(input_data_feed[4])
+        batch_size = input_data_feed[4].shape[0]
+        word_count += word_num.numpy()
 
-    try:
-        fluid.require_version('1.6.0')
-    except Exception as e:
-        logger.error(err)
-        sys.exit(1)
+        loss = model(input_data_feed)
+
+        total_loss += loss * batch_size
+        word_count += word_num.numpy()
+
+    ppl = np.exp(total_loss.numpy() / word_count)
+    model.train()
+    return ppl
 
 
 if __name__ == '__main__':
-    check_version()
     main()

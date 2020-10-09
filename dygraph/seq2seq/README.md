@@ -1,4 +1,4 @@
-运行本目录下的范例模型需要安装PaddlePaddle Fluid 1.7版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
+运行本目录下的范例模型需要安装PaddlePaddle 2.0版。如果您的 PaddlePaddle 安装版本低于此要求，请按照[安装文档](https://www.paddlepaddle.org.cn/#quick-start)中的说明更新 PaddlePaddle 安装版本。
 
 # Sequence to Sequence (Seq2Seq)
 
@@ -9,13 +9,9 @@
 ├── README.md              # 文档，本文件
 ├── args.py                # 训练、预测以及模型参数配置程序
 ├── reader.py              # 数据读入程序
-├── download.py            # 数据下载程序
 ├── train.py               # 训练主程序
-├── infer.py               # 预测主程序
 ├── run.sh                 # 默认配置的启动脚本
-├── infer.sh               # 默认配置的解码脚本
-├── attention_model.py     # 带注意力机制的翻译模型程序
-└── base_model.py          # 无注意力机制的翻译模型程序
+└──attention_model.py      # 带注意力机制的翻译模型程序
 ```
 
 ## 简介
@@ -24,7 +20,7 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 
 本目录包含Seq2Seq的一个经典样例：机器翻译，实现了一个base model（不带attention机制），一个带attention机制的翻译模型。Seq2Seq翻译模型，模拟了人类在进行翻译类任务时的行为：先解析源语言，理解其含义，再根据该含义来写出目标语言的语句。更多关于机器翻译的具体原理和数学表达式，我们推荐参考[深度学习101](http://paddlepaddle.org/documentation/docs/zh/1.2/beginners_guide/basics/machine_translation/index.html)。
 
-**本目录旨在展示如何用Paddle Fluid 1.7的动态图接口实现一个标准的Seq2Seq模型** ，相同网络结构的静态图实现可以参照 [Seq2Seq](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleTextGEN/seq2seq)。
+**本目录旨在展示如何用PaddlePaddle 2.0-beta的动态图接口实现一个标准的Seq2Seq模型** ，相同网络结构的静态图实现可以参照 [Seq2Seq](https://github.com/PaddlePaddle/models/tree/develop/PaddleNLP/PaddleTextGEN/seq2seq)。
 
 ## 模型概览
 
@@ -37,6 +33,7 @@ Sequence to Sequence (Seq2Seq)，使用编码器-解码器（Encoder-Decoder）�
 ### 数据获取
 
 ```
+cd ..
 python download.py
 ```
 
@@ -48,59 +45,36 @@ python download.py
 sh run.sh
 ```
 
-默认使用带有注意力机制的RNN模型，可以通过修改 --attention 为False来训练不带注意力机制的RNN模型。
 
 ```
 python train.py \
     --src_lang en --tar_lang vi \
-    --attention True \
     --num_layers 2 \
     --hidden_size 512 \
     --src_vocab_size 17191 \
     --tar_vocab_size 7709 \
     --batch_size 128 \
-    --dropout 0.2 \
-    --init_scale  0.1 \
+    --dropout 0.0 \
+    --init_scale  0.2 \
     --max_grad_norm 5.0 \
     --train_data_prefix data/en-vi/train \
     --eval_data_prefix data/en-vi/tst2012 \
     --test_data_prefix data/en-vi/tst2013 \
     --vocab_prefix data/en-vi/vocab \
     --use_gpu True \
-    --model_path ./attention_models
+    --model_path attention_models \
+    --enable_ce \
+    --learning_rate 0.002 \
+    --dtype float64 \
+    --optimizer sgd \
+    --max_epoch 3
 ```
 
 训练程序会在每个epoch训练结束之后，save一次模型。
 
 ## 模型预测
 
-当模型训练完成之后， 可以利用infer.sh的脚本进行预测，默认使用beam search的方法进行预测，加载第10个epoch的模型进行预测，对test的数据集进行解码
-
-```
-sh infer.sh
-```
-
-如果想预测别的数据文件，只需要将 --infer_file参数进行修改。
-
-```
-python infer.py \
-    --attention True \
-    --src_lang en --tar_lang vi \
-    --num_layers 2 \
-    --hidden_size 512 \
-    --src_vocab_size 17191 \
-    --tar_vocab_size 7709 \
-    --batch_size 128 \
-    --dropout 0.2 \
-    --init_scale  0.1 \
-    --max_grad_norm 5.0 \
-    --vocab_prefix data/en-vi/vocab \
-    --infer_file data/en-vi/tst2013.en \
-    --reload_model attention_models/epoch_10 \
-    --infer_output_file attention_infer_output/infer_output.txt \
-    --beam_size 10 \
-    --use_gpu True
-```
+TODO
 
 ## 效果评价
 
@@ -108,20 +82,4 @@ python infer.py \
 
 ```sh
 mosesdecoder/scripts/generic/multi-bleu.perl tst2013.vi < infer_output.txt
-```
-
-每个模型分别训练了10次，单次取第10个epoch保存的模型进行预测，取beam_size=10。效果如下（为了便于观察，对10次结果按照升序进行了排序）：
-
-```
-> no attention
-tst2012 BLEU:
-[10.75 10.85 10.9  10.94 10.97 11.01 11.01 11.04 11.13 11.4]
-tst2013 BLEU:
-[10.71 10.71 10.74 10.76 10.91 10.94 11.02 11.16 11.21 11.44]
-
-> with attention
-tst2012 BLEU:
-[21.14 22.34 22.54 22.65 22.71 22.71 23.08 23.15 23.3  23.4]
-tst2013 BLEU:
-[23.41 24.79 25.11 25.12 25.19 25.24 25.39 25.61 25.61 25.63]
 ```
