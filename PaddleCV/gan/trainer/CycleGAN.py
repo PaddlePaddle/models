@@ -17,6 +17,7 @@ from __future__ import division
 from __future__ import print_function
 from network.CycleGAN_network import CycleGAN_model
 from util import utility
+from util import timer
 import paddle.fluid as fluid
 from paddle.fluid import profiler
 import paddle
@@ -291,15 +292,17 @@ class CycleGAN(object):
                 loss_name=d_B_trainer.d_loss_B.name,
                 build_strategy=build_strategy)
 
-        t_time = 0
-
         total_train_batch = 0  # NOTE :used for benchmark
+        reader_cost_averager = timer.TimeAverager()
+        batch_cost_averager = timer.TimeAverager()
         for epoch_id in range(self.cfg.epoch):
             batch_id = 0
+            batch_start = time.time()
             for data_A, data_B in zip(A_loader(), B_loader()):
-                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter: # used for benchmark
+                if self.cfg.max_iter and total_train_batch == self.cfg.max_iter:  # used for benchmark
                     return
-                s_time = time.time()
+                reader_cost_averager.record(time.time() - batch_start)
+
                 tensor_A, tensor_B = data_A[0]['input_A'], data_B[0]['input_B']
                 ## optimize the g_A network
                 g_A_loss, g_A_cyc_loss, g_A_idt_loss, g_B_loss, g_B_cyc_loss,\
@@ -335,26 +338,31 @@ class CycleGAN(object):
                     feed={"input_A": tensor_A,
                           "fake_pool_A": fake_pool_A})[0]
 
-                batch_time = time.time() - s_time
-                t_time += batch_time
+                batch_cost_averager.record(time.time() - batch_start)
                 if batch_id % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}: \n\
                          d_A_loss: {}; g_A_loss: {}; g_A_cyc_loss: {}; g_A_idt_loss: {}; \n\
                          d_B_loss: {}; g_B_loss: {}; g_B_cyc_loss: {}; g_B_idt_loss: {}; \n\
-                         Batch_time_cost: {}".format(
-                        epoch_id, batch_id, d_A_loss[0], g_A_loss[0],
-                        g_A_cyc_loss[0], g_A_idt_loss[0], d_B_loss[0], g_B_loss[
-                            0], g_B_cyc_loss[0], g_B_idt_loss[0], batch_time))
+                         reader_cost: {}, Batch_time_cost: {}"
+                          .format(epoch_id, batch_id, d_A_loss[0], g_A_loss[
+                              0], g_A_cyc_loss[0], g_A_idt_loss[0], d_B_loss[0],
+                                  g_B_loss[0], g_B_cyc_loss[0], g_B_idt_loss[0],
+                                  reader_cost_averager.get_average(),
+                                  batch_cost_averager.get_average()))
+                    reader_cost_averager.reset()
+                    batch_cost_averager.reset()
 
                 sys.stdout.flush()
                 batch_id += 1
-                #NOTE: used for benchmark
                 total_train_batch += 1  # used for benchmark
+                batch_start = time.time()
+
                 # profiler tools
                 if self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq:
                     profiler.reset_profiler()
                 elif self.cfg.profile and epoch_id == 0 and batch_id == self.cfg.print_freq + 5:
                     return
+
                 # used for continuous evaluation
                 if self.cfg.enable_ce and batch_id == 10:
                     break
@@ -398,12 +406,9 @@ class CycleGAN(object):
                     B_id2name=self.B_id2name)
 
             if self.cfg.save_checkpoints:
-                utility.checkpoints(epoch_id, self.cfg, gen_trainer,
-                                    "net_G")
-                utility.checkpoints(epoch_id, self.cfg, d_A_trainer,
-                                    "net_DA")
-                utility.checkpoints(epoch_id, self.cfg, d_B_trainer,
-                                    "net_DB")
+                utility.checkpoints(epoch_id, self.cfg, gen_trainer, "net_G")
+                utility.checkpoints(epoch_id, self.cfg, d_A_trainer, "net_DA")
+                utility.checkpoints(epoch_id, self.cfg, d_B_trainer, "net_DB")
 
         # used for continuous evaluation
         if self.cfg.enable_ce:

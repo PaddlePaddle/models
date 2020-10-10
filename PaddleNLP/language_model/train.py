@@ -49,19 +49,24 @@ import pickle
 
 SEED = 123
 
+
 class TimeCostAverage(object):
     def __init__(self):
         self.reset()
+
     def reset(self):
         self.cnt = 0
         self.total_time = 0
+
     def record(self, usetime):
         self.cnt += 1
         self.total_time += usetime
+
     def get_average(self):
         if self.cnt == 0:
             return 0
         return self.total_time / self.cnt
+
 
 @contextlib.contextmanager
 def profile_context(profile=True, profiler_path='/tmp/paddingrnn.profile'):
@@ -307,6 +312,7 @@ def main():
         total_loss = 0
         iters = 0
         batch_cost_avg = TimeCostAverage()
+        reader_cost_avg = TimeCostAverage()
 
         init_hidden, init_cell = generate_init_data()
         batch_start_time = time.time()
@@ -318,6 +324,8 @@ def main():
                 epoch_id=epoch_id,
                 with_lr=True,
                 device_count=device_count)
+            reader_time = time.time() - batch_start_time
+            reader_cost_avg.record(reader_time)
             fetch_outs = exe.run(train_program,
                                  feed=input_data_feed,
                                  fetch_list=[
@@ -338,9 +346,13 @@ def main():
             if batch_id > 0 and batch_id % log_interval == 0:
                 ppl = np.exp(total_loss / iters)
                 print(
-                    "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
-                    % (epoch_id, batch_id, batch_cost_avg.get_average(), ppl[0], lr[0]))
+                    "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f words/sec"
+                    % (epoch_id, batch_id, ppl[0], lr[0],
+                       batch_cost_avg.get_average(),
+                       reader_cost_avg.get_average(),
+                       config.batch_size / batch_cost_avg.get_average()))
                 batch_cost_avg.reset()
+                reader_cost_avg.reset()
 
             # profiler tools for benchmark
             if args.profile and batch_id == log_interval:
@@ -402,7 +414,8 @@ def main():
                     ppl = np.exp(total_loss / iters)
                     print(
                         "-- Epoch:[%d]; Batch:[%d]; Time: %.5f s; ppl: %.5f, lr: %.5f"
-                        % (epoch_id, batch_id, batch_cost_avg.get_average(), ppl[0], lr[0]))
+                        % (epoch_id, batch_id, batch_cost_avg.get_average(),
+                           ppl[0], lr[0]))
                     batch_cost_avg.reset()
 
                 batch_id += 1
@@ -506,5 +519,6 @@ def main():
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     main()
-

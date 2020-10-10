@@ -37,19 +37,24 @@ if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding("utf-8")
 
+
 class TimeCostAverage(object):
     def __init__(self):
         self.reset()
+
     def reset(self):
         self.cnt = 0
         self.total_time = 0
+
     def record(self, usetime):
         self.cnt += 1
         self.total_time += usetime
+
     def get_average(self):
         if self.cnt == 0:
             return 0
         return self.total_time / self.cnt
+
 
 class SimpleLSTMRNN(fluid.Layer):
     def __init__(self,
@@ -451,10 +456,12 @@ def train_ptb_lm():
                 if batch_id > 0 and batch_id % log_interval == 0:
                     ppl = np.exp(total_loss / iters)
                     print(
-                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
+                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f words/sec"
                         % (epoch_id, batch_id, ppl[0],
                            sgd._global_learning_rate().numpy(), out_loss,
-                           batch_cost_avg.get_average(), reader_cost_avg.get_average()))
+                           batch_cost_avg.get_average(),
+                           reader_cost_avg.get_average(),
+                           batch_size / batch_cost_avg.get_average()))
                     batch_cost_avg.reset()
                     reader_cost_avg.reset()
                 batch_start = time.time()

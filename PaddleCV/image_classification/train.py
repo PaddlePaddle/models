@@ -120,6 +120,7 @@ def validate(args,
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
+
     if int(os.environ.get('PADDLE_TRAINERS_NUM', 1)) > 1:
         compiled_program = test_prog
     else:
@@ -245,6 +246,7 @@ def train(args):
                                                  train_fetch_vars[0], exe)
 
     batch_cost_avg = TimeCostAverage()
+    reader_cost_avg = TimeCostAverage()
 
     #NOTE: this for benchmark
 
@@ -267,11 +269,14 @@ def train(args):
             #NOTE: this is for benchmark
             if args.max_iter and total_batch_num == args.max_iter:
                 return
+            t2 = time.time()
+            reader_cost = t2 - t1
+            reader_cost_avg.record(reader_cost)
             train_batch_metrics = exe.run(compiled_train_prog,
                                           feed=batch,
                                           fetch_list=train_fetch_list)
-            t2 = time.time()
-            train_batch_elapse = t2 - t1
+            t3 = time.time()
+            train_batch_elapse = t3 - t1
             train_batch_time_record.append(train_batch_elapse)
             batch_cost_avg.record(train_batch_elapse)
 
@@ -279,11 +284,18 @@ def train(args):
                 np.array(train_batch_metrics), axis=1)
             train_batch_metrics_record.append(train_batch_metrics_avg)
             if trainer_id == 0:
-                print_info("batch", train_batch_metrics_avg,
-                           batch_cost_avg.get_average(), pass_id,
-                           train_batch_id, args.print_step)
+                print_info(
+                    "batch",
+                    train_batch_metrics_avg,
+                    batch_cost_avg.get_average(),
+                    pass_id,
+                    train_batch_id,
+                    args.print_step,
+                    reader_cost=reader_cost_avg.get_average(),
+                    ips=args.batch_size / batch_cost_avg.get_average())
                 sys.stdout.flush()
                 if train_batch_id % args.print_step == 0:
+                    reader_cost_avg.reset()
                     batch_cost_avg.reset()
             train_batch_id += 1
             t1 = time.time()
@@ -327,4 +339,6 @@ def main():
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     main()

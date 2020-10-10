@@ -84,6 +84,7 @@ def infer(args):
 
 
 if __name__ == '__main__':
+    
     args = utils.parse_args()
     utils.print_arguments(args)
 
