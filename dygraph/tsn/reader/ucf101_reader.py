@@ -45,7 +45,7 @@ class VideoRecord(object):
 
     @property
     def path(self):
-        return "./data/dataset/ucf101/rawframes/" + self._data[0]
+        return self._data[0]
 
     @property
     def num_frames(self):

@@ -234,11 +234,6 @@ def train(args):
             num_workers=valid_config.VALID.num_workers,
             return_list=True)
 
-        if use_data_parallel:
-            # (data_parallel step4/6)
-            train_reader = fluid.contrib.reader.distributed_batch_reader(
-                train_reader)
-
         # resume training the model
         if args.resume is not None:
             model_state, opt_state = fluid.load_dygraph(args.resume)
@@ -270,7 +265,7 @@ def train(args):
                 dy_out = avg_loss.numpy()[0]
 
                 if use_data_parallel:
-                    # (data_parallel step5/6)
+                    # (data_parallel step4/6)
                     avg_loss = video_model.scale_loss(avg_loss)
                     avg_loss.backward()
                     video_model.apply_collective_grads()
