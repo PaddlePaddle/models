@@ -16,20 +16,19 @@ import os
 import sys
 import time
 import argparse
-import ast
 import wget
 import tarfile
 import logging
 import numpy as np
-import paddle.fluid as fluid
 import glob
-from paddle.fluid.dygraph.base import to_variable
+import ast
 from model import TSN_ResNet
 from utils.config_utils import *
 from reader.ucf101_reader import UCF101Reader
 import paddle
 from paddle.io import DataLoader, DistributedBatchSampler
 from compose import TSN_UCF101_Dataset
+import paddle.nn.functional as F
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -127,11 +126,11 @@ def val(epoch, model, val_loader, cfg, args):
 
         outputs = model(imgs)
 
-        loss = fluid.layers.cross_entropy(
+        loss = F.cross_entropy(
             input=outputs, label=labels, ignore_index=-1)
-        avg_loss = fluid.layers.mean(loss)
-        acc_top1 = fluid.layers.accuracy(input=outputs, label=labels, k=1)
-        acc_top5 = fluid.layers.accuracy(input=outputs, label=labels, k=5)
+        avg_loss = paddle.mean(loss)
+        acc_top1 = paddle.metric.accuracy(input=outputs, label=labels, k=1)
+        acc_top5 = paddle.metric.accuracy(input=outputs, label=labels, k=5)
 
         dy_out = avg_loss.numpy()[0]
         total_loss += dy_out
@@ -161,12 +160,12 @@ def create_optimizer(cfg, params):
     l2_weight_decay = cfg.l2_weight_decay
     momentum = cfg.momentum
 
-    optimizer = fluid.optimizer.Momentum(
-        learning_rate=fluid.layers.piecewise_decay(
+    optimizer = paddle.optimizer.Momentum(
+        learning_rate=paddle.optimizer.PiecewiseLR(
             boundaries=bd, values=lr),
         momentum=momentum,
-        regularization=fluid.regularizer.L2Decay(l2_weight_decay),
-        parameter_list=params)
+        weight_decay=paddle.regularizer.L2Decay(l2_weight_decay),
+        parameters=params)
 
     return optimizer
 
@@ -178,162 +177,155 @@ def train(args):
     print_configs(train_config, 'Train')
     use_data_parallel = args.use_data_parallel
 
-    trainer_count = fluid.dygraph.parallel.Env().nranks
+    paddle.disable_static(paddle.CUDAPlace(0))
 
-    # (data_parallel step1/6)
-    place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id) \
-        if use_data_parallel else fluid.CUDAPlace(0)
-    pre_state_dict = fluid.load_program_state(args.pretrain)
+    place = paddle.CUDAPlace(paddle.distributed.ParallelEnv().dev_id) \
+        if use_data_parallel else paddle.CUDAPlace(0)
+    if use_data_parallel:
 
-    with fluid.dygraph.guard(place):
-        if use_data_parallel:
-            # (data_parallel step2/6)
-            strategy = fluid.dygraph.parallel.prepare_context()
-        video_model = TSN_ResNet(train_config)
-        video_model = init_model(video_model, pre_state_dict)
-        optimizer = create_optimizer(train_config.TRAIN,
+        paddle.distributed.init_parallel_env()
+    
+    video_model = TSN_ResNet(train_config)
+    if use_data_parallel:
+
+        video_model = paddle.DataParallel(video_model)
+    
+    pre_state_dict, _ = paddle.load(args.pretrain)
+    #if paddle.distributed.parallel.Env().local_rank == 0:
+    video_model = init_model(video_model, pre_state_dict)
+
+    optimizer = create_optimizer(train_config.TRAIN,
                                      video_model.parameters())
 
-        if use_data_parallel:
-            # (data_parallel step3/6)
-            video_model = fluid.dygraph.parallel.DataParallel(video_model,
-                                                              strategy)
-
-        bs_denominator = 1
-        if args.use_gpu:
+    bs_denominator = 1
+    if args.use_gpu:
             # check number of GPUs
-            gpus = os.getenv("CUDA_VISIBLE_DEVICES", "")
-            if gpus == "":
-                pass
-            else:
-                gpus = gpus.split(",")
-                num_gpus = len(gpus)
-            bs_denominator = num_gpus
-        bs_train_single = int(train_config.TRAIN.batch_size / bs_denominator)
-        bs_val_single = int(valid_config.VALID.batch_size / bs_denominator)
+        gpus = os.getenv("CUDA_VISIBLE_DEVICES", "")
+        if gpus == "":
+            pass
+        else:
+            gpus = gpus.split(",")
+            num_gpus = len(gpus)
+        bs_denominator = num_gpus   
+    bs_train_single = int(train_config.TRAIN.batch_size / bs_denominator)
+    bs_val_single = int(valid_config.VALID.batch_size / bs_denominator)
 
-        train_dataset = TSN_UCF101_Dataset(train_config, 'train')
-        val_dataset = TSN_UCF101_Dataset(valid_config, 'valid')
-        train_sampler = DistributedBatchSampler(
+    train_dataset = TSN_UCF101_Dataset(train_config, 'train')
+    val_dataset = TSN_UCF101_Dataset(valid_config, 'valid')
+    train_sampler = DistributedBatchSampler(
             train_dataset,
             batch_size=bs_train_single,
             shuffle=train_config.TRAIN.use_shuffle,
             drop_last=True)
-        train_loader = DataLoader(
+    train_loader = DataLoader(
             train_dataset,
             batch_sampler=train_sampler,
             places=place,
             num_workers=train_config.TRAIN.num_workers,
             return_list=True)
-        val_sampler = DistributedBatchSampler(
+    val_sampler = DistributedBatchSampler(
             val_dataset, batch_size=bs_val_single)
-        val_loader = DataLoader(
+    val_loader = DataLoader(
             val_dataset,
             batch_sampler=val_sampler,
             places=place,
             num_workers=valid_config.VALID.num_workers,
             return_list=True)
 
-        if use_data_parallel:
-            # (data_parallel step4/6)
-            train_reader = fluid.contrib.reader.distributed_batch_reader(
-                train_reader)
 
-        # resume training the model
-        if args.resume is not None:
-            model_state, opt_state = fluid.load_dygraph(args.resume)
-            video_model.set_dict(model_state)
-            optimizer.set_dict(opt_state)
+    # resume training the model
+    if args.resume is not None:
+        model_state, opt_state = paddle.load(args.resume)
+        video_model.set_dict(model_state)
+        optimizer.set_dict(opt_state)
 
-        for epoch in range(1, train_config.TRAIN.epoch + 1):
-            video_model.train()
-            total_loss = 0.0
-            total_acc1 = 0.0
-            total_acc5 = 0.0
-            total_sample = 0
-            batch_start = time.time()
-            for batch_id, data in enumerate(train_loader):
-                train_reader_cost = time.time() - batch_start
-                imgs = paddle.to_tensor(data[0])
-                labels = paddle.to_tensor(data[1])
-                labels.stop_gradient = True
-                outputs = video_model(imgs)
+    for epoch in range(1, train_config.TRAIN.epoch + 1):
+        video_model.train()
+        total_loss = 0.0
+        total_acc1 = 0.0
+        total_acc5 = 0.0
+        total_sample = 0
+        batch_start = time.time()
+        for batch_id, data in enumerate(train_loader):
+            train_reader_cost = time.time() - batch_start
+            imgs = paddle.to_tensor(data[0], place=paddle.CUDAPinnedPlace())
+            labels = paddle.to_tensor(data[1], place=paddle.CUDAPinnedPlace())
+            labels.stop_gradient = True
+            outputs = video_model(imgs)
 
-                loss = fluid.layers.cross_entropy(
-                    input=outputs, label=labels, ignore_index=-1)
-                avg_loss = fluid.layers.mean(loss)
+            loss = F.cross_entropy(input=outputs, label=labels, ignore_index=-1)
+            avg_loss = paddle.mean(loss)
 
-                acc_top1 = fluid.layers.accuracy(
+            acc_top1 = paddle.metric.accuracy(
                     input=outputs, label=labels, k=1)
-                acc_top5 = fluid.layers.accuracy(
+            acc_top5 = paddle.metric.accuracy(
                     input=outputs, label=labels, k=5)
-                dy_out = avg_loss.numpy()[0]
+            dy_out = avg_loss.numpy()[0]
 
-                if use_data_parallel:
+            if use_data_parallel:
                     # (data_parallel step5/6)
-                    avg_loss = video_model.scale_loss(avg_loss)
-                    avg_loss.backward()
-                    video_model.apply_collective_grads()
-                else:
-                    avg_loss.backward()
-
-                optimizer.minimize(avg_loss)
-                video_model.clear_gradients()
-
-                total_loss += dy_out
-                total_acc1 += acc_top1.numpy()[0]
-                total_acc5 += acc_top5.numpy()[0]
-                total_sample += 1
-                train_batch_cost = time.time() - batch_start
-                print(
-                    'TRAIN Epoch: {}, iter: {}, batch_cost: {:.5f} s, reader_cost: {:.5f} s, loss={:.6f}, acc1 {:.6f}, acc5 {:.6f}  '.
-                    format(epoch, batch_id, train_batch_cost, train_reader_cost,
-                           total_loss / total_sample, total_acc1 / total_sample,
-                           total_acc5 / total_sample))
-                batch_start = time.time()
-
-            print(
-                'TRAIN End, Epoch {}, avg_loss= {}, avg_acc1= {}, avg_acc5= {}'.
-                format(epoch, total_loss / total_sample, total_acc1 /
-                       total_sample, total_acc5 / total_sample))
-
-            # save model's and optimizer's parameters which used for resuming the training stage
-            save_parameters = (not use_data_parallel) or (
-                use_data_parallel and
-                fluid.dygraph.parallel.Env().local_rank == 0)
-            if save_parameters:
-                model_path_pre = "_tsn"
-                if not os.path.isdir(args.checkpoint):
-                    os.makedirs(args.checkpoint)
-                model_path = os.path.join(
-                    args.checkpoint,
-                    "_" + model_path_pre + "_epoch{}".format(epoch))
-                fluid.dygraph.save_dygraph(video_model.state_dict(), model_path)
-                fluid.dygraph.save_dygraph(optimizer.state_dict(), model_path)
-
-            if args.validate:
-                video_model.eval()
-                val_acc = val(epoch, video_model, val_loader, valid_config,
-                              args)
-                # save the best parameters in trainging stage
-                if epoch == 1:
-                    best_acc = val_acc
-                else:
-                    if val_acc > best_acc:
-                        best_acc = val_acc
-                        if fluid.dygraph.parallel.Env().local_rank == 0:
-                            if not os.path.isdir(args.weights):
-                                os.makedirs(args.weights)
-                            fluid.dygraph.save_dygraph(video_model.state_dict(),
-                                                       args.weights + "/final")
+                avg_loss = video_model.scale_loss(avg_loss)
+                avg_loss.backward()
+                video_model.apply_collective_grads()
             else:
-                if fluid.dygraph.parallel.Env().local_rank == 0:
-                    if not os.path.isdir(args.weights):
-                        os.makedirs(args.weights)
-                    fluid.dygraph.save_dygraph(video_model.state_dict(),
-                                               args.weights + "/final")
+                avg_loss.backward()
 
-        logger.info('[TRAIN] training finished')
+            optimizer.minimize(avg_loss)
+            optimizer.step()
+            optimizer.clear_grad()
+
+            total_loss += dy_out
+            total_acc1 += acc_top1.numpy()[0]
+            total_acc5 += acc_top5.numpy()[0]
+            total_sample += 1
+            train_batch_cost = time.time() - batch_start
+            print(
+                'TRAIN Epoch: {}, iter: {}, batch_cost: {:.5f} s, reader_cost: {:.5f} s, loss={:.6f}, acc1 {:.6f}, acc5 {:.6f}  '.
+                format(epoch, batch_id, train_batch_cost, train_reader_cost,
+                   total_loss / total_sample, total_acc1 / total_sample,
+                   total_acc5 / total_sample))
+            batch_start = time.time()
+
+        print(
+            'TRAIN End, Epoch {}, avg_loss= {}, avg_acc1= {}, avg_acc5= {}'.
+            format(epoch, total_loss / total_sample, total_acc1 /
+               total_sample, total_acc5 / total_sample))
+
+        # save model's and optimizer's parameters which used for resuming the training stage
+        save_parameters = (not use_data_parallel) or (
+            use_data_parallel and
+            paddle.distributed.ParallelEnv().local_rank == 0)
+        if save_parameters:
+            model_path_pre = "_tsn"
+            if not os.path.isdir(args.checkpoint):
+                os.makedirs(args.checkpoint)
+            model_path = os.path.join(
+                args.checkpoint,
+                "_" + model_path_pre + "_epoch{}".format(epoch))
+            paddle.save(
+                video_model.state_dict(), model_path)
+            paddle.save(optimizer.state_dict(), model_path)
+
+        if args.validate:
+            video_model.eval()
+            val_acc = val(epoch, video_model,valid_loader, valid_config, args)
+            # save the best parameters in trainging stage
+            if epoch == 1:
+                best_acc = val_acc
+            else:
+                if val_acc > best_acc:
+                    best_acc = val_acc
+                    if paddle.distributed.ParallelEnv().local_rank == 0:
+                        if not os.path.isdir(args.weights):
+                            os.makedirs(args.weights)
+                        paddle.save(video_model.state_dict(),   args.weights + "/final")
+        else:
+            if paddle.distributed.parallel.Env().local_rank == 0:
+                if not os.path.isdir(args.weights):
+                    os.makedirs(args.weights)
+                paddle.save(video_model.state_dict(),args.weights + "/final")
+
+    logger.info('[TRAIN] training finished')
 
 
 if __name__ == "__main__":
