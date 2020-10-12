@@ -1,40 +1,4 @@
 # Text_Classifiler
 
-以下是本例的简要目录结构及说明：
 
-```text
-.
-├── README.md            # 文档
-├── train.py             # 训练脚本
-└── net.py               # 网络结构
-
-```
-
-
-## 简介
-
-文本分类是机器学习中经典的NLP和推荐任务，包括但不限于情感分类，标签推荐等等。以CNN为例介绍文本分类的任务。
-
-## 数据
-
-模型的输入数据为若干ID（表示词或者其他id）和一个label表示分类的标签。
-
-
-原始数据格式分为两列，第一列是输入数据，第二列是分类标签
-
-```
-特 喜欢 这种 好看的 狗狗                 1
-这 真是 惊艳 世界 的 中国 黑科技          1
-环境 特别 差 ，脏兮兮 的，再也 不去 了     0
-```
-本例采用随机数据作为demo样例
-
-
-## 训练命令
-```
-python train.py
-```
-
-## 未来工作
-
-添加公开数据集和测试结果
+models/PaddleRec只是提供了经典推荐算法的Paddle实现，我们已经开源了功能更强大的工具组件[PaddlePaddle/PaddleRec](https://github.com/PaddlePaddle/PaddleRec) 打通了推荐算法+分布式训练全流程，并提供了高级API，在单机和分布式间可以实现无缝切换。后续我们将在[PaddlePaddle/PaddleRec](https://github.com/PaddlePaddle/PaddleRec) Repo中发布新的模型和功能，models/PaddleRec不再更新维护。
