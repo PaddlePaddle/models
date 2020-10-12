@@ -26,6 +26,8 @@ from predict import do_predict
 from inference_model import do_save_inference_model
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     LOG_FORMAT = "[%(asctime)s %(levelname)s %(filename)s:%(lineno)d] %(message)s"
     logging.basicConfig(
         stream=sys.stdout, level=logging.DEBUG, format=LOG_FORMAT)

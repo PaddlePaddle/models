@@ -196,6 +196,8 @@ def train(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = parser.parse_args()
     print_arguments(args)
     train(args)

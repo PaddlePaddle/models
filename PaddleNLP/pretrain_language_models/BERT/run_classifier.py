@@ -326,6 +326,7 @@ def main(args):
         ce_info = []
 
         total_batch_num=0 # used for benchmark
+        interval_seq_num = 0
 
         while True:
             try:
@@ -335,15 +336,13 @@ def main(args):
                 if args.max_iter and total_batch_num == args.max_iter: # used for benchmark
                     return
 
-                if steps % args.skip_steps == 0:
-                    if args.use_fp16:
-                        fetch_list = [loss.name, accuracy.name, scheduled_lr.name, num_seqs.name, loss_scaling.name]
-                    else:
-                        fetch_list = [loss.name, accuracy.name, scheduled_lr.name, num_seqs.name]
+                if args.use_fp16:
+                    fetch_list = [loss.name, accuracy.name, scheduled_lr.name, num_seqs.name, loss_scaling.name]
                 else:
-                    fetch_list = []
+                    fetch_list = [loss.name, accuracy.name, scheduled_lr.name, num_seqs.name]
 
                 outputs = exe.run(train_compiled_program, fetch_list=fetch_list)
+                interval_seq_num += outputs[3]  # get the sequence number
 
                 if steps % args.skip_steps == 0:
                     if args.use_fp16:
@@ -382,11 +381,12 @@ def main(args):
                     ce_info.append([np.sum(total_cost) / np.sum(total_num_seqs), np.sum(total_acc) / np.sum(total_num_seqs), used_time])
                     if steps > 0 :
                         throughput.append( args.skip_steps / used_time)
-                        log_record = log_record + ", speed: %f steps/s" % (args.skip_steps / used_time)
+                        log_record = log_record + ", speed: %f steps/s" % (args.skip_steps / used_time) + ", qps: %f sequence/s" % ( interval_seq_num / used_time )
                         print(log_record)
                     else:
                         print(log_record)
                     total_cost, total_acc, total_num_seqs = [], [], []
+                    interval_seq_num = 0
                     time_begin = time.time()
 
                 if steps % args.save_steps == 0:
@@ -445,6 +445,8 @@ def main(args):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     print_arguments(args)
     check_cuda(args.use_cuda)
     check_version()

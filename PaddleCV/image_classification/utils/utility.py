@@ -420,7 +420,9 @@ def print_info(info_mode,
                batch_id=0,
                print_step=1,
                device_num=1,
-               class_dim=5):
+               class_dim=5,
+               reader_cost=0.0,
+               ips=0.0):
     """print function
 
     Args:
@@ -439,25 +441,28 @@ def print_info(info_mode,
             if len(metrics) == 2:
                 loss, lr = metrics
                 logger.info(
-                    "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, elapse {4}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, reader_cost: {5}, batch_cost: {4}, ips: {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
-                           "%2.4f sec" % time_info))
+                           "%2.4f sec" % time_info, "%.5f sec" % reader_cost,
+                           "%.5f images/sec" % ips))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 logger.info(
-                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, elapse {6}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, reader_cost: {8}, batch_cost: {6}, ips: {9}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
-                           min(class_dim, 5)))
+                           min(class_dim, 5), "%.5f sec" % reader_cost,
+                           "%.5f images/sec" % ips))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 logger.info(
-                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, elapse {5}".
+                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, reader_cost: {7}, batch_cost: {5}, ips: {8}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
                            "%.5f" % acc5, "%2.4f sec" % time_info,
-                           min(class_dim, 5)))
+                           min(class_dim, 5), "%.5f sec" % reader_cost,
+                           "%.5f images/sec" % ips))
             else:
                 raise Exception(
                     "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".
@@ -525,8 +530,9 @@ def best_strategy_compiled(args,
             fluid.require_version(min_version='1.7.0')
             build_strategy.fuse_bn_act_ops = args.fuse_bn_act_ops
         except Exception as e:
-            logger.info("PaddlePaddle version 1.7.0 or higher is "
-            "required when you want to fuse batch_norm and activation_op.")
+            logger.info(
+                "PaddlePaddle version 1.7.0 or higher is "
+                "required when you want to fuse batch_norm and activation_op.")
         build_strategy.fuse_elewise_add_act_ops = args.fuse_elewise_add_act_ops
 
         exec_strategy = fluid.ExecutionStrategy()

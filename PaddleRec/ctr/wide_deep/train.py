@@ -46,5 +46,7 @@ def train(args, train_data_path):
         fluid.io.save(main_program,model_dir)
   
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = args.parse_args()
     train(args, args.train_data_path)

@@ -251,6 +251,8 @@ def train(args):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     utils.check_version(args.with_shuffle_batch)
     train(args)

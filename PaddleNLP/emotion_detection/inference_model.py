@@ -104,6 +104,8 @@ def test_inference_model(args, texts):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = PDConfig(json_file="./config.json")
     args.build()
     args.print_arguments()

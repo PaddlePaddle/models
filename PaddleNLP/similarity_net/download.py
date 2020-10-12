@@ -96,8 +96,8 @@ def download(url, filename, md5sum):
 
 def download_dataset(dir_path):
     BASE_URL = "https://baidu-nlp.bj.bcebos.com/"
-    DATASET_NAME = "simnet_dataset-1.0.0.tar.gz"
-    DATASET_MD5 = "ec65b313bc237150ef536a8d26f3c73b"
+    DATASET_NAME = "simnet_dataset-1.0.1.tar.gz"
+    DATASET_MD5 = "4a381770178721b539e7cf0f91a8777d"
     file_path = os.path.join(dir_path, DATASET_NAME)
     url = BASE_URL + DATASET_NAME
 

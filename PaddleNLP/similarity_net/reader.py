@@ -19,6 +19,7 @@ import logging
 import numpy as np
 import io
 
+import tokenization
 
 class SimNetProcessor(object):
     def __init__(self, args, vocab):
@@ -27,6 +28,10 @@ class SimNetProcessor(object):
         self.vocab = vocab
         self.valid_label = np.array([])
         self.test_label = np.array([])
+        if args.tokenizer:
+            self.tokenizer = getattr(tokenization, args.tokenizer)()
+        else:
+            self.tokenizer = None
 
     def get_reader(self, mode, epoch=0):
         """
@@ -48,6 +53,12 @@ class SimNetProcessor(object):
                             logging.warning(
                                 "line not match format in test file")
                             continue
+
+                        # tokenize
+                        if self.tokenizer:
+                            query = self.tokenizer.tokenize(query)
+                            title = self.tokenizer.tokenize(title)
+
                         query = [
                             self.vocab[word] for word in query.split(" ")
                             if word in self.vocab
@@ -71,6 +82,12 @@ class SimNetProcessor(object):
                             logging.warning(
                                 "line not match format in test file")
                             continue
+
+                        # tokenize
+                        if self.tokenizer:
+                            query = self.tokenizer.tokenize(query)
+                            title = self.tokenizer.tokenize(title)
+
                         query = [
                             self.vocab[word] for word in query.split(" ")
                             if word in self.vocab
@@ -95,6 +112,12 @@ class SimNetProcessor(object):
                                 logging.warning(
                                     "line not match format in test file")
                                 continue
+                        # tokenize
+                        if self.tokenizer:
+                            query = self.tokenizer.tokenize(query)
+                            pos_title = self.tokenizer.tokenize(pos_title)
+                            neg_title = self.tokenizer.tokenize(neg_title)
+
                             query = [
                                 self.vocab[word] for word in query.split(" ")
                                 if word in self.vocab
@@ -130,6 +153,12 @@ class SimNetProcessor(object):
                             logging.warning(
                                 "line not match format in test file")
                             continue
+
+                        # tokenize
+                        if self.tokenizer:
+                            query = self.tokenizer.tokenize(query)
+                            title = self.tokenizer.tokenize(title)
+
                         query = [
                             self.vocab[word] for word in query.split(" ")
                             if word in self.vocab
@@ -153,6 +182,12 @@ class SimNetProcessor(object):
                             logging.warning(
                                 "line not match format in test file")
                             continue
+
+                        # tokenize
+                        if self.tokenizer:
+                            query = self.tokenizer.tokenize(query)
+                            title = self.tokenizer.tokenize(title)
+
                         query = [
                             self.vocab[word] for word in query.split(" ")
                             if word in self.vocab
@@ -178,6 +213,12 @@ class SimNetProcessor(object):
                                 logging.warning(
                                     "line not match format in test file")
                                 continue
+
+                            # tokenize
+                            if self.tokenizer:
+                                query = self.tokenizer.tokenize(query)
+                                title = self.tokenizer.tokenize(title)
+
                             query = [
                                 self.vocab[word] for word in query.split(" ")
                                 if word in self.vocab
@@ -208,6 +249,10 @@ class SimNetProcessor(object):
                 if len(query) == 0 or len(title) == 0:
                     logging.warning("line not match format in test file")
                     continue
+                # tokenize
+                if self.tokenizer:
+                    query = self.tokenizer.tokenize(query)
+                    title = self.tokenizer.tokenize(title)
                 query = [
                     self.vocab[word] for word in query.split(" ")
                     if word in self.vocab

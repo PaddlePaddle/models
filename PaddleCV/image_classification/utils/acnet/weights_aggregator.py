@@ -184,6 +184,8 @@ def convert_main(model_name, input_path, output_path, class_num=1000):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     assert len(
         sys.argv
     ) == 5, "input format: python weights_aggregator.py $model_name $input_path $output_path $class_num"

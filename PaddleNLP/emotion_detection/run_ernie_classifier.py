@@ -397,6 +397,8 @@ def main(args):
             [probs.name], "infer")
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     utils.print_arguments(args)
     check_cuda(args.use_cuda)
     main(args)
