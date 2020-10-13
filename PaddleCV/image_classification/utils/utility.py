@@ -44,16 +44,12 @@ logger = logging.getLogger(__name__)
 
 def print_arguments(args):
     """Print argparse's arguments.
-
     Usage:
-
     .. code-block:: python
-
         parser = argparse.ArgumentParser()
         parser.add_argument("name", default="Jonh", type=str, help="User name.")
         args = parser.parse_args()
         print_arguments(args)
-
     :param args: Input argparse.Namespace for printing.
     :type args: argparse.Namespace
     """
@@ -66,11 +62,8 @@ def print_arguments(args):
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
     """Add argparse's argument.
-
     Usage:
-
     .. code-block:: python
-
         parser = argparse.ArgumentParser()
         add_argument("name", str, "Jonh", "User name.", parser)
         args = parser.parse_args()
@@ -86,7 +79,6 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
 
 def parse_args():
     """Add arguments
-
     Returns:
         all training args
     """
@@ -206,7 +198,6 @@ def check_version():
 
 def check_args(args):
     """check arguments before running
-
     Args:
         all arguments
     """
@@ -363,14 +354,11 @@ def save_json(info, path):
 
 def create_data_loader(is_train, args):
     """create data_loader
-
     Usage:
         Using mixup process in training, it will return 5 results, include data_loader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include data_loader, image, and label.
-
     Args:
         is_train: mode
         args: arguments
-
     Returns:
         data_loader and the input data of net,
     """
@@ -421,10 +409,9 @@ def print_info(info_mode,
                print_step=1,
                device_num=1,
                class_dim=5,
-               reader_cost=0.0,
-               ips=0.0):
+               reader_cost=None,
+               ips=None):
     """print function
-
     Args:
         pass_id: epoch index
         batch_id: batch index
@@ -435,34 +422,35 @@ def print_info(info_mode,
     """
     #XXX: Use specific name to choose pattern, not the length of metrics.
     if info_mode == "batch":
+        time_info_str = "batch_cost %.5f sec" % time_info
+        if reader_cost:
+            time_info_str += ", reader_cost %.5f sec" % reader_cost
+        if ips:
+            time_info_str += ", ips %.5f images/sec" % ips
         if batch_id % print_step == 0:
             #if isinstance(metrics,np.ndarray):
             # train and mixup output
             if len(metrics) == 2:
                 loss, lr = metrics
                 logger.info(
-                    "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, reader_cost: {5}, batch_cost: {4}, ips: {6}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, lr {3}, {4}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % lr,
-                           "%2.4f sec" % time_info, "%.5f sec" % reader_cost,
-                           "%.5f images/sec" % ips))
+                           time_info_str))
             # train and no mixup output
             elif len(metrics) == 4:
                 loss, acc1, acc5, lr = metrics
                 logger.info(
-                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, reader_cost: {8}, batch_cost: {6}, ips: {9}".
+                    "[Pass {0}, train batch {1}] \tloss {2}, acc1 {3}, acc{7} {4}, lr {5}, {6}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%.5f" % lr, "%2.4f sec" % time_info,
-                           min(class_dim, 5), "%.5f sec" % reader_cost,
-                           "%.5f images/sec" % ips))
+                           "%.5f" % acc5, "%.5f" % lr, time_info_str,
+                           min(class_dim, 5)))
             # test output
             elif len(metrics) == 3:
                 loss, acc1, acc5 = metrics
                 logger.info(
-                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, reader_cost: {7}, batch_cost: {5}, ips: {8}".
+                    "[Pass {0}, test  batch {1}] \tloss {2}, acc1 {3}, acc{6} {4}, {5}".
                     format(pass_id, batch_id, "%.5f" % loss, "%.5f" % acc1,
-                           "%.5f" % acc5, "%2.4f sec" % time_info,
-                           min(class_dim, 5), "%.5f sec" % reader_cost,
-                           "%.5f images/sec" % ips))
+                           "%.5f" % acc5, time_info_str, min(class_dim, 5)))
             else:
                 raise Exception(
                     "length of metrics {} is not implemented, It maybe caused by wrong format of build_program_output".
@@ -678,7 +666,6 @@ class ExponentialMovingAverage(object):
     def apply(self, executor, need_restore=True):
         """
         Apply moving average to parameters for evaluation.
-
         Args:
             executor (Executor): The Executor to execute applying.
             need_restore (bool): Whether to restore parameters after applying.
@@ -692,7 +679,6 @@ class ExponentialMovingAverage(object):
 
     def restore(self, executor):
         """Restore parameters.
-
         Args:
             executor (Executor): The Executor to execute restoring.
         """
