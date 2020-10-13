@@ -366,11 +366,11 @@ def create_data_loader(is_train, args):
 
     Usage:
         Using mixup process in training, it will return 5 results, include data_loader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include data_loader, image, and label.
-    
+
     Args:
         is_train: mode
         args: arguments
-    
+
     Returns:
         data_loader and the input data of net,
     """

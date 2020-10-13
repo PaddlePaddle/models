@@ -54,11 +54,13 @@ class TimeAverager(object):
 
 def build_program(is_train, main_prog, startup_prog, args):
     """build program, and add backward op in program accroding to different mode
+
     Parameters:
         is_train: indicate train mode or test mode
         main_prog: main program
         startup_prog: strartup program
         args: arguments
+
     Returns : 
         train mode: [Loss, global_lr, data_loader]
         test mode: [Loss, data_loader]
@@ -118,6 +120,7 @@ def validate(args,
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
+
     if int(os.environ.get('PADDLE_TRAINERS_NUM', 1)) > 1:
         compiled_program = test_prog
     else:
