@@ -26,7 +26,6 @@ import glob
 from paddle.fluid.dygraph.base import to_variable
 from model import TSN_ResNet
 from utils.config_utils import *
-from reader.ucf101_reader import UCF101Reader
 import paddle
 from paddle.io import DataLoader, DistributedBatchSampler
 from compose import TSN_UCF101_Dataset

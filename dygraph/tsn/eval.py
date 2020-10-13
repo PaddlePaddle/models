@@ -19,12 +19,13 @@ import argparse
 import ast
 import logging
 import numpy as np
+import paddle
 import paddle.fluid as fluid
 from paddle.fluid.dygraph.base import to_variable
-
+from paddle.io import DataLoader, DistributedBatchSampler
+from compose import TSN_UCF101_Dataset
 from model import TSN_ResNet
 from utils.config_utils import *
-from reader.ucf101_reader import UCF101Reader
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -68,8 +69,18 @@ def test(args):
         model_dict, _ = fluid.load_dygraph(args.weights)
         video_model.set_dict(model_dict)
 
-        test_reader = UCF101Reader(name="TSN", mode="test", cfg=test_config)
-        test_reader = test_reader.create_reader()
+        test_dataset = TSN_UCF101_Dataset(test_config, 'test')
+        test_sampler = DistributedBatchSampler(
+            test_dataset,
+            batch_size=test_config.VALID.batch_size,
+            shuffle=False,
+            drop_last=False)
+        test_loader = DataLoader(
+            test_dataset,
+            batch_sampler=test_sampler,
+            places=place,
+            num_workers=4,
+            return_list=True)
 
         video_model.eval()
         total_loss = 0.0
@@ -77,12 +88,9 @@ def test(args):
         total_acc5 = 0.0
         total_sample = 0
 
-        for batch_id, data in enumerate(test_reader()):
-            x_data = np.array([item[0] for item in data])
-            y_data = np.array([item[1] for item in data]).reshape([-1, 1])
-
-            imgs = to_variable(x_data)
-            labels = to_variable(y_data)
+        for batch_id, data in enumerate(test_loader):
+            imgs = paddle.to_tensor(data[0])
+            labels = paddle.to_tensor(data[1])
             labels.stop_gradient = True
             outputs = video_model(imgs)
             loss = fluid.layers.cross_entropy(
