@@ -44,12 +44,16 @@ logger = logging.getLogger(__name__)
 
 def print_arguments(args):
     """Print argparse's arguments.
+
     Usage:
+
     .. code-block:: python
+
         parser = argparse.ArgumentParser()
         parser.add_argument("name", default="Jonh", type=str, help="User name.")
         args = parser.parse_args()
         print_arguments(args)
+
     :param args: Input argparse.Namespace for printing.
     :type args: argparse.Namespace
     """
@@ -62,8 +66,11 @@ def print_arguments(args):
 
 def add_arguments(argname, type, default, help, argparser, **kwargs):
     """Add argparse's argument.
+
     Usage:
+
     .. code-block:: python
+
         parser = argparse.ArgumentParser()
         add_argument("name", str, "Jonh", "User name.", parser)
         args = parser.parse_args()
@@ -79,6 +86,7 @@ def add_arguments(argname, type, default, help, argparser, **kwargs):
 
 def parse_args():
     """Add arguments
+
     Returns:
         all training args
     """
@@ -198,6 +206,7 @@ def check_version():
 
 def check_args(args):
     """check arguments before running
+
     Args:
         all arguments
     """
@@ -354,11 +363,14 @@ def save_json(info, path):
 
 def create_data_loader(is_train, args):
     """create data_loader
+
     Usage:
         Using mixup process in training, it will return 5 results, include data_loader, image, y_a(label), y_b(label) and lamda, or it will return 3 results, include data_loader, image, and label.
+    
     Args:
         is_train: mode
         args: arguments
+    
     Returns:
         data_loader and the input data of net,
     """
@@ -412,6 +424,7 @@ def print_info(info_mode,
                reader_cost=None,
                ips=None):
     """print function
+
     Args:
         pass_id: epoch index
         batch_id: batch index
@@ -666,6 +679,7 @@ class ExponentialMovingAverage(object):
     def apply(self, executor, need_restore=True):
         """
         Apply moving average to parameters for evaluation.
+
         Args:
             executor (Executor): The Executor to execute applying.
             need_restore (bool): Whether to restore parameters after applying.
@@ -679,6 +693,7 @@ class ExponentialMovingAverage(object):
 
     def restore(self, executor):
         """Restore parameters.
+
         Args:
             executor (Executor): The Executor to execute restoring.
         """
