@@ -30,6 +30,7 @@ python train.py \
        --data_format=${DATA_FORMAT} \
        --fuse_elewise_add_act_ops=true \
        --fuse_bn_act_ops=true \
+       --fuse_bn_add_act_ops=true \
        --validate=true \
        --is_profiler=false \
        --profiler_path=profile/ \
