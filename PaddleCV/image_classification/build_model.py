@@ -39,10 +39,14 @@ def _basic_model(data, model, args, is_train):
         image_in = fluid.layers.transpose(
             image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
         image_in.stop_gradient = image.stop_gradient
+        # fuse_bn_add_act only supports amp training
+        fuse_bn_add_act=False
+        if is_train and args.fuse_bn_add_act_ops:
+            fuse_bn_add_act=True
         net_out = model.net(input=image_in,
                             class_dim=args.class_dim,
                             data_format=args.data_format,
-                            fuse_bn_add_act=args.fuse_bn_add_act_ops)
+                            fuse_bn_add_act=fuse_bn_add_act)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
