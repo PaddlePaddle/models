@@ -192,15 +192,14 @@ class ResNet():
             return fluid.layers.elementwise_add(
                 x=short, y=conv2, act='relu', name=name + ".add.output.5")
         else:
-            name = name + "_branch2c"
             conv2 = fluid.layers.conv2d(
                 input=conv1,
                 num_filters=num_filters * 4,
                 filter_size=1,
                 act=None,
-                param_attr=ParamAttr(name=name + "_weights"),
+                param_attr=ParamAttr(name=name + "_branch2c" + "_weights"),
                 bias_attr=False,
-                name=name + '.conv2d.output.1',
+                name=name + '_branch2c' + '.conv2d.output.1',
                 data_format=data_format)
             short = self.shortcut(
                 input,
@@ -209,6 +208,7 @@ class ResNet():
                 is_first=False,
                 name=name + "_branch1",
                 data_format=data_format)
+            name = name + "_branch2c"
             bn_name = "bn" + name[3:]
             short = fluid.contrib.layers.fused_bn_add_act(
                 conv2,
@@ -249,7 +249,6 @@ class ResNet():
 
             return fluid.layers.elementwise_add(x=short, y=conv1, act='relu')
         else:
-            name = name + "_branch2b"
             conv1 = fluid.layers.conv2d(
                 input=conv0,
                 num_filters=num_filters,
@@ -260,7 +259,7 @@ class ResNet():
                 act=None,
                 param_attr=ParamAttr(name=name + "_weights"),
                 bias_attr=False,
-                name=name + '.conv2d.output.1',
+                name=name + '_branch2b' + '.conv2d.output.1',
                 data_format=data_format)
             short = self.shortcut(
                 input,
@@ -269,6 +268,7 @@ class ResNet():
                 is_first,
                 name=name + "_branch1",
                 data_format=data_format)
+            name = name + "_branch2b"
             bn_name = "bn" + name[3:]
             short = fluid.contrib.layers.fused_bn_add_act(
                 conv1,
@@ -277,7 +277,7 @@ class ResNet():
                 bias_attr=ParamAttr(bn_name + '_offset'),
                 moving_mean_name=bn_name + '_mean',
                 moving_variance_name=bn_name + '_variance')
-                
+
             return short
 
 
