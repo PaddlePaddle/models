@@ -19,7 +19,7 @@ python train.py \
        --data_dir=${DATA_DIR} \
        --batch_size=256 \
        --total_images=1281167 \
-       --image_shape 3 224 224 \
+       --image_shape 4 224 224 \
        --class_dim=1000 \
        --print_step=10 \
        --model_save_dir=output/ \
