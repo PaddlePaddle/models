@@ -160,6 +160,7 @@ class Optimizer(object):
         self.decay_rate = args.decay_rate
         self.total_images = args.total_images
         self.multi_precision = args.multi_precision
+        self.loss_scaling = args.scale_loss
 
         self.step = int(math.ceil(float(self.total_images) / self.batch_size))
 
@@ -176,7 +177,8 @@ class Optimizer(object):
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision)
+            multi_precision=self.multi_precision,
+            loss_scaling=self.loss_scaling)
         return optimizer
 
     def cosine_decay(self):
@@ -194,7 +196,8 @@ class Optimizer(object):
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision)
+            multi_precision=self.multi_precision,
+            loss_scaling=self.loss_scaling)
         return optimizer
 
     def cosine_decay_warmup(self):
@@ -213,7 +216,8 @@ class Optimizer(object):
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision)
+            multi_precision=self.multi_precision,
+            loss_scaling=self.loss_scaling)
         return optimizer
 
     def exponential_decay_warmup(self):
@@ -251,7 +255,8 @@ class Optimizer(object):
             learning_rate=learning_rate,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision)
+            multi_precision=self.multi_precision,
+            loss_scaling=self.loss_scaling)
 
         return optimizer
 
@@ -294,7 +299,8 @@ class Optimizer(object):
             learning_rate=self.lr,
             momentum=self.momentum_rate,
             regularization=fluid.regularizer.L2Decay(self.l2_decay),
-            multi_precision=self.multi_precision)
+            multi_precision=self.multi_precision,
+            loss_scaling=self.loss_scaling)
         return optimizer
 
 
