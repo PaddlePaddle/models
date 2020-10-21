@@ -38,13 +38,13 @@ class ImageNetDataset(DatasetFolder):
             self.transform = transforms.Compose([
                 transforms.RandomResizedCrop(image_size),
                 transforms.RandomHorizontalFlip(),
-                transforms.Permute(mode='CHW'), normalize
+                transforms.Transpose(order=(2, 0, 1)), normalize
             ])
         else:
             self.transform = transforms.Compose([
                 transforms.Resize(resize_short_size),
                 transforms.CenterCrop(image_size),
-                transforms.Permute(mode='CHW'), normalize
+                transforms.Transpose(order=(2, 0, 1)), normalize
             ])
 
     def __getitem__(self, idx):
