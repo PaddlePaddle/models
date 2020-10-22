@@ -145,7 +145,6 @@ def parse_args():
     add_arg('data_format',              str,    "NCHW",                 "Tensor data format when training.")
     add_arg('fuse_elewise_add_act_ops', bool,   False,                  "Whether to use elementwise_act fusion.")
     add_arg('fuse_bn_act_ops',          bool,   False,                  "Whether to use batch_norm and act fusion.")
-    add_arg('fuse_bn_add_act_ops',      bool,   False,                  "Whether to use batch_norm, elementwise_add and act fusion. This is only used for AMP training.")
 
     add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
