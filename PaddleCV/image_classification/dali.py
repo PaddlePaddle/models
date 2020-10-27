@@ -43,7 +43,8 @@ class HybridTrainPipe(Pipeline):
                  num_shards=1,
                  random_shuffle=True,
                  num_threads=4,
-                 seed=42):
+                 seed=42,
+                 pad_output=False):
         super(HybridTrainPipe, self).__init__(
             batch_size, num_threads, device_id, seed=seed)
         self.input = ops.FileReader(
@@ -73,7 +74,8 @@ class HybridTrainPipe(Pipeline):
             crop=(crop, crop),
             image_type=types.RGB,
             mean=mean,
-            std=std)
+            std=std,
+            pad_output=pad_output)
         self.coin = ops.CoinFlip(probability=0.5)
         self.to_int64 = ops.Cast(dtype=types.INT64, device="gpu")
 
@@ -104,7 +106,8 @@ class HybridValPipe(Pipeline):
                  num_shards=1,
                  random_shuffle=False,
                  num_threads=4,
-                 seed=42):
+                 seed=42,
+                 pad_output=False):
         super(HybridValPipe, self).__init__(
             batch_size, num_threads, device_id, seed=seed)
         self.input = ops.FileReader(
@@ -123,7 +126,8 @@ class HybridValPipe(Pipeline):
             crop=(crop, crop),
             image_type=types.RGB,
             mean=mean,
-            std=std)
+            std=std,
+            pad_output=pad_output)
         self.to_int64 = ops.Cast(dtype=types.INT64, device="gpu")
 
     def define_graph(self):
@@ -169,6 +173,9 @@ def build(settings, mode='train'):
     }
     assert interp in interp_map, "interpolation method not supported by DALI"
     interp = interp_map[interp]
+    pad_output = False
+    if settings.image_shape[0] == 4:
+        pad_output = True
 
     if mode != 'train':
         p = fluid.framework.cuda_places()[0]
@@ -188,7 +195,8 @@ def build(settings, mode='train'):
             interp,
             mean,
             std,
-            device_id=device_id)
+            device_id=device_id,
+            pad_output=pad_output)
         pipe.build()
         return DALIGenericIterator(
             pipe, ['feed_image', 'feed_label'],
@@ -221,7 +229,8 @@ def build(settings, mode='train'):
             device_id,
             shard_id,
             num_shards,
-            seed=42 + shard_id)
+            seed=42 + shard_id,
+            pad_output=pad_output)
         pipe.build()
         pipelines = [pipe]
         sample_per_shard = len(pipe) // num_shards
@@ -248,7 +257,8 @@ def build(settings, mode='train'):
                 device_id,
                 idx,
                 num_shards,
-                seed=42 + idx)
+                seed=42 + idx,
+                pad_output=pad_output)
             pipe.build()
             pipelines.append(pipe)
         sample_per_shard = len(pipelines[0])

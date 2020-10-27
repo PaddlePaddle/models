@@ -245,6 +245,9 @@ def process_image(sample, settings, mode, color_jitter, rotate):
     img_std = np.array(std).reshape((3, 1, 1))
     img -= img_mean
     img /= img_std
+    if settings.image_shape[0] == 4:
+        pad0 = np.zeros((1, img.shape[1], img.shape[2]))
+        img = np.concatenate((img, pad0), axis=0)
     # doing training (train.py)
     if mode == 'train' or (mode == 'val' and
                            not hasattr(settings, 'save_json_path')):
