@@ -147,8 +147,8 @@ def parse_args():
     add_arg('fuse_bn_act_ops',          bool,   False,                  "Whether to use batch_norm and act fusion.")
     add_arg('fuse_bn_add_act_ops',      bool,   False,                  "Whether to use batch_norm, elementwise_add and act fusion. This is only used for AMP training.")
     add_arg('enable_addto',             bool,   False,                  "Whether to enable the addto strategy for gradient accumulation or not. This is only used for AMP training.")
-    add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     
+    add_arg('use_label_smoothing',      bool,   False,                  "Whether to use label_smoothing")
     add_arg('label_smoothing_epsilon',  float,  0.1,                    "The value of label_smoothing_epsilon parameter")
     #NOTE: (2019/08/08) temporary disable use_distill
     #add_arg('use_distill',              bool,   False,                  "Whether to use distill")
