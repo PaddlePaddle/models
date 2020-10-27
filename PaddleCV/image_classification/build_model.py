@@ -58,7 +58,7 @@ def _basic_model(data, model, args, is_train):
     else:
         cost = fluid.layers.cross_entropy(input=softmax_out, label=label)
 
-    avg_cost = fluid.layers.mean(cost)
+    avg_cost = fluid.layers.reduce_sum(cost)
     acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(
         input=softmax_out, label=label, k=min(5, args.class_dim))
@@ -124,10 +124,10 @@ def _mixup_model(data, model, args, is_train):
         loss_b = _calc_label_smoothing_loss(softmax_out, y_b, args.class_dim,
                                             args.label_smoothing_epsilon)
 
-    loss_a_mean = fluid.layers.mean(x=loss_a)
-    loss_b_mean = fluid.layers.mean(x=loss_b)
+    loss_a_mean = fluid.layers.reduce_sum(x=loss_a)
+    loss_b_mean = fluid.layers.reduce_sum(x=loss_b)
     cost = lam * loss_a_mean + (1 - lam) * loss_b_mean
-    avg_cost = fluid.layers.mean(x=cost)
+    avg_cost = fluid.layers.reduce_sum(x=cost)
     return [avg_cost]
 
 
