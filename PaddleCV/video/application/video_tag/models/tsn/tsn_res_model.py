@@ -20,10 +20,15 @@ import math
 
 
 class TSN_ResNet():
-    def __init__(self, layers=50, seg_num=7, is_training=True):
-        self.layers = 101  #layers
+    def __init__(self,
+                 layers=50,
+                 seg_num=7,
+                 is_training=True,
+                 is_extractor=False):
+        self.layers = layers
         self.seg_num = seg_num
         self.is_training = is_training
+        self.is_extractor = is_extractor
 
     def conv_bn_layer(self,
                       input,
@@ -144,7 +149,18 @@ class TSN_ResNet():
         pool = fluid.layers.pool2d(
             input=conv, pool_size=7, pool_type='avg', global_pooling=True)
 
-        # video_tag just need extractor feature
         feature = fluid.layers.reshape(
             x=pool, shape=[-1, seg_num, pool.shape[1]])
-        return feature
+        if self.is_extractor:
+            out = feature
+        else:
+            out = fluid.layers.reduce_mean(feature, dim=1)
+
+            stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
+            out = fluid.layers.fc(input=out,
+                                  size=class_dim,
+                                  act='softmax',
+                                  param_attr=fluid.param_attr.ParamAttr(
+                                      initializer=fluid.initializer.Uniform(
+                                          -stdv, stdv)))
+        return out
