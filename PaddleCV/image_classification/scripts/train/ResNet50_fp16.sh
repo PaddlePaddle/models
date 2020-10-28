@@ -5,7 +5,7 @@ export FLAGS_cudnn_exhaustive_search=1
 export FLAGS_cudnn_batchnorm_spatial_persistent=1
 
 
-DATA_DIR="Your image dataset path, e.g. /work/datasets/ILSVRC2012/"
+DATA_DIR="/paddle/dataset/ILSVRC2012/"
 
 DATA_FORMAT="NHWC"
 USE_FP16=true #whether to use float16
@@ -20,10 +20,10 @@ if ${USE_DALI}; then
     export FLAGS_fraction_of_gpu_memory_to_use=0.8
 fi
 
-python train.py \
+python3.6 train.py \
        --model=ResNet50 \
        --data_dir=${DATA_DIR} \
-       --batch_size=256 \
+       --batch_size=128 \
        --total_images=1281167 \
        --image_shape 4 224 224 \
        --class_dim=1000 \

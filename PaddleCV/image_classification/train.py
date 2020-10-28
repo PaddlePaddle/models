@@ -266,8 +266,17 @@ def train(args):
         batch_start = time.time()
         for batch in train_iter:
             #NOTE: this is for benchmark
-            if args.max_iter and total_batch_num == args.max_iter:
+            if total_batch_num == 200:
+                # if args.max_iter and total_batch_num == args.max_iter:
+                print("=" * 20)
+                print("total_batch_num: ", total_batch_num, "records_num: ",
+                      len(train_batch_time_record))
+                avg_times = sum(train_batch_time_record[-150:]) / 150
+                avg_speed = args.batch_size / avg_times
+                print("average time: %.5f s/batch, average speed: %.5f imgs/s" %
+                      (avg_times, avg_speed))
                 return
+
             reader_cost_averager.record(time.time() - batch_start)
 
             train_batch_metrics = exe.run(compiled_train_prog,
