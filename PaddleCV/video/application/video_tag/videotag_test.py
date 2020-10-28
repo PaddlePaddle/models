@@ -78,10 +78,13 @@ def parse_args():
     parser.add_argument(
         '--filelist',
         type=str,
-        default=None,
+        default='./data/VideoTag_test.list',
         help='path of video data, multiple video')
     parser.add_argument(
-        '--save_dir', type=str, default='data/results', help='output file path')
+        '--save_dir',
+        type=str,
+        default='data/VideoTag_results',
+        help='output file path')
     parser.add_argument(
         '--label_file',
         type=str,
@@ -116,7 +119,10 @@ def main():
             with fluid.unique_name.guard():
                 # build model
                 extractor_model = models.get_model(
-                    args.extractor_name, extractor_infer_config, mode='infer')
+                    args.extractor_name,
+                    extractor_infer_config,
+                    mode='infer',
+                    is_videotag=True)
                 extractor_model.build_input(use_dataloader=False)
                 extractor_model.build_model()
                 extractor_feeds = extractor_model.feeds()
@@ -129,8 +135,9 @@ def main():
 
                 logger.info('load extractor weights from {}'.format(
                     args.extractor_weights))
-                extractor_model.load_test_weights(exe, args.extractor_weights,
-                                                  extractor_main_prog)
+
+                extractor_model.load_pretrain_params(
+                    exe, args.extractor_weights, extractor_main_prog)
 
                 # get reader and metrics
                 extractor_reader = get_reader(args.extractor_name, 'infer',
@@ -224,8 +231,6 @@ def main():
 
 
 if __name__ == '__main__':
-    import paddle
-    paddle.enable_static()
     start_time = time.time()
     args = parse_args()
     print(args)
