@@ -268,7 +268,7 @@ def train(args):
 
     random.seed(0)
     np.random.seed(0)
-    paddle.framework.manual_seed(0)
+    paddle.framework.seed(0)
     with fluid.dygraph.guard(place):
         # 1. init net
         if args.use_data_parallel:
