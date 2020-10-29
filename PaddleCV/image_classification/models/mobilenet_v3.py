@@ -75,7 +75,7 @@ class MobileNetV3():
             raise NotImplementedError("mode[" + model_name +
                                       "_model] is not implemented!")
 
-    def net(self, input, class_dim=1000):
+    def net(self, input, class_dim=1000, data_format="NCHW"):
         scale = self.scale
         inplanes = self.inplanes
         cfg = self.cfg
@@ -92,7 +92,8 @@ class MobileNetV3():
             num_groups=1,
             if_act=True,
             act='hard_swish',
-            name='conv1')
+            name='conv1',
+            data_format=data_format)
         i = 0
         for layer_cfg in cfg:
             conv = self.residual_unit(
@@ -104,7 +105,8 @@ class MobileNetV3():
                 stride=layer_cfg[5],
                 filter_size=layer_cfg[0],
                 use_se=layer_cfg[3],
-                name='conv' + str(i + 2))
+                name='conv' + str(i + 2),
+                data_format=data_format)
             inplanes = int(scale * layer_cfg[2])
             i += 1
 
@@ -117,9 +119,10 @@ class MobileNetV3():
             num_groups=1,
             if_act=True,
             act='hard_swish',
-            name='conv_last')
+            name='conv_last', 
+            data_format=data_format)
         conv = fluid.layers.pool2d(
-            input=conv, pool_type='avg', global_pooling=True, use_cudnn=False)
+            input=conv, pool_type='avg', global_pooling=True, use_cudnn=True, data_format=data_format)
         conv = fluid.layers.conv2d(
             input=conv,
             num_filters=cls_ch_expand,
@@ -128,7 +131,7 @@ class MobileNetV3():
             padding=0,
             act=None,
             param_attr=ParamAttr(name='last_1x1_conv_weights'),
-            bias_attr=False)
+            bias_attr=False, data_format=data_format)
         conv = self.hard_swish(conv)
         drop = fluid.layers.dropout(x=conv, dropout_prob=0.2)
         out = fluid.layers.fc(input=drop,
@@ -147,7 +150,7 @@ class MobileNetV3():
                       if_act=True,
                       act=None,
                       name=None,
-                      use_cudnn=True):
+                      use_cudnn=True, data_format="NCHW"):
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -158,14 +161,14 @@ class MobileNetV3():
             act=None,
             use_cudnn=use_cudnn,
             param_attr=ParamAttr(name=name + '_weights'),
-            bias_attr=False)
+            bias_attr=False, data_format=data_format)
         bn_name = name + '_bn'
         bn = fluid.layers.batch_norm(
             input=conv,
             param_attr=ParamAttr(name=bn_name + "_scale"),
             bias_attr=ParamAttr(name=bn_name + "_offset"),
             moving_mean_name=bn_name + '_mean',
-            moving_variance_name=bn_name + '_variance')
+            moving_variance_name=bn_name + '_variance', data_layout=data_format)
         if if_act:
             if act == 'relu':
                 bn = fluid.layers.relu(bn)
@@ -176,24 +179,24 @@ class MobileNetV3():
     def hard_swish(self, x):
         return x * fluid.layers.relu6(x + 3) / 6.
 
-    def se_block(self, input, num_out_filter, ratio=4, name=None):
+    def se_block(self, input, num_out_filter, ratio=4, name=None, data_format="NCHW"):
         num_mid_filter = int(num_out_filter // ratio)
         pool = fluid.layers.pool2d(
-            input=input, pool_type='avg', global_pooling=True, use_cudnn=False)
+            input=input, pool_type='avg', global_pooling=True, use_cudnn=True, data_format=data_format)
         conv1 = fluid.layers.conv2d(
             input=pool,
             filter_size=1,
             num_filters=num_mid_filter,
             act='relu',
             param_attr=ParamAttr(name=name + '_1_weights'),
-            bias_attr=ParamAttr(name=name + '_1_offset'))
+            bias_attr=ParamAttr(name=name + '_1_offset'), data_format=data_format)
         conv2 = fluid.layers.conv2d(
             input=conv1,
             filter_size=1,
             num_filters=num_out_filter,
             act='hard_sigmoid',
             param_attr=ParamAttr(name=name + '_2_weights'),
-            bias_attr=ParamAttr(name=name + '_2_offset'))
+            bias_attr=ParamAttr(name=name + '_2_offset'), data_format=data_format)
         scale = fluid.layers.elementwise_mul(x=input, y=conv2, axis=0)
         return scale
 
@@ -206,7 +209,7 @@ class MobileNetV3():
                       filter_size,
                       act=None,
                       use_se=False,
-                      name=None):
+                      name=None, data_format="NCHW"):
 
         first_conv = (num_out_filter != num_mid_filter)
         input_data = input
@@ -219,7 +222,7 @@ class MobileNetV3():
                 padding=0,
                 if_act=True,
                 act=act,
-                name=name + '_expand')
+                name=name + '_expand', data_format=data_format)
 
         conv1 = self.conv_bn_layer(
             input=input,
@@ -231,10 +234,10 @@ class MobileNetV3():
             act=act,
             num_groups=num_mid_filter,
             use_cudnn=True,
-            name=name + '_depthwise')
+            name=name + '_depthwise', data_format=data_format)
         if use_se:
             conv1 = self.se_block(
-                input=conv1, num_out_filter=num_mid_filter, name=name + '_se')
+                input=conv1, num_out_filter=num_mid_filter, name=name + '_se', data_format=data_format)
 
         conv2 = self.conv_bn_layer(
             input=conv1,
@@ -243,7 +246,7 @@ class MobileNetV3():
             stride=1,
             padding=0,
             if_act=False,
-            name=name + '_linear')
+            name=name + '_linear', data_format=data_format)
         if num_in_filter != num_out_filter or stride != 1:
             return conv2
         else:

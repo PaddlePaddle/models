@@ -265,6 +265,23 @@ def train(args):
 
         batch_start = time.time()
         for batch in train_iter:
+            if total_batch_num == 200:
+                profiler.start_profiler("All")
+                #fluid.core.nvprof_start()
+            if total_batch_num == 202:
+                #fluid.core.nvprof_stop()
+                profiler.stop_profiler("total", "./profile")
+                return
+            
+            if total_batch_num == 200:
+                # if args.max_iter and total_batch_num == args.max_iter:
+                print("=" * 20)
+                avg_times = sum(train_batch_time_record[-100:]) / 100
+                avg_speed = args.batch_size / avg_times
+                print("average time: %.5f s/batch, average speed: %.5f imgs/s" %
+                      (avg_times, avg_speed))
+                return
+
             #NOTE: this is for benchmark
             if args.max_iter and total_batch_num == args.max_iter:
                 return
@@ -298,11 +315,12 @@ def train(args):
                 if train_batch_id % args.print_step == 0:
                     batch_cost_averager.reset()
                     reader_cost_averager.reset()
-
+            
+                
             train_batch_id += 1
             total_batch_num = total_batch_num + 1
             batch_start = time.time()
-
+            
             #NOTE: this for benchmark profiler
             if args.is_profiler and pass_id == 0 and train_batch_id == args.print_step:
                 profiler.start_profiler("All")

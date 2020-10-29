@@ -164,6 +164,7 @@ def parse_args():
     add_arg('profiler_path',            str,    './profilier_files',                   "the profiler output file path")
     add_arg('max_iter',                 int,    0,                      "the max train batch num")
     add_arg('same_feed',                int,    0,                      "whether to feed same images")
+    add_arg('pool_cudnn',               bool,   False,                   "whether to use cudnn for pool2d")
 
 
     # yapf: enable
