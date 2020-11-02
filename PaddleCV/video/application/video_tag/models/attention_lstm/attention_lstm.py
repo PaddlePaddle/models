@@ -12,8 +12,6 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-import numpy as np
-
 import paddle.fluid as fluid
 from paddle.fluid import ParamAttr
 
@@ -27,13 +25,13 @@ __all__ = ["AttentionLSTM"]
 
 
 class AttentionLSTM(ModelBase):
-    def __init__(self, name, cfg, mode='train'):
+    def __init__(self, name, cfg, mode='train', is_videotag=False):
         super(AttentionLSTM, self).__init__(name, cfg, mode)
+        self.is_videotag = is_videotag
         self.get_config()
 
     def get_config(self):
         # get model configs
-        self.feature_num = self.cfg.MODEL.feature_num
         self.feature_names = self.cfg.MODEL.feature_names
         self.feature_dims = self.cfg.MODEL.feature_dims
         self.num_classes = self.cfg.MODEL.num_classes
@@ -45,18 +43,34 @@ class AttentionLSTM(ModelBase):
         self.batch_size = self.get_config_from_sec(self.mode, 'batch_size', 1)
         self.num_gpus = self.get_config_from_sec(self.mode, 'num_gpus', 1)
 
+        if self.mode == 'train':
+            self.learning_rate = self.get_config_from_sec('train',
+                                                          'learning_rate', 1e-3)
+            self.weight_decay = self.get_config_from_sec('train',
+                                                         'weight_decay', 8e-4)
+            self.num_samples = self.get_config_from_sec('train', 'num_samples',
+                                                        5000000)
+            self.decay_epochs = self.get_config_from_sec('train',
+                                                         'decay_epochs', [5])
+            self.decay_gamma = self.get_config_from_sec('train', 'decay_gamma',
+                                                        0.1)
+
     def build_input(self, use_dataloader):
         self.feature_input = []
         for name, dim in zip(self.feature_names, self.feature_dims):
             self.feature_input.append(
                 fluid.data(
                     shape=[None, dim], lod_level=1, dtype='float32', name=name))
-        #video_tag without label_input
+        if self.mode != 'infer':
+            self.label_input = fluid.data(
+                shape=[None, self.num_classes], dtype='float32', name='label')
+        else:
+            self.label_input = None
         if use_dataloader:
             assert self.mode != 'infer', \
                     'dataloader is not recommendated when infer, please set use_dataloader to be false.'
             self.dataloader = fluid.io.DataLoader.from_generator(
-                feed_list=self.feature_input,  #video_tag
+                feed_list=self.feature_input + [self.label_input],
                 capacity=8,
                 iterable=True)
 
@@ -71,7 +85,7 @@ class AttentionLSTM(ModelBase):
         if len(att_outs) > 1:
             out = fluid.layers.concat(att_outs, axis=1)
         else:
-            out = att_outs[0]
+            out = att_outs[0]  # video only, without audio in videoTag
 
         fc1 = fluid.layers.fc(
             input=out,
@@ -92,8 +106,7 @@ class AttentionLSTM(ModelBase):
 
         self.logit = fluid.layers.fc(input=fc2, size=self.num_classes, act=None, \
                               bias_attr=ParamAttr(regularizer=fluid.regularizer.L2Decay(0.0),
-                                                  initializer=fluid.initializer.NormalInitializer(scale=0.0)),
-                              name = 'output')
+                                                  initializer=fluid.initializer.NormalInitializer(scale=0.0)), name='output')
 
         self.output = fluid.layers.sigmoid(self.logit)
 
@@ -125,16 +138,29 @@ class AttentionLSTM(ModelBase):
         return [self.output, self.logit]
 
     def feeds(self):
-        return self.feature_input
+        return self.feature_input if self.mode == 'infer' else self.feature_input + [
+            self.label_input
+        ]
 
     def fetches(self):
-        fetch_list = [self.output]
+        if self.mode == 'train' or self.mode == 'valid':
+            losses = self.loss()
+            fetch_list = [losses, self.output, self.label_input]
+        elif self.mode == 'test':
+            losses = self.loss()
+            fetch_list = [losses, self.output, self.label_input]
+        elif self.mode == 'infer':
+            fetch_list = [self.output]
+        else:
+            raise NotImplementedError('mode {} not implemented'.format(
+                self.mode))
+
         return fetch_list
 
     def weights_info(self):
-        return None
+        return None, None
 
-    def load_pretrain_params(self, exe, pretrain, prog, place):
+    def load_pretrain_params(self, exe, pretrain, prog):
         logger.info("Load pretrain weights from {}, exclude fc layer.".format(
             pretrain))
 

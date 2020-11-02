@@ -26,6 +26,8 @@ from inference_model import do_save_inference_model
 from dgu.utils.configure import PDConfig
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
 
     args = PDConfig(yaml_file="./data/config/dgu.yaml")
     args.build()

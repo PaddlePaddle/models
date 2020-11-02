@@ -47,6 +47,8 @@ def infer(args):
             user_vec.to_csv(args.user_vec_path, mode="a", index=False, header=0)
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = args.parse_args()
     if(os.path.exists(args.user_vec_path)):
         os.system("rm " + args.user_vec_path)

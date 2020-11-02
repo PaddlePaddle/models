@@ -248,6 +248,8 @@ def get_proposal_func(cfg, mode='TRAIN'):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     np.random.seed(3333)
     x_np = np.random.random((4, 256, 84)).astype('float32')
 

@@ -1,1 +1,0 @@
-CUDA_VISIBLE_DEVICES=0 python train.py --use_gpu 1 --batch_size 32 --epochs 20 --watch_vec_size 64 --search_vec_size 64 --other_feat_size 64 --output_size 100 --model_dir 'model_dir' --test_epoch 19 --base_lr 0.01 --video_vec_path './video_vec.csv'

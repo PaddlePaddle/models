@@ -38,6 +38,8 @@ def train(args, vocab_size, train_data_path):
         fluid.io.save(main_program,model_dir)
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = args.parse_args()
     vocab_size =utils.get_vocab_size(args.vocab_path)
     train(args, vocab_size, args.train_data_path)

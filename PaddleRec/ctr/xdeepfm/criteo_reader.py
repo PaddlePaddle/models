@@ -37,5 +37,7 @@ class CriteoDataset(dg.MultiSlotDataGenerator):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     criteo_dataset = CriteoDataset()
     criteo_dataset.run_from_stdin()
