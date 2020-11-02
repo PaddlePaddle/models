@@ -233,7 +233,8 @@ def load_params(exe, prog, path, ignore_params=None):
     if len(ignore_set) > 0:
         for k in ignore_set:
             if k in state:
-                print('warning: variable {} is already excluded automatically'.format(k))
+                print('warning: variable {} is already excluded automatically'.
+                      format(k))
                 del state[k]
 
     fluid.io.set_program_state(prog, state)
