@@ -13,7 +13,6 @@ export FLAGS_cudnn_batchnorm_spatial_persistent=1
 # DATA_DIR="./data/ILSVRC2012/"
 DATA_DIR="/models/PaddleCV/image_classification/data/ILSVRC2012"
 DATA_FORMAT="NCHW"
-# DATA_FORMAT="NHWC"
 USE_FP16=true #whether to use float16
 USE_DALI=true
 USE_ADDTO=true
