@@ -338,17 +338,19 @@ class CycleGAN(object):
                     feed={"input_A": tensor_A,
                           "fake_pool_A": fake_pool_A})[0]
 
-                batch_cost_averager.record(time.time() - batch_start)
+                batch_cost_averager.record(
+                    time.time() - batch_start, num_samples=self.cfg.batch_size)
                 if batch_id % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}: \n\
-                         d_A_loss: {}; g_A_loss: {}; g_A_cyc_loss: {}; g_A_idt_loss: {}; \n\
-                         d_B_loss: {}; g_B_loss: {}; g_B_cyc_loss: {}; g_B_idt_loss: {}; \n\
-                         reader_cost: {}, Batch_time_cost: {}"
+                         d_A_loss: {:.5f}; g_A_loss: {:.5f}; g_A_cyc_loss: {:.5f}; g_A_idt_loss: {:.5f}; \n\
+                         d_B_loss: {:.5f}; g_B_loss: {:.5f}; g_B_cyc_loss: {:.5f}; g_B_idt_loss: {:.5f}; \n\
+                         batch_cost: {:.5f} sec, reader_cost: {:.5f} sec, ips: {:.5f} images/s"
                           .format(epoch_id, batch_id, d_A_loss[0], g_A_loss[
                               0], g_A_cyc_loss[0], g_A_idt_loss[0], d_B_loss[0],
                                   g_B_loss[0], g_B_cyc_loss[0], g_B_idt_loss[0],
+                                  batch_cost_averager.get_average(),
                                   reader_cost_averager.get_average(),
-                                  batch_cost_averager.get_average()))
+                                  batch_cost_averager.get_ips_average()))
                     reader_cost_averager.reset()
                     batch_cost_averager.reset()
 
