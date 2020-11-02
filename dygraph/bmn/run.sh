@@ -2,7 +2,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 start_time=$(date +%s)
 
-python3 train.py --use_data_parallel=1
+python3.7 train.py --use_data_parallel=1
 
 end_time=$(date +%s)
 cost_time=$[ $end_time-$start_time ]

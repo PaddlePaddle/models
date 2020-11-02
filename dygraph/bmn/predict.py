@@ -55,7 +55,7 @@ def parse_args():
     parser.add_argument(
         '--weights',
         type=str,
-        default="checkpoint/bmn_paddle_dy_final",
+        default="checkpoint/bmn_paddle_dy_final.pdparams",
         help='weight path, None to automatically download weights provided by Paddle.'
     )
     parser.add_argument(
@@ -94,19 +94,18 @@ def infer_bmn(args):
     if not os.path.isdir(infer_config.INFER.result_path):
         os.makedirs(infer_config.INFER.result_path)
 
-    place = paddle.CUDAPlace(0)
-    paddle.disable_static(place)
+    place = 'gpu:0' if args.use_gpu else 'cpu'
+    place = paddle.set_device(place)
 
     bmn = BMN(infer_config)
     # load checkpoint
     if args.weights:
         assert os.path.exists(
-            args.weights +
-            ".pdparams"), "Given weight dir {} not exist.".format(args.weights)
+            args.weights), "Given weight dir {} not exist.".format(args.weights)
 
-    logger.info('load test weights from {}'.format(args.weights))
-    model_dict, _ = paddle.load(args.weights)
-    bmn.set_dict(model_dict)
+        logger.info('load test weights from {}'.format(args.weights))
+        model_dict = paddle.load(args.weights)
+        bmn.set_dict(model_dict)
 
     infer_dataset = BmnDataset(infer_config, 'infer')
     infer_sampler = DistributedBatchSampler(

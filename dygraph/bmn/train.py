@@ -99,8 +99,7 @@ def optimizer(cfg, parameter_list):
     lr_decay = cfg.TRAIN.learning_rate_decay
     l2_weight_decay = cfg.TRAIN.l2_weight_decay
     lr = [base_lr, base_lr * lr_decay]
-    scheduler = paddle.optimizer.lr_scheduler.PiecewiseLR(
-        boundaries=bd, values=lr)
+    scheduler = paddle.optimizer.lr.PiecewiseDecay(boundaries=bd, values=lr)
     optimizer = paddle.optimizer.Adam(
         learning_rate=scheduler,
         parameters=parameter_list,
@@ -138,16 +137,13 @@ def train_bmn(args):
     train_config = merge_configs(config, 'train', vars(args))
     valid_config = merge_configs(config, 'valid', vars(args))
 
-    if not args.use_gpu:
-        place = paddle.CPUPlace()
-    elif not args.use_data_parallel:
-        place = paddle.CUDAPlace(0)
-    else:
-        place = paddle.CUDAPlace(dist.ParallelEnv().dev_id)
+    place = 'gpu:{}'.format(dist.ParallelEnv()
+                            .dev_id) if args.use_gpu else 'cpu'
+    place = paddle.set_device(place)
 
-    paddle.disable_static(place)
     if args.use_data_parallel:
         dist.init_parallel_env()
+
     bmn = BMN(train_config)
     adam = optimizer(train_config, parameter_list=bmn.parameters())
 
@@ -157,10 +153,14 @@ def train_bmn(args):
     if args.resume:
         # if resume weights is given, load resume weights directly
         assert os.path.exists(args.resume + ".pdparams"), \
-            "Given resume weight dir {} not exist.".format(args.resume)
+            "Given resume weight dir {}.pdparams not exist.".format(args.resume)
+        assert os.path.exists(args.resume + ".pdopt"), \
+            "Given resume weight dir {}.pdopt not exist.".format(args.resume)
 
-        model, _ = paddle.load(args.resume)
-        bmn.set_dict(model)
+        model_dict = paddle.load(args.resume + ".pdparams")
+        opt_dict = paddle.load(args.resum + ".pdopt")
+        bmn.set_dict(model_dict)
+        adam.set_state_dict(opt_dict)
 
     #Reader
     bs_denominator = 1
@@ -219,13 +219,7 @@ def train_bmn(args):
                 train_config)
             avg_loss = paddle.mean(loss)
 
-            if args.use_data_parallel:
-                avg_loss = bmn.scale_loss(avg_loss)
-                avg_loss.backward()
-                bmn.apply_collective_grads()
-            else:
-                avg_loss.backward()
-
+            avg_loss.backward()
             adam.step()
             adam.clear_grad()
 
@@ -244,7 +238,8 @@ def train_bmn(args):
         if dist.get_rank() == 0:
             save_model_name = os.path.join(
                 args.save_dir, "bmn_paddle_dy" + "_epoch{}".format(epoch))
-            paddle.save(bmn.state_dict(), save_model_name)
+            paddle.save(bmn.state_dict(), save_model_name + '.pdparams')
+            paddle.save(adam.state_dict(), save_model_name + '.pdopt')
 
         # validation
         if args.valid_interval > 0 and (epoch + 1) % args.valid_interval == 0:
@@ -256,7 +251,8 @@ def train_bmn(args):
     if dist.get_rank() == 0:
         save_model_name = os.path.join(args.save_dir,
                                        "bmn_paddle_dy" + "_final")
-        paddle.save(bmn.state_dict(), save_model_name)
+        paddle.save(bmn.state_dict(), save_model_name + '.pdparams')
+        paddle.save(adam.state_dict(), save_model_name + '.pdopt')
     logger.info('[TRAIN] training finished')
 
 

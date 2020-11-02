@@ -23,48 +23,13 @@ from bmn_utils import get_interp1d_mask
 DATATYPE = 'float32'
 
 
-# Net
-class Conv1D(paddle.nn.Layer):
-    def __init__(self,
-                 prefix,
-                 num_channels=256,
-                 num_filters=256,
-                 size_k=3,
-                 padding=1,
-                 groups=1,
-                 act="relu"):
-        super(Conv1D, self).__init__()
-        fan_in = num_channels * size_k * 1
-        k = 1. / math.sqrt(fan_in)
-        param_attr = ParamAttr(
-            name=prefix + "_w",
-            initializer=paddle.nn.initializer.Uniform(
-                low=-k, high=k))
-        bias_attr = ParamAttr(
-            name=prefix + "_b",
-            initializer=paddle.nn.initializer.Uniform(
-                low=-k, high=k))
-
-        self._conv2d = paddle.nn.Conv2d(
-            in_channels=num_channels,
-            out_channels=num_filters,
-            kernel_size=(1, size_k),
-            stride=1,
-            padding=(0, padding),
-            groups=groups,
-            weight_attr=param_attr,
-            bias_attr=bias_attr)
-        if act == "relu":
-            self._act = paddle.nn.ReLU()
-        elif act == "sigmoid":
-            self._act = paddle.nn.Sigmoid()
-
-    def forward(self, x):
-        x = paddle.unsqueeze(x, axis=[2])
-        x = self._conv2d(x)
-        x = self._act(x)
-        x = paddle.squeeze(x, axis=[2])
-        return x
+def init_params(name, in_channels, kernel_size):
+    fan_in = in_channels * kernel_size * 1
+    k = 1. / math.sqrt(fan_in)
+    param_attr = ParamAttr(
+        name=name, initializer=paddle.nn.initializer.Uniform(
+            low=-k, high=k))
+    return param_attr
 
 
 class BMN(paddle.nn.Layer):
@@ -83,49 +48,76 @@ class BMN(paddle.nn.Layer):
         self.hidden_dim_3d = 512
 
         # Base Module
-        self.b_conv1 = Conv1D(
-            prefix="Base_1",
-            num_channels=400,
-            num_filters=self.hidden_dim_1d,
-            size_k=3,
+        self.b_conv1 = paddle.nn.Conv1D(
+            in_channels=400,
+            out_channels=self.hidden_dim_1d,
+            kernel_size=3,
             padding=1,
             groups=4,
-            act="relu")
-        self.b_conv2 = Conv1D(
-            prefix="Base_2",
-            num_filters=self.hidden_dim_1d,
-            size_k=3,
+            weight_attr=init_params('Base_1_w', 400, 3),
+            bias_attr=init_params('Base_1_b', 400, 3))
+        self.b_conv1_act = paddle.nn.ReLU()
+
+        self.b_conv2 = paddle.nn.Conv1D(
+            in_channels=self.hidden_dim_1d,
+            out_channels=self.hidden_dim_1d,
+            kernel_size=3,
             padding=1,
             groups=4,
-            act="relu")
+            weight_attr=init_params('Base_2_w', self.hidden_dim_1d, 3),
+            bias_attr=init_params('Base_2_b', self.hidden_dim_1d, 3))
+        self.b_conv2_act = paddle.nn.ReLU()
 
         # Temporal Evaluation Module
-        self.ts_conv1 = Conv1D(
-            prefix="TEM_s1",
-            num_filters=self.hidden_dim_1d,
-            size_k=3,
+        self.ts_conv1 = paddle.nn.Conv1D(
+            in_channels=self.hidden_dim_1d,
+            out_channels=self.hidden_dim_1d,
+            kernel_size=3,
             padding=1,
             groups=4,
-            act="relu")
-        self.ts_conv2 = Conv1D(
-            prefix="TEM_s2", num_filters=1, size_k=1, padding=0, act="sigmoid")
-        self.te_conv1 = Conv1D(
-            prefix="TEM_e1",
-            num_filters=self.hidden_dim_1d,
-            size_k=3,
+            weight_attr=init_params('TEM_s1_w', self.hidden_dim_1d, 3),
+            bias_attr=init_params('TEM_s1_b', self.hidden_dim_1d, 3))
+        self.ts_conv1_act = paddle.nn.ReLU()
+
+        self.ts_conv2 = paddle.nn.Conv1D(
+            in_channels=self.hidden_dim_1d,
+            out_channels=1,
+            kernel_size=1,
+            padding=0,
+            groups=1,
+            weight_attr=init_params('TEM_s2_w', self.hidden_dim_1d, 1),
+            bias_attr=init_params('TEM_s2_b', self.hidden_dim_1d, 1))
+        self.ts_conv2_act = paddle.nn.Sigmoid()
+
+        self.te_conv1 = paddle.nn.Conv1D(
+            in_channels=self.hidden_dim_1d,
+            out_channels=self.hidden_dim_1d,
+            kernel_size=3,
             padding=1,
             groups=4,
-            act="relu")
-        self.te_conv2 = Conv1D(
-            prefix="TEM_e2", num_filters=1, size_k=1, padding=0, act="sigmoid")
+            weight_attr=init_params('TEM_e1_w', self.hidden_dim_1d, 3),
+            bias_attr=init_params('TEM_e1_b', self.hidden_dim_1d, 3))
+        self.te_conv1_act = paddle.nn.ReLU()
+        self.te_conv2 = paddle.nn.Conv1D(
+            in_channels=self.hidden_dim_1d,
+            out_channels=1,
+            kernel_size=1,
+            padding=0,
+            groups=1,
+            weight_attr=init_params('TEM_e2_w', self.hidden_dim_1d, 1),
+            bias_attr=init_params('TEM_e2_b', self.hidden_dim_1d, 1))
+        self.te_conv2_act = paddle.nn.Sigmoid()
 
         #Proposal Evaluation Module
-        self.p_conv1 = Conv1D(
-            prefix="PEM_1d",
-            num_filters=self.hidden_dim_2d,
-            size_k=3,
+        self.p_conv1 = paddle.nn.Conv1D(
+            in_channels=self.hidden_dim_1d,
+            out_channels=self.hidden_dim_2d,
+            kernel_size=3,
             padding=1,
-            act="relu")
+            groups=1,
+            weight_attr=init_params('PEM_1d_w', self.hidden_dim_1d, 3),
+            bias_attr=init_params('PEM_1d_b', self.hidden_dim_1d, 3))
+        self.p_conv1_act = paddle.nn.ReLU()
 
         # init to speed up
         sample_mask = get_interp1d_mask(self.tscale, self.dscale,
@@ -134,7 +126,7 @@ class BMN(paddle.nn.Layer):
         self.sample_mask = paddle.to_tensor(sample_mask)
         self.sample_mask.stop_gradient = True
 
-        self.p_conv3d1 = paddle.nn.Conv3d(
+        self.p_conv3d1 = paddle.nn.Conv3D(
             in_channels=128,
             out_channels=self.hidden_dim_3d,
             kernel_size=(self.num_sample, 1, 1),
@@ -144,7 +136,7 @@ class BMN(paddle.nn.Layer):
             bias_attr=ParamAttr(name="PEM_3d1_b"))
         self.p_conv3d1_act = paddle.nn.ReLU()
 
-        self.p_conv2d1 = paddle.nn.Conv2d(
+        self.p_conv2d1 = paddle.nn.Conv2D(
             in_channels=512,
             out_channels=self.hidden_dim_2d,
             kernel_size=1,
@@ -154,7 +146,7 @@ class BMN(paddle.nn.Layer):
             bias_attr=ParamAttr(name="PEM_2d1_b"))
         self.p_conv2d1_act = paddle.nn.ReLU()
 
-        self.p_conv2d2 = paddle.nn.Conv2d(
+        self.p_conv2d2 = paddle.nn.Conv2D(
             in_channels=128,
             out_channels=self.hidden_dim_2d,
             kernel_size=3,
@@ -164,7 +156,7 @@ class BMN(paddle.nn.Layer):
             bias_attr=ParamAttr(name="PEM_2d2_b"))
         self.p_conv2d2_act = paddle.nn.ReLU()
 
-        self.p_conv2d3 = paddle.nn.Conv2d(
+        self.p_conv2d3 = paddle.nn.Conv2D(
             in_channels=128,
             out_channels=self.hidden_dim_2d,
             kernel_size=3,
@@ -174,7 +166,7 @@ class BMN(paddle.nn.Layer):
             bias_attr=ParamAttr(name="PEM_2d3_b"))
         self.p_conv2d3_act = paddle.nn.ReLU()
 
-        self.p_conv2d4 = paddle.nn.Conv2d(
+        self.p_conv2d4 = paddle.nn.Conv2D(
             in_channels=128,
             out_channels=2,
             kernel_size=1,
@@ -187,18 +179,25 @@ class BMN(paddle.nn.Layer):
     def forward(self, x):
         #Base Module
         x = self.b_conv1(x)
+        x = self.b_conv1_act(x)
         x = self.b_conv2(x)
+        x = self.b_conv2_act(x)
 
         #TEM
         xs = self.ts_conv1(x)
+        xs = self.ts_conv1_act(xs)
         xs = self.ts_conv2(xs)
+        xs = self.ts_conv2_act(xs)
         xs = paddle.squeeze(xs, axis=[1])
         xe = self.te_conv1(x)
+        xe = self.te_conv1_act(xe)
         xe = self.te_conv2(xe)
+        xe = self.te_conv2_act(xe)
         xe = paddle.squeeze(xe, axis=[1])
 
         #PEM
         xp = self.p_conv1(x)
+        xp = self.p_conv1_act(xp)
         #BM layer
         xp = paddle.matmul(xp, self.sample_mask)
         xp = paddle.reshape(xp, shape=[0, 0, -1, self.dscale, self.tscale])
@@ -239,17 +238,17 @@ def bmn_loss_func(pred_bm, pred_start, pred_end, gt_iou_map, gt_start, gt_end,
             gt_label.stop_gradient = True
             pmask = paddle.cast(x=(gt_label > 0.5), dtype=DATATYPE)
             num_entries = paddle.cast(paddle.shape(pmask), dtype=DATATYPE)
-            num_positive = paddle.cast(paddle.reduce_sum(pmask), dtype=DATATYPE)
+            num_positive = paddle.cast(paddle.sum(pmask), dtype=DATATYPE)
             ratio = num_entries / num_positive
             coef_0 = 0.5 * ratio / (ratio - 1)
             coef_1 = 0.5 * ratio
             epsilon = 0.000001
             temp = paddle.log(pred_score + epsilon)
             loss_pos = paddle.multiply(paddle.log(pred_score + epsilon), pmask)
-            loss_pos = coef_1 * paddle.reduce_mean(loss_pos)
+            loss_pos = coef_1 * paddle.mean(loss_pos)
             loss_neg = paddle.multiply(
                 paddle.log(1.0 - pred_score + epsilon), (1.0 - pmask))
-            loss_neg = coef_0 * paddle.reduce_mean(loss_neg)
+            loss_neg = coef_0 * paddle.mean(loss_neg)
             loss = -1 * (loss_pos + loss_neg)
             return loss
 
@@ -269,9 +268,9 @@ def bmn_loss_func(pred_bm, pred_start, pred_end, gt_iou_map, gt_start, gt_end,
         u_lmask = paddle.cast(x=u_lmask, dtype=DATATYPE)
         u_lmask = paddle.multiply(u_lmask, mask)
 
-        num_h = paddle.cast(paddle.reduce_sum(u_hmask), dtype=DATATYPE)
-        num_m = paddle.cast(paddle.reduce_sum(u_mmask), dtype=DATATYPE)
-        num_l = paddle.cast(paddle.reduce_sum(u_lmask), dtype=DATATYPE)
+        num_h = paddle.cast(paddle.sum(u_hmask), dtype=DATATYPE)
+        num_m = paddle.cast(paddle.sum(u_mmask), dtype=DATATYPE)
+        num_l = paddle.cast(paddle.sum(u_lmask), dtype=DATATYPE)
 
         r_m = num_h / num_m
         u_smmask = paddle.uniform(
@@ -295,7 +294,7 @@ def bmn_loss_func(pred_bm, pred_start, pred_end, gt_iou_map, gt_start, gt_end,
         weights.stop_gradient = True
         loss = F.square_error_cost(pred_score, gt_iou_map)
         loss = paddle.multiply(loss, weights)
-        loss = 0.5 * paddle.reduce_sum(loss) / paddle.reduce_sum(weights)
+        loss = 0.5 * paddle.sum(loss) / paddle.sum(weights)
 
         return loss
 
@@ -306,17 +305,17 @@ def bmn_loss_func(pred_bm, pred_start, pred_end, gt_iou_map, gt_start, gt_end,
         nmask = paddle.cast(x=(gt_iou_map <= 0.9), dtype=DATATYPE)
         nmask = paddle.multiply(nmask, mask)
 
-        num_positive = paddle.reduce_sum(pmask)
-        num_entries = num_positive + paddle.reduce_sum(nmask)
+        num_positive = paddle.sum(pmask)
+        num_entries = num_positive + paddle.sum(nmask)
         ratio = num_entries / num_positive
         coef_0 = 0.5 * ratio / (ratio - 1)
         coef_1 = 0.5 * ratio
         epsilon = 0.000001
         loss_pos = paddle.multiply(paddle.log(pred_score + epsilon), pmask)
-        loss_pos = coef_1 * paddle.reduce_sum(loss_pos)
+        loss_pos = coef_1 * paddle.sum(loss_pos)
         loss_neg = paddle.multiply(
             paddle.log(1.0 - pred_score + epsilon), nmask)
-        loss_neg = coef_0 * paddle.reduce_sum(loss_neg)
+        loss_neg = coef_0 * paddle.sum(loss_neg)
         loss = -1 * (loss_pos + loss_neg) / num_entries
         return loss
 
