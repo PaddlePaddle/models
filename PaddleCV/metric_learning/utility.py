@@ -199,9 +199,6 @@ def load_params(exe, prog, path, ignore_params=None):
         prog (fluid.Program): load weight to which Program object.
         path (string): local model path.
         ignore_params (list): ignore variable to load when finetuning.
-            It can be specified by finetune_exclude_pretrained_params
-            and the usage can refer to the document
-            docs/advanced_tutorials/TRANSFER_LEARNING.md
     """
     if not (os.path.isdir(path) or os.path.exists(path + '.pdparams')):
         raise ValueError("Model pretrain path {} does not "
