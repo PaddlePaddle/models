@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 class TSN_UCF101_Dataset(Dataset):
     def __init__(self, cfg, mode):
         self.mode = mode
-        self.format = cfg.MODEL.format  #'videos' or 'frames'
+        self.format = cfg.MODEL.format  # 'videos' or 'frames'
         self.seg_num = cfg.MODEL.seg_num
         self.seglen = cfg.MODEL.seglen
-        self.short_size = cfg.TRAIN.short_size
-        self.target_size = cfg.TRAIN.target_size
+        self.short_size = cfg[mode.upper()]['short_size']
+        self.target_size = cfg[mode.upper()]['target_size']
         self.img_mean = np.array(cfg.MODEL.image_mean).reshape(
             [3, 1, 1]).astype(np.float32)
         self.img_std = np.array(cfg.MODEL.image_std).reshape(
@@ -52,7 +52,7 @@ class TSN_UCF101_Dataset(Dataset):
                 if self.format == "videos":
                     path, label = path_label.split()
                     self._path_to_videos.append(path + '.avi')
-                    self._num_frames.append(0)  # unused 
+                    self._num_frames.append(0)  # unused
                     self._labels.append(int(label))
                 elif self.format == "frames":
                     path, num_frames, label = path_label.split()
@@ -92,11 +92,11 @@ class TSN_UCF101_Dataset(Dataset):
                         format(path, ir))
                     return None, None
             label = self._labels[idx]
-            return frames, np.array([label])  #, np.array([idx])
+            return frames, np.array([label])  # , np.array([idx])
 
     def pipline(self, filepath, num_frames, format, seg_num, seglen, short_size,
                 target_size, img_mean, img_std, mode):
-        #Loader
+        # Loader
         if format == 'videos':
             Loader_ops = [
                 VideoDecoder(filepath), VideoSampler(seg_num, seglen, mode)
@@ -106,7 +106,7 @@ class TSN_UCF101_Dataset(Dataset):
                 FrameLoader(filepath, num_frames, seg_num, seglen, mode)
             ]
 
-        #Augmentation
+        # Augmentation
         if mode == 'train':
             Aug_ops = [
                 Scale(short_size), RandomCrop(target_size), RandomFlip(),
