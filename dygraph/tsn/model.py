@@ -19,7 +19,7 @@ from __future__ import print_function
 import numpy as np
 import paddle
 import math
-from paddle.nn import Conv2d, BatchNorm2d, Linear, Dropout, MaxPool2d, AvgPool2d
+from paddle.nn import Conv2D, BatchNorm2D, Linear, Dropout, MaxPool2D, AvgPool2D
 from paddle import ParamAttr
 import paddle.nn.functional as F
 from paddle.jit import to_static
@@ -35,7 +35,7 @@ class ConvBNLayer(paddle.nn.Layer):
                  act=None,
                  name=None):
         super(ConvBNLayer, self).__init__()
-        self._conv = Conv2d(
+        self._conv = Conv2D(
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
@@ -51,7 +51,7 @@ class ConvBNLayer(paddle.nn.Layer):
         
         self._act = act
         
-        self._batch_norm = BatchNorm2d(
+        self._batch_norm = BatchNorm2D(
             out_channels,
             weight_attr=ParamAttr(name=bn_name + "_scale"),
             bias_attr=ParamAttr(bn_name + "_offset"))
@@ -194,7 +194,7 @@ class TSN_ResNet(paddle.nn.Layer):
             stride=2,
             act="relu",
             name="conv1")
-        self.pool2d_max = MaxPool2d(
+        self.pool2D_max = MaxPool2D(
             kernel_size=3, stride=2, padding=1)
 
         self.block_list = []
@@ -237,12 +237,12 @@ class TSN_ResNet(paddle.nn.Layer):
                     self.block_list.append(basic_block)
                     shortcut = True
 
-        self.pool2d_avg = AvgPool2d(kernel_size=7)
+        self.pool2D_avg = AvgPool2D(kernel_size=7)
 
-        self.pool2d_avg_channels = in_channels[-1] * 2
+        self.pool2D_avg_channels = in_channels[-1] * 2
 
         self.out = Linear(
-            self.pool2d_avg_channels,
+            self.pool2D_avg_channels,
             self.class_dim,
             weight_attr=ParamAttr(
                 initializer=paddle.nn.initializer.Normal(
@@ -258,10 +258,10 @@ class TSN_ResNet(paddle.nn.Layer):
         y = paddle.reshape(
             inputs, [-1, inputs.shape[2], inputs.shape[3], inputs.shape[4]])
         y = self.conv(y)
-        y = self.pool2d_max(y)
+        y = self.pool2D_max(y)
         for block in self.block_list:
             y = block(y)
-        y = self.pool2d_avg(y)
+        y = self.pool2D_avg(y)
         y = F.dropout(y, p=0.2)
         y = paddle.reshape(y, [-1, self.seg_num, y.shape[1]])
         y = paddle.mean(y, axis=1)
