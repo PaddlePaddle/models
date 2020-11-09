@@ -35,6 +35,7 @@ from losses import EmlLoss
 from losses import NpairsLoss
 from utility import add_arguments, print_arguments
 from utility import fmt_time, recall_topk, get_gpu_num, check_cuda
+from utility import load_params
 
 parser = argparse.ArgumentParser(description=__doc__)
 add_arg = functools.partial(add_arguments, argparser=parser)
@@ -188,8 +189,7 @@ def train_async(args):
         fluid.load(program=train_prog, model_path=checkpoint, executor=exe)
 
     if pretrained_model:
-        fluid.load(
-            program=train_prog, model_path=pretrained_model, executor=exe)
+        load_params(exe, train_prog, pretrained_model)
 
     if args.use_gpu:
         devicenum = get_gpu_num()
