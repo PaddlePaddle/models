@@ -175,7 +175,7 @@ def train_bmn(args):
                 "num_gpus({}) set by CUDA_VISIBLE_DEVICES" \
                 "shoud be the same as that" \
                 "set in {}({})".format(
-                    num_gpus, args.config, train_config.TRAIN.num_gpus)
+                    num_gpus, args.config_file, train_config.TRAIN.num_gpus)
         bs_denominator = train_config.TRAIN.num_gpus
 
     bs_train_single = int(train_config.TRAIN.batch_size / bs_denominator)
