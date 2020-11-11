@@ -411,10 +411,6 @@ def train_resnet():
                 batch_size=batch_size,
                 drop_last=True)
 
-        if args.use_data_parallel:
-            train_reader = fluid.contrib.reader.distributed_batch_reader(
-                train_reader)
-
         if args.use_imagenet_data:
             test_reader = imagenet_reader.val(settings=args)
         else:
