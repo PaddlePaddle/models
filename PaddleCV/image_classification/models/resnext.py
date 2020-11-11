@@ -33,7 +33,7 @@ class ResNeXt():
         self.layers = layers
         self.cardinality = cardinality
 
-    def net(self, input, class_dim=1000):
+    def net(self, input, class_dim=1000, data_format="NCHW"):
         layers = self.layers
         cardinality = self.cardinality
         supported_layers = [50, 101, 152]
@@ -56,13 +56,15 @@ class ResNeXt():
             filter_size=7,
             stride=2,
             act='relu',
-            name="res_conv1")  #debug
+            name="res_conv1",  #debug
+            data_format=data_format)
         conv = fluid.layers.pool2d(
             input=conv,
             pool_size=3,
             pool_stride=2,
             pool_padding=1,
-            pool_type='max')
+            pool_type='max',
+            data_format=data_format)
 
         for block in range(len(depth)):
             for i in range(depth[block]):
@@ -79,10 +81,11 @@ class ResNeXt():
                     if cardinality == 64 else num_filters2[block],
                     stride=2 if i == 0 and block != 0 else 1,
                     cardinality=cardinality,
-                    name=conv_name)
+                    name=conv_name,
+                    data_format=data_format)
 
         pool = fluid.layers.pool2d(
-            input=conv, pool_type='avg', global_pooling=True)
+            input=conv, pool_type='avg', global_pooling=True, data_format=data_format)
         stdv = 1.0 / math.sqrt(pool.shape[1] * 1.0)
         out = fluid.layers.fc(
             input=pool,
@@ -100,7 +103,8 @@ class ResNeXt():
                       stride=1,
                       groups=1,
                       act=None,
-                      name=None):
+                      name=None,
+                      data_format='NCHW'):
         conv = fluid.layers.conv2d(
             input=input,
             num_filters=num_filters,
@@ -111,7 +115,8 @@ class ResNeXt():
             act=None,
             param_attr=ParamAttr(name=name + "_weights"),
             bias_attr=False,
-            name=name + '.conv2d.output.1')
+            name=name + '.conv2d.output.1',
+            data_format=data_format)
         if name == "conv1":
             bn_name = "bn_" + name
         else:
@@ -123,23 +128,28 @@ class ResNeXt():
             param_attr=ParamAttr(name=bn_name + '_scale'),
             bias_attr=ParamAttr(bn_name + '_offset'),
             moving_mean_name=bn_name + '_mean',
-            moving_variance_name=bn_name + '_variance', )
+            moving_variance_name=bn_name + '_variance', 
+            data_layout=data_format)
 
-    def shortcut(self, input, ch_out, stride, name):
-        ch_in = input.shape[1]
+    def shortcut(self, input, ch_out, stride, name, data_format):
+        if data_format == "NCHW":
+            ch_in = input.shape[1]
+        else:
+            ch_in = input.shape[-1]
         if ch_in != ch_out or stride != 1:
-            return self.conv_bn_layer(input, ch_out, 1, stride, name=name)
+            return self.conv_bn_layer(input, ch_out, 1, stride, name=name, data_format=data_format)
         else:
             return input
 
-    def bottleneck_block(self, input, num_filters, stride, cardinality, name):
+    def bottleneck_block(self, input, num_filters, stride, cardinality, name, data_format):
         cardinality = self.cardinality
         conv0 = self.conv_bn_layer(
             input=input,
             num_filters=num_filters,
             filter_size=1,
             act='relu',
-            name=name + "_branch2a")
+            name=name + "_branch2a",
+            data_format=data_format)
         conv1 = self.conv_bn_layer(
             input=conv0,
             num_filters=num_filters,
@@ -147,19 +157,22 @@ class ResNeXt():
             stride=stride,
             groups=cardinality,
             act='relu',
-            name=name + "_branch2b")
+            name=name + "_branch2b",
+            data_format=data_format)
         conv2 = self.conv_bn_layer(
             input=conv1,
             num_filters=num_filters if cardinality == 64 else num_filters * 2,
             filter_size=1,
             act=None,
-            name=name + "_branch2c")
+            name=name + "_branch2c",
+            data_format=data_format)
 
         short = self.shortcut(
             input,
             num_filters if cardinality == 64 else num_filters * 2,
             stride,
-            name=name + "_branch1")
+            name=name + "_branch1",
+            data_format=data_format)
 
         return fluid.layers.elementwise_add(
             x=short, y=conv2, act='relu', name=name + ".add.output.5")

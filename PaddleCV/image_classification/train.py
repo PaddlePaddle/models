@@ -264,8 +264,18 @@ def train(args):
                 test_iter = test_data_loader()
 
         batch_start = time.time()
+        ips_avg = []
         for batch in train_iter:
             #NOTE: this is for benchmark
+
+            # if total_batch_num == 200:
+            #     fluid.core.nvprof_start()
+            # if total_batch_num == 210:
+            #     fluid.core.nvprof_stop()
+            if total_batch_num == 200:
+                print(">>>>>>>>>>>>>>>>>>>>>>>>>> Average ips: ", np.mean(ips_avg),">>>>>>>>>>>>>>>>>>>>>>>>")
+                #fluid.core.nvprof_stop()
+                return
             if args.max_iter and total_batch_num == args.max_iter:
                 return
             reader_cost_averager.record(time.time() - batch_start)
@@ -285,6 +295,9 @@ def train(args):
 
             if trainer_id == 0:
                 ips = float(args.batch_size) / batch_cost_averager.get_average()
+                if total_batch_num > 40:
+                    ips_avg.append(ips)
+
                 print_info(
                     "batch",
                     train_batch_metrics_avg,

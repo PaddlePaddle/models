@@ -35,15 +35,16 @@ def _calc_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
 def _basic_model(data, model, args, is_train):
     image = data[0]
     label = data[1]
-    if args.model == "ResNet50":
-        image_in = fluid.layers.transpose(
-            image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
-        image_in.stop_gradient = image.stop_gradient
-        net_out = model.net(input=image_in,
-                            class_dim=args.class_dim,
-                            data_format=args.data_format)
-    else:
-        net_out = model.net(input=image, class_dim=args.class_dim)
+    print ("args.data_format:", args.data_format)
+    # if args.model == ("ResNet50" or "ResNeXt101_32x4d"):
+    image_in = fluid.layers.transpose(
+        image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
+    image_in.stop_gradient = image.stop_gradient
+    net_out = model.net(input=image_in,
+                        class_dim=args.class_dim,
+                        data_format=args.data_format)
+    # else:
+    #     net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
 
     if is_train and args.use_label_smoothing:
@@ -95,15 +96,15 @@ def _mixup_model(data, model, args, is_train):
     y_b = data[2]
     lam = data[3]
 
-    if args.model == "ResNet50":
-        image_in = fluid.layers.transpose(
-            image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
-        image_in.stop_gradient = image.stop_gradient
-        net_out = model.net(input=image_in,
-                            class_dim=args.class_dim,
-                            data_format=args.data_format)
-    else:
-        net_out = model.net(input=image, class_dim=args.class_dim)
+    # if args.model == "ResNet50":
+    image_in = fluid.layers.transpose(
+        image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
+    image_in.stop_gradient = image.stop_gradient
+    net_out = model.net(input=image_in,
+                        class_dim=args.class_dim,
+                        data_format=args.data_format)
+    # else:
+    #     net_out = model.net(input=image, class_dim=args.class_dim)
     softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
     if not args.use_label_smoothing:
         loss_a = fluid.layers.cross_entropy(input=softmax_out, label=y_a)
