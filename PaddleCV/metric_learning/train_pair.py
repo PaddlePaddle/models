@@ -17,13 +17,10 @@ from __future__ import print_function
 
 import os
 import sys
-import math
 import time
 import logging
 import argparse
 import functools
-import threading
-import subprocess
 import numpy as np
 import paddle
 import paddle.fluid as fluid
@@ -69,7 +66,7 @@ model_list = [m for m in dir(models) if "__" not in m]
 def optimizer_setting(params):
     ls = params["learning_strategy"]
     assert ls["name"] == "piecewise_decay", \
-           "learning rate strategy must be {}, but got {}".format("piecewise_decay", lr["name"])
+           "learning rate strategy must be {}, but got {}".format("piecewise_decay", ls["name"])
 
     bd = [int(e) for e in ls["lr_steps"].split(',')]
     base_lr = params["lr"]
@@ -153,7 +150,8 @@ def train_async(args):
     checkpoint = args.checkpoint
     pretrained_model = args.pretrained_model
     model_save_dir = args.model_save_dir
-
+    if not os.path.exists(model_save_dir):
+        os.mkdir(model_save_dir)
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     tmp_prog = fluid.Program()
@@ -271,10 +269,7 @@ def train_async(args):
                 sys.stdout.flush()
 
             if iter_no % args.save_iter_step == 0 and iter_no != 0:
-                model_path = os.path.join(model_save_dir + '/' + model_name,
-                                          str(iter_no))
-                if not os.path.isdir(model_path):
-                    os.makedirs(model_path)
+                model_path = os.path.join(model_save_dir, model_name, str(iter_no))
                 fluid.save(program=train_prog, model_path=model_path)
 
             iter_no += 1
@@ -292,6 +287,7 @@ def initlogging():
 
 
 def main():
+    paddle.enable_static()
     args = parser.parse_args()
     print_arguments(args)
     check_cuda(args.use_gpu)
@@ -299,6 +295,4 @@ def main():
 
 
 if __name__ == '__main__':
-    import paddle
-    paddle.enable_static()
     main()

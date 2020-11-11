@@ -17,11 +17,8 @@ from __future__ import print_function
 
 import os
 import sys
-import math
-import time
 import argparse
 import functools
-import numpy as np
 import paddle
 import paddle.fluid as fluid
 import models
@@ -92,6 +89,7 @@ def infer(args):
 
 
 def main():
+    paddle.enable_static()
     args = parser.parse_args()
     print_arguments(args)
     check_cuda(args.use_gpu)
@@ -99,6 +97,4 @@ def main():
 
 
 if __name__ == '__main__':
-    import paddle
-    paddle.enable_static()
     main()

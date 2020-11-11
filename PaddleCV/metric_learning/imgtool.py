@@ -76,7 +76,7 @@ def crop_image(img, target_size, center):
     """ crop_image """
     height, width = img.shape[:2]
     size = target_size
-    if center == True:
+    if center is True:
         w_start = (width - size) // 2
         h_start = (height - size) // 2
     else:

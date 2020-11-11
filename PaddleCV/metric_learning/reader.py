@@ -15,12 +15,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
-import math
 import random
 import functools
-import numpy as np
-import paddle
 from imgtool import process_image
 import paddle.fluid as fluid
 

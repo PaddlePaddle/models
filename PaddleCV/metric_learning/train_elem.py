@@ -17,13 +17,10 @@ from __future__ import print_function
 
 import os
 import sys
-import math
 import time
 import logging
 import argparse
 import functools
-import threading
-import subprocess
 import numpy as np
 import paddle
 import paddle.fluid as fluid
@@ -68,7 +65,7 @@ model_list = [m for m in dir(models) if "__" not in m]
 def optimizer_setting(params):
     ls = params["learning_strategy"]
     assert ls["name"] == "piecewise_decay", \
-           "learning rate strategy must be {}, but got {}".format("piecewise_decay", lr["name"])
+           "learning rate strategy must be {}, but got {}".format("piecewise_decay", ls["name"])
 
     bd = [int(e) for e in ls["lr_steps"].split(',')]
     base_lr = params["lr"]
@@ -302,6 +299,7 @@ def initlogging():
 
 
 def main():
+    paddle.enable_static()
     args = parser.parse_args()
     print_arguments(args)
     check_cuda(args.use_gpu)
@@ -309,6 +307,4 @@ def main():
 
 
 if __name__ == '__main__':
-    import paddle
-    paddle.enable_static()
     main()
