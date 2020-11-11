@@ -196,7 +196,7 @@ class BaseModel(object):
         max_tar_seq_len = layers.shape(self.tar)[1]
         tar_mask = layers.sequence_mask(
             self.tar_sequence_length, maxlen=max_tar_seq_len, dtype='float32')
-        loss = loss * tar_mask
+        loss = layers.elementwise_mul(loss, tar_mask, axis=0)
         loss = layers.reduce_mean(loss, dim=[0])
         loss = layers.reduce_sum(loss)
         return loss
