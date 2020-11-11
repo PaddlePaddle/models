@@ -15,15 +15,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import numpy as np
-import paddle as paddle
 import paddle.fluid as fluid
 
 def generate_index(batch_size, samples_each_class):
     a = np.arange(0, batch_size * batch_size) # N*N x 1
     a = a.reshape(-1, batch_size) # N x N
-    steps = batch_size // samples_each_class
     res = []
     for i in range(batch_size):
         step = i // samples_each_class
