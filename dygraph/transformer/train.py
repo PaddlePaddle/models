@@ -204,7 +204,7 @@ def do_train(args):
                         logger.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
                             "normalized loss: %f, ppl: %f, avg_speed: %.2f step/s, "
-                            "reader cost: %0.2f sec, ips: %0.2f words/s" %
+                            "reader cost: %0.2f sec, ips: %0.2f words/sec" %
                             (step_idx, pass_id, batch_id, total_avg_cost,
                              total_avg_cost - loss_normalizer,
                              np.exp([min(total_avg_cost, 100)]),
