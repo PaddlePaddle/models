@@ -73,14 +73,27 @@ def test_with_dataloader(exe,
     test_metrics.finalize_and_log_out("[TEST] Finish")
 
 
-def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader, \
-                        train_fetch_list, train_metrics, epochs = 10, \
-                        log_interval = 0, valid_interval = 0, save_dir = './', \
-                        num_trainers = 1, trainer_id = 0, \
-                        save_model_name = 'model', fix_random_seed = False, \
-                        compiled_test_prog = None, test_dataloader = None, \
-                        test_fetch_list = None, test_metrics = None, \
-                        is_profiler = None, profiler_path = None):
+def train_with_dataloader(exe,
+                          train_prog,
+                          compiled_train_prog,
+                          train_dataloader,
+                          train_fetch_list,
+                          train_metrics,
+                          train_batch_size=None,
+                          epochs=10,
+                          log_interval=0,
+                          valid_interval=0,
+                          save_dir='./',
+                          num_trainers=1,
+                          trainer_id=0,
+                          save_model_name='model',
+                          fix_random_seed=False,
+                          compiled_test_prog=None,
+                          test_dataloader=None,
+                          test_fetch_list=None,
+                          test_metrics=None,
+                          is_profiler=None,
+                          profiler_path=None):
     if not train_dataloader:
         logger.error("[TRAIN] get dataloader failed.")
 
@@ -105,13 +118,21 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
 
             batch_cost = time.time() - batch_start
             epoch_periods.append(batch_cost)
-            batch_cost_averager.record(batch_cost)
+            batch_cost_averager.record(batch_cost, num_samples=train_batch_size)
 
             local_time = time.localtime(time.time())
             str_time = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
             if log_interval > 0 and (train_iter % log_interval == 0):
-                train_metrics.calculate_and_log_out(train_outs, \
-                        info = '[TRAIN {}] Epoch {}, iter {}, batch_cost {:.5}, reader_cost {:.5}'.format(str_time, epoch, train_iter, batch_cost_averager.get_average(), reader_cost_averager.get_average()))
+                time_info_str = "batch_cost: {:.5f} sec, reader_cost: {:.5f} sec".format(
+                    batch_cost_averager.get_average(),
+                    reader_cost_averager.get_average())
+                if train_batch_size:
+                    time_info_str += ", ips: {:.5f} samples/sec".format(
+                        batch_cost_averager.get_ips_average())
+                train_metrics.calculate_and_log_out(
+                    train_outs,
+                    info='[TRAIN {}] Epoch {}, iter {}, {}'.format(
+                        str_time, epoch, train_iter, time_info_str))
                 reader_cost_averager.reset()
                 batch_cost_averager.reset()
 
@@ -130,8 +151,9 @@ def train_with_dataloader(exe, train_prog, compiled_train_prog, train_dataloader
                 'No iteration was executed, please check the data reader')
             sys.exit(1)
 
-        logger.info('[TRAIN] Epoch {} training finished, average time: {}'.
-                    format(epoch, np.mean(epoch_periods[1:])))
+        logger.info(
+            '[TRAIN] Epoch {} training finished, average time: {:.5f} sec'.
+            format(epoch, np.mean(epoch_periods[1:])))
 
         if trainer_id == 0:
             save_model(exe, train_prog, save_dir, save_model_name,

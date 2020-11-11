@@ -391,9 +391,13 @@ def train(args):
                 optimizer.minimize(avg_loss)
                 video_model.clear_gradients()
 
-                total_loss += avg_loss.numpy()[0]
-                total_acc1 += acc_top1.numpy()[0]
-                total_acc5 += acc_top5.numpy()[0]
+                avg_loss_value = avg_loss.numpy()[0]
+                acc_top1_value = acc_top1.numpy()[0]
+                acc_top5_value = acc_top5.numpy()[0]
+
+                total_loss += avg_loss_value
+                total_acc1 += acc_top1_value
+                total_acc5 += acc_top5_value
                 total_sample += 1
                 if args.use_visualdl:
                     vdl_writer.add_scalar(
@@ -409,21 +413,23 @@ def train(args):
                         step=epoch * train_iter_num + batch_id,
                         value=1.0 - acc_top5.numpy())
 
-                batch_cost_averager.record(time.time() - batch_start)
+                batch_cost_averager.record(
+                    time.time() - batch_start, num_samples=bs_train_single)
                 if batch_id % args.log_interval == 0:
                     print(
-                        "[Epoch %d, batch %d] loss %.5f, err1 %.5f, err5 %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
-                        % (epoch, batch_id, avg_loss.numpy(),
-                           1.0 - acc_top1.numpy(), 1. - acc_top5.numpy(),
-                           batch_cost_averager.get_average(),
-                           reader_cost_averager.get_average()))
+                        "[Epoch %d, batch %d] loss %.5f, err1 %.5f, err5 %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f samples/sec"
+                        %
+                        (epoch, batch_id, avg_loss_value, 1.0 - acc_top1_value,
+                         1. - acc_top5_value, batch_cost_averager.get_average(),
+                         reader_cost_averager.get_average(),
+                         batch_cost_averager.get_ips_average()))
                     reader_cost_averager.reset()
                     batch_cost_averager.reset()
 
                 batch_start = time.time()
 
             train_epoch_cost = time.time() - epoch_start
-            print( '[Epoch %d end] avg_loss %.5f, avg_err1 %.5f, avg_err5= %.5f, epoch_cost: %.5f s' % \
+            print( '[Epoch %d end] avg_loss %.5f, avg_err1 %.5f, avg_err5= %.5f, epoch_cost: %.5f sec' % \
                    (epoch, total_loss / total_sample, 1. - total_acc1 / total_sample, 1. - total_acc5 / total_sample, train_epoch_cost))
             if args.use_visualdl:
                 vdl_writer.add_scalar(
