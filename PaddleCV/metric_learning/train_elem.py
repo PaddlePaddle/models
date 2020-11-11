@@ -145,6 +145,9 @@ def train_async(args):
     pretrained_model = args.pretrained_model
     model_save_dir = args.model_save_dir
 
+    if not os.path.exists(model_save_dir):
+        os.mkdir(model_save_dir)
+
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
     tmp_prog = fluid.Program()
@@ -272,10 +275,7 @@ def train_async(args):
                 sys.stdout.flush()
 
             if iter_no % args.save_iter_step == 0 and iter_no != 0:
-                model_path = os.path.join(model_save_dir + '/' + model_name,
-                                          str(iter_no))
-                if not os.path.isdir(model_path):
-                    os.makedirs(model_path)
+                model_path = os.path.join(model_save_dir, model_name, str(iter_no))
                 fluid.save(program=train_prog, model_path=model_path)
 
             iter_no += 1

@@ -77,7 +77,7 @@ def save_inference_model(args):
         print('Finish.')
 
     else:
-        print('Please set the pretrained_model dir.')
+        print('Can\'t load the pretrained_model. Please set the true pretrained_model dir.')
 
 def main():
     paddle.enable_static()
