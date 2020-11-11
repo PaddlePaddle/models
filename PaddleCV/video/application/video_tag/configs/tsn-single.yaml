@@ -15,11 +15,11 @@ TRAIN:
     target_size: 224
     num_reader_threads: 12
     buf_size: 1024
-    batch_size: 256
+    batch_size: 32
     use_gpu: True
-    num_gpus: 8
+    num_gpus: 1
     filelist: "./data/dataset/tsn/train.list"
-    learning_rate: 0.01
+    learning_rate: 0.00125
     learning_rate_decay: 0.1
     l2_weight_decay: 1e-4
     momentum: 0.9
@@ -31,7 +31,7 @@ VALID:
     target_size: 224
     num_reader_threads: 12
     buf_size: 1024
-    batch_size: 256
+    batch_size: 32 
     filelist: "./data/dataset/tsn/val.list"
 
 TEST:

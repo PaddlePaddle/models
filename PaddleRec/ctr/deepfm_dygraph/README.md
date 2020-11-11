@@ -1,4 +1,3 @@
-
 # DeepFM动态图
 
 以下是本例的简要目录结构及说明：
@@ -65,9 +64,9 @@ CUDA_VISIBLE_DEVICES=0 python infer.py --checkpoint=models/epoch_0
 
 ## 效果
 ```text
-test auc of epoch 0 is 0.802877
+test auc of epoch 0 is 0.78+
 ```
 
-第一轮数据训练结束后，test auc为0.802877。
+第一轮数据训练结束后，test auc为0.78+。
 
 继续训练模型易出现过拟合现象，可以通过评估模型选择效果最好的模型作为最终训练结果。

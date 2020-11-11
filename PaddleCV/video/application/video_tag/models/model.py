@@ -148,7 +148,7 @@ class ModelBase(object):
         download(url, path)
         return path
 
-    def load_pretrain_params(self, exe, pretrain, prog, place):
+    def load_pretrain_params(self, exe, pretrain, prog):
         logger.info("Load pretrain weights from {}".format(pretrain))
         state_dict = fluid.load_program_state(pretrain)
         fluid.set_program_state(prog, state_dict)
@@ -172,10 +172,10 @@ class ModelZoo(object):
             type(model))
         self.model_zoo[name] = model
 
-    def get(self, name, cfg, mode='train'):
+    def get(self, name, cfg, mode='train', is_videotag=False):
         for k, v in self.model_zoo.items():
             if k.upper() == name.upper():
-                return v(name, cfg, mode)
+                return v(name, cfg, mode, is_videotag)
         raise ModelNotFoundError(name, self.model_zoo.keys())
 
 
@@ -187,5 +187,5 @@ def regist_model(name, model):
     model_zoo.regist(name, model)
 
 
-def get_model(name, cfg, mode='train'):
-    return model_zoo.get(name, cfg, mode)
+def get_model(name, cfg, mode='train', is_videotag=False):
+    return model_zoo.get(name, cfg, mode, is_videotag)
