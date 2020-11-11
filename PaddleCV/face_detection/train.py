@@ -270,6 +270,8 @@ def get_cards(args):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parser.parse_args()
     print_arguments(args)
     check_cuda(args.use_gpu)

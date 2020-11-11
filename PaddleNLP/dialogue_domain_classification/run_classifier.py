@@ -521,6 +521,8 @@ def main(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     logger.info("the paddle version is %s" % paddle.__version__)
     check_version('1.6.0')
     print_arguments(args)

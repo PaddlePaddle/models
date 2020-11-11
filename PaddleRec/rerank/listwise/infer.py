@@ -77,6 +77,8 @@ def run_infer(args):
                     end-begin, float(np.array(loss_val)), float(np.array(auc))))
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
   
     args = args.parse_args()
     run_infer(args)

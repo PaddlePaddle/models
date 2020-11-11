@@ -456,11 +456,12 @@ def train_ptb_lm():
                 if batch_id > 0 and batch_id % log_interval == 0:
                     ppl = np.exp(total_loss / iters)
                     print(
-                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f, batch_cost: %.5f s, reader_cost: %.5f s"
+                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f words/sec"
                         % (epoch_id, batch_id, ppl[0],
                            sgd._global_learning_rate().numpy(), out_loss,
                            batch_cost_avg.get_average(),
-                           reader_cost_avg.get_average()))
+                           reader_cost_avg.get_average(),
+                           batch_size / batch_cost_avg.get_average()))
                     batch_cost_avg.reset()
                     reader_cost_avg.reset()
                 batch_start = time.time()

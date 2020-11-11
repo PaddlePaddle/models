@@ -37,5 +37,7 @@ def infer(args):
             logger.info("query_doc_sim: {:.5f}".format(np.array(con_sim).reshape(-1,1)[0][0]))
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = args.parse_args()
     infer(args)

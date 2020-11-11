@@ -523,6 +523,8 @@ def get_cards():
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
 
     args = ArgConfig()
     args = args.build_conf()

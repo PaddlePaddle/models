@@ -175,6 +175,7 @@ def do_train(args):
 
     step_idx = 0
     total_batch_num = 0  # this is for benchmark
+    total_batch_token_num = 0  # this is for benchmark word count
     for pass_id in range(args.epoch):
         pass_start_time = time.time()
         input_field.loader.start()
@@ -185,12 +186,12 @@ def do_train(args):
                 return
             try:
                 outs = exe.run(compiled_train_prog,
-                               fetch_list=[sum_cost.name, token_num.name]
-                               if step_idx % args.print_step == 0 else [])
+                               fetch_list=[sum_cost.name, token_num.name])
 
+                total_batch_token_num += np.asarray(outs[1]).sum()
                 if step_idx % args.print_step == 0:
-                    sum_cost_val, token_num_val = np.array(outs[0]), np.array(
-                        outs[1])
+                    sum_cost_val, token_num_val = np.asarray(outs[
+                        0]), np.asarray(outs[1])
                     # sum the cost from multi-devices
                     total_sum_cost = sum_cost_val.sum()
                     total_token_num = token_num_val.sum()
@@ -207,12 +208,16 @@ def do_train(args):
                     else:
                         logging.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                            "normalized loss: %f, ppl: %f, speed: %.2f step/s" %
-                            (step_idx, pass_id, batch_id, total_avg_cost,
-                             total_avg_cost - loss_normalizer,
-                             np.exp([min(total_avg_cost, 100)]),
-                             args.print_step / (time.time() - avg_batch_time)))
+                            "normalized loss: %f, ppl: %f, batch speed: %.2f steps/s, ips: %.2f words/sec"
+                            % (step_idx, pass_id, batch_id, total_avg_cost,
+                               total_avg_cost - loss_normalizer,
+                               np.exp([min(total_avg_cost, 100)]),
+                               args.print_step / (time.time() - avg_batch_time),
+                               total_batch_token_num /
+                               (time.time() - avg_batch_time)))
                         avg_batch_time = time.time()
+
+                    total_batch_token_num = 0
 
                 if step_idx % args.save_step == 0 and step_idx != 0:
                     if args.save_model_path:
@@ -249,6 +254,8 @@ def do_train(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = PDConfig(yaml_file="./transformer.yaml")
     args.build()
     args.Print()

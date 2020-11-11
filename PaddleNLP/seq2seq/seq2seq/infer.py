@@ -181,5 +181,7 @@ def check_version():
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     check_version()
     infer()

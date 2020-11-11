@@ -37,7 +37,7 @@ def calculate_hit_at_one(predictions, actuals):
     float: The average hit at one across the entire batch.
   """
     top_prediction = numpy.argmax(predictions, 1)
-    hits = actuals[:, top_prediction]
+    hits = actuals[numpy.arange(actuals.shape[0]), top_prediction]
     return numpy.average(hits)
 
 

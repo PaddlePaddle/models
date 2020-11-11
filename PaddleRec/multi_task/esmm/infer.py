@@ -49,6 +49,8 @@ def run_infer(args,model_path,test_data_path,vocab_size):
                                        debug=False)
                                        
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
   
     args = args.parse_args()
     model_list = []

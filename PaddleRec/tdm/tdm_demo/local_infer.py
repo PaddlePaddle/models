@@ -110,6 +110,8 @@ def run_infer(args, model_path):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     print_arguments(args)
     # 在此处指定infer模型所在的文件夹

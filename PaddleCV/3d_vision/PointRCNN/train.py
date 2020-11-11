@@ -243,4 +243,6 @@ def train():
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     train()

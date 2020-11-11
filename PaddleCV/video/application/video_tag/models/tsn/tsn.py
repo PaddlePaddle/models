@@ -12,8 +12,6 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 
-import numpy as np
-
 import paddle.fluid as fluid
 from paddle.fluid import ParamAttr
 
@@ -27,8 +25,9 @@ __all__ = ["TSN"]
 
 
 class TSN(ModelBase):
-    def __init__(self, name, cfg, mode='train'):
+    def __init__(self, name, cfg, mode='train', is_videotag=False):
         super(TSN, self).__init__(name, cfg, mode=mode)
+        self.is_videotag = is_videotag
         self.get_config()
 
     def get_config(self):
@@ -87,11 +86,11 @@ class TSN(ModelBase):
         videomodel = TSN_ResNet(
             layers=cfg['layers'],
             seg_num=cfg['seg_num'],
-            is_training=(self.mode == 'train'))
+            is_training=(self.mode == 'train'),
+            is_extractor=self.is_videotag)
         out = videomodel.net(input=self.feature_input[0],
                              class_dim=cfg['class_dim'])
-        # videotag just need extractor feature
-        self.feature_output = out
+        self.network_outputs = [out]
 
     def optimizer(self):
         assert self.mode == 'train', "optimizer only can be get in train mode"
@@ -133,9 +132,9 @@ class TSN(ModelBase):
             fetch_list = [losses, self.network_outputs[0], self.label_input]
         elif self.mode == 'test':
             losses = self.loss()
-            fetch_list = [self.feature_output, self.label_input]
+            fetch_list = [losses, self.network_outputs[0], self.label_input]
         elif self.mode == 'infer':
-            fetch_list = self.feature_output
+            fetch_list = self.network_outputs
         else:
             raise NotImplementedError('mode {} not implemented'.format(
                 self.mode))
@@ -143,27 +142,22 @@ class TSN(ModelBase):
         return fetch_list
 
     def pretrain_info(self):
-        return (
-            'ResNet50_pretrained',
-            'https://paddlemodels.bj.bcebos.com/video_classification/ResNet50_pretrained.tar.gz'
-        )
+        return None, None
 
     def weights_info(self):
         return None
 
-    def load_pretrain_params(self, exe, pretrain, prog, place):
+    def load_pretrain_params(self, exe, pretrain, prog):
         def is_parameter(var):
             return isinstance(var, fluid.framework.Parameter)
-
-        params_list = list(filter(is_parameter, prog.list_vars()))
-        for param in params_list:
-            print(param.name)
 
         logger.info("Load pretrain weights from {}, exclude fc layer.".format(
             pretrain))
 
+        print("===pretrain===", pretrain)
         state_dict = fluid.load_program_state(pretrain)
         dict_keys = list(state_dict.keys())
+        # remove fc layer when pretrain, because the number of classes in final fc may not match
         for name in dict_keys:
             if "fc_0" in name:
                 del state_dict[name]
