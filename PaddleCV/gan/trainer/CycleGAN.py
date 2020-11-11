@@ -344,7 +344,7 @@ class CycleGAN(object):
                     print("epoch{}: batch{}: \n\
                          d_A_loss: {:.5f}; g_A_loss: {:.5f}; g_A_cyc_loss: {:.5f}; g_A_idt_loss: {:.5f}; \n\
                          d_B_loss: {:.5f}; g_B_loss: {:.5f}; g_B_cyc_loss: {:.5f}; g_B_idt_loss: {:.5f}; \n\
-                         batch_cost: {:.5f} sec, reader_cost: {:.5f} sec, ips: {:.5f} images/s"
+                         batch_cost: {:.5f} sec, reader_cost: {:.5f} sec, ips: {:.5f} images/sec"
                           .format(epoch_id, batch_id, d_A_loss[0], g_A_loss[
                               0], g_A_cyc_loss[0], g_A_idt_loss[0], d_B_loss[0],
                                   g_B_loss[0], g_B_cyc_loss[0], g_B_idt_loss[0],
