@@ -53,6 +53,14 @@ def print_arguments(args):
     print("-------------  Configuration Arguments -------------")
     for arg, value in sorted(six.iteritems(vars(args))):
         print("%25s : %s" % (arg, value))
+    print("\n-------------  Environment variables  --------------")
+    print("%25s : %s" %
+          ('FLAGS_use_mkldnn', os.environ.get('FLAGS_use_mkldnn', False)))
+    mkldnn_ops_on = os.environ.get('FLAGS_tracer_mkldnn_ops_on', None)
+    mkldnn_ops_off = os.environ.get('FLAGS_tracer_mkldnn_ops_off', None)
+    if mkldnn_ops_on or mkldnn_ops_off:
+        print("%28s : %s" % ('FLAGS_tracer_mkldnn_ops_on', mkldnn_ops_on))
+        print("%28s : %s" % ('FLAGS_tracer_mkldnn_ops_off', mkldnn_ops_off))
     print("----------------------------------------------------")
 
 
