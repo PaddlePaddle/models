@@ -318,16 +318,13 @@ def train(args):
     build_strategy = fluid.BuildStrategy()
     if not sys.platform == "win32":
         build_strategy.num_trainers = nccl2_num_trainers
-    elif  nccl2_num_trainers > 1:
+    elif nccl2_num_trainers > 1:
         raise ValueError("Windows platform doesn't support distributed training!")
     build_strategy.trainer_id = nccl2_trainer_id
-    # use_ngraph is for CPU only, please refer to README_ngraph.md for details
-    use_ngraph = os.getenv('FLAGS_use_ngraph')
-    if not use_ngraph:
-        train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
-                 loss_name=total_loss.name,
-                 exec_strategy=exec_strategy,
-                 build_strategy=build_strategy)
+    train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
+             loss_name=total_loss.name,
+             exec_strategy=exec_strategy,
+             build_strategy=build_strategy)
 
     if args.validation_set_dir and args.validation_set_dir != "":
         predict = predict_wrapper(
@@ -353,17 +350,11 @@ def train(args):
             skip_steps = args.skip_steps * nccl2_num_trainers
 
             if nccl2_trainer_id != 0:
-                if use_ngraph:
-                    exe.run(fetch_list=[], program=train_program)
-                else:
-                    exe.run(fetch_list=[], program=train_compiled_program)
+                exe.run(fetch_list=[], program=train_compiled_program)
                 continue
 
             if steps % args.skip_steps != 0:
-                if use_ngraph:
-                    exe.run(fetch_list=[], program=train_program)
-                else:
-                    exe.run(fetch_list=[], program=train_compiled_program)
+                exe.run(fetch_list=[], program=train_compiled_program)
 
             else:
                 fetch_list=[next_sent_acc.name, mask_lm_loss.name, total_loss.name,
@@ -371,12 +362,8 @@ def train(args):
                 if args.use_fp16:
                     fetch_list.append(loss_scaling.name)
 
-                if use_ngraph:
-                    outputs = exe.run(
-                        fetch_list=fetch_list, program=train_program)
-                else:
-                    outputs = exe.run(
-                        fetch_list=fetch_list, program=train_compiled_program)
+                outputs = exe.run(
+                    fetch_list=fetch_list, program=train_compiled_program)
 
                 if args.use_fp16:
                     each_next_acc, each_mask_lm_cost, each_total_cost, np_lr, np_scaling = outputs
