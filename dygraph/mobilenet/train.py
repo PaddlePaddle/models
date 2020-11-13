@@ -175,6 +175,10 @@ def train_mobilenet():
         for eop in range(args.num_epochs):
             epoch_start = time.time()
 
+            localTime = time.localtime(epoch_start)
+            strTime = time.strftime("%Y-%m-%d %H:%M:%S", localTime)
+            print("[Epoch %d, start %s]" % (eop, strTime))
+
             if num_trainers > 1:
                 imagenet_reader.set_shuffle_seed(eop + (
                     args.random_seed if args.random_seed else 0))

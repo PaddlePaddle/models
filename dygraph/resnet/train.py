@@ -60,8 +60,15 @@ def print_arguments(args):
     mkldnn_ops_on = os.environ.get('FLAGS_tracer_mkldnn_ops_on', None)
     mkldnn_ops_off = os.environ.get('FLAGS_tracer_mkldnn_ops_off', None)
     if mkldnn_ops_on or mkldnn_ops_off:
-        print("%28s : %s" % ('FLAGS_tracer_mkldnn_ops_on', mkldnn_ops_on))
-        print("%28s : %s" % ('FLAGS_tracer_mkldnn_ops_off', mkldnn_ops_off))
+        """ 
+        FLAGS_tracer_mkldnn_ops_on is list of ops to be activated default empty means all mkldnn ops 
+        FLAGS_tracer_mkldnn_ops_off default empty means no exceptions from the on list
+        On list has priority over off list
+        """
+        print("%28s : %s" % ('FLAGS_tracer_mkldnn_ops_on', mkldnn_ops_on
+                             if mkldnn_ops_on else 'all'))
+        print("%28s : %s" % ('FLAGS_tracer_mkldnn_ops_off', mkldnn_ops_off
+                             if not mkldnn_ops_on else None))
     print("----------------------------------------------------")
 
 
@@ -478,6 +485,10 @@ def train_resnet():
 
         for eop in range(epoch):
             epoch_start = time.time()
+
+            localTime = time.localtime(epoch_start)
+            strTime = time.strftime("%Y-%m-%d %H:%M:%S", localTime)
+            print("[Epoch %d, start %s]" % (eop, strTime))
 
             resnet.train()
             total_loss = 0.0
