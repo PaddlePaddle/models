@@ -207,9 +207,6 @@ def pre_post_process_layer(prev_out, out, process_cmd, dropout_rate=0.,
         if cmd == "a":  # add residual connection
             out = out + prev_out if prev_out else out
         elif cmd == "n":  # add layer normalization
-            out_dtype = out.dtype
-            if out_dtype == fluid.core.VarDesc.VarType.FP16:
-                out = layers.cast(x=out, dtype="float32")
             out = layers.layer_norm(
                 out,
                 begin_norm_axis=len(out.shape) - 1,
@@ -219,8 +216,6 @@ def pre_post_process_layer(prev_out, out, process_cmd, dropout_rate=0.,
                 bias_attr=fluid.ParamAttr(
                     name=name + '_layer_norm_bias',
                     initializer=fluid.initializer.Constant(0.)))
-            if out_dtype == fluid.core.VarDesc.VarType.FP16:
-                out = layers.cast(x=out, dtype="float16")
         elif cmd == "d":  # add dropout
             if dropout_rate:
                 out = layers.dropout(

@@ -23,38 +23,20 @@ import numpy as np
 import paddle.fluid as fluid
 
 
-def cast_fp32_to_fp16(exe, main_program):
-    print("Cast parameters to float16 data format.")
-    for param in main_program.all_parameters():
-        if not param.name.endswith(".master"):
-            param_t = fluid.global_scope().find_var(param.name).get_tensor()
-            data = np.array(param_t)
-            if param.name.find("layer_norm") == -1:
-                param_t.set(np.float16(data), exe.place)
-            master_param_var = fluid.global_scope().find_var(param.name +
-                                                             ".master")
-            if master_param_var is not None:
-                master_param_var.get_tensor().set(np.float32(data), exe.place)
+def init_checkpoint(exe, init_checkpoint_path, main_program):
+    assert os.path.exists(
+        init_checkpoint_path), "[%s] cann't be found." % init_checkpoint_path
 
-
-def init_checkpoint(exe, init_checkpoint_path, main_program, use_fp16=False):
     fluid.load(
         program=main_program, model_path=init_checkpoint_path, executor=exe)
-
     print("Load model from {}".format(init_checkpoint_path))
 
-    if use_fp16:
-        cast_fp32_to_fp16(exe, main_program)
 
+def init_pretraining_params(exe, pretraining_params_path, main_program):
+    assert os.path.exists(pretraining_params_path
+                          ), "[%s] cann't be found." % pretraining_params_path
 
-def init_pretraining_params(exe,
-                            pretraining_params_path,
-                            main_program,
-                            use_fp16=False):
     fluid.load(
         program=main_program, model_path=pretraining_params_path, executor=exe)
     print("Load pretraining parameters from {}.".format(
         pretraining_params_path))
-
-    if use_fp16:
-        cast_fp32_to_fp16(exe, main_program)

@@ -54,9 +54,7 @@ class BertModel(object):
                  sentence_ids,
                  input_mask,
                  config,
-                 weight_sharing=True,
-                 use_fp16=False):
-
+                 weight_sharing=True):
         self._emb_size = config['hidden_size']
         self._n_layer = config['num_hidden_layers']
         self._n_head = config['num_attention_heads']
@@ -71,7 +69,7 @@ class BertModel(object):
         self._word_emb_name = "word_embedding"
         self._pos_emb_name = "pos_embedding"
         self._sent_emb_name = "sent_embedding"
-        self._dtype = "float16" if use_fp16 else "float32"
+        self._dtype = "float32"
 
         # Initialize all weigths by truncated normal initializer, and all biases 
         # will be initialized by constant zero by default.
@@ -109,9 +107,6 @@ class BertModel(object):
         emb_out = pre_process_layer(
             emb_out, 'nd', self._prepostprocess_dropout, name='pre_encoder')
 
-        if self._dtype == "float16":
-            input_mask = fluid.layers.cast(x=input_mask, dtype=self._dtype)
-
         self_attn_mask = fluid.layers.matmul(
             x=input_mask, y=input_mask, transpose_y=True)
         self_attn_mask = fluid.layers.scale(
@@ -142,8 +137,9 @@ class BertModel(object):
         return self._enc_out
 
     def get_pooled_output(self):
-        """Get the first feature of each sequence for classification"""
-
+        """
+        Get the first feature of each sequence for classification
+        """
         next_sent_feat = fluid.layers.slice(
             input=self._enc_out, axes=[1], starts=[0], ends=[1])
         next_sent_feat = fluid.layers.fc(
@@ -157,8 +153,9 @@ class BertModel(object):
         return next_sent_feat
 
     def get_pretraining_output(self, mask_label, mask_pos, labels):
-        """Get the loss & accuracy for pretraining"""
-
+        """
+        Get the loss & accuracy for pretraining
+        """
         mask_pos = fluid.layers.cast(x=mask_pos, dtype='int32')
 
         # extract the first token feature in each sentence
@@ -177,6 +174,7 @@ class BertModel(object):
                 name='mask_lm_trans_fc.w_0',
                 initializer=self._param_initializer),
             bias_attr=fluid.ParamAttr(name='mask_lm_trans_fc.b_0'))
+
         # transform: layer norm 
         mask_trans_feat = pre_process_layer(
             mask_trans_feat, 'n', name='mask_lm_trans')
