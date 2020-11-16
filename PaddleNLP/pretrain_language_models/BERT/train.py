@@ -263,36 +263,6 @@ def train(args):
 
     print("Device count %d" % dev_count)
 
-    nccl2_num_trainers = 1
-    nccl2_trainer_id = 0
-    print("args.is_distributed:", args.is_distributed)
-    if args.is_distributed:
-        worker_endpoints_env = os.getenv("worker_endpoints")
-        worker_endpoints = worker_endpoints_env.split(",")
-        trainers_num = len(worker_endpoints)
-        current_endpoint = os.getenv("current_endpoint")
-        trainer_id = worker_endpoints.index(current_endpoint)
-        if trainer_id == 0:
-            print("train_id == 0, sleep 60s")
-            time.sleep(60)
-        print("worker_endpoints:{} trainers_num:{} current_endpoint:{} \
-              trainer_id:{}"
-                            .format(worker_endpoints, trainers_num,
-                                    current_endpoint, trainer_id))
-
-        # prepare nccl2 env.
-        config = fluid.DistributeTranspilerConfig()
-        config.mode = "nccl2"
-        t = fluid.DistributeTranspiler(config=config)
-        t.transpile(
-            trainer_id,
-            trainers=worker_endpoints_env,
-            current_endpoint=current_endpoint,
-            program=train_program,
-            startup_program=startup_prog)
-        nccl2_num_trainers = trainers_num
-        nccl2_trainer_id = trainer_id
-
     exe = fluid.Executor(place)
     exe.run(startup_prog)
 
@@ -315,11 +285,6 @@ def train(args):
     exec_strategy.num_iteration_per_drop_scope = args.num_iteration_per_drop_scope
 
     build_strategy = fluid.BuildStrategy()
-    if not sys.platform == "win32":
-        build_strategy.num_trainers = nccl2_num_trainers
-    elif nccl2_num_trainers > 1:
-        raise ValueError("Windows platform doesn't support distributed training!")
-    build_strategy.trainer_id = nccl2_trainer_id
     train_compiled_program = fluid.CompiledProgram(train_program).with_data_parallel(
              loss_name=total_loss.name,
              exec_strategy=exec_strategy,
@@ -336,61 +301,57 @@ def train(args):
                 next_sent_acc.name, mask_lm_loss.name, total_loss.name
             ])
 
+    # Set training fetch list
+    fetch_list=[next_sent_acc.name, mask_lm_loss.name, total_loss.name,
+            scheduled_lr.name]
+    if args.use_fp16:
+        fetch_list.append(loss_scaling.name)
+
     train_data_loader.set_batch_generator(data_reader.data_generator())
     train_data_loader.start()
+
     steps = 0
     cost = []
     lm_cost = []
     acc = []
+
     time_begin = time.time()
     while steps < args.num_train_steps:
         try:
             steps += 1
-            skip_steps = args.skip_steps * nccl2_num_trainers
 
-            if nccl2_trainer_id != 0:
-                exe.run(fetch_list=[], program=train_compiled_program)
-                continue
-
-            if steps % args.skip_steps != 0:
-                exe.run(fetch_list=[], program=train_compiled_program)
-
+            outputs = exe.run(
+                fetch_list=fetch_list, program=train_compiled_program)
+            if args.use_fp16:
+                each_next_acc, each_mask_lm_cost, each_total_cost, np_lr, np_scaling = outputs
             else:
-                fetch_list=[next_sent_acc.name, mask_lm_loss.name, total_loss.name,
-                        scheduled_lr.name]
-                if args.use_fp16:
-                    fetch_list.append(loss_scaling.name)
+                each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = outputs
 
-                outputs = exe.run(
-                    fetch_list=fetch_list, program=train_compiled_program)
+            acc.extend(each_next_acc)
+            lm_cost.extend(each_mask_lm_cost)
+            cost.extend(each_total_cost)
 
-                if args.use_fp16:
-                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr, np_scaling = outputs
-                else:
-                    each_next_acc, each_mask_lm_cost, each_total_cost, np_lr = outputs
+            if steps % args.skip_steps == 0:
+                loss = np.mean(np.array(cost))
+                ppl = np.mean(np.exp(np.array(lm_cost)))
+                next_sent_acc = np.mean(np.array(acc))
 
-                acc.extend(each_next_acc)
-                lm_cost.extend(each_mask_lm_cost)
-                cost.extend(each_total_cost)
-
-                time_end = time.time()
-                used_time = time_end - time_begin
+                used_time = time.time() - time_begin
                 epoch, current_file_index, total_file, current_file = data_reader.get_progress(
                 )
-                if args.verbose:
-                    verbose = "feed_queue size: %d, " %train_data_loader.queue.size()
-                    verbose += "current learning_rate: %f, " % np_lr[0]
-                    if args.use_fp16:
-                        verbose += "loss scaling: %f" % np_scaling[0]
-                    print(verbose)
 
-                print("epoch: %d, progress: %d/%d, step: %d, loss: %f, "
-                      "ppl: %f, next_sent_acc: %f, speed: %f steps/s, file: %s"
+                verbose_str = ""
+                if args.verbose:
+                    verbose_str = "feed_queue size: %d, " %train_data_loader.queue.size()
+                    verbose_str += "learning_rate: %f, " % np_lr[0]
+                    if args.use_fp16:
+                        verbose_str += "loss scaling: %f, " % np_scaling[0]
+
+                print("[epoch: %d, progress: %d/%d, step: %d] loss: %f, "
+                      "ppl: %f, next_sent_acc: %f, %sbatch_cost: %f sec, speed: %f steps/s, file: %s"
                       % (epoch, current_file_index, total_file, steps,
-                         np.mean(np.array(cost)),
-                         np.mean(np.exp(np.array(lm_cost))),
-                         np.mean(np.array(acc)), skip_steps / used_time,
-                         current_file))
+                         loss, ppl, next_sent_acc, verbose_str,
+                         used_time / skip_steps, skip_steps / used_time, current_file))
                 cost = []
                 lm_cost = []
                 acc = []
