@@ -91,6 +91,7 @@ run_type_g.add_arg("use_cuda",                     bool,   True,   "If set, use 
 run_type_g.add_arg("use_fast_executor",            bool,   False,  "If set, use fast parallel executor (in experiment).")
 run_type_g.add_arg("num_iteration_per_drop_scope", int,    1,      "Ihe iteration intervals to clean up temporary variables.")
 run_type_g.add_arg("do_test",                      bool,   False,  "Whether to perform evaluation on test data set.")
+run_type_g.add_arg("profile",                      bool,   False,  "Whether to enable the profiler.")
 
 args = parser.parse_args()
 # yapf: enable.
@@ -320,6 +321,13 @@ def train(args):
     interval_batch_start = time.time()
     while steps < args.num_train_steps:
         try:
+            if args.profile:
+                if steps == args.skip_steps:
+                    fluid.profiler.start_profiler("All", "OpDetail")
+                if steps == args.skip_steps + 10:
+                    fluid.profiler.stop_profiler("total", "bert.profile")
+                    break
+
             steps += 1
 
             outputs = exe.run(
@@ -384,7 +392,7 @@ def train(args):
             train_data_loader.reset()
             break
 
-    print("Training %d steps: %f sec, avg_speed: %f steps/s" % (args.num_train_steps, time.time() - train_start, 1.0 / np.mean(batch_times[1:])))
+    print("Training %d steps: %f sec, avg_speed: %f steps/s" % (steps, time.time() - train_start, 1.0 / np.mean(batch_times[1:])))
     train_data_loader.reset()
 
 
