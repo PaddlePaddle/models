@@ -315,6 +315,8 @@ def train(args):
     lm_cost = []
     acc = []
 
+    batch_times = []
+    train_start = time.time()
     interval_batch_start = time.time()
     while steps < args.num_train_steps:
         try:
@@ -336,7 +338,6 @@ def train(args):
                 ppl = np.mean(np.exp(np.array(lm_cost)))
                 next_sent_acc = np.mean(np.array(acc))
 
-                used_time = time.time() - interval_batch_start
                 epoch, current_file_index, total_file, current_file = data_reader.get_progress(
                 )
 
@@ -347,11 +348,17 @@ def train(args):
                     if args.use_fp16:
                         verbose_str += "loss scaling: %f, " % np_scaling[0]
 
+                batch_cost = (time.time() - interval_batch_start) / args.skip_steps
+                if not args.in_tokens:
+                    ips_str = "%f sequences/sec" % (args.batch_size / batch_cost)
+                else:
+                    ips_str = "%f steps/s" % (1.0 / batch_cost)
+                batch_times.append(batch_cost)
                 print("[epoch: %d, progress: %d/%d, step: %d] loss: %f, "
-                      "ppl: %f, next_sent_acc: %f, %sbatch_cost: %f sec, speed: %f steps/s, file: %s"
+                      "ppl: %f, next_sent_acc: %f, %sbatch_cost: %f sec, ips: %s, file: %s"
                       % (epoch, current_file_index, total_file, steps,
                          loss, ppl, next_sent_acc, verbose_str,
-                         used_time / args.skip_steps, args.skip_steps / used_time, current_file))
+                         batch_cost, ips_str, current_file))
                 cost = []
                 lm_cost = []
                 acc = []
@@ -376,6 +383,10 @@ def train(args):
         except fluid.core.EOFException:
             train_data_loader.reset()
             break
+
+    print("Training %d steps: %f sec, avg_speed: %f steps/s" % (args.num_train_steps, time.time() - train_start, 1.0 / np.mean(batch_times[1:])))
+    train_data_loader.reset()
+
 
 if __name__ == '__main__':
     import paddle
