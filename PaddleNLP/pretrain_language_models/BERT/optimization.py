@@ -112,12 +112,6 @@ def optimization(loss,
             param_list[param.name].stop_gradient = True
 
     if use_fp16:
-        #        loss_scaling = fluid.layers.create_global_var(
-        #            name=fluid.unique_name.generate("loss_scaling"),
-        #            shape=[1],
-        #            value=init_loss_scaling,
-        #            dtype='float32',
-        #            persistable=True)
         amp_lists = fluid.contrib.mixed_precision.AutoMixedPrecisionLists(
             custom_black_varnames={"word_embedding"})
         amp_optimizer = fluid.contrib.mixed_precision.decorate(
@@ -131,8 +125,6 @@ def optimization(loss,
     else:
         _, param_grads = optimizer.minimize(loss)
 
-    print("weight_decay:", weight_decay)
-    print("scheduled_lr:", scheduled_lr)
     if weight_decay > 0:
         for param, grad in param_grads:
             if exclude_from_weight_decay(param):

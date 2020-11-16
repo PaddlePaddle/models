@@ -17,6 +17,7 @@ from __future__ import division
 
 import io
 import os
+import h5py
 import numpy as np
 import types
 import gzip
@@ -79,30 +80,65 @@ class DataReader(object):
     def parse_line(self, line, max_seq_len=512):
         """ parse one line to token_ids, sentence_ids, pos_ids, label
         """
-        line = line.strip().decode().split(";")
-        assert len(line) == 4, "One sample must have 4 fields!"
-        (token_ids, sent_ids, pos_ids, label) = line
-        token_ids = [int(token) for token in token_ids.split(" ")]
-        sent_ids = [int(token) for token in sent_ids.split(" ")]
-        pos_ids = [int(token) for token in pos_ids.split(" ")]
+
+        def _parse_to_list(content):
+            if isinstance(content, str):
+                content = [int(v) for v in content.split(" ")]
+            if isinstance(content, np.ndarray):
+                content = content.tolist()
+            return content
+
+        if isinstance(line, str):
+            line = line.strip().decode().split(";")
+        if len(line) == 4:
+            (token_ids, sent_ids, pos_ids, label) = line
+        elif len(line) == 3:
+            (token_ids, sent_ids, label) = line
+            pos_ids = None
+        else:
+            raise ValueError(
+                "One sample must have 4 fields ([token_ids, sentence_ids, pos_ids, label]) or 3 fields ([token_ids, sentence_ids, label])!"
+            )
+
+        token_ids = _parse_to_list(token_ids)
+        sent_ids = _parse_to_list(sent_ids)
+        if pos_ids is None:
+            pos_ids = [i for i in range(len(token_ids))]
+        else:
+            pos_ids = _parse_to_list(pos_ids)
+
         assert len(token_ids) == len(sent_ids) == len(
             pos_ids
         ), "[Must be true]len(token_ids) == len(sent_ids) == len(pos_ids)"
+
         label = int(label)
         if len(token_ids) > max_seq_len:
             return None
         return [token_ids, sent_ids, pos_ids, label]
 
     def read_file(self, file):
-        assert file.endswith('.gz'), "[ERROR] %s is not a gzip file" % file
         file_path = self.data_dir + "/" + file
-        with gzip.open(file_path, "rb") as f:
-            for line in f:
-                parsed_line = self.parse_line(
-                    line, max_seq_len=self.max_seq_len)
-                if parsed_line is None:
-                    continue
-                yield parsed_line
+        if file.endswith(".gz"):
+            with gzip.open(file_path, "rb") as f:
+                for line in f:
+                    parsed_line = self.parse_line(
+                        line, max_seq_len=self.max_seq_len)
+                    if parsed_line is None:
+                        continue
+                    yield parsed_line
+        elif file.endswith("hdf5"):
+            with h5py.File(file_path, "r") as f:
+                keys = ['input_ids', 'segment_ids', 'next_sentence_labels']
+                total_num = len(f[keys[0]])
+                for i in range(total_num):
+                    elems = [f[key][i] for key in keys]
+                    parsed_line = self.parse_line(
+                        elems, max_seq_len=self.max_seq_len)
+                    if parsed_line is None:
+                        continue
+                    yield parsed_line
+        else:
+            raise ValueError("[ERROR] %s is not a gzip/hdf5 file" % file)
 
     def convert_to_unicode(self, text):
         """Converts `text` to Unicode (if it's not already), assuming utf-8 input."""

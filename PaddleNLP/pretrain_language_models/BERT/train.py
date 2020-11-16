@@ -315,7 +315,7 @@ def train(args):
     lm_cost = []
     acc = []
 
-    time_begin = time.time()
+    interval_batch_start = time.time()
     while steps < args.num_train_steps:
         try:
             steps += 1
@@ -336,13 +336,13 @@ def train(args):
                 ppl = np.mean(np.exp(np.array(lm_cost)))
                 next_sent_acc = np.mean(np.array(acc))
 
-                used_time = time.time() - time_begin
+                used_time = time.time() - interval_batch_start
                 epoch, current_file_index, total_file, current_file = data_reader.get_progress(
                 )
 
                 verbose_str = ""
                 if args.verbose:
-                    verbose_str = "feed_queue size: %d, " %train_data_loader.queue.size()
+                    verbose_str = "feed_queue size: %d, " % train_data_loader.queue.size()
                     verbose_str += "learning_rate: %f, " % np_lr[0]
                     if args.use_fp16:
                         verbose_str += "loss scaling: %f, " % np_scaling[0]
@@ -351,11 +351,11 @@ def train(args):
                       "ppl: %f, next_sent_acc: %f, %sbatch_cost: %f sec, speed: %f steps/s, file: %s"
                       % (epoch, current_file_index, total_file, steps,
                          loss, ppl, next_sent_acc, verbose_str,
-                         used_time / skip_steps, skip_steps / used_time, current_file))
+                         used_time / args.skip_steps, args.skip_steps / used_time, current_file))
                 cost = []
                 lm_cost = []
                 acc = []
-                time_begin = time.time()
+                interval_batch_start = time.time()
 
             if steps % args.save_steps == 0:
                 save_path = os.path.join(args.checkpoints, "step_" + str(steps))
