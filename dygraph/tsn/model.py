@@ -246,7 +246,7 @@ class TSN_ResNet(paddle.nn.Layer):
             self.class_dim,
             weight_attr=ParamAttr(
                 initializer=paddle.nn.initializer.Normal(
-                    loc=0.0, scale=0.01),
+                    mean=0.0, std=0.01),
                 name="fc_0.w_0"),
             bias_attr=ParamAttr(
                 initializer=paddle.nn.initializer.Constant(value=0.0),
