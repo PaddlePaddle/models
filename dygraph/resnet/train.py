@@ -60,10 +60,11 @@ def print_arguments(args):
     mkldnn_ops_on = os.environ.get('FLAGS_tracer_mkldnn_ops_on', None)
     mkldnn_ops_off = os.environ.get('FLAGS_tracer_mkldnn_ops_off', None)
     if mkldnn_ops_on or mkldnn_ops_off:
-        """ 
-        FLAGS_tracer_mkldnn_ops_on is list of ops to be activated default empty means all mkldnn ops 
-        FLAGS_tracer_mkldnn_ops_off default empty means no exceptions from the on list
-        On list has priority over off list
+        """
+        Valid only when FLAGS_use_mkldnn==True
+        By default both ops_on and ops_off lists are empty which implies all mkldnn ops types are enabled 
+        When ops_on list is not empty only ops from that list are enabled, ops_off list is ignored
+        When ops_on list is empty all mkldnn ops types are enabled except for the types from ops_off list
         """
         print("%28s : %s" % ('FLAGS_tracer_mkldnn_ops_on', mkldnn_ops_on
                              if mkldnn_ops_on else 'all'))
