@@ -51,3 +51,4 @@ python train.py \
             --fuse_bn_add_act_ops=true \
             --use_dali=${USE_DALI} \
             --enable_addto=${USE_ADDTO} \
+            --data_dir=${DATA_DIR} 
