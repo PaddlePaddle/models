@@ -34,8 +34,8 @@ python train.py \
             --batch_size=512 \
             --image_shape 3 299 299 \
             --lr_strategy=cosine_decay \
-            --lr=0.045 \
-            --num_epochs=200 \
+            --lr=0.09 \
+            --num_epochs=100 \
             --model_save_dir=output/ \
             --l2_decay=1e-4 \
             --use_mixup=False \
