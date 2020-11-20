@@ -59,7 +59,7 @@ def pad_wid(wids, max_seq_len=128, pad_id=0):
             wids.append(pad_id)
     else:
         wids = wids[:max_seq_len]
-    seq_len = max_seq_len
+        seq_len = max_seq_len
     return wids, seq_len
 
 
