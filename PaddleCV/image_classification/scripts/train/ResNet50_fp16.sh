@@ -48,5 +48,6 @@ python train.py \
        --reader_thread=10 \
        --reader_buf_size=4000 \
        --use_dali=${USE_DALI} \
-       --lr=0.1
+       --lr=0.1 \
+       --random_seed=2020
 

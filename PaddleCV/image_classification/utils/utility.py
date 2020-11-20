@@ -379,10 +379,13 @@ def create_data_loader(is_train, args):
         data_loader and the input data of net,
     """
     image_shape = args.image_shape
+    image_dtype = "float32"
+    if args.model == "ResNet50" and args.use_pure_fp16 and args.use_dali:
+        image_dtype = "float16"
     feed_image = fluid.data(
         name="feed_image",
         shape=[None] + image_shape,
-        dtype="float32",
+        dtype=image_dtype,
         lod_level=0)
 
     feed_label = fluid.data(
@@ -396,7 +399,7 @@ def create_data_loader(is_train, args):
         feed_y_b = fluid.data(
             name="feed_y_b", shape=[None, 1], dtype="int64", lod_level=0)
         feed_lam = fluid.data(
-            name="feed_lam", shape=[None, 1], dtype="float32", lod_level=0)
+            name="feed_lam", shape=[None, 1], dtype=image_dtype, lod_level=0)
 
         data_loader = fluid.io.DataLoader.from_generator(
             feed_list=[feed_image, feed_y_a, feed_y_b, feed_lam],
@@ -558,7 +561,7 @@ def best_strategy_compiled(args,
         if args.use_gpu:
             exec_strategy.num_threads = fluid.core.get_cuda_device_count()
 
-        exec_strategy.num_iteration_per_drop_scope = 10000
+        exec_strategy.num_iteration_per_drop_scope = 10000 if args.use_pure_fp16 else 10
 
         num_trainers = int(os.environ.get('PADDLE_TRAINERS_NUM', 1))
         if num_trainers > 1 and args.use_gpu:

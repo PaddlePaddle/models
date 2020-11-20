@@ -14,7 +14,6 @@
 import paddle
 import paddle.fluid as fluid
 import utils.utility as utility
-from paddle.fluid.contrib.mixed_precision.fp16_utils import cast_net_to_fp16
 
 def _calc_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
     """Calculate label smoothing loss
@@ -36,16 +35,17 @@ def _basic_model(data, model, args, is_train):
     image = data[0]
     label = data[1]
     if args.model == "ResNet50":
-        image_in = fluid.layers.transpose(
-            image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
-        image_in.stop_gradient = image.stop_gradient
-        net_out = model.net(input=image_in,
+        image_data = (fluid.layers.cast(image, 'float16')
+            if args.use_pure_fp16 and not args.use_dali else image)
+        image_transpose = fluid.layers.transpose(
+            image_data, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image_data
+        image_transpose.stop_gradient = image.stop_gradient
+        net_out = model.net(input=image_transpose,
                             class_dim=args.class_dim,
                             data_format=args.data_format)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
     if args.use_pure_fp16:
-        cast_net_to_fp16(fluid.default_main_program())
         net_out_fp32 = fluid.layers.cast(x=net_out, dtype="float32")
         softmax_out = fluid.layers.softmax(net_out_fp32, use_cudnn=False)
     else:
@@ -58,11 +58,12 @@ def _basic_model(data, model, args, is_train):
     else:
         cost = fluid.layers.cross_entropy(input=softmax_out, label=label)
 
-    avg_cost = fluid.layers.reduce_sum(cost)
+    target_cost = (fluid.layers.reduce_sum(cost) if args.use_pure_fp16
+        else fluid.layers.reduce_sum(cost))
     acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(
         input=softmax_out, label=label, k=min(5, args.class_dim))
-    return [avg_cost, acc_top1, acc_top5]
+    return [target_cost, acc_top1, acc_top5]
 
 
 def _googlenet_model(data, model, args, is_train):
@@ -101,16 +102,17 @@ def _mixup_model(data, model, args, is_train):
     lam = data[3]
 
     if args.model == "ResNet50":
-        image_in = fluid.layers.transpose(
-            image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
-        image_in.stop_gradient = image.stop_gradient
-        net_out = model.net(input=image_in,
+        image_data = (fluid.layers.cast(image, 'float16')
+            if args.use_pure_fp16 and not args.use_dali else image)
+        image_transpose = fluid.layers.transpose(
+            image_data, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image_data
+        image_transpose.stop_gradient = image.stop_gradient
+        net_out = model.net(input=image_transpose,
                             class_dim=args.class_dim,
                             data_format=args.data_format)
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
     if args.use_pure_fp16:
-        cast_net_to_fp16(fluid.default_main_program())
         net_out_fp32 = fluid.layers.cast(x=net_out, dtype="float32")
         softmax_out = fluid.layers.softmax(net_out_fp32, use_cudnn=False)
     else:
@@ -124,11 +126,17 @@ def _mixup_model(data, model, args, is_train):
         loss_b = _calc_label_smoothing_loss(softmax_out, y_b, args.class_dim,
                                             args.label_smoothing_epsilon)
 
-    loss_a_mean = fluid.layers.reduce_sum(x=loss_a)
-    loss_b_mean = fluid.layers.reduce_sum(x=loss_b)
-    cost = lam * loss_a_mean + (1 - lam) * loss_b_mean
-    avg_cost = fluid.layers.reduce_sum(x=cost)
-    return [avg_cost]
+    if args.use_pure_fp16:
+        target_loss_a = fluid.layers.reduce_sum(x=loss_a)
+        target_loss_b = fluid.layers.reduce_sum(x=loss_b)
+        cost = lam * target_loss_a + (1 - lam) * target_loss_b
+        target_cost = fluid.layers.reduce_sum(x=cost)
+    else:
+        target_loss_a = fluid.layers.reduce_sum(x=loss_a)
+        target_loss_b = fluid.layers.reduce_sum(x=loss_b)
+        cost = lam * target_loss_a + (1 - lam) * target_loss_b
+        target_cost = fluid.layers.reduce_sum(x=cost)
+    return [target_cost]
 
 
 def create_model(model, args, is_train):
