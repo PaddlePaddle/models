@@ -1,17 +1,11 @@
 #!/bin/bash -ex
 
 #Training details
-#Machine: Missed
-# export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-export FLAGS_fast_eager_deletion_mode=1
-export FLAGS_eager_delete_tensor_gb=0.0
-export FLAGS_fraction_of_gpu_memory_to_use=0.98
-
 export FLAGS_conv_workspace_size_limit=4000 #MB
 export FLAGS_cudnn_exhaustive_search=1
 export FLAGS_cudnn_batchnorm_spatial_persistent=1
-# DATA_DIR="./data/ILSVRC2012/"
-DATA_DIR="/models/PaddleCV/image_classification/data/ILSVRC2012"
+
+DATA_DIR="Your image dataset path, e.g. ./data/ILSVRC2012/"
 DATA_FORMAT="NCHW"
 USE_FP16=true #whether to use float16
 USE_DALI=true
@@ -25,7 +19,7 @@ fi
 if ${USE_DALI}; then
     export FLAGS_fraction_of_gpu_memory_to_use=0.8
 fi
-#nvprof -o mobilenet_fp32 -f --cpu-profiling off  --profile-from-start off python train.py \
+
 python train.py \
        --model=ResNet200_vd \
        --data_dir=${DATA_DIR} \
@@ -52,7 +46,6 @@ python train.py \
        --reader_buf_size=4000 \
        --use_dali=${USE_DALI} \
        --lr=0.1 \
-       --l2_decay=1e-4
-       --use_mixup=True \
+       --l2_decay=1e-4 \
        --use_label_smoothing=True \
        --label_smoothing_epsilon=0.1
