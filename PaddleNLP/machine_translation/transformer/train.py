@@ -208,7 +208,7 @@ def do_train(args):
                     else:
                         logging.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
-                            "normalized loss: %f, ppl: %f, batch speed: %.2f steps/s, token speed: %.2f words/sec"
+                            "normalized loss: %f, ppl: %f, batch speed: %.2f steps/s, ips: %.2f words/sec"
                             % (step_idx, pass_id, batch_id, total_avg_cost,
                                total_avg_cost - loss_normalizer,
                                np.exp([min(total_avg_cost, 100)]),

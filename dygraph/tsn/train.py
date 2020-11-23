@@ -161,7 +161,7 @@ def create_optimizer(cfg, params):
     momentum = cfg.momentum
 
     optimizer = paddle.optimizer.Momentum(
-        learning_rate=paddle.optimizer.PiecewiseLR(
+        learning_rate=paddle.optimizer.lr.PiecewiseDecay(
             boundaries=bd, values=lr),
         momentum=momentum,
         weight_decay=paddle.regularizer.L2Decay(l2_weight_decay),
@@ -190,7 +190,7 @@ def train(args):
 
         video_model = paddle.DataParallel(video_model)
     
-    pre_state_dict, _ = paddle.load(args.pretrain)
+    pre_state_dict = paddle.load(args.pretrain)
     #if paddle.distributed.parallel.Env().local_rank == 0:
     video_model = init_model(video_model, pre_state_dict)
 
