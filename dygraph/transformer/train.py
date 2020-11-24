@@ -156,10 +156,13 @@ def do_train(args):
             batch_id = 0
             batch_start = time.time()
             interval_word_num = 0.0
+            total_reader_costs = 0.0
+            batch_reader_start = time.time()
             for input_data in train_loader():
                 if args.max_iter and step_idx == args.max_iter:  #NOTE: used for benchmark
                     return
                 batch_reader_end = time.time()
+                total_reader_costs += batch_reader_end - batch_reader_start
 
                 (src_word, src_pos, src_slf_attn_bias, trg_word, trg_pos,
                  trg_slf_attn_bias, trg_src_attn_bias, lbl_word,
@@ -201,13 +204,16 @@ def do_train(args):
                         logger.info(
                             "step_idx: %d, epoch: %d, batch: %d, avg loss: %f, "
                             "normalized loss: %f, ppl: %f, avg_speed: %.2f step/s, "
-                            "words speed: %0.2f words/s" %
+                            "reader cost: %0.2f sec, ips: %0.2f words/sec" %
                             (step_idx, pass_id, batch_id, total_avg_cost,
                              total_avg_cost - loss_normalizer,
                              np.exp([min(total_avg_cost, 100)]),
-                             train_avg_batch_cost, word_speed))
-                    batch_start = time.time()
+                             train_avg_batch_cost,
+                             total_reader_costs / args.print_step, word_speed))
+
                     interval_word_num = 0.0
+                    total_reader_costs = 0.0
+                    batch_start = time.time()
 
                 if step_idx % args.save_step == 0 and step_idx != 0:
                     # validation
@@ -250,6 +256,7 @@ def do_train(args):
 
                 batch_id += 1
                 step_idx += 1
+                batch_reader_start = time.time()
 
             train_epoch_cost = time.time() - epoch_start
             ce_time.append(train_epoch_cost)

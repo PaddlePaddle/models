@@ -180,7 +180,7 @@ def main():
                 batch_times.append(train_batch_cost)
                 if batch_id > 0 and batch_id % 100 == 0:
                     print(
-                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, batch_cost: %.5f s, reader_cost: %.5f s, ips: %.5f words/s"
+                        "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, batch_cost: %.5f s, reader_cost: %.5f s, ips: %.5f words/sec"
                         % (epoch_id, batch_id, np.exp(total_loss.numpy() /
                                                       word_count),
                            train_batch_cost, total_reader_cost / 100,
