@@ -75,7 +75,7 @@ class Youtube8mMetrics(Metrics):
         perr = youtube8m_metrics.calculate_precision_at_equal_recall_rate(pred,
                                                                           label)
         gap = youtube8m_metrics.calculate_gap(pred, label)
-        logger.info(info + ' , loss = {0}, Hit@1 = {1}, PERR = {2}, GAP = {3}'.format(\
+        logger.info(info + ', loss: {0}, Hit@1: {1}, PERR: {2}, GAP: {3}'.format(\
                      '%.6f' % loss, '%.2f' % hit_at_one, '%.2f' % perr, '%.2f' % gap))
 
     def accumulate(self, fetch_list, info=''):
@@ -107,9 +107,9 @@ class Youtube8mMetrics(Metrics):
 
         else:
             epoch_info_dict = self.calculator.get()
-            logger.info(info + '\tavg_hit_at_one: {0},\tavg_perr: {1},\tavg_loss :{2},\taps: {3},\tgap:{4}'\
+            logger.info(info + '\tavg_hit_at_one: {0},\tavg_perr: {1},\tavg_loss :{2},\tgap:{3}'\
                      .format(epoch_info_dict['avg_hit_at_one'], epoch_info_dict['avg_perr'], \
-                             epoch_info_dict['avg_loss'], epoch_info_dict['aps'], epoch_info_dict['gap']))
+                             epoch_info_dict['avg_loss'], epoch_info_dict['gap']))
 
     def reset(self):
         self.calculator.clear()

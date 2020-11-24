@@ -25,6 +25,7 @@ import paddle.nn.functional as F
 from paddle.jit import to_static
 from paddle.static import InputSpec
 
+
 class ConvBNLayer(paddle.nn.Layer):
     def __init__(self,
                  in_channels,
@@ -48,9 +49,9 @@ class ConvBNLayer(paddle.nn.Layer):
             bn_name = "bn_" + name
         else:
             bn_name = "bn" + name[3:]
-        
+
         self._act = act
-        
+
         self._batch_norm = BatchNorm2D(
             out_channels,
             weight_attr=ParamAttr(name=bn_name + "_scale"),
@@ -103,7 +104,6 @@ class BottleneckBlock(paddle.nn.Layer):
                 name=name + "_branch1")
 
         self.shortcut = shortcut
-
 
     def forward(self, inputs):
         y = self.conv0(inputs)
@@ -161,8 +161,9 @@ class BasicBlock(paddle.nn.Layer):
         else:
             short = self.short(inputs)
         y = paddle.add(short, conv1)
-        y = F.relu(y) 
-        return y  
+        y = F.relu(y)
+        return y
+
 
 class TSN_ResNet(paddle.nn.Layer):
     def __init__(self, config):
@@ -184,7 +185,7 @@ class TSN_ResNet(paddle.nn.Layer):
         elif self.layers == 152:
             depth = [3, 8, 36, 3]
         in_channels = [64, 256, 512,
-                        1024] if self.layers >= 50 else [64, 64, 128, 256]
+                       1024] if self.layers >= 50 else [64, 64, 128, 256]
         out_channels = [64, 128, 256, 512]
 
         self.conv = ConvBNLayer(
@@ -194,8 +195,7 @@ class TSN_ResNet(paddle.nn.Layer):
             stride=2,
             act="relu",
             name="conv1")
-        self.pool2D_max = MaxPool2D(
-            kernel_size=3, stride=2, padding=1)
+        self.pool2D_max = MaxPool2D(kernel_size=3, stride=2, padding=1)
 
         self.block_list = []
         if self.layers >= 50:
@@ -246,7 +246,7 @@ class TSN_ResNet(paddle.nn.Layer):
             self.class_dim,
             weight_attr=ParamAttr(
                 initializer=paddle.nn.initializer.Normal(
-                    loc=0.0, scale=0.01),
+                    mean=0.0, std=0.01),
                 name="fc_0.w_0"),
             bias_attr=ParamAttr(
                 initializer=paddle.nn.initializer.Constant(value=0.0),
