@@ -141,7 +141,7 @@ class BaseModel(object):
         self.label = fluid.data(
             name="label", shape=[None, None, 1], dtype='int64')
 
-    def _emebdding(self):
+    def _embedding(self):
         self.src_emb = self.src_embeder(self.src)
         self.tar_emb = self.tar_embeder(self.tar)
 
@@ -207,7 +207,7 @@ class BaseModel(object):
     def build_graph(self, mode='train', beam_size=10):
         if mode == 'train' or mode == 'eval':
             self._build_data()
-            self._emebdding()
+            self._embedding()
             enc_output, enc_final_state = self._build_encoder()
             dec_output = self._build_decoder(enc_final_state)
 
@@ -215,7 +215,7 @@ class BaseModel(object):
             return loss
         elif mode == "beam_search" or mode == 'greedy_search':
             self._build_data()
-            self._emebdding()
+            self._embedding()
             enc_output, enc_final_state = self._build_encoder()
             dec_output = self._build_decoder(
                 enc_final_state, mode=mode, beam_size=beam_size)
