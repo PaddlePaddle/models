@@ -444,8 +444,9 @@ def train_ptb_lm():
 
                 dy_loss.backward()
                 sgd.minimize(dy_loss)
-
                 ptb_model.clear_gradients()
+
+                global_lr = sgd._global_learning_rate().numpy()
                 total_loss += out_loss
                 iters += num_steps
                 total_batch_num = total_batch_num + 1  #this is for benchmark
@@ -457,8 +458,7 @@ def train_ptb_lm():
                     ppl = np.exp(total_loss / iters)
                     print(
                         "-- Epoch:[%d]; Batch:[%d]; ppl: %.5f, lr: %.5f, loss: %.5f, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f words/sec"
-                        % (epoch_id, batch_id, ppl[0],
-                           sgd._global_learning_rate().numpy(), out_loss,
+                        % (epoch_id, batch_id, ppl[0], global_lr, out_loss,
                            batch_cost_avg.get_average(),
                            reader_cost_avg.get_average(),
                            batch_size / batch_cost_avg.get_average()))
