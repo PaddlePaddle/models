@@ -345,19 +345,21 @@ class StarGAN(object):
                         ],
                         feed=data)
                     print("epoch{}: batch{}: \n\
-                         g_loss_fake: {}; g_loss_rec: {}; g_loss_cls: {}"
+                         g_loss_fake: {:.5f}; g_loss_rec: {:.5f}; g_loss_cls: {:.5f}"
                           .format(epoch_id, batch_id, g_loss_fake[0],
                                   g_loss_rec[0], g_loss_cls[0]))
 
-                batch_cost_averager.record(time.time() - batch_start)
+                batch_cost_averager.record(
+                    time.time() - batch_start, num_samples=self.cfg.batch_size)
                 if (batch_id + 1) % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}: \n\
-                         d_loss_real: {}; d_loss_fake: {}; d_loss_cls: {}; d_loss_gp: {} \n\
-                         reader_cost: {}, Batch_time_cost: {}"
+                         d_loss_real: {:.5f}; d_loss_fake: {:.5f}; d_loss_cls: {:.5f}; d_loss_gp: {:.5f} \n\
+                         batch_cost: {:.5f} sec, reader_cost: {:.5f} sec, ips: {:.5f} images/sec"
                           .format(epoch_id, batch_id, d_loss_real[0],
                                   d_loss_fake[0], d_loss_cls[0], d_loss_gp[0],
+                                  batch_cost_averager.get_average(),
                                   reader_cost_averager.get_average(),
-                                  batch_cost_averager.get_average()))
+                                  batch_cost_averager.get_ips_average()))
                     reader_cost_averager.reset()
                     batch_cost_averager.reset()
 
