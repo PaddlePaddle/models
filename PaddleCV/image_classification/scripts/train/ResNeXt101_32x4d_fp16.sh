@@ -1,14 +1,14 @@
 #!/bin/bash -ex
 
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=5
 export FLAGS_conv_workspace_size_limit=4000 #MB
-export FLAGS_cudnn_exhaustive_search=1
+export FLAGS_cudnn_exhaustive_search=0
 export FLAGS_cudnn_batchnorm_spatial_persistent=1
 
 DATA_DIR="/ssd3/datasets/ILSVRC2012"
 
 DATA_FORMAT="NHWC"
-USE_FP16=true #whether to use float16
+USE_FP16=false #whether to use float16
 USE_DALI=true
 USE_ADDTO=true
 
@@ -20,10 +20,10 @@ if ${USE_DALI}; then
     export FLAGS_fraction_of_gpu_memory_to_use=0.8
 fi
 
-python train.py \
-       --model=ResNet50 \
+nvprof -o timeline_output -f --cpu-profiling off --profile-from-start off python train.py \
+       --model=ResNeXt101_32x4d \
        --data_dir=${DATA_DIR} \
-       --batch_size=128 \
+       --batch_size=32 \
        --total_images=1281167 \
        --image_shape 4 224 224 \
        --class_dim=1000 \
@@ -45,4 +45,5 @@ python train.py \
        --reader_buf_size=4000 \
        --use_dali=${USE_DALI} \
        --lr=0.1
+
 
