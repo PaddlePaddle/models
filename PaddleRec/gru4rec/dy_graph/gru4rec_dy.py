@@ -125,16 +125,16 @@ class SimpleGRURNN(paddle.fluid.Layer):
                 step_input = hidden_state
 
                 if self._dropout is not None and self._dropout > 0.0:
-                    step_input = paddle.fluid.layers.dropout(
+                    step_input = paddle.fluid.layers.nn.dropout(
                         step_input,
                         dropout_prob=self._dropout,
                         dropout_implementation='upscale_in_train')
             res.append(step_input)
         real_res = paddle.concat(x=res, axis=1)
-        real_res = paddle.fluid.layers.reshape(
-            real_res, [-1, self._num_steps, self._hidden_size])
+        real_res = paddle.reshape(real_res,
+                                  [-1, self._num_steps, self._hidden_size])
         last_hidden = paddle.concat(x=hidden_array, axis=1)
-        last_hidden = paddle.fluid.layers.reshape(
+        last_hidden = paddle.reshape(
             last_hidden, shape=[-1, self._num_layers, self._hidden_size])
         last_hidden = paddle.transpose(x=last_hidden, perm=[1, 0, 2])
         return real_res, last_hidden
@@ -191,15 +191,15 @@ class PtbModel(paddle.fluid.Layer):
 
     def forward(self, input, label, init_hidden):
 
-        init_h = paddle.fluid.layers.reshape(
+        init_h = paddle.reshape(
             init_hidden, shape=[self.num_layers, -1, self.hidden_size])
 
         x_emb = self.embedding(input)
 
-        x_emb = paddle.fluid.layers.reshape(
+        x_emb = paddle.reshape(
             x_emb, shape=[-1, self.num_steps, self.hidden_size])
         if self.dropout is not None and self.dropout > 0.0:
-            x_emb = paddle.fluid.layers.dropout(
+            x_emb = paddle.fluid.layers.nn.dropout(
                 x_emb,
                 dropout_prob=self.dropout,
                 dropout_implementation='upscale_in_train')
@@ -209,13 +209,12 @@ class PtbModel(paddle.fluid.Layer):
         projection = paddle.add(x=projection, y=self.softmax_bias)
         loss = paddle.nn.functional.softmax_with_cross_entropy(
             logits=projection, label=label, soft_label=False)
-        pre_2d = paddle.fluid.layers.reshape(
-            projection, shape=[-1, self.vocab_size])
-        label_2d = paddle.fluid.layers.reshape(label, shape=[-1, 1])
+        pre_2d = paddle.reshape(projection, shape=[-1, self.vocab_size])
+        label_2d = paddle.reshape(label, shape=[-1, 1])
         acc = paddle.metric.accuracy(input=pre_2d, label=label_2d, k=20)
-        loss = paddle.fluid.layers.reshape(loss, shape=[-1, self.num_steps])
-        loss = paddle.reduce_mean(loss, dim=[0])
-        loss = paddle.reduce_sum(loss)
+        loss = paddle.reshape(loss, shape=[-1, self.num_steps])
+        loss = paddle.mean(loss, axis=[0])
+        loss = paddle.sum(loss)
 
         return loss, last_hidden, acc
 

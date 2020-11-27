@@ -12,9 +12,9 @@ class DeepFM(paddle.nn.Layer):
         self.dnn = DNN(args)
 
     def forward(self, raw_feat_idx, raw_feat_value, label):
-        feat_idx = paddle.fluid.layers.reshape(
-            raw_feat_idx, [-1, 1])  # (None * num_field) * 1
-        feat_value = paddle.fluid.layers.reshape(
+        feat_idx = paddle.reshape(raw_feat_idx,
+                                  [-1, 1])  # (None * num_field) * 1
+        feat_value = paddle.reshape(
             raw_feat_value,
             [-1, self.args.num_field, 1])  # None * num_field * 1
 
@@ -55,35 +55,35 @@ class FM(paddle.nn.Layer):
     def forward(self, feat_idx, feat_value):
         # -------------------- first order term  --------------------
         first_weights_re = self.embedding_w(feat_idx)
-        first_weights = paddle.fluid.layers.reshape(
+        first_weights = paddle.reshape(
             first_weights_re,
             shape=[-1, self.args.num_field, 1])  # None * num_field * 1
-        y_first_order = paddle.reduce_sum(first_weights * feat_value, 1)
+        y_first_order = paddle.sum(first_weights * feat_value, 1)
 
         # -------------------- second order term  --------------------
         feat_embeddings_re = self.embedding(feat_idx)
-        feat_embeddings = paddle.fluid.layers.reshape(
+        feat_embeddings = paddle.reshape(
             feat_embeddings_re,
             shape=[-1, self.args.num_field, self.args.embedding_size
                    ])  # None * num_field * embedding_size
         feat_embeddings = feat_embeddings * feat_value  # None * num_field * embedding_size
 
         # sum_square part
-        summed_features_emb = paddle.reduce_sum(feat_embeddings,
-                                                1)  # None * embedding_size
+        summed_features_emb = paddle.sum(feat_embeddings,
+                                         1)  # None * embedding_size
         summed_features_emb_square = paddle.square(
             summed_features_emb)  # None * embedding_size
 
         # square_sum part
         squared_features_emb = paddle.square(
             feat_embeddings)  # None * num_field * embedding_size
-        squared_sum_features_emb = paddle.reduce_sum(squared_features_emb,
-                                                     1)  # None * embedding_size
+        squared_sum_features_emb = paddle.sum(squared_features_emb,
+                                              1)  # None * embedding_size
 
-        y_second_order = 0.5 * paddle.reduce_sum(
+        y_second_order = 0.5 * paddle.sum(
             summed_features_emb_square - squared_sum_features_emb,
             1,
-            keep_dim=True)  # None * 1
+            keepdim=True)  # None * 1
 
         return y_first_order, y_second_order, feat_embeddings
 
@@ -121,7 +121,7 @@ class DNN(paddle.nn.Layer):
             self._layers.append(act)
 
     def forward(self, feat_embeddings):
-        y_dnn = paddle.fluid.layers.reshape(
+        y_dnn = paddle.reshape(
             feat_embeddings,
             [-1, self.args.num_field * self.args.embedding_size])
         for n_layer in self._layers:

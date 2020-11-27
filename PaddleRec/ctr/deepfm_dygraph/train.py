@@ -50,13 +50,14 @@ def train(args):
             raw_feat_value = np.array(raw_feat_value, dtype=np.float32)
             label = np.array(label, dtype=np.int64)
             raw_feat_idx, raw_feat_value, label = [
-                paddle.to_tensor(data=i, dtype=None, place=None, stop_gradient=True)
+                paddle.to_tensor(
+                    data=i, dtype=None, place=None, stop_gradient=True)
                 for i in [raw_feat_idx, raw_feat_value, label]
             ]
 
             predict = deepfm(raw_feat_idx, raw_feat_value, label)
 
-                # for auc
+            # for auc
             predict_2d = paddle.concat(x=[1 - predict, predict], axis=1)
             auc_metric_test.update(
                 preds=predict_2d.numpy(), labels=label.numpy())
@@ -68,16 +69,15 @@ def train(args):
         parameters=deepfm.parameters(),
         weight_decay=paddle.fluid.regularizer.L2DecayRegularizer(args.reg))
 
-        # load model if exists
+    # load model if exists
     start_epoch = 0
     if args.checkpoint:
         model_dict, optimizer_dict = paddle.fluid.dygraph.load_dygraph(
             args.checkpoint)
         deepfm.set_dict(model_dict)
         optimizer.set_dict(optimizer_dict)
-        start_epoch = int(
-            os.path.basename(args.checkpoint).split("_")[
-                -1]) + 1  # get next train epoch
+        start_epoch = int(os.path.basename(args.checkpoint).split("_")[
+            -1]) + 1  # get next train epoch
         logger.info("load model {} finished.".format(args.checkpoint))
 
     for epoch in range(start_epoch, args.num_epoch):
@@ -94,17 +94,17 @@ def train(args):
             raw_feat_value = np.array(raw_feat_value, dtype=np.float32)
             label = np.array(label, dtype=np.int64)
             raw_feat_idx, raw_feat_value, label = [
-                paddle.to_tensor(data=i, dtype=None, place=None, stop_gradient=True)
+                paddle.to_tensor(
+                    data=i, dtype=None, place=None, stop_gradient=True)
                 for i in [raw_feat_idx, raw_feat_value, label]
             ]
 
             predict = deepfm(raw_feat_idx, raw_feat_value, label)
 
             loss = paddle.nn.functional.log_loss(
-                input=predict,
-                label=paddle.cast(
+                input=predict, label=paddle.cast(
                     label, dtype="float32"))
-            batch_loss = paddle.reduce_sum(loss)
+            batch_loss = paddle.sum(loss)
 
             total_loss += batch_loss.numpy().item()
 
@@ -112,16 +112,14 @@ def train(args):
             optimizer.minimize(batch_loss)
             deepfm.clear_gradients()
 
-                # for auc
+            # for auc
             predict_2d = paddle.concat(x=[1 - predict, predict], axis=1)
-            auc_metric.update(
-                preds=predict_2d.numpy(), labels=label.numpy())
+            auc_metric.update(preds=predict_2d.numpy(), labels=label.numpy())
 
             if batch_id > 0 and batch_id % 100 == 0:
                 logger.info(
                     "epoch: {}, batch_id: {}, loss: {:.6f}, auc: {:.6f}, speed: {:.2f} ins/s".
-                    format(epoch, batch_id, total_loss / args.batch_size /
-                           100,
+                    format(epoch, batch_id, total_loss / args.batch_size / 100,
                            auc_metric.eval(), 100 * args.batch_size / (
                                time.time() - batch_begin)))
                 batch_begin = time.time()
@@ -130,9 +128,8 @@ def train(args):
             batch_id += 1
         logger.info("epoch %d is finished and takes %f s" %
                     (epoch, time.time() - begin))
-            # save model and optimizer
-        logger.info("going to save epoch {} model and optimizer.".format(
-            epoch))
+        # save model and optimizer
+        logger.info("going to save epoch {} model and optimizer.".format(epoch))
         paddle.fluid.dygraph.save_dygraph(
             deepfm.state_dict(),
             model_path=os.path.join(args.model_output_dir,
@@ -142,7 +139,7 @@ def train(args):
             model_path=os.path.join(args.model_output_dir,
                                     "epoch_" + str(epoch)))
         logger.info("save epoch {} finished.".format(epoch))
-            # eval model
+        # eval model
         deepfm.eval()
         eval(epoch)
         deepfm.train()
