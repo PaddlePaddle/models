@@ -68,31 +68,8 @@ SlowFast Overview
 
 ## 数据准备
 
-SlowFast模型的训练数据采用Kinetics400数据集，直接输入mp4文件进行训练，数据准备方式如下:
+SlowFast模型的训练数据采用Kinetics400数据集，数据下载及准备请参考[数据说明](../PaddleCV/video/data/dataset/README.md)
 
-### mp4视频下载
-
-在Code\_Root目录下创建文件夹
-
-```
-    cd $Code_Root/ && mkdir data
-    cd data && mkdir data_k400 && cd data_k400
-    mkdir train_mp4 && mkdir val_mp4
-```
-
-ActivityNet官方提供了Kinetics的下载工具，具体参考其[官方repo](https://github.com/activitynet/ActivityNet/tree/master/Crawler/Kinetics)即可下载Kinetics400的mp4视频集合。将kinetics400的训练与验证集合分别下载到data/data\_k400/train\_mp4与data/data\_k400/val\_mp4。
-
-### 生成训练和验证集list
-
-验证(Validation)和评估(Evaluation)使用同一份数据集，预测(Predict)可以从验证数据集中挑选少量样本进行预测
-
-```
-    cd $Code_Root/data/
-    ls $Code_Root/data/data_k400/train_mp4/* > train.csv
-    ls $Code_Root/data/data_k400/val_mp4/* > val.csv
-    ls $Code_Root/data/data_k400/val_mp4/* > test.csv
-    ls $Code_Root/data/data_k400/val_mp4/* > infer.csv
-```
 
 ## 模型训练
 

@@ -25,6 +25,8 @@ import ast
 from model import TSN_ResNet
 from utils.config_utils import *
 from reader.ucf101_reader import UCF101Reader
+from timer import TimeAverager
+
 import paddle
 from paddle.io import DataLoader, DistributedBatchSampler
 from compose import TSN_UCF101_Dataset
@@ -93,6 +95,11 @@ def parse_args():
         default=True,
         help='whether to validating in training phase.'
         'default value is True.')
+    parser.add_argument(
+        '--log_interval',
+        type=int,
+        default=10,
+        help='mini-batch interval to log.')
     args = parser.parse_args()
     return args
 
@@ -126,8 +133,7 @@ def val(epoch, model, val_loader, cfg, args):
 
         outputs = model(imgs)
 
-        loss = F.cross_entropy(
-            input=outputs, label=labels, ignore_index=-1)
+        loss = F.cross_entropy(input=outputs, label=labels, ignore_index=-1)
         avg_loss = paddle.mean(loss)
         acc_top1 = paddle.metric.accuracy(input=outputs, label=labels, k=1)
         acc_top5 = paddle.metric.accuracy(input=outputs, label=labels, k=5)
@@ -161,7 +167,7 @@ def create_optimizer(cfg, params):
     momentum = cfg.momentum
 
     optimizer = paddle.optimizer.Momentum(
-        learning_rate=paddle.optimizer.PiecewiseLR(
+        learning_rate=paddle.optimizer.lr.PiecewiseDecay(
             boundaries=bd, values=lr),
         momentum=momentum,
         weight_decay=paddle.regularizer.L2Decay(l2_weight_decay),
@@ -182,56 +188,51 @@ def train(args):
     place = paddle.CUDAPlace(paddle.distributed.ParallelEnv().dev_id) \
         if use_data_parallel else paddle.CUDAPlace(0)
     if use_data_parallel:
-
         paddle.distributed.init_parallel_env()
-    
+
     video_model = TSN_ResNet(train_config)
     if use_data_parallel:
-
         video_model = paddle.DataParallel(video_model)
-    
-    pre_state_dict, _ = paddle.load(args.pretrain)
+
+    pre_state_dict = paddle.load(args.pretrain)
     #if paddle.distributed.parallel.Env().local_rank == 0:
     video_model = init_model(video_model, pre_state_dict)
 
-    optimizer = create_optimizer(train_config.TRAIN,
-                                     video_model.parameters())
+    optimizer = create_optimizer(train_config.TRAIN, video_model.parameters())
 
     bs_denominator = 1
     if args.use_gpu:
-            # check number of GPUs
+        # check number of GPUs
         gpus = os.getenv("CUDA_VISIBLE_DEVICES", "")
         if gpus == "":
             pass
         else:
             gpus = gpus.split(",")
             num_gpus = len(gpus)
-        bs_denominator = num_gpus   
+        bs_denominator = num_gpus
     bs_train_single = int(train_config.TRAIN.batch_size / bs_denominator)
     bs_val_single = int(valid_config.VALID.batch_size / bs_denominator)
 
     train_dataset = TSN_UCF101_Dataset(train_config, 'train')
     val_dataset = TSN_UCF101_Dataset(valid_config, 'valid')
     train_sampler = DistributedBatchSampler(
-            train_dataset,
-            batch_size=bs_train_single,
-            shuffle=train_config.TRAIN.use_shuffle,
-            drop_last=True)
+        train_dataset,
+        batch_size=bs_train_single,
+        shuffle=train_config.TRAIN.use_shuffle,
+        drop_last=True)
     train_loader = DataLoader(
-            train_dataset,
-            batch_sampler=train_sampler,
-            places=place,
-            num_workers=train_config.TRAIN.num_workers,
-            return_list=True)
-    val_sampler = DistributedBatchSampler(
-            val_dataset, batch_size=bs_val_single)
+        train_dataset,
+        batch_sampler=train_sampler,
+        places=place,
+        num_workers=train_config.TRAIN.num_workers,
+        return_list=True)
+    val_sampler = DistributedBatchSampler(val_dataset, batch_size=bs_val_single)
     val_loader = DataLoader(
-            val_dataset,
-            batch_sampler=val_sampler,
-            places=place,
-            num_workers=valid_config.VALID.num_workers,
-            return_list=True)
-
+        val_dataset,
+        batch_sampler=val_sampler,
+        places=place,
+        num_workers=valid_config.VALID.num_workers,
+        return_list=True)
 
     # resume training the model
     if args.resume is not None:
@@ -239,15 +240,21 @@ def train(args):
         video_model.set_dict(model_state)
         optimizer.set_dict(opt_state)
 
+    reader_cost_averager = TimeAverager()
+    batch_cost_averager = TimeAverager()
     for epoch in range(1, train_config.TRAIN.epoch + 1):
+        epoch_start = time.time()
+
         video_model.train()
         total_loss = 0.0
         total_acc1 = 0.0
         total_acc5 = 0.0
         total_sample = 0
+
         batch_start = time.time()
         for batch_id, data in enumerate(train_loader):
-            train_reader_cost = time.time() - batch_start
+            reader_cost_averager.record(time.time() - batch_start)
+
             imgs = paddle.to_tensor(data[0], place=paddle.CUDAPinnedPlace())
             labels = paddle.to_tensor(data[1], place=paddle.CUDAPinnedPlace())
             labels.stop_gradient = True
@@ -256,14 +263,12 @@ def train(args):
             loss = F.cross_entropy(input=outputs, label=labels, ignore_index=-1)
             avg_loss = paddle.mean(loss)
 
-            acc_top1 = paddle.metric.accuracy(
-                    input=outputs, label=labels, k=1)
-            acc_top5 = paddle.metric.accuracy(
-                    input=outputs, label=labels, k=5)
+            acc_top1 = paddle.metric.accuracy(input=outputs, label=labels, k=1)
+            acc_top5 = paddle.metric.accuracy(input=outputs, label=labels, k=5)
             dy_out = avg_loss.numpy()[0]
 
             if use_data_parallel:
-                    # (data_parallel step5/6)
+                # (data_parallel step5/6)
                 avg_loss = video_model.scale_loss(avg_loss)
                 avg_loss.backward()
                 video_model.apply_collective_grads()
@@ -278,18 +283,27 @@ def train(args):
             total_acc1 += acc_top1.numpy()[0]
             total_acc5 += acc_top5.numpy()[0]
             total_sample += 1
-            train_batch_cost = time.time() - batch_start
-            print(
-                'TRAIN Epoch: {}, iter: {}, batch_cost: {:.5f} s, reader_cost: {:.5f} s, loss={:.6f}, acc1 {:.6f}, acc5 {:.6f}  '.
-                format(epoch, batch_id, train_batch_cost, train_reader_cost,
-                   total_loss / total_sample, total_acc1 / total_sample,
-                   total_acc5 / total_sample))
+
+            batch_cost_averager.record(
+                time.time() - batch_start, num_samples=bs_train_single)
+            if batch_id % args.log_interval == 0:
+                print(
+                    'TRAIN Epoch: {}, iter: {}, loss={:.6f}, acc1 {:.6f}, acc5 {:.6f}, batch_cost: {:.5f} sec, reader_cost: {:.5f} sec, ips: {:.5f} samples/sec'.
+                    format(epoch, batch_id, total_loss / total_sample,
+                           total_acc1 / total_sample, total_acc5 / total_sample,
+                           batch_cost_averager.get_average(),
+                           reader_cost_averager.get_average(),
+                           batch_cost_averager.get_ips_average()))
+                batch_cost_averager.reset()
+                reader_cost_averager.reset()
+
             batch_start = time.time()
 
+        train_epoch_cost = time.time() - epoch_start
         print(
-            'TRAIN End, Epoch {}, avg_loss= {}, avg_acc1= {}, avg_acc5= {}'.
-            format(epoch, total_loss / total_sample, total_acc1 /
-               total_sample, total_acc5 / total_sample))
+            'TRAIN End, Epoch {}, avg_loss= {:.6f}, avg_acc1= {:.6f}, avg_acc5= {:.6f}, epoch_cost: {:.5f} sec'.
+            format(epoch, total_loss / total_sample, total_acc1 / total_sample,
+                   total_acc5 / total_sample, train_epoch_cost))
 
         # save model's and optimizer's parameters which used for resuming the training stage
         save_parameters = (not use_data_parallel) or (
@@ -302,13 +316,12 @@ def train(args):
             model_path = os.path.join(
                 args.checkpoint,
                 "_" + model_path_pre + "_epoch{}".format(epoch))
-            paddle.save(
-                video_model.state_dict(), model_path)
+            paddle.save(video_model.state_dict(), model_path)
             paddle.save(optimizer.state_dict(), model_path)
 
         if args.validate:
             video_model.eval()
-            val_acc = val(epoch, video_model,valid_loader, valid_config, args)
+            val_acc = val(epoch, video_model, val_loader, valid_config, args)
             # save the best parameters in trainging stage
             if epoch == 1:
                 best_acc = val_acc
@@ -318,12 +331,13 @@ def train(args):
                     if paddle.distributed.ParallelEnv().local_rank == 0:
                         if not os.path.isdir(args.weights):
                             os.makedirs(args.weights)
-                        paddle.save(video_model.state_dict(),   args.weights + "/final")
+                        paddle.save(video_model.state_dict(),
+                                    args.weights + "/final")
         else:
             if paddle.distributed.parallel.Env().local_rank == 0:
                 if not os.path.isdir(args.weights):
                     os.makedirs(args.weights)
-                paddle.save(video_model.state_dict(),args.weights + "/final")
+                paddle.save(video_model.state_dict(), args.weights + "/final")
 
     logger.info('[TRAIN] training finished')
 

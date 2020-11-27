@@ -232,6 +232,7 @@ def train(args):
         train_dataloader,
         train_fetch_list,
         train_metrics,
+        train_batch_size=train_config.TRAIN.batch_size,
         epochs=epochs,
         log_interval=args.log_interval,
         valid_interval=args.valid_interval,

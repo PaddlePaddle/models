@@ -292,16 +292,18 @@ class Pix2pix(object):
                                                    ],
                                                    feed=tensor)
 
-                batch_cost_averager.record(time.time() - batch_start)
+                batch_cost_averager.record(
+                    time.time() - batch_start, num_samples=self.cfg.batch_size)
                 if batch_id % self.cfg.print_freq == 0:
                     print("epoch{}: batch{}: \n\
-                         g_loss_gan: {}; g_loss_l1: {}; \n\
-                         d_loss_real: {}; d_loss_fake: {}; \n\
-                         reader_cost: {}, Batch_time_cost: {}"
+                         g_loss_gan: {:.5f}; g_loss_l1: {:.5f}; \n\
+                         d_loss_real: {:.5f}; d_loss_fake: {:.5f}; \n\
+                         batch_cost: {:.5f} sec, reader_cost: {:.5f} sec, ips: {:.5f} images/sec"
                           .format(epoch_id, batch_id, g_loss_gan[0], g_loss_l1[
                               0], d_loss_real[0], d_loss_fake[0],
+                                  batch_cost_averager.get_average(),
                                   reader_cost_averager.get_average(),
-                                  batch_cost_averager.get_average()))
+                                  batch_cost_averager.get_ips_average()))
                     reader_cost_averager.reset()
                     batch_cost_averager.reset()
 

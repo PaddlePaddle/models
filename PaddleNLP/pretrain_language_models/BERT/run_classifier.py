@@ -342,7 +342,7 @@ def main(args):
                     fetch_list = [loss.name, accuracy.name, scheduled_lr.name, num_seqs.name]
 
                 outputs = exe.run(train_compiled_program, fetch_list=fetch_list)
-                interval_seq_num += outputs[3]  # get the sequence number
+                interval_seq_num += np.sum( outputs[3] )  # get the sequence number
 
                 if steps % args.skip_steps == 0:
                     if args.use_fp16:
@@ -381,7 +381,7 @@ def main(args):
                     ce_info.append([np.sum(total_cost) / np.sum(total_num_seqs), np.sum(total_acc) / np.sum(total_num_seqs), used_time])
                     if steps > 0 :
                         throughput.append( args.skip_steps / used_time)
-                        log_record = log_record + ", speed: %f steps/s" % (args.skip_steps / used_time) + ", qps: %f sequence/s" % ( interval_seq_num / used_time )
+                        log_record = log_record + ", speed: %f steps/s" % (args.skip_steps / used_time) + ", ips: %f sequence/s" % ( interval_seq_num / used_time )
                         print(log_record)
                     else:
                         print(log_record)

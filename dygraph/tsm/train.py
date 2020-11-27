@@ -25,6 +25,7 @@ from model import TSM_ResNet
 from config_utils import *
 from reader import KineticsReader
 from ucf101_reader import UCF101Reader
+from timer import TimeAverager
 
 logging.root.handlers = []
 FORMAT = '[%(levelname)s: %(filename)s: %(lineno)4d]: %(message)s'
@@ -92,7 +93,12 @@ def parse_args():
         type=str,
         default='./ResNet50_pretrained/',
         help='default weights is ./ResNet50_pretrained/.')
- 
+    parser.add_argument(
+        '--log_interval',
+        type=int,
+        default=10,
+        help='mini-batch interval to log.')
+
     args = parser.parse_args()
     return args
 
@@ -245,16 +251,23 @@ def train(args):
                 train_reader)
 
         # 6. train loop
+        reader_cost_averager = TimeAverager()
+        batch_cost_averager = TimeAverager()
         for epoch in range(train_config.TRAIN.epoch):
+            epoch_start = time.time()
+
             video_model.train()
             total_loss = 0.0
             total_acc1 = 0.0
             total_acc5 = 0.0
             total_sample = 0
-            t_last = time.time()
+
             # 6.1 for each batch, call model() , backward(), and minimize()
+            batch_start = time.time()
             for batch_id, data in enumerate(train_reader()):
                 t1 = time.time()
+                reader_cost_averager.record(t1 - batch_start)
+
                 x_data = np.array([item[0] for item in data])
                 y_data = np.array([item[1] for item in data]).reshape([-1, 1])
 
@@ -287,26 +300,38 @@ def train(args):
                 t4 = time.time()
                 optimizer.minimize(avg_loss)
                 video_model.clear_gradients()
-                t5 = time.time()
 
-                total_loss += avg_loss.numpy()[0]
-                total_acc1 += acc_top1.numpy()[0]
-                total_acc5 += acc_top5.numpy()[0]
+                avg_loss_value = avg_loss.numpy()[0]
+                acc_top1_value = acc_top1.numpy()[0]
+                acc_top5_value = acc_top5.numpy()[0]
+
+                total_loss += avg_loss_value
+                total_acc1 += acc_top1_value
+                total_acc5 += acc_top5_value
                 total_sample += 1
 
-                print(
-                    'TRAIN Epoch: %d, iter: %d, loss: %.5f, acc1: %.5f, acc5: %.5f, lr: %.5f, forward_cost:%.5f s, backward_cost:%.5f s, minimize_cost:%.5f s, to_variable_cost: %.5f s, batch_cost: %.5f s, reader_cost: %.5f s'
-                    % (epoch, batch_id, avg_loss.numpy()[0],
-                       acc_top1.numpy()[0], acc_top5.numpy()[0],
-                       current_step_lr, t3 - t2, t4 - t3, t5 - t4, t2 - t1,
-                       t5 - t_last, t2 - t_last))
-                t_last = time.time()
+                t5 = time.time()
+                batch_cost_averager.record(
+                    t5 - batch_start, num_samples=train_config.TRAIN.batch_size)
+                if batch_id % args.log_interval == 0:
+                    print(
+                        'TRAIN Epoch: %d, iter: %d, loss: %.5f, acc1: %.5f, acc5: %.5f, lr: %.5f, forward_cost:%.5f s, backward_cost:%.5f s, minimize_cost:%.5f s, to_variable_cost: %.5f s, batch_cost: %.5f sec, reader_cost: %.5f sec, ips: %.5f samples/sec'
+                        % (epoch, batch_id, avg_loss_value, acc_top1_value,
+                           acc_top5_value, current_step_lr, t3 - t2, t4 - t3,
+                           t5 - t4, t2 - t1, batch_cost_averager.get_average(),
+                           reader_cost_averager.get_average(),
+                           batch_cost_averager.get_ips_average()))
+                    batch_cost_averager.reset()
+                    reader_cost_averager.reset()
 
+                batch_start = time.time()
+
+            train_epoch_cost = time.time() - epoch_start
             print(
-                'TRAIN End, Epoch {}, avg_loss= {}, avg_acc1= {}, avg_acc5= {}, lr={}'.
+                'TRAIN End, Epoch {}, avg_loss= {:.5f}, avg_acc1= {:.5f}, avg_acc5= {:.5f}, lr={:.5f}, epoch_cost: {:.5f} sec'.
                 format(epoch, total_loss / total_sample, total_acc1 /
-                       total_sample, total_acc5 / total_sample,
-                       current_step_lr))
+                       total_sample, total_acc5 / total_sample, current_step_lr,
+                       train_epoch_cost))
 
             # 6.2 save checkpoint 
             if local_rank == 0:

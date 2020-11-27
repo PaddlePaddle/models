@@ -19,11 +19,12 @@ from __future__ import print_function
 import numpy as np
 import paddle
 import math
-from paddle.nn import Conv2d, BatchNorm2d, Linear, Dropout, MaxPool2d, AvgPool2d
+from paddle.nn import Conv2D, BatchNorm2D, Linear, Dropout, MaxPool2D, AvgPool2D
 from paddle import ParamAttr
 import paddle.nn.functional as F
 from paddle.jit import to_static
 from paddle.static import InputSpec
+
 
 class ConvBNLayer(paddle.nn.Layer):
     def __init__(self,
@@ -35,7 +36,7 @@ class ConvBNLayer(paddle.nn.Layer):
                  act=None,
                  name=None):
         super(ConvBNLayer, self).__init__()
-        self._conv = Conv2d(
+        self._conv = Conv2D(
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
@@ -48,10 +49,10 @@ class ConvBNLayer(paddle.nn.Layer):
             bn_name = "bn_" + name
         else:
             bn_name = "bn" + name[3:]
-        
+
         self._act = act
-        
-        self._batch_norm = BatchNorm2d(
+
+        self._batch_norm = BatchNorm2D(
             out_channels,
             weight_attr=ParamAttr(name=bn_name + "_scale"),
             bias_attr=ParamAttr(bn_name + "_offset"))
@@ -103,7 +104,6 @@ class BottleneckBlock(paddle.nn.Layer):
                 name=name + "_branch1")
 
         self.shortcut = shortcut
-
 
     def forward(self, inputs):
         y = self.conv0(inputs)
@@ -161,8 +161,9 @@ class BasicBlock(paddle.nn.Layer):
         else:
             short = self.short(inputs)
         y = paddle.add(short, conv1)
-        y = F.relu(y) 
-        return y  
+        y = F.relu(y)
+        return y
+
 
 class TSN_ResNet(paddle.nn.Layer):
     def __init__(self, config):
@@ -184,7 +185,7 @@ class TSN_ResNet(paddle.nn.Layer):
         elif self.layers == 152:
             depth = [3, 8, 36, 3]
         in_channels = [64, 256, 512,
-                        1024] if self.layers >= 50 else [64, 64, 128, 256]
+                       1024] if self.layers >= 50 else [64, 64, 128, 256]
         out_channels = [64, 128, 256, 512]
 
         self.conv = ConvBNLayer(
@@ -194,8 +195,7 @@ class TSN_ResNet(paddle.nn.Layer):
             stride=2,
             act="relu",
             name="conv1")
-        self.pool2d_max = MaxPool2d(
-            kernel_size=3, stride=2, padding=1)
+        self.pool2D_max = MaxPool2D(kernel_size=3, stride=2, padding=1)
 
         self.block_list = []
         if self.layers >= 50:
@@ -237,16 +237,16 @@ class TSN_ResNet(paddle.nn.Layer):
                     self.block_list.append(basic_block)
                     shortcut = True
 
-        self.pool2d_avg = AvgPool2d(kernel_size=7)
+        self.pool2D_avg = AvgPool2D(kernel_size=7)
 
-        self.pool2d_avg_channels = in_channels[-1] * 2
+        self.pool2D_avg_channels = in_channels[-1] * 2
 
         self.out = Linear(
-            self.pool2d_avg_channels,
+            self.pool2D_avg_channels,
             self.class_dim,
             weight_attr=ParamAttr(
                 initializer=paddle.nn.initializer.Normal(
-                    loc=0.0, scale=0.01),
+                    mean=0.0, std=0.01),
                 name="fc_0.w_0"),
             bias_attr=ParamAttr(
                 initializer=paddle.nn.initializer.Constant(value=0.0),
@@ -258,10 +258,10 @@ class TSN_ResNet(paddle.nn.Layer):
         y = paddle.reshape(
             inputs, [-1, inputs.shape[2], inputs.shape[3], inputs.shape[4]])
         y = self.conv(y)
-        y = self.pool2d_max(y)
+        y = self.pool2D_max(y)
         for block in self.block_list:
             y = block(y)
-        y = self.pool2d_avg(y)
+        y = self.pool2D_avg(y)
         y = F.dropout(y, p=0.2)
         y = paddle.reshape(y, [-1, self.seg_num, y.shape[1]])
         y = paddle.mean(y, axis=1)
