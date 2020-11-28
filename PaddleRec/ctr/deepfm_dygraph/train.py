@@ -42,7 +42,7 @@ def train(args):
         deepfm.eval()
         logger.info("start eval model.")
         total_step = 0.0
-        auc_metric_test = paddle.fluid.metrics.Auc("ROC")
+        auc_metric_test = paddle.metric.Auc("ROC")
         for data in test_reader():
             total_step += 1
             raw_feat_idx, raw_feat_value, label = zip(*data)
@@ -67,12 +67,12 @@ def train(args):
 
     optimizer = paddle.optimizer.Adam(
         parameters=deepfm.parameters(),
-        weight_decay=paddle.fluid.regularizer.L2DecayRegularizer(args.reg))
+        weight_decay=paddle.regularizer.L2Decay(args.reg))
 
     # load model if exists
     start_epoch = 0
     if args.checkpoint:
-        model_dict, optimizer_dict = paddle.fluid.dygraph.load_dygraph(
+        model_dict, optimizer_dict = paddle.dygraph.load_dygraph(
             args.checkpoint)
         deepfm.set_dict(model_dict)
         optimizer.set_dict(optimizer_dict)
@@ -85,7 +85,7 @@ def train(args):
         batch_begin = time.time()
         batch_id = 0
         total_loss = 0.0
-        auc_metric = paddle.fluid.metrics.Auc("ROC")
+        auc_metric = paddle.metric.Auc("ROC")
         logger.info("training epoch {} start.".format(epoch))
 
         for data in train_reader():
@@ -130,11 +130,11 @@ def train(args):
                     (epoch, time.time() - begin))
         # save model and optimizer
         logger.info("going to save epoch {} model and optimizer.".format(epoch))
-        paddle.fluid.dygraph.save_dygraph(
+        paddle.dygraph.save_dygraph(
             deepfm.state_dict(),
             model_path=os.path.join(args.model_output_dir,
                                     "epoch_" + str(epoch)))
-        paddle.fluid.dygraph.save_dygraph(
+        paddle.dygraph.save_dygraph(
             optimizer.state_dict(),
             model_path=os.path.join(args.model_output_dir,
                                     "epoch_" + str(epoch)))

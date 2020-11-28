@@ -31,7 +31,7 @@ if sys.version[0] == '2':
     sys.setdefaultencoding("utf-8")
 
 
-class SimpleGRURNN(paddle.fluid.Layer):
+class SimpleGRURNN(paddle.nn.Layer):
     def __init__(self,
                  hidden_size,
                  num_steps,
@@ -125,10 +125,8 @@ class SimpleGRURNN(paddle.fluid.Layer):
                 step_input = hidden_state
 
                 if self._dropout is not None and self._dropout > 0.0:
-                    step_input = paddle.fluid.layers.nn.dropout(
-                        step_input,
-                        dropout_prob=self._dropout,
-                        dropout_implementation='upscale_in_train')
+                    step_input = paddle.nn.dropout(
+                        step_input, p=self._dropout, mode='upscale_in_train')
             res.append(step_input)
         real_res = paddle.concat(x=res, axis=1)
         real_res = paddle.reshape(real_res,
@@ -140,7 +138,7 @@ class SimpleGRURNN(paddle.fluid.Layer):
         return real_res, last_hidden
 
 
-class PtbModel(paddle.fluid.Layer):
+class PtbModel(paddle.nn.Layer):
     def __init__(self,
                  name_scope,
                  hidden_size,
@@ -158,18 +156,16 @@ class PtbModel(paddle.fluid.Layer):
         self.num_steps = num_steps
         self.dropout = dropout
         self.simple_gru_rnn = SimpleGRURNN(
-            #self.full_name(),
             hidden_size,
             num_steps,
             num_layers=num_layers,
             init_scale=init_scale,
             dropout=dropout)
-        self.embedding = paddle.fluid.dygraph.nn.Embedding(
-            #self.full_name(),
-            size=[vocab_size, hidden_size],
-            dtype='float32',
-            is_sparse=False,
-            param_attr=paddle.ParamAttr(
+        self.embedding = paddle.nn.Embedding(
+            vocab_size,
+            hidden_size,
+            sparse=False,
+            weight_attr=paddle.ParamAttr(
                 name='embedding_para',
                 initializer=paddle.nn.initializer.Uniform(
                     low=-init_scale, high=init_scale)))
@@ -199,10 +195,8 @@ class PtbModel(paddle.fluid.Layer):
         x_emb = paddle.reshape(
             x_emb, shape=[-1, self.num_steps, self.hidden_size])
         if self.dropout is not None and self.dropout > 0.0:
-            x_emb = paddle.fluid.layers.nn.dropout(
-                x_emb,
-                dropout_prob=self.dropout,
-                dropout_implementation='upscale_in_train')
+            x_emb = paddle.nn.functional.dropout(
+                x_emb, p=self.dropout, mode='upscale_in_train')
         rnn_out, last_hidden = self.simple_gru_rnn(x_emb, init_h)
 
         projection = paddle.matmul(x=rnn_out, y=self.softmax_weight)
@@ -250,7 +244,7 @@ def train_ptb_lm():
         print("model type not support")
         return
 
-    paddle.disable_static(paddle.fluid.core.CUDAPlace(0))
+    paddle.disable_static(paddle.CUDAPlace(0))
     if args.ce:
         print("ce mode")
         seed = 33
@@ -272,7 +266,7 @@ def train_ptb_lm():
             print(args.init_from_pretrain_model)
             raise Warning("The pretrained params do not exist.")
             return
-        paddle.fluid.load_dygraph(args.init_from_pretrain_model)
+        paddle.load(args.init_from_pretrain_model)
         print("finish initing model from pretrained params from %s" %
               (args.init_from_pretrain_model))
 
@@ -304,8 +298,6 @@ def train_ptb_lm():
     sgd = paddle.optimizer.Adagrad(
         parameters=ptb_model.parameters(),
         learning_rate=base_learning_rate,
-        #learning_rate=paddle.fluid.layers.piecewise_decay(
-        #    boundaries=bd, values=lr_arr),
         grad_clip=grad_clip)
 
     print("parameters:--------------------------------")
@@ -401,7 +393,7 @@ def train_ptb_lm():
             print("kpis\ttrain_ppl\t%0.3f" % ppl[0])
         save_model_dir = os.path.join(args.save_model_dir,
                                       str(epoch_id), 'params')
-        paddle.fluid.save_dygraph(ptb_model.state_dict(), save_model_dir)
+        paddle.save(ptb_model.state_dict(), save_model_dir)
         print("Saved model to: %s.\n" % save_model_dir)
         eval(ptb_model, test_data)
     paddle.enable_static()
