@@ -33,20 +33,19 @@ class FM(paddle.nn.Layer):
         super(FM, self).__init__()
         self.args = args
         self.init_value_ = 0.1
-        self.embedding_w = paddle.fluid.dygraph.nn.Embedding(
-            size=[self.args.num_feat + 1, 1],
-            dtype='float32',
+        self.embedding_w = paddle.nn.Embedding(
+            self.args.num_feat + 1,
+            1,
             padding_idx=0,
-            param_attr=paddle.ParamAttr(
+            weight_attr=paddle.ParamAttr(
                 initializer=paddle.nn.initializer.TruncatedNormal(
                     mean=0.0, std=self.init_value_),
-                regularizer=paddle.fluid.regularizer.L1DecayRegularizer(
-                    self.args.reg)))
-        self.embedding = paddle.fluid.dygraph.nn.Embedding(
-            size=[self.args.num_feat + 1, self.args.embedding_size],
-            dtype='float32',
+                regularizer=paddle.regularizer.L1Decay(self.args.reg)))
+        self.embedding = paddle.nn.Embedding(
+            self.args.num_feat + 1,
+            self.args.embedding_size,
             padding_idx=0,
-            param_attr=paddle.ParamAttr(
+            weight_attr=paddle.ParamAttr(
                 initializer=paddle.nn.initializer.TruncatedNormal(
                     mean=0.0,
                     std=self.init_value_ /

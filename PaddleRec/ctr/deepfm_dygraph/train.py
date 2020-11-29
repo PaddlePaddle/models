@@ -120,7 +120,7 @@ def train(args):
                 logger.info(
                     "epoch: {}, batch_id: {}, loss: {:.6f}, auc: {:.6f}, speed: {:.2f} ins/s".
                     format(epoch, batch_id, total_loss / args.batch_size / 100,
-                           auc_metric.eval(), 100 * args.batch_size / (
+                           auc_metric.accumulate(), 100 * args.batch_size / (
                                time.time() - batch_begin)))
                 batch_begin = time.time()
                 total_loss = 0.0
