@@ -72,10 +72,10 @@ def train(args):
     # load model if exists
     start_epoch = 0
     if args.checkpoint:
-        model_dict, optimizer_dict = paddle.dygraph.load_dygraph(
-            args.checkpoint)
+        model_dict = paddle.load(os.path.join(args.checkpoint, ".pdparams"))
+        optimizer_dict = paddle.load(os.path.join(args.checkpoint, ".pdopt"))
         deepfm.set_dict(model_dict)
-        optimizer.set_dict(optimizer_dict)
+        optimizer.set_state_dict(optimizer_dict)
         start_epoch = int(os.path.basename(args.checkpoint).split("_")[
             -1]) + 1  # get next train epoch
         logger.info("load model {} finished.".format(args.checkpoint))
@@ -132,10 +132,12 @@ def train(args):
         logger.info("going to save epoch {} model and optimizer.".format(epoch))
         paddle.save(
             deepfm.state_dict(),
-            path=os.path.join(args.model_output_dir, "epoch_" + str(epoch)))
+            path=os.path.join(args.model_output_dir, "epoch_" + str(epoch),
+                              ".pdparams"))
         paddle.save(
             optimizer.state_dict(),
-            path=os.path.join(args.model_output_dir, "epoch_" + str(epoch)))
+            path=os.path.join(args.model_output_dir, "epoch_" + str(epoch),
+                              ".pdopt"))
         logger.info("save epoch {} finished.".format(epoch))
         # eval model
         deepfm.eval()
