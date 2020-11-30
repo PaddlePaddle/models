@@ -34,8 +34,7 @@ def infer(args):
 
     # load model
     if args.checkpoint:
-        model_dict, optimizer_dict = paddle.dygraph.load_dygraph(
-            args.checkpoint)
+        model_dict, optimizer_dict = paddle.load(args.checkpoint)
         deepfm.set_dict(model_dict)
         logger.info("load model {} finished.".format(args.checkpoint))
     else:

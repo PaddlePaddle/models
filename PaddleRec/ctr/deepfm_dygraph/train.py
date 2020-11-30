@@ -63,7 +63,7 @@ def train(args):
                 preds=predict_2d.numpy(), labels=label.numpy())
 
         logger.info("test auc of epoch %d is %.6f" %
-                    (epoch, auc_metric_test.eval()))
+                    (epoch, auc_metric_test.accumulate()))
 
     optimizer = paddle.optimizer.Adam(
         parameters=deepfm.parameters(),
