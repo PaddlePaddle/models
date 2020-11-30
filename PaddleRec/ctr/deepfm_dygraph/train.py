@@ -130,14 +130,12 @@ def train(args):
                     (epoch, time.time() - begin))
         # save model and optimizer
         logger.info("going to save epoch {} model and optimizer.".format(epoch))
-        paddle.dygraph.save_dygraph(
+        paddle.save(
             deepfm.state_dict(),
-            model_path=os.path.join(args.model_output_dir,
-                                    "epoch_" + str(epoch)))
-        paddle.dygraph.save_dygraph(
+            path=os.path.join(args.model_output_dir, "epoch_" + str(epoch)))
+        paddle.save(
             optimizer.state_dict(),
-            model_path=os.path.join(args.model_output_dir,
-                                    "epoch_" + str(epoch)))
+            path=os.path.join(args.model_output_dir, "epoch_" + str(epoch)))
         logger.info("save epoch {} finished.".format(epoch))
         # eval model
         deepfm.eval()
