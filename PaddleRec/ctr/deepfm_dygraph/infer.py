@@ -71,11 +71,11 @@ def infer(args):
                 logger.info(
                     "TEST --> batch: {} auc: {:.6f} speed: {:.2f} ins/s".format(
                         total_step,
-                        auc_metric_test.eval(), 100 * args.batch_size / (
+                        auc_metric_test.accumulate(), 100 * args.batch_size / (
                             time.time() - batch_begin)))
                 batch_begin = time.time()
 
-        logger.info("test auc is %.6f" % auc_metric_test.eval())
+        logger.info("test auc is %.6f" % auc_metric_test.accumulate())
 
     begin = time.time()
     eval()
