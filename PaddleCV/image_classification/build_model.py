@@ -59,7 +59,7 @@ def _basic_model(data, model, args, is_train):
         cost = fluid.layers.cross_entropy(input=softmax_out, label=label)
 
     target_cost = (fluid.layers.reduce_sum(cost) if args.use_pure_fp16
-        else fluid.layers.reduce_sum(cost))
+        else fluid.layers.mean(cost))
     acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(
         input=softmax_out, label=label, k=min(5, args.class_dim))
@@ -132,10 +132,10 @@ def _mixup_model(data, model, args, is_train):
         cost = lam * target_loss_a + (1 - lam) * target_loss_b
         target_cost = fluid.layers.reduce_sum(x=cost)
     else:
-        target_loss_a = fluid.layers.reduce_sum(x=loss_a)
-        target_loss_b = fluid.layers.reduce_sum(x=loss_b)
+        target_loss_a = fluid.layers.mean(x=loss_a)
+        target_loss_b = fluid.layers.mean(x=loss_b)
         cost = lam * target_loss_a + (1 - lam) * target_loss_b
-        target_cost = fluid.layers.reduce_sum(x=cost)
+        target_cost = fluid.layers.mean(x=cost)
     return [target_cost]
 
 

@@ -161,7 +161,8 @@ class Optimizer(object):
         self.decay_rate = args.decay_rate
         self.total_images = args.total_images
         self.multi_precision = args.multi_precision
-        self.rescale_grad = 1.0 / (args.batch_size / self.get_gpu_num())
+        self.rescale_grad = (1.0 / (args.batch_size / self.get_gpu_num())
+            if args.use_pure_fp16 else 1.0)
 
         self.step = int(math.ceil(float(self.total_images) / self.batch_size))
 

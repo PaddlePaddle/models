@@ -33,7 +33,6 @@ from build_model import create_model
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# paddle.enable_static()
 
 class TimeAverager(object):
     def __init__(self):
