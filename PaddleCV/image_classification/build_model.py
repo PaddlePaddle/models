@@ -20,7 +20,7 @@ def _calc_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
 
     Returns:
         label smoothing loss
-        
+
     """
 
     label_one_hot = fluid.layers.one_hot(input=label, depth=class_dim)
@@ -46,15 +46,12 @@ def _basic_model(data, model, args, is_train):
     else:
         net_out = model.net(input=image, class_dim=args.class_dim)
     if args.use_pure_fp16:
-        net_out_fp32 = fluid.layers.cast(x=net_out, dtype="float32")
-        softmax_out = fluid.layers.softmax(net_out_fp32, use_cudnn=False)
-    else:
-        softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
+        net_out = fluid.layers.cast(x=net_out, dtype="float32")
+    softmax_out = fluid.layers.softmax(net_out, use_cudnn=False)
 
     if is_train and args.use_label_smoothing:
         cost = _calc_label_smoothing_loss(softmax_out, label, args.class_dim,
                                           args.label_smoothing_epsilon)
-
     else:
         cost = fluid.layers.cross_entropy(input=softmax_out, label=label)
 
@@ -68,7 +65,7 @@ def _basic_model(data, model, args, is_train):
 
 def _googlenet_model(data, model, args, is_train):
     """GoogLeNet model output, include avg_cost, acc_top1 and acc_top5
-        
+
     Returns:
          GoogLeNet model output
 
