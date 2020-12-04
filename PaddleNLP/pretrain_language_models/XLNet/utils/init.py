@@ -54,11 +54,8 @@ def init_checkpoint(exe, init_checkpoint_path, main_program, use_fp16=False):
             print("SKIP %s" % var.name)
             return False
 
-    fluid.io.load_vars(
-        exe,
-        init_checkpoint_path,
-        main_program=main_program,
-        predicate=existed_persitables)
+    fluid.load(
+        model_path=init_checkpoint_path, program=main_program, executor=exe)
 
     if use_fp16:
         cast_fp32_to_fp16(exe, main_program)
@@ -83,11 +80,8 @@ def init_pretraining_params(exe,
             print("SKIP %s" % var.name)
             return False
 
-    fluid.io.load_vars(
-        exe,
-        pretraining_params_path,
-        main_program=main_program,
-        predicate=existed_params)
+    fluid.io.load(
+        model_path=pretraining_params_path, program=main_program, executor=exe)
 
     if use_fp16:
         cast_fp32_to_fp16(exe, main_program)
