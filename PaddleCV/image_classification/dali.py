@@ -44,7 +44,8 @@ class HybridTrainPipe(Pipeline):
                  random_shuffle=True,
                  num_threads=4,
                  seed=42,
-                 pad_output=False):
+                 pad_output=False,
+                 output_dtype=types.FLOAT):
         super(HybridTrainPipe, self).__init__(
             batch_size, num_threads, device_id, seed=seed)
         self.input = ops.FileReader(
@@ -69,7 +70,7 @@ class HybridTrainPipe(Pipeline):
             device='gpu', resize_x=crop, resize_y=crop, interp_type=interp)
         self.cmnp = ops.CropMirrorNormalize(
             device="gpu",
-            output_dtype=types.FLOAT,
+            output_dtype=output_dtype,
             output_layout=types.NCHW,
             crop=(crop, crop),
             image_type=types.RGB,
@@ -107,7 +108,8 @@ class HybridValPipe(Pipeline):
                  random_shuffle=False,
                  num_threads=4,
                  seed=42,
-                 pad_output=False):
+                 pad_output=False,
+                 output_dtype=types.FLOAT):
         super(HybridValPipe, self).__init__(
             batch_size, num_threads, device_id, seed=seed)
         self.input = ops.FileReader(
@@ -121,7 +123,7 @@ class HybridValPipe(Pipeline):
             device="gpu", resize_shorter=resize_shorter, interp_type=interp)
         self.cmnp = ops.CropMirrorNormalize(
             device="gpu",
-            output_dtype=types.FLOAT,
+            output_dtype=output_dtype,
             output_layout=types.NCHW,
             crop=(crop, crop),
             image_type=types.RGB,
@@ -163,6 +165,7 @@ def build(settings, mode='train'):
     min_area = settings.lower_scale
     lower = settings.lower_ratio
     upper = settings.upper_ratio
+    output_dtype = types.FLOAT16 if settings.use_pure_fp16 else types.FLOAT
 
     interp = settings.interpolation or 1  # default to linear
     interp_map = {
@@ -196,7 +199,8 @@ def build(settings, mode='train'):
             mean,
             std,
             device_id=device_id,
-            pad_output=pad_output)
+            pad_output=pad_output,
+            output_dtype=output_dtype)
         pipe.build()
         return DALIGenericIterator(
             pipe, ['feed_image', 'feed_label'],
@@ -230,7 +234,8 @@ def build(settings, mode='train'):
             shard_id,
             num_shards,
             seed=42 + shard_id,
-            pad_output=pad_output)
+            pad_output=pad_output,
+            output_dtype=output_dtype)
         pipe.build()
         pipelines = [pipe]
         sample_per_shard = len(pipe) // num_shards
@@ -258,7 +263,8 @@ def build(settings, mode='train'):
                 idx,
                 num_shards,
                 seed=42 + idx,
-                pad_output=pad_output)
+                pad_output=pad_output,
+                output_dtype=output_dtype)
             pipe.build()
             pipelines.append(pipe)
         sample_per_shard = len(pipelines[0])

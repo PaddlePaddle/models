@@ -61,7 +61,7 @@ def build_program(is_train, main_prog, startup_prog, args):
         startup_prog: strartup program
         args: arguments
 
-    Returns : 
+    Returns :
         train mode: [Loss, global_lr, data_loader]
         test mode: [Loss, data_loader]
     """
@@ -85,12 +85,12 @@ def build_program(is_train, main_prog, startup_prog, args):
             if is_train:
                 optimizer = create_optimizer(args)
                 avg_cost = loss_out[0]
-                #XXX: fetch learning rate now, better implement is required here. 
+                #XXX: fetch learning rate now, better implement is required here.
                 global_lr = optimizer._global_learning_rate()
                 global_lr.persistable = True
                 loss_out.append(global_lr)
 
-                if args.use_fp16:
+                if args.use_amp:
                     optimizer = fluid.contrib.mixed_precision.decorate(
                         optimizer,
                         init_loss_scaling=args.scale_loss,
@@ -172,9 +172,9 @@ def validate(args,
 
 def train(args):
     """Train model
-    
+
     Args:
-        args: all arguments.    
+        args: all arguments.
     """
     startup_prog = fluid.Program()
     train_prog = fluid.Program()
