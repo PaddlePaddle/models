@@ -5,7 +5,7 @@
 ## 1. 任务说明
 本文主要介绍基于lstm的语言的模型的实现，给定一个输入词序列（中文分词、英文tokenize），计算其ppl（语言模型困惑度，用户表示句子的流利程度），基于循环神经网络语言模型的介绍可以[参阅论文](https://arxiv.org/abs/1409.2329)。相对于传统的方法，基于循环神经网络的方法能够更好的解决稀疏词的问题。
 
-**目前语言模型要求使用PaddlePaddle 1.7及以上版本或适当的develop版本。**
+**目前语言模型要求使用PaddlePaddle 1.8及以上版本或适当的develop版本。**
 
 同时推荐用户参考[IPython Notebook demo](https://aistudio.baidu.com/aistudio/projectDetail/122290)
 
@@ -53,7 +53,7 @@ cd data; sh download_data.sh
 ### 训练或fine-tune
 任务训练启动命令如下：
 ```
-sh run.sh
+bash run.sh
 ```
 需要指定数据的目录，模型的大小(默认为small，用户可以选择medium， 或者large)。
 

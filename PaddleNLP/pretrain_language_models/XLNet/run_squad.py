@@ -155,7 +155,9 @@ def get_qa_outputs(xlnet_config, features, is_training=False):
     # logit of the end position
     if is_training:
         start_positions = features['start_positions']
-        start_index = fluid.layers.one_hot(start_positions, depth=args.max_seq_length)
+        start_positions =  fluid.squeeze(start_positions, [-1])
+        start_index = fluid.one_hot(start_positions, depth=args.max_seq_length)
+
         # lbh,bl->bh
         trans_out = fluid.layers.transpose(output, perm=[1, 2, 0])
         start_index = fluid.layers.unsqueeze(start_index, axes=[2])
@@ -193,8 +195,7 @@ def get_qa_outputs(xlnet_config, features, is_training=False):
         end_log_probs = log_softmax(end_logits_masked)
     else:
         start_top_log_probs, start_top_index = fluid.layers.topk(start_log_probs, k=args.start_n_top)
-        start_top_index = fluid.layers.unsqueeze(start_top_index, [-1])
-        start_index = fluid.layers.one_hot(start_top_index, seq_len)
+        start_index = fluid.one_hot(start_top_index, seq_len)
         # lbh,bkl->bkh
         trans_out = fluid.layers.transpose(output, perm=[1, 2, 0])
         trans_start_index = fluid.layers.transpose(start_index, [0, 2, 1])
@@ -249,7 +250,8 @@ def get_qa_outputs(xlnet_config, features, is_training=False):
         return_dict["end_top_log_probs"] = end_top_log_probs
         return_dict["end_top_index"] = end_top_index
 
-    cls_index = fluid.layers.one_hot(cls_index, seq_len)
+    cls_index = fluid.squeeze(cls_index, [-1])
+    cls_index = fluid.one_hot(cls_index, seq_len)
     cls_index = fluid.layers.unsqueeze(cls_index, axes=[2])
     cls_feature = fluid.layers.matmul(x=trans_out, y=cls_index)
 
@@ -335,8 +337,8 @@ def create_model(xlnet_config, is_training=False):
     seq_len = input_ids.shape[1]
 
     def compute_loss(log_probs, positions):
-        one_hot_positions = fluid.layers.one_hot(positions, depth=seq_len)
-
+        one_hot_positions = fluid.squeeze(positions,[-1])
+        one_hot_positions = fluid.one_hot(positions, depth=seq_len)
         loss = -1 * fluid.layers.reduce_sum(one_hot_positions * log_probs, dim=-1)
         loss = fluid.layers.reduce_mean(loss)
         return loss
@@ -581,11 +583,11 @@ def train(args):
                 if steps % args.save_steps == 0 or steps == args.train_steps:
                     save_path = os.path.join(args.checkpoints,
                                              "step_" + str(steps))
-                    fluid.io.save_persistables(exe, save_path, train_program)
+                    fluid.save(model_path=save_path, program=train_program)
             except fluid.core.EOFException:
                 save_path = os.path.join(args.checkpoints,
                                          "step_" + str(steps) + "_final")
-                fluid.io.save_persistables(exe, save_path, train_program)
+                fluid.save(model_path=save_path, program=train_program)
                 train_data_loader.reset()
                 break
         print("Finish model training ...")
