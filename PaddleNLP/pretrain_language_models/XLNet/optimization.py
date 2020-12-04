@@ -110,10 +110,9 @@ def optimization(loss,
                 return True
         return False
 
-    optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr)
+    clip = fluid.clip.GradientClipByGlobalNorm(clip_norm=1.0)
 
-    fluid.clip.set_gradient_clip(
-        clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=1.0))
+    optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr, grad_clip=clip)
 
     param_list = dict()
 

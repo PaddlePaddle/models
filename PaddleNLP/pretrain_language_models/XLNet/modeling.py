@@ -619,7 +619,8 @@ def transformer_xl(inp_k,
         attr=fluid.ParamAttr(
             name=name + '_word_embedding', initializer=initializer),
         is_bias=False)
-    word_emb_k = fluid.layers.embedding(
+    inp_k = fluid.layers.reshape(inp_k, shape=[inp_k.shape[0], -1])
+    word_emb_k = fluid.embedding(
         input=inp_k,
         size=[n_token, d_model],
         dtype=data_type,
@@ -693,8 +694,7 @@ def transformer_xl(inp_k,
             dtype='int64')
 
         seg_mat = fluid.layers.transpose(seg_mat, perm=[1, 2, 0])
-        seg_mat = fluid.layers.unsqueeze(seg_mat, [-1])
-        seg_mat = fluid.layers.one_hot(seg_mat, 2)
+        seg_mat = fluid.one_hot(seg_mat, 2)
         seg_mat.stop_gradient = True
     else:
         seg_mat = None
@@ -899,7 +899,7 @@ def classification_loss(hidden,
                                  initializer=initializer),
                              bias_attr=name + '_logit_bias')
 
-    one_hot_target = fluid.layers.one_hot(labels, depth=n_class)
+    one_hot_target = fluid.one_hot(labels, depth=n_class)
     loss = -1.0 * fluid.layers.reduce_sum(
         log_softmax(logits) * one_hot_target, dim=-1)
 

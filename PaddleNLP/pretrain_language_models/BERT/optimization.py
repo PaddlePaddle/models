@@ -102,9 +102,9 @@ def optimization(loss,
         raise ValueError("Unkown learning rate scheduler, should be "
                          "'noam_decay' or 'linear_warmup_decay'")
 
-    optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr)
-    fluid.clip.set_gradient_clip(
-        clip=fluid.clip.GradientClipByGlobalNorm(clip_norm=1.0))
+    clip = fluid.clip.GradientClipByGlobalNorm(clip_norm=1.0)
+
+    optimizer = fluid.optimizer.Adam(learning_rate=scheduled_lr, grad_clip=clip)
 
     def exclude_from_weight_decay(param):
         name = param.name.rstrip(".master")
