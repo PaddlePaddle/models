@@ -25,7 +25,8 @@ class SquadExample(object):
                  orig_answer_text=None,
                  start_position=None,
                  end_position=None,
-                 is_impossible=False):
+                 is_impossible=False,
+                 **kwargs):
         self.qas_id = qas_id
         self.question_text = question_text
         self.doc_tokens = doc_tokens
