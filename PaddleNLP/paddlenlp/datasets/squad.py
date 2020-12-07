@@ -445,6 +445,9 @@ class SQuAD(Dataset):
 
         self.examples = examples
 
+    def __len__(self):
+        return len(self.data)
+
     def __getitem__(self, idx):
         feature = self.data[idx]
 
