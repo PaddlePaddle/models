@@ -25,8 +25,7 @@ class SquadExample(object):
                  orig_answer_text=None,
                  start_position=None,
                  end_position=None,
-                 is_impossible=False,
-                 **kwargs):
+                 is_impossible=False):
         self.qas_id = qas_id
         self.question_text = question_text
         self.doc_tokens = doc_tokens
@@ -105,7 +104,8 @@ class SQuAD(Dataset):
                  root=None,
                  doc_stride=128,
                  max_query_length=64,
-                 max_seq_length=512):
+                 max_seq_length=512,
+                 **kwargs):
 
         self.version_2_with_negative = version_2_with_negative
         self._get_data(root, segment, **kwargs)
