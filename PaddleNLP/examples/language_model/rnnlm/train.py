@@ -13,8 +13,9 @@ paddle.seed(102)
 
 
 def create_data_loader(batch_size, num_steps, data_path):
-    train_ds, valid_ds, test_ds = PTBDataset.get_datasets(
-        [batch_size] * 3, [num_steps] * 3, ['train', 'eval', 'test'])
+    train_ds = PTBDataset(batch_size, num_steps,'train')
+    valid_ds = PTBDataset(batch_size, num_steps,'eval')
+    test_ds = PTBDataset(batch_size, num_steps,'test')
 
     train_loader = DataLoader(train_ds, return_list=True, batch_size=None)
     valid_loader = DataLoader(valid_ds, return_list=True, batch_size=None)
