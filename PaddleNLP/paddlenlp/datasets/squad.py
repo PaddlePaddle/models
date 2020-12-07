@@ -104,8 +104,7 @@ class SQuAD(Dataset):
                  root=None,
                  doc_stride=128,
                  max_query_length=64,
-                 max_seq_length=512,
-                 **kwargs):
+                 max_seq_length=512):
 
         self.version_2_with_negative = version_2_with_negative
         self._get_data(root, segment, **kwargs)
@@ -444,6 +443,9 @@ class SQuAD(Dataset):
                     examples.append(example)
 
         self.examples = examples
+
+    def __len__(self):
+        return len(self.data)
 
     def __getitem__(self, idx):
         feature = self.data[idx]
