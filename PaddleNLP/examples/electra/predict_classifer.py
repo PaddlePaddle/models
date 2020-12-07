@@ -28,7 +28,7 @@ from paddle.io import DataLoader
 
 from paddlenlp.datasets.dataset import *
 from paddlenlp.datasets.glue import *
-from paddlenlp.data import *
+from paddlenlp.data.batchify import *
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
 
@@ -47,43 +47,75 @@ def do_prdict(args):
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    test_dataset = dataset_class.get_datasets(["test"])
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
-
-    trans_func = partial(
-        convert_example,
-        tokenizer=tokenizer,
-        label_list=test_dataset.get_labels(),
-        max_seq_length=args.max_seq_length,
-        is_test=True)
-    test_dataset = test_dataset.apply(trans_func, lazy=True)
-    test_batch_sampler = paddle.io.BatchSampler(
-        test_dataset, batch_size=args.batch_size, shuffle=False)
     batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # segment
         Stack(),  # length
     ): fn(samples)[:2]
-    test_data_loader = DataLoader(
-        dataset=test_dataset,
-        batch_sampler=test_batch_sampler,
-        collate_fn=batchify_fn,
-        num_workers=0,
-        return_list=True)
+
+    if args.task_name == "mnli":
+        test_dataset_matched = dataset_class("test_matched")
+        test_dataset_mismatched = dataset_class("test_mismatched")
+        trans_func = partial(
+            convert_example,
+            tokenizer=tokenizer,
+            label_list=test_dataset_matched.get_labels(),
+            max_seq_length=args.max_seq_length,
+            is_test=True)
+        test_dataset_matched = SimpleDataset(test_dataset_matched).apply(
+            trans_func, lazy=True)
+        test_dataset_mismatched = SimpleDataset(test_dataset_mismatched).apply(
+            trans_func, lazy=True)
+        test_batch_sampler_matched = paddle.io.BatchSampler(
+            test_dataset_matched, batch_size=args.batch_size, shuffle=False)
+        test_batch_sampler_mismatched = paddle.io.BatchSampler(
+            test_dataset_mismatched, batch_size=args.batch_size, shuffle=False)
+        test_data_loader_matched = DataLoader(
+            dataset=test_dataset_matched,
+            batch_sampler=test_batch_sampler_matched,
+            collate_fn=batchify_fn,
+            num_workers=0,
+            return_list=True)
+        test_data_loader_mismatched = DataLoader(
+            dataset=test_dataset_mismatched,
+            batch_sampler=test_batch_sampler_mismatched,
+            collate_fn=batchify_fn,
+            num_workers=0,
+            return_list=True)
+    else:
+        test_dataset = dataset_class("test")
+        trans_func = partial(
+            convert_example,
+            tokenizer=tokenizer,
+            label_list=test_dataset.get_labels(),
+            max_seq_length=args.max_seq_length,
+            is_test=True)
+        test_dataset = SimpleDataset(test_dataset).apply(trans_func, lazy=True)
+        test_batch_sampler = paddle.io.BatchSampler(
+            test_dataset, batch_size=args.batch_size, shuffle=False)
+        test_data_loader = DataLoader(
+            dataset=test_dataset,
+            batch_sampler=test_batch_sampler,
+            collate_fn=batchify_fn,
+            num_workers=0,
+            return_list=True)
 
     # for debug
     model = model_class.from_pretrained(args.model_name_or_path)
-    return_dict = model.return_dict
 
     model.eval()
+    if args.task_name == "mnli":
+        predict(model, test_data_loader_matched)
+        predict(model, test_data_loader_mismatched)
+    else:
+        predict(model, test_data_loader)
 
-    for batch in test_data_loader:
+
+def predict(model, data_loader):
+    for batch in data_loader:
         input_ids, segment_ids = batch
-        model_output = model(input_ids=input_ids, token_type_ids=segment_ids)
-        if not return_dict:
-            logits = model_output[0]
-        else:
-            logits = model_output.logits
+        logits = model(input_ids=input_ids, token_type_ids=segment_ids)
         #print("logits.shape is : %s" % logits.shape)
         for i, rs in enumerate(paddle.argmax(logits, -1).numpy()):
             print("data : %s, predict : %s" % (input_ids[i], rs))

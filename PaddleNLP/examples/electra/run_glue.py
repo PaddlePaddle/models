@@ -25,9 +25,10 @@ from functools import partial
 import numpy as np
 import paddle
 from paddle.io import DataLoader
+from paddle.metric import Metric, Accuracy, Precision, Recall
 
-from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
-from paddlenlp.data import Stack, Tuple, Pad
+from paddlenlp.datasets import SimpleDataset, GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
+from paddlenlp.data.batchify import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
 
@@ -35,15 +36,216 @@ FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
+
+class Accu_and_F1(Metric):
+    """
+    Encapsulates Accuracy, Precision, Recall and F1 metric logic.
+    """
+
+    def __init__(self,
+                 topk=(1, ),
+                 pos_label=1,
+                 name='acc_and_f1',
+                 *args,
+                 **kwargs):
+        super(Accu_and_F1, self).__init__(*args, **kwargs)
+        self.topk = topk
+        self.pos_label = pos_label
+        self._name = name
+        self.accu = Accuracy(self.topk, *args, **kwargs)
+        self.precision = Precision(*args, **kwargs)
+        self.recall = Recall(*args, **kwargs)
+        self.reset()
+
+    def compute(self, pred, label, *args):
+        self.label = label
+        self.preds_pos = paddle.nn.functional.softmax(pred)[:, self.pos_label]
+        return self.accu.compute(pred, label)
+
+    def update(self, correct, *args):
+        self.accu.update(correct)
+        self.precision.update(self.preds_pos, self.label)
+        self.recall.update(self.preds_pos, self.label)
+
+    def accumulate(self):
+        accu = self.accu.accumulate()
+        precision = self.precision.accumulate()
+        recall = self.recall.accumulate()
+        if precision == 0.0 or recall == 0.0:
+            f1 = 0.0
+        else:
+            # 1/f1 = 1/2 * (1/precision + 1/recall)
+            f1 = (2 * precision * recall) / (precision + recall)
+        return {
+            "accu": accu,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "accu_and_f1": (accu + f1) / 2,
+        }
+
+    def reset(self):
+        self.accu.reset()
+        self.precision.reset()
+        self.recall.reset()
+        self.label = None
+        self.preds_pos = None
+
+    def name(self):
+        """
+        Return name of metric instance.
+        """
+        return self._name
+
+
+class Mcc(Metric):
+    """
+    Matthews correlation coefficient
+    https://en.wikipedia.org/wiki/Matthews_correlation_coefficient.
+    """
+
+    def __init__(self, name='mcc', *args, **kwargs):
+        super(Mcc, self).__init__(*args, **kwargs)
+        self._name = name
+        self.tp = 0  # true positive
+        self.fp = 0  # false positive
+        self.tn = 0  # true negative
+        self.fn = 0  # false negative
+
+    def update(self, preds_and_labels):
+        preds = paddle.argsort(preds_and_labels[0], descending=True)[:, :1]
+        preds = preds.numpy()
+        labels = paddle.reshape(preds_and_labels[1], (-1, 1))
+        labels = labels.numpy()
+        sample_num = labels.shape[0]
+        for i in range(sample_num):
+            pred = preds[i]
+            label = labels[i]
+            if pred == 1:
+                if pred == label:
+                    self.tp += 1
+                else:
+                    self.fp += 1
+            else:
+                if pred == label:
+                    self.tn += 1
+                else:
+                    self.fn += 1
+
+    def accumulate(self):
+        if self.tp == 0 or self.fp == 0 or self.tn == 0 or self.fn == 0:
+            mcc = 0.0
+        else:
+            # mcc = (tp*tn-fp*fn)/ sqrt(tp+fp)(tp+fn)(tn+fp)(tn+fn))
+            mcc = (self.tp * self.tn - self.fp * self.fn) / math.sqrt(
+                (self.tp + self.fp) * (self.tp + self.fn) *
+                (self.tn + self.fp) * (self.tn + self.fn))
+        return {"mcc": mcc, }
+
+    def reset(self):
+        self.tp = 0  # true positive
+        self.fp = 0  # false positive
+        self.tn = 0  # true negative
+        self.fn = 0  # false negative
+
+    def name(self):
+        """
+        Return name of metric instance.
+        """
+        return self._name
+
+
+class Pearson_and_Spearman(Metric):
+    """
+    Pearson correlation coefficient
+    https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
+    Spearman's rank correlation coefficient
+    https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient.
+    """
+
+    def __init__(self, name='mcc', *args, **kwargs):
+        super(Pearson_and_Spearman, self).__init__(*args, **kwargs)
+        self._name = name
+        self.preds = []
+        self.labels = []
+
+    def update(self, preds_and_labels):
+        preds = paddle.reshape(preds_and_labels[0], (-1, 1))
+        preds = np.squeeze(preds.numpy()).tolist()
+        labels = paddle.reshape(preds_and_labels[1], (-1, 1))
+        labels = np.squeeze(labels.numpy()).tolist()
+        self.preds.append(preds)
+        self.labels.append(labels)
+
+    def accumulate(self):
+        preds = [item for sublist in self.preds for item in sublist]
+        labels = [item for sublist in self.labels for item in sublist]
+        #import pdb; pdb.set_trace()
+        pearson = self.pearson(preds, labels)
+        spearman = self.spearman(preds, labels)
+        return {
+            "pearson": pearson,
+            "spearman": spearman,
+            "pearson_and_spearman": (pearson + spearman) / 2,
+        }
+
+    def pearson(self, preds, labels):
+        n = len(preds)
+        #simple sums
+        sum1 = sum(float(preds[i]) for i in range(n))
+        sum2 = sum(float(labels[i]) for i in range(n))
+        #sum up the squares
+        sum1_pow = sum([pow(v, 2.0) for v in preds])
+        sum2_pow = sum([pow(v, 2.0) for v in labels])
+        #sum up the products
+        p_sum = sum([preds[i] * labels[i] for i in range(n)])
+
+        numerator = p_sum - (sum1 * sum2 / n)
+        denominator = math.sqrt(
+            (sum1_pow - pow(sum1, 2) / n) * (sum2_pow - pow(sum2, 2) / n))
+        if denominator == 0:
+            return 0.0
+        return numerator / denominator
+
+    def spearman(self, preds, labels):
+        preds_rank = self.get_rank(preds)
+        labels_rank = self.get_rank(labels)
+
+        total = 0
+        n = len(preds)
+        for i in range(n):
+            total += pow((preds_rank[i] - labels_rank[i]), 2)
+        spearman = 1 - float(6 * total) / (n * (pow(n, 2) - 1))
+        return spearman
+
+    def get_rank(self, raw_list):
+        x = np.array(raw_list)
+        r_x = np.empty(x.shape, dtype=int)
+        y = np.argsort(-x)
+        for i, k in enumerate(y):
+            r_x[k] = i + 1
+        return r_x
+
+    def reset(self):
+        self.preds = []
+        self.labels = []
+
+    def name(self):
+        """
+        Return name of metric instance.
+        """
+        return self._name
+
+
 TASK_CLASSES = {
-    "cola": (GlueCoLA, paddle.metric.Accuracy),
-    "sst-2": (GlueSST2, paddle.metric.Accuracy),
-    "mrpc": (GlueMRPC, paddle.metric.Accuracy),
-    "sts-b": (GlueSTSB, paddle.metric.Accuracy),
-    "qqp": (GlueQQP, paddle.metric.Accuracy),
-    "mnli": (GlueMNLI, paddle.metric.Accuracy),
-    "qnli": (GlueQNLI, paddle.metric.Accuracy),
-    "rte": (GlueRTE, paddle.metric.Accuracy),
+    "cola": (GlueCoLA, Mcc),
+    "sst-2": (GlueSST2, Accuracy),
+    "mrpc": (GlueMRPC, Accu_and_F1),
+    "sts-b": (GlueSTSB, Pearson_and_Spearman),
+    "qqp": (GlueQQP, Accu_and_F1),
+    "mnli": (GlueMNLI, Accuracy),
+    "qnli": (GlueQNLI, Accuracy),
+    "rte": (GlueRTE, Accuracy),
 }
 
 MODEL_CLASSES = {
@@ -57,21 +259,17 @@ def set_seed(args):
     paddle.seed(args.seed + paddle.distributed.get_rank())
 
 
-def evaluate(model, loss_fct, metric, data_loader, return_dict):
+def evaluate(model, loss_fct, metric, data_loader):
     model.eval()
     metric.reset()
     for batch in data_loader:
         input_ids, segment_ids, labels = batch
-        model_output = model(input_ids=input_ids, token_type_ids=segment_ids)
-        if not return_dict:
-            logits = model_output[0]
-        else:
-            logits = model_output.logits
+        logits = model(input_ids=input_ids, token_type_ids=segment_ids)
         loss = loss_fct(logits, labels)
         correct = metric.compute(logits, labels)
         metric.update(correct)
-        accu = metric.accumulate()
-    print("eval loss: %f, accu: %f, " % (loss.numpy(), accu), end='')
+    accu = metric.accumulate()
+    print("eval loss: %f, accu: %s, " % (loss.numpy(), accu), end='')
     model.train()
 
 
@@ -161,7 +359,7 @@ def do_train(args):
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    train_dataset = dataset_class.get_datasets(["train"])
+    train_dataset = dataset_class("train")
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
 
     trans_func = partial(
@@ -169,7 +367,7 @@ def do_train(args):
         tokenizer=tokenizer,
         label_list=train_dataset.get_labels(),
         max_seq_length=args.max_seq_length)
-    train_dataset = train_dataset.apply(trans_func, lazy=True)
+    train_dataset = SimpleDataset(train_dataset).apply(trans_func, lazy=True)
     train_batch_sampler = paddle.io.DistributedBatchSampler(
         train_dataset, batch_size=args.batch_size, shuffle=True)
     batchify_fn = lambda samples, fn=Tuple(
@@ -185,10 +383,11 @@ def do_train(args):
         num_workers=0,
         return_list=True)
     if args.task_name == "mnli":
-        dev_dataset_matched, dev_dataset_mismatched = dataset_class.get_datasets(
-            ["dev_matched", "dev_mismatched"])
-        dev_dataset_matched = dev_dataset_matched.apply(trans_func, lazy=True)
-        dev_dataset_mismatched = dev_dataset_mismatched.apply(
+        dev_dataset_matched = dataset_class("dev_matched")
+        dev_dataset_mismatched = dataset_class("dev_mismatched")
+        dev_dataset_matched = SimpleDataset(dev_dataset_matched).apply(
+            trans_func, lazy=True)
+        dev_dataset_mismatched = SimpleDataset(dev_dataset_mismatched).apply(
             trans_func, lazy=True)
         dev_batch_sampler_matched = paddle.io.BatchSampler(
             dev_dataset_matched, batch_size=args.batch_size, shuffle=False)
@@ -207,8 +406,8 @@ def do_train(args):
             num_workers=0,
             return_list=True)
     else:
-        dev_dataset = dataset_class.get_datasets(["dev"])
-        dev_dataset = dev_dataset.apply(trans_func, lazy=True)
+        dev_dataset = dataset_class("dev")
+        dev_dataset = SimpleDataset(dev_dataset).apply(trans_func, lazy=True)
         dev_batch_sampler = paddle.io.BatchSampler(
             dev_dataset, batch_size=args.batch_size, shuffle=False)
         dev_data_loader = DataLoader(
@@ -218,9 +417,10 @@ def do_train(args):
             num_workers=0,
             return_list=True)
 
+    num_labels = 1 if train_dataset.get_labels(
+    ) == None else train_dataset.get_labels()
     model = model_class.from_pretrained(
-        args.model_name_or_path, num_labels=len(train_dataset.get_labels()))
-    return_dict = model.return_dict
+        args.model_name_or_path, num_labels=num_labels)
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
@@ -268,12 +468,7 @@ def do_train(args):
     for epoch in range(args.num_train_epochs):
         for step, batch in enumerate(train_data_loader):
             input_ids, segment_ids, labels = batch
-            model_output = model(
-                input_ids=input_ids, token_type_ids=segment_ids)
-            if not return_dict:
-                logits = model_output[0]
-            else:
-                logits = model_output.logits
+            logits = model(input_ids=input_ids, token_type_ids=segment_ids)
             loss = loss_fct(logits, labels)
             if global_step % args.logging_steps == 0:
                 print(
@@ -289,14 +484,12 @@ def do_train(args):
             if global_step > 1 and global_step % args.save_steps == 0:
                 tic_eval = time.time()
                 if args.task_name == "mnli":
-                    evaluate(model, loss_fct, metric, dev_data_loader_matched,
-                             return_dict)
+                    evaluate(model, loss_fct, metric, dev_data_loader_matched)
                     evaluate(model, loss_fct, metric,
-                             dev_data_loader_mismatched, return_dict)
+                             dev_data_loader_mismatched)
                     print("eval done total : %s s" % (time.time() - tic_eval))
                 else:
-                    evaluate(model, loss_fct, metric, dev_data_loader,
-                             return_dict)
+                    evaluate(model, loss_fct, metric, dev_data_loader)
                     print("eval done total : %s s" % (time.time() - tic_eval))
                 if (not args.n_gpu > 1) or paddle.distributed.get_rank() == 0:
                     output_dir = os.path.join(args.output_dir,

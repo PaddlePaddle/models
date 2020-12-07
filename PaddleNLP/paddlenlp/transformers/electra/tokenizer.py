@@ -47,47 +47,28 @@ class ElectraTokenizer(PretrainedTokenizer):
     resource_files_names = {"vocab_file": "vocab.txt"}  # for save_pretrained
     pretrained_resource_files_map = {
         "vocab_file": {
-            "electra-small-generator":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-small-generator/vocab.txt",
-            "electra-base-generator":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-base-generator/vocab.txt",
-            "electra-large-generator":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-large-generator/vocab.txt",
-            "electra-small-discriminator":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-small-discriminator/vocab.txt",
-            "electra-base-discriminator":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-base-discriminator/vocab.txt",
-            "electra-large-discriminator":
-            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-large-discriminator/vocab.txt",
-            "chinese-electra-discriminator-base":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/chinese-electra-discriminator-base/vocab.txt",
-            "chinese-electra-discriminator-small":
-            "http://paddlenlp.bj.bcebos.com/models/transformers/chinese-electra-discriminator-small/vocab.txt",
+            "electra-small":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-small-vocab.txt",
+            "electra-base":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-base-vocab.txt",
+            "electra-large":
+            "https://paddlenlp.bj.bcebos.com/models/transformers/electra-large-vocab.txt",
         }
     }
     pretrained_init_configuration = {
-        "electra-small-generator": {
+        "electra-small": {
             "do_lower_case": True
         },
-        "electra-base-generator": {
+        "electra-base": {
             "do_lower_case": True
         },
-        "electra-large-generator": {
+        "electra-large": {
             "do_lower_case": True
         },
-        "electra-small-discriminator": {
+        "chinese-electra-base": {
             "do_lower_case": True
         },
-        "electra-base-discriminator": {
-            "do_lower_case": True
-        },
-        "electra-large-discriminator": {
-            "do_lower_case": True
-        },
-        "chinese-electra-discriminator-base": {
-            "do_lower_case": True
-        },
-        "chinese-electra-discriminator-small": {
+        "chinese-electra-small": {
             "do_lower_case": True
         }
     }
@@ -163,15 +144,12 @@ class ElectraTokenizer(PretrainedTokenizer):
     def num_special_tokens_to_add(self, pair=False):
         """
         Returns the number of added tokens when encoding a sequence with special tokens.
-
         Note:
             This encodes inputs and checks the number of added tokens, and is therefore not efficient. Do not put this
             inside your training loop.
-
         Args:
             pair: Returns the number of added tokens in the case of a sequence pair if set to True, returns the
                 number of added tokens in the case of a single sequence if set to False.
-
         Returns:
             Number of tokens added to sequences
         """
@@ -190,13 +168,11 @@ class ElectraTokenizer(PretrainedTokenizer):
         ::
             - single sequence: ``[CLS] X [SEP]``
             - pair of sequences: ``[CLS] A [SEP] B [SEP]``
-
         Args:
             token_ids_0 (:obj:`List[int]`):
                 List of IDs to which the special tokens will be added.
             token_ids_1 (:obj:`List[int]`, `optional`):
                 Optional second list of IDs for sequence pairs.
-
         Returns:
             :obj:`List[int]`: List of input_id with the appropriate special tokens.
         """
@@ -211,21 +187,16 @@ class ElectraTokenizer(PretrainedTokenizer):
                                              token_ids_1=None):
         """
         Create a mask from the two sequences passed to be used in a sequence-pair classification task. 
-
         A BERT sequence pair mask has the following format:
         ::
-
             0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1
             | first sequence    | second sequence |
-
         If :obj:`token_ids_1` is :obj:`None`, this method only returns the first portion of the mask (0s).
-
         Args:
             token_ids_0 (:obj:`List[int]`):
                 List of IDs.
             token_ids_1 (:obj:`List[int]`, `optional`):
                 Optional second list of IDs for sequence pairs.
-
         Returns:
             :obj:`List[int]`: List of token_type_id according to the given sequence(s).
         """
@@ -251,7 +222,6 @@ class ElectraTokenizer(PretrainedTokenizer):
         """
         Returns a dictionary containing the encoded sequence or sequence pair and additional information:
         the mask for sequence classification and the overflowing elements if a ``max_seq_len`` is specified.
-
         Args:
             text (:obj:`str`, :obj:`List[str]` or :obj:`List[int]`):
                 The first sequence to be encoded. This can be a string, a list of strings (tokenized string using
@@ -270,7 +240,6 @@ class ElectraTokenizer(PretrainedTokenizer):
                 model's max length.
             truncation_strategy (:obj:`str`, `optional`, defaults to `longest_first`):
                 String selected in the following options:
-
                 - 'longest_first' (default) Iteratively reduce the inputs sequence until the input is under max_seq_len
                   starting from the longest one at each token (when there is a pair of input sequences)
                 - 'only_first': Only truncate the first sequence
@@ -288,10 +257,8 @@ class ElectraTokenizer(PretrainedTokenizer):
                 Set to True to return overflowing token information (default False).
             return_special_tokens_mask (:obj:`bool`, `optional`, defaults to :obj:`False`):
                 Set to True to return special tokens mask information (default False).
-
         Return:
             A Dictionary of shape::
-
                 {
                     input_ids: list[int],
                     position_ids: list[int] if return_position_ids is True (default)
@@ -302,9 +269,7 @@ class ElectraTokenizer(PretrainedTokenizer):
                     num_truncated_tokens: int if a ``max_seq_len`` is specified and return_overflowing_tokens is True
                     special_tokens_mask: list[int] if return_special_tokens_mask is True
                 }
-
             With the fields:
-
             - ``input_ids``: list of token ids to be fed to a model
             - ``position_ids``: list of token position ids to be fed to a model
             - ``segment_ids``: list of token type ids to be fed to a model
