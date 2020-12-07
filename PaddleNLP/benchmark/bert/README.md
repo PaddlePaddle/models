@@ -1,8 +1,8 @@
 # BERT Benchmark with Fleet API
 
-先配置运行环境
-export PYTHONPATH=/home/fangzeyang/PaddleNLP
-export DATA_DIR=/home/fangzeyang/bert_data/wikicorpus_en
+先配置运行环境，clone PaddleNLP的代码，同时下载好预训练的数据到相应的位置
+export PYTHONPATH=${HOME}/models/PaddleNLP
+export DATA_DIR=${HOME}/bert_data/wikicorpus_en
 
 ## NLP 任务中的Pretraining
 
