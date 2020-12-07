@@ -49,7 +49,7 @@ def create_infer_loader(args):
             prepare_infer_input,
             bos_idx=args.bos_idx,
             eos_idx=args.eos_idx,
-            pad_idx=args.eos_idx),
+            pad_idx=args.bos_idx),
         num_workers=0,
         return_list=True)
     data_loaders = (data_loader, batch_sampler.__len__)
