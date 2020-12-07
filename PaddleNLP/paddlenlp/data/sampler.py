@@ -174,7 +174,8 @@ class SamplerHelper(object):
               batch_size,
               drop_last=False,
               batch_size_fn=None,
-              batch_fn=None):
+              batch_fn=None,
+              batch_by_token=False):
         """
         To produce a BatchSampler.
         Agrs:
@@ -185,25 +186,33 @@ class SamplerHelper(object):
         Returns:
             SamplerHelper
         """
+        ori_batch_size_fn = batch_size_fn
         if batch_size_fn is None:
-            ori_batch_size_fn = None
-            batch_size_fn = lambda new, count, sofar, data_source: count
+            print("batch size fn is None")
+            batch_size_fn = lambda new, count, sofar, max_len, data_source: count * max_len
 
         def _impl():
             data_source = self.data_source
-            minibatch, size_so_far = [], 0
+            minibatch, size_so_far, max_len = [], 0, 0
             for idx in iter(self):
                 minibatch.append(idx)
+                cur_len = len(data_source[idx][0]) if batch_by_token else 1
+                max_len = max(max_len, cur_len)
                 size_so_far = batch_size_fn(idx,
                                             len(minibatch), size_so_far,
-                                            data_source)
+                                            max_len, data_source)
                 if size_so_far == batch_size:
                     yield minibatch
-                    minibatch, size_so_far = [], 0
+                    minibatch, size_so_far, max_len = [], 0, 0
                 elif size_so_far > batch_size:
+                    if len(minibatch) == 1:
+                        raise ValueError(
+                            "Please increase the value of `batch_size`, or limit the max length of batch"
+                        )
                     yield minibatch[:-1]
+                    max_len = cur_len
                     minibatch, size_so_far = minibatch[-1:], batch_size_fn(
-                        idx, 1, 0, data_source)
+                        idx, 1, 0, max_len, data_source)
             if minibatch and not drop_last:
                 yield minibatch
 

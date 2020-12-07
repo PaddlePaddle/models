@@ -276,16 +276,17 @@ def prepare_train_input(insts, pad_id):
 
 
 if __name__ == '__main__':
-    batch_size = 32
+    batch_size = 32  # 4096
     pad_id = 2
 
     transform_func = IWSLT15.get_default_transform_func()
     train_dataset = IWSLT15(transform_func=transform_func)
 
     key = (lambda x, data_source: len(data_source[x][0]))
+
     train_batch_sampler = SamplerHelper(train_dataset).shuffle().sort(
         key=key, buffer_size=batch_size * 20).batch(
-            batch_size=batch_size, drop_last=True).shard()
+            batch_size=batch_size, drop_last=True, batch_by_token=True).shard()
 
     train_loader = paddle.io.DataLoader(
         train_dataset,
@@ -293,6 +294,8 @@ if __name__ == '__main__':
         collate_fn=partial(
             prepare_train_input, pad_id=pad_id))
 
-    for data in train_loader:
-        print(data)
-        break
+    for i, data in enumerate(train_loader):
+        print(data[1])
+        print(paddle.max(data[1]) * len(data[1]))
+        print(len(data[1]))
+        print("*******************")
