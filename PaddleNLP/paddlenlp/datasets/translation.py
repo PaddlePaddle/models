@@ -276,7 +276,7 @@ def prepare_train_input(insts, pad_id):
 
 
 if __name__ == '__main__':
-    batch_size = 32  # 4096
+    batch_size = 4096  # 32
     pad_id = 2
 
     transform_func = IWSLT15.get_default_transform_func()
@@ -298,4 +298,3 @@ if __name__ == '__main__':
         print(data[1])
         print(paddle.max(data[1]) * len(data[1]))
         print(len(data[1]))
-        print("*******************")

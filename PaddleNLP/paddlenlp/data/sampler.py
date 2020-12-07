@@ -188,7 +188,6 @@ class SamplerHelper(object):
         """
         ori_batch_size_fn = batch_size_fn
         if batch_size_fn is None:
-            print("batch size fn is None")
             batch_size_fn = lambda new, count, sofar, max_len, data_source: count * max_len
 
         def _impl():
