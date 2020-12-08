@@ -171,7 +171,7 @@ def do_train(args):
                     lr = optimizer.get_lr()
                 else:
                     lr = scheduler.get_lr()
-                logger_info = "step_idx: %d, epoch: %d, batch: %d, learning rate: %f, " \
+                logger_info = "step_idx: %d, epoch: %d, batch: %d, learning rate: %.16f, " \
                               "speed: %f ms/batch, loss: %f" % \
                               (step_idx, pass_id, batch_id, lr,
                                elapsed * 1000.0 / args.print_step, cur_loss)
@@ -277,8 +277,7 @@ def do_train(args):
             if args.scheduler in ['cosine', 'dev_perf']:
                 if step_idx < args.warmup_steps:
                     curr_lr = args.learning_rate * step_idx / args.warmup_steps
-                    # TODO: reset learning rate during warmup.
-                    # scheduler.base_lr = curr_lr
+                    scheduler.base_lr = curr_lr
                 else:
                     if args.scheduler == 'cosine':
                         scheduler.step()
