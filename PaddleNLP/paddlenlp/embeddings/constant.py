@@ -20,8 +20,8 @@ URL_ROOT = "http://127.0.0.1:8080"
 PAD_WORD = '[PAD]'
 UNK_WORD = '[UNK]'
 
-PAD_IDX = 0
-UNK_IDX = 1
+PAD_IDX = 1
+UNK_IDX = 0
 
 
 # FIXME(zhoushunjie): CorpusName is related to training setting of word2vec, need to modify
