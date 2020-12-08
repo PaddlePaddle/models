@@ -33,7 +33,7 @@ from paddlenlp.transformers.tokenizer_bert import BertTokenizer
 
 from run_glue import convert_example, TASK_CLASSES
 
-MODEL_CLASSES = {"bert": (BertForSequenceClassification, BertTokenizer), }
+MODEL_CLASSES = {"bert": (BertForSequenceClassification, BertTokenizer) }
 
 
 def parse_args():

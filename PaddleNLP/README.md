@@ -6,7 +6,7 @@
 
 ## Introduction
 
-PaddleNLP aims to accelerate NLP applications by powerful model zoo, easy-to-use API and detailed tutorials, It's also the NLP best practice for PaddlePaddle 2.0 API system.
+PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-to-use API with detailed tutorials, It's also the NLP best practice for PaddlePaddle 2.0 API system.
 
 ** This project is still UNDER ACTIVE DEVELOPMENT. **
 
@@ -29,7 +29,7 @@ PaddleNLP aims to accelerate NLP applications by powerful model zoo, easy-to-use
 * paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp
+pip install paddlenlp==2.0.0a
 ```
 
 ## Quick Start
@@ -37,7 +37,7 @@ pip install paddlenlp
 ### Quick Dataset Loading
 
 ```python
-train_ds, test_ds = paddlenlp.datasets.ChnSentiCorp(['train','test'])
+train_ds, test_ds = paddlenlp.datasets.ChnSentiCorp.get_datasets(['train','test'])
 ```
 
 ### Reusable Text Emebdding
@@ -72,4 +72,4 @@ List our notebook tutorials based on AI Studio.
 
 ## License
 
-PaddleNLP is provided under the [Apache-2.0 license](./LICENSE).
+PaddleNLP is provided under the [Apache-2.0 License](./LICENSE).
