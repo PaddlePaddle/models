@@ -39,23 +39,8 @@ def _get_idx_from_word(word, word_to_idx, unk_word=UNK_WORD):
 
 
 class BaseEmbeddingTokenizer(object):
-    def __init__(self,
-                 vocab_path,
-                 pad_idx=PAD_IDX,
-                 pad_word=PAD_WORD,
-                 unk_idx=UNK_IDX,
-                 unk_word=UNK_WORD):
-        self.vocab_path = vocab_path
-        self._word_to_idx = {pad_word: pad_idx, unk_word: unk_idx}
-        self.unk_word = unk_word
-        with open(vocab_path) as f:
-            idx = 2
-            for line in f.readlines():
-                if line.strip() == "":
-                    break
-                word, freq = line.split()
-                self._word_to_idx[word] = idx
-                idx += 1
+    def __init__(self, vocab):
+        self.vocab = vocab
 
     def get_tokenizer(self):
         return self.tokenizer
@@ -68,15 +53,13 @@ class BaseEmbeddingTokenizer(object):
 
 
 class JiebaEmbeddingTokenizer(BaseEmbeddingTokenizer):
-    def __init__(self,
-                 vocab_path,
-                 pad_idx=PAD_IDX,
-                 pad_word=PAD_WORD,
-                 unk_idx=UNK_IDX,
-                 unk_word=UNK_WORD):
-        super(JiebaEmbeddingTokenizer, self).__init__(
-            vocab_path, pad_idx, pad_word, unk_idx, unk_word)
-        self.tokenizer = jieba.Tokenizer(vocab_path)
+    def __init__(self, vocab):
+        super(JiebaEmbeddingTokenizer, self).__init__(vocab)
+        self.tokenizer = jieba.Tokenizer()
+        # initialize tokenizer
+        self.tokenizer.FREQ = {key: 1 for key in self.vocab.token_to_idx.keys()}
+        self.tokenizer.total = len(self.tokenizer.FREQ)
+        self.tokenizer.initialized = True
 
     def cut(self, sentence, cut_all=False, HMM=True):
         return [word for word in self.tokenizer.cut(sentence, cut_all, HMM)]
@@ -84,8 +67,8 @@ class JiebaEmbeddingTokenizer(BaseEmbeddingTokenizer):
     def encode(self, sentence, cut_all=False, HMM=True):
         words = self.cut(sentence, cut_all, HMM)
         return [
-            _get_idx_from_word(word, self._word_to_idx, self.unk_word)
-            for word in words
+            _get_idx_from_word(word, self.vocab.token_to_idx,
+                               self.vocab.unk_token) for word in words
         ]
 
 
@@ -105,8 +88,6 @@ class TokenEmbedding(nn.Embedding):
         corpus_path = get_corpus_path(corpus_name)
         vector_path = osp.join(EMBEDDING_HOME, corpus_path + ".tar",
                                corpus_path + ".npz")
-        self.vocab_path = osp.join(EMBEDDING_HOME, corpus_path + ".tar",
-                                   corpus_path + ".txt")
         if not osp.exists(vector_path):
             # download
             url = URL_ROOT + "/" + corpus_path + ".tar.gz"
@@ -154,12 +135,13 @@ class TokenEmbedding(nn.Embedding):
         self.vocab = Vocab.from_dict(
             word_to_idx, unk_token=unknown_word, pad_token=PAD_WORD)
         self.num_embeddings = embedding_table.shape[0]
+        if extended_vocab_path is not None:
+            # load new vocab table from file
+            trainable = True
         # import embedding
         super(TokenEmbedding, self).__init__(
             self.num_embeddings, self.embedding_dim, padding_idx=padding_idx)
         self.weight.set_value(embedding_table)
-        if extended_vocab_path is not None:
-            trainable = True
         self.set_trainable(trainable)
 
     def set_trainable(self, trainable):
@@ -171,7 +153,8 @@ class TokenEmbedding(nn.Embedding):
         return self(idx_tensor).numpy()
 
     def get_idx_from_word(self, word):
-        return _get_idx_from_word(word, self._word_to_idx, self.unknown_word)
+        return _get_idx_from_word(word, self.vocab.token_to_idx,
+                                  self.unknown_word)
 
     def get_idx_list_from_words(self, words):
         if isinstance(words, str):
