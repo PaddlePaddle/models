@@ -15,12 +15,9 @@ import paddle
 import paddle.fluid as fluid
 import utils.utility as utility
 
-<<<<<<< 7cce86e0543d1059e65060a91b2526d7b415534f
-=======
 AMP_MODEL_LIST = ["ResNet50", "SE_ResNet50_vd"]
 
 
->>>>>>> optimize code, add model ResNet50 and SE_ResNet50_vd to list
 def _calc_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
     """Calculate label smoothing loss
 
@@ -40,22 +37,14 @@ def _calc_label_smoothing_loss(softmax_out, label, class_dim, epsilon):
 def _basic_model(data, model, args, is_train):
     image = data[0]
     label = data[1]
-<<<<<<< 7cce86e0543d1059e65060a91b2526d7b415534f
-    if args.model == "ResNet50":
+    if args.model in AMP_MODEL_LIST:
         image_data = (fluid.layers.cast(image, 'float16')
-            if args.use_pure_fp16 and not args.use_dali else image)
+                      if args.use_pure_fp16 and not args.use_dali else image)
         image_transpose = fluid.layers.transpose(
-            image_data, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image_data
+            image_data,
+            [0, 2, 3, 1]) if args.data_format == 'NHWC' else image_data
         image_transpose.stop_gradient = image.stop_gradient
         net_out = model.net(input=image_transpose,
-=======
-
-    if args.model in AMP_MODEL_LIST:
-        image_in = fluid.layers.transpose(
-            image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
-        image_in.stop_gradient = image.stop_gradient
-        net_out = model.net(input=image_in,
->>>>>>> optimize code, add model ResNet50 and SE_ResNet50_vd to list
                             class_dim=args.class_dim,
                             data_format=args.data_format)
     else:
@@ -70,8 +59,8 @@ def _basic_model(data, model, args, is_train):
     else:
         cost = fluid.layers.cross_entropy(input=softmax_out, label=label)
 
-    target_cost = (fluid.layers.reduce_sum(cost) if args.use_pure_fp16
-        else fluid.layers.mean(cost))
+    target_cost = (fluid.layers.reduce_sum(cost)
+                   if args.use_pure_fp16 else fluid.layers.mean(cost))
     acc_top1 = fluid.layers.accuracy(input=softmax_out, label=label, k=1)
     acc_top5 = fluid.layers.accuracy(
         input=softmax_out, label=label, k=min(5, args.class_dim))
@@ -113,21 +102,14 @@ def _mixup_model(data, model, args, is_train):
     y_b = data[2]
     lam = data[3]
 
-<<<<<<< 7cce86e0543d1059e65060a91b2526d7b415534f
-    if args.model == "ResNet50":
+    if args.model in AMP_MODEL_LIST:
         image_data = (fluid.layers.cast(image, 'float16')
-            if args.use_pure_fp16 and not args.use_dali else image)
+                      if args.use_pure_fp16 and not args.use_dali else image)
         image_transpose = fluid.layers.transpose(
-            image_data, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image_data
+            image_data,
+            [0, 2, 3, 1]) if args.data_format == 'NHWC' else image_data
         image_transpose.stop_gradient = image.stop_gradient
         net_out = model.net(input=image_transpose,
-=======
-    if args.model in AMP_MODEL_LIST:
-        image_in = fluid.layers.transpose(
-            image, [0, 2, 3, 1]) if args.data_format == 'NHWC' else image
-        image_in.stop_gradient = image.stop_gradient
-        net_out = model.net(input=image_in,
->>>>>>> optimize code, add model ResNet50 and SE_ResNet50_vd to list
                             class_dim=args.class_dim,
                             data_format=args.data_format)
     else:
