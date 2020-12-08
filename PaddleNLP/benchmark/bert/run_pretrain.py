@@ -136,11 +136,6 @@ def parse_args():
         type=float,
         default=1.0,
         help="The value of scale_loss for fp16.")
-    parser.add_argument(
-        "--use_dynamic_loss_scaling",
-        type=distutils.util.strtobool,
-        default=True,
-        help="Whether to use dynamic loss scaling.")
     args = parser.parse_args()
     return args
 
@@ -173,7 +168,7 @@ def reset_program_state_dict(model, state_dict):
     return new_state_dict
 
 
-def construct_compiled_program(main_program, loss):
+def build_compiled_program(main_program, loss):
     exec_strategy = paddle.static.ExecutionStrategy()
     exec_strategy.num_threads = 1
     exec_strategy.num_iteration_per_drop_scope = 10000
@@ -267,7 +262,7 @@ def do_train(args):
             optimizer,
             amp_list,
             init_loss_scaling=args.scale_loss,
-            use_dynamic_loss_scaling=args.use_dynamic_loss_scaling)
+            use_dynamic_loss_scaling=True)
     # Use the fleet api to compile the distributed optimizer
     strategy = fleet.DistributedStrategy()
     optimizer = fleet.distributed_optimizer(optimizer, strategy=strategy)
@@ -282,7 +277,7 @@ def do_train(args):
     reset_state_dict = reset_program_state_dict(model, state_dict)
     paddle.static.set_program_state(main_program, reset_state_dict)
     # Construct the compiled program
-    main_program = construct_compiled_program(main_program, loss)
+    main_program = build_compiled_program(main_program, loss)
 
     pool = ThreadPoolExecutor(1)
     global_step = 0
