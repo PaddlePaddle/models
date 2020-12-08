@@ -118,7 +118,7 @@ class LSTMModel(nn.Layer):
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, query, title, query_seq_len, title_seq_len):
-        assert query_seq_len is not None and title_seq_len is not None, "Please "
+        assert query_seq_len is not None and title_seq_len is not None
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_query = self.embedder(query)
         embedded_title = self.embedder(title)
