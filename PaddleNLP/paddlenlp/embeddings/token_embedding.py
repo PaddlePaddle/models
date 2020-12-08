@@ -62,7 +62,7 @@ class JiebaEmbeddingTokenizer(BaseEmbeddingTokenizer):
         self.tokenizer.initialized = True
 
     def cut(self, sentence, cut_all=False, HMM=True):
-        return [word for word in self.tokenizer.cut(sentence, cut_all, HMM)]
+        return self.tokenizer.lcut(sentence, cut_all, HMM)
 
     def encode(self, sentence, cut_all=False, HMM=True):
         words = self.cut(sentence, cut_all, HMM)
@@ -77,7 +77,6 @@ class TokenEmbedding(nn.Embedding):
                  corpus_name=CorpusName.SOGOU_NEWS,
                  unknown_word=UNK_WORD,
                  unknown_word_vector=None,
-                 padding_idx=None,
                  extended_vocab_path=None,
                  trainable=True):
         if isinstance(corpus_name, str):
@@ -86,63 +85,78 @@ class TokenEmbedding(nn.Embedding):
             corpus_name = CorpusName(corpus_name)
 
         corpus_path = get_corpus_path(corpus_name)
-        vector_path = osp.join(EMBEDDING_HOME, corpus_path + ".tar",
-                               corpus_path + ".npz")
+        vector_path = osp.join(EMBEDDING_HOME, corpus_path + ".npz")
         if not osp.exists(vector_path):
             # download
             url = URL_ROOT + "/" + corpus_path + ".tar.gz"
             get_path_from_url(url, EMBEDDING_HOME)
 
         self.unknown_word = unknown_word
-        self.unk_idx = UNK_IDX
-        self.pad_idx = PAD_IDX
-        if padding_idx is not None:
-            self.pad_idx = padding_idx
-            if UNK_IDX == padding_idx:
-                self.unk_idx = PAD_IDX
 
         vector_np = np.load(vector_path)
-        self._idx_to_word = vector_np['vocab']
+        self._idx_to_word = list(vector_np['vocab'])
         self.embedding_dim = vector_np['embedding'].shape[1]
         if unknown_word_vector is not None:
-            unk_vector = np.array(unknown_word_vector)
+            unk_vector = np.array(unknown_word_vector).astype(
+                paddle.get_default_dtype())
         else:
-            unk_vector = np.random.uniform(size=self.embedding_dim)
-        pad_vector = np.array([0] * self.embedding_dim)
+            unk_vector = np.random.normal(
+                scale=0.02,
+                size=self.embedding_dim).astype(paddle.get_default_dtype())
+        pad_vector = np.array(
+            [0] * self.embedding_dim).astype(paddle.get_default_dtype())
 
         # insert unk, pad embedding
-        embedding_table = None
-        if self.pad_idx == 0:
-            embedding_table = np.insert(
-                vector_np['embedding'], [self.pad_idx, self.unk_idx - 1],
-                [pad_vector, unk_vector],
-                axis=0)
-            self._idx_to_word = np.insert(
-                self._idx_to_word, [self.pad_idx, self.unk_idx - 1],
-                [PAD_WORD, self.unknown_word],
-                axis=0)
-        else:
-            embedding_table = np.insert(
-                vector_np['embedding'], [self.unk_idx, self.pad_idx - 1],
-                [unk_vector, pad_vector],
-                axis=0)
-            self._idx_to_word = np.insert(
-                self._idx_to_word, [self.unk_idx, self.pad_idx - 1],
-                [self.unknown_word, PAD_WORD],
-                axis=0)
+        embedding_table = np.insert(
+            vector_np['embedding'], [0], [pad_vector, unk_vector],
+            axis=0).astype(paddle.get_default_dtype())
+        self._idx_to_word.insert(PAD_IDX, PAD_WORD)
+        self._idx_to_word.insert(UNK_IDX, self.unknown_word)
 
-        word_to_idx = self._construct_word_to_idx(self._idx_to_word)
-        self.vocab = Vocab.from_dict(
-            word_to_idx, unk_token=unknown_word, pad_token=PAD_WORD)
-        self.num_embeddings = embedding_table.shape[0]
+        self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
         if extended_vocab_path is not None:
-            # load new vocab table from file
+            new_words_embedding = self._extend_vocab(extended_vocab_path,
+                                                     embedding_table)
+            embedding_table = np.append(
+                embedding_table, new_words_embedding, axis=0)
             trainable = True
+
+        self.vocab = Vocab.from_dict(
+            self._word_to_idx, unk_token=unknown_word, pad_token=PAD_WORD)
+        self.num_embeddings = embedding_table.shape[0]
         # import embedding
         super(TokenEmbedding, self).__init__(
-            self.num_embeddings, self.embedding_dim, padding_idx=padding_idx)
+            self.num_embeddings, self.embedding_dim, padding_idx=PAD_IDX)
         self.weight.set_value(embedding_table)
         self.set_trainable(trainable)
+
+    def _read_vocab_list_from_file(self, extended_vocab_path):
+        # load new vocab table from file
+        vocab_list = []
+        with open(extended_vocab_path) as f:
+            for line in f.readlines():
+                if line.strip() == "":
+                    break
+                vocab_list.append(line)
+        return vocab_list
+
+    def _extend_vocab(self, extended_vocab_path, embedding_table):
+        extend_vocab_list = self._read_vocab_list_from_file(extended_vocab_path)
+        curr_idx = len(self._idx_to_word)
+        new_words = list(
+            set(word for word in extend_vocab_list
+                if word not in self._word_to_idx))
+        # update idx_to_word
+        self._idx_to_word.extend(new_words)
+        # update word_to_idx
+        for i, word in enumerate(new_words):
+            self._word_to_idx[word] = i + curr_idx
+        # update embedding_table
+        new_words_embedding = np.random.normal(
+            scale=0.02,
+            size=(len(new_words),
+                  self.embedding_dim)).astype(paddle.get_default_dtype())
+        return new_words_embedding
 
     def set_trainable(self, trainable):
         self.weight.stop_gradient = not trainable
@@ -188,8 +202,8 @@ class TokenEmbedding(nn.Embedding):
         return word_to_idx
 
     def get_unk_idx_word(self):
-        return "Unknown index = {}, word = {}".format(self.unk_idx,
+        return "Unknown index = {}, word = {}".format(UNK_IDX,
                                                       self.unknown_word)
 
     def get_pad_idx_word(self):
-        return "Padding index = {}, word = {}".format(self.pad_idx, PAD_WORD)
+        return "Padding index = {}, word = {}".format(PAD_IDX, PAD_WORD)

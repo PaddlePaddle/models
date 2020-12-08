@@ -15,21 +15,23 @@
 from enum import Enum
 
 # FIXME(zhoushunjie): only for test
-URL_ROOT = "http://127.0.0.1:8080"
+URL_ROOT = "http://127.0.0.1:8888"
 
 PAD_WORD = '[PAD]'
 UNK_WORD = '[UNK]'
 
-PAD_IDX = 1
-UNK_IDX = 0
+PAD_IDX = 0
+UNK_IDX = 1
 
 
 # FIXME(zhoushunjie): CorpusName is related to training setting of word2vec, need to modify
 class CorpusName(Enum):
     SOGOU_NEWS = 0
+    TEST = 1
 
 
 CORPUS_NAME_MAP = {
     CorpusName.SOGOU_NEWS:
-    "sgns.target.word-word.dynwin5.thr10.neg5.dim300.iter5"
+    "sgns.target.word-word.dynwin5.thr10.neg5.dim300.iter5",
+    CorpusName.TEST: "test_emb.txt"
 }
