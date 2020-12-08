@@ -174,51 +174,62 @@ class SamplerHelper(object):
               batch_size,
               drop_last=False,
               batch_size_fn=None,
-              batch_fn=None,
-              batch_by_token=False):
+              cmp_fn=None):
         """
         To produce a BatchSampler.
-        Agrs:
+        Args:
             batch_size (int): Batch size.
-            drop_last (bool): Whether to drop the last mini batch. Default: False.
-            batch_size_fn (callable, optional): Return the size of mini batch so far. Default: None.
-            batch_fn (callable, optional): Transformations to be performed. Default: None.
+            drop_last (bool): Whether to drop the last mini batch. Default:
+                False.
+            batch_size_fn (callable, optional): Return the state of mini batch
+                so far. The argument should be `idx`, `len(minibatch)`,
+                `size_so_far` and `data_source`. Default: None.
+            cmp_fn (callable, optional): By comparing `size_so_far` and
+                `batch_size`, return whether the current mini batch has formed
+                a complete batch. The return value `0` means `minibatch` could
+                be yielded, and the return value `1` means `minibatch[:-1]`
+                could be yielded, and the return value -1 means `minibatch`
+                should be added more samples. Default: None.
         Returns:
             SamplerHelper
         """
+
+        def _cmp_fn(size_so_far, batch_size, minibatch_len):
+            if size_so_far == batch_size:
+                return 0
+            elif size_so_far > batch_size:
+                return 1
+            return -1
+
         ori_batch_size_fn = batch_size_fn
         if batch_size_fn is None:
-            batch_size_fn = lambda new, count, sofar, max_len, data_source: count * max_len
+            batch_size_fn = lambda new, count, sofar, data_source: count
+        cmp_fn = _cmp_fn if cmp_fn is None else cmp_fn
 
         def _impl():
             data_source = self.data_source
-            minibatch, size_so_far, max_len = [], 0, 0
+            minibatch, size_so_far = [], 0
             for idx in iter(self):
                 minibatch.append(idx)
-                cur_len = len(data_source[idx][0]) if batch_by_token else 1
-                max_len = max(max_len, cur_len)
                 size_so_far = batch_size_fn(idx,
                                             len(minibatch), size_so_far,
-                                            max_len, data_source)
-                if size_so_far == batch_size:
+                                            data_source)
+                if cmp_fn(size_so_far, batch_size, len(minibatch)) == 0:
                     yield minibatch
-                    minibatch, size_so_far, max_len = [], 0, 0
-                elif size_so_far > batch_size:
+                    minibatch, size_so_far = [], 0
+                elif cmp_fn(size_so_far, batch_size, len(minibatch)) == 1:
                     if len(minibatch) == 1:
                         raise ValueError(
-                            "Please increase the value of `batch_size`, or limit the max length of batch"
+                            "Please increase the value of `batch_size`, or limit the max length of batch."
                         )
                     yield minibatch[:-1]
-                    max_len = cur_len
                     minibatch, size_so_far = minibatch[-1:], batch_size_fn(
-                        idx, 1, 0, max_len, data_source)
+                        idx, 1, 0, data_source)
             if minibatch and not drop_last:
                 yield minibatch
 
-        sampler = type(self)(
-            self.data_source,
-            _impl) if batch_fn is None else self.apply(batch_fn)
-        if ori_batch_size_fn is None and batch_fn is None and self.length is not None:
+        sampler = type(self)(self.data_source, _impl)
+        if ori_batch_size_fn is None and self.length is not None:
             sampler.length = (self.length + int(not drop_last) *
                               (batch_size - 1)) // batch_size
         else:

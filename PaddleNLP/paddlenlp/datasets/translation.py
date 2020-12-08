@@ -275,8 +275,18 @@ def prepare_train_input(insts, pad_id):
     return src, src_length, tgt[:, :-1], tgt[:, 1:, np.newaxis]
 
 
+def cmp_fn(size_so_far, batch_size, minibatch_len):
+    token_num = size_so_far * minibatch_len
+    if token_num == batch_size:
+        return 0
+    elif token_num > batch_size:
+        return 1
+    return -1
+
+batch_size_fn = lambda idx, minibatch_len, size_so_far, data_source: max(size_so_far, len(data_source[idx][0]))
+
 if __name__ == '__main__':
-    batch_size = 4096  # 32
+    batch_size = 4096  #32
     pad_id = 2
 
     transform_func = IWSLT15.get_default_transform_func()
@@ -286,7 +296,10 @@ if __name__ == '__main__':
 
     train_batch_sampler = SamplerHelper(train_dataset).shuffle().sort(
         key=key, buffer_size=batch_size * 20).batch(
-            batch_size=batch_size, drop_last=True, batch_by_token=True).shard()
+            batch_size=batch_size,
+            drop_last=True,
+            batch_size_fn=batch_size_fn,
+            cmp_fn=cmp_fn).shard()
 
     train_loader = paddle.io.DataLoader(
         train_dataset,
