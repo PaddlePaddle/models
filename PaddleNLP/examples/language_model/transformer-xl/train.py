@@ -189,17 +189,33 @@ def do_train(args):
                 # Do validation. 
                 mem_transformer.eval()
 
-                # TODO(FrostML): use xxx._layer.xxx when using multi cards. 
+                # TODO(FrostML): simplify this.
                 if args.mem_len == 0:
-                    mem_transformer.reset_length(
-                        tgt_len=args.eval_tgt_len,
-                        ext_len=args.ext_len + args.tgt_len - args.eval_tgt_len,
-                        mem_len=args.mem_len)
+                    if dist.get_world_size() == 1:
+                        mem_transformer.reset_length(
+                            tgt_len=args.eval_tgt_len,
+                            ext_len=args.ext_len + args.tgt_len -
+                            args.eval_tgt_len,
+                            mem_len=args.mem_len)
+                    else:
+                        mem_transformer._layers.reset_length(
+                            tgt_len=args.eval_tgt_len,
+                            ext_len=args.ext_len + args.tgt_len -
+                            args.eval_tgt_len,
+                            mem_len=args.mem_len)
                 else:
-                    mem_transformer.reset_length(
-                        tgt_len=args.eval_tgt_len,
-                        ext_len=args.ext_len,
-                        mem_len=args.mem_len + args.tgt_len - args.eval_tgt_len)
+                    if dist.get_world_size() == 1:
+                        mem_transformer.reset_length(
+                            tgt_len=args.eval_tgt_len,
+                            ext_len=args.ext_len,
+                            mem_len=args.mem_len + args.tgt_len -
+                            args.eval_tgt_len)
+                    else:
+                        mem_transformer._layers.reset_length(
+                            tgt_len=args.eval_tgt_len,
+                            ext_len=args.ext_len,
+                            mem_len=args.mem_len + args.tgt_len -
+                            args.eval_tgt_len)
 
                 total_len, total_loss = 0, 0.
 
@@ -242,10 +258,18 @@ def do_train(args):
                 if args.scheduler == 'dev_perf':
                     scheduler.step(eval_loss)
 
-                mem_transformer.reset_length(
-                    tgt_len=args.tgt_len,
-                    ext_len=args.ext_len,
-                    mem_len=args.mem_len)
+                # TODO(FrostML): simplify this.
+                if dist.get_world_size() == 1:
+                    mem_transformer.reset_length(
+                        tgt_len=args.tgt_len,
+                        ext_len=args.ext_len,
+                        mem_len=args.mem_len)
+                else:
+                    mem_transformer._layers.reset_length(
+                        tgt_len=args.tgt_len,
+                        ext_len=args.ext_len,
+                        mem_len=args.mem_len)
+
                 mem_transformer.train()
 
             step_idx += 1
