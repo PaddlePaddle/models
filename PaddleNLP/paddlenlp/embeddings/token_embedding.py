@@ -22,73 +22,29 @@ import paddle
 import paddle.nn as nn
 from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import DATA_HOME, _get_sub_home
-from paddlenlp.data import Vocab
+from paddlenlp.data import Vocab, get_idx_from_word
 from .constant import *
 
 EMBEDDING_HOME = _get_sub_home('embedding', parent_home=DATA_HOME)
 
 
-def get_corpus_path(corpus_name):
-    return CORPUS_NAME_MAP[corpus_name]
-
-
-def _get_idx_from_word(word, word_to_idx, unk_word=UNK_WORD):
-    if word in word_to_idx:
-        return word_to_idx[word]
-    return word_to_idx[unk_word]
-
-
-class BaseEmbeddingTokenizer(object):
-    def __init__(self, vocab):
-        self.vocab = vocab
-
-    def get_tokenizer(self):
-        return self.tokenizer
-
-    def cut(self, sentence):
-        pass
-
-    def encode(self, sentence):
-        pass
-
-
-class JiebaEmbeddingTokenizer(BaseEmbeddingTokenizer):
-    def __init__(self, vocab):
-        super(JiebaEmbeddingTokenizer, self).__init__(vocab)
-        self.tokenizer = jieba.Tokenizer()
-        # initialize tokenizer
-        self.tokenizer.FREQ = {key: 1 for key in self.vocab.token_to_idx.keys()}
-        self.tokenizer.total = len(self.tokenizer.FREQ)
-        self.tokenizer.initialized = True
-
-    def cut(self, sentence, cut_all=False, HMM=True):
-        return self.tokenizer.lcut(sentence, cut_all, HMM)
-
-    def encode(self, sentence, cut_all=False, HMM=True):
-        words = self.cut(sentence, cut_all, HMM)
-        return [
-            _get_idx_from_word(word, self.vocab.token_to_idx,
-                               self.vocab.unk_token) for word in words
-        ]
+def list_embedding_name():
+    return list(EMBEDDING_NAME_LIST)
 
 
 class TokenEmbedding(nn.Embedding):
     def __init__(self,
-                 corpus_name=CorpusName.SOGOU_NEWS,
+                 embedding_name=EMBEDDING_NAME_LIST[0],
                  unknown_word=UNK_WORD,
                  unknown_word_vector=None,
                  extended_vocab_path=None,
                  trainable=True):
-        if isinstance(corpus_name, str):
-            corpus_name = CorpusName[corpus_name]
-        else:
-            corpus_name = CorpusName(corpus_name)
 
-        corpus_path = get_corpus_path(corpus_name)
-        vector_path = osp.join(EMBEDDING_HOME, corpus_path + ".npz")
+        embedding_path = embedding_name.lower()
+        vector_path = osp.join(EMBEDDING_HOME, embedding_path + ".npz")
         if not osp.exists(vector_path):
             # download
-            url = URL_ROOT + "/" + corpus_path + ".tar.gz"
+            url = URL_ROOT + "/" + embedding_path + ".tar.gz"
             get_path_from_url(url, EMBEDDING_HOME)
 
         self.unknown_word = unknown_word
@@ -167,8 +123,8 @@ class TokenEmbedding(nn.Embedding):
         return self(idx_tensor).numpy()
 
     def get_idx_from_word(self, word):
-        return _get_idx_from_word(word, self.vocab.token_to_idx,
-                                  self.unknown_word)
+        return get_idx_from_word(word, self.vocab.token_to_idx,
+                                 self.unknown_word)
 
     def get_idx_list_from_words(self, words):
         if isinstance(words, str):

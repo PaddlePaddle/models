@@ -23,15 +23,4 @@ UNK_WORD = '[UNK]'
 PAD_IDX = 0
 UNK_IDX = 1
 
-
-# FIXME(zhoushunjie): CorpusName is related to training setting of word2vec, need to modify
-class CorpusName(Enum):
-    SOGOU_NEWS = 0
-    TEST = 1
-
-
-CORPUS_NAME_MAP = {
-    CorpusName.SOGOU_NEWS:
-    "sgns.target.word-word.dynwin5.thr10.neg5.dim300.iter5",
-    CorpusName.TEST: "test_emb.txt"
-}
+EMBEDDING_NAME_LIST = ["sgns.target.word-word.dynwin5.thr10.neg5.dim300.iter5"]
