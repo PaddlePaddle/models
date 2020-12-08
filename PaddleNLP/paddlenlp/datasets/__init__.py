@@ -15,6 +15,7 @@
 from .chnsenticorp import *
 from .dataset import *
 from .glue import *
+from .lcqmc import LCQMC
 from .msra_ner import *
 from .ptb import *
 from .squad import *

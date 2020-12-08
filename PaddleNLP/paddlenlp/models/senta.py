@@ -1,6 +1,6 @@
 # Copyright (c) 2020 PaddlePaddle Authors. All Rights Reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
@@ -20,28 +21,66 @@ import paddlenlp as nlp
 INF = 1. * 1e12
 
 
+class Senta(nn.Layer):
+    def __init__(self, network_name, vocab_size, num_classes, emb_dim=128, pad_token_id=0):
+        super().__init__()
+
+        network_name = network_name.lower()
+        if network_name == 'bow':
+            self.model = BoWModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
+        elif network_name == 'bigru':
+            self.model = GRUModel(vocab_size, num_classes, emb_dim, direction='bidirectional', padding_idx=pad_token_id)
+        elif network_name == 'bilstm':
+            self.model = LSTMModel(vocab_size, num_classes, emb_dim ,direction='bidirectional', padding_idx=pad_token_id)
+        elif network_name == 'bilstm_attn':
+            lstm_hidden_size = 196
+            attention = SelfInteractiveAttention(hidden_size=2 * lstm_hidden_size)
+            self.model = BiLSTMAttentionModel(
+                attention_layer=attention,
+                vocab_size=vocab_size,
+                lstm_hidden_size=lstm_hidden_size,
+                num_classes=num_classes,
+                padding_idx=pad_token_id)
+        elif network_name == 'birnn':
+            self.model = RNNModel(vocab_size, num_classes, emb_dim, direction='bidrectional', padding_idx=pad_token_id)
+        elif network_name == 'gru':
+            self.model = GRUModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id, pooling_type='max')
+        elif network_name == 'lstm':
+            self.model = LSTMModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id, pooling_type='max')
+        elif network_name == 'rnn':
+            self.model = RNNModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id, pooling_type='max')
+        elif network_name == 'textcnn':
+            network = TextCNNModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
+        else:
+            raise ValueError(
+                "Unknown network: %s, it must be one of bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn."
+                % network_name)
+
+    def forward(self, text, seq_len):
+        logits = self.model(text, seq_len)
+        probs = F.softmax(logits, axis=-1)
+        return probs
+
+
 class BoWModel(nn.Layer):
     """
     This class implements the Bag of Words Classification Network model to classify texts.
-
     At a high level, the model starts by embedding the tokens and running them through
     a word embedding. Then, we encode these epresentations with a `BoWEncoder`.
     Lastly, we take the output of the encoder to create a final representation,
     which is passed through some feed-forward layers to output a logits (`output_layer`).
-
     Args:
         vocab_size (obj:`int`): The vocabulary size.
         emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
         padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
         hidden_size (obj:`int`, optional, defaults to 128): The first full-connected layer hidden size.
         fc_hidden_size (obj:`int`, optional, defaults to 96): The second full-connected layer hidden size.
-        num_labels (obj:`int`): All the labels that the data has.
-
+        num_classes (obj:`int`): All the labels that the data has.
     """
 
     def __init__(self,
                  vocab_size,
-                 num_labels,
+                 num_classes,
                  emb_dim=128,
                  padding_idx=0,
                  hidden_size=128,
@@ -52,7 +91,7 @@ class BoWModel(nn.Layer):
         self.bow_encoder = nlp.seq2vec.BoWEncoder(emb_dim)
         self.fc1 = nn.Linear(self.bow_encoder.get_output_dim(), hidden_size)
         self.fc2 = nn.Linear(hidden_size, fc_hidden_size)
-        self.output_layer = nn.Linear(fc_hidden_size, num_labels)
+        self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, text, seq_len):
         # Shape: (batch_size, num_tokens, embedding_dim)
@@ -66,7 +105,7 @@ class BoWModel(nn.Layer):
         fc1_out = paddle.tanh(self.fc1(encoded_text))
         # Shape: (batch_size, fc_hidden_size)
         fc2_out = paddle.tanh(self.fc2(fc1_out))
-        # Shape: (batch_size, num_labels)
+        # Shape: (batch_size, num_classes)
         logits = self.output_layer(fc2_out)
         return logits
 
@@ -74,7 +113,7 @@ class BoWModel(nn.Layer):
 class LSTMModel(nn.Layer):
     def __init__(self,
                  vocab_size,
-                 num_labels,
+                 num_classes,
                  emb_dim=128,
                  padding_idx=0,
                  lstm_hidden_size=198,
@@ -96,7 +135,7 @@ class LSTMModel(nn.Layer):
             dropout=dropout_rate,
             pooling_type=pooling_type)
         self.fc = nn.Linear(self.lstm_encoder.get_output_dim(), fc_hidden_size)
-        self.output_layer = nn.Linear(fc_hidden_size, num_labels)
+        self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, text, seq_len):
         # Shape: (batch_size, num_tokens, embedding_dim)
@@ -107,7 +146,7 @@ class LSTMModel(nn.Layer):
         text_repr = self.lstm_encoder(embedded_text, sequence_length=seq_len)
         # Shape: (batch_size, fc_hidden_size)
         fc_out = paddle.tanh(self.fc(text_repr))
-        # Shape: (batch_size, num_labels)
+        # Shape: (batch_size, num_classes)
         logits = self.output_layer(fc_out)
         return logits
 
@@ -115,7 +154,7 @@ class LSTMModel(nn.Layer):
 class GRUModel(nn.Layer):
     def __init__(self,
                  vocab_size,
-                 num_labels,
+                 num_classes,
                  emb_dim=128,
                  padding_idx=0,
                  gru_hidden_size=198,
@@ -137,7 +176,7 @@ class GRUModel(nn.Layer):
             dropout=dropout_rate,
             pooling_type=pooling_type)
         self.fc = nn.Linear(self.gru_encoder.get_output_dim(), fc_hidden_size)
-        self.output_layer = nn.Linear(fc_hidden_size, num_labels)
+        self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, text, seq_len):
         # Shape: (batch_size, num_tokens, embedding_dim)
@@ -148,7 +187,7 @@ class GRUModel(nn.Layer):
         text_repr = self.gru_encoder(embedded_text, sequence_length=seq_len)
         # Shape: (batch_size, fc_hidden_size)
         fc_out = paddle.tanh(self.fc(text_repr))
-        # Shape: (batch_size, num_labels)
+        # Shape: (batch_size, num_classes)
         logits = self.output_layer(fc_out)
         return logits
 
@@ -156,7 +195,7 @@ class GRUModel(nn.Layer):
 class RNNModel(nn.Layer):
     def __init__(self,
                  vocab_size,
-                 num_labels,
+                 num_classes,
                  emb_dim=128,
                  padding_idx=0,
                  rnn_hidden_size=198,
@@ -178,7 +217,7 @@ class RNNModel(nn.Layer):
             dropout=dropout_rate,
             pooling_type=pooling_type)
         self.fc = nn.Linear(self.rnn_encoder.get_output_dim(), fc_hidden_size)
-        self.output_layer = nn.Linear(fc_hidden_size, num_labels)
+        self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, text, seq_len):
         # Shape: (batch_size, num_tokens, embedding_dim)
@@ -189,7 +228,7 @@ class RNNModel(nn.Layer):
         text_repr = self.rnn_encoder(embedded_text, sequence_length=seq_len)
         # Shape: (batch_size, fc_hidden_size)
         fc_out = paddle.tanh(self.fc(text_repr))
-        # Shape: (batch_size, num_labels)
+        # Shape: (batch_size, num_classes)
         logits = self.output_layer(fc_out)
         return logits
 
@@ -198,7 +237,7 @@ class BiLSTMAttentionModel(nn.Layer):
     def __init__(self,
                  attention_layer,
                  vocab_size,
-                 num_labels,
+                 num_classes,
                  emb_dim=128,
                  lstm_hidden_size=196,
                  fc_hidden_size=96,
@@ -226,7 +265,7 @@ class BiLSTMAttentionModel(nn.Layer):
         else:
             raise RuntimeError("Unknown attention type %s." %
                                attention_layer.__class__.__name__)
-        self.output_layer = nn.Linear(fc_hidden_size, num_labels)
+        self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, text, seq_len):
         mask = text != self.padding_idx
@@ -238,7 +277,7 @@ class BiLSTMAttentionModel(nn.Layer):
         hidden, att_weights = self.attention(encoded_text, mask)
         # Shape: (batch_size, fc_hidden_size)
         fc_out = paddle.tanh(self.fc(hidden))
-        # Shape: (batch_size, num_labels)
+        # Shape: (batch_size, num_classes)
         logits = self.output_layer(fc_out)
         return logits
 
@@ -248,7 +287,6 @@ class SelfAttention(nn.Layer):
     A close implementation of attention network of ACL 2016 paper, 
     Attention-Based Bidirectional Long Short-Term Memory Networks for Relation Classification (Zhou et al., 2016).
     ref: https://www.aclweb.org/anthology/P16-2034/
-
     Args:
         hidden_size (obj:`int`): The number of expected features in the input x.
     """
@@ -296,7 +334,6 @@ class SelfInteractiveAttention(nn.Layer):
     """
     A close implementation of attention network of NAACL 2016 paper, Hierarchical Attention Networks for Document Classiﬁcation (Yang et al., 2016).
     ref: https://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf
-
     Args:
         hidden_size (obj:`int`): The number of expected features in the input x.
     """
@@ -348,7 +385,6 @@ class SelfInteractiveAttention(nn.Layer):
 class TextCNNModel(nn.Layer):
     """
     This class implements the Text Convolution Neural Network model.
-
     At a high level, the model starts by embedding the tokens and running them through
     a word embedding. Then, we encode these epresentations with a `CNNEncoder`.
     The CNN has one convolution layer for each ngram filter size. Each convolution operation gives
@@ -357,21 +393,20 @@ class TextCNNModel(nn.Layer):
     outputs from the convolution layer and outputs the max. 
     Lastly, we take the output of the encoder to create a final representation,
     which is passed through some feed-forward layers to output a logits (`output_layer`).
-
     Args:
         vocab_size (obj:`int`): The vocabulary size.
         emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
         padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
-        num_labels (obj:`int`): All the labels that the data has.
+        num_classes (obj:`int`): All the labels that the data has.
     """
 
     def __init__(self,
                  vocab_size,
-                 num_labels,
+                 num_classes,
                  emb_dim=128,
                  padding_idx=0,
                  num_filter=128,
-                 ngram_filter_sizes=[1, 2, 3],
+                 ngram_filter_sizes=(1, 2, 3),
                  fc_hidden_size=96):
         super().__init__()
         self.embedder = nn.Embedding(
@@ -379,9 +414,9 @@ class TextCNNModel(nn.Layer):
         self.encoder = nlp.seq2vec.CNNEncoder(
             emb_dim=emb_dim,
             num_filter=num_filter,
-            ngram_filter_sizes=(1, 2, 3),
+            ngram_filter_sizes=ngram_filter_sizes,
             output_dim=fc_hidden_size)
-        self.output_layer = nn.Linear(self.encoder.get_output_dim(), num_labels)
+        self.output_layer = nn.Linear(self.encoder.get_output_dim(), num_classes)
 
     def forward(self, text, seq_len):
         # Shape: (batch_size, num_tokens, embedding_dim)
@@ -390,6 +425,6 @@ class TextCNNModel(nn.Layer):
         # Shape: (batch_size, fc_hidden_size)
         encoder_out = self.encoder(embedded_text)
         encoder_out = paddle.tanh(encoder_out)
-        # Shape: (batch_size, num_labels)
+        # Shape: (batch_size, num_classes)
         logits = self.output_layer(encoder_out)
         return logits
