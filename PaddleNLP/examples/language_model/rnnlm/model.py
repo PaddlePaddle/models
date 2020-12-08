@@ -87,13 +87,6 @@ class CrossEntropyLossForLm(nn.Layer):
 
 class UpdateModel(paddle.callbacks.Callback):
     # This callback reset model hidden states and update learning rate before each epoch begins 
-    def __init__(self, base_lr, lr_decay, epoch_start_decay):
-        self.base_lr = base_lr
-        self.lr_decay = lr_decay
-        self.epoch_start_decay = epoch_start_decay
-
     def on_epoch_begin(self, epoch=None, logs=None):
         self.model.network.reset_states()
-        new_lr = self.base_lr * (self.lr_decay
-                                 **max(epoch + 1 - self.epoch_start_decay, 0.0))
-        self.model._optimizer.set_lr(new_lr)
+        
