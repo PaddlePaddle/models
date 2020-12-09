@@ -3,7 +3,7 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 
 
-class Plato2(nn.Layer):
+class InferPlato2(nn.Layer):
     def __init__(self,
                  vocab_size=8001,
                  type_size=2,
@@ -17,7 +17,7 @@ class Plato2(nn.Layer):
                  max_dec_len=64,
                  min_dec_len=1,
                  topk=10):
-        super(Plato2, self).__init__()
+        super(InferPlato2, self).__init__()
 
         self.n_layer = n_layer
         self.n_head = n_head
@@ -25,6 +25,7 @@ class Plato2(nn.Layer):
         self.max_dec_len = max_dec_len
         self.min_dec_len = min_dec_len
         self.topk = topk
+        self.vocab_size = vocab_size
 
         self.mask_id = 8000
         self.bos_id = 1
@@ -173,7 +174,7 @@ class Plato2(nn.Layer):
         step = 0
         while step < self.max_dec_len:
             append_mask = paddle.ones(
-                [batch_size, 1, 1], dtype=tgt_generation_mask.dtype)
+                [tgt_ids.shape[0], 1, 1], dtype=tgt_generation_mask.dtype)
             tgt_generation_mask = paddle.concat(
                 [tgt_generation_mask, append_mask], axis=-1)
             tgt_sent = paddle.ones(
@@ -203,12 +204,22 @@ class Plato2(nn.Layer):
 
             # [-1, topk]
             topk_probs, _ = paddle.topk(probs, k=self.topk)
-            new_probs = probs * paddle.cast(probs >= topk_probs[:, -1],
-                                            'float32') / paddle.sum(
-                                                topk_probs,
-                                                axis=-1,
-                                                keepdim=True)
+            mask = paddle.cast(
+                probs >= paddle.unsqueeze(
+                    topk_probs[:, -1], axis=1), 'float32')
+            new_probs = probs * mask / paddle.sum(topk_probs,
+                                                  axis=-1,
+                                                  keepdim=True)
+            # [-1, 1]
             sampling_ids = paddle.multinomial(new_probs)
+            sampling_ids = paddle.squeeze(sampling_ids, axis=1)
+
+            # [-1, vocab_size]
+            sampling_scores = F.one_hot(sampling_ids, self.vocab_size)
+            sampling_scores = sampling_scores * probs - (1 - sampling_scores
+                                                         ) * 1e3
+            # [-1, 1]
+            topk_scores, topk_indices = paddle.topk(sampling_scores, k=1)
 
             pre_len = step
             cur_len = step = step + 1
@@ -242,5 +253,7 @@ if __name__ == '__main__':
             inputs[key] = paddle.squeeze(inputs[key], axis=-1)
         print(key, inputs[key].shape, inputs[key].dtype)
 
-    model = Plato2()
+    model = InferPlato2()
+    # TODO load pretrained params
+
     model(inputs)
