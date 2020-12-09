@@ -32,10 +32,7 @@ from paddle.io import DataLoader, Dataset
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.transformers import BertForPretraining, BertModel, BertPretrainingCriterion
 from paddlenlp.transformers import BertTokenizer
-
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
-logger = logging.getLogger(__name__)
+from paddlenlp.utils.log import logger
 
 MODEL_CLASSES = {"bert": (BertForPretraining, BertTokenizer), }
 

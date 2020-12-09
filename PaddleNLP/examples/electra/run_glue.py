@@ -30,10 +30,7 @@ from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, 
 from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
-
-FORMAT = '%(asctime)s-%(levelname)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=FORMAT)
-logger = logging.getLogger(__name__)
+from paddlenlp.utils.log import logger
 
 TASK_CLASSES = {
     "cola": (GlueCoLA, paddle.metric.Accuracy),
