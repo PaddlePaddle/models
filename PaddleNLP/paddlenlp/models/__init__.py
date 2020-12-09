@@ -1,3 +1,3 @@
 from .senta import Senta
 from .ernie import Ernie
-from .simnet import Simnet
+from .simnet import SimNet

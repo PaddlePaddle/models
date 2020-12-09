@@ -87,7 +87,7 @@ if __name__ == "__main__":
     label_map = {0: 'dissimilar', 1: 'similar'}
 
     # Constructs the newtork.
-    model = ppnlp.models.Simnet(network_name=args.network_name, vocab_size=len(vocab), num_classes=len(label_map))
+    model = ppnlp.models.SimNet(network_name=args.network_name, vocab_size=len(vocab), num_classes=len(label_map))
 
     # Loads model parameters.
     state_dict = paddle.load(args.params_path)

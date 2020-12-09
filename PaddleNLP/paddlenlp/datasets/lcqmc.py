@@ -89,7 +89,7 @@ class LCQMC(TSVDataset):
 
     def get_labels(self):
         """
-        Return labels of the ChnSentiCorp object.
+        Return labels of the LCQMC object.
         """
         return ["0", "1"]
 

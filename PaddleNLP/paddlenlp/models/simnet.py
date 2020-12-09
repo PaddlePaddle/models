@@ -19,23 +19,23 @@ import paddle.nn.functional as F
 import paddlenlp as nlp
 
 
-class Simnet(nn.Layer):
-    def __init__(self, network_name, vocab_size, num_classes, emb_dim=128, pad_token_id=0):
+class SimNet(nn.Layer):
+    def __init__(self, network, vocab_size, num_classes, emb_dim=128, pad_token_id=0):
         super().__init__()
 
-        network_name = network_name.lower()
-        if network_name == 'bow':
+        network = network.lower()
+        if network == 'bow':
             self.model = BoWModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
-        elif network_name == 'gru':
+        elif network == 'cnn':
+            self.model = CNNModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
+        elif network == 'gru':
             self.model = GRUModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id)
-        elif network_name == 'lstm':
+        elif network == 'lstm':
             self.model = LSTMModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id)
-        elif network_name == 'rnn':
-            self.model = RNNModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id)
         else:
             raise ValueError(
                 "Unknown network: %s, it must be one of bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn."
-                % network_name)
+                % network)
 
     def forward(self, query, title, query_seq_len=None, title_seq_len=None):
         logits = self.model(query, title, query_seq_len, title_seq_len)
@@ -180,45 +180,57 @@ class GRUModel(nn.Layer):
         return logits
 
 
-class RNNModel(nn.Layer):
+class CNNModel(nn.Layer):
+    """
+    This class implements the
+    
+    
+     Convolution Neural Network model.
+    At a high level, the model starts by embedding the tokens and running them through
+    a word embedding. Then, we encode these epresentations with a `CNNEncoder`.
+    The CNN has one convolution layer for each ngram filter size. Each convolution operation gives
+    out a vector of size num_filter. The number of times a convolution layer will be used
+    is `num_tokens - ngram_size + 1`. The corresponding maxpooling layer aggregates all these
+    outputs from the convolution layer and outputs the max. 
+    Lastly, we take the output of the encoder to create a final representation,
+    which is passed through some feed-forward layers to output a logits (`output_layer`).
+    Args:
+        vocab_size (obj:`int`): The vocabulary size.
+        emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
+        padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
+        num_classes (obj:`int`): All the labels that the data has.
+    """
+
     def __init__(self,
                  vocab_size,
                  num_classes,
                  emb_dim=128,
                  padding_idx=0,
-                 rnn_hidden_size=198,
-                 direction='forward',
-                 rnn_layers=1,
-                 dropout_rate=0.0,
-                 pooling_type=None,
-                 fc_hidden_size=96):
+                 num_filter=256,
+                 ngram_filter_sizes=(3,),
+                 fc_hidden_size=128):
         super().__init__()
-        self.embedder = nn.Embedding(
-            num_embeddings=vocab_size,
-            embedding_dim=emb_dim,
-            padding_idx=padding_idx)
-        self.rnn_encoder = nlp.seq2vec.RNNEncoder(
-            emb_dim,
-            rnn_hidden_size,
-            num_layers=rnn_layers,
-            direction=direction,
-            dropout=dropout_rate)
-        self.fc = nn.Linear(self.rnn_encoder.get_output_dim()*2, fc_hidden_size)
+        self.padding_idx = padding_idx
+        self.embedder = nn.Embedding(vocab_size, emb_dim, padding_idx=padding_idx)
+        self.encoder = nlp.seq2vec.CNNEncoder(
+            emb_dim=emb_dim,
+            num_filter=num_filter,
+            ngram_filter_sizes=ngram_filter_sizes)
+        self.fc = nn.Linear(self.encoder.get_output_dim()*2, fc_hidden_size)
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
-    def forward(self, query, title, query_seq_len, title_seq_len):
+    def forward(self, query, title, query_seq_len=None, title_seq_len=None):
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_query = self.embedder(query)
         embedded_title = self.embedder(title)
-        # Shape: (batch_size, lstm_hidden_size)
-        query_repr = self.rnn_encoder(embedded_query, sequence_length=query_seq_len)
-        title_repr = self.rnn_encoder(embedded_title, sequence_length=title_seq_len)
-        # Shape: (batch_size, 2*lstm_hidden_size)
+        # Shape: (batch_size, num_filter)
+        query_repr = self.encoder(embedded_query)
+        title_repr = self.encoder(embedded_title)
+        # Shape: (batch_size, 2*num_filter)
         contacted = paddle.concat([query_repr, title_repr], axis=-1)
         # Shape: (batch_size, fc_hidden_size)
         fc_out = paddle.tanh(self.fc(contacted))
         # Shape: (batch_size, num_classes)
         logits = self.output_layer(fc_out)
         # probs = F.softmax(logits, axis=-1)
-        
         return logits

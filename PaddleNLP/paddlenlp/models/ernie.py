@@ -16,31 +16,36 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 
-from paddlenlp.transformers import * # ErnieForSequenceClassification, ErnieForTokenClassification, ErnieTokenizer, ErnieTinyTokenizer
+from paddlenlp.transformers import *
 import paddlenlp as nlp
 
 
 class Ernie(nn.Layer):
-    def __init__(self, model_name, task, num_classes):
+    def __init__(self, model_name, num_classes, task=None):
         super().__init__()
         model_name = model_name.lower()
         self.task = task.lower()
-        if self.task == 'sequence-classification':
+        if self.task == 'seq-cls':
             required_names = list(ErnieForSequenceClassification.pretrained_init_configuration.keys())
-            assert model_name in required_names, "model_name must be in %s, unkown %s ." (required_names, model_name)
+            assert model_name in required_names, "model_name must be in %s, unknown %s ." (required_names, model_name)
             self.model = ErnieForSequenceClassification.from_pretrained(model_name, num_classes=num_classes)
-        elif self.task == 'token-classification':
+        elif self.task == 'token-cls':
             required_names = list(ErnieForTokenClassification.pretrained_init_configuration.keys())
-            assert model_name in required_names, "model_name must be in %s, unkown %s ." (required_names, model_name)
+            assert model_name in required_names, "model_name must be in %s, unknown %s ." (required_names, model_name)
             self.model = ErnieForTokenClassification.from_pretrained(model_name, num_classes=num_classes)
-        elif self.task == 'question-answering':
+        elif self.task == 'qa':
             required_names = list(ErnieForQuestionAnswering.pretrained_init_configuration.keys())
-            assert model_name in required_names, "model_name must be in %s, unkown %s ." (required_names, model_name)
+            assert model_name in required_names, "model_name must be in %s, unknown %s ." (required_names, model_name)
             self.model = ErnieForQuestionAnswering.from_pretrained(model_name)
+        elif self.task is None:
+            required_names = list(ErnieModel.pretrained_init_configuration.keys())
+            assert model_name in required_names, "model_name must be in %s, unknown %s ." (required_names, model_name)
+            self.model = ErnieModel.from_pretrained(model_name)
         else:
             raise RuntimeError(
-                "Unknown task %s. Please make sure it to be one of sequence-classification, "
-                "token-classification and question-answering." % task)
+                "Unknown task %s. Please make sure it to be one of seq-cls (it means sequence classifaction), "
+                "token-cls (it means token classifaction), qa (it means question answering) "
+                "or set it as None object." % task)
 
     def forward(self,
                 input_ids,
@@ -48,14 +53,17 @@ class Ernie(nn.Layer):
                 position_ids=None,
                 attention_mask=None):
 
-        if self.task in ['sequence-classification', 'token-classification']:
+        if self.task in ['seq-cls', 'token-cls']:
             logits = self.model(input_ids, token_type_ids, position_ids, attention_mask)
             probs = F.softmax(logits, axis=-1)
             return probs
-        elif self.task == 'question-answering':
+        elif self.task == 'qa':
             start_logits, end_logits = self.model(input_ids, token_type_ids, position_ids, attention_mask)
             start_position = paddle.unsqueeze(start_position, axis=-1)
             end_position = paddle.unsqueeze(end_position, axis=-1)
             start_probs = F.softmax(start_position, axis=-1)
             end_probs = F.softmax(end_position, axis=-1)
             return start_probs, end_probs
+        elif self.task is None:
+            sequence_output, pooled_output = self.model(input_ids, token_type_ids, position_ids, attention_mask)
+            return sequence_output, pooled_output

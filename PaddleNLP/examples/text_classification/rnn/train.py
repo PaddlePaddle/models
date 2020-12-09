@@ -30,8 +30,8 @@ parser.add_argument("--lr", type=float, default=5e-4, help="Learning rate used t
 parser.add_argument("--save_dir", type=str, default='chekpoints/', help="Directory to save model checkpoint")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
 parser.add_argument("--vocab_path", type=str, default="./word_dict.txt", help="The directory to dataset.")
-parser.add_argument('--network_name', type=str, default="rnn", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
-parser.add_argument("--init_from_ckpt", type=str, default='./chekpoints/final', help="The path of checkpoint to be loaded.")
+parser.add_argument('--network_name', type=str, default="bilstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn?")
+parser.add_argument("--init_from_ckpt", type=str, default=None, help="The path of checkpoint to be loaded.")
 args = parser.parse_args()
 # yapf: enable
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
         print("Loaded checkpoint from %s" % args.init_from_ckpt)
 
     # Starts training and evaluating.
-    # model.fit(train_loader, dev_loader, epochs=args.epochs, save_dir=args.save_dir)
+    model.fit(train_loader, dev_loader, epochs=args.epochs, save_dir=args.save_dir)
 
     # Finally tests model.
     results = model.evaluate(test_loader)

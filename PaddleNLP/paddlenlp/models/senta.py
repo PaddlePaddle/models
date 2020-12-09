@@ -43,6 +43,8 @@ class Senta(nn.Layer):
                 padding_idx=pad_token_id)
         elif network_name == 'birnn':
             self.model = RNNModel(vocab_size, num_classes, emb_dim, direction='bidrectional', padding_idx=pad_token_id)
+        elif network_name == 'cnn':
+            self.model = CNNModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
         elif network_name == 'gru':
             self.model = GRUModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id, pooling_type='max')
         elif network_name == 'lstm':
@@ -50,10 +52,10 @@ class Senta(nn.Layer):
         elif network_name == 'rnn':
             self.model = RNNModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id, pooling_type='max')
         elif network_name == 'textcnn':
-            network = TextCNNModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
+            self.model = TextCNNModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
         else:
             raise ValueError(
-                "Unknown network: %s, it must be one of bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn."
+                "Unknown network: %s, it must be one of bow, lstm, bilstm, cnn, gru, bigru, rnn, birnn, bilstm_attn and textcnn."
                 % network_name)
 
     def forward(self, text, seq_len):
@@ -382,6 +384,55 @@ class SelfInteractiveAttention(nn.Layer):
         return reps, att_weight
 
 
+class CNNModel(nn.Layer):
+    """
+    This class implements the Convolution Neural Network model.
+    At a high level, the model starts by embedding the tokens and running them through
+    a word embedding. Then, we encode these epresentations with a `CNNEncoder`.
+    The CNN has one convolution layer for each ngram filter size. Each convolution operation gives
+    out a vector of size num_filter. The number of times a convolution layer will be used
+    is `num_tokens - ngram_size + 1`. The corresponding maxpooling layer aggregates all these
+    outputs from the convolution layer and outputs the max. 
+    Lastly, we take the output of the encoder to create a final representation,
+    which is passed through some feed-forward layers to output a logits (`output_layer`).
+    Args:
+        vocab_size (obj:`int`): The vocabulary size.
+        emb_dim (obj:`int`, optional, defaults to 128):  The embedding dimension.
+        padding_idx (obj:`int`, optinal, defaults to 0) : The pad token index.
+        num_classes (obj:`int`): All the labels that the data has.
+    """
+
+    def __init__(self,
+                 vocab_size,
+                 num_classes,
+                 emb_dim=128,
+                 padding_idx=0,
+                 num_filter=128,
+                 ngram_filter_sizes=(3,),
+                 fc_hidden_size=96):
+        super().__init__()
+        self.embedder = nn.Embedding(
+            vocab_size, emb_dim, padding_idx=padding_idx)
+        self.encoder = nlp.seq2vec.CNNEncoder(
+            emb_dim=emb_dim,
+            num_filter=num_filter,
+            ngram_filter_sizes=ngram_filter_sizes)
+        self.fc = nn.Linear(self.encoder.get_output_dim(), fc_hidden_size)
+        self.output_layer = nn.Linear(fc_hidden_size, num_classes)
+
+    def forward(self, text, seq_len):
+        # Shape: (batch_size, num_tokens, embedding_dim)
+        embedded_text = self.embedder(text)
+        # Shape: (batch_size, len(ngram_filter_sizes)*num_filter)
+        encoder_out = self.encoder(embedded_text)
+        encoder_out = paddle.tanh(encoder_out)
+        # Shape: (batch_size, fc_hidden_size)
+        fc_out = self.fc(encoder_out)
+        # Shape: (batch_size, num_classes)
+        logits = self.output_layer(fc_out)
+        return logits
+
+
 class TextCNNModel(nn.Layer):
     """
     This class implements the Text Convolution Neural Network model.
@@ -414,17 +465,18 @@ class TextCNNModel(nn.Layer):
         self.encoder = nlp.seq2vec.CNNEncoder(
             emb_dim=emb_dim,
             num_filter=num_filter,
-            ngram_filter_sizes=ngram_filter_sizes,
-            output_dim=fc_hidden_size)
-        self.output_layer = nn.Linear(self.encoder.get_output_dim(), num_classes)
+            ngram_filter_sizes=ngram_filter_sizes)
+        self.fc = nn.Linear(self.encoder.get_output_dim(), fc_hidden_size)
+        self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, text, seq_len):
         # Shape: (batch_size, num_tokens, embedding_dim)
         embedded_text = self.embedder(text)
-
-        # Shape: (batch_size, fc_hidden_size)
+        # Shape: (batch_size, len(ngram_filter_sizes)*num_filter)
         encoder_out = self.encoder(embedded_text)
         encoder_out = paddle.tanh(encoder_out)
+        # Shape: (batch_size, fc_hidden_size)
+        fc_out = paddle.tanh(self.fc(encoder_out))
         # Shape: (batch_size, num_classes)
-        logits = self.output_layer(encoder_out)
+        logits = self.output_layer(fc_out)
         return logits
