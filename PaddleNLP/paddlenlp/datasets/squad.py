@@ -123,7 +123,7 @@ class SQuAD(Dataset):
 
         self._read()
 
-        self.data = self.convert_examples_to_feature(
+        self.features = self.convert_examples_to_feature(
             self.examples,
             tokenizer=self.tokenizer,
             doc_stride=self.doc_stride,
@@ -425,7 +425,7 @@ class SQuAD(Dataset):
                         if self.version_2_with_negative:
                             is_impossible = qa["is_impossible"]
                         orig_answer_text = []
-                        if not is_impossible:
+                        if not is_impossible and 'answers' in qa.keys():
                             answers = qa["answers"]
                             for answer in answers:
                                 orig_answer_text.append(answer["text"])
@@ -446,10 +446,10 @@ class SQuAD(Dataset):
         self.examples = examples
 
     def __len__(self):
-        return len(self.data)
+        return len(self.features)
 
     def __getitem__(self, idx):
-        feature = self.data[idx]
+        feature = self.features[idx]
 
         if self.is_training:
             return feature.input_ids, feature.segment_ids, feature.unique_id, feature.start_position, feature.end_position
