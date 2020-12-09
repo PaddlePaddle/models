@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from functools import partial
 import argparse
 
 import paddle
@@ -22,8 +24,8 @@ from utils import load_vocab, generate_batch, preprocess_prediction_data
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--use_gpu", type=eval, default=False, help="Whether use GPU for training, input should be True or False")
 parser.add_argument("--batch_size", type=int, default=64, help="Total examples' number of a batch for training.")
-parser.add_argument("--vocab_path", type=str, default="./word_dict.txt", help="The path to vocabulary.")
-parser.add_argument('--network_name', type=str, default="bilstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
+parser.add_argument("--vocab_path", type=str, default="./data/term2id.dict", help="The path to vocabulary.")
+parser.add_argument('--network_name', type=str, default="lstm", help="Which network you would like to choose bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn, cnn and textcnn?")
 parser.add_argument("--params_path", type=str, default='./chekpoints/final.pdparams', help="The path of model parameter to be loaded.")
 args = parser.parse_args()
 # yapf: enable
@@ -41,7 +43,7 @@ def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
         collate_fn(obj: `callable`): function to generate mini-batch data by merging
             the sample list.
         batch_size(obj:`int`, defaults to 1): The number of batch.
-        pad_token_id(obj:`int`, optional, defaults to 0): The pad token index.
+        pad_token_id(obj:`int`, optinal, defaults to 0) : The pad token index.
 
     Returns:
         results(obj:`dict`): All the predictions labels.
@@ -62,11 +64,13 @@ def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
     results = []
     model.eval()
     for batch in batches:
-        texts, seq_lens = collate_fn(
+        queries, titles, query_seq_lens, title_seq_lens = collate_fn(
             batch, pad_token_id=pad_token_id, return_label=False)
-        texts = paddle.to_tensor(texts)
-        seq_lens = paddle.to_tensor(seq_lens)
-        probs = model(texts, seq_lens)
+        queries = paddle.to_tensor(queries)
+        titles = paddle.to_tensor(titles)
+        query_seq_lens = paddle.to_tensor(query_seq_lens)
+        title_seq_lens = paddle.to_tensor(title_seq_lens)
+        probs = model(queries, titles, query_seq_lens, title_seq_lens)
         idx = paddle.argmax(probs, axis=1).numpy()
         idx = idx.tolist()
         labels = [label_map[i] for i in idx]
@@ -78,10 +82,10 @@ if __name__ == "__main__":
     paddle.set_device("gpu") if args.use_gpu else paddle.set_device("cpu")
     # Loads vocab.
     vocab = load_vocab(args.vocab_path)
-    label_map = {0: 'negative', 1: 'positive'}
+    label_map = {0: 'dissimilar', 1: 'similar'}
 
     # Constructs the newtork.
-    model = ppnlp.models.Senta(
+    model = ppnlp.models.SimNet(
         network_name=args.network_name,
         vocab_size=len(vocab),
         num_classes=len(label_map))
@@ -93,12 +97,11 @@ if __name__ == "__main__":
 
     # Firstly pre-processing prediction data  and then do predict.
     data = [
-        '这个宾馆比较陈旧了，特价的房间也很一般。总体来说一般',
-        '怀着十分激动的心情放映，可是看着看着发现，在放映完毕后，出现一集米老鼠的动画片',
-        '作为老的四星酒店，房间依然很整洁，相当不错。机场接机服务很好，可以在车上办理入住手续，节省时间。',
+        ['世界上什么东西最小', '世界上什么东西最小？'],
+        ['光眼睛大就好看吗', '眼睛好看吗？'],
+        ['小蝌蚪找妈妈怎么样', '小蝌蚪找妈妈是谁画的'],
     ]
     examples = preprocess_prediction_data(data, vocab)
-
     results = predict(
         model,
         examples,

@@ -3,7 +3,7 @@ from functools import partial
 from paddle.io import DistributedBatchSampler, DataLoader
 from paddle.static import InputSpec
 from paddlenlp.data import Stack, Tuple, Pad
-from paddlenlp.transformers import BertForSequenceClassification, BertTokenizer
+from paddlenlp.transformers import ErnieTokenizer
 import numpy as np
 import paddle
 import paddlenlp
@@ -18,11 +18,11 @@ def convert_example(example, tokenizer, max_seq_length=128):
     return input_ids, segment_ids, label
 
 
-tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
-model = BertForSequenceClassification.from_pretrained('bert-base-chinese')
-
+paddle.set_device('gpu')
 train_ds, dev_ds = paddlenlp.datasets.ChnSentiCorp.get_datasets(
     ['train', 'dev'])
+label_list = train_ds.get_labels()
+tokenizer = ErnieTokenizer.from_pretrained('ernie-1.0')
 trans_func = partial(convert_example, tokenizer=tokenizer)
 train_ds = train_ds.apply(trans_func)
 dev_ds = dev_ds.apply(trans_func)
@@ -43,6 +43,8 @@ dev_loader = DataLoader(
     collate_fn=batchify_fn,
     return_list=True)
 
+model = paddlenlp.models.Ernie(
+    'ernie-1.0', task='seq-cls', num_classes=len(label_list))
 criterion = paddle.nn.loss.CrossEntropyLoss()
 metric = paddle.metric.Accuracy()
 optimizer = paddle.optimizer.AdamW(
