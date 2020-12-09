@@ -204,12 +204,10 @@ class InferPlato2(nn.Layer):
 
             # [-1, topk]
             topk_probs, _ = paddle.topk(probs, k=self.topk)
-            mask = paddle.cast(
-                probs >= paddle.unsqueeze(
-                    topk_probs[:, -1], axis=1), 'float32')
-            new_probs = probs * mask / paddle.sum(topk_probs,
-                                                  axis=-1,
-                                                  keepdim=True)
+            mask = probs >= paddle.unsqueeze(topk_probs[:, -1], axis=1)
+            mask = paddle.cast(mask, 'float32')
+            sums = paddle.sum(topk_probs, axis=-1, keepdim=True)
+            new_probs = probs * mask / sums
             # [-1, 1]
             sampling_ids = paddle.multinomial(new_probs)
             sampling_ids = paddle.squeeze(sampling_ids, axis=1)
