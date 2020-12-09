@@ -1,0 +1,35 @@
+# task_name for train.
+task_name: "XNLI"
+#use cuda for train
+use_cuda: false
+#use xpu for train
+use_xpu: true
+# do train
+do_train: true
+#do val
+do_val: true
+#do test
+do_test: true
+#batch size 
+batch_size: 16
+#in_tokens
+in_tokens: false
+# init pretraining params for train
+init_pretraining_params: 'chinese_L-12_H-768_A-12/params'
+#xpu use data XNLI1.0
+data_dir: 'data/XNLI1.0/'
+#vocab_path
+vocab_path: 'chinese_L-12_H-768_A-12/vocab.txt'
+#checkpoints
+checkpoints: './save/checkpoints'
+save_steps: 100
+weight_decay: 0.01
+warmup_proportion: 0.1
+validation_steps: 100
+epoch: 1
+max_seq_len: 128
+learning_rate: 5e-5
+skip_steps: 10
+num_iteration_per_drop_scope: 10
+verbose: true
+bert_config_path: 'chinese_L-12_H-768_A-12/bert_config.json'

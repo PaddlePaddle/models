@@ -61,6 +61,16 @@ def check_cuda(use_cuda, err = \
     except Exception as e:
         pass
 
+def check_xpu(use_xpu, err = \
+    "\nYou can not set use_xpu = True in the model because you are using paddlepaddle-cpu or paddlepaddle-gpu.\n \
+    Please: 1. Install paddlepaddle-xpu to run your models on XPU or 2. Set use_xpu = False to run models on CPU.\n"
+                                                                                                                     ):
+    try:
+        if use_xpu == True and fluid.is_compiled_with_xpu() == False:
+            print(err)
+            sys.exit(1)
+    except Exception as e:
+        pass
 
 def check_version():
     """
