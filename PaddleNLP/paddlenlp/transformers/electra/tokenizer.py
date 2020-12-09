@@ -53,6 +53,10 @@ class ElectraTokenizer(PretrainedTokenizer):
             "https://paddlenlp.bj.bcebos.com/models/transformers/electra-base-vocab.txt",
             "electra-large":
             "https://paddlenlp.bj.bcebos.com/models/transformers/electra-large-vocab.txt",
+            "chinese-electra-base":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/chinese-electra-base/vocab.txt",
+            "chinese-electra-small":
+            "http://paddlenlp.bj.bcebos.com/models/transformers/chinese-electra-small/vocab.txt",
         }
     }
     pretrained_init_configuration = {

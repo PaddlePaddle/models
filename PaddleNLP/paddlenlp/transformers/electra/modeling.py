@@ -395,14 +395,9 @@ class ElectraModel(ElectraPretrainedModel):
                 attention_mask=None):
 
         if attention_mask is None:
-            attention_mask = paddle.ones_like(input_ids, dtype="float32")
-            attention_mask = paddle.unsqueeze(attention_mask, axis=[1, 2])
-            extended_attention_mask = (1.0 - attention_mask) * -1e4
-        #if attention_mask is None:
-        #    attention_mask = paddle.unsqueeze(
-        #        (input_ids == self.pad_token_id
-        #         ).astype("float32") * -1e4,
-        #        axis=[1, 2])
+            attention_mask = paddle.unsqueeze(
+                (input_ids == self.pad_token_id).astype("float32") * -1e9,
+                axis=[1, 2])
 
         embedding_output = self.embeddings(
             input_ids=input_ids,
@@ -479,10 +474,11 @@ class ElectraGenerator(ElectraPretrainedModel):
         if not self.tie_word_embeddings:
             prediction_scores = self.generator_lm_head(prediction_scores)
         else:
-            prediction_scores = F.linear(
+            prediction_scores = paddle.add(paddle.matmul(
                 prediction_scores,
-                self.get_input_embeddings().weight.transpose([1, 0]),
-                self.generator_lm_head_bias)
+                self.get_input_embeddings().weight,
+                transpose_y=True),
+                                           self.generator_lm_head_bias)
 
         return prediction_scores
 
@@ -607,9 +603,8 @@ class ElectraForTotalPretraining(ElectraPretrainedModel):
         else:
             gumbel_noise = paddle.zeros_like(logits)
         # softmax_sample equal to sampled_tokids.unsqueeze(-1)
-        ins_softmax = nn.Softmax(axis=-1)
         softmax_sample = paddle.argmax(
-            ins_softmax(logits + gumbel_noise), axis=-1)
+            F.softmax(logits + gumbel_noise), axis=-1)
         # one hot
         return F.one_hot(softmax_sample, logits.shape[-1])
 
@@ -653,24 +648,23 @@ class ElectraForTotalPretraining(ElectraPretrainedModel):
 
 
 class ElectraPretrainingCriterion(paddle.nn.Layer):
-    def __init__(self, vocab_size, max_seq_length, gen_weight, disc_weight):
+    def __init__(self, vocab_size, gen_weight, disc_weight):
         super(ElectraPretrainingCriterion, self).__init__()
 
         self.vocab_size = vocab_size
-        self.max_seq_length = max_seq_length
         self.gen_weight = gen_weight
         self.disc_weight = disc_weight
+        self.gen_loss_fct = nn.CrossEntropyLoss(reduction='none')
+        self.disc_loss_fct = nn.BCEWithLogitsLoss()
 
     def forward(self, generator_prediction_scores,
                 discriminator_prediction_scores, generator_labels,
                 discriminator_labels):
         # generator loss
-        gen_loss_fct = nn.CrossEntropyLoss(
-            reduction='none')  # -100 index = padding token
-        gen_loss = gen_loss_fct(
+        gen_loss = self.gen_loss_fct(
             paddle.reshape(generator_prediction_scores, [-1, self.vocab_size]),
             paddle.reshape(generator_labels, [-1]))
-
+        # todo: we can remove 4 lines after when CrossEntropyLoss(reduction='mean') improved
         umask_positions = paddle.zeros_like(generator_labels).astype("float32")
         mask_positions = paddle.ones_like(generator_labels).astype("float32")
         mask_positions = paddle.where(generator_labels == -100, umask_positions,
@@ -678,10 +672,9 @@ class ElectraPretrainingCriterion(paddle.nn.Layer):
         gen_loss = gen_loss.sum() / mask_positions.sum()
 
         # discriminator loss
-        disc_loss_fct = nn.BCEWithLogitsLoss()
-        disc_loss = disc_loss_fct(
-            paddle.reshape(discriminator_prediction_scores,
-                           [-1, self.max_seq_length]),
+        seq_length = discriminator_labels.shape[1]
+        disc_loss = self.disc_loss_fct(
+            paddle.reshape(discriminator_prediction_scores, [-1, seq_length]),
             discriminator_labels.astype("float32"))
 
         return self.gen_weight * gen_loss + self.disc_weight * disc_loss

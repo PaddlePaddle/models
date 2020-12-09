@@ -27,8 +27,8 @@ import paddle
 from paddle.io import DataLoader
 from paddle.metric import Metric, Accuracy, Precision, Recall
 
-from paddlenlp.datasets import SimpleDataset, GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
-from paddlenlp.data.batchify import Stack, Tuple, Pad
+from paddlenlp.datasets import GlueCoLA, GlueSST2, GlueMRPC, GlueSTSB, GlueQQP, GlueMNLI, GlueQNLI, GlueRTE
+from paddlenlp.data import Stack, Tuple, Pad
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
 
@@ -37,7 +37,7 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
-class Accu_and_F1(Metric):
+class AccuAndF1(Metric):
     """
     Encapsulates Accuracy, Precision, Recall and F1 metric logic.
     """
@@ -48,7 +48,7 @@ class Accu_and_F1(Metric):
                  name='acc_and_f1',
                  *args,
                  **kwargs):
-        super(Accu_and_F1, self).__init__(*args, **kwargs)
+        super(AccuAndF1, self).__init__(*args, **kwargs)
         self.topk = topk
         self.pos_label = pos_label
         self._name = name
@@ -76,13 +76,12 @@ class Accu_and_F1(Metric):
         else:
             # 1/f1 = 1/2 * (1/precision + 1/recall)
             f1 = (2 * precision * recall) / (precision + recall)
-        return {
-            "accu": accu,
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
-            "accu_and_f1": (accu + f1) / 2,
-        }
+        return (
+            accu,
+            precision,
+            recall,
+            f1,
+            (accu + f1) / 2, )
 
     def reset(self):
         self.accu.reset()
@@ -112,11 +111,15 @@ class Mcc(Metric):
         self.tn = 0  # true negative
         self.fn = 0  # false negative
 
+    def compute(self, pred, label, *args):
+        preds = paddle.argsort(pred, descending=True)[:, :1]
+        return (preds, label)
+
     def update(self, preds_and_labels):
-        preds = paddle.argsort(preds_and_labels[0], descending=True)[:, :1]
+        preds = preds_and_labels[0]
         preds = preds.numpy()
-        labels = paddle.reshape(preds_and_labels[1], (-1, 1))
-        labels = labels.numpy()
+        labels = preds_and_labels[1]
+        labels = labels.numpy().reshape(-1, 1)
         sample_num = labels.shape[0]
         for i in range(sample_num):
             pred = preds[i]
@@ -140,7 +143,7 @@ class Mcc(Metric):
             mcc = (self.tp * self.tn - self.fp * self.fn) / math.sqrt(
                 (self.tp + self.fp) * (self.tp + self.fn) *
                 (self.tn + self.fp) * (self.tn + self.fn))
-        return {"mcc": mcc, }
+        return (mcc, )
 
     def reset(self):
         self.tp = 0  # true positive
@@ -155,7 +158,7 @@ class Mcc(Metric):
         return self._name
 
 
-class Pearson_and_Spearman(Metric):
+class PearsonAndSpearman(Metric):
     """
     Pearson correlation coefficient
     https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
@@ -164,16 +167,16 @@ class Pearson_and_Spearman(Metric):
     """
 
     def __init__(self, name='mcc', *args, **kwargs):
-        super(Pearson_and_Spearman, self).__init__(*args, **kwargs)
+        super(PearsonAndSpearman, self).__init__(*args, **kwargs)
         self._name = name
         self.preds = []
         self.labels = []
 
     def update(self, preds_and_labels):
-        preds = paddle.reshape(preds_and_labels[0], (-1, 1))
-        preds = np.squeeze(preds.numpy()).tolist()
-        labels = paddle.reshape(preds_and_labels[1], (-1, 1))
-        labels = np.squeeze(labels.numpy()).tolist()
+        preds = preds_and_labels[0]
+        preds = np.squeeze(preds.numpy().reshape(-1, 1)).tolist()
+        labels = preds_and_labels[1]
+        labels = np.squeeze(labels.numpy().reshape(-1, 1)).tolist()
         self.preds.append(preds)
         self.labels.append(labels)
 
@@ -183,11 +186,10 @@ class Pearson_and_Spearman(Metric):
         #import pdb; pdb.set_trace()
         pearson = self.pearson(preds, labels)
         spearman = self.spearman(preds, labels)
-        return {
-            "pearson": pearson,
-            "spearman": spearman,
-            "pearson_and_spearman": (pearson + spearman) / 2,
-        }
+        return (
+            pearson,
+            spearman,
+            (pearson + spearman) / 2, )
 
     def pearson(self, preds, labels):
         n = len(preds)
@@ -240,9 +242,9 @@ class Pearson_and_Spearman(Metric):
 TASK_CLASSES = {
     "cola": (GlueCoLA, Mcc),
     "sst-2": (GlueSST2, Accuracy),
-    "mrpc": (GlueMRPC, Accu_and_F1),
-    "sts-b": (GlueSTSB, Pearson_and_Spearman),
-    "qqp": (GlueQQP, Accu_and_F1),
+    "mrpc": (GlueMRPC, AccuAndF1),
+    "sts-b": (GlueSTSB, PearsonAndSpearman),
+    "qqp": (GlueQQP, AccuAndF1),
     "mnli": (GlueMNLI, Accuracy),
     "qnli": (GlueQNLI, Accuracy),
     "rte": (GlueRTE, Accuracy),
@@ -359,7 +361,7 @@ def do_train(args):
     args.model_type = args.model_type.lower()
     model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    train_dataset = dataset_class("train")
+    train_dataset = dataset_class.get_datasets(["train"])
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
 
     trans_func = partial(
@@ -367,7 +369,7 @@ def do_train(args):
         tokenizer=tokenizer,
         label_list=train_dataset.get_labels(),
         max_seq_length=args.max_seq_length)
-    train_dataset = SimpleDataset(train_dataset).apply(trans_func, lazy=True)
+    train_dataset = train_dataset.apply(trans_func, lazy=True)
     train_batch_sampler = paddle.io.DistributedBatchSampler(
         train_dataset, batch_size=args.batch_size, shuffle=True)
     batchify_fn = lambda samples, fn=Tuple(
@@ -383,11 +385,10 @@ def do_train(args):
         num_workers=0,
         return_list=True)
     if args.task_name == "mnli":
-        dev_dataset_matched = dataset_class("dev_matched")
-        dev_dataset_mismatched = dataset_class("dev_mismatched")
-        dev_dataset_matched = SimpleDataset(dev_dataset_matched).apply(
-            trans_func, lazy=True)
-        dev_dataset_mismatched = SimpleDataset(dev_dataset_mismatched).apply(
+        dev_dataset_matched, dev_dataset_mismatched = dataset_class.get_datasets(
+            ["dev_matched", "dev_mismatched"])
+        dev_dataset_matched = dev_dataset_matched.apply(trans_func, lazy=True)
+        dev_dataset_mismatched = dev_dataset_mismatched.apply(
             trans_func, lazy=True)
         dev_batch_sampler_matched = paddle.io.BatchSampler(
             dev_dataset_matched, batch_size=args.batch_size, shuffle=False)
@@ -406,8 +407,8 @@ def do_train(args):
             num_workers=0,
             return_list=True)
     else:
-        dev_dataset = dataset_class("dev")
-        dev_dataset = SimpleDataset(dev_dataset).apply(trans_func, lazy=True)
+        dev_dataset = dataset_class.get_datasets(["dev"])
+        dev_dataset = dev_dataset.apply(trans_func, lazy=True)
         dev_batch_sampler = paddle.io.BatchSampler(
             dev_dataset, batch_size=args.batch_size, shuffle=False)
         dev_data_loader = DataLoader(
@@ -417,8 +418,8 @@ def do_train(args):
             num_workers=0,
             return_list=True)
 
-    num_labels = 1 if train_dataset.get_labels(
-    ) == None else train_dataset.get_labels()
+    num_labels = 1 if train_dataset.get_labels() == None else len(
+        train_dataset.get_labels())
     model = model_class.from_pretrained(
         args.model_name_or_path, num_labels=num_labels)
     if paddle.distributed.get_world_size() > 1:
@@ -567,7 +568,7 @@ if __name__ == "__main__":
         "than this will be truncated, sequences shorter will be padded.", )
     parser.add_argument(
         "--learning_rate",
-        default=3e-4,
+        default=1e-4,
         type=float,
         help="The initial learning rate for Adam.")
     parser.add_argument(

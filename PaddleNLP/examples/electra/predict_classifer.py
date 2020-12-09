@@ -28,7 +28,7 @@ from paddle.io import DataLoader
 
 from paddlenlp.datasets.dataset import *
 from paddlenlp.datasets.glue import *
-from paddlenlp.data.batchify import *
+from paddlenlp.data import *
 from paddlenlp.data.sampler import SamplerHelper
 from paddlenlp.transformers import ElectraForSequenceClassification, ElectraTokenizer
 
@@ -55,17 +55,16 @@ def do_prdict(args):
     ): fn(samples)[:2]
 
     if args.task_name == "mnli":
-        test_dataset_matched = dataset_class("test_matched")
-        test_dataset_mismatched = dataset_class("test_mismatched")
+        test_dataset_matched, test_dataset_mismatched = dataset_class.get_datasets(
+            ["test_matched", "test_mismatched"])
         trans_func = partial(
             convert_example,
             tokenizer=tokenizer,
             label_list=test_dataset_matched.get_labels(),
             max_seq_length=args.max_seq_length,
             is_test=True)
-        test_dataset_matched = SimpleDataset(test_dataset_matched).apply(
-            trans_func, lazy=True)
-        test_dataset_mismatched = SimpleDataset(test_dataset_mismatched).apply(
+        test_dataset_matched = test_dataset_matched.apply(trans_func, lazy=True)
+        test_dataset_mismatched = test_dataset_mismatched.apply(
             trans_func, lazy=True)
         test_batch_sampler_matched = paddle.io.BatchSampler(
             test_dataset_matched, batch_size=args.batch_size, shuffle=False)
@@ -84,14 +83,14 @@ def do_prdict(args):
             num_workers=0,
             return_list=True)
     else:
-        test_dataset = dataset_class("test")
+        test_dataset = dataset_class.get_datasets(["test"])
         trans_func = partial(
             convert_example,
             tokenizer=tokenizer,
             label_list=test_dataset.get_labels(),
             max_seq_length=args.max_seq_length,
             is_test=True)
-        test_dataset = SimpleDataset(test_dataset).apply(trans_func, lazy=True)
+        test_dataset = test_dataset.apply(trans_func, lazy=True)
         test_batch_sampler = paddle.io.BatchSampler(
             test_dataset, batch_size=args.batch_size, shuffle=False)
         test_data_loader = DataLoader(

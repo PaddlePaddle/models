@@ -29,7 +29,6 @@ import paddle
 import paddle.distributed as dist
 from paddle.io import DataLoader, Dataset
 
-from paddlenlp.data.batchify import Stack, Tuple, Pad
 from paddlenlp.transformers import ElectraForTotalPretraining, ElectraModel, ElectraPretrainingCriterion
 from paddlenlp.transformers import ElectraDiscriminator, ElectraGenerator
 from paddlenlp.transformers import ElectraTokenizer
@@ -99,7 +98,7 @@ def parse_args():
         help="The initial learning rate for Adam.")
     parser.add_argument(
         "--weight_decay",
-        default=0.1,
+        default=0.01,
         type=float,
         help="Weight decay if we apply some.")
     parser.add_argument(
@@ -236,6 +235,7 @@ class BookCorpus(paddle.io.Dataset):
 class DataCollatorForElectra(object):
     """
     pads, gets batch of tensors and preprocesses batches for masked language modeling
+    when dataloader num_worker > 0, this collator may trigger some bugs, for safe, be sure dataloader num_worker=0
     """
 
     def __init__(self,
@@ -260,7 +260,7 @@ class DataCollatorForElectra(object):
             labels = raw_inputs.clone().detach()
             if self.tokenizer.pad_token is not None:
                 pad_token_id = self.tokenizer.convert_tokens_to_ids(
-                    self.tokenizer.pad_token)[0]
+                    self.tokenizer.pad_token)
                 labels[labels == pad_token_id] = -100
             return batch, raw_inputs, labels
 
@@ -287,19 +287,25 @@ class DataCollatorForElectra(object):
             self.tokenizer.cls_token)
         full_inputs = []
         full_maskprob = []
+        max_length = 0
         for ids in inputs:
-            if len(ids) <= (max_seq_length - 2):
-                padding_num = max_seq_length - len(ids) - 2
+            if len(ids) > max_length:
+                max_length = len(ids)
+        max_length = min(max_length + 2, max_seq_length)
+
+        for ids in inputs:
+            if len(ids) <= (max_length - 2):
+                padding_num = max_length - len(ids) - 2
                 full_inputs.append([cls_token_id] + ids + [sep_token_id] + (
                     [pad_token_id] * padding_num))
                 full_maskprob.append([0] + ([self.mlm_probability] * len(ids)) +
                                      [0] + ([0] * padding_num))
             else:
                 if truncation:
-                    full_inputs.append([cls_token_id] + ids[:(
-                        max_seq_length - 2)] + [sep_token_id])
+                    full_inputs.append([cls_token_id] + ids[:(max_length - 2)] +
+                                       [sep_token_id])
                     full_maskprob.append([0] + ([self.mlm_probability] * (
-                        max_seq_length - 2)) + [0])
+                        max_length - 2)) + [0])
                 else:
                     full_inputs.append([cls_token_id] + ids + [sep_token_id])
                     full_maskprob.append([0] + ([self.mlm_probability] * len(
@@ -434,7 +440,7 @@ def do_train(args):
     criterion = ElectraPretrainingCriterion(
         getattr(model.generator,
                 ElectraGenerator.base_model_prefix).config["vocab_size"],
-        args.max_seq_length, model.gen_weight, model.disc_weight)
+        model.gen_weight, model.disc_weight)
     if paddle.distributed.get_world_size() > 1:
         model = paddle.DataParallel(model)
 
@@ -447,16 +453,6 @@ def do_train(args):
         tokenizer=tokenizer,
         max_seq_length=args.max_seq_length,
         mode='train')
-    dev_dataset = BookCorpus(
-        data_path=args.input_dir,
-        tokenizer=tokenizer,
-        max_seq_length=args.max_seq_length,
-        mode='dev')
-    test_dataset = BookCorpus(
-        data_path=args.input_dir,
-        tokenizer=tokenizer,
-        max_seq_length=args.max_seq_length,
-        mode='test')
     print("load data done, total : %s s" % (time.time() - tic_load_data))
 
     # Reads data and generates mini-batches.
@@ -470,18 +466,6 @@ def do_train(args):
         train_dataset,
         batch_size=args.train_batch_size,
         mode='train',
-        use_gpu=True if args.n_gpu else False,
-        data_collator=data_collator)
-    dev_data_loader = create_dataloader(
-        dev_dataset,
-        batch_size=args.eval_batch_size,
-        mode='validation',
-        use_gpu=True if args.n_gpu else False,
-        data_collator=data_collator)
-    test_data_loader = create_dataloader(
-        test_dataset,
-        batch_size=args.eval_batch_size,
-        mode='test',
         use_gpu=True if args.n_gpu else False,
         data_collator=data_collator)
 
