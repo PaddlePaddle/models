@@ -16,6 +16,7 @@ from enum import Enum
 import os
 import os.path as osp
 import numpy as np
+import logging
 
 import paddle
 import paddle.nn as nn
@@ -25,6 +26,16 @@ from paddlenlp.data import Vocab, get_idx_from_word
 from .constant import *
 
 EMBEDDING_HOME = _get_sub_home('embeddings', parent_home=MODEL_HOME)
+
+log = logging.getLogger(__name__)
+formatter = logging.Formatter(
+    fmt='[%(levelname)s] %(asctime)s [%(filename)12s:%(lineno)5d]:\t%(message)s')
+console = logging.StreamHandler()
+console.setFormatter(formatter)
+log.addHandler(console)
+log.setLevel(logging.DEBUG)
+
+__all__ = ['list_embedding_name', 'TokenEmbedding']
 
 
 def list_embedding_name():
@@ -47,7 +58,7 @@ class TokenEmbedding(nn.Embedding):
             get_path_from_url(url, EMBEDDING_HOME)
 
         self.unknown_word = unknown_word
-
+        log.info("Loading embedding vector...")
         vector_np = np.load(vector_path)
         self._idx_to_word = list(vector_np['vocab'])
         self.embedding_dim = vector_np['embedding'].shape[1]
@@ -84,6 +95,7 @@ class TokenEmbedding(nn.Embedding):
             self.num_embeddings, self.embedding_dim, padding_idx=PAD_IDX)
         self.weight.set_value(embedding_table)
         self.set_trainable(trainable)
+        log.info("Finish loading embedding vector.")
 
     def _read_vocab_list_from_file(self, extended_vocab_path):
         # load new vocab table from file
@@ -96,6 +108,7 @@ class TokenEmbedding(nn.Embedding):
         return vocab_list
 
     def _extend_vocab(self, extended_vocab_path, embedding_table):
+        log.info("Start extending vocab.")
         extend_vocab_list = self._read_vocab_list_from_file(extended_vocab_path)
         curr_idx = len(self._idx_to_word)
         new_words = list(
@@ -111,6 +124,7 @@ class TokenEmbedding(nn.Embedding):
             scale=0.02,
             size=(len(new_words),
                   self.embedding_dim)).astype(paddle.get_default_dtype())
+        log.info("Finish extending vocab.")
         return new_words_embedding
 
     def set_trainable(self, trainable):
