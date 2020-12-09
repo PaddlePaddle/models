@@ -115,15 +115,17 @@ def do_train(args):
     tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path)
     root = args.data_path
     set_seed(args)
-    train_dataset, dev_dataset, test_dataset = ppnlp.datasets.DuReaderRobust.get_datasets(
+
+    train_ds, dev_ds, test_ds = ppnlp.datasets.DuReaderRobust.get_datasets(
         tokenizer=[tokenizer] * 3,
+        root=[root] * 3,
         doc_stride=[args.doc_stride] * 3,
         max_query_length=[args.max_query_length] * 3,
         max_seq_length=[args.max_seq_length] * 3,
         segment=['train', 'dev', 'test'])
 
     train_batch_sampler = paddle.io.DistributedBatchSampler(
-        train_dataset, batch_size=args.batch_size, shuffle=True)
+        train_ds, batch_size=args.batch_size, shuffle=True)
 
     train_batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
@@ -134,13 +136,13 @@ def do_train(args):
     ): [data for i, data in enumerate(fn(samples)) if i != 2]
 
     train_data_loader = DataLoader(
-        dataset=train_dataset,
+        dataset=train_ds,
         batch_sampler=train_batch_sampler,
         collate_fn=train_batchify_fn,
         return_list=True)
 
     dev_batch_sampler = paddle.io.BatchSampler(
-        dev_dataset, batch_size=args.batch_size, shuffle=False)
+        dev_ds, batch_size=args.batch_size, shuffle=False)
 
     dev_batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
@@ -149,13 +151,13 @@ def do_train(args):
     ): fn(samples)
 
     dev_data_loader = DataLoader(
-        dataset=dev_dataset,
+        dataset=dev_ds,
         batch_sampler=dev_batch_sampler,
         collate_fn=dev_batchify_fn,
         return_list=True)
 
     test_batch_sampler = paddle.io.BatchSampler(
-        test_dataset, batch_size=args.batch_size, shuffle=False)
+        test_ds, batch_size=args.batch_size, shuffle=False)
 
     test_batchify_fn = lambda samples, fn=Tuple(
         Pad(axis=0, pad_val=tokenizer.vocab[tokenizer.pad_token]),  # input
@@ -164,7 +166,7 @@ def do_train(args):
     ): fn(samples)
 
     test_data_loader = DataLoader(
-        dataset=test_dataset,
+        dataset=test_ds,
         batch_sampler=test_batch_sampler,
         collate_fn=test_batchify_fn,
         return_list=True)
@@ -178,7 +180,7 @@ def do_train(args):
         args.learning_rate,
         lambda current_step, warmup_proportion=args.warmup_proportion,
         num_training_steps=args.max_steps if args.max_steps > 0 else
-        (len(train_dataset.examples)//args.batch_size*args.num_train_epochs): float(
+        (len(train_ds.examples)//args.batch_size*args.num_train_epochs): float(
             current_step) / float(max(1, warmup_proportion*num_training_steps))
         if current_step < warmup_proportion*num_training_steps else max(
             0.0,
