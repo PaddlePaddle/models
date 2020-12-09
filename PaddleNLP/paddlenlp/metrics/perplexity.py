@@ -39,35 +39,37 @@ class Perplexity(paddle.metric.Metric):
 
     """
 
-    def __init__(self, seq_len=20, name='Perplexity', *args, **kwargs):
+    def __init__(self, name='Perplexity', *args, **kwargs):
         super(Perplexity, self).__init__(*args, **kwargs)
         self._name = name
-        self.total_cost = 0
+        self.total_ce = 0
         self.word_count = 0
-        self.word_num = seq_len
 
     def compute(self, pred, label, seq_mask=None):
-        cost = F.softmax_with_cross_entropy(
+        print(label.shape)
+        label = paddle.unsqueeze(label, axis=2)
+        ce = F.softmax_with_cross_entropy(
             logits=pred, label=label, soft_label=False)
-        cost = paddle.squeeze(cost, axis=[2])
-        word_num = self.word_num
-
+        ce = paddle.squeeze(ce, axis=[2])
         if seq_mask is not None:
-            cost = cost * seq_mask
+            ce = ce * seq_mask
             word_num = paddle.sum(seq_mask)
-        batch_cost = paddle.sum(cost)
-        return batch_cost, word_num
+            return ce, word_num
+        return ce
 
-    def update(self, batch_cost, word_num):
-        self.total_cost += batch_cost
+    def update(self, ce, word_num=None):
+        batch_ce = np.sum(ce)
+        if word_num is None:
+            word_num = ce.shape[0] * ce.shape[1]
+        self.total_ce += batch_ce
         self.word_count += word_num
 
     def reset(self):
-        self.total_cost = 0
+        self.total_ce = 0
         self.word_count = 0
 
     def accumulate(self):
-        return np.exp(self.total_cost / self.word_count)
+        return np.exp(self.total_ce / self.word_count)
 
     def name(self):
         return self._name
