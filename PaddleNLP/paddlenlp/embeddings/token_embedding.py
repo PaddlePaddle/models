@@ -24,7 +24,8 @@ from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import _get_sub_home, MODEL_HOME
 from paddlenlp.utils.log import logger
 from paddlenlp.data import Vocab, get_idx_from_word
-from .constant import EMBEDDING_URL_ROOT, PAD_TOKEN, UNK_TOKEN, PAD_IDX, UNK_IDX, EMBEDDING_NAME_LIST
+from .constant import EMBEDDING_URL_ROOT, PAD_TOKEN, UNK_TOKEN, PAD_IDX, \
+                      UNK_IDX, EMBEDDING_NAME_LIST
 
 EMBEDDING_HOME = _get_sub_home('embeddings', parent_home=MODEL_HOME)
 
@@ -174,11 +175,11 @@ class TokenEmbedding(nn.Embedding):
 
     def __repr__(self):
         s = "Object   type: {}\
-             \nUnknown index: {}\
-             \nUnknown token: {}\
              \nPadding index: {}\
              \nPadding token: {}\
+             \nUnknown index: {}\
+             \nUnknown token: {}\
              \n{}".format(
-            super(TokenEmbedding, self).__repr__(), UNK_IDX, self.unknown_token,
-            PAD_IDX, PAD_TOKEN, self.weight)
+            super(TokenEmbedding, self).__repr__(), PAD_IDX, PAD_TOKEN, UNK_IDX,
+            self.unknown_token, self.weight)
         return s
