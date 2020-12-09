@@ -468,9 +468,14 @@ def do_train(args):
     tic_train = time.time()
     for epoch in range(args.num_train_epochs):
         for step, batch in enumerate(train_data_loader):
+            global_step += 1
             input_ids, segment_ids, labels = batch
             logits = model(input_ids=input_ids, token_type_ids=segment_ids)
             loss = loss_fct(logits, labels)
+            loss.backward()
+            optimizer.step()
+            lr_scheduler.step()
+            optimizer.clear_gradients()
             if global_step % args.logging_steps == 0:
                 print(
                     "global step %d/%d, epoch: %d, batch: %d, rank_id: %s, loss: %f, lr: %.10f, speed: %.4f step/s"
@@ -478,11 +483,7 @@ def do_train(args):
                        paddle.distributed.get_rank(), loss, optimizer.get_lr(),
                        args.logging_steps / (time.time() - tic_train)))
                 tic_train = time.time()
-            loss.backward()
-            optimizer.step()
-            lr_scheduler.step()
-            optimizer.clear_gradients()
-            if global_step > 1 and global_step % args.save_steps == 0:
+            if global_step % args.save_steps == 0:
                 tic_eval = time.time()
                 if args.task_name == "mnli":
                     evaluate(model, loss_fct, metric, dev_data_loader_matched)
@@ -503,7 +504,6 @@ def do_train(args):
                         model, paddle.DataParallel) else model
                     model_to_save.save_pretrained(output_dir)
                     tokenizer.save_pretrained(output_dir)
-            global_step += 1
 
 
 def get_md5sum(file_path):
