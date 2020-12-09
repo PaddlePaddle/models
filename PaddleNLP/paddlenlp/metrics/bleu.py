@@ -16,6 +16,12 @@ import math
 import sys
 from collections import defaultdict
 
+import paddle
+
+from .utils import default_trans_func
+
+__all__ = ["BLEU", "BLEUForDuReader"]
+
 
 def get_match_size(cand_ngram, refs_ngram):
     ref_set = defaultdict(int)
@@ -48,13 +54,23 @@ def get_ngram(sent, n_size, label=None):
     return ngram_list
 
 
-class BLEU(object):
+class BLEU(paddle.metric.Metric):
     r'''
-    BLEU (bilingual evaluation understudy) is an algorithm for evaluating the quality of
-    text which has been machine-translated from one natural language to another. This metric
-    uses a modified form of precision to compare a candidate translation against multiple
-    reference translations.
+    BLEU (bilingual evaluation understudy) is an algorithm for evaluating the
+    quality of text which has been machine-translated from one natural language
+    to another. This metric uses a modified form of precision to compare a
+    candidate translation against multiple reference translations.
 
+    BLEU could be used as `paddle.metric.Metric` class, or an ordinary
+    class. When BLEU is used as `paddle.metric.Metric` class. A function is
+    needed that transforms the network output to reference string list, and
+    transforms the label to candidate string. By default, a default function
+    `default_trans_func` is provided, which gets target sequence id by
+    calculating the maximum probability of each step. In this case, user must
+    provide `vocab`. It should be noted that the BLEU here is different from
+    the BLEU calculated in prediction, and it is only for observation during
+    training and evaluation.
+    
     .. math::
 
         BP & =
@@ -68,24 +84,72 @@ class BLEU(object):
     where `c` is the length of candidate sentence, and 'r' is the length of refrence sentence.
 
     Args:
-        n_size (int): Number of gram for BLEU metric. Default: 4.
-        weights (list, optional): The weights of precision of each gram. Default: None.  
+        trans_func (callable, optional): `trans_func` transforms the network
+            output to string to calculate.
+        vocab (dict|paddlenlp.data.vocab, optional): Vocab for target language.
+            If `trans_func` is None and BLEU is used as `paddle.metric.Metric`
+            instance, `default_trans_func` will be performed and `vocab` must
+            be provided.
+        n_size (int, optional): Number of gram for BLEU metric. Default: 4.
+        weights (list, optional): The weights of precision of each gram.
+            Default: None.
+        name (str, optional): Name of `paddle.metric.Metric` instance.
+            Default: "bleu".
+
+    Examples:
+        1. Using as a general evaluation object.
+        .. code-block:: python
+            from paddlenlp.metrics import BLEU
+            bleu = BLEU()
+            cand = "Welcome to PaddleNLP."
+            ref_list = ["Welcome PaddleNLP"]
+            bleu.add_inst(cand, ref_list)
+            print(bleu.accumulate()) # 0.7510186074254295
+
+        2. Using as an instance of `paddle.metric.Metric`.
+                
+        .. code-block:: python
+        # TODO(liujiaqi)
+
     '''
 
-    def __init__(self, n_size=4, weights=None):
+    def __init__(self,
+                 trans_func=None,
+                 vocab=None,
+                 n_size=4,
+                 weights=None,
+                 name="bleu"):
+        super(BLEU, self).__init__()
         if not weights:
             weights = [1 / n_size for _ in range(n_size)]
-
         assert len(weights) == n_size, (
             "Number of weights and n-gram should be the same, got Number of weights: '%d' and n-gram: '%d'"
             % (len(weights), n_size))
-
+        self._name = name
         self.match_ngram = {}
         self.candi_ngram = {}
         self.weights = weights
         self.bp_r = 0
         self.bp_c = 0
         self.n_size = n_size
+        self.vocab = vocab
+        self.trans_func = trans_func
+
+    def update(self, output, label, seq_mask=None):
+        if self.trans_func is None:
+            if self.vocab is None:
+                raise AttributeError(
+                    "The `update` method requires users to provide `trans_func` or `vocab` when initializing BLEU."
+                )
+            cand_list, ref_list = default_trans_func(output, label, seq_mask,
+                                                     self.vocab)
+        else:
+            cand_list, ref_list = self.trans_func(output, label, seq_mask)
+        if len(cand_list) != len(ref_list):
+            raise ValueError(
+                "Length error! Please check the output of network.")
+        for i in range(len(cand_list)):
+            self.add_inst(cand_list[i], ref_list[i])
 
     def add_inst(self, cand, ref_list):
         '''
@@ -117,7 +181,13 @@ class BLEU(object):
         self.bp_r += min([(abs(len(cand) - len(ref)), len(ref))
                           for ref in ref_list])[1]
 
-    def score(self):
+    def reset(self):
+        self.match_ngram = {}
+        self.candi_ngram = {}
+        self.bp_r = 0
+        self.bp_c = 0
+
+    def accumulate(self):
         '''
         Calculate the final bleu metric.
         '''
@@ -132,15 +202,17 @@ class BLEU(object):
             except:
                 _score = 0
             if _score == 0:
-                _score = w_i * math.log(sys.float_info.min)
+                _score = sys.float_info.min
             prob_list.append(_score)
 
         logs = math.fsum(w_i * math.log(p_i)
                          for w_i, p_i in zip(self.weights, prob_list))
         bp = math.exp(min(1 - self.bp_r / float(self.bp_c), 0))
         bleu = bp * math.exp(logs)
-
         return bleu
+
+    def name(self):
+        return self._name
 
 
 class BLEUForDuReader(BLEU):
@@ -161,7 +233,6 @@ class BLEUForDuReader(BLEU):
                  yn_label=None,
                  yn_ref=None,
                  entity_ref=None):
-        #super(BLEUWithBonus, self).add_inst(cand, ref_list)
         BLEU.add_inst(self, cand, ref_list)
         if yn_label is not None and yn_ref is not None:
             self.add_yn_bonus(cand, ref_list, yn_label, yn_ref)

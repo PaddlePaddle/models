@@ -14,4 +14,5 @@
 
 from .perplexity import Perplexity
 from .chunk import ChunkEvaluator
-from .bleu import BLEU
+from .bleu import *
+from .rouge import *
