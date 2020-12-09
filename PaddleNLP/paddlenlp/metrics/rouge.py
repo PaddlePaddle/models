@@ -105,7 +105,7 @@ class RougeL(paddle.metric.Metric):
         if self.trans_func is None:
             if self.vocab is None:
                 raise AttributeError(
-                    "The `update` method requires users to provide `trans_func` or `vocab` when initializing BLEU."
+                    "The `update` method requires users to provide `trans_func` or `vocab` when initializing RougeL."
                 )
             cand_list, ref_list = default_trans_func(output, label, seq_mask,
                                                      self.vocab)
