@@ -79,7 +79,7 @@ def do_eval(args):
         args.d_inner_hid,
         args.dropout,
         args.attn_dropout,
-        tie_weight=args.tied,
+        tie_weight=args.tie_weight,
         d_embed=args.d_model,
         div_val=args.div_val,
         tie_projs=tie_projs,

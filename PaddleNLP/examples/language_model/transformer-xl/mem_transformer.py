@@ -5,7 +5,6 @@ import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
 
-paddle.set_default_dtype("float64")
 global_dtype = paddle.get_default_dtype()
 
 
