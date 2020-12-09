@@ -18,8 +18,8 @@ import os.path as osp
 URL_ROOT = "https://bj.bcebos.com/paddlenlp"
 EMBEDDING_URL_ROOT = osp.join(URL_ROOT, "models/embeddings")
 
-PAD_WORD = '[PAD]'
-UNK_WORD = '[UNK]'
+PAD_TOKEN = '[PAD]'
+UNK_TOKEN = '[UNK]'
 
 PAD_IDX = 0
 UNK_IDX = 1

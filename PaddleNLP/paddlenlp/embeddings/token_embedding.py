@@ -23,7 +23,7 @@ import paddle.nn as nn
 from paddle.utils.download import get_path_from_url
 from paddlenlp.utils.env import _get_sub_home, MODEL_HOME
 from paddlenlp.data import Vocab, get_idx_from_word
-from .constant import *
+from .constant import EMBEDDING_URL_ROOT, PAD_TOKEN, UNK_TOKEN, PAD_IDX, UNK_IDX, EMBEDDING_NAME_LIST
 
 EMBEDDING_HOME = _get_sub_home('embeddings', parent_home=MODEL_HOME)
 
@@ -45,8 +45,8 @@ def list_embedding_name():
 class TokenEmbedding(nn.Embedding):
     def __init__(self,
                  embedding_name=EMBEDDING_NAME_LIST[0],
-                 unknown_word=UNK_WORD,
-                 unknown_word_vector=None,
+                 unknown_token=UNK_TOKEN,
+                 unknown_token_vector=None,
                  extended_vocab_path=None,
                  trainable=True):
 
@@ -57,13 +57,13 @@ class TokenEmbedding(nn.Embedding):
             url = osp.join(EMBEDDING_URL_ROOT, embedding_path + ".tar.gz")
             get_path_from_url(url, EMBEDDING_HOME)
 
-        self.unknown_word = unknown_word
+        self.unknown_token = unknown_token
         log.info("Loading embedding vector...")
         vector_np = np.load(vector_path)
         self._idx_to_word = list(vector_np['vocab'])
         self.embedding_dim = vector_np['embedding'].shape[1]
-        if unknown_word_vector is not None:
-            unk_vector = np.array(unknown_word_vector).astype(
+        if unknown_token_vector is not None:
+            unk_vector = np.array(unknown_token_vector).astype(
                 paddle.get_default_dtype())
         else:
             unk_vector = np.random.normal(
@@ -76,8 +76,8 @@ class TokenEmbedding(nn.Embedding):
         embedding_table = np.insert(
             vector_np['embedding'], [0], [pad_vector, unk_vector],
             axis=0).astype(paddle.get_default_dtype())
-        self._idx_to_word.insert(PAD_IDX, PAD_WORD)
-        self._idx_to_word.insert(UNK_IDX, self.unknown_word)
+        self._idx_to_word.insert(PAD_IDX, PAD_TOKEN)
+        self._idx_to_word.insert(UNK_IDX, self.unknown_token)
 
         self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
         if extended_vocab_path is not None:
@@ -88,7 +88,7 @@ class TokenEmbedding(nn.Embedding):
             trainable = True
 
         self.vocab = Vocab.from_dict(
-            self._word_to_idx, unk_token=unknown_word, pad_token=PAD_WORD)
+            self._word_to_idx, unk_token=unknown_token, pad_token=PAD_TOKEN)
         self.num_embeddings = embedding_table.shape[0]
         # import embedding
         super(TokenEmbedding, self).__init__(
@@ -102,7 +102,8 @@ class TokenEmbedding(nn.Embedding):
         vocab_list = []
         with open(extended_vocab_path) as f:
             for line in f.readlines():
-                if line.strip() == "":
+                line = line.strip()
+                if line == "":
                     break
                 vocab_list.append(line)
         return vocab_list
@@ -137,7 +138,7 @@ class TokenEmbedding(nn.Embedding):
 
     def get_idx_from_word(self, word):
         return get_idx_from_word(word, self.vocab.token_to_idx,
-                                 self.unknown_word)
+                                 self.unknown_token)
 
     def get_idx_list_from_words(self, words):
         if isinstance(words, str):
@@ -153,16 +154,24 @@ class TokenEmbedding(nn.Embedding):
             raise TypeError
         return idx_list
 
-    def cosine_sim(self, word_a, word_b):
+    def _dot_np(self, array_a, array_b):
+        return np.sum(array_a * array_b)
+
+    def _calc_word(self, word_a, word_b, calc_kernel):
         embeddings = self.search([word_a, word_b])
         embedding_a = embeddings[0]
         embedding_b = embeddings[1]
+        return calc_kernel(embedding_a, embedding_b)
 
-        def dot(a, b):
-            return np.sum(a * b)
-        return dot(embedding_a, embedding_b) /            \
-            (np.sqrt(dot(embedding_a, embedding_a)) *     \
-             np.sqrt(dot(embedding_b, embedding_b)))
+    def dot(self, word_a, word_b):
+        dot = self._dot_np
+        return self._calc_word(word_a, word_b, lambda x, y: dot(x, y))
+
+    def cosine_sim(self, word_a, word_b):
+        dot = self._dot_np
+        return self._calc_word(
+            word_a, word_b,
+            lambda x, y: dot(x, y) / (np.sqrt(dot(x, x)) * np.sqrt(dot(y, y))))
 
     def _construct_word_to_idx(self, idx_to_word):
         word_to_idx = {}
@@ -170,9 +179,13 @@ class TokenEmbedding(nn.Embedding):
             word_to_idx[word] = i
         return word_to_idx
 
-    def get_unk_idx_word(self):
-        return "Unknown index = {}, word = {}".format(UNK_IDX,
-                                                      self.unknown_word)
-
-    def get_pad_idx_word(self):
-        return "Padding index = {}, word = {}".format(PAD_IDX, PAD_WORD)
+    def __repr__(self):
+        s = "Object   type: {}\
+             \nUnknown index: {}\
+             \nUnknown token: {}\
+             \nPadding index: {}\
+             \nPadding token: {}\
+             \n{}".format(
+            super(TokenEmbedding, self).__repr__(), UNK_IDX, self.unknown_token,
+            PAD_IDX, PAD_TOKEN, self.weight)
+        return s

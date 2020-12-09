@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .vocab import Vocab
 import jieba
+from .vocab import Vocab
 
 
 def get_idx_from_word(word, word_to_idx, unk_word):
@@ -45,11 +45,11 @@ class JiebaTokenizer(BaseTokenizer):
         self.tokenizer.total = len(self.tokenizer.FREQ)
         self.tokenizer.initialized = True
 
-    def cut(self, sentence, cut_all=False, HMM=True):
-        return self.tokenizer.lcut(sentence, cut_all, HMM)
+    def cut(self, sentence, cut_all=False, use_hmm=True):
+        return self.tokenizer.lcut(sentence, cut_all, use_hmm)
 
-    def encode(self, sentence, cut_all=False, HMM=True):
-        words = self.cut(sentence, cut_all, HMM)
+    def encode(self, sentence, cut_all=False, use_hmm=True):
+        words = self.cut(sentence, cut_all, use_hmm)
         return [
             get_idx_from_word(word, self.vocab.token_to_idx,
                               self.vocab.unk_token) for word in words
