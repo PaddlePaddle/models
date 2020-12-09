@@ -6,9 +6,9 @@
 
 ## Introduction
 
-PaddleNLP aims to accelerate NLP applications by powerful model zoo, easy-to-use API and detailed tutorials, It's also the NLP best practice for PaddlePaddle 2.0 API system.
+PaddleNLP aims to accelerate NLP applications through powerful model zoo, easy-to-use API with detailed tutorials, It's also the NLP best practice for PaddlePaddle 2.0 API system.
 
-**TODO:** Add an architecture chart for PaddleNLP
+** This project is still UNDER ACTIVE DEVELOPMENT. **
 
 ## Features
 
@@ -29,7 +29,7 @@ PaddleNLP aims to accelerate NLP applications by powerful model zoo, easy-to-use
 * paddlepaddle >= 2.0.0-rc1
 
 ```
-pip install paddlenlp
+pip install paddlenlp==2.0.0a
 ```
 
 ## Quick Start
@@ -37,22 +37,25 @@ pip install paddlenlp
 ### Quick Dataset Loading
 
 ```python
-dataset = paddlenlp.datasets.ChnSentiCorp(split="train")
+train_ds, test_ds = paddlenlp.datasets.ChnSentiCorp.get_datasets(['train','test'])
 ```
 
 ### Reusable Text Emebdding
 
 ```python
-wordemb = paddlenlp.embedding.SkipGram("Text8")
-wordemb("language")
->>> [1.0, 2.0, 3.0, ...., 5.0, 6.0]
+
+from paddlenlp.embeddings import TokenEmbedding
+wordemb = TokenEmbedding("word2vec.baike.300d")
+print(wordemb.search("中国"))
+>>> [0.260801  0.1047    0.129453 ... 0.096542  0.0092513]
+
 ```
 
 ### High Quality Chinsese Pre-trained Model
 
 ```python
-from paddlenlp.transformer import ErnieModel
-ernie = ErnieModel.from_pretrained("ernie-1.0-chinese")
+from paddlenlp.transformers import ErnieModel
+ernie = ErnieModel.from_pretrained("ernie")
 sequence_output, pooled_output = ernie.forward(input_ids, segment_ids)
 ```
 
@@ -69,4 +72,4 @@ List our notebook tutorials based on AI Studio.
 
 ## License
 
-PaddleNLP is provided under the [Apache-2.0 license](./LICENSE).
+PaddleNLP is provided under the [Apache-2.0 License](./LICENSE).
