@@ -89,7 +89,7 @@ def evaluate(model, data_loader, args, tokenizer, do_pred=False):
                     start_logits=start_logits,
                     end_logits=end_logits))
 
-    all_predictions, all_nbest_json, scores_diff_json = compute_predictions(
+    all_predictions, _, scores_diff_json = compute_predictions(
         data_loader.dataset.examples, data_loader.dataset.features, all_results,
         args.n_best_size, args.max_answer_length, args.do_lower_case, False,
         args.null_score_diff_threshold, args.verbose, tokenizer)
