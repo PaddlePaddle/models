@@ -21,7 +21,6 @@ from paddlenlp.datasets import ChnSentiCorp
 
 from utils import load_vocab, generate_batch, convert_example
 
-
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--epochs", type=int, default=3, help="Number of epoches for training.")
@@ -83,10 +82,15 @@ if __name__ == "__main__":
     vocab = load_vocab(args.vocab_path)
 
     # Loads dataset.
-    train_ds, dev_ds, test_ds = ChnSentiCorp.get_datasets(['train', 'dev', 'test'])
+    train_ds, dev_ds, test_ds = ChnSentiCorp.get_datasets(
+        ['train', 'dev', 'test'])
 
     # Constructs the newtork.
-    model = ppnlp.models.Senta(network_name=args.network_name, vocab_size=len(vocab), num_classes=len(train_ds.get_labels()))
+    label_list = train_ds.get_labels()
+    model = ppnlp.models.Senta(
+        network_name=args.network_name,
+        vocab_size=len(vocab),
+        num_classes=len(label_list))
     model = paddle.Model(model)
 
     # Reads data and generates mini-batches.
@@ -96,20 +100,14 @@ if __name__ == "__main__":
         unk_token_id=vocab['[UNK]'],
         is_test=False)
     train_loader = create_dataloader(
-        train_ds,
-        trans_fn=trans_fn,
-        batch_size=args.batch_size,
-        mode='train')
+        train_ds, trans_fn=trans_fn, batch_size=args.batch_size, mode='train')
     dev_loader = create_dataloader(
         dev_ds,
         trans_fn=trans_fn,
         batch_size=args.batch_size,
         mode='validation')
     test_loader = create_dataloader(
-        test_ds,
-        trans_fn=trans_fn,
-        batch_size=args.batch_size,
-        mode='test')
+        test_ds, trans_fn=trans_fn, batch_size=args.batch_size, mode='test')
 
     optimizer = paddle.optimizer.Adam(
         parameters=model.parameters(), learning_rate=args.lr)
@@ -126,7 +124,10 @@ if __name__ == "__main__":
         print("Loaded checkpoint from %s" % args.init_from_ckpt)
 
     # Starts training and evaluating.
-    model.fit(train_loader, dev_loader, epochs=args.epochs, save_dir=args.save_dir)
+    model.fit(train_loader,
+              dev_loader,
+              epochs=args.epochs,
+              save_dir=args.save_dir)
 
     # Finally tests model.
     results = model.evaluate(test_loader)

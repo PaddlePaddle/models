@@ -18,7 +18,6 @@ import paddlenlp as ppnlp
 
 from utils import load_vocab, generate_batch, preprocess_prediction_data
 
-
 # yapf: disable
 parser = argparse.ArgumentParser(__doc__)
 parser.add_argument("--use_gpu", type=eval, default=False, help="Whether use GPU for training, input should be True or False")
@@ -28,6 +27,7 @@ parser.add_argument('--network_name', type=str, default="bilstm", help="Which ne
 parser.add_argument("--params_path", type=str, default='./chekpoints/final.pdparams', help="The path of model parameter to be loaded.")
 args = parser.parse_args()
 # yapf: enable
+
 
 def predict(model, data, label_map, collate_fn, batch_size=1, pad_token_id=0):
     """
@@ -81,7 +81,10 @@ if __name__ == "__main__":
     label_map = {0: 'negative', 1: 'positive'}
 
     # Constructs the newtork.
-    model = ppnlp.models.Senta(network_name=args.network_name, vocab_size=len(vocab), num_classes=len(label_map))
+    model = ppnlp.models.Senta(
+        network_name=args.network_name,
+        vocab_size=len(vocab),
+        num_classes=len(label_map))
 
     # Loads model parameters.
     state_dict = paddle.load(args.params_path)
@@ -95,7 +98,7 @@ if __name__ == "__main__":
         '作为老的四星酒店，房间依然很整洁，相当不错。机场接机服务很好，可以在车上办理入住手续，节省时间。',
     ]
     examples = preprocess_prediction_data(data, vocab)
-    
+
     results = predict(
         model,
         examples,

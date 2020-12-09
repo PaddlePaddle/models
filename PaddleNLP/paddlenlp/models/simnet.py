@@ -20,18 +20,35 @@ import paddlenlp as nlp
 
 
 class SimNet(nn.Layer):
-    def __init__(self, network, vocab_size, num_classes, emb_dim=128, pad_token_id=0):
+    def __init__(self,
+                 network,
+                 vocab_size,
+                 num_classes,
+                 emb_dim=128,
+                 pad_token_id=0):
         super().__init__()
 
         network = network.lower()
         if network == 'bow':
-            self.model = BoWModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
+            self.model = BoWModel(
+                vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
         elif network == 'cnn':
-            self.model = CNNModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
+            self.model = CNNModel(
+                vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
         elif network == 'gru':
-            self.model = GRUModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id)
+            self.model = GRUModel(
+                vocab_size,
+                num_classes,
+                emb_dim,
+                direction='forward',
+                padding_idx=pad_token_id)
         elif network == 'lstm':
-            self.model = LSTMModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id)
+            self.model = LSTMModel(
+                vocab_size,
+                num_classes,
+                emb_dim,
+                direction='forward',
+                padding_idx=pad_token_id)
         else:
             raise ValueError(
                 "Unknown network: %s, it must be one of bow, lstm, bilstm, gru, bigru, rnn, birnn, bilstm_attn and textcnn."
@@ -69,7 +86,8 @@ class BoWModel(nn.Layer):
         self.embedder = nn.Embedding(
             vocab_size, emb_dim, padding_idx=padding_idx)
         self.bow_encoder = nlp.seq2vec.BoWEncoder(emb_dim)
-        self.fc = nn.Linear(self.bow_encoder.get_output_dim()*2, fc_hidden_size)
+        self.fc = nn.Linear(self.bow_encoder.get_output_dim() * 2,
+                            fc_hidden_size)
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, query, title, query_seq_len=None, title_seq_len=None):
@@ -114,7 +132,8 @@ class LSTMModel(nn.Layer):
             num_layers=lstm_layers,
             direction=direction,
             dropout=dropout_rate)
-        self.fc = nn.Linear(self.lstm_encoder.get_output_dim()*2, fc_hidden_size)
+        self.fc = nn.Linear(self.lstm_encoder.get_output_dim() * 2,
+                            fc_hidden_size)
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, query, title, query_seq_len, title_seq_len):
@@ -123,8 +142,10 @@ class LSTMModel(nn.Layer):
         embedded_query = self.embedder(query)
         embedded_title = self.embedder(title)
         # Shape: (batch_size, lstm_hidden_size)
-        query_repr = self.lstm_encoder(embedded_query, sequence_length=query_seq_len)
-        title_repr = self.lstm_encoder(embedded_title, sequence_length=title_seq_len)
+        query_repr = self.lstm_encoder(
+            embedded_query, sequence_length=query_seq_len)
+        title_repr = self.lstm_encoder(
+            embedded_title, sequence_length=title_seq_len)
         # Shape: (batch_size, 2*lstm_hidden_size)
         contacted = paddle.concat([query_repr, title_repr], axis=-1)
         # Shape: (batch_size, fc_hidden_size)
@@ -132,7 +153,7 @@ class LSTMModel(nn.Layer):
         # Shape: (batch_size, num_classes)
         logits = self.output_layer(fc_out)
         # probs = F.softmax(logits, axis=-1)
-        
+
         return logits
 
 
@@ -159,7 +180,8 @@ class GRUModel(nn.Layer):
             num_layers=gru_layers,
             direction=direction,
             dropout=dropout_rate)
-        self.fc = nn.Linear(self.gru_encoder.get_output_dim()*2, fc_hidden_size)
+        self.fc = nn.Linear(self.gru_encoder.get_output_dim() * 2,
+                            fc_hidden_size)
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, query, title, query_seq_len, title_seq_len):
@@ -167,8 +189,10 @@ class GRUModel(nn.Layer):
         embedded_query = self.embedder(query)
         embedded_title = self.embedder(title)
         # Shape: (batch_size, gru_hidden_size)
-        query_repr = self.gru_encoder(embedded_query, sequence_length=query_seq_len)
-        title_repr = self.gru_encoder(embedded_title, sequence_length=title_seq_len)
+        query_repr = self.gru_encoder(
+            embedded_query, sequence_length=query_seq_len)
+        title_repr = self.gru_encoder(
+            embedded_title, sequence_length=title_seq_len)
         # Shape: (batch_size, 2*gru_hidden_size)
         contacted = paddle.concat([query_repr, title_repr], axis=-1)
         # Shape: (batch_size, fc_hidden_size)
@@ -176,7 +200,7 @@ class GRUModel(nn.Layer):
         # Shape: (batch_size, num_classes)
         logits = self.output_layer(fc_out)
         # probs = F.softmax(logits, axis=-1)
-        
+
         return logits
 
 
@@ -207,16 +231,17 @@ class CNNModel(nn.Layer):
                  emb_dim=128,
                  padding_idx=0,
                  num_filter=256,
-                 ngram_filter_sizes=(3,),
+                 ngram_filter_sizes=(3, ),
                  fc_hidden_size=128):
         super().__init__()
         self.padding_idx = padding_idx
-        self.embedder = nn.Embedding(vocab_size, emb_dim, padding_idx=padding_idx)
+        self.embedder = nn.Embedding(
+            vocab_size, emb_dim, padding_idx=padding_idx)
         self.encoder = nlp.seq2vec.CNNEncoder(
             emb_dim=emb_dim,
             num_filter=num_filter,
             ngram_filter_sizes=ngram_filter_sizes)
-        self.fc = nn.Linear(self.encoder.get_output_dim()*2, fc_hidden_size)
+        self.fc = nn.Linear(self.encoder.get_output_dim() * 2, fc_hidden_size)
         self.output_layer = nn.Linear(fc_hidden_size, num_classes)
 
     def forward(self, query, title, query_seq_len=None, title_seq_len=None):

@@ -25,6 +25,7 @@ def load_vocab(vocab_file):
         vocab[token] = index
     return vocab
 
+
 def convert_ids_to_tokens(wids, inversed_vocab):
     """ Converts a token string (or a sequence of tokens) in a single integer id
         (or a sequence of ids), using the vocabulary.
@@ -35,6 +36,7 @@ def convert_ids_to_tokens(wids, inversed_vocab):
         if wstr:
             tokens.append(wstr)
     return tokens
+
 
 def convert_tokens_to_ids(tokens, vocab):
     """ Converts a token id (or a sequence of id) in a token string
@@ -48,6 +50,7 @@ def convert_tokens_to_ids(tokens, vocab):
         if wid:
             ids.append(wid)
     return ids
+
 
 def convert_example(example, vocab, unk_token_id=1, is_test=False):
     """
@@ -78,6 +81,7 @@ def convert_example(example, vocab, unk_token_id=1, is_test=False):
     else:
         return input_ids, valid_length
 
+
 def pad_texts_to_max_seq_len(texts, max_seq_len, pad_token_id=0):
     """
     Padded the texts to the max sequence length if the length of text is lower than it.
@@ -97,6 +101,7 @@ def pad_texts_to_max_seq_len(texts, max_seq_len, pad_token_id=0):
         elif seq_len > max_seq_len:
             new_text = text[:max_seq_len]
             texts[index] = new_text
+
 
 def generate_batch(batch, pad_token_id=0, return_label=True):
     """
@@ -121,6 +126,7 @@ def generate_batch(batch, pad_token_id=0, return_label=True):
     else:
         return texts, seq_lens
 
+
 def convert_example(example, vocab, unk_token_id=1, is_test=False):
     """
     Builds model inputs from a sequence for sequence classification tasks. 
@@ -149,6 +155,7 @@ def convert_example(example, vocab, unk_token_id=1, is_test=False):
         return input_ids, valid_length, label
     else:
         return input_ids, valid_length
+
 
 def preprocess_prediction_data(data, vocab):
     """

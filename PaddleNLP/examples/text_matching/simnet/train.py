@@ -74,6 +74,7 @@ def create_dataloader(dataset,
         collate_fn=lambda batch: generate_batch(batch, pad_token_id=pad_token_id))
     return dataloader
 
+
 if __name__ == "__main__":
     paddle.set_device('gpu') if args.use_gpu else paddle.set_device('cpu')
 
@@ -84,32 +85,28 @@ if __name__ == "__main__":
     vocab = load_vocab(args.vocab_path)
 
     # Loads dataset.
-    train_ds, dev_dataset, test_ds = LCQMC.get_datasets(['train', 'dev', 'test'])
+    train_ds, dev_dataset, test_ds = LCQMC.get_datasets(
+        ['train', 'dev', 'test'])
 
     # Constructs the newtork.
-    model = ppnlp.models.SimNet(network=args.network, vocab_size=len(vocab), num_classes=len(train_ds.get_labels()))
+    label_list = train_ds.get_labels()
+    model = ppnlp.models.SimNet(
+        network=args.network,
+        vocab_size=len(vocab),
+        num_classes=len(label_list))
     model = paddle.Model(model)
 
     # Reads data and generates mini-batches.
-    trans_fn = partial(
-        convert_example,
-        vocab=vocab,
-        is_test=False)
+    trans_fn = partial(convert_example, vocab=vocab, is_test=False)
     train_loader = create_dataloader(
-        train_ds,
-        trans_fn=trans_fn,
-        batch_size=args.batch_size,
-        mode='train')
+        train_ds, trans_fn=trans_fn, batch_size=args.batch_size, mode='train')
     dev_loader = create_dataloader(
         dev_dataset,
         trans_fn=trans_fn,
         batch_size=args.batch_size,
         mode='validation')
     test_loader = create_dataloader(
-        test_ds,
-        trans_fn=trans_fn,
-        batch_size=args.batch_size,
-        mode='test')
+        test_ds, trans_fn=trans_fn, batch_size=args.batch_size, mode='test')
 
     optimizer = paddle.optimizer.Adam(
         parameters=model.parameters(), learning_rate=args.lr)
@@ -126,7 +123,11 @@ if __name__ == "__main__":
         print("Loaded checkpoint from %s" % args.init_from_ckpt)
 
     # Starts training and evaluating.
-    model.fit(train_loader, dev_loader, epochs=args.epochs, save_dir=args.save_dir,)
+    model.fit(
+        train_loader,
+        dev_loader,
+        epochs=args.epochs,
+        save_dir=args.save_dir, )
 
     # Finally tests model.
     results = model.evaluate(test_loader)

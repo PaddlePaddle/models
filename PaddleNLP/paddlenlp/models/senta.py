@@ -22,19 +22,36 @@ INF = 1. * 1e12
 
 
 class Senta(nn.Layer):
-    def __init__(self, network_name, vocab_size, num_classes, emb_dim=128, pad_token_id=0):
+    def __init__(self,
+                 network_name,
+                 vocab_size,
+                 num_classes,
+                 emb_dim=128,
+                 pad_token_id=0):
         super().__init__()
 
         network_name = network_name.lower()
         if network_name == 'bow':
-            self.model = BoWModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
+            self.model = BoWModel(
+                vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
         elif network_name == 'bigru':
-            self.model = GRUModel(vocab_size, num_classes, emb_dim, direction='bidirectional', padding_idx=pad_token_id)
+            self.model = GRUModel(
+                vocab_size,
+                num_classes,
+                emb_dim,
+                direction='bidirectional',
+                padding_idx=pad_token_id)
         elif network_name == 'bilstm':
-            self.model = LSTMModel(vocab_size, num_classes, emb_dim ,direction='bidirectional', padding_idx=pad_token_id)
+            self.model = LSTMModel(
+                vocab_size,
+                num_classes,
+                emb_dim,
+                direction='bidirectional',
+                padding_idx=pad_token_id)
         elif network_name == 'bilstm_attn':
             lstm_hidden_size = 196
-            attention = SelfInteractiveAttention(hidden_size=2 * lstm_hidden_size)
+            attention = SelfInteractiveAttention(hidden_size=2 *
+                                                 lstm_hidden_size)
             self.model = BiLSTMAttentionModel(
                 attention_layer=attention,
                 vocab_size=vocab_size,
@@ -42,17 +59,42 @@ class Senta(nn.Layer):
                 num_classes=num_classes,
                 padding_idx=pad_token_id)
         elif network_name == 'birnn':
-            self.model = RNNModel(vocab_size, num_classes, emb_dim, direction='bidrectional', padding_idx=pad_token_id)
+            self.model = RNNModel(
+                vocab_size,
+                num_classes,
+                emb_dim,
+                direction='bidrectional',
+                padding_idx=pad_token_id)
         elif network_name == 'cnn':
-            self.model = CNNModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
+            self.model = CNNModel(
+                vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
         elif network_name == 'gru':
-            self.model = GRUModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id, pooling_type='max')
+            self.model = GRUModel(
+                vocab_size,
+                num_classes,
+                emb_dim,
+                direction='forward',
+                padding_idx=pad_token_id,
+                pooling_type='max')
         elif network_name == 'lstm':
-            self.model = LSTMModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id, pooling_type='max')
+            self.model = LSTMModel(
+                vocab_size,
+                num_classes,
+                emb_dim,
+                direction='forward',
+                padding_idx=pad_token_id,
+                pooling_type='max')
         elif network_name == 'rnn':
-            self.model = RNNModel(vocab_size, num_classes, emb_dim, direction='forward', padding_idx=pad_token_id, pooling_type='max')
+            self.model = RNNModel(
+                vocab_size,
+                num_classes,
+                emb_dim,
+                direction='forward',
+                padding_idx=pad_token_id,
+                pooling_type='max')
         elif network_name == 'textcnn':
-            self.model = TextCNNModel(vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
+            self.model = TextCNNModel(
+                vocab_size, num_classes, emb_dim, padding_idx=pad_token_id)
         else:
             raise ValueError(
                 "Unknown network: %s, it must be one of bow, lstm, bilstm, cnn, gru, bigru, rnn, birnn, bilstm_attn and textcnn."
@@ -408,7 +450,7 @@ class CNNModel(nn.Layer):
                  emb_dim=128,
                  padding_idx=0,
                  num_filter=128,
-                 ngram_filter_sizes=(3,),
+                 ngram_filter_sizes=(3, ),
                  fc_hidden_size=96):
         super().__init__()
         self.embedder = nn.Embedding(
