@@ -13,9 +13,10 @@
 # limitations under the License.
 
 from enum import Enum
+import os.path as osp
 
-# FIXME(zhoushunjie): only for test
-URL_ROOT = "http://127.0.0.1:8888"
+URL_ROOT = "https://bj.bcebos.com/paddlenlp"
+EMBEDDING_URL_ROOT = osp.join(URL_ROOT, "models/embeddings")
 
 PAD_WORD = '[PAD]'
 UNK_WORD = '[UNK]'
@@ -23,4 +24,4 @@ UNK_WORD = '[UNK]'
 PAD_IDX = 0
 UNK_IDX = 1
 
-EMBEDDING_NAME_LIST = ["sgns.target.word-word.dynwin5.thr10.neg5.dim300.iter5"]
+EMBEDDING_NAME_LIST = ["w2v.baidu_encyclopedia.target.word-word.dim300"]

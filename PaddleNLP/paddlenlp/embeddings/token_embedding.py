@@ -16,16 +16,15 @@ from enum import Enum
 import os
 import os.path as osp
 import numpy as np
-import jieba
 
 import paddle
 import paddle.nn as nn
 from paddle.utils.download import get_path_from_url
-from paddlenlp.utils.env import DATA_HOME, _get_sub_home
+from paddlenlp.utils.env import _get_sub_home, MODEL_HOME
 from paddlenlp.data import Vocab, get_idx_from_word
 from .constant import *
 
-EMBEDDING_HOME = _get_sub_home('embedding', parent_home=DATA_HOME)
+EMBEDDING_HOME = _get_sub_home('embeddings', parent_home=MODEL_HOME)
 
 
 def list_embedding_name():
@@ -44,7 +43,7 @@ class TokenEmbedding(nn.Embedding):
         vector_path = osp.join(EMBEDDING_HOME, embedding_path + ".npz")
         if not osp.exists(vector_path):
             # download
-            url = URL_ROOT + "/" + embedding_path + ".tar.gz"
+            url = osp.join(EMBEDDING_URL_ROOT, embedding_path + ".tar.gz")
             get_path_from_url(url, EMBEDDING_HOME)
 
         self.unknown_word = unknown_word
