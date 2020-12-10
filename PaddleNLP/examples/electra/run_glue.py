@@ -37,7 +37,7 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
-class AccuAndF1(Metric):
+class AccuracyAndF1(Metric):
     """
     Encapsulates Accuracy, Precision, Recall and F1 metric logic.
     """
@@ -48,11 +48,11 @@ class AccuAndF1(Metric):
                  name='acc_and_f1',
                  *args,
                  **kwargs):
-        super(AccuAndF1, self).__init__(*args, **kwargs)
+        super(AccuracyAndF1, self).__init__(*args, **kwargs)
         self.topk = topk
         self.pos_label = pos_label
         self._name = name
-        self.accu = Accuracy(self.topk, *args, **kwargs)
+        self.acc = Accuracy(self.topk, *args, **kwargs)
         self.precision = Precision(*args, **kwargs)
         self.recall = Recall(*args, **kwargs)
         self.reset()
@@ -60,15 +60,15 @@ class AccuAndF1(Metric):
     def compute(self, pred, label, *args):
         self.label = label
         self.preds_pos = paddle.nn.functional.softmax(pred)[:, self.pos_label]
-        return self.accu.compute(pred, label)
+        return self.acc.compute(pred, label)
 
     def update(self, correct, *args):
-        self.accu.update(correct)
+        self.acc.update(correct)
         self.precision.update(self.preds_pos, self.label)
         self.recall.update(self.preds_pos, self.label)
 
     def accumulate(self):
-        accu = self.accu.accumulate()
+        acc = self.acc.accumulate()
         precision = self.precision.accumulate()
         recall = self.recall.accumulate()
         if precision == 0.0 or recall == 0.0:
@@ -77,14 +77,14 @@ class AccuAndF1(Metric):
             # 1/f1 = 1/2 * (1/precision + 1/recall)
             f1 = (2 * precision * recall) / (precision + recall)
         return (
-            accu,
+            acc,
             precision,
             recall,
             f1,
-            (accu + f1) / 2, )
+            (acc + f1) / 2, )
 
     def reset(self):
-        self.accu.reset()
+        self.acc.reset()
         self.precision.reset()
         self.recall.reset()
         self.label = None
@@ -242,9 +242,9 @@ class PearsonAndSpearman(Metric):
 TASK_CLASSES = {
     "cola": (GlueCoLA, Mcc),
     "sst-2": (GlueSST2, Accuracy),
-    "mrpc": (GlueMRPC, AccuAndF1),
+    "mrpc": (GlueMRPC, AccuracyAndF1),
     "sts-b": (GlueSTSB, PearsonAndSpearman),
-    "qqp": (GlueQQP, AccuAndF1),
+    "qqp": (GlueQQP, AccuracyAndF1),
     "mnli": (GlueMNLI, Accuracy),
     "qnli": (GlueQNLI, Accuracy),
     "rte": (GlueRTE, Accuracy),
@@ -270,8 +270,8 @@ def evaluate(model, loss_fct, metric, data_loader):
         loss = loss_fct(logits, labels)
         correct = metric.compute(logits, labels)
         metric.update(correct)
-    accu = metric.accumulate()
-    print("eval loss: %f, accu: %s, " % (loss.numpy(), accu), end='')
+    acc = metric.accumulate()
+    print("eval loss: %f, acc: %s, " % (loss.numpy(), acc), end='')
     model.train()
 
 
