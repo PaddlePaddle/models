@@ -154,8 +154,9 @@ class CoupletDataset(paddle.io.Dataset):
         (f_mode, f_encoding, endl) = ("r", "utf-8", "\n")
         with io.open(corpus_path, f_mode, encoding=f_encoding) as f_corpus:
             for line in f_corpus.readlines():
-                left = line.split("\t")[0]
-                right = line.split("\t")[1]
+                line = line.strip().split("\t")
+                left = line[0]
+                right = line[1]
                 data.append((left, right))
         return data
 
@@ -169,12 +170,14 @@ class CoupletDataset(paddle.io.Dataset):
 
             return func
 
-        self.data = [([self.vocab[self.bos_token]] + vocab_func(
-            self.vocab, self.unk_token)(data[0].split("\x02")) +
-                      [self.vocab[self.eos_token]],
-                      [self.vocab[self.bos_token]] + vocab_func(
-                          self.vocab, self.unk_token)(data[1].split("\x02")) +
-                      [self.vocab[self.eos_token]]) for data in self.data]
+        eos_id = self.vocab[self.eos_token]
+        bos_id = self.vocab[self.bos_token]
+        self.data = [(
+            [bos_id] + vocab_func(
+                self.vocab, self.unk_token)(data[0].split("\x02")) + [eos_id],
+            [bos_id] + vocab_func(
+                self.vocab, self.unk_token)(data[1].split("\x02")) + [eos_id])
+                     for data in self.data]
 
     def get_vocab(self):
         return self.vocab

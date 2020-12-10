@@ -16,7 +16,6 @@ import numpy as np
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
-import paddle.nn.initializer as I
 
 
 class CrossEntropyCriterion(nn.Layer):
@@ -27,7 +26,6 @@ class CrossEntropyCriterion(nn.Layer):
         cost = F.softmax_with_cross_entropy(
             logits=predict, label=label, soft_label=False)
         cost = paddle.squeeze(cost, axis=[2])
-        # print(cost.shape, trg_mask.shape)
         masked_cost = cost * trg_mask
         batch_mean_cost = paddle.mean(masked_cost, axis=[0])
         seq_cost = paddle.sum(batch_mean_cost)
@@ -41,14 +39,9 @@ class Seq2SeqEncoder(nn.Layer):
                  embed_dim,
                  hidden_size,
                  num_layers,
-                 dropout_prob=0.,
-                 init_scale=0.1):
+                 dropout_prob=0.):
         super(Seq2SeqEncoder, self).__init__()
-        self.embedder = nn.Embedding(
-            vocab_size,
-            embed_dim,
-            weight_attr=paddle.ParamAttr(initializer=I.Uniform(
-                low=-init_scale, high=init_scale)))
+        self.embedder = nn.Embedding(vocab_size, embed_dim)
 
         self.lstm = nn.LSTM(
             input_size=embed_dim,
@@ -66,20 +59,10 @@ class Seq2SeqEncoder(nn.Layer):
 
 
 class AttentionLayer(nn.Layer):
-    def __init__(self, hidden_size, bias=False, init_scale=0.1):
+    def __init__(self, hidden_size):
         super(AttentionLayer, self).__init__()
-        self.input_proj = nn.Linear(
-            hidden_size,
-            hidden_size,
-            weight_attr=paddle.ParamAttr(initializer=I.Uniform(
-                low=-init_scale, high=init_scale)),
-            bias_attr=bias)
-        self.output_proj = nn.Linear(
-            hidden_size + hidden_size,
-            hidden_size,
-            weight_attr=paddle.ParamAttr(initializer=I.Uniform(
-                low=-init_scale, high=init_scale)),
-            bias_attr=bias)
+        self.input_proj = nn.Linear(hidden_size, hidden_size)
+        self.output_proj = nn.Linear(hidden_size + hidden_size, hidden_size)
 
     def forward(self, hidden, encoder_output, encoder_padding_mask):
         encoder_output = self.input_proj(encoder_output)
@@ -140,24 +123,14 @@ class Seq2SeqDecoder(nn.Layer):
                  embed_dim,
                  hidden_size,
                  num_layers,
-                 dropout_prob=0.,
-                 init_scale=0.1):
+                 dropout_prob=0.):
         super(Seq2SeqDecoder, self).__init__()
-        self.embedder = nn.Embedding(
-            vocab_size,
-            embed_dim,
-            weight_attr=paddle.ParamAttr(initializer=I.Uniform(
-                low=-init_scale, high=init_scale)))
+        self.embedder = nn.Embedding(vocab_size, embed_dim)
         self.lstm_attention = nn.RNN(Seq2SeqDecoderCell(
             num_layers, embed_dim, hidden_size, dropout_prob),
                                      is_reverse=False,
                                      time_major=False)
-        self.output_layer = nn.Linear(
-            hidden_size,
-            vocab_size,
-            weight_attr=paddle.ParamAttr(initializer=I.Uniform(
-                low=-init_scale, high=init_scale)),
-            bias_attr=False)
+        self.output_layer = nn.Linear(hidden_size, vocab_size)
 
     def forward(self, trg, decoder_initial_states, encoder_output,
                 encoder_padding_mask):
@@ -180,17 +153,16 @@ class Seq2SeqAttnModel(nn.Layer):
                  hidden_size,
                  num_layers,
                  dropout_prob=0.,
-                 eos_id=1,
-                 init_scale=0.1):
+                 eos_id=1):
         super(Seq2SeqAttnModel, self).__init__()
         self.hidden_size = hidden_size
         self.eos_id = eos_id
         self.num_layers = num_layers
         self.INF = 1e9
         self.encoder = Seq2SeqEncoder(vocab_size, embed_dim, hidden_size,
-                                      num_layers, dropout_prob, init_scale)
+                                      num_layers, dropout_prob)
         self.decoder = Seq2SeqDecoder(vocab_size, embed_dim, hidden_size,
-                                      num_layers, dropout_prob, init_scale)
+                                      num_layers, dropout_prob)
 
     def forward(self, src, src_length, trg):
         encoder_output, encoder_final_state = self.encoder(src, src_length)

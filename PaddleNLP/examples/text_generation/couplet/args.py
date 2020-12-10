@@ -58,12 +58,6 @@ def parse_args():
         "--dropout", type=float, default=0.2, help="drop probability")
 
     parser.add_argument(
-        "--init_scale",
-        type=float,
-        default=0.1,
-        help="init scale for parameter")
-
-    parser.add_argument(
         "--max_grad_norm",
         type=float,
         default=5.0,
