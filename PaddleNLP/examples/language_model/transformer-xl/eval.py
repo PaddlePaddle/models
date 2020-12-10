@@ -38,8 +38,6 @@ def do_eval(args):
         for i, (src, target, seq_len) in enumerate(loader):
             if args.max_eval_steps > 0 and i >= args.max_eval_steps:
                 break
-            src = src.squeeze([0])
-            target = src.squeeze([0])
             ret = mem_transformer(src, target, *eval_mems)
             loss, eval_mems = ret[0], ret[1:]
             eval_cur_loss = seq_len * loss

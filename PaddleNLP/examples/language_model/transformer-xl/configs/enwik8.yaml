@@ -24,8 +24,8 @@ use_gpu: True
 
 # Args for reader, see reader.py for details
 token_delimiter: None
-batch_size: 5
-eval_batch_size: 1
+batch_size: 16
+eval_batch_size: 2
 
 # Hyparams for training:
 # The number of epoches for training

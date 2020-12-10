@@ -24,8 +24,8 @@ use_gpu: True
 
 # Args for reader, see reader.py for details
 token_delimiter: None
-batch_size: 1
-eval_batch_size: 1
+batch_size: 32
+eval_batch_size: 5
 
 # Hyparams for training:
 # The number of epoches for training
@@ -64,8 +64,6 @@ min_lr: 0.0
 adaptive: True
 # Size of dictionary. This can be obtained automatically. 
 ntokens: 10000
-# The length of the retained previous heads. 
-mem_length: 512
 # The dimension for word embeddings, which is also the last dimension of
 # the input and output of multi-head attention, position-wise feed-forward
 # networks, encoder and decoder.

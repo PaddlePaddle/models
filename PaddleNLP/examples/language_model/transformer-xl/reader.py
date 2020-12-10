@@ -79,7 +79,7 @@ def get_lm_data_loader(args, vocab, mode="train"):
         rank=dist.get_rank() if mode == "train" else 0)
 
     data_loader = DataLoader(
-        dataset=lm_dataset, batch_size=1, num_workers=0, return_list=True)
+        dataset=lm_dataset, batch_size=None, num_workers=0, return_list=True)
 
     return data_loader
 

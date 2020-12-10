@@ -151,18 +151,14 @@ def do_train(args):
         mems = tuple()
         for input_data in train_loader:
             (src, target, seq_len) = input_data
-            src = src.squeeze([0])
-            target = target.squeeze([0])
             ret = mem_transformer(src, target, *mems)
             loss = ret[0]
             mems = ret[1:]
+            train_loss += loss.numpy()
 
             loss.backward()
             optimizer.step()
             optimizer.clear_grad()
-
-            loss = loss.numpy()
-            train_loss += loss
 
             if step_idx > 0 and step_idx % args.print_step == 0 and rank == 0:
                 cur_loss = train_loss / args.print_step
@@ -171,7 +167,7 @@ def do_train(args):
                     lr = optimizer.get_lr()
                 else:
                     lr = scheduler.get_lr()
-                logger_info = "step_idx: %d, epoch: %d, batch: %d, learning rate: %.16f, " \
+                logger_info = "step_idx: %d, epoch: %d, batch: %d, learning rate: %.8f, " \
                               "speed: %f ms/batch, loss: %f" % \
                               (step_idx, pass_id, batch_id, lr,
                                elapsed * 1000.0 / args.print_step, cur_loss)
@@ -224,8 +220,6 @@ def do_train(args):
                     for i, (src, target, seq_len) in enumerate(eval_loader):
                         if args.max_eval_steps > 0 and i >= args.max_eval_steps:
                             break
-                        src = src.squeeze([0])
-                        target = target.squeeze([0])
                         ret = mem_transformer(src, target, *eval_mems)
                         loss, eval_mems = ret[0], ret[1:]
                         eval_cur_loss = seq_len * loss

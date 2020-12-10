@@ -90,7 +90,8 @@ class ProjAdaptiveSoftmax(nn.Layer):
             self.cluster_weight = paddle.create_parameter(
                 shape=[self.num_clusters, self.d_embed],
                 dtype=global_dtype,
-                default_initializer=paddle.nn.initializer.Constant(0.0))
+                default_initializer=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01))
             self.cluster_bias = paddle.create_parameter(
                 shape=[self.num_clusters],
                 dtype=global_dtype,
@@ -106,16 +107,24 @@ class ProjAdaptiveSoftmax(nn.Layer):
                 if d_proj != d_embed:
                     self.out_projs.append(
                         paddle.create_parameter(
-                            shape=[d_proj, d_embed], dtype=global_dtype))
+                            shape=[d_proj, d_embed],
+                            dtype=global_dtype,
+                            default_initializer=paddle.nn.initializer.Normal(
+                                mean=0.0, std=0.01)))
                 else:
                     self.out_projs.append(None)
 
             self.out_layers_weight.append(
                 paddle.create_parameter(
-                    shape=[n_token, d_embed], dtype=global_dtype))
+                    shape=[n_token, d_embed],
+                    dtype=global_dtype,
+                    default_initializer=paddle.nn.initializer.Constant(0.0)))
             self.out_layers_bias.append(
                 paddle.create_parameter(
-                    shape=[n_token], dtype=global_dtype, is_bias=True))
+                    shape=[n_token],
+                    dtype=global_dtype,
+                    is_bias=True,
+                    default_initializer=paddle.nn.initializer.Constant(0.0)))
         else:
             for i in range(len(self.cutoffs)):
                 l_idx, r_idx = self.cutoff_ends[i], self.cutoff_ends[i + 1]
@@ -123,15 +132,26 @@ class ProjAdaptiveSoftmax(nn.Layer):
 
                 self.out_projs.append(
                     paddle.create_parameter(
-                        shape=[d_proj, d_emb_i], dtype=global_dtype))
+                        shape=[d_proj, d_emb_i],
+                        dtype=global_dtype,
+                        default_initializer=paddle.nn.initializer.Normal(
+                            mean=0.0, std=0.01)))
 
                 self.out_layers_weight.append(
                     paddle.create_parameter(
-                        shape=[r_idx - l_idx, d_emb_i], dtype=global_dtype))
+                        shape=[r_idx - l_idx, d_emb_i],
+                        dtype=global_dtype,
+                        default_initializer=paddle.nn.initializer.Uniform(
+                            low=-(r_idx - l_idx)**(-1.0 / 2.0),
+                            high=(r_idx - l_idx)**(-1.0 / 2.0))))
                 self.out_layers_bias.append(
                     paddle.create_parameter(
-                        shape=[r_idx - l_idx], dtype=global_dtype,
-                        is_bias=True))
+                        shape=[r_idx - l_idx],
+                        dtype=global_dtype,
+                        is_bias=True,
+                        default_initializer=paddle.nn.initializer.Uniform(
+                            low=-(r_idx - l_idx)**(-1.0 / 2.0),
+                            high=(r_idx - l_idx)**(-1.0 / 2.0))))
 
         self.keep_order = keep_order
 
@@ -309,11 +329,26 @@ class PositionwiseFFN(nn.Layer):
         self.d_inner = d_inner
 
         self.CoreNet = nn.Sequential(
-            nn.Linear(d_model, d_inner),
+            nn.Linear(
+                d_model,
+                d_inner,
+                weight_attr=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01),
+                bias_attr=paddle.nn.initializer.Constant(0.0)),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(d_inner, d_model), nn.Dropout(dropout))
-        self.layer_norm = nn.LayerNorm(d_model)
+            nn.Linear(
+                d_inner,
+                d_model,
+                weight_attr=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01),
+                bias_attr=paddle.nn.initializer.Constant(0.0)),
+            nn.Dropout(dropout))
+        self.layer_norm = nn.LayerNorm(
+            d_model,
+            weight_attr=paddle.nn.initializer.Normal(
+                mean=1.0, std=0.01),
+            bias_attr=paddle.nn.initializer.Constant(0.0))
         self.normalize_before = normalize_before
 
     def forward(self, inp):
@@ -339,12 +374,31 @@ class MultiHeadAttn(nn.Layer):
         self.d_model = d_model
         self.d_head = d_head
 
-        self.q_proj = nn.Linear(d_model, n_head * d_head, bias_attr=False)
-        self.kv_proj = nn.Linear(d_model, 2 * n_head * d_head, bias_attr=False)
+        self.q_proj = nn.Linear(
+            d_model,
+            n_head * d_head,
+            weight_attr=paddle.nn.initializer.Normal(
+                mean=0.0, std=0.01),
+            bias_attr=False)
+        self.kv_proj = nn.Linear(
+            d_model,
+            2 * n_head * d_head,
+            weight_attr=paddle.nn.initializer.Normal(
+                mean=0.0, std=0.01),
+            bias_attr=False)
         self.drop = nn.Dropout(p=dropout)
         self.attn_drop = nn.Dropout(p=attn_dropout)
-        self.o_proj = nn.Linear(n_head * d_head, d_model, bias_attr=False)
-        self.layer_norm = nn.LayerNorm(d_model)
+        self.o_proj = nn.Linear(
+            n_head * d_head,
+            d_model,
+            weight_attr=paddle.nn.initializer.Normal(
+                mean=0.0, std=0.01),
+            bias_attr=False)
+        self.layer_norm = nn.LayerNorm(
+            d_model,
+            weight_attr=paddle.nn.initializer.Normal(
+                mean=1.0, std=0.01),
+            bias_attr=paddle.nn.initializer.Constant(0.0))
 
         self.scale = 1 / (d_head**0.5)
         self.normalize_before = normalize_before
@@ -411,13 +465,27 @@ class RelMultiHeadAttn(nn.Layer):
         self.d_head = d_head
         self.dropout = dropout
 
-        self.qkv_proj = nn.Linear(d_model, 3 * n_head * d_head, bias_attr=False)
+        self.qkv_proj = nn.Linear(
+            d_model,
+            3 * n_head * d_head,
+            weight_attr=paddle.nn.initializer.Normal(
+                mean=0.0, std=0.01),
+            bias_attr=False)
 
         self.drop = nn.Dropout(dropout)
         self.attn_drop = nn.Dropout(attn_dropout)
-        self.o_proj = nn.Linear(n_head * d_head, d_model, bias_attr=False)
+        self.o_proj = nn.Linear(
+            n_head * d_head,
+            d_model,
+            weight_attr=paddle.nn.initializer.Normal(
+                mean=0.0, std=0.01),
+            bias_attr=False)
 
-        self.layer_norm = nn.LayerNorm(d_model)
+        self.layer_norm = nn.LayerNorm(
+            d_model,
+            weight_attr=paddle.nn.initializer.Normal(
+                mean=1.0, std=0.01),
+            bias_attr=paddle.nn.initializer.Constant(0.0))
 
         self.scale = 1 / (d_head**0.5)
 
@@ -451,7 +519,11 @@ class RelPartialLearnableMultiHeadAttn(RelMultiHeadAttn):
         super(RelPartialLearnableMultiHeadAttn, self).__init__(*args, **kwargs)
 
         self.r_proj = nn.Linear(
-            self.d_model, self.n_head * self.d_head, bias_attr=False)
+            self.d_model,
+            self.n_head * self.d_head,
+            weight_attr=paddle.nn.initializer.Normal(
+                mean=0.0, std=0.01),
+            bias_attr=False)
 
     def forward(self, w, r, r_w_bias, r_r_bias, attn_mask=None, mems=None):
         qlen, rlen, bsz = w.shape[1], r.shape[1], w.shape[0]
@@ -719,19 +791,34 @@ class AdaptiveEmbedding(nn.Layer):
         if div_val == 1:
             self.emb_layers.append(
                 nn.Embedding(
-                    n_token, d_embed, sparse=sample_softmax > 0))
+                    n_token,
+                    d_embed,
+                    sparse=sample_softmax > 0,
+                    weight_attr=paddle.nn.initializer.Normal(
+                        mean=0.0, std=0.01)))
             if d_proj != d_embed:
                 self.emb_projs.append(
                     paddle.create_parameter(
-                        shape=[d_embed, d_proj], dtype=global_dtype))
+                        shape=[d_embed, d_proj],
+                        dtype=global_dtype,
+                        default_initializer=paddle.nn.initializer.Normal(
+                            mean=0.0, std=0.01)))
         else:
             for i in range(len(self.cutoffs)):
                 l_idx, r_idx = self.cutoff_ends[i], self.cutoff_ends[i + 1]
                 d_emb_i = d_embed // (div_val**i)
-                self.emb_layers.append(nn.Embedding(r_idx - l_idx, d_emb_i))
+                self.emb_layers.append(
+                    nn.Embedding(
+                        r_idx - l_idx,
+                        d_emb_i,
+                        weight_attr=paddle.nn.initializer.Normal(
+                            mean=0.0, std=0.01)))
                 self.emb_projs.append(
                     paddle.create_parameter(
-                        shape=[d_emb_i, d_proj], dtype=global_dtype))
+                        shape=[d_emb_i, d_proj],
+                        dtype=global_dtype,
+                        default_initializer=paddle.nn.initializer.Normal(
+                            mean=0.0, std=0.01)))
 
     def forward(self, inp):
         if self.div_val == 1:
@@ -855,7 +942,12 @@ class MemTransformerLM(nn.Layer):
 
         self.sample_softmax = sample_softmax
         if sample_softmax > 0:
-            self.out_layer = nn.Linear(d_model, n_token)
+            self.out_layer = nn.Linear(
+                d_model,
+                n_token,
+                weight_attr=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01),
+                bias_attr=paddle.nn.initializer.Constant(0.0))
             self.tie_weight = tie_weight
             self.sampler = LogUniformSampler(n_token, sample_softmax)
         else:
@@ -886,25 +978,39 @@ class MemTransformerLM(nn.Layer):
         if self.attn_type == 0:
             self.pos_emb = PositionEmbedding(self.d_model)
             self.r_w_bias = paddle.create_parameter(
-                shape=[self.n_head, self.d_head], dtype=global_dtype)
+                shape=[self.n_head, self.d_head],
+                dtype=global_dtype,
+                default_initializer=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01))
             self.r_r_bias = paddle.create_parameter(
-                shape=[self.n_head, self.d_head], dtype=global_dtype)
+                shape=[self.n_head, self.d_head],
+                dtype=global_dtype,
+                default_initializer=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01))
         elif self.attn_type == 1:
             self.r_emb = paddle.create_parameter(
                 shape=[self.n_layer, self.max_klen, self.n_head, self.d_head],
-                dtype=global_dtype)
+                dtype=global_dtype,
+                default_initializer=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01))
             self.r_w_bias = paddle.create_parameter(
                 shape=[self.n_layer, self.n_head, self.d_head],
-                dtype=global_dtype)
+                dtype=global_dtype,
+                default_initializer=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01))
             self.r_bias = paddle.create_parameter(
                 shape=[self.n_layer, self.max_klen, self.n_head],
-                dtype=global_dtype)
+                dtype=global_dtype,
+                default_initializer=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01))
         elif self.attn_type == 2:
             self.pos_emb = PositionEmbedding(self.d_model)
         elif self.attn_type == 3:
             self.r_emb = paddle.create_parameter(
                 shape=[self.n_layer, self.max_klen, self.n_head, self.d_head],
-                dtype=global_dtype)
+                dtype=global_dtype,
+                default_initializer=paddle.nn.initializer.Normal(
+                    mean=0.0, std=0.01))
 
     def reset_length(self, tgt_len, ext_len, mem_len):
         self.tgt_len = tgt_len
@@ -1006,7 +1112,6 @@ class MemTransformerLM(nn.Layer):
         elif self.attn_type == 2:
             pos_seq = paddle.arange(klen - 1, -1, -1.0, dtype=word_emb.dtype)
             if self.clamp_len > 0:
-                # TODO: clamp and clip
                 pos_seq = paddle.clip(pos_seq, max=self.clamp_len)
             pos_emb = self.pos_emb(pos_seq, bsz)
 
@@ -1030,7 +1135,6 @@ class MemTransformerLM(nn.Layer):
                     cur_emb = self.r_emb[i][:-qlen]
                     cur_size = cur_emb.size(0)
                     if cur_size < mlen:
-                        # TODO: verify shape of this one
                         cur_emb_pad = cur_emb[0:1].expand(mlen - cur_size, -1,
                                                           -1)
                         cur_emb = paddle.concat([cur_emb_pad, cur_emb], 0)
@@ -1070,7 +1174,6 @@ class MemTransformerLM(nn.Layer):
                     pred_hid, shape=[-1, pred_hid.shape[-1]]),
                 paddle.reshape(
                     target, shape=[-1]))
-            loss = paddle.reshape(loss, shape=[tgt_len, -1])
 
         if new_mems is None:
             return [loss.mean()]
