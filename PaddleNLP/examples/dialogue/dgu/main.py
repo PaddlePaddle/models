@@ -190,7 +190,7 @@ def evaluation(args, model, data_loader, metric):
     for batch in data_loader:
         input_ids, segment_ids, labels = batch
         logits = model(input_ids, segment_ids)
-        if args.task_name in ['did', 'mrda', 'swda']:
+        if args.task_name in ['atis_intent', 'mrda', 'swda']:
             correct = metric.compute(logits, labels)
             metric.update(correct)
         else:
