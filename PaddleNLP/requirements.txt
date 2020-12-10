@@ -1,0 +1,3 @@
+visualdl
+jieba
+h5py

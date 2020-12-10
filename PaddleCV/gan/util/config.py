@@ -97,7 +97,7 @@ def base_parse_args(parser):
     add_arg('output', str, "./output",
             "The directory the model and the test result to be saved to.")
     add_arg('init_model', str, None, "The init model file of directory.")
-    add_arg('gan_mode', str, "vanilla", "The init model file of directory.")
+    add_arg('gan_mode', str, "vanilla", "which GAN loss used in model.")
     add_arg('norm_type', str, "batch_norm", "Which normalization to used")
     add_arg('learning_rate', float, 0.0002, "the initialize learning rate")
     add_arg('lambda_L1', float, 100.0, "the initialize lambda parameter for L1 loss")

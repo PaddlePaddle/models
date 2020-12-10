@@ -30,7 +30,7 @@ def infer():
     ]
     criteo_dataset = CriteoDataset()
     criteo_dataset.setup(args.feat_dict)
-    test_reader = paddle.batch(
+    test_reader = fluid.io.batch(
         criteo_dataset.test(test_files), batch_size=args.batch_size)
 
     startup_program = fluid.framework.Program()
@@ -85,5 +85,7 @@ def set_zero(var_name,
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     utils.check_version()
     infer()

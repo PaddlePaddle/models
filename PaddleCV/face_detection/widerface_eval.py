@@ -324,6 +324,8 @@ def get_shrink(height, width):
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parser.parse_args()
     print_arguments(args)
     config = reader.Settings(data_dir=args.data_dir)

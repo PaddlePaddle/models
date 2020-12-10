@@ -27,8 +27,9 @@ import paddle.fluid as fluid
 from paddle.fluid import layers
 import paddle.fluid.param_attr as attr
 import paddle.fluid.layers.utils as utils
-from paddle.fluid.dygraph import Embedding, Pool2D, Linear, Conv2D, GRUUnit, Layer, to_variable
+from paddle.fluid.dygraph import Embedding, Conv2D, GRUUnit, Layer, to_variable
 from paddle.fluid.layers.utils import map_structure, flatten, pack_sequence_as
+
 
 class EmbeddingLayer(object):
     """
@@ -48,15 +49,14 @@ class EmbeddingLayer(object):
         """
         operation
         """
-        # name = self.name
         emb = Embedding(
             size=[self.dict_size, self.emb_dim],
             is_sparse=True,
             padding_idx=self.padding_idx,
-            param_attr=attr.ParamAttr(name=self.name, initializer=fluid.initializer.Xavier()))
+            param_attr=attr.ParamAttr(
+                name=self.name, initializer=fluid.initializer.Xavier()))
 
         return emb
-
 
 
 class FCLayer(object):
@@ -77,9 +77,9 @@ class FCLayer(object):
         operation
         """
         fc = FC(size=self.fc_dim,
-                    param_attr=attr.ParamAttr(name="%s.w" % self.name),
-                    bias_attr=attr.ParamAttr(name="%s.b" % self.name),
-                    act=self.act)
+                param_attr=attr.ParamAttr(name="%s.w" % self.name),
+                bias_attr=attr.ParamAttr(name="%s.b" % self.name),
+                act=self.act)
         return fc
 
 
@@ -94,12 +94,11 @@ class DynamicGRULayer(object):
         """
         self.gru_dim = gru_dim
         self.name = name
-  
+
     def ops(self):
         """
         operation
         """
-
         gru = DynamicGRU(
             size=self.gru_dim,
             param_attr=attr.ParamAttr(name="%s.w" % self.name),
@@ -119,11 +118,13 @@ class DynamicLSTMLayer(object):
         self.lstm_dim = lstm_dim
         self.name = name
         self.is_reverse = is_reverse
+
     def ops(self):
         """
         operation
         """
-        lstm_cell = BasicLSTMUnit(hidden_size=self.lstm_dim, input_size=self.lstm_dim*4)
+        lstm_cell = BasicLSTMUnit(
+            hidden_size=self.lstm_dim, input_size=self.lstm_dim * 4)
         lstm = RNN(cell=lstm_cell, time_major=True, is_reverse=self.is_reverse)
         return lstm
 
@@ -143,7 +144,7 @@ class DataLayer(object):
         """
         operation
         """
-        data = fluid.layers.data( 
+        data = fluid.data(
             name=name, shape=shape, dtype=dtype, lod_level=lod_level)
         return data
 
@@ -201,7 +202,7 @@ class CrossEntropyLayer(object):
         """
         operation
         """
-        loss = fluid.layers.cross_entropy(input=input, label=label)   # no need
+        loss = fluid.layers.cross_entropy(input=input, label=label)
         return loss
 
 
@@ -220,7 +221,7 @@ class SoftmaxWithCrossEntropyLayer(object):
         """
         operation
         """
-        loss = fluid.layers.softmax_with_cross_entropy(   # no need
+        loss = fluid.layers.softmax_with_cross_entropy(
             logits=input, label=label)
         return loss
 
@@ -316,8 +317,10 @@ class ConstantLayer(object):
         """
         operation
         """
-        constant = fluid.layers.fill_constant_batch_size_like(input, shape,
-                                                              dtype, value)
+        shape = list(shape)
+        input_shape = fluid.layers.shape(input)
+        shape[0] = input_shape[0]
+        constant = fluid.layers.fill_constant(shape, dtype, value)
         return constant
 
 
@@ -359,28 +362,23 @@ class SoftsignLayer(object):
         return softsign
 
 
-
-# dygraph 
-class SimpleConvPool(fluid.dygraph.Layer):
-    def __init__(self,
-                 num_channels,
-                 num_filters,
-                 filter_size,
-                 use_cudnn=False
-                 ):
+class SimpleConvPool(Layer):
+    def __init__(self, num_channels, num_filters, filter_size, use_cudnn=False):
         super(SimpleConvPool, self).__init__()
-        self._conv2d = Conv2D(num_channels = num_channels,
+        self._conv2d = Conv2D(
+            num_channels=num_channels,
             num_filters=num_filters,
             filter_size=filter_size,
-            padding=[1, 1],                 
+            padding=[1, 1],
             use_cudnn=use_cudnn,
             act='relu')
 
     def forward(self, inputs):
         x = self._conv2d(inputs)
         x = fluid.layers.reduce_max(x, dim=-1)
-        x = fluid.layers.reshape(x, shape=[x.shape[0],  -1])
+        x = fluid.layers.reshape(x, shape=[x.shape[0], -1])
         return x
+
 
 class FC(Layer):
     """
@@ -560,7 +558,7 @@ class FC(Layer):
                 outputs={"Out": pre_bias},
                 attrs={"use_mkldnn": False})
 
-        if self._b:
+        if self._b is not None:
             pre_activation = self._helper.create_variable_for_type_inference(
                 dtype=self._dtype)
             self._helper.append_op(
@@ -574,6 +572,7 @@ class FC(Layer):
         # Currently, we don't support inplace in dygraph mode
         return self._helper.append_activation(pre_activation, act=self._act)
 
+
 class DynamicGRU(Layer):
     def __init__(self,
                  size,
@@ -583,7 +582,7 @@ class DynamicGRU(Layer):
                  gate_activation='sigmoid',
                  candidate_activation='tanh',
                  origin_mode=False,
-                 init_size = None):
+                 init_size=None):
         super(DynamicGRU, self).__init__()
         self.gru_unit = GRUUnit(
             size * 3,
@@ -594,16 +593,19 @@ class DynamicGRU(Layer):
             origin_mode=origin_mode)
         self.size = size
         self.is_reverse = is_reverse
+
     def forward(self, inputs, h_0):
         hidden = h_0
         res = []
         for i in range(inputs.shape[1]):
             if self.is_reverse:
                 i = inputs.shape[1] - 1 - i
-            input_ = inputs[ :, i:i+1, :]
-            input_ = fluid.layers.reshape(input_, [-1, input_.shape[2]], inplace=False)
+            input_ = inputs[:, i:i + 1, :]
+            input_ = fluid.layers.reshape(
+                input_, [-1, input_.shape[2]], inplace=False)
             hidden, reset, gate = self.gru_unit(input_, hidden)
-            hidden_ = fluid.layers.reshape(hidden, [-1, 1, hidden.shape[1]], inplace=False)
+            hidden_ = fluid.layers.reshape(
+                hidden, [-1, 1, hidden.shape[1]], inplace=False)
             res.append(hidden_)
         if self.is_reverse:
             res = res[::-1]
@@ -789,18 +791,21 @@ class BasicLSTMUnit(RNNUnit):
 
         self._weight = self.create_parameter(
             attr=self._param_attr,
-            shape=[self._input_size + self._hidden_size, 4 * self._hidden_size],
+            shape=[
+                self._input_size + self._hidden_size, 4 * self._hidden_size
+            ],
             dtype=self._dtype)
-        
-        self._bias = self.create_parameter(attr=self._bias_attr,
-                                           shape=[4 * self._hidden_size],
-                                           dtype=self._dtype,
-                                           is_bias=True)
+
+        self._bias = self.create_parameter(
+            attr=self._bias_attr,
+            shape=[4 * self._hidden_size],
+            dtype=self._dtype,
+            is_bias=True)
 
     def forward(self, input, state):
         pre_hidden, pre_cell = state
         concat_input_hidden = layers.concat([input, pre_hidden], axis=1)
-    
+
         gate_input = layers.matmul(x=concat_input_hidden, y=self._weight)
 
         gate_input = layers.elementwise_add(gate_input, self._bias)
@@ -820,11 +825,7 @@ class BasicLSTMUnit(RNNUnit):
 
 
 class RNN(Layer):
-    def __init__(self,
-                 cell,
-                 is_reverse=False,
-                 time_major=False,
-                 **kwargs):
+    def __init__(self, cell, is_reverse=False, time_major=False, **kwargs):
         super(RNN, self).__init__()
         self.cell = cell
         if not hasattr(self.cell, "call"):
@@ -834,12 +835,17 @@ class RNN(Layer):
         self.batch_index, self.time_step_index = (1, 0) if time_major else (0,
                                                                             1)
 
-    def forward(self, inputs, initial_states=None, sequence_length=None, **kwargs):
+    def forward(self,
+                inputs,
+                initial_states=None,
+                sequence_length=None,
+                **kwargs):
         if fluid.in_dygraph_mode():
 
             class OutputArray(object):
                 def __init__(self, x):
                     self.array = [x]
+
                 def append(self, x):
                     self.array.append(x)
 
@@ -847,9 +853,8 @@ class RNN(Layer):
                 # TODO: use where_op
                 new_state = fluid.layers.elementwise_mul(
                     new_state, step_mask,
-                    axis=0) - fluid.layers.elementwise_mul(state,
-                                                           (step_mask - 1),
-                                                           axis=0)
+                    axis=0) - fluid.layers.elementwise_mul(
+                        state, (step_mask - 1), axis=0)
                 return new_state
 
             flat_inputs = flatten(inputs)
@@ -866,7 +871,7 @@ class RNN(Layer):
                     lambda x: fluid.layers.transpose(x, [1, 0] + list(
                         range(2, len(x.shape)))), inputs)
 
-            if sequence_length:
+            if sequence_length is not None:
                 mask = fluid.layers.sequence_mask(
                     sequence_length,
                     maxlen=time_steps,
@@ -875,16 +880,20 @@ class RNN(Layer):
 
             if self.is_reverse:
                 inputs = map_structure(lambda x: fluid.layers.reverse(x, axis=[0]), inputs)
-                mask = fluid.layers.reverse(mask, axis=[0]) if sequence_length else None
+                mask = fluid.layers.reverse(
+                    mask, axis=[0]) if sequence_length is not None else None
 
             states = initial_states
             outputs = []
             for i in range(time_steps):
-                step_inputs = map_structure(lambda x:x[i], inputs)
-                step_outputs, new_states = self.cell(step_inputs, states, **kwargs)
-                if sequence_length:
+                step_inputs = map_structure(lambda x: x[i], inputs)
+                step_outputs, new_states = self.cell(step_inputs, states,
+                                                     **kwargs)
+                if sequence_length is not None:
                     new_states = map_structure(
-                        partial(_maybe_copy, step_mask=mask[i]), states,
+                        partial(
+                            _maybe_copy, step_mask=mask[i]),
+                        states,
                         new_states)
                 states = new_states
                 if i == 0:
@@ -916,10 +925,6 @@ class RNN(Layer):
         return final_outputs, final_states
 
 
-from paddle.fluid.dygraph import Embedding, LayerNorm, Linear, Layer, to_variable
-place = fluid.CPUPlace()
-executor = fluid.Executor(place)
-
 class EncoderCell(RNNUnit):
     def __init__(self, num_layers, input_size, hidden_size, dropout_prob=0.):
         super(EncoderCell, self).__init__()
@@ -929,10 +934,9 @@ class EncoderCell(RNNUnit):
         self.lstm_cells = list()
         for i in range(self.num_layers):
             self.lstm_cells.append(
-                self.add_sublayer(
-                    "layer_%d" % i,
-                    BasicLSTMUnit(input_size if i == 0 else hidden_size,
-                                  hidden_size)))
+                self.add_sublayer("layer_%d" % i,
+                                  BasicLSTMUnit(input_size if i == 0 else
+                                                hidden_size, hidden_size)))
 
     def forward(self, step_input, states):
         new_states = []
@@ -946,6 +950,7 @@ class EncoderCell(RNNUnit):
     @property
     def state_shape(self):
         return [cell.state_shape for cell in self.lstm_cells]
+
 
 class BasicGRUUnit(Layer):
     """
@@ -1046,4 +1051,3 @@ class BasicGRUUnit(Layer):
         new_hidden = u * pre_hidden + (1 - u) * c
 
         return new_hidden
-

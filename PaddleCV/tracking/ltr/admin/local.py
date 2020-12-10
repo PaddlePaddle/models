@@ -9,3 +9,4 @@ class EnvironmentSettings:
         self.coco_dir = ''
         self.imagenet_dir = ''
         self.imagenetdet_dir = ''
+        self.youtubevos_dir = ''

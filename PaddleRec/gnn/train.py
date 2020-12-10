@@ -140,7 +140,7 @@ def train():
         logger.info("epoch loss: %.4lf" % (np.mean(epoch_sum)))
         save_dir = os.path.join(args.model_path, "epoch_" + str(i))
         fetch_vars = [loss, acc]
-        fluid.io.save_inference_model(save_dir, feed_list, fetch_vars, exe)
+        fluid.save(fluid.default_main_program(), model_path=save_dir)
         logger.info("model saved in " + save_dir)
 
     # only for ce
@@ -171,4 +171,6 @@ def get_cards(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     train()

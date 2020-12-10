@@ -232,6 +232,7 @@ def train(args):
         train_dataloader,
         train_fetch_list,
         train_metrics,
+        train_batch_size=train_config.TRAIN.batch_size,
         epochs=epochs,
         log_interval=args.log_interval,
         valid_interval=args.valid_interval,
@@ -247,6 +248,8 @@ def train(args):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     # check whether the installed paddle is compiled with GPU
     check_cuda(args.use_gpu)

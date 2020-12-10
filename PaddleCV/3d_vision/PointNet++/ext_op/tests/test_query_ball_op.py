@@ -48,10 +48,10 @@ class TestQueryBallOp(unittest.TestCase):
         radius = 6
         nsample = 5
 
-        points = fluid.layers.data(
-            name='points', shape=points_shape, dtype=points_type, append_batch_size=False)
-        new_points = fluid.layers.data(
-            name='new_points', shape=new_points_shape, dtype=points_type, append_batch_size=False)
+        points = fluid.data(
+            name='points', shape=points_shape, dtype=points_type)
+        new_points = fluid.data(
+            name='new_points', shape=new_points_shape, dtype=points_type)
         y = pointnet_lib.query_ball(points, new_points, radius, nsample)
 
         points_np = np.random.randint(1, 5, points_shape).astype(points_type)
@@ -66,4 +66,6 @@ class TestQueryBallOp(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    import paddle
+    paddle.enable_static()
     unittest.main()

@@ -42,7 +42,7 @@ class CGAN_model(object):
 
     def network_G(self, input, label, name="generator"):
         # concat noise and label
-        y = fluid.layers.reshape(label, shape=[-1, self.y_dim, 1, 1])
+        y = fluid.layers.reshape(label, shape=[-1, self.y_dim])
         xy = fluid.layers.concat([input, y], 1)
         o_l1 = linear(
             input=xy,

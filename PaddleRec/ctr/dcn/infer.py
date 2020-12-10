@@ -64,7 +64,7 @@ def infer():
                 feed_list=dcn_model.data_list, place=place)
 
             exe.run(startup_program)
-            fluid.io.load(fluid.default_main_program(), cur_model_path)
+            fluid.load(fluid.default_main_program(), cur_model_path)
 
             for var in dcn_model.auc_states:  # reset auc states
                 set_zero(var.name, scope=inference_scope, place=place)
@@ -107,5 +107,7 @@ def set_zero(var_name,
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     utils.check_version()
     infer()

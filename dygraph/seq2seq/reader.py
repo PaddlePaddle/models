@@ -191,7 +191,6 @@ def get_data_iter(raw_data,
                 new_cache = b_src
             else:
                 new_cache = sorted(b_src, key=lambda k: len(k[0]))
-            
 
             for i in range(cache_num):
                 batch_data = new_cache[i * batch_size:(i + 1) * batch_size]
@@ -212,7 +211,7 @@ def get_data_iter(raw_data,
 
         for i in range(cache_num):
             batch_end = min(len(new_cache), (i + 1) * batch_size)
-            batch_data = new_cache[i * batch_size: batch_end]
+            batch_data = new_cache[i * batch_size:batch_end]
             src_cache = [w[0] for w in batch_data]
             tar_cache = [w[1] for w in batch_data]
             src_ids, src_mask = to_pad_np(src_cache, source=True)

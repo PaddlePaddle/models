@@ -17,7 +17,7 @@
 BMN模型是百度自研，2019年ActivityNet夺冠方案，为视频动作定位问题中proposal的生成提供高效的解决方案，在PaddlePaddle上首次开源。此模型引入边界匹配(Boundary-Matching, BM)机制来评估proposal的置信度，按照proposal开始边界的位置及其长度将所有可能存在的proposal组合成一个二维的BM置信度图，图中每个点的数值代表其所对应的proposal的置信度分数。网络由三个模块组成，基础模块作为主干网络处理输入的特征序列，TEM模块预测每一个时序位置属于动作开始、动作结束的概率，PEM模块生成BM置信度图。
 
 <p align="center">
-<img src="../../PaddleCV/PaddleVideo/images/BMN.png" height=300 width=500 hspace='10'/> <br />
+<img src="./BMN.png" height=300 width=500 hspace='10'/> <br />
 BMN Overview
 </p>
 
@@ -44,7 +44,7 @@ BMN模型的静态图实现请参考[PaddleVideo](../../PaddleCV/PaddleVideo)
 
 ## 数据准备
 
-BMN的训练数据采用ActivityNet1.3提供的数据集，我们提供了处理好的视频特征，请下载[bmn\_feat](https://paddlemodels.bj.bcebos.com/video_detection/bmn_feat.tar.gz)数据后解压，同时相应的修改bmn.yaml中的特征路径feat\_path。
+BMN的训练数据采用ActivityNet1.3提供的数据集，我们提供了处理好的视频特征和对应的标签文件，请下载特征数据[bmn\_feat](https://paddlemodels.bj.bcebos.com/video_detection/bmn_feat.tar.gz)和标签数据[label](https://paddlemodels.bj.bcebos.com/video_detection/activitynet_1.3_annotations.json)，并相应地修改配置文件bmn.yaml中的特征文件路径feat\_path和标签文件路径anno\_file
 
 
 ## 模型训练
@@ -55,7 +55,7 @@ BMN的训练数据采用ActivityNet1.3提供的数据集，我们提供了处理
 
     bash run.sh
 
-若使用单卡训练，启动方式如下:
+若使用单卡训练，请将配置文件bmn.yaml中`TRAIN`和`VALID`对应的batch\_size调整为16，启动方式如下:
 
     export CUDA_VISIBLE_DEVICES=0
     python train.py

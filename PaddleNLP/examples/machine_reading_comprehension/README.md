@@ -1,0 +1,4 @@
+# PaddleMRC
+
+基于PaddleNLP提供的BERT类预训练模型，在SQuAD和DuReader数据集上完成Finetune
+

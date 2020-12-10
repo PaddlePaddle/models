@@ -179,6 +179,8 @@ def train():
 
 
 if __name__ == '__main__':
+    import paddle
+    paddle.enable_static()
     args = parse_args()
     print_arguments(args)
     check_gpu(args.use_gpu)

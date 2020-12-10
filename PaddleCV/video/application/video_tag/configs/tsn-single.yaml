@@ -1,0 +1,53 @@
+MODEL:
+    name: "TSN"
+    format: "video" # ["video", "frames"]
+    num_classes: 400
+    seglen: 1
+    image_mean: [0.485, 0.456, 0.406]
+    image_std: [0.229, 0.224, 0.225]
+    num_layers: 101
+    topk: 5
+
+TRAIN:
+    seg_num: 3  # training with 3 segments
+    epoch: 45
+    short_size: 256
+    target_size: 224
+    num_reader_threads: 12
+    buf_size: 1024
+    batch_size: 32
+    use_gpu: True
+    num_gpus: 1
+    filelist: "./data/dataset/tsn/train.list"
+    learning_rate: 0.00125
+    learning_rate_decay: 0.1
+    l2_weight_decay: 1e-4
+    momentum: 0.9
+    total_videos: 224684  # modify it according to the number samples of your dataset
+
+VALID:
+    seg_num: 3
+    short_size: 256
+    target_size: 224
+    num_reader_threads: 12
+    buf_size: 1024
+    batch_size: 32 
+    filelist: "./data/dataset/tsn/val.list"
+
+TEST:
+    seg_num: 7
+    short_size: 256
+    target_size: 224
+    num_reader_threads: 12
+    buf_size: 1024
+    batch_size: 16
+    filelist: "./data/dataset/tsn/test.list"
+
+INFER:
+    seg_num: 300  # infer using 300 segments
+    short_size: 256
+    target_size: 224
+    num_reader_threads: 12
+    buf_size: 1024
+    batch_size: 1
+    filelist: "./data/dataset/tsn/infer.list" 
