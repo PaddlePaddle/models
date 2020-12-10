@@ -37,36 +37,52 @@ pip install paddlenlp==2.0.0a
 ### Quick Dataset Loading
 
 ```python
-train_ds, test_ds = paddlenlp.datasets.ChnSentiCorp.get_datasets(['train','test'])
+
+from paddlenlp.datasets import ChnSentiCrop
+train_ds, test_ds = ChnSentiCorp.get_datasets(['train','test'])
 ```
 
-### Reusable Text Emebdding
+### Chinese Text Emebdding Loading
 
 ```python
 
 from paddlenlp.embeddings import TokenEmbedding
 wordemb = TokenEmbedding("word2vec.baike.300d")
 print(wordemb.search("中国"))
->>> [0.260801  0.1047    0.129453 ... 0.096542  0.0092513]
+>>> [0.260801, 0.1047, 0.129453 ... 0.096542, 0.0092513]
 
 ```
 
-### High Quality Chinsese Pre-trained Model
+### One-Line Classical Model Building
 
 ```python
-from paddlenlp.transformers import ErnieModel
-ernie = ErnieModel.from_pretrained("ernie")
-sequence_output, pooled_output = ernie.forward(input_ids, segment_ids)
+from paddlenlp.models import Ernie
+ernie = Ernie(Ernie.Task.SeqCls)
+ernie.forward(input_ids, segment_ids)
 ```
+
+### Rich Chinsese Pre-trained Models
+
+```python
+from paddlenlp.transformers import ErnieModel, BertModel, RobertaModel, ElectraModel
+ernie = ErnieModel.from_pretrained('ernie-1.0')
+bert = BertModel.from_pretrained('bert-wwm-ext-large')
+electra = ElectraModel.from_pretrained('eclectra-chinese')
+roberta = RobertaModel.from_pretrained('roberta-wwm-ext')
+```
+
+For more pretrained model selection, please refer to [PretrainedModels](./paddlenlp/transformers/README.md)
 
 ## Tutorials
 
 List our notebook tutorials based on AI Studio.
+TBD
 
 ## Community
 
 * SIG for Pretrained Model Contribution
 * SIG for Dataset Integration
+TBD
 
 ## FAQ
 
