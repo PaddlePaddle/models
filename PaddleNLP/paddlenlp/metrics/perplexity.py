@@ -43,10 +43,9 @@ class Perplexity(paddle.metric.Metric):
         super(Perplexity, self).__init__(*args, **kwargs)
         self._name = name
         self.total_ce = 0
-        self.word_count = 0
+        self.total_word_num = 0
 
     def compute(self, pred, label, seq_mask=None):
-        print(label.shape)
         label = paddle.unsqueeze(label, axis=2)
         ce = F.softmax_with_cross_entropy(
             logits=pred, label=label, soft_label=False)
@@ -61,15 +60,17 @@ class Perplexity(paddle.metric.Metric):
         batch_ce = np.sum(ce)
         if word_num is None:
             word_num = ce.shape[0] * ce.shape[1]
+        else:
+            word_num = word_num[0]
         self.total_ce += batch_ce
-        self.word_count += word_num
+        self.total_word_num += word_num
 
     def reset(self):
         self.total_ce = 0
-        self.word_count = 0
+        self.total_word_num = 0
 
     def accumulate(self):
-        return np.exp(self.total_ce / self.word_count)
+        return np.exp(self.total_ce / self.total_word_num)
 
     def name(self):
         return self._name
