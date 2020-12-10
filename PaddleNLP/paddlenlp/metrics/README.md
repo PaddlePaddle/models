@@ -1,39 +1,15 @@
 # paddlenlp.metrics
 
-## Perplexity
-Perplexity is calculated using cross entropy. It supports both padding data
-and no padding data.
+目前paddlenlp提供以下评价指标：
 
-If data is not padded, users should provide `seq_len` for `Metric`
-initialization. If data is padded, your label should contain `seq_mask`,
-which indicates the actual length of samples.
-
-This Perplexity requires that the output of your network is prediction,
-label and sequence length (opitonal). If the Perplexity here doesn't meet
-your needs, you could override the `compute` or `update` method for
-caculating Perplexity.
-
-## BLEU
-BLEU (bilingual evaluation understudy) is an algorithm for evaluating the
-quality of text which has been machine-translated from one natural language
-to another. This metric uses a modified form of precision to compare a
-candidate translation against multiple reference translations.
-
-BLEU could be used as `paddle.metrics.Metric` class, or an ordinary
-class.
-
-When BLEU is used as `paddle.metrics.Metric` class. A function is
-needed that transforms the network output to reference string list, and
-transforms the label to candidate string. By default, a default function
-`_default_trans_func` is provided, which gets target sequence id by
-calculating the maximum probability of each step. In this case, user must
-provide `vocab`. It should be noted that the BLEU here is different from
-the BLEU calculated in prediction, and it is only for observation during
-training and evaluation.
-
-## Rouge
-### rouge-l
-
-## dureader
-## chunk
-## squad
+| Metric                                                     | 简介                                                         |
+| ---------------------------------------------------------- | :----------------------------------------------------------- |
+| Perplexity                                                 | 困惑度，常用来衡量语言模型优劣，也可用于机器翻译、文本生成等任务。 |
+| BLEU(bilingual evaluation understudy)                      | 机器翻译常用评价指标                                         |
+| Rouge-L(Recall-Oriented Understudy for Gisting Evaluation) | 评估自动文摘以及机器翻译的指标                               |
+| AccuracyAndF1                                              | 准确率及F1，可用于glue中的mrpc and qqp任务                   |
+| PearsonAndSpearman                                         | 皮尔森相关性系数和斯皮尔曼相关系数。可用于glue中的sts-b任务  |
+| Mcc                                                        | 马修斯相关系数，用以测量二分类的分类性能的指标。可用于glue中的cola任务 |
+| ChunkEvaluator                                             | 计算了块检测的精确率、召回率和F1-score。常用于序列标记任务，如命名实体识别（NER） |
+| Squad                                                      | 用于SQuAD的评价指标                                          |
+| Dureader                                                   | 用于Dureader的评价指标                                       |
