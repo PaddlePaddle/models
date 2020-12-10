@@ -77,7 +77,9 @@ class TokenEmbedding(nn.Embedding):
         self.num_embeddings = embedding_table.shape[0]
         # import embedding
         super(TokenEmbedding, self).__init__(
-            self.num_embeddings, self.embedding_dim, padding_idx=PAD_IDX)
+            self.num_embeddings,
+            self.embedding_dim,
+            padding_idx=self._word_to_idx[PAD_TOKEN])
         self.weight.set_value(embedding_table)
         self.set_trainable(trainable)
         logger.info("Finish loading embedding vector.")
@@ -96,7 +98,7 @@ class TokenEmbedding(nn.Embedding):
     def _read_vocab_list_from_file(self, extended_vocab_path):
         # load new vocab table from file
         vocab_list = []
-        with open(extended_vocab_path) as f:
+        with open(extended_vocab_path, "r", encoding="utf-8") as f:
             for line in f.readlines():
                 line = line.strip()
                 if line == "":
