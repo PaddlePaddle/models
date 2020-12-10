@@ -83,6 +83,7 @@ class InferPlato2(nn.Layer):
         self.logits_bias = paddle.create_parameter(
             [vocab_size], 'float32', is_bias=True)
 
+    @paddle.no_grad()
     def forward(self, inputs):
         token_ids = inputs['token_ids']
         type_ids = inputs['type_ids']
@@ -167,7 +168,6 @@ class InferPlato2(nn.Layer):
         # TODO
         step = 0
         while step < self.max_dec_len:
-            print(step)
             # [-1, 1]
             append_mask = paddle.cast(
                 tgt_ids != self.eos_id, dtype=tgt_generation_mask.dtype)
