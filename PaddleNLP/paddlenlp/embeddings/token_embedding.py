@@ -44,18 +44,17 @@ class TokenEmbedding(nn.Embedding):
                  extended_vocab_path=None,
                  trainable=True):
 
-        embedding_path = embedding_name.lower()
-        vector_path = osp.join(EMBEDDING_HOME, embedding_path + ".npz")
+        embedding_name = embedding_name.lower()
+        vector_path = osp.join(EMBEDDING_HOME, embedding_name + ".npz")
         if not osp.exists(vector_path):
             # download
-            url = osp.join(EMBEDDING_URL_ROOT, embedding_path + ".tar.gz")
+            url = osp.join(EMBEDDING_URL_ROOT, embedding_name + ".tar.gz")
             get_path_from_url(url, EMBEDDING_HOME)
 
-        self.unknown_token = unknown_token
         logger.info("Loading embedding vector...")
         vector_np = np.load(vector_path)
-        self._idx_to_word = list(vector_np['vocab'])
         self.embedding_dim = vector_np['embedding'].shape[1]
+        self.unknown_token = unknown_token
         if unknown_token_vector is not None:
             unk_vector = np.array(unknown_token_vector).astype(
                 paddle.get_default_dtype())
@@ -65,21 +64,13 @@ class TokenEmbedding(nn.Embedding):
                 size=self.embedding_dim).astype(paddle.get_default_dtype())
         pad_vector = np.array(
             [0] * self.embedding_dim).astype(paddle.get_default_dtype())
-
-        # insert unk, pad embedding
-        embedding_table = np.insert(
-            vector_np['embedding'], [0], [pad_vector, unk_vector],
-            axis=0).astype(paddle.get_default_dtype())
-        self._idx_to_word.insert(PAD_IDX, PAD_TOKEN)
-        self._idx_to_word.insert(UNK_IDX, self.unknown_token)
-
-        self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
         if extended_vocab_path is not None:
-            new_words_embedding = self._extend_vocab(extended_vocab_path,
-                                                     embedding_table)
-            embedding_table = np.append(
-                embedding_table, new_words_embedding, axis=0)
+            embedding_table = self._extend_vocab(extended_vocab_path, vector_np,
+                                                 pad_vector, unk_vector)
             trainable = True
+        else:
+            embedding_table = self._init_without_extend_vocab(
+                vector_np, pad_vector, unk_vector)
 
         self.vocab = Vocab.from_dict(
             self._word_to_idx, unk_token=unknown_token, pad_token=PAD_TOKEN)
@@ -91,6 +82,17 @@ class TokenEmbedding(nn.Embedding):
         self.set_trainable(trainable)
         logger.info("Finish loading embedding vector.")
 
+    def _init_without_extend_vocab(self, vector_np, pad_vector, unk_vector):
+        self._idx_to_word = list(vector_np['vocab'])
+        self._idx_to_word.insert(PAD_IDX, PAD_TOKEN)
+        self._idx_to_word.insert(UNK_IDX, self.unknown_token)
+        self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
+        # insert unk, pad embedding
+        embedding_table = np.insert(
+            vector_np['embedding'], [0], [pad_vector, unk_vector],
+            axis=0).astype(paddle.get_default_dtype())
+        return embedding_table
+
     def _read_vocab_list_from_file(self, extended_vocab_path):
         # load new vocab table from file
         vocab_list = []
@@ -99,28 +101,70 @@ class TokenEmbedding(nn.Embedding):
                 line = line.strip()
                 if line == "":
                     break
-                vocab_list.append(line)
+                vocab = line.split()[0]
+                vocab_list.append(vocab)
         return vocab_list
 
-    def _extend_vocab(self, extended_vocab_path, embedding_table):
+    def _extend_vocab(self, extended_vocab_path, vector_np, pad_vector,
+                      unk_vector):
         logger.info("Start extending vocab.")
         extend_vocab_list = self._read_vocab_list_from_file(extended_vocab_path)
-        curr_idx = len(self._idx_to_word)
-        new_words = list(
-            set(word for word in extend_vocab_list
-                if word not in self._word_to_idx))
+        extend_vocab_set = set(extend_vocab_list)
         # update idx_to_word
-        self._idx_to_word.extend(new_words)
-        # update word_to_idx
-        for i, word in enumerate(new_words):
-            self._word_to_idx[word] = i + curr_idx
-        # update embedding_table
-        new_words_embedding = np.random.normal(
+        self._idx_to_word = extend_vocab_list
+        embedding_table = np.random.normal(
             scale=0.02,
-            size=(len(new_words),
+            size=(len(self._idx_to_word),
                   self.embedding_dim)).astype(paddle.get_default_dtype())
+
+        self._idx_to_word.append(PAD_TOKEN)
+        embedding_table = np.append(embedding_table, [pad_vector], axis=0)
+
+        if self.unknown_token not in extend_vocab_set:
+            self._idx_to_word.append(self.unknown_token)
+            embedding_table = np.append(embedding_table, [unk_vector], axis=0)
+            self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
+        else:
+            self._word_to_idx = self._construct_word_to_idx(self._idx_to_word)
+            unk_idx = self._word_to_idx[self.unknown_token]
+            embedding_table[unk_idx] = unk_vector
+
+        pretrained_idx_to_word = list(vector_np['vocab'])
+        pretrained_word_to_idx = self._construct_word_to_idx(
+            pretrained_idx_to_word)
+        pretrained_embedding_table = np.array(vector_np['embedding'])
+
+        pretrained_vocab_set = set(pretrained_idx_to_word)
+        extend_vocab_set = set(self._idx_to_word)
+        vocab_intersection = pretrained_vocab_set & extend_vocab_set
+        vocab_subtraction = pretrained_vocab_set - extend_vocab_set
+
+        # assignment from pretrained_vocab_embedding to extend_vocab_embedding
+        pretrained_vocab_intersect_index = [
+            pretrained_word_to_idx[word] for word in vocab_intersection
+        ]
+        pretrained_vocab_subtract_index = [
+            pretrained_word_to_idx[word] for word in vocab_subtraction
+        ]
+        extend_vocab_intersect_index = [
+            self._word_to_idx[word] for word in vocab_intersection
+        ]
+        embedding_table[
+            extend_vocab_intersect_index] = pretrained_embedding_table[
+                pretrained_vocab_intersect_index]
+
+        for idx in pretrained_vocab_subtract_index:
+            word = pretrained_idx_to_word[idx]
+            self._idx_to_word.append(word)
+            self._word_to_idx[word] = len(self._idx_to_word) - 1
+
+        embedding_table = np.append(
+            embedding_table,
+            pretrained_embedding_table[pretrained_vocab_subtract_index],
+            axis=0)
+
         logger.info("Finish extending vocab.")
-        return new_words_embedding
+        return embedding_table
 
     def set_trainable(self, trainable):
         self.weight.stop_gradient = not trainable
@@ -180,6 +224,8 @@ class TokenEmbedding(nn.Embedding):
              \nUnknown index: {}\
              \nUnknown token: {}\
              \n{}".format(
-            super(TokenEmbedding, self).__repr__(), PAD_IDX, PAD_TOKEN, UNK_IDX,
-            self.unknown_token, self.weight)
+            super(TokenEmbedding, self).__repr__(),
+            self._word_to_idx[PAD_TOKEN], PAD_TOKEN,
+            self._word_to_idx[self.unknown_token], self.unknown_token,
+            self.weight)
         return s
