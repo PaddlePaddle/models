@@ -52,8 +52,7 @@ except:
             sys.stderr.write('\n')
 
 
-import logging
-logger = logging.getLogger(__name__)
+from .log import logger
 
 __all__ = ['get_weights_path_from_url']
 
